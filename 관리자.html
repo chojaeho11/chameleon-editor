@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chameleon Admin : 템플릿 관리자</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+
+<style>
+    :root { 
+        --primary: #6366f1; --primary-dark: #4f46e5;
+        --text-main: #1e293b; --text-sub: #64748b;
+        --bg: #f1f5f9; --white: #ffffff;
+        --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; font-family: 'Nanum Gothic', sans-serif; background: var(--bg); color: var(--text-main); }
+    
+    /* Header */
+    header { background: var(--white); padding: 15px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    h1 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    
+    /* Layout */
+    .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+    
+    /* Panel Styles */
+    .panel { background: var(--white); border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); height: fit-content; }
+    .panel h2 { margin-top: 0; font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+
+    /* Form Elements */
+    .form-group { margin-bottom: 15px; }
+    .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text-sub); margin-bottom: 5px; }
+    .form-input, .form-select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; }
+    .form-input:focus, .form-select:focus { border-color: var(--primary); }
+    
+    .file-input-wrapper { border: 2px dashed #cbd5e1; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; }
+    .file-input-wrapper:hover { border-color: var(--primary); background: #eff6ff; }
+    .file-input-wrapper input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .file-preview { max-width: 100%; max-height: 150px; margin-top: 10px; display: none; border-radius: 4px; border: 1px solid #eee; }
+
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 14px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: var(--danger); color: white; padding: 5px 10px; font-size: 12px; width: auto; }
+
+    /* Grid Layout */
+    .filter-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .card { background: var(--white); border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; transition: 0.2s; position: relative; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .card-img { width: 100%; aspect-ratio: 1/1.2; object-fit: cover; background: #eee; border-bottom: 1px solid #eee; }
+    .card-body { padding: 15px; }
+    .card-badge { display: inline-block; padding: 4px 8px; background: #eff6ff; color: var(--primary); border-radius: 4px; font-size: 11px; font-weight: 700; margin-bottom: 5px; }
+    .card-tags { font-size: 12px; color: var(--text-sub); margin-bottom: 10px; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; pt: 10px; border-top: 1px solid #f1f5f9; }
+    
+    .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Helper text */
+    .help-text { font-size: 12px; color: #64748b; margin-top: 5px; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p style="margin-top: 10px; font-weight: 600;">처리 중...</p>
+</div>
+
+<header>
+    <h1><i class="fa-solid fa-screwdriver-wrench"></i> Chameleon Template Admin</h1>
+    <a href="index.html" style="text-decoration: none; color: var(--text-sub); font-size: 14px; font-weight: 600;">
+        <i class="fa-solid fa-arrow-left"></i> 에디터로 돌아가기
+    </a>
+</header>
+
+<div class="container">
+    <div class="panel">
+        <h2><i class="fa-solid fa-cloud-arrow-up"></i> 새 템플릿 등록</h2>
+        
+        <div class="form-group">
+            <label class="form-label">카테고리</label>
+            <select id="inputCategory" class="form-select">
+                <option value="text">완성된탬플릿</option>
+                <option value="vector">일러스트배경</option>
+                <option value="graphic">일러스트 객체</option>
+                <option value="photo-bg">사진으로된배경</option>
+                <option value="transparent-graphic">누끼따서쓸이미지</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">태그 (쉼표로 구분)</label>
+            <input id="inputTags" class="form-input" placeholder="예: 여름, 세일, 이벤트">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" id="labelMainFile">이미지 파일</label>
+            <div class="file-input-wrapper">
+                <span id="thumbLabel"><i class="fa-regular fa-image"></i> 이미지 선택 (JPG/PNG)</span>
+                <input type="file" id="inputThumb" accept="image/png, image/jpeg, image/webp">
+            </div>
+            <img id="thumbPreview" class="file-preview">
+            <p class="help-text" id="helpImage">썸네일로 사용될 이미지를 업로드하세요.</p>
+        </div>
+
+        <div class="form-group" id="dataGroup">
+            <label class="form-label">데이터 파일 (SVG)</label>
+            <div class="file-input-wrapper">
+                <span id="jsonLabel"><i class="fa-solid fa-bezier-curve"></i> SVG 파일 선택</span>
+                <input type="file" id="inputJson" accept=".svg,.json">
+            </div>
+            <div id="jsonInfo" style="font-size: 12px; color: green; margin-top: 5px; display: none;">파일 로드 완료</div>
+            <p class="help-text">일러스트/벡터 파일(.svg)을 업로드하면 자동으로 변환됩니다.</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="uploadTemplate()">DB에 등록하기</button>
+    </div>
+
+    <div class="panel" style="background: transparent; box-shadow: none; padding: 0;">
+        <div class="filter-bar">
+            <select id="filterCategory" class="form-select" style="width: 200px;" onchange="loadTemplates()">
+                <option value="all">전체 보기</option>
+                <option value="text">타이포그래피</option>
+                <option value="vector">벡터 배경</option>
+                <option value="photo-bg">사진 배경</option>
+                <option value="graphic">그래픽</option>
+                <option value="transparent-graphic">AI 투명 이미지</option>
+            </select>
+            <button class="btn btn-primary" style="width: 100px;" onclick="loadTemplates()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+        </div>
+        <div id="templateGrid" class="grid">
+            </div>
+    </div>
+</div>
+
+<script type="module">
+    import { sb, initConfig } from "./config.js";
+
+    let currentThumbBase64 = null;
+    let currentDataPayload = null; 
+    let isPhotoType = false;
+
+    window.onload = async () => {
+        try {
+            await initConfig(); 
+            loadTemplates();    
+            setupInputs();
+            updateUIByCategory(); // 초기 UI 상태 설정
+        } catch(e) {
+            console.error("초기화 오류:", e);
+        }
+    };
+
+    // 카테고리 변경 이벤트
+    document.getElementById('inputCategory').addEventListener('change', updateUIByCategory);
+
+    function updateUIByCategory() {
+        const cat = document.getElementById('inputCategory').value;
+        const dataGroup = document.getElementById('dataGroup');
+        const labelMain = document.getElementById('labelMainFile');
+        const helpImage = document.getElementById('helpImage');
+        
+        // 사진형 카테고리는 데이터 파일 입력 숨김
+        if (cat === 'photo-bg' || cat === 'transparent-graphic') {
+            isPhotoType = true;
+            dataGroup.style.display = 'none'; 
+            labelMain.innerText = "원본 이미지 (썸네일 겸용)";
+            helpImage.innerText = "업로드한 이미지가 썸네일과 원본 데이터로 모두 사용됩니다.";
+        } else {
+            isPhotoType = false;
+            dataGroup.style.display = 'block';
+            labelMain.innerText = "썸네일 이미지";
+            helpImage.innerText = "리스트에 표시될 미리보기 이미지를 업로드하세요.";
+        }
+    }
+
+    function setupInputs() {
+        // 이미지 처리
+        document.getElementById('inputThumb').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('thumbLabel').innerText = file.name;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                currentThumbBase64 = ev.target.result;
+                const img = document.getElementById('thumbPreview');
+                img.src = currentThumbBase64;
+                img.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 데이터 파일 (SVG/JSON) 처리
+        document.getElementById('inputJson').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('jsonLabel').innerText = file.name;
+            const reader = new FileReader();
+            
+            reader.onload = (ev) => {
+                const content = ev.target.result;
+                
+                if (file.name.toLowerCase().endsWith('.svg')) {
+                    parseSvgToFabricJson(content).then(json => {
+                        currentDataPayload = json;
+                        showStatus(`SVG 변환 완료 (${file.size} bytes)`);
+                    }).catch(err => {
+                        console.error(err);
+                        alert("SVG 변환 실패: " + err.message);
+                    });
+                } else {
+                    try {
+                        currentDataPayload = JSON.parse(content);
+                        showStatus(`JSON 파싱 완료 (${file.size} bytes)`);
+                    } catch (err) {
+                        alert("올바른 JSON 형식이 아닙니다.");
+                        currentDataPayload = null;
+                    }
+                }
+            };
+            
+            reader.readAsText(file);
+        });
+    }
+
+    function showStatus(msg) {
+        const el = document.getElementById('jsonInfo');
+        el.style.display = 'block';
+        el.innerText = msg;
+    }
+
+    function parseSvgToFabricJson(svgString) {
+        return new Promise((resolve, reject) => {
+            fabric.loadSVGFromString(svgString, (objects, options) => {
+                if (!objects || objects.length === 0) {
+                    reject(new Error("SVG 내에 객체가 없습니다."));
+                    return;
+                }
+                const group = fabric.util.groupSVGElements(objects, options);
+                // 기본 좌표 조정
+                group.set({ left: 100, top: 100 });
+
+                const jsonOutput = {
+                    version: "5.3.0",
+                    objects: [ group.toObject() ]
+                };
+
+                resolve(jsonOutput);
+            });
+        });
+    }
+
+    function wrapImageToJson(base64Str) {
+        return {
+            version: "5.3.0",
+            objects: [
+                {
+                    type: "image",
+                    version: "5.3.0",
+                    originX: "center",
+                    originY: "center",
+                    left: 500,
+                    top: 500,
+                    src: base64Str
+                }
+            ]
+        };
+    }
+
+    // 템플릿 목록 불러오기
+    window.loadTemplates = async () => {
+        const grid = document.getElementById('templateGrid');
+        const category = document.getElementById('filterCategory').value;
+        
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">로딩중...</div>';
+
+        if (!sb) {
+            grid.innerHTML = '<div style="text-align:center; color:red;">config.js 연결 실패</div>';
+            return;
+        }
+
+        let query = sb.from('library').select('id, category, tags, thumb_url, created_at').order('created_at', { ascending: false });
+        if (category !== 'all') query = query.eq('category', category);
+
+        const { data, error } = await query;
+
+        if (error) {
+            alert('로드 실패: ' + error.message);
+            return;
+        }
+
+        grid.innerHTML = '';
+        if (!data || data.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">등록된 템플릿이 없습니다.</div>';
+            return;
+        }
+
+        data.forEach(item => {
+            const date = new Date(item.created_at).toLocaleDateString();
+            const tags = item.tags || '-';
+            const thumb = item.thumb_url || 'https://via.placeholder.com/300?text=No+Image';
+            
+            let catName = item.category;
+            if(catName === 'vector') catName = '벡터 배경';
+            if(catName === 'photo-bg') catName = '사진 배경';
+            if(catName === 'transparent-graphic') catName = 'AI 투명';
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${item.id}`; // DOM ID 추가 (삭제 시 식별용)
+            
+            // 이미지 에러 핸들링 추가 (무한 루프 방지)
+            card.innerHTML = `
+                <img src="${thumb}" class="card-img" loading="lazy" 
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300?text=Image+Error'; this.style.opacity='0.5';">
+                <div class="card-body">
+                    <span class="card-badge">${catName}</span>
+                    <div class="card-tags"><i class="fa-solid fa-tag"></i> ${tags}</div>
+                    <div style="font-size:11px; color:#999;">${date}</div>
+                    <div class="card-actions">
+                        <span style="font-size:11px; color:#aaa;">ID: ${item.id}</span>
+                        <button class="btn btn-danger" onclick="deleteTemplate('${item.id}')">
+                            <i class="fa-solid fa-trash"></i> 삭제
+                        </button>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    };
+
+    window.uploadTemplate = async () => {
+        if (!sb) return alert("DB 연결 실패");
+        if (!currentThumbBase64) return alert("이미지를 선택해주세요.");
+
+        const category = document.getElementById('inputCategory').value;
+        const tags = document.getElementById('inputTags').value || "template";
+
+        let finalData = null;
+
+        if (isPhotoType) {
+            finalData = wrapImageToJson(currentThumbBase64);
+        } else {
+            if (!currentDataPayload) return alert("데이터 파일(SVG/JSON)을 선택해주세요.");
+            finalData = currentDataPayload;
+        }
+
+        if(!confirm(`[${category}] 카테고리에 등록하시겠습니까?`)) return;
+
+        showLoading(true);
+
+        try {
+            const { error } = await sb.from('library').insert([{
+                category: category,
+                tags: tags,
+                thumb_url: currentThumbBase64,
+                data_url: finalData,
+                created_at: new Date()
+            }]);
+
+            if (error) throw error;
+
+            alert("성공적으로 등록되었습니다!");
+            location.reload(); 
+        } catch (e) {
+            console.error(e);
+            alert("등록 실패: " + e.message);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    // 템플릿 삭제 함수 (DOM 즉시 제거 적용)
+    window.deleteTemplate = async (id) => {
+        if (!confirm("정말 삭제하시겠습니까? (복구 불가)")) return;
+        
+        showLoading(true);
+        
+        try {
+            const { error } = await sb.from('library').delete().eq('id', id);
+
+            if (error) {
+                console.error("삭제 에러:", error);
+                throw new Error(error.message);
+            }
+
+            // DB 삭제 성공 시, 화면에서도 카드 제거
+            const targetCard = document.getElementById(`card-${id}`);
+            if (targetCard) {
+                targetCard.remove();
+            }
+
+        } catch (e) {
+            alert("삭제 실패: " + e.message);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    function showLoading(show) {
+        document.getElementById('loading').style.display = show ? 'flex' : 'none';
+    }
+</script>
+</body>
+</html>

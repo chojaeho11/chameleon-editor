@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>카멜레온 캔바 : Expert Studio (Full Version)</title>
+<title>카멜레온 캔바 : Expert Studio</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/plugins/svg.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/potrace@2.1.8/potrace.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/GmarketSans/build/GmarketSans.css">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Do+Hyeon&family=Jua&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root { 
+        --primary: #6366f1; --primary-dark: #4f46e5;
+        --text-main: #111827; --text-sub: #4b5563;
+        --bg-sidebar: #ffffff; 
+        --bg-stage: #2b2b2b; /* 포토샵 스타일 진한 회색 배경 */
+        --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; outline: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        margin: 0; height: 100vh; height: 100dvh; overflow: hidden; 
+        background: var(--bg-sidebar); 
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Nanum Gothic', sans-serif; 
+        color: var(--text-main);
+    }
+    
+    button, input, textarea, select { font-family: inherit; }
+    .canvas-container { margin: auto !important; }
+
+    #loading { position:fixed; inset:0; background:rgba(255,255,255,0.95); z-index:20000; display:none; justify-content:center; align-items:center; flex-direction:column; backdrop-filter: blur(5px); }
+    .loading-spin { width:50px; height:50px; border:5px solid #e5e7eb; border-top:5px solid var(--primary); border-radius:50%; animation:spin 1s infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* =========================================
+       [시작 화면 스타일]
+       ========================================= */
+    #startScreen { 
+        position: fixed; inset: 0; 
+        background: #fff; 
+        z-index: 9999; 
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+        overflow-y: auto; 
+        padding-bottom: 80px;
+    }
+    /* =========================================
+    [우클릭 메뉴 스타일 추가]
+    ========================================= */
+#contextMenu {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed;
+    z-index: 99999;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    padding: 6px 0;
+    width: 160px;
+    font-size: 13px;
+    color: #333;
+}
+.ctx-item {
+    padding: 8px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.1s;
+}
+.ctx-item:hover {
+    background: #f3f4f6;
+    color: var(--primary);
+}
+.ctx-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 5px 0;
+}
+    /* 1. 히어로 섹션 */
+    .hero-section {
+        width: 100%;
+        padding: 50px 20px 30px;
+        text-align: center;
+        background: #fff;
+        margin-bottom: 10px;
+    }
+    .hero-title { 
+        font-size: 54px; 
+        font-weight: 900; color: #111; 
+        letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 15px; 
+    }
+    .hero-title span { 
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-desc { 
+        font-size: 18px; color: #6b7280; font-weight: 500; 
+        background: #f3f4f6; padding: 10px 24px; border-radius: 30px; display: inline-block; 
+    }
+
+    /* 2. 제품 선택 (Quick Menu) - 8열 (2줄) */
+    .quick-menu-wrapper {
+        width: 98%;
+        max-width: 1200px;
+        margin-bottom: 40px;
+        padding: 0 10px;
+    }
+    .quick-menu-label {
+        font-size: 15px; font-weight: 800; color: #374151;
+        margin-bottom: 15px; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    
+    .quick-menu-track {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr); 
+        gap: 12px; 
+        justify-content: center;
+    }
+
+    .quick-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%; 
+        cursor: pointer;
+        transition: transform 0.2s;
+        margin-bottom: 5px;
+        background: #f9fafb;
+        border-radius: 16px;
+        padding: 12px 5px; 
+        border: 1px solid transparent;
+    }
+    .quick-item:hover { 
+        transform: translateY(-5px); 
+        background: #fff; 
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    }
+    
+    .quick-icon {
+        width: 60px; height: 60px; 
+        background: #1f2937; 
+        border-radius: 18px; 
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        font-size: 26px; 
+        color: white;
+        margin-bottom: 8px;
+        transition: all 0.2s;
+    }
+    .quick-item:hover .quick-icon {
+        background: var(--primary);
+        box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4);
+    }
+    .quick-text {
+        font-size: 13px; 
+        color: #374151;
+        font-weight: 700;
+        text-align: center;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+    }
+
+    /* 3. 템플릿 갤러리 */
+    .gallery-section { width: 96%; max-width: 1600px; margin-top: 10px; }
+    .gallery-header { 
+        text-align: center; margin-bottom: 30px; 
+        font-size: 22px; font-weight: 800; color: #111; 
+        display: flex; align-items: center; justify-content: center; gap: 15px;
+    }
+    .gallery-header::before, .gallery-header::after { content: ''; height: 2px; width: 40px; background: #e5e7eb; }
+    
+    .template-grid-start {
+        column-count: 5; 
+        column-gap: 20px;
+        width: 100%;
+    }
+    .tpl-card-start {
+        display: inline-block; 
+        width: 100%;
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 15px; 
+        break-inside: avoid; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+    }
+    .tpl-card-start:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
+        border-color: var(--primary);
+        z-index: 10;
+    }
+    .tpl-card-img { 
+        width: 100%; 
+        height: auto; 
+        display: block; 
+        background: #f9fafb;
+    }
+    .tpl-card-overlay {
+        position: absolute; inset: 0;
+        background: rgba(0,0,0,0.05);
+        opacity: 0; transition: 0.2s;
+        pointer-events: none;
+    }
+    .tpl-card-start:hover .tpl-card-overlay { opacity: 1; }
+
+    /* 메인 에디터 레이아웃 */
+    #mainEditor { display: none; width: 100vw; height: 100vh; height: 100dvh; flex-direction: column; }
+    .topbar { height: 60px; display: flex; align-items: center; padding: 0 25px; background: #fff; border-bottom: 1px solid var(--border); gap: 10px; z-index: 100; justify-content: space-between; overflow-x: auto; white-space: nowrap; }
+    .topbar::-webkit-scrollbar { display: none; }
+    .brand { font-weight: 800; font-size: 22px; color: var(--primary); cursor: pointer; flex-shrink: 0; }
+    .template-tabs { display: flex; gap: 5px; }
+    .tpl-tab { padding: 8px 16px; border-radius: 8px; background: #f8fafc; color: var(--text-sub); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: 0.2s; white-space: nowrap; }
+    .tpl-tab:hover { background: #eff6ff; color: var(--primary); }
+    #btnMobileTemplateOpen { display: none; padding: 8px 12px; border-radius: 8px; background: #eff6ff; color: var(--primary); font-size: 13px; font-weight: 700; border: 1px solid var(--primary); cursor: pointer; }
+
+    .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; border: 1px solid transparent; white-space: nowrap; flex-shrink: 0; }
+    .btn.primary { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2); }
+    .btn:hover:not(.primary) { background: #f1f5f9; }
+    .btn-save-top { background: #741e9c; color: white; display: flex; align-items: center; gap: 6px; }
+    #btnOpenSaveModal { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; font-weight: 800; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
+
+    .editor-wrap { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 60px); width: 100vw; overflow: hidden; }
+    .side { background: #fff; border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; z-index: 20; display: flex; flex-direction: column; gap: 15px; }
+    .stage { background: var(--bg-stage); width: 100%; height: 100%; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; touch-action: none; }
+
+    #wallHeightControls { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); padding: 8px 15px; border-radius: 50px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12); display: none; align-items: center; gap: 12px; z-index: 40; border: 1px solid rgba(0,0,0,0.1); white-space: nowrap; }
+    .wall-label { font-size: 13px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px; }
+    .height-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .height-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .section-title { font-size: 13px; font-weight: 700; color: #333; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .btn-round { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: #fff; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-main); }
+    .btn-round.primary { background: var(--primary); color: #fff; border: none; }
+    .btn-round.ai-red { background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%); color: white; border: none; }
+    .shape-panel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .shape-btn { height: 40px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: #fff; font-size: 16px; color: #64748b; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .shape-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+    .upload-box { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: #f8fafc; color: #64748b; font-size: 13px; display: flex; flex-direction: column; align-items: center; transition: 0.2s; }
+    .upload-box:hover { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+
+    .right-stack { position: absolute; right: 20px; top: 20px; bottom: 20px; width: 260px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 50; pointer-events: auto; }
+    .right-stack::-webkit-scrollbar { width: 6px; }
+    .right-stack::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+    .panel-box { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 15px; box-shadow: var(--shadow); border: 2px solid transparent; flex-shrink: 0; }
+    .tool-btn { flex: 1; min-width: 0; padding: 8px; margin-top: 5px; border-radius: 8px; border: 1px solid #eee; background: #fff; color: #333; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .tool-btn:hover { border-color: var(--primary); color: var(--primary); background: #f8fafc; }
+    .ai-tool-stack { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+    #btnCutout { background: #fff9c4; color: #5d4037; border: 1px solid #fbc02d; }
+    #btnCutout:hover { background: #fff59d; transform: translateY(-1px); }
+    .align-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
+    .align-btn { padding: 8px 0; border: 1px solid #eee; border-radius: 8px; background: #fff; cursor: pointer; color: #555; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 14px; }
+    .align-btn:hover { background: #f8fafc; color: var(--primary); border-color: var(--primary); }
+    .color-group { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; border: 1px solid #e2e8f0; padding: 5px 10px; border-radius: 8px; font-size: 12px; color: #666; }
+    .color-picker { -webkit-appearance: none; appearance: none; width: 32px; height: 32px; border: 1px solid #e2e8f0; background: none; cursor: pointer; padding: 0; border-radius: 50%; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.2s; box-sizing: border-box; }
+    .color-picker::-webkit-color-swatch-wrapper { padding: 0; border: none; }
+    .color-picker::-webkit-color-swatch { border: none; border-radius: 50%; padding: 0; }
+    .color-picker:hover { transform: scale(1.1); }
+    .bottom-dock { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: #fff; padding: 8px 20px; border-radius: 50px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 15px; z-index: 100; white-space: nowrap; }
+    .zoom-btn { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; color: #555; background: #f1f5f9; border:none; }
+    .zoom-btn:hover { background: #e2e8f0; color: #000; }
+    .divider { width: 1px; height: 16px; background: #ddd; }
+    #guideToggle.active { background: var(--primary); color: white; }
+    .help-text { font-size: 12px; color: #666; margin-left: 10px; font-weight: 500; white-space: nowrap; }
+
+    /* 모달 및 기타 */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; }
+    .modal-box { background: #fff; padding: 30px; border-radius: 20px; width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+    .ai-input-pretty { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; background: #f9f9f9; margin-bottom: 10px; outline: none; }
+    .ai-input-pretty:focus { border-color: var(--primary); background: #fff; }
+    .ai-drawer { position: fixed; top: 60px; right: 0; width: 360px; height: calc(100vh - 60px); background: #fff; border-left: 1px solid #e2e8f0; padding: 25px; z-index: 9000; transform: translateX(100%); transition: 0.3s; box-shadow: -5px 0 15px rgba(0,0,0,0.05); overflow-y: auto; }
+    .ai-drawer.open { transform: translateX(0); }
+    #templateOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.6); backdrop-filter: blur(15px); z-index: 9999; display: none; justify-content: center; align-items: center; }
+    .tpl-modal-box { width: 90%; max-width: 1200px; height: 85%; background: #fff; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.5); display: flex; overflow: hidden; }
+    .tpl-sidebar { width: 240px; background: #f8fafc; border-right: 1px solid #e2e8f0; padding: 30px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .tpl-cate-btn { text-align: left; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s; border: none; background: transparent; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .tpl-cate-btn:hover { background: #e2e8f0; color: var(--text-main); }
+    .tpl-cate-btn.active { background: #fff; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .tpl-content { flex: 1; display: flex; flex-direction: column; background: #fff; }
+    .tpl-grid { display: block !important; column-count: 3 !important; column-gap: 20px; width: 100%; padding: 20px; box-sizing: border-box; height: auto !important; flex: 1; overflow-y: auto !important; overflow-x: hidden; scrollbar-width: thin; background-color: #f1f5f9; }
+    .tpl-item { position: relative; background-color: #ffffff; border-radius: 16px; overflow: hidden; cursor: pointer; border: none !important; padding: 0 !important; margin-bottom: 20px; break-inside: avoid; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .tpl-item-img { width: 100%; height: auto !important; object-fit: contain; display: block; background-color: #fff; margin: 0 !important; padding: 0 !important; }
+    .tpl-item.selected { box-shadow: 0 0 0 3px var(--primary); }
+    .tpl-item div:not(:has(img)) { display: none !important; }
+    #cartPage { z-index: 120000; padding-top: 40px; }
+    #cartListArea { overflow-y: auto; max-height: 70vh; }
+    .cart-item { margin-bottom: 15px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; width: 100%; }
+    .cal-day-header { font-weight: 800; text-align: center; padding: 5px 0; color: var(--primary); font-size: 14px; }
+    .cal-day { height: 45px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; border-radius: 8px; background: #f8fafc; transition: 0.2s; }
+    .cal-day:hover:not(.disabled) { background: #eff6ff; color: var(--primary); font-weight: bold; }
+    .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; background: #fff; }
+    .cal-day.selected { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(99,102,241,0.3); }
+
+    /* 모바일 최적화 */
+    /* =========================================
+       [모바일 반응형 수정 - 장바구니 멈춤 해결]
+       ========================================= */
+    @media (max-width: 768px) {
+        /* 1. 상단바 최적화 */
+        .topbar { height: 50px; padding: 0 10px; gap: 5px; overflow-x: auto; justify-content: space-between; }
+        .template-tabs .tpl-tab { display: none; }
+        #btnMobileTemplateOpen { display: inline-flex; align-items:center; height: 34px; white-space: nowrap; }
+        .btn { padding: 0 10px; height: 34px; font-size: 13px; }
+        #btnViewCart { font-size: 0; } 
+        #btnViewCart::before { content: '🛒'; font-size: 16px; } /* 아이콘만 표시 */
+        .btn-save-top span { display: none; }
+
+        /* 2. 에디터 레이아웃: 세로 배치 */
+        #mainEditor { height: 100dvh; display: flex; flex-direction: column; }
+        .editor-wrap { display: flex; flex-direction: column; height: calc(100dvh - 50px); overflow: hidden; }
+        
+        /* 캔버스 (상단 고정 55%) */
+        .stage { order: 1; height: 55%; width: 100%; border-bottom: 1px solid #ddd; }
+        .bottom-dock { bottom: 10px; padding: 5px 15px; transform: translateX(-50%) scale(0.9); width: max-content; }
+        #wallHeightControls { top: 10px; }
+
+        /* 도구 패널 (하단 배치) */
+        .side { order: 2; width: 100%; height: 45%; padding: 15px; overflow-y: auto; border-right: none; }
+        .right-stack { display: none; } /* 모바일에서는 속성창 잠시 숨김 (공간 부족 시) */
+
+        /* 3. [핵심 수정] 장바구니 모바일 레이아웃 */
+        #cartPage { 
+            /* display: flex !important;  <-- 이 코드가 멈춤의 원인이었습니다. 삭제함. */
+            padding-top: 50px !important; 
+            background: #f1f5f9;
+            flex-direction: column;
+        }
+        
+        /* 장바구니 내부 컨테이너 */
+        #cartPage > div { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%; 
+            padding: 0 10px; 
+        }
+
+        /* 목록 영역 (스크롤 가능, 위쪽 차지) */
+        #cartListArea { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding-bottom: 20px; 
+            order: 1; /* 목록이 먼저 */
+        }
+
+        /* 결제 박스 (하단 고정, 아래쪽 차지) */
+        #cartPage > div > div:last-child {
+            order: 2; /* 결제가 나중 */
+            background: #fff;
+            padding: 15px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            border-top: 1px solid #eee;
+            z-index: 10;
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        /* 장바구니 아이템 디자인 (세로형) */
+        .cart-item { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            padding: 15px; 
+            background: #fff; 
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        .cart-item > div { width: 100%; text-align: left; } /* 강제 정렬 */
+    }
+    /* =========================================
+       [푸터/회사정보 스타일 추가]
+       ========================================= */
+    .footer-wrap {
+        width: 100%;
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        padding: 40px 20px;
+        margin-top: 50px;
+        color: #4b5563;
+        font-size: 13px;
+    }
+    .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        justify-content: space-between;
+    }
+    .foot-menu ul {
+        list-style: none; padding: 0; margin: 0 0 20px 0; display: flex; gap: 20px;
+    }
+    .foot-menu a { text-decoration: none; color: #374151; font-weight: 600; }
+    .foot-menu a:hover { color: var(--primary); }
+    
+    .foot-info dl { display: flex; flex-wrap: wrap; margin: 5px 0; gap: 5px; }
+    .foot-info dt { font-weight: 700; color: #111; }
+    .foot-info dd { color: #666; margin: 0; margin-right: 10px; }
+    .copyright { margin-top: 15px; color: #9ca3af; font-size: 12px; }
+    
+    .cs-center h3 { margin: 0 0 10px 0; font-size: 16px; color: #111; }
+    .cs-center strong { font-size: 24px; color: var(--primary); display: block; margin-bottom: 5px; }
+    .cs-center p { margin: 0; line-height: 1.5; color: #666; }
+
+    @media (max-width: 768px) {
+        .footer-inner { flex-direction: column; gap: 20px; }
+        .foot-menu ul { flex-wrap: wrap; gap: 10px; }
+    }
+</style>
+</head>
+<script>
+    // [장바구니 렌더링 함수]
+    // 이 함수가 있어야 장바구니 내용과 옵션창이 올바르게 보입니다.
+    window.renderCartList = function() {
+        const cartArea = document.getElementById('cartListArea');
+        if(!cartArea) return;
+        
+        // 장바구니 데이터 (없으면 테스트 데이터 사용)
+        const items = window.cartItems || [
+            {productName: 'A3 기본 포스터 (예시)', price: 15000, qty: 1, thumb: 'https://via.placeholder.com/150'}
+        ]; 
+        
+        cartArea.innerHTML = ''; // 초기화
+
+        // 1. 장바구니 비었을 때
+        if (items.length === 0) {
+            cartArea.innerHTML = `
+                <div style="text-align:center; padding:50px; color:#999;">
+                    <i class="fa-solid fa-cart-shopping" style="font-size:48px; margin-bottom:15px;"></i>
+                    <p>장바구니가 비어있습니다.</p>
+                </div>`;
+            updateSummary(0);
+            return;
+        }
+
+        let total = 0;
+
+        // 2. 아이템 반복 생성
+        items.forEach((item, index) => {
+            const itemPrice = (item.price || 0) * (item.qty || 1);
+            total += itemPrice;
+
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            // 모바일에서 잘 보이도록 스타일(Flex Column) 적용
+            div.innerHTML = `
+                <div style="display:flex; gap:15px; align-items:center;">
+                    <img src="${item.thumb}" style="width:80px; height:80px; object-fit:cover; border-radius:8px; border:1px solid #eee;">
+                    <div style="flex:1;">
+                        <div style="font-weight:bold; font-size:16px;">${item.productName}</div>
+                        <div style="color:#6366f1; font-weight:bold; margin-top:4px;">${itemPrice.toLocaleString()}원</div>
+                    </div>
+                </div>
+                
+                <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-top:10px; border:1px solid #eee;">
+                    <div style="font-size:13px; color:#ef4444; font-weight:bold; margin-bottom:5px;">
+                        <i class="fa-solid fa-check"></i> 필수 옵션을 선택해주세요
+                    </div>
+                    <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; background:#fff;">
+                        <option>기본 소재</option>
+                        <option>고급 포맥스 (+5,000원)</option>
+                    </select>
+                    <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
+                        <option>후가공 없음</option>
+                        <option>코팅 추가 (+2,000원)</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:6px; background:#fff;">
+                        <button onclick="updateQty(${index}, -1)" style="padding:5px 12px; border:none; background:none;">-</button>
+                        <span style="font-weight:bold; padding:0 5px;">${item.qty}</span>
+                        <button onclick="updateQty(${index}, 1)" style="padding:5px 12px; border:none; background:none;">+</button>
+                    </div>
+                    <button onclick="removeCartItem(${index})" style="padding:6px 12px; border:1px solid #ef4444; color:#ef4444; background:#fff; border-radius:6px; font-size:12px;">삭제</button>
+                </div>
+            `;
+            cartArea.appendChild(div);
+        });
+
+        updateSummary(total);
+    };
+
+    function updateSummary(total) {
+        const totalElem = document.getElementById('summaryTotal');
+        if(totalElem) totalElem.innerText = total.toLocaleString() + '원';
+        
+        const countElem = document.getElementById('cartCount');
+        if(countElem) countElem.innerText = window.cartItems ? window.cartItems.length : 0;
+    }
+
+    // 더미 함수들 (실제 로직 연결 필요)
+    window.updateQty = (i, d) => { console.log('수량변경', i, d); };
+    window.removeCartItem = (i) => { console.log('삭제', i); document.getElementById('cartPage').style.display='none'; };
+</script>
+<body>
+<div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;">로딩 중입니다...</p></div>
+
+<div id="contextMenu">
+    <div class="ctx-item" id="ctxUndo"><i class="fa-solid fa-rotate-left"></i> 실행 취소</div>
+    <div class="ctx-item" id="ctxRedo"><i class="fa-solid fa-rotate-right"></i> 다시 실행</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" id="ctxCopy"><i class="fa-regular fa-copy"></i> 복사하기</div>
+    <div class="ctx-item" id="ctxPaste"><i class="fa-regular fa-paste"></i> 붙여넣기</div>
+    <div class="ctx-item" id="ctxDelete" style="color:#ef4444;"><i class="fa-solid fa-trash"></i> 삭제하기</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" id="ctxFront"><i class="fa-solid fa-arrow-up-from-bracket"></i> 맨 앞으로</div>
+    <div class="ctx-item" id="ctxBack"><i class="fa-solid fa-arrow-down-from-bracket"></i> 맨 뒤로</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" id="ctxLock"><i class="fa-solid fa-lock"></i> 잠금 (Lock)</div>
+</div>
+
+<div id="startScreen">
+    <div class="hero-section">
+        <h1 class="hero-title">행사 준비하세요? <br><span>카멜레온</span>과 함께해요.</h1>
+        <p class="hero-desc">행사 팝업스토어 기획자를 위한 도매 쇼핑몰, 강력한 무료에디터, 허니콤보드 판매 1위.</p>
+    </div>
+
+    <div class="quick-menu-wrapper">
+        <div class="quick-menu-label">맞춤형 디자인 시작하기</div>
+        <div class="quick-menu-track" id="quickMenuContainer">
+            </div>
+    </div>
+    
+    <div class="gallery-section">
+        <div class="gallery-header">✨ 인기 템플릿 살펴보기</div>
+        <div id="startTemplateGrid" class="template-grid-start"></div>
+    </div>
+    <div class="footer-wrap">
+        <div class="footer-inner">
+            <div class="foot-left">
+                <div class="foot-menu">
+                    <ul>
+                        <li><a href="#">회사소개</a></li>
+                        <li><a href="#">공지사항</a></li>
+                        <li><a href="#">이용약관</a></li>
+                        <li><a href="#"><strong>개인정보처리방침</strong></a></li>
+                    </ul>
+                </div>
+                <div class="foot-info">
+                    <dl>
+                        <dt>상호명 :</dt><dd>(주)카멜레온프린팅</dd>
+                        <dt>대표 :</dt><dd>조재호</dd>
+                    </dl>
+                    <dl>
+                        <dt>주소 :</dt><dd>경기도 화성시 우정읍 한말길 72-2</dd>
+                    </dl>
+                    <dl>
+                        <dt>사업자등록번호 :</dt><dd>470-81-02808</dd>
+                        <dt>통신판매업신고번호 :</dt><dd>2025-화성우정-0033</dd>
+                    </dl>
+                    <dl>
+                        <dt>개인정보관리자 :</dt><dd>변지웅</dd>
+                    </dl>
+                    <p class="copyright">Copyright © <strong>Chameleon Canvas</strong>. all rights reserved.</p>
+                </div>
+            </div>
+
+            <div class="cs-center">
+                <h3>고객센터 (CS CENTER)</h3>
+                <strong>031-366-1984</strong>
+                <p>
+                    평일 09:00 ~ 18:00 <br>
+                    점심 12:00 ~ 13:00 <br>
+                    <span>* 주말 및 공휴일 휴무</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div id="mainEditor">
+    <div class="topbar">
+        <div class="brand" onclick="location.reload()"><i class="fa-solid fa-palette"></i> Chameleon</div>
+        <div class="template-tabs">
+            <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'">🎨 템플릿</button>
+            <!-- <button class="tpl-tab" data-tpl="text">허니콤보드전용</button> -->
+            <button class="tpl-tab" data-tpl="vector">심플백터배경</button>
+            <button class="tpl-tab" data-tpl="graphic">백터탬플릿</button>
+            <button class="tpl-tab" data-tpl="photo-bg">사진템플릿[A2이하까지]</button>
+            <button class="tpl-tab" data-tpl="transparent-graphic">패브릭패턴</button>
+        </div> 
+        <div style="flex:1;"></div>
+        <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'" style="margin-right:5px;">🛒 장바구니</button>
+        <button class="btn" id="btnMyLibrary" style="display:none; margin-right:5px;">📂 보관함</button>
+        <button class="btn primary" id="btnOrderTop">🚀 주문하기</button>
+        <button class="btn btn-save-top" id="btnPNG"><i class="fa-solid fa-download"></i> <span>이미지 저장</span></button>
+        <button class="btn" id="btnLoginBtn">로그인</button>
+    </div>
+
+    <div id="wallHeightControls">
+        <div class="wall-label"><i class="fa-solid fa-ruler-vertical"></i> 벽 높이</div>
+        <button class="height-btn active" onclick="window.setWallHeight(2200, this)">220cm</button>
+        <button class="height-btn" onclick="window.setWallHeight(2400, this)">240cm</button>
+        <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
+    </div>
+
+    <div class="editor-wrap">
+        <div class="side" id="toolsPanel">
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <button id="btnChangeSize" class="btn-round" style="flex:1;"><i class="fa-solid fa-ruler-combined"></i> 사이즈 변경</button>
+                <button id="btnRotateCanvas" class="btn-round" style="flex:1;"><i class="fa-solid fa-rotate"></i> 캔버스 회전</button>
+            </div>
+            <div id="sizeTogglePanel" style="display:none; grid-template-columns: 1fr; gap:5px; margin-bottom:15px; padding:10px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;"></div>
+            
+            <div class="section-title">CANVAS TOOLS</div>
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <button id="btnFitScreen" class="btn-round" title="화면에 맞추기"><i class="fa-solid fa-compress"></i> 화면 맞춤</button>
+                <button id="btnLockSelection" class="btn-round" onclick="window.toggleLockSelection()"><i class="fa-solid fa-lock"></i> 선택 잠금</button>
+            </div>
+
+            <div class="section-title">AI TOOLS</div>
+            <button class="btn-round ai-red" id="btnAIBox"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 이미지 생성</button>
+            <button class="btn-round primary" id="btnRegisterTemplate" style="margin-top:5px; display:none;">👑 디자인 등록</button>
+            <button class="btn-round" id="btnOpenSaveModal" style="margin-top:5px;">💾 디자인 저장</button>
+            
+            <div class="section-title">BASIC TOOLS</div>
+            <button class="btn-round" id="btnAddText">+ 텍스트 추가</button>
+            <button class="btn-round" id="btnFontSelect" style="margin-top:5px;">🅰️ 폰트 변경</button>
+            <div class="color-group"><span>면 색상</span><input id="fillColor" type="color" class="color-picker" value="#000000"></div>
+            <div class="color-group" style="margin-top:5px;"><span>선 색상</span><input id="strokeColor" type="color" class="color-picker" value="#000000"></div>
+            
+            <div class="section-title">SHAPES</div>
+            <div class="shape-panel">
+                <button class="shape-btn" data-shape="rect">■</button>
+                <button class="shape-btn" data-shape="circle">●</button>
+                <button class="shape-btn" data-shape="triangle">▲</button>
+                <button class="shape-btn" data-shape="star">★</button>
+                <button class="shape-btn" data-shape="heart">♥</button>
+                <button class="shape-btn" data-shape="arrow">➡</button>
+                <button class="shape-btn" data-shape="round">▢</button>
+                <button class="shape-btn" data-shape="line">━</button>
+            </div>
+            
+            <div class="section-title">UPLOAD</div>
+            <label class="upload-box" for="imgUpload"><span style="font-size:24px; margin-bottom:5px;"><i class="fa-solid fa-cloud-arrow-up"></i></span>이미지 / PDF 업로드</label>
+            <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
+        </div>
+        
+        <div class="stage" id="stage">
+            <div class="bottom-dock">
+                <button id="btnZoomOut" class="zoom-btn"><i class="fa-solid fa-minus"></i></button>
+                <button id="btnZoomIn" class="zoom-btn"><i class="fa-solid fa-plus"></i></button>
+                <div class="divider"></div>
+                <button id="guideToggle" class="zoom-btn" style="width:auto; padding:0 15px; border-radius:20px; font-size:12px;">가이드 켜기</button>
+                <span class="help-text">Space: 화면이동 / 휠: 크기조절 / 방향키: 미세이동</span>
+            </div>
+            
+            <div class="right-stack" id="rightStackPanel">
+                <div class="panel-box" id="panelEdit">
+                    <div class="section-title" style="margin-top:0;">편집 & 레이어</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
+                        <button class="tool-btn" id="btnUndo"><i class="fa-solid fa-rotate-left"></i> 실행취소</button>
+                        <button class="tool-btn" id="btnRedo"><i class="fa-solid fa-rotate-right"></i> 다시실행</button>
+                        <button class="tool-btn" id="btnCopy"><i class="fa-regular fa-copy"></i> 복사</button>
+                        <button class="tool-btn" id="btnPaste"><i class="fa-regular fa-paste"></i> 붙여넣기</button>
+                    </div>
+                    
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <button class="tool-btn" id="btnRotateLeft15"><i class="fa-solid fa-rotate-left"></i> -15°</button>
+                        <button class="tool-btn" id="btnRotateRight15"><i class="fa-solid fa-rotate-right"></i> +15°</button>
+                    </div>
+
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <button class="tool-btn" id="btnFront">맨앞</button>
+                        <button class="tool-btn" id="btnBack">맨뒤</button>
+                        <button class="tool-btn" id="btnDel" style="color:red;">삭제</button>
+                    </div>
+                    
+                    <div class="section-title" style="margin-top:10px;">객체 정렬</div>
+                    <div class="align-grid">
+                        <button class="align-btn" id="btnAlignLeft"><i class="fa-solid fa-align-left"></i></button>
+                        <button class="align-btn" id="btnAlignCenterH"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>
+                        <button class="align-btn" id="btnAlignRight"><i class="fa-solid fa-align-right"></i></button>
+                        <button class="align-btn" id="btnAlignTop"><i class="fa-solid fa-align-left" style="transform:rotate(90deg)"></i></button>
+                        <button class="align-btn" id="btnAlignMiddle"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>
+                        <button class="align-btn" id="btnAlignBottom"><i class="fa-solid fa-align-right" style="transform:rotate(90deg)"></i></button>
+                    </div>
+                    <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px;">🎯 정중앙 정렬</button>
+                    <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px;">🖼 배경으로 꽉 채우기</button>
+                </div>
+                
+                <div class="panel-box" id="panelText">
+                    <div class="section-title" style="margin-top:0;">텍스트 설정</div>
+                    <div style="display:flex; gap:5px; margin-bottom:10px;">
+                        <button class="tool-btn" id="btnAlignLeftText"><i class="fa-solid fa-align-left"></i></button>
+                        <button class="tool-btn" id="btnAlignCenterText"><i class="fa-solid fa-align-center"></i></button>
+                        <button class="tool-btn" id="btnAlignRightText"><i class="fa-solid fa-align-right"></i></button>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center; margin-bottom:5px;">
+                        <span style="font-size:12px; color:#666;">크기</span><input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center; margin-bottom:5px;">
+                        <span style="font-size:12px; color:#666;">자간</span><input type="range" id="textCharSpacing" min="-100" max="500" value="50" style="width:100%;">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center;">
+                        <span style="font-size:12px; color:#666;">행간</span><input type="range" id="textLineHeight" min="0.5" max="3.0" step="0.1" value="1.2" style="width:100%;">
+                    </div>
+                </div>
+                
+                <div class="panel-box">
+                    <div class="section-title" style="margin-top:0; color:#333;">AI 이미지 도구</div>
+                    <div class="ai-tool-stack">
+                        <button class="tool-btn" id="btnCutout">✂️ 배경 제거</button>
+                        <button class="tool-btn" id="btnEnhance">✨ 밝게 보정</button>
+                        <button class="tool-btn" id="btnOutline">🔲 글자 테두리</button>
+                    </div>
+                    <div class="section-title">선 설정</div>
+                    <input type="range" id="globalStroke" min="0" max="30" value="2" style="width:100%;">
+                    
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <button class="tool-btn" id="btnStrokeMiter" title="각지게"><i class="fa-solid fa-square"></i> 각지게</button>
+                        <button class="tool-btn" id="btnStrokeRound" title="부드럽게"><i class="fa-solid fa-circle"></i> 둥글게</button>
+                    </div>
+
+                    <div class="section-title">투명도</div><input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
+                </div>
+            </div>
+            <canvas id="designCanvas"></canvas>
+        </div>
+    </div>
+</div>
+<div id="sizeSelectModal" class="modal-bg" style="z-index: 15000;">
+    <div class="modal-box" style="width: 800px; max-width: 95%;">
+        <h3>📏 어떤 크기로 만드시겠습니까?</h3>
+        <p style="margin-bottom:20px; color:#666;">선택한 제품 크기에 맞춰 템플릿이 자동으로 조절됩니다.</p>
+        
+        <div id="productSelectGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
+        
+        <button onclick="document.getElementById('sizeSelectModal').style.display='none'" class="btn-round" style="margin-top:20px;">취소</button>
+    </div>
+</div>
+<div id="aiDrawer" class="ai-drawer"><h3>✨ AI 이미지 생성</h3><p class="label">설명 (Prompt)</p><textarea id="aiPrompt" class="ai-input-pretty" placeholder="예: 숲속에 앉아있는 귀여운 갈색 토끼" style="height:100px;"></textarea><button id="aiGenerateBtn" class="btn-round primary" style="margin-top:10px;">생성하기</button><div id="aiResultArea" style="min-height:200px; background:#f9f9f9; margin-top:20px; display:flex; justify-content:center; align-items:center;"><span style="color:#ccc;">결과 대기 중</span></div><button id="aiUseBtn" class="btn-round" style="display:none; margin-top:10px;">캔버스에 넣기</button><button onclick="document.getElementById('aiDrawer').classList.remove('open')" class="btn-round" style="margin-top:10px;">닫기</button></div>
+<div id="templateOverlay">
+    <div class="tpl-modal-box">
+        <div class="tpl-sidebar">
+            <div class="tpl-cate-title">CATEGORIES</div>
+            <button class="tpl-cate-btn active" onclick="window.filterTpl('all', this)"><span>전체 보기</span></button>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)"><span>심플백터배경</span></button>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>사진템플릿</span></button>
+            
+            <button class="tpl-cate-btn" onclick="window.filterTpl('text', this)" style="display:none;"><span>준비중입니다.</span></button>
+            
+            <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>백터템플릿</span></button>
+            
+            <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)"><span>패브릭패턴</span></button>
+        </div>
+        <div class="tpl-content">
+            <div style="padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+                <h2 style="margin:0;">템플릿 탐색</h2>
+                <input type="text" id="tplSearchInput" class="ai-input-pretty" style="width:300px; margin-bottom:0;" placeholder="검색어 입력...">
+                <button onclick="document.getElementById('templateOverlay').style.display='none'" style="border:none; background:none; cursor:pointer;">
+                    <i class="fa-solid fa-xmark fa-2x"></i>
+                </button>
+            </div>
+            <div id="tplGrid" class="tpl-grid"></div>
+            <div style="padding:15px; text-align:right; border-top:1px solid #eee;">
+                <button id="btnUseTpl" class="btn primary">선택한 템플릿 적용</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="libraryModal" class="modal-bg" style="z-index: 11000;"><div class="modal-box" style="width: 800px; max-width: 90%; height: 80%; display: flex; flex-direction: column;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h3 style="margin:0;">📂 내 디자인 보관함</h3><button onclick="document.getElementById('libraryModal').style.display='none'" style="border:none; background:none; cursor:pointer; font-size:20px;">✕</button></div><div id="myDesignGrid" style="flex:1; overflow-y:auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap:20px; padding:10px;"></div></div></div>
+<div id="saveDesignModal" class="modal-bg" style="z-index: 11001;"><div class="modal-box"><h3>💾 디자인 저장하기</h3><p style="font-size:13px; color:#666;">보관함에 저장하여 나중에 다시 불러올 수 있습니다.</p><input id="saveDesignTitle" class="ai-input-pretty" placeholder="디자인 제목을 입력하세요 (예: 여름 이벤트 배너)"><div style="display:flex; gap:10px; margin-top:20px;"><button id="btnConfirmSave" class="btn-round primary">저장하기</button><button onclick="document.getElementById('saveDesignModal').style.display='none'" class="btn-round">취소</button></div></div></div>
+<div id="loadModeModal" class="modal-bg" style="z-index: 10001;"><div class="modal-box" style="width: 450px;"><h3>🎨 템플릿 불러오기</h3><p style="color:#666; font-size:14px; margin-bottom:20px;">현재 캔버스 내용이 있습니다.</p><div style="display:flex; gap:10px;"><button id="btnLoadReplace" class="btn-round ai-red" style="height:100px;">새 작업으로<br>(기존 삭제)</button><button id="btnLoadAdd" class="btn-round primary" style="height:100px;">현재 작업에<br>추가하기</button></div><button onclick="document.getElementById('loadModeModal').style.display='none'" class="btn-round" style="margin-top:15px;">취소</button></div></div>
+<div id="loginModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box" style="width: 400px;"><h3 id="authTitle" style="margin-top:0;">로그인</h3><div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"><input id="loginId" class="ai-input-pretty" placeholder="이메일 주소" style="margin:0;"><input id="loginPw" class="ai-input-pretty" type="password" placeholder="비밀번호" style="margin:0;"><input id="loginPwConfirm" class="ai-input-pretty" type="password" placeholder="비밀번호 확인" style="margin:0; display:none;"></div><button class="btn-round primary" id="btnAuthAction" style="width:100%; justify-content:center; height:45px; font-size:15px;">로그인</button><div style="margin-top:15px; font-size:13px; color:#666;"><span id="authSwitchText">계정이 없으신가요?</span><span id="btnSwitchAuthMode" style="color:var(--primary); font-weight:bold; cursor:pointer; margin-left:5px; text-decoration:underline;">회원가입</span></div><hr style="margin:20px 0; border:0; border-top:1px solid #eee;"><div style="display:flex; flex-direction:column; gap:8px;"><button id="btnGoogleLogin" class="btn-round" style="border-color:#ddd; justify-content:center;"><i class="fa-brands fa-google" style="color:#DB4437; margin-right:8px;"></i> Google로 시작하기</button><button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center;"><i class="fa-solid fa-comment" style="margin-right:8px;"></i> 카카오로 시작하기</button></div><button onclick="document.getElementById('loginModal').style.display='none'" class="btn-round" style="margin-top:15px; border:none; color:#888; width:100%;">닫기</button></div></div>
+<div id="productDetailModal" class="modal-bg" style="z-index: 11000;"><div class="modal-box" style="width: 900px; max-width: 95%; display: flex; text-align: left; padding:0; overflow:hidden;"><div style="width: 45%; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 20px;"><img id="pdpImage" src="" style="max-width: 100%; max-height: 300px; object-fit: contain;"></div><div style="width: 55%; padding: 40px; display: flex; flex-direction: column;"><h2 id="pdpTitle" style="margin: 0 0 10px 0;">상품명</h2><h3 id="pdpPrice" style="color: var(--primary); margin: 0 0 20px 0;">0원</h3><button id="btnActionDesign" class="btn-round primary" style="height: 50px;">🎨 직접 디자인하기</button><div style="margin-top:10px;"><input type="file" id="pdpFileUpload" style="display: none;"><button onclick="document.getElementById('pdpFileUpload').click()" class="btn-round">📂 파일 업로드 주문</button></div><button onclick="document.getElementById('productDetailModal').style.display='none'" style="margin-top: auto; border:none; background:none; cursor:pointer;">닫기</button></div></div></div>
+<div id="cartPage" style="display:none; position:fixed; inset:0; background:#f1f5f9; z-index: 12000; overflow-y:auto; padding-top: 40px;"><div style="max-width: 1000px; margin: 0 auto; padding-bottom: 60px;"><div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;"><h1>🛒 장바구니 <span id="cartCount">(0)</span></h1><button onclick="document.getElementById('cartPage').style.display='none'" class="btn-round" style="width:auto;">닫기</button></div><div style="display: grid; grid-template-columns: 1fr 300px; gap: 30px; padding: 0 20px;"><div id="cartListArea"></div><div><div style="background:white; padding:20px; border-radius:12px;"><h3>결제 금액</h3><div style="display:flex; justify-content:space-between;"><span>상품</span><span id="summaryItemPrice">0원</span></div><div style="display:flex; justify-content:space-between;"><span>옵션</span><span id="summaryAddonPrice">0원</span></div><hr><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px;"><span>합계</span><span id="summaryTotal">0원</span></div><button id="btnGoCheckout" class="btn-round primary" style="margin-top:20px; width:100%;">💳 결제하기</button><button id="btnPrintQuote" class="btn-round btn-secondary" style="margin-top:10px; width:100%;"><i class="fa-solid fa-file-invoice"></i> 견적서 출력</button></div></div></div></div></div>
+<div id="calendarModal" class="modal-bg" style="z-index: 12500;"><div class="modal-box"><h3>📅 배송요청 [제작기간 3일]</h3><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><button id="btnPrevMonth" class="btn-round" style="width:30px;">&lt;</button><span id="currentMonthYear" style="font-weight:bold;"></span><button id="btnNextMonth" class="btn-round" style="width:30px;">&gt;</button></div><div id="calendarGrid" class="calendar-grid"></div><button onclick="document.getElementById('calendarModal').style.display='none'" class="btn-round" style="margin-top:15px;">닫기</button></div></div>
+<div id="deliveryInfoModal" class="modal-bg" style="z-index: 12600;"><div class="modal-box" style="text-align:left;"><h3 style="text-align:center;">📝 배송 정보 입력</h3><p>담당자명</p><input id="inputManagerName" class="ai-input-pretty"><p>연락처</p><input id="inputManagerPhone" class="ai-input-pretty"><p>주소</p><input id="inputAddress" class="ai-input-pretty"><p>요청사항</p><textarea id="inputRequest" class="ai-input-pretty"></textarea><button id="btnSubmitOrderInfo" class="btn-round primary" style="margin-top:10px;">주문서 생성 및 결제</button><button onclick="document.getElementById('deliveryInfoModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
+<div id="checkoutModal" class="modal-bg" style="z-index: 13000;"><div class="modal-box" style="text-align:left;"><h3 style="text-align:center;">확인</h3><input id="orderName" class="ai-input-pretty" readonly><input id="orderPhone" class="ai-input-pretty" readonly><input id="orderAddr" class="ai-input-pretty" readonly><textarea id="orderMemo" class="ai-input-pretty" readonly></textarea><button id="btnRealPayment" class="btn-round primary">최종 결제</button><button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
+<div id="successModal" class="modal-bg" style="z-index: 14000;"><div class="modal-box"><h2>🎉 주문 완료!</h2><button id="btnDownOrderSheet" class="btn-round">📄 작업지시서 다운로드</button><button id="btnDownQuotation" class="btn-round" style="margin-top:5px;">📑 견적서 다운로드</button><button onclick="window.closeSuccessModal()" class="btn-round primary" style="margin-top:15px;">확인</button></div></div>
+<div id="sellModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>💎 디자인 등록</h3><input id="sellKw" class="ai-input-pretty" placeholder="#키워드"><button id="btnSellConfirm" class="btn-round primary">등록하기</button><button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
+<div id="fontModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>폰트 선택</h3><div id="fontList" style="max-height:300px; overflow-y:auto;"></div><button onclick="document.getElementById('fontModal').style.display='none'" class="btn-round" style="margin-top:10px;">닫기</button></div></div>
+
+<script type="module" src="./config.js"></script>
+<script type="module" src="./canvas-core.js"></script>
+<script type="module" src="./canvas-size.js"></script>
+<script type="module" src="./canvas-guides.js"></script>
+<script type="module" src="./canvas-zoom-pan.js"></script>
+<script type="module" src="./canvas-objects.js"></script>
+<script type="module" src="./canvas-image.js"></script>
+<script type="module" src="./canvas-template.js"></script>
+<script type="module" src="./canvas-ai.js"></script>
+<script type="module" src="./canvas-utils.js"></script>
+<script type="module" src="./shortcuts.js"></script>
+<script type="module" src="./context-menu.js"></script>
+<script type="module" src="./export.js"></script>
+<script type="module" src="./order.js"></script>
+<script type="module" src="./login.js"></script>
+<script type="module" src="./my-design.js"></script>
+<script type="module" src="./main.js"></script>
+
+<script type="module">
+    import { canvas } from './canvas-core.js';
+    import { openProductDetail, startDesignFromProduct } from './order.js';
+    import { applySize } from './canvas-size.js';
+    import { sb, PRODUCT_DB } from './config.js'; 
+
+    window.canvas = canvas;
+    window.openProductDetail = openProductDetail;
+    window.startDesignFromProduct = startDesignFromProduct;
+    window.applySize = applySize;
+    
+    // [중요] 현재 선택된 제품 키를 저장하는 전역 변수
+    window.currentProductKey = 'A4'; // 기본값
+
+    // [1] 템플릿 클릭 -> 사이즈 선택 모달 열기
+    window.onTemplateClick = function(tplData) {
+        window.pendingTemplate = tplData;
+        const grid = document.getElementById('productSelectGrid');
+        if(grid) {
+            grid.innerHTML = '';
+            const getIcon = (name) => {
+                if(name.includes('A4')||name.includes('A3')) return 'fa-solid fa-file';
+                if(name.includes('배너')) return 'fa-solid fa-flag';
+                if(name.includes('가벽')) return 'fa-solid fa-door-closed';
+                if(name.includes('보드')) return 'fa-solid fa-chalkboard';
+                return 'fa-solid fa-layer-group';
+            };
+            Object.keys(PRODUCT_DB).forEach(key => {
+                const item = PRODUCT_DB[key];
+                const div = document.createElement('div');
+                div.className = 'quick-item';
+                div.innerHTML = `<div class="quick-icon"><i class="${getIcon(item.name)}"></i></div><div class="quick-text">${item.name}</div>`;
+                div.onclick = () => checkAndLoad(key, item.name);
+                grid.appendChild(div);
+            });
+            document.getElementById('sizeSelectModal').style.display = 'flex';
+        }
+    };
+
+    // [2] 제품 선택 후 로드
+    function checkAndLoad(productKey, productName) {
+        if (!window.pendingTemplate) return;
+        
+        // [핵심] 선택한 제품 키 저장
+        window.currentProductKey = productKey;
+
+        const isLarge = productName.includes('가벽') || productName.includes('Wall');
+        const isVector = ['vector', 'graphic', 'transparent-graphic', 'vector_bg', 'vector_obj'].includes(window.pendingTemplate.category);
+
+        if (isLarge && !isVector) {
+            if(!confirm("⚠️ 경고: 이미지 템플릿은 대형 출력 시 깨질 수 있습니다.\n진행하시겠습니까?")) return;
+        }
+
+        document.getElementById('sizeSelectModal').style.display = 'none';
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('mainEditor').style.display = 'flex';
+        window.dispatchEvent(new Event('resize'));
+
+        startDesignWithTemplate(productKey, window.pendingTemplate);
+    }
+
+    async function startDesignWithTemplate(productKey, tpl) {
+        document.getElementById("loading").style.display = "flex";
+        
+        // [핵심] 여기서도 저장 (안전장치)
+        window.currentProductKey = productKey;
+
+        const sizeMap = { 
+            'A4': [595, 842], 'A3': [842, 1191], 'A2': [1191, 1684], 'A1': [1684, 2384], 
+            'Std_1200_600': [3401, 1700], 'Std_2400_1200': [6803, 3401], 
+            'Wall_1': [1200, 2200], 'Wall_2': [2200, 2200], 'Wall_3': [3200, 2200], 
+            'Wall_4': [4200, 2200], 'Wall_5': [5200, 2200], 
+            'Banner_X': [600, 1800], 'Award_Board': [800, 570], 
+            'PhotoZone_Text': [2400, 1200], 'Fabric_Wide': [1350, 900], 'Paper_Disp_4': [585, 1130] 
+        };
+        const size = sizeMap[productKey] || [1000, 1000];
+        
+        await new Promise(r => setTimeout(r, 300));
+        applySize(size[0], size[1], productKey, productKey.includes('Wall') ? 'wall' : 'standard', 'replace');
+
+        const { data: doc, error } = await sb.from('library').select('data_url').eq('id', tpl.id).single();
+        if (error || !doc) {
+            alert("데이터 로드 실패");
+            document.getElementById("loading").style.display = "none";
+            return;
+        }
+        window.applyTemplateToCanvas(doc.data_url);
+    }
+
+    // [기존 함수 유지] applyTemplateToCanvas, setAsBackground, loadTemplates 등은 그대로 둡니다.
+    // (너무 길어서 생략, 위에서 드린 코드 그대로 쓰시면 됩니다)
+    // ... (applyTemplateToCanvas 함수) ...
+    // ... (setAsBackground 함수) ...
+    // ... (loadTemplates 함수) ...
+    
+    window.applyTemplateToCanvas = async function(inputData) {
+        // ... (기존과 동일) ...
+        if (!canvas) return;
+        document.getElementById("loading").style.display = "flex";
+        try {
+            let jsonData = inputData;
+            if (typeof inputData === 'string') {
+                if (inputData.startsWith('http')) {
+                    const res = await fetch(inputData);
+                    const ct = res.headers.get("content-type");
+                    jsonData = (ct && ct.includes("svg")) ? await res.text() : await res.json();
+                } else if (inputData.trim().startsWith('{')) {
+                    jsonData = JSON.parse(inputData);
+                }
+            }
+            let board = canvas.getObjects().find(o => o.isBoard);
+            let boardSize = board ? { w: board.width * board.scaleX, h: board.height * board.scaleY } : { w: canvas.width, h: canvas.height };
+            let center = board ? { x: board.left + boardSize.w/2, y: board.top + boardSize.h/2 } : { x: canvas.width/2, y: canvas.height/2 };
+
+            const onLoad = (objects, options) => {
+                if(!objects || objects.length===0) return finishLoading();
+                objects.forEach(o => { 
+                    o.set({ selectable: true, evented: true, lockMovementX: false, lockMovementY: false });
+                    if(o.type==='i-text'||o.type==='text') delete o.textBaseline; 
+                });
+                let group;
+                if(options) group = fabric.util.groupSVGElements(objects, options);
+                else group = new fabric.Group(objects);
+                group.set({ originX: 'center', originY: 'center' });
+                const scale = Math.min((boardSize.w * 0.9) / group.width, (boardSize.h * 0.9) / group.height);
+                group.set({ scaleX: scale, scaleY: scale, left: center.x, top: center.y });
+                canvas.add(group);
+                group.toActiveSelection();
+                canvas.requestRenderAll();
+                finishLoading();
+            };
+            if (typeof jsonData === 'string' && (jsonData.includes('<svg') || jsonData.includes('data:image/svg'))) {
+                fabric.loadSVGFromString(jsonData, onLoad);
+            } else if (typeof jsonData === 'object' && jsonData.objects) {
+                const objs = jsonData.objects.filter(o => !o.isBoard);
+                fabric.util.enlivenObjects(objs, (enlivened) => onLoad(enlivened, null));
+            } else {
+                fabric.Image.fromURL(inputData, (img) => {
+                    if(img) onLoad([img], null); else finishLoading();
+                });
+            }
+        } catch(e) { console.error(e); alert("오류"); finishLoading(); }
+    };
+
+    function finishLoading() {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById('templateOverlay').style.display = 'none';
+    }
+
+    async function loadTemplates(containerId, isModal = false) {
+        const grid = document.getElementById(containerId);
+        if (!grid) return;
+        grid.innerHTML = 'Loading...';
+        if (!sb) await new Promise(r => setTimeout(r, 500)); 
+        const { data } = await sb.from('library').select('id, thumb_url, category').order('created_at', { ascending: false }).limit(50);
+        if (!data) { grid.innerHTML = 'No Data'; return; }
+        grid.innerHTML = '';
+        data.forEach(tpl => {
+            const card = document.createElement('div');
+            card.className = isModal ? 'tpl-item' : 'tpl-card-start';
+            let imgSrc = tpl.thumb_url;
+            if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) imgSrc = 'data:image/jpeg;base64,' + imgSrc;
+            if (!imgSrc) imgSrc = 'https://via.placeholder.com/300';
+            card.innerHTML = isModal ? `<img src="${imgSrc}" class="tpl-item-img">` : `<img src="${imgSrc}" class="tpl-card-img"><div class="tpl-card-overlay"></div>`;
+            card.onclick = () => { if(window.onTemplateClick) window.onTemplateClick(tpl); };
+            grid.appendChild(card);
+        });
+    }
+
+    // [중요] 초기 실행 시 'A4'가 아닌, 현재 선택된 값으로 설정되도록 수정
+    window.addEventListener('load', () => {
+        renderQuickMenu();
+        loadTemplates('startTemplateGrid', false);
+        window.preloadKoreanFont();
+    });
+    
+    document.getElementById('btnMobileTemplateOpen').onclick = () => { document.getElementById('templateOverlay').style.display='flex'; loadTemplates('tplGrid', true); };
+    document.querySelectorAll('.tpl-tab').forEach(b => b.onclick = () => { document.getElementById('templateOverlay').style.display='flex'; loadTemplates('tplGrid', true); });
+
+    function renderQuickMenu() {
+        const c = document.getElementById('quickMenuContainer');
+        if (!c) return; c.innerHTML = '';
+        const icons = {'A4':'fa-file','배너':'fa-flag','가벽':'fa-door-closed','보드':'fa-chalkboard','원단':'fa-scroll','포토':'fa-camera'};
+        Object.keys(PRODUCT_DB).forEach(k => {
+            const n = PRODUCT_DB[k].name;
+            let icon = 'fa-layer-group';
+            for(let i in icons) if(n.includes(i)) icon = 'fa-solid '+icons[i];
+            const d = document.createElement('div');
+            d.className = 'quick-item';
+            d.innerHTML = `<div class="quick-icon"><i class="${icon}"></i></div><div class="quick-text">${n}</div>`;
+            d.onclick = () => startEditorDirect(k);
+            c.appendChild(d);
+        });
+    }
+    
+    function startEditorDirect(key) {
+        // [핵심] 직접 시작할 때도 전역 변수에 저장
+        window.currentProductKey = key;
+
+        const sizeMap = { 'A4': [595, 842], 'A3': [842, 1191], 'A2': [1191, 1684], 'A1': [1684, 2384], 'Std_1200_600': [3401, 1700], 'Std_2400_1200': [6803, 3401], 'Wall_1': [1200, 2200], 'Wall_2': [2200, 2200], 'Wall_3': [3200, 2200], 'Wall_4': [4200, 2200], 'Wall_5': [5200, 2200], 'Banner_X': [600, 1800], 'Award_Board': [800, 570], 'PhotoZone_Text': [2400, 1200], 'Fabric_Wide': [1350, 900], 'Paper_Disp_4': [585, 1130] };
+        const size = sizeMap[key] || [1000, 1000];
+        applySize(size[0], size[1], key, key.includes('Wall') ? 'wall' : 'standard', 'replace');
+        document.getElementById("startScreen").style.display = "none";
+        document.getElementById("mainEditor").style.display = "flex";
+        window.dispatchEvent(new Event('resize'));
+    }
+    
+    // 기타 유틸 함수들...
+    window.toggleLockSelection = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return alert("선택필요"); const l=!a.lockMovementX; a.set({lockMovementX:l,lockMovementY:l,lockRotation:l,lockScalingX:l,lockScalingY:l,hasControls:!l,selectable:true}); canvas.discardActiveObject(); canvas.requestRenderAll(); };
+    window.setAsBackground = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return alert("선택필요"); const b=canvas.getObjects().find(o=>o.isBoard); if(!b)return; const s=Math.max((b.width*b.scaleX)/a.width,(b.height*b.scaleY)/a.height); a.set({scaleX:s,scaleY:s,left:b.left+(b.width*b.scaleX)/2,top:b.top+(b.height*b.scaleY)/2,originX:'center',originY:'center',angle:0}); canvas.sendToBack(a); canvas.sendToBack(b); canvas.requestRenderAll(); };
+    window.alignObject = function(d) { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return; const b=canvas.getObjects().find(o=>o.isBoard); const r=b?b.getBoundingRect():{left:0,top:0,width:canvas.width,height:canvas.height}; const w=a.getScaledWidth(); const h=a.getScaledHeight(); if(d=='left') a.left=r.left+w/2; if(d=='centerH') a.left=r.left+r.width/2; if(d=='right') a.left=r.left+r.width-w/2; if(d=='top') a.top=r.top+h/2; if(d=='centerV') a.top=r.top+r.height/2; if(d=='bottom') a.top=r.top+r.height-h/2; if(d=='center') { a.left=r.left+r.width/2; a.top=r.top+r.height/2; } a.setCoords(); canvas.requestRenderAll(); };
+
+    if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    window.koreanFontCache = null;
+    window.preloadKoreanFont = async function() { try { const r = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf'); if(r.ok) { const b = await r.blob(); const rd = new FileReader(); rd.onloadend = function() { window.koreanFontCache = rd.result.split(',')[1]; }; rd.readAsDataURL(b); } } catch(e) {} };
+    window.loadKoreanFontForPDF = async function(doc) { if(window.koreanFontCache) { try { doc.addFileToVFS('NanumGothic.ttf', window.koreanFontCache); doc.addFont('NanumGothic.ttf', 'NanumGothic', 'normal'); doc.addFont('NanumGothic.ttf', 'NanumGothic', 'bold'); doc.setFont('NanumGothic'); } catch(e) {} } };
+</script>
+<script>
+    document.addEventListener('click', function(e) {
+        const card = e.target.closest('.size-card');
+        if (card) {
+            const onclickCode = card.getAttribute('onclick');
+            if (onclickCode) {
+                try { eval(onclickCode); } catch(err) { console.error("판형 클릭 오류:", err); }
+            }
+        }
+    });
+    
+    // [수정] 확인 버튼 클릭 시 모달 닫기 및 초기화
+    window.closeSuccessModal = function() {
+        const modal = document.getElementById('successModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        // 페이지 새로고침하여 초기화 (선택사항)
+        // location.reload(); 
+    };
+
+    // [추가] 버튼에 직접 이벤트 리스너 연결 (HTML onclick 속성 대신)
+    document.addEventListener('DOMContentLoaded', () => {
+        const confirmBtn = document.querySelector('#successModal .btn-round.primary');
+        if(confirmBtn) {
+            confirmBtn.onclick = window.closeSuccessModal;
+        }
+    });
+</script>
+</body>
+</html>
