@@ -527,6 +527,44 @@ input, textarea, select {
     #startScreen { padding-top: 20px !important; }
     .bottom-dock { display: none !important; }
 }
+/* =========================================
+   [모바일 텍스트 에디터 스타일]
+   ========================================= */
+#mobileTextEditor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 140px; /* 키보드 위 공간 확보 */
+    background: #fff;
+    z-index: 999999; /* 최상위 노출 */
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.m-text-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    color: #333;
+}
+#mobileTextInput {
+    width: 100%;
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+}
+#mobileTextInput:focus {
+    border-color: #6366f1;
+}
 </style>
 </head>
 <script>
@@ -1215,5 +1253,12 @@ document.getElementById("btnPayTest").onclick = function () {
         }
     }, true); // true: 캡처링 모드로 설정하여 다른 스크립트보다 먼저 감지
 </script>
+<div id="mobileTextEditor" style="display:none;">
+    <div class="m-text-header">
+        <span>✏️ 텍스트 수정</span>
+        <button id="btnFinishText" class="btn-round primary" style="width:auto; padding:5px 15px; font-size:12px;">완료</button>
+    </div>
+    <textarea id="mobileTextInput" placeholder="내용을 입력하세요"></textarea>
+</div>
 </body>
 </html>
