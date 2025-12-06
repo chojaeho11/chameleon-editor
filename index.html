@@ -311,82 +311,7 @@
     .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; background: #fff; }
     .cal-day.selected { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(99,102,241,0.3); }
 
-    /* 모바일 최적화 */
-    /* =========================================
-       [모바일 반응형 수정 - 장바구니 멈춤 해결]
-       ========================================= */
-    @media (max-width: 768px) {
-        /* 1. 상단바 최적화 */
-        .topbar { height: 50px; padding: 0 10px; gap: 5px; overflow-x: auto; justify-content: space-between; }
-        .template-tabs .tpl-tab { display: none; }
-        #btnMobileTemplateOpen { display: inline-flex; align-items:center; height: 34px; white-space: nowrap; }
-        .btn { padding: 0 10px; height: 34px; font-size: 13px; }
-        #btnViewCart { font-size: 0; } 
-        #btnViewCart::before { content: '🛒'; font-size: 16px; } /* 아이콘만 표시 */
-        .btn-save-top span { display: none; }
 
-        /* 2. 에디터 레이아웃: 세로 배치 */
-        #mainEditor { height: 100dvh; display: flex; flex-direction: column; }
-        .editor-wrap { display: flex; flex-direction: column; height: calc(100dvh - 50px); overflow: hidden; }
-        
-        /* 캔버스 (상단 고정 55%) */
-        .stage { order: 1; height: 55%; width: 100%; border-bottom: 1px solid #ddd; }
-        .bottom-dock { bottom: 10px; padding: 5px 15px; transform: translateX(-50%) scale(0.9); width: max-content; }
-        #wallHeightControls { top: 10px; }
-
-        /* 도구 패널 (하단 배치) */
-        .side { order: 2; width: 100%; height: 45%; padding: 15px; overflow-y: auto; border-right: none; }
-        .right-stack { display: none; } /* 모바일에서는 속성창 잠시 숨김 (공간 부족 시) */
-
-        /* 3. [핵심 수정] 장바구니 모바일 레이아웃 */
-        #cartPage { 
-            /* display: flex !important;  <-- 이 코드가 멈춤의 원인이었습니다. 삭제함. */
-            padding-top: 50px !important; 
-            background: #f1f5f9;
-            flex-direction: column;
-        }
-        
-        /* 장바구니 내부 컨테이너 */
-        #cartPage > div { 
-            display: flex; 
-            flex-direction: column; 
-            height: 100%; 
-            padding: 0 10px; 
-        }
-
-        /* 목록 영역 (스크롤 가능, 위쪽 차지) */
-        #cartListArea { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding-bottom: 20px; 
-            order: 1; /* 목록이 먼저 */
-        }
-
-        /* 결제 박스 (하단 고정, 아래쪽 차지) */
-        #cartPage > div > div:last-child {
-            order: 2; /* 결제가 나중 */
-            background: #fff;
-            padding: 15px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-            border-top: 1px solid #eee;
-            z-index: 10;
-            border-radius: 12px 12px 0 0;
-            margin-bottom: 0;
-            flex-shrink: 0;
-        }
-
-        /* 장바구니 아이템 디자인 (세로형) */
-        .cart-item { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            padding: 15px; 
-            background: #fff; 
-            border-radius: 12px;
-            margin-bottom: 10px;
-        }
-        .cart-item > div { width: 100%; text-align: left; } /* 강제 정렬 */
-    }
     /* =========================================
        [푸터/회사정보 스타일 추가]
        ========================================= */
@@ -426,6 +351,182 @@
         .footer-inner { flex-direction: column; gap: 20px; }
         .foot-menu ul { flex-wrap: wrap; gap: 10px; }
     }
+    /* =========================================
+   [입력창 터치/선택 오류 방지]
+   ========================================= */
+input, textarea, select {
+    user-select: text !important;        /* 텍스트 선택 허용 */
+    -webkit-user-select: text !important; /* 사파리/크롬 호환 */
+    touch-action: manipulation !important; /* 터치 동작 최적화 */
+}
+/* =========================================
+   [모바일 최적화 최종 완성본 (V3)]
+   기존 media query 전체를 이 코드로 덮어씌우세요.
+   ========================================= */
+@media (max-width: 768px) {
+
+    /* [1] 상단 메뉴바 (Topbar) - 버튼 복구 및 가로 스크롤 */
+    .topbar {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important; /* 왼쪽부터 정렬 */
+        gap: 8px !important;
+        padding: 0 10px !important;
+        overflow-x: auto !important; /* 버튼 많으면 스크롤 */
+        white-space: nowrap !important;
+        height: 50px !important;
+        background: #fff !important;
+    }
+    .topbar::-webkit-scrollbar { display: none; } /* 스크롤바 숨김 */
+
+    /* 1. 로고 */
+    .brand { 
+        order: 1 !important; 
+        margin-right: 5px !important; 
+        flex-shrink: 0 !important;
+    }
+
+    /* 2. 장바구니 (아이콘만 표시) */
+    #btnViewCart {
+        order: 2 !important;
+        display: inline-flex !important;
+        font-size: 0 !important;
+        padding: 0 10px !important;
+        flex-shrink: 0 !important;
+        width: 40px !important; /* 터치 영역 확보 */
+        justify-content: center !important;
+    }
+    #btnViewCart::before {
+        content: '🛒';
+        font-size: 18px !important;
+    }
+
+    /* 3. 로그인 버튼 */
+    #btnLoginBtn { 
+        order: 3 !important; 
+        flex-shrink: 0 !important; 
+        padding: 8px 12px !important;
+    }
+
+    /* 4. [해결] 템플릿 버튼 (컨테이너 및 버튼 강제 표시) */
+    .template-tabs {
+        order: 4 !important;
+        display: flex !important;
+        flex-shrink: 0 !important;
+        margin: 0 5px !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    /* 모바일용 템플릿 버튼 디자인 */
+    #btnMobileTemplateOpen {
+        display: flex !important;
+        align-items: center !important;
+        height: 34px !important;
+        padding: 0 12px !important;
+        background: #eff6ff !important;
+        color: #6366f1 !important;
+        border: 1px solid #6366f1 !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        white-space: nowrap !important;
+    }
+    .tpl-tab { display: none !important; } /* PC용 탭 숨김 */
+
+    /* 5. 주문하기 & 저장하기 */
+    #btnOrderTop { order: 5 !important; flex-shrink: 0 !important; }
+    .btn-save-top { order: 6 !important; flex-shrink: 0 !important; }
+
+    /* 빈 공간 채우기용 div 숨김 */
+    .topbar > div[style*="flex:1"] { display: none !important; }
+
+
+    /* [2] 에디터 화면 (좌우 패널 정리) */
+    .editor-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100vw !important;
+        height: calc(100vh - 50px) !important;
+        overflow: hidden !important;
+    }
+    .stage {
+        order: 1 !important;
+        width: 100% !important;
+        height: 50% !important;
+        border-bottom: 2px solid #ddd;
+        position: relative !important;
+    }
+    .right-stack { display: none !important; } 
+    .side {
+        order: 2 !important;
+        width: 100% !important;
+        height: 50% !important;
+        padding: 15px !important;
+        overflow-y: auto !important;
+        background: #fff !important;
+        border-right: none !important;
+    }
+
+    /* [3] 템플릿 화면 (카테고리 잘림 해결) */
+    .tpl-modal-box {
+        width: 100% !important; height: 100% !important;
+        border-radius: 0 !important; flex-direction: column !important;
+        display: flex !important; overflow: hidden !important;
+    }
+    .tpl-sidebar {
+        flex-direction: row !important; height: auto !important;
+        padding: 10px 10px 10px 15px !important; 
+        padding-right: 40px !important; /* 우측 여백 */
+        overflow-x: auto !important; white-space: nowrap !important;
+        border-right: none !important; border-bottom: 1px solid #eee;
+        flex-shrink: 0 !important; width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .tpl-cate-btn {
+        margin-right: 10px !important; flex: 0 0 auto !important;
+        background: #f1f5f9; padding: 8px 15px !important; border-radius: 20px !important;
+    }
+    .tpl-content { display: flex !important; flex-direction: column !important; height: 100% !important; overflow: hidden !important; }
+    .tpl-content > div:first-child { display: flex !important; align-items: center !important; padding: 10px 15px !important; flex-shrink: 0 !important; }
+    #tplSearchInput { width: auto !important; flex: 1 !important; margin-bottom: 0 !important; }
+    .tpl-grid { flex: 1 !important; overflow-y: auto !important; column-count: 2 !important; padding: 10px !important; }
+    .tpl-content > div:last-child { flex-shrink: 0 !important; padding: 15px !important; background: #fff; border-top: 1px solid #e2e8f0; z-index: 20 !important; }
+    #btnUseTpl { width: 100% !important; height: 50px !important; font-size: 16px !important; font-weight: bold !important; }
+
+    /* [4] 장바구니 화면 (가격 텍스트 위치 조정) */
+    #cartPage { padding-top: 50px !important; background: #f1f5f9 !important; }
+    #cartPage > div { display: flex !important; flex-direction: column !important; padding: 0 !important; height: 100% !important; }
+    #cartPage > div > div { display: block !important; height: 100% !important; }
+    #cartListArea { height: auto !important; max-height: none !important; padding: 15px 15px 280px 15px !important; overflow-y: auto !important; }
+
+    .cart-item {
+        display: flex !important; flex-direction: column !important;
+        padding: 20px !important; background: #fff !important;
+        border-radius: 16px !important; margin-bottom: 20px !important;
+        position: relative !important;
+    }
+    .cart-item > div:nth-child(2) { order: 1 !important; margin-bottom: 20px !important; width: 100% !important; }
+    .cart-item > div:nth-child(2) > div:first-child { display: block !important; width: 100% !important; margin-bottom: 10px !important; text-align: left !important; }
+    
+    .cart-item > div:first-child {
+        order: 2 !important; margin-bottom: 15px !important;
+        padding-top: 15px !important; border-top: 1px solid #f3f4f6;
+        display: flex !important; align-items: flex-start !important;
+    }
+    .cart-item > div:first-child > div { display: flex !important; flex-direction: column !important; justify-content: flex-start !important; padding-left: 5px !important; }
+    .cart-item > div:first-child > div > div:last-child { margin-top: 15px !important; font-size: 16px !important; display: block !important; }
+    
+    .cart-item > div:last-child { order: 3 !important; width: 100% !important; }
+    #cartPage > div > div > div:last-child { position: fixed !important; bottom: 0 !important; left: 0 !important; width: 100% !important; background: #fff !important; padding: 20px !important; z-index: 12500 !important; border-radius: 20px 20px 0 0 !important; box-shadow: 0 -5px 10px rgba(0,0,0,0.05) !important; }
+
+    
+    /* 기타 */
+    .hero-title { font-size: 26px !important; word-break: keep-all; }
+    .quick-menu-track { grid-template-columns: repeat(2, 1fr) !important; }
+    .template-grid-start { column-count: 2 !important; }
+    #startScreen { padding-top: 20px !important; }
+    .bottom-dock { display: none !important; }
+}
 </style>
 </head>
 <script>
@@ -1057,6 +1158,62 @@
             confirmBtn.onclick = window.closeSuccessModal;
         }
     });
+</script>
+<script src="https://js.tosspayments.com/v1"></script>
+
+<button id="btnPayTest" 
+    style="position: fixed; bottom: 20px; right: 20px; z-index: 999999; padding: 15px 25px; background: #3182f6; color: white; border: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;">
+    💳 테스트 결제 실행
+</button>
+
+<script>
+document.getElementById("btnPayTest").onclick = function () {
+    console.log("결제 버튼 클릭됨"); // 클릭 확인용 로그
+
+    // 1. 클라이언트 키 설정 (반드시 본인의 테스트 키로 변경해야 함)
+    // 개발자센터 > API 키 > 클라이언트 키 (테스트용) 복사해서 붙여넣기
+    const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"; 
+    
+    // SDK 초기화 확인
+    if (typeof TossPayments === 'undefined') {
+        alert("토스페이먼츠 SDK가 로드되지 않았습니다.");
+        return;
+    }
+
+    const tossPayments = TossPayments(clientKey);
+    const orderId = "order_" + new Date().getTime(); // 고유 주문번호 생성
+
+    // 2. 결제 요청
+    tossPayments.requestPayment("카드", {
+        amount: 1000,
+        orderId: orderId,
+        orderName: "테스트 주문",
+        customerName: "홍길동",
+        successUrl: window.location.origin + "/success.html", // 성공 시 이동할 페이지 (로컬 서버 필요)
+        failUrl: window.location.origin + "/fail.html",       // 실패 시 이동할 페이지
+    })
+    .catch(function (error) {
+        // 3. 에러 발생 시 처리 (중요)
+        if (error.code === "USER_CANCEL") {
+            alert("사용자가 결제를 취소했습니다.");
+        } else {
+            console.error(error);
+            alert("결제 연동 에러: " + error.message);
+        }
+    });
+};
+</script>
+<script>
+    // [입력창 오류 해결] 텍스트 입력 중 스페이스바(단축키) 작동 방지
+    window.addEventListener('keydown', function(e) {
+        // 현재 포커스가 입력창(input, textarea)에 있다면
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            // 스페이스바를 눌렀을 때
+            if (e.code === 'Space' || e.key === ' ') {
+                e.stopPropagation(); // 캔버스 이동(단축키) 이벤트를 막고, 공백만 입력되게 함
+            }
+        }
+    }, true); // true: 캡처링 모드로 설정하여 다른 스크립트보다 먼저 감지
 </script>
 </body>
 </html>

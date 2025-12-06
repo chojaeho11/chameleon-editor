@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Chameleon 관리자 (Optimized)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+
+    <style>
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Pretendard', sans-serif; background: #f1f5f9; color: #334155; overflow: hidden; }
+        .sidebar { width: 260px; background: #1e293b; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 25px 20px; font-weight: 800; font-size: 20px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; color: #818cf8; }
+        .nav-menu { list-style: none; padding: 20px 10px; margin: 0; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+        .nav-label { font-size: 11px; color: #64748b; padding: 15px 15px 5px; font-weight: 700; text-transform: uppercase; }
+        .nav-item { padding: 12px 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #cbd5e1; }
+        .nav-item:hover { background: #334155; color: white; }
+        .nav-item.active { background: #6366f1; color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
+        .page-title { font-size: 18px; font-weight: 700; color: #0f172a; }
+        .content-scroll { flex: 1; overflow-y: auto; padding: 30px; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+        .input-text { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-primary { background: #6366f1; color: white; } .btn-primary:hover { background: #4f46e5; }
+        .btn-danger { background: #fee2e2; color: #ef4444; } .btn-outline { background: #fff; border: 1px solid #cbd5e1; color: #334155; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge.admin { background: #dbeafe; color: #1e40af; } .badge.customer { background: #f1f5f9; color: #475569; }
+        .wizard-layout { display: flex; gap: 20px; height: 600px; }
+        .step-list { width: 300px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow-y: auto; }
+        .step-item { padding: 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 14px; transition:0.2s; }
+        .step-item:hover, .step-item.selected { background: #eff6ff; border-left: 4px solid #6366f1; }
+        .step-detail { flex: 1; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; overflow-y: auto; display: none; }
+        .opt-row { display: flex; gap: 5px; background: #f8fafc; padding: 10px; margin-bottom: 5px; border-radius: 6px; align-items: center; border: 1px solid #e2e8f0; }
+        .tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .tpl-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; position: relative; }
+        .tpl-img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #f8fafc; }
+        .tpl-del { position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header"><i class="fa-solid fa-layer-group"></i> Chameleon</div>
+        <ul class="nav-menu">
+            <div class="nav-label">Order & Users</div>
+            <li class="nav-item active" onclick="showSection('sec-orders', this)"><i class="fa-solid fa-truck-fast"></i> 통합 주문 관리</li>
+            <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
+            <div class="nav-label">Products & Design</div>
+            <li class="nav-item" onclick="showSection('sec-products', this)"><i class="fa-solid fa-tags"></i> 상품 관리</li>
+            <li class="nav-item" onclick="showSection('sec-wizard', this)"><i class="fa-solid fa-sitemap"></i> 위자드 설정</li>
+            <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 라이브러리</li>
+        </ul>
+        <div style="margin-top:auto; padding:20px;">
+            <button class="btn btn-danger" style="width:100%;" onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title" id="pageTitle">통합 주문 관리</div>
+            <div style="font-size:14px; color:#64748b;">관리자 모드 실행중 🟢</div>
+        </div>
+        <div class="content-scroll">
+            
+            <div id="sec-orders" class="section active">
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <button class="btn btn-primary" onclick="filterOrders('접수됨', this)">📥 신규</button>
+                    <button class="btn btn-outline" onclick="filterOrders('칼선작업', this)">✂️ 작업</button>
+                    <button class="btn btn-outline" onclick="filterOrders('배송준비', this)">📦 준비</button>
+                    <button class="btn btn-outline" onclick="filterOrders('배송중', this)">🚚 배송</button>
+                    <button class="btn btn-outline" onclick="filterOrders('완료됨', this)">✅ 완료</button>
+                    <button class="btn btn-outline" style="margin-left:auto;" onclick="loadOrders()"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+                <div class="card" style="padding:0;"><table style="margin:0;"><thead><tr><th>날짜</th><th>고객</th><th>내용</th><th>상태</th><th style="text-align:right;">관리</th></tr></thead><tbody id="orderListBody"></tbody></table></div>
+            </div>
+
+            <div id="sec-members" class="section">
+                <div class="card">
+                    <div style="display:flex; gap:10px; margin-bottom:15px;"><input id="memberSearch" class="input-text" style="width:300px;" placeholder="검색..." onkeyup="filterMembers()"><button class="btn btn-primary" onclick="loadMembers()">새로고침</button></div>
+                    <table><thead><tr><th>가입일</th><th>이름</th><th>이메일</th><th>연락처</th><th>등급</th><th>관리</th></tr></thead><tbody id="memberListBody"></tbody></table>
+                </div>
+            </div>
+
+            <div id="sec-products" class="section">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h3>🏷️ 상품 목록</h3><button class="btn btn-primary" onclick="openProductModal()">+ 상품 등록</button></div>
+                    <table><thead><tr><th>Key</th><th>상품명</th><th>가격</th><th>사이즈</th><th>관리</th></tr></thead><tbody id="productListBody"></tbody></table>
+                </div>
+            </div>
+
+            <div id="sec-wizard" class="section">
+                <div class="wizard-layout">
+                    <div class="step-list">
+                        <div style="padding:15px; border-bottom:1px solid #eee; font-weight:bold; display:flex; justify-content:space-between;"><span>질문 단계</span><button class="btn btn-sm btn-primary" onclick="addNewStep()">+ 추가</button></div>
+                        <div id="stepListContainer"></div>
+                    </div>
+                    <div class="step-detail" id="stepDetailView">
+                        <h3>질문 편집</h3>
+                        <label style="font-size:12px;">ID</label><input id="editStepId" class="input-text" placeholder="예: step1" style="background:#f8fafc; margin-bottom:10px;">
+                        <label style="font-size:12px;">질문</label><input id="editStepQ" class="input-text" style="margin-bottom:10px;">
+                        <label style="font-size:12px;">설명</label><input id="editStepD" class="input-text" style="margin-bottom:10px;">
+                        <div style="margin:10px 0;"><label><input type="checkbox" id="editStepStart"> 첫 질문으로 설정</label></div>
+                        <h4 style="margin-top:20px; border-top:1px solid #eee; padding-top:10px;">선택지</h4>
+                        <div id="optionListContainer"></div>
+                        <button class="btn btn-sm btn-outline" style="width:100%; margin-top:10px;" onclick="addOptionRow()">+ 옵션 추가</button>
+                        <div style="margin-top:20px; text-align:right;"><button class="btn btn-danger" onclick="deleteStep()">삭제</button> <button class="btn btn-primary" onclick="saveStep()">저장</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-templates" class="section">
+                <div style="display:flex; gap:20px;">
+                    <div class="card" style="width:300px; flex-shrink:0;">
+                        <h3>🎨 템플릿 등록</h3>
+                        <select id="tplCat" class="input-text" style="margin-bottom:10px;" onchange="toggleTplInput()"><option value="vector">벡터배경</option><option value="photo-bg">사진배경</option></select>
+                        <input type="file" id="tplThumb" class="input-text" style="margin-bottom:10px;" accept="image/*">
+                        <div id="divTplData"><input type="file" id="tplData" class="input-text" style="margin-bottom:10px;" accept=".svg,.json"></div>
+                        <button class="btn btn-primary" style="width:100%;" onclick="uploadTemplate()">등록</button>
+                    </div>
+                    <div style="flex:1;"><div class="card"><div id="tplGrid" class="tpl-grid"></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalProduct" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="width:400px;">
+            <h3>상품 정보</h3>
+            <input id="prodKey" class="input-text" placeholder="Key (A4, Wall_1)" style="margin-bottom:10px;">
+            <input id="prodName" class="input-text" placeholder="상품명" style="margin-bottom:10px;">
+            <input id="prodPrice" type="number" class="input-text" placeholder="가격" style="margin-bottom:10px;">
+            <div style="display:flex; gap:10px;"><input id="prodW" placeholder="가로" class="input-text"><input id="prodH" placeholder="세로" class="input-text"></div>
+            <div style="margin-top:15px; text-align:right;"><button class="btn btn-danger" onclick="closeModal('modalProduct')">취소</button> <button class="btn btn-primary" onclick="submitProduct()">저장</button></div>
+        </div>
+    </div>
+    <div id="modalKnife" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="width:350px;"><h3>파일 업로드</h3><input type="hidden" id="kId"><input type="file" id="kFile" class="input-text" style="margin:10px 0;"><button class="btn btn-danger" onclick="closeModal('modalKnife')">취소</button> <button class="btn btn-primary" onclick="subKnife()">업로드</button></div>
+    </div>
+    <div id="modalShip" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="width:350px;"><h3>송장 입력</h3><input type="hidden" id="sId"><select id="sCarr" class="input-text"><option>CJ대한통운</option><option>우체국</option></select><input id="sTrk" class="input-text" placeholder="번호" style="margin:10px 0;"><button class="btn btn-danger" onclick="closeModal('modalShip')">취소</button> <button class="btn btn-primary" onclick="subShip()">발송</button></div>
+    </div>
+
+    <script type="module">
+        import { sb, initConfig } from "./config.js";
+
+        // ================= Common =================
+        window.onload = async () => { await initConfig(); loadOrders(); };
+        window.showSection = (id, el) => {
+            document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+            if(el) el.classList.add('active');
+            const titles = {'sec-orders':'📦 통합 주문','sec-members':'👥 회원 관리','sec-products':'🏷️ 상품 관리','sec-wizard':'🧠 위자드 설정','sec-templates':'🎨 템플릿'};
+            document.getElementById('pageTitle').innerText = titles[id];
+            if(id==='sec-members') loadMembers();
+            if(id==='sec-orders') loadOrders();
+            if(id==='sec-products') loadProducts();
+            if(id==='sec-wizard') loadWizard();
+            if(id==='sec-templates') loadTemplates();
+        };
+        window.logout = async() => { await sb.auth.signOut(); location.href="../index.html"; };
+        window.closeModal = (id) => document.getElementById(id).style.display='none';
+
+        // ================= Orders =================
+        let ordStat = '접수됨';
+        window.filterOrders = (s,b) => {
+            ordStat = s; 
+            document.querySelectorAll('#sec-orders .btn').forEach(x=>x.classList.remove('btn-primary'));
+            if(b) b.classList.add('btn-primary');
+            loadOrders();
+        };
+        window.loadOrders = async() => {
+            const tb = document.getElementById('orderListBody'); tb.innerHTML='<tr><td colspan="5">로딩...</td></tr>';
+            let {data, error} = await sb.from('admin_orders_view').select('*').eq('status', ordStat).order('created_at',{ascending:false});
+            if(error && error.code === '42P01') { const res = await sb.from('orders').select('*').eq('status', ordStat).order('created_at',{ascending:false}); data = res.data; }
+            if(!data) return tb.innerHTML='<tr><td colspan="5">데이터 없음 (DB권한 확인)</td></tr>';
+            tb.innerHTML='';
+            data.forEach(o => {
+                let files = o.files && o.files.length > 0 ? `<div style="font-size:11px; color:#6366f1;">📂 파일 ${o.files.length}개 <button class="btn btn-sm btn-outline" onclick="downloadAllFiles(${o.id},'${o.manager_name}')">다운</button></div>` : '';
+                let btn = '';
+                if(ordStat==='접수됨') btn=`<button class="btn btn-primary btn-sm" onclick="updOrd(${o.id},'칼선작업')">시작</button>`;
+                else if(ordStat==='칼선작업') btn=`<button class="btn btn-primary btn-sm" onclick="openKnife(${o.id})">업로드</button>`;
+                else if(ordStat==='배송준비') btn=`<button class="btn btn-primary btn-sm" onclick="openShip(${o.id})">발송</button>`;
+                else if(ordStat==='배송중') btn=`<button class="btn btn-primary btn-sm" onclick="updOrd(${o.id},'완료됨')">완료</button>`;
+                tb.innerHTML += `<tr><td>${o.created_at.split('T')[0]}</td><td>${o.manager_name||'-'}</td><td>${o.request_note||'-'}${files}</td><td><span class="badge admin">${o.status}</span></td><td style="text-align:right;">${btn}</td></tr>`;
+            });
+        };
+        window.downloadAllFiles = async (oid, name) => {
+            const {data} = await sb.from('orders').select('files').eq('id', oid).single();
+            if(!data || !data.files) return alert("파일 없음");
+            const zip = new JSZip();
+            await Promise.all(data.files.map(async f => {
+                const res = await fetch(f.url);
+                zip.file(f.name, await res.blob());
+            }));
+            saveAs(await zip.generateAsync({type:"blob"}), `${name}_files.zip`);
+        };
+        window.updOrd = async(id, st) => { if(confirm("변경?")){ await sb.from('orders').update({status:st}).eq('id',id); loadOrders(); }};
+        window.openKnife = (id) => { document.getElementById('kId').value=id; document.getElementById('modalKnife').style.display='flex'; };
+        window.subKnife = async() => {
+            const id=document.getElementById('kId').value, f=document.getElementById('kFile').files[0];
+            if(!f) return;
+            const nm = `${id}_knife_${Date.now()}`;
+            await sb.storage.from('admin_uploads').upload(nm, f);
+            const {data} = sb.storage.from('admin_uploads').getPublicUrl(nm);
+            await sb.from('orders').update({knife_file_url:data.publicUrl, status:'배송준비'}).eq('id',id);
+            closeModal('modalKnife'); loadOrders();
+        };
+        window.openShip = (id) => { document.getElementById('sId').value=id; document.getElementById('modalShip').style.display='flex'; };
+        window.subShip = async() => {
+            const id=document.getElementById('sId').value, t=document.getElementById('sTrk').value;
+            if(!t) return;
+            await sb.from('orders').update({tracking_number:t, carrier:document.getElementById('sCarr').value, status:'배송중'}).eq('id',id);
+            closeModal('modalShip'); loadOrders();
+        };
+
+        // ================= Members =================
+        window.loadMembers = async() => {
+            const tb = document.getElementById('memberListBody'); tb.innerHTML='Loading...';
+            const {data, error} = await sb.from('profiles').select('*');
+            if(error) return tb.innerHTML = 'Error (DB권한 확인)';
+            tb.innerHTML='';
+            data.forEach(u => tb.innerHTML += `<tr><td>${u.created_at.split('T')[0]}</td><td>${u.username||'-'}</td><td>${u.email}</td><td>${u.phone||'-'}</td><td>${u.role}</td><td><button class="btn btn-sm btn-outline" onclick="updRole('${u.id}','${u.role==='admin'?'customer':'admin'}')">등급변경</button></td></tr>`);
+        };
+        window.updRole = async(id, r) => { await sb.from('profiles').update({role:r}).eq('id',id); loadMembers(); };
+
+        // ================= Products =================
+        window.loadProducts = async() => {
+            const tb = document.getElementById('productListBody'); tb.innerHTML='Loading...';
+            const {data} = await sb.from('products').select('*').order('created_at');
+            tb.innerHTML='';
+            data.forEach(p => tb.innerHTML += `<tr><td>${p.key}</td><td>${p.name}</td><td>${p.price}</td><td>${p.width}x${p.height}</td><td><button class="btn btn-danger btn-sm" onclick="delProd(${p.id})">삭제</button></td></tr>`);
+        };
+        window.openProductModal = () => document.getElementById('modalProduct').style.display='flex';
+        window.submitProduct = async() => {
+            const p = { key: document.getElementById('prodKey').value, name: document.getElementById('prodName').value, price: document.getElementById('prodPrice').value, width: document.getElementById('prodW').value, height: document.getElementById('prodH').value };
+            await sb.from('products').upsert([p], {onConflict:'key'});
+            closeModal('modalProduct'); loadProducts();
+        };
+        window.delProd = async(id) => { if(confirm("삭제?")) { await sb.from('products').delete().eq('id',id); loadProducts(); }};
+
+        // ================= Wizard (Upsert Fix) =================
+        let wizStepId = null;
+        window.loadWizard = async() => {
+            const div = document.getElementById('stepListContainer'); div.innerHTML='Loading...';
+            const {data} = await sb.from('wizard_steps').select('*').order('id');
+            div.innerHTML = '';
+            if(!data) return;
+            data.forEach(s => {
+                const item = document.createElement('div'); item.className='step-item';
+                item.innerHTML = `<b>${s.id}</b> ${s.is_start?'(시작)':''}<br><small>${s.question}</small>`;
+                item.onclick = () => loadStepDetail(s);
+                div.appendChild(item);
+            });
+        };
+        window.addNewStep = () => {
+            loadStepDetail({id:'step_'+Date.now(), question:'', description:'', is_start:false});
+            document.getElementById('editStepId').readOnly = false;
+        };
+        async function loadStepDetail(s) {
+            wizStepId = s.id;
+            document.getElementById('stepDetailView').style.display='block';
+            document.getElementById('editStepId').value = s.id;
+            if(!s.id.startsWith('step_')) document.getElementById('editStepId').readOnly = true;
+            document.getElementById('editStepQ').value = s.question;
+            document.getElementById('editStepD').value = s.description||'';
+            document.getElementById('editStepStart').checked = s.is_start;
+            const {data:opts} = await sb.from('wizard_options').select('*').eq('step_id', s.id).order('display_order');
+            const con = document.getElementById('optionListContainer'); con.innerHTML='';
+            if(opts) opts.forEach(o => addOptionRow(o));
+        }
+        window.addOptionRow = (o) => {
+            const con = document.getElementById('optionListContainer');
+            const div = document.createElement('div'); div.className='opt-row';
+            div.innerHTML = `<input placeholder="버튼명" class="input-text" value="${o?o.label:''}" data-f="l"><input placeholder="다음단계ID" class="input-text" value="${o?o.next_step_id||'':''}" data-f="n"><input placeholder="상품Key" class="input-text" value="${o?o.linked_product_key||'':''}" data-f="p"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>`;
+            con.appendChild(div);
+        };
+        window.saveStep = async() => {
+            const id = document.getElementById('editStepId').value;
+            const q = document.getElementById('editStepQ').value;
+            if(!id) return alert("ID 필수");
+            
+            // 1. Upsert Step
+            const {error} = await sb.from('wizard_steps').upsert({ id: id, question: q, description: document.getElementById('editStepD').value, is_start: document.getElementById('editStepStart').checked });
+            if(error) return alert("저장 실패: "+error.message);
+
+            // 2. Options
+            await sb.from('wizard_options').delete().eq('step_id', id);
+            const rows = document.querySelectorAll('.opt-row');
+            const newOpts = [];
+            rows.forEach((r, i) => {
+                const l = r.querySelector('[data-f="l"]').value;
+                if(l) newOpts.push({ step_id: id, label: l, display_order: i, next_step_id: r.querySelector('[data-f="n"]').value || null, linked_product_key: r.querySelector('[data-f="p"]').value || null });
+            });
+            if(newOpts.length>0) await sb.from('wizard_options').insert(newOpts);
+            alert("저장 완료"); loadWizard();
+        };
+        window.deleteStep = async() => { if(confirm("삭제?")) { await sb.from('wizard_steps').delete().eq('id', wizStepId); document.getElementById('stepDetailView').style.display='none'; loadWizard(); }};
+
+        // ================= Templates (Optimized Fetch) =================
+        window.toggleTplInput = () => { document.getElementById('divTplData').style.display = (document.getElementById('tplCat').value==='vector')?'block':'none'; };
+        
+        window.loadTemplates = async() => {
+            const g = document.getElementById('tplGrid'); g.innerHTML='Loading...';
+            // ★ 수정됨: 전체(*)가 아니라 필요한 컬럼만 가져옴 (Timeout 방지)
+            const {data, error} = await sb.from('library').select('id, category, thumb_url').order('created_at',{ascending:false});
+            
+            if(error) return g.innerHTML = `Error: ${error.message}`;
+            g.innerHTML='';
+            if(data) data.forEach(t => {
+                // 이미지가 Base64이거나 URL인지 확인
+                let src = t.thumb_url;
+                if(!src) src = 'https://via.placeholder.com/150';
+                g.innerHTML += `<div class="tpl-card"><img src="${src}" class="tpl-img"><button class="tpl-del" onclick="delTpl(${t.id})">삭제</button></div>`;
+            });
+        };
+
+        window.uploadTemplate = async() => {
+            const cat = document.getElementById('tplCat').value;
+            const ft = document.getElementById('tplThumb').files[0];
+            const fd = document.getElementById('tplData').files[0];
+            if(!ft) return alert("썸네일 필수");
+            
+            const btn = event.target; btn.innerText="업로드중..."; btn.disabled=true;
+
+            try {
+                const read = (f) => new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(f); });
+                const readTxt = (f) => new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsText(f); });
+                const thumb = await read(ft);
+                let finalData = null;
+                
+                if(cat==='vector') {
+                    if(!fd) throw new Error("SVG파일 필수");
+                    const svg = await readTxt(fd);
+                    await new Promise(r => fabric.loadSVGFromString(svg, (o,OPT) => { finalData={version:"5.3.0",objects:[fabric.util.groupSVGElements(o,OPT).toObject()]}; r(); }));
+                } else {
+                    finalData = {version:"5.3.0",objects:[{type:"image",src:thumb, left:500, top:500}]};
+                }
+                
+                const {error} = await sb.from('library').insert([{category:cat, thumb_url:thumb, data_url:finalData}]);
+                if(error) throw error;
+                
+                alert("완료"); 
+                // 폼 초기화
+                document.getElementById('tplThumb').value='';
+                document.getElementById('tplData').value='';
+                loadTemplates();
+            } catch(e) {
+                alert(e.message);
+            } finally {
+                btn.innerText="등록"; btn.disabled=false;
+            }
+        };
+        window.delTpl = async(id) => { if(confirm("삭제?")){ await sb.from('library').delete().eq('id',id); loadTemplates(); }};
+
+    </script>
+</body>
+</html>

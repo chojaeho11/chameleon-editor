@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 완료</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f8fafc; }
+        .success-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
+        h1 { margin: 0 0 10px 0; color: #111; }
+        p { color: #666; margin-bottom: 30px; }
+        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; color: #333; font-weight: bold; cursor: pointer; text-decoration: none; box-sizing: border-box; transition: 0.2s; }
+        .btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .btn-primary { background: #6366f1; color: white; border: none; margin-top: 20px; }
+        .btn-primary:hover { background: #4f46e5; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="success-box">
+        <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
+        <h1>주문 완료!</h1>
+        <p>주문이 성공적으로 접수되었습니다.</p>
+
+        <div id="downloadArea">
+            <a id="btnOrderSheet" class="btn hidden" target="_blank">📄 작업지시서 다운로드</a>
+            <a id="btnQuotation" class="btn hidden" target="_blank">📑 견적서 다운로드</a>
+        </div>
+
+        <button onclick="location.href='/'" class="btn btn-primary">확인 (홈으로)</button>
+    </div>
+
+    <script type="module">
+        // config.js에서 Supabase 설정 가져오기
+        import { sb } from './config.js';
+
+        async function init() {
+            // URL에서 db_id 가져오기
+            const params = new URLSearchParams(window.location.search);
+            const dbId = params.get('db_id');
+
+            if (!dbId || !sb) return;
+
+            // DB에서 파일 정보 조회
+            const { data, error } = await sb
+                .from('orders')
+                .select('files')
+                .eq('id', dbId)
+                .single();
+
+            if (error || !data || !data.files) {
+                console.error("파일 조회 실패", error);
+                return;
+            }
+
+            // 파일 버튼 활성화
+            const files = data.files;
+            
+            // 작업지시서 찾기
+            const orderSheet = files.find(f => f.type === 'order_sheet');
+            if (orderSheet) {
+                const btn = document.getElementById('btnOrderSheet');
+                btn.href = orderSheet.url;
+                btn.download = orderSheet.name; // 다운로드 속성 추가
+                btn.classList.remove('hidden');
+            }
+
+            // 견적서 찾기
+            const quote = files.find(f => f.type === 'quotation');
+            if (quote) {
+                const btn = document.getElementById('btnQuotation');
+                btn.href = quote.url;
+                btn.download = quote.name;
+                btn.classList.remove('hidden');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

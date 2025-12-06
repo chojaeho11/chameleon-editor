@@ -1,6 +1,5 @@
-// order.js
 import { canvas } from "./canvas-core.js";
-import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js"; 
+import { PRODUCT_DB, cartData, currentUser, sb } from "./config.js"; // ADDON_DB 제거됨
 import { applySize } from "./canvas-size.js";
 import { generateOrderSheetPDF, generateProductVectorPDF, generateQuotationPDF, generateRasterPDF } from "./export.js"; 
 
@@ -64,14 +63,12 @@ export function initOrderSystem() {
     if (btnPrintQuote) {
         btnPrintQuote.onclick = async () => {
             if (cartData.length === 0) return alert("상품이 없습니다.");
-            // 임시 고객 정보 생성
             const mockInfo = {
                 manager: currentUser?.email?.split('@')[0] || "고객",
                 phone: "",
                 date: new Date().toLocaleDateString()
             };
             try {
-                // export.js의 PDF 생성 함수 호출
                 const blob = await generateQuotationPDF(mockInfo, cartData);
                 if (blob) downloadBlob(blob, `견적서_${new Date().toISOString().slice(0,10)}.pdf`);
             } catch(e) {
@@ -80,6 +77,9 @@ export function initOrderSystem() {
             }
         };
     }
+
+    // [초기화] 페이지 로드 시 장바구니 UI 렌더링
+    renderCart();
 }
 
 // [2] 캘린더 로직
@@ -112,7 +112,6 @@ function renderCalendar() {
     for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
     
     let minDate = new Date(); 
-    // 최소 3일 뒤부터 선택 가능 로직 (주말 제외 등 단순화)
     let count = 0; 
     while(count < 3) { 
         minDate.setDate(minDate.getDate() + 1); 
@@ -152,7 +151,6 @@ function saveCart() {
     } catch(e) { console.error("장바구니 저장 실패", e); } 
 }
 
-// [중요] 상품 상세 열기 (HTML onclick에서 호출되므로 export 필수)
 export function openProductDetail(key, w, h, mode) {
     let product = PRODUCT_DB[key];
     if (!product) {
@@ -169,19 +167,16 @@ export function openProductDetail(key, w, h, mode) {
     document.getElementById("productDetailModal").style.display = "flex";
 }
 
-// [중요] 디자인 시작 함수 (HTML onclick에서 호출되므로 export 필수)
 export function startDesignFromProduct() { 
     if(!currentTargetProduct) return; 
     const { w, h, key, mode } = currentTargetProduct; 
     
     document.getElementById("productDetailModal").style.display = "none"; 
     
-    // 캔버스 크기 변경
     applySize(w, h, key, mode, 'replace'); 
     
     switchToEditor(); 
     
-    // [수정] 전역 변수에도 저장하여 장바구니 담을 때 참조 가능하게 함
     canvas.currentProductKey = key; 
     window.currentProductKey = key; 
 }
@@ -192,15 +187,11 @@ function switchToEditor() {
     window.dispatchEvent(new Event('resize')); 
 }
 
-// 현재 캔버스 상태를 장바구니에 추가
 async function addCanvasToCart() {
-    // [핵심 수정] 전역 변수(window.currentProductKey)를 최우선으로 확인
     const key = window.currentProductKey || canvas.currentProductKey || 'A4'; 
     const product = PRODUCT_DB[key] || PRODUCT_DB['A4'];
     
-    // 썸네일 생성
     const thumb = canvas.toDataURL({ format: 'png', multiplier: 0.5, quality: 0.8 });
-    // 캔버스 데이터 저장
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst']);
     const board = canvas.getObjects().find(o => o.isBoard);
     
@@ -212,7 +203,6 @@ async function addCanvasToCart() {
         json: json,
         width: board ? board.width : canvas.width, 
         height: board ? board.height : canvas.height,
-        addons: {}, 
         isOpen: true, 
         qty: 1
     });
@@ -222,7 +212,6 @@ async function addCanvasToCart() {
     alert(`[${product.name}] 상품이 장바구니에 담겼습니다.`);
 }
 
-// 파일 업로드로 장바구니 추가
 function addFileToCart(e) {
     const file = e.target.files[0]; 
     if(!file || !currentTargetProduct) return;
@@ -232,7 +221,6 @@ function addFileToCart(e) {
         const fileDataURI = evt.target.result; 
         let thumbUrl = 'https://placehold.co/100?text=FILE';
         
-        // PDF 썸네일 생성 시도
         if (file.type === 'application/pdf' && window.pdfjsLib) {
             try {
                 const arrayBuffer = await file.arrayBuffer();
@@ -258,7 +246,6 @@ function addFileToCart(e) {
             mimeType: file.type, 
             fileData: fileDataURI,
             thumb: thumbUrl, 
-            addons: {}, 
             isOpen: true, 
             qty: 1 
         });
@@ -271,7 +258,7 @@ function addFileToCart(e) {
     reader.readAsDataURL(file);
 }
 
-// 장바구니 렌더링
+// 장바구니 렌더링 (수정: 추가 옵션 로직 제거, 필수 옵션 드롭박스 유지)
 function renderCart() {
     const listArea = document.getElementById("cartListArea"); 
     if(!listArea) return;
@@ -287,30 +274,21 @@ function renderCart() {
     
     cartData.forEach((item, idx) => {
         if (!item.qty) item.qty = 1; 
-        if (!item.addons) item.addons = {}; 
         if (item.isOpen === undefined) item.isOpen = true;
         
+        // 가격 계산: 추가 옵션 없이 (단가 * 수량)
         let itemBasePrice = item.product.price * item.qty; 
-        let addonPriceTotal = 0;
+        let totalItemPrice = itemBasePrice; 
         
-        Object.keys(item.addons).forEach(key => { 
-            const count = item.addons[key]; 
-            if(count > 0 && ADDON_DB[key]) { 
-                addonPriceTotal += ADDON_DB[key].price * count; 
-            } 
-        });
-        
-        const totalItemPrice = itemBasePrice + addonPriceTotal; 
         grandTotal += totalItemPrice;
         
         const div = document.createElement("div"); 
         div.className = "cart-item"; 
-        // 스타일 직접 주입하여 카드 형태 잡기
         div.style.cssText = "display:flex; flexDirection:column; cursor:pointer; transition:all 0.2s; border:1px solid #e2e8f0; background:white; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.03);";
         if (item.isOpen) div.style.borderColor = "var(--primary)";
         
         div.onclick = (e) => { 
-            if(e.target.closest('button')) return; 
+            if(e.target.closest('button') || e.target.closest('select')) return; 
             window.toggleCartAccordion(idx); 
         };
         
@@ -320,21 +298,12 @@ function renderCart() {
         mainRow.style.width = "100%"; 
         mainRow.style.gap = "15px";
         
-        let selectedAddonsText = ""; 
-        const activeAddons = [];
-        Object.keys(item.addons).forEach(k => { 
-            if(item.addons[k] > 0 && ADDON_DB[k]) activeAddons.push(`${ADDON_DB[k].name}(${item.addons[k]}개)`); 
-        });
-        if(activeAddons.length > 0) selectedAddonsText = `<div style="font-size:12px; color:#6366f1; margin-top:6px; line-height:1.4;"><i class="fa-solid fa-check"></i> ${activeAddons.join(", ")}</div>`;
-        
-        // 수량 버튼 레이아웃 flex-shrink:0 적용
         mainRow.innerHTML = `
             <img src="${item.thumb}" style="width:70px; height:70px; object-fit:contain; border-radius:8px; border:1px solid #eee; background:#fff; flex-shrink:0;">
             <div style="flex:1; min-width:0;">
                 <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">${item.type==='design' ? '디자인' : '파일 업로드'} ${item.isOpen ? '' : '<span style="font-size:11px; color:#999;">(펼치기)</span>'}</div>
                 <h4 style="margin:0; font-size:15px; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.product.name}</h4>
                 <div style="font-weight:700; margin-top:4px;">${totalItemPrice.toLocaleString()}원</div>
-                ${selectedAddonsText}
             </div>
             
             <div class="qty-control" style="display:flex; align-items:center; gap:0; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; flex-shrink:0;">
@@ -349,39 +318,24 @@ function renderCart() {
         `;
         div.appendChild(mainRow);
         
-        if(item.isOpen && item.product.addons && item.product.addons.length > 0) {
-            const addonArea = document.createElement("div"); 
-            addonArea.style.marginTop = "15px"; 
-            addonArea.style.padding = "15px"; 
-            addonArea.style.background = "#f8fafc"; 
-            addonArea.style.borderRadius = "12px"; 
-            addonArea.style.border = "1px solid #e2e8f0"; 
-            addonArea.onclick = (e) => e.stopPropagation(); 
-            
-            let html = `<div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:12px; display:flex; justify-content:space-between;"><span>추가 옵션 선택</span><span style="font-weight:400; font-size:11px;">필요한 옵션을 추가하세요</span></div>`;
-            
-            item.product.addons.forEach(key => {
-                const addonInfo = ADDON_DB[key];
-                if(addonInfo) {
-                    const currentCount = item.addons[key] || 0; 
-                    const isActive = currentCount > 0;
-                    html += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed #e2e8f0;">
-                            <div>
-                                <div style="font-size:13px; color:${isActive ? '#1e293b' : '#64748b'}; font-weight:${isActive ? 'bold' : 'normal'};">${addonInfo.name}</div>
-                                <div style="font-size:11px; color:#94a3b8;">+${addonInfo.price.toLocaleString()}원</div>
-                            </div>
-                            <div style="display:flex; align-items:center; background:#fff; border:1px solid ${isActive ? '#6366f1' : '#e2e8f0'}; border-radius:6px; height:28px;">
-                                <button onclick="window.updateAddon(${idx}, '${key}', -1)" style="border:none; background:transparent; width:24px; cursor:pointer; color:#64748b;">-</button>
-                                <span style="font-size:12px; width:20px; text-align:center; font-weight:bold; color:${isActive ? '#6366f1' : '#333'};">${currentCount}</span>
-                                <button onclick="window.updateAddon(${idx}, '${key}', 1)" style="border:none; background:transparent; width:24px; cursor:pointer; color:#64748b;">+</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            addonArea.innerHTML = html; 
-            div.appendChild(addonArea);
+        if(item.isOpen) {
+            // [UI] 필수 옵션 선택창 (기능 없이 디자인만 존재)
+            const requiredOptDiv = document.createElement("div");
+            requiredOptDiv.style.cssText = "background:#f8fafc; padding:10px; border-radius:8px; margin-top:10px; border:1px solid #eee;";
+            requiredOptDiv.innerHTML = `
+                <div style="font-size:13px; color:#ef4444; font-weight:bold; margin-bottom:5px;">
+                    <i class="fa-solid fa-check"></i> 필수 옵션을 선택해주세요
+                </div>
+                <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; background:#fff; cursor:pointer;">
+                    <option>기본 소재 (Standard)</option>
+                    <option>고급 포맥스</option>
+                </select>
+                <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff; cursor:pointer;">
+                    <option>후가공 없음</option>
+                    <option>무광 코팅</option>
+                </select>
+            `;
+            div.appendChild(requiredOptDiv);
         }
         listArea.appendChild(div);
     });
@@ -444,6 +398,7 @@ async function processOrderSubmission() {
         if (!orderData || orderData.length === 0) throw new Error("주문 ID 생성 실패");
         
         newOrderId = orderData[0].id;
+        window.currentDbId = newOrderId; // [중요] DB ID 저장
         const uploadedFiles = [];
         
         // 작업지시서 생성 및 업로드
@@ -479,10 +434,8 @@ async function processOrderSubmission() {
             
             if (item.type === 'design' && item.json) {
                 try { 
-                    // 10MB 제한 제거: 무조건 벡터 PDF 생성 시도 후 실패 시에만 래스터 전환
                     fileBlob = await generateProductVectorPDF(item.json, item.width, item.height); 
-                    
-                    if (!fileBlob) { // 생성 실패 시에만 이미지로 전환
+                    if (!fileBlob) { 
                         console.warn("벡터 PDF 생성 실패, 이미지로 전환합니다.");
                         fileBlob = await generateRasterPDF(item.json, item.width, item.height); 
                     } 
@@ -505,7 +458,6 @@ async function processOrderSubmission() {
         
         btn.innerText = "완료 처리 중...";
         
-        // 파일 정보 DB 업데이트
         await sb.from('orders').update({ files: uploadedFiles, status: '접수됨' }).eq('id', newOrderId);
         
         document.getElementById("deliveryInfoModal").style.display = "none"; 
@@ -535,61 +487,58 @@ async function uploadToSupabase(blob, path) {
     } catch (e) { return null; } 
 }
 
-// [5] 결제 및 최종 완료
+// [5] 결제 및 최종 완료 (추가옵션 가격 제외됨)
 function processPayment() {
-    document.getElementById("checkoutModal").style.display = "none"; 
-    document.getElementById("successModal").style.display = "flex";
+    const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"; 
     
-    const savedInfo = { 
-        date: selectedDeliveryDate, 
-        manager: document.getElementById("orderName").value, 
-        phone: document.getElementById("orderPhone").value, 
-        address: document.getElementById("orderAddr").value, 
-        note: "-" 
-    };
+    if (typeof TossPayments === 'undefined') {
+        alert("토스페이먼츠 SDK가 로드되지 않았습니다.");
+        return;
+    }
     
-    // 다운로드 버튼에 이벤트 연결
-    const finalCartData = [...cartData];
-    
-    document.getElementById("btnDownOrderSheet").onclick = async () => { 
-        try {
-            const blob = await generateOrderSheetPDF(savedInfo, finalCartData); 
-            if(blob) downloadBlob(blob, "작업지시서.pdf"); 
-        } catch(e) { console.error(e); alert("다운로드 실패"); }
-    };
-    
-    document.getElementById("btnDownQuotation").onclick = async () => { 
-        try {
-            const blob = await generateQuotationPDF(savedInfo, finalCartData); 
-            if(blob) downloadBlob(blob, "견적서.pdf"); 
-        } catch(e) { console.error(e); alert("다운로드 실패"); }
-    };
-    
-    // 장바구니 비우기
-    cartData.length = 0; 
-    localStorage.removeItem(currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest'); 
-    renderCart(); 
-    updateSummary(0);
+    // 2. 결제 금액 계산 (추가 옵션 제외, 기본 가격만)
+    let totalAmount = 0;
+    cartData.forEach(item => {
+        let price = item.product.price * (item.qty || 1);
+        totalAmount += price;
+    });
+
+    if (totalAmount === 0) {
+        alert("결제할 금액이 없습니다.");
+        return;
+    }
+
+    const tossPayments = TossPayments(clientKey);
+    const orderId = "order_" + new Date().getTime(); 
+    const dbIdParam = window.currentDbId ? `?db_id=${window.currentDbId}` : "";
+
+    tossPayments.requestPayment("카드", {
+        amount: totalAmount,
+        orderId: orderId,
+        orderName: `카멜레온 디자인 주문 (${cartData.length}건)`,
+        customerName: document.getElementById("orderName").value,
+        successUrl: window.location.origin + "/success.html" + dbIdParam, 
+        failUrl: window.location.origin + "/fail.html",
+    })
+    .catch(function (error) {
+        if (error.code === "USER_CANCEL") {} 
+        else { alert("결제 연동 에러: " + error.message); }
+    });
 }
 
-// Base64 -> Blob 변환 유틸
 function base64ToBlob(base64, mimeType) { 
     const byteCharacters = atob(base64); 
     const byteArrays = []; 
-    
     for (let offset = 0; offset < byteCharacters.length; offset += 512) { 
         const slice = byteCharacters.slice(offset, offset + 512); 
         const byteNumbers = new Array(slice.length); 
-        for (let i = 0; i < slice.length; i++) { 
-            byteNumbers[i] = slice.charCodeAt(i); 
-        } 
+        for (let i = 0; i < slice.length; i++) { byteNumbers[i] = slice.charCodeAt(i); } 
         const byteArray = new Uint8Array(byteNumbers); 
         byteArrays.push(byteArray); 
     } 
     return new Blob(byteArrays, { type: mimeType }); 
 }
 
-// Window 객체에 헬퍼 함수 할당 (HTML에서 호출 가능하도록)
 window.toggleCartAccordion = (idx) => { 
     cartData[idx].isOpen = !cartData[idx].isOpen; 
     renderCart(); 
@@ -604,16 +553,6 @@ window.updateCartQty = (idx, change) => {
         saveCart(); 
         renderCart(); 
     } 
-};
-
-window.updateAddon = (idx, key, delta) => { 
-    const item = cartData[idx]; 
-    if(!item.addons) item.addons = {}; 
-    if(!item.addons[key]) item.addons[key] = 0; 
-    item.addons[key] += delta; 
-    if(item.addons[key] < 0) item.addons[key] = 0; 
-    saveCart(); 
-    renderCart(); 
 };
 
 window.removeCartItem = (idx) => { 
