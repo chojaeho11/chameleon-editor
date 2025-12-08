@@ -83,11 +83,10 @@ async function searchTemplates(category, keyword) {
     }
 
     try {
-        // ★ [핵심 최적화] data_url(무거운 JSON)은 빼고 가져옴
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, width, height, product_key, created_at')
             .order('created_at', { ascending: false })
-            .limit(50); // 개수 제한
+            .limit(50);
 
         if (category && category !== 'all') {
             query = query.eq('category', category);
@@ -123,9 +122,8 @@ async function searchTemplates(category, keyword) {
                 document.querySelectorAll(".tpl-item").forEach((i) => i.classList.remove("selected"));
                 card.classList.add("selected");
                 
-                // 선택 시 id만 저장 (JSON은 적용 버튼 누를 때 로딩)
                 selectedTpl = { 
-                    id: item.id, // ID 저장
+                    id: item.id, 
                     category: item.category,
                     width: item.width || 1000, 
                     height: item.height || 1000, 
@@ -145,7 +143,6 @@ async function searchTemplates(category, keyword) {
 async function useSelectedTemplate() {
     if (!selectedTpl) return alert("템플릿을 선택해주세요.");
     
-    // 현재 캔버스에 객체가 있는지 확인
     const objects = canvas.getObjects().filter(o => !o.isBoard);
     if (objects.length > 0) {
         document.getElementById("loadModeModal").style.display = "flex";
@@ -154,14 +151,13 @@ async function useSelectedTemplate() {
     }
 }
 
-// 템플릿 로드 프로세스 (DB에서 JSON을 그때 가져옴)
+// 템플릿 로드 프로세스 (수정됨: 그룹 해제 강화)
 async function processLoad(mode) {
     document.getElementById("loadModeModal").style.display = "none";
     document.getElementById("templateOverlay").style.display = "none";
     document.getElementById("loading").style.display = "flex";
 
     try {
-        // ★ [Lazy Loading] 여기서 진짜 데이터(JSON)를 가져옴
         const { data, error } = await sb
             .from('library')
             .select('data_url')
@@ -172,7 +168,6 @@ async function processLoad(mode) {
 
         let jsonData = data.data_url;
 
-        // 문자열이면 파싱
         if (typeof jsonData === 'string') {
             if(jsonData.startsWith('http')) { 
                 const res = await fetch(jsonData); 
@@ -182,16 +177,13 @@ async function processLoad(mode) {
             }
         }
 
-        // [교체 모드] 대지 크기 변경
         if (mode === 'replace') {
             const newW = selectedTpl.width || 1000;
             const newH = selectedTpl.height || 1000;
             const newKey = selectedTpl.product_key || 'Custom';
-            
             applySize(newW, newH, newKey, 'standard', 'replace');
         }
 
-        // JSON에서 대지 객체 제외
         if(jsonData.objects) jsonData.objects = jsonData.objects.filter(o => !o.isBoard);
 
         fabric.util.enlivenObjects(jsonData.objects, (objs) => {
@@ -201,11 +193,10 @@ async function processLoad(mode) {
                 return; 
             }
 
-            // 잠금 해제
+            // [1] 객체 초기화 (모바일 터치 오류 방지)
             objs.forEach(obj => {
                 obj.set({
-                    selectable: true,
-                    evented: true,
+                    selectable: true, evented: true,
                     lockMovementX: false, lockMovementY: false,
                     lockScalingX: false, lockScalingY: false,
                     hasControls: true, hasBorders: true
@@ -220,24 +211,26 @@ async function processLoad(mode) {
             const centerX = board ? (board.left + boardW / 2) : canvas.width / 2;
             const centerY = board ? (board.top + boardH / 2) : canvas.height / 2;
 
+            group.set({ left: centerX, top: centerY });
+            
             if (mode === 'add') {
                 const limitW = boardW * 0.7;
                 const limitH = boardH * 0.7;
                 const scale = Math.min(limitW / group.width, limitH / group.height);
                 group.scale(scale);
-                group.set({ left: centerX, top: centerY });
-                canvas.add(group);
-                group.setCoords();
-                canvas.setActiveObject(group);
-            } else {
-                group.set({ left: centerX, top: centerY });
-                canvas.add(group);
-                group.toActiveSelection();
-                canvas.discardActiveObject();
             }
 
+            canvas.add(group);
+
+            // [2] 그룹 해제 및 선택 해제 (텍스트 수정 가능하게)
+            group.toActiveSelection();
+            canvas.discardActiveObject(); 
+            
             canvas.requestRenderAll();
+            
+            // [3] 화면 꽉 채우기 실행
             setTimeout(() => resetViewToCenter(), 100);
+            
             document.getElementById("loading").style.display = "none";
         });
 
@@ -246,6 +239,46 @@ async function processLoad(mode) {
         alert("템플릿 불러오기 실패: " + e.message);
         document.getElementById("loading").style.display = "none";
     }
+}
+
+// [수정됨] 화면 꽉 채우기 (여백 최소화)
+function resetViewToCenter() {
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
+
+    const containerW = canvas.getWidth(); 
+    const containerH = canvas.getHeight();
+    const boardW = board.getScaledWidth();
+    const boardH = board.getScaledHeight();
+
+    if (boardW === 0 || boardH === 0) return;
+
+    const isMobile = window.innerWidth < 768;
+    
+    // ★ 여기가 화면 꽉 채우기 핵심입니다.
+    // PC일 땐 왼쪽 패널(320px) 만큼 비우지만,
+    // 모바일일 땐 여백을 20px(좌10+우10)로 줄여서 꽉 차게 만듭니다.
+    const paddingX = isMobile ? 20 : 320; 
+    
+    // 상하 여백도 모바일은 툴바 높이 정도만 남깁니다.
+    const paddingY = isMobile ? 120 : 100; 
+
+    const safeWidth = Math.max(containerW - paddingX, 50);
+    const safeHeight = Math.max(containerH - paddingY, 50);
+
+    // zoom 비율 계산 (0.98 = 98% 꽉 차게)
+    const zoom = Math.min(safeWidth / boardW, safeHeight / boardH) * 0.98;
+    const safeZoom = Math.min(Math.max(zoom, 0.05), 5); 
+
+    canvas.setZoom(safeZoom);
+    
+    const vpt = canvas.viewportTransform;
+    vpt[4] = (containerW - boardW * safeZoom) / 2; // X축 중앙 정렬
+    vpt[5] = (containerH - boardH * safeZoom) / 2; // Y축 중앙 정렬
+    
+    if(isMobile) vpt[5] += 10; // 모바일 미세 조정
+
+    canvas.requestRenderAll();
 }
 
 // 관리자용 템플릿 등록
@@ -267,7 +300,6 @@ async function registerOfficialTemplate() {
     canvas.discardActiveObject();
     canvas.requestRenderAll();
 
-    // 데이터 추출
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth']);
     const board = canvas.getObjects().find(o => o.isBoard);
     const originalVpt = canvas.viewportTransform; 
@@ -317,26 +349,4 @@ async function registerOfficialTemplate() {
         canvas.requestRenderAll();
         btn.innerText = originalText;
     }
-}
-
-function resetViewToCenter() {
-    const board = canvas.getObjects().find(o => o.isBoard);
-    if (!board) return;
-
-    const containerW = canvas.getWidth(); 
-    const containerH = canvas.getHeight();
-    const safeWidth = Math.max(containerW - 300, 100); 
-    const boardW = board.getScaledWidth();
-    const boardH = board.getScaledHeight();
-
-    if (boardW === 0 || boardH === 0) return;
-
-    const zoom = Math.min(safeWidth / boardW, containerH / boardH) * 0.85;
-    const safeZoom = Math.min(Math.max(zoom, 0.05), 5); 
-
-    canvas.setZoom(safeZoom);
-    const vpt = canvas.viewportTransform;
-    vpt[4] = (containerW - boardW * safeZoom) / 2;
-    vpt[5] = (containerH - boardH * safeZoom) / 2;
-    canvas.requestRenderAll();
 }

@@ -10,7 +10,6 @@ export function initAuth() {
             if (currentUser) {
                 btnLogin.innerText = isAdmin ? "관리자 로그아웃" : "로그아웃";
                 btnLogin.classList.add("primary");
-                // 관리자라면 버튼 색상을 다르게 표시 (선택사항)
                 if (isAdmin) btnLogin.style.backgroundColor = "#dc2626"; 
             } else {
                 btnLogin.innerText = "로그인";
@@ -19,10 +18,24 @@ export function initAuth() {
             }
         };
 
-        btnLogin.onclick = () => {
+        // [핵심 수정 1] 로그아웃 로직 강화 (try-finally 적용)
+        btnLogin.onclick = async () => {
             if (currentUser) {
-                if (confirm(isAdmin ? "관리자 계정에서 로그아웃 하시겠습니까?" : "로그아웃 하시겠습니까?")) {
-                    sb.auth.signOut().then(() => location.reload());
+                const msg = isAdmin ? "관리자 계정에서 로그아웃 하시겠습니까?" : "로그아웃 하시겠습니까?";
+                if (!confirm(msg)) return;
+
+                btnLogin.innerText = "처리 중...";
+
+                try {
+                    // 배포 환경에서 브라우저 보안으로 인해 signOut이 차단되더라도
+                    if (sb && sb.auth) {
+                        await sb.auth.signOut();
+                    }
+                } catch (e) {
+                    console.error("로그아웃 통신 오류(무시하고 진행):", e);
+                } finally {
+                    // 에러 여부와 관계없이 무조건 강제 새로고침하여 로그아웃 처리
+                    window.location.reload(); 
                 }
             } else {
                 openLoginModal();
@@ -35,7 +48,10 @@ export function initAuth() {
     // 2. 로그인/회원가입 모드 전환 버튼
     const btnSwitch = document.getElementById("btnSwitchAuthMode");
     if (btnSwitch) {
-        btnSwitch.onclick = toggleAuthMode;
+        btnSwitch.onclick = () => {
+            isSignUpMode = !isSignUpMode; // 상태 반전
+            updateModalUI(); // UI 업데이트
+        };
     }
 
     // 3. 실행 버튼 (로그인 또는 가입하기)
@@ -51,31 +67,38 @@ export function initAuth() {
     if (btnGoogle) btnGoogle.onclick = () => handleSocialLogin("google");
     if (btnKakao) btnKakao.onclick = () => handleSocialLogin("kakao");
     
-    // 5. 엔터키 입력 시 자동 실행
+    // 5. 엔터키 입력 시 자동 실행 (모바일 키보드 호환성 위해 keydown 사용)
     const inputPw = document.getElementById("loginPw");
     if(inputPw) {
-        inputPw.onkeyup = (e) => { if(e.key === 'Enter') handleAuthAction(); };
+        inputPw.addEventListener("keydown", (e) => {
+            if(e.key === 'Enter') {
+                e.preventDefault(); // 모바일 줄바꿈 방지
+                handleAuthAction();
+            }
+        });
     }
 }
 
+// 모달 열기 함수
 function openLoginModal() {
     const modal = document.getElementById("loginModal");
     if (modal) {
         modal.style.display = "flex";
-        // 모달 열 때 항상 로그인 모드로 초기화
-        isSignUpMode = true; 
-        toggleAuthMode(); 
-        // ★ [테스트용] 여기에 아이디/비번 자동 입력 코드 추가
-        document.getElementById("loginId").value = "whwogh11";
-        document.getElementById("loginPw").value = "0529as";
+        
+        // [핵심 수정 2] 모달 열 때 항상 '로그인' 모드로 초기화
+        isSignUpMode = false; 
+        updateModalUI(); 
+        
+        // [핵심 수정 3] 입력창 초기화 (테스트용 하드코딩 삭제됨)
+        document.getElementById("loginId").value = "";
+        document.getElementById("loginPw").value = "";
+        const pwConfirm = document.getElementById("loginPwConfirm");
+        if(pwConfirm) pwConfirm.value = "";
     }
 }
-    
 
-// 모드 전환 (로그인 <-> 회원가입)
-function toggleAuthMode() {
-    isSignUpMode = !isSignUpMode;
-    
+// UI 업데이트 전용 함수 (상태에 따라 텍스트/보임 여부 변경)
+function updateModalUI() {
     const title = document.getElementById("authTitle");
     const actionBtn = document.getElementById("btnAuthAction");
     const switchText = document.getElementById("authSwitchText");
@@ -127,9 +150,14 @@ async function handleAuthAction() {
             });
             if (error) throw error;
             
-            alert("가입 확인 메일을 발송했습니다.\n이메일을 확인하여 인증을 완료해주세요! (인증 후 로그인 가능)");
-            // 자동 로그인이 안 되는 설정일 수 있으므로 모달 닫기
-            document.getElementById("loginModal").style.display = "none";
+            // Supabase 설정에 따라 data.session이 바로 들어오는 경우(이메일 인증 불필요)
+            if (data.session) {
+                alert("회원가입이 완료되었습니다! 자동 로그인됩니다.");
+                location.reload();
+            } else {
+                alert("가입 확인 메일을 발송했습니다.\n이메일을 확인하여 인증을 완료해주세요! (인증 후 로그인 가능)");
+                document.getElementById("loginModal").style.display = "none";
+            }
             
         } else {
             // --- 로그인 ---
@@ -139,7 +167,7 @@ async function handleAuthAction() {
             });
             if (error) throw error;
             
-            // 관리자 로그인 체크는 config.js의 onAuthStateChange에서 처리됨
+            // 로그인 성공 시 새로고침
             location.reload(); 
         }
     } catch (e) {
@@ -155,13 +183,12 @@ async function handleSocialLogin(provider) {
     if (!sb) return alert("DB 미연결");
     
     // 현재 URL (로그인 후 돌아올 주소)
-    const redirectUrl = window.location.origin; // 예: https://your-site.com
+    const redirectUrl = window.location.origin; 
     
     const { data, error } = await sb.auth.signInWithOAuth({
         provider: provider,
         options: {
             redirectTo: redirectUrl, 
-            // 카카오의 경우 prompt 옵션 등이 필요할 수 있음
             queryParams: {
                 access_type: 'offline',
                 prompt: 'consent',
@@ -170,5 +197,4 @@ async function handleSocialLogin(provider) {
     });
 
     if (error) alert(provider + " 로그인 실패: " + error.message);
-    // OAuth는 자동으로 리다이렉트 되므로 추가 처리 불필요
 }
