@@ -498,9 +498,105 @@
             }
         };
         window.uploadTemplate = async () => {
-             // 기존 업로드 로직 유지 (너무 길어서 생략)
-             alert("등록 기능 (서버 연결 필요)");
+            const btn = document.querySelector('.tpl-form button.btn-primary');
+            const originalText = btn.innerText;
+            
+            // 1. 입력값 가져오기
+            const cat = document.getElementById('tplCategory').value;
+            const tags = document.getElementById('tplTags').value;
+            const thumbFile = document.getElementById('fileThumb').files[0];
+            const dataFile = document.getElementById('fileData').files[0];
+
+            // 2. 유효성 검사
+            if (!thumbFile) return alert("썸네일 이미지는 필수입니다.");
+            if (cat === 'transparent-graphic' && !dataFile) return alert("로고용 SVG 파일은 필수입니다.");
+
+            try {
+                btn.innerText = "업로드 중...";
+                btn.disabled = true;
+
+                const timestamp = Date.now();
+                let thumbUrl = '';
+                let dataUrl = '';
+
+                // 3. 썸네일 업로드 (Storage: design 버킷)
+                // 파일명에 한글이 있으면 오류가 날 수 있으니 영문 타임스탬프 사용
+                const thumbPath = `thumbs/${timestamp}_thumb_${Math.floor(Math.random()*1000)}`;
+                const { data: tData, error: tErr } = await sb.storage
+                    .from('design')
+                    .upload(thumbPath, thumbFile);
+
+                if (tErr) throw tErr;
+                
+                // 업로드된 이미지의 공개 주소 가져오기
+                const { data: tUrlData } = sb.storage.from('design').getPublicUrl(thumbPath);
+                thumbUrl = tUrlData.publicUrl;
+
+                // 4. 데이터 파일(SVG) 처리
+                if (cat === 'transparent-graphic' || cat === 'vector') {
+                    if (dataFile) {
+                        // SVG는 파일로 올리거나, 텍스트로 읽어서 DB에 넣을 수 있습니다.
+                        // 여기서는 로고 공장과 통일성을 위해 '텍스트 데이터'로 변환해 넣습니다.
+                        dataUrl = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                // Base64 형태로 변환 (data:image/svg+xml;base64,...)
+                                resolve(e.target.result); 
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(dataFile);
+                        });
+                    } else {
+                        dataUrl = thumbUrl; // 파일 없으면 썸네일 주소 사용
+                    }
+                } else {
+                    // 사진 배경인 경우 원본도 이미지
+                    if (dataFile) {
+                        const dataPath = `assets/${timestamp}_data_${Math.floor(Math.random()*1000)}`;
+                        const { error: dErr } = await sb.storage.from('design').upload(dataPath, dataFile);
+                        if (dErr) throw dErr;
+                        const { data: dUrlData } = sb.storage.from('design').getPublicUrl(dataPath);
+                        dataUrl = dUrlData.publicUrl;
+                    } else {
+                        dataUrl = thumbUrl; // 데이터 파일 안 올리면 썸네일 사용
+                    }
+                }
+
+                // 5. DB(library 테이블)에 정보 저장
+                const { error: dbErr } = await sb.from('library').insert({
+                    category: cat,
+                    tags: tags || '관리자등록',
+                    thumb_url: thumbUrl,
+                    data_url: dataUrl,
+                    width: 1000,   // 기본값
+                    height: 1000,  // 기본값
+                    product_key: 'admin_upload',
+                    created_at: new Date().toISOString()
+                });
+
+                if (dbErr) throw dbErr;
+
+                alert("✅ 템플릿 등록 성공!");
+                
+                // 폼 초기화
+                document.getElementById('fileThumb').value = '';
+                document.getElementById('fileData').value = '';
+                document.getElementById('tplTags').value = '';
+                document.getElementById('previewThumb').style.display = 'none';
+                document.getElementById('dataStatus').style.display = 'none';
+                
+                // 목록 새로고침
+                loadTemplates();
+
+            } catch (e) {
+                console.error("업로드 오류:", e);
+                alert("❌ 업로드 실패: " + (e.message || "알 수 없는 오류"));
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         };
+    
         window.deleteTemplate = async (id) => { if(confirm("삭제?")) { await sb.from('library').delete().eq('id',id); loadTemplates(); }};
 
         // ===========================================

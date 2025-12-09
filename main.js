@@ -140,3 +140,37 @@ function initMobileTextEditor() {
         activeTextObj = null;
     }
 }
+// =========================================
+// [모바일] 패널 열고 닫기 토글 기능 (플로팅 버튼용)
+// =========================================
+window.toggleMobilePanel = function(side) {
+    const leftPanel = document.getElementById('toolsPanel');
+    const rightPanel = document.getElementById('rightStackPanel');
+
+    if (side === 'left') {
+        // [왼쪽 버튼 클릭] 왼쪽 열고/닫기, 오른쪽은 무조건 닫기
+        if (leftPanel) leftPanel.classList.toggle('open');
+        if (rightPanel) rightPanel.classList.remove('open');
+    } else if (side === 'right') {
+        // [오른쪽 버튼 클릭] 오른쪽 열고/닫기, 왼쪽은 무조건 닫기
+        if (rightPanel) rightPanel.classList.toggle('open');
+        if (leftPanel) leftPanel.classList.remove('open');
+    }
+};
+
+// (옵션) 캔버스 빈 곳을 터치하면 열려있던 패널들 닫기
+document.addEventListener('DOMContentLoaded', () => {
+    const stage = document.getElementById('stage');
+    if(stage) {
+        stage.addEventListener('click', (e) => {
+            // 버튼이나 패널 내부를 클릭한 게 아니라면 -> 패널 닫기
+            if (!e.target.closest('.mobile-fab') && !e.target.closest('.side') && !e.target.closest('.right-stack')) {
+                const leftPanel = document.getElementById('toolsPanel');
+                const rightPanel = document.getElementById('rightStackPanel');
+                
+                if(leftPanel) leftPanel.classList.remove('open');
+                if(rightPanel) rightPanel.classList.remove('open');
+            }
+        });
+    }
+});

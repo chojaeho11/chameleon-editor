@@ -518,3 +518,26 @@ function alignObjects(direction) {
     }
     canvas.requestRenderAll();
 }
+// [추가 기능] 모바일 에디터에서 객체 삭제하기
+window.deleteMobileObject = function() {
+    if (!canvas) return;
+
+    const activeObj = canvas.getActiveObject();
+    
+    if (activeObj) {
+        // 1. 캔버스에서 제거
+        canvas.remove(activeObj);
+        
+        // 2. 선택 해제
+        canvas.discardActiveObject();
+        
+        // 3. 화면 갱신
+        canvas.requestRenderAll();
+        
+        // 4. 에디터 창 닫기
+        window.closeMobileTextEditor();
+        
+        // (선택사항) 삭제 알림이 필요하면 주석 해제
+        // alert("삭제되었습니다.");
+    }
+};

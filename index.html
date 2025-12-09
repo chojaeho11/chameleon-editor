@@ -392,41 +392,100 @@
 .opt-price { font-size: 13px; font-weight: 700; color: #6366f1; white-space: nowrap; margin-left: 5px; }
 
 /* 모바일 화면 최적화 (768px 이하) */
+/* =========================================
+   [모바일 UI 최종 수정: 로고 숨김 + 버튼 위치 조정]
+   ========================================= */
 @media (max-width: 768px) {
-    #cartPage { padding-top: 50px !important; background: #f1f5f9 !important; }
-    #cartListArea { padding-bottom: 200px !important; }
+    /* 1. 상단 로고 숨기기 (공간 확보) */
+    .brand { display: none !important; }
     
-    .cart-item {
-        display: flex; /* 그리드 해제하고 세로 배치 */
+    /* 2. 에디터 영역 확장 */
+    .editor-wrap {
+        height: calc(100vh - 50px) !important;
+        position: relative !important;
+        width: 100vw !important;
+    }
+    
+    /* 3. 캔버스 영역 */
+    .stage {
+        width: 100% !important;
+        height: 100% !important;
+        position: absolute !important;
+        top: 0; left: 0;
+        z-index: 1;
+        background: #e5e5e5;
+    }
+
+    /* 4. 좌측 패널 (평소 숨김) */
+    .side {
+        position: fixed !important;
+        top: 50px; bottom: 0; left: 0;
+        width: 85% !important;
+        max-width: 320px;
+        background: #fff !important;
+        z-index: 10000 !important;
+        border-right: 1px solid #ddd;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        transform: translateX(-120%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex !important;
         flex-direction: column;
-        gap: 0;
-        padding: 0;
-        overflow: hidden;
     }
-    .cart-left-col {
-        padding: 20px;
-        border-bottom: 1px solid #f1f5f9;
-        width: 100%;
+    .side.open { transform: translateX(0); }
+
+    /* 5. 우측 패널 (평소 숨김) */
+    .right-stack {
+        display: flex !important;
+        position: fixed !important;
+        top: 50px; bottom: 0; right: 0;
+        width: 85% !important;
+        max-width: 320px;
+        background: #fff !important;
+        z-index: 10000 !important;
+        border-left: 1px solid #ddd;
+        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        transform: translateX(120%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 20px !important;
+        pointer-events: auto !important;
     }
-    .cart-thumb { width: 80px; height: 80px; }
-    
-    .cart-right-col {
+    .right-stack.open { transform: translateX(0); }
+
+    /* 6. 플로팅 버튼 (위치 조정됨) */
+    #mobileControlDock {
+        display: flex;
+        position: fixed;
+        /* ★★★ 수정됨: 채널톡 버튼 위로 올리기 위해 bottom 값을 20px -> 90px로 변경 */
+        bottom: 90px; 
+        left: 0; right: 0;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 9000;
+        pointer-events: none;
+    }
+    .mobile-fab {
+        pointer-events: auto;
+        width: 55px; height: 55px; /* 크기 살짝 줄임 */
+        border-radius: 50%;
         border: none;
-        background: #f8fafc;
-        border-radius: 0;
-        padding: 20px;
-        width: 100%;
+        color: white;
+        font-size: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        cursor: pointer;
+        transition: transform 0.1s;
     }
-    .cart-title { font-size: 16px; }
-    .cart-price { font-size: 15px; }
+    .mobile-fab:active { transform: scale(0.95); }
+    .mobile-fab span { font-size: 10px; margin-top: 2px; font-weight: bold; }
+    
+    .mobile-fab.left { background: #6366f1; } 
+    .mobile-fab.right { background: #111827; } 
+
+    .panel-box { box-shadow: none !important; border: 1px solid #eee !important; }
 }
-    .cart-item { margin-bottom: 15px; }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; width: 100%; }
-    .cal-day-header { font-weight: 800; text-align: center; padding: 5px 0; color: var(--primary); font-size: 14px; }
-    .cal-day { height: 45px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; border-radius: 8px; background: #f8fafc; transition: 0.2s; }
-    .cal-day:hover:not(.disabled) { background: #eff6ff; color: var(--primary); font-weight: bold; }
-    .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; background: #fff; }
-    .cal-day.selected { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(99,102,241,0.3); }
 
 
     /* =========================================
@@ -501,21 +560,6 @@ input, textarea, select {
         order: 1 !important; 
         margin-right: 5px !important; 
         flex-shrink: 0 !important;
-    }
-
-    /* 2. 장바구니 (아이콘만 표시) */
-    #btnViewCart {
-        order: 2 !important;
-        display: inline-flex !important;
-        font-size: 0 !important;
-        padding: 0 10px !important;
-        flex-shrink: 0 !important;
-        width: 40px !important; /* 터치 영역 확보 */
-        justify-content: center !important;
-    }
-    #btnViewCart::before {
-        content: '🛒';
-        font-size: 18px !important;
     }
 
     /* 3. 로그인 버튼 */
@@ -682,6 +726,154 @@ input, textarea, select {
 #mobileTextInput:focus {
     border-color: #6366f1;
 }
+/* =========================================
+   [NEW] 예쁜 로고 업로드 모달 스타일
+   ========================================= */
+.upload-drop-zone {
+    width: 100%;
+    height: 150px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+.upload-drop-zone:hover, .upload-drop-zone.dragover {
+    border-color: #6366f1;
+    background: #eff6ff;
+    color: #6366f1;
+}
+.upload-icon { font-size: 32px; margin-bottom: 10px; }
+.upload-text { font-size: 14px; font-weight: 600; }
+.upload-sub { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+
+/* 업로드된 이미지 미리보기 */
+#previewImage {
+    display: none;
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    padding: 10px;
+    background: #fff;
+    z-index: 10;
+}
+#removeFileBtn {
+    display: none;
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    font-size: 12px;
+}
+/* =========================================
+   [모바일 UI 대수선: 슬라이드 패널 & 플로팅 버튼]
+   ========================================= */
+#mobileControlDock { display: none; } /* PC에서는 숨김 */
+
+@media (max-width: 768px) {
+    /* 1. 에디터 영역을 화면 전체로 확장 */
+    .editor-wrap {
+        height: calc(100vh - 50px) !important;
+        position: relative !important;
+        width: 100vw !important;
+    }
+    
+    /* 2. 캔버스 영역 (Stage) */
+    .stage {
+        width: 100% !important;
+        height: 100% !important; /* 화면 꽉 채우기 */
+        position: absolute !important;
+        top: 0; left: 0;
+        z-index: 1; /* 맨 아래 */
+        background: #e5e5e5; /* 배경색 구분 */
+    }
+
+    /* 3. 좌측 패널 (#toolsPanel) - 평소엔 숨김 */
+    .side {
+        position: fixed !important;
+        top: 50px; bottom: 0; left: 0;
+        width: 85% !important; /* 화면의 85% 차지 */
+        max-width: 320px;
+        background: #fff !important;
+        z-index: 10000 !important;
+        border-right: 1px solid #ddd;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        transform: translateX(-120%); /* 화면 왼쪽으로 숨김 */
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex !important; /* flex 유지 */
+        flex-direction: column;
+    }
+    .side.open { transform: translateX(0); } /* 열렸을 때 */
+
+    /* 4. 우측 패널 (.right-stack) - 평소엔 숨김 */
+    .right-stack {
+        display: flex !important; /* 강제로 보이게 설정 (기존 none 덮어쓰기) */
+        position: fixed !important;
+        top: 50px; bottom: 0; right: 0;
+        width: 85% !important;
+        max-width: 320px;
+        background: #fff !important; /* 배경색 추가 */
+        z-index: 10000 !important;
+        border-left: 1px solid #ddd;
+        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        transform: translateX(120%); /* 화면 오른쪽으로 숨김 */
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 20px !important;
+        pointer-events: auto !important;
+    }
+    .right-stack.open { transform: translateX(0); } /* 열렸을 때 */
+
+    /* 5. 플로팅 버튼 (FAB) 디자인 */
+    #mobileControlDock {
+        display: flex;
+        position: fixed;
+        bottom: 20px;
+        left: 0; right: 0;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 9000;
+        pointer-events: none; /* 버튼 사이 빈 공간은 터치 통과 */
+    }
+    .mobile-fab {
+        pointer-events: auto;
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        border: none;
+        color: white;
+        font-size: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+    .mobile-fab:active { transform: scale(0.95); }
+    .mobile-fab span { font-size: 10px; margin-top: 2px; font-weight: bold; }
+    
+    .mobile-fab.left { background: #6366f1; } /* 좌측: 보라색 */
+    .mobile-fab.right { background: #111827; } /* 우측: 검정색 */
+
+    /* 패널 내부 스크롤바 확보 */
+    .panel-box { box-shadow: none !important; border: 1px solid #eee !important; }
+}
 </style>
 </head>
 
@@ -764,20 +956,29 @@ input, textarea, select {
 
 <div id="mainEditor">
     <div class="topbar">
-        <div class="brand" onclick="location.reload()"><i class="fa-solid fa-palette"></i> Chameleon</div>
-        <div class="template-tabs">
-            <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'">🎨 템플릿</button>
-            <button class="tpl-tab" data-tpl="vector">배경</button>
-            <button class="tpl-tab" data-tpl="graphic">백터</button>
-            <button class="tpl-tab" data-tpl="photo-bg">사진</button>
-            <button class="tpl-tab" data-tpl="transparent-graphic">로고</button>
-        </div> 
-        <div style="flex:1;"></div>
-        <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'" style="margin-right:5px;">🛒구매하기</button>
-        <button class="btn" id="btnMyLibrary" style="display:none; margin-right:5px;">저장된작업</button>
-        <button class="btn primary" id="btnOrderTop">🚀 주문하기</button>
-        <button class="btn" id="btnLoginBtn">로그인</button>
+    <div class="brand" onclick="location.reload()"><i class="fa-solid fa-palette"></i> Chameleon</div>
+    
+    <div class="template-tabs">
+        <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'">🎨 템플릿</button>
+        <button class="tpl-tab" data-tpl="vector">배경</button>
+        <button class="tpl-tab" data-tpl="graphic">백터</button>
+        <button class="tpl-tab" data-tpl="photo-bg">사진</button>
+        <button class="tpl-tab" data-tpl="transparent-graphic">패턴</button>
+        <button class="tpl-tab" data-tpl="logo">로고</button>
     </div>
+    
+    <div style="flex:1;"></div>
+
+    <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'" style="margin-right:5px; background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
+        🛒 <span class="pc-only">장바구니</span>
+    </button>
+
+    <button class="btn primary" id="btnOrderTop" onclick="window.addToCartAndGo()" style="background:var(--primary); color:white; font-weight:bold; box-shadow:0 4px 12px rgba(99,102,241,0.4);">
+        🚀 주문하기
+    </button>
+    
+    <button class="btn" id="btnLoginBtn" style="margin-left:5px;">로그인</button>
+</div>
 
     <div id="wallHeightControls">
         <div class="wall-label"><i class="fa-solid fa-ruler-vertical"></i> 가벽 높이선택</div>
@@ -785,6 +986,32 @@ input, textarea, select {
         <button class="height-btn" onclick="window.setWallHeight(2400, this)">240cm</button>
         <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
     </div>
+    <div id="logoUploadModal" class="modal-bg">
+    <div class="modal-box" style="width: 400px;">
+        <h3 style="margin-top:0;">☁️ 로고 업로드</h3>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">배경이 투명한 PNG 파일을 권장합니다.</p>
+        
+        <div class="upload-drop-zone" id="dropZone" onclick="document.getElementById('logoFileInput').click()">
+            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+            <span class="upload-text">클릭하여 파일 선택</span>
+            <span class="upload-sub">또는 파일을 여기로 드래그하세요</span>
+            
+            <img id="previewImage">
+            <div id="removeFileBtn" onclick="window.resetUpload(event)">✕</div>
+        </div>
+
+        <input type="file" id="logoFileInput" accept="image/png, image/jpeg, image/svg+xml" style="display:none;" onchange="window.handleFileSelect(this)">
+        
+        <div style="text-align:left; font-size:13px; font-weight:700; color:#333; margin-bottom:5px;">검색 태그</div>
+        <input type="text" id="logoKeywordInput" class="ai-input-pretty" placeholder="예: 삼성, 로고, 심플 (쉼표로 구분)">
+        
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button onclick="window.uploadUserLogo()" class="btn-round primary" style="flex:2;">업로드하기</button>
+            <button onclick="document.getElementById('logoUploadModal').style.display='none'" class="btn-round" style="flex:1;">취소</button>
+        </div>
+    </div>
+</div>
+
 
     <div class="editor-wrap">
         <div class="side" id="toolsPanel">
@@ -803,6 +1030,10 @@ input, textarea, select {
             <button class="btn-round ai-red" id="btnAIBox"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 이미지 생성</button>
             <button class="btn-round primary" id="btnRegisterTemplate" style="margin-top:5px; display:none;">👑 디자인 등록</button>
             <button class="btn-round" id="btnOpenSaveModal" style="margin-top:5px;">💾 디자인 저장</button>
+            <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="margin-top: 5px; margin-bottom: 20px; width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1; font-weight: 800; flex-direction: column; height: auto; padding: 15px; gap: 5px;">
+    <span style="font-size: 15px;"><i class="fa-solid fa-cloud-arrow-up"></i> 유저 로고 공유방</span>
+    <span style="font-size: 11px; font-weight: normal; color: #64748b;">(배경없는 로고 3개 등록하면 등업)</span>
+</button>
             
             <div class="section-title">BASIC TOOLS</div>
             <button class="btn-round" id="btnAddText">+ 텍스트 추가</button>
@@ -910,6 +1141,49 @@ input, textarea, select {
         </div>
     </div>
 </div>
+<div id="mobileTextEditor" style="display:none;">
+    <div class="m-text-header">
+        <span style="color:#6366f1; font-weight:bold;"><i class="fa-solid fa-pen"></i> 텍스트 수정</span>
+        
+        <div style="display:flex; gap:5px;">
+            <button onclick="window.deleteMobileObject()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;">
+                <i class="fa-solid fa-trash"></i> 삭제
+            </button>
+            
+            <button onclick="window.closeMobileTextEditor()" style="background:#6366f1; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;">
+                완료
+            </button>
+        </div>
+    </div>
+    <textarea id="mobileTextInput" placeholder="여기에 내용을 입력하세요..."></textarea>
+</div>
+<div id="templateActionModal" class="modal-bg" style="z-index: 20000;">
+    <div class="modal-box" style="width: 500px; max-width: 90%;">
+        <h3 style="margin-top:0; font-size: 20px;">🎨 템플릿 불러오기</h3>
+        <p style="color:#666; font-size:15px; margin-bottom:30px; line-height: 1.5;">
+            현재 작업 중인 디자인이 있습니다.<br>
+            선택한 템플릿을 어떻게 적용하시겠습니까?
+        </p>
+        
+        <div style="display:flex; gap:15px;">
+            <button id="btnActionAdd" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155;">
+                <i class="fa-solid fa-layer-group" style="font-size:32px; color:#6366f1;"></i>
+                <span style="font-size:16px; font-weight:bold;">현재 작업에 추가</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">기존 디자인 위에 겹치기</span>
+            </button>
+
+            <button id="btnActionReplace" class="btn-round ai-red" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; border:none;">
+                <i class="fa-solid fa-file-circle-check" style="font-size:32px;"></i>
+                <span style="font-size:16px; font-weight:bold;">새 작업 시작</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">기존 내용 지우고 덮어쓰기</span>
+            </button>
+        </div>
+
+        <button onclick="document.getElementById('templateActionModal').style.display='none'" class="btn-round" style="margin-top:20px; border:none; color:#999;">
+            취소하고 돌아가기
+        </button>
+    </div>
+</div>
 <div id="sizeSelectModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 800px; max-width: 95%;">
         <h3>📏 어떤 크기로 만드시겠습니까?</h3>
@@ -924,17 +1198,12 @@ input, textarea, select {
 <div id="templateOverlay">
     <div class="tpl-modal-box">
         <div class="tpl-sidebar">
-            <div class="tpl-cate-title">CATEGORIES</div>
-            <button class="tpl-cate-btn active" onclick="window.filterTpl('all', this)"><span>전체 보기</span></button>
-            <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)"><span>배경</span></button>
-            <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>사진</span></button>
-            
-            <button class="tpl-cate-btn" onclick="window.filterTpl('text', this)" style="display:none;"><span>준비중입니다.</span></button>
-            
-            <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>백터</span></button>
-            
-            <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)"><span>로고</span></button>
-        </div>
+    <button class="tpl-cate-btn active" onclick="window.filterTpl('vector', this)"><span>배경</span></button>
+    <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>사진</span></button>
+    <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>백터</span></button>
+    <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)"><span>패턴</span></button>
+    <button class="tpl-cate-btn" onclick="window.filterTpl('logo', this)"><span>로고</span></button>
+</div>
         <div class="tpl-content">
             <div style="padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
                 <h2 style="margin:0;">검색</h2>
@@ -1013,6 +1282,17 @@ input, textarea, select {
 
         <button onclick="document.getElementById('choiceModal').style.display='none'" class="btn-round" style="margin-top:10px;">닫기</button>
     </div>
+</div>
+<div id="mobileControlDock">
+    <button onclick="window.toggleMobilePanel('left')" class="mobile-fab left">
+        <i class="fa-solid fa-shapes"></i>
+        <span>요소추가</span>
+    </button>
+
+    <button onclick="window.toggleMobilePanel('right')" class="mobile-fab right">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>편집/정렬</span>
+    </button>
 </div>
 <script type="module" src="./config.js"></script>
 <script type="module" src="./canvas-core.js"></script>
@@ -1451,6 +1731,77 @@ localStorage.setItem("chameleon_cart", JSON.stringify(cartData));
   (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
   ChannelIO('boot', { "pluginKey": "752ba9ff-a447-4e10-9813-715e051995cd" });
 </script>
+<script>
+window.addToCartAndGo = async function() {
+    // 1. 캔버스 확인
+    if (!canvas) return alert("오류: 캔버스가 로드되지 않았습니다.");
+    
+    // 로딩 표시
+    const loading = document.getElementById("loading");
+    if(loading) loading.style.display = "flex";
 
+    try {
+        // 2. 현재 디자인 썸네일 & 데이터 생성
+        // 배경(보드)만 따로 찾아서 그 크기만큼만 이미지를 뜹니다.
+        const board = canvas.getObjects().find(o => o.isBoard);
+        let thumbUrl = "";
+        
+        // 썸네일 생성 (화면 캡쳐)
+        if (board) {
+            // 잠시 뷰포트 초기화해서 정확히 캡쳐
+            const vpt = canvas.viewportTransform;
+            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+            thumbUrl = canvas.toDataURL({
+                format: 'png',
+                multiplier: 0.5, // 용량 최적화를 위해 반으로 축소
+                quality: 0.8,
+                left: board.left,
+                top: board.top,
+                width: board.width * board.scaleX,
+                height: board.height * board.scaleY
+            });
+            // 뷰포트 원상복구
+            canvas.setViewportTransform(vpt);
+        } else {
+            thumbUrl = canvas.toDataURL({ format: 'png', multiplier: 0.5 });
+        }
+
+        // 3. 장바구니 아이템 만들기
+        const currentProduct = window.PRODUCT_DB ? window.PRODUCT_DB[window.currentProductKey] : null;
+        
+        const newItem = {
+            uid: Date.now(), // 고유 ID
+            productName: currentProduct ? currentProduct.name : '나만의 디자인',
+            type: 'design', // 유형: 디자인
+            price: currentProduct ? currentProduct.price : 0, // 가격
+            qty: 1,
+            thumb: thumbUrl, // 방금 캡쳐한 이미지
+            // ★ 핵심: 현재 캔버스 상태를 통째로 저장 (나중에 불러오기 가능)
+            designData: JSON.stringify(canvas.toJSON(['id', 'isBoard', 'selectable', 'evented'])), 
+            options: {} 
+        };
+
+        // 4. 전역 장바구니 배열에 추가
+        if (typeof cartData !== 'undefined') {
+            cartData.push(newItem);
+            // 로컬 스토리지 저장 (새로고침 해도 유지되게)
+            localStorage.setItem("chameleon_cart", JSON.stringify(cartData));
+        }
+
+        // 5. 장바구니 화면 열기
+        if (window.renderCart) window.renderCart(); // 목록 새로고침
+        document.getElementById('cartPage').style.display = 'block';
+        
+        // (선택) 알림 메시지
+        // alert("현재 디자인이 장바구니에 담겼습니다.");
+
+    } catch (e) {
+        console.error(e);
+        alert("장바구니 담기 중 오류가 발생했습니다: " + e.message);
+    } finally {
+        if(loading) loading.style.display = "none";
+    }
+};
+</script>
 </body>
 </html>
