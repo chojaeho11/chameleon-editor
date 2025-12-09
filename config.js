@@ -1,15 +1,20 @@
 // config.js
+
 export let apiKeys = {}; 
 export let sb = null;
 export let currentUser = null; 
 export let isAdmin = false; 
-export let cartData = []; // ★ 초기값은 빈 배열로 시작
+export let cartData = []; 
 
-// ★ 관리자 이메일 목록
+// 관리자 이메일 목록 (여기에 본인 이메일이 있어야 관리자 기능 사용 가능)
 const ADMIN_EMAILS = [
     "korea900as@gmail.com",
     "ceo@test.com"
 ];
+
+// ★ DB에서 불러와서 채울 빈 객체들
+export let ADDON_DB = {};
+export let PRODUCT_DB = {};
 
 let initPromise = null;
 
@@ -19,10 +24,10 @@ export function initConfig() {
     initPromise = (async () => {
         console.log("⚙️ 설정 로딩 시작...");
         
+        // 1. Supabase 라이브러리 로드 대기
         if (typeof window.supabase === 'undefined') {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
-
         if (typeof window.supabase === 'undefined') {
             console.error("🚨 Supabase 라이브러리 없음");
             return;
@@ -30,6 +35,7 @@ export function initConfig() {
 
         const { createClient } = window.supabase;
         
+        // Supabase 키 설정 (기존 키 유지)
         const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
@@ -38,41 +44,26 @@ export function initConfig() {
                 auth: { persistSession: true, autoRefreshToken: true } 
             });
             
+            // 2. 세션 상태 확인
             const { data: { session } } = await sb.auth.getSession();
             updateUserSession(session);
 
-            // config.js의 sb.auth.onAuthStateChange 부분 수정
+            sb.auth.onAuthStateChange((event, session) => {
+                updateUserSession(session);
+                // 로그인/로그아웃 UI 업데이트
+                const btnLogin = document.getElementById("btnLoginBtn");
+                if(btnLogin && btnLogin.updateState) btnLogin.updateState();
+                
+                const btnLib = document.getElementById("btnMyLibrary");
+                if(btnLib) btnLib.style.display = session ? "inline-flex" : "none";
 
-sb.auth.onAuthStateChange((event, session) => {
-    console.log("Auth Event:", event);
-    updateUserSession(session);
-    
-    // UI 업데이트
-    const btnLogin = document.getElementById("btnLoginBtn");
-    if(btnLogin && btnLogin.updateState) btnLogin.updateState();
+                if (event === 'SIGNED_OUT') location.reload();
+            });
 
-    const btnLib = document.getElementById("btnMyLibrary");
-    if(btnLib) btnLib.style.display = session ? "flex" : "none";
+            // ★★★ [중요] DB에서 상품/옵션 정보 불러오기 ★★★
+            await loadSystemData();
 
-    // ★ [추가됨] 장바구니 버튼 표시 로직 (로그인 시 무조건 보임)
-    const btnCart = document.getElementById("btnViewCart");
-    if(btnCart) {
-        // 세션이 있거나(로그인) OR 장바구니에 물건이 있으면 -> 보이기
-        if (session || cartData.length > 0) {
-            btnCart.style.display = "inline-flex";
-        } else {
-            // 로그아웃 상태이고 장바구니도 비었으면 -> 숨기기
-            btnCart.style.display = "none";
-        }
-    }
-    
-    // 로그아웃 시 페이지 새로고침 (데이터 정리)
-    if (event === 'SIGNED_OUT') {
-        location.reload();
-    }
-});
-
-            console.log("✅ 설정 로딩 완료");
+            console.log("✅ 설정 및 데이터 로딩 완료");
 
         } catch (e) {
             console.error("설정 오류:", e);
@@ -82,12 +73,64 @@ sb.auth.onAuthStateChange((event, session) => {
     return initPromise;
 }
 
-// ★ [수정됨] 사용자 세션 및 장바구니 로드 로직
+// ★ DB 데이터 로드 및 사이즈 변환 함수
+async function loadSystemData() {
+    try {
+        // 1. 옵션(Addon) 불러오기
+        const { data: addons } = await sb.from('admin_addons').select('*');
+        if (addons) {
+            ADDON_DB = {}; // 초기화
+            addons.forEach(item => {
+                // 구조: { 코드: { 이름, 가격 } }
+                ADDON_DB[item.code] = { name: item.name, price: item.price };
+            });
+        }
+
+        // 2. 상품(Product) 불러오기 & 사이즈 변환
+        const { data: products } = await sb.from('admin_products')
+    .select('*')
+    .order('sort_order', { ascending: true }) // 순서 적용
+    .order('id', { ascending: true });        // 같은 순서일 경우 등록순
+        if (products) {
+            PRODUCT_DB = {}; // 초기화
+            products.forEach(item => {
+                // mm -> px 변환 (1mm = 약 3.7795px)
+                // 캔버스 해상도를 위해 약 3.78배로 설정합니다.
+                const scaleFactor = 3.7795;
+                
+                // DB에 값이 없으면 기본 A4 사이즈(210x297) 적용
+                const mmW = item.width_mm || 210;
+                const mmH = item.height_mm || 297;
+
+                const pxW = Math.round(mmW * scaleFactor);
+                const pxH = Math.round(mmH * scaleFactor);
+
+                // 연결된 옵션 목록 (문자열 -> 배열)
+                const addonList = item.addons ? item.addons.split(',').map(s=>s.trim()).filter(s=>s) : [];
+                
+                PRODUCT_DB[item.code] = {
+                    name: item.name,
+                    price: item.price,
+                    img: item.img_url || 'https://placehold.co/400?text=No+Image',
+                    w: pxW, // 변환된 픽셀 너비
+                    h: pxH, // 변환된 픽셀 높이
+                    addons: addonList // 연결된 옵션 코드들
+                };
+            });
+        }
+    } catch(e) {
+        console.error("DB 데이터 로드 실패:", e);
+    }
+}
+
+// 사용자 세션 처리
 function updateUserSession(session) {
     if (session && session.user) {
         currentUser = session.user;
+        // 관리자 여부 확인
         if (ADMIN_EMAILS.includes(currentUser.email)) {
             isAdmin = true;
+            // 관리자 전용 버튼 표시 (템플릿 등록 등)
             const btnReg = document.getElementById("btnRegisterTemplate");
             if(btnReg) btnReg.style.display = "flex";
         } else {
@@ -98,24 +141,20 @@ function updateUserSession(session) {
         isAdmin = false;
     }
     
-    // ★ 사용자별 장바구니 로드
+    // 장바구니 로드
     loadUserCart();
 }
 
-// ★ [신규 함수] 사용자 ID에 맞는 장바구니 불러오기
+// 장바구니 로드
 function loadUserCart() {
-    // 키 생성: 로그인했으면 'cart_유저ID', 아니면 'cart_guest'
     const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
-    
-    // 기존 배열 비우기
-    cartData.length = 0;
+    cartData.length = 0; // 배열 초기화
     
     try {
         const saved = localStorage.getItem(storageKey);
         if (saved) {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed)) {
-                // 배열 요소 하나씩 cartData에 넣기 (참조 유지 위해)
                 parsed.forEach(item => cartData.push(item));
             }
         }
@@ -123,42 +162,13 @@ function loadUserCart() {
         console.error("장바구니 로드 실패", e);
     }
     
-    // UI 갱신 (order.js의 함수가 전역에 있다면 호출)
+    // UI 갱신
     const countEl = document.getElementById("cartCount");
     if(countEl) countEl.innerText = `(${cartData.length})`;
+    
+    const btnCart = document.getElementById("btnViewCart");
+    if(btnCart) {
+        // 로그인했거나 장바구니에 담긴 게 있으면 버튼 표시
+        btnCart.style.display = (currentUser || cartData.length > 0) ? "inline-flex" : "none";
+    }
 }
-
-export const ADDON_DB = {
-    'mat_foamex': { name: '포맥스3T (Foamex)', price: 0 },
-    'mat_foamboard': { name: '폼보드5T (Foamboard)', price: 0 },
-    'mat_acrylic': { name: '아크릴3T (Acrylic)', price: 50000 },
-    'mat_fabric': { name: '광목20수 오버록 상단고리', price: 0 },
-    'mat_honeycomb': { name: '허니콤보드16T (Honeycomb)', price: 0 },
-    'opt_stand': { name: '외부 보조 받침대', price: 80000 },
-    'opt_column': { name: '꺾이는 가벽 기둥', price: 100000 },
-    'opt_light': { name: '상단 조명 콘센트형 (1칸당 1개 구매)', price: 50000 },
-    'svc_install_time': { name: '지정시간 설치(선택 안하면 무료설치)', price: 300000 },
-    'svc_remove': { name: '철거 서비스 지방불가', price: 150000 },
-    'svc_delivery_local': { name: '지방 용차배송(설치불가)', price: 200000 }
-};
-
-export const PRODUCT_DB = {
-    'A4': { name: 'A4 기본 판형', price: 10000, img: 'https://placehold.co/400?text=A4', addons: ['mat_foamex', 'mat_foamboard', 'mat_acrylic', 'mat_honeycomb', 'mat_fabric'] },
-    'A3': { name: 'A3 기본 판형', price: 15000, img: 'https://placehold.co/400?text=A3', addons: ['mat_foamex', 'mat_foamboard', 'mat_acrylic', 'mat_honeycomb', 'mat_fabric'] },    
-    'A2': { name: 'A2 기본 판형', price: 20000, img: 'https://placehold.co/400?text=A2', addons: ['mat_foamex', 'mat_foamboard', 'mat_acrylic', 'mat_honeycomb', 'mat_fabric'] },
-    'A1': { name: 'A1 기본 판형', price: 40000, img: 'https://placehold.co/400?text=A1', addons: ['mat_foamex', 'mat_foamboard', 'mat_acrylic', 'mat_honeycomb', 'mat_fabric'] },
-    'Std_1200_600': { name: '판형 1200x600', price: 50000, img: 'https://placehold.co/400?text=1200x600', addons: ['mat_foamex', 'mat_foamboard', 'mat_acrylic', 'mat_honeycomb', 'mat_fabric'] },
-    'Std_2400_1200': { name: '판형 2400x1200', price: 150000, img: 'https://placehold.co/400?text=2400x1200', addons: ['mat_foamex', 'mat_foamboard', 'mat_acrylic', 'mat_honeycomb', 'mat_fabric'] },
-    'Wall_1': { name: '전시 가벽 1칸 (1.2m)', price: 110000, img: 'https://placehold.co/400?text=Wall+1', addons: ['opt_stand', 'opt_column', 'opt_light', 'svc_install_time', 'svc_remove', 'svc_delivery_local'] },
-    'Wall_2': { name: '전시 가벽 2칸 (2.2m)', price: 220000, img: 'https://placehold.co/400?text=Wall+2', addons: ['opt_stand', 'opt_column', 'opt_light', 'svc_install_time', 'svc_remove', 'svc_delivery_local'] },
-    'Wall_3': { name: '전시 가벽 3칸 (3.2m)', price: 330000, img: 'https://placehold.co/400?text=Wall+3', addons: ['opt_stand', 'opt_column', 'opt_light', 'svc_install_time', 'svc_remove', 'svc_delivery_local'] },
-    'Wall_4': { name: '전시 가벽 4칸 (4.2m)', price: 440000, img: 'https://placehold.co/400?text=Wall+4', addons: ['opt_stand', 'opt_column', 'opt_light', 'svc_install_time', 'svc_remove', 'svc_delivery_local'] },
-    'Wall_5': { name: '전시 가벽 5칸 (5.2m)', price: 550000, img: 'https://placehold.co/400?text=Wall+5', addons: ['opt_stand', 'opt_column', 'opt_light', 'svc_install_time', 'svc_remove', 'svc_delivery_local'] },
-    'Banner_X': { name: 'X배너 (600x1800)', price: 10000, img: 'https://placehold.co/400?text=X-Banner', addons: [] },
-    'Award_Board': { name: '시상 보드 (800x570)', price: 10000, img: 'https://placehold.co/400?text=Award+Board', addons: [] },
-    'PhotoZone_Text': { name: '글씨 포토존 (2.4m)', price: 10000, img: 'https://placehold.co/400?text=Photo+Zone', addons: ['svc_install_time', 'svc_remove'] },
-    'Fabric_Wide': { name: '대폭 원단 (1350x900)', price: 10000, img: 'https://placehold.co/400?text=Fabric', addons: [] },
-    'Paper_Disp_4': { name: '종이 디스플레이 (4칸)', price: 10000, img: 'https://placehold.co/400?text=Paper+Display', addons: [] }
-};
-
-initConfig();

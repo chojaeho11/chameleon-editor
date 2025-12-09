@@ -71,7 +71,7 @@ async function openTemplateOverlay(type) {
     await searchTemplates(type, "");
 }
 
-// 템플릿 검색 (최적화 적용: data_url 제외)
+// 템플릿 검색
 async function searchTemplates(category, keyword) {
     const grid = document.getElementById("tplGrid");
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">로딩중...</div>';
@@ -143,15 +143,19 @@ async function searchTemplates(category, keyword) {
 async function useSelectedTemplate() {
     if (!selectedTpl) return alert("템플릿을 선택해주세요.");
     
+    // [수정] 모달 없이 바로 'replace'로 진행 (사용자 경험 개선)
+    // 기존 객체가 있으면 확인창만 띄움
     const objects = canvas.getObjects().filter(o => !o.isBoard);
     if (objects.length > 0) {
-        document.getElementById("loadModeModal").style.display = "flex";
+        if(confirm("기존 디자인을 삭제하고 템플릿을 적용하시겠습니까?\n(현재 대지 크기는 유지됩니다)")) {
+            processLoad('replace');
+        }
     } else {
         processLoad('replace');
     }
 }
 
-// 템플릿 로드 프로세스 (수정됨: 그룹 해제 강화)
+// ★★★ [템플릿 로드 프로세스 - 수정됨] ★★★
 async function processLoad(mode) {
     document.getElementById("loadModeModal").style.display = "none";
     document.getElementById("templateOverlay").style.display = "none";
@@ -177,11 +181,13 @@ async function processLoad(mode) {
             }
         }
 
+        // ★ [핵심 수정 1] applySize 호출 제거
+        // 기존에는 여기서 applySize(newW, newH...)를 호출하여 캔버스를 강제로 리사이징했습니다.
+        // 이를 제거하고, 대신 기존 객체만 삭제하도록 변경합니다.
         if (mode === 'replace') {
-            const newW = selectedTpl.width || 1000;
-            const newH = selectedTpl.height || 1000;
-            const newKey = selectedTpl.product_key || 'Custom';
-            applySize(newW, newH, newKey, 'standard', 'replace');
+            const objects = canvas.getObjects().filter(o => !o.isBoard);
+            objects.forEach(o => canvas.remove(o));
+            // applySize 호출 삭제됨 -> 현재 대지 사이즈 유지!
         }
 
         if(jsonData.objects) jsonData.objects = jsonData.objects.filter(o => !o.isBoard);
@@ -193,7 +199,6 @@ async function processLoad(mode) {
                 return; 
             }
 
-            // [1] 객체 초기화 (모바일 터치 오류 방지)
             objs.forEach(obj => {
                 obj.set({
                     selectable: true, evented: true,
@@ -211,24 +216,25 @@ async function processLoad(mode) {
             const centerX = board ? (board.left + boardW / 2) : canvas.width / 2;
             const centerY = board ? (board.top + boardH / 2) : canvas.height / 2;
 
-            group.set({ left: centerX, top: centerY });
-            
-            if (mode === 'add') {
-                const limitW = boardW * 0.7;
-                const limitH = boardH * 0.7;
-                const scale = Math.min(limitW / group.width, limitH / group.height);
-                group.scale(scale);
-            }
+            // ★ [핵심 수정 2] 강제 꽉 채우기 (Cover) 로직 적용
+            // 대지의 가로/세로 비율 중 더 크게 확대해야 하는 쪽을 기준으로 스케일을 맞춥니다.
+            const scaleX = boardW / group.width;
+            const scaleY = boardH / group.height;
+            const scale = Math.max(scaleX, scaleY); // Max를 사용해야 빈 공간 없이 꽉 찹니다.
+
+            group.set({ 
+                left: centerX, 
+                top: centerY,
+                scaleX: scale,
+                scaleY: scale
+            });
 
             canvas.add(group);
 
-            // [2] 그룹 해제 및 선택 해제 (텍스트 수정 가능하게)
             group.toActiveSelection();
             canvas.discardActiveObject(); 
             
             canvas.requestRenderAll();
-            
-            // [3] 화면 꽉 채우기 실행
             setTimeout(() => resetViewToCenter(), 100);
             
             document.getElementById("loading").style.display = "none";
@@ -241,7 +247,7 @@ async function processLoad(mode) {
     }
 }
 
-// [수정됨] 화면 꽉 채우기 (여백 최소화)
+// 화면 꽉 채우기 (여백 최소화)
 function resetViewToCenter() {
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) return;
@@ -254,29 +260,22 @@ function resetViewToCenter() {
     if (boardW === 0 || boardH === 0) return;
 
     const isMobile = window.innerWidth < 768;
-    
-    // ★ 여기가 화면 꽉 채우기 핵심입니다.
-    // PC일 땐 왼쪽 패널(320px) 만큼 비우지만,
-    // 모바일일 땐 여백을 20px(좌10+우10)로 줄여서 꽉 차게 만듭니다.
     const paddingX = isMobile ? 20 : 320; 
-    
-    // 상하 여백도 모바일은 툴바 높이 정도만 남깁니다.
     const paddingY = isMobile ? 120 : 100; 
 
     const safeWidth = Math.max(containerW - paddingX, 50);
     const safeHeight = Math.max(containerH - paddingY, 50);
 
-    // zoom 비율 계산 (0.98 = 98% 꽉 차게)
     const zoom = Math.min(safeWidth / boardW, safeHeight / boardH) * 0.98;
     const safeZoom = Math.min(Math.max(zoom, 0.05), 5); 
 
     canvas.setZoom(safeZoom);
     
     const vpt = canvas.viewportTransform;
-    vpt[4] = (containerW - boardW * safeZoom) / 2; // X축 중앙 정렬
-    vpt[5] = (containerH - boardH * safeZoom) / 2; // Y축 중앙 정렬
+    vpt[4] = (containerW - boardW * safeZoom) / 2;
+    vpt[5] = (containerH - boardH * safeZoom) / 2;
     
-    if(isMobile) vpt[5] += 10; // 모바일 미세 조정
+    if(isMobile) vpt[5] += 10;
 
     canvas.requestRenderAll();
 }

@@ -1,7 +1,7 @@
 import { canvas } from "./canvas-core.js";
-import { PRODUCT_DB, cartData, currentUser, sb } from "./config.js"; // ADDON_DB 제거됨
+import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js"; 
 import { applySize } from "./canvas-size.js";
-import { generateOrderSheetPDF, generateProductVectorPDF, generateQuotationPDF, generateRasterPDF } from "./export.js"; 
+import { generateOrderSheetPDF, generateQuotationPDF, generateProductVectorPDF, generateRasterPDF } from "./export.js"; 
 
 let currentTargetProduct = null;
 let selectedDeliveryDate = null;
@@ -173,7 +173,7 @@ export function startDesignFromProduct() {
     
     document.getElementById("productDetailModal").style.display = "none"; 
     
-    applySize(w, h, key, mode, 'replace'); 
+    if(window.applySize) window.applySize(w, h, key, mode, 'replace');
     
     switchToEditor(); 
     
@@ -195,16 +195,20 @@ async function addCanvasToCart() {
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst']);
     const board = canvas.getObjects().find(o => o.isBoard);
     
+    const finalW = board ? board.width : (product.w || canvas.width);
+    const finalH = board ? board.height : (product.h || canvas.height);
+
     cartData.push({ 
         uid: Date.now(), 
         product: product, 
         type: 'design', 
         thumb: thumb, 
         json: json,
-        width: board ? board.width : canvas.width, 
-        height: board ? board.height : canvas.height,
+        width: finalW, 
+        height: finalH,
         isOpen: true, 
-        qty: 1
+        qty: 1,
+        selectedAddons: {} // ★ 옵션 코드를 저장할 객체
     });
     
     saveCart(); 
@@ -247,7 +251,8 @@ function addFileToCart(e) {
             fileData: fileDataURI,
             thumb: thumbUrl, 
             isOpen: true, 
-            qty: 1 
+            qty: 1,
+            selectedAddons: {} // ★ 옵션 초기화
         });
         
         saveCart(); 
@@ -258,7 +263,7 @@ function addFileToCart(e) {
     reader.readAsDataURL(file);
 }
 
-// 장바구니 렌더링 (수정: 추가 옵션 로직 제거, 필수 옵션 드롭박스 유지)
+// ★★★ [장바구니 렌더링] - 재질/추가상품 2단 분리 및 코드 저장 방식 ★★★
 function renderCart() {
     const listArea = document.getElementById("cartListArea"); 
     if(!listArea) return;
@@ -275,68 +280,128 @@ function renderCart() {
     cartData.forEach((item, idx) => {
         if (!item.qty) item.qty = 1; 
         if (item.isOpen === undefined) item.isOpen = true;
+        if (!item.selectedAddons) item.selectedAddons = {};
         
-        // 가격 계산: 추가 옵션 없이 (단가 * 수량)
-        let itemBasePrice = item.product.price * item.qty; 
-        let totalItemPrice = itemBasePrice; 
+        // 1. 옵션 분류 (재질 / 추가상품)
+        let matOpts = [], addOpts = [];
+        if (item.product && item.product.addons) {
+            item.product.addons.forEach(code => {
+                const info = ADDON_DB[code]; // config.js의 ADDON_DB에서 정보 조회
+                if (info) {
+                    // category가 'material'이면 재질, 나머지는 추가상품
+                    if (info.category === 'material') matOpts.push({code, ...info});
+                    else addOpts.push({code, ...info});
+                }
+            });
+        }
+
+        // 2. 가격 계산 (옵션 코드로 가격 찾기)
+        let basePrice = item.product.price;
+        let addonPrice = 0;
         
+        // selectedAddons에 저장된 코드들을 순회하며 가격 합산
+        Object.values(item.selectedAddons).forEach(code => {
+            const addon = ADDON_DB[code];
+            if (addon) addonPrice += addon.price;
+        });
+        
+        let totalItemPrice = (basePrice + addonPrice) * item.qty;
         grandTotal += totalItemPrice;
         
         const div = document.createElement("div"); 
         div.className = "cart-item"; 
-        div.style.cssText = "display:flex; flexDirection:column; cursor:pointer; transition:all 0.2s; border:1px solid #e2e8f0; background:white; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.03);";
+        div.style.cssText = "display:flex; flexDirection:column; cursor:pointer; transition:all 0.2s; border:1px solid #e2e8f0; background:white; border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.03);";
         if (item.isOpen) div.style.borderColor = "var(--primary)";
         
         div.onclick = (e) => { 
-            if(e.target.closest('button') || e.target.closest('select')) return; 
+            if(e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return; 
             window.toggleCartAccordion(idx); 
         };
         
+        // ★ [수정됨] 상단 정보 (Grid/Flex 대응을 위한 클래스 추가, 파일명 표시)
         const mainRow = document.createElement("div"); 
-        mainRow.style.display = "flex"; 
-        mainRow.style.alignItems = "center"; 
-        mainRow.style.width = "100%"; 
-        mainRow.style.gap = "15px";
+        mainRow.className = "cart-top-row"; // CSS 클래스 적용
         
+        let typeInfo = item.type === 'design' 
+            ? '<span style="font-size:12px; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px; margin-right:5px;">🎨 직접 디자인</span>' 
+            : `<span style="font-size:12px; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-right:5px;">📁 파일 업로드</span> <span style="font-size:12px; color:#64748b;">${item.fileName || '파일명 없음'}</span>`;
+
         mainRow.innerHTML = `
-            <img src="${item.thumb}" style="width:70px; height:70px; object-fit:contain; border-radius:8px; border:1px solid #eee; background:#fff; flex-shrink:0;">
-            <div style="flex:1; min-width:0;">
-                <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">${item.type==='design' ? '디자인' : '파일 업로드'} ${item.isOpen ? '' : '<span style="font-size:11px; color:#999;">(펼치기)</span>'}</div>
-                <h4 style="margin:0; font-size:15px; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.product.name}</h4>
-                <div style="font-weight:700; margin-top:4px;">${totalItemPrice.toLocaleString()}원</div>
+            <img src="${item.thumb}" class="cart-thumb">
+            
+            <div class="cart-info">
+                <div style="margin-bottom:6px; display:flex; align-items:center;">${typeInfo} ${item.isOpen ? '' : '<span style="font-size:11px; color:#999; margin-left:5px;">(펼치기)</span>'}</div>
+                <h4 style="margin:0; font-size:16px; color:#1e293b; line-height:1.4;">${item.product.name}</h4>
+                <div style="font-weight:800; font-size:15px; color:#6366f1; margin-top:6px;">${totalItemPrice.toLocaleString()}원</div>
             </div>
             
-            <div class="qty-control" style="display:flex; align-items:center; gap:0; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; flex-shrink:0;">
-                <button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; cursor:pointer;"><i class="fa-solid fa-minus" style="font-size:10px; color:#64748b;"></i></button>
-                <div class="qty-val" style="width:30px; text-align:center; font-size:13px; font-weight:bold; color:#1e293b;">${item.qty}</div>
-                <button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; cursor:pointer;"><i class="fa-solid fa-plus" style="font-size:10px; color:#64748b;"></i></button>
+            <div class="cart-qty qty-control" style="display:flex; align-items:center; gap:0; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc;">
+                <button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)" style="width:32px; height:32px; border:none; background:transparent; cursor:pointer;"><i class="fa-solid fa-minus" style="font-size:11px; color:#64748b;"></i></button>
+                <div class="qty-val" style="width:36px; text-align:center; font-size:14px; font-weight:bold; color:#1e293b;">${item.qty}</div>
+                <button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)" style="width:32px; height:32px; border:none; background:transparent; cursor:pointer;"><i class="fa-solid fa-plus" style="font-size:11px; color:#64748b;"></i></button>
             </div>
             
-            <button onclick="window.removeCartItem(${idx})" class="qty-btn" style="width:30px; height:30px; border-radius:50%; background:#fee2e2; color:#ef4444; border:none; flex-shrink:0; margin-left:5px; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-trash" style="font-size:12px;"></i>
+            <button onclick="window.removeCartItem(${idx})" class="cart-del qty-btn" style="width:36px; height:36px; border-radius:50%; background:#fee2e2; color:#ef4444; border:none; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-trash" style="font-size:14px;"></i>
             </button>
         `;
         div.appendChild(mainRow);
         
+        // ★ [수정됨] 하단 옵션 선택 영역 (넓게 보기 위한 클래스 추가)
         if(item.isOpen) {
-            // [UI] 필수 옵션 선택창 (기능 없이 디자인만 존재)
-            const requiredOptDiv = document.createElement("div");
-            requiredOptDiv.style.cssText = "background:#f8fafc; padding:10px; border-radius:8px; margin-top:10px; border:1px solid #eee;";
-            requiredOptDiv.innerHTML = `
-                <div style="font-size:13px; color:#ef4444; font-weight:bold; margin-bottom:5px;">
-                    <i class="fa-solid fa-check"></i> 필수 옵션을 선택해주세요
-                </div>
-                <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; background:#fff; cursor:pointer;">
-                    <option>기본 소재 (Standard)</option>
-                    <option>고급 포맥스</option>
-                </select>
-                <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff; cursor:pointer;">
-                    <option>후가공 없음</option>
-                    <option>무광 코팅</option>
-                </select>
-            `;
-            div.appendChild(requiredOptDiv);
+            const optionArea = document.createElement("div");
+            optionArea.className = "cart-option-area"; // CSS 클래스 적용
+            optionArea.style.cssText = "background:#f8fafc; padding:15px; border-radius:8px; margin-top:20px; border:1px solid #eee;";
+            
+            let innerHTML = "";
+            
+            // 1. 재질 선택
+            if (matOpts.length > 0) {
+                innerHTML += `<div style="margin-bottom:20px;">
+                    <label style="font-size:13px; color:#475569; font-weight:800; display:block; margin-bottom:8px;">✨ 재질 선택 (필수)</label>
+                    <select onchange="window.updateCartOption(${idx}, 'opt_mat', this.value)" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:14px; cursor:pointer;">
+                        <option value="">선택 안함 (기본)</option>`;
+                matOpts.forEach(opt => {
+                    const isSelected = item.selectedAddons['opt_mat'] === opt.code; 
+                    innerHTML += `<option value="${opt.code}" ${isSelected?'selected':''}>${opt.name} (+${opt.price.toLocaleString()}원)</option>`;
+                });
+                innerHTML += `</select></div>`;
+            }
+
+            // 2. 추가 상품 (2열 배치용 클래스 적용)
+            if (addOpts.length > 0) {
+                if (matOpts.length > 0) innerHTML += `<hr style="border:0; border-top:1px dashed #cbd5e1; margin:15px 0;">`;
+                
+                innerHTML += `<div>
+                    <label style="font-size:13px; color:#475569; font-weight:800; display:block; margin-bottom:10px;">➕ 추가 상품 (중복 선택 가능)</label>
+                    <div class="cart-option-list" style="display:flex; flex-direction:column; gap:8px;">`; // PC에서는 Grid로 자동 변환됨
+
+                addOpts.forEach(opt => {
+                    const storageKey = `addon_${opt.code}`;
+                    const isChecked = item.selectedAddons[storageKey] === opt.code;
+                    
+                    innerHTML += `
+                        <label style="display:flex; align-items:center; cursor:pointer; font-size:14px; background:white; padding:12px; border:1px solid ${isChecked ? '#6366f1' : '#e2e8f0'}; border-radius:8px; transition:0.2s;">
+                            <input type="checkbox" 
+                                onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)"
+                                ${isChecked ? 'checked' : ''}
+                                style="accent-color:#6366f1; margin-right:10px; width:18px; height:18px;">
+                            <span style="flex:1; font-weight:500;">${opt.name}</span>
+                            <span style="font-weight:800; color:#6366f1;">+${opt.price.toLocaleString()}원</span>
+                        </label>
+                    `;
+                });
+                innerHTML += `</div></div>`;
+            }
+
+            if (matOpts.length === 0 && addOpts.length === 0) {
+                innerHTML += `<div style="font-size:13px; color:#999;">선택 가능한 옵션이 없습니다.</div>`;
+            }
+
+            optionArea.innerHTML = innerHTML;
+            div.appendChild(optionArea);
         }
+        
         listArea.appendChild(div);
     });
     updateSummary(grandTotal);
@@ -363,7 +428,7 @@ function updateSummary(total) {
     }
 }
 
-// [4] 주문 제출 및 파일 업로드
+// [4] 주문 제출
 async function processOrderSubmission() {
     const manager = document.getElementById("inputManagerName").value;
     const phone = document.getElementById("inputManagerPhone").value;
@@ -381,52 +446,38 @@ async function processOrderSubmission() {
     
     try {
         const orderInfo = { date: selectedDeliveryDate, manager, phone, address, note: request };
-        
         btn.innerText = "주문 정보 저장 중...";
         
         const { data: orderData, error: orderError } = await sb.from('orders').insert([{ 
-            order_date: selectedDeliveryDate, 
-            manager_name: manager, 
-            phone: phone, 
-            address: address, 
-            request_note: request, 
-            status: '파일처리중', 
-            files: [] 
+            order_date: selectedDeliveryDate, manager_name: manager, phone, address, request_note: request, status: '파일처리중', files: [] 
         }]).select();
         
         if (orderError) throw orderError; 
         if (!orderData || orderData.length === 0) throw new Error("주문 ID 생성 실패");
         
         newOrderId = orderData[0].id;
-        window.currentDbId = newOrderId; // [중요] DB ID 저장
+        window.currentDbId = newOrderId;
         const uploadedFiles = [];
         
-        // 작업지시서 생성 및 업로드
-        btn.innerText = "작업지시서 생성...";
+        btn.innerText = "문서 생성 중...";
         try { 
             const orderSheetBlob = await generateOrderSheetPDF(orderInfo, cartData); 
             if(orderSheetBlob) { 
-                const fileUrl = await uploadToSupabase(orderSheetBlob, `${newOrderId}/order_sheet.pdf`); 
-                if(fileUrl) uploadedFiles.push({ name: `작업지시서.pdf`, url: fileUrl, type: 'order_sheet' }); 
+                const url = await uploadToSupabase(orderSheetBlob, `${newOrderId}/order_sheet.pdf`); 
+                if(url) uploadedFiles.push({ name: `작업지시서.pdf`, url: url, type: 'order_sheet' }); 
             } 
-        } catch(e) { console.warn("작업지시서 업로드 실패", e); }
-        
-        // 견적서 생성 및 업로드
-        btn.innerText = "견적서 생성...";
-        try { 
             const quoteBlob = await generateQuotationPDF(orderInfo, cartData); 
             if(quoteBlob) { 
-                const fileUrl = await uploadToSupabase(quoteBlob, `${newOrderId}/quotation.pdf`); 
-                if(fileUrl) uploadedFiles.push({ name: `견적서.pdf`, url: fileUrl, type: 'quotation' }); 
+                const url = await uploadToSupabase(quoteBlob, `${newOrderId}/quotation.pdf`); 
+                if(url) uploadedFiles.push({ name: `견적서.pdf`, url: url, type: 'quotation' }); 
             } 
-        } catch(e) { console.warn("견적서 업로드 실패", e); }
+        } catch(e) { console.warn("문서 생성 실패", e); }
         
-        // 개별 파일/디자인 처리
         for (let i = 0; i < cartData.length; i++) {
             const item = cartData[i]; 
             const idx = String(i + 1).padStart(2, '0');
             btn.innerText = `파일 처리 중 (${i + 1} / ${cartData.length})...`; 
-            await new Promise(r => setTimeout(r, 10)); // UI 갱신용 딜레이
+            await new Promise(r => setTimeout(r, 10)); 
             
             let fileBlob = null; 
             let fileExt = "pdf"; 
@@ -435,10 +486,7 @@ async function processOrderSubmission() {
             if (item.type === 'design' && item.json) {
                 try { 
                     fileBlob = await generateProductVectorPDF(item.json, item.width, item.height); 
-                    if (!fileBlob) { 
-                        console.warn("벡터 PDF 생성 실패, 이미지로 전환합니다.");
-                        fileBlob = await generateRasterPDF(item.json, item.width, item.height); 
-                    } 
+                    if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.height); 
                     displayName = `제작물_${idx}_${item.product.name}.pdf`; 
                 } catch(e) {}
             } else if (item.type === 'file' && item.fileData) {
@@ -449,15 +497,13 @@ async function processOrderSubmission() {
                     displayName = `고객파일_${idx}_${item.product.name}.${fileExt}`; 
                 } catch(e) {}
             }
-            
             if (fileBlob) { 
-                const fileUrl = await uploadToSupabase(fileBlob, `${newOrderId}/file_${idx}_${Date.now()}.${fileExt}`); 
-                if(fileUrl) uploadedFiles.push({ name: displayName, url: fileUrl, type: 'product' }); 
+                const url = await uploadToSupabase(fileBlob, `${newOrderId}/file_${idx}_${Date.now()}.${fileExt}`); 
+                if(url) uploadedFiles.push({ name: displayName, url: url, type: 'product' }); 
             }
         }
         
         btn.innerText = "완료 처리 중...";
-        
         await sb.from('orders').update({ files: uploadedFiles, status: '접수됨' }).eq('id', newOrderId);
         
         document.getElementById("deliveryInfoModal").style.display = "none"; 
@@ -487,26 +533,23 @@ async function uploadToSupabase(blob, path) {
     } catch (e) { return null; } 
 }
 
-// [5] 결제 및 최종 완료 (추가옵션 가격 제외됨)
+// [5] 결제 (가격 계산 시 옵션 코드 사용)
 function processPayment() {
     const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"; 
     
-    if (typeof TossPayments === 'undefined') {
-        alert("토스페이먼츠 SDK가 로드되지 않았습니다.");
-        return;
-    }
+    if (typeof TossPayments === 'undefined') return alert("결제 모듈 로드 실패");
     
-    // 2. 결제 금액 계산 (추가 옵션 제외, 기본 가격만)
     let totalAmount = 0;
     cartData.forEach(item => {
-        let price = item.product.price * (item.qty || 1);
-        totalAmount += price;
+        let price = item.product.price;
+        // 옵션 코드 lookup
+        Object.values(item.selectedAddons).forEach(code => {
+            if(ADDON_DB[code]) price += ADDON_DB[code].price;
+        });
+        totalAmount += price * (item.qty || 1);
     });
 
-    if (totalAmount === 0) {
-        alert("결제할 금액이 없습니다.");
-        return;
-    }
+    if (totalAmount === 0) return alert("결제 금액 0원");
 
     const tossPayments = TossPayments(clientKey);
     const orderId = "order_" + new Date().getTime(); 
@@ -521,8 +564,7 @@ function processPayment() {
         failUrl: window.location.origin + "/fail.html",
     })
     .catch(function (error) {
-        if (error.code === "USER_CANCEL") {} 
-        else { alert("결제 연동 에러: " + error.message); }
+        if (error.code !== "USER_CANCEL") alert("결제 에러: " + error.message);
     });
 }
 
@@ -539,6 +581,10 @@ function base64ToBlob(base64, mimeType) {
     return new Blob(byteArrays, { type: mimeType }); 
 }
 
+// 전역 함수들 (window 객체에 바인딩)
+// ★ [핵심 추가] renderCart 함수를 전역으로 노출하여 다른 파일에서 호출 가능하게 함
+window.renderCart = renderCart; 
+
 window.toggleCartAccordion = (idx) => { 
     cartData[idx].isOpen = !cartData[idx].isOpen; 
     renderCart(); 
@@ -553,6 +599,38 @@ window.updateCartQty = (idx, change) => {
         saveCart(); 
         renderCart(); 
     } 
+};
+
+// [단일 선택] 재질 등 Select Box 변경 시
+window.updateCartOption = (idx, key, code) => {
+    if (cartData[idx]) {
+        if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {};
+        
+        if (code === "") delete cartData[idx].selectedAddons[key];
+        else cartData[idx].selectedAddons[key] = code; 
+        
+        saveCart(); 
+        renderCart(); 
+    }
+};
+
+// [다중 선택] 추가상품 Checkbox 변경 시
+window.toggleCartAddon = (idx, code, isChecked) => {
+    if (cartData[idx]) {
+        if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {};
+        
+        // 각 추가상품마다 고유 키를 사용하여 중복 저장을 허용
+        const storageKey = `addon_${code}`;
+        
+        if (isChecked) {
+            cartData[idx].selectedAddons[storageKey] = code;
+        } else {
+            delete cartData[idx].selectedAddons[storageKey];
+        }
+        
+        saveCart(); 
+        renderCart(); 
+    }
 };
 
 window.removeCartItem = (idx) => { 

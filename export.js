@@ -359,7 +359,13 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         doc.text(`📌 상품 상세 (${i + 1})`, margin, y); y += 10;
         
         let addonList = [];
-        if (item.addons) Object.entries(item.addons).forEach(([k, v]) => { if(v>0 && ADDON_DB[k]) addonList.push(`${ADDON_DB[k].name} x${v}`); });
+        // [수정] 코드로 저장된 옵션을 이름으로 변환하여 출력
+        if (item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const addon = ADDON_DB[code];
+                if (addon) addonList.push(`${addon.name} (+${addon.price})`);
+            });
+        }
         
         doc.setFontSize(12); doc.setFont("NanumGothic", "normal");
         doc.text(`• 상품명: ${item.product.name}`, margin + 5, y); y += 7;
@@ -436,25 +442,42 @@ export async function generateQuotationPDF(orderInfo, cartItems) {
 
     doc.setFillColor(240, 240, 240); doc.rect(margin, y, 180, 8, 'F'); 
     doc.setFontSize(10); doc.setFont("NanumGothic", "bold"); 
-    doc.text("품명", margin + 5, y + 5); doc.text("금액", 190, y + 5, { align: 'right' }); y += 10;
+    doc.text("품명", margin + 5, y + 5); doc.text("금액", 190, y + 5, { align: 'right' }); y += 12; // 줄 간격 조정
 
     let total = 0; doc.setFont("NanumGothic", "normal");
+    
     cartItems.forEach((item) => {
-        let itemPrice = item.product.price; total += itemPrice;
-        doc.setFont("NanumGothic", "bold"); doc.text(item.product.name, margin + 5, y);
-        doc.setFont("NanumGothic", "normal"); doc.text(itemPrice.toLocaleString(), 190, y, { align: 'right' });
+        let itemBasePrice = item.product.price;
+        let lineTotal = itemBasePrice;
+
+        // 1. 기본 상품명 출력
+        doc.setFont("NanumGothic", "bold");
+        doc.text(item.product.name, margin + 5, y);
+        doc.setFont("NanumGothic", "normal");
+        doc.text(itemBasePrice.toLocaleString(), 190, y, { align: 'right' });
         y += 6;
-        if(item.addons) {
-            Object.entries(item.addons).forEach(([k, qty]) => {
-                if(qty > 0 && ADDON_DB[k]) {
-                    const p = ADDON_DB[k].price * qty; total += p;
-                    doc.text(`└ ${ADDON_DB[k].name} x${qty}`, margin + 10, y);
-                    doc.text(p.toLocaleString(), 190, y, { align: 'right' });
+
+        // 2. 옵션 내역 출력 (★ 수정된 부분: 코드로 이름 조회)
+        if(item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const addon = ADDON_DB[code];
+                if (addon) {
+                    doc.text(`└ ${addon.name}`, margin + 10, y);
+                    doc.text(`+${addon.price.toLocaleString()}`, 190, y, { align: 'right' });
+                    lineTotal += addon.price;
                     y += 6;
                 }
             });
         }
+        
+        // 수량 적용 합계
+        total += lineTotal * item.qty;
+        
+        // 구분선
         y += 2; 
+        doc.setDrawColor(220); 
+        doc.line(margin, y, 195, y);
+        y += 6;
     });
 
     y += 5; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(margin, y, 195, y); y += 10;

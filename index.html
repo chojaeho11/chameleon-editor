@@ -57,6 +57,15 @@
         overflow-y: auto; 
         padding-bottom: 80px;
     }
+
+    /* 장바구니 이미지 강제 축소 스타일 */
+.cart-item img {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: contain !important; /* 비율 유지하며 안에 맞춤 */
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
     /* =========================================
     [우클릭 메뉴 스타일 추가]
     ========================================= */
@@ -301,8 +310,116 @@
     .tpl-item-img { width: 100%; height: auto !important; object-fit: contain; display: block; background-color: #fff; margin: 0 !important; padding: 0 !important; }
     .tpl-item.selected { box-shadow: 0 0 0 3px var(--primary); }
     .tpl-item div:not(:has(img)) { display: none !important; }
-    #cartPage { z-index: 120000; padding-top: 40px; }
-    #cartListArea { overflow-y: auto; max-height: 70vh; }
+   /* =========================================
+   [★ NEW ★ 장바구니 PC/모바일 반응형 스타일]
+   이 코드를 <style> 태그 안쪽, 맨 아래에 붙여넣으세요.
+   ========================================= */
+#cartPage { z-index: 120000; padding-top: 40px; }
+#cartListArea { overflow-y: auto; max-height: 70vh; }
+
+/* PC 버전: 좌측(정보) + 우측(옵션) 2단 그리드 레이아웃 */
+/* [수정 위치 1] PC 레이아웃 설정 */
+.cart-item {
+    display: grid;
+    /* 좌측은 남은 공간 전부(1fr), 우측은 340px 고정 → 자연스럽게 우측 끝 배치됨 */
+    grid-template-columns: 1fr 340px; 
+    gap: 30px; /* 좌우 사이 간격 */
+    
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    align-items: start; /* 위쪽 라인 맞춤 */
+}
+
+.cart-left-col {
+    display: flex;
+    gap: 20px;
+}
+
+.cart-thumb {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+    flex-shrink: 0;
+}
+
+.cart-info-box {
+    flex: 1;
+    min-width: 0; /* 텍스트 말줄임/줄바꿈을 위해 필수 */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* 뱃지 및 텍스트 스타일 */
+.cart-badges { margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.cart-badge { font-size: 11px; padding: 3px 6px; border-radius: 4px; font-weight: 600; }
+.badge-design { background: #e0e7ff; color: #4338ca; }
+.badge-file { background: #f1f5f9; color: #475569; }
+
+.cart-title { font-size: 17px; font-weight: 700; color: #1e293b; margin: 0 0 5px 0; line-height: 1.35; word-break: keep-all; }
+.cart-filename { font-size: 13px; color: #64748b; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
+.cart-price { font-size: 16px; font-weight: 800; color: #6366f1; margin-bottom: 12px; }
+
+/* 수량/삭제 버튼 행 */
+.cart-ctrl-row { display: flex; align-items: center; gap: 10px; }
+.qty-wrapper { display: flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; overflow: hidden; }
+.qty-btn { width: 32px; height: 32px; border: none; background: #fff; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; }
+.qty-btn:hover { background: #f8fafc; color: #333; }
+.qty-val { width: 40px; text-align: center; font-size: 14px; font-weight: 700; border-left: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; line-height: 32px; }
+.del-btn { width: 34px; height: 34px; border-radius: 6px; border: 1px solid #fee2e2; background: #fff; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.del-btn:hover { background: #fee2e2; }
+
+/* 우측 옵션 영역 스타일 */
+.cart-right-col {
+    background: #f9fafb;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 15px;
+    min-height: 100px;
+}
+.opt-header { font-size: 13px; font-weight: 800; color: #475569; margin-bottom: 10px; display: block; }
+.opt-select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; margin-bottom: 15px; outline: none; background: #fff; }
+.opt-chk-group { display: flex; flex-direction: column; gap: 8px; }
+.opt-chk-label { display: flex; align-items: center; padding: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+.opt-chk-label:hover { border-color: #6366f1; }
+.opt-chk-label input { accent-color: #6366f1; width: 16px; height: 16px; margin-right: 10px; flex-shrink: 0; }
+.opt-name { flex: 1; font-size: 13px; color: #334155; font-weight: 500; word-break: keep-all; line-height: 1.3;}
+.opt-price { font-size: 13px; font-weight: 700; color: #6366f1; white-space: nowrap; margin-left: 5px; }
+
+/* 모바일 화면 최적화 (768px 이하) */
+@media (max-width: 768px) {
+    #cartPage { padding-top: 50px !important; background: #f1f5f9 !important; }
+    #cartListArea { padding-bottom: 200px !important; }
+    
+    .cart-item {
+        display: flex; /* 그리드 해제하고 세로 배치 */
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    .cart-left-col {
+        padding: 20px;
+        border-bottom: 1px solid #f1f5f9;
+        width: 100%;
+    }
+    .cart-thumb { width: 80px; height: 80px; }
+    
+    .cart-right-col {
+        border: none;
+        background: #f8fafc;
+        border-radius: 0;
+        padding: 20px;
+        width: 100%;
+    }
+    .cart-title { font-size: 16px; }
+    .cart-price { font-size: 15px; }
+}
     .cart-item { margin-bottom: 15px; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; width: 100%; }
     .cal-day-header { font-weight: 800; text-align: center; padding: 5px 0; color: var(--primary); font-size: 14px; }
@@ -567,91 +684,7 @@ input, textarea, select {
 }
 </style>
 </head>
-<script>
-    // [장바구니 렌더링 함수]
-    // 이 함수가 있어야 장바구니 내용과 옵션창이 올바르게 보입니다.
-    window.renderCartList = function() {
-        const cartArea = document.getElementById('cartListArea');
-        if(!cartArea) return;
-        
-        // 장바구니 데이터 (없으면 테스트 데이터 사용)
-        const items = window.cartItems || [
-            {productName: 'A3 기본 포스터 (예시)', price: 15000, qty: 1, thumb: 'https://via.placeholder.com/150'}
-        ]; 
-        
-        cartArea.innerHTML = ''; // 초기화
 
-        // 1. 장바구니 비었을 때
-        if (items.length === 0) {
-            cartArea.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#999;">
-                    <i class="fa-solid fa-cart-shopping" style="font-size:48px; margin-bottom:15px;"></i>
-                    <p>장바구니가 비어있습니다.</p>
-                </div>`;
-            updateSummary(0);
-            return;
-        }
-
-        let total = 0;
-
-        // 2. 아이템 반복 생성
-        items.forEach((item, index) => {
-            const itemPrice = (item.price || 0) * (item.qty || 1);
-            total += itemPrice;
-
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            // 모바일에서 잘 보이도록 스타일(Flex Column) 적용
-            div.innerHTML = `
-                <div style="display:flex; gap:15px; align-items:center;">
-                    <img src="${item.thumb}" style="width:80px; height:80px; object-fit:cover; border-radius:8px; border:1px solid #eee;">
-                    <div style="flex:1;">
-                        <div style="font-weight:bold; font-size:16px;">${item.productName}</div>
-                        <div style="color:#6366f1; font-weight:bold; margin-top:4px;">${itemPrice.toLocaleString()}원</div>
-                    </div>
-                </div>
-                
-                <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-top:10px; border:1px solid #eee;">
-                    <div style="font-size:13px; color:#ef4444; font-weight:bold; margin-bottom:5px;">
-                        <i class="fa-solid fa-check"></i> 필수 옵션을 선택해주세요
-                    </div>
-                    <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; background:#fff;">
-                        <option>기본 소재</option>
-                        <option>고급 포맥스 (+5,000원)</option>
-                    </select>
-                    <select style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
-                        <option>후가공 없음</option>
-                        <option>코팅 추가 (+2,000원)</option>
-                    </select>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                    <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:6px; background:#fff;">
-                        <button onclick="updateQty(${index}, -1)" style="padding:5px 12px; border:none; background:none;">-</button>
-                        <span style="font-weight:bold; padding:0 5px;">${item.qty}</span>
-                        <button onclick="updateQty(${index}, 1)" style="padding:5px 12px; border:none; background:none;">+</button>
-                    </div>
-                    <button onclick="removeCartItem(${index})" style="padding:6px 12px; border:1px solid #ef4444; color:#ef4444; background:#fff; border-radius:6px; font-size:12px;">삭제</button>
-                </div>
-            `;
-            cartArea.appendChild(div);
-        });
-
-        updateSummary(total);
-    };
-
-    function updateSummary(total) {
-        const totalElem = document.getElementById('summaryTotal');
-        if(totalElem) totalElem.innerText = total.toLocaleString() + '원';
-        
-        const countElem = document.getElementById('cartCount');
-        if(countElem) countElem.innerText = window.cartItems ? window.cartItems.length : 0;
-    }
-
-    // 더미 함수들 (실제 로직 연결 필요)
-    window.updateQty = (i, d) => { console.log('수량변경', i, d); };
-    window.removeCartItem = (i) => { console.log('삭제', i); document.getElementById('cartPage').style.display='none'; };
-</script>
 <body>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;">로딩 중입니다...</p></div>
 
@@ -672,7 +705,7 @@ input, textarea, select {
 <div id="startScreen">
     <div class="hero-section">
         <h1 class="hero-title">행사 준비하세요? <br><span>카멜레온</span>과 함께해요.</h1>
-        <p class="hero-desc">행사 팝업스토어 기획자를 위한 도매 쇼핑몰, 강력한 무료에디터, 허니콤보드 판매 1위.</p>
+        <p class="hero-desc">행사 팝업스토어 기획자를 위한 도매 쇼핑 강력한 무료에디터, 허니콤보드 판매 1위.</p>
     </div>
 
     <div class="quick-menu-wrapper">
@@ -734,22 +767,20 @@ input, textarea, select {
         <div class="brand" onclick="location.reload()"><i class="fa-solid fa-palette"></i> Chameleon</div>
         <div class="template-tabs">
             <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'">🎨 템플릿</button>
-            <!-- <button class="tpl-tab" data-tpl="text">허니콤보드전용</button> -->
-            <button class="tpl-tab" data-tpl="vector">심플백터배경</button>
-            <button class="tpl-tab" data-tpl="graphic">백터탬플릿</button>
-            <button class="tpl-tab" data-tpl="photo-bg">사진템플릿[A2이하까지]</button>
-            <button class="tpl-tab" data-tpl="transparent-graphic">패브릭패턴</button>
+            <button class="tpl-tab" data-tpl="vector">배경</button>
+            <button class="tpl-tab" data-tpl="graphic">백터</button>
+            <button class="tpl-tab" data-tpl="photo-bg">사진</button>
+            <button class="tpl-tab" data-tpl="transparent-graphic">로고</button>
         </div> 
         <div style="flex:1;"></div>
-        <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'" style="margin-right:5px;">🛒 장바구니</button>
-        <button class="btn" id="btnMyLibrary" style="display:none; margin-right:5px;">📂 보관함</button>
+        <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'" style="margin-right:5px;">🛒구매하기</button>
+        <button class="btn" id="btnMyLibrary" style="display:none; margin-right:5px;">저장된작업</button>
         <button class="btn primary" id="btnOrderTop">🚀 주문하기</button>
-        <button class="btn btn-save-top" id="btnPNG"><i class="fa-solid fa-download"></i> <span>이미지 저장</span></button>
         <button class="btn" id="btnLoginBtn">로그인</button>
     </div>
 
     <div id="wallHeightControls">
-        <div class="wall-label"><i class="fa-solid fa-ruler-vertical"></i> 벽 높이</div>
+        <div class="wall-label"><i class="fa-solid fa-ruler-vertical"></i> 가벽 높이선택</div>
         <button class="height-btn active" onclick="window.setWallHeight(2200, this)">220cm</button>
         <button class="height-btn" onclick="window.setWallHeight(2400, this)">240cm</button>
         <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
@@ -758,7 +789,6 @@ input, textarea, select {
     <div class="editor-wrap">
         <div class="side" id="toolsPanel">
             <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="btnChangeSize" class="btn-round" style="flex:1;"><i class="fa-solid fa-ruler-combined"></i> 사이즈 변경</button>
                 <button id="btnRotateCanvas" class="btn-round" style="flex:1;"><i class="fa-solid fa-rotate"></i> 캔버스 회전</button>
             </div>
             <div id="sizeTogglePanel" style="display:none; grid-template-columns: 1fr; gap:5px; margin-bottom:15px; padding:10px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;"></div>
@@ -896,18 +926,18 @@ input, textarea, select {
         <div class="tpl-sidebar">
             <div class="tpl-cate-title">CATEGORIES</div>
             <button class="tpl-cate-btn active" onclick="window.filterTpl('all', this)"><span>전체 보기</span></button>
-            <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)"><span>심플백터배경</span></button>
-            <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>사진템플릿</span></button>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)"><span>배경</span></button>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>사진</span></button>
             
             <button class="tpl-cate-btn" onclick="window.filterTpl('text', this)" style="display:none;"><span>준비중입니다.</span></button>
             
-            <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>백터템플릿</span></button>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>백터</span></button>
             
-            <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)"><span>패브릭패턴</span></button>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)"><span>로고</span></button>
         </div>
         <div class="tpl-content">
             <div style="padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin:0;">템플릿 탐색</h2>
+                <h2 style="margin:0;">검색</h2>
                 <input type="text" id="tplSearchInput" class="ai-input-pretty" style="width:300px; margin-bottom:0;" placeholder="검색어 입력...">
                 <button onclick="document.getElementById('templateOverlay').style.display='none'" style="border:none; background:none; cursor:pointer;">
                     <i class="fa-solid fa-xmark fa-2x"></i>
@@ -916,7 +946,7 @@ input, textarea, select {
             <div id="tplGrid" class="tpl-grid"></div>
             <div style="padding:15px; text-align:right; border-top:1px solid #eee;">
                 <button id="btnUseTpl" class="btn primary">선택한 템플릿 적용</button>
-            </div>
+            </div> 
         </div>
     </div>
 </div>
@@ -925,14 +955,65 @@ input, textarea, select {
 <div id="loadModeModal" class="modal-bg" style="z-index: 10001;"><div class="modal-box" style="width: 450px;"><h3>🎨 템플릿 불러오기</h3><p style="color:#666; font-size:14px; margin-bottom:20px;">현재 캔버스 내용이 있습니다.</p><div style="display:flex; gap:10px;"><button id="btnLoadReplace" class="btn-round ai-red" style="height:100px;">새 작업으로<br>(기존 삭제)</button><button id="btnLoadAdd" class="btn-round primary" style="height:100px;">현재 작업에<br>추가하기</button></div><button onclick="document.getElementById('loadModeModal').style.display='none'" class="btn-round" style="margin-top:15px;">취소</button></div></div>
 <div id="loginModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box" style="width: 400px;"><h3 id="authTitle" style="margin-top:0;">로그인</h3><div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"><input id="loginId" class="ai-input-pretty" placeholder="이메일 주소" style="margin:0;"><input id="loginPw" class="ai-input-pretty" type="password" placeholder="비밀번호" style="margin:0;"><input id="loginPwConfirm" class="ai-input-pretty" type="password" placeholder="비밀번호 확인" style="margin:0; display:none;"></div><button class="btn-round primary" id="btnAuthAction" style="width:100%; justify-content:center; height:45px; font-size:15px;">로그인</button><div style="margin-top:15px; font-size:13px; color:#666;"><span id="authSwitchText">계정이 없으신가요?</span><span id="btnSwitchAuthMode" style="color:var(--primary); font-weight:bold; cursor:pointer; margin-left:5px; text-decoration:underline;">회원가입</span></div><hr style="margin:20px 0; border:0; border-top:1px solid #eee;"><div style="display:flex; flex-direction:column; gap:8px;"><button id="btnGoogleLogin" class="btn-round" style="border-color:#ddd; justify-content:center;"><i class="fa-brands fa-google" style="color:#DB4437; margin-right:8px;"></i> Google로 시작하기</button><button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center;"><i class="fa-solid fa-comment" style="margin-right:8px;"></i> 카카오로 시작하기</button></div><button onclick="document.getElementById('loginModal').style.display='none'" class="btn-round" style="margin-top:15px; border:none; color:#888; width:100%;">닫기</button></div></div>
 <div id="productDetailModal" class="modal-bg" style="z-index: 11000;"><div class="modal-box" style="width: 900px; max-width: 95%; display: flex; text-align: left; padding:0; overflow:hidden;"><div style="width: 45%; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 20px;"><img id="pdpImage" src="" style="max-width: 100%; max-height: 300px; object-fit: contain;"></div><div style="width: 55%; padding: 40px; display: flex; flex-direction: column;"><h2 id="pdpTitle" style="margin: 0 0 10px 0;">상품명</h2><h3 id="pdpPrice" style="color: var(--primary); margin: 0 0 20px 0;">0원</h3><button id="btnActionDesign" class="btn-round primary" style="height: 50px;">🎨 직접 디자인하기</button><div style="margin-top:10px;"><input type="file" id="pdpFileUpload" style="display: none;"><button onclick="document.getElementById('pdpFileUpload').click()" class="btn-round">📂 파일 업로드 주문</button></div><button onclick="document.getElementById('productDetailModal').style.display='none'" style="margin-top: auto; border:none; background:none; cursor:pointer;">닫기</button></div></div></div>
-<div id="cartPage" style="display:none; position:fixed; inset:0; background:#f1f5f9; z-index: 12000; overflow-y:auto; padding-top: 40px;"><div style="max-width: 1000px; margin: 0 auto; padding-bottom: 60px;"><div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;"><h1>🛒 장바구니 <span id="cartCount">(0)</span></h1><button onclick="document.getElementById('cartPage').style.display='none'" class="btn-round" style="width:auto;">닫기</button></div><div style="display: grid; grid-template-columns: 1fr 300px; gap: 30px; padding: 0 20px;"><div id="cartListArea"></div><div><div style="background:white; padding:20px; border-radius:12px;"><h3>결제 금액</h3><div style="display:flex; justify-content:space-between;"><span>상품</span><span id="summaryItemPrice">0원</span></div><div style="display:flex; justify-content:space-between;"><span>옵션</span><span id="summaryAddonPrice">0원</span></div><hr><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px;"><span>합계</span><span id="summaryTotal">0원</span></div><button id="btnGoCheckout" class="btn-round primary" style="margin-top:20px; width:100%;">💳 결제하기</button><button id="btnPrintQuote" class="btn-round btn-secondary" style="margin-top:10px; width:100%;"><i class="fa-solid fa-file-invoice"></i> 견적서 출력</button></div></div></div></div></div>
+<div id="cartPage" style="display:none; position:fixed; inset:0; background:#f1f5f9; z-index: 12000; overflow-y:auto; padding-top: 40px;">
+    <div style="max-width: 1000px; margin: 0 auto; padding-bottom: 60px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
+            <h1>🛒 장바구니 <span id="cartCount">(0)</span></h1>
+            <button onclick="document.getElementById('cartPage').style.display='none'" class="btn-round" style="width:auto;">닫기</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px; padding: 0 20px;">
+            
+            <div id="cartListArea" style="width: 100%;"></div>
+            
+            <div style="width: 100%;">
+                <div style="background:white; padding:20px; border-radius:12px;">
+                    <h3>결제 금액</h3>
+                    <div style="display:flex; justify-content:space-between;"><span>상품</span><span id="summaryItemPrice">0원</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>옵션</span><span id="summaryAddonPrice">0원</span></div>
+                    <hr>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px;"><span>합계</span><span id="summaryTotal">0원</span></div>
+                    <button id="btnGoCheckout" class="btn-round primary" style="margin-top:20px; width:100%;">💳 결제하기</button>
+                    <button id="btnPrintQuote" class="btn-round btn-secondary" style="margin-top:10px; width:100%;"><i class="fa-solid fa-file-invoice"></i> 견적서 출력</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 <div id="calendarModal" class="modal-bg" style="z-index: 12500;"><div class="modal-box"><h3>📅 배송요청 [제작기간 3일]</h3><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><button id="btnPrevMonth" class="btn-round" style="width:30px;">&lt;</button><span id="currentMonthYear" style="font-weight:bold;"></span><button id="btnNextMonth" class="btn-round" style="width:30px;">&gt;</button></div><div id="calendarGrid" class="calendar-grid"></div><button onclick="document.getElementById('calendarModal').style.display='none'" class="btn-round" style="margin-top:15px;">닫기</button></div></div>
 <div id="deliveryInfoModal" class="modal-bg" style="z-index: 12600;"><div class="modal-box" style="text-align:left;"><h3 style="text-align:center;">📝 배송 정보 입력</h3><p>담당자명</p><input id="inputManagerName" class="ai-input-pretty"><p>연락처</p><input id="inputManagerPhone" class="ai-input-pretty"><p>주소</p><input id="inputAddress" class="ai-input-pretty"><p>요청사항</p><textarea id="inputRequest" class="ai-input-pretty"></textarea><button id="btnSubmitOrderInfo" class="btn-round primary" style="margin-top:10px;">주문서 생성 및 결제</button><button onclick="document.getElementById('deliveryInfoModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
 <div id="checkoutModal" class="modal-bg" style="z-index: 13000;"><div class="modal-box" style="text-align:left;"><h3 style="text-align:center;">확인</h3><input id="orderName" class="ai-input-pretty" readonly><input id="orderPhone" class="ai-input-pretty" readonly><input id="orderAddr" class="ai-input-pretty" readonly><textarea id="orderMemo" class="ai-input-pretty" readonly></textarea><button id="btnRealPayment" class="btn-round primary">최종 결제</button><button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
 <div id="successModal" class="modal-bg" style="z-index: 14000;"><div class="modal-box"><h2>🎉 주문 완료!</h2><button id="btnDownOrderSheet" class="btn-round">📄 작업지시서 다운로드</button><button id="btnDownQuotation" class="btn-round" style="margin-top:5px;">📑 견적서 다운로드</button><button onclick="window.closeSuccessModal()" class="btn-round primary" style="margin-top:15px;">확인</button></div></div>
 <div id="sellModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>💎 디자인 등록</h3><input id="sellKw" class="ai-input-pretty" placeholder="#키워드"><button id="btnSellConfirm" class="btn-round primary">등록하기</button><button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
 <div id="fontModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>폰트 선택</h3><div id="fontList" style="max-height:300px; overflow-y:auto;"></div><button onclick="document.getElementById('fontModal').style.display='none'" class="btn-round" style="margin-top:10px;">닫기</button></div></div>
+<div id="choiceModal" class="modal-bg" style="z-index: 15000;">
+    <div class="modal-box" style="width: 500px; max-width: 95%;">
+        <h3>🎨 작업 방식을 선택해주세요</h3>
+        <p style="color:#666; font-size:14px; margin-bottom:30px;">
+            선택하신 상품으로 디자인을 새로 시작하거나,<br>
+            이미 완성된 파일(PDF, JPG)이 있다면 바로 주문할 수 있습니다.
+        </p>
 
+        <div style="display:flex; gap:15px; margin-bottom:20px;">
+            <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px;">
+                <i class="fa-solid fa-palette" style="font-size:32px;"></i>
+                <span style="font-size:16px;">직접 디자인하기</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">에디터에서 꾸미기</span>
+            </button>
+
+            <button onclick="window.confirmChoice('file')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;"></i>
+                <span style="font-size:16px;">내 파일로 주문</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">PDF/이미지 파일 업로드</span>
+            </button>
+        </div>
+
+        <input type="file" id="directUploadInput" style="display:none;" accept="image/*,.pdf">
+
+        <button onclick="document.getElementById('choiceModal').style.display='none'" class="btn-round" style="margin-top:10px;">닫기</button>
+    </div>
+</div>
 <script type="module" src="./config.js"></script>
 <script type="module" src="./canvas-core.js"></script>
 <script type="module" src="./canvas-size.js"></script>
@@ -955,99 +1036,289 @@ input, textarea, select {
     import { canvas } from './canvas-core.js';
     import { openProductDetail, startDesignFromProduct } from './order.js';
     import { applySize } from './canvas-size.js';
-    import { sb, PRODUCT_DB } from './config.js'; 
+    import { sb, PRODUCT_DB, cartData, currentUser } from './config.js'; // cartData 추가 import
 
     window.canvas = canvas;
     window.openProductDetail = openProductDetail;
     window.startDesignFromProduct = startDesignFromProduct;
     window.applySize = applySize;
     
-    // [중요] 현재 선택된 제품 키를 저장하는 전역 변수
-    window.currentProductKey = 'A4'; // 기본값
+    // 현재 선택된 제품 키 저장
+    window.currentProductKey = 'A4';
+    let selectedProductForChoice = null; // 선택된 상품 정보 저장용
 
-    // [1] 템플릿 클릭 -> 사이즈 선택 모달 열기
-    window.onTemplateClick = function(tplData) {
-        window.pendingTemplate = tplData;
-        const grid = document.getElementById('productSelectGrid');
-        if(grid) {
-            grid.innerHTML = '';
-            const getIcon = (name) => {
-                if(name.includes('A4')||name.includes('A3')) return 'fa-solid fa-file';
-                if(name.includes('배너')) return 'fa-solid fa-flag';
-                if(name.includes('가벽')) return 'fa-solid fa-door-closed';
-                if(name.includes('보드')) return 'fa-solid fa-chalkboard';
-                return 'fa-solid fa-layer-group';
-            };
-            Object.keys(PRODUCT_DB).forEach(key => {
-                const item = PRODUCT_DB[key];
-                const div = document.createElement('div');
-                div.className = 'quick-item';
-                div.innerHTML = `<div class="quick-icon"><i class="${getIcon(item.name)}"></i></div><div class="quick-text">${item.name}</div>`;
-                div.onclick = () => checkAndLoad(key, item.name);
-                grid.appendChild(div);
-            });
-            document.getElementById('sizeSelectModal').style.display = 'flex';
+    // 1. 퀵 메뉴 렌더링 (시작 화면)
+    async function renderQuickMenu() {
+        const c = document.getElementById('quickMenuContainer');
+        if (!c) return;
+        c.innerHTML = '로딩 중...';
+        
+        let retry = 0;
+        while(Object.keys(PRODUCT_DB).length === 0 && retry < 10) {
+            await new Promise(r => setTimeout(r, 200));
+            retry++;
+        }
+        
+        c.innerHTML = '';
+        const icons = {'A4':'fa-file','배너':'fa-flag','가벽':'fa-door-closed','보드':'fa-chalkboard','원단':'fa-scroll','포토':'fa-camera'};
+        
+        Object.keys(PRODUCT_DB).forEach(k => {
+            const n = PRODUCT_DB[k].name;
+            let icon = 'fa-layer-group';
+            for(let i in icons) if(n.includes(i)) icon = 'fa-solid '+icons[i];
+            
+            const d = document.createElement('div');
+            d.className = 'quick-item';
+            d.innerHTML = `<div class="quick-icon"><i class="${icon}"></i></div><div class="quick-text">${n}</div>`;
+            
+            // ★ 클릭 시 '선택 모달' 띄우기
+            d.onclick = () => window.showChoiceModal(k);
+            
+            c.appendChild(d);
+        });
+    }
+
+    // 2. [템플릿 클릭 시] 분기 처리
+    window.onTemplateClick = async function(tplData) {
+        const startScreen = document.getElementById('startScreen');
+        // 시작 화면이 안 보이면 에디터 작업 중으로 판단
+        const isEditorOpen = startScreen && window.getComputedStyle(startScreen).display === 'none';
+
+        if (isEditorOpen) {
+            // [CASE A] 작업 중: 현재 캔버스에 템플릿 적용 (사이즈 유지)
+            if(!confirm("현재 캔버스에 템플릿을 적용하시겠습니까?\n(디자인만 변경됩니다)")) return;
+            await applyTemplateDirectly(tplData);
+        } else {
+            // [CASE B] 시작 화면: 사이즈 선택 모달 띄우기
+            window.pendingTemplate = tplData;
+            const grid = document.getElementById('productSelectGrid');
+            if(grid) {
+                grid.innerHTML = '';
+                Object.keys(PRODUCT_DB).forEach(key => {
+                    const item = PRODUCT_DB[key];
+                    const div = document.createElement('div');
+                    div.className = 'quick-item';
+                    div.innerHTML = `<div class="quick-icon"><i class="fa-solid fa-check"></i></div><div class="quick-text">${item.name}</div>`;
+                    // 템플릿 모드에서는 바로 에디터로 진입 (파일 업로드 X)
+                    div.onclick = () => checkAndLoad(key, item.name); 
+                    grid.appendChild(div);
+                });
+                document.getElementById('sizeSelectModal').style.display = 'flex';
+            }
         }
     };
 
-    // [2] 제품 선택 후 로드
+    // 3. 작업 방식 선택 모달 열기
+    window.showChoiceModal = function(key) {
+        if (!PRODUCT_DB[key]) return alert("상품 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+        selectedProductForChoice = { key: key, ...PRODUCT_DB[key] };
+        document.getElementById('choiceModal').style.display = 'flex';
+    };
+
+    // 4. 모달 내 버튼 클릭 처리
+    window.confirmChoice = function(mode) {
+        if (!selectedProductForChoice) return alert("상품 정보가 없습니다.");
+
+        if (mode === 'editor') {
+            // [A] 에디터로 이동
+            document.getElementById('choiceModal').style.display = 'none';
+            startEditorDirect(selectedProductForChoice.key);
+        } else {
+            // [B] 파일 업로드 창 열기
+            const input = document.getElementById('directUploadInput');
+            if(input) input.click();
+        }
+    };
+
+    // 5. ★ [핵심 수정] 파일 선택 후 장바구니 담기 (새로고침 제거 & 오류 방어)
+    // [새 코드 1] PDF 파일을 받아서 작은 썸네일(이미지)로 변환
+    async function createPdfThumbnail(file) {
+        try {
+            if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            }
+
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            const page = await pdf.getPage(1);
+            
+            // 썸네일 크기 강제 조절 (높이 150px 기준)
+            const desiredHeight = 150;
+            const viewport = page.getViewport({ scale: 1 });
+            const scale = desiredHeight / viewport.height;
+            const scaledViewport = page.getViewport({ scale: scale });
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+
+            await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+            return canvas.toDataURL('image/jpeg', 0.8); 
+
+        } catch (e) {
+            console.error("PDF 썸네일 생성 실패:", e);
+            return 'https://via.placeholder.com/100?text=PDF'; 
+        }
+    }
+
+    // [새 코드 2] 일반 이미지 파일도 썸네일용으로 작게 리사이징
+    async function createImageThumbnail(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const desiredHeight = 150; // 높이 150px 고정
+                    const scale = desiredHeight / img.height;
+                    const canvas = document.createElement('canvas');
+                    canvas.height = desiredHeight;
+                    canvas.width = img.width * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // [새 코드 3] 파일 선택 시 -> 작게 변환 후 장바구니 담기
+    const directInput = document.getElementById('directUploadInput');
+    if (directInput) {
+        directInput.onchange = async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const loading = document.getElementById("loading");
+            if(loading) loading.style.display = "flex";
+
+            try {
+                let thumbUrl = 'https://via.placeholder.com/100?text=FILE'; 
+                let fileDataURI = null; 
+
+                // 1. 원본 데이터 읽기 (서버 전송용 - 필수)
+                fileDataURI = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+
+                // 2. 썸네일 생성 (보기용 - 작게 변환)
+                if (file.type === 'application/pdf') {
+                    thumbUrl = await createPdfThumbnail(file); 
+                } else if (file.type.startsWith('image/')) {
+                    thumbUrl = await createImageThumbnail(file);
+                }
+
+                // 장바구니 아이템 생성
+                const newItem = {
+                    uid: Date.now(),
+                    productName: selectedProductForChoice ? selectedProductForChoice.name : '파일 주문',
+                    product: selectedProductForChoice ? { ...selectedProductForChoice } : {},
+                    type: 'file', 
+                    fileName: file.name,
+                    mimeType: file.type,
+                    price: 15000, 
+                    qty: 1,
+                    thumb: thumbUrl, // 작아진 썸네일 이미지
+                    fileData: fileDataURI, // 원본 데이터 (필수)
+                    isOpen: true,
+                    selectedAddons: {}
+                };
+
+                cartData.push(newItem);
+localStorage.setItem("chameleon_cart", JSON.stringify(cartData));
+
+
+                alert(`[${newItem.productName}] 파일이 담겼습니다.`);
+                
+                // 화면 전환 (장바구니를 바로 띄우지 않고, 메인 화면만 보여줌)
+                document.getElementById('choiceModal').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'none';
+                
+                // 메인 에디터 화면을 보여줌 (에디터 주문과 동일한 UX)
+                document.getElementById('mainEditor').style.display = 'flex';
+                window.dispatchEvent(new Event('resize'));
+
+                // [중요 수정] 구버전 함수 대신 order.js의 window.renderCart() 호출
+                if(window.renderCart) window.renderCart();
+                
+                // 알림 메시지 수정
+                alert(`[${newItem.productName}] 파일이 장바구니에 담겼습니다.\n우측 상단 [🛒구매하기] 버튼을 눌러 확인하세요.`);
+
+            } catch (err) {
+                console.error("오류:", err);
+                alert("파일 처리 중 오류가 발생했습니다.");
+            } finally {
+                if(loading) loading.style.display = "none";
+                directInput.value = ''; 
+            }
+        };
+    }
+
+    // [기존 함수들 유지]
+    function startEditorDirect(key) {
+        window.currentProductKey = key;
+        if(canvas) canvas.currentProductKey = key;
+        const product = PRODUCT_DB[key];
+        const width = product ? product.w : 1000;
+        const height = product ? product.h : 1000;
+        
+        applySize(width, height, key, key.includes('Wall')?'wall':'standard', 'replace');
+        
+        document.getElementById("startScreen").style.display = "none";
+        document.getElementById("mainEditor").style.display = "flex";
+        window.dispatchEvent(new Event('resize'));
+    }
+
     function checkAndLoad(productKey, productName) {
         if (!window.pendingTemplate) return;
-        
-        // [핵심] 선택한 제품 키 저장
         window.currentProductKey = productKey;
-
-        const isLarge = productName.includes('가벽') || productName.includes('Wall');
-        const isVector = ['vector', 'graphic', 'transparent-graphic', 'vector_bg', 'vector_obj'].includes(window.pendingTemplate.category);
-
-        if (isLarge && !isVector) {
-            if(!confirm("⚠️ 경고: 이미지 템플릿은 대형 출력 시 깨질 수 있습니다.\n진행하시겠습니까?")) return;
-        }
+        if(canvas) canvas.currentProductKey = productKey;
 
         document.getElementById('sizeSelectModal').style.display = 'none';
         document.getElementById('startScreen').style.display = 'none';
         document.getElementById('mainEditor').style.display = 'flex';
         window.dispatchEvent(new Event('resize'));
-
         startDesignWithTemplate(productKey, window.pendingTemplate);
     }
 
     async function startDesignWithTemplate(productKey, tpl) {
         document.getElementById("loading").style.display = "flex";
-        
-        // [핵심] 여기서도 저장 (안전장치)
+        const product = PRODUCT_DB[productKey];
+        const width = product ? product.w : 1000;
+        const height = product ? product.h : 1000;
         window.currentProductKey = productKey;
-
-        const sizeMap = { 
-            'A4': [595, 842], 'A3': [842, 1191], 'A2': [1191, 1684], 'A1': [1684, 2384], 
-            'Std_1200_600': [3401, 1700], 'Std_2400_1200': [6803, 3401], 
-            'Wall_1': [1200, 2200], 'Wall_2': [2200, 2200], 'Wall_3': [3200, 2200], 
-            'Wall_4': [4200, 2200], 'Wall_5': [5200, 2200], 
-            'Banner_X': [600, 1800], 'Award_Board': [800, 570], 
-            'PhotoZone_Text': [2400, 1200], 'Fabric_Wide': [1350, 900], 'Paper_Disp_4': [585, 1130] 
-        };
-        const size = sizeMap[productKey] || [1000, 1000];
-        
+        if(canvas) canvas.currentProductKey = productKey;
         await new Promise(r => setTimeout(r, 300));
-        applySize(size[0], size[1], productKey, productKey.includes('Wall') ? 'wall' : 'standard', 'replace');
-
+        applySize(width, height, productKey, productKey.includes('Wall')?'wall':'standard', 'replace');
+        
         const { data: doc, error } = await sb.from('library').select('data_url').eq('id', tpl.id).single();
         if (error || !doc) {
-            alert("데이터 로드 실패");
+            alert("로드 실패");
             document.getElementById("loading").style.display = "none";
             return;
         }
         window.applyTemplateToCanvas(doc.data_url);
     }
 
-    // [기존 함수 유지] applyTemplateToCanvas, setAsBackground, loadTemplates 등은 그대로 둡니다.
-    // (너무 길어서 생략, 위에서 드린 코드 그대로 쓰시면 됩니다)
-    // ... (applyTemplateToCanvas 함수) ...
-    // ... (setAsBackground 함수) ...
-    // ... (loadTemplates 함수) ...
-    
+    async function applyTemplateDirectly(tpl) {
+        document.getElementById("loading").style.display = "flex";
+        document.getElementById('templateOverlay').style.display = 'none';
+        try {
+            const { data: doc, error } = await sb.from('library').select('data_url').eq('id', tpl.id).single();
+            if (error || !doc) return alert("데이터 로드 실패");
+            await window.applyTemplateToCanvas(doc.data_url);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            document.getElementById("loading").style.display = "none";
+        }
+    }
+
     window.applyTemplateToCanvas = async function(inputData) {
-        // ... (기존과 동일) ...
         if (!canvas) return;
         document.getElementById("loading").style.display = "flex";
         try {
@@ -1055,12 +1326,12 @@ input, textarea, select {
             if (typeof inputData === 'string') {
                 if (inputData.startsWith('http')) {
                     const res = await fetch(inputData);
-                    const ct = res.headers.get("content-type");
-                    jsonData = (ct && ct.includes("svg")) ? await res.text() : await res.json();
+                    jsonData = await res.json();
                 } else if (inputData.trim().startsWith('{')) {
                     jsonData = JSON.parse(inputData);
                 }
             }
+
             let board = canvas.getObjects().find(o => o.isBoard);
             let boardSize = board ? { w: board.width * board.scaleX, h: board.height * board.scaleY } : { w: canvas.width, h: canvas.height };
             let center = board ? { x: board.left + boardSize.w/2, y: board.top + boardSize.h/2 } : { x: canvas.width/2, y: canvas.height/2 };
@@ -1075,13 +1346,18 @@ input, textarea, select {
                 if(options) group = fabric.util.groupSVGElements(objects, options);
                 else group = new fabric.Group(objects);
                 group.set({ originX: 'center', originY: 'center' });
-                const scale = Math.min((boardSize.w * 0.9) / group.width, (boardSize.h * 0.9) / group.height);
+
+                const scaleX = boardSize.w / group.width;
+                const scaleY = boardSize.h / group.height;
+                const scale = Math.max(scaleX, scaleY);
+
                 group.set({ scaleX: scale, scaleY: scale, left: center.x, top: center.y });
                 canvas.add(group);
                 group.toActiveSelection();
                 canvas.requestRenderAll();
                 finishLoading();
             };
+
             if (typeof jsonData === 'string' && (jsonData.includes('<svg') || jsonData.includes('data:image/svg'))) {
                 fabric.loadSVGFromString(jsonData, onLoad);
             } else if (typeof jsonData === 'object' && jsonData.objects) {
@@ -1092,13 +1368,20 @@ input, textarea, select {
                     if(img) onLoad([img], null); else finishLoading();
                 });
             }
-        } catch(e) { console.error(e); alert("오류"); finishLoading(); }
+        } catch(e) { console.error(e); finishLoading(); }
     };
 
     function finishLoading() {
         document.getElementById("loading").style.display = "none";
         document.getElementById('templateOverlay').style.display = 'none';
     }
+
+    window.addEventListener('load', async () => {
+        await new Promise(r => setTimeout(r, 500));
+        renderQuickMenu();
+        loadTemplates('startTemplateGrid', false);
+        window.preloadKoreanFont();
+    });
 
     async function loadTemplates(containerId, isModal = false) {
         const grid = document.getElementById(containerId);
@@ -1111,54 +1394,14 @@ input, textarea, select {
         data.forEach(tpl => {
             const card = document.createElement('div');
             card.className = isModal ? 'tpl-item' : 'tpl-card-start';
-            let imgSrc = tpl.thumb_url;
-            if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) imgSrc = 'data:image/jpeg;base64,' + imgSrc;
-            if (!imgSrc) imgSrc = 'https://via.placeholder.com/300';
+            let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
             card.innerHTML = isModal ? `<img src="${imgSrc}" class="tpl-item-img">` : `<img src="${imgSrc}" class="tpl-card-img"><div class="tpl-card-overlay"></div>`;
             card.onclick = () => { if(window.onTemplateClick) window.onTemplateClick(tpl); };
             grid.appendChild(card);
         });
     }
 
-    // [중요] 초기 실행 시 'A4'가 아닌, 현재 선택된 값으로 설정되도록 수정
-    window.addEventListener('load', () => {
-        renderQuickMenu();
-        loadTemplates('startTemplateGrid', false);
-        window.preloadKoreanFont();
-    });
-    
-    document.getElementById('btnMobileTemplateOpen').onclick = () => { document.getElementById('templateOverlay').style.display='flex'; loadTemplates('tplGrid', true); };
-    document.querySelectorAll('.tpl-tab').forEach(b => b.onclick = () => { document.getElementById('templateOverlay').style.display='flex'; loadTemplates('tplGrid', true); });
-
-    function renderQuickMenu() {
-        const c = document.getElementById('quickMenuContainer');
-        if (!c) return; c.innerHTML = '';
-        const icons = {'A4':'fa-file','배너':'fa-flag','가벽':'fa-door-closed','보드':'fa-chalkboard','원단':'fa-scroll','포토':'fa-camera'};
-        Object.keys(PRODUCT_DB).forEach(k => {
-            const n = PRODUCT_DB[k].name;
-            let icon = 'fa-layer-group';
-            for(let i in icons) if(n.includes(i)) icon = 'fa-solid '+icons[i];
-            const d = document.createElement('div');
-            d.className = 'quick-item';
-            d.innerHTML = `<div class="quick-icon"><i class="${icon}"></i></div><div class="quick-text">${n}</div>`;
-            d.onclick = () => startEditorDirect(k);
-            c.appendChild(d);
-        });
-    }
-    
-    function startEditorDirect(key) {
-        // [핵심] 직접 시작할 때도 전역 변수에 저장
-        window.currentProductKey = key;
-
-        const sizeMap = { 'A4': [595, 842], 'A3': [842, 1191], 'A2': [1191, 1684], 'A1': [1684, 2384], 'Std_1200_600': [3401, 1700], 'Std_2400_1200': [6803, 3401], 'Wall_1': [1200, 2200], 'Wall_2': [2200, 2200], 'Wall_3': [3200, 2200], 'Wall_4': [4200, 2200], 'Wall_5': [5200, 2200], 'Banner_X': [600, 1800], 'Award_Board': [800, 570], 'PhotoZone_Text': [2400, 1200], 'Fabric_Wide': [1350, 900], 'Paper_Disp_4': [585, 1130] };
-        const size = sizeMap[key] || [1000, 1000];
-        applySize(size[0], size[1], key, key.includes('Wall') ? 'wall' : 'standard', 'replace');
-        document.getElementById("startScreen").style.display = "none";
-        document.getElementById("mainEditor").style.display = "flex";
-        window.dispatchEvent(new Event('resize'));
-    }
-    
-    // 기타 유틸 함수들...
+    // 기타 유틸
     window.toggleLockSelection = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return alert("선택필요"); const l=!a.lockMovementX; a.set({lockMovementX:l,lockMovementY:l,lockRotation:l,lockScalingX:l,lockScalingY:l,hasControls:!l,selectable:true}); canvas.discardActiveObject(); canvas.requestRenderAll(); };
     window.setAsBackground = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return alert("선택필요"); const b=canvas.getObjects().find(o=>o.isBoard); if(!b)return; const s=Math.max((b.width*b.scaleX)/a.width,(b.height*b.scaleY)/a.height); a.set({scaleX:s,scaleY:s,left:b.left+(b.width*b.scaleX)/2,top:b.top+(b.height*b.scaleY)/2,originX:'center',originY:'center',angle:0}); canvas.sendToBack(a); canvas.sendToBack(b); canvas.requestRenderAll(); };
     window.alignObject = function(d) { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return; const b=canvas.getObjects().find(o=>o.isBoard); const r=b?b.getBoundingRect():{left:0,top:0,width:canvas.width,height:canvas.height}; const w=a.getScaledWidth(); const h=a.getScaledHeight(); if(d=='left') a.left=r.left+w/2; if(d=='centerH') a.left=r.left+r.width/2; if(d=='right') a.left=r.left+r.width-w/2; if(d=='top') a.top=r.top+h/2; if(d=='centerV') a.top=r.top+r.height/2; if(d=='bottom') a.top=r.top+r.height-h/2; if(d=='center') { a.left=r.left+r.width/2; a.top=r.top+r.height/2; } a.setCoords(); canvas.requestRenderAll(); };
@@ -1179,93 +1422,35 @@ input, textarea, select {
         }
     });
     
-    // [수정] 확인 버튼 클릭 시 모달 닫기 및 초기화
     window.closeSuccessModal = function() {
         const modal = document.getElementById('successModal');
         if (modal) {
             modal.style.display = 'none';
         }
-        // 페이지 새로고침하여 초기화 (선택사항)
-        // location.reload(); 
     };
 
-    // [추가] 버튼에 직접 이벤트 리스너 연결 (HTML onclick 속성 대신)
     document.addEventListener('DOMContentLoaded', () => {
         const confirmBtn = document.querySelector('#successModal .btn-round.primary');
         if(confirmBtn) {
             confirmBtn.onclick = window.closeSuccessModal;
         }
     });
-</script>
-<script src="https://js.tosspayments.com/v1"></script>
-
-<button id="btnPayTest" 
-    style="position: fixed; bottom: 20px; right: 20px; z-index: 999999; padding: 15px 25px; background: #3182f6; color: white; border: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;">
-    💳 테스트 결제 실행
-</button>
-
-<script>
-document.getElementById("btnPayTest").onclick = function () {
-    console.log("결제 버튼 클릭됨"); // 클릭 확인용 로그
-
-    // 1. 클라이언트 키 설정 (반드시 본인의 테스트 키로 변경해야 함)
-    // 개발자센터 > API 키 > 클라이언트 키 (테스트용) 복사해서 붙여넣기
-    const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"; 
     
-    // SDK 초기화 확인
-    if (typeof TossPayments === 'undefined') {
-        alert("토스페이먼츠 SDK가 로드되지 않았습니다.");
-        return;
-    }
-
-    const tossPayments = TossPayments(clientKey);
-    const orderId = "order_" + new Date().getTime(); // 고유 주문번호 생성
-
-    // 2. 결제 요청
-    tossPayments.requestPayment("카드", {
-        amount: 1000,
-        orderId: orderId,
-        orderName: "테스트 주문",
-        customerName: "홍길동",
-        successUrl: window.location.origin + "/success.html", // 성공 시 이동할 페이지 (로컬 서버 필요)
-        failUrl: window.location.origin + "/fail.html",       // 실패 시 이동할 페이지
-    })
-    .catch(function (error) {
-        // 3. 에러 발생 시 처리 (중요)
-        if (error.code === "USER_CANCEL") {
-            alert("사용자가 결제를 취소했습니다.");
-        } else {
-            console.error(error);
-            alert("결제 연동 에러: " + error.message);
-        }
-    });
-};
-</script>
-<script>
-    // [입력창 오류 해결] 텍스트 입력 중 스페이스바(단축키) 작동 방지
+    // 입력창 오류 해결
     window.addEventListener('keydown', function(e) {
-        // 현재 포커스가 입력창(input, textarea)에 있다면
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-            // 스페이스바를 눌렀을 때
             if (e.code === 'Space' || e.key === ' ') {
-                e.stopPropagation(); // 캔버스 이동(단축키) 이벤트를 막고, 공백만 입력되게 함
+                e.stopPropagation(); 
             }
         }
-    }, true); // true: 캡처링 모드로 설정하여 다른 스크립트보다 먼저 감지
+    }, true);
 </script>
-<div id="mobileTextEditor" style="display:none;">
-    <div class="m-text-header">
-        <span>✏️ 텍스트 수정</span>
-        <button id="btnFinishText" class="btn-round primary" style="width:auto; padding:5px 15px; font-size:12px;">완료</button>
-    </div>
-    <textarea id="mobileTextInput" placeholder="내용을 입력하세요"></textarea>
-</div>
+<script src="https://js.tosspayments.com/v1"></script>
+<button id="btnPayTest" style="display:none; position:fixed; bottom:20px; right:20px; z-index:999999;">결제테스트</button>
 <script>
   (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
-
-  ChannelIO('boot', {
-    "pluginKey": "752ba9ff-a447-4e10-9813-715e051995cd"
-  });
+  ChannelIO('boot', { "pluginKey": "752ba9ff-a447-4e10-9813-715e051995cd" });
 </script>
+
 </body>
 </html>
