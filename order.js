@@ -18,47 +18,68 @@ function downloadBlob(blob, filename) {
     URL.revokeObjectURL(url);
 }
 
-// [1] 주문 시스템 초기화
+// ============================================================
+// [1] 주문 시스템 초기화 및 이벤트 연결
+// ============================================================
 export function initOrderSystem() {
-    // 상단 장바구니 담기 버튼
     const btnOrderTop = document.getElementById("btnOrderTop");
     if(btnOrderTop) { 
         btnOrderTop.innerText = "➕ 장바구니 담기"; 
         btnOrderTop.onclick = addCanvasToCart;
     }
     
-    // 상품 상세 모달 내부 버튼들
     const btnActionDesign = document.getElementById("btnActionDesign");
     if(btnActionDesign) btnActionDesign.onclick = startDesignFromProduct;
     
     const pdpFileUpload = document.getElementById("pdpFileUpload");
     if(pdpFileUpload) pdpFileUpload.onchange = addFileToCart;
     
-    // 장바구니 페이지 결제 버튼
     const btnGoCheckout = document.getElementById("btnGoCheckout");
     if(btnGoCheckout) { 
         btnGoCheckout.onclick = () => { 
             if(cartData.length === 0) return alert("장바구니가 비어있습니다."); 
+            
+            // 필수 옵션 체크
+            for (let i = 0; i < cartData.length; i++) {
+                const item = cartData[i];
+                let hasMaterial = false;
+                let hasFinish = false;
+
+                if (item.product && item.product.addons) {
+                    item.product.addons.forEach(code => {
+                        const info = ADDON_DB[code];
+                        if(info) {
+                            if(info.category === 'material') hasMaterial = true;
+                            if(info.category === 'finish') hasFinish = true;
+                        }
+                    });
+                }
+
+                if (hasMaterial && !item.selectedAddons['opt_mat']) {
+                    alert(`[${item.product.name}] 상품의 '재질/두께'를 선택해주세요.`);
+                    return;
+                }
+                if (hasFinish && !item.selectedAddons['opt_fin']) {
+                    alert(`[${item.product.name}] 상품의 '마감 방식'을 선택해주세요.`);
+                    return;
+                }
+            }
             openCalendarModal(); 
         }; 
     }
     
-    // 달력 월 변경 버튼
     const btnPrev = document.getElementById("btnPrevMonth");
     if(btnPrev) btnPrev.onclick = () => changeMonth(-1);
     
     const btnNext = document.getElementById("btnNextMonth");
     if(btnNext) btnNext.onclick = () => changeMonth(1);
     
-    // 배송 정보 제출 버튼
     const btnSubmit = document.getElementById("btnSubmitOrderInfo");
     if(btnSubmit) btnSubmit.onclick = processOrderSubmission;
     
-    // 최종 결제 버튼
     const btnPayment = document.getElementById("btnRealPayment");
     if(btnPayment) btnPayment.onclick = processPayment;
 
-    // 장바구니 내 견적서 출력 버튼
     const btnPrintQuote = document.getElementById("btnPrintQuote");
     if (btnPrintQuote) {
         btnPrintQuote.onclick = async () => {
@@ -71,18 +92,16 @@ export function initOrderSystem() {
             try {
                 const blob = await generateQuotationPDF(mockInfo, cartData);
                 if (blob) downloadBlob(blob, `견적서_${new Date().toISOString().slice(0,10)}.pdf`);
-            } catch(e) {
-                console.error("견적서 오류:", e);
-                alert("견적서 생성 중 오류가 발생했습니다.");
-            }
+            } catch(e) { console.error(e); }
         };
     }
 
-    // [초기화] 페이지 로드 시 장바구니 UI 렌더링
     renderCart();
 }
 
+// ============================================================
 // [2] 캘린더 로직
+// ============================================================
 let currentCalDate = new Date();
 
 function openCalendarModal() { 
@@ -104,7 +123,7 @@ function renderCalendar() {
     document.getElementById("currentMonthYear").innerText = `${year}. ${String(month+1).padStart(2,'0')}`; 
     grid.innerHTML = "";
     
-    ['일','월','화','수','목','금','토'].forEach(d => grid.innerHTML += `<div class="cal-day-header" style="text-align:center; font-weight:bold; font-size:13px; padding:5px;">${d}</div>`);
+    ['일','월','화','수','목','금','토'].forEach(d => grid.innerHTML += `<div class="cal-day-header">${d}</div>`);
     
     const firstDay = new Date(year, month, 1).getDay(); 
     const lastDate = new Date(year, month + 1, 0).getDate();
@@ -123,8 +142,10 @@ function renderCalendar() {
         const div = document.createElement("div"); 
         div.className = "cal-day"; 
         div.innerText = i;
-        
-        if(dateObj < minDate || dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
+        const checkDate = new Date(dateObj); checkDate.setHours(0,0,0,0);
+        const limitDate = new Date(minDate); limitDate.setHours(0,0,0,0);
+
+        if(checkDate < limitDate || dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
             div.classList.add("disabled"); 
         } else { 
             div.onclick = () => { 
@@ -143,7 +164,9 @@ function openDeliveryInfoModal() {
     document.getElementById("deliveryInfoModal").style.display = "flex"; 
 }
 
-// [3] 장바구니 로직
+// ============================================================
+// [3] 장바구니 데이터 관리
+// ============================================================
 function saveCart() { 
     try { 
         const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
@@ -153,32 +176,22 @@ function saveCart() {
 
 export function openProductDetail(key, w, h, mode) {
     let product = PRODUCT_DB[key];
-    if (!product) {
-        product = { name: key, price: 0, img: 'https://placehold.co/400?text=No+Image', addons: [] };
-    }
+    if (!product) { product = { name: key, price: 0, img: '', addons: [] }; }
     currentTargetProduct = { key, w, h, mode, info: product };
-    
     document.getElementById("pdpTitle").innerText = product.name;
     document.getElementById("pdpPrice").innerText = product.price.toLocaleString() + "원";
-    
     const imgElem = document.getElementById("pdpImage");
-    if(imgElem) imgElem.src = product.img || 'https://placehold.co/400?text=No+Image';
-    
+    if(imgElem) imgElem.src = product.img || 'https://placehold.co/400';
     document.getElementById("productDetailModal").style.display = "flex";
 }
 
 export function startDesignFromProduct() { 
     if(!currentTargetProduct) return; 
-    const { w, h, key, mode } = currentTargetProduct; 
-    
     document.getElementById("productDetailModal").style.display = "none"; 
-    
-    if(window.applySize) window.applySize(w, h, key, mode, 'replace');
-    
+    if(window.applySize) window.applySize(currentTargetProduct.w, currentTargetProduct.h, currentTargetProduct.key, currentTargetProduct.mode, 'replace');
     switchToEditor(); 
-    
-    canvas.currentProductKey = key; 
-    window.currentProductKey = key; 
+    canvas.currentProductKey = currentTargetProduct.key; 
+    window.currentProductKey = currentTargetProduct.key; 
 }
 
 function switchToEditor() { 
@@ -187,33 +200,58 @@ function switchToEditor() {
     window.dispatchEvent(new Event('resize')); 
 }
 
+// ★★★ [수정됨] 캔버스 이미지 크롭 저장 (검은 배경 제거) ★★★
 async function addCanvasToCart() {
+    if (!canvas) return;
+
+    // 1. 현재 화면 상태 저장
+    const originalVpt = canvas.viewportTransform;
+    
+    // 2. 뷰포트 초기화
+    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+
+    // 3. 'Board' (흰색 작업영역) 찾기
+    const board = canvas.getObjects().find(o => o.isBoard);
+    let thumbUrl = "";
+
+    // 4. Board 영역만 잘라서 이미지 생성
+    if (board) {
+        thumbUrl = canvas.toDataURL({
+            format: 'jpeg',
+            quality: 0.7,
+            multiplier: 0.3, 
+            left: board.left,
+            top: board.top,
+            width: board.width * board.scaleX,
+            height: board.height * board.scaleY
+        });
+    } else {
+        thumbUrl = canvas.toDataURL({ format: 'jpeg', quality: 0.7, multiplier: 0.3 });
+    }
+
+    // 5. 원래 화면 상태로 복구
+    canvas.setViewportTransform(originalVpt);
+
     const key = window.currentProductKey || canvas.currentProductKey || 'A4'; 
     const product = PRODUCT_DB[key] || PRODUCT_DB['A4'];
-    
-    const thumb = canvas.toDataURL({ format: 'png', multiplier: 0.5, quality: 0.8 });
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst']);
-    const board = canvas.getObjects().find(o => o.isBoard);
     
     const finalW = board ? board.width : (product.w || canvas.width);
     const finalH = board ? board.height : (product.h || canvas.height);
 
     cartData.push({ 
-        uid: Date.now(), 
-        product: product, 
-        type: 'design', 
-        thumb: thumb, 
-        json: json,
-        width: finalW, 
-        height: finalH,
-        isOpen: true, 
-        qty: 1,
-        selectedAddons: {} // ★ 옵션 코드를 저장할 객체
+        uid: Date.now(), product: product, type: 'design', thumb: thumbUrl, json: json,
+        width: finalW, height: finalH, isOpen: true, qty: 1, selectedAddons: {} 
     });
     
-    saveCart(); 
-    renderCart(); 
-    alert(`[${product.name}] 상품이 장바구니에 담겼습니다.`);
+    try {
+        saveCart(); 
+        renderCart(); 
+        alert(`[${product.name}] 상품이 장바구니에 담겼습니다.`);
+    } catch(e) {
+        console.error(e);
+        alert("장바구니 용량이 가득 찼습니다.");
+    }
 }
 
 function addFileToCart(e) {
@@ -237,22 +275,15 @@ function addFileToCart(e) {
                 canvasEl.width = viewport.width;
                 await page.render({ canvasContext: context, viewport: viewport }).promise;
                 thumbUrl = canvasEl.toDataURL('image/png');
-            } catch(e) { console.warn("썸네일 생성 실패", e); }
+            } catch(e) {}
         } else if (file.type.startsWith('image/')) { 
             thumbUrl = fileDataURI; 
         }
 
         cartData.push({ 
-            uid: Date.now(), 
-            product: currentTargetProduct.info, 
-            type: 'file', 
-            fileName: file.name, 
-            mimeType: file.type, 
-            fileData: fileDataURI,
-            thumb: thumbUrl, 
-            isOpen: true, 
-            qty: 1,
-            selectedAddons: {} // ★ 옵션 초기화
+            uid: Date.now(), product: currentTargetProduct.info, type: 'file', 
+            fileName: file.name, mimeType: file.type, fileData: fileDataURI,
+            thumb: thumbUrl, isOpen: true, qty: 1, selectedAddons: {} 
         });
         
         saveCart(); 
@@ -263,7 +294,9 @@ function addFileToCart(e) {
     reader.readAsDataURL(file);
 }
 
-// ★★★ [장바구니 렌더링] - 재질/추가상품 2단 분리 및 코드 저장 방식 ★★★
+// ============================================================
+// [4] 장바구니 렌더링 (★ 3단 박스 분리 로직 ★)
+// ============================================================
 function renderCart() {
     const listArea = document.getElementById("cartListArea"); 
     if(!listArea) return;
@@ -282,124 +315,138 @@ function renderCart() {
         if (item.isOpen === undefined) item.isOpen = true;
         if (!item.selectedAddons) item.selectedAddons = {};
         
-        // 1. 옵션 분류 (재질 / 추가상품)
-        let matOpts = [], addOpts = [];
+        // 1. 옵션 분류
+        let matOpts = []; // 재질
+        let finOpts = []; // 마감
+        let addOpts = []; // 추가상품
+
+        // ★ [중요] 옵션 정보 가져오기 (DB에서)
         if (item.product && item.product.addons) {
             item.product.addons.forEach(code => {
-                const info = ADDON_DB[code]; // config.js의 ADDON_DB에서 정보 조회
+                const info = ADDON_DB[code]; // config.js에서 로드된 전역 변수
                 if (info) {
-                    // category가 'material'이면 재질, 나머지는 추가상품
-                    if (info.category === 'material') matOpts.push({code, ...info});
+                    const cat = (info.category || '').toLowerCase();
+                    if (cat === 'material') matOpts.push({code, ...info});
+                    else if (cat === 'finish') finOpts.push({code, ...info});
                     else addOpts.push({code, ...info});
                 }
             });
         }
 
-        // 2. 가격 계산 (옵션 코드로 가격 찾기)
+        // 2. 가격 계산
+        if (!item.product) {
+            console.warn("상품 정보가 유실된 항목이 있습니다.", item);
+            item.product = { price: 0, name: "알 수 없는 상품" }; // 임시 방편
+        }
+
         let basePrice = item.product.price;
         let addonPrice = 0;
-        
-        // selectedAddons에 저장된 코드들을 순회하며 가격 합산
         Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) addonPrice += addon.price;
         });
-        
         let totalItemPrice = (basePrice + addonPrice) * item.qty;
         grandTotal += totalItemPrice;
         
+        // 3. HTML 생성 (카드)
         const div = document.createElement("div"); 
         div.className = "cart-item"; 
-        div.style.cssText = "display:flex; flexDirection:column; cursor:pointer; transition:all 0.2s; border:1px solid #e2e8f0; background:white; border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.03);";
-        if (item.isOpen) div.style.borderColor = "var(--primary)";
         
-        div.onclick = (e) => { 
-            if(e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return; 
-            window.toggleCartAccordion(idx); 
-        };
-        
-        // ★ [수정됨] 상단 정보 (Grid/Flex 대응을 위한 클래스 추가, 파일명 표시)
-        const mainRow = document.createElement("div"); 
-        mainRow.className = "cart-top-row"; // CSS 클래스 적용
-        
-        let typeInfo = item.type === 'design' 
-            ? '<span style="font-size:12px; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px; margin-right:5px;">🎨 직접 디자인</span>' 
-            : `<span style="font-size:12px; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-right:5px;">📁 파일 업로드</span> <span style="font-size:12px; color:#64748b;">${item.fileName || '파일명 없음'}</span>`;
-
-        mainRow.innerHTML = `
-            <img src="${item.thumb}" class="cart-thumb">
-            
-            <div class="cart-info">
-                <div style="margin-bottom:6px; display:flex; align-items:center;">${typeInfo} ${item.isOpen ? '' : '<span style="font-size:11px; color:#999; margin-left:5px;">(펼치기)</span>'}</div>
-                <h4 style="margin:0; font-size:16px; color:#1e293b; line-height:1.4;">${item.product.name}</h4>
-                <div style="font-weight:800; font-size:15px; color:#6366f1; margin-top:6px;">${totalItemPrice.toLocaleString()}원</div>
+        div.innerHTML = `
+            <div class="cart-top-row" onclick="window.toggleCartAccordion(${idx})" style="display:flex; gap:15px; align-items:center; cursor:pointer;">
+                <div style="width:80px; height:80px; background:#f8fafc; border:1px solid #eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                    <img src="${item.thumb}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                </div>
+                <div style="flex:1;">
+                    <h4 style="margin:0; font-size:16px;">${item.product.name}</h4>
+                    <div style="font-size:13px; color:#666; margin-top:4px;">${item.fileName || '사용자 디자인'}</div>
+                    <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${totalItemPrice.toLocaleString()}원</div>
+                </div>
+                <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
             </div>
-            
-            <div class="cart-qty qty-control" style="display:flex; align-items:center; gap:0; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc;">
-                <button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)" style="width:32px; height:32px; border:none; background:transparent; cursor:pointer;"><i class="fa-solid fa-minus" style="font-size:11px; color:#64748b;"></i></button>
-                <div class="qty-val" style="width:36px; text-align:center; font-size:14px; font-weight:bold; color:#1e293b;">${item.qty}</div>
-                <button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)" style="width:32px; height:32px; border:none; background:transparent; cursor:pointer;"><i class="fa-solid fa-plus" style="font-size:11px; color:#64748b;"></i></button>
-            </div>
-            
-            <button onclick="window.removeCartItem(${idx})" class="cart-del qty-btn" style="width:36px; height:36px; border-radius:50%; background:#fee2e2; color:#ef4444; border:none; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-trash" style="font-size:14px;"></i>
-            </button>
         `;
-        div.appendChild(mainRow);
         
-        // ★ [수정됨] 하단 옵션 선택 영역 (넓게 보기 위한 클래스 추가)
+        // 4. 옵션 박스 렌더링
         if(item.isOpen) {
-            const optionArea = document.createElement("div");
-            optionArea.className = "cart-option-area"; // CSS 클래스 적용
-            optionArea.style.cssText = "background:#f8fafc; padding:15px; border-radius:8px; margin-top:20px; border:1px solid #eee;";
+            const optionContainer = document.createElement("div");
+            optionContainer.style.marginTop = "15px";
             
-            let innerHTML = "";
-            
-            // 1. 재질 선택
+            // [박스 1] 재질 (필수)
             if (matOpts.length > 0) {
-                innerHTML += `<div style="margin-bottom:20px;">
-                    <label style="font-size:13px; color:#475569; font-weight:800; display:block; margin-bottom:8px;">✨ 재질 선택 (필수)</label>
-                    <select onchange="window.updateCartOption(${idx}, 'opt_mat', this.value)" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:14px; cursor:pointer;">
-                        <option value="">선택 안함 (기본)</option>`;
-                matOpts.forEach(opt => {
-                    const isSelected = item.selectedAddons['opt_mat'] === opt.code; 
-                    innerHTML += `<option value="${opt.code}" ${isSelected?'selected':''}>${opt.name} (+${opt.price.toLocaleString()}원)</option>`;
-                });
-                innerHTML += `</select></div>`;
-            }
-
-            // 2. 추가 상품 (2열 배치용 클래스 적용)
-            if (addOpts.length > 0) {
-                if (matOpts.length > 0) innerHTML += `<hr style="border:0; border-top:1px dashed #cbd5e1; margin:15px 0;">`;
+                const box = document.createElement("div");
+                box.className = "cart-opt-group required-group";
+                box.innerHTML = `<div class="opt-group-header">① 재질/두께 <span class="badge-req">필수</span></div>`;
+                const sel = document.createElement("select");
+                sel.className = "opt-select-box";
+                sel.onchange = (e) => window.updateCartOption(idx, 'opt_mat', e.target.value);
                 
-                innerHTML += `<div>
-                    <label style="font-size:13px; color:#475569; font-weight:800; display:block; margin-bottom:10px;">➕ 추가 상품 (중복 선택 가능)</label>
-                    <div class="cart-option-list" style="display:flex; flex-direction:column; gap:8px;">`; // PC에서는 Grid로 자동 변환됨
-
-                addOpts.forEach(opt => {
-                    const storageKey = `addon_${opt.code}`;
-                    const isChecked = item.selectedAddons[storageKey] === opt.code;
-                    
-                    innerHTML += `
-                        <label style="display:flex; align-items:center; cursor:pointer; font-size:14px; background:white; padding:12px; border:1px solid ${isChecked ? '#6366f1' : '#e2e8f0'}; border-radius:8px; transition:0.2s;">
-                            <input type="checkbox" 
-                                onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)"
-                                ${isChecked ? 'checked' : ''}
-                                style="accent-color:#6366f1; margin-right:10px; width:18px; height:18px;">
-                            <span style="flex:1; font-weight:500;">${opt.name}</span>
-                            <span style="font-weight:800; color:#6366f1;">+${opt.price.toLocaleString()}원</span>
-                        </label>
-                    `;
+                let optsHTML = `<option value="">선택해주세요</option>`;
+                matOpts.forEach(opt => {
+                    const selected = item.selectedAddons['opt_mat'] === opt.code ? 'selected' : '';
+                    const priceStr = opt.price > 0 ? ` (+${opt.price.toLocaleString()}원)` : '';
+                    optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`;
                 });
-                innerHTML += `</div></div>`;
+                sel.innerHTML = optsHTML;
+                box.appendChild(sel);
+                optionContainer.appendChild(box);
             }
 
-            if (matOpts.length === 0 && addOpts.length === 0) {
-                innerHTML += `<div style="font-size:13px; color:#999;">선택 가능한 옵션이 없습니다.</div>`;
+            // [박스 2] 마감 (필수)
+            if (finOpts.length > 0) {
+                const box = document.createElement("div");
+                box.className = "cart-opt-group required-group";
+                box.innerHTML = `<div class="opt-group-header">② 마감 방식 <span class="badge-req">필수</span></div>`;
+                const sel = document.createElement("select");
+                sel.className = "opt-select-box";
+                sel.onchange = (e) => window.updateCartOption(idx, 'opt_fin', e.target.value);
+                
+                let optsHTML = `<option value="">선택해주세요</option>`;
+                finOpts.forEach(opt => {
+                    const selected = item.selectedAddons['opt_fin'] === opt.code ? 'selected' : '';
+                    const priceStr = opt.price > 0 ? ` (+${opt.price.toLocaleString()}원)` : '';
+                    optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`;
+                });
+                sel.innerHTML = optsHTML;
+                box.appendChild(sel);
+                optionContainer.appendChild(box);
             }
 
-            optionArea.innerHTML = innerHTML;
-            div.appendChild(optionArea);
+            // [박스 3] 추가 상품 (선택)
+            if (addOpts.length > 0) {
+                const box = document.createElement("div");
+                box.className = "cart-opt-group optional-group";
+                box.innerHTML = `<div class="opt-group-header">③ 추가 상품 <span class="badge-sel">선택</span></div>`;
+                const grid = document.createElement("div");
+                grid.className = "opt-checkbox-grid";
+                addOpts.forEach(opt => {
+                    const key = `addon_${opt.code}`;
+                    const checked = item.selectedAddons[key] === opt.code ? 'checked' : '';
+                    const label = document.createElement("label");
+                    label.className = "opt-checkbox-label";
+                    label.innerHTML = `
+                        <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${checked} style="margin-right:5px; accent-color:#6366f1;">
+                        <span>${opt.name} <span style="color:#6366f1; font-weight:bold;">(+${opt.price.toLocaleString()})</span></span>
+                    `;
+                    grid.appendChild(label);
+                });
+                box.appendChild(grid);
+                optionContainer.appendChild(box);
+            }
+
+            // 수량 조절
+            const qtyBox = document.createElement("div");
+            qtyBox.style.cssText = "display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px;";
+            qtyBox.innerHTML = `
+                <span style="font-size:13px; font-weight:bold;">수량</span>
+                <div class="qty-wrapper" style="border:1px solid #ddd; border-radius:5px; display:flex;">
+                    <button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)">-</button>
+                    <div class="qty-val" style="width:40px; text-align:center; line-height:30px;">${item.qty}</div>
+                    <button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)">+</button>
+                </div>
+            `;
+            optionContainer.appendChild(qtyBox);
+
+            div.appendChild(optionContainer);
         }
         
         listArea.appendChild(div);
@@ -408,12 +455,11 @@ function renderCart() {
 }
 
 function updateSummary(total) {
-    const summaryTotal = document.getElementById("summaryTotal");
-    const summaryItem = document.getElementById("summaryItemPrice");
+    const elTotal = document.getElementById("summaryTotal");
+    const elItem = document.getElementById("summaryItemPrice");
     const formatted = total.toLocaleString() + "원";
-    
-    if(summaryTotal) summaryTotal.innerText = formatted;
-    if(summaryItem) summaryItem.innerText = formatted;
+    if(elTotal) elTotal.innerText = formatted;
+    if(elItem) elItem.innerText = formatted;
     
     const cartCount = document.getElementById("cartCount");
     if(cartCount) cartCount.innerText = `(${cartData.length})`;
@@ -428,7 +474,7 @@ function updateSummary(total) {
     }
 }
 
-// [4] 주문 제출
+// [5] 주문 제출 및 결제 실행
 async function processOrderSubmission() {
     const manager = document.getElementById("inputManagerName").value;
     const phone = document.getElementById("inputManagerPhone").value;
@@ -445,9 +491,6 @@ async function processOrderSubmission() {
     let newOrderId = null;
     
     try {
-        const orderInfo = { date: selectedDeliveryDate, manager, phone, address, note: request };
-        btn.innerText = "주문 정보 저장 중...";
-        
         const { data: orderData, error: orderError } = await sb.from('orders').insert([{ 
             order_date: selectedDeliveryDate, manager_name: manager, phone, address, request_note: request, status: '파일처리중', files: [] 
         }]).select();
@@ -461,12 +504,12 @@ async function processOrderSubmission() {
         
         btn.innerText = "문서 생성 중...";
         try { 
-            const orderSheetBlob = await generateOrderSheetPDF(orderInfo, cartData); 
+            const orderSheetBlob = await generateOrderSheetPDF({ date: selectedDeliveryDate, manager, phone, address, note: request }, cartData); 
             if(orderSheetBlob) { 
                 const url = await uploadToSupabase(orderSheetBlob, `${newOrderId}/order_sheet.pdf`); 
                 if(url) uploadedFiles.push({ name: `작업지시서.pdf`, url: url, type: 'order_sheet' }); 
             } 
-            const quoteBlob = await generateQuotationPDF(orderInfo, cartData); 
+            const quoteBlob = await generateQuotationPDF({ date: selectedDeliveryDate, manager, phone, address, note: request }, cartData); 
             if(quoteBlob) { 
                 const url = await uploadToSupabase(quoteBlob, `${newOrderId}/quotation.pdf`); 
                 if(url) uploadedFiles.push({ name: `견적서.pdf`, url: url, type: 'quotation' }); 
@@ -533,7 +576,7 @@ async function uploadToSupabase(blob, path) {
     } catch (e) { return null; } 
 }
 
-// [5] 결제 (가격 계산 시 옵션 코드 사용)
+// [6] 결제
 function processPayment() {
     const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"; 
     
@@ -542,7 +585,6 @@ function processPayment() {
     let totalAmount = 0;
     cartData.forEach(item => {
         let price = item.product.price;
-        // 옵션 코드 lookup
         Object.values(item.selectedAddons).forEach(code => {
             if(ADDON_DB[code]) price += ADDON_DB[code].price;
         });
@@ -581,58 +623,37 @@ function base64ToBlob(base64, mimeType) {
     return new Blob(byteArrays, { type: mimeType }); 
 }
 
-// 전역 함수들 (window 객체에 바인딩)
-// ★ [핵심 추가] renderCart 함수를 전역으로 노출하여 다른 파일에서 호출 가능하게 함
+// ============================================================
+// [7] 전역 함수 등록
+// ============================================================
 window.renderCart = renderCart; 
-
 window.toggleCartAccordion = (idx) => { 
     cartData[idx].isOpen = !cartData[idx].isOpen; 
     renderCart(); 
 };
-
 window.updateCartQty = (idx, change) => { 
-    const item = cartData[idx]; 
-    if(item) { 
-        let newQty = (item.qty || 1) + change; 
-        if(newQty < 1) newQty = 1; 
-        item.qty = newQty; 
-        saveCart(); 
-        renderCart(); 
+    if(cartData[idx]) { 
+        cartData[idx].qty = Math.max(1, (cartData[idx].qty||1) + change); 
+        saveCart(); renderCart(); 
     } 
 };
-
-// [단일 선택] 재질 등 Select Box 변경 시
 window.updateCartOption = (idx, key, code) => {
     if (cartData[idx]) {
         if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {};
-        
         if (code === "") delete cartData[idx].selectedAddons[key];
         else cartData[idx].selectedAddons[key] = code; 
-        
-        saveCart(); 
-        renderCart(); 
+        saveCart(); renderCart(); 
     }
 };
-
-// [다중 선택] 추가상품 Checkbox 변경 시
 window.toggleCartAddon = (idx, code, isChecked) => {
     if (cartData[idx]) {
         if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {};
-        
-        // 각 추가상품마다 고유 키를 사용하여 중복 저장을 허용
         const storageKey = `addon_${code}`;
-        
-        if (isChecked) {
-            cartData[idx].selectedAddons[storageKey] = code;
-        } else {
-            delete cartData[idx].selectedAddons[storageKey];
-        }
-        
-        saveCart(); 
-        renderCart(); 
+        if (isChecked) cartData[idx].selectedAddons[storageKey] = code;
+        else delete cartData[idx].selectedAddons[storageKey];
+        saveCart(); renderCart(); 
     }
 };
-
 window.removeCartItem = (idx) => { 
     if(confirm("삭제하시겠습니까?")) { 
         cartData.splice(idx, 1); 
@@ -640,3 +661,4 @@ window.removeCartItem = (idx) => {
         renderCart(); 
     } 
 };
+window.processOrderSubmission = processOrderSubmission;

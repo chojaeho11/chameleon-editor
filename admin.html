@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Chameleon 통합 관리자</title>
+    <title>Chameleon Global Admin</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
@@ -10,65 +10,50 @@
 
     <style>
         body { margin: 0; display: flex; height: 100vh; font-family: 'Pretendard', sans-serif; background: #f1f5f9; color: #334155; overflow: hidden; }
-        
-        /* 사이드바 */
         .sidebar { width: 260px; background: #1e293b; color: white; display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; }
-        .sidebar-header { padding: 25px 20px; font-weight: 800; font-size: 22px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; color: #818cf8; }
+        .sidebar-header { padding: 25px 20px; font-weight: 800; font-size: 20px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; color: #818cf8; }
         .nav-menu { list-style: none; padding: 20px 10px; margin: 0; display: flex; flex-direction: column; gap: 5px; }
         .nav-item { padding: 12px 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 15px; color: #cbd5e1; }
         .nav-item:hover { background: #334155; color: white; }
         .nav-item.active { background: #6366f1; color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
         .nav-label { font-size: 11px; color: #64748b; padding: 0 15px; margin-top: 15px; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; }
-
-        /* 메인 영역 */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .top-bar { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
         .page-title { font-size: 18px; font-weight: 700; color: #0f172a; }
         .content-scroll { flex: 1; overflow-y: auto; padding: 30px; }
-
         .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 카드 & 폼 스타일 */
         .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         .form-label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 5px; }
         .input-text { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; font-size: 14px; box-sizing: border-box; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; vertical-align: middle; }
         tr:hover td { background: #f8fafc; }
-        
-        /* 버튼 */
         .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-primary { background: #6366f1; color: white; }
-        .btn-primary:hover { background: #4f46e5; }
         .btn-vip { background: #d97706; color: white; }
         .btn-danger { background: #fee2e2; color: #ef4444; }
         .btn-outline { background: #fff; border: 1px solid #cbd5e1; color: #334155; }
-        /* 파일 다운로드 버튼 스타일 */
         .btn-file { background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 13px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; width: fit-content; margin-bottom: 5px; }
         .btn-file:hover { background: #f1f5f9; border-color: #6366f1; color: #6366f1; }
-        
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
         .badge.admin { background: #dbeafe; color: #1e40af; }
         .badge.customer { background: #f1f5f9; color: #475569; }
-        .badge.vip { background: #fef3c7; color: #d97706; }
-        .badge.franchise { background: #dcfce7; color: #15803d; }
-
-        /* 파일 업로드 UI */
+        .badge-site { font-size: 11px; padding: 3px 6px; border-radius: 4px; margin-right: 4px; font-weight: 800; border: 1px solid #e2e8f0; background: #fff; display: inline-block; min-width: 30px; text-align: center; }
+        .badge-site.kr { color: #cf2e2e; border-color: #fecaca; background: #fef2f2; }
+        .badge-site.jp { color: #ea580c; border-color: #ffedd5; background: #fff7ed; }
+        .badge-site.us { color: #2563eb; border-color: #dbeafe; background: #eff6ff; }
+        .badge-site.my { color: #d97706; border-color: #fef3c7; background: #fffbeb; }
+        .badge-site.sg { color: #059669; border-color: #d1fae5; background: #ecfdf5; }
         .file-drop-zone { border: 2px dashed #cbd5e1; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; background: #f8fafc; color: #64748b; margin-bottom: 10px; }
-        .file-drop-zone:hover { border-color: #6366f1; background: #eff6ff; color: #6366f1; }
         .file-drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .preview-img { max-width: 100%; height: 150px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; display: none; margin-top: 10px; background: white; }
-
-        /* ★ [중요] 템플릿 UI 레이아웃 복구 */
         .tpl-layout { display: flex; gap: 30px; align-items: flex-start; height: 100%; }
-        .tpl-form { width: 320px; flex-shrink: 0; position: sticky; top: 0; background: #fff; padding: 0; /* Card 클래스가 패딩 처리 */ }
+        .tpl-form { width: 320px; flex-shrink: 0; position: sticky; top: 0; background: #fff; padding: 0; }
         .tpl-grid-area { flex: 1; min-width: 0; }
-        
         .tpl-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         .tpl-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; transition: 0.2s; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .tpl-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: #6366f1; }
@@ -76,12 +61,10 @@
         .tpl-info { padding: 12px; }
         .tpl-badge { font-size: 11px; background: #e0e7ff; color: #4338ca; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; font-weight: bold; }
         .tpl-del-btn { width: 100%; margin-top: 8px; background: #fee2e2; color: #ef4444; font-size: 12px; padding: 6px; border-radius: 6px; border:none; cursor:pointer; font-weight: 600; }
-        .tpl-del-btn:hover { background: #fecaca; }
-
         .product-layout { display: grid; grid-template-columns: 350px 1fr; gap: 20px; align-items: start; }
         .addon-checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; max-height: 150px; overflow-y: auto; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; }
-        .addon-check-item { display: flex; align-items: center; gap: 5px; font-size: 13px; background: white; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
-        
+        .addon-check-item { display: flex; align-items: center; gap: 5px; font-size: 13px; background: white; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .addon-check-item:hover { border-color: #6366f1; color: #6366f1; }
         .draggable-row { cursor: move; }
         .draggable-row.dragging { opacity: 0.5; background: #e2e8f0; }
     </style>
@@ -89,23 +72,22 @@
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-header"><i class="fa-solid fa-layer-group"></i> Chameleon</div>
+        <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
         <ul class="nav-menu">
-            <div class="nav-label">Order Management</div>
+            <div class="nav-label">Global Business</div>
             <li class="nav-item active" onclick="showSection('sec-orders', this)">
-                <i class="fa-solid fa-truck-fast"></i> 통합 주문 관리
+                <i class="fa-solid fa-cart-shopping"></i> 통합 주문 관리
             </li>
-            <div class="nav-label">Customer Relation</div>
-            <li class="nav-item" onclick="showSection('sec-members', this)">
-                <i class="fa-solid fa-users"></i> 회원 관리
+            <div class="nav-label">Product & Stock</div>
+            <li class="nav-item" onclick="showSection('sec-products', this)">
+                <i class="fa-solid fa-tags"></i> 상품 & 옵션 (글로벌)
             </li>
-            <div class="nav-label">Design Assets</div>
+            <div class="nav-label">Assets</div>
             <li class="nav-item" onclick="showSection('sec-templates', this)">
                 <i class="fa-solid fa-palette"></i> 템플릿 & 로고
             </li>
-            <div class="nav-label">Settings</div>
-            <li class="nav-item" onclick="showSection('sec-products', this)">
-                <i class="fa-solid fa-tags"></i> 상품 & 옵션 관리
+             <li class="nav-item" onclick="showSection('sec-members', this)">
+                <i class="fa-solid fa-users"></i> 회원 관리
             </li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
@@ -118,7 +100,7 @@
     <div class="main-content">
         <div class="top-bar">
             <div class="page-title" id="pageTitle">통합 주문 관리</div>
-            <div style="font-size: 14px; color: #64748b;">관리자님, 환영합니다 👋</div>
+            <div style="font-size: 14px; color: #64748b;">Global Admin Connected 🟢</div>
         </div>
 
         <div class="content-scroll">
@@ -132,8 +114,16 @@
                             <button class="btn btn-outline" id="btnFilterDone" onclick="filterOrders('완료됨', this)">✅ 완료</button>
                         </div>
                         <div style="display:flex; gap:5px;">
+                            <select id="filterSite" class="input-text" style="width:130px; font-weight:bold;" onchange="loadOrders()">
+                                <option value="all">🌏 전체 국가</option>
+                                <option value="KR">🇰🇷 한국</option>
+                                <option value="JP">🇯🇵 일본</option>
+                                <option value="US">🇺🇸 미국</option>
+                                <option value="MY">🇲🇾 말레이시아</option>
+                                <option value="SG">🇸🇬 싱가포르</option>
+                            </select>
                             <button id="btnBulkDownload" class="btn btn-vip" style="display:none;" onclick="downloadAllFiles()">
-                                <i class="fa-solid fa-folder-open"></i> 전체 파일 일괄 다운로드
+                                <i class="fa-solid fa-folder-open"></i> 일괄 다운로드
                             </button>
                             <button class="btn btn-outline" onclick="loadOrders()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
                         </div>
@@ -141,11 +131,12 @@
                     <table style="margin:0;">
                         <thead>
                             <tr>
+                                <th style="width:80px;">Site</th>
                                 <th style="width:100px;">날짜</th>
                                 <th style="width:120px;">고객명</th>
-                                <th>주문 파일 (클릭시 저장)</th>
+                                <th>주문 파일</th>
                                 <th style="width:100px;">상태</th>
-                                <th style="width:150px; text-align:right;">관리</th>
+                                <th style="width:120px; text-align:right;">관리</th>
                             </tr>
                         </thead>
                         <tbody id="orderListBody"></tbody>
@@ -169,7 +160,7 @@
             </div>
 
             <div id="sec-templates" class="section">
-                <div class="tpl-layout">
+                 <div class="tpl-layout">
                     <div class="card tpl-form">
                         <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">📤 템플릿 등록</h3>
                         <div class="form-group">
@@ -194,7 +185,6 @@
                         </div>
                         <button class="btn btn-primary" style="width:100%;" onclick="uploadTemplate()">등록하기</button>
                     </div>
-                    
                     <div class="tpl-grid-area">
                         <div class="card" style="margin-bottom:20px; padding:15px; display:flex; justify-content:space-between;">
                             <div style="display:flex; gap:10px; align-items:center;">
@@ -214,30 +204,83 @@
             </div>
 
             <div id="sec-products" class="section">
+                 <div class="card" style="background:#f0f9ff; border:1px solid #bae6fd; margin-bottom:20px;">
+                    <h3 style="margin-top:0; color:#0369a1;">0️⃣ 카테고리 관리 (폴더 자동 생성)</h3>
+                    <div style="display:flex; gap:10px; align-items:flex-end;">
+                        <div style="flex:1;">
+                            <label class="form-label">카테고리 명 (한글)</label>
+                            <input id="newCatName" class="input-text" placeholder="예: 허니콤보드">
+                        </div>
+                        <div style="flex:1;">
+                            <label class="form-label">폴더 코드 (영문)</label>
+                            <input id="newCatCode" class="input-text" placeholder="예: honeycomb">
+                        </div>
+                        <button class="btn btn-primary" onclick="addCategoryDB()">카테고리 생성</button>
+                    </div>
+                    <div style="margin-top:15px; border-top:1px solid #bae6fd; padding-top:10px;">
+                        <span style="font-size:12px; font-weight:bold; color:#0369a1;">현재 등록된 카테고리:</span>
+                        <div id="categoryListArea" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;"></div>
+                    </div>
+                </div>
+
                 <div class="product-layout">
                     <div class="card product-form">
                         <h3 style="margin-top:0;">2️⃣ 상품 등록 (Product)</h3>
-                        <div class="form-group"><label class="form-label">상품코드</label><input id="newProdCode" class="input-text" placeholder="Wall_1"></div>
-                        <div class="form-group"><label class="form-label">상품명</label><input id="newProdName" class="input-text" placeholder="가벽 1칸"></div>
+                        
+                        <div class="form-group" style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                            <label class="form-label">🌐 판매 국가 (Site Code)</label>
+                            <select id="newProdSite" class="input-text" style="font-weight:bold; color:#6366f1;">
+                                <option value="KR" selected>🇰🇷 한국 (Korea)</option>
+                                <option value="JP">🇯🇵 일본 (Japan)</option>
+                                <option value="US">🇺🇸 미국 (USA)</option>
+                                <option value="MY">🇲🇾 말레이시아 (Malaysia)</option>
+                                <option value="SG">🇸🇬 싱가포르 (Singapore)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">카테고리 선택</label>
+                            <select id="newProdCategory" class="input-text"><option value="">로딩 중...</option></select>
+                        </div>
+
+                        <div class="form-group"><label class="form-label">상품코드 (고유값)</label><input id="newProdCode" class="input-text" placeholder="Wall_1_KR"></div>
+                        <div class="form-group"><label class="form-label">상품명 (해당 언어)</label><input id="newProdName" class="input-text" placeholder="가벽 1칸"></div>
+                        
                         <div style="display:flex; gap:10px;">
                             <div class="form-group" style="flex:1;"><label class="form-label">가로(mm)</label><input id="newProdW" type="number" class="input-text"></div>
                             <div class="form-group" style="flex:1;"><label class="form-label">세로(mm)</label><input id="newProdH" type="number" class="input-text"></div>
                         </div>
-                        <div class="form-group"><label class="form-label">가격</label><input id="newProdPrice" type="number" class="input-text"></div>
+                        
+                        <div class="form-group"><label class="form-label">가격 (해당 통화)</label><input id="newProdPrice" type="number" class="input-text" placeholder="예: 150000"></div>
+                        
                         <div class="form-group">
                             <label class="form-label">상품 이미지</label>
                             <div class="file-drop-zone" style="padding:10px;"><input type="file" id="newProdFile" accept="image/*" onchange="previewProductImage(this)"><span>클릭하여 업로드</span></div>
-                            <input id="newProdImg" class="input-text" placeholder="URL 입력 가능" style="margin-top:5px;">
+                            <input id="newProdImg" class="input-text" placeholder="URL 자동 입력됨" style="margin-top:5px;">
                             <img id="prodPreview" class="preview-img">
                         </div>
+                        
                         <div class="form-group"><label class="form-label">옵션 연결</label><div id="addonCheckboxArea" class="addon-checkbox-group"></div></div>
+                        
                         <button id="btnProductSave" class="btn btn-primary" style="width:100%;" onclick="addProductDB()">상품 등록하기</button>
+                        
+                        <div style="margin-top:10px; display:flex; gap:5px;">
+                            <button id="btnProductClone" class="btn btn-vip" style="flex:1; display:none;" onclick="cloneProduct()">📋 복제하기</button>
+                            <button id="btnCancelEdit" class="btn btn-outline" style="flex:1; display:none;" onclick="resetProductForm()">취소</button>
+                        </div>
                     </div>
+
                     <div class="product-grid-area">
                         <div class="card" style="margin-bottom:20px;">
-                            <h3>1️⃣ 옵션 등록</h3>
+                            <h3>1️⃣ 옵션 등록 (공통 사용)</h3>
                             <div style="display:flex; gap:10px; align-items:flex-end;">
-                                <div style="width:120px;"><label class="form-label">종류</label><select id="newAddonCat" class="input-text"><option value="material">재질</option><option value="addon" selected>추가</option></select></div>
+                                <div style="width:120px;">
+                                    <label class="form-label">종류</label>
+                                    <select id="newAddonCat" class="input-text">
+                                        <option value="material">1. 재질/두께</option>
+                                        <option value="finish">2. 마감방식</option> <option value="addon" selected>3. 추가상품</option>
+                                    </select>
+                                </div>
                                 <div style="flex:1;"><label class="form-label">코드</label><input id="newAddonCode" class="input-text"></div>
                                 <div style="flex:1;"><label class="form-label">명칭</label><input id="newAddonName" class="input-text"></div>
                                 <div style="width:100px;"><label class="form-label">가격</label><input id="newAddonPrice" type="number" class="input-text" placeholder="0"></div>
@@ -245,10 +288,20 @@
                             </div>
                             <div style="margin-top:10px; max-height:150px; overflow-y:auto; border-top:1px solid #eee;"><table style="font-size:12px;"><tbody id="addonTableBody"></tbody></table></div>
                         </div>
+
                         <div class="card">
-                            <h3>📜 상품 목록 (드래그하여 순서 변경)</h3>
+                            <h3>📜 상품 목록 (국가별 필터링)</h3>
+                            <div style="margin-bottom:10px;">
+                                필터: 
+                                <select onchange="filterProductList(this.value)" class="input-text" style="width:150px; display:inline-block;">
+                                    <option value="all">전체 보기</option>
+                                    <option value="KR">🇰🇷 한국</option>
+                                    <option value="JP">🇯🇵 일본</option>
+                                    <option value="US">🇺🇸 미국</option>
+                                </select>
+                            </div>
                             <table>
-                                <thead><tr><th width="60">순서</th><th width="60">이미지</th><th>코드/상품명</th><th>사이즈</th><th>가격</th><th width="120">관리</th></tr></thead>
+                                <thead><tr><th width="50">국가</th><th width="60">이미지</th><th>코드/상품명</th><th>사이즈</th><th>가격</th><th width="120">관리</th></tr></thead>
                                 <tbody id="prodTableBody"></tbody>
                             </table>
                         </div>
@@ -267,38 +320,24 @@
             <div style="text-align:right;"><button class="btn btn-danger" onclick="closeModal('modalKnife')">취소</button> <button class="btn btn-primary" onclick="submitKnifeFile()">업로드</button></div>
         </div>
     </div>
-    <div id="modalShipping" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-        <div class="card" style="width:400px;">
-            <h3>🚚 배송 정보</h3>
-            <input type="hidden" id="shipOrderId">
-            <div style="margin:10px 0;"><label>택배사</label><select id="shipCarrier" class="input-text"><option>CJ대한통운</option><option>우체국</option><option>로젠</option></select></div>
-            <div style="margin-bottom:20px;"><label>송장번호</label><input id="shipTracking" class="input-text"></div>
-            <div style="text-align:right;"><button class="btn btn-danger" onclick="closeModal('modalShipping')">취소</button> <button class="btn btn-primary" onclick="submitShipping()">발송</button></div>
-        </div>
-    </div>
 
     <script type="module">
         import { sb, initConfig } from "./config.js";
 
         let editingProdId = null;
         let currentOrdersData = [];
+        let allProducts = []; 
 
         window.showSection = (secId, navEl) => {
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.getElementById(secId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             if(navEl) navEl.classList.add('active');
-
-            const titleMap = {
-                'sec-orders': '📦 통합 주문 관리', 'sec-members': '👥 회원 관리',
-                'sec-templates': '🎨 템플릿 & 로고', 'sec-products': '🏷️ 상품 & 옵션 관리'
-            };
-            document.getElementById('pageTitle').innerText = titleMap[secId] || '관리자';
-
+            
             if(secId === 'sec-members') loadMembers();
             if(secId === 'sec-orders') loadOrders();
             if(secId === 'sec-templates') loadTemplates();
-            if(secId === 'sec-products') loadSystemDB();
+            if(secId === 'sec-products') { loadCategories(); loadSystemDB(); }
         };
 
         window.logout = async () => { if(confirm("로그아웃?")) { await sb.auth.signOut(); location.href = "index.html"; } };
@@ -308,389 +347,310 @@
             await initConfig();
             loadOrders(); 
             initTemplateListeners(); 
+            loadCategories(); 
         });
 
-        // ===========================================
-        // 1. 통합 주문 관리 (PDF 아이콘 & 강제 저장 적용)
-        // ===========================================
-        let currentOrderStatus = '접수됨';
+        // 0. 카테고리 관리 
+        window.loadCategories = async () => {
+            const { data } = await sb.from('admin_categories').select('*').order('id');
+            const selectBox = document.getElementById('newProdCategory');
+            const listArea = document.getElementById('categoryListArea');
+            selectBox.innerHTML = '<option value="">카테고리를 선택하세요</option>';
+            listArea.innerHTML = '';
+            if (data) {
+                data.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.code; option.innerText = cat.name;
+                    selectBox.appendChild(option);
+                    listArea.innerHTML += `<span class="badge" style="border:1px solid #bae6fd; color:#0284c7; margin-right:5px; margin-bottom:5px; display:inline-block;"><b>${cat.name}</b> (${cat.code}) <i class="fa-solid fa-xmark" style="cursor:pointer; color:red; margin-left:5px;" onclick="deleteCategory(${cat.id})"></i></span>`;
+                });
+            }
+        };
+        window.addCategoryDB = async () => {
+             const name = document.getElementById('newCatName').value; const code = document.getElementById('newCatCode').value;
+             if (!name || !code) return alert("입력 확인");
+             const { error } = await sb.from('admin_categories').insert([{ name, code: code.toLowerCase().replace(/\s/g, '_') }]);
+             if(error) alert("카테고리 생성 실패: " + error.message);
+             else { alert("카테고리 생성 완료"); loadCategories(); }
+        };
+        window.deleteCategory = async (id) => { if(confirm("삭제하시겠습니까?")) { await sb.from('admin_categories').delete().eq('id', id); loadCategories(); } };
 
+        // 1. 주문 관리
+        let currentOrderStatus = '접수됨';
         window.filterOrders = (status, btn) => {
             currentOrderStatus = status;
-            document.querySelectorAll('#sec-orders .btn-primary').forEach(b => {
-                b.classList.remove('btn-primary'); b.classList.add('btn-outline');
-            });
-            if(btn) {
-                btn.classList.remove('btn-outline'); btn.classList.add('btn-primary');
-            }
+            document.querySelectorAll('#sec-orders .btn-primary').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-outline'); });
+            if(btn) { btn.classList.remove('btn-outline'); btn.classList.add('btn-primary'); }
             document.getElementById('btnBulkDownload').style.display = (status === '칼선작업') ? 'inline-flex' : 'none';
             loadOrders();
         };
-
-        window.forceDownload = async (url, fileName) => {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = fileName; 
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(blobUrl);
-            } catch (err) {
-                window.open(url, '_blank');
-            }
-        };
-
-        window.downloadAllFiles = async () => {
-            if(!currentOrdersData || currentOrdersData.length === 0) return alert("다운로드할 주문이 없습니다.");
-            if(!confirm(`총 ${currentOrdersData.length}건의 주문 파일을 다운로드하시겠습니까?`)) return;
-
-            for (const order of currentOrdersData) {
-                if(order.files && Array.isArray(order.files)) {
-                    for (const f of order.files) {
-                        const saveName = `${order.manager_name}_${f.name}`;
-                        await window.forceDownload(f.url, saveName);
-                        await new Promise(r => setTimeout(r, 500)); 
-                    }
-                }
-            }
-            alert("다운로드 요청 완료.");
-        };
-
+        
         window.loadOrders = async () => {
+            const siteFilter = document.getElementById('filterSite').value;
+            let query = sb.from('orders').select('*').eq('status', currentOrderStatus).order('created_at', {ascending:false});
+            const { data } = await query;
             const tbody = document.getElementById('orderListBody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">로딩 중...</td></tr>';
-            
-            let { data, error } = await sb.from('orders').select('*').eq('status', currentOrderStatus).order('created_at', {ascending:false});
-            if(error) return tbody.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`;
-            
-            currentOrdersData = data || []; 
             tbody.innerHTML = '';
+            if(!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">데이터 없음</td></tr>'; return; }
             
-            if(!data || data.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">데이터 없음</td></tr>';
+            // 필터링 적용
+            const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
 
-            data.forEach(order => {
-                let fileBtns = '';
-                if(order.files && Array.isArray(order.files)) {
-                    order.files.forEach(f => {
-                        // ★ PDF인 경우 아이콘 표시, 아니면 이미지 표시
-                        let iconOrImg = '';
-                        const isPdf = f.name.toLowerCase().endsWith('.pdf');
-                        
-                        if(isPdf) {
-                            iconOrImg = `<i class="fa-solid fa-file-pdf" style="color:#ef4444; font-size:16px;"></i>`;
-                        } else {
-                            // 이미지 썸네일
-                            iconOrImg = `<img src="${f.url}" style="width:24px; height:24px; object-fit:cover; border-radius:4px;">`;
-                        }
+            filteredData.forEach(order => {
+                const site = order.site_code || 'KR'; 
+                const siteBadge = `<span class="badge-site ${site.toLowerCase()}">${site}</span>`;
+                let fileBtns = ''; 
+                if(order.files) order.files.forEach(f => { fileBtns += `<button class="btn-file" onclick="forceDownload('${f.url}','${f.name}')">📄 ${f.name}</button>`; });
+                
+                // 관리 버튼 기능 연결
+                let btnHtml = '';
+                if(currentOrderStatus === '접수됨') btnHtml = `<button class="btn btn-primary btn-sm" onclick="updateOrder(${order.id}, '칼선작업')">✂️ 작업 시작</button>`;
+                else if(currentOrderStatus === '칼선작업') btnHtml = `<button class="btn btn-vip btn-sm" onclick="updateOrder(${order.id}, '완료됨')">✅ 작업 완료</button>`;
+                else btnHtml = '<span class="badge customer">완료됨</span>';
 
-                        fileBtns += `
-                            <button class="btn-file" onclick="forceDownload('${f.url}', '${f.name}')" title="클릭하여 저장">
-                                ${iconOrImg} <span>${f.name}</span> <i class="fa-solid fa-download" style="font-size:10px; color:#999;"></i>
-                            </button>
-                        `;
-                    });
-                } else { fileBtns = '<span style="color:#ccc; font-size:12px;">파일 없음</span>'; }
-
-                let btn = '';
-                if(currentOrderStatus === '접수됨') {
-                    btn = `<button class="btn btn-primary btn-sm" onclick="updateOrder(${order.id}, '칼선작업')">✂️ 작업 시작</button>`;
-                } else if(currentOrderStatus === '칼선작업') {
-                    btn = `<button class="btn btn-vip btn-sm" onclick="updateOrder(${order.id}, '완료됨')">✅ 작업 완료</button>`;
-                } else {
-                    btn = '<span class="badge customer">완료됨</span>';
-                }
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${new Date(order.created_at).toLocaleDateString()}</td>
-                        <td><b>${order.manager_name}</b><br><span style="font-size:12px; color:#666;">${order.phone||''}</span></td>
-                        <td>
-                            <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-start;">
-                                ${fileBtns}
-                            </div>
-                        </td>
-                        <td><span class="badge admin">${order.status}</span></td>
-                        <td style="text-align:right;">${btn}</td>
-                    </tr>`;
+                tbody.innerHTML += `<tr><td>${siteBadge}</td><td>${new Date(order.created_at).toLocaleDateString()}</td><td><b>${order.manager_name}</b><br><span style="font-size:12px; color:#666;">${order.phone}</span></td><td>${fileBtns}</td><td><span class="badge admin">${order.status}</span></td><td style="text-align:right;">${btnHtml}</td></tr>`;
             });
         };
-
+        
         window.updateOrder = async (id, status) => {
             if(!confirm("상태를 변경하시겠습니까?")) return;
-            await sb.from('orders').update({status}).eq('id', id);
-            loadOrders();
+            const { error } = await sb.from('orders').update({status}).eq('id', id);
+            if(error) alert("상태 변경 실패: " + error.message);
+            else loadOrders();
         };
 
-        // ===========================================
+        window.forceDownload = async (url, name) => { try { const r=await fetch(url); const b=await r.blob(); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); } catch(e){ window.open(url,'_blank'); } };
+        window.downloadAllFiles = async () => { if(!confirm("전체 다운로드?")) return; alert("기능 구현 중"); };
+
         // 2. 회원 관리
-        // ===========================================
         window.loadMembers = async () => {
             const tbody = document.getElementById('memberListBody');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">로딩중...</td></tr>';
             const { data, error } = await sb.from('profiles').select('*').order('created_at', {ascending:false});
             tbody.innerHTML = '';
             if(!data || data.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">회원 없음</td></tr>';
-            
             const badgeMap = { 'customer': 'badge customer', 'vip': 'badge vip', 'franchise': 'badge franchise', 'admin': 'badge admin' };
             data.forEach(m => {
                 const r = m.role || 'customer';
-                const selectBox = `
-                    <select onchange="updateMemberRole('${m.id}', this.value)" style="padding:6px; border:1px solid #cbd5e1; border-radius:4px; font-size:13px; cursor:pointer;">
-                        <option value="customer" ${r==='customer'?'selected':''}>일반회원</option>
-                        <option value="vip" ${r==='vip'?'selected':''}>👑 VIP</option>
-                        <option value="franchise" ${r==='franchise'?'selected':''}>🏢 가맹점</option>
-                        <option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option>
-                    </select>
-                `;
+                const selectBox = `<select onchange="updateMemberRole('${m.id}', this.value)" style="padding:6px; border:1px solid #cbd5e1; border-radius:4px; font-size:13px; cursor:pointer;"><option value="customer" ${r==='customer'?'selected':''}>일반회원</option><option value="vip" ${r==='vip'?'selected':''}>👑 VIP</option><option value="franchise" ${r==='franchise'?'selected':''}>🏢 가맹점</option><option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option></select>`;
                 tbody.innerHTML += `<tr><td>${new Date(m.created_at).toLocaleDateString()}</td><td>${m.email}</td><td><span class="${badgeMap[r] || 'badge'}">${r.toUpperCase()}</span></td><td>${selectBox}</td></tr>`;
             });
         };
-
         window.updateMemberRole = async (id, newRole) => {
             if(!confirm(`등급을 [${newRole}]로 변경하시겠습니까?`)) { loadMembers(); return; }
             const { error } = await sb.from('profiles').update({role: newRole}).eq('id', id);
-            if(error) alert("실패: " + error.message);
-            else { alert("변경되었습니다."); loadMembers(); }
+            if(error) alert("실패: " + error.message); else { alert("변경되었습니다."); loadMembers(); }
         };
 
-        // ===========================================
-        // 3. 템플릿 관리 (UI/UX 개선됨)
-        // ===========================================
+        // 3. 템플릿
         let tplThumbData = null; let tplPayload = null; 
         function initTemplateListeners() {
-            document.getElementById('fileThumb').addEventListener('change', (e) => {
-                const file = e.target.files[0]; if(!file) return;
-                const r = new FileReader(); r.onload=(ev)=>{ tplThumbData=ev.target.result; document.getElementById('previewThumb').src=tplThumbData; document.getElementById('previewThumb').style.display='block'; }; r.readAsDataURL(file);
-            });
-            document.getElementById('fileData').addEventListener('change', (e) => {
-                const file = e.target.files[0]; if(!file) return;
-                const r = new FileReader(); r.onload=(ev)=>{ 
-                    if(file.name.endsWith('.svg')) { tplPayload = ev.target.result; document.getElementById('dataStatus').style.display='block'; }
-                }; r.readAsDataURL(file);
-            });
+            document.getElementById('fileThumb').addEventListener('change', (e) => { const file = e.target.files[0]; if(!file) return; const r = new FileReader(); r.onload=(ev)=>{ tplThumbData=ev.target.result; document.getElementById('previewThumb').src=tplThumbData; document.getElementById('previewThumb').style.display='block'; }; r.readAsDataURL(file); });
+            document.getElementById('fileData').addEventListener('change', (e) => { const file = e.target.files[0]; if(!file) return; const r = new FileReader(); r.onload=(ev)=>{ if(file.name.endsWith('.svg')) { tplPayload = ev.target.result; document.getElementById('dataStatus').style.display='block'; } }; r.readAsDataURL(file); });
         }
-        window.toggleFileInputs = () => {
-            const cat = document.getElementById('tplCategory').value;
-            const groupData = document.getElementById('groupDataFile');
-            const lblThumb = document.getElementById('lblThumb');
-            if(cat === 'transparent-graphic') {
-                groupData.style.display = 'block'; lblThumb.innerText = "1. 미리보기용 이미지 (선택사항)";
-            } else {
-                groupData.style.display = 'none'; lblThumb.innerText = "1. 템플릿 이미지 (필수)";
-            }
-        };
+        window.toggleFileInputs = () => { const cat = document.getElementById('tplCategory').value; const groupData = document.getElementById('groupDataFile'); const lblThumb = document.getElementById('lblThumb'); if(cat === 'transparent-graphic') { groupData.style.display = 'block'; lblThumb.innerText = "1. 미리보기용 이미지 (선택사항)"; } else { groupData.style.display = 'none'; lblThumb.innerText = "1. 템플릿 이미지 (필수)"; } };
         window.loadTemplates = async () => {
-            const grid = document.getElementById('tplGrid');
-            const cat = document.getElementById('filterTplCat').value;
-            grid.innerHTML = '로딩 중...';
+            const grid = document.getElementById('tplGrid'); const cat = document.getElementById('filterTplCat').value; grid.innerHTML = '로딩 중...';
             let query = sb.from('library').select('id, category, thumb_url, tags').order('created_at', {ascending:false});
             if(cat !== 'all') query = query.eq('category', cat);
             const {data, error} = await query;
             grid.innerHTML = '';
-            if(data) {
-                data.forEach(item => {
-                    grid.innerHTML += `<div class="tpl-card"><img src="${item.thumb_url}" class="tpl-thumb"><div class="tpl-info"><span class="tpl-badge">${item.category}</span><div style="font-size:12px; font-weight:bold;">${item.tags||'-'}</div><button class="btn tpl-del-btn" onclick="deleteTemplate(${item.id})">삭제</button></div></div>`;
-                });
-            }
+            if(data) { data.forEach(item => { grid.innerHTML += `<div class="tpl-card"><img src="${item.thumb_url}" class="tpl-thumb"><div class="tpl-info"><span class="tpl-badge">${item.category}</span><div style="font-size:12px; font-weight:bold;">${item.tags||'-'}</div><button class="tpl-del-btn" onclick="deleteTemplate(${item.id})">삭제</button></div></div>`; }); }
         };
         window.uploadTemplate = async () => {
-            const btn = document.querySelector('.tpl-form button.btn-primary');
-            const originalText = btn.innerText;
-            
-            // 1. 입력값 가져오기
-            const cat = document.getElementById('tplCategory').value;
-            const tags = document.getElementById('tplTags').value;
-            const thumbFile = document.getElementById('fileThumb').files[0];
-            const dataFile = document.getElementById('fileData').files[0];
-
-            // 2. 유효성 검사
-            if (!thumbFile) return alert("썸네일 이미지는 필수입니다.");
-            if (cat === 'transparent-graphic' && !dataFile) return alert("로고용 SVG 파일은 필수입니다.");
-
-            try {
-                btn.innerText = "업로드 중...";
-                btn.disabled = true;
-
-                const timestamp = Date.now();
-                let thumbUrl = '';
-                let dataUrl = '';
-
-                // 3. 썸네일 업로드 (Storage: design 버킷)
-                // 파일명에 한글이 있으면 오류가 날 수 있으니 영문 타임스탬프 사용
+             const btn = document.querySelector('.tpl-form button.btn-primary'); const originalText = btn.innerText;
+             const cat = document.getElementById('tplCategory').value; const tags = document.getElementById('tplTags').value; const thumbFile = document.getElementById('fileThumb').files[0]; const dataFile = document.getElementById('fileData').files[0];
+             if (!thumbFile) return alert("썸네일 이미지는 필수입니다.");
+             try {
+                btn.innerText = "업로드 중..."; btn.disabled = true;
+                const timestamp = Date.now(); let thumbUrl = ''; let dataUrl = '';
                 const thumbPath = `thumbs/${timestamp}_thumb_${Math.floor(Math.random()*1000)}`;
-                const { data: tData, error: tErr } = await sb.storage
-                    .from('design')
-                    .upload(thumbPath, thumbFile);
-
+                const { data: tData, error: tErr } = await sb.storage.from('design').upload(thumbPath, thumbFile);
                 if (tErr) throw tErr;
-                
-                // 업로드된 이미지의 공개 주소 가져오기
-                const { data: tUrlData } = sb.storage.from('design').getPublicUrl(thumbPath);
-                thumbUrl = tUrlData.publicUrl;
-
-                // 4. 데이터 파일(SVG) 처리
+                const { data: tUrlData } = sb.storage.from('design').getPublicUrl(thumbPath); thumbUrl = tUrlData.publicUrl;
                 if (cat === 'transparent-graphic' || cat === 'vector') {
-                    if (dataFile) {
-                        // SVG는 파일로 올리거나, 텍스트로 읽어서 DB에 넣을 수 있습니다.
-                        // 여기서는 로고 공장과 통일성을 위해 '텍스트 데이터'로 변환해 넣습니다.
-                        dataUrl = await new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                // Base64 형태로 변환 (data:image/svg+xml;base64,...)
-                                resolve(e.target.result); 
-                            };
-                            reader.onerror = reject;
-                            reader.readAsDataURL(dataFile);
-                        });
-                    } else {
-                        dataUrl = thumbUrl; // 파일 없으면 썸네일 주소 사용
-                    }
+                    if (dataFile) { dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.onerror = reject; reader.readAsDataURL(dataFile); }); } else { dataUrl = thumbUrl; }
                 } else {
-                    // 사진 배경인 경우 원본도 이미지
-                    if (dataFile) {
-                        const dataPath = `assets/${timestamp}_data_${Math.floor(Math.random()*1000)}`;
-                        const { error: dErr } = await sb.storage.from('design').upload(dataPath, dataFile);
-                        if (dErr) throw dErr;
-                        const { data: dUrlData } = sb.storage.from('design').getPublicUrl(dataPath);
-                        dataUrl = dUrlData.publicUrl;
-                    } else {
-                        dataUrl = thumbUrl; // 데이터 파일 안 올리면 썸네일 사용
-                    }
+                    if (dataFile) { const dataPath = `assets/${timestamp}_data_${Math.floor(Math.random()*1000)}`; const { error: dErr } = await sb.storage.from('design').upload(dataPath, dataFile); if (dErr) throw dErr; const { data: dUrlData } = sb.storage.from('design').getPublicUrl(dataPath); dataUrl = dUrlData.publicUrl; } else { dataUrl = thumbUrl; }
                 }
-
-                // 5. DB(library 테이블)에 정보 저장
-                const { error: dbErr } = await sb.from('library').insert({
-                    category: cat,
-                    tags: tags || '관리자등록',
-                    thumb_url: thumbUrl,
-                    data_url: dataUrl,
-                    width: 1000,   // 기본값
-                    height: 1000,  // 기본값
-                    product_key: 'admin_upload',
-                    created_at: new Date().toISOString()
-                });
-
-                if (dbErr) throw dbErr;
-
-                alert("✅ 템플릿 등록 성공!");
-                
-                // 폼 초기화
-                document.getElementById('fileThumb').value = '';
-                document.getElementById('fileData').value = '';
-                document.getElementById('tplTags').value = '';
-                document.getElementById('previewThumb').style.display = 'none';
-                document.getElementById('dataStatus').style.display = 'none';
-                
-                // 목록 새로고침
-                loadTemplates();
-
-            } catch (e) {
-                console.error("업로드 오류:", e);
-                alert("❌ 업로드 실패: " + (e.message || "알 수 없는 오류"));
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+                const { error: dbErr } = await sb.from('library').insert({ category: cat, tags: tags || '관리자등록', thumb_url: thumbUrl, data_url: dataUrl, width: 1000, height: 1000, product_key: 'admin_upload', created_at: new Date().toISOString() });
+                if (dbErr) throw dbErr; alert("✅ 템플릿 등록 성공!"); loadTemplates();
+             } catch (e) { alert("업로드 실패: " + e.message); } finally { btn.innerText = originalText; btn.disabled = false; }
         };
-    
         window.deleteTemplate = async (id) => { if(confirm("삭제?")) { await sb.from('library').delete().eq('id',id); loadTemplates(); }};
 
-        // ===========================================
-        // 4. 상품 관리 (유지)
-        // ===========================================
+        // 4. 상품 관리 (★ 에러 처리 및 복제 기능 강화)
         window.loadSystemDB = async () => {
             const { data: addons } = await sb.from('admin_addons').select('*').order('category');
             const addonBody = document.getElementById('addonTableBody');
             const chkArea = document.getElementById('addonCheckboxArea');
             addonBody.innerHTML = ''; chkArea.innerHTML = '';
-            if (addons) {
+            if(addons) {
                 addons.forEach(item => {
-                    let color = item.category === 'material' ? '#16a34a' : '#d97706';
-                    addonBody.innerHTML += `<tr><td><span style="color:${color}; font-weight:bold;">${item.category}</span></td><td><b>${item.code}</b></td><td>${item.name}</td><td>${item.price}</td><td><button class="btn btn-danger btn-sm" onclick="deleteSystemData('admin_addons', ${item.id})">x</button></td></tr>`;
-                    chkArea.innerHTML += `<label class="addon-check-item"><span style="color:${color};">●</span> <input type="checkbox" name="prodAddon" value="${item.code}"> ${item.name}</label>`;
+                    const color = item.category==='material'?'#16a34a':(item.category==='finish'?'#2563eb':'#d97706');
+                    addonBody.innerHTML += `<tr><td><span style="color:${color}">${item.category}</span></td><td><b>${item.code}</b></td><td>${item.name}</td><td>${item.price}</td><td><button class="btn btn-danger btn-sm" onclick="deleteSystemData('admin_addons',${item.id})">x</button></td></tr>`;
+                    chkArea.innerHTML += `<label class="addon-check-item"><span style="color:${color}">●</span> <input type="checkbox" name="prodAddon" value="${item.code}"> ${item.name}</label>`;
                 });
             }
-            let query = sb.from('admin_products').select('*');
-            try {
-                const { data: prods } = await query.order('sort_order', {ascending: true, nullsFirst: false}).order('id', {ascending: true});
-                const prodBody = document.getElementById('prodTableBody');
-                prodBody.innerHTML = '';
-                if (prods) {
-                    prods.forEach((item, idx) => {
-                        const tr = document.createElement('tr');
-                        tr.className = 'draggable-row';
-                        tr.draggable = true;
-                        tr.dataset.id = item.id;
-                        tr.innerHTML = `
-                            <td style="cursor:grab;">☰ ${idx+1}</td>
-                            <td><img src="${item.img_url || 'https://placehold.co/50'}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #eee;"></td>
-                            <td><b style="color:#6366f1;">${item.code}</b><br>${item.name}</td>
-                            <td>${item.width_mm}x${item.height_mm}</td>
-                            <td>${item.price.toLocaleString()}</td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" onclick="editProductLoad(${item.id})">수정</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteSystemData('admin_products', ${item.id})">삭제</button>
-                            </td>
-                        `;
-                        addDragListeners(tr);
-                        prodBody.appendChild(tr);
-                    });
-                }
-            } catch (err) {}
+            
+            const { data: prods } = await sb.from('admin_products').select('*').order('sort_order').order('id');
+            allProducts = prods || [];
+            renderProductList(allProducts);
         };
 
-        window.previewProductImage = (input) => {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => { document.getElementById('prodPreview').src = e.target.result; document.getElementById('prodPreview').style.display = 'block'; }
-                reader.readAsDataURL(input.files[0]);
-            }
+        window.renderProductList = (products) => {
+            const prodBody = document.getElementById('prodTableBody');
+            prodBody.innerHTML = '';
+            if (!products) return;
+            products.forEach((item, idx) => {
+                const site = item.site_code || 'KR';
+                const tr = document.createElement('tr');
+                tr.className = 'draggable-row';
+                tr.draggable = true;
+                tr.dataset.id = item.id;
+                tr.innerHTML = `
+                    <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
+                    <td><img src="${item.img_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;"></td>
+                    <td><b style="color:#6366f1;">${item.code}</b><br>${item.name}</td>
+                    <td>${item.width_mm}x${item.height_mm}</td>
+                    <td>${item.price.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="editProductLoad(${item.id})">수정</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSystemData('admin_products', ${item.id})">삭제</button>
+                    </td>
+                `;
+                addDragListeners(tr);
+                prodBody.appendChild(tr);
+            });
         };
 
+        window.filterProductList = (site) => {
+            if (site === 'all') renderProductList(allProducts);
+            else renderProductList(allProducts.filter(p => (p.site_code||'KR') === site));
+        };
+
+        // ★ [핵심] 상품 등록 (에러 알림 추가)
         window.addProductDB = async () => {
-            // (기존 코드 유지)
-            alert("상품 등록/수정 (서버 연결 필요)");
+            const site = document.getElementById('newProdSite').value;
+            const category = document.getElementById('newProdCategory').value;
+            const code = document.getElementById('newProdCode').value;
+            const name = document.getElementById('newProdName').value;
+            const w = document.getElementById('newProdW').value;
+            const h = document.getElementById('newProdH').value;
+            const price = document.getElementById('newProdPrice').value;
+            const img = document.getElementById('newProdImg').value;
+
+            if(!code || !name) return alert("필수 항목(코드, 상품명)을 입력해주세요.");
+
+            const selectedAddons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value);
+
+            const payload = {
+                site_code: site, // DB에 site_code 컬럼이 없으면 에러 발생 가능
+                category, code, name, 
+                width_mm: parseInt(w||0), height_mm: parseInt(h||0), 
+                price: parseInt(price||0), img_url: img, 
+                addons: selectedAddons.join(',')
+            };
+
+            let result;
+            if(editingProdId) {
+                result = await sb.from('admin_products').update(payload).eq('id', editingProdId);
+            } else {
+                result = await sb.from('admin_products').insert([payload]);
+            }
+
+            if (result.error) {
+                console.error(result.error);
+                alert("❌ 저장 실패!\n원인: " + result.error.message + "\n(혹시 site_code 컬럼이 없거나 코드가 중복되었나요?)");
+                return;
+            }
+
+            alert("✅ 저장되었습니다!");
+            resetProductForm();
+            loadSystemDB();
         };
 
         window.editProductLoad = async (id) => {
             const { data } = await sb.from('admin_products').select('*').eq('id', id).single();
             if(!data) return;
             editingProdId = id;
+            
+            document.getElementById('newProdSite').value = data.site_code || 'KR';
+            document.getElementById('newProdCategory').value = data.category;
             document.getElementById('newProdCode').value = data.code;
             document.getElementById('newProdName').value = data.name;
             document.getElementById('newProdW').value = data.width_mm;
             document.getElementById('newProdH').value = data.height_mm;
             document.getElementById('newProdPrice').value = data.price;
             document.getElementById('newProdImg').value = data.img_url;
-            const img = document.getElementById('prodPreview');
-            if(data.img_url) { img.src = data.img_url; img.style.display = 'block'; } else { img.style.display = 'none'; }
-            const currentAddons = data.addons ? data.addons.split(',') : [];
-            document.querySelectorAll('input[name="prodAddon"]').forEach(chk => { chk.checked = currentAddons.includes(chk.value); });
+            document.getElementById('prodPreview').src = data.img_url;
+            document.getElementById('prodPreview').style.display = 'block';
+
+            const addons = data.addons ? data.addons.split(',') : [];
+            document.querySelectorAll('input[name="prodAddon"]').forEach(c => c.checked = addons.includes(c.value));
+
             const btn = document.getElementById('btnProductSave');
             btn.innerText = "수정사항 저장"; btn.classList.remove('btn-primary'); btn.classList.add('btn-vip');
-            if(!document.getElementById('btnCancelEdit')) {
-                const cancel = document.createElement('button'); cancel.id = 'btnCancelEdit'; cancel.className = 'btn btn-outline'; cancel.innerText = '취소'; cancel.style.marginTop = '10px'; cancel.style.width='100%'; cancel.onclick = resetProductForm; btn.parentNode.insertBefore(cancel, btn.nextSibling);
-            }
+            
+            // 복제 버튼 및 취소 버튼 보이기
+            document.getElementById('btnProductClone').style.display = 'inline-block';
+            document.getElementById('btnCancelEdit').style.display = 'inline-block';
+            
             document.querySelector('.product-form').scrollIntoView({behavior:'smooth'});
+        };
+
+        // ★ [복제 기능] 코드 중복 방지 강화
+        window.cloneProduct = () => {
+            editingProdId = null; // ID를 비워서 '새 상품'으로 인식하게 함
+            
+            // 코드 뒤에 랜덤 숫자 붙여서 중복 에러 방지
+            const codeInput = document.getElementById('newProdCode');
+            codeInput.value = codeInput.value + "_copy_" + Math.floor(Math.random() * 1000);
+            
+            document.getElementById('btnProductSave').innerText = "새 상품으로 등록하기";
+            document.getElementById('btnProductClone').style.display = 'none';
+            alert("📋 상품이 복제되었습니다.\n'코드'와 '국가'를 확인 후 [새 상품으로 등록하기]를 눌러주세요.");
         };
 
         window.resetProductForm = () => {
             editingProdId = null;
-            document.getElementById('newProdCode').value = ''; document.getElementById('newProdName').value = ''; document.getElementById('newProdW').value = ''; document.getElementById('newProdH').value = ''; document.getElementById('newProdPrice').value = ''; document.getElementById('newProdImg').value = ''; document.getElementById('newProdFile').value = ''; document.getElementById('prodPreview').style.display = 'none';
+            document.getElementById('newProdCode').value = ''; 
+            document.getElementById('newProdName').value = '';
+            document.getElementById('newProdW').value = ''; document.getElementById('newProdH').value = ''; document.getElementById('newProdPrice').value = ''; document.getElementById('newProdImg').value = ''; document.getElementById('newProdFile').value = ''; document.getElementById('prodPreview').style.display = 'none';
             document.querySelectorAll('input[name="prodAddon"]').forEach(c => c.checked = false);
-            const btn = document.getElementById('btnProductSave'); btn.innerText = "상품 등록하기"; btn.classList.remove('btn-vip'); btn.classList.add('btn-primary');
-            const cancel = document.getElementById('btnCancelEdit'); if(cancel) cancel.remove();
+            
+            const btn = document.getElementById('btnProductSave');
+            btn.innerText = "상품 등록하기"; 
+            btn.classList.remove('btn-vip'); btn.classList.add('btn-primary');
+            
+            document.getElementById('btnProductClone').style.display = 'none';
+            document.getElementById('btnCancelEdit').style.display = 'none';
         };
 
-        window.deleteSystemData = async (table, id) => { if(confirm("삭제하시겠습니까?")) { await sb.from(table).delete().eq('id', id); loadSystemDB(); } };
+        window.previewProductImage = async (input) => {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const btn = document.getElementById('btnProductSave');
+            const originalText = btn.innerText;
+            const reader = new FileReader();
+            reader.onload = (e) => { document.getElementById('prodPreview').src = e.target.result; document.getElementById('prodPreview').style.display = 'block'; };
+            reader.readAsDataURL(file);
+            try {
+                btn.innerText = "업로드 중..."; btn.disabled = true;
+                const fileName = `prod_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+                const { data, error } = await sb.storage.from('products').upload(fileName, file);
+                if (error) throw error;
+                const { data: urlData } = sb.storage.from('products').getPublicUrl(fileName);
+                document.getElementById('newProdImg').value = urlData.publicUrl;
+                alert("업로드 완료");
+            } catch (e) { alert("업로드 실패: " + e.message); } finally { btn.innerText = originalText; btn.disabled = false; }
+        };
+
+        window.deleteSystemData = async (t, id) => { if(confirm("삭제하시겠습니까?")) { await sb.from(t).delete().eq('id', id); loadSystemDB(); } };
         window.addAddonDB = async () => {
-            const code = document.getElementById('newAddonCode').value; const name = document.getElementById('newAddonName').value; const price = document.getElementById('newAddonPrice').value; const cat = document.getElementById('newAddonCat').value;
-            if(!code || !name) return alert("입력 확인");
-            await sb.from('admin_addons').insert([{code, name, price: parseInt(price||0), category: cat}]); alert("옵션 저장됨"); loadSystemDB();
+             const code = document.getElementById('newAddonCode').value; const name = document.getElementById('newAddonName').value; const price = document.getElementById('newAddonPrice').value; const cat = document.getElementById('newAddonCat').value;
+             if(!code || !name) return alert("입력 확인");
+             await sb.from('admin_addons').insert([{code, name, price: parseInt(price||0), category: cat}]); loadSystemDB();
         };
 
         function addDragListeners(row) {
@@ -708,7 +668,6 @@
             rows.forEach((row, index) => { updates.push(sb.from('admin_products').update({ sort_order: index + 1 }).eq('id', row.dataset.id)); });
             await Promise.all(updates); console.log("순서 저장 완료");
         }
-
     </script>
 </body>
 </html>
