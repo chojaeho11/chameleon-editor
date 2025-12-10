@@ -1,5 +1,5 @@
 import { initConfig } from "./config.js";
-import { initCanvas, canvas } from "./canvas-core.js"; // canvas 변수도 필요하다면 가져오기 (보통 window.canvas로 접근 가능하지만 명시적이면 좋음)
+import { initCanvas, canvas } from "./canvas-core.js";
 import { initSizeControls } from "./canvas-size.js";
 import { initGuides } from "./canvas-guides.js";
 import { initZoomPan } from "./canvas-zoom-pan.js";
@@ -14,68 +14,148 @@ import { initMyDesign } from "./my-design.js";
 import { initCanvasUtils } from "./canvas-utils.js";
 import { initShortcuts } from "./shortcuts.js";
 import { initContextMenu } from "./context-menu.js";
+// 벡터 생성 모듈
+import { createVectorOutline } from "./outlineMaker.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
     try {
-        // 1. 설정 및 DB 연결
         await initConfig();
-        
-        // 2. 캔버스 코어 초기화
         initCanvas();
-        
-        // 3. 유틸리티 & 단축키 초기화
         initCanvasUtils();
         initShortcuts();
         initContextMenu();
-
-        // 4. 각종 도구 및 UI 초기화
         initSizeControls();
         initGuides();
         initZoomPan();
         initObjectTools();
         initImageTools();
         initTemplateTools();
-        
-        // 5. AI 도구 초기화
         initAiTools(); 
-        
-        // 6. 비즈니스 로직 초기화
         initExport();
         initOrderSystem();
         initAuth();
         initMyDesign();
-
-        // ★ [추가됨] 7. 모바일 텍스트 에디터 초기화
-        // 아래쪽에 정의된 함수를 여기서 실행합니다.
         initMobileTextEditor();
+        initOutlineTool(); // 칼선 도구
 
         console.log("🚀 모든 모듈 초기화 완료");
 
-        // 8. 로딩 완료 후 화면 전환
         setTimeout(() => {
             const loading = document.getElementById("loading");
             const startScreen = document.getElementById("startScreen");
             const mainEditor = document.getElementById("mainEditor");
-
             if (loading) loading.style.display = "none";
-            
             if (startScreen && startScreen.style.display !== 'none') {
-                // 시작 화면 유지
             } else {
                 if (mainEditor) mainEditor.style.display = "flex";
             }
         }, 300);
-
     } catch (error) {
-        console.error("🚨 초기화 중 치명적 오류 발생:", error);
+        console.error("🚨 초기화 오류:", error);
         alert("시스템 초기화 중 오류가 발생했습니다. 콘솔을 확인해주세요.");
     }
 });
 
 /**
- * ★ [추가됨] 모바일 전용 텍스트 에디터 로직
- * 모바일 환경에서 텍스트 수정 시 키보드 가림 현상을 방지하기 위해
- * 별도의 상단 입력창을 띄우는 함수입니다.
+ * ★ 벡터(Path) 칼선 만들기 도구 초기화
+ */
+function initOutlineTool() {
+    const btn = document.getElementById("btn-create-outline");
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+        const currentCanvas = window.canvas || canvas;
+        if (!currentCanvas) return;
+
+        const activeObj = currentCanvas.getActiveObject();
+        if (!activeObj || activeObj.type !== 'image') {
+            alert("외곽선을 만들 이미지를 선택해주세요!");
+            return;
+        }
+
+        const originalText = btn.innerText;
+        btn.innerText = "생성 중...";
+        btn.disabled = true;
+
+        try {
+            const src = activeObj.getSrc();
+            
+            // 1. 벡터 생성 요청 (outlineMaker.js)
+            const result = await createVectorOutline(src, {
+                dilation: 15,       // ★ 칼선 여백 (캐릭터와 선 사이 거리)
+                color: '#FF00FF',   // 칼선 색상
+                strokeWidth: 2      // 선 두께
+            });
+
+            // 2. 패스 객체 생성
+            const pathObj = new fabric.Path(result.pathData, {
+                fill: '',           // 내부는 투명
+                stroke: result.color,
+                strokeWidth: result.strokeWidth,
+                
+                // ★ 선을 부드럽게 (Round Join) - 오버컷 방지
+                strokeLineJoin: 'round',
+                strokeLineCap: 'round',
+
+                objectCaching: false,
+                selectable: true,
+                evented: true,
+                originX: 'center',
+                originY: 'center'
+            });
+
+            // 3. 정밀 위치 보정 (중요)
+            // Potrace 캔버스의 중심과 Path의 중심 차이를 계산하여 보정합니다.
+            
+            // (A) Potrace 캔버스 상의 중심
+            const svgImageCenterX = result.width / 2;
+            const svgImageCenterY = result.height / 2;
+
+            // (B) 생성된 Path의 자체 중심 (Bounding Box 기준)
+            const pathCenterX = pathObj.pathOffset.x;
+            const pathCenterY = pathObj.pathOffset.y;
+
+            // (C) 오차 계산
+            const diffX = pathCenterX - svgImageCenterX;
+            const diffY = pathCenterY - svgImageCenterY;
+
+            // (D) 이미지의 회전/스케일에 맞춰 오차 적용
+            const imgCenter = activeObj.getCenterPoint();
+            const angleRad = fabric.util.degreesToRadians(activeObj.angle);
+            const cos = Math.cos(angleRad);
+            const sin = Math.sin(angleRad);
+
+            // 회전된 좌표계에서의 오차값 변환
+            const finalOffsetX = (diffX * activeObj.scaleX * cos) - (diffY * activeObj.scaleY * sin);
+            const finalOffsetY = (diffX * activeObj.scaleX * sin) + (diffY * activeObj.scaleY * cos);
+
+            // 최종 위치 설정
+            pathObj.set({
+                left: imgCenter.x + finalOffsetX,
+                top: imgCenter.y + finalOffsetY,
+                scaleX: activeObj.scaleX, // 스케일 동기화
+                scaleY: activeObj.scaleY,
+                angle: activeObj.angle    // 회전 동기화
+            });
+
+            currentCanvas.add(pathObj);
+            currentCanvas.bringToFront(pathObj);
+            currentCanvas.requestRenderAll();
+            
+            console.log("✂️ 칼선 생성 완료 (사각형 방지 적용)");
+
+        } catch (error) {
+            console.error("벡터 생성 실패:", error);
+            alert("생성 실패: " + error.message);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    });
+}
+
+/**
+ * 모바일 전용 텍스트 에디터 로직 (기존 유지)
  */
 function initMobileTextEditor() {
     const mobileEditor = document.getElementById('mobileTextEditor');
@@ -83,39 +163,25 @@ function initMobileTextEditor() {
     const btnFinish = document.getElementById('btnFinishText');
     let activeTextObj = null;
 
-    // 캔버스 객체가 없으면 중단 (안전장치)
-    // window.canvas는 canvas-core.js에서 전역 변수로 할당되었다고 가정합니다.
     if (!window.canvas) return;
 
-    // 1. 캔버스 이벤트 리스너 등록
     window.canvas.on('selection:created', handleSelection);
     window.canvas.on('selection:updated', handleSelection);
     window.canvas.on('selection:cleared', closeMobileEditor);
 
     function handleSelection(e) {
-        // 화면 너비가 768px 이하(모바일)일 때만 작동
         if (window.innerWidth > 768) return;
-
         const obj = e.selected ? e.selected[0] : window.canvas.getActiveObject();
-        
-        // 선택된 객체가 텍스트라면
         if (obj && (obj.type === 'i-text' || obj.type === 'textbox' || obj.type === 'text')) {
             activeTextObj = obj;
-            
-            // 텍스트 내용 가져오기
-            mobileInput.value = obj.text;
-            
-            // 입력창 보이기
+            if(mobileInput) mobileInput.value = obj.text;
             if(mobileEditor) mobileEditor.style.display = 'flex';
-            
-            // 캔버스 기본 편집 모드 진입 방지 (키보드 중복 방지)
             obj.enterEditing = function() {}; 
         } else {
             closeMobileEditor();
         }
     }
 
-    // 2. 입력창 타이핑 시 실시간 반영
     if(mobileInput) {
         mobileInput.addEventListener('input', function() {
             if (activeTextObj) {
@@ -125,49 +191,52 @@ function initMobileTextEditor() {
         });
     }
 
-    // 3. 완료 버튼 클릭
     if(btnFinish) {
         btnFinish.addEventListener('click', function() {
             closeMobileEditor();
-            if(mobileInput) mobileInput.blur(); // 키보드 내리기
-            window.canvas.discardActiveObject(); // 선택 해제
+            if(mobileInput) mobileInput.blur();
+            window.canvas.discardActiveObject();
             window.canvas.requestRenderAll();
         });
     }
 
+    window.closeMobileTextEditor = closeMobileEditor;
     function closeMobileEditor() {
         if(mobileEditor) mobileEditor.style.display = 'none';
         activeTextObj = null;
     }
+    
+    window.deleteMobileObject = function() {
+        const active = window.canvas.getActiveObject();
+        if(active) {
+            window.canvas.remove(active);
+            window.canvas.requestRenderAll();
+        }
+        closeMobileEditor();
+    };
 }
-// =========================================
-// [모바일] 패널 열고 닫기 토글 기능 (플로팅 버튼용)
-// =========================================
+
+// 패널 토글 함수
 window.toggleMobilePanel = function(side) {
     const leftPanel = document.getElementById('toolsPanel');
     const rightPanel = document.getElementById('rightStackPanel');
-
     if (side === 'left') {
-        // [왼쪽 버튼 클릭] 왼쪽 열고/닫기, 오른쪽은 무조건 닫기
         if (leftPanel) leftPanel.classList.toggle('open');
         if (rightPanel) rightPanel.classList.remove('open');
     } else if (side === 'right') {
-        // [오른쪽 버튼 클릭] 오른쪽 열고/닫기, 왼쪽은 무조건 닫기
         if (rightPanel) rightPanel.classList.toggle('open');
         if (leftPanel) leftPanel.classList.remove('open');
     }
 };
 
-// (옵션) 캔버스 빈 곳을 터치하면 열려있던 패널들 닫기
+// 캔버스 빈 곳 터치 시 패널 닫기
 document.addEventListener('DOMContentLoaded', () => {
     const stage = document.getElementById('stage');
     if(stage) {
         stage.addEventListener('click', (e) => {
-            // 버튼이나 패널 내부를 클릭한 게 아니라면 -> 패널 닫기
             if (!e.target.closest('.mobile-fab') && !e.target.closest('.side') && !e.target.closest('.right-stack')) {
                 const leftPanel = document.getElementById('toolsPanel');
                 const rightPanel = document.getElementById('rightStackPanel');
-                
                 if(leftPanel) leftPanel.classList.remove('open');
                 if(rightPanel) rightPanel.classList.remove('open');
             }

@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/plugins/svg.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/potrace@2.1.8/potrace.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/kilobtye/potrace@master/potrace.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
@@ -1436,7 +1436,7 @@ input, textarea, select {
                     <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px;">🎯 정중앙 정렬</button>
                     <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px;">🖼 배경으로 꽉 채우기</button>
                 </div>
-                
+                        <button id="btn-create-outline" style="padding: 10px; cursor: pointer;">✂️ 칼선/외곽선 만들기</button>
                 <div class="panel-box" id="panelText">
                     <div class="section-title" style="margin-top:0;">텍스트 설정</div>
                     <div style="display:flex; gap:5px; margin-bottom:10px;">
