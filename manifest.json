@@ -1,0 +1,21 @@
+{
+  "name": "카멜레온 카프",
+  "short_name": "카프",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3159/3159310.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3159/3159310.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
