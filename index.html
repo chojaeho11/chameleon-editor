@@ -16,6 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-full.min.js"></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/GmarketSans/build/GmarketSans.css">
@@ -257,7 +258,7 @@
     .height-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
     .height-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-    .section-title { font-size: 13px; font-weight: 700; color: #333; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .section-title { font-size: 13px; font-weight: 700; color: #b6b6b6; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
     .btn-round { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: #fff; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-main); }
     .btn-round.primary { background: var(--primary); color: #fff; border: none; }
     .btn-round.ai-red { background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%); color: white; border: none; }
@@ -1210,6 +1211,20 @@ input, textarea, select {
 .cal-day:hover:not(.disabled) { background: #eff6ff; color: #6366f1; }
 .cal-day.selected { background: #6366f1; color: white !important; font-weight: bold; box-shadow: 0 2px 5px rgba(99,102,241,0.4); }
 .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; }
+/* 칼선 도구 박스 스타일 */
+.tool-box-group {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 20px;
+}
+.tool-box-group button:hover {
+    background: #fff;
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
 </style>
 </head>
 
@@ -1436,7 +1451,26 @@ input, textarea, select {
                     <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px;">🎯 정중앙 정렬</button>
                     <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px;">🖼 배경으로 꽉 채우기</button>
                 </div>
-                        <button id="btn-create-outline" style="padding: 10px; cursor: pointer;">✂️ 칼선/외곽선 만들기</button>
+                        <div class="section-title">CUTTING TOOLS</div>
+<div class="tool-box-group">
+    <div style="font-size:12px; color:#666; margin-bottom:8px; text-align:center;">
+        이미지를 선택하고 클릭하세요
+    </div>
+    
+    <button id="btn-create-outline" class="btn-round" style="width:100%; margin-bottom:8px; justify-content:center;">
+        ✂️ 외곽선 만들기
+    </button>
+
+    <div style="display:flex; gap:8px;">
+        <button id="btn-make-keyring" class="btn-round" style="flex:1; flex-direction:column; gap:5px; height:auto; padding:10px; font-size:12px;">
+            <span>키링 고리</span>
+        </button>
+        
+        <button id="btn-make-standee" class="btn-round" style="flex:1; flex-direction:column; gap:5px; height:auto; padding:10px; font-size:12px;">
+            <span>등신대 받침</span>
+        </button>
+    </div>
+</div>
                 <div class="panel-box" id="panelText">
                     <div class="section-title" style="margin-top:0;">텍스트 설정</div>
                     <div style="display:flex; gap:5px; margin-bottom:10px;">

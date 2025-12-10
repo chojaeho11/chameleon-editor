@@ -14,7 +14,7 @@ import { initMyDesign } from "./my-design.js";
 import { initCanvasUtils } from "./canvas-utils.js";
 import { initShortcuts } from "./shortcuts.js";
 import { initContextMenu } from "./context-menu.js";
-// 벡터 생성 모듈
+// 벡터 생성 모듈 (수정된 outlineMaker.js와 연결)
 import { createVectorOutline } from "./outlineMaker.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -36,7 +36,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         initAuth();
         initMyDesign();
         initMobileTextEditor();
-        initOutlineTool(); // 칼선 도구
+        initOutlineTool(); // ★ 칼선 도구 초기화
 
         console.log("🚀 모든 모듈 초기화 완료");
 
@@ -44,12 +44,15 @@ window.addEventListener("DOMContentLoaded", async () => {
             const loading = document.getElementById("loading");
             const startScreen = document.getElementById("startScreen");
             const mainEditor = document.getElementById("mainEditor");
+
             if (loading) loading.style.display = "none";
             if (startScreen && startScreen.style.display !== 'none') {
+                // 시작 화면 유지
             } else {
                 if (mainEditor) mainEditor.style.display = "flex";
             }
         }, 300);
+
     } catch (error) {
         console.error("🚨 초기화 오류:", error);
         alert("시스템 초기화 중 오류가 발생했습니다. 콘솔을 확인해주세요.");
@@ -58,22 +61,25 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 /**
  * ★ 벡터(Path) 칼선 만들기 도구 초기화
+ * - 3개 버튼 (일반, 등신대, 키링) 통합 처리
+ * - 검증된 위치 보정 로직 적용
  */
 function initOutlineTool() {
-    const btn = document.getElementById("btn-create-outline");
-    if (!btn) return;
+    // 공통으로 사용할 외곽선 생성 함수
+    const runOutlineMaker = async (btnId, type) => {
+        const btn = document.getElementById(btnId);
+        if (!btn) return; // 해당 버튼이 없으면 패스
 
-    btn.addEventListener("click", async () => {
         const currentCanvas = window.canvas || canvas;
-        if (!currentCanvas) return;
-
         const activeObj = currentCanvas.getActiveObject();
+
         if (!activeObj || activeObj.type !== 'image') {
             alert("외곽선을 만들 이미지를 선택해주세요!");
             return;
         }
 
-        const originalText = btn.innerText;
+        // 버튼 상태 변경 (로딩 중)
+        const originalText = btn.innerHTML;
         btn.innerText = "생성 중...";
         btn.disabled = true;
 
@@ -81,33 +87,31 @@ function initOutlineTool() {
             const src = activeObj.getSrc();
             
             // 1. 벡터 생성 요청 (outlineMaker.js)
+            // type 파라미터를 넘겨서 'normal', 'keyring', 'standee'를 구분합니다.
             const result = await createVectorOutline(src, {
-                dilation: 15,       // ★ 칼선 여백 (캐릭터와 선 사이 거리)
-                color: '#FF00FF',   // 칼선 색상
-                strokeWidth: 2      // 선 두께
+                dilation: 15,       
+                color: '#FF00FF',   
+                strokeWidth: 2,
+                type: type // ★ 핵심: 버튼에 따라 타입 전달
             });
 
-            // 2. 패스 객체 생성
+            // 2. 패스 객체 생성 (검증된 설정)
             const pathObj = new fabric.Path(result.pathData, {
-                fill: '',           // 내부는 투명
+                fill: '', 
                 stroke: result.color,
                 strokeWidth: result.strokeWidth,
-                
-                // ★ 선을 부드럽게 (Round Join) - 오버컷 방지
                 strokeLineJoin: 'round',
                 strokeLineCap: 'round',
-
-                objectCaching: false,
+                objectCaching: false, // 렌더링 이슈 방지
                 selectable: true,
                 evented: true,
                 originX: 'center',
                 originY: 'center'
             });
 
-            // 3. 정밀 위치 보정 (중요)
-            // Potrace 캔버스의 중심과 Path의 중심 차이를 계산하여 보정합니다.
+            // 3. ★ 정밀 위치 보정 (사용자님께서 확인해주신 '잘 되는 코드' 로직)
             
-            // (A) Potrace 캔버스 상의 중심
+            // (A) Potrace 캔버스의 중심
             const svgImageCenterX = result.width / 2;
             const svgImageCenterY = result.height / 2;
 
@@ -125,37 +129,61 @@ function initOutlineTool() {
             const cos = Math.cos(angleRad);
             const sin = Math.sin(angleRad);
 
-            // 회전된 좌표계에서의 오차값 변환
             const finalOffsetX = (diffX * activeObj.scaleX * cos) - (diffY * activeObj.scaleY * sin);
             const finalOffsetY = (diffX * activeObj.scaleX * sin) + (diffY * activeObj.scaleY * cos);
 
-            // 최종 위치 설정
+            // 최종 위치 적용
             pathObj.set({
                 left: imgCenter.x + finalOffsetX,
                 top: imgCenter.y + finalOffsetY,
-                scaleX: activeObj.scaleX, // 스케일 동기화
+                scaleX: activeObj.scaleX,
                 scaleY: activeObj.scaleY,
-                angle: activeObj.angle    // 회전 동기화
+                angle: activeObj.angle
             });
 
+            // 캔버스에 추가
             currentCanvas.add(pathObj);
             currentCanvas.bringToFront(pathObj);
+            
+            // 렌더링 갱신
+            pathObj.setCoords();
             currentCanvas.requestRenderAll();
             
-            console.log("✂️ 칼선 생성 완료 (사각형 방지 적용)");
+            console.log(`✂️ ${type} 모드 칼선 생성 완료`);
 
         } catch (error) {
             console.error("벡터 생성 실패:", error);
             alert("생성 실패: " + error.message);
         } finally {
-            btn.innerText = originalText;
+            // 버튼 복구
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
-    });
+    };
+
+    // 버튼 3개에 대해 각각 이벤트 리스너 등록
+    
+    // 1. 일반 외곽선 버튼
+    const btnNormal = document.getElementById("btn-create-outline");
+    if (btnNormal) {
+        btnNormal.onclick = () => runOutlineMaker("btn-create-outline", "normal");
+    }
+
+    // 2. 등신대 만들기 버튼
+    const btnStandee = document.getElementById("btn-make-standee");
+    if (btnStandee) {
+        btnStandee.onclick = () => runOutlineMaker("btn-make-standee", "standee");
+    }
+
+    // 3. 키링 만들기 버튼
+    const btnKeyring = document.getElementById("btn-make-keyring");
+    if (btnKeyring) {
+        btnKeyring.onclick = () => runOutlineMaker("btn-make-keyring", "keyring");
+    }
 }
 
 /**
- * 모바일 전용 텍스트 에디터 로직 (기존 유지)
+ * 모바일 전용 텍스트 에디터 로직
  */
 function initMobileTextEditor() {
     const mobileEditor = document.getElementById('mobileTextEditor');
@@ -216,7 +244,7 @@ function initMobileTextEditor() {
     };
 }
 
-// 패널 토글 함수
+// 패널 토글 함수 (모바일용)
 window.toggleMobilePanel = function(side) {
     const leftPanel = document.getElementById('toolsPanel');
     const rightPanel = document.getElementById('rightStackPanel');
