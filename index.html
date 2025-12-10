@@ -1232,7 +1232,7 @@ input, textarea, select {
 
 <div id="startScreen">
     <div class="hero-section">
-        <h1 class="hero-title">행사 준비하세요? <br><span>카프</span>와 함께해요.</h1>
+        <h1 class="hero-title">행사 준비하세요? <br><span>카멜레온</span>과 함께해요.</h1>
         <p class="hero-desc">행사 팝업스토어 기획자를 위한 도매쇼핑몰, 유저가 함께 만드는 무료에디터</p>
     </div>
 
@@ -1877,82 +1877,171 @@ input, textarea, select {
             if(input) input.click();
         }
     };
+    // [추가됨] 파일 선택 시 장바구니로 이동하는 로직
+    const directUploadInput = document.getElementById("directUploadInput");
+    
+    if (directUploadInput) {
+        // 기존에 혹시 연결된 이벤트가 있다면 덮어씌웁니다.
+        directUploadInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-    // ============================================================
-    // [5] 에디터 진입 함수 (★ 핵심 수정: window. 에 붙여서 전역 함수로 만듦)
-    // ============================================================
-    window.startEditorDirect = function(key) {
-        // 방어 코드: 키가 없으면 실행 중단
+            // 선택된 상품 정보 가져오기
+            const product = window.selectedProductForChoice;
+            if (!product) return alert("상품 정보가 없습니다.");
+
+            // 로딩 표시
+            const loading = document.getElementById("loading");
+            if (loading) loading.style.display = "flex";
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const fileDataURI = evt.target.result;
+                
+                // 썸네일 처리
+                let thumbUrl = 'https://placehold.co/100?text=FILE';
+                if (file.type.startsWith('image/')) {
+                    thumbUrl = fileDataURI;
+                }
+
+                // 장바구니 아이템 생성
+                const newItem = {
+                    uid: Date.now(),
+                    product: product,
+                    type: 'file',
+                    fileName: file.name,
+                    mimeType: file.type,
+                    fileData: fileDataURI,
+                    thumb: thumbUrl,
+                    qty: 1,
+                    selectedAddons: {},
+                    isOpen: true
+                };
+
+                // 전역 장바구니 배열에 추가 (config.js에서 가져온 변수 사용)
+                if (typeof cartData !== 'undefined') {
+                    cartData.push(newItem);
+                    
+                    // 로컬 스토리지 저장
+                    try {
+                        const user = typeof currentUser !== 'undefined' ? currentUser : null;
+                        const storageKey = user ? `chameleon_cart_${user.id}` : 'chameleon_cart_guest';
+                        localStorage.setItem(storageKey, JSON.stringify(cartData));
+                    } catch(err) { console.error(err); }
+                }
+
+                // 화면 전환
+                if (window.renderCart) window.renderCart();
+                document.getElementById('choiceModal').style.display = 'none';
+                document.getElementById('cartPage').style.display = 'block';
+                
+                if (loading) loading.style.display = "none";
+                
+                // 입력창 초기화 (같은 파일 다시 선택 가능하도록)
+                directUploadInput.value = ''; 
+            };
+            
+            reader.readAsDataURL(file);
+        };
+    }
+
+    // ==========================================================
+    // [3번 수정 - 수정됨] 템플릿 및 에디터 진입 로직
+    // ==========================================================
+
+    window.pendingTemplate = null; 
+
+    // 1. 에디터 진입 함수
+    window.startEditorDirect = async function(key) {
         if (!key) return alert("상품 코드가 올바르지 않습니다.");
 
         window.currentProductKey = key;
         if(canvas) canvas.currentProductKey = key;
         
-        // DB에서 정보 찾기
         const product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
-        
-        // 기본값 (DB에 정보가 늦게 로딩될 경우 대비)
         const width = product ? product.w : 210; 
         const height = product ? product.h : 297;
-        
-        // ★ 에러 해결: key가 문자열일 때만 includes 사용
         const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
         
-        // 캔버스 크기 적용
+        // 캔버스 사이즈 적용
         if (window.applySize) {
             window.applySize(width, height, key, mode, 'replace');
-        } else {
-            console.error("applySize 함수가 로드되지 않았습니다.");
         }
         
         // 화면 전환
         document.getElementById("startScreen").style.display = "none";
         document.getElementById("mainEditor").style.display = "flex";
         window.dispatchEvent(new Event('resize'));
+
+        // ★ [수정 포인트] window. 을 제거했습니다.
+        if (window.pendingTemplate) {
+            setTimeout(async () => {
+                // 여기서 window.applyTemplateDirectly -> applyTemplateDirectly 로 변경
+                if (typeof applyTemplateDirectly === 'function') {
+                    await applyTemplateDirectly(window.pendingTemplate);
+                } else {
+                    console.error("템플릿 적용 함수를 찾을 수 없습니다.");
+                }
+                window.pendingTemplate = null; 
+            }, 300); // 딜레이를 100ms -> 300ms로 조금 늘려 안정성을 확보했습니다.
+        }
     };
 
-    // [6] 템플릿 클릭 시 분기 처리 (기존 유지)
-    window.onTemplateClick = async function(tplData) {
+    // 2. 템플릿 클릭 핸들러
+    window.onTemplateClick = async function(tpl) {
         const startScreen = document.getElementById('startScreen');
         const isEditorOpen = startScreen && window.getComputedStyle(startScreen).display === 'none';
 
         if (isEditorOpen) {
-            if(!confirm("현재 캔버스에 템플릿을 적용하시겠습니까?\n(디자인만 변경됩니다)")) return;
-            await applyTemplateDirectly(tplData);
+            // 에디터 상태: 바로 적용
+            if(!confirm("현재 캔버스에 템플릿을 적용하시겠습니까?\n(기존 디자인 위에 추가됩니다)")) return;
+            // 여기도 window. 없이 호출
+            await applyTemplateDirectly(tpl);
         } else {
-            alert("템플릿을 사용하시려면 먼저 [카테고리] -> [제품]을 선택해주세요.");
+            // 시작 화면: 선택 모달 띄우기
+            window.pendingTemplate = tpl; 
+            showCategorySelectionModal(); 
         }
     };
 
-    // [수정됨] 에디터 진입 함수 (에러 방지 코드 추가)
-    function startEditorDirect(key) {
-        // 키가 없는 경우 방어
-        if (!key) return alert("상품 코드가 올바르지 않습니다.");
+    // 3. "무엇을 만들까요?" 모달
+    async function showCategorySelectionModal() {
+        const modal = document.getElementById('categoryDetailModal');
+        const grid = document.getElementById('catProductGrid');
+        const titleEl = document.getElementById('catModalTitle');
+        
+        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">Q. 무엇을 만들까요?</span> <span style="font-size:14px; color:#888; font-weight:normal;">(사이즈 선택)</span>`;
+        
+        modal.style.display = 'flex';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">불러오는 중...</div>';
+        
+        const { data: categories, error } = await sb.from('admin_categories')
+            .select('*').order('sort_order', { ascending: true });
 
-        window.currentProductKey = key;
-        if(canvas) canvas.currentProductKey = key;
+        if (!categories || categories.length === 0) return;
+
+        grid.innerHTML = '';
         
-        // DB에서 정보 찾기
-        const product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
-        
-        // 기본값 설정 (DB에 없으면 A4 사이즈로)
-        const width = product ? product.w : 210; // mm 단위
-        const height = product ? product.h : 297;
-        
-        // ★ [에러 해결] key가 문자열인지 확인 후 includes 호출
-        const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
-        
-        // 캔버스 크기 적용 함수 호출
-        if (window.applySize) {
-            window.applySize(width, height, key, mode, 'replace');
-        } else {
-            console.error("applySize 함수를 찾을 수 없습니다.");
-        }
-        
-        // 화면 전환
-        document.getElementById("startScreen").style.display = "none";
-        document.getElementById("mainEditor").style.display = "flex";
-        window.dispatchEvent(new Event('resize'));
+        categories.forEach(cat => {
+            let iconUrl = 'https://cdn-icons-png.flaticon.com/512/3159/3159310.png';
+            const n = cat.name;
+            if (n.includes('허니콤') || n.includes('등신대')) iconUrl = 'data:image/png;base64,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'; 
+            else if (n.includes('패브릭') || n.includes('광목')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWV5d7OPwqIbTMcek_s71sum2bh8Zh7CFGA&s';
+            else if (n.includes('매대') || n.includes('거치대')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6MsafK1Bk4flaRnwnJ6yHsY_HHtS_rZ3lbA&s';
+            else if (n.includes('배너') || n.includes('현수막')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-0q3W2v3GAdaDgS-5NpX3tfxYN_qTmh6cdA&s';
+
+            const div = document.createElement('div');
+            div.className = 'quick-item';
+            div.innerHTML = `
+                <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9;">
+                    <img src="${iconUrl}" style="width:45px; height:45px; object-fit:contain;">
+                </div>
+                <div class="quick-text">${cat.name}</div>
+            `;
+            
+            div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
+            grid.appendChild(div);
+        });
     }
 
     async function applyTemplateDirectly(tpl) {
