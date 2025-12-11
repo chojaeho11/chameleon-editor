@@ -6,7 +6,7 @@ export let currentUser = null;
 export let isAdmin = false; 
 export let cartData = []; 
 
-// 관리자 이메일 목록 (여기에 본인 이메일이 있어야 관리자 기능 사용 가능)
+// 관리자 이메일 목록
 const ADMIN_EMAILS = [
     "korea900as@gmail.com",
     "ceo@test.com"
@@ -73,7 +73,7 @@ export function initConfig() {
     return initPromise;
 }
 
-// ★ DB 데이터 로드 및 사이즈 변환 함수
+// ★ DB 데이터 로드 및 사이즈 변환 함수 (핵심 수정 부분)
 async function loadSystemData() {
     try {
         // 1. 옵션(Addon) 불러오기
@@ -81,40 +81,42 @@ async function loadSystemData() {
         if (addons) {
             ADDON_DB = {}; // 초기화
             addons.forEach(item => {
-                // 구조: { 코드: { 이름, 가격 } }
                 ADDON_DB[item.code] = { name: item.name, price: item.price };
             });
         }
 
         // 2. 상품(Product) 불러오기 & 사이즈 변환
         const { data: products } = await sb.from('admin_products')
-    .select('*')
-    .order('sort_order', { ascending: true }) // 순서 적용
-    .order('id', { ascending: true });        // 같은 순서일 경우 등록순
+            .select('*')
+            .order('sort_order', { ascending: true }) // 순서 적용
+            .order('id', { ascending: true });        // 같은 순서일 경우 등록순
+            
         if (products) {
             PRODUCT_DB = {}; // 초기화
             products.forEach(item => {
-                // mm -> px 변환 (1mm = 약 3.7795px)
-                // 캔버스 해상도를 위해 약 3.78배로 설정합니다.
+                // mm -> px 변환 비율 (출력용 고해상도: 1mm = 약 3.7795px)
                 const scaleFactor = 3.7795;
                 
                 // DB에 값이 없으면 기본 A4 사이즈(210x297) 적용
                 const mmW = item.width_mm || 210;
                 const mmH = item.height_mm || 297;
 
+                // ★ [핵심] mm를 픽셀로 뻥튀기 (캔버스 렌더링용)
                 const pxW = Math.round(mmW * scaleFactor);
                 const pxH = Math.round(mmH * scaleFactor);
 
-                // 연결된 옵션 목록 (문자열 -> 배열)
+                // 연결된 옵션 목록
                 const addonList = item.addons ? item.addons.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 
                 PRODUCT_DB[item.code] = {
                     name: item.name,
                     price: item.price,
                     img: item.img_url || 'https://placehold.co/400?text=No+Image',
-                    w: pxW, // 변환된 픽셀 너비
-                    h: pxH, // 변환된 픽셀 높이
-                    addons: addonList // 연결된 옵션 코드들
+                    w: pxW,       // 캔버스 작동용 픽셀값 (예: 800mm -> 3024px)
+                    h: pxH,       
+                    w_mm: mmW,    // ★ [추가] UI 표시용 원본 mm값 (예: 800)
+                    h_mm: mmH,    
+                    addons: addonList
                 };
             });
         }
@@ -127,10 +129,8 @@ async function loadSystemData() {
 function updateUserSession(session) {
     if (session && session.user) {
         currentUser = session.user;
-        // 관리자 여부 확인
         if (ADMIN_EMAILS.includes(currentUser.email)) {
             isAdmin = true;
-            // 관리자 전용 버튼 표시 (템플릿 등록 등)
             const btnReg = document.getElementById("btnRegisterTemplate");
             if(btnReg) btnReg.style.display = "flex";
         } else {
@@ -140,8 +140,6 @@ function updateUserSession(session) {
         currentUser = null;
         isAdmin = false;
     }
-    
-    // 장바구니 로드
     loadUserCart();
 }
 
@@ -162,13 +160,11 @@ function loadUserCart() {
         console.error("장바구니 로드 실패", e);
     }
     
-    // UI 갱신
     const countEl = document.getElementById("cartCount");
     if(countEl) countEl.innerText = `(${cartData.length})`;
     
     const btnCart = document.getElementById("btnViewCart");
     if(btnCart) {
-        // 로그인했거나 장바구니에 담긴 게 있으면 버튼 표시
         btnCart.style.display = (currentUser || cartData.length > 0) ? "inline-flex" : "none";
     }
 }

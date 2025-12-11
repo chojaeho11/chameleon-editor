@@ -1,5 +1,5 @@
 // canvas-size.js
-import { canvas, setBaseSize, setGlobalMode, setGlobalSizeName, setGuideOn } from "./canvas-core.js";
+import { canvas, setBaseSize, setGlobalMode, setGlobalSizeName, setGuideOn, maxLimitMM } from "./canvas-core.js";
 import { drawGuides } from "./canvas-guides.js";
 import { openProductDetail } from "./order.js";
 
@@ -38,74 +38,71 @@ export function initSizeControls() {
         { name: '종이진열대', w: 585, h: 1130, key: 'Paper_Disp_4' }
     ];
 
+    // [추가] 사용자 지정 사이즈 적용 버튼 이벤트 연결
+    const btnApplyUser = document.getElementById("btnApplyUserSize");
+    const inputW = document.getElementById("inputUserW");
+    const inputH = document.getElementById("inputUserH");
+
+    if (btnApplyUser && inputW && inputH) {
+        btnApplyUser.onclick = () => {
+            const newW = parseInt(inputW.value);
+            const newH = parseInt(inputH.value);
+
+            if (!newW || !newH || newW <= 0 || newH <= 0) {
+                return alert("유효한 숫자를 입력해주세요.");
+            }
+
+            // 최대 한계값 검사 (index.html 진입 시 설정됨)
+            // 가로/세로를 바꾼 경우(회전)도 허용해야 하므로 둘 다 검사
+            const limitW = maxLimitMM.w || 99999;
+            const limitH = maxLimitMM.h || 99999;
+
+            // 1. 정방향 비교: 입력값 <= 제한값
+            const isFitNormal = (newW <= limitW && newH <= limitH);
+            // 2. 회전 비교: 입력값(가로) <= 제한값(세로) AND 입력값(세로) <= 제한값(가로)
+            const isFitRotated = (newW <= limitH && newH <= limitW);
+
+            if (!isFitNormal && !isFitRotated) {
+                return alert(
+                    `설정된 최대 크기(${limitW}x${limitH}mm)를 초과할 수 없습니다.\n` +
+                    `현재 선택하신 상품(가격) 기준보다 작거나 같아야 합니다.`
+                );
+            }
+
+            // 통과했다면 mm -> px 변환 후 적용
+            const scaleFactor = 3.7795; // 1mm = 약 3.7795px
+            const finalPxW = Math.round(newW * scaleFactor);
+            const finalPxH = Math.round(newH * scaleFactor);
+
+            // 기존 작업물이 있으면 유지할지 물어보는 requestChangeSize 호출
+            requestChangeSize(finalPxW, finalPxH, `Custom(${newW}x${newH})`, 'custom');
+        };
+    }
+
     // 2. 시작 화면에 버튼 렌더링
     renderSizeButtons('row1', sizesStandard);
     renderSizeButtons('row2', sizesWall);
     renderSizeButtons('row3', sizesGoods);
 
     // 3. 에디터 내부 "사이즈 변경" 패널 로직
+    // (기존 숨겨진 패널 로직은 유지하되, 필요 없으면 사용 안 함)
     const btnChange = document.getElementById("btnChangeSize");
     const panel = document.getElementById("sizeTogglePanel");
     
     if (btnChange && panel) {
-        // ★ HTML에서 grid-template-columns: 1fr로 설정했으므로, JS에서는 display 속성만 제어
         btnChange.onclick = () => {
             const isHidden = panel.style.display === 'none';
             panel.style.display = isHidden ? 'grid' : 'none';
             
-            // 패널이 처음 열릴 때만 버튼 생성 (중복 방지)
             if(isHidden && panel.innerHTML === '') {
-                
-                // (1) 커스텀 사이즈 입력 영역
-                const customRow = document.createElement("div");
-                customRow.className = "custom-size-row";
-                // 1칸 배치에서도 가득 차게 설정
-                customRow.style.gridColumn = "1 / -1"; 
-                
-                customRow.innerHTML = `
-                    <input id="customW" class="custom-size-input" type="number" placeholder="가로(mm)">
-                    <input id="customH" class="custom-size-input" type="number" placeholder="세로(mm)">
-                    <button id="btnApplyCustom" class="custom-size-btn">적용</button>
-                `;
-                panel.appendChild(customRow);
-
-                // 커스텀 적용 이벤트
-                setTimeout(() => {
-                    const btnApply = document.getElementById("btnApplyCustom");
-                    const inputW = document.getElementById("customW");
-                    const inputH = document.getElementById("customH");
-                    
-                    if(btnApply) {
-                        btnApply.onclick = () => {
-                            const w_mm = parseInt(inputW.value);
-                            const h_mm = parseInt(inputH.value);
-                            
-                            if(!w_mm || !h_mm || w_mm <= 0 || h_mm <= 0) {
-                                return alert("유효한 사이즈를 입력해주세요.");
-                            }
-
-                            // mm -> px 변환 (72dpi 기준)
-                            const scaleFactor = 2.8333;
-                            const finalW = Math.round(w_mm * scaleFactor);
-                            const finalH = Math.round(h_mm * scaleFactor);
-
-                            requestChangeSize(finalW, finalH, `사용자 지정`, 'custom');
-                        };
-                    }
-                }, 100);
-
-                // (2) 프리셋 버튼 생성 (★ 수정된 부분: 텍스트 간소화)
+                // 커스텀 입력 부분은 위쪽 UI로 대체되었으므로 여기서는 프리셋 버튼만 생성
                 [...sizesStandard, ...sizesWall, ...sizesGoods].forEach(s => {
                     const btn = document.createElement('button');
                     btn.className = 'btn-round';
-                    // 버튼 스타일 조정
                     btn.style.padding = "10px";
                     btn.style.fontSize = "14px"; 
-                    btn.style.justifyContent = "center"; // 가운데 정렬
-                    
-                    // ★ 상세 사이즈 텍스트 제거하고 이름만 표시
+                    btn.style.justifyContent = "center";
                     btn.innerHTML = `<b>${s.name}</b>`;
-                    
                     btn.onclick = () => requestChangeSize(s.w, s.h, s.name, s.mode || 'standard');
                     panel.appendChild(btn);
                 });
@@ -121,6 +118,13 @@ export function initSizeControls() {
             if (!board) return;
             // 가로/세로 교환
             applySize(board.height, board.width, "Rotated", 'standard', 'resize');
+            
+            // [추가] 회전 시 입력창 값도 뒤집어주기 (UI 동기화)
+            if(inputW && inputH) {
+                const temp = inputW.value;
+                inputW.value = inputH.value;
+                inputH.value = temp;
+            }
         };
     }
 }
@@ -148,7 +152,7 @@ function requestChangeSize(w, h, name, mode) {
     if(panel) panel.style.display = 'none';
 }
 
-// 시작 화면 버튼 렌더링 (★ 모든 모드에 대해 openProductDetail 호출)
+// 시작 화면 버튼 렌더링
 function renderSizeButtons(containerId, list) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -161,7 +165,6 @@ function renderSizeButtons(containerId, list) {
             <div style="font-weight:bold; font-size:14px;">${item.name}</div>
             <div style="font-size:11px; color:#888; margin-top:5px;">${item.w} x ${item.h}</div>
         `;
-        // ★ 질문 창(Product Detail Modal) 열기 - DB에 있는 정보 사용
         div.onclick = () => openProductDetail(item.key, item.w, item.h, item.mode || 'standard');
         container.appendChild(div);
     });

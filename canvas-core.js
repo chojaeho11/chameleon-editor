@@ -9,6 +9,9 @@ export let currentMode = 'standard';
 export let currentSizeName = 'custom';
 export let isGuideOn = false;
 
+// [추가] 최대 허용 사이즈 (mm 단위 저장)
+export let maxLimitMM = { w: 0, h: 0 };
+
 export function initCanvas() {
     const stageElem = document.querySelector(".stage");
     const canvasElem = document.getElementById("designCanvas");
@@ -67,7 +70,14 @@ export function initCanvas() {
     console.log("✅ 캔버스 코어 초기화 완료");
 }
 
-// 사이즈 설정 함수들
+// [추가] 최대 사이즈 설정 함수 (주문 시작 시 호출됨)
+export function setMaxLimits(w_mm, h_mm) {
+    maxLimitMM.w = w_mm;
+    maxLimitMM.h = h_mm;
+    console.log(`🔒 최대 사이즈 제한 설정됨: ${w_mm} x ${h_mm} mm`);
+}
+
+// 기존 사이즈 설정 함수들
 export function setBaseSize(w, h) { baseW = w; baseH = h; }
 export function setGlobalSize(w, h) { setBaseSize(w, h); }
 export function setGlobalMode(mode) { currentMode = mode; }

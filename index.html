@@ -1366,6 +1366,23 @@ input, textarea, select {
 
     <div class="editor-wrap">
         <div class="side" id="toolsPanel">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:15px;">
+                <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px; display:flex; justify-content:space-between;">
+                    <span>📏 사이즈 변경 (mm)</span>
+                    <span id="limitLabel" style="color:#6366f1;">Max: -</span>
+                </div>
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <input type="number" id="inputUserW" class="ai-input-pretty" placeholder="가로" style="margin:0; padding:6px; font-size:13px; text-align:center;">
+                    <span style="color:#999;">x</span>
+                    <input type="number" id="inputUserH" class="ai-input-pretty" placeholder="세로" style="margin:0; padding:6px; font-size:13px; text-align:center;">
+                </div>
+                <button id="btnApplyUserSize" class="btn-round primary" style="width:100%; margin-top:8px; height:36px; font-size:13px;">
+                    적용하기 (가격동일)
+                </button>
+                <p style="font-size:11px; color:#94a3b8; margin:5px 0 0 0; line-height:1.3;">
+                    * 선택한 상품 크기 안에서만 조절 가능합니다.
+                </p>
+            </div>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
                 <button id="btnRotateCanvas" class="btn-round" style="flex:1;"><i class="fa-solid fa-rotate"></i> 캔버스 회전</button>
             </div>
@@ -1383,7 +1400,7 @@ input, textarea, select {
             <button class="btn-round" id="btnOpenSaveModal" style="margin-top:5px;">💾 디자인 저장</button>
             <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="margin-top: 5px; margin-bottom: 20px; width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1; font-weight: 800; flex-direction: column; height: auto; padding: 15px; gap: 5px;">
     <span style="font-size: 15px;"><i class="fa-solid fa-cloud-arrow-up"></i> 유저 로고 공유방</span>
-    <span style="font-size: 11px; font-weight: normal; color: #64748b;">(배경없는 로고 3개 등록하면 등업)</span>
+    <span style="font-size: 11px; font-weight: normal; color: #64748b;">(PNG로고 5개 등록하면 등업됩니다. 등업이 완료되면 고화질 PDF 다운로드가능.)</span>
 </button>
             
             <div class="section-title">BASIC TOOLS</div>
@@ -1703,7 +1720,8 @@ input, textarea, select {
 <script type="module" src="./main.js"></script>
 
 <script type="module">
-    import { canvas } from './canvas-core.js';
+    // setMaxLimits 추가됨
+    import { canvas, setMaxLimits } from './canvas-core.js';
     import { openProductDetail, startDesignFromProduct } from './order.js';
     import { applySize } from './canvas-size.js';
     import { sb, PRODUCT_DB, cartData, currentUser } from './config.js'; // cartData 추가 import
@@ -1985,21 +2003,46 @@ input, textarea, select {
 
     window.pendingTemplate = null; 
 
-    // 1. 에디터 진입 함수
     window.startEditorDirect = async function(key) {
         if (!key) return alert("상품 코드가 올바르지 않습니다.");
 
         window.currentProductKey = key;
         if(canvas) canvas.currentProductKey = key;
         
+        // DB에서 상품 정보 가져오기
         const product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
-        const width = product ? product.w : 210; 
-        const height = product ? product.h : 297;
+
+        // 1. UI 표시용 사이즈 (mm) 구하기
+        // w_mm(원본 mm)가 있으면 그걸 쓰고, 없으면 w를 그대로 씁니다. (절대 나누기 계산 하지 않음)
+        const displayW = product ? (product.w_mm || product.width_mm || product.w || 210) : 210;
+        const displayH = product ? (product.h_mm || product.height_mm || product.h || 297) : 297;
+
+        // 2. 캔버스 생성용 사이즈 (px) 구하기
+        // 고해상도 출력을 위해 픽셀값(w)을 사용합니다.
+        const canvasW = product ? (product.w || 210) : 210;
+        const canvasH = product ? (product.h || 297) : 297;
+
         const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
+
+        // 3. 최대 한계값 설정 (mm 단위)
+        if (typeof setMaxLimits === 'function') {
+            setMaxLimits(displayW, displayH);
+        }
         
-        // 캔버스 사이즈 적용
+        // 4. UI 텍스트 업데이트 (Max: 600x600 표시)
+        const limitLabel = document.getElementById("limitLabel");
+        if(limitLabel) limitLabel.innerText = `Max: ${displayW}x${displayH}`;
+        
+        // 5. 입력창 초기값 채우기 (600 입력됨)
+        const inpW = document.getElementById("inputUserW");
+        const inpH = document.getElementById("inputUserH");
+        if(inpW) inpW.value = displayW;
+        if(inpH) inpH.value = displayH;
+
+        // 6. 캔버스 크기 적용 (픽셀 단위 사용)
         if (window.applySize) {
-            window.applySize(width, height, key, mode, 'replace');
+            // 주의: 여기는 화면에 그릴 픽셀값(canvasW)을 넘겨야 합니다.
+            window.applySize(canvasW, canvasH, key, mode, 'replace');
         }
         
         // 화면 전환
@@ -2007,17 +2050,13 @@ input, textarea, select {
         document.getElementById("mainEditor").style.display = "flex";
         window.dispatchEvent(new Event('resize'));
 
-        // ★ [수정 포인트] window. 을 제거했습니다.
         if (window.pendingTemplate) {
             setTimeout(async () => {
-                // 여기서 window.applyTemplateDirectly -> applyTemplateDirectly 로 변경
                 if (typeof applyTemplateDirectly === 'function') {
                     await applyTemplateDirectly(window.pendingTemplate);
-                } else {
-                    console.error("템플릿 적용 함수를 찾을 수 없습니다.");
                 }
                 window.pendingTemplate = null; 
-            }, 300); // 딜레이를 100ms -> 300ms로 조금 늘려 안정성을 확보했습니다.
+            }, 300);
         }
     };
 
