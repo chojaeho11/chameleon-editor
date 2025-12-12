@@ -58,12 +58,7 @@ export function initAiTools() {
             const key = await getApiKey('OPENAI_API_KEY');
             if (!key) return alert("OpenAI 키를 DB(secrets)에서 찾을 수 없습니다.");
 
-            const STYLE_PROMPT = `
-Soft vector-style drawing, clean outlines, warm and friendly expression. Keep the main characters centered with generous white margins around them. 
-No cropping, no cut-off edges — full-body characters visible. 
-Soft pastel colors, simple shapes, kid-friendly design. 
-Illustration style similar to modern Christmas greeting card artwork. 
-High-resolution PNG with transparent background.
+            const STYLE_PROMPT = `누끼딸 수 있게 이미지와 대비대는 파스텔톤 화면 밖으로 나가지 않게 충분한 여백 백터 일러스트 단순한 이미지 생성
             `;
 
             const finalPrompt = `

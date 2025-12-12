@@ -163,7 +163,7 @@ button, input, textarea, select { font-family: inherit; }
 }
 .gallery-header::before, .gallery-header::after { content: ''; height: 2px; width: 40px; background: #e5e7eb; }
 
-.template-grid-start { column-count: 5; column-gap: 20px; width: 100%; }
+.template-grid-start { column-count: 6; column-gap: 20px; width: 100%; }
 .tpl-card-start {
     display: inline-block; width: 100%;
     background: #fff; border-radius: 16px; overflow: hidden;
@@ -803,3 +803,142 @@ button, input, textarea, select { font-family: inherit; }
     padding: 10px; font-size: 16px; outline: none; resize: none; font-family: inherit;
 }
 #mobileTextInput:focus { border-color: #6366f1; }
+/* =========================================
+   [추가] 결제 모달 계좌정보 스타일
+   ========================================= */
+.bank-transfer-container {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.bank-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.bank-info {
+    font-size: 16px;
+    font-weight: 800;
+    color: #333;
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.bank-name {
+    color: #f59e0b; /* 국민은행 느낌의 노란/주황 계열 포인트 */
+}
+
+.bank-num {
+    color: #1e293b;
+    letter-spacing: 0.5px;
+}
+
+.bank-owner {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.bank-note {
+    font-size: 11px;
+    color: #6366f1; /* 브랜드 컬러(Primary) 사용 */
+    background: #eff6ff;
+    padding: 5px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    line-height: 1.4;
+}
+/* [추가] 입금 확인 버튼 스타일 */
+.btn-bank-confirm {
+    margin-top: 15px;
+    background-color: #10b981; /* 신뢰감을 주는 초록색 */
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-size: 14px;
+    height: 45px;
+    width: 100%;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+    transition: all 0.2s;
+}
+
+.btn-bank-confirm:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+}
+/* =========================================
+   [추가] 메인 검색창 디자인 (크고 예쁘게)
+   ========================================= */
+.hero-search-wrap {
+    width: 100%;
+    max-width: 600px; /* 검색창 전체 너비 */
+    margin: 10px auto 40px; /* 위아래 여백 */
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15); /* 부드러운 보라색 그림자 */
+    border-radius: 50px;
+    background: #fff;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+/* 마우스 올리거나 클릭했을 때 강조 */
+.hero-search-wrap:hover,
+.hero-search-wrap:focus-within {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.25);
+    border-color: var(--primary); /* 보라색 테두리 */
+}
+
+.hero-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 18px 25px; /* 내부 여백을 키워서 통통하게 */
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    border-radius: 50px 0 0 50px;
+    outline: none !important;
+}
+
+.hero-search-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.hero-search-btn {
+    background: var(--primary); /* 보라색 배경 */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    margin: 5px; /* 입력창 안쪽으로 살짝 들어온 느낌 */
+    border-radius: 40px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hero-search-btn:hover {
+    background: var(--primary-dark);
+}

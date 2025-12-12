@@ -58,9 +58,24 @@
     </div>
     
     <div class="gallery-section">
-        <div class="gallery-header">함께 만드는 무료 에디터 - 카프</div>
-        <div id="startTemplateGrid" class="template-grid-start"></div>
+    <div class="gallery-header">함께 만드는 무료 에디터 - 카프</div>
+    
+    <div class="hero-search-wrap">
+        <input type="search" 
+               id="startSearchInput" 
+               class="hero-search-input" 
+               placeholder="어떤 디자인을 찾으세요? (예: 카페, 메뉴판, 여름)" 
+               autocomplete="off" 
+               readonly 
+               onfocus="this.removeAttribute('readonly');"
+        >
+        <button id="btnStartSearch" class="hero-search-btn">
+            <i class="fa-solid fa-magnifying-glass"></i> 검색
+        </button>
     </div>
+
+    <div id="startTemplateGrid" class="template-grid-start"></div>
+</div>
     <div class="footer-wrap">
         <div class="footer-inner">
             <div class="foot-left">
@@ -120,10 +135,13 @@
     
     <div style="flex:1;"></div>
 
+    <button class="btn" id="btnMyLibrary" style="margin-right:5px; background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
+        📂 <span class="pc-only">내 보관함</span>
+    </button>
+
     <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'" style="margin-right:5px; background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
         🛒 <span class="pc-only">장바구니</span>
     </button>
-
     <button class="btn primary" id="btnOrderTop" onclick="window.addToCartAndGo()" style="background:var(--primary); color:white; font-weight:bold; box-shadow:0 4px 12px rgba(99,102,241,0.4);">
         🚀 주문하기
     </button>
@@ -439,7 +457,50 @@
 </div>
 <div id="calendarModal" class="modal-bg" style="z-index: 12500;"><div class="modal-box"><h3>📅 배송요청 [제작기간 3일]</h3><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><button id="btnPrevMonth" class="btn-round" style="width:30px;">&lt;</button><span id="currentMonthYear" style="font-weight:bold;"></span><button id="btnNextMonth" class="btn-round" style="width:30px;">&gt;</button></div><div id="calendarGrid" class="calendar-grid"></div><button onclick="document.getElementById('calendarModal').style.display='none'" class="btn-round" style="margin-top:15px;">닫기</button></div></div>
 <div id="deliveryInfoModal" class="modal-bg" style="z-index: 12600;"><div class="modal-box" style="text-align:left;"><h3 style="text-align:center;">📝 배송 정보 입력</h3><p>담당자명</p><input id="inputManagerName" class="ai-input-pretty"><p>연락처</p><input id="inputManagerPhone" class="ai-input-pretty"><p>주소</p><input id="inputAddress" class="ai-input-pretty"><p>요청사항</p><textarea id="inputRequest" class="ai-input-pretty"></textarea><button id="btnSubmitOrderInfo" class="btn-round primary" style="margin-top:10px;">주문서 생성 및 결제</button><button onclick="document.getElementById('deliveryInfoModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
-<div id="checkoutModal" class="modal-bg" style="z-index: 13000;"><div class="modal-box" style="text-align:left;"><h3 style="text-align:center;">확인</h3><input id="orderName" class="ai-input-pretty" readonly><input id="orderPhone" class="ai-input-pretty" readonly><input id="orderAddr" class="ai-input-pretty" readonly><textarea id="orderMemo" class="ai-input-pretty" readonly></textarea><button id="btnRealPayment" class="btn-round primary">최종 결제</button><button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
+<div id="checkoutModal" class="modal-bg" style="z-index: 13000;">
+    <div class="modal-box" style="text-align:left;">
+        <h3 style="text-align:center; margin-bottom: 20px;">주문 확인 및 결제</h3>
+        
+        <label style="font-size:12px; color:#666; font-weight:bold;">주문자명</label>
+        <input id="orderName" class="ai-input-pretty" readonly>
+        
+        <label style="font-size:12px; color:#666; font-weight:bold;">연락처</label>
+        <input id="orderPhone" class="ai-input-pretty" readonly>
+        
+        <label style="font-size:12px; color:#666; font-weight:bold;">배송지</label>
+        <input id="orderAddr" class="ai-input-pretty" readonly>
+        
+        <label style="font-size:12px; color:#666; font-weight:bold;">요청사항</label>
+        <textarea id="orderMemo" class="ai-input-pretty" readonly></textarea>
+        
+        <button id="btnRealPayment" class="btn-round primary" style="margin-top:10px; height: 50px; font-size: 16px;">
+            💳 카드 / 간편결제 (바로결제)
+        </button>
+
+        <div class="bank-transfer-container">
+            <div class="bank-title">[계좌이체 안내]</div>
+            <div class="bank-info">
+                <span class="bank-name">국민은행</span>
+                <span class="bank-num">647701-04-277763</span>
+            </div>
+            <div class="bank-owner">예금주: 카멜레온프린팅 주식회사</div>
+            <div class="bank-note">
+                * 입금자명과 주문자명이 동일하면 즉시 입금이 확인됩니다.
+            </div>
+            
+            <button onclick="alert('입금 확인 요청이 접수되었습니다.\n에디터 화면으로 이동합니다.'); document.getElementById('checkoutModal').style.display='none';" class="btn-round btn-bank-confirm">
+                ✅ 입금했어요 확인해주세요
+            </button>
+        </div>
+
+        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
+    </div>
+</div>
+
+        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
+    </div>
+</div>
+</div>
 <div id="successModal" class="modal-bg" style="z-index: 14000;"><div class="modal-box"><h2>🎉 주문 완료!</h2><button id="btnDownOrderSheet" class="btn-round">📄 작업지시서 다운로드</button><button id="btnDownQuotation" class="btn-round" style="margin-top:5px;">📑 견적서 다운로드</button><button onclick="window.closeSuccessModal()" class="btn-round primary" style="margin-top:15px;">확인</button></div></div>
 <div id="sellModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>💎 디자인 등록</h3><input id="sellKw" class="ai-input-pretty" placeholder="#키워드"><button id="btnSellConfirm" class="btn-round primary">등록하기</button><button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
 <div id="fontModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>폰트 선택</h3><div id="fontList" style="max-height:300px; overflow-y:auto;"></div><button onclick="document.getElementById('fontModal').style.display='none'" class="btn-round" style="margin-top:10px;">닫기</button></div></div>
@@ -521,10 +582,11 @@
 
 <script type="module">
     // setMaxLimits 추가됨
+// setMaxLimits 추가됨
     import { canvas, setMaxLimits } from './canvas-core.js';
     import { openProductDetail, startDesignFromProduct } from './order.js';
     import { applySize } from './canvas-size.js';
-    import { sb, PRODUCT_DB, cartData, currentUser } from './config.js'; // cartData 추가 import
+    import { sb, PRODUCT_DB, cartData, currentUser } from './config.js';
 
     window.canvas = canvas;
     window.openProductDetail = openProductDetail;
@@ -536,25 +598,18 @@
     let selectedProductForChoice = null; // 선택된 상품 정보 저장용
 
     // ============================================================
-    // [1] 아이콘 매핑 (DB 코드에 맞는 아이콘 설정)
+    // [1] 아이콘 매핑
     // ============================================================
-
     const CATEGORY_ICONS = {
-        'honeycomb': 'https://cdn-icons-png.flaticon.com/512/9425/9425781.png',   // 허니콤 (박스/가벽 느낌)
-        'fabric': 'https://cdn-icons-png.flaticon.com/512/9069/9069036.png',      // 패브릭 (천/현수막)
-        'board': 'https://cdn-icons-png.flaticon.com/512/2665/2665873.png',       // 폼보드 (단단한 판)
-        'pet': 'https://cdn-icons-png.flaticon.com/512/2680/2680932.png',         // 배너 (돌돌 말린 것)
-        'default': 'https://cdn-icons-png.flaticon.com/512/3159/3159310.png'      // 기본값 (디자인 도구)
+        'honeycomb': 'https://cdn-icons-png.flaticon.com/512/9425/9425781.png',
+        'fabric': 'https://cdn-icons-png.flaticon.com/512/9069/9069036.png',
+        'board': 'https://cdn-icons-png.flaticon.com/512/2665/2665873.png',
+        'pet': 'https://cdn-icons-png.flaticon.com/512/2680/2680932.png',
+        'default': 'https://cdn-icons-png.flaticon.com/512/3159/3159310.png'
     };
 
     // ============================================================
-    // [2] 시작 화면: 카테고리 목록 (4가지 그룹으로 정밀 분류)
-    // ============================================================
-    // ============================================================
-    // [2] 시작 화면: 카테고리 목록 (V3: 귀여운 3D 아이콘 + 정밀 분류)
-    // ============================================================
-    // ============================================================
-    // [2] 시작 화면: 카테고리 목록 (Icons8 귀여운 3D 아이콘 적용)
+    // [2] 시작 화면: 카테고리 목록
     // ============================================================
     async function renderQuickMenu() {
         const container = document.getElementById('quickMenuContainer');
@@ -575,30 +630,17 @@
 
         categories.forEach(cat => {
             const n = cat.name; 
-            // 기본값 (연필/도구)
             let iconUrl = 'https://th.bing.com/th/id/OIP.Jj5QUnowN2oCX56cVuo45wHaHa?w=197&h=197&c=7&r=0&o=7&pid=1.7&rm=3'; 
 
-            // ---------------------------------------------------------
-            // [그룹 1] 허니콤보드/판넬 (귀여운 나무 간판/보드 느낌)
-            // ---------------------------------------------------------
             if (n.includes('허니콤') || n.includes('가벽') || n.includes('등신대') || n.includes('스카시') || n.includes('박스') || n.includes('판넬') || n.includes('테이블')) {
-                iconUrl = 'data:image/png;base64,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'; 
+                iconUrl = 'https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20241009_270%2F17284630974014y3f0_JPEG%2F1000190590.jpg&type=sc960_832'; 
             } 
-            // ---------------------------------------------------------
-            // [그룹 2] 패브릭/광목/백아이 (동그란 분홍 털실)
-            // ---------------------------------------------------------
             else if (n.includes('광목') || n.includes('쉬폰') || n.includes('린넨') || n.includes('캔버스') || n.includes('패브릭') || n.includes('텍') || n.includes('화이트') || n.includes('네츄럴') || n.includes('백아이')) {
                 iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWV5d7OPwqIbTMcek_s71sum2bh8Zh7CFGA&s'; 
             }
-            // ---------------------------------------------------------
-            // [그룹 3] 디스플레이 매대 (귀여운 상점/가판대)
-            // ---------------------------------------------------------
             else if (n.includes('매대') || n.includes('거치대') || n.includes('진열') || n.includes('다이') || n.includes('철제') || n.includes('스탠드')) {
                 iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6MsafK1Bk4flaRnwnJ6yHsY_HHtS_rZ3lbA&s'; 
             }
-            // ---------------------------------------------------------
-            // [그룹 4] 인쇄물/현수막 (말려있는 종이/스크롤)
-            // ---------------------------------------------------------
             else if (n.includes('현수막') || n.includes('배너') || n.includes('리플렛') || n.includes('포맥스') || n.includes('폼보드') || n.includes('포스터') || n.includes('아크릴')) {
                 iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-0q3W2v3GAdaDgS-5NpX3tfxYN_qTmh6cdA&s'; 
             }
@@ -606,7 +648,6 @@
             const div = document.createElement('div');
             div.className = 'quick-item';
             
-            // 이미지 크기를 조금 키워서(45px) 더 귀엽게 보이게 조정했습니다.
             div.innerHTML = `
                 <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9;">
                     <img src="${iconUrl}" style="width:45px; height:45px; object-fit:contain;">
@@ -618,11 +659,9 @@
             container.appendChild(div);
         });
     }
+
     // ============================================================
-    // [3] 제품 선택 모달 (수정됨: 큰 이미지 + 잘림 방지 + 에디터 연결)
-    // ============================================================
-    // ============================================================
-    // [3] 제품 선택 모달 (수정됨: 깔끔한 아이콘 스타일)
+    // [3] 제품 선택 모달
     // ============================================================
     window.showCategoryProducts = async function(catKey, catName) {
         const grid = document.getElementById('catProductGrid');
@@ -631,14 +670,12 @@
         
         if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span> 사이즈 선택`;
         
-        // ★ [디자인 복구] 한 줄에 4개씩 나오도록 설정
         grid.style.gridTemplateColumns = "repeat(4, 1fr)"; 
         grid.style.gap = "12px";
 
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">로딩 중...</div>';
         modal.style.display = 'flex';
 
-        // DB 조회
         const { data: products, error } = await sb.from('admin_products')
             .select('*')
             .eq('category', catKey)
@@ -651,9 +688,7 @@
             return;
         }
 
-        // 카드 생성
         products.forEach(p => {
-            // 전역 DB 등록
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             window.PRODUCT_DB[p.code] = {
                 name: p.name, w: p.width_mm, h: p.height_mm, price: p.price,
@@ -661,10 +696,8 @@
             };
 
             const div = document.createElement('div');
-            // 시작화면 버튼과 똑같은 클래스(.quick-item) 사용 -> 디자인 통일
             div.className = 'quick-item'; 
             
-            // 깔끔한 아이콘 + 이름 + (작게 가격 표시)
             div.innerHTML = `
                 <div class="quick-icon"><i class="fa-solid fa-cube"></i></div>
                 <div class="quick-text">${p.name}</div>
@@ -673,16 +706,13 @@
                 </div>
             `;
 
-            // 클릭 시 에디터 연결
             div.onclick = () => {
-                modal.style.display = 'none'; // 목록 닫기
-                
+                modal.style.display = 'none'; 
                 window.currentProductKey = p.code;
                 window.selectedProductForChoice = window.PRODUCT_DB[p.code];
 
                 if(!p.code) return alert("상품 코드가 없습니다.");
 
-                // 바로 에디터로 진입 (또는 선택 모달)
                 if(window.showChoiceModal) {
                     window.showChoiceModal(p.code);
                 } else {
@@ -695,68 +725,58 @@
     };
 
     // ============================================================
-    // [4] 작업 방식 선택 모달 (유지)
+    // [4] 작업 방식 선택 모달
     // ============================================================
     window.showChoiceModal = function(key) {
-    window.currentProductKey = key;
-    window.selectedProductForChoice = window.PRODUCT_DB[key];
-    
-    if (!window.selectedProductForChoice) return alert("상품 정보를 불러오는 중입니다. 다시 시도해주세요.");
-    
-    // [추가됨] 상품명 표시
-    const nameEl = document.getElementById('choiceProdName');
-    if(nameEl) nameEl.innerText = window.selectedProductForChoice.name;
+        window.currentProductKey = key;
+        window.selectedProductForChoice = window.PRODUCT_DB[key];
+        
+        if (!window.selectedProductForChoice) return alert("상품 정보를 불러오는 중입니다. 다시 시도해주세요.");
+        
+        const nameEl = document.getElementById('choiceProdName');
+        if(nameEl) nameEl.innerText = window.selectedProductForChoice.name;
 
-    // [추가됨] 이미지 주소(DB에서 가져온 img_url)를 img 태그에 넣기
-    const imgEl = document.getElementById('choiceProductImg');
-    if(imgEl) {
-        // 이미지가 없으면 기본 플레이스홀더 사용
-        imgEl.src = window.selectedProductForChoice.img || 'https://placehold.co/400?text=No+Image';
-    }
+        const imgEl = document.getElementById('choiceProductImg');
+        if(imgEl) {
+            imgEl.src = window.selectedProductForChoice.img || 'https://placehold.co/400?text=No+Image';
+        }
 
-    document.getElementById('choiceModal').style.display = 'flex';
-};
+        document.getElementById('choiceModal').style.display = 'flex';
+    };
 
     window.confirmChoice = function(mode) {
         if (!window.selectedProductForChoice) return alert("상품 정보가 없습니다.");
 
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
-            // ★ 중요: window.startEditorDirect 호출
             window.startEditorDirect(window.selectedProductForChoice.key || window.currentProductKey);
         } else {
             const input = document.getElementById('directUploadInput');
             if(input) input.click();
         }
     };
-    // [추가됨] 파일 선택 시 장바구니로 이동하는 로직
+
+    // 파일 선택 시 장바구니 이동
     const directUploadInput = document.getElementById("directUploadInput");
-    
     if (directUploadInput) {
-        // 기존에 혹시 연결된 이벤트가 있다면 덮어씌웁니다.
         directUploadInput.onchange = function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // 선택된 상품 정보 가져오기
             const product = window.selectedProductForChoice;
             if (!product) return alert("상품 정보가 없습니다.");
 
-            // 로딩 표시
             const loading = document.getElementById("loading");
             if (loading) loading.style.display = "flex";
 
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const fileDataURI = evt.target.result;
-                
-                // 썸네일 처리
                 let thumbUrl = 'https://placehold.co/100?text=FILE';
                 if (file.type.startsWith('image/')) {
                     thumbUrl = fileDataURI;
                 }
 
-                // 장바구니 아이템 생성
                 const newItem = {
                     uid: Date.now(),
                     product: product,
@@ -770,11 +790,8 @@
                     isOpen: true
                 };
 
-                // 전역 장바구니 배열에 추가 (config.js에서 가져온 변수 사용)
                 if (typeof cartData !== 'undefined') {
                     cartData.push(newItem);
-                    
-                    // 로컬 스토리지 저장
                     try {
                         const user = typeof currentUser !== 'undefined' ? currentUser : null;
                         const storageKey = user ? `chameleon_cart_${user.id}` : 'chameleon_cart_guest';
@@ -782,24 +799,15 @@
                     } catch(err) { console.error(err); }
                 }
 
-                // 화면 전환
                 if (window.renderCart) window.renderCart();
                 document.getElementById('choiceModal').style.display = 'none';
                 document.getElementById('cartPage').style.display = 'block';
-                
                 if (loading) loading.style.display = "none";
-                
-                // 입력창 초기화 (같은 파일 다시 선택 가능하도록)
                 directUploadInput.value = ''; 
             };
-            
             reader.readAsDataURL(file);
         };
     }
-
-    // ==========================================================
-    // [3번 수정 - 수정됨] 템플릿 및 에디터 진입 로직
-    // ==========================================================
 
     window.pendingTemplate = null; 
 
@@ -809,43 +817,30 @@
         window.currentProductKey = key;
         if(canvas) canvas.currentProductKey = key;
         
-        // DB에서 상품 정보 가져오기
         const product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
 
-        // 1. UI 표시용 사이즈 (mm) 구하기
-        // w_mm(원본 mm)가 있으면 그걸 쓰고, 없으면 w를 그대로 씁니다. (절대 나누기 계산 하지 않음)
         const displayW = product ? (product.w_mm || product.width_mm || product.w || 210) : 210;
         const displayH = product ? (product.h_mm || product.height_mm || product.h || 297) : 297;
-
-        // 2. 캔버스 생성용 사이즈 (px) 구하기
-        // 고해상도 출력을 위해 픽셀값(w)을 사용합니다.
         const canvasW = product ? (product.w || 210) : 210;
         const canvasH = product ? (product.h || 297) : 297;
-
         const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
 
-        // 3. 최대 한계값 설정 (mm 단위)
         if (typeof setMaxLimits === 'function') {
             setMaxLimits(displayW, displayH);
         }
         
-        // 4. UI 텍스트 업데이트 (Max: 600x600 표시)
         const limitLabel = document.getElementById("limitLabel");
         if(limitLabel) limitLabel.innerText = `Max: ${displayW}x${displayH}`;
         
-        // 5. 입력창 초기값 채우기 (600 입력됨)
         const inpW = document.getElementById("inputUserW");
         const inpH = document.getElementById("inputUserH");
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
-        // 6. 캔버스 크기 적용 (픽셀 단위 사용)
         if (window.applySize) {
-            // 주의: 여기는 화면에 그릴 픽셀값(canvasW)을 넘겨야 합니다.
             window.applySize(canvasW, canvasH, key, mode, 'replace');
         }
         
-        // 화면 전환
         document.getElementById("startScreen").style.display = "none";
         document.getElementById("mainEditor").style.display = "flex";
         window.dispatchEvent(new Event('resize'));
@@ -860,24 +855,19 @@
         }
     };
 
-    // 2. 템플릿 클릭 핸들러
     window.onTemplateClick = async function(tpl) {
         const startScreen = document.getElementById('startScreen');
         const isEditorOpen = startScreen && window.getComputedStyle(startScreen).display === 'none';
 
         if (isEditorOpen) {
-            // 에디터 상태: 바로 적용
             if(!confirm("현재 캔버스에 템플릿을 적용하시겠습니까?\n(기존 디자인 위에 추가됩니다)")) return;
-            // 여기도 window. 없이 호출
             await applyTemplateDirectly(tpl);
         } else {
-            // 시작 화면: 선택 모달 띄우기
             window.pendingTemplate = tpl; 
             showCategorySelectionModal(); 
         }
     };
 
-    // 3. "무엇을 만들까요?" 모달
     async function showCategorySelectionModal() {
         const modal = document.getElementById('categoryDetailModal');
         const grid = document.getElementById('catProductGrid');
@@ -989,26 +979,69 @@
         document.getElementById('templateOverlay').style.display = 'none';
     }
 
+    // ============================================================
+    // [수정] 메인 로드 이벤트 & 템플릿 로드 함수
+    // ============================================================
     window.addEventListener('load', async () => {
         await new Promise(r => setTimeout(r, 500));
         renderQuickMenu();
-        loadTemplates('startTemplateGrid', false);
+        loadTemplates('startTemplateGrid', false); // 초기 로드
         window.preloadKoreanFont();
+
+        // [추가] 검색 버튼 및 엔터키 이벤트 연결
+        const searchBtn = document.getElementById('btnStartSearch');
+        const searchInput = document.getElementById('startSearchInput');
+
+        if (searchBtn && searchInput) {
+            const doSearch = () => {
+                loadTemplates('startTemplateGrid', false, searchInput.value);
+            };
+
+            searchBtn.onclick = doSearch;
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') doSearch();
+            });
+        }
     });
 
-    async function loadTemplates(containerId, isModal = false) {
+    // [수정] 템플릿 로드 (검색어 처리 + 50개 로드)
+    async function loadTemplates(containerId, isModal = false, keyword = null) {
         const grid = document.getElementById(containerId);
         if (!grid) return;
-        grid.innerHTML = 'Loading...';
+        
+        grid.innerHTML = '<div style="text-align:center; padding:20px; grid-column:1/-1;">Loading...</div>';
+        
         if (!sb) await new Promise(r => setTimeout(r, 500)); 
-        const { data } = await sb.from('library').select('id, thumb_url, category').order('created_at', { ascending: false }).limit(50);
-        if (!data) { grid.innerHTML = 'No Data'; return; }
+
+        // 쿼리 작성 (50개 제한)
+        let query = sb.from('library')
+            .select('id, thumb_url, category, tags')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        // 검색어가 있으면 태그 필터링 (ilike)
+        if (keyword && keyword.trim() !== '') {
+            query = query.ilike('tags', `%${keyword.trim()}%`);
+        }
+
+        const { data, error } = await query;
+
         grid.innerHTML = '';
+
+        if (!data || data.length === 0) { 
+            grid.innerHTML = '<div style="text-align:center; padding:20px; color:#888; grid-column:1/-1;">검색 결과가 없습니다.</div>'; 
+            return; 
+        }
+        
         data.forEach(tpl => {
             const card = document.createElement('div');
             card.className = isModal ? 'tpl-item' : 'tpl-card-start';
             let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
-            card.innerHTML = isModal ? `<img src="${imgSrc}" class="tpl-item-img">` : `<img src="${imgSrc}" class="tpl-card-img"><div class="tpl-card-overlay"></div>`;
+            
+            card.innerHTML = isModal 
+                ? `<img src="${imgSrc}" class="tpl-item-img">` 
+                : `<img src="${imgSrc}" class="tpl-card-img"><div class="tpl-card-overlay"></div>`;
+            
             card.onclick = () => { if(window.onTemplateClick) window.onTemplateClick(tpl); };
             grid.appendChild(card);
         });
@@ -1022,7 +1055,7 @@
     if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     window.koreanFontCache = null;
     window.preloadKoreanFont = async function() { try { const r = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf'); if(r.ok) { const b = await r.blob(); const rd = new FileReader(); rd.onloadend = function() { window.koreanFontCache = rd.result.split(',')[1]; }; rd.readAsDataURL(b); } } catch(e) {} };
-    window.loadKoreanFontForPDF = async function(doc) { if(window.koreanFontCache) { try { doc.addFileToVFS('NanumGothic.ttf', window.koreanFontCache); doc.addFont('NanumGothic.ttf', 'NanumGothic', 'normal'); doc.addFont('NanumGothic.ttf', 'NanumGothic', 'bold'); doc.setFont('NanumGothic'); } catch(e) {} } };
+    window.loadKoreanFontForPDF = async function(doc) { if(window.koreanFontCache) { try { doc.addFileToVFS('NanumGothic.ttf', window.koreanFontCache); doc.addFont('NanumGothic.ttf', 'NanumGothic', 'normal'); doc.addFont('NanumGothic.ttf', 'NanumGothic', 'bold'); doc.setFont('NanumGothic'); } catch(e) {} } };    
 </script>
 <script>
     document.addEventListener('click', function(e) {
