@@ -475,6 +475,7 @@ function updateSummary(total) {
 }
 
 // [5] 주문 제출 및 결제 실행
+// [5] 주문 제출 및 결제 실행
 async function processOrderSubmission() {
     const manager = document.getElementById("inputManagerName").value;
     const phone = document.getElementById("inputManagerPhone").value;
@@ -491,8 +492,46 @@ async function processOrderSubmission() {
     let newOrderId = null;
     
     try {
+        // [수정] 1. 저장할 아이템 데이터와 총 금액 계산
+        let calculatedTotal = 0;
+        
+        // DB에 저장할 형태로 장바구니 데이터를 정리합니다 (불필요한 데이터 제외)
+        const itemsToSave = cartData.map(item => {
+            let itemPrice = item.product.price || 0;
+            // 옵션 가격 추가
+            if(item.selectedAddons) {
+                Object.values(item.selectedAddons).forEach(code => {
+                    const addon = ADDON_DB[code];
+                    if(addon) itemPrice += addon.price;
+                });
+            }
+            
+            calculatedTotal += itemPrice * (item.qty || 1);
+
+            return {
+                product: { 
+                    name: item.product.name, 
+                    price: item.product.price,
+                    code: item.product.code || item.product.key // 상품 코드 저장
+                },
+                qty: item.qty || 1,
+                price: itemPrice, // 옵션 포함 단가
+                selectedAddons: item.selectedAddons || {}, // 선택된 옵션 코드들
+                productName: item.product.name // 관리자 페이지 호환성용
+            };
+        });
+
+        // [수정] 2. insert 부분에 items와 total_amount 추가
         const { data: orderData, error: orderError } = await sb.from('orders').insert([{ 
-            order_date: selectedDeliveryDate, manager_name: manager, phone, address, request_note: request, status: '파일처리중', files: [] 
+            order_date: selectedDeliveryDate, 
+            manager_name: manager, 
+            phone, 
+            address, 
+            request_note: request, 
+            status: '파일처리중', 
+            files: [],
+            items: itemsToSave,          // <--- 여기가 추가됨
+            total_amount: calculatedTotal // <--- 여기가 추가됨
         }]).select();
         
         if (orderError) throw orderError; 
@@ -503,6 +542,8 @@ async function processOrderSubmission() {
         const uploadedFiles = [];
         
         btn.innerText = "문서 생성 중...";
+        
+        // ... (이하 문서 생성 및 파일 업로드 로직은 기존과 동일) ...
         try { 
             const orderSheetBlob = await generateOrderSheetPDF({ date: selectedDeliveryDate, manager, phone, address, note: request }, cartData); 
             if(orderSheetBlob) { 
