@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#6366f1">
+    
+    <title>배송 파트너</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    
+    <style>
+        /* 앱스러운 UI 디자인 */
+        body { margin: 0; background: #f1f5f9; font-family: 'Pretendard', sans-serif; color: #334155; -webkit-tap-highlight-color: transparent; padding-bottom: 30px; }
+        
+        /* 상단 네비게이션 바 */
+        .navbar { background: #6366f1; color: white; padding: 15px 20px; padding-top: env(safe-area-inset-top, 20px); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(99,102,241,0.3); }
+        .app-header { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        
+        /* 컨트롤 패널 (기사선택/날짜) */
+        .controls { background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
+        .form-row { display: flex; gap: 10px; }
+        .input-box { border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 14px; width: 100%; background: #f8fafc; color: #333; outline: none; }
+        .input-box:focus { border-color: #6366f1; }
+
+        /* 리스트 영역 */
+        .task-list { padding: 0 15px; }
+        .task-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; position: relative; overflow: hidden; transition: 0.2s; }
+        .task-card.completed { border: 2px solid #22c55e; background: #f0fdf4; }
+        
+        .status-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; background: #e2e8f0; color: #64748b; margin-bottom: 10px; }
+        .status-tag.active { background: #e0e7ff; color: #4338ca; }
+        .status-tag.done { background: #22c55e; color: white; }
+
+        .client-name { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 5px; }
+        .client-addr { font-size: 14px; color: #64748b; line-height: 1.5; display: flex; align-items: start; gap: 5px; }
+        .note-box { background: #fff1f2; color: #be123c; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 10px; line-height: 1.4; border: 1px solid #fecdd3; }
+
+        /* 액션 버튼 그룹 */
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .action-btn { padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: 0.1s; }
+        .btn-call { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+        .btn-map { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+        .btn-call:active, .btn-map:active { transform: scale(0.98); }
+
+        /* 시간 선택 & 완료 버튼 */
+        .time-select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: 2px solid #e2e8f0; font-weight: bold; color: #334155; background: #fff; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right .7em top 50%; background-size: .65em auto; }
+        
+        .finish-btn { width: 100%; margin-top: 10px; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; color: white; background: #1e293b; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .finish-btn.done { background: #22c55e; pointer-events: none; }
+        .finish-btn:active { transform: scale(0.98); }
+
+        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div id="loading">
+    <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color:#6366f1;"></i>
+    <div style="font-weight:bold; color:#6366f1;">데이터 불러오는 중...</div>
+</div>
+
+<div class="navbar">
+    <div class="app-header">
+        <div class="logo"><i class="fa-solid fa-box"></i> 배송 파트너</div>
+        <div style="font-size:13px; opacity:0.8;">v1.0</div>
+    </div>
+</div>
+
+<div class="controls">
+    <div style="font-size:12px; font-weight:bold; color:#64748b; margin-bottom:5px;">작업 설정</div>
+    <div class="form-row">
+        <select id="driverSelect" class="input-box" onchange="saveDriverAndLoad()">
+            <option value="">기사님 선택...</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <input type="date" id="workDate" class="input-box" onchange="loadMyTasks()">
+    </div>
+</div>
+
+<div id="taskList" class="task-list"></div>
+
+<script type="module">
+    import { sb, initConfig } from "./config.js";
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        await initConfig();
+        
+        // 날짜 기본값 세팅
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('workDate').value = today;
+
+        await loadDriverList();
+        
+        // 저장된 기사님 ID 있으면 자동 로드
+        const savedDriverId = localStorage.getItem('my_driver_id');
+        if(savedDriverId) {
+            document.getElementById('driverSelect').value = savedDriverId;
+            loadMyTasks();
+        } else {
+            document.getElementById('loading').style.display = 'none';
+        }
+    });
+
+    // 기사님 목록 로드
+    async function loadDriverList() {
+        const { data } = await sb.from('admin_staff').select('*').eq('role', 'driver');
+        const sel = document.getElementById('driverSelect');
+        if(data) {
+            data.forEach(d => {
+                sel.innerHTML += `<option value="${d.id}">${d.name} 기사님</option>`;
+            });
+        }
+    }
+
+    // 기사 선택 시 저장 및 로드
+    window.saveDriverAndLoad = () => {
+        const id = document.getElementById('driverSelect').value;
+        if(id) localStorage.setItem('my_driver_id', id);
+        loadMyTasks();
+    };
+
+    // 데이터 로드
+    window.loadMyTasks = async () => {
+        const driverId = document.getElementById('driverSelect').value;
+        const date = document.getElementById('workDate').value;
+        
+        if(!driverId) return;
+        document.getElementById('loading').style.display = 'flex';
+
+        // 해당 기사 + 해당 날짜(delivery_target_date) 주문 조회
+        const { data: orders, error } = await sb.from('orders')
+            .select('*')
+            .eq('staff_driver_id', driverId)
+            .eq('delivery_target_date', date)
+            .order('delivery_time', {ascending: true}); // 시간순 정렬
+
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+
+        if(!orders || orders.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-mug-hot fa-3x" style="margin-bottom:15px; opacity:0.5;"></i><br>
+                    <strong>오늘은 배송 일정이 없습니다.</strong><br>
+                    <small>날짜를 확인하거나 관리자에게 문의하세요.</small>
+                </div>`;
+        } else {
+            orders.forEach(o => {
+                const isDone = o.status === '배송완료';
+                const timeVal = o.delivery_time || '';
+                
+                // 시간 옵션 생성
+                let timeOptions = `<option value="">⏱️ 도착 예정 시간 입력</option>`;
+                for(let i=8; i<=22; i+=1) { // 1시간 간격
+                     let t = (i<10?'0'+i:i) + ":00";
+                     let t_next = (i+1<10?'0'+(i+1):(i+1)) + ":00";
+                     timeOptions += `<option value="${t}" ${timeVal===t?'selected':''}>${t} ~ ${t_next}</option>`;
+                }
+
+                // 카드 HTML 생성
+                list.innerHTML += `
+                    <div class="task-card ${isDone ? 'completed' : ''}">
+                        <span class="status-tag ${isDone ? 'done' : 'active'}">
+                            ${isDone ? '배송완료' : '배송중'}
+                        </span>
+                        
+                        <div class="client-name">${o.manager_name}</div>
+                        <div class="client-addr">
+                            <i class="fa-solid fa-map-pin" style="margin-top:3px; color:#ef4444;"></i> 
+                            ${o.address}
+                        </div>
+                        
+                        ${o.request_note ? `<div class="note-box"><i class="fa-solid fa-bullhorn"></i> ${o.request_note}</div>` : ''}
+
+                        <select class="time-select" onchange="updateDeliveryTime('${o.id}', this.value)" ${isDone?'disabled':''}>
+                            ${timeOptions}
+                        </select>
+
+                        <div class="btn-group">
+                            <a href="tel:${o.phone}" class="action-btn btn-call">
+                                <i class="fa-solid fa-phone"></i> 전화걸기
+                            </a>
+                            <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address)}" target="_blank" class="action-btn btn-map">
+                                <i class="fa-solid fa-map"></i> 지도보기
+                            </a>
+                        </div>
+
+                        <button class="finish-btn ${isDone?'done':''}" onclick="toggleComplete('${o.id}', '${o.status}')">
+                            ${isDone ? '<i class="fa-solid fa-check"></i> 완료된 배송입니다' : '📦 배송 완료 처리'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+        document.getElementById('loading').style.display = 'none';
+    };
+
+    // 시간 업데이트 -> 관리자 DB에 즉시 반영
+    window.updateDeliveryTime = async (orderId, time) => {
+        if(!time) return;
+        // 사용자 확인 없이 바로 저장해도 되지만, UX상 잠시 로딩 보여주거나 토스트 메시지 띄우는게 좋음
+        const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
+        if(error) alert("저장 실패");
+    };
+
+    // 완료 처리 -> 관리자 DB에 즉시 반영
+    window.toggleComplete = async (orderId, currentStatus) => {
+        if(currentStatus === '배송완료') return;
+        if(!confirm("배송을 완료 처리 하시겠습니까?\n(관리자 페이지에 즉시 반영됩니다)")) return;
+
+        // 상태 업데이트
+        const { error } = await sb.from('orders').update({ status: '배송완료' }).eq('id', orderId);
+        
+        if(error) alert("오류 발생: " + error.message);
+        else {
+            loadMyTasks(); // 화면 새로고침
+        }
+    };
+</script>
+
+</body>
+</html>

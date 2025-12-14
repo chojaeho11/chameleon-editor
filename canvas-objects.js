@@ -284,11 +284,14 @@ function initTextHandlers() {
     if(alignRight) alignRight.onclick = () => applyToSelection("textAlign", "right");
 
     // [★ 글자 테두리 버튼 - "복제 & 그룹" 방식 적용]
+    // canvas-objects.js 내부
+
+    // [★ 글자 및 도형 테두리 버튼 - "복제 & 그룹" 방식 적용]
     const btnOutline = document.getElementById("btnOutline");
     if (btnOutline) {
         btnOutline.onclick = () => {
             const active = canvas.getActiveObject();
-            if (!active) return;
+            if (!active) return alert("객체를 선택해주세요.");
 
             // 1. 이미 아웃라인 그룹이면 -> 해제 (테두리 삭제)
             if (active.type === 'group' && active.isOutlineGroup) {
@@ -306,34 +309,46 @@ function initTextHandlers() {
                     canvas.discardActiveObject();
                     canvas.setActiveObject(original);
                 }
-                document.getElementById("globalStroke").value = 0;
+                
+                // UI 초기화
+                const strokeInput = document.getElementById("globalStroke");
+                if(strokeInput) strokeInput.value = 0;
+                
                 canvas.requestRenderAll();
                 return;
             }
 
-            // 2. 일반 텍스트면 -> 아웃라인 그룹 생성
-            if (active.type === 'i-text' || active.type === 'text') {
+            // 2. 텍스트 또는 도형이면 -> 아웃라인 그룹 생성
+            // 허용할 타입 목록 정의
+            const allowedTypes = ['i-text', 'text', 'textbox', 'rect', 'circle', 'triangle', 'path', 'polygon'];
+            
+            if (allowedTypes.includes(active.type)) {
                 active.clone((cloned) => {
-                    // 클론 (뒤쪽, 테두리용)
+                    // 클론 (뒤쪽, 테두리용) 설정
                     cloned.set({
                         fill: 'transparent', // 면 없음
-                        stroke: '#ffffff',   // 흰색 테두리
-                        strokeWidth: 6,      // 두껍게 (뒤에 있으므로 절반만 보임)
-                        strokeLineJoin: 'round',
+                        stroke: '#ffffff',   // 흰색 테두리 기본값
+                        strokeWidth: 10,      // 두께 (뒤에 있으므로 절반만 보임 -> 좀 더 두껍게 설정)
+                        strokeLineJoin: 'round', // 기본 둥글게
                         strokeLineCap: 'round',
                         isOutlineClone: true,
                         selectable: false,
-                        evented: false
+                        evented: false,
+                        left: active.left,   // 위치 동기화
+                        top: active.top,
+                        angle: active.angle,
+                        scaleX: active.scaleX,
+                        scaleY: active.scaleY
                     });
 
-                    // 원본 (앞쪽, 글씨용)
+                    // 원본 (앞쪽, 면 채우기용) 설정
                     active.set({
-                        stroke: null,
+                        stroke: null,        // 원본은 테두리 제거
                         strokeWidth: 0,
                         isOutlineClone: false
                     });
                     
-                    // 그룹핑
+                    // 그룹핑 (중앙 기준 정렬)
                     const group = new fabric.Group([cloned, active], {
                         isOutlineGroup: true,
                         originX: 'center', 
@@ -342,12 +357,14 @@ function initTextHandlers() {
                         top: active.top
                     });
 
-                    canvas.remove(active);
-                    canvas.add(group);
+                    canvas.remove(active); // 기존 객체 제거
+                    canvas.add(group);     // 그룹 추가
                     canvas.setActiveObject(group);
                     
-                    document.getElementById("globalStroke").value = 6;
                     // UI 싱크
+                    const strokeInput = document.getElementById("globalStroke");
+                    if(strokeInput) strokeInput.value = 10;
+                    
                     const strokeColorPicker = document.getElementById("strokeColor");
                     if(strokeColorPicker) strokeColorPicker.value = "#ffffff";
                     

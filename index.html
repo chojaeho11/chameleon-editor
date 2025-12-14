@@ -325,7 +325,7 @@
         <div class="side" id="toolsPanel">
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:15px;">
                 <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px; display:flex; justify-content:space-between;">
-                    <span>📏 사이즈 변경 (mm)</span>
+                    <span>📏 사이즈 변경(mm)</span>
                     <span id="limitLabel" style="color:#6366f1;">Max: -</span>
                 </div>
                 <div style="display:flex; gap:5px; align-items:center;">
@@ -334,10 +334,10 @@
                     <input type="number" id="inputUserH" class="ai-input-pretty" placeholder="세로" style="margin:0; padding:6px; font-size:13px; text-align:center;">
                 </div>
                 <button id="btnApplyUserSize" class="btn-round primary" style="width:100%; margin-top:8px; height:36px; font-size:13px;">
-                    적용하기 (가격동일)
+                    클릭! 비용 아끼기
                 </button>
                 <p style="font-size:11px; color:#94a3b8; margin:5px 0 0 0; line-height:1.3;">
-                    * 선택한 상품 크기 안에서만 조절 가능합니다.
+                    사이즈 변경 후 남는공간에 또 다른 제품 제작가능.네모구멍 재단선으로 사용도 가능합니다.
                 </p>
             </div>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -361,11 +361,44 @@
 </button>
             
             <div class="section-title">BASIC TOOLS</div>
-            <button class="btn-round" id="btnAddText">+ 텍스트 추가</button>
-            <button class="btn-round" id="btnFontSelect" style="margin-top:5px;">🅰️ 폰트 변경</button>
-            <div class="color-group"><span>면 색상</span><input id="fillColor" type="color" class="color-picker" value="#000000"></div>
-            <div class="color-group" style="margin-top:5px;"><span>선 색상</span><input id="strokeColor" type="color" class="color-picker" value="#000000"></div>
-            
+
+<div style="display:flex; gap:5px; margin-bottom:10px;">
+    <button class="btn-round" id="btnAddText" style="flex:1; justify-content:center;">+ 텍스트 추가</button>
+    <button class="btn-round" id="btnFontSelect" style="flex:1; justify-content:center;">🅰️ 폰트 변경</button>
+</div>
+
+<div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:15px;">
+    <div style="font-size:12px; font-weight:bold; color:#666; margin-bottom:8px;">텍스트 상세 설정</div>
+    
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <button class="tool-btn" id="btnAlignLeftText" style="flex:1; justify-content:center;"><i class="fa-solid fa-align-left"></i></button>
+        <button class="tool-btn" id="btnAlignCenterText" style="flex:1; justify-content:center;"><i class="fa-solid fa-align-center"></i></button>
+        <button class="tool-btn" id="btnAlignRightText" style="flex:1; justify-content:center;"><i class="fa-solid fa-align-right"></i></button>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center; margin-bottom:5px;">
+        <span style="font-size:12px; color:#666;">크기</span>
+        <input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
+    </div>
+    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center; margin-bottom:5px;">
+        <span style="font-size:12px; color:#666;">자간</span>
+        <input type="range" id="textCharSpacing" min="-100" max="500" value="50" style="width:100%;">
+    </div>
+    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center;">
+        <span style="font-size:12px; color:#666;">행간</span>
+        <input type="range" id="textLineHeight" min="0.5" max="3.0" step="0.1" value="1.2" style="width:100%;">
+    </div>
+</div>
+
+<div class="color-group" style="margin-bottom:5px;">
+    <span>🎨 면 색상</span>
+    <input id="fillColor" type="color" class="color-picker" value="#000000">
+</div>
+<div class="color-group" style="margin-top:5px;">
+    <span>🖌️ 선 색상</span>
+    <input id="strokeColor" type="color" class="color-picker" value="#000000">
+</div>
+
             <div class="section-title">SHAPES</div>
             <div class="shape-panel">
                 <button class="shape-btn" data-shape="rect">■</button>
@@ -425,14 +458,14 @@
                     <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px;">🎯 정중앙 정렬</button>
                     <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px;">🖼 배경으로 꽉 채우기</button>
                 </div>
-                        <div class="section-title">CUTTING TOOLS</div>
+                        <div class="section-title">모양대로 오려내기</div>
 <div class="tool-box-group">
     <div style="font-size:12px; color:#666; margin-bottom:8px; text-align:center;">
         이미지를 선택하고 클릭하세요
     </div>
     
     <button id="btn-create-outline" class="btn-round" style="width:100%; margin-bottom:8px; justify-content:center;">
-        ✂️ 외곽선 만들기
+        ✂️ 오려내기 칼선작업
     </button>
 
     <div style="display:flex; gap:8px;">
@@ -445,38 +478,26 @@
         </button>
     </div>
 </div>
-                <div class="panel-box" id="panelText">
-                    <div class="section-title" style="margin-top:0;">텍스트 설정</div>
-                    <div style="display:flex; gap:5px; margin-bottom:10px;">
-                        <button class="tool-btn" id="btnAlignLeftText"><i class="fa-solid fa-align-left"></i></button>
-                        <button class="tool-btn" id="btnAlignCenterText"><i class="fa-solid fa-align-center"></i></button>
-                        <button class="tool-btn" id="btnAlignRightText"><i class="fa-solid fa-align-right"></i></button>
-                    </div>
-                    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center; margin-bottom:5px;">
-                        <span style="font-size:12px; color:#666;">크기</span><input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
-                    </div>
-                    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center; margin-bottom:5px;">
-                        <span style="font-size:12px; color:#666;">자간</span><input type="range" id="textCharSpacing" min="-100" max="500" value="50" style="width:100%;">
-                    </div>
-                    <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center;">
-                        <span style="font-size:12px; color:#666;">행간</span><input type="range" id="textLineHeight" min="0.5" max="3.0" step="0.1" value="1.2" style="width:100%;">
-                    </div>
-                </div>
+                <div class="panel-box" id="panelText" style="display:none;"></div>
                 
                 <div class="panel-box">
                     <div class="section-title" style="margin-top:0; color:#333;">AI 이미지 도구</div>
                     <div class="ai-tool-stack">
-                        <button class="tool-btn" id="btnCutout">✂️ 배경 제거</button>
+                        <button class="tool-btn" id="btnCutout">✂️ (배경 제거 누끼따기)</button>
                         <button class="tool-btn" id="btnEnhance">✨ 밝게 보정</button>
-                        <button class="tool-btn" id="btnOutline">🔲 글자 테두리</button>
+                        <button class="tool-btn" id="btnOutline">🔲 글자 테두리 만들기</button>
                     </div>
-                    <div class="section-title">선 설정</div>
-                    <input type="range" id="globalStroke" min="0" max="30" value="2" style="width:100%;">
-                    
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <button class="tool-btn" id="btnStrokeMiter" title="각지게"><i class="fa-solid fa-square"></i> 각지게</button>
-                        <button class="tool-btn" id="btnStrokeRound" title="부드럽게"><i class="fa-solid fa-circle"></i> 둥글게</button>
-                    </div>
+                    <div class="section-title" style="margin-top:10px;">📏 선 두께 및 스타일</div>
+<input type="range" id="globalStroke" min="0" max="30" value="0" style="width:100%;">
+
+<div style="display:flex; gap:5px; margin-top:5px;">
+    <button class="tool-btn" id="btnStrokeMiter" title="각지게" style="flex:1; justify-content:center;">
+        <i class="fa-solid fa-square"></i> 각지게
+    </button>
+    <button class="tool-btn" id="btnStrokeRound" title="부드럽게" style="flex:1; justify-content:center;">
+        <i class="fa-solid fa-circle"></i> 둥글게
+    </button>
+</div>
 
                     <div class="section-title">투명도</div><input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
                 </div>
@@ -630,6 +651,14 @@
             <button onclick="alert('입금 확인 요청이 접수되었습니다.\n에디터 화면으로 이동합니다.'); document.getElementById('checkoutModal').style.display='none';" class="btn-round btn-bank-confirm">
                 ✅ 입금했어요 확인해주세요
             </button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+    <button id="btnDownQuotationCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
+        <i class="fa-solid fa-file-invoice"></i> 견적서 다운
+    </button>
+    <button id="btnDownOrderSheetCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
+        <i class="fa-solid fa-clipboard-list"></i> 작업지시서 다운
+    </button>
+</div>
         </div>
 
         <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
@@ -664,7 +693,7 @@
                     <button onclick="window.confirmChoice('file')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;">
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;"></i>
                         <span style="font-size:16px;">내 파일로 주문</span>
-                        <span style="font-size:12px; font-weight:normal; opacity:0.8;">PDF/이미지 파일 업로드</span>
+                        <span style="font-size:12px; font-weight:normal; opacity:0.8;">PDF 파일 업로드 10메가 이상은 이메일로 보내주세요. korea900@daum.net</span>
                     </button>
                 </div>
 
@@ -680,10 +709,10 @@
 
     </div>
 </div>
-<div id="mobileControlDock">
+<div id="mobileControlDock" style="z-index: 30000;">
     <button onclick="window.toggleMobilePanel('left')" class="mobile-fab left">
         <i class="fa-solid fa-shapes"></i>
-        <span>요소추가</span>
+        <span>글자도형</span>
     </button>
 
     <button onclick="window.toggleMobilePanel('right')" class="mobile-fab right">
@@ -1308,5 +1337,6 @@ window.addToCartAndGo = async function() {
     }
 };
 </script>
+
 </body>
 </html>

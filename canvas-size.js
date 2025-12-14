@@ -3,14 +3,8 @@ import { canvas, setBaseSize, setGlobalMode, setGlobalSizeName, setGuideOn, maxL
 import { drawGuides } from "./canvas-guides.js";
 import { openProductDetail } from "./order.js";
 
-let pendingSize = null;
-
 export function initSizeControls() {
-    // ==============================
-    // 1. 제품 데이터 정의 (config.js와 키값 매칭)
-    // ==============================
-    
-    // 기본 판형
+    // 1. 제품 데이터 정의
     const sizesStandard = [
         { name: 'A4', w: 595, h: 842, key: 'A4' },
         { name: 'A3', w: 842, h: 1191, key: 'A3' },
@@ -20,7 +14,6 @@ export function initSizeControls() {
         { name: '2400x1200', w: 6803, h: 3401, key: 'Std_2400_1200' }
     ];
 
-    // 전시 가벽 (mm 단위 사용)
     const sizesWall = [
         { name: '1칸 가벽', w: 1200, h: 2200, mode: 'wall', key: 'Wall_1' },
         { name: '2칸 가벽', w: 2200, h: 2200, mode: 'wall', key: 'Wall_2' },
@@ -29,7 +22,6 @@ export function initSizeControls() {
         { name: '5칸 가벽', w: 5200, h: 2200, mode: 'wall', key: 'Wall_5' },
     ];
 
-    // 굿즈 & 디스플레이
     const sizesGoods = [
         { name: 'X배너', w: 600, h: 1800, key: 'Banner_X' },
         { name: '시상보드', w: 800, h: 570, key: 'Award_Board' },
@@ -38,54 +30,52 @@ export function initSizeControls() {
         { name: '종이진열대', w: 585, h: 1130, key: 'Paper_Disp_4' }
     ];
 
-    // [추가] 사용자 지정 사이즈 적용 버튼 이벤트 연결
+    // [사용자 지정 사이즈 적용 버튼 이벤트]
     const btnApplyUser = document.getElementById("btnApplyUserSize");
     const inputW = document.getElementById("inputUserW");
     const inputH = document.getElementById("inputUserH");
 
     if (btnApplyUser && inputW && inputH) {
         btnApplyUser.onclick = () => {
-            const newW = parseInt(inputW.value);
-            const newH = parseInt(inputH.value);
+            let reqW = parseInt(inputW.value); // mm 단위
+            let reqH = parseInt(inputH.value); // mm 단위
 
-            if (!newW || !newH || newW <= 0 || newH <= 0) {
+            if (!reqW || !reqH || reqW <= 0 || reqH <= 0) {
                 return alert("유효한 숫자를 입력해주세요.");
             }
 
-            // 최대 한계값 검사 (index.html 진입 시 설정됨)
-            // 가로/세로를 바꾼 경우(회전)도 허용해야 하므로 둘 다 검사
+            // 최대 크기(현재 대지 크기) 체크
             const limitW = maxLimitMM.w || 99999;
             const limitH = maxLimitMM.h || 99999;
 
-            // 1. 정방향 비교: 입력값 <= 제한값
-            const isFitNormal = (newW <= limitW && newH <= limitH);
-            // 2. 회전 비교: 입력값(가로) <= 제한값(세로) AND 입력값(세로) <= 제한값(가로)
-            const isFitRotated = (newW <= limitH && newH <= limitW);
+            const isFitNormal = (reqW <= limitW && reqH <= limitH);
+            const isFitRotated = (reqW <= limitH && reqH <= limitW);
 
             if (!isFitNormal && !isFitRotated) {
                 return alert(
                     `설정된 최대 크기(${limitW}x${limitH}mm)를 초과할 수 없습니다.\n` +
-                    `현재 선택하신 상품(가격) 기준보다 작거나 같아야 합니다.`
+                    `현재 대지 크기 안에서만 설정 가능합니다.`
                 );
             }
 
-            // 통과했다면 mm -> px 변환 후 적용
-            const scaleFactor = 3.7795; // 1mm = 약 3.7795px
-            const finalPxW = Math.round(newW * scaleFactor);
-            const finalPxH = Math.round(newH * scaleFactor);
+            // 회전 자동 적용
+            if (!isFitNormal && isFitRotated) {
+                const temp = reqW;
+                reqW = reqH;
+                reqH = temp;
+                alert("입력하신 크기가 대지에 맞지 않아 가로/세로를 회전하여 적용합니다.");
+            }
 
-            // 기존 작업물이 있으면 유지할지 물어보는 requestChangeSize 호출
-            requestChangeSize(finalPxW, finalPxH, `Custom(${newW}x${newH})`, 'custom');
+            // ★ 커팅라인 추가 (기존 선 삭제 안함, 계속 추가됨)
+            drawUserCutLine(reqW, reqH);
         };
     }
 
-    // 2. 시작 화면에 버튼 렌더링
     renderSizeButtons('row1', sizesStandard);
     renderSizeButtons('row2', sizesWall);
     renderSizeButtons('row3', sizesGoods);
 
-    // 3. 에디터 내부 "사이즈 변경" 패널 로직
-    // (기존 숨겨진 패널 로직은 유지하되, 필요 없으면 사용 안 함)
+    // 에디터 내부 패널 로직
     const btnChange = document.getElementById("btnChangeSize");
     const panel = document.getElementById("sizeTogglePanel");
     
@@ -93,9 +83,7 @@ export function initSizeControls() {
         btnChange.onclick = () => {
             const isHidden = panel.style.display === 'none';
             panel.style.display = isHidden ? 'grid' : 'none';
-            
             if(isHidden && panel.innerHTML === '') {
-                // 커스텀 입력 부분은 위쪽 UI로 대체되었으므로 여기서는 프리셋 버튼만 생성
                 [...sizesStandard, ...sizesWall, ...sizesGoods].forEach(s => {
                     const btn = document.createElement('button');
                     btn.className = 'btn-round';
@@ -110,16 +98,14 @@ export function initSizeControls() {
         };
     }
 
-    // 4. 캔버스 회전 로직
+    // 캔버스 회전 로직
     const btnRotate = document.getElementById("btnRotateCanvas");
     if (btnRotate) {
         btnRotate.onclick = () => {
             const board = canvas.getObjects().find(o => o.isBoard);
             if (!board) return;
-            // 가로/세로 교환
             applySize(board.height, board.width, "Rotated", 'standard', 'resize');
             
-            // [추가] 회전 시 입력창 값도 뒤집어주기 (UI 동기화)
             if(inputW && inputH) {
                 const temp = inputW.value;
                 inputW.value = inputH.value;
@@ -129,30 +115,95 @@ export function initSizeControls() {
     }
 }
 
-// 사이즈 변경 요청 (기존 작업물이 있으면 모달 띄움)
+// =================================================================
+// ★ [수정됨] 사용자 정의 재단선 그리기 (요청 문구 적용)
+// =================================================================
+function drawUserCutLine(w_mm, h_mm) {
+    if (!canvas) return;
+
+    // 1. 현재 대지(Board) 정보 가져오기
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return alert("대지(Board)를 찾을 수 없습니다.");
+
+    // 2. 비율 계산 (DPI 보정)
+    const realBoardW_mm = maxLimitMM.w || w_mm; 
+    const currentBoardPixelW = board.getScaledWidth();
+    const pxPerMM = currentBoardPixelW / realBoardW_mm;
+
+    // 3. 픽셀 변환
+    const reqW_px = w_mm * pxPerMM;
+    const reqH_px = h_mm * pxPerMM;
+    
+    // 4. 빨간색 재단선 사각형 생성
+    const cutRect = new fabric.Rect({
+        left: board.left, // 여백 없이 (0,0)
+        top: board.top,
+        width: reqW_px,
+        height: reqH_px,
+        fill: 'transparent',
+        stroke: 'red',
+        strokeWidth: 2,
+        strokeDashArray: [5, 5],
+        selectable: true, // 이동 가능
+        evented: true,    
+        hasControls: true, 
+        isUserCutLine: true
+    });
+
+    // 5. ★ [수정] 요청하신 텍스트 내용 적용
+    const textContent = `${w_mm}x${h_mm}mm_ 남는 공간에는 다른 제품을 추가로 제작하실 수 있습니다.\n모양재단 재봉 같은 마감이 있다면 장바구니에서 마감 비용만 추가해 주세요.\n사각재단은 여러개 해도 무료이니 비용을 아껴보아요.\n좌측상단 사이즈변경을 또 누르시면 칼선이 나옵니다. 이 메모는 지워도 됩니다.`;
+
+    const infoText = new fabric.Text(textContent, {
+        left: board.left,
+        top: board.top + reqH_px + 5, // 사각형 바로 아래
+        fontSize: 12, // 문구가 길어서 폰트 사이즈 살짝 조정
+        fontFamily: 'Nanum Gothic',
+        fill: '#ef4444', // 빨간색
+        lineHeight: 1.2,
+        selectable: true, // 텍스트도 이동 가능
+        evented: true,
+        isUserCutText: true
+    });
+
+    // 6. 캔버스 추가
+    canvas.add(cutRect);
+    canvas.add(infoText);
+    
+    // 추가된 객체 활성화 (바로 이동 가능하도록)
+    canvas.setActiveObject(cutRect);
+
+    canvas.bringToFront(cutRect);
+    canvas.bringToFront(infoText);
+    
+    canvas.requestRenderAll();
+}
+
+// -----------------------------------------------------------------
+// 기존 함수들
+// -----------------------------------------------------------------
+
 function requestChangeSize(w, h, name, mode) {
     const objects = canvas.getObjects().filter(o => !o.isBoard);
     if (objects.length === 0) {
         applySize(w, h, name, mode, 'replace');
     } else {
-        pendingSize = { w, h, name, mode };
-        document.getElementById("loadModeModal").style.display = "flex";
-        
-        document.getElementById("btnLoadReplace").onclick = () => {
-            applySize(pendingSize.w, pendingSize.h, pendingSize.name, pendingSize.mode, 'replace');
-            document.getElementById("loadModeModal").style.display = 'none';
-        };
-        document.getElementById("btnLoadAdd").onclick = () => {
-            applySize(pendingSize.w, pendingSize.h, pendingSize.name, pendingSize.mode, 'resize');
-            document.getElementById("loadModeModal").style.display = 'none';
-        };
+        const modal = document.getElementById("loadModeModal");
+        if(modal) {
+            modal.style.display = "flex";
+            document.getElementById("btnLoadReplace").onclick = () => {
+                applySize(pendingSize.w, pendingSize.h, pendingSize.name, pendingSize.mode, 'replace');
+                modal.style.display = 'none';
+            };
+            document.getElementById("btnLoadAdd").onclick = () => {
+                applySize(pendingSize.w, pendingSize.h, pendingSize.name, pendingSize.mode, 'resize');
+                modal.style.display = 'none';
+            };
+        } else {
+            applySize(w, h, name, mode, 'resize');
+        }
     }
-    // 선택 후 패널 닫기
-    const panel = document.getElementById("sizeTogglePanel");
-    if(panel) panel.style.display = 'none';
 }
 
-// 시작 화면 버튼 렌더링
 function renderSizeButtons(containerId, list) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -170,7 +221,9 @@ function renderSizeButtons(containerId, list) {
     });
 }
 
-// 실제 캔버스 크기 적용 함수
+// =================================================================
+// ★ [수정됨] 대지 생성 (기본 커팅라인 자동 생성 로직 삭제)
+// =================================================================
 export function applySize(w, h, name, mode, action) {
     setBaseSize(w, h);
     setGlobalMode(mode);
@@ -185,7 +238,6 @@ export function applySize(w, h, name, mode, action) {
     canvas.clear(); 
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
 
-    // 흰색 배경(보드) 생성
     const board = new fabric.Rect({
         width: w, height: h, fill: 'white', left: 0, top: 0,
         selectable: false, evented: false, isBoard: true, 
@@ -193,20 +245,16 @@ export function applySize(w, h, name, mode, action) {
     });
     canvas.add(board);
     canvas.sendToBack(board);
-
-    // 클리핑 마스크
     canvas.clipPath = new fabric.Rect({ left: 0, top: 0, width: w, height: h, absolutePositioned: true });
 
-    // 기존 오브젝트 복원
     if (action === 'resize' && objectsToKeep.length > 0) {
-        const group = new fabric.Group(objectsToKeep);
-        group.set({ left: w/2, top: h/2, originX: 'center', originY: 'center' });
-        canvas.add(group);
-        group.toActiveSelection();
+        objectsToKeep.forEach(obj => {
+            canvas.add(obj); 
+            obj.setCoords(); 
+        });
         canvas.discardActiveObject();
     }
 
-    // 가벽 모드일 때 컨트롤러 표시
     const wallControls = document.getElementById("wallHeightControls");
     if (mode === 'wall') {
         if(wallControls) wallControls.style.display = 'flex';
@@ -217,13 +265,21 @@ export function applySize(w, h, name, mode, action) {
         setGuideOn(false);
     }
     
-    // 화면에 딱 맞게 줌 조절
+    // ★ [삭제됨] 아래 로직 삭제: 대지 생성 시 자동으로 커팅라인을 만들지 않음
+    // if (!maxLimitMM.w) { maxLimitMM.w = w; maxLimitMM.h = h; }
+    // setTimeout(() => { ... drawUserCutLine ... }, 100);
+
+    // 대신 maxLimitMM 값만 세팅 (비율 계산용)
+    if (!maxLimitMM.w) {
+        maxLimitMM.w = w;
+        maxLimitMM.h = h;
+    }
+
     setTimeout(() => {
         resizeCanvasToFit();
     }, 50);
 }
 
-// 캔버스 줌 자동 맞춤
 export function resizeCanvasToFit() {
     const stage = document.querySelector('.stage');
     if (!stage) return;
@@ -246,7 +302,6 @@ export function resizeCanvasToFit() {
     canvas.requestRenderAll();
 }
 
-// 가벽 높이 조절 함수 (window 전역 노출)
 window.setWallHeight = (h, btn) => {
     const board = canvas.getObjects().find(o => o.isBoard);
     if(board) applySize(board.width, h, "Custom Wall", 'wall', 'resize'); 
