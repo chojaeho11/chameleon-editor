@@ -18,34 +18,38 @@ function downloadBlob(blob, filename) {
     URL.revokeObjectURL(url);
 }
 
-// [헬퍼] PDF 라이브러리 로드 확인
+// [헬퍼] PDF 라이브러리 로드 확인 및 설정
 async function loadPdfLib() {
-    if (window.pdfjsLib) return;
-    return new Promise((resolve) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        script.onload = () => {
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            resolve();
-        };
-        document.head.appendChild(script);
-    });
+    if (!window.pdfjsLib) {
+        await new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = resolve;
+            document.head.appendChild(script);
+        });
+    }
+    // 워커 설정 필수
+    if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
 }
 
 // [핵심] PDF -> 이미지 Blob 변환 (캡쳐)
 async function createPdfThumbnailBlob(file) {
-    // 20MB 이상 대용량은 브라우저 다운 방지를 위해 캡쳐 생략
-    if (file.size > 20 * 1024 * 1024) return null;
+    // 50MB 이상 대용량은 브라우저 다운 방지를 위해 캡쳐 생략
+    if (file.size > 50 * 1024 * 1024) return null;
 
     await loadPdfLib();
+
     try {
         const arrayBuffer = await file.arrayBuffer();
-        const pdf = await window.pdfjsLib.getDocument(arrayBuffer).promise;
+        const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1); // 1페이지 캡쳐
         
         const viewport = page.getViewport({ scale: 1 }); // 원본 비율
-        // 썸네일용 리사이징 (너비 1000px 기준)
-        const scale = 1000 / viewport.width;
+        // 썸네일용 리사이징 (너비 800px 기준)
+        const scale = 800 / viewport.width;
         const scaledViewport = page.getViewport({ scale });
 
         const canvas = document.createElement('canvas');
@@ -92,8 +96,11 @@ const resizeImageToBlob = (file) => {
 // [헬퍼] 파일을 Supabase에 업로드하고 URL 반환
 async function uploadFileToSupabase(file, folder) {
     if (!sb) return null;
+    // 파일명 한글 안전하게 변환
+    const timestamp = Date.now();
     const ext = file.name ? file.name.split('.').pop() : 'jpg'; 
-    const safeName = `${Date.now()}_${Math.random().toString(36).substring(2,7)}.${ext}`;
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const safeName = `${timestamp}_${randomStr}.${ext}`;
     const filePath = `${folder}/${safeName}`;
     
     const { data, error } = await sb.storage.from('orders').upload(filePath, file);
@@ -227,29 +234,125 @@ export function openProductDetail(key, w, h, mode) {
     const imgElem = document.getElementById("pdpImage"); if(imgElem) imgElem.src = product.img || 'https://placehold.co/400';
     document.getElementById("productDetailModal").style.display = "flex";
 }
-export function startDesignFromProduct() { if(!currentTargetProduct) return; document.getElementById("productDetailModal").style.display = "none"; if(window.applySize) window.applySize(currentTargetProduct.w, currentTargetProduct.h, currentTargetProduct.key, currentTargetProduct.mode, 'replace'); switchToEditor(); canvas.currentProductKey = currentTargetProduct.key; window.currentProductKey = currentTargetProduct.key; }
-function switchToEditor() { document.getElementById("startScreen").style.display = "none"; document.getElementById("mainEditor").style.display = "flex"; window.dispatchEvent(new Event('resize')); }
 
-// 캔버스 추가 (디자인)
+// 상품 선택 -> 에디터 진입 -> DB 조회 -> 템플릿 자동 로드
+export async function startDesignFromProduct() { 
+    if(!currentTargetProduct) return; 
+    
+    document.getElementById("productDetailModal").style.display = "none"; 
+    
+    if(window.applySize) {
+        window.applySize(
+            currentTargetProduct.w, 
+            currentTargetProduct.h, 
+            currentTargetProduct.key, 
+            currentTargetProduct.mode, 
+            'replace'
+        ); 
+    }
+
+    const startScreen = document.getElementById("startScreen");
+    const mainEditor = document.getElementById("mainEditor");
+    if(startScreen) startScreen.style.display = "none";
+    if(mainEditor) mainEditor.style.display = "flex";
+    window.dispatchEvent(new Event('resize')); 
+    
+    if(canvas) canvas.currentProductKey = currentTargetProduct.key; 
+    window.currentProductKey = currentTargetProduct.key;
+
+    try {
+        const pKey = currentTargetProduct.key;
+        console.log(`🔎 자동 템플릿 검색 중... Product Key: [${pKey}]`);
+        
+        const { data, error } = await sb
+            .from('library')
+            .select('data_url')
+            .eq('product_key', pKey)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            const templateUrl = data[0].data_url;
+            console.log("🎯 자동 로드할 템플릿 발견! URL:", templateUrl);
+            
+            setTimeout(() => {
+                if (window.loadProductFixedTemplate) {
+                    window.loadProductFixedTemplate(templateUrl);
+                }
+            }, 500);
+        }
+    } catch (e) {
+        console.error("🚨 자동 템플릿 로드 중 오류 발생:", e);
+    }
+}
+
+// ============================================================
+// ★ [수정됨] 장바구니 담기 (대지 영역만 정확히 캡쳐)
+// ============================================================
 async function addCanvasToCart() {
     if (!canvas) return;
-    const originalVpt = canvas.viewportTransform; canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    
+    // 1. 현재 뷰포트 상태 저장 (줌, 이동 등)
+    const originalVpt = canvas.viewportTransform;
+    
+    // 2. 대지(Board) 객체 찾기
+    const board = canvas.getObjects().find(o => o.isBoard);
     let thumbUrl = "https://placehold.co/100?text=Design";
     
     try {
-        const blob = await new Promise(resolve => canvas.getElement().toBlob(resolve, 'image/jpeg', 0.5));
+        // 로딩 표시
+        const loading = document.getElementById("loading");
+        if(loading) loading.style.display = "flex";
+
+        let blob;
+
+        if (board) {
+            // ★ 핵심: 대지 영역만 크롭해서 이미지 생성
+            // 뷰포트를 초기화해서 1:1 비율로 맞춤
+            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+            
+            // 대지 영역의 좌표와 크기로 DataURL 생성
+            const dataUrl = canvas.toDataURL({
+                format: 'png',
+                left: board.left,
+                top: board.top,
+                width: board.width * board.scaleX,
+                height: board.height * board.scaleY,
+                multiplier: 0.5, // 썸네일용이므로 절반 축소
+                quality: 0.8
+            });
+            
+            // DataURL -> Blob 변환
+            blob = await (await fetch(dataUrl)).blob();
+            
+            // 뷰포트 원상복구
+            canvas.setViewportTransform(originalVpt);
+        } else {
+            // 대지가 없으면 전체 캔버스 캡쳐 (기존 방식)
+            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+            blob = await new Promise(resolve => canvas.getElement().toBlob(resolve, 'image/jpeg', 0.5));
+            canvas.setViewportTransform(originalVpt);
+        }
+
+        // 3. 썸네일 업로드
         if(blob) {
             const uploadedThumb = await uploadFileToSupabase(blob, 'thumbs');
             if(uploadedThumb) thumbUrl = uploadedThumb;
         }
-    } catch(e) { console.warn("썸네일 생성 실패", e); }
-
-    canvas.setViewportTransform(originalVpt);
+    } catch(e) { 
+        console.warn("썸네일 생성 실패", e); 
+        // 실패시에도 뷰포트 복구
+        canvas.setViewportTransform(originalVpt);
+    } finally {
+        const loading = document.getElementById("loading");
+        if(loading) loading.style.display = "none";
+    }
     
     const key = window.currentProductKey || canvas.currentProductKey || 'A4'; 
     const product = PRODUCT_DB[key] || PRODUCT_DB['A4'];
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst']);
-    const board = canvas.getObjects().find(o => o.isBoard);
     const finalW = board ? board.width : (product.w || canvas.width); 
     const finalH = board ? board.height : (product.h || canvas.height);
 
@@ -262,7 +365,9 @@ async function addCanvasToCart() {
     alert(`[${product.name}] 상품이 장바구니에 담겼습니다.`);
 }
 
-// ★ [파일 업로드] - PDF 캡쳐 및 업로드 로직 포함
+// ============================================================
+// ★ [수정됨] 파일 업로드 (PDF 썸네일 생성 기능 강화)
+// ============================================================
 async function addFileToCart(e) {
     const file = e.target.files[0]; 
     if(!file || !currentTargetProduct) return;
@@ -283,6 +388,7 @@ async function addFileToCart(e) {
         // 2. 썸네일 생성 시도 (PDF -> Image 캡쳐)
         let thumbBlob = null;
         if (file.type === 'application/pdf') {
+            // PDF 썸네일 생성 함수 호출
             thumbBlob = await createPdfThumbnailBlob(file);
         } else if (file.type.startsWith('image/')) {
             thumbBlob = await resizeImageToBlob(file);
@@ -459,10 +565,10 @@ async function processOrderSubmission() {
             };
         });
 
-        // ▼ [수정됨] DB 저장 시 'delivery_target_date' 에도 날짜 저장
+        // delivery_target_date에도 날짜 저장
         const { data: orderData, error: orderError } = await sb.from('orders').insert([{ 
-            order_date: selectedDeliveryDate,           // 기존 주문일 (표기용)
-            delivery_target_date: selectedDeliveryDate, // ★ [핵심] 관리자 배송관리용 날짜 자동 입력
+            order_date: selectedDeliveryDate,           
+            delivery_target_date: selectedDeliveryDate, 
             manager_name: manager, 
             phone, 
             address, 
@@ -533,7 +639,7 @@ async function processOrderSubmission() {
     finally { btn.innerText = "주문서 생성 및 결제"; btn.disabled = false; document.getElementById("loading").style.display = "none"; }
 }
 
-function processPayment() { /* 결제 로직 동일 */ const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"; if (typeof TossPayments === 'undefined') return alert("결제 모듈 로드 실패"); let totalAmount = 0; cartData.forEach(item => { let price = item.product.price; if(item.selectedAddons) { Object.values(item.selectedAddons).forEach(code => { if(ADDON_DB[code]) { const aq = (item.addonQuantities && item.addonQuantities[code]) || 1; price += ADDON_DB[code].price * aq; } }); } totalAmount += price * (item.qty || 1); }); if (totalAmount === 0) return alert("결제 금액 0원"); if (!window.currentDbId) return alert("주문 정보가 없습니다."); const tossPayments = TossPayments(clientKey); const orderId = "ORD-" + new Date().getTime(); tossPayments.requestPayment("카드", { amount: totalAmount, orderId: orderId, orderName: `카멜레온 디자인 주문 (${cartData.length}건)`, customerName: document.getElementById("orderName").value, successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}`, failUrl: window.location.origin + `/fail.html?db_id=${window.currentDbId}`, }).catch(async function (error) { if (error.code === "USER_CANCEL") { await updatePaymentStatus(window.currentDbId, '결제중단'); alert("결제가 중단되었습니다."); } else { alert("결제 에러: " + error.message); } }); }
+function processPayment() { const clientKey = "live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6"; if (typeof TossPayments === 'undefined') return alert("결제 모듈 로드 실패"); let totalAmount = 0; cartData.forEach(item => { let price = item.product.price; if(item.selectedAddons) { Object.values(item.selectedAddons).forEach(code => { if(ADDON_DB[code]) { const aq = (item.addonQuantities && item.addonQuantities[code]) || 1; price += ADDON_DB[code].price * aq; } }); } totalAmount += price * (item.qty || 1); }); if (totalAmount === 0) return alert("결제 금액 0원"); if (!window.currentDbId) return alert("주문 정보가 없습니다."); const tossPayments = TossPayments(clientKey); const orderId = "ORD-" + new Date().getTime(); tossPayments.requestPayment("카드", { amount: totalAmount, orderId: orderId, orderName: `카멜레온 디자인 주문 (${cartData.length}건)`, customerName: document.getElementById("orderName").value, successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}`, failUrl: window.location.origin + `/fail.html?db_id=${window.currentDbId}`, }).catch(async function (error) { if (error.code === "USER_CANCEL") { await updatePaymentStatus(window.currentDbId, '결제중단'); alert("결제가 중단되었습니다."); } else { alert("결제 에러: " + error.message); } }); }
 window.renderCart = renderCart; window.toggleCartAccordion = (idx) => { cartData[idx].isOpen = !cartData[idx].isOpen; renderCart(); }; window.updateCartQty = (idx, change) => { if(cartData[idx]) { cartData[idx].qty = Math.max(1, (cartData[idx].qty||1) + change); saveCart(); renderCart(); } }; window.updateCartOption = (idx, key, code) => { if (cartData[idx]) { if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {}; if (code === "") delete cartData[idx].selectedAddons[key]; else cartData[idx].selectedAddons[key] = code; saveCart(); renderCart(); } }; window.toggleCartAddon = (idx, code, isChecked) => { if (cartData[idx]) { if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {}; const storageKey = `addon_${code}`; if (isChecked) { cartData[idx].selectedAddons[storageKey] = code; if(!cartData[idx].addonQuantities) cartData[idx].addonQuantities = {}; cartData[idx].addonQuantities[code] = 1; } else { delete cartData[idx].selectedAddons[storageKey]; if(cartData[idx].addonQuantities) delete cartData[idx].addonQuantities[code]; } saveCart(); renderCart(); } }; window.updateCartAddonQty = (idx, code, val) => { let qty = parseInt(val); if(isNaN(qty) || qty < 1) qty = 1; if(cartData[idx]) { if(!cartData[idx].addonQuantities) cartData[idx].addonQuantities = {}; cartData[idx].addonQuantities[code] = qty; saveCart(); renderCart(); } }; window.removeCartItem = (idx) => { if(confirm("삭제하시겠습니까?")) { cartData.splice(idx, 1); saveCart(); renderCart(); } }; window.processOrderSubmission = processOrderSubmission; window.updateCartQtyInput = (idx, val) => { let newQty = parseInt(val); if(isNaN(newQty) || newQty < 1) newQty = 1; if(cartData[idx]) { cartData[idx].qty = newQty; saveCart(); renderCart(); } };
 async function updatePaymentStatus(dbId, status) { if(!sb || !dbId) return; try { await sb.from('orders').update({ payment_status: status }).eq('id', dbId); } catch(e) { console.error("상태 업데이트 실패", e); } }
 window.handleBankTransfer = async () => { if (!window.currentDbId) return alert("주문 정보가 없습니다."); if (!confirm("무통장 입금으로 진행하시겠습니까?")) return; const { error } = await sb.from('orders').update({ payment_method: '계좌이체', payment_status: '입금대기', status: '접수됨' }).eq('id', window.currentDbId); if(error) { alert("오류: " + error.message); } else { alert("입금 요청이 완료되었습니다.\n[닫기]를 누르면 초기화됩니다."); const btn = document.querySelector('.btn-bank-confirm'); if(btn) btn.style.display = 'none'; window.isOrderCompleted = true; } };

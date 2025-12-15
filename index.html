@@ -353,12 +353,24 @@
 
             <div class="section-title">AI TOOLS</div>
             <button class="btn-round ai-red" id="btnAIBox"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 이미지 생성</button>
-            <button class="btn-round primary" id="btnRegisterTemplate" style="margin-top:5px; display:none;">👑 디자인 등록</button>
             <button class="btn-round" id="btnOpenSaveModal" style="margin-top:5px;">💾 디자인 저장</button>
             <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="margin-top: 5px; margin-bottom: 20px; width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1; font-weight: 800; flex-direction: column; height: auto; padding: 15px; gap: 5px;">
     <span style="font-size: 15px;"><i class="fa-solid fa-cloud-arrow-up"></i> 유저 로고 공유방</span>
     <span style="font-size: 11px; font-weight: normal; color: #64748b;">(PNG로고 5개 등록하면 등업됩니다. 등업이 완료되면 고화질 PDF 다운로드가능.)</span>
+    
 </button>
+<div style="display:flex; gap:8px; margin-bottom:20px;">
+    <button id="btnPNG" class="btn-round" style="flex:1; flex-direction:column; gap:4px; height:auto; padding:12px 5px; justify-content:center; border:1px solid #cbd5e1;">
+        <i class="fa-regular fa-image" style="font-size:20px; color:#10b981;"></i>
+        <span style="font-size:13px; font-weight:700; color:#334155;">PNG 저장</span>
+        <span style="font-size:10px; color:#94a3b8; font-weight:normal;">(로고 5개↑)</span>
+    </button>
+    <button id="btnPDF" class="btn-round" style="flex:1; flex-direction:column; gap:4px; height:auto; padding:12px 5px; justify-content:center; border:1px solid #cbd5e1;">
+        <i class="fa-solid fa-file-pdf" style="font-size:20px; color:#ef4444;"></i>
+        <span style="font-size:13px; font-weight:700; color:#334155;">PDF 저장</span>
+        <span style="font-size:10px; color:#94a3b8; font-weight:normal;">(로고 10개↑)</span>
+    </button>
+</div>
             
             <div class="section-title">BASIC TOOLS</div>
 
@@ -925,9 +937,12 @@
     };
 
     // 파일 선택 시 장바구니 이동
+    // index.html의 기존 directUploadInput.onchange 부분을 아래 내용으로 교체
+
     const directUploadInput = document.getElementById("directUploadInput");
     if (directUploadInput) {
-        directUploadInput.onchange = function(e) {
+        // [수정됨] async 키워드 추가 (PDF 처리를 위해 비동기 필요)
+        directUploadInput.onchange = async function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -937,12 +952,55 @@
             const loading = document.getElementById("loading");
             if (loading) loading.style.display = "flex";
 
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const fileDataURI = evt.target.result;
+            try {
                 let thumbUrl = 'https://placehold.co/100?text=FILE';
-                if (file.type.startsWith('image/')) {
+                let fileDataURI = null;
+
+                // 1. PDF일 경우 썸네일 생성
+                if (file.type === 'application/pdf') {
+                    // PDF 라이브러리 워커 설정 확인
+                    if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    }
+                    
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        const page = await pdf.getPage(1); // 1페이지 가져오기
+                        
+                        // 썸네일용 뷰포트 (너비 150px 기준 축소)
+                        const viewport = page.getViewport({ scale: 1 });
+                        const scale = 150 / viewport.width;
+                        const scaledViewport = page.getViewport({ scale });
+
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = scaledViewport.height;
+                        canvas.width = scaledViewport.width;
+
+                        await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+                        thumbUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    } catch (err) {
+                        console.warn("PDF 썸네일 생성 실패:", err);
+                    }
+                } 
+                // 2. 이미지일 경우 바로 사용
+                else if (file.type.startsWith('image/')) {
+                    fileDataURI = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => resolve(evt.target.result);
+                        reader.readAsDataURL(file);
+                    });
                     thumbUrl = fileDataURI;
+                }
+
+                // 원본 데이터 로드 (PDF인 경우에도 데이터URI 생성 필요 시)
+                if (!fileDataURI) {
+                    fileDataURI = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => resolve(evt.target.result);
+                        reader.readAsDataURL(file);
+                    });
                 }
 
                 const newItem = {
@@ -952,7 +1010,7 @@
                     fileName: file.name,
                     mimeType: file.type,
                     fileData: fileDataURI,
-                    thumb: thumbUrl,
+                    thumb: thumbUrl, // [핵심] 생성된 썸네일 URL 적용
                     qty: 1,
                     selectedAddons: {},
                     isOpen: true
@@ -970,10 +1028,14 @@
                 if (window.renderCart) window.renderCart();
                 document.getElementById('choiceModal').style.display = 'none';
                 document.getElementById('cartPage').style.display = 'block';
+                
+            } catch (err) {
+                console.error("파일 처리 중 오류:", err);
+                alert("파일 처리 중 오류가 발생했습니다.");
+            } finally {
                 if (loading) loading.style.display = "none";
                 directUploadInput.value = ''; 
-            };
-            reader.readAsDataURL(file);
+            }
         };
     }
 
@@ -987,8 +1049,8 @@
         
         const product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
 
-        const displayW = product ? (product.w_mm || product.width_mm || product.w || 210) : 210;
-        const displayH = product ? (product.h_mm || product.height_mm || product.h || 297) : 297;
+        const displayW = product ? (product.w_mm || product.w || 210) : 210;
+        const displayH = product ? (product.h_mm || product.h || 297) : 297;
         const canvasW = product ? (product.w || 210) : 210;
         const canvasH = product ? (product.h || 297) : 297;
         const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
@@ -1013,13 +1075,27 @@
         document.getElementById("mainEditor").style.display = "flex";
         window.dispatchEvent(new Event('resize'));
 
-        if (window.pendingTemplate) {
-            setTimeout(async () => {
-                if (typeof applyTemplateDirectly === 'function') {
-                    await applyTemplateDirectly(window.pendingTemplate);
-                }
-                window.pendingTemplate = null; 
-            }, 300);
+        // ★★★ [추가된 로직] 제품 전용 템플릿(칼선) 자동 로드
+        try {
+            console.log(`🔎 StartEditorDirect: 템플릿 검색 - ${key}`);
+            const { data, error } = await sb
+                .from('library')
+                .select('data_url')
+                .eq('product_key', key)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (data && data.length > 0) {
+                const templateUrl = data[0].data_url;
+                console.log("🎯 템플릿 발견, 로드합니다:", templateUrl);
+                setTimeout(() => {
+                    if (window.loadProductFixedTemplate) {
+                        window.loadProductFixedTemplate(templateUrl);
+                    }
+                }, 500);
+            }
+        } catch(e) {
+            console.error("자동 로드 오류:", e);
         }
     };
 

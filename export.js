@@ -1,11 +1,14 @@
+// export.js
+
 import { canvas } from "./canvas-core.js";
-import { ADDON_DB } from "./config.js";
+import { ADDON_DB, getUserLogoCount, currentUser } from "./config.js"; 
 import { FONT_URLS } from "./fonts.js"; 
 
 // ==========================================================
-// [1] 내보내기 도구 초기화
+// [1] 내보내기 도구 초기화 (등급별 권한 체크 추가)
 // ==========================================================
 export function initExport() {
+    // 1. SVG 다운로드 (제한 없음)
     const btnSVG = document.getElementById("btnDownloadSVG");
     if (btnSVG) {
         btnSVG.onclick = () => {
@@ -15,23 +18,84 @@ export function initExport() {
         };
     }
 
+    // 2. PNG 다운로드 (로고 5개 이상 필요)
     const btnPNG = document.getElementById("btnPNG");
     if (btnPNG) {
-        btnPNG.onclick = () => downloadImage();
+        btnPNG.onclick = async () => {
+            if (!currentUser) {
+                alert("로그인이 필요한 서비스입니다.");
+                document.getElementById('loginModal').style.display='flex';
+                return;
+            }
+            
+            const btn = btnPNG;
+            const originText = btn.innerText;
+            btn.innerText = "권한 확인 중...";
+            
+            // 유저 기여도 체크
+            const count = await getUserLogoCount();
+            btn.innerText = originText;
+
+            if (count < 5) {
+                alert(`🔒 [멤버십 제한]\n로고를 5개 이상 공유해주시면 PNG 다운로드가 가능합니다.\n(현재 내 공유 로고: ${count}개)`);
+                // 로고 업로드 모달 열기
+                const uploadModal = document.getElementById('logoUploadModal');
+                if(uploadModal) uploadModal.style.display='flex';
+                return;
+            }
+
+            downloadImage();
+        };
     }
 
+    // 3. PDF 다운로드 (로고 10개 이상 필요)
     const btnPDF = document.getElementById("btnPDF");
     if (btnPDF) {
         btnPDF.onclick = async () => {
-            const originalText = btnPDF.innerText;
-            btnPDF.disabled = true;
-            btnPDF.innerText = "벡터 변환 중...";
+            if (!currentUser) {
+                alert("로그인이 필요한 서비스입니다.");
+                document.getElementById('loginModal').style.display='flex';
+                return;
+            }
+
+            const btn = btnPDF;
+            const originalText = btn.innerText;
+            btn.innerText = "변환 중...";
+
+            const count = await getUserLogoCount();
             
-            let blob = await generateProductVectorPDF(canvas.toJSON(), canvas.width, canvas.height);
+            if (count < 10) {
+                btn.innerText = originalText;
+                alert(`🔒 [VIP 제한]\n로고를 10개 이상 공유해주시면 고화질 PDF(벡터) 다운로드가 가능합니다.\n(현재 내 공유 로고: ${count}개)`);
+                const uploadModal = document.getElementById('logoUploadModal');
+                if(uploadModal) uploadModal.style.display='flex';
+                return;
+            }
+
+            // 권한 충족 시 실행
+            btn.disabled = true;
+            
+            // ★ [핵심 수정] 대지(Board) 영역 찾기 및 좌표 계산
+            const board = canvas.getObjects().find(o => o.isBoard);
+            
+            let x = 0; 
+            let y = 0;
+            let w = canvas.width;
+            let h = canvas.height;
+
+            if (board) {
+                x = board.left;
+                y = board.top;
+                w = board.width * board.scaleX;
+                h = board.height * board.scaleY;
+            }
+            
+            // 좌표(x, y)와 크기(w, h)를 모두 전달
+            let blob = await generateProductVectorPDF(canvas.toJSON(), w, h, x, y);
             
             if (!blob) {
                 console.warn("벡터 변환 실패, 이미지 방식으로 재시도합니다.");
-                blob = await generateRasterPDF(canvas.toJSON(), canvas.width, canvas.height);
+                blob = await generateRasterPDF(canvas.toJSON(), w, h, x, y);
             }
 
             if(blob) {
@@ -40,8 +104,8 @@ export function initExport() {
                 alert("PDF 생성에 실패했습니다.");
             }
             
-            btnPDF.disabled = false;
-            btnPDF.innerText = originalText;
+            btn.disabled = false;
+            btn.innerText = originalText;
         };
     }
 }
@@ -54,6 +118,7 @@ export function downloadImage(filename = "design-image") {
     
     canvas.discardActiveObject();
     const originalVpt = canvas.viewportTransform;
+    // 뷰포트 초기화하여 정확한 좌표 계산
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
     
     const board = canvas.getObjects().find(o => o.isBoard);
@@ -61,10 +126,13 @@ export function downloadImage(filename = "design-image") {
     try {
         let dataURL = "";
         if (board) {
+            // ★ [수정] 대지 영역만 정확히 크롭
             dataURL = canvas.toDataURL({
                 format: 'png', quality: 1, multiplier: 2,
-                left: board.left, top: board.top,
-                width: board.getScaledWidth(), height: board.getScaledHeight()
+                left: board.left, 
+                top: board.top,
+                width: board.width * board.scaleX, 
+                height: board.height * board.scaleY
             });
         } else {
             dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
@@ -126,15 +194,15 @@ async function getSafeImageDataUrl(urlOrData) {
     });
 }
 
-// [핵심] PDF URL -> 이미지 Base64 변환 (작업지시서용 강제 변환)
+// [핵심] PDF URL -> 이미지 Base64 변환
 async function pdfUrlToImageData(url) {
     if (!window.pdfjsLib) return null;
     try {
         const loadingTask = window.pdfjsLib.getDocument(url);
         const pdf = await loadingTask.promise;
-        const page = await pdf.getPage(1); // 첫 페이지만
+        const page = await pdf.getPage(1); 
         
-        const scale = 1.5; // 해상도
+        const scale = 1.5; 
         const viewport = page.getViewport({ scale });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
@@ -152,18 +220,23 @@ async function pdfUrlToImageData(url) {
 // ----------------------------------------------------------
 // 벡터 PDF 생성 로직 (디자인 파일용)
 // ----------------------------------------------------------
-export async function generateProductVectorPDF(json, w, h) {
+export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
     if (!window.jspdf || !window.opentype) return null;
 
     try {
         const MM_TO_PX = 3.7795;
+        // w, h는 이제 대지의 크기입니다.
         const widthMM = w / MM_TO_PX;
         const heightMM = h / MM_TO_PX;
 
         const tempEl = document.createElement('canvas');
         const tempCvs = new fabric.StaticCanvas(tempEl);
-        tempCvs.setWidth(w);
-        tempCvs.setHeight(h);
+        
+        // 캔버스 전체 크기는 넉넉하게 잡거나 기존과 동일하게 유지해도 되지만,
+        // toSVG에서 viewBox로 잘라낼 것이므로 로드 자체는 전체 크기로 합니다.
+        // 다만 json 내 좌표가 전체 캔버스 기준이므로 캔버스를 충분히 크게 잡습니다.
+        tempCvs.setWidth(canvas ? canvas.width : w + x);
+        tempCvs.setHeight(canvas ? canvas.height : h + y);
 
         if (json && json.objects) {
             json.objects = json.objects.filter(o => !o.isBoard);
@@ -171,7 +244,7 @@ export async function generateProductVectorPDF(json, w, h) {
 
         await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
 
-        // 그룹 해제 (텍스트 아웃라인 처리 등을 위해)
+        // 그룹 해제 및 텍스트 처리
         const rawObjects = tempCvs.getObjects();
         for (let i = rawObjects.length - 1; i >= 0; i--) {
             const obj = rawObjects[i];
@@ -187,7 +260,7 @@ export async function generateProductVectorPDF(json, w, h) {
         }
         tempCvs.renderAll();
 
-        // 폰트 로드
+        // 폰트 로드 로직 (기존과 동일)
         const allObjects = [...tempCvs.getObjects()];
         const usedFonts = new Set();
         usedFonts.add('NanumGothic'); 
@@ -260,9 +333,11 @@ export async function generateProductVectorPDF(json, w, h) {
             format: [widthMM, heightMM] 
         });
         
+        // ★ [핵심] viewBox를 사용하여 대지 영역(x, y, w, h)만 SVG로 추출
         const svgStr = tempCvs.toSVG({ 
-            viewBox: { x: 0, y: 0, width: w, height: h }, 
-            width: w, height: h, 
+            viewBox: { x: x, y: y, width: w, height: h }, 
+            width: w, 
+            height: h, 
             suppressPreamble: true 
         });
         
@@ -280,7 +355,7 @@ export async function generateProductVectorPDF(json, w, h) {
 }
 
 // 래스터(이미지) PDF 생성 (백업용)
-export async function generateRasterPDF(json, w, h) {
+export async function generateRasterPDF(json, w, h, x = 0, y = 0) {
     if (!window.jspdf) return null;
     try {
         const MM_TO_PX = 3.7795;
@@ -289,8 +364,9 @@ export async function generateRasterPDF(json, w, h) {
 
         const tempEl = document.createElement('canvas');
         const tempCvs = new fabric.StaticCanvas(tempEl);
-        tempCvs.setWidth(w);
-        tempCvs.setHeight(h);
+        // 전체 로드
+        tempCvs.setWidth(canvas ? canvas.width : w + x);
+        tempCvs.setHeight(canvas ? canvas.height : h + y);
 
         if (json && json.objects) {
             json.objects = json.objects.filter(o => !o.isBoard);
@@ -303,7 +379,16 @@ export async function generateRasterPDF(json, w, h) {
         }
         tempCvs.renderAll();
 
-        const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 2 });
+        // ★ [핵심] toDataURL에서 left, top 옵션을 사용해 크롭
+        const imgData = tempCvs.toDataURL({ 
+            format: 'jpeg', 
+            quality: 0.9, 
+            multiplier: 2,
+            left: x,
+            top: y,
+            width: w,
+            height: h
+        });
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ 
@@ -367,11 +452,18 @@ async function createPathFromText(textObj) {
 }
 
 export async function getDesignPDFBlob() {
-    return generateProductVectorPDF(canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth']), canvas.width, canvas.height);
+    // 저장 시에도 대지 기준 좌표 계산 (필요시)
+    const board = canvas.getObjects().find(o => o.isBoard);
+    let x=0, y=0, w=canvas.width, h=canvas.height;
+    if(board) {
+        x = board.left; y = board.top;
+        w = board.width * board.scaleX; h = board.height * board.scaleY;
+    }
+    return generateProductVectorPDF(canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth']), w, h, x, y);
 }
 
 // ==========================================================
-// [4] 작업지시서 생성 (★ 고객 파일 PDF 캡쳐 + 디자인 개선 적용됨)
+// [4] 작업지시서 생성
 // ==========================================================
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
     if (!window.jspdf) return alert("PDF 라이브러리 로딩 중...");
@@ -387,7 +479,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         const item = cartItems[i];
         if (i > 0) doc.addPage();
         
-        // 1. 헤더 (브랜드 컬러 바)
+        // 1. 헤더
         doc.setFillColor(99, 102, 241); 
         doc.rect(0, 0, 210, 20, 'F');
         doc.setTextColor(255, 255, 255);
@@ -395,7 +487,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         doc.setFont("NanumGothic", "bold");
         doc.text("작업 지시서 (Work Order)", 105, 13, { align: 'center' });
 
-        // 2. 주문 정보 & QR코드
+        // 2. 주문 정보
         const startY = 30;
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(10);
@@ -409,7 +501,6 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         doc.text(`주문일자: ${new Date().toLocaleDateString()}`, 20, startY + 8);
         doc.text(`담당자명: ${orderInfo.manager || '-'}`, 80, startY + 8);
         
-        // [강조] 도착 희망일
         doc.setFont("NanumGothic", "bold");
         doc.setTextColor(220, 38, 38);
         doc.setFontSize(14);
@@ -422,7 +513,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         doc.text(`배송주소: ${orderInfo.address || '-'}`, 20, startY + 24);
         doc.text(`요청사항: ${orderInfo.note || '-'}`, 20, startY + 32, { maxWidth: 125 });
 
-        // (2) QR코드 생성
+        // QR
         let qrOptionText = "";
         if(item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
@@ -432,7 +523,6 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             });
         }
         const qrContent = `[주문] ${orderInfo.manager}\n${orderInfo.phone}\n${orderInfo.address}\n제품:${item.product.name}\n옵션:${qrOptionText}`;
-        
         try {
             const qrData = await generateQRCodeUrl(qrContent);
             if (qrData) {
@@ -442,10 +532,10 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             }
         } catch(e) {}
 
-        // 3. 책임자 정보 (주황색 박스 & 기사님 사진)
+        // 책임자
         const staffY = startY + 45;
-        doc.setFillColor(255, 247, 237); // 연한 주황
-        doc.setDrawColor(249, 115, 22);  // 주황
+        doc.setFillColor(255, 247, 237);
+        doc.setDrawColor(249, 115, 22);
         doc.rect(15, staffY, 180, 20, 'F');
         doc.rect(15, staffY, 180, 20);
 
@@ -455,14 +545,14 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             if(driverData) doc.addImage(driverData, 'PNG', 20, staffY + 2, 16, 16);
         } catch(e) {}
 
-        doc.setTextColor(194, 65, 12); // 진한 주황
+        doc.setTextColor(194, 65, 12);
         doc.setFont("NanumGothic", "bold");
         doc.setFontSize(11);
         doc.text("배송책임자 : 서용규 (010-8272-3017)", 42, staffY + 11);
         doc.text("|", 105, staffY + 11, {align:'center'});
         doc.text("제작책임자 : 변지웅 (010-5512-5366)", 115, staffY + 11);
 
-        // 4. 상품 정보 & 옵션 박스
+        // 상품 정보
         let y = staffY + 30;
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(16);
@@ -477,9 +567,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             for (const code of arr) {
                 const add = ADDON_DB[code];
                 if (!add) continue;
-                
                 const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                
                 doc.setDrawColor(0); doc.setLineWidth(0.3);
                 doc.rect(15, y, 5, 5); 
                 doc.setFillColor(255, 255, 255);
@@ -500,45 +588,43 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         doc.setTextColor(99, 102, 241); 
         doc.text(`총 본품 수량: ${item.qty}개`, 160, y);
 
-        // 5. 이미지 출력 (★ PDF인 경우 즉석 변환 로직 적용)
+        // 이미지
         y += 10;
         const boxSize = 130;
         const boxX = (210 - boxSize) / 2;
         doc.setDrawColor(200); doc.setLineWidth(0.5);
         doc.rect(boxX, y, boxSize, boxSize);
 
-        // ★ [핵심] 이미지 데이터 결정
-        // 1. 썸네일(Base64)이 있으면 최우선 사용
-        // 2. 썸네일이 없거나 기본 아이콘이라면 -> 원본 파일 확인
-        // 3. 원본이 PDF면 -> pdfUrlToImageData 변환
-        // 4. 원본이 이미지면 -> getSafeImageDataUrl 변환
-        
         let imgData = null;
         let isPdf = false;
         if (item.mimeType === 'application/pdf' || (item.fileName && item.fileName.toLowerCase().endsWith('.pdf'))) {
             isPdf = true;
         }
 
-        // thumb가 있고 'data:image'로 시작하면 사용
         if (item.thumb && item.thumb.startsWith('data:image')) {
             imgData = item.thumb;
+        } else if (item.thumb) {
+            imgData = await getSafeImageDataUrl(item.thumb);
         } else if (item.originalUrl) {
-            // 원본 URL로 시도
             if (isPdf) {
-                imgData = await pdfUrlToImageData(item.originalUrl); // PDF -> 이미지 변환
+                imgData = await pdfUrlToImageData(item.originalUrl);
             } else {
-                imgData = await getSafeImageDataUrl(item.originalUrl); // URL -> 이미지 변환
+                imgData = await getSafeImageDataUrl(item.originalUrl);
             }
         }
 
         if (imgData) {
             try {
+                let format = 'PNG';
+                if (imgData.startsWith('data:image/jpeg') || imgData.startsWith('data:image/jpg')) {
+                    format = 'JPEG';
+                }
                 const imgProps = doc.getImageProperties(imgData);
                 const maxW = boxSize - 2; const maxH = boxSize - 2;
                 let w = maxW; let h = (imgProps.height * w) / imgProps.width;
                 if (h > maxH) { h = maxH; w = (imgProps.width * h) / imgProps.height; }
                 const x = boxX + (boxSize - w) / 2; const imgY = y + 1 + (boxSize - h) / 2;
-                doc.addImage(imgData, 'PNG', x, imgY, w, h);
+                doc.addImage(imgData, format, x, imgY, w, h);
             } catch (err) {
                 doc.setFontSize(10); doc.setTextColor(150); 
                 doc.text("이미지 처리 실패", 105, y + 60, { align: 'center' });
@@ -555,7 +641,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 }
 
 // ==========================================================
-// [5] 견적서 생성 (기존 유지)
+// [5] 견적서 생성
 // ==========================================================
 export async function generateQuotationPDF(orderInfo, cartItems) {
     if (!window.jspdf) return;

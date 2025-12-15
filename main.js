@@ -1,4 +1,6 @@
-import { initConfig } from "./config.js";
+// main.js
+
+import { initConfig, sb, currentUser } from "./config.js"; 
 import { initCanvas, canvas } from "./canvas-core.js";
 import { initSizeControls } from "./canvas-size.js";
 import { initGuides } from "./canvas-guides.js";
@@ -14,11 +16,16 @@ import { initMyDesign } from "./my-design.js";
 import { initCanvasUtils } from "./canvas-utils.js";
 import { initShortcuts } from "./shortcuts.js";
 import { initContextMenu } from "./context-menu.js";
-// 벡터 생성 모듈 (수정된 outlineMaker.js와 연결)
+// 벡터 생성 모듈
 import { createVectorOutline } from "./outlineMaker.js";
+// ★ 템플릿 자동 로드 함수 가져오기
+import { loadProductFixedTemplate } from "./canvas-template.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
     try {
+        // ★ [중요] 전역 함수로 등록 (order.js에서 호출할 수 있도록 연결)
+        window.loadProductFixedTemplate = loadProductFixedTemplate;
+
         await initConfig();
         initCanvas();
         initCanvasUtils();
@@ -36,7 +43,25 @@ window.addEventListener("DOMContentLoaded", async () => {
         initAuth();
         initMyDesign();
         initMobileTextEditor();
-        initOutlineTool(); // ★ 칼선 도구 초기화
+        initOutlineTool(); // 칼선 도구 초기화
+
+        if (window.canvas) {
+            window.canvas.on('object:added', (e) => {
+                const addedObj = e.target;
+                
+                // 방금 추가된 게 '특수 칼선'이 아니라면
+                if (addedObj && addedObj.id !== 'product_fixed_overlay') {
+                    
+                    // 캔버스에 '특수 칼선'이 있는지 확인
+                    const fixedOverlay = window.canvas.getObjects().find(o => o.id === 'product_fixed_overlay');
+                    
+                    // 있으면 다시 맨 위로 올림
+                    if (fixedOverlay) {
+                        window.canvas.bringToFront(fixedOverlay);
+                    }
+                }
+            });
+        }
 
         console.log("🚀 모든 모듈 초기화 완료");
 
@@ -46,9 +71,12 @@ window.addEventListener("DOMContentLoaded", async () => {
             const mainEditor = document.getElementById("mainEditor");
 
             if (loading) loading.style.display = "none";
+            
+            // 시작 화면이 닫혀있지 않다면(아직 선택 전이라면) 그대로 둠
             if (startScreen && startScreen.style.display !== 'none') {
-                // 시작 화면 유지
+                // pass
             } else {
+                // 이미 에디터 모드라면 에디터 표시
                 if (mainEditor) mainEditor.style.display = "flex";
             }
         }, 300);
@@ -62,13 +90,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 /**
  * ★ 벡터(Path) 칼선 만들기 도구 초기화
  * - 3개 버튼 (일반, 등신대, 키링) 통합 처리
- * - 검증된 위치 보정 로직 적용
  */
 function initOutlineTool() {
-    // 공통으로 사용할 외곽선 생성 함수
     const runOutlineMaker = async (btnId, type) => {
         const btn = document.getElementById(btnId);
-        if (!btn) return; // 해당 버튼이 없으면 패스
+        if (!btn) return; 
 
         const currentCanvas = window.canvas || canvas;
         const activeObj = currentCanvas.getActiveObject();
@@ -78,7 +104,6 @@ function initOutlineTool() {
             return;
         }
 
-        // 버튼 상태 변경 (로딩 중)
         const originalText = btn.innerHTML;
         btn.innerText = "생성 중...";
         btn.disabled = true;
@@ -86,44 +111,36 @@ function initOutlineTool() {
         try {
             const src = activeObj.getSrc();
             
-            // 1. 벡터 생성 요청 (outlineMaker.js)
-            // type 파라미터를 넘겨서 'normal', 'keyring', 'standee'를 구분합니다.
+            // 벡터 생성 요청
             const result = await createVectorOutline(src, {
                 dilation: 15,       
                 color: '#FF00FF',   
                 strokeWidth: 2,
-                type: type // ★ 핵심: 버튼에 따라 타입 전달
+                type: type 
             });
 
-            // 2. 패스 객체 생성 (검증된 설정)
+            // 패스 객체 생성
             const pathObj = new fabric.Path(result.pathData, {
                 fill: '', 
                 stroke: result.color,
                 strokeWidth: result.strokeWidth,
                 strokeLineJoin: 'round',
                 strokeLineCap: 'round',
-                objectCaching: false, // 렌더링 이슈 방지
+                objectCaching: false,
                 selectable: true,
                 evented: true,
                 originX: 'center',
                 originY: 'center'
             });
 
-            // 3. ★ 정밀 위치 보정 (사용자님께서 확인해주신 '잘 되는 코드' 로직)
-            
-            // (A) Potrace 캔버스의 중심
+            // 정밀 위치 보정
             const svgImageCenterX = result.width / 2;
             const svgImageCenterY = result.height / 2;
-
-            // (B) 생성된 Path의 자체 중심 (Bounding Box 기준)
             const pathCenterX = pathObj.pathOffset.x;
             const pathCenterY = pathObj.pathOffset.y;
-
-            // (C) 오차 계산
             const diffX = pathCenterX - svgImageCenterX;
             const diffY = pathCenterY - svgImageCenterY;
 
-            // (D) 이미지의 회전/스케일에 맞춰 오차 적용
             const imgCenter = activeObj.getCenterPoint();
             const angleRad = fabric.util.degreesToRadians(activeObj.angle);
             const cos = Math.cos(angleRad);
@@ -132,7 +149,6 @@ function initOutlineTool() {
             const finalOffsetX = (diffX * activeObj.scaleX * cos) - (diffY * activeObj.scaleY * sin);
             const finalOffsetY = (diffX * activeObj.scaleX * sin) + (diffY * activeObj.scaleY * cos);
 
-            // 최종 위치 적용
             pathObj.set({
                 left: imgCenter.x + finalOffsetX,
                 top: imgCenter.y + finalOffsetY,
@@ -141,11 +157,8 @@ function initOutlineTool() {
                 angle: activeObj.angle
             });
 
-            // 캔버스에 추가
             currentCanvas.add(pathObj);
             currentCanvas.bringToFront(pathObj);
-            
-            // 렌더링 갱신
             pathObj.setCoords();
             currentCanvas.requestRenderAll();
             
@@ -155,31 +168,19 @@ function initOutlineTool() {
             console.error("벡터 생성 실패:", error);
             alert("생성 실패: " + error.message);
         } finally {
-            // 버튼 복구
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
     };
 
-    // 버튼 3개에 대해 각각 이벤트 리스너 등록
-    
-    // 1. 일반 외곽선 버튼
     const btnNormal = document.getElementById("btn-create-outline");
-    if (btnNormal) {
-        btnNormal.onclick = () => runOutlineMaker("btn-create-outline", "normal");
-    }
+    if (btnNormal) btnNormal.onclick = () => runOutlineMaker("btn-create-outline", "normal");
 
-    // 2. 등신대 만들기 버튼
     const btnStandee = document.getElementById("btn-make-standee");
-    if (btnStandee) {
-        btnStandee.onclick = () => runOutlineMaker("btn-make-standee", "standee");
-    }
+    if (btnStandee) btnStandee.onclick = () => runOutlineMaker("btn-make-standee", "standee");
 
-    // 3. 키링 만들기 버튼
     const btnKeyring = document.getElementById("btn-make-keyring");
-    if (btnKeyring) {
-        btnKeyring.onclick = () => runOutlineMaker("btn-make-keyring", "keyring");
-    }
+    if (btnKeyring) btnKeyring.onclick = () => runOutlineMaker("btn-make-keyring", "keyring");
 }
 
 /**
@@ -271,3 +272,151 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ==========================================================
+// ★ [수정됨] 유저 로고 업로드 (최종: user_id 저장 활성화)
+// ==========================================================
+window.uploadUserLogo = async () => {
+    // 1. 로그인 체크
+    if (!currentUser) return alert("로그인이 필요한 기능입니다.");
+
+    const fileInput = document.getElementById('logoFileInput');
+    const tagInput = document.getElementById('logoKeywordInput');
+    const file = fileInput.files[0];
+    const tags = tagInput.value;
+
+    if (!file) return alert("파일을 선택해주세요.");
+    
+    const btn = document.querySelector('#logoUploadModal .btn-round.primary');
+    const oldText = btn.innerText;
+    btn.innerText = "업로드 중...";
+    btn.disabled = true;
+
+    try {
+        // 2. [오류해결] 한글 파일명 깨짐 방지
+        const timestamp = Date.now();
+        const fileExt = file.name.split('.').pop(); 
+        const safeFileName = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${fileExt}`;
+        const filePath = `user_uploads/${currentUser.id}/${safeFileName}`;
+        
+        // 3. 스토리지에 파일 업로드
+        const { error: uploadError } = await sb.storage
+            .from('design') 
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // 4. 공개 URL 가져오기
+        const { data: urlData } = sb.storage
+            .from('design')
+            .getPublicUrl(filePath);
+        
+        const publicUrl = urlData.publicUrl;
+
+        // 5. DB 데이터 등록
+        // ★ user_id를 포함하여 저장합니다. (is_public은 DB에 없으므로 제외)
+        const payload = {
+            category: 'logo',
+            tags: tags || '유저업로드',
+            thumb_url: publicUrl,
+            data_url: publicUrl,
+            width: 1000,
+            height: 1000,
+            user_id: currentUser.id  // ✅ 카운트를 위해 필수
+        };
+
+        const { error: dbError } = await sb.from('library').insert(payload);
+
+        if (dbError) throw dbError;
+
+        // 6. 현재 개수 즉시 확인 (DB 기준)
+        const { count } = await sb
+            .from('library')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', currentUser.id)
+            .eq('category', 'logo');
+
+        const currentCount = count || 0;
+
+        alert(`✅ 업로드 성공!\n\n현재 누적 공유 로고: ${currentCount}개\n\n5개 달성 시: PNG 다운로드 잠금해제\n10개 달성 시: PDF 다운로드 잠금해제`);
+        
+        window.resetUpload(); 
+        document.getElementById('logoUploadModal').style.display = 'none';
+
+    } catch (e) {
+        console.error(e);
+        if (e.message.includes("Invalid key")) {
+             alert("업로드 경로 오류: 관리자에게 문의하세요.");
+        } else if (e.message.includes("column")) {
+             alert("DB 컬럼 오류: " + e.message);
+        } else {
+             alert("업로드 실패: " + e.message);
+        }
+    } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+    }
+};
+
+// ==========================================================
+// ★ [수정됨] 파일 선택 시: 미리보기 + 태그 자동완성
+// ==========================================================
+window.handleFileSelect = (input) => {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // 1. 검색 태그 자동 완성 (파일명 활용)
+        const fileNameNoExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+        const tagInput = document.getElementById('logoKeywordInput');
+        
+        // 태그 입력창이 비어있을 때만 자동 입력
+        if (tagInput && !tagInput.value) {
+            tagInput.value = fileNameNoExt + " 로고";
+        }
+
+        // 2. 이미지 미리보기
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('previewImage');
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            // 업로드 UI 전환
+            const icon = document.querySelector('.upload-icon');
+            const text = document.querySelector('.upload-text');
+            const sub = document.querySelector('.upload-sub');
+            const delBtn = document.getElementById('removeFileBtn');
+
+            if(icon) icon.style.display = 'none';
+            if(text) text.style.display = 'none';
+            if(sub) sub.style.display = 'none';
+            if(delBtn) delBtn.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+// 업로드 폼 리셋 기능
+window.resetUpload = (e) => {
+    if(e) e.stopPropagation();
+    const input = document.getElementById('logoFileInput');
+    if(input) input.value = '';
+    
+    // 태그 입력창도 초기화
+    const tagInput = document.getElementById('logoKeywordInput');
+    if(tagInput) tagInput.value = '';
+
+    const preview = document.getElementById('previewImage');
+    if(preview) preview.style.display = 'none';
+
+    const icon = document.querySelector('.upload-icon');
+    const text = document.querySelector('.upload-text');
+    const sub = document.querySelector('.upload-sub');
+    const delBtn = document.getElementById('removeFileBtn');
+
+    if(icon) icon.style.display = 'block';
+    if(text) text.style.display = 'block';
+    if(sub) sub.style.display = 'block';
+    if(delBtn) delBtn.style.display = 'none';
+};

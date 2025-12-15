@@ -141,10 +141,10 @@ export function createVectorOutline(imageSrc, options = {}) {
                         } else if (type === 'standee') {
                             // --- 등신대 로직 ---
                             const baseWidth = Math.max(bounds.width * 0.9, mmToPx(30));
-                            const baseHeight = mmToPx(12);
+                            const baseHeight = mmToPx(20);
                             
                             const centerX = bounds.bottomCenter.x;
-                            const overlap = baseHeight * 0.4; // 40% 겹침
+                            const overlap = baseHeight * 1; // 40% 겹침
                             const startY = bounds.bottomCenter.y - overlap;
 
                             const standRect = new paper.Path.Rectangle({

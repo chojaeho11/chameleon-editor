@@ -51,7 +51,7 @@
         /* 버튼 */
         .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-primary { background: #6366f1; color: white; }
-        .btn-vip { background: #d97706; color: white; } /* 주황색 버튼 */
+        .btn-vip { background: #d97706; color: white; } 
         .btn-danger { background: #fee2e2; color: #ef4444; }
         .btn-success { background: #22c55e; color: white; } 
         .btn-outline { background: #fff; border: 1px solid #cbd5e1; color: #334155; }
@@ -59,7 +59,7 @@
         .btn-file { background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 12px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; margin-right: 5px; margin-bottom: 3px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .btn-file:hover { border-color: #6366f1; color: #6366f1; }
         
-        /* 뱃지 및 드래그 */
+        /* 뱃지 */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
         .badge.draggable { cursor: grab; }
         .badge-site { font-size: 11px; padding: 3px 6px; border-radius: 4px; margin-right: 4px; font-weight: 800; border: 1px solid #e2e8f0; background: #fff; display: inline-block; min-width: 30px; text-align: center; }
@@ -166,7 +166,7 @@
                                 <th style="width:110px;">고객/연락처</th>
                                 <th style="width:220px;">주문 내역 (상품/옵션/수량)</th>
                                 <th style="width:90px; text-align:right;">금액</th>
-                                <th style="width:140px; background:#f0f9ff;">📅 배송일 / 담당자</th>
+                                <th style="width:180px; min-width: 160px; background:#f0f9ff;">📅 배송일 / 담당자</th>
                                 <th style="">주문 파일</th>
                                 <th style="width:100px;">결제 정보</th>
                             </tr>
@@ -196,57 +196,42 @@
                     <div class="card"><h4 style="margin-top:0;">🚚 배송 기사별 실적</h4><table style="margin-top:0;"><thead><tr><th>기사님</th><th style="text-align:right;">매출 기여도</th></tr></thead><tbody id="statDriverBody"></tbody></table></div>
                 </div>
             </div>
+
             <div id="sec-tasks" class="section">
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
-            <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-truck-fast" style="color:#6366f1;"></i> 날짜별 배송 스케줄
-            </h3>
-            <div style="display:flex; gap:8px; align-items:center;">
-                <select id="filterTaskDriver" class="input-text" style="width:200px; font-weight:bold;" onchange="loadDailyTasks()">
-                    <option value="all">🚛 전체 기사 보기</option>
-                    </select>
-                
-                <input type="date" id="taskDate" class="input-text" style="width:140px;" onchange="loadDailyTasks()">
-                <button class="btn btn-primary" onclick="loadDailyTasks()">조회</button>
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                            <i class="fa-solid fa-truck-fast" style="color:#6366f1;"></i> 날짜별 배송 스케줄
+                        </h3>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <select id="filterTaskDriver" class="input-text" style="width:200px; font-weight:bold;" onchange="loadDailyTasks()">
+                                <option value="all">🚛 전체 기사 보기</option>
+                            </select>
+                            
+                            <input type="date" id="taskDate" class="input-text" style="width:140px;" onchange="loadDailyTasks()">
+                            <button class="btn btn-primary" onclick="loadDailyTasks()">조회</button>
+                        </div>
+                    </div>
+
+                    <table style="margin-top:0;">
+                        <thead>
+                            <tr>
+                                <th style="width:90px; white-space:nowrap;">상태</th>
+                                <th style="width:180px;">고객 정보 (이름/연락처)</th>
+                                <th>주문 파일</th>
+                                <th style="width:180px;">🚚 배송 기사 배정</th>
+                                <th style="width:160px;">⏰ 시간 / 완료체크</th>
+                            </tr>
+                        </thead>
+                        <tbody id="taskListBody">
+                        </tbody>
+                    </table>
+                    <div style="margin-top:15px; background:#f0f9ff; padding:15px; border-radius:8px; font-size:13px; color:#334155;">
+                        💡 <b>사용 팁:</b> '통합 주문 관리' 리스트에서도 날짜를 지정할 수 있도록 하면 편합니다. 
+                        현재는 데이터베이스에 <code>delivery_target_date</code>(배송일)가 설정된 주문만 이곳에 나타납니다.
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <table style="margin-top:0;">
-            <thead>
-                <tr>
-                    <th style="width:90px; white-space:nowrap;">상태</th>
-                    <th style="width:180px;">고객 정보 (이름/연락처)</th>
-                    <th>주문 파일</th>
-                    <th style="width:150px;">🚚 배송 기사 배정</th>
-                    <th style="width:160px;">⏰ 시간 / 완료체크</th>
-                </tr>
-            </thead>
-            <tbody id="taskListBody">
-                </tbody>
-        </table>
-        </div>
-</div>
-
-        <table style="margin-top:0;">
-            <thead>
-                <tr>
-                    <th style="width:60px;">상태</th>
-                    <th style="width:180px;">고객 정보 (이름/연락처)</th>
-                    <th>주문 파일</th>
-                    <th style="width:180px;">🚚 배송 기사 배정</th>
-                    <th style="width:150px;">⏰ 시간 선택</th>
-                </tr>
-            </thead>
-            <tbody id="taskListBody">
-                </tbody>
-        </table>
-        <div style="margin-top:15px; background:#f0f9ff; padding:15px; border-radius:8px; font-size:13px; color:#334155;">
-            💡 <b>사용 팁:</b> '통합 주문 관리' 리스트에서도 날짜를 지정할 수 있도록 하면 편합니다. 
-            현재는 데이터베이스에 <code>delivery_target_date</code>(배송일)가 설정된 주문만 이곳에 나타납니다.
-        </div>
-    </div>
-</div>
 
             <div id="sec-products" class="section">
                  <div class="card" style="background:#f0f9ff; border:1px solid #bae6fd; margin-bottom:20px;">
@@ -338,14 +323,72 @@
                  <div class="product-layout">
                     <div class="card tpl-form">
                         <h3 style="margin-top:0;">📤 템플릿 등록</h3>
-                        <div class="form-group"><label class="form-label">카테고리</label><select id="tplCategory" class="input-text" onchange="toggleFileInputs()"><option value="transparent-graphic">로고</option><option value="vector">벡터 배경</option><option value="photo-bg">사진 배경</option><option value="graphic">그래픽</option></select></div>
-                        <div class="form-group"><label class="form-label">검색어</label><input id="tplTags" class="input-text" placeholder="예: 삼성, 로고"></div>
-                        <div class="form-group"><label class="form-label" id="lblThumb">1. 썸네일 (필수)</label><div class="file-drop-zone"><input type="file" id="fileThumb" accept="image/*"><span>이미지 선택</span></div><img id="previewThumb" class="preview-img"></div>
-                        <div class="form-group" id="groupDataFile"><label class="form-label">2. 벡터 데이터</label><div class="file-drop-zone"><input type="file" id="fileData" accept=".svg,.json"><span>SVG 파일 선택</span></div><div id="dataStatus" style="font-size:12px; color:#16a34a; display:none;">✅ 원본 준비됨!</div></div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">카테고리</label>
+                            <select id="tplCategory" class="input-text" onchange="toggleFileInputs()">
+                                <option value="logo">🎨 로고 (Logo)</option>
+                                <option value="transparent-graphic">🏁 패턴 (Pattern)</option>
+                                <option value="vector">🖼 벡터 배경 (Vector)</option>
+                                <option value="photo-bg">📷 사진 배경 (Photo)</option>
+                                <option value="graphic">🧸 그래픽/스티커 (Graphic)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">검색어 (태그)</label>
+                            <input id="tplTags" class="input-text" placeholder="예: 삼성, 로고, 여름">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">연결 제품 (Product Key)</label>
+                            <select id="tplProductKey" class="input-text">
+                                <option value="custom">공통 / 지정안함</option>
+                                </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" id="lblThumb">1. 썸네일 (필수)</label>
+                            <div class="file-drop-zone">
+                                <input type="file" id="fileThumb" accept="image/*">
+                                <span>이미지 선택</span>
+                            </div>
+                            <img id="previewThumb" class="preview-img">
+                        </div>
+
+                        <div class="form-group" id="groupDataFile">
+                            <label class="form-label">2. 벡터 데이터 (선택)</label>
+                            <div class="file-drop-zone">
+                                <input type="file" id="fileData" accept=".svg,.json">
+                                <span>SVG 파일 선택</span>
+                            </div>
+                            <div id="dataStatus" style="font-size:12px; color:#16a34a; display:none;">✅ 원본 준비됨!</div>
+                        </div>
+
                         <button class="btn btn-primary" style="width:100%;" onclick="uploadTemplate()">등록하기</button>
                     </div>
+
                     <div class="card">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><div style="display:flex; gap:10px;"><span>필터:</span><select id="filterTplCat" class="input-text" style="width:150px;" onchange="loadTemplates()"><option value="all">전체</option><option value="transparent-graphic">로고</option><option value="vector">배경</option></select></div><button class="btn btn-primary" onclick="loadTemplates()">새로고침</button></div>
+                        <div style="margin-bottom:15px;">
+                            <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                                <select id="filterTplCat" class="input-text" style="flex:1;" onchange="loadTemplates()">
+                                    <option value="all">📂 카테고리: 전체</option>
+                                    <option value="logo">🎨 로고</option>
+                                    <option value="transparent-graphic">🏁 패턴</option>
+                                    <option value="vector">🖼 벡터 배경</option>
+                                    <option value="photo-bg">📷 사진 배경</option>
+                                    <option value="graphic">🧸 그래픽</option>
+                                </select>
+                                
+                                <select id="filterTplProduct" class="input-text" style="flex:1;" onchange="loadTemplates()">
+                                    <option value="all">📦 제품연결: 전체 보기</option>
+                                    <option value="custom">🔹 공통 템플릿만 보기</option>
+                                    <option value="assigned">🔸 제품 전용만 보기</option>
+                                    <optgroup label="--- 개별 제품 선택 ---"></optgroup>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" style="width:100%;" onclick="loadTemplates()">새로고침 / 검색 적용</button>
+                        </div>
                         <div id="tplGrid" class="tpl-card-grid"></div>
                     </div>
                 </div>
@@ -402,7 +445,7 @@
             if(secId === 'sec-orders') loadOrders();
             if(secId === 'sec-stats') loadStatsData();
             if(secId === 'sec-members') loadMembers();
-            if(secId === 'sec-templates') loadTemplates();
+            if(secId === 'sec-templates') { loadTemplates(); loadProductKeys(); } // [수정] 템플릿 섹션 진입 시 제품 키 로드
             if(secId === 'sec-fonts') loadFonts(); 
             if(secId === 'sec-products') { loadCategories(); loadSystemDB(); }
             if(secId === 'sec-staff') loadStaffList(); 
@@ -535,28 +578,26 @@
                         <td><b>${order.manager_name}</b><br><span style="font-size:12px; color:#666;">${order.phone}</span></td>
                         <td style="color:#334155; max-width:220px;">${itemsDisplayHtml}</td>
                         <td style="text-align:right; font-weight:bold; color:#0f172a;">${priceStr}</td>
-                        // ▼ [수정] 배송 날짜 입력칸 추가
-                        <td style="background:#f9faff;">
+                        <td style="background:#f9faff; min-width: 170px;">
                             <div style="margin-bottom:6px;">
                                 <input type="date" class="input-text" 
-                                    style="padding:4px; font-size:11px; width:100%; border:1px solid #cbd5e1;" 
+                                    style="padding:5px; font-size:12px; width:100%; border:1px solid #cbd5e1; box-sizing:border-box;" 
                                     value="${order.delivery_target_date || ''}" 
                                     onchange="updateTaskDB('${order.id}', 'delivery_target_date', this.value)"
                                     title="배송 예정일 지정">
                             </div>
-                            ${managerSelect}
-                            ${driverSelect}
+                            <div style="margin-bottom:4px;">${managerSelect}</div>
+                            <div>${driverSelect}</div>
                         </td>
-                        // ▲ [수정 끝]
                         <td>
                             <div style="margin-bottom:5px; padding-bottom:5px; border-bottom:1px dashed #ddd;">
                                 <button class="btn btn-vip btn-sm" onclick="triggerManualSheet('${order.id}')" style="width:100%;">
-                                    <i class="fa-solid fa-file-pdf"></i> 고객이 올린파일은 파일을 검토 후 작업지시서를 새로 작성하여 이 버튼을 눌러 교체
+                                    <i class="fa-solid fa-file-pdf"></i> 작업지시서 교체
                                 </button>
                             </div>
-                            <div style="display:flex; align-items:flex-start; gap:5px;">
+                            <div style="display:flex; align-items:flex-start; gap:5px; flex-wrap:wrap;">
                                 <button class="btn btn-outline btn-sm" onclick="triggerFileReplace('${order.id}')" title="데이터교체" style="padding: 6px 8px; height: 30px; color:#2563eb; border-color:#bfdbfe; background:#eff6ff;"><i class="fa-solid fa-rotate"></i></button>
-                                <div style="display:flex; flex-wrap:wrap;">${fileBtns}</div>
+                                ${fileBtns}
                             </div>
                         </td>
                         <td>
@@ -745,10 +786,184 @@
         window.loadMembers = async () => { const {data}=await sb.from('profiles').select('*').order('created_at',{ascending:false}); const tbody=document.getElementById('memberListBody'); tbody.innerHTML=''; data?.forEach(m=>{ const r = m.role || 'customer'; const select = `<select onchange="updateMemberRole('${m.id}', this.value)" style="padding:4px; border:1px solid #ddd; border-radius:4px;"><option value="customer" ${r==='customer'?'selected':''}>일반회원</option><option value="vip" ${r==='vip'?'selected':''}>👑 VIP</option><option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option></select>`; tbody.innerHTML+=`<tr><td>${new Date(m.created_at).toLocaleDateString()}</td><td>${m.email}</td><td>${r}</td><td>${select}</td></tr>`; }); };
         window.updateMemberRole = async (id, newRole) => { if(!confirm("등급을 변경하시겠습니까?")) { loadMembers(); return; } const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); if(error) alert("실패: " + error.message); else alert("변경 완료"); };
         function initTemplateListeners() { const fThumb = document.getElementById('fileThumb'); if(fThumb) fThumb.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{document.getElementById('previewThumb').src=ev.target.result; document.getElementById('previewThumb').style.display='block';}; r.readAsDataURL(f);}); const fData = document.getElementById('fileData'); if(fData) fData.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{if(f.name.endsWith('.svg')){document.getElementById('dataStatus').style.display='block';}}; r.readAsDataURL(f);}); }
-        window.toggleFileInputs = () => { document.getElementById('groupDataFile').style.display = document.getElementById('tplCategory').value==='transparent-graphic'?'block':'none'; };
-        window.loadTemplates = async () => { const grid = document.getElementById('tplGrid'); const filterSelect = document.getElementById('filterTplCat'); if(!grid) return; grid.innerHTML = '<div style="padding:20px; text-align:center;">로딩 중...</div>'; let query = sb.from('library').select('id, category, thumb_url, tags').order('id', {ascending:false}).limit(30); if (filterSelect && filterSelect.value !== 'all') { query = query.eq('category', filterSelect.value); } const { data, error } = await query; grid.innerHTML = ''; if (error) { console.error(error); grid.innerHTML = '<div style="padding:20px; color:red;">데이터를 불러오지 못했습니다. (' + error.message + ')</div>'; return; } if (data && data.length > 0) { data.forEach(t => { const tagText = t.tags ? t.tags : '-'; grid.innerHTML += `<div class="tpl-card"><img src="${t.thumb_url}" class="tpl-thumb" loading="lazy"><div class="tpl-info"><span class="tpl-badge">${t.category}</span><div style="font-size:12px; font-weight:bold; margin: 5px 0; color:#475569;">${tagText}</div><button class="tpl-del-btn" onclick="deleteTemplate(${t.id})">삭제</button></div></div>`; }); } else { grid.innerHTML = '<div style="padding:20px; color:#999; text-align:center; width:100%;">등록된 템플릿이 없습니다.</div>'; } };
-        window.uploadTemplate = async () => { const cat = document.getElementById('tplCategory').value; const tags = document.getElementById('tplTags').value; const thumbFile = document.getElementById('fileThumb').files[0]; const dataFile = document.getElementById('fileData').files[0]; if (!thumbFile) return alert("썸네일 이미지는 필수입니다."); const btn = document.querySelector('#sec-templates .btn-primary'); const originalText = btn.innerText; btn.innerText = "업로드 중..."; btn.disabled = true; try { const timestamp = Date.now(); const thumbPath = `thumbs/${timestamp}_${thumbFile.name}`; const { error: thumbErr } = await sb.storage.from('design').upload(thumbPath, thumbFile); if(thumbErr) throw thumbErr; const { data: thumbUrlData } = sb.storage.from('design').getPublicUrl(thumbPath); const thumbUrl = thumbUrlData.publicUrl; let dataUrl = thumbUrl; if ((cat === 'transparent-graphic' || cat === 'vector') && dataFile) { const dataPath = `assets/${timestamp}_${dataFile.name}`; const { error: dataErr } = await sb.storage.from('design').upload(dataPath, dataFile); if(dataErr) throw dataErr; const { data: dataUrlData } = sb.storage.from('design').getPublicUrl(dataPath); dataUrl = dataUrlData.publicUrl; } const { error: dbErr } = await sb.from('library').insert({ category: cat, tags: tags || '관리자등록', thumb_url: thumbUrl, data_url: dataUrl, width: 1000, height: 1000, product_key: 'admin_upload' }); if (dbErr) throw dbErr; alert("✅ 템플릿 등록 성공!"); document.getElementById('tplTags').value = ''; document.getElementById('fileThumb').value = ''; document.getElementById('fileData').value = ''; document.getElementById('previewThumb').style.display = 'none'; document.getElementById('dataStatus').style.display = 'none'; loadTemplates(); } catch(e) { alert("업로드 실패: " + e.message); console.error(e); } finally { btn.innerText = originalText; btn.disabled = false; } };
+        
+        // [수정됨] 카테고리에 따라 SVG 파일 업로드창 보이기/숨기기
+        window.toggleFileInputs = () => { 
+            const cat = document.getElementById('tplCategory').value;
+            const groupData = document.getElementById('groupDataFile');
+            
+            // SVG 파일 업로드가 필요한 카테고리 목록
+            // vector: 벡터 배경
+            // transparent-graphic: 패턴
+            // logo: 로고
+            // graphic: 그래픽/스티커 (필요시 포함)
+            const needsVector = ['vector', 'transparent-graphic', 'logo', 'graphic'].includes(cat);
+
+            if (needsVector) {
+                groupData.style.display = 'block';
+            } else {
+                groupData.style.display = 'none'; // 사진 배경 등은 숨김
+            }
+        };
+        
+        // [추가] 제품 키 목록 로드 (등록 폼 & 검색 필터 둘 다 채움)
+        window.loadProductKeys = async () => {
+            const regSelect = document.getElementById('tplProductKey'); // 등록용
+            const filterSelect = document.getElementById('filterTplProduct'); // 검색 필터용
+            
+            if(!regSelect || !filterSelect) return;
+
+            // 초기화
+            regSelect.innerHTML = '<option value="custom">공통 / 지정안함</option>';
+            // 필터는 기본 옵션 유지하고 뒤에 추가
+            filterSelect.innerHTML = `
+                <option value="all">📦 제품연결: 전체 보기</option>
+                <option value="custom">🔹 공통 템플릿만 보기</option>
+                <option value="assigned">🔸 제품 전용만 보기</option>
+                <optgroup label="--- 개별 제품 선택 ---"></optgroup>
+            `;
+            
+            const { data: prods } = await sb.from('admin_products').select('code, name').order('name');
+            if(prods) {
+                prods.forEach(p => {
+                    const optionHtml = `<option value="${p.code}">${p.name} (${p.code})</option>`;
+                    regSelect.innerHTML += optionHtml;
+                    filterSelect.innerHTML += optionHtml;
+                });
+            }
+        };
+
+        // [수정] 템플릿 로드 (카테고리 + 제품 필터 동시 적용)
+        window.loadTemplates = async () => { 
+            const grid = document.getElementById('tplGrid'); 
+            const catFilter = document.getElementById('filterTplCat').value; 
+            const prodFilter = document.getElementById('filterTplProduct').value;
+
+            if(!grid) return; 
+            grid.innerHTML = '<div style="padding:20px; text-align:center;">로딩 중...</div>'; 
+            
+            let query = sb.from('library')
+                .select('id, category, thumb_url, tags, product_key')
+                .order('id', {ascending:false})
+                .limit(100); // 갯수 늘림
+
+            // 1. 카테고리 필터
+            if (catFilter !== 'all') { 
+                query = query.eq('category', catFilter); 
+            } 
+
+            // 2. 제품 키 필터
+            if (prodFilter === 'custom') {
+                // 공통만 (null 이거나 'custom')
+                query = query.or('product_key.eq.custom,product_key.is.null');
+            } else if (prodFilter === 'assigned') {
+                // 어딘가 할당된 것만 (custom이 아니고 null도 아닌 것)
+                query = query.neq('product_key', 'custom').not('product_key', 'is', null);
+            } else if (prodFilter !== 'all') {
+                // 특정 제품 코드 선택 시
+                query = query.eq('product_key', prodFilter);
+            }
+            
+            const { data, error } = await query; 
+            
+            grid.innerHTML = ''; 
+            if (error) { 
+                console.error(error); 
+                grid.innerHTML = '<div style="padding:20px; color:red;">에러: ' + error.message + '</div>'; 
+                return; 
+            } 
+            
+            if (data && data.length > 0) { 
+                data.forEach(t => { 
+                    const tagText = t.tags ? t.tags : '-'; 
+                    // 뱃지 표시 로직
+                    const pKey = (t.product_key && t.product_key !== 'custom') ? t.product_key : '공통';
+                    const isCustom = pKey === '공통';
+                    const badgeStyle = isCustom 
+                        ? "background:#f1f5f9; color:#64748b;" 
+                        : "background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;";
+
+                    grid.innerHTML += `
+                        <div class="tpl-card">
+                            <img src="${t.thumb_url}" class="tpl-thumb" loading="lazy">
+                            <div class="tpl-info">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                    <span class="tpl-badge" style="font-size:10px;">${t.category}</span>
+                                    <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; ${badgeStyle}">${pKey}</span>
+                                </div>
+                                <div style="font-size:12px; font-weight:bold; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tagText}</div>
+                                <button class="tpl-del-btn" onclick="deleteTemplate(${t.id})">삭제</button>
+                            </div>
+                        </div>`; 
+                }); 
+            } else { 
+                grid.innerHTML = '<div style="padding:40px; color:#999; text-align:center; width:100%;">조건에 맞는 템플릿이 없습니다.</div>'; 
+            } 
+        };
+        
+        // [수정] 템플릿 업로드: product_key 추가 저장
+        window.uploadTemplate = async () => { 
+            const cat = document.getElementById('tplCategory').value; 
+            const tags = document.getElementById('tplTags').value; 
+            const prodKey = document.getElementById('tplProductKey').value; // [추가]
+            const thumbFile = document.getElementById('fileThumb').files[0]; 
+            const dataFile = document.getElementById('fileData').files[0]; 
+            
+            if (!thumbFile) return alert("썸네일 이미지는 필수입니다."); 
+            const btn = document.querySelector('#sec-templates .btn-primary'); 
+            const originalText = btn.innerText; 
+            btn.innerText = "업로드 중..."; 
+            btn.disabled = true; 
+            
+            try { 
+                const timestamp = Date.now(); 
+                const thumbPath = `thumbs/${timestamp}_${thumbFile.name}`; 
+                const { error: thumbErr } = await sb.storage.from('design').upload(thumbPath, thumbFile); 
+                if(thumbErr) throw thumbErr; 
+                
+                const { data: thumbUrlData } = sb.storage.from('design').getPublicUrl(thumbPath); 
+                const thumbUrl = thumbUrlData.publicUrl; 
+                let dataUrl = thumbUrl; 
+                
+                if ((cat === 'transparent-graphic' || cat === 'vector') && dataFile) { 
+                    const dataPath = `assets/${timestamp}_${dataFile.name}`; 
+                    const { error: dataErr } = await sb.storage.from('design').upload(dataPath, dataFile); 
+                    if(dataErr) throw dataErr; 
+                    const { data: dataUrlData } = sb.storage.from('design').getPublicUrl(dataPath); 
+                    dataUrl = dataUrlData.publicUrl; 
+                } 
+                
+                // product_key 저장
+                const { error: dbErr } = await sb.from('library').insert({ 
+                    category: cat, 
+                    tags: tags || '관리자등록', 
+                    thumb_url: thumbUrl, 
+                    data_url: dataUrl, 
+                    width: 1000, 
+                    height: 1000, 
+                    product_key: prodKey // [수정]
+                }); 
+                
+                if (dbErr) throw dbErr; 
+                alert("✅ 템플릿 등록 성공!"); 
+                document.getElementById('tplTags').value = ''; 
+                document.getElementById('fileThumb').value = ''; 
+                document.getElementById('fileData').value = ''; 
+                document.getElementById('previewThumb').style.display = 'none'; 
+                document.getElementById('dataStatus').style.display = 'none'; 
+                loadTemplates(); 
+            } catch(e) { 
+                alert("업로드 실패: " + e.message); 
+                console.error(e); 
+            } finally { 
+                btn.innerText = originalText; 
+                btn.disabled = false; 
+            } 
+        };
+        
         window.deleteTemplate = async (id) => { if(confirm("삭제?")) await sb.from('library').delete().eq('id',id); loadTemplates(); };
+
+        // ... (나머지 로직 동일)
 
         // ==========================================
         // ★ [신규기능] 오늘 할일 (배송 관리) 로직
@@ -767,12 +982,6 @@
         }
 
         // 2. 리스트 불러오기 메인 함수
-        // ==========================================
-        // [수정됨] 오늘 할일 (배송 관리) 로직 - 완료 표시 강화
-        // ==========================================
-        // ==========================================
-        // [업그레이드] 오늘 할일 (배송 관리) - 정렬/필터/UI개선
-        // ==========================================
         window.loadDailyTasks = async () => {
             const dateInput = document.getElementById('taskDate');
             if (!dateInput.value) {

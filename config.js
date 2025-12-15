@@ -73,7 +73,7 @@ export function initConfig() {
     return initPromise;
 }
 
-// ★ DB 데이터 로드 및 사이즈 변환 함수 (핵심 수정 부분)
+// ★ DB 데이터 로드 및 사이즈 변환 함수
 async function loadSystemData() {
     try {
         // 1. 옵션(Addon) 불러오기
@@ -166,5 +166,28 @@ function loadUserCart() {
     const btnCart = document.getElementById("btnViewCart");
     if(btnCart) {
         btnCart.style.display = (currentUser || cartData.length > 0) ? "inline-flex" : "none";
+    }
+}
+
+// ★ [수정됨] 유저 로고 업로드 개수 카운트 함수 (user_id 컬럼 사용)
+export async function getUserLogoCount() {
+    if (!sb || !currentUser) return 0;
+
+    try {
+        // 사용자님이 생성하신 'user_id' 컬럼을 기준으로 카운트합니다.
+        const { count, error } = await sb
+            .from('library')
+            .select('*', { count: 'exact', head: true }) // head: true는 데이터 없이 갯수만 가져옴
+            .eq('user_id', currentUser.id) // DB 컬럼이 있으므로 정상 작동
+            .eq('category', 'logo');
+
+        if (error) {
+            console.warn("로고 카운트 조회 에러:", error.message);
+            return 0;
+        }
+        return count || 0;
+    } catch (e) {
+        console.error("로고 카운트 로직 실패:", e);
+        return 0;
     }
 }

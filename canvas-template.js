@@ -91,6 +91,12 @@ async function openTemplateOverlay(type) {
 }
 
 // ★★★ [핵심 수정] 섞임 방지: 카테고리를 엄격하게 분리 ★★★
+// canvas-template.js 내부
+
+// ★★★ [수정됨] 템플릿 검색 및 필터링 (제품 키 연동) ★★★
+// canvas-template.js
+
+// ★★★ [수정됨] 템플릿 검색 및 필터링 (안전한 로직) ★★★
 async function searchTemplates(category, keyword) {
     const grid = document.getElementById("tplGrid");
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">로딩중...</div>';
@@ -102,37 +108,63 @@ async function searchTemplates(category, keyword) {
     }
 
     try {
+        // 1. 현재 에디터의 제품 키 확인 (우선순위: window 전역변수 -> 캔버스 속성 -> 'custom')
+        const currentKey = window.currentProductKey || (canvas ? canvas.currentProductKey : 'custom') || 'custom';
+        
+        console.log(`🔎 템플릿 검색 시작 | 카테고리: ${category} | 현재 제품키: ${currentKey}`);
+
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, width, height, product_key, created_at')
             .order('created_at', { ascending: false })
             .limit(50);
 
-        // [수정된 부분] 이전의 '합치기 로직(OR)'을 제거하고, 정확히 일치하는 것만 가져옵니다.
+        // 2. 카테고리 필터
         if (category && category !== 'all') {
             query = query.eq('category', category); 
         }
         
+        // 3. 키워드 검색
         if (keyword) {
             query = query.ilike('tags', `%${keyword}%`);
         }
+
+        // 4. ★ [핵심] 제품 키 필터링 로직
+        // 논리: (내 제품키와 똑같음) OR (공통 템플릿임) OR (키가 비어있음)
+        // 주의: Supabase OR 문법은 공백 없이 써야 함
+        const filterCondition = `product_key.eq.${currentKey},product_key.eq.custom,product_key.is.null`;
+        query = query.or(filterCondition);
 
         const { data, error } = await query;
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">등록된 템플릿이 없습니다.</div>';
+            console.log("결과 없음. 쿼리 조건:", filterCondition);
+            grid.innerHTML = `
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
+                    <i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:10px; display:block;"></i>
+                    사용 가능한 템플릿이 없습니다.<br>
+                    <span style="font-size:11px;">(현재 제품: ${currentKey})</span>
+                </div>`;
             return;
         }
 
+        // 5. 그리드 렌더링
         grid.innerHTML = "";
         data.forEach((item) => {
             const card = document.createElement("div");
             card.className = "tpl-item";
             const imgUrl = item.thumb_url || 'https://via.placeholder.com/300?text=No+Image';
             const displayTitle = item.tags ? item.tags.split(',')[0] : '무제';
+            
+            // 전용 템플릿 표시
+            const isExclusive = item.product_key && item.product_key !== 'custom';
+            const badgeHtml = isExclusive 
+                ? `<span style="position:absolute; top:8px; left:8px; background:#6366f1; color:white; font-size:10px; padding:3px 6px; border-radius:4px; z-index:2; box-shadow:0 2px 4px rgba(0,0,0,0.2);">전용</span>` 
+                : '';
 
             card.innerHTML = `
-                <img src="${imgUrl}" class="tpl-item-img" loading="lazy" style="width:100%; height:auto; object-fit:contain; display:block;">
+                ${badgeHtml}
+                <img src="${imgUrl}" class="tpl-item-img" loading="lazy">
                 <div class="tpl-overlay-info">
                     <span class="tpl-name">${displayTitle}</span>
                     <button class="btn-use-mini" type="button">바로 적용</button>
@@ -157,7 +189,7 @@ async function searchTemplates(category, keyword) {
         });
     } catch (e) {
         console.error(e);
-        grid.innerHTML = `<div style="text-align:center; color:red;">에러: ${e.message}</div>`;
+        grid.innerHTML = `<div style="text-align:center; color:red;">시스템 에러: ${e.message}</div>`;
     }
 }
 
@@ -622,3 +654,89 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// canvas-template.js 맨 아래에 추가
+
+// ★ [신규] 제품 전용 고정 템플릿(칼선) 자동 로드 함수
+// [canvas-template.js] 파일 맨 아래에 추가 또는 교체
+
+// ★ [신규] 제품 전용 고정 템플릿(칼선) 자동 로드 함수 - 오버레이 모드
+
+// 오버레이 객체 추적용 변수
+let overlayObject = null;
+
+export function loadProductFixedTemplate(url) {
+    if (!canvas || !url) return;
+
+    console.log("🔒 특수 상품 템플릿(칼선) 로드 중:", url);
+    const loading = document.getElementById("loading");
+    if (loading) loading.style.display = "flex";
+
+    // 공통 처리 함수 (이미지 또는 SVG 그룹)
+    const setupSpecialOverlay = (obj) => {
+        if (!obj) {
+            if (loading) loading.style.display = "none";
+            return;
+        }
+
+        // 1. 기존 칼선 삭제 (중복 방지)
+        const oldOverlay = canvas.getObjects().find(o => o.id === 'product_fixed_overlay');
+        if (oldOverlay) canvas.remove(oldOverlay);
+
+        // 2. 대지(Board) 크기에 맞추기
+        const board = canvas.getObjects().find(o => o.isBoard);
+        let tLeft = 0, tTop = 0, tW = canvas.width, tH = canvas.height;
+
+        if (board) {
+            tW = board.width * board.scaleX;
+            tH = board.height * board.scaleY;
+            tLeft = board.left;
+            tTop = board.top;
+        }
+
+        // 이미지 크기를 대지 크기에 강제로 맞춤 (비율 무시, 꽉 채움)
+        // 칼선 템플릿은 대지와 1:1 사이즈로 제작되므로 scaleX, scaleY를 각각 계산
+        const scaleX = tW / obj.width;
+        const scaleY = tH / obj.height;
+
+        obj.set({
+            scaleX: scaleX,
+            scaleY: scaleY,
+            left: tLeft + tW / 2,
+            top: tTop + tH / 2,
+            originX: 'center',
+            originY: 'center',
+            
+            // ★ 핵심 설정: 맨 위에 있지만 클릭은 통과됨
+            id: 'product_fixed_overlay', 
+            selectable: false,
+            evented: false,              // 마우스 이벤트 무시 (클릭 통과)
+            hasControls: false,
+            hasBorders: false,
+            lockMovementX: true,
+            lockMovementY: true,
+            hoverCursor: 'default',
+            excludeFromExport: false     // 저장 시 포함 여부 (필요에 따라 true/false 변경)
+        });
+
+        // 3. 캔버스에 추가하고 맨 앞으로 가져오기
+        overlayObject = obj;
+        canvas.add(obj);
+        canvas.bringToFront(obj); // 무조건 맨 위로
+        canvas.requestRenderAll();
+        
+        if (loading) loading.style.display = "none";
+        console.log("✅ 템플릿 오버레이 고정 완료");
+    };
+
+    // 파일 타입에 따른 로드 분기
+    if (url.toLowerCase().endsWith('.svg') || url.includes('data:image/svg')) {
+        fabric.loadSVGFromURL(url, (objects, options) => {
+            const group = fabric.util.groupSVGElements(objects, options);
+            setupSpecialOverlay(group);
+        });
+    } else {
+        fabric.Image.fromURL(url, (img) => {
+            setupSpecialOverlay(img);
+        }, { crossOrigin: 'anonymous' });
+    }
+}
