@@ -50,7 +50,9 @@
         
         /* 버튼 */
         .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-primary { background: #6366f1; color: white; }
+        .btn-primary { background: #6366f1; color: white; } /* 보라색 (수정됨 상태) */
+        .btn-sky { background: #0ea5e9; color: white; } /* 하늘색 (기본 상태) */
+        .btn-sky:hover { background: #0284c7; }
         .btn-vip { background: #d97706; color: white; } 
         .btn-danger { background: #fee2e2; color: #ef4444; }
         .btn-success { background: #22c55e; color: white; } 
@@ -100,12 +102,36 @@
         .stat-info div:last-child { font-size: 24px; font-weight: 800; color: #0f172a; }
         .progress-bar-bg { width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-top: 8px; }
         .progress-bar-fill { height: 100%; border-radius: 4px; transition: 0.5s; }
+
+        /* 모달 스타일 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-box { background: white; border-radius: 12px; padding: 25px; width: 500px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px; }
+        .modal-header { font-size: 18px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .file-list-area { max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #f8fafc; }
+        .file-item-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; margin-bottom: 6px; border: 1px solid #eee; border-radius: 6px; font-size: 13px; }
+        .file-item-row:last-child { margin-bottom: 0; }
     </style>
 </head>
 <body>
     <div id="loading"><div class="spinner"></div></div>
-    <input type="file" id="replaceFileInput" style="display:none;" onchange="handleFileReplace(this)">
-    <input type="file" id="manualOrderSheetInput" style="display:none;" accept="application/pdf" onchange="uploadManualOrderSheet(this)">
+    
+    <div id="fileManagerModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>📂 주문 파일 관리</span>
+                <button class="btn btn-outline btn-sm" onclick="closeFileModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="fileMgrList" class="file-list-area">
+                </div>
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border: 1px dashed #bae6fd;">
+                <div style="font-size: 12px; font-weight: bold; color: #0369a1; margin-bottom: 8px;">➕ 새 파일 추가</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="file" id="fileMgrInput" class="input-text" style="padding: 6px;">
+                    <button class="btn btn-primary" onclick="uploadFileToOrder()">업로드</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="sidebar">
         <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
@@ -163,7 +189,7 @@
                                 <th style="width:40px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
                                 <th style="width:50px;">Site</th>
                                 <th style="width:90px;">날짜</th>
-                                <th style="width:110px;">고객/연락처</th>
+                                <th style="width:180px;">고객/주소/노하우</th>
                                 <th style="width:220px;">주문 내역 (상품/옵션/수량)</th>
                                 <th style="width:90px; text-align:right;">금액</th>
                                 <th style="width:180px; min-width: 160px; background:#f0f9ff;">📅 배송일 / 담당자</th>
@@ -212,7 +238,6 @@
                             <button class="btn btn-primary" onclick="loadDailyTasks()">조회</button>
                         </div>
                     </div>
-
                     <table style="margin-top:0;">
                         <thead>
                             <tr>
@@ -223,13 +248,8 @@
                                 <th style="width:160px;">⏰ 시간 / 완료체크</th>
                             </tr>
                         </thead>
-                        <tbody id="taskListBody">
-                        </tbody>
+                        <tbody id="taskListBody"></tbody>
                     </table>
-                    <div style="margin-top:15px; background:#f0f9ff; padding:15px; border-radius:8px; font-size:13px; color:#334155;">
-                        💡 <b>사용 팁:</b> '통합 주문 관리' 리스트에서도 날짜를 지정할 수 있도록 하면 편합니다. 
-                        현재는 데이터베이스에 <code>delivery_target_date</code>(배송일)가 설정된 주문만 이곳에 나타납니다.
-                    </div>
                 </div>
             </div>
 
@@ -323,7 +343,6 @@
                  <div class="product-layout">
                     <div class="card tpl-form">
                         <h3 style="margin-top:0;">📤 템플릿 등록</h3>
-                        
                         <div class="form-group">
                             <label class="form-label">카테고리</label>
                             <select id="tplCategory" class="input-text" onchange="toggleFileInputs()">
@@ -334,19 +353,16 @@
                                 <option value="graphic">🧸 그래픽/스티커 (Graphic)</option>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label class="form-label">검색어 (태그)</label>
                             <input id="tplTags" class="input-text" placeholder="예: 삼성, 로고, 여름">
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">연결 제품 (Product Key)</label>
                             <select id="tplProductKey" class="input-text">
                                 <option value="custom">공통 / 지정안함</option>
-                                </select>
+                            </select>
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label" id="lblThumb">1. 썸네일 (필수)</label>
                             <div class="file-drop-zone">
@@ -355,7 +371,6 @@
                             </div>
                             <img id="previewThumb" class="preview-img">
                         </div>
-
                         <div class="form-group" id="groupDataFile">
                             <label class="form-label">2. 벡터 데이터 (선택)</label>
                             <div class="file-drop-zone">
@@ -364,7 +379,6 @@
                             </div>
                             <div id="dataStatus" style="font-size:12px; color:#16a34a; display:none;">✅ 원본 준비됨!</div>
                         </div>
-
                         <button class="btn btn-primary" style="width:100%;" onclick="uploadTemplate()">등록하기</button>
                     </div>
 
@@ -379,7 +393,6 @@
                                     <option value="photo-bg">📷 사진 배경</option>
                                     <option value="graphic">🧸 그래픽</option>
                                 </select>
-                                
                                 <select id="filterTplProduct" class="input-text" style="flex:1;" onchange="loadTemplates()">
                                     <option value="all">📦 제품연결: 전체 보기</option>
                                     <option value="custom">🔹 공통 템플릿만 보기</option>
@@ -428,6 +441,10 @@
         let allProducts = [];
         let staffList = []; 
 
+        // [신규] 파일 관리를 위한 상태 변수
+        let currentMgrOrderId = null;
+        let currentMgrFiles = [];
+
         const formatCurrency = (amount, siteCode) => {
             if (!amount) return '0';
             const site = siteCode || 'KR';
@@ -445,7 +462,7 @@
             if(secId === 'sec-orders') loadOrders();
             if(secId === 'sec-stats') loadStatsData();
             if(secId === 'sec-members') loadMembers();
-            if(secId === 'sec-templates') { loadTemplates(); loadProductKeys(); } // [수정] 템플릿 섹션 진입 시 제품 키 로드
+            if(secId === 'sec-templates') { loadTemplates(); loadProductKeys(); }
             if(secId === 'sec-fonts') loadFonts(); 
             if(secId === 'sec-products') { loadCategories(); loadSystemDB(); }
             if(secId === 'sec-staff') loadStaffList(); 
@@ -456,7 +473,7 @@
         function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
 
         // ==========================================
-        // 2. 주문 관리 (Orders)
+        // 2. 주문 관리 (Orders) - [수정됨: 노하우 표시 추가]
         // ==========================================
         window.filterOrders = (status, btn) => {
             currentOrderStatus = status;
@@ -503,6 +520,14 @@
             const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
             allOrders = filteredData; 
 
+            // [추가] 배송 노하우 데이터 조회 (주소 기반)
+            const addresses = filteredData.map(o => o.address).filter(a => a);
+            let tipMap = {};
+            if(addresses.length > 0) {
+                const { data: tips } = await sb.from('delivery_knowhow').select('*').in('address', addresses);
+                if(tips) tips.forEach(t => tipMap[t.address] = t);
+            }
+
             // 가격 정보 맵핑
             const { data: allProds } = await sb.from('admin_products').select('price, name');
             const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
@@ -513,12 +538,12 @@
                 const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
                 const filesJson = order.files ? JSON.stringify(order.files).replace(/"/g, '&quot;') : '[]';
                 
+                // ... (아이템 계산 로직 생략 없이 포함)
                 let items = [];
                 if (order.items) {
                     if (Array.isArray(order.items)) items = order.items;
                     else if (typeof order.items === 'string') { try { items = JSON.parse(order.items); } catch(e) { items = []; } }
                 }
-                
                 if (items.length === 0 && order.files && Array.isArray(order.files)) {
                     order.files.forEach(f => {
                         if (f.name.indexOf('작업지시서') === -1 && f.name.indexOf('견적서') === -1) {
@@ -557,25 +582,49 @@
                     itemsDisplayHtml = '<span style="color:#ccc; font-size:12px;">내역 없음</span>';
                 }
 
+                // 파일 목록 및 버튼 로직
                 let fileBtns = ''; 
-                if(order.files && Array.isArray(order.files)) {
-                    order.files.forEach(f => { fileBtns += `<a href="${f.url}" target="_blank" class="btn-file" title="${f.name}"><i class="fa-solid fa-file"></i> ${f.name}</a>`; });
+                const currentFiles = order.files || [];
+                const isModified = currentFiles.some(f => f.type === 'replaced_file' || f.type === 'admin_added');
+                
+                const fileMgrBtnClass = isModified ? 'btn-primary' : 'btn-sky';
+                const fileMgrBtnText = isModified ? '<i class="fa-solid fa-folder-open"></i> 교체된 주문' : '<i class="fa-solid fa-file-pen"></i> 파일교체';
+
+                if(currentFiles.length > 0) {
+                    currentFiles.forEach(f => { fileBtns += `<a href="${f.url}" target="_blank" class="btn-file" title="${f.name}"><i class="fa-solid fa-file"></i> ${f.name}</a>`; });
                 } else { fileBtns = '<span style="color:#ccc; font-size:12px;">파일 없음</span>'; }
 
                 let payMethod = order.payment_method || '-';
                 let payBadge = `<span class="pay-badge pay-wait">미결제</span>`;
                 const isPaid = (order.payment_status === 'paid' || order.payment_status === '결제완료' || order.payment_status === '카드결제완료' || order.payment_status === '입금확인됨');
-                
                 if (isPaid) payBadge = `<span class="pay-badge pay-done">결제완료</span>`; 
                 else if (order.payment_status === '입금대기') payBadge = `<span class="pay-badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;">입금대기</span>`;
                 else if (order.payment_status === '결제중단') payBadge = `<span class="pay-badge" style="background:#f1f5f9; color:#64748b;">결제중단</span>`;
+
+                // [추가] 노하우 표시 HTML
+                const tip = tipMap[order.address];
+                let tipHtml = '';
+                if(tip) {
+                    tipHtml = `<div style="margin-top:5px; padding:6px; background:#fffbeb; border:1px solid #fcd34d; border-radius:4px; font-size:11px; color:#92400e;">
+                        <i class="fa-solid fa-lightbulb"></i> <b>기사 노하우:</b><br>${tip.content}
+                    </div>`;
+                }
 
                 tbody.innerHTML += `
                     <tr>
                         <td><input type="checkbox" class="row-chk" value="${order.id}" data-manager="${order.manager_name}" data-files="${filesJson}" data-items="${itemsJson}"></td>
                         <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
                         <td>${new Date(order.created_at).toLocaleDateString()}<br><small style="color:#888;">${new Date(order.created_at).toLocaleTimeString()}</small></td>
-                        <td><b>${order.manager_name}</b><br><span style="font-size:12px; color:#666;">${order.phone}</span></td>
+                        
+                        <td>
+                            <b>${order.manager_name}</b><br>
+                            <span style="font-size:12px; color:#666;">${order.phone}</span>
+                            <div style="margin-top:4px; font-size:12px; color:#334155;">
+                                <i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> ${order.address || '주소없음'}
+                            </div>
+                            ${tipHtml}
+                        </td>
+
                         <td style="color:#334155; max-width:220px;">${itemsDisplayHtml}</td>
                         <td style="text-align:right; font-weight:bold; color:#0f172a;">${priceStr}</td>
                         <td style="background:#f9faff; min-width: 170px;">
@@ -590,13 +639,12 @@
                             <div>${driverSelect}</div>
                         </td>
                         <td>
-                            <div style="margin-bottom:5px; padding-bottom:5px; border-bottom:1px dashed #ddd;">
-                                <button class="btn btn-vip btn-sm" onclick="triggerManualSheet('${order.id}')" style="width:100%;">
-                                    <i class="fa-solid fa-file-pdf"></i> 작업지시서 교체
+                            <div style="margin-bottom:8px;">
+                                <button class="btn ${fileMgrBtnClass}" onclick="openFileModal('${order.id}')" style="width:100%; font-size:12px;">
+                                    ${fileMgrBtnText}
                                 </button>
                             </div>
                             <div style="display:flex; align-items:flex-start; gap:5px; flex-wrap:wrap;">
-                                <button class="btn btn-outline btn-sm" onclick="triggerFileReplace('${order.id}')" title="데이터교체" style="padding: 6px 8px; height: 30px; color:#2563eb; border-color:#bfdbfe; background:#eff6ff;"><i class="fa-solid fa-rotate"></i></button>
                                 ${fileBtns}
                             </div>
                         </td>
@@ -611,6 +659,130 @@
             showLoading(false);
         };
 
+        // ==========================================
+        // [파일 관리 모달 로직 + 한글 파일명 오류 패치 적용됨]
+        // ==========================================
+        window.openFileModal = async (orderId) => {
+            currentMgrOrderId = orderId;
+            showLoading(true);
+            try {
+                const { data, error } = await sb.from('orders').select('files').eq('id', orderId).single();
+                if (error) throw error;
+                currentMgrFiles = data.files || [];
+                renderFileMgrList();
+                document.getElementById('fileManagerModal').style.display = 'flex';
+            } catch(e) {
+                alert("파일 정보를 불러오지 못했습니다: " + e.message);
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        window.closeFileModal = () => {
+            document.getElementById('fileManagerModal').style.display = 'none';
+            currentMgrOrderId = null;
+            currentMgrFiles = [];
+            document.getElementById('fileMgrInput').value = '';
+        };
+
+        function renderFileMgrList() {
+            const listArea = document.getElementById('fileMgrList');
+            listArea.innerHTML = '';
+            
+            if (currentMgrFiles.length === 0) {
+                listArea.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">등록된 파일이 없습니다.</div>';
+                return;
+            }
+
+            currentMgrFiles.forEach((file, index) => {
+                let badge = '';
+                if (file.name.includes('견적서')) badge = '<span class="badge" style="background:#f1f5f9; color:#64748b; margin-right:5px;">견적서</span>';
+                else if (file.name.includes('작업지시서')) badge = '<span class="badge" style="background:#fee2e2; color:#ef4444; margin-right:5px;">지시서</span>';
+                else if (file.type === 'admin_added') badge = '<span class="badge" style="background:#dbeafe; color:#2563eb; margin-right:5px;">추가됨</span>';
+
+                listArea.innerHTML += `
+                    <div class="file-item-row">
+                        <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center;">
+                            ${badge}
+                            <a href="${file.url}" target="_blank" style="text-decoration:none; color:#334155; font-weight:bold;">${file.name}</a>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteFileFromOrder(${index})" style="margin-left:10px;">삭제</button>
+                    </div>
+                `;
+            });
+        }
+
+        window.deleteFileFromOrder = async (index) => {
+            if (!confirm("정말 이 파일을 목록에서 삭제하시겠습니까?")) return;
+            currentMgrFiles.splice(index, 1);
+            await updateOrderFilesDB();
+        };
+
+        // ★ [핵심] 랜덤 영문 변환 업로드 함수 (한글 오류 완벽 해결)
+        window.uploadFileToOrder = async () => {
+            const input = document.getElementById('fileMgrInput');
+            if (!input.files || input.files.length === 0) return alert("추가할 파일을 선택해주세요.");
+            
+            const file = input.files[0];
+            showLoading(true);
+            try {
+                // 1. 파일 확장자 추출
+                const parts = file.name.split('.');
+                const ext = parts.length > 1 ? parts.pop() : ''; 
+                
+                // 2. 저장 경로용 이름 생성 (한글 제외, 오직 영문+숫자+시간)
+                const timestamp = Date.now();
+                const randomStr = Math.random().toString(36).substring(2, 10); 
+                const safeStorageName = `added_${timestamp}_${randomStr}.${ext}`;
+
+                // 3. 스토리지 경로 설정
+                const path = `orders/${currentMgrOrderId}/${safeStorageName}`;
+                
+                // 4. 스토리지 업로드
+                const { error: uploadErr } = await sb.storage.from('orders').upload(path, file, {
+                    upsert: true
+                });
+
+                if (uploadErr) throw uploadErr;
+                
+                const { data: publicUrlData } = sb.storage.from('orders').getPublicUrl(path);
+                
+                // 5. DB 저장용 객체 (name은 한글 원본 유지)
+                const newFileObj = {
+                    name: file.name, 
+                    url: publicUrlData.publicUrl, 
+                    type: 'admin_added' 
+                };
+                
+                currentMgrFiles.push(newFileObj);
+                await updateOrderFilesDB();
+                
+                input.value = ''; 
+            } catch (e) {
+                console.error(e);
+                alert("파일 추가 실패: " + e.message);
+                showLoading(false);
+            }
+        };
+
+        async function updateOrderFilesDB() {
+            if (!currentMgrOrderId) return;
+            showLoading(true);
+            try {
+                const { error } = await sb.from('orders').update({ files: currentMgrFiles }).eq('id', currentMgrOrderId);
+                if (error) throw error;
+                renderFileMgrList(); 
+                loadOrders(); 
+            } catch(e) {
+                alert("DB 저장 오류: " + e.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ==========================================
+        // (기존) 스태프, 일괄처리 로직 등
+        // ==========================================
         async function fetchStaffForOrders() { const { data } = await sb.from('admin_staff').select('*'); staffList = data || []; }
         function createStaffSelectHTML(orderId, role, selectedId) {
             const roleName = role === 'manager' ? '담당' : '배송';
@@ -641,7 +813,6 @@
             if (error) alert("실패: " + error.message); else loadOrders();
         };
         
-        // [일괄 다운로드]
         window.downloadBulkFiles = async () => {
             const checks = document.querySelectorAll('.row-chk:checked');
             if (checks.length === 0) return alert("다운로드할 주문을 선택해주세요.");
@@ -692,72 +863,8 @@
         
         window.confirmPayment = async (id) => { if(!confirm("입금을 확인하고 '결제완료' 처리하시겠습니까?")) return; const { error } = await sb.from('orders').update({ payment_status: '결제완료', payment_method: '계좌이체' }).eq('id', id); if(error) alert("오류: " + error.message); else loadOrders(); };
 
-        // [파일 교체] (데이터 파일만)
-        let targetReplaceOrderId = null;
-        window.triggerFileReplace = (id) => { targetReplaceOrderId = id; document.getElementById('replaceFileInput').click(); }
-        window.handleFileReplace = async (input) => {
-            if (!input.files || input.files.length === 0) return;
-            if (!targetReplaceOrderId) return;
-            const file = input.files[0];
-            const confirmMsg = `기존 데이터 파일을 삭제하고\n'${file.name}' 파일로 교체하시겠습니까?\n(견적서와 작업지시서는 유지됩니다)`;
-            if (!confirm(confirmMsg)) { input.value = ''; return; }
-            showLoading(true);
-            try {
-                const { data: orderData, error: fetchErr } = await sb.from('orders').select('files').eq('id', targetReplaceOrderId).single();
-                if (fetchErr) throw fetchErr;
-                const existingFiles = orderData.files || [];
-                const keptFiles = existingFiles.filter(f => (f.name && f.name.includes('견적서')) || (f.name && f.name.includes('작업지시서')));
-                const timestamp = Date.now();
-                const path = `orders/${targetReplaceOrderId}/replaced_${timestamp}_${file.name}`;
-                const { error: uploadErr } = await sb.storage.from('orders').upload(path, file);
-                if (uploadErr) throw uploadErr;
-                const { data: publicUrlData } = sb.storage.from('orders').getPublicUrl(path);
-                const newFileObj = { name: file.name, url: publicUrlData.publicUrl, type: 'replaced_file' };
-                const finalFilesArray = [...keptFiles, newFileObj];
-                const { error: dbErr } = await sb.from('orders').update({ files: finalFilesArray }).eq('id', targetReplaceOrderId);
-                if (dbErr) throw dbErr;
-                alert("파일이 안전하게 교체되었습니다."); loadOrders(); 
-            } catch (e) { console.error(e); alert("파일 교체 실패: " + e.message); } finally { input.value = ''; targetReplaceOrderId = null; showLoading(false); }
-        };
-
-        // ★ [추가] 작업지시서 수동 교체
-        let targetManualSheetId = null;
-        window.triggerManualSheet = (id) => { targetManualSheetId = id; document.getElementById('manualOrderSheetInput').click(); }
-        window.uploadManualOrderSheet = async (input) => {
-            if (!input.files || input.files.length === 0) return;
-            if (!targetManualSheetId) return;
-            const file = input.files[0];
-            if (!confirm("선택한 PDF 파일로 작업지시서를 교체하시겠습니까?")) { input.value = ''; return; }
-            showLoading(true);
-            try {
-                // 1. 기존 파일 목록 가져오기
-                const { data: orderData, error: fetchErr } = await sb.from('orders').select('files').eq('id', targetManualSheetId).single();
-                if (fetchErr) throw fetchErr;
-                const existingFiles = orderData.files || [];
-                
-                // 2. 기존 작업지시서 제거
-                const keptFiles = existingFiles.filter(f => !f.name.includes('작업지시서'));
-                
-                // 3. 새 지시서 업로드
-                const timestamp = Date.now();
-                const path = `orders/${targetManualSheetId}/manual_sheet_${timestamp}.pdf`;
-                const { error: uploadErr } = await sb.storage.from('orders').upload(path, file);
-                if (uploadErr) throw uploadErr;
-                const { data: publicUrlData } = sb.storage.from('orders').getPublicUrl(path);
-                
-                // 4. 새 파일 객체 추가 (이름을 '작업지시서.pdf'로 고정)
-                const newSheetObj = { name: '작업지시서(수정).pdf', url: publicUrlData.publicUrl, type: 'order_sheet' };
-                const finalFilesArray = [newSheetObj, ...keptFiles]; // 지시서를 맨 앞에 배치
-
-                // 5. DB 업데이트
-                const { error: dbErr } = await sb.from('orders').update({ files: finalFilesArray }).eq('id', targetManualSheetId);
-                if (dbErr) throw dbErr;
-                alert("작업지시서가 교체되었습니다."); loadOrders(); 
-            } catch(e) { console.error(e); alert("교체 실패: " + e.message); } finally { input.value = ''; targetManualSheetId = null; showLoading(false); }
-        }
-
         // (이하 통계, 상품 관리 로직 기존 유지 - 분량상 생략된 부분 없이 모두 포함됨)
-        window.loadStatsData = async () => { /* 기존 유지 */ let start = document.getElementById('statStartDate').value; let end = document.getElementById('statEndDate').value; if(!start || !end) { const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); start = firstDay.toISOString().split('T')[0]; end = now.toISOString().split('T')[0]; document.getElementById('statStartDate').value = start; document.getElementById('statEndDate').value = end; } document.getElementById('loading').style.display = 'flex'; const { data: orders, error } = await sb.from('orders').select('*').gte('created_at', start + 'T00:00:00').lte('created_at', end + 'T23:59:59'); if(error) { alert("로드 실패"); document.getElementById('loading').style.display = 'none'; return; } const { data: allProds } = await sb.from('admin_products').select('price, name'); const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price); let totalRevenue = 0; const managerStats = {}; const driverStats = {}; orders.forEach(o => { let amt = o.total_amount || 0; let items = o.items; if (typeof items === 'string') { try { items = JSON.parse(items); } catch(e) { items = []; } } if(amt === 0 && Array.isArray(items)) { items.forEach(i => { let p = 0; if(i.product && i.product.price) p = i.product.price; else if(i.product && prodMap[i.product.name]) p = prodMap[i.product.name]; if(!p) p = i.price || 10000; amt += p * (i.qty || 1); }); } totalRevenue += amt; if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt; if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt; }); document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + "원"; document.getElementById('totalCount').innerText = orders.length + "건"; const { data: staff } = await sb.from('admin_staff').select('*'); renderStaffStats('statManagerBody', managerStats, staff || [], totalRevenue); renderStaffStats('statDriverBody', driverStats, staff || [], totalRevenue); document.getElementById('loading').style.display = 'none'; };
+        window.loadStatsData = async () => { let start = document.getElementById('statStartDate').value; let end = document.getElementById('statEndDate').value; if(!start || !end) { const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); start = firstDay.toISOString().split('T')[0]; end = now.toISOString().split('T')[0]; document.getElementById('statStartDate').value = start; document.getElementById('statEndDate').value = end; } document.getElementById('loading').style.display = 'flex'; const { data: orders, error } = await sb.from('orders').select('*').gte('created_at', start + 'T00:00:00').lte('created_at', end + 'T23:59:59'); if(error) { alert("로드 실패"); document.getElementById('loading').style.display = 'none'; return; } const { data: allProds } = await sb.from('admin_products').select('price, name'); const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price); let totalRevenue = 0; const managerStats = {}; const driverStats = {}; orders.forEach(o => { let amt = o.total_amount || 0; let items = o.items; if (typeof items === 'string') { try { items = JSON.parse(items); } catch(e) { items = []; } } if(amt === 0 && Array.isArray(items)) { items.forEach(i => { let p = 0; if(i.product && i.product.price) p = i.product.price; else if(i.product && prodMap[i.product.name]) p = prodMap[i.product.name]; if(!p) p = i.price || 10000; amt += p * (i.qty || 1); }); } totalRevenue += amt; if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt; if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt; }); document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + "원"; document.getElementById('totalCount').innerText = orders.length + "건"; const { data: staff } = await sb.from('admin_staff').select('*'); renderStaffStats('statManagerBody', managerStats, staff || [], totalRevenue); renderStaffStats('statDriverBody', driverStats, staff || [], totalRevenue); document.getElementById('loading').style.display = 'none'; };
         function renderStaffStats(elemId, statsObj, staffList, totalRev) { const tbody = document.getElementById(elemId); tbody.innerHTML = ''; const sortedIds = Object.keys(statsObj).sort((a,b) => statsObj[b] - statsObj[a]); if(sortedIds.length === 0) { tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">데이터 없음</td></tr>'; return; } sortedIds.forEach(id => { const s = staffList.find(st => st.id == id); if(!s) return; const amt = statsObj[id]; const percent = totalRev > 0 ? Math.round((amt / totalRev) * 100) : 0; tbody.innerHTML += `<tr><td style="padding:12px 0;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><div style="width:12px; height:12px; border-radius:50%; background:${s.color};"></div><span style="font-weight:bold;">${s.name}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%; background:${s.color};"></div></div></td><td style="text-align:right;"><div>${amt.toLocaleString()}원</div><div style="font-size:11px; color:#999;">${percent}%</div></td></tr>`; }); }
         window.loadCategories = async () => { const { data } = await sb.from('admin_categories').select('*').order('sort_order', {ascending:true}); const selectBox = document.getElementById('newProdCategory'); const listArea = document.getElementById('categoryListArea'); selectBox.innerHTML = '<option value="">카테고리 선택</option>'; listArea.innerHTML = ''; if(data) data.forEach(cat => { const option = document.createElement('option'); option.value = cat.code; option.innerText = `${cat.name} (${cat.code})`; selectBox.appendChild(option); const span = document.createElement('span'); span.className = 'badge draggable'; span.draggable = true; span.dataset.id = cat.id; span.style.cssText = "border:1px solid #bae6fd; color:#0284c7; margin-right:5px; margin-bottom:5px; display:inline-block; user-select:none;"; span.innerHTML = `<b>${cat.name}</b> (${cat.code}) <i class="fa-solid fa-pen" style="font-size:10px; margin-left:5px; color:#aaa;"></i>`; span.onclick = () => window.editCategoryLoad(cat.id); span.addEventListener('dragstart', () => span.classList.add('dragging')); span.addEventListener('dragend', async () => { span.classList.remove('dragging'); await saveCategoryOrder(); }); listArea.appendChild(span); }); listArea.addEventListener('dragover', e => { e.preventDefault(); const afterElement = getDragAfterElementX(listArea, e.clientX); const draggable = document.querySelector('.badge.dragging'); if (afterElement == null) listArea.appendChild(draggable); else listArea.insertBefore(draggable, afterElement); }); };
         window.addCategoryDB = async () => { const code=document.getElementById('newCatCode').value; const name=document.getElementById('newCatName').value; const name_jp=document.getElementById('newCatNameJP').value; const name_us=document.getElementById('newCatNameUS').value; if(!code || !name) return alert("필수항목 누락"); const {error} = await sb.from('admin_categories').upsert([{code:code.toLowerCase().replace(/\s/g,'_'), name, name_jp, name_us}], {onConflict:'code'}); if(error) alert(error.message); else { alert("저장됨"); loadCategories(); } };
@@ -787,350 +894,72 @@
         window.updateMemberRole = async (id, newRole) => { if(!confirm("등급을 변경하시겠습니까?")) { loadMembers(); return; } const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); if(error) alert("실패: " + error.message); else alert("변경 완료"); };
         function initTemplateListeners() { const fThumb = document.getElementById('fileThumb'); if(fThumb) fThumb.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{document.getElementById('previewThumb').src=ev.target.result; document.getElementById('previewThumb').style.display='block';}; r.readAsDataURL(f);}); const fData = document.getElementById('fileData'); if(fData) fData.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{if(f.name.endsWith('.svg')){document.getElementById('dataStatus').style.display='block';}}; r.readAsDataURL(f);}); }
         
-        // [수정됨] 카테고리에 따라 SVG 파일 업로드창 보이기/숨기기
         window.toggleFileInputs = () => { 
             const cat = document.getElementById('tplCategory').value;
             const groupData = document.getElementById('groupDataFile');
-            
-            // SVG 파일 업로드가 필요한 카테고리 목록
-            // vector: 벡터 배경
-            // transparent-graphic: 패턴
-            // logo: 로고
-            // graphic: 그래픽/스티커 (필요시 포함)
             const needsVector = ['vector', 'transparent-graphic', 'logo', 'graphic'].includes(cat);
-
-            if (needsVector) {
-                groupData.style.display = 'block';
-            } else {
-                groupData.style.display = 'none'; // 사진 배경 등은 숨김
-            }
+            if (needsVector) { groupData.style.display = 'block'; } else { groupData.style.display = 'none'; }
         };
         
-        // [추가] 제품 키 목록 로드 (등록 폼 & 검색 필터 둘 다 채움)
         window.loadProductKeys = async () => {
-            const regSelect = document.getElementById('tplProductKey'); // 등록용
-            const filterSelect = document.getElementById('filterTplProduct'); // 검색 필터용
-            
+            const regSelect = document.getElementById('tplProductKey'); 
+            const filterSelect = document.getElementById('filterTplProduct'); 
             if(!regSelect || !filterSelect) return;
-
-            // 초기화
             regSelect.innerHTML = '<option value="custom">공통 / 지정안함</option>';
-            // 필터는 기본 옵션 유지하고 뒤에 추가
-            filterSelect.innerHTML = `
-                <option value="all">📦 제품연결: 전체 보기</option>
-                <option value="custom">🔹 공통 템플릿만 보기</option>
-                <option value="assigned">🔸 제품 전용만 보기</option>
-                <optgroup label="--- 개별 제품 선택 ---"></optgroup>
-            `;
-            
+            filterSelect.innerHTML = `<option value="all">📦 제품연결: 전체 보기</option><option value="custom">🔹 공통 템플릿만 보기</option><option value="assigned">🔸 제품 전용만 보기</option><optgroup label="--- 개별 제품 선택 ---"></optgroup>`;
             const { data: prods } = await sb.from('admin_products').select('code, name').order('name');
-            if(prods) {
-                prods.forEach(p => {
-                    const optionHtml = `<option value="${p.code}">${p.name} (${p.code})</option>`;
-                    regSelect.innerHTML += optionHtml;
-                    filterSelect.innerHTML += optionHtml;
-                });
-            }
+            if(prods) { prods.forEach(p => { const optionHtml = `<option value="${p.code}">${p.name} (${p.code})</option>`; regSelect.innerHTML += optionHtml; filterSelect.innerHTML += optionHtml; }); }
         };
 
-        // [수정] 템플릿 로드 (카테고리 + 제품 필터 동시 적용)
         window.loadTemplates = async () => { 
             const grid = document.getElementById('tplGrid'); 
             const catFilter = document.getElementById('filterTplCat').value; 
             const prodFilter = document.getElementById('filterTplProduct').value;
-
-            if(!grid) return; 
-            grid.innerHTML = '<div style="padding:20px; text-align:center;">로딩 중...</div>'; 
-            
-            let query = sb.from('library')
-                .select('id, category, thumb_url, tags, product_key')
-                .order('id', {ascending:false})
-                .limit(100); // 갯수 늘림
-
-            // 1. 카테고리 필터
-            if (catFilter !== 'all') { 
-                query = query.eq('category', catFilter); 
-            } 
-
-            // 2. 제품 키 필터
-            if (prodFilter === 'custom') {
-                // 공통만 (null 이거나 'custom')
-                query = query.or('product_key.eq.custom,product_key.is.null');
-            } else if (prodFilter === 'assigned') {
-                // 어딘가 할당된 것만 (custom이 아니고 null도 아닌 것)
-                query = query.neq('product_key', 'custom').not('product_key', 'is', null);
-            } else if (prodFilter !== 'all') {
-                // 특정 제품 코드 선택 시
-                query = query.eq('product_key', prodFilter);
-            }
-            
+            if(!grid) return; grid.innerHTML = '<div style="padding:20px; text-align:center;">로딩 중...</div>'; 
+            let query = sb.from('library').select('id, category, thumb_url, tags, product_key').order('id', {ascending:false}).limit(100); 
+            if (catFilter !== 'all') { query = query.eq('category', catFilter); } 
+            if (prodFilter === 'custom') { query = query.or('product_key.eq.custom,product_key.is.null'); } else if (prodFilter === 'assigned') { query = query.neq('product_key', 'custom').not('product_key', 'is', null); } else if (prodFilter !== 'all') { query = query.eq('product_key', prodFilter); }
             const { data, error } = await query; 
-            
             grid.innerHTML = ''; 
-            if (error) { 
-                console.error(error); 
-                grid.innerHTML = '<div style="padding:20px; color:red;">에러: ' + error.message + '</div>'; 
-                return; 
-            } 
-            
-            if (data && data.length > 0) { 
-                data.forEach(t => { 
-                    const tagText = t.tags ? t.tags : '-'; 
-                    // 뱃지 표시 로직
-                    const pKey = (t.product_key && t.product_key !== 'custom') ? t.product_key : '공통';
-                    const isCustom = pKey === '공통';
-                    const badgeStyle = isCustom 
-                        ? "background:#f1f5f9; color:#64748b;" 
-                        : "background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;";
-
-                    grid.innerHTML += `
-                        <div class="tpl-card">
-                            <img src="${t.thumb_url}" class="tpl-thumb" loading="lazy">
-                            <div class="tpl-info">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                    <span class="tpl-badge" style="font-size:10px;">${t.category}</span>
-                                    <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; ${badgeStyle}">${pKey}</span>
-                                </div>
-                                <div style="font-size:12px; font-weight:bold; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tagText}</div>
-                                <button class="tpl-del-btn" onclick="deleteTemplate(${t.id})">삭제</button>
-                            </div>
-                        </div>`; 
-                }); 
-            } else { 
-                grid.innerHTML = '<div style="padding:40px; color:#999; text-align:center; width:100%;">조건에 맞는 템플릿이 없습니다.</div>'; 
-            } 
+            if (error) { grid.innerHTML = '<div style="padding:20px; color:red;">에러: ' + error.message + '</div>'; return; } 
+            if (data && data.length > 0) { data.forEach(t => { const tagText = t.tags ? t.tags : '-'; const pKey = (t.product_key && t.product_key !== 'custom') ? t.product_key : '공통'; const isCustom = pKey === '공통'; const badgeStyle = isCustom ? "background:#f1f5f9; color:#64748b;" : "background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;"; grid.innerHTML += `<div class="tpl-card"><img src="${t.thumb_url}" class="tpl-thumb" loading="lazy"><div class="tpl-info"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><span class="tpl-badge" style="font-size:10px;">${t.category}</span><span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; ${badgeStyle}">${pKey}</span></div><div style="font-size:12px; font-weight:bold; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tagText}</div><button class="tpl-del-btn" onclick="deleteTemplate(${t.id})">삭제</button></div></div>`; }); } else { grid.innerHTML = '<div style="padding:40px; color:#999; text-align:center; width:100%;">조건에 맞는 템플릿이 없습니다.</div>'; } 
         };
         
-        // [수정] 템플릿 업로드: product_key 추가 저장
         window.uploadTemplate = async () => { 
-            const cat = document.getElementById('tplCategory').value; 
-            const tags = document.getElementById('tplTags').value; 
-            const prodKey = document.getElementById('tplProductKey').value; // [추가]
-            const thumbFile = document.getElementById('fileThumb').files[0]; 
-            const dataFile = document.getElementById('fileData').files[0]; 
-            
+            const cat = document.getElementById('tplCategory').value; const tags = document.getElementById('tplTags').value; const prodKey = document.getElementById('tplProductKey').value; 
+            const thumbFile = document.getElementById('fileThumb').files[0]; const dataFile = document.getElementById('fileData').files[0]; 
             if (!thumbFile) return alert("썸네일 이미지는 필수입니다."); 
-            const btn = document.querySelector('#sec-templates .btn-primary'); 
-            const originalText = btn.innerText; 
-            btn.innerText = "업로드 중..."; 
-            btn.disabled = true; 
-            
+            const btn = document.querySelector('#sec-templates .btn-primary'); const originalText = btn.innerText; btn.innerText = "업로드 중..."; btn.disabled = true; 
             try { 
-                const timestamp = Date.now(); 
-                const thumbPath = `thumbs/${timestamp}_${thumbFile.name}`; 
-                const { error: thumbErr } = await sb.storage.from('design').upload(thumbPath, thumbFile); 
-                if(thumbErr) throw thumbErr; 
-                
-                const { data: thumbUrlData } = sb.storage.from('design').getPublicUrl(thumbPath); 
-                const thumbUrl = thumbUrlData.publicUrl; 
+                const timestamp = Date.now(); const thumbPath = `thumbs/${timestamp}_${thumbFile.name}`; 
+                const { error: thumbErr } = await sb.storage.from('design').upload(thumbPath, thumbFile); if(thumbErr) throw thumbErr; 
+                const { data: thumbUrlData } = sb.storage.from('design').getPublicUrl(thumbPath); const thumbUrl = thumbUrlData.publicUrl; 
                 let dataUrl = thumbUrl; 
-                
-                if ((cat === 'transparent-graphic' || cat === 'vector') && dataFile) { 
-                    const dataPath = `assets/${timestamp}_${dataFile.name}`; 
-                    const { error: dataErr } = await sb.storage.from('design').upload(dataPath, dataFile); 
-                    if(dataErr) throw dataErr; 
-                    const { data: dataUrlData } = sb.storage.from('design').getPublicUrl(dataPath); 
-                    dataUrl = dataUrlData.publicUrl; 
-                } 
-                
-                // product_key 저장
-                const { error: dbErr } = await sb.from('library').insert({ 
-                    category: cat, 
-                    tags: tags || '관리자등록', 
-                    thumb_url: thumbUrl, 
-                    data_url: dataUrl, 
-                    width: 1000, 
-                    height: 1000, 
-                    product_key: prodKey // [수정]
-                }); 
-                
-                if (dbErr) throw dbErr; 
-                alert("✅ 템플릿 등록 성공!"); 
-                document.getElementById('tplTags').value = ''; 
-                document.getElementById('fileThumb').value = ''; 
-                document.getElementById('fileData').value = ''; 
-                document.getElementById('previewThumb').style.display = 'none'; 
-                document.getElementById('dataStatus').style.display = 'none'; 
-                loadTemplates(); 
-            } catch(e) { 
-                alert("업로드 실패: " + e.message); 
-                console.error(e); 
-            } finally { 
-                btn.innerText = originalText; 
-                btn.disabled = false; 
-            } 
+                if ((cat === 'transparent-graphic' || cat === 'vector') && dataFile) { const dataPath = `assets/${timestamp}_${dataFile.name}`; const { error: dataErr } = await sb.storage.from('design').upload(dataPath, dataFile); if(dataErr) throw dataErr; const { data: dataUrlData } = sb.storage.from('design').getPublicUrl(dataPath); dataUrl = dataUrlData.publicUrl; } 
+                const { error: dbErr } = await sb.from('library').insert({ category: cat, tags: tags || '관리자등록', thumb_url: thumbUrl, data_url: dataUrl, width: 1000, height: 1000, product_key: prodKey }); if (dbErr) throw dbErr; 
+                alert("✅ 템플릿 등록 성공!"); document.getElementById('tplTags').value = ''; document.getElementById('fileThumb').value = ''; document.getElementById('fileData').value = ''; document.getElementById('previewThumb').style.display = 'none'; document.getElementById('dataStatus').style.display = 'none'; loadTemplates(); 
+            } catch(e) { alert("업로드 실패: " + e.message); } finally { btn.innerText = originalText; btn.disabled = false; } 
         };
-        
         window.deleteTemplate = async (id) => { if(confirm("삭제?")) await sb.from('library').delete().eq('id',id); loadTemplates(); };
 
-        // ... (나머지 로직 동일)
+        function getDeliveryTimeOptions(selectedTime) { let html = '<option value="">시간 미정</option>'; for (let i = 8; i <= 24; i += 2) { let timeStr = (i < 10 ? '0' + i : i) + ":00"; let isSelected = selectedTime === timeStr ? 'selected' : ''; html += `<option value="${timeStr}" ${isSelected}>${timeStr}</option>`; } return html; }
 
-        // ==========================================
-        // ★ [신규기능] 오늘 할일 (배송 관리) 로직
-        // ==========================================
-        
-        // 1. 배송 시간 옵션 생성 함수 (08:00 ~ 24:00, 2시간 간격)
-        function getDeliveryTimeOptions(selectedTime) {
-            let html = '<option value="">시간 미정</option>';
-            for (let i = 8; i <= 24; i += 2) {
-                // 24시는 00시 혹은 24시로 표기 (여기선 24:00)
-                let timeStr = (i < 10 ? '0' + i : i) + ":00";
-                let isSelected = selectedTime === timeStr ? 'selected' : '';
-                html += `<option value="${timeStr}" ${isSelected}>${timeStr}</option>`;
-            }
-            return html;
-        }
-
-        // 2. 리스트 불러오기 메인 함수
         window.loadDailyTasks = async () => {
-            const dateInput = document.getElementById('taskDate');
-            if (!dateInput.value) {
-                const today = new Date().toISOString().split('T')[0];
-                dateInput.value = today;
-            }
-            const targetDate = dateInput.value;
-            const driverFilterId = document.getElementById('filterTaskDriver').value;
-
-            showLoading(true);
-            const tbody = document.getElementById('taskListBody');
-            tbody.innerHTML = '';
-
-            // 1. 스태프 목록 확보 및 필터 옵션 채우기
+            const dateInput = document.getElementById('taskDate'); if (!dateInput.value) { const today = new Date().toISOString().split('T')[0]; dateInput.value = today; }
+            const targetDate = dateInput.value; const driverFilterId = document.getElementById('filterTaskDriver').value;
+            showLoading(true); const tbody = document.getElementById('taskListBody'); tbody.innerHTML = '';
             if (staffList.length === 0) await fetchStaffForOrders();
-            
-            // 필터 드롭다운 갱신 (한 번만 수행하거나 매번 갱신)
-            const filterSelect = document.getElementById('filterTaskDriver');
-            if(filterSelect.options.length === 1) { // '전체보기'만 있을 때 채움
-                staffList.filter(s => s.role === 'driver').forEach(s => {
-                    filterSelect.innerHTML += `<option value="${s.id}">${s.name} 기사님</option>`;
-                });
-            }
-
-            // 2. 해당 날짜 배송 건 조회
-            let { data: orders, error } = await sb.from('orders')
-                .select('*')
-                .eq('delivery_target_date', targetDate);
-
-            if (error) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">로드 에러: ${error.message}</td></tr>`;
-                showLoading(false);
-                return;
-            }
-
-            if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#999;">${targetDate} 배송 일정이 없습니다.</td></tr>`;
-                showLoading(false);
-                return;
-            }
-
-            // 3. [기능] 기사별 필터링
-            if(driverFilterId !== 'all') {
-                orders = orders.filter(o => o.staff_driver_id == driverFilterId);
-            }
-            if(orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#999;">해당 기사님의 배송 건이 없습니다.</td></tr>`;
-                showLoading(false);
-                return;
-            }
-
-            // 4. [기능] 정렬 (기사 이름순 -> 시간순)
-            orders.sort((a, b) => {
-                // 기사 이름 찾기
-                const driverA = staffList.find(s=>s.id == a.staff_driver_id)?.name || 'zzz'; // 미지정은 뒤로
-                const driverB = staffList.find(s=>s.id == b.staff_driver_id)?.name || 'zzz';
-                
-                if (driverA !== driverB) return driverA.localeCompare(driverB);
-                
-                // 같은 기사면 시간순
-                const timeA = a.delivery_time || "99:99";
-                const timeB = b.delivery_time || "99:99";
-                return timeA.localeCompare(timeB);
-            });
-
-            // 5. 렌더링
-            orders.forEach(o => {
-                const isDone = (o.status === '배송완료');
-                
-                // 완료 표시 (초록 버튼)
-                const dotColor = isDone ? '#22c55e' : '#cbd5e1'; // 초록 vs 회색
-                const dotShadow = isDone ? '0 0 5px #4ade80' : 'none';
-                
-                // 상태 뱃지 (줄바꿈 방지)
-                const statusBadge = isDone 
-                    ? `<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; white-space:nowrap;">배송완료</span>`
-                    : `<span class="badge" style="background:#f1f5f9; color:#64748b; white-space:nowrap;">${o.status}</span>`;
-                
-                // 완료된 줄 스타일
-                const rowStyle = isDone ? 'background-color: #f0fdf4;' : '';
-                const textStyle = isDone ? 'opacity: 0.6;' : '';
-
-                // 파일 링크
-                let fileLinks = '';
-                if(o.files && Array.isArray(o.files)) {
-                    o.files.forEach(f => {
-                         fileLinks += `<a href="${f.url}" target="_blank" class="btn-file" style="margin-right:4px;">📄 ${f.name}</a>`;
-                    });
-                } else { fileLinks = '<span style="color:#ccc;">파일 없음</span>'; }
-
-                // 기사 선택
-                let driverOpts = `<option value="">미지정</option>`;
-                staffList.filter(s => s.role === 'driver').forEach(s => {
-                    const selected = o.staff_driver_id == s.id ? 'selected' : '';
-                    driverOpts += `<option value="${s.id}" ${selected}>${s.name}</option>`;
-                });
-                
-                // 시간 선택
-                const timeOpts = getDeliveryTimeOptions(o.delivery_time);
-
-                const tr = document.createElement('tr');
-                tr.style.cssText = rowStyle;
-                
-                tr.innerHTML = `
-                    <td style="text-align:center;">${statusBadge}</td>
-                    <td style="${textStyle}">
-                        <div style="font-weight:bold; font-size:15px;">${o.manager_name}</div>
-                        <div style="font-size:13px; color:#6366f1;">${o.phone}</div>
-                        <div style="font-size:12px; color:#666; margin-top:2px;">${o.address}</div>
-                    </td>
-                    <td style="${textStyle}"><div style="display:flex; flex-wrap:wrap;">${fileLinks}</div></td>
-                    <td>
-                        <select class="input-text" onchange="updateTaskDB('${o.id}', 'staff_driver_id', this.value)" style="width:100%; ${isDone ? 'background:transparent; border:none; font-weight:bold; appearance:none;' : ''}" ${isDone?'disabled':''}>
-                            ${driverOpts}
-                        </select>
-                    </td>
-                    <td>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <select class="input-text" onchange="updateTaskDB('${o.id}', 'delivery_time', this.value)" style="flex:1; font-weight:bold; color:#0f172a; ${isDone ? 'background:transparent; border:none; appearance:none;' : ''}" ${isDone?'disabled':''}>
-                                ${timeOpts}
-                            </select>
-                            
-                            <div title="${isDone ? '배송 완료됨' : '배송 중'}" 
-                                 style="width:18px; height:18px; border-radius:50%; background:${dotColor}; box-shadow:${dotShadow}; flex-shrink:0; cursor:default; border:2px solid white; outline:1px solid ${isDone?'#22c55e':'#cbd5e1'};">
-                            </div>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            showLoading(false);
+            const filterSelect = document.getElementById('filterTaskDriver'); if(filterSelect.options.length === 1) { staffList.filter(s => s.role === 'driver').forEach(s => { filterSelect.innerHTML += `<option value="${s.id}">${s.name} 기사님</option>`; }); }
+            let { data: orders, error } = await sb.from('orders').select('*').eq('delivery_target_date', targetDate);
+            if (error) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">로드 에러: ${error.message}</td></tr>`; showLoading(false); return; }
+            if (!orders || orders.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#999;">${targetDate} 배송 일정이 없습니다.</td></tr>`; showLoading(false); return; }
+            if(driverFilterId !== 'all') { orders = orders.filter(o => o.staff_driver_id == driverFilterId); }
+            if(orders.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#999;">해당 기사님의 배송 건이 없습니다.</td></tr>`; showLoading(false); return; }
+            orders.sort((a, b) => { const driverA = staffList.find(s=>s.id == a.staff_driver_id)?.name || 'zzz'; const driverB = staffList.find(s=>s.id == b.staff_driver_id)?.name || 'zzz'; if (driverA !== driverB) return driverA.localeCompare(driverB); const timeA = a.delivery_time || "99:99"; const timeB = b.delivery_time || "99:99"; return timeA.localeCompare(timeB); });
+            orders.forEach(o => { const isDone = (o.status === '배송완료'); const dotColor = isDone ? '#22c55e' : '#cbd5e1'; const dotShadow = isDone ? '0 0 5px #4ade80' : 'none'; const statusBadge = isDone ? `<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; white-space:nowrap;">배송완료</span>` : `<span class="badge" style="background:#f1f5f9; color:#64748b; white-space:nowrap;">${o.status}</span>`; const rowStyle = isDone ? 'background-color: #f0fdf4;' : ''; const textStyle = isDone ? 'opacity: 0.6;' : ''; let fileLinks = ''; if(o.files && Array.isArray(o.files)) { o.files.forEach(f => { fileLinks += `<a href="${f.url}" target="_blank" class="btn-file" style="margin-right:4px;">📄 ${f.name}</a>`; }); } else { fileLinks = '<span style="color:#ccc;">파일 없음</span>'; } let driverOpts = `<option value="">미지정</option>`; staffList.filter(s => s.role === 'driver').forEach(s => { const selected = o.staff_driver_id == s.id ? 'selected' : ''; driverOpts += `<option value="${s.id}" ${selected}>${s.name}</option>`; }); const timeOpts = getDeliveryTimeOptions(o.delivery_time); const tr = document.createElement('tr'); tr.style.cssText = rowStyle; tr.innerHTML = `<td style="text-align:center;">${statusBadge}</td><td style="${textStyle}"><div style="font-weight:bold; font-size:15px;">${o.manager_name}</div><div style="font-size:13px; color:#6366f1;">${o.phone}</div><div style="font-size:12px; color:#666; margin-top:2px;">${o.address}</div></td><td style="${textStyle}"><div style="display:flex; flex-wrap:wrap;">${fileLinks}</div></td><td><select class="input-text" onchange="updateTaskDB('${o.id}', 'staff_driver_id', this.value)" style="width:100%; ${isDone ? 'background:transparent; border:none; font-weight:bold; appearance:none;' : ''}" ${isDone?'disabled':''}>${driverOpts}</select></td><td><div style="display:flex; align-items:center; gap:8px;"><select class="input-text" onchange="updateTaskDB('${o.id}', 'delivery_time', this.value)" style="flex:1; font-weight:bold; color:#0f172a; ${isDone ? 'background:transparent; border:none; appearance:none;' : ''}" ${isDone?'disabled':''}>${timeOpts}</select><div title="${isDone ? '배송 완료됨' : '배송 중'}" style="width:18px; height:18px; border-radius:50%; background:${dotColor}; box-shadow:${dotShadow}; flex-shrink:0; cursor:default; border:2px solid white; outline:1px solid ${isDone?'#22c55e':'#cbd5e1'};"></div></div></td>`; tbody.appendChild(tr); }); showLoading(false);
         };
-
-        // 3. 데이터 저장(업데이트) 함수
-        window.updateTaskDB = async (orderId, field, value) => {
-            // value가 빈 문자열이면 null로 처리할 수도 있음
-            const valToSave = value === "" ? null : value;
-            
-            const { error } = await sb.from('orders').update({ [field]: valToSave }).eq('id', orderId);
-            if (error) {
-                alert("저장 실패: " + error.message);
-            } else {
-                // 성공 시 별도 알림 없이 조용히 저장 (UX상 부드러움)
-                // 필요하다면 console.log("Saved");
-            }
-        };
+        window.updateTaskDB = async (orderId, field, value) => { const valToSave = value === "" ? null : value; const { error } = await sb.from('orders').update({ [field]: valToSave }).eq('id', orderId); if (error) { alert("저장 실패: " + error.message); } };
         window.addEventListener('DOMContentLoaded', async () => { await initConfig(); loadOrders(); initTemplateListeners(); loadCategories(); loadFonts(); });
     </script>
-    
 </body>
 </html>

@@ -41,6 +41,13 @@
         .client-addr { font-size: 14px; color: #64748b; line-height: 1.5; display: flex; align-items: start; gap: 5px; }
         .note-box { background: #fff1f2; color: #be123c; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 10px; line-height: 1.4; border: 1px solid #fecdd3; }
 
+        /* [추가] 노하우 박스 스타일 */
+        .knowhow-area { margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px; }
+        .knowhow-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; font-weight: 700; color: #d97706; }
+        .knowhow-content { background: #fffbeb; padding: 10px; border-radius: 8px; font-size: 13px; color: #92400e; border: 1px solid #fcd34d; line-height: 1.4; }
+        .knowhow-input { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 5px; resize: none; height: 60px; }
+        .btn-knowhow-save { background: #d97706; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; float: right; }
+
         /* 액션 버튼 그룹 */
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .action-btn { padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: 0.1s; }
@@ -69,7 +76,7 @@
 <div class="navbar">
     <div class="app-header">
         <div class="logo"><i class="fa-solid fa-box"></i> 배송 파트너</div>
-        <div style="font-size:13px; opacity:0.8;">v1.0</div>
+        <div style="font-size:13px; opacity:0.8;">v1.1</div>
     </div>
 </div>
 
@@ -93,13 +100,11 @@
     window.addEventListener('DOMContentLoaded', async () => {
         await initConfig();
         
-        // 날짜 기본값 세팅
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('workDate').value = today;
 
         await loadDriverList();
         
-        // 저장된 기사님 ID 있으면 자동 로드
         const savedDriverId = localStorage.getItem('my_driver_id');
         if(savedDriverId) {
             document.getElementById('driverSelect').value = savedDriverId;
@@ -135,12 +140,12 @@
         if(!driverId) return;
         document.getElementById('loading').style.display = 'flex';
 
-        // 해당 기사 + 해당 날짜(delivery_target_date) 주문 조회
+        // 1. 주문 데이터 가져오기
         const { data: orders, error } = await sb.from('orders')
             .select('*')
             .eq('staff_driver_id', driverId)
             .eq('delivery_target_date', date)
-            .order('delivery_time', {ascending: true}); // 시간순 정렬
+            .order('delivery_time', {ascending: true});
 
         const list = document.getElementById('taskList');
         list.innerHTML = '';
@@ -152,77 +157,176 @@
                     <strong>오늘은 배송 일정이 없습니다.</strong><br>
                     <small>날짜를 확인하거나 관리자에게 문의하세요.</small>
                 </div>`;
-        } else {
-            orders.forEach(o => {
-                const isDone = o.status === '배송완료';
-                const timeVal = o.delivery_time || '';
-                
-                // 시간 옵션 생성
-                let timeOptions = `<option value="">⏱️ 도착 예정 시간 입력</option>`;
-                for(let i=8; i<=22; i+=1) { // 1시간 간격
-                     let t = (i<10?'0'+i:i) + ":00";
-                     let t_next = (i+1<10?'0'+(i+1):(i+1)) + ":00";
-                     timeOptions += `<option value="${t}" ${timeVal===t?'selected':''}>${t} ~ ${t_next}</option>`;
-                }
+            document.getElementById('loading').style.display = 'none';
+            return;
+        }
 
-                // 카드 HTML 생성
-                list.innerHTML += `
-                    <div class="task-card ${isDone ? 'completed' : ''}">
-                        <span class="status-tag ${isDone ? 'done' : 'active'}">
-                            ${isDone ? '배송완료' : '배송중'}
-                        </span>
-                        
-                        <div class="client-name">${o.manager_name}</div>
-                        <div class="client-addr">
-                            <i class="fa-solid fa-map-pin" style="margin-top:3px; color:#ef4444;"></i> 
-                            ${o.address}
+        // 2. [추가] 이번 주문들에 해당하는 주소의 노하우 데이터 한 번에 가져오기
+        const addresses = orders.map(o => o.address).filter(a => a); // 주소만 추출
+        let knowhowMap = {};
+        
+        if(addresses.length > 0) {
+            // delivery_knowhow 테이블에서 해당 주소들 검색
+            const { data: tips } = await sb.from('delivery_knowhow').select('*').in('address', addresses);
+            if(tips) {
+                tips.forEach(t => {
+                    knowhowMap[t.address] = t; // 주소를 키로 하여 맵핑
+                });
+            }
+        }
+
+        // 3. 카드 렌더링
+        orders.forEach(o => {
+            const isDone = o.status === '배송완료';
+            const timeVal = o.delivery_time || '';
+            
+            // 시간 옵션
+            let timeOptions = `<option value="">⏱️ 도착 예정 시간 입력</option>`;
+            for(let i=8; i<=22; i+=1) {
+                 let t = (i<10?'0'+i:i) + ":00";
+                 let t_next = (i+1<10?'0'+(i+1):(i+1)) + ":00";
+                 timeOptions += `<option value="${t}" ${timeVal===t?'selected':''}>${t} ~ ${t_next}</option>`;
+            }
+
+            // 노하우 데이터 확인
+            const tip = knowhowMap[o.address];
+            let knowhowHtml = '';
+
+            if (tip) {
+                // 노하우가 있는 경우
+                knowhowHtml = `
+                    <div class="knowhow-area">
+                        <div class="knowhow-header">
+                            <span><i class="fa-solid fa-lightbulb"></i> 동료 기사님의 공유 노하우</span>
+                            <span style="color:#999; font-weight:normal; cursor:pointer;" onclick="toggleEditKnowhow('${o.id}')">수정</span>
                         </div>
-                        
-                        ${o.request_note ? `<div class="note-box"><i class="fa-solid fa-bullhorn"></i> ${o.request_note}</div>` : ''}
-
-                        <select class="time-select" onchange="updateDeliveryTime('${o.id}', this.value)" ${isDone?'disabled':''}>
-                            ${timeOptions}
-                        </select>
-
-                        <div class="btn-group">
-                            <a href="tel:${o.phone}" class="action-btn btn-call">
-                                <i class="fa-solid fa-phone"></i> 전화걸기
-                            </a>
-                            <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address)}" target="_blank" class="action-btn btn-map">
-                                <i class="fa-solid fa-map"></i> 지도보기
-                            </a>
+                        <div id="view_tip_${o.id}" class="knowhow-content">
+                            ${tip.content.replace(/\n/g, '<br>')}
+                            <div style="margin-top:5px; font-size:11px; opacity:0.7; text-align:right;">- ${tip.writer_name || '동료기사'}님 작성</div>
                         </div>
-
-                        <button class="finish-btn ${isDone?'done':''}" onclick="toggleComplete('${o.id}', '${o.status}')">
-                            ${isDone ? '<i class="fa-solid fa-check"></i> 완료된 배송입니다' : '📦 배송 완료 처리'}
-                        </button>
+                        <div id="edit_tip_${o.id}" style="display:none;">
+                            <textarea id="input_tip_${o.id}" class="knowhow-input" placeholder="이곳의 주차/배송 꿀팁을 공유해주세요!">${tip.content}</textarea>
+                            <button class="btn-knowhow-save" onclick="saveKnowhow('${o.address}', '${o.id}')">수정 저장</button>
+                        </div>
                     </div>
                 `;
-            });
-        }
+            } else {
+                // 노하우가 없는 경우
+                knowhowHtml = `
+                    <div class="knowhow-area">
+                        <div class="knowhow-header" onclick="toggleEditKnowhow('${o.id}')" style="cursor:pointer; color:#94a3b8;">
+                            <span><i class="fa-regular fa-lightbulb"></i> 주차/배송 노하우 등록하기 <i class="fa-solid fa-chevron-down"></i></span>
+                        </div>
+                        <div id="edit_tip_${o.id}" style="display:none; margin-top:5px;">
+                            <textarea id="input_tip_${o.id}" class="knowhow-input" placeholder="예: 101동 뒤쪽 쪽문 이용, 비밀번호 1234"></textarea>
+                            <button class="btn-knowhow-save" onclick="saveKnowhow('${o.address}', '${o.id}')">공유하기</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            list.innerHTML += `
+                <div class="task-card ${isDone ? 'completed' : ''}">
+                    <span class="status-tag ${isDone ? 'done' : 'active'}">
+                        ${isDone ? '배송완료' : '배송중'}
+                    </span>
+                    
+                    <div class="client-name">${o.manager_name}</div>
+                    <div class="client-addr">
+                        <i class="fa-solid fa-map-pin" style="margin-top:3px; color:#ef4444;"></i> 
+                        ${o.address}
+                    </div>
+                    
+                    ${o.request_note ? `<div class="note-box"><i class="fa-solid fa-bullhorn"></i> ${o.request_note}</div>` : ''}
+
+                    ${knowhowHtml}
+
+                    <select class="time-select" onchange="updateDeliveryTime('${o.id}', this.value)" ${isDone?'disabled':''}>
+                        ${timeOptions}
+                    </select>
+
+                    <div class="btn-group">
+                        <a href="tel:${o.phone}" class="action-btn btn-call">
+                            <i class="fa-solid fa-phone"></i> 전화걸기
+                        </a>
+                        <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address)}" target="_blank" class="action-btn btn-map">
+                            <i class="fa-solid fa-map"></i> 지도보기
+                        </a>
+                    </div>
+
+                    <button class="finish-btn ${isDone?'done':''}" onclick="toggleComplete('${o.id}', '${o.status}')">
+                        ${isDone ? '<i class="fa-solid fa-check"></i> 완료된 배송입니다' : '📦 배송 완료 처리'}
+                    </button>
+                </div>
+            `;
+        });
         document.getElementById('loading').style.display = 'none';
     };
 
-    // 시간 업데이트 -> 관리자 DB에 즉시 반영
+    // 노하우 입력창 토글
+    window.toggleEditKnowhow = (id) => {
+        const viewDiv = document.getElementById(`view_tip_${id}`);
+        const editDiv = document.getElementById(`edit_tip_${id}`);
+        
+        if (viewDiv) viewDiv.style.display = 'none';
+        if (editDiv) editDiv.style.display = (editDiv.style.display === 'none') ? 'block' : 'none';
+    };
+
+    // 노하우 저장 (Upsert)
+    window.saveKnowhow = async (address, orderId) => {
+        const content = document.getElementById(`input_tip_${orderId}`).value;
+        if (!content.trim()) return alert("내용을 입력해주세요.");
+
+        // 현재 선택된 기사 이름 가져오기
+        const driverSelect = document.getElementById('driverSelect');
+        const driverName = driverSelect.options[driverSelect.selectedIndex].text.replace(' 기사님', '');
+
+        // 주소가 같은 기존 데이터가 있으면 업데이트, 없으면 추가
+        // address 컬럼이 Unique 제약조건이 없다면 select 후 update/insert 분기 처리
+        
+        // 1. 기존 데이터 확인
+        const { data: existing } = await sb.from('delivery_knowhow').select('id').eq('address', address).single();
+        
+        let error;
+        if (existing) {
+            // 업데이트
+            const res = await sb.from('delivery_knowhow').update({ 
+                content: content, 
+                writer_name: driverName,
+                created_at: new Date()
+            }).eq('id', existing.id);
+            error = res.error;
+        } else {
+            // 신규 등록
+            const res = await sb.from('delivery_knowhow').insert([{ 
+                address: address, 
+                content: content, 
+                writer_name: driverName 
+            }]);
+            error = res.error;
+        }
+
+        if (error) {
+            alert("저장 실패: " + error.message);
+        } else {
+            alert("노하우가 공유되었습니다! 감사합니다 👍");
+            loadMyTasks(); // 화면 새로고침하여 반영
+        }
+    };
+
     window.updateDeliveryTime = async (orderId, time) => {
         if(!time) return;
-        // 사용자 확인 없이 바로 저장해도 되지만, UX상 잠시 로딩 보여주거나 토스트 메시지 띄우는게 좋음
         const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
         if(error) alert("저장 실패");
     };
 
-    // 완료 처리 -> 관리자 DB에 즉시 반영
     window.toggleComplete = async (orderId, currentStatus) => {
         if(currentStatus === '배송완료') return;
         if(!confirm("배송을 완료 처리 하시겠습니까?\n(관리자 페이지에 즉시 반영됩니다)")) return;
 
-        // 상태 업데이트
         const { error } = await sb.from('orders').update({ status: '배송완료' }).eq('id', orderId);
-        
         if(error) alert("오류 발생: " + error.message);
-        else {
-            loadMyTasks(); // 화면 새로고침
-        }
+        else loadMyTasks();
     };
 </script>
 
