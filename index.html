@@ -1075,9 +1075,9 @@
         document.getElementById("mainEditor").style.display = "flex";
         window.dispatchEvent(new Event('resize'));
 
-        // ★★★ [추가된 로직] 제품 전용 템플릿(칼선) 자동 로드
+        // [기존 로직] 제품 전용 템플릿(칼선) 자동 로드
         try {
-            console.log(`🔎 StartEditorDirect: 템플릿 검색 - ${key}`);
+            console.log(`🔎 StartEditorDirect: 칼선 템플릿 검색 - ${key}`);
             const { data, error } = await sb
                 .from('library')
                 .select('data_url')
@@ -1087,7 +1087,6 @@
 
             if (data && data.length > 0) {
                 const templateUrl = data[0].data_url;
-                console.log("🎯 템플릿 발견, 로드합니다:", templateUrl);
                 setTimeout(() => {
                     if (window.loadProductFixedTemplate) {
                         window.loadProductFixedTemplate(templateUrl);
@@ -1096,6 +1095,13 @@
             }
         } catch(e) {
             console.error("자동 로드 오류:", e);
+        }
+
+        // ▼▼▼ [추가된 부분] 시작화면에서 선택한 디자인 템플릿 적용 로직 ▼▼▼
+        if (window.pendingTemplate) {
+            console.log("⏳ 선택된 디자인 템플릿 로드 중:", window.pendingTemplate);
+            await applyTemplateDirectly(window.pendingTemplate);
+            window.pendingTemplate = null; // 로드 후 초기화
         }
     };
 
