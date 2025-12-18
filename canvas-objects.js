@@ -260,8 +260,26 @@ function initTextHandlers() {
     const btnAddText = document.getElementById("btnAddText");
     if (btnAddText) {
         btnAddText.onclick = () => {
-            const t = new fabric.IText("텍스트", { 
-                fontFamily: "NanumMyeongjo", fontSize: 60,
+            // 1. URL 파라미터에서 언어(lang) 감지
+            const urlParams = new URLSearchParams(window.location.search);
+            const lang = urlParams.get('lang') ? urlParams.get('lang').toLowerCase() : 'kr';
+
+            // 2. 언어별 기본 멘트 설정
+            let defaultText = "글씨"; // 기본(한국어)
+            
+            if (lang === 'jp') {
+                defaultText = "素敵なテキスト"; // 일본어
+            } else if (lang === 'us') {
+                defaultText = "Stylish Text";     // 영어
+            }
+
+            // 3. 폰트 설정 (index.html에서 설정된 window.currentCanvasFont 활용)
+            // 설정이 안 되어있을 경우를 대비해 안전장치(Pretendard) 추가
+            const targetFont = window.currentCanvasFont || "Pretendard";
+
+            const t = new fabric.IText(defaultText, { 
+                fontFamily: targetFont, 
+                fontSize: 100,
                 fill: "#000000"
             });
             addToCenter(t);

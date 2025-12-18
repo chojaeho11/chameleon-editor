@@ -4,9 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Chameleon Canvas</title>
-<meta name="description" content="행사 팝업스토어, 백월, 등신대 제작을 위한 무료 온라인 디자인 에디터. 웹에서 바로 디자인하고 견적 확인까지 가능합니다.">
-<link rel="canonical" href="https://www.yoursite.com/" />
 
+<title>Chameleon Canvas - イベント・ポップアップストア デザインツール</title>
+<meta name="description" content="イベントのバックウォール、等身大パネル制作のための無料オンラインエディタ。インストール不要で今すぐデザイン可能。">
 <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/" />
 <link rel="alternate" hreflang="en" href="https://www.cafe2626.com/en.html" />
 <link rel="alternate" hreflang="ja" href="https://www.cafe2626.com/jp.html" />
@@ -819,8 +819,7 @@
     // ============================================================
     // [1] 다국어 JSON 파일 로드 및 적용 (Fetch 방식)
     // ============================================================
-    const urlParams = new URLSearchParams(window.location.search);
-    const CURRENT_LANG = urlParams.get('lang') ? urlParams.get('lang').toLowerCase() : 'kr';
+    const CURRENT_LANG = 'jp';
 
     async function loadAndApplyTranslations() {
         try {

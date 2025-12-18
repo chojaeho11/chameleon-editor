@@ -1,10 +1,28 @@
 import { canvas } from "./canvas-core.js";
-import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js"; 
+import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js";
+import { SITE_CONFIG } from "./site-config.js"; // [추가] 설정 파일 가져오기
 import { applySize } from "./canvas-size.js";
 import { generateOrderSheetPDF, generateQuotationPDF, generateProductVectorPDF, generateRasterPDF } from "./export.js"; 
 
 let currentTargetProduct = null;
 let selectedDeliveryDate = null;
+
+// [헬퍼] 통화 포맷터 (국가별 화폐 단위 자동 적용)
+function formatCurrency(amount) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lang = urlParams.get('lang');
+    
+    // 숫자가 아니면 0으로 처리
+    const num = parseInt(amount) || 0;
+
+    if (lang === 'jp') {
+        return '¥' + num.toLocaleString();
+    } else if (lang === 'us') {
+        return '$' + num.toLocaleString();
+    } else {
+        return num.toLocaleString() + '원';
+    }
+}
 
 // [헬퍼] Blob 파일 다운로드
 function downloadBlob(blob, filename) {
@@ -117,9 +135,24 @@ async function uploadFileToSupabase(file, folder) {
 // [1] 주문 시스템 초기화
 // ============================================================
 export function initOrderSystem() {
+    // [추가] 국가별 주소 폼 및 결제 안내문 토글 로직
+    const country = SITE_CONFIG.COUNTRY;
+    const krForm = document.getElementById("addrFormKR");
+    const globalForm = document.getElementById("addrFormGlobal");
+    const bankArea = document.getElementById("bankTransferInfoArea");
+
+    if (country === 'KR') {
+        if(krForm) krForm.style.display = 'block';
+        if(globalForm) globalForm.style.display = 'none';
+        if(bankArea) bankArea.style.display = 'block'; // 한국만 무통장 입금 표시
+    } else {
+        if(krForm) krForm.style.display = 'none';
+        if(globalForm) globalForm.style.display = 'flex';
+        if(bankArea) bankArea.style.display = 'none'; // 해외는 카드결제만 유도
+    }
+
     const btnOrderTop = document.getElementById("btnOrderTop");
     if(btnOrderTop) { 
-        btnOrderTop.innerText = "➕ 장바구니 담기"; 
         btnOrderTop.onclick = addCanvasToCart;
     }
     
@@ -230,7 +263,8 @@ function saveCart() {
 export function openProductDetail(key, w, h, mode) {
     let product = PRODUCT_DB[key]; if (!product) { product = { name: key, price: 0, img: '', addons: [] }; }
     currentTargetProduct = { key, w, h, mode, info: product };
-    document.getElementById("pdpTitle").innerText = product.name; document.getElementById("pdpPrice").innerText = product.price.toLocaleString() + "원";
+    document.getElementById("pdpTitle").innerText = product.name; 
+    document.getElementById("pdpPrice").innerText = formatCurrency(product.price);
     const imgElem = document.getElementById("pdpImage"); if(imgElem) imgElem.src = product.img || 'https://placehold.co/400';
     document.getElementById("productDetailModal").style.display = "flex";
 }
@@ -289,61 +323,48 @@ export async function startDesignFromProduct() {
 }
 
 // ============================================================
-// ★ [수정됨] 장바구니 담기 (대지 영역만 정확히 캡쳐)
+// 장바구니 담기
 // ============================================================
 async function addCanvasToCart() {
     if (!canvas) return;
     
-    // 1. 현재 뷰포트 상태 저장 (줌, 이동 등)
     const originalVpt = canvas.viewportTransform;
-    
-    // 2. 대지(Board) 객체 찾기
     const board = canvas.getObjects().find(o => o.isBoard);
     let thumbUrl = "https://placehold.co/100?text=Design";
     
     try {
-        // 로딩 표시
         const loading = document.getElementById("loading");
         if(loading) loading.style.display = "flex";
 
         let blob;
 
         if (board) {
-            // ★ 핵심: 대지 영역만 크롭해서 이미지 생성
-            // 뷰포트를 초기화해서 1:1 비율로 맞춤
             canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
             
-            // 대지 영역의 좌표와 크기로 DataURL 생성
             const dataUrl = canvas.toDataURL({
                 format: 'png',
                 left: board.left,
                 top: board.top,
                 width: board.width * board.scaleX,
                 height: board.height * board.scaleY,
-                multiplier: 0.5, // 썸네일용이므로 절반 축소
+                multiplier: 0.5, 
                 quality: 0.8
             });
             
-            // DataURL -> Blob 변환
             blob = await (await fetch(dataUrl)).blob();
-            
-            // 뷰포트 원상복구
             canvas.setViewportTransform(originalVpt);
         } else {
-            // 대지가 없으면 전체 캔버스 캡쳐 (기존 방식)
             canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
             blob = await new Promise(resolve => canvas.getElement().toBlob(resolve, 'image/jpeg', 0.5));
             canvas.setViewportTransform(originalVpt);
         }
 
-        // 3. 썸네일 업로드
         if(blob) {
             const uploadedThumb = await uploadFileToSupabase(blob, 'thumbs');
             if(uploadedThumb) thumbUrl = uploadedThumb;
         }
     } catch(e) { 
         console.warn("썸네일 생성 실패", e); 
-        // 실패시에도 뷰포트 복구
         canvas.setViewportTransform(originalVpt);
     } finally {
         const loading = document.getElementById("loading");
@@ -362,11 +383,13 @@ async function addCanvasToCart() {
     });
     
     saveCart(); renderCart(); 
-    alert(`[${product.name}] 상품이 장바구니에 담겼습니다.`);
+    
+    const t = window.translations || {};
+    alert(`[${product.name}] ` + (t['msg_cart_added'] || "상품이 장바구니에 담겼습니다."));
 }
 
 // ============================================================
-// ★ [수정됨] 파일 업로드 (PDF 썸네일 생성 기능 강화)
+// 파일 업로드
 // ============================================================
 async function addFileToCart(e) {
     const file = e.target.files[0]; 
@@ -380,27 +403,22 @@ async function addFileToCart(e) {
     
     try {
         let originalUrl = null;
-        let thumbUrl = 'https://cdn-icons-png.flaticon.com/512/337/337946.png'; // 기본 아이콘
+        let thumbUrl = 'https://cdn-icons-png.flaticon.com/512/337/337946.png'; 
 
-        // 1. 원본 파일 업로드
         originalUrl = await uploadFileToSupabase(file, 'customer_uploads');
         
-        // 2. 썸네일 생성 시도 (PDF -> Image 캡쳐)
         let thumbBlob = null;
         if (file.type === 'application/pdf') {
-            // PDF 썸네일 생성 함수 호출
             thumbBlob = await createPdfThumbnailBlob(file);
         } else if (file.type.startsWith('image/')) {
             thumbBlob = await resizeImageToBlob(file);
         }
 
-        // 3. 썸네일 서버 업로드 (URL 획득)
         if (thumbBlob) {
             const uploadedThumbUrl = await uploadFileToSupabase(thumbBlob, 'thumbs');
             if (uploadedThumbUrl) thumbUrl = uploadedThumbUrl;
         }
 
-        // 4. 장바구니 추가
         cartData.push({ 
             uid: Date.now(), 
             product: currentTargetProduct.info, 
@@ -409,7 +427,7 @@ async function addFileToCart(e) {
             mimeType: file.type, 
             fileData: null, 
             originalUrl: originalUrl, 
-            thumb: thumbUrl, // PDF 캡쳐 이미지 URL
+            thumb: thumbUrl, 
             isOpen: true, 
             qty: 1, 
             selectedAddons: {}, 
@@ -430,35 +448,89 @@ async function addFileToCart(e) {
     }
 }
 
-// [장바구니 렌더링]
+// ============================================================
+// ★ [수정됨] 장바구니 렌더링 (상품금액/옵션금액 분리 계산)
+// ============================================================
 function renderCart() {
     const listArea = document.getElementById("cartListArea"); 
     if(!listArea) return;
-    listArea.innerHTML = ""; let grandTotal = 0;
+    listArea.innerHTML = ""; 
     
-    if(cartData.length === 0) { listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">장바구니가 비어있습니다.</div>`; updateSummary(0); return; }
+    // [변수 추가] 상품합계, 옵션합계, 총합계를 분리해서 계산
+    let grandTotal = 0;
+    let grandProductTotal = 0; // 순수 상품 금액 합
+    let grandAddonTotal = 0;   // 순수 옵션 금액 합
+    
+    const t = window.translations || {};
+    const txt_empty = t['msg_cart_empty'] || "장바구니가 비어있습니다.";
+    const txt_mat = t['label_material'] || "① 재질/두께";
+    const txt_fin = t['label_finish'] || "② 마감 방식";
+    const txt_add = t['label_addons'] || "③ 추가 상품";
+    const txt_req = t['badge_required'] || "필수";
+    const txt_sel = t['badge_select'] || "선택";
+    const txt_qty = t['label_qty'] || "본품 수량";
+    const txt_select_msg = t['msg_select_option'] || "선택해주세요";
+    const txt_user_design = t['label_user_design'] || "사용자 디자인";
+    
+    if(cartData.length === 0) { 
+        listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">${txt_empty}</div>`; 
+        updateSummary(0, 0, 0); 
+        return; 
+    }
     
     cartData.forEach((item, idx) => {
         if (!item.qty) item.qty = 1; if (item.isOpen === undefined) item.isOpen = true; if (!item.selectedAddons) item.selectedAddons = {}; if (!item.addonQuantities) item.addonQuantities = {};
+        
         let matOpts = []; let finOpts = []; let addOpts = []; 
-        if (item.product && item.product.addons) {
+        
+        if (item.product && item.product.addons && Array.isArray(item.product.addons)) {
             item.product.addons.forEach(code => {
-                const info = ADDON_DB[code]; if (info) { const cat = (info.category || '').toLowerCase(); if (cat === 'material') matOpts.push({code, ...info}); else if (cat === 'finish') finOpts.push({code, ...info}); else addOpts.push({code, ...info}); }
+                const info = ADDON_DB[code]; 
+                if (info) { 
+                    const cat = (info.category || '').toLowerCase(); 
+                    if (cat === 'material') matOpts.push({code, ...info}); 
+                    else if (cat === 'finish') finOpts.push({code, ...info}); 
+                    else addOpts.push({code, ...info}); 
+                }
             });
+        } else if (item.product && typeof item.product.addons === 'string') {
+             item.product.addons.split(',').forEach(code => {
+                const cleanCode = code.trim();
+                const info = ADDON_DB[cleanCode];
+                if(info) {
+                    const cat = (info.category || '').toLowerCase();
+                    if (cat === 'material') matOpts.push({code: cleanCode, ...info});
+                    else if (cat === 'finish') finOpts.push({code: cleanCode, ...info});
+                    else addOpts.push({code: cleanCode, ...info});
+                }
+             });
         }
-        let basePrice = item.product.price || 0; let addonPrice = 0;
+
+        let basePrice = item.product.price || 0; 
+        let addonPriceUnit = 0; // 개당 옵션 가격 합
+        
         Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) {
                 const isAdditional = addOpts.some(a => a.code === code);
                 const aq = isAdditional ? (item.addonQuantities[code] || 1) : 1;
-                addonPrice += addon.price * aq;
+                addonPriceUnit += addon.price * aq;
             }
         });
-        let totalItemPrice = (basePrice + addonPrice) * item.qty;
-        grandTotal += totalItemPrice;
+
+        // [핵심] 분리 계산 로직
+        const currentProductTotal = basePrice * item.qty;
+        const currentAddonTotal = addonPriceUnit * item.qty;
         
-        const div = document.createElement("div"); div.className = "cart-item"; 
+        grandProductTotal += currentProductTotal;
+        grandAddonTotal += currentAddonTotal;
+        grandTotal += (currentProductTotal + currentAddonTotal);
+
+        let totalItemPrice = currentProductTotal + currentAddonTotal;
+        
+        const div = document.createElement("div"); 
+        div.className = "cart-item"; 
+        
         div.innerHTML = `
             <div class="cart-top-row" onclick="window.toggleCartAccordion(${idx})" style="display:flex; gap:15px; align-items:center; cursor:pointer;">
                 <div style="width:80px; height:80px; background:#f8fafc; border:1px solid #eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">
@@ -466,8 +538,8 @@ function renderCart() {
                 </div>
                 <div style="flex:1;">
                     <h4 style="margin:0; font-size:16px;">${item.product.name}</h4>
-                    <div style="font-size:13px; color:#666; margin-top:4px;">${item.fileName || '사용자 디자인'}</div>
-                    <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${totalItemPrice.toLocaleString()}원</div>
+                    <div style="font-size:13px; color:#666; margin-top:4px;">${item.fileName || txt_user_design}</div>
+                    <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${formatCurrency(totalItemPrice)}</div>
                 </div>
                 <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444;"><i class="fa-solid fa-trash"></i></button>
             </div>`;
@@ -478,27 +550,39 @@ function renderCart() {
             // 재질
             if (matOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group required-group";
-                box.innerHTML = `<div class="opt-group-header">① 재질/두께 <span class="badge-req">필수</span></div>`;
+                box.innerHTML = `<div class="opt-group-header">${txt_mat} <span class="badge-req">${txt_req}</span></div>`;
                 const sel = document.createElement("select"); sel.className = "opt-select-box";
                 sel.onchange = (e) => window.updateCartOption(idx, 'opt_mat', e.target.value);
-                let optsHTML = `<option value="">선택해주세요</option>`;
-                matOpts.forEach(opt => { const selected = item.selectedAddons['opt_mat'] === opt.code ? 'selected' : ''; const priceStr = opt.price > 0 ? ` (+${opt.price.toLocaleString()}원)` : ''; optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`; });
+                
+                let optsHTML = `<option value="">${txt_select_msg}</option>`;
+                matOpts.forEach(opt => { 
+                    const selected = item.selectedAddons['opt_mat'] === opt.code ? 'selected' : ''; 
+                    const priceStr = opt.price > 0 ? ` (+${formatCurrency(opt.price)})` : ''; 
+                    optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`; 
+                });
                 sel.innerHTML = optsHTML; box.appendChild(sel); optionContainer.appendChild(box);
             }
+
             // 마감
             if (finOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group required-group";
-                box.innerHTML = `<div class="opt-group-header">② 마감 방식 <span class="badge-req">필수</span></div>`;
+                box.innerHTML = `<div class="opt-group-header">${txt_fin} <span class="badge-req">${txt_req}</span></div>`;
                 const sel = document.createElement("select"); sel.className = "opt-select-box";
                 sel.onchange = (e) => window.updateCartOption(idx, 'opt_fin', e.target.value);
-                let optsHTML = `<option value="">선택해주세요</option>`;
-                finOpts.forEach(opt => { const selected = item.selectedAddons['opt_fin'] === opt.code ? 'selected' : ''; const priceStr = opt.price > 0 ? ` (+${opt.price.toLocaleString()}원)` : ''; optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`; });
+                
+                let optsHTML = `<option value="">${txt_select_msg}</option>`;
+                finOpts.forEach(opt => { 
+                    const selected = item.selectedAddons['opt_fin'] === opt.code ? 'selected' : ''; 
+                    const priceStr = opt.price > 0 ? ` (+${formatCurrency(opt.price)})` : ''; 
+                    optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`; 
+                });
                 sel.innerHTML = optsHTML; box.appendChild(sel); optionContainer.appendChild(box);
             }
+
             // 추가상품
             if (addOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group optional-group";
-                box.innerHTML = `<div class="opt-group-header">③ 추가 상품 <span class="badge-sel">선택</span></div>`;
+                box.innerHTML = `<div class="opt-group-header">${txt_add} <span class="badge-sel">${txt_sel}</span></div>`;
                 const grid = document.createElement("div");
                 grid.style.display = "flex"; grid.style.flexDirection = "column"; grid.style.gap = "8px";
 
@@ -512,30 +596,69 @@ function renderCart() {
                     row.innerHTML = `
                         <label style="display:flex; align-items:center; cursor:pointer; flex:1;">
                             <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isChecked?'checked':''} style="margin-right:8px; accent-color:#6366f1;">
-                            <span style="font-size:13px;">${opt.name} <span style="color:#6366f1; font-weight:bold;">(+${opt.price.toLocaleString()})</span></span>
+                            <span style="font-size:13px;">${opt.name} <span style="color:#6366f1; font-weight:bold;">(+${formatCurrency(opt.price)})</span></span>
                         </label>
-                        ${isChecked ? `<div style="display:flex; align-items:center; gap:5px; margin-left:10px;"><span style="font-size:11px; color:#888;">수량</span><input type="number" min="1" value="${currentQty}" onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)" onclick="event.stopPropagation()" style="width:40px; text-align:center; border:1px solid #ddd; border-radius:4px; font-size:12px; padding:2px;"></div>` : ''}`;
+                        ${isChecked ? `<div style="display:flex; align-items:center; gap:5px; margin-left:10px;"><span style="font-size:11px; color:#888;">Qty</span><input type="number" min="1" value="${currentQty}" onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)" onclick="event.stopPropagation()" style="width:40px; text-align:center; border:1px solid #ddd; border-radius:4px; font-size:12px; padding:2px;"></div>` : ''}`;
                     grid.appendChild(row);
                 });
                 box.appendChild(grid); optionContainer.appendChild(box);
             }
+
             // 본품 수량
-            const qtyBox = document.createElement("div"); qtyBox.style.cssText = "display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px;";
-            qtyBox.innerHTML = `<span style="font-size:13px; font-weight:bold;">본품 수량</span><div class="qty-wrapper" style="border:1px solid #ddd; border-radius:5px; display:flex;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)">-</button><input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:50px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; height:30px; font-weight:bold; outline:none;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)">+</button></div>`;
+            const qtyBox = document.createElement("div"); 
+            qtyBox.style.cssText = "display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px;";
+            qtyBox.innerHTML = `<span style="font-size:13px; font-weight:bold;">${txt_qty}</span><div class="qty-wrapper" style="border:1px solid #ddd; border-radius:5px; display:flex;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)">-</button><input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:50px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; height:30px; font-weight:bold; outline:none;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)">+</button></div>`;
             optionContainer.appendChild(qtyBox); div.appendChild(optionContainer);
         }
         listArea.appendChild(div);
     });
-    updateSummary(grandTotal);
+    
+    // [핵심] 분리된 값을 전달
+    updateSummary(grandProductTotal, grandAddonTotal, grandTotal);
 }
-function updateSummary(total) { const elTotal = document.getElementById("summaryTotal"); const elItem = document.getElementById("summaryItemPrice"); const formatted = total.toLocaleString() + "원"; if(elTotal) elTotal.innerText = formatted; if(elItem) elItem.innerText = formatted; const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`; const btnCart = document.getElementById("btnViewCart"); if (btnCart) { btnCart.style.display = (cartData.length > 0 || currentUser) ? "inline-flex" : "none"; } }
+
+// [수정] 합계 표시 (상품/옵션/합계 모두 업데이트)
+function updateSummary(prodTotal, addonTotal, total) { 
+    const elItem = document.getElementById("summaryItemPrice"); 
+    const elAddon = document.getElementById("summaryAddonPrice"); 
+    const elTotal = document.getElementById("summaryTotal"); 
+    
+    if(elItem) elItem.innerText = formatCurrency(prodTotal); 
+    if(elAddon) elAddon.innerText = formatCurrency(addonTotal); // ★ 이 부분이 누락되었던 부분입니다.
+    if(elTotal) elTotal.innerText = formatCurrency(total); 
+    
+    const cartCount = document.getElementById("cartCount"); 
+    if(cartCount) cartCount.innerText = `(${cartData.length})`; 
+    
+    const btnCart = document.getElementById("btnViewCart"); 
+    if (btnCart) { 
+        btnCart.style.display = (cartData.length > 0 || currentUser) ? "inline-flex" : "none"; 
+    } 
+}
 
 // [주문 제출]
 async function processOrderSubmission() {
     const manager = document.getElementById("inputManagerName").value;
     const phone = document.getElementById("inputManagerPhone").value;
-    const address = document.getElementById("inputAddress").value;
     const request = document.getElementById("inputRequest").value;
+    
+    // [추가] 주소 조합 로직
+    let address = "";
+    if (SITE_CONFIG.COUNTRY === 'KR') {
+        address = document.getElementById("inputAddressKR").value;
+    } else {
+        // Global: 우편번호 + 주/도 + 시 + 상세주소 합치기
+        const zip = document.getElementById("inputZipCode").value;
+        const state = document.getElementById("inputState").value;
+        const city = document.getElementById("inputCity").value;
+        const st1 = document.getElementById("inputStreet1").value;
+        const st2 = document.getElementById("inputStreet2").value;
+        
+        address = `${st1} ${st2}, ${city}, ${state} ${zip}`; // 표준 영문 주소 표기
+    }
+
+    // [검증] 필수 입력값 확인
+    if(!manager || !address) return alert("배송 정보를 모두 입력해주세요.");
     
     if(!manager) return alert("담당자 입력 필수");
     
@@ -639,8 +762,94 @@ async function processOrderSubmission() {
     finally { btn.innerText = "주문서 생성 및 결제"; btn.disabled = false; document.getElementById("loading").style.display = "none"; }
 }
 
-function processPayment() { const clientKey = "live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6"; if (typeof TossPayments === 'undefined') return alert("결제 모듈 로드 실패"); let totalAmount = 0; cartData.forEach(item => { let price = item.product.price; if(item.selectedAddons) { Object.values(item.selectedAddons).forEach(code => { if(ADDON_DB[code]) { const aq = (item.addonQuantities && item.addonQuantities[code]) || 1; price += ADDON_DB[code].price * aq; } }); } totalAmount += price * (item.qty || 1); }); if (totalAmount === 0) return alert("결제 금액 0원"); if (!window.currentDbId) return alert("주문 정보가 없습니다."); const tossPayments = TossPayments(clientKey); const orderId = "ORD-" + new Date().getTime(); tossPayments.requestPayment("카드", { amount: totalAmount, orderId: orderId, orderName: `카멜레온 디자인 주문 (${cartData.length}건)`, customerName: document.getElementById("orderName").value, successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}`, failUrl: window.location.origin + `/fail.html?db_id=${window.currentDbId}`, }).catch(async function (error) { if (error.code === "USER_CANCEL") { await updatePaymentStatus(window.currentDbId, '결제중단'); alert("결제가 중단되었습니다."); } else { alert("결제 에러: " + error.message); } }); }
-window.renderCart = renderCart; window.toggleCartAccordion = (idx) => { cartData[idx].isOpen = !cartData[idx].isOpen; renderCart(); }; window.updateCartQty = (idx, change) => { if(cartData[idx]) { cartData[idx].qty = Math.max(1, (cartData[idx].qty||1) + change); saveCart(); renderCart(); } }; window.updateCartOption = (idx, key, code) => { if (cartData[idx]) { if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {}; if (code === "") delete cartData[idx].selectedAddons[key]; else cartData[idx].selectedAddons[key] = code; saveCart(); renderCart(); } }; window.toggleCartAddon = (idx, code, isChecked) => { if (cartData[idx]) { if (!cartData[idx].selectedAddons) cartData[idx].selectedAddons = {}; const storageKey = `addon_${code}`; if (isChecked) { cartData[idx].selectedAddons[storageKey] = code; if(!cartData[idx].addonQuantities) cartData[idx].addonQuantities = {}; cartData[idx].addonQuantities[code] = 1; } else { delete cartData[idx].selectedAddons[storageKey]; if(cartData[idx].addonQuantities) delete cartData[idx].addonQuantities[code]; } saveCart(); renderCart(); } }; window.updateCartAddonQty = (idx, code, val) => { let qty = parseInt(val); if(isNaN(qty) || qty < 1) qty = 1; if(cartData[idx]) { if(!cartData[idx].addonQuantities) cartData[idx].addonQuantities = {}; cartData[idx].addonQuantities[code] = qty; saveCart(); renderCart(); } }; window.removeCartItem = (idx) => { if(confirm("삭제하시겠습니까?")) { cartData.splice(idx, 1); saveCart(); renderCart(); } }; window.processOrderSubmission = processOrderSubmission; window.updateCartQtyInput = (idx, val) => { let newQty = parseInt(val); if(isNaN(newQty) || newQty < 1) newQty = 1; if(cartData[idx]) { cartData[idx].qty = newQty; saveCart(); renderCart(); } };
-async function updatePaymentStatus(dbId, status) { if(!sb || !dbId) return; try { await sb.from('orders').update({ payment_status: status }).eq('id', dbId); } catch(e) { console.error("상태 업데이트 실패", e); } }
-window.handleBankTransfer = async () => { if (!window.currentDbId) return alert("주문 정보가 없습니다."); if (!confirm("무통장 입금으로 진행하시겠습니까?")) return; const { error } = await sb.from('orders').update({ payment_method: '계좌이체', payment_status: '입금대기', status: '접수됨' }).eq('id', window.currentDbId); if(error) { alert("오류: " + error.message); } else { alert("입금 요청이 완료되었습니다.\n[닫기]를 누르면 초기화됩니다."); const btn = document.querySelector('.btn-bank-confirm'); if(btn) btn.style.display = 'none'; window.isOrderCompleted = true; } };
-document.addEventListener('DOMContentLoaded', () => { const bankBtn = document.querySelector('.btn-bank-confirm'); if(bankBtn) { bankBtn.onclick = window.handleBankTransfer; } });
+function processPayment() {
+    if (!window.currentDbId) return alert("주문 정보가 없습니다.");
+    
+    // 1. 결제 금액 계산
+    let totalAmount = 0; 
+    cartData.forEach(item => { 
+        let price = item.product.price;
+        if(item.selectedAddons) { 
+            Object.values(item.selectedAddons).forEach(code => { 
+                if(ADDON_DB[code]) { 
+                    const aq = (item.addonQuantities && item.addonQuantities[code]) || 1; 
+                    price += ADDON_DB[code].price * aq; 
+                } 
+            }); 
+        } 
+        totalAmount += price * (item.qty || 1); 
+    });
+
+    if (totalAmount === 0) return alert("결제 금액이 0원입니다.");
+
+    const country = SITE_CONFIG.COUNTRY;
+    const pgConfig = SITE_CONFIG.PG_CONFIG[country];
+    const orderName = `Chameleon Order (${cartData.length})`;
+    const customerName = document.getElementById("orderName").value;
+
+    // 2. 국가별 분기 처리
+    if (pgConfig.provider === 'toss') {
+        // [KR] 토스 페이먼츠
+        if (typeof TossPayments === 'undefined') return alert("결제 모듈 로드 실패");
+        const tossPayments = TossPayments(pgConfig.clientKey);
+        const orderId = "ORD-" + new Date().getTime(); 
+        
+        tossPayments.requestPayment("카드", { 
+            amount: totalAmount, 
+            orderId: orderId, 
+            orderName: orderName, 
+            customerName: customerName, 
+            successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}`, 
+            failUrl: window.location.origin + `/fail.html?db_id=${window.currentDbId}`, 
+        }).catch(error => {
+            if (error.code === "USER_CANCEL") alert("결제가 취소되었습니다.");
+            else alert("결제 오류: " + error.message);
+        });
+
+    } else if (pgConfig.provider === 'stripe') {
+        // [Global] Stripe 결제
+        // 주의: Supabase Edge Function 등을 통해 세션을 생성해야 합니다.
+        initiateStripeCheckout(pgConfig.publishableKey, totalAmount, country, window.currentDbId);
+    }
+}
+
+// [신규] Stripe Checkout 리다이렉트 함수
+async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId) {
+    if (typeof Stripe === 'undefined') return alert("Stripe 모듈 로드 실패");
+    const stripe = Stripe(pubKey);
+    const btn = document.getElementById("btnRealPayment");
+    const originalText = btn.innerText;
+    
+    btn.innerText = "Stripe 연결 중...";
+    btn.disabled = true;
+
+    const currency = currencyCountry === 'JP' ? 'jpy' : 'usd';
+
+    try {
+        // ★ 중요: 백엔드(Supabase Function)에서 세션 ID를 받아와야 합니다.
+        // 현재는 예시로 작성되었습니다. 실제 사용 시 'create-stripe-session' 함수를 배포해야 합니다.
+        const { data, error } = await sb.functions.invoke('create-stripe-session', {
+            body: {
+                amount: amount,
+                currency: currency,
+                order_id: orderDbId,
+                cancel_url: window.location.href
+            }
+        });
+
+        if (error) throw error;
+
+        const result = await stripe.redirectToCheckout({
+            sessionId: data.sessionId
+        });
+
+        if (result.error) alert(result.error.message);
+        
+    } catch (e) {
+        console.error("Stripe Error:", e);
+        alert("결제 초기화 실패: " + e.message + "\n(백엔드 설정이 필요합니다)");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}

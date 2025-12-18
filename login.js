@@ -1,30 +1,45 @@
+// login.js
+
 import { sb, currentUser, isAdmin } from "./config.js";
 
 let isSignUpMode = false; 
 
 export function initAuth() {
-    // 1. 메인 로그인 버튼 
+    // 1. 메인 로그인 버튼 (초기화 시점 번역 적용)
     const btnLogin = document.getElementById("btnLoginBtn");
     if (btnLogin) {
         btnLogin.updateState = () => {
+            // ★ 상태 업데이트 시마다 최신 번역 데이터 가져오기
+            const t = window.translations || {}; 
+
             if (currentUser) {
-                btnLogin.innerText = isAdmin ? "관리자 로그아웃" : "로그아웃";
+                // 관리자/일반 로그아웃 텍스트 처리
+                btnLogin.innerText = isAdmin 
+                    ? (t['btn_admin_logout'] || "관리자 로그아웃") 
+                    : (t['btn_logout'] || "로그아웃");
+                
                 btnLogin.classList.add("primary");
                 if (isAdmin) btnLogin.style.backgroundColor = "#dc2626"; 
             } else {
-                btnLogin.innerText = "로그인";
+                // 로그인 텍스트 처리
+                btnLogin.innerText = t['btn_login'] || "로그인";
                 btnLogin.classList.remove("primary");
                 btnLogin.style.backgroundColor = ""; 
             }
         };
 
-        // 로그아웃 로직 (강제 새로고침 포함)
+        // 로그아웃 로직
         btnLogin.onclick = async () => {
+            const t = window.translations || {}; // 클릭 시점 번역
+
             if (currentUser) {
-                const msg = isAdmin ? "관리자 계정에서 로그아웃 하시겠습니까?" : "로그아웃 하시겠습니까?";
+                const msg = isAdmin 
+                    ? (t['confirm_admin_logout'] || "관리자 계정에서 로그아웃 하시겠습니까?") 
+                    : (t['confirm_logout'] || "로그아웃 하시겠습니까?");
+                
                 if (!confirm(msg)) return;
 
-                btnLogin.innerText = "처리 중...";
+                btnLogin.innerText = t['msg_processing'] || "처리 중...";
 
                 try {
                     if (sb && sb.auth) {
@@ -47,7 +62,7 @@ export function initAuth() {
         btnLogin.updateState();
     }
 
-    // 2. 모드 전환 버튼
+    // 2. 모드 전환 버튼 (로그인 <-> 회원가입)
     const btnSwitch = document.getElementById("btnSwitchAuthMode");
     if (btnSwitch) {
         btnSwitch.onclick = () => {
@@ -56,7 +71,7 @@ export function initAuth() {
         };
     }
 
-    // 3. 실행 버튼
+    // 3. 실행 버튼 (로그인/가입하기 수행)
     const btnAuthAction = document.getElementById("btnAuthAction");
     if (btnAuthAction) {
         btnAuthAction.onclick = handleAuthAction;
@@ -69,7 +84,7 @@ export function initAuth() {
     if (btnGoogle) btnGoogle.onclick = () => handleSocialLogin("google");
     if (btnKakao) btnKakao.onclick = () => handleSocialLogin("kakao");
     
-    // 5. 엔터키
+    // 5. 엔터키 입력 처리
     const inputPw = document.getElementById("loginPw");
     if(inputPw) {
         inputPw.addEventListener("keydown", (e) => {
@@ -85,16 +100,25 @@ function openLoginModal() {
     const modal = document.getElementById("loginModal");
     if (modal) {
         modal.style.display = "flex";
-        isSignUpMode = false; 
+        isSignUpMode = false; // 기본은 로그인 모드로 열기
         updateModalUI(); 
-        document.getElementById("loginId").value = "";
-        document.getElementById("loginPw").value = "";
+        
+        // 입력창 초기화
+        const idInput = document.getElementById("loginId");
+        const pwInput = document.getElementById("loginPw");
         const pwConfirm = document.getElementById("loginPwConfirm");
+        
+        if(idInput) idInput.value = "";
+        if(pwInput) pwInput.value = "";
         if(pwConfirm) pwConfirm.value = "";
     }
 }
 
+// ★ 여기가 가장 중요한 수정 부분입니다 (모달 내부 텍스트 번역 적용)
 function updateModalUI() {
+    // 번역 데이터 가져오기
+    const t = window.translations || {};
+
     const title = document.getElementById("authTitle");
     const actionBtn = document.getElementById("btnAuthAction");
     const switchText = document.getElementById("authSwitchText");
@@ -102,49 +126,55 @@ function updateModalUI() {
     const pwConfirm = document.getElementById("loginPwConfirm");
 
     if (isSignUpMode) {
-        title.innerText = "회원가입";
-        actionBtn.innerText = "가입하기";
-        switchText.innerText = "이미 계정이 있으신가요?";
-        switchBtn.innerText = "로그인";
+        // [회원가입 모드]
+        title.innerText = t['modal_signup_title'] || "회원가입";
+        actionBtn.innerText = t['btn_signup_submit'] || "가입하기";
+        switchText.innerText = t['msg_have_account'] || "이미 계정이 있으신가요?";
+        switchBtn.innerText = t['btn_to_login'] || "로그인"; // 로그인으로 전환하는 버튼 텍스트
+        
         if (pwConfirm) pwConfirm.style.display = "block";
     } else {
-        title.innerText = "로그인";
-        actionBtn.innerText = "로그인";
-        switchText.innerText = "계정이 없으신가요?";
-        switchBtn.innerText = "회원가입";
+        // [로그인 모드]
+        title.innerText = t['modal_login_title'] || "로그인";
+        actionBtn.innerText = t['btn_login_submit'] || "로그인";
+        switchText.innerText = t['msg_no_account'] || "계정이 없으신가요?";
+        switchBtn.innerText = t['btn_to_signup'] || "회원가입"; // 회원가입으로 전환하는 버튼 텍스트
+        
         if (pwConfirm) pwConfirm.style.display = "none";
     }
 }
 
 async function handleAuthAction() {
+    const t = window.translations || {}; // 알림 메시지용 번역
+
     const emailInput = document.getElementById("loginId");
     const pwInput = document.getElementById("loginPw");
     const pwConfirmInput = document.getElementById("loginPwConfirm");
     const email = emailInput?.value.trim();
     const password = pwInput?.value.trim();
 
-    if (!email || !password) return alert("입력 정보 확인 필요");
-    if (!sb) return alert("DB 연결 오류");
+    if (!email || !password) return alert(t['err_input_required'] || "입력 정보 확인 필요");
+    if (!sb) return alert(t['err_db_connection'] || "DB 연결 오류");
 
     const btn = document.getElementById("btnAuthAction");
     const originalText = btn.innerText;
-    btn.innerText = "처리 중...";
+    btn.innerText = t['msg_processing'] || "처리 중...";
     btn.disabled = true;
 
     try {
         if (isSignUpMode) {
             const pwConfirm = pwConfirmInput?.value.trim();
-            if (password !== pwConfirm) throw new Error("비밀번호 불일치");
-            if (password.length < 6) throw new Error("비밀번호 6자리 이상");
+            if (password !== pwConfirm) throw new Error(t['err_pw_mismatch'] || "비밀번호 불일치");
+            if (password.length < 6) throw new Error(t['err_pw_length'] || "비밀번호 6자리 이상");
 
             const { data, error } = await sb.auth.signUp({ email, password });
             if (error) throw error;
             
             if (data.session) {
-                alert("가입 완료!");
+                alert(t['msg_signup_success'] || "가입 완료!");
                 location.reload();
             } else {
-                alert("인증 메일 발송됨");
+                alert(t['msg_verify_email'] || "인증 메일 발송됨");
                 document.getElementById("loginModal").style.display = "none";
             }
         } else {
@@ -153,7 +183,8 @@ async function handleAuthAction() {
             location.reload(); 
         }
     } catch (e) {
-        alert("오류: " + e.message);
+        const errPrefix = t['err_prefix'] || "오류: ";
+        alert(errPrefix + e.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -161,11 +192,17 @@ async function handleAuthAction() {
 }
 
 async function handleSocialLogin(provider) {
-    if (!sb) return alert("DB 미연결");
+    const t = window.translations || {};
+
+    if (!sb) return alert(t['err_db_connection'] || "DB 미연결");
     const redirectUrl = window.location.origin; 
     const { data, error } = await sb.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: redirectUrl, queryParams: { access_type: 'offline', prompt: 'consent' } },
     });
-    if (error) alert("로그인 실패: " + error.message);
+    
+    if (error) {
+        const errPrefix = t['err_login_fail'] || "로그인 실패: ";
+        alert(errPrefix + error.message);
+    }
 }

@@ -1,5 +1,8 @@
 // config.js
 
+// ★ [추가] 국가 설정을 가져옵니다.
+import { SITE_CONFIG } from "./site-config.js";
+
 export let apiKeys = {}; 
 export let sb = null;
 export let currentUser = null; 
@@ -22,7 +25,7 @@ export function initConfig() {
     if (initPromise) return initPromise;
 
     initPromise = (async () => {
-        console.log("⚙️ 설정 로딩 시작...");
+        console.log(`⚙️ 설정 로딩 시작... (현재 모드: ${SITE_CONFIG.COUNTRY})`);
         
         // 1. Supabase 라이브러리 로드 대기
         if (typeof window.supabase === 'undefined') {
@@ -73,15 +76,29 @@ export function initConfig() {
     return initPromise;
 }
 
-// ★ DB 데이터 로드 및 사이즈 변환 함수
+// ★ DB 데이터 로드 및 사이즈 변환 함수 (다국어 지원 수정됨)
 async function loadSystemData() {
     try {
+        const country = SITE_CONFIG.COUNTRY; // 현재 접속 국가 코드 (KR, JP, US)
+
         // 1. 옵션(Addon) 불러오기
         const { data: addons } = await sb.from('admin_addons').select('*');
         if (addons) {
             ADDON_DB = {}; // 초기화
             addons.forEach(item => {
-                ADDON_DB[item.code] = { name: item.name, price: item.price };
+                // 국가별 옵션명/가격 매핑
+                let dName = item.name;
+                let dPrice = item.price;
+
+                if (country === 'JP') {
+                    dName = item.name_jp || item.name;
+                    dPrice = item.price_jp || 0; // 일본 가격이 없으면 0원 처리 (혹은 item.price 유지 선택 가능)
+                } else if (country === 'US') {
+                    dName = item.name_us || item.name;
+                    dPrice = item.price_us || 0;
+                }
+
+                ADDON_DB[item.code] = { name: dName, price: dPrice };
             });
         }
 
@@ -94,6 +111,18 @@ async function loadSystemData() {
         if (products) {
             PRODUCT_DB = {}; // 초기화
             products.forEach(item => {
+                // 국가별 상품명/가격 매핑
+                let finalName = item.name;
+                let finalPrice = item.price;
+
+                if (country === 'JP') {
+                    finalName = item.name_jp || item.name;
+                    finalPrice = item.price_jp || 0;
+                } else if (country === 'US') {
+                    finalName = item.name_us || item.name;
+                    finalPrice = item.price_us || 0;
+                }
+
                 // mm -> px 변환 비율 (출력용 고해상도: 1mm = 약 3.7795px)
                 const scaleFactor = 3.7795;
                 
@@ -109,12 +138,13 @@ async function loadSystemData() {
                 const addonList = item.addons ? item.addons.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 
                 PRODUCT_DB[item.code] = {
-                    name: item.name,
-                    price: item.price,
+                    name: finalName,   // ✅ 변환된 언어의 상품명
+                    price: finalPrice, // ✅ 변환된 국가의 가격
+                    currency: SITE_CONFIG.CURRENCY_UNIT[country], // ✅ 화폐 단위
                     img: item.img_url || 'https://placehold.co/400?text=No+Image',
-                    w: pxW,       // 캔버스 작동용 픽셀값 (예: 800mm -> 3024px)
+                    w: pxW,       // 캔버스 작동용 픽셀값
                     h: pxH,       
-                    w_mm: mmW,    // ★ [추가] UI 표시용 원본 mm값 (예: 800)
+                    w_mm: mmW,    // UI 표시용 원본 mm값
                     h_mm: mmH,    
                     addons: addonList
                 };
