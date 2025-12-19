@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Chameleon Canvas</title>
-<meta name="description" content="행사 팝업스토어, 백월, 등신대 제작을 위한 무료 온라인 디자인 에디터. 웹에서 바로 디자인하고 견적 확인까지 가능합니다.">
-<link rel="canonical" href="https://www.yoursite.com/" />
+<title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
+<meta name="description" content="허니콤보드, 종이매대, 패브릭인쇄, 연포장 제작 전문. 팝업스토어 및 전시회에 필요한 실사출력, 등신대, 백월을 무료 에디터로 쉽고 빠르게 디자인하고 주문하세요.">
+<meta name="keywords" content="카멜레온프린팅, 허니콤보드, 종이매대, 패브릭인쇄, 팝업스토어, 등신대제작, 실사출력, 연포장, 친환경전시, 백월디자인, 전시부스, 폼보드인쇄">
+<link rel="canonical" href="https://www.cafe2626.com/" />
 
 <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/" />
 <link rel="alternate" hreflang="en" href="https://www.cafe2626.com/en.html" />
@@ -66,14 +67,14 @@
 </div>
 
 <div class="gallery-section">
-    <div class="gallery-header">Expert Studio - Chameleon Canvas</div>
+    <div class="gallery-header">사진 이미지는 A2까지 예쁘게 나옵니다. 허니콤보드 가벽용 백터 이미지는 에디터 카테고리에 있어요.</div>
     
     <div class="hero-search-wrap">
         <input type="search" 
                id="startSearchInput" 
                class="hero-search-input" 
                data-i18n-placeholder="search_placeholder"
-               placeholder="어떤 디자인을 찾으세요? (예: 카페, 메뉴판, 여름)" 
+               placeholder="어떤 디자인을 찾으세요? (예: 고양이, 바다, 하늘)" 
                autocomplete="off" 
                readonly 
                onfocus="this.removeAttribute('readonly');"
@@ -351,11 +352,29 @@
                 <button id="btnPDF" class="btn-round" style="flex:1;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
             </div>
 
-            <div class="section-title" data-i18n="label_basic_tools">BASIC TOOLS</div>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button class="btn-round" id="btnAddText" style="flex:1;"><span data-i18n="btn_add_text">+ 텍스트</span></button>
-                <button class="btn-round" id="btnFontSelect" style="flex:1;"><span data-i18n="btn_font">🅰️ 폰트</span></button>
-            </div>
+
+            <div class="section-title" data-i18n="label_text_tools">텍스트 추가</div>
+
+<div class="text-btn-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+    <button id="btnAddTitle" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
+        <span class="text-preview" style="display:block; font-family: 'Jalnan'; font-size: 16px; margin-bottom:5px;">제목</span>
+        <span class="text-label" style="font-size: 11px; color: #64748b;">잘난체</span>
+    </button>
+
+    <button id="btnAddSubtitle" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
+        <span class="text-preview" style="display:block; font-family: 'HyundaiSansMedium'; font-weight: bold; font-size: 14px; margin-bottom:5px;">부제목</span>
+        <span class="text-label" style="font-size: 11px; color: #64748b;">현대산스 B</span>
+    </button>
+
+    <button id="btnAddBody" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
+        <span class="text-preview" style="display:block; font-family: 'HyundaiSansMedium'; font-size: 12px; margin-bottom:5px;">본문</span>
+        <span class="text-label" style="font-size: 11px; color: #64748b;">현대산스 M</span>
+    </button>
+</div>
+
+<button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:15px; display:flex; align-items:center; justify-content:center;">
+    <span data-i18n="btn_font">🅰️ 폰트 전체보기</span>
+</button>
 
             <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:15px;">
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -368,6 +387,46 @@
                     <input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
                 </div>
             </div>
+            <!-- 텍스트효과시작 -->
+<div class="section-title" style="margin-top:15px;">🔥 파워 텍스트 효과</div>
+<div class="effect-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px;">
+
+    <button class="btn-round" onclick="window.applyTextEffect('block-3d')" 
+            style="background:#000; color:#4fffa5; font-weight:900; border:none; text-shadow: 2px 2px 0px #005c30;">
+        3D 블록
+    </button>
+    
+    <button class="btn-round" onclick="window.applyTextEffect('neon-strong')" 
+            style="background:#111; color:#fff; border:1px solid #d300c5; text-shadow: 0 0 5px #d300c5, 0 0 10px #7800ff;">
+        강한 네온
+    </button>
+    
+    <button class="btn-round" onclick="window.applyTextEffect('glitch-strong')" 
+            style="background:#1a1a1a; color:#fff; font-weight:bold; text-shadow: -2px 0 cyan, 2px 0 red; clip-path: polygon(0% 0%, 100% 0%, 95% 100%, 5% 100%);">
+        ⚡ 사이버펑크
+    </button>
+    
+    <button class="btn-round" onclick="window.applyTextEffect('long-shadow')" 
+            style="background:#40c4ff; color:white; font-weight:bold; text-shadow: 1px 1px #2689b5, 2px 2px #2689b5, 3px 3px #2689b5;">
+        긴 그림자
+    </button>
+
+    <button class="btn-round" onclick="window.applyTextEffect('retro-candy')" 
+            style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #22c55e 10px, #22c55e 20px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold;">
+        🍭 레트로 캔디
+    </button>
+
+    <button class="btn-round" onclick="window.applyTextEffect('blue-candy')" 
+            style="background: repeating-linear-gradient(45deg, #0ea5e9, #0ea5e9 10px, #1e3a8a 10px, #1e3a8a 20px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold;">
+        🧊 블루 캔디
+    </button>
+
+    <button class="btn-round" onclick="window.applyTextEffect('reset')" 
+            style="grid-column: 1 / -1; background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">
+        ↺ 효과 제거 (초기화)
+    </button>
+</div>
+<!-- 텍스트효과 끝 -->
 
             <div class="color-group" style="margin-bottom:5px;">
                 <span data-i18n="label_fill">🎨 채우기</span>
@@ -948,11 +1007,13 @@
 
         categories.forEach(cat => {
             const n = cat.name; 
-            let iconUrl = 'https://th.bing.com/th/id/OIP.Jj5QUnowN2oCX56cVuo45wHaHa?w=197&h=197&c=7&r=0&o=7&pid=1.7&rm=3'; 
+            let iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyBh196ouPpy-OMxHy1i0b6k2_c0VDMPorAA&s'; 
 
-            if (n.includes('허니콤') || n.includes('가벽') || n.includes('등신대')) iconUrl = 'https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20241009_270%2F17284630974014y3f0_JPEG%2F1000190590.jpg&type=sc960_832'; 
-            else if (n.includes('패브릭') || n.includes('현수막')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWV5d7OPwqIbTMcek_s71sum2bh8Zh7CFGA&s';
-            else if (n.includes('매대') || n.includes('배너')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6MsafK1Bk4flaRnwnJ6yHsY_HHtS_rZ3lbA&s';
+            if (n.includes('허니콤') || n.includes('판넬') || n.includes('등신대')) iconUrl = 'data:image/jpeg;base64,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'; 
+            else if (n.includes('광목') || n.includes('블라인드')  || n.includes('실사출력')  || n.includes('쉬폰')  || n.includes('현수막')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSc0eNnMG8PaVNf9mzYNz8iB7hmY1lQRNVCA&s';
+            else if (n.includes('매대') || n.includes('종이')  || n.includes('배너')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6MsafK1Bk4flaRnwnJ6yHsY_HHtS_rZ3lbA&s';
+            else if (n.includes('폼보드') || n.includes('포맥스')  || n.includes('전단')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNK-375x0PExowwpzCESuDi2VdPxV273YdJg&s';
+
 
             const div = document.createElement('div');
             div.className = 'quick-item';

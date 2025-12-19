@@ -1,6 +1,4 @@
-// ============================================================
-//  fonts.js — Supabase에 업로드된 폰트 URL 목록 (정식 export)
-// ============================================================
+// fonts.js (전체 코드 복사 후 덮어쓰기)
 
 export const FONT_URLS = {
     "JalnanGothic": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/JalnanGothic.otf",
@@ -19,20 +17,19 @@ export const FONT_URLS = {
     "HyundaiSansRegular": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/HyundaiSansTextKRRegular.ttf"
 };
 
-// UI에서 쓸 Label도 함께 export (선택사항)
-export const FONT_LABELS = {
-    "JalnanGothic": "잘난고딕",
-    "Jalnan2": "잘난체",
-    "HakgyoansimChilpanjiugaeBold": "학교안심 칠판지우개 Bold",
-    "HakgyoansimDunggeunmisoBold": "둥근미소 Bold",
-    "HakgyoansimDunggeunmisoRegular": "둥근미소 Regular",
-    "SCDream7": "에스코어드림7",
-    "BMEuljiro10YearsLater": "을지로 10년 후",
-    "HakgyoansimEunhasu": "은하수",
-    "NanumMyeongjo": "나눔명조",
-    "NanumMyeongjoBold": "나눔명조 Bold",
-    "NanumMyeongjoExtraBold": "나눔명조 ExtraBold",
-    "HyundaiSansBold": "현대 Bold",
-    "HyundaiSansMedium": "현대 Medium",
-    "HyundaiSansRegular": "현대 Regular"
+export const FONT_ALIASES = {
+    "Jalnan": "Jalnan2", "Jalnan 2": "Jalnan2", "잘난체": "Jalnan2",
+    "JalnanGothic": "JalnanGothic", "잘난고딕": "JalnanGothic",
+    "HakgyoansimChilpanjiugaeBold": "HakgyoansimChilpanjiugaeBold", "칠판지우개": "HakgyoansimChilpanjiugaeBold",
+    "HakgyoansimDunggeunmisoBold": "HakgyoansimDunggeunmisoBold", "둥근미소 Bold": "HakgyoansimDunggeunmisoBold",
+    "HakgyoansimDunggeunmisoRegular": "HakgyoansimDunggeunmisoRegular", "둥근미소": "HakgyoansimDunggeunmisoRegular",
+    "SCDream7": "SCDream7", "에스코어드림7": "SCDream7",
+    "BMEuljiro10YearsLater": "BMEuljiro10YearsLater", "을지로10년후": "BMEuljiro10YearsLater",
+    "HakgyoansimEunhasu": "HakgyoansimEunhasu", "은하수": "HakgyoansimEunhasu",
+    "NanumMyeongjo": "NanumMyeongjo", "나눔명조": "NanumMyeongjo",
+    "HyundaiSansBold": "HyundaiSansBold", "현대 Bold": "HyundaiSansBold",
+    "HyundaiSansMedium": "HyundaiSansMedium", "현대 Medium": "HyundaiSansMedium",
+    "HyundaiSansRegular": "HyundaiSansRegular", "현대 Regular": "HyundaiSansRegular"
 };
+
+export const FONT_LABELS = { /* 기존 내용 유지 또는 생략 가능 */ };
