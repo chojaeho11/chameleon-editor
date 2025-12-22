@@ -1086,37 +1086,38 @@ async function renderQuickMenu() {
         }
 
         // 2. 탭 생성 함수
-        const renderTabs = () => {
-            tabContainer.innerHTML = '';
-            
-            if (topCats) {
-                topCats.forEach(top => {
-                    const btn = document.createElement('button');
-                    btn.className = 'cat-tab';
-                    btn.innerText = top.name;
-                    btn.onclick = (e) => {
-                        handleTabClick(e);
-                        renderItems(top.code);
-                        document.getElementById('product-list-container').innerHTML = ''; 
-                    };
-                    tabContainer.appendChild(btn);
-                });
-            }
-            
-            // 기타 탭
-            const orphanCats = subCats.filter(sub => !sub.top_category_code);
-            if (orphanCats.length > 0) {
-                const etcBtn = document.createElement('button');
-                etcBtn.className = 'cat-tab';
-                etcBtn.innerText = '기타';
-                etcBtn.onclick = (e) => {
-                    handleTabClick(e);
-                    renderItems('etc');
-                    document.getElementById('product-list-container').innerHTML = ''; 
-                };
-                tabContainer.appendChild(etcBtn);
-            }
+        // 2. 탭 생성 함수
+const renderTabs = () => {
+    tabContainer.innerHTML = '';
+    
+    if (topCats) {
+        topCats.forEach(top => {
+            const btn = document.createElement('button');
+            btn.className = 'cat-tab';
+            btn.innerText = top.name;
+            btn.onclick = (e) => {
+                handleTabClick(e);
+                renderItems(top.code);
+                // ★ 삭제함: document.getElementById('product-list-container').innerHTML = ''; 
+            };
+            tabContainer.appendChild(btn);
+        });
+    }
+    
+    // 기타 탭
+    const orphanCats = subCats.filter(sub => !sub.top_category_code);
+    if (orphanCats.length > 0) {
+        const etcBtn = document.createElement('button');
+        etcBtn.className = 'cat-tab';
+        etcBtn.innerText = '기타';
+        etcBtn.onclick = (e) => {
+            handleTabClick(e);
+            renderItems('etc');
+            // ★ 삭제함: document.getElementById('product-list-container').innerHTML = ''; 
         };
+        tabContainer.appendChild(etcBtn);
+    }
+};
 
         // 3. 탭 스타일 처리
         const handleTabClick = (e) => {

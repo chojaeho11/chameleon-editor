@@ -26,63 +26,51 @@ window.currentUploadedPdfUrl = null;
 // 1. 메인 초기화
 // ==========================================================
 window.addEventListener("DOMContentLoaded", async () => {
-    try {
-        window.loadProductFixedTemplate = loadProductFixedTemplate;
+  const loading = document.getElementById("loading");
+  const startScreen = document.getElementById("startScreen");
+  const mainEditor = document.getElementById("mainEditor");
 
-        await initConfig();
-        initCanvas();
-        initCanvasUtils();
-        initShortcuts();
-        initContextMenu();
-        initSizeControls();
-        initGuides();
-        initZoomPan();
-        initObjectTools();
-        initImageTools();
-        initTemplateTools();
-        initAiTools(); 
-        initExport();
-        initOrderSystem();
-        initAuth();
-        initMyDesign();
-        initMobileTextEditor();
-        initOutlineTool();
-        
-        // 파일 업로드 리스너 초기화
-        initFileUploadListeners();
+  try {
+    window.loadProductFixedTemplate = loadProductFixedTemplate;
 
-        // 캔버스 레이어 관리
-        if (window.canvas) {
-            window.canvas.on('object:added', (e) => {
-                const addedObj = e.target;
-                if (addedObj && addedObj.id !== 'product_fixed_overlay') {
-                    const fixedOverlay = window.canvas.getObjects().find(o => o.id === 'product_fixed_overlay');
-                    if (fixedOverlay) window.canvas.bringToFront(fixedOverlay);
-                }
-            });
-        }
+    await initConfig();
+    initCanvas();
+    initCanvasUtils();
+    initShortcuts();
+    initContextMenu();
+    initSizeControls();
+    initGuides();
+    initZoomPan();
+    initObjectTools();
+    initImageTools();
+    initTemplateTools();
+    initAiTools();
+    initExport();
+    initOrderSystem();
+    initAuth();
+    initMyDesign();
+    initMobileTextEditor();
+    initOutlineTool();
 
-        console.log("🚀 모든 모듈 초기화 완료");
+    initFileUploadListeners();
 
-        setTimeout(() => {
-            const loading = document.getElementById("loading");
-            const startScreen = document.getElementById("startScreen");
-            const mainEditor = document.getElementById("mainEditor");
+    console.log("🚀 모든 모듈 초기화 완료");
+  } catch (error) {
+    console.error("🚨 초기화 오류:", error);
+    alert("시스템 초기화 중 오류가 발생했습니다.");
+  } finally {
+    // ✅ 에러가 나도 로딩은 반드시 끈다
+    if (loading) loading.style.display = "none";
 
-            if (loading) loading.style.display = "none";
-            
-            if (startScreen && startScreen.style.display !== 'none') {
-                // pass
-            } else {
-                if (mainEditor) mainEditor.style.display = "flex";
-            }
-        }, 300);
-
-    } catch (error) {
-        console.error("🚨 초기화 오류:", error);
-        alert("시스템 초기화 중 오류가 발생했습니다.");
+    // 메인 화면은 가능한 보여주기
+    if (startScreen && startScreen.style.display !== "none") {
+      // 시작화면 유지
+    } else {
+      if (mainEditor) mainEditor.style.display = "flex";
     }
+  }
 });
+
 
 // ==========================================================
 // ★ [핵심] 통합 파일 업로드 처리

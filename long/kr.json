@@ -1,29 +1,29 @@
 {
   "page_title": "카멜레온 캔버스 - 무료 디자인 에디터",
-  
+
   "hero_title": "행사 준비하세요? <br><span>카멜레온</span>과 함께해요.",
   "hero_desc": "행사 팝업스토어 기획자를 위한 도매쇼핑몰, 유저가 함께 만드는 무료에디터",
   "wall_option_desc": "맞춤형 디자인 시작하기",
-  
+
   "search_placeholder": "어떤 디자인을 찾으세요? (예: 카페, 메뉴판, 여름)",
   "btn_search": "검색",
-  
+
   "tab_all": "템플릿",
   "tab_vector": "배경",
   "tab_graphic": "벡터",
   "tab_photo": "사진",
   "tab_pattern": "패턴",
   "tab_logo": "로고",
-  
+
   "btn_my_library": "📂 보관함",
   "btn_cart": "🛒 장바구니",
   "btn_add_to_cart": "장바구니 담기",
   "btn_login": "로그인",
-  
+
   "wall_option_title": "가벽 높이",
   "tool_size_change": "📏 사이즈 변경(mm)",
   "btn_save_cost": "변경 적용",
-  
+
   "label_canvas_tools": "CANVAS TOOLS",
   "btn_fit_screen": "화면 맞춤",
   "btn_lock": "잠금",
@@ -31,7 +31,7 @@
   "btn_ai_gen": "AI 생성",
   "btn_save_design": "💾 디자인 저장",
   "btn_logo_share": "로고 공유방",
-  
+
   "label_basic_tools": "BASIC TOOLS",
   "btn_add_text": "+ 텍스트",
   "btn_font": "🅰️ 폰트",
@@ -39,7 +39,7 @@
   "label_stroke": "🖌️ 선색상",
   "label_shapes": "SHAPES",
   "label_upload": "UPLOAD",
-  
+
   "label_edit_layer": "편집 & 레이어",
   "btn_undo": "실행취소",
   "btn_redo": "다시실행",
@@ -48,22 +48,22 @@
   "btn_front": "맨앞",
   "btn_back": "맨뒤",
   "btn_del": "삭제",
-  
+
   "label_align": "객체 정렬",
   "btn_center_all": "정중앙 정렬",
   "btn_full_bg": "배경으로 꽉 채우기",
-  
+
   "label_cut_shape": "모양대로 오려내기",
   "msg_select_click": "이미지를 선택하고 클릭하세요",
   "btn_make_cutline": "오려내기 칼선작업",
   "btn_keyring_hole": "키링 고리",
   "btn_stand_base": "등신대 받침",
-  
+
   "label_ai_image_tools": "AI 이미지 도구",
   "btn_bg_remove": "(배경 제거 누끼따기)",
   "btn_enhance": "밝게 보정",
   "btn_text_outline": "글자 테두리 만들기",
-  
+
   "cart_title": "장바구니",
   "label_payment_amt": "결제 금액",
   "label_product_price": "상품",
@@ -71,7 +71,7 @@
   "label_total_price": "합계",
   "btn_do_checkout": "결제하기",
   "btn_print_quote": "견적서 출력",
-  
+
   "label_material": "① 재질/두께",
   "label_finish": "② 마감 방식",
   "label_addons": "③ 추가 상품",
@@ -82,7 +82,7 @@
   "label_user_design": "사용자 디자인",
   "msg_cart_empty": "장바구니가 비어있습니다.",
   "msg_cart_added": "상품이 장바구니에 담겼습니다.",
-  
+
   "modal_login_title": "로그인",
   "placeholder_email": "이메일 주소",
   "placeholder_pw": "비밀번호",
@@ -90,7 +90,7 @@
   "msg_no_account": "계정이 없으신가요?",
   "btn_signup": "회원가입",
   "btn_close": "닫기",
-  
+
   "modal_delivery_title": "📝 배송 정보 입력",
   "label_manager_name": "담당자명",
   "label_contact_phone": "연락처",
@@ -98,7 +98,7 @@
   "label_request_memo": "요청사항",
   "btn_payment_submit": "주문서 생성 및 결제",
   "btn_cancel": "취소",
-  
+
   "modal_checkout_title": "주문 확인 및 결제",
   "label_orderer_name": "주문자명",
   "label_shipping_addr": "배송지",
@@ -127,11 +127,12 @@
   "label_opacity": "투명도",
   "modal_size_select_sub": "(사이즈 선택)",
   "modal_size_select_desc": "원하시는 규격을 선택하시면 디자인이 시작됩니다.",
-  "msg_loading": "로딩 중..."
-  ,
+
+  "msg_loading": "로딩 중입니다...",
   "btn_guide_on": "가이드 켜기",
-  "help_text_shortcuts": "Space: 화면이동 / 휠: 크기조절 / 방향키: 미세이동"
-  ,"review_section_title": "✨ 고객님들의 생생한 리얼 후기",
+  "help_text_shortcuts": "Space: 화면이동 / 휠: 크기조절 / 방향키: 미세이동",
+
+  "review_section_title": "✨ 고객님들의 생생한 리얼 후기",
   "review_section_desc": "카멜레온으로 완성된 멋진 결과물들을 확인해보세요.",
   "rev_1_text": "\"행사때마다 이용합니다. 기획사한테는 여기만한 곳이 없어요. 허니콤보드 진짜 저렴하고 빠르고 사장님 최고입니다.\"",
   "rev_1_user": "제일기획 우*진 부장",
@@ -148,13 +149,10 @@
   "footer_cs_time": "평일 09:00 ~ 18:00",
   "footer_cs_lunch": "점심 12:00 ~ 13:00",
   "footer_cs_closed": "* 주말 및 공휴일 휴무",
-  
-  "msg_loading": "로딩 중입니다...",
+
   "msg_deposit_complete": "입금 요청이 완료되었습니다.\n[닫기]를 누르면 초기화됩니다.",
   "msg_confirm_bank_transfer": "무통장 입금으로 진행하시겠습니까?",
-  "btn_close": "닫기",
   "btn_confirm": "확인",
-  "btn_cancel": "취소",
 
   "pdf_quote_title": "견  적  서",
   "pdf_order_sheet_title": "작업 지시서 (Work Order)",
@@ -183,8 +181,4 @@
   "pdf_option_none": "- 옵션 없음 (기본 사양)",
   "pdf_total_qty": "총 본품 수량",
   "pdf_generated_by": "Generated by Chameleon Design Studio"
-  ,
-  "page_title": "카멜레온 프린팅 에디터",
-    "btn_add_to_cart": "장바구니 담기",
-    "btn_login": "로그인"
 }

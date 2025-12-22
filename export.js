@@ -427,7 +427,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         
         doc.setFillColor(99, 102, 241); doc.rect(0, 0, 210, 20, 'F');
         doc.setTextColor(255, 255, 255); doc.setFontSize(16); 
-        try { doc.setFont(BASE_FONT_NAME, "bold"); } catch(e){}
+        try { doc.setFont(BASE_FONT_NAME, "normal"); } catch(e){}
         drawAutoText(doc, t['pdf_order_sheet_title'] || "작업 지시서", 105, 13, { align: 'center' });
         
         const startY = 30; doc.setTextColor(0); doc.setFontSize(10); 
@@ -440,7 +440,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         doc.text(`${lblDate}: ${new Date().toLocaleDateString()}`, 20, startY + 8);
         doc.text(`${lblManager}: `, 80, startY + 8); drawAutoText(doc, orderInfo.manager || '-', 95, startY + 8); 
         
-        try{ doc.setFont(BASE_FONT_NAME, "bold"); }catch(e){} 
+        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){} 
         doc.setTextColor(220, 38, 38); doc.setFontSize(14);
         doc.text(`${lblDelDate}: ${orderInfo.date || '-'}`, 20, startY + 16);
         
@@ -469,7 +469,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         const staffY = startY + 45;
         doc.setFillColor(255, 247, 237); doc.setDrawColor(249, 115, 22); doc.rect(15, staffY, 180, 20, 'F'); doc.rect(15, staffY, 180, 20);
         doc.setTextColor(194, 65, 12); 
-        try{ doc.setFont(BASE_FONT_NAME, "bold"); }catch(e){} 
+        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){} 
         doc.setFontSize(11);
         const lblDelMgr = t['pdf_delivery_manager'] || "배송책임자"; const lblProdMgr = t['pdf_production_manager'] || "제작책임자";
         drawAutoText(doc, `${lblDelMgr} : 서용규 (010-8272-3017)`, 42, staffY + 11);
@@ -506,7 +506,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         }
         
         y += 5; doc.setFontSize(14); 
-        try{ doc.setFont(BASE_FONT_NAME, "bold"); }catch(e){}
+        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){}
         doc.setTextColor(99, 102, 241); 
         const lblTotalQty = t['pdf_total_qty'] || "총 수량";
         doc.text(`${lblTotalQty}: ${item.qty}`, 160, y);

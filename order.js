@@ -171,53 +171,6 @@ export function initOrderSystem() {
             openCalendarModal(); 
         }; 
     }
-    const btnQuote = document.getElementById("btnPrintQuote");
-    if (btnQuote) {
-        btnQuote.onclick = async () => {
-            // 1. 장바구니 비었는지 확인
-            if (!cartData || cartData.length === 0) {
-                return alert("장바구니에 담긴 상품이 없습니다.");
-            }
-
-            // 2. 버튼 텍스트 변경 (로딩 중 표시)
-            const originalText = btnQuote.innerHTML;
-            btnQuote.innerText = "생성 중...";
-            btnQuote.disabled = true;
-            
-            try {
-                // 3. 임시 주문 정보 만들기 (아직 배송지 입력 전이므로)
-                const tempOrderInfo = {
-                    manager: "고객 (온라인 견적)", 
-                    date: new Date().toLocaleDateString(),
-                    address: "(배송지 정보 없음)",
-                    phone: "-",
-                    note: "장바구니에서 출력된 가견적서입니다."
-                };
-
-                // 4. export.js에 있는 함수 호출
-                const blob = await generateQuotationPDF(tempOrderInfo, cartData);
-                
-                // 5. 다운로드 실행
-                if (blob) {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `견적서_${new Date().getFullYear()}${new Date().getMonth()+1}${new Date().getDate()}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-            } catch (e) {
-                console.error(e);
-                alert("견적서 생성 중 오류가 발생했습니다.");
-            } finally {
-                // 6. 버튼 원상복구
-                btnQuote.innerHTML = originalText;
-                btnQuote.disabled = false;
-            }
-        };
-    }
     
     const btnPrev = document.getElementById("btnPrevMonth");
     if(btnPrev) btnPrev.onclick = () => changeMonth(-1);
