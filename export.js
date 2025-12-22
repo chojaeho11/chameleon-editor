@@ -156,36 +156,52 @@ async function ensureDefaultFontLoaded() {
     }
 }
 
+// [export.js] 이 코드로 덮어씌우세요.
+
 async function loadPdfFonts(doc) {
-    // 1. 모든 폰트 로드 시도
+    // 폰트 목록을 순회하며 로드 시도
     const fontPromises = Object.keys(FONT_URLS).map(async (key) => {
         const fileName = key + ".ttf"; 
+        
+        // 이미 로드된 폰트면 건너뜀
         if (doc.existsFileInVFS(fileName)) return;
 
         try {
             let buffer = fontBufferCache[key];
+            
+            // 캐시에 없으면 다운로드 시도
             if (!buffer) {
-                const res = await fetch(FONT_URLS[key]);
-                if (!res.ok) throw new Error(`Fetch failed`);
+                const fontUrl = FONT_URLS[key];
+                
+                // ★ 핵심 수정 1: mode: 'cors' 추가 (보안 요청)
+                // ★ 핵심 수정 2: 실패해도 에러 내지 않고 넘어가도록 처리
+                const res = await fetch(fontUrl, { mode: 'cors' }).catch(err => null);
+                
+                if (!res || !res.ok) {
+                    // 폰트 다운로드 실패 시 조용히 경고만 남기고 종료 (치명적 에러 방지)
+                    console.warn(`[Font Skip] 폰트 로드 실패 (${key}). 기본 폰트를 사용합니다.`);
+                    return; 
+                }
+                
                 buffer = await res.arrayBuffer();
+                // 데이터가 너무 작으면(에러 페이지일 경우) 무시
+                if (buffer.byteLength < 100) return; 
+
                 fontBufferCache[key] = buffer;
             }
+            
+            // 정상적으로 받아온 폰트만 PDF에 등록
             const base64String = arrayBufferToBase64(buffer);
             doc.addFileToVFS(fileName, base64String);
             doc.addFont(fileName, key, "normal");
-        } catch (e) {}
+            
+        } catch (e) {
+            // ★ 핵심 수정 3: 절대 멈추지 않게 예외 처리
+            console.warn(`[Font Ignored] ${key} 로딩 중 예외 발생:`, e);
+        }
     });
 
-    // 2. 기본 폰트 확실히 로드
-    fontPromises.push((async () => {
-        await ensureDefaultFontLoaded();
-        if (fontBufferCache[BASE_FONT_NAME] && !doc.existsFileInVFS(BASE_FONT_NAME + ".ttf")) {
-            const b64 = arrayBufferToBase64(fontBufferCache[BASE_FONT_NAME]);
-            doc.addFileToVFS(BASE_FONT_NAME + ".ttf", b64);
-            doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "normal");
-        }
-    })());
-
+    // 모든 시도가 끝날 때까지 대기
     await Promise.all(fontPromises);
 }
 
