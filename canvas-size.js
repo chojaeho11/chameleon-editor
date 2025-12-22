@@ -1,5 +1,6 @@
 // canvas-size.js
-import { canvas, setBaseSize, setGlobalMode, setGlobalSizeName, setGuideOn, maxLimitMM } from "./canvas-core.js";
+// [수정] currentMode 추가 import (현재 작업 모드 'standard'/'wall' 유지를 위해)
+import { canvas, setBaseSize, setGlobalMode, setGlobalSizeName, setGuideOn, maxLimitMM, currentMode } from "./canvas-core.js";
 import { drawGuides } from "./canvas-guides.js";
 import { openProductDetail } from "./order.js";
 
@@ -58,16 +59,26 @@ export function initSizeControls() {
                 );
             }
 
-            // 회전 자동 적용
+            // 회전 자동 적용 (가로/세로 교차 허용)
             if (!isFitNormal && isFitRotated) {
                 const temp = reqW;
                 reqW = reqH;
                 reqH = temp;
                 alert("입력하신 크기가 대지에 맞지 않아 가로/세로를 회전하여 적용합니다.");
+                
+                // 입력창 값도 스왑해서 보여줌
+                inputW.value = reqW;
+                inputH.value = reqH;
             }
 
-            // ★ 커팅라인 추가 (기존 선 삭제 안함, 계속 추가됨)
-            drawUserCutLine(reqW, reqH);
+            // ★ [수정됨] 기존 방식: drawUserCutLine(reqW, reqH) -> 가이드라인만 그리기
+            // ★ [변경 방식]: applySize() 호출 -> 대지 자체를 해당 크기로 변경 (여백 삭제 효과)
+            
+            // 기존 작업물 유지를 위해 'resize' 옵션 사용
+            // currentMode는 import된 canvas-core의 상태를 따름 (wall인지 standard인지)
+            applySize(reqW, reqH, "User Custom", currentMode || 'standard', 'resize');
+            
+            console.log(`📏 사용자 지정 사이즈 적용됨: ${reqW}x${reqH}mm (나머지 영역 삭제)`);
         };
     }
 
@@ -115,69 +126,6 @@ export function initSizeControls() {
     }
 }
 
-// =================================================================
-// ★ [수정됨] 사용자 정의 재단선 그리기 (요청 문구 적용)
-// =================================================================
-function drawUserCutLine(w_mm, h_mm) {
-    if (!canvas) return;
-
-    // 1. 현재 대지(Board) 정보 가져오기
-    const board = canvas.getObjects().find(o => o.isBoard);
-    if (!board) return alert("대지(Board)를 찾을 수 없습니다.");
-
-    // 2. 비율 계산 (DPI 보정)
-    const realBoardW_mm = maxLimitMM.w || w_mm; 
-    const currentBoardPixelW = board.getScaledWidth();
-    const pxPerMM = currentBoardPixelW / realBoardW_mm;
-
-    // 3. 픽셀 변환
-    const reqW_px = w_mm * pxPerMM;
-    const reqH_px = h_mm * pxPerMM;
-    
-    // 4. 빨간색 재단선 사각형 생성
-    const cutRect = new fabric.Rect({
-        left: board.left, // 여백 없이 (0,0)
-        top: board.top,
-        width: reqW_px,
-        height: reqH_px,
-        fill: 'transparent',
-        stroke: 'red',
-        strokeWidth: 2,
-        strokeDashArray: [5, 5],
-        selectable: true, // 이동 가능
-        evented: true,    
-        hasControls: true, 
-        isUserCutLine: true
-    });
-
-    // 5. ★ [수정] 요청하신 텍스트 내용 적용
-    const textContent = `${w_mm}x${h_mm}mm_ 남는 공간에는 다른 제품을 추가로 제작하실 수 있습니다.\n모양재단 재봉 같은 마감이 있다면 장바구니에서 마감 비용만 추가해 주세요.\n사각재단은 여러개 해도 무료이니 비용을 아껴보아요.\n좌측상단 사이즈변경을 또 누르시면 칼선이 나옵니다. 이 메모는 지워도 됩니다.`;
-
-    const infoText = new fabric.Text(textContent, {
-        left: board.left,
-        top: board.top + reqH_px + 5, // 사각형 바로 아래
-        fontSize: 12, // 문구가 길어서 폰트 사이즈 살짝 조정
-        fontFamily: 'Nanum Gothic',
-        fill: '#ef4444', // 빨간색
-        lineHeight: 1.2,
-        selectable: true, // 텍스트도 이동 가능
-        evented: true,
-        isUserCutText: true
-    });
-
-    // 6. 캔버스 추가
-    canvas.add(cutRect);
-    canvas.add(infoText);
-    
-    // 추가된 객체 활성화 (바로 이동 가능하도록)
-    canvas.setActiveObject(cutRect);
-
-    canvas.bringToFront(cutRect);
-    canvas.bringToFront(infoText);
-    
-    canvas.requestRenderAll();
-}
-
 // -----------------------------------------------------------------
 // 기존 함수들
 // -----------------------------------------------------------------
@@ -222,7 +170,7 @@ function renderSizeButtons(containerId, list) {
 }
 
 // =================================================================
-// ★ [수정됨] 대지 생성 (기본 커팅라인 자동 생성 로직 삭제)
+// ★ [핵심] 대지 생성 함수 (기존 로직 유지)
 // =================================================================
 export function applySize(w, h, name, mode, action) {
     setBaseSize(w, h);
@@ -238,6 +186,9 @@ export function applySize(w, h, name, mode, action) {
     canvas.clear(); 
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
 
+    // 여기서 생성되는 Rect가 실제 대지(Board) 크기입니다.
+    // 사용자가 입력한 w, h가 그대로 width, height로 적용되므로,
+    // 관리자 페이지 계산 방식과 동일한 단위(mm 등)를 사용한다면 정확히 반영됩니다.
     const board = new fabric.Rect({
         width: w, height: h, fill: 'white', left: 0, top: 0,
         selectable: false, evented: false, isBoard: true, 
@@ -245,6 +196,8 @@ export function applySize(w, h, name, mode, action) {
     });
     canvas.add(board);
     canvas.sendToBack(board);
+    
+    // 클립 경로 설정 (대지 밖으로 나가는 요소 안 보이게 처리)
     canvas.clipPath = new fabric.Rect({ left: 0, top: 0, width: w, height: h, absolutePositioned: true });
 
     if (action === 'resize' && objectsToKeep.length > 0) {
@@ -265,11 +218,7 @@ export function applySize(w, h, name, mode, action) {
         setGuideOn(false);
     }
     
-    // ★ [삭제됨] 아래 로직 삭제: 대지 생성 시 자동으로 커팅라인을 만들지 않음
-    // if (!maxLimitMM.w) { maxLimitMM.w = w; maxLimitMM.h = h; }
-    // setTimeout(() => { ... drawUserCutLine ... }, 100);
-
-    // 대신 maxLimitMM 값만 세팅 (비율 계산용)
+    // maxLimitMM 값은 초기 제품 선택 시 설정된 최대값 유지 (비율 계산 등을 위해 필요한 경우)
     if (!maxLimitMM.w) {
         maxLimitMM.w = w;
         maxLimitMM.h = h;
