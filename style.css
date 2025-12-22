@@ -120,16 +120,26 @@ button, input, textarea, select { font-family: inherit; }
     font-size: 15px; font-weight: 800; color: #374151;
     margin-bottom: 15px; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;
 }
+/* 기존 .quick-menu-track 부분을 아래 코드로 교체하세요 */
 .quick-menu-track {
-    display: grid; grid-template-columns: repeat(8, 1fr); 
-    gap: 12px; justify-content: center;
+    display: flex;             /* grid에서 flex로 변경 */
+    flex-wrap: wrap;           /* 줄바꿈 허용 */
+    justify-content: center;   /* 가로축 완전 중앙 정렬 */
+    gap: 15px;                 /* 간격 조정 */
+    width: 100%;
 }
+
 .quick-item {
-    display: flex; flex-direction: column; align-items: center;
-    width: 100%; cursor: pointer;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    width: 110px;              /* 아이템 너비를 고정하여 균일하게 배치 */
+    cursor: pointer;
     transition: transform 0.2s;
-    margin-bottom: 5px; background: #f9fafb;
-    border-radius: 16px; padding: 12px 5px; 
+    margin-bottom: 5px; 
+    background: #f9fafb;
+    border-radius: 16px; 
+    padding: 12px 5px; 
     border: 1px solid transparent;
 }
 .quick-item:hover { 
@@ -803,6 +813,7 @@ button, input, textarea, select { font-family: inherit; }
     padding: 10px; font-size: 16px; outline: none; resize: none; font-family: inherit;
 }
 #mobileTextInput:focus { border-color: #6366f1; }
+
 /* =========================================
    [추가] 결제 모달 계좌정보 스타일
    ========================================= */
@@ -933,7 +944,7 @@ button, input, textarea, select { font-family: inherit; }
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.2s;
+    /* 오류가 있던 부분 */
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1066,3 +1077,278 @@ button, input, textarea, select { font-family: inherit; }
     .review-card { width: 260px; }
     .review-img { height: 150px; }
 }
+/* =========================================
+   [추가] 대분류(Top Category) 탭 스타일
+   ========================================= */
+/* =========================================
+   [수정됨] 카테고리 탭 (PC: 중앙, 모바일: 왼쪽 정렬)
+   ========================================= */
+.category-tabs {
+    display: flex;
+    justify-content: center; /* PC 기본: 중앙 정렬 */
+    gap: 8px;
+    padding: 0 5px 15px 5px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 10px;
+    scrollbar-width: none; 
+}
+.category-tabs::-webkit-scrollbar { display: none; }
+
+.cat-tab {
+    padding: 10px 18px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #64748b;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.cat-tab:hover {
+    background: #f8fafc;
+    color: #334155;
+    transform: translateY(-2px);
+}
+
+.cat-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+
+/* 모바일 화면 (768px 이하)에서만 왼쪽 정렬 강제 */
+@media (max-width: 768px) {
+    .category-tabs {
+        justify-content: flex-start !important;
+        padding: 0 20px 15px 20px !important;
+    }
+}
+/* 썸네일 이미지를 감싸는 박스 */
+.quick-icon-img-box {
+    width: 65px; height: 65px; 
+    border-radius: 18px; 
+    overflow: hidden;
+    margin-bottom: 10px;
+    background: #f1f5f9; 
+    border: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* 실제 이미지 스타일 */
+.quick-icon-img-box img {
+    width: 100%; height: 100%;
+    object-fit: cover; /* 이미지를 박스에 꽉 차게 (잘림 허용) */
+}
+
+/* 마우스 올렸을 때 효과 */
+.quick-item:hover .quick-icon-img-box {
+    border-color: #6366f1; /* 보라색 테두리 */
+    transform: translateY(-3px); /* 살짝 위로 */
+}
+/* [추가] 팝업창(모달) 전용 상품 그리드 스타일 */
+#catProductGrid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important; /* 한 줄에 4개 강제 고정 */
+    gap: 20px !important; /* 간격 넓게 */
+    padding: 10px !important;
+}
+
+/* 팝업창 안의 개별 상품 박스 */
+#catProductGrid .quick-item {
+    width: 100% !important; /* 너비를 그리드 칸에 꽉 채움 */
+    height: auto !important;
+    margin-bottom: 0 !important;
+    padding: 15px !important; /* 내부 여백 추가 */
+    background: #fff;
+    border: 1px solid #eee;
+}
+
+/* [수정됨] 팝업창 안의 상품 이미지 박스 (정사각형 & 중앙 정렬) */
+#catProductGrid .quick-icon-img-box {
+    width: 100% !important;  /* 가로 꽉 채움 */
+    height: auto !important; /* 높이는 자동으로 (비율에 맞춤) */
+    aspect-ratio: 1 / 1 !important; /* ★ 핵심: 1:1 정사각형 비율 강제 */
+    margin-bottom: 15px !important;
+    border-radius: 12px !important;
+    background: #f8fafc;
+    border: 1px solid #eee;
+    overflow: hidden; /* 네모 밖으로 나간 이미지 숨김 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* [수정됨] 이미지 스타일 (잘려서 중앙이 보이게) */
+#catProductGrid .quick-icon-img-box img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* ★ 핵심: 박스에 꽉 차게 (넘치면 잘림) */
+    object-position: center !important; /* 잘릴 때 중앙을 보여줌 */
+    padding: 0 !important; /* 패딩 제거 */
+}
+
+/* 팝업창 안의 텍스트 크기 조정 */
+#catProductGrid .quick-text {
+    font-size: 16px !important; /* 글자도 조금 크게 */
+    margin-bottom: 5px !important;
+}
+
+    /* =========================================
+       [팝업창 상품 목록 디자인 수정 - PC/모바일 완벽 분리]
+       ========================================= */
+
+    /* ----------------------------------------------------
+       [1] PC 및 공통 설정 (기본값) 
+       화면이 클 때 이 스타일이 먼저 적용됩니다.
+       ---------------------------------------------------- */
+    
+    /* 1. 팝업창 크기 확장 (PC에서 4개가 넉넉하게 들어가도록) */
+    #categoryDetailModal .modal-box {
+        width: 1000px !important; /* 기존 800px -> 1000px로 넓힘 */
+        max-width: 95% !important;
+    }
+
+    /* 2. 그리드 레이아웃 (PC: 한 줄에 4개) */
+    #catProductGrid {
+        display: grid !important; /* 기존 flex 무시하고 grid 강제 */
+        grid-template-columns: repeat(4, 1fr) !important; /* 가로 4개 고정 */
+        gap: 25px !important; /* 간격 시원하게 */
+        padding: 20px !important;
+        justify-content: start !important;
+    }
+
+    /* 3. 개별 상품 박스 (110px 고정폭 해제 -> 100% 꽉 채우기) */
+    #catProductGrid .quick-item {
+        width: 100% !important; /* 그리드 칸에 맞춰 늘어남 */
+        height: 100% !important;
+        min-height: 320px !important; /* 세로 높이 충분히 확보 */
+        margin-bottom: 0 !important;
+        padding: 20px !important;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px; /* 둥글게 */
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important; /* 부드러운 그림자 */
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    #catProductGrid .quick-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(99, 102, 241, 0.15) !important;
+        border-color: #6366f1;
+        z-index: 5;
+    }
+
+    /* 4. 이미지 박스 (1:1 정사각형 & 중앙 정렬) */
+    #catProductGrid .quick-icon-img-box {
+        width: 100% !important;
+        aspect-ratio: 1 / 1 !important; /* ★ 정사각형 강제 */
+        height: auto !important;
+        margin-bottom: 15px !important;
+        border-radius: 10px !important;
+        background: #f8fafc;
+        border: 1px solid #f1f5f9;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 5. 이미지 (꽉 차게 & 중앙 크롭) */
+    #catProductGrid .quick-icon-img-box img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* 빈틈없이 채우기 */
+        object-position: center !important; /* 중앙 보여주기 */
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    /* 6. 상품명 텍스트 (PC: 큼지막하게) */
+    #catProductGrid .quick-text {
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        color: #111;
+        margin-bottom: 8px !important;
+        line-height: 1.4 !important;
+        
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important; /* 2줄 말줄임 */
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        height: 46px !important; /* 높이 고정 */
+        text-align: center !important;
+    }
+
+    /* 7. 가격 정보 (하단 고정) */
+    #catProductGrid .quick-item > div:last-child {
+        margin-top: auto !important;
+        font-size: 14px !important;
+        color: #666;
+        text-align: center !important;
+    }
+
+
+    /* ----------------------------------------------------
+       [2] 모바일 전용 설정 (화면 너비 768px 이하일 때만 적용)
+       ---------------------------------------------------- */
+    @media (max-width: 768px) {
+        /* 모바일 팝업창 너비 복구 */
+        #categoryDetailModal .modal-box {
+            width: 95% !important;
+        }
+
+        /* 2칸 그리드 (모바일: 한 줄에 2개) */
+        #catProductGrid {
+            grid-template-columns: repeat(2, 1fr) !important; 
+            gap: 12px !important;
+            padding: 10px !important;
+        }
+
+        /* 모바일 박스 크기 및 폰트 축소 */
+        #catProductGrid .quick-item {
+            min-height: 240px !important;
+            padding: 12px !important;
+        }
+        
+        #catProductGrid .quick-text {
+            font-size: 14px !important;
+            height: 40px !important;
+        }
+        
+        #catProductGrid .quick-item > div:last-child {
+            font-size: 12px !important;
+        }
+    }
+
+    /* [기존 모바일 검색창 디자인 유지] */
+    @media (max-width: 768px) {
+        .hero-search-wrap {
+            max-width: 92% !important;
+            margin: 10px auto 25px !important;
+        }
+        .hero-search-input {
+            padding: 12px 15px !important;
+            font-size: 14px !important;
+        }
+        .hero-search-btn {
+            padding: 10px 16px !important;
+            font-size: 14px !important;
+            margin: 4px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+        .hero-search-btn i {
+            margin-right: 4px !important;
+        }
+    }

@@ -1,8 +1,10 @@
 // canvas-ai.js
 import { canvas } from "./canvas-core.js";
-import { sb } from "./config.js"; 
+import { sb, currentUser } from "./config.js"; 
 
-// DB secrets 테이블에서 API 키 가져오기
+// ==========================================================
+// [유틸] DB secrets 테이블에서 API 키 가져오기
+// ==========================================================
 async function getApiKey(keyName) {
     if (!sb) {
         console.error("Supabase 클라이언트가 초기화되지 않았습니다.");
@@ -21,24 +23,153 @@ async function getApiKey(keyName) {
     return data.value;
 }
 
+// ==========================================================
+// [코어] AI 이미지 생성 공통 함수 (Flux.1 Edge Function)
+// ==========================================================
+async function generateImageCore(prompt) {
+    if (!sb) throw new Error("Supabase 연결 실패");
+    
+    // Edge Function 호출
+    const { data, error } = await sb.functions.invoke('generate-image-flux', {
+        body: { prompt: prompt, ratio: "1:1" }
+    });
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error("데이터 응답이 없습니다.");
+
+    let rawUrl = data.imageUrl || data;
+    if (Array.isArray(rawUrl)) rawUrl = rawUrl[0];
+    if (typeof rawUrl === 'object') {
+        if (rawUrl.url) rawUrl = rawUrl.url;
+        else throw new Error("이미지 주소를 찾을 수 없습니다.");
+    }
+    return rawUrl;
+}
+
+// ==========================================================
+// [메인] AI 도구 초기화 (에디터 내부 + 시작 화면)
+// ==========================================================
 export function initAiTools() {
     
-    // 1. AI 패널 열기/닫기
+    // ------------------------------------------------------
+    // 1. [Start Screen] 시작 화면 전용 AI 기능
+    // ------------------------------------------------------
+    
+    // 1-1. 모달 열기 및 초기화 함수
+    window.openAiStartModal = function() {
+        const modal = document.getElementById('aiStartModal');
+        const promptInput = document.getElementById('aiStartPrompt');
+        const startResult = document.getElementById('aiStartResult');
+        const btnStartGo = document.getElementById('btnAiStartGo');
+        const btnStartGen = document.getElementById('btnAiStartGen');
+
+        // 모달 상태 초기화
+        if(startResult) startResult.innerHTML = '<span style="color:#cbd5e1;">이미지가 여기에 표시됩니다</span>';
+        if(btnStartGo) btnStartGo.style.display = 'none';
+        if(btnStartGen) btnStartGen.disabled = false;
+        if(promptInput) promptInput.value = '';
+        window.pendingAiImage = null;
+
+        if (modal) {
+            modal.style.display = 'flex';
+            if(promptInput) setTimeout(() => promptInput.focus(), 100);
+        }
+    };
+
+    const btnStartGen = document.getElementById('btnAiStartGen');
+    const startPrompt = document.getElementById('aiStartPrompt');
+    const startResult = document.getElementById('aiStartResult');
+    const btnStartGo = document.getElementById('btnAiStartGo');
+
+    // 1-2. 생성 버튼 클릭
+    if (btnStartGen) {
+        btnStartGen.onclick = async () => {
+            const text = startPrompt.value.trim();
+            if (!text) return alert("설명을 입력해주세요.");
+
+            startResult.innerHTML = '<div class="loading-spin" style="width:40px; height:40px;"></div><p style="margin-top:10px; color:#666;">AI가 열심히 그리는 중...</p>';
+            btnStartGen.disabled = true; // 생성 중 중복 클릭 방지
+            btnStartGo.style.display = 'none';
+
+            try {
+                const imageUrl = await generateImageCore(text);
+                window.pendingAiImage = imageUrl;
+
+                // 마케팅 문구 및 이미지 표시
+                const marketingHtml = `
+                    <div style="width:100%; text-align:center;">
+                        <img src="${imageUrl}" style="max-height:250px; object-fit:contain; border-radius:8px; border:1px solid #eee; margin-bottom:15px;">
+                        
+                        <div style="text-align:left; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:12px;">
+                            <p style="margin:0 0 5px 0; font-weight:bold; color:#166534; font-size:15px;">
+                                🎉 이미지가 잘 만들어졌어요!
+                            </p>
+                            <p style="margin:0; color:#374151; font-size:13px; line-height:1.6;">
+                                당신이 만든 멋진 이미지를 다른 유저와 공유해요.<br>
+                                이 디자인으로 제품을 구매하면 현금처럼 쓸 수 있는 
+                                <span style="color:#e11d48; font-weight:bold;">1%의 마일리지</span>가 
+                                당신에게 적립됩니다.<br>
+                                <span style="font-size:12px; color:#6b7280;">(10만원이 넘으면 현금으로 찾을 수 있어요)</span>
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                startResult.innerHTML = marketingHtml;
+                
+                // ★ [수정] 버튼 텍스트를 "또 만들기"로 변경하고 표시
+                btnStartGo.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 또 만들기';
+                btnStartGo.className = "btn-round primary"; 
+                btnStartGo.style.display = 'flex'; 
+                
+            } catch (e) {
+                console.error(e);
+                alert("생성 실패: " + e.message);
+                startResult.innerHTML = '<span style="color:red;">실패했습니다. 다시 시도해주세요.</span>';
+                btnStartGen.disabled = false; // 실패 시에만 다시 활성화
+            }
+            // 성공 시에는 "또 만들기"를 눌러야 초기화되므로 finally에서 활성화하지 않음
+        };
+    }
+
+    // ★ [수정] "또 만들기" 버튼 클릭 시 초기화 로직
+    if (btnStartGo) {
+        btnStartGo.onclick = () => {
+            // 1. 결과 영역 초기화
+            if(startResult) startResult.innerHTML = '<span style="color:#cbd5e1;">이미지가 여기에 표시됩니다</span>';
+            
+            // 2. "또 만들기" 버튼 숨기기
+            btnStartGo.style.display = 'none';
+            
+            // 3. "생성하기" 버튼 다시 활성화
+            if(btnStartGen) btnStartGen.disabled = false;
+            
+            // 4. 입력창 비우고 포커스
+            if(startPrompt) {
+                startPrompt.value = '';
+                startPrompt.focus();
+            }
+            
+            // 5. 임시 저장된 이미지 초기화
+            window.pendingAiImage = null;
+        };
+    }
+
+    // ------------------------------------------------------
+    // 2. [Editor Internal] 에디터 내부 AI 패널 기능
+    // ------------------------------------------------------
     const btnAIBox = document.getElementById("btnAIBox");
     const aiDrawer = document.getElementById("aiDrawer");
     if (btnAIBox && aiDrawer) {
         btnAIBox.onclick = () => aiDrawer.classList.add("open");
     }
 
-    // ==========================================================
-    // 2. [Flux.1] 이미지 생성 (Supabase Edge Function 호출)
-    // ==========================================================
     const btnGen = document.getElementById("aiGenerateBtn");
     const promptInput = document.getElementById("aiPrompt");
     const resultArea = document.getElementById("aiResultArea");
     const btnUse = document.getElementById("aiUseBtn");
     
-    let generatedImageUrl = null; 
+    let internalGeneratedUrl = null; 
 
     if (promptInput) {
         promptInput.addEventListener('keydown', (e) => e.stopPropagation());
@@ -53,47 +184,14 @@ export function initAiTools() {
             const userText = promptInput.value.trim();
             if (!userText) return alert("어떤 그림을 그릴지 설명해주세요.");
 
-            // ★ [수정 1] 스타일 강제 적용 제거 (사용자가 입력한 대로 그리기 위함)
-            // const STYLE_PROMPT = `flat vector illustration, simple shapes...`; 
-            // const finalPrompt = `${STYLE_PROMPT}, ${userText}`;
-            const finalPrompt = userText; // 사용자가 입력한 텍스트 그대로 전송
-
             resultArea.innerHTML = '<div class="loading-spin" style="width:30px; height:30px;"></div><p style="font-size:12px; margin-top:10px;">Flux.1 AI가 그리는 중...</p>';
             btnUse.style.display = "none";
             btnGen.disabled = true;
 
             try {
-                if (!sb) throw new Error("Supabase 연결 실패");
-
-                const { data, error } = await sb.functions.invoke('generate-image-flux', {
-                    body: { 
-                        prompt: finalPrompt,
-                        ratio: "1:1" 
-                    }
-                });
-
-                if (error) throw new Error(error.message);
-                if (!data) throw new Error("데이터 응답이 없습니다.");
-
-                // ★ [수정 2] [object Object] 오류 방지 (데이터 파싱 강화)
-                // 서버가 { imageUrl: "..." } 형태로 주는지, 그냥 텍스트인지, 배열인지 확인
-                let rawUrl = data.imageUrl || data;
-                
-                // 만약 배열이면 첫 번째 꺼내기
-                if (Array.isArray(rawUrl)) rawUrl = rawUrl[0];
-                
-                // 만약 객체라면 toString으로 확인해보고, 이상하면 에러 처리
-                if (typeof rawUrl === 'object') {
-                    console.error("받은 데이터가 객체입니다:", rawUrl);
-                    // 혹시라도 { url: "..." } 형태일 수 있으니 한번 더 체크
-                    if (rawUrl.url) rawUrl = rawUrl.url;
-                    else throw new Error("이미지 주소를 찾을 수 없습니다.");
-                }
-
-                generatedImageUrl = rawUrl;
-                console.log("최종 이미지 주소:", generatedImageUrl);
-
-                resultArea.innerHTML = `<img id="aiGeneratedImg" src="${generatedImageUrl}" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">`;
+                const imageUrl = await generateImageCore(userText);
+                internalGeneratedUrl = imageUrl;
+                resultArea.innerHTML = `<img id="aiGeneratedImg" src="${internalGeneratedUrl}" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">`;
                 btnUse.style.display = "block";
 
             } catch (e) {
@@ -106,24 +204,14 @@ export function initAiTools() {
         };
     }
 
-    // 3. 캔버스에 추가
     if (btnUse) {
         btnUse.onclick = () => {
-            if (!generatedImageUrl) return;
-            
-            fabric.Image.fromURL(generatedImageUrl, (img) => {
+            if (!internalGeneratedUrl) return;
+            fabric.Image.fromURL(internalGeneratedUrl, (img) => {
                 if (!img) return alert("이미지 로드 실패");
-
                 if (img.width > 800) img.scaleToWidth(800);
-
                 const center = canvas.getCenter();
-                img.set({ 
-                    left: center.left, 
-                    top: center.top, 
-                    originX: 'center', 
-                    originY: 'center' 
-                });
-                
+                img.set({ left: center.left, top: center.top, originX: 'center', originY: 'center' });
                 canvas.add(img);
                 canvas.setActiveObject(img);
                 canvas.requestRenderAll();
@@ -132,9 +220,9 @@ export function initAiTools() {
         };
     }
     
-    // ==========================================================
-    // 4. [Remove.bg] 배경 제거 (고해상도 유지)
-    // ==========================================================
+    // ------------------------------------------------------
+    // 3. [Editor Internal] 배경 제거 (Remove.bg)
+    // ------------------------------------------------------
     const btnCutout = document.getElementById("btnCutout");
     if (btnCutout) {
         btnCutout.onclick = async () => {
@@ -154,11 +242,7 @@ export function initAiTools() {
                 const originalVisualHeight = active.height * active.scaleY;
                 const restoreScale = 1 / active.scaleX;
 
-                const base64 = active.toDataURL({ 
-                    format: 'png', 
-                    multiplier: restoreScale 
-                });
-                
+                const base64 = active.toDataURL({ format: 'png', multiplier: restoreScale });
                 const res = await fetch(base64);
                 const blob = await res.blob();
                 
@@ -167,9 +251,7 @@ export function initAiTools() {
                 formData.append('size', 'auto'); 
 
                 const apiRes = await fetch('https://api.remove.bg/v1.0/removebg', {
-                    method: 'POST', 
-                    headers: { 'X-Api-Key': key }, 
-                    body: formData
+                    method: 'POST', headers: { 'X-Api-Key': key }, body: formData
                 });
 
                 if (!apiRes.ok) throw new Error(await apiRes.text());
@@ -178,29 +260,17 @@ export function initAiTools() {
                 const url = URL.createObjectURL(resultBlob);
 
                 fabric.Image.fromURL(url, (newImg) => {
-                    if (!newImg) {
-                        alert("결과 로드 실패");
-                        return;
-                    }
-
+                    if (!newImg) return alert("결과 로드 실패");
                     const newScaleX = originalVisualWidth / newImg.width;
                     const newScaleY = originalVisualHeight / newImg.height;
-
                     newImg.set({
-                        left: active.left, 
-                        top: active.top,
-                        scaleX: newScaleX, 
-                        scaleY: newScaleY,
-                        angle: active.angle, 
-                        originX: active.originX, 
-                        originY: active.originY
+                        left: active.left, top: active.top, scaleX: newScaleX, scaleY: newScaleY,
+                        angle: active.angle, originX: active.originX, originY: active.originY
                     });
-
                     canvas.remove(active);
                     canvas.add(newImg);
                     canvas.setActiveObject(newImg);
                     canvas.requestRenderAll();
-                    
                     alert("배경 제거 완료!");
                     URL.revokeObjectURL(url);
                 });

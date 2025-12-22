@@ -155,17 +155,17 @@ function initTextHandlers() {
 
         // 1. 제목 (Jalnan)
         if (btnTitle) {
-            btnTitle.onclick = () => addTextToCanvas("제목을 입력하세요", "Jalnan", 80, "normal");
+            btnTitle.onclick = () => addTextToCanvas("제목요기", "Jalnan", 80, "normal");
         } else console.warn("⚠️ 제목 버튼(btnAddTitle) 없음");
 
         // 2. 부제목 (HyundaiSansBold)
         if (btnSubtitle) {
-            btnSubtitle.onclick = () => addTextToCanvas("부제목 내용을 입력하세요", "HyundaiSansBold", 50, "normal");
+            btnSubtitle.onclick = () => addTextToCanvas("부제목은 요기", "HyundaiSansBold", 50, "normal");
         }
 
         // 3. 본문 (HyundaiSansMedium)
         if (btnBody) {
-            btnBody.onclick = () => addTextToCanvas("여기에 본문 내용을 입력하세요.\n여러 줄 입력이 가능합니다.", "HyundaiSansMedium", 30, "normal");
+            btnBody.onclick = () => addTextToCanvas("본문내용.\n사이즈는 좌측패널.", "HyundaiSansMedium", 30, "normal");
         }
     };
 
