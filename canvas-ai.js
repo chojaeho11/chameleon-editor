@@ -107,7 +107,7 @@ export function initAiTools() {
                             <p style="margin:0; color:#374151; font-size:13px; line-height:1.6;">
                                 당신이 만든 멋진 이미지를 다른 유저와 공유해요.<br>
                                 이 디자인으로 제품을 구매하면 현금처럼 쓸 수 있는 
-                                <span style="color:#e11d48; font-weight:bold;">1%의 마일리지</span>가 
+                                <span style="color:#e11d48; font-weight:bold;">0.1%의 마일리지</span>가 
                                 당신에게 적립됩니다.<br>
                                 <span style="font-size:12px; color:#6b7280;">(10만원이 넘으면 현금으로 찾을 수 있어요)</span>
                             </p>
