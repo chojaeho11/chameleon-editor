@@ -1036,6 +1036,7 @@
 
 // index.html 내부의 renderQuickMenu 함수 교체
 
+// [수정] index.html 내부의 renderQuickMenu 함수 교체
 async function renderQuickMenu() {
     const tabContainer = document.getElementById('topCategoryTabs');
     const itemContainer = document.getElementById('quickMenuContainer');
@@ -1049,75 +1050,80 @@ async function renderQuickMenu() {
         let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
         const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
 
-        // ▼▼▼ [추가된 부분] 상품 이미지 미리 가져오기 (카테고리 썸네일용) ▼▼▼
-        // 이미지가 있는 상품들의 카테고리와 이미지 주소만 가볍게 조회합니다.
+        // 이미지 매핑 데이터
         const { data: prodImages } = await sb.from('admin_products')
             .select('category, img_url')
-            .not('img_url', 'is', null) // 이미지가 null이 아닌 것만
-            .neq('img_url', '');        // 빈 문자열이 아닌 것만
+            .not('img_url', 'is', null)
+            .neq('img_url', '');
 
-        // 카테고리 코드별 대표 이미지 맵핑 (Key: 카테고리코드, Value: 이미지URL)
         const catThumbMap = {};
         if (prodImages) {
             prodImages.forEach(p => {
-                // 해당 카테고리에 이미지가 아직 등록 안 되어 있다면, 이 상품 이미지를 대표로 설정
-                // (순서상 가장 먼저 로드된 상품의 이미지가 들어갑니다)
                 if (p.category && !catThumbMap[p.category]) {
                     catThumbMap[p.category] = p.img_url;
                 }
             });
         }
-        // ▲▲▲ [추가 끝] ▲▲▲
-
 
         if (!subCats || subCats.length === 0) {
             itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
             return;
         }
 
-        // "기본 대분류" 숨기기 및 허니콤보드 순서 조정
+        // ▼▼▼ [핵심 수정] 중복 제거 및 불필요한 카테고리 숨김 처리 ▼▼▼
         if (topCats) {
-            topCats = topCats.filter(cat => cat.name !== '기본 대분류' && cat.name !== '기본대분류');
+            // 1. 이름이 같은 카테고리 중복 제거 (Set 사용)
+            const seen = new Set();
+            topCats = topCats.filter(cat => {
+                const name = cat.name.trim();
+                if (seen.has(name)) return false; // 이미 본 이름이면 제외 (중복 제거)
+                seen.add(name);
+                return true;
+            });
+
+            // 2. 원하지 않는 카테고리 이름 강제 숨김
+            const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
+            topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
+
+            // 3. 허니콤보드 맨 앞으로 이동
             const targetIndex = topCats.findIndex(cat => cat.name.includes('허니콤'));
             if (targetIndex > -1) {
                 const [targetCat] = topCats.splice(targetIndex, 1);
                 topCats.unshift(targetCat);
             }
         }
+        // ▲▲▲ [수정 끝] ▲▲▲
 
         // 2. 탭 생성 함수
-        // 2. 탭 생성 함수
-const renderTabs = () => {
-    tabContainer.innerHTML = '';
-    
-    if (topCats) {
-        topCats.forEach(top => {
-            const btn = document.createElement('button');
-            btn.className = 'cat-tab';
-            btn.innerText = top.name;
-            btn.onclick = (e) => {
-                handleTabClick(e);
-                renderItems(top.code);
-                // ★ 삭제함: document.getElementById('product-list-container').innerHTML = ''; 
-            };
-            tabContainer.appendChild(btn);
-        });
-    }
-    
-    // 기타 탭
-    const orphanCats = subCats.filter(sub => !sub.top_category_code);
-    if (orphanCats.length > 0) {
-        const etcBtn = document.createElement('button');
-        etcBtn.className = 'cat-tab';
-        etcBtn.innerText = '기타';
-        etcBtn.onclick = (e) => {
-            handleTabClick(e);
-            renderItems('etc');
-            // ★ 삭제함: document.getElementById('product-list-container').innerHTML = ''; 
+        const renderTabs = () => {
+            tabContainer.innerHTML = '';
+            
+            if (topCats) {
+                topCats.forEach(top => {
+                    const btn = document.createElement('button');
+                    btn.className = 'cat-tab';
+                    btn.innerText = top.name;
+                    btn.onclick = (e) => {
+                        handleTabClick(e);
+                        renderItems(top.code);
+                    };
+                    tabContainer.appendChild(btn);
+                });
+            }
+            
+            // 기타 탭
+            const orphanCats = subCats.filter(sub => !sub.top_category_code);
+            if (orphanCats.length > 0) {
+                const etcBtn = document.createElement('button');
+                etcBtn.className = 'cat-tab';
+                etcBtn.innerText = '기타';
+                etcBtn.onclick = (e) => {
+                    handleTabClick(e);
+                    renderItems('etc');
+                };
+                tabContainer.appendChild(etcBtn);
+            }
         };
-        tabContainer.appendChild(etcBtn);
-    }
-};
 
         // 3. 탭 스타일 처리
         const handleTabClick = (e) => {
@@ -1144,11 +1150,6 @@ const renderTabs = () => {
 
             filtered.forEach(cat => {
                 const n = cat.name;
-                
-                // ▼▼▼ [수정됨] 이미지 우선순위 로직 ▼▼▼
-                // 1순위: 카테고리 설정에 직접 등록된 이미지
-                // 2순위: 해당 카테고리에 속한 상품 중 첫 번째 상품의 이미지 (catThumbMap)
-                // 3순위: 없음 (빈 문자열 -> No Img 표시)
                 let iconUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
 
                 const div = document.createElement('div');
@@ -1156,10 +1157,8 @@ const renderTabs = () => {
                 
                 let imgTag = '';
                 if (iconUrl) {
-                    // 이미지가 있으면 보여줌
                     imgTag = `<img src="${iconUrl}" alt="${n}" onerror="this.style.display='none'; this.parentNode.classList.add('no-img'); this.parentNode.innerHTML='<span style=\\'font-size:11px; color:#cbd5e1;\\'>No Img</span>';">`;
                 } else {
-                    // 이미지가 없으면 회색 박스에 No Img 텍스트
                     imgTag = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#cbd5e1; font-size:11px;">No Img</div>`;
                 }
 
@@ -1175,10 +1174,8 @@ const renderTabs = () => {
             });
         };
 
-        // 5. 초기 실행
         renderTabs();
         
-        // 첫 번째 탭 자동 클릭
         const allTab = tabContainer.querySelectorAll('.cat-tab')[0];
         if (allTab) allTab.click(); 
 

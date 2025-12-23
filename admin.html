@@ -50,8 +50,8 @@
         
         /* 버튼 */
         .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-primary { background: #6366f1; color: white; } /* 보라색 (수정됨 상태) */
-        .btn-sky { background: #0ea5e9; color: white; } /* 하늘색 (기본 상태) */
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-sky { background: #0ea5e9; color: white; }
         .btn-sky:hover { background: #0284c7; }
         .btn-vip { background: #d97706; color: white; } 
         .btn-danger { background: #fee2e2; color: #ef4444; }
@@ -257,6 +257,14 @@
                  <div class="card" style="background:#f0f9ff; border:1px solid #bae6fd; margin-bottom:20px;">
                     <h3 style="margin-top:0; color:#0369a1;">0️⃣ 카테고리 관리 (통합)</h3>
                     <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                        
+                        <div style="width:140px;">
+                            <label class="form-label">📂 대분류 선택</label>
+                            <select id="newCatTop" class="input-text" style="background:#fff;">
+                                <option value="">(상위 없음)</option>
+                            </select>
+                        </div>
+
                         <div style="flex:1; min-width:120px;"><label class="form-label">폴더 코드 (영문)</label><input id="newCatCode" class="input-text" placeholder="예: honeycomb"></div>
                         <div style="flex:1; min-width:120px;"><label class="form-label">🇰🇷 한국명</label><input id="newCatName" class="input-text" placeholder="예: 허니콤"></div>
                         <div style="flex:1; min-width:120px;"><label class="form-label">🇯🇵 일본명</label><input id="newCatNameJP" class="input-text" placeholder="예: ハニカム"></div>
@@ -280,25 +288,25 @@
                         <div class="form-group"><label class="form-label">카테고리 선택</label><select id="newProdCategory" class="input-text"><option value="">로딩 중...</option></select></div>
                         <div class="form-group"><label class="form-label">상품코드 (고유값)</label><input id="newProdCode" class="input-text" placeholder="Wall_1_KR"></div>
                         <div class="form-group" style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
-    <label class="form-label">상품명 (다국어)</label>
-    <input id="newProdName" class="input-text" placeholder="🇰🇷 한국어 (기본)" style="margin-bottom:5px;">
-    <input id="newProdNameJP" class="input-text" placeholder="🇯🇵 일본어" style="margin-bottom:5px;">
-    <input id="newProdNameUS" class="input-text" placeholder="🇺🇸 영어">
-</div>
+                            <label class="form-label">상품명 (다국어)</label>
+                            <input id="newProdName" class="input-text" placeholder="🇰🇷 한국어 (기본)" style="margin-bottom:5px;">
+                            <input id="newProdNameJP" class="input-text" placeholder="🇯🇵 일본어" style="margin-bottom:5px;">
+                            <input id="newProdNameUS" class="input-text" placeholder="🇺🇸 영어">
+                        </div>
 
-<div class="input-row">
-    <div style="flex:1;"><label class="form-label">가로(mm)</label><input id="newProdW" type="number" class="input-text"></div>
-    <div style="flex:1;"><label class="form-label">세로(mm)</label><input id="newProdH" type="number" class="input-text"></div>
-</div>
+                        <div class="input-row">
+                            <div style="flex:1;"><label class="form-label">가로(mm)</label><input id="newProdW" type="number" class="input-text"></div>
+                            <div style="flex:1;"><label class="form-label">세로(mm)</label><input id="newProdH" type="number" class="input-text"></div>
+                        </div>
 
-<div class="form-group" style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
-    <label class="form-label">가격 설정 (국가별)</label>
-    <div style="display:flex; gap:5px; margin-bottom:5px;">
-        <input id="newProdPrice" type="number" class="input-text" placeholder="🇰🇷 KRW">
-        <input id="newProdPriceJP" type="number" class="input-text" placeholder="🇯🇵 JPY">
-    </div>
-    <input id="newProdPriceUS" type="number" class="input-text" placeholder="🇺🇸 USD">
-</div>
+                        <div class="form-group" style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                            <label class="form-label">가격 설정 (국가별)</label>
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                <input id="newProdPrice" type="number" class="input-text" placeholder="🇰🇷 KRW">
+                                <input id="newProdPriceJP" type="number" class="input-text" placeholder="🇯🇵 JPY">
+                            </div>
+                            <input id="newProdPriceUS" type="number" class="input-text" placeholder="🇺🇸 USD">
+                        </div>
                         <div class="form-group"><label class="form-label">이미지</label><div class="file-drop-zone"><input type="file" id="newProdFile" accept="image/*" onchange="previewProductImage(this)"><span>업로드</span></div><input id="newProdImg" class="input-text" style="margin-top:5px;" placeholder="URL"><img id="prodPreview" class="preview-img"></div>
                         <div class="form-group"><label class="form-label">옵션 연결</label><div id="addonCheckboxArea" class="addon-checkbox-group"></div></div>
                         <button id="btnProductSave" class="btn btn-primary" style="width:100%;" onclick="addProductDB()">상품 등록하기</button>
@@ -325,7 +333,18 @@
                         </div>
                         <div class="card">
                             <h3>📜 상품 목록</h3>
-                            <div style="margin-bottom:10px;">필터: <select onchange="filterProductList(this.value)" class="input-text" style="width:150px; display:inline-block;"><option value="all">전체 보기</option><option value="KR">🇰🇷 한국</option><option value="JP">🇯🇵 일본</option><option value="US">🇺🇸 미국</option></select></div>
+                            <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center;">
+                                <span style="font-weight:bold; color:#64748b;">🔍 필터:</span>
+                                <select id="filterProdSite" onchange="filterProductList()" class="input-text" style="width:130px;">
+                                    <option value="all">🌏 국가 전체</option>
+                                    <option value="KR">🇰🇷 한국</option>
+                                    <option value="JP">🇯🇵 일본</option>
+                                    <option value="US">🇺🇸 미국</option>
+                                </select>
+                                <select id="filterProdCat" onchange="filterProductList()" class="input-text" style="width:150px;">
+                                    <option value="all">📂 카테고리 전체</option>
+                                    </select>
+                            </div>
                             <table><thead><tr><th width="50">국가</th><th width="60">이미지</th><th>코드/상품명</th><th>사이즈</th><th>가격</th><th width="80">관리</th></tr></thead><tbody id="prodTableBody"></tbody></table>
                         </div>
                     </div>
@@ -458,7 +477,6 @@
         let allProducts = [];
         let staffList = []; 
 
-        // [신규] 파일 관리를 위한 상태 변수
         let currentMgrOrderId = null;
         let currentMgrFiles = [];
 
@@ -490,7 +508,7 @@
         function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
 
         // ==========================================
-        // 2. 주문 관리 (Orders) - [수정됨: 노하우 표시 추가]
+        // 2. 주문 관리 (Orders)
         // ==========================================
         window.filterOrders = (status, btn) => {
             currentOrderStatus = status;
@@ -537,7 +555,7 @@
             const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
             allOrders = filteredData; 
 
-            // [추가] 배송 노하우 데이터 조회 (주소 기반)
+            // 노하우 데이터 조회
             const addresses = filteredData.map(o => o.address).filter(a => a);
             let tipMap = {};
             if(addresses.length > 0) {
@@ -545,7 +563,6 @@
                 if(tips) tips.forEach(t => tipMap[t.address] = t);
             }
 
-            // 가격 정보 맵핑
             const { data: allProds } = await sb.from('admin_products').select('price, name');
             const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
 
@@ -555,7 +572,6 @@
                 const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
                 const filesJson = order.files ? JSON.stringify(order.files).replace(/"/g, '&quot;') : '[]';
                 
-                // ... (아이템 계산 로직 생략 없이 포함)
                 let items = [];
                 if (order.items) {
                     if (Array.isArray(order.items)) items = order.items;
@@ -599,7 +615,6 @@
                     itemsDisplayHtml = '<span style="color:#ccc; font-size:12px;">내역 없음</span>';
                 }
 
-                // 파일 목록 및 버튼 로직
                 let fileBtns = ''; 
                 const currentFiles = order.files || [];
                 const isModified = currentFiles.some(f => f.type === 'replaced_file' || f.type === 'admin_added');
@@ -618,7 +633,6 @@
                 else if (order.payment_status === '입금대기') payBadge = `<span class="pay-badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;">입금대기</span>`;
                 else if (order.payment_status === '결제중단') payBadge = `<span class="pay-badge" style="background:#f1f5f9; color:#64748b;">결제중단</span>`;
 
-                // [추가] 노하우 표시 HTML
                 const tip = tipMap[order.address];
                 let tipHtml = '';
                 if(tip) {
@@ -676,9 +690,6 @@
             showLoading(false);
         };
 
-        // ==========================================
-        // [파일 관리 모달 로직 + 한글 파일명 오류 패치 적용됨]
-        // ==========================================
         window.openFileModal = async (orderId) => {
             currentMgrOrderId = orderId;
             showLoading(true);
@@ -735,7 +746,6 @@
             await updateOrderFilesDB();
         };
 
-        // ★ [핵심] 랜덤 영문 변환 업로드 함수 (한글 오류 완벽 해결)
         window.uploadFileToOrder = async () => {
             const input = document.getElementById('fileMgrInput');
             if (!input.files || input.files.length === 0) return alert("추가할 파일을 선택해주세요.");
@@ -743,19 +753,14 @@
             const file = input.files[0];
             showLoading(true);
             try {
-                // 1. 파일 확장자 추출
                 const parts = file.name.split('.');
                 const ext = parts.length > 1 ? parts.pop() : ''; 
-                
-                // 2. 저장 경로용 이름 생성 (한글 제외, 오직 영문+숫자+시간)
                 const timestamp = Date.now();
                 const randomStr = Math.random().toString(36).substring(2, 10); 
                 const safeStorageName = `added_${timestamp}_${randomStr}.${ext}`;
 
-                // 3. 스토리지 경로 설정
                 const path = `orders/${currentMgrOrderId}/${safeStorageName}`;
                 
-                // 4. 스토리지 업로드
                 const { error: uploadErr } = await sb.storage.from('orders').upload(path, file, {
                     upsert: true
                 });
@@ -764,7 +769,6 @@
                 
                 const { data: publicUrlData } = sb.storage.from('orders').getPublicUrl(path);
                 
-                // 5. DB 저장용 객체 (name은 한글 원본 유지)
                 const newFileObj = {
                     name: file.name, 
                     url: publicUrlData.publicUrl, 
@@ -797,9 +801,6 @@
             }
         }
 
-        // ==========================================
-        // (기존) 스태프, 일괄처리 로직 등
-        // ==========================================
         async function fetchStaffForOrders() { const { data } = await sb.from('admin_staff').select('*'); staffList = data || []; }
         function createStaffSelectHTML(orderId, role, selectedId) {
             const roleName = role === 'manager' ? '담당' : '배송';
@@ -880,135 +881,256 @@
         
         window.confirmPayment = async (id) => { if(!confirm("입금을 확인하고 '결제완료' 처리하시겠습니까?")) return; const { error } = await sb.from('orders').update({ payment_status: '결제완료', payment_method: '계좌이체' }).eq('id', id); if(error) alert("오류: " + error.message); else loadOrders(); };
 
-        // (이하 통계, 상품 관리 로직 기존 유지 - 분량상 생략된 부분 없이 모두 포함됨)
         window.loadStatsData = async () => { let start = document.getElementById('statStartDate').value; let end = document.getElementById('statEndDate').value; if(!start || !end) { const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); start = firstDay.toISOString().split('T')[0]; end = now.toISOString().split('T')[0]; document.getElementById('statStartDate').value = start; document.getElementById('statEndDate').value = end; } document.getElementById('loading').style.display = 'flex'; const { data: orders, error } = await sb.from('orders').select('*').gte('created_at', start + 'T00:00:00').lte('created_at', end + 'T23:59:59'); if(error) { alert("로드 실패"); document.getElementById('loading').style.display = 'none'; return; } const { data: allProds } = await sb.from('admin_products').select('price, name'); const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price); let totalRevenue = 0; const managerStats = {}; const driverStats = {}; orders.forEach(o => { let amt = o.total_amount || 0; let items = o.items; if (typeof items === 'string') { try { items = JSON.parse(items); } catch(e) { items = []; } } if(amt === 0 && Array.isArray(items)) { items.forEach(i => { let p = 0; if(i.product && i.product.price) p = i.product.price; else if(i.product && prodMap[i.product.name]) p = prodMap[i.product.name]; if(!p) p = i.price || 10000; amt += p * (i.qty || 1); }); } totalRevenue += amt; if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt; if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt; }); document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + "원"; document.getElementById('totalCount').innerText = orders.length + "건"; const { data: staff } = await sb.from('admin_staff').select('*'); renderStaffStats('statManagerBody', managerStats, staff || [], totalRevenue); renderStaffStats('statDriverBody', driverStats, staff || [], totalRevenue); document.getElementById('loading').style.display = 'none'; };
         function renderStaffStats(elemId, statsObj, staffList, totalRev) { const tbody = document.getElementById(elemId); tbody.innerHTML = ''; const sortedIds = Object.keys(statsObj).sort((a,b) => statsObj[b] - statsObj[a]); if(sortedIds.length === 0) { tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">데이터 없음</td></tr>'; return; } sortedIds.forEach(id => { const s = staffList.find(st => st.id == id); if(!s) return; const amt = statsObj[id]; const percent = totalRev > 0 ? Math.round((amt / totalRev) * 100) : 0; tbody.innerHTML += `<tr><td style="padding:12px 0;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><div style="width:12px; height:12px; border-radius:50%; background:${s.color};"></div><span style="font-weight:bold;">${s.name}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%; background:${s.color};"></div></div></td><td style="text-align:right;"><div>${amt.toLocaleString()}원</div><div style="font-size:11px; color:#999;">${percent}%</div></td></tr>`; }); }
-        window.loadCategories = async () => { const { data } = await sb.from('admin_categories').select('*').order('sort_order', {ascending:true}); const selectBox = document.getElementById('newProdCategory'); const listArea = document.getElementById('categoryListArea'); selectBox.innerHTML = '<option value="">카테고리 선택</option>'; listArea.innerHTML = ''; if(data) data.forEach(cat => { const option = document.createElement('option'); option.value = cat.code; option.innerText = `${cat.name} (${cat.code})`; selectBox.appendChild(option); const span = document.createElement('span'); span.className = 'badge draggable'; span.draggable = true; span.dataset.id = cat.id; span.style.cssText = "border:1px solid #bae6fd; color:#0284c7; margin-right:5px; margin-bottom:5px; display:inline-block; user-select:none;"; span.innerHTML = `<b>${cat.name}</b> (${cat.code}) <i class="fa-solid fa-pen" style="font-size:10px; margin-left:5px; color:#aaa;"></i>`; span.onclick = () => window.editCategoryLoad(cat.id); span.addEventListener('dragstart', () => span.classList.add('dragging')); span.addEventListener('dragend', async () => { span.classList.remove('dragging'); await saveCategoryOrder(); }); listArea.appendChild(span); }); listArea.addEventListener('dragover', e => { e.preventDefault(); const afterElement = getDragAfterElementX(listArea, e.clientX); const draggable = document.querySelector('.badge.dragging'); if (afterElement == null) listArea.appendChild(draggable); else listArea.insertBefore(draggable, afterElement); }); };
-        window.addCategoryDB = async () => { const code=document.getElementById('newCatCode').value; const name=document.getElementById('newCatName').value; const name_jp=document.getElementById('newCatNameJP').value; const name_us=document.getElementById('newCatNameUS').value; if(!code || !name) return alert("필수항목 누락"); const {error} = await sb.from('admin_categories').upsert([{code:code.toLowerCase().replace(/\s/g,'_'), name, name_jp, name_us}], {onConflict:'code'}); if(error) alert(error.message); else { alert("저장됨"); loadCategories(); } };
-        window.editCategoryLoad = async (id) => { const {data} = await sb.from('admin_categories').select('*').eq('id',id).single(); if(data) { document.getElementById('newCatCode').value=data.code; document.getElementById('newCatName').value=data.name; document.getElementById('newCatNameJP').value=data.name_jp||''; document.getElementById('newCatNameUS').value=data.name_us||''; document.querySelector('.card').scrollIntoView({behavior:'smooth'}); } };
+        
+        // [수정] 카테고리 로드 및 대분류 연동
+        window.loadCategories = async () => { 
+            // 1. 대분류 불러오기
+            const { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order');
+            const topSelect = document.getElementById('newCatTop');
+            if (topSelect && topCats) {
+                topSelect.innerHTML = '<option value="">(상위 없음)</option>';
+                topCats.forEach(t => { topSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`; });
+            }
+
+            // 2. 카테고리 불러오기
+            const { data } = await sb.from('admin_categories').select('*').order('sort_order', {ascending:true}); 
+            const selectBox = document.getElementById('newProdCategory'); 
+            const listArea = document.getElementById('categoryListArea'); 
+            selectBox.innerHTML = '<option value="">카테고리 선택</option>'; 
+            listArea.innerHTML = ''; 
+            
+            if(data) data.forEach(cat => { 
+                const option = document.createElement('option'); 
+                option.value = cat.code; 
+                option.innerText = `${cat.name} (${cat.code})`; 
+                selectBox.appendChild(option); 
+                
+                const span = document.createElement('span'); 
+                span.className = 'badge draggable'; 
+                span.draggable = true; 
+                span.dataset.id = cat.id; 
+                span.style.cssText = "border:1px solid #bae6fd; color:#0284c7; margin-right:5px; margin-bottom:5px; display:inline-block; user-select:none; background:white; padding:6px 10px;"; 
+                
+                // 대분류 표시
+                const parentName = topCats && cat.top_category_code 
+                    ? (topCats.find(t => t.code === cat.top_category_code)?.name || cat.top_category_code) + " > " : "";
+
+                span.innerHTML = `<span style="color:#94a3b8; font-size:11px;">${parentName}</span> <b>${cat.name}</b> (${cat.code}) <i class="fa-solid fa-pen" style="font-size:10px; margin-left:5px; color:#aaa;"></i>`; 
+                span.onclick = () => window.editCategoryLoad(cat.id); 
+                span.addEventListener('dragstart', () => span.classList.add('dragging')); 
+                span.addEventListener('dragend', async () => { span.classList.remove('dragging'); await saveCategoryOrder(); }); 
+                listArea.appendChild(span); 
+            }); 
+            
+            listArea.addEventListener('dragover', e => { 
+                e.preventDefault(); 
+                const afterElement = getDragAfterElementX(listArea, e.clientX); 
+                const draggable = document.querySelector('.badge.dragging'); 
+                if (afterElement == null) listArea.appendChild(draggable); 
+                else listArea.insertBefore(draggable, afterElement); 
+            }); 
+        };
+
+        // [수정] 대분류 포함 저장
+        window.addCategoryDB = async () => {
+            const topCode = document.getElementById('newCatTop').value || null;
+            const codeRaw = document.getElementById('newCatCode').value;
+            const name = document.getElementById('newCatName').value;
+            const name_jp = document.getElementById('newCatNameJP').value;
+            const name_us = document.getElementById('newCatNameUS').value;
+
+            if (!codeRaw || !name) return alert("필수항목 누락: 코드와 한국명은 필수입니다.");
+            const code = codeRaw.toLowerCase().replace(/\s/g, '_');
+
+            try {
+                const { data: exist } = await sb.from('admin_categories').select('id, sort_order').eq('code', code).single();
+                let nextOrder = 1;
+                if (exist) {
+                    if (!confirm(`⚠️ 이미 존재하는 코드입니다: '${code}'\n수정하시겠습니까?`)) return;
+                    nextOrder = exist.sort_order;
+                } else {
+                    const { data: maxData } = await sb.from('admin_categories').select('sort_order').order('sort_order', { ascending: false }).limit(1);
+                    if (maxData && maxData.length > 0) nextOrder = (maxData[0].sort_order || 0) + 1;
+                }
+
+                const { error } = await sb.from('admin_categories').upsert([{
+                    code, name, name_jp, name_us, top_category_code: topCode, sort_order: nextOrder
+                }], { onConflict: 'code' });
+
+                if (error) throw error;
+                alert("✅ 카테고리 저장 완료");
+                document.getElementById('newCatCode').value = '';
+                document.getElementById('newCatName').value = '';
+                document.getElementById('newCatNameJP').value = '';
+                document.getElementById('newCatNameUS').value = '';
+                document.getElementById('newCatTop').value = '';
+                loadCategories();
+            } catch (e) {
+                alert("저장 오류: " + e.message);
+            }
+        };
+
+        window.editCategoryLoad = async (id) => { 
+            const {data} = await sb.from('admin_categories').select('*').eq('id',id).single(); 
+            if(data) { 
+                document.getElementById('newCatTop').value = data.top_category_code || '';
+                document.getElementById('newCatCode').value=data.code; 
+                document.getElementById('newCatName').value=data.name; 
+                document.getElementById('newCatNameJP').value=data.name_jp||''; 
+                document.getElementById('newCatNameUS').value=data.name_us||''; 
+                document.querySelector('.card').scrollIntoView({behavior:'smooth'}); 
+            } 
+        };
         async function saveCategoryOrder() { const badges = document.querySelectorAll('#categoryListArea .badge'); const updates=[]; badges.forEach((b,i)=>updates.push(sb.from('admin_categories').update({sort_order:i+1}).eq('id',b.dataset.id))); await Promise.all(updates); }
         function getDragAfterElementX(container, x) { const draggables = [...container.querySelectorAll('.badge:not(.dragging)')]; return draggables.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = x - box.left - box.width / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
-        window.loadSystemDB = async (filterSite = 'KR') => { const { data: addons } = await sb.from('admin_addons').select('*').order('category'); const addonBody = document.getElementById('addonTableBody'); const chkArea = document.getElementById('addonCheckboxArea'); if(addonBody) addonBody.innerHTML = ''; if(chkArea) chkArea.innerHTML = ''; if(addons) { addons.forEach(item => { const color = item.category==='material'?'#16a34a':(item.category==='finish'?'#2563eb':'#d97706'); let dName = item.name_kr || item.name; let dPrice = item.price_kr || item.price; if(filterSite === 'JP') { dName = item.name_jp || item.name; dPrice = item.price_jp || 0; } if(filterSite === 'US') { dName = item.name_us || item.name; dPrice = item.price_us || 0; } const priceStr = formatCurrency(dPrice, filterSite); if(addonBody) { addonBody.innerHTML += `<tr style="background:${editingAddonId===item.id?'#f0f9ff':'transparent'}"><td><span style="color:${color};font-weight:bold;">${item.category}</span></td><td><b>${item.code}</b></td><td><div>🇰🇷 ${item.name_kr||item.name} (${item.price_kr||item.price})</div><div style="font-size:11px;color:#888;">🇯🇵 ${item.name_jp||'-'} / 🇺🇸 ${item.name_us||'-'}</div></td><td><button class="btn btn-outline" style="padding:4px;" onclick="editAddonLoad(${item.id})">수정</button> <button class="btn btn-danger" style="padding:4px;" onclick="deleteSystemData('admin_addons',${item.id})">x</button></td></tr>`; } if(chkArea) { chkArea.innerHTML += `<label class="addon-check-item"><span class="badge-site ${filterSite.toLowerCase()}" style="font-size:10px;">${filterSite}</span> ${dName} (${priceStr}) <input type="checkbox" name="prodAddon" value="${item.code}"></label>`; } }); } const { data: prods } = await sb.from('admin_products').select('*').order('sort_order').order('id'); allProducts = prods || []; renderProductList(allProducts); };
+        
+        // [수정] 시스템 DB 로드 함수 (필터용 카테고리 로드 추가)
+       // [수정] 시스템 DB 로드 함수 (필터 상태 유지 기능 추가됨)
+window.loadSystemDB = async (filterSite = 'KR') => { 
+    // 1. 현재 사용자가 보고 있던 필터 값 기억하기 (저장 후에도 유지하기 위함)
+    const catSelect = document.getElementById('filterProdCat');
+    const savedCatValue = catSelect ? catSelect.value : 'all';
+
+    // 2. 옵션(Addon) 로드 (기존 로직)
+    const { data: addons } = await sb.from('admin_addons').select('*').order('category'); 
+    const addonBody = document.getElementById('addonTableBody'); 
+    const chkArea = document.getElementById('addonCheckboxArea'); 
+    
+    if(addonBody) addonBody.innerHTML = ''; 
+    if(chkArea) chkArea.innerHTML = ''; 
+    
+    if(addons) { 
+        addons.forEach(item => { 
+            const color = item.category==='material'?'#16a34a':(item.category==='finish'?'#2563eb':'#d97706'); 
+            let dName = item.name_kr || item.name; 
+            let dPrice = item.price_kr || item.price; 
+            if(filterSite === 'JP') { dName = item.name_jp || item.name; dPrice = item.price_jp || 0; } 
+            if(filterSite === 'US') { dName = item.name_us || item.name; dPrice = item.price_us || 0; } 
+            const priceStr = formatCurrency(dPrice, filterSite); 
+            
+            if(addonBody) { addonBody.innerHTML += `<tr style="background:${editingAddonId===item.id?'#f0f9ff':'transparent'}"><td><span style="color:${color};font-weight:bold;">${item.category}</span></td><td><b>${item.code}</b></td><td><div>🇰🇷 ${item.name_kr||item.name} (${item.price_kr||item.price})</div><div style="font-size:11px;color:#888;">🇯🇵 ${item.name_jp||'-'} / 🇺🇸 ${item.name_us||'-'}</div></td><td><button class="btn btn-outline" style="padding:4px;" onclick="editAddonLoad(${item.id})">수정</button> <button class="btn btn-danger" style="padding:4px;" onclick="deleteSystemData('admin_addons',${item.id})">x</button></td></tr>`; } 
+            if(chkArea) { chkArea.innerHTML += `<label class="addon-check-item"><span class="badge-site ${filterSite.toLowerCase()}" style="font-size:10px;">${filterSite}</span> ${dName} (${priceStr}) <input type="checkbox" name="prodAddon" value="${item.code}"></label>`; } 
+        }); 
+    } 
+    
+    // 3. 카테고리 필터 목록 다시 만들기
+    const { data: cats } = await sb.from('admin_categories').select('*').order('sort_order');
+    if (catSelect && cats) {
+        catSelect.innerHTML = '<option value="all">📂 카테고리 전체</option>';
+        cats.forEach(c => { catSelect.innerHTML += `<option value="${c.code}">${c.name}</option>`; });
+        
+        // [핵심 수정] 아까 기억해둔 값으로 다시 선택 (필터 유지)
+        if (savedCatValue) {
+            catSelect.value = savedCatValue;
+        }
+    }
+
+    // 4. 상품 목록 로드 및 필터 적용
+    const { data: prods } = await sb.from('admin_products').select('*').order('sort_order').order('id'); 
+    allProducts = prods || []; 
+    
+    // 필터 함수를 호출하여 현재 선택된 카테고리에 맞는 상품만 다시 보여줌
+    filterProductList(); 
+};
+
         window.editAddonLoad = async (id) => { const { data } = await sb.from('admin_addons').select('*').eq('id', id).single(); if(!data) return; editingAddonId = id; document.getElementById('newAddonCat').value = data.category; document.getElementById('newAddonCode').value = data.code; document.getElementById('nmKR').value = data.name_kr||data.name; document.getElementById('prKR').value = data.price_kr||data.price; document.getElementById('nmJP').value = data.name_jp||''; document.getElementById('prJP').value = data.price_jp||0; document.getElementById('nmUS').value = data.name_us||''; document.getElementById('prUS').value = data.price_us||0; const btn = document.querySelector('#newAddonCode').parentElement.parentElement.querySelector('.btn-primary'); btn.innerText = "수정 완료"; btn.classList.remove('btn-primary'); btn.classList.add('btn-vip'); };
         window.addAddonDB = async () => { const cat = document.getElementById('newAddonCat').value; const code = document.getElementById('newAddonCode').value; const nKR = document.getElementById('nmKR').value; const pKR = document.getElementById('prKR').value; const nJP = document.getElementById('nmJP').value; const pJP = document.getElementById('prJP').value; const nUS = document.getElementById('nmUS').value; const pUS = document.getElementById('prUS').value; if(!code) return alert("코드 필수"); const payload = { category: cat, code: code, name_kr: nKR, price_kr: parseInt(pKR||0), name_jp: nJP, price_jp: parseInt(pJP||0), name_us: nUS, price_us: parseInt(pUS||0), name: nKR, price: parseInt(pKR||0) }; if(editingAddonId) { await sb.from('admin_addons').update(payload).eq('id', editingAddonId); alert("수정되었습니다."); } else { await sb.from('admin_addons').insert([payload]); alert("등록되었습니다."); } editingAddonId = null; document.getElementById('newAddonCode').value = ''; document.getElementById('nmKR').value=''; document.getElementById('prKR').value=''; document.getElementById('nmJP').value=''; document.getElementById('prJP').value=''; document.getElementById('nmUS').value=''; document.getElementById('prUS').value=''; const btn = document.querySelector('#newAddonCode').parentElement.parentElement.querySelector('.btn'); btn.innerText = "저장"; btn.classList.remove('btn-vip'); btn.classList.add('btn-primary'); loadSystemDB('KR'); };
-        window.renderProductList = (products) => { const prodBody = document.getElementById('prodTableBody'); prodBody.innerHTML = ''; if(!products) return; products.forEach(item => { const site = item.site_code || 'KR'; const displayPrice = formatCurrency(item.price, site); const tr = document.createElement('tr'); tr.className = 'draggable-row'; tr.draggable = true; tr.dataset.id = item.id; tr.innerHTML = `<td><span class="badge-site ${site.toLowerCase()}">${site}</span></td><td><img src="${item.img_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;"></td><td><b style="color:#6366f1;">${item.code}</b><br>${item.name}</td><td>${item.width_mm}x${item.height_mm}</td><td>${displayPrice}</td><td><button class="btn btn-outline" style="padding:4px;" onclick="editProductLoad(${item.id})">수정</button> <button class="btn btn-danger" style="padding:4px;" onclick="deleteSystemData('admin_products', ${item.id})">삭제</button></td>`; addDragListeners(tr); prodBody.appendChild(tr); }); };
+        
+        // [신규] 상품 목록 필터링 함수
+        window.filterProductList = () => {
+            const siteFilter = document.getElementById('filterProdSite').value;
+            const catFilter = document.getElementById('filterProdCat').value;
+
+            let filtered = allProducts;
+            if (siteFilter !== 'all') filtered = filtered.filter(p => p.site_code === siteFilter);
+            if (catFilter !== 'all') filtered = filtered.filter(p => p.category === catFilter);
+
+            renderProductList(filtered);
+        };
+
+        window.renderProductList = (products) => { 
+            const prodBody = document.getElementById('prodTableBody'); 
+            prodBody.innerHTML = ''; 
+            if(!products || products.length === 0) {
+                prodBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">조건에 맞는 상품이 없습니다.</td></tr>';
+                return;
+            }
+            products.forEach(item => { 
+                const site = item.site_code || 'KR'; 
+                const displayPrice = formatCurrency(item.price, site); 
+                const tr = document.createElement('tr'); 
+                tr.className = 'draggable-row'; 
+                tr.draggable = true; 
+                tr.dataset.id = item.id; 
+                tr.innerHTML = `<td><span class="badge-site ${site.toLowerCase()}">${site}</span></td><td><img src="${item.img_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#eee;" onerror="this.src='https://placehold.co/40?text=NoImg'"></td><td><div style="font-size:11px; color:#6366f1; font-weight:bold;">${item.category || '-'}</div><b>${item.code}</b><br>${item.name}</td><td>${item.width_mm}x${item.height_mm}</td><td>${displayPrice}</td><td><button class="btn btn-outline" style="padding:4px;" onclick="editProductLoad(${item.id})">수정</button> <button class="btn btn-danger" style="padding:4px;" onclick="deleteSystemData('admin_products', ${item.id})">삭제</button></td>`; 
+                addDragListeners(tr); 
+                prodBody.appendChild(tr); 
+            }); 
+        };
+        
         window.addProductDB = async () => {
-    // 1. 공통 정보 읽기
-    const site = document.getElementById('newProdSite').value;
-    const cat = document.getElementById('newProdCategory').value;
-    const code = document.getElementById('newProdCode').value;
-    const w = document.getElementById('newProdW').value;
-    const h = document.getElementById('newProdH').value;
-    const img = document.getElementById('newProdImg').value;
+            const site = document.getElementById('newProdSite').value;
+            const cat = document.getElementById('newProdCategory').value;
+            const code = document.getElementById('newProdCode').value;
+            const w = document.getElementById('newProdW').value;
+            const h = document.getElementById('newProdH').value;
+            const img = document.getElementById('newProdImg').value;
+            const name = document.getElementById('newProdName').value;
+            const nameJP = document.getElementById('newProdNameJP').value;
+            const nameUS = document.getElementById('newProdNameUS').value;
+            const price = document.getElementById('newProdPrice').value;
+            const priceJP = document.getElementById('newProdPriceJP').value;
+            const priceUS = document.getElementById('newProdPriceUS').value;
 
-    // 2. 다국어 정보 읽기
-    const name = document.getElementById('newProdName').value;
-    const nameJP = document.getElementById('newProdNameJP').value;
-    const nameUS = document.getElementById('newProdNameUS').value;
+            if(!code || !name) return alert("상품코드와 한국어 상품명은 필수입니다.");
 
-    const price = document.getElementById('newProdPrice').value;
-    const priceJP = document.getElementById('newProdPriceJP').value;
-    const priceUS = document.getElementById('newProdPriceUS').value;
+            const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
+            const payload = { site_code: site, currency: 'KRW', category: cat, code, width_mm: parseInt(w||0), height_mm: parseInt(h||0), img_url: img, addons, name, name_jp: nameJP || null, name_us: nameUS || null, price: parseInt(price||0), price_jp: parseInt(priceJP||0), price_us: parseInt(priceUS||0) };
 
-    if(!code || !name) return alert("상품코드와 한국어 상품명은 필수입니다.");
+            let res;
+            if(editingProdId) res = await sb.from('admin_products').update(payload).eq('id', editingProdId);
+            else res = await sb.from('admin_products').insert([payload]);
 
-    let currency = 'KRW'; // 기본값 (실제 표시는 site-config에 따름)
+            if(res.error) alert(res.error.message);
+            else { alert("저장되었습니다."); resetProductForm(); loadSystemDB(site); }
+        };
 
-    const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
-
-    // 3. DB 페이로드 구성 (컬럼이 추가되어 있어야 함)
-    const payload = {
-        site_code: site,
-        currency,
-        category: cat,
-        code,
-        width_mm: parseInt(w||0),
-        height_mm: parseInt(h||0),
-        img_url: img,
-        addons,
-        // -- 다국어 데이터 --
-        name: name,
-        name_jp: nameJP || null,
-        name_us: nameUS || null,
-        price: parseInt(price||0),
-        price_jp: parseInt(priceJP||0),
-        price_us: parseInt(priceUS||0)
-    };
-
-    let res;
-    if(editingProdId) res = await sb.from('admin_products').update(payload).eq('id', editingProdId);
-    else res = await sb.from('admin_products').insert([payload]);
-
-    if(res.error) alert(res.error.message);
-    else {
-        alert("저장되었습니다.");
-        resetProductForm();
-        loadSystemDB(site);
-    }
-};
         window.editProductLoad = async (id) => {
-    const { data } = await sb.from('admin_products').select('*').eq('id', id).single();
-    if(!data) return;
-    
-    editingProdId = id;
-    
-    // 기본 정보 로드
-    document.getElementById('newProdSite').value = data.site_code;
-    document.getElementById('newProdCategory').value = data.category;
-    document.getElementById('newProdCode').value = data.code;
-    document.getElementById('newProdW').value = data.width_mm;
-    document.getElementById('newProdH').value = data.height_mm;
-    document.getElementById('newProdImg').value = data.img_url;
-    
-    const preview = document.getElementById('prodPreview');
-    preview.src = data.img_url;
-    preview.style.display = 'block';
-
-    // 다국어 정보 로드 (DB 컬럼 매칭)
-    document.getElementById('newProdName').value = data.name || '';
-    document.getElementById('newProdNameJP').value = data.name_jp || '';
-    document.getElementById('newProdNameUS').value = data.name_us || '';
-
-    document.getElementById('newProdPrice').value = data.price || 0;
-    document.getElementById('newProdPriceJP').value = data.price_jp || 0;
-    document.getElementById('newProdPriceUS').value = data.price_us || 0;
-
-    // 옵션 체크박스
-    const addons = data.addons ? data.addons.split(',') : [];
-    document.querySelectorAll('input[name="prodAddon"]').forEach(c => c.checked = addons.includes(c.value));
-
-    // 버튼 상태 변경
-    document.getElementById('btnProductSave').innerText = "수정 저장";
-    document.getElementById('btnProductClone').style.display = 'inline-block';
-    document.getElementById('btnCancelEdit').style.display = 'inline-block';
-    
-    document.querySelector('.product-form').scrollIntoView({behavior:'smooth'});
-};
+            const { data } = await sb.from('admin_products').select('*').eq('id', id).single();
+            if(!data) return;
+            editingProdId = id;
+            document.getElementById('newProdSite').value = data.site_code;
+            document.getElementById('newProdCategory').value = data.category;
+            document.getElementById('newProdCode').value = data.code;
+            document.getElementById('newProdW').value = data.width_mm;
+            document.getElementById('newProdH').value = data.height_mm;
+            document.getElementById('newProdImg').value = data.img_url;
+            const preview = document.getElementById('prodPreview');
+            preview.src = data.img_url; preview.style.display = 'block';
+            document.getElementById('newProdName').value = data.name || '';
+            document.getElementById('newProdNameJP').value = data.name_jp || '';
+            document.getElementById('newProdNameUS').value = data.name_us || '';
+            document.getElementById('newProdPrice').value = data.price || 0;
+            document.getElementById('newProdPriceJP').value = data.price_jp || 0;
+            document.getElementById('newProdPriceUS').value = data.price_us || 0;
+            const addons = data.addons ? data.addons.split(',') : [];
+            document.querySelectorAll('input[name="prodAddon"]').forEach(c => c.checked = addons.includes(c.value));
+            document.getElementById('btnProductSave').innerText = "수정 저장";
+            document.getElementById('btnProductClone').style.display = 'inline-block';
+            document.getElementById('btnCancelEdit').style.display = 'inline-block';
+            document.querySelector('.product-form').scrollIntoView({behavior:'smooth'});
+        };
         window.cloneProduct = () => { editingProdId=null; document.getElementById('newProdCode').value += "_copy"; document.getElementById('btnProductSave').innerText="새 상품 등록"; alert("복제 모드"); };
         window.resetProductForm = () => {
-    editingProdId = null;
-    
-    // 입력창 비우기
-    document.getElementById('newProdCode').value = '';
-    document.getElementById('newProdW').value = '';
-    document.getElementById('newProdH').value = '';
-    document.getElementById('newProdImg').value = '';
-    document.getElementById('prodPreview').style.display = 'none';
-
-    document.getElementById('newProdName').value = '';
-    document.getElementById('newProdNameJP').value = '';
-    document.getElementById('newProdNameUS').value = '';
-
-    document.getElementById('newProdPrice').value = '';
-    document.getElementById('newProdPriceJP').value = '';
-    document.getElementById('newProdPriceUS').value = '';
-
-    document.querySelectorAll('input[name="prodAddon"]').forEach(c => c.checked = false);
-
-    document.getElementById('btnProductSave').innerText = "상품 등록";
-    document.getElementById('btnProductClone').style.display = 'none';
-    document.getElementById('btnCancelEdit').style.display = 'none';
-};
+            editingProdId = null;
+            document.getElementById('newProdCode').value = ''; document.getElementById('newProdW').value = ''; document.getElementById('newProdH').value = ''; document.getElementById('newProdImg').value = ''; document.getElementById('prodPreview').style.display = 'none';
+            document.getElementById('newProdName').value = ''; document.getElementById('newProdNameJP').value = ''; document.getElementById('newProdNameUS').value = '';
+            document.getElementById('newProdPrice').value = ''; document.getElementById('newProdPriceJP').value = ''; document.getElementById('newProdPriceUS').value = '';
+            document.querySelectorAll('input[name="prodAddon"]').forEach(c => c.checked = false);
+            document.getElementById('btnProductSave').innerText = "상품 등록"; document.getElementById('btnProductClone').style.display = 'none'; document.getElementById('btnCancelEdit').style.display = 'none';
+        };
         window.previewProductImage = async (input) => { if(!input.files[0]) return; const file=input.files[0]; const reader=new FileReader(); reader.onload=(e)=>{document.getElementById('prodPreview').src=e.target.result; document.getElementById('prodPreview').style.display='block';}; reader.readAsDataURL(file); const btn=document.getElementById('btnProductSave'); btn.innerText="업로드중..."; btn.disabled=true; try { const path=`products/${Date.now()}_${file.name}`; await sb.storage.from('products').upload(path, file); const {data}=sb.storage.from('products').getPublicUrl(path); document.getElementById('newProdImg').value=data.publicUrl; } catch(e){alert("업로드실패");} finally {btn.innerText="상품 등록"; btn.disabled=false;} };
         window.deleteSystemData = async (t, id) => { if(confirm("삭제?")) { await sb.from(t).delete().eq('id',id); loadSystemDB(); }};
         function addDragListeners(row) { row.addEventListener('dragstart',()=>row.classList.add('dragging')); row.addEventListener('dragend',async()=>{row.classList.remove('dragging'); await saveSortOrder();}); const container=document.getElementById('prodTableBody'); container.addEventListener('dragover',e=>{e.preventDefault(); const after=getDragAfterElementY(container,e.clientY); const drag=document.querySelector('.draggable-row.dragging'); if(after==null) container.appendChild(drag); else container.insertBefore(drag,after);}); }
