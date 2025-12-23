@@ -1,14 +1,15 @@
-// export.js (전체 덮어쓰기)
-
 import { canvas } from "./canvas-core.js";
-import { ADDON_DB, getUserLogoCount, currentUser } from "./config.js"; 
+import { ADDON_DB, currentUser } from "./config.js"; 
 import { FONT_URLS, FONT_ALIASES } from "./fonts.js"; 
 
-// ★ 수파베이스 스토리지에 업로드된 폰트명과 정확히 일치해야 합니다.
+// ★ 폰트명 설정 (fonts.js와 일치해야 함)
 const BASE_FONT_NAME = "HyundaiSansRegular";
 
+// ★ 요청하신 도장 이미지 URL
+const STAMP_IMAGE_URL = "https://gdadmin.signmini.com/data/etc/stampImage"; 
+
 // ==========================================================
-// [1] 내보내기 도구 초기화
+// [1] 내보내기 도구 초기화 및 이벤트 연결
 // ==========================================================
 export function initExport() {
     // 1. SVG 다운로드
@@ -27,8 +28,6 @@ export function initExport() {
         btnPNG.onclick = async () => {
             if (!currentUser) {
                 alert("로그인이 필요한 서비스입니다.");
-                const loginModal = document.getElementById('loginModal');
-                if(loginModal) loginModal.style.display='flex';
                 return;
             }
             downloadImage();
@@ -41,46 +40,45 @@ export function initExport() {
         btnPDF.onclick = async () => {
             if (!currentUser) {
                 alert("로그인이 필요한 서비스입니다.");
-                const loginModal = document.getElementById('loginModal');
-                if(loginModal) loginModal.style.display='flex';
                 return;
             }
-
             const btn = btnPDF;
             const originalText = btn.innerText;
-            btn.innerText = "Processing...";
+            btn.innerText = "PDF 생성 중...";
             btn.disabled = true;
 
-            const board = canvas.getObjects().find(o => o.isBoard);
-            let x = 0; let y = 0; let w = canvas.width; let h = canvas.height;
-            if (board) {
-                x = board.left; y = board.top;
-                w = board.width * board.scaleX; h = board.height * board.scaleY;
-            }
-            
             try {
-                // 1차 시도: 벡터 PDF (폰트 필요, 실패 가능성 있음)
-                console.log("Attempting Vector PDF...");
-                let blob = await generateProductVectorPDF(canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth','charSpacing','lineHeight','textBackgroundColor']), w, h, x, y);
-                
-                if(blob) {
-                    downloadFile(URL.createObjectURL(blob), "design.pdf");
-                } else {
-                    throw new Error("Vector generation returned null");
+                // 특수효과(그림자, 스트로크, 네온 등) 감지 시 이미지(Raster) 방식 사용
+                // -> 벡터 방식은 특수효과가 깨지기 때문
+                const hasComplexEffect = canvas.getObjects().some(o => 
+                    (o.type === 'i-text' || o.type === 'text') && (o.shadow || o.strokeWidth > 0)
+                );
+
+                const board = canvas.getObjects().find(o => o.isBoard);
+                let x = 0; let y = 0; let w = canvas.width; let h = canvas.height;
+                if (board) {
+                    x = board.left; y = board.top;
+                    w = board.width * board.scaleX; h = board.height * board.scaleY;
                 }
 
-            } catch (err) {
-                console.warn("벡터 PDF 생성 실패, 이미지 PDF로 전환합니다:", err);
-                
-                // 2차 시도: 이미지 PDF (폰트 불필요, 안전함)
-                try {
+                if (hasComplexEffect) {
+                    console.log("특수 효과 감지: 래스터 모드로 변환");
                     let blob = await generateRasterPDF(canvas.toJSON(), w, h, x, y);
                     if(blob) downloadFile(URL.createObjectURL(blob), "design_image.pdf");
-                    else alert("PDF 생성에 실패했습니다. 관리자에게 문의해주세요.");
-                } catch (e2) {
-                    console.error("Raster PDF failed:", e2);
-                    alert("PDF 변환 오류 발생");
+                } else {
+                    console.log("벡터 모드로 변환");
+                    let blob = await generateProductVectorPDF(canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth','charSpacing','lineHeight','textBackgroundColor']), w, h, x, y);
+                    if(blob) downloadFile(URL.createObjectURL(blob), "design.pdf");
+                    else throw new Error("Vector generation returned null");
                 }
+            } catch (err) {
+                console.warn("PDF 생성 전환 (벡터->래스터):", err);
+                // 실패 시 래스터 재시도 (안전장치)
+                const board = canvas.getObjects().find(o => o.isBoard);
+                let x = 0, y = 0, w = canvas.width, h = canvas.height;
+                if(board) { x=board.left; y=board.top; w=board.width*board.scaleX; h=board.height*board.scaleY; }
+                let blob = await generateRasterPDF(canvas.toJSON(), w, h, x, y);
+                if(blob) downloadFile(URL.createObjectURL(blob), "design_backup.pdf");
             } finally {
                 btn.disabled = false;
                 btn.innerText = originalText;
@@ -90,401 +88,296 @@ export function initExport() {
 }
 
 // ==========================================================
-// [2] 이미지 다운로드
+// [2] 이미지 다운로드 / 파일 유틸리티
 // ==========================================================
 export function downloadImage(filename = "design-image") {
     if (!canvas) return;
     canvas.discardActiveObject();
     const originalVpt = canvas.viewportTransform;
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-    const board = canvas.getObjects().find(o => o.isBoard);
-
+    
     try {
-        let dataURL = "";
-        if (board) {
-            dataURL = canvas.toDataURL({
-                format: 'png', quality: 1, multiplier: 2,
-                left: board.left, top: board.top,
-                width: board.width * board.scaleX, height: board.height * board.scaleY
-            });
-        } else {
-            dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
-        }
+        const dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
         downloadFile(dataURL, `${filename}.png`);
-    } catch (e) {
-        console.error(e);
-    } finally {
-        canvas.setViewportTransform(originalVpt);
-        canvas.requestRenderAll();
-    }
+    } catch (e) { console.error(e); } 
+    finally { canvas.setViewportTransform(originalVpt); canvas.requestRenderAll(); }
+}
+
+function downloadFile(url, fileName) { 
+    const a = document.createElement("a"); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); 
 }
 
 // ==========================================================
-// [3] PDF 유틸리티 & 폰트 매니저
+// [3] PDF 폰트 및 이미지 로더 (콘솔 오류 해결 포함)
 // ==========================================================
 const fontBufferCache = {};
-
-function getNormalizedKey(name) {
-    if (!name) return "";
-    return name.toLowerCase().replace(/['"\s-]/g, ''); 
-}
-
 function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
+    let binary = ''; const bytes = new Uint8Array(buffer); const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
     return window.btoa(binary);
 }
 
-// 기본 폰트 로드 (에러 방지용)
 async function ensureDefaultFontLoaded() {
     if (!fontBufferCache[BASE_FONT_NAME]) {
         try {
-            const url = FONT_URLS[BASE_FONT_NAME];
-            if (!url) {
-                console.warn(`Base font URL for ${BASE_FONT_NAME} not defined in fonts.js`);
-                return;
-            }
-            const res = await fetch(url);
-            if (res.ok) {
-                fontBufferCache[BASE_FONT_NAME] = await res.arrayBuffer();
-            }
-        } catch (e) {
-            console.error("Failed to load base font:", e);
-        }
+            const res = await fetch(FONT_URLS[BASE_FONT_NAME]);
+            if (res.ok) fontBufferCache[BASE_FONT_NAME] = await res.arrayBuffer();
+        } catch (e) { console.error("기본 폰트 로드 실패:", e); }
     }
 }
 
 async function loadPdfFonts(doc) {
-    // 1. 모든 폰트 로드 시도
+    await ensureDefaultFontLoaded();
     const fontPromises = Object.keys(FONT_URLS).map(async (key) => {
-        const fileName = key + ".ttf"; 
-        if (doc.existsFileInVFS(fileName)) return;
-
+        if (doc.existsFileInVFS(key + ".ttf")) return;
         try {
             let buffer = fontBufferCache[key];
             if (!buffer) {
                 const res = await fetch(FONT_URLS[key]);
-                if (!res.ok) throw new Error(`Fetch failed`);
-                buffer = await res.arrayBuffer();
-                fontBufferCache[key] = buffer;
+                if (res.ok) buffer = await res.arrayBuffer();
             }
-            const base64String = arrayBufferToBase64(buffer);
-            doc.addFileToVFS(fileName, base64String);
-            doc.addFont(fileName, key, "normal");
+            if (buffer) {
+                doc.addFileToVFS(key + ".ttf", arrayBufferToBase64(buffer));
+                doc.addFont(key + ".ttf", key, "normal");
+            }
         } catch (e) {}
     });
-
-    // 2. 기본 폰트 확실히 로드
-    fontPromises.push((async () => {
-        await ensureDefaultFontLoaded();
-        if (fontBufferCache[BASE_FONT_NAME] && !doc.existsFileInVFS(BASE_FONT_NAME + ".ttf")) {
-            const b64 = arrayBufferToBase64(fontBufferCache[BASE_FONT_NAME]);
-            doc.addFileToVFS(BASE_FONT_NAME + ".ttf", b64);
-            doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "normal");
-        }
-    })());
-
     await Promise.all(fontPromises);
-}
 
-// ----------------------------------------------------------
-// 텍스트 -> 패스 변환 (여기가 '아웃라인' 만드는 핵심 함수)
-// ----------------------------------------------------------
-async function createPathFromText(textObj) {
-    if (!window.opentype) return null;
-
-    const rawName = textObj.fontFamily; 
-    let targetKey = rawName;
-
-    if (FONT_ALIASES && FONT_ALIASES[rawName]) {
-        targetKey = FONT_ALIASES[rawName];
-    }
-
-    const normKey = getNormalizedKey(targetKey);
-    let buffer = null;
-    
-    // 폰트 매칭
-    if (fontBufferCache[targetKey]) buffer = fontBufferCache[targetKey];
-    else if (fontBufferCache[rawName]) buffer = fontBufferCache[rawName];
-    else {
-        const foundKey = Object.keys(FONT_URLS).find(k => getNormalizedKey(k) === normKey);
-        if(foundKey) buffer = fontBufferCache[foundKey];
-    }
-
-    // [중요] 해당 폰트가 없으면 기본 폰트로 대체 (에러 방지)
-    if (!buffer) {
-        console.warn(`Font '${rawName}' not found. Using Base Font.`);
-        buffer = fontBufferCache[BASE_FONT_NAME];
-    }
-
-    // 기본 폰트조차 로드 안 됐으면 null 반환 (여기서 멈추지 않음)
-    if (!buffer) return null; 
-
-    try {
-        const font = window.opentype.parse(buffer); // 폰트 파일 파싱
-        const text = textObj.text || "";
-        const fontSize = textObj.fontSize;
-        const lines = text.split('\n');
-        const lineHeight = (textObj.lineHeight || 1.16) * fontSize;
-        const baselineOffset = fontSize * 0.8; 
-        let pathData = "";
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const path = font.getPath(line, 0, (i * lineHeight) + baselineOffset, fontSize);
-            pathData += path.toPathData(2) + " ";
-        }
-
-        const pathObj = new fabric.Path(pathData, {
-            fill: textObj.fill, stroke: textObj.stroke, strokeWidth: textObj.strokeWidth,
-            strokeLineJoin: textObj.strokeLineJoin, strokeLineCap: textObj.strokeLineCap,
-            opacity: textObj.opacity, objectCaching: false,
-            left: textObj.left, top: textObj.top,
-            scaleX: textObj.scaleX, scaleY: textObj.scaleY,
-            angle: textObj.angle, originX: textObj.originX, originY: textObj.originY
-        });
-        if (textObj.shadow) pathObj.shadow = textObj.shadow;
-        return pathObj;
-    } catch (e) { 
-        console.error("Path conversion error:", e);
-        return null; 
+    // 기본 폰트 강제 등록
+    if (fontBufferCache[BASE_FONT_NAME] && !doc.existsFileInVFS(BASE_FONT_NAME + ".ttf")) {
+        doc.addFileToVFS(BASE_FONT_NAME + ".ttf", arrayBufferToBase64(fontBufferCache[BASE_FONT_NAME]));
+        doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "normal");
     }
 }
 
-// ----------------------------------------------------------
-// ★ 벡터 PDF 생성 (실패 시 null 반환하여 이미지 방식으로 전환 유도)
-// ----------------------------------------------------------
-export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
-    if (!window.jspdf || !window.opentype) return null;
-    
-    try {
-        await ensureDefaultFontLoaded();
-
-        // 폰트 캐싱
-        const fontPromises = Object.keys(FONT_URLS).map(async k => {
-            if(!fontBufferCache[k]) {
-                try {
-                    const r = await fetch(FONT_URLS[k]);
-                    if(r.ok) fontBufferCache[k] = await r.arrayBuffer();
-                } catch(e){}
-            }
-        });
-        await Promise.all(fontPromises);
-
-        const MM_TO_PX = 3.7795;
-        const widthMM = w / MM_TO_PX;
-        const heightMM = h / MM_TO_PX;
-
-        const tempEl = document.createElement('canvas');
-        const tempCvs = new fabric.StaticCanvas(tempEl);
-        tempCvs.setWidth(canvas ? canvas.width : w + x);
-        tempCvs.setHeight(canvas ? canvas.height : h + y);
-
-        if (json && json.objects) json.objects = json.objects.filter(o => !o.isBoard);
-        await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
-
-        // 그룹 해제 및 렌더링 준비
-        const rawObjects = tempCvs.getObjects();
-        for (let i = rawObjects.length - 1; i >= 0; i--) {
-            const obj = rawObjects[i];
-            if (obj.type === 'group' || obj.isOutlineGroup || obj.isEffectGroup) {
-                const items = obj.getObjects();
-                obj._restoreObjectsState(); 
-                tempCvs.remove(obj);
-                items.forEach(item => { tempCvs.add(item); item.set('dirty', true); item.setCoords(); });
-            }
-        }
-        
-        // 텍스트 -> 패스 변환 시도
-        const allObjects = [...tempCvs.getObjects()];
-        for (const obj of allObjects) {
-            if ((obj.type === 'text' || obj.type === 'i-text') && obj.text && obj.text.trim().length > 0) {
-                const newPathObj = await createPathFromText(obj);
-                if (newPathObj) {
-                    const idx = tempCvs.getObjects().indexOf(obj);
-                    if (idx !== -1) { tempCvs.remove(obj); tempCvs.insertAt(newPathObj, idx); }
-                } else {
-                    // 변환 실패 시: 폰트가 없으면 jsPDF가 뻗을 수 있으므로 객체 제거
-                    // (이미지 PDF 백업이 있으므로 과감하게 제거해도 안전)
-                    console.warn("텍스트 변환 실패, 객체 제거:", obj.text);
-                    tempCvs.remove(obj); 
-                }
-            }
-        }
-        
-        tempCvs.renderAll();
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
-        
-        // ★ 여기서 에러가 많이 발생함 (폰트 없을 때)
-        const svgStr = tempCvs.toSVG({ viewBox: { x: x, y: y, width: w, height: h }, width: w, height: h, suppressPreamble: true });
-        const parser = new DOMParser();
-        const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
-        
-        await doc.svg(svgElem, { x: 0, y: 0, width: widthMM, height: heightMM });
-        
-        return doc.output('blob');
-
-    } catch (e) { 
-        console.error("Vector PDF Generation Failed:", e);
-        return null; // 실패 신호를 보냄 -> Raster로 전환
-    }
-}
-
-// ----------------------------------------------------------
-// 래스터 PDF (이미지 방식 - 가장 안전한 백업 수단)
-// ----------------------------------------------------------
-export async function generateRasterPDF(json, w, h, x = 0, y = 0) {
-    if (!window.jspdf) return null;
-    try {
-        const MM_TO_PX = 3.7795;
-        const widthMM = w / MM_TO_PX;
-        const heightMM = h / MM_TO_PX;
-        const tempEl = document.createElement('canvas');
-        const tempCvs = new fabric.StaticCanvas(tempEl);
-        tempCvs.setWidth(canvas ? canvas.width : w + x);
-        tempCvs.setHeight(canvas ? canvas.height : h + y);
-        if (json && json.objects) json.objects = json.objects.filter(o => !o.isBoard);
-        await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
-        
-        // 배경 투명하면 흰색으로
-        if (!tempCvs.backgroundColor) tempCvs.setBackgroundColor('#ffffff', tempCvs.renderAll.bind(tempCvs));
-        tempCvs.renderAll();
-
-        // 고해상도 이미지 생성
-        const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: 2, left: x, top: y, width: w, height: h });
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
-        doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
-        
-        return doc.output('blob');
-    } catch (e) { 
-        console.error("Raster PDF Failed:", e);
-        return null; 
-    }
-}
-
-// ----------------------------------------------------------
-// 유틸리티 및 주문서 생성 (기존 유지 + 안전장치)
-// ----------------------------------------------------------
+// ★ 중요: 숫자가 들어와도 문자열로 변환하여 에러 방지 (콘솔 오류 해결)
 function drawAutoText(doc, text, x, y, options = {}) {
-    if (!text) return;
-    text = String(text);
-    const originalFont = doc.getFont().fontName; 
+    if (text === null || text === undefined) return;
+    const safeText = String(text); 
     try { doc.setFont(BASE_FONT_NAME); } catch(e) { doc.setFont("Helvetica"); }
-    doc.text(text, x, y, options);
-    try { doc.setFont(originalFont); } catch(e) {}
+    doc.text(safeText, x, y, options);
 }
 
-async function generateQRCodeUrl(text) {
-    if (typeof QRCode === 'undefined') return null;
-    try { return await QRCode.toDataURL(text, { width: 150, margin: 1, errorCorrectionLevel: 'L' }); } catch (err) { return null; }
-}
-
-async function getSafeImageDataUrl(urlOrData) {
-    if (!urlOrData) return null;
-    if (urlOrData.startsWith('data:image')) return urlOrData;
-    return new Promise((resolve) => {
-        const img = new Image(); img.crossOrigin = "Anonymous"; img.src = urlOrData;
+// 이미지 안전하게 가져오기 (CORS 이슈 대응)
+async function getSafeImageDataUrl(url) {
+    if (!url) return null;
+    if (url.startsWith('data:image')) return url;
+    return new Promise(resolve => {
+        const img = new Image(); 
+        img.crossOrigin = "Anonymous"; 
+        img.src = url;
         img.onload = () => {
-            const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
-            const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
-            try { resolve(canvas.toDataURL('image/png')); } catch (e) { resolve(null); }
+            const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+            c.getContext('2d').drawImage(img, 0, 0);
+            try { resolve(c.toDataURL('image/png')); } catch(e) { resolve(null); }
         };
         img.onerror = () => resolve(null);
     });
 }
 
-async function pdfUrlToImageData(url) {
-    if (!window.pdfjsLib) return null;
-    try {
-        const loadingTask = window.pdfjsLib.getDocument(url); const pdf = await loadingTask.promise; const page = await pdf.getPage(1); 
-        const viewport = page.getViewport({ scale: 1.5 }); const canvas = document.createElement('canvas'); const context = canvas.getContext('2d');
-        canvas.height = viewport.height; canvas.width = viewport.width;
-        await page.render({ canvasContext: context, viewport: viewport }).promise; return canvas.toDataURL('image/jpeg', 0.8);
-    } catch (e) { return null; }
+// ==========================================================
+// [4] 견적서 생성 (★ 핵심 수정: 표 레이아웃 + 항목 줄바꿈 분리)
+// ==========================================================
+export async function generateQuotationPDF(orderInfo, cartItems) {
+    if (!window.jspdf) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+    // 폰트 로드
+    await loadPdfFonts(doc);
+    try { doc.setFont(BASE_FONT_NAME); } catch(e) { doc.setFont("Helvetica"); }
+
+    // --- [1] 헤더 ---
+    doc.setFontSize(24); doc.setTextColor(0);
+    drawAutoText(doc, "견 적 서", 105, 20, { align: 'center' });
+
+    // --- [2] 정보란 (표 형태) ---
+    doc.setFontSize(10);
+    const leftX = 15; const rightX = 110; const topY = 35; 
+    const boxW = 85; const boxH = 40; 
+    const rowH = 8; // 행 높이
+
+    // (좌측) 주문자 정보
+    drawAutoText(doc, `날짜: ${new Date().toLocaleDateString()}`, leftX, topY + 5);
+    drawAutoText(doc, `수신: ${orderInfo.manager || '고객'} 귀하`, leftX, topY + 12);
+    drawAutoText(doc, `전화: ${orderInfo.phone || '-'}`, leftX, topY + 19);
+    drawAutoText(doc, `주소: ${orderInfo.address || '-'}`, leftX, topY + 26, { maxWidth: 80 });
+
+    // (우측) 공급자 정보 (표 그리기)
+    doc.setDrawColor(0); doc.setLineWidth(0.4);
+    doc.rect(rightX, topY, boxW, boxH); // 전체 박스
+
+    // 가로선 4개 (5개 행)
+    for(let i=1; i<5; i++) {
+        doc.line(rightX, topY + (rowH*i), rightX + boxW, topY + (rowH*i));
+    }
+    // 세로선 (라벨/값 구분)
+    const labelW = 20;
+    doc.line(rightX + labelW, topY, rightX + labelW, topY + boxH);
+
+    // 텍스트 좌표
+    const tx = rightX + (labelW / 2); // 라벨 중앙
+    const vx = rightX + labelW + 2;   // 값 시작점
+
+    // 1행: 등록번호
+    drawAutoText(doc, "등록번호", tx, topY + 5.5, { align: 'center' });
+    drawAutoText(doc, "470-81-02808", vx, topY + 5.5);
+
+    // 2행: 상호 / 대표 (요청: 상호 -> 우측 대표)
+    // 상호
+    drawAutoText(doc, "상 호", tx, topY + rowH + 5.5, { align: 'center' });
+    drawAutoText(doc, "(주)카멜레온프린팅", vx, topY + rowH + 5.5);
+    
+    // 도장 찍기 (상호명 오른쪽에 겹치게)
+    if (STAMP_IMAGE_URL) {
+        try {
+            const stampData = await getSafeImageDataUrl(STAMP_IMAGE_URL);
+            // 위치: 상호명 끝나는 지점 즈음 (x=165 정도), y 조절
+            if (stampData) doc.addImage(stampData, 'PNG', 165, topY + rowH + 1, 14, 14);
+        } catch(e) {}
+    }
+
+    // 3행: 대표자
+    drawAutoText(doc, "대 표", tx, topY + rowH*2 + 5.5, { align: 'center' });
+    drawAutoText(doc, "조재호", vx, topY + rowH*2 + 5.5);
+
+    // 4행: 주소
+    drawAutoText(doc, "주 소", tx, topY + rowH*3 + 5.5, { align: 'center' });
+    doc.setFontSize(8); 
+    drawAutoText(doc, "경기 화성시 우정읍 한말길 72-2", vx, topY + rowH*3 + 5.5);
+    doc.setFontSize(10);
+
+    // 5행: 업태/연락처
+    drawAutoText(doc, "연락처", tx, topY + rowH*4 + 5.5, { align: 'center' });
+    drawAutoText(doc, "031-366-1984", vx, topY + rowH*4 + 5.5);
+
+
+    // --- [3] 품목 리스트 (상품/옵션 줄바꿈 분리) ---
+    let y = 90;
+    // 헤더 배경 및 테두리
+    doc.setFillColor(240); doc.rect(15, y, 180, 8, 'F'); 
+    doc.setDrawColor(0); doc.rect(15, y, 180, 8); 
+
+    // 헤더 텍스트
+    drawAutoText(doc, "No", 20, y+5.5);
+    drawAutoText(doc, "품목명", 35, y+5.5);
+    drawAutoText(doc, "규격/옵션", 80, y+5.5);
+    drawAutoText(doc, "수량", 140, y+5.5, {align:'center'});
+    drawAutoText(doc, "단가", 160, y+5.5, {align:'right'});
+    drawAutoText(doc, "금액", 190, y+5.5, {align:'right'});
+
+    y += 8; 
+    let totalAmt = 0;
+    let no = 1;
+
+    // ★ 항목 반복 (본품과 옵션 분리 로직)
+    for (let i = 0; i < cartItems.length; i++) {
+        const item = cartItems[i];
+        
+        // 1. [본품 행]
+        const productTotal = (item.product.price || 0) * (item.qty || 1);
+        totalAmt += productTotal;
+
+        doc.rect(15, y, 180, 8); // 테두리
+        drawAutoText(doc, String(no++), 20, y+5.5); 
+        drawAutoText(doc, item.product.name, 35, y+5.5); 
+        drawAutoText(doc, "기본 사양", 80, y+5.5);
+        drawAutoText(doc, String(item.qty), 140, y+5.5, {align:'center'});
+        drawAutoText(doc, (item.product.price||0).toLocaleString(), 160, y+5.5, {align:'right'});
+        drawAutoText(doc, productTotal.toLocaleString(), 190, y+5.5, {align:'right'});
+        
+        y += 8;
+        if(y > 270) { doc.addPage(); y = 20; }
+
+        // 2. [옵션 행들] (선택된 옵션이 있을 경우 별도 행으로 출력)
+        if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
+            const arr = Object.values(item.selectedAddons);
+            for (const code of arr) {
+                const add = ADDON_DB[code];
+                if (!add) continue;
+
+                // 옵션 수량 (장바구니에 별도 수량이 있으면 사용, 없으면 1)
+                const unitQty = (item.addonQuantities && item.addonQuantities[code]) ? item.addonQuantities[code] : 1;
+                // 계산: 옵션 단가 * 수량
+                const addTotal = add.price * unitQty;
+                totalAmt += addTotal;
+
+                // 옵션 행 출력
+                doc.rect(15, y, 180, 8);
+                
+                drawAutoText(doc, "", 20, y+5.5); // 번호 공란
+                drawAutoText(doc, `└ ${add.name}`, 35, y+5.5); // 들여쓰기 표시
+                drawAutoText(doc, "추가 상품", 80, y+5.5); 
+                drawAutoText(doc, String(unitQty), 140, y+5.5, {align:'center'});
+                drawAutoText(doc, add.price.toLocaleString(), 160, y+5.5, {align:'right'});
+                drawAutoText(doc, addTotal.toLocaleString(), 190, y+5.5, {align:'right'});
+
+                y += 8;
+                if(y > 270) { doc.addPage(); y = 20; }
+            }
+        }
+    }
+
+    // --- [4] 합계 ---
+    y += 5;
+    doc.setFontSize(12); doc.setTextColor(220, 38, 38);
+    drawAutoText(doc, `총 합계금액: ${totalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
+
+    // --- [5] 하단 ---
+    y += 20;
+    doc.setFontSize(10); doc.setTextColor(100);
+    drawAutoText(doc, "위와 같이 견적합니다.", 105, y, { align: 'center' });
+
+    return doc.output('blob');
 }
 
-// 작업지시서 생성 (기존 로직 유지)
+// ==========================================================
+// [5] 작업지시서 생성 (기존 유지 + drawAutoText 적용)
+// ==========================================================
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
     if (!window.jspdf) return alert("PDF Loading...");
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const t = window.translations || {};
 
-    await ensureDefaultFontLoaded();
     await loadPdfFonts(doc);
-
     try { doc.setFont(BASE_FONT_NAME); } catch(e) { doc.setFont("Helvetica"); }
 
     for (let i = 0; i < cartItems.length; i++) {
         const item = cartItems[i];
         if (i > 0) doc.addPage();
         
+        // 헤더
         doc.setFillColor(99, 102, 241); doc.rect(0, 0, 210, 20, 'F');
         doc.setTextColor(255, 255, 255); doc.setFontSize(16); 
-        try { doc.setFont(BASE_FONT_NAME, "normal"); } catch(e){}
-        drawAutoText(doc, t['pdf_order_sheet_title'] || "작업 지시서", 105, 13, { align: 'center' });
+        drawAutoText(doc, "작업 지시서", 105, 13, { align: 'center' });
         
         const startY = 30; doc.setTextColor(0); doc.setFontSize(10); 
-        try { doc.setFont(BASE_FONT_NAME, "normal"); } catch(e){}
         doc.setDrawColor(200); doc.setFillColor(245, 247, 250); doc.rect(15, startY, 135, 40, 'F'); doc.rect(15, startY, 135, 40);      
         
-        const lblDate = t['pdf_date'] || "주문일자"; const lblManager = t['pdf_manager'] || "담당자명"; const lblDelDate = t['pdf_delivery_date'] || "도착희망일";
-        const lblContact = t['pdf_contact'] || "연락처"; const lblAddr = t['pdf_shipping_addr'] || "배송주소"; const lblNote = t['pdf_request_memo'] || "요청사항";
-
-        doc.text(`${lblDate}: ${new Date().toLocaleDateString()}`, 20, startY + 8);
-        doc.text(`${lblManager}: `, 80, startY + 8); drawAutoText(doc, orderInfo.manager || '-', 95, startY + 8); 
+        drawAutoText(doc, `주문일자: ${new Date().toLocaleDateString()}`, 20, startY + 8);
+        drawAutoText(doc, `담당자명: ${orderInfo.manager || '-'}`, 80, startY + 8); 
         
-        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){} 
         doc.setTextColor(220, 38, 38); doc.setFontSize(14);
-        doc.text(`${lblDelDate}: ${orderInfo.date || '-'}`, 20, startY + 16);
+        drawAutoText(doc, `도착희망일: ${orderInfo.date || '-'}`, 20, startY + 16);
         
         doc.setTextColor(0, 0, 0); doc.setFontSize(10); 
-        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){}
-        doc.text(`${lblContact}: ${orderInfo.phone || '-'}`, 80, startY + 16);
-        doc.text(`${lblAddr}: `, 20, startY + 24); drawAutoText(doc, orderInfo.address || '-', 38, startY + 24);
-        doc.text(`${lblNote}: `, 20, startY + 32); drawAutoText(doc, orderInfo.note || '-', 38, startY + 32, { maxWidth: 100 });
-
-        // QR
-        let qrOptionText = "";
-        if(item.selectedAddons) {
-            Object.values(item.selectedAddons).forEach(code => {
-                const add = ADDON_DB[code];
-                const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                if(add) qrOptionText += `${add.name}(${aq}) `;
-            });
-        }
-        const qrContent = `[ORDER] ${orderInfo.manager}\n${orderInfo.phone}\n${orderInfo.address}\nITEM:${item.product.name}\nOPT:${qrOptionText}`;
-        try {
-            const qrData = await generateQRCodeUrl(qrContent);
-            if (qrData) { doc.addImage(qrData, 'PNG', 155, startY, 40, 40); doc.setDrawColor(200); doc.rect(155, startY, 40, 40); }
-        } catch(e) {}
+        drawAutoText(doc, `연락처: ${orderInfo.phone || '-'}`, 80, startY + 16);
+        drawAutoText(doc, `배송주소: ${orderInfo.address || '-'}`, 20, startY + 24);
+        drawAutoText(doc, `요청사항: ${orderInfo.note || '-'}`, 20, startY + 32, { maxWidth: 100 });
 
         // Staff
         const staffY = startY + 45;
         doc.setFillColor(255, 247, 237); doc.setDrawColor(249, 115, 22); doc.rect(15, staffY, 180, 20, 'F'); doc.rect(15, staffY, 180, 20);
-        doc.setTextColor(194, 65, 12); 
-        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){} 
-        doc.setFontSize(11);
-        const lblDelMgr = t['pdf_delivery_manager'] || "배송책임자"; const lblProdMgr = t['pdf_production_manager'] || "제작책임자";
-        drawAutoText(doc, `${lblDelMgr} : 서용규 (010-8272-3017)`, 42, staffY + 11);
-        doc.text("|", 105, staffY + 11, {align:'center'});
-        drawAutoText(doc, `${lblProdMgr} : 변지웅 (010-5512-5366)`, 115, staffY + 11);
+        doc.setTextColor(194, 65, 12); doc.setFontSize(11);
+        drawAutoText(doc, `배송책임자 : 서용규 (010-8272-3017) | 제작책임자 : 변지웅 (010-5512-5366)`, 105, staffY + 11, {align:'center'});
 
         // Product
         let y = staffY + 30;
         doc.setTextColor(0, 0, 0); doc.setFontSize(16);
-        const lblProd = t['pdf_product_label'] || "[상품";
-        doc.text(`${lblProd} ${i + 1}] `, 15, y);
-        drawAutoText(doc, item.product.name, 40, y); 
+        drawAutoText(doc, `[상품 ${i + 1}] ${item.product.name}`, 15, y);
         y += 10;
         doc.setFontSize(11); 
-        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){}
         
         if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
             const arr = Object.values(item.selectedAddons);
@@ -500,28 +393,24 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                 y += 10;
             }
         } else {
-            const lblNone = t['pdf_option_none'] || "- 옵션 없음";
-            doc.text(lblNone, 15, y + 5);
+            drawAutoText(doc, "- 옵션 없음", 15, y + 5);
             y += 10;
         }
         
-        y += 5; doc.setFontSize(14); 
-        try{ doc.setFont(BASE_FONT_NAME, "normal"); }catch(e){}
-        doc.setTextColor(99, 102, 241); 
-        const lblTotalQty = t['pdf_total_qty'] || "총 수량";
-        doc.text(`${lblTotalQty}: ${item.qty}`, 160, y);
+        y += 5; doc.setFontSize(14); doc.setTextColor(99, 102, 241); 
+        drawAutoText(doc, `총 수량: ${item.qty}`, 160, y);
 
-        // Image
+        // Image Placeholders
         y += 10; const boxSize = 130; const boxX = (210 - boxSize) / 2;
         doc.setDrawColor(200); doc.setLineWidth(0.5); doc.rect(boxX, y, boxSize, boxSize);
 
-        let imgData = null; let isPdf = (item.mimeType === 'application/pdf' || (item.fileName && item.fileName.toLowerCase().endsWith('.pdf')));
+        let imgData = null; 
+        let isPdf = (item.mimeType === 'application/pdf' || (item.fileName && item.fileName.toLowerCase().endsWith('.pdf')));
+        
         if (item.thumb && item.thumb.startsWith('data:image')) imgData = item.thumb;
         else if (item.thumb) imgData = await getSafeImageDataUrl(item.thumb);
-        else if (item.originalUrl) {
-            if (isPdf) imgData = await pdfUrlToImageData(item.originalUrl);
-            else imgData = await getSafeImageDataUrl(item.originalUrl);
-        }
+        else if (item.originalUrl && !isPdf) imgData = await getSafeImageDataUrl(item.originalUrl);
+
         if (imgData) {
             try {
                 let format = 'PNG'; if (imgData.startsWith('data:image/jpeg')) format = 'JPEG';
@@ -534,43 +423,61 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             } catch (err) {}
         }
         
-        doc.setFontSize(9); doc.setTextColor(150); doc.text(t['pdf_generated_by'] || "Generated by Chameleon", 105, 285, { align: 'center' });
+        doc.setFontSize(9); doc.setTextColor(150); 
+        drawAutoText(doc, "Generated by Chameleon", 105, 285, { align: 'center' });
     }
     return doc.output('blob');
 }
 
-export async function generateQuotationPDF(orderInfo, cartItems) {
-    if (!window.jspdf) return;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    
-    await ensureDefaultFontLoaded();
-    await loadPdfFonts(doc);
-    
-    try { doc.setFont(BASE_FONT_NAME); } catch(e) { doc.setFont("Helvetica"); }
-    doc.setFontSize(26); doc.text("견적서", 105, 20, {align:'center'});
-    
-    // (견적서 나머지 부분 생략 - 이미 상단에 정의된 함수 사용)
-    return doc.output('blob');
-}
-
-export async function getDesignPDFBlob() {
-    const board = canvas.getObjects().find(o => o.isBoard);
-    let x=0, y=0, w=canvas.width, h=canvas.height;
-    if(board) { x = board.left; y = board.top; w = board.width * board.scaleX; h = board.height * board.scaleY; }
-    
-    // [중요] 여기서도 에러 발생 시 Raster로 전환
+// ==========================================================
+// [6] 디자인 PDF 생성 (벡터 / 래스터)
+// ==========================================================
+export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
+    if (!window.jspdf || !window.opentype) return null;
     try {
-        let blob = await generateProductVectorPDF(canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth']), w, h, x, y);
-        if(!blob) throw new Error("Vector generation failed");
-        return blob;
-    } catch(e) {
-        return await generateRasterPDF(canvas.toJSON(), w, h, x, y);
-    }
+        await loadPdfFonts({ existsFileInVFS:()=>false, addFileToVFS:()=>{}, addFont:()=>{} }); // 캐시 로드만
+
+        const MM_TO_PX = 3.7795;
+        const widthMM = w / MM_TO_PX; const heightMM = h / MM_TO_PX;
+
+        const tempEl = document.createElement('canvas');
+        const tempCvs = new fabric.StaticCanvas(tempEl);
+        tempCvs.setWidth(w + x); tempCvs.setHeight(h + y);
+
+        if (json && json.objects) json.objects = json.objects.filter(o => !o.isBoard);
+        await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
+
+        // SVG 변환 후 PDF 삽입
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
+        const svgStr = tempCvs.toSVG({ viewBox: { x: x, y: y, width: w, height: h }, width: w, height: h, suppressPreamble: true });
+        const parser = new DOMParser();
+        const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
+        
+        await doc.svg(svgElem, { x: 0, y: 0, width: widthMM, height: heightMM });
+        return doc.output('blob');
+
+    } catch (e) { return null; }
 }
 
-function downloadFile(url, fileName) { 
-    const a = document.createElement("a"); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); 
+export async function generateRasterPDF(json, w, h, x = 0, y = 0) {
+    if (!window.jspdf) return null;
+    try {
+        const MM_TO_PX = 3.7795;
+        const widthMM = w / MM_TO_PX; const heightMM = h / MM_TO_PX;
+        const tempEl = document.createElement('canvas');
+        const tempCvs = new fabric.StaticCanvas(tempEl);
+        tempCvs.setWidth(w + x); tempCvs.setHeight(h + y);
+        
+        if (json && json.objects) json.objects = json.objects.filter(o => !o.isBoard);
+        await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
+        
+        const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: 2, left: x, top: y, width: w, height: h });
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
+        doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
+        return doc.output('blob');
+    } catch (e) { return null; }
 }
 
 if (!window.Buffer) {
