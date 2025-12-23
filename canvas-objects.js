@@ -1,48 +1,46 @@
 import { canvas } from "./canvas-core.js";
 import { updateLockUI } from "./canvas-utils.js";
-import { FONT_URLS } from "./fonts.js";
+import { sb } from "./config.js"; // ★ Supabase 인스턴스 가져오기
 
 // ============================================================
-//             ★ KOREAN_FONTS 설정 (Supabase 연동)
+// [설정] 현재 사이트 언어 및 폰트 변수
 // ============================================================
-export const KOREAN_FONTS = Object.keys(FONT_URLS).map(key => ({
-    name: key, label: key, url: FONT_URLS[key]
-}));
+const urlParams = new URLSearchParams(window.location.search);
+// URL에 lang 파라미터가 없으면 'KR'을 기본값으로 사용
+const CURRENT_LANG = (urlParams.get('lang') || 'kr').toUpperCase(); 
 
-export function initObjectTools() {
-    // 1. Supabase 폰트 로드 (브라우저 등록)
-    loadSupabaseFonts();
+// DB에서 불러온 폰트 목록을 저장할 전역 변수
+let DYNAMIC_FONTS = [];
 
-    // 2. 각종 핸들러 초기화
-    initTextHandlers();
-    initShapeHandlers();
-    initEditHandlers(); 
-    initSelectionEffects();
-    initColorHandlers();
-    initLayerHandlers();
-    initAlignHandlers(); 
-    initRotationHandlers();
+// ============================================================
+// [1] 초기화 함수 (Main Init)
+// ============================================================
+export async function initObjectTools() {
+    // 1. 구글 기본 폰트(시스템 폰트) CSS 로드
+    loadGoogleWebFontsCSS();
+
+    // 2. Supabase DB에서 국가별 폰트 로드 및 브라우저 등록
+    await loadDynamicFonts();
+
+    // 3. 각종 핸들러 초기화
+    initTextHandlers();      // 텍스트 추가/수정
+    initShapeHandlers();     // 도형 추가
+    initEditHandlers();      // 편집(삭제, 중앙정렬 등)
+    initSelectionEffects();  // 선택 시 UI 갱신
+    initColorHandlers();     // 색상 변경
+    initLayerHandlers();     // 레이어 순서
+    initAlignHandlers();     // 정렬
+    initRotationHandlers();  // 회전
     
-    // 3. 캔바 스타일 실시간 편집 기능 활성화
+    // 4. 캔바 스타일 실시간 편집(더블클릭) 활성화
     initAdvancedEditing();
 
-    console.log("✨ canvas-objects.js initialized (Final Version)");
+    console.log(`✨ canvas-objects.js initialized (Site: ${CURRENT_LANG})`);
 }
 
-// [핵심] Supabase 폰트 파일을 다운로드하여 브라우저에 등록하는 함수
-function loadSupabaseFonts() {
-    KOREAN_FONTS.forEach(font => {
-        const fontFace = new FontFace(font.name, `url(${font.url})`);
-        fontFace.load().then(loadedFace => {
-            document.fonts.add(loadedFace);
-            console.log(`✅ 폰트 로드 성공: ${font.name}`);
-        }).catch(err => {
-            console.error(`❌ 폰트 로드 실패 (${font.name}):`, err);
-        });
-    });
-}
-
-// [추가] 구글 폰트 CSS (시스템 기본 폰트용)
+// ============================================================
+// [2] 폰트 로딩 시스템 (Supabase 연동)
+// ============================================================
 function loadGoogleWebFontsCSS() {
     if (document.getElementById("google-fonts-link")) return;
     const link = document.createElement("link");
@@ -52,49 +50,86 @@ function loadGoogleWebFontsCSS() {
     document.head.appendChild(link);
 }
 
-// ============================================================
-//  ★ [수정됨] 폰트 목록 렌더링 함수 (모달창 내부용)
-// ============================================================
+// ★ 핵심: Supabase에서 폰트 목록을 가져와 브라우저에 등록
+async function loadDynamicFonts() {
+    try {
+        console.log(`📥 [Font] ${CURRENT_LANG} 폰트 로딩 중...`);
+        
+        // 현재 국가코드와 일치하는 폰트만 조회 (최신순)
+        const { data, error } = await sb.from('site_fonts')
+            .select('*')
+            .eq('site_code', CURRENT_LANG)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        DYNAMIC_FONTS = data || [];
+
+        // FontFace API를 사용하여 폰트 파일 비동기 로드
+        const fontPromises = DYNAMIC_FONTS.map(font => {
+            // URL에 띄어쓰기가 있을 수 있으므로 encodeURI 처리 권장
+            const fontFace = new FontFace(font.font_family, `url(${encodeURI(font.file_url)})`);
+            return fontFace.load().then(loadedFace => {
+                document.fonts.add(loadedFace);
+                console.log(`✅ Font Loaded: ${font.font_name} (${font.font_family})`);
+            }).catch(err => {
+                console.warn(`❌ Font Load Failed (${font.font_name}):`, err);
+            });
+        });
+
+        await Promise.all(fontPromises);
+
+    } catch (e) {
+        console.error("폰트 목록 DB 로딩 실패:", e);
+    }
+}
+
+// 폰트 전체보기 모달에 목록 렌더링
 function renderFontList() {
     const listContainer = document.getElementById("fontList");
     if (!listContainer) return;
     
     listContainer.innerHTML = ""; // 초기화
 
-    KOREAN_FONTS.forEach(font => {
+    if (DYNAMIC_FONTS.length === 0) {
+        listContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">등록된 폰트가 없습니다.<br>관리자 페이지에서 폰트를 등록해주세요.</div>`;
+        return;
+    }
+
+    DYNAMIC_FONTS.forEach(font => {
         const div = document.createElement("div");
         div.className = "font-item";
-        div.innerText = font.label || font.name; // 폰트 이름 표시
+        div.innerText = font.font_name; // 화면에 보여줄 이름 (예: 잘난체)
         
-        // 스타일
+        // 스타일 설정
         div.style.padding = "12px";
         div.style.cursor = "pointer";
         div.style.borderBottom = "1px solid #eee";
-        div.style.fontFamily = font.name; // ★ 해당 폰트로 미리보기
+        div.style.fontFamily = font.font_family; // 실제 폰트로 미리보기 적용
         div.style.fontSize = "18px";
         div.style.transition = "background 0.2s";
 
-        // 마우스 오버 효과
         div.onmouseover = () => div.style.background = "#f8fafc";
         div.onmouseout = () => div.style.background = "white";
 
-        // 클릭 시 폰트 적용
+        // 클릭 시 텍스트에 폰트 적용
         div.onclick = async () => {
             const active = canvas.getActiveObject();
-            if (!active) return alert("텍스트를 선택해주세요.");
+            if (!active) return alert("폰트를 변경할 텍스트를 선택해주세요.");
 
-            await document.fonts.load(`20px "${font.name}"`); // 로딩 대기
-            
-            // 적용 (그룹 내부까지 고려)
             const applyFont = (obj) => { 
-                if (obj.type.includes('text')) obj.set("fontFamily", font.name); 
+                if (obj.type && (obj.type.includes('text') || obj.type === 'i-text' || obj.type === 'textbox')) {
+                    obj.set("fontFamily", font.font_family);
+                }
             };
 
-            if (active.isEffectGroup || active.isOutlineGroup) {
+            // 그룹이거나 다중 선택일 경우 처리
+            if (active.type === 'activeSelection' || active.type === 'group') {
                 active.getObjects().forEach(o => applyFont(o));
-                active.addWithUpdate();
-            } else if (active.type === 'activeSelection') {
+            } else if (active.isEffectGroup || active.isOutlineGroup) {
+                // 특수 효과 그룹인 경우 내부 객체 적용
                 active.getObjects().forEach(o => applyFont(o));
+                active.addWithUpdate(); // 그룹 갱신
             } else {
                 applyFont(active);
             }
@@ -108,69 +143,62 @@ function renderFontList() {
 }
 
 // ============================================================
-//  ★ [수정됨] 텍스트 핸들러 (제목/부제목/본문 버튼 연결)
+// [3] 텍스트 핸들러 (Text Tools)
 // ============================================================
+// canvas-objects.js 파일 내부의 initTextHandlers 함수 수정
+
 function initTextHandlers() {
     // 텍스트 추가 공통 함수
-    const addTextToCanvas = (text, fontFamily, fontSize, fontWeight = 'normal') => {
+    const addTextToCanvas = (text, fontSize, fontWeight = 'normal') => { // 기본값을 normal로
         if (!window.canvas) return alert("캔버스가 로드되지 않았습니다.");
 
-        // 폰트가 로드되었는지 확인 (선택 사항: 로딩 대기 후 추가)
-        document.fonts.load(`${fontSize}px "${fontFamily}"`).then(() => {
-            const t = new fabric.IText(text, {
-                fontFamily: fontFamily, // fonts.js의 키값과 동일해야 함
-                fontSize: fontSize,
-                fontWeight: fontWeight,
-                fill: "#000000",
-                textAlign: 'center',
-                left: 0, 
-                top: 0
-            });
+        let family = 'sans-serif';
+        if (DYNAMIC_FONTS.length > 0) {
+            family = DYNAMIC_FONTS[0].font_family; 
+        }
+
+        const t = new fabric.IText(text, {
+            fontFamily: family,
+            fontSize: fontSize,
+            fontWeight: fontWeight, // 여기서 굵기 결정
+            fill: "#000000",
             
-            // 중앙 배치
-            if (typeof addToCenter === 'function') {
-                addToCenter(t);
-            } else {
-                window.canvas.add(t);
-                window.canvas.centerObject(t);
-                window.canvas.setActiveObject(t);
-            }
-            window.canvas.requestRenderAll();
-            console.log(`📝 텍스트 추가됨: ${text} (${fontFamily})`);
-        }).catch(() => {
-            // 로드 실패 시 기본 폰트로 추가
-            const t = new fabric.IText(text, { fontFamily: 'sans-serif', fontSize: fontSize, fill: "#000000" });
-            window.canvas.add(t);
-            window.canvas.centerObject(t);
-            window.canvas.setActiveObject(t);
-            window.canvas.requestRenderAll();
+            // ★ [추가] 외곽선이 생기지 않도록 확실하게 초기화
+            stroke: null, 
+            strokeWidth: 0,
+            
+            textAlign: 'center',
+            left: 0, 
+            top: 0,
+            originX: 'center', originY: 'center'
         });
+        
+        if (typeof addToCenter === 'function') {
+            addToCenter(t);
+        } else {
+            t.set({ left: canvas.width/2, top: canvas.height/2 });
+            window.canvas.add(t);
+            window.canvas.setActiveObject(t);
+        }
+        window.canvas.requestRenderAll();
     };
 
-    // 버튼 클릭 이벤트 연결
-    const connectButtons = () => {
-        const btnTitle = document.getElementById("btnAddTitle");
-        const btnSubtitle = document.getElementById("btnAddSubtitle");
-        const btnBody = document.getElementById("btnAddBody");
+    const btnTitle = document.getElementById("btnAddTitle");
+    const btnSubtitle = document.getElementById("btnAddSubtitle");
+    const btnBody = document.getElementById("btnAddBody");
 
-        // 1. 제목 (Jalnan)
-        if (btnTitle) {
-            btnTitle.onclick = () => addTextToCanvas("제목요기", "Jalnan", 80, "normal");
-        } else console.warn("⚠️ 제목 버튼(btnAddTitle) 없음");
+    // ▼▼▼ [수정 포인트] "bold"를 "normal"로 변경해주세요 ▼▼▼
+    
+    // 제목: 잘난체처럼 두꺼운 폰트는 normal로 해야 깨끗하게 나옵니다.
+    if (btnTitle) btnTitle.onclick = () => addTextToCanvas("제목을 입력하세요", 80, "normal");
+    
+    // 부제목: 필요하다면 bold 유지, 너무 두꺼우면 normal로 변경
+    if (btnSubtitle) btnSubtitle.onclick = () => addTextToCanvas("부제목 입력", 50, "normal");
+    
+    // 본문: 얇은 폰트는 normal
+    if (btnBody) btnBody.onclick = () => addTextToCanvas("본문 내용을 입력하세요", 30, "normal");
 
-        // 2. 부제목 (HyundaiSansBold)
-        if (btnSubtitle) {
-            btnSubtitle.onclick = () => addTextToCanvas("부제목은 요기", "HyundaiSansBold", 50, "normal");
-        }
-
-        // 3. 본문 (HyundaiSansMedium)
-        if (btnBody) {
-            btnBody.onclick = () => addTextToCanvas("본문내용.\n사이즈는 좌측패널.", "HyundaiSansMedium", 30, "normal");
-        }
-    };
-
-    connectButtons();
-    setTimeout(connectButtons, 500); // HTML 로딩 딜레이 대비
+    // ... (나머지 코드는 그대로) ...
 
     // 폰트 전체보기 모달 버튼
     const btnFontSelect = document.getElementById("btnFontSelect");
@@ -181,13 +209,16 @@ function initTextHandlers() {
             const modal = document.getElementById("fontModal");
             if (modal) {
                 modal.style.display = "flex";
-                // ★ 여기서 폰트 목록 렌더링 함수 호출!
-                renderFontList();
+                renderFontList(); // 목록 렌더링 호출
             }
         };
     }
     
-    // 정렬 및 스타일 핸들러
+    // 스타일 핸들러 설정
+    setupStyleHandlers();
+}
+
+function setupStyleHandlers() {
     const alignLeft = document.getElementById("btnAlignLeftText");
     const alignCenter = document.getElementById("btnAlignCenterText");
     const alignRight = document.getElementById("btnAlignRightText");
@@ -198,19 +229,43 @@ function initTextHandlers() {
     const textSize = document.getElementById("textSize");
     const charSpacing = document.getElementById("textCharSpacing");
     const lineHeight = document.getElementById("textLineHeight");
+
     if (textSize) textSize.oninput = () => applyToSelection("fontSize", parseInt(textSize.value));
     if (charSpacing) charSpacing.oninput = () => applyToSelection("charSpacing", parseInt(charSpacing.value));
     if (lineHeight) lineHeight.oninput = () => applyToSelection("lineHeight", parseFloat(lineHeight.value));
 }
 
+// 공통 속성 적용 함수
+function applyToSelection(prop, val) {
+    const active = canvas.getActiveObject();
+    if (!active) return;
+
+    if (active.isEffectGroup) {
+        // 효과 그룹인 경우 메인 텍스트만 변경하거나 전체 변경
+        const mainText = active.getObjects().find(o => o.isMainText);
+        if (prop === 'fill' && mainText) mainText.set('fill', val);
+        else if ((prop === 'stroke' || prop === 'strokeWidth') && mainText) {
+            mainText.set(prop, val);
+        } else {
+            active.getObjects().forEach(o => o.set(prop, val));
+        }
+        active.addWithUpdate();
+    } else if (active.type === "activeSelection" || active.type === "group") {
+        active.getObjects().forEach(obj => obj.set(prop, val));
+    } else {
+        active.set(prop, val);
+    }
+    canvas.requestRenderAll();
+}
+
 // ============================================================
-//  🔥 파워 텍스트 효과 (메인 함수)
+// [4] 파워 텍스트 효과 (Text Effects)
 // ============================================================
 window.applyTextEffect = function(type) {
     const active = canvas.getActiveObject();
     if (!active) return alert("텍스트를 선택해주세요.");
 
-    // [초기화] 기존 효과 그룹 해제 후 원본 추출
+    // 기존 효과 그룹 해제 후 원본 추출
     let originalText = active;
     if (active.type === 'group' && active.isEffectGroup) {
         const items = active.getObjects();
@@ -225,46 +280,25 @@ window.applyTextEffect = function(type) {
             canvas.remove(active);
             canvas.add(cloned);
             canvas.setActiveObject(cloned);
-            // 재귀 호출로 새 효과 적용
-            window.applyTextEffect(type);
+            window.applyTextEffect(type); // 재귀 호출
         });
         return;
     }
 
     if (!originalText.type.includes('text')) return alert("텍스트만 가능합니다.");
 
-    // 비율 계산
     const fontSize = originalText.fontSize * originalText.scaleY; 
     const strokeW = Math.max(2, fontSize * 0.05);
     const depth3D = Math.max(5, fontSize * 0.15);
     const originalColor = originalText.fill || '#000000';
 
     switch (type) {
-        case 'block-3d': 
-            create3DEffect(originalText, '#4fffa5', '#000000', depth3D); 
-            break;
-
-        case 'neon-strong': 
-            createNeonEffect(originalText, strokeW);
-            break;
-
-        case 'glitch-strong': 
-            createGlitchEffect(originalText);
-            break;
-
-        case 'long-shadow': 
-            // [수정] 원래 색상 유지 + 검정 그림자 + 선명함
-            createLongShadow(originalText, originalColor, '#000000', 500); 
-            break;
-
-        case 'retro-candy':
-            createCandyEffect(originalText, '#ef4444', '#15803d'); 
-            break;
-
-        case 'blue-candy':
-            createCandyEffect(originalText, '#38bdf8', '#1e3a8a');
-            break;
-
+        case 'block-3d': create3DEffect(originalText, '#4fffa5', '#000000', depth3D); break;
+        case 'neon-strong': createNeonEffect(originalText, strokeW); break;
+        case 'glitch-strong': createGlitchEffect(originalText); break;
+        case 'long-shadow': createLongShadow(originalText, originalColor, '#000000', 500); break;
+        case 'retro-candy': createCandyEffect(originalText, '#ef4444', '#15803d'); break;
+        case 'blue-candy': createCandyEffect(originalText, '#38bdf8', '#1e3a8a'); break;
         case 'reset':
             originalText.set({ fill: '#000000', stroke: null, strokeWidth: 0, shadow: null });
             canvas.requestRenderAll();
@@ -272,11 +306,7 @@ window.applyTextEffect = function(type) {
     }
 };
 
-// ==========================================
-// 🔥 효과 구현 상세 함수들
-// ==========================================
-
-// [1] 3D 블록
+// 효과 구현 함수들
 function create3DEffect(original, topColor, sideColor, depth) {
     const layers = [];
     const step = 1; 
@@ -297,7 +327,6 @@ function create3DEffect(original, topColor, sideColor, depth) {
     }
 }
 
-// [2] 강한 네온
 function createNeonEffect(original, strokeW) {
     const layers = [];
     original.clone((glow1) => {
@@ -307,7 +336,6 @@ function createNeonEffect(original, strokeW) {
             selectable: false, isClone: true
         });
         layers.push(glow1);
-        
         original.clone((glow2) => {
             glow2.set({
                 stroke: '#d300c5', strokeWidth: strokeW * 0.5, fill: 'transparent',
@@ -315,66 +343,37 @@ function createNeonEffect(original, strokeW) {
                 selectable: false, isClone: true
             });
             layers.push(glow2);
-
-            original.set({
-                stroke: '#ffffff', strokeWidth: Math.max(1, strokeW * 0.1), fill: 'transparent', isMainText: true
-            });
+            original.set({ stroke: '#ffffff', strokeWidth: Math.max(1, strokeW * 0.1), fill: 'transparent', isMainText: true });
             layers.push(original);
-            
             groupAndRender(layers);
         });
     });
 }
 
-// [3] 글리치
 function createGlitchEffect(original) {
     const layers = [];
     const offset = Math.max(3, original.fontSize * 0.03); 
-
     original.clone((red) => {
-        red.set({
-            left: original.left - offset, top: original.top - offset,
-            fill: 'red', opacity: 0.8, 
-            stroke: null, strokeWidth: 0,
-            selectable: false, isClone: true
-        });
+        red.set({ left: original.left - offset, top: original.top - offset, fill: 'red', opacity: 0.8, stroke: null, strokeWidth: 0, selectable: false, isClone: true });
         layers.push(red);
-        
         original.clone((cyan) => {
-            cyan.set({
-                left: original.left + offset, top: original.top + offset,
-                fill: 'cyan', opacity: 0.8, 
-                stroke: null, strokeWidth: 0,
-                selectable: false, isClone: true
-            });
+            cyan.set({ left: original.left + offset, top: original.top + offset, fill: 'cyan', opacity: 0.8, stroke: null, strokeWidth: 0, selectable: false, isClone: true });
             layers.push(cyan);
-            
             original.set({ fill: '#ffffff', stroke: null, strokeWidth: 0, isMainText: true });
             layers.push(original);
-            
             groupAndRender(layers);
         });
     });
 }
 
-// [4] 긴 그림자 (원래 색상 유지)
 function createLongShadow(original, textColor, shadowColor, length) {
     const layers = [];
     const step = 2; 
     const count = Math.floor(length / step); 
-
     for(let i=1; i<=count; i++) {
         original.clone((s) => {
-            s.set({
-                left: original.left + (i * step), 
-                top: original.top + (i * step),
-                fill: shadowColor,
-                stroke: null, strokeWidth: 0,
-                shadow: null, 
-                selectable: false, evented: false, isClone: true
-            });
+            s.set({ left: original.left + (i * step), top: original.top + (i * step), fill: shadowColor, stroke: null, strokeWidth: 0, shadow: null, selectable: false, evented: false, isClone: true });
             layers.push(s);
-            
             if(i === count) {
                 original.set({ fill: textColor, isMainText: true });
                 layers.push(original);
@@ -384,82 +383,38 @@ function createLongShadow(original, textColor, shadowColor, length) {
     }
 }
 
-// [5] 캔디 효과 (고해상도 벡터)
 function createCandyEffect(original, color1, color2) {
-    const candyPattern = generateHighResPattern(color1, color2);
-
-    original.set({
-        fill: candyPattern,
-        stroke: '#ffffff', 
-        strokeWidth: Math.max(3, original.fontSize * 0.04),
-        paintFirst: 'stroke',
-        isMainText: true
-    });
-
-    original.clone((shadow) => {
-        shadow.set({
-            fill: '#000000', stroke: null, strokeWidth: 0,
-            left: original.left + 5, top: original.top + 5,
-            opacity: 0.25, isClone: true, selectable: false
-        });
-        groupAndRender([shadow, original]);
-    });
-}
-
-// [60px 벡터 패턴]
-function generateHighResPattern(bgCol, lineCol) {
     const size = 60; 
     const patternCanvas = document.createElement('canvas');
-    patternCanvas.width = size;
-    patternCanvas.height = size;
+    patternCanvas.width = size; patternCanvas.height = size;
     const ctx = patternCanvas.getContext('2d');
-
-    ctx.fillStyle = bgCol;
-    ctx.fillRect(0, 0, size, size);
-
-    ctx.beginPath();
-    ctx.strokeStyle = lineCol;
-    ctx.lineWidth = size / 2.2; 
-    ctx.lineCap = 'butt';
-
-    ctx.moveTo(0, size);
-    ctx.lineTo(size, 0);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(-size/2, size/2);
-    ctx.lineTo(size/2, -size/2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(size/2, size + size/2);
-    ctx.lineTo(size + size/2, size/2);
-    ctx.stroke();
-
-    return new fabric.Pattern({
-        source: patternCanvas,
-        repeat: 'repeat'
+    ctx.fillStyle = color1; ctx.fillRect(0, 0, size, size);
+    ctx.beginPath(); ctx.strokeStyle = color2; ctx.lineWidth = size / 2.2; ctx.lineCap = 'butt';
+    ctx.moveTo(0, size); ctx.lineTo(size, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-size/2, size/2); ctx.lineTo(size/2, -size/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(size/2, size + size/2); ctx.lineTo(size + size/2, size/2); ctx.stroke();
+    
+    const candyPattern = new fabric.Pattern({ source: patternCanvas, repeat: 'repeat' });
+    original.set({ fill: candyPattern, stroke: '#ffffff', strokeWidth: Math.max(3, original.fontSize * 0.04), paintFirst: 'stroke', isMainText: true });
+    original.clone((shadow) => {
+        shadow.set({ fill: '#000000', stroke: null, strokeWidth: 0, left: original.left + 5, top: original.top + 5, opacity: 0.25, isClone: true, selectable: false });
+        groupAndRender([shadow, original]);
     });
 }
 
 function groupAndRender(items) {
     items.forEach(obj => canvas.remove(obj));
-    // 스케일 중복 방지를 위해 그룹의 scale은 기본 1로 생성
-    const group = new fabric.Group(items, {
-        canvas: canvas,
-        isEffectGroup: true,
-    });
+    const group = new fabric.Group(items, { canvas: canvas, isEffectGroup: true });
     canvas.add(group);
     canvas.setActiveObject(group);
     canvas.requestRenderAll();
 }
 
 // ============================================================
-//  🔥 캔바 스타일: 더블 클릭 실시간 편집 (Advanced Editing)
+// [5] 캔바 스타일: 실시간 편집 (Advanced Editing)
 // ============================================================
 function initAdvancedEditing() {
     if (!canvas) return;
-
     canvas.on('mouse:dblclick', (e) => {
         const target = e.target;
         if (target && target.type === 'group' && target.isEffectGroup) {
@@ -471,7 +426,6 @@ function initAdvancedEditing() {
 function enableEffectEditing(group) {
     const items = group.toActiveSelection(); 
     const objects = items.getObjects();
-
     const mainText = objects.find(o => o.isMainText);
     const clones = objects.filter(o => o !== mainText);
 
@@ -481,6 +435,7 @@ function enableEffectEditing(group) {
         return;
     }
 
+    // 클론들은 잠시 숨기거나 투명하게
     clones.forEach(clone => {
         clone.set({ selectable: false, evented: false, opacity: clone.opacity * 0.5 });
     });
@@ -490,6 +445,7 @@ function enableEffectEditing(group) {
     mainText.enterEditing(); 
     mainText.selectAll(); 
 
+    // 입력 동기화
     const syncHandler = () => {
         const content = mainText.text;
         clones.forEach(clone => clone.set('text', content));
@@ -497,17 +453,16 @@ function enableEffectEditing(group) {
     };
     mainText.on('changed', syncHandler);
 
+    // 편집 종료 시 그룹 재구성
     mainText.on('editing:exited', () => {
         mainText.off('changed', syncHandler);
         clones.forEach(clone => clone.set({ opacity: clone.opacity / 0.5 })); 
-
         const allItems = [...clones, mainText];
         const newGroup = new fabric.Group(allItems, {
             isEffectGroup: true,
             selectionBackgroundColor: 'rgba(255,255,255,0)',
             originX: 'center', originY: 'center'
         });
-
         canvas.remove(mainText);
         clones.forEach(c => canvas.remove(c));
         canvas.add(newGroup);
@@ -517,7 +472,7 @@ function enableEffectEditing(group) {
 }
 
 // ============================================================
-//             기타 필수 핸들러
+// [6] 기타 객체 핸들러 (Shapes, Utils)
 // ============================================================
 export function addToCenter(obj) {
     if (!canvas) return;
@@ -571,38 +526,15 @@ function initColorHandlers() {
     const fillColor = document.getElementById("fillColor");
     const strokeColor = document.getElementById("strokeColor");
     const strokeWidth = document.getElementById("globalStroke");
+    const strokeMiter = document.getElementById("btnStrokeMiter");
+    const strokeRound = document.getElementById("btnStrokeRound");
 
     if (fillColor) fillColor.oninput = () => applyToSelection("fill", fillColor.value);
     if (strokeColor) strokeColor.oninput = () => applyToSelection("stroke", strokeColor.value);
     if (strokeWidth) strokeWidth.oninput = () => applyToSelection("strokeWidth", parseInt(strokeWidth.value, 10));
-}
-
-function applyToSelection(prop, val) {
-    const active = canvas.getActiveObject();
-    if (!active) return;
-
-    if (active.isEffectGroup) {
-        const mainText = active.getObjects().find(o => o.isMainText);
-        if (prop === 'fill' && mainText) mainText.set('fill', val);
-        else if ((prop === 'stroke' || prop === 'strokeWidth') && mainText) {
-            mainText.set(prop, val);
-        } else {
-            active.getObjects().forEach(o => o.set(prop, val));
-        }
-        active.addWithUpdate();
-    } else if (active.isOutlineGroup) {
-        const clone = active.getObjects().find(o => o.isOutlineClone);
-        const original = active.getObjects().find(o => !o.isOutlineClone);
-        if (prop === 'fill' && original) original.set('fill', val);
-        else if ((prop === 'stroke' || prop === 'strokeWidth') && clone) clone.set(prop, val);
-        else active.getObjects().forEach(o => o.set(prop, val));
-        active.addWithUpdate();
-    } else if (active.type === "activeSelection" || active.type === "group") {
-        active.getObjects().forEach(obj => obj.set(prop, val));
-    } else {
-        active.set(prop, val);
-    }
-    canvas.requestRenderAll();
+    
+    if(strokeMiter) strokeMiter.onclick = () => applyToSelection("strokeLineJoin", "miter");
+    if(strokeRound) strokeRound.onclick = () => applyToSelection("strokeLineJoin", "round");
 }
 
 function initLayerHandlers() {
@@ -631,7 +563,7 @@ function initShapeHandlers() {
             const type = btn.dataset.shape;
             const color = document.getElementById("fillColor")?.value || "#000000";
             let obj;
-            const opt = { fill: color, strokeWidth: 0 };
+            const opt = { fill: color, strokeWidth: 0, originX: 'center', originY: 'center' };
             
             if(type === 'rect') obj = new fabric.Rect({...opt, width:100, height:100});
             else if(type === 'circle') obj = new fabric.Circle({...opt, radius:50});
@@ -656,10 +588,11 @@ function initEditHandlers() {
             const board = canvas.getObjects().find(o => o.isBoard);
             if (board) {
                 const boardCenterX = board.left + (board.getScaledWidth() / 2);
-                active.set({ originX: 'center', left: boardCenterX });
+                const boardCenterY = board.top + (board.getScaledHeight() / 2);
+                active.set({ originX: 'center', originY: 'center', left: boardCenterX, top: boardCenterY });
                 active.setCoords();
             } else {
-                canvas.centerObjectH(active);
+                canvas.centerObject(active);
             }
             canvas.requestRenderAll();
         };
@@ -689,8 +622,11 @@ function initEditHandlers() {
 function initRotationHandlers() {
     const btnLeft = document.getElementById("btnRotateLeft15");
     const btnRight = document.getElementById("btnRotateRight15");
+    const btnRotate = document.getElementById("btnRotateCanvas"); 
+
     if (btnLeft) btnLeft.onclick = () => rotateActive(-15);
     if (btnRight) btnRight.onclick = () => rotateActive(15);
+    if (btnRotate) btnRotate.onclick = () => rotateActive(90);
 }
 
 function rotateActive(angle) {
@@ -747,6 +683,7 @@ function alignObjects(direction) {
     canvas.requestRenderAll();
 }
 
+// 모바일용 텍스트 에디터 관련 (유틸)
 window.deleteMobileObject = function() {
     if (!canvas) return;
     const activeObj = canvas.getActiveObject();
@@ -756,4 +693,118 @@ window.deleteMobileObject = function() {
         canvas.requestRenderAll();
         window.closeMobileTextEditor();
     }
+};
+
+window.toggleMobilePanel = function(side) {
+    const leftPanel = document.getElementById('toolsPanel');
+    const rightPanel = document.getElementById('rightStackPanel');
+    if (side === 'left') {
+        if (leftPanel) leftPanel.classList.toggle('open');
+        if (rightPanel) rightPanel.classList.remove('open');
+    } else if (side === 'right') {
+        if (rightPanel) rightPanel.classList.toggle('open');
+        if (leftPanel) leftPanel.classList.remove('open');
+    }
+};
+
+// ============================================================
+// [7] 로고 업로드 및 파일 핸들러
+// ============================================================
+window.uploadUserLogo = async () => {
+    // config.js에서 currentUser 가져오기
+    // (이 파일 상단에 import { currentUser } from "./config.js"; 추가 필요)
+    // 여기서는 window.currentUser가 있다고 가정하거나 config에서 가져와야 함.
+    // 안전을 위해 import 문에 currentUser 추가를 권장합니다.
+    const { currentUser } = await import("./config.js");
+
+    if (!currentUser) return alert("로그인이 필요한 기능입니다.");
+    
+    const fileInput = document.getElementById('logoFileInput');
+    const tagInput = document.getElementById('logoKeywordInput');
+    const file = fileInput.files[0];
+    const tags = tagInput.value;
+    
+    if (!file) return alert("파일을 선택해주세요.");
+    
+    const btn = document.querySelector('#logoUploadModal .btn-round.primary');
+    const oldText = btn.innerText;
+    btn.innerText = "업로드 중...";
+    btn.disabled = true;
+    
+    try {
+        const timestamp = Date.now();
+        const fileExt = file.name.split('.').pop(); 
+        const safeFileName = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${fileExt}`;
+        const filePath = `user_uploads/${currentUser.id}/${safeFileName}`;
+        
+        const { error: uploadError } = await sb.storage.from('design').upload(filePath, file);
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = sb.storage.from('design').getPublicUrl(filePath);
+        const publicUrl = urlData.publicUrl;
+        
+        const payload = {
+            category: 'logo', tags: tags || '유저업로드', thumb_url: publicUrl, data_url: publicUrl,
+            width: 1000, height: 1000, user_id: currentUser.id 
+        };
+        
+        const { error: dbError } = await sb.from('library').insert(payload);
+        if (dbError) throw dbError;
+        
+        alert(`✅ 업로드 성공!`);
+        window.resetUpload(); 
+        document.getElementById('logoUploadModal').style.display = 'none';
+    } catch (e) {
+        console.error(e);
+        alert("업로드 실패: " + e.message);
+    } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+    }
+};
+
+window.handleFileSelect = (input) => {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileNameNoExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+        const tagInput = document.getElementById('logoKeywordInput');
+        if (tagInput && !tagInput.value) {
+            tagInput.value = fileNameNoExt + " 로고";
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('previewImage');
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            const icon = document.querySelector('.upload-icon');
+            const text = document.querySelector('.upload-text');
+            const sub = document.querySelector('.upload-sub');
+            const delBtn = document.getElementById('removeFileBtn');
+            if(icon) icon.style.display = 'none';
+            if(text) text.style.display = 'none';
+            if(sub) sub.style.display = 'none';
+            if(delBtn) delBtn.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+window.resetUpload = (e) => {
+    if(e) e.stopPropagation();
+    const input = document.getElementById('logoFileInput');
+    if(input) input.value = '';
+    const tagInput = document.getElementById('logoKeywordInput');
+    if(tagInput) tagInput.value = '';
+    const preview = document.getElementById('previewImage');
+    if(preview) preview.style.display = 'none';
+    const icon = document.querySelector('.upload-icon');
+    const text = document.querySelector('.upload-text');
+    const sub = document.querySelector('.upload-sub');
+    const delBtn = document.getElementById('removeFileBtn');
+    if(icon) icon.style.display = 'block';
+    if(text) text.style.display = 'block';
+    if(sub) sub.style.display = 'block';
+    if(delBtn) delBtn.style.display = 'none';
 };

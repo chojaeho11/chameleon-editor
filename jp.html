@@ -1,13 +1,19 @@
-<!DOCTYPE html>
 <html lang="ko">
+<head>
+    <script>window.SITE_CODE = 'JP';</script>
+<meta charset="UTF-8" />
+<title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
+<meta name="description" content="허니콤보드, 종이매대...">
+<meta name="keywords" content="카멜레온프린팅, 허니콤보드...">
+
+<html lang="ja">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Chameleon Canvas</title>
-
 <title>カメレオンプリント - エコ展示会・ポップアップストア装飾＆無料デザインツール</title>
 <meta name="description" content="ハニカムボード、紙製什器、ファブリック印刷など、環境に優しい展示会・ポップアップストア製作専門。等身大パネル、バックウォールから軟包装まで、Webエディタで簡単にデザイン・注文可能です。">
 <meta name="keywords" content="カメレオンプリント, ハニカムボード, 紙製什器, ファブリック印刷, ポップアップストア, 等身大パネル, 展示会装飾, エコ印刷, 軟包装, バックウォール, 大判印刷">
+
 <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/" />
 <link rel="alternate" hreflang="en" href="https://www.cafe2626.com/en.html" />
 <link rel="alternate" hreflang="ja" href="https://www.cafe2626.com/jp.html" />
@@ -36,6 +42,7 @@
   (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
   ChannelIO('boot', { "pluginKey": "752ba9ff-a447-4e10-9813-715e051995cd" });
 </script>
+
 </head>
 <body>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;">로딩 중입니다...</p></div>
@@ -57,24 +64,38 @@
 <div id="startScreen">
     
     <div class="hero-section">
-    <h1 class="hero-title" data-i18n="hero_title">행사 준비하세요? <br><span>카멜레온</span>과 함께해요.</h1>
-    <p class="hero-desc" data-i18n="hero_desc">행사 팝업스토어 기획자를 위한 도매쇼핑몰, 유저가 함께 만드는 무료에디터</p>
+    <h1 class="hero-title" data-i18n="hero_title">광고사 기획사 파티플래너라면? <br><span>카멜레온</span>과 함께해요.</h1>
+    <p class="hero-desc" data-i18n="hero_desc">대한민국 1등 광고인쇄 도매쇼핑몰, 로고를 공유하고 함께 만드는 무료에디터</p>
 </div>
 
 <div class="quick-menu-wrapper">
-    <div class="quick-menu-label" data-i18n="wall_option_desc">맞춤형 디자인 시작하기</div>
+    
+    <div id="topCategoryTabs" class="category-tabs"></div>
+
     <div class="quick-menu-track" id="quickMenuContainer"></div>
 </div>
 
 <div class="gallery-section">
-    <div class="gallery-header">Expert Studio - Chameleon Canvas</div>
+    <div class="gallery-header">부업공지! 이미지 만들어 나도쓰고 남도쓰면 현금으로 쌓이는 풍성한 적립금 혜택</div>
+
+    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; flex-wrap: wrap;">
+        
+        <button onclick="window.openAiStartModal()" class="btn-round" style="width: auto; display: inline-flex; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 50px; box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2); background: #fff; color: #6366f1; border: 2px solid #6366f1;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> &nbsp; AI로 디자인 만들기
+        </button>
+
+        <button onclick="document.getElementById('logoUploadModal').style.display='flex'" class="btn-round" style="width: auto; display: inline-flex; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 50px; box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2); background: #fff; color: #6366f1; border: 2px solid #6366f1;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> &nbsp; 로고 공유 (2배 적립!)
+        </button>
+
+    </div>
     
     <div class="hero-search-wrap">
         <input type="search" 
                id="startSearchInput" 
                class="hero-search-input" 
                data-i18n-placeholder="search_placeholder"
-               placeholder="어떤 디자인을 찾으세요? (예: 카페, 메뉴판, 여름)" 
+               placeholder="어떤 디자인을 찾으세요? (예: 고양이, 바다, 하늘)" 
                autocomplete="off" 
                readonly 
                onfocus="this.removeAttribute('readonly');"
@@ -83,6 +104,8 @@
             <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">검색</span>
         </button>
     </div>
+
+    
 
     <div id="startTemplateGrid" class="template-grid-start"></div>
     <div class="review-section">
@@ -296,23 +319,7 @@
         <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
     </div>
 
-    <div id="logoUploadModal" class="modal-bg">
-        <div class="modal-box" style="width: 400px;">
-            <h3 style="margin-top:0;">☁️ Upload Logo</h3>
-            <div class="upload-drop-zone" id="dropZone" onclick="document.getElementById('logoFileInput').click()">
-                <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-                <span class="upload-text">Click or Drag</span>
-                <img id="previewImage">
-                <div id="removeFileBtn" onclick="window.resetUpload(event)">✕</div>
-            </div>
-            <input type="file" id="logoFileInput" accept="image/png, image/jpeg, image/svg+xml" style="display:none;" onchange="window.handleFileSelect(this)">
-            <input type="text" id="logoKeywordInput" class="ai-input-pretty" placeholder="Tags">
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button onclick="window.uploadUserLogo()" class="btn-round primary" style="flex:2;">Upload</button>
-                <button onclick="document.getElementById('logoUploadModal').style.display='none'" class="btn-round" style="flex:1;">Cancel</button>
-            </div>
-        </div>
-    </div>
+    
 
     <div class="editor-wrap">
         <div class="side" id="toolsPanel">
@@ -352,11 +359,29 @@
                 <button id="btnPDF" class="btn-round" style="flex:1;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
             </div>
 
-            <div class="section-title" data-i18n="label_basic_tools">BASIC TOOLS</div>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button class="btn-round" id="btnAddText" style="flex:1;"><span data-i18n="btn_add_text">+ 텍스트</span></button>
-                <button class="btn-round" id="btnFontSelect" style="flex:1;"><span data-i18n="btn_font">🅰️ 폰트</span></button>
-            </div>
+
+            <div class="section-title" data-i18n="label_text_tools">텍스트 추가</div>
+
+<div class="text-btn-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+    <button id="btnAddTitle" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
+        <span class="text-preview" style="display:block; font-family: 'Jalnan'; font-size: 16px; margin-bottom:5px;">제목</span>
+        <span class="text-label" style="font-size: 11px; color: #64748b;">잘난체</span>
+    </button>
+
+    <button id="btnAddSubtitle" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
+        <span class="text-preview" style="display:block; font-family: 'HyundaiSansMedium'; font-weight: bold; font-size: 14px; margin-bottom:5px;">부제목</span>
+        <span class="text-label" style="font-size: 11px; color: #64748b;">현대산스 B</span>
+    </button>
+
+    <button id="btnAddBody" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
+        <span class="text-preview" style="display:block; font-family: 'HyundaiSansMedium'; font-size: 12px; margin-bottom:5px;">본문</span>
+        <span class="text-label" style="font-size: 11px; color: #64748b;">현대산스 M</span>
+    </button>
+</div>
+
+<button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:15px; display:flex; align-items:center; justify-content:center;">
+    <span data-i18n="btn_font">🅰️ 폰트 전체보기</span>
+</button>
 
             <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:15px;">
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -369,6 +394,46 @@
                     <input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
                 </div>
             </div>
+            <!-- 텍스트효과시작 -->
+<div class="section-title" style="margin-top:15px;">🔥 파워 텍스트 효과</div>
+<div class="effect-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px;">
+
+    <button class="btn-round" onclick="window.applyTextEffect('block-3d')" 
+            style="background:#000; color:#4fffa5; font-weight:900; border:none; text-shadow: 2px 2px 0px #005c30;">
+        3D 블록
+    </button>
+    
+    <button class="btn-round" onclick="window.applyTextEffect('neon-strong')" 
+            style="background:#111; color:#fff; border:1px solid #d300c5; text-shadow: 0 0 5px #d300c5, 0 0 10px #7800ff;">
+        강한 네온
+    </button>
+    
+    <button class="btn-round" onclick="window.applyTextEffect('glitch-strong')" 
+            style="background:#1a1a1a; color:#fff; font-weight:bold; text-shadow: -2px 0 cyan, 2px 0 red; clip-path: polygon(0% 0%, 100% 0%, 95% 100%, 5% 100%);">
+        ⚡ 사이버펑크
+    </button>
+    
+    <button class="btn-round" onclick="window.applyTextEffect('long-shadow')" 
+            style="background:#40c4ff; color:white; font-weight:bold; text-shadow: 1px 1px #2689b5, 2px 2px #2689b5, 3px 3px #2689b5;">
+        긴 그림자
+    </button>
+
+    <button class="btn-round" onclick="window.applyTextEffect('retro-candy')" 
+            style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #22c55e 10px, #22c55e 20px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold;">
+        🍭 레트로 캔디
+    </button>
+
+    <button class="btn-round" onclick="window.applyTextEffect('blue-candy')" 
+            style="background: repeating-linear-gradient(45deg, #0ea5e9, #0ea5e9 10px, #1e3a8a 10px, #1e3a8a 20px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold;">
+        🧊 블루 캔디
+    </button>
+
+    <button class="btn-round" onclick="window.applyTextEffect('reset')" 
+            style="grid-column: 1 / -1; background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">
+        ↺ 효과 제거 (초기화)
+    </button>
+</div>
+<!-- 텍스트효과 끝 -->
 
             <div class="color-group" style="margin-bottom:5px;">
                 <span data-i18n="label_fill">🎨 채우기</span>
@@ -745,7 +810,7 @@
             <button onclick="window.confirmChoice('file')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;">
                 <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;"></i>
                 <span style="font-size:16px;" data-i18n="btn_order_file">내 파일로 주문</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="btn_order_file_sub">PDF 파일 업로드 10메가 이상은 이메일로 보내주세요. korea900@daum.net</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="btn_order_file_sub">PDF업로드 10메가 이상 korea900@daum.net</span>
             </button>
         </div>
 
@@ -780,6 +845,49 @@
         <div id="catProductGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
         
         <button onclick="document.getElementById('categoryDetailModal').style.display='none'" class="btn-round" style="margin-top:20px;">닫기</button>
+    </div>
+</div>
+<div id="logoUploadModal" class="modal-bg" style="z-index: 20000;">
+    <div class="modal-box" style="width: 400px;">
+        <h3 style="margin-top:0;">☁️ Upload Logo</h3>
+        <div class="upload-drop-zone" id="dropZone" onclick="document.getElementById('logoFileInput').click()">
+            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+            <span class="upload-text">Click or Drag</span>
+            <img id="previewImage">
+            <div id="removeFileBtn" onclick="window.resetUpload(event)">✕</div>
+        </div>
+        <input type="file" id="logoFileInput" accept="image/png, image/jpeg, image/svg+xml" style="display:none;" onchange="window.handleFileSelect(this)">
+        <input type="text" id="logoKeywordInput" class="ai-input-pretty" placeholder="파일명이 자동으로 검색어로 등록되며 사용시 적립금 2배.">
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button onclick="window.uploadUserLogo()" class="btn-round primary" style="flex:2;">Upload</button>
+            <button onclick="document.getElementById('logoUploadModal').style.display='none'" class="btn-round" style="flex:1;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="aiStartModal" class="modal-bg" style="z-index: 15000;">
+    <div class="modal-box" style="width: 500px; max-width: 90%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0;">✨ AI 이미지 생성 (Start)</h3>
+            <button onclick="document.getElementById('aiStartModal').style.display='none'" style="border:none; background:none; cursor:pointer; font-size:20px;">✕</button>
+        </div>
+        
+        <p style="color:#666; font-size:14px; margin-bottom:10px;">이미지를 만들면 다른 유저에게 자동으로 공유되고 현금으로 적립됩니다.</p>
+        
+        <textarea id="aiStartPrompt" class="ai-input-pretty" placeholder="멋진 프롬프트를 작성하시면 최상위 AI 모델로 멋진 작품을 만들어 줍니다. 시작화면으로 가서 새로고침 하면 고객님께서 생성한 멋진 작품이 하단작품에 등록되어 있을거예요." style="height:100px;"></textarea>
+        
+        <button id="btnAiStartGen" class="btn-round primary" style="width:100%; margin-top:5px;">
+            🎨 생성하기
+        </button>
+
+        <div id="aiStartResult" style="margin-top:20px; min-height:300px; background:#f8fafc; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0;">
+            <span style="color:#cbd5e1;">이미지가 여기에 표시됩니다</span>
+        </div>
+
+        <button id="btnAiStartGo" class="btn-round" style="width:100%; margin-top:15px; display:none; background:#111; color:#fff;">
+            🚀 이 이미지로 디자인 시작하기
+        </button>
     </div>
 </div>
 <script type="module" src="./config.js"></script>
@@ -929,44 +1037,157 @@
     loadAndApplyTranslations();
 
 
-    // ============================================================
-    // [2] 시작 화면: 카테고리 목록
-    // ============================================================
-    async function renderQuickMenu() {
-        const container = document.getElementById('quickMenuContainer');
-        if (!container) return;
-        container.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
-        
-        const { data: categories, error } = await sb.from('admin_categories')
-            .select('*').order('sort_order', { ascending: true });
+   // index.html 내부의 renderQuickMenu 함수 교체
 
-        container.innerHTML = '';
-        if (!categories || categories.length === 0) {
-            container.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
+// index.html 내부의 renderQuickMenu 함수 교체
+
+// [수정] index.html 내부의 renderQuickMenu 함수 교체
+async function renderQuickMenu() {
+    const tabContainer = document.getElementById('topCategoryTabs');
+    const itemContainer = document.getElementById('quickMenuContainer');
+    
+    if (!tabContainer || !itemContainer) return;
+
+    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
+
+    try {
+        // 1. 카테고리 데이터 가져오기
+        let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
+        const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
+
+        // 이미지 매핑 데이터
+        const { data: prodImages } = await sb.from('admin_products')
+            .select('category, img_url')
+            .not('img_url', 'is', null)
+            .neq('img_url', '');
+
+        const catThumbMap = {};
+        if (prodImages) {
+            prodImages.forEach(p => {
+                if (p.category && !catThumbMap[p.category]) {
+                    catThumbMap[p.category] = p.img_url;
+                }
+            });
+        }
+
+        if (!subCats || subCats.length === 0) {
+            itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
             return;
         }
 
-        categories.forEach(cat => {
-            const n = cat.name; 
-            let iconUrl = 'https://th.bing.com/th/id/OIP.Jj5QUnowN2oCX56cVuo45wHaHa?w=197&h=197&c=7&r=0&o=7&pid=1.7&rm=3'; 
+        // ▼▼▼ [핵심 수정] 중복 제거 및 불필요한 카테고리 숨김 처리 ▼▼▼
+        if (topCats) {
+            // 1. 이름이 같은 카테고리 중복 제거 (Set 사용)
+            const seen = new Set();
+            topCats = topCats.filter(cat => {
+                const name = cat.name.trim();
+                if (seen.has(name)) return false; // 이미 본 이름이면 제외 (중복 제거)
+                seen.add(name);
+                return true;
+            });
 
-            if (n.includes('허니콤') || n.includes('가벽') || n.includes('등신대')) iconUrl = 'https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20241009_270%2F17284630974014y3f0_JPEG%2F1000190590.jpg&type=sc960_832'; 
-            else if (n.includes('패브릭') || n.includes('현수막')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWV5d7OPwqIbTMcek_s71sum2bh8Zh7CFGA&s';
-            else if (n.includes('매대') || n.includes('배너')) iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6MsafK1Bk4flaRnwnJ6yHsY_HHtS_rZ3lbA&s';
+            // 2. 원하지 않는 카테고리 이름 강제 숨김
+            const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
+            topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
 
-            const div = document.createElement('div');
-            div.className = 'quick-item';
-            div.innerHTML = `
-                <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9;">
-                    <img src="${iconUrl}" style="width:45px; height:45px; object-fit:contain;">
-                </div>
-                <div class="quick-text">${cat.name}</div>
-            `;
-            div.onclick = () => showCategoryProducts(cat.code, cat.name);
-            container.appendChild(div);
-        });
+            // 3. 허니콤보드 맨 앞으로 이동
+            const targetIndex = topCats.findIndex(cat => cat.name.includes('허니콤'));
+            if (targetIndex > -1) {
+                const [targetCat] = topCats.splice(targetIndex, 1);
+                topCats.unshift(targetCat);
+            }
+        }
+        // ▲▲▲ [수정 끝] ▲▲▲
+
+        // 2. 탭 생성 함수
+        const renderTabs = () => {
+            tabContainer.innerHTML = '';
+            
+            if (topCats) {
+                topCats.forEach(top => {
+                    const btn = document.createElement('button');
+                    btn.className = 'cat-tab';
+                    btn.innerText = top.name;
+                    btn.onclick = (e) => {
+                        handleTabClick(e);
+                        renderItems(top.code);
+                    };
+                    tabContainer.appendChild(btn);
+                });
+            }
+            
+            // 기타 탭
+            const orphanCats = subCats.filter(sub => !sub.top_category_code);
+            if (orphanCats.length > 0) {
+                const etcBtn = document.createElement('button');
+                etcBtn.className = 'cat-tab';
+                etcBtn.innerText = '기타';
+                etcBtn.onclick = (e) => {
+                    handleTabClick(e);
+                    renderItems('etc');
+                };
+                tabContainer.appendChild(etcBtn);
+            }
+        };
+
+        // 3. 탭 스타일 처리
+        const handleTabClick = (e) => {
+            const tabs = tabContainer.querySelectorAll('.cat-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+        };
+
+        // 4. 아이콘(2차 분류) 렌더링 함수
+        const renderItems = (filterCode) => {
+            itemContainer.innerHTML = '';
+            
+            let filtered = [];
+            if (filterCode === 'etc') {
+                filtered = subCats.filter(sub => !sub.top_category_code);
+            } else {
+                filtered = subCats.filter(sub => sub.top_category_code === filterCode);
+            }
+
+            if (filtered.length === 0) {
+                itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">하위 분류가 없습니다.</div>';
+                return;
+            }
+
+            filtered.forEach(cat => {
+                const n = cat.name;
+                let iconUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+
+                const div = document.createElement('div');
+                div.className = 'quick-item';
+                
+                let imgTag = '';
+                if (iconUrl) {
+                    imgTag = `<img src="${iconUrl}" alt="${n}" onerror="this.style.display='none'; this.parentNode.classList.add('no-img'); this.parentNode.innerHTML='<span style=\\'font-size:11px; color:#cbd5e1;\\'>No Img</span>';">`;
+                } else {
+                    imgTag = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#cbd5e1; font-size:11px;">No Img</div>`;
+                }
+
+                div.innerHTML = `
+                    <div class="quick-icon-img-box">
+                        ${imgTag}
+                    </div>
+                    <div class="quick-text">${n}</div>
+                `;
+
+                div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
+                itemContainer.appendChild(div);
+            });
+        };
+
+        renderTabs();
+        
+        const allTab = tabContainer.querySelectorAll('.cat-tab')[0];
+        if (allTab) allTab.click(); 
+
+    } catch (err) {
+        console.error("카테고리 로딩 실패:", err);
     }
-
+}
     // ============================================================
     // [3] 제품 선택 모달 (다국어 지원)
     // ============================================================
@@ -1019,8 +1240,23 @@
 
             const div = document.createElement('div');
             div.className = 'quick-item'; 
+            
+            // [수정] 관리자에서 등록한 이미지(p.img_url)가 있으면 보여주는 로직
+            let imgHtml = '';
+            if (p.img_url) {
+                // 이미지가 있을 때: 꽉 찬 이미지 박스
+                imgHtml = `
+                    <div class="quick-icon-img-box">
+                        <img src="${p.img_url}" alt="${displayName}" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
+                    </div>
+                `;
+            } else {
+                // 이미지가 없을 때: 기존 큐브 아이콘
+                imgHtml = `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
+            }
+
             div.innerHTML = `
-                <div class="quick-icon"><i class="fa-solid fa-cube"></i></div>
+                ${imgHtml}
                 <div class="quick-text">${displayName}</div>
                 <div style="font-size:11px; color:#888; margin-top:3px;">
                     ${p.width_mm}x${p.height_mm} / ${currencySymbol}${displayPrice.toLocaleString()}
@@ -1208,6 +1444,46 @@
             await applyTemplateDirectly(window.pendingTemplate);
             window.pendingTemplate = null; 
         }
+
+        // ▼▼▼ [추가] AI 이미지가 있다면 캔버스에 적용 ▼▼▼
+        if (window.pendingAiImage) {
+            const loading = document.getElementById("loading");
+            if(loading) loading.style.display = 'flex';
+
+            fabric.Image.fromURL(window.pendingAiImage, (img) => {
+                if (!img) return;
+
+                // 캔버스 중앙 및 크기 계산
+                const board = canvas.getObjects().find(o => o.isBoard);
+                const canvasW = board ? board.width * board.scaleX : canvas.width;
+                const canvasH = board ? board.height * board.scaleY : canvas.height;
+                const centerX = board ? board.left + canvasW / 2 : canvas.width / 2;
+                const centerY = board ? board.top + canvasH / 2 : canvas.height / 2;
+
+                // 이미지 크기 조절 (화면의 80%)
+                const scale = Math.min(
+                    (canvasW * 0.8) / img.width, 
+                    (canvasH * 0.8) / img.height
+                );
+                
+                img.set({
+                    scaleX: scale,
+                    scaleY: scale,
+                    left: centerX,
+                    top: centerY,
+                    originX: 'center',
+                    originY: 'center'
+                });
+
+                canvas.add(img);
+                canvas.setActiveObject(img);
+                canvas.requestRenderAll();
+                
+                window.pendingAiImage = null; // 초기화
+                if(loading) loading.style.display = 'none';
+            }, { crossOrigin: 'anonymous' });
+        }
+        // ▲▲▲ [추가 끝] ▲▲▲
     };
 
     window.onTemplateClick = async function(tpl) {
@@ -1262,27 +1538,31 @@ const msg = t['msg_cart_added'] || "상품이 장바구니에 담겼습니다.";
             grid.innerHTML = ''; // 로딩 메시지 지우기
 
             categories.forEach(cat => {
-                let iconUrl = 'https://cdn-icons-png.flaticon.com/512/3159/3159310.png';
-                const n = cat.name;
-                
-                if (n.includes('허니콤') || n.includes('가벽') || n.includes('등신대')) 
-                    iconUrl = 'https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20241009_270%2F17284630974014y3f0_JPEG%2F1000190590.jpg&type=sc960_832'; 
-                else if (n.includes('패브릭') || n.includes('현수막')) 
-                    iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWV5d7OPwqIbTMcek_s71sum2bh8Zh7CFGA&s';
-                else if (n.includes('매대') || n.includes('배너')) 
-                    iconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6MsafK1Bk4flaRnwnJ6yHsY_HHtS_rZ3lbA&s';
+                // ▼▼▼ 삭제한 자리에 이 코드를 넣으세요 ▼▼▼
+            
+            // [수정] 관리자 DB 이미지 사용 (메인 메뉴와 동일한 로직)
+            let iconUrl = cat.img_url || cat.image || cat.thumbnail || '';
+            
+            const div = document.createElement('div');
+            div.className = 'quick-item';
 
-                const div = document.createElement('div');
-                div.className = 'quick-item';
-                div.innerHTML = `
-                    <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9;">
-                        <img src="${iconUrl}" style="width:45px; height:45px; object-fit:contain;">
-                    </div>
-                    <div class="quick-text">${cat.name}</div>
-                `;
-                
-                div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
-                grid.appendChild(div);
+            let imgTag = '';
+            if (iconUrl) {
+                imgTag = `<img src="${iconUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;" onerror="this.style.display='none'; this.parentNode.innerText='No Img'; this.parentNode.style.background='#f1f5f9'; this.parentNode.style.display='flex'; this.parentNode.style.alignItems='center'; this.parentNode.style.justifyContent='center'; this.parentNode.style.color='#ccc';">`;
+            } else {
+                imgTag = `<div style="width:100%; height:100%; background:#f1f5f9; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:12px;">No Img</div>`;
+            }
+
+            // [수정] 아이콘 박스 스타일을 메인 화면과 통일하거나 깔끔하게 정리
+            div.innerHTML = `
+                <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; padding:0; overflow:hidden;">
+                    ${imgTag}
+                </div>
+                <div class="quick-text">${cat.name}</div>
+            `;
+            
+            div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
+            grid.appendChild(div);
             });
 
         } catch (e) {

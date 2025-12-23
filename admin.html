@@ -1614,9 +1614,141 @@
         window.loadStaffList = async () => { const {data}=await sb.from('admin_staff').select('*').order('created_at',{ascending:false}); const tbody=document.getElementById('staffListBody'); tbody.innerHTML=''; data?.forEach(s=>{ tbody.innerHTML+=`<tr><td><div class="color-dot" style="background:${s.color}"></div></td><td>${s.name}</td><td>${s.role}</td><td><button class="btn btn-danger btn-sm" onclick="deleteStaffDB(${s.id})">삭제</button></td></tr>`; }); };
         window.addStaffDB = async () => { const name=document.getElementById('staffName').value; const role=document.getElementById('staffRole').value; const color=document.getElementById('staffColor').value; if(!name) return; await sb.from('admin_staff').insert([{name,role,color}]); loadStaffList(); };
         window.deleteStaffDB = async (id) => { if(confirm("삭제?")) await sb.from('admin_staff').delete().eq('id',id); loadStaffList(); };
-        window.loadFonts = async () => { const tbody=document.getElementById('fontListBody'); tbody.innerHTML=''; try { const {data}=await sb.from('site_fonts').select('*'); data?.forEach(f=>{ tbody.innerHTML+=`<tr><td>${f.site_code}</td><td>${f.font_name}</td><td style="font-family:'${f.font_family}'">가나다 ABC</td><td><button class="btn btn-danger btn-sm" onclick="deleteFontDB(${f.id})">삭제</button></td></tr>`; }); } catch(e){} };
-        window.uploadFont = async () => { const site=document.getElementById('fontSite').value; const name=document.getElementById('fontName').value; const fam=document.getElementById('fontFamily').value; const file=document.getElementById('fontFile').files[0]; if(!name||!file) return alert("필수입력"); try { const path=`fonts/${site}/${Date.now()}_${file.name}`; await sb.storage.from('fonts').upload(path,file); const {data}=sb.storage.from('fonts').getPublicUrl(path); await sb.from('site_fonts').insert([{site_code:site, font_name:name, font_family:fam, file_url:data.publicUrl}]); alert("완료"); loadFonts(); } catch(e){alert("실패");} };
-        window.deleteFontDB = async (id) => { if(confirm("삭제?")) await sb.from('site_fonts').delete().eq('id',id); loadFonts(); };
+        // admin.html 내부 스크립트 수정
+
+// [수정] 폰트 목록 불러오기
+window.loadFonts = async () => { 
+    const tbody = document.getElementById('fontListBody'); 
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">로딩 중...</td></tr>';
+    
+    try { 
+        // 최신순 정렬
+        const { data, error } = await sb.from('site_fonts').select('*').order('created_at', { ascending: false });
+        
+        if (error) throw error;
+
+        tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">등록된 폰트가 없습니다.</td></tr>';
+            return;
+        }
+
+        // 폰트 미리보기를 위해 브라우저에 로드
+        data.forEach(f => {
+            const fontFace = new FontFace(f.font_family, `url(${f.file_url})`);
+            fontFace.load().then(loaded => document.fonts.add(loaded)).catch(e => console.warn(e));
+
+            let flag = '';
+            if(f.site_code === 'KR') flag = '🇰🇷';
+            else if(f.site_code === 'JP') flag = '🇯🇵';
+            else if(f.site_code === 'US') flag = '🇺🇸';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${flag} ${f.site_code}</td>
+                    <td>${f.font_name}<br><span style="font-size:11px; color:#888;">(${f.font_family})</span></td>
+                    <td style="font-family:'${f.font_family}'; font-size:16px;">
+                        다람쥐 헌 쳇바퀴 (Preview)
+                    </td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteFontDB(${f.id})">삭제</button>
+                    </td>
+                </tr>`; 
+        }); 
+    } catch(e) { 
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">로드 실패</td></tr>';
+    } 
+};
+
+// [수정] 폰트 업로드 및 DB 등록
+// admin.html 내부의 uploadFont 함수 교체
+
+window.uploadFont = async () => { 
+    const site = document.getElementById('fontSite').value; 
+    const name = document.getElementById('fontName').value; 
+    const fam = document.getElementById('fontFamily').value; 
+    const fileInput = document.getElementById('fontFile');
+    const file = fileInput.files[0]; 
+
+    // 유효성 검사
+    if (!name) return alert("폰트명(표시명)을 입력해주세요.");
+    if (!fam) return alert("CSS Family 이름을 입력해주세요.");
+    if (!file) return alert("폰트 파일(.ttf / .woff2)을 선택해주세요.");
+    
+    // 버튼 로딩 처리
+    const btn = document.querySelector('#sec-fonts .btn-primary');
+    const oldText = btn.innerText;
+    btn.innerText = "업로드 중...";
+    btn.disabled = true;
+
+    try { 
+        console.log("업로드 시작..."); // 디버깅용
+
+        // 1. 스토리지 업로드 (fonts 버킷)
+        const timestamp = Date.now();
+        // 파일명에서 특수문자 제거 후 저장
+        const safeName = `${timestamp}_${Math.random().toString(36).substring(2,10)}.ttf`;
+        const path = `${site}/${safeName}`; // 폴더 구분
+        
+        console.log("스토리지 업로드 시도:", path);
+
+        const { data: uploadData, error: uploadErr } = await sb.storage
+            .from('fonts') // 2단계에서 만든 버킷 이름
+            .upload(path, file); 
+        
+        if(uploadErr) {
+            console.error("스토리지 에러:", uploadErr);
+            throw new Error("스토리지 업로드 실패: " + uploadErr.message);
+        }
+        
+        // 2. 공개 URL 가져오기
+        const { data: urlData } = sb.storage.from('fonts').getPublicUrl(path); 
+        console.log("공개 URL 획득:", urlData.publicUrl);
+
+        // 3. DB Insert
+        const { error: dbErr } = await sb.from('site_fonts').insert([{
+            site_code: site, 
+            font_name: name, 
+            font_family: fam, 
+            file_url: urlData.publicUrl
+        }]);
+
+        if (dbErr) {
+            console.error("DB 에러:", dbErr);
+            throw new Error("DB 저장 실패: " + dbErr.message);
+        }
+
+        alert("✅ 폰트가 성공적으로 등록되었습니다!"); 
+        
+        // 입력창 초기화
+        document.getElementById('fontName').value = '';
+        document.getElementById('fontFamily').value = '';
+        fileInput.value = '';
+        
+        // 목록 새로고침
+        if(typeof loadFonts === 'function') loadFonts(); 
+
+    } catch(e) { 
+        console.error(e);
+        alert("에러 발생: " + e.message); 
+    } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+    }
+};
+
+// [수정] 폰트 삭제
+window.deleteFontDB = async (id) => { 
+    if(!confirm("이 폰트를 정말 삭제하시겠습니까?\n(이미 사용된 디자인에서는 폰트가 깨질 수 있습니다)")) return; 
+    try {
+        const { error } = await sb.from('site_fonts').delete().eq('id', id); 
+        if(error) throw error;
+        loadFonts(); 
+    } catch(e) {
+        alert("삭제 실패: " + e.message);
+    }
+};
         window.loadMembers = async () => { const {data}=await sb.from('profiles').select('*').order('created_at',{ascending:false}); const tbody=document.getElementById('memberListBody'); tbody.innerHTML=''; data?.forEach(m=>{ const r = m.role || 'customer'; const select = `<select onchange="updateMemberRole('${m.id}', this.value)" style="padding:4px; border:1px solid #ddd; border-radius:4px;"><option value="customer" ${r==='customer'?'selected':''}>일반회원</option><option value="vip" ${r==='vip'?'selected':''}>👑 VIP</option><option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option></select>`; tbody.innerHTML+=`<tr><td>${new Date(m.created_at).toLocaleDateString()}</td><td>${m.email}</td><td>${r}</td><td>${select}</td></tr>`; }); };
         window.updateMemberRole = async (id, newRole) => { if(!confirm("등급을 변경하시겠습니까?")) { loadMembers(); return; } const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); if(error) alert("실패: " + error.message); else alert("변경 완료"); };
         function initTemplateListeners() { const fThumb = document.getElementById('fileThumb'); if(fThumb) fThumb.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{document.getElementById('previewThumb').src=ev.target.result; document.getElementById('previewThumb').style.display='block';}; r.readAsDataURL(f);}); const fData = document.getElementById('fileData'); if(fData) fData.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{if(f.name.endsWith('.svg')){document.getElementById('dataStatus').style.display='block';}}; r.readAsDataURL(f);}); }
