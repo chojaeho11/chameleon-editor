@@ -5,17 +5,17 @@ import { applySize } from "./canvas-size.js";
 // main.js에서 호출하는 이름에 맞춰 'initMyDesign'으로 export 합니다.
 export function initMyDesign() {
     // 1. 상단 보관함 열기 버튼
-    const btnLib = document.getElementById("btnMyLibrary");
-    if(btnLib) {
-        btnLib.onclick = () => {
-            if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
-            const modal = document.getElementById("libraryModal");
-            if(modal) {
-                modal.style.display = "flex";
-                loadMyDesigns(); 
-            }
-        };
-    }
+    // 1. [수정됨] 상단 보관함 버튼 -> 마이페이지 이동
+const btnLib = document.getElementById("btnMyLibrary");
+if(btnLib) {
+    btnLib.innerHTML = `<span data-i18n="btn_my_library">📂 My Studio</span>`;
+
+    btnLib.onclick = () => {
+        if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
+        // 모달 대신 별도 페이지(mypage.html)로 이동
+        location.href = 'mypage.html'; 
+    };
+}
 
     // 2. [수정됨] 사이드바 '저장 버튼' -> 모달 창 열기
     const btnOpenSave = document.getElementById("btnOpenSaveModal");

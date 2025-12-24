@@ -1,26 +1,27 @@
 /**
  * outlineMaker.js
- * 1. 투명 배경 제거 및 확장 (기존 로직 유지)
- * 2. Potrace로 벡터 생성 (기존 로직 유지)
- * 3. [NEW] Paper.js를 이용해 키링/등신대 도형 합치기 추가
+ * [최종 수정]
+ * 1. 등신대 너비: 전체의 60%로 축소 및 중앙 정렬
+ * 2. 등신대 내부 정리: 합친 후 생기는 내부 구멍(Artifacts) 제거 로직 추가
+ * 3. 기존 설정 유지: 간격 20, 빨강, 두께 15
  */
 
-// Paper.js 로드 확인 (없으면 경고)
 if (typeof paper === 'undefined') console.warn("Paper.js가 로드되지 않았습니다.");
 if (typeof window.Potrace === 'undefined') console.error("Potrace 라이브러리가 로드되지 않았습니다.");
 
-// mm 단위를 픽셀로 변환 (300 DPI 기준)
 const mmToPx = (mm) => {
     return mm * (300 / 25.4);
 };
 
 export function createVectorOutline(imageSrc, options = {}) {
-    const {
-        dilation = 15,        // 칼선 여백
-        color = '#FF00FF',    // 선 색상
-        strokeWidth = 2,      // 선 두께
-        type = 'normal'       // 'normal', 'keyring', 'standee'
-    } = options;
+    // ============================================================
+    // [강제 설정 구역]
+    // ============================================================
+    const FORCED_DILATION = 120;     // 간격 유지
+    const FORCED_STROKE = 10;       // 두께 유지
+    const FORCED_COLOR = '#FF0000'; // 빨강 유지
+    const FORCED_TYPE = options.type || 'normal'; 
+    // ============================================================
 
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -29,16 +30,13 @@ export function createVectorOutline(imageSrc, options = {}) {
 
         img.onload = () => {
             try {
-                // ----------------------------------------------------------------
-                // [1~3] 기존 완벽한 로직 (이미지 전처리 ~ 확장) - 건드리지 않음
-                // ----------------------------------------------------------------
-                
                 // 1. 투명도 처리
                 const sCanvas = document.createElement('canvas');
                 sCanvas.width = img.width;
                 sCanvas.height = img.height;
                 const sCtx = sCanvas.getContext('2d');
                 sCtx.drawImage(img, 0, 0);
+                
                 const imgData = sCtx.getImageData(0, 0, sCanvas.width, sCanvas.height);
                 const data = imgData.data;
                 for (let i = 0; i < data.length; i += 4) {
@@ -51,7 +49,7 @@ export function createVectorOutline(imageSrc, options = {}) {
                 sCtx.putImageData(imgData, 0, 0);
 
                 // 2. 확장 (Dilation)
-                const padding = dilation + 50; 
+                const padding = FORCED_DILATION + 50; 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 canvas.width = img.width + (padding * 2);
@@ -63,8 +61,8 @@ export function createVectorOutline(imageSrc, options = {}) {
                 const steps = 36;
                 for (let i = 0; i < steps; i++) {
                     const angle = (i / steps) * 2 * Math.PI;
-                    const dx = Math.cos(angle) * dilation;
-                    const dy = Math.sin(angle) * dilation;
+                    const dx = Math.cos(angle) * FORCED_DILATION;
+                    const dy = Math.sin(angle) * FORCED_DILATION;
                     ctx.drawImage(sCanvas, padding + dx, padding + dy);
                 }
                 ctx.drawImage(sCanvas, padding, padding);
@@ -81,14 +79,12 @@ export function createVectorOutline(imageSrc, options = {}) {
                 });
 
                 window.Potrace.process(function() {
-                    // Potrace가 만든 원본 SVG 문자열
                     let svgString = window.Potrace.getSVG(1);
 
                     // ============================================================
-                    // ★ [추가된 부분] Paper.js로 키링/등신대 모양 합치기
+                    // ★ Paper.js 후처리
                     // ============================================================
-                    if (type !== 'normal' && typeof paper !== 'undefined') {
-                        // 1. Paper.js 셋업 (화면에 안 보이는 캔버스 사용)
+                    if (typeof paper !== 'undefined') {
                         let dummyCanvas = document.getElementById('paperSetupCanvas');
                         if (!dummyCanvas) {
                             dummyCanvas = document.createElement('canvas');
@@ -98,71 +94,119 @@ export function createVectorOutline(imageSrc, options = {}) {
                             document.body.appendChild(dummyCanvas);
                             paper.setup(dummyCanvas);
                         } else {
-                            paper.project.clear(); // 기존 작업 초기화
+                            paper.project.clear(); 
                         }
 
-                        // 2. Potrace SVG를 Paper.js Path로 변환
-                        const mainPath = paper.project.importSVG(svgString, { expandShapes: true });
-                        // importSVG는 Group을 반환하므로 내부 Path를 꺼냄
-                        const outline = mainPath.children[0] || mainPath; 
-                        outline.fillColor = 'black'; // 불리언 연산을 위해 색칠
+                        const mainItem = paper.project.importSVG(svgString, { expandShapes: true });
+                        
+                        // [1차 정리] Potrace 결과물 중 가장 큰 덩어리만 추출 (이미지 노이즈 제거)
+                        let outlinePath = null;
+                        let maxArea = 0;
 
-                        const bounds = outline.bounds;
-                        let finalPath = outline;
+                        const findLargestPath = (item) => {
+                            if (item.className === 'Path') {
+                                const area = Math.abs(item.area);
+                                if (area > maxArea) {
+                                    maxArea = area;
+                                    outlinePath = item;
+                                }
+                            } else if (item.children) {
+                                item.children.forEach(child => findLargestPath(child));
+                            }
+                        };
+                        findLargestPath(mainItem);
 
-                        // 3. 타입별 도형 합치기
-                        if (type === 'keyring') {
-                            // --- 키링 로직 ---
-                            const outerRadius = mmToPx(3.0); // 6mm 지름
-                            const innerRadius = mmToPx(1.5); // 3mm 지름
-                            
+                        if (!outlinePath) outlinePath = mainItem.children[0] || mainItem;
+
+                        outlinePath = outlinePath.clone(); 
+                        mainItem.remove(); 
+                        
+                        // 스타일 초기화
+                        outlinePath.fillColor = 'black'; 
+                        outlinePath.strokeWidth = 0;
+
+                        let finalPath = outlinePath;
+                        let bounds = finalPath.bounds;
+
+                        if (FORCED_TYPE === 'keyring') {
+                            const outerRadius = mmToPx(16.0); 
+                            const innerRadius = mmToPx(8.0); 
                             const centerX = bounds.topCenter.x;
-                            // 머리 안쪽으로 2mm 파고들기
-                            const centerY = bounds.topCenter.y + mmToPx(2.0); 
+                            const centerY = bounds.topCenter.y + mmToPx(3.0); 
 
                             const outerCircle = new paper.Path.Circle({
-                                center: [centerX, centerY],
-                                radius: outerRadius,
-                                fillColor: 'black'
+                                center: [centerX, centerY], radius: outerRadius, insert: false
                             });
-
-                            // 합치기 (Unite)
-                            const merged = outline.unite(outerCircle);
-                            
-                            // 구멍 뚫기 (Subtract)
                             const innerCircle = new paper.Path.Circle({
-                                center: [centerX, centerY],
-                                radius: innerRadius,
-                                fillColor: 'black'
+                                center: [centerX, centerY], radius: innerRadius, insert: false
                             });
-                            
-                            finalPath = merged.subtract(innerCircle);
+                            finalPath = finalPath.unite(outerCircle).subtract(innerCircle);
 
-                        } else if (type === 'standee') {
-                            // --- 등신대 로직 ---
-                            const baseWidth = Math.max(bounds.width * 0.9, mmToPx(30));
-                            const baseHeight = mmToPx(20);
+                        } else if (FORCED_TYPE === 'standee') {
+                            // -------------------------------------------------------
+                            // [등신대 로직: 너비 60% 중앙 정렬]
+                            // -------------------------------------------------------
                             
-                            const centerX = bounds.bottomCenter.x;
-                            const overlap = baseHeight * 1; // 40% 겹침
-                            const startY = bounds.bottomCenter.y - overlap;
+                            // 1. 박스 높이: 안정감을 위해 15% 유지
+                            const baseHeight = Math.max(bounds.height * 0.15, 30);
+                            
+                            // 2. [수정] 박스 너비: 전체 너비의 60%
+                            const baseWidth = bounds.width * 0.6;
 
-                            const standRect = new paper.Path.Rectangle({
-                                point: [centerX - baseWidth / 2, startY],
+                            // 3. [수정] 위치: 전체 중심(center.x)에서 절반만큼 왼쪽으로 이동
+                            const startX = bounds.center.x - (baseWidth / 2);
+
+                            // 4. 사각형 생성 (바닥은 캐릭터 바닥과 일치)
+                            const baseRect = new paper.Path.Rectangle({
+                                point: [startX, bounds.bottom - baseHeight],
                                 size: [baseWidth, baseHeight],
-                                fillColor: 'black'
+                                insert: false
                             });
 
-                            // 합치기 (Unite)
-                            finalPath = outline.unite(standRect);
+                            // 5. 합치기
+                            let united = finalPath.unite(baseRect);
+
+                            // -------------------------------------------------------
+                            // [2차 정리] 합친 후 내부 조각(쓸모없는 구멍) 삭제
+                            // unite 과정에서 다리 사이 등에 원치 않는 구멍이 생길 수 있음
+                            // -------------------------------------------------------
+                            if (united instanceof paper.CompoundPath) {
+                                // 구멍이 뚫려있다는 뜻이므로, 다시 가장 큰 덩어리(외곽)만 추출합니다.
+                                let maxChildArea = 0;
+                                let mainChild = null;
+                                
+                                united.children.forEach(child => {
+                                    const area = Math.abs(child.area);
+                                    if (area > maxChildArea) {
+                                        maxChildArea = area;
+                                        mainChild = child;
+                                    }
+                                });
+                                
+                                if (mainChild) {
+                                    finalPath = mainChild.clone();
+                                    // 기존 CompoundPath는 메모리에서 제거하지 않아도 가비지 컬렉팅 되지만 명시적 분리
+                                } else {
+                                    finalPath = united; // 실패 시 원본 유지
+                                }
+                            } else {
+                                finalPath = united;
+                            }
                         }
 
-                        // 4. 합쳐진 결과를 다시 SVG 문자열로 변환
+                        // [위치 보정]
+                        finalPath.translate(new paper.Point(-padding, -padding));
+
+                        // 최종 스타일 적용
+                        finalPath.fillColor = null; 
+                        finalPath.strokeColor = FORCED_COLOR; 
+                        finalPath.strokeWidth = FORCED_STROKE; 
+
                         svgString = finalPath.exportSVG({ asString: true });
                     }
+
                     // ============================================================
 
-                    // SVG 파싱 후 데이터 추출 (기존 로직)
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(svgString, "image/svg+xml");
                     const pathNode = doc.querySelector('path');
@@ -174,10 +218,10 @@ export function createVectorOutline(imageSrc, options = {}) {
 
                     resolve({
                         pathData: pathNode.getAttribute('d'),
-                        width: canvas.width,   // Potrace 캔버스 크기 유지
-                        height: canvas.height,
-                        color: color,
-                        strokeWidth: strokeWidth
+                        width: img.width,
+                        height: img.height,
+                        color: FORCED_COLOR, 
+                        strokeWidth: FORCED_STROKE 
                     });
                 });
 

@@ -50,8 +50,8 @@
   "btn_del": "삭제",
 
   "label_align": "객체 정렬",
-  "btn_center_all": "정중앙 정렬",
-  "btn_full_bg": "배경으로 꽉 채우기",
+  "btn_center_all": "선택된 유닛 정중앙으로",
+  "btn_full_bg": "선택된 디자인을 배경으로 만들기",
 
   "label_cut_shape": "모양대로 오려내기",
   "msg_select_click": "이미지를 선택하고 클릭하세요",

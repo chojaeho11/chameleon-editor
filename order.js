@@ -114,7 +114,6 @@ async function uploadFileToSupabase(file, folder) {
     const timestamp = Date.now();
     const ext = file.name ? file.name.split('.').pop() : 'jpg';
     const randomStr = Math.random().toString(36).substring(2, 8);
-    // 한글명 오류 방지를 위해 영문/숫자 파일명 생성
     const safeName = `${timestamp}_${randomStr}.${ext}`;
     const filePath = `${folder}/${safeName}`;
     
@@ -131,9 +130,8 @@ async function uploadFileToSupabase(file, folder) {
 // [2] 주문 시스템 초기화 및 이벤트 바인딩
 // ============================================================
 export function initOrderSystem() {
-    const country = SITE_CONFIG.COUNTRY; // config.js 또는 site-config.js에서 가져옴
+    const country = SITE_CONFIG.COUNTRY; 
     
-    // 국가별 주소 폼 토글
     const krForm = document.getElementById("addrFormKR");
     const globalForm = document.getElementById("addrFormGlobal");
     const bankArea = document.getElementById("bankTransferInfoArea");
@@ -141,14 +139,14 @@ export function initOrderSystem() {
     if (CURRENT_LANG === 'kr') {
         if(krForm) krForm.style.display = 'block';
         if(globalForm) globalForm.style.display = 'none';
-        if(bankArea) bankArea.style.display = 'block'; // 한국만 계좌이체 표시
+        if(bankArea) bankArea.style.display = 'block'; 
     } else {
         if(krForm) krForm.style.display = 'none';
         if(globalForm) globalForm.style.display = 'flex';
         if(bankArea) bankArea.style.display = 'none';
     }
 
-    // 버튼 이벤트 연결
+    // ★ [중요] 버튼 이벤트 연결 (HTML onclick 제거 대응)
     const btnOrderTop = document.getElementById("btnOrderTop");
     if(btnOrderTop) btnOrderTop.onclick = addCanvasToCart;
     
@@ -158,7 +156,6 @@ export function initOrderSystem() {
     const pdpFileUpload = document.getElementById("pdpFileUpload");
     if(pdpFileUpload) pdpFileUpload.onchange = addFileToCart;
     
-    // 장바구니 -> 결제하기 버튼
     const btnGoCheckout = document.getElementById("btnGoCheckout");
     if(btnGoCheckout) { 
         btnGoCheckout.onclick = () => { 
@@ -167,7 +164,6 @@ export function initOrderSystem() {
         }; 
     }
 
-    // 장바구니 -> 견적서 출력 버튼
     const btnPrintQuote = document.getElementById("btnPrintQuote");
     if(btnPrintQuote) {
         btnPrintQuote.onclick = async () => {
@@ -175,7 +171,6 @@ export function initOrderSystem() {
             const btn = btnPrintQuote;
             btn.innerText = "생성 중..."; btn.disabled = true;
             try {
-                // 임시 정보로 출력 (로그인 유저 정보가 있으면 사용)
                 const info = { 
                     manager: currentUser?.user_metadata?.full_name || '고객', 
                     phone: currentUser?.user_metadata?.phone || '-', 
@@ -185,7 +180,7 @@ export function initOrderSystem() {
                 };
                 const blob = await generateQuotationPDF(info, cartData);
                 if(blob) downloadBlob(blob, "견적서.pdf");
-                else alert("견적서 생성 실패 (내용 없음)");
+                else alert("견적서 생성 실패");
             } catch(e) {
                 console.error(e);
                 alert("견적서 오류: " + e.message);
@@ -195,36 +190,30 @@ export function initOrderSystem() {
         };
     }
     
-    // 달력 컨트롤
     const btnPrev = document.getElementById("btnPrevMonth");
     if(btnPrev) btnPrev.onclick = () => changeMonth(-1);
     const btnNext = document.getElementById("btnNextMonth");
     if(btnNext) btnNext.onclick = () => changeMonth(1);
     
-    // 주문 제출 및 결제
     const btnSubmit = document.getElementById("btnSubmitOrderInfo");
     if(btnSubmit) btnSubmit.onclick = processOrderSubmission;
     
     const btnPayment = document.getElementById("btnRealPayment");
     if(btnPayment) btnPayment.onclick = processPayment;
 
-    // 결제 모달 닫기 로직
     const checkoutModal = document.getElementById('checkoutModal');
     if(checkoutModal) {
         const closeBtns = checkoutModal.querySelectorAll('button');
         closeBtns.forEach(btn => {
-            // '닫기' 텍스트를 포함하거나 닫기 아이콘인 경우
             if(btn.innerText.includes('닫기') || btn.innerText.includes('Cancel')) {
                 btn.onclick = () => {
                     checkoutModal.style.display = 'none';
-                    // 주문 완료 후 닫으면 페이지 새로고침 (장바구니 비우기 위해)
                     if (window.isOrderCompleted) window.location.reload();
                 };
             }
         });
     }
 
-    // 결제 완료/확인창 내부 다운로드 버튼들
     const btnDownSheet = document.getElementById("btnDownOrderSheetCheckout");
     const btnDownQuote = document.getElementById("btnDownQuotationCheckout");
 
@@ -252,7 +241,6 @@ export function initOrderSystem() {
     renderCart(); // 초기 렌더링
 }
 
-// 주문 정보 가져오기 (폼 입력값)
 function getOrderInfo() {
     return {
         manager: document.getElementById("orderName").value || "고객",
@@ -293,15 +281,12 @@ function renderCalendar() {
     const firstDay = new Date(year, month, 1).getDay(); 
     const lastDate = new Date(year, month + 1, 0).getDate();
     
-    // 빈 칸 채우기
     for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
     
-    // 최소 제작기간 (3일 후) 계산
     let minDate = new Date(); 
     let count = 0; 
     while(count < 3) { 
         minDate.setDate(minDate.getDate() + 1); 
-        // 주말 제외 로직 (선택사항)
         if(minDate.getDay() !== 0 && minDate.getDay() !== 6) count++; 
     }
     
@@ -316,7 +301,6 @@ function renderCalendar() {
         const limitDate = new Date(minDate); 
         limitDate.setHours(0,0,0,0);
         
-        // 과거 날짜 또는 주말 비활성화
         if(checkDate < limitDate || dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
             div.classList.add("disabled"); 
         } else { 
@@ -367,6 +351,9 @@ export async function startDesignFromProduct() {
     
     document.getElementById("productDetailModal").style.display = "none"; 
     
+    // ★ [추가] 선택한 상품 키를 브라우저에 저장 (새로고침 해도 기억하도록)
+    localStorage.setItem('current_product_key', currentTargetProduct.key);
+
     if(window.applySize) {
         window.applySize(currentTargetProduct.w, currentTargetProduct.h, currentTargetProduct.key, currentTargetProduct.mode, 'replace'); 
     }
@@ -378,10 +365,11 @@ export async function startDesignFromProduct() {
     
     window.dispatchEvent(new Event('resize')); 
     
+    // ... (나머지 코드는 그대로 유지)
     if(canvas) canvas.currentProductKey = currentTargetProduct.key; 
     window.currentProductKey = currentTargetProduct.key;
     
-    // 자동 템플릿 로드 (칼선 등)
+    
     try {
         const { data } = await sb.from('library')
             .select('data_url')
@@ -409,7 +397,6 @@ async function addCanvasToCart() {
         if(loading) loading.style.display = "flex";
         
         let blob;
-        // 썸네일 생성 (보드 영역만 크롭)
         if (board) {
             canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
             const dataUrl = canvas.toDataURL({ 
@@ -441,26 +428,48 @@ async function addCanvasToCart() {
         if(loading) loading.style.display = "none";
     }
     
-    const key = window.currentProductKey || canvas.currentProductKey || 'A4'; 
-    const product = PRODUCT_DB[key] || PRODUCT_DB['A4'];
+    let key = window.currentProductKey || canvas.currentProductKey;
     
-    // JSON 추출 시 커스텀 속성 포함
+    // 만약 키가 없으면(새로고침 등), 아까 저장해둔 것 꺼내오기
+    if (!key) {
+        key = localStorage.getItem('current_product_key') || 'A4';
+    }
+
+    // DB에서 상품 정보 찾기
+    let product = PRODUCT_DB[key];
+
+    // DB에 해당 키가 없으면 'A4' 또는 '임시값'으로 대체
+    if (!product) {
+        console.warn(`상품 DB에서 Key[${key}]를 찾을 수 없어 기본값으로 대체합니다.`);
+        // 다시 한번 저장된 키로 시도해보고, 그래도 없으면 기본값
+        const savedKey = localStorage.getItem('current_product_key');
+        if (savedKey && PRODUCT_DB[savedKey]) {
+            product = PRODUCT_DB[savedKey];
+        } else {
+            product = PRODUCT_DB['A4'] || { 
+                name: '자유 디자인 (상품정보 없음)', 
+                price: 0, 
+                img: 'https://placehold.co/100', 
+                addons: [] 
+            };
+        }
+    }
+    
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow']);
     const finalW = board ? board.width : (product.w || canvas.width); 
     const finalH = board ? board.height : (product.h || canvas.height);
 
-    // PDF 업로드 파일이 있는 경우 처리
     let originalFileUrl = null; 
     let fileName = "나만의 디자인";
     if (window.currentUploadedPdfUrl) {
         originalFileUrl = window.currentUploadedPdfUrl;
         fileName = "업로드된_PDF_원본.pdf"; 
-        window.currentUploadedPdfUrl = null; // 초기화
+        window.currentUploadedPdfUrl = null; 
     }
 
     cartData.push({ 
         uid: Date.now(), 
-        product: product, 
+        product: product, // 이제 절대 undefined가 아님
         type: 'design', 
         thumb: thumbUrl, 
         json: json, 
@@ -487,11 +496,9 @@ async function addFileToCart(e) {
     if(loading) { loading.style.display = "flex"; loading.querySelector('p').innerText = "파일 업로드 중..."; }
     
     try {
-        // 원본 파일 업로드
         let originalUrl = await uploadFileToSupabase(file, 'customer_uploads');
-        let thumbUrl = 'https://cdn-icons-png.flaticon.com/512/337/337946.png'; // 기본 아이콘
+        let thumbUrl = 'https://cdn-icons-png.flaticon.com/512/337/337946.png'; 
         
-        // 썸네일 생성 시도
         let thumbBlob = null;
         if (file.type === 'application/pdf') thumbBlob = await createPdfThumbnailBlob(file);
         else if (file.type.startsWith('image/')) thumbBlob = await resizeImageToBlob(file);
@@ -545,11 +552,16 @@ function renderCart() {
     }
     
     cartData.forEach((item, idx) => {
+        // ★ [수정] 불량 데이터(상품 정보 없음) 체크 후 건너뛰기
+        if (!item.product) {
+            console.warn(`잘못된 장바구니 아이템(Index ${idx}): 상품 정보가 없어 건너뜁니다.`);
+            return;
+        }
+
         if (!item.qty) item.qty = 1; 
         if (item.isOpen === undefined) item.isOpen = true; 
         if (!item.selectedAddons) item.selectedAddons = {};
         
-        // 옵션 목록 분류
         let matOpts = []; let finOpts = []; let addOpts = [];
         if (item.product.addons) {
              const arr = Array.isArray(item.product.addons) ? item.product.addons : item.product.addons.split(',');
@@ -565,7 +577,6 @@ function renderCart() {
              });
         }
 
-        // 가격 계산
         let baseProductTotal = (item.product.price || 0) * item.qty;
         let optionTotal = 0;
         
@@ -582,7 +593,6 @@ function renderCart() {
         grandAddonTotal += optionTotal; 
         grandTotal += totalItemPrice;
         
-        // HTML 생성
         const div = document.createElement("div"); div.className = "cart-item"; 
         div.innerHTML = `
             <div class="cart-top-row" onclick="window.toggleCartAccordion(${idx})" style="display:flex; gap:15px; align-items:center; cursor:pointer;">
@@ -600,7 +610,6 @@ function renderCart() {
         if(item.isOpen) {
             const optionContainer = document.createElement("div"); optionContainer.style.marginTop = "15px";
             
-            // 필수 옵션 Select Box
             if (matOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group required-group";
                 box.innerHTML = `<div class="opt-group-header">① 재질/두께 <span class="badge-req">필수</span></div>`;
@@ -614,7 +623,6 @@ function renderCart() {
                 });
                 sel.innerHTML = optsHTML; box.appendChild(sel); optionContainer.appendChild(box);
             }
-            // 마감 옵션 Select Box
             if (finOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group required-group";
                 box.innerHTML = `<div class="opt-group-header">② 마감 방식 <span class="badge-req">필수</span></div>`;
@@ -628,7 +636,6 @@ function renderCart() {
                 });
                 sel.innerHTML = optsHTML; box.appendChild(sel); optionContainer.appendChild(box);
             }
-            // 추가 옵션 Checkbox List
             if (addOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group optional-group";
                 box.innerHTML = `<div class="opt-group-header">③ 추가 상품 <span class="badge-sel">선택</span></div>`;
@@ -650,7 +657,6 @@ function renderCart() {
                 });
                 box.appendChild(grid); optionContainer.appendChild(box);
             }
-            // 수량 조절
             const qtyBox = document.createElement("div"); 
             qtyBox.style.cssText = "display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px;";
             qtyBox.innerHTML = `<span style="font-size:13px; font-weight:bold;">본품 수량</span><div class="qty-wrapper" style="border:1px solid #ddd; border-radius:5px; display:flex;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)">-</button><input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:50px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; height:30px; font-weight:bold; outline:none;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)">+</button></div>`;
@@ -671,14 +677,16 @@ function updateSummary(prodTotal, addonTotal, total) {
 }
 
 // ============================================================
-// [6] 주문 제출 로직 (핵심)
+// [6] 주문 제출 로직
 // ============================================================
+// [order.js] processOrderSubmission 함수 전체 교체
+
 async function processOrderSubmission() {
     const manager = document.getElementById("inputManagerName").value;
     const phone = document.getElementById("inputManagerPhone").value;
     const request = document.getElementById("inputRequest").value;
     
-    // 주소 조합 (국가별)
+    // 주소 조합
     let address = "";
     if (CURRENT_LANG === 'kr') {
         address = document.getElementById("inputAddressKR").value;
@@ -702,9 +710,12 @@ async function processOrderSubmission() {
     let newOrderId = null;
     
     try {
-        // 1. 주문 데이터 구성
         let calculatedTotal = 0;
+        
+        // ★ [핵심 수정] 저장할 데이터에 디자인(json), 썸네일(thumb) 등을 모두 포함시킴
         const itemsToSave = cartData.map(item => {
+            if (!item.product) return null; 
+            
             let itemPrice = item.product.price || 0;
             if(item.selectedAddons) {
                 Object.values(item.selectedAddons).forEach(code => {
@@ -714,18 +725,37 @@ async function processOrderSubmission() {
                 });
             }
             calculatedTotal += itemPrice * (item.qty || 1);
+
             return {
-                product: { name: item.product.name, price: item.product.price, code: item.product.code || item.product.key },
+                // 기본 정보
+                product: { 
+                    name: item.product.name, 
+                    price: item.product.price, 
+                    code: item.product.code || item.product.key,
+                    img: item.product.img 
+                },
+                productName: item.product.name,
                 qty: item.qty || 1, 
                 price: itemPrice, 
+                
+                // 옵션 정보
                 selectedAddons: item.selectedAddons || {}, 
                 addonQuantities: item.addonQuantities || {}, 
-                productName: item.product.name
-            };
-        });
 
-        // 2. Supabase Insert
+                // ★ [추가됨] 재주문을 위한 필수 데이터들
+                type: item.type || 'design',     // design 또는 file
+                json: item.json || null,         // 디자인 데이터 (제일 중요)
+                thumb: item.thumb || '',         // 썸네일 이미지
+                width: item.width || 0,          // 캔버스 크기
+                height: item.height || 0,
+                fileName: item.fileName || '',
+                originalUrl: item.originalUrl || ''
+            };
+        }).filter(i => i !== null);
+
+        // DB Insert
         const { data: orderData, error: orderError } = await sb.from('orders').insert([{ 
+            user_id: currentUser?.id, 
             order_date: new Date().toISOString(),           
             delivery_target_date: selectedDeliveryDate, 
             manager_name: manager, 
@@ -735,18 +765,17 @@ async function processOrderSubmission() {
             status: '접수대기', 
             payment_status: '미결제', 
             total_amount: calculatedTotal, 
-            items: itemsToSave,
-            site_code: CURRENT_LANG.toUpperCase() // 사이트 구분 코드 추가
+            items: itemsToSave, // 수정된 데이터 저장
+            site_code: CURRENT_LANG.toUpperCase() 
         }]).select();
         
         if (orderError) throw orderError; 
         newOrderId = orderData[0].id; 
         window.currentDbId = newOrderId;
-        window.isOrderCompleted = true; // 주문 완료 플래그
+        window.isOrderCompleted = true; 
         
-        // 3. 파일 업로드 준비
+        // 파일 업로드 처리 (기존 로직 유지)
         let uploadedFiles = [];
-        // (1) 사용자가 업로드했던 파일들 링크 연결
         for (let i = 0; i < cartData.length; i++) {
             const item = cartData[i]; 
             const idx = String(i + 1).padStart(2, '0');
@@ -759,7 +788,7 @@ async function processOrderSubmission() {
             }
         }
         
-        // (2) PDF 문서 자동 생성 (지시서, 견적서)
+        // PDF 생성 로직 (기존 로직 유지)
         const orderInfoForPDF = { manager, phone, address, note: request, date: selectedDeliveryDate };
         
         try {
@@ -780,14 +809,13 @@ async function processOrderSubmission() {
             } 
         } catch(quoteErr) { console.warn("견적서 생성 오류:", quoteErr); }
             
-        // (3) 디자인 파일 변환 (Canvas -> PDF)
+        // 디자인 PDF 변환 (기존 로직 유지)
         for (let i = 0; i < cartData.length; i++) {
             const item = cartData[i]; 
             const idx = String(i + 1).padStart(2, '0');
-            if (!item.originalUrl && item.type === 'design' && item.json) {
+            if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
                 loading.querySelector('p').innerText = `디자인 변환 중 (${i+1}/${cartData.length})...`;
                 try { 
-                    // 벡터 PDF 시도 -> 실패 시 래스터 PDF
                     let fileBlob = await generateProductVectorPDF(item.json, item.width, item.height); 
                     if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.height); 
                     
@@ -799,18 +827,15 @@ async function processOrderSubmission() {
             }
         }
 
-        // 4. 주문 업데이트 (파일 정보 저장)
         if (uploadedFiles.length > 0) {
             await sb.from('orders').update({ files: uploadedFiles, status: '접수됨' }).eq('id', newOrderId);
         }
 
-        // 5. 화면 전환: 배송정보 모달 닫기 -> 결제/확인 모달 열기
+        // UI 전환
         document.getElementById("deliveryInfoModal").style.display = "none"; 
-        
         const checkoutModal = document.getElementById("checkoutModal");
         checkoutModal.style.display = "flex";
         
-        // 결제창에 정보 채우기
         document.getElementById("orderName").value = manager; 
         document.getElementById("orderPhone").value = phone; 
         document.getElementById("orderAddr").value = address; 
@@ -831,14 +856,14 @@ async function processOrderSubmission() {
 }
 
 // ============================================================
-// [7] 결제 프로세스 (PG사 연동)
+// [7] 결제 프로세스
 // ============================================================
 function processPayment() {
     if (!window.currentDbId) return alert("주문 정보가 없습니다.");
     
-    // 금액 재계산 (검증용)
     let totalAmount = 0; 
     cartData.forEach(item => { 
+        if(!item.product) return;
         let lineTotal = (item.product.price || 0) * (item.qty || 1);
         if(item.selectedAddons) { 
             Object.values(item.selectedAddons).forEach(code => { 
@@ -853,7 +878,6 @@ function processPayment() {
 
     if (totalAmount === 0) return alert("결제 금액이 0원입니다.");
 
-    // config.js의 SITE_CONFIG 참조
     const country = SITE_CONFIG.COUNTRY;
     const pgConfig = SITE_CONFIG.PG_CONFIG[country];
     
@@ -863,7 +887,6 @@ function processPayment() {
     const customerName = document.getElementById("orderName").value;
 
     if (pgConfig.provider === 'toss') {
-        // Toss Payments
         if (!window.TossPayments) return alert("Toss Payments SDK가 로드되지 않았습니다.");
         
         const tossPayments = TossPayments(pgConfig.clientKey);
@@ -879,7 +902,6 @@ function processPayment() {
         });
 
     } else if (pgConfig.provider === 'stripe') {
-        // Stripe Checkout
         initiateStripeCheckout(pgConfig.publishableKey, totalAmount, country, window.currentDbId);
     }
 }
@@ -894,11 +916,9 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
     btn.innerText = "Stripe 연결 중...";
     btn.disabled = true;
 
-    // JP는 JPY, 그 외는 USD 가정 (필요시 로직 수정)
     const currency = currencyCountry === 'JP' ? 'jpy' : 'usd';
 
     try {
-        // Supabase Edge Function 호출 ('create-stripe-session')
         const { data, error } = await sb.functions.invoke('create-stripe-session', {
             body: {
                 amount: amount,
@@ -919,7 +939,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
         
     } catch (e) {
         console.error("Stripe Error:", e);
-        alert("결제 초기화 실패: " + e.message + "\n(관리자에게 문의하세요)");
+        alert("결제 초기화 실패: " + e.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -927,7 +947,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
 }
 
 // ============================================================
-// [8] Window 전역 함수 연결 (HTML onclick 대응)
+// [8] Window 전역 함수 연결
 // ============================================================
 window.toggleCartAccordion = function(idx) { 
     if (cartData[idx]) { 
