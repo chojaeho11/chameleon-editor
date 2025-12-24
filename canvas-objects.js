@@ -1,12 +1,11 @@
 import { canvas } from "./canvas-core.js";
 import { updateLockUI } from "./canvas-utils.js";
-import { sb } from "./config.js"; // ★ Supabase 인스턴스 가져오기
+import { sb, currentUser } from "./config.js";
 
 // ============================================================
 // [설정] 현재 사이트 언어 및 폰트 변수
 // ============================================================
 const urlParams = new URLSearchParams(window.location.search);
-// URL에 lang 파라미터가 없으면 'KR'을 기본값으로 사용
 const CURRENT_LANG = (urlParams.get('lang') || 'kr').toUpperCase(); 
 
 // DB에서 불러온 폰트 목록을 저장할 전역 변수
@@ -55,11 +54,11 @@ async function loadDynamicFonts() {
     try {
         console.log(`📥 [Font] ${CURRENT_LANG} 폰트 로딩 중...`);
         
-        // 현재 국가코드와 일치하는 폰트만 조회 (최신순)
+        // 현재 국가코드와 일치하는 폰트만 조회 (오래된 순 = 등록순)
         const { data, error } = await sb.from('site_fonts')
             .select('*')
             .eq('site_code', CURRENT_LANG)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: true });
 
         if (error) throw error;
 
@@ -67,7 +66,6 @@ async function loadDynamicFonts() {
 
         // FontFace API를 사용하여 폰트 파일 비동기 로드
         const fontPromises = DYNAMIC_FONTS.map(font => {
-            // URL에 띄어쓰기가 있을 수 있으므로 encodeURI 처리 권장
             const fontFace = new FontFace(font.font_family, `url(${encodeURI(font.file_url)})`);
             return fontFace.load().then(loadedFace => {
                 document.fonts.add(loadedFace);
@@ -99,7 +97,7 @@ function renderFontList() {
     DYNAMIC_FONTS.forEach(font => {
         const div = document.createElement("div");
         div.className = "font-item";
-        div.innerText = font.font_name; // 화면에 보여줄 이름 (예: 잘난체)
+        div.innerText = font.font_name; // 화면에 보여줄 이름
         
         // 스타일 설정
         div.style.padding = "12px";
@@ -127,7 +125,6 @@ function renderFontList() {
             if (active.type === 'activeSelection' || active.type === 'group') {
                 active.getObjects().forEach(o => applyFont(o));
             } else if (active.isEffectGroup || active.isOutlineGroup) {
-                // 특수 효과 그룹인 경우 내부 객체 적용
                 active.getObjects().forEach(o => applyFont(o));
                 active.addWithUpdate(); // 그룹 갱신
             } else {
@@ -145,62 +142,49 @@ function renderFontList() {
 // ============================================================
 // [3] 텍스트 핸들러 (Text Tools)
 // ============================================================
-// canvas-objects.js 파일 내부의 initTextHandlers 함수 수정
 
+// ============================================================
+// [3] 텍스트 핸들러 (Text Tools)
+// ============================================================
 function initTextHandlers() {
-    // 텍스트 추가 공통 함수
-    const addTextToCanvas = (text, fontSize, fontWeight = 'normal') => { // 기본값을 normal로
-        if (!window.canvas) return alert("캔버스가 로드되지 않았습니다.");
-
-        let family = 'sans-serif';
-        if (DYNAMIC_FONTS.length > 0) {
-            family = DYNAMIC_FONTS[0].font_family; 
-        }
-
-        const t = new fabric.IText(text, {
-            fontFamily: family,
-            fontSize: fontSize,
-            fontWeight: fontWeight, // 여기서 굵기 결정
-            fill: "#000000",
+    const btnBasic = document.getElementById("btnAddBasicText");
+    
+    if (btnBasic) {
+        btnBasic.onclick = () => {
+            // 1. 폰트 설정 (1번째 등록된 폰트 우선 사용)
+            const targetFontObj = DYNAMIC_FONTS[0] || { font_family: 'sans-serif' };
+            const family = targetFontObj.font_family;
             
-            // ★ [추가] 외곽선이 생기지 않도록 확실하게 초기화
-            stroke: null, 
-            strokeWidth: 0,
-            
-            textAlign: 'center',
-            left: 0, 
-            top: 0,
-            originX: 'center', originY: 'center'
-        });
-        
-        if (typeof addToCenter === 'function') {
+            // 2. 대지(Board) 너비 계산
+            // 보드가 없으면 캔버스 전체 너비를 기준으로 함
+            const board = canvas.getObjects().find(o => o.isBoard);
+            const baseW = board ? (board.width * board.scaleX) : canvas.width;
+
+            // 3. 텍스트 객체 생성 (일단 임의의 크기로 생성)
+            const textString = "“The Story”";
+            const t = new fabric.IText(textString, {
+                fontFamily: family,
+                fontSize: 50, // 초기값 (계산 후 변경됨)
+                fill: "#14078aff", 
+                left: 0, top: 0,
+                originX: 'center', originY: 'center'
+            });
+
+            // 4. ★ 핵심: 대지 너비의 2/3(66%)에 맞게 폰트 크기 자동 조절
+            if (t.width > 0) {
+                const targetWidth = baseW * 0.66; // 목표 너비 (2/3)
+                const scaleFactor = targetWidth / t.width; // 비율 계산
+                
+                // 폰트 사이즈에 비율을 곱해서 적용
+                t.set('fontSize', t.fontSize * scaleFactor);
+                // (선택사항) 만약 너무 커지는게 싫다면 최대값 제한 가능: Math.min(t.fontSize * scaleFactor, 200)
+            }
+
             addToCenter(t);
-        } else {
-            t.set({ left: canvas.width/2, top: canvas.height/2 });
-            window.canvas.add(t);
-            window.canvas.setActiveObject(t);
-        }
-        window.canvas.requestRenderAll();
-    };
+        };
+    }
 
-    const btnTitle = document.getElementById("btnAddTitle");
-    const btnSubtitle = document.getElementById("btnAddSubtitle");
-    const btnBody = document.getElementById("btnAddBody");
-
-    // ▼▼▼ [수정 포인트] "bold"를 "normal"로 변경해주세요 ▼▼▼
-    
-    // 제목: 잘난체처럼 두꺼운 폰트는 normal로 해야 깨끗하게 나옵니다.
-    if (btnTitle) btnTitle.onclick = () => addTextToCanvas("제목을 입력하세요", 80, "normal");
-    
-    // 부제목: 필요하다면 bold 유지, 너무 두꺼우면 normal로 변경
-    if (btnSubtitle) btnSubtitle.onclick = () => addTextToCanvas("부제목 입력", 50, "normal");
-    
-    // 본문: 얇은 폰트는 normal
-    if (btnBody) btnBody.onclick = () => addTextToCanvas("본문 내용을 입력하세요", 30, "normal");
-
-    // ... (나머지 코드는 그대로) ...
-
-    // 폰트 전체보기 모달 버튼
+    // 폰트 전체보기 버튼 이벤트 연결
     const btnFontSelect = document.getElementById("btnFontSelect");
     if (btnFontSelect) {
         btnFontSelect.onclick = () => {
@@ -209,14 +193,205 @@ function initTextHandlers() {
             const modal = document.getElementById("fontModal");
             if (modal) {
                 modal.style.display = "flex";
-                renderFontList(); // 목록 렌더링 호출
+                renderFontList(); 
             }
         };
     }
     
-    // 스타일 핸들러 설정
     setupStyleHandlers();
 }
+
+// ============================================================
+// ★★★ [리뉴얼 V2] 텍스트 마법사 (여백 확보 및 사이즈 최적화) ★★★
+// ============================================================
+window.applyTextWizard = function(type) {
+    if (!canvas) return;
+
+    // 1. 폰트 매핑
+    const titleFont = (DYNAMIC_FONTS[0] || { font_family: 'sans-serif' }).font_family;
+    const bodyFont = ((DYNAMIC_FONTS.length > 5) ? DYNAMIC_FONTS[5] : (DYNAMIC_FONTS[0] || { font_family: 'sans-serif' })).font_family;
+
+    // 2. 작업 영역(Board) 계산
+    const board = canvas.getObjects().find(o => o.isBoard);
+    const baseX = board ? board.left : 0;
+    const baseY = board ? board.top : 0;
+    const baseW = board ? (board.width * board.scaleX) : canvas.width;
+    const baseH = board ? (board.height * board.scaleY) : canvas.height;
+    
+    // 중앙점
+    const centerX = baseX + baseW / 2;
+    const centerY = baseY + baseH / 2;
+
+    const objects = [];
+
+    // 텍스트 생성 헬퍼
+    const addText = (text, font, sizeRatio, weight, left, top, align, color='#111', spacing=0) => {
+        return new fabric.IText(text, {
+            fontFamily: font,
+            fontSize: baseH * sizeRatio, // 높이 비례 사이즈
+            fontWeight: weight,
+            fill: color,
+            left: left,
+            top: top,
+            originX: align, 
+            originY: 'top',
+            textAlign: align,
+            charSpacing: spacing
+        });
+    };
+
+    // ----------------------------------------------------------------
+// [A] Business Card - Reduce element sizes and keep comfortable spacing
+// ----------------------------------------------------------------
+if (type === 'card') {
+    // Layout zones (keep ~4:6 ratio but add padding)
+    const leftZoneCenter = baseX + (baseW * 0.22); // logo center
+    const dividerX = baseX + (baseW * 0.45);       // divider position (slightly more to the right)
+    const infoStartX = baseX + (baseW * 0.50);     // info start (keep gap from divider)
+
+    // 1. Logo area (scale down 0.18 -> 0.15)
+    const icon = addText("✂", 'sans-serif', 0.15, 'normal', leftZoneCenter, baseY + baseH * 0.28, 'center', '#222');
+    icon.set({ angle: -90 });
+
+    // Brand name (scale down 0.07 -> 0.06)
+    const logoMain = addText("SOON HAIR", titleFont, 0.06, 'bold', leftZoneCenter, baseY + baseH * 0.50, 'center', '#111', 20);
+    const logoSub  = addText("SOON HAIR", bodyFont, 0.03, 'normal', leftZoneCenter, baseY + baseH * 0.60, 'center', '#555', 50);
+
+    // 2. Divider line
+    const line = new fabric.Rect({
+        left: dividerX, top: baseY + (baseH * 0.2),
+        width: Math.max(1, baseW * 0.002), height: baseH * 0.6,
+        fill: '#ccc', originX: 'center', originY: 'top'
+    });
+
+    // 3. Right-side info (smaller font to prevent overlap)
+    // Name + Title
+    const name = addText("Jihyun Soon", titleFont, 0.07, 'bold', infoStartX, baseY + baseH * 0.22, 'left', '#111', 10);
+    const job  = addText("Owner | Hair Designer", bodyFont, 0.028, 'normal', infoStartX, baseY + baseH * 0.32, 'left', '#666');
+
+    // Contact (scale down 0.08 -> 0.065)
+    const phoneLabel = addText("Reservation", bodyFont, 0.022, 'normal', infoStartX, baseY + baseH * 0.46, 'left', '#888');
+    const phone      = addText("+82 2-1234-5678", titleFont, 0.065, 'bold', infoStartX, baseY + baseH * 0.50, 'left', '#111');
+
+    // Address (scale down 0.032 -> 0.025)
+    const addr = addText("5F, Soon Bldg, 5 Myeongdong 3-gil, Jung-gu, Seoul", bodyFont, 0.025, 'normal', infoStartX, baseY + baseH * 0.68, 'left', '#444');
+    const sns  = addText("Kakao: soonhair   Insta: soon_official", bodyFont, 0.025, 'normal', infoStartX, baseY + baseH * 0.73, 'left', '#444');
+
+    objects.push(icon, logoMain, logoSub, line, name, job, phoneLabel, phone, addr, sns);
+}
+
+// ----------------------------------------------------------------
+// [B] Menu - Keep side padding and auto-adjust dotted line width
+// ----------------------------------------------------------------
+else if (type === 'menu') {
+    // Top title (scale down 0.08 -> 0.06)
+    const mainTitle = addText("PREMIUM COFFEE", titleFont, 0.06, 'bold', centerX, baseY + baseH * 0.10, 'center', '#2C3E50', 50);
+    const subTitle  = addText("Fresh Roasted Beans", bodyFont, 0.025, 'normal', centerX, baseY + baseH * 0.17, 'center', '#7F8C8D', 100);
+
+    // Divider line
+    const topDescLine = new fabric.Rect({
+        left: centerX, top: baseY + baseH * 0.21,
+        width: baseW * 0.1, height: 2, fill: '#D35400', originX: 'center'
+    });
+    objects.push(mainTitle, subTitle, topDescLine);
+
+    // Menu list (8 items)
+    const items = [
+        { n: "Espresso",          p: "4.0" },
+        { n: "Americano",         p: "4.5" },
+        { n: "Café Latte",        p: "5.0" },
+        { n: "Vanilla Bean Latte",p: "5.5" },
+        { n: "Caramel Macchiato", p: "5.5" },
+        { n: "Cold Brew",         p: "5.0" },
+        { n: "Jeju Matcha Latte", p: "6.0" },
+        { n: "Real Chocolate Latte", p: "5.5" }
+    ];
+
+    const startY = baseY + baseH * 0.30;
+    const gapY = baseH * 0.075;          // vertical spacing
+    const paddingSide = baseW * 0.15;    // 15% padding each side (30% total)
+    const menuLeftX = baseX + paddingSide;
+    const menuRightX = baseX + baseW - paddingSide;
+
+    // Dotted-line width calculation (total width - side padding - estimated text area)
+    const dotLineWidth = (baseW - (paddingSide * 2)) * 0.4;
+
+    items.forEach((item, i) => {
+        const yPos = startY + (i * gapY);
+
+        // Item name (scale down 0.04 -> 0.032)
+        const mName = addText(item.n, bodyFont, 0.032, 'bold', menuLeftX, yPos, 'left', '#333');
+
+        // Dotted line (position adjusted)
+        const dotLine = new fabric.Rect({
+            left: menuLeftX + (baseW * 0.30), // start after item name
+            top: yPos + (baseH * 0.025),      // mid-height of text
+            width: dotLineWidth,
+            height: 1,
+            fill: '#ddd',
+            originX: 'left'
+        });
+
+        // Price
+        const mPrice = addText(item.p, titleFont, 0.032, 'bold', menuRightX, yPos, 'right', '#D35400');
+
+        objects.push(mName, dotLine, mPrice);
+    });
+}
+
+// ----------------------------------------------------------------
+// [C] Poster (Flyer) - Reduce huge title size + change title color to BLUE
+// ----------------------------------------------------------------
+else if (type === 'flyer') {
+    // Huge title (scale down 0.18 -> 0.15, add left padding)
+    const bigTitle = addText("GRAND\nOPENING", titleFont, 0.15, 'bold', baseX + baseW * 0.08, baseY + baseH * 0.08, 'left', '#141f42ff');
+    bigTitle.set({ lineHeight: 0.9, charSpacing: -10 });
+
+    // Date box (narrower width)
+    const dateBox = new fabric.Rect({
+        left: baseX + baseW * 0.08, top: baseY + baseH * 0.45,
+        width: baseW * 0.35, height: baseH * 0.07, fill: '#110c4bff', originX: 'left'
+    });
+
+    // Date text
+    const dateText = addText("Dec 25, 2025", bodyFont, 0.04, 'bold', baseX + baseW * 0.255, baseY + baseH * 0.465, 'center', '#fff');
+
+    // Bottom details (secure right margin 0.95 -> 0.92, scaled down)
+    const detailText = addText(
+        "Venue: COEX Hall A, Seoul\nTime: 10:00 AM - 06:00 PM\nHost: Chameleon Design",
+        bodyFont, 0.03, 'normal',
+        baseX + baseW * 0.92, baseY + baseH * 0.78, 'right', '#1d1d1dff'
+    );
+    detailText.set({ lineHeight: 1.6 });
+
+    objects.push(bigTitle, dateBox, dateText, detailText);
+}
+
+// ----------------------------------------------------------------
+// [D] Basic - Change title color to SKY BLUE
+// ----------------------------------------------------------------
+else {
+    const title = addText("2025 EXHIBITION", titleFont, 0.07, 'bold', centerX, baseY + baseH * 0.35, 'center', '#da0959ff');
+    const sub   = addText("Future of Design & Art", bodyFont, 0.035, 'normal', centerX, baseY + baseH * 0.50, 'center', '#da0959ff');
+    const info  = addText("Date: Aug 15, 2025 | Venue: DDP Art Hall", bodyFont, 0.022, 'normal', centerX, baseY + baseH * 0.85, 'center', '#181818ff');
+    objects.push(title, sub, info);
+}
+
+// Add to canvas
+if (objects.length > 0) {
+    canvas.discardActiveObject();
+    const addedObjs = [];
+    objects.forEach(obj => {
+        canvas.add(obj);
+        addedObjs.push(obj);
+    });
+    const sel = new fabric.ActiveSelection(addedObjs, { canvas: canvas });
+    canvas.setActiveObject(sel);
+    canvas.requestRenderAll();
+}
+};
+
+
 
 function setupStyleHandlers() {
     const alignLeft = document.getElementById("btnAlignLeftText");
@@ -711,12 +886,7 @@ window.toggleMobilePanel = function(side) {
 // [7] 로고 업로드 및 파일 핸들러
 // ============================================================
 window.uploadUserLogo = async () => {
-    // config.js에서 currentUser 가져오기
-    // (이 파일 상단에 import { currentUser } from "./config.js"; 추가 필요)
-    // 여기서는 window.currentUser가 있다고 가정하거나 config에서 가져와야 함.
-    // 안전을 위해 import 문에 currentUser 추가를 권장합니다.
-    const { currentUser } = await import("./config.js");
-
+    // 상단 import { currentUser } 사용
     if (!currentUser) return alert("로그인이 필요한 기능입니다.");
     
     const fileInput = document.getElementById('logoFileInput');

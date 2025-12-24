@@ -277,17 +277,22 @@
     </div>
 </div>
 
-<div id="mainEditor">
+<div id="mainEditor" style="display:none;">
     <div class="topbar">
         <div class="brand" onclick="location.reload()"><i class="fa-solid fa-palette"></i> Chameleon</div>
         
         <div class="template-tabs">
             <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'">🎨 <span data-i18n="tab_all">템플릿</span></button>
-            <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">배경</button>
-            <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">벡터</button>
-            <button class="tpl-tab" data-tpl="photo-bg" data-i18n="tab_photo">사진</button>
-            <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴</button>
-            <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고</button>
+            
+            <button class="tpl-tab active" data-tpl="photo-bg" 
+                    style="background: linear-gradient(135deg, #410175 0%, #f00064 100%); color: #fff; font-weight: 800; border: none; box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3); margin-right: 5px;">
+                 이미지 템플릿
+            </button>
+
+            <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">백터배경</button>
+            <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">벡터이미지</button>
+            <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴디자인</button>
+            <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고모음</button>
         </div>
         
         <div style="flex:1;"></div>
@@ -301,9 +306,9 @@
         </button>
         
         <button class="btn primary" id="btnOrderTop" onclick="window.addToCartAndGo()" style="background:var(--primary); color:white; font-weight:bold; box-shadow:0 4px 12px rgba(99,102,241,0.4);">
-    🚀 <span data-i18n="btn_add_to_cart">장바구니 담기</span>
-</button>
-<button class="btn" id="btnLoginBtn" style="margin-left:5px;" data-i18n="btn_login">로그인</button>
+            🚀 <span data-i18n="btn_add_to_cart">장바구니 담기</span>
+        </button>
+        <button class="btn" id="btnLoginBtn" style="margin-left:5px;" data-i18n="btn_login">로그인</button>
     </div>
 
     <div id="wallHeightControls">
@@ -313,133 +318,120 @@
         <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
     </div>
 
-    
-
     <div class="editor-wrap">
-        <div class="side" id="toolsPanel">
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:15px;">
-                <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px; display:flex; justify-content:space-between;">
+        
+        <div class="side" id="toolsPanel" style="text-align: center; padding: 10px 12px;">
+            
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;">
+                <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between;">
                     <span data-i18n="tool_size_change">📏 사이즈 변경(mm)</span>
                     <span id="limitLabel" style="color:#6366f1;">Max: -</span>
                 </div>
                 <div style="display:flex; gap:5px; align-items:center;">
-                    <input type="number" id="inputUserW" class="ai-input-pretty" placeholder="W" style="margin:0; padding:6px; font-size:13px; text-align:center;">
+                    <input type="number" id="inputUserW" class="ai-input-pretty" placeholder="W" style="margin:0; padding:5px; font-size:12px; text-align:center;">
                     <span style="color:#999;">x</span>
-                    <input type="number" id="inputUserH" class="ai-input-pretty" placeholder="H" style="margin:0; padding:6px; font-size:13px; text-align:center;">
+                    <input type="number" id="inputUserH" class="ai-input-pretty" placeholder="H" style="margin:0; padding:5px; font-size:12px; text-align:center;">
                 </div>
-                <button id="btnApplyUserSize" class="btn-round primary" style="width:100%; margin-top:8px; height:36px; font-size:13px;" data-i18n="btn_save_cost">변경 적용</button>
+                <button id="btnApplyUserSize" class="btn-round primary" style="width:100%; margin-top:6px; height:32px; font-size:12px;" data-i18n="btn_save_cost">변경 적용</button>
             </div>
             
             <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="btnRotateCanvas" class="btn-round" style="flex:1;"><i class="fa-solid fa-rotate"></i> <span data-i18n="btn_rotate">회전</span></button>
+                <button id="btnRotateCanvas" class="btn-round" style="flex:1; justify-content: center;"><i class="fa-solid fa-rotate"></i> <span data-i18n="btn_rotate">회전</span></button>
+                <button id="btnFitScreen" class="btn-round" style="flex:1; justify-content: center;"><i class="fa-solid fa-compress"></i> <span data-i18n="btn_fit_screen">맞춤</span></button>
             </div>
 
-            <div class="section-title" data-i18n="label_canvas_tools">CANVAS TOOLS</div>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="btnFitScreen" class="btn-round"><i class="fa-solid fa-compress"></i> <span data-i18n="btn_fit_screen">화면 맞춤</span></button>
-                <button id="btnLockSelection" class="btn-round" onclick="window.toggleLockSelection()"><i class="fa-solid fa-lock"></i> <span data-i18n="btn_lock">잠금</span></button>
-            </div>
-
-            <div class="section-title" data-i18n="label_ai_tools">AI TOOLS</div>
-            <button class="btn-round ai-red" id="btnAIBox"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_ai_gen">AI 생성</span></button>
-            <button class="btn-round" id="btnOpenSaveModal" style="margin-top:5px;"><span data-i18n="btn_save_design">💾 디자인 저장</span></button>
+            <div class="section-title" data-i18n="label_ai_tools" style="margin-bottom: 5px; font-size: 12px;">AI TOOLS</div>
+            <button class="btn-round ai-red" id="btnAIBox" style="justify-content: center; height: 38px; margin-bottom: 5px;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_ai_gen">AI 생성</span></button>
             
-            <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="margin-top: 5px; margin-bottom: 20px; width: 100%; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_logo_share">로고 공유방</span>
+            <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                <button class="btn-round" id="btnOpenSaveModal" style="flex: 1; justify-content: center; height: 38px;"><span data-i18n="btn_save_design">💾 저장</span></button>
+                <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="flex: 1; justify-content: center; height: 38px; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_logo_share">공유</span>
+                </button>
+            </div>
+            
+            <div style="display:flex; gap:5px; margin-bottom:15px;">
+                <button id="btnPNG" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-regular fa-image"></i> PNG</button>
+                <button id="btnPDF" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            </div>
+
+            <div class="section-title" style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span style="font-size: 16px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));">🧙‍♂️</span>
+                <span style="font-size: 13px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(to right, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    텍스트 디자인 마법사
+                </span>
+            </div>
+
+            <div class="wizard-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 15px;">
+                <button class="btn-round" onclick="window.applyTextWizard('basic')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="font-size:14px; color:#6366f1;"></i>
+                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">기본</span>
+                </button>
+                <button class="btn-round" onclick="window.applyTextWizard('flyer')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
+                    <i class="fa-solid fa-newspaper" style="font-size:14px; color:#ef4444;"></i>
+                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">홍보</span>
+                </button>
+                <button class="btn-round" onclick="window.applyTextWizard('card')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
+                    <i class="fa-solid fa-address-card" style="font-size:14px; color:#10b981;"></i>
+                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">명함</span>
+                </button>
+                <button class="btn-round" onclick="window.applyTextWizard('menu')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
+                    <i class="fa-solid fa-utensils" style="font-size:14px; color:#f59e0b;"></i>
+                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">메뉴</span>
+                </button>
+            </div>
+
+            <button id="btnAddBasicText" class="btn-round" style="width:100%; margin-bottom:10px; border:1px solid #cbd5e1; background:#fff; color:#333; font-weight:bold; padding:10px; display:flex; align-items:center; justify-content:center;">
+                <span style="display:inline-flex; width:20px; height:20px; background:#222; color:#fff; border-radius:4px; align-items:center; justify-content:center; margin-right:6px; font-size:12px;">T</span>
+                <span style="font-size: 13px;">텍스트 추가</span>
             </button>
-            
-            <div style="display:flex; gap:8px; margin-bottom:20px;">
-                <button id="btnPNG" class="btn-round" style="flex:1;"><i class="fa-regular fa-image"></i> PNG</button>
-                <button id="btnPDF" class="btn-round" style="flex:1;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-            </div>
 
+            <button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height: 38px;">
+                <span data-i18n="btn_font" style="font-size: 13px;">🅰️ 폰트 전체보기</span>
+            </button>
 
-            <div class="section-title" data-i18n="label_text_tools">텍스트 추가</div>
-
-<div class="text-btn-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
-    <button id="btnAddTitle" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
-        <span class="text-preview" style="display:block; font-family: 'Jalnan'; font-size: 16px; margin-bottom:5px;">제목</span>
-        <span class="text-label" style="font-size: 11px; color: #64748b;">잘난체</span>
-    </button>
-
-    <button id="btnAddSubtitle" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
-        <span class="text-preview" style="display:block; font-family: 'HyundaiSansMedium'; font-weight: bold; font-size: 14px; margin-bottom:5px;">부제목</span>
-        <span class="text-label" style="font-size: 11px; color: #64748b;">현대산스 B</span>
-    </button>
-
-    <button id="btnAddBody" class="text-add-btn" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 0; cursor: pointer;">
-        <span class="text-preview" style="display:block; font-family: 'HyundaiSansMedium'; font-size: 12px; margin-bottom:5px;">본문</span>
-        <span class="text-label" style="font-size: 11px; color: #64748b;">현대산스 M</span>
-    </button>
-</div>
-
-<button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:15px; display:flex; align-items:center; justify-content:center;">
-    <span data-i18n="btn_font">🅰️ 폰트 전체보기</span>
-</button>
-
-            <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:15px;">
-                <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <button class="tool-btn" id="btnAlignLeftText"><i class="fa-solid fa-align-left"></i></button>
-                    <button class="tool-btn" id="btnAlignCenterText"><i class="fa-solid fa-align-center"></i></button>
-                    <button class="tool-btn" id="btnAlignRightText"><i class="fa-solid fa-align-right"></i></button>
+            <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:10px; text-align: left;">
+                <div style="display:flex; gap:4px; margin-bottom:8px;">
+                    <button class="tool-btn" id="btnAlignLeftText" style="flex:1;"><i class="fa-solid fa-align-left"></i></button>
+                    <button class="tool-btn" id="btnAlignCenterText" style="flex:1;"><i class="fa-solid fa-align-center"></i></button>
+                    <button class="tool-btn" id="btnAlignRightText" style="flex:1;"><i class="fa-solid fa-align-right"></i></button>
                 </div>
-                <div style="display:grid; grid-template-columns: 35px 1fr; gap:10px; align-items:center;">
-                    <span style="font-size:12px; color:#666;">Size</span>
+                <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:11px; color:#666;">크기</span>
                     <input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
                 </div>
+                <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:11px; color:#666;">자간</span>
+                    <input type="range" id="textCharSpacing" min="-50" max="300" value="0" style="width:100%;">
+                </div>
+                <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center;">
+                    <span style="font-size:11px; color:#666;">행간</span>
+                    <input type="range" id="textLineHeight" min="0.5" max="2.5" step="0.1" value="1.2" style="width:100%;">
+                </div>
             </div>
-            <!-- 텍스트효과시작 -->
-<div class="section-title" style="margin-top:15px;">🔥 파워 텍스트 효과</div>
-<div class="effect-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px;">
 
-    <button class="btn-round" onclick="window.applyTextEffect('block-3d')" 
-            style="background:#000; color:#4fffa5; font-weight:900; border:none; text-shadow: 2px 2px 0px #005c30;">
-        3D 블록
-    </button>
-    
-    <button class="btn-round" onclick="window.applyTextEffect('neon-strong')" 
-            style="background:#111; color:#fff; border:1px solid #d300c5; text-shadow: 0 0 5px #d300c5, 0 0 10px #7800ff;">
-        강한 네온
-    </button>
-    
-    <button class="btn-round" onclick="window.applyTextEffect('glitch-strong')" 
-            style="background:#1a1a1a; color:#fff; font-weight:bold; text-shadow: -2px 0 cyan, 2px 0 red; clip-path: polygon(0% 0%, 100% 0%, 95% 100%, 5% 100%);">
-        ⚡ 사이버펑크
-    </button>
-    
-    <button class="btn-round" onclick="window.applyTextEffect('long-shadow')" 
-            style="background:#40c4ff; color:white; font-weight:bold; text-shadow: 1px 1px #2689b5, 2px 2px #2689b5, 3px 3px #2689b5;">
-        긴 그림자
-    </button>
+            <!-- <div class="section-title" style="margin-top:10px; margin-bottom: 5px; font-size: 12px;">🔥 파워 텍스트 효과</div>
+            <div class="effect-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:10px;">
+                <button class="btn-round" onclick="window.applyTextEffect('block-3d')" style="background:#000; color:#4fffa5; font-weight:900; border:none; text-shadow: 1px 1px 0px #005c30; font-size: 11px; height: 35px;">3D블록</button>
+                <button class="btn-round" onclick="window.applyTextEffect('neon-strong')" style="background:#111; color:#fff; border:1px solid #d300c5; text-shadow: 0 0 5px #d300c5; font-size: 11px; height: 35px;">네온</button>
+                <button class="btn-round" onclick="window.applyTextEffect('glitch-strong')" style="background:#1a1a1a; color:#fff; font-weight:bold; text-shadow: -1px 0 cyan, 1px 0 red; font-size: 11px; height: 35px;">글리치</button>
+                <button class="btn-round" onclick="window.applyTextEffect('long-shadow')" style="background:#40c4ff; color:white; font-weight:bold; text-shadow: 1px 1px #2689b5; font-size: 11px; height: 35px;">그림자</button>
+                <button class="btn-round" onclick="window.applyTextEffect('retro-candy')" style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 5px, #22c55e 5px, #22c55e 10px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold; font-size: 11px; height: 35px;">캔디</button>
+                <button class="btn-round" onclick="window.applyTextEffect('blue-candy')" style="background: repeating-linear-gradient(45deg, #0ea5e9, #0ea5e9 5px, #1e3a8a 5px, #1e3a8a 10px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold; font-size: 11px; height: 35px;">블루</button>
+                <button class="btn-round" onclick="window.applyTextEffect('reset')" style="grid-column: 1 / -1; background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; height: 30px; font-size: 11px;">↺ 효과 제거</button>
+            </div> -->
 
-    <button class="btn-round" onclick="window.applyTextEffect('retro-candy')" 
-            style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #22c55e 10px, #22c55e 20px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold;">
-        🍭 레트로 캔디
-    </button>
-
-    <button class="btn-round" onclick="window.applyTextEffect('blue-candy')" 
-            style="background: repeating-linear-gradient(45deg, #0ea5e9, #0ea5e9 10px, #1e3a8a 10px, #1e3a8a 20px); color:white; text-shadow: 1px 1px 0 #000; font-weight:bold;">
-        🧊 블루 캔디
-    </button>
-
-    <button class="btn-round" onclick="window.applyTextEffect('reset')" 
-            style="grid-column: 1 / -1; background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">
-        ↺ 효과 제거 (초기화)
-    </button>
-</div>
-<!-- 텍스트효과 끝 -->
-
-            <div class="color-group" style="margin-bottom:5px;">
-                <span data-i18n="label_fill">🎨 채우기</span>
-                <input id="fillColor" type="color" class="color-picker" value="#000000">
+            <div class="color-group" style="margin-bottom:5px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <span data-i18n="label_fill">🎨 면색상</span>
+                <input id="fillColor" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
             </div>
-            <div class="color-group" style="margin-top:5px;">
+            <div class="color-group" style="margin-bottom:10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
                 <span data-i18n="label_stroke">🖌️ 선색상</span>
-                <input id="strokeColor" type="color" class="color-picker" value="#000000">
+                <input id="strokeColor" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
             </div>
 
-            <div class="section-title" data-i18n="label_shapes">SHAPES</div>
-            <div class="shape-panel">
+            <div class="section-title" data-i18n="label_shapes" style="font-size: 12px; margin-bottom: 5px;">SHAPES</div>
+            <div class="shape-panel" style="gap: 4px;">
                 <button class="shape-btn" data-shape="rect">■</button>
                 <button class="shape-btn" data-shape="circle">●</button>
                 <button class="shape-btn" data-shape="triangle">▲</button>
@@ -450,8 +442,8 @@
                 <button class="shape-btn" data-shape="line">━</button>
             </div>
             
-            <div class="section-title" data-i18n="label_upload">UPLOAD</div>
-            <label class="upload-box" for="imgUpload"><span style="font-size:24px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> Image/PDF</label>
+            <div class="section-title" data-i18n="label_upload" style="font-size: 12px; margin-top: 10px; margin-bottom: 5px;">UPLOAD</div>
+            <label class="upload-box" for="imgUpload" style="height: 60px; padding: 10px;"><span style="font-size:18px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> <span style="font-size: 12px;">Image/PDF</span></label>
             <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
         </div>
         
@@ -461,86 +453,73 @@
                 <button id="btnZoomIn" class="zoom-btn"><i class="fa-solid fa-plus"></i></button>
                 <div class="divider"></div>
                 <button id="guideToggle" class="zoom-btn" style="width:auto; padding:0 15px; border-radius:20px; font-size:12px;">가이드 켜기</button>
-                <span class="help-text">Space: 화면이동 / 휠: 크기조절 / 방향키: 미세이동</span>
+                <span class="help-text">Space: 이동 / 휠: 줌</span>
             </div>
             
             <div class="right-stack" id="rightStackPanel">
-                <div class="panel-box" id="panelEdit">
-    <div class="section-title" style="margin-top:0;" data-i18n="label_edit_layer">편집 & 레이어</div>
-    
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
-        <button class="tool-btn" id="btnUndo"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="btn_undo">실행취소</span></button>
-        <button class="tool-btn" id="btnRedo"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_redo">다시실행</span></button>
-        <button class="tool-btn" id="btnCopy"><i class="fa-regular fa-copy"></i> <span data-i18n="btn_copy">복사</span></button>
-        <button class="tool-btn" id="btnPaste"><i class="fa-regular fa-paste"></i> <span data-i18n="btn_paste">붙여넣기</span></button>
-    </div>
-    
-    <div style="display:flex; gap:5px; margin-bottom:5px;">
-        <button class="tool-btn" id="btnRotateLeft15"><i class="fa-solid fa-rotate-left"></i> -15°</button>
-        <button class="tool-btn" id="btnRotateRight15"><i class="fa-solid fa-rotate-right"></i> +15°</button>
-    </div>
+                <div class="panel-box" id="panelEdit" style="padding: 10px 12px; text-align: center;">
+                    <div class="section-title" style="margin-top:0; margin-bottom: 8px; font-size: 12px;" data-i18n="label_edit_layer">편집 & 레이어</div>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
+                        <button class="tool-btn" id="btnUndo" style="font-size: 11px;"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="btn_undo">취소</span></button>
+                        <button class="tool-btn" id="btnRedo" style="font-size: 11px;"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_redo">다시</span></button>
+                        <button class="tool-btn" id="btnCopy" style="font-size: 11px;"><i class="fa-regular fa-copy"></i> <span data-i18n="btn_copy">복사</span></button>
+                        <button class="tool-btn" id="btnPaste" style="font-size: 11px;"><i class="fa-regular fa-paste"></i> <span data-i18n="btn_paste">붙여넣기</span></button>
+                    </div>
+                    
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <button class="tool-btn" id="btnRotateLeft15" style="flex:1; font-size: 11px;">-15°</button>
+                        <button class="tool-btn" id="btnRotateRight15" style="flex:1; font-size: 11px;">+15°</button>
+                    </div>
 
-    <div style="display:flex; gap:5px; margin-bottom:5px;">
-        <button class="tool-btn" id="btnFront" data-i18n="btn_front">맨앞</button>
-        <button class="tool-btn" id="btnBack" data-i18n="btn_back">맨뒤</button>
-        <button class="tool-btn" id="btnDel" style="color:red;" data-i18n="btn_del">삭제</button>
-    </div>
-    
-    <div class="section-title" style="margin-top:10px;" data-i18n="label_align">객체 정렬</div>
-    <div class="align-grid">
-        <button class="align-btn" id="btnAlignLeft"><i class="fa-solid fa-align-left"></i></button>
-        <button class="align-btn" id="btnAlignCenterH"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>
-        <button class="align-btn" id="btnAlignRight"><i class="fa-solid fa-align-right"></i></button>
-        <button class="align-btn" id="btnAlignTop"><i class="fa-solid fa-align-left" style="transform:rotate(90deg)"></i></button>
-        <button class="align-btn" id="btnAlignMiddle"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>
-        <button class="align-btn" id="btnAlignBottom"><i class="fa-solid fa-align-right" style="transform:rotate(90deg)"></i></button>
-    </div>
-    <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px;">🎯 <span data-i18n="btn_center_all">정중앙 정렬</span></button>
-    <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px;">🖼 <span data-i18n="btn_full_bg">배경으로 꽉 채우기</span></button>
-</div>
+                    <div style="display:flex; gap:5px; margin-bottom:10px;">
+                        <button class="tool-btn" id="btnFront" data-i18n="btn_front" style="flex:1; font-size: 11px;">맨앞</button>
+                        <button class="tool-btn" id="btnBack" data-i18n="btn_back" style="flex:1; font-size: 11px;">맨뒤</button>
+                        <button class="tool-btn" id="btnDel" style="color:red; flex:1; font-size: 11px;" data-i18n="btn_del">삭제</button>
+                    </div>
+                    
+                    <div class="section-title" style="margin-bottom:8px; font-size: 12px;" data-i18n="label_align">정렬</div>
+                    <div class="align-grid" style="gap: 4px; margin-bottom: 8px;">
+                        <button class="align-btn" id="btnAlignLeft"><i class="fa-solid fa-align-left"></i></button>
+                        <button class="align-btn" id="btnAlignCenterH"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>
+                        <button class="align-btn" id="btnAlignRight"><i class="fa-solid fa-align-right"></i></button>
+                        <button class="align-btn" id="btnAlignTop"><i class="fa-solid fa-align-left" style="transform:rotate(90deg)"></i></button>
+                        <button class="align-btn" id="btnAlignMiddle"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>
+                        <button class="align-btn" id="btnAlignBottom"><i class="fa-solid fa-align-right" style="transform:rotate(90deg)"></i></button>
+                    </div>
+                    <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px; height: 32px; font-size: 11px;">🎯 <span data-i18n="btn_center_all">정중앙</span></button>
+                    <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px; height: 32px; font-size: 11px;">🖼 <span data-i18n="btn_full_bg">배경 채우기</span></button>
+                </div>
 
-<div class="section-title" data-i18n="label_cut_shape">모양대로 오려내기</div>
-<div class="tool-box-group">
-    <div style="font-size:12px; color:#666; margin-bottom:8px; text-align:center;" data-i18n="msg_select_click">
-        이미지를 선택하고 클릭하세요
-    </div>
-    
-    <button id="btn-create-outline" class="btn-round" style="width:100%; margin-bottom:8px; justify-content:center;">
-        ✂️ <span data-i18n="btn_make_cutline">오려내기 칼선작업</span>
-    </button>
-
-    <div style="display:flex; gap:8px;">
-        <button id="btn-make-keyring" class="btn-round" style="flex:1; flex-direction:column; gap:5px; height:auto; padding:10px; font-size:12px;">
-            <span data-i18n="btn_keyring_hole">키링 고리</span>
-        </button>
-        
-        <button id="btn-make-standee" class="btn-round" style="flex:1; flex-direction:column; gap:5px; height:auto; padding:10px; font-size:12px;">
-            <span data-i18n="btn_stand_base">등신대 받침</span>
-        </button>
-    </div>
-</div>
                 <div class="panel-box" id="panelText" style="display:none;"></div>
                 
-                <div class="panel-box">
-                    <div class="section-title" style="margin-top:0; color:#333;" data-i18n="label_ai_image_tools">AI 이미지 도구</div>
-<div class="ai-tool-stack">
-    <button class="tool-btn" id="btnCutout">✂️ <span data-i18n="btn_bg_remove">(배경 제거 누끼따기)</span></button>
-    <button class="tool-btn" id="btnEnhance">✨ <span data-i18n="btn_enhance">밝게 보정</span></button>
-    <button class="tool-btn" id="btnOutline">🔲 <span data-i18n="btn_text_outline">글자 테두리 만들기</span></button>
-</div>
-<div class="section-title" style="margin-top:10px;" data-i18n="label_stroke_style">📏 선 두께 및 스타일</div>
-<input type="range" id="globalStroke" min="0" max="30" value="0" style="width:100%;">
+                <div class="panel-box" style="padding: 10px 12px; text-align: center;">
+                    <div class="section-title" style="margin-top:0; color:#333; font-size: 12px; margin-bottom: 5px;">오려내기 & AI</div>
+                    <div class="tool-box-group" style="padding: 0;">
+                        <button id="btn-create-outline" class="btn-round" style="width:100%; margin-bottom:5px; justify-content:center; height: 36px; font-size: 11px;">
+                            ✂️ <span data-i18n="btn_make_cutline">오려내기 칼선</span>
+                        </button>
+                        <div style="display:flex; gap:5px; margin-bottom: 10px;">
+                            <button id="btn-make-keyring" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">키링 고리</button>
+                            <button id="btn-make-standee" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">등신대</button>
+                        </div>
+                    </div>
 
-<div style="display:flex; gap:5px; margin-top:5px;">
-    <button class="tool-btn" id="btnStrokeMiter" title="각지게" style="flex:1; justify-content:center;">
-        <i class="fa-solid fa-square"></i> <span data-i18n="style_miter">각지게</span>
-    </button>
-    <button class="tool-btn" id="btnStrokeRound" title="부드럽게" style="flex:1; justify-content:center;">
-        <i class="fa-solid fa-circle"></i> <span data-i18n="style_round">둥글게</span>
-    </button>
-</div>
+                    <div class="ai-tool-stack" style="gap: 5px;">
+                        <button class="tool-btn" id="btnCutout" style="height: 36px; font-size: 11px;">✂️ <span data-i18n="btn_bg_remove">누끼따기</span></button>
+                        <button class="tool-btn" id="btnEnhance" style="height: 36px; font-size: 11px;">✨ <span data-i18n="btn_enhance">화질 개선</span></button>
+                        <button class="tool-btn" id="btnOutline" style="height: 36px; font-size: 11px;">🔲 <span data-i18n="btn_text_outline">외곽선</span></button>
+                    </div>
+                    
+                    <div class="section-title" style="margin-top:10px; font-size: 11px; text-align: left;">선 두께</div>
+                    <input type="range" id="globalStroke" min="0" max="30" value="0" style="width:100%;">
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <button class="tool-btn" id="btnStrokeMiter" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-square"></i> 각지게</button>
+                        <button class="tool-btn" id="btnStrokeRound" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-circle"></i> 둥글게</button>
+                    </div>
 
-                    <div class="section-title">투명도</div><input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
+                    <div class="section-title" style="margin-top: 10px; font-size: 11px; text-align: left;">투명도</div>
+                    <input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
                 </div>
             </div>
             <canvas id="designCanvas"></canvas>

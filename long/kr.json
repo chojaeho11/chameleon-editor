@@ -9,10 +9,10 @@
   "btn_search": "검색",
 
   "tab_all": "템플릿",
-  "tab_vector": "배경",
-  "tab_graphic": "벡터",
-  "tab_photo": "사진",
-  "tab_pattern": "패턴",
+  "tab_vector": "백터배경디자인",
+  "tab_graphic": "벡터스토리디자인",
+  "tab_photo": "이미지 템플릿",
+  "tab_pattern": "패턴디자인",
   "tab_logo": "로고",
 
   "btn_my_library": "📂 보관함",
