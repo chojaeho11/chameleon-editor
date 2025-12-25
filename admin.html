@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Chameleon Global Admin</title>
+    <title>Chameleon Global Admin + Bankda</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
@@ -138,8 +138,10 @@
         <ul class="nav-menu">
             <div class="nav-label">Business</div>
             <li class="nav-item active" onclick="showSection('sec-orders', this)"><i class="fa-solid fa-cart-shopping"></i> 통합 주문 관리</li>
+            <li class="nav-item" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
+            
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this)"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
             
@@ -202,6 +204,56 @@
                 </div>
             </div>
 
+            <div id="sec-bankda" class="section">
+                <div class="card" style="margin-bottom:20px; background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <h3 style="margin-top:0; border-bottom:1px solid #bbf7d0; padding-bottom:15px; display:flex; align-items:center; gap:10px; color:#15803d;">
+                        <i class="fa-solid fa-robot"></i> 뱅크다(Bankda) 실시간 입금 확인
+                    </h3>
+                    <div style="display:flex; gap:15px; align-items:flex-end;">
+    <div>
+        <label class="form-label">조회 시작일</label>
+        <input type="date" id="bankStartDate" class="input-text">
+    </div>
+    <div>
+        <label class="form-label">조회 종료일</label>
+        <input type="date" id="bankEndDate" class="input-text">
+    </div>
+    <button class="btn btn-success" style="height:42px;" onclick="loadBankdaList()">
+        <i class="fa-solid fa-magnifying-glass"></i> 내역 조회
+    </button>
+    
+    <button class="btn btn-outline" style="height:42px; margin-left:auto;" onclick="openManualDepositModal()">
+        <i class="fa-solid fa-plus"></i> 입금건 수동 등록
+    </button>
+    </div>
+                    <p style="font-size:12px; color:#166534; margin-top:10px; margin-bottom:0;">
+                        * 실시간 계좌 갱신은 백엔드 서버의 뱅크다 모듈을 호출하여 최신 내역을 DB로 가져옵니다.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <h4 style="margin:0;">🏦 입금 내역 리스트 (DB: bank_transactions)</h4>
+                        <span class="badge" style="background:#f1f5f9; color:#64748b;">자동매칭 포함</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="150">거래일시</th>
+                                <th width="120">입금자명</th>
+                                <th width="120" style="text-align:right;">입금액</th>
+                                <th width="120">은행/계좌</th>
+                                <th width="100">매칭 상태</th>
+                                <th>관리 (주문연동)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bankListBody">
+                            <tr><td colspan="6" style="text-align:center; padding:30px;">조회 버튼을 눌러주세요.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div id="sec-stats" class="section">
                 <div class="card" style="margin-bottom:20px;">
                     <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px;">
@@ -222,6 +274,36 @@
                     <div class="card"><h4 style="margin-top:0;">🚚 배송 기사별 실적</h4><table style="margin-top:0;"><thead><tr><th>기사님</th><th style="text-align:right;">매출 기여도</th></tr></thead><tbody id="statDriverBody"></tbody></table></div>
                 </div>
             </div>
+
+            <div id="sec-tasks" class="section">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+            <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-truck-fast" style="color:#6366f1;"></i> 날짜별 배송 스케줄
+            </h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <select id="filterTaskDriver" class="input-text" style="width:200px; font-weight:bold;" onchange="loadDailyTasks()">
+                    <option value="all">🚛 전체 기사 보기</option>
+                </select>
+                
+                <input type="date" id="taskDate" class="input-text" style="width:140px;" onchange="loadDailyTasks()">
+                <button class="btn btn-primary" onclick="loadDailyTasks()">조회</button>
+            </div>
+        </div>
+        <table style="margin-top:0;">
+            <thead>
+                <tr>
+                    <th style="width:90px; white-space:nowrap;">상태</th>
+                    <th style="width:180px;">고객 정보 (이름/연락처)</th>
+                    <th>주문 파일</th>
+                    <th style="width:180px;">🚚 배송 기사 배정</th>
+                    <th style="width:160px;">⏰ 시간 / 완료체크</th>
+                </tr>
+            </thead>
+            <tbody id="taskListBody"></tbody>
+        </table>
+    </div>
+</div>
 
             <div id="sec-products" class="section">
                 <div class="card" style="background:#fff7ed; border:1px solid #ffedd5; margin-bottom:20px;">
@@ -487,7 +569,7 @@
         let allOrders = [];
         let editingProdId = null;
         let editingAddonId = null;
-        let editingTopCatId = null; // 대분류 수정용 ID
+        let editingTopCatId = null; 
         let allProducts = [];
         let staffList = []; 
 
@@ -509,6 +591,7 @@
             if(navEl) navEl.classList.add('active');
             
             if(secId === 'sec-orders') loadOrders();
+            if(secId === 'sec-bankda') loadBankdaList(); // [추가] 뱅크다 섹션 로드
             if(secId === 'sec-stats') loadStatsData();
             if(secId === 'sec-members') loadMembers();
             if(secId === 'sec-templates') { loadTemplates(); loadProductKeys(); }
@@ -522,7 +605,136 @@
         function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
 
         // ==========================================
-        // [신규] 대분류 관리 함수들
+        // [추가] 뱅크다(Bankda) 관련 함수
+        // ==========================================
+        window.loadBankdaList = async () => {
+            let start = document.getElementById('bankStartDate').value;
+            let end = document.getElementById('bankEndDate').value;
+            
+            if(!start || !end) { 
+                const now = new Date(); 
+                end = now.toISOString().split('T')[0];
+                const weekAgo = new Date(now);
+                weekAgo.setDate(now.getDate() - 7);
+                start = weekAgo.toISOString().split('T')[0];
+                document.getElementById('bankStartDate').value = start;
+                document.getElementById('bankEndDate').value = end;
+            }
+
+            showLoading(true);
+            const tbody = document.getElementById('bankListBody');
+            tbody.innerHTML = '';
+
+            try {
+                // 1. 주문 목록 가져오기 (매칭용)
+                const { data: orders } = await sb.from('orders')
+                    .select('id, manager_name, total_amount, payment_status, created_at')
+                    .gte('created_at', start + 'T00:00:00')
+                    .neq('payment_status', '결제완료');
+
+                // 2. 입금 내역 가져오기 (가정된 테이블: bank_transactions)
+                const { data: transactions, error } = await sb.from('bank_transactions')
+                    .select('*')
+                    .gte('transaction_date', start + 'T00:00:00')
+                    .lte('transaction_date', end + 'T23:59:59')
+                    .order('transaction_date', { ascending: false });
+
+                if (error) {
+                    console.error(error);
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:red;">데이터 로드 실패 (테이블 확인 필요)</td></tr>`;
+                    showLoading(false);
+                    return;
+                }
+
+                if (!transactions || transactions.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">기간 내 입금 내역이 없습니다.</td></tr>`;
+                    showLoading(false);
+                    return;
+                }
+
+                transactions.forEach(tx => {
+                    // 매칭 로직 (단순 이름 매칭)
+                    const matchOrder = orders.find(o => 
+                        o.manager_name === tx.depositor && 
+                        Math.abs((o.total_amount || 0) - tx.amount) < 100 // 금액 오차범위 100원
+                    );
+
+                    let statusBadge = '<span class="badge" style="background:#f1f5f9; color:#94a3b8;">미매칭</span>';
+                    let actionBtn = `<button class="btn btn-outline btn-sm" onclick="matchOrderManual('${tx.id}', '${tx.depositor}')">수동 연결</button>`;
+
+                    if (matchOrder) {
+                        statusBadge = `<span class="badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">✅ 매칭됨 (${matchOrder.manager_name})</span>`;
+                        actionBtn = `<button class="btn btn-success btn-sm" onclick="confirmBankMatch('${tx.id}', '${matchOrder.id}')">입금확인 처리</button>`;
+                    } else if (tx.match_status === 'matched') {
+                        statusBadge = `<span class="badge" style="background:#e0e7ff; color:#3730a3;">처리완료</span>`;
+                        actionBtn = `-`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${new Date(tx.transaction_date).toLocaleString()}</td>
+                            <td style="font-weight:bold;">${tx.depositor}</td>
+                            <td style="text-align:right; font-weight:bold; color:#0f172a;">${tx.amount.toLocaleString()}원</td>
+                            <td><span style="font-size:12px; color:#666;">${tx.bank_name || '은행'}</span></td>
+                            <td>${statusBadge}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch(e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        window.runBankdaScraping = async () => {
+            if(!confirm("뱅크다 모듈을 실행하여 최신 입금내역을 가져오시겠습니까?\n(서버 부하 방지를 위해 1분 간격 권장)")) return;
+            
+            showLoading(true);
+            try {
+                // 실제 환경에서는 Supabase Edge Function URL을 호출해야 합니다.
+                // const res = await fetch('YOUR_SUPABASE_EDGE_FUNCTION_URL/bankda-scraping', { method: 'POST' });
+                
+                // [시뮬레이션] 2초 대기 후 완료 메시지
+                await new Promise(r => setTimeout(r, 2000));
+                
+                alert("✅ 최신 내역 갱신 완료!");
+                loadBankdaList(); // 목록 새로고침
+            } catch(e) {
+                alert("스크래핑 실패: " + e.message);
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        window.confirmBankMatch = async (txId, orderId) => {
+            if(!confirm("이 입금내역으로 주문을 '결제완료' 처리하시겠습니까?")) return;
+            try {
+                // 1. 주문 업데이트
+                const { error: ordErr } = await sb.from('orders').update({
+                    payment_status: '결제완료',
+                    payment_method: '무통장입금'
+                }).eq('id', orderId);
+                if(ordErr) throw ordErr;
+
+                // 2. 뱅크다 테이블 업데이트 (중복 처리 방지)
+                const { error: txErr } = await sb.from('bank_transactions').update({
+                    match_status: 'matched',
+                    matched_order_id: orderId
+                }).eq('id', txId);
+                
+                alert("처리되었습니다.");
+                loadBankdaList();
+            } catch(e) {
+                alert("처리 실패: " + e.message);
+            }
+        };
+        
+        // ==========================================
+        // 기존 함수들 (유지)
         // ==========================================
         window.loadTopCategoriesList = async () => {
             const listArea = document.getElementById('topCategoryListArea');
@@ -1359,9 +1571,7 @@
         window.loadStatsData = async () => { let start = document.getElementById('statStartDate').value; let end = document.getElementById('statEndDate').value; if(!start || !end) { const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); start = firstDay.toISOString().split('T')[0]; end = now.toISOString().split('T')[0]; document.getElementById('statStartDate').value = start; document.getElementById('statEndDate').value = end; } document.getElementById('loading').style.display = 'flex'; const { data: orders, error } = await sb.from('orders').select('*').gte('created_at', start + 'T00:00:00').lte('created_at', end + 'T23:59:59'); if(error) { alert("로드 실패"); document.getElementById('loading').style.display = 'none'; return; } const { data: allProds } = await sb.from('admin_products').select('price, name'); const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price); let totalRevenue = 0; const managerStats = {}; const driverStats = {}; orders.forEach(o => { let amt = o.total_amount || 0; let items = o.items; if (typeof items === 'string') { try { items = JSON.parse(items); } catch(e) { items = []; } } if(amt === 0 && Array.isArray(items)) { items.forEach(i => { let p = 0; if(i.product && i.product.price) p = i.product.price; else if(i.product && prodMap[i.product.name]) p = prodMap[i.product.name]; if(!p) p = i.price || 10000; amt += p * (i.qty || 1); }); } totalRevenue += amt; if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt; if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt; }); document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + "원"; document.getElementById('totalCount').innerText = orders.length + "건"; const { data: staff } = await sb.from('admin_staff').select('*'); renderStaffStats('statManagerBody', managerStats, staff || [], totalRevenue); renderStaffStats('statDriverBody', driverStats, staff || [], totalRevenue); document.getElementById('loading').style.display = 'none'; };
         function renderStaffStats(elemId, statsObj, staffList, totalRev) { const tbody = document.getElementById(elemId); tbody.innerHTML = ''; const sortedIds = Object.keys(statsObj).sort((a,b) => statsObj[b] - statsObj[a]); if(sortedIds.length === 0) { tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">데이터 없음</td></tr>'; return; } sortedIds.forEach(id => { const s = staffList.find(st => st.id == id); if(!s) return; const amt = statsObj[id]; const percent = totalRev > 0 ? Math.round((amt / totalRev) * 100) : 0; tbody.innerHTML += `<tr><td style="padding:12px 0;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><div style="width:12px; height:12px; border-radius:50%; background:${s.color};"></div><span style="font-weight:bold;">${s.name}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%; background:${s.color};"></div></div></td><td style="text-align:right;"><div>${amt.toLocaleString()}원</div><div style="font-size:11px; color:#999;">${percent}%</div></td></tr>`; }); }
         
-        // [수정] 카테고리 로드 및 대분류 연동
         window.loadCategories = async () => { 
-            // 1. 대분류 불러오기
             const { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order');
             const topSelect = document.getElementById('newCatTop');
             if (topSelect && topCats) {
@@ -1369,7 +1579,6 @@
                 topCats.forEach(t => { topSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`; });
             }
 
-            // 2. 카테고리 불러오기
             const { data } = await sb.from('admin_categories').select('*').order('sort_order', {ascending:true}); 
             const selectBox = document.getElementById('newProdCategory'); 
             const listArea = document.getElementById('categoryListArea'); 
@@ -1388,7 +1597,6 @@
                 span.dataset.id = cat.id; 
                 span.style.cssText = "border:1px solid #bae6fd; color:#0284c7; margin-right:5px; margin-bottom:5px; display:inline-block; user-select:none; background:white; padding:6px 10px;"; 
                 
-                // 대분류 표시
                 const parentName = topCats && cat.top_category_code 
                     ? (topCats.find(t => t.code === cat.top_category_code)?.name || cat.top_category_code) + " > " : "";
 
@@ -1409,7 +1617,6 @@
             }); 
         };
 
-        // [수정] 대분류 포함 저장
         window.addCategoryDB = async () => {
             const topCode = document.getElementById('newCatTop').value || null;
             const codeRaw = document.getElementById('newCatCode').value;
@@ -1474,7 +1681,6 @@
         async function saveCategoryOrder() { const badges = document.querySelectorAll('#categoryListArea .badge'); const updates=[]; badges.forEach((b,i)=>updates.push(sb.from('admin_categories').update({sort_order:i+1}).eq('id',b.dataset.id))); await Promise.all(updates); }
         function getDragAfterElementX(container, x) { const draggables = [...container.querySelectorAll('.badge:not(.dragging)')]; return draggables.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = x - box.left - box.width / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
         
-        // [수정] 시스템 DB 로드 함수 (필터 상태 유지)
         window.loadSystemDB = async (filterSite = 'KR') => { 
             const catSelect = document.getElementById('filterProdCat');
             const savedCatValue = catSelect ? catSelect.value : 'all';
@@ -1497,7 +1703,6 @@
                 }); 
             } 
             
-            // 카테고리 필터 채우기
             const { data: cats } = await sb.from('admin_categories').select('*').order('sort_order');
             if (catSelect && cats) {
                 catSelect.innerHTML = '<option value="all">📂 카테고리 전체</option>';
@@ -1513,7 +1718,6 @@
         window.editAddonLoad = async (id) => { const { data } = await sb.from('admin_addons').select('*').eq('id', id).single(); if(!data) return; editingAddonId = id; document.getElementById('newAddonCat').value = data.category; document.getElementById('newAddonCode').value = data.code; document.getElementById('nmKR').value = data.name_kr||data.name; document.getElementById('prKR').value = data.price_kr||data.price; document.getElementById('nmJP').value = data.name_jp||''; document.getElementById('prJP').value = data.price_jp||0; document.getElementById('nmUS').value = data.name_us||''; document.getElementById('prUS').value = data.price_us||0; const btn = document.querySelector('#newAddonCode').parentElement.parentElement.querySelector('.btn-primary'); btn.innerText = "수정 완료"; btn.classList.remove('btn-primary'); btn.classList.add('btn-vip'); };
         window.addAddonDB = async () => { const cat = document.getElementById('newAddonCat').value; const code = document.getElementById('newAddonCode').value; const nKR = document.getElementById('nmKR').value; const pKR = document.getElementById('prKR').value; const nJP = document.getElementById('nmJP').value; const pJP = document.getElementById('prJP').value; const nUS = document.getElementById('nmUS').value; const pUS = document.getElementById('prUS').value; if(!code) return alert("코드 필수"); const payload = { category: cat, code: code, name_kr: nKR, price_kr: parseInt(pKR||0), name_jp: nJP, price_jp: parseInt(pJP||0), name_us: nUS, price_us: parseInt(pUS||0), name: nKR, price: parseInt(pKR||0) }; if(editingAddonId) { await sb.from('admin_addons').update(payload).eq('id', editingAddonId); alert("수정되었습니다."); } else { await sb.from('admin_addons').insert([payload]); alert("등록되었습니다."); } editingAddonId = null; document.getElementById('newAddonCode').value = ''; document.getElementById('nmKR').value=''; document.getElementById('prKR').value=''; document.getElementById('nmJP').value=''; document.getElementById('prJP').value=''; document.getElementById('nmUS').value=''; document.getElementById('prUS').value=''; const btn = document.querySelector('#newAddonCode').parentElement.parentElement.querySelector('.btn'); btn.innerText = "저장"; btn.classList.remove('btn-vip'); btn.classList.add('btn-primary'); loadSystemDB('KR'); };
         
-        // [신규] 상품 목록 필터링 함수
         window.filterProductList = () => {
             const siteFilter = document.getElementById('filterProdSite').value;
             const catFilter = document.getElementById('filterProdCat').value;
@@ -1614,141 +1818,49 @@
         window.loadStaffList = async () => { const {data}=await sb.from('admin_staff').select('*').order('created_at',{ascending:false}); const tbody=document.getElementById('staffListBody'); tbody.innerHTML=''; data?.forEach(s=>{ tbody.innerHTML+=`<tr><td><div class="color-dot" style="background:${s.color}"></div></td><td>${s.name}</td><td>${s.role}</td><td><button class="btn btn-danger btn-sm" onclick="deleteStaffDB(${s.id})">삭제</button></td></tr>`; }); };
         window.addStaffDB = async () => { const name=document.getElementById('staffName').value; const role=document.getElementById('staffRole').value; const color=document.getElementById('staffColor').value; if(!name) return; await sb.from('admin_staff').insert([{name,role,color}]); loadStaffList(); };
         window.deleteStaffDB = async (id) => { if(confirm("삭제?")) await sb.from('admin_staff').delete().eq('id',id); loadStaffList(); };
-        // admin.html 내부 스크립트 수정
 
-// [수정] 폰트 목록 불러오기
-window.loadFonts = async () => { 
-    const tbody = document.getElementById('fontListBody'); 
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">로딩 중...</td></tr>';
-    
-    try { 
-        // 최신순 정렬
-        const { data, error } = await sb.from('site_fonts').select('*').order('created_at', { ascending: false });
-        
-        if (error) throw error;
+        window.loadFonts = async () => { 
+            const tbody = document.getElementById('fontListBody'); 
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">로딩 중...</td></tr>';
+            try { 
+                const { data, error } = await sb.from('site_fonts').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                tbody.innerHTML = '';
+                if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">등록된 폰트가 없습니다.</td></tr>'; return; }
+                data.forEach(f => {
+                    const fontFace = new FontFace(f.font_family, `url(${f.file_url})`);
+                    fontFace.load().then(loaded => document.fonts.add(loaded)).catch(e => console.warn(e));
+                    let flag = ''; if(f.site_code === 'KR') flag = '🇰🇷'; else if(f.site_code === 'JP') flag = '🇯🇵'; else if(f.site_code === 'US') flag = '🇺🇸';
+                    tbody.innerHTML += `<tr><td>${flag} ${f.site_code}</td><td>${f.font_name}<br><span style="font-size:11px; color:#888;">(${f.font_family})</span></td><td style="font-family:'${f.font_family}'; font-size:16px;">다람쥐 헌 쳇바퀴 (Preview)</td><td><button class="btn btn-danger btn-sm" onclick="deleteFontDB(${f.id})">삭제</button></td></tr>`; 
+                }); 
+            } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">로드 실패</td></tr>'; } 
+        };
 
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">등록된 폰트가 없습니다.</td></tr>';
-            return;
-        }
+        window.uploadFont = async () => { 
+            const site = document.getElementById('fontSite').value; 
+            const name = document.getElementById('fontName').value; 
+            const fam = document.getElementById('fontFamily').value; 
+            const fileInput = document.getElementById('fontFile');
+            const file = fileInput.files[0]; 
+            if (!name || !fam || !file) return alert("필수 입력값을 확인해주세요.");
+            const btn = document.querySelector('#sec-fonts .btn-primary');
+            const oldText = btn.innerText; btn.innerText = "업로드 중..."; btn.disabled = true;
+            try { 
+                const timestamp = Date.now();
+                const safeName = `${timestamp}_${Math.random().toString(36).substring(2,10)}.ttf`;
+                const path = `${site}/${safeName}`; 
+                const { data: uploadData, error: uploadErr } = await sb.storage.from('fonts').upload(path, file); 
+                if(uploadErr) throw new Error(uploadErr.message);
+                const { data: urlData } = sb.storage.from('fonts').getPublicUrl(path); 
+                const { error: dbErr } = await sb.from('site_fonts').insert([{ site_code: site, font_name: name, font_family: fam, file_url: urlData.publicUrl }]);
+                if (dbErr) throw new Error(dbErr.message);
+                alert("✅ 폰트 등록 완료!"); 
+                document.getElementById('fontName').value = ''; document.getElementById('fontFamily').value = ''; fileInput.value = '';
+                loadFonts(); 
+            } catch(e) { alert("에러 발생: " + e.message); } finally { btn.innerText = oldText; btn.disabled = false; }
+        };
 
-        // 폰트 미리보기를 위해 브라우저에 로드
-        data.forEach(f => {
-            const fontFace = new FontFace(f.font_family, `url(${f.file_url})`);
-            fontFace.load().then(loaded => document.fonts.add(loaded)).catch(e => console.warn(e));
-
-            let flag = '';
-            if(f.site_code === 'KR') flag = '🇰🇷';
-            else if(f.site_code === 'JP') flag = '🇯🇵';
-            else if(f.site_code === 'US') flag = '🇺🇸';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${flag} ${f.site_code}</td>
-                    <td>${f.font_name}<br><span style="font-size:11px; color:#888;">(${f.font_family})</span></td>
-                    <td style="font-family:'${f.font_family}'; font-size:16px;">
-                        다람쥐 헌 쳇바퀴 (Preview)
-                    </td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="deleteFontDB(${f.id})">삭제</button>
-                    </td>
-                </tr>`; 
-        }); 
-    } catch(e) { 
-        console.error(e);
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">로드 실패</td></tr>';
-    } 
-};
-
-// [수정] 폰트 업로드 및 DB 등록
-// admin.html 내부의 uploadFont 함수 교체
-
-window.uploadFont = async () => { 
-    const site = document.getElementById('fontSite').value; 
-    const name = document.getElementById('fontName').value; 
-    const fam = document.getElementById('fontFamily').value; 
-    const fileInput = document.getElementById('fontFile');
-    const file = fileInput.files[0]; 
-
-    // 유효성 검사
-    if (!name) return alert("폰트명(표시명)을 입력해주세요.");
-    if (!fam) return alert("CSS Family 이름을 입력해주세요.");
-    if (!file) return alert("폰트 파일(.ttf / .woff2)을 선택해주세요.");
-    
-    // 버튼 로딩 처리
-    const btn = document.querySelector('#sec-fonts .btn-primary');
-    const oldText = btn.innerText;
-    btn.innerText = "업로드 중...";
-    btn.disabled = true;
-
-    try { 
-        console.log("업로드 시작..."); // 디버깅용
-
-        // 1. 스토리지 업로드 (fonts 버킷)
-        const timestamp = Date.now();
-        // 파일명에서 특수문자 제거 후 저장
-        const safeName = `${timestamp}_${Math.random().toString(36).substring(2,10)}.ttf`;
-        const path = `${site}/${safeName}`; // 폴더 구분
-        
-        console.log("스토리지 업로드 시도:", path);
-
-        const { data: uploadData, error: uploadErr } = await sb.storage
-            .from('fonts') // 2단계에서 만든 버킷 이름
-            .upload(path, file); 
-        
-        if(uploadErr) {
-            console.error("스토리지 에러:", uploadErr);
-            throw new Error("스토리지 업로드 실패: " + uploadErr.message);
-        }
-        
-        // 2. 공개 URL 가져오기
-        const { data: urlData } = sb.storage.from('fonts').getPublicUrl(path); 
-        console.log("공개 URL 획득:", urlData.publicUrl);
-
-        // 3. DB Insert
-        const { error: dbErr } = await sb.from('site_fonts').insert([{
-            site_code: site, 
-            font_name: name, 
-            font_family: fam, 
-            file_url: urlData.publicUrl
-        }]);
-
-        if (dbErr) {
-            console.error("DB 에러:", dbErr);
-            throw new Error("DB 저장 실패: " + dbErr.message);
-        }
-
-        alert("✅ 폰트가 성공적으로 등록되었습니다!"); 
-        
-        // 입력창 초기화
-        document.getElementById('fontName').value = '';
-        document.getElementById('fontFamily').value = '';
-        fileInput.value = '';
-        
-        // 목록 새로고침
-        if(typeof loadFonts === 'function') loadFonts(); 
-
-    } catch(e) { 
-        console.error(e);
-        alert("에러 발생: " + e.message); 
-    } finally {
-        btn.innerText = oldText;
-        btn.disabled = false;
-    }
-};
-
-// [수정] 폰트 삭제
-window.deleteFontDB = async (id) => { 
-    if(!confirm("이 폰트를 정말 삭제하시겠습니까?\n(이미 사용된 디자인에서는 폰트가 깨질 수 있습니다)")) return; 
-    try {
-        const { error } = await sb.from('site_fonts').delete().eq('id', id); 
-        if(error) throw error;
-        loadFonts(); 
-    } catch(e) {
-        alert("삭제 실패: " + e.message);
-    }
-};
+        window.deleteFontDB = async (id) => { if(!confirm("삭제하시겠습니까?")) return; try { const { error } = await sb.from('site_fonts').delete().eq('id', id); if(error) throw error; loadFonts(); } catch(e) { alert("삭제 실패: " + e.message); } };
         window.loadMembers = async () => { const {data}=await sb.from('profiles').select('*').order('created_at',{ascending:false}); const tbody=document.getElementById('memberListBody'); tbody.innerHTML=''; data?.forEach(m=>{ const r = m.role || 'customer'; const select = `<select onchange="updateMemberRole('${m.id}', this.value)" style="padding:4px; border:1px solid #ddd; border-radius:4px;"><option value="customer" ${r==='customer'?'selected':''}>일반회원</option><option value="vip" ${r==='vip'?'selected':''}>👑 VIP</option><option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option></select>`; tbody.innerHTML+=`<tr><td>${new Date(m.created_at).toLocaleDateString()}</td><td>${m.email}</td><td>${r}</td><td>${select}</td></tr>`; }); };
         window.updateMemberRole = async (id, newRole) => { if(!confirm("등급을 변경하시겠습니까?")) { loadMembers(); return; } const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); if(error) alert("실패: " + error.message); else alert("변경 완료"); };
         function initTemplateListeners() { const fThumb = document.getElementById('fileThumb'); if(fThumb) fThumb.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{document.getElementById('previewThumb').src=ev.target.result; document.getElementById('previewThumb').style.display='block';}; r.readAsDataURL(f);}); const fData = document.getElementById('fileData'); if(fData) fData.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{if(f.name.endsWith('.svg')){document.getElementById('dataStatus').style.display='block';}}; r.readAsDataURL(f);}); }

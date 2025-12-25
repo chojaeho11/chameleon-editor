@@ -362,10 +362,12 @@ export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
 
 // ★ [핵심] 줄바꿈(Enter) 문자를 인식해서 한 줄씩 나눠서 그리는 함수
 // ★ [수정됨] 전체 함수 코드 (행간 문제 + 볼드 문제 완벽 해결 버전)
+// export.js 내부의 convertCanvasTextToPaths 함수를 이걸로 교체하세요
+
 async function convertCanvasTextToPaths(fabricCanvas) {
     if (!window.opentype) return;
 
-    // 1. 폰트 URL 매핑 정보 가져오기
+    // 1. 폰트 매핑 정보 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     const CURRENT_LANG = (urlParams.get('lang') || 'kr').toUpperCase();
     const fontUrlMap = {};
@@ -377,14 +379,16 @@ async function convertCanvasTextToPaths(fabricCanvas) {
 
     const loadedFonts = {}; 
 
-    // 재귀적으로 그룹 및 객체 처리
+    // 재귀적으로 객체 처리 (그룹 내부까지)
     const processObjects = async (objects) => {
-        for (let i = 0; i < objects.length; i++) {
+        // 뒤에서부터 처리해야 인덱스 꼬임 방지
+        for (let i = objects.length - 1; i >= 0; i--) {
             let obj = objects[i];
 
             if (obj.type === 'group') {
                 await processObjects(obj.getObjects());
-            } else if (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox') {
+            } 
+            else if (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox') {
                 try {
                     const family = obj.fontFamily;
                     let url = fontUrlMap[family];
@@ -397,44 +401,59 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                     const font = loadedFonts[url];
 
                     // ----------------------------------------------------
-                    // [1] 행간(줄간격) 계산 및 Path 데이터 생성
+                    // ★ [핵심 수정] 텍스트 위치 및 줄바꿈 정밀 계산
                     // ----------------------------------------------------
+                    const fontSize = obj.fontSize;
+                    // Fabric.js의 lineHeight는 배수(예: 1.2)이므로 픽셀로 변환
+                    const lineHeightPx = obj.lineHeight * fontSize;
+                    
+                    // 텍스트 전체 높이 계산 (중심점 보정을 위해)
                     const textLines = obj.text.split(/\r\n|\r|\n/);
+                    const totalHeight = textLines.length * lineHeightPx;
+                    
+                    // 텍스트 박스의 정중앙 좌표 (변환 기준점)
+                    // Fabric.js는 텍스트를 그릴 때 baseline이 아닌 중심점 기준으로 배치함
+                    // 따라서 Path를 그릴 때도 시작점(y)을 잘 잡아야 함
+                    let startY = -(totalHeight / 2) + (fontSize * 0.8); // 0.8은 대략적인 baseline 보정값
+
                     let fullPathData = "";
-                    
-                    // ★ 행간 넓히기: 1.2배 적용 (원하는 만큼 숫자 조절 가능)
-                    const lh = obj.lineHeight * obj.fontSize * 1.2;
-                    
+
                     textLines.forEach((line, index) => {
-                        if(line.trim() === '') return;
-                        // y좌표를 줄 수(index) * 줄 높이(lh) 만큼 내려서 그림
-                        const linePath = font.getPath(line, 0, index * lh, obj.fontSize);
-                        fullPathData += linePath.toPathData(2);
+                        if(line.trim() !== '') {
+                            // 각 줄의 x좌표 정렬 (왼쪽/중앙/오른쪽)
+                            let lineX = 0;
+                            const lineWidth = font.getAdvanceWidth(line, fontSize);
+                            
+                            if (obj.textAlign === 'center') lineX = -lineWidth / 2;
+                            else if (obj.textAlign === 'right') lineX = (obj.width / 2) - lineWidth;
+                            else lineX = -obj.width / 2; // left
+
+                            // Path 생성
+                            const path = font.getPath(line, lineX, startY + (index * lineHeightPx), fontSize);
+                            fullPathData += path.toPathData(2);
+                        }
                     });
 
                     // ----------------------------------------------------
-                    // [2] 볼드(Bold) 강제 적용 로직
+                    // [2] Path 객체로 변환 (스타일 유지)
                     // ----------------------------------------------------
                     const isBold = obj.fontWeight === 'bold' || parseInt(obj.fontWeight) >= 600;
-                    
                     let finalStroke = obj.stroke;
                     let finalStrokeWidth = obj.strokeWidth;
 
-                    // 볼드체인데 외곽선 설정이 없다면 -> 글자색과 같은 외곽선을 추가해 두께감을 줌
+                    // 볼드 처리 (외곽선 추가)
                     if (isBold && !finalStroke && typeof obj.fill === 'string') {
                         finalStroke = obj.fill; 
-                        finalStrokeWidth = obj.fontSize * 0.035; // 폰트 크기의 3.5% 두께 추가
+                        finalStrokeWidth = fontSize * 0.025; // 두께 약간 얇게 조정
                     }
 
-                    // ----------------------------------------------------
-                    // [3] 기존 텍스트 객체를 Path 객체로 교체
-                    // ----------------------------------------------------
                     const fabricPath = new fabric.Path(fullPathData, {
                         fill: obj.fill,
-                        stroke: finalStroke,            // 계산된 외곽선 색
-                        strokeWidth: finalStrokeWidth,  // 계산된 외곽선 두께
-                        strokeLineCap: 'round',         // 끝부분 둥글게
-                        strokeLineJoin: 'round',        // 꺾임부분 둥글게
+                        stroke: finalStroke,
+                        strokeWidth: finalStrokeWidth,
+                        strokeLineCap: 'round',
+                        strokeLineJoin: 'round',
+                        // 기존 객체의 변형 속성 그대로 복사
                         scaleX: obj.scaleX,
                         scaleY: obj.scaleY,
                         angle: obj.angle,
@@ -446,19 +465,15 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                         shadow: obj.shadow
                     });
 
-                    // 위치 보정 (중심점 유지)
-                    const center = obj.getCenterPoint();
-                    fabricPath.setPositionByOrigin(center, 'center', 'center');
-
-                    // 그룹 내부가 아니면 캔버스에서 교체
-                    if (!obj.group) {
-                       fabricCanvas.remove(obj);
-                       fabricCanvas.add(fabricPath);
+                    // 기존 텍스트 삭제 후 벡터 패스로 교체
+                    if (obj.group) {
+                        obj.group.removeWithUpdate(obj);
+                        obj.group.addWithUpdate(fabricPath);
                     } else {
-                        // 그룹 내부라면(이 로직은 복잡하므로 그룹 해제 후 처리하거나 별도 로직 필요하지만, 
-                        // 현재 구조상 그룹 내 객체는 직접 교체가 어려울 수 있어 삭제 후 추가 방식 사용)
-                        // *그룹 내 텍스트 변환이 중요하다면 별도 처리가 필요합니다.*
+                        fabricCanvas.remove(obj);
+                        fabricCanvas.add(fabricPath);
                     }
+
                 } catch (err) {
                     console.warn("Text outline failed:", err);
                 }
