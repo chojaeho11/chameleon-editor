@@ -96,12 +96,25 @@
     <p class="hero-desc" data-i18n="hero_desc">대한민국 1등 광고인쇄 도매쇼핑몰, 로고를 공유하고 함께 만드는 무료에디터</p>
 </div>
 
+
+<div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
+    <div class="hotdeal-header">
+        <h2>🔥 오늘의 핫딜 <span class="badge-hot">Time Sale</span></h2>
+        <p>지금 놓치면 후회하는 초특가 상품을 만나보세요. 핫딜상품은 1인 최대 2개 주문가능해요</p>
+    </div>
+    <div id="hotDealGrid" class="hotdeal-grid">
+        </div>
+</div>
+
+
 <div class="quick-menu-wrapper">
     
     <div id="topCategoryTabs" class="category-tabs"></div>
 
     <div class="quick-menu-track" id="quickMenuContainer"></div>
 </div>
+
+
 
 <div class="gallery-section">
     <div class="gallery-header">부업공지! 이미지 만들어 나도쓰고 남도쓰면 현금으로 쌓이는 풍성한 적립금 혜택</div>
@@ -1026,6 +1039,8 @@
     loadTemplates('startTemplateGrid', false);
     window.preloadLanguageFont();
 
+    renderHotDeals();
+
     // ▼▼▼ [수정됨] 로그인 상태 확인 및 버튼 글씨 변경 로직 ▼▼▼
     setTimeout(async () => {
         // 1. Supabase에 로그인 상태 확인
@@ -1229,6 +1244,90 @@
 
     // 페이지 로드 시 실행
     loadAndApplyTranslations();
+
+    // [추가] 핫딜 렌더링 함수
+    async function renderHotDeals() {
+        const section = document.getElementById('hotDealSection');
+        const grid = document.getElementById('hotDealGrid');
+        if (!grid) return;
+
+        try {
+            // 1. 관리자 DB에서 'hotdeal' 카테고리를 가진 상품 최대 5개 가져오기
+            // 주의: 관리자 페이지에서 상품 등록 시 카테고리 코드를 'hotdeal'로 설정해야 합니다.
+            const { data: products, error } = await sb.from('admin_products')
+                .select('*')
+                .eq('category', 'hotdeal') // 카테고리 코드가 'hotdeal'인 것만 필터링
+                .order('sort_order', { ascending: true }) // 정렬 순서 적용 (없으면 created_at 등)
+                .limit(5);
+
+            if (error) throw error;
+
+            // 상품이 없으면 섹션을 숨김
+            if (!products || products.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            // 상품이 있으면 섹션을 보여주고 렌더링
+            section.style.display = 'block';
+            grid.innerHTML = '';
+
+            products.forEach(p => {
+                // 전역 PRODUCT_DB에 상품 정보 등록 (에디터 실행을 위해 필수)
+                if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+                
+                // 다국어 처리 (필요시)
+                let dName = p.name;
+                let dPrice = p.price;
+                // (기존 로직처럼 언어별 분기 가능)
+
+                window.PRODUCT_DB[p.code] = {
+                    name: dName,
+                    w: p.width_mm,
+                    h: p.height_mm,
+                    price: dPrice,
+                    img: p.img_url,
+                    addons: p.addons ? p.addons.split(',') : [],
+                    category: p.category
+                };
+
+                // 카드 HTML 생성
+                const card = document.createElement('div');
+                card.className = 'hotdeal-card';
+                
+                const imgSrc = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
+                const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : '사이즈 옵션';
+                
+                card.innerHTML = `
+                    <div class="hotdeal-img-box">
+                        <img src="${imgSrc}" alt="${dName}" onerror="this.src='https://placehold.co/300?text=No+Img'">
+                        <div style="position:absolute; top:10px; left:10px; background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px;">HOT</div>
+                    </div>
+                    <div class="hotdeal-info">
+                        <div class="hotdeal-title">${dName}</div>
+                        <div class="hotdeal-meta">${sizeText}</div>
+                        <div class="hotdeal-price">${dPrice.toLocaleString()}원</div>
+                    </div>
+                `;
+
+                // 클릭 시 에디터로 바로 이동
+                card.onclick = () => {
+                    // 선택된 상품 정보를 전역 변수에 저장
+                    window.currentProductKey = p.code;
+                    window.selectedProductForChoice = window.PRODUCT_DB[p.code];
+                    
+                    // 에디터 바로 실행
+                    window.startEditorDirect(p.code);
+                };
+
+                grid.appendChild(card);
+            });
+
+        } catch (e) {
+            console.error("핫딜 로딩 실패:", e);
+            section.style.display = 'none';
+        }
+    }
 // ============================================================
     // [신규] 상단 메뉴 클릭 시 실행되는 함수
     // (카테고리가 비어보이지 않게 첫번째 상품 사진을 가져옵니다)
@@ -1364,13 +1463,6 @@ async function renderQuickMenu() {
             // 2. 원하지 않는 카테고리 이름 강제 숨김
             const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
             topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
-
-            // 3. 허니콤보드 맨 앞으로 이동
-            const targetIndex = topCats.findIndex(cat => cat.name.includes('허니콤'));
-            if (targetIndex > -1) {
-                const [targetCat] = topCats.splice(targetIndex, 1);
-                topCats.unshift(targetCat);
-            }
         }
         // ▲▲▲ [수정 끝] ▲▲▲
 

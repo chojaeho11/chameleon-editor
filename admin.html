@@ -736,25 +736,72 @@
         // ==========================================
         // 기존 함수들 (유지)
         // ==========================================
-        window.loadTopCategoriesList = async () => {
-            const listArea = document.getElementById('topCategoryListArea');
-            if(!listArea) return;
-            listArea.innerHTML = '';
+        // [수정됨] 대분류 목록 로드 및 드래그 기능 추가
+window.loadTopCategoriesList = async () => {
+    const listArea = document.getElementById('topCategoryListArea');
+    if(!listArea) return;
+    listArea.innerHTML = '';
 
-            const { data } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
+    // sort_order 순으로 불러오기
+    const { data } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
+    
+    if(data) {
+        data.forEach(cat => {
+            const span = document.createElement('span');
+            // 'draggable' 클래스 추가
+            span.className = 'badge draggable';
+            // 드래그 가능 속성 true
+            span.draggable = true;
+            span.dataset.id = cat.id;
             
-            if(data) {
-                data.forEach(cat => {
-                    const span = document.createElement('span');
-                    span.className = 'badge';
-                    span.style.cssText = "border:1px solid #fdba74; color:#c2410c; background:#fff7ed; margin-right:5px; margin-bottom:5px; display:inline-block; padding:6px 10px;";
-                    span.innerHTML = `<b>${cat.name}</b> (${cat.code}) 
-                        <i class="fa-solid fa-pen" style="font-size:10px; margin-left:5px; color:#aaa; cursor:pointer;" onclick="editTopCategoryLoad(${cat.id})"></i>
-                        <i class="fa-solid fa-xmark" style="font-size:10px; margin-left:5px; color:#ef4444; cursor:pointer;" onclick="deleteTopCategoryDB(${cat.id})"></i>`;
-                    listArea.appendChild(span);
-                });
+            // 스타일: cursor:grab 추가됨
+            span.style.cssText = "border:1px solid #fdba74; color:#c2410c; background:#fff7ed; margin-right:5px; margin-bottom:5px; display:inline-block; padding:6px 10px; cursor:grab; user-select:none;";
+            
+            span.innerHTML = `<b>${cat.name}</b> (${cat.code}) 
+                <i class="fa-solid fa-pen" style="font-size:10px; margin-left:5px; color:#aaa; cursor:pointer;" onclick="editTopCategoryLoad(${cat.id})"></i>
+                <i class="fa-solid fa-xmark" style="font-size:10px; margin-left:5px; color:#ef4444; cursor:pointer;" onclick="deleteTopCategoryDB(${cat.id})"></i>`;
+            
+            // [드래그 이벤트] 시작
+            span.addEventListener('dragstart', () => span.classList.add('dragging'));
+            
+            // [드래그 이벤트] 종료 (순서 저장)
+            span.addEventListener('dragend', async () => {
+                span.classList.remove('dragging');
+                await saveTopCategoryOrder(); // 순서 저장 함수 호출
+            });
+
+            listArea.appendChild(span);
+        });
+
+        // [컨테이너 이벤트] 드래그 중 위치 계산 (기존 getDragAfterElementX 함수 재사용)
+        listArea.addEventListener('dragover', e => {
+            e.preventDefault();
+            const afterElement = getDragAfterElementX(listArea, e.clientX);
+            const draggable = document.querySelector('.badge.dragging');
+            if (afterElement == null) {
+                listArea.appendChild(draggable);
+            } else {
+                listArea.insertBefore(draggable, afterElement);
             }
-        };
+        });
+    }
+};
+
+// [신규] 대분류 순서 저장 함수
+async function saveTopCategoryOrder() {
+    // topCategoryListArea 안에 있는 배지들을 순서대로 가져옴
+    const badges = document.querySelectorAll('#topCategoryListArea .badge');
+    const updates = [];
+    
+    badges.forEach((b, i) => {
+        // i+1을 하여 sort_order를 1, 2, 3... 순으로 업데이트
+        updates.push(sb.from('admin_top_categories').update({ sort_order: i + 1 }).eq('id', b.dataset.id));
+    });
+    
+    // 비동기 병렬 처리로 DB 업데이트
+    await Promise.all(updates);
+    // console.log("대분류 순서 저장 완료");
+}
 
         window.addTopCategoryDB = async () => {
             const codeRaw = document.getElementById('newTopCatCode').value;

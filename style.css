@@ -1538,4 +1538,152 @@ body {
     body.editor-active #mobileControlDock {
         display: flex !important;
     }
-    
+    /* 핫딜 섹션 스타일 */
+.hotdeal-wrapper {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.hotdeal-header {
+    margin-bottom: 20px;
+}
+
+.hotdeal-header h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 5px 0;
+}
+
+.hotdeal-header p {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+}
+
+.badge-hot {
+    background: #ef4444;
+    color: white;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    animation: pulse 2s infinite;
+}
+
+.hotdeal-grid {
+    display: grid;
+    /* 5개를 균등한 비율(1fr)로 가로로 배치 */
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 15px; /* 간격 조절 */
+    width: 100%;
+}
+
+.hotdeal-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.hotdeal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: #6366f1;
+}
+
+.hotdeal-img-box {
+    width: 100%;
+    height: 180px;
+    background: #f8fafc;
+    overflow: hidden;
+    position: relative;
+}
+
+.hotdeal-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.hotdeal-card:hover .hotdeal-img-box img {
+    transform: scale(1.05);
+}
+
+.hotdeal-info {
+    padding: 15px;
+}
+
+.hotdeal-title {
+    font-weight: bold;
+    font-size: 15px;
+    color: #333;
+    margin-bottom: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hotdeal-meta {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.hotdeal-price {
+    font-size: 16px;
+    font-weight: 800;
+    color: #6366f1;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+/* 모바일 화면 (폭 768px 이하) */
+@media (max-width: 768px) {
+    .hotdeal-grid {
+        /* 한 줄에 2개씩 배치 */
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 10px;
+    }
+
+    /* 모바일에서는 5번째 상품을 숨겨서 2줄(4개)만 딱 보이게 처리 */
+    .hotdeal-card:nth-child(5) {
+        display: none;
+    }
+}
+/* 모바일 화면 (768px 이하) 설정 */
+    @media (max-width: 768px) {
+        
+        /* 퀵메뉴(카테고리) 컨테이너를 3칸으로 설정 */
+        #quickMenuContainer {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important; /* 핵심: 1줄에 3개 */
+            gap: 8px !important; /* 간격을 조금 좁게 조정 */
+        }
+
+        /* 3개씩 배치되면 공간이 좁아지므로 폰트 크기 미세 조정 */
+        .quick-item .quick-text {
+            font-size: 11px !important; 
+            letter-spacing: -0.5px;
+            white-space: nowrap; /* 글자가 두 줄로 안 떨어지게 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* 아이콘 박스 크기도 화면에 맞게 유동적으로 */
+        .quick-item .quick-icon-img-box {
+            height: auto !important;
+            aspect-ratio: 1 / 1; /* 정사각형 비율 유지 */
+        }
+    }
