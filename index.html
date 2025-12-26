@@ -136,19 +136,24 @@
     </div>
     
     <div class="hero-search-wrap">
-        <input type="search" 
-               id="startSearchInput" 
-               class="hero-search-input" 
-               data-i18n-placeholder="search_placeholder"
-               placeholder="어떤 디자인을 찾으세요? (예: 고양이, 바다, 하늘)" 
-               autocomplete="off" 
-               readonly 
-               onfocus="this.removeAttribute('readonly');"
-        >
-        <button id="btnStartSearch" class="hero-search-btn">
-            <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">검색</span>
-        </button>
+    <div style="display:none; opacity:0;">
+        <input type="text" name="fake_username_prevention" autocomplete="username">
+        <input type="password" name="fake_password_prevention" autocomplete="current-password">
     </div>
+
+    <input type="search" 
+           id="startSearchInput" 
+           name="q_search_query_final_v2" 
+           class="hero-search-input" 
+           placeholder="어떤 디자인을 찾으세요? (예: 고양이, 바다, 하늘)" 
+           autocomplete="off" 
+           readonly 
+           onfocus="this.removeAttribute('readonly');"
+    >
+    <button id="btnStartSearch" class="hero-search-btn">
+        <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">검색</span>
+    </button>
+</div>
 
     <!-- 게시판 -->
 <div class="community-nav-wrapper">
@@ -1080,15 +1085,15 @@ function goBoard(category) {
     // [1] 초기화 및 데이터 로드 (순서 중요)
     // ============================================================
     window.addEventListener('load', async () => {
-    
-    // 1. 초기 설정 (기존 코드 유지)
-    await initConfig(); 
-    loadAndApplyTranslations();
-    renderQuickMenu();
-    loadTemplates('startTemplateGrid', false);
-    window.preloadLanguageFont();
-
-    renderHotDeals();
+        await initConfig(); 
+        loadAndApplyTranslations();
+        renderQuickMenu();
+        
+        // ★ [여기 수정] 기존 loadTemplates(...) 지우고 아래 한 줄 추가
+        window.searchTemplates(''); // 전체 템플릿 로드 및 스크롤 감지 시작
+        
+        window.preloadLanguageFont();
+        renderHotDeals();
 
     // ▼▼▼ [수정됨] 로그인 상태 확인 및 버튼 글씨 변경 로직 ▼▼▼
     setTimeout(async () => {
@@ -1138,15 +1143,17 @@ function goBoard(category) {
 
     // 검색 기능 연결 (기존 코드 유지)
     const searchBtn = document.getElementById('btnStartSearch');
-    const searchInput = document.getElementById('startSearchInput');
-    if (searchBtn && searchInput) {
-        const doSearch = () => loadTemplates('startTemplateGrid', false, searchInput.value);
-        searchBtn.onclick = doSearch;
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') doSearch();
-        });
-    }
-});// ▼▼▼ [새로 추가] 마이페이지에서 [편집] 눌렀을 때 복구하는 코드 ▼▼▼
+        const searchInput = document.getElementById('startSearchInput');
+        if (searchBtn && searchInput) {
+            const doSearch = () => window.searchTemplates(searchInput.value);
+            searchBtn.onclick = doSearch;
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') doSearch();
+            });
+        }
+    });
+    
+    // ▼▼▼ [새로 추가] 마이페이지에서 [편집] 눌렀을 때 복구하는 코드 ▼▼▼
         const loadId = localStorage.getItem('load_design_id');
         if (loadId) {
             localStorage.removeItem('load_design_id'); // 한 번만 실행되도록 삭제
@@ -2109,36 +2116,152 @@ async function renderQuickMenu() {
         }
     });
 
-    async function loadTemplates(containerId, isModal = false, keyword = null) {
-        const grid = document.getElementById(containerId);
-        if (!grid) return;
-        grid.innerHTML = '<div style="text-align:center; padding:20px; grid-column:1/-1;">Loading...</div>';
-        if (!sb) await new Promise(r => setTimeout(r, 500)); 
+    // ==========================================
+// [1] 스마트 검색 & 무한 스크롤 설정
+// ==========================================
 
-        let query = sb.from('library').select('id, thumb_url, category, tags').order('created_at', { ascending: false }).limit(49);
-        if (keyword && keyword.trim() !== '') query = query.ilike('tags', `%${keyword.trim()}%`);
+// 1. 동의어(유사어) 데이터베이스
+const SYNONYM_DB = {
+    '빵': ['브레드', '베이커리', '제과', '디저트', '케이크', '식빵'],
+    '커피': ['카페', '아메리카노', '라떼', '음료', '티', 'coffee'],
+    '여름': ['바다', '해변', '수영', '휴가', '썸머', '물놀이'],
+    '세일': ['할인', '특가', '이벤트', '프로모션', '오픈', 'sale'],
+    '학원': ['교육', '수학', '영어', '입시', '공부', '과외'],
+    '고기': ['정육', '한우', '삼겹살', '식당', '맛집', '구이'],
+    '부동산': ['공인중개사', '매매', '전세', '월세', '분양'],
+    '뷰티': ['미용', '헤어', '네일', '화장품', '에스테틱']
+};
+
+// 2. 검색어 확장 함수
+function expandSearchKeywords(inputText) {
+    if (!inputText) return [];
+    let words = inputText.split(/\s+/).filter(w => w.trim().length > 0);
+    let expanded = new Set(words);
+    words.forEach(word => {
+        Object.keys(SYNONYM_DB).forEach(key => {
+            if (word.includes(key) || key.includes(word)) {
+                SYNONYM_DB[key].forEach(syn => expanded.add(syn));
+            }
+        });
+    });
+    return Array.from(expanded);
+}
+
+// 3. 변수 설정
+let currentTemplatePage = 0;
+let isTemplateLoading = false;
+let hasMoreTemplates = true;
+let lastSearchKeyword = '';
+const ITEMS_PER_PAGE = 120;
+
+// 4. 검색 시작 함수 (초기화)
+window.searchTemplates = function(keyword = '') {
+    const grid = document.getElementById('startTemplateGrid');
+    if (!grid) return;
+    
+    // 초기화
+    grid.innerHTML = '';
+    currentTemplatePage = 0;
+    hasMoreTemplates = true;
+    lastSearchKeyword = keyword;
+    
+    // 스크롤 감지 센서 재설치
+    const sentinel = document.getElementById('scroll-sentinel');
+    if(sentinel) sentinel.remove();
+    
+    const newSentinel = document.createElement('div');
+    newSentinel.id = 'scroll-sentinel';
+    newSentinel.style.cssText = 'height:10px; grid-column:1/-1;';
+    grid.parentNode.appendChild(newSentinel);
+    
+    scrollObserver.observe(newSentinel); // 감지 시작
+    
+    loadMoreTemplates(); // 첫 페이지 로드
+};
+
+// 5. 데이터 로드 함수 (무한 스크롤 핵심)
+async function loadMoreTemplates() {
+    if (isTemplateLoading || !hasMoreTemplates) return;
+    
+    const grid = document.getElementById('startTemplateGrid');
+    if (!grid) return;
+
+    isTemplateLoading = true;
+
+    // 로딩바 표시
+    let loader = document.getElementById('tpl-loader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'tpl-loader';
+        loader.style.cssText = 'grid-column:1/-1; text-align:center; padding:20px; color:#888;';
+        loader.innerText = '로딩 중...';
+        grid.appendChild(loader);
+    }
+
+    try {
+        if (!sb) await new Promise(r => setTimeout(r, 500));
+
+        let query = sb.from('library')
+            .select('id, thumb_url, category, tags')
+            .order('created_at', { ascending: false })
+            .range(currentTemplatePage * ITEMS_PER_PAGE, (currentTemplatePage + 1) * ITEMS_PER_PAGE - 1);
+
+        // 스마트 검색 조건 적용
+        if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
+            const keywords = expandSearchKeywords(lastSearchKeyword);
+            // 태그에 단어가 포함되는지 확인 (OR 검색)
+            const orCondition = keywords.map(k => `tags.ilike.%${k}%`).join(',');
+            if (orCondition) query = query.or(orCondition);
+        }
 
         const { data, error } = await query;
-        grid.innerHTML = '';
 
-        if (!data || data.length === 0) { 
-            grid.innerHTML = '<div style="text-align:center; padding:20px; color:#888; grid-column:1/-1;">검색 결과가 없습니다.</div>'; 
-            return; 
+        // 로딩바 제거
+        if(loader) loader.remove();
+
+        if (error) throw error;
+
+        // 데이터가 없거나 끝난 경우
+        if (!data || data.length === 0) {
+            hasMoreTemplates = false;
+            if (currentTemplatePage === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#888;">검색 결과가 없습니다.</div>';
+            }
+            return;
         }
-        
+
+        if (data.length < ITEMS_PER_PAGE) hasMoreTemplates = false;
+
+        // 카드 렌더링
         data.forEach(tpl => {
             const card = document.createElement('div');
-            card.className = isModal ? 'tpl-item' : 'tpl-card-start';
-            let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
+            card.className = 'tpl-card-start';
+            const imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
             
-            card.innerHTML = isModal 
-                ? `<img src="${imgSrc}" class="tpl-item-img">` 
-                : `<img src="${imgSrc}" class="tpl-card-img"><div class="tpl-card-overlay"></div>`;
-            
+            card.innerHTML = `<img src="${imgSrc}" class="tpl-card-img"><div class="tpl-card-overlay"></div>`;
             card.onclick = () => { if(window.onTemplateClick) window.onTemplateClick(tpl); };
             grid.appendChild(card);
         });
+
+        currentTemplatePage++;
+
+    } catch (e) {
+        console.error("템플릿 로드 오류:", e);
+        hasMoreTemplates = false;
+        if(loader) loader.remove();
+    } finally {
+        isTemplateLoading = false;
     }
+}
+
+// 6. 스크롤 감지 옵저버
+const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting && hasMoreTemplates && !isTemplateLoading) {
+            loadMoreTemplates();
+        }
+    });
+}, { root: null, rootMargin: '200px', threshold: 0.1 });
 
     // PDF 폰트 설정 (폰트 깨짐 방지)
     window.pdfFontCache = null;
