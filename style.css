@@ -1687,3 +1687,115 @@ body {
             aspect-ratio: 1 / 1; /* 정사각형 비율 유지 */
         }
     }
+    /* 커뮤니티 버튼 스타일 */
+.community-nav-wrapper { max-width: 1200px; margin: 20px auto 40px; padding: 0 10px; }
+.comm-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.comm-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; width: 90px; cursor: pointer; transition: transform 0.2s; }
+.comm-btn:hover { transform: translateY(-5px); }
+.comm-icon { width: 70px; height: 70px; border-radius: 50%; background: #fff; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #475569; margin-bottom: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.2s; }
+.comm-btn:hover .comm-icon { border-color: #6366f1; color: #6366f1; box-shadow: 0 10px 15px rgba(99,102,241,0.2); }
+.comm-btn.blog .comm-icon { background: #6366f1; color: white; border: none; }
+.comm-btn span { font-size: 13px; font-weight: 700; color: #333; text-align: center; line-height: 1.3; }
+@media (max-width: 768px) {
+    .comm-grid { gap: 10px; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .comm-btn { width: 100%; margin-bottom: 10px; }
+    .comm-icon { width: 60px; height: 60px; font-size: 24px; }
+}
+/* 세련된 커뮤니티 버튼 스타일 (Glassmorphism + Gradient) */
+.community-nav-wrapper { max-width: 1200px; margin: 30px auto 50px; padding: 0 20px; }
+.comm-grid { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; }
+
+.comm-btn {
+    display: flex; flex-direction: column; align-items: center; text-decoration: none;
+    width: 100px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+}
+
+/* 아이콘 박스: 그라데이션 테두리와 그림자 효과 */
+.comm-icon {
+    width: 75px; height: 75px; border-radius: 24px;
+    background: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; color: #64748b; margin-bottom: 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.05);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* 호버 시 둥둥 뜨는 효과와 색상 변경 */
+.comm-btn:hover { transform: translateY(-8px); }
+
+.comm-btn:hover .comm-icon {
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.25);
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); /* 보라색 그라데이션 */
+    border-color: transparent;
+}
+
+/* 블로그 버튼은 처음부터 강조 */
+.comm-btn.blog .comm-icon {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+.comm-btn.blog:hover .comm-icon {
+    transform: scale(1.05);
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
+}
+
+.comm-btn span {
+    font-size: 14px; font-weight: 700; color: #475569;
+    text-align: center; line-height: 1.4; transition: color 0.2s;
+}
+.comm-btn:hover span { color: #6366f1; }
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .comm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .comm-btn { width: 100%; }
+    .comm-icon { width: 65px; height: 65px; font-size: 26px; border-radius: 20px; }
+}
+
+/* =========================================
+   [모바일 탑바 버튼 순서 수정]
+   ========================================= */
+@media (max-width: 768px) {
+    /* 1. 브랜드 로고 숨김 (공간 확보) */
+    .brand { display: none !important; }
+
+    /* 2. 버튼 순서 강제 지정 (Flexbox Order) */
+    #btnHomeTop   { order: 1 !important; } /* HOME */
+    #btnOrderTop  { order: 2 !important; } /* 장바구니 담기 */
+    #btnViewCart  { order: 3 !important; } /* 장바구니 */
+    #btnLoginBtn  { order: 4 !important; } /* 로그인 */
+    #btnMyLibrary { order: 5 !important; } /* 보관함 */
+
+    /* 템플릿 버튼 등 기타 요소는 맨 뒤로 */
+    .template-tabs { order: 6 !important; }
+    .btn-save-top { order: 7 !important; }
+
+    /* 3. 좁은 화면을 위한 스타일 최적화 */
+    .topbar {
+        justify-content: space-between !important; /* 간격 균등 배치 */
+        padding: 0 5px !important;
+    }
+    
+    .topbar .btn {
+        margin: 0 2px !important;      /* 버튼 간격 좁힘 */
+        padding: 0 8px !important;     /* 내부 여백 줄임 */
+        font-size: 12px !important;    /* 글자 크기 줄임 */
+        height: 36px !important;       /* 높이 통일 */
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* (선택사항) 공간이 너무 좁으면 글자 숨기고 아이콘만 보이게 처리 */
+    /* 필요시 아래 주석을 해제하세요 */
+    /*
+    .topbar .btn span { display: none !important; }
+    .topbar .btn i { margin: 0 !important; font-size: 14px; }
+    */
+}

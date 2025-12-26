@@ -72,23 +72,27 @@
         </div>
         
         <div style="flex:1;"></div>
+        
         <button class="btn" onclick="if(confirm('첫 화면으로 돌아가시겠습니까?\n(저장하지 않은 작업은 사라질 수 있습니다)')) location.reload()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
             <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
         </button>
 
-        <button class="btn" id="btnMyLibrary" onclick="document.getElementById('libraryModal').style.display='flex'; if(window.loadMyDesigns) window.loadMyDesigns();" style="margin-right:5px; background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
-    <span data-i18n="btn_my_library">📂 마이페이지</span>
-</button>
-
-        <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'; document.body.classList.remove('editor-active');" style="margin-right:5px; background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
-    <span data-i18n="btn_cart">🛒 장바구니</span>
-</button>
-        
-        <button class="btn primary" id="btnOrderTop" style="background:var(--primary); color:white; font-weight:bold; box-shadow:0 4px 12px rgba(99,102,241,0.4);">
+        <button class="btn primary" id="btnOrderTop" style="margin-right:5px; background:var(--primary); color:rgb(255, 255, 255); font-weight:bold; box-shadow:0 4px 12px rgba(99,102,241,0.4);">
             🚀 <span data-i18n="btn_add_to_cart">장바구니 담기</span>
         </button>
-        <button class="btn" id="btnLoginBtn" onclick="document.getElementById('loginModal').style.display='flex'" style="margin-left:5px;" data-i18n="btn_login">로그인</button>
+
+        <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'; document.body.classList.remove('editor-active');" style="margin-right:5px; background:rgb(137, 57, 241); border:1px solid #fdfff2; color:#ffffff; padding:8px 12px;">
+            <span data-i18n="btn_cart">🛒 장바구니</span>
+        </button>
+        
+        <button class="btn" id="btnLoginBtn" onclick="document.getElementById('loginModal').style.display='flex'" style="margin-right:5px;" data-i18n="btn_login">로그인</button>
+
+        <button class="btn" id="btnMyLibrary" onclick="document.getElementById('libraryModal').style.display='flex'; if(window.loadMyDesigns) window.loadMyDesigns();" style="background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
+            <span data-i18n="btn_my_library">📂 보관함</span>
+        </button>
     </div>
+
+
 <div id="startScreen">
     
     <div class="hero-section">
@@ -96,7 +100,7 @@
     <p class="hero-desc" data-i18n="hero_desc">대한민국 1등 광고인쇄 도매쇼핑몰, 로고를 공유하고 함께 만드는 무료에디터</p>
 </div>
 
-
+<!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
         <h2>🔥 오늘의 핫딜 <span class="badge-hot">Time Sale</span></h2>
@@ -106,7 +110,7 @@
         </div>
 </div>
 
-
+<!-- 퀵메뉴와퍼 -->
 <div class="quick-menu-wrapper">
     
     <div id="topCategoryTabs" class="category-tabs"></div>
@@ -146,12 +150,57 @@
         </button>
     </div>
 
+    <!-- 게시판 -->
+<div class="community-nav-wrapper">
+    <div class="comm-grid">
+        <a href="#" onclick="goBoard('blog'); return false;" class="comm-btn blog">
+            <div class="comm-icon"><i class="fa-solid fa-pen-nib"></i></div>
+            <span>카멜레온<br>블로그</span>
+        </a>
+        <a href="#" onclick="goBoard('review'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-star"></i></div>
+            <span>고객<br>제작후기</span>
+        </a>
+        <a href="#" onclick="goBoard('promo'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-bullhorn"></i></div>
+            <span>지역광고사<br>홍보</span>
+        </a>
+        <a href="#" onclick="goBoard('trade'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-handshake"></i></div>
+            <span>중고장비<br>거래</span>
+        </a>
+        <a href="#" onclick="goBoard('job'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <span>구인구직</span>
+        </a>
+        <a href="#" onclick="goBoard('free'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-comments"></i></div>
+            <span>제품설명서</span>
+        </a>
+    </div>
+</div>
+<script>
+    // 게시판 이동 함수 (국가 코드 자동 감지)
+    // 게시판 이동 함수 (새 창 열기 적용)
+function goBoard(category) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentLang = urlParams.get('lang') || 'kr'; 
+    
+    let country = 'KR';
+    if (currentLang.toLowerCase() === 'us' || currentLang.toLowerCase() === 'en') country = 'US';
+    if (currentLang.toLowerCase() === 'jp') country = 'JP';
+
+    // window.open을 사용하여 새 탭에서 열기 ('_blank')
+    window.open(`/board.html?cat=${category}&country=${country}`, '_blank');
+}
+</script>
+
     
 
     <div id="startTemplateGrid" class="template-grid-start"></div>
     <div class="review-section">
     <div class="review-header">
-    <h2 data-i18n="review_section_title">✨ 고객님들의 생생한 리얼 후기</h2>
+    <h2 data-i18n="review_section_title">✨ 고객님들의 생생한 후기</h2>
     <p data-i18n="review_section_desc">카멜레온으로 완성된 멋진 결과물들을 확인해보세요.</p>
 </div>
 
@@ -1077,11 +1126,12 @@
                 };
             }
 
-            // 로그인 안내 팝업 띄우기
-            const loginModal = document.getElementById('loginModal');
+            // [수정됨] 시작 화면에서는 로그인 팝업을 자동으로 띄우지 않음
+            /* const loginModal = document.getElementById('loginModal');
             if (loginModal) {
                 loginModal.style.display = 'flex';
             }
+            */
         }
     }, 500);
     // ▲▲▲ 수정 완료 ▲▲▲
@@ -1761,106 +1811,117 @@ async function renderQuickMenu() {
     // ============================================================
     // [5] 에디터 시작 및 템플릿 로드
     // ============================================================
+    // ============================================================
+    // [5] 에디터 시작 및 템플릿 로드 (수정됨: 로그인 체크 + 템플릿 팝업)
+    // ============================================================
     window.startEditorDirect = async function(key) {
-    if (!key) return alert("상품 코드가 올바르지 않습니다.");
+        // [1] 로그인 체크 로직 추가
+        const { data } = await sb.auth.getSession();
+        if (!data || !data.session || !data.session.user) {
+            alert("디자인을 시작하려면 로그인이 필요합니다.");
+            document.getElementById('loginModal').style.display = 'flex';
+            return; // 로그인 안되어 있으면 에디터 진입 중단
+        }
 
-    window.currentProductKey = key;
-    if(canvas) canvas.currentProductKey = key;
-    
-    // [수정] PRODUCT_DB가 없거나 해당 키가 없을 경우를 대비한 안전 장치 추가
-    if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-    
-    const product = window.PRODUCT_DB[key];
+        if (!key) return alert("상품 코드가 올바르지 않습니다.");
 
-    // 상품 정보가 없으면 기본값(A4 사이즈)을 사용하도록 방어 코드 작성
-    const displayW = product ? (product.w_mm || product.w || 210) : 210;
-    const displayH = product ? (product.h_mm || product.h || 297) : 297;
-    const canvasW = product ? (product.w || 210) : 210;
-    const canvasH = product ? (product.h || 297) : 297;
-    
-    // 모드가 벽(Wall)인지 확인
-    const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
+        window.currentProductKey = key;
+        if(canvas) canvas.currentProductKey = key;
+        
+        if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+        
+        const product = window.PRODUCT_DB[key];
 
-    if (typeof setMaxLimits === 'function') setMaxLimits(displayW, displayH);
-    
-    const limitLabel = document.getElementById("limitLabel");
-    if(limitLabel) limitLabel.innerText = `Max: ${displayW}x${displayH}`;
-    
-    const inpW = document.getElementById("inputUserW");
-    const inpH = document.getElementById("inputUserH");
-    if(inpW) inpW.value = displayW;
-    if(inpH) inpH.value = displayH;
+        const displayW = product ? (product.w_mm || product.w || 210) : 210;
+        const displayH = product ? (product.h_mm || product.h || 297) : 297;
+        const canvasW = product ? (product.w || 210) : 210;
+        const canvasH = product ? (product.h || 297) : 297;
+        
+        const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
 
-    // 캔버스 크기 적용
-    if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
-    
-    // 화면 전환 (여기가 실행되어야 에디터가 보입니다)
-    document.getElementById("startScreen").style.display = "none";
-    document.getElementById("mainEditor").style.display = "flex";
+        if (typeof setMaxLimits === 'function') setMaxLimits(displayW, displayH);
+        
+        const limitLabel = document.getElementById("limitLabel");
+        if(limitLabel) limitLabel.innerText = `Max: ${displayW}x${displayH}`;
+        
+        const inpW = document.getElementById("inputUserW");
+        const inpH = document.getElementById("inputUserH");
+        if(inpW) inpW.value = displayW;
+        if(inpH) inpH.value = displayH;
 
-    const tplTabs = document.querySelector('.template-tabs');
+        if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
+        
+        // 화면 전환
+        document.getElementById("startScreen").style.display = "none";
+        document.getElementById("mainEditor").style.display = "flex";
+
+        const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
 
         document.body.classList.add('editor-active'); 
 
-        // [3번 해결] 채널톡 버튼 숨기기
         if (window.ChannelIO) {
             ChannelIO('hide');
         }
     
-    // 리사이즈 이벤트 발생시켜 캔버스 위치 잡기
-    window.dispatchEvent(new Event('resize'));
+        window.dispatchEvent(new Event('resize'));
 
-    // --- (이하 기존 로직 유지) ---
-    // 칼선 템플릿 자동 로드
-    try {
-        const { data, error } = await sb.from('library')
-            .select('data_url')
-            .eq('product_key', key)
-            .order('created_at', { ascending: false })
-            .limit(1);
+        // [2] 에디터 진입 직후 템플릿 선택 팝업 띄우기 (추가됨)
+        setTimeout(() => {
+            const tplOverlay = document.getElementById('templateOverlay');
+            if (tplOverlay) {
+                tplOverlay.style.display = 'flex';
+                // 기본 탭(이미지 템플릿) 활성화 및 로드
+                if (window.filterTpl) window.filterTpl('photo-bg'); 
+            }
+        }, 300); // 에디터 로딩 후 자연스럽게 뜨도록 약간의 딜레이
 
-        if (data && data.length > 0) {
-            const templateUrl = data[0].data_url;
-            setTimeout(() => {
-                if (window.loadProductFixedTemplate) window.loadProductFixedTemplate(templateUrl);
-            }, 500);
+        // 칼선 자동 로드 로직 (유지)
+        try {
+            const { data, error } = await sb.from('library')
+                .select('data_url')
+                .eq('product_key', key)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (data && data.length > 0) {
+                const templateUrl = data[0].data_url;
+                setTimeout(() => {
+                    if (window.loadProductFixedTemplate) window.loadProductFixedTemplate(templateUrl);
+                }, 500);
+            }
+        } catch(e) { console.error("자동 로드 오류:", e); }
+
+        if (window.pendingTemplate) {
+            await applyTemplateDirectly(window.pendingTemplate);
+            window.pendingTemplate = null; 
         }
-    } catch(e) { console.error("자동 로드 오류:", e); }
 
-    // 템플릿 적용 대기열 처리
-    if (window.pendingTemplate) {
-        await applyTemplateDirectly(window.pendingTemplate);
-        window.pendingTemplate = null; 
-    }
+        if (window.pendingAiImage) {
+            const loading = document.getElementById("loading");
+            if(loading) loading.style.display = 'flex';
 
-    // AI 이미지 적용 대기열 처리
-    if (window.pendingAiImage) {
-        // (기존 코드와 동일하게 유지)
-        const loading = document.getElementById("loading");
-        if(loading) loading.style.display = 'flex';
-
-        fabric.Image.fromURL(window.pendingAiImage, (img) => {
-            if (!img) return;
-            const board = canvas.getObjects().find(o => o.isBoard);
-            const cW = board ? board.width * board.scaleX : canvas.width;
-            const cH = board ? board.height * board.scaleY : canvas.height;
-            const cX = board ? board.left + cW / 2 : canvas.width / 2;
-            const cY = board ? board.top + cH / 2 : canvas.height / 2;
-            const scale = Math.min((cW * 0.8) / img.width, (cH * 0.8) / img.height);
-            
-            img.set({
-                scaleX: scale, scaleY: scale, left: cX, top: cY,
-                originX: 'center', originY: 'center'
-            });
-            canvas.add(img);
-            canvas.setActiveObject(img);
-            canvas.requestRenderAll();
-            window.pendingAiImage = null;
-            if(loading) loading.style.display = 'none';
-        }, { crossOrigin: 'anonymous' });
-    }
-};
+            fabric.Image.fromURL(window.pendingAiImage, (img) => {
+                if (!img) return;
+                const board = canvas.getObjects().find(o => o.isBoard);
+                const cW = board ? board.width * board.scaleX : canvas.width;
+                const cH = board ? board.height * board.scaleY : canvas.height;
+                const cX = board ? board.left + cW / 2 : canvas.width / 2;
+                const cY = board ? board.top + cH / 2 : canvas.height / 2;
+                const scale = Math.min((cW * 0.8) / img.width, (cH * 0.8) / img.height);
+                
+                img.set({
+                    scaleX: scale, scaleY: scale, left: cX, top: cY,
+                    originX: 'center', originY: 'center'
+                });
+                canvas.add(img);
+                canvas.setActiveObject(img);
+                canvas.requestRenderAll();
+                window.pendingAiImage = null;
+                if(loading) loading.style.display = 'none';
+            }, { crossOrigin: 'anonymous' });
+        }
+    };
 
     window.onTemplateClick = async function(tpl) {
         const startScreen = document.getElementById('startScreen');
