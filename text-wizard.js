@@ -1,14 +1,14 @@
 /**
  * text-wizard.js
- * 텍스트 디자인 마법사 (V15: 서체명 긴급 수정 & 디자인 최적화)
- * * [수정 사항]
- * 1. ★서체명 수정: 'JalnanGothic' -> 'jalnangodic' (관리자 화면 ID와 일치시킴)
- * 2. 서체 설정:
- * - 제목: 'jalnangodic' (잘난고딕)
- * - 본문: 'Paperlogy' (페이퍼로지)
- * - 감성: 'Nanum Pen Script' (나눔손글씨)
- * 3. 볼드 제거: 서체 본연의 모양을 살리기 위해 fontWeight: 'normal' 고정
- * 4. 자간/행간: 세련된 비율로 미세 조정
+ * 텍스트 디자인 마법사 (V16: 시스템 폰트 ID 적용 & 오류 해결 & 연하늘색 테마)
+ * * [수정 완료 사항]
+ * 1. 폰트 ID 적용 (스크린샷 기반):
+ * - 제목: jalnangodic (잘난체)
+ * - 본문: asdfasfasfsfdf (페이퍼로지)
+ * - 감성: asfgdfggfgfdg (나눔손글씨)
+ * 2. 색상 변경: 전체 '연하늘색' (#5dade2) 적용
+ * 3. 선 두께: 얇고 세련되게 (Thin Stroke)
+ * 4. 안정성: 'getRetinaScaling' 오류 방지를 위해 렌더링 동기화 후 그룹 해제
  */
 
 (function() {
@@ -16,24 +16,23 @@
     const urlParams = new URLSearchParams(window.location.search);
     const currentLang = urlParams.get('lang') ? urlParams.get('lang').toLowerCase() : 'kr';
 
-    // 2. 폰트 설정 (관리자 화면 ID 기준)
-    // ★ 여기가 틀려서 안 나왔던 것 수정 완료!
-    const FONT_TITLE = 'jalnangodic';      // 관리자 ID: jalnangodic
-    const FONT_SUB   = 'Paperlogy';        // 본문용
-    const FONT_EMO   = 'Nanum Pen Script'; // 감성용
+    // 2. 폰트 설정 (콘솔 로그에 찍힌 실제 시스템 ID)
+    const FONT_TITLE = 'jalnangodic';      // 잘난체
+    const FONT_SUB   = 'asdfasfasfsfdf';   // 페이퍼로지 중간 고딕
+    const FONT_EMO   = 'asfgdfggfgfdg';    // 나눔손글씨
     
-    // 3. 스타일 설정
-    const COLOR_MAIN = '#222222'; 
-    const COLOR_GRAY = '#555555'; 
-    const TIGHT_SPACING = -30;    // 자간 좁게
-    const LINE_HEIGHT_TITLE = 0.85; // 제목 행간 (밀도있게)
+    // 3. 스타일 설정 (연하늘색 & 얇은 선)
+    const COLOR_MAIN = '#5dade2';  // 연하늘색 (Sky Blue 계열)
+    const COLOR_SUB  = '#5dade2';  // 서브도 동일 계열 (필요시 조절)
+    const STROKE_THIN = 1.5;       // 선 두께 얇게
+    const TIGHT_SPACING = -30;     // 자간 좁게
 
     // 4. 내용 데이터
     const WIZ_DATA = {
         kr: {
             basic:   { main: "CHAMELEON\nEXHIBITION", sub: "친환경 전시 부스 솔루션", deco: "01" },
             flyer:   { main: "PAPER\nWORLD", sub: "종이로 만드는 새로운 세상\n허니콤보드 디자인 전시", host: "주최 : 카멜레온 프린팅   |   주관 : 디자인연구소\n후원 : 한국전시산업진흥회" },
-            card:    { name: "행복한마을", job: "Design Team Manager", phone: "010-1234-5678", email: "design@chameleon.co.kr", company: "CHAMELEON" },
+            card:    { name: "잘나가는회사", job: "Design Team Manager", phone: "010-1234-5678", email: "design@chameleon.co.kr", company: "CHAMELEON" },
             menu:    { 
                 title: "CAFE MENU", 
                 items: [
@@ -59,8 +58,10 @@
         const canvas = window.canvas;
         const data = WIZ_DATA[currentLang] || WIZ_DATA['kr'];
 
+        // 충돌 방지를 위해 기존 선택 해제
         canvas.discardActiveObject();
 
+        // 대지 정보 확인
         const board = canvas.getObjects().find(o => o.isBoard);
         let boardW = canvas.width;
         let boardH = canvas.height;
@@ -82,22 +83,22 @@
 
         // 1. [행사부스]
         if (type === 'basic') {
-            const lineTop = new fabric.Rect({ width: 400, height: 4, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy - 120 });
-            const lineBot = new fabric.Rect({ width: 400, height: 4, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 120 });
+            const lineTop = new fabric.Rect({ width: 400, height: STROKE_THIN, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy - 120 });
+            const lineBot = new fabric.Rect({ width: 400, height: STROKE_THIN, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 120 });
             
             const main = new fabric.IText(data.basic.main, {
                 fontFamily: FONT_TITLE, fontSize: 55, fill: COLOR_MAIN, textAlign: 'center', 
-                lineHeight: LINE_HEIGHT_TITLE, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
+                lineHeight: 0.85, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy
             });
             const sub = new fabric.IText(data.basic.sub, {
-                fontFamily: FONT_SUB, fontSize: 18, fill: COLOR_GRAY, 
+                fontFamily: FONT_SUB, fontSize: 18, fill: COLOR_SUB, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy + 70
             });
-            const circleDeco = new fabric.Circle({ radius: 30, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy - 180 });
+            const circleDeco = new fabric.Circle({ radius: 30, fill: 'transparent', stroke: COLOR_MAIN, strokeWidth: STROKE_THIN, originX: 'center', originY: 'center', left: cx, top: cy - 180 });
             const num = new fabric.IText("01", {
-                fontFamily: FONT_TITLE, fontSize: 24, fill: '#fff', 
+                fontFamily: FONT_TITLE, fontSize: 24, fill: COLOR_MAIN, 
                 charSpacing: TIGHT_SPACING, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy - 180
             });
@@ -108,7 +109,7 @@
         else if (type === 'flyer') {
             const title = new fabric.IText(data.flyer.main, {
                 fontFamily: FONT_TITLE, fontSize: 80, fill: COLOR_MAIN, textAlign: 'left', 
-                lineHeight: LINE_HEIGHT_TITLE, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
+                lineHeight: 0.85, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
                 originX: 'left', originY: 'top', left: cx - 200, top: cy - 300
             });
             
@@ -117,10 +118,10 @@
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'left', originY: 'top', left: cx - 200, top: cy + 50
             });
-            const line = new fabric.Rect({ width: 400, height: 2, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 200 });
+            const line = new fabric.Rect({ width: 400, height: STROKE_THIN, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 200 });
             
             const host = new fabric.IText(data.flyer.host, {
-                fontFamily: FONT_SUB, fontSize: 14, fill: COLOR_GRAY, textAlign: 'center', lineHeight: 1.6, 
+                fontFamily: FONT_SUB, fontSize: 14, fill: COLOR_SUB, textAlign: 'center', lineHeight: 1.6, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'center', originY: 'top', left: cx, top: cy + 220
             });
@@ -141,12 +142,12 @@
                 originX: 'left', originY: 'center', left: cx - 200, top: cy
             });
             const job = new fabric.IText(data.card.job, {
-                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_GRAY, 
+                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_SUB, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'left', originY: 'top', left: cx - 200, top: cy + 30
             });
             const contact = new fabric.IText(data.card.phone + "\n" + data.card.email, {
-                fontFamily: FONT_SUB, fontSize: 14, fill: COLOR_GRAY, textAlign: 'right', lineHeight: 1.6, 
+                fontFamily: FONT_SUB, fontSize: 14, fill: COLOR_SUB, textAlign: 'right', lineHeight: 1.6, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'right', originY: 'top', left: cx + 200, top: cy + 80
             });
@@ -160,7 +161,7 @@
                 charSpacing: TIGHT_SPACING, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy - 260
             });
-            const titleBar = new fabric.Rect({ width: 100, height: 6, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy - 220 });
+            const titleBar = new fabric.Rect({ width: 100, height: STROKE_THIN + 2, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy - 220 });
 
             const startY = cy - 180;
             const gap = 38; 
@@ -186,8 +187,8 @@
 
         // 5. [가로 현수막]
         else if (type === 'banner-h') {
-            const circleL = new fabric.Circle({ radius: 30, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx - 320, top: cy });
-            const circleR = new fabric.Circle({ radius: 30, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx + 320, top: cy });
+            const circleL = new fabric.Circle({ radius: 30, fill: 'transparent', stroke: COLOR_MAIN, strokeWidth: STROKE_THIN, originX: 'center', originY: 'center', left: cx - 320, top: cy });
+            const circleR = new fabric.Circle({ radius: 30, fill: 'transparent', stroke: COLOR_MAIN, strokeWidth: STROKE_THIN, originX: 'center', originY: 'center', left: cx + 320, top: cy });
             
             const main = new fabric.IText(data.bannerH.main, {
                 fontFamily: FONT_TITLE, fontSize: 50, fill: COLOR_MAIN, 
@@ -195,13 +196,13 @@
                 originX: 'center', originY: 'center', left: cx, top: cy - 20
             });
             const sub = new fabric.IText(data.bannerH.sub, {
-                fontFamily: FONT_SUB, fontSize: 20, fill: COLOR_MAIN, 
+                fontFamily: FONT_SUB, fontSize: 20, fill: COLOR_SUB, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy - 70
             });
-            const line = new fabric.Rect({ width: 500, height: 2, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 40 });
+            const line = new fabric.Rect({ width: 500, height: STROKE_THIN, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 40 });
             const desc = new fabric.IText(data.bannerH.desc, {
-                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_MAIN, 
+                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_SUB, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy + 70
             });
@@ -210,22 +211,22 @@
 
         // 6. [세로 배너]
         else if (type === 'banner-v') {
-            const triTop = new fabric.Triangle({ width: 120, height: 100, fill: COLOR_MAIN, angle: 180, originX: 'center', originY: 'center', left: cx, top: cy - 260 });
-            const triBot = new fabric.Triangle({ width: 120, height: 100, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 260 });
+            const triTop = new fabric.Triangle({ width: 120, height: 100, fill: 'transparent', stroke: COLOR_MAIN, strokeWidth: STROKE_THIN, angle: 180, originX: 'center', originY: 'center', left: cx, top: cy - 260 });
+            const triBot = new fabric.Triangle({ width: 120, height: 100, fill: 'transparent', stroke: COLOR_MAIN, strokeWidth: STROKE_THIN, originX: 'center', originY: 'center', left: cx, top: cy + 260 });
             
             const main = new fabric.IText(data.bannerV.main, {
                 fontFamily: FONT_TITLE, fontSize: 45, fill: COLOR_MAIN, textAlign: 'center', 
-                lineHeight: LINE_HEIGHT_TITLE, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
+                lineHeight: 0.85, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy - 40
             });
             const sub = new fabric.IText(data.bannerV.sub, {
-                fontFamily: FONT_SUB, fontSize: 18, fill: COLOR_GRAY, 
+                fontFamily: FONT_SUB, fontSize: 18, fill: COLOR_SUB, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy - 140
             });
-            const box = new fabric.Rect({ width: 150, height: 6, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 60 });
+            const box = new fabric.Rect({ width: 150, height: STROKE_THIN + 2, fill: COLOR_MAIN, originX: 'center', originY: 'center', left: cx, top: cy + 60 });
             const desc = new fabric.IText(data.bannerV.desc, {
-                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_MAIN, 
+                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_SUB, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy + 100
             });
@@ -240,14 +241,14 @@
                 originX: 'center', originY: 'center', left: cx, top: cy - 150
             });
             const sub = new fabric.IText(data.fabric.sub, {
-                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_GRAY, textAlign: 'center',
+                fontFamily: FONT_SUB, fontSize: 16, fill: COLOR_SUB, textAlign: 'center',
                 charSpacing: -10, fontWeight: 'normal', lineHeight: 1.5,
                 originX: 'center', originY: 'center', left: cx, top: cy - 90
             });
             
-            const guideCircle = new fabric.Circle({ radius: 80, fill: '#f0f0f0', originX: 'center', originY: 'center', left: cx, top: cy + 20 });
+            const guideCircle = new fabric.Circle({ radius: 80, fill: '#f0f8ff', originX: 'center', originY: 'center', left: cx, top: cy + 20 });
             const guideText = new fabric.IText("Photo Here", {
-                fontFamily: FONT_SUB, fontSize: 14, fill: '#ccc', fontWeight: 'normal', originX: 'center', originY: 'center', left: cx, top: cy + 20
+                fontFamily: FONT_SUB, fontSize: 14, fill: '#87ceeb', fontWeight: 'normal', originX: 'center', originY: 'center', left: cx, top: cy + 20
             });
             
             const bottom = new fabric.IText(data.fabric.bottom, {
@@ -266,17 +267,16 @@
                 originX: 'left', originY: 'bottom', left: cx - 120, top: cy - 170
             });
 
-            // 점 3개
             const dot1 = new fabric.Circle({ radius: 2, fill: COLOR_MAIN, left: cx + 100, top: cy - 175 });
             const dot2 = new fabric.Circle({ radius: 2, fill: COLOR_MAIN, left: cx + 108, top: cy - 175 });
             const dot3 = new fabric.Circle({ radius: 2, fill: COLOR_MAIN, left: cx + 116, top: cy - 175 });
 
             const photoArea = new fabric.Rect({ 
-                width: 240, height: 240, fill: '#f0f0f0', 
+                width: 240, height: 240, fill: '#f0f8ff', 
                 originX: 'center', originY: 'center', left: cx, top: cy - 40 
             });
             const photoText = new fabric.IText("PHOTO HERE", {
-                fontFamily: FONT_SUB, fontSize: 16, fill: '#ccc', fontWeight: 'normal', 
+                fontFamily: FONT_SUB, fontSize: 16, fill: '#87ceeb', fontWeight: 'normal', 
                 originX: 'center', originY: 'center', left: cx, top: cy - 40
             });
 
@@ -286,12 +286,12 @@
                 originX: 'left', originY: 'top', left: cx - 120, top: cy + 90
             });
             const desc = new fabric.IText(data.insta.desc, {
-                fontFamily: FONT_SUB, fontSize: 13, fill: COLOR_MAIN, lineHeight: 1.4, 
+                fontFamily: FONT_SUB, fontSize: 13, fill: COLOR_SUB, lineHeight: 1.4, 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'left', originY: 'top', left: cx - 120, top: cy + 115
             });
             const hash = new fabric.IText(data.insta.hash, {
-                fontFamily: FONT_SUB, fontSize: 12, fill: '#00376b', 
+                fontFamily: FONT_SUB, fontSize: 12, fill: '#0077b6', 
                 charSpacing: -10, fontWeight: 'normal',
                 originX: 'left', originY: 'top', left: cx - 120, top: cy + 160
             });
@@ -304,9 +304,10 @@
         }
 
         // ===============================================
-        // 스마트 리사이징 & 배치
+        // 스마트 리사이징 & 안전 배치 (오류 해결)
         // ===============================================
         if (objs.length > 0) {
+            // 1. 임시 그룹으로 크기 및 위치 계산
             const group = new fabric.Group(objs, {
                 left: cx, top: cy, originX: 'center', originY: 'center'
             });
@@ -318,18 +319,25 @@
             group.scale(scale);
             group.setCoords();
 
+            // 2. 캔버스에 추가 및 렌더링 (동기화)
             canvas.add(group);
-            canvas.requestRenderAll();
+            canvas.requestRenderAll(); 
 
-            const activeSel = group.toActiveSelection();
-            canvas.setActiveObject(activeSel);
-            
-            activeSel.set('opacity', 0);
-            activeSel.animate('opacity', 1, {
-                duration: 500,
-                onChange: canvas.renderAll.bind(canvas),
-                easing: fabric.util.ease.easeOutQuad
-            });
+            // 3. 렌더링이 확실히 끝난 후 그룹 해제 (오류 방지)
+            // setTimeout을 주어 렌더링 사이클 확보
+            setTimeout(() => {
+                if (group && canvas.contains(group)) {
+                    const activeSel = group.toActiveSelection();
+                    canvas.setActiveObject(activeSel);
+                    
+                    activeSel.set('opacity', 0);
+                    activeSel.animate('opacity', 1, {
+                        duration: 500,
+                        onChange: canvas.renderAll.bind(canvas),
+                        easing: fabric.util.ease.easeOutQuad
+                    });
+                }
+            }, 50);
         }
     };
 })();
