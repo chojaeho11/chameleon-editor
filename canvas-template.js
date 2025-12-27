@@ -345,11 +345,10 @@ async function processLoad(mode) {
                 });
 
                 if (board) {
-                    const maxW = board.getScaledWidth() * 0.5;
-                    if (img.width > maxW) {
-                        img.scaleToWidth(maxW);
-                    }
+                    const targetWidth = board.getScaledWidth() * 0.5;
+                    img.scaleToWidth(targetWidth);
                 }
+                
 
                 canvas.add(img);
                 img.setCoords(); 
@@ -391,11 +390,7 @@ async function processLoad(mode) {
                 if (mode === 'replace') {
                     const scaleX = boardW / group.width;
                     const scaleY = boardH / group.height;
-                    scale = Math.max(scaleX, scaleY); 
-                } else {
-                    if (group.width > boardW * 0.6) {
-                        scale = (boardW * 0.6) / group.width;
-                    }
+                    scale = (boardW * 0.5) / group.width;
                 }
 
                 group.set({ 
@@ -404,6 +399,8 @@ async function processLoad(mode) {
                     scaleX: scale,
                     scaleY: scale
                 });
+
+                canvas.add(group);
 
                 canvas.add(group);
 

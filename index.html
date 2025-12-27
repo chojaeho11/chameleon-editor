@@ -387,6 +387,8 @@ function goBoard(category) {
     </div>
 </div>
 
+
+
 <div id="mainEditor" style="display:none;">
     
 
@@ -441,31 +443,7 @@ function goBoard(category) {
                 <button id="btnPDF" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
             </div>
 
-            <div class="section-title" style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                <span style="font-size: 16px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));">🧙‍♂️</span>
-                <span style="font-size: 13px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(to right, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                    텍스트 디자인 마법사
-                </span>
-            </div>
-
-            <div class="wizard-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 15px;">
-                <button class="btn-round" onclick="window.applyTextWizard('basic')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="font-size:14px; color:#6366f1;"></i>
-                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">행사부스</span>
-                </button>
-                <button class="btn-round" onclick="window.applyTextWizard('flyer')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
-                    <i class="fa-solid fa-newspaper" style="font-size:14px; color:#ef4444;"></i>
-                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">포스터</span>
-                </button>
-                <button class="btn-round" onclick="window.applyTextWizard('card')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
-                    <i class="fa-solid fa-address-card" style="font-size:14px; color:#10b981;"></i>
-                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">명함</span>
-                </button>
-                <button class="btn-round" onclick="window.applyTextWizard('menu')" style="flex-direction:column; justify-content:center; gap:2px; height:55px; padding:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
-                    <i class="fa-solid fa-utensils" style="font-size:14px; color:#f59e0b;"></i>
-                    <span style="font-size:10px; color:#333; letter-spacing:-0.5px;">메뉴판</span>
-                </button>
-            </div>
+            <!-- 요기가 원래 마법사 자리 -->
 
             <button id="btnAddBasicText" class="btn-round" style="width:100%; margin-bottom:10px; border:1px solid #cbd5e1; background:#fff; color:#333; font-weight:bold; padding:10px; display:flex; align-items:center; justify-content:center;">
                 <span style="display:inline-flex; width:20px; height:20px; background:#222; color:#fff; border-radius:4px; align-items:center; justify-content:center; margin-right:6px; font-size:12px;">T</span>
@@ -523,6 +501,49 @@ function goBoard(category) {
         </div>
         
         <div class="stage" id="stage">
+           <div id="textWizardToolbar" class="wizard-toolbar floating-island">
+    <div class="wiz-brand">
+        <span class="wiz-icon">🧙‍♂️</span>
+    </div>
+    
+    <div class="wiz-scroll-track">
+        <button class="wiz-btn" onclick="window.applyNewWizard('basic')">
+            <div class="icon-box c-indigo"><i class="fa-solid fa-store"></i></div>
+            <span>행사부스</span>
+        </button>
+        <button class="wiz-btn" onclick="window.applyNewWizard('flyer')">
+            <div class="icon-box c-red"><i class="fa-solid fa-bullhorn"></i></div>
+            <span>포스터</span>
+        </button>
+        <button class="wiz-btn" onclick="window.applyNewWizard('card')">
+            <div class="icon-box c-green"><i class="fa-solid fa-address-card"></i></div>
+            <span>명함</span>
+        </button>
+        <button class="wiz-btn" onclick="window.applyNewWizard('menu')">
+            <div class="icon-box c-orange"><i class="fa-solid fa-utensils"></i></div>
+            <span>메뉴판</span>
+        </button>
+
+        <div class="wiz-divider"></div>
+
+        <button class="wiz-btn" onclick="window.applyNewWizard('banner-h')">
+            <div class="icon-box c-blue"><i class="fa-solid fa-scroll"></i></div>
+            <span>가로현수막</span>
+        </button>
+        <button class="wiz-btn" onclick="window.applyNewWizard('banner-v')">
+            <div class="icon-box c-purple"><i class="fa-solid fa-flag"></i></div>
+            <span>세로배너</span>
+        </button>
+        <button class="wiz-btn" onclick="window.applyNewWizard('fabric')">
+            <div class="icon-box c-pink"><i class="fa-solid fa-shirt"></i></div>
+            <span>패브릭</span>
+        </button>
+        <button class="wiz-btn" onclick="window.applyNewWizard('vertical-text')">
+            <div class="icon-box c-teal"><i class="fa-solid fa-text-height"></i></div>
+            <span>인스타판넬</span>
+        </button>
+    </div>
+</div>
             <div class="bottom-dock">
                 <button id="btnZoomOut" class="zoom-btn"><i class="fa-solid fa-minus"></i></button>
                 <button id="btnZoomIn" class="zoom-btn"><i class="fa-solid fa-plus"></i></button>
@@ -991,6 +1012,12 @@ function goBoard(category) {
 <script type="module" src="./login.js"></script>
 <script type="module" src="./my-design.js"></script>
 <script type="module" src="./main.js"></script>
+<script type="module" src="./main.js"></script>
+
+<script src="./text-wizard.js"></script> 
+
+</body>
+</html>
 
 <script type="module">
     import { canvas, setMaxLimits } from './canvas-core.js';
@@ -1094,12 +1121,15 @@ function goBoard(category) {
     // [1] 초기화 및 데이터 로드 (순서 중요)
     // ============================================================
     window.addEventListener('load', async () => {
-        await initConfig(); 
-        loadAndApplyTranslations();
-        renderQuickMenu();
-        
-        // ★ [여기 수정] 기존 loadTemplates(...) 지우고 아래 한 줄 추가
-        window.searchTemplates(''); // 전체 템플릿 로드 및 스크롤 감지 시작
+    await new Promise(r => setTimeout(r, 500));
+    renderQuickMenu();
+    
+    // ✅ 최신 검색 함수로 교체!
+    if(window.searchTemplates) {
+        window.searchTemplates(''); 
+    }
+    
+    window.preloadLanguageFont();
         
         window.preloadLanguageFont();
         loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
@@ -1179,6 +1209,10 @@ function goBoard(category) {
                     const { data, error } = await sb.from('user_designs').select('*').eq('id', loadId).single();
                     
                     if (error || !data) throw new Error("디자인을 찾을 수 없습니다.");
+
+                    if (data.json && !data.json_data) {
+    data.json_data = data.json;
+}
 
                     // 2. 에디터 화면으로 전환
                     document.getElementById("startScreen").style.display = "none";
@@ -2081,9 +2115,7 @@ async function renderQuickMenu() {
                 else group = new fabric.Group(objects);
                 group.set({ originX: 'center', originY: 'center' });
 
-                const scaleX = boardSize.w / group.width;
-                const scaleY = boardSize.h / group.height;
-                const scale = Math.max(scaleX, scaleY);
+                const scale = (boardSize.w * 0.5) / group.width;
 
                 group.set({ scaleX: scale, scaleY: scale, left: center.x, top: center.y });
                 canvas.add(group);
@@ -2314,7 +2346,38 @@ const scrollObserver = new IntersectionObserver((entries) => {
 
     // 기타 유틸
     window.toggleLockSelection = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return alert("선택필요"); const l=!a.lockMovementX; a.set({lockMovementX:l,lockMovementY:l,lockRotation:l,lockScalingX:l,lockScalingY:l,hasControls:!l,selectable:true}); canvas.discardActiveObject(); canvas.requestRenderAll(); };
-    window.setAsBackground = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return alert("선택필요"); const b=canvas.getObjects().find(o=>o.isBoard); if(!b)return; const s=Math.max((b.width*b.scaleX)/a.width,(b.height*b.scaleY)/a.height); a.set({scaleX:s,scaleY:s,left:b.left+(b.width*b.scaleX)/2,top:b.top+(b.height*b.scaleY)/2,originX:'center',originY:'center',angle:0}); canvas.sendToBack(a); canvas.sendToBack(b); canvas.requestRenderAll(); };
+    window.setAsBackground = function() { 
+    if(!canvas) return; 
+    
+    const a = canvas.getActiveObject(); 
+    if(!a) return alert("배경으로 만들 이미지를 선택해주세요."); 
+    
+    const b = canvas.getObjects().find(o => o.isBoard); 
+    if(!b) return; 
+
+    // 1.1배(10%) 더 크게 키우기 계산
+    const scaleX = (b.width * b.scaleX) / a.width;
+    const scaleY = (b.height * b.scaleY) / a.height;
+    const s = Math.max(scaleX, scaleY) * 1.15; 
+
+    // 속성 변경
+    a.set({
+        scaleX: s,
+        scaleY: s,
+        left: b.left + (b.width * b.scaleX) / 2,
+        top: b.top + (b.height * b.scaleY) / 2,
+        originX: 'center',
+        originY: 'center',
+        angle: 0
+    }); 
+    
+    // ★ [핵심 수정] 좌표 강제 업데이트 (이게 없으면 오류가 납니다!)
+    a.setCoords(); 
+    
+    canvas.sendToBack(a); 
+    canvas.sendToBack(b); // 대지는 항상 맨 뒤로
+    canvas.requestRenderAll(); 
+};
     window.alignObject = function(d) { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return; const b=canvas.getObjects().find(o=>o.isBoard); const r=b?b.getBoundingRect():{left:0,top:0,width:canvas.width,height:canvas.height}; const w=a.getScaledWidth(); const h=a.getScaledHeight(); if(d=='left') a.left=r.left+w/2; if(d=='centerH') a.left=r.left+r.width/2; if(d=='right') a.left=r.left+r.width-w/2; if(d=='top') a.top=r.top+h/2; if(d=='centerV') a.top=r.top+r.height/2; if(d=='bottom') a.top=r.top+r.height-h/2; if(d=='center') { a.left=r.left+r.width/2; a.top=r.top+r.height/2; } a.setCoords(); canvas.requestRenderAll(); };
 
     if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -2378,6 +2441,9 @@ const scrollObserver = new IntersectionObserver((entries) => {
       'value': 1.0,
       'currency': 'KRW'
   });
+
+  // [선택된 디자인 배경 만들기 - 10% 확대 + 오류 수정 버전]
+
 </script>
 
 </body>

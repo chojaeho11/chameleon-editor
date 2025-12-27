@@ -202,6 +202,23 @@
         async function init() {
             await initConfig();
 
+            // [추가된 로직 시작] DB에서 실시간으로 권한 다시 확인하기
+            let isRealAdmin = isAdmin; // config.js에서 가져온 기본값
+
+            if (currentUser) {
+                // profiles 테이블에서 현재 로그인한 유저의 role 값을 직접 조회
+                const { data: profile } = await sb.from('profiles')
+                    .select('role')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                // DB에 'admin'이라고 적혀있으면 관리자 권한 부여 (admin.html에서 설정한 값 반영)
+                if (profile && profile.role === 'admin') {
+                    isRealAdmin = true;
+                }
+            }
+            // [추가된 로직 끝]
+
             // UI 초기화
             const countrySelect = document.getElementById('countrySelect');
             countrySelect.value = currentCountry;
@@ -214,8 +231,10 @@
             document.title = pageTitle;
 
             const btnWrite = document.getElementById('btnWrite');
+            
+            // [수정됨] 블로그일 때 isRealAdmin 변수를 사용하여 버튼 표시 여부 결정
             if (category === 'blog') {
-                if (isAdmin) btnWrite.style.display = 'inline-block';
+                if (isRealAdmin) btnWrite.style.display = 'inline-block';
             } else {
                 if (currentUser) btnWrite.style.display = 'inline-block';
             }

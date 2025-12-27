@@ -110,13 +110,24 @@ export function initSizeControls() {
     }
 
     // 캔버스 회전 로직
-    const btnRotate = document.getElementById("btnRotateCanvas");
+    // 캔버스 회전 로직
+    let btnRotate = document.getElementById("btnRotateCanvas");
     if (btnRotate) {
+        // ★ [핵심 수정] 버튼을 복제하여 교체 (기존에 잘못 연결된 객체 회전 이벤트를 제거함)
+        const newBtn = btnRotate.cloneNode(true);
+        btnRotate.parentNode.replaceChild(newBtn, btnRotate);
+        btnRotate = newBtn; // 새 버튼으로 변수 갱신
+
         btnRotate.onclick = () => {
             const board = canvas.getObjects().find(o => o.isBoard);
             if (!board) return;
+            
+            // 현재 너비와 높이를 서로 바꿔서(Swap) 적용 -> 90도 회전 효과
             applySize(board.height, board.width, "Rotated", 'standard', 'resize');
             
+            // 사이즈 입력창 숫자도 반대로 변경
+            const inputW = document.getElementById("inputUserW");
+            const inputH = document.getElementById("inputUserH");
             if(inputW && inputH) {
                 const temp = inputW.value;
                 inputW.value = inputH.value;

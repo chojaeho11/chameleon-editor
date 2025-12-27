@@ -797,11 +797,9 @@ function initEditHandlers() {
 function initRotationHandlers() {
     const btnLeft = document.getElementById("btnRotateLeft15");
     const btnRight = document.getElementById("btnRotateRight15");
-    const btnRotate = document.getElementById("btnRotateCanvas"); 
 
     if (btnLeft) btnLeft.onclick = () => rotateActive(-15);
     if (btnRight) btnRight.onclick = () => rotateActive(15);
-    if (btnRotate) btnRotate.onclick = () => rotateActive(90);
 }
 
 function rotateActive(angle) {
