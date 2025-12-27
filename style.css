@@ -1576,12 +1576,25 @@ body {
 }
 
 .hotdeal-grid {
-    display: grid;
-    /* 5개를 균등한 비율(1fr)로 가로로 배치 */
-    grid-template-columns: repeat(5, 1fr); 
-    gap: 15px; /* 간격 조절 */
-    width: 100%;
-}
+        display: grid;
+        gap: 15px;
+        /* PC 화면: 한 줄에 6개 */
+        grid-template-columns: repeat(6, 1fr); 
+        margin-top: 20px;
+    }
+
+    /* 모바일 화면 (768px 이하) */
+    @media (max-width: 768px) {
+        .hotdeal-grid {
+            /* 모바일: 한 줄에 2개 */
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px;
+        }
+        
+        /* 모바일에서 카드 내용 간소화 (선택사항) */
+        .hotdeal-title { font-size: 13px; }
+        .hotdeal-price { font-size: 14px; }
+    }
 
 .hotdeal-card {
     background: white;

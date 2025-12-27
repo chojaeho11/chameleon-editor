@@ -12,23 +12,21 @@
     <link rel="stylesheet" href="./style.css">
     
     <style>
-        /* [핵심 수정 1] 스크롤 금지 해제 & 높이 제한 해제 */
         body { 
             background: #f1f5f9; 
             padding-top: 80px; 
             font-family: 'Pretendard', sans-serif;
-            overflow-y: auto !important; /* 스크롤 허용 */
-            height: auto !important;     /* 높이 제한 해제 */
+            overflow-y: auto !important;
+            height: auto !important;
         }
 
         .board-container { 
             max-width: 1100px; 
             margin: 0 auto; 
             padding: 30px 20px; 
-            padding-bottom: 100px; /* 하단 여백 충분히 */
+            padding-bottom: 100px;
         }
         
-        /* 헤더 스타일 */
         .board-header-wrap {
             background: white; border-radius: 20px; padding: 25px 30px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 30px;
@@ -53,13 +51,19 @@
 
         /* 상세보기 */
         .view-wrap { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); display: none; position: relative; }
-        .view-title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .view-title { font-size: 32px; font-weight: 900; color: #111; line-height: 1.3; flex: 1; }
+        .view-title-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .view-title { font-size: 32px; font-weight: 900; color: #111; line-height: 1.3; margin: 0; }
         .view-meta-row { display: flex; gap: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 40px; color: #666; font-size: 14px; }
         .view-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .view-content { font-size: 16px; line-height: 1.8; color: #333; min-height: 200px; margin-bottom: 50px; }
 
-        /* 댓글 영역 스타일 */
+        /* 별점 스타일 */
+        .star-display-lg { color: #f59e0b; font-size: 20px; margin-bottom: 5px; }
+        .star-rating { display: flex; gap: 2px; cursor: pointer; margin-left: 10px; }
+        .star-rating i { color: #cbd5e1; font-size: 24px; transition: color 0.2s; }
+        .star-rating i.active { color: #f59e0b; }
+
+        /* 댓글 영역 */
         .comment-section { background: #f8fafc; padding: 20px; border-radius: 12px; margin-top: 30px; }
         .comment-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #333; }
         .comment-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; max-height: 500px; overflow-y: auto; }
@@ -68,23 +72,19 @@
         .comment-author { font-weight: 700; color: #333; }
         .comment-date { color: #999; }
         .comment-text { font-size: 14px; color: #555; line-height: 1.5; }
-        .star-display { color: #f59e0b; font-size: 12px; margin-left: 5px; }
 
-        /* 댓글 작성 폼 */
-        .comment-form { display: flex; gap: 10px; align-items: flex-start; background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
-        .star-rating { display: flex; gap: 2px; cursor: pointer; margin-top: 8px; }
-        .star-rating i { color: #cbd5e1; font-size: 18px; transition: color 0.2s; }
-        .star-rating i.active { color: #f59e0b; }
-        
+        /* 댓글 폼 */
+        .comment-form { display: flex; gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
+
         /* 글쓰기 에디터 */
         .write-wrap { display: none; background: white; padding: 30px; border-radius: 20px; flex-direction: column; gap: 20px; }
         #editor-container { height: 500px; font-size: 16px; } 
 
-        /* 관리자 삭제 버튼 */
-        .btn-delete { background: #fee2e2; color: #ef4444; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; display: none; }
+        .btn-edit { background: #dbeafe; color: #2563eb; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 5px; }
+        .btn-edit:hover { background: #bfdbfe; }
+        .btn-delete { background: #fee2e2; color: #ef4444; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-delete:hover { background: #fecaca; }
 
-        /* Quill 툴바 커스텀 */
         .ql-toolbar.ql-snow { border-top-left-radius: 10px; border-top-right-radius: 10px; border-color: #e2e8f0; background: #f8fafc; }
         .ql-container.ql-snow { border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; border-color: #e2e8f0; font-family: 'Pretendard'; }
     </style>
@@ -116,11 +116,17 @@
         <div id="boardList" class="post-grid">Loading...</div>
 
         <div id="boardView" class="view-wrap">
-            <button onclick="goToList()" class="btn" style="margin-bottom:20px;">← 목록으로</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <button onclick="goToList()" class="btn">← 목록으로</button>
+                <div id="btnGroupAuth" style="display:none;">
+                    <button id="btnEditPost" class="btn-edit" onclick="editCurrentPost()"><i class="fa-solid fa-pen"></i> 수정</button>
+                    <button id="btnDeletePost" class="btn-delete" onclick="deleteCurrentPost()"><i class="fa-solid fa-trash"></i> 삭제</button>
+                </div>
+            </div>
             
             <div class="view-title-row">
+                <div id="viewRatingArea" class="star-display-lg" style="display:none;"></div>
                 <h1 id="viewTitle" class="view-title"></h1>
-                <button id="btnDeletePost" class="btn-delete" onclick="deleteCurrentPost()"><i class="fa-solid fa-trash"></i> 글 삭제</button>
             </div>
 
             <div class="view-meta-row">
@@ -132,19 +138,9 @@
             <article id="viewContent" class="view-content"></article>
             
             <div class="comment-section">
-                <div class="comment-header">💬 댓글 & 별점</div>
+                <div class="comment-header">💬 댓글</div>
                 <div id="commentList" class="comment-list"></div>
                 <div class="comment-form">
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                        <span style="font-size:11px; font-weight:bold; color:#666;">별점</span>
-                        <div class="star-rating" id="starInput">
-                            <i class="fa-solid fa-star active" data-score="1"></i>
-                            <i class="fa-solid fa-star active" data-score="2"></i>
-                            <i class="fa-solid fa-star active" data-score="3"></i>
-                            <i class="fa-solid fa-star active" data-score="4"></i>
-                            <i class="fa-solid fa-star active" data-score="5"></i>
-                        </div>
-                    </div>
                     <textarea id="commentInput" class="ai-input-pretty" style="height:60px; margin:0; flex:1;" placeholder="댓글을 남겨주세요..."></textarea>
                     <button id="btnSubmitComment" class="btn primary" style="height:60px;">등록</button>
                 </div>
@@ -153,7 +149,22 @@
 
         <div id="boardWrite" class="write-wrap">
             <h2 style="margin:0;">✨ 멋진 글을 작성해보세요</h2>
-            <input id="inputTitle" class="ai-input-pretty" placeholder="제목을 입력하세요">
+            
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input id="inputTitle" class="ai-input-pretty" placeholder="제목을 입력하세요" style="flex:1; margin:0;">
+                
+                <div id="ratingInputArea" style="display:none; align-items:center; background:#f8fafc; padding:8px 15px; border-radius:8px; border:1px solid #e2e8f0;">
+                    <span style="font-size:13px; font-weight:bold; color:#666;">만족도</span>
+                    <div class="star-rating" id="starInput">
+                        <i class="fa-solid fa-star active" data-score="1"></i>
+                        <i class="fa-solid fa-star active" data-score="2"></i>
+                        <i class="fa-solid fa-star active" data-score="3"></i>
+                        <i class="fa-solid fa-star active" data-score="4"></i>
+                        <i class="fa-solid fa-star active" data-score="5"></i>
+                    </div>
+                </div>
+            </div>
+
             <div style="background:white;">
                 <div id="editor-container"></div>
             </div>
@@ -177,6 +188,7 @@
 
         let quill; 
         let currentRating = 5; 
+        let isEditMode = false;
 
         const boardTitles = {
             'blog': { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ' },
@@ -201,7 +213,6 @@
             document.getElementById('pageTitle').innerText = pageTitle;
             document.title = pageTitle;
 
-            // 글쓰기 버튼 권한
             const btnWrite = document.getElementById('btnWrite');
             if (category === 'blog') {
                 if (isAdmin) btnWrite.style.display = 'inline-block';
@@ -209,7 +220,6 @@
                 if (currentUser) btnWrite.style.display = 'inline-block';
             }
 
-            // Quill 에디터 설정
             quill = new Quill('#editor-container', {
                 modules: {
                     toolbar: [
@@ -234,9 +244,42 @@
             setupEventListeners();
         }
 
-        // [핵심 기능] 목록으로 돌아가기 (ID 파라미터 제거)
         window.goToList = function() {
             location.href = `/board.html?cat=${category}&country=${currentCountry}`;
+        };
+
+        window.editCurrentPost = function() {
+            if(!confirm("글을 수정하시겠습니까?")) return;
+            isEditMode = true; 
+            
+            const title = document.getElementById('viewTitle').innerText;
+            const content = document.getElementById('viewContent').innerHTML;
+
+            document.getElementById('inputTitle').value = title;
+            quill.root.innerHTML = content;
+
+            // [수정] 수정 모드일 때도 카테고리가 review면 별점 수정창 표시
+            if (category === 'review') {
+                document.getElementById('ratingInputArea').style.display = 'flex';
+                // 기존 별점 불러오는 로직은 생략했으나 필요하면 추가 가능
+            }
+
+            showSection('write');
+        };
+
+        window.deleteCurrentPost = async function() {
+            if(!confirm("정말 이 글을 삭제하시겠습니까?\n(관련된 댓글도 모두 삭제됩니다)")) return;
+            try {
+                const { error: commentErr } = await sb.from('community_comments').delete().eq('post_id', postId);
+                if(commentErr) throw commentErr;
+                const { error: postErr } = await sb.from('community_posts').delete().eq('id', postId);
+                if(postErr) throw postErr;
+                alert("삭제되었습니다.");
+                goToList();
+            } catch(e) {
+                console.error(e);
+                alert("삭제 실패: " + e.message);
+            }
         };
 
         function setupStarRating() {
@@ -254,8 +297,10 @@
 
         async function loadPostList() {
             showSection('list');
+            
+            // [수정] 리스트에서도 별점 가져오기 위해 rating 컬럼 추가
             const { data } = await sb.from('community_posts')
-                .select('id, title, author_name, created_at, view_count, content')
+                .select('id, title, author_name, created_at, view_count, content, rating') 
                 .eq('category', category).eq('country_code', currentCountry)
                 .order('created_at', { ascending: false });
             
@@ -275,6 +320,14 @@
                 const firstImg = tempDiv.querySelector('img');
                 const thumbSrc = firstImg ? firstImg.src : null;
 
+                // [수정] 리스트 카드에 별점 표시
+                let starHtml = '';
+                if (category === 'review' && post.rating) {
+                    starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
+                    for(let i=0; i<5; i++) starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+                    starHtml += `</div>`;
+                }
+
                 const card = document.createElement('div');
                 card.className = 'post-card';
                 card.innerHTML = `
@@ -282,6 +335,7 @@
                         ${thumbSrc ? `<img src="${thumbSrc}" loading="lazy">` : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`}
                     </div>
                     <div class="card-body">
+                        ${starHtml}
                         <div class="card-title">${post.title}</div>
                         <div class="card-meta">
                             <span>${post.author_name || 'User'}</span>
@@ -301,17 +355,30 @@
             const { data: post } = await sb.from('community_posts').select('*').eq('id', id).single();
             if (!post) return alert('삭제된 글입니다.'), goToList();
             
+            // [수정] 작성자의 별점 표시 (review 카테고리만)
+            const ratingArea = document.getElementById('viewRatingArea');
+            if (category === 'review' && post.rating) {
+                let starHtml = '';
+                for(let i=0; i<5; i++) {
+                    starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+                }
+                ratingArea.innerHTML = starHtml;
+                ratingArea.style.display = 'block';
+            } else {
+                ratingArea.style.display = 'none';
+            }
+
             document.getElementById('viewTitle').innerText = post.title;
             document.getElementById('viewAuthor').innerHTML = `<i class="fa-regular fa-user"></i> ${post.author_name}`;
             document.getElementById('viewDate').innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date(post.created_at).toLocaleString()}`;
             document.getElementById('viewCount').innerHTML = `<i class="fa-regular fa-eye"></i> ${post.view_count}`;
             document.getElementById('viewContent').innerHTML = post.content;
 
-            const btnDelete = document.getElementById('btnDeletePost');
+            const btnGroup = document.getElementById('btnGroupAuth');
             if (isAdmin || (currentUser && currentUser.id === post.author_id)) {
-                btnDelete.style.display = 'block';
+                btnGroup.style.display = 'block';
             } else {
-                btnDelete.style.display = 'none';
+                btnGroup.style.display = 'none';
             }
 
             loadComments(id);
@@ -336,13 +403,10 @@
             comments.forEach(cmt => {
                 const item = document.createElement('div');
                 item.className = 'comment-item';
-                let starsHtml = '';
-                for(let i=0; i<5; i++) {
-                    starsHtml += i < cmt.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-                }
+                // [수정] 댓글에서는 별점 삭제함
                 item.innerHTML = `
                     <div class="comment-top">
-                        <span class="comment-author">${cmt.author_name} <span class="star-display">${starsHtml}</span></span>
+                        <span class="comment-author">${cmt.author_name}</span>
                         <span class="comment-date">${new Date(cmt.created_at).toLocaleDateString()}</span>
                     </div>
                     <div class="comment-text">${cmt.content.replace(/\n/g, '<br>')}</div>
@@ -350,13 +414,6 @@
                 listDiv.appendChild(item);
             });
         }
-
-        window.deleteCurrentPost = async function() {
-            if(!confirm("정말 이 글을 삭제하시겠습니까?")) return;
-            const { error } = await sb.from('community_posts').delete().eq('id', postId);
-            if(error) alert("삭제 실패: " + error.message);
-            else { alert("삭제되었습니다."); goToList(); }
-        };
 
         function showSection(sec) {
             document.getElementById('boardList').style.display = sec === 'list' ? 'grid' : 'none';
@@ -374,6 +431,21 @@
         function setupEventListeners() {
             document.getElementById('btnWrite').onclick = () => {
                 if (!currentUser) return alert('로그인이 필요합니다.');
+                
+                isEditMode = false; 
+                document.getElementById('inputTitle').value = "";
+                quill.setContents([]);
+                
+                // [수정] 리뷰 카테고리일 때만 작성창에 별점 입력 보이기
+                if (category === 'review') {
+                    document.getElementById('ratingInputArea').style.display = 'flex';
+                    currentRating = 5; // 기본값
+                    // 별 초기화
+                    document.querySelectorAll('#starInput i').forEach(s => s.classList.add('active'));
+                } else {
+                    document.getElementById('ratingInputArea').style.display = 'none';
+                }
+
                 showSection('write');
             };
 
@@ -382,15 +454,29 @@
                 const content = quill.root.innerHTML; 
                 if (!title || quill.getText().trim().length === 0 && !content.includes('<img')) return alert('내용을 입력해주세요.');
 
-                const { error } = await sb.from('community_posts').insert({
-                    category, country_code: currentCountry, title, content, 
-                    author_id: currentUser.id, 
-                    author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
-                    author_email: currentUser.email
-                });
+                // [수정] rating 값 설정 (리뷰 아니면 null)
+                const ratingValue = (category === 'review') ? currentRating : null;
 
-                if (error) alert(error.message); 
-                else { alert('등록되었습니다!'); goToList(); }
+                if (isEditMode) {
+                    const { error } = await sb.from('community_posts')
+                        .update({ title, content, rating: ratingValue }) // 수정 시 별점도 업데이트
+                        .eq('id', postId);
+
+                    if (error) alert("수정 실패: " + error.message);
+                    else { alert("수정되었습니다!"); location.reload(); }
+
+                } else {
+                    const { error } = await sb.from('community_posts').insert({
+                        category, country_code: currentCountry, title, content, 
+                        author_id: currentUser.id, 
+                        author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
+                        author_email: currentUser.email,
+                        rating: ratingValue // 작성 시 별점 저장
+                    });
+
+                    if (error) alert(error.message); 
+                    else { alert('등록되었습니다!'); goToList(); }
+                }
             };
 
             document.getElementById('btnSubmitComment').onclick = async () => {
@@ -398,12 +484,12 @@
                 const txt = document.getElementById('commentInput').value;
                 if(!txt.trim()) return alert('댓글 내용을 입력해주세요.');
 
+                // [수정] 댓글 등록 시 rating 필드 제거 (작성자가 이미 글에서 매김)
                 const { error } = await sb.from('community_comments').insert({
                     post_id: postId,
                     author_id: currentUser.id,
                     author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0],
-                    content: txt,
-                    rating: currentRating
+                    content: txt
                 });
 
                 if(error) alert("등록 실패: " + error.message);
