@@ -514,8 +514,17 @@
                     </div>
 
                     <div class="card">
-                        <div style="margin-bottom:15px;">
-                            <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                        <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <h3 style="margin:0;">🗂️ 템플릿 관리</h3>
+                                <button class="btn btn-danger" onclick="deleteSelectedTemplates()">
+                                    <i class="fa-solid fa-trash-can"></i> 선택항목 일괄삭제
+                                </button>
+                            </div>
+                            
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <input type="text" id="tplSearchInput" class="input-text" style="flex:2;" placeholder="태그 또는 ID 검색..." onkeyup="if(event.key=='Enter') loadTemplates()">
+                                
                                 <select id="filterTplCat" class="input-text" style="flex:1;" onchange="loadTemplates()">
                                     <option value="all">📂 카테고리: 전체</option>
                                     <option value="logo">🎨 로고</option>
@@ -524,14 +533,22 @@
                                     <option value="photo-bg">📷 사진 배경</option>
                                     <option value="graphic">🧸 그래픽</option>
                                 </select>
+                                
                                 <select id="filterTplProduct" class="input-text" style="flex:1;" onchange="loadTemplates()">
-                                    <option value="all">📦 제품연결: 전체 보기</option>
-                                    <option value="custom">🔹 공통 템플릿만 보기</option>
-                                    <option value="assigned">🔸 제품 전용만 보기</option>
-                                    <optgroup label="--- 개별 제품 선택 ---"></optgroup>
+                                    <option value="all">📦 제품연결: 전체</option>
+                                    <option value="custom">🔹 공통 템플릿</option>
+                                    <option value="assigned">🔸 제품 전용</option>
+                                    <optgroup label="--- 개별 제품 ---"></optgroup>
                                 </select>
+                                
+                                <button class="btn btn-primary" onclick="loadTemplates()"><i class="fa-solid fa-magnifying-glass"></i> 검색</button>
                             </div>
-                            <button class="btn btn-primary" style="width:100%;" onclick="loadTemplates()">새로고침 / 검색 적용</button>
+                            
+                            <div style="margin-top:10px;">
+                                <label style="cursor:pointer; font-weight:bold; font-size:13px;">
+                                    <input type="checkbox" onchange="toggleAllTemplates(this)"> 전체 선택
+                                </label>
+                            </div>
                         </div>
                         <div id="tplGrid" class="tpl-card-grid"></div>
                     </div>
@@ -1015,8 +1032,8 @@ async function saveTopCategoryOrder() {
             btn.disabled = true;
 
             try {
-                const rateJPY = 0.115; 
-                const rateUSD = 0.001;
+                const rateJPY = 0.2; 
+                const rateUSD = 0.002;
 
                 // 가격 계산
                 document.getElementById('newProdPriceJP').value = Math.round(krPrice * rateJPY);
@@ -1929,18 +1946,100 @@ async function saveTopCategoryOrder() {
             if(prods) { prods.forEach(p => { const optionHtml = `<option value="${p.code}">${p.name} (${p.code})</option>`; regSelect.innerHTML += optionHtml; filterSelect.innerHTML += optionHtml; }); }
         };
 
+        // [수정됨] 템플릿 목록 로드 (검색 기능 + 체크박스 추가)
         window.loadTemplates = async () => { 
             const grid = document.getElementById('tplGrid'); 
             const catFilter = document.getElementById('filterTplCat').value; 
             const prodFilter = document.getElementById('filterTplProduct').value;
-            if(!grid) return; grid.innerHTML = '<div style="padding:20px; text-align:center;">로딩 중...</div>'; 
+            const searchKeyword = document.getElementById('tplSearchInput').value.trim(); // 검색어 가져오기
+
+            if(!grid) return; 
+            grid.innerHTML = '<div style="padding:20px; text-align:center; grid-column:1/-1;">로딩 중...</div>'; 
+            
             let query = sb.from('library').select('id, category, thumb_url, tags, product_key').order('id', {ascending:false}).limit(100); 
+            
+            // 필터 적용
             if (catFilter !== 'all') { query = query.eq('category', catFilter); } 
-            if (prodFilter === 'custom') { query = query.or('product_key.eq.custom,product_key.is.null'); } else if (prodFilter === 'assigned') { query = query.neq('product_key', 'custom').not('product_key', 'is', null); } else if (prodFilter !== 'all') { query = query.eq('product_key', prodFilter); }
+            
+            if (prodFilter === 'custom') { query = query.or('product_key.eq.custom,product_key.is.null'); } 
+            else if (prodFilter === 'assigned') { query = query.neq('product_key', 'custom').not('product_key', 'is', null); } 
+            else if (prodFilter !== 'all') { query = query.eq('product_key', prodFilter); }
+
+            // [추가] 검색어 적용 (태그 컬럼 검색)
+            if (searchKeyword) {
+                // 숫자인 경우 ID 검색, 문자면 태그 검색
+                if (!isNaN(searchKeyword)) {
+                    query = query.eq('id', searchKeyword);
+                } else {
+                    query = query.ilike('tags', `%${searchKeyword}%`);
+                }
+            }
+
             const { data, error } = await query; 
+            
             grid.innerHTML = ''; 
-            if (error) { grid.innerHTML = '<div style="padding:20px; color:red;">에러: ' + error.message + '</div>'; return; } 
-            if (data && data.length > 0) { data.forEach(t => { const tagText = t.tags ? t.tags : '-'; const pKey = (t.product_key && t.product_key !== 'custom') ? t.product_key : '공통'; const isCustom = pKey === '공통'; const badgeStyle = isCustom ? "background:#f1f5f9; color:#64748b;" : "background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;"; grid.innerHTML += `<div class="tpl-card"><img src="${t.thumb_url}" class="tpl-thumb" loading="lazy"><div class="tpl-info"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><span class="tpl-badge" style="font-size:10px;">${t.category}</span><span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; ${badgeStyle}">${pKey}</span></div><div style="font-size:12px; font-weight:bold; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tagText}</div><button class="tpl-del-btn" onclick="deleteTemplate(${t.id})">삭제</button></div></div>`; }); } else { grid.innerHTML = '<div style="padding:40px; color:#999; text-align:center; width:100%;">조건에 맞는 템플릿이 없습니다.</div>'; } 
+            if (error) { grid.innerHTML = '<div style="padding:20px; color:red; grid-column:1/-1;">에러: ' + error.message + '</div>'; return; } 
+            
+            if (data && data.length > 0) { 
+                data.forEach(t => { 
+                    const tagText = t.tags ? t.tags : '-'; 
+                    const pKey = (t.product_key && t.product_key !== 'custom') ? t.product_key : '공통'; 
+                    const isCustom = pKey === '공통'; 
+                    const badgeStyle = isCustom ? "background:#f1f5f9; color:#64748b;" : "background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;"; 
+                    
+                    // [추가] 체크박스 UI 삽입
+                    grid.innerHTML += `
+                    <div class="tpl-card">
+                        <div style="position:absolute; top:10px; right:10px; z-index:10;">
+                            <input type="checkbox" class="tpl-chk" value="${t.id}" style="width:18px; height:18px; cursor:pointer;">
+                        </div>
+                        <img src="${t.thumb_url}" class="tpl-thumb" loading="lazy" style="cursor:pointer;" onclick="window.open('${t.thumb_url}')">
+                        <div class="tpl-info">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <span class="tpl-badge" style="font-size:10px;">${t.category}</span>
+                                <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; ${badgeStyle}">${pKey}</span>
+                            </div>
+                            <div style="font-size:12px; font-weight:bold; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${tagText}">${tagText}</div>
+                            <button class="tpl-del-btn" onclick="deleteTemplate(${t.id})">개별 삭제</button>
+                        </div>
+                    </div>`; 
+                }); 
+            } else { 
+                grid.innerHTML = '<div style="padding:40px; color:#999; text-align:center; width:100%; grid-column:1/-1;">조건에 맞는 템플릿이 없습니다.</div>'; 
+            } 
+        };
+
+        // [신규] 템플릿 전체 선택/해제
+        window.toggleAllTemplates = (source) => {
+            document.querySelectorAll('.tpl-chk').forEach(chk => chk.checked = source.checked);
+        };
+
+        // [신규] 선택된 템플릿 일괄 삭제
+        window.deleteSelectedTemplates = async () => {
+            const checks = document.querySelectorAll('.tpl-chk:checked');
+            if (checks.length === 0) return alert("삭제할 템플릿을 선택해주세요.");
+            
+            if (!confirm(`선택한 ${checks.length}개의 이미지를 정말 삭제하시겠습니까?\n(복구할 수 없습니다)`)) return;
+
+            const ids = Array.from(checks).map(c => c.value);
+            const btn = document.querySelector('button[onclick="deleteSelectedTemplates()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 삭제 중...';
+            btn.disabled = true;
+
+            try {
+                // Supabase에서 일괄 삭제
+                const { error } = await sb.from('library').delete().in('id', ids);
+                if (error) throw error;
+                
+                alert("삭제되었습니다.");
+                loadTemplates(); // 목록 새로고침
+            } catch (e) {
+                alert("삭제 실패: " + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         };
         
         window.uploadTemplate = async () => { 
