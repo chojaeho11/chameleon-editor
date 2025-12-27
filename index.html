@@ -74,16 +74,16 @@
         <div style="flex:1;"></div>
         
         <button class="btn" onclick="if(confirm('첫 화면으로 돌아가시겠습니까?\n(저장하지 않은 작업은 사라질 수 있습니다)')) location.reload()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
-            <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
-        </button>
+    <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
+</button>
 
-        <button class="btn primary" id="btnOrderTop" style="margin-right:5px; background:var(--primary); color:rgb(255, 255, 255); font-weight:bold; box-shadow:0 4px 12px rgba(99,102,241,0.4);">
-            🚀 <span data-i18n="btn_add_to_cart">장바구니 담기</span>
-        </button>
+<button class="btn primary" id="btnOrderTop" style="margin-right:5px; background:#ffde26; color:#ffffff; font-weight:bold; box-shadow:0 4px 12px rgb(197, 255, 90);">
+    <span data-i18n="btn_add_to_cart">장바구니 담기</span>
+</button>
 
-        <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'; document.body.classList.remove('editor-active');" style="margin-right:5px; background:rgb(137, 57, 241); border:1px solid #fdfff2; color:#ffffff; padding:8px 12px;">
-            <span data-i18n="btn_cart">🛒 장바구니</span>
-        </button>
+<!-- <button class="btn" id="btnViewCart" onclick="document.getElementById('cartPage').style.display='block'; document.body.classList.remove('editor-active');" style="display:none !important; margin-right:5px; background:rgb(137, 57, 241); border:1px solid #fdfff2; color:#ffffff; padding:8px 12px;"> -->
+    <!-- <span data-i18n="btn_cart">🛒 장바구니</span> -->
+<!-- </button> -->
         
         <button class="btn" id="btnLoginBtn" onclick="document.getElementById('loginModal').style.display='flex'" style="margin-right:5px;" data-i18n="btn_login">로그인</button>
 
@@ -686,9 +686,9 @@ function goBoard(category) {
 <div id="templateOverlay">
     <div class="tpl-modal-box">
         <div class="tpl-sidebar">
-    <button class="tpl-cate-btn active" onclick="window.filterTpl('vector', this)"><span>대형출력백터배경</span></button>
-    <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>♥고퀄리티사진♥</span></button>
-    <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>상황별백터</span></button>
+    <button class="tpl-cate-btn active" onclick="window.filterTpl('vector', this)"><span>심플백터배경</span></button>
+    <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>♥고화질이미지♥</span></button>
+    <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>PNG객체</span></button>
     <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)"><span>패턴디자인</span></button>
     <button class="tpl-cate-btn" onclick="window.filterTpl('logo', this)"><span>PNG로고</span></button>
 </div>

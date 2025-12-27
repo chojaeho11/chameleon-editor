@@ -385,9 +385,15 @@ export async function startDesignFromProduct() {
     } catch (e) { console.error("템플릿 로드 오류:", e); }
 }
 
+// order.js
+
+// ... (상단 import 및 변수들은 유지) ...
+
+// ★ [수정됨] 장바구니 담기 + DB 자동저장 + 즉시이동 함수
 async function addCanvasToCart() {
     if (!canvas) return;
     
+    // 1. 썸네일 생성
     const originalVpt = canvas.viewportTransform;
     const board = canvas.getObjects().find(o => o.isBoard);
     let thumbUrl = "https://placehold.co/100?text=Design";
@@ -428,33 +434,24 @@ async function addCanvasToCart() {
         if(loading) loading.style.display = "none";
     }
     
+    // 2. 상품 정보 가져오기
     let key = window.currentProductKey || canvas.currentProductKey;
-    
-    // 만약 키가 없으면(새로고침 등), 아까 저장해둔 것 꺼내오기
-    if (!key) {
-        key = localStorage.getItem('current_product_key') || 'A4';
-    }
+    if (!key) key = localStorage.getItem('current_product_key') || 'A4';
 
-    // DB에서 상품 정보 찾기
     let product = PRODUCT_DB[key];
-
-    // DB에 해당 키가 없으면 'A4' 또는 '임시값'으로 대체
     if (!product) {
-        console.warn(`상품 DB에서 Key[${key}]를 찾을 수 없어 기본값으로 대체합니다.`);
-        // 다시 한번 저장된 키로 시도해보고, 그래도 없으면 기본값
+        // 상품 정보가 없으면 로컬스토리지 재시도 혹은 기본값
         const savedKey = localStorage.getItem('current_product_key');
         if (savedKey && PRODUCT_DB[savedKey]) {
             product = PRODUCT_DB[savedKey];
         } else {
             product = PRODUCT_DB['A4'] || { 
-                name: '자유 디자인 (상품정보 없음)', 
-                price: 0, 
-                img: 'https://placehold.co/100', 
-                addons: [] 
+                name: '자유 디자인', price: 0, img: 'https://placehold.co/100', addons: [] 
             };
         }
     }
     
+    // 3. JSON 데이터 생성
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow']);
     const finalW = board ? board.width : (product.w || canvas.width); 
     const finalH = board ? board.height : (product.h || canvas.height);
@@ -467,9 +464,10 @@ async function addCanvasToCart() {
         window.currentUploadedPdfUrl = null; 
     }
 
+    // ★ [핵심 1] 장바구니 배열에 추가
     cartData.push({ 
         uid: Date.now(), 
-        product: product, // 이제 절대 undefined가 아님
+        product: product, 
         type: 'design', 
         thumb: thumbUrl, 
         json: json, 
@@ -485,7 +483,34 @@ async function addCanvasToCart() {
     
     saveCart(); 
     renderCart(); 
-    alert(`[${product.name}] 상품이 장바구니에 담겼습니다.`);
+
+    // ★ [핵심 2] 로그인 상태라면 '내 디자인 보관함'에도 자동 저장
+    if (currentUser && sb) {
+        // 저장 알림을 작게 띄우거나 로그만 남김 (UX 방해 최소화)
+        console.log("보관함 자동 저장 시작...");
+        try {
+            const { error } = await sb.from('user_designs').insert({
+                user_id: currentUser.id,
+                title: `[자동저장] ${product.name} (${new Date().toLocaleTimeString()})`,
+                json: json,
+                thumb_url: thumbUrl,
+                product_key: key
+            });
+            if (error) throw error;
+            console.log("보관함 자동 저장 완료");
+        } catch(err) {
+            console.warn("보관함 자동 저장 실패 (장바구니에는 담김):", err);
+        }
+    }
+
+    // ★ [핵심 3] alert 제거하고 즉시 장바구니 화면 열기
+    // alert(`[${product.name}] 상품이 장바구니에 담겼습니다.`); // 기존 코드 삭제
+    document.getElementById('cartPage').style.display = 'block';
+    
+    // 모바일 등에서 에디터 UI 조정이 필요한 경우 클래스 제거
+    if(document.body.classList.contains('editor-active')) {
+        document.body.classList.remove('editor-active');
+    }
 }
 
 async function addFileToCart(e) {

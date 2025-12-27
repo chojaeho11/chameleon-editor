@@ -16,8 +16,8 @@
   "tab_logo": "로고PNG",
 
   "btn_my_library": "📂 보관함",
-  "btn_cart": "🛒 장바구니 보기",
-  "btn_add_to_cart": "장바구니 담기",
+  "btn_cart": "🛒",
+  "btn_add_to_cart": "🛒",
   "btn_login": "로그인",
 
   "wall_option_title": "가벽 높이",

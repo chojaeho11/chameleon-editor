@@ -1669,11 +1669,6 @@ body {
         grid-template-columns: repeat(2, 1fr); 
         gap: 10px;
     }
-
-    /* 모바일에서는 5번째 상품을 숨겨서 2줄(4개)만 딱 보이게 처리 */
-    .hotdeal-card:nth-child(5) {
-        display: none;
-    }
 }
 /* 모바일 화면 (768px 이하) 설정 */
     @media (max-width: 768px) {
