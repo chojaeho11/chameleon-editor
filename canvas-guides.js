@@ -1,6 +1,9 @@
 // canvas-guides.js
 import { canvas, isGuideOn, setGuideOn, baseW, baseH, currentMode } from "./canvas-core.js";
 
+// [핵심 수정] 가이드라인 정렬 과부하 방지를 위한 타이머 변수
+let guideBringToFrontTimeout = null;
+
 export function initGuides() {
     const btnGuide = document.getElementById("guideToggle");
     if (btnGuide) {
@@ -25,11 +28,26 @@ export function initGuides() {
     }
 
     if (canvas) {
+        // [핵심 수정] 객체 추가 시 즉시 실행하지 않고 0.1초 딜레이를 주어
+        // 수십 개의 객체가 동시에 추가될 때(그룹 해제 등) 한 번만 실행되도록 최적화
         canvas.on('object:added', (e) => {
             if (isGuideOn && !e.target.isGuide) {
-                setTimeout(() => {
-                    canvas.getObjects().filter(o => o.isGuide).forEach(g => canvas.bringToFront(g));
-                }, 0);
+                // 기존에 대기 중이던 명령이 있다면 취소
+                if (guideBringToFrontTimeout) {
+                    clearTimeout(guideBringToFrontTimeout);
+                }
+                
+                // 새로운 명령 예약 (100ms 후 실행)
+                guideBringToFrontTimeout = setTimeout(() => {
+                    if (!canvas) return;
+                    
+                    // 가이드 객체만 찾아서 맨 위로 올리기
+                    const guides = canvas.getObjects().filter(o => o.isGuide);
+                    if (guides.length > 0) {
+                        guides.forEach(g => canvas.bringToFront(g));
+                        canvas.requestRenderAll();
+                    }
+                }, 100);
             }
         });
     }
@@ -119,6 +137,7 @@ export function drawGuides() {
     // [2] 자(Ruler) 그리기 (4면 모두)
     drawRulers(width, height, mainStroke, smartFontSize, guideCommonOpt);
     
+    // 그리기 직후에도 가이드를 맨 위로 정렬
     canvas.getObjects().filter(o => o.isGuide).forEach(g => canvas.bringToFront(g));
     canvas.requestRenderAll();
 }
@@ -141,14 +160,14 @@ function drawRulers(w, h, strokeW, fontSize, commonOpt) {
     const rulerColor = "#666";
     const rulerBgColor = "#f0f0f0"; 
     
-    // [수정] 자 두께를 절반으로 줄임 (폰트 크기 * 1.2 수준으로 타이트하게)
+    // 자 두께 설정
     const rulerSize = fontSize * 1.3; 
 
     // 텍스트 스타일
     const textOpt = {
         ...commonOpt,
         fill: "#555",
-        fontSize: fontSize * 0.9, // 폰트도 살짝 작게
+        fontSize: fontSize * 0.9, 
         fontFamily: 'sans-serif',
         originX: 'left',
         originY: 'top'
@@ -179,7 +198,7 @@ function drawRulers(w, h, strokeW, fontSize, commonOpt) {
     }
 
     // ==========================================================
-    // 2. Bottom Ruler (하단) - [추가됨]
+    // 2. Bottom Ruler (하단)
     // ==========================================================
     canvas.add(new fabric.Rect({
         ...commonOpt,
@@ -231,7 +250,7 @@ function drawRulers(w, h, strokeW, fontSize, commonOpt) {
     }
 
     // ==========================================================
-    // 4. Right Ruler (우측) - [추가됨]
+    // 4. Right Ruler (우측)
     // ==========================================================
     canvas.add(new fabric.Rect({
         ...commonOpt,
@@ -253,7 +272,6 @@ function drawRulers(w, h, strokeW, fontSize, commonOpt) {
                 angle: -90, 
                 originX: 'right', originY: 'top'
             });
-            // 우측 자의 경우 텍스트 위치 미세 조정 (자 안쪽으로)
             tObj.left = w - 2; 
             if (tObj.width < step * 0.9) canvas.add(tObj);
         }

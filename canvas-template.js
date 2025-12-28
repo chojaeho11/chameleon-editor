@@ -4,68 +4,49 @@ import { sb, currentUser } from "./config.js";
 import { canvas } from "./canvas-core.js";
 import { applySize } from "./canvas-size.js";
 
+// 선택된 템플릿 정보를 저장하는 변수
 let selectedTpl = null;
 let currentCategory = 'all';
 
 // =========================================================
-// [0] 스마트 검색어 확장 DB (정확도 최적화 버전)
+// [0] 스마트 검색어 확장 DB
 // =========================================================
-// 원칙: 시각적으로 유사하거나, 업종이 완전히 일치하는 것만 묶음.
 const SYNONYM_DB = {
-    // 1. 요식업 / 음식
     '빵': ['베이커리', '케이크', '디저트', '제과', '식빵', '도넛', 'bakery', 'bread'],
     '커피': ['카페', '아메리카노', '라떼', '음료', '티', 'cafe', 'coffee'],
     '음식': ['푸드', '식당', '요리', '맛집', '한식', '메뉴', 'food'],
     '고기': ['정육', '삼겹살', '한우', '갈비', '식육', 'meat'],
     '술': ['주점', '맥주', '소주', '와인', '이자카야', '포차', 'beer'],
-
-    // 2. 뷰티 / 헬스 / 스포츠 (운동 검색 시 풍경 안나오게 분리)
     '운동': ['헬스', '피트니스', '요가', '필라테스', '체육', 'gym', 'health', 'yoga', 'sports'],
     '뷰티': ['미용', '헤어', '네일', '에스테틱', '속눈썹', '메이크업', 'beauty', 'hair'],
     '병원': ['의료', '진료', '치과', '약국', '건강', 'care', 'medical'],
-
-    // 3. 교육 / 비즈니스
     '학원': ['교육', '수학', '영어', '입시', '공부', '과외', 'school', 'academy', 'study'],
     '부동산': ['공인중개사', '매매', '전세', '월세', '분양', '임대', 'real estate'],
     '세일': ['할인', '특가', '이벤트', '오픈', '프로모션', 'sale', 'event', 'open'],
     '비즈니스': ['회사', '업무', '성공', '금융', '마케팅', 'business'],
-
-    // 4. 시즌 / 자연 (명확한 시즌성만 포함)
     '여름': ['바다', '해변', '수영', '휴가', '물놀이', 'summer', 'beach'],
     '겨울': ['눈', '크리스마스', '성탄절', '새해', 'winter', 'snow'],
     '명절': ['추석', '설날', '한가위', '선물세트', 'holiday'],
     '여행': ['투어', '캠핑', '호텔', '휴식', 'travel', 'trip'],
     '꽃': ['플라워', '봄', '식물', '화분', 'flower', 'plant'],
-
-    // 5. 동물 / 인물
     '동물': ['강아지', '고양이', '반려견', '펫', 'dog', 'cat', 'pet'],
     '사람': ['가족', '아이', '학생', '직장인', '커플', 'people']
 };
 
-// 검색어 확장 함수 (로직 개선)
 function expandSearchKeywords(inputText) {
     if (!inputText) return [];
-    
-    // 1. 입력된 단어를 공백 기준으로 분리
     let words = inputText.toLowerCase().split(/\s+/).filter(w => w.trim().length > 0);
-    let expanded = new Set(words); // 중복 제거를 위해 Set 사용
-
+    let expanded = new Set(words);
     words.forEach(word => {
-        // 2. DB 순회하며 연관 단어 찾기
         Object.keys(SYNONYM_DB).forEach(key => {
-            // 입력한 단어가 키워드에 포함되거나(예: '팥빵' -> '빵'), 키워드가 단어와 같으면
             if (word.includes(key) || key === word) {
-                // 해당 카테고리의 연관어들을 모두 추가
                 SYNONYM_DB[key].forEach(syn => expanded.add(syn));
-            }
-            // 반대로 연관어 리스트 중에 입력한 단어가 있는 경우도 체크 (예: '베이커리' 검색 -> '빵' 카테고리 추가)
-            else if (SYNONYM_DB[key].includes(word)) {
+            } else if (SYNONYM_DB[key].includes(word)) {
                 expanded.add(key);
                 SYNONYM_DB[key].forEach(syn => expanded.add(syn));
             }
         });
     });
-
     return Array.from(expanded);
 }
 
@@ -73,7 +54,6 @@ function expandSearchKeywords(inputText) {
 // [1] 초기화 및 이벤트 리스너 설정
 // =========================================================
 export function initTemplateTools() {
-    // 1. 카테고리 필터 버튼
     window.filterTpl = (type, btnElement) => {
         if (btnElement) {
             document.querySelectorAll(".tpl-cate-btn").forEach(b => b.classList.remove("active"));
@@ -84,7 +64,6 @@ export function initTemplateTools() {
         searchTemplates(type, keyword);
     };
 
-    // 2. 검색창 엔터 이벤트
     const searchInput = document.getElementById("tplSearchInput");
     if (searchInput) {
         searchInput.onkeyup = (e) => {
@@ -92,14 +71,12 @@ export function initTemplateTools() {
         };
     }
 
-    // 3. 템플릿 탭 (오버레이 열기)
     document.querySelectorAll(".tpl-tab").forEach((b) => {
         if (!b.getAttribute('onclick')) {
             b.onclick = () => openTemplateOverlay(b.dataset.tpl);
         }
     });
 
-    // 4. 모달 내부 버튼 이벤트 연결 (추가/교체 선택)
     const btnReplace = document.getElementById("btnActionReplace"); 
     if (btnReplace) {
         btnReplace.onclick = () => {
@@ -116,11 +93,9 @@ export function initTemplateTools() {
         };
     }
 
-    // 적용 버튼
     const btnUse = document.getElementById("btnUseTpl");
     if(btnUse) btnUse.onclick = useSelectedTemplate;
 
-    // 5. 관리자 등록 버튼
     const btnReg = document.getElementById("btnRegisterTemplate");
     if (btnReg) {
         if (currentUser) btnReg.style.display = "flex";
@@ -130,7 +105,6 @@ export function initTemplateTools() {
         };
     }
 
-    // 6. 등록 확인 버튼
     const btnSellConfirm = document.getElementById("btnSellConfirm");
     if (btnSellConfirm) btnSellConfirm.onclick = registerOfficialTemplate;
 }
@@ -154,7 +128,6 @@ async function openTemplateOverlay(type) {
     await searchTemplates(type, "");
 }
 
-// ★★★ [수정됨] 템플릿 검색 및 필터링 (검색어 확장 + 100개 제한 적용) ★★★
 async function searchTemplates(category, keyword) {
     const grid = document.getElementById("tplGrid");
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">로딩중...</div>';
@@ -166,37 +139,23 @@ async function searchTemplates(category, keyword) {
     }
 
     try {
-        // 1. 현재 에디터의 제품 키 확인
         const currentKey = window.currentProductKey || (canvas ? canvas.currentProductKey : 'custom') || 'custom';
         
-        console.log(`🔎 템플릿 검색 시작 | 카테고리: ${category} | 키워드: ${keyword}`);
-
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, width, height, product_key, created_at')
             .order('created_at', { ascending: false })
-            .limit(100); // ★ 수정됨: 50개 -> 100개로 증가
+            .limit(100);
 
-        // 2. 카테고리 필터
         if (category && category !== 'all') {
             query = query.eq('category', category); 
         }
         
-        // 3. 키워드 검색 (확장 로직 적용)
         if (keyword && keyword.trim() !== '') {
-            // ★ 수정됨: 검색어 확장 함수 사용
             const expandedWords = expandSearchKeywords(keyword);
-            
-            // Supabase .or() 구문 생성 (tags 컬럼에 대해 여러 단어 중 하나라도 포함되면 검색)
-            // 예: tags.ilike.%여름%,tags.ilike.%바다%,tags.ilike.%휴가%
             const orSearchCondition = expandedWords.map(w => `tags.ilike.%${w}%`).join(',');
-            
-            if (orSearchCondition) {
-                query = query.or(orSearchCondition);
-            }
+            if (orSearchCondition) query = query.or(orSearchCondition);
         }
 
-        // 4. 제품 키 필터링 로직 (내 제품키 OR 공통 OR 커스텀)
-        // 기존 쿼리에 .or()를 추가하면 (카테고리 AND 키워드조건 AND 제품키조건) 형태로 결합됩니다.
         const filterCondition = `product_key.eq.${currentKey},product_key.eq.custom,product_key.is.null`;
         query = query.or(filterCondition);
 
@@ -204,16 +163,10 @@ async function searchTemplates(category, keyword) {
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            grid.innerHTML = `
-                <div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
-                    <i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:10px; display:block;"></i>
-                    검색 결과가 없습니다.<br>
-                    <span style="font-size:11px;">(키워드: ${keyword || '없음'})</span>
-                </div>`;
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">검색 결과가 없습니다.<br><span style="font-size:11px;">(키워드: ${keyword || '없음'})</span></div>`;
             return;
         }
 
-        // 5. 그리드 렌더링
         grid.innerHTML = "";
         data.forEach((item) => {
             const card = document.createElement("div");
@@ -221,7 +174,6 @@ async function searchTemplates(category, keyword) {
             const imgUrl = item.thumb_url || 'https://via.placeholder.com/300?text=No+Image';
             const displayTitle = item.tags ? item.tags.split(',')[0] : '무제';
             
-            // 전용 템플릿 표시
             const isExclusive = item.product_key && item.product_key !== 'custom';
             const badgeHtml = isExclusive 
                 ? `<span style="position:absolute; top:8px; left:8px; background:#6366f1; color:white; font-size:10px; padding:3px 6px; border-radius:4px; z-index:2; box-shadow:0 2px 4px rgba(0,0,0,0.2);">전용</span>` 
@@ -242,7 +194,7 @@ async function searchTemplates(category, keyword) {
                 
                 selectedTpl = { 
                     id: item.id, 
-                    category: item.category,
+                    category: item.category, // ★ 중요: 카테고리 정보 저장
                     width: item.width || 1000, 
                     height: item.height || 1000, 
                     product_key: item.product_key || 'custom'
@@ -259,16 +211,16 @@ async function searchTemplates(category, keyword) {
 }
 
 // =========================================================
-// [3] 선택 및 로드 프로세스
+// [3] 선택 및 로드 프로세스 (여기가 핵심 수정 구간)
 // =========================================================
 
 async function useSelectedTemplate() {
     if (!selectedTpl) return alert("템플릿을 선택해주세요.");
     
+    // 현재 캔버스에 내용물이 있는지 확인
     const objects = canvas.getObjects().filter(o => !o.isBoard);
     
     if (objects.length > 0) {
-        // 모달창 띄우기 (confirm 대신)
         document.getElementById("templateActionModal").style.display = "flex";
     } else {
         processLoad('replace');
@@ -276,15 +228,11 @@ async function useSelectedTemplate() {
 }
 
 async function processLoad(mode) {
-    // UI 정리
-    const loadModal = document.getElementById("loadModeModal");
-    if(loadModal) loadModal.style.display = "none";
     document.getElementById("templateActionModal").style.display = "none"; 
     document.getElementById("templateOverlay").style.display = "none";
     document.getElementById("loading").style.display = "flex";
 
     try {
-        // 1. DB에서 데이터 가져오기
         const { data, error } = await sb
             .from('library')
             .select('data_url')
@@ -298,7 +246,7 @@ async function processLoad(mode) {
         let isImage = false;
         let imageUrl = "";
 
-        // 2. 데이터 타입 판별
+        // 데이터 타입 판별 (JSON 문자열 vs 이미지 URL)
         try {
             if (typeof rawData === 'object') {
                 finalJson = rawData; 
@@ -306,6 +254,7 @@ async function processLoad(mode) {
                 finalJson = JSON.parse(rawData);
             }
 
+            // JSON 파싱은 성공했으나, 내용이 단순 문자열(이미지URL)인 경우 처리
             if (typeof finalJson === 'string') {
                 isImage = true;
                 imageUrl = finalJson;
@@ -313,18 +262,56 @@ async function processLoad(mode) {
                 isImage = false;
             }
         } catch (e) {
-            console.log("JSON 형식이 아님 -> 이미지로 처리합니다.");
+            // 파싱 실패 시 일반 이미지 URL로 간주
             isImage = true;
             imageUrl = rawData;
         }
 
-        // 3. 교체 모드일 경우 기존 요소 삭제
+        // '새 작업 시작' 모드일 때 기존 객체 삭제
         if (mode === 'replace') {
             const objects = canvas.getObjects().filter(o => !o.isBoard);
             objects.forEach(o => canvas.remove(o));
         }
 
-        // 4. 타입에 따른 처리 실행
+        // =================================================================
+        // ★★★ [스마트 리사이징 계산 로직] (이미지 & JSON 공통 사용) ★★★
+        // =================================================================
+        const getSmartScale = (objWidth, objHeight) => {
+            const board = canvas.getObjects().find(o => o.isBoard);
+            const bW = board ? (board.width * board.scaleX) : canvas.width;
+            const bH = board ? (board.height * board.scaleY) : canvas.height;
+
+            // 카테고리 확인 (없으면 기본값 'logo'로 처리하여 작게 로드)
+            const category = selectedTpl ? (selectedTpl.category || 'logo') : 'logo';
+            
+            console.log(`📏 스마트 리사이징 실행: ${category} 모드`);
+
+            // 1. 배경형 (꽉 차게 + 10%)
+            if (['photo-bg', 'vector', 'transparent-graphic', 'pattern'].includes(category)) {
+                // 가로 비율과 세로 비율 중 더 큰 쪽을 선택 (Cover 효과)
+                const scaleX = bW / objWidth;
+                const scaleY = bH / objHeight;
+                return Math.max(scaleX, scaleY) * 1.1; 
+            } 
+            // 2. 객체형 (화면의 1/3)
+            else {
+                const targetWidth = bW / 3;
+                return targetWidth / objWidth;
+            }
+        };
+
+        const getCenterPos = () => {
+            const board = canvas.getObjects().find(o => o.isBoard);
+            const bW = board ? (board.width * board.scaleX) : canvas.width;
+            const bH = board ? (board.height * board.scaleY) : canvas.height;
+            const cX = board ? (board.left + bW / 2) : canvas.width / 2;
+            const cY = board ? (board.top + bH / 2) : canvas.height / 2;
+            return { x: cX, y: cY };
+        };
+
+        // =================================================================
+        // [CASE 1] 단순 이미지 로드
+        // =================================================================
         if (isImage) {
             const cleanUrl = String(imageUrl).trim().replace(/^"|"$/g, '');
 
@@ -334,30 +321,31 @@ async function processLoad(mode) {
                     return alert("이미지 파일을 불러올 수 없습니다.");
                 }
 
-                const board = canvas.getObjects().find(o => o.isBoard);
-                const center = board ? board.getCenterPoint() : canvas.getCenter();
-                
+                const finalScale = getSmartScale(img.width, img.height);
+                const center = getCenterPos();
+
                 img.set({
                     left: center.x,
                     top: center.y,
                     originX: 'center',
-                    originY: 'center'
+                    originY: 'center',
+                    scaleX: finalScale,
+                    scaleY: finalScale
                 });
-
-                if (board) {
-                    const targetWidth = board.getScaledWidth() * 0.5;
-                    img.scaleToWidth(targetWidth);
-                }
-                
 
                 canvas.add(img);
                 img.setCoords(); 
                 canvas.setActiveObject(img);
                 canvas.requestRenderAll();
                 document.getElementById("loading").style.display = "none";
+
             }, { crossOrigin: 'anonymous' }); 
 
-        } else {
+        } 
+        // =================================================================
+        // [CASE 2] JSON 객체(그룹) 로드
+        // =================================================================
+        else {
             let jsonData = finalJson;
             if(jsonData.objects) jsonData.objects = jsonData.objects.filter(o => !o.isBoard);
 
@@ -379,31 +367,20 @@ async function processLoad(mode) {
 
                 const group = new fabric.Group(objs, { originX: 'center', originY: 'center' });
                 
-                const board = canvas.getObjects().find(o => o.isBoard);
-                const boardW = board ? (board.width * board.scaleX) : 1000;
-                const boardH = board ? (board.height * board.scaleY) : 1000;
-                const centerX = board ? (board.left + boardW / 2) : canvas.width / 2;
-                const centerY = board ? (board.top + boardH / 2) : canvas.height / 2;
-
-                let scale = 1;
-                
-                if (mode === 'replace') {
-                    const scaleX = boardW / group.width;
-                    const scaleY = boardH / group.height;
-                    scale = (boardW * 0.5) / group.width;
-                }
+                // ★ [수정됨] JSON 로드 시에도 스마트 리사이징 적용
+                const finalScale = getSmartScale(group.width, group.height);
+                const center = getCenterPos();
 
                 group.set({ 
-                    left: centerX, 
-                    top: centerY,
-                    scaleX: scale,
-                    scaleY: scale
+                    left: center.x, 
+                    top: center.y,
+                    scaleX: finalScale,
+                    scaleY: finalScale
                 });
 
                 canvas.add(group);
-
-                canvas.add(group);
-
+                
+                // 그룹 해제 후 개별 선택 상태로 전환
                 if (group.type === 'group') {
                     group.toActiveSelection();
                 }
@@ -491,15 +468,15 @@ async function registerOfficialTemplate() {
             canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
             thumbUrl = canvas.toDataURL({ 
                 format: 'png', 
-                multiplier: 3, 
-                quality: 1,
+                multiplier: 0.5, 
+                quality: 0.8,
                 left: board.left,
                 top: board.top,
                 width: board.getScaledWidth(),
                 height: board.getScaledHeight()
             });
         } else {
-            thumbUrl = canvas.toDataURL({ format: 'png', multiplier: 3, quality: 1 });
+            thumbUrl = canvas.toDataURL({ format: 'png', multiplier: 0.5, quality: 0.8 });
         }
 
         const payload = {
@@ -532,7 +509,7 @@ async function registerOfficialTemplate() {
 }
 
 // =========================================================
-// [5] 로고 대량 업로드 (다중 파일 + 자동 키워드)
+// [5] 로고 대량 업로드
 // =========================================================
 
 window.handleFileSelect = function(input) {
@@ -705,30 +682,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ★ [신규] 제품 전용 고정 템플릿(칼선) 자동 로드 함수 - 오버레이 모드
-
-// 오버레이 객체 추적용 변수
+// ★ 제품 전용 고정 템플릿(칼선) 로드
 let overlayObject = null;
 
 export function loadProductFixedTemplate(url) {
     if (!canvas || !url) return;
 
-    console.log("🔒 특수 상품 템플릿(칼선) 로드 중:", url);
+    console.log("🔒 칼선 로드 중:", url);
     const loading = document.getElementById("loading");
     if (loading) loading.style.display = "flex";
 
-    // 공통 처리 함수 (이미지 또는 SVG 그룹)
     const setupSpecialOverlay = (obj) => {
         if (!obj) {
             if (loading) loading.style.display = "none";
             return;
         }
 
-        // 1. 기존 칼선 삭제 (중복 방지)
         const oldOverlay = canvas.getObjects().find(o => o.id === 'product_fixed_overlay');
         if (oldOverlay) canvas.remove(oldOverlay);
 
-        // 2. 대지(Board) 크기에 맞추기
         const board = canvas.getObjects().find(o => o.isBoard);
         let tLeft = 0, tTop = 0, tW = canvas.width, tH = canvas.height;
 
@@ -739,7 +711,6 @@ export function loadProductFixedTemplate(url) {
             tTop = board.top;
         }
 
-        // 이미지 크기를 대지 크기에 강제로 맞춤 (비율 무시, 꽉 채움)
         const scaleX = tW / obj.width;
         const scaleY = tH / obj.height;
 
@@ -750,8 +721,6 @@ export function loadProductFixedTemplate(url) {
             top: tTop + tH / 2,
             originX: 'center',
             originY: 'center',
-            
-            // ★ 핵심 설정: 맨 위에 있지만 클릭은 통과됨
             id: 'product_fixed_overlay', 
             selectable: false,
             evented: false,              
@@ -763,17 +732,14 @@ export function loadProductFixedTemplate(url) {
             excludeFromExport: false     
         });
 
-        // 3. 캔버스에 추가하고 맨 앞으로 가져오기
         overlayObject = obj;
         canvas.add(obj);
-        canvas.bringToFront(obj); // 무조건 맨 위로
+        canvas.bringToFront(obj); 
         canvas.requestRenderAll();
         
         if (loading) loading.style.display = "none";
-        console.log("✅ 템플릿 오버레이 고정 완료");
     };
 
-    // 파일 타입에 따른 로드 분기
     if (url.toLowerCase().endsWith('.svg') || url.includes('data:image/svg')) {
         fabric.loadSVGFromURL(url, (objects, options) => {
             const group = fabric.util.groupSVGElements(objects, options);
