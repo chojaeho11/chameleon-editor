@@ -502,8 +502,9 @@ function goBoard(category) {
         
         <div class="stage" id="stage">
            <div id="textWizardToolbar" class="wizard-toolbar floating-island">
-    <div class="wiz-brand">
-        <span class="wiz-icon">🧙‍♂️</span>
+    <div class="wiz-brand" style="display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.2; padding: 0 5px;">
+        <span class="wiz-icon" style="font-size:20px; margin-bottom:2px;">🧙‍♂️</span>
+        <span style="font-size:10px; font-weight:bold; color:#8b00a7; letter-spacing:-0.5px;">디자인마법사</span>
     </div>
     
     <div class="wiz-scroll-track">
@@ -574,17 +575,25 @@ function goBoard(category) {
                         <button class="tool-btn" id="btnDel" style="color:red; flex:1; font-size: 11px;" data-i18n="btn_del">삭제</button>
                     </div>
                     
-                    <div class="section-title" style="margin-bottom:8px; font-size: 12px;" data-i18n="label_align">정렬</div>
+                    <!-- <div class="section-title" style="margin-bottom:8px; font-size: 12px;" data-i18n="label_align">정렬</div>
                     <div class="align-grid" style="gap: 4px; margin-bottom: 8px;">
                         <button class="align-btn" id="btnAlignLeft"><i class="fa-solid fa-align-left"></i></button>
-                        <button class="align-btn" id="btnAlignCenterH"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>
                         <button class="align-btn" id="btnAlignRight"><i class="fa-solid fa-align-right"></i></button>
                         <button class="align-btn" id="btnAlignTop"><i class="fa-solid fa-align-left" style="transform:rotate(90deg)"></i></button>
                         <button class="align-btn" id="btnAlignMiddle"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>
                         <button class="align-btn" id="btnAlignBottom"><i class="fa-solid fa-align-right" style="transform:rotate(90deg)"></i></button>
-                    </div>
-                    <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px; height: 32px; font-size: 11px;">🎯 <span data-i18n="btn_center_all">정중앙</span></button>
-                    <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px; height: 32px; font-size: 11px;">🖼 <span data-i18n="btn_full_bg">배경 채우기</span></button>
+                    </div> -->
+                    <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="margin-top:5px; height: 32px; font-size: 11px;">
+        🎯 <span data-i18n="btn_center_all">정중앙</span>
+    </button>
+    
+    <button class="btn-round" onclick="window.setAsBackground()" style="margin-top:5px; height: 32px; font-size: 11px;">
+        🖼 <span data-i18n="btn_full_bg">배경 채우기</span>
+    </button>
+
+    <button id="btnLockWizard" class="btn-round" style="margin-top:5px; height: 32px; font-size: 11px;">
+        <i class="fa-solid fa-lock"></i> <span>선택-잠그기</span>
+    </button>
                 </div>
 
                 <div class="panel-box" id="panelText" style="display:none;"></div>
