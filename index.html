@@ -134,7 +134,35 @@
 </div>
 
 
-
+    <!-- 게시판 -->
+<div class="community-nav-wrapper">
+    <div class="comm-grid">
+        <a href="#" onclick="goBoard('blog'); return false;" class="comm-btn blog">
+            <div class="comm-icon"><i class="fa-solid fa-pen-nib"></i></div>
+            <span>카멜레온<br>블로그</span>
+        </a>
+        <a href="#" onclick="goBoard('review'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-star"></i></div>
+            <span>고객<br>제작후기</span>
+        </a>
+        <a href="#" onclick="goBoard('promo'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-bullhorn"></i></div>
+            <span>지역광고사<br>홍보</span>
+        </a>
+        <a href="#" onclick="goBoard('trade'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-handshake"></i></div>
+            <span>중고장비<br>거래</span>
+        </a>
+        <a href="#" onclick="goBoard('job'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <span>구인구직</span>
+        </a>
+        <a href="#" onclick="goBoard('free'); return false;" class="comm-btn">
+            <div class="comm-icon"><i class="fa-solid fa-comments"></i></div>
+            <span>제품설명서</span>
+        </a>
+    </div>
+</div>
 
 <div class="gallery-section">
     <style>
@@ -313,37 +341,21 @@
     <button id="btnStartSearch" class="hero-search-btn">
         <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">검색</span>
     </button>
+</div> 
+<div class="pagination-wrapper" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:20px 0 40px 0;">
+    <button id="btnTplPrev" class="btn-round" onclick="changeTemplatePage(-1)" style="width:100px; justify-content:center;" disabled>
+        <i class="fa-solid fa-chevron-left"></i> 이전
+    </button>
+    
+    <span id="tplPageLabel" style="font-weight:bold; color:#334155; font-size:16px;">1 페이지</span>
+    
+    <button id="btnTplNext" class="btn-round" onclick="changeTemplatePage(1)" style="width:100px; justify-content:center;">
+        다음 <i class="fa-solid fa-chevron-right"></i>
+    </button>
 </div>
-
-    <!-- 게시판 -->
 <div class="community-nav-wrapper">
-    <div class="comm-grid">
-        <a href="#" onclick="goBoard('blog'); return false;" class="comm-btn blog">
-            <div class="comm-icon"><i class="fa-solid fa-pen-nib"></i></div>
-            <span>카멜레온<br>블로그</span>
-        </a>
-        <a href="#" onclick="goBoard('review'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-star"></i></div>
-            <span>고객<br>제작후기</span>
-        </a>
-        <a href="#" onclick="goBoard('promo'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-bullhorn"></i></div>
-            <span>지역광고사<br>홍보</span>
-        </a>
-        <a href="#" onclick="goBoard('trade'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-handshake"></i></div>
-            <span>중고장비<br>거래</span>
-        </a>
-        <a href="#" onclick="goBoard('job'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-briefcase"></i></div>
-            <span>구인구직</span>
-        </a>
-        <a href="#" onclick="goBoard('free'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-comments"></i></div>
-            <span>제품설명서</span>
-        </a>
-    </div>
-</div>
+
+
 <script>
     // 게시판 이동 함수 (국가 코드 자동 감지)
     // 게시판 이동 함수 (새 창 열기 적용)
@@ -363,6 +375,7 @@ function goBoard(category) {
     
 
     <div id="startTemplateGrid" class="template-grid-start"></div>
+    
     <div class="review-section">
     <div class="review-header">
     <h2 data-i18n="review_section_title">✨ 고객님들의 생생한 후기</h2>
@@ -1321,120 +1334,113 @@ function goBoard(category) {
     // [1] 초기화 및 데이터 로드 (순서 중요)
     // ============================================================
     window.addEventListener('load', async () => {
+    // 0.5초 대기 (안정적인 로딩)
     await new Promise(r => setTimeout(r, 500));
-    renderQuickMenu();
     
-    // ✅ 최신 검색 함수로 교체!
+    // 1. 상단 메뉴 렌더링
+    if (typeof renderQuickMenu === 'function') renderQuickMenu();
+    
+    // 2. 템플릿 로드 (페이징 기능 적용)
     if(window.searchTemplates) {
-        window.searchTemplates(''); 
+        window.searchTemplates('');
     }
     
-    window.preloadLanguageFont();
-        
-        window.preloadLanguageFont();
+    // 3. 폰트 및 핫딜 상품 로드
+    if (window.preloadLanguageFont) window.preloadLanguageFont();
+    if (typeof loadSpecialProducts === 'function') {
         loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
-        
-        // 2. 업자용 핫딜 (신규)
-        loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+        loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6); // 업자용
+    }
 
-    // ▼▼▼ [수정됨] 로그인 상태 확인 및 버튼 글씨 변경 로직 ▼▼▼
+    // 4. 로그인 상태 확인 및 버튼 처리 (비동기)
     setTimeout(async () => {
-        // 1. Supabase에 로그인 상태 확인
         const { data } = await sb.auth.getSession();
         const btnLogin = document.getElementById('btnLoginBtn');
         
-        // 2. 로그인 된 상태라면?
+        // 로그인 된 상태
         if (data && data.session && data.session.user) {
             window.currentUser = data.session.user;
             console.log("로그인 확인됨:", window.currentUser.email);
 
-            // ★ [핵심] 버튼 글씨를 '로그아웃'으로 변경
             if (btnLogin) {
                 btnLogin.innerText = "로그아웃";
                 btnLogin.style.fontWeight = "bold"; 
                 
-                // ★ [핵심] 버튼 클릭 시 진짜 로그아웃 되도록 기능 연결
+                // 로그아웃 기능 연결
                 btnLogin.onclick = async function() {
                     if (confirm("정말 로그아웃 하시겠습니까?")) {
                         await sb.auth.signOut();
                         alert("로그아웃 되었습니다.");
-                        window.location.reload(); // 새로고침하여 초기화
+                        window.location.reload(); 
                     }
                 };
             }
         } 
-        // 3. 로그인이 안 된 상태라면?
+        // 비로그인 상태
         else {
-            // 버튼을 원래대로 '로그인'으로 설정
             if (btnLogin) {
                 btnLogin.innerText = "로그인";
                 btnLogin.onclick = function() {
                     document.getElementById('loginModal').style.display = 'flex';
                 };
             }
-
-            // [수정됨] 시작 화면에서는 로그인 팝업을 자동으로 띄우지 않음
-            /* const loginModal = document.getElementById('loginModal');
-            if (loginModal) {
-                loginModal.style.display = 'flex';
-            }
-            */
         }
     }, 500);
-    // ▲▲▲ 수정 완료 ▲▲▲
 
-    // 검색 기능 연결 (기존 코드 유지)
+    // 5. 메인 검색창 이벤트 연결
     const searchBtn = document.getElementById('btnStartSearch');
-        const searchInput = document.getElementById('startSearchInput');
-        if (searchBtn && searchInput) {
-            const doSearch = () => window.searchTemplates(searchInput.value);
-            searchBtn.onclick = doSearch;
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') doSearch();
-            });
-        }
-    });
+    const searchInput = document.getElementById('startSearchInput');
+    if (searchBtn && searchInput) {
+        const doSearch = () => {
+            if(window.searchTemplates) window.searchTemplates(searchInput.value);
+        };
+        searchBtn.onclick = doSearch;
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') doSearch();
+        });
+    }
+});
+
+// ▼▼▼ [새로 추가] 마이페이지에서 [편집] 눌렀을 때 복구하는 코드 ▼▼▼
+const loadId = localStorage.getItem('load_design_id');
+if (loadId) {
+    localStorage.removeItem('load_design_id'); // 한 번만 실행되도록 삭제
     
-    // ▼▼▼ [새로 추가] 마이페이지에서 [편집] 눌렀을 때 복구하는 코드 ▼▼▼
-        const loadId = localStorage.getItem('load_design_id');
-        if (loadId) {
-            localStorage.removeItem('load_design_id'); // 한 번만 실행되도록 삭제
+    setTimeout(async () => {
+        const loading = document.getElementById('loading');
+        if(loading) loading.style.display = 'flex';
+        
+        try {
+            // 1. DB에서 저장된 디자인 데이터 가져오기
+            const { data, error } = await sb.from('user_designs').select('*').eq('id', loadId).single();
             
-            setTimeout(async () => {
-                const loading = document.getElementById('loading');
-                if(loading) loading.style.display = 'flex';
-                
-                try {
-                    // 1. DB에서 저장된 디자인 데이터 가져오기
-                    const { data, error } = await sb.from('user_designs').select('*').eq('id', loadId).single();
-                    
-                    if (error || !data) throw new Error("디자인을 찾을 수 없습니다.");
+            if (error || !data) throw new Error("디자인을 찾을 수 없습니다.");
 
-                    if (data.json && !data.json_data) {
-    data.json_data = data.json;
-}
+            if (data.json && !data.json_data) {
+                data.json_data = data.json;
+            }
 
-                    // 2. 에디터 화면으로 전환
-                    document.getElementById("startScreen").style.display = "none";
-                    document.getElementById("mainEditor").style.display = "flex";
-                    document.body.classList.add('editor-active');
+            // 2. 에디터 화면으로 전환
+            document.getElementById("startScreen").style.display = "none";
+            document.getElementById("mainEditor").style.display = "flex";
+            document.body.classList.add('editor-active');
 
-                    // 3. my-design.js에 있는 복구 함수 실행
-                    if (window.restoreDesignFromData) {
-                        window.restoreDesignFromData(data);
-                    } else {
-                        console.error("복구 함수가 로드되지 않았습니다.");
-                        if(loading) loading.style.display = 'none';
-                    }
+            // 3. my-design.js에 있는 복구 함수 실행
+            if (window.restoreDesignFromData) {
+                window.restoreDesignFromData(data);
+            } else {
+                console.error("복구 함수가 로드되지 않았습니다.");
+                if(loading) loading.style.display = 'none';
+            }
 
-                } catch (e) {
-                    console.error(e);
-                    alert("불러오기 실패: " + e.message);
-                    if(loading) loading.style.display = 'none';
-                }
-            }, 800); // 0.8초 뒤 실행 (안전하게 로딩)
+        } catch (e) {
+            console.error(e);
+            alert("불러오기 실패: " + e.message);
+            if(loading) loading.style.display = 'none';
         }
-        // ▲▲▲ 추가 끝 ▲▲▲
+    }, 800); // 0.8초 뒤 실행 (안전하게 로딩)
+}
+// ▲▲▲ 추가 끝 ▲▲▲
 
     // ============================================================
     // [1] 다국어 JSON 파일 로드 및 적용 (Fetch 방식)
@@ -2343,17 +2349,28 @@ async function renderQuickMenu() {
     }
 
     // 메인 로드 이벤트
+    // [수정된 초기화 코드]
     window.addEventListener('load', async () => {
         await new Promise(r => setTimeout(r, 500));
+        
+        // 1. 카테고리 메뉴 로드
         renderQuickMenu();
-        loadTemplates('startTemplateGrid', false);
+        
+        // 2. 템플릿 로드 (함수 이름 변경됨: loadTemplates -> searchTemplates)
+        if(window.searchTemplates) {
+            window.searchTemplates(''); // 첫 페이지(28개) 로드 시작
+        }
+        
+        // 3. 폰트 로드
         window.preloadLanguageFont();
 
-        // 검색
+        // 4. 검색창 이벤트 연결 (수정됨)
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
         if (searchBtn && searchInput) {
-            const doSearch = () => loadTemplates('startTemplateGrid', false, searchInput.value);
+            const doSearch = () => {
+                if(window.searchTemplates) window.searchTemplates(searchInput.value);
+            };
             searchBtn.onclick = doSearch;
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') doSearch();
@@ -2365,148 +2382,119 @@ async function renderQuickMenu() {
 // [1] 스마트 검색 & 무한 스크롤 설정
 // ==========================================
 
-// 1. 동의어(유사어) 데이터베이스
-const SYNONYM_DB = {
-    '빵': ['브레드', '베이커리', '제과', '디저트', '케이크', '식빵'],
-    '커피': ['카페', '아메리카노', '라떼', '음료', '티', 'coffee'],
-    '여름': ['바다', '해변', '수영', '휴가', '썸머', '물놀이'],
-    '세일': ['할인', '특가', '이벤트', '프로모션', '오픈', 'sale'],
-    '학원': ['교육', '수학', '영어', '입시', '공부', '과외'],
-    '고기': ['정육', '한우', '삼겹살', '식당', '맛집', '구이'],
-    '부동산': ['공인중개사', '매매', '전세', '월세', '분양'],
-    '뷰티': ['미용', '헤어', '네일', '화장품', '에스테틱']
-};
+// ==========================================
+    // [1] 템플릿 페이징 시스템 (28개씩 보기) - 수정됨
+    // ==========================================
 
-// 2. 검색어 확장 함수
-function expandSearchKeywords(inputText) {
-    if (!inputText) return [];
-    let words = inputText.split(/\s+/).filter(w => w.trim().length > 0);
-    let expanded = new Set(words);
-    words.forEach(word => {
-        Object.keys(SYNONYM_DB).forEach(key => {
-            if (word.includes(key) || key.includes(word)) {
-                SYNONYM_DB[key].forEach(syn => expanded.add(syn));
+    const ITEMS_PER_PAGE = 28; // 한 페이지당 28개
+    let currentTemplatePage = 0;
+    let lastSearchKeyword = '';
+
+    // 1. 검색 시작 (초기화)
+    window.searchTemplates = function(keyword = '') {
+        lastSearchKeyword = keyword;
+        currentTemplatePage = 0; // 1페이지로 리셋
+        loadTemplatePage(0);
+    };
+
+    // 2. 페이지 변경 버튼 클릭 시 실행 (HTML의 onclick과 연결됨)
+    window.changeTemplatePage = function(delta) {
+        const newPage = currentTemplatePage + delta;
+        if (newPage < 0) return; // 0페이지 미만 방지
+        loadTemplatePage(newPage);
+    };
+
+    // 3. 데이터 로드 및 그리기 (핵심 함수)
+    async function loadTemplatePage(page) {
+        const grid = document.getElementById('startTemplateGrid');
+        if (!grid) return;
+
+        // 로딩 표시
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>로딩 중...</div>';
+        
+        try {
+            // DB 쿼리 준비
+            let query = sb.from('library')
+                .select('id, thumb_url, category, tags', { count: 'exact' }) // 전체 개수도 같이 가져옴
+                .order('created_at', { ascending: false })
+                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); // 범위 설정
+
+            // 검색어 필터 (태그 검색)
+            if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
+                query = query.ilike('tags', `%${lastSearchKeyword}%`);
             }
-        });
-    });
-    return Array.from(expanded);
-}
 
-// 3. 변수 설정
-let currentTemplatePage = 0;
-let isTemplateLoading = false;
-let hasMoreTemplates = true;
-let lastSearchKeyword = '';
-const ITEMS_PER_PAGE = 120;
+            const { data, error, count } = await query;
 
-// 4. 검색 시작 함수 (초기화)
-window.searchTemplates = function(keyword = '') {
-    const grid = document.getElementById('startTemplateGrid');
-    if (!grid) return;
-    
-    // 초기화
-    grid.innerHTML = '';
-    currentTemplatePage = 0;
-    hasMoreTemplates = true;
-    lastSearchKeyword = keyword;
-    
-    // 스크롤 감지 센서 재설치
-    const sentinel = document.getElementById('scroll-sentinel');
-    if(sentinel) sentinel.remove();
-    
-    const newSentinel = document.createElement('div');
-    newSentinel.id = 'scroll-sentinel';
-    newSentinel.style.cssText = 'height:10px; grid-column:1/-1;';
-    grid.parentNode.appendChild(newSentinel);
-    
-    scrollObserver.observe(newSentinel); // 감지 시작
-    
-    loadMoreTemplates(); // 첫 페이지 로드
-};
+            if (error) throw error;
 
-// 5. 데이터 로드 함수 (무한 스크롤 핵심)
-async function loadMoreTemplates() {
-    if (isTemplateLoading || !hasMoreTemplates) return;
-    
-    const grid = document.getElementById('startTemplateGrid');
-    if (!grid) return;
+            grid.innerHTML = ''; // 기존 내용 지우기
 
-    isTemplateLoading = true;
+            // 데이터가 없을 때
+            if (!data || data.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#999;">검색 결과가 없습니다.</div>';
+                updatePaginationButtons(page, 0);
+                return;
+            }
 
-    // 로딩바 표시
-    let loader = document.getElementById('tpl-loader');
-    if (!loader) {
-        loader = document.createElement('div');
-        loader.id = 'tpl-loader';
-        loader.style.cssText = 'grid-column:1/-1; text-align:center; padding:20px; color:#888;';
-        loader.innerText = '로딩 중...';
-        grid.appendChild(loader);
+            // 카드 생성 (이미지 최적화 포함)
+            data.forEach(tpl => {
+                const card = document.createElement('div');
+                card.className = 'tpl-card-start'; // 기존 CSS 클래스 사용
+                
+                // [이미지 최적화] Supabase 리사이징
+                let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
+                if (imgSrc.includes('supabase.co')) {
+                    const separator = imgSrc.includes('?') ? '&' : '?';
+                    imgSrc += `${separator}width=300&height=300&resize=cover&format=webp&quality=60`;
+                }
+
+                card.innerHTML = `
+                    <img src="${imgSrc}" class="tpl-card-img" loading="lazy">
+                    <div class="tpl-card-overlay"></div>
+                `;
+                
+                // 클릭 이벤트
+                card.onclick = () => { 
+                    if(window.onTemplateClick) window.onTemplateClick(tpl); 
+                };
+                
+                grid.appendChild(card);
+            });
+
+            // 현재 페이지 번호 업데이트 및 버튼 상태 관리
+            currentTemplatePage = page;
+            updatePaginationButtons(page, data.length);
+
+        } catch (e) {
+            console.error("템플릿 로드 오류:", e);
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">오류가 발생했습니다.</div>';
+        }
     }
 
-    try {
-        if (!sb) await new Promise(r => setTimeout(r, 500));
+    // 4. 버튼 활성화/비활성화 및 페이지 번호 표시
+    function updatePaginationButtons(page, currentItemsCount) {
+        const btnPrev = document.getElementById('btnTplPrev');
+        const btnNext = document.getElementById('btnTplNext');
+        const lblPage = document.getElementById('tplPageLabel');
 
-        let query = sb.from('library')
-            .select('id, thumb_url, category, tags')
-            .order('created_at', { ascending: false })
-            .range(currentTemplatePage * ITEMS_PER_PAGE, (currentTemplatePage + 1) * ITEMS_PER_PAGE - 1);
+        if(lblPage) lblPage.innerText = `${page + 1} 페이지`;
 
-        // 스마트 검색 조건 적용
-        if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
-            const keywords = expandSearchKeywords(lastSearchKeyword);
-            // 태그에 단어가 포함되는지 확인 (OR 검색)
-            const orCondition = keywords.map(k => `tags.ilike.%${k}%`).join(',');
-            if (orCondition) query = query.or(orCondition);
+        // 첫 페이지면 '이전' 버튼 비활성화
+        if(btnPrev) {
+            btnPrev.disabled = (page === 0);
+            btnPrev.style.opacity = (page === 0) ? '0.5' : '1';
+            btnPrev.style.cursor = (page === 0) ? 'default' : 'pointer';
         }
 
-        const { data, error } = await query;
-
-        // 로딩바 제거
-        if(loader) loader.remove();
-
-        if (error) throw error;
-
-        // 데이터가 없거나 끝난 경우
-        if (!data || data.length === 0) {
-            hasMoreTemplates = false;
-            if (currentTemplatePage === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#888;">검색 결과가 없습니다.</div>';
-            }
-            return;
+        // 가져온 데이터가 설정 개수(28개)보다 적으면 '다음' 버튼 비활성화 (마지막 페이지)
+        if(btnNext) {
+            const isLastPage = currentItemsCount < ITEMS_PER_PAGE;
+            btnNext.disabled = isLastPage;
+            btnNext.style.opacity = isLastPage ? '0.5' : '1';
+            btnNext.style.cursor = isLastPage ? 'default' : 'pointer';
         }
-
-        if (data.length < ITEMS_PER_PAGE) hasMoreTemplates = false;
-
-        // 카드 렌더링
-        data.forEach(tpl => {
-            const card = document.createElement('div');
-            card.className = 'tpl-card-start';
-            const imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
-            
-            card.innerHTML = `<img src="${imgSrc}" class="tpl-card-img"><div class="tpl-card-overlay"></div>`;
-            card.onclick = () => { if(window.onTemplateClick) window.onTemplateClick(tpl); };
-            grid.appendChild(card);
-        });
-
-        currentTemplatePage++;
-
-    } catch (e) {
-        console.error("템플릿 로드 오류:", e);
-        hasMoreTemplates = false;
-        if(loader) loader.remove();
-    } finally {
-        isTemplateLoading = false;
     }
-}
-
-// 6. 스크롤 감지 옵저버
-const scrollObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting && hasMoreTemplates && !isTemplateLoading) {
-            loadMoreTemplates();
-        }
-    });
-}, { root: null, rootMargin: '200px', threshold: 0.1 });
 
     // PDF 폰트 설정 (폰트 깨짐 방지)
     window.pdfFontCache = null;
