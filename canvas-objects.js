@@ -164,8 +164,8 @@ function initTextHandlers() {
             const textString = "“The Story”";
             const t = new fabric.IText(textString, {
                 fontFamily: family,
-                fontSize: 50, // 초기값 (계산 후 변경됨)
-                fill: "#14078aff", 
+                fontSize: 30, // 초기값 (계산 후 변경됨)
+                fill: "#1f1f1fff", 
                 left: 0, top: 0,
                 originX: 'center', originY: 'center'
             });
@@ -703,6 +703,30 @@ function initColorHandlers() {
     const strokeWidth = document.getElementById("globalStroke");
     const strokeMiter = document.getElementById("btnStrokeMiter");
     const strokeRound = document.getElementById("btnStrokeRound");
+
+    const btnOutline = document.getElementById("btnOutline");
+    if (btnOutline) {
+        btnOutline.onclick = () => {
+            const active = canvas.getActiveObject();
+            if (!active) return alert("외곽선을 적용할 객체를 선택해주세요.");
+
+            const defaultColor = "#ff6060ff"; // 갈색 (SaddleBrown)
+            const defaultWidth = 5;         // 중간 두께
+
+            // 1. 객체에 속성 적용 (함수 재사용)
+            applyToSelection("stroke", defaultColor);
+            applyToSelection("strokeWidth", defaultWidth);
+            
+            // 텍스트의 경우 외곽선이 글자를 덮지 않도록 설정 (선택사항)
+            applyToSelection("paintFirst", "stroke"); 
+
+            // 2. UI(입력창) 상태 동기화
+            if (strokeColor) strokeColor.value = defaultColor;
+            if (strokeWidth) strokeWidth.value = defaultWidth;
+
+            canvas.requestRenderAll();
+        };
+    }
 
     if (fillColor) fillColor.oninput = () => applyToSelection("fill", fillColor.value);
     if (strokeColor) strokeColor.oninput = () => applyToSelection("stroke", strokeColor.value);
