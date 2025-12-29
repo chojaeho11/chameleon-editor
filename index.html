@@ -99,6 +99,20 @@
     <h1 class="hero-title" data-i18n="hero_title">광고사 기획사 파티플래너라면? <br><span>카멜레온</span>과 함께해요.</h1>
     <p class="hero-desc" data-i18n="hero_desc">대한민국 1등 광고인쇄 도매쇼핑몰, 로고를 공유하고 함께 만드는 무료에디터</p>
 </div>
+<!-- 퀵메뉴와퍼 -->
+<div class="quick-menu-wrapper">
+    
+    <img src="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png" class="bouncing-char" alt="캐릭터">
+    
+    
+    <div class="quick-title-box">
+        <span class="qt-badge">프린팅계의 코스트코</span>
+        <h2 class="qt-text">카멜레온의 제품 카테고리</h2>
+    </div>
+    <div id="topCategoryTabs" class="category-tabs"></div>
+
+    <div class="quick-menu-track" id="quickMenuContainer"></div>
+</div>
 
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
@@ -119,18 +133,155 @@
         </div>
 </div>
 
-<!-- 퀵메뉴와퍼 -->
-<div class="quick-menu-wrapper">
-    
-    <div id="topCategoryTabs" class="category-tabs"></div>
-
-    <div class="quick-menu-track" id="quickMenuContainer"></div>
-</div>
 
 
 
 <div class="gallery-section">
-    <div class="gallery-header">부업공지! 이미지 만들어 나도쓰고 남도쓰면 현금으로 쌓이는 풍성한 적립금 혜택</div>
+    <style>
+    .tier-section-wrap {
+        text-align: center;
+        margin: 40px auto 60px auto;
+        max-width: 1000px;
+        padding: 0 20px;
+    }
+    .tier-title-main {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 30px;
+    }
+    .tier-title-main span {
+        color: #6366f1;
+    }
+    
+    .tier-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap; /* 모바일에서 자동 줄바꿈 */
+    }
+
+    .tier-card {
+        flex: 1;
+        min-width: 280px; /* 카드 최소 너비 */
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 30px 20px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tier-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 카드 상단 색상띠 */
+    .tier-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+    }
+    .tier-card.gold::before { background: #eab308; }
+    .tier-card.platinum::before { background: #64748b; }
+    .tier-card.franchise::before { background: #6366f1; }
+
+    .tier-icon {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    .tier-card.gold .tier-icon { background: #fef9c3; color: #ca8a04; }
+    .tier-card.platinum .tier-icon { background: #f1f5f9; color: #475569; }
+    .tier-card.franchise .tier-icon { background: #e0e7ff; color: #4f46e5; }
+
+    .tier-name {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: #334155;
+    }
+
+    .tier-discount {
+        font-size: 32px;
+        font-weight: 900;
+        margin-bottom: 20px;
+    }
+    .tier-card.gold .tier-discount { color: #ca8a04; }
+    .tier-card.platinum .tier-discount { color: #475569; }
+    .tier-card.franchise .tier-discount { color: #4f46e5; }
+
+    .tier-desc {
+        font-size: 14px;
+        color: #64748b;
+        line-height: 1.6;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 15px;
+        width: 100%;
+    }
+    .tier-desc strong { color: #334155; }
+    
+    .tier-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        background: #f1f5f9;
+        color: #64748b;
+        margin-bottom: 5px;
+    }
+</style>
+
+<div class="tier-section-wrap">
+    <h2 class="tier-title-main">멤버십 등급별 <span>할인 혜택</span> 안내</h2>
+    
+    <div class="tier-container">
+        
+        <div class="tier-card gold">
+            <div class="tier-icon"><i class="fa-solid fa-medal"></i></div>
+            <div class="tier-name">골드 (GOLD)</div>
+            <div class="tier-discount">5% 할인</div>
+            <div class="tier-desc">
+                <span class="tier-badge">조건 1</span> 누적 구매 <strong>500만원</strong> 이상<br>
+                <div style="margin: 5px 0; font-size:12px; color:#94a3b8;">OR</div>
+                <span class="tier-badge">조건 2</span> 로고 <strong>10개</strong> 공유
+            </div>
+        </div>
+
+        <div class="tier-card platinum">
+            <div class="tier-icon"><i class="fa-solid fa-crown"></i></div>
+            <div class="tier-name">플래티넘 (PLATINUM)</div>
+            <div class="tier-discount">10% 할인</div>
+            <div class="tier-desc">
+                <span class="tier-badge">조건 1</span> 누적 구매 <strong>1,000만원</strong> 이상<br>
+                <div style="margin: 5px 0; font-size:12px; color:#94a3b8;">OR</div>
+                <span class="tier-badge">조건 2</span> 로고 <strong>100개</strong> 공유
+            </div>
+        </div>
+
+        <div class="tier-card franchise">
+            <div class="tier-icon"><i class="fa-solid fa-store"></i></div>
+            <div class="tier-name">가맹점 (PARTNER)</div>
+            <div class="tier-discount">15% 할인</div>
+            <div class="tier-desc">
+                <span class="tier-badge" style="background:#e0e7ff; color:#4338ca;">가입조건</span><br>
+                가맹비 <strong>100만원</strong><br>
+                <span style="font-size:12px; color:#888;">(별도 문의 요망)</span>
+            </div>
+        </div>
+
+    </div>
+</div>
 
     <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; flex-wrap: wrap;">
         
@@ -139,7 +290,7 @@
         </button>
 
         <button onclick="document.getElementById('logoUploadModal').style.display='flex'" class="btn-round" style="width: auto; display: inline-flex; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 50px; box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2); background: #fff; color: #6366f1; border: 2px solid #6366f1;">
-            <i class="fa-solid fa-cloud-arrow-up"></i> &nbsp; 로고 공유 (2배 적립!)
+            <i class="fa-solid fa-cloud-arrow-up"></i> &nbsp; 로고 공유 GO PLATINUM
         </button>
 
     </div>
@@ -783,18 +934,43 @@ function goBoard(category) {
 
         <div style="display: flex; flex-direction: column; gap: 20px; padding: 0 20px;">
             <div id="cartListArea" style="width: 100%;"></div>
+            
             <div style="width: 100%;">
                 <div style="background:white; padding:20px; border-radius:12px;">
                     <h3 data-i18n="label_payment_amt">결제 금액</h3>
-                    <div style="display:flex; justify-content:space-between;"><span data-i18n="label_product_price">상품</span><span id="summaryItemPrice">0원</span></div>
-                    <div style="display:flex; justify-content:space-between;"><span data-i18n="label_option_price">옵션</span><span id="summaryAddonPrice">0원</span></div>
-                    <hr>
-                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px;"><span data-i18n="label_total_price">합계</span><span id="summaryTotal">0원</span></div>
-                    <button id="btnGoCheckout" class="btn-round primary" style="margin-top:20px; width:100%;">💳 <span data-i18n="btn_do_checkout">결제하기</span></button>
-                    <button id="btnPrintQuote" class="btn-round btn-secondary" style="margin-top:10px; width:100%;"><i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_print_quote">견적서 출력</span></button>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                        <span data-i18n="label_product_price">상품</span>
+                        <span id="summaryItemPrice">0원</span>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                        <span data-i18n="label_option_price">옵션</span>
+                        <span id="summaryAddonPrice">0원</span>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; color:#ef4444; font-weight:bold; margin-bottom: 5px;">
+                        <span>등급 할인</span>
+                        <span id="summaryDiscount">0원 (0%)</span>
+                    </div>
+                    
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                    
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px; margin-bottom: 20px;">
+                        <span data-i18n="label_total_price">합계</span>
+                        <span id="summaryTotal">0원</span>
+                    </div>
+                    
+                    <button id="btnGoCheckout" class="btn-round primary" style="margin-top:0; width:100%; height: 50px; font-size: 16px;">
+                        💳 <span data-i18n="btn_do_checkout">결제하기</span>
+                    </button>
+                    
+                    <button id="btnPrintQuote" class="btn-round btn-secondary" style="margin-top:10px; width:100%;">
+                        <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_print_quote">견적서 출력</span>
+                    </button>
                 </div>
             </div>
-        </div>
+            </div>
     </div>
 </div>
 <div id="calendarModal" class="modal-bg" style="z-index: 12500;">
@@ -844,7 +1020,7 @@ function goBoard(category) {
 </div>
 
 <div id="checkoutModal" class="modal-bg" style="z-index: 13000;">
-    <div class="modal-box" style="text-align:left;">
+    <div class="modal-box" style="text-align:left; width: 500px;">
         <h3 style="text-align:center; margin-bottom: 20px;" data-i18n="modal_checkout_title">주문 확인 및 결제</h3>
         
         <label style="font-size:12px; color:#666; font-weight:bold;" data-i18n="label_orderer_name">주문자명</label>
@@ -859,35 +1035,50 @@ function goBoard(category) {
         <label style="font-size:12px; color:#666; font-weight:bold;" data-i18n="label_request_memo">요청사항</label>
         <textarea id="orderMemo" class="ai-input-pretty" readonly></textarea>
         
-        <button id="btnRealPayment" class="btn-round primary" style="margin-top:10px; height: 50px; font-size: 16px;" data-i18n="btn_card_payment">
-            💳 카드 / 간편결제 (바로결제)
-        </button>
+        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
 
-        <div class="bank-transfer-container" id="bankTransferInfoArea">
-            <div class="bank-title" data-i18n="msg_bank_info">[계좌이체 안내]</div>
-            <div class="bank-info">
-                <span class="bank-name" data-i18n="msg_bank_name">국민은행</span>
-                <span class="bank-num">647701-04-277763</span>
-            </div>
-            <div class="bank-owner" data-i18n="msg_bank_owner">예금주: 카멜레온프린팅 주식회사</div>
-            <div class="bank-note" data-i18n="msg_bank_note">
-                * 입금자명과 주문자명이 동일하면 즉시 입금이 확인됩니다.
-            </div>
-            
-            <button onclick="alert('입금 확인 요청이 접수되었습니다.\n에디터 화면으로 이동합니다.'); document.getElementById('checkoutModal').style.display='none';" class="btn-round btn-bank-confirm" data-i18n="btn_bank_confirm">
-                ✅ 입금했어요 확인해주세요
-            </button>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button id="btnDownQuotationCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
-                    <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_download_quote">견적서 다운</span>
-                </button>
-                <button id="btnDownOrderSheetCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
-                    <i class="fa-solid fa-clipboard-list"></i> <span data-i18n="btn_download_work_sheet">작업지시서 다운</span>
-                </button>
-            </div>
+        <label style="font-size:14px; font-weight:bold; color:#333; margin-bottom:10px; display:block;">결제 수단 선택</label>
+        
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+            <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
+                <input type="radio" name="paymentMethod" value="card" checked style="margin-right:10px; accent-color:#6366f1;">
+                <span>💳 카드 / 간편결제 (즉시 완료)</span>
+            </label>
+
+            <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
+                <input type="radio" name="paymentMethod" value="bank" style="margin-right:10px; accent-color:#6366f1;">
+                <span>🏦 무통장 입금 (확인 후 제작)</span>
+            </label>
+
+            <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
+                <input type="radio" name="paymentMethod" value="deposit" style="margin-right:10px; accent-color:#6366f1;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <span>💰 나의 예치금 사용</span>
+                    <span id="myCurrentDepositDisplay" style="font-weight:bold; color:#6366f1;">(잔액 조회중...)</span>
+                </div>
+            </label>
         </div>
 
-        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;" data-i18n="btn_close">닫기</button>
+        <button id="btnFinalPay" class="btn-round primary" style="width:100%; height: 50px; font-size: 16px;" onclick="window.handleFinalPayment()">
+            결제하기
+        </button>
+
+        <div id="bankInfoBox" style="display:none; margin-top:15px; background:#f8fafc; padding:15px; border-radius:8px; font-size:13px;">
+            <div class="bank-title" style="font-weight:bold; margin-bottom:5px;">[계좌이체 안내]</div>
+            <div>국민은행 647701-04-277763 (예금주: 카멜레온프린팅)</div>
+            <div style="color:#ef4444; margin-top:5px;">* 입금자명이 주문자명과 다르면 확인이 지연됩니다.</div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button id="btnDownQuotationCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
+                <i class="fa-solid fa-file-invoice"></i> 견적서 다운
+            </button>
+            <button id="btnDownOrderSheetCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
+                <i class="fa-solid fa-clipboard-list"></i> 작업지시서 다운
+            </button>
+        </div>
+
+        <button onclick="document.getElementById('checkoutModal').style.display='none'; if(window.isOrderCompleted) location.reload();" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
     </div>
 </div>
         </div>

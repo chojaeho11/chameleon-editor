@@ -258,7 +258,7 @@ async function loadTemplatePage(pageIndex) {
 }
 
 // ★ 하단 페이지네이션 버튼 그리기 함수
-// ★ 하단 페이지네이션 버튼 그리기 함수 (디자인 수정됨)
+// ★ 하단 페이지네이션 버튼 그리기 함수 (가로폭 강제 축소)
 function renderPaginationControls(isEnabled, dataCount = 0) {
     const grid = document.getElementById("tplGrid");
     if(!grid) return;
@@ -269,24 +269,25 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
 
     controls = document.createElement("div");
     controls.id = "tpl-pagination-controls";
-    // [수정] flex 정렬 개선 및 높이 중앙 정렬
+    // [수정] 중앙 정렬 확실하게 지정
     controls.style.cssText = "grid-column: 1/-1; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; padding-bottom: 30px;";
 
-    // 공통 버튼 스타일 (작고 슬림하게)
-    const btnStyle = "padding: 0 15px; height: 36px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 20px; transition: all 0.2s;";
+    // [핵심 수정] width: auto !important 및 flex: none 추가하여 늘어남 방지
+    const btnStyle = "width: auto !important; flex: none !important; padding: 0 15px; height: 34px; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 17px; transition: all 0.2s; white-space: nowrap;";
 
     // 1. 이전 버튼
     const prevBtn = document.createElement("button");
-    prevBtn.className = "btn-round"; // 기존 클래스 유지하되 스타일 덮어쓰기
+    prevBtn.className = "btn-round"; 
     prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left" style="font-size:11px;"></i> 이전`;
     prevBtn.style.cssText = btnStyle;
     
     if (!isEnabled || tplCurrentPage === 0) {
         prevBtn.disabled = true;
-        prevBtn.style.opacity = "0.4";
+        prevBtn.style.opacity = "0.5";
         prevBtn.style.cursor = "not-allowed";
-        prevBtn.style.background = "#e2e8f0"; // 비활성 회색 배경
+        prevBtn.style.background = "#f1f5f9"; 
         prevBtn.style.color = "#94a3b8";
+        prevBtn.style.border = "1px solid #e2e8f0";
     } else {
         prevBtn.style.background = "#fff";
         prevBtn.style.border = "1px solid #cbd5e1";
@@ -294,11 +295,11 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
         prevBtn.onclick = () => changeTemplatePage(-1);
     }
 
-    // 2. 페이지 표시 텍스트 (밀림 방지)
+    // 2. 페이지 표시 텍스트
     const pageIndicator = document.createElement("span");
     pageIndicator.innerText = `${tplCurrentPage + 1} 페이지`;
-    // [수정] white-space: nowrap으로 줄바꿈 방지, min-width로 공간 확보
-    pageIndicator.style.cssText = "font-size: 14px; font-weight: 600; color: #475569; margin: 0 8px; white-space: nowrap; text-align: center; min-width: 60px;";
+    // 여백을 조금 넉넉히 주어 답답함 해소
+    pageIndicator.style.cssText = "font-size: 13px; font-weight: 600; color: #64748b; margin: 0 10px; white-space: nowrap;";
 
     // 3. 다음 버튼
     const nextBtn = document.createElement("button");
@@ -308,30 +309,30 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
 
     if (!isEnabled || dataCount < TPL_PER_PAGE) {
         nextBtn.disabled = true;
-        nextBtn.style.opacity = "0.4";
+        nextBtn.style.opacity = "0.5";
         nextBtn.style.cursor = "not-allowed";
-        nextBtn.style.background = "#e2e8f0";
+        nextBtn.style.background = "#f1f5f9";
         nextBtn.style.color = "#94a3b8";
+        nextBtn.style.border = "1px solid #e2e8f0";
     } else {
-        // 활성 상태일 때 강조 색상 (파란색 계열)
         nextBtn.style.background = "#fff"; 
         nextBtn.style.border = "1px solid #6366f1";
         nextBtn.style.color = "#6366f1";
         nextBtn.onclick = () => changeTemplatePage(1);
     }
 
-    // 마우스 오버 효과 (선택 사항)
+    // 마우스 오버 효과
     const addHover = (btn, isPrimary) => {
         if(btn.disabled) return;
         btn.onmouseover = () => { 
             btn.style.transform = "translateY(-1px)"; 
-            btn.style.boxShadow = "0 2px 5px rgba(0,0,0,0.1)";
             if(isPrimary) { btn.style.background = "#6366f1"; btn.style.color = "#fff"; }
+            else { btn.style.borderColor = "#94a3b8"; }
         };
         btn.onmouseout = () => { 
             btn.style.transform = "none"; 
-            btn.style.boxShadow = "none";
             if(isPrimary) { btn.style.background = "#fff"; btn.style.color = "#6366f1"; }
+            else { btn.style.borderColor = "#cbd5e1"; }
         };
     };
 
@@ -342,7 +343,6 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
     controls.appendChild(pageIndicator);
     controls.appendChild(nextBtn);
 
-    // 그리드 바로 뒤에 삽입
     grid.parentNode.appendChild(controls);
 }
 

@@ -464,11 +464,28 @@
             </div>
 
             <div id="sec-members" class="section">
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h3>👥 회원 목록</h3><button class="btn btn-primary" onclick="loadMembers()">새로고침</button></div>
-                    <table><thead><tr><th>가입일</th><th>이메일</th><th>현재 등급</th><th>등급 변경</th></tr></thead><tbody id="memberListBody"></tbody></table>
-                </div>
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+            <h3>👥 회원 목록 & 등급 관리</h3>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="memberSearchInput" class="input-text" placeholder="이메일 또는 이름 검색" style="width:200px;" onkeyup="if(event.key=='Enter') loadMembers()">
+                <button class="btn btn-primary" onclick="loadMembers()"><i class="fa-solid fa-magnifying-glass"></i> 검색</button>
             </div>
+        </div>
+        <table>
+            <thead>
+    <tr>
+        <th>가입일</th>
+        <th>이메일/이름</th>
+        <th>누적 구매액 / 로고수</th>
+        <th>💰 예치금 관리</th> <th>현재 등급</th>
+        <th>등급 변경</th>
+    </tr>
+</thead>
+            <tbody id="memberListBody"></tbody>
+        </table>
+    </div>
+</div>
 
             <div id="sec-templates" class="section">
                  <div class="product-layout">
@@ -576,6 +593,46 @@
         </div>
     </div>
 
+    <div id="walletModal" class="modal-overlay">
+    <div class="modal-box" style="width: 400px;">
+        <div class="modal-header">
+            <span>💰 예치금 관리</span>
+            <button class="btn btn-outline btn-sm" onclick="closeModal('walletModal')">✕</button>
+        </div>
+        
+        <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center;">
+            <div id="walletTargetName" style="font-weight:bold; color:#334155;">회원명</div>
+            <div style="font-size:12px; color:#64748b;">현재 잔액</div>
+            <div id="walletTargetBalance" style="font-size:24px; font-weight:800; color:#6366f1;">0원</div>
+        </div>
+
+        <input type="hidden" id="walletTargetId">
+
+        <div class="form-group">
+            <label class="form-label">조정 유형</label>
+            <div style="display:flex; gap:5px;">
+                <button class="btn btn-primary" style="flex:1;" onclick="setWalletMode('add')" id="btnWalletAdd">➕ 충전 (지급)</button>
+                <button class="btn btn-outline" style="flex:1;" onclick="setWalletMode('sub')" id="btnWalletSub">➖ 차감 (회수)</button>
+            </div>
+            <input type="hidden" id="walletMode" value="add">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">금액 입력</label>
+            <input type="number" id="walletAmount" class="input-text" placeholder="금액 입력 (숫자만)">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">사유 (로그용)</label>
+            <input type="text" id="walletDesc" class="input-text" placeholder="예: 무통장 입금 확인, 주문 취소 환불 등">
+        </div>
+
+        <button class="btn btn-vip" style="width:100%; margin-top:10px;" onclick="submitWalletChange()">
+            적용하기
+        </button>
+    </div>
+</div>
+
     <script type="module">
         import { sb, initConfig } from "./config.js";
 
@@ -620,6 +677,86 @@
         window.logout = async () => { if(confirm("로그아웃 하시겠습니까?")) { await sb.auth.signOut(); location.href = "index.html"; } };
         window.closeModal = (id) => document.getElementById(id).style.display='none';
         function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
+
+        // [신규] 예치금 모달 열기
+window.openWalletModal = (id, email, currentBalance) => {
+    document.getElementById('walletTargetId').value = id;
+    document.getElementById('walletTargetName').innerText = email;
+    document.getElementById('walletTargetBalance').innerText = currentBalance.toLocaleString() + '원';
+    document.getElementById('walletAmount').value = '';
+    document.getElementById('walletDesc').value = '';
+    
+    // 기본값: 충전 모드
+    setWalletMode('add');
+    document.getElementById('walletModal').style.display = 'flex';
+};
+
+// [신규] 모드 전환 (충전/차감)
+window.setWalletMode = (mode) => {
+    document.getElementById('walletMode').value = mode;
+    const btnAdd = document.getElementById('btnWalletAdd');
+    const btnSub = document.getElementById('btnWalletSub');
+    
+    if(mode === 'add') {
+        btnAdd.className = 'btn btn-primary';
+        btnSub.className = 'btn btn-outline';
+        document.querySelector('#walletModal .btn-vip').innerText = '충전하기 (지급)';
+        document.querySelector('#walletModal .btn-vip').className = 'btn btn-primary';
+    } else {
+        btnAdd.className = 'btn btn-outline';
+        btnSub.className = 'btn btn-danger';
+        document.querySelector('#walletModal .btn-primary').innerText = '차감하기 (회수)';
+        document.querySelector('#walletModal .btn-primary').className = 'btn btn-danger';
+    }
+};
+
+// [신규] 예치금 변경 실행
+window.submitWalletChange = async () => {
+    const id = document.getElementById('walletTargetId').value;
+    const mode = document.getElementById('walletMode').value;
+    const amountStr = document.getElementById('walletAmount').value;
+    const desc = document.getElementById('walletDesc').value;
+
+    if(!amountStr || parseInt(amountStr) <= 0) return alert("올바른 금액을 입력해주세요.");
+    if(!desc) return alert("관리 기록을 위해 사유를 입력해주세요.");
+
+    const amount = parseInt(amountStr);
+    const finalAmount = (mode === 'add') ? amount : -amount; // 차감이면 음수
+    const type = (mode === 'add') ? 'admin_deposit' : 'admin_withdraw';
+
+    if(!confirm(`${Math.abs(amount).toLocaleString()}원을 ${mode==='add'?'충전':'차감'}하시겠습니까?`)) return;
+
+    try {
+        // 1. 프로필 잔액 업데이트 (RPC 함수가 없으므로 조회 후 업데이트 방식 사용 - 간단 구현)
+        // ※ 더 안전하게 하려면 Supabase RPC(Database Function)을 만들어 쓰는 것이 좋습니다.
+        
+        // 현재 잔액 가져오기
+        const { data: profile } = await sb.from('profiles').select('deposit').eq('id', id).single();
+        const currentDeposit = profile ? (profile.deposit || 0) : 0;
+        const newDeposit = currentDeposit + finalAmount;
+
+        // 잔액 업데이트
+        const { error: updateErr } = await sb.from('profiles').update({ deposit: newDeposit }).eq('id', id);
+        if(updateErr) throw updateErr;
+
+        // 2. 로그 기록 (wallet_logs)
+        const { error: logErr } = await sb.from('wallet_logs').insert({
+            user_id: id,
+            type: type,
+            amount: finalAmount,
+            description: `[관리자] ${desc}`
+        });
+        
+        if(logErr) console.warn("로그 기록 실패:", logErr);
+
+        alert("처리되었습니다.");
+        closeModal('walletModal');
+        loadMembers(); // 목록 새로고침
+
+    } catch(e) {
+        alert("오류 발생: " + e.message);
+    }
+};
 
         // ==========================================
         // [추가] 뱅크다(Bankda) 관련 함수
@@ -1925,8 +2062,84 @@ async function saveTopCategoryOrder() {
         };
 
         window.deleteFontDB = async (id) => { if(!confirm("삭제하시겠습니까?")) return; try { const { error } = await sb.from('site_fonts').delete().eq('id', id); if(error) throw error; loadFonts(); } catch(e) { alert("삭제 실패: " + e.message); } };
-        window.loadMembers = async () => { const {data}=await sb.from('profiles').select('*').order('created_at',{ascending:false}); const tbody=document.getElementById('memberListBody'); tbody.innerHTML=''; data?.forEach(m=>{ const r = m.role || 'customer'; const select = `<select onchange="updateMemberRole('${m.id}', this.value)" style="padding:4px; border:1px solid #ddd; border-radius:4px;"><option value="customer" ${r==='customer'?'selected':''}>일반회원</option><option value="vip" ${r==='vip'?'selected':''}>👑 VIP</option><option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option></select>`; tbody.innerHTML+=`<tr><td>${new Date(m.created_at).toLocaleDateString()}</td><td>${m.email}</td><td>${r}</td><td>${select}</td></tr>`; }); };
-        window.updateMemberRole = async (id, newRole) => { if(!confirm("등급을 변경하시겠습니까?")) { loadMembers(); return; } const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); if(error) alert("실패: " + error.message); else alert("변경 완료"); };
+        // [수정] 회원 목록 조회 (검색 및 통계 포함)
+// [수정] 회원 목록 조회 (예치금 관리 버튼 포함)
+window.loadMembers = async () => { 
+    const keyword = document.getElementById('memberSearchInput') ? document.getElementById('memberSearchInput').value.trim() : '';
+    const tbody = document.getElementById('memberListBody'); 
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>';
+    
+    let query = sb.from('profiles').select('*').order('created_at', {ascending:false});
+    
+    if(keyword) query = query.ilike('email', `%${keyword}%`);
+    else query = query.limit(50);
+
+    const {data: members, error} = await query;
+    
+    if(error) {
+        alert("로딩 실패: " + error.message);
+        return;
+    }
+
+    tbody.innerHTML = '';
+    
+    if(!members || members.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">회원이 없습니다.</td></tr>';
+        return;
+    }
+
+    members.forEach(m => {
+        const r = m.role || 'customer';
+        const deposit = m.deposit || 0; // 예치금 잔액
+
+        // 등급 선택 박스
+        const select = `
+            <select onchange="updateMemberRole('${m.id}', this.value)" style="padding:4px; border:1px solid #cbd5e1; border-radius:4px;">
+                <option value="customer" ${r==='customer'?'selected':''}>일반</option>
+                <option value="gold" ${r==='gold'?'selected':''}>🥇 골드</option>
+                <option value="platinum" ${r==='platinum'?'selected':''}>💎 플래티넘</option>
+                <option value="franchise" ${r==='franchise'?'selected':''}>🏢 가맹점</option>
+                <option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option>
+            </select>
+        `;
+
+        // ★ [핵심] 예치금 관리 버튼
+        const walletBtn = `
+            <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${deposit})">
+                <i class="fa-solid fa-coins" style="color:#eab308;"></i> ₩${deposit.toLocaleString()} 관리
+            </button>
+        `;
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${new Date(m.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div style="font-weight:bold;">${m.email}</div>
+                    <div style="font-size:12px; color:#888;">${m.full_name || '-'}</div>
+                </td>
+                <td>
+                    <span style="color:#6366f1;">${(m.total_spend || 0).toLocaleString()}원</span> / 
+                    <span style="color:#059669;">${m.logo_count || 0}개</span>
+                </td>
+                <td>${walletBtn}</td> <td><span class="badge" style="background:#f1f5f9;">${r.toUpperCase()}</span></td>
+                <td>${select}</td>
+            </tr>
+        `;
+    });
+};
+
+// [수정] 회원 등급 변경 함수
+window.updateMemberRole = async (id, newRole) => { 
+    if(!confirm(`해당 회원의 등급을 '${newRole}'(으)로 변경하시겠습니까?`)) { 
+        loadMembers(); // 취소 시 원래대로 되돌림
+        return; 
+    } 
+    
+    const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); 
+    
+    if(error) alert("변경 실패: " + error.message); 
+    else alert("✅ 등급이 변경되었습니다."); 
+};
         function initTemplateListeners() { const fThumb = document.getElementById('fileThumb'); if(fThumb) fThumb.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{document.getElementById('previewThumb').src=ev.target.result; document.getElementById('previewThumb').style.display='block';}; r.readAsDataURL(f);}); const fData = document.getElementById('fileData'); if(fData) fData.addEventListener('change', e=>{const f=e.target.files[0]; const r=new FileReader(); r.onload=ev=>{if(f.name.endsWith('.svg')){document.getElementById('dataStatus').style.display='block';}}; r.readAsDataURL(f);}); }
         
         window.toggleFileInputs = () => { 
@@ -2078,5 +2291,6 @@ async function saveTopCategoryOrder() {
         window.updateTaskDB = async (orderId, field, value) => { const valToSave = value === "" ? null : value; const { error } = await sb.from('orders').update({ [field]: valToSave }).eq('id', orderId); if (error) { alert("저장 실패: " + error.message); } };
         window.addEventListener('DOMContentLoaded', async () => { await initConfig(); loadOrders(); initTemplateListeners(); loadCategories(); loadFonts(); });
     </script>
+
 </body>
 </html>

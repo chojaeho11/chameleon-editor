@@ -11,65 +11,131 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    // 유저 이름 표시
     const userName = currentUser.user_metadata?.full_name || '고객';
-    document.getElementById('userNameDisplay').innerText = `반갑습니다, ${userName}님!`;
+    const email = currentUser.email || '';
+    const displayTitle = document.getElementById('userNameDisplay');
+    if(displayTitle) displayTitle.innerText = `반갑습니다, ${userName}님!`;
     
+    // 대시보드 통계 및 지갑 로그 로드
     loadDashboardStats();
+    loadWalletLogs();
     
+    // 전역 함수 연결
     window.switchTab = switchTab;
     window.logout = logout;
     window.loadDesignToEditor = loadDesignToEditor;
     window.deleteDesign = deleteDesign;
     window.cancelOrder = cancelOrder;
-    window.reOrder = reOrder; // ★ 다시 담기 기능 연결
+    window.reOrder = reOrder;
 });
 
-// [2] 탭 전환
+// [2] 탭 전환 기능
 function switchTab(tabId) {
     const navItems = document.querySelectorAll('.mp-nav-item');
     navItems.forEach(el => el.classList.remove('active'));
     
+    // 클릭된 탭 활성화
     const currentNav = Array.from(navItems).find(el => el.getAttribute('onclick')?.includes(`'${tabId}'`));
     if(currentNav) currentNav.classList.add('active');
 
+    // 섹션 전환
     document.querySelectorAll('.mp-section').forEach(el => el.classList.remove('active'));
     const targetSection = document.getElementById('tab-' + tabId);
     if(targetSection) targetSection.classList.add('active');
 
+    // 탭별 데이터 로드
     if (tabId === 'designs') loadMyDesigns();
     if (tabId === 'orders') loadOrders();
 }
 
-// [3] 대시보드 통계
-async function loadDashboardStats() {
-    const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
-    const mileage = profile ? profile.mileage : 0;
-    
-    const elMileage = document.getElementById('mileageDisplay');
-    if(elMileage) elMileage.innerText = mileage.toLocaleString() + ' P';
+// [3] 등급 자동 승급 체크
+async function checkAndUpgradeTier(userId, currentRole) {
+    if (currentRole === 'admin' || currentRole === 'franchise') return;
 
-    const { count: designCount } = await sb.from('user_designs')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', currentUser.id);
-    
-    const elDesign = document.getElementById('designCount');
-    if(elDesign) elDesign.innerText = (designCount || 0) + ' 개';
-    
-    const { count: orderCount } = await sb.from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', currentUser.id)
-        .neq('status', '완료됨')
-        .neq('status', '취소됨');
+    try {
+        // DB에 저장된 통계값 활용
+        const { data: profile } = await sb.from('profiles')
+            .select('total_spend, logo_count')
+            .eq('id', userId)
+            .single();
 
-    const elOrder = document.getElementById('activeOrderCount');
-    if(elOrder) elOrder.innerText = (orderCount || 0) + ' 건';
+        const totalSpend = profile?.total_spend || 0;
+        const logoCount = profile?.logo_count || 0;
+
+        let newRole = 'customer';
+
+        // 승급 조건
+        if (logoCount >= 100 || totalSpend >= 10000000) {
+            newRole = 'platinum';
+        } else if (logoCount >= 10 || totalSpend >= 5000000) {
+            newRole = 'gold';
+        }
+
+        // 등급 업데이트 (상승시에만)
+        const levels = { 'customer': 0, 'gold': 1, 'platinum': 2 };
+        if (newRole !== currentRole && levels[newRole] > levels[currentRole]) {
+            await sb.from('profiles').update({ role: newRole }).eq('id', userId);
+            
+            const rate = newRole === 'platinum' ? '10%' : '5%';
+            alert(`🎉 축하합니다! '${newRole.toUpperCase()}' 등급으로 승급되었습니다.\n(${rate} 할인 적용)`);
+            location.reload(); 
+        }
+    } catch (e) {
+        console.error("등급 체크 오류:", e);
+    }
 }
 
-// [4] 내 디자인 목록
+// [4] 대시보드 통계 로드
+async function loadDashboardStats() {
+    try {
+        const { data: profile, error } = await sb.from('profiles')
+            .select('mileage, role, total_spend, logo_count, deposit')
+            .eq('id', currentUser.id)
+            .single();
+        
+        if (error) throw error;
+
+        // 화면 업데이트
+        const elMileage = document.getElementById('mileageDisplay');
+        if(elMileage) elMileage.innerText = (profile.mileage || 0).toLocaleString() + ' P';
+
+        const elSpend = document.getElementById('totalSpendDisplay');
+        if(elSpend) elSpend.innerText = (profile.total_spend || 0).toLocaleString() + ' 원';
+
+        const elLogo = document.getElementById('logoCountDisplay');
+        if(elLogo) elLogo.innerText = (profile.logo_count || 0) + ' 개';
+
+        const elDeposit = document.getElementById('depositTotal');
+        if(elDeposit) elDeposit.innerText = (profile.deposit || 0).toLocaleString();
+        
+        // 수익금(가칭) 표시 (현재는 0으로 고정하거나 별도 로직 필요)
+        const elProfit = document.getElementById('profitTotal');
+        if(elProfit) elProfit.innerText = "0"; // 추후 구현 필요 시 수정
+
+        // 등급 체크 실행
+        await checkAndUpgradeTier(currentUser.id, profile.role);
+
+        // 진행중인 주문 건수 (실시간 조회)
+        const { count: orderCount } = await sb.from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', currentUser.id)
+            .neq('status', '완료됨')
+            .neq('status', '취소됨')
+            .neq('status', '배송완료');
+
+        const elOrder = document.getElementById('activeOrderCount');
+        if(elOrder) elOrder.innerText = (orderCount || 0) + ' 건';
+
+    } catch(e) {
+        console.warn("대시보드 로드 실패:", e);
+    }
+}
+
+// [5] 디자인 목록 로드
 async function loadMyDesigns() {
     const grid = document.getElementById('designGrid');
     if(!grid) return;
-    
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;">로딩 중...</div>';
     
     const { data, error } = await sb.from('user_designs')
@@ -78,9 +144,8 @@ async function loadMyDesigns() {
         .order('created_at', { ascending: false });
 
     grid.innerHTML = '';
-    
-    if (error || !data || data.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999; background:#fff;">저장된 디자인이 없습니다.</div>';
+    if (!data || data.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">저장된 디자인이 없습니다.</div>';
         return;
     }
 
@@ -88,20 +153,15 @@ async function loadMyDesigns() {
         const div = document.createElement('div');
         div.className = 'mp-design-card';
         div.innerHTML = `
-            <img src="${d.thumb_url}" class="mp-design-thumb" onclick="loadDesignToEditor(${d.id})" title="클릭하여 편집">
+            <img src="${d.thumb_url}" class="mp-design-thumb" onclick="loadDesignToEditor(${d.id})">
             <div class="mp-design-body">
                 <div class="mp-design-title">${d.title}</div>
                 <div style="font-size:11px; color:#888;">${new Date(d.created_at).toLocaleDateString()}</div>
                 <div style="display:flex; gap:5px; margin-top:5px;">
-                    <button class="btn-round primary" style="flex:1; height:30px; font-size:12px; justify-content:center;" onclick="loadDesignToEditor(${d.id})">
-                        <i class="fa-solid fa-pen"></i> 편집
-                    </button>
-                    <button class="btn-round" style="width:30px; height:30px; padding:0; color:red; justify-content:center; border:1px solid #fee2e2;" onclick="deleteDesign(${d.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button class="btn-round primary" onclick="loadDesignToEditor(${d.id})" style="flex:1; font-size:12px; height:30px; justify-content:center;">편집</button>
+                    <button class="btn-round" onclick="deleteDesign(${d.id})" style="width:30px; height:30px; color:red; border-color:#fee2e2; justify-content:center;"><i class="fa-solid fa-trash"></i></button>
                 </div>
-            </div>
-        `;
+            </div>`;
         grid.appendChild(div);
     });
 }
@@ -118,14 +178,15 @@ async function deleteDesign(id) {
     loadMyDesigns();
 }
 
-// [5] 주문 목록
+// [6] 주문 목록 로드
+// [6] 주문 목록 로드 (수정됨: ID 오류 해결)
 async function loadOrders() {
     const tbody = document.getElementById('orderListBody');
     if(!tbody) return;
     
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">로딩 중...</td></tr>';
 
-    const { data: orders, error } = await sb.from('orders')
+    const { data: orders } = await sb.from('orders')
         .select('*')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
@@ -137,49 +198,44 @@ async function loadOrders() {
         return;
     }
 
-    // ★ 전역 변수에 주문 데이터 저장 (재주문 시 사용)
     window.myOrdersData = orders;
 
     orders.forEach(o => {
-        let badgeClass = 'status-wait';
-        if (o.status === '완료됨' || o.status === '배송완료') badgeClass = 'status-done';
-        if (o.status === '취소됨') badgeClass = 'status-cancel';
-
-        let summary = "상품 정보 없음";
-        let items = o.items;
-        if (typeof items === 'string') {
-            try { items = JSON.parse(items); } catch(e) { items = []; }
-        }
+        let items = [];
+        try { items = (typeof o.items === 'string') ? JSON.parse(o.items) : o.items; } catch(e) {}
         
+        let summary = "상품 정보 없음";
         if (Array.isArray(items) && items.length > 0) {
             summary = items[0].productName || items[0].product?.name || "상품";
             if (items.length > 1) summary += ` 외 ${items.length - 1}건`;
         }
 
-        const canCancel = (o.status === '접수대기' || o.status === '입금대기');
+        let badgeClass = 'status-wait';
+        if(['완료됨','배송완료'].includes(o.status)) badgeClass = 'status-done';
+        if(o.status === '취소됨') badgeClass = 'status-cancel';
+
+        const canCancel = ['접수대기','입금대기'].includes(o.status);
+
+        // ★ [핵심 수정] String(o.id)를 사용하여 숫자 ID도 안전하게 처리
+        const safeId = String(o.id); 
+        const displayId = safeId.length > 8 ? safeId.substring(0,8) + '...' : safeId;
 
         tbody.innerHTML += `
             <tr>
                 <td>
-                    <div style="font-weight:bold;">${new Date(o.created_at).toLocaleDateString()}</div>
-                    <div style="font-size:11px; color:#888;">${o.id}</div>
+                    ${new Date(o.created_at).toLocaleDateString()}<br>
+                    <small style="color:#888;">${displayId}</small>
                 </td>
-                <td>
-                    <div style="font-weight:bold;">${summary}</div>
-                    <div style="font-size:12px; color:#666;">${items.length}개 품목</div>
-                </td>
+                <td><div style="font-weight:bold;">${summary}</div></td>
                 <td style="font-weight:bold;">${(o.total_amount || 0).toLocaleString()}원</td>
                 <td><span class="status-badge ${badgeClass}">${o.status}</span></td>
                 <td>
-                    <div style="display:flex; gap:5px; flex-direction:column;">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
                         ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')">취소</button>` : ''}
-                        <button class="btn-round" style="height:28px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; justify-content:center;" onclick="reOrder('${o.id}')">
-                            <i class="fa-solid fa-cart-plus"></i> 다시담기
-                        </button>
+                        <button class="btn-round" onclick="reOrder('${o.id}')" style="height:26px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; justify-content:center;">다시담기</button>
                     </div>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     });
 }
 
@@ -189,41 +245,62 @@ async function cancelOrder(orderId) {
     loadOrders();
 }
 
-// ★ [핵심 기능] 다시 담기 (재주문) 로직 구현
 async function reOrder(orderId) {
-    if (!window.myOrdersData) return;
-    const order = window.myOrdersData.find(o => o.id == orderId); // == 사용 (타입 유연성)
-    if (!order) return alert("주문 정보를 찾을 수 없습니다.");
-
-    let items = order.items;
-    if (typeof items === 'string') {
-        try { items = JSON.parse(items); } catch(e) { 
-            console.error(e);
-            return alert("주문 상품 데이터 오류");
+    const order = window.myOrdersData?.find(o => o.id == orderId);
+    if (!order) return;
+    
+    let items = [];
+    try { items = (typeof order.items === 'string') ? JSON.parse(order.items) : order.items; } catch(e) {}
+    
+    if (confirm("해당 상품을 장바구니에 다시 담으시겠습니까?")) {
+        items.forEach(item => {
+            const newItem = { ...item, uid: Date.now() + Math.random() };
+            cartData.push(newItem);
+        });
+        localStorage.setItem(`chameleon_cart_${currentUser.id}`, JSON.stringify(cartData));
+        if(confirm("장바구니로 이동할까요?")) {
+            localStorage.setItem('open_cart_on_load', 'true');
+            location.href = 'index.html';
         }
     }
+}
 
-    if (!Array.isArray(items) || items.length === 0) return alert("담을 상품이 없습니다.");
+// [7] 입출금 내역 로드
+async function loadWalletLogs() {
+    const tbody = document.getElementById('walletListBody');
+    if(!tbody) return;
 
-    if (!confirm("해당 주문의 상품들을 장바구니에 다시 담으시겠습니까?")) return;
+    const { data: logs } = await sb.from('wallet_logs')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-    // 현재 장바구니에 추가
-    items.forEach(item => {
-        // 새 UID 생성하여 중복 방지
-        const newItem = { ...item, uid: Date.now() + Math.random() };
-        cartData.push(newItem);
-    });
-
-    // 로컬 스토리지 저장
-    const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
-    localStorage.setItem(storageKey, JSON.stringify(cartData));
-
-    // ★ 알림 및 장바구니 페이지로 이동
-    if (confirm("장바구니에 담겼습니다. 장바구니로 이동할까요?")) {
-        // index.html로 이동하면서 장바구니를 열도록 플래그 설정
-        localStorage.setItem('open_cart_on_load', 'true');
-        location.href = 'index.html';
+    if(!logs || logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">내역이 없습니다.</td></tr>';
+        return;
     }
+
+    tbody.innerHTML = '';
+    logs.forEach(log => {
+        const isPlus = log.amount > 0;
+        const color = isPlus ? '#2563eb' : '#ef4444';
+        const sign = isPlus ? '+' : '';
+        
+        let typeName = '기타';
+        if(log.type?.includes('deposit')) typeName = '충전/입금';
+        if(log.type?.includes('payment')) typeName = '사용/결제';
+        if(log.type?.includes('withdraw')) typeName = '출금/차감';
+        if(log.type?.includes('admin')) typeName = '관리자조정';
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${new Date(log.created_at).toLocaleDateString()}</td>
+                <td><span class="status-badge" style="background:#f1f5f9; color:#64748b;">${typeName}</span></td>
+                <td>${log.description || '-'}</td>
+                <td style="text-align:right; font-weight:bold; color:${color};">${sign}${log.amount.toLocaleString()}원</td>
+            </tr>`;
+    });
 }
 
 async function logout() {

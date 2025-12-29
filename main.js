@@ -2,7 +2,7 @@
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js"; 
 import { initCanvas, canvas } from "./canvas-core.js";
-import { initSizeControls, applySize } from "./canvas-size.js"; // applySize import 확인
+import { initSizeControls, applySize } from "./canvas-size.js"; 
 import { initGuides } from "./canvas-guides.js";
 import { initZoomPan } from "./canvas-zoom-pan.js";
 import { initObjectTools } from "./canvas-objects.js";
@@ -33,7 +33,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
         // 1. 필수 설정 및 캔버스 초기화
         window.loadProductFixedTemplate = loadProductFixedTemplate;
-        await initConfig(); // DB 연결 및 PRODUCT_DB 로드 대기 (가장 중요)
+        await initConfig(); // DB 연결 및 PRODUCT_DB 로드 대기
         initCanvas();       
         
         // 2. 각종 도구 초기화
@@ -48,14 +48,14 @@ window.addEventListener("DOMContentLoaded", async () => {
         initTemplateTools();
         initAiTools();
         initExport();
-        initOrderSystem();
+        initOrderSystem(); // 주문 시스템 (할인율 로드 포함)
         initAuth();
         initMyDesign();
         initMobileTextEditor();
         initOutlineTool();
         initFileUploadListeners();
 
-        // 폰트 미리 로드 (텍스트 깨짐 방지)
+        // 폰트 미리 로드
         if(window.preloadLanguageFont) await window.preloadLanguageFont();
 
         // 3. 마이페이지 버튼 연결
@@ -70,7 +70,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         console.log("🚀 에디터 모듈 초기화 완료");
 
         // =========================================================
-        // ★ 마이페이지 연동 로직 (편집/재주문 복구) - 여기가 핵심 수정됨
+        // ★ 마이페이지 연동 로직 (편집/재주문 복구)
         // =========================================================
         const loadId = localStorage.getItem('load_design_id');
         const cartFlag = localStorage.getItem('open_cart_on_load');
@@ -92,54 +92,35 @@ window.addEventListener("DOMContentLoaded", async () => {
                 setTimeout(() => {
                     let savedKey = data.product_key;
 
-                    // ★ [핵심] 저장된 키가 없거나 'A4', 'custom' 처럼 불확실하면 -> 상품 선택 팝업 띄우기
                     if (!savedKey || savedKey === 'A4' || savedKey === 'custom' || !PRODUCT_DB[savedKey]) {
-                        // 1. 임시로 데이터 로드 (그림은 보여줘야 하니까)
                         if(window.restoreDesignFromData) window.restoreDesignFromData(data);
-                        
-                        // 2. 알림 및 상품 선택 유도
                         alert("⚠️ 이 디자인의 상품 정보가 확인되지 않습니다.\n제작하실 상품 규격을 다시 선택해주세요.");
-                        
-                        // 3. 상품 선택 모달 강제 호출 (카테고리 선택창)
-                        // showCategorySelectionModal 함수가 있다면 실행
                         if (window.showCategorySelectionModal) {
                             window.showCategorySelectionModal();
                         } else {
-                            // 함수가 없다면 상단 메뉴 탭 클릭 효과라도 줌
                             const firstTab = document.querySelector('.cat-tab');
                             if(firstTab) firstTab.click();
                         }
-                        
-                        // ※ 주의: 사용자가 상품을 선택하면 applySize가 실행되면서 캔버스 크기가 조정됩니다.
-                        // 이때 기존 그림이 유지되도록 'standard' 모드로 동작해야 합니다.
                         return; 
                     }
 
-                    // 정상적인 상품 키가 있다면 바로 복구 진행
                     window.currentProductKey = savedKey;
                     if(canvas) canvas.currentProductKey = savedKey;
 
                     if (PRODUCT_DB && PRODUCT_DB[savedKey]) {
                         window.selectedProductForChoice = PRODUCT_DB[savedKey];
-                        
-                        // UI 업데이트
                         const p = PRODUCT_DB[savedKey];
                         const limitLabel = document.getElementById("limitLabel");
                         if(limitLabel) limitLabel.innerText = `Max: ${p.w_mm || 210}x${p.h_mm || 297}`;
-                        
                         const inpW = document.getElementById("inputUserW");
                         const inpH = document.getElementById("inputUserH");
                         if(inpW) inpW.value = p.w_mm || 210;
                         if(inpH) inpH.value = p.h_mm || 297;
-                        
-                        console.log("✅ 상품 정보 복구됨:", p.name);
                     }
 
-                    // 캔버스 크기 및 데이터 복구
                     if(window.applySize) {
                         window.applySize(data.width, data.height, savedKey, 'standard', 'replace');
                     }
-
                     window.dispatchEvent(new Event('resize')); 
 
                     let jsonData = data.json_data;
@@ -181,7 +162,6 @@ window.addEventListener("DOMContentLoaded", async () => {
                 if(window.renderCart) window.renderCart();
             }, 300);
         } else {
-            // 일반 접속 시 로딩 끄기
             if(loading) loading.style.display = 'none';
         }
 

@@ -96,11 +96,11 @@ button, input, textarea, select { font-family: inherit; }
 /* 히어로 섹션 */
 .hero-section {
     width: 100%; padding: 50px 20px 30px;
-    text-align: center; background: #fff; margin-bottom: 10px;
+    text-align: center; background: #fff; margin-bottom: 0px;
 }
 .hero-title { 
     font-size: 54px; font-weight: 900; color: #111; 
-    letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 15px; 
+    letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 0px; 
 }
 .hero-title span { 
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
@@ -1996,4 +1996,142 @@ body {
 @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
+}
+/* ========================================================= */
+/* [1] 모바일 (기본값): 원래대로 깔끔하게 복구 */
+/* ========================================================= */
+
+/* 가로 스크롤 방지 (필수) */
+body {
+    overflow-x: hidden; 
+}
+
+.quick-menu-wrapper {
+    /* 모바일에서는 배경색 투명 (원래대로) */
+    background-color: transparent !important; 
+    
+    /* 여백 및 크기 초기화 */
+    padding: 0;               
+    margin: 20px 0;           
+    width: 100%; /* 부모 너비에 딱 맞춤 */
+    
+    /* 위치 강제 초기화 (PC 설정 무시) */
+    position: static;
+    left: auto;
+    transform: none;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* 모바일에서는 캐릭터 및 타이틀 숨김 */
+.bouncing-char, .quick-title-box {
+    display: none !important; 
+}
+
+/* 모바일 내부 여백 미세 조정 */
+.quick-menu-wrapper > div {
+    padding: 0 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* ========================================================= */
+/* [2] PC 화면 (1000px 이상): 노란색 배경 꽉 차게 + 캐릭터 */
+/* ========================================================= */
+@media screen and (min-width: 1000px) {
+
+    .quick-menu-wrapper {
+        background-color: #FDD835 !important; /* 진한 노란색 */
+        
+        /* ★ [핵심] 부모 요소를 무시하고 화면 꽉 채우는 공식 */
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        
+        /* 위치 정렬 */
+        position: relative;
+        left: 0;
+        transform: none; /* 기존 transform 제거 (밀림 방지) */
+        
+        padding: 40px 0;
+        margin-top: 60px;
+        margin-bottom: 60px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    /* 타이틀 보이기 */
+    .quick-title-box {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    /* 타이틀 디자인 */
+    .qt-badge {
+        background-color: #000;
+        color: #FDD835;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        display: inline-block;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .qt-text {
+        font-size: 32px;
+        font-weight: 900;
+        margin: 0;
+        color: #111;
+        letter-spacing: -1px;
+    }
+
+    /* 캐릭터 이미지 보이기 + 위치 조정 */
+    .bouncing-char {
+        display: block !important;
+        position: absolute;
+        z-index: 10;
+        
+        /* 요청하신 크기 */
+        width: 350px;            
+        
+        /* 위치: 오른쪽 여백 */
+        right: calc(50% - 600px); /* 화면 중앙 기준 오른쪽 배치 (반응형 대응) */
+        margin-right: -100px;     /* 미세 조정 */
+        
+        /* 박스 위에 걸치도록 */
+        top: -140px;              
+        
+        animation: bounceUpDn 3s ease-in-out infinite;
+        pointer-events: none;
+    }
+    
+    /* 만약 화면이 1200px보다 작아지면 캐릭터 위치 수정 */
+    @media screen and (max-width: 1300px) {
+        .bouncing-char {
+            right: 0;
+            margin-right: 0;
+        }
+    }
+
+    /* 내부 콘텐츠 중앙 정렬 */
+    .quick-menu-wrapper > div, 
+    .quick-title-box {
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 20px;
+        padding-right: 20px;
+        position: relative;
+    }
+}
+
+/* 바운스 애니메이션 */
+@keyframes bounceUpDn {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-30px); }
 }

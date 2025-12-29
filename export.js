@@ -165,7 +165,7 @@ function drawAutoText(doc, text, x, y, options = {}) {
 }
 
 // ==========================================================
-// [4] 견적서 생성 함수
+// [4] 견적서 생성 함수 (할인 내역 포함)
 // ==========================================================
 export async function generateQuotationPDF(orderInfo, cartItems) {
     if (!window.jspdf) return;
@@ -223,15 +223,48 @@ export async function generateQuotationPDF(orderInfo, cartItems) {
             });
         }
     }
-    y += 5; doc.setFontSize(12); doc.setTextColor(220, 38, 38);
-    drawAutoText(doc, `총 합계금액: ${totalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
+
+    // 등급 할인 조회 (할인율 계산)
+    let discountRate = 0;
+    if (currentUser) {
+        try {
+            const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
+            const role = data?.role;
+            if (role === 'franchise') discountRate = 0.15;
+            else if (role === 'platinum') discountRate = 0.10;
+            else if (role === 'gold') discountRate = 0.05;
+        } catch(e) { console.warn("등급 조회 실패"); }
+    }
+
+    const discountAmt = Math.floor(totalAmt * discountRate);
+    const finalAmt = totalAmt - discountAmt;
+
+    y += 5; 
+    
+    // 합계
+    doc.setFontSize(10); doc.setTextColor(0);
+    drawAutoText(doc, `합계 금액: ${totalAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
+    y += 6;
+
+    // 할인 내역
+    if (discountAmt > 0) {
+        doc.setTextColor(220, 38, 38);
+        drawAutoText(doc, `회원 등급 할인 (${(discountRate*100).toFixed(0)}%): -${discountAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
+        y += 6;
+    }
+
+    // 최종 금액
+    doc.setFontSize(12); doc.setTextColor(0, 0, 0);
+    drawAutoText(doc, `최종 결제금액: ${finalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
+
     y += 20; doc.setFontSize(10); doc.setTextColor(100);
     drawAutoText(doc, "위와 같이 견적합니다.", 105, y, { align: 'center' });
+    
     return doc.output('blob');
 }
 
 // ==========================================================
-// [5] 작업지시서 생성 함수
+// [5] 작업지시서 생성 함수 (★ QR코드 포함됨)
 // ==========================================================
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
     if (!window.jspdf) return alert("PDF Loading...");
@@ -239,21 +272,40 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     await loadPdfFonts(doc); 
 
+    // ★ [추가] QR코드 생성 (orderInfo.id가 있을 때만)
+    let qrDataUrl = null;
+    if (orderInfo.id && window.QRCode) {
+        try {
+            // 주문 번호를 담은 QR코드 생성
+            qrDataUrl = await window.QRCode.toDataURL(String(orderInfo.id), { width: 100, margin: 1 });
+        } catch (e) {
+            console.warn("QR 생성 실패:", e);
+        }
+    }
+
     for (let i = 0; i < cartItems.length; i++) {
         const item = cartItems[i];
         if (!item.product) continue;
 
         if (i > 0) doc.addPage();
         
+        // 헤더 바
         doc.setFillColor(99, 102, 241); doc.rect(0, 0, 210, 20, 'F');
         doc.setTextColor(255, 255, 255); doc.setFontSize(16); drawAutoText(doc, "작업 지시서", 105, 13, { align: 'center' });
         
+        // ★ [배치] QR코드 삽입 (헤더 우측 하단)
+        if (qrDataUrl) {
+            doc.addImage(qrDataUrl, 'PNG', 165, 25, 25, 25);
+        }
+
         const startY = 30; doc.setTextColor(0); doc.setFontSize(10); 
         doc.setDrawColor(200); doc.setFillColor(245, 247, 250); doc.rect(15, startY, 135, 40, 'F'); doc.rect(15, startY, 135, 40);      
-        drawAutoText(doc, `주문일자: ${new Date().toLocaleDateString()}`, 20, startY + 8);
+        drawAutoText(doc, `주문번호: ${orderInfo.id || '-'}`, 20, startY + 8);
         drawAutoText(doc, `담당자명: ${orderInfo.manager || '-'}`, 80, startY + 8); 
+        
         doc.setTextColor(220, 38, 38); doc.setFontSize(14);
         drawAutoText(doc, `도착희망일: ${orderInfo.date || '-'}`, 20, startY + 16);
+        
         doc.setTextColor(0, 0, 0); doc.setFontSize(10); 
         drawAutoText(doc, `연락처: ${orderInfo.phone || '-'}`, 80, startY + 16);
         drawAutoText(doc, `배송주소: ${orderInfo.address || '-'}`, 20, startY + 24);
@@ -361,9 +413,6 @@ export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
 }
 
 // ★ [핵심] 줄바꿈(Enter) 문자를 인식해서 한 줄씩 나눠서 그리는 함수
-// ★ [수정됨] 전체 함수 코드 (행간 문제 + 볼드 문제 완벽 해결 버전)
-// export.js 내부의 convertCanvasTextToPaths 함수를 이걸로 교체하세요
-
 async function convertCanvasTextToPaths(fabricCanvas) {
     if (!window.opentype) return;
 
