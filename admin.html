@@ -593,45 +593,120 @@
         </div>
     </div>
 
-    <div id="walletModal" class="modal-overlay">
+    <div id="walletModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 400px;">
         <div class="modal-header">
             <span>💰 예치금 관리</span>
-            <button class="btn btn-outline btn-sm" onclick="closeModal('walletModal')">✕</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('walletModal').style.display='none'">✕</button>
         </div>
         
         <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center;">
-            <div id="walletTargetName" style="font-weight:bold; color:#334155;">회원명</div>
+            <div id="walletTargetName" style="font-weight:bold; color:#334155;">-</div>
             <div style="font-size:12px; color:#64748b;">현재 잔액</div>
             <div id="walletTargetBalance" style="font-size:24px; font-weight:800; color:#6366f1;">0원</div>
         </div>
 
         <input type="hidden" id="walletTargetId">
+        <input type="hidden" id="walletMode" value="add">
 
         <div class="form-group">
-            <label class="form-label">조정 유형</label>
-            <div style="display:flex; gap:5px;">
-                <button class="btn btn-primary" style="flex:1;" onclick="setWalletMode('add')" id="btnWalletAdd">➕ 충전 (지급)</button>
-                <button class="btn btn-outline" style="flex:1;" onclick="setWalletMode('sub')" id="btnWalletSub">➖ 차감 (회수)</button>
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <button class="btn btn-primary" style="flex:1;" onclick="setWalletMode('add')" id="btnWalletAdd">➕ 충전 (입금확인)</button>
+                <button class="btn btn-outline" style="flex:1;" onclick="setWalletMode('sub')" id="btnWalletSub">➖ 차감 (취소/회수)</button>
             </div>
-            <input type="hidden" id="walletMode" value="add">
+            <label class="form-label">금액</label>
+            <input type="number" id="walletAmount" class="input-text" placeholder="숫자만 입력">
         </div>
 
         <div class="form-group">
-            <label class="form-label">금액 입력</label>
-            <input type="number" id="walletAmount" class="input-text" placeholder="금액 입력 (숫자만)">
+            <label class="form-label">사유 (고객에게도 보임)</label>
+            <input type="text" id="walletDesc" class="input-text" placeholder="예: 무통장 입금 확인">
         </div>
 
-        <div class="form-group">
-            <label class="form-label">사유 (로그용)</label>
-            <input type="text" id="walletDesc" class="input-text" placeholder="예: 무통장 입금 확인, 주문 취소 환불 등">
-        </div>
-
-        <button class="btn btn-vip" style="width:100%; margin-top:10px;" onclick="submitWalletChange()">
-            적용하기
-        </button>
+        <button id="btnWalletSubmit" class="btn btn-vip" style="width:100%; margin-top:10px;" onclick="submitWalletChange()">적용하기</button>
     </div>
 </div>
+
+<script>
+    // [모달 열기 함수]
+    window.openWalletModal = (id, email, balance) => {
+        document.getElementById('walletTargetId').value = id;
+        document.getElementById('walletTargetName').innerText = email;
+        document.getElementById('walletTargetBalance').innerText = balance.toLocaleString() + '원';
+        document.getElementById('walletAmount').value = '';
+        document.getElementById('walletDesc').value = '';
+        setWalletMode('add'); // 기본은 충전 모드
+        document.getElementById('walletModal').style.display = 'flex';
+    };
+
+    // [충전/차감 모드 전환] ★ 수정됨: ID로 버튼 찾기
+    window.setWalletMode = (mode) => {
+        document.getElementById('walletMode').value = mode;
+        
+        const btnAdd = document.getElementById('btnWalletAdd');
+        const btnSub = document.getElementById('btnWalletSub');
+        const btnSubmit = document.getElementById('btnWalletSubmit'); // ★ ID로 찾음
+
+        if(mode === 'add') {
+            btnAdd.className = 'btn btn-primary'; 
+            btnSub.className = 'btn btn-outline';
+            
+            btnSubmit.innerText = "충전하기 (지급)";
+            btnSubmit.className = "btn btn-primary"; // 파란색
+        } else {
+            btnAdd.className = 'btn btn-outline'; 
+            btnSub.className = 'btn btn-danger';
+            
+            btnSubmit.innerText = "차감하기 (회수)";
+            btnSubmit.className = "btn btn-danger"; // 빨간색
+        }
+    };
+
+    // [실제 적용 함수]
+    window.submitWalletChange = async () => {
+        const id = document.getElementById('walletTargetId').value;
+        const mode = document.getElementById('walletMode').value;
+        const amt = parseInt(document.getElementById('walletAmount').value);
+        const desc = document.getElementById('walletDesc').value;
+
+        if(!amt || amt <= 0) return alert("금액을 입력해주세요.");
+        if(!desc) return alert("사유를 입력해주세요.");
+
+        const finalAmount = mode === 'add' ? amt : -amt;
+        const type = mode === 'add' ? 'admin_deposit' : 'admin_withdraw';
+
+        if(!confirm(`${amt.toLocaleString()}원을 ${mode==='add'?'충전':'차감'}하시겠습니까?`)) return;
+
+        // 1. 잔액 업데이트
+        const { data: pf } = await sb.from('profiles').select('deposit').eq('id', id).single();
+        const newBalance = (pf?.deposit || 0) + finalAmount;
+
+        const { error } = await sb.from('profiles').update({ deposit: newBalance }).eq('id', id);
+        if(error) return alert("잔액 업데이트 실패: " + error.message);
+
+        // 2. 로그 기록
+        const { error: logErr } = await sb.from('wallet_logs').insert({
+            user_id: id,
+            type: type,
+            amount: finalAmount,
+            description: `[관리자] ${desc}`
+        });
+
+        if(logErr) alert("로그 기록 실패(권한 문제일 수 있음): " + logErr.message);
+        else alert("처리되었습니다.");
+
+        document.getElementById('walletModal').style.display = 'none';
+        loadMembers(); // 목록 새로고침
+    };
+    
+    // 모달 외부 클릭 시 닫기
+    window.onclick = function(event) {
+        const modal = document.getElementById('walletModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
 
     <script type="module">
         import { sb, initConfig } from "./config.js";

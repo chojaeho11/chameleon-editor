@@ -79,126 +79,389 @@
         // 디자인 생성
         // ====================================================
 
-        // 1. [행사부스]
+        // 1. [행사부스] -> (수정됨: 배지 두께UP / 타이틀 축소 / 하단 라운딩)
         if (type === 'basic') {
-            const OFF_WHITE = '#f2f2f2'; 
 
-            // 검정 반투명 배경 상자
-            const bgBox = new fabric.Rect({
-                width: 650, height: 240, fill: '#d8b909ff', opacity: 0.6,
-                originX: 'center', originY: 'center', left: cx, top: cy
-            });
+            // --- 1. 색상 및 스타일 정의 ---
+            const COLOR_SKY_BLUE = '#29b6f6'; 
+            const COLOR_YELLOW   = '#fff59d'; 
+            const COLOR_WHITE    = '#ffffff';
+            const COLOR_TEXT     = '#333333'; 
+            const COLOR_GRAY     = '#888888';
+            const COLOR_DATE_GREEN = '#64dd17'; 
 
-            // 라인
-            const lineTop = new fabric.Rect({ width: 400, height: STROKE_THIN, fill: OFF_WHITE, originX: 'center', originY: 'center', left: cx, top: cy - 120 });
-            const lineBot = new fabric.Rect({ width: 400, height: STROKE_THIN, fill: OFF_WHITE, originX: 'center', originY: 'center', left: cx, top: cy + 120 });
+            const TITLE_FONT_NAME = typeof FONT_TITLE !== 'undefined' ? FONT_TITLE : 'jalnangodic';
+
+            // --- 2. 반응형 레이아웃 치수 계산 ---
+            const centerY = cy; // 화면 중앙
             
-            // 텍스트
-            const main = new fabric.IText(data.basic.main, {
-                fontFamily: FONT_TITLE, fontSize: 65, fill: OFF_WHITE, textAlign: 'center', 
-                lineHeight: 0.95, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
-                originX: 'center', originY: 'center', left: cx, top: cy - 10
-            });
+            // 폰트 크기 조절 (타이틀 약간 축소)
+            const sizeMainTitle = boardW * 0.14; // 기존 0.16 -> 0.14로 축소
+            const sizeSubTitle  = boardW * 0.05; 
+            const sizeGridTitle = boardW * 0.045; 
 
-            const sub = new fabric.IText(data.basic.sub, {
-                fontFamily: FONT_SUB, fontSize: 9, fill: OFF_WHITE, textAlign: 'center',
-                charSpacing: -10, fontWeight: 'normal',
-                originX: 'center', originY: 'center', left: cx, top: cy + 150
-            });
+            // 기준점 (왼쪽 여백)
+            const leftAlignX = cx - (boardW * 0.45);
 
-            // 장식 (01)
-            const circleDeco = new fabric.Circle({ 
-                radius: 30, fill: 'transparent', stroke: OFF_WHITE, strokeWidth: STROKE_THIN, 
-                originX: 'center', originY: 'center', left: cx, top: cy - 180 
-            });
-            const num = new fabric.IText("01", {
-                fontFamily: FONT_TITLE, fontSize: 24, fill: OFF_WHITE, 
-                charSpacing: TIGHT_SPACING, fontWeight: 'normal',
-                originX: 'center', originY: 'center', left: cx, top: cy - 180
-            });
+            // --- 3. [상단] 투명 영역 ---
 
-            // 도형 4개
-            const shapeSize = 22; const gap = 45; const shapeY = cy + 95;
-            const shape1 = new fabric.Rect({ width: shapeSize, height: shapeSize, fill: OFF_WHITE, originX: 'center', originY: 'center', left: cx - (gap * 1.5) - (shapeSize/2), top: shapeY });
-            const shape2 = new fabric.Triangle({ width: shapeSize + 2, height: shapeSize, fill: OFF_WHITE, originX: 'center', originY: 'center', left: cx - (gap * 0.5), top: shapeY });
-            const shape3 = new fabric.Circle({ radius: shapeSize / 2, fill: OFF_WHITE, originX: 'center', originY: 'center', left: cx + (gap * 0.5), top: shapeY });
-            const shape4 = new fabric.Rect({ width: shapeSize, height: shapeSize, rx: 3, ry: 3, fill: OFF_WHITE, originX: 'center', originY: 'center', left: cx + (gap * 1.5) + (shapeSize/2), top: shapeY });
-
-            objs = [bgBox, lineTop, lineBot, main, sub, circleDeco, num, shape1, shape2, shape3, shape4];
-        }
-
-        // 2. [포스터] (★ 수정됨: 가상 좌표계 사용 + 자동 리사이징)
-        else if (type === 'flyer') {
-            // useSafetyGroup = true; (기본값)
-
-            // 1. 기준 크기 설정 (이 크기로 만든 후 대지에 맞춰 자동 축소됨)
-            const baseW = 600;  // 포스터 기준 너비
-            const baseH = 850;  // 포스터 기준 높이
-            const refCx = cx;
-            const refCy = cy;
+            // [1] 상단 포인트 배지
+            const badgeW = boardW * 0.28;
+            const badgeH = boardW * 0.07;
             
-            // 기준점(좌상단) 계산
-            const refLeft = refCx - (baseW / 2);
-            const refTop = refCy - (baseH / 2);
+            // 배지 위치
+            const badgeX = leftAlignX + (badgeW / 2); 
+            const badgeY = centerY - (boardH * 0.42); 
 
-            const strokeSize = 20; 
-            const padding = 30;    
-            const textPadding = 50;
-
-            // 2. 테두리 박스 (기준 크기 내에서 생성)
-            const bgBox = new fabric.Rect({
-                width: baseW - (padding * 2) - strokeSize, 
-                height: baseH - (padding * 2) - strokeSize,
-                fill: 'transparent',    
-                stroke: '#6a0dad',      
-                strokeWidth: strokeSize,            
-                opacity: 0.8,
-                left: refCx, 
-                top: refCy,
+            const topBadgeRect = new fabric.Rect({
+                width: badgeW, height: badgeH,
+                fill: 'transparent', 
+                stroke: 'white', strokeWidth: 2, // ★ 테두리 두께 UP (1 -> 2)
+                rx: badgeH / 2, ry: badgeH / 2, 
                 originX: 'center', originY: 'center',
-                selectable: true, evented: true, id: 'wizard_bg_frame'
+                left: badgeX, top: badgeY
             });
 
-            // 3. 텍스트 요소들 (refLeft, refTop 기준으로 배치)
-            const title = new fabric.IText('POSTER\nDESIGN', { 
-                fontFamily: FONT_TITLE, fontSize: 75, 
-                fill: '#6a0dad',        
-                textAlign: 'left', lineHeight: 0.9, charSpacing: TIGHT_SPACING, fontWeight: 'normal',
-                left: refLeft + padding + textPadding, 
-                top: refTop + (baseH * 0.2), 
-                originX: 'left', originY: 'top'
+            const topBadgeText = new fabric.IText("SKIN CARE", { 
+                fontFamily: 'sans-serif', fontSize: badgeH * 0.45,
+                fill: 'white', fontWeight: 'bold',
+                originX: 'center', originY: 'center',
+                left: badgeX, top: badgeY
             });
-            
-            const sub = new fabric.IText(data.flyer.sub, {
-                fontFamily: FONT_SUB, fontSize: 16, 
-                fill: '#6a0dad',        
-                textAlign: 'left', lineHeight: 1.5, charSpacing: 0, fontWeight: 'normal',
-                left: refLeft + padding + textPadding,
-                top: title.top + title.height + 50,
+
+
+            // [2] 메인 타이틀 (크기 축소됨)
+            const titleY = badgeY + (badgeH) + 15;
+
+            const mainTitle = new fabric.IText("숨어있던\n꿀피부 찾기", { 
+                fontFamily: TITLE_FONT_NAME, 
+                fontSize: sizeMainTitle, // 축소된 크기 적용
+                fill: 'white', lineHeight: 1.2,
                 originX: 'left', originY: 'top',
-                width: (baseW / 2)
+                left: leftAlignX, top: titleY
             });
 
-            const line = new fabric.Rect({
-                width: 250,
-                height: 3,              
-                fill: '#6a0dad',        
-                left: refLeft + padding + textPadding,
-                top: sub.top + sub.height + 40,
-                originX: 'left', originY: 'center'
+
+            // --- 4. [하단] 화이트 배경 (라운딩 처리) ---
+            const roundRadius = boardW * 0.05; // 둥글기 정도
+
+            // 메인 둥근 박스
+            const bottomBg = new fabric.Rect({
+                width: boardW, height: boardH / 2,
+                fill: COLOR_WHITE,
+                rx: roundRadius, ry: roundRadius, // ★ 위쪽 라운딩 효과
+                originX: 'center', originY: 'top',
+                left: cx, top: centerY
             });
+
+            // 하단 모서리 채움용 사각형 (아래쪽은 각지게)
+            // 둥근 박스의 하단부를 덮어서 위쪽만 둥글게 보이도록 함
+            const bottomFiller = new fabric.Rect({
+                width: boardW, height: roundRadius * 2,
+                fill: COLOR_WHITE,
+                originX: 'center', originY: 'bottom',
+                left: cx, top: centerY + (boardH / 2) // 맨 아래 위치
+            });
+
+            // --- 5. [하단 콘텐츠] 3단 그리드 ---
             
-            const host = new fabric.IText(data.flyer.host, {
-                fontFamily: FONT_SUB, fontSize: 14, 
-                fill: '#6a0dad',        
-                textAlign: 'left', lineHeight: 1.6, charSpacing: 0, fontWeight: 'normal',
-                left: refLeft + padding + textPadding,
-                top: line.top + 30,
+            // 헤드라인
+            const subHeadline = new fabric.IText("지친 피부에 '수분 에너지'를 채우세요!", {
+                fontFamily: 'sans-serif', fontSize: sizeSubTitle, 
+                fill: COLOR_TEXT, fontWeight: 'bold',
+                originX: 'center', originY: 'top',
+                left: cx, top: centerY + (boardH * 0.05)
+            });
+
+            // 그리드 설정
+            const gridObjs = [];
+            const gridMargin = boardW * 0.05;
+            const availableW = boardW - (gridMargin * 2);
+            const colWidth = availableW / 3;
+            
+            const startX = (cx - (availableW / 2)) + (colWidth / 2);
+            const gridContentY = centerY + (boardH * 0.12);
+
+            const gridData = [
+                { badge: "꿀할인.01", title: "집중 보습", sub: "<2주 프로그램>", old: "50만원", new: "34만원" },
+                { badge: "꿀할인.02", title: "여드름 흉터", sub: "<3주 프로그램>", old: "60만원", new: "52만원" },
+                { badge: "꿀할인.03", title: "모공 관리", sub: "<1주 프로그램>", old: "25만원", new: "18만원" }
+            ];
+
+            gridData.forEach((item, i) => {
+                const itemX = startX + (i * colWidth);
+
+                const badgeRect = new fabric.Rect({
+                    width: colWidth * 0.7, height: boardH * 0.03, fill: COLOR_YELLOW,
+                    originX: 'center', originY: 'center', left: itemX, top: gridContentY
+                });
+                const badgeTxt = new fabric.IText(item.badge, {
+                    fontFamily: 'sans-serif', fontSize: sizeGridTitle * 0.6, 
+                    fill: '#333', fontWeight: 'bold',
+                    originX: 'center', originY: 'center', left: itemX, top: gridContentY
+                });
+
+                const titleTxt = new fabric.IText(item.title, {
+                    fontFamily: 'sans-serif', fontSize: sizeGridTitle, 
+                    fill: 'black', fontWeight: 'bold',
+                    originX: 'center', originY: 'top', left: itemX, top: gridContentY + (boardH * 0.03) + 5
+                });
+
+                const subTxt = new fabric.IText(item.sub, {
+                    fontFamily: 'sans-serif', fontSize: sizeGridTitle * 0.6, fill: COLOR_SKY_BLUE,
+                    originX: 'center', originY: 'top', left: itemX, top: titleTxt.top + titleTxt.height + 5
+                });
+
+                const oldPrice = new fabric.IText(item.old, {
+                    fontFamily: 'sans-serif', fontSize: sizeGridTitle * 0.7, 
+                    fill: COLOR_GRAY, textDecoration: 'line-through',
+                    originX: 'center', originY: 'top', left: itemX, top: subTxt.top + subTxt.height + 15
+                });
+
+                const priceBtnH = boardH * 0.05;
+                const priceBg = new fabric.Rect({
+                    width: colWidth * 0.9, height: priceBtnH, 
+                    fill: COLOR_SKY_BLUE, rx: priceBtnH/2, ry: priceBtnH/2,
+                    originX: 'center', originY: 'top', left: itemX, top: oldPrice.top + oldPrice.height + 10
+                });
+                const newPrice = new fabric.IText(item.new, {
+                    fontFamily: 'sans-serif', fontSize: sizeGridTitle * 0.9, 
+                    fill: 'white', fontWeight: 'bold',
+                    originX: 'center', originY: 'center', left: itemX, top: priceBg.top + (priceBtnH/2) + 2
+                });
+
+                if (i < 2) {
+                    const divider = new fabric.Rect({
+                        width: 1, height: boardH * 0.15, fill: '#eee',
+                        originX: 'left', originY: 'top',
+                        left: itemX + (colWidth/2), top: gridContentY + 20
+                    });
+                    gridObjs.push(divider);
+                }
+
+                gridObjs.push(badgeRect, badgeTxt, titleTxt, subTxt, oldPrice, priceBg, newPrice);
+            });
+
+
+            // --- 6. [푸터] 하늘색 마감 ---
+            const footerHeight = boardH * 0.06;
+            const footerBg = new fabric.Rect({
+                width: boardW, height: footerHeight,
+                fill: COLOR_SKY_BLUE,
+                originX: 'center', originY: 'bottom',
+                left: cx, top: boardH
+            });
+
+            const footerText = new fabric.IText("수험표 지참시 20% 할인 | 예약문의 : 012-3456-7890", {
+                fontFamily: 'sans-serif', fontSize: sizeSubTitle * 0.6, fill: 'white',
+                originX: 'center', originY: 'center',
+                left: cx, top: boardH - (footerHeight / 2)
+            });
+
+
+            // [날짜] 하단 이동 (진한 녹색)
+            const dateText = new fabric.IText("EVENT 11.01 ~ 12.31", {
+                fontFamily: 'sans-serif', fontSize: sizeSubTitle * 1.2, 
+                fill: COLOR_DATE_GREEN, fontWeight: 'bold', 
+                originX: 'center', originY: 'bottom', 
+                left: cx, top: boardH - footerHeight - 15 
+            });
+
+
+            // --- 7. 객체 병합 ---
+            objs = [
+                topBadgeRect, topBadgeText, // 1. 상단 포인트
+                mainTitle, // 2. 제목
+                bottomBg, bottomFiller, // 3. 하단 배경 (위쪽만 둥글게)
+                subHeadline, ...gridObjs, // 4. 내용
+                dateText, // 5. 날짜
+                footerBg, footerText // 6. 푸터
+            ];
+        }
+        // 2. [포스터] -> (수정됨: 전체 위치 상향 조정 / 영문 정자 표기)
+        else if (type === 'flyer') {
+            
+            // ★ 강제 확대 방지
+            useSafetyGroup = false; 
+
+            // --- 1. 기본 스타일 설정 ---
+            const COLOR_WHITE = '#ffffff'; 
+            const refS = Math.min(boardW, boardH); 
+
+            // 라인 두께 (1.2px 유지)
+            const LINE_THICKNESS = 1.8; 
+            
+            // 서체 설정 (북엔드바탕 레귤러)
+            const FONT_ENG = 'Bookend Batang Regular'; 
+
+            // --- 2. 위치 조정 (위로 올리기) ---
+            // ★ 핵심 수정: 전체 중심을 화면 중앙(cy)보다 15% 위로 올림
+            const shiftUp = boardH * 0.15; 
+            const centerY = cy - shiftUp; 
+
+            // --- 3. 그리드(Grid) 크기 설정 ---
+            const gridCols = 5;
+            const gridRows = 2;
+            
+            // 사이즈: 대지 너비의 40%
+            const gridW = boardW * 0.40; 
+            
+            const cellW = gridW / gridCols; // 한 칸 너비
+            const cellH = cellW;            // 정사각형 셀
+            const gridH = cellH * gridRows; // 전체 높이
+
+            // 그리드 시작 좌표 (조정된 centerY 기준)
+            const gridStartX = cx - (gridW / 2);
+            const gridStartY = centerY - (gridH / 2); 
+
+            // --- 4. [배경] 그리드 라인 만들기 (그룹) ---
+            const gridLines = [];
+
+            // (1) 외곽선
+            const outerRect = new fabric.Rect({
+                width: gridW, height: gridH,
+                fill: 'transparent', 
+                stroke: COLOR_WHITE, strokeWidth: LINE_THICKNESS,
+                left: gridStartX, top: gridStartY,
                 originX: 'left', originY: 'top'
             });
+            gridLines.push(outerRect);
 
-            objs = [bgBox, title, sub, line, host];
+            // (2) 가로 줄
+            const hLine = new fabric.Rect({
+                width: gridW, height: LINE_THICKNESS,
+                fill: COLOR_WHITE,
+                left: gridStartX, top: gridStartY + cellH - (LINE_THICKNESS/2),
+                originX: 'left', originY: 'top'
+            });
+            gridLines.push(hLine);
+
+            // (3) 세로 줄
+            for (let i = 1; i < gridCols; i++) {
+                const vLine = new fabric.Rect({
+                    width: LINE_THICKNESS, height: gridH,
+                    fill: COLOR_WHITE,
+                    left: gridStartX + (cellW * i) - (LINE_THICKNESS/2),
+                    top: gridStartY,
+                    originX: 'left', originY: 'top'
+                });
+                gridLines.push(vLine);
+            }
+
+            // 라인 그룹핑
+            const gridGroup = new fabric.Group(gridLines, {
+                selectable: true, evented: true,
+                originX: 'center', originY: 'center',
+                left: cx, top: centerY // ★ 위로 올라간 중심 좌표 적용
+            });
+
+
+            // --- 5. [글자] 텍스트 배치 ---
+            const textObjs = [];
+            const strRow1 = "오늘의행사";
+            const strRow2 = "아름다운밤";
+            const fontSize = cellH * 0.55; 
+
+            // 첫째 줄
+            for (let i = 0; i < strRow1.length; i++) {
+                const char = strRow1[i];
+                const charX = gridStartX + (cellW * i) + (cellW / 2);
+                const charY = gridStartY + (cellH / 2);
+
+                const t = new fabric.IText(char, {
+                    fontFamily: 'serif', 
+                    fontSize: fontSize, fill: COLOR_WHITE,
+                    originX: 'center', originY: 'center',
+                    left: charX, top: charY,
+                    selectable: true 
+                });
+                textObjs.push(t);
+            }
+
+            // 둘째 줄
+            for (let i = 0; i < strRow2.length; i++) {
+                const char = strRow2[i];
+                const charX = gridStartX + (cellW * i) + (cellW / 2);
+                const charY = gridStartY + cellH + (cellH / 2);
+
+                const t = new fabric.IText(char, {
+                    fontFamily: 'serif', 
+                    fontSize: fontSize, fill: COLOR_WHITE,
+                    originX: 'center', originY: 'center',
+                    left: charX, top: charY,
+                    selectable: true
+                });
+                textObjs.push(t);
+            }
+
+
+            // --- 6. [장식 및 텍스트 요소] ---
+            const decoGap = 15; 
+            const textGap = 20;
+
+            // 상단 라인
+            const lineTop = new fabric.Rect({
+                width: gridW, height: LINE_THICKNESS, fill: COLOR_WHITE,
+                originX: 'center', originY: 'bottom',
+                left: cx, top: gridStartY - decoGap,
+                selectable: true
+            });
+
+            // 상단 서브 타이틀
+            const topSubText = new fabric.IText("행복한 여름바다의 꿈.", {
+                fontFamily: 'sans-serif', fontSize: refS * 0.035, 
+                fill: COLOR_WHITE, fontWeight: 'normal',
+                originX: 'center', originY: 'bottom', 
+                left: cx, top: lineTop.top - textGap 
+            });
+
+            // 하단 라인
+            const lineBot = new fabric.Rect({
+                width: gridW, height: LINE_THICKNESS, fill: COLOR_WHITE,
+                originX: 'center', originY: 'top',
+                left: cx, top: gridStartY + gridH + decoGap,
+                selectable: true
+            });
+
+            // 날짜 (작게 유지)
+            const dateText = new fabric.IText("2099. 09. 10 ~ 09. 11", {
+                fontFamily: 'sans-serif', fontSize: refS * 0.022, 
+                fill: COLOR_WHITE, fontWeight: 'normal', letterSpacing: 100,
+                originX: 'center', originY: 'top',
+                left: cx, top: lineBot.top + textGap 
+            });
+
+            // ★ 영문 감성 글씨 (정자체 적용)
+            const emotionalText = new fabric.IText("Starry Night in Caravan", {
+                fontFamily: FONT_ENG, // Bookend Batang Regular
+                fontSize: refS * 0.03, 
+                fill: COLOR_WHITE, 
+                fontWeight: 'normal', 
+                fontStyle: 'normal', // ★ 수정됨: 기울임(italic) 제거 -> 정자(normal)
+                originX: 'center', originY: 'top',
+                left: cx, top: dateText.top + dateText.height + 30
+            });
+
+            // 하단 기관명 (위치 고정)
+            const footerText = new fabric.IText("기관명을 넣어주세요", {
+                fontFamily: 'sans-serif', fontSize: refS * 0.03, 
+                fill: COLOR_WHITE, fontWeight: 'bold',
+                originX: 'center', originY: 'bottom',
+                left: cx, top: boardH - (refS * 0.08)
+            });
+
+
+            // --- 7. 객체 병합 ---
+            objs = [
+                topSubText, lineTop, 
+                gridGroup, 
+                ...textObjs, 
+                lineBot, dateText, 
+                emotionalText, 
+                footerText 
+            ];
         }
+        
 
         // 3. [명함] (기존 유지 - 자동 리사이징 적용됨)
         else if (type === 'card') {
@@ -337,7 +600,7 @@
 
             // 4. 하단 문구
             const footer = new fabric.IText("Bon Appetit", { 
-                fontFamily: 'cursive', fontSize: 24, fill: '#D4AF37', 
+                fontFamily: 'asdfasdfffffff', fontSize: 24, fill: '#D4AF37', 
                 originX: 'center', originY: 'center', 
                 left: cx, top: cy + 280 
             });
@@ -612,7 +875,7 @@
                 originX: 'center', originY: 'bottom', left: cx, top: cy - 140
             });
 
-            const title2 = new fabric.IText("혜택속으로", {
+            const title2 = new fabric.IText("SALE속으로", {
                 fontFamily: FONT_TITLE, fontSize: 110, fill: NAVY, fontWeight: 'bold',
                 charSpacing: -50,
                 originX: 'center', originY: 'top', left: cx, top: cy - 140
@@ -895,3 +1158,81 @@
         }
     };
 })();
+/**
+ * 배경 지정/해제 토글 함수 (수정됨: 대지 뒤로 숨는 문제 해결)
+ */
+/**
+ * 배경 지정/해제 토글 함수 (수정됨: 안내 멘트 알림 추가)
+ */
+window.toggleBackgroundLock = function() {
+    if (!window.canvas) {
+        alert("캔버스를 찾을 수 없습니다.");
+        return;
+    }
+
+    const canvas = window.canvas;
+    const activeObj = canvas.getActiveObject();
+
+    // [CASE 1] 선택된 요소가 있을 때 -> 배경으로 잠그기
+    if (activeObj) {
+        // 1. 순서 정리 (이미지 -> 대지 뒤로)
+        canvas.sendToBack(activeObj);
+        const board = canvas.getObjects().find(o => o.isBoard);
+        if (board) {
+            canvas.sendToBack(board);
+        }
+
+        // 2. 속성 잠그기
+        activeObj.set({
+            selectable: false,
+            evented: false,         
+            lockMovementX: true,    
+            lockMovementY: true,
+            lockRotation: true,     
+            lockScalingX: true,     
+            lockScalingY: true,
+            hasControls: false,     
+            hasBorders: false,      
+            hoverCursor: 'default', 
+            isLockedBackground: true
+        });
+
+        // 3. 선택 해제 및 렌더링
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+
+        // ★ [알림 추가] 요청하신 안내 멘트
+        alert("선택한 이미지가 배경이 되어 움직이지 않아요.\n한번 더 누르면 위치를 변경할 수 있습니다.");
+    } 
+    
+    // [CASE 2] 선택된 게 없다면 -> 잠긴 배경 풀기
+    else {
+        const bgObj = canvas.getObjects().find(obj => obj.isLockedBackground === true);
+
+        if (bgObj) {
+            // 잠금 해제
+            bgObj.set({
+                selectable: true,
+                evented: true,
+                lockMovementX: false,
+                lockMovementY: false,
+                lockRotation: false,
+                lockScalingX: false,
+                lockScalingY: false,
+                hasControls: true,
+                hasBorders: true,
+                hoverCursor: 'move',
+                isLockedBackground: false
+            });
+
+            // 다시 선택 활성화
+            canvas.setActiveObject(bgObj);
+            canvas.requestRenderAll();
+
+            // (선택사항) 해제 알림
+            alert("배경 잠금이 해제되었습니다.\n이제 위치를 변경할 수 있습니다.");
+        } else {
+            alert("선택된 이미지가 없거나, 잠긴 배경이 없습니다.\n이미지를 선택 후 버튼을 눌러주세요.");
+        }
+    }
+};
