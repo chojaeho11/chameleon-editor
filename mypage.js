@@ -47,6 +47,7 @@ function switchTab(tabId) {
     // 탭별 데이터 로드
     if (tabId === 'designs') loadMyDesigns();
     if (tabId === 'orders') loadOrders();
+    if (tabId === 'sales') loadMySales();
 }
 
 // [3] 등급 자동 승급 체크
@@ -111,7 +112,7 @@ async function loadDashboardStats() {
         
         // 수익금(가칭) 표시 (현재는 0으로 고정하거나 별도 로직 필요)
         const elProfit = document.getElementById('profitTotal');
-        if(elProfit) elProfit.innerText = "0"; // 추후 구현 필요 시 수정
+        if(elProfit) elProfit.innerText = (profile.mileage || 0).toLocaleString();
 
         // 등급 체크 실행
         await checkAndUpgradeTier(currentUser.id, profile.role);
@@ -264,7 +265,75 @@ async function reOrder(orderId) {
         }
     }
 }
+// [신규] 판매중인 디자인 로드
+async function loadMySales() {
+    const grid = document.getElementById('mySalesGrid');
+    if(!grid) return;
+    grid.innerHTML = '로딩 중...';
 
+    const { data } = await sb.from('library').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    
+    if(!data || data.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">판매중인 디자인이 없습니다.</div>';
+        return;
+    }
+
+    grid.innerHTML = '';
+    let total = 0;
+    data.forEach(d => {
+        const reward = d.category === 'logo' ? 150 : 100;
+        total += reward;
+        grid.innerHTML += `
+            <div class="mp-design-card">
+                <img src="${d.thumb_url}" class="mp-design-thumb" style="height:150px; object-fit:cover;">
+                <div class="mp-design-body">
+                    <div style="font-weight:bold;">${d.title || '제목없음'}</div>
+                    <div style="font-size:12px; color:#666;">${d.category}</div>
+                    <div style="margin-top:5px; font-size:12px; color:#16a34a;">🎁 등록보상: ${reward}P</div>
+                </div>
+            </div>`;
+    });
+    document.getElementById('totalSalesPoint').innerText = total.toLocaleString() + ' P';
+}
+
+// [신규] 출금 모달 열기
+window.openWithdrawModal = async () => {
+    const { data } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
+    document.getElementById('wdCurrentMileage').innerText = (data?.mileage || 0).toLocaleString();
+    document.getElementById('withdrawModal').style.display = 'flex';
+};
+
+// [신규] 출금 신청
+window.requestWithdrawal = async () => {
+    const amt = parseInt(document.getElementById('wdAmount').value);
+    const bank = document.getElementById('wdBank').value;
+    const acc = document.getElementById('wdAccount').value;
+    const holder = document.getElementById('wdHolder').value;
+    const cur = parseInt(document.getElementById('wdCurrentMileage').innerText.replace(/,/g,''));
+
+    if(!amt || amt < 1000) return alert("최소 1,000P 부터 신청 가능합니다.");
+    if(amt > cur) return alert("보유 포인트가 부족합니다.");
+    if(!bank || !acc || !holder) return alert("계좌 정보를 입력해주세요.");
+
+    if(!confirm(`${amt}P를 출금 신청하시겠습니까?`)) return;
+
+    // 1. 마일리지 차감
+    await sb.from('profiles').update({ mileage: cur - amt }).eq('id', currentUser.id);
+    
+    // 2. 요청 저장
+    await sb.from('withdrawal_requests').insert({
+        user_id: currentUser.id, amount: amt, bank_name: bank, account_number: acc, account_holder: holder
+    });
+
+    // 3. 로그 저장
+    await sb.from('wallet_logs').insert({
+        user_id: currentUser.id, type: 'withdraw_req', amount: -amt, description: `출금신청(${bank})`
+    });
+
+    alert("✅ 출금 신청 완료! 관리자 확인 후 입금됩니다.");
+    document.getElementById('withdrawModal').style.display = 'none';
+    loadDashboardStats();
+};
 // [7] 입출금 내역 로드
 async function loadWalletLogs() {
     const tbody = document.getElementById('walletListBody');
@@ -307,5 +376,17 @@ async function logout() {
     if(confirm("로그아웃 하시겠습니까?")) {
         await sb.auth.signOut();
         location.href = 'index.html';
+    }
+}
+// [예시] 공유한 템플릿 불러오기 로직
+async function loadSharedTemplates() {
+    const { data, error } = await sb.from('library')
+        .select('*')
+        .eq('user_id', currentUser.id) // 내 아이디로 등록된 것만
+        .order('created_at', { ascending: false });
+
+    if (data) {
+        console.log("내가 공유한 템플릿:", data);
+        // HTML 그리드에 그려주는 로직 연결
     }
 }

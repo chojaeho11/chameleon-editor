@@ -141,6 +141,10 @@
             <li class="nav-item" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
+
+            <li class="nav-item" onclick="showSection('sec-withdrawals', this)">
+                <i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리
+            </li>
             
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this)"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
@@ -305,6 +309,16 @@
     </div>
 </div>
 
+            <div id="sec-withdrawals" class="section">
+                <div class="card">
+                    <h3 style="margin-top:0;">💸 고객 출금 신청 목록</h3>
+                    <button class="btn btn-outline btn-sm" onclick="loadWithdrawals()">새로고침</button>
+                    <table>
+                        <thead><tr><th>신청일</th><th>유저</th><th>출금액</th><th>계좌정보</th><th>상태</th><th>관리</th></tr></thead>
+                        <tbody id="withdrawalListBody"></tbody>
+                    </table>
+                </div>
+            </div>
             <div id="sec-products" class="section">
                 <div class="card" style="background:#fff7ed; border:1px solid #ffedd5; margin-bottom:20px;">
                     <h3 style="margin-top:0; color:#c2410c;">👑 대분류(Top Category) 관리</h3>
@@ -2365,6 +2379,72 @@ window.updateMemberRole = async (id, newRole) => {
         };
         window.updateTaskDB = async (orderId, field, value) => { const valToSave = value === "" ? null : value; const { error } = await sb.from('orders').update({ [field]: valToSave }).eq('id', orderId); if (error) { alert("저장 실패: " + error.message); } };
         window.addEventListener('DOMContentLoaded', async () => { await initConfig(); loadOrders(); initTemplateListeners(); loadCategories(); loadFonts(); });
+
+        // [신규] 출금 목록 로드
+        // [수정됨] 출금 목록 로드 (오류 방지 버전)
+        window.loadWithdrawals = async () => {
+            const tbody = document.getElementById('withdrawalListBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>';
+            
+            try {
+                // 1. 출금 요청 데이터만 먼저 가져오기 (오류 원인인 join 제거)
+                const { data: requests, error } = await sb.from('withdrawal_requests')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!requests || requests.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">출금 신청 내역이 없습니다.</td></tr>';
+                    return;
+                }
+
+                // 2. 신청한 유저들의 ID 목록 추출
+                const userIds = [...new Set(requests.map(r => r.user_id))];
+
+                // 3. 유저 정보(이메일) 별도로 가져오기
+                const { data: users } = await sb.from('profiles')
+                    .select('id, email, full_name')
+                    .in('id', userIds);
+                
+                // 유저 정보 매핑 (ID -> 정보)
+                const userMap = {};
+                if (users) users.forEach(u => userMap[u.id] = u);
+
+                // 4. 화면 그리기
+                tbody.innerHTML = '';
+                requests.forEach(r => {
+                    const user = userMap[r.user_id];
+                    const displayUser = user ? `${user.email}<br><span style='font-size:11px; color:#888;'>${user.full_name||''}</span>` : r.user_id;
+                    
+                    const statusBadge = r.status === 'pending' 
+                        ? '<span class="badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;">대기중</span>'
+                        : '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">완료됨</span>';
+                    
+                    const actionBtn = r.status === 'pending'
+                        ? `<button class="btn btn-primary btn-sm" onclick="approveWithdrawal(${r.id})">입금확인 처리</button>`
+                        : `<span style="color:#cbd5e1; font-size:12px;">처리완료</span>`;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${new Date(r.created_at).toLocaleString()}</td>
+                            <td>${displayUser}</td>
+                            <td style="font-weight:bold; color:#d97706;">${r.amount.toLocaleString()} P</td>
+                            <td>
+                                <div style="font-weight:bold;">${r.bank_name} ${r.account_number}</div>
+                                <div style="font-size:12px; color:#666;">예금주: ${r.account_holder}</div>
+                            </td>
+                            <td>${statusBadge}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">데이터 로드 오류: ${e.message}</td></tr>`;
+            }
+        };
     </script>
 
 </body>

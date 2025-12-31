@@ -2135,3 +2135,140 @@ body {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-30px); }
 }
+/* --- 디자인 판매 모달 스타일 시작 --- */
+
+/* 배경 (어두운 영역) */
+#sellModal.modal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002; /* 기존 코드 유지 */
+}
+
+/* 모달 박스 본체 */
+#sellModal .modal-box {
+    background: #fff;
+    width: 90%;          /* 모바일 대응 */
+    max-width: 400px;    /* PC 최대 너비 */
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    text-align: center;
+    font-family: 'Pretendard', sans-serif; /* 폰트가 없다면 기본 폰트 사용됨 */
+    box-sizing: border-box;
+}
+
+/* 제목 */
+#sellModal .modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
+/* 혜택 안내 박스 (회색/파란색 박스 영역) */
+#sellModal .benefit-box {
+    background: #f0f7ff;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+#sellModal .benefit-item {
+    font-size: 13px;
+    color: #444;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.4;
+}
+
+#sellModal .benefit-item:last-child {
+    margin-bottom: 0;
+}
+
+#sellModal .benefit-icon {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+#sellModal .highlight {
+    color: #007bff; /* 포인트 컬러 (파랑) */
+    font-weight: 700;
+}
+
+/* 입력창 영역 */
+#sellModal .input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+#sellModal .input-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+#sellModal .ai-input-pretty {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: 0.2s;
+}
+
+#sellModal .ai-input-pretty:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* 버튼 영역 */
+#sellModal .btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#sellModal .btn-round {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.2s;
+    display: flex;       /* 기존 플렉스 스타일 유지 */
+    justify-content: center;
+    align-items: center;
+}
+
+#sellModal .btn-round.primary {
+    background: #007bff;
+    color: white;
+}
+
+#sellModal .btn-round.primary:hover {
+    background: #0056b3;
+}
+
+#sellModal .btn-round.cancel {
+    background: #f1f3f5;
+    color: #333;
+}
+
+#sellModal .btn-round.cancel:hover {
+    background: #e9ecef;
+}

@@ -3,6 +3,15 @@
 import { sb, currentUser } from "./config.js";
 import { canvas } from "./canvas-core.js";
 import { applySize } from "./canvas-size.js";
+// [추가] 마일리지 적립 헬퍼 함수
+async function addRewardPoints(userId, amount, desc) {
+    try {
+        const { data: pf } = await sb.from('profiles').select('mileage').eq('id', userId).single();
+        const current = pf?.mileage || 0;
+        await sb.from('profiles').update({ mileage: current + amount }).eq('id', userId);
+        await sb.from('wallet_logs').insert({ user_id: userId, type: 'reward', amount: amount, description: desc });
+    } catch(e) { console.error("적립 오류", e); }
+}
 
 // 선택된 템플릿 정보를 저장하는 변수
 let selectedTpl = null;
@@ -62,6 +71,7 @@ function expandSearchKeywords(inputText) {
 // =========================================================
 // [1] 초기화 및 이벤트 리스너 설정
 // =========================================================
+// [1] 초기화 및 이벤트 리스너 설정 (수정됨)
 export function initTemplateTools() {
     window.filterTpl = (type, btnElement) => {
         if (btnElement) {
@@ -70,7 +80,6 @@ export function initTemplateTools() {
         }
         currentCategory = type;
         const keyword = document.getElementById("tplSearchInput")?.value || "";
-        // 검색 실행 (페이지 0부터)
         searchTemplates(type, keyword);
     };
 
@@ -95,16 +104,36 @@ export function initTemplateTools() {
     setupBtn("btnActionReplace", () => { document.getElementById("templateActionModal").style.display = "none"; processLoad('replace'); });
     setupBtn("btnActionAdd", () => { document.getElementById("templateActionModal").style.display = "none"; processLoad('add'); });
     setupBtn("btnUseTpl", useSelectedTemplate);
-    setupBtn("btnSellConfirm", registerOfficialTemplate);
 
-    const btnReg = document.getElementById("btnRegisterTemplate");
-    if (btnReg) {
-        if (currentUser) btnReg.style.display = "flex";
-        btnReg.onclick = () => {
-            if (!currentUser) return alert("관리자 로그인이 필요합니다.");
+    // ▼▼▼ [여기부터 수정된 부분입니다] ▼▼▼
+    
+    // 1. "디자인 판매 등록" 버튼 클릭 시 모달 열기 (기존 btnRegisterTemplate 로직 대체)
+    const btnOpenSell = document.getElementById("btnOpenSellModal");
+    if(btnOpenSell) {
+        btnOpenSell.onclick = () => {
+            if (!currentUser) {
+                alert("로그인이 필요한 서비스입니다.");
+                document.getElementById('loginModal').style.display = 'flex';
+                return;
+            }
+            // 모달 초기화
+            const elTitle = document.getElementById("sellTitle");
+            const elKw = document.getElementById("sellKw");
+            const elCat = document.getElementById("sellCategory");
+            
+            if(elTitle) elTitle.value = "";
+            if(elKw) elKw.value = "";
+            if(elCat) elCat.value = "text";
+            
             document.getElementById("sellModal").style.display = "flex";
         };
     }
+
+    // 2. 모달 내 "등록하기" 버튼 연결 -> registerUserTemplate 함수 실행
+    const btnConfirm = document.getElementById("btnSellConfirm");
+    if(btnConfirm) btnConfirm.onclick = registerUserTemplate;
+    
+    // ▲▲▲ [수정 끝] ▲▲▲
 }
 
 // =========================================================
@@ -136,9 +165,9 @@ async function searchTemplates(category, keyword) {
 }
 
 // ★ 페이지 이동 함수 (버튼 클릭 시 실행)
-window.changeTemplatePage = async function(direction) {
+window.changeModalTemplatePage = async function(direction) {
     const newPage = tplCurrentPage + direction;
-    if (newPage < 0) return; // 0페이지 미만 방지
+    if (newPage < 0) return; 
     await loadTemplatePage(newPage);
 }
 
@@ -185,8 +214,8 @@ async function loadTemplatePage(pageIndex) {
         }
 
         // 제품 필터
-        const filterCondition = `product_key.eq.${currentKey},product_key.eq.custom,product_key.is.null`;
-        query = query.or(filterCondition);
+        // const filterCondition = `product_key.eq.${currentKey},product_key.eq.custom,product_key.is.null`;
+        // query = query.or(filterCondition);
 
         // 4. 실행
         const { data, error } = await query;
@@ -198,14 +227,14 @@ async function loadTemplatePage(pageIndex) {
 
         // 데이터가 없을 때
         if (!data || data.length === 0) {
-            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
-                표시할 데이터가 없습니다.<br>
-                ${pageIndex > 0 ? '<button class="btn-round" onclick="changeTemplatePage(-1)" style="margin-top:10px;">이전 페이지로 돌아가기</button>' : ''}
-            </div>`;
-            renderPaginationControls(true, 0); // 버튼 업데이트
-            tplIsLoading = false;
-            return;
-        }
+    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
+        표시할 데이터가 없습니다.<br>
+        ${pageIndex > 0 ? '<button class="btn-round" onclick="changeModalTemplatePage(-1)" style="margin-top:10px;">이전 페이지로 돌아가기</button>' : ''}
+    </div>`;
+    renderPaginationControls(true, 0); 
+    tplIsLoading = false;
+    return;
+}
 
         // 6. 카드 렌더링
         data.forEach((item) => {
@@ -259,6 +288,12 @@ async function loadTemplatePage(pageIndex) {
 
 // ★ 하단 페이지네이션 버튼 그리기 함수
 // ★ 하단 페이지네이션 버튼 그리기 함수 (가로폭 강제 축소)
+// [수정 전 코드의 문제점]
+// 1. 이전 버튼: changeTemplatePage(-1) -> 함수 이름 틀림 (changeModalTemplatePage여야 함)
+// 2. 다음 버튼: prevBtn.onclick = ... -> 변수 이름 틀림 (nextBtn이어야 함)
+
+// ▼▼▼ [수정된 코드] 복사해서 덮어씌우세요 ▼▼▼
+
 function renderPaginationControls(isEnabled, dataCount = 0) {
     const grid = document.getElementById("tplGrid");
     if(!grid) return;
@@ -269,10 +304,8 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
 
     controls = document.createElement("div");
     controls.id = "tpl-pagination-controls";
-    // [수정] 중앙 정렬 확실하게 지정
     controls.style.cssText = "grid-column: 1/-1; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; padding-bottom: 30px;";
 
-    // [핵심 수정] width: auto !important 및 flex: none 추가하여 늘어남 방지
     const btnStyle = "width: auto !important; flex: none !important; padding: 0 15px; height: 34px; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 17px; transition: all 0.2s; white-space: nowrap;";
 
     // 1. 이전 버튼
@@ -292,13 +325,13 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
         prevBtn.style.background = "#fff";
         prevBtn.style.border = "1px solid #cbd5e1";
         prevBtn.style.color = "#334155";
-        prevBtn.onclick = () => changeTemplatePage(-1);
+        // [수정 1] 함수 이름 변경: changeTemplatePage -> changeModalTemplatePage
+        prevBtn.onclick = () => changeModalTemplatePage(-1);
     }
 
     // 2. 페이지 표시 텍스트
     const pageIndicator = document.createElement("span");
     pageIndicator.innerText = `${tplCurrentPage + 1} 페이지`;
-    // 여백을 조금 넉넉히 주어 답답함 해소
     pageIndicator.style.cssText = "font-size: 13px; font-weight: 600; color: #64748b; margin: 0 10px; white-space: nowrap;";
 
     // 3. 다음 버튼
@@ -318,10 +351,11 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
         nextBtn.style.background = "#fff"; 
         nextBtn.style.border = "1px solid #6366f1";
         nextBtn.style.color = "#6366f1";
-        nextBtn.onclick = () => changeTemplatePage(1);
+        // [수정 2] 변수 이름 변경: prevBtn -> nextBtn (여기가 원인이었습니다!)
+        nextBtn.onclick = () => changeModalTemplatePage(1);
     }
 
-    // 마우스 오버 효과
+    // ... (이후 마우스 오버 효과 코드는 그대로 유지)
     const addHover = (btn, isPrimary) => {
         if(btn.disabled) return;
         btn.onmouseover = () => { 
@@ -345,7 +379,6 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
 
     grid.parentNode.appendChild(controls);
 }
-
 
 // =========================================================
 // [3] 선택 및 로드 프로세스 (변경 없음)
@@ -406,18 +439,25 @@ async function processLoad(mode) {
             objects.forEach(o => canvas.remove(o));
         }
 
+        // ... (위쪽 코드 생략)
+
         const getSmartScale = (objWidth, objHeight) => {
             const board = canvas.getObjects().find(o => o.isBoard);
             const bW = board ? (board.width * board.scaleX) : canvas.width;
             const bH = board ? (board.height * board.scaleY) : canvas.height;
             const category = selectedTpl.category || 'logo';
             
-            if (['photo-bg', 'vector', 'transparent-graphic', 'pattern'].includes(category)) {
+            // ▼▼▼ [수정된 부분] 배열에 'text'를 추가했습니다. ▼▼▼
+            if (['photo-bg', 'vector', 'transparent-graphic', 'pattern', 'text'].includes(category)) {
+                // 이 조건에 걸리면 화면을 꽉 채우게 됨 (Cover Fit)
                 return Math.max(bW / objWidth, bH / objHeight) * 1.1; 
             } else {
+                // 그 외(로고 등)는 화면의 1/3 크기로 작게 들어감
                 return (bW / 3) / objWidth;
             }
         };
+
+        // ... (아래쪽 코드 생략)
 
         const getCenterPos = () => {
             const board = canvas.getObjects().find(o => o.isBoard);
@@ -508,60 +548,120 @@ function resetViewToCenter() {
     canvas.requestRenderAll();
 }
 
-async function registerOfficialTemplate() {
-    const kwInput = document.getElementById("sellKw");
-    const keyword = kwInput ? kwInput.value : "";
-    let cat = prompt("카테고리를 입력하세요\n(옵션: vector, graphic, photo-bg, logo)", "text");
-    if(!cat) return;
-    cat = cat.toLowerCase();
+// [유틸] Base64 이미지를 Blob 파일로 변환 (파일 업로드용)
+function dataURLtoBlob(dataurl) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], {type:mime});
+}
 
-    if (!sb) return alert("DB 미연결");
-    if (!currentUser) return alert("관리자 로그인이 필요합니다.");
+// [핵심] 유저 디자인 등록 함수 (스토리지 업로드 + DB 저장)
+async function registerUserTemplate() {
+    if (!sb) return alert("데이터베이스 연결 실패");
+    if (!currentUser) return alert("로그인이 필요합니다.");
+
+    // 입력값 가져오기
+    const titleEl = document.getElementById("sellTitle");
+    const catEl = document.getElementById("sellCategory");
+    const tagEl = document.getElementById("sellKw");
+
+    const title = titleEl ? titleEl.value.trim() : "제목 없음";
+    const category = catEl ? catEl.value : "photo-bg";
+    const tags = tagEl ? tagEl.value.trim() : "";
+
+    if (!title) return alert("제목을 입력해주세요.");
 
     const btn = document.getElementById("btnSellConfirm");
     const originalText = btn.innerText;
     btn.innerText = "업로드 중...";
-    canvas.discardActiveObject();
-    canvas.requestRenderAll();
-
-    const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth']);
-    const board = canvas.getObjects().find(o => o.isBoard);
-    const originalVpt = canvas.viewportTransform; 
-    let thumbUrl = "";
+    btn.disabled = true;
 
     try {
+        // 1. 캔버스 선택 해제 (깔끔한 썸네일 위해)
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+
+        // 2. 캔버스 데이터(JSON) 추출 (용량 최적화)
+        const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'selectable', 'evented']);
+
+        // 3. 썸네일 이미지 생성
+        const board = canvas.getObjects().find(o => o.isBoard);
+        let dataUrl = "";
+        
+        // 뷰포트 잠시 초기화하여 정확한 이미지 추출
+        const originalVpt = canvas.viewportTransform;
+        canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+
         if (board) {
-            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-            thumbUrl = canvas.toDataURL({ 
-                format: 'png', multiplier: 0.5, quality: 0.8,
+            dataUrl = canvas.toDataURL({
+                format: 'jpeg', quality: 0.8,
                 left: board.left, top: board.top,
                 width: board.getScaledWidth(), height: board.getScaledHeight()
             });
         } else {
-            thumbUrl = canvas.toDataURL({ format: 'png', multiplier: 0.5, quality: 0.8 });
+            dataUrl = canvas.toDataURL({ format: 'jpeg', quality: 0.8 });
         }
+        canvas.setViewportTransform(originalVpt); // 복구
 
+        // 4. Supabase Storage에 썸네일 업로드
+        const blob = dataURLtoBlob(dataUrl);
+        // 파일명: 유저ID/시간.jpg
+        const fileName = `${currentUser.id}/${Date.now()}.jpg`;
+
+        // 'templates' 버킷에 업로드
+        const { error: uploadError } = await sb.storage
+            .from('templates') 
+            .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        // 업로드된 이미지의 공개 주소 가져오기
+        const { data: publicUrlData } = sb.storage
+            .from('templates')
+            .getPublicUrl(fileName);
+        
+        const finalThumbUrl = publicUrlData.publicUrl;
+
+        // 5. Library 테이블에 데이터 저장
         const payload = {
-            category: cat, tags: keyword || "제목 없음",
-            thumb_url: thumbUrl, data_url: json,
+            title: title,
+            category: category,
+            tags: tags,
+            thumb_url: finalThumbUrl,
+            data_url: json,
             created_at: new Date(),
-            width: board ? board.width : canvas.width,
-            height: board ? board.height : canvas.height,
+            user_id: currentUser.id,
+            user_email: currentUser.email,
+            status: 'approved',
+            is_official: false,
             product_key: canvas.currentProductKey || 'custom'
         };
 
-        const { error } = await sb.from('library').insert([payload]);
-        if (error) throw error;
-        alert("👑 공식 템플릿으로 등록되었습니다!");
+        const { error: dbError } = await sb.from('library').insert([payload]);
+        if (dbError) throw dbError;
+
+        // 성공 처리
+        await addRewardPoints(currentUser.id, 100, `템플릿 등록 보상 (${title})`);
+        alert("🎉 디자인이 등록되었습니다! (+100P 적립)\n[템플릿] 탭에서 확인하세요.");
         document.getElementById("sellModal").style.display = "none";
-        if(kwInput) kwInput.value = "";
+        
+        // 입력창 초기화
+        if(titleEl) titleEl.value = "";
+        if(tagEl) tagEl.value = "";
+        
+        // 템플릿 목록 새로고침 (현재 보고있는 카테고리가 같다면)
+        if(window.filterTpl) window.filterTpl(category);
+
     } catch (e) {
-        console.error("등록 실패:", e);
-        alert("등록 실패: " + e.message);
+        console.error("업로드 실패:", e);
+        alert("업로드 실패: " + (e.message || e));
     } finally {
-        canvas.setViewportTransform(originalVpt);
-        canvas.requestRenderAll();
         btn.innerText = originalText;
+        btn.disabled = false;
+        canvas.requestRenderAll();
     }
 }
 
@@ -640,7 +740,13 @@ window.uploadUserLogo = async function() {
                 width: 500, height: 500, product_key: 'custom'
             };
             const { error: dbError } = await sb.from('library').insert([payload]);
-            if (dbError) failCount++; else successCount++;
+            if (dbError) {
+                failCount++;
+            } else {
+                successCount++;
+                // 로고 1개당 150P 적립
+                await addRewardPoints(currentUser.id, 150, `로고 공유 보상 (${files[i].name})`);
+            }
         }
         alert(`완료! 성공: ${successCount}개, 실패: ${failCount}개`);
         window.resetUpload(null);

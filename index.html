@@ -60,14 +60,21 @@
         <div class="template-tabs" style="display:none;">
             <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('photo-bg');">🎨 <span data-i18n="tab_all">템플릿</span></button>
             
-            <button class="tpl-tab active" data-tpl="photo-bg" 
-                    style="background: linear-gradient(135deg, #410175 0%, #f00064 100%); color: #fff; font-weight: 800; border: none; box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3); margin-right: 5px;">
-                 이미지 템플릿
+            <button class="tpl-tab active" data-tpl="all" 
+                style="background: linear-gradient(135deg, #410175 0%, #f00064 100%); color: #fff; font-weight: 800; border: none; box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3); margin-right: 5px;">
+                🎨 전체 템플릿
             </button>
 
+            <button class="tpl-tab" data-tpl="text">유저 템플릿</button>
+
+            <button class="tpl-tab" data-tpl="photo-bg">고화질이미지</button>
+
             <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">백터배경</button>
+
             <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">벡터이미지</button>
+
             <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴디자인</button>
+
             <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고모음</button>
         </div>
         
@@ -318,7 +325,7 @@
         </button>
 
         <button onclick="document.getElementById('logoUploadModal').style.display='flex'" class="btn-round" style="width: auto; display: inline-flex; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 50px; box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2); background: #fff; color: #6366f1; border: 2px solid #6366f1;">
-            <i class="fa-solid fa-cloud-arrow-up"></i> &nbsp; 로고 공유 GO PLATINUM
+            <i class="fa-solid fa-cloud-arrow-up"></i> &nbsp; 로고 공유 1개 150원
         </button>
 
     </div>
@@ -587,7 +594,10 @@ function goBoard(category) {
 
             <div class="section-title" data-i18n="label_ai_tools" style="margin-bottom: 5px; font-size: 12px;">AI TOOLS</div>
             <button class="btn-round ai-red" id="btnAIBox" style="justify-content: center; height: 38px; margin-bottom: 5px;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_ai_gen">AI 생성</span></button>
-            
+            <button class="btn-round" id="btnOpenSellModal" onclick="window.openSellModal()" 
+                  style="width: 100%; justify-content: center; height: 38px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border: none; color: white; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
+                 <i class="fa-solid fa-sack-dollar"></i> <span data-i18n="btn_sell_design">디자인 판매 등록</span>
+            </button>
             <div style="display: flex; gap: 5px; margin-bottom: 5px;">
                 <button class="btn-round" id="btnOpenSaveModal" style="flex: 1; justify-content: center; height: 38px;">
                     <span data-i18n="btn_save_design">💾 디자인 저장</span>
@@ -921,12 +931,34 @@ function goBoard(category) {
 <div id="templateOverlay">
     <div class="tpl-modal-box">
         <div class="tpl-sidebar">
-    <button class="tpl-cate-btn active" onclick="window.filterTpl('vector', this)"><span>심플백터배경</span></button>
-    <button class="tpl-cate-btn" onclick="window.filterTpl('photo-bg', this)"><span>♥고화질이미지♥</span></button>
-    <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)"><span>PNG객체</span></button>
-    <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)"><span>패턴디자인</span></button>
-    <button class="tpl-cate-btn" onclick="window.filterTpl('logo', this)"><span>PNG로고</span></button>
-</div>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('all', this)">
+                <span style="font-weight:800; color:#6366f1;">🎨 전체 디자인</span>
+            </button>
+            
+            <button class="tpl-cate-btn" onclick="window.filterTpl('text', this)">
+                <span>유저 템플릿</span>
+            </button>
+
+            <button class="tpl-cate-btn active" onclick="window.filterTpl('photo-bg', this)">
+                <span>♥고화질이미지♥</span>
+            </button>
+
+            <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)">
+                <span>심플백터배경</span>
+            </button>
+
+            <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)">
+                <span>PNG객체</span>
+            </button>
+
+            <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)">
+                <span>패턴디자인</span>
+            </button>
+
+            <button class="tpl-cate-btn" onclick="window.filterTpl('logo', this)">
+                <span>로고모음</span>
+            </button>
+        </div>
         <div class="tpl-content">
             <div style="padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
                 <h2 style="margin:0;">검색</h2>
@@ -1146,7 +1178,41 @@ function goBoard(category) {
 </div>
 </div>
 <div id="successModal" class="modal-bg" style="z-index: 14000;"><div class="modal-box"><h2>🎉 주문 완료!</h2><button id="btnDownOrderSheet" class="btn-round">📄 작업지시서 다운로드</button><button id="btnDownQuotation" class="btn-round" style="margin-top:5px;">📑 견적서 다운로드</button><button onclick="window.closeSuccessModal()" class="btn-round primary" style="margin-top:15px;">확인</button></div></div>
-<div id="sellModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>💎 디자인 등록</h3><input id="sellKw" class="ai-input-pretty" placeholder="#키워드"><button id="btnSellConfirm" class="btn-round primary">등록하기</button><button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round" style="margin-top:5px;">취소</button></div></div>
+<div id="sellModal" class="modal-bg" style="display: none;"> <div class="modal-box">
+        <h3 class="modal-title">💎 디자인 공유/판매 등록</h3>
+        
+        <div class="benefit-box">
+            <div class="benefit-item">
+                <span class="benefit-icon">💰</span>
+                <span>등록 즉시 <span class="highlight">100원</span>, 사용될 때마다 <span class="highlight">200원</span> 적립</span>
+            </div>
+            <div class="benefit-item">
+                <span class="benefit-icon">💳</span>
+                <span>1,000원부터 바로 <span class="highlight">현금 환전</span> 가능</span>
+            </div>
+            <div class="benefit-item">
+                <span class="benefit-icon">🚀</span>
+                <span>텍스트/로고 공유로 매일 자동 수입 만들기!</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">키워드</label>
+            <input id="sellTitle" class="ai-input-pretty" 
+                   type="text"
+                   placeholder="예: 피부과 이벤트, 여름 포스터" 
+                   oninput="document.getElementById('sellKw').value = this.value;">
+        </div>
+
+        <input id="sellCategory" type="hidden" value="text">
+        <input id="sellKw" type="hidden">
+
+        <div class="btn-group">
+            <button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round cancel">취소</button>
+            <button id="btnSellConfirm" class="btn-round primary">등록하기</button>
+        </div>
+    </div>
+</div>
 <div id="fontModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>폰트 선택</h3><div id="fontList" style="max-height:300px; overflow-y:auto;"></div><button onclick="document.getElementById('fontModal').style.display='none'" class="btn-round" style="margin-top:10px;">닫기</button></div></div>
 <div id="choiceModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 900px; max-width: 95%;">
@@ -1216,7 +1282,7 @@ function goBoard(category) {
             <div id="removeFileBtn" onclick="window.resetUpload(event)">✕</div>
         </div>
         <input type="file" id="logoFileInput" accept="image/png, image/jpeg, image/svg+xml" style="display:none;" onchange="window.handleFileSelect(this)">
-        <input type="text" id="logoKeywordInput" class="ai-input-pretty" placeholder="파일명이 자동으로 검색어로 등록되며 사용시 적립금 2배.">
+        <input type="text" id="logoKeywordInput" class="ai-input-pretty" placeholder="PNG로고 등록시 150원 즉시 지급 MY page에서 확인">
         <div style="display:flex; gap:10px; margin-top:10px;">
             <button onclick="window.uploadUserLogo()" class="btn-round primary" style="flex:2;">Upload</button>
             <button onclick="document.getElementById('logoUploadModal').style.display='none'" class="btn-round" style="flex:1;">Cancel</button>
@@ -2336,8 +2402,10 @@ async function renderQuickMenu() {
     window.applyTemplateToCanvas = async function(inputData) {
         if (!canvas) return;
         document.getElementById("loading").style.display = "flex";
+        
         try {
             let jsonData = inputData;
+            // 1. 데이터 파싱 (JSON 또는 URL)
             if (typeof inputData === 'string') {
                 if (inputData.startsWith('http')) {
                     const res = await fetch(inputData);
@@ -2347,41 +2415,87 @@ async function renderQuickMenu() {
                 }
             }
 
+            // 2. 현재 작업 중인 대지(Board) 정보 가져오기
             let board = canvas.getObjects().find(o => o.isBoard);
-            let boardSize = board ? { w: board.width * board.scaleX, h: board.height * board.scaleY } : { w: canvas.width, h: canvas.height };
-            let center = board ? { x: board.left + boardSize.w/2, y: board.top + boardSize.h/2 } : { x: canvas.width/2, y: canvas.height/2 };
+            
+            // 대지가 없으면 캔버스 전체 크기를 대지로 간주
+            let boardSize = board 
+                ? { w: board.width * board.scaleX, h: board.height * board.scaleY } 
+                : { w: canvas.width, h: canvas.height };
+            
+            // 대지의 중심 좌표
+            let center = board 
+                ? { x: board.left + boardSize.w/2, y: board.top + boardSize.h/2 } 
+                : { x: canvas.width/2, y: canvas.height/2 };
 
+            // 3. 객체 로드 및 배치 함수
             const onLoad = (objects, options) => {
-                if(!objects || objects.length===0) return finishLoading();
+                if(!objects || objects.length === 0) return finishLoading();
+
+                // 객체들 설정 초기화 (잠금 해제 등)
                 objects.forEach(o => { 
-                    o.set({ selectable: true, evented: true, lockMovementX: false, lockMovementY: false });
-                    if(o.type==='i-text'||o.type==='text') delete o.textBaseline; 
+                    o.set({ 
+                        selectable: true, 
+                        evented: true, 
+                        lockMovementX: false, 
+                        lockMovementY: false 
+                    });
+                    // 텍스트 베이스라인 오류 방지
+                    if(o.type === 'i-text' || o.type === 'text') delete o.textBaseline; 
                 });
+
+                // 그룹으로 묶기
                 let group;
                 if(options) group = fabric.util.groupSVGElements(objects, options);
                 else group = new fabric.Group(objects);
+
+                // 그룹 중심점 설정
                 group.set({ originX: 'center', originY: 'center' });
 
-                const scale = (boardSize.w * 0.5) / group.width;
+                // ▼▼▼ [핵심 수정] 화면 꽉 채우기 (Object-fit: Cover 로직) ▼▼▼
+                // 가로 비율과 세로 비율 중 '더 큰 쪽'을 선택하여 확대합니다.
+                // 이렇게 하면 여백 없이 화면을 꽉 채우게 됩니다.
+                const scaleX = boardSize.w / group.width;
+                const scaleY = boardSize.h / group.height;
+                const scale = Math.max(scaleX, scaleY); // 둘 중 큰 비율 선택 (꽉 채우기)
 
-                group.set({ scaleX: scale, scaleY: scale, left: center.x, top: center.y });
+                // 위치 잡기 (대지 정중앙)
+                group.set({ 
+                    scaleX: scale, 
+                    scaleY: scale, 
+                    left: center.x, 
+                    top: center.y 
+                });
+
+                // 캔버스에 추가
                 canvas.add(group);
-                group.toActiveSelection();
+                
+                // 그룹 해제하여 개별 편집 가능하게 만들기 (선택 사항)
+                // 바로 편집하려면 아래 주석을 푸세요. 지금은 그룹 상태로 둡니다.
+                // group.toActiveSelection(); 
+                
+                canvas.setActiveObject(group); // 선택 활성화
                 canvas.requestRenderAll();
                 finishLoading();
             };
 
+            // 4. SVG 또는 JSON 형식에 따라 로드 분기
             if (typeof jsonData === 'string' && (jsonData.includes('<svg') || jsonData.includes('data:image/svg'))) {
                 fabric.loadSVGFromString(jsonData, onLoad);
             } else if (typeof jsonData === 'object' && jsonData.objects) {
+                // 저장된 캔버스 데이터(JSON)인 경우, 대지(Board) 객체는 제외하고 내용물만 가져옴
                 const objs = jsonData.objects.filter(o => !o.isBoard);
                 fabric.util.enlivenObjects(objs, (enlivened) => onLoad(enlivened, null));
             } else {
+                // 이미지 URL인 경우
                 fabric.Image.fromURL(inputData, (img) => {
                     if(img) onLoad([img], null); else finishLoading();
                 });
             }
-        } catch(e) { console.error(e); finishLoading(); }
+        } catch(e) { 
+            console.error("템플릿 적용 실패:", e); 
+            finishLoading(); 
+        }
     };
 
     function finishLoading() {
