@@ -16,7 +16,7 @@ export function initCanvas() {
     if (!canvasElem || !stageElem) return;
     if (typeof fabric === 'undefined') return;
 
-    // Fabric.js 설정
+    // Fabric.js 전역 객체 설정
     fabric.Object.prototype.set({
         cornerStyle: 'circle',
         cornerSize: 12,
@@ -25,7 +25,15 @@ export function initCanvas() {
         borderColor: '#00D2FF',
         cornerColor: '#ffffff',
         cornerStrokeColor: '#00D2FF',
-        borderScaleFactor: 2
+        borderScaleFactor: 2,
+        
+        // ★ [핵심 해결] 투명한 영역(빈 공간)은 클릭되지 않도록 설정
+        // 이 설정이 있어야 큰 배경의 투명한 부분을 클릭해도 뒤의 글자를 선택할 수 있음
+        perPixelTargetFind: true, 
+        
+        // 클릭 감지 민감도 (픽셀 단위)
+        // 너무 정밀하면 얇은 선 클릭이 어려우므로 5px 정도의 여유를 줌
+        targetFindTolerance: 5  
     });
 
     // ★★★ [핵심 패치] 이동 중 튕김(getRetinaScaling 오류) 원천 차단 ★★★
@@ -41,8 +49,12 @@ export function initCanvas() {
         width: stageElem.clientWidth || 800,
         height: stageElem.clientHeight || 600,
         backgroundColor: '#555555',
-        preserveObjectStacking: true,
-        selection: true
+        preserveObjectStacking: true, // 선택해도 레이어 순서가 바뀌지 않도록 함
+        selection: true,
+        
+        // 캔버스 자체에도 픽셀 기반 탐지 적용 (이중 안전장치)
+        perPixelTargetFind: true,
+        targetFindTolerance: 5
     });
 
     window.canvas = canvas;
@@ -62,7 +74,7 @@ export function initCanvas() {
     canvas.on("selection:updated", updateLockUI);
     canvas.on("selection:cleared", updateLockUI);
 
-    console.log("✅ 캔버스 코어 초기화 완료");
+    console.log("✅ 캔버스 코어 초기화 완료 (클릭 간섭 방지 적용됨)");
 }
 
 export function setMaxLimits(w_mm, h_mm) { maxLimitMM.w = w_mm; maxLimitMM.h = h_mm; }

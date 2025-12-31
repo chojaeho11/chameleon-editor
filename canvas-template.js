@@ -466,6 +466,8 @@ async function processLoad(mode) {
             return { x: board.left + bW/2, y: board.top + bH/2 };
         };
 
+        // [수정] 좌표 보정 및 개별 객체 로딩 (그룹화 방지)
+        // [수정] 좌표 보정 및 개별 객체 로딩 (그룹화 방지)
         if (isImage) {
             const cleanUrl = String(imageUrl).trim().replace(/^"|"$/g, '');
             fabric.Image.fromURL(cleanUrl, (img) => {
@@ -487,32 +489,110 @@ async function processLoad(mode) {
             }, { crossOrigin: 'anonymous' }); 
 
         } else {
+            // JSON 벡터 데이터 처리
             let jsonData = finalJson;
-            if(jsonData.objects) jsonData.objects = jsonData.objects.filter(o => !o.isBoard);
+            
+            // 1. 저장된 데이터에서 '대지(Board)' 정보 찾기 (좌표 기준점용)
+            const savedBoard = jsonData.objects.find(o => o.isBoard);
+            
+            // 2. 렌더링할 객체만 필터링 (대지 제외)
+            const objectsToRender = jsonData.objects.filter(o => !o.isBoard);
 
-            fabric.util.enlivenObjects(jsonData.objects, (objs) => {
+            fabric.util.enlivenObjects(objectsToRender, (objs) => {
                 if (objs.length === 0) { 
                     if(document.getElementById("loading")) document.getElementById("loading").style.display = "none"; 
-                    if(mode === 'replace') resetViewToCenter(); 
                     return; 
                 }
+
+                // 3. 현재 캔버스의 대지 정보 가져오기
+                const currentBoard = canvas.getObjects().find(o => o.isBoard);
+                
+                // 4. 좌표 및 스케일 계산
+                let scale = 1;
+                let moveX = 0;
+                let moveY = 0;
+                let useRelativePos = false;
+
+                // 대지 정보가 둘 다 있다면 '상대 좌표' 계산 (가장 정확함)
+                if (savedBoard && currentBoard) {
+                    useRelativePos = true;
+                    // 저장된 대지 너비 vs 현재 대지 너비 비율 계산
+                    const savedW = savedBoard.width * savedBoard.scaleX;
+                    const curW = currentBoard.width * currentBoard.scaleX;
+                    
+                    // 카테고리에 따라 꽉 채울지(Cover), 맞출지(Contain) 결정
+                    const fullSizeCats = ['card', 'flyer', 'poster', 'banner-h', 'banner-v', 'menu', 'photo-bg', 'text'];
+                    if(fullSizeCats.includes(selectedTpl.category)) {
+                        scale = curW / savedW; // 가로폭에 맞춰 꽉 채움
+                    } else {
+                        scale = (curW / 3) / savedW; // 로고 등은 1/3 크기
+                    }
+                } 
+                else {
+                    // 대지 정보가 없는 구버전 데이터는 중앙 정렬 계산을 위해 임시 그룹 사용
+                    const group = new fabric.Group(objs);
+                    const center = getCenterPos();
+                    scale = getSmartScale(group.width, group.height);
+                    moveX = center.x - (group.left + group.width/2);
+                    moveY = center.y - (group.top + group.height/2);
+                    group.destroy(); // 계산만 하고 그룹 파괴
+                }
+
+                // 5. 객체 하나씩 좌표 보정하여 추가
                 objs.forEach(obj => {
-                    obj.set({
-                        selectable: true, evented: true,
-                        lockMovementX: false, lockMovementY: false, lockScalingX: false, lockScalingY: false,
-                        hasControls: true, hasBorders: true
-                    });
+                    if (useRelativePos) {
+                        // 저장된 보드 중심점 계산
+                        const savedW = savedBoard.width * savedBoard.scaleX;
+                        const savedCenterX = savedBoard.left + (savedW / 2);
+                        const savedCenterY = savedBoard.top + (savedBoard.height * savedBoard.scaleY / 2);
+                        
+                        // 현재 보드 중심점 계산
+                        const curW = currentBoard.width * currentBoard.scaleX;
+                        const curCenterX = currentBoard.left + (curW / 2);
+                        const curCenterY = currentBoard.top + (currentBoard.height * currentBoard.scaleY / 2);
+
+                        // 중심점 기준 거리 차이 * 스케일
+                        const distFromCenterTheX = (obj.left - savedCenterX) * scale;
+                        const distFromCenterTheY = (obj.top - savedCenterY) * scale;
+
+                        obj.set({
+                            left: curCenterX + distFromCenterTheX,
+                            top: curCenterY + distFromCenterTheY,
+                            scaleX: obj.scaleX * scale,
+                            scaleY: obj.scaleY * scale,
+                            selectable: true,
+                            evented: true,
+                            hasControls: true,
+                            hasBorders: true
+                        });
+                    } else {
+                        // 구버전 데이터 (단순 중앙 이동)
+                        obj.set({
+                            left: obj.left + moveX,
+                            top: obj.top + moveY,
+                            scaleX: obj.scaleX * scale,
+                            scaleY: obj.scaleY * scale,
+                            selectable: true,
+                            evented: true,
+                            hasControls: true,
+                            hasBorders: true
+                        });
+                    }
+                    
+                    obj.setCoords();
+                    canvas.add(obj);
                 });
-                const group = new fabric.Group(objs, { originX: 'center', originY: 'center' });
-                const finalScale = getSmartScale(group.width, group.height);
-                const center = getCenterPos();
-                group.set({ left: center.x, top: center.y, scaleX: finalScale, scaleY: finalScale });
-                canvas.add(group);
-                if (group.type === 'group') group.toActiveSelection();
-                canvas.discardActiveObject(); 
+
+                // 6. 편의를 위해 불러온 객체들을 '다중 선택' 상태로 만듦 (그룹핑 아님)
+                if (objs.length > 0) {
+                    const sel = new fabric.ActiveSelection(objs, { canvas: canvas });
+                    canvas.setActiveObject(sel);
+                }
+                
                 canvas.requestRenderAll();
-                if (mode === 'replace') setTimeout(() => resetViewToCenter(), 100);
                 if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+                
+                if (mode === 'replace') setTimeout(() => resetViewToCenter(), 100);
             });
         }
     } catch (e) {
@@ -595,14 +675,28 @@ async function registerUserTemplate() {
         const originalVpt = canvas.viewportTransform;
         canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
 
+        // [수정] 썸네일 고화질 추출 (명함 등 작은 사이즈 대응)
         if (board) {
+            const currentW = board.getScaledWidth();
+            // 목표: 최소 1000px 너비 확보 (작은 명함도 선명하게)
+            const minTargetW = 1000; 
+            let multiplier = 1;
+            
+            if (currentW < minTargetW) {
+                multiplier = minTargetW / currentW; 
+            }
+
             dataUrl = canvas.toDataURL({
-                format: 'jpeg', quality: 0.8,
-                left: board.left, top: board.top,
-                width: board.getScaledWidth(), height: board.getScaledHeight()
+                format: 'jpeg', 
+                quality: 0.9,
+                left: board.left, 
+                top: board.top,
+                width: currentW, 
+                height: board.getScaledHeight(),
+                multiplier: multiplier // ★ 핵심: 강제 확대
             });
         } else {
-            dataUrl = canvas.toDataURL({ format: 'jpeg', quality: 0.8 });
+            dataUrl = canvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 2 });
         }
         canvas.setViewportTransform(originalVpt); // 복구
 

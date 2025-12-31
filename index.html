@@ -1332,7 +1332,6 @@ function goBoard(category) {
 <script type="module" src="./login.js"></script>
 <script type="module" src="./my-design.js"></script>
 <script type="module" src="./main.js"></script>
-<script type="module" src="./main.js"></script>
 
 <script src="./text-wizard.js"></script> 
 
@@ -2399,104 +2398,7 @@ async function renderQuickMenu() {
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    window.applyTemplateToCanvas = async function(inputData) {
-        if (!canvas) return;
-        document.getElementById("loading").style.display = "flex";
-        
-        try {
-            let jsonData = inputData;
-            // 1. 데이터 파싱 (JSON 또는 URL)
-            if (typeof inputData === 'string') {
-                if (inputData.startsWith('http')) {
-                    const res = await fetch(inputData);
-                    jsonData = await res.json();
-                } else if (inputData.trim().startsWith('{')) {
-                    jsonData = JSON.parse(inputData);
-                }
-            }
-
-            // 2. 현재 작업 중인 대지(Board) 정보 가져오기
-            let board = canvas.getObjects().find(o => o.isBoard);
-            
-            // 대지가 없으면 캔버스 전체 크기를 대지로 간주
-            let boardSize = board 
-                ? { w: board.width * board.scaleX, h: board.height * board.scaleY } 
-                : { w: canvas.width, h: canvas.height };
-            
-            // 대지의 중심 좌표
-            let center = board 
-                ? { x: board.left + boardSize.w/2, y: board.top + boardSize.h/2 } 
-                : { x: canvas.width/2, y: canvas.height/2 };
-
-            // 3. 객체 로드 및 배치 함수
-            const onLoad = (objects, options) => {
-                if(!objects || objects.length === 0) return finishLoading();
-
-                // 객체들 설정 초기화 (잠금 해제 등)
-                objects.forEach(o => { 
-                    o.set({ 
-                        selectable: true, 
-                        evented: true, 
-                        lockMovementX: false, 
-                        lockMovementY: false 
-                    });
-                    // 텍스트 베이스라인 오류 방지
-                    if(o.type === 'i-text' || o.type === 'text') delete o.textBaseline; 
-                });
-
-                // 그룹으로 묶기
-                let group;
-                if(options) group = fabric.util.groupSVGElements(objects, options);
-                else group = new fabric.Group(objects);
-
-                // 그룹 중심점 설정
-                group.set({ originX: 'center', originY: 'center' });
-
-                // ▼▼▼ [핵심 수정] 화면 꽉 채우기 (Object-fit: Cover 로직) ▼▼▼
-                // 가로 비율과 세로 비율 중 '더 큰 쪽'을 선택하여 확대합니다.
-                // 이렇게 하면 여백 없이 화면을 꽉 채우게 됩니다.
-                const scaleX = boardSize.w / group.width;
-                const scaleY = boardSize.h / group.height;
-                const scale = Math.max(scaleX, scaleY); // 둘 중 큰 비율 선택 (꽉 채우기)
-
-                // 위치 잡기 (대지 정중앙)
-                group.set({ 
-                    scaleX: scale, 
-                    scaleY: scale, 
-                    left: center.x, 
-                    top: center.y 
-                });
-
-                // 캔버스에 추가
-                canvas.add(group);
-                
-                // 그룹 해제하여 개별 편집 가능하게 만들기 (선택 사항)
-                // 바로 편집하려면 아래 주석을 푸세요. 지금은 그룹 상태로 둡니다.
-                // group.toActiveSelection(); 
-                
-                canvas.setActiveObject(group); // 선택 활성화
-                canvas.requestRenderAll();
-                finishLoading();
-            };
-
-            // 4. SVG 또는 JSON 형식에 따라 로드 분기
-            if (typeof jsonData === 'string' && (jsonData.includes('<svg') || jsonData.includes('data:image/svg'))) {
-                fabric.loadSVGFromString(jsonData, onLoad);
-            } else if (typeof jsonData === 'object' && jsonData.objects) {
-                // 저장된 캔버스 데이터(JSON)인 경우, 대지(Board) 객체는 제외하고 내용물만 가져옴
-                const objs = jsonData.objects.filter(o => !o.isBoard);
-                fabric.util.enlivenObjects(objs, (enlivened) => onLoad(enlivened, null));
-            } else {
-                // 이미지 URL인 경우
-                fabric.Image.fromURL(inputData, (img) => {
-                    if(img) onLoad([img], null); else finishLoading();
-                });
-            }
-        } catch(e) { 
-            console.error("템플릿 적용 실패:", e); 
-            finishLoading(); 
-        }
-    };
+    
 
     function finishLoading() {
         document.getElementById("loading").style.display = "none";

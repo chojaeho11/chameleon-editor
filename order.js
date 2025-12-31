@@ -454,8 +454,11 @@ async function addCanvasToCart() {
     }
     
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow']);
-    const finalW = board ? board.width : (product.w || canvas.width); 
-    const finalH = board ? board.height : (product.h || canvas.height);
+   // [수정] 대지 정보 정확히 추출
+    const finalW = board ? board.width * board.scaleX : (product.w || canvas.width); 
+    const finalH = board ? board.height * board.scaleY : (product.h || canvas.height);
+    const boardX = board ? board.left : 0;
+    const boardY = board ? board.top : 0;
 
     let originalFileUrl = null; 
     let fileName = "나만의 디자인";
@@ -499,7 +502,9 @@ async function addCanvasToCart() {
         fileName: fileName, 
         width: finalW, 
         height: finalH, 
-        isOpen: true, 
+        boardX: boardX, // ★ 추가됨
+        boardY: boardY, // ★ 추가됨
+        isOpen: true,
         qty: 1, 
         selectedAddons: {}, 
         addonQuantities: {} 
@@ -857,8 +862,9 @@ async function processOrderSubmission() {
             if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
                 loading.querySelector('p').innerText = `디자인 변환 중 (${i+1}/${cartData.length})...`;
                 try { 
-                    let fileBlob = await generateProductVectorPDF(item.json, item.width, item.height); 
-                    if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.height); 
+                    // [수정] 대지 좌표(x, y)까지 전달하여 정확한 위치 크롭
+let fileBlob = await generateProductVectorPDF(item.json, item.width, item.height, item.boardX || 0, item.boardY || 0); 
+if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.height, item.boardX || 0, item.boardY || 0);
                     
                     if(fileBlob) {
                         const url = await uploadFileToSupabase(fileBlob, `orders/${newOrderId}/design_${idx}.pdf`); 
