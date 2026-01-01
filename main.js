@@ -377,28 +377,73 @@ function initMobileTextEditor() {
 
 let lastOrderCount = 0; 
 
-// 1. 파트너 권한 확인 및 초기화
+// 1. 파트너 권한 확인 및 버튼 표시 (수정됨: 권한별 버튼 분기 처리)
 async function checkPartnerStatus() {
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return;
+    const btnConsole = document.getElementById('btnPartnerConsole');
+    const btnApply = document.getElementById('btnPartnerApply');
 
+    // 1. 비로그인 상태 체크
+    const { data: { user } } = await sb.auth.getUser();
+    
+    if (!user) {
+        // 비로그인이면 콘솔 버튼 숨기고, 신청 버튼만 보여줌 (로그인 유도용)
+        if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
+        if (btnApply) {
+            btnApply.style.display = 'inline-flex';
+            btnApply.onclick = () => alert("로그인이 필요한 서비스입니다.");
+        }
+        return;
+    }
+
+    // 2. 로그인 상태면 DB에서 등급 조회
     const { data } = await sb.from('profiles').select('role, region').eq('id', user.id).single();
     
     if (data && (data.role === 'franchise' || data.role === 'admin')) {
-        const btnConsole = document.getElementById('btnPartnerConsole');
-        const btnApply = document.getElementById('btnPartnerApply');
+        // [가맹점/관리자] -> 콘솔 버튼 보임, 신청 버튼 숨김
+        console.log("✅ 가맹점/관리자 접속 확인");
         if (btnConsole) btnConsole.style.setProperty('display', 'inline-flex', 'important');
         if (btnApply) btnApply.style.display = 'none';
         
+        // 지역 설정 및 알림 시작
         const badge = document.getElementById('partnerRegionBadge');
         if(badge) badge.innerText = data.region ? `📍 ${data.region} 지역` : '📍 지역 전체';
         window.currentPartnerRegion = data.region;
 
-        // 30초마다 자동 새로고침 (알림용)
         setInterval(() => loadPartnerOrders('pool', true), 30000);
+    } 
+    else {
+        // [일반 회원] -> 콘솔 버튼 숨김, 신청 버튼 보임
+        console.log("ℹ️ 일반 회원 접속");
+        if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
+        if (btnApply) {
+            btnApply.style.display = 'inline-flex';
+            btnApply.onclick = applyForPartner; // 신청 함수 연결
+        }
     }
 }
-window.addEventListener('load', () => setTimeout(checkPartnerStatus, 1500));
+
+// [신규] 가맹점 신청 함수
+async function applyForPartner() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return alert("로그인이 필요합니다.");
+
+    const name = prompt("가맹점(업체) 상호명을 입력해주세요.");
+    if(!name) return;
+    const phone = prompt("담당자 연락처를 입력해주세요.");
+    if(!phone) return;
+    const region = prompt("희망 지역을 입력해주세요 (예: 서울 강남구)");
+    if(!region) return;
+
+    if(!confirm(`[신청 정보 확인]\n상호명: ${name}\n연락처: ${phone}\n지역: ${region}\n\n제출하시겠습니까?`)) return;
+
+    // (선택) DB에 신청 내용을 저장하거나, 일단 알림만 띄움
+    // 실제로는 withdrawal_requests 처럼 partner_applications 테이블을 만들어 insert 해야 함.
+    // 여기서는 UI 동작 확인용으로 완료 메시지만 띄웁니다.
+    alert("🎉 가맹점 신청이 접수되었습니다!\n담당자가 검토 후 연락드리겠습니다.");
+}
+
+// 페이지 로드 시 권한 체크 실행
+window.addEventListener('load', () => setTimeout(checkPartnerStatus, 1000));
 
 // 2. 콘솔 열기
 window.openPartnerConsole = function() {

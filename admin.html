@@ -145,7 +145,9 @@
             <li class="nav-item" onclick="showSection('sec-withdrawals', this)">
                 <i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리
             </li>
-            
+            <li class="nav-item" onclick="showSection('sec-partner-apps', this)">
+    <i class="fa-solid fa-store"></i> 가맹점 신청 관리 <span id="partnerPendingCount" class="badge" style="background:#ef4444; color:white; font-size:10px; display:none;">N</span>
+</li>
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this)"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
             
@@ -207,6 +209,33 @@
                     </table>
                 </div>
             </div>
+
+            <div id="sec-partner-apps" class="section">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0;">🏪 가맹점 신청 내역 (대기중)</h3>
+            <button class="btn btn-outline btn-sm" onclick="loadPartnerApplications()">
+                <i class="fa-solid fa-rotate"></i> 새로고침
+            </button>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th width="150">신청일</th>
+                    <th>신청자 (이메일)</th>
+                    <th>업체명 (상호)</th>
+                    <th>연락처</th>
+                    <th>희망 지역</th>
+                    <th width="100">승인</th>
+                </tr>
+            </thead>
+            <tbody id="partnerAppListBody">
+                <tr><td colspan="6" style="text-align:center; padding:30px;">로딩 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
             <div id="sec-bankda" class="section">
                 <div class="card" style="margin-bottom:20px; background:#f0fdf4; border:1px solid #bbf7d0;">
@@ -1372,6 +1401,144 @@ async function saveTopCategoryOrder() {
                 btn.disabled = false;
             }
         };
+
+        // ============================================================
+// [신규] 가맹점 신청 관리 기능 (admin.html 스크립트 맨 끝에 추가)
+// ============================================================
+
+// 1. 신청 내역 불러오기
+window.loadPartnerApplications = async () => {
+    const tbody = document.getElementById('partnerAppListBody');
+    if (!tbody) return; // 해당 섹션이 없으면 패스
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;"><div class="spinner"></div></td></tr>';
+
+    try {
+        // 대기중(pending)인 신청서만 가져오기
+        const { data: apps, error } = await sb
+            .from('partner_applications')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!apps || apps.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">대기 중인 가맹점 신청이 없습니다.</td></tr>';
+            updateBadge(0);
+            return;
+        }
+
+        updateBadge(apps.length); // 뱃지 업데이트
+
+        // 신청자들의 이메일을 알기 위해 profiles 조회
+        const userIds = apps.map(a => a.user_id);
+        const { data: profiles } = await sb.from('profiles').select('id, email').in('id', userIds);
+        const emailMap = {};
+        if (profiles) profiles.forEach(p => emailMap[p.id] = p.email);
+
+        tbody.innerHTML = '';
+        
+        apps.forEach(app => {
+            const email = emailMap[app.user_id] || '이메일 없음';
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td>${new Date(app.created_at).toLocaleDateString()} <span style="font-size:11px; color:#888;">${new Date(app.created_at).toLocaleTimeString()}</span></td>
+                    <td>
+                        <div style="font-weight:bold; color:#334155;">${email}</div>
+                        <div style="font-size:11px; color:#94a3b8;">UID: ${app.user_id.substring(0,8)}...</div>
+                    </td>
+                    <td style="font-weight:bold;">${app.company_name}</td>
+                    <td>${app.contact_phone}</td>
+                    <td><span class="badge" style="background:#e0e7ff; color:#4338ca;">${app.region}</span></td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="approvePartnerApp('${app.id}', '${app.user_id}', '${app.region}', '${app.company_name}')">
+                            ✅ 승인
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">로드 오류: ${e.message}</td></tr>`;
+    }
+};
+
+// 2. [핵심] 가맹점 승인 처리 (원스톱)
+window.approvePartnerApp = async (appId, userId, region, companyName) => {
+    if (!confirm(`[승인 확인]\n\n업체명: ${companyName}\n지역: ${region}\n\n이 회원을 '가맹점(Franchise)' 등급으로 승격시키겠습니까?`)) return;
+
+    try {
+        // [1단계] 프로필 테이블 업데이트 (등급 변경 + 지역 설정)
+        const { error: profileErr } = await sb
+            .from('profiles')
+            .update({ 
+                role: 'franchise',   // 등급을 가맹점으로!
+                region: region       // 신청한 지역 자동 입력
+            })
+            .eq('id', userId);
+
+        if (profileErr) throw profileErr;
+
+        // [2단계] 신청서 상태를 'approved'로 변경 (목록에서 사라지게)
+        const { error: appErr } = await sb
+            .from('partner_applications')
+            .update({ status: 'approved' })
+            .eq('id', appId);
+
+        if (appErr) throw appErr;
+
+        alert(`🎉 승인 완료!\n이제 '${companyName}'님은 파트너스 기능을 사용할 수 있습니다.`);
+        loadPartnerApplications(); // 목록 새로고침
+
+    } catch (e) {
+        alert("승인 처리 중 오류 발생: " + e.message);
+    }
+};
+
+// 뱃지 숫자 표시 헬퍼
+function updateBadge(count) {
+    const badge = document.getElementById('partnerPendingCount');
+    if(badge) {
+        if(count > 0) {
+            badge.style.display = 'inline-block';
+            badge.innerText = count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// (선택) 페이지 로드 시 기존 함수들과 함께 실행되도록 수정이 필요할 수 있음
+// 만약 기존 showSection 함수가 있다면 거기에 'sec-partner-apps' 케이스를 추가해야 함.
+// 하지만 일단 수동으로 추가해드립니다.
+
+// 기존 showSection 함수 덮어쓰기 (admin.html 안에 있는 함수)
+const originalShowSection = window.showSection;
+window.showSection = (secId, navEl) => {
+    // 기존 기능 실행
+    document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+    document.getElementById(secId).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    if(navEl) navEl.classList.add('active');
+
+    // 기존 섹션별 로드
+    if(secId === 'sec-orders') loadOrders();
+    if(secId === 'sec-bankda') loadBankdaList();
+    if(secId === 'sec-stats') loadStatsData();
+    if(secId === 'sec-members') loadMembers();
+    if(secId === 'sec-templates') { loadTemplates(); loadProductKeys(); }
+    if(secId === 'sec-fonts') loadFonts(); 
+    if(secId === 'sec-products') { loadTopCategoriesList(); loadCategories(); loadSystemDB(); }
+    if(secId === 'sec-staff') loadStaffList();
+    if(secId === 'sec-withdrawals') loadWithdrawals();
+
+    // ★ [추가됨] 가맹점 신청 탭 클릭 시 로드
+    if(secId === 'sec-partner-apps') loadPartnerApplications();
+};
 
         // ==========================================
         // [최종 강화판] 차단 감지 및 자동 재시도 기능 포함된 일괄 번역
