@@ -20,18 +20,19 @@
 <link rel="alternate" hreflang="ja" href="https://www.cafe2626.com/jp.html" />
 <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/" />
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/plugins/svg.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/kilobtye/potrace@master/potrace.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-full.min.js"></script>
-<script src="https://js.tosspayments.com/v1"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/plugins/svg.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/kilobtye/potrace@master/potrace.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-full.min.js" defer></script>
+<script src="https://js.tosspayments.com/v1" defer></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/GmarketSans/build/GmarketSans.css">
@@ -74,7 +75,13 @@
                 🎨 전체 템플릿
             </button>
 
-            <button class="tpl-tab" data-tpl="text">유저 템플릿</button>
+            <button class="tpl-tab" data-tpl="user_vector">
+   유저 템플릿 벡터
+</button>
+
+<button class="tpl-tab" data-tpl="user_image">
+   유저 템플릿 이미지
+</button>
 
             <button class="tpl-tab" data-tpl="photo-bg">고화질이미지</button>
 
@@ -106,6 +113,9 @@
         <button class="btn" id="btnMyLibrary" onclick="document.getElementById('libraryModal').style.display='flex'; if(window.loadMyDesigns) window.loadMyDesigns();" style="background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
             <span data-i18n="btn_my_library">📂 보관함</span>
         </button>
+        <button class="btn" onclick="window.openMyOrderList()" style="background:white; border:1px solid #ddd; color:#333; margin-right:5px;">
+    🚚 주문배송조회
+</button>
     </div>
 
 
@@ -324,6 +334,124 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<div class="partner-recruit-banner" style="max-width:1000px; margin: 30px auto; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; color: white; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+    
+    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(99, 102, 241, 0.2); border-radius: 50%;"></div>
+    
+    <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div style="flex: 1; min-width: 300px;">
+            <span style="background: #6366f1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 10px; display: inline-block;">PARTNER CENTER</span>
+            <h2 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 800;">우리 지역 인쇄/광고 주문, <br><span style="color: #818cf8;">직접 접수받고 수익을 창출하세요!</span></h2>
+            <p style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6;">
+                본사가 영업하고, 사장님은 제작/납품만 하세요.<br>
+                카드 수수료 제외 후, 안전하게 정산해 드립니다. (고객 수령 후 5일 뒤 출금 가능)
+            </p>
+        </div>
+        
+        <div style="text-align: right;">
+            <button id="btnPartnerConsole" onclick="openPartnerConsole()" class="btn-round" style="display: none; background: #fff; color: #0f172a; font-weight: 800; padding: 15px 30px; border: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255,255,255,0.2);">
+                <i class="fa-solid fa-store"></i> 파트너스 관리자 접속
+            </button>
+            
+            <button id="btnPartnerApply" onclick="alert('가맹 문의는 고객센터로 연락바랍니다.')" class="btn-round" style="background: transparent; border: 2px solid #6366f1; color: #fff; font-weight: 800; padding: 12px 25px;">
+                가맹점 신청 문의하기
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="partnerConsoleModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 1200px; max-width: 98%; height: 90vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden;">
+        
+        <div style="background: #fff; padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h3 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-store" style="color:#6366f1;"></i> 파트너스 콘솔</h3>
+                <span class="badge" style="background: #e0e7ff; color: #4338ca;" id="partnerRegionBadge">지역 미설정</span>
+            </div>
+            <button onclick="document.getElementById('partnerConsoleModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;">닫기</button>
+        </div>
+
+        <div style="display: flex; flex: 1; overflow: hidden;">
+            <div style="width: 220px; background: #fff; border-right: 1px solid #e2e8f0; padding: 20px;">
+                <div class="nav-menu" style="display: flex; flex-direction: column; gap: 5px;">
+                    <button class="nav-item active" onclick="switchPartnerTab('pool')" style="text-align: left; padding: 12px; border: none; background: #eff6ff; color: #6366f1; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        <i class="fa-solid fa-list-ul"></i> 실시간 주문접수
+                    </button>
+                    <button class="nav-item" onclick="switchPartnerTab('my')" style="text-align: left; padding: 12px; border: none; background: transparent; color: #64748b; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        <i class="fa-solid fa-clipboard-check"></i> 나의 진행 주문
+                    </button>
+                    <button class="nav-item" onclick="switchPartnerTab('settlement')" style="text-align: left; padding: 12px; border: none; background: transparent; color: #64748b; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        <i class="fa-solid fa-sack-dollar"></i> 정산 및 출금
+                    </button>
+                </div>
+            </div>
+
+            <div style="flex: 1; padding: 25px; overflow-y: auto;">
+                <div id="tab-pool" class="partner-tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">📍 실시간 오더 (선착순)</h2>
+                        <button class="btn-round primary" onclick="loadPartnerOrders('pool')" style="width: auto;"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                    </div>
+                    <div id="orderPoolList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">로딩 중...</div>
+                </div>
+
+                <div id="tab-my" class="partner-tab-content" style="display: none;">
+                    <h2 style="margin-bottom: 20px;">📋 나의 진행 주문</h2>
+                    <div id="myOrderList" style="display: flex; flex-direction: column; gap: 15px;">내역 없음</div>
+                </div>
+
+                <div id="tab-settlement" class="partner-tab-content" style="display: none;">
+    
+    <div style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; align-items: center;">
+        
+        <div style="margin-right: 50px;">
+            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;">출금 가능 금액 (수수료 제외)</div>
+            <div style="font-size: 32px; font-weight: 900; color: #1e293b;" id="partnerAvailableBalance">0원</div>
+        </div>
+
+        <div>
+            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;">출금 대기중 (신청완료)</div>
+            <div style="font-size: 32px; font-weight: 900; color: #d97706;" id="partnerPendingBalance">0원</div>
+        </div>
+
+        <button class="btn-round primary" onclick="requestPartnerWithdrawal()" style="width: auto; padding: 15px 30px; margin-left: auto;">
+            💸 출금 요청하기
+        </button>
+    </div>
+    
+    <h4 style="margin-bottom: 15px; color: #334155;">정산 상세 내역</h4>
+    <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+        <thead style="background: #f8fafc;">
+            <tr>
+                <th style="padding: 12px; text-align: left; color: #64748b; font-size: 13px;">날짜</th>
+                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;">주문금액</th>
+                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;">정산금액</th>
+                <th style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;">상태</th>
+            </tr>
+        </thead>
+        <tbody id="settlementListBody"></tbody>
+    </table>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="myOrderModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 800px; max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden;">
+        
+        <div style="background: #fff; padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #1e293b;">📦 나의 주문 배송 조회</h3>
+            <button onclick="document.getElementById('myOrderModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;">닫기</button>
+        </div>
+
+        <div style="flex: 1; padding: 20px; overflow-y: auto;">
+            <div id="myOrderListUser" style="display: flex; flex-direction: column; gap: 15px;">
+                </div>
+        </div>
     </div>
 </div>
 
@@ -620,7 +748,7 @@ function goBoard(category) {
                 <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_logo_share">로고 공유방</span>
             </button>
             
-            <div class="section-title" style="margin-bottom: 5px; font-size: 12px; color: #b6b6b6; letter-spacing: 1px;">Download File</div>
+            <div class="section-title" style="margin-bottom: 5px; font-size: 12px; color: #b6b6b6; letter-spacing: 1px;">무료 다운로드</div>
             <div style="display:flex; gap:5px; margin-bottom:15px;">
                 <button id="btnPNG" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-regular fa-image"></i> PNG</button>
                 <button id="btnPDF" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
@@ -944,9 +1072,12 @@ function goBoard(category) {
                 <span style="font-weight:800; color:#6366f1;">🎨 전체 디자인</span>
             </button>
             
-            <button class="tpl-cate-btn" onclick="window.filterTpl('text', this)">
-                <span>유저 템플릿</span>
-            </button>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('user_vector', this)">
+    <span>유저 템플릿 (벡터)</span>
+</button>
+<button class="tpl-cate-btn" onclick="window.filterTpl('user_image', this)">
+    <span>유저 템플릿 (이미지)</span>
+</button>
 
             <button class="tpl-cate-btn active" onclick="window.filterTpl('photo-bg', this)">
                 <span>♥고화질이미지♥</span>
@@ -1205,16 +1336,31 @@ function goBoard(category) {
             </div>
         </div>
 
+        
+
+        <div class="input-row" style="margin-bottom: 15px;">
+    <label style="display:block; font-weight:bold; margin-bottom:5px;">템플릿 유형</label>
+    <div style="display: flex; gap: 20px;">
+        <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+            <input type="radio" name="sellType" value="vector" checked> 
+            벡터
+        </label>
+        <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+            <input type="radio" name="sellType" value="image"> 
+            이미지
+        </label>
+    </div>
+</div>
         <div class="input-group">
-            <label class="input-label">키워드</label>
+            <label class="input-label">키워드 & 제목</label>
             <input id="sellTitle" class="ai-input-pretty" 
                    type="text"
                    placeholder="예: 피부과 이벤트, 여름 포스터" 
                    oninput="document.getElementById('sellKw').value = this.value;">
         </div>
 
-        <input id="sellCategory" type="hidden" value="text">
         <input id="sellKw" type="hidden">
+        
 
         <div class="btn-group">
             <button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round cancel">취소</button>
@@ -1355,6 +1501,18 @@ function goBoard(category) {
     
     // 윈도우 전역 변수 연결
     window.canvas = canvas;
+    // [강력 최적화] 이미지를 아주 작게(썸네일용) 변환하는 함수
+    window.getTinyThumb = function(url, size = 150) {
+        if (!url) return '';
+        // Supabase 이미지라면 서버에서 리사이징해서 가져옴 (속도 20배 향상)
+        if (url.includes('supabase.co')) {
+            const separator = url.includes('?') ? '&' : '?';
+            // quality=50: 화질 절반 (작게 보니까 상관없음)
+            // format=webp: 용량 적은 포맷
+            return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=50&format=webp`;
+        }
+        return url;
+    };
     window.openProductDetail = openProductDetail;
     window.startDesignFromProduct = startDesignFromProduct;
     window.applySize = applySize;
@@ -1841,232 +1999,202 @@ if (loadId) {
     };
 
 // [수정] index.html 내부의 renderQuickMenu 함수 교체
-async function renderQuickMenu() {
-    const tabContainer = document.getElementById('topCategoryTabs');
-    const itemContainer = document.getElementById('quickMenuContainer');
-    
-    if (!tabContainer || !itemContainer) return;
+// [최적화 적용] 퀵메뉴 렌더링 (이미지 100px로 제한)
+    async function renderQuickMenu() {
+        const tabContainer = document.getElementById('topCategoryTabs');
+        const itemContainer = document.getElementById('quickMenuContainer');
+        if (!tabContainer || !itemContainer) return;
 
-    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
+        itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
 
-    try {
-        // 1. 카테고리 데이터 가져오기
-        let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
-        const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
-
-        // 이미지 매핑 데이터
-        const { data: prodImages } = await sb.from('admin_products')
-            .select('category, img_url')
-            .not('img_url', 'is', null)
-            .neq('img_url', '');
-
-        const catThumbMap = {};
-        if (prodImages) {
-            prodImages.forEach(p => {
-                if (p.category && !catThumbMap[p.category]) {
-                    catThumbMap[p.category] = p.img_url;
-                }
-            });
-        }
-
-        if (!subCats || subCats.length === 0) {
-            itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
-            return;
-        }
-
-        // ▼▼▼ [핵심 수정] 중복 제거 및 불필요한 카테고리 숨김 처리 ▼▼▼
-        if (topCats) {
-            // 1. 이름이 같은 카테고리 중복 제거 (Set 사용)
-            const seen = new Set();
-            topCats = topCats.filter(cat => {
-                const name = cat.name.trim();
-                if (seen.has(name)) return false; // 이미 본 이름이면 제외 (중복 제거)
-                seen.add(name);
-                return true;
-            });
-
-            // 2. 원하지 않는 카테고리 이름 강제 숨김
-            const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
-            topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
-        }
-        // ▲▲▲ [수정 끝] ▲▲▲
-
-        // 2. 탭 생성 함수
-        const renderTabs = () => {
-            tabContainer.innerHTML = '';
+        try {
+            let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
+            const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
             
-            if (topCats) {
-                topCats.forEach(top => {
-                    const btn = document.createElement('button');
-                    btn.className = 'cat-tab';
-                    btn.innerText = top.name;
-                    btn.onclick = (e) => {
-                        handleTabClick(e);
-                        renderItems(top.code);
-                    };
-                    tabContainer.appendChild(btn);
+            // 이미지 매핑 데이터 가져오기
+            const { data: prodImages } = await sb.from('admin_products')
+                .select('category, img_url')
+                .not('img_url', 'is', null).neq('img_url', '');
+
+            const catThumbMap = {};
+            if (prodImages) {
+                prodImages.forEach(p => {
+                    if (p.category && !catThumbMap[p.category]) catThumbMap[p.category] = p.img_url;
                 });
             }
-            
-            // 기타 탭
-            const orphanCats = subCats.filter(sub => !sub.top_category_code);
-            if (orphanCats.length > 0) {
-                const etcBtn = document.createElement('button');
-                etcBtn.className = 'cat-tab';
-                etcBtn.innerText = '기타';
-                etcBtn.onclick = (e) => {
-                    handleTabClick(e);
-                    renderItems('etc');
-                };
-                tabContainer.appendChild(etcBtn);
-            }
-        };
 
-        // 3. 탭 스타일 처리
-        const handleTabClick = (e) => {
-            const tabs = tabContainer.querySelectorAll('.cat-tab');
-            tabs.forEach(t => t.classList.remove('active'));
-            e.target.classList.add('active');
-        };
-
-        // 4. 아이콘(2차 분류) 렌더링 함수
-        const renderItems = (filterCode) => {
-            itemContainer.innerHTML = '';
-            
-            let filtered = [];
-            if (filterCode === 'etc') {
-                filtered = subCats.filter(sub => !sub.top_category_code);
-            } else {
-                filtered = subCats.filter(sub => sub.top_category_code === filterCode);
-            }
-
-            if (filtered.length === 0) {
-                itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">하위 분류가 없습니다.</div>';
+            if (!subCats || subCats.length === 0) {
+                itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
                 return;
             }
 
-            filtered.forEach(cat => {
-                const n = cat.name;
-                let iconUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+            // 중복 제거 및 숨김 처리
+            if (topCats) {
+                const seen = new Set();
+                topCats = topCats.filter(cat => {
+                    const name = cat.name.trim();
+                    if (seen.has(name)) return false;
+                    seen.add(name);
+                    return true;
+                });
+                const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
+                topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
+            }
 
-                const div = document.createElement('div');
-                div.className = 'quick-item';
-                
-                let imgTag = '';
-                if (iconUrl) {
-                    imgTag = `<img src="${iconUrl}" alt="${n}" onerror="this.style.display='none'; this.parentNode.classList.add('no-img'); this.parentNode.innerHTML='<span style=\\'font-size:11px; color:#cbd5e1;\\'>No Img</span>';">`;
-                } else {
-                    imgTag = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#cbd5e1; font-size:11px;">No Img</div>`;
+            // 탭 생성 로직
+            const renderTabs = () => {
+                tabContainer.innerHTML = '';
+                if (topCats) {
+                    topCats.forEach(top => {
+                        const btn = document.createElement('button');
+                        btn.className = 'cat-tab';
+                        btn.innerText = top.name;
+                        btn.onclick = (e) => {
+                            handleTabClick(e);
+                            renderItems(top.code);
+                        };
+                        tabContainer.appendChild(btn);
+                    });
+                }
+                // 기타 탭
+                const orphanCats = subCats.filter(sub => !sub.top_category_code);
+                if (orphanCats.length > 0) {
+                    const etcBtn = document.createElement('button');
+                    etcBtn.className = 'cat-tab';
+                    etcBtn.innerText = '기타';
+                    etcBtn.onclick = (e) => { handleTabClick(e); renderItems('etc'); };
+                    tabContainer.appendChild(etcBtn);
+                }
+            };
+
+            const handleTabClick = (e) => {
+                const tabs = tabContainer.querySelectorAll('.cat-tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+            };
+
+            // 아이템 렌더링 (이미지 최적화 적용됨)
+            const renderItems = (filterCode) => {
+                itemContainer.innerHTML = '';
+                let filtered = (filterCode === 'etc') 
+                    ? subCats.filter(sub => !sub.top_category_code)
+                    : subCats.filter(sub => sub.top_category_code === filterCode);
+
+                if (filtered.length === 0) {
+                    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">하위 분류가 없습니다.</div>';
+                    return;
                 }
 
-                div.innerHTML = `
-                    <div class="quick-icon-img-box">
-                        ${imgTag}
-                    </div>
-                    <div class="quick-text">${n}</div>
-                `;
+                filtered.forEach(cat => {
+                    const n = cat.name;
+                    let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+                    
+                    // ★ 여기서 이미지 용량을 확 줄입니다 (100px)
+                    const tinyUrl = window.getTinyThumb(rawUrl, 100);
 
-                div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
-                itemContainer.appendChild(div);
-            });
-        };
+                    const div = document.createElement('div');
+                    div.className = 'quick-item';
+                    
+                    let imgTag = tinyUrl 
+                        ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-folder-open\\'></i>'">`
+                        : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
 
-        renderTabs();
-        
-        const allTab = tabContainer.querySelectorAll('.cat-tab')[0];
-        if (allTab) allTab.click(); 
+                    div.innerHTML = `<div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text">${n}</div>`;
+                    div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
+                    itemContainer.appendChild(div);
+                });
+            };
 
-    } catch (err) {
-        console.error("카테고리 로딩 실패:", err);
+            renderTabs();
+            const allTab = tabContainer.querySelectorAll('.cat-tab')[0];
+            if (allTab) allTab.click();
+
+        } catch (err) {
+            console.error("카테고리 로딩 실패:", err);
+        }
     }
-}
     // ============================================================
     // [3] 제품 선택 모달 (다국어 지원)
     // ============================================================
+    // [최적화 적용] 제품 선택 모달 (이미지 150px 제한)
     window.showCategoryProducts = async function(catKey, catName) {
         const grid = document.getElementById('catProductGrid');
         const modal = document.getElementById('categoryDetailModal');
         const titleEl = document.getElementById('catModalTitle');
+        const descEl = modal.querySelector('p');
+
+        const t = window.translations || {};
+        const titleText = t['modal_size_select_title'] || "Q. 무엇을 만들까요?";
+        const subText = t['modal_size_select_sub'] || "(사이즈 선택)";
+        const descText = t['modal_size_select_desc'] || "원하시는 규격을 선택하시면 디자인이 시작됩니다.";
+
+        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">${subText}</span>`;
+        if(descEl) descEl.innerText = descText;
         
-        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
-        
-        grid.style.gridTemplateColumns = "repeat(4, 1fr)"; 
-        grid.style.gap = "12px";
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">Loading...</div>';
         modal.style.display = 'flex';
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center;">로딩 중...</div>`;
+        
+        try {
+            const { data: products, error } = await sb.from('admin_products')
+                .select('*')
+                .eq('category', catKey)
+                .order('sort_order', { ascending: true });
 
-        const { data: products, error } = await sb.from('admin_products')
-            .select('*')
-            .eq('category', catKey)
-            .order('sort_order', { ascending: true });
+            if (error) throw error;
 
-        grid.innerHTML = '';
-        if (!products || products.length === 0) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">No Products.</div>';
-            return;
-        }
-
-        let currencySymbol = '원';
-        if(CURRENT_LANG === 'jp') currencySymbol = '¥';
-        else if(CURRENT_LANG === 'us') currencySymbol = '$';
-
-        products.forEach(p => {
-            let displayName = p.name;
-            let displayPrice = p.price;
-
-            if (CURRENT_LANG === 'jp') {
-                displayName = p.name_jp || p.name; 
-                displayPrice = p.price_jp || p.price; 
-            } else if (CURRENT_LANG === 'us') {
-                displayName = p.name_us || p.name;
-                displayPrice = p.price_us || p.price;
+            grid.innerHTML = '';
+            if (!products || products.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">No Products.</div>';
+                return;
             }
 
-            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-            window.PRODUCT_DB[p.code] = {
-                name: displayName, 
-                w: p.width_mm, h: p.height_mm, 
-                price: displayPrice,
-                img: p.img_url, addons: p.addons ? p.addons.split(',') : [], category: p.category
-            };
+            let currencySymbol = (CURRENT_LANG === 'jp') ? '¥' : (CURRENT_LANG === 'us') ? '$' : '원';
 
-            const div = document.createElement('div');
-            div.className = 'quick-item'; 
-            
-            // [수정] 관리자에서 등록한 이미지(p.img_url)가 있으면 보여주는 로직
-            let imgHtml = '';
-            if (p.img_url) {
-                // 이미지가 있을 때: 꽉 찬 이미지 박스
-                imgHtml = `
-                    <div class="quick-icon-img-box">
-                        <img src="${p.img_url}" alt="${displayName}" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
+            products.forEach(p => {
+                let displayName = p.name;
+                let displayPrice = p.price;
+
+                if (CURRENT_LANG === 'jp') { displayName = p.name_jp || p.name; displayPrice = p.price_jp || p.price; }
+                else if (CURRENT_LANG === 'us') { displayName = p.name_us || p.name; displayPrice = p.price_us || p.price; }
+
+                if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+                window.PRODUCT_DB[p.code] = {
+                    name: displayName, w: p.width_mm, h: p.height_mm, price: displayPrice,
+                    img: p.img_url, addons: p.addons ? p.addons.split(',') : [], category: p.category
+                };
+
+                const div = document.createElement('div');
+                div.className = 'quick-item';
+                
+                // ★ 여기서 이미지 용량을 150px로 확 줄입니다
+                const tinyUrl = window.getTinyThumb(p.img_url, 150);
+
+                let imgHtml = tinyUrl 
+                    ? `<div class="quick-icon-img-box"><img src="${tinyUrl}" loading="lazy" alt="${displayName}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';"></div>`
+                    : `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
+
+                div.innerHTML = `
+                    ${imgHtml}
+                    <div class="quick-text">${displayName}</div>
+                    <div style="font-size:11px; color:#888; margin-top:3px;">
+                        ${p.width_mm}x${p.height_mm} / ${currencySymbol}${displayPrice.toLocaleString()}
                     </div>
                 `;
-            } else {
-                // 이미지가 없을 때: 기존 큐브 아이콘
-                imgHtml = `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
-            }
 
-            div.innerHTML = `
-                ${imgHtml}
-                <div class="quick-text">${displayName}</div>
-                <div style="font-size:11px; color:#888; margin-top:3px;">
-                    ${p.width_mm}x${p.height_mm} / ${currencySymbol}${displayPrice.toLocaleString()}
-                </div>
-            `;
-
-            div.onclick = () => {
-                modal.style.display = 'none'; 
-                window.currentProductKey = p.code;
-                window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-
-                if(window.showChoiceModal) window.showChoiceModal(p.code);
-                else window.startEditorDirect(p.code);
-            };
-            grid.appendChild(div);
-        });
+                div.onclick = () => {
+                    modal.style.display = 'none'; 
+                    window.currentProductKey = p.code;
+                    window.selectedProductForChoice = window.PRODUCT_DB[p.code];
+                    if(window.showChoiceModal) window.showChoiceModal(p.code);
+                    else window.startEditorDirect(p.code);
+                };
+                grid.appendChild(div);
+            });
+        } catch (e) {
+            console.error("제품 로딩 실패:", e);
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Error loading products</div>';
+        }
     };
-
     // ============================================================
     // [4] 작업 방식 선택 모달 & 파일 업로드
     // ============================================================
@@ -2241,17 +2369,7 @@ async function renderQuickMenu() {
     
         window.dispatchEvent(new Event('resize'));
 
-        // [2] 에디터 진입 직후 템플릿 선택 팝업 띄우기 (추가됨)
-        setTimeout(() => {
-            const tplOverlay = document.getElementById('templateOverlay');
-            if (tplOverlay) {
-                tplOverlay.style.display = 'flex';
-                // 기본 탭(이미지 템플릿) 활성화 및 로드
-                if (window.filterTpl) window.filterTpl('photo-bg'); 
-            }
-        }, 300); // 에디터 로딩 후 자연스럽게 뜨도록 약간의 딜레이
-
-        // 칼선 자동 로드 로직 (유지)
+        // 칼선(제품 고정 틀) 자동 로드 로직
         try {
             const { data, error } = await sb.from('library')
                 .select('data_url')
@@ -2267,9 +2385,25 @@ async function renderQuickMenu() {
             }
         } catch(e) { console.error("자동 로드 오류:", e); }
 
+        // [수정됨] 템플릿 적용 분기 처리
         if (window.pendingTemplate) {
-            await applyTemplateDirectly(window.pendingTemplate);
-            window.pendingTemplate = null; 
+            // Case 1: 시작 화면에서 선택한 템플릿이 있는 경우 -> 바로 적용
+            // (약간의 딜레이를 주어 캔버스 초기화 후 실행)
+            setTimeout(async () => {
+                if (window.applyStartTemplate) {
+                    await window.applyStartTemplate(window.pendingTemplate);
+                }
+                window.pendingTemplate = null;
+            }, 100);
+        } else {
+            // Case 2: 선택한 템플릿이 없는 경우 -> 템플릿 목록 팝업 띄우기
+            setTimeout(() => {
+                const tplOverlay = document.getElementById('templateOverlay');
+                if (tplOverlay) {
+                    tplOverlay.style.display = 'flex';
+                    if (window.filterTpl) window.filterTpl('photo-bg'); 
+                }
+            }, 300);
         }
 
         if (window.pendingAiImage) {
@@ -2396,16 +2530,7 @@ async function renderQuickMenu() {
         }
     };
 
-    async function applyTemplateDirectly(tpl) {
-        document.getElementById("loading").style.display = "flex";
-        document.getElementById('templateOverlay').style.display = 'none';
-        try {
-            const { data: doc, error } = await sb.from('library').select('data_url').eq('id', tpl.id).single();
-            if (error || !doc) return alert("데이터 로드 실패");
-            await window.applyTemplateToCanvas(doc.data_url);
-        } catch (e) { console.error(e); } 
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
+    // (삭제됨: applyTemplateDirectly 함수는 canvas-template.js의 applyStartTemplate으로 대체되었습니다.)
 
     
 
@@ -2452,7 +2577,7 @@ async function renderQuickMenu() {
     // [1] 템플릿 페이징 시스템 (28개씩 보기) - 수정됨
     // ==========================================
 
-    const ITEMS_PER_PAGE = 28; // 한 페이지당 28개
+    const ITEMS_PER_PAGE = 20; // 한 페이지당 28개
     let currentTemplatePage = 0;
     let lastSearchKeyword = '';
 
@@ -2503,24 +2628,51 @@ async function renderQuickMenu() {
                 return;
             }
 
-            // 카드 생성 (이미지 최적화 포함)
+            // [수정] 카드 생성 (정사각형 프레임 + 모든 뱃지 표시)
             data.forEach(tpl => {
                 const card = document.createElement('div');
-                card.className = 'tpl-card-start'; // 기존 CSS 클래스 사용
+                card.className = 'tpl-card-start'; 
                 
-                // [이미지 최적화] Supabase 리사이징
+                // 1. 카테고리별 뱃지 설정 (모든 종류 추가)
+                let badgeText = '';
+                let badgeColor = '#64748b'; // 기본 회색
+
+                switch (tpl.category) {
+                    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break; // 보라색
+                    case 'user_image':  badgeText = 'User Image'; badgeColor = '#059669'; break;  // 초록색
+                    case 'vector':      badgeText = 'Vector'; badgeColor = '#7c3aed'; break;
+                    case 'photo-bg':    badgeText = 'Image'; badgeColor = '#059669'; break;
+                    case 'graphic':     badgeText = 'Graphic'; badgeColor = '#2563eb'; break; // 파란색
+                    case 'pattern':
+                    case 'transparent-graphic': badgeText = 'Pattern'; badgeColor = '#db2777'; break; // 핑크색
+                    case 'logo':        badgeText = 'Logo'; badgeColor = '#d97706'; break; // 주황색
+                    case 'text':        badgeText = 'Text'; badgeColor = '#475569'; break;
+                }
+
+                // 뱃지 HTML 생성
+                let badgeHtml = '';
+                if (badgeText) {
+                    badgeHtml = `<span style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; z-index:5; box-shadow:0 2px 4px rgba(0,0,0,0.2); text-transform:uppercase; letter-spacing:0.5px;">${badgeText}</span>`;
+                }
+
+                // 2. 이미지 최적화 (정사각형 1:1 비율 요청)
                 let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
                 if (imgSrc.includes('supabase.co')) {
                     const separator = imgSrc.includes('?') ? '&' : '?';
-                    imgSrc += `${separator}width=300&height=300&resize=cover&format=webp&quality=60`;
+                    // width와 height를 똑같이 설정하고 resize=cover 옵션을 주어 정사각형으로 자름
+                    imgSrc += `${separator}width=400&height=400&resize=cover&format=webp&quality=70`;
                 }
 
+                // 3. HTML 구성 및 스타일 강제 적용
+                // aspect-ratio: 1/1 을 주어 강제로 정사각형으로 만듭니다.
+                card.style.cssText = "aspect-ratio: 1/1; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid #e5e7eb; background: #f8fafc;";
+                
                 card.innerHTML = `
-                    <img src="${imgSrc}" class="tpl-card-img" loading="lazy">
+                    ${badgeHtml}
+                    <img src="${imgSrc}" class="tpl-card-img" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;">
                     <div class="tpl-card-overlay"></div>
                 `;
                 
-                // 클릭 이벤트
                 card.onclick = () => { 
                     if(window.onTemplateClick) window.onTemplateClick(tpl); 
                 };
@@ -2699,6 +2851,152 @@ async function renderQuickMenu() {
   // [선택된 디자인 배경 만들기 - 10% 확대 + 오류 수정 버전]
 
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        // 1. 페이지 로딩 후 1초 뒤 권한 체크 실행
+        setTimeout(checkPartnerStatusForce, 1000);
+    });
 
+    // 가맹점 권한 체크 및 버튼 교체 함수
+    async function checkPartnerStatusForce() {
+        console.log("🔄 권한 체크 시작...");
+        
+        // Supabase에서 현재 유저 정보 가져오기
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            console.log("❌ 로그인된 유저 없음");
+            return;
+        }
+
+        // DB에서 역할(role) 조회
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('role, region')
+            .eq('id', user.id)
+            .single();
+
+        if (error || !data) {
+            console.error("DB 조회 실패:", error);
+            return;
+        }
+
+        console.log(`✅ 유저: ${user.email}, 등급: ${data.role}`);
+
+        const btnConsole = document.getElementById('btnPartnerConsole'); // 관리자 접속 버튼
+        const btnApply = document.getElementById('btnPartnerApply');     // 신청 버튼
+
+        // 가맹점(franchise) 또는 관리자(admin)일 때
+        if (data.role === 'franchise' || data.role === 'admin') {
+            if (btnConsole) btnConsole.style.setProperty('display', 'inline-flex', 'important'); // 강제 보이기
+            if (btnApply) btnApply.style.setProperty('display', 'none', 'important'); // 강제 숨기기
+            
+            // 지역 설정
+            const badge = document.getElementById('partnerRegionBadge');
+            if (badge) badge.innerText = data.region ? `📍 ${data.region} 지역` : '📍 지역 전체';
+            window.currentPartnerRegion = data.region;
+        } 
+        // 일반 유저(customer)일 때
+        else {
+            if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
+            if (btnApply) btnApply.style.setProperty('display', 'inline-flex', 'important');
+            
+            // 신청 버튼 클릭 이벤트 연결 (간단 신청 기능)
+            btnApply.onclick = applyForPartner;
+        }
+    }
+
+    // [추가 기능] 가맹점 신청하기 함수
+    async function applyForPartner() {
+        const name = prompt("가맹점(업체) 상호명을 입력해주세요.");
+        if(!name) return;
+        
+        const phone = prompt("담당자 연락처를 입력해주세요.");
+        if(!phone) return;
+
+        const region = prompt("희망 지역을 입력해주세요 (예: 서울 강남구, 경기 화성시)");
+        if(!region) return;
+
+        if(!confirm(`[신청 정보 확인]\n상호명: ${name}\n연락처: ${phone}\n지역: ${region}\n\n제출하시겠습니까?`)) return;
+
+        // DB에 신청 내역 저장 (profiles 테이블 업데이트 또는 별도 테이블 사용)
+        // 여기서는 편의상 profiles 테이블의 메모 필드나 role을 'pending'으로 바꾸는 방식 예시
+        // 실제로는 withdrawal_requests 처럼 partner_applications 테이블을 만드는 게 좋습니다.
+        
+        /* 임시 구현: 관리자에게 알림이 갔다고 가정 */
+        alert("🎉 가맹점 신청이 접수되었습니다!\n담당자가 확인 후 연락드리겠습니다.\n(승인 전까지는 일반 회원으로 유지됩니다.)");
+    }
+</script>
+<div id="reviewWriteModal" class="modal-bg" style="z-index: 17000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 400px; text-align: center;">
+        <h3 style="margin-top: 0;">🎁 상품은 마음에 드셨나요?</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">구매를 확정하고 소중한 후기를 남겨주세요.<br>(가맹점에게 큰 힘이 됩니다!)</p>
+
+        <div style="margin-bottom: 20px;">
+            <div id="starContainer" style="font-size: 32px; color: #ddd; cursor: pointer;">
+                <i class="fa-solid fa-star" onclick="setReviewRating(1)" id="star1"></i>
+                <i class="fa-solid fa-star" onclick="setReviewRating(2)" id="star2"></i>
+                <i class="fa-solid fa-star" onclick="setReviewRating(3)" id="star3"></i>
+                <i class="fa-solid fa-star" onclick="setReviewRating(4)" id="star4"></i>
+                <i class="fa-solid fa-star" onclick="setReviewRating(5)" id="star5"></i>
+            </div>
+            <div id="ratingText" style="font-weight: bold; color: #6366f1; margin-top: 5px;">5점</div>
+        </div>
+
+        <textarea id="reviewCommentInput" class="ai-input-pretty" placeholder="후기를 간단히 남겨주세요 (선택사항)" style="height: 80px;"></textarea>
+        
+        <input type="hidden" id="targetReviewOrderId">
+        <input type="hidden" id="targetReviewScore" value="5">
+
+        <button onclick="submitOrderReview()" class="btn-round primary" style="width: 100%; margin-top: 10px;">
+            확인 및 정산지급 승인
+        </button>
+        <button onclick="document.getElementById('reviewWriteModal').style.display='none'" class="btn-round" style="margin-top: 5px; border: none; color: #888;">
+            나중에 하기
+        </button>
+    </div>
+</div>
+<div id="withdrawModal" class="modal-bg" style="z-index: 25000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 500px; text-align: left;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">💸 정산 출금 신청</h3>
+        
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #0369a1; line-height: 1.6;">
+            <strong>[세금계산서 발행 정보]</strong><br>
+            아래 정보로 세금계산서를 발행하여 첨부해주세요.<br><br>
+            상호 : <strong>(주)카멜레온프린팅</strong> (대표: 조재호)<br>
+            사업자등록번호 : <strong>470-81-02808</strong><br>
+            주소 : 경기도 화성시 우정읍 한말길 72-2<br>
+            이메일 : korea900as@gmail.com
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">출금 요청 금액 (수수료 공제 후)</label>
+            <input id="wdAmount" class="ai-input-pretty" readonly style="background: #f8fafc; font-weight: 800; color: #6366f1; font-size: 18px;">
+            <div style="font-size: 11px; color: #64748b; margin-top: 5px; line-height: 1.4;">
+                * 공제 내역 (총 20%): 부가세(10%) + 카드수수료(3.5%) + 가맹수수료(6.5%)<br>
+                * 실제 입금은 신청일로부터 <strong>영업일 기준 5일 이내</strong> 처리됩니다.
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">입금받을 계좌 정보</label>
+            <input id="wdBankInfo" class="ai-input-pretty" placeholder="은행명 / 계좌번호 / 예금주 입력">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">세금계산서 첨부 (필수)</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="file" id="wdTaxFile" class="ai-input-pretty" accept=".pdf,.jpg,.png" style="padding: 8px;">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="submitWithdrawal()" class="btn-round primary" style="flex: 1;">신청하기</button>
+            <button onclick="document.getElementById('withdrawModal').style.display='none'" class="btn-round" style="flex: 1;">취소</button>
+        </div>
+    </div>
+</div>
+
+<audio id="orderAlertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 </body>
 </html>

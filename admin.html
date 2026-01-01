@@ -725,6 +725,32 @@
     <script type="module">
         import { sb, initConfig } from "./config.js";
 
+    // [보안] 관리자 권한 체크 함수
+    async function checkAdminAccess() {
+        const { data: { session } } = await sb.auth.getSession();
+        
+        // 1. 비로그인 상태면 추방
+        if (!session) {
+            alert("관리자 로그인이 필요합니다.");
+            window.location.replace("index.html"); 
+            return false;
+        }
+
+        // 2. 등급 확인 (admin 아니면 추방)
+        const { data: profile, error } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+        
+        if (error || !profile || profile.role !== 'admin') {
+            alert("접근 권한이 없습니다. (관리자 전용)");
+            await sb.auth.signOut(); 
+            window.location.replace("index.html");
+            return false;
+        }
+
+        // 3. 통과 (화면 보이기)
+        document.body.style.visibility = 'visible';
+        return true;
+    }
+
         // ==========================================
         // 1. 전역 변수 및 공통 유틸
         // ==========================================
@@ -2378,73 +2404,108 @@ window.updateMemberRole = async (id, newRole) => {
             orders.forEach(o => { const isDone = (o.status === '배송완료'); const dotColor = isDone ? '#22c55e' : '#cbd5e1'; const dotShadow = isDone ? '0 0 5px #4ade80' : 'none'; const statusBadge = isDone ? `<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; white-space:nowrap;">배송완료</span>` : `<span class="badge" style="background:#f1f5f9; color:#64748b; white-space:nowrap;">${o.status}</span>`; const rowStyle = isDone ? 'background-color: #f0fdf4;' : ''; const textStyle = isDone ? 'opacity: 0.6;' : ''; let fileLinks = ''; if(o.files && Array.isArray(o.files)) { o.files.forEach(f => { fileLinks += `<a href="${f.url}" target="_blank" class="btn-file" style="margin-right:4px;">📄 ${f.name}</a>`; }); } else { fileLinks = '<span style="color:#ccc;">파일 없음</span>'; } let driverOpts = `<option value="">미지정</option>`; staffList.filter(s => s.role === 'driver').forEach(s => { const selected = o.staff_driver_id == s.id ? 'selected' : ''; driverOpts += `<option value="${s.id}" ${selected}>${s.name}</option>`; }); const timeOpts = getDeliveryTimeOptions(o.delivery_time); const tr = document.createElement('tr'); tr.style.cssText = rowStyle; tr.innerHTML = `<td style="text-align:center;">${statusBadge}</td><td style="${textStyle}"><div style="font-weight:bold; font-size:15px;">${o.manager_name}</div><div style="font-size:13px; color:#6366f1;">${o.phone}</div><div style="font-size:12px; color:#666; margin-top:2px;">${o.address}</div></td><td style="${textStyle}"><div style="display:flex; flex-wrap:wrap;">${fileLinks}</div></td><td><select class="input-text" onchange="updateTaskDB('${o.id}', 'staff_driver_id', this.value)" style="width:100%; ${isDone ? 'background:transparent; border:none; font-weight:bold; appearance:none;' : ''}" ${isDone?'disabled':''}>${driverOpts}</select></td><td><div style="display:flex; align-items:center; gap:8px;"><select class="input-text" onchange="updateTaskDB('${o.id}', 'delivery_time', this.value)" style="flex:1; font-weight:bold; color:#0f172a; ${isDone ? 'background:transparent; border:none; appearance:none;' : ''}" ${isDone?'disabled':''}>${timeOpts}</select><div title="${isDone ? '배송 완료됨' : '배송 중'}" style="width:18px; height:18px; border-radius:50%; background:${dotColor}; box-shadow:${dotShadow}; flex-shrink:0; cursor:default; border:2px solid white; outline:1px solid ${isDone?'#22c55e':'#cbd5e1'};"></div></div></td>`; tbody.appendChild(tr); }); showLoading(false);
         };
         window.updateTaskDB = async (orderId, field, value) => { const valToSave = value === "" ? null : value; const { error } = await sb.from('orders').update({ [field]: valToSave }).eq('id', orderId); if (error) { alert("저장 실패: " + error.message); } };
-        window.addEventListener('DOMContentLoaded', async () => { await initConfig(); loadOrders(); initTemplateListeners(); loadCategories(); loadFonts(); });
+        window.addEventListener('DOMContentLoaded', async () => { 
+            // 1. 화면 깜빡임 방지를 위해 일단 숨김
+            document.body.style.visibility = 'hidden';
+            
+            await initConfig(); 
+            
+            // 2. 보안 체크 실행 (통과 못하면 여기서 멈추고 쫓겨남)
+            const isAdmin = await checkAdminAccess();
+            if (!isAdmin) return;
+
+            // 3. 통과된 경우에만 데이터 로드 시작
+            loadOrders(); 
+            initTemplateListeners(); 
+            loadCategories(); 
+            loadFonts(); 
+        });
 
         // [신규] 출금 목록 로드
         // [수정됨] 출금 목록 로드 (오류 방지 버전)
-        window.loadWithdrawals = async () => {
-            const tbody = document.getElementById('withdrawalListBody');
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>';
+        // [수정된 admin.html용 출금 목록 로드 함수]
+window.loadWithdrawals = async () => {
+    const tbody = document.getElementById('withdrawalListBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>';
+    
+    try {
+        const { data: requests, error } = await sb.from('withdrawal_requests')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!requests || requests.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">출금 신청 내역이 없습니다.</td></tr>';
+            return;
+        }
+
+        const userIds = [...new Set(requests.map(r => r.user_id))];
+        const { data: users } = await sb.from('profiles').select('id, email, full_name').in('id', userIds);
+        const userMap = {};
+        if (users) users.forEach(u => userMap[u.id] = u);
+
+        tbody.innerHTML = '';
+        requests.forEach(r => {
+            const user = userMap[r.user_id];
+            const displayUser = user ? `${user.email}<br><span style='font-size:11px; color:#888;'>${user.full_name||''}</span>` : r.user_id;
             
-            try {
-                // 1. 출금 요청 데이터만 먼저 가져오기 (오류 원인인 join 제거)
-                const { data: requests, error } = await sb.from('withdrawal_requests')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+            // 세금계산서 링크
+            const taxLink = r.tax_invoice_url 
+                ? `<a href="${r.tax_invoice_url}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:2px;">📄 세금계산서</a>` 
+                : '<span style="color:#aaa; font-size:11px;">미첨부</span>';
 
-                if (error) throw error;
+            const statusBadge = r.status === 'pending' 
+                ? '<span class="badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;">대기중</span>'
+                : '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">완료됨</span>';
+            
+            const actionBtn = r.status === 'pending'
+                ? `<button class="btn btn-primary btn-sm" onclick="approveWithdrawal(${r.id})">입금확인 처리</button>`
+                : `<span style="color:#cbd5e1; font-size:12px;">처리완료</span>`;
 
-                if (!requests || requests.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">출금 신청 내역이 없습니다.</td></tr>';
-                    return;
-                }
+            // ★ 중요: bank_name에 통합된 정보를 보여주도록 수정
+            tbody.innerHTML += `
+                <tr>
+                    <td>${new Date(r.created_at).toLocaleString()}</td>
+                    <td>${displayUser}</td>
+                    <td style="font-weight:bold; color:#d97706;">${r.amount.toLocaleString()}원</td>
+                    <td>
+                        <div style="font-weight:bold; font-size:13px;">${r.bank_name}</div>
+                        ${taxLink}
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
+                </tr>
+            `;
+        });
 
-                // 2. 신청한 유저들의 ID 목록 추출
-                const userIds = [...new Set(requests.map(r => r.user_id))];
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">데이터 로드 오류: ${e.message}</td></tr>`;
+    }
+};
+// [신규] 관리자 출금 승인 (입금확인 처리) 함수
+window.approveWithdrawal = async (requestId) => {
+    if(!confirm("해당 건을 '입금완료' 처리하시겠습니까?")) return;
 
-                // 3. 유저 정보(이메일) 별도로 가져오기
-                const { data: users } = await sb.from('profiles')
-                    .select('id, email, full_name')
-                    .in('id', userIds);
-                
-                // 유저 정보 매핑 (ID -> 정보)
-                const userMap = {};
-                if (users) users.forEach(u => userMap[u.id] = u);
+    try {
+        // 1. 상태 업데이트 (pending -> approved)
+        const { error } = await sb.from('withdrawal_requests')
+            .update({ 
+                status: 'approved',
+                processed_at: new Date().toISOString()
+            })
+            .eq('id', requestId);
 
-                // 4. 화면 그리기
-                tbody.innerHTML = '';
-                requests.forEach(r => {
-                    const user = userMap[r.user_id];
-                    const displayUser = user ? `${user.email}<br><span style='font-size:11px; color:#888;'>${user.full_name||''}</span>` : r.user_id;
-                    
-                    const statusBadge = r.status === 'pending' 
-                        ? '<span class="badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;">대기중</span>'
-                        : '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">완료됨</span>';
-                    
-                    const actionBtn = r.status === 'pending'
-                        ? `<button class="btn btn-primary btn-sm" onclick="approveWithdrawal(${r.id})">입금확인 처리</button>`
-                        : `<span style="color:#cbd5e1; font-size:12px;">처리완료</span>`;
+        if(error) throw error;
 
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${new Date(r.created_at).toLocaleString()}</td>
-                            <td>${displayUser}</td>
-                            <td style="font-weight:bold; color:#d97706;">${r.amount.toLocaleString()} P</td>
-                            <td>
-                                <div style="font-weight:bold;">${r.bank_name} ${r.account_number}</div>
-                                <div style="font-size:12px; color:#666;">예금주: ${r.account_holder}</div>
-                            </td>
-                            <td>${statusBadge}</td>
-                            <td>${actionBtn}</td>
-                        </tr>
-                    `;
-                });
+        alert("처리되었습니다.");
+        loadWithdrawals(); // 목록 새로고침
 
-            } catch (e) {
-                console.error(e);
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">데이터 로드 오류: ${e.message}</td></tr>`;
-            }
-        };
+    } catch(e) {
+        alert("처리 실패: " + e.message);
+    }
+};
     </script>
 
 </body>

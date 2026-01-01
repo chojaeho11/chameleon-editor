@@ -118,7 +118,7 @@
         .ql-toolbar.ql-snow { border-top-left-radius: 10px; border-top-right-radius: 10px; border-color: #e2e8f0; background: #f8fafc; }
         .ql-container.ql-snow { border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; border-color: #e2e8f0; font-family: 'Pretendard'; }
         
-        /* 버튼이 비활성화(disabled) 되었을 때 스타일 */
+        /* [추가] 버튼이 비활성화(disabled) 되었을 때 시각적 피드백 */
         button:disabled {
             background-color: #ccc !important;
             cursor: not-allowed !important;
@@ -301,16 +301,23 @@
             location.href = `/board.html?cat=${cat}&country=${currentCountry}`;
         }
 
+        // [최적화 1단계] 이미지 용량 다이어트 함수 (강력 압축)
         function optimizeImage(url) {
             if (!url) return null;
+            // Supabase 스토리지 이미지인 경우에만 최적화 적용
             if (url.includes('supabase.co')) {
+                // 이미 ?가 있으면 &를 쓰고, 없으면 ?를 씀
                 const separator = url.includes('?') ? '&' : '?';
-                return `${url}${separator}width=400&height=300&resize=cover&quality=60&format=webp`;
+                
+                // width=300: 썸네일용으로 크기 대폭 축소 (원본이 4000px이어도 300px로 받음)
+                // quality=50: 화질을 절반으로 낮춤 (썸네일은 그래도 충분함)
+                // format=webp: 용량이 적은 차세대 포맷(WebP) 사용
+                return `${url}${separator}width=300&height=200&resize=cover&quality=50&format=webp`;
             }
             return url;
         }
 
-        // [수정: 로딩 멈춤 방지] 초기화 과정에서 에러가 나도 목록은 보여주도록 수정
+        // [안전장치] 초기화 과정에서 에러가 나도 목록은 보여주도록 수정
         async function init() {
             try {
                 // 로그인 체크 시도
@@ -330,7 +337,6 @@
                     if (profile && profile.role === 'admin') isRealAdmin = true;
                 } catch(err) { 
                     console.error("프로필 정보 로드 실패(무시)", err); 
-                    // 프로필이 없어도 멈추지 않고 진행
                 }
             }
 
@@ -412,6 +418,7 @@
                 if(commentErr) throw commentErr;
                 const { data, error: postErr } = await sb.from('community_posts').delete().eq('id', postId).select();
                 if(postErr) throw postErr;
+                // 삭제된 데이터가 없으면 권한 문제로 간주
                 if(!data || data.length === 0) throw new Error("삭제 권한이 없거나 이미 삭제된 글입니다.");
 
                 alert("삭제되었습니다.");
@@ -459,6 +466,7 @@
                 const firstImg = tempDiv.querySelector('img');
                 
                 const rawSrc = firstImg ? firstImg.src : null;
+                // [최적화 적용] 강력한 이미지 압축 함수 사용
                 const optimizedSrc = optimizeImage(rawSrc);
 
                 let starHtml = '';
@@ -470,9 +478,13 @@
 
                 const card = document.createElement('div');
                 card.className = 'post-card';
+                // [최적화 2단계] Lazy Loading 및 Async Decoding 적용
                 card.innerHTML = `
                     <div class="card-thumb">
-                        ${optimizedSrc ? `<img src="${optimizedSrc}" loading="lazy" alt="${post.title}">` : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`}
+                        ${optimizedSrc 
+                            ? `<img src="${optimizedSrc}" loading="lazy" decoding="async" alt="${post.title}" style="width:100%; height:100%; object-fit:cover;">` 
+                            : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`
+                        }
                     </div>
                     <div class="card-body">
                         ${starHtml}
@@ -595,7 +607,7 @@
                 showSection('write');
             };
 
-            // [수정: 중복 글쓰기 방지] 버튼 즉시 비활성화 로직 적용
+            // [핵심] 중복 글쓰기 방지: 버튼 즉시 비활성화 로직 적용
             document.getElementById('btnSubmitPost').onclick = async () => {
                 const btn = document.getElementById('btnSubmitPost');
                 

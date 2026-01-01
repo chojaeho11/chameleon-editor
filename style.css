@@ -173,21 +173,34 @@ button, input, textarea, select { font-family: inherit; }
 }
 .gallery-header::before, .gallery-header::after { content: ''; height: 2px; width: 40px; background: #e5e7eb; }
 
-.template-grid-start { column-count: 7; column-gap: 20px; width: 100%; }
+.template-grid-start { 
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 가로 6개 강제 설정 */
+    gap: 20px; 
+    width: 100%; 
+}
+
+/* [수정] 정사각 프레임 적용 */
 .tpl-card-start {
-    display: inline-block; width: 100%;
-    background: #fff; border-radius: 16px; overflow: hidden;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1; /* 정사각형 비율 강제 */
+    background: #f8fafc; /* 이미지 로딩 전 배경색 */
+    border-radius: 16px; overflow: hidden;
     cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-    margin-bottom: 15px; break-inside: avoid; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     border: 1px solid #e5e7eb;
+    position: relative; /* 뱃지 위치 기준 */
 }
-.tpl-card-start:hover { 
-    transform: translateY(-5px); 
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
-    border-color: var(--primary); z-index: 10;
+
+/* [수정] 이미지가 정사각형 영역을 꽉 채우도록 설정 */
+.tpl-card-img { 
+    width: 100%; 
+    height: 100%;       /* 높이도 100% */
+    object-fit: cover;  /* 비율 유지하며 꽉 채우기 (잘림 발생) */
+    display: block; 
+    transition: transform 0.3s; 
 }
-.tpl-card-img { width: 100%; height: auto; display: block; background: #f9fafb; }
 .tpl-card-overlay {
     position: absolute; inset: 0;
     background: rgba(0,0,0,0.05); opacity: 0; transition: 0.2s;
@@ -2271,4 +2284,83 @@ body {
 
 #sellModal .btn-round.cancel:hover {
     background: #e9ecef;
+}
+/* 파트너스 콘솔 스타일 */
+.partner-order-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    transition: all 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.partner-order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    border-color: #6366f1;
+}
+.poc-header {
+    display: flex; justify-content: space-between; align-items: start;
+    margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9;
+}
+.poc-badge {
+    background: #ef4444; color: white; font-size: 11px; font-weight: bold;
+    padding: 3px 8px; border-radius: 4px; animation: pulse 2s infinite;
+}
+.poc-address {
+    font-size: 15px; font-weight: 800; color: #1e293b; margin-bottom: 5px;
+}
+.poc-items {
+    font-size: 13px; color: #64748b; margin-bottom: 15px;
+    background: #f8fafc; padding: 10px; border-radius: 6px;
+}
+.poc-price {
+    font-size: 18px; font-weight: 900; color: #0f172a; text-align: right;
+    margin-bottom: 15px;
+}
+.btn-dibs {
+    width: 100%; padding: 12px; background: #6366f1; color: white;
+    font-weight: 800; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 14px; transition: background 0.2s;
+}
+.btn-dibs:hover { background: #4f46e5; }
+
+/* 탭 활성화 스타일 */
+.nav-item.active { background: #eff6ff !important; color: #6366f1 !important; }
+.nav-item:not(.active):hover { background: #f8fafc !important; }
+/* =========================================
+   [모바일 탑바 버튼 순서 수정] (맨 아래에 추가)
+   ========================================= */
+@media (max-width: 768px) {
+    /* 1. 브랜드 로고 숨김 */
+    .brand { display: none !important; }
+
+    /* 2. 버튼 순서 재배치 (템플릿을 1번으로!) */
+    .template-tabs { order: 1 !important; } /* ★ 템플릿 버튼을 맨 앞으로 */
+    
+    #btnOrderTop   { order: 2 !important; } /* 장바구니 담기 (노란색) */
+    #btnLoginBtn   { order: 3 !important; } /* 로그인/로그아웃 */
+    #btnMyLibrary  { order: 4 !important; } /* MY Page (보관함) */
+    
+    /* 나머지 버튼들 (필요시 순서 조정) */
+    #btnHomeTop    { order: 5 !important; } 
+    #btnViewCart   { order: 6 !important; } 
+    .btn-save-top  { order: 7 !important; }
+
+    /* 3. 좁은 화면을 위한 스타일 최적화 */
+    .topbar {
+        justify-content: space-between !important;
+        padding: 0 5px !important;
+    }
+    
+    .topbar .btn {
+        margin: 0 2px !important;
+        padding: 0 8px !important;
+        font-size: 12px !important;
+        height: 36px !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
 }

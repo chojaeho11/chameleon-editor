@@ -48,7 +48,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         initTemplateTools();
         initAiTools();
         initExport();
-        initOrderSystem(); // 주문 시스템 (할인율 로드 포함)
+        initOrderSystem(); // 주문 시스템
         initAuth();
         initMyDesign();
         initMobileTextEditor();
@@ -171,7 +171,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-// ... (이하 기존 파일 업로드 및 유틸 함수들은 그대로 유지) ...
 function initFileUploadListeners() {
     const editorUpload = document.getElementById('imgUpload');
     if (editorUpload) {
@@ -305,7 +304,6 @@ function initOutlineTool() {
                 selectable: true, evented: true, originX: 'center', originY: 'center'
             });
             const imgCenter = activeObj.getCenterPoint();
-            const diffX = (pathObj.width/2 - result.width/2); 
             pathObj.set({
                 left: imgCenter.x, top: imgCenter.y,
                 scaleX: activeObj.scaleX, scaleY: activeObj.scaleY, angle: activeObj.angle
@@ -333,7 +331,6 @@ function initOutlineTool() {
 function initMobileTextEditor() {
     const mobileEditor = document.getElementById('mobileTextEditor');
     const mobileInput = document.getElementById('mobileTextInput');
-    const btnFinish = document.getElementById('btnFinishText');
     let activeTextObj = null;
     if (!window.canvas) return;
     window.canvas.on('selection:created', handleSelection);
@@ -373,3 +370,435 @@ function initMobileTextEditor() {
         closeMobileEditor();
     };
 }
+
+// ============================================================
+// [최종] 파트너스 시스템 (음성안내 + 10% 수수료 + 파일명)
+// ============================================================
+
+let lastOrderCount = 0; 
+
+// 1. 파트너 권한 확인 및 초기화
+async function checkPartnerStatus() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+
+    const { data } = await sb.from('profiles').select('role, region').eq('id', user.id).single();
+    
+    if (data && (data.role === 'franchise' || data.role === 'admin')) {
+        const btnConsole = document.getElementById('btnPartnerConsole');
+        const btnApply = document.getElementById('btnPartnerApply');
+        if (btnConsole) btnConsole.style.setProperty('display', 'inline-flex', 'important');
+        if (btnApply) btnApply.style.display = 'none';
+        
+        const badge = document.getElementById('partnerRegionBadge');
+        if(badge) badge.innerText = data.region ? `📍 ${data.region} 지역` : '📍 지역 전체';
+        window.currentPartnerRegion = data.region;
+
+        // 30초마다 자동 새로고침 (알림용)
+        setInterval(() => loadPartnerOrders('pool', true), 30000);
+    }
+}
+window.addEventListener('load', () => setTimeout(checkPartnerStatus, 1500));
+
+// 2. 콘솔 열기
+window.openPartnerConsole = function() {
+    document.getElementById('partnerConsoleModal').style.display = 'flex';
+    window.switchPartnerTab('pool');
+};
+
+// 3. 탭 전환
+window.switchPartnerTab = function(tabName) {
+    document.querySelectorAll('.partner-tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.nav-menu .nav-item').forEach(el => {
+        el.style.background = 'transparent'; el.style.color = '#64748b';
+    });
+    document.getElementById(`tab-${tabName}`).style.display = 'block';
+    
+    if(tabName === 'pool') loadPartnerOrders('pool');
+    if(tabName === 'my') loadPartnerOrders('my');
+    if(tabName === 'settlement') loadSettlementInfo();
+};
+
+// 4. 주문 목록 불러오기 (음성 알림 & 파일명 표시)
+window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
+    const listId = mode === 'pool' ? 'orderPoolList' : 'myOrderList';
+    const container = document.getElementById(listId);
+    
+    if (!isAutoCheck && container) {
+        container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>';
+    }
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+
+    let query = sb.from('orders').select('*').order('created_at', {ascending: false});
+
+    if (mode === 'pool') {
+        query = query.is('franchise_id', null).in('status', ['접수됨', '파일처리중', '접수대기']);
+        if (window.currentPartnerRegion && window.currentPartnerRegion !== '전체') {
+            query = query.ilike('address', `%${window.currentPartnerRegion}%`);
+        }
+    } else {
+        query = query.eq('franchise_id', user.id);
+    }
+
+    const { data: orders, error } = await query;
+    if (error) return;
+
+    // ★ [음성 알림] 주문이 늘어났으면 목소리로 안내
+    if (mode === 'pool' && orders && orders.length > lastOrderCount) {
+        if ('speechSynthesis' in window) {
+            const msg = new SpeechSynthesisUtterance("카멜레온 프린팅, 새로운 주문이 들어왔습니다.");
+            msg.lang = 'ko-KR'; 
+            msg.rate = 1.0; 
+            window.speechSynthesis.speak(msg);
+        } else {
+            // TTS 미지원 브라우저는 띵동 소리
+            try { document.getElementById('orderAlertSound')?.play(); } catch(e){}
+        }
+    }
+    if (mode === 'pool') lastOrderCount = orders ? orders.length : 0;
+
+    if (isAutoCheck && document.getElementById('partnerConsoleModal').style.display === 'none') return;
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!orders || orders.length === 0) {
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">
+            ${mode==='pool' ? '현재 접수 가능한 주문이 없습니다.' : '진행 중인 주문이 없습니다.'}
+        </div>`;
+        return;
+    }
+
+    orders.forEach(o => {
+        let itemSummary = '상품 정보 없음';
+        try {
+            const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+            if(items && items.length > 0) itemSummary = items.map(i => `${i.productName || i.product?.name} (${i.qty}개)`).join(', ');
+        } catch(e){}
+
+        // 파일명 표시
+        let fileBtns = '';
+        if(o.files && o.files.length > 0) {
+            o.files.forEach((f) => {
+                let displayName = f.name;
+                if (!displayName) {
+                    const decoded = decodeURIComponent(f.url.split('/').pop());
+                    displayName = decoded.split('_').pop(); 
+                }
+                let icon = '📄';
+                if(displayName.includes('견적서')) icon = '📑';
+                if(displayName.includes('지시서')) icon = '📋';
+                fileBtns += `<a href="${f.url}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:6px 10px; background:#f1f5f9; color:#334155; margin-right:5px; margin-bottom:5px; text-decoration:none; border-radius:4px; border:1px solid #e2e8f0; font-weight:500;">${icon} ${displayName}</a>`;
+            });
+        } else {
+            fileBtns = '<span style="font-size:12px; color:#ef4444;">첨부파일 없음</span>';
+        }
+
+        const card = document.createElement('div');
+        
+        if (mode === 'pool') {
+            const timeDiff = Math.floor((new Date() - new Date(o.created_at)) / (1000 * 60));
+            card.className = 'partner-order-card';
+            card.style.cssText = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:15px;";
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">NEW ${timeDiff}분전</span>
+                    <span style="font-size:12px; color:#888;">${o.manager_name}님</span>
+                </div>
+                <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">📍 ${o.address}</div>
+                <div style="font-size:13px; color:#666; margin-bottom:10px;">${itemSummary}</div>
+                <div style="text-align:right;">
+                    <div style="font-weight:bold; font-size:16px;">${o.total_amount.toLocaleString()}원</div>
+                    <div style="font-size:11px; color:#6366f1;">예상 정산금(90%): ${Math.floor(o.total_amount * 0.9).toLocaleString()}원</div>
+                </div>
+                <button onclick="window.dibsOrder('${o.id}')" style="width:100%; margin-top:10px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚡ 접수하기</button>
+            `;
+        } else {
+            let statusHtml = '';
+            if (o.status === '구매확정') statusHtml = `<span style="color:#16a34a; font-weight:bold; font-size:13px;">✅ 구매확정 (정산대기)</span>`;
+            else if (o.status === '배송중') statusHtml = `<span style="color:#2563eb; font-weight:bold; font-size:13px;">🚚 배송중 (수령대기)</span>`;
+            else statusHtml = `<button onclick="window.updateOrderStatus('${o.id}', '배송중')" style="padding:6px 12px; background:#334155; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px;">🚚 배송 출발</button>`;
+
+            card.style.cssText = "background:#fff; border:1px solid #e2e8f0; padding:20px; border-radius:12px; margin-bottom:15px;";
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div style="flex:1;">
+                        <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">${o.manager_name}님 주문</div>
+                        <div style="font-size:13px; color:#666; margin-bottom:8px;">${o.address}</div>
+                        <div style="font-size:13px; color:#333; font-weight:bold; margin-bottom:10px;">${itemSummary}</div>
+                        <div style="display:flex; flex-wrap:wrap;">${fileBtns}</div>
+                    </div>
+                    <div style="text-align:right; min-width:100px;">
+                        ${statusHtml}
+                        <div style="margin-top:5px; font-size:12px; color:#888;">${new Date(o.created_at).toLocaleDateString()}</div>
+                    </div>
+                </div>
+            `;
+        }
+        container.appendChild(card);
+    });
+};
+
+// 5. 찜하기
+window.dibsOrder = async function(orderId) {
+    if(!confirm("주문을 접수하시겠습니까?")) return;
+    const { data: { user } } = await sb.auth.getUser();
+    
+    const { data: check } = await sb.from('orders').select('franchise_id').eq('id', orderId).single();
+    if(check.franchise_id) return alert("이미 다른 파트너가 접수한 주문입니다.");
+
+    await sb.from('orders').update({ franchise_id: user.id, status: '제작준비' }).eq('id', orderId);
+    alert("접수되었습니다! [나의 진행 주문] 탭에서 확인하세요.");
+    window.switchPartnerTab('my');
+};
+
+// 6. 상태 변경
+window.updateOrderStatus = async function(orderId, status) {
+    if(!confirm(`상태를 '${status}'로 변경하시겠습니까?`)) return;
+    await sb.from('orders').update({ status: status }).eq('id', orderId);
+    window.loadPartnerOrders('my');
+};
+
+// 7. 정산 정보 로드 (★ 90% 지급 로직)
+// 7. 정산 정보 로드 (입금완료 건 제외 로직 추가)
+window.loadSettlementInfo = async function() {
+    const tbody = document.getElementById('settlementListBody');
+    if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">로딩 중...</td></tr>';
+
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) return;
+
+    // [1] 출금 가능 금액 (구매확정, 아직 신청 안 함)
+    const { data: orders } = await sb.from('orders')
+        .select('*')
+        .eq('franchise_id', user.id)
+        .eq('status', '구매확정')
+        .neq('settlement_status', 'withdrawn'); // 이미 신청한 건 제외
+
+    // [2] 출금 대기중 금액 (신청함, 아직 관리자 승인 안 함)
+    const { data: pendings } = await sb.from('withdrawal_requests')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('status', 'pending'); // ★ 'approved'(완료) 상태는 제외됨!
+
+    let availableTotal = 0;
+    let pendingTotal = 0;
+    let html = '';
+
+    // 대기 금액 합산
+    if (pendings) {
+        pendings.forEach(p => pendingTotal += (p.amount || 0));
+    }
+
+    if(!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">정산 가능한 내역이 없습니다.</td></tr>';
+    } else {
+        orders.forEach(o => {
+            const amount = o.total_amount || 0;
+            // 10% 수수료 공제 (90% 지급)
+            const profit = Math.floor(amount * 0.9); 
+            availableTotal += profit;
+
+            html += `
+                <tr>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(o.created_at).toLocaleDateString()}</td>
+                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; color:#64748b;">${amount.toLocaleString()}원</td>
+                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; font-weight:bold; color:#16a34a;">${profit.toLocaleString()}원</td>
+                    <td style="padding:12px; text-align:center; border-bottom:1px solid #f1f5f9;"><span class="badge" style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:4px; font-size:12px;">출금가능</span></td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    // 화면 업데이트
+    document.getElementById('partnerAvailableBalance').innerText = availableTotal.toLocaleString() + '원';
+    
+    const pendingEl = document.getElementById('partnerPendingBalance');
+    if(pendingEl) pendingEl.innerText = pendingTotal.toLocaleString() + '원';
+    
+    window.currentWithdrawableAmount = availableTotal;
+};
+
+// 8. 출금 모달 열기
+window.requestPartnerWithdrawal = function() {
+    const amt = window.currentWithdrawableAmount || 0;
+    if (amt < 10000) return alert("최소 10,000원 이상부터 출금 가능합니다.");
+    document.getElementById('wdAmount').value = amt.toLocaleString() + '원';
+    document.getElementById('withdrawModal').style.display = 'flex';
+};
+
+// 9. 출금 신청 제출 (에러 해결됨)
+window.submitWithdrawal = async function() {
+    const amount = window.currentWithdrawableAmount;
+    const bankInfo = document.getElementById('wdBankInfo').value;
+    const fileInput = document.getElementById('wdTaxFile');
+
+    if (!bankInfo) return alert("계좌 정보를 입력해주세요.");
+    if (fileInput.files.length === 0) return alert("세금계산서를 첨부해주세요.");
+
+    if (!confirm("신청하시겠습니까?")) return;
+
+    const btn = document.querySelector('#withdrawModal .btn-round.primary');
+    btn.innerText = "전송 중..."; btn.disabled = true;
+
+    try {
+        const { data: { user } } = await sb.auth.getUser();
+        
+        // 파일 업로드
+        const file = fileInput.files[0];
+        const ext = file.name.split('.').pop();
+        const path = `tax_invoices/${user.id}_${Date.now()}.${ext}`;
+        
+        const { error: upErr } = await sb.storage.from('orders').upload(path, file);
+        if (upErr) throw upErr;
+        
+        const { data: { publicUrl } } = sb.storage.from('orders').getPublicUrl(path);
+
+        // ★ [수정] bank_name에 계좌정보 통합 저장
+        const { error: dbErr } = await sb.from('withdrawal_requests').insert({
+            user_id: user.id,
+            amount: amount,
+            bank_name: bankInfo, // 여기에 계좌/은행/예금주 다 넣음
+            status: 'pending',
+            tax_invoice_url: publicUrl
+        });
+        if (dbErr) throw dbErr;
+
+        await sb.from('orders')
+            .update({ settlement_status: 'withdrawn' })
+            .eq('franchise_id', user.id)
+            .eq('status', '구매확정')
+            .neq('settlement_status', 'withdrawn');
+
+        alert("출금 신청 완료! (D+5일 내 입금)");
+        document.getElementById('withdrawModal').style.display = 'none';
+        window.loadSettlementInfo();
+
+    } catch(e) {
+        alert("오류: " + e.message);
+    } finally {
+        btn.innerText = "신청하기"; btn.disabled = false;
+    }
+};
+// ============================================================
+// [고객용] 주문 조회 & 리뷰 시스템 (별점 포함)
+// ============================================================
+
+// 1. 내 주문 목록 열기
+window.openMyOrderList = async function() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return alert("로그인이 필요한 서비스입니다.");
+
+    document.getElementById('myOrderModal').style.display = 'flex';
+    const container = document.getElementById('myOrderListUser');
+    container.innerHTML = '<div style="text-align:center; padding:30px;">로딩 중...</div>';
+
+    const { data: orders, error } = await sb.from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+    if (error || !orders || orders.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">주문 내역이 없습니다.</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    orders.forEach(o => {
+        let itemSummary = '상품 정보 없음';
+        try {
+            const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+            if(items && items.length > 0) {
+                itemSummary = items.map(i => `${i.productName || i.product?.name} (${i.qty}개)`).join(', ');
+            }
+        } catch(e){}
+
+        // 버튼 상태 로직
+        let statusBadge = `<span class="badge" style="background:#f1f5f9; color:#64748b;">${o.status}</span>`;
+        let actionBtn = '';
+
+        // 고객이 '배송중' 또는 '제작준비(테스트용)' 일 때 수령확인 가능
+        if (o.status === '배송중' || o.status === '제작준비') { 
+            statusBadge = `<span class="badge" style="background:#e0e7ff; color:#4338ca;">🚚 ${o.status}</span>`;
+            actionBtn = `
+                <button onclick="openReviewModal('${o.id}')" class="btn-round primary" style="width:auto; padding:8px 15px; font-size:13px; box-shadow:0 4px 10px rgba(99,102,241,0.3);">
+                    🎁 수령확인 & 구매확정
+                </button>
+            `;
+        } else if (o.status === '구매확정' || o.status === '배송완료') {
+            statusBadge = `<span class="badge" style="background:#dcfce7; color:#166534;">✅ 구매확정</span>`;
+            if(o.rating) {
+                const stars = '⭐'.repeat(o.rating);
+                actionBtn = `<div style="font-size:12px; color:#f59e0b;">별점: ${stars}</div>`;
+            } else {
+                actionBtn = `<span style="font-size:12px; color:#94a3b8;">후기 작성 완료</span>`;
+            }
+        }
+
+        const div = document.createElement('div');
+        div.style.cssText = "background:#fff; border:1px solid #e2e8f0; padding:20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;";
+        
+        div.innerHTML = `
+            <div>
+                <div style="font-size:12px; color:#94a3b8; margin-bottom:5px;">${new Date(o.created_at).toLocaleDateString()} 주문</div>
+                <div style="font-size:16px; font-weight:bold; color:#333; margin-bottom:5px;">${itemSummary}</div>
+                <div style="font-size:14px; color:#64748b;">결제금액: <b>${o.total_amount.toLocaleString()}원</b></div>
+                <div style="margin-top:8px;">${statusBadge}</div>
+            </div>
+            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                ${actionBtn}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+};
+
+// 2. 리뷰 모달 열기
+window.openReviewModal = function(orderId) {
+    document.getElementById('targetReviewOrderId').value = orderId;
+    document.getElementById('reviewCommentInput').value = '';
+    setReviewRating(5);
+    document.getElementById('reviewWriteModal').style.display = 'flex';
+};
+
+// 3. 별점 UI
+window.setReviewRating = function(score) {
+    document.getElementById('targetReviewScore').value = score;
+    document.getElementById('ratingText').innerText = score + "점";
+    for(let i=1; i<=5; i++) {
+        const star = document.getElementById(`star${i}`);
+        if(i <= score) star.style.color = '#f59e0b';
+        else star.style.color = '#e2e8f0';
+    }
+};
+
+// 4. 리뷰 제출 (구매확정)
+window.submitOrderReview = async function() {
+    const orderId = document.getElementById('targetReviewOrderId').value;
+    const score = parseInt(document.getElementById('targetReviewScore').value);
+    const comment = document.getElementById('reviewCommentInput').value;
+
+    if(!confirm("구매를 확정하시겠습니까? (반품 불가)")) return;
+
+    const { error } = await sb.from('orders').update({
+        status: '구매확정',
+        received_at: new Date().toISOString(),
+        rating: score,
+        customer_review: comment
+    }).eq('id', orderId);
+
+    if (error) {
+        alert("오류: " + error.message);
+    } else {
+        alert("구매확정 되었습니다. 감사합니다!");
+        document.getElementById('reviewWriteModal').style.display = 'none';
+        window.openMyOrderList();
+        
+        // 가맹점 화면 갱신용 (선택)
+        if(typeof loadSettlementInfo === 'function') loadSettlementInfo();
+    }
+};

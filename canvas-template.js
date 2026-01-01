@@ -201,9 +201,16 @@ async function loadTemplatePage(pageIndex) {
             .order('created_at', { ascending: false })
             .range(pageIndex * TPL_PER_PAGE, (pageIndex + 1) * TPL_PER_PAGE - 1);
 
-        // 카테고리 필터
+        // [수정] 카테고리 필터 (예전 데이터 호환성 처리)
         if (tplLastCategory && tplLastCategory !== 'all') {
-            query = query.eq('category', tplLastCategory); 
+            // 'user_image' 탭 선택 시 -> 'user_image' + 예전 데이터('text') 모두 가져오기
+            if (tplLastCategory === 'user_image') {
+                query = query.in('category', ['user_image', 'text']);
+            } 
+            // 그 외(user_vector 등)는 해당 카테고리만 정확히 가져오기
+            else {
+                query = query.eq('category', tplLastCategory); 
+            }
         }
         
         // 키워드 검색
@@ -243,13 +250,37 @@ async function loadTemplatePage(pageIndex) {
             const imgUrl = item.thumb_url || 'https://via.placeholder.com/300?text=No+Image';
             const displayTitle = item.tags ? item.tags.split(',')[0] : '무제';
             
+            // [수정] 카테고리별 영문 뱃지 설정
+            let badgeText = '';
+            let badgeColor = '#64748b'; // 기본 회색
+
+            switch(item.category) {
+                case 'vector': badgeText = 'Vector'; badgeColor = '#7c3aed'; break; // 보라색
+                // ▼▼▼ [추가할 부분] ▼▼▼
+    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break; // 보라색
+    case 'user_image': badgeText = 'User Image'; badgeColor = '#059669'; break;   // 초록색
+    // ▲▲▲ [추가 끝] ▲▲▲
+                case 'photo-bg': badgeText = 'Image'; badgeColor = '#059669'; break; // 초록색
+                case 'graphic': badgeText = 'PNG'; badgeColor = '#2563eb'; break; // 파란색
+                case 'pattern': 
+                case 'transparent-graphic': badgeText = 'Pattern'; badgeColor = '#db2777'; break; // 핑크색
+                case 'logo': badgeText = 'Logo'; badgeColor = '#d97706'; break; // 주황색
+                case 'text': badgeText = 'Text'; badgeColor = '#475569'; break; // 진한 회색
+            }
+
             const isExclusive = item.product_key && item.product_key !== 'custom';
-            const badgeHtml = isExclusive 
-                ? `<span style="position:absolute; top:8px; left:8px; background:#6366f1; color:white; font-size:10px; padding:3px 6px; border-radius:4px; z-index:2;">전용</span>` 
-                : '';
+            let finalBadgeHtml = '';
+            
+            if (isExclusive) {
+                // 전용 상품 (Exclusive)
+                finalBadgeHtml = `<span style="position:absolute; top:8px; left:8px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:3px 6px; border-radius:4px; z-index:2;">Exclusive</span>`;
+            } else if (badgeText) {
+                // 일반 카테고리 뱃지
+                finalBadgeHtml = `<span style="position:absolute; top:8px; left:8px; background:${badgeColor}; color:white; font-size:10px; font-weight:bold; padding:3px 6px; border-radius:4px; z-index:2; text-transform:uppercase;">${badgeText}</span>`;
+            }
 
             card.innerHTML = `
-                ${badgeHtml}
+                ${finalBadgeHtml}
                 <img src="${imgUrl}" class="tpl-item-img" loading="lazy">
                 <div class="tpl-overlay-info">
                     <span class="tpl-name">${displayTitle}</span>
@@ -645,11 +676,16 @@ async function registerUserTemplate() {
 
     // 입력값 가져오기
     const titleEl = document.getElementById("sellTitle");
-    const catEl = document.getElementById("sellCategory");
     const tagEl = document.getElementById("sellKw");
+    
+    // [수정] 무조건 'text' (유저 템플릿) 카테고리로 고정
+    const selectedRadio = document.querySelector('input[name="sellType"]:checked');
+const type = selectedRadio ? selectedRadio.value : "vector"; // 라디오 버튼 값 ('vector' 또는 'image')
+
+// ★ 핵심: 시스템 템플릿과 섞이지 않게 'user_' 접두어를 붙여서 저장합니다.
+const category = 'user_' + type; // 결과: 'user_vector' 또는 'user_image'
 
     const title = titleEl ? titleEl.value.trim() : "제목 없음";
-    const category = catEl ? catEl.value : "photo-bg";
     const tags = tagEl ? tagEl.value.trim() : "";
 
     if (!title) return alert("제목을 입력해주세요.");
@@ -878,3 +914,15 @@ export function loadProductFixedTemplate(url) {
         if (loading) loading.style.display = "none";
     }, { crossOrigin: 'anonymous' });
 }
+
+// [추가] 시작 화면에서 선택한 템플릿을 에디터 로딩 후 적용하는 함수
+window.applyStartTemplate = async function(tpl) {
+    if (!tpl) return;
+    console.log("Applying Start Template:", tpl);
+    
+    // 모듈 내부 변수(selectedTpl)에 할당
+    selectedTpl = tpl; 
+    
+    // 기존 로딩 함수(processLoad)를 'replace' 모드로 실행
+    await processLoad('replace');
+};
