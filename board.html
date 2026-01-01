@@ -3,8 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>카멜레온 커뮤니티</title>
     
+    <title>카멜레온 커뮤니티 | 허니콤보드·실사출력·무료디자인에디터 정보</title>
+    <meta name="description" content="카멜레온프린팅 공식 커뮤니티. 허니콤보드, 종이매대, 패브릭인쇄, 종이가구 제작 후기 및 실사출력 노하우. 무료디자인에디터 사용법과 그림부업 정보를 공유하는 인쇄도매쇼핑몰 소통 공간입니다.">
+    <meta name="keywords" content="카멜레온프린팅, 허니콤보드, 패브릭인쇄, 종이매대, 종이가구, 실사출력, 무료디자인에디터, 인쇄도매쇼핑몰, 그림부업, 굿즈제작, 폼보드인쇄">
+    <meta name="author" content="Chameleon Printing">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="카멜레온프린팅">
+    <meta property="og:title" content="카멜레온 커뮤니티 - 인쇄/디자인/부업 정보">
+    <meta property="og:description" content="허니콤보드, 종이매대, 실사출력 제작 후기와 그림부업 노하우를 확인하세요.">
+    <meta property="og:image" content="https://www.cafe2626.com/images/og_board_thumb.jpg"> 
+    <meta property="og:url" content="https://www.cafe2626.com/board.html">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="카멜레온 커뮤니티">
+    <meta name="twitter:description" content="인쇄도매쇼핑몰 카멜레온프린팅의 커뮤니티입니다.">
+
+    <link rel="canonical" href="https://www.cafe2626.com/board.html" />
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -29,10 +47,28 @@
         
         .board-header-wrap {
             background: white; border-radius: 20px; padding: 25px 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
         }
         .country-badge { background: #eff6ff; color: #6366f1; padding: 5px 12px; border-radius: 30px; font-size: 13px; font-weight: 700; margin-bottom: 5px; display:inline-block;}
+
+        /* [추가] 상단 탭 네비게이션 스타일 */
+        .board-nav {
+            display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; 
+            padding-bottom: 5px; /* 스크롤바 공간 확보 */
+            scrollbar-width: none; /* 파이어폭스 스크롤 숨김 */
+        }
+        .board-nav::-webkit-scrollbar { display: none; } /* 크롬 스크롤 숨김 */
+        
+        .nav-item {
+            padding: 10px 18px; background: white; border: 1px solid #e2e8f0;
+            border-radius: 50px; font-size: 14px; font-weight: 600; color: #64748b;
+            cursor: pointer; white-space: nowrap; transition: 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .nav-item:hover { background: #f8fafc; color: #333; }
+        .nav-item.active { background: #6366f1; color: white; border-color: #6366f1; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
+        .nav-item.home { background: #334155; color: white; border-color: #334155; }
 
         /* 게시글 그리드 */
         .post-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
@@ -57,13 +93,11 @@
         .view-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .view-content { font-size: 16px; line-height: 1.8; color: #333; min-height: 200px; margin-bottom: 50px; }
 
-        /* 별점 스타일 */
         .star-display-lg { color: #f59e0b; font-size: 20px; margin-bottom: 5px; }
         .star-rating { display: flex; gap: 2px; cursor: pointer; margin-left: 10px; }
         .star-rating i { color: #cbd5e1; font-size: 24px; transition: color 0.2s; }
         .star-rating i.active { color: #f59e0b; }
 
-        /* 댓글 영역 */
         .comment-section { background: #f8fafc; padding: 20px; border-radius: 12px; margin-top: 30px; }
         .comment-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #333; }
         .comment-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; max-height: 500px; overflow-y: auto; }
@@ -73,10 +107,7 @@
         .comment-date { color: #999; }
         .comment-text { font-size: 14px; color: #555; line-height: 1.5; }
 
-        /* 댓글 폼 */
         .comment-form { display: flex; gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
-
-        /* 글쓰기 에디터 */
         .write-wrap { display: none; background: white; padding: 30px; border-radius: 20px; flex-direction: column; gap: 20px; }
         #editor-container { height: 500px; font-size: 16px; } 
 
@@ -111,6 +142,30 @@
                 </select>
                 <button id="btnWrite" class="btn primary" style="display:none; margin-left:10px;">✏️ 글쓰기</button>
             </div>
+        </div>
+
+        <div class="board-nav">
+            <button class="nav-item home" onclick="location.href='index.html'">
+                <i class="fa-solid fa-house"></i> HOME
+            </button>
+            <button class="nav-item" onclick="moveCategory('free')" id="nav-free">
+                <i class="fa-regular fa-file-lines"></i> 제품설명서
+            </button>
+            <button class="nav-item" onclick="moveCategory('blog')" id="nav-blog">
+                <i class="fa-solid fa-pen-nib"></i> 블로그
+            </button>
+            <button class="nav-item" onclick="moveCategory('review')" id="nav-review">
+                <i class="fa-regular fa-star"></i> 고객후기
+            </button>
+            <button class="nav-item" onclick="moveCategory('promo')" id="nav-promo">
+                <i class="fa-solid fa-bullhorn"></i> 업체홍보
+            </button>
+            <button class="nav-item" onclick="moveCategory('trade')" id="nav-trade">
+                <i class="fa-solid fa-handshake"></i> 중고거래
+            </button>
+            <button class="nav-item" onclick="moveCategory('job')" id="nav-job">
+                <i class="fa-solid fa-briefcase"></i> 구인구직
+            </button>
         </div>
 
         <div id="boardList" class="post-grid">Loading...</div>
@@ -190,49 +245,95 @@
         let currentRating = 5; 
         let isEditMode = false;
 
-        const boardTitles = {
-            'blog': { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ' },
-            'review': { KR: '고객 제작후기', US: 'Customer Reviews', JP: 'お客様のレビュー' },
-            'promo': { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社' },
-            'trade': { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引' },
-            'job': { KR: '구인구직', US: 'Job Market', JP: '求人・求職' },
-            'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書' }
+        const boardMetaInfo = {
+            'blog': {
+                title: { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ' },
+                desc: '카멜레온프린팅 공식 블로그. 무료디자인에디터 활용법과 그림부업 노하우, 최신 인쇄 트렌드를 공유합니다.',
+                keywords: '그림부업, 무료디자인에디터, 인쇄도매쇼핑몰, 디자인팁, 카멜레온프린팅'
+            },
+            'review': {
+                title: { KR: '고객 제작후기', US: 'Customer Reviews', JP: 'お客様のレビュー' },
+                desc: '고객님이 직접 제작한 허니콤보드, 종이매대, 패브릭인쇄, 종이가구, 실사출력 실제 후기를 확인해보세요.',
+                keywords: '허니콤보드후기, 종이매대, 패브릭인쇄, 종이가구, 실사출력, 인쇄후기'
+            },
+            'promo': {
+                title: { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社' },
+                desc: '전국 인쇄도매쇼핑몰 파트너 및 지역 광고사 홍보 게시판입니다.',
+                keywords: '인쇄도매쇼핑몰, 지역광고사, 실사출력업체, 간판업체홍보'
+            },
+            'trade': {
+                title: { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引' },
+                desc: '실사출력 장비, 컷팅기 등 중고 인쇄 장비 직거래 장터입니다.',
+                keywords: '중고플로터, 실사출력기중고, 인쇄장비거래'
+            },
+            'job': {
+                title: { KR: '구인구직', US: 'Job Market', JP: '求人・求職' },
+                desc: '디자인 및 인쇄 업계 채용 정보. 그림부업 및 프리랜서 디자이너 모집 정보를 확인하세요.',
+                keywords: '디자이너구인, 인쇄소채용, 그림부업, 시공기사모집'
+            },
+            'free': {
+                title: { KR: '제품설명서', US: 'Product Manuals', JP: '製品説明書' },
+                desc: '허니콤보드 조립법, 종이매대 설치 가이드, 패브릭인쇄 마감 안내 등 상세 제품 설명서입니다.',
+                keywords: '허니콤보드설명서, 종이매대조립, 종이가구만들기, 등신대설치법'
+            }
         };
+
+        function updateMetaTags(title, desc, keywords) {
+            document.title = title + " | 카멜레온프린팅";
+            let metaDesc = document.querySelector('meta[name="description"]');
+            if (!metaDesc) { metaDesc = document.createElement('meta'); metaDesc.name = "description"; document.head.appendChild(metaDesc); }
+            metaDesc.setAttribute("content", desc);
+            let metaKeys = document.querySelector('meta[name="keywords"]');
+            if (!metaKeys) { metaKeys = document.createElement('meta'); metaKeys.name = "keywords"; document.head.appendChild(metaKeys); }
+            metaKeys.setAttribute("content", keywords);
+            document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
+            document.querySelector('meta[property="og:description"]')?.setAttribute("content", desc);
+        }
+
+        // [추가] 카테고리 이동 헬퍼 함수
+        window.moveCategory = function(cat) {
+            location.href = `/board.html?cat=${cat}&country=${currentCountry}`;
+        }
+
+        // [추가] 이미지 최적화 (Supabase URL 변환)
+        function optimizeImage(url) {
+            if (!url) return null;
+            if (url.includes('supabase.co')) {
+                // 이미 쿼리가 있으면 & 없으면 ?
+                const separator = url.includes('?') ? '&' : '?';
+                // 너비 400px, WebP 포맷, 품질 60% 설정 (로딩 속도 개선)
+                return `${url}${separator}width=400&height=300&resize=cover&quality=60&format=webp`;
+            }
+            return url;
+        }
 
         async function init() {
             await initConfig();
 
-            // [추가된 로직 시작] DB에서 실시간으로 권한 다시 확인하기
-            let isRealAdmin = isAdmin; // config.js에서 가져온 기본값
-
+            let isRealAdmin = isAdmin; 
             if (currentUser) {
-                // profiles 테이블에서 현재 로그인한 유저의 role 값을 직접 조회
-                const { data: profile } = await sb.from('profiles')
-                    .select('role')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                // DB에 'admin'이라고 적혀있으면 관리자 권한 부여 (admin.html에서 설정한 값 반영)
-                if (profile && profile.role === 'admin') {
-                    isRealAdmin = true;
-                }
+                const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
+                if (profile && profile.role === 'admin') isRealAdmin = true;
             }
-            // [추가된 로직 끝]
 
-            // UI 초기화
             const countrySelect = document.getElementById('countrySelect');
             countrySelect.value = currentCountry;
             countrySelect.onchange = (e) => location.href = `/board.html?cat=${category}&country=${e.target.value}`;
             document.getElementById('countryBadge').innerText = currentCountry;
             
-            const titleMap = boardTitles[category] || boardTitles['free'];
-            const pageTitle = titleMap[currentCountry] || titleMap['KR'];
+            const metaInfo = boardMetaInfo[category] || boardMetaInfo['free'];
+            const pageTitle = metaInfo.title[currentCountry] || metaInfo.title['KR'];
             document.getElementById('pageTitle').innerText = pageTitle;
-            document.title = pageTitle;
+
+            // [추가] 현재 탭 활성화
+            const currentTab = document.getElementById(`nav-${category}`);
+            if (currentTab) currentTab.classList.add('active');
+
+            if (!postId) {
+                updateMetaTags(pageTitle, metaInfo.desc, metaInfo.keywords);
+            }
 
             const btnWrite = document.getElementById('btnWrite');
-            
-            // [수정됨] 블로그일 때 isRealAdmin 변수를 사용하여 버튼 표시 여부 결정
             if (category === 'blog') {
                 if (isRealAdmin) btnWrite.style.display = 'inline-block';
             } else {
@@ -277,10 +378,8 @@
             document.getElementById('inputTitle').value = title;
             quill.root.innerHTML = content;
 
-            // [수정] 수정 모드일 때도 카테고리가 review면 별점 수정창 표시
             if (category === 'review') {
                 document.getElementById('ratingInputArea').style.display = 'flex';
-                // 기존 별점 불러오는 로직은 생략했으나 필요하면 추가 가능
             }
 
             showSection('write');
@@ -316,8 +415,6 @@
 
         async function loadPostList() {
             showSection('list');
-            
-            // [수정] 리스트에서도 별점 가져오기 위해 rating 컬럼 추가
             const { data } = await sb.from('community_posts')
                 .select('id, title, author_name, created_at, view_count, content, rating') 
                 .eq('category', category).eq('country_code', currentCountry)
@@ -337,9 +434,11 @@
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
                 const firstImg = tempDiv.querySelector('img');
-                const thumbSrc = firstImg ? firstImg.src : null;
+                
+                // [수정] 이미지 최적화 적용 (WebP 포맷 & 리사이징)
+                const rawSrc = firstImg ? firstImg.src : null;
+                const optimizedSrc = optimizeImage(rawSrc);
 
-                // [수정] 리스트 카드에 별점 표시
                 let starHtml = '';
                 if (category === 'review' && post.rating) {
                     starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
@@ -351,7 +450,7 @@
                 card.className = 'post-card';
                 card.innerHTML = `
                     <div class="card-thumb">
-                        ${thumbSrc ? `<img src="${thumbSrc}" loading="lazy">` : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`}
+                        ${optimizedSrc ? `<img src="${optimizedSrc}" loading="lazy" alt="${post.title}">` : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`}
                     </div>
                     <div class="card-body">
                         ${starHtml}
@@ -374,13 +473,10 @@
             const { data: post } = await sb.from('community_posts').select('*').eq('id', id).single();
             if (!post) return alert('삭제된 글입니다.'), goToList();
             
-            // [수정] 작성자의 별점 표시 (review 카테고리만)
             const ratingArea = document.getElementById('viewRatingArea');
             if (category === 'review' && post.rating) {
                 let starHtml = '';
-                for(let i=0; i<5; i++) {
-                    starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-                }
+                for(let i=0; i<5; i++) starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
                 ratingArea.innerHTML = starHtml;
                 ratingArea.style.display = 'block';
             } else {
@@ -392,6 +488,10 @@
             document.getElementById('viewDate').innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date(post.created_at).toLocaleString()}`;
             document.getElementById('viewCount').innerHTML = `<i class="fa-regular fa-eye"></i> ${post.view_count}`;
             document.getElementById('viewContent').innerHTML = post.content;
+
+            const summary = post.content.replace(/<[^>]*>?/g, '').substring(0, 150).replace(/\s+/g, ' ').trim();
+            const detailKeywords = `${post.title}, ${category}, 카멜레온프린팅, ${boardMetaInfo[category].keywords}`;
+            updateMetaTags(post.title, summary || post.title, detailKeywords);
 
             const btnGroup = document.getElementById('btnGroupAuth');
             if (isAdmin || (currentUser && currentUser.id === post.author_id)) {
@@ -422,7 +522,6 @@
             comments.forEach(cmt => {
                 const item = document.createElement('div');
                 item.className = 'comment-item';
-                // [수정] 댓글에서는 별점 삭제함
                 item.innerHTML = `
                     <div class="comment-top">
                         <span class="comment-author">${cmt.author_name}</span>
@@ -455,11 +554,9 @@
                 document.getElementById('inputTitle').value = "";
                 quill.setContents([]);
                 
-                // [수정] 리뷰 카테고리일 때만 작성창에 별점 입력 보이기
                 if (category === 'review') {
                     document.getElementById('ratingInputArea').style.display = 'flex';
-                    currentRating = 5; // 기본값
-                    // 별 초기화
+                    currentRating = 5; 
                     document.querySelectorAll('#starInput i').forEach(s => s.classList.add('active'));
                 } else {
                     document.getElementById('ratingInputArea').style.display = 'none';
@@ -473,12 +570,11 @@
                 const content = quill.root.innerHTML; 
                 if (!title || quill.getText().trim().length === 0 && !content.includes('<img')) return alert('내용을 입력해주세요.');
 
-                // [수정] rating 값 설정 (리뷰 아니면 null)
                 const ratingValue = (category === 'review') ? currentRating : null;
 
                 if (isEditMode) {
                     const { error } = await sb.from('community_posts')
-                        .update({ title, content, rating: ratingValue }) // 수정 시 별점도 업데이트
+                        .update({ title, content, rating: ratingValue }) 
                         .eq('id', postId);
 
                     if (error) alert("수정 실패: " + error.message);
@@ -490,7 +586,7 @@
                         author_id: currentUser.id, 
                         author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
                         author_email: currentUser.email,
-                        rating: ratingValue // 작성 시 별점 저장
+                        rating: ratingValue 
                     });
 
                     if (error) alert(error.message); 
@@ -503,7 +599,6 @@
                 const txt = document.getElementById('commentInput').value;
                 if(!txt.trim()) return alert('댓글 내용을 입력해주세요.');
 
-                // [수정] 댓글 등록 시 rating 필드 제거 (작성자가 이미 글에서 매김)
                 const { error } = await sb.from('community_comments').insert({
                     post_id: postId,
                     author_id: currentUser.id,
