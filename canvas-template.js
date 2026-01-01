@@ -478,8 +478,8 @@ async function processLoad(mode) {
             const bH = board ? (board.height * board.scaleY) : canvas.height;
             const category = selectedTpl.category || 'logo';
             
-            // ▼▼▼ [수정된 부분] 배열에 'text'를 추가했습니다. ▼▼▼
-            if (['photo-bg', 'vector', 'transparent-graphic', 'pattern', 'text'].includes(category)) {
+            // ▼▼▼ [수정된 부분] 배열에 유저 템플릿(user_vector, user_image)도 추가 ▼▼▼
+            if (['photo-bg', 'vector', 'transparent-graphic', 'pattern', 'text', 'user_vector', 'user_image'].includes(category)) {
                 // 이 조건에 걸리면 화면을 꽉 채우게 됨 (Cover Fit)
                 return Math.max(bW / objWidth, bH / objHeight) * 1.1; 
             } else {
@@ -497,27 +497,90 @@ async function processLoad(mode) {
             return { x: board.left + bW/2, y: board.top + bH/2 };
         };
 
-        // [수정] 좌표 보정 및 개별 객체 로딩 (그룹화 방지)
-        // [수정] 좌표 보정 및 개별 객체 로딩 (그룹화 방지)
+        // [수정] 이미지 및 SVG 로딩 분기 처리 (일러스트 대지 여백 문제 해결)
         if (isImage) {
             const cleanUrl = String(imageUrl).trim().replace(/^"|"$/g, '');
-            fabric.Image.fromURL(cleanUrl, (img) => {
-                if (!img || !img.width) {
+            
+            // 파일이 SVG인지 확인
+            const isSvg = cleanUrl.toLowerCase().includes('.svg') || cleanUrl.startsWith('data:image/svg+xml');
+
+            if (isSvg) {
+                // ★ [SVG 벡터 로딩] 일러스트레이터의 빈 대지(Artboard) 무시하고 내용물만 중앙 정렬
+                fabric.loadSVGFromURL(cleanUrl, (objects, options) => {
+                    if (!objects || objects.length === 0) {
+                         if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+                         return;
+                    }
+                    
+                    // 1. 흩어진 벡터 조각들을 하나의 그룹으로 묶음 (이때 실제 그림 크기만 잡힘)
+                    const group = fabric.util.groupSVGElements(objects, options);
+                    
+                    // 2. 현재 대지(Board) 정보 가져오기
+                    const board = canvas.getObjects().find(o => o.isBoard);
+                    let bW = canvas.width;
+                    let bH = canvas.height;
+                    let bLeft = 0;
+                    let bTop = 0;
+
+                    if (board) {
+                        bW = board.width * board.scaleX;
+                        bH = board.height * board.scaleY;
+                        bLeft = board.left;
+                        bTop = board.top;
+                    }
+
+                    // 3. 스케일 계산: 화면을 '꽉 채우도록(Cover)' 설정
+                    // 그룹의 실제 크기(그림 영역)를 기준으로 비율 계산
+                    const scaleX = bW / group.width;
+                    const scaleY = bH / group.height;
+                    const finalScale = Math.max(scaleX, scaleY); // 꽉 채우기
+                    
+                    // 4. 강제 중앙 정렬 및 속성 적용
+                    group.set({
+                        originX: 'center',
+                        originY: 'center',
+                        left: bLeft + (bW / 2),
+                        top: bTop + (bH / 2),
+                        scaleX: finalScale,
+                        scaleY: finalScale,
+                        selectable: true,
+                        evented: true
+                    });
+
+                    // 5. 캔버스에 추가
+                    canvas.add(group);
+                    
+                    // 6. 편집 편의를 위해 그룹 해제 (일러스트 파일 편집 가능하게)
+                    const activeSelection = group.toActiveSelection();
+                    canvas.setActiveObject(activeSelection);
+
+                    canvas.requestRenderAll();
                     if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-                    return alert("이미지 로드 실패");
-                }
-                const finalScale = getSmartScale(img.width, img.height);
-                const center = getCenterPos();
-                img.set({
-                    left: center.x, top: center.y, originX: 'center', originY: 'center',
-                    scaleX: finalScale, scaleY: finalScale
                 });
-                canvas.add(img);
-                img.setCoords(); 
-                canvas.setActiveObject(img);
-                canvas.requestRenderAll();
-                if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-            }, { crossOrigin: 'anonymous' }); 
+
+            } else {
+                // ★ [일반 이미지(JPG/PNG) 로딩] - 기존 로직 유지
+                fabric.Image.fromURL(cleanUrl, (img) => {
+                    if (!img || !img.width) {
+                        if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+                        return alert("이미지 로드 실패");
+                    }
+                    
+                    const center = getCenterPos();
+                    const finalScale = getSmartScale(img.width, img.height);
+                    
+                    img.set({
+                        left: center.x, top: center.y, originX: 'center', originY: 'center',
+                        scaleX: finalScale, scaleY: finalScale
+                    });
+                    
+                    canvas.add(img);
+                    img.setCoords(); 
+                    canvas.setActiveObject(img);
+                    canvas.requestRenderAll();
+                    if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+                }, { crossOrigin: 'anonymous' }); 
+            }
 
         } else {
             // JSON 벡터 데이터 처리
@@ -545,28 +608,98 @@ async function processLoad(mode) {
                 let useRelativePos = false;
 
                 // 대지 정보가 둘 다 있다면 '상대 좌표' 계산 (가장 정확함)
+                // 4. 좌표 및 스케일 계산
+                // 대지 정보가 있는 경우 (에디터에서 저장한 파일)
                 if (savedBoard && currentBoard) {
-                    useRelativePos = true;
-                    // 저장된 대지 너비 vs 현재 대지 너비 비율 계산
                     const savedW = savedBoard.width * savedBoard.scaleX;
+                    const savedH = savedBoard.height * savedBoard.scaleY;
                     const curW = currentBoard.width * currentBoard.scaleX;
+                    const curH = currentBoard.height * currentBoard.scaleY;
                     
-                    // 카테고리에 따라 꽉 채울지(Cover), 맞출지(Contain) 결정
-                    const fullSizeCats = ['card', 'flyer', 'poster', 'banner-h', 'banner-v', 'menu', 'photo-bg', 'text'];
-                    if(fullSizeCats.includes(selectedTpl.category)) {
-                        scale = curW / savedW; // 가로폭에 맞춰 꽉 채움
+                    // 스케일 계산
+                    let scale = 1;
+                    if (['vector', 'photo-bg', 'transparent-graphic', 'pattern', 'user_vector', 'user_image'].includes(selectedTpl.category)) {
+                        scale = Math.max(curW / savedW, curH / savedH); // 꽉 채우기 (Cover)
+                    } else if (['card', 'flyer', 'poster', 'banner-h', 'banner-v', 'menu', 'text'].includes(selectedTpl.category)) {
+                        scale = curW / savedW; // 가로 맞춤
                     } else {
-                        scale = (curW / 3) / savedW; // 로고 등은 1/3 크기
+                        scale = (curW / 3) / savedW; // 로고 등 작게
                     }
-                } 
-                else {
-                    // 대지 정보가 없는 구버전 데이터는 중앙 정렬 계산을 위해 임시 그룹 사용
+
+                    // 개별 객체 좌표 보정하여 추가
+                    const savedCenterX = savedBoard.left + (savedW / 2);
+                    const savedCenterY = savedBoard.top + (savedBoard.height * savedBoard.scaleY / 2);
+                    const curCenterX = currentBoard.left + (curW / 2);
+                    const curCenterY = currentBoard.top + (currentBoard.height * currentBoard.scaleY / 2);
+
+                    objs.forEach(obj => {
+                        const distX = (obj.left - savedCenterX) * scale;
+                        const distY = (obj.top - savedCenterY) * scale;
+                        obj.set({
+                            left: curCenterX + distX,
+                            top: curCenterY + distY,
+                            scaleX: obj.scaleX * scale,
+                            scaleY: obj.scaleY * scale,
+                            selectable: true, evented: true
+                        });
+                        obj.setCoords();
+                        canvas.add(obj);
+                    });
+                    
+                    // 다중 선택 활성화
+                    const sel = new fabric.ActiveSelection(objs, { canvas: canvas });
+                    canvas.setActiveObject(sel);
+
+                } else {
+                    // ★ [최종 수정] 유저 벡터/이미지 강제 맞춤 로직 (Cover Fit)
+                    
+                    // 1. 객체들을 그룹으로 묶어 전체 크기 파악
                     const group = new fabric.Group(objs);
-                    const center = getCenterPos();
-                    scale = getSmartScale(group.width, group.height);
-                    moveX = center.x - (group.left + group.width/2);
-                    moveY = center.y - (group.top + group.height/2);
-                    group.destroy(); // 계산만 하고 그룹 파괴
+
+                    // 2. 현재 캔버스의 대지(Board) 정보 가져오기
+                    const board = canvas.getObjects().find(o => o.isBoard);
+                    
+                    // 대지 크기 및 위치 계산 (대지가 없으면 캔버스 전체 기준)
+                    let bW = canvas.width;
+                    let bH = canvas.height;
+                    let bLeft = 0;
+                    let bTop = 0;
+
+                    if (board) {
+                        bW = board.width * board.scaleX;
+                        bH = board.height * board.scaleY;
+                        bLeft = board.left;
+                        bTop = board.top;
+                    }
+
+                    // 3. 스케일 계산: 화면을 '꽉 채우도록(Cover)' 설정
+                    // 가로 비율과 세로 비율 중 '더 큰 값'을 선택하면 빈 공간 없이 꽉 찹니다.
+                    const scaleX = bW / group.width;
+                    const scaleY = bH / group.height;
+                    const finalScale = Math.max(scaleX, scaleY); // 꽉 채우기 (잘림 허용)
+                    // 만약 '잘리지 않고 다 보이게(Contain)' 하려면 Math.min(scaleX, scaleY)로 변경하세요.
+
+                    // 4. 그룹 속성 적용 (중앙 정렬 + 스케일)
+                    group.set({
+                        originX: 'center',
+                        originY: 'center',
+                        left: bLeft + (bW / 2),  // 대지 정중앙 X
+                        top: bTop + (bH / 2),    // 대지 정중앙 Y
+                        scaleX: finalScale,
+                        scaleY: finalScale
+                    });
+
+                    // 5. 캔버스에 추가
+                    canvas.add(group);
+                    
+                    // 6. 좌표 업데이트 및 그룹 해제 (편집 가능하도록)
+                    group.setCoords();
+                    
+                    // 그룹을 해제하여 개별 객체 선택 모드로 전환
+                    const activeSelection = group.toActiveSelection();
+                    canvas.setActiveObject(activeSelection);
+                    
+                    canvas.requestRenderAll();
                 }
 
                 // 5. 객체 하나씩 좌표 보정하여 추가
