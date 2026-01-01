@@ -52,13 +52,12 @@
         }
         .country-badge { background: #eff6ff; color: #6366f1; padding: 5px 12px; border-radius: 30px; font-size: 13px; font-weight: 700; margin-bottom: 5px; display:inline-block;}
 
-        /* [추가] 상단 탭 네비게이션 스타일 */
         .board-nav {
             display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; 
-            padding-bottom: 5px; /* 스크롤바 공간 확보 */
-            scrollbar-width: none; /* 파이어폭스 스크롤 숨김 */
+            padding-bottom: 5px; 
+            scrollbar-width: none; 
         }
-        .board-nav::-webkit-scrollbar { display: none; } /* 크롬 스크롤 숨김 */
+        .board-nav::-webkit-scrollbar { display: none; } 
         
         .nav-item {
             padding: 10px 18px; background: white; border: 1px solid #e2e8f0;
@@ -118,6 +117,13 @@
 
         .ql-toolbar.ql-snow { border-top-left-radius: 10px; border-top-right-radius: 10px; border-color: #e2e8f0; background: #f8fafc; }
         .ql-container.ql-snow { border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; border-color: #e2e8f0; font-family: 'Pretendard'; }
+        
+        /* 버튼이 비활성화(disabled) 되었을 때 스타일 */
+        button:disabled {
+            background-color: #ccc !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -244,6 +250,7 @@
         let quill; 
         let currentRating = 5; 
         let isEditMode = false;
+        let isLoginAvailable = true; // 로그인 기능 사용 가능 여부 체크
 
         const boardMetaInfo = {
             'blog': {
@@ -290,30 +297,41 @@
             document.querySelector('meta[property="og:description"]')?.setAttribute("content", desc);
         }
 
-        // [추가] 카테고리 이동 헬퍼 함수
         window.moveCategory = function(cat) {
             location.href = `/board.html?cat=${cat}&country=${currentCountry}`;
         }
 
-        // [추가] 이미지 최적화 (Supabase URL 변환)
         function optimizeImage(url) {
             if (!url) return null;
             if (url.includes('supabase.co')) {
-                // 이미 쿼리가 있으면 & 없으면 ?
                 const separator = url.includes('?') ? '&' : '?';
-                // 너비 400px, WebP 포맷, 품질 60% 설정 (로딩 속도 개선)
                 return `${url}${separator}width=400&height=300&resize=cover&quality=60&format=webp`;
             }
             return url;
         }
 
+        // [수정: 로딩 멈춤 방지] 초기화 과정에서 에러가 나도 목록은 보여주도록 수정
         async function init() {
-            await initConfig();
+            try {
+                // 로그인 체크 시도
+                await initConfig();
+            } catch (e) {
+                console.warn("로그인 정보 로드 실패 (추적 방지 등으로 인한 쿠키 차단):", e);
+                isLoginAvailable = false; // 로그인 불가능 상태로 표시
+                // 여기서 멈추지 않고 아래 코드를 실행함 (이게 중요!)
+            }
 
-            let isRealAdmin = isAdmin; 
-            if (currentUser) {
-                const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
-                if (profile && profile.role === 'admin') isRealAdmin = true;
+            let isRealAdmin = false; 
+            // 로그인이 되어있을 때만 관리자 체크
+            if (isLoginAvailable && isAdmin) isRealAdmin = true;
+            if (isLoginAvailable && currentUser) {
+                try {
+                    const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
+                    if (profile && profile.role === 'admin') isRealAdmin = true;
+                } catch(err) { 
+                    console.error("프로필 정보 로드 실패(무시)", err); 
+                    // 프로필이 없어도 멈추지 않고 진행
+                }
             }
 
             const countrySelect = document.getElementById('countrySelect');
@@ -325,7 +343,6 @@
             const pageTitle = metaInfo.title[currentCountry] || metaInfo.title['KR'];
             document.getElementById('pageTitle').innerText = pageTitle;
 
-            // [추가] 현재 탭 활성화
             const currentTab = document.getElementById(`nav-${category}`);
             if (currentTab) currentTab.classList.add('active');
 
@@ -334,10 +351,13 @@
             }
 
             const btnWrite = document.getElementById('btnWrite');
-            if (category === 'blog') {
-                if (isRealAdmin) btnWrite.style.display = 'inline-block';
-            } else {
-                if (currentUser) btnWrite.style.display = 'inline-block';
+            // 로그인이 가능한 상태에서만 글쓰기 버튼 노출 로직 수행
+            if (isLoginAvailable) {
+                if (category === 'blog') {
+                    if (isRealAdmin) btnWrite.style.display = 'inline-block';
+                } else {
+                    if (currentUser) btnWrite.style.display = 'inline-block';
+                }
             }
 
             quill = new Quill('#editor-container', {
@@ -390,8 +410,10 @@
             try {
                 const { error: commentErr } = await sb.from('community_comments').delete().eq('post_id', postId);
                 if(commentErr) throw commentErr;
-                const { error: postErr } = await sb.from('community_posts').delete().eq('id', postId);
+                const { data, error: postErr } = await sb.from('community_posts').delete().eq('id', postId).select();
                 if(postErr) throw postErr;
+                if(!data || data.length === 0) throw new Error("삭제 권한이 없거나 이미 삭제된 글입니다.");
+
                 alert("삭제되었습니다.");
                 goToList();
             } catch(e) {
@@ -415,6 +437,7 @@
 
         async function loadPostList() {
             showSection('list');
+            // 목록은 로그인 여부와 상관없이 누구나 볼 수 있어야 함
             const { data } = await sb.from('community_posts')
                 .select('id, title, author_name, created_at, view_count, content, rating') 
                 .eq('category', category).eq('country_code', currentCountry)
@@ -435,7 +458,6 @@
                 tempDiv.innerHTML = post.content;
                 const firstImg = tempDiv.querySelector('img');
                 
-                // [수정] 이미지 최적화 적용 (WebP 포맷 & 리사이징)
                 const rawSrc = firstImg ? firstImg.src : null;
                 const optimizedSrc = optimizeImage(rawSrc);
 
@@ -468,7 +490,9 @@
 
         async function loadPostDetail(id) {
             showSection('view');
-            await sb.rpc('increment_view_count', { post_id: id });
+            try {
+                 await sb.rpc('increment_view_count', { post_id: id });
+            } catch(e) { console.log("조회수 증가 실패(무시)", e); }
             
             const { data: post } = await sb.from('community_posts').select('*').eq('id', id).single();
             if (!post) return alert('삭제된 글입니다.'), goToList();
@@ -494,7 +518,8 @@
             updateMetaTags(post.title, summary || post.title, detailKeywords);
 
             const btnGroup = document.getElementById('btnGroupAuth');
-            if (isAdmin || (currentUser && currentUser.id === post.author_id)) {
+            // 로그인 상태일 때만 수정/삭제 버튼 체크
+            if (isLoginAvailable && (isAdmin || (currentUser && currentUser.id === post.author_id))) {
                 btnGroup.style.display = 'block';
             } else {
                 btnGroup.style.display = 'none';
@@ -540,7 +565,12 @@
             
             const btnWrite = document.getElementById('btnWrite');
             if (sec === 'list') {
-                 if(category !== 'blog' || isAdmin) btnWrite.style.display = 'inline-block';
+                 // 로그인 되어있고 조건 맞을 때만 글쓰기 버튼 표시
+                 if(isLoginAvailable && (category !== 'blog' || isAdmin)) {
+                     btnWrite.style.display = 'inline-block';
+                 } else {
+                     btnWrite.style.display = 'none';
+                 }
             } else {
                 btnWrite.style.display = 'none';
             }
@@ -548,7 +578,7 @@
 
         function setupEventListeners() {
             document.getElementById('btnWrite').onclick = () => {
-                if (!currentUser) return alert('로그인이 필요합니다.');
+                if (!isLoginAvailable || !currentUser) return alert('로그인이 필요한 기능입니다.');
                 
                 isEditMode = false; 
                 document.getElementById('inputTitle').value = "";
@@ -565,51 +595,89 @@
                 showSection('write');
             };
 
+            // [수정: 중복 글쓰기 방지] 버튼 즉시 비활성화 로직 적용
             document.getElementById('btnSubmitPost').onclick = async () => {
+                const btn = document.getElementById('btnSubmitPost');
+                
+                // 1. 이미 비활성화 상태(처리중)라면 클릭을 무시합니다. (이게 핵심)
+                if (btn.disabled) return; 
+
                 const title = document.getElementById('inputTitle').value;
                 const content = quill.root.innerHTML; 
-                if (!title || quill.getText().trim().length === 0 && !content.includes('<img')) return alert('내용을 입력해주세요.');
+                if (!title || (quill.getText().trim().length === 0 && !content.includes('<img'))) {
+                    return alert('내용을 입력해주세요.');
+                }
 
-                const ratingValue = (category === 'review') ? currentRating : null;
+                // 2. 버튼을 비활성화하고 텍스트를 변경합니다.
+                btn.disabled = true;
+                btn.innerText = "처리중...";
 
-                if (isEditMode) {
-                    const { error } = await sb.from('community_posts')
-                        .update({ title, content, rating: ratingValue }) 
-                        .eq('id', postId);
+                try {
+                    const ratingValue = (category === 'review') ? currentRating : null;
 
-                    if (error) alert("수정 실패: " + error.message);
-                    else { alert("수정되었습니다!"); location.reload(); }
+                    if (isEditMode) {
+                        const { error } = await sb.from('community_posts')
+                            .update({ title, content, rating: ratingValue }) 
+                            .eq('id', postId);
 
-                } else {
-                    const { error } = await sb.from('community_posts').insert({
-                        category, country_code: currentCountry, title, content, 
-                        author_id: currentUser.id, 
-                        author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
-                        author_email: currentUser.email,
-                        rating: ratingValue 
-                    });
+                        if (error) throw error;
+                        alert("수정되었습니다!"); 
+                        location.reload();
 
-                    if (error) alert(error.message); 
-                    else { alert('등록되었습니다!'); goToList(); }
+                    } else {
+                        const { error } = await sb.from('community_posts').insert({
+                            category, country_code: currentCountry, title, content, 
+                            author_id: currentUser.id, 
+                            author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
+                            author_email: currentUser.email,
+                            rating: ratingValue 
+                        });
+
+                        if (error) throw error;
+                        alert('등록되었습니다!'); 
+                        goToList();
+                    }
+                } catch(e) {
+                    console.error(e);
+                    alert("처리 실패: " + e.message);
+                    
+                    // 에러가 났을 때만 다시 누를 수 있게 버튼을 풀어줍니다.
+                    btn.disabled = false;
+                    btn.innerText = "등록하기";
                 }
             };
 
+            // 댓글 작성 버튼에도 똑같이 중복 방지 적용
             document.getElementById('btnSubmitComment').onclick = async () => {
-                if(!currentUser) return alert('로그인이 필요합니다.');
+                if(!isLoginAvailable || !currentUser) return alert('로그인이 필요합니다.');
+                
+                const btn = document.getElementById('btnSubmitComment');
+                if(btn.disabled) return; // 중복 클릭 방지
+
                 const txt = document.getElementById('commentInput').value;
                 if(!txt.trim()) return alert('댓글 내용을 입력해주세요.');
 
-                const { error } = await sb.from('community_comments').insert({
-                    post_id: postId,
-                    author_id: currentUser.id,
-                    author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0],
-                    content: txt
-                });
+                btn.disabled = true;
+                btn.innerText = "등록중...";
 
-                if(error) alert("등록 실패: " + error.message);
-                else {
+                try {
+                    const { error } = await sb.from('community_comments').insert({
+                        post_id: postId,
+                        author_id: currentUser.id,
+                        author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0],
+                        content: txt
+                    });
+
+                    if(error) throw error;
+                    
                     document.getElementById('commentInput').value = '';
                     loadComments(postId);
+                } catch(e) {
+                    alert("등록 실패: " + e.message);
+                } finally {
+                    // 댓글은 작성 후 바로 또 쓸 수 있게 풀어줍니다.
+                    btn.disabled = false;
+                    btn.innerText = "등록";
                 }
             };
         }
