@@ -55,6 +55,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         initOutlineTool();
         initFileUploadListeners();
 
+        await checkPartnerStatus();
+
         // 폰트 미리 로드
         if(window.preloadLanguageFont) await window.preloadLanguageFont();
 
@@ -423,6 +425,7 @@ async function checkPartnerStatus() {
 }
 
 // [신규] 가맹점 신청 함수
+// [수정됨] 가맹점 신청 함수 (DB에 진짜로 저장하는 코드)
 async function applyForPartner() {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return alert("로그인이 필요합니다.");
@@ -436,20 +439,24 @@ async function applyForPartner() {
 
     if(!confirm(`[신청 정보 확인]\n상호명: ${name}\n연락처: ${phone}\n지역: ${region}\n\n제출하시겠습니까?`)) return;
 
-    // (선택) DB에 신청 내용을 저장하거나, 일단 알림만 띄움
-    // 실제로는 withdrawal_requests 처럼 partner_applications 테이블을 만들어 insert 해야 함.
-    // 여기서는 UI 동작 확인용으로 완료 메시지만 띄웁니다.
-    alert("🎉 가맹점 신청이 접수되었습니다!\n담당자가 검토 후 연락드리겠습니다.");
+    // ★ [핵심] 실제 DB에 저장하는 코드
+    try {
+        const { error } = await sb.from('partner_applications').insert({
+            user_id: user.id,
+            company_name: name,
+            contact_phone: phone,
+            region: region,
+            status: 'pending' // '대기중' 상태로 저장
+        });
+
+        if (error) throw error;
+
+        alert("🎉 가맹점 신청이 정상적으로 접수되었습니다!\n관리자 승인 후 파트너스 기능을 이용하실 수 있습니다.");
+    } catch (e) {
+        console.error(e);
+        alert("신청 실패: " + e.message);
+    }
 }
-
-// 페이지 로드 시 권한 체크 실행
-window.addEventListener('load', () => setTimeout(checkPartnerStatus, 1000));
-
-// 2. 콘솔 열기
-window.openPartnerConsole = function() {
-    document.getElementById('partnerConsoleModal').style.display = 'flex';
-    window.switchPartnerTab('pool');
-};
 
 // 3. 탭 전환
 window.switchPartnerTab = function(tabName) {
