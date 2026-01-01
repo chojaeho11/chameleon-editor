@@ -346,8 +346,11 @@
             <span style="background: #6366f1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 10px; display: inline-block;">PARTNER CENTER</span>
             <h2 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 800;">우리 지역 인쇄/광고 주문, <br><span style="color: #818cf8;">직접 접수받고 수익을 창출하세요!</span></h2>
             <p style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6;">
-                본사가 영업하고, 사장님은 제작/납품만 하세요.<br>
-                카드 수수료 제외 후, 안전하게 정산해 드립니다. (고객 수령 후 5일 뒤 출금 가능)
+                영업은 본사가 가맹점주님은 제작 납품, 허니콤보드는 설치비 무료, 기타 설치는 고객님과 협의<br>
+                관리 페이지에서 맘에드는 오더만 찜해서 제작 진행하시면 됩니다. <br>
+                카드 수수료 3.5% 가맹점 수수료 6.5% 제외 후, 전액 안전하게 정산해 드립니다. (고객 수령 5일 후 정산) <br>
+                배송 가능한 지역을 선택하세요. 그 지역오더가 들어오면 관리자페이지 알림이 울립니다. 띵동!!! <br>
+                먼저 가져가는 사람이 임자입니다. 단! 불친절 1달 2회 신고되면 박탈됩니다.
             </p>
         </div>
         
@@ -1626,36 +1629,60 @@ function goBoard(category) {
     }
 
     // 4. 로그인 상태 확인 및 버튼 처리 (비동기)
+    // 4. 로그인 상태 확인 및 버튼 처리 (비동기) - [수정됨: 강제 로그아웃 적용]
     setTimeout(async () => {
         const { data } = await sb.auth.getSession();
         const btnLogin = document.getElementById('btnLoginBtn');
+        const btnConsole = document.getElementById('btnPartnerConsole'); // 파트너 버튼
         
-        // 로그인 된 상태
+        // [CASE A] 로그인 된 상태
         if (data && data.session && data.session.user) {
             window.currentUser = data.session.user;
-            console.log("로그인 확인됨:", window.currentUser.email);
+            console.log("✅ 로그인 확인됨:", window.currentUser.email);
 
             if (btnLogin) {
                 btnLogin.innerText = "로그아웃";
                 btnLogin.style.fontWeight = "bold"; 
-                
-                // 로그아웃 기능 연결
+                btnLogin.style.color = "#ef4444"; // 빨간색으로 표시
+
+                // ★ [핵심] 강력한 로그아웃 기능 연결
                 btnLogin.onclick = async function() {
                     if (confirm("정말 로그아웃 하시겠습니까?")) {
-                        await sb.auth.signOut();
+                        try {
+                            // 1. 서버에 로그아웃 요청 (에러나도 무시하고 진행)
+                            await sb.auth.signOut();
+                        } catch (e) {
+                            console.log("서버 로그아웃 응답 없음(무시함):", e);
+                        }
+
+                        // 2. 브라우저 저장소 강제 초기화 (가장 중요!)
+                        localStorage.clear(); 
+                        
+                        // 3. UI 즉시 숨김
+                        if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
+                        btnLogin.innerText = "로그인";
+
                         alert("로그아웃 되었습니다.");
-                        window.location.reload(); 
+                        
+                        // 4. 홈으로 이동하며 새로고침
+                        window.location.replace('/'); 
                     }
                 };
             }
         } 
-        // 비로그인 상태
+        // [CASE B] 비로그인 상태
         else {
+            console.log("ℹ️ 비로그인 상태");
             if (btnLogin) {
                 btnLogin.innerText = "로그인";
+                btnLogin.style.color = ""; // 색상 초기화
                 btnLogin.onclick = function() {
                     document.getElementById('loginModal').style.display = 'flex';
                 };
+            }
+            // 비로그인이면 파트너 버튼 강제로 숨김
+            if (btnConsole) {
+                btnConsole.style.setProperty('display', 'none', 'important');
             }
         }
     }, 500);

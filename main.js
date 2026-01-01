@@ -376,7 +376,17 @@ function initMobileTextEditor() {
 // ============================================================
 // [최종] 파트너스 시스템 (음성안내 + 10% 수수료 + 파일명)
 // ============================================================
-
+// ============================================================
+// ★ [추가] 파트너스 관리자 접속 버튼 기능
+// ============================================================
+window.openPartnerConsole = function() {
+    const modal = document.getElementById('partnerConsoleModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // 모달을 열 때 '실시간 주문접수' 탭 데이터를 자동으로 불러옵니다.
+        if (window.switchPartnerTab) window.switchPartnerTab('pool');
+    }
+};
 let lastOrderCount = 0; 
 
 // 1. 파트너 권한 확인 및 버튼 표시 (수정됨: 권한별 버튼 분기 처리)
