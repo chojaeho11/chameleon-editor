@@ -534,12 +534,15 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
 }
 
 // ==========================================================
-// [9] 작업지시서 생성 (Order Sheet) - ★ 완벽 수정됨
+// [9] 작업지시서 생성 (배송일 대형 + QR 상세정보 포함)
 // ==========================================================
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
-    if (!window.jspdf) return alert("PDF Loading...");
+    if (!window.jspdf) return alert("PDF 라이브러리 로딩 중...");
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    
+    // 폰트 로드
     await loadPdfFonts(doc); 
 
     for (let i = 0; i < cartItems.length; i++) {
@@ -548,69 +551,155 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 
         if (i > 0) doc.addPage();
         
-        // 헤더
+        // 1. 헤더 (남색 배경)
         const NAVY_CMYK = "#1a237e"; 
         const [c,m,yk,k] = hexToCMYK(NAVY_CMYK);
-        doc.setFillColor(c,m,yk,k); doc.rect(0, 0, 210, 20, 'F');
-        doc.setTextColor(0,0,0,0); doc.setFontSize(18); 
-        drawText(doc, "작 업 지 시 서", 105, 13, { align: 'center', weight: 'bold' }, "#ffffff");
+        doc.setFillColor(c,m,yk,k); 
+        doc.rect(0, 0, 210, 20, 'F');
         
+        doc.setTextColor(0,0,0,0); // 흰색
+        doc.setFontSize(22); 
+        drawText(doc, "작 업 지 시 서", 105, 14, { align: 'center', weight: 'bold' }, "#ffffff");
+        
+        // 2. 주문 정보 박스
         const startY = 30; 
-        doc.setTextColor(0,0,0,1); doc.setFontSize(11); 
-        doc.setDrawColor(0.8, 0, 0, 0.1); 
-        // [수정] 박스 높이 늘림 (배송일 추가 공간 확보)
-        doc.rect(15, startY, 180, 50); 
+        const boxH = 50;
+        doc.setTextColor(0,0,0,1); // 검정
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.4);
+        doc.rect(15, startY, 180, boxH); 
 
-        drawText(doc, `주 문 번 호 :  ${orderInfo.id || 'PREVIEW'}`, 20, startY + 8, {weight:'bold'});
-        drawText(doc, `주 문 일 자 :  ${new Date().toLocaleString()}`, 110, startY + 8);
-        drawLine(doc, 15, startY+12, 195, startY+12, "#cccccc"); 
+        // --- [좌측 정보] ---
+        doc.setFontSize(10); 
+        const lineH = 7;
+        let curY = startY + 8;
 
-        // ★ [추가] 배송 희망일 (강조)
-        doc.setTextColor(0, 1, 1, 0); // Red
-        doc.setFontSize(12);
-        drawText(doc, `배 송 희 망 일 :  ${orderInfo.date || '미지정'}`, 20, startY + 18, {weight:'bold'}, "#ff0000");
+        // 주문번호 / 날짜
+        drawText(doc, `주 문 번 호 :  ${orderInfo.id || '-'}`, 20, curY, {weight:'bold'});
+        drawText(doc, `접 수 일 자 :  ${new Date().toLocaleDateString()}`, 80, curY);
         
-        // 다시 기본색
-        doc.setTextColor(0,0,0,1); 
+        // 구분선
+        doc.setDrawColor(200); doc.setLineWidth(0.1);
+        doc.line(20, curY + 3, 130, curY + 3); 
+
+        curY += 8; 
+
+        // 주문자
         doc.setFontSize(11);
-
-        drawText(doc, `주   문   자 :  ${orderInfo.manager || '-'}`, 20, startY + 26);
-        drawText(doc, `연   락   처 :  ${orderInfo.phone || '-'}`, 110, startY + 26);
+        drawText(doc, `주   문   자 :  ${orderInfo.manager || '-'}`, 20, curY);
         
-        drawText(doc, `배 송 주 소 :`, 20, startY + 34);
+        curY += 6; 
+
+        // 연락처 (좌측)
+        drawText(doc, `연   락   처 :  ${orderInfo.phone || '-'}`, 20, curY);
+
+        curY += 6; 
+
+        // 주소
+        drawText(doc, `배 송 주 소 :`, 20, curY);
         doc.setFontSize(10);
-        drawText(doc, `${orderInfo.address || '-'}`, 45, startY + 34, {maxWidth: 140});
-        
-        doc.setFontSize(11);
-        drawText(doc, `요 청 사 항 :`, 20, startY + 44);
-        doc.setTextColor(0, 1, 1, 0); 
-        drawText(doc, `${orderInfo.note || '없음'}`, 45, startY + 44, {maxWidth: 140, weight:'bold'}, "#ff0000");
+        drawText(doc, `${orderInfo.address || '-'}`, 45, curY, {maxWidth: 90});
 
-        // ★ [복구] 담당자 실명 정보
-        const staffY = startY + 55; // 위치 조정
-        doc.setFillColor(255, 247, 237); // 연한 주황
-        doc.setDrawColor(249, 115, 22); 
-        doc.rect(15, staffY, 180, 15, 'F'); 
-        doc.rect(15, staffY, 180, 15);
+        curY += 10; 
+
+        // 요청사항
+        doc.setFontSize(11);
+        drawText(doc, `요 청 사 항 :`, 20, curY);
+        drawText(doc, `${orderInfo.note || '없음'}`, 45, curY, {maxWidth: 130, weight:'bold'}, "#1d4ed8");
+
+
+        // --- [우측 대형 배송일] ---
+        let dateStr = "미지정";
+        if (orderInfo.date) {
+            const parts = orderInfo.date.split('-');
+            if(parts.length === 3) {
+                dateStr = `${parts[1]}.${parts[2]}`; // 월.일
+            } else {
+                dateStr = orderInfo.date;
+            }
+        }
+
+        doc.setFontSize(12);
+        drawText(doc, "배송 희망일", 165, startY + 12, {align:'center', weight:'bold'}, "#ff0000");
+        
+        doc.setFontSize(42); 
+        drawText(doc, dateStr, 165, startY + 32, {align:'center', weight:'bold'}, "#ff0000");
+        
+        doc.setDrawColor(255, 0, 0); 
+        doc.setLineWidth(0.5);
+        doc.roundedRect(135, startY + 5, 55, 35, 3, 3); 
+
+
+        // 3. 담당자 정보 박스
+        const staffY = startY + boxH + 5; 
+        doc.setFillColor(255, 247, 237); 
+        doc.setDrawColor(249, 115, 22);  
+        doc.setLineWidth(0.3);
+        doc.rect(15, staffY, 180, 14, 'FD'); 
         
         doc.setTextColor(194, 65, 12); 
         doc.setFontSize(10);
-        drawText(doc, `배송책임자 : 서용규 (010-8272-3017)  |  제작책임자 : 변지웅 (010-5512-5366)`, 105, staffY + 8.5, {align:'center'}, "#c2410c");
+        drawText(doc, `배송책임자 : 서용규 (010-8272-3017)   |   제작책임자 : 변지웅 (010-5512-5366)`, 105, staffY + 8.5, {align:'center', weight:'bold'}, "#c2410c");
 
-        const prodY = staffY + 25;
-        doc.setTextColor(0, 0, 0, 1);
-        doc.setFillColor(0.1, 0, 0, 0.05); doc.rect(15, prodY, 180, 10, 'F'); doc.rect(15, prodY, 180, 10); 
-        drawText(doc, "제 작 사양", 20, prodY + 7, {weight:'bold'}, "#000000");
-        drawText(doc, `수량: ${item.qty}개`, 185, prodY + 7, {align:'right', weight:'bold'}, "#000000");
+        // ★ [수정] QR코드 (상세 정보 포함)
+        if (window.QRCode) {
+            try {
+                // 1. 옵션 텍스트 생성
+                let optionText = "기본 사양";
+                if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
+                    const optNames = [];
+                    Object.values(item.selectedAddons).forEach(code => {
+                        const add = ADDON_DB[code]; 
+                        if(add) optNames.push(add.name);
+                    });
+                    if(optNames.length > 0) optionText = optNames.join(", ");
+                }
 
-        const infoY = prodY + 15;
-        doc.setFontSize(14);
-        drawText(doc, `품명: ${item.product.name}`, 20, infoY, {weight:'bold'});
+                // 2. QR에 담을 내용 구성 (줄바꿈 \n 사용)
+                // 내용이 너무 길면 QR 코드가 복잡해져서 인식이 어려울 수 있으니 핵심만 담습니다.
+                const qrContent = `[주문정보]
+고객: ${orderInfo.manager}
+전화: ${orderInfo.phone}
+주소: ${orderInfo.address}
+제품: ${item.product.name}
+옵션: ${optionText}`;
+
+                // 3. QR 생성
+                // utf-8 처리를 위해 라이브러리가 알아서 처리하지만, 내용이 길 경우 width를 늘리는 것을 권장하지 않으므로 데이터 밀도를 높입니다.
+                const qrUrl = await window.QRCode.toDataURL(qrContent, { margin: 0, width: 150 });
+                
+                // 4. 위치 배치 (Staff 박스 우측 끝)
+                doc.addImage(qrUrl, 'PNG', 181, staffY + 1, 12, 12);
+                
+            } catch (e) {
+                console.warn("QR Error:", e);
+            }
+        }
+
+        // 4. 상품 정보
+        const prodY = staffY + 20;
+        
+        doc.setFillColor(240, 240, 240); 
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.1);
+        doc.rect(15, prodY, 180, 10, 'FD');
+        
+        doc.setTextColor(0);
+        doc.setFontSize(11);
+        drawText(doc, "제 작 사 양", 20, prodY + 7, {weight:'bold'});
+        drawText(doc, `수량: ${item.qty}개`, 185, prodY + 7, {align:'right', weight:'bold', fontSize:12}, "#ff0000");
+
+        const infoY = prodY + 18;
+        doc.setFontSize(16);
+        drawText(doc, `${item.product.name}`, 20, infoY, {weight:'bold'});
+        
         doc.setFontSize(11);
         let optY = infoY + 8;
-        if (item.selectedAddons) {
+        
+        if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
             Object.values(item.selectedAddons).forEach(code => {
-                const add = ADDON_DB[code]; if(!add) return;
+                const add = ADDON_DB[code]; 
+                if(!add) return;
                 const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
                 drawText(doc, `• ${add.name} (x${qty})`, 25, optY);
                 optY += 6;
@@ -620,10 +709,16 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             optY += 6;
         }
 
+        // 5. 디자인 시안 이미지
         const imgBoxY = optY + 5;
-        const imgBoxH = 100;
-        doc.setDrawColor(0); doc.rect(15, imgBoxY, 180, imgBoxH); 
-        drawText(doc, "< 디자인 시안 확인 >", 105, imgBoxY - 2, {align:'center', size:9}, "#666666");
+        const footerY = 255; 
+        const imgBoxH = footerY - imgBoxY - 5; 
+
+        doc.setDrawColor(0); 
+        doc.setLineWidth(0.2);
+        doc.rect(15, imgBoxY, 180, imgBoxH); 
+        
+        drawText(doc, "< 디자인 시안 확인 >", 105, imgBoxY - 2, {align:'center', size:9, color:"#888888"});
 
         let imgData = null; 
         if (item.thumb && item.thumb.startsWith('data:image')) imgData = item.thumb;
@@ -632,32 +727,48 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 
         if (imgData) {
             try {
-                let format = 'PNG'; if (imgData.startsWith('data:image/jpeg')) format = 'JPEG';
+                let format = 'PNG'; 
+                if (imgData.startsWith('data:image/jpeg')) format = 'JPEG';
+                
                 const imgProps = doc.getImageProperties(imgData);
-                const maxW = 178; const maxH = 98;
-                let w = maxW; let h = (imgProps.height * w) / imgProps.width;
-                if (h > maxH) { h = maxH; w = (imgProps.width * h) / imgProps.height; }
-                const imgX = 105 - (w / 2); const imgY = imgBoxY + (imgBoxH / 2) - (h / 2);
+                const innerW = 176; 
+                const innerH = imgBoxH - 4;
+                let w = innerW; 
+                let h = (imgProps.height * w) / imgProps.width;
+                
+                if (h > innerH) { h = innerH; w = (imgProps.width * h) / imgProps.height; }
+                const imgX = 105 - (w / 2); 
+                const imgY = imgBoxY + (imgBoxH / 2) - (h / 2);
+                
                 doc.addImage(imgData, format, imgX, imgY, w, h);
-            } catch (err) {}
+            } catch (err) {
+                console.warn("이미지 추가 실패:", err);
+            }
         } else {
-            drawText(doc, "이미지 없음", 105, imgBoxY + 50, {align:'center'});
+            drawText(doc, "이미지 없음 (파일 별도 확인)", 105, imgBoxY + (imgBoxH/2), {align:'center'});
         }
 
-        // [QR 대신 상세 텍스트] - 보안 문제 해결
-        const qrY = 255;
-        doc.setDrawColor(0); doc.rect(15, qrY, 180, 30);
-        drawLine(doc, 15, qrY+10, 195, qrY+10);
+        // 6. 하단 결재란
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.1);
         
-        drawText(doc, "제 작 담 당", 45, qrY+7, {align:'center', weight:'bold'});
-        drawText(doc, "검 수 / 출 고", 105, qrY+7, {align:'center', weight:'bold'});
-        drawText(doc, "배 송 담 당", 165, qrY+7, {align:'center', weight:'bold'});
+        const signBoxW = 180; 
+        const signBoxH = 25;
         
-        drawLine(doc, 75, qrY, 75, qrY+30);
-        drawLine(doc, 135, qrY, 135, qrY+30);
+        doc.rect(15, footerY, signBoxW, signBoxH);
+        
+        const colW = signBoxW / 3;
+        doc.line(15, footerY + 8, 15 + signBoxW, footerY + 8); 
+        doc.line(15 + colW, footerY, 15 + colW, footerY + signBoxH); 
+        doc.line(15 + colW*2, footerY, 15 + colW*2, footerY + signBoxH); 
+        
+        doc.setFontSize(10);
+        drawText(doc, "제 작 담 당", 15 + colW/2, footerY+5.5, {align:'center'});
+        drawText(doc, "검 수 / 출 고", 15 + colW*1.5, footerY+5.5, {align:'center'});
+        drawText(doc, "배 송 담 당", 15 + colW*2.5, footerY+5.5, {align:'center'});
 
-        doc.setFontSize(9); 
-        drawText(doc, "Generated by Chameleon Printing System", 105, 290, { align: 'center' }, "#888888");
+        doc.setFontSize(8); 
+        drawText(doc, "Generated by Chameleon Printing System", 105, 292, { align: 'center' }, "#888888");
     }
     return doc.output('blob');
 }
