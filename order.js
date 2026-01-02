@@ -760,26 +760,32 @@ async function processOrderSubmission() {
         const itemsToSave = cartData.map(item => {
             if (!item.product) return null; 
             
-            // [수정] 본품과 옵션 가격을 분리하여 계산
-            const productUnitPrice = item.product.price || 0;
-            const productQty = item.qty || 1;
+            // 1. 가격 분리 계산 (견적서 로직과 통일)
+            const unitPrice = item.product.price || 0;
+            const qty = item.qty || 1;
             
-            let currentProductTotal = productUnitPrice * productQty; // 본품 총액
-            let currentOptionTotal = 0; // 옵션 총액
-
+            // 본품 총액
+            const productTotal = unitPrice * qty;
+            
+            // 옵션 총액 (본품 수량과 곱하지 않고, 옵션 수량만 더함)
+            let optionTotal = 0;
             if(item.selectedAddons) {
                 Object.values(item.selectedAddons).forEach(code => {
                     const addon = ADDON_DB[code];
                     const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                    if(addon) {
-                        // 옵션은 본품 수량과 곱하지 않고, 설정된 옵션 수량(aq)만 더함
-                        currentOptionTotal += addon.price * aq;
-                    }
+                    if(addon) optionTotal += addon.price * aq;
                 });
             }
+
+            // 이 아이템의 최종 합계 금액 (옵션 중복 곱하기 방지)
+            const itemFinalTotal = productTotal + optionTotal;
             
-            const itemFinalPrice = currentProductTotal + currentOptionTotal;
-            rawTotal += itemFinalPrice;
+            // 전체 주문 총액에 합산
+            rawTotal += itemFinalTotal;
+
+            // [핵심] 관리자 페이지 호환용 단가 계산 (총액 ÷ 수량)
+            // 관리자 페이지는 (단가 × 수량)으로 총액을 보여주므로, 여기서 나누어서 저장해야 함
+            const compatibleUnitPrice = itemFinalTotal / qty;
 
             return {
                 product: { 
@@ -789,13 +795,13 @@ async function processOrderSubmission() {
                     img: item.product.img 
                 },
                 productName: item.product.name,
-                qty: item.qty || 1, 
+                qty: qty, 
                 
-                // [수정됨] 계산된 최종 가격 변수(itemFinalPrice)를 넣어야 합니다.
-                price: itemFinalPrice, 
+                // [수정] 오류가 나던 itemPrice 대신 계산된 호환 단가를 저장
+                price: compatibleUnitPrice, 
                 
                 selectedAddons: item.selectedAddons || {}, 
-                addonQuantities: item.addonQuantities || {},
+                addonQuantities: item.addonQuantities || {}, 
                 type: item.type || 'design',     
                 json: item.json || null,         
                 thumb: item.thumb || '',         

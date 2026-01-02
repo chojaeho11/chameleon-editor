@@ -1,17 +1,18 @@
 import { canvas } from "./canvas-core.js";
 import { ADDON_DB, currentUser, sb } from "./config.js";
 
-// ★ [핵심] 안전장치: 폰트 로드 실패 시 사용할 '나눔고딕' 주소
+// [안전장치] 폰트 로드 실패 시 사용할 기본 폰트 (나눔고딕)
 const SAFE_KOREAN_FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf";
 const BASE_FONT_NAME = "NanumGothic"; 
 
-// 직인 이미지
+// 직인 이미지 URL
 const STAMP_IMAGE_URL = "https://gdadmin.signmini.com/data/etc/stampImage"; 
 
 // ==========================================================
 // [1] 내보내기 버튼 초기화
 // ==========================================================
 export function initExport() {
+    // 1. SVG 다운로드
     const btnSVG = document.getElementById("btnDownloadSVG");
     if (btnSVG) {
         btnSVG.onclick = () => {
@@ -21,6 +22,7 @@ export function initExport() {
         };
     }
 
+    // 2. PNG 다운로드
     const btnPNG = document.getElementById("btnPNG");
     if (btnPNG) {
         btnPNG.onclick = async () => {
@@ -29,23 +31,26 @@ export function initExport() {
         };
     }
 
+    // 3. PDF 다운로드 (아웃라인 처리 포함)
     const btnPDF = document.getElementById("btnPDF");
     if (btnPDF) {
         btnPDF.onclick = async () => {
             if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
+            
             const btn = btnPDF;
             const originalText = btn.innerText;
             btn.innerText = "PDF 생성 중...";
             btn.disabled = true;
 
             try {
-                // 특수효과(그림자 등)가 있으면 이미지 방식이 더 안전함
+                // 특수효과(그림자 등) 확인 -> 있으면 이미지 방식 권장
                 const hasComplexEffect = canvas.getObjects().some(o => 
                     (o.type === 'i-text' || o.type === 'text') && (o.shadow || o.strokeWidth > 0)
                 );
 
+                // 대지(Board) 정보 확인
                 const board = canvas.getObjects().find(o => o.isBoard);
-                let x = 0; let y = 0; let w = canvas.width; let h = canvas.height;
+                let x = 0, y = 0, w = canvas.width, h = canvas.height;
                 
                 if (board) {
                     x = board.left; 
@@ -60,16 +65,20 @@ export function initExport() {
                     if(blob) downloadFile(URL.createObjectURL(blob), "design_image.pdf");
                 } else {
                     console.log("벡터(아웃라인) PDF로 변환 시작...");
+                    
+                    // ★ 핵심: 벡터 PDF 생성 함수 호출
                     let blob = await generateProductVectorPDF(
-                        canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth','charSpacing','lineHeight','textAlign']), 
+                        canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth','charSpacing','lineHeight','textAlign','fontWeight','fontStyle']), 
                         w, h, x, y
                     );
                     
                     if(blob) downloadFile(URL.createObjectURL(blob), "design_outline.pdf");
                     else throw new Error("Vector generation failed");
                 }
+
             } catch (err) {
                 console.warn("벡터 변환 실패, 이미지 모드로 백업:", err);
+                // 실패 시 백업 로직 (이미지 방식)
                 const board = canvas.getObjects().find(o => o.isBoard);
                 let x = 0, y = 0, w = canvas.width, h = canvas.height;
                 if(board) { x=board.left; y=board.top; w=board.width*board.scaleX; h=board.height*board.scaleY; }
@@ -85,7 +94,7 @@ export function initExport() {
 }
 
 // ==========================================================
-// [2] 유틸리티
+// [2] 유틸리티 함수
 // ==========================================================
 export function downloadImage(filename = "design-image") {
     if (!canvas) return;
@@ -140,7 +149,7 @@ async function getSafeImageDataUrl(url) {
 }
 
 // ==========================================================
-// [3] 견적서/지시서용 폰트 로더
+// [3] PDF 폰트 로더 (견적서/지시서용)
 // ==========================================================
 const fontBufferCache = {};
 
@@ -165,7 +174,227 @@ function drawAutoText(doc, text, x, y, options = {}) {
 }
 
 // ==========================================================
-// [4] 견적서 생성 함수
+// [4] ★ 핵심: 벡터(아웃라인) PDF 생성 함수
+// ==========================================================
+export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
+    if (!window.jspdf) return null;
+
+    try {
+        // 1. 가상 캔버스 생성 (화면에 보이지 않음, 메모리 절약)
+        const tempElement = document.createElement('canvas');
+        const tempCanvas = new fabric.StaticCanvas(tempElement);
+        tempCanvas.setWidth(w);
+        tempCanvas.setHeight(h);
+
+        // 2. JSON 데이터 로드
+        await new Promise((resolve) => {
+            tempCanvas.loadFromJSON(json, () => {
+                // 대지 위치 보정 (x, y 만큼 이동하여 0,0에 맞춤)
+                if (json.objects) {
+                    tempCanvas.setViewportTransform([1, 0, 0, 1, -x, -y]);
+                }
+                resolve();
+            });
+        });
+
+        // 3. ★ 텍스트를 아웃라인(Path)으로 변환 (DB 폰트 연동)
+        await convertCanvasTextToPaths(tempCanvas);
+
+        // 4. PDF 설정
+        const MM_TO_PX = 3.7795; 
+        const widthMM = w / MM_TO_PX; 
+        const heightMM = h / MM_TO_PX;
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ 
+            orientation: widthMM > heightMM ? 'l' : 'p', 
+            unit: 'mm', 
+            format: [widthMM, heightMM],
+            compress: true 
+        });
+
+        // 5. SVG 추출 (아웃라인 된 상태)
+        const svgStr = tempCanvas.toSVG({ 
+            viewBox: { x: x, y: y, width: w, height: h }, 
+            width: w, 
+            height: h, 
+            suppressPreamble: true 
+        });
+
+        // 6. PDF에 SVG 삽입
+        const parser = new DOMParser();
+        const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
+        
+        await doc.svg(svgElem, { 
+            x: 0, 
+            y: 0, 
+            width: widthMM, 
+            height: heightMM 
+        });
+
+        tempCanvas.dispose(); // 메모리 정리
+        return doc.output('blob');
+
+    } catch (e) { 
+        console.error("Vector Gen Error:", e);
+        alert("벡터 데이터 처리에 실패했습니다. 이미지 모드로 전환합니다.");
+        return null; 
+    }
+}
+
+// ==========================================================
+// [5] ★ 핵심: 텍스트 -> 패스 변환 로직 (Supabase 연동)
+// ==========================================================
+async function convertCanvasTextToPaths(fabricCanvas) {
+    if (!window.opentype) {
+        console.warn("opentype.js 라이브러리가 로드되지 않았습니다.");
+        return;
+    }
+
+    // ★ 1. Supabase에서 모든 폰트 정보 가져오기 (매핑)
+    const fontUrlMap = {};
+    try {
+        // 특정 site_code 필터 없이 모든 폰트를 가져와서 매칭 확률을 높임
+        const { data } = await sb.from('site_fonts').select('font_family, file_url');
+        if (data) {
+            data.forEach(f => {
+                fontUrlMap[f.font_family] = f.file_url;
+            });
+        }
+    } catch(e) {
+        console.warn("폰트 DB 조회 실패 (기본 폰트 사용됨):", e);
+    }
+
+    const loadedFonts = {}; 
+
+    // 재귀적으로 객체 처리
+    const processObjects = async (objects) => {
+        // 인덱스 꼬임 방지를 위해 뒤에서부터 순회
+        for (let i = objects.length - 1; i >= 0; i--) {
+            let obj = objects[i];
+
+            if (obj.type === 'group') {
+                await processObjects(obj.getObjects());
+            } 
+            else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+                try {
+                    // 1. 폰트 매핑 확인
+                    const family = obj.fontFamily;
+                    let url = fontUrlMap[family];
+                    
+                    // 매핑된게 없으면 기본 폰트로 대체
+                    if (!url) {
+                        console.warn(`폰트 못찾음: ${family} -> 기본값 사용`);
+                        url = SAFE_KOREAN_FONT_URL; 
+                    }
+
+                    // 2. 폰트 파일 로드 및 파싱 (캐싱 사용)
+                    if (!loadedFonts[url]) {
+                        const buffer = await (await fetch(url)).arrayBuffer();
+                        loadedFonts[url] = window.opentype.parse(buffer);
+                    }
+                    const font = loadedFonts[url];
+
+                    // 3. 텍스트 -> Path 데이터 변환
+                    const fontSize = obj.fontSize;
+                    const lineHeightPx = obj.lineHeight * fontSize;
+                    const textLines = obj.text.split(/\r\n|\r|\n/);
+                    const totalHeight = textLines.length * lineHeightPx;
+                    
+                    // 중심점 보정
+                    let startY = -(totalHeight / 2) + (fontSize * 0.8);
+                    let fullPathData = "";
+
+                    textLines.forEach((line, index) => {
+                        if(line.trim() !== '') {
+                            let lineX = 0;
+                            const lineWidth = font.getAdvanceWidth(line, fontSize);
+                            
+                            if (obj.textAlign === 'center') lineX = -lineWidth / 2;
+                            else if (obj.textAlign === 'right') lineX = (obj.width / 2) - lineWidth;
+                            else lineX = -obj.width / 2; 
+
+                            const path = font.getPath(line, lineX, startY + (index * lineHeightPx), fontSize);
+                            fullPathData += path.toPathData(2);
+                        }
+                    });
+
+                    // 4. Path 객체 생성 (기존 속성 복사)
+                    const isBold = obj.fontWeight === 'bold' || parseInt(obj.fontWeight) >= 600;
+                    let finalStroke = obj.stroke;
+                    let finalStrokeWidth = obj.strokeWidth;
+
+                    // 볼드 효과 시뮬레이션
+                    if (isBold && !finalStroke && typeof obj.fill === 'string') {
+                        finalStroke = obj.fill; 
+                        finalStrokeWidth = fontSize * 0.025; 
+                    }
+
+                    const fabricPath = new fabric.Path(fullPathData, {
+                        fill: obj.fill,
+                        stroke: finalStroke,
+                        strokeWidth: finalStrokeWidth,
+                        strokeLineCap: 'round',
+                        strokeLineJoin: 'round',
+                        scaleX: obj.scaleX,
+                        scaleY: obj.scaleY,
+                        angle: obj.angle,
+                        left: obj.left,
+                        top: obj.top,
+                        originX: obj.originX,
+                        originY: obj.originY,
+                        opacity: obj.opacity,
+                        shadow: obj.shadow
+                    });
+
+                    // 5. 교체 실행
+                    if (obj.group) {
+                        obj.group.removeWithUpdate(obj);
+                        obj.group.addWithUpdate(fabricPath);
+                    } else {
+                        fabricCanvas.remove(obj);
+                        fabricCanvas.add(fabricPath);
+                    }
+
+                } catch (err) {
+                    console.warn("Text outline error:", err);
+                }
+            }
+        }
+    };
+
+    await processObjects(fabricCanvas.getObjects());
+}
+
+// ==========================================================
+// [6] 래스터(이미지) PDF 생성 (백업용)
+// ==========================================================
+export async function generateRasterPDF(json, w, h, x = 0, y = 0) {
+    if (!window.jspdf) return null;
+    try {
+        const MM_TO_PX = 3.7795;
+        const widthMM = w / MM_TO_PX; const heightMM = h / MM_TO_PX;
+        const tempEl = document.createElement('canvas');
+        const tempCvs = new fabric.StaticCanvas(tempEl);
+        tempCvs.setWidth(w); tempCvs.setHeight(h);
+        
+        if (json && json.objects) {
+            json.objects = json.objects.filter(o => !o.isBoard).map(o => {
+                o.left -= x; o.top -= y; return o;
+            });
+        }
+        await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
+        
+        const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: 2 });
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
+        doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
+        return doc.output('blob');
+    } catch (e) { return null; }
+}
+
+// ==========================================================
+// [7] 견적서/주문서 생성 (기존 유지)
 // ==========================================================
 export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0) {
     if (!window.jspdf) return;
@@ -226,26 +455,21 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
     y += 5;
 
     if (discountRate > 0) {
-        // [할인 적용 시]
         const discountAmt = Math.floor(totalAmt * discountRate);
         const finalAmt = totalAmt - discountAmt;
         const percent = (discountRate * 100).toFixed(0);
 
-        // 1. 소계 (원가)
         doc.setFontSize(10); doc.setTextColor(0);
         drawAutoText(doc, `소  계: ${totalAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
         y += 6;
 
-        // 2. 할인 내역 (녹색/파란색)
         doc.setTextColor(21, 128, 61); 
         drawAutoText(doc, `회원 등급 할인 (${percent}%): -${discountAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
         y += 8;
 
-        // 3. 최종 결제 금액 (빨간색 강조)
         doc.setFontSize(12); doc.setTextColor(220, 38, 38); doc.setFont(BASE_FONT_NAME, "bold");
         drawAutoText(doc, `총 합계금액: ${finalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
     } else {
-        // [할인 없을 시] 기존 유지
         doc.setFontSize(12); doc.setTextColor(220, 38, 38);
         drawAutoText(doc, `총 합계금액: ${totalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
     }
@@ -255,9 +479,6 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
     return doc.output('blob');
 }
 
-// ==========================================================
-// [5] 작업지시서 생성 함수
-// ==========================================================
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
     if (!window.jspdf) return alert("PDF Loading...");
     const { jsPDF } = window.jspdf;
@@ -329,216 +550,6 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         doc.setFontSize(9); doc.setTextColor(150); drawAutoText(doc, "Generated by Chameleon", 105, 285, { align: 'center' });
     }
     return doc.output('blob');
-}
-
-// ==========================================================
-// [6] ★ 디자인 PDF 생성 (텍스트 줄바꿈 및 엑박 해결)
-// ==========================================================
-// [수정] 메모리 최적화된 벡터 PDF 생성 함수 (대형 출력용 에러 해결)
-export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
-    if (!window.jspdf) return null;
-
-    try {
-        // 1. PDF 크기 설정 (mm 단위 변환)
-        // Fabric.js 기본: 1px ≈ 0.264583mm (96 DPI 기준)
-        // 만약 캔버스 설정이 다르다면 이 값을 조정해야 합니다. 보통 3.7795px = 1mm 입니다.
-        const MM_TO_PX = 3.7795; 
-        const widthMM = w / MM_TO_PX; 
-        const heightMM = h / MM_TO_PX;
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ 
-            orientation: widthMM > heightMM ? 'l' : 'p', 
-            unit: 'mm', 
-            format: [widthMM, heightMM],
-            compress: true // 압축 사용
-        });
-
-        // 2. 현재 캔버스에서 직접 SVG 추출 (새 캔버스 생성 X -> 메모리 절약)
-        // 좌표 보정을 위해 잠시 뷰포트 이동 (대지 위치만큼 이동)
-        const originalVpt = canvas.viewportTransform;
-        
-        // 대지(x, y) 만큼 캔버스를 이동시켜서 0,0 좌표를 맞춤
-        canvas.setViewportTransform([1, 0, 0, 1, -x, -y]); 
-
-        // 3. SVG 문자열 추출 (suppressPreamble: 불필요한 헤더 제거)
-        const svgStr = canvas.toSVG({ 
-            viewBox: { x: x, y: y, width: w, height: h }, 
-            width: w, 
-            height: h, 
-            suppressPreamble: true 
-        });
-
-        // 4. 뷰포트 원상복구 (사용자 화면 복구)
-        canvas.setViewportTransform(originalVpt);
-
-        // 5. svg2pdf로 변환 (벡터 유지)
-        const parser = new DOMParser();
-        const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
-        
-        await doc.svg(svgElem, { 
-            x: 0, 
-            y: 0, 
-            width: widthMM, 
-            height: heightMM 
-        });
-
-        return doc.output('blob');
-
-    } catch (e) { 
-        console.error("Vector Gen Error:", e);
-        // 벡터 생성 실패 시, 사용자에게 알리고 null 반환 (이미지 모드로 전환 유도)
-        alert("벡터 데이터가 너무 커서 처리에 실패했습니다.\n이미지 모드로 자동 전환됩니다.");
-        return null; 
-    }
-}
-
-// ★ [핵심] 줄바꿈(Enter) 문자를 인식해서 한 줄씩 나눠서 그리는 함수
-// ★ [수정됨] 전체 함수 코드 (행간 문제 + 볼드 문제 완벽 해결 버전)
-// export.js 내부의 convertCanvasTextToPaths 함수를 이걸로 교체하세요
-
-async function convertCanvasTextToPaths(fabricCanvas) {
-    if (!window.opentype) return;
-
-    // 1. 폰트 매핑 정보 가져오기
-    const urlParams = new URLSearchParams(window.location.search);
-    const CURRENT_LANG = (urlParams.get('lang') || 'kr').toUpperCase();
-    const fontUrlMap = {};
-    
-    try {
-        const { data } = await sb.from('site_fonts').select('font_family, file_url').eq('site_code', CURRENT_LANG);
-        if (data) data.forEach(f => fontUrlMap[f.font_family] = f.file_url);
-    } catch(e) {}
-
-    const loadedFonts = {}; 
-
-    // 재귀적으로 객체 처리 (그룹 내부까지)
-    const processObjects = async (objects) => {
-        // 뒤에서부터 처리해야 인덱스 꼬임 방지
-        for (let i = objects.length - 1; i >= 0; i--) {
-            let obj = objects[i];
-
-            if (obj.type === 'group') {
-                await processObjects(obj.getObjects());
-            } 
-            else if (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox') {
-                try {
-                    const family = obj.fontFamily;
-                    let url = fontUrlMap[family];
-                    if (!url) url = SAFE_KOREAN_FONT_URL; 
-
-                    if (!loadedFonts[url]) {
-                        const buffer = await (await fetch(url)).arrayBuffer();
-                        loadedFonts[url] = window.opentype.parse(buffer);
-                    }
-                    const font = loadedFonts[url];
-
-                    // ----------------------------------------------------
-                    // ★ [핵심 수정] 텍스트 위치 및 줄바꿈 정밀 계산
-                    // ----------------------------------------------------
-                    const fontSize = obj.fontSize;
-                    // Fabric.js의 lineHeight는 배수(예: 1.2)이므로 픽셀로 변환
-                    const lineHeightPx = obj.lineHeight * fontSize;
-                    
-                    // 텍스트 전체 높이 계산 (중심점 보정을 위해)
-                    const textLines = obj.text.split(/\r\n|\r|\n/);
-                    const totalHeight = textLines.length * lineHeightPx;
-                    
-                    // 텍스트 박스의 정중앙 좌표 (변환 기준점)
-                    // Fabric.js는 텍스트를 그릴 때 baseline이 아닌 중심점 기준으로 배치함
-                    // 따라서 Path를 그릴 때도 시작점(y)을 잘 잡아야 함
-                    let startY = -(totalHeight / 2) + (fontSize * 0.8); // 0.8은 대략적인 baseline 보정값
-
-                    let fullPathData = "";
-
-                    textLines.forEach((line, index) => {
-                        if(line.trim() !== '') {
-                            // 각 줄의 x좌표 정렬 (왼쪽/중앙/오른쪽)
-                            let lineX = 0;
-                            const lineWidth = font.getAdvanceWidth(line, fontSize);
-                            
-                            if (obj.textAlign === 'center') lineX = -lineWidth / 2;
-                            else if (obj.textAlign === 'right') lineX = (obj.width / 2) - lineWidth;
-                            else lineX = -obj.width / 2; // left
-
-                            // Path 생성
-                            const path = font.getPath(line, lineX, startY + (index * lineHeightPx), fontSize);
-                            fullPathData += path.toPathData(2);
-                        }
-                    });
-
-                    // ----------------------------------------------------
-                    // [2] Path 객체로 변환 (스타일 유지)
-                    // ----------------------------------------------------
-                    const isBold = obj.fontWeight === 'bold' || parseInt(obj.fontWeight) >= 600;
-                    let finalStroke = obj.stroke;
-                    let finalStrokeWidth = obj.strokeWidth;
-
-                    // 볼드 처리 (외곽선 추가)
-                    if (isBold && !finalStroke && typeof obj.fill === 'string') {
-                        finalStroke = obj.fill; 
-                        finalStrokeWidth = fontSize * 0.025; // 두께 약간 얇게 조정
-                    }
-
-                    const fabricPath = new fabric.Path(fullPathData, {
-                        fill: obj.fill,
-                        stroke: finalStroke,
-                        strokeWidth: finalStrokeWidth,
-                        strokeLineCap: 'round',
-                        strokeLineJoin: 'round',
-                        // 기존 객체의 변형 속성 그대로 복사
-                        scaleX: obj.scaleX,
-                        scaleY: obj.scaleY,
-                        angle: obj.angle,
-                        left: obj.left,
-                        top: obj.top,
-                        originX: obj.originX,
-                        originY: obj.originY,
-                        opacity: obj.opacity,
-                        shadow: obj.shadow
-                    });
-
-                    // 기존 텍스트 삭제 후 벡터 패스로 교체
-                    if (obj.group) {
-                        obj.group.removeWithUpdate(obj);
-                        obj.group.addWithUpdate(fabricPath);
-                    } else {
-                        fabricCanvas.remove(obj);
-                        fabricCanvas.add(fabricPath);
-                    }
-
-                } catch (err) {
-                    console.warn("Text outline failed:", err);
-                }
-            }
-        }
-    };
-
-    await processObjects(fabricCanvas.getObjects());
-}
-
-export async function generateRasterPDF(json, w, h, x = 0, y = 0) {
-    if (!window.jspdf) return null;
-    try {
-        const MM_TO_PX = 3.7795;
-        const widthMM = w / MM_TO_PX; const heightMM = h / MM_TO_PX;
-        const tempEl = document.createElement('canvas');
-        const tempCvs = new fabric.StaticCanvas(tempEl);
-        tempCvs.setWidth(w); tempCvs.setHeight(h);
-        
-        if (json && json.objects) {
-            json.objects = json.objects.filter(o => !o.isBoard).map(o => {
-                o.left -= x; o.top -= y; return o;
-            });
-        }
-        await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
-        
-        const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: 2 });
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
-        doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
-        return doc.output('blob');
-    } catch (e) { return null; }
 }
 
 if (!window.Buffer) {

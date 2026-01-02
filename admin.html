@@ -149,6 +149,9 @@
             <li class="nav-item" onclick="showSection('sec-partner-apps', this)">
     <i class="fa-solid fa-store"></i> 가맹점 신청 관리 <span id="partnerPendingCount" class="badge" style="background:#ef4444; color:white; font-size:10px; display:none;">N</span>
 </li>
+            <li class="nav-item" onclick="showSection('sec-accounting', this)">
+                <i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)
+            </li>
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this)"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
             
@@ -233,6 +236,8 @@
                 <i class="fa-solid fa-rotate"></i> 새로고침
             </button>
         </div>
+
+
         
         <table>
             <thead>
@@ -251,6 +256,129 @@
         </table>
     </div>
 </div>
+
+<div id="sec-accounting" class="section">
+                <div class="card" style="margin-bottom:20px; border-left:5px solid #059669;">
+                    <div style="border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:15px;">
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px; color:#059669;">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> 경리과 통합 결산 관리
+                        </h3>
+                    </div>
+
+                    <div style="display:flex; gap:15px; align-items:flex-end; background:#f0fdf4; padding:20px; border-radius:8px;">
+                        <div>
+                            <label class="form-label">📅 조회 시작일</label>
+                            <input type="date" id="accStartDate" class="input-text">
+                        </div>
+                        <div>
+                            <label class="form-label">📅 조회 종료일</label>
+                            <input type="date" id="accEndDate" class="input-text">
+                        </div>
+                        <button class="btn btn-primary" style="height:42px; padding:0 25px; font-size:14px;" onclick="loadAccountingData()">
+                            <i class="fa-solid fa-magnifying-glass"></i> 데이터 조회
+                        </button>
+                    </div>
+                    <p style="font-size:12px; color:#666; margin-top:10px; margin-bottom:0;">
+                        ※ <b>결제완료, 입금확인, 카드결제완료</b> 상태인 주문만 매출로 집계됩니다.
+                    </p>
+                </div>
+
+                <div class="stat-card-group">
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#dcfce7; color:#15803d;"><i class="fa-solid fa-won-sign"></i></div>
+                                <div style="font-size:13px; font-weight:bold; color:#64748b;">기간 내 결제 총액</div>
+                            </div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccSales()" title="주문별 상세 엑셀">
+                                <i class="fa-solid fa-file-excel"></i> 엑셀
+                            </button>
+                        </div>
+                        <div id="accTotalSales" style="font-size:24px; font-weight:800; color:#0f172a; margin-top:5px;">0원</div>
+                    </div>
+
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#fef3c7; color:#d97706;"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                                <div style="font-size:13px; font-weight:bold; color:#64748b;">미지급(정산대기) 총액</div>
+                            </div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccUnpaid()" title="미지급 계좌 엑셀">
+                                <i class="fa-solid fa-file-excel"></i> 엑셀
+                            </button>
+                        </div>
+                        <div id="accUnpaidTotal" style="font-size:24px; font-weight:800; color:#d97706; margin-top:5px;">0원</div>
+                    </div>
+
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#e0e7ff; color:#4338ca;"><i class="fa-solid fa-coins"></i></div>
+                                <div style="font-size:13px; font-weight:bold; color:#64748b;">고객 예치금 (현재잔고)</div>
+                            </div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccDeposit()" title="예치금 보유자리스트">
+                                <i class="fa-solid fa-file-excel"></i> 엑셀
+                            </button>
+                        </div>
+                        <div id="accTotalDeposit" style="font-size:24px; font-weight:800; color:#4338ca; margin-top:5px;">0원</div>
+                    </div>
+
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#fee2e2; color:#ef4444;"><i class="fa-solid fa-tags"></i></div>
+                                <div style="font-size:13px; font-weight:bold; color:#64748b;">기간 내 할인 총액</div>
+                            </div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccDiscount()" title="할인 내역 상세">
+                                <i class="fa-solid fa-file-excel"></i> 엑셀
+                            </button>
+                        </div>
+                        <div id="accTotalDiscount" style="font-size:24px; font-weight:800; color:#ef4444; margin-top:5px;">0원</div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div class="card">
+                        <h4 style="margin-top:0; color:#1e40af;">🏢 [6] 가맹점/파트너스 입금요청 (세금계산서 O)</h4>
+                        <div style="max-height:400px; overflow-y:auto;">
+                            <table style="font-size:12px;">
+                                <thead>
+                                    <tr>
+                                        <th>신청일</th>
+                                        <th>업체명(상호)</th>
+                                        <th style="text-align:right;">금액</th>
+                                        <th style="text-align:center;">증빙</th>
+                                        <th style="text-align:center;">상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accPartnerBody">
+                                    <tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">조회 버튼을 눌러주세요.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 style="margin-top:0; color:#c2410c;">🧑‍💻 [5] 프리랜서/디자이너 입금요청 (주민번호 O)</h4>
+                        <div style="max-height:400px; overflow-y:auto;">
+                            <table style="font-size:12px;">
+                                <thead>
+                                    <tr>
+                                        <th>신청일</th>
+                                        <th>성명</th>
+                                        <th style="text-align:right;">금액</th>
+                                        <th style="text-align:center;">주민번호</th>
+                                        <th style="text-align:center;">상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accFreelancerBody">
+                                    <tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">조회 버튼을 눌러주세요.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div id="sec-bankda" class="section">
                 <div class="card" style="margin-bottom:20px; background:#f0fdf4; border:1px solid #bbf7d0;">
@@ -824,15 +952,26 @@
             if(navEl) navEl.classList.add('active');
             
             if(secId === 'sec-orders') loadOrders();
-            if(secId === 'sec-bankda') loadBankdaList(); // [추가] 뱅크다 섹션 로드
+            if(secId === 'sec-bankda') loadBankdaList();
             if(secId === 'sec-stats') loadStatsData();
             if(secId === 'sec-members') loadMembers();
             if(secId === 'sec-templates') { loadTemplates(); loadProductKeys(); }
             if(secId === 'sec-fonts') loadFonts(); 
             if(secId === 'sec-products') { loadTopCategoriesList(); loadCategories(); loadSystemDB(); }
-            if(secId === 'sec-staff') loadStaffList(); 
-        };
+            if(secId === 'sec-staff') loadStaffList();
+            if(secId === 'sec-withdrawals') loadWithdrawals();
+            if(secId === 'sec-partner-apps') loadPartnerApplications();
 
+            if(secId === 'sec-accounting') {
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                const today = now.toISOString().split('T')[0];
+                document.getElementById('accStartDate').value = firstDay;
+                document.getElementById('accEndDate').value = today;
+                loadAccountingData();
+            }
+        };
+        
         window.logout = async () => { if(confirm("로그아웃 하시겠습니까?")) { await sb.auth.signOut(); location.href = "index.html"; } };
         window.closeModal = (id) => document.getElementById(id).style.display='none';
         function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
@@ -1718,130 +1857,179 @@ window.showSection = (secId, navEl) => {
         // admin.html 내부 스크립트의 window.loadOrders 함수 교체
 
 // [1] 수정된 주문 목록 로드 함수
-window.loadOrders = async () => {
-    showLoading(true);
-    updateActionButtons(); 
+// [수정된 loadOrders 함수] - 파일 직접 노출 & 입금확인 빨간색 처리 적용
+    // [수정된 loadOrders 함수] - 오류 수정 및 디자인 적용 완료
+    window.loadOrders = async () => {
+        showLoading(true);
+        updateActionButtons(); 
+        
+        const siteFilter = document.getElementById('filterSite').value;
+        await fetchStaffForOrders();
+        
+        const { data: partners } = await sb.from('partner_applications').select('user_id, company_name').eq('status', 'approved');
+        const partnerMap = {}; if(partners) partners.forEach(p => partnerMap[p.user_id] = p.company_name);
 
-    const siteFilter = document.getElementById('filterSite').value;
-    await fetchStaffForOrders();
+        let query = sb.from('orders').select('*').order('created_at', {ascending:false});
+        if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
+        else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
+        else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
 
-    const { data: partners } = await sb.from('partner_applications').select('user_id, company_name').eq('status', 'approved');
-    const partnerMap = {}; if(partners) partners.forEach(p => partnerMap[p.user_id] = p.company_name);
-
-    let query = sb.from('orders').select('*').order('created_at', {ascending:false});
-    if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
-    else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
-    else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
-
-    const { data, error } = await query;
-    const tbody = document.getElementById('orderListBody');
-    tbody.innerHTML = '';
-
-    if (!data || data.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">데이터가 없습니다.</td></tr>'; 
-        showLoading(false); return; 
-    }
-
-    const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
-    allOrders = filteredData; 
-
-    // 상품 가격 매핑
-    const { data: allProds } = await sb.from('admin_products').select('price, name');
-    const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
-
-    filteredData.forEach(order => {
-        const site = order.site_code || 'KR'; 
-        const managerSelect = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
-        const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
-
-        // --- [금액 상세 계산] ---
-        let items = [];
-        if (order.items) {
-            if (Array.isArray(order.items)) items = order.items;
-            else if (typeof order.items === 'string') { try { items = JSON.parse(order.items); } catch(e) { items = []; } }
+        const { data, error } = await query;
+        const tbody = document.getElementById('orderListBody');
+        tbody.innerHTML = '';
+        
+        if (!data || data.length === 0) { 
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">데이터가 없습니다.</td></tr>'; 
+            showLoading(false); return; 
         }
+        
+        const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
+        allOrders = filteredData; 
 
-        // 1. 주문 총액 (원가)
-        let rawTotalAmount = 0; 
-        items.forEach(item => {
-            if (item.isFileDerived) return;
-            let unitPrice = item.price || (item.product ? item.product.price : 0) || 0;
-            if (unitPrice === 0 && item.product && prodMap[item.product.name]) unitPrice = prodMap[item.product.name];
-            rawTotalAmount += (unitPrice * (item.qty || 1));
+        // 상품 가격 매핑
+        const { data: allProds } = await sb.from('admin_products').select('price, name');
+        const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
+
+        filteredData.forEach(order => {
+            const site = order.site_code || 'KR'; 
+            const managerSelect = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
+            const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
+            
+            // 금액 계산
+            let items = [];
+            if (order.items) {
+                if (Array.isArray(order.items)) items = order.items;
+                else if (typeof order.items === 'string') { try { items = JSON.parse(order.items); } catch(e) { items = []; } }
+            }
+            let rawTotalAmount = 0; 
+            items.forEach(item => {
+                if (item.isFileDerived) return;
+                let unitPrice = item.price || (item.product ? item.product.price : 0) || 0;
+                if (unitPrice === 0 && item.product && prodMap[item.product.name]) unitPrice = prodMap[item.product.name];
+                rawTotalAmount += (unitPrice * (item.qty || 1));
+            });
+            if(rawTotalAmount === 0) rawTotalAmount = order.total_amount; 
+            const finalPaidAmount = order.total_amount || 0;
+            let discountAmt = (rawTotalAmount > finalPaidAmount) ? (rawTotalAmount - finalPaidAmount) : 0;
+            let depositUsed = 0; let realCashPaid = 0;
+            if (order.payment_method === 'deposit' || order.payment_method === '예치금') { depositUsed = finalPaidAmount; realCashPaid = 0; } 
+            else { depositUsed = 0; realCashPaid = finalPaidAmount; }
+
+            // 아이템 표시
+            let itemsDisplayHtml = '';
+            items.forEach(i => {
+                let pName = i.productName || (i.product ? i.product.name : i.name) || '상품';
+                itemsDisplayHtml += `<div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">- ${pName} (${i.qty})</div>`;
+            });
+
+            // [수정됨] 본사 Lock 버튼 및 파트너 접수 표시 복구
+            let franchiseBadge = '';
+            if (order.franchise_id) {
+                // 이미 누군가(파트너/본사)가 접수한 경우
+                const pName = partnerMap[order.franchise_id] || '가맹점/본사';
+                franchiseBadge = `
+                    <div style="margin-bottom:6px; padding:4px 6px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; font-size:11px; color:#1e40af; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80px;">${pName}</span>
+                        <i class="fa-solid fa-xmark" style="cursor:pointer; color:#ef4444;" onclick="cancelFranchiseClaim('${order.id}')" title="접수 해제"></i>
+                    </div>`;
+            } else {
+                // 아무도 접수하지 않은 경우 -> 본사 Lock 버튼 표시
+                franchiseBadge = `
+                    <div style="margin-bottom:6px;">
+                        <button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; border:1px dashed #94a3b8; color:#64748b; font-size:11px; padding:4px;">
+                            🔒 본사 직접 제작
+                        </button>
+                    </div>`;
+            }
+
+            // [파일 목록 HTML 생성] - 절대 수정 금지 (오류 발생 지점)
+            let fileDisplayHtml = `
+                <div style="margin-bottom:6px;">
+                    <label class="btn btn-sky btn-sm" style="cursor:pointer; width:100%;">
+                        <i class="fa-solid fa-plus"></i> 파일추가
+                        <input type="file" style="display:none;" onchange="uploadFileDirect('${order.id}', this)">
+                    </label>
+                </div>
+            `;
+            if (order.files && order.files.length > 0) {
+                order.files.forEach((f, idx) => {
+                    fileDisplayHtml += `
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; font-size:12px; background:#fff; padding:6px; border-radius:4px; border:1px solid #e2e8f0;">
+                            <a href="${f.url}" target="_blank" style="text-decoration:none; color:#334155; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${f.name}">📄 ${f.name}</a>
+                            <button onclick="deleteFileDirect('${order.id}', ${idx})" 
+                                style="width:20px; height:20px; background:#fee2e2; border:1px solid #fca5a5; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left:5px;"
+                                title="파일 삭제">
+                                <i class="fa-solid fa-xmark" style="color:#dc2626; font-size:12px;"></i>
+                            </button>
+                        </div>`;
+                });
+            } else {
+                fileDisplayHtml += `<div style="font-size:11px; color:#ccc; text-align:center;">파일 없음</div>`;
+            }
+
+            // [결제 상태 표시]
+            let payStatusHtml = '';
+            const pm = order.payment_method || '';
+            const ps = order.payment_status || '';
+
+            if (pm.includes('card') || pm.includes('카드')) {
+                payStatusHtml = `<div style="color:#15803d; font-weight:800; font-size:13px;">카드결제완료</div>`;
+                if (['결제완료', 'paid', '카드결제완료', '입금확인됨'].includes(ps)) {
+                    payStatusHtml += `<button class="btn btn-danger btn-sm" style="margin-top:5px; width:100%; font-size:11px;" onclick="cancelTossPayment('${order.id}', '${order.toss_payment_key}')">결제취소</button>`;
+                }
+            } 
+            else if (pm.includes('bank') || pm.includes('무통장') || pm.includes('계좌')) {
+                if (['결제완료', '입금확인', '입금확인됨'].includes(ps)) {
+                    payStatusHtml = `<div style="color:#dc2626; font-weight:800; font-size:14px;">입금 확인</div>`;
+                } else {
+                    payStatusHtml = `
+                        <div style="font-size:12px; color:#d97706; margin-bottom:4px;">입금대기</div>
+                        <button class="btn btn-outline btn-sm" style="width:100%; font-weight:bold; color:#dc2626; border-color:#dc2626;" onclick="confirmDeposit('${order.id}')">
+                            입금확인
+                        </button>`;
+                }
+            }
+            else if (pm.includes('deposit') || pm.includes('예치금')) {
+                payStatusHtml = `<div style="color:#6366f1; font-weight:800; font-size:13px;">예치금 결제</div>`;
+            }
+            else {
+                payStatusHtml = `<div style="color:#94a3b8; font-size:12px;">${ps || '미결제'}</div>`;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><input type="checkbox" class="row-chk" value="${order.id}"></td>
+                    <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
+                    <td>${new Date(order.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <b>${order.manager_name}</b><br>
+                        <span style="font-size:11px; color:#666;">${order.phone}</span>
+                    </td>
+                    <td style="color:#334155; font-size:11px;">${itemsDisplayHtml}</td>
+                    
+                    <td style="text-align:right; color:#64748b;">${rawTotalAmount.toLocaleString()}</td>
+                    <td style="text-align:right; color:#ef4444;">${discountAmt > 0 ? '-' + discountAmt.toLocaleString() : '-'}</td>
+                    <td style="text-align:right; color:#d97706;">${depositUsed > 0 ? depositUsed.toLocaleString() : '-'}</td>
+                    <td style="text-align:right; font-weight:bold; color:#15803d; background:#f0fdf4;">${realCashPaid.toLocaleString()}</td>
+                    
+                    <td>
+                        ${franchiseBadge}
+                        <div style="margin-top:2px;">${managerSelect}</div>
+                        <div style="margin-top:2px;">${driverSelect}</div>
+                    </td>
+                    
+                    <td style="vertical-align:top; min-width:180px;">
+                        ${fileDisplayHtml}
+                    </td>
+                    
+                    <td style="text-align:center;">
+                        ${payStatusHtml}
+                    </td>
+                </tr>
+            `;
         });
-        if(rawTotalAmount === 0) rawTotalAmount = order.total_amount; 
-
-        // 2. 실 결제액 (DB 저장값)
-        const finalPaidAmount = order.total_amount || 0;
-
-        // 3. 할인액
-        let discountAmt = 0;
-        if (rawTotalAmount > finalPaidAmount) {
-            discountAmt = rawTotalAmount - finalPaidAmount;
-        }
-
-        // 4. 예치금/실입금액 구분
-        let depositUsed = 0;
-        let realCashPaid = 0;
-
-        if (order.payment_method === 'deposit' || order.payment_method === '예치금') {
-            depositUsed = finalPaidAmount; 
-            realCashPaid = 0; 
-        } else {
-            depositUsed = 0;
-            realCashPaid = finalPaidAmount; 
-        }
-
-        // 아이템 표시
-        let itemsDisplayHtml = '';
-        items.forEach(i => {
-            let pName = i.productName || (i.product ? i.product.name : i.name) || '상품';
-            itemsDisplayHtml += `<div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">- ${pName} (${i.qty})</div>`;
-        });
-
-        // 가맹점 뱃지
-        let franchiseBadge = '';
-        if (order.franchise_id) {
-            franchiseBadge = `<span class="badge" style="background:#eff6ff; color:#1e40af;">파트너접수</span>`;
-        }
-
-        // 결제 상태
-        const isPaid = (order.payment_status === '결제완료' || order.payment_status === 'paid');
-        const payStatusColor = isPaid ? '#15803d' : '#94a3b8';
-
-        tbody.innerHTML += `
-            <tr>
-                <td><input type="checkbox" class="row-chk" value="${order.id}"></td>
-                <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
-                <td>${new Date(order.created_at).toLocaleDateString()}</td>
-                <td>
-                    <b>${order.manager_name}</b><br>
-                    <span style="font-size:11px; color:#666;">${order.phone}</span>
-                </td>
-                <td style="color:#334155; font-size:11px;">${itemsDisplayHtml}</td>
-
-                <td style="text-align:right; color:#64748b;">${rawTotalAmount.toLocaleString()}</td>
-                <td style="text-align:right; color:#ef4444;">${discountAmt > 0 ? '-' + discountAmt.toLocaleString() : '-'}</td>
-                <td style="text-align:right; color:#d97706;">${depositUsed > 0 ? depositUsed.toLocaleString() : '-'}</td>
-                <td style="text-align:right; font-weight:bold; color:#15803d; background:#f0fdf4;">${realCashPaid.toLocaleString()}</td>
-
-                <td>
-                    ${franchiseBadge}
-                    <div style="margin-top:2px;">${managerSelect}</div>
-                    <div style="margin-top:2px;">${driverSelect}</div>
-                </td>
-                <td>
-                    <button class="btn btn-outline btn-sm" onclick="openFileModal('${order.id}')">파일보기</button>
-                </td>
-                <td>
-                    <span style="color:${payStatusColor}; font-weight:bold;">${order.payment_status}</span><br>
-                    <span style="font-size:10px; color:#888;">${order.payment_method}</span>
-                </td>
-            </tr>
-        `;
-    });
-    showLoading(false);
-};
+        showLoading(false);
+    };
 
 // [2] [신규] 월별 엑셀 다운로드 함수
 window.downloadMonthlyExcel = async () => {
@@ -2104,6 +2292,53 @@ window.downloadMonthlyExcel = async () => {
         };
         
         window.confirmPayment = async (id) => { if(!confirm("입금을 확인하고 '결제완료' 처리하시겠습니까?")) return; const { error } = await sb.from('orders').update({ payment_status: '결제완료', payment_method: '계좌이체' }).eq('id', id); if(error) alert("오류: " + error.message); else loadOrders(); };
+        // [신규] 토스 결제 취소 함수
+    window.cancelTossPayment = async (orderId, paymentKey) => {
+        // 1. paymentKey 확인
+        if (!paymentKey || paymentKey === 'null' || paymentKey === 'undefined') {
+            return alert("취소할 수 없는 주문입니다. (DB에 PaymentKey가 없습니다.)");
+        }
+
+        const reason = prompt("취소 사유를 입력해주세요 (예: 고객 변심)");
+        if (!reason) return;
+
+        if (!confirm(`정말 취소하시겠습니까?\n사유: ${reason}`)) return;
+
+        showLoading(true);
+
+        try {
+            // 2. 방금 배포한 Supabase Edge Function 호출 ('cancel-toss-payment')
+            const { data, error } = await sb.functions.invoke('cancel-toss-payment', {
+                body: { 
+                    paymentKey: paymentKey, 
+                    cancelReason: reason 
+                }
+            });
+
+            if (error) throw new Error(error.message);
+            
+            // 함수 내부에서 토스 API 에러가 발생한 경우
+            if (data && data.error) throw new Error(data.error);
+
+            // 3. 취소 성공 시 DB 상태 업데이트
+            const { error: dbError } = await sb.from('orders').update({ 
+                payment_status: '결제취소',
+                status: '취소됨',
+                request_note: `[취소사유] ${reason} / ` + (document.getElementById('orderMemo')?.value || '')
+            }).eq('id', orderId);
+
+            if (dbError) throw dbError;
+
+            alert("✅ 결제가 정상적으로 취소되었습니다.");
+            loadOrders(); // 목록 새로고침
+
+        } catch (e) {
+            console.error(e);
+            alert("취소 실패: " + e.message);
+        } finally {
+            showLoading(false);
+        }
+    };
 
         window.loadStatsData = async () => { let start = document.getElementById('statStartDate').value; let end = document.getElementById('statEndDate').value; if(!start || !end) { const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); start = firstDay.toISOString().split('T')[0]; end = now.toISOString().split('T')[0]; document.getElementById('statStartDate').value = start; document.getElementById('statEndDate').value = end; } document.getElementById('loading').style.display = 'flex'; const { data: orders, error } = await sb.from('orders').select('*').gte('created_at', start + 'T00:00:00').lte('created_at', end + 'T23:59:59'); if(error) { alert("로드 실패"); document.getElementById('loading').style.display = 'none'; return; } const { data: allProds } = await sb.from('admin_products').select('price, name'); const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price); let totalRevenue = 0; const managerStats = {}; const driverStats = {}; orders.forEach(o => { let amt = o.total_amount || 0; let items = o.items; if (typeof items === 'string') { try { items = JSON.parse(items); } catch(e) { items = []; } } if(amt === 0 && Array.isArray(items)) { items.forEach(i => { let p = 0; if(i.product && i.product.price) p = i.product.price; else if(i.product && prodMap[i.product.name]) p = prodMap[i.product.name]; if(!p) p = i.price || 10000; amt += p * (i.qty || 1); }); } totalRevenue += amt; if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt; if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt; }); document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + "원"; document.getElementById('totalCount').innerText = orders.length + "건"; const { data: staff } = await sb.from('admin_staff').select('*'); renderStaffStats('statManagerBody', managerStats, staff || [], totalRevenue); renderStaffStats('statDriverBody', driverStats, staff || [], totalRevenue); document.getElementById('loading').style.display = 'none'; };
         function renderStaffStats(elemId, statsObj, staffList, totalRev) { const tbody = document.getElementById(elemId); tbody.innerHTML = ''; const sortedIds = Object.keys(statsObj).sort((a,b) => statsObj[b] - statsObj[a]); if(sortedIds.length === 0) { tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">데이터 없음</td></tr>'; return; } sortedIds.forEach(id => { const s = staffList.find(st => st.id == id); if(!s) return; const amt = statsObj[id]; const percent = totalRev > 0 ? Math.round((amt / totalRev) * 100) : 0; tbody.innerHTML += `<tr><td style="padding:12px 0;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><div style="width:12px; height:12px; border-radius:50%; background:${s.color};"></div><span style="font-weight:bold;">${s.name}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%; background:${s.color};"></div></div></td><td style="text-align:right;"><div>${amt.toLocaleString()}원</div><div style="font-size:11px; color:#999;">${percent}%</div></td></tr>`; }); }
@@ -2763,7 +2998,327 @@ window.approveWithdrawal = async (requestId) => {
         if(error) alert("해제 실패: " + error.message);
         else loadOrders();
     };
-    </script>
 
+    // [신규] 리스트에서 바로 파일 업로드
+    // [신규] 리스트에서 바로 파일 업로드
+    window.uploadFileDirect = async (orderId, input) => {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        showLoading(true);
+
+        try {
+            const { data: order } = await sb.from('orders').select('files').eq('id', orderId).single();
+            const currentFiles = order.files || [];
+
+            const parts = file.name.split('.');
+            const ext = parts.length > 1 ? parts.pop() : ''; 
+            const timestamp = Date.now();
+            const randomStr = Math.random().toString(36).substring(2, 8); 
+            const safeName = `added_${timestamp}_${randomStr}.${ext}`;
+            const path = `orders/${orderId}/${safeName}`;
+
+            const { error: upErr } = await sb.storage.from('orders').upload(path, file);
+            if (upErr) throw upErr;
+
+            const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+
+            currentFiles.push({
+                name: file.name,
+                url: urlData.publicUrl,
+                type: 'admin_added'
+            });
+
+            const { error: dbErr } = await sb.from('orders').update({ files: currentFiles }).eq('id', orderId);
+            if (dbErr) throw dbErr;
+
+            alert("파일이 추가되었습니다.");
+            loadOrders();
+
+        } catch (e) {
+            console.error(e);
+            alert("업로드 실패: " + e.message);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    // [파일 삭제 함수]
+    window.deleteFileDirect = async (orderId, fileIndex) => {
+        if (!confirm("⚠️ 정말 이 파일을 삭제하시겠습니까?\n\n※ 삭제된 파일은 복구할 수 없습니다.")) return;
+
+        showLoading(true);
+        try {
+            const { data: order } = await sb.from('orders').select('files').eq('id', orderId).single();
+            let files = order.files || [];
+            
+            // 배열에서 해당 인덱스 제거
+            files.splice(fileIndex, 1);
+
+            const { error } = await sb.from('orders').update({ files: files }).eq('id', orderId);
+            if (error) throw error;
+
+            loadOrders(); // 화면 갱신
+        } catch (e) {
+            alert("삭제 오류: " + e.message);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    // [신규] 무통장 입금 확인 처리
+    window.confirmDeposit = async (orderId) => {
+        if (!confirm("입금 확인 처리를 하시겠습니까?\n(상태가 '입금확인'으로 변경됩니다)")) return;
+        
+        showLoading(true);
+        try {
+            const { error } = await sb.from('orders').update({ 
+                payment_status: '입금확인', 
+                payment_method: '무통장입금'
+            }).eq('id', orderId);
+
+            if (error) throw error;
+            loadOrders();
+        } catch (e) {
+            alert("처리 실패: " + e.message);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    // [신규] 경리과 데이터 통합 조회
+    // [전역 변수] 경리과 엑셀용 데이터 캐싱
+    let cachedAccOrders = [];      // 매출/할인용
+    let cachedAccWithdrawals = []; // 미지급용
+    let cachedAccProfiles = [];    // 예치금용
+
+    // 1. [조회] 경리과 데이터 통합 조회
+    window.loadAccountingData = async () => {
+        const start = document.getElementById('accStartDate').value;
+        const end = document.getElementById('accEndDate').value;
+        
+        if(!start || !end) return alert("날짜 범위를 선택해주세요.");
+        showLoading(true);
+
+        try {
+            // --- (A) 예치금 총액 조회 ---
+            const { data: profiles } = await sb.from('profiles').select('id, email, full_name, deposit, role');
+            cachedAccProfiles = profiles || [];
+            const totalDeposit = cachedAccProfiles.reduce((acc, cur) => acc + (cur.deposit || 0), 0);
+            document.getElementById('accTotalDeposit').innerText = totalDeposit.toLocaleString() + "원";
+
+            // --- (B) 기간 내 [결제완료] 주문 조회 ---
+            const { data: orders, error } = await sb.from('orders')
+                .select('*')
+                .gte('created_at', start + 'T00:00:00')
+                .lte('created_at', end + 'T23:59:59')
+                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']);
+
+            if (error) throw error;
+            cachedAccOrders = orders || [];
+
+            let totalSales = 0;
+            let totalDiscount = 0;
+
+            // 상품 원가표 (할인액 계산용)
+            const { data: prods } = await sb.from('admin_products').select('name, price');
+            const prodMap = {}; if(prods) prods.forEach(p => prodMap[p.name] = p.price);
+
+            cachedAccOrders.forEach(o => {
+                totalSales += (o.total_amount || 0);
+
+                // 할인액 계산 (원가합계 - 실결제액)
+                let items = [];
+                try { items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items; } catch(e){}
+                
+                let rawTotal = 0;
+                if(items) {
+                    items.forEach(i => {
+                        let price = i.price || (i.product ? i.product.price : 0) || 0;
+                        if (price === 0 && prodMap[i.productName]) price = prodMap[i.productName] || 0;
+                        rawTotal += price * (i.qty || 1);
+                    });
+                }
+                if (rawTotal > o.total_amount) {
+                    o.discount_amount = (rawTotal - o.total_amount); // 엑셀용 저장
+                    o.discount_rate = ((o.discount_amount / rawTotal) * 100).toFixed(1);
+                    totalDiscount += o.discount_amount;
+                } else {
+                    o.discount_amount = 0;
+                    o.discount_rate = 0;
+                }
+            });
+
+            document.getElementById('accTotalSales').innerText = totalSales.toLocaleString() + "원";
+            document.getElementById('accTotalDiscount').innerText = totalDiscount.toLocaleString() + "원";
+
+            // --- (C) 정산(출금) 내역 조회 ---
+            const { data: withdraws } = await sb.from('withdrawal_requests')
+                .select('*')
+                .gte('created_at', start + 'T00:00:00')
+                .lte('created_at', end + 'T23:59:59')
+                .order('created_at', {ascending: false});
+
+            cachedAccWithdrawals = withdraws || [];
+
+            let partnerHtml = '';
+            let freeHtml = '';
+            let unpaidTotal = 0;
+
+            // 사용자 정보 매핑
+            const uids = [...new Set(cachedAccWithdrawals.map(w => w.user_id))];
+            const userMap = {};
+            if(uids.length > 0) {
+                const { data: users } = await sb.from('profiles').select('id, full_name, role, email').in('id', uids);
+                if(users) users.forEach(u => userMap[u.id] = u);
+            }
+
+            cachedAccWithdrawals.forEach(w => {
+                const u = userMap[w.user_id] || { full_name: '미상', role: 'customer' };
+                w.userName = u.full_name; // 엑셀용 저장
+                w.userRole = u.role;
+
+                // 미지급금 합산 (status='pending')
+                if (w.status === 'pending') unpaidTotal += w.amount;
+
+                // 상태 뱃지
+                const statusBadge = w.status === 'pending' 
+                    ? `<span style="color:#d97706; font-weight:bold;">대기</span>` 
+                    : `<span style="color:#15803d;">완료</span>`;
+
+                // [중요] 5번(프리랜서)은 주민번호 칸이 필요하므로 구분
+                // 주민번호는 DB 컬럼이 별도로 없으면 일단 비워두거나 user_metadata 등에서 가져와야 함 (현재는 '-')
+                const rowPartner = `
+                    <tr>
+                        <td>${new Date(w.created_at).toLocaleDateString()}</td>
+                        <td>${u.full_name}</td>
+                        <td style="text-align:right;">${w.amount.toLocaleString()}</td>
+                        <td style="text-align:center;">${w.tax_invoice_url ? '<a href="'+w.tax_invoice_url+'" target="_blank">📄보기</a>' : '-'}</td>
+                        <td style="text-align:center;">${statusBadge}</td>
+                    </tr>
+                `;
+
+                const rowFree = `
+                    <tr>
+                        <td>${new Date(w.created_at).toLocaleDateString()}</td>
+                        <td>${u.full_name}</td>
+                        <td style="text-align:right;">${w.amount.toLocaleString()}</td>
+                        <td style="text-align:center;">-</td> <td style="text-align:center;">${statusBadge}</td>
+                    </tr>
+                `;
+
+                // 역할별 분류 (6번: 가맹점 / 5번: 그외 프리랜서)
+                if (u.role === 'franchise') partnerHtml += rowPartner;
+                else freeHtml += rowFree;
+            });
+            
+            document.getElementById('accPartnerBody').innerHTML = partnerHtml || '<tr><td colspan="5" style="text-align:center;">내역 없음</td></tr>';
+            document.getElementById('accFreelancerBody').innerHTML = freeHtml || '<tr><td colspan="5" style="text-align:center;">내역 없음</td></tr>';
+            document.getElementById('accUnpaidTotal').innerText = unpaidTotal.toLocaleString() + "원";
+
+        } catch (e) {
+            console.error(e);
+            alert("조회 실패: " + e.message);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    // 2. [엑셀 1] 기간 내 결제 총액 (주문일, 고객명, 결제금액, 배송방법)
+    window.downloadAccSales = () => {
+        if (!cachedAccOrders.length) return alert("조회된 결제 내역이 없습니다.");
+        
+        const data = cachedAccOrders.map(o => ({
+            "주문일자": new Date(o.created_at).toLocaleDateString(),
+            "주문번호": o.id,
+            "고객명": o.manager_name,
+            "결제금액": o.total_amount,
+            "배송방법": o.staff_driver_id ? "기사 배정" : (o.address.includes("직접") ? "방문수령" : "택배/화물"),
+            "배송지": o.address
+        }));
+
+        // 합계 행 추가
+        const total = cachedAccOrders.reduce((sum, o) => sum + (o.total_amount||0), 0);
+        data.push({ "주문일자": "총계", "결제금액": total });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "결제총액");
+        XLSX.writeFile(wb, `매출상세_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    // 3. [엑셀 2] 미지급 정산대기 (계좌번호, 금액, 요청자)
+    window.downloadAccUnpaid = () => {
+        const unpaidList = cachedAccWithdrawals.filter(w => w.status === 'pending');
+        if (!unpaidList.length) return alert("미지급(대기중)인 내역이 없습니다.");
+
+        const data = unpaidList.map(w => ({
+            "요청일자": new Date(w.created_at).toLocaleDateString(),
+            "요청자(상호/이름)": w.userName || w.user_id,
+            "구분": w.userRole === 'franchise' ? '가맹점' : '프리랜서',
+            "지급요청금액": w.amount,
+            "입금은행": w.bank_name || '-', 
+            "계좌번호": w.account_number || '-' // ※ DB 컬럼명 확인 필요
+        }));
+
+        // 합계
+        const total = unpaidList.reduce((sum, w) => sum + (w.amount||0), 0);
+        data.push({ "요청일자": "총 미지급액", "지급요청금액": total });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "미지급내역");
+        XLSX.writeFile(wb, `미지급정산_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    // 4. [엑셀 3] 고객 예치금 (고객 리스트, 잔액)
+    window.downloadAccDeposit = () => {
+        const depositUsers = cachedAccProfiles.filter(p => p.deposit > 0);
+        if (!depositUsers.length) return alert("예치금을 보유한 고객이 없습니다.");
+
+        const data = depositUsers.map(p => ({
+            "고객명": p.full_name,
+            "이메일": p.email,
+            "보유 예치금": p.deposit,
+            "회원등급": p.role
+        }));
+
+        const total = depositUsers.reduce((sum, p) => sum + (p.deposit||0), 0);
+        data.push({ "고객명": "총 예치금 합계", "보유 예치금": total });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "예치금현황");
+        XLSX.writeFile(wb, `예치금현황_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    // 5. [엑셀 4] 기간 내 할인 총액 (주문명, 주문자, 금액, 할인액, 할인율)
+    window.downloadAccDiscount = () => {
+        const discountList = cachedAccOrders.filter(o => o.discount_amount > 0);
+        if (!discountList.length) return alert("할인이 적용된 주문이 없습니다.");
+
+        const data = discountList.map(o => {
+            let itemName = "상품 정보 없음";
+            try { 
+                const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items; 
+                if(items && items.length > 0) itemName = items[0].productName || items[0].name;
+                if(items.length > 1) itemName += ` 외 ${items.length-1}건`;
+            } catch(e){}
+
+            return {
+                "주문일자": new Date(o.created_at).toLocaleDateString(),
+                "주문번호": o.id,
+                "주문명": itemName,
+                "주문자": o.manager_name,
+                "실결제금액": o.total_amount,
+                "할인금액": o.discount_amount,
+                "할인율": o.discount_rate + "%"
+            };
+        });
+
+        const totalDisc = discountList.reduce((sum, o) => sum + o.discount_amount, 0);
+        data.push({ "주문일자": "총 할인액", "할인금액": totalDisc });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "할인내역");
+        XLSX.writeFile(wb, `할인내역_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+    </script>
 </body>
 </html>
