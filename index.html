@@ -1083,11 +1083,11 @@ function goBoard(category) {
 </button>
 
             <button class="tpl-cate-btn active" onclick="window.filterTpl('photo-bg', this)">
-                <span>♥고화질이미지♥</span>
+                <span>이미지</span>
             </button>
 
             <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)">
-                <span>심플백터배경</span>
+                <span>심플배경 (백터)</span>
             </button>
 
             <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)">
@@ -2361,6 +2361,18 @@ if (loadId) {
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
         
         const product = window.PRODUCT_DB[key];
+
+        // ▼▼▼ [추가] 대형 출력물 선택 시 화질 안내 메시지 ▼▼▼
+        if (product) {
+            // 가로/세로 중 긴 쪽 확인 (단위: mm)
+            const maxSide = Math.max(product.w_mm || 0, product.h_mm || 0, product.w || 0, product.h || 0);
+            
+            // A2 사이즈(약 600mm) 이상인 경우 안내 팝업
+            if (maxSide >= 590) {
+                alert("📢 크기에 따라 탬플릿을 선택해 주세요\n\n허니콤가벽 현수막은 백터로 해야 깨짐없이 깔끔\n\n배너 인쇄물 포스터 기타제품은 이미지도 좋아요 ");
+            }
+        }
+        // ▲▲▲ [추가 끝] ▲▲▲
 
         const displayW = product ? (product.w_mm || product.w || 210) : 210;
         const displayH = product ? (product.h_mm || product.h || 297) : 297;

@@ -1763,12 +1763,22 @@ window.loadOrders = async () => {
         let franchiseBadge = '';
         if (order.franchise_id) {
             // 위에서 만든 partnerMap을 이용해 상호명을 찾음
-            const pName = partnerMap[order.franchise_id] || '가맹점(정보없음)';
+            const pName = partnerMap[order.franchise_id] || '가맹점/본사';
             
             franchiseBadge = `
                 <div style="margin-bottom:8px; padding:6px 10px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; color:#1e40af; font-size:12px; font-weight:bold; display:flex; align-items:center; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                     <i class="fa-solid fa-store" style="color:#2563eb;"></i> 
                     <span>${pName} 접수중</span>
+                    <i class="fa-solid fa-xmark" style="margin-left:auto; cursor:pointer; color:#ef4444;" onclick="cancelFranchiseClaim('${order.id}')" title="접수 취소시키기(초기화)"></i>
+                </div>
+            `;
+        } else {
+            // ★ [추가] 담당자가 없을 때 -> 관리자가 직접 가져가는 버튼 표시
+            franchiseBadge = `
+                <div style="margin-bottom:8px;">
+                    <button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; border-style:dashed; color:#64748b;">
+                        🏢 본사 직접 제작 (Lock)
+                    </button>
                 </div>
             `;
         }
@@ -2714,6 +2724,42 @@ window.approveWithdrawal = async (requestId) => {
         alert("처리 실패: " + e.message);
     }
 };
+
+// [신규] 본사 직접 접수 함수 (파트너스 화면에서 잠금 처리됨)
+    window.claimOrderAdmin = async (orderId) => {
+        if(!confirm("이 주문을 본사(HQ)에서 직접 제작하시겠습니까?\n파트너스 리스트에서는 '본사 제작중'으로 표시되며 선택이 불가능해집니다.")) return;
+
+        try {
+            const { data: { user } } = await sb.auth.getUser();
+            if(!user) return alert("관리자 정보를 찾을 수 없습니다.");
+
+            // 본사 관리자 ID로 업데이트 -> 파트너스 화면에서 'Lock' 됨
+            const { error } = await sb.from('orders').update({
+                franchise_id: user.id, 
+                status: '제작준비'      
+            }).eq('id', orderId);
+
+            if(error) throw error;
+
+            alert("✅ 본사 제작건으로 지정되었습니다.");
+            loadOrders(); // 목록 새로고침
+        } catch(e) {
+            alert("처리 실패: " + e.message);
+        }
+    };
+
+    // [신규] 접수 취소 함수 (초기화)
+    window.cancelFranchiseClaim = async (orderId) => {
+        if(!confirm("현재 담당자(파트너/본사) 지정을 해제하시겠습니까?\n다시 '대기중' 상태가 되어 파트너들이 볼 수 있게 됩니다.")) return;
+
+        const { error } = await sb.from('orders').update({
+            franchise_id: null,
+            status: '접수대기'
+        }).eq('id', orderId);
+
+        if(error) alert("해제 실패: " + error.message);
+        else loadOrders();
+    };
     </script>
 
 </body>

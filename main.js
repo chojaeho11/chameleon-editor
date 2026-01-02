@@ -387,7 +387,7 @@ window.openPartnerConsole = function() {
         if (window.switchPartnerTab) window.switchPartnerTab('pool');
     }
 };
-let lastOrderCount = 0; 
+let lastOrderCount = -1;
 
 // 1. 파트너 권한 확인 및 버튼 표시 (수정됨: 권한별 버튼 분기 처리)
 async function checkPartnerStatus() {
@@ -496,7 +496,9 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     let query = sb.from('orders').select('*').order('created_at', {ascending: false});
 
     if (mode === 'pool') {
-        query = query.is('franchise_id', null).in('status', ['접수됨', '파일처리중', '접수대기']);
+        // [수정] .is('franchise_id', null) 제거 -> 이미 접수된 건도 불러와서 UI에서 잠금 처리
+        query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
+        
         if (window.currentPartnerRegion && window.currentPartnerRegion !== '전체') {
             query = query.ilike('address', `%${window.currentPartnerRegion}%`);
         }
@@ -508,18 +510,23 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     if (error) return;
 
     // ★ [음성 알림] 주문이 늘어났으면 목소리로 안내
-    if (mode === 'pool' && orders && orders.length > lastOrderCount) {
-        if ('speechSynthesis' in window) {
-            const msg = new SpeechSynthesisUtterance("카멜레온 프린팅, 새로운 주문이 들어왔습니다.");
-            msg.lang = 'ko-KR'; 
-            msg.rate = 1.0; 
-            window.speechSynthesis.speak(msg);
-        } else {
-            // TTS 미지원 브라우저는 띵동 소리
-            try { document.getElementById('orderAlertSound')?.play(); } catch(e){}
+    const currentCount = orders ? orders.length : 0;
+
+    if (mode === 'pool') {
+        // ★ 핵심: lastOrderCount가 -1(첫 로딩)이 아닐 때만 소리 재생
+        if (lastOrderCount !== -1 && currentCount > lastOrderCount) {
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance("카멜레온 프린팅, 새로운 주문이 들어왔습니다.");
+                msg.lang = 'ko-KR'; 
+                msg.rate = 1.0; 
+                window.speechSynthesis.speak(msg);
+            } else {
+                try { document.getElementById('orderAlertSound')?.play(); } catch(e){}
+            }
         }
+        // 개수 업데이트
+        lastOrderCount = currentCount;
     }
-    if (mode === 'pool') lastOrderCount = orders ? orders.length : 0;
 
     if (isAutoCheck && document.getElementById('partnerConsoleModal').style.display === 'none') return;
     if (!container) return;
@@ -561,11 +568,33 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
         
         if (mode === 'pool') {
             const timeDiff = Math.floor((new Date() - new Date(o.created_at)) / (1000 * 60));
+            
+            // ★ [핵심] 이미 접수된 주문인지 확인 (본사 또는 타 파트너)
+            const isTaken = (o.franchise_id !== null);
+            
+            // 스타일 및 버튼 설정 분기
+            let cardStyle = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:15px;";
+            let btnHtml = `<button onclick="window.dibsOrder('${o.id}')" style="width:100%; margin-top:10px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚡ 접수하기</button>`;
+            let badgeHtml = `<span style="background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">NEW ${timeDiff}분전</span>`;
+
+            // 이미 접수된 건이면 (본사 제작 포함)
+            if (isTaken) {
+                // 내 주문이 아닌 경우 -> 회색 비활성화 (Lock)
+                if (o.franchise_id !== user.id) {
+                    cardStyle = "background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:20px; margin-bottom:15px; opacity:0.7;";
+                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#94a3b8; color:white; border:none; border-radius:8px; font-weight:bold; cursor:not-allowed;">🚫 본사/타점 제작중</button>`;
+                    badgeHtml = `<span style="background:#64748b; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔒 접수완료</span>`;
+                } else {
+                    // 내가 접수한 건이 풀 목록에 보일 경우
+                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#10b981; color:white; border:none; border-radius:8px; font-weight:bold;">✅ 내가 접수함</button>`;
+                }
+            }
+
             card.className = 'partner-order-card';
-            card.style.cssText = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:15px;";
+            card.style.cssText = cardStyle;
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span style="background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">NEW ${timeDiff}분전</span>
+                    ${badgeHtml}
                     <span style="font-size:12px; color:#888;">${o.manager_name}님</span>
                 </div>
                 <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">📍 ${o.address}</div>
@@ -574,7 +603,7 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
                     <div style="font-weight:bold; font-size:16px;">${o.total_amount.toLocaleString()}원</div>
                     <div style="font-size:11px; color:#6366f1;">예상 정산금(90%): ${Math.floor(o.total_amount * 0.9).toLocaleString()}원</div>
                 </div>
-                <button onclick="window.dibsOrder('${o.id}')" style="width:100%; margin-top:10px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚡ 접수하기</button>
+                ${btnHtml}
             `;
         } else {
             let statusHtml = '';
