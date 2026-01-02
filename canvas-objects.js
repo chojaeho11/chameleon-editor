@@ -646,13 +646,12 @@ function enableEffectEditing(group) {
     });
 }
 
-// ============================================================
-// [6] 기타 객체 핸들러 (Shapes, Utils)
-// ============================================================
+
 export function addToCenter(obj) {
     if (!canvas) return;
     const board = canvas.getObjects().find(o => o.isBoard);
     
+    // 1. 위치 설정 (대지 중앙)
     if (board) {
         obj.set({
             left: board.left + (board.width * board.scaleX) / 2,
@@ -668,7 +667,15 @@ export function addToCenter(obj) {
             originX: "center", originY: "center"
         });
     }
+    
+    // 2. 캔버스에 추가
     canvas.add(obj);
+
+    // 3. ★ [핵심] 새로 추가된 객체(로고/텍스트)를 무조건 맨 위로 올림
+    canvas.bringToFront(obj);
+
+    // (주의: 가이드를 맨 위로 올리는 코드는 절대 넣지 마세요!)
+
     canvas.setActiveObject(obj);
     canvas.requestRenderAll();
 }

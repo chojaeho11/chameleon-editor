@@ -309,29 +309,15 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 // ==========================================================
 // [6] ★ 디자인 PDF 생성 (텍스트 줄바꿈 및 엑박 해결)
 // ==========================================================
+// [수정] 메모리 최적화된 벡터 PDF 생성 함수 (대형 출력용 에러 해결)
 export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
-    if (!window.jspdf || !window.opentype) return null;
-    
-    const tempEl = document.createElement('canvas');
-    const tempCvs = new fabric.StaticCanvas(tempEl);
-    tempCvs.setWidth(w); 
-    tempCvs.setHeight(h);
-
-    if (json && json.objects) {
-        json.objects = json.objects.filter(o => !o.isBoard).map(o => {
-            o.left -= x;
-            o.top -= y;
-            return o;
-        });
-    }
-
-    await new Promise(resolve => tempCvs.loadFromJSON(json, resolve));
-
-    // 2. 텍스트를 Path(벡터)로 변환 (줄바꿈 로직 적용됨)
-    await convertCanvasTextToPaths(tempCvs);
+    if (!window.jspdf) return null;
 
     try {
-        const MM_TO_PX = 3.7795;
+        // 1. PDF 크기 설정 (mm 단위 변환)
+        // Fabric.js 기본: 1px ≈ 0.264583mm (96 DPI 기준)
+        // 만약 캔버스 설정이 다르다면 이 값을 조정해야 합니다. 보통 3.7795px = 1mm 입니다.
+        const MM_TO_PX = 3.7795; 
         const widthMM = w / MM_TO_PX; 
         const heightMM = h / MM_TO_PX;
         
@@ -339,23 +325,45 @@ export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
         const doc = new jsPDF({ 
             orientation: widthMM > heightMM ? 'l' : 'p', 
             unit: 'mm', 
-            format: [widthMM, heightMM] 
+            format: [widthMM, heightMM],
+            compress: true // 압축 사용
         });
+
+        // 2. 현재 캔버스에서 직접 SVG 추출 (새 캔버스 생성 X -> 메모리 절약)
+        // 좌표 보정을 위해 잠시 뷰포트 이동 (대지 위치만큼 이동)
+        const originalVpt = canvas.viewportTransform;
         
-        const svgStr = tempCvs.toSVG({ 
-            viewBox: { x: 0, y: 0, width: w, height: h }, 
+        // 대지(x, y) 만큼 캔버스를 이동시켜서 0,0 좌표를 맞춤
+        canvas.setViewportTransform([1, 0, 0, 1, -x, -y]); 
+
+        // 3. SVG 문자열 추출 (suppressPreamble: 불필요한 헤더 제거)
+        const svgStr = canvas.toSVG({ 
+            viewBox: { x: x, y: y, width: w, height: h }, 
             width: w, 
             height: h, 
             suppressPreamble: true 
         });
 
+        // 4. 뷰포트 원상복구 (사용자 화면 복구)
+        canvas.setViewportTransform(originalVpt);
+
+        // 5. svg2pdf로 변환 (벡터 유지)
         const parser = new DOMParser();
         const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
         
-        await doc.svg(svgElem, { x: 0, y: 0, width: widthMM, height: heightMM });
+        await doc.svg(svgElem, { 
+            x: 0, 
+            y: 0, 
+            width: widthMM, 
+            height: heightMM 
+        });
+
         return doc.output('blob');
+
     } catch (e) { 
-        console.error("Vector Outline Error:", e);
+        console.error("Vector Gen Error:", e);
+        // 벡터 생성 실패 시, 사용자에게 알리고 null 반환 (이미지 모드로 전환 유도)
+        alert("벡터 데이터가 너무 커서 처리에 실패했습니다.\n이미지 모드로 자동 전환됩니다.");
         return null; 
     }
 }

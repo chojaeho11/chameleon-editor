@@ -2368,8 +2368,8 @@ if (loadId) {
             const maxSide = Math.max(product.w_mm || 0, product.h_mm || 0, product.w || 0, product.h || 0);
             
             // A2 사이즈(약 600mm) 이상인 경우 안내 팝업
-            if (maxSide >= 590) {
-                alert("📢 크기에 따라 탬플릿을 선택해 주세요\n\n허니콤가벽 현수막은 백터로 해야 깨짐없이 깔끔\n\n배너 인쇄물 포스터 기타제품은 이미지도 좋아요 ");
+            if (maxSide >= 800) {
+                alert("📢 크기가 큰 제품을 선택하셨네요\n\n허니콤가벽은 백터 탬플릿으로 작업해야 깨짐없이 깔끔해요\n\n패브릭 제품이나 배너는 이미지도 괜찮아요 ");
             }
         }
         // ▲▲▲ [추가 끝] ▲▲▲
@@ -2408,8 +2408,12 @@ if (loadId) {
     
         window.dispatchEvent(new Event('resize'));
 
-        // 칼선(제품 고정 틀) 자동 로드 로직
+        // ▼▼▼ [수정] 칼선(제품 고정 가이드) 로드 및 팝업 제어 로직 ▼▼▼
+        let hasFixedGuide = false; // 가이드 존재 여부 플래그
+
         try {
+            // 1. 제품(key)에 연결된 고정 템플릿(가이드) 조회
+            // await를 사용하여 DB 응답이 올 때까지 기다립니다.
             const { data, error } = await sb.from('library')
                 .select('data_url')
                 .eq('product_key', key)
@@ -2417,33 +2421,44 @@ if (loadId) {
                 .limit(1);
 
             if (data && data.length > 0) {
+                // 2. 가이드가 있으면 플래그를 True로 설정
+                hasFixedGuide = true;
                 const templateUrl = data[0].data_url;
+                
+                console.log("📢 고정 가이드 발견! 템플릿 팝업을 차단합니다.");
+
+                // 가이드 로드 (화면에 표시)
                 setTimeout(() => {
                     if (window.loadProductFixedTemplate) window.loadProductFixedTemplate(templateUrl);
                 }, 500);
             }
-        } catch(e) { console.error("자동 로드 오류:", e); }
+        } catch(e) { 
+            console.error("자동 로드 오류:", e); 
+        }
 
-        // [수정됨] 템플릿 적용 분기 처리
+        // 3. 템플릿 적용 분기 처리 (DB 확인이 끝난 후 실행됨)
         if (window.pendingTemplate) {
-            // Case 1: 시작 화면에서 선택한 템플릿이 있는 경우 -> 바로 적용
-            // (약간의 딜레이를 주어 캔버스 초기화 후 실행)
+            // [Case A] 시작화면에서 이미 템플릿을 선택하고 들어온 경우
             setTimeout(async () => {
-                if (window.applyStartTemplate) {
-                    await window.applyStartTemplate(window.pendingTemplate);
-                }
+                if (window.applyStartTemplate) await window.applyStartTemplate(window.pendingTemplate);
                 window.pendingTemplate = null;
             }, 100);
+
         } else {
-            // Case 2: 선택한 템플릿이 없는 경우 -> 템플릿 목록 팝업 띄우기
-            setTimeout(() => {
-                const tplOverlay = document.getElementById('templateOverlay');
-                if (tplOverlay) {
-                    tplOverlay.style.display = 'flex';
-                    if (window.filterTpl) window.filterTpl('photo-bg'); 
-                }
-            }, 300);
+            // [Case B] 아무것도 선택하지 않고 들어온 경우
+            // ★ 핵심: 가이드(hasFixedGuide)가 '없을 때만' 팝업을 띄움
+            if (!hasFixedGuide) {
+                setTimeout(() => {
+                    const tplOverlay = document.getElementById('templateOverlay');
+                    if (tplOverlay) {
+                        tplOverlay.style.display = 'flex';
+                        // 여기서 강제로 'photo-bg'를 띄우던 로직이 가이드가 없을 때만 실행됩니다.
+                        if (window.filterTpl) window.filterTpl('photo-bg'); 
+                    }
+                }, 300);
+            }
         }
+        // ▲▲▲ [수정 끝] ▲▲▲
 
         if (window.pendingAiImage) {
             const loading = document.getElementById("loading");

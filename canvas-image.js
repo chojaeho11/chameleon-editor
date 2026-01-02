@@ -67,7 +67,12 @@ function handleImageUpload(file) {
                 fabricImg.set({ scaleX: scale, scaleY: scale });
             }
             
+            // 중앙에 추가
             addToCenter(fabricImg);
+
+            // ★ [안전장치] 추가된 이미지를 다시 한번 맨 위로 강력하게 올림
+            canvas.bringToFront(fabricImg);
+            canvas.requestRenderAll();
         };
     };
     reader.readAsDataURL(file);

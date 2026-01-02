@@ -83,11 +83,23 @@ export function initTemplateTools() {
         searchTemplates(type, keyword);
     };
 
+    // [수정] 검색창 엔터키 및 입력 이벤트 연결
     const searchInput = document.getElementById("tplSearchInput");
     if (searchInput) {
+        // 엔터키 누르면 검색 실행
         searchInput.onkeyup = (e) => {
-            if (e.key === 'Enter') searchTemplates(currentCategory, e.target.value);
+            if (e.key === 'Enter') {
+                searchTemplates(currentCategory, e.target.value);
+            }
         };
+        
+        // (선택사항) '검색' 버튼이 있다면 연결 (없으면 무시됨)
+        const searchBtn = document.getElementById("btnTplSearch");
+        if(searchBtn) {
+            searchBtn.onclick = () => {
+                searchTemplates(currentCategory, searchInput.value);
+            }
+        }
     }
 
     document.querySelectorAll(".tpl-tab").forEach((b) => {
@@ -195,13 +207,15 @@ async function loadTemplatePage(pageIndex) {
     try {
         const currentKey = window.currentProductKey || (canvas ? canvas.currentProductKey : 'custom') || 'custom';
         
-        // 3. 쿼리 작성 (Range 사용: 30개씩)
+       
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, product_key, created_at')
             .order('created_at', { ascending: false })
             .range(pageIndex * TPL_PER_PAGE, (pageIndex + 1) * TPL_PER_PAGE - 1);
 
-        // [수정] 카테고리 필터 (예전 데이터 호환성 처리)
+      
+        query = query.or('product_key.eq.custom,product_key.is.null,product_key.eq."",category.eq.user_vector,category.eq.user_image,category.eq.text');
+        
         if (tplLastCategory && tplLastCategory !== 'all') {
             // 'user_image' 탭 선택 시 -> 'user_image' + 예전 데이터('text') 모두 가져오기
             if (tplLastCategory === 'user_image') {
@@ -213,11 +227,20 @@ async function loadTemplatePage(pageIndex) {
             }
         }
         
-        // 키워드 검색
+        // [수정] 키워드 검색 로직 (태그 + 제목 동시 검색)
         if (tplLastKeyword && tplLastKeyword.trim() !== '') {
-            const expandedWords = expandSearchKeywords(tplLastKeyword);
-            const orSearchCondition = expandedWords.map(w => `tags.ilike.%${w}%`).join(',');
-            if (orSearchCondition) query = query.or(orSearchCondition);
+            const term = tplLastKeyword.trim();
+            
+            // 1. 숫자인 경우 ID로 정밀 검색
+            if (!isNaN(term)) {
+                query = query.eq('id', term);
+            } 
+            // 2. 문자인 경우 태그(tags) 또는 제목(title)에 포함된 것 검색
+            else {
+                // tags 컬럼과 title 컬럼 모두에서 검색 (OR 조건)
+                // (만약 DB에 title 컬럼이 없다면 `tags.ilike.%${term}%` 만 쓰세요)
+                query = query.or(`tags.ilike.%${term}%,title.ilike.%${term}%`);
+            }
         }
 
         // 제품 필터
@@ -427,12 +450,14 @@ async function useSelectedTemplate() {
     }
 }
 
+// [수정] 템플릿 로드 함수 (레이어 순서 정리 + 템플릿 강제 잠금 해제 + 가이드 고정)
 async function processLoad(mode) {
     document.getElementById("templateActionModal").style.display = "none"; 
     document.getElementById("templateOverlay").style.display = "none";
     document.getElementById("loading").style.display = "flex";
 
     try {
+        // 1. DB 데이터 가져오기
         const { data, error } = await sb
             .from('library')
             .select('data_url, width, height, category') 
@@ -445,151 +470,158 @@ async function processLoad(mode) {
         selectedTpl.height = data.height || 1000;
         selectedTpl.category = data.category;
 
+        // 2. 데이터 파싱
         let rawData = data.data_url;
         let finalJson = null;
         let isImage = false;
         let imageUrl = "";
 
         try {
-            if (typeof rawData === 'object') {
-                finalJson = rawData; 
-            } else {
-                finalJson = JSON.parse(rawData);
-            }
-            if (typeof finalJson === 'string') {
-                isImage = true; imageUrl = finalJson;
-            } else {
-                isImage = false;
-            }
+            if (typeof rawData === 'object') finalJson = rawData; 
+            else finalJson = JSON.parse(rawData);
+            
+            if (typeof finalJson === 'string') { isImage = true; imageUrl = finalJson; }
+            else isImage = false;
         } catch (e) {
             isImage = true; imageUrl = rawData;
         }
 
+        // '새 작업' 모드 시 기존 디자인 삭제 (대지, 가이드 제외)
         if (mode === 'replace') {
-            const objects = canvas.getObjects().filter(o => !o.isBoard);
+            const objects = canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay');
             objects.forEach(o => canvas.remove(o));
         }
 
-        // ... (위쪽 코드 생략)
-
-        const getSmartScale = (objWidth, objHeight) => {
+        // ★ [핵심] 템플릿 속성 적용 (잠금 해제!)
+        function applyTemplateSettings(obj) {
             const board = canvas.getObjects().find(o => o.isBoard);
-            const bW = board ? (board.width * board.scaleX) : canvas.width;
-            const bH = board ? (board.height * board.scaleY) : canvas.height;
-            const category = selectedTpl.category || 'logo';
-            
-            // ▼▼▼ [수정된 부분] 배열에 유저 템플릿(user_vector, user_image)도 추가 ▼▼▼
-            if (['photo-bg', 'vector', 'transparent-graphic', 'pattern', 'text', 'user_vector', 'user_image'].includes(category)) {
-                // 이 조건에 걸리면 화면을 꽉 채우게 됨 (Cover Fit)
-                return Math.max(bW / objWidth, bH / objHeight) * 1.1; 
-            } else {
-                // 그 외(로고 등)는 화면의 1/3 크기로 작게 들어감
-                return (bW / 3) / objWidth;
+            let bW = canvas.width, bH = canvas.height;
+            let centerX = canvas.width/2, centerY = canvas.height/2;
+
+            if (board) {
+                bW = board.getScaledWidth();
+                bH = board.getScaledHeight();
+                centerX = board.left + bW/2;
+                centerY = board.top + bH/2;
             }
+
+            let finalScale = 1;
+            // 배경형 카테고리는 꽉 채우기
+            if (['photo-bg', 'vector', 'user_vector', 'user_image', 'transparent-graphic'].includes(selectedTpl.category)) {
+                finalScale = Math.max(bW / obj.width, bH / obj.height);
+            } else {
+                finalScale = (bW / 3) / obj.width; 
+            }
+            
+            obj.set({
+                originX: 'center', originY: 'center',
+                left: centerX, top: centerY,
+                scaleX: finalScale, scaleY: finalScale,
+                
+                // ▼ [중요] 고객이 선택한 템플릿은 무조건 움직일 수 있어야 함 (잠금 해제)
+                selectable: true,
+                evented: true,
+                lockMovementX: false,
+                lockMovementY: false,
+                lockRotation: false,
+                lockScalingX: false,
+                lockScalingY: false,
+                hasControls: true,
+                hasBorders: true,
+                hoverCursor: 'move',
+                
+                // 배경 식별자 (레이어 정렬용)
+                isTemplateBackground: true 
+            });
+        }
+
+        // ★ [핵심] 레이어 순서 정리 (가이드 고정 + 템플릿 배치)
+        const arrangeLayers = () => {
+            const allObjects = canvas.getObjects();
+            
+            // 객체 분류
+            const board = allObjects.find(o => o.isBoard);
+            const guide = allObjects.find(o => o.id === 'product_fixed_overlay');
+            const backgrounds = allObjects.filter(o => o.isTemplateBackground); // 방금 불러온 템플릿
+            const others = allObjects.filter(o => 
+                !o.isBoard && 
+                o.id !== 'product_fixed_overlay' && 
+                !o.isTemplateBackground
+            ); // 텍스트, 로고, 기타
+
+            // [Layer 1] 흰색 대지 (가장 아래)
+            if (board) canvas.sendToBack(board);
+
+            // [Layer 2] 배경 템플릿 (대지 바로 위)
+            backgrounds.forEach(bg => {
+                canvas.bringToFront(bg); 
+            });
+
+            // [Layer 3] 고정 가이드 (배경 위) - ★ 여기서 가이드를 확실히 잠급니다.
+            if (guide) {
+                canvas.bringToFront(guide);
+                guide.set({ 
+                    selectable: false, 
+                    evented: false, 
+                    lockMovementX: true, 
+                    lockMovementY: true,
+                    hoverCursor: 'default'
+                });
+            }
+
+            // [Layer 4] 텍스트, 로고, 기타 (가장 위)
+            others.forEach(obj => {
+                canvas.bringToFront(obj);
+            });
+            
+            canvas.requestRenderAll();
         };
 
-        // ... (아래쪽 코드 생략)
+        // [헬퍼] 로딩 완료 후 처리
+        function finishLoad(obj) {
+            obj.setCoords(); 
+            // 배경형이면 선택만 해제 (잠그는게 아님), 로고형이면 선택 상태로
+            if(['photo-bg','vector','transparent-graphic'].includes(selectedTpl.category)){
+                canvas.discardActiveObject();
+            } else {
+                canvas.setActiveObject(obj);
+            }
+            canvas.requestRenderAll();
+            if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+        }
 
-        const getCenterPos = () => {
-            const board = canvas.getObjects().find(o => o.isBoard);
-            const bW = board ? (board.width * board.scaleX) : canvas.width;
-            const bH = board ? (board.height * board.scaleY) : canvas.height;
-            return { x: board.left + bW/2, y: board.top + bH/2 };
-        };
-
-        // [수정] 이미지 및 SVG 로딩 분기 처리 (일러스트 대지 여백 문제 해결)
+        // 3. 로딩 실행
         if (isImage) {
             const cleanUrl = String(imageUrl).trim().replace(/^"|"$/g, '');
-            
-            // 파일이 SVG인지 확인
             const isSvg = cleanUrl.toLowerCase().includes('.svg') || cleanUrl.startsWith('data:image/svg+xml');
 
             if (isSvg) {
-                // ★ [SVG 벡터 로딩] 일러스트레이터의 빈 대지(Artboard) 무시하고 내용물만 중앙 정렬
                 fabric.loadSVGFromURL(cleanUrl, (objects, options) => {
                     if (!objects || objects.length === 0) {
                          if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
                          return;
                     }
-                    
-                    // 1. 흩어진 벡터 조각들을 하나의 그룹으로 묶음 (이때 실제 그림 크기만 잡힘)
                     const group = fabric.util.groupSVGElements(objects, options);
-                    
-                    // 2. 현재 대지(Board) 정보 가져오기
-                    const board = canvas.getObjects().find(o => o.isBoard);
-                    let bW = canvas.width;
-                    let bH = canvas.height;
-                    let bLeft = 0;
-                    let bTop = 0;
-
-                    if (board) {
-                        bW = board.width * board.scaleX;
-                        bH = board.height * board.scaleY;
-                        bLeft = board.left;
-                        bTop = board.top;
-                    }
-
-                    // 3. 스케일 계산: 화면을 '꽉 채우도록(Cover)' 설정
-                    // 그룹의 실제 크기(그림 영역)를 기준으로 비율 계산
-                    const scaleX = bW / group.width;
-                    const scaleY = bH / group.height;
-                    const finalScale = Math.max(scaleX, scaleY); // 꽉 채우기
-                    
-                    // 4. 강제 중앙 정렬 및 속성 적용
-                    group.set({
-                        originX: 'center',
-                        originY: 'center',
-                        left: bLeft + (bW / 2),
-                        top: bTop + (bH / 2),
-                        scaleX: finalScale,
-                        scaleY: finalScale,
-                        selectable: true,
-                        evented: true
-                    });
-
-                    // 5. 캔버스에 추가
+                    applyTemplateSettings(group);
                     canvas.add(group);
-                    
-                    // 6. 편집 편의를 위해 그룹 해제 (일러스트 파일 편집 가능하게)
-                    const activeSelection = group.toActiveSelection();
-                    canvas.setActiveObject(activeSelection);
-
-                    canvas.requestRenderAll();
-                    if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+                    arrangeLayers(); // 전체 재정렬
+                    finishLoad(group);
                 });
-
             } else {
-                // ★ [일반 이미지(JPG/PNG) 로딩] - 기존 로직 유지
                 fabric.Image.fromURL(cleanUrl, (img) => {
                     if (!img || !img.width) {
                         if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
                         return alert("이미지 로드 실패");
                     }
-                    
-                    const center = getCenterPos();
-                    const finalScale = getSmartScale(img.width, img.height);
-                    
-                    img.set({
-                        left: center.x, top: center.y, originX: 'center', originY: 'center',
-                        scaleX: finalScale, scaleY: finalScale
-                    });
-                    
+                    applyTemplateSettings(img);
                     canvas.add(img);
-                    img.setCoords(); 
-                    canvas.setActiveObject(img);
-                    canvas.requestRenderAll();
-                    if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+                    arrangeLayers(); // 전체 재정렬
+                    finishLoad(img);
                 }, { crossOrigin: 'anonymous' }); 
             }
-
         } else {
-            // JSON 벡터 데이터 처리
+            // [JSON]
             let jsonData = finalJson;
-            
-            // 1. 저장된 데이터에서 '대지(Board)' 정보 찾기 (좌표 기준점용)
-            const savedBoard = jsonData.objects.find(o => o.isBoard);
-            
-            // 2. 렌더링할 객체만 필터링 (대지 제외)
             const objectsToRender = jsonData.objects.filter(o => !o.isBoard);
 
             fabric.util.enlivenObjects(objectsToRender, (objs) => {
@@ -597,168 +629,24 @@ async function processLoad(mode) {
                     if(document.getElementById("loading")) document.getElementById("loading").style.display = "none"; 
                     return; 
                 }
-
-                // 3. 현재 캔버스의 대지 정보 가져오기
-                const currentBoard = canvas.getObjects().find(o => o.isBoard);
+                const group = new fabric.Group(objs);
+                applyTemplateSettings(group);
+                canvas.add(group);
                 
-                // 4. 좌표 및 스케일 계산
-                let scale = 1;
-                let moveX = 0;
-                let moveY = 0;
-                let useRelativePos = false;
-
-                // 대지 정보가 둘 다 있다면 '상대 좌표' 계산 (가장 정확함)
-                // 4. 좌표 및 스케일 계산
-                // 대지 정보가 있는 경우 (에디터에서 저장한 파일)
-                if (savedBoard && currentBoard) {
-                    const savedW = savedBoard.width * savedBoard.scaleX;
-                    const savedH = savedBoard.height * savedBoard.scaleY;
-                    const curW = currentBoard.width * currentBoard.scaleX;
-                    const curH = currentBoard.height * currentBoard.scaleY;
-                    
-                    // 스케일 계산
-                    let scale = 1;
-                    if (['vector', 'photo-bg', 'transparent-graphic', 'pattern', 'user_vector', 'user_image'].includes(selectedTpl.category)) {
-                        scale = Math.max(curW / savedW, curH / savedH); // 꽉 채우기 (Cover)
-                    } else if (['card', 'flyer', 'poster', 'banner-h', 'banner-v', 'menu', 'text'].includes(selectedTpl.category)) {
-                        scale = curW / savedW; // 가로 맞춤
-                    } else {
-                        scale = (curW / 3) / savedW; // 로고 등 작게
-                    }
-
-                    // 개별 객체 좌표 보정하여 추가
-                    const savedCenterX = savedBoard.left + (savedW / 2);
-                    const savedCenterY = savedBoard.top + (savedBoard.height * savedBoard.scaleY / 2);
-                    const curCenterX = currentBoard.left + (curW / 2);
-                    const curCenterY = currentBoard.top + (currentBoard.height * currentBoard.scaleY / 2);
-
-                    objs.forEach(obj => {
-                        const distX = (obj.left - savedCenterX) * scale;
-                        const distY = (obj.top - savedCenterY) * scale;
-                        obj.set({
-                            left: curCenterX + distX,
-                            top: curCenterY + distY,
-                            scaleX: obj.scaleX * scale,
-                            scaleY: obj.scaleY * scale,
-                            selectable: true, evented: true
-                        });
-                        obj.setCoords();
-                        canvas.add(obj);
-                    });
-                    
-                    // 다중 선택 활성화
-                    const sel = new fabric.ActiveSelection(objs, { canvas: canvas });
-                    canvas.setActiveObject(sel);
-
-                } else {
-                    // ★ [최종 수정] 유저 벡터/이미지 강제 맞춤 로직 (Cover Fit)
-                    
-                    // 1. 객체들을 그룹으로 묶어 전체 크기 파악
-                    const group = new fabric.Group(objs);
-
-                    // 2. 현재 캔버스의 대지(Board) 정보 가져오기
-                    const board = canvas.getObjects().find(o => o.isBoard);
-                    
-                    // 대지 크기 및 위치 계산 (대지가 없으면 캔버스 전체 기준)
-                    let bW = canvas.width;
-                    let bH = canvas.height;
-                    let bLeft = 0;
-                    let bTop = 0;
-
-                    if (board) {
-                        bW = board.width * board.scaleX;
-                        bH = board.height * board.scaleY;
-                        bLeft = board.left;
-                        bTop = board.top;
-                    }
-
-                    // 3. 스케일 계산: 화면을 '꽉 채우도록(Cover)' 설정
-                    // 가로 비율과 세로 비율 중 '더 큰 값'을 선택하면 빈 공간 없이 꽉 찹니다.
-                    const scaleX = bW / group.width;
-                    const scaleY = bH / group.height;
-                    const finalScale = Math.max(scaleX, scaleY); // 꽉 채우기 (잘림 허용)
-                    // 만약 '잘리지 않고 다 보이게(Contain)' 하려면 Math.min(scaleX, scaleY)로 변경하세요.
-
-                    // 4. 그룹 속성 적용 (중앙 정렬 + 스케일)
-                    group.set({
-                        originX: 'center',
-                        originY: 'center',
-                        left: bLeft + (bW / 2),  // 대지 정중앙 X
-                        top: bTop + (bH / 2),    // 대지 정중앙 Y
-                        scaleX: finalScale,
-                        scaleY: finalScale
-                    });
-
-                    // 5. 캔버스에 추가
-                    canvas.add(group);
-                    
-                    // 6. 좌표 업데이트 및 그룹 해제 (편집 가능하도록)
-                    group.setCoords();
-                    
-                    // 그룹을 해제하여 개별 객체 선택 모드로 전환
-                    const activeSelection = group.toActiveSelection();
-                    canvas.setActiveObject(activeSelection);
-                    
-                    canvas.requestRenderAll();
-                }
-
-                // 5. 객체 하나씩 좌표 보정하여 추가
-                objs.forEach(obj => {
-                    if (useRelativePos) {
-                        // 저장된 보드 중심점 계산
-                        const savedW = savedBoard.width * savedBoard.scaleX;
-                        const savedCenterX = savedBoard.left + (savedW / 2);
-                        const savedCenterY = savedBoard.top + (savedBoard.height * savedBoard.scaleY / 2);
-                        
-                        // 현재 보드 중심점 계산
-                        const curW = currentBoard.width * currentBoard.scaleX;
-                        const curCenterX = currentBoard.left + (curW / 2);
-                        const curCenterY = currentBoard.top + (currentBoard.height * currentBoard.scaleY / 2);
-
-                        // 중심점 기준 거리 차이 * 스케일
-                        const distFromCenterTheX = (obj.left - savedCenterX) * scale;
-                        const distFromCenterTheY = (obj.top - savedCenterY) * scale;
-
-                        obj.set({
-                            left: curCenterX + distFromCenterTheX,
-                            top: curCenterY + distFromCenterTheY,
-                            scaleX: obj.scaleX * scale,
-                            scaleY: obj.scaleY * scale,
-                            selectable: true,
-                            evented: true,
-                            hasControls: true,
-                            hasBorders: true
-                        });
-                    } else {
-                        // 구버전 데이터 (단순 중앙 이동)
-                        obj.set({
-                            left: obj.left + moveX,
-                            top: obj.top + moveY,
-                            scaleX: obj.scaleX * scale,
-                            scaleY: obj.scaleY * scale,
-                            selectable: true,
-                            evented: true,
-                            hasControls: true,
-                            hasBorders: true
-                        });
-                    }
-                    
-                    obj.setCoords();
-                    canvas.add(obj);
+                arrangeLayers(); // 전체 재정렬
+                
+                // JSON 로드는 그룹을 깨줘야 편집이 편함
+                const items = group.toActiveSelection(); 
+                items.getObjects().forEach(o => {
+                    // 개별 객체들도 잠금 해제
+                    o.set({ selectable: true, evented: true });
                 });
 
-                // 6. 편의를 위해 불러온 객체들을 '다중 선택' 상태로 만듦 (그룹핑 아님)
-                if (objs.length > 0) {
-                    const sel = new fabric.ActiveSelection(objs, { canvas: canvas });
-                    canvas.setActiveObject(sel);
-                }
-                
                 canvas.requestRenderAll();
                 if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-                
-                if (mode === 'replace') setTimeout(() => resetViewToCenter(), 100);
             });
         }
+
     } catch (e) {
         console.error(e);
         if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
@@ -1023,29 +911,100 @@ window.uploadUserLogo = async function() {
     }
 };
 
+// [수정] 제품 고정 가이드 로드 함수 (SVG/이미지 분기 처리 + 완전 잠금 + 변수명 오류 수정)
 export function loadProductFixedTemplate(url) {
     if (!canvas || !url) return;
+    
     const loading = document.getElementById("loading");
     if (loading) loading.style.display = "flex";
-    fabric.Image.fromURL(url, (img) => {
-        if(!img) { if(loading) loading.style.display = "none"; return; }
+
+    // 1. SVG 파일 여부 확인
+    const isSvg = url.toLowerCase().includes('.svg') || url.startsWith('data:image/svg+xml');
+
+    // 2. 공통 적용할 설정 함수
+    const applyFixedSettings = (obj) => {
         const board = canvas.getObjects().find(o => o.isBoard);
-        let tLeft = 0, tTop = 0, tW = canvas.width, tH = canvas.height;
+        
+        let targetW = canvas.width;
+        let targetH = canvas.height;
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height / 2;
+
         if (board) {
-            tW = board.width * board.scaleX; tH = board.height * board.scaleY;
-            tLeft = board.left; tTop = board.top;
+            targetW = board.getScaledWidth();
+            targetH = board.getScaledHeight();
+            centerX = board.left + (targetW / 2);
+            centerY = board.top + (targetH / 2);
         }
-        const scaleX = tW / img.width; const scaleY = tH / img.height;
-        img.set({
-            scaleX: scaleX, scaleY: scaleY,
-            left: tLeft + tW / 2, top: tTop + tH / 2, originX: 'center', originY: 'center',
-            id: 'product_fixed_overlay', selectable: false, evented: false, excludeFromExport: false     
+
+        // 스케일 계산 (대지 크기에 꽉 차게)
+        // ★ [수정] 여기서 'img'가 아니라 'obj'를 사용해야 합니다.
+        const scaleX = targetW / obj.width;
+        const scaleY = targetH / obj.height;
+
+        obj.set({
+            scaleX: scaleX, 
+            scaleY: scaleY,
+            left: centerX, 
+            top: centerY, 
+            originX: 'center', 
+            originY: 'center',
+            id: 'product_fixed_overlay', // 고유 ID
+            
+            // ▼ 완전 잠금 (가이드 역할: 선택불가, 클릭통과)
+            selectable: false,
+            evented: false,         
+            lockMovementX: true,
+            lockMovementY: true,
+            lockRotation: true,
+            lockScalingX: true,
+            lockScalingY: true,
+            hasControls: false,
+            hasBorders: false,
+            hoverCursor: 'default',
+            
+            excludeFromExport: false 
         });
-        const old = canvas.getObjects().find(o=>o.id==='product_fixed_overlay');
+
+        const old = canvas.getObjects().find(o => o.id === 'product_fixed_overlay');
         if(old) canvas.remove(old);
-        canvas.add(img); canvas.bringToFront(img); canvas.requestRenderAll();
+
+        canvas.add(obj);
+        
+        // ★ [수정] 가이드(T셔츠 등)는 로고보다 뒤에 있어야 하므로 '바닥'으로 보냄
+        canvas.sendToBack(obj); 
+        
+        // 단, 흰색 대지(Board)보다는 위에 있어야 보임
+        const boardObj = canvas.getObjects().find(o => o.isBoard);
+        if (boardObj) {
+            canvas.sendToBack(boardObj); // 대지를 맨 꼴찌로
+            canvas.bringForward(obj);    // 가이드를 대지 바로 위로 (Layer 1)
+        }
+        
+        canvas.requestRenderAll();
+        
         if (loading) loading.style.display = "none";
-    }, { crossOrigin: 'anonymous' });
+    };
+
+    // 3. 로딩 실행 (SVG vs 이미지)
+    if (isSvg) {
+        fabric.loadSVGFromURL(url, (objects, options) => {
+            if (!objects || objects.length === 0) {
+                if (loading) loading.style.display = "none";
+                return;
+            }
+            const group = fabric.util.groupSVGElements(objects, options);
+            applyFixedSettings(group);
+        });
+    } else {
+        fabric.Image.fromURL(url, (img) => {
+            if (!img) {
+                if (loading) loading.style.display = "none";
+                return;
+            }
+            applyFixedSettings(img);
+        }, { crossOrigin: 'anonymous' });
+    }
 }
 
 // [추가] 시작 화면에서 선택한 템플릿을 에디터 로딩 후 적용하는 함수
