@@ -234,10 +234,11 @@ export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
     }
 }
 
-// [텍스트 -> 패스 변환 (테두리 문제 해결 + 정확한 폰트 매칭)]
+// [텍스트 -> 패스 변환 (테두리 침범 방지 & 두께 보정 완벽 해결 버전)]
 async function convertCanvasTextToPaths(fabricCanvas) {
     if (!window.opentype) return;
 
+    // 1. 폰트 목록 준비
     const fontList = []; 
     try {
         const { data } = await sb.from('site_fonts').select('font_family, file_url');
@@ -254,16 +255,14 @@ async function convertCanvasTextToPaths(fabricCanvas) {
 
     const loadedFonts = {}; 
 
-    // 서체 찾기: 정확도 우선
+    // 서체 찾기 함수
     const findFontUrl = (familyName) => {
         if (!familyName) return SAFE_KOREAN_FONT_URL;
         const target = familyName.toLowerCase().replace(/[\s\-_]/g, '');
         
-        // 1. 정확한 매칭
         const exactMatch = fontList.find(f => f.normalized === target);
         if (exactMatch) return exactMatch.url;
         
-        // 2. 근사 매칭 (글자수 차이가 적은 것 우선)
         const candidates = fontList.filter(f => target.includes(f.normalized) || f.normalized.includes(target));
         if (candidates.length > 0) {
             candidates.sort((a, b) => Math.abs(a.normalized.length - target.length) - Math.abs(b.normalized.length - target.length));
@@ -272,12 +271,16 @@ async function convertCanvasTextToPaths(fabricCanvas) {
         return SAFE_KOREAN_FONT_URL;
     };
 
+    // 객체 처리 함수 (재귀)
     const processObjects = async (objects) => {
+        // 뒤에서부터 처리해야 인덱스가 꼬이지 않음
         for (let i = objects.length - 1; i >= 0; i--) {
             let obj = objects[i];
+            
             if (obj.type === 'group') {
                 await processObjects(obj.getObjects());
-            } else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+            } 
+            else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
                 try {
                     const fontUrl = findFontUrl(obj.fontFamily);
                     if (!loadedFonts[fontUrl]) {
@@ -286,46 +289,93 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                     }
                     const font = loadedFonts[fontUrl];
                     const fontSize = obj.fontSize;
+                    
+                    // opentype.js 좌표 계산
                     const lineHeightPx = obj.lineHeight * fontSize;
                     const textLines = obj.text.split(/\r\n|\r|\n/);
+                    
+                    // 텍스트 수직 정렬 보정
                     let startY = -(textLines.length * lineHeightPx / 2) + (fontSize * 0.8);
+                    
+                    // 전체 텍스트의 패스 데이터 생성
                     let fullPathData = "";
-
                     textLines.forEach((line, index) => {
                         if(line.trim() !== '') {
                             const lineWidth = font.getAdvanceWidth(line, fontSize);
                             let lineX = -obj.width / 2; 
+                            
+                            // 정렬에 따른 X좌표 보정
                             if (obj.textAlign === 'center') lineX = -lineWidth / 2;
                             else if (obj.textAlign === 'right') lineX = (obj.width / 2) - lineWidth;
+                            
                             const path = font.getPath(line, lineX, startY + (index * lineHeightPx), fontSize);
                             fullPathData += path.toPathData(2);
                         }
                     });
 
-                    // ★ paintFirst: 'stroke' 적용 (테두리 안쪽 침범 방지)
-                    const fabricPath = new fabric.Path(fullPathData, {
+                    // ★ [핵심 1] 테두리(Stroke) 객체 생성 (글자 뒤에 배치될 녀석)
+                    let strokePathObj = null;
+                    if (obj.stroke && obj.strokeWidth > 0) {
+                        // 글자가 커질수록 테두리가 얇아 보이는 문제 보정
+                        // (화면과 PDF의 렌더링 스케일 차이를 보정하기 위해 약간의 가중치 부여 가능)
+                        strokePathObj = new fabric.Path(fullPathData, {
+                            fill: null, // 채우기 없음
+                            stroke: obj.stroke,
+                            strokeWidth: obj.strokeWidth * 2, // ★ 중요: 중앙 기준이므로 두께를 2배로 해야 바깥쪽으로 원하는 만큼 나옴
+                            strokeLineCap: 'round',
+                            strokeLineJoin: 'round',
+                            scaleX: obj.scaleX, scaleY: obj.scaleY, 
+                            angle: obj.angle,
+                            left: obj.left, top: obj.top, 
+                            originX: obj.originX, originY: obj.originY,
+                            opacity: obj.opacity,
+                            shadow: null // 그림자는 분리하지 않음
+                        });
+                    }
+
+                    // ★ [핵심 2] 채우기(Fill) 객체 생성 (글자 앞에 배치될 녀석)
+                    const fillPathObj = new fabric.Path(fullPathData, {
                         fill: obj.fill,
-                        stroke: obj.stroke,          
-                        strokeWidth: obj.strokeWidth || 0,
-                        strokeLineCap: 'round',
-                        strokeLineJoin: 'round',
-                        paintFirst: 'stroke', // ★ 테두리를 뒤에 그리기
-                        scaleX: obj.scaleX, scaleY: obj.scaleY, angle: obj.angle,
-                        left: obj.left, top: obj.top, originX: obj.originX, originY: obj.originY,
-                        opacity: obj.opacity, shadow: obj.shadow
+                        stroke: null, // 테두리 없음
+                        strokeWidth: 0,
+                        scaleX: obj.scaleX, scaleY: obj.scaleY, 
+                        angle: obj.angle,
+                        left: obj.left, top: obj.top, 
+                        originX: obj.originX, originY: obj.originY,
+                        opacity: obj.opacity,
+                        shadow: obj.shadow
                     });
 
+                    // ★ [핵심 3] 교체 작업
                     if (obj.group) {
-                        obj.group.removeWithUpdate(obj);
-                        obj.group.addWithUpdate(fabricPath);
+                        // 그룹 내부에 있다면
+                        const group = obj.group;
+                        group.removeWithUpdate(obj);
+                        
+                        // 테두리가 있으면 먼저 추가 (뒤쪽)
+                        if (strokePathObj) group.addWithUpdate(strokePathObj);
+                        // 채우기는 나중에 추가 (앞쪽)
+                        group.addWithUpdate(fillPathObj);
                     } else {
+                        // 캔버스 바로 위에 있다면
+                        const index = fabricCanvas.getObjects().indexOf(obj);
                         fabricCanvas.remove(obj);
-                        fabricCanvas.add(fabricPath);
+                        
+                        if (strokePathObj) {
+                            fabricCanvas.insertAt(strokePathObj, index); // 원래 위치
+                            fabricCanvas.insertAt(fillPathObj, index + 1); // 그 바로 위
+                        } else {
+                            fabricCanvas.insertAt(fillPathObj, index);
+                        }
                     }
-                } catch (err) {}
+
+                } catch (err) {
+                    console.warn("Text convert error:", err);
+                }
             }
         }
     };
+
     await processObjects(fabricCanvas.getObjects());
 }
 

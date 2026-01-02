@@ -397,6 +397,7 @@ export async function startDesignFromProduct() {
     } catch (e) { console.error("템플릿 로드 오류:", e); }
 }
 
+// [수정됨] 장바구니 담기 (상품 정보 누락 시 자동 복구 기능 추가)
 async function addCanvasToCart() {
     if (!canvas) return;
     
@@ -410,6 +411,7 @@ async function addCanvasToCart() {
     const board = canvas.getObjects().find(o => o.isBoard);
     let thumbUrl = "https://placehold.co/100?text=Design";
     
+    // 1. 썸네일 생성
     try {
         let blob;
         if (board) {
@@ -440,21 +442,53 @@ async function addCanvasToCart() {
         canvas.setViewportTransform(originalVpt);
     } 
 
+    // 2. 상품 정보 확인 (없으면 복구)
     let key = window.currentProductKey || canvas.currentProductKey;
     if (!key) key = localStorage.getItem('current_product_key') || 'A4';
 
-    let product = PRODUCT_DB[key];
-    if (!product) {
-        const savedKey = localStorage.getItem('current_product_key');
-        if (savedKey && PRODUCT_DB[savedKey]) {
-            product = PRODUCT_DB[savedKey];
-        } else {
-            product = PRODUCT_DB['A4'] || { name: '자유 디자인', price: 0, img: 'https://placehold.co/100', addons: [] };
+    // ★ [핵심] 상품 정보가 없으면 서버에서 가져와서 채워넣음
+    if (!PRODUCT_DB[key]) {
+        try {
+            console.log(`상품 정보('${key}') 복구 시도...`);
+            const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).single();
+            
+            if (prodData) {
+                // config.js의 데이터 구조에 맞춰 변환
+                const scaleFactor = 3.7795;
+                const pxW = Math.round((prodData.width_mm || 210) * scaleFactor);
+                const pxH = Math.round((prodData.height_mm || 297) * scaleFactor);
+                
+                // 다국어 처리 (SITE_CONFIG 필요, 없으면 KR 기본)
+                const country = (typeof SITE_CONFIG !== 'undefined' ? SITE_CONFIG.COUNTRY : 'KR');
+                let dName = prodData.name;
+                let dPrice = prodData.price;
+                
+                if (country === 'JP') { dName = prodData.name_jp || dName; dPrice = prodData.price_jp || 0; }
+                else if (country === 'US') { dName = prodData.name_us || dName; dPrice = prodData.price_us || 0; }
+
+                PRODUCT_DB[key] = {
+                    name: dName,
+                    price: dPrice,
+                    img: prodData.img_url,
+                    w: pxW, h: pxH, 
+                    w_mm: prodData.width_mm, h_mm: prodData.height_mm, 
+                    addons: prodData.addons ? prodData.addons.split(',') : [],
+                    category: prodData.category
+                };
+            }
+        } catch(e) {
+            console.error("상품 정보 복구 실패:", e);
         }
+    }
+
+    let product = PRODUCT_DB[key];
+    
+    // 그래도 없으면 안전장치
+    if (!product) {
+        product = { name: '상품 정보 없음', price: 0, img: 'https://placehold.co/100', addons: [] };
     }
     
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow']);
-   // [수정] 대지 정보 정확히 추출
     const finalW = board ? board.width * board.scaleX : (product.w || canvas.width); 
     const finalH = board ? board.height * board.scaleY : (product.h || canvas.height);
     const boardX = board ? board.left : 0;
@@ -470,31 +504,10 @@ async function addCanvasToCart() {
 
     if(loading) loading.style.display = "none";
 
-    if (currentUser && sb) {
-        if (confirm("장바구니에 담기 전, '내 보관함'에도 저장하시겠습니까?\n(취소를 누르면 장바구니에만 담깁니다)")) {
-            if(loading) {
-                loading.style.display = "flex";
-                loading.querySelector('p').innerText = "보관함에 저장 중...";
-            }
-            try {
-                const savePayload = {
-                    user_id: currentUser.id,
-                    title: `${product.name} (${new Date().toLocaleDateString()})`,
-                    json: json,
-                    thumb_url: thumbUrl || "",
-                    product_key: key || "custom"
-                };
-                const { error } = await sb.from('user_designs').insert(savePayload);
-                if (error) throw error;
-            } catch(err) {
-                alert(`보관함 저장 실패: ${err.message || "알 수 없는 오류"}\n(장바구니에는 담깁니다)`);
-            }
-        }
-    }
-
+    // 3. 카트에 담기
     cartData.push({ 
         uid: Date.now(), 
-        product: product, 
+        product: product, // 이제 정보가 들어있음
         type: 'design', 
         thumb: thumbUrl, 
         json: json, 
@@ -502,15 +515,20 @@ async function addCanvasToCart() {
         fileName: fileName, 
         width: finalW, 
         height: finalH, 
-        boardX: boardX, // ★ 추가됨
-        boardY: boardY, // ★ 추가됨
+        boardX: boardX, 
+        boardY: boardY, 
         isOpen: true,
         qty: 1, 
         selectedAddons: {}, 
         addonQuantities: {} 
     });
     
-    saveCart(); 
+    // 4. 저장 및 갱신
+    try { 
+        const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+        localStorage.setItem(storageKey, JSON.stringify(cartData)); 
+    } catch(e) {}
+
     renderCart(); 
 
     if(loading) loading.style.display = "none";

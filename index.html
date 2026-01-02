@@ -2127,86 +2127,121 @@ if (loadId) {
         }
     }
     // ============================================================
-    // [3] 제품 선택 모달 (다국어 지원)
+    // [3] 제품 선택 모달 (서버 보호: 클릭 시 로딩 & 캐싱 적용)
     // ============================================================
-    // [최적화 적용] 제품 선택 모달 (이미지 150px 제한)
+    // ★ 전역 캐시 저장소 (한 번 불러온 카테고리는 서버에 다시 요청 안 함)
+    window.categoryCache = {}; 
+
     window.showCategoryProducts = async function(catKey, catName) {
         const grid = document.getElementById('catProductGrid');
         const modal = document.getElementById('categoryDetailModal');
         const titleEl = document.getElementById('catModalTitle');
-        const descEl = modal.querySelector('p');
-
-        const t = window.translations || {};
-        const titleText = t['modal_size_select_title'] || "Q. 무엇을 만들까요?";
-        const subText = t['modal_size_select_sub'] || "(사이즈 선택)";
-        const descText = t['modal_size_select_desc'] || "원하시는 규격을 선택하시면 디자인이 시작됩니다.";
-
-        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">${subText}</span>`;
-        if(descEl) descEl.innerText = descText;
         
+        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
+        
+        grid.style.gridTemplateColumns = "repeat(4, 1fr)"; 
+        grid.style.gap = "12px";
+        
+        // 로딩 표시
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> 상품 정보를 불러오는 중...</div>';
         modal.style.display = 'flex';
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center;">로딩 중...</div>`;
-        
-        try {
-            const { data: products, error } = await sb.from('admin_products')
-                .select('*')
-                .eq('category', catKey)
-                .order('sort_order', { ascending: true });
 
-            if (error) throw error;
+        // 1. 캐시 확인 (이미 불러온 적 있나?)
+        let products = window.categoryCache[catKey];
 
-            grid.innerHTML = '';
-            if (!products || products.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">No Products.</div>';
+        if (!products) {
+            // 2. 없으면 서버 호출 (필수 데이터만)
+            try {
+                const { data, error } = await sb.from('admin_products')
+                    .select('*') // 필요한 경우 .select('code, name, price, img_url...')로 더 줄일 수 있음
+                    .eq('category', catKey)
+                    .order('sort_order', { ascending: true });
+
+                if (error) throw error;
+                
+                products = data;
+                // 3. 캐시에 저장
+                window.categoryCache[catKey] = data;
+
+            } catch (e) {
+                console.error("상품 로딩 실패:", e);
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">데이터를 불러오지 못했습니다.</div>';
                 return;
             }
+        }
 
-            let currencySymbol = (CURRENT_LANG === 'jp') ? '¥' : (CURRENT_LANG === 'us') ? '$' : '원';
+        grid.innerHTML = '';
+        if (!products || products.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">상품이 없습니다.</div>';
+            return;
+        }
 
-            products.forEach(p => {
-                let displayName = p.name;
-                let displayPrice = p.price;
+        let currencySymbol = '원';
+        if(CURRENT_LANG === 'jp') currencySymbol = '¥';
+        else if(CURRENT_LANG === 'us') currencySymbol = '$';
 
-                if (CURRENT_LANG === 'jp') { displayName = p.name_jp || p.name; displayPrice = p.price_jp || p.price; }
-                else if (CURRENT_LANG === 'us') { displayName = p.name_us || p.name; displayPrice = p.price_us || p.price; }
+        products.forEach(p => {
+            let displayName = p.name;
+            let displayPrice = p.price;
 
-                if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-                window.PRODUCT_DB[p.code] = {
-                    name: displayName, w: p.width_mm, h: p.height_mm, price: displayPrice,
-                    img: p.img_url, addons: p.addons ? p.addons.split(',') : [], category: p.category
-                };
+            if (CURRENT_LANG === 'jp') {
+                displayName = p.name_jp || p.name; 
+                displayPrice = p.price_jp || p.price; 
+            } else if (CURRENT_LANG === 'us') {
+                displayName = p.name_us || p.name;
+                displayPrice = p.price_us || p.price;
+            }
 
-                const div = document.createElement('div');
-                div.className = 'quick-item';
-                
-                // ★ 여기서 이미지 용량을 150px로 확 줄입니다
-                const tinyUrl = window.getTinyThumb(p.img_url, 150);
+            // ★ 중요: 나중에 에디터에서 쓸 수 있게 전역 DB에 등록
+            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+            
+            // mm -> px 변환
+            const scaleFactor = 3.7795;
+            const pxW = Math.round((p.width_mm || 210) * scaleFactor);
+            const pxH = Math.round((p.height_mm || 297) * scaleFactor);
 
-                let imgHtml = tinyUrl 
-                    ? `<div class="quick-icon-img-box"><img src="${tinyUrl}" loading="lazy" alt="${displayName}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';"></div>`
-                    : `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
+            window.PRODUCT_DB[p.code] = {
+                name: displayName, 
+                w: pxW, h: pxH,
+                w_mm: p.width_mm, h_mm: p.height_mm,
+                price: displayPrice,
+                img: p.img_url, 
+                addons: p.addons ? p.addons.split(',') : [], 
+                category: p.category
+            };
 
-                div.innerHTML = `
-                    ${imgHtml}
-                    <div class="quick-text">${displayName}</div>
-                    <div style="font-size:11px; color:#888; margin-top:3px;">
-                        ${p.width_mm}x${p.height_mm} / ${currencySymbol}${displayPrice.toLocaleString()}
+            const div = document.createElement('div');
+            div.className = 'quick-item'; 
+            
+            let imgHtml = '';
+            if (p.img_url) {
+                imgHtml = `
+                    <div class="quick-icon-img-box">
+                        <img src="${p.img_url}" alt="${displayName}" loading="lazy" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
                     </div>
                 `;
+            } else {
+                imgHtml = `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
+            }
 
-                div.onclick = () => {
-                    modal.style.display = 'none'; 
-                    window.currentProductKey = p.code;
-                    window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-                    if(window.showChoiceModal) window.showChoiceModal(p.code);
-                    else window.startEditorDirect(p.code);
-                };
-                grid.appendChild(div);
-            });
-        } catch (e) {
-            console.error("제품 로딩 실패:", e);
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Error loading products</div>';
-        }
+            div.innerHTML = `
+                ${imgHtml}
+                <div class="quick-text">${displayName}</div>
+                <div style="font-size:11px; color:#888; margin-top:3px;">
+                    ${p.width_mm || '-'}x${p.height_mm || '-'} / ${currencySymbol}${displayPrice.toLocaleString()}
+                </div>
+            `;
+
+            div.onclick = () => {
+                modal.style.display = 'none'; 
+                window.currentProductKey = p.code;
+                window.selectedProductForChoice = window.PRODUCT_DB[p.code];
+
+                if(window.showChoiceModal) window.showChoiceModal(p.code);
+                else window.startEditorDirect(p.code);
+            };
+            grid.appendChild(div);
+        });
     };
     // ============================================================
     // [4] 작업 방식 선택 모달 & 파일 업로드

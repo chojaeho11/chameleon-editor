@@ -12,12 +12,11 @@
 
     // 2. 폰트 설정 (★중요: 수파베이스 DB의 CSS Family 코드값 적용)
     // 이미지 분석 결과 기반 매핑
-    const FONT_TITLE = 'sfasfsfasfhhhhhhhh';  // 잘난체 (실제 DB 코드)
-    const FONT_SUB   = 'asdfastfashdf';       // 페이퍼로지 중간 (추정)
-    const FONT_EMO   = 'asdfdgrfgfgfgfdg';    // 나눔손글씨
-    const FONT_POINT = 'jalnangodic';         // 잘난고딕
-    const FONT_DECO  = 'asdfasfsf';           // 넷마블 볼드 (장식용)
-    
+    const FONT_TITLE = 'jalnangodic';  // 잘난고딕 (실제 DB 코드)
+    const FONT_SUB   = 'asdfasfasfsfsdf';       // 페이퍼로지 중간 (추정)
+    const FONT_EMO   = 'bndsmb';    // 북엔드바탕
+    const FONT_POINT = 'lkhjljdgfgfg';         // 김대건
+    const FONT_DECO  = 'asdfasdfffffff';           // 필산들
     // 3. 스타일 설정
     const COLOR_MAIN = '#5dade2';
     const COLOR_SUB  = '#5dade2';  

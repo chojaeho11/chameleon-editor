@@ -86,33 +86,7 @@ async function loadSystemData() {
                 ADDON_DB[item.code] = { name: dName, price: dPrice };
             });
         }
-
-        // ★ [핵심] 전체 조회('*') 대신 필요한 컬럼만 콕 집어 조회
-        // 이렇게 하면 데이터 전송량이 1/10로 줄어들어 서버가 안 죽습니다.
-        const { data: products } = await sb.from('admin_products')
-            .select('code, name, price, img_url, width_mm, height_mm, addons, category') 
-            .order('sort_order', { ascending: true });
-            
-        if (products) {
-            PRODUCT_DB = {}; 
-            products.forEach(item => {
-                const scaleFactor = 3.7795;
-                const mmW = item.width_mm || 210;
-                const mmH = item.height_mm || 297;
-                
-                PRODUCT_DB[item.code] = {
-                    name: item.name,
-                    price: item.price,
-                    img: item.img_url || 'https://placehold.co/400?text=No+Image',
-                    w: Math.round(mmW * scaleFactor),       
-                    h: Math.round(mmH * scaleFactor),       
-                    w_mm: mmW,    
-                    h_mm: mmH,    
-                    addons: item.addons ? item.addons.split(',') : [],
-                    category: item.category
-                };
-            });
-        }
+        PRODUCT_DB = {};
     } catch(e) {
         console.error("데이터 로드 실패:", e);
     }

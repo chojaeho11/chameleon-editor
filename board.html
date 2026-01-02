@@ -240,7 +240,13 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script type="module">
-        import { sb, initConfig, currentUser, isAdmin } from './config.js';
+        // [최적화] config.js의 무거운 로딩을 피하기 위해 직접 연결
+        let sb = null;
+        let currentUser = null;
+        let isAdmin = false;
+
+        // 관리자 이메일 (config.js와 동일하게 설정)
+        const ADMIN_EMAILS = ["korea900as@gmail.com", "ceo@test.com"];
 
         const urlParams = new URLSearchParams(window.location.search);
         const category = urlParams.get('cat') || 'free';
@@ -250,115 +256,82 @@
         let quill; 
         let currentRating = 5; 
         let isEditMode = false;
-        let isLoginAvailable = true; // 로그인 기능 사용 가능 여부 체크
+        let isLoginAvailable = true; 
 
         const boardMetaInfo = {
-            'blog': {
-                title: { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ' },
-                desc: '카멜레온프린팅 공식 블로그. 무료디자인에디터 활용법과 그림부업 노하우, 최신 인쇄 트렌드를 공유합니다.',
-                keywords: '그림부업, 무료디자인에디터, 인쇄도매쇼핑몰, 디자인팁, 카멜레온프린팅'
-            },
-            'review': {
-                title: { KR: '고객 제작후기', US: 'Customer Reviews', JP: 'お客様のレビュー' },
-                desc: '고객님이 직접 제작한 허니콤보드, 종이매대, 패브릭인쇄, 종이가구, 실사출력 실제 후기를 확인해보세요.',
-                keywords: '허니콤보드후기, 종이매대, 패브릭인쇄, 종이가구, 실사출력, 인쇄후기'
-            },
-            'promo': {
-                title: { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社' },
-                desc: '전국 인쇄도매쇼핑몰 파트너 및 지역 광고사 홍보 게시판입니다.',
-                keywords: '인쇄도매쇼핑몰, 지역광고사, 실사출력업체, 간판업체홍보'
-            },
-            'trade': {
-                title: { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引' },
-                desc: '실사출력 장비, 컷팅기 등 중고 인쇄 장비 직거래 장터입니다.',
-                keywords: '중고플로터, 실사출력기중고, 인쇄장비거래'
-            },
-            'job': {
-                title: { KR: '구인구직', US: 'Job Market', JP: '求人・求職' },
-                desc: '디자인 및 인쇄 업계 채용 정보. 그림부업 및 프리랜서 디자이너 모집 정보를 확인하세요.',
-                keywords: '디자이너구인, 인쇄소채용, 그림부업, 시공기사모집'
-            },
-            'free': {
-                title: { KR: '제품설명서', US: 'Product Manuals', JP: '製品説明書' },
-                desc: '허니콤보드 조립법, 종이매대 설치 가이드, 패브릭인쇄 마감 안내 등 상세 제품 설명서입니다.',
-                keywords: '허니콤보드설명서, 종이매대조립, 종이가구만들기, 등신대설치법'
-            }
+            'blog': { title: { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ' }, desc: '카멜레온프린팅 공식 블로그', keywords: '블로그, 인쇄팁' },
+            'review': { title: { KR: '고객 제작후기', US: 'Customer Reviews', JP: 'お客様のレビュー' }, desc: '생생한 제작 후기', keywords: '후기, 리뷰' },
+            'promo': { title: { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社' }, desc: '파트너 홍보', keywords: '홍보, 광고사' },
+            'trade': { title: { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引' }, desc: '중고 장비 거래', keywords: '중고, 장비' },
+            'job': { title: { KR: '구인구직', US: 'Job Market', JP: '求人・求職' }, desc: '채용 정보', keywords: '구인, 구직' },
+            'free': { title: { KR: '제품설명서', US: 'Product Manuals', JP: '製品説明書' }, desc: '제품 매뉴얼', keywords: '설명서, 매뉴얼' }
         };
 
-        function updateMetaTags(title, desc, keywords) {
-            document.title = title + " | 카멜레온프린팅";
-            let metaDesc = document.querySelector('meta[name="description"]');
-            if (!metaDesc) { metaDesc = document.createElement('meta'); metaDesc.name = "description"; document.head.appendChild(metaDesc); }
-            metaDesc.setAttribute("content", desc);
-            let metaKeys = document.querySelector('meta[name="keywords"]');
-            if (!metaKeys) { metaKeys = document.createElement('meta'); metaKeys.name = "keywords"; document.head.appendChild(metaKeys); }
-            metaKeys.setAttribute("content", keywords);
-            document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
-            document.querySelector('meta[property="og:description"]')?.setAttribute("content", desc);
-        }
-
-        window.moveCategory = function(cat) {
-            location.href = `/board.html?cat=${cat}&country=${currentCountry}`;
-        }
-
-        // [최적화 1단계] 이미지 용량 다이어트 함수 (강력 압축)
+        // [이미지 최적화] Supabase 기능으로 썸네일 용량 압축
         function optimizeImage(url) {
             if (!url) return null;
-            // Supabase 스토리지 이미지인 경우에만 최적화 적용
             if (url.includes('supabase.co')) {
-                // 이미 ?가 있으면 &를 쓰고, 없으면 ?를 씀
-                const separator = url.includes('?') ? '&' : '?';
-                
-                // width=300: 썸네일용으로 크기 대폭 축소 (원본이 4000px이어도 300px로 받음)
-                // quality=50: 화질을 절반으로 낮춤 (썸네일은 그래도 충분함)
-                // format=webp: 용량이 적은 차세대 포맷(WebP) 사용
-                return `${url}${separator}width=300&height=200&resize=cover&quality=50&format=webp`;
+                const sep = url.includes('?') ? '&' : '?';
+                // 목록에서는 아주 작은 사이즈만 필요함
+                return `${url}${sep}width=300&height=200&resize=cover&quality=50&format=webp`;
             }
             return url;
         }
 
-        // [안전장치] 초기화 과정에서 에러가 나도 목록은 보여주도록 수정
+        // [초기화 함수] - 게시판 전용 (상품 로딩 X)
         async function init() {
-            try {
-                // 로그인 체크 시도
-                await initConfig();
-            } catch (e) {
-                console.warn("로그인 정보 로드 실패 (추적 방지 등으로 인한 쿠키 차단):", e);
-                isLoginAvailable = false; // 로그인 불가능 상태로 표시
-                // 여기서 멈추지 않고 아래 코드를 실행함 (이게 중요!)
+            // 1. Supabase 라이브러리 대기
+            if (typeof window.supabase === 'undefined') {
+                await new Promise(r => setTimeout(r, 100));
             }
-
-            let isRealAdmin = false; 
-            // 로그인이 되어있을 때만 관리자 체크
-            if (isLoginAvailable && isAdmin) isRealAdmin = true;
-            if (isLoginAvailable && currentUser) {
+            
+            if (typeof window.supabase !== 'undefined') {
+                const { createClient } = window.supabase;
+                const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+                
+                sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+                
                 try {
-                    const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
-                    if (profile && profile.role === 'admin') isRealAdmin = true;
-                } catch(err) { 
-                    console.error("프로필 정보 로드 실패(무시)", err); 
+                    const { data } = await sb.auth.getSession();
+                    if (data && data.session) {
+                        currentUser = data.session.user;
+                        isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+                    }
+                } catch(e) {
+                    console.warn("세션 로드 실패:", e);
+                    isLoginAvailable = false;
                 }
+            } else {
+                isLoginAvailable = false;
             }
 
+            // 2. 관리자 확인
+            let isRealAdmin = false; 
+            if (isLoginAvailable && isAdmin) isRealAdmin = true;
+
+            // 3. UI 설정
             const countrySelect = document.getElementById('countrySelect');
-            countrySelect.value = currentCountry;
-            countrySelect.onchange = (e) => location.href = `/board.html?cat=${category}&country=${e.target.value}`;
-            document.getElementById('countryBadge').innerText = currentCountry;
+            if(countrySelect) {
+                countrySelect.value = currentCountry;
+                countrySelect.onchange = (e) => location.href = `/board.html?cat=${category}&country=${e.target.value}`;
+            }
+            const badge = document.getElementById('countryBadge');
+            if(badge) badge.innerText = currentCountry;
             
             const metaInfo = boardMetaInfo[category] || boardMetaInfo['free'];
             const pageTitle = metaInfo.title[currentCountry] || metaInfo.title['KR'];
-            document.getElementById('pageTitle').innerText = pageTitle;
+            const titleEl = document.getElementById('pageTitle');
+            if(titleEl) titleEl.innerText = pageTitle;
 
             const currentTab = document.getElementById(`nav-${category}`);
             if (currentTab) currentTab.classList.add('active');
 
-            if (!postId) {
-                updateMetaTags(pageTitle, metaInfo.desc, metaInfo.keywords);
-            }
+            if (!postId) updateMetaTags(pageTitle, metaInfo.desc, metaInfo.keywords);
 
+            // 4. 글쓰기 버튼 표시
             const btnWrite = document.getElementById('btnWrite');
-            // 로그인이 가능한 상태에서만 글쓰기 버튼 노출 로직 수행
-            if (isLoginAvailable) {
+            if (btnWrite && isLoginAvailable) {
                 if (category === 'blog') {
                     if (isRealAdmin) btnWrite.style.display = 'inline-block';
                 } else {
@@ -366,149 +339,106 @@
                 }
             }
 
-            quill = new Quill('#editor-container', {
-                modules: {
-                    toolbar: [
-                        [{ 'header': [1, 2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        [{ 'align': [] }],
-                        ['image', 'link'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        ['clean']
-                    ]
-                },
-                placeholder: '내용을 입력하세요...',
-                theme: 'snow'
-            });
+            // 5. 에디터 설정
+            if(typeof Quill !== 'undefined') {
+                quill = new Quill('#editor-container', {
+                    modules: { toolbar: [ [{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline'], ['image', 'link'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean'] ] },
+                    placeholder: '내용을 입력하세요...', theme: 'snow'
+                });
+            }
 
             setupStarRating();
+            setupEventListeners();
 
+            // 6. 데이터 로드
             if (postId) loadPostDetail(postId);
             else loadPostList();
-
-            setupEventListeners();
         }
 
-        window.goToList = function() {
-            location.href = `/board.html?cat=${category}&country=${currentCountry}`;
-        };
-
-        window.editCurrentPost = function() {
-            if(!confirm("글을 수정하시겠습니까?")) return;
-            isEditMode = true; 
-            
-            const title = document.getElementById('viewTitle').innerText;
-            const content = document.getElementById('viewContent').innerHTML;
-
-            document.getElementById('inputTitle').value = title;
-            quill.root.innerHTML = content;
-
-            if (category === 'review') {
-                document.getElementById('ratingInputArea').style.display = 'flex';
-            }
-
-            showSection('write');
-        };
-
-        window.deleteCurrentPost = async function() {
-            if(!confirm("정말 이 글을 삭제하시겠습니까?\n(관련된 댓글도 모두 삭제됩니다)")) return;
-            try {
-                const { error: commentErr } = await sb.from('community_comments').delete().eq('post_id', postId);
-                if(commentErr) throw commentErr;
-                const { data, error: postErr } = await sb.from('community_posts').delete().eq('id', postId).select();
-                if(postErr) throw postErr;
-                // 삭제된 데이터가 없으면 권한 문제로 간주
-                if(!data || data.length === 0) throw new Error("삭제 권한이 없거나 이미 삭제된 글입니다.");
-
-                alert("삭제되었습니다.");
-                goToList();
-            } catch(e) {
-                console.error(e);
-                alert("삭제 실패: " + e.message);
-            }
-        };
-
-        function setupStarRating() {
-            const stars = document.querySelectorAll('#starInput i');
-            stars.forEach(star => {
-                star.onclick = function() {
-                    currentRating = parseInt(this.getAttribute('data-score'));
-                    stars.forEach(s => {
-                        if(parseInt(s.getAttribute('data-score')) <= currentRating) s.classList.add('active');
-                        else s.classList.remove('active');
-                    });
-                };
-            });
+        function updateMetaTags(title, desc, keywords) {
+            document.title = title + " | 카멜레온프린팅";
         }
 
+        // [목록 로드] - 9개 제한 + 이미지 최적화
         async function loadPostList() {
             showSection('list');
-            // 목록은 로그인 여부와 상관없이 누구나 볼 수 있어야 함
-            const { data } = await sb.from('community_posts')
-                .select('id, title, author_name, created_at, view_count, content, rating') 
-                .eq('category', category).eq('country_code', currentCountry)
-                .order('created_at', { ascending: false });
-            
             const listEl = document.getElementById('boardList');
-            listEl.innerHTML = '';
+            listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">로딩 중...</div>';
 
-            if (!data || data.length === 0) {
-                listEl.style.display = 'block';
-                listEl.innerHTML = `<div style="text-align:center; padding:100px; color:#999; grid-column:1/-1;">등록된 게시글이 없습니다.</div>`;
-                return;
-            }
-            listEl.style.display = 'grid';
+            try {
+                const { data, error } = await sb.from('community_posts')
+                    .select('id, title, author_name, created_at, view_count, rating, content')
+                    .eq('category', category)
+                    .eq('country_code', currentCountry)
+                    .order('created_at', { ascending: false })
+                    .limit(9); // ★ 30개 -> 9개로 축소 (로딩 속도 개선)
 
-            data.forEach(post => {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = post.content;
-                const firstImg = tempDiv.querySelector('img');
-                
-                const rawSrc = firstImg ? firstImg.src : null;
-                // [최적화 적용] 강력한 이미지 압축 함수 사용
-                const optimizedSrc = optimizeImage(rawSrc);
+                if (error) throw error;
 
-                let starHtml = '';
-                if (category === 'review' && post.rating) {
-                    starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
-                    for(let i=0; i<5; i++) starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-                    starHtml += `</div>`;
+                listEl.innerHTML = '';
+                if (!data || data.length === 0) {
+                    listEl.style.display = 'block';
+                    listEl.innerHTML = `<div style="text-align:center; padding:100px; color:#999;">등록된 게시글이 없습니다.</div>`;
+                    return;
                 }
+                listEl.style.display = 'grid';
 
-                const card = document.createElement('div');
-                card.className = 'post-card';
-                // [최적화 2단계] Lazy Loading 및 Async Decoding 적용
-                card.innerHTML = `
-                    <div class="card-thumb">
-                        ${optimizedSrc 
-                            ? `<img src="${optimizedSrc}" loading="lazy" decoding="async" alt="${post.title}" style="width:100%; height:100%; object-fit:cover;">` 
-                            : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`
-                        }
-                    </div>
-                    <div class="card-body">
-                        ${starHtml}
-                        <div class="card-title">${post.title}</div>
-                        <div class="card-meta">
-                            <span>${post.author_name || 'User'}</span>
-                            <span>${new Date(post.created_at).toLocaleDateString()}</span>
+                data.forEach(post => {
+                    // 본문에서 이미지 추출
+                    let thumbUrl = null;
+                    const imgMatch = post.content && post.content.match(/<img[^>]+src="([^">]+)"/);
+                    if (imgMatch) thumbUrl = imgMatch[1];
+
+                    // 이미지 주소 최적화
+                    const optimizedSrc = optimizeImage(thumbUrl);
+
+                    let starHtml = '';
+                    if (category === 'review' && post.rating) {
+                        starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
+                        for(let i=0; i<5; i++) starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+                        starHtml += `</div>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'post-card';
+                    card.innerHTML = `
+                        <div class="card-thumb">
+                            ${optimizedSrc 
+                                ? `<img src="${optimizedSrc}" loading="lazy" decoding="async" alt="thumb" style="width:100%; height:100%; object-fit:cover;">` 
+                                : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`
+                            }
                         </div>
-                    </div>
-                `;
-                card.onclick = () => location.href = `/board.html?cat=${category}&country=${currentCountry}&id=${post.id}`;
-                listEl.appendChild(card);
-            });
+                        <div class="card-body">
+                            ${starHtml}
+                            <div class="card-title">${post.title}</div>
+                            <div class="card-meta">
+                                <span>${post.author_name || 'User'}</span>
+                                <span>${new Date(post.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    `;
+                    card.onclick = () => location.href = `/board.html?cat=${category}&country=${currentCountry}&id=${post.id}`;
+                    listEl.appendChild(card);
+                });
+
+            } catch (e) {
+                console.error("게시글 로드 실패:", e);
+                listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center;">불러오기 실패</div>';
+            }
         }
 
+        // [상세 보기]
         async function loadPostDetail(id) {
             showSection('view');
-            try {
-                 await sb.rpc('increment_view_count', { post_id: id });
-            } catch(e) { console.log("조회수 증가 실패(무시)", e); }
-            
-            const { data: post } = await sb.from('community_posts').select('*').eq('id', id).single();
-            if (!post) return alert('삭제된 글입니다.'), goToList();
-            
+            sb.rpc('increment_view_count', { post_id: id }).catch(() => {});
+
+            const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
+            if (error || !post) {
+                alert('삭제되거나 존재하지 않는 글입니다.');
+                goToList();
+                return;
+            }
+
             const ratingArea = document.getElementById('viewRatingArea');
             if (category === 'review' && post.rating) {
                 let starHtml = '';
@@ -525,13 +455,8 @@
             document.getElementById('viewCount').innerHTML = `<i class="fa-regular fa-eye"></i> ${post.view_count}`;
             document.getElementById('viewContent').innerHTML = post.content;
 
-            const summary = post.content.replace(/<[^>]*>?/g, '').substring(0, 150).replace(/\s+/g, ' ').trim();
-            const detailKeywords = `${post.title}, ${category}, 카멜레온프린팅, ${boardMetaInfo[category].keywords}`;
-            updateMetaTags(post.title, summary || post.title, detailKeywords);
-
             const btnGroup = document.getElementById('btnGroupAuth');
-            // 로그인 상태일 때만 수정/삭제 버튼 체크
-            if (isLoginAvailable && (isAdmin || (currentUser && currentUser.id === post.author_id))) {
+            if (isLoginAvailable && currentUser && (isAdmin || currentUser.id === post.author_id)) {
                 btnGroup.style.display = 'block';
             } else {
                 btnGroup.style.display = 'none';
@@ -542,13 +467,7 @@
 
         async function loadComments(postId) {
             const listDiv = document.getElementById('commentList');
-            listDiv.innerHTML = '댓글 로딩 중...';
-            
-            const { data: comments } = await sb
-                .from('community_comments')
-                .select('*')
-                .eq('post_id', postId)
-                .order('created_at', { ascending: true });
+            const { data: comments } = await sb.from('community_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
 
             listDiv.innerHTML = '';
             if(!comments || comments.length === 0) {
@@ -574,28 +493,18 @@
             document.getElementById('boardList').style.display = sec === 'list' ? 'grid' : 'none';
             document.getElementById('boardView').style.display = sec === 'view' ? 'block' : 'none';
             document.getElementById('boardWrite').style.display = sec === 'write' ? 'flex' : 'none';
-            
-            const btnWrite = document.getElementById('btnWrite');
-            if (sec === 'list') {
-                 // 로그인 되어있고 조건 맞을 때만 글쓰기 버튼 표시
-                 if(isLoginAvailable && (category !== 'blog' || isAdmin)) {
-                     btnWrite.style.display = 'inline-block';
-                 } else {
-                     btnWrite.style.display = 'none';
-                 }
-            } else {
-                btnWrite.style.display = 'none';
-            }
         }
 
+        window.goToList = () => { location.href = `/board.html?cat=${category}&country=${currentCountry}`; };
+        window.moveCategory = (cat) => { location.href = `/board.html?cat=${cat}&country=${currentCountry}`; };
+
         function setupEventListeners() {
-            document.getElementById('btnWrite').onclick = () => {
-                if (!isLoginAvailable || !currentUser) return alert('로그인이 필요한 기능입니다.');
-                
+            const btnWrite = document.getElementById('btnWrite');
+            if(btnWrite) btnWrite.onclick = () => {
+                if (!isLoginAvailable || !currentUser) return alert('로그인이 필요합니다.');
                 isEditMode = false; 
                 document.getElementById('inputTitle').value = "";
-                quill.setContents([]);
-                
+                if(quill) quill.setContents([]);
                 if (category === 'review') {
                     document.getElementById('ratingInputArea').style.display = 'flex';
                     currentRating = 5; 
@@ -603,98 +512,97 @@
                 } else {
                     document.getElementById('ratingInputArea').style.display = 'none';
                 }
-
                 showSection('write');
             };
 
-            // [핵심] 중복 글쓰기 방지: 버튼 즉시 비활성화 로직 적용
-            document.getElementById('btnSubmitPost').onclick = async () => {
-                const btn = document.getElementById('btnSubmitPost');
-                
-                // 1. 이미 비활성화 상태(처리중)라면 클릭을 무시합니다. (이게 핵심)
-                if (btn.disabled) return; 
-
+            const btnSubmit = document.getElementById('btnSubmitPost');
+            if(btnSubmit) btnSubmit.onclick = async () => {
+                if (btnSubmit.disabled) return;
                 const title = document.getElementById('inputTitle').value;
                 const content = quill.root.innerHTML; 
-                if (!title || (quill.getText().trim().length === 0 && !content.includes('<img'))) {
-                    return alert('내용을 입력해주세요.');
-                }
+                if (!title || quill.getText().trim().length === 0 && !content.includes('<img')) return alert('내용을 입력해주세요.');
 
-                // 2. 버튼을 비활성화하고 텍스트를 변경합니다.
-                btn.disabled = true;
-                btn.innerText = "처리중...";
+                btnSubmit.disabled = true;
+                btnSubmit.innerText = "처리중...";
 
                 try {
                     const ratingValue = (category === 'review') ? currentRating : null;
-
                     if (isEditMode) {
-                        const { error } = await sb.from('community_posts')
-                            .update({ title, content, rating: ratingValue }) 
-                            .eq('id', postId);
-
+                        const { error } = await sb.from('community_posts').update({ title, content, rating: ratingValue }).eq('id', postId);
                         if (error) throw error;
                         alert("수정되었습니다!"); 
                         location.reload();
-
                     } else {
-                        const { error } = await sb.from('community_posts').insert({
+                        const payload = {
                             category, country_code: currentCountry, title, content, 
                             author_id: currentUser.id, 
                             author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
-                            author_email: currentUser.email,
                             rating: ratingValue 
-                        });
-
+                        };
+                        const { error } = await sb.from('community_posts').insert(payload);
                         if (error) throw error;
                         alert('등록되었습니다!'); 
                         goToList();
                     }
                 } catch(e) {
-                    console.error(e);
-                    alert("처리 실패: " + e.message);
-                    
-                    // 에러가 났을 때만 다시 누를 수 있게 버튼을 풀어줍니다.
-                    btn.disabled = false;
-                    btn.innerText = "등록하기";
+                    alert("실패: " + e.message);
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "등록하기";
                 }
             };
 
-            // 댓글 작성 버튼에도 똑같이 중복 방지 적용
-            document.getElementById('btnSubmitComment').onclick = async () => {
+            const btnComment = document.getElementById('btnSubmitComment');
+            if(btnComment) btnComment.onclick = async () => {
                 if(!isLoginAvailable || !currentUser) return alert('로그인이 필요합니다.');
-                
-                const btn = document.getElementById('btnSubmitComment');
-                if(btn.disabled) return; // 중복 클릭 방지
-
+                if(btnComment.disabled) return;
                 const txt = document.getElementById('commentInput').value;
-                if(!txt.trim()) return alert('댓글 내용을 입력해주세요.');
-
-                btn.disabled = true;
-                btn.innerText = "등록중...";
-
+                if(!txt.trim()) return alert('내용을 입력해주세요.');
+                btnComment.disabled = true;
+                btnComment.innerText = "...";
                 try {
-                    const { error } = await sb.from('community_comments').insert({
+                    await sb.from('community_comments').insert({
                         post_id: postId,
                         author_id: currentUser.id,
                         author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0],
                         content: txt
                     });
-
-                    if(error) throw error;
-                    
                     document.getElementById('commentInput').value = '';
                     loadComments(postId);
-                } catch(e) {
-                    alert("등록 실패: " + e.message);
-                } finally {
-                    // 댓글은 작성 후 바로 또 쓸 수 있게 풀어줍니다.
-                    btn.disabled = false;
-                    btn.innerText = "등록";
-                }
+                } catch(e) { alert(e.message); } 
+                finally { btnComment.disabled = false; btnComment.innerText = "등록"; }
             };
         }
 
+        function setupStarRating() {
+            const stars = document.querySelectorAll('#starInput i');
+            stars.forEach(star => {
+                star.onclick = function() {
+                    currentRating = parseInt(this.getAttribute('data-score'));
+                    stars.forEach(s => {
+                        if(parseInt(s.getAttribute('data-score')) <= currentRating) s.classList.add('active');
+                        else s.classList.remove('active');
+                    });
+                };
+            });
+        }
+
+        window.editCurrentPost = () => {
+            if(!confirm("글을 수정하시겠습니까?")) return;
+            isEditMode = true; 
+            const title = document.getElementById('viewTitle').innerText;
+            const content = document.getElementById('viewContent').innerHTML;
+            document.getElementById('inputTitle').value = title;
+            quill.root.innerHTML = content;
+            if (category === 'review') document.getElementById('ratingInputArea').style.display = 'flex';
+            showSection('write');
+        };
+
+        window.deleteCurrentPost = async () => {
+            if(!confirm("삭제하시겠습니까?")) return;
+            await sb.from('community_posts').delete().eq('id', postId);
+            alert("삭제되었습니다.");
+            goToList();
+        };
+
         init();
     </script>
-</body>
-</html>
