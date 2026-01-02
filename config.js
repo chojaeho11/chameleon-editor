@@ -1,4 +1,4 @@
-// config.js - 무한 로딩 방지 및 강제 실행 안전장치 포함
+// config.js
 
 import { SITE_CONFIG } from "./site-config.js";
 
@@ -15,89 +15,64 @@ const ADMIN_EMAILS = ["korea900as@gmail.com", "ceo@test.com"];
 let initPromise = null;
 
 // =================================================================
-// ★ 핵심 수정: 3초 타임아웃 안전장치 (무한 로딩 해결)
+// [1] 초기화 함수 (백업 버전 구조 복원)
 // =================================================================
 export function initConfig() {
     if (initPromise) return initPromise;
 
-    initPromise = new Promise(async (resolve) => {
+    // 백업 파일과 동일한 IIFE 구조 사용 (가장 안정적)
+    initPromise = (async () => {
         console.log(`⚙️ 설정 로딩 시작...`);
         
-        // [안전장치] 3초가 지나면 무조건 로딩을 끝내버리는 타이머
-        const safetyTimer = setTimeout(() => {
-            console.warn("⏳ Supabase 응답 지연/차단됨 -> 오프라인 모드로 강제 진입");
-            hideLoadingScreen();
-            resolve(); // Promise 강제 완료
-        }, 3000); 
+        // 1. 라이브러리 로드 대기
+        if (typeof window.supabase === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        if (typeof window.supabase === 'undefined') return;
+
+        const { createClient } = window.supabase;
+        const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
         try {
-            // 1. Supabase 라이브러리 로드 확인
-            if (typeof window.supabase === 'undefined') {
-                // 라이브러리가 로드될 때까지 잠시 대기 (최대 1초)
-                let checkCount = 0;
-                while(typeof window.supabase === 'undefined' && checkCount < 10) {
-                    await new Promise(r => setTimeout(r, 100));
-                    checkCount++;
-                }
-            }
-
-            if (typeof window.supabase === 'undefined') {
-                throw new Error("Supabase 라이브러리를 찾을 수 없음");
-            }
-
-            // 2. 클라이언트 생성
-            const { createClient } = window.supabase;
-            const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
-            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-
             sb = createClient(SUPABASE_URL, SUPABASE_KEY, { 
-                auth: { 
-                    persistSession: true, // 로컬 스토리지 사용
-                    autoRefreshToken: true,
-                    detectSessionInUrl: false // URL 리다이렉트 감지 끔 (오류 방지)
-                } 
+                auth: { persistSession: true, autoRefreshToken: true } 
             });
             
-            // 3. 세션 가져오기 (여기서 브라우저가 차단하면 catch로 넘어감)
-            const { data: { session }, error } = await sb.auth.getSession();
-            if (error) throw error;
-            
+            // 2. 세션 상태 확인
+            const { data: { session } } = await sb.auth.getSession();
             updateUserSession(session);
 
-            // 4. 상태 변경 리스너
+            // 3. 리스너 등록
             sb.auth.onAuthStateChange((event, session) => {
                 updateUserSession(session);
+                // UI 갱신
+                const btnLogin = document.getElementById("btnLoginBtn");
+                if(btnLogin && btnLogin.updateState) btnLogin.updateState();
+                
+                const btnLib = document.getElementById("btnMyLibrary");
+                if(btnLib) btnLib.style.display = session ? "inline-flex" : "none";
+
+                if (event === 'SIGNED_OUT') location.reload();
             });
 
-            // 5. DB 데이터 로드
+            // 4. 데이터 로드 (이 부분만 최적화됨)
             await loadSystemData();
-            console.log("✅ 데이터 로딩 완료");
+
+            console.log("✅ 설정 및 데이터 로딩 완료");
 
         } catch (e) {
-            console.error("⚠️ 초기화 중 경고 (기능 제한됨):", e.message);
-            // 에러가 나도 멈추지 않고 진행
-        } finally {
-            // 성공하든 실패하든 타이머 해제하고 로딩 끄기
-            clearTimeout(safetyTimer);
-            hideLoadingScreen();
-            resolve();
+            console.error("설정 오류:", e);
         }
-    });
+    })();
 
     return initPromise;
 }
 
-// 로딩 화면 숨기기
-function hideLoadingScreen() {
-    const loading = document.getElementById("loading");
-    if (loading) loading.style.display = "none";
-}
-
-// DB 데이터 로드
+// [최적화된 데이터 로드] - 서버 부하 방지의 핵심
 async function loadSystemData() {
-    if (!sb) return;
     try {
-        const country = SITE_CONFIG.COUNTRY || 'KR';
+        const country = SITE_CONFIG.COUNTRY; 
 
         // 옵션 로드
         const { data: addons } = await sb.from('admin_addons').select('*');
@@ -112,43 +87,56 @@ async function loadSystemData() {
             });
         }
 
-        // 상품 로드 [최적화 수정됨: 필요한 데이터만 가져오기]
+        // ★ [핵심] 전체 조회('*') 대신 필요한 컬럼만 콕 집어 조회
+        // 이렇게 하면 데이터 전송량이 1/10로 줄어들어 서버가 안 죽습니다.
         const { data: products } = await sb.from('admin_products')
-            .select('code, name, price, width_mm, height_mm, category, img_url, addons') // 전체(*) 대신 필수 컬럼만 지정
+            .select('code, name, price, img_url, width_mm, height_mm, addons, category') 
             .order('sort_order', { ascending: true });
-
+            
         if (products) {
             PRODUCT_DB = {}; 
             products.forEach(item => {
                 const scaleFactor = 3.7795;
-                const pxW = Math.round((item.width_mm || 210) * scaleFactor);
-                const pxH = Math.round((item.height_mm || 297) * scaleFactor);
+                const mmW = item.width_mm || 210;
+                const mmH = item.height_mm || 297;
                 
                 PRODUCT_DB[item.code] = {
                     name: item.name,
                     price: item.price,
-                    img: item.img_url, // 필요하다면 이 줄도 주석처리하여 로딩 속도를 더 높일 수 있습니다.
-                    w: pxW, h: pxH, 
-                    w_mm: item.width_mm, h_mm: item.height_mm, 
+                    img: item.img_url || 'https://placehold.co/400?text=No+Image',
+                    w: Math.round(mmW * scaleFactor),       
+                    h: Math.round(mmH * scaleFactor),       
+                    w_mm: mmW,    
+                    h_mm: mmH,    
                     addons: item.addons ? item.addons.split(',') : [],
                     category: item.category
                 };
             });
         }
-    } catch(e) { console.warn("데이터 로드 실패:", e); }
+    } catch(e) {
+        console.error("데이터 로드 실패:", e);
+    }
 }
 
 function updateUserSession(session) {
     if (session && session.user) {
         currentUser = session.user;
+        // ★ [핵심] window 객체에도 심어서 index.html이 바로 쓰게 함
+        window.currentUser = session.user; 
+        
         isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+        
+        if(isAdmin) {
+            const btnReg = document.getElementById("btnRegisterTemplate");
+            if(btnReg) btnReg.style.display = "flex";
+        }
     } else {
         currentUser = null;
+        window.currentUser = null; // ★ 로그아웃 시 확실히 비움
         isAdmin = false;
     }
     loadUserCart();
 }
-
 function loadUserCart() {
     const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
     cartData.length = 0; 
@@ -159,6 +147,9 @@ function loadUserCart() {
     
     const countEl = document.getElementById("cartCount");
     if(countEl) countEl.innerText = `(${cartData.length})`;
+    
+    const btnCart = document.getElementById("btnViewCart");
+    if(btnCart) btnCart.style.display = (currentUser || cartData.length > 0) ? "inline-flex" : "none";
 }
 
 export async function getUserLogoCount() { return 0; }

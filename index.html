@@ -1606,100 +1606,86 @@ function goBoard(category) {
 
     window.translations = {}; 
 
+
     // ============================================================
-    // [1] 초기화 및 데이터 로드 (순서 중요)
+    // [1] 메인 로드 이벤트 (즉시 반응형 로그인 처리)
     // ============================================================
     window.addEventListener('load', async () => {
-    // 0.5초 대기 (안정적인 로딩)
-    await new Promise(r => setTimeout(r, 500));
-    
-    // 1. 상단 메뉴 렌더링
-    if (typeof renderQuickMenu === 'function') renderQuickMenu();
-    
-    // 2. 템플릿 로드 (페이징 기능 적용)
-    if(window.searchTemplates) {
-        window.searchTemplates('');
-    }
-    
-    // 3. 폰트 및 핫딜 상품 로드
-    if (window.preloadLanguageFont) window.preloadLanguageFont();
-    if (typeof loadSpecialProducts === 'function') {
-        loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
-        loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6); // 업자용
-    }
-
-    // 4. 로그인 상태 확인 및 버튼 처리 (비동기)
-    // 4. 로그인 상태 확인 및 버튼 처리 (비동기) - [수정됨: 강제 로그아웃 적용]
-    setTimeout(async () => {
-        const { data } = await sb.auth.getSession();
-        const btnLogin = document.getElementById('btnLoginBtn');
-        const btnConsole = document.getElementById('btnPartnerConsole'); // 파트너 버튼
         
-        // [CASE A] 로그인 된 상태
-        if (data && data.session && data.session.user) {
-            window.currentUser = data.session.user;
-            console.log("✅ 로그인 확인됨:", window.currentUser.email);
+        // 1. 설정 로딩 (config.js)
+        if (window.initConfig) await window.initConfig(); 
+        else if (typeof initConfig === 'function') await initConfig();
 
+        // 2. 로그인 버튼 상태 "즉시" 업데이트
+        updateLoginButtonState();
+
+        // 3. 카테고리 메뉴 렌더링
+        if (typeof renderQuickMenu === 'function') renderQuickMenu();
+        
+        // 4. 템플릿 및 상품 로드
+        if(window.searchTemplates) window.searchTemplates('');
+        if (window.preloadLanguageFont) window.preloadLanguageFont();
+        if (typeof loadSpecialProducts === 'function') {
+            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
+            loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+        }
+
+        // 5. 검색창 연결
+        const searchBtn = document.getElementById('btnStartSearch');
+        const searchInput = document.getElementById('startSearchInput');
+        if (searchBtn && searchInput) {
+            const doSearch = () => { if(window.searchTemplates) window.searchTemplates(searchInput.value); };
+            searchBtn.onclick = doSearch;
+            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
+        }
+    });
+
+    // ★ [핵심] 로그인 버튼 상태를 강제로 고치는 함수
+    function updateLoginButtonState() {
+        const btnLogin = document.getElementById('btnLoginBtn');
+        const btnConsole = document.getElementById('btnPartnerConsole');
+        
+        // window.currentUser는 config.js에서 이미 설정됨
+        if (window.currentUser) {
+            console.log("✅ 로그인 상태 UI 적용:", window.currentUser.email);
+            
             if (btnLogin) {
+                // 1. 텍스트 변경
                 btnLogin.innerText = "로그아웃";
                 btnLogin.style.fontWeight = "bold"; 
-                btnLogin.style.color = "#ef4444"; // 빨간색으로 표시
-
-                // ★ [핵심] 강력한 로그아웃 기능 연결
-                btnLogin.onclick = async function() {
-                    if (confirm("정말 로그아웃 하시겠습니까?")) {
-                        try {
-                            // 1. 서버에 로그아웃 요청 (에러나도 무시하고 진행)
-                            await sb.auth.signOut();
-                        } catch (e) {
-                            console.log("서버 로그아웃 응답 없음(무시함):", e);
-                        }
-
-                        // 2. 브라우저 저장소 강제 초기화 (가장 중요!)
-                        localStorage.clear(); 
-                        
-                        // 3. UI 즉시 숨김
-                        if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
-                        btnLogin.innerText = "로그인";
-
-                        alert("로그아웃 되었습니다.");
-                        
-                        // 4. 홈으로 이동하며 새로고침
-                        window.location.replace('/'); 
+                btnLogin.style.color = "#ef4444"; 
+                
+                // 2. 기존 이벤트 제거 및 로그아웃 이벤트 강제 주입
+                // (cloneNode를 사용해 기존에 잘못 연결된 로그인 창 띄우기 이벤트를 날려버림)
+                const newBtn = btnLogin.cloneNode(true);
+                btnLogin.parentNode.replaceChild(newBtn, btnLogin);
+                
+                newBtn.onclick = async function() {
+                    if (confirm("로그아웃 하시겠습니까?")) {
+                        // Supabase 로그아웃 시도
+                        if(typeof sb !== 'undefined') await sb.auth.signOut();
+                        // 로컬 스토리지 클리어 (확실하게)
+                        localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); 
+                        window.location.reload(); 
                     }
                 };
             }
-        } 
-        // [CASE B] 비로그인 상태
-        else {
-            console.log("ℹ️ 비로그인 상태");
+            if(btnConsole) btnConsole.style.removeProperty('display');
+        } else {
+            // 비로그인 상태
             if (btnLogin) {
                 btnLogin.innerText = "로그인";
-                btnLogin.style.color = ""; // 색상 초기화
-                btnLogin.onclick = function() {
-                    document.getElementById('loginModal').style.display = 'flex';
-                };
-            }
-            // 비로그인이면 파트너 버튼 강제로 숨김
-            if (btnConsole) {
-                btnConsole.style.setProperty('display', 'none', 'important');
-            }
-        }
-    }, 500);
+                btnLogin.style.fontWeight = "normal";
+                btnLogin.style.color = "";
+                
+                const newBtn = btnLogin.cloneNode(true);
+                btnLogin.parentNode.replaceChild(newBtn, btnLogin);
 
-    // 5. 메인 검색창 이벤트 연결
-    const searchBtn = document.getElementById('btnStartSearch');
-    const searchInput = document.getElementById('startSearchInput');
-    if (searchBtn && searchInput) {
-        const doSearch = () => {
-            if(window.searchTemplates) window.searchTemplates(searchInput.value);
-        };
-        searchBtn.onclick = doSearch;
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') doSearch();
-        });
+                newBtn.onclick = () => document.getElementById('loginModal').style.display = 'flex';
+            }
+            if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
+        }
     }
-});
 
 // ▼▼▼ [새로 추가] 마이페이지에서 [편집] 눌렀을 때 복구하는 코드 ▼▼▼
 const loadId = localStorage.getItem('load_design_id');
@@ -2593,39 +2579,64 @@ if (loadId) {
         document.getElementById('templateOverlay').style.display = 'none';
     }
 
-    // 메인 로드 이벤트
-    // [수정된 초기화 코드]
-    window.addEventListener('load', async () => {
-        await new Promise(r => setTimeout(r, 500));
-        
-        // 1. 카테고리 메뉴 로드
-        renderQuickMenu();
-        
-        // 2. 템플릿 로드 (함수 이름 변경됨: loadTemplates -> searchTemplates)
-        if(window.searchTemplates) {
-            window.searchTemplates(''); // 첫 페이지(28개) 로드 시작
-        }
-        
-        // 3. 폰트 로드
-        window.preloadLanguageFont();
 
-        // 4. 검색창 이벤트 연결 (수정됨)
+    // ============================================================
+    // [1] 초기화 및 데이터 로드 (안정화 최종 버전)
+    // ============================================================
+    window.addEventListener('load', async () => {
+        // 1. 설정 로딩 대기 (config.js의 작업이 끝날 때까지 기다림)
+        if (window.initConfig) await window.initConfig(); 
+        else if (typeof initConfig === 'function') await initConfig();
+
+        // 2. 카테고리 메뉴 렌더링
+        if (typeof renderQuickMenu === 'function') renderQuickMenu();
+        
+        // 3. 템플릿 및 상품 로드
+        if(window.searchTemplates) window.searchTemplates('');
+        if (window.preloadLanguageFont) window.preloadLanguageFont();
+        if (typeof loadSpecialProducts === 'function') {
+            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
+            loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+        }
+
+        // 4. 로그인 버튼 상태 업데이트 (config.js 완료 후 실행되므로 안전함)
+        const btnLogin = document.getElementById('btnLoginBtn');
+        const btnConsole = document.getElementById('btnPartnerConsole');
+        
+        // config.js에서 설정된 currentUser 변수 사용
+        if (window.currentUser) {
+            console.log("✅ 로그인 됨:", window.currentUser.email);
+            if (btnLogin) {
+                btnLogin.innerText = "로그아웃";
+                btnLogin.style.fontWeight = "bold"; 
+                btnLogin.style.color = "#ef4444"; 
+                btnLogin.onclick = async function() {
+                    if (confirm("로그아웃 하시겠습니까?")) {
+                        await sb.auth.signOut();
+                        localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); 
+                        window.location.reload(); 
+                    }
+                };
+            }
+            if(btnConsole) btnConsole.style.removeProperty('display');
+        } else {
+            if (btnLogin) {
+                btnLogin.innerText = "로그인";
+                btnLogin.onclick = () => document.getElementById('loginModal').style.display = 'flex';
+            }
+            if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
+        }
+
+        // 5. 검색창 연결
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
         if (searchBtn && searchInput) {
-            const doSearch = () => {
-                if(window.searchTemplates) window.searchTemplates(searchInput.value);
-            };
+            const doSearch = () => { if(window.searchTemplates) window.searchTemplates(searchInput.value); };
             searchBtn.onclick = doSearch;
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') doSearch();
-            });
+            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
         }
     });
 
-    // ==========================================
-// [1] 스마트 검색 & 무한 스크롤 설정
-// ==========================================
 
 // ==========================================
     // [1] 템플릿 페이징 시스템 (28개씩 보기) - 수정됨
