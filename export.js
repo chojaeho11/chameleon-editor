@@ -167,7 +167,7 @@ function drawAutoText(doc, text, x, y, options = {}) {
 // ==========================================================
 // [4] 견적서 생성 함수
 // ==========================================================
-export async function generateQuotationPDF(orderInfo, cartItems) {
+export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0) {
     if (!window.jspdf) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
@@ -223,8 +223,33 @@ export async function generateQuotationPDF(orderInfo, cartItems) {
             });
         }
     }
-    y += 5; doc.setFontSize(12); doc.setTextColor(220, 38, 38);
-    drawAutoText(doc, `총 합계금액: ${totalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
+    y += 5;
+
+    if (discountRate > 0) {
+        // [할인 적용 시]
+        const discountAmt = Math.floor(totalAmt * discountRate);
+        const finalAmt = totalAmt - discountAmt;
+        const percent = (discountRate * 100).toFixed(0);
+
+        // 1. 소계 (원가)
+        doc.setFontSize(10); doc.setTextColor(0);
+        drawAutoText(doc, `소  계: ${totalAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
+        y += 6;
+
+        // 2. 할인 내역 (녹색/파란색)
+        doc.setTextColor(21, 128, 61); 
+        drawAutoText(doc, `회원 등급 할인 (${percent}%): -${discountAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
+        y += 8;
+
+        // 3. 최종 결제 금액 (빨간색 강조)
+        doc.setFontSize(12); doc.setTextColor(220, 38, 38); doc.setFont(BASE_FONT_NAME, "bold");
+        drawAutoText(doc, `총 합계금액: ${finalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
+    } else {
+        // [할인 없을 시] 기존 유지
+        doc.setFontSize(12); doc.setTextColor(220, 38, 38);
+        drawAutoText(doc, `총 합계금액: ${totalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
+    }
+
     y += 20; doc.setFontSize(10); doc.setTextColor(100);
     drawAutoText(doc, "위와 같이 견적합니다.", 105, y, { align: 'center' });
     return doc.output('blob');

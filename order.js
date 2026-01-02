@@ -760,15 +760,26 @@ async function processOrderSubmission() {
         const itemsToSave = cartData.map(item => {
             if (!item.product) return null; 
             
-            let itemPrice = item.product.price || 0;
+            // [수정] 본품과 옵션 가격을 분리하여 계산
+            const productUnitPrice = item.product.price || 0;
+            const productQty = item.qty || 1;
+            
+            let currentProductTotal = productUnitPrice * productQty; // 본품 총액
+            let currentOptionTotal = 0; // 옵션 총액
+
             if(item.selectedAddons) {
                 Object.values(item.selectedAddons).forEach(code => {
                     const addon = ADDON_DB[code];
                     const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                    if(addon) itemPrice += addon.price * aq;
+                    if(addon) {
+                        // 옵션은 본품 수량과 곱하지 않고, 설정된 옵션 수량(aq)만 더함
+                        currentOptionTotal += addon.price * aq;
+                    }
                 });
             }
-            rawTotal += itemPrice * (item.qty || 1);
+            
+            const itemFinalPrice = currentProductTotal + currentOptionTotal;
+            rawTotal += itemFinalPrice;
 
             return {
                 product: { 
@@ -848,7 +859,8 @@ async function processOrderSubmission() {
 
         try {
             loading.querySelector('p').innerText = "견적서 생성 중...";
-            const quoteBlob = await generateQuotationPDF(orderInfoForPDF, cartData); 
+            // [수정] 3번째 인자로 할인율(currentUserDiscountRate) 전달
+const quoteBlob = await generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate);
             if(quoteBlob) { 
                 const url = await uploadFileToSupabase(quoteBlob, `orders/${newOrderId}/quotation.pdf`); 
                 if(url) uploadedFiles.push({ name: `견적서.pdf`, url: url, type: 'quotation' }); 

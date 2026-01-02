@@ -1702,17 +1702,18 @@ window.showSection = (secId, navEl) => {
 
         // admin.html 내부 스크립트의 window.loadOrders 함수 교체
 
+// admin.html 파일 내부의 <script type="module"> 영역
+
+// 기존 window.loadOrders 함수를 아래 코드로 교체하세요.
 window.loadOrders = async () => {
     showLoading(true);
     updateActionButtons(); 
     
     const siteFilter = document.getElementById('filterSite').value;
     
-    // 1. 스태프 목록 및 가맹점(파트너) 목록 동시 로드
+    // 1. 스태프 목록 및 가맹점(파트너) 목록 로드
     await fetchStaffForOrders();
     
-    // ★ [핵심] 가맹점 상호명 매핑을 위해 partner_applications 테이블 조회
-    // (status가 'approved'인 파트너만 가져와서 ID와 상호명을 매칭합니다)
     const { data: partners } = await sb.from('partner_applications')
         .select('user_id, company_name')
         .eq('status', 'approved');
@@ -1724,8 +1725,7 @@ window.loadOrders = async () => {
 
     let query = sb.from('orders').select('*').order('created_at', {ascending:false});
     
-    // 필터 조건 설정
-    if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']); // '제작준비'가 가맹점 접수 상태
+    if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
     else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
     else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
 
@@ -1749,7 +1749,7 @@ window.loadOrders = async () => {
         if(tips) tips.forEach(t => tipMap[t.address] = t);
     }
 
-    // 상품 가격 매핑
+    // 상품 가격 매핑 (가격 추적용)
     const { data: allProds } = await sb.from('admin_products').select('price, name');
     const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
 
@@ -1759,62 +1759,65 @@ window.loadOrders = async () => {
         const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
         const filesJson = order.files ? JSON.stringify(order.files).replace(/"/g, '&quot;') : '[]';
         
-        // ★ [핵심] 가맹점(파트너) 접수 여부 확인 및 뱃지 생성 로직
+        // 가맹점 뱃지
         let franchiseBadge = '';
         if (order.franchise_id) {
-            // 위에서 만든 partnerMap을 이용해 상호명을 찾음
             const pName = partnerMap[order.franchise_id] || '가맹점/본사';
-            
             franchiseBadge = `
-                <div style="margin-bottom:8px; padding:6px 10px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; color:#1e40af; font-size:12px; font-weight:bold; display:flex; align-items:center; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                <div style="margin-bottom:8px; padding:6px 10px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; color:#1e40af; font-size:12px; font-weight:bold; display:flex; align-items:center; gap:6px;">
                     <i class="fa-solid fa-store" style="color:#2563eb;"></i> 
                     <span>${pName} 접수중</span>
-                    <i class="fa-solid fa-xmark" style="margin-left:auto; cursor:pointer; color:#ef4444;" onclick="cancelFranchiseClaim('${order.id}')" title="접수 취소시키기(초기화)"></i>
-                </div>
-            `;
+                    <i class="fa-solid fa-xmark" style="margin-left:auto; cursor:pointer; color:#ef4444;" onclick="cancelFranchiseClaim('${order.id}')"></i>
+                </div>`;
         } else {
-            // ★ [추가] 담당자가 없을 때 -> 관리자가 직접 가져가는 버튼 표시
-            franchiseBadge = `
-                <div style="margin-bottom:8px;">
-                    <button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; border-style:dashed; color:#64748b;">
-                        🏢 본사 직접 제작 (Lock)
-                    </button>
-                </div>
-            `;
+            franchiseBadge = `<div style="margin-bottom:8px;"><button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; border-style:dashed; color:#64748b;">🏢 본사 직접 제작 (Lock)</button></div>`;
         }
 
-        // 아이템 처리 로직
+        // 아이템 파싱
         let items = [];
         if (order.items) {
             if (Array.isArray(order.items)) items = order.items;
             else if (typeof order.items === 'string') { try { items = JSON.parse(order.items); } catch(e) { items = []; } }
         }
-        // 파일 기반 아이템 추정
-        if (items.length === 0 && order.files && Array.isArray(order.files)) {
-            order.files.forEach(f => {
-                if (f.name.indexOf('작업지시서') === -1 && f.name.indexOf('견적서') === -1) {
-                    let simpleName = f.name.substring(0, f.name.lastIndexOf('.')) || f.name;
-                    items.push({ productName: simpleName, qty: 1, isFileDerived: true });
-                }
-            });
-        }
+        
+        // [수정 포인트] 원가 계산 (JSON 내의 단가 합산)
+        let rawTotalAmount = 0; 
+        items.forEach(item => {
+            if (item.isFileDerived) return;
+            // item.price에는 옵션포함 단가가 들어있음. 없으면 product.price 사용
+            let unitPrice = item.price || (item.product ? item.product.price : 0) || 0;
+            if (unitPrice === 0 && item.product && prodMap[item.product.name]) unitPrice = prodMap[item.product.name];
+            
+            rawTotalAmount += (unitPrice * (item.qty || 1));
+        });
+
+        // 실제 결제된 금액 (DB 저장값)
+        const paidAmount = order.total_amount || 0;
+        
+        // [수정 포인트] 가격 표시 HTML 생성 (할인 여부 판단)
+        // 원가와 실결제액 차이가 100원 이상 나면 할인된 것으로 간주
+        let priceDisplayHtml = '';
+        if (rawTotalAmount > paidAmount + 100) {
+    // 할인율 역산
+    const discountRate = Math.round((1 - (paidAmount / rawTotalAmount)) * 100);
+    
+    priceDisplayHtml = `
+        <div style="font-weight:800; color:#ef4444; font-size:14px;">
+            ${formatCurrency(paidAmount, site)}
+        </div>
+        <div style="margin-top:2px;">
+            <span class="badge" style="background:#fee2e2; color:#ef4444; font-size:10px;">
+                ${discountRate}% 할인적용
+            </span>
+        </div>
+    `;
+} else {
+    priceDisplayHtml = `<div style="font-weight:bold; color:#0f172a; font-size:14px;">${formatCurrency(paidAmount, site)}</div>`;
+}
+        // -----------------------------------------------------------
+
         const itemsJson = JSON.stringify(items).replace(/"/g, '&quot;');
 
-        // 가격 계산
-        let finalPrice = order.total_amount || 0;
-        if (finalPrice === 0 && items.length > 0) {
-            items.forEach(item => {
-                if (item.isFileDerived) return;
-                let unitPrice = 0;
-                if (item.product && item.product.price) unitPrice = item.product.price;
-                else if (item.product && prodMap[item.product.name]) unitPrice = prodMap[item.product.name];
-                if (!unitPrice) unitPrice = item.price || 0;
-                finalPrice += unitPrice * (item.qty || 1);
-            });
-        }
-        const priceStr = formatCurrency(finalPrice, site);
-
-        // 아이템 표시 HTML
         let itemsDisplayHtml = '';
         if (items.length > 0) {
             items.forEach(i => {
@@ -1841,7 +1844,7 @@ window.loadOrders = async () => {
             currentFiles.forEach(f => { fileBtns += `<a href="${f.url}" target="_blank" class="btn-file" title="${f.name}"><i class="fa-solid fa-file"></i> ${f.name}</a>`; });
         } else { fileBtns = '<span style="color:#ccc; font-size:12px;">파일 없음</span>'; }
 
-        // 결제 상태 뱃지
+        // 결제 뱃지
         let payMethod = order.payment_method || '-';
         let payBadge = `<span class="pay-badge pay-wait">미결제</span>`;
         const isPaid = (order.payment_status === 'paid' || order.payment_status === '결제완료' || order.payment_status === '카드결제완료' || order.payment_status === '입금확인됨');
@@ -1858,7 +1861,6 @@ window.loadOrders = async () => {
             </div>`;
         }
 
-        // HTML 렌더링
         tbody.innerHTML += `
             <tr>
                 <td><input type="checkbox" class="row-chk" value="${order.id}" data-manager="${order.manager_name}" data-files="${filesJson}" data-items="${itemsJson}"></td>
@@ -1875,10 +1877,11 @@ window.loadOrders = async () => {
                 </td>
 
                 <td style="color:#334155; max-width:220px;">${itemsDisplayHtml}</td>
-                <td style="text-align:right; font-weight:bold; color:#0f172a;">${priceStr}</td>
+                
+                <td style="text-align:right;">${priceDisplayHtml}</td>
+                
                 <td style="background:#f9faff; min-width: 170px;">
                     ${franchiseBadge} 
-                    
                     <div style="margin-bottom:6px;">
                         <input type="date" class="input-text" 
                             style="padding:5px; font-size:12px; width:100%; border:1px solid #cbd5e1; box-sizing:border-box;" 
