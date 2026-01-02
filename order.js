@@ -790,9 +790,12 @@ async function processOrderSubmission() {
                 },
                 productName: item.product.name,
                 qty: item.qty || 1, 
-                price: itemPrice, 
+                
+                // [수정됨] 계산된 최종 가격 변수(itemFinalPrice)를 넣어야 합니다.
+                price: itemFinalPrice, 
+                
                 selectedAddons: item.selectedAddons || {}, 
-                addonQuantities: item.addonQuantities || {}, 
+                addonQuantities: item.addonQuantities || {},
                 type: item.type || 'design',     
                 json: item.json || null,         
                 thumb: item.thumb || '',         

@@ -9,6 +9,7 @@
     <script src="https://js.tosspayments.com/v1/payment"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <style>
         body { margin: 0; display: flex; height: 100vh; font-family: 'Pretendard', sans-serif; background: #f1f5f9; color: #334155; overflow: hidden; }
@@ -174,40 +175,54 @@
             
             <div id="sec-orders" class="section active">
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn btn-primary" id="btnFilterNew" onclick="filterOrders('접수됨', this)">📌 신규 접수</button>
-                            <button class="btn btn-outline" id="btnFilterKnife" onclick="filterOrders('칼선작업', this)">✂️ 칼선/제작작업</button>
-                            <button class="btn btn-outline" id="btnFilterDone" onclick="filterOrders('완료됨', this)">✅ 완료</button>
-                        </div>
-                        <div style="display:flex; gap:5px; align-items:center;">
-                            <div id="action-buttons" style="display:flex; gap:5px; margin-right: 15px; border-right: 1px solid #ddd; padding-right: 15px;"></div>
-                            <select id="filterSite" class="input-text" style="width:130px; font-weight:bold;" onchange="loadOrders()">
-                                <option value="all">🌏 전체 국가</option>
-                                <option value="KR">🇰🇷 한국</option>
-                                <option value="JP">🇯🇵 일본</option>
-                                <option value="US">🇺🇸 미국</option>
-                            </select>
-                            <button class="btn btn-outline" onclick="loadOrders()"><i class="fa-solid fa-rotate"></i></button>
-                        </div>
-                    </div>
-                    <table style="margin:0;">
-                        <thead>
-                            <tr>
-                                <th style="width:40px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
-                                <th style="width:50px;">Site</th>
-                                <th style="width:90px;">날짜</th>
-                                <th style="width:180px;">고객/주소/노하우</th>
-                                <th style="width:220px;">주문 내역 (상품/옵션/수량)</th>
-                                <th style="width:90px; text-align:right;">금액</th>
-                                <th style="width:180px; min-width: 160px; background:#f0f9ff;">📅 배송일 / 담당자</th>
-                                <th style="">주문 파일</th>
-                                <th style="width:100px;">결제 정보</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderListBody"></tbody>
-                    </table>
-                </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+        <div style="display:flex; gap:5px;">
+            <button class="btn btn-primary" id="btnFilterNew" onclick="filterOrders('접수됨', this)">📌 신규 접수</button>
+            <button class="btn btn-outline" id="btnFilterKnife" onclick="filterOrders('칼선작업', this)">✂️ 칼선/제작작업</button>
+            <button class="btn btn-outline" id="btnFilterDone" onclick="filterOrders('완료됨', this)">✅ 완료</button>
+        </div>
+        
+        <div style="display:flex; gap:5px; align-items:center; background:#f0fdf4; padding:5px 10px; border-radius:8px; border:1px solid #bbf7d0;">
+            <span style="font-size:12px; font-weight:bold; color:#166534;">📊 매출정산 엑셀:</span>
+            <input type="month" id="excelMonth" class="input-text" style="width:130px; height:32px; font-size:12px;">
+            <button class="btn btn-success btn-sm" onclick="downloadMonthlyExcel()">
+                <i class="fa-solid fa-file-excel"></i> 다운로드
+            </button>
+        </div>
+
+        <div style="display:flex; gap:5px; align-items:center;">
+            <div id="action-buttons" style="display:flex; gap:5px; margin-right: 15px; border-right: 1px solid #ddd; padding-right: 15px;"></div>
+            <select id="filterSite" class="input-text" style="width:130px; font-weight:bold;" onchange="loadOrders()">
+                <option value="all">🌏 전체 국가</option>
+                <option value="KR">🇰🇷 한국</option>
+                <option value="JP">🇯🇵 일본</option>
+                <option value="US">🇺🇸 미국</option>
+            </select>
+            <button class="btn btn-outline" onclick="loadOrders()"><i class="fa-solid fa-rotate"></i></button>
+        </div>
+    </div>
+    <table style="margin:0; font-size:12px;">
+        <thead>
+            <tr>
+                <th style="width:30px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
+                <th style="width:40px;">Site</th>
+                <th style="width:80px;">날짜</th>
+                <th style="width:150px;">고객 정보</th>
+                <th style="">주문 내역</th>
+                
+                <th style="width:80px; text-align:right; background:#f8fafc;">주문총액</th>
+                <th style="width:70px; text-align:right; color:#ef4444; background:#f8fafc;">할인액</th>
+                <th style="width:70px; text-align:right; color:#d97706; background:#f8fafc;">예치금</th>
+                <th style="width:80px; text-align:right; color:#15803d; background:#dcfce7;">실입금액</th>
+                
+                <th style="width:160px; background:#f0f9ff;">📅 배송/담당</th>
+                <th style="width:130px;">파일</th>
+                <th style="width:70px;">상태</th>
+            </tr>
+        </thead>
+        <tbody id="orderListBody"></tbody>
+    </table>
+</div>
             </div>
 
             <div id="sec-partner-apps" class="section">
@@ -1702,29 +1717,18 @@ window.showSection = (secId, navEl) => {
 
         // admin.html 내부 스크립트의 window.loadOrders 함수 교체
 
-// admin.html 파일 내부의 <script type="module"> 영역
-
-// 기존 window.loadOrders 함수를 아래 코드로 교체하세요.
+// [1] 수정된 주문 목록 로드 함수
 window.loadOrders = async () => {
     showLoading(true);
     updateActionButtons(); 
-    
+
     const siteFilter = document.getElementById('filterSite').value;
-    
-    // 1. 스태프 목록 및 가맹점(파트너) 목록 로드
     await fetchStaffForOrders();
-    
-    const { data: partners } = await sb.from('partner_applications')
-        .select('user_id, company_name')
-        .eq('status', 'approved');
-    
-    const partnerMap = {};
-    if(partners) {
-        partners.forEach(p => partnerMap[p.user_id] = p.company_name);
-    }
+
+    const { data: partners } = await sb.from('partner_applications').select('user_id, company_name').eq('status', 'approved');
+    const partnerMap = {}; if(partners) partners.forEach(p => partnerMap[p.user_id] = p.company_name);
 
     let query = sb.from('orders').select('*').order('created_at', {ascending:false});
-    
     if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
     else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
     else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
@@ -1732,24 +1736,16 @@ window.loadOrders = async () => {
     const { data, error } = await query;
     const tbody = document.getElementById('orderListBody');
     tbody.innerHTML = '';
-    
+
     if (!data || data.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;">데이터가 없습니다.</td></tr>'; 
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">데이터가 없습니다.</td></tr>'; 
         showLoading(false); return; 
     }
-    
+
     const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
     allOrders = filteredData; 
 
-    // 주소별 노하우 데이터 조회
-    const addresses = filteredData.map(o => o.address).filter(a => a);
-    let tipMap = {};
-    if(addresses.length > 0) {
-        const { data: tips } = await sb.from('delivery_knowhow').select('*').in('address', addresses);
-        if(tips) tips.forEach(t => tipMap[t.address] = t);
-    }
-
-    // 상품 가격 매핑 (가격 추적용)
+    // 상품 가격 매핑
     const { data: allProds } = await sb.from('admin_products').select('price, name');
     const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
 
@@ -1757,160 +1753,164 @@ window.loadOrders = async () => {
         const site = order.site_code || 'KR'; 
         const managerSelect = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
         const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
-        const filesJson = order.files ? JSON.stringify(order.files).replace(/"/g, '&quot;') : '[]';
-        
-        // 가맹점 뱃지
-        let franchiseBadge = '';
-        if (order.franchise_id) {
-            const pName = partnerMap[order.franchise_id] || '가맹점/본사';
-            franchiseBadge = `
-                <div style="margin-bottom:8px; padding:6px 10px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; color:#1e40af; font-size:12px; font-weight:bold; display:flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-store" style="color:#2563eb;"></i> 
-                    <span>${pName} 접수중</span>
-                    <i class="fa-solid fa-xmark" style="margin-left:auto; cursor:pointer; color:#ef4444;" onclick="cancelFranchiseClaim('${order.id}')"></i>
-                </div>`;
-        } else {
-            franchiseBadge = `<div style="margin-bottom:8px;"><button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; border-style:dashed; color:#64748b;">🏢 본사 직접 제작 (Lock)</button></div>`;
-        }
 
-        // 아이템 파싱
+        // --- [금액 상세 계산] ---
         let items = [];
         if (order.items) {
             if (Array.isArray(order.items)) items = order.items;
             else if (typeof order.items === 'string') { try { items = JSON.parse(order.items); } catch(e) { items = []; } }
         }
-        
-        // [수정 포인트] 원가 계산 (JSON 내의 단가 합산)
+
+        // 1. 주문 총액 (원가)
         let rawTotalAmount = 0; 
         items.forEach(item => {
             if (item.isFileDerived) return;
-            // item.price에는 옵션포함 단가가 들어있음. 없으면 product.price 사용
             let unitPrice = item.price || (item.product ? item.product.price : 0) || 0;
             if (unitPrice === 0 && item.product && prodMap[item.product.name]) unitPrice = prodMap[item.product.name];
-            
             rawTotalAmount += (unitPrice * (item.qty || 1));
         });
+        if(rawTotalAmount === 0) rawTotalAmount = order.total_amount; 
 
-        // 실제 결제된 금액 (DB 저장값)
-        const paidAmount = order.total_amount || 0;
-        
-        // [수정 포인트] 가격 표시 HTML 생성 (할인 여부 판단)
-        // 원가와 실결제액 차이가 100원 이상 나면 할인된 것으로 간주
-        let priceDisplayHtml = '';
-        if (rawTotalAmount > paidAmount + 100) {
-    // 할인율 역산
-    const discountRate = Math.round((1 - (paidAmount / rawTotalAmount)) * 100);
-    
-    priceDisplayHtml = `
-        <div style="font-weight:800; color:#ef4444; font-size:14px;">
-            ${formatCurrency(paidAmount, site)}
-        </div>
-        <div style="margin-top:2px;">
-            <span class="badge" style="background:#fee2e2; color:#ef4444; font-size:10px;">
-                ${discountRate}% 할인적용
-            </span>
-        </div>
-    `;
-} else {
-    priceDisplayHtml = `<div style="font-weight:bold; color:#0f172a; font-size:14px;">${formatCurrency(paidAmount, site)}</div>`;
-}
-        // -----------------------------------------------------------
+        // 2. 실 결제액 (DB 저장값)
+        const finalPaidAmount = order.total_amount || 0;
 
-        const itemsJson = JSON.stringify(items).replace(/"/g, '&quot;');
+        // 3. 할인액
+        let discountAmt = 0;
+        if (rawTotalAmount > finalPaidAmount) {
+            discountAmt = rawTotalAmount - finalPaidAmount;
+        }
 
-        let itemsDisplayHtml = '';
-        if (items.length > 0) {
-            items.forEach(i => {
-                let pName = i.productName || (i.product ? i.product.name : i.name) || '상품';
-                let qty = i.qty || 1;
-                let icon = i.isFileDerived ? '<i class="fa-regular fa-file-lines" style="color:#94a3b8; margin-right:4px;"></i>' : '- ';
-                itemsDisplayHtml += `<div style="margin-bottom:4px; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${icon}${pName} <b style="color:#6366f1;">(${qty}개)</b></div>`;
-            });
-            if(order.request_note) {
-                itemsDisplayHtml += `<div style="font-size:11px; color:#ef4444; margin-top:4px; background:#fff1f2; padding:3px 6px; border-radius:4px; display:inline-block;">📢 ${order.request_note}</div>`;
-            }
+        // 4. 예치금/실입금액 구분
+        let depositUsed = 0;
+        let realCashPaid = 0;
+
+        if (order.payment_method === 'deposit' || order.payment_method === '예치금') {
+            depositUsed = finalPaidAmount; 
+            realCashPaid = 0; 
         } else {
-            itemsDisplayHtml = '<span style="color:#ccc; font-size:12px;">내역 없음</span>';
+            depositUsed = 0;
+            realCashPaid = finalPaidAmount; 
         }
 
-        // 파일 버튼 처리
-        let fileBtns = ''; 
-        const currentFiles = order.files || [];
-        const isModified = currentFiles.some(f => f.type === 'replaced_file' || f.type === 'admin_added');
-        const fileMgrBtnClass = isModified ? 'btn-primary' : 'btn-sky';
-        const fileMgrBtnText = isModified ? '<i class="fa-solid fa-folder-open"></i> 교체된 주문' : '<i class="fa-solid fa-file-pen"></i> 파일교체';
+        // 아이템 표시
+        let itemsDisplayHtml = '';
+        items.forEach(i => {
+            let pName = i.productName || (i.product ? i.product.name : i.name) || '상품';
+            itemsDisplayHtml += `<div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">- ${pName} (${i.qty})</div>`;
+        });
 
-        if(currentFiles.length > 0) {
-            currentFiles.forEach(f => { fileBtns += `<a href="${f.url}" target="_blank" class="btn-file" title="${f.name}"><i class="fa-solid fa-file"></i> ${f.name}</a>`; });
-        } else { fileBtns = '<span style="color:#ccc; font-size:12px;">파일 없음</span>'; }
-
-        // 결제 뱃지
-        let payMethod = order.payment_method || '-';
-        let payBadge = `<span class="pay-badge pay-wait">미결제</span>`;
-        const isPaid = (order.payment_status === 'paid' || order.payment_status === '결제완료' || order.payment_status === '카드결제완료' || order.payment_status === '입금확인됨');
-        if (isPaid) payBadge = `<span class="pay-badge pay-done">결제완료</span>`; 
-        else if (order.payment_status === '입금대기') payBadge = `<span class="pay-badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;">입금대기</span>`;
-        else if (order.payment_status === '결제중단') payBadge = `<span class="pay-badge" style="background:#f1f5f9; color:#64748b;">결제중단</span>`;
-
-        // 기사 노하우
-        const tip = tipMap[order.address];
-        let tipHtml = '';
-        if(tip) {
-            tipHtml = `<div style="margin-top:5px; padding:6px; background:#fffbeb; border:1px solid #fcd34d; border-radius:4px; font-size:11px; color:#92400e;">
-                <i class="fa-solid fa-lightbulb"></i> <b>기사 노하우:</b><br>${tip.content}
-            </div>`;
+        // 가맹점 뱃지
+        let franchiseBadge = '';
+        if (order.franchise_id) {
+            franchiseBadge = `<span class="badge" style="background:#eff6ff; color:#1e40af;">파트너접수</span>`;
         }
+
+        // 결제 상태
+        const isPaid = (order.payment_status === '결제완료' || order.payment_status === 'paid');
+        const payStatusColor = isPaid ? '#15803d' : '#94a3b8';
 
         tbody.innerHTML += `
             <tr>
-                <td><input type="checkbox" class="row-chk" value="${order.id}" data-manager="${order.manager_name}" data-files="${filesJson}" data-items="${itemsJson}"></td>
+                <td><input type="checkbox" class="row-chk" value="${order.id}"></td>
                 <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
-                <td>${new Date(order.created_at).toLocaleDateString()}<br><small style="color:#888;">${new Date(order.created_at).toLocaleTimeString()}</small></td>
-                
+                <td>${new Date(order.created_at).toLocaleDateString()}</td>
                 <td>
                     <b>${order.manager_name}</b><br>
-                    <span style="font-size:12px; color:#666;">${order.phone}</span>
-                    <div style="margin-top:4px; font-size:12px; color:#334155;">
-                        <i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> ${order.address || '주소없음'}
-                    </div>
-                    ${tipHtml}
+                    <span style="font-size:11px; color:#666;">${order.phone}</span>
                 </td>
+                <td style="color:#334155; font-size:11px;">${itemsDisplayHtml}</td>
 
-                <td style="color:#334155; max-width:220px;">${itemsDisplayHtml}</td>
-                
-                <td style="text-align:right;">${priceDisplayHtml}</td>
-                
-                <td style="background:#f9faff; min-width: 170px;">
-                    ${franchiseBadge} 
-                    <div style="margin-bottom:6px;">
-                        <input type="date" class="input-text" 
-                            style="padding:5px; font-size:12px; width:100%; border:1px solid #cbd5e1; box-sizing:border-box;" 
-                            value="${order.delivery_target_date || ''}" 
-                            onchange="updateTaskDB('${order.id}', 'delivery_target_date', this.value)"
-                            title="배송 예정일 지정">
-                    </div>
-                    <div style="margin-bottom:4px;">${managerSelect}</div>
-                    <div>${driverSelect}</div>
+                <td style="text-align:right; color:#64748b;">${rawTotalAmount.toLocaleString()}</td>
+                <td style="text-align:right; color:#ef4444;">${discountAmt > 0 ? '-' + discountAmt.toLocaleString() : '-'}</td>
+                <td style="text-align:right; color:#d97706;">${depositUsed > 0 ? depositUsed.toLocaleString() : '-'}</td>
+                <td style="text-align:right; font-weight:bold; color:#15803d; background:#f0fdf4;">${realCashPaid.toLocaleString()}</td>
+
+                <td>
+                    ${franchiseBadge}
+                    <div style="margin-top:2px;">${managerSelect}</div>
+                    <div style="margin-top:2px;">${driverSelect}</div>
                 </td>
                 <td>
-                    <div style="margin-bottom:8px;">
-                        <button class="btn ${fileMgrBtnClass}" onclick="openFileModal('${order.id}')" style="width:100%; font-size:12px;">
-                            ${fileMgrBtnText}
-                        </button>
-                    </div>
-                    <div style="display:flex; align-items:flex-start; gap:5px; flex-wrap:wrap;">
-                        ${fileBtns}
-                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="openFileModal('${order.id}')">파일보기</button>
                 </td>
                 <td>
-                    <div style="font-size:12px; margin-bottom:3px; font-weight:bold;">${payMethod}</div>
-                    ${payBadge}
-                    ${(!isPaid) ? `<button class="btn btn-outline" style="font-size:10px; padding:2px 5px; margin-top:3px;" onclick="confirmPayment('${order.id}')">입금확인</button>` : ''}
+                    <span style="color:${payStatusColor}; font-weight:bold;">${order.payment_status}</span><br>
+                    <span style="font-size:10px; color:#888;">${order.payment_method}</span>
                 </td>
             </tr>
         `;
     });
     showLoading(false);
+};
+
+// [2] [신규] 월별 엑셀 다운로드 함수
+window.downloadMonthlyExcel = async () => {
+    const monthVal = document.getElementById('excelMonth').value; 
+    if (!monthVal) return alert("다운로드할 '월'을 선택해주세요.");
+
+    const [year, month] = monthVal.split('-');
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    if (!confirm(`${monthVal}월 매출 내역을 엑셀로 저장하시겠습니까?`)) return;
+
+    showLoading(true);
+
+    try {
+        const { data: orders, error } = await sb.from('orders')
+            .select('*')
+            .gte('created_at', startDate.toISOString())
+            .lte('created_at', endDate.toISOString())
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        if (!orders || orders.length === 0) {
+            showLoading(false);
+            return alert("해당 월에 내역이 없습니다.");
+        }
+
+        const excelData = orders.map(o => {
+            let items = [];
+            try { items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items; } catch(e){}
+
+            let rawTotal = 0;
+            if(items) {
+                items.forEach(i => {
+                    let price = i.price || (i.product ? i.product.price : 0) || 0;
+                    rawTotal += price * (i.qty || 1);
+                });
+            }
+            if(rawTotal === 0) rawTotal = o.total_amount; 
+
+            const finalPay = o.total_amount || 0;
+            const discount = (rawTotal > finalPay) ? (rawTotal - finalPay) : 0;
+            const isDeposit = (o.payment_method === 'deposit' || o.payment_method === '예치금');
+
+            return {
+                "주문일자": new Date(o.created_at).toLocaleDateString(),
+                "주문번호": o.id,
+                "국가": o.site_code || 'KR',
+                "주문자": o.manager_name,
+                "주문내역": items ? items.map(i => `${i.productName}(${i.qty})`).join(', ') : '',
+                "결제상태": o.payment_status,
+                "결제수단": o.payment_method,
+                "주문총액(원가)": rawTotal,
+                "할인액": discount,
+                "예치금사용": isDeposit ? finalPay : 0,
+                "실제입금액": isDeposit ? 0 : finalPay
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "매출장부");
+        XLSX.writeFile(wb, `매출장부_${monthVal}.xlsx`);
+
+    } catch (e) {
+        alert("엑셀 오류: " + e.message);
+    } finally {
+        showLoading(false);
+    }
 };
         
 
