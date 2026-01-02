@@ -1,18 +1,21 @@
 import { canvas } from "./canvas-core.js";
 import { ADDON_DB, currentUser, sb } from "./config.js";
 
-// [안전장치] 폰트 로드 실패 시 사용할 기본 폰트 (나눔고딕)
+// [안전장치] 기본 폰트 로드 실패 시 사용할 폰트
 const SAFE_KOREAN_FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf";
 const BASE_FONT_NAME = "NanumGothic"; 
 
-// 직인 이미지 URL
+// 직인 이미지
 const STAMP_IMAGE_URL = "https://gdadmin.signmini.com/data/etc/stampImage"; 
+
+// QR코드 생성 API
+const QR_API_BASE = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=";
 
 // ==========================================================
 // [1] 내보내기 버튼 초기화
 // ==========================================================
 export function initExport() {
-    // 1. SVG 다운로드
+    // SVG 다운로드
     const btnSVG = document.getElementById("btnDownloadSVG");
     if (btnSVG) {
         btnSVG.onclick = () => {
@@ -22,7 +25,7 @@ export function initExport() {
         };
     }
 
-    // 2. PNG 다운로드
+    // PNG 다운로드
     const btnPNG = document.getElementById("btnPNG");
     if (btnPNG) {
         btnPNG.onclick = async () => {
@@ -31,7 +34,7 @@ export function initExport() {
         };
     }
 
-    // 3. PDF 다운로드 (아웃라인 처리 포함)
+    // PDF 다운로드
     const btnPDF = document.getElementById("btnPDF");
     if (btnPDF) {
         btnPDF.onclick = async () => {
@@ -39,16 +42,15 @@ export function initExport() {
             
             const btn = btnPDF;
             const originalText = btn.innerText;
-            btn.innerText = "PDF 생성 중...";
+            btn.innerText = "인쇄용 PDF 생성 중...";
             btn.disabled = true;
 
             try {
-                // 특수효과(그림자 등) 확인 -> 있으면 이미지 방식 권장
+                // 특수효과(그림자 등) 확인 -> 래스터(이미지) 방식 권장
                 const hasComplexEffect = canvas.getObjects().some(o => 
-                    (o.type === 'i-text' || o.type === 'text') && (o.shadow || o.strokeWidth > 0)
+                    (o.type === 'i-text' || o.type === 'text') && (o.shadow)
                 );
 
-                // 대지(Board) 정보 확인
                 const board = canvas.getObjects().find(o => o.isBoard);
                 let x = 0, y = 0, w = canvas.width, h = canvas.height;
                 
@@ -62,23 +64,22 @@ export function initExport() {
                 if (hasComplexEffect) {
                     console.log("특수 효과 감지: 고해상도 이미지 PDF로 변환");
                     let blob = await generateRasterPDF(canvas.toJSON(), w, h, x, y);
-                    if(blob) downloadFile(URL.createObjectURL(blob), "design_image.pdf");
+                    if(blob) downloadFile(URL.createObjectURL(blob), "design_print_raster.pdf");
                 } else {
                     console.log("벡터(아웃라인) PDF로 변환 시작...");
-                    
-                    // ★ 핵심: 벡터 PDF 생성 함수 호출
                     let blob = await generateProductVectorPDF(
-                        canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth','charSpacing','lineHeight','textAlign','fontWeight','fontStyle']), 
+                        // paintFirst 포함하여 내보내기
+                        canvas.toJSON(['id','isBoard','fontFamily','fontSize','text','fill','stroke','strokeWidth','charSpacing','lineHeight','textAlign','fontWeight','fontStyle','paintFirst']), 
                         w, h, x, y
                     );
                     
-                    if(blob) downloadFile(URL.createObjectURL(blob), "design_outline.pdf");
+                    if(blob) downloadFile(URL.createObjectURL(blob), "design_print_vector.pdf");
                     else throw new Error("Vector generation failed");
                 }
 
             } catch (err) {
-                console.warn("벡터 변환 실패, 이미지 모드로 백업:", err);
-                // 실패 시 백업 로직 (이미지 방식)
+                console.warn("벡터 변환 실패, 백업 모드 실행:", err);
+                // 실패 시 백업: 래스터 방식
                 const board = canvas.getObjects().find(o => o.isBoard);
                 let x = 0, y = 0, w = canvas.width, h = canvas.height;
                 if(board) { x=board.left; y=board.top; w=board.width*board.scaleX; h=board.height*board.scaleY; }
@@ -94,35 +95,8 @@ export function initExport() {
 }
 
 // ==========================================================
-// [2] 유틸리티 함수
+// [2] 유틸리티 및 CMYK 변환 헬퍼
 // ==========================================================
-export function downloadImage(filename = "design-image") {
-    if (!canvas) return;
-    canvas.discardActiveObject();
-    const originalVpt = canvas.viewportTransform;
-    
-    const board = canvas.getObjects().find(o => o.isBoard);
-    if(board) {
-         canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-         try {
-            const dataURL = canvas.toDataURL({ 
-                format: 'png', quality: 1, multiplier: 2,
-                left: board.left, top: board.top,
-                width: board.width * board.scaleX, height: board.height * board.scaleY
-            });
-            downloadFile(dataURL, `${filename}.png`);
-        } catch (e) { console.error(e); } 
-        finally { canvas.setViewportTransform(originalVpt); canvas.requestRenderAll(); }
-    } else {
-        canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-        try {
-            const dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
-            downloadFile(dataURL, `${filename}.png`);
-        } catch (e) { console.error(e); } 
-        finally { canvas.setViewportTransform(originalVpt); canvas.requestRenderAll(); }
-    }
-}
-
 function downloadFile(url, fileName) { 
     const a = document.createElement("a"); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); 
 }
@@ -148,8 +122,36 @@ async function getSafeImageDataUrl(url) {
     });
 }
 
+// CMYK 색상 변환 (인쇄 적합성 향상)
+function hexToCMYK(hex) {
+    let c = 0, m = 0, y = 0, k = 0;
+    hex = (hex.charAt(0) == "#") ? hex.substring(1, 7) : hex;
+    
+    if (hex.length != 6) return [0, 0, 0, 1]; 
+
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    // K100 블랙 처리
+    if (r === 0 && g === 0 && b === 0) return [0, 0, 0, 1];
+    if (r === 255 && g === 255 && b === 255) return [0, 0, 0, 0];
+
+    c = 1 - (r / 255);
+    m = 1 - (g / 255);
+    y = 1 - (b / 255);
+    let minCMY = Math.min(c, Math.min(m, y));
+    
+    c = (c - minCMY) / (1 - minCMY);
+    m = (m - minCMY) / (1 - minCMY);
+    y = (y - minCMY) / (1 - minCMY);
+    k = minCMY;
+
+    return [c, m, y, k];
+}
+
 // ==========================================================
-// [3] PDF 폰트 로더 (견적서/지시서용)
+// [3] PDF 폰트 로더
 // ==========================================================
 const fontBufferCache = {};
 
@@ -160,9 +162,14 @@ async function loadPdfFonts(doc) {
             if (res.ok) fontBufferCache[BASE_FONT_NAME] = await res.arrayBuffer();
         } catch (e) { console.error("기본 폰트 로드 실패:", e); }
     }
-    if (fontBufferCache[BASE_FONT_NAME] && !doc.existsFileInVFS(BASE_FONT_NAME + ".ttf")) {
-        doc.addFileToVFS(BASE_FONT_NAME + ".ttf", arrayBufferToBase64(fontBufferCache[BASE_FONT_NAME]));
-        doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "normal");
+    
+    if (fontBufferCache[BASE_FONT_NAME]) {
+        const fontData = arrayBufferToBase64(fontBufferCache[BASE_FONT_NAME]);
+        if (!doc.existsFileInVFS(BASE_FONT_NAME + ".ttf")) {
+            doc.addFileToVFS(BASE_FONT_NAME + ".ttf", fontData);
+            doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "normal");
+            doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "bold");
+        }
     }
 }
 
@@ -174,22 +181,19 @@ function drawAutoText(doc, text, x, y, options = {}) {
 }
 
 // ==========================================================
-// [4] ★ 핵심: 벡터(아웃라인) PDF 생성 함수
+// [4] 벡터(아웃라인) PDF 생성 함수
 // ==========================================================
 export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
     if (!window.jspdf) return null;
 
     try {
-        // 1. 가상 캔버스 생성 (화면에 보이지 않음, 메모리 절약)
         const tempElement = document.createElement('canvas');
         const tempCanvas = new fabric.StaticCanvas(tempElement);
         tempCanvas.setWidth(w);
         tempCanvas.setHeight(h);
 
-        // 2. JSON 데이터 로드
         await new Promise((resolve) => {
             tempCanvas.loadFromJSON(json, () => {
-                // 대지 위치 보정 (x, y 만큼 이동하여 0,0에 맞춤)
                 if (json.objects) {
                     tempCanvas.setViewportTransform([1, 0, 0, 1, -x, -y]);
                 }
@@ -197,10 +201,8 @@ export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
             });
         });
 
-        // 3. ★ 텍스트를 아웃라인(Path)으로 변환 (DB 폰트 연동)
         await convertCanvasTextToPaths(tempCanvas);
 
-        // 4. PDF 설정
         const MM_TO_PX = 3.7795; 
         const widthMM = w / MM_TO_PX; 
         const heightMM = h / MM_TO_PX;
@@ -213,141 +215,106 @@ export async function generateProductVectorPDF(json, w, h, x = 0, y = 0) {
             compress: true 
         });
 
-        // 5. SVG 추출 (아웃라인 된 상태)
         const svgStr = tempCanvas.toSVG({ 
             viewBox: { x: x, y: y, width: w, height: h }, 
-            width: w, 
-            height: h, 
-            suppressPreamble: true 
+            width: w, height: h, suppressPreamble: true 
         });
 
-        // 6. PDF에 SVG 삽입
         const parser = new DOMParser();
         const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
         
-        await doc.svg(svgElem, { 
-            x: 0, 
-            y: 0, 
-            width: widthMM, 
-            height: heightMM 
-        });
+        await doc.svg(svgElem, { x: 0, y: 0, width: widthMM, height: heightMM });
 
-        tempCanvas.dispose(); // 메모리 정리
+        tempCanvas.dispose();
         return doc.output('blob');
 
     } catch (e) { 
         console.error("Vector Gen Error:", e);
-        alert("벡터 데이터 처리에 실패했습니다. 이미지 모드로 전환합니다.");
         return null; 
     }
 }
 
-// ==========================================================
-// [5] ★ 핵심: 텍스트 -> 패스 변환 로직 (Supabase 연동)
-// ==========================================================
+// [텍스트 -> 패스 변환 (테두리 문제 해결 + 정확한 폰트 매칭)]
 async function convertCanvasTextToPaths(fabricCanvas) {
-    if (!window.opentype) {
-        console.warn("opentype.js 라이브러리가 로드되지 않았습니다.");
-        return;
-    }
+    if (!window.opentype) return;
 
-    // ★ 1. Supabase에서 모든 폰트 정보 가져오기 (매핑)
-    const fontUrlMap = {};
+    const fontList = []; 
     try {
-        // 특정 site_code 필터 없이 모든 폰트를 가져와서 매칭 확률을 높임
         const { data } = await sb.from('site_fonts').select('font_family, file_url');
         if (data) {
             data.forEach(f => {
-                fontUrlMap[f.font_family] = f.file_url;
+                fontList.push({
+                    original: f.font_family,
+                    normalized: f.font_family.toLowerCase().replace(/[\s\-_]/g, ''),
+                    url: f.file_url
+                });
             });
         }
-    } catch(e) {
-        console.warn("폰트 DB 조회 실패 (기본 폰트 사용됨):", e);
-    }
+    } catch(e) {}
 
     const loadedFonts = {}; 
 
-    // 재귀적으로 객체 처리
+    // 서체 찾기: 정확도 우선
+    const findFontUrl = (familyName) => {
+        if (!familyName) return SAFE_KOREAN_FONT_URL;
+        const target = familyName.toLowerCase().replace(/[\s\-_]/g, '');
+        
+        // 1. 정확한 매칭
+        const exactMatch = fontList.find(f => f.normalized === target);
+        if (exactMatch) return exactMatch.url;
+        
+        // 2. 근사 매칭 (글자수 차이가 적은 것 우선)
+        const candidates = fontList.filter(f => target.includes(f.normalized) || f.normalized.includes(target));
+        if (candidates.length > 0) {
+            candidates.sort((a, b) => Math.abs(a.normalized.length - target.length) - Math.abs(b.normalized.length - target.length));
+            return candidates[0].url; 
+        }
+        return SAFE_KOREAN_FONT_URL;
+    };
+
     const processObjects = async (objects) => {
-        // 인덱스 꼬임 방지를 위해 뒤에서부터 순회
         for (let i = objects.length - 1; i >= 0; i--) {
             let obj = objects[i];
-
             if (obj.type === 'group') {
                 await processObjects(obj.getObjects());
-            } 
-            else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+            } else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
                 try {
-                    // 1. 폰트 매핑 확인
-                    const family = obj.fontFamily;
-                    let url = fontUrlMap[family];
-                    
-                    // 매핑된게 없으면 기본 폰트로 대체
-                    if (!url) {
-                        console.warn(`폰트 못찾음: ${family} -> 기본값 사용`);
-                        url = SAFE_KOREAN_FONT_URL; 
+                    const fontUrl = findFontUrl(obj.fontFamily);
+                    if (!loadedFonts[fontUrl]) {
+                        const buffer = await (await fetch(fontUrl)).arrayBuffer();
+                        loadedFonts[fontUrl] = window.opentype.parse(buffer);
                     }
-
-                    // 2. 폰트 파일 로드 및 파싱 (캐싱 사용)
-                    if (!loadedFonts[url]) {
-                        const buffer = await (await fetch(url)).arrayBuffer();
-                        loadedFonts[url] = window.opentype.parse(buffer);
-                    }
-                    const font = loadedFonts[url];
-
-                    // 3. 텍스트 -> Path 데이터 변환
+                    const font = loadedFonts[fontUrl];
                     const fontSize = obj.fontSize;
                     const lineHeightPx = obj.lineHeight * fontSize;
                     const textLines = obj.text.split(/\r\n|\r|\n/);
-                    const totalHeight = textLines.length * lineHeightPx;
-                    
-                    // 중심점 보정
-                    let startY = -(totalHeight / 2) + (fontSize * 0.8);
+                    let startY = -(textLines.length * lineHeightPx / 2) + (fontSize * 0.8);
                     let fullPathData = "";
 
                     textLines.forEach((line, index) => {
                         if(line.trim() !== '') {
-                            let lineX = 0;
                             const lineWidth = font.getAdvanceWidth(line, fontSize);
-                            
+                            let lineX = -obj.width / 2; 
                             if (obj.textAlign === 'center') lineX = -lineWidth / 2;
                             else if (obj.textAlign === 'right') lineX = (obj.width / 2) - lineWidth;
-                            else lineX = -obj.width / 2; 
-
                             const path = font.getPath(line, lineX, startY + (index * lineHeightPx), fontSize);
                             fullPathData += path.toPathData(2);
                         }
                     });
 
-                    // 4. Path 객체 생성 (기존 속성 복사)
-                    const isBold = obj.fontWeight === 'bold' || parseInt(obj.fontWeight) >= 600;
-                    let finalStroke = obj.stroke;
-                    let finalStrokeWidth = obj.strokeWidth;
-
-                    // 볼드 효과 시뮬레이션
-                    if (isBold && !finalStroke && typeof obj.fill === 'string') {
-                        finalStroke = obj.fill; 
-                        finalStrokeWidth = fontSize * 0.025; 
-                    }
-
+                    // ★ paintFirst: 'stroke' 적용 (테두리 안쪽 침범 방지)
                     const fabricPath = new fabric.Path(fullPathData, {
                         fill: obj.fill,
-                        stroke: finalStroke,
-                        strokeWidth: finalStrokeWidth,
+                        stroke: obj.stroke,          
+                        strokeWidth: obj.strokeWidth || 0,
                         strokeLineCap: 'round',
                         strokeLineJoin: 'round',
-                        scaleX: obj.scaleX,
-                        scaleY: obj.scaleY,
-                        angle: obj.angle,
-                        left: obj.left,
-                        top: obj.top,
-                        originX: obj.originX,
-                        originY: obj.originY,
-                        opacity: obj.opacity,
-                        shadow: obj.shadow
+                        paintFirst: 'stroke', // ★ 테두리를 뒤에 그리기
+                        scaleX: obj.scaleX, scaleY: obj.scaleY, angle: obj.angle,
+                        left: obj.left, top: obj.top, originX: obj.originX, originY: obj.originY,
+                        opacity: obj.opacity, shadow: obj.shadow
                     });
 
-                    // 5. 교체 실행
                     if (obj.group) {
                         obj.group.removeWithUpdate(obj);
                         obj.group.addWithUpdate(fabricPath);
@@ -355,20 +322,14 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                         fabricCanvas.remove(obj);
                         fabricCanvas.add(fabricPath);
                     }
-
-                } catch (err) {
-                    console.warn("Text outline error:", err);
-                }
+                } catch (err) {}
             }
         }
     };
-
     await processObjects(fabricCanvas.getObjects());
 }
 
-// ==========================================================
-// [6] 래스터(이미지) PDF 생성 (백업용)
-// ==========================================================
+// [래스터 PDF 생성]
 export async function generateRasterPDF(json, w, h, x = 0, y = 0) {
     if (!window.jspdf) return null;
     try {
@@ -394,7 +355,35 @@ export async function generateRasterPDF(json, w, h, x = 0, y = 0) {
 }
 
 // ==========================================================
-// [7] 견적서/주문서 생성 (기존 유지)
+// [7] 견적서/주문서 공통 로직 (CMYK Helper & Draw)
+// ==========================================================
+function drawText(doc, text, x, y, options = {}, colorHex = "#000000") {
+    if (!text) return;
+    const [c, m, yk, k] = hexToCMYK(colorHex);
+    doc.setTextColor(c, m, yk, k); 
+    doc.setFont(BASE_FONT_NAME, options.weight || "normal");
+    doc.text(String(text), x, y, options);
+}
+
+function drawLine(doc, x1, y1, x2, y2, colorHex = "#000000", width = 0.1) {
+    const [c, m, yk, k] = hexToCMYK(colorHex);
+    doc.setDrawColor(c, m, yk, k);
+    doc.setLineWidth(width);
+    doc.line(x1, y1, x2, y2);
+}
+
+function drawCell(doc, x, y, w, h, text, align='center', fontSize=9, isHeader=false) {
+    doc.setFontSize(fontSize);
+    if (isHeader) { doc.setFillColor(240, 240, 240); doc.rect(x, y, w, h, 'F'); }
+    doc.setDrawColor(0); doc.setLineWidth(0.1); doc.rect(x, y, w, h);
+    doc.setTextColor(0, 0, 0, 1);
+    doc.setFont(BASE_FONT_NAME, isHeader ? 'bold' : 'normal');
+    const textX = align === 'left' ? x + 2 : (align === 'right' ? x + w - 2 : x + w/2);
+    doc.text(String(text), textX, y + (h/2) + (fontSize/3.5), { align: align, maxWidth: w-4 });
+}
+
+// ==========================================================
+// [8] 고품질 견적서 생성 (Quotation)
 // ==========================================================
 export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0) {
     if (!window.jspdf) return;
@@ -402,83 +391,101 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     await loadPdfFonts(doc); 
 
-    doc.setFontSize(24); doc.setTextColor(0);
-    drawAutoText(doc, "견 적 서", 105, 20, { align: 'center' });
+    doc.setFontSize(26); 
+    drawText(doc, "견   적   서", 105, 22, { align: 'center', weight: 'bold' });
+    drawLine(doc, 15, 28, 195, 28, "#000000", 0.5); 
 
+    const topY = 35; const leftX = 15;
     doc.setFontSize(10);
-    const leftX = 15; const rightX = 110; const topY = 35; const boxW = 85; const boxH = 40; const rowH = 8;
-    drawAutoText(doc, `날짜: ${new Date().toLocaleDateString()}`, leftX, topY + 5);
-    drawAutoText(doc, `수신: ${orderInfo.manager || '고객'} 귀하`, leftX, topY + 12);
-    drawAutoText(doc, `전화: ${orderInfo.phone || '-'}`, leftX, topY + 19);
-    drawAutoText(doc, `주소: ${orderInfo.address || '-'}`, leftX, topY + 26, { maxWidth: 80 });
+    drawText(doc, "[ 공급받는자 ]", leftX, topY);
+    drawText(doc, `성   명 :  ${orderInfo.manager || '귀하'}`, leftX, topY+8);
+    drawText(doc, `연락처 :  ${orderInfo.phone || '-'}`, leftX, topY+14);
+    drawText(doc, `이메일 :  ${orderInfo.email || currentUser?.email || '-'}`, leftX, topY+20);
+    drawText(doc, `주   소 :  ${orderInfo.address || '-'}`, leftX, topY+26, { maxWidth: 85 });
 
-    doc.setDrawColor(0); doc.setLineWidth(0.4); doc.rect(rightX, topY, boxW, boxH);
-    for(let i=1; i<5; i++) doc.line(rightX, topY + (rowH*i), rightX + boxW, topY + (rowH*i));
-    const labelW = 20; doc.line(rightX + labelW, topY, rightX + labelW, topY + boxH);
-    const tx = rightX + (labelW / 2); const vx = rightX + labelW + 2;
+    const boxX = 105; const boxY = 32; const cellH = 7; const labelW = 20; const valW = 70;
+    const providerInfo = [ ["등록번호", "470-81-02808"], ["상      호", "(주)카멜레온프린팅"], ["대      표", "조재호"], ["주      소", "경기 화성시 우정읍 한말길 72-2"], ["업      태", "제조업 / 서비스업"], ["연 락 처", "031-366-1984"] ];
+    providerInfo.forEach((row, i) => {
+        const curY = boxY + (i * cellH);
+        drawCell(doc, boxX, curY, labelW, cellH, row[0], 'center', 9, true);
+        drawCell(doc, boxX+labelW, curY, valW, cellH, row[1], 'left', 9, false);
+    });
 
-    drawAutoText(doc, "등록번호", tx, topY + 5.5, { align: 'center' }); drawAutoText(doc, "470-81-02808", vx, topY + 5.5);
-    drawAutoText(doc, "상 호", tx, topY + rowH + 5.5, { align: 'center' }); drawAutoText(doc, "(주)카멜레온프린팅", vx, topY + rowH + 5.5);
-    if (STAMP_IMAGE_URL) { try { const stamp = await getSafeImageDataUrl(STAMP_IMAGE_URL); if (stamp) doc.addImage(stamp, 'PNG', 165, topY + rowH + 1, 14, 14); } catch(e) {} }
-    drawAutoText(doc, "대 표", tx, topY + rowH*2 + 5.5, { align: 'center' }); drawAutoText(doc, "조재호", vx, topY + rowH*2 + 5.5);
-    drawAutoText(doc, "주 소", tx, topY + rowH*3 + 5.5, { align: 'center' }); doc.setFontSize(8); drawAutoText(doc, "경기 화성시 우정읍 한말길 72-2", vx, topY + rowH*3 + 5.5); doc.setFontSize(10);
-    drawAutoText(doc, "연락처", tx, topY + rowH*4 + 5.5, { align: 'center' }); drawAutoText(doc, "031-366-1984", vx, topY + rowH*4 + 5.5);
+    if (STAMP_IMAGE_URL) {
+        try {
+            const stamp = await getSafeImageDataUrl(STAMP_IMAGE_URL);
+            if (stamp) doc.addImage(stamp, 'PNG', boxX+labelW+45, boxY+cellH+1, 14, 14);
+        } catch(e) {}
+    }
 
-    let y = 90;
-    doc.setFillColor(240); doc.rect(15, y, 180, 8, 'F'); doc.setDrawColor(0); doc.rect(15, y, 180, 8);
-    drawAutoText(doc, "No", 20, y+5.5); drawAutoText(doc, "품목명", 35, y+5.5); drawAutoText(doc, "규격/옵션", 80, y+5.5);
-    drawAutoText(doc, "수량", 140, y+5.5, {align:'center'}); drawAutoText(doc, "단가", 160, y+5.5, {align:'right'}); drawAutoText(doc, "금액", 190, y+5.5, {align:'right'});
-    y += 8; let totalAmt = 0; let no = 1;
+    let y = 85;
+    const cols = [10, 50, 40, 20, 30, 30]; 
+    const headers = ["No", "품목명", "규격/옵션", "수량", "단가", "금액"];
+    let curX = 15;
+    headers.forEach((h, i) => { drawCell(doc, curX, y, cols[i], 8, h, 'center', 10, true); curX += cols[i]; });
+    y += 8;
 
-    for (let i = 0; i < cartItems.length; i++) {
-        const item = cartItems[i];
-        if (!item.product) continue; 
-
+    let totalAmt = 0; let no = 1;
+    cartItems.forEach(item => {
+        if (!item.product) return;
         const pTotal = (item.product.price || 0) * (item.qty || 1); totalAmt += pTotal;
-        doc.rect(15, y, 180, 8);
-        drawAutoText(doc, String(no++), 20, y+5.5); drawAutoText(doc, item.product.name, 35, y+5.5); drawAutoText(doc, "기본 사양", 80, y+5.5);
-        drawAutoText(doc, String(item.qty), 140, y+5.5, {align:'center'}); drawAutoText(doc, (item.product.price||0).toLocaleString(), 160, y+5.5, {align:'right'}); drawAutoText(doc, pTotal.toLocaleString(), 190, y+5.5, {align:'right'});
-        y += 8; if(y > 270) { doc.addPage(); y = 20; }
-
+        curX = 15;
+        drawCell(doc, curX, y, cols[0], 8, no++, 'center'); curX += cols[0];
+        drawCell(doc, curX, y, cols[1], 8, item.product.name, 'left'); curX += cols[1];
+        drawCell(doc, curX, y, cols[2], 8, "기본 사양", 'left'); curX += cols[2];
+        drawCell(doc, curX, y, cols[3], 8, String(item.qty), 'center'); curX += cols[3];
+        drawCell(doc, curX, y, cols[4], 8, item.product.price.toLocaleString(), 'right'); curX += cols[4];
+        drawCell(doc, curX, y, cols[5], 8, pTotal.toLocaleString(), 'right');
+        y += 8;
+        if(y > 260) { doc.addPage(); y = 20; }
         if (item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = ADDON_DB[code]; if(!add) return;
-                const uQty = (item.addonQuantities && item.addonQuantities[code]) ? item.addonQuantities[code] : 1;
+                const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
                 const aTotal = add.price * uQty; totalAmt += aTotal;
-                doc.rect(15, y, 180, 8);
-                drawAutoText(doc, "", 20, y+5.5); drawAutoText(doc, `└ ${add.name}`, 35, y+5.5); drawAutoText(doc, "추가 상품", 80, y+5.5);
-                drawAutoText(doc, String(uQty), 140, y+5.5, {align:'center'}); drawAutoText(doc, add.price.toLocaleString(), 160, y+5.5, {align:'right'}); drawAutoText(doc, aTotal.toLocaleString(), 190, y+5.5, {align:'right'});
-                y += 8; if(y > 270) { doc.addPage(); y = 20; }
+                curX = 15;
+                drawCell(doc, curX, y, cols[0], 8, "", 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1], 8, "└ " + add.name, 'left', 8); curX += cols[1];
+                drawCell(doc, curX, y, cols[2], 8, "추가 옵션", 'left', 8); curX += cols[2];
+                drawCell(doc, curX, y, cols[3], 8, String(uQty), 'center'); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], 8, add.price.toLocaleString(), 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], 8, aTotal.toLocaleString(), 'right');
+                y += 8; if(y > 260) { doc.addPage(); y = 20; }
             });
         }
-    }
+    });
+
     y += 5;
+    const finalAmt = Math.floor(totalAmt * (1 - discountRate));
+    const discountAmt = totalAmt - finalAmt;
+    const vat = Math.floor(finalAmt / 11);
+    const supply = finalAmt - vat;
+    const summaryX = 105; 
+    
+    drawText(doc, "공급가액 :", summaryX, y+5, {align:'right'});
+    drawText(doc, supply.toLocaleString() + " 원", 195, y+5, {align:'right'}); y+=6;
+    drawText(doc, "부 가 세 :", summaryX, y+5, {align:'right'});
+    drawText(doc, vat.toLocaleString() + " 원", 195, y+5, {align:'right'}); y+=6;
 
-    if (discountRate > 0) {
-        const discountAmt = Math.floor(totalAmt * discountRate);
-        const finalAmt = totalAmt - discountAmt;
-        const percent = (discountRate * 100).toFixed(0);
-
-        doc.setFontSize(10); doc.setTextColor(0);
-        drawAutoText(doc, `소  계: ${totalAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
-        y += 6;
-
-        doc.setTextColor(21, 128, 61); 
-        drawAutoText(doc, `회원 등급 할인 (${percent}%): -${discountAmt.toLocaleString()} 원`, 195, y, { align: 'right' });
-        y += 8;
-
-        doc.setFontSize(12); doc.setTextColor(220, 38, 38); doc.setFont(BASE_FONT_NAME, "bold");
-        drawAutoText(doc, `총 합계금액: ${finalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
-    } else {
-        doc.setFontSize(12); doc.setTextColor(220, 38, 38);
-        drawAutoText(doc, `총 합계금액: ${totalAmt.toLocaleString()} 원 (VAT 포함)`, 195, y, { align: 'right' });
+    if (discountAmt > 0) {
+        doc.setTextColor(255, 0, 0); 
+        drawText(doc, `할인금액 (${(discountRate*100).toFixed(0)}%) :`, summaryX, y+5, {align:'right'}, "#ff0000");
+        drawText(doc, "-" + discountAmt.toLocaleString() + " 원", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
     }
+    y += 2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(summaryX-20, y, 195, y); y += 8;
+    drawText(doc, "합계금액 (VAT포함)", summaryX, y, {align:'right', weight:'bold'});
+    doc.setFontSize(14);
+    drawText(doc, finalAmt.toLocaleString() + " 원", 195, y, {align:'right', weight:'bold'}, "#1a237e"); 
 
-    y += 20; doc.setFontSize(10); doc.setTextColor(100);
-    drawAutoText(doc, "위와 같이 견적합니다.", 105, y, { align: 'center' });
+    doc.setFontSize(10);
+    drawText(doc, "위와 같이 견적합니다.", 105, 250, {align:'center'});
+    drawText(doc, new Date().toLocaleDateString(), 105, 256, {align:'center'});
     return doc.output('blob');
 }
 
+// ==========================================================
+// [9] 작업지시서 생성 (Order Sheet) - ★ 완벽 수정됨
+// ==========================================================
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
     if (!window.jspdf) return alert("PDF Loading...");
     const { jsPDF } = window.jspdf;
@@ -491,45 +498,82 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 
         if (i > 0) doc.addPage();
         
-        doc.setFillColor(99, 102, 241); doc.rect(0, 0, 210, 20, 'F');
-        doc.setTextColor(255, 255, 255); doc.setFontSize(16); drawAutoText(doc, "작업 지시서", 105, 13, { align: 'center' });
+        // 헤더
+        const NAVY_CMYK = "#1a237e"; 
+        const [c,m,yk,k] = hexToCMYK(NAVY_CMYK);
+        doc.setFillColor(c,m,yk,k); doc.rect(0, 0, 210, 20, 'F');
+        doc.setTextColor(0,0,0,0); doc.setFontSize(18); 
+        drawText(doc, "작 업 지 시 서", 105, 13, { align: 'center', weight: 'bold' }, "#ffffff");
         
-        const startY = 30; doc.setTextColor(0); doc.setFontSize(10); 
-        doc.setDrawColor(200); doc.setFillColor(245, 247, 250); doc.rect(15, startY, 135, 40, 'F'); doc.rect(15, startY, 135, 40);      
-        drawAutoText(doc, `주문일자: ${new Date().toLocaleDateString()}`, 20, startY + 8);
-        drawAutoText(doc, `담당자명: ${orderInfo.manager || '-'}`, 80, startY + 8); 
-        doc.setTextColor(220, 38, 38); doc.setFontSize(14);
-        drawAutoText(doc, `도착희망일: ${orderInfo.date || '-'}`, 20, startY + 16);
-        doc.setTextColor(0, 0, 0); doc.setFontSize(10); 
-        drawAutoText(doc, `연락처: ${orderInfo.phone || '-'}`, 80, startY + 16);
-        drawAutoText(doc, `배송주소: ${orderInfo.address || '-'}`, 20, startY + 24);
-        drawAutoText(doc, `요청사항: ${orderInfo.note || '-'}`, 20, startY + 32, { maxWidth: 100 });
+        const startY = 30; 
+        doc.setTextColor(0,0,0,1); doc.setFontSize(11); 
+        doc.setDrawColor(0.8, 0, 0, 0.1); 
+        // [수정] 박스 높이 늘림 (배송일 추가 공간 확보)
+        doc.rect(15, startY, 180, 50); 
 
-        const staffY = startY + 45;
-        doc.setFillColor(255, 247, 237); doc.setDrawColor(249, 115, 22); doc.rect(15, staffY, 180, 20, 'F'); doc.rect(15, staffY, 180, 20);
-        doc.setTextColor(194, 65, 12); doc.setFontSize(11);
-        drawAutoText(doc, `배송책임자 : 서용규 (010-8272-3017) | 제작책임자 : 변지웅 (010-5512-5366)`, 105, staffY + 11, {align:'center'});
+        drawText(doc, `주 문 번 호 :  ${orderInfo.id || 'PREVIEW'}`, 20, startY + 8, {weight:'bold'});
+        drawText(doc, `주 문 일 자 :  ${new Date().toLocaleString()}`, 110, startY + 8);
+        drawLine(doc, 15, startY+12, 195, startY+12, "#cccccc"); 
 
-        let y = staffY + 30;
-        doc.setTextColor(0, 0, 0); doc.setFontSize(16);
-        drawAutoText(doc, `[상품 ${i + 1}] ${item.product.name}`, 15, y); y += 10; doc.setFontSize(11); 
+        // ★ [추가] 배송 희망일 (강조)
+        doc.setTextColor(0, 1, 1, 0); // Red
+        doc.setFontSize(12);
+        drawText(doc, `배 송 희 망 일 :  ${orderInfo.date || '미지정'}`, 20, startY + 18, {weight:'bold'}, "#ff0000");
         
+        // 다시 기본색
+        doc.setTextColor(0,0,0,1); 
+        doc.setFontSize(11);
+
+        drawText(doc, `주   문   자 :  ${orderInfo.manager || '-'}`, 20, startY + 26);
+        drawText(doc, `연   락   처 :  ${orderInfo.phone || '-'}`, 110, startY + 26);
+        
+        drawText(doc, `배 송 주 소 :`, 20, startY + 34);
+        doc.setFontSize(10);
+        drawText(doc, `${orderInfo.address || '-'}`, 45, startY + 34, {maxWidth: 140});
+        
+        doc.setFontSize(11);
+        drawText(doc, `요 청 사 항 :`, 20, startY + 44);
+        doc.setTextColor(0, 1, 1, 0); 
+        drawText(doc, `${orderInfo.note || '없음'}`, 45, startY + 44, {maxWidth: 140, weight:'bold'}, "#ff0000");
+
+        // ★ [복구] 담당자 실명 정보
+        const staffY = startY + 55; // 위치 조정
+        doc.setFillColor(255, 247, 237); // 연한 주황
+        doc.setDrawColor(249, 115, 22); 
+        doc.rect(15, staffY, 180, 15, 'F'); 
+        doc.rect(15, staffY, 180, 15);
+        
+        doc.setTextColor(194, 65, 12); 
+        doc.setFontSize(10);
+        drawText(doc, `배송책임자 : 서용규 (010-8272-3017)  |  제작책임자 : 변지웅 (010-5512-5366)`, 105, staffY + 8.5, {align:'center'}, "#c2410c");
+
+        const prodY = staffY + 25;
+        doc.setTextColor(0, 0, 0, 1);
+        doc.setFillColor(0.1, 0, 0, 0.05); doc.rect(15, prodY, 180, 10, 'F'); doc.rect(15, prodY, 180, 10); 
+        drawText(doc, "제 작 사양", 20, prodY + 7, {weight:'bold'}, "#000000");
+        drawText(doc, `수량: ${item.qty}개`, 185, prodY + 7, {align:'right', weight:'bold'}, "#000000");
+
+        const infoY = prodY + 15;
+        doc.setFontSize(14);
+        drawText(doc, `품명: ${item.product.name}`, 20, infoY, {weight:'bold'});
+        doc.setFontSize(11);
+        let optY = infoY + 8;
         if (item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = ADDON_DB[code]; if(!add) return;
                 const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                doc.setDrawColor(0); doc.setLineWidth(0.3); doc.rect(15, y, 5, 5); 
-                doc.setFillColor(255, 255, 255); doc.rect(23, y, 120, 8, 'F'); doc.rect(23, y, 120, 8);
-                drawAutoText(doc, ` ${add.name}`, 25, y + 5.5);
-                doc.rect(145, y, 20, 8); doc.text(`${qty}`, 155, y + 5.5, { align: 'center' });
-                y += 10;
+                drawText(doc, `• ${add.name} (x${qty})`, 25, optY);
+                optY += 6;
             });
-        } else { drawAutoText(doc, "- 옵션 없음", 15, y + 5); y += 10; }
-        
-        y += 5; doc.setFontSize(14); doc.setTextColor(99, 102, 241); drawAutoText(doc, `총 수량: ${item.qty}`, 160, y);
+        } else {
+            drawText(doc, "• 기본 사양", 25, optY);
+            optY += 6;
+        }
 
-        y += 10; const boxSize = 130; const boxX = (210 - boxSize) / 2;
-        doc.setDrawColor(200); doc.setLineWidth(0.5); doc.rect(boxX, y, boxSize, boxSize);
+        const imgBoxY = optY + 5;
+        const imgBoxH = 100;
+        doc.setDrawColor(0); doc.rect(15, imgBoxY, 180, imgBoxH); 
+        drawText(doc, "< 디자인 시안 확인 >", 105, imgBoxY - 2, {align:'center', size:9}, "#666666");
 
         let imgData = null; 
         if (item.thumb && item.thumb.startsWith('data:image')) imgData = item.thumb;
@@ -540,14 +584,30 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             try {
                 let format = 'PNG'; if (imgData.startsWith('data:image/jpeg')) format = 'JPEG';
                 const imgProps = doc.getImageProperties(imgData);
-                const maxW = boxSize - 2; const maxH = boxSize - 2;
+                const maxW = 178; const maxH = 98;
                 let w = maxW; let h = (imgProps.height * w) / imgProps.width;
                 if (h > maxH) { h = maxH; w = (imgProps.width * h) / imgProps.height; }
-                const imgX = boxX + (boxSize - w) / 2; const imgY = y + 1 + (boxSize - h) / 2;
+                const imgX = 105 - (w / 2); const imgY = imgBoxY + (imgBoxH / 2) - (h / 2);
                 doc.addImage(imgData, format, imgX, imgY, w, h);
             } catch (err) {}
+        } else {
+            drawText(doc, "이미지 없음", 105, imgBoxY + 50, {align:'center'});
         }
-        doc.setFontSize(9); doc.setTextColor(150); drawAutoText(doc, "Generated by Chameleon", 105, 285, { align: 'center' });
+
+        // [QR 대신 상세 텍스트] - 보안 문제 해결
+        const qrY = 255;
+        doc.setDrawColor(0); doc.rect(15, qrY, 180, 30);
+        drawLine(doc, 15, qrY+10, 195, qrY+10);
+        
+        drawText(doc, "제 작 담 당", 45, qrY+7, {align:'center', weight:'bold'});
+        drawText(doc, "검 수 / 출 고", 105, qrY+7, {align:'center', weight:'bold'});
+        drawText(doc, "배 송 담 당", 165, qrY+7, {align:'center', weight:'bold'});
+        
+        drawLine(doc, 75, qrY, 75, qrY+30);
+        drawLine(doc, 135, qrY, 135, qrY+30);
+
+        doc.setFontSize(9); 
+        drawText(doc, "Generated by Chameleon Printing System", 105, 290, { align: 'center' }, "#888888");
     }
     return doc.output('blob');
 }
