@@ -1879,22 +1879,26 @@ window.showSection = (secId, navEl) => {
             }
         }
 
-        // admin.html 내부 스크립트의 window.loadOrders 함수 교체
-
-// [1] 수정된 주문 목록 로드 함수
-// [수정된 loadOrders 함수] - 파일 직접 노출 & 입금확인 빨간색 처리 적용
-    // [수정된 loadOrders 함수] - 오류 수정 및 디자인 적용 완료
+    // [최적화된 주문 로드 함수] - 서버 보호 모드 (최근 50개만 로드)
     window.loadOrders = async () => {
         showLoading(true);
         updateActionButtons(); 
         
         const siteFilter = document.getElementById('filterSite').value;
-        await fetchStaffForOrders();
         
+        // 스태프 목록 미리 가져오기
+        if (staffList.length === 0) await fetchStaffForOrders();
+        
+        // 파트너 정보 가져오기
         const { data: partners } = await sb.from('partner_applications').select('user_id, company_name').eq('status', 'approved');
         const partnerMap = {}; if(partners) partners.forEach(p => partnerMap[p.user_id] = p.company_name);
 
-        let query = sb.from('orders').select('*').order('created_at', {ascending:false});
+        // ▼▼▼ [핵심 수정] .limit(50)을 추가하여 최근 50개만 가져옵니다 (서버 터짐 방지) ▼▼▼
+        let query = sb.from('orders')
+            .select('*')
+            .order('created_at', {ascending:false})
+            .limit(50); 
+
         if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
         else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
         else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
@@ -1903,10 +1907,173 @@ window.showSection = (secId, navEl) => {
         const tbody = document.getElementById('orderListBody');
         tbody.innerHTML = '';
         
+        if (error) {
+            console.error(error);
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px; color:red;">데이터 로드 중 오류가 발생했습니다.</td></tr>';
+            showLoading(false);
+            return;
+        }
+        
         if (!data || data.length === 0) { 
             tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">데이터가 없습니다.</td></tr>'; 
             showLoading(false); return; 
         }
+        
+        const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
+        allOrders = filteredData; 
+
+        // 상품 가격 매핑
+        const { data: allProds } = await sb.from('admin_products').select('price, name');
+        const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
+
+        filteredData.forEach(order => {
+            const site = order.site_code || 'KR'; 
+            const managerSelect = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
+            const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
+            
+            // 금액 계산 로직
+            let items = [];
+            if (order.items) {
+                if (Array.isArray(order.items)) items = order.items;
+                else if (typeof order.items === 'string') { try { items = JSON.parse(order.items); } catch(e) { items = []; } }
+            }
+            let rawTotalAmount = 0; 
+            items.forEach(item => {
+                if (item.isFileDerived) return;
+                let unitPrice = item.price || (item.product ? item.product.price : 0) || 0;
+                if (unitPrice === 0 && item.product && prodMap[item.product.name]) unitPrice = prodMap[item.product.name];
+                rawTotalAmount += (unitPrice * (item.qty || 1));
+            });
+            if(rawTotalAmount === 0) rawTotalAmount = order.total_amount; 
+            const finalPaidAmount = order.total_amount || 0;
+            let discountAmt = (rawTotalAmount > finalPaidAmount) ? (rawTotalAmount - finalPaidAmount) : 0;
+            let depositUsed = 0; let realCashPaid = 0;
+            if (order.payment_method === 'deposit' || order.payment_method === '예치금') { depositUsed = finalPaidAmount; realCashPaid = 0; } 
+            else { depositUsed = 0; realCashPaid = finalPaidAmount; }
+
+            // 아이템 표시 HTML
+            let itemsDisplayHtml = '';
+            items.forEach(i => {
+                let pName = i.productName || (i.product ? i.product.name : i.name) || '상품';
+                itemsDisplayHtml += `<div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">- ${pName} (${i.qty})</div>`;
+            });
+
+            // 프랜차이즈/본사 배지
+            let franchiseBadge = '';
+            if (order.franchise_id) {
+                const pName = partnerMap[order.franchise_id] || '가맹점/본사';
+                franchiseBadge = `
+                    <div style="margin-bottom:6px; padding:4px 6px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; font-size:11px; color:#1e40af; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80px;">${pName}</span>
+                        <i class="fa-solid fa-xmark" style="cursor:pointer; color:#ef4444;" onclick="cancelFranchiseClaim('${order.id}')" title="접수 해제"></i>
+                    </div>`;
+            } else {
+                franchiseBadge = `
+                    <div style="margin-bottom:6px;">
+                        <button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; border:1px dashed #94a3b8; color:#64748b; font-size:11px; padding:4px;">
+                            🔒 본사 직접 제작
+                        </button>
+                    </div>`;
+            }
+
+            // 파일 목록 표시 (최적화 적용)
+            // ★ 수정: optimizeImage 함수가 정의되지 않았을 수 있으므로 안전하게 처리
+            function getOptimizedUrl(url) {
+                if (!url) return null;
+                if (url.includes('supabase.co')) {
+                    const sep = url.includes('?') ? '&' : '?';
+                    return `${url}${sep}width=200&height=200&resize=cover&quality=50&format=webp`;
+                }
+                return url;
+            }
+
+            let fileDisplayHtml = `
+                <div style="margin-bottom:6px;">
+                    <label class="btn btn-sky btn-sm" style="cursor:pointer; width:100%;">
+                        <i class="fa-solid fa-plus"></i> 파일추가
+                        <input type="file" style="display:none;" onchange="uploadFileDirect('${order.id}', this)">
+                    </label>
+                </div>
+            `;
+            if (order.files && order.files.length > 0) {
+                order.files.forEach((f, idx) => {
+                    fileDisplayHtml += `
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; font-size:12px; background:#fff; padding:6px; border-radius:4px; border:1px solid #e2e8f0;">
+                            <a href="${f.url}" target="_blank" style="text-decoration:none; color:#334155; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${f.name}">📄 ${f.name}</a>
+                            <button onclick="deleteFileDirect('${order.id}', ${idx})" 
+                                style="width:20px; height:20px; background:#fee2e2; border:1px solid #fca5a5; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left:5px;"
+                                title="파일 삭제">
+                                <i class="fa-solid fa-xmark" style="color:#dc2626; font-size:12px;"></i>
+                            </button>
+                        </div>`;
+                });
+            } else {
+                fileDisplayHtml += `<div style="font-size:11px; color:#ccc; text-align:center;">파일 없음</div>`;
+            }
+
+            // 결제 상태 표시
+            let payStatusHtml = '';
+            const pm = order.payment_method || '';
+            const ps = order.payment_status || '';
+
+            if (pm.includes('card') || pm.includes('카드')) {
+                payStatusHtml = `<div style="color:#15803d; font-weight:800; font-size:13px;">카드결제완료</div>`;
+                if (['결제완료', 'paid', '카드결제완료', '입금확인됨'].includes(ps)) {
+                    payStatusHtml += `<button class="btn btn-danger btn-sm" style="margin-top:5px; width:100%; font-size:11px;" onclick="cancelTossPayment('${order.id}', '${order.toss_payment_key}')">결제취소</button>`;
+                }
+            } 
+            else if (pm.includes('bank') || pm.includes('무통장') || pm.includes('계좌')) {
+                if (['결제완료', '입금확인', '입금확인됨'].includes(ps)) {
+                    payStatusHtml = `<div style="color:#dc2626; font-weight:800; font-size:14px;">입금 확인</div>`;
+                } else {
+                    payStatusHtml = `
+                        <div style="font-size:12px; color:#d97706; margin-bottom:4px;">입금대기</div>
+                        <button class="btn btn-outline btn-sm" style="width:100%; font-weight:bold; color:#dc2626; border-color:#dc2626;" onclick="confirmDeposit('${order.id}')">
+                            입금확인
+                        </button>`;
+                }
+            }
+            else if (pm.includes('deposit') || pm.includes('예치금')) {
+                payStatusHtml = `<div style="color:#6366f1; font-weight:800; font-size:13px;">예치금 결제</div>`;
+            }
+            else {
+                payStatusHtml = `<div style="color:#94a3b8; font-size:12px;">${ps || '미결제'}</div>`;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><input type="checkbox" class="row-chk" value="${order.id}"></td>
+                    <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
+                    <td>${new Date(order.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <b>${order.manager_name}</b><br>
+                        <span style="font-size:11px; color:#666;">${order.phone}</span>
+                    </td>
+                    <td style="color:#334155; font-size:11px;">${itemsDisplayHtml}</td>
+                    
+                    <td style="text-align:right; color:#64748b;">${rawTotalAmount.toLocaleString()}</td>
+                    <td style="text-align:right; color:#ef4444;">${discountAmt > 0 ? '-' + discountAmt.toLocaleString() : '-'}</td>
+                    <td style="text-align:right; color:#d97706;">${depositUsed > 0 ? depositUsed.toLocaleString() : '-'}</td>
+                    <td style="text-align:right; font-weight:bold; color:#15803d; background:#f0fdf4;">${realCashPaid.toLocaleString()}</td>
+                    
+                    <td>
+                        ${franchiseBadge}
+                        <div style="margin-top:2px;">${managerSelect}</div>
+                        <div style="margin-top:2px;">${driverSelect}</div>
+                    </td>
+                    
+                    <td style="vertical-align:top; min-width:180px;">
+                        ${fileDisplayHtml}
+                    </td>
+                    
+                    <td style="text-align:center;">
+                        ${payStatusHtml}
+                    </td>
+                </tr>
+            `;
+        });
+        showLoading(false);
+    };
         
         const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
         allOrders = filteredData; 
@@ -2054,8 +2221,7 @@ window.showSection = (secId, navEl) => {
             `;
         });
         showLoading(false);
-    };
-
+    
 // [2] [신규] 월별 엑셀 다운로드 함수
 window.downloadMonthlyExcel = async () => {
     const monthVal = document.getElementById('excelMonth').value; 

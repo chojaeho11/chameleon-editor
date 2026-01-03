@@ -860,7 +860,7 @@ const REWARD_RATES = {
     'png': 100,
     'svg': 200,
     'logo': 150,
-    'template': 100,
+    'template': 500,
     'usage_share': 0.1 
 };
 

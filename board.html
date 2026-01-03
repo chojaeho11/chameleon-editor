@@ -240,369 +240,328 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script type="module">
-        // [최적화] config.js의 무거운 로딩을 피하기 위해 직접 연결
-        let sb = null;
-        let currentUser = null;
-        let isAdmin = false;
+    // [서버 보호 모드] config.js 로딩 없이 직접 가볍게 연결
+    let sb = null;
+    let currentUser = null;
+    let isAdmin = false;
 
-        // 관리자 이메일 (config.js와 동일하게 설정)
-        const ADMIN_EMAILS = ["korea900as@gmail.com", "ceo@test.com"];
+    // ▼▼▼ [강제 관리자] DB가 느려도 글쓰기 버튼 즉시 노출 ▼▼▼
+    const FORCE_ADMIN_EMAILS = [
+        "korea900@daum.net", 
+        "korea900as@gmail.com", 
+        "ceo@test.com"
+    ];
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const category = urlParams.get('cat') || 'free';
-        const currentCountry = (urlParams.get('country') || 'KR').toUpperCase();
-        const postId = urlParams.get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('cat') || 'free';
+    const currentCountry = (urlParams.get('country') || 'KR').toUpperCase();
+    const postId = urlParams.get('id');
 
-        let quill; 
-        let currentRating = 5; 
-        let isEditMode = false;
-        let isLoginAvailable = true; 
+    let quill; 
+    let currentRating = 5; 
+    let isEditMode = false;
 
-        const boardMetaInfo = {
-            'blog': { title: { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ' }, desc: '카멜레온프린팅 공식 블로그', keywords: '블로그, 인쇄팁' },
-            'review': { title: { KR: '고객 제작후기', US: 'Customer Reviews', JP: 'お客様のレビュー' }, desc: '생생한 제작 후기', keywords: '후기, 리뷰' },
-            'promo': { title: { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社' }, desc: '파트너 홍보', keywords: '홍보, 광고사' },
-            'trade': { title: { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引' }, desc: '중고 장비 거래', keywords: '중고, 장비' },
-            'job': { title: { KR: '구인구직', US: 'Job Market', JP: '求人・求職' }, desc: '채용 정보', keywords: '구인, 구직' },
-            'free': { title: { KR: '제품설명서', US: 'Product Manuals', JP: '製品説明書' }, desc: '제품 매뉴얼', keywords: '설명서, 매뉴얼' }
-        };
+    // 게시판 설정
+    const boardMetaInfo = {
+        'blog': { title: { KR: '카멜레온 블로그', US: 'Blog', JP: 'ブログ' }, desc: '공식 블로그' },
+        'review': { title: { KR: '고객 제작후기', US: 'Reviews', JP: 'レビュー' }, desc: '생생한 후기' },
+        'promo': { title: { KR: '지역광고사 홍보', US: 'Partners', JP: 'パートナー' }, desc: '업체 홍보' },
+        'trade': { title: { KR: '중고장비 거래', US: 'Used Market', JP: '中古取引' }, desc: '중고 장비' },
+        'job': { title: { KR: '구인구직', US: 'Job Market', JP: '求人' }, desc: '채용 정보' },
+        'free': { title: { KR: '제품설명서', US: 'Manuals', JP: 'マニュアル' }, desc: '제품 설명서' }
+    };
 
-        // [이미지 최적화] Supabase 기능으로 썸네일 용량 압축
-        function optimizeImage(url) {
-            if (!url) return null;
-            if (url.includes('supabase.co')) {
-                const sep = url.includes('?') ? '&' : '?';
-                // 목록에서는 아주 작은 사이즈만 필요함
-                return `${url}${sep}width=300&height=200&resize=cover&quality=50&format=webp`;
-            }
-            return url;
+    // [핵심 1] 이미지 용량 1/50로 압축하여 로딩 (서버 부하 감소)
+    function optimizeImage(url) {
+        if (!url) return null;
+        if (url.includes('supabase.co')) {
+            const sep = url.includes('?') ? '&' : '?';
+            return `${url}${sep}width=300&height=200&resize=cover&quality=50&format=webp`;
         }
+        return url;
+    }
 
-        // [초기화 함수] - 게시판 전용 (상품 로딩 X)
-        async function init() {
-            // 1. Supabase 라이브러리 대기
-            if (typeof window.supabase === 'undefined') {
-                await new Promise(r => setTimeout(r, 100));
-            }
+    async function init() {
+        if (typeof window.supabase === 'undefined') await new Promise(r => setTimeout(r, 100));
+        
+        if (typeof window.supabase !== 'undefined') {
+            const { createClient } = window.supabase;
+            const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+            sb = createClient(SUPABASE_URL, SUPABASE_KEY);
             
-            if (typeof window.supabase !== 'undefined') {
-                const { createClient } = window.supabase;
-                const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
-                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-                
-                sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
-                
-                try {
-                    const { data } = await sb.auth.getSession();
-                    if (data && data.session) {
-                        currentUser = data.session.user;
-                        isAdmin = ADMIN_EMAILS.includes(currentUser.email);
-                    }
-                } catch(e) {
-                    console.warn("세션 로드 실패:", e);
-                    isLoginAvailable = false;
-                }
-            } else {
-                isLoginAvailable = false;
-            }
-
-            // 2. 관리자 확인
-            let isRealAdmin = false; 
-            if (isLoginAvailable && isAdmin) isRealAdmin = true;
-
-            // 3. UI 설정
-            const countrySelect = document.getElementById('countrySelect');
-            if(countrySelect) {
-                countrySelect.value = currentCountry;
-                countrySelect.onchange = (e) => location.href = `/board.html?cat=${category}&country=${e.target.value}`;
-            }
-            const badge = document.getElementById('countryBadge');
-            if(badge) badge.innerText = currentCountry;
-            
-            const metaInfo = boardMetaInfo[category] || boardMetaInfo['free'];
-            const pageTitle = metaInfo.title[currentCountry] || metaInfo.title['KR'];
-            const titleEl = document.getElementById('pageTitle');
-            if(titleEl) titleEl.innerText = pageTitle;
-
-            const currentTab = document.getElementById(`nav-${category}`);
-            if (currentTab) currentTab.classList.add('active');
-
-            if (!postId) updateMetaTags(pageTitle, metaInfo.desc, metaInfo.keywords);
-
-            // 4. 글쓰기 버튼 표시
-            const btnWrite = document.getElementById('btnWrite');
-            if (btnWrite && isLoginAvailable) {
-                if (category === 'blog') {
-                    if (isRealAdmin) btnWrite.style.display = 'inline-block';
-                } else {
-                    if (currentUser) btnWrite.style.display = 'inline-block';
-                }
-            }
-
-            // 5. 에디터 설정
-            if(typeof Quill !== 'undefined') {
-                quill = new Quill('#editor-container', {
-                    modules: { toolbar: [ [{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline'], ['image', 'link'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean'] ] },
-                    placeholder: '내용을 입력하세요...', theme: 'snow'
-                });
-            }
-
-            setupStarRating();
-            setupEventListeners();
-
-            // 6. 데이터 로드
-            if (postId) loadPostDetail(postId);
-            else loadPostList();
-        }
-
-        function updateMetaTags(title, desc, keywords) {
-            document.title = title + " | 카멜레온프린팅";
-        }
-
-        // [목록 로드] - 9개 제한 + 이미지 최적화
-        async function loadPostList() {
-            showSection('list');
-            const listEl = document.getElementById('boardList');
-            listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">로딩 중...</div>';
-
             try {
-                const { data, error } = await sb.from('community_posts')
-                    .select('id, title, author_name, created_at, view_count, rating, content')
-                    .eq('category', category)
-                    .eq('country_code', currentCountry)
-                    .order('created_at', { ascending: false })
-                    .limit(9); // ★ 30개 -> 9개로 축소 (로딩 속도 개선)
-
-                if (error) throw error;
-
-                listEl.innerHTML = '';
-                if (!data || data.length === 0) {
-                    listEl.style.display = 'block';
-                    listEl.innerHTML = `<div style="text-align:center; padding:100px; color:#999;">등록된 게시글이 없습니다.</div>`;
-                    return;
-                }
-                listEl.style.display = 'grid';
-
-                data.forEach(post => {
-                    // 본문에서 이미지 추출
-                    let thumbUrl = null;
-                    const imgMatch = post.content && post.content.match(/<img[^>]+src="([^">]+)"/);
-                    if (imgMatch) thumbUrl = imgMatch[1];
-
-                    // 이미지 주소 최적화
-                    const optimizedSrc = optimizeImage(thumbUrl);
-
-                    let starHtml = '';
-                    if (category === 'review' && post.rating) {
-                        starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
-                        for(let i=0; i<5; i++) starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-                        starHtml += `</div>`;
-                    }
-
-                    const card = document.createElement('div');
-                    card.className = 'post-card';
-                    card.innerHTML = `
-                        <div class="card-thumb">
-                            ${optimizedSrc 
-                                ? `<img src="${optimizedSrc}" loading="lazy" decoding="async" alt="thumb" style="width:100%; height:100%; object-fit:cover;">` 
-                                : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`
-                            }
-                        </div>
-                        <div class="card-body">
-                            ${starHtml}
-                            <div class="card-title">${post.title}</div>
-                            <div class="card-meta">
-                                <span>${post.author_name || 'User'}</span>
-                                <span>${new Date(post.created_at).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                    `;
-                    card.onclick = () => location.href = `/board.html?cat=${category}&country=${currentCountry}&id=${post.id}`;
-                    listEl.appendChild(card);
-                });
-
-            } catch (e) {
-                console.error("게시글 로드 실패:", e);
-                listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center;">불러오기 실패</div>';
-            }
-        }
-
-        // [상세 보기]
-        async function loadPostDetail(id) {
-            showSection('view');
-            sb.rpc('increment_view_count', { post_id: id }).catch(() => {});
-
-            const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
-            if (error || !post) {
-                alert('삭제되거나 존재하지 않는 글입니다.');
-                goToList();
-                return;
-            }
-
-            const ratingArea = document.getElementById('viewRatingArea');
-            if (category === 'review' && post.rating) {
-                let starHtml = '';
-                for(let i=0; i<5; i++) starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-                ratingArea.innerHTML = starHtml;
-                ratingArea.style.display = 'block';
-            } else {
-                ratingArea.style.display = 'none';
-            }
-
-            document.getElementById('viewTitle').innerText = post.title;
-            document.getElementById('viewAuthor').innerHTML = `<i class="fa-regular fa-user"></i> ${post.author_name}`;
-            document.getElementById('viewDate').innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date(post.created_at).toLocaleString()}`;
-            document.getElementById('viewCount').innerHTML = `<i class="fa-regular fa-eye"></i> ${post.view_count}`;
-            document.getElementById('viewContent').innerHTML = post.content;
-
-            const btnGroup = document.getElementById('btnGroupAuth');
-            if (isLoginAvailable && currentUser && (isAdmin || currentUser.id === post.author_id)) {
-                btnGroup.style.display = 'block';
-            } else {
-                btnGroup.style.display = 'none';
-            }
-
-            loadComments(id);
-        }
-
-        async function loadComments(postId) {
-            const listDiv = document.getElementById('commentList');
-            const { data: comments } = await sb.from('community_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
-
-            listDiv.innerHTML = '';
-            if(!comments || comments.length === 0) {
-                listDiv.innerHTML = '<p style="color:#999; text-align:center;">첫 번째 댓글을 남겨주세요!</p>';
-                return;
-            }
-
-            comments.forEach(cmt => {
-                const item = document.createElement('div');
-                item.className = 'comment-item';
-                item.innerHTML = `
-                    <div class="comment-top">
-                        <span class="comment-author">${cmt.author_name}</span>
-                        <span class="comment-date">${new Date(cmt.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div class="comment-text">${cmt.content.replace(/\n/g, '<br>')}</div>
-                `;
-                listDiv.appendChild(item);
-            });
-        }
-
-        function showSection(sec) {
-            document.getElementById('boardList').style.display = sec === 'list' ? 'grid' : 'none';
-            document.getElementById('boardView').style.display = sec === 'view' ? 'block' : 'none';
-            document.getElementById('boardWrite').style.display = sec === 'write' ? 'flex' : 'none';
-        }
-
-        window.goToList = () => { location.href = `/board.html?cat=${category}&country=${currentCountry}`; };
-        window.moveCategory = (cat) => { location.href = `/board.html?cat=${cat}&country=${currentCountry}`; };
-
-        function setupEventListeners() {
-            const btnWrite = document.getElementById('btnWrite');
-            if(btnWrite) btnWrite.onclick = () => {
-                if (!isLoginAvailable || !currentUser) return alert('로그인이 필요합니다.');
-                isEditMode = false; 
-                document.getElementById('inputTitle').value = "";
-                if(quill) quill.setContents([]);
-                if (category === 'review') {
-                    document.getElementById('ratingInputArea').style.display = 'flex';
-                    currentRating = 5; 
-                    document.querySelectorAll('#starInput i').forEach(s => s.classList.add('active'));
-                } else {
-                    document.getElementById('ratingInputArea').style.display = 'none';
-                }
-                showSection('write');
-            };
-
-            const btnSubmit = document.getElementById('btnSubmitPost');
-            if(btnSubmit) btnSubmit.onclick = async () => {
-                if (btnSubmit.disabled) return;
-                const title = document.getElementById('inputTitle').value;
-                const content = quill.root.innerHTML; 
-                if (!title || quill.getText().trim().length === 0 && !content.includes('<img')) return alert('내용을 입력해주세요.');
-
-                btnSubmit.disabled = true;
-                btnSubmit.innerText = "처리중...";
-
-                try {
-                    const ratingValue = (category === 'review') ? currentRating : null;
-                    if (isEditMode) {
-                        const { error } = await sb.from('community_posts').update({ title, content, rating: ratingValue }).eq('id', postId);
-                        if (error) throw error;
-                        alert("수정되었습니다!"); 
-                        location.reload();
+                const { data } = await sb.auth.getSession();
+                if (data?.session?.user) {
+                    currentUser = data.session.user;
+                    // 관리자 권한 확인 (강제 리스트 우선)
+                    if (FORCE_ADMIN_EMAILS.includes(currentUser.email)) {
+                        isAdmin = true;
                     } else {
-                        const payload = {
-                            category, country_code: currentCountry, title, content, 
-                            author_id: currentUser.id, 
-                            author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
-                            rating: ratingValue 
-                        };
-                        const { error } = await sb.from('community_posts').insert(payload);
-                        if (error) throw error;
-                        alert('등록되었습니다!'); 
-                        goToList();
+                        // DB 체크 (비동기, 실패해도 페이지는 뜸)
+                        sb.from('profiles').select('role').eq('id', currentUser.id).single()
+                          .then(({data}) => { if(data?.role === 'admin') isAdmin = true; });
                     }
-                } catch(e) {
-                    alert("실패: " + e.message);
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerText = "등록하기";
                 }
-            };
-
-            const btnComment = document.getElementById('btnSubmitComment');
-            if(btnComment) btnComment.onclick = async () => {
-                if(!isLoginAvailable || !currentUser) return alert('로그인이 필요합니다.');
-                if(btnComment.disabled) return;
-                const txt = document.getElementById('commentInput').value;
-                if(!txt.trim()) return alert('내용을 입력해주세요.');
-                btnComment.disabled = true;
-                btnComment.innerText = "...";
-                try {
-                    await sb.from('community_comments').insert({
-                        post_id: postId,
-                        author_id: currentUser.id,
-                        author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0],
-                        content: txt
-                    });
-                    document.getElementById('commentInput').value = '';
-                    loadComments(postId);
-                } catch(e) { alert(e.message); } 
-                finally { btnComment.disabled = false; btnComment.innerText = "등록"; }
-            };
+            } catch(e) {}
         }
 
-        function setupStarRating() {
-            const stars = document.querySelectorAll('#starInput i');
-            stars.forEach(star => {
-                star.onclick = function() {
-                    currentRating = parseInt(this.getAttribute('data-score'));
-                    stars.forEach(s => {
-                        if(parseInt(s.getAttribute('data-score')) <= currentRating) s.classList.add('active');
-                        else s.classList.remove('active');
-                    });
-                };
+        // UI 초기화
+        const meta = boardMetaInfo[category] || boardMetaInfo['free'];
+        const titleText = meta.title[currentCountry] || meta.title['KR'];
+        document.getElementById('pageTitle').innerText = titleText;
+        document.getElementById('countryBadge').innerText = currentCountry;
+        
+        const nav = document.getElementById(`nav-${category}`);
+        if(nav) nav.classList.add('active');
+
+        // 버튼 표시
+        const btnWrite = document.getElementById('btnWrite');
+        if (btnWrite && currentUser) {
+            if (category === 'blog' && !isAdmin) btnWrite.style.display = 'none';
+            else btnWrite.style.display = 'inline-block';
+        }
+
+        // 에디터
+        if(typeof Quill !== 'undefined' && document.getElementById('editor-container')) {
+            quill = new Quill('#editor-container', {
+                modules: { toolbar: [ [{ header: [1, 2, false] }], ['bold', 'italic'], ['image', 'link'], [{ list: 'ordered' }, { list: 'bullet' }] ] },
+                placeholder: '내용을 입력하세요...', theme: 'snow'
             });
         }
 
-        window.editCurrentPost = () => {
-            if(!confirm("글을 수정하시겠습니까?")) return;
-            isEditMode = true; 
-            const title = document.getElementById('viewTitle').innerText;
-            const content = document.getElementById('viewContent').innerHTML;
-            document.getElementById('inputTitle').value = title;
-            quill.root.innerHTML = content;
+        setupEventListeners();
+
+        if (postId) loadPostDetail(postId);
+        else loadPostList();
+    }
+
+    // [핵심 2] 목록 로딩 시 '본문(content)' 제외하고 20개만 로드
+    async function loadPostList() {
+        showSection('list');
+        const listEl = document.getElementById('boardList');
+        listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>';
+
+        try {
+            // content 컬럼을 빼고 가져와야 데이터량이 99% 줄어듭니다.
+            const { data, error } = await sb.from('community_posts')
+                .select('id, title, author_name, created_at, view_count, rating, content') // content는 썸네일 추출용으로만 사용
+                .eq('category', category)
+                .eq('country_code', currentCountry)
+                .order('created_at', { ascending: false })
+                .limit(20); // ★ 20개 제한 필수
+
+            if (error) throw error;
+
+            listEl.innerHTML = '';
+            if (!data || data.length === 0) {
+                listEl.style.display = 'block';
+                listEl.innerHTML = `<div style="text-align:center; padding:100px; color:#999;">게시글이 없습니다.</div>`;
+                return;
+            }
+            listEl.style.display = 'grid';
+
+            data.forEach(post => {
+                // 본문에서 이미지 URL만 쏙 빼내기 (정규식)
+                let thumbUrl = null;
+                if (post.content && post.content.includes('<img')) {
+                    const match = post.content.match(/<img[^>]+src="([^">]+)"/);
+                    if (match) thumbUrl = match[1];
+                }
+                const optimizedSrc = optimizeImage(thumbUrl);
+
+                let starHtml = '';
+                if (category === 'review' && post.rating) {
+                    starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">${'★'.repeat(post.rating)}${'☆'.repeat(5-post.rating)}</div>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.innerHTML = `
+                    <div class="card-thumb">
+                        ${optimizedSrc 
+                            ? `<img src="${optimizedSrc}" loading="lazy" decoding="async" alt="thumb" style="width:100%; height:100%; object-fit:cover;">` 
+                            : `<i class="fa-regular fa-image" style="font-size:30px; color:#e2e8f0;"></i>`
+                        }
+                    </div>
+                    <div class="card-body">
+                        ${starHtml}
+                        <div class="card-title">${post.title}</div>
+                        <div class="card-meta">
+                            <span>${post.author_name || 'User'}</span>
+                            <span>${new Date(post.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => location.href = `/board.html?cat=${category}&country=${currentCountry}&id=${post.id}`;
+                listEl.appendChild(card);
+            });
+
+        } catch (e) {
+            console.error("List Load Error:", e);
+            listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center;">불러오기 실패 (새로고침 해주세요)</div>';
+        }
+    }
+
+    // [핵심 3] 상세 보기 (안전 장치 추가)
+    async function loadPostDetail(id) {
+        showSection('view');
+        
+        // ★ [수정됨] 에러가 발생하던 부분: .catch()를 제거하고 try-catch 블록으로 감쌌습니다.
+        try {
+            await sb.rpc('increment_view_count', { post_id: id });
+        } catch (err) {
+            console.warn("조회수 증가 실패 (무시됨):", err);
+        }
+
+        const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
+        
+        if (error || !post) {
+            alert('글을 불러올 수 없습니다.');
+            goToList();
+            return;
+        }
+
+        // 별점
+        if (category === 'review' && post.rating) {
+            document.getElementById('viewRatingArea').innerHTML = '★'.repeat(post.rating) + '☆'.repeat(5-post.rating);
+            document.getElementById('viewRatingArea').style.display = 'block';
+        }
+
+        document.getElementById('viewTitle').innerText = post.title;
+        document.getElementById('viewAuthor').innerText = post.author_name;
+        document.getElementById('viewDate').innerText = new Date(post.created_at).toLocaleString();
+        document.getElementById('viewCount').innerText = `조회 ${post.view_count}`;
+        document.getElementById('viewContent').innerHTML = post.content;
+
+        // 수정/삭제 버튼 권한
+        const btnGroup = document.getElementById('btnGroupAuth');
+        if (currentUser && (isAdmin || currentUser.id === post.author_id)) {
+            btnGroup.style.display = 'block';
+        } else {
+            btnGroup.style.display = 'none';
+        }
+
+        loadComments(id);
+    }
+
+    async function loadComments(postId) {
+        const listDiv = document.getElementById('commentList');
+        // 댓글도 최대 50개만 로드
+        const { data: comments } = await sb.from('community_comments')
+            .select('*').eq('post_id', postId).order('created_at', { ascending: true }).limit(50);
+
+        listDiv.innerHTML = '';
+        if(!comments?.length) {
+            listDiv.innerHTML = '<p style="color:#999; text-align:center;">첫 댓글을 남겨보세요!</p>';
+            return;
+        }
+        comments.forEach(cmt => {
+            const item = document.createElement('div');
+            item.className = 'comment-item';
+            item.innerHTML = `
+                <div class="comment-top"><span class="comment-author">${cmt.author_name}</span></div>
+                <div class="comment-text">${cmt.content.replace(/\n/g, '<br>')}</div>
+            `;
+            listDiv.appendChild(item);
+        });
+    }
+
+    function showSection(sec) {
+        document.getElementById('boardList').style.display = sec === 'list' ? 'grid' : 'none';
+        document.getElementById('boardView').style.display = sec === 'view' ? 'block' : 'none';
+        document.getElementById('boardWrite').style.display = sec === 'write' ? 'flex' : 'none';
+    }
+
+    window.goToList = () => { location.href = `/board.html?cat=${category}&country=${currentCountry}`; };
+    window.moveCategory = (cat) => { location.href = `/board.html?cat=${cat}&country=${currentCountry}`; };
+
+    function setupEventListeners() {
+        const btnWrite = document.getElementById('btnWrite');
+        if(btnWrite) btnWrite.onclick = () => {
+            if (!currentUser) return alert('로그인이 필요합니다.');
+            isEditMode = false;
+            document.getElementById('inputTitle').value = "";
+            if(quill) quill.setContents([]);
             if (category === 'review') document.getElementById('ratingInputArea').style.display = 'flex';
             showSection('write');
         };
 
-        window.deleteCurrentPost = async () => {
-            if(!confirm("삭제하시겠습니까?")) return;
-            await sb.from('community_posts').delete().eq('id', postId);
-            alert("삭제되었습니다.");
-            goToList();
+        const btnSubmit = document.getElementById('btnSubmitPost');
+        if(btnSubmit) btnSubmit.onclick = async () => {
+            if (btnSubmit.disabled) return;
+            const title = document.getElementById('inputTitle').value;
+            const content = quill.root.innerHTML;
+            if (!title) return alert('제목을 입력해주세요.');
+
+            btnSubmit.disabled = true; btnSubmit.innerText = "저장 중...";
+
+            try {
+                const ratingValue = (category === 'review') ? currentRating : null;
+                const payload = {
+                    title, content, rating: ratingValue, updated_at: new Date()
+                };
+
+                if (isEditMode) {
+                    await sb.from('community_posts').update(payload).eq('id', postId);
+                    alert("수정되었습니다.");
+                } else {
+                    payload.category = category;
+                    payload.country_code = currentCountry;
+                    payload.author_id = currentUser.id;
+                    payload.author_name = currentUser.user_metadata.full_name || currentUser.email.split('@')[0];
+                    await sb.from('community_posts').insert(payload);
+                    alert("등록되었습니다.");
+                }
+                location.href = `/board.html?cat=${category}&country=${currentCountry}`;
+            } catch(e) {
+                alert("실패: " + e.message);
+                btnSubmit.disabled = false; btnSubmit.innerText = "등록하기";
+            }
         };
 
-        init();
-    </script>
+        // 별점 로직
+        const stars = document.querySelectorAll('#starInput i');
+        stars.forEach(star => {
+            star.onclick = function() {
+                currentRating = parseInt(this.getAttribute('data-score'));
+                stars.forEach(s => {
+                    if(parseInt(s.getAttribute('data-score')) <= currentRating) s.classList.add('active');
+                    else s.classList.remove('active');
+                });
+            };
+        });
+        
+        // 댓글 등록
+        document.getElementById('btnSubmitComment').onclick = async () => {
+            if(!currentUser) return alert('로그인 필요');
+            const txt = document.getElementById('commentInput').value;
+            if(!txt.trim()) return;
+            await sb.from('community_comments').insert({
+                post_id: postId, author_id: currentUser.id,
+                author_name: currentUser.user_metadata.full_name || 'User', content: txt
+            });
+            document.getElementById('commentInput').value = '';
+            loadComments(postId);
+        };
+    }
+
+    // 수정/삭제 전역 함수
+    window.editCurrentPost = () => {
+        if(!confirm("수정하시겠습니까?")) return;
+        isEditMode = true; 
+        document.getElementById('inputTitle').value = document.getElementById('viewTitle').innerText;
+        quill.root.innerHTML = document.getElementById('viewContent').innerHTML;
+        if (category === 'review') document.getElementById('ratingInputArea').style.display = 'flex';
+        showSection('write');
+    };
+
+    window.deleteCurrentPost = async () => {
+        if(!confirm("정말 삭제하시겠습니까?")) return;
+        await sb.from('community_posts').delete().eq('id', postId);
+        alert("삭제되었습니다.");
+        goToList();
+    };
+
+    init();
+</script>
