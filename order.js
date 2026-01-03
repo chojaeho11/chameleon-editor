@@ -1032,19 +1032,21 @@ async function processDepositPayment() {
     }
 }
 
-// [카드 결제 로직]
+// [수정된 카드 결제 함수]
 function processCardPayment() {
-    const country = SITE_CONFIG.COUNTRY;
-    const pgConfig = SITE_CONFIG.PG_CONFIG[country];
-    if (!pgConfig) return alert("PG 설정 오류: 해당 국가의 결제 설정이 없습니다.");
-
+    // 주문명 설정
     const orderName = `Chameleon Order #${window.currentDbId}`;
-    const customerName = document.getElementById("orderName").value;
+    // 주문자명 가져오기
+    const nameInput = document.getElementById("orderName");
+    const customerName = nameInput ? nameInput.value : "고객";
 
-    if (pgConfig.provider === 'toss') {
-        if (!window.TossPayments) return alert("Toss Payments SDK가 로드되지 않았습니다.");
+    // 1. 한국 (토스 결제)
+    if (SITE_CONFIG.pgProvider === 'toss') {
+        if (!window.TossPayments) return alert("토스 결제 모듈을 불러오지 못했습니다.");
         
-        const tossPayments = TossPayments(pgConfig.clientKey);
+        // site-config.js에 있는 토스 키 사용
+        const tossPayments = TossPayments(SITE_CONFIG.tossClientKey);
+
         tossPayments.requestPayment("카드", { 
             amount: finalPaymentAmount, 
             orderId: "ORD-" + new Date().getTime() + "-" + window.currentDbId, 
@@ -1056,8 +1058,11 @@ function processCardPayment() {
             if (error.code !== "USER_CANCEL") alert("결제 오류: " + error.message); 
         });
 
-    } else if (pgConfig.provider === 'stripe') {
-        initiateStripeCheckout(pgConfig.publishableKey, finalPaymentAmount, country, window.currentDbId);
+    } 
+    // 2. 해외 (스트라이프 결제)
+    else if (SITE_CONFIG.pgProvider === 'stripe') {
+        // 스트라이프 키 사용
+        initiateStripeCheckout(SITE_CONFIG.stripePublicKey, finalPaymentAmount, SITE_CONFIG.code, window.currentDbId);
     }
 }
 
