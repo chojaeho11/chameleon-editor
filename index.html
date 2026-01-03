@@ -210,13 +210,13 @@
 </div>
 
 <script type="module">
-    // [수정됨] initConfig를 중괄호 안에 쉼표(,)로 추가했습니다.
+    // [수정 1] initConfig를 여기서 불러와야 실행됩니다.
     import { sb, initConfig } from './config.js';
     import { loadTranslations } from './translation.js';
 
     async function startApp() {
         try {
-            // 1. 설정 로드 (국가 확인)
+            // 1. 설정 로드
             if (typeof initConfig === 'function') {
                 await initConfig(); 
             }
@@ -226,13 +226,14 @@
                 await loadTranslations();
             }
         } catch (e) {
-            console.error("초기화 중 오류 발생:", e);
+            console.error("앱 시작 오류:", e);
         }
     }
 
-    // 앱 실행
+    // [수정 2] 함수를 반드시 실행해야 합니다!
     startApp();
 
+    // 기존 변수들
     let currentQrManager = '';
     let currentQrScore = 0;
     
