@@ -210,29 +210,29 @@
 </div>
 
 <script type="module">
-    // [수정 1] initConfig를 {} 안에 추가해야 합니다.
+    // [수정됨] initConfig를 중괄호 안에 쉼표(,)로 추가했습니다.
     import { sb, initConfig } from './config.js';
     import { loadTranslations } from './translation.js';
 
-    // 페이지 로드 시 실행 순서
     async function startApp() {
         try {
             // 1. 설정 로드 (국가 확인)
-            await initConfig(); 
+            if (typeof initConfig === 'function') {
+                await initConfig(); 
+            }
             
             // 2. 번역 적용
             if (typeof loadTranslations === 'function') {
                 await loadTranslations();
             }
         } catch (e) {
-            console.error("초기화 오류:", e);
+            console.error("초기화 중 오류 발생:", e);
         }
     }
 
-    // [수정 2] 함수를 실행합니다.
+    // 앱 실행
     startApp();
 
-    // 여기서부터 기존 변수들
     let currentQrManager = '';
     let currentQrScore = 0;
     
@@ -2766,8 +2766,8 @@ if (loadId) {
     // ============================================================
     window.addEventListener('load', async () => {
         // 1. 설정 로딩 대기 (config.js의 작업이 끝날 때까지 기다림)
-        if (window.initConfig) await window.initConfig(); 
-        else if (typeof initConfig === 'function') await initConfig();
+        //if (window.initConfig) await window.initConfig(); 
+        //else if (typeof initConfig === 'function') await initConfig();
 
         // 2. 카테고리 메뉴 렌더링
         if (typeof renderQuickMenu === 'function') renderQuickMenu();
