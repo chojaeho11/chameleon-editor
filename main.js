@@ -1,4 +1,4 @@
-// main.js
+// main.js - Complete Integrated Version
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js"; 
 import { initCanvas, canvas } from "./canvas-core.js";
@@ -55,7 +55,11 @@ window.addEventListener("DOMContentLoaded", async () => {
         initOutlineTool();
         initFileUploadListeners();
 
-        await checkPartnerStatus();
+        // 3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
+        if (currentUser) {
+            await checkPartnerStatus();
+            await initContributorSystem(); // [신규] 기여자 시스템 초기화
+        }
 
         // 폰트 미리 로드
         if(window.preloadLanguageFont) await window.preloadLanguageFont();
@@ -374,31 +378,24 @@ function initMobileTextEditor() {
 }
 
 // ============================================================
-// [최종] 파트너스 시스템 (음성안내 + 10% 수수료 + 파일명)
-// ============================================================
-// ============================================================
-// ★ [추가] 파트너스 관리자 접속 버튼 기능
+// [파트너스 시스템] (기존 코드 유지)
 // ============================================================
 window.openPartnerConsole = function() {
     const modal = document.getElementById('partnerConsoleModal');
     if (modal) {
         modal.style.display = 'flex';
-        // 모달을 열 때 '실시간 주문접수' 탭 데이터를 자동으로 불러옵니다.
         if (window.switchPartnerTab) window.switchPartnerTab('pool');
     }
 };
 let lastOrderCount = -1;
 
-// 1. 파트너 권한 확인 및 버튼 표시 (수정됨: 권한별 버튼 분기 처리)
 async function checkPartnerStatus() {
     const btnConsole = document.getElementById('btnPartnerConsole');
     const btnApply = document.getElementById('btnPartnerApply');
 
-    // 1. 비로그인 상태 체크
     const { data: { user } } = await sb.auth.getUser();
     
     if (!user) {
-        // 비로그인이면 콘솔 버튼 숨기고, 신청 버튼만 보여줌 (로그인 유도용)
         if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
         if (btnApply) {
             btnApply.style.display = 'inline-flex';
@@ -407,16 +404,12 @@ async function checkPartnerStatus() {
         return;
     }
 
-    // 2. 로그인 상태면 DB에서 등급 조회
     const { data } = await sb.from('profiles').select('role, region').eq('id', user.id).single();
     
     if (data && (data.role === 'franchise' || data.role === 'admin')) {
-        // [가맹점/관리자] -> 콘솔 버튼 보임, 신청 버튼 숨김
-        console.log("✅ 가맹점/관리자 접속 확인");
         if (btnConsole) btnConsole.style.setProperty('display', 'inline-flex', 'important');
         if (btnApply) btnApply.style.display = 'none';
         
-        // 지역 설정 및 알림 시작
         const badge = document.getElementById('partnerRegionBadge');
         if(badge) badge.innerText = data.region ? `📍 ${data.region} 지역` : '📍 지역 전체';
         window.currentPartnerRegion = data.region;
@@ -424,18 +417,14 @@ async function checkPartnerStatus() {
         setInterval(() => loadPartnerOrders('pool', true), 30000);
     } 
     else {
-        // [일반 회원] -> 콘솔 버튼 숨김, 신청 버튼 보임
-        console.log("ℹ️ 일반 회원 접속");
         if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
         if (btnApply) {
             btnApply.style.display = 'inline-flex';
-            btnApply.onclick = applyForPartner; // 신청 함수 연결
+            btnApply.onclick = applyForPartner; 
         }
     }
 }
 
-// [신규] 가맹점 신청 함수
-// [수정됨] 가맹점 신청 함수 (DB에 진짜로 저장하는 코드)
 async function applyForPartner() {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return alert("로그인이 필요합니다.");
@@ -449,14 +438,13 @@ async function applyForPartner() {
 
     if(!confirm(`[신청 정보 확인]\n상호명: ${name}\n연락처: ${phone}\n지역: ${region}\n\n제출하시겠습니까?`)) return;
 
-    // ★ [핵심] 실제 DB에 저장하는 코드
     try {
         const { error } = await sb.from('partner_applications').insert({
             user_id: user.id,
             company_name: name,
             contact_phone: phone,
             region: region,
-            status: 'pending' // '대기중' 상태로 저장
+            status: 'pending'
         });
 
         if (error) throw error;
@@ -468,7 +456,6 @@ async function applyForPartner() {
     }
 }
 
-// 3. 탭 전환
 window.switchPartnerTab = function(tabName) {
     document.querySelectorAll('.partner-tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.nav-menu .nav-item').forEach(el => {
@@ -481,7 +468,6 @@ window.switchPartnerTab = function(tabName) {
     if(tabName === 'settlement') loadSettlementInfo();
 };
 
-// 4. 주문 목록 불러오기 (음성 알림 & 파일명 표시)
 window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     const listId = mode === 'pool' ? 'orderPoolList' : 'myOrderList';
     const container = document.getElementById(listId);
@@ -496,7 +482,6 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     let query = sb.from('orders').select('*').order('created_at', {ascending: false});
 
     if (mode === 'pool') {
-        // [수정] .is('franchise_id', null) 제거 -> 이미 접수된 건도 불러와서 UI에서 잠금 처리
         query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
         
         if (window.currentPartnerRegion && window.currentPartnerRegion !== '전체') {
@@ -509,11 +494,9 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     const { data: orders, error } = await query;
     if (error) return;
 
-    // ★ [음성 알림] 주문이 늘어났으면 목소리로 안내
     const currentCount = orders ? orders.length : 0;
 
     if (mode === 'pool') {
-        // ★ 핵심: lastOrderCount가 -1(첫 로딩)이 아닐 때만 소리 재생
         if (lastOrderCount !== -1 && currentCount > lastOrderCount) {
             if ('speechSynthesis' in window) {
                 const msg = new SpeechSynthesisUtterance("카멜레온 프린팅, 새로운 주문이 들어왔습니다.");
@@ -524,7 +507,6 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
                 try { document.getElementById('orderAlertSound')?.play(); } catch(e){}
             }
         }
-        // 개수 업데이트
         lastOrderCount = currentCount;
     }
 
@@ -546,7 +528,6 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
             if(items && items.length > 0) itemSummary = items.map(i => `${i.productName || i.product?.name} (${i.qty}개)`).join(', ');
         } catch(e){}
 
-        // 파일명 표시
         let fileBtns = '';
         if(o.files && o.files.length > 0) {
             o.files.forEach((f) => {
@@ -568,24 +549,18 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
         
         if (mode === 'pool') {
             const timeDiff = Math.floor((new Date() - new Date(o.created_at)) / (1000 * 60));
-            
-            // ★ [핵심] 이미 접수된 주문인지 확인 (본사 또는 타 파트너)
             const isTaken = (o.franchise_id !== null);
             
-            // 스타일 및 버튼 설정 분기
             let cardStyle = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:15px;";
             let btnHtml = `<button onclick="window.dibsOrder('${o.id}')" style="width:100%; margin-top:10px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚡ 접수하기</button>`;
             let badgeHtml = `<span style="background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">NEW ${timeDiff}분전</span>`;
 
-            // 이미 접수된 건이면 (본사 제작 포함)
             if (isTaken) {
-                // 내 주문이 아닌 경우 -> 회색 비활성화 (Lock)
                 if (o.franchise_id !== user.id) {
                     cardStyle = "background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:20px; margin-bottom:15px; opacity:0.7;";
                     btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#94a3b8; color:white; border:none; border-radius:8px; font-weight:bold; cursor:not-allowed;">🚫 본사/타점 제작중</button>`;
                     badgeHtml = `<span style="background:#64748b; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔒 접수완료</span>`;
                 } else {
-                    // 내가 접수한 건이 풀 목록에 보일 경우
                     btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#10b981; color:white; border:none; border-radius:8px; font-weight:bold;">✅ 내가 접수함</button>`;
                 }
             }
@@ -631,7 +606,6 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     });
 };
 
-// 5. 찜하기
 window.dibsOrder = async function(orderId) {
     if(!confirm("주문을 접수하시겠습니까?")) return;
     const { data: { user } } = await sb.auth.getUser();
@@ -644,15 +618,12 @@ window.dibsOrder = async function(orderId) {
     window.switchPartnerTab('my');
 };
 
-// 6. 상태 변경
 window.updateOrderStatus = async function(orderId, status) {
     if(!confirm(`상태를 '${status}'로 변경하시겠습니까?`)) return;
     await sb.from('orders').update({ status: status }).eq('id', orderId);
     window.loadPartnerOrders('my');
 };
 
-// 7. 정산 정보 로드 (★ 90% 지급 로직)
-// 7. 정산 정보 로드 (입금완료 건 제외 로직 추가)
 window.loadSettlementInfo = async function() {
     const tbody = document.getElementById('settlementListBody');
     if(!tbody) return;
@@ -661,24 +632,21 @@ window.loadSettlementInfo = async function() {
     const { data: { user } } = await sb.auth.getUser();
     if(!user) return;
 
-    // [1] 출금 가능 금액 (구매확정, 아직 신청 안 함)
     const { data: orders } = await sb.from('orders')
         .select('*')
         .eq('franchise_id', user.id)
         .eq('status', '구매확정')
-        .neq('settlement_status', 'withdrawn'); // 이미 신청한 건 제외
+        .neq('settlement_status', 'withdrawn');
 
-    // [2] 출금 대기중 금액 (신청함, 아직 관리자 승인 안 함)
     const { data: pendings } = await sb.from('withdrawal_requests')
         .select('amount')
         .eq('user_id', user.id)
-        .eq('status', 'pending'); // ★ 'approved'(완료) 상태는 제외됨!
+        .eq('status', 'pending');
 
     let availableTotal = 0;
     let pendingTotal = 0;
     let html = '';
 
-    // 대기 금액 합산
     if (pendings) {
         pendings.forEach(p => pendingTotal += (p.amount || 0));
     }
@@ -688,7 +656,6 @@ window.loadSettlementInfo = async function() {
     } else {
         orders.forEach(o => {
             const amount = o.total_amount || 0;
-            // 10% 수수료 공제 (90% 지급)
             const profit = Math.floor(amount * 0.9); 
             availableTotal += profit;
 
@@ -704,7 +671,6 @@ window.loadSettlementInfo = async function() {
         tbody.innerHTML = html;
     }
 
-    // 화면 업데이트
     document.getElementById('partnerAvailableBalance').innerText = availableTotal.toLocaleString() + '원';
     
     const pendingEl = document.getElementById('partnerPendingBalance');
@@ -713,7 +679,6 @@ window.loadSettlementInfo = async function() {
     window.currentWithdrawableAmount = availableTotal;
 };
 
-// 8. 출금 모달 열기
 window.requestPartnerWithdrawal = function() {
     const amt = window.currentWithdrawableAmount || 0;
     if (amt < 10000) return alert("최소 10,000원 이상부터 출금 가능합니다.");
@@ -721,7 +686,6 @@ window.requestPartnerWithdrawal = function() {
     document.getElementById('withdrawModal').style.display = 'flex';
 };
 
-// 9. 출금 신청 제출 (에러 해결됨)
 window.submitWithdrawal = async function() {
     const amount = window.currentWithdrawableAmount;
     const bankInfo = document.getElementById('wdBankInfo').value;
@@ -738,7 +702,6 @@ window.submitWithdrawal = async function() {
     try {
         const { data: { user } } = await sb.auth.getUser();
         
-        // 파일 업로드
         const file = fileInput.files[0];
         const ext = file.name.split('.').pop();
         const path = `tax_invoices/${user.id}_${Date.now()}.${ext}`;
@@ -748,11 +711,10 @@ window.submitWithdrawal = async function() {
         
         const { data: { publicUrl } } = sb.storage.from('orders').getPublicUrl(path);
 
-        // ★ [수정] bank_name에 계좌정보 통합 저장
         const { error: dbErr } = await sb.from('withdrawal_requests').insert({
             user_id: user.id,
             amount: amount,
-            bank_name: bankInfo, // 여기에 계좌/은행/예금주 다 넣음
+            bank_name: bankInfo,
             status: 'pending',
             tax_invoice_url: publicUrl
         });
@@ -774,11 +736,10 @@ window.submitWithdrawal = async function() {
         btn.innerText = "신청하기"; btn.disabled = false;
     }
 };
-// ============================================================
-// [고객용] 주문 조회 & 리뷰 시스템 (별점 포함)
-// ============================================================
 
-// 1. 내 주문 목록 열기
+// ============================================================
+// [고객용] 주문 조회 & 리뷰
+// ============================================================
 window.openMyOrderList = async function() {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return alert("로그인이 필요한 서비스입니다.");
@@ -808,11 +769,9 @@ window.openMyOrderList = async function() {
             }
         } catch(e){}
 
-        // 버튼 상태 로직
         let statusBadge = `<span class="badge" style="background:#f1f5f9; color:#64748b;">${o.status}</span>`;
         let actionBtn = '';
 
-        // 고객이 '배송중' 또는 '제작준비(테스트용)' 일 때 수령확인 가능
         if (o.status === '배송중' || o.status === '제작준비') { 
             statusBadge = `<span class="badge" style="background:#e0e7ff; color:#4338ca;">🚚 ${o.status}</span>`;
             actionBtn = `
@@ -848,7 +807,6 @@ window.openMyOrderList = async function() {
     });
 };
 
-// 2. 리뷰 모달 열기
 window.openReviewModal = function(orderId) {
     document.getElementById('targetReviewOrderId').value = orderId;
     document.getElementById('reviewCommentInput').value = '';
@@ -856,7 +814,6 @@ window.openReviewModal = function(orderId) {
     document.getElementById('reviewWriteModal').style.display = 'flex';
 };
 
-// 3. 별점 UI
 window.setReviewRating = function(score) {
     document.getElementById('targetReviewScore').value = score;
     document.getElementById('ratingText').innerText = score + "점";
@@ -867,7 +824,6 @@ window.setReviewRating = function(score) {
     }
 };
 
-// 4. 리뷰 제출 (구매확정)
 window.submitOrderReview = async function() {
     const orderId = document.getElementById('targetReviewOrderId').value;
     const score = parseInt(document.getElementById('targetReviewScore').value);
@@ -889,7 +845,265 @@ window.submitOrderReview = async function() {
         document.getElementById('reviewWriteModal').style.display = 'none';
         window.openMyOrderList();
         
-        // 가맹점 화면 갱신용 (선택)
         if(typeof loadSettlementInfo === 'function') loadSettlementInfo();
     }
+};
+
+// ============================================================
+// [기여자 시스템] 통합 관리 스크립트 (Contributor System)
+// ============================================================
+
+// 전역 변수
+let currentUploadType = 'png'; 
+
+const REWARD_RATES = {
+    'png': 100,
+    'svg': 200,
+    'logo': 150,
+    'template': 100,
+    'usage_share': 0.1 
+};
+
+const TIER_MULTIPLIERS = {
+    'regular': 1,
+    'excellent': 2,
+    'hero': 4
+};
+
+let currentUserTier = 'regular';
+let currentMultiplier = 1;
+
+// 1. 초기화
+window.initContributorSystem = async function() {
+    if (!window.currentUser) return; 
+
+    const { data: profile } = await sb.from('profiles')
+        .select('contributor_tier, mileage, deposit') 
+        .eq('id', window.currentUser.id)
+        .single();
+
+    if (profile) {
+        currentUserTier = profile.contributor_tier || 'regular';
+        currentMultiplier = TIER_MULTIPLIERS[currentUserTier] || 1;
+        updateContributorUI(profile.deposit || 0);
+    }
+};
+
+function updateContributorUI(balance) {
+    const badge = document.getElementById('myTierBadge');
+    const balEl = document.getElementById('contributorBalance');
+    const bonusEls = document.querySelectorAll('.tier-bonus');
+
+    let tierName = '일반 기여자';
+    let badgeClass = 'contributor-badge';
+    
+    if (currentUserTier === 'excellent') {
+        tierName = '🏆 우수 기여자 (x2)';
+        badgeClass += ' badge-excellent';
+    } else if (currentUserTier === 'hero') {
+        tierName = '👑 영웅 기여자 (x4)';
+        badgeClass += ' badge-hero';
+    }
+    
+    if(badge) {
+        badge.className = badgeClass;
+        badge.innerText = tierName;
+    }
+
+    if(balEl) balEl.innerText = balance.toLocaleString() + '원';
+
+    if (currentMultiplier > 1) {
+        bonusEls.forEach(el => el.innerText = ` (x${currentMultiplier})`);
+    }
+}
+
+// 2. 태그 자동 완성 (파일명 기반)
+window.autoFillTags = function(input) {
+    if (input.files && input.files.length > 0) {
+        const file = input.files[0];
+        const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+        const tagInput = document.getElementById('cUploadTags');
+        if(tagInput && !tagInput.value) { 
+            tagInput.value = name;
+        }
+    }
+};
+
+// 3. 업로드 모달 열기
+window.handleContributorUpload = function(type) {
+    if (!window.currentUser) {
+        alert("로그인이 필요한 서비스입니다.");
+        document.getElementById('loginModal').style.display = 'flex';
+        return;
+    }
+
+    currentUploadType = type; 
+    const modal = document.getElementById('contributorUploadModal');
+    const title = document.getElementById('cUploadTitle');
+    const svgArea = document.getElementById('cUploadSvgArea');
+    const simpleArea = document.getElementById('cUploadSimpleArea');
+    
+    document.getElementById('cUploadTags').value = '';
+    document.getElementById('cFileThumb').value = '';
+    document.getElementById('cFileSvg').value = '';
+    document.getElementById('cFileSimple').value = '';
+
+    if (type === 'svg') {
+        title.innerText = '📤 SVG 벡터 업로드';
+        svgArea.style.display = 'flex';
+        simpleArea.style.display = 'none';
+    } else {
+        const name = type === 'logo' ? '로고' : 'PNG 객체';
+        title.innerText = `📤 ${name} 업로드`;
+        svgArea.style.display = 'none';
+        simpleArea.style.display = 'block';
+    }
+
+    modal.style.display = 'flex';
+};
+
+// 4. 업로드 실행
+window.submitContributorUpload = async function() {
+    const tags = document.getElementById('cUploadTags').value.trim();
+    const loading = document.getElementById('loading');
+    
+    if (!tags) return alert("검색 키워드를 입력해주세요.");
+    
+    if(loading) loading.style.display = 'flex';
+
+    try {
+        let uploadCount = 0;
+        let totalReward = 0;
+
+        if (currentUploadType === 'svg') {
+            const thumbFile = document.getElementById('cFileThumb').files[0];
+            const svgFile = document.getElementById('cFileSvg').files[0];
+
+            if (!thumbFile || !svgFile) {
+                if(loading) loading.style.display = 'none';
+                return alert("썸네일 이미지와 SVG 파일을 모두 선택해주세요.");
+            }
+
+            await processSingleUpload(thumbFile, svgFile, tags, 'vector'); 
+            uploadCount = 1;
+
+        } else {
+            const files = document.getElementById('cFileSimple').files;
+            if (files.length === 0) {
+                if(loading) loading.style.display = 'none';
+                return alert("파일을 선택해주세요.");
+            }
+
+            const category = currentUploadType === 'logo' ? 'logo' : 'graphic';
+
+            for (const file of files) {
+                await processSingleUpload(file, null, tags, category);
+                uploadCount++;
+            }
+        }
+
+        const baseAmount = REWARD_RATES[currentUploadType] || 100;
+        const finalAmount = (baseAmount * currentMultiplier) * uploadCount;
+        
+        await addReward(finalAmount, `${currentUploadType.toUpperCase()} 업로드 보상 (${uploadCount}개)`);
+
+        alert(`🎉 업로드 완료! 총 ${finalAmount.toLocaleString()}원이 적립되었습니다.`);
+        document.getElementById('contributorUploadModal').style.display = 'none';
+        
+        window.initContributorSystem();
+        if(window.searchTemplates) window.searchTemplates('');
+
+    } catch (e) {
+        console.error(e);
+        alert("업로드 실패: " + e.message);
+    } finally {
+        if(loading) loading.style.display = 'none';
+    }
+};
+
+// 5. 단일 파일 업로드 (파일명 안전 변환 포함)
+async function processSingleUpload(file1, file2, userTags, category) {
+    const timestamp = Date.now();
+    let thumbUrl = '';
+    let dataUrl = '';
+
+    // [중요] 한글 파일명 오류 방지를 위한 영문 변환 (타임스탬프 + 랜덤)
+    const ext1 = file1.name.split('.').pop();
+    const safeName1 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
+    
+    // 파일1 (이미지) 업로드
+    const path1 = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeName1}`;
+    const { error: err1 } = await sb.storage.from('design').upload(path1, file1);
+    if (err1) throw err1;
+    const { data: public1 } = sb.storage.from('design').getPublicUrl(path1);
+    thumbUrl = public1.publicUrl;
+
+    // 파일2 (SVG) 업로드
+    if (file2 && currentUploadType === 'svg') {
+        const ext2 = file2.name.split('.').pop();
+        const safeName2 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext2}`;
+        const path2 = `user_assets/svg/${window.currentUser.id}_${safeName2}`;
+        
+        const { error: err2 } = await sb.storage.from('design').upload(path2, file2);
+        if (err2) throw err2;
+        const { data: public2 } = sb.storage.from('design').getPublicUrl(path2);
+        dataUrl = public2.publicUrl;
+    } else {
+        dataUrl = thumbUrl;
+    }
+
+    const { error: dbErr } = await sb.from('library').insert({
+        category: category,
+        tags: userTags, // DB에는 한글 태그 그대로 저장
+        thumb_url: thumbUrl,
+        data_url: dataUrl,
+        user_id: window.currentUser.id,
+        created_at: new Date(),
+        status: 'approved',
+        contributor_type: currentUploadType
+    });
+
+    if (dbErr) throw dbErr;
+}
+
+window.openTemplateCreator = function() {
+    if (!window.currentUser) return alert("로그인 필요");
+    if(confirm("디자인 에디터로 이동하시겠습니까?")) window.startEditorDirect('custom'); 
+};
+
+async function addReward(amount, description) {
+    try {
+        const { data: pf } = await sb.from('profiles').select('deposit').eq('id', window.currentUser.id).single();
+        const currentDeposit = pf?.deposit || 0;
+        
+        await sb.from('profiles').update({ 
+            deposit: currentDeposit + amount 
+        }).eq('id', window.currentUser.id);
+
+        await sb.from('wallet_logs').insert({
+            user_id: window.currentUser.id,
+            type: 'contributor_reward',
+            amount: amount,
+            description: description
+        });
+    } catch (e) { console.error("보상 지급 실패:", e); }
+}
+
+window.triggerUsageReward = async function(templateOwnerId, type) {
+    if (!window.currentUser || window.currentUser.id === templateOwnerId) return;
+
+    try {
+        const { data: owner } = await sb.from('profiles').select('contributor_tier, deposit').eq('id', templateOwnerId).single();
+        if (!owner) return;
+
+        const tier = owner.contributor_tier || 'regular';
+        const multiplier = TIER_MULTIPLIERS[tier] || 1;
+        const base = REWARD_RATES[type] || 100;
+        const reward = (base * REWARD_RATES.usage_share) * multiplier;
+
+        if (reward > 0) {
+            await sb.from('profiles').update({ deposit: (owner.deposit || 0) + reward }).eq('id', templateOwnerId);
+            await sb.from('wallet_logs').insert({ user_id: templateOwnerId, type: 'usage_royalty', amount: reward, description: `내 디자인(${type}) 사용됨` });
+        }
+    } catch (e) { console.error("사용료 지급 오류:", e); }
 };

@@ -2690,11 +2690,13 @@ window.downloadMonthlyExcel = async () => {
                 return;
             }
 
+            // [수정됨] 기여자 등급 기능이 추가된 루프
             members.forEach(m => {
                 const r = m.role || 'customer';
                 const deposit = m.deposit || 0; 
-
-                const select = `
+                
+                // 1. 회원 등급 (기존)
+                const roleSelect = `
                     <select onchange="updateMemberRole('${m.id}', this.value)" style="padding:4px; border:1px solid #cbd5e1; border-radius:4px;">
                         <option value="customer" ${r==='customer'?'selected':''}>일반</option>
                         <option value="gold" ${r==='gold'?'selected':''}>🥇 골드</option>
@@ -2702,6 +2704,19 @@ window.downloadMonthlyExcel = async () => {
                         <option value="franchise" ${r==='franchise'?'selected':''}>🏢 가맹점</option>
                         <option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option>
                     </select>
+                `;
+
+                // 2. [신규] 기여자 등급 (Contributor Tier)
+                const tier = m.contributor_tier || 'regular';
+                const tierSelect = `
+                    <div style="margin-top:4px;">
+                        <span style="font-size:11px; color:#6366f1; font-weight:bold;">기여등급:</span>
+                        <select onchange="updateContributorTier('${m.id}', this.value)" style="padding:4px; border:1px solid #6366f1; color:#6366f1; border-radius:4px; font-weight:bold;">
+                            <option value="regular" ${tier==='regular'?'selected':''}>😐 일반 (x1)</option>
+                            <option value="excellent" ${tier==='excellent'?'selected':''}>🏆 우수 (x2)</option>
+                            <option value="hero" ${tier==='hero'?'selected':''}>👑 영웅 (x4)</option>
+                        </select>
+                    </div>
                 `;
 
                 const walletBtn = `
@@ -2721,11 +2736,28 @@ window.downloadMonthlyExcel = async () => {
                             <span style="color:#6366f1;">${(m.total_spend || 0).toLocaleString()}원</span> / 
                             <span style="color:#059669;">${m.logo_count || 0}개</span>
                         </td>
-                        <td>${walletBtn}</td> <td><span class="badge" style="background:#f1f5f9;">${r.toUpperCase()}</span></td>
-                        <td>${select}</td>
+                        <td>${walletBtn}</td> 
+                        <td><span class="badge" style="background:#f1f5f9;">${r.toUpperCase()}</span></td>
+                        <td>
+                            ${roleSelect}
+                            ${tierSelect}
+                        </td>
                     </tr>
                 `;
             });
+        }; // loadMembers 함수 끝
+
+        // [신규] 기여자 등급 변경 함수 (admin.html 스크립트 맨 아래나 적절한 곳에 추가)
+        window.updateContributorTier = async (id, newTier) => {
+            if(!confirm("기여자 등급을 변경하시겠습니까?\n(해당 회원의 업로드 수익 배수가 즉시 변경됩니다)")) {
+                loadMembers(); // 취소 시 UI 원복
+                return;
+            }
+            
+            const { error } = await sb.from('profiles').update({ contributor_tier: newTier }).eq('id', id);
+            
+            if(error) alert("오류 발생: " + error.message);
+            else alert("✅ 기여자 등급이 변경되었습니다.");
         };
 
 // [수정] 회원 등급 변경 함수

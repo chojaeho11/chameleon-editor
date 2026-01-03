@@ -2369,3 +2369,85 @@ body {
         justify-content: center;
     }
 }
+/* =========================================
+   [신규] 기여자 시스템 (Contributor) 스타일
+   ========================================= */
+.contributor-section {
+    max-width: 1000px;
+    margin: 0 auto 40px auto;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 상단 그라데이션 바 */
+.contributor-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+}
+
+.contributor-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 15px; border-bottom: 1px solid #d5eaff; padding-bottom: 15px;
+}
+
+.contributor-title {
+    font-size: 20px; font-weight: 800; color: #1e293b;
+    display: flex; align-items: center; gap: 10px;
+}
+
+.contributor-badge {
+    font-size: 11px; padding: 4px 8px; border-radius: 20px;
+    background: #f1f5f9; color: #64748b; font-weight: bold; border: 1px solid #e2e8f0;
+}
+/* 등급별 뱃지 컬러 */
+.badge-hero { background: linear-gradient(135deg, #ef4444, #f97316); color: white; border: none; box-shadow: 0 2px 5px rgba(239,68,68,0.3); }
+.badge-excellent { background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; border: none; box-shadow: 0 2px 5px rgba(59,130,246,0.3); }
+
+.contributor-balance-box { text-align: right; }
+.live-money { font-size: 24px; font-weight: 900; color: #16a34a; letter-spacing: -0.5px; }
+
+.contributor-desc {
+    font-size: 14px; color: #666; margin-bottom: 20px; background: #f8fafc;
+    padding: 10px 15px; border-radius: 8px; line-height: 1.5;
+}
+
+.contributor-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
+}
+
+.contrib-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 20px 10px; cursor: pointer; transition: all 0.2s; position: relative;
+}
+.contrib-btn:hover {
+    transform: translateY(-5px); border-color: #6366f1;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.1);
+}
+
+.c-icon-box {
+    width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: white; margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.bg-blue { background: #3b82f6; }
+.bg-purple { background: #8b5cf6; }
+.bg-orange { background: #f59e0b; }
+.bg-green { background: #10b981; }
+
+.c-info { text-align: center; }
+.c-name { display: block; font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+.c-reward { display: block; font-size: 13px; font-weight: 800; color: #6366f1; }
+.tier-bonus { font-size: 10px; color: #ef4444; margin-left: 2px; }
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .contributor-grid { grid-template-columns: repeat(2, 1fr); }
+    .contributor-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .contributor-balance-box { width: 100%; text-align: right; background: #f0fdf4; padding: 10px; border-radius: 8px; }
+}

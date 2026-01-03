@@ -277,18 +277,33 @@ async function loadTemplatePage(pageIndex) {
             let badgeText = '';
             let badgeColor = '#64748b'; // 기본 회색
 
+            // [수정됨] 카테고리별 영문 뱃지 설정 (Vector 표시 강화)
             switch(item.category) {
-                case 'vector': badgeText = 'Vector'; badgeColor = '#7c3aed'; break; // 보라색
-                // ▼▼▼ [추가할 부분] ▼▼▼
-    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break; // 보라색
-    case 'user_image': badgeText = 'User Image'; badgeColor = '#059669'; break;   // 초록색
-    // ▲▲▲ [추가 끝] ▲▲▲
-                case 'photo-bg': badgeText = 'Image'; badgeColor = '#059669'; break; // 초록색
-                case 'graphic': badgeText = 'PNG'; badgeColor = '#2563eb'; break; // 파란색
-                case 'pattern': 
-                case 'transparent-graphic': badgeText = 'Pattern'; badgeColor = '#db2777'; break; // 핑크색
-                case 'logo': badgeText = 'Logo'; badgeColor = '#d97706'; break; // 주황색
-                case 'text': badgeText = 'Text'; badgeColor = '#475569'; break; // 진한 회색
+                case 'vector': 
+                    badgeText = 'VECTOR';  // 벡터 강조
+                    badgeColor = '#7c3aed'; // 보라색
+                    break;
+                case 'graphic': 
+                    badgeText = 'PNG Object'; 
+                    badgeColor = '#2563eb'; // 파란색
+                    break;
+                case 'logo': 
+                    badgeText = 'LOGO'; 
+                    badgeColor = '#d97706'; // 주황색
+                    break;
+                case 'user_vector': 
+                    badgeText = 'USER VECTOR'; 
+                    badgeColor = '#9333ea'; 
+                    break;
+                case 'user_image': 
+                    badgeText = 'USER IMG'; 
+                    badgeColor = '#059669'; 
+                    break;
+                
+                // 기존 시스템 템플릿들
+                case 'photo-bg': badgeText = 'IMAGE'; badgeColor = '#059669'; break;
+                case 'transparent-graphic': badgeText = 'PATTERN'; badgeColor = '#db2777'; break;
+                case 'text': badgeText = 'TEXT'; badgeColor = '#475569'; break;
             }
 
             const isExclusive = item.product_key && item.product_key !== 'custom';
