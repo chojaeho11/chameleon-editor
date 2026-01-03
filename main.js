@@ -1,7 +1,6 @@
 // main.js - Complete Integrated Version
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js"; 
-import { SITE_CONFIG } from "./site-config.js"; // ★ 설정 파일 불러오기
 import { initCanvas, canvas } from "./canvas-core.js";
 import { initSizeControls, applySize } from "./canvas-size.js"; 
 import { initGuides } from "./canvas-guides.js";
@@ -20,54 +19,12 @@ import { initContextMenu } from "./context-menu.js";
 import { createVectorOutline } from "./outlineMaker.js";
 
 window.currentUploadedPdfUrl = null; 
-window.translations = {}; // 전역 번역 변수
 
 // ==========================================================
 // 1. 메인 초기화 및 통합 로직
 // ==========================================================
 window.addEventListener("DOMContentLoaded", async () => {
     const loading = document.getElementById("loading");
-    
-    // ▼▼▼ [번역 시스템 시작] ▼▼▼
-    try {
-        console.log(`🌐 접속 도메인: ${window.location.hostname} / 설정 언어: ${SITE_CONFIG.lang}`);
-        
-        // 1. 해당 국가의 JSON 파일 가져오기
-        const response = await fetch(`long/${SITE_CONFIG.lang}.json`);
-        const langData = await response.json();
-        window.translations = langData; // 전역 변수에 저장
-
-        // 2. 화면의 텍스트 교체 (data-i18n 속성 찾기)
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (langData[key]) {
-                // 입력창 placeholder 처리
-                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                    el.placeholder = langData[key];
-                } else {
-                    el.innerHTML = langData[key];
-                }
-            }
-        });
-
-        // 3. 입력창 placeholder 별도 처리
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            const key = el.getAttribute('data-i18n-placeholder');
-            if (langData[key]) el.placeholder = langData[key];
-        });
-
-        // 4. 상단 버튼/로그인 버튼 강제 번역
-        const loginBtn = document.getElementById('btnLoginBtn');
-        if(loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
-
-        const cartBtn = document.querySelector('#btnOrderTop span[data-i18n="btn_add_to_cart"]');
-        if (cartBtn && langData['btn_add_to_cart']) cartBtn.innerText = langData['btn_add_to_cart'];
-
-    } catch (e) {
-        console.error("❌ 번역 로딩 실패:", e);
-    }
-    // ▲▲▲ [번역 시스템 끝] ▲▲▲
-
     const startScreen = document.getElementById("startScreen");
     const mainEditor = document.getElementById("mainEditor");
 
@@ -101,7 +58,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         // 3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
         if (currentUser) {
             await checkPartnerStatus();
-            await initContributorSystem(); 
+            await initContributorSystem(); // [신규] 기여자 시스템 초기화
         }
 
         // 폰트 미리 로드
@@ -903,7 +860,7 @@ const REWARD_RATES = {
     'png': 100,
     'svg': 200,
     'logo': 150,
-    'template': 500,
+    'template': 100,
     'usage_share': 0.1 
 };
 

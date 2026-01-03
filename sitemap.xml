@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
     <url>
         <loc>https://cafe2626.com/</loc>
+        <xhtml:link rel="alternate" hreflang="ko" href="https://cafe2626.com/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://cafe2626.com/en.html"/>
+        <xhtml:link rel="alternate" hreflang="ja" href="https://cafe2626.com/jp.html"/>
         <lastmod>2025-05-20</lastmod>
         <priority>1.0</priority>
     </url>
+
     <url>
-        <loc>https://cafe0101.com/</loc>
-        <priority>1.0</priority>
+        <loc>https://cafe2626.com/en.html</loc>
+        <xhtml:link rel="alternate" hreflang="ko" href="https://cafe2626.com/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://cafe2626.com/en.html"/>
+        <xhtml:link rel="alternate" hreflang="ja" href="https://cafe2626.com/jp.html"/>
+        <priority>0.8</priority>
     </url>
+
     <url>
-        <loc>https://cafe3355.com/</loc>
-        <priority>1.0</priority>
+        <loc>https://cafe2626.com/jp.html</loc>
+        <xhtml:link rel="alternate" hreflang="ko" href="https://cafe2626.com/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://cafe2626.com/en.html"/>
+        <xhtml:link rel="alternate" hreflang="ja" href="https://cafe2626.com/jp.html"/>
+        <priority>0.8</priority>
     </url>
+
 </urlset>

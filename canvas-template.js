@@ -810,8 +810,8 @@ const category = 'user_' + type; // 결과: 'user_vector' 또는 'user_image'
         if (dbError) throw dbError;
 
         // 성공 처리
-        await addRewardPoints(currentUser.id, 500, `템플릿 등록 보상 (${title})`);
-        alert("🎉 디자인이 등록되었습니다! (+500P 적립)\n[템플릿] 탭에서 확인하세요.");
+        await addRewardPoints(currentUser.id, 100, `템플릿 등록 보상 (${title})`);
+        alert("🎉 디자인이 등록되었습니다! (+100P 적립)\n[템플릿] 탭에서 확인하세요.");
         document.getElementById("sellModal").style.display = "none";
         
         // 입력창 초기화

@@ -76,22 +76,22 @@
             </button>
 
             <button class="tpl-tab" data-tpl="user_vector">
-   대형출력용 템플릿
+   유저 템플릿 벡터
 </button>
 
 <button class="tpl-tab" data-tpl="user_image">
-    A2이하출력 템플릿 
+   유저 템플릿 이미지
 </button>
 
-            <button class="tpl-tab" data-tpl="photo-bg">사진</button>
+            <button class="tpl-tab" data-tpl="photo-bg">고화질이미지</button>
 
-            <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">백터</button>
+            <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">백터배경</button>
 
-            <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">PNG</button>
+            <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">벡터이미지</button>
 
-            <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴</button>
+            <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴디자인</button>
 
-            <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고</button>
+            <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고모음</button>
         </div>
         
         <div style="flex:1;"></div>
@@ -139,252 +139,7 @@
 
     <div class="quick-menu-track" id="quickMenuContainer"></div>
 </div>
-<div class="consult-section-wrap">
-    <div class="consult-box" style="max-width: 800px; margin: 0 auto; background:none; box-shadow:none; border:none;">
-        <h2 style="font-size: 16px; color:#3e166d; margin-bottom:15px;">전시행사처럼 여러품목을 주문해야하는 경우 또는 복잡한 주문은 친절한 매니저들이 안내해 드립니다.</h2>
-        
-        <div class="manager-simple-list" style="display:flex; flex-direction:row; flex-wrap:wrap; gap:10px; justify-content:center;">
-            
-            <button class="manager-btn" onclick="window.openQuickReview('은미', 4.9)" style="flex:1; min-width:200px; display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #ddd; padding:15px 20px; border-radius:12px; cursor:pointer; font-size:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); transition:0.2s;">
-                <span style="font-weight:bold; color:#333;">은미 매니저</span>
-                <span style="color:#f5a623; font-weight:bold;">★ 4.9</span>
-            </button>
 
-            <button class="manager-btn" onclick="window.openQuickReview('성희', 4.8)" style="flex:1; min-width:200px; display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #ddd; padding:15px 20px; border-radius:12px; cursor:pointer; font-size:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); transition:0.2s;">
-                <span style="font-weight:bold; color:#333;">성희 매니저</span>
-                <span style="color:#f5a623; font-weight:bold;">★ 4.8</span>
-            </button>
-
-            <button class="manager-btn" onclick="window.openQuickReview('지숙', 5.0)" style="flex:1; min-width:200px; display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #ddd; padding:15px 20px; border-radius:12px; cursor:pointer; font-size:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); transition:0.2s;">
-                <span style="font-weight:bold; color:#333;">지숙 매니저</span>
-                <span style="color:#f5a623; font-weight:bold;">★ 5.0</span>
-            </button>
-            
-             <button class="manager-btn" onclick="window.openQuickReview('가현', 4.7)" style="flex:1; min-width:200px; display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #ddd; padding:15px 20px; border-radius:12px; cursor:pointer; font-size:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); transition:0.2s;">
-                <span style="font-weight:bold; color:#333;">본사 상담팀</span>
-                <span style="color:#f5a623; font-weight:bold;">★ 4.7</span>
-            </button>
-        </div>
-
-        <div class="consult-desc" style="margin-top:20px; font-size:13px; color:#888;">
-            매니저님들에 대한 고객님들의 평가를 보고 자신과 꼭 맞는 매니저를 선택해 주세요. 담당 매니저가 부재중인 경우 5분 이내 다른분이 매칭됩니다.
-        </div>
-        
-        <button onclick="if(window.ChannelIO) ChannelIO('showMessenger');" class="btn-consult-main" style="width:100%; max-width:400px; border-radius:50px; margin-top:10px;">
-            <i class="fa-solid fa-headset"></i> 상담이 필요하신가요?
-        </button>
-    </div>
-</div>
-
-<div id="quickReviewModal" class="modal-bg" style="z-index: 25000; display:none; align-items:center; justify-content:center;">
-    <div class="modal-box" style="width: 400px; text-align:left; padding:0; overflow:hidden; display:flex; flex-direction:column; max-height: 85vh; border-radius: 20px;">
-        
-        <div style="padding:20px 20px 15px 20px; border-bottom:1px solid #f1f5f9; background:#fff; flex-shrink: 0;">
-            <h3 id="qrTargetName" style="margin:0; font-size:18px; color:#1e293b;">매니저 후기</h3>
-            <p style="margin:5px 0 0 0; color:#64748b; font-size:13px;">고객님들의 따뜻한 칭찬 메시지입니다.</p>
-        </div>
-
-        <div id="qrReviewList" class="custom-scrollbar" style="flex:1; overflow-y:auto; padding:20px; background:#f8fafc; max-height: 350px;">
-            <div style="text-align:center; color:#999; font-size:13px; padding:20px;">후기를 불러오는 중...</div>
-        </div>
-
-        <div style="padding:20px; background:#fff; border-top:1px solid #f1f5f9; flex-shrink: 0; box-shadow: 0 -4px 10px rgba(0,0,0,0.02);">
-            <div style="font-weight:bold; font-size:14px; margin-bottom:10px; color:#333;">나도 한마디 남기기 👇</div>
-            
-            <div class="qr-stars" style="font-size:24px; color:#ddd; cursor:pointer; margin-bottom:10px; display:flex; gap:5px;">
-                <i class="fa-solid fa-star" onclick="window.setQrScore(1)"></i>
-                <i class="fa-solid fa-star" onclick="window.setQrScore(2)"></i>
-                <i class="fa-solid fa-star" onclick="window.setQrScore(3)"></i>
-                <i class="fa-solid fa-star" onclick="window.setQrScore(4)"></i>
-                <i class="fa-solid fa-star" onclick="window.setQrScore(5)"></i>
-            </div>
-            
-            <textarea id="qrComment" class="ai-input-pretty" placeholder="칭찬과 격려의 한마디를 남겨주세요!" style="height:50px; font-size:13px; margin-bottom:10px; resize:none;"></textarea>
-            
-            <div style="display:flex; gap:8px;">
-                <button id="btnQrSubmit" onclick="window.submitQuickReview()" class="btn-round primary" style="flex:1;">등록</button>
-                <button onclick="document.getElementById('quickReviewModal').style.display='none'" class="btn-round" style="flex:1; background:#f1f5f9; color:#333; border:none;">닫기</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-    // 1. 필요한 설정 가져오기
-    import { sb, initConfig } from './config.js';
-    import { SITE_CONFIG } from './site-config.js'; 
-    import { loadTranslations } from './translation.js';
-
-    // ★ [핵심 수정] 가져오자마자 바로 전역 변수로 박아버립니다. (가장 중요)
-    window.CURRENT_LANG = SITE_CONFIG.lang;
-    console.log("✅ 언어 변수 즉시 설정됨:", window.CURRENT_LANG);
-
-    // 2. 앱 시작 함수
-    async function startApp() {
-        try {
-            // 설정 로드
-            if (typeof initConfig === 'function') {
-                await initConfig(); 
-            }
-            
-            // 번역 적용
-            if (typeof loadTranslations === 'function') {
-                await loadTranslations();
-            }
-            
-            // SEO 메타태그 업데이트 (아래 SEO 설명 부분 참조)
-            updateMetaTags();
-
-        } catch (e) {
-            console.error("앱 시작 오류:", e);
-        }
-    }
-
-    // 3. SEO를 위한 메타태그 동적 변경 함수
-    function updateMetaTags() {
-        const t = window.translations || {};
-        
-        // 타이틀 변경
-        if(t['page_title']) document.title = t['page_title'];
-        
-        // 설명(Description) 태그 변경
-        const descMeta = document.querySelector('meta[name="description"]');
-        if(descMeta && t['hero_desc']) {
-            descMeta.setAttribute('content', t['hero_desc']);
-        }
-        
-        // 오픈그래프(카톡/페이스북 공유 미리보기) 변경
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        if(ogTitle && t['page_title']) ogTitle.setAttribute('content', t['page_title']);
-        
-        const ogDesc = document.querySelector('meta[property="og:description"]');
-        if(ogDesc && t['hero_desc']) ogDesc.setAttribute('content', t['hero_desc']);
-    }
-
-    // 실행
-    startApp();
-
-    // 기존 변수들 유지
-    let currentQrManager = '';
-    let currentQrScore = 0;
-    
-
-    window.openQuickReview = async function(name) {
-        currentQrManager = name;
-        currentQrScore = 0;
-        document.getElementById('qrTargetName').innerText = name + " 매니저님";
-        document.getElementById('qrComment').value = '';
-        document.getElementById('quickReviewModal').style.display = 'flex';
-        window.setQrScore(0); // 별점 초기화
-
-        // 후기 목록 로딩 실행
-        await loadManagerReviews(name);
-    };
-
-    // 2. [기능추가] 후기 목록 DB에서 가져오기
-    async function loadManagerReviews(name) {
-        const listArea = document.getElementById('qrReviewList');
-        listArea.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>';
-
-        try {
-            // 해당 매니저의 후기만 최신순으로 20개 가져오기
-            const { data, error } = await sb
-                .from('manager_reviews')
-                .select('*')
-                .eq('manager_name', name)
-                .order('created_at', { ascending: false })
-                .limit(20);
-
-            if (error) throw error;
-
-            listArea.innerHTML = ''; // 초기화
-
-            if (!data || data.length === 0) {
-                listArea.innerHTML = '<div style="text-align:center; color:#999; font-size:13px; padding:30px;">아직 등록된 후기가 없습니다.<br>첫 번째 칭찬 주인공이 되어주세요! 😊</div>';
-                return;
-            }
-
-            // 리스트 그리기
-            data.forEach(review => {
-                const date = new Date(review.created_at).toLocaleDateString();
-                const starStr = '★'.repeat(review.rating); // 별점 개수만큼 반복
-                
-                const item = document.createElement('div');
-                item.style.cssText = "background:white; padding:12px; border-radius:8px; border:1px solid #eee; margin-bottom:8px;";
-                item.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#888; margin-bottom:4px;">
-                        <span style="color:#f5a623;">${starStr}</span>
-                        <span>${date}</span>
-                    </div>
-                    <div style="font-size:13px; color:#333; line-height:1.4;">
-                        ${review.content || '내용 없음'}
-                    </div>
-                `;
-                listArea.appendChild(item);
-            });
-
-        } catch (e) {
-            console.error(e);
-            listArea.innerHTML = '<div style="text-align:center; color:red; font-size:12px;">후기를 불러오지 못했습니다.</div>';
-        }
-    }
-
-    // 3. 별점 UI
-    window.setQrScore = function(score) {
-        currentQrScore = score;
-        const stars = document.querySelectorAll('.qr-stars i');
-        stars.forEach((star, index) => {
-            if (index < score) {
-                star.style.color = '#f5a623'; // 노란색
-            } else {
-                star.style.color = '#ddd';    // 회색
-            }
-        });
-    };
-
-    // 4. 수파베이스 전송 (후기 작성)
-    window.submitQuickReview = async function() {
-        if (currentQrScore === 0) {
-            alert("별점을 선택해주세요!");
-            return;
-        }
-
-        const btn = document.getElementById('btnQrSubmit');
-        const content = document.getElementById('qrComment').value;
-        
-        btn.disabled = true;
-        btn.innerText = "저장 중...";
-
-        try {
-            const { error } = await sb
-                .from('manager_reviews')
-                .insert([{
-                    manager_name: currentQrManager,
-                    rating: currentQrScore,
-                    content: content
-                }]);
-
-            if (error) throw error;
-
-            alert("소중한 후기 감사합니다! 🙇‍♂️");
-            
-            // 입력창 초기화
-            document.getElementById('qrComment').value = '';
-            window.setQrScore(0);
-            btn.innerText = "등록";
-            btn.disabled = false;
-            
-            // 방금 쓴 글 바로 보이게 목록 새로고침
-            await loadManagerReviews(currentQrManager);
-
-        } catch (e) {
-            console.error(e);
-            alert("저장 실패: " + e.message);
-            btn.disabled = false;
-            btn.innerText = "등록";
-        }
-    };
-</script>
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
@@ -660,7 +415,7 @@
             <div class="c-icon-box bg-green"><i class="fa-solid fa-palette"></i></div>
             <div class="c-info">
                 <span class="c-name">템플릿 만들기</span>
-                <span class="c-reward">500원 <span class="tier-bonus"></span></span>
+                <span class="c-reward">100원 <span class="tier-bonus"></span></span>
             </div>
         </button>
     </div>
@@ -1366,10 +1121,10 @@ function goBoard(category) {
             </button>
             
             <button class="tpl-cate-btn" onclick="window.filterTpl('user_vector', this)">
-    <span>대형출력용 템플릿</span>
+    <span>유저 템플릿 (벡터)</span>
 </button>
 <button class="tpl-cate-btn" onclick="window.filterTpl('user_image', this)">
-    <span>A2이하출력 템플릿</span>
+    <span>유저 템플릿 (이미지)</span>
 </button>
 
             <button class="tpl-cate-btn active" onclick="window.filterTpl('photo-bg', this)">
@@ -1377,19 +1132,19 @@ function goBoard(category) {
             </button>
 
             <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)">
-                <span>백터</span>
+                <span>심플배경 (백터)</span>
             </button>
 
             <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)">
-                <span>PNG</span>
+                <span>PNG객체</span>
             </button>
 
             <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)">
-                <span>패턴</span>
+                <span>패턴디자인</span>
             </button>
 
             <button class="tpl-cate-btn" onclick="window.filterTpl('logo', this)">
-                <span>로고</span>
+                <span>로고모음</span>
             </button>
         </div>
         <div class="tpl-content">
@@ -2016,7 +1771,119 @@ if (loadId) {
         }
     }, 800); // 0.8초 뒤 실행 (안전하게 로딩)
 }
+// ▲▲▲ 추가 끝 ▲▲▲
 
+    // ============================================================
+    // [1] 다국어 JSON 파일 로드 및 적용 (Fetch 방식)
+    // ============================================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const CURRENT_LANG = urlParams.get('lang') ? urlParams.get('lang').toLowerCase() : 'kr';
+
+    async function loadAndApplyTranslations() {
+        try {
+            // 1. JSON 파일 불러오기
+            const response = await fetch(`long/${CURRENT_LANG}.json`);
+            
+            if (!response.ok) {
+                throw new Error(`언어 파일을 찾을 수 없습니다: ${CURRENT_LANG}`);
+            }
+
+            const langData = await response.json();
+            
+            // 2. 전역 변수에 저장
+            window.translations = langData; 
+
+            // 3. 브라우저 탭 제목 변경
+            if (langData['page_title']) {
+                document.title = langData['page_title'];
+            }
+
+            // 4. [기존] 텍스트 번역 적용
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (langData[key]) el.innerHTML = langData[key];
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (langData[key]) el.placeholder = langData[key];
+            });
+
+            // ▼▼▼ [추가] 상단 버튼 강제 번역 적용 (확실한 해결책) ▼▼▼
+            const topCartBtn = document.querySelector('#btnOrderTop span[data-i18n="btn_add_to_cart"]');
+            if (topCartBtn && langData['btn_add_to_cart']) topCartBtn.innerText = langData['btn_add_to_cart'];
+
+            const topLoginBtn = document.getElementById('btnLoginBtn');
+            if (topLoginBtn && langData['btn_login']) topLoginBtn.innerText = langData['btn_login'];
+            // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+            // 5. [수정] 로그인 버튼 강제 텍스트 변경 (번역 안 되는 문제 해결용)
+            const loginBtn = document.getElementById('btnLoginBtn');
+            if (loginBtn && langData['btn_login']) {
+                loginBtn.innerText = langData['btn_login'];
+            }
+
+            // 6. [신규] 국가별 소셜 로그인 버튼 제어 (카카오 숨기기)
+            const kakaoBtn = document.getElementById('btnKakaoLogin');
+            if (kakaoBtn) {
+                if (CURRENT_LANG === 'kr') {
+                    // 한국어일 때는 보임
+                    kakaoBtn.style.display = 'flex'; 
+                } else {
+                    // 일본어(jp), 영어(us) 등 다른 언어일 때는 숨김
+                    kakaoBtn.style.display = 'none'; 
+                }
+            }
+
+            // 7. 폰트 로드
+            loadLanguageFont();
+
+        } catch (error) {
+            console.error('번역 데이터 로딩 실패:', error);
+        }
+    }
+
+    // [수정된 폰트 로드 함수]
+    function loadLanguageFont() {
+        const head = document.getElementsByTagName('head')[0];
+        let fontLink = document.createElement('link');
+        fontLink.rel = 'stylesheet';
+        let fontFamily = '';
+
+        if (CURRENT_LANG === 'jp') {
+            // 🇯🇵 일본어 폰트
+            fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap';
+            fontFamily = "'Noto Sans JP', sans-serif";
+            
+            // ★ [추가] 캔버스용 폰트 이름 저장 (따옴표 제거한 순수 이름)
+            window.currentCanvasFont = 'Noto Sans JP'; 
+
+        } else if (CURRENT_LANG === 'us') {
+            // 🇺🇸 영어 폰트
+            fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap';
+            fontFamily = "'Inter', sans-serif";
+            
+            // ★ [추가]
+            window.currentCanvasFont = 'Inter';
+
+        } else {
+            // 🇰🇷 한국어 폰트 (기본)
+            fontFamily = "'Pretendard', sans-serif"; // 또는 NanumGothic
+            
+            // ★ [추가] 한국어는 원하는 폰트로 지정 (예: NanumGothic, Jua, Pretendard 등)
+            window.currentCanvasFont = 'Pretendard'; 
+        }
+
+        head.appendChild(fontLink);
+        document.documentElement.style.setProperty('--main-font', fontFamily);
+        
+        const style = document.createElement('style');
+        style.innerHTML = `body, button, input, select, textarea { font-family: ${fontFamily} !important; }`;
+        head.appendChild(style);
+    }
+
+    // 페이지 로드 시 실행
+    loadAndApplyTranslations();
 
     // [추가] 핫딜 렌더링 함수
     // [새로운 통합 함수] 일반 핫딜 + 업자용 핫딜 모두 처리
@@ -2536,23 +2403,25 @@ if (loadId) {
             }
         };
     }
-    window.startEditorDirect = async function(key) {
-        // 1. 번역 객체 가져오기 (없으면 빈 객체)
-        const t = window.translations || {};
 
-        // 2. 로그인 체크
+    // ============================================================
+    // [5] 에디터 시작 및 템플릿 로드
+    // ============================================================
+    // ============================================================
+    // [5] 에디터 시작 및 템플릿 로드 (수정됨: 로그인 체크 + 템플릿 팝업)
+    // ============================================================
+    window.startEditorDirect = async function(key) {
+        // [1] 로그인 체크 로직 추가
         const { data } = await sb.auth.getSession();
         if (!data || !data.session || !data.session.user) {
-            // [변경] 한글 대신 번역된 문구 사용 (JSON에 키가 없으면 기본 한글 출력)
-            alert(t['msg_login_required'] || "디자인을 시작하려면 로그인이 필요합니다.");
+            alert("디자인을 시작하려면 로그인이 필요합니다.");
             document.getElementById('loginModal').style.display = 'flex';
-            return; 
+            return; // 로그인 안되어 있으면 에디터 진입 중단
         }
 
-        if (!key) return alert(t['msg_invalid_code'] || "상품 코드가 올바르지 않습니다.");
+        if (!key) return alert("상품 코드가 올바르지 않습니다.");
 
         window.currentProductKey = key;
-        // ... (이 아래 코드는 그대로 두시면 됩니다)
         if(canvas) canvas.currentProductKey = key;
         
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
@@ -2796,8 +2665,8 @@ if (loadId) {
     // ============================================================
     window.addEventListener('load', async () => {
         // 1. 설정 로딩 대기 (config.js의 작업이 끝날 때까지 기다림)
-        //if (window.initConfig) await window.initConfig(); 
-        //else if (typeof initConfig === 'function') await initConfig();
+        if (window.initConfig) await window.initConfig(); 
+        else if (typeof initConfig === 'function') await initConfig();
 
         // 2. 카테고리 메뉴 렌더링
         if (typeof renderQuickMenu === 'function') renderQuickMenu();
@@ -2872,75 +2741,75 @@ if (loadId) {
     };
 
     // 3. 데이터 로드 및 그리기 (핵심 함수)
-    // [수정됨] 번역 적용된 템플릿 로드 함수
     async function loadTemplatePage(page) {
         const grid = document.getElementById('startTemplateGrid');
         if (!grid) return;
 
-        // 1. 번역 객체 준비
-        const t = window.translations || {};
-        const txtLoading = t['msg_loading'] || "로딩 중...";
-        const txtNoData = t['msg_no_data'] || "검색 결과가 없습니다.";
-
-        // 2. 로딩 화면에 번역된 텍스트 적용
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>${txtLoading}</div>`;
+        // 로딩 표시
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>로딩 중...</div>';
         
         try {
             // DB 쿼리 준비
             let query = sb.from('library')
-                .select('id, thumb_url, category, tags', { count: 'exact' }) 
+                .select('id, thumb_url, category, tags', { count: 'exact' }) // 전체 개수도 같이 가져옴
                 .order('created_at', { ascending: false })
-                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); 
+                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); // 범위 설정
 
-            // 검색어 필터
+            // 검색어 필터 (태그 검색)
             if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
                 query = query.ilike('tags', `%${lastSearchKeyword}%`);
             }
 
             const { data, error, count } = await query;
+
             if (error) throw error;
 
-            grid.innerHTML = ''; // 초기화
+            grid.innerHTML = ''; // 기존 내용 지우기
 
-            // 데이터가 없을 때 번역된 문구 출력
+            // 데이터가 없을 때
             if (!data || data.length === 0) {
-                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:#999;">${txtNoData}</div>`;
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#999;">검색 결과가 없습니다.</div>';
                 updatePaginationButtons(page, 0);
                 return;
             }
 
-            // (기존 코드와 동일) 카드 생성 로직
+            // [수정] 카드 생성 (정사각형 프레임 + 모든 뱃지 표시)
             data.forEach(tpl => {
                 const card = document.createElement('div');
                 card.className = 'tpl-card-start'; 
                 
-                // 뱃지 설정 등 기존 로직 유지...
+                // 1. 카테고리별 뱃지 설정 (모든 종류 추가)
                 let badgeText = '';
-                let badgeColor = '#64748b';
+                let badgeColor = '#64748b'; // 기본 회색
 
                 switch (tpl.category) {
-                    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break;
-                    case 'user_image':  badgeText = 'User Image'; badgeColor = '#059669'; break;
+                    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break; // 보라색
+                    case 'user_image':  badgeText = 'User Image'; badgeColor = '#059669'; break;  // 초록색
                     case 'vector':      badgeText = 'Vector'; badgeColor = '#7c3aed'; break;
                     case 'photo-bg':    badgeText = 'Image'; badgeColor = '#059669'; break;
-                    case 'graphic':     badgeText = 'Graphic'; badgeColor = '#2563eb'; break;
+                    case 'graphic':     badgeText = 'Graphic'; badgeColor = '#2563eb'; break; // 파란색
                     case 'pattern':
-                    case 'transparent-graphic': badgeText = 'Pattern'; badgeColor = '#db2777'; break;
-                    case 'logo':        badgeText = 'Logo'; badgeColor = '#d97706'; break;
+                    case 'transparent-graphic': badgeText = 'Pattern'; badgeColor = '#db2777'; break; // 핑크색
+                    case 'logo':        badgeText = 'Logo'; badgeColor = '#d97706'; break; // 주황색
                     case 'text':        badgeText = 'Text'; badgeColor = '#475569'; break;
                 }
 
+                // 뱃지 HTML 생성
                 let badgeHtml = '';
                 if (badgeText) {
                     badgeHtml = `<span style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; z-index:5; box-shadow:0 2px 4px rgba(0,0,0,0.2); text-transform:uppercase; letter-spacing:0.5px;">${badgeText}</span>`;
                 }
 
+                // 2. 이미지 최적화 (정사각형 1:1 비율 요청)
                 let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
                 if (imgSrc.includes('supabase.co')) {
                     const separator = imgSrc.includes('?') ? '&' : '?';
+                    // width와 height를 똑같이 설정하고 resize=cover 옵션을 주어 정사각형으로 자름
                     imgSrc += `${separator}width=400&height=400&resize=cover&format=webp&quality=70`;
                 }
 
+                // 3. HTML 구성 및 스타일 강제 적용
+                // aspect-ratio: 1/1 을 주어 강제로 정사각형으로 만듭니다.
                 card.style.cssText = "aspect-ratio: 1/1; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid #e5e7eb; background: #f8fafc;";
                 
                 card.innerHTML = `
@@ -2956,12 +2825,12 @@ if (loadId) {
                 grid.appendChild(card);
             });
 
+            // 현재 페이지 번호 업데이트 및 버튼 상태 관리
             currentTemplatePage = page;
             updatePaginationButtons(page, data.length);
 
         } catch (e) {
             console.error("템플릿 로드 오류:", e);
-            // 오류 메시지도 번역 가능하지만 일단 한글로 둡니다
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">오류가 발생했습니다.</div>';
         }
     }
@@ -3232,6 +3101,5 @@ if (loadId) {
         </div>
     </div>
 </div>
-
 </body>
 </html>
