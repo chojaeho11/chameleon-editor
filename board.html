@@ -118,7 +118,6 @@
         .ql-toolbar.ql-snow { border-top-left-radius: 10px; border-top-right-radius: 10px; border-color: #e2e8f0; background: #f8fafc; }
         .ql-container.ql-snow { border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; border-color: #e2e8f0; font-family: 'Pretendard'; }
         
-        /* [추가] 버튼이 비활성화(disabled) 되었을 때 시각적 피드백 */
         button:disabled {
             background-color: #ccc !important;
             cursor: not-allowed !important;
@@ -240,12 +239,11 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script type="module">
-        // [최적화] config.js의 무거운 로딩을 피하기 위해 직접 연결
         let sb = null;
         let currentUser = null;
         let isAdmin = false;
 
-        // 관리자 이메일 (config.js와 동일하게 설정)
+        // 관리자 이메일 목록
         const ADMIN_EMAILS = ["korea900as@gmail.com", "ceo@test.com"];
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -272,15 +270,13 @@
             if (!url) return null;
             if (url.includes('supabase.co')) {
                 const sep = url.includes('?') ? '&' : '?';
-                // 목록에서는 아주 작은 사이즈만 필요함
                 return `${url}${sep}width=300&height=200&resize=cover&quality=50&format=webp`;
             }
             return url;
         }
 
-        // [초기화 함수] - 게시판 전용 (상품 로딩 X)
+        // [초기화 함수]
         async function init() {
-            // 1. Supabase 라이브러리 대기
             if (typeof window.supabase === 'undefined') {
                 await new Promise(r => setTimeout(r, 100));
             }
@@ -306,11 +302,7 @@
                 isLoginAvailable = false;
             }
 
-            // 2. 관리자 확인
-            let isRealAdmin = false; 
-            if (isLoginAvailable && isAdmin) isRealAdmin = true;
-
-            // 3. UI 설정
+            // UI 설정
             const countrySelect = document.getElementById('countrySelect');
             if(countrySelect) {
                 countrySelect.value = currentCountry;
@@ -329,17 +321,15 @@
 
             if (!postId) updateMetaTags(pageTitle, metaInfo.desc, metaInfo.keywords);
 
-            // 4. 글쓰기 버튼 표시
+            // [수정] 글쓰기 버튼 표시 로직 (카테고리 제한 제거, 누구나 로그인하면 작성 가능)
             const btnWrite = document.getElementById('btnWrite');
             if (btnWrite && isLoginAvailable) {
-                if (category === 'blog') {
-                    if (isRealAdmin) btnWrite.style.display = 'inline-block';
-                } else {
-                    if (currentUser) btnWrite.style.display = 'inline-block';
+                if (currentUser) {
+                    btnWrite.style.display = 'inline-block';
                 }
             }
 
-            // 5. 에디터 설정
+            // 에디터 설정
             if(typeof Quill !== 'undefined') {
                 quill = new Quill('#editor-container', {
                     modules: { toolbar: [ [{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline'], ['image', 'link'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean'] ] },
@@ -350,7 +340,6 @@
             setupStarRating();
             setupEventListeners();
 
-            // 6. 데이터 로드
             if (postId) loadPostDetail(postId);
             else loadPostList();
         }
@@ -359,7 +348,7 @@
             document.title = title + " | 카멜레온프린팅";
         }
 
-        // [목록 로드] - 9개 제한 + 이미지 최적화
+        // [목록 로드] - 9개 제한 + 이미지 최적화 유지
         async function loadPostList() {
             showSection('list');
             const listEl = document.getElementById('boardList');
@@ -371,7 +360,7 @@
                     .eq('category', category)
                     .eq('country_code', currentCountry)
                     .order('created_at', { ascending: false })
-                    .limit(9); // ★ 30개 -> 9개로 축소 (로딩 속도 개선)
+                    .limit(9); // 로딩 속도를 위해 9개로 제한
 
                 if (error) throw error;
 
@@ -384,12 +373,9 @@
                 listEl.style.display = 'grid';
 
                 data.forEach(post => {
-                    // 본문에서 이미지 추출
                     let thumbUrl = null;
                     const imgMatch = post.content && post.content.match(/<img[^>]+src="([^">]+)"/);
                     if (imgMatch) thumbUrl = imgMatch[1];
-
-                    // 이미지 주소 최적화
                     const optimizedSrc = optimizeImage(thumbUrl);
 
                     let starHtml = '';
@@ -455,11 +441,31 @@
             document.getElementById('viewCount').innerHTML = `<i class="fa-regular fa-eye"></i> ${post.view_count}`;
             document.getElementById('viewContent').innerHTML = post.content;
 
+            // [수정] 수정/삭제 버튼 노출 로직 분리
             const btnGroup = document.getElementById('btnGroupAuth');
-            if (isLoginAvailable && currentUser && (isAdmin || currentUser.id === post.author_id)) {
-                btnGroup.style.display = 'block';
-            } else {
-                btnGroup.style.display = 'none';
+            const btnEdit = document.getElementById('btnEditPost');
+            const btnDelete = document.getElementById('btnDeletePost');
+            
+            // 초기화
+            btnGroup.style.display = 'none';
+            btnEdit.style.display = 'none';
+            btnDelete.style.display = 'none';
+
+            if (isLoginAvailable && currentUser) {
+                // 권한 체크
+                const isAuthor = (currentUser.id === post.author_id);
+                
+                // 1. 수정: 본인 글이거나 관리자일 경우
+                const canEdit = isAuthor || isAdmin;
+                // 2. 삭제: 오직 관리자만 가능 (요청사항 반영)
+                const canDelete = isAdmin;
+
+                if (canEdit || canDelete) {
+                    btnGroup.style.display = 'block'; // 버튼 그룹 컨테이너 표시
+                    
+                    if (canEdit) btnEdit.style.display = 'inline-block';
+                    if (canDelete) btnDelete.style.display = 'inline-block';
+                }
             }
 
             loadComments(id);
@@ -599,6 +605,7 @@
 
         window.deleteCurrentPost = async () => {
             if(!confirm("삭제하시겠습니까?")) return;
+            // 삭제 권한은 DB단에서도 막혀있을 수 있으나 UI에서 관리자만 호출하도록 함
             await sb.from('community_posts').delete().eq('id', postId);
             alert("삭제되었습니다.");
             goToList();
@@ -606,3 +613,5 @@
 
         init();
     </script>
+</body>
+</html>
