@@ -210,44 +210,65 @@
 </div>
 
 <script type="module">
-    // [수정] SITE_CONFIG를 추가로 불러옵니다.
+    // 1. 필요한 설정 가져오기
     import { sb, initConfig } from './config.js';
     import { SITE_CONFIG } from './site-config.js'; 
     import { loadTranslations } from './translation.js';
 
+    // ★ [핵심 수정] 가져오자마자 바로 전역 변수로 박아버립니다. (가장 중요)
+    window.CURRENT_LANG = SITE_CONFIG.lang;
+    console.log("✅ 언어 변수 즉시 설정됨:", window.CURRENT_LANG);
+
+    // 2. 앱 시작 함수
     async function startApp() {
         try {
-            // 1. 설정 로드
+            // 설정 로드
             if (typeof initConfig === 'function') {
                 await initConfig(); 
             }
-
-            // ★ [핵심] 에러가 났던 원인을 해결하는 코드입니다!
-            // SITE_CONFIG의 설정값을 전역 변수 CURRENT_LANG에 넣어줍니다.
-            window.CURRENT_LANG = SITE_CONFIG.lang; 
-            console.log("✅ 언어 변수 설정 완료:", window.CURRENT_LANG);
             
-            // 2. 번역 적용
+            // 번역 적용
             if (typeof loadTranslations === 'function') {
                 await loadTranslations();
             }
+            
+            // SEO 메타태그 업데이트 (아래 SEO 설명 부분 참조)
+            updateMetaTags();
+
         } catch (e) {
             console.error("앱 시작 오류:", e);
         }
     }
 
-    // 앱 실행
+    // 3. SEO를 위한 메타태그 동적 변경 함수
+    function updateMetaTags() {
+        const t = window.translations || {};
+        
+        // 타이틀 변경
+        if(t['page_title']) document.title = t['page_title'];
+        
+        // 설명(Description) 태그 변경
+        const descMeta = document.querySelector('meta[name="description"]');
+        if(descMeta && t['hero_desc']) {
+            descMeta.setAttribute('content', t['hero_desc']);
+        }
+        
+        // 오픈그래프(카톡/페이스북 공유 미리보기) 변경
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if(ogTitle && t['page_title']) ogTitle.setAttribute('content', t['page_title']);
+        
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if(ogDesc && t['hero_desc']) ogDesc.setAttribute('content', t['hero_desc']);
+    }
+
+    // 실행
     startApp();
 
-    // 기존 변수들
+    // 기존 변수들 유지
     let currentQrManager = '';
     let currentQrScore = 0;
     
-    // ... (이 아래는 건드리지 마세요)
-    
-    // ... (아래 코드는 그대로 두시면 됩니다)
 
-    // 1. 모달 열기 + 후기 불러오기
     window.openQuickReview = async function(name) {
         currentQrManager = name;
         currentQrScore = 0;
