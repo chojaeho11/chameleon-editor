@@ -10,7 +10,8 @@ export async function loadTranslations() {
 
     try {
         // 1. 해당 언어의 JSON 파일 불러오기
-        const response = await fetch(`./${lang}.json`);
+        // 점(.)을 빼고 슬래시(/)로 시작, 뒤에 시간값(?t=...)을 붙여서 캐시 방지
+const response = await fetch(`/${lang}.json?t=${new Date().getTime()}`);
         if (!response.ok) throw new Error("번역 파일을 찾을 수 없습니다.");
         
         const data = await response.json();
