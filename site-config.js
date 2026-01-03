@@ -1,60 +1,51 @@
 // site-config.js
 
-// 1. 현재 접속한 도메인 주소를 가져옵니다 (예: cafe2626.com, cafe0101.com)
+// 1. 현재 접속한 도메인과 URL 파라미터를 가져옵니다.
 const hostname = window.location.hostname;
+const urlParams = new URLSearchParams(window.location.search);
+const forceLang = urlParams.get('lang'); // ?lang=jp 또는 ?lang=en 감지
 
-// [1] 기본 설정 (한국 - cafe2626.com 또는 그 외 주소)
+// [기본 설정] (한국 - cafe2626.com 또는 localhost)
 let config = {
     code: 'KR',
-    lang: 'kr',          // 불러올 json 파일명 (long/kr.json)
-    currency: 'KRW',     // 통화 코드
-    symbol: '원',        // 통화 기호
-    
-    // PG 결제 설정 (한국)
+    lang: 'kr',          // kr.json 사용
+    currency: 'KRW',
+    symbol: '원',
     pgProvider: 'toss',
-    // ▼ 기존에 쓰시던 토스 라이브 키를 여기에 넣었습니다 ▼
-    tossClientKey: 'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6', 
-    
-    // 견적서/입금 계좌 정보
+    tossClientKey: 'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6',
     bankInfo: '국민은행 647701-04-277763 (예금주: 카멜레온프린팅)',
     invoiceTitle: '견 적 서',
     companyName: '(주)카멜레온프린팅',
     csPhone: '031-366-1984'
 };
 
-// [2] 🇯🇵 일본 도메인 감지 (cafe0101.com)
-if (hostname.includes('cafe0101.com')) {
+// [2] 🇯🇵 일본 설정 (도메인이 cafe0101이거나 ?lang=jp 일 때)
+if (hostname.includes('cafe0101.com') || forceLang === 'jp') {
+    console.log("👉 일본어 모드로 강제 전환됨");
     config = {
         code: 'JP',
-        lang: 'jp',          // long/jp.json
+        lang: 'jp',          // jp.json 사용
         currency: 'JPY',
         symbol: '¥',
-        
-        // PG 결제 설정 (일본 - 스트라이프)
         pgProvider: 'stripe',
-        // ▼ 나중에 발급받은 일본용 Stripe 키를 넣으세요
-        stripePublicKey: 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX', 
-        
-        bankInfo: 'Mizuho Bank 123-456789 (Account: Chameleon)', // 일본 계좌 예시
+        stripePublicKey: 'pk_live_jp_key_placeholder', 
+        bankInfo: 'Mizuho Bank 123-456789 (Account: Chameleon)',
         invoiceTitle: '御 見 積 書',
         companyName: 'Chameleon Printing JP',
         csPhone: '03-1234-5678'
     };
 }
-// [3] 🇺🇸 영어/글로벌 도메인 감지 (cafe3355.com)
-else if (hostname.includes('cafe3355.com')) {
+// [3] 🇺🇸 영어 설정 (도메인이 cafe3355이거나 ?lang=en 일 때)
+else if (hostname.includes('cafe3355.com') || forceLang === 'en') {
+    console.log("👉 영어 모드로 강제 전환됨");
     config = {
         code: 'US',
-        lang: 'en',          // long/en.json
+        lang: 'en',          // en.json 사용
         currency: 'USD',
         symbol: '$',
-        
-        // PG 결제 설정 (글로벌 - 스트라이프)
         pgProvider: 'stripe',
-        // ▼ 나중에 발급받은 미국용 Stripe 키를 넣으세요
-        stripePublicKey: 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX', 
-        
-        bankInfo: 'Bank of America 987654321', // 미국 계좌 예시
+        stripePublicKey: 'pk_live_us_key_placeholder',
+        bankInfo: 'Bank of America 987654321',
         invoiceTitle: 'INVOICE',
         companyName: 'Chameleon Global Inc.',
         csPhone: '+1-234-567-8900'
@@ -64,5 +55,4 @@ else if (hostname.includes('cafe3355.com')) {
 // 설정 내보내기
 export const SITE_CONFIG = config;
 
-// 디버깅용 (브라우저 콘솔에서 확인 가능)
-console.log(`🌍 접속 도메인: ${hostname} / 설정된 국가: ${config.code}`);
+console.log(`🌍 현재 설정: ${config.code} / 언어파일: ${config.lang}.json`);

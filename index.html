@@ -210,10 +210,33 @@
 </div>
 
 <script type="module">
-    import { sb } from './config.js';
+    // [수정 1] initConfig를 {} 안에 추가해야 합니다.
+    import { sb, initConfig } from './config.js';
+    import { loadTranslations } from './translation.js';
 
+    // 페이지 로드 시 실행 순서
+    async function startApp() {
+        try {
+            // 1. 설정 로드 (국가 확인)
+            await initConfig(); 
+            
+            // 2. 번역 적용
+            if (typeof loadTranslations === 'function') {
+                await loadTranslations();
+            }
+        } catch (e) {
+            console.error("초기화 오류:", e);
+        }
+    }
+
+    // [수정 2] 함수를 실행합니다.
+    startApp();
+
+    // 여기서부터 기존 변수들
     let currentQrManager = '';
     let currentQrScore = 0;
+    
+    // ... (아래 코드는 그대로 두시면 됩니다)
 
     // 1. 모달 열기 + 후기 불러오기
     window.openQuickReview = async function(name) {
@@ -2483,25 +2506,23 @@ if (loadId) {
             }
         };
     }
-
-    // ============================================================
-    // [5] 에디터 시작 및 템플릿 로드
-    // ============================================================
-    // ============================================================
-    // [5] 에디터 시작 및 템플릿 로드 (수정됨: 로그인 체크 + 템플릿 팝업)
-    // ============================================================
     window.startEditorDirect = async function(key) {
-        // [1] 로그인 체크 로직 추가
+        // 1. 번역 객체 가져오기 (없으면 빈 객체)
+        const t = window.translations || {};
+
+        // 2. 로그인 체크
         const { data } = await sb.auth.getSession();
         if (!data || !data.session || !data.session.user) {
-            alert("디자인을 시작하려면 로그인이 필요합니다.");
+            // [변경] 한글 대신 번역된 문구 사용 (JSON에 키가 없으면 기본 한글 출력)
+            alert(t['msg_login_required'] || "디자인을 시작하려면 로그인이 필요합니다.");
             document.getElementById('loginModal').style.display = 'flex';
-            return; // 로그인 안되어 있으면 에디터 진입 중단
+            return; 
         }
 
-        if (!key) return alert("상품 코드가 올바르지 않습니다.");
+        if (!key) return alert(t['msg_invalid_code'] || "상품 코드가 올바르지 않습니다.");
 
         window.currentProductKey = key;
+        // ... (이 아래 코드는 그대로 두시면 됩니다)
         if(canvas) canvas.currentProductKey = key;
         
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
@@ -2821,75 +2842,75 @@ if (loadId) {
     };
 
     // 3. 데이터 로드 및 그리기 (핵심 함수)
+    // [수정됨] 번역 적용된 템플릿 로드 함수
     async function loadTemplatePage(page) {
         const grid = document.getElementById('startTemplateGrid');
         if (!grid) return;
 
-        // 로딩 표시
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>로딩 중...</div>';
+        // 1. 번역 객체 준비
+        const t = window.translations || {};
+        const txtLoading = t['msg_loading'] || "로딩 중...";
+        const txtNoData = t['msg_no_data'] || "검색 결과가 없습니다.";
+
+        // 2. 로딩 화면에 번역된 텍스트 적용
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>${txtLoading}</div>`;
         
         try {
             // DB 쿼리 준비
             let query = sb.from('library')
-                .select('id, thumb_url, category, tags', { count: 'exact' }) // 전체 개수도 같이 가져옴
+                .select('id, thumb_url, category, tags', { count: 'exact' }) 
                 .order('created_at', { ascending: false })
-                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); // 범위 설정
+                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); 
 
-            // 검색어 필터 (태그 검색)
+            // 검색어 필터
             if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
                 query = query.ilike('tags', `%${lastSearchKeyword}%`);
             }
 
             const { data, error, count } = await query;
-
             if (error) throw error;
 
-            grid.innerHTML = ''; // 기존 내용 지우기
+            grid.innerHTML = ''; // 초기화
 
-            // 데이터가 없을 때
+            // 데이터가 없을 때 번역된 문구 출력
             if (!data || data.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#999;">검색 결과가 없습니다.</div>';
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:#999;">${txtNoData}</div>`;
                 updatePaginationButtons(page, 0);
                 return;
             }
 
-            // [수정] 카드 생성 (정사각형 프레임 + 모든 뱃지 표시)
+            // (기존 코드와 동일) 카드 생성 로직
             data.forEach(tpl => {
                 const card = document.createElement('div');
                 card.className = 'tpl-card-start'; 
                 
-                // 1. 카테고리별 뱃지 설정 (모든 종류 추가)
+                // 뱃지 설정 등 기존 로직 유지...
                 let badgeText = '';
-                let badgeColor = '#64748b'; // 기본 회색
+                let badgeColor = '#64748b';
 
                 switch (tpl.category) {
-                    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break; // 보라색
-                    case 'user_image':  badgeText = 'User Image'; badgeColor = '#059669'; break;  // 초록색
+                    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break;
+                    case 'user_image':  badgeText = 'User Image'; badgeColor = '#059669'; break;
                     case 'vector':      badgeText = 'Vector'; badgeColor = '#7c3aed'; break;
                     case 'photo-bg':    badgeText = 'Image'; badgeColor = '#059669'; break;
-                    case 'graphic':     badgeText = 'Graphic'; badgeColor = '#2563eb'; break; // 파란색
+                    case 'graphic':     badgeText = 'Graphic'; badgeColor = '#2563eb'; break;
                     case 'pattern':
-                    case 'transparent-graphic': badgeText = 'Pattern'; badgeColor = '#db2777'; break; // 핑크색
-                    case 'logo':        badgeText = 'Logo'; badgeColor = '#d97706'; break; // 주황색
+                    case 'transparent-graphic': badgeText = 'Pattern'; badgeColor = '#db2777'; break;
+                    case 'logo':        badgeText = 'Logo'; badgeColor = '#d97706'; break;
                     case 'text':        badgeText = 'Text'; badgeColor = '#475569'; break;
                 }
 
-                // 뱃지 HTML 생성
                 let badgeHtml = '';
                 if (badgeText) {
                     badgeHtml = `<span style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; z-index:5; box-shadow:0 2px 4px rgba(0,0,0,0.2); text-transform:uppercase; letter-spacing:0.5px;">${badgeText}</span>`;
                 }
 
-                // 2. 이미지 최적화 (정사각형 1:1 비율 요청)
                 let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
                 if (imgSrc.includes('supabase.co')) {
                     const separator = imgSrc.includes('?') ? '&' : '?';
-                    // width와 height를 똑같이 설정하고 resize=cover 옵션을 주어 정사각형으로 자름
                     imgSrc += `${separator}width=400&height=400&resize=cover&format=webp&quality=70`;
                 }
 
-                // 3. HTML 구성 및 스타일 강제 적용
-                // aspect-ratio: 1/1 을 주어 강제로 정사각형으로 만듭니다.
                 card.style.cssText = "aspect-ratio: 1/1; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid #e5e7eb; background: #f8fafc;";
                 
                 card.innerHTML = `
@@ -2905,12 +2926,12 @@ if (loadId) {
                 grid.appendChild(card);
             });
 
-            // 현재 페이지 번호 업데이트 및 버튼 상태 관리
             currentTemplatePage = page;
             updatePaginationButtons(page, data.length);
 
         } catch (e) {
             console.error("템플릿 로드 오류:", e);
+            // 오류 메시지도 번역 가능하지만 일단 한글로 둡니다
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">오류가 발생했습니다.</div>';
         }
     }
