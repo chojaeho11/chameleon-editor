@@ -6,18 +6,48 @@
     <title>카멜레온 커뮤니티</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    
     <link rel="stylesheet" href="./style.css">
     
     <style>
+        /* =========================================
+           기본 레이아웃 및 스타일
+           ========================================= */
         body { 
             background: #f1f5f9; 
             padding-top: 80px; 
             font-family: 'Pretendard', sans-serif;
             overflow-y: auto !important;
             height: auto !important;
+            color: #333;
+        }
+
+        /* 상단 네비게이션 바 */
+        .topbar {
+            position: fixed; 
+            top: 0; left: 0; right: 0; 
+            z-index: 999;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .brand { 
+            font-weight: 900; 
+            font-size: 20px; 
+            cursor: pointer;
+            color: #111;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .board-container { 
@@ -27,72 +57,352 @@
             padding-bottom: 100px;
         }
         
+        /* 게시판 헤더 (제목, 필터, 글쓰기 버튼) */
         .board-header-wrap {
-            background: white; border-radius: 20px; padding: 25px 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 30px;
-            display: flex; justify-content: space-between; align-items: center;
+            background: white; 
+            border-radius: 20px; 
+            padding: 25px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+            margin-bottom: 30px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
-        .country-badge { background: #eff6ff; color: #6366f1; padding: 5px 12px; border-radius: 30px; font-size: 13px; font-weight: 700; margin-bottom: 5px; display:inline-block;}
+        
+        .country-badge { 
+            background: #eff6ff; 
+            color: #6366f1; 
+            padding: 5px 12px; 
+            border-radius: 30px; 
+            font-size: 13px; 
+            font-weight: 700; 
+            margin-bottom: 5px; 
+            display: inline-block;
+        }
 
-        /* 게시글 그리드 */
-        .post-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
+        /* =========================================
+           게시글 목록 (Grid System)
+           ========================================= */
+        .post-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            gap: 25px; 
+        }
+
         .post-card {
-            background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;
-            cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column;
+            background: white; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            border: 1px solid #e2e8f0;
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            display: flex; 
+            flex-direction: column;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            height: 100%;
         }
-        .post-card:hover { transform: translateY(-7px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-color: #6366f1; }
-        .card-thumb { width: 100%; height: 180px; background-color: #f8fafc; overflow: hidden; display:flex; align-items:center; justify-content:center; }
-        .card-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-        .post-card:hover .card-thumb img { transform: scale(1.05); }
-        .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-        .card-title { font-size: 16px; font-weight: 700; color: #333; margin: 0 0 10px 0; line-height: 1.4; flex: 1; }
-        .card-meta { font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: auto; }
 
-        /* 상세보기 */
-        .view-wrap { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); display: none; position: relative; }
-        .view-title-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .view-title { font-size: 32px; font-weight: 900; color: #111; line-height: 1.3; margin: 0; }
-        .view-meta-row { display: flex; gap: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 40px; color: #666; font-size: 14px; }
-        .view-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .view-content { font-size: 16px; line-height: 1.8; color: #333; min-height: 200px; margin-bottom: 50px; }
+        .post-card:hover { 
+            transform: translateY(-7px); 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
+            border-color: #6366f1; 
+        }
+        
+        /* 썸네일 영역 */
+        .card-thumb { 
+            width: 100%; 
+            height: 180px; 
+            background-color: #f8fafc; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .card-thumb img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transition: transform 0.3s; 
+        }
+        
+        .post-card:hover .card-thumb img { 
+            transform: scale(1.05); 
+        }
+        
+        .card-body { 
+            padding: 20px; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .card-title { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: #333; 
+            margin: 0 0 10px 0; 
+            line-height: 1.4; 
+            flex: 1;
+            /* 긴 제목 말줄임 처리 */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .card-meta { 
+            font-size: 12px; 
+            color: #94a3b8; 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: auto; 
+            padding-top: 15px;
+            border-top: 1px solid #f8fafc;
+        }
 
-        /* 별점 스타일 */
-        .star-display-lg { color: #f59e0b; font-size: 20px; margin-bottom: 5px; }
-        .star-rating { display: flex; gap: 2px; cursor: pointer; margin-left: 10px; }
-        .star-rating i { color: #cbd5e1; font-size: 24px; transition: color 0.2s; }
-        .star-rating i.active { color: #f59e0b; }
+        /* =========================================
+           게시글 상세 보기 (View)
+           ========================================= */
+        .view-wrap { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); 
+            display: none; /* JS로 제어 */
+            position: relative; 
+        }
+        
+        .view-title-row { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        
+        .view-title { 
+            font-size: 32px; 
+            font-weight: 900; 
+            color: #111; 
+            line-height: 1.3; 
+            margin: 0; 
+        }
+        
+        .view-meta-row { 
+            display: flex; 
+            gap: 20px; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 20px; 
+            margin-bottom: 40px; 
+            color: #666; 
+            font-size: 14px; 
+        }
 
-        /* 댓글 영역 */
-        .comment-section { background: #f8fafc; padding: 20px; border-radius: 12px; margin-top: 30px; }
-        .comment-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #333; }
-        .comment-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; max-height: 500px; overflow-y: auto; }
-        .comment-item { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
-        .comment-top { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
-        .comment-author { font-weight: 700; color: #333; }
-        .comment-date { color: #999; }
-        .comment-text { font-size: 14px; color: #555; line-height: 1.5; }
+        /* 상세 본문 이미지 강제 리사이징 (레이아웃 깨짐 방지) */
+        .view-content img { 
+            max-width: 100% !important; 
+            height: auto !important; 
+            border-radius: 8px; 
+            margin: 15px 0; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        
+        .view-content { 
+            font-size: 16px; 
+            line-height: 1.8; 
+            color: #333; 
+            min-height: 200px; 
+            margin-bottom: 50px; 
+        }
 
-        /* 댓글 폼 */
-        .comment-form { display: flex; gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        /* =========================================
+           별점 (Star Rating) 스타일
+           ========================================= */
+        .star-display-lg { 
+            color: #f59e0b; 
+            font-size: 20px; 
+            margin-bottom: 5px; 
+        }
+        
+        .star-rating { 
+            display: flex; 
+            gap: 2px; 
+            cursor: pointer; 
+            margin-left: 10px; 
+        }
+        
+        .star-rating i { 
+            color: #cbd5e1; 
+            font-size: 24px; 
+            transition: color 0.2s; 
+        }
+        
+        .star-rating i.active { 
+            color: #f59e0b; 
+        }
 
-        /* 글쓰기 에디터 */
-        .write-wrap { display: none; background: white; padding: 30px; border-radius: 20px; flex-direction: column; gap: 20px; }
-        #editor-container { height: 500px; font-size: 16px; } 
+        /* =========================================
+           댓글 영역
+           ========================================= */
+        .comment-section { 
+            background: #f8fafc; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-top: 30px; 
+        }
+        
+        .comment-header { 
+            font-size: 18px; 
+            font-weight: 800; 
+            margin-bottom: 15px; 
+            color: #333; 
+        }
+        
+        .comment-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+            max-height: 500px; 
+            overflow-y: auto; 
+        }
+        
+        .comment-item { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #e2e8f0; 
+        }
+        
+        .comment-top { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 5px; 
+            font-size: 13px; 
+        }
+        
+        .comment-author { 
+            font-weight: 700; 
+            color: #333; 
+        }
+        
+        .comment-date { 
+            color: #999; 
+        }
+        
+        .comment-text { 
+            font-size: 14px; 
+            color: #555; 
+            line-height: 1.5; 
+        }
 
-        .btn-edit { background: #dbeafe; color: #2563eb; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 5px; }
+        /* 댓글 작성 폼 */
+        .comment-form { 
+            display: flex; 
+            gap: 10px; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #e2e8f0; 
+        }
+
+        /* =========================================
+           글쓰기 에디터 (Write)
+           ========================================= */
+        .write-wrap { 
+            display: none; /* JS로 제어 */
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px; 
+            flex-direction: column; 
+            gap: 20px; 
+        }
+        
+        #editor-container { 
+            height: 500px; 
+            font-size: 16px; 
+        } 
+
+        /* 버튼 스타일 */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #f8fafc; }
+        
+        .btn.primary {
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+        .btn.primary:hover { background: #1d4ed8; }
+
+        .btn-edit { 
+            background: #dbeafe; 
+            color: #2563eb; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-right: 5px; 
+        }
         .btn-edit:hover { background: #bfdbfe; }
-        .btn-delete { background: #fee2e2; color: #ef4444; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        .btn-delete { 
+            background: #fee2e2; 
+            color: #ef4444; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
         .btn-delete:hover { background: #fecaca; }
 
-        .ql-toolbar.ql-snow { border-top-left-radius: 10px; border-top-right-radius: 10px; border-color: #e2e8f0; background: #f8fafc; }
-        .ql-container.ql-snow { border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; border-color: #e2e8f0; font-family: 'Pretendard'; }
+        /* 입력창 스타일 */
+        .ai-input-pretty {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .ai-input-pretty:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        /* Quill 툴바 커스텀 */
+        .ql-toolbar.ql-snow { 
+            border-top-left-radius: 10px; 
+            border-top-right-radius: 10px; 
+            border-color: #e2e8f0; 
+            background: #f8fafc; 
+        }
+        .ql-container.ql-snow { 
+            border-bottom-left-radius: 10px; 
+            border-bottom-right-radius: 10px; 
+            border-color: #e2e8f0; 
+            font-family: 'Pretendard'; 
+        }
     </style>
 </head>
 <body>
 
-    <div class="topbar" style="position:fixed; top:0; left:0; right:0; z-index: 999;">
-        <div class="brand" onclick="location.href='/'"><i class="fa-solid fa-palette"></i> Chameleon</div>
+    <div class="topbar">
+        <div class="brand" onclick="location.href='/'">
+            <i class="fa-solid fa-palette"></i> Chameleon
+        </div>
         <div style="flex:1;"></div>
     </div>
 
@@ -109,7 +419,7 @@
                     <option value="US">🇺🇸 미국</option>
                     <option value="JP">🇯🇵 일본</option>
                 </select>
-                <button id="btnWrite" class="btn primary" style="display:none; margin-left:10px;">✏️ 글쓰기</button>
+                <button id="btnWrite" class="btn primary" style="display:inline-block; margin-left:10px;">✏️ 글쓰기</button>
             </div>
         </div>
 
@@ -202,24 +512,7 @@
         async function init() {
             await initConfig();
 
-            // [추가된 로직 시작] DB에서 실시간으로 권한 다시 확인하기
-            let isRealAdmin = isAdmin; // config.js에서 가져온 기본값
-
-            if (currentUser) {
-                // profiles 테이블에서 현재 로그인한 유저의 role 값을 직접 조회
-                const { data: profile } = await sb.from('profiles')
-                    .select('role')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                // DB에 'admin'이라고 적혀있으면 관리자 권한 부여 (admin.html에서 설정한 값 반영)
-                if (profile && profile.role === 'admin') {
-                    isRealAdmin = true;
-                }
-            }
-            // [추가된 로직 끝]
-
-            // UI 초기화
+            // UI 초기화: 국가 선택, 타이틀 등
             const countrySelect = document.getElementById('countrySelect');
             countrySelect.value = currentCountry;
             countrySelect.onchange = (e) => location.href = `/board.html?cat=${category}&country=${e.target.value}`;
@@ -230,15 +523,10 @@
             document.getElementById('pageTitle').innerText = pageTitle;
             document.title = pageTitle;
 
-            const btnWrite = document.getElementById('btnWrite');
-            
-            // [수정됨] 블로그일 때 isRealAdmin 변수를 사용하여 버튼 표시 여부 결정
-            if (category === 'blog') {
-                if (isRealAdmin) btnWrite.style.display = 'inline-block';
-            } else {
-                if (currentUser) btnWrite.style.display = 'inline-block';
-            }
+            // 글쓰기 버튼 항상 표시 (로그인 여부 상관없이)
+            document.getElementById('btnWrite').style.display = 'inline-block';
 
+            // Quill 에디터 설정
             quill = new Quill('#editor-container', {
                 modules: {
                     toolbar: [
@@ -277,22 +565,19 @@
             document.getElementById('inputTitle').value = title;
             quill.root.innerHTML = content;
 
-            // [수정] 수정 모드일 때도 카테고리가 review면 별점 수정창 표시
             if (category === 'review') {
                 document.getElementById('ratingInputArea').style.display = 'flex';
-                // 기존 별점 불러오는 로직은 생략했으나 필요하면 추가 가능
             }
 
             showSection('write');
         };
 
         window.deleteCurrentPost = async function() {
-            if(!confirm("정말 이 글을 삭제하시겠습니까?\n(관련된 댓글도 모두 삭제됩니다)")) return;
+            if(!confirm("정말 삭제하시겠습니까?")) return;
             try {
-                const { error: commentErr } = await sb.from('community_comments').delete().eq('post_id', postId);
-                if(commentErr) throw commentErr;
-                const { error: postErr } = await sb.from('community_posts').delete().eq('id', postId);
-                if(postErr) throw postErr;
+                await sb.from('community_comments').delete().eq('post_id', postId);
+                const { error } = await sb.from('community_posts').delete().eq('id', postId);
+                if(error) throw error;
                 alert("삭제되었습니다.");
                 goToList();
             } catch(e) {
@@ -314,12 +599,22 @@
             });
         }
 
+        // [이미지 최적화] Supabase 스토리지 이미지 리사이징 URL 생성기
+        function getResizedImage(url, width = 300) {
+            if (!url) return null;
+            if (url.includes('supabase.co/storage/v1/object/public')) {
+                return `${url}?width=${width}&resize=cover`;
+            }
+            return url;
+        }
+
+        // [핵심 로직] 리스트 불러오기 (본문 제외, 썸네일만)
         async function loadPostList() {
             showSection('list');
             
-            // [수정] 리스트에서도 별점 가져오기 위해 rating 컬럼 추가
+            // select에서 'content'를 제외하고 'thumbnail'을 가져옴 -> 데이터 전송량 감소 -> 속도 향상
             const { data } = await sb.from('community_posts')
-                .select('id, title, author_name, created_at, view_count, content, rating') 
+                .select('id, title, author_name, created_at, view_count, thumbnail, rating') 
                 .eq('category', category).eq('country_code', currentCountry)
                 .order('created_at', { ascending: false });
             
@@ -334,12 +629,9 @@
             listEl.style.display = 'grid';
 
             data.forEach(post => {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = post.content;
-                const firstImg = tempDiv.querySelector('img');
-                const thumbSrc = firstImg ? firstImg.src : null;
+                // DB에 저장된 thumbnail 주소를 가져옴
+                const thumbSrc = post.thumbnail ? getResizedImage(post.thumbnail, 400) : null;
 
-                // [수정] 리스트 카드에 별점 표시
                 let starHtml = '';
                 if (category === 'review' && post.rating) {
                     starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
@@ -349,15 +641,16 @@
 
                 const card = document.createElement('div');
                 card.className = 'post-card';
+                // loading="lazy" 추가
                 card.innerHTML = `
                     <div class="card-thumb">
-                        ${thumbSrc ? `<img src="${thumbSrc}" loading="lazy">` : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`}
+                        ${thumbSrc ? `<img src="${thumbSrc}" loading="lazy" alt="썸네일">` : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`}
                     </div>
                     <div class="card-body">
                         ${starHtml}
                         <div class="card-title">${post.title}</div>
                         <div class="card-meta">
-                            <span>${post.author_name || 'User'}</span>
+                            <span>${post.author_name || '익명'}</span>
                             <span>${new Date(post.created_at).toLocaleDateString()}</span>
                         </div>
                     </div>
@@ -371,10 +664,10 @@
             showSection('view');
             await sb.rpc('increment_view_count', { post_id: id });
             
+            // 상세 화면에서는 content(본문) 전체를 가져옴
             const { data: post } = await sb.from('community_posts').select('*').eq('id', id).single();
             if (!post) return alert('삭제된 글입니다.'), goToList();
             
-            // [수정] 작성자의 별점 표시 (review 카테고리만)
             const ratingArea = document.getElementById('viewRatingArea');
             if (category === 'review' && post.rating) {
                 let starHtml = '';
@@ -394,7 +687,8 @@
             document.getElementById('viewContent').innerHTML = post.content;
 
             const btnGroup = document.getElementById('btnGroupAuth');
-            if (isAdmin || (currentUser && currentUser.id === post.author_id)) {
+            // 본인이거나 관리자일 때만 수정/삭제 버튼
+            if (currentUser && (isAdmin || currentUser.id === post.author_id)) {
                 btnGroup.style.display = 'block';
             } else {
                 btnGroup.style.display = 'none';
@@ -422,7 +716,6 @@
             comments.forEach(cmt => {
                 const item = document.createElement('div');
                 item.className = 'comment-item';
-                // [수정] 댓글에서는 별점 삭제함
                 item.innerHTML = `
                     <div class="comment-top">
                         <span class="comment-author">${cmt.author_name}</span>
@@ -439,9 +732,10 @@
             document.getElementById('boardView').style.display = sec === 'view' ? 'block' : 'none';
             document.getElementById('boardWrite').style.display = sec === 'write' ? 'flex' : 'none';
             
+            // 리스트 화면이면 글쓰기 버튼 표시
             const btnWrite = document.getElementById('btnWrite');
             if (sec === 'list') {
-                 if(category !== 'blog' || isAdmin) btnWrite.style.display = 'inline-block';
+                 btnWrite.style.display = 'inline-block';
             } else {
                 btnWrite.style.display = 'none';
             }
@@ -449,17 +743,14 @@
 
         function setupEventListeners() {
             document.getElementById('btnWrite').onclick = () => {
-                if (!currentUser) return alert('로그인이 필요합니다.');
-                
+                // 비로그인도 작성 가능하므로 체크 로직 없음
                 isEditMode = false; 
                 document.getElementById('inputTitle').value = "";
                 quill.setContents([]);
                 
-                // [수정] 리뷰 카테고리일 때만 작성창에 별점 입력 보이기
                 if (category === 'review') {
                     document.getElementById('ratingInputArea').style.display = 'flex';
-                    currentRating = 5; // 기본값
-                    // 별 초기화
+                    currentRating = 5; 
                     document.querySelectorAll('#starInput i').forEach(s => s.classList.add('active'));
                 } else {
                     document.getElementById('ratingInputArea').style.display = 'none';
@@ -468,46 +759,71 @@
                 showSection('write');
             };
 
+            // [게시글 등록 버튼]
             document.getElementById('btnSubmitPost').onclick = async () => {
                 const title = document.getElementById('inputTitle').value;
                 const content = quill.root.innerHTML; 
                 if (!title || quill.getText().trim().length === 0 && !content.includes('<img')) return alert('내용을 입력해주세요.');
 
-                // [수정] rating 값 설정 (리뷰 아니면 null)
+                // [핵심] 본문에서 첫 번째 이미지 URL 추출하여 썸네일로 사용
+                let thumbUrl = null;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const firstImg = doc.querySelector('img');
+                if (firstImg) {
+                    thumbUrl = firstImg.src;
+                }
+
                 const ratingValue = (category === 'review') ? currentRating : null;
 
-                if (isEditMode) {
-                    const { error } = await sb.from('community_posts')
-                        .update({ title, content, rating: ratingValue }) // 수정 시 별점도 업데이트
-                        .eq('id', postId);
+                // 작성자 정보 (비로그인이면 익명 처리)
+                const authorId = currentUser ? currentUser.id : null; 
+                const authorName = currentUser ? (currentUser.user_metadata.full_name || currentUser.email.split('@')[0]) : '익명(Guest)';
+                const authorEmail = currentUser ? currentUser.email : '';
 
+                // 저장할 데이터 객체
+                const payload = { 
+                    title, 
+                    content, 
+                    rating: ratingValue,
+                    thumbnail: thumbUrl // 추출한 썸네일 저장
+                };
+
+                if (isEditMode) {
+                    // 수정 모드
+                    if (!currentUser) return alert("익명 작성 글은 수정할 수 없습니다.");
+                    const { error } = await sb.from('community_posts').update(payload).eq('id', postId);
+                    
                     if (error) alert("수정 실패: " + error.message);
                     else { alert("수정되었습니다!"); location.reload(); }
 
                 } else {
-                    const { error } = await sb.from('community_posts').insert({
-                        category, country_code: currentCountry, title, content, 
-                        author_id: currentUser.id, 
-                        author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0], 
-                        author_email: currentUser.email,
-                        rating: ratingValue // 작성 시 별점 저장
-                    });
+                    // 신규 작성 모드
+                    payload.category = category;
+                    payload.country_code = currentCountry;
+                    payload.author_id = authorId;
+                    payload.author_name = authorName;
+                    payload.author_email = authorEmail;
 
-                    if (error) alert(error.message); 
+                    const { error } = await sb.from('community_posts').insert(payload);
+
+                    if (error) alert("저장 실패: " + error.message); 
                     else { alert('등록되었습니다!'); goToList(); }
                 }
             };
 
+            // [댓글 등록 버튼]
             document.getElementById('btnSubmitComment').onclick = async () => {
-                if(!currentUser) return alert('로그인이 필요합니다.');
                 const txt = document.getElementById('commentInput').value;
                 if(!txt.trim()) return alert('댓글 내용을 입력해주세요.');
 
-                // [수정] 댓글 등록 시 rating 필드 제거 (작성자가 이미 글에서 매김)
+                const cmtAuthorId = currentUser ? currentUser.id : null;
+                const cmtAuthorName = currentUser ? (currentUser.user_metadata.full_name || currentUser.email.split('@')[0]) : '익명(Guest)';
+
                 const { error } = await sb.from('community_comments').insert({
                     post_id: postId,
-                    author_id: currentUser.id,
-                    author_name: currentUser.user_metadata.full_name || currentUser.email.split('@')[0],
+                    author_id: cmtAuthorId,
+                    author_name: cmtAuthorName,
                     content: txt
                 });
 
