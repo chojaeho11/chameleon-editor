@@ -210,8 +210,9 @@
 </div>
 
 <script type="module">
-    // [수정 1] initConfig를 여기서 불러와야 실행됩니다.
+    // [수정] SITE_CONFIG를 추가로 불러옵니다.
     import { sb, initConfig } from './config.js';
+    import { SITE_CONFIG } from './site-config.js'; 
     import { loadTranslations } from './translation.js';
 
     async function startApp() {
@@ -220,6 +221,11 @@
             if (typeof initConfig === 'function') {
                 await initConfig(); 
             }
+
+            // ★ [핵심] 에러가 났던 원인을 해결하는 코드입니다!
+            // SITE_CONFIG의 설정값을 전역 변수 CURRENT_LANG에 넣어줍니다.
+            window.CURRENT_LANG = SITE_CONFIG.lang; 
+            console.log("✅ 언어 변수 설정 완료:", window.CURRENT_LANG);
             
             // 2. 번역 적용
             if (typeof loadTranslations === 'function') {
@@ -230,12 +236,14 @@
         }
     }
 
-    // [수정 2] 함수를 반드시 실행해야 합니다!
+    // 앱 실행
     startApp();
 
     // 기존 변수들
     let currentQrManager = '';
     let currentQrScore = 0;
+    
+    // ... (이 아래는 건드리지 마세요)
     
     // ... (아래 코드는 그대로 두시면 됩니다)
 
