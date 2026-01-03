@@ -1,7 +1,7 @@
 // main.js - Complete Integrated Version
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js"; 
-import { SITE_CONFIG } from "./site-config.js"; 
+import { SITE_CONFIG } from "./site-config.js"; // ★ 설정 파일 불러오기
 import { initCanvas, canvas } from "./canvas-core.js";
 import { initSizeControls, applySize } from "./canvas-size.js"; 
 import { initGuides } from "./canvas-guides.js";
@@ -20,14 +20,17 @@ import { initContextMenu } from "./context-menu.js";
 import { createVectorOutline } from "./outlineMaker.js";
 
 window.currentUploadedPdfUrl = null; 
+window.translations = {}; // 전역 번역 변수
 
 // ==========================================================
 // 1. 메인 초기화 및 통합 로직
 // ==========================================================
 window.addEventListener("DOMContentLoaded", async () => {
     const loading = document.getElementById("loading");
+    
+    // ▼▼▼ [번역 시스템 시작] ▼▼▼
     try {
-        console.log(`🌐 언어 설정 로딩: ${SITE_CONFIG.lang} (도메인: ${window.location.hostname})`);
+        console.log(`🌐 접속 도메인: ${window.location.hostname} / 설정 언어: ${SITE_CONFIG.lang}`);
         
         // 1. 해당 국가의 JSON 파일 가져오기
         const response = await fetch(`long/${SITE_CONFIG.lang}.json`);
@@ -57,9 +60,14 @@ window.addEventListener("DOMContentLoaded", async () => {
         const loginBtn = document.getElementById('btnLoginBtn');
         if(loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
 
+        const cartBtn = document.querySelector('#btnOrderTop span[data-i18n="btn_add_to_cart"]');
+        if (cartBtn && langData['btn_add_to_cart']) cartBtn.innerText = langData['btn_add_to_cart'];
+
     } catch (e) {
         console.error("❌ 번역 로딩 실패:", e);
     }
+    // ▲▲▲ [번역 시스템 끝] ▲▲▲
+
     const startScreen = document.getElementById("startScreen");
     const mainEditor = document.getElementById("mainEditor");
 
@@ -93,7 +101,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         // 3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
         if (currentUser) {
             await checkPartnerStatus();
-            await initContributorSystem(); // [신규] 기여자 시스템 초기화
+            await initContributorSystem(); 
         }
 
         // 폰트 미리 로드
