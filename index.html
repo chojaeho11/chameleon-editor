@@ -2,6 +2,20 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
+<script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log("좀비 서비스 워커 삭제 완료!");
+                }
+            });
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+                console.log("좀비 캐시 저장소 삭제 완료!");
+            });
+        }
+    </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
 <meta name="description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.">
