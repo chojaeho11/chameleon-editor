@@ -499,8 +499,6 @@
     let quill; 
     let currentRating = 5; 
     let isEditMode = false;
-    
-    // 페이징 설정 (12개씩 로딩)
     let currentPage = 0;
     const ITEMS_PER_PAGE = 12;
     let isLastPage = false;
@@ -542,8 +540,7 @@
             'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書' }
         }[category] || { KR: '게시판', US: 'Board', JP: '掲示板' };
         
-        const pageTitle = titleMap[currentCountry] || titleMap['KR'];
-        document.getElementById('pageTitle').innerText = pageTitle;
+        document.getElementById('pageTitle').innerText = titleMap[currentCountry] || titleMap['KR'];
         document.getElementById('btnWrite').style.display = 'inline-block';
 
         quill = new Quill('#editor-container', {
@@ -573,41 +570,18 @@
         setupEventListeners();
     }
 
-    function createLoadMoreButton() {
-        const listContainer = document.querySelector('.board-container');
-        const btnDiv = document.createElement('div');
-        btnDiv.id = 'loadMoreArea';
-        btnDiv.style.textAlign = 'center';
-        btnDiv.style.marginTop = '20px';
-        btnDiv.style.display = 'none';
-        btnDiv.innerHTML = `<button id="btnLoadMore" class="btn" style="width:200px; padding:10px;">더 보기 (+)</button>`;
-        listContainer.appendChild(btnDiv);
-
-        document.getElementById('btnLoadMore').onclick = () => {
-            currentPage++;
-            loadPostList(true);
-        };
-    }
-
-    window.goToList = function() {
-        location.href = `/board.html?cat=${category}&country=${currentCountry}`;
-    };
-
-    // ★★★ [핵심 수정] 이미지 강제 리사이징 함수 (Supabase 네이티브 기능 사용) ★★★
+    // ★★★ [핵심] 이미지 강제 압축 (Supabase Pro 기능 사용) ★★★
     function getResizedImage(url) {
         if (!url) return null;
         if (url.startsWith('data:image')) return url; // Base64는 패스
         
-        // 1. Supabase Storage 이미지인 경우 -> 서버 자체 변환 기능 사용 (가장 빠름)
+        // Supabase 이미지라면 서버에서 300px, WebP 포맷으로 변환해서 가져오게 함
         if (url.includes('supabase.co')) {
-            const baseUrl = url.split('?')[0]; // 기존 파라미터 제거
-            // width=300: 너비 300px로 강제 축소
-            // quality=50: 화질 50%로 압축
-            // format=webp: 용량이 작은 webp 포맷으로 변환
+            const baseUrl = url.split('?')[0];
             return `${baseUrl}?width=300&height=300&resize=cover&quality=50&format=webp`;
         }
         
-        // 2. 외부 이미지인 경우 -> wsrv.nl 경유 (백업)
+        // 외부 이미지는 wsrv.nl 경유
         return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=300&q=50&output=webp`;
     }
 
@@ -626,6 +600,7 @@
             const from = currentPage * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
 
+            // [최적화] content 컬럼 제외하고 가져오기 (데이터 양 줄임)
             const { data, error } = await sb.from('community_posts')
                 .select('id, title, author_name, created_at, view_count, thumbnail, rating') 
                 .eq('category', category).eq('country_code', currentCountry)
@@ -638,7 +613,6 @@
 
             if (!data || data.length === 0) {
                 if (!isAppend) listEl.innerHTML = `<div style="text-align:center; padding:100px; color:#999; grid-column:1/-1;">게시글이 없습니다.</div>`;
-                isLastPage = true;
                 if(loadMoreArea) loadMoreArea.style.display = 'none';
                 return;
             }
@@ -653,9 +627,9 @@
             listEl.style.display = 'grid';
 
             data.forEach(post => {
-                // [수정] 썸네일 변환 URL 적용
-                const thumbSrc = post.thumbnail ? getResizedImage(post.thumbnail) : null;
-
+                // ★ 썸네일을 압축된 URL로 교체
+                const thumbSrc = getResizedImage(post.thumbnail);
+                
                 let starHtml = '';
                 if (category === 'review' && post.rating) {
                     starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
@@ -665,15 +639,13 @@
 
                 const card = document.createElement('div');
                 card.className = 'post-card';
-                // [수정] onerror시 원본 로드 (썸네일 실패 대비)
-                const fallbackSrc = post.thumbnail || '';
                 
+                // 이미지가 깨지면 원본을 시도하되, 기본적으로는 압축된 것만 로드
                 card.innerHTML = `
                     <div class="card-thumb">
                         ${thumbSrc 
-                            ? `<img src="${thumbSrc}" loading="lazy" alt="썸네일" onerror="this.onerror=null; this.src='${fallbackSrc}';">` 
-                            : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`
-                        }
+                            ? `<img src="${thumbSrc}" loading="lazy" alt="썸네일" onerror="this.src='${post.thumbnail}'">` 
+                            : `<i class="fa-regular fa-image" style="font-size:40px; color:#ddd;"></i>`}
                     </div>
                     <div class="card-body">
                         ${starHtml}
@@ -692,7 +664,7 @@
             console.error(e);
             if(!isAppend) {
                 listEl.style.display = 'block';
-                listEl.innerHTML = `<div style="text-align:center; padding:50px; color:#ef4444;">서버 연결 상태가 좋지 않습니다.<br>잠시 후 다시 시도해주세요.<br><span style="font-size:12px;">(${e.message})</span></div>`;
+                listEl.innerHTML = `<div style="text-align:center; padding:50px; color:#ef4444;">서버 연결이 원활하지 않습니다.<br>잠시 후 다시 시도해주세요.<br><span style="font-size:12px;">(${e.message})</span></div>`;
             }
         }
     }
@@ -702,7 +674,6 @@
         try {
             await sb.rpc('increment_view_count', { post_id: id });
             const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
-            
             if (error) throw error;
             if (!post) return alert('삭제된 글입니다.'), goToList();
             
@@ -712,9 +683,7 @@
                 for(let i=0; i<5; i++) starHtml += i < post.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
                 ratingArea.innerHTML = starHtml;
                 ratingArea.style.display = 'block';
-            } else {
-                ratingArea.style.display = 'none';
-            }
+            } else ratingArea.style.display = 'none';
 
             document.getElementById('viewTitle').innerText = post.title;
             document.getElementById('viewAuthor').innerHTML = `<i class="fa-regular fa-user"></i> ${post.author_name}`;
@@ -723,11 +692,9 @@
             document.getElementById('viewContent').innerHTML = post.content;
 
             const btnGroup = document.getElementById('btnGroupAuth');
-            if (currentUser && (isAdmin || currentUser.id === post.author_id)) {
-                btnGroup.style.display = 'block';
-            } else {
-                btnGroup.style.display = 'none';
-            }
+            if (currentUser && (isAdmin || currentUser.id === post.author_id)) btnGroup.style.display = 'block';
+            else btnGroup.style.display = 'none';
+            
             loadComments(id);
         } catch(e) {
             console.error(e);
@@ -742,10 +709,7 @@
         try {
             const { data: comments } = await sb.from('community_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
             listDiv.innerHTML = '';
-            if(!comments || comments.length === 0) {
-                listDiv.innerHTML = '<p style="color:#999; text-align:center;">첫 번째 댓글을 남겨주세요!</p>';
-                return;
-            }
+            if(!comments || comments.length === 0) { listDiv.innerHTML = '<p style="color:#999; text-align:center;">첫 번째 댓글을 남겨주세요!</p>'; return; }
             comments.forEach(cmt => {
                 const item = document.createElement('div');
                 item.className = 'comment-item';
@@ -755,19 +719,29 @@
         } catch(e) { listDiv.innerHTML = '<p style="color:red;">댓글 로딩 실패</p>'; }
     }
 
+    function createLoadMoreButton() {
+        const listContainer = document.querySelector('.board-container');
+        const btnDiv = document.createElement('div');
+        btnDiv.id = 'loadMoreArea';
+        btnDiv.style.textAlign = 'center';
+        btnDiv.style.marginTop = '20px';
+        btnDiv.style.display = 'none';
+        btnDiv.innerHTML = `<button id="btnLoadMore" class="btn" style="width:200px; padding:10px;">더 보기 (+)</button>`;
+        listContainer.appendChild(btnDiv);
+        document.getElementById('btnLoadMore').onclick = () => { currentPage++; loadPostList(true); };
+    }
+
     function showSection(sec) {
         document.getElementById('boardList').style.display = sec === 'list' ? 'grid' : 'none';
         document.getElementById('boardView').style.display = sec === 'view' ? 'block' : 'none';
         document.getElementById('boardWrite').style.display = sec === 'write' ? 'flex' : 'none';
         const btnWrite = document.getElementById('btnWrite');
-        
+        const loadMore = document.getElementById('loadMoreArea');
         if (sec === 'list') {
             btnWrite.style.display = 'inline-block';
-            const loadMore = document.getElementById('loadMoreArea');
             if(loadMore && !isLastPage) loadMore.style.display = 'block';
         } else {
             btnWrite.style.display = 'none';
-            const loadMore = document.getElementById('loadMoreArea');
             if(loadMore) loadMore.style.display = 'none';
         }
     }
