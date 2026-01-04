@@ -1,9 +1,22 @@
 // site-config.js
 
-// 1. 도메인이나 URL 파라미터로 국가 확인 (예: ?lang=jp)
+// 1. 도메인 및 URL 파라미터로 국가 확인
 const urlParams = new URLSearchParams(window.location.search);
-// 기본값은 KR, URL에 lang=jp가 있으면 JP 모드로 전환
-let country = urlParams.get('lang') ? urlParams.get('lang').toUpperCase() : 'KR';
+const hostname = window.location.hostname;
+
+let country = 'KR'; // 기본값
+
+// 도메인에 따른 국가 설정
+if (hostname.includes('cafe0101.com')) {
+    country = 'JP';
+} else if (hostname.includes('cafe3355.com')) {
+    country = 'US';
+}
+
+// URL 파라미터가 있다면 도메인 설정보다 우선순위 (테스트용)
+if (urlParams.get('lang')) {
+    country = urlParams.get('lang').toUpperCase();
+}
 
 export const SITE_CONFIG = {
     COUNTRY: country, // 'KR', 'JP', 'US'
@@ -26,18 +39,17 @@ export const SITE_CONFIG = {
     PG_CONFIG: {
         'KR': {
             provider: 'toss',
-            clientKey: 'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6' // 기존 토스 키
+            clientKey: 'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6' 
         },
         'JP': {
             provider: 'stripe',
-            // ★ Stripe 대시보드에서 받은 'pk_live_...' 키를 아래에 넣으세요
-            publishableKey: 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX' 
+            publishableKey: 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX' // Stripe 일본 키 입력 필요
         },
         'US': {
             provider: 'stripe',
-            publishableKey: 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX'
+            publishableKey: 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX' // Stripe 미국 키 입력 필요
         }
     }
 };
 
-console.log(`🌍 현재 접속 국가 모드: ${country}`);
+console.log(`🌍 현재 접속 국가 모드: ${country} (Domain: ${hostname})`);

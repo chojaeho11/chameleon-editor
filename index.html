@@ -15,10 +15,11 @@
 <meta name="keywords" content="카멜레온프린팅, 허니콤보드, 종이매대, 패브릭인쇄, 팝업스토어, 등신대제작, 실사출력, 연포장, 친환경전시, 백월디자인, 전시부스, 폼보드인쇄">
 <link rel="canonical" href="https://www.cafe2626.com/" />
 
-<link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/" />
-<link rel="alternate" hreflang="en" href="https://www.cafe2626.com/en.html" />
-<link rel="alternate" hreflang="ja" href="https://www.cafe2626.com/jp.html" />
-<link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/" />
+<link rel="canonical" href="https://www.cafe3355.com/">
+    <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
+    <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/">
+    <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/">
+    <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 
@@ -46,7 +47,11 @@
   (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
   ChannelIO('boot', { "pluginKey": "752ba9ff-a447-4e10-9813-715e051995cd" });
 </script>
-
+<script>
+    // 1. 프로젝트 버전
+    const PROJECT_VERSION = '118'; 
+    const DATA_PATH = './long/';
+</script>
 </head>
 <body>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;">로딩 중입니다...</p></div>
@@ -132,14 +137,22 @@
     
     
     <div class="quick-title-box">
-        <span class="qt-badge">프린팅계의 코스트코</span>
+        <span class="qt-badge">가격 퀄리티 두가지는 자신있다. 대한민국 프린팅계의 코스트코</span>
         <h2 class="qt-text">카멜레온의 제품 카테고리</h2>
     </div>
     <div id="topCategoryTabs" class="category-tabs"></div>
 
     <div class="quick-menu-track" id="quickMenuContainer"></div>
-    <div style="text-align: center; margin-top: 20px; color: #333; font-weight: bold; font-size: 16px; padding-bottom: 20px;">
-        팝업스토어나 전시 등 복잡한 주문은 채널톡을 통해 문의주시면 담당 매니저가 안내해 드립니다.
+    <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;">골드 등급 이상 또는 대량주문 전용 VIP 라운지</h3>
+        <p style="margin: 0 0 20px 0; color: #64748b; font-size: 15px;">
+            팝업스토어나 전시장 꾸미기 같이 대량이거나 복잡한 주문인가요? 골드 등급이상의 VIP고객이신가요?<br>
+            파일만 올려주시면 <strong>전담 매니저</strong>가 분석 후 견적서와 함께 30분 이내에 연락드립니다.<br>
+            매니저의 가이드에 따라 결제만 하시면 디자인/파일변환/접수/배송/설치까지 논스톱으로 도와드립니다.
+        </p>
+        <button onclick="document.getElementById('vipOrderModal').style.display='flex'" class="btn-round" style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); color: white; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(67, 56, 202, 0.3); width: auto; display: inline-flex; gap: 10px; align-items: center;">
+            <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> VIP 주문 파일 업로드 (원스톱 접수)
+        </button>
     </div>
 </div>
 
@@ -552,21 +565,31 @@
 
 
 <script>
-    // 게시판 이동 함수 (국가 코드 자동 감지)
-    // 게시판 이동 함수 (새 창 열기 적용)
-function goBoard(category) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentLang = urlParams.get('lang') || 'kr'; 
-    
-    let country = 'KR';
-    if (currentLang.toLowerCase() === 'us' || currentLang.toLowerCase() === 'en') country = 'US';
-    if (currentLang.toLowerCase() === 'jp') country = 'JP';
+    // 게시판 이동 함수 (도메인 및 언어 자동 감지 적용)
+    function goBoard(category) {
+        // 1. 현재 도메인 확인
+        const hostname = window.location.hostname;
+        let targetCountry = 'KR'; // 기본값
 
-    // window.open을 사용하여 새 탭에서 열기 ('_blank')
-    window.open(`/board.html?cat=${category}&country=${country}`, '_blank');
-}
+        // 2. 도메인에 따라 국가 코드 결정 (board.html은 KR, US, JP 대문자 사용)
+        if (hostname.includes('cafe3355.com')) {
+            targetCountry = 'US';
+        } else if (hostname.includes('cafe0101.com')) {
+            targetCountry = 'JP';
+        }
+
+        // 3. 주소창 파라미터(?lang=)가 있다면 최우선 적용 (테스트용)
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramLang = urlParams.get('lang');
+        if (paramLang) {
+            if (paramLang.toLowerCase() === 'en' || paramLang.toLowerCase() === 'us') targetCountry = 'US';
+            if (paramLang.toLowerCase() === 'ja' || paramLang.toLowerCase() === 'jp') targetCountry = 'JP';
+        }
+
+        // 4. 해당 언어 코드를 달고 게시판 새 창 열기
+        window.open(`/board.html?cat=${category}&country=${targetCountry}`, '_blank');
+    }
 </script>
-
     
 
     <div id="startTemplateGrid" class="template-grid-start"></div>
@@ -1548,18 +1571,16 @@ function goBoard(category) {
     import { canvas, setMaxLimits } from './canvas-core.js';
     import { openProductDetail, startDesignFromProduct } from './order.js';
     import { applySize } from './canvas-size.js';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig } from './config.js'; // initConfig 추가됨
-    
-    // 윈도우 전역 변수 연결
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig } from './config.js';
+
+    // -----------------------------------------------------------
+    // [1] 전역 변수 및 헬퍼 함수 설정
+    // -----------------------------------------------------------
     window.canvas = canvas;
-    // [강력 최적화] 이미지를 아주 작게(썸네일용) 변환하는 함수
     window.getTinyThumb = function(url, size = 150) {
         if (!url) return '';
-        // Supabase 이미지라면 서버에서 리사이징해서 가져옴 (속도 20배 향상)
         if (url.includes('supabase.co')) {
             const separator = url.includes('?') ? '&' : '?';
-            // quality=50: 화질 절반 (작게 보니까 상관없음)
-            // format=webp: 용량 적은 포맷
             return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=50&format=webp`;
         }
         return url;
@@ -1570,107 +1591,202 @@ function goBoard(category) {
     window.currentProductKey = 'A4';
     let selectedProductForChoice = null;
 
+    // -----------------------------------------------------------
+    // [2] 통합 언어 감지 및 SEO 자동 설정 (핵심 로직)
+    // -----------------------------------------------------------
+    const urlParams = new URLSearchParams(window.location.search);
+    let detectedLang = urlParams.get('lang'); // 1. 주소창 ?lang= 확인
+
+    // 2. 파라미터가 없으면 도메인으로 판단
+    if (!detectedLang) {
+        const hostname = window.location.hostname;
+        if (hostname.includes('cafe3355.com')) {
+            detectedLang = 'en'; // 영어 (cafe3355)
+        } else if (hostname.includes('cafe0101.com')) {
+            detectedLang = 'ja'; // 일본어 (cafe0101)
+        } else {
+            detectedLang = 'kr'; // 그 외 한국어
+        }
+    }
+    
+    // 언어 코드 소문자 변환 및 파일명 매칭 (ja_118.json, en_118.json)
+    let CURRENT_LANG = detectedLang ? detectedLang.toLowerCase() : 'kr';
+    if (CURRENT_LANG === 'jp') CURRENT_LANG = 'ja'; // jp -> ja로 통일
+    if (CURRENT_LANG === 'us') CURRENT_LANG = 'en'; // us -> en으로 통일
+
+    console.log(`🌍 접속 모드: ${CURRENT_LANG} (Domain: ${window.location.hostname})`);
+
+    // [SEO] 언어별 메타태그(제목, 설명) 동적 변경 함수
+    function updateSEOMetaTags(lang) {
+        const metaData = {
+            'kr': {
+                title: "카멜레온프린팅 - 무료 디자인 에디터 (Ver 118)",
+                desc: "허니콤보드, 패브릭인쇄, 팝업스토어 전문. 설치 없이 브라우저에서 바로 디자인하고 주문하세요."
+            },
+            'en': { 
+                title: "Chameleon Printing - Free Honeycomb Board & Fabric Editor",
+                desc: "Create your own Honeycomb Board and Fabric Printing designs with our free online editor. Easy to use, no installation required."
+            },
+            'ja': {
+                title: "カメレオンプリンティング - 無料ハニカムボード＆ファブリック印刷エディタ",
+                desc: "カメレオンプリンティングの無料オンラインエディタで、ハニカムボードやファブリック印刷のデザインを簡単に作成。インストール不要。"
+            }
+        };
+
+        const data = metaData[lang] || metaData['kr'];
+        
+        // 메타 태그 업데이트
+        document.title = data.title;
+        const descTag = document.querySelector('meta[name="description"]');
+        if (descTag) descTag.setAttribute('content', data.desc);
+        
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogTitle) ogTitle.setAttribute('content', data.title);
+        if (ogDesc) ogDesc.setAttribute('content', data.desc);
+        
+        document.documentElement.setAttribute('lang', lang);
+    }
+    updateSEOMetaTags(CURRENT_LANG); // SEO 즉시 실행
+
+    // -----------------------------------------------------------
+    // [3] 번역 파일 로드 및 폰트 설정
+    // -----------------------------------------------------------
+    window.translations = {};
+
+    async function loadAndApplyTranslations() {
+        try {
+            const response = await fetch(`long/${CURRENT_LANG}_${PROJECT_VERSION}.json`);
+            if (!response.ok) {
+                console.warn(`언어 파일 로드 실패 (${CURRENT_LANG}), 한국어로 대체합니다.`);
+                if (CURRENT_LANG !== 'kr') { CURRENT_LANG = 'kr'; return loadAndApplyTranslations(); }
+                return;
+            }
+            const langData = await response.json();
+            window.translations = langData; 
+
+            // 텍스트 교체
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (langData[key]) el.innerHTML = langData[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (langData[key]) el.placeholder = langData[key];
+            });
+
+            // 상단 버튼 강제 번역
+            const topCartBtn = document.querySelector('#btnOrderTop span[data-i18n="btn_add_to_cart"]');
+            if (topCartBtn && langData['btn_add_to_cart']) topCartBtn.innerText = langData['btn_add_to_cart'];
+            const loginBtn = document.getElementById('btnLoginBtn');
+            if (loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
+
+            // 국가별 카카오 버튼 숨김 처리
+            const kakaoBtn = document.getElementById('btnKakaoLogin');
+            if (kakaoBtn) kakaoBtn.style.display = (CURRENT_LANG === 'kr') ? 'flex' : 'none';
+
+            loadLanguageFont();
+
+        } catch (error) { console.error('번역 적용 중 오류:', error); }
+    }
+
+    function loadLanguageFont() {
+        const head = document.getElementsByTagName('head')[0];
+        let fontLink = document.createElement('link');
+        fontLink.rel = 'stylesheet';
+        let fontFamily = '';
+
+        if (CURRENT_LANG === 'ja') {
+            fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap';
+            fontFamily = "'Noto Sans JP', sans-serif";
+            window.currentCanvasFont = 'Noto Sans JP'; 
+        } else if (CURRENT_LANG === 'en') {
+            fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap';
+            fontFamily = "'Inter', sans-serif";
+            window.currentCanvasFont = 'Inter';
+        } else {
+            fontFamily = "'Pretendard', sans-serif";
+            window.currentCanvasFont = 'Pretendard'; 
+        }
+        head.appendChild(fontLink);
+        document.documentElement.style.setProperty('--main-font', fontFamily);
+        const style = document.createElement('style');
+        style.innerHTML = `body, button, input, select, textarea { font-family: ${fontFamily} !important; }`;
+        head.appendChild(style);
+    }
+    loadAndApplyTranslations(); // 번역 실행
+
+    // -----------------------------------------------------------
+    // [4] 템플릿 클릭 & 필터링 함수 (기존 기능 복구)
+    // -----------------------------------------------------------
     window.onTemplateClick = async function(tpl) {
         const startScreen = document.getElementById('startScreen');
-        // 에디터 진입 전(시작 화면)인지 확인
         const isStartScreenVisible = startScreen && window.getComputedStyle(startScreen).display !== 'none';
 
         if (isStartScreenVisible) {
-            // [CASE 1] 시작 화면일 때: 사이즈 선택 모달 띄우기
-            document.getElementById('templateOverlay').style.display = 'none'; // 상단 팝업 닫기
-            window.pendingTemplate = tpl; // 선택한 템플릿 저장
-
-            // 사이즈 선택 모달 호출 (기존 함수 활용)
-            if (window.showCategorySelectionModal) {
-                window.showCategorySelectionModal();
-            } else {
-                // 만약 showCategorySelectionModal 함수가 없다면 showCategoryProducts를 대신 사용하거나 경고
-                alert("사이즈 선택 화면을 불러올 수 없습니다.");
-            }
+            document.getElementById('templateOverlay').style.display = 'none';
+            window.pendingTemplate = tpl;
+            if (window.showCategorySelectionModal) window.showCategorySelectionModal();
+            else alert("사이즈 선택 화면을 불러올 수 없습니다.");
         } else {
-            // [CASE 2] 에디터 작업 중일 때: 캔버스에 추가 확인
             if(!confirm("현재 캔버스에 템플릿을 적용하시겠습니까?\n(기존 디자인 위에 추가됩니다)")) return;
-            
             document.getElementById('templateOverlay').style.display = 'none';
             await window.applyTemplateDirectly(tpl);
         }
     };
 
-    // 2. 상단 팝업에 템플릿 목록 불러오기 함수
     window.filterTpl = async function(category, btnElement) {
-        // 버튼 스타일 활성화
         if (btnElement) {
             const sidebar = document.querySelector('.tpl-sidebar');
             if(sidebar) sidebar.querySelectorAll('.tpl-cate-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
         }
-
         const grid = document.getElementById('tplGrid');
         if (!grid) return;
-
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#888;">로딩 중...</div>';
 
         try {
-            // DB에서 템플릿 가져오기
             let query = sb.from('library')
                           .select('id, thumb_url, data_url, category, tags')
                           .order('created_at', { ascending: false })
                           .limit(50);
-            
-            // 카테고리 필터링
             if (category && category !== 'all') {
                 query = query.ilike('category', `%${category}%`); 
             }
-
             const { data, error } = await query;
             if (error) throw error;
-
             grid.innerHTML = '';
-
             if (!data || data.length === 0) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#999;">데이터가 없습니다.</div>';
                 return;
             }
-
-            // 목록 생성
             data.forEach(tpl => {
                 const div = document.createElement('div');
                 div.className = 'tpl-item';
                 div.style.cssText = 'cursor:pointer; position:relative; overflow:hidden; border-radius:8px; aspect-ratio:1/1.4; background:#f1f5f9;';
-
                 const imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300?text=No+Image';
                 div.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover;">`;
-
-                // 클릭 시 공통 함수 호출
                 div.onclick = () => window.onTemplateClick(tpl);
                 grid.appendChild(div);
             });
-
         } catch (e) {
             console.error(e);
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">오류 발생</div>';
         }
     };
 
-    window.translations = {}; 
-
-
-    // ============================================================
-    // [1] 메인 로드 이벤트 (즉시 반응형 로그인 처리)
-    // ============================================================
+    // -----------------------------------------------------------
+    // [5] 초기화 (Load Event)
+    // -----------------------------------------------------------
     window.addEventListener('load', async () => {
-        
-        // 1. 설정 로딩 (config.js)
         if (window.initConfig) await window.initConfig(); 
         else if (typeof initConfig === 'function') await initConfig();
 
-        // 2. 로그인 버튼 상태 "즉시" 업데이트
         updateLoginButtonState();
 
-        // 3. 카테고리 메뉴 렌더링
+        // ★ [중요] 아래에 있는 함수들을 여기서 호출하여 화면을 그립니다.
         if (typeof renderQuickMenu === 'function') renderQuickMenu();
         
-        // 4. 템플릿 및 상품 로드
         if(window.searchTemplates) window.searchTemplates('');
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
@@ -1678,7 +1794,6 @@ function goBoard(category) {
             loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
         }
 
-        // 5. 검색창 연결
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
         if (searchBtn && searchInput) {
@@ -1686,33 +1801,23 @@ function goBoard(category) {
             searchBtn.onclick = doSearch;
             searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
         }
+        
+        document.getElementById("loading").style.display = "none";
     });
 
-    // ★ [핵심] 로그인 버튼 상태를 강제로 고치는 함수
     function updateLoginButtonState() {
         const btnLogin = document.getElementById('btnLoginBtn');
         const btnConsole = document.getElementById('btnPartnerConsole');
-        
-        // window.currentUser는 config.js에서 이미 설정됨
         if (window.currentUser) {
-            console.log("✅ 로그인 상태 UI 적용:", window.currentUser.email);
-            
             if (btnLogin) {
-                // 1. 텍스트 변경
-                btnLogin.innerText = "로그아웃";
+                btnLogin.innerText = (CURRENT_LANG === 'kr') ? "로그아웃" : "Logout";
                 btnLogin.style.fontWeight = "bold"; 
                 btnLogin.style.color = "#ef4444"; 
-                
-                // 2. 기존 이벤트 제거 및 로그아웃 이벤트 강제 주입
-                // (cloneNode를 사용해 기존에 잘못 연결된 로그인 창 띄우기 이벤트를 날려버림)
                 const newBtn = btnLogin.cloneNode(true);
                 btnLogin.parentNode.replaceChild(newBtn, btnLogin);
-                
                 newBtn.onclick = async function() {
-                    if (confirm("로그아웃 하시겠습니까?")) {
-                        // Supabase 로그아웃 시도
+                    if (confirm((CURRENT_LANG === 'kr') ? "로그아웃 하시겠습니까?" : "Do you want to logout?")) {
                         if(typeof sb !== 'undefined') await sb.auth.signOut();
-                        // 로컬 스토리지 클리어 (확실하게)
                         localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); 
                         window.location.reload(); 
                     }
@@ -1720,173 +1825,71 @@ function goBoard(category) {
             }
             if(btnConsole) btnConsole.style.removeProperty('display');
         } else {
-            // 비로그인 상태
             if (btnLogin) {
-                btnLogin.innerText = "로그인";
+                btnLogin.innerText = (CURRENT_LANG === 'kr') ? "로그인" : "Login";
                 btnLogin.style.fontWeight = "normal";
                 btnLogin.style.color = "";
-                
                 const newBtn = btnLogin.cloneNode(true);
                 btnLogin.parentNode.replaceChild(newBtn, btnLogin);
-
                 newBtn.onclick = () => document.getElementById('loginModal').style.display = 'flex';
             }
             if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
         }
     }
 
-// ▼▼▼ [새로 추가] 마이페이지에서 [편집] 눌렀을 때 복구하는 코드 ▼▼▼
-const loadId = localStorage.getItem('load_design_id');
-if (loadId) {
-    localStorage.removeItem('load_design_id'); // 한 번만 실행되도록 삭제
-    
-    setTimeout(async () => {
-        const loading = document.getElementById('loading');
-        if(loading) loading.style.display = 'flex';
-        
-        try {
-            // 1. DB에서 저장된 디자인 데이터 가져오기
-            const { data, error } = await sb.from('user_designs').select('*').eq('id', loadId).single();
-            
-            if (error || !data) throw new Error("디자인을 찾을 수 없습니다.");
+    // 마이페이지 복구 로직
+    const loadId = localStorage.getItem('load_design_id');
+    if (loadId) {
+        localStorage.removeItem('load_design_id');
+        setTimeout(async () => {
+            const loading = document.getElementById('loading');
+            if(loading) loading.style.display = 'flex';
+            try {
+                const { data, error } = await sb.from('user_designs').select('*').eq('id', loadId).single();
+                if (error || !data) throw new Error("디자인을 찾을 수 없습니다.");
+                if (data.json && !data.json_data) data.json_data = data.json;
 
-            if (data.json && !data.json_data) {
-                data.json_data = data.json;
-            }
+                document.getElementById("startScreen").style.display = "none";
+                document.getElementById("mainEditor").style.display = "flex";
+                document.body.classList.add('editor-active');
 
-            // 2. 에디터 화면으로 전환
-            document.getElementById("startScreen").style.display = "none";
-            document.getElementById("mainEditor").style.display = "flex";
-            document.body.classList.add('editor-active');
-
-            // 3. my-design.js에 있는 복구 함수 실행
-            if (window.restoreDesignFromData) {
-                window.restoreDesignFromData(data);
-            } else {
-                console.error("복구 함수가 로드되지 않았습니다.");
+                if (window.restoreDesignFromData) window.restoreDesignFromData(data);
+            } catch (e) {
+                console.error(e);
+                alert("불러오기 실패: " + e.message);
                 if(loading) loading.style.display = 'none';
             }
-
-        } catch (e) {
-            console.error(e);
-            alert("불러오기 실패: " + e.message);
-            if(loading) loading.style.display = 'none';
-        }
-    }, 800); // 0.8초 뒤 실행 (안전하게 로딩)
-}
-// ▲▲▲ 추가 끝 ▲▲▲
-
-    // ============================================================
-    // [1] 다국어 JSON 파일 로드 및 적용 (Fetch 방식)
-    // ============================================================
-    const urlParams = new URLSearchParams(window.location.search);
-    const CURRENT_LANG = urlParams.get('lang') ? urlParams.get('lang').toLowerCase() : 'kr';
-
-    async function loadAndApplyTranslations() {
-        try {
-            // 1. JSON 파일 불러오기
-            const response = await fetch(`long/${CURRENT_LANG}.json`);
-            
-            if (!response.ok) {
-                throw new Error(`언어 파일을 찾을 수 없습니다: ${CURRENT_LANG}`);
-            }
-
-            const langData = await response.json();
-            
-            // 2. 전역 변수에 저장
-            window.translations = langData; 
-
-            // 3. 브라우저 탭 제목 변경
-            if (langData['page_title']) {
-                document.title = langData['page_title'];
-            }
-
-            // 4. [기존] 텍스트 번역 적용
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (langData[key]) el.innerHTML = langData[key];
-            });
-
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (langData[key]) el.placeholder = langData[key];
-            });
-
-            // ▼▼▼ [추가] 상단 버튼 강제 번역 적용 (확실한 해결책) ▼▼▼
-            const topCartBtn = document.querySelector('#btnOrderTop span[data-i18n="btn_add_to_cart"]');
-            if (topCartBtn && langData['btn_add_to_cart']) topCartBtn.innerText = langData['btn_add_to_cart'];
-
-            const topLoginBtn = document.getElementById('btnLoginBtn');
-            if (topLoginBtn && langData['btn_login']) topLoginBtn.innerText = langData['btn_login'];
-            // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-            // 5. [수정] 로그인 버튼 강제 텍스트 변경 (번역 안 되는 문제 해결용)
-            const loginBtn = document.getElementById('btnLoginBtn');
-            if (loginBtn && langData['btn_login']) {
-                loginBtn.innerText = langData['btn_login'];
-            }
-
-            // 6. [신규] 국가별 소셜 로그인 버튼 제어 (카카오 숨기기)
-            const kakaoBtn = document.getElementById('btnKakaoLogin');
-            if (kakaoBtn) {
-                if (CURRENT_LANG === 'kr') {
-                    // 한국어일 때는 보임
-                    kakaoBtn.style.display = 'flex'; 
-                } else {
-                    // 일본어(jp), 영어(us) 등 다른 언어일 때는 숨김
-                    kakaoBtn.style.display = 'none'; 
-                }
-            }
-
-            // 7. 폰트 로드
-            loadLanguageFont();
-
-        } catch (error) {
-            console.error('번역 데이터 로딩 실패:', error);
-        }
+        }, 800);
     }
 
-    // [수정된 폰트 로드 함수]
-    function loadLanguageFont() {
-        const head = document.getElementsByTagName('head')[0];
-        let fontLink = document.createElement('link');
-        fontLink.rel = 'stylesheet';
-        let fontFamily = '';
+    // PDF 폰트 설정
+    window.pdfFontCache = null;
+    window.pdfFontName = 'NanumGothic'; 
+    window.preloadLanguageFont = async function() { 
+        try { 
+            let fontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf'; 
+            const r = await fetch(fontUrl); 
+            if(r.ok) { 
+                const b = await r.blob(); 
+                const rd = new FileReader(); 
+                rd.onloadend = function() { window.pdfFontCache = rd.result.split(',')[1]; }; 
+                rd.readAsDataURL(b); 
+            } 
+        } catch(e) { console.error("Font Load Error:", e); } 
+    };
+    window.loadKoreanFontForPDF = async function(doc) { 
+        if(window.pdfFontCache) { 
+            try { 
+                const fileName = window.pdfFontName + '.ttf';
+                doc.addFileToVFS(fileName, window.pdfFontCache); 
+                doc.addFont(fileName, window.pdfFontName, 'normal'); 
+                doc.setFont(window.pdfFontName); 
+            } catch(e) { console.warn(e); } 
+        } 
+    };
 
-        if (CURRENT_LANG === 'jp') {
-            // 🇯🇵 일본어 폰트
-            fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap';
-            fontFamily = "'Noto Sans JP', sans-serif";
-            
-            // ★ [추가] 캔버스용 폰트 이름 저장 (따옴표 제거한 순수 이름)
-            window.currentCanvasFont = 'Noto Sans JP'; 
-
-        } else if (CURRENT_LANG === 'us') {
-            // 🇺🇸 영어 폰트
-            fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap';
-            fontFamily = "'Inter', sans-serif";
-            
-            // ★ [추가]
-            window.currentCanvasFont = 'Inter';
-
-        } else {
-            // 🇰🇷 한국어 폰트 (기본)
-            fontFamily = "'Pretendard', sans-serif"; // 또는 NanumGothic
-            
-            // ★ [추가] 한국어는 원하는 폰트로 지정 (예: NanumGothic, Jua, Pretendard 등)
-            window.currentCanvasFont = 'Pretendard'; 
-        }
-
-        head.appendChild(fontLink);
-        document.documentElement.style.setProperty('--main-font', fontFamily);
-        
-        const style = document.createElement('style');
-        style.innerHTML = `body, button, input, select, textarea { font-family: ${fontFamily} !important; }`;
-        head.appendChild(style);
-    }
-
-    // 페이지 로드 시 실행
-    loadAndApplyTranslations();
+    // PDF.js 워커 설정
+    if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     // [추가] 핫딜 렌더링 함수
     // [새로운 통합 함수] 일반 핫딜 + 업자용 핫딜 모두 처리
@@ -3104,5 +3107,85 @@ if (loadId) {
         </div>
     </div>
 </div>
+<script src="./text-wizard.js"></script>
+<div id="vipOrderModal" class="modal-bg" style="z-index: 30000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 550px; max-width: 95%;">
+        <div style="background: #1e1b4b; margin: -25px -25px 20px -25px; padding: 25px; color: white; border-radius: 12px 12px 0 0; text-align: center;">
+            <h3 style="margin: 0; font-size: 22px; color: #fff;"><i class="fa-solid fa-crown" style="color: #fbbf24;"></i> VIP 우선 접수</h3>
+            <p style="margin: 10px 0 0 0; opacity: 0.8; font-size: 13px;">전담 매니저를 선택하고 파일을 올려주세요.</p>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="flex:1;">
+                <label class="form-label" style="font-weight:bold; font-size:13px;">담당자 성함</label>
+                <input id="vipName" class="ai-input-pretty" placeholder="예: 김철수 팀장" style="margin:0;">
+            </div>
+            <div style="flex:1;">
+                <label class="form-label" style="font-weight:bold; font-size:13px;">연락처</label>
+                <input id="vipPhone" class="ai-input-pretty" placeholder="010-0000-0000" style="margin:0;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label class="form-label" style="font-weight:bold; font-size:13px; margin-bottom:5px; display:block;">고객님 전담 매니저가 있으시면 선택해 주세요.</label>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px;">
+                <label class="manager-select">
+                    <input type="radio" name="vipManager" value="은미" checked>
+                    <div class="mgr-box">은미</div>
+                </label>
+                <label class="manager-select">
+                    <input type="radio" name="vipManager" value="성희">
+                    <div class="mgr-box">성희</div>
+                </label>
+                <label class="manager-select">
+                    <input type="radio" name="vipManager" value="지숙">
+                    <div class="mgr-box">지숙</div>
+                </label>
+                <label class="manager-select">
+                    <input type="radio" name="vipManager" value="본사">
+                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;">첫고객</div>
+                </label>
+            </div>
+            <style>
+                .manager-select input { display:none; }
+                .manager-select .mgr-box { border:1px solid #e2e8f0; padding:10px; text-align:center; border-radius:8px; cursor:pointer; font-weight:bold; color:#475569; transition:0.2s; font-size:13px; }
+                .manager-select input:checked + .mgr-box { background:#e0e7ff; border-color:#6366f1; color:#4338ca; box-shadow:0 0 0 2px #6366f1 inset; }
+            </style>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label class="form-label" style="font-weight:bold; font-size:13px;">요청사항 (메모)</label>
+            <textarea id="vipMemo" class="ai-input-pretty" placeholder="견적 요청 내용이나 작업 지시사항을 자유롭게 적어주세요." style="height:80px; margin:0;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label class="form-label" style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">파일 업로드 (다중 선택 가능)</label>
+            <div onclick="document.getElementById('vipFileInput').click()" style="border: 2px dashed #cbd5e1; background: #f8fafc; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 24px; color: #94a3b8; margin-bottom: 5px;"></i>
+                <div style="color: #64748b; font-size: 13px;">여기를 클릭하여 파일 선택 (여러개 가능)</div>
+                <div id="vipFileList" style="margin-top:10px; font-size:12px; color:#4338ca; text-align:left; padding-left:10px;"></div>
+            </div>
+            <input type="file" id="vipFileInput" multiple style="display: none;" onchange="updateVipFileList(this)">
+        </div>
+
+        <button onclick="window.submitVipOrder()" class="btn-round primary" style="width: 100%; height: 50px; font-size: 16px; background: #4338ca;">
+            🚀 접수하기
+        </button>
+        <button onclick="document.getElementById('vipOrderModal').style.display='none'" class="btn-round" style="width: 100%; margin-top: 10px; border: none; color: #64748b;">
+            닫기
+        </button>
+    </div>
+</div>
+<script>
+function updateVipFileList(input) {
+    const list = document.getElementById('vipFileList');
+    list.innerHTML = '';
+    if(input.files.length > 0) {
+        for(let i=0; i<input.files.length; i++) {
+            list.innerHTML += `<div>📄 ${input.files[i].name}</div>`;
+        }
+    }
+}
+</script>
 </body>
 </html>

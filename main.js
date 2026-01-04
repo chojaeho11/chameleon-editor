@@ -1107,3 +1107,78 @@ window.triggerUsageReward = async function(templateOwnerId, type) {
         }
     } catch (e) { console.error("사용료 지급 오류:", e); }
 };
+// ============================================================
+// [VIP 주문] 전용 접수 로직 (다중 파일 + 매니저 + 메모)
+// ============================================================
+window.submitVipOrder = async function() {
+    const name = document.getElementById('vipName').value;
+    const phone = document.getElementById('vipPhone').value;
+    const memo = document.getElementById('vipMemo').value;
+    const fileInput = document.getElementById('vipFileInput');
+    
+    // 선택된 라디오 버튼 값 가져오기
+    const managerRadio = document.querySelector('input[name="vipManager"]:checked');
+    const managerName = managerRadio ? managerRadio.value : '본사';
+
+    if(!name || !phone) return alert("담당자 성함과 연락처를 입력해주세요.");
+    if(fileInput.files.length === 0) return alert("전달하실 파일을 최소 1개 이상 선택해주세요.");
+
+    const btn = document.querySelector('#vipOrderModal .btn-round.primary');
+    const originalText = btn.innerText;
+    btn.innerText = "파일 업로드 중...";
+    btn.disabled = true;
+
+    try {
+        const uploadedFiles = [];
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+
+        // 1. 다중 파일 업로드 반복 처리
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const ext = file.name.split('.').pop();
+            // 파일명 안전하게 변환
+            const safeName = `VIP_${timestamp}_${randomStr}_${i}.${ext}`;
+            const path = `vip_uploads/${safeName}`;
+
+            const { error: uploadErr } = await sb.storage.from('orders').upload(path, file);
+            if (uploadErr) throw uploadErr;
+
+            const { data: publicData } = sb.storage.from('orders').getPublicUrl(path);
+            
+            uploadedFiles.push({
+                name: file.name,
+                url: publicData.publicUrl
+            });
+        }
+
+        // 2. DB 저장 (파일 목록은 JSON으로 저장)
+        const { error: dbErr } = await sb.from('vip_orders').insert({
+            customer_name: name,
+            customer_phone: phone,
+            preferred_manager: managerName,
+            memo: memo,
+            files: uploadedFiles, // JSONB 타입
+            status: '대기중'
+        });
+
+        if(dbErr) throw dbErr;
+
+        alert(`🎉 접수가 완료되었습니다.\n담당 매니저(${managerName})가 확인 후 연락드리겠습니다.`);
+        document.getElementById('vipOrderModal').style.display = 'none';
+        
+        // 입력창 초기화
+        document.getElementById('vipName').value = '';
+        document.getElementById('vipPhone').value = '';
+        document.getElementById('vipMemo').value = '';
+        document.getElementById('vipFileInput').value = '';
+        document.getElementById('vipFileList').innerHTML = '';
+
+    } catch (e) {
+        console.error(e);
+        alert("접수 중 오류가 발생했습니다: " + e.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+};

@@ -138,6 +138,9 @@
         <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
         <ul class="nav-menu">
             <div class="nav-label">Business</div>
+            <li class="nav-item" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
+    <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
+</li>
             <li class="nav-item active" onclick="showSection('sec-orders', this)"><i class="fa-solid fa-cart-shopping"></i> 통합 주문 관리</li>
             <li class="nav-item" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
@@ -175,7 +178,33 @@
         </div>
 
         <div class="content-scroll">
-            
+            <div id="sec-vip" class="section">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px; color: #312e81;">
+                            <i class="fa-solid fa-crown" style="color:#fbbf24;"></i> VIP 파일 접수 내역
+                        </h3>
+                        <button class="btn btn-outline" onclick="loadVipOrders()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="120">접수일시</th>
+                                <th width="80">담당</th>
+                                <th width="100">고객명</th>
+                                <th width="130">연락처</th>
+                                <th>메모 (요청사항)</th>
+                                <th width="200">첨부파일 (다운로드)</th>
+                                <th width="80">상태</th>
+                                <th width="80">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vipOrderListBody">
+                            <tr><td colspan="8" style="text-align:center; padding:30px;">로딩 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <div id="sec-orders" class="section active">
                 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
@@ -1706,6 +1735,7 @@ window.showSection = (secId, navEl) => {
 
     // 기존 섹션별 로드
     if(secId === 'sec-orders') loadOrders();
+    if(secId === 'sec-vip') loadVipOrders();
     if(secId === 'sec-bankda') loadBankdaList();
     if(secId === 'sec-stats') loadStatsData();
     if(secId === 'sec-members') loadMembers();
@@ -3288,6 +3318,84 @@ window.approveWithdrawal = async (requestId) => {
             alert("조회 실패: " + e.message);
         } finally {
             showLoading(false);
+        }
+    };
+    // ==========================================
+    // [VIP] 관리자 기능
+    // ==========================================
+    // ==========================================
+    // [VIP] 관리자 기능 (업데이트됨)
+    // ==========================================
+    window.loadVipOrders = async () => {
+        const tbody = document.getElementById('vipOrderListBody');
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="spinner"></div></td></tr>';
+
+        try {
+            const { data, error } = await sb.from('vip_orders').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">접수된 VIP 주문이 없습니다.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const statusBadge = item.status === '확인됨' 
+                    ? `<span class="badge" style="background:#dcfce7; color:#15803d;">확인완료</span>` 
+                    : `<span class="badge" style="background:#fee2e2; color:#ef4444;">대기중</span>`;
+                
+                // 파일 목록 생성
+                let filesHtml = '';
+                if (item.files && Array.isArray(item.files)) {
+                    item.files.forEach(f => {
+                        filesHtml += `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-block; margin:2px; text-decoration:none; font-size:11px;">💾 ${f.name}</a><br>`;
+                    });
+                } else if (item.file_url) {
+                    // 구버전 데이터 호환 (테이블 리셋했으므로 필요없을 수 있지만 안전장치)
+                    filesHtml = `<a href="${item.file_url}" target="_blank" class="btn btn-outline btn-sm">💾 ${item.file_name || '파일'}</a>`;
+                } else {
+                    filesHtml = '<span style="color:#ccc;">파일 없음</span>';
+                }
+
+                // 매니저 뱃지 색상
+                let mgrColor = '#64748b';
+                const mgrName = item.preferred_manager || '미지정';
+                if(mgrName === '은미') mgrColor = '#db2777';
+                if(mgrName === '성희') mgrColor = '#7c3aed';
+                if(mgrName === '지숙') mgrColor = '#059669';
+
+                tbody.innerHTML += `
+                    <tr style="${item.status !== '확인됨' ? 'background:#fff7ed;' : ''}">
+                        <td>${new Date(item.created_at).toLocaleString()}</td>
+                        <td><span class="badge" style="background:${mgrColor}10; color:${mgrColor}; border:1px solid ${mgrColor}30;">${mgrName}</span></td>
+                        <td style="font-weight:bold;">${item.customer_name}</td>
+                        <td>${item.customer_phone}</td>
+                        <td style="font-size:13px; color:#475569;">${item.memo || '-'}</td>
+                        <td>${filesHtml}</td>
+                        <td style="text-align:center;">${statusBadge}</td>
+                        <td style="text-align:center;">
+                            <button class="btn btn-primary btn-sm" onclick="toggleVipStatus(${item.id}, '${item.status}')">
+                                ${item.status === '확인됨' ? '취소' : '확인'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
+        }
+    };
+
+    window.toggleVipStatus = async (id, currentStatus) => {
+        const newStatus = currentStatus === '확인됨' ? '대기중' : '확인됨';
+        try {
+            const { error } = await sb.from('vip_orders').update({ status: newStatus }).eq('id', id);
+            if (error) throw error;
+            loadVipOrders();
+        } catch(e) {
+            alert("상태 변경 실패: " + e.message);
         }
     };
 

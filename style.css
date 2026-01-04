@@ -2059,7 +2059,7 @@ body {
 
     .quick-menu-wrapper {
         /* 1. 배경 디자인: 노란색 -> 진한 파란색 그라데이션 */
-        background: linear-gradient(135deg, #ffa0a5 0%, #ffd61e 100%) !important;
+        background: linear-gradient(135deg, #ffc60b 0%, #ffd61e 100%) !important;
         
         /* 2. 크기 및 위치: 화면 꽉 참 방지 & 중앙 정렬 */
         width: 100% !important;
@@ -2103,21 +2103,21 @@ body {
     
     /* 뱃지 스타일 변경 (노랑 -> 파랑 포인트) */
     .qt-badge {
-        background-color: #323ab1b4 !important; /* 브랜드 컬러 */
+        background-color: #111111 !important; /* 브랜드 컬러 */
         color: #ffffff !important;
         padding: 6px 15px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 800;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
         display: inline-block;
         margin-bottom: 15px;
-        box-shadow: 0 4px 15px rgba(155, 3, 130, 0.4);
+        box-shadow: 0 4px 15px rgba(209, 209, 209, 0.671);
     }
 
     /* 텍스트 색상 변경 (검정 -> 흰색) */
     .qt-text {
         font-size: 36px;
-        font-weight: 900;
+        font-weight: 700;
         margin: 0;
         color: #ffffff !important; /* 흰색 텍스트 */
         letter-spacing: -1px;
