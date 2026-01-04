@@ -151,21 +151,21 @@
     
     
     <div class="quick-title-box">
-        <span class="qt-badge">가격 퀄리티 두가지는 자신있다. 대한민국 프린팅계의 코스트코</span>
-        <h2 class="qt-text">카멜레온의 제품 카테고리</h2>
+        <span class="qt-badge" data-i18n="home_quick_badge">가격 퀄리티 두가지는 자신있다. 대한민국 프린팅계의 코스트코</span>
+        <h2 class="qt-text" data-i18n="home_quick_title">카멜레온의 제품 카테고리</h2>
     </div>
     <div id="topCategoryTabs" class="category-tabs"></div>
 
     <div class="quick-menu-track" id="quickMenuContainer"></div>
     <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
-        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;">골드 등급 이상 또는 대량주문 전용 VIP 라운지</h3>
-        <p style="margin: 0 0 20px 0; color: #64748b; font-size: 15px;">
+        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">골드 등급 이상 또는 대량주문 전용 VIP 라운지</h3>
+        <p style="margin: 0 0 20px 0; color: #64748b; font-size: 15px;" data-i18n="home_vip_desc">
             팝업스토어나 전시장 꾸미기 같이 대량이거나 복잡한 주문인가요? 골드 등급이상의 VIP고객이신가요?<br>
             파일만 올려주시면 <strong>전담 매니저</strong>가 분석 후 견적서와 함께 30분 이내에 연락드립니다.<br>
             매니저의 가이드에 따라 결제만 하시면 디자인/파일변환/접수/배송/설치까지 논스톱으로 도와드립니다.
         </p>
         <button onclick="document.getElementById('vipOrderModal').style.display='flex'" class="btn-round" style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); color: white; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(67, 56, 202, 0.3); width: auto; display: inline-flex; gap: 10px; align-items: center;">
-            <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> VIP 주문 파일 업로드 (원스톱 접수)
+            <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span data-i18n="home_btn_vip_upload">VIP 주문 파일 업로드 (원스톱 접수)</span>
         </button>
     </div>
 </div>
@@ -173,8 +173,8 @@
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
-        <h2>🔥 오늘의 핫딜 <span class="badge-hot">Time Sale</span></h2>
-        <p>지금 놓치면 후회하는 초특가 상품을 만나보세요. 친구에서 선물하세요. 집들이 선물 핫딜상품은 최대 10개까지 주문가능</p>
+        <h2>🔥 <span data-i18n="home_hotdeal_title">오늘의 핫딜</span> <span class="badge-hot">Time Sale</span></h2>
+        <p data-i18n="home_hotdeal_desc">지금 놓치면 후회하는 초특가 상품을 만나보세요. 친구에서 선물하세요. 집들이 선물 핫딜상품은 최대 10개까지 주문가능</p>
     </div>
     <div id="hotDealGrid" class="hotdeal-grid">
         </div>
@@ -182,8 +182,8 @@
 
 <div id="bizDealSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f8fafc; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
-        <h2 style="color: #4f46e5;">💼 업자용 대박할인 <span class="badge-hot" style="background:#4f46e5;">B2B Only</span></h2>
-        <p>사업자 고객님을 위한 전용 특가! 최소주문수량 10~100개 리셀러 판매자에게 드리는 업자할인</p>
+        <h2 style="color: #4f46e5;">💼 <span data-i18n="home_biz_title">업자용 대박할인</span> <span class="badge-hot" style="background:#4f46e5;">B2B Only</span></h2>
+        <p data-i18n="home_biz_desc">사업자 고객님을 위한 전용 특가! 최소주문수량 10~100개 리셀러 판매자에게 드리는 업자할인</p>
     </div>
     <div id="bizDealGrid" class="hotdeal-grid">
         </div>
@@ -195,27 +195,27 @@
     <div class="comm-grid">
         <a href="#" onclick="goBoard('blog'); return false;" class="comm-btn blog">
             <div class="comm-icon"><i class="fa-solid fa-pen-nib"></i></div>
-            <span>카멜레온<br>블로그</span>
+            <span data-i18n="menu_blog">카멜레온<br>블로그</span>
         </a>
         <a href="#" onclick="goBoard('review'); return false;" class="comm-btn">
             <div class="comm-icon"><i class="fa-solid fa-star"></i></div>
-            <span>고객<br>제작후기</span>
+            <span data-i18n="menu_review">고객<br>제작후기</span>
         </a>
         <a href="#" onclick="goBoard('promo'); return false;" class="comm-btn">
             <div class="comm-icon"><i class="fa-solid fa-bullhorn"></i></div>
-            <span>지역광고사<br>홍보</span>
+            <span data-i18n="menu_promo">지역광고사<br>홍보</span>
         </a>
         <a href="#" onclick="goBoard('trade'); return false;" class="comm-btn">
             <div class="comm-icon"><i class="fa-solid fa-handshake"></i></div>
-            <span>중고장비<br>거래</span>
+            <span data-i18n="menu_trade">중고장비<br>거래</span>
         </a>
         <a href="#" onclick="goBoard('job'); return false;" class="comm-btn">
             <div class="comm-icon"><i class="fa-solid fa-briefcase"></i></div>
-            <span>구인구직</span>
+            <span data-i18n="menu_job">구인구직</span>
         </a>
         <a href="#" onclick="goBoard('free'); return false;" class="comm-btn">
             <div class="comm-icon"><i class="fa-solid fa-comments"></i></div>
-            <span>제품설명서</span>
+            <span data-i18n="menu_manual">제품설명서</span>
         </a>
     </div>
 </div>
@@ -327,43 +327,41 @@
 </style>
 
 <div class="tier-section-wrap">
-    <h2 class="tier-title-main">멤버십 등급별 <span>할인 혜택</span> 안내</h2>
+    <h2 class="tier-title-main" data-i18n="tier_main_title">멤버십 등급별 <span>할인 혜택</span> 안내</h2>
     
     <div class="tier-container">
-        
         <div class="tier-card gold">
             <div class="tier-icon"><i class="fa-solid fa-medal"></i></div>
-            <div class="tier-name">골드 (GOLD)</div>
-            <div class="tier-discount">5% 할인</div>
+            <div class="tier-name" data-i18n="tier_gold_name">골드 (GOLD)</div>
+            <div class="tier-discount" data-i18n="tier_gold_discount">5% 할인</div>
             <div class="tier-desc">
-                <span class="tier-badge">조건 1</span> 누적 구매 <strong>500만원</strong> 이상<br>
+                <span class="tier-badge" data-i18n="tier_cond_1">조건 1</span> <span data-i18n="tier_gold_cond_1">누적 구매 <strong>500만원</strong> 이상</span><br>
                 <div style="margin: 5px 0; font-size:12px; color:#94a3b8;">OR</div>
-                <span class="tier-badge">조건 2</span> 로고 <strong>10개</strong> 공유
+                <span class="tier-badge" data-i18n="tier_cond_2">조건 2</span> <span data-i18n="tier_gold_cond_2">로고 <strong>10개</strong> 공유</span>
             </div>
         </div>
 
         <div class="tier-card platinum">
             <div class="tier-icon"><i class="fa-solid fa-crown"></i></div>
-            <div class="tier-name">플래티넘 (PLATINUM)</div>
-            <div class="tier-discount">10% 할인</div>
+            <div class="tier-name" data-i18n="tier_plat_name">플래티넘 (PLATINUM)</div>
+            <div class="tier-discount" data-i18n="tier_plat_discount">10% 할인</div>
             <div class="tier-desc">
-                <span class="tier-badge">조건 1</span> 누적 구매 <strong>1,000만원</strong> 이상<br>
+                <span class="tier-badge" data-i18n="tier_cond_1">조건 1</span> <span data-i18n="tier_plat_cond_1">누적 구매 <strong>1,000만원</strong> 이상</span><br>
                 <div style="margin: 5px 0; font-size:12px; color:#94a3b8;">OR</div>
-                <span class="tier-badge">조건 2</span> 로고 <strong>100개</strong> 공유
+                <span class="tier-badge" data-i18n="tier_cond_2">조건 2</span> <span data-i18n="tier_plat_cond_2">로고 <strong>100개</strong> 공유</span>
             </div>
         </div>
 
         <div class="tier-card franchise">
             <div class="tier-icon"><i class="fa-solid fa-store"></i></div>
-            <div class="tier-name">가맹점 (PARTNER)</div>
-            <div class="tier-discount">15% 할인</div>
+            <div class="tier-name" data-i18n="tier_partner_name">가맹점 (PARTNER)</div>
+            <div class="tier-discount" data-i18n="tier_partner_discount">15% 할인</div>
             <div class="tier-desc">
-                <span class="tier-badge" style="background:#e0e7ff; color:#4338ca;">가입조건</span><br>
-                가맹비 <strong>100만원</strong><br>
-                <span style="font-size:12px; color:#888;">(별도 문의 요망)</span>
+                <span class="tier-badge" style="background:#e0e7ff; color:#4338ca;" data-i18n="tier_partner_cond_label">가입조건</span><br>
+                <span data-i18n="tier_partner_cond_fee">가맹비 <strong>100만원</strong></span><br>
+                <span style="font-size:12px; color:#888;" data-i18n="tier_partner_cond_note">(별도 문의 요망)</span>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -374,23 +372,19 @@
     <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
         <div style="flex: 1; min-width: 300px;">
             <span style="background: #6366f1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 10px; display: inline-block;">PARTNER CENTER</span>
-            <h2 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 800;">우리 지역 인쇄/광고 주문, <br><span style="color: #818cf8;">직접 접수받고 수익을 창출하세요!</span></h2>
-            <p style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6;">
-                영업은 본사가 가맹점주님은 제작 납품, 허니콤보드는 설치비 무료, 기타 설치는 고객님과 협의<br>
-                관리 페이지에서 맘에드는 오더만 찜해서 제작 진행하시면 됩니다. <br>
-                카드 수수료 3.5% 가맹점 수수료 6.5% 제외 후, 전액 안전하게 정산해 드립니다. (고객 수령 5일 후 정산) <br>
-                배송 가능한 지역을 선택하세요. 그 지역오더가 들어오면 관리자페이지 알림이 울립니다. 띵동!!! <br>
-                먼저 가져가는 사람이 임자입니다. 단! 불친절 1달 2회 신고되면 박탈됩니다.
+            <h2 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 800;" data-i18n="partner_banner_title">우리 지역 인쇄/광고 주문, <br><span style="color: #818cf8;">직접 접수받고 수익을 창출하세요!</span></h2>
+            <p style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6;" data-i18n="partner_banner_desc">
+                영업은 본사가 가맹점주님은 제작 납품, 허니콤보드는 설치비 무료...
             </p>
         </div>
         
         <div style="text-align: right;">
     <button id="btnPartnerConsole" onclick="openPartnerConsole()" class="btn-round" style="display: none; background: #fff; color: #0f172a; font-weight: 800; padding: 15px 30px; border: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255,255,255,0.2);">
-        <i class="fa-solid fa-store"></i> 파트너스 관리자 접속
+        <i class="fa-solid fa-store"></i> <span data-i18n="btn_partner_console">파트너스 관리자 접속</span>
     </button>
     
     <button id="btnPartnerApply" class="btn-round" style="background: transparent; border: 2px solid #6366f1; color: #fff; font-weight: 800; padding: 12px 25px;">
-        가맹점 신청 문의하기
+        <span data-i18n="btn_partner_apply">가맹점 신청 문의하기</span>
     </button>
 </div>
     </div>
@@ -399,53 +393,49 @@
 <div class="contributor-section">
     <div class="contributor-header">
         <div class="contributor-title">
-            <i class="fa-solid fa-gem" style="color:#6366f1;"></i> 카멜레온 기여자 시스템
+            <i class="fa-solid fa-gem" style="color:#6366f1;"></i> <span data-i18n="contrib_title">카멜레온 기여자 시스템</span>
             <span class="contributor-badge" id="myTierBadge">Loading...</span>
         </div>
         <div class="contributor-balance-box">
-            <span style="font-size:12px; color:#64748b;">내 누적 수익금</span>
-            <div class="live-money" id="contributorBalance">0원</div>
+            <span style="font-size:12px; color:#64748b;" data-i18n="contrib_balance_label">내 누적 수익금</span>
+            <div class="live-money" id="contributorBalance">0</div>
         </div>
     </div>
 
-    <div class="contributor-desc">
-        내가 만든 디자인 소스를 공유하고 현금을 적립받으세요. <br>
-        좋은 소스를 많이 올리면 프로기여자, 더많이 올리면 마스터가 되고 돈은 2배 4배로 올라갑니다. <br>
-        중복이미지를 많이 올리면 즉시 자격이 취소됩니다.키워드를 영어와 일본어로 같이 올리면 판매 수익이 훨씬 올라갑니다. <br>
-        출금신청은 상단 우측 마이페이지에서 가능하며 1000원부터 즉시출금이 가능합니다. <br>
-        <span style="color:#ef4444; font-weight:bold;">투명한 공개!</span> 올리는 즉시 적립 + 전세계 다른 유저가 사용할때마다 빵빵한 판매수익
+    <div class="contributor-desc" data-i18n="contrib_desc">
+        내가 만든 디자인 소스를 공유하고 현금을 적립받으세요...
     </div>
 
     <div class="contributor-grid">
         <button class="contrib-btn" onclick="window.handleContributorUpload('png')">
             <div class="c-icon-box bg-blue"><i class="fa-solid fa-image"></i></div>
             <div class="c-info">
-                <span class="c-name">PNG 객체</span>
-                <span class="c-reward">100원 <span class="tier-bonus"></span></span>
+                <span class="c-name" data-i18n="contrib_btn_png">PNG 객체</span>
+                <span class="c-reward">100 <span class="tier-bonus"></span></span>
             </div>
         </button>
 
         <button class="contrib-btn" onclick="window.handleContributorUpload('svg')">
             <div class="c-icon-box bg-purple"><i class="fa-solid fa-bezier-curve"></i></div>
             <div class="c-info">
-                <span class="c-name">SVG 객체</span>
-                <span class="c-reward">200원 <span class="tier-bonus"></span></span>
+                <span class="c-name" data-i18n="contrib_btn_svg">SVG 객체</span>
+                <span class="c-reward">200 <span class="tier-bonus"></span></span>
             </div>
         </button>
 
         <button class="contrib-btn" onclick="window.handleContributorUpload('logo')">
             <div class="c-icon-box bg-orange"><i class="fa-solid fa-icons"></i></div>
             <div class="c-info">
-                <span class="c-name">로고 업로드</span>
-                <span class="c-reward">150원 <span class="tier-bonus"></span></span>
+                <span class="c-name" data-i18n="contrib_btn_logo">로고 업로드</span>
+                <span class="c-reward">150 <span class="tier-bonus"></span></span>
             </div>
         </button>
 
         <button class="contrib-btn" onclick="window.openTemplateCreator()">
             <div class="c-icon-box bg-green"><i class="fa-solid fa-palette"></i></div>
             <div class="c-info">
-                <span class="c-name">템플릿 만들기</span>
-                <span class="c-reward">100원 <span class="tier-bonus"></span></span>
+                <span class="c-name" data-i18n="contrib_btn_template">템플릿 만들기</span>
+                <span class="c-reward">100 <span class="tier-bonus"></span></span>
             </div>
         </button>
     </div>
@@ -1645,13 +1635,18 @@
     }
     updateSEOMetaTags(CURRENT_LANG);
 
-    // -----------------------------------------------------------
-    // [3] 번역 파일 로드 및 폰트 설정
-    // -----------------------------------------------------------
     window.translations = {};
 
-    // [3] 번역 파일 로드 (경로 수정 및 캐시 방지)
-    window.translations = {};
+// ★ [신규 추가] 전역 번역 헬퍼 함수
+window.t = function(key) {
+    if (window.translations && window.translations[key]) {
+        return window.translations[key];
+    }
+    // 번역 데이터가 아직 로드되지 않았거나 키가 없으면, 키 자체를 반환하거나 임시 처리
+    // (디버깅을 위해 콘솔에 로그를 남겨도 좋습니다)
+    // console.warn(`Missing translation: ${key}`);
+    return key; 
+};
 
     async function loadAndApplyTranslations() {
         // ★ 중요: long 폴더가 없다면 'long/'을 지우세요. 파일명 뒤에 시간을 붙여 캐시를 갱신합니다.
@@ -1819,13 +1814,15 @@
         const btnConsole = document.getElementById('btnPartnerConsole');
         if (window.currentUser) {
             if (btnLogin) {
-                btnLogin.innerText = (CURRENT_LANG === 'kr') ? "로그아웃" : "Logout";
+                // [수정] 다국어 적용
+                btnLogin.innerText = window.t('btn_logout'); 
                 btnLogin.style.fontWeight = "bold"; 
                 btnLogin.style.color = "#ef4444"; 
                 const newBtn = btnLogin.cloneNode(true);
                 btnLogin.parentNode.replaceChild(newBtn, btnLogin);
                 newBtn.onclick = async function() {
-                    if (confirm((CURRENT_LANG === 'kr') ? "로그아웃 하시겠습니까?" : "Do you want to logout?")) {
+                    // [수정] 다국어 적용
+                    if (confirm(window.t('msg_logout_confirm'))) {
                         if(typeof sb !== 'undefined') await sb.auth.signOut();
                         localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); 
                         window.location.reload(); 
@@ -1835,7 +1832,8 @@
             if(btnConsole) btnConsole.style.removeProperty('display');
         } else {
             if (btnLogin) {
-                btnLogin.innerText = (CURRENT_LANG === 'kr') ? "로그인" : "Login";
+                // [수정] 다국어 적용
+                btnLogin.innerText = window.t('btn_login');
                 btnLogin.style.fontWeight = "normal";
                 btnLogin.style.color = "";
                 const newBtn = btnLogin.cloneNode(true);
@@ -1902,88 +1900,98 @@
 
     // [추가] 핫딜 렌더링 함수
     // [새로운 통합 함수] 일반 핫딜 + 업자용 핫딜 모두 처리
-    async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount = 6) {
-        const section = document.getElementById(sectionId);
-        const grid = document.getElementById(gridId);
-        if (!grid) return;
+    // [수정됨] 핫딜 상품 로드 (언어/화폐 감지 추가)
+async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount = 6) {
+    const section = document.getElementById(sectionId);
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
 
-        try {
-            // DB 조회 (카테고리 코드 기준, 정렬, 갯수제한)
-            const { data: products, error } = await sb.from('admin_products')
-                .select('*')
-                .eq('category', categoryCode) // 카테고리 필터
-                .order('sort_order', { ascending: true }) 
-                .limit(limitCount); 
+    // ★ [1] 현재 국가 감지
+    const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
+    const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
 
-            if (error) throw error;
+    try {
+        const { data: products, error } = await sb.from('admin_products')
+            .select('*')
+            .eq('category', categoryCode)
+            .order('sort_order', { ascending: true }) 
+            .limit(limitCount); 
 
-            // 상품 없으면 섹션 숨김
-            if (!products || products.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
+        if (error) throw error;
 
-            // 섹션 보이기
-            section.style.display = 'block';
-            grid.innerHTML = '';
-
-            products.forEach(p => {
-                // 전역 DB 등록
-                if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-                
-                // 다국어 처리
-                let dName = p.name;
-                let dPrice = p.price;
-                
-                // 전역 변수 등록
-                window.PRODUCT_DB[p.code] = {
-                    name: dName,
-                    w: p.width_mm,
-                    h: p.height_mm,
-                    price: dPrice,
-                    img: p.img_url,
-                    addons: p.addons ? p.addons.split(',') : [],
-                    category: p.category
-                };
-
-                // 카드 HTML 생성
-                const card = document.createElement('div');
-                card.className = 'hotdeal-card';
-                
-                const imgSrc = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
-                const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : '사이즈 옵션';
-                
-                // 뱃지 색상 (일반 핫딜: 빨강, 업자용: 파랑)
-                const badgeColor = categoryCode === 'hotdeal' ? '#ef4444' : '#4f46e5';
-                const badgeText = categoryCode === 'hotdeal' ? 'HOT' : 'BIZ';
-
-                card.innerHTML = `
-                    <div class="hotdeal-img-box">
-                        <img src="${imgSrc}" alt="${dName}" onerror="this.src='https://placehold.co/300?text=No+Img'">
-                        <div style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px;">${badgeText}</div>
-                    </div>
-                    <div class="hotdeal-info">
-                        <div class="hotdeal-title">${dName}</div>
-                        <div class="hotdeal-meta">${sizeText}</div>
-                        <div class="hotdeal-price">${dPrice.toLocaleString()}원</div>
-                    </div>
-                `;
-
-                // 클릭 시 에디터 실행
-                card.onclick = () => {
-                    window.currentProductKey = p.code;
-                    window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-                    window.startEditorDirect(p.code);
-                };
-
-                grid.appendChild(card);
-            });
-
-        } catch (e) {
-            console.error(`[${categoryCode}] 로딩 실패:`, e);
+        if (!products || products.length === 0) {
             section.style.display = 'none';
+            return;
         }
+
+        section.style.display = 'block';
+        grid.innerHTML = '';
+
+        products.forEach(p => {
+            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+            
+            // ★ [2] 다국어 상품명 및 가격 설정
+            let dName = p.name;
+            let dPrice = p.price;
+            let currency = '원';
+
+            if (isJP) {
+                dName = p.name_jp || p.name;
+                dPrice = p.price_jp || p.price;
+                currency = '¥';
+            } else if (isUS) {
+                dName = p.name_us || p.name;
+                dPrice = p.price_us || p.price;
+                currency = '$';
+            }
+            
+            window.PRODUCT_DB[p.code] = {
+                name: dName,
+                w: p.width_mm,
+                h: p.height_mm,
+                price: dPrice,
+                img: p.img_url,
+                addons: p.addons ? p.addons.split(',') : [],
+                category: p.category
+            };
+
+            const card = document.createElement('div');
+            card.className = 'hotdeal-card';
+            
+            const imgSrc = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
+            
+            // 사이즈 표기도 필요하면 단위를 바꿀 수 있습니다 (현재는 mm 유지)
+            const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : '사이즈 옵션';
+            
+            const badgeColor = categoryCode === 'hotdeal' ? '#ef4444' : '#4f46e5';
+            const badgeText = categoryCode === 'hotdeal' ? 'HOT' : 'BIZ';
+
+            card.innerHTML = `
+                <div class="hotdeal-img-box">
+                    <img src="${imgSrc}" alt="${dName}" onerror="this.src='https://placehold.co/300?text=No+Img'">
+                    <div style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px;">${badgeText}</div>
+                </div>
+                <div class="hotdeal-info">
+                    <div class="hotdeal-title">${dName}</div>
+                    <div class="hotdeal-meta">${sizeText}</div>
+                    <div class="hotdeal-price">${currency}${dPrice.toLocaleString()}</div>
+                </div>
+            `;
+
+            card.onclick = () => {
+                window.currentProductKey = p.code;
+                window.selectedProductForChoice = window.PRODUCT_DB[p.code];
+                window.startEditorDirect(p.code);
+            };
+
+            grid.appendChild(card);
+        });
+
+    } catch (e) {
+        console.error(`[${categoryCode}] 로딩 실패:`, e);
+        section.style.display = 'none';
     }
+}
 // ============================================================
     // [신규] 상단 메뉴 클릭 시 실행되는 함수
     // (카테고리가 비어보이지 않게 첫번째 상품 사진을 가져옵니다)
@@ -2073,236 +2081,272 @@
 
 // [수정] index.html 내부의 renderQuickMenu 함수 교체
 // [최적화 적용] 퀵메뉴 렌더링 (이미지 100px로 제한)
-    async function renderQuickMenu() {
-        const tabContainer = document.getElementById('topCategoryTabs');
-        const itemContainer = document.getElementById('quickMenuContainer');
-        if (!tabContainer || !itemContainer) return;
+    // [수정됨] 카테고리 메뉴 렌더링 (언어 감지 추가)
+async function renderQuickMenu() {
+    const tabContainer = document.getElementById('topCategoryTabs');
+    const itemContainer = document.getElementById('quickMenuContainer');
+    if (!tabContainer || !itemContainer) return;
 
-        itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
+    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
 
-        try {
-            let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
-            const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
-            
-            // 이미지 매핑 데이터 가져오기
-            const { data: prodImages } = await sb.from('admin_products')
-                .select('category, img_url')
-                .not('img_url', 'is', null).neq('img_url', '');
+    // ★ [1] 현재 국가 감지 (도메인 기준)
+    const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
+    const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
 
-            const catThumbMap = {};
-            if (prodImages) {
-                prodImages.forEach(p => {
-                    if (p.category && !catThumbMap[p.category]) catThumbMap[p.category] = p.img_url;
-                });
-            }
+    try {
+        let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
+        const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
+        
+        const { data: prodImages } = await sb.from('admin_products')
+            .select('category, img_url')
+            .not('img_url', 'is', null).neq('img_url', '');
 
-            if (!subCats || subCats.length === 0) {
-                itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
+        const catThumbMap = {};
+        if (prodImages) {
+            prodImages.forEach(p => {
+                if (p.category && !catThumbMap[p.category]) catThumbMap[p.category] = p.img_url;
+            });
+        }
+
+        if (!subCats || subCats.length === 0) {
+            itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
+            return;
+        }
+
+        if (topCats) {
+            const seen = new Set();
+            topCats = topCats.filter(cat => {
+                const name = cat.name.trim();
+                if (seen.has(name)) return false;
+                seen.add(name);
+                return true;
+            });
+            const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
+            topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
+        }
+
+        const renderTabs = () => {
+    tabContainer.innerHTML = '';
+    if (topCats) {
+        topCats.forEach(top => {
+            // ★ 대분류명 언어 처리
+            let topName = top.name;
+            if (isJP) topName = top.name_jp || top.name;
+            else if (isUS) topName = top.name_us || top.name;
+
+            const btn = document.createElement('button');
+            btn.className = 'cat-tab';
+            btn.innerText = topName;
+
+            // ▼▼▼ [클릭 이벤트 수정] ▼▼▼
+            btn.onclick = (e) => {
+                handleTabClick(e);      // 탭 활성화 디자인
+                renderItems(top.code);  // 소분류 아이콘 갱신
+
+                if (window.loadSpecialProducts) {
+                    // (1) 핫딜 상품 갱신
+                    loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
+
+                    // (2) 업자용 핫딜 갱신
+                    loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+
+                    // (3) ★ 일반 상품 영역 갱신 (스크린샷에서 찾은 ID 적용) ★
+                    // categoryDetailModal: 상품 리스트를 감싸는 전체 영역 (모달창)
+                    // catProductGrid: 실제 상품 카드가 들어가는 그리드
+                    loadSpecialProducts('categoryDetailModal', 'catProductGrid', top.code, 50);
+                }
+            };
+            // ▲▲▲ [수정 끝] ▲▲▲
+
+            tabContainer.appendChild(btn);
+        });
+    }
+
+    const orphanCats = subCats.filter(sub => !sub.top_category_code);
+    if (orphanCats.length > 0) {
+        const etcBtn = document.createElement('button');
+        etcBtn.className = 'cat-tab';
+        etcBtn.innerText = isJP ? 'その他' : (isUS ? 'Others' : '기타');
+        etcBtn.onclick = (e) => {
+            handleTabClick(e);
+            renderItems('etc');
+        };
+        tabContainer.appendChild(etcBtn);
+    }
+};
+
+        const handleTabClick = (e) => {
+            const tabs = tabContainer.querySelectorAll('.cat-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+        };
+
+        const renderItems = (filterCode) => {
+            itemContainer.innerHTML = '';
+            let filtered = (filterCode === 'etc') 
+                ? subCats.filter(sub => !sub.top_category_code)
+                : subCats.filter(sub => sub.top_category_code === filterCode);
+
+            if (filtered.length === 0) {
+                itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">Empty.</div>';
                 return;
             }
 
-            // 중복 제거 및 숨김 처리
-            if (topCats) {
-                const seen = new Set();
-                topCats = topCats.filter(cat => {
-                    const name = cat.name.trim();
-                    if (seen.has(name)) return false;
-                    seen.add(name);
-                    return true;
-                });
-                const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
-                topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
-            }
+            filtered.forEach(cat => {
+                // ★ [2] 소분류명 언어 처리 (핵심 수정 부분)
+                let catName = cat.name;
+                if(isJP) catName = cat.name_jp || cat.name;
+                else if(isUS) catName = cat.name_us || cat.name;
 
-            // 탭 생성 로직
-            const renderTabs = () => {
-                tabContainer.innerHTML = '';
-                if (topCats) {
-                    topCats.forEach(top => {
-                        const btn = document.createElement('button');
-                        btn.className = 'cat-tab';
-                        btn.innerText = top.name;
-                        btn.onclick = (e) => {
-                            handleTabClick(e);
-                            renderItems(top.code);
-                        };
-                        tabContainer.appendChild(btn);
-                    });
+                let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+                const tinyUrl = window.getTinyThumb(rawUrl, 100);
+
+                const div = document.createElement('div');
+                div.className = 'quick-item';
+                // ★ [추가] 영어(US)나 일본어(JP)면 'long-text-mode' 클래스를 붙임
+                if (isUS || isJP) {
+                    div.classList.add('long-text-mode');
                 }
-                // 기타 탭
-                const orphanCats = subCats.filter(sub => !sub.top_category_code);
-                if (orphanCats.length > 0) {
-                    const etcBtn = document.createElement('button');
-                    etcBtn.className = 'cat-tab';
-                    etcBtn.innerText = '기타';
-                    etcBtn.onclick = (e) => { handleTabClick(e); renderItems('etc'); };
-                    tabContainer.appendChild(etcBtn);
-                }
-            };
+                let imgTag = tinyUrl 
+                    ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-folder-open\\'></i>'">`
+                    : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
 
-            const handleTabClick = (e) => {
-                const tabs = tabContainer.querySelectorAll('.cat-tab');
-                tabs.forEach(t => t.classList.remove('active'));
-                e.target.classList.add('active');
-            };
+                // 여기서 catName 변수를 사용합니다.
+                div.innerHTML = `<div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text">${catName}</div>`;
+                div.onclick = () => window.showCategoryProducts(cat.code, catName); // 함수 호출시에도 번역된 이름 전달
+                itemContainer.appendChild(div);
+            });
+        };
 
-            // 아이템 렌더링 (이미지 최적화 적용됨)
-            const renderItems = (filterCode) => {
-                itemContainer.innerHTML = '';
-                let filtered = (filterCode === 'etc') 
-                    ? subCats.filter(sub => !sub.top_category_code)
-                    : subCats.filter(sub => sub.top_category_code === filterCode);
+        renderTabs();
+        const allTab = tabContainer.querySelectorAll('.cat-tab')[0];
+        if (allTab) allTab.click();
 
-                if (filtered.length === 0) {
-                    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">하위 분류가 없습니다.</div>';
-                    return;
-                }
-
-                filtered.forEach(cat => {
-                    const n = cat.name;
-                    let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
-                    
-                    // ★ 여기서 이미지 용량을 확 줄입니다 (100px)
-                    const tinyUrl = window.getTinyThumb(rawUrl, 100);
-
-                    const div = document.createElement('div');
-                    div.className = 'quick-item';
-                    
-                    let imgTag = tinyUrl 
-                        ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-folder-open\\'></i>'">`
-                        : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
-
-                    div.innerHTML = `<div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text">${n}</div>`;
-                    div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
-                    itemContainer.appendChild(div);
-                });
-            };
-
-            renderTabs();
-            const allTab = tabContainer.querySelectorAll('.cat-tab')[0];
-            if (allTab) allTab.click();
-
-        } catch (err) {
-            console.error("카테고리 로딩 실패:", err);
-        }
+    } catch (err) {
+        console.error("카테고리 로딩 실패:", err);
     }
+}
     // ============================================================
     // [3] 제품 선택 모달 (서버 보호: 클릭 시 로딩 & 캐싱 적용)
     // ============================================================
     // ★ 전역 캐시 저장소 (한 번 불러온 카테고리는 서버에 다시 요청 안 함)
     window.categoryCache = {}; 
 
-    window.showCategoryProducts = async function(catKey, catName) {
-        const grid = document.getElementById('catProductGrid');
-        const modal = document.getElementById('categoryDetailModal');
-        const titleEl = document.getElementById('catModalTitle');
-        
-        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
-        
-        grid.style.gridTemplateColumns = "repeat(4, 1fr)"; 
-        grid.style.gap = "12px";
-        
-        // 로딩 표시
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> 상품 정보를 불러오는 중...</div>';
-        modal.style.display = 'flex';
+    // [수정된 버전] 언어 감지 기능이 강화된 상품 목록 표시 함수
+window.showCategoryProducts = async function(catKey, catName) {
+    const grid = document.getElementById('catProductGrid');
+    const modal = document.getElementById('categoryDetailModal');
+    const titleEl = document.getElementById('catModalTitle');
+    
+    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
+    
+    grid.style.gridTemplateColumns = "repeat(4, 1fr)"; 
+    grid.style.gap = "12px";
+    
+    // 로딩 표시
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+    modal.style.display = 'flex';
 
-        // 1. 캐시 확인 (이미 불러온 적 있나?)
-        let products = window.categoryCache[catKey];
+    // ★ [1] 언어 감지 (여기가 핵심 수정 사항)
+    // 주소창(URL)이나 도메인을 확인해서 현재 언어를 확실하게 파악합니다.
+    const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja') || window.location.href.includes('lang=jp');
+    const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en') || window.location.href.includes('lang=us');
 
-        if (!products) {
-            // 2. 없으면 서버 호출 (필수 데이터만)
-            try {
-                const { data, error } = await sb.from('admin_products')
-                    .select('*') // 필요한 경우 .select('code, name, price, img_url...')로 더 줄일 수 있음
-                    .eq('category', catKey)
-                    .order('sort_order', { ascending: true });
+    // 1. 캐시 확인
+    let products = window.categoryCache[catKey];
 
-                if (error) throw error;
-                
-                products = data;
-                // 3. 캐시에 저장
-                window.categoryCache[catKey] = data;
+    if (!products) {
+        try {
+            const { data, error } = await sb.from('admin_products')
+                .select('*')
+                .eq('category', catKey)
+                .order('sort_order', { ascending: true });
 
-            } catch (e) {
-                console.error("상품 로딩 실패:", e);
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">데이터를 불러오지 못했습니다.</div>';
-                return;
-            }
-        }
+            if (error) throw error;
+            
+            products = data;
+            window.categoryCache[catKey] = data;
 
-        grid.innerHTML = '';
-        if (!products || products.length === 0) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">상품이 없습니다.</div>';
+        } catch (e) {
+            console.error("Error:", e);
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Error loading products.</div>';
             return;
         }
+    }
 
+    grid.innerHTML = '';
+    if (!products || products.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">No products found.</div>';
+        return;
+    }
+
+    // 2. 상품 카드 생성 루프
+    products.forEach(p => {
+        // ★ [2] 다국어 데이터 적용 (여기가 안 되어서 한국어가 나왔던 것)
+        let displayName = p.name;
+        let displayPrice = p.price;
         let currencySymbol = '원';
-        if(CURRENT_LANG === 'jp') currencySymbol = '¥';
-        else if(CURRENT_LANG === 'us') currencySymbol = '$';
 
-        products.forEach(p => {
-            let displayName = p.name;
-            let displayPrice = p.price;
+        if (isJP) {
+            displayName = p.name_jp || p.name; // 일본어 없으면 한국어
+            displayPrice = p.price_jp || p.price;
+            currencySymbol = '¥';
+        } else if (isUS) {
+            displayName = p.name_us || p.name; // 영어 없으면 한국어
+            displayPrice = p.price_us || p.price;
+            currencySymbol = '$';
+        }
 
-            if (CURRENT_LANG === 'jp') {
-                displayName = p.name_jp || p.name; 
-                displayPrice = p.price_jp || p.price; 
-            } else if (CURRENT_LANG === 'us') {
-                displayName = p.name_us || p.name;
-                displayPrice = p.price_us || p.price;
-            }
+        // 전역 DB에 등록 (에디터 진입 시 사용됨)
+        if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+        const scaleFactor = 3.7795;
+        const pxW = Math.round((p.width_mm || 210) * scaleFactor);
+        const pxH = Math.round((p.height_mm || 297) * scaleFactor);
 
-            // ★ 중요: 나중에 에디터에서 쓸 수 있게 전역 DB에 등록
-            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-            
-            // mm -> px 변환
-            const scaleFactor = 3.7795;
-            const pxW = Math.round((p.width_mm || 210) * scaleFactor);
-            const pxH = Math.round((p.height_mm || 297) * scaleFactor);
+        window.PRODUCT_DB[p.code] = {
+            name: displayName, // 번역된 이름 저장
+            w: pxW, h: pxH,
+            w_mm: p.width_mm, h_mm: p.height_mm,
+            price: displayPrice, // 번역된 가격 저장
+            img: p.img_url, 
+            addons: p.addons ? p.addons.split(',') : [], 
+            category: p.category
+        };
 
-            window.PRODUCT_DB[p.code] = {
-                name: displayName, 
-                w: pxW, h: pxH,
-                w_mm: p.width_mm, h_mm: p.height_mm,
-                price: displayPrice,
-                img: p.img_url, 
-                addons: p.addons ? p.addons.split(',') : [], 
-                category: p.category
-            };
-
-            const div = document.createElement('div');
-            div.className = 'quick-item'; 
-            
-            let imgHtml = '';
-            if (p.img_url) {
-                imgHtml = `
-                    <div class="quick-icon-img-box">
-                        <img src="${p.img_url}" alt="${displayName}" loading="lazy" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
-                    </div>
-                `;
-            } else {
-                imgHtml = `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
-            }
-
-            div.innerHTML = `
-                ${imgHtml}
-                <div class="quick-text">${displayName}</div>
-                <div style="font-size:11px; color:#888; margin-top:3px;">
-                    ${p.width_mm || '-'}x${p.height_mm || '-'} / ${currencySymbol}${displayPrice.toLocaleString()}
+        const div = document.createElement('div');
+        div.className = 'quick-item'; 
+        
+        let imgHtml = '';
+        if (p.img_url) {
+            imgHtml = `
+                <div class="quick-icon-img-box">
+                    <img src="${p.img_url}" alt="${displayName}" loading="lazy" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
                 </div>
             `;
+        } else {
+            imgHtml = `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
+        }
 
-            div.onclick = () => {
-                modal.style.display = 'none'; 
-                window.currentProductKey = p.code;
-                window.selectedProductForChoice = window.PRODUCT_DB[p.code];
+        // 화면에 보여줄 내용 (번역된 변수 사용)
+        div.innerHTML = `
+            ${imgHtml}
+            <div class="quick-text">${displayName}</div>
+            <div style="font-size:11px; color:#888; margin-top:3px;">
+                ${p.width_mm || '-'}x${p.height_mm || '-'} / ${currencySymbol}${displayPrice.toLocaleString()}
+            </div>
+        `;
 
-                if(window.showChoiceModal) window.showChoiceModal(p.code);
-                else window.startEditorDirect(p.code);
-            };
-            grid.appendChild(div);
-        });
-    };
+        div.onclick = () => {
+            modal.style.display = 'none'; 
+            window.currentProductKey = p.code;
+            window.selectedProductForChoice = window.PRODUCT_DB[p.code];
+
+            if(window.showChoiceModal) window.showChoiceModal(p.code);
+            else window.startEditorDirect(p.code);
+        };
+        grid.appendChild(div);
+    });
+};
     // ============================================================
     // [4] 작업 방식 선택 모달 & 파일 업로드
     // ============================================================
@@ -2429,9 +2473,9 @@
         // [1] 로그인 체크 로직 추가
         const { data } = await sb.auth.getSession();
         if (!data || !data.session || !data.session.user) {
-            alert("디자인을 시작하려면 로그인이 필요합니다.");
+            alert(window.t('msg_login_required_design'));
             document.getElementById('loginModal').style.display = 'flex';
-            return; // 로그인 안되어 있으면 에디터 진입 중단
+            return; 
         }
 
         if (!key) return alert("상품 코드가 올바르지 않습니다.");
@@ -2450,7 +2494,7 @@
             
             // A2 사이즈(약 600mm) 이상인 경우 안내 팝업
             if (maxSide >= 800) {
-                alert("📢 크기가 큰 제품을 선택하셨네요\n\n허니콤가벽은 백터 탬플릿으로 작업해야 깨짐없이 깔끔해요\n\n패브릭 제품이나 배너는 이미지도 괜찮아요 ");
+                alert(window.t('msg_large_product_warning'));
             }
         }
         // ▲▲▲ [추가 끝] ▲▲▲
@@ -2571,8 +2615,8 @@
         const startScreen = document.getElementById('startScreen');
         const isEditorOpen = startScreen && window.getComputedStyle(startScreen).display === 'none';
 
-        if (isEditorOpen) {
-            if(!confirm("현재 캔버스에 템플릿을 적용하시겠습니까?\n(기존 디자인 위에 추가됩니다)")) return;
+       if (isEditorOpen) {
+            if(!confirm(window.t('msg_template_apply_confirm'))) return;
             await applyTemplateDirectly(tpl);
         } else {
             window.pendingTemplate = tpl; 
@@ -2588,12 +2632,11 @@
         const titleEl = document.getElementById('catModalTitle');
         const descEl = modal.querySelector('p');
 
-        // 1. 텍스트 설정 (번역 적용)
-        const t = window.translations || {};
-        const titleText = t['modal_size_select_title'] || "Q. 무엇을 만들까요?";
-        const subText = t['modal_size_select_sub'] || "(사이즈 선택)";
-        const descText = t['modal_size_select_desc'] || "원하시는 규격을 선택하시면 디자인이 시작됩니다.";
-        const loadingMsg = t['msg_loading'] || "로딩 중...";
+        // 1. 텍스트 설정 (window.t 사용으로 변경)
+        const titleText = window.t('modal_size_select_title');
+        const subText = window.t('modal_size_select_sub');
+        const descText = window.t('modal_size_select_desc');
+        const loadingMsg = window.t('msg_loading');
 
         if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">${subText}</span>`;
         if(descEl) descEl.innerText = descText;
@@ -2702,11 +2745,13 @@
         if (window.currentUser) {
             console.log("✅ 로그인 됨:", window.currentUser.email);
             if (btnLogin) {
-                btnLogin.innerText = "로그아웃";
+                // [수정] "로그아웃" -> window.t('btn_logout')
+                btnLogin.innerText = window.t('btn_logout');
                 btnLogin.style.fontWeight = "bold"; 
                 btnLogin.style.color = "#ef4444"; 
                 btnLogin.onclick = async function() {
-                    if (confirm("로그아웃 하시겠습니까?")) {
+                    // [수정] "로그아웃 하시겠습니까?" -> window.t('msg_logout_confirm')
+                    if (confirm(window.t('msg_logout_confirm'))) {
                         await sb.auth.signOut();
                         localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); 
                         window.location.reload(); 
@@ -2716,7 +2761,8 @@
             if(btnConsole) btnConsole.style.removeProperty('display');
         } else {
             if (btnLogin) {
-                btnLogin.innerText = "로그인";
+                // [수정] "로그인" -> window.t('btn_login')
+                btnLogin.innerText = window.t('btn_login');
                 btnLogin.onclick = () => document.getElementById('loginModal').style.display = 'flex';
             }
             if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');

@@ -68,7 +68,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         const btnMyPage = document.getElementById("btnMyLibrary");
         if (btnMyPage) {
             btnMyPage.onclick = () => {
-                if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
+                if (!currentUser) return alert(window.t('msg_login_required'));
                 location.href = 'mypage.html';
             };
         }
@@ -193,7 +193,7 @@ async function handleUniversalUpload(file, isFromStartScreen) {
     const loading = document.getElementById("loading");
     if(loading) {
         loading.style.display = "flex";
-        loading.querySelector('p').innerText = "파일 처리 중...";
+        loading.querySelector('p').innerText = window.t('msg_processing_file');
     }
     try {
         if (isFromStartScreen) {
@@ -229,7 +229,7 @@ async function handleUniversalUpload(file, isFromStartScreen) {
             };
             reader.readAsDataURL(file);
         } else {
-            alert("지원하지 않는 파일 형식입니다.");
+            alert(window.t('msg_unsupported_file'));
         }
     } catch (err) {
         console.error(err);
@@ -260,7 +260,7 @@ async function addPdfToCanvasAsImage(file) {
     const imgData = hiddenCanvas.toDataURL('image/jpeg', 0.8);
     fabric.Image.fromURL(imgData, function(img) {
         fitImageToCanvas(img);
-        alert("✅ PDF 파일이 로드되었습니다. (원본은 서버에 저장됨)");
+        alert(window.t('msg_pdf_loaded'));
     });
 }
 
@@ -293,11 +293,11 @@ function initOutlineTool() {
         const currentCanvas = window.canvas || canvas;
         const activeObj = currentCanvas.getActiveObject();
         if (!activeObj || activeObj.type !== 'image') {
-            alert("외곽선을 만들 이미지를 선택해주세요!");
+            alert(window.t('msg_select_image_for_outline'));
             return;
         }
         const originalText = btn.innerHTML;
-        btn.innerText = "생성 중...";
+        btn.innerText = window.t('msg_generating');
         btn.disabled = true;
         try {
             const src = activeObj.getSrc();
@@ -429,14 +429,17 @@ async function applyForPartner() {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return alert("로그인이 필요합니다.");
 
-    const name = prompt("가맹점(업체) 상호명을 입력해주세요.");
+    const name = prompt(window.t('prompt_partner_name'));
     if(!name) return;
-    const phone = prompt("담당자 연락처를 입력해주세요.");
+    const phone = prompt(window.t('prompt_partner_phone'));
     if(!phone) return;
-    const region = prompt("희망 지역을 입력해주세요 (예: 서울 강남구)");
+    const region = prompt(window.t('prompt_partner_region'));
     if(!region) return;
 
-    if(!confirm(`[신청 정보 확인]\n상호명: ${name}\n연락처: ${phone}\n지역: ${region}\n\n제출하시겠습니까?`)) return;
+    if(!confirm(window.t('confirm_partner_apply')
+        .replace('{name}', name)
+        .replace('{phone}', phone)
+        .replace('{region}', region))) return;
 
     try {
         const { error } = await sb.from('partner_applications').insert({
@@ -449,7 +452,7 @@ async function applyForPartner() {
 
         if (error) throw error;
 
-        alert("🎉 가맹점 신청이 정상적으로 접수되었습니다!\n관리자 승인 후 파트너스 기능을 이용하실 수 있습니다.");
+        alert(window.t('msg_partner_apply_success'));
     } catch (e) {
         console.error(e);
         alert("신청 실패: " + e.message);
@@ -607,14 +610,14 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
 };
 
 window.dibsOrder = async function(orderId) {
-    if(!confirm("주문을 접수하시겠습니까?")) return;
+    if(!confirm(window.t('confirm_order_accept'))) return;
     const { data: { user } } = await sb.auth.getUser();
     
     const { data: check } = await sb.from('orders').select('franchise_id').eq('id', orderId).single();
-    if(check.franchise_id) return alert("이미 다른 파트너가 접수한 주문입니다.");
+    if(check.franchise_id) return alert(window.t('msg_order_already_taken'));
 
     await sb.from('orders').update({ franchise_id: user.id, status: '제작준비' }).eq('id', orderId);
-    alert("접수되었습니다! [나의 진행 주문] 탭에서 확인하세요.");
+    alert(window.t('msg_order_accept_success'));
     window.switchPartnerTab('my');
 };
 
@@ -1120,12 +1123,12 @@ window.submitVipOrder = async function() {
     const managerRadio = document.querySelector('input[name="vipManager"]:checked');
     const managerName = managerRadio ? managerRadio.value : '본사';
 
-    if(!name || !phone) return alert("담당자 성함과 연락처를 입력해주세요.");
-    if(fileInput.files.length === 0) return alert("전달하실 파일을 최소 1개 이상 선택해주세요.");
+    if(!name || !phone) return alert(window.t('alert_vip_info_needed'));
+    if(fileInput.files.length === 0) return alert(window.t('alert_vip_file_needed'));
 
     const btn = document.querySelector('#vipOrderModal .btn-round.primary');
     const originalText = btn.innerText;
-    btn.innerText = "파일 업로드 중...";
+    btn.innerText = window.t('msg_uploading_files');
     btn.disabled = true;
 
     try {
@@ -1164,7 +1167,7 @@ window.submitVipOrder = async function() {
 
         if(dbErr) throw dbErr;
 
-        alert(`🎉 접수가 완료되었습니다.\n담당 매니저(${managerName})가 확인 후 연락드리겠습니다.`);
+        alert(window.t('msg_vip_order_success').replace('{manager}', managerName));
         document.getElementById('vipOrderModal').style.display = 'none';
         
         // 입력창 초기화

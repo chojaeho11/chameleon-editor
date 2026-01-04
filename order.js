@@ -598,10 +598,9 @@ function renderCart() {
     let grandTotal = 0; let grandProductTotal = 0; let grandAddonTotal = 0;
     
     if(cartData.length === 0) { 
-        listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">장바구니가 비어있습니다.</div>`; 
+        listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">${window.t('msg_cart_empty')}</div>`; 
         updateSummary(0, 0, 0); return; 
     }
-    
     cartData.forEach((item, idx) => {
         if (!item.product) return;
 
@@ -648,7 +647,7 @@ function renderCart() {
                 </div>
                 <div style="flex:1;">
                     <h4 style="margin:0; font-size:16px;">${item.product.name}</h4>
-                    <div style="font-size:13px; color:#666; margin-top:4px;">${item.fileName || "사용자 디자인"}</div>
+                    <div style="font-size:13px; color:#666; margin-top:4px;">${item.fileName || window.t('label_user_design')}</div>
                     <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${formatCurrency(totalItemPrice)}</div>
                 </div>
                 <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444;"><i class="fa-solid fa-trash"></i></button>
@@ -659,8 +658,8 @@ function renderCart() {
             
             if (matOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group required-group";
-                box.innerHTML = `<div class="opt-group-header">① 재질/두께 <span class="badge-req">필수</span></div>`;
-                const sel = document.createElement("select"); sel.className = "opt-select-box";
+            box.innerHTML = `<div class="opt-group-header">① ${window.t('label_opt_material')} <span class="badge-req">${window.t('badge_required')}</span></div>`;
+            const sel = document.createElement("select"); sel.className = "opt-select-box";
                 sel.onchange = (e) => window.updateCartOption(idx, 'opt_mat', e.target.value);
                 let optsHTML = `<option value="">선택해주세요</option>`;
                 matOpts.forEach(opt => { 
@@ -672,8 +671,8 @@ function renderCart() {
             }
             if (finOpts.length > 0) {
                 const box = document.createElement("div"); box.className = "cart-opt-group required-group";
-                box.innerHTML = `<div class="opt-group-header">② 마감 방식 <span class="badge-req">필수</span></div>`;
-                const sel = document.createElement("select"); sel.className = "opt-select-box";
+            box.innerHTML = `<div class="opt-group-header">② ${window.t('label_opt_finish')} <span class="badge-req">${window.t('badge_required')}</span></div>`;
+            const sel = document.createElement("select"); sel.className = "opt-select-box";
                 sel.onchange = (e) => window.updateCartOption(idx, 'opt_fin', e.target.value);
                 let optsHTML = `<option value="">선택해주세요</option>`;
                 finOpts.forEach(opt => { 
@@ -684,9 +683,9 @@ function renderCart() {
                 sel.innerHTML = optsHTML; box.appendChild(sel); optionContainer.appendChild(box);
             }
             if (addOpts.length > 0) {
-                const box = document.createElement("div"); box.className = "cart-opt-group optional-group";
-                box.innerHTML = `<div class="opt-group-header">③ 추가 상품 <span class="badge-sel">선택</span></div>`;
-                const grid = document.createElement("div");
+            const box = document.createElement("div"); box.className = "cart-opt-group optional-group";
+            box.innerHTML = `<div class="opt-group-header">③ ${window.t('label_opt_addon')} <span class="badge-sel">${window.t('badge_optional')}</span></div>`;
+            const grid = document.createElement("div");
                 grid.style.display = "flex"; grid.style.flexDirection = "column"; grid.style.gap = "8px";
                 addOpts.forEach(opt => {
                     const key = `addon_${opt.code}`;
@@ -706,7 +705,7 @@ function renderCart() {
             }
             const qtyBox = document.createElement("div"); 
             qtyBox.style.cssText = "display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px;";
-            qtyBox.innerHTML = `<span style="font-size:13px; font-weight:bold;">본품 수량</span><div class="qty-wrapper" style="border:1px solid #ddd; border-radius:5px; display:flex;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)">-</button><input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:50px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; height:30px; font-weight:bold; outline:none;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)">+</button></div>`;
+            qtyBox.innerHTML = `<span style="font-size:13px; font-weight:bold;">${window.t('label_quantity')}</span><div class="qty-wrapper" style="border:1px solid #ddd; border-radius:5px; display:flex;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)">-</button><input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:50px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; height:30px; font-weight:bold; outline:none;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)">+</button></div>`;
             optionContainer.appendChild(qtyBox); div.appendChild(optionContainer);
         }
         listArea.appendChild(div);
@@ -762,13 +761,13 @@ async function processOrderSubmission() {
         address = `${st1} ${st2}, ${city}, ${state} ${zip}`;
     }
 
-    if(!manager || !address) return alert("배송 정보를 모두 입력해주세요.");
+    if(!manager || !address) return alert(window.t('alert_input_shipping'));
     
     const btn = document.getElementById("btnSubmitOrderInfo"); 
     btn.disabled = true; 
     const loading = document.getElementById("loading");
     loading.style.display = "flex";
-    loading.querySelector('p').innerText = "주문서를 작성하고 있습니다...";
+    loading.querySelector('p').innerText = window.t('msg_creating_order');
     
     let newOrderId = null;
     
@@ -941,9 +940,9 @@ if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.he
             if(elBal) elBal.innerText = "(로그인 필요)";
         }
 
-        alert(`주문이 정상적으로 접수되었습니다.\n회원 등급 할인(${(currentUserDiscountRate*100).toFixed(0)}%)이 적용된 금액입니다.`);
-        
-        btn.innerText = "접수 완료";
+        alert(window.t('msg_order_received').replace('{rate}', (currentUserDiscountRate*100).toFixed(0)));
+
+        btn.innerText = window.t('btn_submit_complete');
 
     } catch (e) { 
         console.error(e); 
@@ -970,9 +969,9 @@ async function processFinalPayment() {
         await processDepositPayment();
     } else if (method === 'bank') {
         // [무통장 입금]
-        if(confirm("무통장 입금으로 주문하시겠습니까?\n입금 확인 후 제작이 진행됩니다.")) {
+        if(confirm(window.t('confirm_bank_payment'))) {
             await sb.from('orders').update({ payment_method: '무통장입금', payment_status: '입금대기' }).eq('id', window.currentDbId);
-            alert("주문이 완료되었습니다.\n안내된 계좌로 입금해주세요.");
+            alert(window.t('msg_order_complete_bank'));
             location.reload();
         }
     } else {
@@ -990,13 +989,14 @@ async function processDepositPayment() {
     const payAmount = finalPaymentAmount;
 
     if (currentBalance < payAmount) {
-        return alert(`예치금 잔액이 부족합니다.\n(부족금액: ${(payAmount - currentBalance).toLocaleString()}원)`);
+        const shortage = (payAmount - currentBalance).toLocaleString();
+        return alert(window.t('alert_deposit_shortage').replace('{amount}', shortage));
     }
 
-    if (!confirm(`예치금 ${payAmount.toLocaleString()}원을 사용하여 결제하시겠습니까?`)) return;
+    if (!confirm(window.t('confirm_deposit_pay').replace('{amount}', payAmount.toLocaleString()))) return;
 
     const loading = document.getElementById("loading");
-    loading.style.display = 'flex'; loading.querySelector('p').innerText = "예치금 결제 중...";
+    loading.style.display = 'flex'; loading.querySelector('p').innerText = window.t('msg_processing_payment');
 
     try {
         // 1. 차감 후 잔액 계산
@@ -1021,7 +1021,7 @@ async function processDepositPayment() {
             status: '접수됨' // 바로 접수 상태로 변경
         }).eq('id', window.currentDbId);
 
-        alert("결제가 완료되었습니다!");
+        alert(window.t('msg_payment_complete'));
         location.reload();
 
     } catch (e) {
