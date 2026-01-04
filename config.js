@@ -1,6 +1,6 @@
 // config.js
 
-import { SITE_CONFIG } from "./site-config.js";
+import { SITE_CONFIG } from "./site-config.js?v=119";
 
 // 전역 변수
 export let apiKeys = {}; 

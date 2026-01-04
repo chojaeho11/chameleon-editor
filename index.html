@@ -1568,10 +1568,11 @@
 </html>
 
 <script type="module">
-    import { canvas, setMaxLimits } from './canvas-core.js';
-    import { openProductDetail, startDesignFromProduct } from './order.js';
-    import { applySize } from './canvas-size.js';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig } from './config.js';
+    // ★ 여기 파일명 뒤에 ?v=119 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=119';
+    import { openProductDetail, startDesignFromProduct } from './order.js?v=119';
+    import { applySize } from './canvas-size.js?v=119';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig } from './config.js?v=119';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
