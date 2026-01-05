@@ -6,112 +6,71 @@
     <title>결제 처리 중...</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
     <style>
-        body {
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            height: 100vh; margin: 0; font-family: 'Pretendard', sans-serif;
-            background-color: #f8fafc; color: #334155;
-        }
-        .loader {
-            border: 4px solid #e2e8f0; border-top: 4px solid #6366f1;
-            border-radius: 50%; width: 50px; height: 50px;
-            animation: spin 1s infinite; margin-bottom: 20px;
-        }
+        body { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #334155; }
+        .loader { border: 4px solid #e2e8f0; border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        h2 { margin: 0 0 10px 0; font-size: 20px; }
-        p { margin: 0; color: #64748b; }
     </style>
 </head>
 <body>
     <div class="loader"></div>
     <h2 id="title">결제 승인 요청 중...</h2>
-    <p id="desc">카드사에 결제 승인을 요청하고 있습니다.</p>
+    <p id="desc">잠시만 기다려주세요.</p>
 
     <script type="module">
-        // 1. Supabase 설정
+        // 1. Supabase 설정 (기존 키 그대로 사용)
         const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function processSuccess() {
-            // URL에서 파라미터 가져오기 (토스가 넘겨준 값들)
+            // URL에서 값 가져오기
             const urlParams = new URLSearchParams(window.location.search);
-            const paymentKey = urlParams.get("paymentKey");
-            const orderId = urlParams.get("orderId");
+            const paymentKey = urlParams.get("paymentKey"); // ★ 이게 진짜 결제키 (tviva...)
+            const orderId = urlParams.get("orderId");       // 이건 주문번호 (cafe...)
             const amount = urlParams.get("amount");
-            const dbId = urlParams.get("db_id"); // 우리가 넘긴 주문 DB ID
+            const dbId = urlParams.get("db_id");
 
-            // 필수 정보 확인
+            console.log("받은 결제키:", paymentKey); // 콘솔에서 확인 가능
+
             if (!paymentKey || !orderId || !amount || !dbId) {
-                fail("결제 정보가 부족합니다. (필수 파라미터 누락)");
+                alert("결제 정보가 부족합니다.");
+                window.location.href = "index.html";
                 return;
             }
 
             try {
-                // 1. Edge Function 호출 (토스 승인 요청)
+                // 1. 토스 승인 요청 (Edge Function)
                 const { data, error } = await sb.functions.invoke('confirm-payment', {
-                    body: { 
-                        paymentKey, 
-                        orderId, 
-                        amount: Number(amount),
-                        dbId 
-                    }
+                    body: { paymentKey, orderId, amount: Number(amount), dbId }
                 });
 
-                if (error) throw new Error(error.message);
-                if (data && data.error) throw new Error(data.error);
+                if (error || (data && data.error)) {
+                    throw new Error(error?.message || data?.error);
+                }
 
-                // ============================================================
-                // [★중요 수정] 승인 성공 후, 결제 키(paymentKey)를 DB에 꼭 저장해야 함
-                // ============================================================
+                // 2. ★ 여기가 제일 중요합니다 ★ DB 업데이트
+                // toss_payment_key 컬럼에 반드시 'paymentKey' 변수를 넣어야 합니다. ('orderId' 아님!)
                 const { error: dbError } = await sb.from('orders').update({
                     payment_status: '결제완료',
                     payment_method: '카드/간편결제',
-                    toss_payment_key: paymentKey  // <--- 이 키가 저장되어야 취소가 가능합니다!
+                    toss_payment_key: paymentKey  // <--- 여기서 tviva... 키가 저장됩니다.
                 }).eq('id', dbId);
 
-                if (dbError) {
-                    console.error("DB 업데이트 실패:", dbError);
-                    // 승인은 났는데 DB 저장이 안 된 경우, 치명적이지 않으므로 넘어가거나 알림
-                }
+                if (dbError) console.error("DB 저장 실패:", dbError);
 
-                // 성공 메시지 및 이동
-                document.getElementById('title').innerText = "결제가 완료되었습니다!";
-                document.getElementById('desc').innerText = "주문 내역으로 이동합니다.";
-                
-                // 장바구니 비우기
+                // 성공 시 이동
+                document.getElementById('title').innerText = "결제 완료!";
                 localStorage.removeItem('chameleon_cart_guest');
                 const user = await sb.auth.getUser();
                 if(user?.data?.user) localStorage.removeItem(`chameleon_cart_${user.data.user.id}`);
                 
-                setTimeout(() => {
-                    window.location.href = "index.html"; // 메인으로 이동
-                }, 2000);
+                setTimeout(() => window.location.href = "index.html", 1000);
 
             } catch (e) {
                 console.error(e);
-                fail("결제 승인 실패: " + e.message);
+                alert("결제 승인 실패: " + e.message);
+                window.location.href = "index.html";
             }
-        }
-
-        function fail(msg) {
-            document.getElementById('title').innerText = "결제 오류";
-            document.getElementById('title').style.color = "#ef4444";
-            document.getElementById('desc').innerText = msg;
-            document.querySelector('.loader').style.display = 'none';
-            
-            // 실패 시 돌아가기 버튼 추가
-            const btn = document.createElement('button');
-            btn.innerText = "돌아가기";
-            btn.style.marginTop = "20px";
-            btn.style.padding = "10px 20px";
-            btn.style.border = "none";
-            btn.style.borderRadius = "8px";
-            btn.style.backgroundColor = "#334155";
-            btn.style.color = "white";
-            btn.style.cursor = "pointer";
-            btn.onclick = () => window.location.href = "index.html";
-            document.body.appendChild(btn);
         }
 
         processSuccess();

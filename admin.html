@@ -184,11 +184,15 @@
                         <h3 style="margin:0; display:flex; align-items:center; gap:10px; color: #312e81;">
                             <i class="fa-solid fa-crown" style="color:#fbbf24;"></i> VIP 파일 접수 내역
                         </h3>
-                        <button class="btn btn-outline" onclick="loadVipOrders()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                        <div>
+                            <button class="btn btn-danger" onclick="deleteSelectedVipOrders()">선택 삭제</button>
+                            <button class="btn btn-outline" onclick="loadVipOrders()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                        </div>
                     </div>
                     <table>
                         <thead>
                             <tr>
+                                <th width="30"><input type="checkbox" onchange="toggleVipChecks(this)"></th>
                                 <th width="120">접수일시</th>
                                 <th width="80">담당</th>
                                 <th width="100">고객명</th>
@@ -683,6 +687,10 @@
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
             <h3>👥 회원 목록 & 등급 관리</h3>
             <div style="display:flex; gap:5px;">
+                <label class="btn btn-success" style="cursor:pointer;" title="고도몰 엑셀 업로드">
+                    <i class="fa-solid fa-file-excel"></i> 마일리지 이관(Excel)
+                    <input type="file" id="mileageExcelInput" accept=".xlsx, .xls" style="display:none;" onchange="importMileageExcel(this)">
+                </label>
                 <input type="text" id="memberSearchInput" class="input-text" placeholder="이메일 또는 이름 검색" style="width:200px;" onkeyup="if(event.key=='Enter') loadMembers()">
                 <button class="btn btn-primary" onclick="loadMembers()"><i class="fa-solid fa-magnifying-glass"></i> 검색</button>
             </div>
@@ -692,8 +700,8 @@
     <tr>
         <th>가입일</th>
         <th>이메일/이름</th>
-        <th>누적 구매액 / 로고수</th>
-        <th>💰 예치금 관리</th> <th>현재 등급</th>
+        <th>💰 예치금 / Ⓜ️ 마일리지</th> <th>관리</th> 
+        <th>현재 등급</th>
         <th>등급 변경</th>
     </tr>
 </thead>
@@ -2032,7 +2040,7 @@ window.showSection = (secId, navEl) => {
                 if (['결제완료', 'paid', '카드결제완료', '입금확인됨'].includes(ps)) {
                     payStatusHtml += `<button class="btn btn-danger btn-sm" style="margin-top:5px; width:100%; font-size:11px;" onclick="cancelTossPayment('${order.id}', '${order.toss_payment_key}')">결제취소</button>`;
                 }
-            } 
+            }
             else if (pm.includes('bank') || pm.includes('무통장') || pm.includes('계좌')) {
                 if (['결제완료', '입금확인', '입금확인됨'].includes(ps)) {
                     payStatusHtml = `<div style="color:#dc2626; font-weight:800; font-size:14px;">입금 확인</div>`;
@@ -2301,15 +2309,29 @@ window.downloadMonthlyExcel = async () => {
         window.downloadBulkFiles = async () => {
             const checks = document.querySelectorAll('.row-chk:checked');
             if (checks.length === 0) return alert("다운로드할 주문을 선택해주세요.");
+            
             showLoading(true);
             try {
                 const zip = new JSZip();
                 let fileCount = 0;
                 const fetchPromises = [];
+
                 checks.forEach(chk => {
-                    const customerName = chk.dataset.manager || '고객미상';
-                    const files = JSON.parse(chk.dataset.files || '[]');
-                    const items = JSON.parse(chk.dataset.items || '[]');
+                    // [수정] HTML dataset 대신 전역 변수(allOrders)에서 데이터 찾기
+                    const orderId = chk.value;
+                    const order = allOrders.find(o => o.id == orderId);
+                    if (!order) return;
+
+                    const customerName = order.manager_name || '고객미상';
+                    const files = order.files || [];
+                    
+                    let items = [];
+                    if (typeof order.items === 'string') {
+                         try { items = JSON.parse(order.items); } catch(e) {}
+                    } else {
+                         items = order.items || [];
+                    }
+
                     if (files.length === 0) return;
                     const clean = (str) => (str || '').replace(/[\\/:*?"<>|]/g, "").trim();
                     let prodItemIndex = 0; 
@@ -2781,6 +2803,7 @@ window.renderProductList = (products) => {
             members.forEach(m => {
                 const r = m.role || 'customer';
                 const deposit = m.deposit || 0; 
+                const mileage = m.mileage || 0; // 마일리지 추가
                 
                 // 1. 회원 등급 (기존)
                 const roleSelect = `
@@ -2820,10 +2843,16 @@ window.renderProductList = (products) => {
                             <div style="font-size:12px; color:#888;">${m.full_name || '-'}</div>
                         </td>
                         <td>
-                            <span style="color:#6366f1;">${(m.total_spend || 0).toLocaleString()}원</span> / 
-                            <span style="color:#059669;">${m.logo_count || 0}개</span>
+                           <div style="font-size:12px;">예치금: <b style="color:#6366f1;">${deposit.toLocaleString()}원</b></div>
+                           <div style="font-size:12px;">마일리지: <b style="color:#059669;">${mileage.toLocaleString()}P</b></div>
+                           <div style="font-size:11px; color:#888; margin-top:2px;">(구매: ${(m.total_spend || 0).toLocaleString()}원)</div>
                         </td>
-                        <td>${walletBtn}</td> 
+                        <td>
+                            ${walletBtn}
+                            <button class="btn btn-outline btn-sm" onclick="editMileageManual('${m.id}', '${m.email}', ${mileage})" style="margin-top:4px;">
+                                Ⓜ️ 관리
+                            </button>
+                        </td> 
                         <td><span class="badge" style="background:#f1f5f9;">${r.toUpperCase()}</span></td>
                         <td>
                             ${roleSelect}
@@ -3424,6 +3453,7 @@ window.approveWithdrawal = async (requestId) => {
 
                 tbody.innerHTML += `
                     <tr style="${item.status !== '확인됨' ? 'background:#fff7ed;' : ''}">
+                        <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                         <td>${new Date(item.created_at).toLocaleString()}</td>
                         <td><span class="badge" style="background:${mgrColor}10; color:${mgrColor}; border:1px solid ${mgrColor}30;">${mgrName}</span></td>
                         <td style="font-weight:bold;">${item.customer_name}</td>
@@ -3552,6 +3582,108 @@ window.approveWithdrawal = async (requestId) => {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "할인내역");
         XLSX.writeFile(wb, `할인내역_${new Date().toISOString().slice(0,10)}.xlsx`);
     };
+    // [VIP] 전체 선택 토글
+    window.toggleVipChecks = (source) => {
+        document.querySelectorAll('.vip-chk').forEach(chk => chk.checked = source.checked);
+    };
+
+    // [VIP] 선택 삭제
+    window.deleteSelectedVipOrders = async () => {
+        const checks = document.querySelectorAll('.vip-chk:checked');
+        if (checks.length === 0) return alert("삭제할 항목을 선택해주세요.");
+        if (!confirm(`선택한 ${checks.length}건을 정말 삭제하시겠습니까?`)) return;
+
+        const ids = Array.from(checks).map(c => c.value);
+        try {
+            const { error } = await sb.from('vip_orders').delete().in('id', ids);
+            if (error) throw error;
+            alert("삭제되었습니다.");
+            loadVipOrders();
+        } catch (e) {
+            alert("삭제 실패: " + e.message);
+        }
+    };
+
+    // ==========================================
+    // [신규] 마일리지 시스템 (엑셀 이관 & 수동 관리)
+    // ==========================================
+
+    // 1. 고도몰 엑셀 파일 읽어서 마일리지 업데이트 (이메일 기준 매칭)
+    window.importMileageExcel = async (input) => {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+
+        if (!confirm(`'${file.name}' 파일에서 이메일과 마일리지를 읽어 업데이트하시겠습니까?\n\n[주의] 엑셀에 '이메일', '마일리지' 컬럼이 있어야 합니다.`)) {
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                if (jsonData.length === 0) throw new Error("엑셀 파일에 데이터가 없습니다.");
+
+                showLoading(true);
+                let successCount = 0;
+                let failCount = 0;
+
+                // 병렬 처리 대신 순차 처리로 안정성 확보 (또는 Promise.all 사용)
+                for (const row of jsonData) {
+                    // 컬럼명 유연성 확보 (이메일/email, 마일리지/mileage/적립금)
+                    const email = row['이메일'] || row['email'] || row['Email'];
+                    const mileageVal = row['마일리지'] || row['mileage'] || row['적립금'];
+
+                    if (email && mileageVal !== undefined) {
+                        const amount = parseInt(mileageVal);
+                        if (!isNaN(amount)) {
+                            // 이메일로 사용자 찾아서 업데이트
+                            // profiles 테이블에 mileage 컬럼이 있어야 함
+                            const { error } = await sb.from('profiles')
+                                .update({ mileage: amount })
+                                .eq('email', email);
+                            
+                            if (!error) successCount++;
+                            else failCount++;
+                        }
+                    }
+                }
+
+                alert(`✅ 처리 완료!\n성공: ${successCount}명\n실패(미가입/오류): ${failCount}명`);
+                loadMembers();
+
+            } catch (err) {
+                alert("엑셀 처리 중 오류: " + err.message);
+                console.error(err);
+            } finally {
+                showLoading(false);
+                input.value = '';
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    };
+
+    // 2. 마일리지 수동 수정 (관리자용)
+    window.editMileageManual = async (userId, email, currentMileage) => {
+        const newAmountStr = prompt(`[${email}]님의 현재 마일리지: ${currentMileage}P\n\n변경할 최종 마일리지를 입력하세요:`, currentMileage);
+        if (newAmountStr === null) return;
+        
+        const newAmount = parseInt(newAmountStr);
+        if (isNaN(newAmount)) return alert("숫자만 입력해주세요.");
+
+        const { error } = await sb.from('profiles').update({ mileage: newAmount }).eq('id', userId);
+        if (error) alert("수정 실패: " + error.message);
+        else {
+            alert("수정되었습니다.");
+            loadMembers();
+        }
+    };
     </script>
+    
 </body>
 </html>
