@@ -15,13 +15,20 @@ let DYNAMIC_FONTS = [];
 // [1] 초기화 함수 (Main Init)
 // ============================================================
 export async function initObjectTools() {
-    // 1. 구글 기본 폰트(시스템 폰트) CSS 로드
-    loadGoogleWebFontsCSS();
+    // [수정] 폰트 로딩은 여기서 하지 않고, 에디터 진입 시 별도로 호출합니다.
+    // loadGoogleWebFontsCSS();  <-- 주석 처리
+    // await loadDynamicFonts(); <-- 주석 처리
 
-    // 2. Supabase DB에서 국가별 폰트 로드 및 브라우저 등록
-    await loadDynamicFonts();
+    // 1. 전역 함수로 폰트 로딩 기능 등록 (index.html에서 호출함)
+    window.initCanvasFonts = async function() {
+        if (window.isFontsInitialized) return;
+        console.log("🎨 [Editor] 폰트 동적 로딩 시작...");
+        loadGoogleWebFontsCSS();
+        await loadDynamicFonts();
+        window.isFontsInitialized = true;
+    };
 
-    // 3. 각종 핸들러 초기화
+    // 2. 각종 핸들러 초기화 (이건 미리 해도 상관없음)
     initTextHandlers();      // 텍스트 추가/수정
     initShapeHandlers();     // 도형 추가
     initEditHandlers();      // 편집(삭제, 중앙정렬 등)

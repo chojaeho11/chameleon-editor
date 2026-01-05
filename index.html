@@ -51,8 +51,6 @@
 <script src="https://js.tosspayments.com/v1" defer></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/GmarketSans/build/GmarketSans.css">
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Do+Hyeon&family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="./style.css">
 
@@ -2503,7 +2501,46 @@ window.showCategoryProducts = async function(catKey, catName) {
     // ============================================================
     // [5] 에디터 시작 및 템플릿 로드 (수정됨: 로그인 체크 + 템플릿 팝업)
     // ============================================================
+    // [폰트 동적 로딩 함수 추가]
+    function loadEditorFonts() {
+        if (window.isFontsLoaded) return; // 이미 로드했으면 중복 실행 방지
+        console.log("🎨 에디터용 서체 로딩 시작...");
+        
+        const fonts = [
+            "https://cdn.jsdelivr.net/gh/orioncactus/GmarketSans/build/GmarketSans.css",
+            "https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Do+Hyeon&family=Jua&display=swap"
+        ];
+
+        fonts.forEach(url => {
+            const link = document.createElement('link');
+            link.href = url;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+        });
+        window.isFontsLoaded = true;
+    }
+
     window.startEditorDirect = async function(key) {
+        
+        loadEditorFonts(); 
+
+        // [2] 폰트 로딩하는 무거운 스크립트(canvas-objects)를 여기서 실행!
+        if (!window.isObjectsLoaded) {
+            console.log("🛠 에디터 필수 스크립트(JS) 로딩 중...");
+            try {
+                await import('./canvas-objects.js?v=119');
+                window.isObjectsLoaded = true;
+            } catch (e) {
+                console.error("스크립트 로딩 실패:", e);
+                return;
+            }
+        }
+
+        // [3] ★수정됨★: 폰트 로딩이 끝날 때까지 기다렸다가 다음으로 넘어감
+        if (window.initCanvasFonts) {
+            await window.initCanvasFonts(); 
+        }
+
         // [1] 로그인 체크 로직 추가
         const { data } = await sb.auth.getSession();
         if (!data || !data.session || !data.session.user) {
