@@ -3353,5 +3353,51 @@ function updateVipFileList(input) {
     // 페이지 로딩 시 실행
     trackVisit();
 </script>
+<script type="module">
+    import { sb } from './config.js?v=119';
+
+    async function trackVisit() {
+        console.log("🕵️ 방문자 추적 시작...");
+
+        try {
+            // 1. 방문 기록 시도
+            const { data, error } = await sb
+                .from('page_views')
+                .insert([{ 
+                    referrer: document.referrer || '직접/즐겨찾기',
+                    duration: 0 
+                }])
+                .select()
+                .single();
+
+            if (error) {
+                console.error("❌ 방문 기록 실패! (Supabase 권한 문제 가능성)", error.message);
+            } else {
+                console.log("✅ 방문 기록 성공! ID:", data.id);
+                
+                // 2. 체류시간 업데이트 (5초마다)
+                const visitId = data.id;
+                const startTime = Date.now();
+                
+                setInterval(() => {
+                    const durationSec = Math.floor((Date.now() - startTime) / 1000);
+                    sb.from('page_views')
+                      .update({ duration: durationSec })
+                      .eq('id', visitId)
+                      .then(({ error }) => {
+                          if(error) console.error("시간 업데이트 실패:", error.message);
+                          else console.log(`⏱️ 체류시간 업데이트: ${durationSec}초`);
+                      });
+                }, 5000);
+            }
+
+        } catch (e) {
+            console.error("⚠️ 시스템 오류:", e);
+        }
+    }
+
+    // 실행
+    trackVisit();
+</script>
 </body>
 </html>
