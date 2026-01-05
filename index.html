@@ -1778,9 +1778,9 @@ window.t = function(key) {
 
         try {
             let query = sb.from('library')
-                          .select('id, thumb_url, data_url, category, tags')
-                          .order('created_at', { ascending: false })
-                          .limit(50);
+              .select('id, thumb_url, category, tags') 
+              .order('created_at', { ascending: false })
+              .limit(50);
             if (category && category !== 'all') {
                 query = query.ilike('category', `%${category}%`); 
             }
@@ -2810,7 +2810,7 @@ window.showCategoryProducts = async function(catKey, catName) {
     // [1] 템플릿 페이징 시스템 (28개씩 보기) - 수정됨
     // ==========================================
 
-    const ITEMS_PER_PAGE = 20; // 한 페이지당 28개
+    const ITEMS_PER_PAGE = 10; // 한 페이지당 28개
     let currentTemplatePage = 0;
     let lastSearchKeyword = '';
 

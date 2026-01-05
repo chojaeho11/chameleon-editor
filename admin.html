@@ -1932,7 +1932,11 @@ window.showSection = (secId, navEl) => {
         const { data: partners } = await sb.from('partner_applications').select('user_id, company_name').eq('status', 'approved');
         const partnerMap = {}; if(partners) partners.forEach(p => partnerMap[p.user_id] = p.company_name);
 
-        let query = sb.from('orders').select('*').order('created_at', {ascending:false});
+        // [최적화] 필요한 컬럼만 명시하고, 최신 50개만 로드 (.range 사용)
+let query = sb.from('orders')
+    .select('id, created_at, manager_name, phone, address, total_amount, status, payment_status, payment_method, site_code, items, files, staff_manager_id, staff_driver_id, depositor_name, delivery_target_date, delivery_time, franchise_id')
+    .order('created_at', {ascending:false})
+    .range(0, 49);
         if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
         else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
         else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
@@ -2068,15 +2072,23 @@ window.showSection = (secId, navEl) => {
                 payStatusHtml = `<div style="color:#94a3b8; font-size:12px;">${ps || '미결제'}</div>`;
             }
 
+            // 날짜 포맷팅 (2024-05-20 -> 05.20)
+            const deliveryDateSimple = order.delivery_target_date 
+                ? order.delivery_target_date.substring(5).replace(/-/g, '.') 
+                : '';
+
             tbody.innerHTML += `
                 <tr>
                     <td><input type="checkbox" class="row-chk" value="${order.id}"></td>
                     <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
                     <td>
-                        ${new Date(order.created_at).toLocaleDateString()}
-                        <div style="font-size:11px; color:#d97706; font-weight:bold; margin-top:4px;">
-                            <i class="fa-solid fa-truck"></i> ${order.delivery_target_date || '-'}
-                        </div>
+                        <span style="font-size:11px; color:#94a3b8;">${new Date(order.created_at).toLocaleDateString()}</span>
+                        
+                        ${deliveryDateSimple ? `
+                        <div style="margin-top:4px; color:#d97706; display:flex; align-items:center; gap:3px;">
+                            <i class="fa-solid fa-truck" style="font-size:11px;"></i> 
+                            <span style="font-size:15px; font-weight:800; letter-spacing:-0.5px;">${deliveryDateSimple}</span>
+                        </div>` : ''}
                     </td>
                     <td>
                         <b>${order.manager_name}</b><br>
@@ -2788,7 +2800,10 @@ window.renderProductList = (products) => {
             const tbody = document.getElementById('memberListBody'); 
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
             
-            let query = sb.from('profiles').select('*').order('created_at', {ascending:false});
+            // [최적화] * 대신 필요한 컬럼만 지정하여 데이터 전송량 감소
+let query = sb.from('profiles')
+    .select('id, email, full_name, role, deposit, mileage, created_at, contributor_tier, total_spend')
+    .order('created_at', {ascending:false});
             
             if(keyword) {
                 // 검색어가 있을 때는 전체에서 검색
@@ -3306,9 +3321,9 @@ window.approveWithdrawal = async (requestId) => {
 
             // --- (B) 기간 내 [결제완료] 주문 조회 ---
             const { data: orders, error } = await sb.from('orders')
-                .select('*')
-                .gte('created_at', start + 'T00:00:00')
-                .lte('created_at', end + 'T23:59:59')
+    .select('id, total_amount, items, payment_method, created_at, manager_name, discount_amount') 
+    .gte('created_at', start + 'T00:00:00')
+    .lte('created_at', end + 'T23:59:59')
                 .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']);
 
             if (error) throw error;
@@ -3431,7 +3446,11 @@ window.approveWithdrawal = async (requestId) => {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="spinner"></div></td></tr>';
 
         try {
-            const { data, error } = await sb.from('vip_orders').select('*').order('created_at', { ascending: false });
+            // [최적화] * 대신 필요한 컬럼 명시 + 최신 50개 제한
+const { data, error } = await sb.from('vip_orders')
+    .select('id, created_at, status, customer_name, customer_phone, memo, files, file_url, file_name, preferred_manager')
+    .order('created_at', { ascending: false })
+    .limit(50);
             if (error) throw error;
 
             if (!data || data.length === 0) {
