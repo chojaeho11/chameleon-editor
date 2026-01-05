@@ -1957,19 +1957,21 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
         products.forEach(p => {
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             
-            // ★ [2] 다국어 상품명 및 가격 설정
+            // ★ [2] 다국어 상품명 및 가격 포맷 설정
             let dName = p.name;
             let dPrice = p.price;
-            let currency = '원';
+            let formattedPrice = '';
 
             if (isJP) {
                 dName = p.name_jp || p.name;
                 dPrice = p.price_jp || p.price;
-                currency = '¥';
+                formattedPrice = '¥' + dPrice.toLocaleString();
             } else if (isUS) {
                 dName = p.name_us || p.name;
                 dPrice = p.price_us || p.price;
-                currency = '$';
+                formattedPrice = '$' + dPrice.toLocaleString();
+            } else {
+                formattedPrice = dPrice.toLocaleString() + '원'; // 한국은 뒤에 '원'
             }
             
             window.PRODUCT_DB[p.code] = {
@@ -2001,7 +2003,7 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
                 <div class="hotdeal-info">
                     <div class="hotdeal-title">${dName}</div>
                     <div class="hotdeal-meta">${sizeText}</div>
-                    <div class="hotdeal-price">${currency}${dPrice.toLocaleString()}</div>
+                    <div class="hotdeal-price">${formattedPrice}</div>
                 </div>
             `;
 
@@ -2310,18 +2312,22 @@ window.showCategoryProducts = async function(catKey, catName) {
     // 2. 상품 카드 생성 루프
     products.forEach(p => {
         // ★ [2] 다국어 데이터 적용 (여기가 안 되어서 한국어가 나왔던 것)
+        // ★ [2] 다국어 데이터 적용 & 가격 포맷 수정
         let displayName = p.name;
         let displayPrice = p.price;
-        let currencySymbol = '원';
+        let formattedPrice = ''; // 완성된 가격 문자열
 
         if (isJP) {
-            displayName = p.name_jp || p.name; // 일본어 없으면 한국어
+            displayName = p.name_jp || p.name;
             displayPrice = p.price_jp || p.price;
-            currencySymbol = '¥';
+            formattedPrice = '¥' + displayPrice.toLocaleString(); // 일본: ¥1,000
         } else if (isUS) {
-            displayName = p.name_us || p.name; // 영어 없으면 한국어
+            displayName = p.name_us || p.name;
             displayPrice = p.price_us || p.price;
-            currencySymbol = '$';
+            formattedPrice = '$' + displayPrice.toLocaleString(); // 미국: $10.00
+        } else {
+            // 한국 (기본)
+            formattedPrice = displayPrice.toLocaleString() + '원'; // 한국: 10,000원
         }
 
         // 전역 DB에 등록 (에디터 진입 시 사용됨)
@@ -2359,7 +2365,7 @@ window.showCategoryProducts = async function(catKey, catName) {
             ${imgHtml}
             <div class="quick-text">${displayName}</div>
             <div style="font-size:11px; color:#888; margin-top:3px;">
-                ${p.width_mm || '-'}x${p.height_mm || '-'} / ${currencySymbol}${displayPrice.toLocaleString()}
+                ${p.width_mm || '-'}x${p.height_mm || '-'} / ${formattedPrice}
             </div>
         `;
 
