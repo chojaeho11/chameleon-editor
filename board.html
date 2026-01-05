@@ -836,7 +836,8 @@
     init();
 </script>
 <script type="module">
-    import { sb } from './config.js?v=119';
+    // 1. initConfig를 꼭 같이 가져와야 합니다.
+    import { sb, initConfig } from './config.js?v=119';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
@@ -875,8 +876,14 @@
     }
 
     async function trackVisit() {
+        // ★ [핵심 수정] DB가 준비되지 않았으면 강제로 초기화(initConfig)를 기다립니다.
+        if (!sb || !sb.from) {
+            // console.log("DB 연결 대기 중..."); 
+            if(typeof initConfig === 'function') await initConfig();
+        }
+
         try {
-            // ★ 핵심 수정: 앞에 [Blog] 태그를 붙여서 저장함
+            // 상세 분석된 유입 경로 가져오기 (앞에 [Blog] 태그 붙임)
             const sourceName = getTrafficSource();
             const finalReferrer = `[Blog] ${sourceName}`; 
 
@@ -891,6 +898,7 @@
 
             if (error) throw error;
 
+            // 체류시간 업데이트 (5초 간격)
             const visitId = data.id;
             const startTime = Date.now();
             
@@ -907,6 +915,7 @@
         }
     }
 
+    // 페이지 로드 시 실행
     trackVisit();
 </script>
 </body>
