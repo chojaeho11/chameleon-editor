@@ -1061,8 +1061,18 @@ async function processFinalPayment() {
         await processDepositPayment();
     } else if (method === 'bank') {
         // [무통장 입금]
+        // ★ 추가: 입금자명 가져오기
+        const depositorName = document.getElementById('inputDepositorName').value;
+        if (!depositorName) return alert("입금자명을 입력해주세요.");
+
         if(confirm(window.t('confirm_bank_payment'))) {
-            await sb.from('orders').update({ payment_method: '무통장입금', payment_status: '입금대기' }).eq('id', window.currentDbId);
+            // ★ 수정: depositor_name 함께 업데이트
+            await sb.from('orders').update({ 
+                payment_method: '무통장입금', 
+                payment_status: '입금대기',
+                depositor_name: depositorName 
+            }).eq('id', window.currentDbId);
+            
             alert(window.t('msg_order_complete_bank'));
             location.reload();
         }

@@ -2035,6 +2035,11 @@ window.showSection = (secId, navEl) => {
             const pm = order.payment_method || '';
             const ps = order.payment_status || '';
 
+            // ★ 추가: 입금자명 HTML 생성
+            const depositorDisplay = order.depositor_name 
+                ? `<div style="font-size:11px; color:#2563eb; font-weight:bold; margin-bottom:3px;">(입금자: ${order.depositor_name})</div>` 
+                : '';
+
             if (pm.includes('card') || pm.includes('카드')) {
                 payStatusHtml = `<div style="color:#15803d; font-weight:800; font-size:13px;">카드결제완료</div>`;
                 if (['결제완료', 'paid', '카드결제완료', '입금확인됨'].includes(ps)) {
@@ -2043,9 +2048,13 @@ window.showSection = (secId, navEl) => {
             }
             else if (pm.includes('bank') || pm.includes('무통장') || pm.includes('계좌')) {
                 if (['결제완료', '입금확인', '입금확인됨'].includes(ps)) {
-                    payStatusHtml = `<div style="color:#dc2626; font-weight:800; font-size:14px;">입금 확인</div>`;
+                    payStatusHtml = `
+                        ${depositorDisplay}
+                        <div style="color:#dc2626; font-weight:800; font-size:14px;">입금 확인</div>
+                    `;
                 } else {
                     payStatusHtml = `
+                        ${depositorDisplay}
                         <div style="font-size:12px; color:#d97706; margin-bottom:4px;">입금대기</div>
                         <button class="btn btn-outline btn-sm" style="width:100%; font-weight:bold; color:#dc2626; border-color:#dc2626;" onclick="confirmDeposit('${order.id}')">
                             입금확인
@@ -2063,7 +2072,12 @@ window.showSection = (secId, navEl) => {
                 <tr>
                     <td><input type="checkbox" class="row-chk" value="${order.id}"></td>
                     <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
-                    <td>${new Date(order.created_at).toLocaleDateString()}</td>
+                    <td>
+                        ${new Date(order.created_at).toLocaleDateString()}
+                        <div style="font-size:11px; color:#d97706; font-weight:bold; margin-top:4px;">
+                            <i class="fa-solid fa-truck"></i> ${order.delivery_target_date || '-'}
+                        </div>
+                    </td>
                     <td>
                         <b>${order.manager_name}</b><br>
                         <span style="font-size:11px; color:#666;">${order.phone}</span>
