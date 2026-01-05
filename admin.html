@@ -228,7 +228,18 @@
 
         <div style="display:flex; gap:5px; align-items:center;">
             <div id="action-buttons" style="display:flex; gap:5px; margin-right: 15px; border-right: 1px solid #ddd; padding-right: 15px;"></div>
-            <select id="filterSite" class="input-text" style="width:130px; font-weight:bold;" onchange="loadOrders()">
+
+<div style="display:flex; gap:5px; margin-right:10px;">
+    <input type="text" id="orderSearchInput" class="input-text" placeholder="고객명/연락처 검색" style="width:150px;" onkeyup="if(event.key=='Enter') loadOrders()">
+</div>
+
+<div style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f0f9ff; padding:5px 10px; border-radius:6px; border:1px solid #bae6fd;">
+    <span style="font-size:12px; font-weight:bold; color:#0369a1;">🚚 배송일:</span>
+    <input type="date" id="filterDeliveryDate" class="input-text" style="width:120px; height:32px; font-size:12px; padding:0 5px;" onchange="loadOrders()">
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('filterDeliveryDate').value=''; loadOrders();" title="날짜 초기화">↺</button>
+</div>
+
+<select id="filterSite" class="input-text" style="width:130px; font-weight:bold;" onchange="loadOrders()">
                 <option value="all">🌏 전체 국가</option>
                 <option value="KR">🇰🇷 한국</option>
                 <option value="JP">🇯🇵 일본</option>
@@ -1917,52 +1928,97 @@ window.showSection = (secId, navEl) => {
             }
         }
 
-        // admin.html 내부 스크립트의 window.loadOrders 함수 교체
 
-// [1] 수정된 주문 목록 로드 함수
-// [수정된 loadOrders 함수] - 파일 직접 노출 & 입금확인 빨간색 처리 적용
-    // [수정된 loadOrders 함수] - 오류 수정 및 디자인 적용 완료
+    // [최적화 완료] 검색 + 배송일 필터 + 디자인 간격 수정
     window.loadOrders = async () => {
-        showLoading(true);
-        updateActionButtons(); 
-        
+        const tbody = document.getElementById('orderListBody');
+        const searchKeyword = document.getElementById('orderSearchInput').value.trim();
         const siteFilter = document.getElementById('filterSite').value;
+        const deliveryDateFilter = document.getElementById('filterDeliveryDate').value; // 배송일 값
+
+        // 1. '완료됨' 탭인데 검색어/날짜가 없으면 로드 차단 (서버 보호)
+        // (단, 배송일을 선택했다면 완료된 것도 보여줍니다)
+        if (currentOrderStatus === '완료됨' && !searchKeyword && !deliveryDateFilter) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="12" style="text-align:center; padding:50px; color:#64748b;">
+                        <i class="fa-solid fa-magnifying-glass fa-2x" style="margin-bottom:10px;"></i><br>
+                        <b>완료된 주문은 데이터가 많아 검색이 필요합니다.</b><br>
+                        고객명, 연락처를 입력하거나 <b>상단에서 배송일을 선택</b>해주세요.
+                    </td>
+                </tr>`;
+            updateActionButtons();
+            return; 
+        }
+
+        showLoading(true);
+        updateActionButtons();
+        
         await fetchStaffForOrders();
         
         const { data: partners } = await sb.from('partner_applications').select('user_id, company_name').eq('status', 'approved');
         const partnerMap = {}; if(partners) partners.forEach(p => partnerMap[p.user_id] = p.company_name);
 
-        // [최적화] 필요한 컬럼만 명시하고, 최신 50개만 로드 (.range 사용)
-let query = sb.from('orders')
-    .select('id, created_at, manager_name, phone, address, total_amount, status, payment_status, payment_method, site_code, items, files, staff_manager_id, staff_driver_id, depositor_name, delivery_target_date, delivery_time, franchise_id')
-    .order('created_at', {ascending:false})
-    .range(0, 49);
-        if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
-        else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
-        else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
+        // 2. 쿼리 구성
+        let query = sb.from('orders')
+            .select('id, created_at, manager_name, phone, address, total_amount, status, payment_status, payment_method, site_code, items, files, staff_manager_id, staff_driver_id, depositor_name, delivery_target_date, delivery_time, franchise_id')
+            .order('created_at', {ascending:false});
+
+        // 3. 상태 필터 (배송일 검색 시에는 상태 무시하고 해당 날짜 다 보여줄지, 상태도 지킬지 결정. 여기선 상태 필터 유지)
+        if (currentOrderStatus === '접수됨') {
+            query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
+        } else if (currentOrderStatus === '칼선작업') {
+            query = query.eq('status', '칼선작업');
+        } else if (currentOrderStatus === '완료됨') {
+            query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
+        }
+
+        // 4. [신규] 배송일 필터 적용
+        if (deliveryDateFilter) {
+            query = query.eq('delivery_target_date', deliveryDateFilter);
+        }
+
+        // 5. 검색어 필터
+        if (searchKeyword) {
+            query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%`);
+        }
+
+        // 6. 사이트 필터
+        if (siteFilter !== 'all') {
+            query = query.eq('site_code', siteFilter);
+        }
+
+        // 7. 개수 제한 (검색어나 날짜 선택 시에는 제한 해제)
+        if (!searchKeyword && !deliveryDateFilter) {
+            query = query.range(0, 49); 
+        } else {
+            query = query.limit(100); 
+        }
 
         const { data, error } = await query;
-        const tbody = document.getElementById('orderListBody');
+        
         tbody.innerHTML = '';
         
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:red;">에러: ${error.message}</td></tr>`;
+            showLoading(false); return;
+        }
+        
         if (!data || data.length === 0) { 
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">데이터가 없습니다.</td></tr>'; 
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">조건에 맞는 주문이 없습니다.</td></tr>'; 
             showLoading(false); return; 
         }
         
-        const filteredData = siteFilter === 'all' ? data : data.filter(o => (o.site_code || 'KR') === siteFilter);
-        allOrders = filteredData; 
-
-        // 상품 가격 매핑
+        allOrders = data; 
         const { data: allProds } = await sb.from('admin_products').select('price, name');
         const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
 
-        filteredData.forEach(order => {
+        data.forEach(order => {
             const site = order.site_code || 'KR'; 
             const managerSelect = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
             const driverSelect = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
             
-            // 금액 계산
+            // 금액 계산 로직 (기존 동일)
             let items = [];
             if (order.items) {
                 if (Array.isArray(order.items)) items = order.items;
@@ -1978,9 +2034,8 @@ let query = sb.from('orders')
             if(rawTotalAmount === 0) rawTotalAmount = order.total_amount; 
             const finalPaidAmount = order.total_amount || 0;
             let discountAmt = (rawTotalAmount > finalPaidAmount) ? (rawTotalAmount - finalPaidAmount) : 0;
-            let depositUsed = 0; let realCashPaid = 0;
-            if (order.payment_method === 'deposit' || order.payment_method === '예치금') { depositUsed = finalPaidAmount; realCashPaid = 0; } 
-            else { depositUsed = 0; realCashPaid = finalPaidAmount; }
+            let depositUsed = (order.payment_method === 'deposit' || order.payment_method === '예치금') ? finalPaidAmount : 0;
+            let realCashPaid = (depositUsed > 0) ? 0 : finalPaidAmount;
 
             // 아이템 표시
             let itemsDisplayHtml = '';
@@ -1989,129 +2044,81 @@ let query = sb.from('orders')
                 itemsDisplayHtml += `<div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">- ${pName} (${i.qty})</div>`;
             });
 
-            // [수정됨] 본사 Lock 버튼 및 파트너 접수 표시 복구
+            // 프랜차이즈 뱃지
             let franchiseBadge = '';
             if (order.franchise_id) {
-                // 이미 누군가(파트너/본사)가 접수한 경우
                 const pName = partnerMap[order.franchise_id] || '가맹점/본사';
-                franchiseBadge = `
-                    <div style="margin-bottom:6px; padding:4px 6px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; font-size:11px; color:#1e40af; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80px;">${pName}</span>
-                        <i class="fa-solid fa-xmark" style="cursor:pointer; color:#ef4444;" onclick="cancelFranchiseClaim('${order.id}')" title="접수 해제"></i>
-                    </div>`;
+                franchiseBadge = `<div style="margin-bottom:4px; padding:4px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; font-size:11px; color:#1e40af; text-align:center; font-weight:bold;">${pName} <i class="fa-solid fa-xmark" style="cursor:pointer; color:#ef4444; margin-left:3px;" onclick="cancelFranchiseClaim('${order.id}')"></i></div>`;
             } else {
-                // 아무도 접수하지 않은 경우 -> 본사 Lock 버튼 표시
-                franchiseBadge = `
-                    <div style="margin-bottom:6px;">
-                        <button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; border:1px dashed #94a3b8; color:#64748b; font-size:11px; padding:4px;">
-                            🔒 본사 직접 제작
-                        </button>
-                    </div>`;
+                franchiseBadge = `<button class="btn btn-outline btn-sm" onclick="claimOrderAdmin('${order.id}')" style="width:100%; margin-bottom:4px; padding:4px; font-size:11px;">🔒 본사접수</button>`;
             }
 
-            // [파일 목록 HTML 생성] - 절대 수정 금지 (오류 발생 지점)
+            // [UI 개선] 파일 버튼
+            let fileCount = (order.files && order.files.length) || 0;
+            let fileBtnText = fileCount > 0 ? `📂 파일확인 (${fileCount})` : '파일 없음';
+            let fileButtonStyle = fileCount > 0 
+                ? "border:1px solid #2563eb; color:#2563eb; background:#eff6ff; font-weight:bold;" 
+                : "color:#ccc; background:#f8fafc;";
+
             let fileDisplayHtml = `
-                <div style="margin-bottom:6px;">
-                    <label class="btn btn-sky btn-sm" style="cursor:pointer; width:100%;">
-                        <i class="fa-solid fa-plus"></i> 파일추가
+                <div style="display:flex; flex-direction:column; gap:4px; justify-content:center; height:100%;">
+                    <button class="btn btn-sm" onclick="openFileModal('${order.id}')" style="width:100%; ${fileButtonStyle}">
+                        ${fileBtnText}
+                    </button>
+                    <label class="btn btn-sky btn-sm" style="cursor:pointer; width:100%; font-size:11px; opacity:0.8; padding:4px;">
+                        <i class="fa-solid fa-plus"></i> 추가
                         <input type="file" style="display:none;" onchange="uploadFileDirect('${order.id}', this)">
                     </label>
                 </div>
             `;
-            if (order.files && order.files.length > 0) {
-                order.files.forEach((f, idx) => {
-                    fileDisplayHtml += `
-                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; font-size:12px; background:#fff; padding:6px; border-radius:4px; border:1px solid #e2e8f0;">
-                            <a href="${f.url}" target="_blank" style="text-decoration:none; color:#334155; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${f.name}">📄 ${f.name}</a>
-                            <button onclick="deleteFileDirect('${order.id}', ${idx})" 
-                                style="width:20px; height:20px; background:#fee2e2; border:1px solid #fca5a5; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left:5px;"
-                                title="파일 삭제">
-                                <i class="fa-solid fa-xmark" style="color:#dc2626; font-size:12px;"></i>
-                            </button>
-                        </div>`;
-                });
-            } else {
-                fileDisplayHtml += `<div style="font-size:11px; color:#ccc; text-align:center;">파일 없음</div>`;
-            }
 
-            // [결제 상태 표시]
+            // 결제 상태
             let payStatusHtml = '';
             const pm = order.payment_method || '';
             const ps = order.payment_status || '';
+            const depositorDisplay = order.depositor_name ? `<div style="font-size:11px; color:#2563eb; font-weight:bold; margin-bottom:2px;">입금자: ${order.depositor_name}</div>` : '';
 
-            // ★ 추가: 입금자명 HTML 생성
-            const depositorDisplay = order.depositor_name 
-                ? `<div style="font-size:11px; color:#2563eb; font-weight:bold; margin-bottom:3px;">(입금자: ${order.depositor_name})</div>` 
-                : '';
-
-            if (pm.includes('card') || pm.includes('카드')) {
-                payStatusHtml = `<div style="color:#15803d; font-weight:800; font-size:13px;">카드결제완료</div>`;
-                if (['결제완료', 'paid', '카드결제완료', '입금확인됨'].includes(ps)) {
-                    payStatusHtml += `<button class="btn btn-danger btn-sm" style="margin-top:5px; width:100%; font-size:11px;" onclick="cancelTossPayment('${order.id}', '${order.toss_payment_key}')">결제취소</button>`;
-                }
-            }
-            else if (pm.includes('bank') || pm.includes('무통장') || pm.includes('계좌')) {
-                if (['결제완료', '입금확인', '입금확인됨'].includes(ps)) {
-                    payStatusHtml = `
-                        ${depositorDisplay}
-                        <div style="color:#dc2626; font-weight:800; font-size:14px;">입금 확인</div>
-                    `;
-                } else {
-                    payStatusHtml = `
-                        ${depositorDisplay}
-                        <div style="font-size:12px; color:#d97706; margin-bottom:4px;">입금대기</div>
-                        <button class="btn btn-outline btn-sm" style="width:100%; font-weight:bold; color:#dc2626; border-color:#dc2626;" onclick="confirmDeposit('${order.id}')">
-                            입금확인
-                        </button>`;
-                }
-            }
-            else if (pm.includes('deposit') || pm.includes('예치금')) {
-                payStatusHtml = `<div style="color:#6366f1; font-weight:800; font-size:13px;">예치금 결제</div>`;
-            }
-            else {
+            if (pm.includes('card')) {
+                payStatusHtml = `<div style="color:#15803d; font-weight:800; font-size:12px;">카드결제</div>`;
+                if (['결제완료','paid','카드결제완료'].includes(ps)) payStatusHtml += `<button class="btn btn-danger btn-sm" style="margin-top:4px; width:100%; font-size:10px; padding:2px;" onclick="cancelTossPayment('${order.id}', '${order.toss_payment_key}')">취소</button>`;
+            } else if (pm.includes('bank') || pm.includes('무통장')) {
+                if (['결제완료','입금확인'].includes(ps)) payStatusHtml = `${depositorDisplay}<div style="color:#dc2626; font-weight:800; font-size:12px;">입금확인</div>`;
+                else payStatusHtml = `${depositorDisplay}<div style="font-size:11px; color:#d97706; margin-bottom:2px;">입금대기</div><button class="btn btn-outline btn-sm" style="width:100%; color:#dc2626; border-color:#dc2626; padding:2px;" onclick="confirmDeposit('${order.id}')">확인</button>`;
+            } else if (pm.includes('deposit')) {
+                payStatusHtml = `<div style="color:#6366f1; font-weight:800; font-size:12px;">예치금</div>`;
+            } else {
                 payStatusHtml = `<div style="color:#94a3b8; font-size:12px;">${ps || '미결제'}</div>`;
             }
 
-            // 날짜 포맷팅 (2024-05-20 -> 05.20)
-            const deliveryDateSimple = order.delivery_target_date 
-                ? order.delivery_target_date.substring(5).replace(/-/g, '.') 
-                : '';
+            const deliveryDateSimple = order.delivery_target_date ? order.delivery_target_date.substring(5).replace(/-/g, '.') : '';
 
+            // [UI 개선] 모든 td에 vertical-align: middle 적용하여 줄맞춤
             tbody.innerHTML += `
                 <tr>
-                    <td><input type="checkbox" class="row-chk" value="${order.id}"></td>
-                    <td><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
-                    <td>
+                    <td style="vertical-align:middle; text-align:center;"><input type="checkbox" class="row-chk" value="${order.id}"></td>
+                    <td style="vertical-align:middle; text-align:center;"><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
+                    <td style="vertical-align:middle;">
                         <span style="font-size:11px; color:#94a3b8;">${new Date(order.created_at).toLocaleDateString()}</span>
-                        
-                        ${deliveryDateSimple ? `
-                        <div style="margin-top:4px; color:#d97706; display:flex; align-items:center; gap:3px;">
-                            <i class="fa-solid fa-truck" style="font-size:11px;"></i> 
-                            <span style="font-size:15px; font-weight:800; letter-spacing:-0.5px;">${deliveryDateSimple}</span>
-                        </div>` : ''}
+                        ${deliveryDateSimple ? `<div style="margin-top:2px; color:#d97706; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:2px;"><i class="fa-solid fa-truck" style="font-size:10px;"></i> ${deliveryDateSimple}</div>` : ''}
                     </td>
-                    <td>
-                        <b>${order.manager_name}</b><br>
-                        <span style="font-size:11px; color:#666;">${order.phone}</span>
-                    </td>
-                    <td style="color:#334155; font-size:11px;">${itemsDisplayHtml}</td>
+                    <td style="vertical-align:middle;"><b>${order.manager_name}</b><br><span style="font-size:11px; color:#666;">${order.phone}</span></td>
+                    <td style="vertical-align:middle; color:#334155; font-size:11px;">${itemsDisplayHtml}</td>
+                    <td style="vertical-align:middle; text-align:right; color:#64748b;">${rawTotalAmount.toLocaleString()}</td>
+                    <td style="vertical-align:middle; text-align:right; color:#ef4444;">${discountAmt > 0 ? '-' + discountAmt.toLocaleString() : '-'}</td>
+                    <td style="vertical-align:middle; text-align:right; color:#d97706;">${depositUsed > 0 ? depositUsed.toLocaleString() : '-'}</td>
+                    <td style="vertical-align:middle; text-align:right; font-weight:bold; color:#15803d; background:#f0fdf4;">${realCashPaid.toLocaleString()}</td>
                     
-                    <td style="text-align:right; color:#64748b;">${rawTotalAmount.toLocaleString()}</td>
-                    <td style="text-align:right; color:#ef4444;">${discountAmt > 0 ? '-' + discountAmt.toLocaleString() : '-'}</td>
-                    <td style="text-align:right; color:#d97706;">${depositUsed > 0 ? depositUsed.toLocaleString() : '-'}</td>
-                    <td style="text-align:right; font-weight:bold; color:#15803d; background:#f0fdf4;">${realCashPaid.toLocaleString()}</td>
-                    
-                    <td>
+                    <td style="vertical-align:middle;">
                         ${franchiseBadge}
                         <div style="margin-top:2px;">${managerSelect}</div>
                         <div style="margin-top:2px;">${driverSelect}</div>
                     </td>
                     
-                    <td style="vertical-align:top; min-width:180px;">
+                    <td style="vertical-align:middle; width:130px;">
                         ${fileDisplayHtml}
                     </td>
                     
-                    <td style="text-align:center;">
+                    <td style="vertical-align:middle; text-align:center; width:80px;">
                         ${payStatusHtml}
                     </td>
                 </tr>
@@ -2578,37 +2585,76 @@ window.downloadMonthlyExcel = async () => {
                 }); 
             } 
             
+            // [수정] 카테고리 로드 및 초기화
             const { data: cats } = await sb.from('admin_categories').select('*').order('sort_order');
             if (catSelect && cats) {
-                catSelect.innerHTML = '<option value="all">📂 카테고리 전체</option>';
+                // '전체' 옵션 제거 -> '선택하세요'로 변경
+                catSelect.innerHTML = '<option value="">📂 카테고리를 선택하세요</option>';
                 cats.forEach(c => { catSelect.innerHTML += `<option value="${c.code}">${c.name}</option>`; });
-                if (savedCatValue) catSelect.value = savedCatValue;
+                
+                // 수정 후 새로고침 했을 때, 이전에 선택한 카테고리 유지
+                if (savedCatValue && savedCatValue !== 'all') {
+                    catSelect.value = savedCatValue;
+                    // 값이 있으면 즉시 로드 트리거
+                    setTimeout(filterProductList, 100); 
+                }
             }
 
-            const { data: prods } = await sb.from('admin_products').select('*').order('sort_order').order('id'); 
-            allProducts = prods || []; 
-            filterProductList(); 
+            // [핵심] 초기 상품 로딩 제거 (서버 부하 방지)
+            // 빈 화면에 안내 메시지만 띄움
+            allProducts = [];
+            document.getElementById('prodTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#64748b;">위에서 카테고리를 선택하면 상품 목록이 표시됩니다.</td></tr>';
         };
 
         window.editAddonLoad = async (id) => { const { data } = await sb.from('admin_addons').select('*').eq('id', id).single(); if(!data) return; editingAddonId = id; document.getElementById('newAddonCat').value = data.category; document.getElementById('newAddonCode').value = data.code; document.getElementById('nmKR').value = data.name_kr||data.name; document.getElementById('prKR').value = data.price_kr||data.price; document.getElementById('nmJP').value = data.name_jp||''; document.getElementById('prJP').value = data.price_jp||0; document.getElementById('nmUS').value = data.name_us||''; document.getElementById('prUS').value = data.price_us||0; const btn = document.querySelector('#newAddonCode').parentElement.parentElement.querySelector('.btn-primary'); btn.innerText = "수정 완료"; btn.classList.remove('btn-primary'); btn.classList.add('btn-vip'); };
         window.addAddonDB = async () => { const cat = document.getElementById('newAddonCat').value; const code = document.getElementById('newAddonCode').value; const nKR = document.getElementById('nmKR').value; const pKR = document.getElementById('prKR').value; const nJP = document.getElementById('nmJP').value; const pJP = document.getElementById('prJP').value; const nUS = document.getElementById('nmUS').value; const pUS = document.getElementById('prUS').value; if(!code) return alert("코드 필수"); const payload = { category: cat, code: code, name_kr: nKR, price_kr: parseInt(pKR||0), name_jp: nJP, price_jp: parseInt(pJP||0), name_us: nUS, price_us: parseInt(pUS||0), name: nKR, price: parseInt(pKR||0) }; if(editingAddonId) { await sb.from('admin_addons').update(payload).eq('id', editingAddonId); alert("수정되었습니다."); } else { await sb.from('admin_addons').insert([payload]); alert("등록되었습니다."); } editingAddonId = null; document.getElementById('newAddonCode').value = ''; document.getElementById('nmKR').value=''; document.getElementById('prKR').value=''; document.getElementById('nmJP').value=''; document.getElementById('prJP').value=''; document.getElementById('nmUS').value=''; document.getElementById('prUS').value=''; const btn = document.querySelector('#newAddonCode').parentElement.parentElement.querySelector('.btn'); btn.innerText = "저장"; btn.classList.remove('btn-vip'); btn.classList.add('btn-primary'); loadSystemDB('KR'); };
         
         // [수정됨] 필터 로직 변경: 국가를 선택해도 상품을 숨기지 않음 (언어 변경용으로만 사용)
-window.filterProductList = () => {
-    const siteFilter = document.getElementById('filterProdSite').value;
-    const catFilter = document.getElementById('filterProdCat').value;
+// [최적화] 카테고리 선택 시에만 DB에서 데이터 가져오기
+        let lastFetchedCategory = null; // 중복 호출 방지용
 
-    let filtered = allProducts;
+        window.filterProductList = async () => {
+            const catFilter = document.getElementById('filterProdCat').value;
+            const tbody = document.getElementById('prodTableBody');
 
-    // [변경점] 국가 필터(site_code)로 상품을 숨기는 줄을 주석 처리했습니다.
-    // 이렇게 해야 KR 상품도 일본어 모드에서 사라지지 않고 보입니다.
-    // if (siteFilter !== 'all') filtered = filtered.filter(p => p.site_code === siteFilter); 
+            // 1. 카테고리 미선택 시 초기화
+            if (!catFilter || catFilter === 'all') { 
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#64748b;">📂 카테고리를 선택해주세요.</td></tr>';
+                allProducts = [];
+                lastFetchedCategory = null;
+                return;
+            }
 
-    // 카테고리 필터는 유지 (이건 숨겨야 하니까요)
-    if (catFilter !== 'all') filtered = filtered.filter(p => p.category === catFilter);
+            // 2. 카테고리가 변경되었을 때만 DB 조회 (언어 변경시는 기존 데이터 활용하여 속도 유지)
+            if (catFilter !== lastFetchedCategory) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;"><div class="spinner"></div> 상품 정보를 가져오는 중...</td></tr>';
+                
+                try {
+                    // 선택한 카테고리만 콕 집어서 가져옴 (매우 가벼움)
+                    const { data, error } = await sb.from('admin_products')
+                        .select('*')
+                        .eq('category', catFilter)
+                        .order('sort_order', { ascending: true });
 
-    renderProductList(filtered);
-};
+                    if (error) throw error;
+
+                    allProducts = data || [];
+                    lastFetchedCategory = catFilter;
+
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">데이터 로드 실패: ${e.message}</td></tr>`;
+                    return;
+                }
+            }
+
+            // 3. 렌더링
+            if (allProducts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#999;">이 카테고리에는 등록된 상품이 없습니다.</td></tr>';
+            } else {
+                renderProductList(allProducts);
+            }
+        };
 
         // [수정됨] 국가 필터에 따라 상품명/가격 언어를 바꿔서 보여주는 함수
 window.renderProductList = (products) => { 
@@ -3447,8 +3493,9 @@ window.approveWithdrawal = async (requestId) => {
 
         try {
             // [최적화] * 대신 필요한 컬럼 명시 + 최신 50개 제한
+// [수정 완료] DB에 실제로 있는 컬럼만 요청하도록 변경
 const { data, error } = await sb.from('vip_orders')
-    .select('id, created_at, status, customer_name, customer_phone, memo, files, file_url, file_name, preferred_manager')
+    .select('id, created_at, status, customer_name, customer_phone, memo, files, preferred_manager')
     .order('created_at', { ascending: false })
     .limit(50);
             if (error) throw error;
