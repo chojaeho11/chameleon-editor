@@ -1341,6 +1341,27 @@
         
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
 
+        <div style="background:#f0f9ff; padding:15px; border-radius:8px; border:1px solid #bae6fd; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-weight:bold; color:#0369a1;">Ⓜ️ 마일리지 사용</span>
+                <span style="font-size:12px; color:#64748b;">보유: <b id="userOwnMileage">0 P</b></span>
+            </div>
+            
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="number" id="inputUseMileage" class="ai-input-pretty" placeholder="0" style="margin:0; text-align:right; font-weight:bold; color:#0369a1;" oninput="window.calcMileageLimit(this)">
+                <button class="btn-round" onclick="window.applyMaxMileage()" style="width:60px; font-size:12px; background:#fff; border:1px solid #cbd5e1; color:#333; justify-content:center;">최대</button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px;">
+                <span style="color:#ef4444; font-weight:bold;">* 결제금액의 10%까지만 사용 가능</span>
+                <span style="color:#0369a1;">사용가능 한도: <b id="mileageLimitDisplay">0 P</b></span>
+            </div>
+        </div>
+
+        <div style="text-align:right; margin-bottom:20px;">
+            <div style="font-size:13px; color:#666;">최종 결제 금액</div>
+            <div id="finalPayAmountDisplay" style="font-size:24px; font-weight:900; color:#6366f1;">0원</div>
+        </div>
         <label style="font-size:14px; font-weight:bold; color:#333; margin-bottom:10px; display:block;">결제 수단 선택</label>
         
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">

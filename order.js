@@ -224,9 +224,15 @@ export async function initOrderSystem() {
     if(btnDownQuote) {
         btnDownQuote.onclick = async () => {
             if(cartData.length === 0) return alert("데이터가 없습니다.");
-             const info = getOrderInfo();
+            const info = getOrderInfo();
+            
+            // [수정] 현재 입력된 마일리지 값 가져오기
+            const mileageInput = document.getElementById('inputUseMileage');
+            const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
+
             try {
-                const blob = await generateQuotationPDF(info, cartData);
+                // [수정] 마일리지 값(useMileage)을 4번째 인자로 전달
+                const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate, useMileage);
                 if(blob) downloadBlob(blob, `견적서_${info.manager}.pdf`);
             } catch(e) { console.error(e); alert("PDF 생성 실패"); }
         };
@@ -926,6 +932,37 @@ if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.he
         document.getElementById("orderAddr").value = address; 
         document.getElementById("orderMemo").value = request;
 
+        // [NEW] 마일리지 10% 제한 로직 초기화
+        if (currentUser) {
+            const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
+            const myMileage = profile ? (profile.mileage || 0) : 0;
+            
+            // 1. 10% 한도 계산 (할인 적용된 finalTotal 기준)
+            const tenPercent = Math.floor(finalTotal * 0.1);
+            
+            // 2. 실제 사용 가능 금액 (내 보유량 vs 10% 한도 중 작은 값)
+            const realLimit = Math.min(myMileage, tenPercent);
+
+            // 3. 전역 변수 및 UI 세팅
+            window.mileageLimitMax = realLimit; // 전역변수 저장
+            window.originalPayAmount = finalTotal; // 원래 결제해야할 금액
+
+            document.getElementById('userOwnMileage').innerText = myMileage.toLocaleString() + ' P';
+            document.getElementById('mileageLimitDisplay').innerText = realLimit.toLocaleString() + ' P';
+            document.getElementById('inputUseMileage').value = ''; 
+            document.getElementById('inputUseMileage').placeholder = `최대 ${realLimit.toLocaleString()}`;
+            
+            // 초기 최종 금액 표시
+            document.getElementById('finalPayAmountDisplay').innerText = finalTotal.toLocaleString() + '원';
+        } else {
+            // 비회원 처리
+            window.mileageLimitMax = 0;
+            window.originalPayAmount = finalTotal;
+            document.getElementById('userOwnMileage').innerText = '-';
+            document.getElementById('mileageLimitDisplay').innerText = '0 P';
+            document.getElementById('finalPayAmountDisplay').innerText = finalTotal.toLocaleString() + '원';
+        }
+
         // 예치금 잔액 업데이트 (UI)
         if(currentUser) {
             const { data: profile } = await sb.from('profiles').select('deposit').eq('id', currentUser.id).single();
@@ -957,10 +994,65 @@ if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.he
 // ============================================================
 // [7] 결제 프로세스 (통합)
 // ============================================================
+// [NEW] 마일리지 계산 헬퍼 함수들 (전역 연결)
+window.calcMileageLimit = function(input) {
+    let val = parseInt(input.value) || 0;
+    const limit = window.mileageLimitMax || 0;
+
+    if (val > limit) {
+        alert(`마일리지는 구매금액의 10%인 ${limit.toLocaleString()}P 까지만 사용 가능합니다.`);
+        val = limit;
+        input.value = val;
+    }
+    
+    // [수정] 전역 변수 window.finalPaymentAmount 업데이트 (카드 결제 연동용)
+    window.finalPaymentAmount = window.originalPayAmount - val;
+    
+    document.getElementById('finalPayAmountDisplay').innerText = window.finalPaymentAmount.toLocaleString() + '원';
+    document.getElementById('btnFinalPay').innerText = `${window.finalPaymentAmount.toLocaleString()}원 결제하기`;
+};
+
+window.applyMaxMileage = function() {
+    const input = document.getElementById('inputUseMileage');
+    input.value = window.mileageLimitMax || 0;
+    window.calcMileageLimit(input);
+};
+
+// [수정된 결제 프로세스]
 async function processFinalPayment() {
     if (!window.currentDbId) return alert("주문 정보가 없습니다.");
     
-    // 선택된 결제 방식 확인
+    // 1. 마일리지 사용 처리
+    const useMileage = parseInt(document.getElementById('inputUseMileage').value) || 0;
+    
+    if (useMileage > 0) {
+        if (!currentUser) return alert("로그인이 필요합니다.");
+        
+        // 보유량 재확인
+        const { data: check } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
+        if (!check || check.mileage < useMileage) return alert("보유 마일리지가 부족합니다.");
+
+        // 차감 및 로그 기록
+        await sb.from('profiles').update({ mileage: check.mileage - useMileage }).eq('id', currentUser.id);
+        await sb.from('wallet_logs').insert({
+            user_id: currentUser.id,
+            type: 'usage_purchase',
+            amount: -useMileage,
+            description: `주문 결제 사용 (10% 제한 적용)`
+        });
+
+        // 주문 정보에 할인금액 업데이트 (DB)
+        // 기존 discount_amount에 마일리지 사용액을 더함 (등급할인 + 마일리지)
+        const { data: order } = await sb.from('orders').select('discount_amount').eq('id', window.currentDbId).single();
+        const prevDiscount = order ? (order.discount_amount || 0) : 0;
+        
+        await sb.from('orders').update({ 
+            discount_amount: prevDiscount + useMileage,
+            total_amount: finalPaymentAmount // 최종 실결제 금액으로 업데이트
+        }).eq('id', window.currentDbId);
+    }
+
+    // 2. 남은 금액 결제 진행
     const selected = document.querySelector('input[name="paymentMethod"]:checked');
     const method = selected ? selected.value : 'card';
 
@@ -976,6 +1068,7 @@ async function processFinalPayment() {
         }
     } else {
         // [카드/간편결제]
+        // finalPaymentAmount는 window.calcMileageLimit에서 갱신됨
         processCardPayment();
     }
 }
@@ -1041,12 +1134,22 @@ function processCardPayment() {
     const orderName = `Chameleon Order #${window.currentDbId}`;
     const customerName = document.getElementById("orderName").value;
 
+    // [수정] 입력된 마일리지 값을 가져와 실시간으로 최종 결제액 계산
+    const mileageInput = document.getElementById('inputUseMileage');
+    const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
+    
+    // 원래금액(finalPaymentAmount) - 마일리지사용액 = 실결제금액
+    const realPayAmount = finalPaymentAmount - useMileage;
+
+    // (안전장치) 금액이 0원 이하인 경우
+    if (realPayAmount < 0) return alert("결제 금액 오류입니다.");
+
     if (pgConfig.provider === 'toss') {
         if (!window.TossPayments) return alert("Toss Payments SDK가 로드되지 않았습니다.");
         
         const tossPayments = TossPayments(pgConfig.clientKey);
         tossPayments.requestPayment("카드", { 
-            amount: finalPaymentAmount, 
+            amount: realPayAmount,  // [핵심] 차감된 금액 적용
             orderId: "ORD-" + new Date().getTime() + "-" + window.currentDbId, 
             orderName: orderName, 
             customerName: customerName, 
@@ -1057,7 +1160,8 @@ function processCardPayment() {
         });
 
     } else if (pgConfig.provider === 'stripe') {
-        initiateStripeCheckout(pgConfig.publishableKey, finalPaymentAmount, country, window.currentDbId);
+        // 스트라이프도 동일하게 차감된 금액 적용
+        initiateStripeCheckout(pgConfig.publishableKey, realPayAmount, country, window.currentDbId);
     }
 }
 

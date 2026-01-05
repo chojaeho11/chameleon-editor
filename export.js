@@ -435,7 +435,8 @@ function drawCell(doc, x, y, w, h, text, align='center', fontSize=9, isHeader=fa
 // ==========================================================
 // [8] 고품질 견적서 생성 (Quotation)
 // ==========================================================
-export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0) {
+// [수정] usedMileage 매개변수 추가 (기본값 0)
+export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
     if (!window.jspdf) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
@@ -506,21 +507,39 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
     });
 
     y += 5;
-    const finalAmt = Math.floor(totalAmt * (1 - discountRate));
-    const discountAmt = totalAmt - finalAmt;
+    
+    // [수정] 금액 계산 로직 (등급할인 + 마일리지 차감)
+    // 1. 등급 할인 적용
+    const afterRateDiscount = Math.floor(totalAmt * (1 - discountRate));
+    const rateDiscountAmt = totalAmt - afterRateDiscount;
+    
+    // 2. 최종 금액 (여기서 마일리지 차감)
+    const finalAmt = afterRateDiscount - usedMileage;
+    
+    // 3. 공급가/부가세 역산 (최종 결제금액 기준)
     const vat = Math.floor(finalAmt / 11);
     const supply = finalAmt - vat;
+    
     const summaryX = 105; 
     
     drawText(doc, "공급가액 :", summaryX, y+5, {align:'right'});
     drawText(doc, supply.toLocaleString() + " 원", 195, y+5, {align:'right'}); y+=6;
+    
     drawText(doc, "부 가 세 :", summaryX, y+5, {align:'right'});
     drawText(doc, vat.toLocaleString() + " 원", 195, y+5, {align:'right'}); y+=6;
 
-    if (discountAmt > 0) {
+    // 등급 할인 표시
+    if (rateDiscountAmt > 0) {
         doc.setTextColor(255, 0, 0); 
-        drawText(doc, `할인금액 (${(discountRate*100).toFixed(0)}%) :`, summaryX, y+5, {align:'right'}, "#ff0000");
-        drawText(doc, "-" + discountAmt.toLocaleString() + " 원", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
+        drawText(doc, `등급할인 (${(discountRate*100).toFixed(0)}%) :`, summaryX, y+5, {align:'right'}, "#ff0000");
+        drawText(doc, "-" + rateDiscountAmt.toLocaleString() + " 원", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
+    }
+
+    // [추가] 마일리지 사용 표시
+    if (usedMileage > 0) {
+        doc.setTextColor(255, 0, 0); 
+        drawText(doc, `마일리지 사용 :`, summaryX, y+5, {align:'right'}, "#ff0000");
+        drawText(doc, "-" + usedMileage.toLocaleString() + " P", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
     }
     y += 2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(summaryX-20, y, 195, y); y += 8;
     drawText(doc, "합계금액 (VAT포함)", summaryX, y, {align:'right', weight:'bold'});
@@ -666,10 +685,10 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 
                 // 3. QR 생성
                 // utf-8 처리를 위해 라이브러리가 알아서 처리하지만, 내용이 길 경우 width를 늘리는 것을 권장하지 않으므로 데이터 밀도를 높입니다.
-                const qrUrl = await window.QRCode.toDataURL(qrContent, { margin: 0, width: 150 });
+                const qrUrl = await window.QRCode.toDataURL(qrContent, { margin: 0, width: 300 });
                 
                 // 4. 위치 배치 (Staff 박스 우측 끝)
-                doc.addImage(qrUrl, 'PNG', 181, staffY + 1, 12, 12);
+                doc.addImage(qrUrl, 'PNG', 108, startY + 12, 25, 25);
                 
             } catch (e) {
                 console.warn("QR Error:", e);

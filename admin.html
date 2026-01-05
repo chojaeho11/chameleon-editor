@@ -138,10 +138,10 @@
         <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
         <ul class="nav-menu">
             <div class="nav-label">Business</div>
-            <li class="nav-item" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
+            <li class="nav-item active" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
     <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
 </li>
-            <li class="nav-item active" onclick="showSection('sec-orders', this)"><i class="fa-solid fa-cart-shopping"></i> 통합 주문 관리</li>
+<li class="nav-item" onclick="showSection('sec-orders', this)"><i class="fa-solid fa-cart-shopping"></i> 통합 주문 관리</li>
             <li class="nav-item" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
@@ -178,7 +178,7 @@
         </div>
 
         <div class="content-scroll">
-            <div id="sec-vip" class="section">
+            <div id="sec-vip" class="section active">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
                         <h3 style="margin:0; display:flex; align-items:center; gap:10px; color: #312e81;">
@@ -209,7 +209,7 @@
                     </table>
                 </div>
             </div>
-            <div id="sec-orders" class="section active">
+            <div id="sec-orders" class="section">
                 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
         <div style="display:flex; gap:5px;">
@@ -3055,8 +3055,8 @@ window.updateMemberRole = async (id, newRole) => {
             if (!isAdmin) return;
 
             // 3. 통과된 경우에만 데이터 로드 시작
-            loadOrders(); 
-            initTemplateListeners(); 
+            loadVipOrders(); // 초기 화면인 VIP 목록 로드
+            initTemplateListeners();
             loadCategories(); 
             loadFonts(); 
         });
