@@ -3311,95 +3311,84 @@ function updateVipFileList(input) {
 }
 </script>
 <script type="module">
-    import { sb } from './config.js?v=119';
+    import { sb, initConfig } from './config.js?v=119';
 
-    async function trackVisit() {
-        const startTime = Date.now();
-        let visitId = null;
+    // [유입 경로 상세 분석 함수]
+    function getTrafficSource() {
+        const params = new URLSearchParams(window.location.search);
+        const referrer = document.referrer;
+        const currentUrl = window.location.href;
 
+        // 1. [광고 체크] URL에 gclid(구글광고ID)나 utm 파라미터가 있는지 확인
+        if (params.has('gclid') || params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
+            return 'Google Ads (광고)';
+        }
+        
+        // 2. [직접 접속/즐겨찾기] 리퍼러가 없는 경우
+        if (!referrer || referrer.trim() === '') {
+            return 'Direct (즐겨찾기/주소입력)';
+        }
+
+        // 3. [검색 엔진 및 소셜] 도메인 분석
         try {
-            // 1. 방문자가 오면 'page_views' 테이블에 기록 (관리자 페이지용)
-            const { data, error } = await sb
-                .from('page_views')
-                .insert([{ 
-                    referrer: document.referrer || '직접/즐겨찾기', // 유입 경로
-                    duration: 0 // 체류시간 0초로 시작
-                }])
-                .select()
-                .single();
-            
-            if (data) visitId = data.id;
+            const refUrl = new URL(referrer);
+            const hostname = refUrl.hostname.toLowerCase();
 
-            // 2. 5초마다 체류시간 업데이트 (살아있는지 체크)
-            setInterval(() => {
-                if (!visitId) return;
-                
-                const now = Date.now();
-                const durationSec = Math.floor((now - startTime) / 1000); // 초 단위 계산
+            if (hostname.includes('google.')) return 'Google Search (자연검색)';
+            if (hostname.includes('naver.')) return 'Naver Search (자연검색)';
+            if (hostname.includes('daum.') || hostname.includes('kakao.')) return 'Daum/Kakao';
+            if (hostname.includes('instagram.')) return 'Instagram';
+            if (hostname.includes('facebook.') || hostname.includes('fb.com')) return 'Facebook';
+            if (hostname.includes('youtube.')) return 'Youtube';
+            if (hostname.includes('bing.')) return 'Bing Search';
 
-                // DB에 체류시간 업데이트
-                sb.from('page_views')
-                  .update({ duration: durationSec })
-                  .eq('id', visitId)
-                  .then(() => {}); 
-                  
-            }, 5000); // 5초 간격
-
-        } catch (e) { 
-            console.warn("Tracking Error:", e); 
+            // 그 외 사이트 (블로그 등)는 도메인 그대로 표시
+            return hostname;
+        } catch (e) {
+            return 'Other Websites';
         }
     }
 
-    // 페이지 로딩 시 실행
-    trackVisit();
-</script>
-<script type="module">
-    import { sb, initConfig } from './config.js?v=119';
-
     async function trackVisit() {
-        // [핵심] DB 연결 도구(sb)가 준비될 때까지 기다림
+        // DB 설정 로드 대기
         if (!sb || !sb.from) {
-            console.log("⏳ DB 설정을 불러오는 중...");
-            await initConfig();
+            if (typeof initConfig === 'function') await initConfig();
         }
 
-        console.log("🕵️ 방문자 추적 시작! (DB 연결됨)");
-
         try {
-            // 1. 방문 기록 시도
+            // 상세 분석된 유입 경로 가져오기
+            const visitSource = getTrafficSource();
+
+            // 1. 방문 기록 저장
             const { data, error } = await sb
                 .from('page_views')
                 .insert([{ 
-                    referrer: document.referrer || '직접/즐겨찾기',
+                    referrer: visitSource, // 분석된 결과를 저장
                     duration: 0 
                 }])
                 .select()
                 .single();
 
-            if (error) {
-                console.error("❌ 기록 실패:", error.message);
-            } else {
-                console.log("✅ 방문 기록 성공! ID:", data.id);
-                
-                // 2. 체류시간 업데이트 (5초마다)
-                const visitId = data.id;
-                const startTime = Date.now();
-                
-                setInterval(() => {
-                    const durationSec = Math.floor((Date.now() - startTime) / 1000);
-                    sb.from('page_views')
-                      .update({ duration: durationSec })
-                      .eq('id', visitId)
-                      .then(() => {});
-                }, 5000);
-            }
+            if (error) throw error;
+
+            // 2. 체류시간 업데이트 (5초 간격)
+            const visitId = data.id;
+            const startTime = Date.now();
+            
+            setInterval(() => {
+                const durationSec = Math.floor((Date.now() - startTime) / 1000);
+                sb.from('page_views')
+                  .update({ duration: durationSec })
+                  .eq('id', visitId)
+                  .then(() => {});
+            }, 5000);
 
         } catch (e) {
-            console.error("⚠️ 추적 스크립트 오류:", e);
+            console.warn("Tracking skipped:", e.message);
         }
     }
 
-    // [중요] 페이지 로딩이 끝난 뒤 안전하게 실행
+    // 페이지 로드 시 실행
     window.addEventListener('load', trackVisit);
 </script>
 </body>
