@@ -3354,10 +3354,16 @@ function updateVipFileList(input) {
     trackVisit();
 </script>
 <script type="module">
-    import { sb } from './config.js?v=119';
+    import { sb, initConfig } from './config.js?v=119';
 
     async function trackVisit() {
-        console.log("🕵️ 방문자 추적 시작...");
+        // [핵심] DB 연결 도구(sb)가 준비될 때까지 기다림
+        if (!sb || !sb.from) {
+            console.log("⏳ DB 설정을 불러오는 중...");
+            await initConfig();
+        }
+
+        console.log("🕵️ 방문자 추적 시작! (DB 연결됨)");
 
         try {
             // 1. 방문 기록 시도
@@ -3371,7 +3377,7 @@ function updateVipFileList(input) {
                 .single();
 
             if (error) {
-                console.error("❌ 방문 기록 실패! (Supabase 권한 문제 가능성)", error.message);
+                console.error("❌ 기록 실패:", error.message);
             } else {
                 console.log("✅ 방문 기록 성공! ID:", data.id);
                 
@@ -3384,20 +3390,17 @@ function updateVipFileList(input) {
                     sb.from('page_views')
                       .update({ duration: durationSec })
                       .eq('id', visitId)
-                      .then(({ error }) => {
-                          if(error) console.error("시간 업데이트 실패:", error.message);
-                          else console.log(`⏱️ 체류시간 업데이트: ${durationSec}초`);
-                      });
+                      .then(() => {});
                 }, 5000);
             }
 
         } catch (e) {
-            console.error("⚠️ 시스템 오류:", e);
+            console.error("⚠️ 추적 스크립트 오류:", e);
         }
     }
 
-    // 실행
-    trackVisit();
+    // [중요] 페이지 로딩이 끝난 뒤 안전하게 실행
+    window.addEventListener('load', trackVisit);
 </script>
 </body>
 </html>
