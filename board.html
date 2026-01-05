@@ -838,61 +838,45 @@
 <script type="module">
     import { sb } from './config.js?v=119';
 
-    // 1. 세션 ID 생성 (브라우저 닫을 때까지 유지)
-    let sessionId = sessionStorage.getItem('chameleon_session_id');
-    if (!sessionId) {
-        sessionId = crypto.randomUUID();
-        sessionStorage.setItem('chameleon_session_id', sessionId);
-    }
-
-    let logId = null;
-
-    // 2. 방문 기록 함수
     async function trackVisit() {
-        try {
-            // 국가 정보 조회 (세션에 없으면 API 호출)
-            let country = sessionStorage.getItem('visitor_country');
-            if (!country) {
-                try {
-                    const res = await fetch('https://api.country.is');
-                    if (res.ok) {
-                        const data = await res.json();
-                        country = data.country;
-                        sessionStorage.setItem('visitor_country', country);
-                    }
-                } catch (e) { country = 'Unknown'; }
-            }
+        const startTime = Date.now();
+        let visitId = null;
 
-            // DB에 기록
+        try {
+            // 1. 방문자가 오면 'page_views' 테이블에 기록 (관리자 페이지용)
             const { data, error } = await sb
-                .from('visitor_logs')
+                .from('page_views')
                 .insert([{ 
-                    session_id: sessionId,
-                    page_url: window.location.href, // 전체 주소 저장 (블로그 구분용)
-                    referrer: document.referrer,    // 유입 경로 저장
-                    country: country || 'Unknown'
+                    referrer: document.referrer || '직접/즐겨찾기', // 유입 경로
+                    duration: 0 // 체류시간 0초로 시작
                 }])
                 .select()
                 .single();
             
-            if (data) logId = data.id;
+            if (data) visitId = data.id;
 
-        } catch (e) { console.warn("Tracking Error"); }
+            // 2. 5초마다 체류시간 업데이트 (살아있는지 체크)
+            setInterval(() => {
+                if (!visitId) return;
+                
+                const now = Date.now();
+                const durationSec = Math.floor((now - startTime) / 1000); // 초 단위 계산
+
+                // DB에 체류시간 업데이트
+                sb.from('page_views')
+                  .update({ duration: durationSec })
+                  .eq('id', visitId)
+                  .then(() => {}); 
+                  
+            }, 5000); // 5초 간격
+
+        } catch (e) { 
+            console.warn("Tracking Error:", e); 
+        }
     }
 
-    // 3. 체류시간 업데이트 (10초마다 핑)
-    function sendHeartbeat() {
-        if (!logId) return;
-        const now = new Date().toISOString();
-        sb.from('visitor_logs').update({ last_active_at: now }).eq('id', logId).then(()=>{});
-    }
-
-    // 실행
+    // 페이지 로딩 시 실행
     trackVisit();
-    setInterval(sendHeartbeat, 10000);
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') sendHeartbeat();
-    });
 </script>
 </body>
 </html>
