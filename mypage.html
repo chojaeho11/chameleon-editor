@@ -222,25 +222,53 @@
 
     <script type="module" src="./mypage.js"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-        <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
-            <h3>💸 포인트 출금 신청</h3>
-            <p style="font-size:13px; color:#666; margin-bottom:20px;">
-                보유하신 마일리지를 현금으로 출금합니다.<br>
-                <strong>최소 출금 가능액은 1,000P 입니다.</strong>
-            </p>
-            <div style="margin-bottom:10px;">
-                <label style="font-size:12px; font-weight:bold;">출금할 포인트</label>
-                <input type="number" id="wdAmount" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="1000 이상 입력">
-                <div style="font-size:11px; color:#6366f1; margin-top:4px;">보유: <span id="wdCurrentMileage">0</span> P</div>
-            </div>
-            <div style="margin-bottom:10px;"><label style="font-size:12px; font-weight:bold;">은행명</label><input type="text" id="wdBank" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;"></div>
-            <div style="margin-bottom:10px;"><label style="font-size:12px; font-weight:bold;">계좌번호</label><input type="text" id="wdAccount" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="- 없이 입력"></div>
-            <div style="margin-bottom:20px;"><label style="font-size:12px; font-weight:bold;">예금주</label><input type="text" id="wdHolder" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;"></div>
-            <div style="display:flex; gap:10px;">
-                <button class="btn-round primary" style="flex:1; justify-content:center;" onclick="requestWithdrawal()">신청하기</button>
-                <button class="btn-round" style="flex:1; justify-content:center; background:#f1f5f9; color:#666;" onclick="document.getElementById('withdrawModal').style.display='none'">취소</button>
-            </div>
+    <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
+        
+        <div style="width:0; height:0; overflow:hidden; opacity:0;">
+            <input type="text" name="fake_username_prevention" autocomplete="username">
+            <input type="password" name="fake_password_prevention" autocomplete="new-password">
+        </div>
+
+        <h3>💸 포인트 출금 신청</h3>
+        <p style="font-size:13px; color:#666; margin-bottom:20px;">
+            보유하신 마일리지를 현금으로 출금합니다.<br>
+            <strong>최소 출금 가능액은 1,000P 입니다.</strong>
+        </p>
+
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px; font-weight:bold;">출금할 포인트</label>
+            <input type="number" id="wdAmount" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="1000 이상 입력">
+            <div style="font-size:11px; color:#6366f1; margin-top:4px;">보유: <span id="wdCurrentMileage">0</span> P</div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px; font-weight:bold;">은행명</label>
+            <input type="text" id="wdBank" name="wd_bank_name" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;">
+        </div>
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px; font-weight:bold;">계좌번호</label>
+            <input type="text" id="wdAccount" name="wd_account_num" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="- 없이 입력">
+        </div>
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px; font-weight:bold;">예금주</label>
+            <input type="text" id="wdHolder" name="wd_holder_name" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;">
+        </div>
+        
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px; font-weight:bold;">연락처</label>
+            <input type="tel" id="wdPhone" name="wd_contact_phone" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="010-0000-0000">
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <label style="font-size:12px; font-weight:bold;">주민등록번호 (세금신고용)</label>
+            <input type="password" id="wdRRN" name="wd_rrn_code" class="input-text" autocomplete="new-password" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="123456-1234567" maxlength="14">
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn-round primary" style="flex:1; justify-content:center;" onclick="requestWithdrawal()">신청하기</button>
+            <button class="btn-round" style="flex:1; justify-content:center; background:#f1f5f9; color:#666;" onclick="document.getElementById('withdrawModal').style.display='none'">취소</button>
         </div>
     </div>
+</div>
 </body>
 </html>

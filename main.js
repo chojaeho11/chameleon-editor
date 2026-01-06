@@ -691,13 +691,23 @@ window.requestPartnerWithdrawal = function() {
 
 window.submitWithdrawal = async function() {
     const amount = window.currentWithdrawableAmount;
-    const bankInfo = document.getElementById('wdBankInfo').value;
+    
+    // [수정] 새로 추가된 입력 필드 값 가져오기
+    const realName = document.getElementById('wdRealName').value.trim();
+    const phone = document.getElementById('wdPhone').value.trim();
+    const rrn = document.getElementById('wdRRN').value.trim();
+    const bankInfo = document.getElementById('wdBankInfo').value.trim();
     const fileInput = document.getElementById('wdTaxFile');
 
+    // [수정] 필수값 체크 강화
+    if (!realName) return alert("예금주(실명)을 입력해주세요.");
+    if (!phone) return alert("연락처를 입력해주세요.");
+    if (!rrn || rrn.length < 13) return alert("주민등록번호를 정확히 입력해주세요.");
     if (!bankInfo) return alert("계좌 정보를 입력해주세요.");
-    if (fileInput.files.length === 0) return alert("세금계산서를 첨부해주세요.");
+    // 파일은 선택사항으로 변경 (원하시면 아래 주석 해제하여 필수로 만드세요)
+    // if (fileInput.files.length === 0) return alert("신분증 또는 통장사본을 첨부해주세요.");
 
-    if (!confirm("신청하시겠습니까?")) return;
+    if (!confirm("입력하신 정보로 출금을 신청하시겠습니까?\n(입력 정보 오류 시 입금이 지연될 수 있습니다.)")) return;
 
     const btn = document.querySelector('#withdrawModal .btn-round.primary');
     btn.innerText = "전송 중..."; btn.disabled = true;
@@ -705,22 +715,33 @@ window.submitWithdrawal = async function() {
     try {
         const { data: { user } } = await sb.auth.getUser();
         
-        const file = fileInput.files[0];
-        const ext = file.name.split('.').pop();
-        const path = `tax_invoices/${user.id}_${Date.now()}.${ext}`;
-        
-        const { error: upErr } = await sb.storage.from('orders').upload(path, file);
-        if (upErr) throw upErr;
-        
-        const { data: { publicUrl } } = sb.storage.from('orders').getPublicUrl(path);
+        let publicUrl = null;
 
+        // 파일이 있는 경우에만 업로드 진행
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const ext = file.name.split('.').pop();
+            const path = `tax_invoices/${user.id}_${Date.now()}.${ext}`;
+            
+            const { error: upErr } = await sb.storage.from('orders').upload(path, file);
+            if (upErr) throw upErr;
+            
+            const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+            publicUrl = urlData.publicUrl;
+        }
+
+        // [수정] DB Insert 시 새로 추가된 컬럼(account_holder, rrn, contact_phone) 포함
         const { error: dbErr } = await sb.from('withdrawal_requests').insert({
             user_id: user.id,
             amount: amount,
             bank_name: bankInfo,
+            account_holder: realName, // 예금주
+            contact_phone: phone,     // 연락처
+            rrn: rrn,                 // 주민번호
             status: 'pending',
             tax_invoice_url: publicUrl
         });
+
         if (dbErr) throw dbErr;
 
         await sb.from('orders')
@@ -729,17 +750,25 @@ window.submitWithdrawal = async function() {
             .eq('status', '구매확정')
             .neq('settlement_status', 'withdrawn');
 
-        alert("출금 신청 완료! (D+5일 내 입금)");
+        alert("출금 신청이 완료되었습니다.\n관리자 확인 후(D+5일 내) 입금됩니다.");
         document.getElementById('withdrawModal').style.display = 'none';
-        window.loadSettlementInfo();
+        
+        // 입력창 초기화
+        document.getElementById('wdRealName').value = '';
+        document.getElementById('wdPhone').value = '';
+        document.getElementById('wdRRN').value = '';
+        document.getElementById('wdBankInfo').value = '';
+        document.getElementById('wdTaxFile').value = '';
+
+        if(window.loadSettlementInfo) window.loadSettlementInfo();
 
     } catch(e) {
+        console.error(e);
         alert("오류: " + e.message);
     } finally {
         btn.innerText = "신청하기"; btn.disabled = false;
     }
 };
-
 // ============================================================
 // [고객용] 주문 조회 & 리뷰
 // ============================================================

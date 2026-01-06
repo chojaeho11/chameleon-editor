@@ -303,36 +303,71 @@ window.openWithdrawModal = async () => {
     document.getElementById('withdrawModal').style.display = 'flex';
 };
 
-// [신규] 출금 신청
+// [신규] 출금 신청 (연락처, 주민번호 포함 수정됨)
 window.requestWithdrawal = async () => {
     const amt = parseInt(document.getElementById('wdAmount').value);
     const bank = document.getElementById('wdBank').value;
     const acc = document.getElementById('wdAccount').value;
     const holder = document.getElementById('wdHolder').value;
-    const cur = parseInt(document.getElementById('wdCurrentMileage').innerText.replace(/,/g,''));
+    
+    // [추가] HTML에서 연락처와 주민번호 값 가져오기
+    // (HTML에 id="wdPhone", id="wdRRN" 입력창이 있어야 합니다)
+    const phone = document.getElementById('wdPhone') ? document.getElementById('wdPhone').value : '';
+    const rrn = document.getElementById('wdRRN') ? document.getElementById('wdRRN').value : '';
+
+    const curEl = document.getElementById('wdCurrentMileage');
+    const cur = curEl ? parseInt(curEl.innerText.replace(/,/g,'')) : 0;
 
     if(!amt || amt < 1000) return alert("최소 1,000P 부터 신청 가능합니다.");
     if(amt > cur) return alert("보유 포인트가 부족합니다.");
-    if(!bank || !acc || !holder) return alert("계좌 정보를 입력해주세요.");
-
-    if(!confirm(`${amt}P를 출금 신청하시겠습니까?`)) return;
-
-    // 1. 마일리지 차감
-    await sb.from('profiles').update({ mileage: cur - amt }).eq('id', currentUser.id);
     
-    // 2. 요청 저장
-    await sb.from('withdrawal_requests').insert({
-        user_id: currentUser.id, amount: amt, bank_name: bank, account_number: acc, account_holder: holder
-    });
+    // [수정] 필수값 체크에 연락처/주민번호 추가
+    if(!bank || !acc || !holder) return alert("계좌 정보를 입력해주세요.");
+    if(!phone || !rrn) return alert("연락처와 주민등록번호를 입력해주세요.");
 
-    // 3. 로그 저장
-    await sb.from('wallet_logs').insert({
-        user_id: currentUser.id, type: 'withdraw_req', amount: -amt, description: `출금신청(${bank})`
-    });
+    if(!confirm(`${amt.toLocaleString()}P를 출금 신청하시겠습니까?\n(3.3% 세금 공제 후 입금됩니다)`)) return;
 
-    alert("✅ 출금 신청 완료! 관리자 확인 후 입금됩니다.");
-    document.getElementById('withdrawModal').style.display = 'none';
-    loadDashboardStats();
+    try {
+        // 1. 요청 저장 (contact_phone, rrn 추가)
+        const { error: reqError } = await sb.from('withdrawal_requests').insert({
+            user_id: currentUser.id, 
+            amount: amt, 
+            bank_name: bank, 
+            account_number: acc, 
+            account_holder: holder,
+            contact_phone: phone, // [추가] DB 컬럼명 contact_phone
+            rrn: rrn,             // [추가] DB 컬럼명 rrn
+            status: 'pending'
+        });
+
+        if (reqError) throw reqError;
+
+        // 2. 마일리지 차감
+        const { error: profileError } = await sb.from('profiles').update({ mileage: cur - amt }).eq('id', currentUser.id);
+        if (profileError) throw profileError;
+
+        // 3. 로그 저장
+        await sb.from('wallet_logs').insert({
+            user_id: currentUser.id, type: 'withdraw_req', amount: -amt, description: `출금신청(${bank})`
+        });
+
+        alert("✅ 출금 신청 완료! 관리자 확인 후 입금됩니다.");
+        document.getElementById('withdrawModal').style.display = 'none';
+        
+        // 입력창 초기화
+        document.getElementById('wdAmount').value = '';
+        if(document.getElementById('wdBank')) document.getElementById('wdBank').value = '';
+        if(document.getElementById('wdAccount')) document.getElementById('wdAccount').value = '';
+        if(document.getElementById('wdHolder')) document.getElementById('wdHolder').value = '';
+        if(document.getElementById('wdPhone')) document.getElementById('wdPhone').value = '';
+        if(document.getElementById('wdRRN')) document.getElementById('wdRRN').value = '';
+
+        loadDashboardStats();
+
+    } catch (e) {
+        console.error(e);
+        alert("오류 발생: " + e.message);
+    }
 };
 // [7] 입출금 내역 로드
 async function loadWalletLogs() {

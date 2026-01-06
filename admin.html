@@ -3188,6 +3188,7 @@ window.changeTplPage = (step) => {
         // [신규] 출금 목록 로드
         // [수정됨] 출금 목록 로드 (오류 방지 버전)
         // [수정된 admin.html용 출금 목록 로드 함수]
+// [수정된 admin.html용 출금 목록 로드 함수]
 window.loadWithdrawals = async () => {
     const tbody = document.getElementById('withdrawalListBody');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>';
@@ -3212,12 +3213,14 @@ window.loadWithdrawals = async () => {
         tbody.innerHTML = '';
         requests.forEach(r => {
             const user = userMap[r.user_id];
-            const displayUser = user ? `${user.email}<br><span style='font-size:11px; color:#888;'>${user.full_name||''}</span>` : r.user_id;
+            const displayUser = user ? 
+                `<div style="font-weight:bold;">${user.full_name || '이름미상'}</div><div style="font-size:11px; color:#888;">${user.email}</div>` 
+                : `<span style="font-size:11px; color:#999;">삭제된 회원<br>(${r.user_id.substring(0,8)}...)</span>`;
             
             // 세금계산서 링크
             const taxLink = r.tax_invoice_url 
                 ? `<a href="${r.tax_invoice_url}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:2px;">📄 세금계산서</a>` 
-                : '<span style="color:#aaa; font-size:11px;">미첨부</span>';
+                : '<span style="color:#aaa; font-size:11px;">(증빙 미첨부)</span>';
 
             const statusBadge = r.status === 'pending' 
                 ? '<span class="badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;">대기중</span>'
@@ -3227,18 +3230,29 @@ window.loadWithdrawals = async () => {
                 ? `<button class="btn btn-primary btn-sm" onclick="approveWithdrawal(${r.id})">입금확인 처리</button>`
                 : `<span style="color:#cbd5e1; font-size:12px;">처리완료</span>`;
 
-            // ★ 중요: bank_name에 통합된 정보를 보여주도록 수정
+            // [수정] 계좌번호(account_number) 추가 및 null값 처리 강화
+            const detailInfo = `
+                <div style="font-weight:bold; font-size:13px; color:#1e293b;">
+                    ${r.bank_name || '은행미정'} <span style="color:#2563eb;">${r.account_number || '(계좌정보 없음)'}</span>
+                </div>
+                <div style="font-size:12px; color:#334155; margin-top:2px;">
+                    예금주: <b>${r.account_holder || '-'}</b>
+                </div>
+                <div style="margin-top:4px; padding-top:4px; border-top:1px dashed #e2e8f0;">
+                    <div style="font-size:11px; color:#64748b;">📞 ${r.contact_phone || '<span style="color:#ccc">연락처 없음</span>'}</div>
+                    <div style="font-size:11px; color:#64748b; letter-spacing:0.5px;">🆔 ${r.rrn || '<span style="color:#ccc">주민번호 없음</span>'}</div>
+                </div>
+                <div style="margin-top:4px;">${taxLink}</div>
+            `;
+
             tbody.innerHTML += `
                 <tr>
                     <td>${new Date(r.created_at).toLocaleString()}</td>
                     <td>${displayUser}</td>
                     <td style="font-weight:bold; color:#d97706;">${r.amount.toLocaleString()}원</td>
-                    <td>
-                        <div style="font-weight:bold; font-size:13px;">${r.bank_name}</div>
-                        ${taxLink}
-                    </td>
-                    <td>${statusBadge}</td>
-                    <td>${actionBtn}</td>
+                    <td style="text-align:left;">${detailInfo}</td>
+                    <td style="text-align:center;">${statusBadge}</td>
+                    <td style="text-align:center;">${actionBtn}</td>
                 </tr>
             `;
         });

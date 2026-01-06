@@ -3177,9 +3177,24 @@ window.showCategoryProducts = async function(catKey, catName) {
             </div>
         </div>
 
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">예금주 (실명)</label>
+                <input id="wdRealName" class="ai-input-pretty" placeholder="홍길동" style="margin-bottom: 0;">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">연락처</label>
+                <input id="wdPhone" class="ai-input-pretty" placeholder="010-0000-0000" style="margin-bottom: 0;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">주민등록번호 (원천징수용)</label>
+            <input id="wdRRN" class="ai-input-pretty" type="password" placeholder="000000-0000000" maxlength="14">
+        </div>
         <div style="margin-bottom: 15px;">
             <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">입금받을 계좌 정보</label>
-            <input id="wdBankInfo" class="ai-input-pretty" placeholder="은행명 / 계좌번호 / 예금주 입력">
+            <input id="wdBankInfo" class="ai-input-pretty" placeholder="은행명 / 계좌번호 (본인 명의)">
         </div>
 
         <div style="margin-bottom: 20px;">
