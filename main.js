@@ -1024,25 +1024,31 @@ window.submitContributorUpload = async function() {
     }
 };
 
-// 5. 단일 파일 업로드 (파일명 안전 변환 포함)
+// 5. 단일 파일 업로드 (썸네일 리사이징 적용 완료)
 async function processSingleUpload(file1, file2, userTags, category) {
     const timestamp = Date.now();
     let thumbUrl = '';
     let dataUrl = '';
 
-    // [중요] 한글 파일명 오류 방지를 위한 영문 변환 (타임스탬프 + 랜덤)
-    const ext1 = file1.name.split('.').pop();
-    const safeName1 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
-    
-    // 파일1 (이미지) 업로드
-    const path1 = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeName1}`;
-    const { error: err1 } = await sb.storage.from('design').upload(path1, file1);
-    if (err1) throw err1;
-    const { data: public1 } = sb.storage.from('design').getPublicUrl(path1);
-    thumbUrl = public1.publicUrl;
+    // [1] 썸네일용 이미지 리사이징 (강제 500px 축소)
+    // resizeImageBlob 함수가 main.js 상단에 선언되어 있어야 합니다.
+    const thumbFile = await resizeImageBlob(file1, 500); 
 
-    // 파일2 (SVG) 업로드
+    const ext1 = file1.name.split('.').pop();
+    const safeNameThumb = `thumb_${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
+    const safeNameOrigin = `origin_${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
+    
+    // [2] 썸네일 업로드 (가벼운 파일) -> thumb_url에 저장
+    const pathThumb = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeNameThumb}`;
+    const { error: errThumb } = await sb.storage.from('design').upload(pathThumb, thumbFile);
+    if (errThumb) throw errThumb;
+    
+    const { data: publicThumb } = sb.storage.from('design').getPublicUrl(pathThumb);
+    thumbUrl = publicThumb.publicUrl;
+
+    // [3] 원본 데이터 처리
     if (file2 && currentUploadType === 'svg') {
+        // SVG 모드: file2(SVG파일)가 원본 데이터가 됨
         const ext2 = file2.name.split('.').pop();
         const safeName2 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext2}`;
         const path2 = `user_assets/svg/${window.currentUser.id}_${safeName2}`;
@@ -1051,15 +1057,24 @@ async function processSingleUpload(file1, file2, userTags, category) {
         if (err2) throw err2;
         const { data: public2 } = sb.storage.from('design').getPublicUrl(path2);
         dataUrl = public2.publicUrl;
+
     } else {
-        dataUrl = thumbUrl;
+        // PNG/로고 모드: file1(원본 이미지)을 그대로 업로드 -> data_url에 저장
+        // 원본 품질 유지를 위해 리사이징 안 된 file1을 업로드
+        const pathOrigin = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeNameOrigin}`;
+        const { error: errOrigin } = await sb.storage.from('design').upload(pathOrigin, file1);
+        if (errOrigin) throw errOrigin;
+
+        const { data: publicOrigin } = sb.storage.from('design').getPublicUrl(pathOrigin);
+        dataUrl = publicOrigin.publicUrl;
     }
 
+    // [4] DB 저장 (썸네일주소와 원본주소를 분리해서 저장)
     const { error: dbErr } = await sb.from('library').insert({
         category: category,
-        tags: userTags, // DB에는 한글 태그 그대로 저장
-        thumb_url: thumbUrl,
-        data_url: dataUrl,
+        tags: userTags,
+        thumb_url: thumbUrl, // 500px 리사이징된 이미지
+        data_url: dataUrl,   // 고화질 원본 (또는 SVG)
         user_id: window.currentUser.id,
         created_at: new Date(),
         status: 'approved',

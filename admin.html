@@ -427,27 +427,27 @@
             <div id="sec-bankda" class="section">
                 <div class="card" style="margin-bottom:20px; background:#f0fdf4; border:1px solid #bbf7d0;">
                     <h3 style="margin-top:0; border-bottom:1px solid #bbf7d0; padding-bottom:15px; display:flex; align-items:center; gap:10px; color:#15803d;">
-                        <i class="fa-solid fa-robot"></i> 뱅크다(Bankda) 실시간 입금 확인
+                        <i class="fa-solid fa-robot"></i> 페이엑션(국민은행) 입금 자동연동
                     </h3>
                     <div style="display:flex; gap:15px; align-items:flex-end;">
-    <div>
-        <label class="form-label">조회 시작일</label>
-        <input type="date" id="bankStartDate" class="input-text">
-    </div>
-    <div>
-        <label class="form-label">조회 종료일</label>
-        <input type="date" id="bankEndDate" class="input-text">
-    </div>
-    <button class="btn btn-success" style="height:42px;" onclick="loadBankdaList()">
-        <i class="fa-solid fa-magnifying-glass"></i> 내역 조회
-    </button>
-    
-    <button class="btn btn-outline" style="height:42px; margin-left:auto;" onclick="openManualDepositModal()">
-        <i class="fa-solid fa-plus"></i> 입금건 수동 등록
-    </button>
-    </div>
+                        <div>
+                            <label class="form-label">조회 시작일</label>
+                            <input type="date" id="bankStartDate" class="input-text">
+                        </div>
+                        <div>
+                            <label class="form-label">조회 종료일</label>
+                            <input type="date" id="bankEndDate" class="input-text">
+                        </div>
+                        <button class="btn btn-success" style="height:42px;" onclick="loadBankdaList()">
+                            <i class="fa-solid fa-magnifying-glass"></i> DB 조회
+                        </button>
+                        
+                        <button class="btn btn-primary" style="height:42px; margin-left:auto; background:#15803d; border:none;" onclick="runBankdaScraping()">
+                            <i class="fa-solid fa-rotate"></i> 국민은행 최신내역 가져오기
+                        </button>
+                    </div>
                     <p style="font-size:12px; color:#166534; margin-top:10px; margin-bottom:0;">
-                        * 실시간 계좌 갱신은 백엔드 서버의 뱅크다 모듈을 호출하여 최신 내역을 DB로 가져옵니다.
+                        * [최신내역 가져오기] 버튼을 누르면 페이엑션을 통해 국민은행의 오늘 입금 내역을 조회하여 DB에 저장합니다.
                     </p>
                 </div>
 
@@ -1222,20 +1222,29 @@ window.submitWalletChange = async () => {
         };
 
         window.runBankdaScraping = async () => {
-            if(!confirm("뱅크다 모듈을 실행하여 최신 입금내역을 가져오시겠습니까?\n(서버 부하 방지를 위해 1분 간격 권장)")) return;
+            if(!confirm("🏦 페이엑션(국민은행) 입금내역을 조회하시겠습니까?\n(최신 내역을 DB로 가져옵니다)")) return;
             
             showLoading(true);
             try {
-                // 실제 환경에서는 Supabase Edge Function URL을 호출해야 합니다.
-                // const res = await fetch('YOUR_SUPABASE_EDGE_FUNCTION_URL/bankda-scraping', { method: 'POST' });
+                // 1. Supabase Edge Function (bank-scraper) 호출
+                const { data, error } = await sb.functions.invoke('bank-scraper', {
+                    method: 'POST',
+                    body: {} 
+                });
+
+                if (error) throw new Error(error.message);
+                if (data && data.error) throw new Error(data.error);
+
+                const count = data.count || 0;
+                const msg = data.message || "완료";
+                alert(`✅ ${msg} (총 ${count}건 확인)`);
                 
-                // [시뮬레이션] 2초 대기 후 완료 메시지
-                await new Promise(r => setTimeout(r, 2000));
-                
-                alert("✅ 최신 내역 갱신 완료!");
-                loadBankdaList(); // 목록 새로고침
+                // 2. 화면 목록 새로고침
+                loadBankdaList(); 
+
             } catch(e) {
-                alert("스크래핑 실패: " + e.message);
+                console.error(e);
+                alert("연동 실패: " + e.message);
             } finally {
                 showLoading(false);
             }
@@ -3803,6 +3812,45 @@ const { data, error } = await sb.from('vip_orders')
             loadMembers();
         }
     };
+    // [수동 매칭 함수] 입금내역 리스트에서 '수동 연결' 버튼 클릭 시 실행
+window.matchOrderManual = async (txId, depositorName) => {
+    // 1. 연결할 주문 ID 입력 받기
+    const orderId = prompt(`[${depositorName}]님의 입금 내역입니다.\n연결할 '주문번호(숫자)'를 입력해주세요.`);
+    if (!orderId) return;
+
+    try {
+        // 2. 주문 정보 확인
+        const { data: order, error: findErr } = await sb.from('orders').select('*').eq('id', orderId).single();
+        
+        if (findErr || !order) {
+            alert("존재하지 않는 주문번호입니다.");
+            return;
+        }
+
+        if (confirm(`주문자: ${order.manager_name}\n금액: ${order.total_amount.toLocaleString()}원\n\n이 주문과 연결하시겠습니까?`)) {
+            // 3. 주문 상태 업데이트 (결제완료)
+            await sb.from('orders').update({
+                payment_status: '결제완료',
+                payment_method: '무통장입금(수동)',
+                status: '제작준비'
+            }).eq('id', orderId);
+
+            // 4. 입금 내역 업데이트 (매칭됨)
+            await sb.from('bank_transactions').update({
+                match_status: 'matched',
+                matched_order_id: orderId
+            }).eq('id', txId);
+
+            alert("✅ 연결되었습니다.");
+            
+            // 화면 새로고침
+            loadBankdaList(); 
+            loadOrders(); 
+        }
+    } catch (e) {
+        alert("오류 발생: " + e.message);
+    }
+};
     </script>
     
 </body>
