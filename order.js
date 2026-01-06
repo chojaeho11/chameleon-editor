@@ -418,35 +418,71 @@ async function addCanvasToCart() {
     let thumbUrl = "https://placehold.co/100?text=Design";
     
     // 1. 썸네일 생성
+    // 1. 썸네일 생성 (작업지시서 이미지 복구 로직 포함)
     try {
-        let blob;
+        let blob = null;
         if (board) {
-            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-            const dataUrl = canvas.toDataURL({ 
-                format: 'png', 
-                left: board.left, 
-                top: board.top, 
-                width: board.width * board.scaleX, 
-                height: board.height * board.scaleY, 
-                multiplier: 0.5, 
-                quality: 0.8 
-            });
-            blob = await (await fetch(dataUrl)).blob();
-            canvas.setViewportTransform(originalVpt);
-        } else {
-            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-            blob = await new Promise(resolve => canvas.getElement().toBlob(resolve, 'image/jpeg', 0.5));
-            canvas.setViewportTransform(originalVpt);
+            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); // 뷰포트 초기화
+            
+            const targetW = board.width * board.scaleX;
+            const targetH = board.height * board.scaleY;
+            
+            // 메모리 보호를 위해 800px 제한
+            const maxDimension = 800; 
+            let dynamicMultiplier = 1.0;
+            const maxSide = Math.max(targetW, targetH);
+            
+            if (maxSide > maxDimension) {
+                dynamicMultiplier = maxDimension / maxSide;
+            }
+
+            try {
+                // [시도 1] 정상적인 캔버스 캡처 시도
+                const dataUrl = canvas.toDataURL({ 
+                    format: 'jpeg', left: board.left, top: board.top, 
+                    width: targetW, height: targetH, 
+                    multiplier: dynamicMultiplier, quality: 0.7 
+                });
+                blob = await (await fetch(dataUrl)).blob();
+            } catch (innerErr) {
+                console.warn("캔버스 캡처 차단됨(CORS), 대체 이미지 탐색:", innerErr);
+                
+                // [시도 2] 캡처가 막혔다면, 캔버스 안에 있는 '이미지 객체'의 원본 URL을 사용
+                // 배경 이미지나 가장 큰 이미지를 찾아서 썸네일로 씁니다.
+                const objects = canvas.getObjects();
+                let mainImgUrl = null;
+
+                // 배경 이미지 확인
+                if (canvas.backgroundImage && canvas.backgroundImage.src) {
+                    mainImgUrl = canvas.backgroundImage.src;
+                }
+                // 없으면 객체 중 가장 큰 이미지 찾기
+                else {
+                    const imgObj = objects.find(o => o.type === 'image');
+                    if (imgObj && imgObj.getSrc()) {
+                        mainImgUrl = imgObj.getSrc();
+                    }
+                }
+
+                if (mainImgUrl) {
+                    console.log("대체 썸네일 발견:", mainImgUrl);
+                    // 원본 URL을 썸네일 주소로 바로 사용 (업로드 불필요)
+                    thumbUrl = mainImgUrl; 
+                }
+            }
+            canvas.setViewportTransform(originalVpt); // 뷰포트 복구
         }
         
-        if(blob) {
-            const uploadedThumb = await uploadFileToSupabase(blob, 'thumbs');
-            if(uploadedThumb) thumbUrl = uploadedThumb;
+        // 캡처에 성공하여 blob이 있는 경우에만 업로드 진행
+        if (blob) {
+             const thumbUrlUpload = await uploadFileToSupabase(blob, 'thumbs');
+             if(thumbUrlUpload) thumbUrl = thumbUrlUpload;
         }
+
     } catch(e) { 
-        console.warn("썸네일 생성 실패", e); 
-        canvas.setViewportTransform(originalVpt);
-    } 
+        console.error("썸네일 프로세스 오류:", e); 
+        try { canvas.setViewportTransform(originalVpt); } catch(ex){}
+    }
 
     // 2. 상품 정보 확인 (없으면 복구)
     let key = window.currentProductKey || canvas.currentProductKey;

@@ -30,7 +30,65 @@ export function initExport() {
     if (btnPNG) {
         btnPNG.onclick = async () => {
             if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
-            downloadImage();
+            
+            const btn = btnPNG;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 저장중...`;
+            btn.disabled = true;
+
+            let originalVpt = null; // [추가] 뷰포트 저장 변수
+
+            try {
+                // [추가] 현재 뷰포트 저장 후 초기화 (정확한 크롭을 위해 필수)
+                originalVpt = canvas.viewportTransform;
+                canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+
+                // 1. 대지(Board) 영역 찾기
+                const board = canvas.getObjects().find(o => o.isBoard);
+                let x = 0, y = 0, w = canvas.width, h = canvas.height;
+                
+                if (board) {
+                    x = board.left; y = board.top;
+                    w = board.width * board.scaleX; h = board.height * board.scaleY;
+                }
+
+                // 2. 3500px 이상이면 강제 축소 (브라우저 메모리 보호)
+                const MAX_SIZE = 3500;
+                let multiplier = 1;
+                const maxSide = Math.max(w, h);
+                
+                if (maxSide > MAX_SIZE) {
+                    multiplier = MAX_SIZE / maxSide;
+                    console.log(`이미지가 너무 커서 ${multiplier.toFixed(2)}배로 조정합니다.`);
+                }
+
+                // 3. 이미지 데이터 추출
+                const dataUrl = canvas.toDataURL({
+                    format: 'png',
+                    left: x, top: y, width: w, height: h,
+                    multiplier: multiplier
+                });
+
+                // 4. 다운로드 실행
+                const link = document.createElement('a');
+                link.download = `design_${new Date().getTime()}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } catch (err) {
+                console.error("PNG 저장 실패:", err);
+                alert("이미지 저장에 실패했습니다.\n(외부 이미지가 포함되어 보안상 차단되었거나, 메모리가 부족합니다.)\n\n화면 캡처 기능을 이용해주시기 바랍니다.");
+            } finally {
+                // [추가] 뷰포트 복구 (성공/실패 여부와 상관없이 실행)
+                if (originalVpt) {
+                    try { canvas.setViewportTransform(originalVpt); } catch(e) { console.warn("뷰포트 복구 실패", e); }
+                }
+
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         };
     }
 
@@ -107,16 +165,37 @@ function arrayBufferToBase64(buffer) {
     return window.btoa(binary);
 }
 
+// [수정됨] 대형 이미지 리사이징 기능 추가 (최대 1500px 제한)
 async function getSafeImageDataUrl(url) {
     if (!url) return null;
-    if (url.startsWith('data:image')) return url;
     return new Promise(resolve => {
         const img = new Image(); 
-        img.crossOrigin = "Anonymous"; img.src = url;
+        img.crossOrigin = "Anonymous"; 
+        img.src = url;
         img.onload = () => {
-            const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
-            c.getContext('2d').drawImage(img, 0, 0);
-            try { resolve(c.toDataURL('image/png')); } catch(e) { resolve(null); }
+            // 원본 비율 유지하면서 최대 크기 제한 (Max 1500px)
+            const MAX_SIZE = 1500;
+            let w = img.width;
+            let h = img.height;
+
+            if (w > MAX_SIZE || h > MAX_SIZE) {
+                if (w > h) {
+                    h = Math.round((h * MAX_SIZE) / w);
+                    w = MAX_SIZE;
+                } else {
+                    w = Math.round((w * MAX_SIZE) / h);
+                    h = MAX_SIZE;
+                }
+            }
+
+            const c = document.createElement('canvas'); 
+            c.width = w; 
+            c.height = h;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            // PNG 대신 JPEG 0.8 퀄리티로 압축하여 용량 대폭 절감
+            try { resolve(c.toDataURL('image/jpeg', 0.8)); } catch(e) { resolve(null); }
         };
         img.onerror = () => resolve(null);
     });
@@ -740,13 +819,21 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         drawText(doc, "< 디자인 시안 확인 >", 105, imgBoxY - 2, {align:'center', size:9, color:"#888888"});
 
         let imgData = null; 
-        if (item.thumb && item.thumb.startsWith('data:image')) imgData = item.thumb;
-        else if (item.thumb) imgData = await getSafeImageDataUrl(item.thumb);
-        else if (item.originalUrl && item.mimeType?.startsWith('image')) imgData = await getSafeImageDataUrl(item.originalUrl);
+        // [수정] 대형 이미지 오류 방지를 위해 무조건 리사이징/압축 함수를 통과시킴
+        let targetUrl = item.thumb;
+        if (!targetUrl && item.originalUrl && item.mimeType?.startsWith('image')) {
+            targetUrl = item.originalUrl;
+        }
+
+        if (targetUrl) {
+            // 이미 dataURL이라도 getSafeImageDataUrl을 통해 안전한 크기(Max 1500px)로 재조정
+            imgData = await getSafeImageDataUrl(targetUrl);
+        }
 
         if (imgData) {
             try {
                 let format = 'PNG'; 
+                // getSafeImageDataUrl은 항상 jpeg(0.8)을 반환하므로 JPEG로 고정해도 무방하나 체크 유지
                 if (imgData.startsWith('data:image/jpeg')) format = 'JPEG';
                 
                 const imgProps = doc.getImageProperties(imgData);
