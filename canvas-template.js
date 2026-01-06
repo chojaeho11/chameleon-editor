@@ -271,10 +271,9 @@ async function loadTemplatePage(pageIndex) {
             const card = document.createElement("div");
             card.className = "tpl-item";
             
-            // [수정] 기존 이미지(대용량)도 Supabase 리사이징 기능을 통해 강제로 작게(300px) 가져옴
-            // getTinyThumb 함수는 index.html에 정의되어 있음 (?width=300... 파라미터 추가 역할)
-            const rawUrl = item.thumb_url || 'https://via.placeholder.com/300?text=No+Image';
-            const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 300) : rawUrl;
+            // [수정] 300px -> 200px로 더 줄여서 로딩 속도 극대화
+            const rawUrl = item.thumb_url || 'https://via.placeholder.com/200?text=No+Image';
+            const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 200) : rawUrl;
 
             const displayTitle = item.tags ? item.tags.split(',')[0] : '무제';
             
