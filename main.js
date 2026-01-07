@@ -1053,49 +1053,53 @@ window.submitContributorUpload = async function() {
     }
 };
 
-// 5. 단일 파일 업로드 (썸네일 300px로 더 축소)
+// 5. 단일 파일 업로드 (리사이징 제거 & 1MB 용량 제한 적용)
 async function processSingleUpload(file1, file2, userTags, category) {
+    // [1] 용량 체크 (1MB = 1024 * 1024 bytes)
+    const MAX_SIZE = 1 * 1024 * 1024;
+    if (file1.size > MAX_SIZE) {
+        alert(`이미지 용량이 너무 큽니다. (현재: ${(file1.size/1024/1024).toFixed(1)}MB)\n1MB 이하의 파일만 업로드 가능합니다.`);
+        throw new Error("File size limit exceeded"); // 실행 중단
+    }
+
     const timestamp = Date.now();
     let thumbUrl = '';
     let dataUrl = '';
 
-    // [1] 썸네일용 이미지 리사이징 (500px -> 300px로 변경하여 용량 대폭 감소)
-    const thumbFile = await resizeImageBlob(file1, 300); 
-
+    // [2] 이미지 파일 업로드 (원본 그대로)
     const ext1 = file1.name.split('.').pop();
-    const safeNameThumb = `thumb_${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
-    const safeNameOrigin = `origin_${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
+    // 한글 파일명 오류 방지를 위해 영문 랜덤명 생성
+    const safeName1 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
     
-    // [2] 썸네일 업로드
-    const pathThumb = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeNameThumb}`;
-    const { error: errThumb } = await sb.storage.from('design').upload(pathThumb, thumbFile);
-    if (errThumb) throw errThumb;
+    const path1 = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeName1}`;
+    const { error: err1 } = await sb.storage.from('design').upload(path1, file1);
     
-    const { data: publicThumb } = sb.storage.from('design').getPublicUrl(pathThumb);
-    thumbUrl = publicThumb.publicUrl;
+    if (err1) throw err1;
+    
+    const { data: public1 } = sb.storage.from('design').getPublicUrl(path1);
+    thumbUrl = public1.publicUrl;
 
-    // [3] 원본 데이터 처리 (기존 로직 유지)
+    // [3] SVG 파일이 있으면 추가 업로드 (SVG 모드인 경우)
     if (file2 && currentUploadType === 'svg') {
         const ext2 = file2.name.split('.').pop();
         const safeName2 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext2}`;
         const path2 = `user_assets/svg/${window.currentUser.id}_${safeName2}`;
+        
         const { error: err2 } = await sb.storage.from('design').upload(path2, file2);
         if (err2) throw err2;
+        
         const { data: public2 } = sb.storage.from('design').getPublicUrl(path2);
         dataUrl = public2.publicUrl;
     } else {
-        const pathOrigin = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeNameOrigin}`;
-        const { error: errOrigin } = await sb.storage.from('design').upload(pathOrigin, file1);
-        if (errOrigin) throw errOrigin;
-        const { data: publicOrigin } = sb.storage.from('design').getPublicUrl(pathOrigin);
-        dataUrl = publicOrigin.publicUrl;
+        // PNG/로고 모드면 썸네일 주소 = 원본 주소
+        dataUrl = thumbUrl;
     }
 
     // [4] DB 저장
     const { error: dbErr } = await sb.from('library').insert({
         category: category,
-        tags: userTags,
-        thumb_url: thumbUrl, 
+        tags: userTags, 
+        thumb_url: thumbUrl,
         data_url: dataUrl,
         user_id: window.currentUser.id,
         created_at: new Date(),
