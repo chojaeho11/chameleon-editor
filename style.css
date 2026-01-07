@@ -802,10 +802,18 @@ button, input, textarea, select { font-family: inherit; }
     .footer-inner { flex-direction: column; gap: 20px; }
     .foot-menu ul { flex-wrap: wrap; gap: 10px; }
 
-    /* 기타 */
+    
     .hero-title { font-size: 26px !important; word-break: keep-all; }
     .quick-menu-track { grid-template-columns: repeat(2, 1fr) !important; }
-    .template-grid-start { column-count: 2 !important; }
+    
+    /* [수정됨] 템플릿 그리드: 모바일에서 2칸으로 고정 */
+    .template-grid-start { 
+        display: grid !important; 
+        grid-template-columns: repeat(2, 1fr) !important; /* 1줄에 2개 */
+        gap: 15px !important; /* 사이 간격 적당히 */
+        column-count: auto !important; /* 기존 컬럼 설정 초기화 */
+    }
+
     #startScreen { padding-top: 20px !important; }
     .bottom-dock { display: none !important; }
 }
@@ -1090,23 +1098,24 @@ button, input, textarea, select { font-family: inherit; }
     .review-card { width: 260px; }
     .review-img { height: 150px; }
 }
-/* =========================================
-   [추가] 대분류(Top Category) 탭 스타일
-   ========================================= */
-/* =========================================
-   [수정됨] 카테고리 탭 (PC: 중앙, 모바일: 왼쪽 정렬)
-   ========================================= */
+
 .category-tabs {
     display: flex;
-    justify-content: center; /* PC 기본: 중앙 정렬 */
+    justify-content: flex-start !important;
     gap: 8px;
-    padding: 0 5px 15px 5px;
+    padding: 0 10px 15px 10px;
     overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
     margin-bottom: 10px;
-    scrollbar-width: none; 
+    
+    /* 스크롤바 디자인 (선택사항) */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
 }
+/* 크롬/사파리 스크롤바 숨김 해제 (스크롤 가능함을 보여줌) */
+.category-tabs::-webkit-scrollbar { height: 4px; display: block; }
+.category-tabs::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 .category-tabs::-webkit-scrollbar { display: none; }
 
 .cat-tab {
@@ -1244,8 +1253,8 @@ button, input, textarea, select { font-family: inherit; }
 #catProductGrid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 20px !important;
-    padding: 10px !important;
+    gap: 10px !important; /* ★ 간격 좁힘 (좌우 공간 확보) */
+    padding: 15px !important;
     width: 100% !important;
     box-sizing: border-box !important;
 }
@@ -1590,7 +1599,7 @@ body {
 
 .hotdeal-grid {
         display: grid;
-        gap: 15px;
+        gap: 10px; /* ★ 간격 좁힘 */
         /* PC 화면: 한 줄에 6개 */
         grid-template-columns: repeat(6, 1fr); 
         margin-top: 20px;
@@ -2140,7 +2149,7 @@ body {
         
         /* 박스 오른쪽 상단에 걸치게 배치 */
         right: -30px; 
-        top: -50px; 
+        top: -90px; 
         
         animation: bounceUpDn 3s ease-in-out infinite;
         pointer-events: none;
@@ -2516,4 +2525,152 @@ body {
     justify-content: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.03);
     transition: transform 0.2s;
+}
+/* =========================================
+   [수정] 상단 카테고리 (대분류) - 7열 그리드
+   ========================================= */
+.category-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important; /* 한 줄에 7개 강제 고정 */
+    gap: 8px !important;       /* 버튼 사이 간격 */
+    width: 100%;
+    max-width: 1000px;         /* 너무 퍼지지 않게 중앙 정렬 제한 */
+    margin: 0 auto 20px auto;  /* 중앙 정렬 */
+    padding: 0 !important;
+    overflow: visible !important; /* 스크롤 제거 */
+}
+
+/* 상단 카테고리 버튼 스타일 */
+.cat-tab {
+    width: 100%;              /* 칸을 꽉 채움 */
+    padding: 12px 0;          /* 위아래 여백 */
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4b5563;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;       /* 텍스트 중앙 정렬 */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cat-tab:hover {
+    background: #f8fafc;
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.cat-tab.active {
+    background: #111827;      /* 활성 상태: 진한 검정 (브랜드 컬러) */
+    color: #fff;
+    border-color: #111827;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   [수정] 하단 카테고리 (소분류) - 간격 축소
+   ========================================= */
+.quick-menu-track {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px !important;       /* ★ 핵심: 좌우 간격을 8px로 좁힘 */
+    width: 100%;
+    margin-top: 20px;
+}
+
+.quick-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 95px !important;    /* ★ 핵심: 아이콘 박스 너비를 95px로 줄여 밀착 */
+    min-width: 95px !important;
+    margin: 0 !important;      /* 외부 여백 제거 */
+    cursor: pointer;
+    transition: transform 0.2s;
+    background: transparent;   /* 배경 투명 */
+}
+
+.quick-item:hover {
+    transform: translateY(-5px);
+}
+
+/* 하단 아이콘 박스 */
+.quick-icon {
+    width: 110% !important;    /* 부모(95px)에 꽉 차게 */
+    height: 120px !important;   /* 정사각형 비율 유지 */
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    margin-bottom: 8px;
+}
+
+.quick-item:hover .quick-icon {
+    border-color: #6366f1;     /* 호버 시 보라색 테두리 */
+    box-shadow: 0 8px 15px rgba(99, 102, 241, 0.15);
+}
+
+/* 하단 텍스트 */
+.quick-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    text-align: center;
+    line-height: 1.3;
+    letter-spacing: -0.3px;
+    word-break: keep-all;
+    width: 100%;
+    margin-top: 0;
+}
+
+/* =========================================
+   [모바일 대응] 모바일에서는 스크롤 유지 or 4열 변경
+   ========================================= */
+@media (max-width: 768px) {
+    /* 모바일 상단: 스크롤 방식이 더 편하므로 그리드 해제하거나, 
+       요청하신 대로 그리드를 원하시면 아래 repeat 숫자를 4로 변경하세요 */
+    .category-tabs {
+        display: flex !important; /* 모바일은 스크롤 유지 권장 */
+        overflow-x: auto !important;
+        justify-content: flex-start;
+        padding-bottom: 10px !important;
+        gap: 6px !important;
+    }
+    
+    .cat-tab {
+        width: auto;
+        min-width: 70px;
+        padding: 8px 16px;
+        font-size: 13px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* 모바일 하단: 3열로 꽉 차게 */
+    .quick-menu-track {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+    }
+    
+    .quick-item {
+        width: 100% !important; /* 그리드에 맞춤 */
+        min-width: 0 !important;
+    }
+    
+    .quick-icon {
+        height: auto !important;
+        aspect-ratio: 1/1;
+    }
 }

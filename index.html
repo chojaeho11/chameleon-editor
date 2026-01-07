@@ -101,15 +101,15 @@
    유저 템플릿 이미지
 </button>
 
-            <button class="tpl-tab" data-tpl="photo-bg">고화질이미지</button>
+            <button class="tpl-tab" data-tpl="photo-bg">사진</button>
 
-            <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">백터배경</button>
+            <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">배경</button>
 
-            <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">벡터이미지</button>
+            <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">객체</button>
 
-            <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴디자인</button>
+            <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴</button>
 
-            <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고모음</button>
+            <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고</button>
         </div>
         
         <div style="flex:1;"></div>
@@ -1522,7 +1522,12 @@
     </button>
 </div>
 <div id="categoryDetailModal" class="modal-bg" style="z-index: 15000;">
-    <div class="modal-box" style="width: 800px; max-width: 95%;">
+    <div class="modal-box" style="width: 800px; max-width: 95%; position: relative;">
+        
+        <button onclick="document.getElementById('categoryDetailModal').style.display='none'" 
+                style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; z-index: 10;">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
         <h3 id="catModalTitle">📏 사이즈(제품)를 선택해주세요</h3>
         <p style="margin-bottom:20px; color:#666;">원하시는 규격을 선택하시면 디자인이 시작됩니다.</p>
         
@@ -1609,13 +1614,18 @@
     // -----------------------------------------------------------
     window.canvas = canvas;
     window.getTinyThumb = function(url, size = 150) {
-        if (!url) return '';
-        if (url.includes('supabase.co')) {
-            const separator = url.includes('?') ? '&' : '?';
-            return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=50&format=webp`;
-        }
-        return url;
-    };
+    if (!url) return '';
+    
+    // 1. Base64 데이터(이미지 자체)인 경우 리사이징 불가하므로 그대로 반환
+    if (url.startsWith('data:image')) return url;
+
+    // 2. URL에 이미 ?가 있으면 &로 연결, 없으면 ?로 시작
+    const separator = url.includes('?') ? '&' : '?';
+
+    // 3. Supabase 외 다른 서버도 지원할 수 있도록 조건문 제거 후 파라미터 강제 부착
+    // (서버가 지원하지 않으면 이 파라미터는 무시되고 원본이 나오지만, 시도는 해봅니다)
+    return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=50&format=webp`;
+};
     window.openProductDetail = openProductDetail;
     window.startDesignFromProduct = startDesignFromProduct;
     window.applySize = applySize;
@@ -2075,9 +2085,10 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
                 div.className = 'quick-item';
                 div.style.cursor = 'pointer';
 
-                // [이미지 결정 순서] 
-                // 1. 카테고리 자체 이미지 -> 2. (없으면) 상품 이미지 -> 3. (없으면) 회색 폴더 아이콘
-                let iconUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+                // 원본 URL 가져오기
+let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+// 리사이징 함수 적용 (150px)
+let iconUrl = window.getTinyThumb(rawUrl, 150);
                 
                 let imgTag = '';
                 if (iconUrl) {
@@ -2307,12 +2318,11 @@ window.showCategoryProducts = async function(catKey, catName) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">No products found.</div>';
         return;
     }
+        products.forEach(p => {
+            const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 80) : '';
 
-    // 2. 상품 카드 생성 루프
-    products.forEach(p => {
-        // ★ [2] 다국어 데이터 적용 (여기가 안 되어서 한국어가 나왔던 것)
-        // ★ [2] 다국어 데이터 적용 & 가격 포맷 수정
-        let displayName = p.name;
+            // ★ [2] 다국어 데이터 적용 & 가격 포맷 수정
+            let displayName = p.name;
         let displayPrice = p.price;
         let formattedPrice = ''; // 완성된 가격 문자열
 
@@ -2352,7 +2362,7 @@ window.showCategoryProducts = async function(catKey, catName) {
         if (p.img_url) {
             imgHtml = `
                 <div class="quick-icon-img-box">
-                    <img src="${p.img_url}" alt="${displayName}" loading="lazy" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
+                    <img src="${thumbUrl}" alt="${displayName}" loading="lazy" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
                 </div>
             `;
         } else {
@@ -2746,32 +2756,40 @@ window.showCategoryProducts = async function(catKey, catName) {
 
             // 4. 그리드 생성
             categories.forEach(cat => {
-                // [이미지 결정 우선순위]
-                // 1순위: 카테고리 자체에 등록된 이미지
-                // 2순위: 해당 카테고리에 속한 첫 번째 상품의 이미지 (catThumbMap)
-                // 3순위: 없음
-                let iconUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
-                
-                const div = document.createElement('div');
-                div.className = 'quick-item';
+    // 1. 원본 URL 가져오기
+    let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+    
+    // 2. 리사이징 시도 (150px)
+    let iconUrl = window.getTinyThumb(rawUrl, 150);
+    
+    const div = document.createElement('div');
+    div.className = 'quick-item';
 
-                let imgTag = '';
-                if (iconUrl) {
-                    imgTag = `<img src="${iconUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;" onerror="this.style.display='none'; this.parentNode.innerText='No Img'; this.parentNode.style.background='#f1f5f9'; this.parentNode.style.display='flex'; this.parentNode.style.alignItems='center'; this.parentNode.style.justifyContent='center'; this.parentNode.style.color='#ccc';">`;
-                } else {
-                    imgTag = `<div style="width:100%; height:100%; background:#f1f5f9; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:12px;">No Img</div>`;
-                }
+    // 3. ★ 핵심 수정: 이미지 태그 최적화 (버벅임 방지) ★
+    // decoding="async": 이미지 해독을 병렬로 처리하여 스크롤 끊김 방지
+    // content-visibility: auto: 화면에 보일 때만 렌더링하여 성능 향상
+    // contain: strict: 레이아웃 재계산 비용 최소화
+    let imgTag = '';
+    if (iconUrl) {
+        imgTag = `<img src="${iconUrl}" 
+                       loading="lazy" 
+                       decoding="async" 
+                       style="width:100%; height:100%; object-fit:cover; border-radius:12px; content-visibility: auto; contain: strict; image-rendering: -webkit-optimize-contrast; transform: translateZ(0); backface-visibility: hidden;"
+                       onerror="this.style.display='none'; this.parentNode.innerText='No Img'; this.parentNode.style.background='#f1f5f9'; this.parentNode.style.color='#ccc';">`;
+    } else {
+        imgTag = `<div style="width:100%; height:100%; background:#f1f5f9; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:12px;">No Img</div>`;
+    }
 
-                div.innerHTML = `
-                    <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; padding:0; overflow:hidden;">
-                        ${imgTag}
-                    </div>
-                    <div class="quick-text">${cat.name}</div>
-                `;
-                
-                div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
-                grid.appendChild(div);
-            });
+    div.innerHTML = `
+        <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; padding:0; overflow:hidden;">
+            ${imgTag}
+        </div>
+        <div class="quick-text">${cat.name}</div>
+    `;
+    
+    div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
+    grid.appendChild(div);
+});
 
         } catch (e) {
             console.error("카테고리 로딩 실패:", e);

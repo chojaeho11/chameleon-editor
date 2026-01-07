@@ -2675,75 +2675,85 @@ window.downloadMonthlyExcel = async () => {
         };
 
         // [수정됨] 국가 필터에 따라 상품명/가격 언어를 바꿔서 보여주는 함수
-window.renderProductList = (products) => { 
-    const prodBody = document.getElementById('prodTableBody'); 
-    prodBody.innerHTML = ''; 
-    
-    // 1. 현재 선택된 국가 필터 확인
-    const filterSite = document.getElementById('filterProdSite').value;
-
-    if(!products || products.length === 0) {
-        prodBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">조건에 맞는 상품이 없습니다.</td></tr>';
-        return;
-    }
-
-    products.forEach(item => { 
-        // 2. 국가별 데이터 매핑 (기본값: 한국어)
-        let dName = item.name;
-        let dPrice = item.price;
-        let subInfo = ""; // 보조 정보 표시용
-
-        // 일본 필터 선택 시 -> 일본어 데이터 표시
-        if (filterSite === 'JP') {
-            dName = item.name_jp || item.name; // 일본어 없으면 한국어 표시
-            dPrice = item.price_jp || 0;
-            // 원본 한국어 이름 작게 표시
-            subInfo = `<div style="font-size:10px; color:#94a3b8;">(KR: ${item.name})</div>`; 
-        } 
-        // 미국 필터 선택 시 -> 영어 데이터 표시
-        else if (filterSite === 'US') {
-            dName = item.name_us || item.name;
-            dPrice = item.price_us || 0;
-            subInfo = `<div style="font-size:10px; color:#94a3b8;">(KR: ${item.name})</div>`;
-        } 
-        // 전체/한국 선택 시 -> 번역 여부 뱃지 표시
-        else {
-            if(item.name_jp) subInfo += `<span style="font-size:10px; margin-right:4px; color:#f59e0b;" title="일본어 번역됨">🇯🇵</span>`;
-            if(item.name_us) subInfo += `<span style="font-size:10px; color:#3b82f6;" title="영어 번역됨">🇺🇸</span>`;
-        }
-
-        // 3. 통화 기호 포맷팅
-        const displayPrice = formatCurrency(dPrice, filterSite === 'all' ? 'KR' : filterSite); 
-        
-        // 4. HTML 렌더링
-        const tr = document.createElement('tr'); 
-        tr.className = 'draggable-row'; 
-        tr.draggable = true; 
-        tr.dataset.id = item.id; 
-        
-        // 이미지 및 내용 구성
-        tr.innerHTML = `
-            <td><span class="badge-site ${(item.site_code || 'KR').toLowerCase()}">${item.site_code || 'KR'}</span></td>
-            <td>
-                <img src="${item.img_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#eee;" onerror="this.src='https://placehold.co/40?text=NoImg'">
-            </td>
-            <td>
-                <div style="font-size:11px; color:#6366f1; font-weight:bold;">${item.category || '-'}</div>
-                <b>${item.code}</b><br>
-                ${dName}
-                ${subInfo}
-            </td>
-            <td>${item.width_mm}x${item.height_mm}</td>
-            <td style="font-weight:bold;">${displayPrice}</td>
-            <td>
-                <button class="btn btn-outline" style="padding:4px;" onclick="editProductLoad(${item.id})">수정</button> 
-                <button class="btn btn-danger" style="padding:4px;" onclick="deleteSystemData('admin_products', ${item.id})">삭제</button>
-            </td>`; 
+// [수정됨] 국가 필터에 따라 상품명/가격 언어를 바꿔서 보여주는 함수 (이미지 최적화 포함)
+        window.renderProductList = (products) => { 
+            const prodBody = document.getElementById('prodTableBody'); 
+            prodBody.innerHTML = ''; 
             
-        addDragListeners(tr); 
-        prodBody.appendChild(tr); 
-    }); 
-};
+            // 1. 현재 선택된 국가 필터 확인
+            const filterSite = document.getElementById('filterProdSite').value;
+
+            if(!products || products.length === 0) {
+                prodBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">조건에 맞는 상품이 없습니다.</td></tr>';
+                return;
+            }
+
+            products.forEach(item => { 
+                // 2. 국가별 데이터 매핑 변수 선언 (이 부분이 누락되어 에러가 났습니다)
+                let dName = item.name;
+                let dPrice = item.price;  // ★ 핵심 복구: dPrice 정의
+                let subInfo = ""; 
+
+                // 일본 필터 선택 시 -> 일본어 데이터 표시
+                if (filterSite === 'JP') {
+                    dName = item.name_jp || item.name; 
+                    dPrice = item.price_jp || 0;
+                    subInfo = `<div style="font-size:10px; color:#94a3b8;">(KR: ${item.name})</div>`; 
+                } 
+                // 미국 필터 선택 시 -> 영어 데이터 표시
+                else if (filterSite === 'US') {
+                    dName = item.name_us || item.name;
+                    dPrice = item.price_us || 0;
+                    subInfo = `<div style="font-size:10px; color:#94a3b8;">(KR: ${item.name})</div>`;
+                } 
+                // 전체/한국 선택 시 -> 뱃지 표시
+                else {
+                    if(item.name_jp) subInfo += `<span style="font-size:10px; margin-right:4px; color:#f59e0b;" title="일본어 번역됨">🇯🇵</span>`;
+                    if(item.name_us) subInfo += `<span style="font-size:10px; color:#3b82f6;" title="영어 번역됨">🇺🇸</span>`;
+                }
+
+                // 3. 통화 기호 포맷팅 (dPrice가 정의되어 있어야 작동함)
+                const displayPrice = formatCurrency(dPrice, filterSite === 'all' ? 'KR' : filterSite); 
+                
+                // 4. [이미지 최적화] 서버 리사이징 URL 생성
+                let thumbUrl = item.img_url;
+                if (thumbUrl && thumbUrl.includes('supabase.co')) {
+                    const separator = thumbUrl.includes('?') ? '&' : '?';
+                    thumbUrl += `${separator}width=80&height=80&resize=cover&quality=60&format=webp`;
+                }
+
+                // 5. HTML 렌더링
+                const tr = document.createElement('tr'); 
+                tr.className = 'draggable-row'; 
+                tr.draggable = true; 
+                tr.dataset.id = item.id; 
+                
+                tr.innerHTML = `
+                    <td><span class="badge-site ${(item.site_code || 'KR').toLowerCase()}">${item.site_code || 'KR'}</span></td>
+                    <td>
+                        <img src="${thumbUrl}" 
+                             loading="lazy" 
+                             decoding="async"
+                             style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#eee; image-rendering:-webkit-optimize-contrast;" 
+                             onerror="this.src='https://placehold.co/40?text=NoImg'">
+                    </td>
+                    <td>
+                        <div style="font-size:11px; color:#6366f1; font-weight:bold;">${item.category || '-'}</div>
+                        <b>${item.code}</b><br>
+                        ${dName}
+                        ${subInfo}
+                    </td>
+                    <td>${item.width_mm}x${item.height_mm}</td>
+                    <td style="font-weight:bold;">${displayPrice}</td>
+                    <td>
+                        <button class="btn btn-outline" style="padding:4px;" onclick="editProductLoad(${item.id})">수정</button> 
+                        <button class="btn btn-danger" style="padding:4px;" onclick="deleteSystemData('admin_products', ${item.id})">삭제</button>
+                    </td>`; 
+                    
+                addDragListeners(tr); 
+                prodBody.appendChild(tr); 
+            }); 
+        };
         
         window.addProductDB = async () => {
             const site = document.getElementById('newProdSite').value;
