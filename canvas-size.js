@@ -16,19 +16,19 @@ export function initSizeControls() {
     ];
 
     const sizesWall = [
-        { name: '1칸 가벽', w: 1200, h: 2200, mode: 'wall', key: 'Wall_1' },
-        { name: '2칸 가벽', w: 2200, h: 2200, mode: 'wall', key: 'Wall_2' },
-        { name: '3칸 가벽', w: 3200, h: 2200, mode: 'wall', key: 'Wall_3' },
-        { name: '4칸 가벽', w: 4200, h: 2200, mode: 'wall', key: 'Wall_4' },
-        { name: '5칸 가벽', w: 5200, h: 2200, mode: 'wall', key: 'Wall_5' },
+        { name: '1-Section Wall', w: 1200, h: 2200, mode: 'wall', key: 'Wall_1' },
+        { name: '2-Section Wall', w: 2200, h: 2200, mode: 'wall', key: 'Wall_2' },
+        { name: '3-Section Wall', w: 3200, h: 2200, mode: 'wall', key: 'Wall_3' },
+        { name: '4-Section Wall', w: 4200, h: 2200, mode: 'wall', key: 'Wall_4' },
+        { name: '5-Section Wall', w: 5200, h: 2200, mode: 'wall', key: 'Wall_5' },
     ];
 
     const sizesGoods = [
-        { name: 'X배너', w: 600, h: 1800, key: 'Banner_X' },
-        { name: '시상보드', w: 800, h: 570, key: 'Award_Board' },
-        { name: '글씨포토존', w: 2400, h: 1200, key: 'PhotoZone_Text' },
-        { name: '대폭원단', w: 1350, h: 900, key: 'Fabric_Wide' },
-        { name: '종이진열대', w: 585, h: 1130, key: 'Paper_Disp_4' }
+        { name: 'X-Banner', w: 600, h: 1800, key: 'Banner_X' },
+        { name: 'Award Board', w: 800, h: 570, key: 'Award_Board' },
+        { name: 'Text Photo Zone', w: 2400, h: 1200, key: 'PhotoZone_Text' },
+        { name: 'Wide Fabric', w: 1350, h: 900, key: 'Fabric_Wide' },
+        { name: 'Paper Stand', w: 585, h: 1130, key: 'Paper_Disp_4' }
     ];
 
     // [사용자 지정 사이즈 적용 버튼 이벤트]
@@ -42,7 +42,7 @@ export function initSizeControls() {
             let reqH = parseInt(inputH.value); // mm 단위
 
             if (!reqW || !reqH || reqW <= 0 || reqH <= 0) {
-                return alert("유효한 숫자를 입력해주세요.");
+                return alert("Please enter a valid number.");
             }
 
             // 최대 크기(현재 대지 크기) 체크
@@ -54,8 +54,8 @@ export function initSizeControls() {
 
             if (!isFitNormal && !isFitRotated) {
                 return alert(
-                    `설정된 최대 크기(${limitW}x${limitH}mm)를 초과할 수 없습니다.\n` +
-                    `현재 대지 크기 안에서만 설정 가능합니다.`
+                    `Cannot exceed the maximum size (${limitW}x${limitH}mm).\n` +
+                    `You can only set within the current canvas dimensions.`
                 );
             }
 
@@ -64,7 +64,7 @@ export function initSizeControls() {
                 const temp = reqW;
                 reqW = reqH;
                 reqH = temp;
-                alert("입력하신 크기가 대지에 맞지 않아 가로/세로를 회전하여 적용합니다.");
+                alert("The dimensions were rotated to fit the canvas.");
                 
                 // 입력창 값도 스왑해서 보여줌
                 inputW.value = reqW;

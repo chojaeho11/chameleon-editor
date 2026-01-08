@@ -124,7 +124,7 @@ export function initTemplateTools() {
     if(btnOpenSell) {
         btnOpenSell.onclick = () => {
             if (!currentUser) {
-                alert("로그인이 필요한 서비스입니다.");
+                alert("Login required.");
                 document.getElementById('loginModal').style.display = 'flex';
                 return;
             }
@@ -193,13 +193,13 @@ async function loadTemplatePage(pageIndex) {
     if (!grid) return;
 
     // 1. 로딩 표시 (기존 그리드 지우고 로딩바)
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#666;">Loading data...</div>';
 
     // 2. 하단 페이징 컨트롤 영역 생성 (그리드 밖 부모 요소에 추가)
     renderPaginationControls(false); // 로딩 중에는 버튼 비활성화
 
     if (!sb) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">DB 미연결</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">DB Not Connected</div>';
         tplIsLoading = false;
         return;
     }
@@ -258,8 +258,8 @@ async function loadTemplatePage(pageIndex) {
         // 데이터가 없을 때
         if (!data || data.length === 0) {
     grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
-        표시할 데이터가 없습니다.<br>
-        ${pageIndex > 0 ? '<button class="btn-round" onclick="changeModalTemplatePage(-1)" style="margin-top:10px;">이전 페이지로 돌아가기</button>' : ''}
+        No data to display.<br>
+        ${pageIndex > 0 ? '<button class="btn-round" onclick="changeModalTemplatePage(-1)" style="margin-top:10px;">Go back to previous page</button>' : ''}
     </div>`;
     renderPaginationControls(true, 0); 
     tplIsLoading = false;
@@ -326,7 +326,7 @@ async function loadTemplatePage(pageIndex) {
                 <img src="${imgUrl}" class="tpl-item-img" loading="lazy">
                 <div class="tpl-overlay-info">
                     <span class="tpl-name">${displayTitle}</span>
-                    <button class="btn-use-mini" type="button">바로 적용</button>
+                    <button class="btn-use-mini" type="button">Apply Now</button>
                 </div>
             `;
             
@@ -351,8 +351,8 @@ async function loadTemplatePage(pageIndex) {
     } catch (e) {
         console.error("로딩 에러:", e);
         grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:red;">
-            데이터를 불러오지 못했습니다.<br>
-            <button class="btn-round" onclick="loadTemplatePage(${tplCurrentPage})" style="margin-top:10px;">다시 시도</button>
+            Failed to load data.<br>
+            <button class="btn-round" onclick="loadTemplatePage(${tplCurrentPage})" style="margin-top:10px;">Retry</button>
         </div>`;
     } finally {
         tplIsLoading = false;
@@ -384,7 +384,7 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
     // 1. 이전 버튼
     const prevBtn = document.createElement("button");
     prevBtn.className = "btn-round"; 
-    prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left" style="font-size:11px;"></i> 이전`;
+    prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left" style="font-size:11px;"></i> Prev`;
     prevBtn.style.cssText = btnStyle;
     
     if (!isEnabled || tplCurrentPage === 0) {
@@ -404,13 +404,13 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
 
     // 2. 페이지 표시 텍스트
     const pageIndicator = document.createElement("span");
-    pageIndicator.innerText = `${tplCurrentPage + 1} 페이지`;
+    pageIndicator.innerText = `Page ${tplCurrentPage + 1}`;
     pageIndicator.style.cssText = "font-size: 13px; font-weight: 600; color: #64748b; margin: 0 10px; white-space: nowrap;";
 
     // 3. 다음 버튼
     const nextBtn = document.createElement("button");
     nextBtn.className = "btn-round";
-    nextBtn.innerHTML = `다음 <i class="fa-solid fa-chevron-right" style="font-size:11px;"></i>`;
+    nextBtn.innerHTML = `Next <i class="fa-solid fa-chevron-right" style="font-size:11px;"></i>`;
     nextBtn.style.cssText = btnStyle;
 
     if (!isEnabled || dataCount < TPL_PER_PAGE) {
@@ -458,7 +458,7 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
 // =========================================================
 
 async function useSelectedTemplate() {
-    if (!selectedTpl) return alert("템플릿을 선택해주세요.");
+    if (!selectedTpl) return alert("Please select a template.");
     
     const objects = canvas.getObjects().filter(o => !o.isBoard);
     
@@ -725,14 +725,14 @@ const type = selectedRadio ? selectedRadio.value : "vector"; // 라디오 버튼
 // ★ 핵심: 시스템 템플릿과 섞이지 않게 'user_' 접두어를 붙여서 저장합니다.
 const category = 'user_' + type; // 결과: 'user_vector' 또는 'user_image'
 
-    const title = titleEl ? titleEl.value.trim() : "제목 없음";
+    const title = titleEl ? titleEl.value.trim() : "Untitled";
     const tags = tagEl ? tagEl.value.trim() : "";
 
-    if (!title) return alert("제목을 입력해주세요.");
+    if (!title) return alert("Please enter a title.");
 
     const btn = document.getElementById("btnSellConfirm");
     const originalText = btn.innerText;
-    btn.innerText = "업로드 중...";
+    btn.innerText = "Uploading...";
     btn.disabled = true;
 
     try {
@@ -814,8 +814,8 @@ const category = 'user_' + type; // 결과: 'user_vector' 또는 'user_image'
         if (dbError) throw dbError;
 
         // 성공 처리
-        await addRewardPoints(currentUser.id, 100, `템플릿 등록 보상 (${title})`);
-        alert("🎉 디자인이 등록되었습니다! (+100P 적립)\n[템플릿] 탭에서 확인하세요.");
+        await addRewardPoints(currentUser.id, 100, `Reward for registration (${title})`);
+        alert("🎉 Design registered! (+100P earned)\nCheck it in the [Templates] tab.");
         document.getElementById("sellModal").style.display = "none";
         
         // 입력창 초기화
@@ -858,14 +858,14 @@ window.handleFileSelect = function(input) {
     } else {
         if(preview) preview.style.display = 'none';
         if(removeBtn) removeBtn.style.display = 'flex';
-        dropText.innerHTML = `<span style="color:#6366f1; font-weight:800;">${files.length}개</span>의 파일이 선택되었습니다.`;
-        subText.innerText = "업로드 버튼을 누르면 일괄 등록됩니다.";
-        if(keywordInput) { keywordInput.value = ""; keywordInput.placeholder = "공통 태그 입력"; }
+        dropText.innerHTML = `<span style="color:#6366f1; font-weight:800;">${files.length}</span> files selected.`;
+        subText.innerText = "Click upload to register all.";
+        if(keywordInput) { keywordInput.value = ""; keywordInput.placeholder = "Enter common tags"; }
     }
 };
 
 window.resetUpload = function(e) {
-    if(e) e.stopPropagation(); 
+    if(e) e.stopPropagation();
     const fileInput = document.getElementById('logoFileInput');
     const preview = document.getElementById('previewImage');
     const removeBtn = document.getElementById('removeFileBtn');
@@ -875,9 +875,9 @@ window.resetUpload = function(e) {
     if(fileInput) fileInput.value = "";
     if(preview) { preview.style.display = 'none'; preview.src = ""; }
     if(removeBtn) removeBtn.style.display = 'none';
-    if(dropText) dropText.innerText = "클릭하여 파일 선택";
-    if(subText) subText.innerText = "또는 파일을 여기로 드래그하세요";
-    if(keywordInput) { keywordInput.value = ""; keywordInput.placeholder = "예: 삼성, 로고, 심플 (쉼표로 구분)"; }
+    if(dropText) dropText.innerText = "Click to select files";
+    if(subText) subText.innerText = "Or drag and drop files here";
+    if(keywordInput) { keywordInput.value = ""; keywordInput.placeholder = "Ex: Samsung, Logo, Simple"; }
 };
 
 window.uploadUserLogo = async function() {

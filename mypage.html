@@ -52,24 +52,24 @@
         <div class="mp-logo" onclick="location.href='index.html'"><i class="fa-solid fa-palette"></i> Chameleon</div>
         
         <div class="mp-nav-item active" onclick="switchTab('dashboard')">
-            <i class="fa-solid fa-chart-pie" style="width:20px;"></i> 대시보드
+            <i class="fa-solid fa-chart-pie" style="width:20px;"></i> <span data-i18n="mp_menu_dashboard">Dashboard</span>
         </div>
         <div class="mp-nav-item" onclick="switchTab('designs')">
-            <i class="fa-solid fa-layer-group" style="width:20px;"></i> 내 디자인
+            <i class="fa-solid fa-layer-group" style="width:20px;"></i> <span data-i18n="mp_menu_designs">My Designs</span>
         </div>
         <div class="mp-nav-item" onclick="switchTab('sales')">
-            <i class="fa-solid fa-store" style="width:20px;"></i> 판매중인 디자인
+            <i class="fa-solid fa-store" style="width:20px;"></i> <span data-i18n="mp_menu_sales">On Sale</span>
         </div>
         <div class="mp-nav-item" onclick="switchTab('orders')">
-            <i class="fa-solid fa-receipt" style="width:20px;"></i> 주문 내역
+            <i class="fa-solid fa-receipt" style="width:20px;"></i> <span data-i18n="mp_menu_orders">Orders</span>
         </div>
         <div class="mp-nav-item" onclick="switchTab('profit')">
-            <i class="fa-solid fa-sack-dollar" style="width:20px;"></i> 수익 & 마일리지
+            <i class="fa-solid fa-sack-dollar" style="width:20px;"></i> <span data-i18n="mp_menu_profit">Profit & Points</span>
         </div>
         
         <div style="margin-top: auto;">
             <div class="mp-nav-item" style="color:#ef4444;" onclick="logout()">
-                <i class="fa-solid fa-right-from-bracket" style="width:20px;"></i> 로그아웃
+                <i class="fa-solid fa-right-from-bracket" style="width:20px;"></i> <span data-i18n="btn_logout">Logout</span>
             </div>
         </div>
     </nav>
@@ -77,11 +77,11 @@
     <main class="mp-main">
         <div class="mp-header">
             <div class="mp-welcome">
-                <h1 id="userNameDisplay">환영합니다!</h1>
-                <p>오늘도 멋진 디자인을 만들어보세요.</p>
+                <h1 id="userNameDisplay" data-i18n="mp_welcome_title">Welcome!</h1>
+                <p data-i18n="mp_welcome_desc">Create amazing designs today.</p>
             </div>
             <button onclick="location.href='index.html'" class="btn-round primary" style="width:auto; padding:10px 20px;">
-                <i class="fa-solid fa-pen-nib"></i> 에디터로 돌아가기
+                <i class="fa-solid fa-pen-nib"></i> <span data-i18n="btn_back_to_editor">Back to Editor</span>
             </button>
         </div>
 
@@ -91,7 +91,7 @@
                     <div class="stat-icon"><i class="fa-solid fa-won-sign"></i></div>
                     <div class="stat-info">
                         <span id="mileageDisplay">0 P</span>
-                        <span>보유 마일리지</span>
+                        <span data-i18n="mp_label_mileage">Mileage</span>
                     </div>
                 </div>
                 
@@ -100,8 +100,8 @@
                         <i class="fa-solid fa-money-bill-wave"></i>
                     </div>
                     <div class="stat-info">
-                        <span id="totalSpendDisplay">0 원</span>
-                        <span>누적 구매실적</span>
+                        <span id="totalSpendDisplay">0</span>
+                        <span data-i18n="mp_label_total_spend">Total Spend</span>
                     </div>
                 </div>
 
@@ -110,8 +110,8 @@
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
                     <div class="stat-info">
-                        <span id="logoCountDisplay">0 개</span>
-                        <span>등록한 로고</span>
+                        <span id="logoCountDisplay">0</span>
+                        <span data-i18n="mp_label_logo_count">Shared Logos</span>
                     </div>
                 </div>
 
@@ -120,8 +120,8 @@
                         <i class="fa-solid fa-box-open"></i>
                     </div>
                     <div class="stat-info">
-                        <span id="activeOrderCount">0 건</span>
-                        <span>진행중인 주문</span>
+                        <span id="activeOrderCount">0</span>
+                        <span data-i18n="mp_label_active_orders">Active Orders</span>
                     </div>
                 </div>
             </div>

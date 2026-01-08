@@ -161,14 +161,14 @@ export function toggleLockWizard() {
     // 2. 선택된 객체가 없는데 잠긴 객체가 있다면 -> 전체 잠금 해제
     const lockedObjects = canvas.getObjects().filter(o => o.locked);
     if (lockedObjects.length > 0) {
-        if(confirm(`잠겨있는 ${lockedObjects.length}개의 객체를 모두 해제하시겠습니까?`)) {
+        if(confirm(`Do you want to unlock all ${lockedObjects.length} locked objects?`)) {
             lockedObjects.forEach(o => unlockObject(o));
             canvas.requestRenderAll();
             saveHistory();
             updateLockUI();
         }
     } else {
-        alert("잠글 객체를 선택해주세요.");
+        alert("Please select an object to lock.");
     }
 }
 
@@ -202,15 +202,15 @@ export function updateLockUI() {
     const hasLocked = canvas.getObjects().some(o => o.locked);
 
     if (active) {
-        btn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>선택 잠그기</span>';
+        btn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>Lock Selection</span>';
         btn.classList.remove('active');
         btn.style.opacity = '1';
     } else {
         if (hasLocked) {
-            btn.innerHTML = '<i class="fa-solid fa-lock-open"></i> <span>모두 잠금해제</span>';
+            btn.innerHTML = '<i class="fa-solid fa-lock-open"></i> <span>Unlock All</span>';
             btn.classList.add('active'); // 스타일링 포인트
         } else {
-            btn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>잠금 마법사</span>';
+            btn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>Lock Wizard</span>';
             btn.classList.remove('active');
         }
     }

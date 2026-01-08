@@ -47,7 +47,7 @@
     // 5. 실행 함수
     window.applyNewWizard = function(type) {
         if (!window.canvas) {
-            alert("캔버스가 준비되지 않았습니다.");
+            alert(window.t ? window.t('err_canvas_not_ready') : "Canvas is not ready.");
             return;
         }
 

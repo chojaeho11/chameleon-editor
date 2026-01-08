@@ -12,10 +12,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // 유저 이름 표시
-    const userName = currentUser.user_metadata?.full_name || '고객';
+    const userName = currentUser.user_metadata?.full_name || 'Customer';
     const email = currentUser.email || '';
     const displayTitle = document.getElementById('userNameDisplay');
-    if(displayTitle) displayTitle.innerText = `반갑습니다, ${userName}님!`;
+    if(displayTitle) {
+        const tpl = window.t('mp_welcome_user') || "Welcome, {name}!";
+        displayTitle.innerText = tpl.replace('{name}', userName);
+    }
     
     // 대시보드 통계 및 지갑 로그 로드
     loadDashboardStats();
@@ -137,7 +140,7 @@ async function loadDashboardStats() {
 async function loadMyDesigns() {
     const grid = document.getElementById('designGrid');
     if(!grid) return;
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;">로딩 중...</div>';
+    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px;">${window.t('msg_loading') || "Loading..."}</div>`;
     
     const { data, error } = await sb.from('user_designs')
         .select('*')
@@ -146,7 +149,7 @@ async function loadMyDesigns() {
 
     grid.innerHTML = '';
     if (!data || data.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">저장된 디자인이 없습니다.</div>';
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">${window.t('msg_no_designs') || "No designs saved."}</div>`;
         return;
     }
 
@@ -168,13 +171,13 @@ async function loadMyDesigns() {
 }
 
 function loadDesignToEditor(id) {
-    if(!confirm("이 디자인을 에디터로 불러오시겠습니까?")) return;
+    if(!confirm(window.t('confirm_load_design') || "Load this design into the editor?")) return;
     localStorage.setItem('load_design_id', id); 
     location.href = 'index.html'; 
 }
 
 async function deleteDesign(id) {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
+    if (!confirm(window.t('confirm_delete') || "Are you sure you want to delete?")) return;
     await sb.from('user_designs').delete().eq('id', id);
     loadMyDesigns();
 }

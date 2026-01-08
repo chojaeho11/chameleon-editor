@@ -623,6 +623,11 @@
                         </div>
                         <div class="form-group"><label class="form-label">이미지</label><div class="file-drop-zone"><input type="file" id="newProdFile" accept="image/*" onchange="previewProductImage(this)"><span>업로드</span></div><input id="newProdImg" class="input-text" style="margin-top:5px;" placeholder="URL"><img id="prodPreview" class="preview-img"></div>
                         <div class="form-group"><label class="form-label">옵션 연결</label><div id="addonCheckboxArea" class="addon-checkbox-group"></div></div>
+                        <div style="margin-top: 5px; margin-bottom: 15px; text-align: right;">
+    <button class="btn btn-sky btn-sm" onclick="bulkApplyAddonsToCategory()" style="width: 100%;">
+        <i class="fa-solid fa-layer-group"></i> 현재 체크된 옵션을 이 카테고리 전 제품에 일괄적용
+    </button>
+</div>
                         <button id="btnProductSave" class="btn btn-primary" style="width:100%;" onclick="addProductDB()">상품 등록하기</button>
                         <div style="margin-top:10px; display:flex; gap:5px;"><button id="btnProductClone" class="btn btn-vip" style="flex:1; display:none;" onclick="cloneProduct()">복제</button><button id="btnCancelEdit" class="btn btn-outline" style="flex:1; display:none;" onclick="resetProductForm()">취소</button></div>
                     </div>
@@ -2517,43 +2522,62 @@ window.downloadMonthlyExcel = async () => {
             }); 
         };
 
-        window.addCategoryDB = async () => {
-            const topCode = document.getElementById('newCatTop').value || null;
-            const codeRaw = document.getElementById('newCatCode').value;
-            const name = document.getElementById('newCatName').value;
-            const name_jp = document.getElementById('newCatNameJP').value;
-            const name_us = document.getElementById('newCatNameUS').value;
+        // [수정된 코드] 카테고리 추가/수정 함수
+window.addCategoryDB = async () => {
+    const topCode = document.getElementById('newCatTop').value || null;
+    const codeRaw = document.getElementById('newCatCode').value;
+    const name = document.getElementById('newCatName').value;
+    const name_jp = document.getElementById('newCatNameJP').value;
+    const name_us = document.getElementById('newCatNameUS').value;
 
-            if (!codeRaw || !name) return alert("필수항목 누락: 코드와 한국명은 필수입니다.");
-            const code = codeRaw.toLowerCase().replace(/\s/g, '_');
+    if (!codeRaw || !name) return alert("필수항목 누락: 코드와 한국명은 필수입니다.");
+    const code = codeRaw.toLowerCase().replace(/\s/g, '_');
 
-            try {
-                const { data: exist } = await sb.from('admin_categories').select('id, sort_order').eq('code', code).single();
-                let nextOrder = 1;
-                if (exist) {
-                    if (!confirm(`⚠️ 이미 존재하는 코드입니다: '${code}'\n수정하시겠습니까?`)) return;
-                    nextOrder = exist.sort_order;
-                } else {
-                    const { data: maxData } = await sb.from('admin_categories').select('sort_order').order('sort_order', { ascending: false }).limit(1);
-                    if (maxData && maxData.length > 0) nextOrder = (maxData[0].sort_order || 0) + 1;
-                }
+    // [중요] 현재 보고 있는 상품 목록의 필터 값을 저장해둡니다.
+    const currentFilterCat = document.getElementById('filterProdCat').value;
 
-                const { error } = await sb.from('admin_categories').upsert([{
-                    code, name, name_jp, name_us, top_category_code: topCode, sort_order: nextOrder
-                }], { onConflict: 'code' });
+    try {
+        const { data: exist } = await sb.from('admin_categories').select('id, sort_order').eq('code', code).single();
+        let nextOrder = 1;
+        if (exist) {
+            if (!editingCategoryLoad && !confirm(`⚠️ 이미 존재하는 코드입니다: '${code}'\n수정하시겠습니까?`)) return; 
+            nextOrder = exist.sort_order;
+        } else {
+            const { data: maxData } = await sb.from('admin_categories').select('sort_order').order('sort_order', { ascending: false }).limit(1);
+            if (maxData && maxData.length > 0) nextOrder = (maxData[0].sort_order || 0) + 1;
+        }
 
-                if (error) throw error;
-                alert("✅ 카테고리 저장 완료");
-                document.getElementById('newCatCode').value = '';
-                document.getElementById('newCatName').value = '';
-                document.getElementById('newCatNameJP').value = '';
-                document.getElementById('newCatNameUS').value = '';
-                document.getElementById('newCatTop').value = '';
-                loadCategories();
-            } catch (e) {
-                alert("저장 오류: " + e.message);
-            }
-        };
+        const { error } = await sb.from('admin_categories').upsert([{
+            code, name, name_jp, name_us, top_category_code: topCode, sort_order: nextOrder
+        }], { onConflict: 'code' });
+
+        if (error) throw error;
+        alert("✅ 카테고리 저장 완료");
+
+        // 입력창 초기화
+        document.getElementById('newCatCode').value = '';
+        document.getElementById('newCatName').value = '';
+        document.getElementById('newCatNameJP').value = '';
+        document.getElementById('newCatNameUS').value = '';
+        document.getElementById('newCatTop').value = '';
+
+        // 목록 새로고침
+        await loadCategories();
+        
+        // [중요] 시스템 DB(옵션/필터 등)도 갱신하여 필터 드롭다운을 최신화
+        await loadSystemDB('KR');
+
+        // [핵심 해결] 저장해둔 필터 값을 다시 설정하고 상품 목록을 불러옴
+        const filterSelect = document.getElementById('filterProdCat');
+        if (currentFilterCat && filterSelect.querySelector(`option[value="${currentFilterCat}"]`)) {
+            filterSelect.value = currentFilterCat;
+            await filterProductList(); // 상품 목록 다시 로드
+        }
+
+    } catch (e) {
+        alert("저장 오류: " + e.message);
+    }
+};
 
         window.editCategoryLoad = async (id) => { 
             const {data} = await sb.from('admin_categories').select('*').eq('id',id).single(); 
@@ -3873,6 +3897,52 @@ window.matchOrderManual = async (txId, depositorName) => {
         }
     } catch (e) {
         alert("오류 발생: " + e.message);
+    }
+};
+// [신규 기능] 카테고리별 옵션 일괄 적용 함수
+window.bulkApplyAddonsToCategory = async () => {
+    // 1. 현재 선택된 카테고리 확인
+    const targetCat = document.getElementById('newProdCategory').value;
+    if (!targetCat) {
+        return alert("일괄 적용할 '카테고리'를 상품 등록 폼에서 선택해주세요.");
+    }
+
+    // 2. 현재 체크된 옵션값들 가져오기
+    const checkedBoxes = document.querySelectorAll('input[name="prodAddon"]:checked');
+    const addonCodes = Array.from(checkedBoxes).map(cb => cb.value).join(',');
+
+    // 3. 사용자 확인 (안전장치)
+    let msg = `[카테고리: ${targetCat}]\n\n`;
+    if (addonCodes) {
+        msg += `선택된 옵션(${checkedBoxes.length}개)을 해당 카테고리의 모든 상품에 적용하시겠습니까?`;
+    } else {
+        msg += `⚠️ 선택된 옵션이 없습니다.\n정말 해당 카테고리의 모든 상품에서 옵션을 '초기화(제거)' 하시겠습니까?`;
+    }
+
+    if (!confirm(msg)) return;
+
+    showLoading(true);
+
+    try {
+        // 4. DB 일괄 업데이트
+        const { error } = await sb.from('admin_products')
+            .update({ addons: addonCodes })
+            .eq('category', targetCat);
+
+        if (error) throw error;
+
+        alert("✅ 일괄 적용 완료되었습니다.");
+        
+        // 현재 보고 있는 리스트가 해당 카테고리라면 새로고침
+        if (document.getElementById('filterProdCat').value === targetCat) {
+            filterProductList();
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("일괄 적용 실패: " + e.message);
+    } finally {
+        showLoading(false);
     }
 };
     </script>

@@ -70,7 +70,7 @@ export function initContextMenu() {
     });
 
     bindAction("ctxPaste", () => {
-        if (!_clipboard) return alert("복사된 내용이 없습니다.");
+        if (!_clipboard) return alert(window.t('msg_clipboard_empty') || "Clipboard is empty.");
         _clipboard.clone((cloned) => {
             canvas.discardActiveObject();
             cloned.set({
@@ -160,9 +160,9 @@ function showMenu(x, y, activeObj) {
         if (btnLock) {
             btnLock.style.display = 'flex';
             if (activeObj.lockMovementX) {
-                btnLock.innerHTML = '<i class="fa-solid fa-lock-open"></i> 잠금 해제';
+                btnLock.innerHTML = `<i class="fa-solid fa-lock-open"></i> ${window.t('ctx_unlock') || "Unlock"}`;
             } else {
-                btnLock.innerHTML = '<i class="fa-solid fa-lock"></i> 잠금 (Lock)';
+                btnLock.innerHTML = `<i class="fa-solid fa-lock"></i> ${window.t('ctx_lock') || "Lock"}`;
             }
         }
     } else {
@@ -173,7 +173,7 @@ function showMenu(x, y, activeObj) {
         const hasLocked = canvas.getObjects().some(o => o.lockMovementX);
         if (btnLock) {
             if (hasLocked) {
-                btnLock.innerHTML = '<i class="fa-solid fa-lock-open"></i> 전체 잠금해제';
+                btnLock.innerHTML = `<i class="fa-solid fa-lock-open"></i> ${window.t('ctx_unlock_all') || "Unlock All"}`;
                 btnLock.style.display = 'flex';
             } else {
                 btnLock.style.display = 'none';

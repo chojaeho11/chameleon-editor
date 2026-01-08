@@ -521,7 +521,11 @@
         descTag.setAttribute('content', data.desc);
         document.documentElement.setAttribute('lang', currentCountry.toLowerCase());
     }
-
+    // [추가] 목록으로 돌아가기 함수 (이게 없어서 에러가 발생했습니다)
+    window.goToList = function() {
+        showSection('list');
+        loadPostList(); // 목록을 새로고침하여 최신 글을 보여줍니다.
+    };
     async function init() {
         await initConfig();
         updateBoardSEO();
@@ -755,14 +759,31 @@
         showSection('write');
     };
 
+    // [수정] 게시글 삭제 함수 (안전성 강화)
     window.deleteCurrentPost = async function() {
-        if(!confirm("정말 삭제하시겠습니까?")) return;
+        if(!confirm("정말 삭제하시겠습니까? (복구할 수 없습니다)")) return;
+        
+        // 삭제 버튼 잠금
+        const btn = document.getElementById('btnDeletePost');
+        if(btn) btn.disabled = true;
+
         try {
-            await sb.from('community_comments').delete().eq('post_id', postId);
-            await sb.from('community_posts').delete().eq('id', postId);
+            // 1. 댓글 먼저 삭제 (댓글이 없어도 에러나지 않도록 처리)
+            const { error: cmtError } = await sb.from('community_comments').delete().eq('post_id', postId);
+            if (cmtError) console.warn("댓글 삭제 중 경고(무시가능):", cmtError.message);
+
+            // 2. 게시글 삭제
+            const { error: postError } = await sb.from('community_posts').delete().eq('id', postId);
+            if (postError) throw postError;
+
             alert("삭제되었습니다.");
-            goToList();
-        } catch(e) { alert("삭제 실패"); }
+            window.goToList(); // 목록으로 이동
+
+        } catch(e) { 
+            console.error(e);
+            alert("삭제 실패: " + e.message);
+            if(btn) btn.disabled = false;
+        }
     };
 
     function setupStarRating() {
@@ -791,35 +812,65 @@
             showSection('write');
         };
 
+        // [수정] 글쓰기 등록 (중복 클릭 방지 적용)
         document.getElementById('btnSubmitPost').onclick = async () => {
+            const btn = document.getElementById('btnSubmitPost');
+            
+            // 1. 유효성 검사
             const title = document.getElementById('inputTitle').value;
             const content = quill.root.innerHTML; 
             if (!title) return alert('제목을 입력해주세요.');
 
-            let thumbUrl = null;
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(content, 'text/html');
-            const firstImg = doc.querySelector('img');
-            if (firstImg) thumbUrl = firstImg.src;
+            // 2. 버튼 잠금 (중복 전송 방지)
+            const originalText = btn.innerText;
+            btn.innerText = "처리 중...";
+            btn.disabled = true;
 
-            const ratingValue = (category === 'review') ? currentRating : null;
-            const authorId = currentUser ? currentUser.id : null; 
-            const authorName = currentUser ? (currentUser.user_metadata.full_name || currentUser.email.split('@')[0]) : '익명(Guest)';
-            const authorEmail = currentUser ? currentUser.email : '';
-            const payload = { title, content, rating: ratingValue, thumbnail: thumbUrl };
+            try {
+                let thumbUrl = null;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const firstImg = doc.querySelector('img');
+                if (firstImg) thumbUrl = firstImg.src;
 
-            if (isEditMode) {
-                if (!currentUser) return alert("익명 글은 수정 불가");
-                const { error } = await sb.from('community_posts').update(payload).eq('id', postId);
-                if (error) alert("수정 실패"); else { alert("수정 완료"); location.reload(); }
-            } else {
-                payload.category = category;
-                payload.country_code = currentCountry;
-                payload.author_id = authorId;
-                payload.author_name = authorName;
-                payload.author_email = authorEmail;
-                const { error } = await sb.from('community_posts').insert(payload);
-                if (error) alert("등록 실패"); else { alert('등록 완료'); goToList(); }
+                const ratingValue = (category === 'review') ? currentRating : null;
+                const authorId = currentUser ? currentUser.id : null; 
+                const authorName = currentUser ? (currentUser.user_metadata.full_name || currentUser.email.split('@')[0]) : '익명(Guest)';
+                const authorEmail = currentUser ? currentUser.email : '';
+                
+                const payload = { 
+                    title, 
+                    content, 
+                    rating: ratingValue, 
+                    thumbnail: thumbUrl 
+                };
+
+                if (isEditMode) {
+                    if (!currentUser) throw new Error("수정 권한이 없습니다.");
+                    const { error } = await sb.from('community_posts').update(payload).eq('id', postId);
+                    if (error) throw error;
+                    alert("수정 완료되었습니다.");
+                    location.reload();
+                } else {
+                    // 신규 등록
+                    payload.category = category;
+                    payload.country_code = currentCountry;
+                    payload.author_id = authorId;
+                    payload.author_name = authorName;
+                    payload.author_email = authorEmail;
+                    
+                    const { error } = await sb.from('community_posts').insert(payload);
+                    if (error) throw error;
+                    
+                    alert('등록되었습니다.');
+                    window.goToList(); // 목록으로 이동
+                }
+            } catch (e) {
+                console.error(e);
+                alert("처리 실패: " + e.message);
+                // 실패했을 때만 버튼 다시 활성화
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         };
 

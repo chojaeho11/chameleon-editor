@@ -66,22 +66,28 @@ export function initAiTools() {
     const startPrompt = document.getElementById('aiStartPrompt');
     const startResult = document.getElementById('aiStartResult');
     const btnStartGo = document.getElementById('btnAiStartGo');
+    // 번역 헬퍼 (없을 경우 텍스트 그대로 반환)
+    const t = (k, def) => (window.t ? window.t(k) : def);
 
     if (btnStartGen) {
         btnStartGen.onclick = async () => {
             const text = startPrompt.value.trim();
-            if (!text) return alert("설명을 입력해주세요.");
-            startResult.innerHTML = '<div class="loading-spin" style="width:40px; height:40px;"></div><p style="margin-top:10px; color:#666;">AI가 그리는 중...</p>';
+            if (!text) return alert(t('msg_input_desc', "설명을 입력해주세요."));
+            
+            const loadingText = t('msg_generating', "AI가 그리는 중...");
+            startResult.innerHTML = `<div class="loading-spin" style="width:40px; height:40px;"></div><p style="margin-top:10px; color:#666;">${loadingText}</p>`;
+            
             btnStartGen.disabled = true;
             try {
                 const imageUrl = await generateImageCore(text);
                 window.pendingAiImage = imageUrl;
                 startResult.innerHTML = `<img src="${imageUrl}" style="max-height:250px; object-fit:contain; border-radius:8px;">`;
                 btnStartGo.style.display = 'flex';
-                btnStartGo.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 또 만들기';
+                const retryText = t('btn_retry', "또 만들기");
+                btnStartGo.innerHTML = `<i class="fa-solid fa-rotate-right"></i> ${retryText}`;
             } catch (e) {
-                alert("생성 실패: " + e.message);
-                startResult.innerHTML = '<span style="color:red;">실패</span>';
+                alert(t('msg_gen_fail', "생성 실패") + ": " + e.message);
+                startResult.innerHTML = '<span style="color:red;">Failed</span>';
                 btnStartGen.disabled = false;
             }
         };
@@ -145,13 +151,17 @@ export function initAiTools() {
     if (btnCutout) {
         btnCutout.onclick = async () => {
             const active = canvas.getActiveObject();
-            if (!active || active.type !== 'image') return alert("이미지 선택 필요");
+            // 다국어 적용
+            const t = (k, def) => (window.t ? window.t(k) : def);
+
+            if (!active || active.type !== 'image') return alert(t('msg_select_click', "이미지를 선택해주세요."));
             const key = await getApiKey('REMOVE_BG_API_KEY');
-            if (!key) return alert("API Key 없음");
-            if(!confirm("배경을 제거할까요?")) return;
+            if (!key) return alert("API Key Error");
+            
+            if(!confirm(t('msg_confirm_bg_remove', "배경을 제거할까요?"))) return;
             
             const originalText = btnCutout.innerText;
-            btnCutout.innerText = "✂️ 고해상도 처리중...";
+            btnCutout.innerText = "✂️ " + t('msg_processing', "처리중...");
             try {
                 // 1. 원본 해상도 추출 (multiplier 중요)
                 // 화면에 보이는 크기가 아니라, 원본 파일의 크기를 계산해서 가져옵니다.
@@ -219,11 +229,15 @@ export function initAiTools() {
     if (btnUpscale) {
         btnUpscale.onclick = async () => {
             const active = canvas.getActiveObject();
-            if (!active || active.type !== 'image') return alert("이미지를 선택해주세요!");
-            if (!confirm("해상도를 2배 높이시겠습니까?\n(가벼운 JPG로 변환 후 전송합니다)")) return;
+            const t = (k, def) => (window.t ? window.t(k) : def);
+
+            if (!active || active.type !== 'image') return alert(t('msg_select_click', "이미지를 선택해주세요!"));
+            
+            const confirmMsg = t('msg_confirm_upscale', "해상도를 2배 높이시겠습니까?");
+            if (!confirm(confirmMsg)) return;
 
             const originalText = btnUpscale.innerText;
-            btnUpscale.innerText = "✨ 전송 중...";
+            btnUpscale.innerText = "✨ " + t('msg_sending', "전송 중...");
             btnUpscale.disabled = true;
 
             try {

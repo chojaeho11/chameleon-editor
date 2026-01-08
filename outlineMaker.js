@@ -6,8 +6,8 @@
  * 3. 기존 설정 유지: 간격 20, 빨강, 두께 15
  */
 
-if (typeof paper === 'undefined') console.warn("Paper.js가 로드되지 않았습니다.");
-if (typeof window.Potrace === 'undefined') console.error("Potrace 라이브러리가 로드되지 않았습니다.");
+if (typeof paper === 'undefined') console.warn("Paper.js not loaded.");
+if (typeof window.Potrace === 'undefined') console.error("Potrace library not loaded.");
 
 const mmToPx = (mm) => {
     return mm * (300 / 25.4);
@@ -212,7 +212,7 @@ export function createVectorOutline(imageSrc, options = {}) {
                     const pathNode = doc.querySelector('path');
 
                     if (!pathNode) {
-                        reject(new Error("외곽선을 찾을 수 없습니다."));
+                        reject(new Error("Outline not found."));
                         return;
                     }
 
@@ -229,6 +229,6 @@ export function createVectorOutline(imageSrc, options = {}) {
                 reject(e);
             }
         };
-        img.onerror = () => reject(new Error("이미지 로드 실패"));
+        img.onerror = () => reject(new Error("Failed to load image."));
     });
 }

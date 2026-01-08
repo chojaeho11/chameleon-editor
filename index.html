@@ -1028,14 +1028,18 @@
                 <div class="panel-box" id="panelText" style="display:none;"></div>
                 
                 <div class="panel-box" style="padding: 10px 12px; text-align: center;">
-                    <div class="section-title" style="margin-top:0; color:#333; font-size: 12px; margin-bottom: 5px;">오려내기 & AI</div>
+                    <div class="section-title" style="margin-top:0; color:#333; font-size: 12px; margin-bottom: 5px;" data-i18n="label_ai_image_tools">AI & Cutout</div>
                     <div class="tool-box-group" style="padding: 0;">
                         <button id="btn-create-outline" class="btn-round" style="width:100%; margin-bottom:5px; justify-content:center; height: 36px; font-size: 11px;">
                             ✂️ <span data-i18n="btn_make_cutline">오려내기 칼선</span>
                         </button>
                         <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                            <button id="btn-make-keyring" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">키링 고리</button>
-                            <button id="btn-make-standee" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">등신대</button>
+                            <button id="btn-make-keyring" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">
+                                <span data-i18n="btn_keyring_hole">키링 고리</span>
+                            </button>
+                            <button id="btn-make-standee" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">
+                                <span data-i18n="btn_stand_base">등신대</span>
+                            </button>
                         </div>
                     </div>
 
@@ -1051,7 +1055,7 @@
         font-size: 13px; 
         box-shadow: 0 4px 10px rgba(118, 75, 162, 0.4);
         display: flex; align-items: center; justify-content: center;">
-        ✨ A3이상 사진 해상도UP
+        ✨ <span data-i18n="btn_enhance">A3이상 사진 해상도UP</span>
     </button>
 
     <button id="btnCutout" class="btn-round" style="
@@ -1064,7 +1068,7 @@
         font-size: 13px; 
         box-shadow: 0 4px 10px rgba(255, 106, 136, 0.4);
         display: flex; align-items: center; justify-content: center;">
-        ✂️ 배경 제거하기
+        ✂️ <span data-i18n="btn_bg_remove">배경 제거하기</span>
     </button>
 
     <button class="tool-btn" id="btnOutline" style="height: 36px; font-size: 11px; background:white; border:1px solid #ddd; color:#333;">
@@ -1236,6 +1240,15 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 20px; padding: 0 20px;">
+            
+            <div style="background:#ffe70e; padding:15px; border-radius:12px; border:1px dashed #ffde39; text-align:center;">
+                <p style="margin:0 0 10px 0; font-size:13px; color:#64748b;">직접 디자인한 파일은 여기에 일괄 업로드 해주세요</p>
+                <button onclick="document.getElementById('bulkCartUpload').click()" class="btn-round" style="width:100%; justify-content:center; background:#f8fafc; border:1px solid #6366f1; color:#6366f1;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> 파일 일괄 업로드
+                </button>
+                <input type="file" id="bulkCartUpload" multiple style="display:none;" onchange="window.handleBulkCartUpload(this)">
+            </div>
+
             <div id="cartListArea" style="width: 100%;"></div>
             
             <div style="width: 100%;">
@@ -1388,15 +1401,20 @@
         </button>
 
         <div id="bankInfoBox" style="display:none; margin-top:15px; background:#f8fafc; padding:15px; border-radius:8px; font-size:13px;">
-            <div class="bank-title" style="font-weight:bold; margin-bottom:5px;">[계좌이체 안내]</div>
-            <div>국민은행 647701-04-277763 (예금주: 카멜레온프린팅)</div>
+            <div class="bank-title" style="font-weight:bold; margin-bottom:5px;" data-i18n="msg_bank_info">[계좌이체 안내]</div>
             
-            <div style="margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;">
-                <label style="font-weight:bold; display:block; margin-bottom:5px;">입금자명 (필수)</label>
-                <input type="text" id="inputDepositorName" class="ai-input-pretty" placeholder="입금하시는 분 성함" style="margin:0; background:white;">
+            <div style="line-height:1.6;">
+                <span data-i18n="msg_bank_name">국민은행</span> 
+                <span style="font-weight:bold; color:#333;">647701-04-277763</span><br>
+                <span data-i18n="msg_bank_owner">(예금주: 카멜레온프린팅)</span>
             </div>
             
-            <div style="color:#ef4444; margin-top:5px;">* 입금자명이 주문자명과 다르면 확인이 지연됩니다.</div>
+            <div style="margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px;" data-i18n="label_manager_name">입금자명</label>
+                <input type="text" id="inputDepositorName" class="ai-input-pretty" placeholder="" style="margin:0; background:white;">
+            </div>
+            
+            <div style="color:#ef4444; margin-top:5px;" data-i18n="msg_bank_note">* 입금자명이 주문자명과 다르면 확인이 지연됩니다.</div>
         </div>
 
         <div style="display:flex; gap:10px; margin-top:15px;">
@@ -1491,16 +1509,20 @@
                 <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="btn_design_direct_sub">에디터에서 꾸미기</span>
             </button>
 
-            <button onclick="window.confirmChoice('file')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;"></i>
-                <span style="font-size:16px;" data-i18n="btn_order_file">내 파일로 주문</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="btn_order_file_sub">PDF업로드 10메가 이상 korea900@daum.net</span>
+            <button onclick="window.confirmChoice('cart')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#fff; color:#334155; border:2px solid #cbd5e1; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+                <i class="fa-solid fa-cart-plus" style="font-size:32px; color:#ef4444;"></i>
+                <span style="font-size:16px; font-weight:bold;">장바구니 담기</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">수량 선택 및 파일 업로드</span>
             </button>
         </div>
 
+        <button onclick="document.getElementById('choiceModal').style.display='none'; location.reload();" class="btn-round" style="width:100%; margin-bottom:10px; background:#f1f5f9; color:#64748b; border:none;">
+            <i class="fa-solid fa-arrow-left"></i> 쇼핑 계속하기 (다른 상품 추가)
+        </button>
+
         <input type="file" id="directUploadInput" style="display:none;" accept="image/*,.pdf">
         
-        <button onclick="document.getElementById('choiceModal').style.display='none'" class="btn-round" style="margin-top:auto;" data-i18n="btn_close">닫기</button>
+        <button onclick="document.getElementById('choiceModal').style.display='none'" class="btn-round" style="margin-top:auto; background:transparent; border:1px solid #ddd; color:#888;" data-i18n="btn_close">닫기</button>
     </div>
 
     <div class="choice-right">
@@ -2406,16 +2428,55 @@ window.showCategoryProducts = async function(catKey, catName) {
         document.getElementById('choiceModal').style.display = 'flex';
     };
 
+    // [전역 변수] 중복 실행 방지 통합 플래그
+    window.isDirectCartAddInProgress = false;
+
     window.confirmChoice = function(mode) {
+        if (window.isDirectCartAddInProgress) return;
+
         if (!window.selectedProductForChoice) return alert("상품 정보가 없습니다.");
 
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
             window.startEditorDirect(window.selectedProductForChoice.key || window.currentProductKey);
-        } else {
-            const input = document.getElementById('directUploadInput');
-            if(input) input.click();
+        } else if (mode === 'cart') {
+            // [중요] 클릭 즉시 전역 락을 걸어 중복 실행 방지
+            window.isDirectCartAddInProgress = true;
+            setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
+
+            document.getElementById('choiceModal').style.display = 'none';
+
+            import('./order.js?v=119').then(m => {
+                m.addProductToCartDirectly(window.selectedProductForChoice);
+                
+                // [수정] 장바구니 페이지(cartPage)로 바로 이동하지 않고 완료 팝업(cartAddedModal) 띄우기
+                document.getElementById('cartAddedModal').style.display = 'flex'; 
+            });
         }
+    };
+
+    // [신규] 완료 모달 : 결제하러 가기 버튼
+    window.goToCartFromSuccess = function() {
+        document.getElementById('cartAddedModal').style.display = 'none'; // 완료 모달 닫기
+        document.getElementById('cartPage').style.display = 'block';      // 장바구니 열기
+        if(window.renderCart) window.renderCart(); // 장바구니 갱신 (안전장치)
+    };
+
+    // [신규] 완료 모달 : 다른 제품 구매하기 버튼 (시작화면으로)
+    window.continueShopping = function() {
+        document.getElementById('cartAddedModal').style.display = 'none'; // 완료 모달 닫기
+        document.getElementById('categoryDetailModal').style.display = 'none'; // 카테고리창도 닫기(필요시)
+        // 시작 화면은 이미 배경에 깔려 있으므로 모달만 닫으면 됩니다.
+        // 만약 새로고침이 필요하다면 location.reload()를 사용하세요.
+    };
+
+    // [추가] 장바구니 일괄 업로드 핸들러
+    window.handleBulkCartUpload = function(input) {
+        if (input.files.length === 0) return;
+        import('./order.js?v=119').then(m => {
+            m.processBulkCartUpload(input.files);
+            input.value = ''; // 초기화
+        });
     };
 
     const directUploadInput = document.getElementById("directUploadInput");
@@ -3283,23 +3344,23 @@ window.showCategoryProducts = async function(catKey, catName) {
         </div>
 
         <div style="margin-bottom: 15px;">
-            <label class="form-label" style="font-weight:bold; font-size:13px; margin-bottom:5px; display:block;">고객님 전담 매니저가 있으시면 선택해 주세요.</label>
+            <label class="form-label" style="font-weight:bold; font-size:13px; margin-bottom:5px; display:block;" data-i18n="label_select_manager">담당 매니저 선택 (Optional)</label>
             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px;">
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="은미" checked>
-                    <div class="mgr-box">은미</div>
+                    <input type="radio" name="vipManager" value="Manager A" checked>
+                    <div class="mgr-box">Manager A</div>
                 </label>
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="성희">
-                    <div class="mgr-box">성희</div>
+                    <input type="radio" name="vipManager" value="Manager B">
+                    <div class="mgr-box">Manager B</div>
                 </label>
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="지숙">
-                    <div class="mgr-box">지숙</div>
+                    <input type="radio" name="vipManager" value="Manager C">
+                    <div class="mgr-box">Manager C</div>
                 </label>
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="본사">
-                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;">첫고객</div>
+                    <input type="radio" name="vipManager" value="Head Office">
+                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;" data-i18n="label_new_customer">New</div>
                 </label>
             </div>
             <style>
@@ -3424,5 +3485,23 @@ function updateVipFileList(input) {
     // 페이지 로드 시 실행
     window.addEventListener('load', trackVisit);
 </script>
+<div id="cartAddedModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 400px; text-align: center; padding: 40px 30px;">
+        <div style="font-size: 50px; color: #6366f1; margin-bottom: 20px;">
+            <i class="fa-regular fa-circle-check"></i>
+        </div>
+        <h3 style="margin: 0 0 10px 0; font-size: 22px;">장바구니에 담겼습니다!</h3>
+        <p style="color: #666; margin-bottom: 30px;">선택하신 상품이 장바구니에 추가되었습니다.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="window.goToCartFromSuccess()" class="btn-round primary" style="width: 100%; justify-content: center; height: 50px; font-size: 16px;">
+                💳 결제하러 가기
+            </button>
+            <button onclick="window.continueShopping()" class="btn-round" style="width: 100%; justify-content: center; height: 50px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
+                🛍️ 다른 제품 구매하기
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

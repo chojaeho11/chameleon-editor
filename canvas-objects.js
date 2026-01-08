@@ -97,7 +97,7 @@ function renderFontList() {
     listContainer.innerHTML = ""; // 초기화
 
     if (DYNAMIC_FONTS.length === 0) {
-        listContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">등록된 폰트가 없습니다.<br>관리자 페이지에서 폰트를 등록해주세요.</div>`;
+        listContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No fonts registered.<br>Please register fonts in the admin page.</div>`;
         return;
     }
 
@@ -120,9 +120,9 @@ function renderFontList() {
         // 클릭 시 텍스트에 폰트 적용
         div.onclick = async () => {
             const active = canvas.getActiveObject();
-            if (!active) return alert("폰트를 변경할 텍스트를 선택해주세요.");
+            if (!active) return alert("Please select a text object to change the font.");
 
-            const applyFont = (obj) => { 
+            const applyFont = (obj) => {
                 if (obj.type && (obj.type.includes('text') || obj.type === 'i-text' || obj.type === 'textbox')) {
                     obj.set("fontFamily", font.font_family);
                 }
@@ -195,7 +195,7 @@ function initTextHandlers() {
     const btnFontSelect = document.getElementById("btnFontSelect");
     if (btnFontSelect) {
         btnFontSelect.onclick = () => {
-            if (!canvas.getActiveObject()) return alert("폰트를 변경할 텍스트를 선택하세요.");
+            if (!canvas.getActiveObject()) return alert("Please select a text object to change the font.");
             
             const modal = document.getElementById("fontModal");
             if (modal) {
@@ -722,7 +722,7 @@ function initColorHandlers() {
     if (btnOutline) {
         btnOutline.onclick = () => {
             const active = canvas.getActiveObject();
-            if (!active) return alert("외곽선을 적용할 객체를 선택해주세요.");
+            if (!active) return alert("Please select an object to apply the outline.");
 
             const defaultColor = "#ff6060ff"; // 갈색 (SaddleBrown)
             const defaultWidth = 5;         // 중간 두께
@@ -861,7 +861,7 @@ function initAlignHandlers() {
 
 function alignObjects(direction) {
     const active = canvas.getActiveObject();
-    if (!active) return alert("정렬할 객체를 선택해주세요.");
+    if (!active) return alert("Please select an object to align.");
 
     const processObj = (obj, bound) => {
         const w = obj.getScaledWidth();
@@ -923,18 +923,18 @@ window.toggleMobilePanel = function(side) {
 // ============================================================
 window.uploadUserLogo = async () => {
     // 상단 import { currentUser } 사용
-    if (!currentUser) return alert("로그인이 필요한 기능입니다.");
+    if (!currentUser) return alert("Login is required for this feature.");
     
     const fileInput = document.getElementById('logoFileInput');
     const tagInput = document.getElementById('logoKeywordInput');
     const file = fileInput.files[0];
     const tags = tagInput.value;
     
-    if (!file) return alert("파일을 선택해주세요.");
+    if (!file) return alert("Please select a file.");
     
     const btn = document.querySelector('#logoUploadModal .btn-round.primary');
     const oldText = btn.innerText;
-    btn.innerText = "업로드 중...";
+    btn.innerText = "Uploading...";
     btn.disabled = true;
     
     try {
@@ -950,14 +950,14 @@ window.uploadUserLogo = async () => {
         const publicUrl = urlData.publicUrl;
         
         const payload = {
-            category: 'logo', tags: tags || '유저업로드', thumb_url: publicUrl, data_url: publicUrl,
+            category: 'logo', tags: tags || 'User Upload', thumb_url: publicUrl, data_url: publicUrl,
             width: 1000, height: 1000, user_id: currentUser.id 
         };
         
         const { error: dbError } = await sb.from('library').insert(payload);
         if (dbError) throw dbError;
         
-        alert(`✅ 업로드 성공!`);
+        alert(`✅ Upload Successful!`);
         window.resetUpload(); 
         document.getElementById('logoUploadModal').style.display = 'none';
     } catch (e) {

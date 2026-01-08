@@ -15,12 +15,12 @@ export function initGuides() {
             
             if (newState) {
                 btnGuide.classList.add("active");
-                const text = t['btn_guide_off'] || "가이드 끄기";
+                const text = t['btn_guide_off'] || "Hide Guides";
                 btnGuide.innerHTML = `<i class="fa-solid fa-ruler-combined"></i> ${text}`;
                 drawGuides();
             } else {
                 btnGuide.classList.remove("active");
-                const text = t['btn_guide_on'] || "가이드 켜기";
+                const text = t['btn_guide_on'] || "Show Guides";
                 btnGuide.innerHTML = `<i class="fa-solid fa-ruler-horizontal"></i> ${text}`;
                 clearGuides();
             }

@@ -13,8 +13,8 @@
 </head>
 <body>
     <div class="loader"></div>
-    <h2 id="title">결제 승인 요청 중...</h2>
-    <p id="desc">잠시만 기다려주세요.</p>
+    <h2 id="title">Processing Payment...</h2>
+    <p id="desc">Please wait a moment.</p>
 
     <script type="module">
         // 1. Supabase 설정 (기존 키 그대로 사용)
@@ -33,7 +33,7 @@
             console.log("받은 결제키:", paymentKey); // 콘솔에서 확인 가능
 
             if (!paymentKey || !orderId || !amount || !dbId) {
-                alert("결제 정보가 부족합니다.");
+                alert("Missing payment information.");
                 window.location.href = "index.html";
                 return;
             }
@@ -59,7 +59,7 @@
                 if (dbError) console.error("DB 저장 실패:", dbError);
 
                 // 성공 시 이동
-                document.getElementById('title').innerText = "결제 완료!";
+                document.getElementById('title').innerText = "Payment Successful!";
                 localStorage.removeItem('chameleon_cart_guest');
                 const user = await sb.auth.getUser();
                 if(user?.data?.user) localStorage.removeItem(`chameleon_cart_${user.data.user.id}`);
@@ -68,7 +68,7 @@
 
             } catch (e) {
                 console.error(e);
-                alert("결제 승인 실패: " + e.message);
+                alert("Payment Failed: " + e.message);
                 window.location.href = "index.html";
             }
         }

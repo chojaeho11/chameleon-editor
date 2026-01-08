@@ -33,7 +33,7 @@ export function initExport() {
             
             const btn = btnPNG;
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 저장중...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${window.t('msg_saving') || "Saving..."}`;
             btn.disabled = true;
 
             let originalVpt = null; // [추가] 뷰포트 저장 변수
@@ -96,11 +96,11 @@ export function initExport() {
     const btnPDF = document.getElementById("btnPDF");
     if (btnPDF) {
         btnPDF.onclick = async () => {
-            if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
+            if (!currentUser) return alert(window.t('msg_login_required') || "Login is required.");
             
             const btn = btnPDF;
             const originalText = btn.innerText;
-            btn.innerText = "인쇄용 PDF 생성 중...";
+            btn.innerText = window.t('msg_generating_print_pdf') || "Generating Print PDF...";
             btn.disabled = true;
 
             try {
@@ -522,16 +522,16 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
     await loadPdfFonts(doc); 
 
     doc.setFontSize(26); 
-    drawText(doc, "견   적   서", 105, 22, { align: 'center', weight: 'bold' });
+    drawText(doc, window.t('pdf_quote_title') || "QUOTATION", 105, 22, { align: 'center', weight: 'bold' });
     drawLine(doc, 15, 28, 195, 28, "#000000", 0.5); 
 
     const topY = 35; const leftX = 15;
     doc.setFontSize(10);
-    drawText(doc, "[ 공급받는자 ]", leftX, topY);
-    drawText(doc, `성   명 :  ${orderInfo.manager || '귀하'}`, leftX, topY+8);
-    drawText(doc, `연락처 :  ${orderInfo.phone || '-'}`, leftX, topY+14);
-    drawText(doc, `이메일 :  ${orderInfo.email || currentUser?.email || '-'}`, leftX, topY+20);
-    drawText(doc, `주   소 :  ${orderInfo.address || '-'}`, leftX, topY+26, { maxWidth: 85 });
+    drawText(doc, `[ ${window.t('pdf_receiver') || "Receiver"} ]`, leftX, topY);
+    drawText(doc, `${window.t('pdf_manager') || "Name"} :  ${orderInfo.manager || '-'}`, leftX, topY+8);
+    drawText(doc, `${window.t('pdf_contact') || "Phone"} :  ${orderInfo.phone || '-'}`, leftX, topY+14);
+    drawText(doc, `Email :  ${orderInfo.email || currentUser?.email || '-'}`, leftX, topY+20);
+    drawText(doc, `${window.t('pdf_addr') || "Address"} :  ${orderInfo.address || '-'}`, leftX, topY+26, { maxWidth: 85 });
 
     const boxX = 105; const boxY = 32; const cellH = 7; const labelW = 20; const valW = 70;
     const providerInfo = [ ["등록번호", "470-81-02808"], ["상      호", "(주)카멜레온프린팅"], ["대      표", "조재호"], ["주      소", "경기 화성시 우정읍 한말길 72-2"], ["업      태", "제조업 / 서비스업"], ["연 락 처", "031-366-1984"] ];

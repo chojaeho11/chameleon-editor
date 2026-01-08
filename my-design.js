@@ -49,8 +49,7 @@ async function saveCurrentDesign() {
 
     const btn = document.getElementById("btnConfirmSave");
     const originalText = btn.innerText;
-    btn.innerText = "저장 중...";
-
+    btn.innerText = window.t('msg_saving') || "Saving...";
     try {
         const { count, error: countError } = await sb
             .from('user_designs')
@@ -85,13 +84,13 @@ async function saveCurrentDesign() {
 
         if(error) throw error;
 
-        alert("✅ 디자인이 저장되었습니다!");
+        alert(window.t('msg_design_saved') || "✅ Design Saved!");
         document.getElementById("saveDesignModal").style.display = "none";
         if(titleInput) titleInput.value = ""; 
 
     } catch(e) {
-        console.error("저장 오류:", e);
-        alert("저장 실패: " + e.message);
+        console.error("Save Error:", e);
+        alert((window.t('msg_save_failed') || "Save Failed: ") + e.message);
     } finally {
         btn.innerText = originalText;
     }

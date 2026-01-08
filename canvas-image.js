@@ -12,7 +12,7 @@ export function initImageTools() {
     const btnCutout = document.getElementById("btnCutout");
     if (btnCutout) {
         btnCutout.onclick = () => {
-            alert("배경 제거 기능은 서버 연동이 필요합니다.");
+            alert("Background removal requires server connection.");
         };
     }
 
@@ -21,7 +21,7 @@ export function initImageTools() {
     if (btnEnhance) {
         btnEnhance.onclick = () => {
             const active = canvas.getActiveObject();
-            if (!active || active.type !== 'image') return alert("이미지를 선택해주세요.");
+            if (!active || active.type !== 'image') return alert("Please select an image.");
             
             // 기존 필터 찾기
             // Fabric.js 5.x 이상에서는 filters 배열 사용
@@ -50,7 +50,7 @@ function handleImageUpload(file) {
 
     // PDF 파일 처리
     if (file.type === 'application/pdf') {
-        alert("PDF는 '주문하기' 단계에서 업로드해주세요. 에디터에서는 이미지만 지원합니다.");
+        alert("Please upload PDF in the 'Order' step. Only images are supported in the editor.");
         return;
     }
 

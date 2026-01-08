@@ -172,7 +172,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
 
     } catch (error) {
-        console.error("🚨 초기화 오류:", error);
+        console.error("🚨 Init Error:", error);
         if(loading) loading.style.display = 'none';
     }
 });
@@ -502,8 +502,10 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     if (mode === 'pool') {
         if (lastOrderCount !== -1 && currentCount > lastOrderCount) {
             if ('speechSynthesis' in window) {
-                const msg = new SpeechSynthesisUtterance("카멜레온 프린팅, 새로운 주문이 들어왔습니다.");
-                msg.lang = 'ko-KR'; 
+                const text = window.t('msg_voice_new_order') || "New order received.";
+                const lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'US') ? 'en-US' : 'ko-KR';
+                const msg = new SpeechSynthesisUtterance(text);
+                msg.lang = lang; 
                 msg.rate = 1.0; 
                 window.speechSynthesis.speak(msg);
             } else {
@@ -707,10 +709,10 @@ window.submitWithdrawal = async function() {
     // 파일은 선택사항으로 변경 (원하시면 아래 주석 해제하여 필수로 만드세요)
     // if (fileInput.files.length === 0) return alert("신분증 또는 통장사본을 첨부해주세요.");
 
-    if (!confirm("입력하신 정보로 출금을 신청하시겠습니까?\n(입력 정보 오류 시 입금이 지연될 수 있습니다.)")) return;
+    if (!confirm(window.t('confirm_withdraw_request') || "Submit withdrawal request?\n(Incorrect info may delay deposit.)")) return;
 
     const btn = document.querySelector('#withdrawModal .btn-round.primary');
-    btn.innerText = "전송 중..."; btn.disabled = true;
+    btn.innerText = window.t('msg_sending') || "Sending..."; btn.disabled = true;
 
     try {
         const { data: { user } } = await sb.auth.getUser();
@@ -750,7 +752,7 @@ window.submitWithdrawal = async function() {
             .eq('status', '구매확정')
             .neq('settlement_status', 'withdrawn');
 
-        alert("출금 신청이 완료되었습니다.\n관리자 확인 후(D+5일 내) 입금됩니다.");
+        alert(window.t('msg_withdraw_success') || "Withdrawal request submitted.\nDeposit within 5 days after admin check.");
         document.getElementById('withdrawModal').style.display = 'none';
         
         // 입력창 초기화
