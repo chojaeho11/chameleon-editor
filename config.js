@@ -127,3 +127,35 @@ function loadUserCart() {
 }
 
 export async function getUserLogoCount() { return 0; }
+// [신규] 통합 데이터 변환 헬퍼 (언어별 이름, 가격, 포맷팅 자동 처리)
+export function getLocalizedData(item) {
+    const country = SITE_CONFIG.COUNTRY; // 'KR', 'JP', 'US'
+    
+    let name = item.name;
+    let price = item.price || 0;
+    let currencyPrefix = '';
+    let currencySuffix = '원';
+
+    // 1. 국가별 데이터 선택
+    if (country === 'JP') {
+        name = item.name_jp || item.name;
+        price = item.price_jp || item.price;
+        currencyPrefix = '¥';
+        currencySuffix = '';
+    } else if (country === 'US') {
+        name = item.name_us || item.name;
+        price = item.price_us || item.price;
+        currencyPrefix = '$';
+        currencySuffix = '';
+    }
+
+    // 2. 가격 콤마 찍기
+    const formattedPrice = currencyPrefix + price.toLocaleString() + currencySuffix;
+
+    return { 
+        name, 
+        price, 
+        formattedPrice,
+        raw: item 
+    };
+}

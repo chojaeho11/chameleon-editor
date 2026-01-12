@@ -155,6 +155,23 @@
     </div>
     <div id="topCategoryTabs" class="category-tabs"></div>
 
+    <div id="categoryDescriptionBox" style="
+        max-width: 1000px;
+        margin: 10px auto 30px auto; 
+        padding: 20px; 
+        background: #f8fafc; 
+        border-radius: 12px; 
+        text-align: center; 
+        font-size: 15px; 
+        color: #475569; 
+        line-height: 1.6;
+        display: none; 
+        border: 1px solid #e2e8f0;
+        word-break: keep-all;
+    ">
+    </div>
+
+    
     <div class="quick-menu-track" id="quickMenuContainer"></div>
     <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
         <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">골드 등급 이상 또는 대량주문 전용 VIP 라운지</h3>
@@ -1497,10 +1514,12 @@
         <div class="choice-layout">
     <div class="choice-left">
         <h3 style="margin-top:0;" data-i18n="choice_modal_title">🎨 작업 방식을 선택해주세요</h3>
-        <p style="color:#666; font-size:14px; margin-bottom:30px; line-height:1.5;" data-i18n="choice_modal_desc">
-            선택하신 <span id="choiceProdName" style="color:#6366f1; font-weight:bold;">상품</span>으로 디자인을 시작하거나,<br>
-            이미 완성된 파일이 있다면 바로 주문할 수 있습니다.
-        </p>
+<div id="choiceProdDesc" class="info-desc-box product-desc" style="display:none;"></div>
+
+<p style="color:#666; font-size:14px; margin-bottom:20px; line-height:1.5;" data-i18n="choice_modal_desc">
+    선택하신 <span id="choiceProdName" style="color:#6366f1; font-weight:bold;">상품</span>으로 디자인을 시작하거나,<br>
+    이미 완성된 파일이 있다면 바로 주문할 수 있습니다.
+</p>
 
         <div style="display:flex; gap:15px; margin-bottom:20px;">
             <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px;">
@@ -1511,8 +1530,8 @@
 
             <button onclick="window.confirmChoice('cart')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#fff; color:#334155; border:2px solid #cbd5e1; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
                 <i class="fa-solid fa-cart-plus" style="font-size:32px; color:#ef4444;"></i>
-                <span style="font-size:16px; font-weight:bold;">장바구니 담기</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;">수량 선택 및 파일 업로드</span>
+                <span style="font-size:16px; font-weight:bold;">Add to Cart</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">Good choice!</span>
             </button>
         </div>
 
@@ -1527,7 +1546,32 @@
 
     <div class="choice-right">
         <img id="choiceProductImg" src="" alt="상품 이미지">
-    </div>
+
+        <div id="customSizePanel" style="display:none; flex-direction:column; justify-content:center; height:100%; padding:20px; background:#f8fafc; border-radius:12px;">
+            <h3 style="text-align:center; color:#334155; margin-top:0;">📏 사이즈 입력</h3>
+            
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:13px; color:#64748b;">가로 (Width) mm</label>
+                <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="예: 1000" oninput="window.calcCustomPrice()">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:13px; color:#64748b;">세로 (Height) mm</label>
+                <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="예: 2000" oninput="window.calcCustomPrice()">
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="font-weight:bold; font-size:13px; color:#64748b;">수량 (Quantity)</label>
+                <input type="number" id="inputCustQty" class="ai-input-pretty" value="1" min="1" oninput="window.calcCustomPrice()">
+            </div>
+
+            <div style="background:#1e293b; color:white; padding:15px; border-radius:8px; text-align:center;">
+                <div style="font-size:12px; opacity:0.8;">예상 견적 금액</div>
+                <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0원</div>
+                <div id="calcResultSize" style="font-size:11px; margin-top:5px; color:#94a3b8;">-</div>
+            </div>
+        </div>
+        </div>
 </div>
 
     </div>
@@ -1551,7 +1595,7 @@
             <i class="fa-solid fa-xmark"></i>
         </button>
         <h3 id="catModalTitle">📏 사이즈(제품)를 선택해주세요</h3>
-        <p style="margin-bottom:20px; color:#666;">원하시는 규격을 선택하시면 디자인이 시작됩니다.</p>
+<div id="catModalDesc" class="info-desc-box" style="display:none;"></div>
         
         <div id="catProductGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
         
@@ -1629,7 +1673,7 @@
     import { canvas, setMaxLimits } from './canvas-core.js?v=119';
     import { openProductDetail, startDesignFromProduct } from './order.js?v=119';
     import { applySize } from './canvas-size.js?v=119';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig } from './config.js?v=119';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=119';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -1959,14 +2003,11 @@ window.t = function(key) {
     // [추가] 핫딜 렌더링 함수
     // [새로운 통합 함수] 일반 핫딜 + 업자용 핫딜 모두 처리
     // [수정됨] 핫딜 상품 로드 (언어/화폐 감지 추가)
+// [최적화됨] 핫딜/추천상품 로드 (언어 로직 제거됨 -> getLocalizedData 위임)
 async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount = 6) {
     const section = document.getElementById(sectionId);
     const grid = document.getElementById(gridId);
     if (!grid) return;
-
-    // ★ [1] 현재 국가 감지
-    const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
-    const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
 
     try {
         const { data: products, error } = await sb.from('admin_products')
@@ -1988,28 +2029,14 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
         products.forEach(p => {
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             
-            // ★ [2] 다국어 상품명 및 가격 포맷 설정
-            let dName = p.name;
-            let dPrice = p.price;
-            let formattedPrice = '';
-
-            if (isJP) {
-                dName = p.name_jp || p.name;
-                dPrice = p.price_jp || p.price;
-                formattedPrice = '¥' + dPrice.toLocaleString();
-            } else if (isUS) {
-                dName = p.name_us || p.name;
-                dPrice = p.price_us || p.price;
-                formattedPrice = '$' + dPrice.toLocaleString();
-            } else {
-                formattedPrice = dPrice.toLocaleString() + '원'; // 한국은 뒤에 '원'
-            }
+            // ★ [핵심] 여기서 지저분한 if문을 싹 제거하고 한 줄로 끝냅니다!
+            const { name, price, formattedPrice } = getLocalizedData(p);
             
+            // 전역 DB 저장 (에디터 연동용)
             window.PRODUCT_DB[p.code] = {
-                name: dName,
-                w: p.width_mm,
-                h: p.height_mm,
-                price: dPrice,
+                name: name,
+                price: price,
+                w: p.width_mm, h: p.height_mm,
                 img: p.img_url,
                 addons: p.addons ? p.addons.split(',') : [],
                 category: p.category
@@ -2017,22 +2044,21 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
 
             const card = document.createElement('div');
             card.className = 'hotdeal-card';
-            
             const imgSrc = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
+            const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : 'Option';
             
-            // 사이즈 표기도 필요하면 단위를 바꿀 수 있습니다 (현재는 mm 유지)
-            const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : '사이즈 옵션';
-            
+            // 뱃지 색상
             const badgeColor = categoryCode === 'hotdeal' ? '#ef4444' : '#4f46e5';
             const badgeText = categoryCode === 'hotdeal' ? 'HOT' : 'BIZ';
 
+            // HTML 생성 (이제 name과 formattedPrice 변수만 넣으면 끝)
             card.innerHTML = `
                 <div class="hotdeal-img-box">
-                    <img src="${imgSrc}" alt="${dName}" onerror="this.src='https://placehold.co/300?text=No+Img'">
+                    <img src="${imgSrc}" alt="${name}" onerror="this.src='https://placehold.co/300?text=No+Img'">
                     <div style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px;">${badgeText}</div>
                 </div>
                 <div class="hotdeal-info">
-                    <div class="hotdeal-title">${dName}</div>
+                    <div class="hotdeal-title">${name}</div>
                     <div class="hotdeal-meta">${sizeText}</div>
                     <div class="hotdeal-price">${formattedPrice}</div>
                 </div>
@@ -2188,37 +2214,44 @@ async function renderQuickMenu() {
 
         const renderTabs = () => {
     tabContainer.innerHTML = '';
+    const descBox = document.getElementById('categoryDescriptionBox'); // 설명 박스 엘리먼트
+
     if (topCats) {
         topCats.forEach(top => {
-            // ★ 대분류명 언어 처리
+            // 이름 다국어 처리
             let topName = top.name;
             if (isJP) topName = top.name_jp || top.name;
             else if (isUS) topName = top.name_us || top.name;
+
+            // ★ [신규] 설명 다국어 처리
+            let topDesc = top.description;
+            if (isJP) topDesc = top.description_jp || top.description;
+            else if (isUS) topDesc = top.description_us || top.description;
 
             const btn = document.createElement('button');
             btn.className = 'cat-tab';
             btn.innerText = topName;
 
-            // ▼▼▼ [클릭 이벤트 수정] ▼▼▼
             btn.onclick = (e) => {
-                handleTabClick(e);      // 탭 활성화 디자인
-                renderItems(top.code);  // 소분류 아이콘 갱신
+                handleTabClick(e);
+                renderItems(top.code);
 
+                // ★ [신규] 탭 클릭 시 설명 업데이트 로직
+                if (topDesc && topDesc.trim() !== "") {
+                    descBox.style.display = "block";
+                    // 줄바꿈(\n)을 <br>로 변환하여 출력
+                    descBox.innerHTML = topDesc.replace(/\n/g, '<br>');
+                } else {
+                    descBox.style.display = "none";
+                }
+
+                // (기존) 핫딜 로드 로직 유지
                 if (window.loadSpecialProducts) {
-                    // (1) 핫딜 상품 갱신
                     loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
-
-                    // (2) 업자용 핫딜 갱신
                     loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
-
-                    // (3) ★ 일반 상품 영역 갱신 (스크린샷에서 찾은 ID 적용) ★
-                    // categoryDetailModal: 상품 리스트를 감싸는 전체 영역 (모달창)
-                    // catProductGrid: 실제 상품 카드가 들어가는 그리드
                     loadSpecialProducts('categoryDetailModal', 'catProductGrid', top.code, 50);
                 }
             };
-            // ▲▲▲ [수정 끝] ▲▲▲
-
             tabContainer.appendChild(btn);
         });
     }
@@ -2274,7 +2307,12 @@ async function renderQuickMenu() {
 
                 // 여기서 catName 변수를 사용합니다.
                 div.innerHTML = `<div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text">${catName}</div>`;
-                div.onclick = () => window.showCategoryProducts(cat.code, catName); // 함수 호출시에도 번역된 이름 전달
+                // [수정] 설명(description)까지 함께 전달
+let catDesc = cat.description;
+if(isJP) catDesc = cat.description_jp || cat.description;
+else if(isUS) catDesc = cat.description_us || cat.description;
+
+div.onclick = () => window.showCategoryProducts(cat.code, catName, catDesc);
                 itemContainer.appendChild(div);
             });
         };
@@ -2294,40 +2332,43 @@ async function renderQuickMenu() {
     window.categoryCache = {}; 
 
     // [수정된 버전] 언어 감지 기능이 강화된 상품 목록 표시 함수
-window.showCategoryProducts = async function(catKey, catName) {
+// [최적화됨] 카테고리 상품 목록 (언어 로직 제거됨)
+// [수정] catDesc 인자 추가
+window.showCategoryProducts = async function(catKey, catName, catDesc) {
     const grid = document.getElementById('catProductGrid');
     const modal = document.getElementById('categoryDetailModal');
     const titleEl = document.getElementById('catModalTitle');
-    
+    const descBox = document.getElementById('catModalDesc'); // 설명 박스
+
+    // 제목 설정
     if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
+    
+    // [신규] 소분류 설명 표시
+    if (descBox) {
+        if (catDesc && catDesc.trim() !== "" && catDesc !== "undefined") {
+            descBox.style.display = "block";
+            descBox.innerHTML = catDesc.replace(/\n/g, '<br>');
+        } else {
+            descBox.style.display = "none";
+        }
+    }
     
     grid.style.gridTemplateColumns = "repeat(4, 1fr)"; 
     grid.style.gap = "12px";
-    
-    // 로딩 표시
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
     modal.style.display = 'flex';
 
-    // ★ [1] 언어 감지 (여기가 핵심 수정 사항)
-    // 주소창(URL)이나 도메인을 확인해서 현재 언어를 확실하게 파악합니다.
-    const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja') || window.location.href.includes('lang=jp');
-    const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en') || window.location.href.includes('lang=us');
-
     // 1. 캐시 확인
     let products = window.categoryCache[catKey];
-
     if (!products) {
         try {
             const { data, error } = await sb.from('admin_products')
                 .select('*')
                 .eq('category', catKey)
                 .order('sort_order', { ascending: true });
-
             if (error) throw error;
-            
             products = data;
             window.categoryCache[catKey] = data;
-
         } catch (e) {
             console.error("Error:", e);
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Error loading products.</div>';
@@ -2340,61 +2381,49 @@ window.showCategoryProducts = async function(catKey, catName) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">No products found.</div>';
         return;
     }
-        products.forEach(p => {
-            const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 80) : '';
 
-            // ★ [2] 다국어 데이터 적용 & 가격 포맷 수정
-            let displayName = p.name;
-        let displayPrice = p.price;
-        let formattedPrice = ''; // 완성된 가격 문자열
+    products.forEach(p => {
+        const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 80) : '';
 
-        if (isJP) {
-            displayName = p.name_jp || p.name;
-            displayPrice = p.price_jp || p.price;
-            formattedPrice = '¥' + displayPrice.toLocaleString(); // 일본: ¥1,000
-        } else if (isUS) {
-            displayName = p.name_us || p.name;
-            displayPrice = p.price_us || p.price;
-            formattedPrice = '$' + displayPrice.toLocaleString(); // 미국: $10.00
-        } else {
-            // 한국 (기본)
-            formattedPrice = displayPrice.toLocaleString() + '원'; // 한국: 10,000원
-        }
+        // ★ [핵심] 여기서도 getLocalizedData 한 방으로 해결
+        const { name, price, formattedPrice } = getLocalizedData(p);
 
-        // 전역 DB에 등록 (에디터 진입 시 사용됨)
+        // 전역 DB 등록
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
         const scaleFactor = 3.7795;
         const pxW = Math.round((p.width_mm || 210) * scaleFactor);
         const pxH = Math.round((p.height_mm || 297) * scaleFactor);
 
+        // [수정] 언어별 설명 가져오기
+        const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
+        const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
+        
+        let pDesc = p.description;
+        if(isJP) pDesc = p.description_jp || p.description;
+        else if(isUS) pDesc = p.description_us || p.description;
+
         window.PRODUCT_DB[p.code] = {
-            name: displayName, // 번역된 이름 저장
+            name: name,
+            price: price,
             w: pxW, h: pxH,
             w_mm: p.width_mm, h_mm: p.height_mm,
-            price: displayPrice, // 번역된 가격 저장
             img: p.img_url, 
             addons: p.addons ? p.addons.split(',') : [], 
-            category: p.category
+            category: p.category,
+            description: pDesc,
+            is_custom_size: p.is_custom_size // ★ [추가] 커스텀 여부 저장
         };
 
         const div = document.createElement('div');
         div.className = 'quick-item'; 
         
-        let imgHtml = '';
-        if (p.img_url) {
-            imgHtml = `
-                <div class="quick-icon-img-box">
-                    <img src="${thumbUrl}" alt="${displayName}" loading="lazy" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">
-                </div>
-            `;
-        } else {
-            imgHtml = `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
-        }
+        let imgHtml = p.img_url 
+            ? `<div class="quick-icon-img-box"><img src="${thumbUrl}" alt="${name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';"></div>`
+            : `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
 
-        // 화면에 보여줄 내용 (번역된 변수 사용)
         div.innerHTML = `
             ${imgHtml}
-            <div class="quick-text">${displayName}</div>
+            <div class="quick-text">${name}</div>
             <div style="font-size:11px; color:#888; margin-top:3px;">
                 ${p.width_mm || '-'}x${p.height_mm || '-'} / ${formattedPrice}
             </div>
@@ -2404,52 +2433,139 @@ window.showCategoryProducts = async function(catKey, catName) {
             modal.style.display = 'none'; 
             window.currentProductKey = p.code;
             window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-
             if(window.showChoiceModal) window.showChoiceModal(p.code);
             else window.startEditorDirect(p.code);
         };
         grid.appendChild(div);
     });
 };
-    // ============================================================
-    // [4] 작업 방식 선택 모달 & 파일 업로드
-    // ============================================================
+ 
+    // [1] 모달 열기 및 모드(일반/커스텀) 설정
     window.showChoiceModal = function(key) {
         window.currentProductKey = key;
         window.selectedProductForChoice = window.PRODUCT_DB[key];
-        if (!window.selectedProductForChoice) return alert("상품 정보를 불러오는 중입니다. 다시 시도해주세요.");
         
+        if (!window.selectedProductForChoice) return alert("상품 정보를 불러오는 중입니다.");
+        
+        const product = window.selectedProductForChoice;
+        
+        // 텍스트 및 설명 설정
         const nameEl = document.getElementById('choiceProdName');
-        if(nameEl) nameEl.innerText = window.selectedProductForChoice.name;
+        if(nameEl) nameEl.innerText = product.name;
 
-        const imgEl = document.getElementById('choiceProductImg');
-        if(imgEl) imgEl.src = window.selectedProductForChoice.img || 'https://placehold.co/400?text=No+Image';
+        const descEl = document.getElementById('choiceProdDesc');
+        if (descEl) {
+            descEl.style.display = product.description ? "block" : "none";
+            descEl.innerHTML = (product.description || '').replace(/\n/g, '<br>');
+        }
+
+        // ★ [중요] 커스텀(헤베 계산) 모드인지 여부를 전역 변수에 확실히 저장
+        const isCustom = product.is_custom_size === true; 
+        window.isCustomModeCurrent = isCustom; 
+
+        if (isCustom) {
+            // [계산기 모드]
+            document.getElementById('choiceProductImg').style.display = 'none';
+            const panel = document.getElementById('customSizePanel');
+            if(panel) {
+                panel.style.display = 'flex';
+                // 입력창 초기화
+                document.getElementById('inputCustW').value = '';
+                document.getElementById('inputCustH').value = '';
+                document.getElementById('inputCustQty').value = 1;
+                document.getElementById('calcResultPrice').innerText = '0원';
+                document.getElementById('calcResultSize').innerText = '-';
+            }
+        } else {
+            // [일반 모드]
+            document.getElementById('choiceProductImg').src = product.img || 'https://placehold.co/400?text=No+Image';
+            document.getElementById('choiceProductImg').style.display = 'block';
+            if(document.getElementById('customSizePanel')) {
+                document.getElementById('customSizePanel').style.display = 'none';
+            }
+        }
 
         document.getElementById('choiceModal').style.display = 'flex';
     };
 
-    // [전역 변수] 중복 실행 방지 통합 플래그
-    window.isDirectCartAddInProgress = false;
+    // [2] 실시간 가격 계산 함수 (입력할 때마다 실행)
+    window.calcCustomPrice = function() {
+        const w = parseInt(document.getElementById('inputCustW').value || 0);
+        const h = parseInt(document.getElementById('inputCustH').value || 0);
+        const qty = parseInt(document.getElementById('inputCustQty').value || 1);
+        
+        // 제품의 1헤베(1m x 1m)당 단가
+        const unitPrice = window.selectedProductForChoice.price; 
 
+        if (w > 0 && h > 0) {
+            // 헤베 계산식: (가로mm * 세로mm / 1,000,000) * 단가
+            const area = (w * h) / 1000000;
+            // 1개당 가격 (올림 처리)
+            const pricePerItem = Math.ceil(area * unitPrice);
+            // 총 합계 (수량 포함)
+            const totalPrice = pricePerItem * qty;
+            
+            document.getElementById('calcResultPrice').innerText = totalPrice.toLocaleString() + '원';
+            document.getElementById('calcResultSize').innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
+        } else {
+            document.getElementById('calcResultPrice').innerText = '0원';
+            document.getElementById('calcResultSize').innerText = '-';
+        }
+    };
+
+    // [3] 선택 완료 및 장바구니 담기 (핵심 수정)
     window.confirmChoice = function(mode) {
         if (window.isDirectCartAddInProgress) return;
-
         if (!window.selectedProductForChoice) return alert("상품 정보가 없습니다.");
+
+        // 변수 초기화
+        let finalW = 0, finalH = 0;
+        let finalPricePerItem = window.selectedProductForChoice.price; // 기본값
+        let finalQty = 1;
+
+        // ★ [핵심] 커스텀 모드일 경우 여기서 가격을 '재계산'해서 확정함
+        if (window.isCustomModeCurrent) {
+            finalW = parseInt(document.getElementById('inputCustW').value || 0);
+            finalH = parseInt(document.getElementById('inputCustH').value || 0);
+            finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
+            
+            if (finalW < 100 || finalH < 100) return alert("최소 사이즈는 100mm 이상이어야 합니다.");
+            
+            // 1헤베 단가 가져오기
+            const unitPrice = window.selectedProductForChoice.price;
+            // 1개당 가격 계산: (면적 * 단가)
+            finalPricePerItem = Math.ceil(((finalW * finalH) / 1000000) * unitPrice);
+            
+            console.log(`[가격계산] ${finalW}x${finalH} = ${finalPricePerItem}원 (단가:${unitPrice})`);
+        }
 
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
-            window.startEditorDirect(window.selectedProductForChoice.key || window.currentProductKey);
+            // 에디터 실행
+            window.startEditorDirect(
+                window.currentProductKey, 
+                window.isCustomModeCurrent ? finalW : null, 
+                window.isCustomModeCurrent ? finalH : null
+            );
         } else if (mode === 'cart') {
-            // [중요] 클릭 즉시 전역 락을 걸어 중복 실행 방지
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
-
             document.getElementById('choiceModal').style.display = 'none';
 
             import('./order.js?v=119').then(m => {
-                m.addProductToCartDirectly(window.selectedProductForChoice);
+                // 원본 객체 복사 (중요)
+                const productToCart = { ...window.selectedProductForChoice };
                 
-                // [수정] 장바구니 페이지(cartPage)로 바로 이동하지 않고 완료 팝업(cartAddedModal) 띄우기
+                // ★ [수정] 커스텀 모드면 계산된 가격으로 덮어쓰기
+                if (window.isCustomModeCurrent) {
+                    productToCart.price = finalPricePerItem; // 6만원 -> 18만원으로 변경
+                    productToCart.name += ` (${finalW}x${finalH}mm)`; // 이름 뒤에 사이즈 붙이기
+                    productToCart.width_mm = finalW;
+                    productToCart.height_mm = finalH;
+                }
+                
+                // 장바구니 추가 함수 호출 (최종 확정된 가격의 객체 전달)
+                m.addProductToCartDirectly(productToCart, finalQty); 
                 document.getElementById('cartAddedModal').style.display = 'flex'; 
             });
         }
@@ -2591,9 +2707,10 @@ window.showCategoryProducts = async function(catKey, catName) {
         window.isFontsLoaded = true;
     }
 
-    window.startEditorDirect = async function(key) {
+    // [수정] customW, customH 파라미터 추가
+    window.startEditorDirect = async function(key, customW = null, customH = null) {
         
-        loadEditorFonts(); 
+        loadEditorFonts();
 
         // [2] 폰트 로딩하는 무거운 스크립트(canvas-objects)를 여기서 실행!
         if (!window.isObjectsLoaded) {
@@ -2639,12 +2756,14 @@ window.showCategoryProducts = async function(catKey, catName) {
                 alert(window.t('msg_large_product_warning'));
             }
         }
-        // ▲▲▲ [추가 끝] ▲▲▲
-
-        const displayW = product ? (product.w_mm || product.w || 210) : 210;
-        const displayH = product ? (product.h_mm || product.h || 297) : 297;
-        const canvasW = product ? (product.w || 210) : 210;
-        const canvasH = product ? (product.h || 297) : 297;
+       // ▼▼▼ [수정] 커스텀 값(customW)이 있으면 그걸 쓰고, 없으면 제품 기본값을 씁니다.
+        const displayW = customW || (product ? (product.w_mm || product.w || 210) : 210);
+        const displayH = customH || (product ? (product.h_mm || product.h || 297) : 297);
+        
+        // 픽셀 변환 (1mm = 3.7795px)
+        // 위에서 결정된 displayW/H 를 사용하여 캔버스 크기를 계산합니다.
+        const canvasW = Math.round(displayW * 3.7795);
+        const canvasH = Math.round(displayH * 3.7795);
         
         const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
 
@@ -2658,6 +2777,7 @@ window.showCategoryProducts = async function(catKey, catName) {
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
+        // canvasW, canvasH는 위에서 계산됨 (기존 변수명 재사용 확인)
         if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
         
         // 화면 전환

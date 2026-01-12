@@ -13,9 +13,19 @@ if (hostname.includes('cafe0101.com')) {
     country = 'US';
 }
 
-// URL 파라미터가 있다면 도메인 설정보다 우선순위 (테스트용)
-if (urlParams.get('lang')) {
-    country = urlParams.get('lang').toUpperCase();
+// URL 파라미터가 있다면 도메인 설정보다 우선순위
+const paramLang = urlParams.get('lang');
+if (paramLang) {
+    const code = paramLang.toUpperCase();
+    
+    // 언어 코드(JA, EN)를 국가 코드(JP, US)로 변환
+    if (code === 'JA' || code === 'JP') {
+        country = 'JP';
+    } else if (code === 'EN' || code === 'US') {
+        country = 'US';
+    } else {
+        country = 'KR';
+    }
 }
 
 export const SITE_CONFIG = {

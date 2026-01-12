@@ -570,6 +570,33 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
+    // [추가] 사이즈별 가격 재계산 로직 시작 ==============================
+    
+    // 1. 단가 설정 (사장님 환경에 맞게 숫자 수정 필요)
+    const sqmPrice = 50000;  // 1제곱미터(헤베)당 가격 (예: 5만원)
+    const minPrice = 60000;  // 최소 주문 금액 (예: 6만원)
+
+    // 2. mm 단위 및 면적(m2) 계산
+    const mmToPx = 3.7795; // Fabric.js 기준 (96DPI)
+    const w_mm = finalW / mmToPx;
+    const h_mm = finalH / mmToPx;
+    const area_m2 = (w_mm / 1000) * (h_mm / 1000); // 가로(m) x 세로(m)
+
+    // 3. 가격 계산 (100원 단위 반올림)
+    let calcPrice = Math.round((area_m2 * sqmPrice) / 100) * 100;
+    
+    // 4. 최소 금액 적용
+    if (calcPrice < minPrice) calcPrice = minPrice;
+
+    // 5. 상품 정보 복제 및 가격 덮어쓰기 (원본 DB 보호)
+    // 화면에 보여질 이름에 사이즈를 추가하고 싶으면 name 부분 주석 해제하세요.
+    let calcProduct = { ...product }; 
+    calcProduct.price = calcPrice;
+    // calcProduct.name = `${product.name} (${Math.round(w_mm)}x${Math.round(h_mm)}mm)`;
+
+    console.log(`[가격계산] ${Math.round(w_mm)}x${Math.round(h_mm)}mm / 면적:${area_m2.toFixed(2)}m2 / 계산가:${calcPrice.toLocaleString()}원`);
+    // =================================================================
+
     let originalFileUrl = null; 
     let fileName = window.t('default_design_name') || "My Design";
     if (window.currentUploadedPdfUrl) {
@@ -586,8 +613,8 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
     // 3. 카트에 담기
     cartData.push({ 
         uid: Date.now(), 
-        product: product, // 이제 정보가 들어있음
-        type: 'design', 
+        product: calcProduct, // [변경] product -> calcProduct (계산된 가격 적용)
+        type: 'design',
         thumb: thumbUrl, 
         json: json, 
         originalUrl: originalFileUrl, 

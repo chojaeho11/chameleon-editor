@@ -2674,3 +2674,132 @@ body {
         aspect-ratio: 1/1;
     }
 }
+/* ========================================================= */
+/* [PC 전용 설정] 1줄 5개 배치 & 썸네일 대형화 (요청사항 적용) */
+/* ========================================================= */
+@media screen and (min-width: 1000px) {
+
+    /* 1. 컨테이너: 플렉스 대신 그리드 사용 (1줄 5개 강제) */
+    .quick-menu-track {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important; /* ★ 핵심: 5칸으로 분할 */
+        gap: 30px 20px !important; /* 세로간격 30px, 가로간격 20px */
+        width: 100% !important;
+        max-width: 1200px !important;
+        margin: 30px auto !important;
+        justify-content: center !important;
+    }
+
+    /* 2. 개별 아이템 박스: 그리드 칸에 꽉 차게 */
+    .quick-item {
+        width: 100% !important;       /* 고정 픽셀(95px) 제거하고 꽉 채움 */
+        min-width: 0 !important;      /* 최소 너비 제한 해제 */
+        margin: 0 !important;
+        background: transparent !important; /* 배경 투명 */
+    }
+
+    /* 3. 썸네일 이미지 박스: 정사각 비율 & 크기 확대 */
+    .quick-icon, 
+    .quick-icon-img-box {
+        width: 100% !important;       /* 부모 너비에 꽉 차게 (약 200px 정도로 커짐) */
+        height: auto !important;      /* 높이 자동 */
+        aspect-ratio: 1 / 1 !important; /* ★ 핵심: 무조건 1:1 정사각형 */
+        border-radius: 20px !important; /* 모서리 둥글게 */
+        margin-bottom: 12px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important; /* 그림자 조금 더 진하게 */
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    /* 4. 이미지 내부 스타일: 찌그러짐 방지 */
+    .quick-icon img, 
+    .quick-icon-img-box img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* 꽉 채우되 비율 유지 (넘치면 잘림) */
+    }
+
+    /* 5. 텍스트 스타일: 이미지가 커진 만큼 글씨도 조정 */
+    .quick-text {
+        font-size: 16px !important;   /* 글자 크기 확대 (기존 13px -> 16px) */
+        font-weight: 700 !important;
+        margin-top: 5px !important;
+        color: #1e293b !important;
+    }
+    
+    /* 호버 효과 강화 */
+    .quick-item:hover {
+        transform: translateY(-8px) !important;
+    }
+    .quick-item:hover .quick-icon,
+    .quick-item:hover .quick-icon-img-box {
+        border-color: #6366f1 !important;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25) !important;
+    }
+}
+/* [신규] 감성적인 설명 박스 디자인 */
+.info-desc-box {
+    background: #f0f9ff; /* 아주 연한 하늘색 배경 */
+    border-left: 4px solid #6366f1; /* 왼쪽 포인트 컬러 */
+    padding: 15px 20px;
+    border-radius: 8px; /* 오른쪽만 둥글게 */
+    margin: 10px auto 25px auto;
+    font-size: 15px;
+    color: #334155;
+    line-height: 1.6;
+    text-align: left; /* 왼쪽 정렬이 가독성 좋음 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    word-break: keep-all; /* 단어 단위 줄바꿈 */
+    display: none; /* 내용 없으면 숨김 */
+    width: 100%;
+    max-width: 900px;
+}
+
+/* 제품 선택 모달 내부 설명 박스 특화 */
+.info-desc-box.product-desc {
+    background: #fff7ed; /* 제품은 연한 주황색 배경 */
+    border-left-color: #f97316;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+/* 설명 박스 내부 아이콘 효과 (가상 요소) */
+.info-desc-box::before {
+    content: '💡 Info';
+    display: block;
+    font-weight: 800;
+    font-size: 12px;
+    color: inherit;
+    opacity: 0.7;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+/* 메인 화면 대분류 설명창 (ID로 덮어쓰기) */
+#categoryDescriptionBox {
+    /* 인라인 스타일 무시하고 이 클래스 적용을 위해 !important 사용 가능하거나 인라인 스타일 제거 권장 */
+    max-width: 1000px;
+    margin: 10px auto 30px auto !important; 
+    padding: 20px !important;
+    background: #f8fafc !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+    font-size: 15px !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .info-desc-box {
+        font-size: 13px;
+        padding: 12px 15px;
+        margin: 10px 0 20px 0;
+    }
+    #categoryDescriptionBox {
+        font-size: 13px !important;
+        padding: 15px !important;
+        margin-bottom: 20px !important;
+        text-align: left !important; /* 모바일은 왼쪽 정렬이 나음 */
+    }
+}
