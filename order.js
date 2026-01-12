@@ -570,33 +570,44 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
-    // [추가] 사이즈별 가격 재계산 로직 시작 ==============================
+    // [수정] 사이즈별 가격 재계산 로직 (조건부 적용) ==============================
     
-    // 1. 단가 설정 (사장님 환경에 맞게 숫자 수정 필요)
-    const sqmPrice = 50000;  // 1제곱미터(헤베)당 가격 (예: 5만원)
-    const minPrice = 60000;  // 최소 주문 금액 (예: 6만원)
-
-    // 2. mm 단위 및 면적(m2) 계산
-    const mmToPx = 3.7795; // Fabric.js 기준 (96DPI)
-    const w_mm = finalW / mmToPx;
-    const h_mm = finalH / mmToPx;
-    const area_m2 = (w_mm / 1000) * (h_mm / 1000); // 가로(m) x 세로(m)
-
-    // 3. 가격 계산 (100원 단위 반올림)
-    let calcPrice = Math.round((area_m2 * sqmPrice) / 100) * 100;
-    
-    // 4. 최소 금액 적용
-    if (calcPrice < minPrice) calcPrice = minPrice;
-
-    // 5. 상품 정보 복제 및 가격 덮어쓰기 (원본 DB 보호)
-    // 화면에 보여질 이름에 사이즈를 추가하고 싶으면 name 부분 주석 해제하세요.
+    // 1. 상품 정보를 복제합니다.
     let calcProduct = { ...product }; 
-    calcProduct.price = calcPrice;
-    // calcProduct.name = `${product.name} (${Math.round(w_mm)}x${Math.round(h_mm)}mm)`;
 
-    console.log(`[가격계산] ${Math.round(w_mm)}x${Math.round(h_mm)}mm / 면적:${area_m2.toFixed(2)}m2 / 계산가:${calcPrice.toLocaleString()}원`);
+    // ★ [핵심 수정] '커스텀 사이즈' 제품일 때만 면적 계산 로직을 수행합니다.
+    // 일반 상품(핫딜 등)은 이 if문을 건너뛰어 원래 가격(product.price)을 유지합니다.
+    if (product.is_custom_size) {
+        
+        // 1-1. 단가 설정 (사장님 환경에 맞게 숫자 수정 필요)
+        const sqmPrice = 50000;  // 1제곱미터(헤베)당 가격
+        const minPrice = 60000;  // 최소 주문 금액
+
+        // 1-2. mm 단위 및 면적(m2) 계산
+        const mmToPx = 3.7795; // Fabric.js 기준 (96DPI)
+        const w_mm = finalW / mmToPx;
+        const h_mm = finalH / mmToPx;
+        const area_m2 = (w_mm / 1000) * (h_mm / 1000); // 가로(m) x 세로(m)
+
+        // 1-3. 가격 계산 (100원 단위 반올림)
+        let calcPrice = Math.round((area_m2 * sqmPrice) / 100) * 100;
+        
+        // 1-4. 최소 금액 적용
+        if (calcPrice < minPrice) calcPrice = minPrice;
+
+        // 1-5. 계산된 가격으로 덮어쓰기
+        calcProduct.price = calcPrice;
+        
+        // (옵션) 이름 뒤에 사이즈 표기
+        // calcProduct.name = `${product.name} (${Math.round(w_mm)}x${Math.round(h_mm)}mm)`;
+
+        console.log(`[가격계산 적용] ${Math.round(w_mm)}x${Math.round(h_mm)}mm / 면적:${area_m2.toFixed(2)}m2 / 계산가:${calcPrice.toLocaleString()}원`);
+    
+    } else {
+        // 커스텀 제품이 아니면(핫딜 등), 원래 DB 가격을 사용합니다.
+        console.log(`[고정가 적용] ${product.name}: ${product.price.toLocaleString()}원`);
+    }
     // =================================================================
-
     let originalFileUrl = null; 
     let fileName = window.t('default_design_name') || "My Design";
     if (window.currentUploadedPdfUrl) {

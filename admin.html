@@ -10,8 +10,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <style>
+        
         body { margin: 0; display: flex; height: 100vh; font-family: 'Pretendard', sans-serif; background: #f1f5f9; color: #334155; overflow: hidden; }
         
         /* 사이드바 */
@@ -64,7 +66,11 @@
         
         /* 뱃지 */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        /* 드래그 앤 드롭 스타일 (SortableJS) */
         .badge.draggable { cursor: grab; }
+        .badge.draggable:active { cursor: grabbing; }
+        .sortable-drag { opacity: 0.5; background: #e2e8f0 !important; border: 1px dashed #94a3b8 !important; }
+        .sortable-ghost { background: #f0f9ff !important; border: 1px dashed #3b82f6 !important; color: #3b82f6 !important; }
         .badge-site { font-size: 11px; padding: 3px 6px; border-radius: 4px; margin-right: 4px; font-weight: 800; border: 1px solid #e2e8f0; background: #fff; display: inline-block; min-width: 30px; text-align: center; }
         .badge-site.kr { color: #cf2e2e; border-color: #fecaca; background: #fef2f2; }
         .badge-site.jp { color: #ea580c; border-color: #ffedd5; background: #fff7ed; }
@@ -564,8 +570,14 @@
                 </div>
 
                 <div class="card" style="background:#f0f9ff; border:1px solid #bae6fd; margin-bottom:20px;">
-                    <h3 style="margin-top:0; color:#0369a1;">0️⃣ 소분류(Sub Category) 관리</h3>
-                    <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+    <h3 style="margin:0; color:#0369a1;">0️⃣ 소분류(Sub Category) 관리</h3>
+    <select id="filterCategoryTop" class="input-text" style="width:200px; font-weight:bold; color:#0369a1;" onchange="loadCategories()">
+        <option value="all">📂 전체 대분류 보기</option>
+    </select>
+</div>
+
+<div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                         
                         <div style="width:140px;">
                             <label class="form-label">📂 대분류 선택</label>
@@ -2564,51 +2576,98 @@ window.downloadMonthlyExcel = async () => {
         window.loadStatsData = async () => { let start = document.getElementById('statStartDate').value; let end = document.getElementById('statEndDate').value; if(!start || !end) { const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); start = firstDay.toISOString().split('T')[0]; end = now.toISOString().split('T')[0]; document.getElementById('statStartDate').value = start; document.getElementById('statEndDate').value = end; } document.getElementById('loading').style.display = 'flex'; const { data: orders, error } = await sb.from('orders').select('*').gte('created_at', start + 'T00:00:00').lte('created_at', end + 'T23:59:59'); if(error) { alert("로드 실패"); document.getElementById('loading').style.display = 'none'; return; } const { data: allProds } = await sb.from('admin_products').select('price, name'); const prodMap = {}; if(allProds) allProds.forEach(p => prodMap[p.name] = p.price); let totalRevenue = 0; const managerStats = {}; const driverStats = {}; orders.forEach(o => { let amt = o.total_amount || 0; let items = o.items; if (typeof items === 'string') { try { items = JSON.parse(items); } catch(e) { items = []; } } if(amt === 0 && Array.isArray(items)) { items.forEach(i => { let p = 0; if(i.product && i.product.price) p = i.product.price; else if(i.product && prodMap[i.product.name]) p = prodMap[i.product.name]; if(!p) p = i.price || 10000; amt += p * (i.qty || 1); }); } totalRevenue += amt; if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt; if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt; }); document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + "원"; document.getElementById('totalCount').innerText = orders.length + "건"; const { data: staff } = await sb.from('admin_staff').select('*'); renderStaffStats('statManagerBody', managerStats, staff || [], totalRevenue); renderStaffStats('statDriverBody', driverStats, staff || [], totalRevenue); document.getElementById('loading').style.display = 'none'; };
         function renderStaffStats(elemId, statsObj, staffList, totalRev) { const tbody = document.getElementById(elemId); tbody.innerHTML = ''; const sortedIds = Object.keys(statsObj).sort((a,b) => statsObj[b] - statsObj[a]); if(sortedIds.length === 0) { tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">데이터 없음</td></tr>'; return; } sortedIds.forEach(id => { const s = staffList.find(st => st.id == id); if(!s) return; const amt = statsObj[id]; const percent = totalRev > 0 ? Math.round((amt / totalRev) * 100) : 0; tbody.innerHTML += `<tr><td style="padding:12px 0;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><div style="width:12px; height:12px; border-radius:50%; background:${s.color};"></div><span style="font-weight:bold;">${s.name}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%; background:${s.color};"></div></div></td><td style="text-align:right;"><div>${amt.toLocaleString()}원</div><div style="font-size:11px; color:#999;">${percent}%</div></td></tr>`; }); }
         
-        window.loadCategories = async () => { 
+        // [전역 변수] Sortable 인스턴스 (필터 변경 시 재설정을 위해 필요)
+        let categorySortableInstance = null;
+
+        window.loadCategories = async () => {
+            // 1. 대분류 목록 가져오기 (선택박스 및 필터 구성용)
             const { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order');
+            
+            // [A] 신규생성용 선택박스
             const topSelect = document.getElementById('newCatTop');
             if (topSelect && topCats) {
                 topSelect.innerHTML = '<option value="">(상위 없음)</option>';
-                topCats.forEach(t => { topSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`; });
+                topCats.forEach(t => topSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`);
             }
 
-            const { data } = await sb.from('admin_categories').select('*').order('sort_order', {ascending:true}); 
-            const selectBox = document.getElementById('newProdCategory'); 
-            const listArea = document.getElementById('categoryListArea'); 
-            selectBox.innerHTML = '<option value="">카테고리 선택</option>'; 
-            listArea.innerHTML = ''; 
-            
-            if(data) data.forEach(cat => { 
-                const option = document.createElement('option'); 
-                option.value = cat.code; 
-                option.innerText = `${cat.name} (${cat.code})`; 
-                selectBox.appendChild(option); 
-                
-                const span = document.createElement('span'); 
-                span.className = 'badge draggable'; 
-                span.draggable = true; 
-                span.dataset.id = cat.id; 
-                span.style.cssText = "border:1px solid #bae6fd; color:#0284c7; margin-right:5px; margin-bottom:5px; display:inline-block; user-select:none; background:white; padding:6px 10px;"; 
-                
-                const parentName = topCats && cat.top_category_code 
-                    ? (topCats.find(t => t.code === cat.top_category_code)?.name || cat.top_category_code) + " > " : "";
+            // [B] 필터용 선택박스
+            const filterSelect = document.getElementById('filterCategoryTop');
+            const currentFilter = filterSelect ? filterSelect.value : 'all';
 
-                span.innerHTML = `<span style="color:#94a3b8; font-size:11px;">${parentName}</span> <b>${cat.name}</b> (${cat.code}) 
-                    <i class="fa-solid fa-pen" style="font-size:10px; margin-left:5px; color:#aaa; cursor:pointer;" onclick="editCategoryLoad(${cat.id})"></i>
-                    <i class="fa-solid fa-xmark" style="font-size:10px; margin-left:5px; color:#ef4444; cursor:pointer;" onclick="deleteCategoryDB(${cat.id})"></i>`; 
-                span.addEventListener('dragstart', () => span.classList.add('dragging')); 
-                span.addEventListener('dragend', async () => { span.classList.remove('dragging'); await saveCategoryOrder(); }); 
-                listArea.appendChild(span); 
-            }); 
+            if (filterSelect && topCats) {
+                filterSelect.innerHTML = '<option value="all">📂 전체 대분류 보기</option>';
+                topCats.forEach(t => {
+                    filterSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`;
+                });
+                filterSelect.value = currentFilter;
+            }
+
+            // 2. 소분류 목록 조회 (필터 적용)
+            let query = sb.from('admin_categories').select('*').order('sort_order', {ascending:true});
+            if (currentFilter && currentFilter !== 'all') {
+                query = query.eq('top_category_code', currentFilter);
+            }
+
+            const { data } = await query;
+
+            // 3. 렌더링
+            const listArea = document.getElementById('categoryListArea');
+            const prodCatSelect = document.getElementById('newProdCategory'); 
             
-            listArea.addEventListener('dragover', e => { 
-                e.preventDefault(); 
-                const afterElement = getDragAfterElementX(listArea, e.clientX); 
-                const draggable = document.querySelector('.badge.dragging'); 
-                if (afterElement == null) listArea.appendChild(draggable); 
-                else listArea.insertBefore(draggable, afterElement); 
-            }); 
+            if(prodCatSelect) prodCatSelect.innerHTML = '<option value="">카테고리 선택</option>';
+            listArea.innerHTML = '';
+            
+            if (data) {
+                data.forEach(cat => {
+                    // 상품 등록 폼 옵션 추가
+                    if(prodCatSelect) {
+                        const option = document.createElement('option');
+                        option.value = cat.code;
+                        option.innerText = `${cat.name} (${cat.code})`;
+                        prodCatSelect.appendChild(option);
+                    }
+
+                    // 관리자 리스트 뱃지 생성
+                    const div = document.createElement('div');
+                    div.className = 'badge draggable';
+                    div.dataset.id = cat.id; // 정렬 저장용 ID
+                    
+                    // 스타일: 잡기 편하게 약간 키움
+                    div.style.cssText = "border:1px solid #bae6fd; color:#0369a1; margin:0 5px 8px 0; display:inline-block; user-select:none; background:white; padding:8px 12px; cursor:grab; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05); vertical-align:middle;";
+
+                    const parentName = topCats && cat.top_category_code 
+                        ? `<span style="color:#64748b; font-weight:normal;">${(topCats.find(t => t.code === cat.top_category_code)?.name || cat.top_category_code)} &gt; </span>` 
+                        : "";
+
+                    div.innerHTML = `
+                        ${parentName} 
+                        <span style="font-weight:bold; font-size:13px;">${cat.name}</span> 
+                        <span style="color:#94a3b8; font-size:11px;">(${cat.code})</span>
+                        <i class="fa-solid fa-pen" style="font-size:11px; margin-left:8px; color:#cbd5e1; cursor:pointer;" onclick="editCategoryLoad(${cat.id})"></i>
+                        <i class="fa-solid fa-xmark" style="font-size:11px; margin-left:5px; color:#ef4444; cursor:pointer;" onclick="deleteCategoryDB(${cat.id})"></i>
+                    `;
+                    
+                    listArea.appendChild(div);
+                });
+            }
+
+            // 4. SortableJS 적용 (드래그 앤 드롭)
+            if (categorySortableInstance) categorySortableInstance.destroy(); // 기존 인스턴스 초기화
+
+            // 필터가 '전체 보기(all)'일 때만 정렬 허용 (순서 꼬임 방지)
+            if (currentFilter === 'all') {
+                categorySortableInstance = new Sortable(listArea, {
+                    animation: 150,      // 애니메이션 속도 (ms)
+                    ghostClass: 'sortable-ghost',  // 드래그 들어갈 자리 스타일
+                    dragClass: 'sortable-drag',    // 드래그 중인 요소 스타일
+                    onEnd: async function (evt) {
+                        await saveCategoryOrder(); // 드래그 끝나면 순서 저장
+                    }
+                });
+            }
         };
+
+        
 
         // [수정된 코드] 카테고리 추가/수정 함수
         window.addCategoryDB = async () => {
@@ -2703,9 +2762,29 @@ window.downloadMonthlyExcel = async () => {
             }
         };
 
-        async function saveCategoryOrder() { const badges = document.querySelectorAll('#categoryListArea .badge'); const updates=[]; badges.forEach((b,i)=>updates.push(sb.from('admin_categories').update({sort_order:i+1}).eq('id',b.dataset.id))); await Promise.all(updates); }
+        // [신규] 소분류 순서 저장 함수 복구
+        window.saveCategoryOrder = async () => {
+            const listArea = document.getElementById('categoryListArea');
+            // 현재 화면에 있는 뱃지들을 순서대로 가져옴
+            const badges = listArea.querySelectorAll('.badge'); 
+            const updates = [];
+            
+            badges.forEach((badge, index) => {
+                const id = badge.dataset.id;
+                // DB에 순서(sort_order) 업데이트 (1부터 시작)
+                updates.push(sb.from('admin_categories').update({ sort_order: index + 1 }).eq('id', id));
+            });
+
+            try {
+                // 병렬 처리로 빠르게 저장
+                await Promise.all(updates);
+                // console.log("순서 저장 완료");
+            } catch (e) {
+                console.error("순서 저장 실패:", e);
+            }
+        };
+
         function getDragAfterElementX(container, x) { const draggables = [...container.querySelectorAll('.badge:not(.dragging)')]; return draggables.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = x - box.left - box.width / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
-        
         window.loadSystemDB = async (filterSite = 'KR') => { 
             const catSelect = document.getElementById('filterProdCat');
             const savedCatValue = catSelect ? catSelect.value : 'all';
