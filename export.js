@@ -543,9 +543,21 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
 
     if (STAMP_IMAGE_URL) {
         try {
-            const stamp = await getSafeImageDataUrl(STAMP_IMAGE_URL);
-            if (stamp) doc.addImage(stamp, 'PNG', boxX+labelW+45, boxY+cellH+1, 14, 14);
-        } catch(e) {}
+            // [수정] 도장 이미지는 투명 배경(PNG)을 유지하기 위해 압축 함수를 거치지 않고 직접 로드합니다.
+            const response = await fetch(STAMP_IMAGE_URL);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            
+            await new Promise(resolve => {
+                reader.onloadend = () => {
+                    if (reader.result) {
+                        doc.addImage(reader.result, 'PNG', boxX+labelW+45, boxY+cellH+1, 14, 14);
+                    }
+                    resolve();
+                };
+                reader.readAsDataURL(blob);
+            });
+        } catch(e) { console.warn("도장 로드 실패:", e); }
     }
 
     let y = 85;
@@ -763,11 +775,12 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 옵션: ${optionText}`;
 
                 // 3. QR 생성
-                // utf-8 처리를 위해 라이브러리가 알아서 처리하지만, 내용이 길 경우 width를 늘리는 것을 권장하지 않으므로 데이터 밀도를 높입니다.
                 const qrUrl = await window.QRCode.toDataURL(qrContent, { margin: 0, width: 300 });
                 
-                // 4. 위치 배치 (Staff 박스 우측 끝)
-                doc.addImage(qrUrl, 'PNG', 108, startY + 12, 25, 25);
+                // ▼▼▼ [수정 2] QR코드를 아래쪽(담당자 박스 우측)으로 이동
+                // staffY는 위에서 계산된 담당자 박스 Y좌표입니다.
+                // 182: 우측 끝 좌표, staffY+1: 박스 내부 높이 맞춤, 12: 크기(작게)
+                doc.addImage(qrUrl, 'PNG', 182, staffY + 1, 12, 12);
                 
             } catch (e) {
                 console.warn("QR Error:", e);
@@ -819,9 +832,15 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         drawText(doc, "< 디자인 시안 확인 >", 105, imgBoxY - 2, {align:'center', size:9, color:"#888888"});
 
         let imgData = null; 
-        // [수정] 대형 이미지 오류 방지를 위해 무조건 리사이징/압축 함수를 통과시킴
+        
         let targetUrl = item.thumb;
-        if (!targetUrl && item.originalUrl && item.mimeType?.startsWith('image')) {
+
+        // ▼▼▼ [수정 3] '단순 주문(product_only)'인 경우 시안 이미지를 비웁니다.
+        if (item.type === 'product_only') {
+            targetUrl = null;
+        }
+        // 파일 주문인 경우 원본 이미지 사용 시도
+        else if (!targetUrl && item.originalUrl && item.mimeType?.startsWith('image')) {
             targetUrl = item.originalUrl;
         }
 
