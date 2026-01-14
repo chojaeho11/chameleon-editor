@@ -793,10 +793,24 @@ button, input, textarea, select { font-family: inherit; }
     }
 
     /* 선택 모달 모바일 */
+    /* 선택 모달 모바일 */
     .choice-layout { flex-direction: column; }
-    .choice-right { width: 100%; height: 250px; margin-top: 20px; order: 2; }
-    .choice-left { order: 1; }
-    .choice-left button.btn-round { height: 100px !important; }
+    
+    /* [수정] 오른쪽(이미지/입력창)을 맨 위로 배치 & 높이 자동 조절 */
+    .choice-right { 
+        width: 100%; 
+        height: auto !important; /* 고정 높이 제거 (잘림 방지) */
+        min-height: 200px;
+        margin-top: 0; 
+        margin-bottom: 20px; /* 버튼과 간격 확보 */
+        order: 1; /* 순서: 1번 (상단) */
+    }
+    
+    /* [수정] 왼쪽(버튼들)을 아래로 배치 */
+    .choice-left { 
+        width: 100%;
+        order: 2; /* 순서: 2번 (하단) */
+    }
 
     /* 푸터 모바일 */
     .footer-inner { flex-direction: column; gap: 20px; }
@@ -2068,7 +2082,7 @@ body {
 
     .quick-menu-wrapper {
         /* 1. 배경 디자인: 노란색 -> 진한 파란색 그라데이션 */
-        background: linear-gradient(135deg, #ffc60b 0%, #ffd61e 100%) !important;
+        background: linear-gradient(135deg, #ffa4f4 0%, #b0b4ff 100%) !important;
         
         /* 2. 크기 및 위치: 화면 꽉 참 방지 & 중앙 정렬 */
         width: 100% !important;
