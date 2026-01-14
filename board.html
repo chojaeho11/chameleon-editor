@@ -3,8 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>카멜레온 커뮤니티</title>
     
+    <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board.html" />
+    <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board.html" />
+    <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board.html" />
+    <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/board.html" />
+    
+    <title>카멜레온 커뮤니티 - 블로그 & 후기</title>
+    <meta name="description" content="카멜레온프린팅 글로벌 커뮤니티입니다. 한국/일본/미국 고객의 제작 후기, 중고 장비 거래, 디자인 정보를 확인하세요.">
+    <meta name="keywords" content="카멜레온프린팅, 허니콤보드, 팝업스토어, 인쇄후기, 중고인쇄장비, カメレオン印刷, ハニカムボード, 韓国印刷">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="카멜레온프린팅 (Chameleon Printing)">
+    <meta property="og:title" content="카멜레온 커뮤니티">
+    <meta property="og:description" content="인쇄/디자인 정보 공유 및 고객 후기 게시판">
+    <meta property="og:image" content="https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png">
+    <meta property="og:url" content="https://www.cafe2626.com/board.html">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
@@ -503,23 +518,68 @@
     const ITEMS_PER_PAGE = 12;
     let isLastPage = false;
 
-    // [SEO]
-    function updateBoardSEO() {
-        const metaData = {
-            'KR': { title: `카멜레온 커뮤니티 - ${category}`, desc: "고객 후기, 중고 거래, 구인구직 등 카멜레온 프린팅 커뮤니티입니다." },
-            'US': { title: `Chameleon Community - ${category}`, desc: "Customer reviews, marketplace, and community forum for Chameleon Printing." },
-            'JP': { title: `カメレオンコミュニティ - ${category}`, desc: "カメレオンプリンティングのお客様レビュー、ブログ、コミュニティです。" }
+    // [SEO - 글로벌 타겟팅 강화]
+    function updateBoardSEO(postTitle = null, postContent = null, postImage = null) {
+        // 1. 국가별 카테고리 명칭 정의
+        const catMap = {
+            'KR': { 'blog': '블로그', 'review': '제작후기', 'promo': '홍보', 'trade': '장비거래', 'job': '구인구직', 'free': '자료실' },
+            'JP': { 'blog': 'ブログ', 'review': 'レビュー', 'promo': 'PR', 'trade': '中古機器', 'job': '求人', 'free': '資料室' },
+            'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files' }
         };
-        const data = metaData[currentCountry] || metaData['KR'];
-        document.title = data.title;
-        let descTag = document.querySelector('meta[name="description"]');
-        if (!descTag) {
-            descTag = document.createElement('meta');
-            descTag.name = "description";
-            document.head.appendChild(descTag);
+        const activeCatName = (catMap[currentCountry] || catMap['KR'])[category] || 'Board';
+
+        // 2. 국가별 기본 메타 데이터
+        const metaData = {
+            'KR': { 
+                title: `카멜레온 ${activeCatName}`, 
+                desc: "카멜레온프린팅 커뮤니티 - 고객 후기, 중고 장비 거래, 구인구직 및 디자인 정보.",
+                locale: "ko_KR" 
+            },
+            'JP': { 
+                title: `カメレオン・${activeCatName}`, 
+                desc: "カメレオンプリンティング公式コミュニティ - 顧客レビュー、中古機器取引、求人情報など。",
+                locale: "ja_JP" 
+            },
+            'US': { 
+                title: `Chameleon ${activeCatName}`, 
+                desc: "Chameleon Printing Community - Customer reviews, Used equipment market, and Design resources.",
+                locale: "en_US" 
+            }
+        };
+        const defaultData = metaData[currentCountry] || metaData['KR'];
+
+        // 3. 게시글 상세 정보가 있으면 덮어쓰기 (다국어 환경 고려)
+        let finalTitle = defaultData.title;
+        let finalDesc = defaultData.desc;
+        let finalImage = "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png"; 
+
+        if (postTitle) {
+            finalTitle = `${postTitle} | Chameleon`;
+            if (postContent) finalDesc = postContent.replace(/<[^>]*>?/gm, '').substring(0, 120) + '...';
+            if (postImage) finalImage = postImage;
         }
-        descTag.setAttribute('content', data.desc);
+
+        // 4. 메타 태그 업데이트
+        document.title = finalTitle;
         document.documentElement.setAttribute('lang', currentCountry.toLowerCase());
+
+        const setMeta = (selector, content) => {
+            let element = document.querySelector(selector);
+            if (!element) {
+                element = document.createElement('meta');
+                if (selector.startsWith('meta[property')) element.setAttribute('property', selector.replace('meta[property="', '').replace('"]', ''));
+                else element.setAttribute('name', selector.replace('meta[name="', '').replace('"]', ''));
+                document.head.appendChild(element);
+            }
+            element.setAttribute('content', content);
+        };
+
+        setMeta('meta[name="description"]', finalDesc);
+        setMeta('meta[property="og:title"]', finalTitle);
+        setMeta('meta[property="og:description"]', finalDesc);
+        setMeta('meta[property="og:image"]', finalImage);
+        setMeta('meta[property="og:url"]', window.location.href);
+        setMeta('meta[property="og:locale"]', defaultData.locale); // 언어/지역 정보 명시
     }
     // [추가] 목록으로 돌아가기 함수 (이게 없어서 에러가 발생했습니다)
     window.goToList = function() {
@@ -680,6 +740,9 @@
             const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
             if (error) throw error;
             if (!post) return alert('삭제된 글입니다.'), goToList();
+
+            // [SEO 적용] 불러온 게시글 정보로 검색엔진 메타태그 즉시 업데이트
+            updateBoardSEO(post.title, post.content, post.thumbnail);
             
             const ratingArea = document.getElementById('viewRatingArea');
             if (category === 'review' && post.rating) {
