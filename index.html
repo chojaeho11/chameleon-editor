@@ -1530,8 +1530,8 @@
 
             <button onclick="window.confirmChoice('cart')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#fff; color:#334155; border:2px solid #cbd5e1; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
                 <i class="fa-solid fa-cart-plus" style="font-size:32px; color:#ef4444;"></i>
-                <span style="font-size:16px; font-weight:bold;">완성 디자인 있음</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;">장바구니에 담기</span>
+                <span style="font-size:16px; font-weight:bold;">CART</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">Add to Cart</span>
             </button>
         </div>
 
@@ -3650,6 +3650,45 @@ function updateVipFileList(input) {
 
     // 페이지 로드 시 실행
     window.addEventListener('load', trackVisit);
+    // [신규] '배송' 카테고리 자동 열기 함수
+    window.openDeliveryCategory = async function() {
+        document.getElementById('cartAddedModal').style.display = 'none'; // 완료 모달 닫기
+        
+        // 로딩 표시를 위해 카테고리 모달을 먼저 엽니다 (빈 상태)
+        const modal = document.getElementById('categoryDetailModal');
+        const grid = document.getElementById('catProductGrid');
+        modal.style.display = 'flex';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 배송 옵션을 찾는 중...</div>';
+
+        try {
+            // DB에서 이름이 '배송'인 카테고리를 찾습니다.
+            const { data, error } = await sb.from('admin_categories')
+                .select('*')
+                .eq('name', '배송') // ★ DB에 저장된 정확한 이름이어야 합니다
+                .single();
+
+            if (error || !data) {
+                alert("배송 카테고리를 찾을 수 없습니다. 관리자에게 문의해주세요.");
+                modal.style.display = 'none';
+                return;
+            }
+
+            // 찾은 카테고리 코드로 상품 목록을 띄웁니다.
+            window.showCategoryProducts(data.code, data.name, data.description);
+
+        } catch (e) {
+            console.error(e);
+            alert("오류가 발생했습니다.");
+            modal.style.display = 'none';
+        }
+    };
+
+    // [신규] 장바구니 화면만 열기 (결제 유도 X)
+    window.goToCartPageOnly = function() {
+        document.getElementById('cartAddedModal').style.display = 'none';
+        document.getElementById('cartPage').style.display = 'block';
+        if(window.renderCart) window.renderCart();
+    };
 </script>
 <div id="cartAddedModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 400px; text-align: center; padding: 40px 30px;">
@@ -3659,15 +3698,25 @@ function updateVipFileList(input) {
         <h3 style="margin: 0 0 10px 0; font-size: 22px;">장바구니에 담겼습니다!</h3>
         <p style="color: #666; margin-bottom: 30px;">선택하신 상품이 장바구니에 추가되었습니다.</p>
         
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button onclick="window.goToCartFromSuccess()" class="btn-round primary" style="width: 100%; justify-content: center; height: 50px; font-size: 16px;">
-                💳 결제하러 가기
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button onclick="window.goToCartFromSuccess()" class="btn-round primary" style="width: 100%; justify-content: center; height: 45px; font-size: 15px;">
+                💳 바로 결제하러 가기
             </button>
-            <button onclick="window.continueShopping()" class="btn-round" style="width: 100%; justify-content: center; height: 50px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
-                🛍️ 다른 제품 구매하기
+
+            <button onclick="window.openDeliveryCategory()" class="btn-round" style="width: 100%; justify-content: center; height: 45px; background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; font-weight:800;">
+                🚚 배송비/설치비 추가하기
+            </button>
+
+            <button onclick="window.goToCartPageOnly()" class="btn-round" style="width: 100%; justify-content: center; height: 45px; background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd;">
+                🛒 장바구니로 가기
+            </button>
+
+            <button onclick="window.continueShopping()" class="btn-round" style="width: 100%; justify-content: center; height: 45px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;">
+                🛍️ 다른상품 더 쇼핑하기
             </button>
         </div>
     </div>
 </div>
+
 </body>
 </html>
