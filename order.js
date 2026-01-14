@@ -522,8 +522,12 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
     let key = window.currentProductKey || canvas.currentProductKey;
     if (!key) key = localStorage.getItem('current_product_key') || 'A4';
 
-    // ★ [핵심] 상품 정보가 없으면 서버에서 가져와서 채워넣음
-    if (!PRODUCT_DB[key]) {
+    // ★ [핵심 수정 1] index.html에서 수정한(가격이 확정된) 정보를 최우선으로 가져옵니다.
+    // window.PRODUCT_DB에 정보가 있으면 그걸 쓰고, 없으면 모듈 내부의 PRODUCT_DB를 씁니다.
+    let product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
+
+    // 정보가 없거나, 커스텀인데 가격이 0원(데이터 유실)인 경우에만 DB에서 다시 가져옵니다.
+    if (!product || (product.is_custom_size && product.price === 0)) {
         try {
             console.log(`상품 정보('${key}') 복구 시도...`);
             const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).single();
@@ -557,7 +561,8 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
         }
     }
 
-    let product = PRODUCT_DB[key];
+    // ★ [핵심 수정 2] 위에서 정의한 product 변수를 갱신합니다 (여기서 다시 PRODUCT_DB[key]로 덮어쓰면 안됩니다)
+    product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
     
     // 그래도 없으면 안전장치
     if (!product) {
@@ -570,14 +575,15 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
-    // [수정] 사이즈별 가격 재계산 로직 (조건부 적용) ==============================
-    
-    // 1. 상품 정보를 복제합니다.
     let calcProduct = { ...product }; 
 
-    // ★ [핵심 수정] '커스텀 사이즈' 제품일 때만 면적 계산 로직을 수행합니다.
-    // 일반 상품(핫딜 등)은 이 if문을 건너뛰어 원래 가격(product.price)을 유지합니다.
-    if (product.is_custom_size) {
+    const currentMmW = finalW / 3.7795;
+
+    if (product.is_custom_size && product.price > 0 && Math.abs(product.w_mm - currentMmW) < 5) {
+         console.log(`[가격 유지] 기존 계산된 가격 사용: ${product.price.toLocaleString()}원`);
+
+    }
+    else if (product.is_custom_size) {
         
         // 1-1. 단가 설정 (사장님 환경에 맞게 숫자 수정 필요)
         const sqmPrice = 50000;  // 1제곱미터(헤베)당 가격

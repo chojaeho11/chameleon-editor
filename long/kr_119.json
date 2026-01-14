@@ -96,7 +96,7 @@
   "btn_close": "닫기",
 
   "modal_delivery_title": "📝 배송 정보 입력",
-  "label_manager_name": "담당자명",
+  "label_manager_name": "고객명",
   "label_contact_phone": "연락처",
   "label_address": "주소",
   "label_request_memo": "요청사항",

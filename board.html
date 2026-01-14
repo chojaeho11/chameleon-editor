@@ -510,6 +510,10 @@
     const category = urlParams.get('cat') || 'free';
     const currentCountry = (urlParams.get('country') || 'KR').toUpperCase();
     const postId = urlParams.get('id');
+    
+    // [추가] 소분류 필터링용 파라미터
+    const subCode = urlParams.get('sub_code'); // 예: honeycomb_wall
+    const subName = urlParams.get('sub_name'); // 예: 허니콤 가벽
 
     let quill; 
     let currentRating = 5; 
@@ -604,7 +608,17 @@
             'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書' }
         }[category] || { KR: '게시판', US: 'Board', JP: '掲示板' };
         
-        document.getElementById('pageTitle').innerText = titleMap[currentCountry] || titleMap['KR'];
+        // [수정] 소분류 이름이 있으면 제목을 'OOO 후기'로 변경
+        if (subName && category === 'review') {
+            document.getElementById('pageTitle').innerText = `${subName} 후기`;
+            const badge = document.getElementById('countryBadge');
+            badge.style.background = '#6366f1';
+            badge.style.color = '#fff';
+            badge.innerText = "PRODUCT"; // 뱃지 변경
+        } else {
+            document.getElementById('pageTitle').innerText = titleMap[currentCountry] || titleMap['KR'];
+        }
+        
         document.getElementById('btnWrite').style.display = 'inline-block';
 
         quill = new Quill('#editor-container', {
@@ -664,10 +678,18 @@
             const from = currentPage * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
 
-            // [최적화] content 컬럼 제외하고 가져오기 (데이터 양 줄임)
-            const { data, error } = await sb.from('community_posts')
+            // [최적화 & 수정] 쿼리 분리 및 필터링 추가
+            let query = sb.from('community_posts')
                 .select('id, title, author_name, created_at, view_count, thumbnail, rating') 
-                .eq('category', category).eq('country_code', currentCountry)
+                .eq('category', category)
+                .eq('country_code', currentCountry);
+
+            // [추가] 소분류 코드가 있으면 해당 제품의 후기만 가져옴
+            if (subCode) {
+                query = query.eq('target_code', subCode);
+            }
+
+            const { data, error } = await query
                 .order('created_at', { ascending: false })
                 .range(from, to);
             
@@ -921,6 +943,15 @@
                     payload.author_id = authorId;
                     payload.author_name = authorName;
                     payload.author_email = authorEmail;
+                    
+                    // [추가] 소분류 타겟 코드 저장 (이게 있어야 나중에 필터링 됨)
+                    if (subCode) {
+                        payload.target_code = subCode;
+                        // 제목 앞에 자동으로 [제품명] 말머리 추가
+                        if (!payload.title.includes(`[${subName}]`)) {
+                            payload.title = `[${subName}] ` + payload.title;
+                        }
+                    }
                     
                     const { error } = await sb.from('community_posts').insert(payload);
                     if (error) throw error;

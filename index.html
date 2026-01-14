@@ -2078,10 +2078,17 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
         section.style.display = 'none';
     }
 }
-// ============================================================
-    // [신규] 상단 메뉴 클릭 시 실행되는 함수
-    // (카테고리가 비어보이지 않게 첫번째 상품 사진을 가져옵니다)
-    // ============================================================
+
+    window.goBoardWithCategory = function(boardType, subCode, subName) {
+        const hostname = window.location.hostname;
+        let targetCountry = 'KR';
+        if (hostname.includes('cafe3355.com')) targetCountry = 'US';
+        else if (hostname.includes('cafe0101.com')) targetCountry = 'JP';
+
+        // 해당 소분류 코드(sub_code)와 이름(sub_name)을 달고 새 창 열기
+        const url = `/board.html?cat=${boardType}&country=${targetCountry}&sub_code=${encodeURIComponent(subCode)}&sub_name=${encodeURIComponent(subName)}`;
+        window.open(url, '_blank');
+    };
     window.openTopMenu = async function(topCode, titleText) {
         const modal = document.getElementById('categoryDetailModal');
         const grid = document.getElementById('catProductGrid');
@@ -2287,32 +2294,55 @@ async function renderQuickMenu() {
             }
 
             filtered.forEach(cat => {
-                // ★ [2] 소분류명 언어 처리 (핵심 수정 부분)
+                // 1. 다국어 이름 설정
                 let catName = cat.name;
                 if(isJP) catName = cat.name_jp || cat.name;
                 else if(isUS) catName = cat.name_us || cat.name;
 
+                // 2. [핵심 수정] 설명글(description) 안전하게 변환
+                // 줄바꿈(\n)이나 따옴표(')가 있으면 에러가 나므로 제거합니다.
+                let rawDesc = cat.description;
+                if(isJP) rawDesc = cat.description_jp || cat.description;
+                else if(isUS) rawDesc = cat.description_us || cat.description;
+                
+                const safeDesc = (rawDesc || '').replace(/\n/g, ' ').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
+                // 3. 코드 공백 제거 (링크 오류 방지)
+                const safeCode = (cat.code || '').trim();
+
+                // 4. 이미지 처리
                 let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
                 const tinyUrl = window.getTinyThumb(rawUrl, 100);
+                
+                // 5. 랜덤 평점 (4.5 ~ 5.0)
+                const randomScore = (4.5 + Math.random() * 0.5).toFixed(1);
 
                 const div = document.createElement('div');
                 div.className = 'quick-item';
-                // ★ [추가] 영어(US)나 일본어(JP)면 'long-text-mode' 클래스를 붙임
-                if (isUS || isJP) {
-                    div.classList.add('long-text-mode');
-                }
+                if (isUS || isJP) div.classList.add('long-text-mode');
+
                 let imgTag = tinyUrl 
                     ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-folder-open\\'></i>'">`
                     : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
 
-                // 여기서 catName 변수를 사용합니다.
-                div.innerHTML = `<div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text">${catName}</div>`;
-                // [수정] 설명(description)까지 함께 전달
-let catDesc = cat.description;
-if(isJP) catDesc = cat.description_jp || cat.description;
-else if(isUS) catDesc = cat.description_us || cat.description;
-
-div.onclick = () => window.showCategoryProducts(cat.code, catName, catDesc);
+                // 6. HTML 생성 (safeDesc, safeCode 사용)
+                div.innerHTML = `
+                    <div class="quick-icon" onclick="window.showCategoryProducts('${safeCode}', '${catName}', '${safeDesc}')" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        ${imgTag}
+                    </div>
+                    <div class="quick-text" onclick="window.showCategoryProducts('${safeCode}', '${catName}', '${safeDesc}')" style="cursor:pointer;">${catName}</div>
+                    
+                    <div class="quick-review-bar">
+                        <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${safeCode}', '${catName}')">
+                            <i class="fa-solid fa-star star-icon"></i> 
+                            <span class="star-score">${randomScore}</span>
+                        </div>
+                        <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${safeCode}', '${catName}')" style="background:white;">
+                            <i class="fa-regular fa-comment-dots"></i> 후기
+                        </div>
+                    </div>
+                `;
+                
                 itemContainer.appendChild(div);
             });
         };
@@ -2514,13 +2544,14 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     };
 
     // [3] 선택 완료 및 장바구니 담기 (핵심 수정)
+    // [3] 선택 완료 및 장바구니 담기 (헤베 가격 적용 수정판)
     window.confirmChoice = function(mode) {
         if (window.isDirectCartAddInProgress) return;
         if (!window.selectedProductForChoice) return alert("상품 정보가 없습니다.");
 
         // 변수 초기화
         let finalW = 0, finalH = 0;
-        let finalPricePerItem = window.selectedProductForChoice.price; // 기본값
+        let finalPricePerItem = window.selectedProductForChoice.price; // 기본값 (1헤베 단가)
         let finalQty = 1;
 
         // ★ [핵심] 커스텀 모드일 경우 여기서 가격을 '재계산'해서 확정함
@@ -2533,19 +2564,22 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             
             // 1헤베 단가 가져오기
             const unitPrice = window.selectedProductForChoice.price;
-            // 1개당 가격 계산: (면적 * 단가)
+            
+            // 1개당 가격 계산: (가로mm * 세로mm / 1,000,000) * 단가
+            // Math.ceil로 소수점 올림 처리 (1원 단위 보존)
             finalPricePerItem = Math.ceil(((finalW * finalH) / 1000000) * unitPrice);
             
-            console.log(`[가격계산] ${finalW}x${finalH} = ${finalPricePerItem}원 (단가:${unitPrice})`);
+            console.log(`[헤베계산적용] ${finalW}x${finalH} = ${finalPricePerItem}원 (단가:${unitPrice})`);
         }
 
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
-            // 에디터 실행
+            // 에디터 실행 (4번째 인자로 '확정된 가격' 전달)
             window.startEditorDirect(
                 window.currentProductKey, 
                 window.isCustomModeCurrent ? finalW : null, 
-                window.isCustomModeCurrent ? finalH : null
+                window.isCustomModeCurrent ? finalH : null,
+                window.isCustomModeCurrent ? finalPricePerItem : null // ★ 추가됨
             );
         } else if (mode === 'cart') {
             window.isDirectCartAddInProgress = true;
@@ -2553,15 +2587,16 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             document.getElementById('choiceModal').style.display = 'none';
 
             import('./order.js?v=119').then(m => {
-                // 원본 객체 복사 (중요)
+                // 원본 객체 복사 (중요: 원본을 수정하면 안됨)
                 const productToCart = { ...window.selectedProductForChoice };
                 
-                // ★ [수정] 커스텀 모드면 계산된 가격으로 덮어쓰기
+                // ★ [수정 포인트] 커스텀 모드면 '계산된 가격'으로 덮어쓰기
                 if (window.isCustomModeCurrent) {
-                    productToCart.price = finalPricePerItem; // 6만원 -> 18만원으로 변경
-                    productToCart.name += ` (${finalW}x${finalH}mm)`; // 이름 뒤에 사이즈 붙이기
+                    productToCart.price = finalPricePerItem; // 여기서 1헤베 가격 -> 계산된 가격으로 변경됨
+                    productToCart.name += ` (${finalW}x${finalH}mm)`; // 이름 뒤에 사이즈 명시
                     productToCart.width_mm = finalW;
                     productToCart.height_mm = finalH;
+                    productToCart.is_custom = true; // 커스텀 상품임을 표시
                 }
                 
                 // 장바구니 추가 함수 호출 (최종 확정된 가격의 객체 전달)
@@ -2707,8 +2742,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         window.isFontsLoaded = true;
     }
 
-    // [수정] customW, customH 파라미터 추가
-    window.startEditorDirect = async function(key, customW = null, customH = null) {
+    // [수정] customW, customH, customPrice 파라미터 추가
+    window.startEditorDirect = async function(key, customW = null, customH = null, customPrice = null) {
         
         loadEditorFonts();
 
@@ -2747,21 +2782,32 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         const product = window.PRODUCT_DB[key];
 
         // ▼▼▼ [추가] 대형 출력물 선택 시 화질 안내 메시지 ▼▼▼
-        if (product) {
-            // 가로/세로 중 긴 쪽 확인 (단위: mm)
-            const maxSide = Math.max(product.w_mm || 0, product.h_mm || 0, product.w || 0, product.h || 0);
+        // ★ [핵심] 커스텀 가격이 넘어왔다면 제품 정보에 덮어쓰기
+        if (customPrice !== null) {
+            product.price = customPrice;
+            product.is_custom_size = true; // 커스텀임을 명시
             
+            // ★ [추가] 사이즈 정보도 함께 업데이트해야 order.js에서 오해하지 않습니다.
+            product.w_mm = customW; 
+            product.h_mm = customH;
+
+            console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()}원`);
+        }
+
+        // ▼▼▼ [수정] 1. 사이즈 변수와 maxSide를 가장 먼저 정의합니다. (순서 중요!)
+        const displayW = customW || (product ? (product.w_mm || product.w || 210) : 210);
+        const displayH = customH || (product ? (product.h_mm || product.h || 297) : 297);
+        const maxSide = Math.max(displayW, displayH); // 여기서 maxSide가 만들어집니다.
+
+        // ▼▼▼ 2. 그 다음 경고창 로직을 실행합니다.
+        if (product) {
             // A2 사이즈(약 600mm) 이상인 경우 안내 팝업
             if (maxSide >= 800) {
                 alert(window.t('msg_large_product_warning'));
             }
         }
-       // ▼▼▼ [수정] 커스텀 값(customW)이 있으면 그걸 쓰고, 없으면 제품 기본값을 씁니다.
-        const displayW = customW || (product ? (product.w_mm || product.w || 210) : 210);
-        const displayH = customH || (product ? (product.h_mm || product.h || 297) : 297);
         
         // 픽셀 변환 (1mm = 3.7795px)
-        // 위에서 결정된 displayW/H 를 사용하여 캔버스 크기를 계산합니다.
         const canvasW = Math.round(displayW * 3.7795);
         const canvasH = Math.round(displayH * 3.7795);
         
