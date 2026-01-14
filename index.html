@@ -1267,6 +1267,20 @@
             </div>
 
             <div id="cartListArea" style="width: 100%;"></div>
+            <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:12px; padding:15px; display:flex; flex-wrap:wrap; gap:15px; justify-content:space-between; align-items:center; margin: 20px 0;">
+                <div style="display:flex; align-items:center; gap:12px; min-width: 200px;">
+                    <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#d97706; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">
+                        <i class="fa-solid fa-truck-fast" style="font-size:18px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:14px; font-weight:800; color:#92400e; word-break:keep-all;">배송비 선택을 잊으셨나요?</div>
+                        <div style="font-size:12px; color:#b45309; margin-top:2px; word-break:keep-all;">제품에 맞는 배송/설치 옵션을 꼭 추가해주세요.</div>
+                    </div>
+                </div>
+                <button onclick="window.openDeliveryCategory()" class="btn-round" style="width:auto; flex-grow:1; max-width:100%; height:38px; padding:0 15px; background:#fff; border:1px solid #d97706; color:#d97706; font-weight:800; font-size:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05); white-space:nowrap;">
+                    + 배송비 추가
+                </button>
+            </div>
             
             <div style="width: 100%;">
                 <div style="background:white; padding:20px; border-radius:12px;">
@@ -1560,14 +1574,19 @@
                 <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="예: 2000" oninput="window.calcCustomPrice()">
             </div>
 
-            <div style="margin-bottom:20px;">
-                <label style="font-weight:bold; font-size:13px; color:#64748b;">수량 (Quantity)</label>
-                <input type="number" id="inputCustQty" class="ai-input-pretty" value="1" min="1" oninput="window.calcCustomPrice()">
-            </div>
+            <input type="hidden" id="inputCustQty" value="1">
 
             <div style="background:#1e293b; color:white; padding:15px; border-radius:8px; text-align:center;">
-                <div style="font-size:12px; opacity:0.8;">예상 견적 금액</div>
+                <div style="font-size:12px; opacity:0.8;">예상 견적 금액 (1개 기준)</div>
                 <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0원</div>
+                <div id="calcResultSize" style="font-size:11px; margin-top:5px; color:#94a3b8;">-</div>
+            </div>
+            
+            <p style="font-size:12px; color:#64748b; margin-top:10px; line-height:1.5; word-break:keep-all;">
+                ※ 예상 금액입니다. 배송비와 마감 비용 등이 추가될 수 있으며, 회원 등급에 따라 할인이 적용됩니다.<br>
+                <b>최종 금액은 장바구니에서 확인하세요.</b>
+            </p>
+                
                 <div id="calcResultSize" style="font-size:11px; margin-top:5px; color:#94a3b8;">-</div>
             </div>
         </div>
@@ -2338,7 +2357,7 @@ async function renderQuickMenu() {
                             <span class="star-score">${randomScore}</span>
                         </div>
                         <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${safeCode}', '${catName}')" style="background:white;">
-                            <i class="fa-regular fa-comment-dots"></i> 후기
+                            <i class="fa-regular fa-comment-dots"></i>
                         </div>
                     </div>
                 `;
@@ -2531,7 +2550,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             // 헤베 계산식: (가로mm * 세로mm / 1,000,000) * 단가
             const area = (w * h) / 1000000;
             // 1개당 가격 (올림 처리)
-            const pricePerItem = Math.ceil(area * unitPrice);
+            // [수정] 10원 단위 절사 (내림 처리): 242,001원 -> 242,000원
+            const pricePerItem = Math.floor((area * unitPrice) / 100) * 100;
             // 총 합계 (수량 포함)
             const totalPrice = pricePerItem * qty;
             
@@ -2567,7 +2587,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             
             // 1개당 가격 계산: (가로mm * 세로mm / 1,000,000) * 단가
             // Math.ceil로 소수점 올림 처리 (1원 단위 보존)
-            finalPricePerItem = Math.ceil(((finalW * finalH) / 1000000) * unitPrice);
+            // [수정] 10원 단위 절사 (내림 처리): 242,001원 -> 242,000원
+            finalPricePerItem = Math.floor((((finalW * finalH) / 1000000) * unitPrice) / 100) * 100;
             
             console.log(`[헤베계산적용] ${finalW}x${finalH} = ${finalPricePerItem}원 (단가:${unitPrice})`);
         }
@@ -2783,13 +2804,21 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 
         // ▼▼▼ [추가] 대형 출력물 선택 시 화질 안내 메시지 ▼▼▼
         // ★ [핵심] 커스텀 가격이 넘어왔다면 제품 정보에 덮어쓰기
+        // ★ [핵심] 커스텀 가격이 넘어왔다면 제품 정보에 덮어쓰기
         if (customPrice !== null) {
             product.price = customPrice;
             product.is_custom_size = true; // 커스텀임을 명시
             
-            // ★ [추가] 사이즈 정보도 함께 업데이트해야 order.js에서 오해하지 않습니다.
             product.w_mm = customW; 
             product.h_mm = customH;
+
+            // ▼▼▼ [추가] 에디터 진입 시 상품 이름에 사이즈 명시하기 ▼▼▼
+            // 원본 이름을 백업해두지 않으면 계속 뒤에 붙을 수 있으므로 체크
+            if (!product.origin_name_bak) product.origin_name_bak = product.name;
+            
+            // 이름 뒤에 (가로x세로mm) 붙이기
+            product.name = `${product.origin_name_bak} (${customW}x${customH}mm)`;
+            // ▲▲▲ [추가 끝] ▲▲▲
 
             console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()}원`);
         }
