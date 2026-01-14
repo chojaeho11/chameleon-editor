@@ -2764,28 +2764,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     }
 
     // [수정] customW, customH, customPrice 파라미터 추가
+    // [수정됨] 템플릿 팝업 제거 + 화면 먼저 보여주고 폰트 로딩 (속도 개선)
     window.startEditorDirect = async function(key, customW = null, customH = null, customPrice = null) {
         
-        loadEditorFonts();
-
-        // [2] 폰트 로딩하는 무거운 스크립트(canvas-objects)를 여기서 실행!
-        if (!window.isObjectsLoaded) {
-            console.log("🛠 에디터 필수 스크립트(JS) 로딩 중...");
-            try {
-                await import('./canvas-objects.js?v=119');
-                window.isObjectsLoaded = true;
-            } catch (e) {
-                console.error("스크립트 로딩 실패:", e);
-                return;
-            }
-        }
-
-        // [3] ★수정됨★: 폰트 로딩이 끝날 때까지 기다렸다가 다음으로 넘어감
-        if (window.initCanvasFonts) {
-            await window.initCanvasFonts(); 
-        }
-
-        // [1] 로그인 체크 로직 추가
+        // 1. [검증] 로그인 및 필수값 체크
         const { data } = await sb.auth.getSession();
         if (!data || !data.session || !data.session.user) {
             alert(window.t('msg_login_required_design'));
@@ -2795,51 +2777,34 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 
         if (!key) return alert("상품 코드가 올바르지 않습니다.");
 
+        // 2. [설정] 전역 변수 및 상품 정보 설정
         window.currentProductKey = key;
         if(canvas) canvas.currentProductKey = key;
         
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-        
         const product = window.PRODUCT_DB[key];
 
-        // ▼▼▼ [추가] 대형 출력물 선택 시 화질 안내 메시지 ▼▼▼
-        // ★ [핵심] 커스텀 가격이 넘어왔다면 제품 정보에 덮어쓰기
-        // ★ [핵심] 커스텀 가격이 넘어왔다면 제품 정보에 덮어쓰기
+        // 커스텀 가격/사이즈 적용
         if (customPrice !== null) {
             product.price = customPrice;
-            product.is_custom_size = true; // 커스텀임을 명시
-            
+            product.is_custom_size = true; 
             product.w_mm = customW; 
             product.h_mm = customH;
-
-            // ▼▼▼ [추가] 에디터 진입 시 상품 이름에 사이즈 명시하기 ▼▼▼
-            // 원본 이름을 백업해두지 않으면 계속 뒤에 붙을 수 있으므로 체크
-            if (!product.origin_name_bak) product.origin_name_bak = product.name;
-            
-            // 이름 뒤에 (가로x세로mm) 붙이기
-            product.name = `${product.origin_name_bak} (${customW}x${customH}mm)`;
-            // ▲▲▲ [추가 끝] ▲▲▲
-
             console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()}원`);
         }
 
-        // ▼▼▼ [수정] 1. 사이즈 변수와 maxSide를 가장 먼저 정의합니다. (순서 중요!)
+        // 사이즈 계산
         const displayW = customW || (product ? (product.w_mm || product.w || 210) : 210);
         const displayH = customH || (product ? (product.h_mm || product.h || 297) : 297);
-        const maxSide = Math.max(displayW, displayH); // 여기서 maxSide가 만들어집니다.
+        const maxSide = Math.max(displayW, displayH);
 
-        // ▼▼▼ 2. 그 다음 경고창 로직을 실행합니다.
-        if (product) {
-            // A2 사이즈(약 600mm) 이상인 경우 안내 팝업
-            if (maxSide >= 800) {
-                alert(window.t('msg_large_product_warning'));
-            }
+        if (product && maxSide >= 800) {
+            alert(window.t('msg_large_product_warning'));
         }
         
-        // 픽셀 변환 (1mm = 3.7795px)
+        // 픽셀 변환 및 캔버스 설정
         const canvasW = Math.round(displayW * 3.7795);
         const canvasH = Math.round(displayH * 3.7795);
-        
         const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
 
         if (typeof setMaxLimits === 'function') setMaxLimits(displayW, displayH);
@@ -2852,30 +2817,43 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
-        // canvasW, canvasH는 위에서 계산됨 (기존 변수명 재사용 확인)
-        if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
-        
-        // 화면 전환
+        // 3. [핵심] 화면 전환을 먼저 실행 (로딩 체감 속도 향상)
         document.getElementById("startScreen").style.display = "none";
         document.getElementById("mainEditor").style.display = "flex";
-
         const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
-
         document.body.classList.add('editor-active'); 
-
-        if (window.ChannelIO) {
-            ChannelIO('hide');
-        }
-    
+        
+        if (window.ChannelIO) ChannelIO('hide');
         window.dispatchEvent(new Event('resize'));
 
-        // ▼▼▼ [수정] 칼선(제품 고정 가이드) 로드 및 팝업 제어 로직 ▼▼▼
-        let hasFixedGuide = false; // 가이드 존재 여부 플래그
+        // 캔버스 크기 적용 (화면이 보여야 캔버스도 제대로 그려짐)
+        if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
 
+        // 4. [지연 로딩] 폰트와 스크립트를 화면 전환 후에 로드
+        console.log("🚀 화면 진입 완료. 서체 및 스크립트 로딩 시작...");
+        
+        loadEditorFonts(); // CSS 폰트
+
+        // 필수 스크립트 로드 (await를 쓰되, 이미 화면은 떴음)
+        if (!window.isObjectsLoaded) {
+            try {
+                await import('./canvas-objects.js?v=119');
+                window.isObjectsLoaded = true;
+            } catch (e) {
+                console.error("스크립트 로딩 실패:", e);
+            }
+        }
+
+        // ★ [핵심] 폰트 로딩을 비동기로 처리 (await 제거)하여 멈춤 현상 제거
+        if (window.initCanvasFonts) {
+            window.initCanvasFonts().then(() => {
+                console.log("✅ 서체 로딩 완료");
+            }); 
+        }
+
+        // 5. [자동 로드] 고정 가이드(칼선)가 있는지 확인
         try {
-            // 1. 제품(key)에 연결된 고정 템플릿(가이드) 조회
-            // await를 사용하여 DB 응답이 올 때까지 기다립니다.
             const { data, error } = await sb.from('library')
                 .select('data_url')
                 .eq('product_key', key)
@@ -2883,13 +2861,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 .limit(1);
 
             if (data && data.length > 0) {
-                // 2. 가이드가 있으면 플래그를 True로 설정
-                hasFixedGuide = true;
                 const templateUrl = data[0].data_url;
-                
-                console.log("📢 고정 가이드 발견! 템플릿 팝업을 차단합니다.");
-
-                // 가이드 로드 (화면에 표시)
+                console.log("📢 고정 가이드 발견! 자동 로드합니다.");
                 setTimeout(() => {
                     if (window.loadProductFixedTemplate) window.loadProductFixedTemplate(templateUrl);
                 }, 500);
@@ -2898,30 +2871,27 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             console.error("자동 로드 오류:", e); 
         }
 
-        // 3. 템플릿 적용 분기 처리 (DB 확인이 끝난 후 실행됨)
+        // 6. 템플릿 처리 (기존 선택된 템플릿만 적용)
         if (window.pendingTemplate) {
-            // [Case A] 시작화면에서 이미 템플릿을 선택하고 들어온 경우
             setTimeout(async () => {
                 if (window.applyStartTemplate) await window.applyStartTemplate(window.pendingTemplate);
                 window.pendingTemplate = null;
-            }, 100);
-
+            }, 500);
         } else {
-            // [Case B] 아무것도 선택하지 않고 들어온 경우
-            // ★ 핵심: 가이드(hasFixedGuide)가 '없을 때만' 팝업을 띄움
-            if (!hasFixedGuide) {
+            // [수정됨] 템플릿 검색 팝업(Overlay) 띄우는 코드를 주석 처리하여 실행되지 않게 함
+            /* if (!hasFixedGuide) {
                 setTimeout(() => {
                     const tplOverlay = document.getElementById('templateOverlay');
                     if (tplOverlay) {
                         tplOverlay.style.display = 'flex';
-                        // 여기서 강제로 'photo-bg'를 띄우던 로직이 가이드가 없을 때만 실행됩니다.
                         if (window.filterTpl) window.filterTpl('photo-bg'); 
                     }
                 }, 300);
-            }
+            } 
+            */
         }
-        // ▲▲▲ [수정 끝] ▲▲▲
 
+        // AI 이미지 시작일 경우 처리
         if (window.pendingAiImage) {
             const loading = document.getElementById("loading");
             if(loading) loading.style.display = 'flex';
