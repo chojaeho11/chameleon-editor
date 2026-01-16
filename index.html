@@ -395,12 +395,12 @@
         </div>
         
         <div style="text-align: right;">
-    <button id="btnPartnerConsole" onclick="openPartnerConsole()" class="btn-round" style="display: none; background: #fff; color: #0f172a; font-weight: 800; padding: 15px 30px; border: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255,255,255,0.2);">
-        <i class="fa-solid fa-store"></i> <span data-i18n="btn_partner_console">파트너스 관리자 접속</span>
+    <button id="btnPartnerConsole" onclick="location.href='partner.html'" class="btn-round" style="display: none; background: #fff; color: #0f172a; font-weight: 800; padding: 15px 30px; border: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255,255,255,0.2);">
+        <i class="fa-solid fa-store"></i> <span data-i18n="btn_partner_console">파트너스 센터 입장</span>
     </button>
     
-    <button id="btnPartnerApply" class="btn-round" style="background: transparent; border: 2px solid #6366f1; color: #fff; font-weight: 800; padding: 12px 25px;">
-        <span data-i18n="btn_partner_apply">가맹점 신청 문의하기</span>
+    <button id="btnPartnerApply" onclick="document.getElementById('partnerApplyModal').style.display='flex'" class="btn-round" style="background: transparent; border: 2px solid #6366f1; color: #fff; font-weight: 800; padding: 12px 25px;">
+        <span data-i18n="btn_partner_apply">가맹점 신청하기</span>
     </button>
 </div>
     </div>
@@ -1683,6 +1683,138 @@
 <script type="module" src="./main.js?v=119"></script>
 
 <script src="./text-wizard.js?v=119"></script> 
+<script>
+    // [1] 파트너 신청 제출 함수
+    window.submitRealPartnerApp = async function() {
+        // sb(Supabase) 객체가 로드되었는지 확인
+        if (typeof sb === 'undefined') { alert("시스템 로딩 중입니다. 잠시 후 다시 시도해주세요."); return; }
+
+        const comp = document.getElementById('applyCompName').value;
+        const phone = document.getElementById('applyPhone').value;
+        const region = document.getElementById('applyRegion').value;
+        const items = document.getElementById('applyMainItems').value;
+
+        if(!comp || !phone || !region) return alert("필수 정보(업체명, 연락처, 지역)를 모두 입력해주세요.");
+
+        const { data: { user } } = await sb.auth.getUser();
+        if(!user) return alert("로그인이 필요합니다.");
+
+        // DB에 저장
+        const { error } = await sb.from('partner_applications').insert({
+            user_id: user.id,
+            company_name: comp,
+            contact_phone: phone,
+            region: region,
+            main_items: items, // 주생산품목
+            status: 'pending'
+        });
+
+        if(error) {
+            alert("신청 오류: " + error.message);
+        } else {
+            alert("✅ 신청이 완료되었습니다.\n관리자 승인 후 '파트너스 센터'에 접속하실 수 있습니다.");
+            document.getElementById('partnerApplyModal').style.display='none';
+        }
+    };
+
+    // [2] 고객용: 도착한 입찰(견적) 확인 및 모달 띄우기
+    window.checkBidsForOrder = async function(orderId) {
+        // 해당 주문의 입찰 내역 조회
+        const { data: bids, error } = await sb.from('bids')
+            .select('*')
+            .eq('order_id', orderId)
+            .order('price', { ascending: true }); // 저렴한 순
+
+        if(error || !bids || bids.length === 0) {
+            alert("아직 도착한 견적서가 없습니다.\n파트너사들이 확인 중이니 조금만 기다려주세요.");
+            return;
+        }
+
+        // 모달 HTML 동적 생성
+        const old = document.getElementById('bidListModal');
+        if(old) old.remove();
+
+        let listHtml = '';
+        bids.forEach(bid => {
+            // 선택된 상태인지 확인
+            const isSelected = bid.status === 'selected';
+            const bgClass = isSelected ? 'background:#f0fdf4; border-color:#bbf7d0;' : 'background:#fff;';
+            
+            // 버튼 또는 연락처 표시
+            let actionArea = '';
+            if(isSelected) {
+                actionArea = `
+                    <div style="margin-top:10px; padding:10px; background:#fff; border-radius:6px; text-align:center;">
+                        <div style="font-size:12px; color:#15803d; font-weight:bold;">🎉 시공 파트너로 선정되었습니다!</div>
+                        <div style="font-size:16px; font-weight:800; color:#1e293b; margin-top:5px;">📞 ${bid.partner_phone}</div>
+                        <button onclick="writePartnerReview('${bid.partner_id}', '${bid.order_id}')" class="btn-round" style="margin-top:8px; width:100%; height:36px; font-size:12px;">⭐ 시공완료 후기 쓰기</button>
+                    </div>
+                `;
+            } else {
+                actionArea = `<button onclick="selectBid('${bid.id}', '${bid.order_id}')" class="btn-round primary" style="width:100%; margin-top:10px;">이 파트너 선택하기</button>`;
+            }
+
+            listHtml += `
+                <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:10px; ${bgClass}">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; font-size:15px;">${bid.company_name || '파트너사'}</span>
+                        <span style="font-weight:bold; color:#6366f1; font-size:16px;">${bid.price.toLocaleString()}원</span>
+                    </div>
+                    <p style="font-size:13px; color:#475569; margin:10px 0; line-height:1.4;">"${bid.message}"</p>
+                    ${actionArea}
+                </div>
+            `;
+        });
+
+        const modalHtml = `
+            <div id="bidListModal" class="modal-bg" style="display:flex; z-index:20000; align-items:center; justify-content:center;">
+                <div class="modal-box" style="width:400px; max-height:80vh; overflow-y:auto; background:#f8fafc;">
+                    <h3 style="margin-top:0;">📋 도착한 견적서 (${bids.length}건)</h3>
+                    <p style="color:#666; font-size:13px; margin-bottom:15px;">마음에 드는 파트너를 선택하여 공사를 진행하세요.</p>
+                    <div>${listHtml}</div>
+                    <button onclick="document.getElementById('bidListModal').remove()" class="btn-round" style="width:100%; margin-top:15px; background:#e2e8f0; color:#334155; border:none;">닫기</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    };
+
+    // [3] 파트너 선택 함수
+    window.selectBid = async function(bidId, orderId) {
+        if(!confirm("이 파트너를 선택하시겠습니까?\n선택 시 파트너의 연락처가 공개되며, 다른 입찰은 마감됩니다.")) return;
+
+        // 1. 해당 입찰 승인
+        await sb.from('bids').update({ status: 'selected' }).eq('id', bidId);
+        // 2. 나머지는 거절 처리
+        await sb.from('bids').update({ status: 'rejected' }).eq('order_id', orderId).neq('id', bidId);
+        // 3. 주문 상태 변경 (제작준비)
+        await sb.from('orders').update({ status: '제작준비' }).eq('id', orderId);
+
+        alert("✅ 파트너 선택 완료! 연락처를 확인하여 일정을 조율하세요.");
+        document.getElementById('bidListModal').remove();
+        checkBidsForOrder(orderId); // 모달 다시 열어서 결과 보여줌
+    };
+
+    // [4] 후기 작성 함수
+    window.writePartnerReview = async function(partnerId, orderId) {
+        const rating = prompt("평점을 입력해주세요 (1~5점):", "5");
+        if(!rating) return;
+        const comment = prompt("파트너에 대한 솔직한 후기를 남겨주세요:", "친절하고 꼼꼼하게 작업해주셨습니다!");
+        if(!comment) return;
+
+        const { data: { user } } = await sb.auth.getUser();
+        const { error } = await sb.from('partner_reviews').insert({
+            partner_id: partnerId,
+            order_id: orderId,
+            customer_id: user.id,
+            rating: parseInt(rating),
+            comment: comment
+        });
+
+        if(error) alert("작성 실패: " + error.message);
+        else alert("소중한 후기가 등록되었습니다!");
+    };
+</script>
 
 </body>
 </html>
@@ -3558,6 +3690,38 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         </button>
     </div>
 </div>
+
+<div id="partnerApplyModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 500px; max-width: 95%;">
+        <h3 style="margin-top:0;">🤝 파트너(가맹점) 신청</h3>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">지역 광고/제조 파트너가 되어 수익을 창출하세요.</p>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">업체명 (상호)</label>
+            <input id="applyCompName" class="ai-input-pretty" placeholder="예: 카멜레온디자인">
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">연락처</label>
+            <input id="applyPhone" class="ai-input-pretty" placeholder="010-1234-5678">
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">활동 지역 (구 단위까지 입력)</label>
+            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 경기 화성시">
+            <p style="font-size:11px; color:#ef4444; margin-top:5px;">* 정확한 매칭을 위해 시/군/구 단위까지 입력해주세요.</p>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+            <label class="form-label" style="font-weight:bold;">주 생산 품목 (제조사인 경우)</label>
+            <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)">
+        </div>
+
+        <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;">신청하기</button>
+        <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;">닫기</button>
+    </div>
+</div>
+
 <script>
 function updateVipFileList(input) {
     const list = document.getElementById('vipFileList');
@@ -3716,6 +3880,67 @@ function updateVipFileList(input) {
         </div>
     </div>
 </div>
+<div id="partnerApplyModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 500px; max-width: 95%;">
+        <h3 style="margin-top:0;">🤝 파트너(가맹점) 신청</h3>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">지역 광고/제조 파트너가 되어 수익을 창출하세요.</p>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">업체명 (상호)</label>
+            <input id="applyCompName" class="ai-input-pretty" placeholder="예: 카멜레온디자인">
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">연락처</label>
+            <input id="applyPhone" class="ai-input-pretty" placeholder="010-1234-5678">
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">활동 지역 (구 단위까지 입력)</label>
+            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 경기 화성시">
+            <p style="font-size:11px; color:#ef4444; margin-top:5px;">* 정확한 매칭을 위해 시/군/구 단위까지 입력해주세요.</p>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+            <label class="form-label" style="font-weight:bold;">주 생산 품목 (제조사인 경우)</label>
+            <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)">
+        </div>
 
+        <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;">신청하기</button>
+        <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;">닫기</button>
+    </div>
+</div>
+
+<script>
+    // 파트너 신청 제출 스크립트 (index.html 내부에 포함)
+    window.submitRealPartnerApp = async function() {
+        if (typeof sb === 'undefined') { alert("시스템 로딩 중입니다."); return; }
+
+        const comp = document.getElementById('applyCompName').value;
+        const phone = document.getElementById('applyPhone').value;
+        const region = document.getElementById('applyRegion').value;
+        const items = document.getElementById('applyMainItems').value;
+
+        if(!comp || !phone || !region) return alert("업체명, 연락처, 지역은 필수입니다.");
+
+        const { data: { user } } = await sb.auth.getUser();
+        if(!user) return alert("로그인이 필요합니다.");
+
+        const { error } = await sb.from('partner_applications').insert({
+            user_id: user.id,
+            company_name: comp,
+            contact_phone: phone,
+            region: region,
+            main_items: items,
+            status: 'pending'
+        });
+
+        if(error) alert("신청 오류: " + error.message);
+        else {
+            alert("✅ 신청이 완료되었습니다. 관리자 승인 후 이용 가능합니다.");
+            document.getElementById('partnerApplyModal').style.display='none';
+        }
+    };
+</script>
 </body>
 </html>

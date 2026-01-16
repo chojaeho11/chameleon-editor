@@ -511,9 +511,8 @@
     const currentCountry = (urlParams.get('country') || 'KR').toUpperCase();
     const postId = urlParams.get('id');
     
-    // [추가] 소분류 필터링용 파라미터
-    const subCode = urlParams.get('sub_code'); // 예: honeycomb_wall
-    const subName = urlParams.get('sub_name'); // 예: 허니콤 가벽
+    const subCode = urlParams.get('sub_code'); 
+    const subName = urlParams.get('sub_name'); 
 
     let quill; 
     let currentRating = 5; 
@@ -522,37 +521,21 @@
     const ITEMS_PER_PAGE = 12;
     let isLastPage = false;
 
-    // [SEO - 글로벌 타겟팅 강화]
+    // [SEO]
     function updateBoardSEO(postTitle = null, postContent = null, postImage = null) {
-        // 1. 국가별 카테고리 명칭 정의
         const catMap = {
             'KR': { 'blog': '블로그', 'review': '제작후기', 'promo': '홍보', 'trade': '장비거래', 'job': '구인구직', 'free': '자료실' },
             'JP': { 'blog': 'ブログ', 'review': 'レビュー', 'promo': 'PR', 'trade': '中古機器', 'job': '求人', 'free': '資料室' },
             'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files' }
         };
         const activeCatName = (catMap[currentCountry] || catMap['KR'])[category] || 'Board';
-
-        // 2. 국가별 기본 메타 데이터
         const metaData = {
-            'KR': { 
-                title: `카멜레온 ${activeCatName}`, 
-                desc: "카멜레온프린팅 커뮤니티 - 고객 후기, 중고 장비 거래, 구인구직 및 디자인 정보.",
-                locale: "ko_KR" 
-            },
-            'JP': { 
-                title: `カメレオン・${activeCatName}`, 
-                desc: "カメレオンプリンティング公式コミュニティ - 顧客レビュー、中古機器取引、求人情報など。",
-                locale: "ja_JP" 
-            },
-            'US': { 
-                title: `Chameleon ${activeCatName}`, 
-                desc: "Chameleon Printing Community - Customer reviews, Used equipment market, and Design resources.",
-                locale: "en_US" 
-            }
+            'KR': { title: `카멜레온 ${activeCatName}`, desc: "카멜레온프린팅 커뮤니티.", locale: "ko_KR" },
+            'JP': { title: `カメレオン・${activeCatName}`, desc: "カメレオンプリンティング公式コミュニティ。", locale: "ja_JP" },
+            'US': { title: `Chameleon ${activeCatName}`, desc: "Chameleon Printing Community.", locale: "en_US" }
         };
         const defaultData = metaData[currentCountry] || metaData['KR'];
 
-        // 3. 게시글 상세 정보가 있으면 덮어쓰기 (다국어 환경 고려)
         let finalTitle = defaultData.title;
         let finalDesc = defaultData.desc;
         let finalImage = "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png"; 
@@ -563,7 +546,6 @@
             if (postImage) finalImage = postImage;
         }
 
-        // 4. 메타 태그 업데이트
         document.title = finalTitle;
         document.documentElement.setAttribute('lang', currentCountry.toLowerCase());
 
@@ -583,13 +565,14 @@
         setMeta('meta[property="og:description"]', finalDesc);
         setMeta('meta[property="og:image"]', finalImage);
         setMeta('meta[property="og:url"]', window.location.href);
-        setMeta('meta[property="og:locale"]', defaultData.locale); // 언어/지역 정보 명시
+        setMeta('meta[property="og:locale"]', defaultData.locale);
     }
-    // [추가] 목록으로 돌아가기 함수 (이게 없어서 에러가 발생했습니다)
+
     window.goToList = function() {
         showSection('list');
-        loadPostList(); // 목록을 새로고침하여 최신 글을 보여줍니다.
+        loadPostList();
     };
+
     async function init() {
         await initConfig();
         updateBoardSEO();
@@ -608,13 +591,12 @@
             'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書' }
         }[category] || { KR: '게시판', US: 'Board', JP: '掲示板' };
         
-        // [수정] 소분류 이름이 있으면 제목을 'OOO 후기'로 변경
         if (subName && category === 'review') {
             document.getElementById('pageTitle').innerText = `${subName} 후기`;
             const badge = document.getElementById('countryBadge');
             badge.style.background = '#6366f1';
             badge.style.color = '#fff';
-            badge.innerText = "PRODUCT"; // 뱃지 변경
+            badge.innerText = "PRODUCT";
         } else {
             document.getElementById('pageTitle').innerText = titleMap[currentCountry] || titleMap['KR'];
         }
@@ -648,18 +630,13 @@
         setupEventListeners();
     }
 
-    // ★★★ [핵심] 이미지 강제 압축 (Supabase Pro 기능 사용) ★★★
     function getResizedImage(url) {
         if (!url) return null;
-        if (url.startsWith('data:image')) return url; // Base64는 패스
-        
-        // Supabase 이미지라면 서버에서 300px, WebP 포맷으로 변환해서 가져오게 함
+        if (url.startsWith('data:image')) return url;
         if (url.includes('supabase.co')) {
             const baseUrl = url.split('?')[0];
             return `${baseUrl}?width=300&height=300&resize=cover&quality=50&format=webp`;
         }
-        
-        // 외부 이미지는 wsrv.nl 경유
         return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=300&q=50&output=webp`;
     }
 
@@ -678,13 +655,11 @@
             const from = currentPage * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
 
-            // [최적화 & 수정] 쿼리 분리 및 필터링 추가
             let query = sb.from('community_posts')
                 .select('id, title, author_name, created_at, view_count, thumbnail, rating') 
                 .eq('category', category)
                 .eq('country_code', currentCountry);
 
-            // [추가] 소분류 코드가 있으면 해당 제품의 후기만 가져옴
             if (subCode) {
                 query = query.eq('target_code', subCode);
             }
@@ -713,9 +688,7 @@
             listEl.style.display = 'grid';
 
             data.forEach(post => {
-                // ★ 썸네일을 압축된 URL로 교체
                 const thumbSrc = getResizedImage(post.thumbnail);
-                
                 let starHtml = '';
                 if (category === 'review' && post.rating) {
                     starHtml = `<div style="color:#f59e0b; font-size:12px; margin-bottom:5px;">`;
@@ -725,8 +698,6 @@
 
                 const card = document.createElement('div');
                 card.className = 'post-card';
-                
-                // 이미지가 깨지면 원본을 시도하되, 기본적으로는 압축된 것만 로드
                 card.innerHTML = `
                     <div class="card-thumb">
                         ${thumbSrc 
@@ -750,7 +721,7 @@
             console.error(e);
             if(!isAppend) {
                 listEl.style.display = 'block';
-                listEl.innerHTML = `<div style="text-align:center; padding:50px; color:#ef4444;">서버 연결이 원활하지 않습니다.<br>잠시 후 다시 시도해주세요.<br><span style="font-size:12px;">(${e.message})</span></div>`;
+                listEl.innerHTML = `<div style="text-align:center; padding:50px; color:#ef4444;">서버 연결 실패 (${e.message})</div>`;
             }
         }
     }
@@ -763,7 +734,6 @@
             if (error) throw error;
             if (!post) return alert('삭제된 글입니다.'), goToList();
 
-            // [SEO 적용] 불러온 게시글 정보로 검색엔진 메타태그 즉시 업데이트
             updateBoardSEO(post.title, post.content, post.thumbnail);
             
             const ratingArea = document.getElementById('viewRatingArea');
@@ -792,24 +762,118 @@
         }
     }
 
+    // [수정] 댓글 목록 불러오기 (수정/삭제 버튼 포함)
     async function loadComments(postId) {
         const listDiv = document.getElementById('commentList');
         listDiv.innerHTML = '댓글 로딩 중...';
+        
         try {
-            const { data: comments } = await sb.from('community_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+            const { data: comments, error } = await sb
+                .from('community_comments')
+                .select('*')
+                .eq('post_id', postId)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+            
             listDiv.innerHTML = '';
-            if(!comments || comments.length === 0) { listDiv.innerHTML = '<p style="color:#999; text-align:center;">첫 번째 댓글을 남겨주세요!</p>'; return; }
+            
+            if (!comments || comments.length === 0) { 
+                listDiv.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">첫 번째 댓글을 남겨주세요!</p>'; 
+                return; 
+            }
+
             comments.forEach(cmt => {
                 const item = document.createElement('div');
                 item.className = 'comment-item';
-                item.innerHTML = `<div class="comment-top"><span class="comment-author">${cmt.author_name}</span><span class="comment-date">${new Date(cmt.created_at).toLocaleDateString()}</span></div><div class="comment-text">${cmt.content.replace(/\n/g, '<br>')}</div>`;
+                item.id = `comment-${cmt.id}`; 
+
+                const safeName = cmt.author_name ? cmt.author_name.replace(/</g, "&lt;") : "익명";
+                const safeContent = cmt.content ? cmt.content.replace(/</g, "&lt;").replace(/\n/g, '<br>') : "";
+
+                const btnHtml = `
+                    <div style="margin-left:auto; font-size:12px; display:flex; gap:8px;">
+                        <span onclick="window.enableEditComment(${cmt.id})" style="cursor:pointer; color:#6366f1; font-weight:bold;">수정</span>
+                        <span onclick="window.deleteComment(${cmt.id})" style="cursor:pointer; color:#ef4444; font-weight:bold;">삭제</span>
+                    </div>
+                `;
+
+                item.innerHTML = `
+                    <div class="comment-top" style="display:flex; align-items:center;">
+                        <span class="comment-author" id="author-${cmt.id}" style="font-weight:bold; margin-right:10px;">${safeName}</span>
+                        <span class="comment-date" style="font-size:12px; color:#999;">${new Date(cmt.created_at).toLocaleDateString()}</span>
+                        ${btnHtml}
+                    </div>
+                    <div class="comment-text" id="content-${cmt.id}" style="margin-top:5px; line-height:1.5;">${safeContent}</div>
+                `;
                 listDiv.appendChild(item);
             });
-        } catch(e) { listDiv.innerHTML = '<p style="color:red;">댓글 로딩 실패</p>'; }
+
+        } catch(e) { 
+            console.error(e);
+            listDiv.innerHTML = '<p style="color:red; text-align:center;">댓글 로딩 실패</p>'; 
+        }
     }
+
+    // [기능] 댓글 수정 모드
+    window.enableEditComment = function(cmtId) {
+        const itemDiv = document.getElementById(`comment-${cmtId}`);
+        const authorSpan = document.getElementById(`author-${cmtId}`);
+        const contentDiv = document.getElementById(`content-${cmtId}`);
+
+        const currentName = authorSpan ? authorSpan.innerText : "";
+        const currentContent = contentDiv ? contentDiv.innerHTML.replace(/<br\s*\/?>/gi, "\n").replace(/&lt;/g, "<").replace(/&gt;/g, ">") : "";
+
+        itemDiv.innerHTML = `
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <input id="edit-name-${cmtId}" class="ai-input-pretty" value="${currentName}" style="width:120px; padding:5px; font-size:13px;" placeholder="이름">
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="window.saveComment(${cmtId})" class="btn primary" style="padding:4px 10px; font-size:12px;">저장</button>
+                        <button onclick="loadComments('${postId}')" class="btn" style="padding:4px 10px; font-size:12px; background:white; border:1px solid #ddd; color:#333;">취소</button>
+                    </div>
+                </div>
+                <textarea id="edit-content-${cmtId}" class="ai-input-pretty" style="width:100%; height:60px; padding:5px; font-size:14px;">${currentContent}</textarea>
+            </div>
+        `;
+    };
+
+    // [기능] 댓글 저장
+    window.saveComment = async function(cmtId) {
+        const newName = document.getElementById(`edit-name-${cmtId}`).value;
+        const newContent = document.getElementById(`edit-content-${cmtId}`).value;
+
+        if (!newName.trim() || !newContent.trim()) return alert("내용을 입력해주세요.");
+        if(!confirm("수정하시겠습니까?")) return;
+
+        try {
+            const { error } = await sb.from('community_comments').update({ author_name: newName, content: newContent }).eq('id', cmtId);
+            if (error) throw error;
+            loadComments(postId);
+        } catch (e) {
+            console.error(e);
+            alert("수정 실패: " + e.message);
+        }
+    };
+
+    // [기능] 댓글 삭제
+    window.deleteComment = async function(cmtId) {
+        if (!confirm("정말 삭제하시겠습니까?")) return;
+        try {
+            const { error } = await sb.from('community_comments').delete().eq('id', cmtId);
+            if (error) throw error;
+            loadComments(postId);
+        } catch (e) {
+            console.error(e);
+            alert("삭제 실패: " + e.message);
+        }
+    };
 
     function createLoadMoreButton() {
         const listContainer = document.querySelector('.board-container');
+        const oldBtn = document.getElementById('loadMoreArea');
+        if(oldBtn) oldBtn.remove();
+
         const btnDiv = document.createElement('div');
         btnDiv.id = 'loadMoreArea';
         btnDiv.style.textAlign = 'center';
@@ -844,25 +908,20 @@
         showSection('write');
     };
 
-    // [수정] 게시글 삭제 함수 (안전성 강화)
     window.deleteCurrentPost = async function() {
         if(!confirm("정말 삭제하시겠습니까? (복구할 수 없습니다)")) return;
-        
-        // 삭제 버튼 잠금
         const btn = document.getElementById('btnDeletePost');
         if(btn) btn.disabled = true;
 
         try {
-            // 1. 댓글 먼저 삭제 (댓글이 없어도 에러나지 않도록 처리)
             const { error: cmtError } = await sb.from('community_comments').delete().eq('post_id', postId);
-            if (cmtError) console.warn("댓글 삭제 중 경고(무시가능):", cmtError.message);
+            if (cmtError) console.warn("댓글 삭제 경고:", cmtError.message);
 
-            // 2. 게시글 삭제
             const { error: postError } = await sb.from('community_posts').delete().eq('id', postId);
             if (postError) throw postError;
 
             alert("삭제되었습니다.");
-            window.goToList(); // 목록으로 이동
+            window.goToList(); 
 
         } catch(e) { 
             console.error(e);
@@ -897,16 +956,12 @@
             showSection('write');
         };
 
-        // [수정] 글쓰기 등록 (중복 클릭 방지 적용)
         document.getElementById('btnSubmitPost').onclick = async () => {
             const btn = document.getElementById('btnSubmitPost');
-            
-            // 1. 유효성 검사
             const title = document.getElementById('inputTitle').value;
             const content = quill.root.innerHTML; 
             if (!title) return alert('제목을 입력해주세요.');
 
-            // 2. 버튼 잠금 (중복 전송 방지)
             const originalText = btn.innerText;
             btn.innerText = "처리 중...";
             btn.disabled = true;
@@ -937,17 +992,14 @@
                     alert("수정 완료되었습니다.");
                     location.reload();
                 } else {
-                    // 신규 등록
                     payload.category = category;
                     payload.country_code = currentCountry;
                     payload.author_id = authorId;
                     payload.author_name = authorName;
                     payload.author_email = authorEmail;
                     
-                    // [추가] 소분류 타겟 코드 저장 (이게 있어야 나중에 필터링 됨)
                     if (subCode) {
                         payload.target_code = subCode;
-                        // 제목 앞에 자동으로 [제품명] 말머리 추가
                         if (!payload.title.includes(`[${subName}]`)) {
                             payload.title = `[${subName}] ` + payload.title;
                         }
@@ -957,12 +1009,11 @@
                     if (error) throw error;
                     
                     alert('등록되었습니다.');
-                    window.goToList(); // 목록으로 이동
+                    window.goToList(); 
                 }
             } catch (e) {
                 console.error(e);
                 alert("처리 실패: " + e.message);
-                // 실패했을 때만 버튼 다시 활성화
                 btn.innerText = originalText;
                 btn.disabled = false;
             }

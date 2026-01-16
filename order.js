@@ -928,7 +928,8 @@ async function processOrderSubmission() {
 
             // [핵심] 관리자 페이지 호환용 단가 계산 (총액 ÷ 수량)
             // 관리자 페이지는 (단가 × 수량)으로 총액을 보여주므로, 여기서 나누어서 저장해야 함
-            const compatibleUnitPrice = itemFinalTotal / qty;
+            // [수정] 소수점 발생 시 오류가 나므로 정수로 내림 처리 (Math.floor)
+            const compatibleUnitPrice = Math.floor(itemFinalTotal / qty);
 
             return {
                 product: { 
@@ -969,7 +970,7 @@ async function processOrderSubmission() {
             phone, 
             address, 
             request_note: request, 
-            status: '접수대기', 
+            status: '임시작성', // [수정] 결제 전에는 관리자에 안 보이게 '임시작성'으로 저장
             payment_status: '미결제', 
             total_amount: finalTotal, 
             items: itemsToSave, 
@@ -1203,10 +1204,11 @@ async function processFinalPayment() {
         if (!depositorName) return alert("입금자명을 입력해주세요.");
 
         if(confirm(window.t('confirm_bank_payment'))) {
-            // ★ 수정: depositor_name 함께 업데이트
+            // [수정] 결제확인(신청)을 눌렀으므로 상태를 '접수됨'으로 변경하여 관리자에게 노출
             await sb.from('orders').update({ 
+                status: '접수됨', // 이제 관리자 페이지에 보임
                 payment_method: '무통장입금', 
-                payment_status: '입금대기',
+                payment_status: '입금대기', // 아직 입금확인은 안된 상태
                 depositor_name: depositorName 
             }).eq('id', window.currentDbId);
             

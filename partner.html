@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>카멜레온 파트너스 센터</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <style>
+        /* 공통 스타일 (PC/모바일 모두 적용) */
+        body { margin: 0; background: #f8fafc; font-family: 'Pretendard', sans-serif; color: #334155; }
+        * { box-sizing: border-box; }
+
+        /* 상단 헤더 */
+        .header { 
+            background: white; border-bottom: 1px solid #e2e8f0; 
+            position: sticky; top: 0; z-index: 100; 
+            padding: 0 20px; height: 60px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand { font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .my-badge { background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+
+        /* PC용 상단 네비게이션 (모바일에서 숨김) */
+        .desktop-nav { display: flex; gap: 20px; height: 100%; }
+        .d-nav-item { 
+            display: flex; align-items: center; height: 100%; 
+            font-size: 15px; font-weight: bold; color: #64748b; cursor: pointer; 
+            border-bottom: 3px solid transparent; transition: 0.2s;
+        }
+        .d-nav-item:hover { color: #6366f1; }
+        .d-nav-item.active { color: #6366f1; border-bottom-color: #6366f1; }
+
+        /* 메인 컨테이너 (반응형 핵심) */
+        .container { 
+            max-width: 1200px; margin: 0 auto; padding: 30px 20px; 
+            padding-bottom: 80px; /* 모바일 하단바 공간 확보 */
+        }
+
+        /* 그리드 시스템 (PC: 3열 / 태블릿: 2열 / 모바일: 1열) */
+        .grid-layout { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+            gap: 20px; 
+        }
+
+        /* 카드 스타일 */
+        .order-card { 
+            background: white; border: 1px solid #e2e8f0; border-radius: 16px; 
+            padding: 25px; position: relative; transition: 0.2s;
+            display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .order-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+        .status-badge { font-size: 12px; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
+        .badge-new { background: #dbeafe; color: #1e40af; }
+        .badge-wait { background: #f1f5f9; color: #64748b; }
+        
+        .card-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
+        .card-info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+        .card-info i { width: 20px; text-align: center; margin-right: 5px; color: #94a3b8; }
+
+        /* 버튼 */
+        .btn { 
+            width: 100%; padding: 12px; border-radius: 8px; border: none; 
+            font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-primary:hover { background: #4f46e5; }
+        .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
+        .btn-outline:hover { background: #f8fafc; }
+
+        /* 모바일 하단 네비게이션 (기본 숨김 -> 미디어쿼리에서 표시) */
+        .mobile-bottom-nav { 
+            display: none; /* PC에서는 안보임 */
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: white; border-top: 1px solid #e2e8f0; 
+            justify-content: space-around; padding: 12px 0; z-index: 90;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+        }
+        .m-nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #94a3b8; cursor: pointer; }
+        .m-nav-item.active { color: #6366f1; font-weight: bold; }
+        .m-nav-item i { font-size: 20px; margin-bottom: 4px; }
+
+        /* 모달 스타일 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-box { background: white; width: 450px; max-width: 90%; border-radius: 16px; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .input-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; font-family: inherit; }
+
+        /* ★ 반응형 미디어 쿼리 (모바일 화면 설정) */
+        @media (max-width: 768px) {
+            .desktop-nav { display: none; } /* PC 메뉴 숨김 */
+            .mobile-bottom-nav { display: flex; } /* 모바일 하단바 표시 */
+            .header { padding: 0 15px; }
+            .container { padding: 20px 15px 90px 15px; } /* 하단바 가림 방지 */
+            .grid-layout { grid-template-columns: 1fr; } /* 카드를 1열로 */
+            .order-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="brand" onclick="location.reload()">
+            <i class="fa-solid fa-handshake" style="color:#6366f1;"></i> Partners Center
+        </div>
+        
+        <div class="desktop-nav">
+            <div class="d-nav-item active" onclick="switchTab('pool')" id="pc-tab-pool">입찰 가능 오더</div>
+            <div class="d-nav-item" onclick="switchTab('my')" id="pc-tab-my">내 입찰 현황</div>
+            <div class="d-nav-item" onclick="switchTab('reviews')" id="pc-tab-reviews">평점/후기</div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button id="btnSoundOn" onclick="window.enableSound()" class="btn-primary" style="padding:6px 12px; width:auto; font-size:12px; border-radius:20px; background:#ef4444; border:none; box-shadow:0 0 10px rgba(239, 68, 68, 0.5);">
+                🔕 소리 알림 켜기 (클릭)
+            </button>
+            
+            <div class="my-badge" id="myRegionBadge">지역 로딩중</div>
+            <button onclick="logout()" class="btn-outline" style="padding:6px 12px; width:auto; font-size:12px; display:none;" id="pcLogoutBtn">로그아웃</button>
+        </div>
+    </div>
+
+    <div id="tab-pool" class="container">
+        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;">📍 우리 지역 실시간 입찰 (Order Pool)</h2>
+        <div id="orderPoolList" class="grid-layout">
+            <div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>주문을 불러오는 중...
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-my" class="container" style="display:none;">
+        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;">📋 내가 참여한 입찰</h2>
+        <div id="myBidList" class="grid-layout"></div>
+    </div>
+
+    <div id="tab-reviews" class="container" style="display:none;">
+        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;">⭐ 고객 후기 관리</h2>
+        <div style="background:white; padding:30px; border-radius:16px; border:1px solid #e2e8f0; text-align:center; margin-bottom:30px;">
+            <div style="font-size:14px; color:#64748b;">나의 평균 평점</div>
+            <div style="font-size:48px; font-weight:900; color:#1e293b;" id="myAvgRating">0.0</div>
+            <div style="color:#f59e0b; letter-spacing:2px; font-size:20px;" id="myStarDisplay">⭐⭐⭐⭐⭐</div>
+            <p style="margin-top:10px; color:#64748b;">총 <strong id="myReviewCount">0</strong>개의 시공 후기가 있습니다.</p>
+        </div>
+        <div id="reviewList" class="grid-layout"></div>
+    </div>
+
+    <div id="bidModal" class="modal">
+        <div class="modal-box">
+            <h3 style="margin-top:0; font-size:20px;">📝 견적서 제출 (입찰)</h3>
+            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">고객에게 제시할 최종 시공/제작 비용을 입력하세요.</p>
+            
+            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">입찰 금액 (원)</label>
+            <input type="number" id="bidPrice" class="input-box" placeholder="숫자만 입력 (예: 150000)">
+            
+            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">담당자 연락처 (필수)</label>
+            <input type="text" id="bidPartnerPhone" class="input-box" placeholder="예: 010-1234-5678">
+
+            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">파트너 코멘트 (어필하기)</label>
+            <textarea id="bidMessage" class="input-box" style="height:100px; resize:none;" placeholder="예: 꼼꼼한 마감 약속드립니다. 내일 오후 방문 가능합니다."></textarea>
+            
+            <input type="hidden" id="targetOrderId">
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeBidModal()" class="btn btn-outline">취소</button>
+                <button onclick="submitBid()" class="btn btn-primary">제출하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-bottom-nav">
+        <div class="m-nav-item active" onclick="switchTab('pool')" id="mb-tab-pool">
+            <i class="fa-solid fa-map-location-dot"></i> 오더찾기
+        </div>
+        <div class="m-nav-item" onclick="switchTab('my')" id="mb-tab-my">
+            <i class="fa-solid fa-clipboard-list"></i> 내 입찰
+        </div>
+        <div class="m-nav-item" onclick="switchTab('reviews')" id="mb-tab-reviews">
+            <i class="fa-solid fa-star"></i> 평점관리
+        </div>
+        <div class="m-nav-item" onclick="location.href='index.html'">
+            <i class="fa-solid fa-house"></i> 홈으로
+        </div>
+        <div class="m-nav-item" onclick="logout()" style="color:#ef4444;">
+            <i class="fa-solid fa-right-from-bracket"></i> 로그아웃
+        </div>
+    </div>
+
+<script type="module">
+    import { sb, initConfig, currentUser } from './config.js?v=119';
+
+    // 전역 변수
+    let myPartnerInfo = null;
+
+    window.onload = async () => {
+        await initConfig();
+        checkPartnerAuth();
+        
+        // 화면 크기에 따라 로그아웃 버튼 표시 조정
+        if(window.innerWidth > 768) {
+            document.getElementById('pcLogoutBtn').style.display = 'block';
+        }
+    };
+
+    // 파트너 권한 체크 및 정보 로드
+    async function checkPartnerAuth() {
+        const { data: { user } } = await sb.auth.getUser();
+        if(!user) {
+            alert("로그인이 필요합니다.");
+            location.href = 'index.html';
+            return;
+        }
+
+        const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        if(!profile || (profile.role !== 'franchise' && profile.role !== 'admin')) {
+            alert("파트너(가맹점) 권한이 없습니다.");
+            location.href = 'index.html';
+            return;
+        }
+
+        myPartnerInfo = profile;
+        document.getElementById('myRegionBadge').innerText = profile.region ? `📍 ${profile.region}` : '전국';
+        
+        loadOrderPool(); 
+        loadMyReviews(); 
+    }
+
+    // 탭 전환 (PC/모바일 메뉴 동시 적용)
+    window.switchTab = (tabId) => {
+        // 컨텐츠 전환
+        document.querySelectorAll('.container').forEach(el => el.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+        
+        // PC 메뉴 활성화
+        document.querySelectorAll('.d-nav-item').forEach(el => el.classList.remove('active'));
+        const pcTab = document.getElementById('pc-tab-' + tabId);
+        if(pcTab) pcTab.classList.add('active');
+
+        // 모바일 메뉴 활성화
+        document.querySelectorAll('.m-nav-item').forEach(el => el.classList.remove('active'));
+        const mbTab = document.getElementById('mb-tab-' + tabId);
+        if(mbTab) mbTab.classList.add('active');
+
+        if(tabId === 'pool') loadOrderPool();
+        if(tabId === 'my') loadMyBids();
+    };
+
+    // 1. 주문 풀 로드 (수정됨: 접수대기 + 접수됨 모두 조회)
+    // 1. 주문 풀 로드 (수정됨: 파일/연락처 보기 복구)
+    async function loadOrderPool() {
+        const list = document.getElementById('orderPoolList');
+        
+        // 접수대기 또는 접수됨 상태인 주문 조회
+        const { data: orders, error } = await sb.from('orders')
+            .select('*')
+            .in('status', ['접수대기', '접수됨']) 
+            .order('created_at', { ascending: false });
+
+        if(error) return console.error(error);
+        
+        list.innerHTML = '';
+        if(!orders || orders.length === 0) {
+            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">현재 입찰 가능한 주문이 없습니다.</div>';
+            return;
+        }
+
+        orders.forEach(o => {
+            const dateStr = new Date(o.created_at).toLocaleDateString();
+            const addr = o.address || '주소 미기재';
+            const cost = o.total_amount.toLocaleString();
+            const phone = o.phone || '연락처 없음'; // [복구] 고객 연락처
+            
+            // 아이템 요약
+            let itemText = '상세내용 없음';
+            try {
+                const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+                if(items && items.length > 0) itemText = items[0].productName + (items.length>1 ? ` 외 ${items.length-1}건` : '');
+            } catch(e){}
+
+            // [복구] 파일 다운로드 버튼 생성
+            let fileHtml = '';
+            if (o.files && Array.isArray(o.files) && o.files.length > 0) {
+                fileHtml = '<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e2e8f0;">';
+                fileHtml += '<div style="font-size:11px; font-weight:bold; color:#64748b; margin-bottom:5px;">📂 고객 첨부 파일 (클릭하여 확인)</div>';
+                fileHtml += '<div style="display:flex; flex-wrap:wrap; gap:5px;">';
+                o.files.forEach(f => {
+                    // 파일명 디코딩 (한글 깨짐 방지)
+                    let fname = f.name;
+                    try { fname = decodeURIComponent(fname); } catch(e){}
+                    
+                    fileHtml += `<a href="${f.url}" target="_blank" class="btn-outline" style="padding:6px 10px; font-size:11px; text-decoration:none; display:inline-flex; align-items:center; width:auto; border-radius:4px; background:#f8fafc;">📄 ${fname}</a>`;
+                });
+                fileHtml += '</div></div>';
+            } else {
+                fileHtml = '<div style="font-size:12px; color:#ccc; margin-top:10px;">첨부파일 없음</div>';
+            }
+
+            list.innerHTML += `
+                <div class="order-card">
+                    <div>
+                        <div class="card-header">
+                            <span class="status-badge badge-new">신규주문</span>
+                            <span style="font-size:12px; color:#94a3b8;">${dateStr}</span>
+                        </div>
+                        <div class="card-title">
+                            ${o.manager_name} 고객님 
+                            <span style="font-size:14px; font-weight:normal; color:#2563eb; margin-left:5px;">(${phone})</span>
+                        </div>
+                        <div class="card-info">
+                            <div><i class="fa-solid fa-location-dot"></i> ${addr}</div>
+                            <div><i class="fa-solid fa-box"></i> ${itemText}</div>
+                            <div style="margin-top:5px; color:#6366f1; font-weight:bold;">예산 규모: ${cost}원</div>
+                        </div>
+                        ${fileHtml} </div>
+                    <button class="btn btn-primary" style="margin-top:15px;" onclick="openBidModal('${o.id}')">
+                        🖐 입찰 참여하기
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    // 2. 입찰 모달
+    window.openBidModal = (orderId) => {
+        document.getElementById('targetOrderId').value = orderId;
+        document.getElementById('bidPrice').value = '';
+        document.getElementById('bidMessage').value = '';
+        document.getElementById('bidModal').style.display = 'flex';
+    };
+    window.closeBidModal = () => document.getElementById('bidModal').style.display = 'none';
+
+    // 3. 입찰 제출 (수정됨)
+    window.submitBid = async () => {
+        const orderId = document.getElementById('targetOrderId').value;
+        const price = document.getElementById('bidPrice').value;
+        const msg = document.getElementById('bidMessage').value;
+        const phone = document.getElementById('bidPartnerPhone').value; // [추가]
+
+        if(!price) return alert("견적 금액을 입력해주세요.");
+        if(!phone) return alert("연락처를 입력해주세요."); // [추가]
+
+        const { error } = await sb.from('bids').insert({
+            order_id: orderId,
+            partner_id: myPartnerInfo.id,
+            company_name: myPartnerInfo.company_name || '파트너', 
+            partner_phone: phone, // [변경] 입력한 연락처 저장
+            price: parseInt(price),
+            message: msg,
+            status: 'pending'
+        });
+
+        if(error) {
+            alert("입찰 실패: " + error.message);
+        } else {
+            alert("✅ 입찰서가 고객님께 전달되었습니다.");
+            closeBidModal();
+            window.switchTab('my');
+        }
+    };
+
+    // [수정됨] 4. 내 입찰 현황 (파일 보기 기능 추가)
+    async function loadMyBids() {
+        const list = document.getElementById('myBidList');
+        
+        // [수정] orders 테이블에서 'files' 컬럼도 같이 가져오도록 추가
+        const { data: bids, error } = await sb.from('bids')
+            .select('*, orders(manager_name, address, phone, selected_customer_phone, files)')
+            .eq('partner_id', myPartnerInfo.id)
+            .order('created_at', { ascending: false });
+
+        if(error) return;
+        
+        list.innerHTML = '';
+        if(!bids || bids.length === 0) {
+            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">참여한 입찰 내역이 없습니다.</div>';
+            return;
+        }
+
+        bids.forEach(bid => {
+            let badge = `<span class="status-badge badge-wait">대기중</span>`;
+            let extraInfo = '';
+
+            // 매칭 상태에 따른 배지 및 연락처 표시
+            if(bid.status === 'selected') {
+                badge = `<span class="status-badge" style="background:#dcfce7; color:#166534;">🎉 매칭성공</span>`;
+                const customerPhone = bid.orders?.selected_customer_phone || bid.orders?.phone || "번호 없음";
+                
+                // [추가됨] 납품완료 버튼
+                let completeBtn = '';
+                // [수정됨] 이미 배송완료 상태가 아니라면 버튼 표시
+                if (bid.orders?.status !== '배송완료' && bid.orders?.status !== '구매확정') {
+                    // ★ 중요: bid.orders.id 대신 bid.order_id 사용 (안전함)
+                    completeBtn = `<button onclick="window.completeDelivery('${bid.order_id}')" class="btn btn-primary" style="margin-top:10px; background:#15803d;">🚀 납품/시공 완료 처리</button>`;
+                } else {
+                    completeBtn = `<div style="margin-top:10px; color:#15803d; font-weight:bold; text-align:center;">🏁 납품 완료됨 (후기 대기중)</div>`;
+                }
+
+                extraInfo = `
+                    <div style="margin-top:15px; padding:15px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px;">
+                        <div style="font-size:14px; font-weight:bold; color:#166534; margin-bottom:5px;">✅ 고객님과 매칭되었습니다!</div>
+                        <div style="font-size:20px; font-weight:900; color:#1e293b;">📞 ${customerPhone}</div>
+                        <div style="font-size:12px; color:#15803d; margin-top:5px;">위 번호로 연락하여 일정을 조율해주세요.</div>
+                        ${completeBtn}
+                    </div>`;
+            } else if (bid.status === 'rejected') {
+                badge = `<span class="status-badge" style="background:#fee2e2; color:#b91c1c;">미선택</span>`;
+            }
+
+            // [추가됨] 파일 다운로드 버튼 생성 로직
+            let fileHtml = '';
+            if (bid.orders?.files && Array.isArray(bid.orders.files) && bid.orders.files.length > 0) {
+                fileHtml = '<div style="margin-top:15px; padding-top:10px; border-top:1px dashed #e2e8f0;">';
+                fileHtml += '<div style="font-size:11px; font-weight:bold; color:#64748b; margin-bottom:5px;">📂 관련 첨부 파일</div>';
+                fileHtml += '<div style="display:flex; flex-wrap:wrap; gap:5px;">';
+                bid.orders.files.forEach(f => {
+                    let fname = f.name;
+                    try { fname = decodeURIComponent(fname); } catch(e){}
+                    fileHtml += `<a href="${f.url}" target="_blank" class="btn-outline" style="padding:6px 10px; font-size:11px; text-decoration:none; display:inline-flex; align-items:center; width:auto; border-radius:4px; background:#f8fafc;">📄 ${fname}</a>`;
+                });
+                fileHtml += '</div></div>';
+            } else {
+                fileHtml = '<div style="margin-top:10px; font-size:12px; color:#ccc;">첨부파일 없음</div>';
+            }
+
+            list.innerHTML += `
+                <div class="order-card">
+                    <div class="card-header">
+                        ${badge}
+                        <span style="font-size:12px; color:#94a3b8;">${new Date(bid.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="card-title">${bid.orders?.manager_name} 고객님</div>
+                    <div class="card-info">
+                        <div>내 입찰가: <b>${bid.price.toLocaleString()}원</b></div>
+                        <div style="white-space:pre-wrap;">"${bid.message}"</div>
+                    </div>
+                    ${extraInfo}
+                    ${fileHtml} </div>
+            `;
+        });
+    }
+
+    // [신규] 파트너용 실시간 음성 알림 시스템
+    let lastOrderCountGlobal = 0;
+    let lastMatchCountGlobal = 0;
+
+    async function monitorPartnerStatus() {
+        if(!myPartnerInfo) return;
+
+        // 1. 새로운 주문 체크 (입찰 요청)
+        const { count: orderCount } = await sb.from('orders')
+            .select('*', { count: 'exact', head: true })
+            .in('status', ['접수대기', '접수됨']);
+        
+        if (lastOrderCountGlobal !== 0 && orderCount > lastOrderCountGlobal) {
+            speakTTS("새로운 주문이 들어왔습니다. 입찰에 참여해주세요.");
+            loadOrderPool(); // 화면 갱신
+        }
+        lastOrderCountGlobal = orderCount || 0;
+
+        // 2. 매칭 성공 체크 (연락 요청)
+        const { count: matchCount } = await sb.from('bids')
+            .select('*', { count: 'exact', head: true })
+            .eq('partner_id', myPartnerInfo.id)
+            .eq('status', 'selected');
+
+        if (lastMatchCountGlobal !== 0 && matchCount > lastMatchCountGlobal) {
+            speakTTS("축하합니다! 고객님과 매칭되었습니다. 지금 바로 연락해주세요.");
+            loadMyBids(); // 화면 갱신
+        }
+        lastMatchCountGlobal = matchCount || 0;
+    }
+
+    // TTS 음성 출력 함수
+    function speakTTS(text) {
+        if ('speechSynthesis' in window) {
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'ko-KR';
+            msg.rate = 1.0; 
+            window.speechSynthesis.speak(msg);
+        }
+    }
+
+    // [중요] 10초마다 상태 체크 실행
+    setInterval(monitorPartnerStatus, 10000);
+
+    // [신규] 파트너용 납품 완료 처리 함수
+    window.completeDelivery = async function(orderId) {
+        if(!confirm("작업(배송/시공)을 완료하셨습니까?\n확인 시 고객님에게 '후기 작성' 버튼이 활성화됩니다.")) return;
+
+        const { error } = await sb.from('orders').update({ status: '배송완료' }).eq('id', orderId);
+        
+        if(error) alert("오류: " + error.message);
+        else {
+            alert("✅ 완료 처리되었습니다. 수고하셨습니다!");
+            loadMyBids();
+        }
+    };
+    // [누락된 함수 복구] 5. 내 리뷰/평점 로드
+    async function loadMyReviews() {
+        if (!myPartnerInfo) return;
+
+        // 평점 정보 표시 (UI 업데이트)
+        const avg = myPartnerInfo.avg_rating || 0;
+        const count = myPartnerInfo.review_count || 0;
+        
+        const avgEl = document.getElementById('myAvgRating');
+        if(avgEl) avgEl.innerText = avg.toFixed(1);
+        
+        const countEl = document.getElementById('myReviewCount');
+        if(countEl) countEl.innerText = count;
+        
+        let stars = '';
+        for(let i=0; i<5; i++) stars += i < Math.round(avg) ? '★' : '☆';
+        
+        const starEl = document.getElementById('myStarDisplay');
+        if(starEl) starEl.innerText = stars;
+
+        // 리뷰 리스트 로드
+        const list = document.getElementById('reviewList');
+        if(!list) return;
+
+        // DB에서 리뷰 가져오기
+        const { data: reviews } = await sb.from('partner_reviews')
+            .select('*')
+            .eq('partner_id', myPartnerInfo.id)
+            .order('created_at', { ascending: false });
+            
+        list.innerHTML = '';
+        if(reviews && reviews.length > 0) {
+            reviews.forEach(r => {
+                let rStars = '';
+                for(let i=0; i<5; i++) rStars += i < r.rating ? '★' : '☆';
+                
+                list.innerHTML += `
+                    <div class="order-card">
+                        <div style="color:#f59e0b; font-size:18px; margin-bottom:5px;">${rStars}</div>
+                        <div style="font-weight:bold; color:#334155; margin-bottom:10px;">"${r.comment}"</div>
+                        <div style="font-size:12px; color:#94a3b8; text-align:right;">${new Date(r.created_at).toLocaleDateString()}</div>
+                    </div>
+                `;
+            });
+        } else {
+            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">아직 등록된 후기가 없습니다.</div>';
+        }
+    }
+    // [신규] 소리 알림 활성화 (브라우저 정책 해제용)
+    window.enableSound = function() {
+        // 1. 강제 음성 재생으로 브라우저 차단 해제
+        speakTTS("소리 알림이 활성화되었습니다. 주문이 들어오면 음성으로 알려드립니다.");
+        
+        // 2. 버튼 스타일 변경 (빨강 -> 초록)
+        const btn = document.getElementById('btnSoundOn');
+        if(btn) {
+            btn.innerHTML = "🔊 알림 켜짐 (테스트)";
+            btn.style.background = "#10b981"; // 초록색
+            btn.style.boxShadow = "none";
+            // 이후 클릭 시 테스트 기능으로 작동하게 변경
+            btn.onclick = function() {
+                speakTTS("알림 소리가 정상적으로 켜져 있습니다.");
+            };
+        }
+    };
+</script>
+</body>
+</html>

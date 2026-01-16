@@ -49,11 +49,11 @@
                 }
 
                 // 2. ★ 여기가 제일 중요합니다 ★ DB 업데이트
-                // toss_payment_key 컬럼에 반드시 'paymentKey' 변수를 넣어야 합니다. ('orderId' 아님!)
                 const { error: dbError } = await sb.from('orders').update({
+                    status: '접수됨', // [수정] 결제 성공했으므로 관리자에 노출
                     payment_status: '결제완료',
                     payment_method: '카드/간편결제',
-                    toss_payment_key: paymentKey  // <--- 여기서 tviva... 키가 저장됩니다.
+                    toss_payment_key: paymentKey
                 }).eq('id', dbId);
 
                 if (dbError) console.error("DB 저장 실패:", dbError);

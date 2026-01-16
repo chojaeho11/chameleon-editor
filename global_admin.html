@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chameleon Global Admin</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <link rel="stylesheet" href="global_admin.css">
+</head>
+<body>
+
+    <div id="loading"><div class="spinner"></div></div>
+    
+    <div id="fileManagerModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>📂 주문 파일 관리</span>
+                <button class="btn btn-outline btn-sm" onclick="closeFileModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="fileMgrList" class="file-list-area"></div>
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border: 1px dashed #bae6fd;">
+                <div style="font-size: 12px; font-weight: bold; color: #0369a1; margin-bottom: 8px;">➕ 새 파일 추가</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="file" id="fileMgrInput" class="input-text" style="padding: 6px;">
+                    <button class="btn btn-primary" onclick="uploadFileToOrder()">업로드</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="walletModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box" style="width: 400px;">
+            <div class="modal-header">
+                <span>💰 예치금 관리</span>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('walletModal').style.display='none'">✕</button>
+            </div>
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center;">
+                <div id="walletTargetName" style="font-weight:bold; color:#334155;">-</div>
+                <div style="font-size:12px; color:#64748b;">현재 잔액</div>
+                <div id="walletTargetBalance" style="font-size:24px; font-weight:800; color:#6366f1;">0원</div>
+            </div>
+            <input type="hidden" id="walletTargetId">
+            <input type="hidden" id="walletMode" value="add">
+            <div class="form-group">
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <button class="btn btn-primary" style="flex:1;" onclick="setWalletMode('add')" id="btnWalletAdd">➕ 충전 (입금확인)</button>
+                    <button class="btn btn-outline" style="flex:1;" onclick="setWalletMode('sub')" id="btnWalletSub">➖ 차감 (취소/회수)</button>
+                </div>
+                <label class="form-label">금액</label>
+                <input type="number" id="walletAmount" class="input-text" placeholder="숫자만 입력">
+            </div>
+            <div class="form-group">
+                <label class="form-label">사유 (고객에게도 보임)</label>
+                <input type="text" id="walletDesc" class="input-text" placeholder="예: 무통장 입금 확인">
+            </div>
+            <button id="btnWalletSubmit" class="btn btn-vip" style="width:100%; margin-top:10px;" onclick="submitWalletChange()">적용하기</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
+        <ul class="nav-menu">
+            <div class="nav-label">Business</div>
+            <li class="nav-item active" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
+                <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
+            </li>
+            <li class="nav-item" onclick="showSection('sec-orders', this)"><i class="fa-solid fa-cart-shopping"></i> 통합 주문 관리</li>
+            <li class="nav-item" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
+            <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
+            <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
+            <li class="nav-item" onclick="showSection('sec-withdrawals', this)"><i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리</li>
+            <li class="nav-item" onclick="showSection('sec-partner-apps', this)">
+                <i class="fa-solid fa-store"></i> 가맹점 신청 관리 <span id="partnerPendingCount" class="badge" style="background:#ef4444; color:white; font-size:10px; display:none;">N</span>
+            </li>
+            <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
+            
+            <div class="nav-label">Product & Stock</div>
+            <li class="nav-item" onclick="showSection('sec-products', this)"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
+            
+            <div class="nav-label">Management</div>
+            <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
+            <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
+
+            <div class="nav-label">Assets</div>
+            <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 & 로고</li>
+            <li class="nav-item" onclick="showSection('sec-fonts', this)"><i class="fa-solid fa-font"></i> 폰트(서체) 관리</li>
+        </ul>
+        <div style="margin-top: auto; padding: 20px;">
+            <button class="btn btn-danger" style="width: 100%;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">통합 주문 관리</div>
+            <div style="font-size: 14px; color: #64748b;">Global Admin Connected 🟢</div>
+        </div>
+
+        <div class="content-scroll">
+            
+            <div id="sec-vip" class="section active">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px; color: #312e81;">
+                            <i class="fa-solid fa-crown" style="color:#fbbf24;"></i> VIP 파일 접수 내역
+                        </h3>
+                        <div>
+                            <button class="btn btn-danger" onclick="deleteSelectedVipOrders()">선택 삭제</button>
+                            <button class="btn btn-outline" onclick="loadVipOrders()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="30"><input type="checkbox" onchange="toggleVipChecks(this)"></th>
+                                <th width="120">접수일시</th>
+                                <th width="80">담당</th>
+                                <th width="100">고객명</th>
+                                <th width="130">연락처</th>
+                                <th>메모 (요청사항)</th>
+                                <th width="200">첨부파일 (다운로드)</th>
+                                <th width="80">상태</th>
+                                <th width="80">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vipOrderListBody">
+                            <tr><td colspan="8" style="text-align:center; padding:30px;">로딩 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="sec-orders" class="section">
+                <div class="card">
+                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; gap:5px;">
+                                <button class="btn btn-primary" id="btnFilterNew" onclick="filterOrders('접수됨', this)">📌 신규 접수</button>
+                                <button class="btn btn-outline" id="btnFilterKnife" onclick="filterOrders('칼선작업', this)">✂️ 칼선/제작작업</button>
+                                <button class="btn btn-outline" id="btnFilterDone" onclick="filterOrders('완료됨', this)">✅ 완료 (배송/수령)</button>
+                            </div>
+                            <div style="display:flex; gap:5px; align-items:center; background:#f0fdf4; padding:5px 10px; border-radius:8px; border:1px solid #bbf7d0;">
+                                <span style="font-size:12px; font-weight:bold; color:#166534;">📊 매출정산 엑셀:</span>
+                                <input type="month" id="excelMonth" class="input-text" style="width:130px; height:32px; font-size:12px;">
+                                <button class="btn btn-success btn-sm" onclick="downloadMonthlyExcel()">
+                                    <i class="fa-solid fa-file-excel"></i> 다운로드
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:#f8fafc; padding:15px; border-radius:8px;">
+                            <input type="text" id="orderSearchInput" class="input-text" placeholder="고객명/연락처 검색" style="width:180px;" onkeyup="if(event.key=='Enter') { resetPage(); loadOrders(); }">
+                            <div style="display:flex; align-items:center; gap:5px; background:#fff; padding:5px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                <span style="font-size:12px; font-weight:bold; color:#334155;">📅 주문일:</span>
+                                <input type="date" id="filterOrderDate" class="input-text" style="width:130px; height:32px; border:none;" onchange="resetPage(); loadOrders()">
+                                <i class="fa-solid fa-xmark" style="cursor:pointer; color:#999;" onclick="document.getElementById('filterOrderDate').value=''; resetPage(); loadOrders();" title="초기화"></i>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:5px; background:#f0f9ff; padding:5px 10px; border:1px solid #bae6fd; border-radius:6px;">
+                                <span style="font-size:12px; font-weight:bold; color:#0369a1;">🚚 배송일:</span>
+                                <input type="date" id="filterDeliveryDate" class="input-text" style="width:130px; height:32px; border:none; background:transparent;" onchange="resetPage(); loadOrders()">
+                                <i class="fa-solid fa-xmark" style="cursor:pointer; color:#999;" onclick="document.getElementById('filterDeliveryDate').value=''; resetPage(); loadOrders();" title="초기화"></i>
+                            </div>
+                            <select id="filterSite" class="input-text" style="width:130px; font-weight:bold;" onchange="resetPage(); loadOrders()">
+                                <option value="all">🌏 전체 국가</option>
+                                <option value="KR">🇰🇷 한국</option>
+                                <option value="JP">🇯🇵 일본</option>
+                                <option value="US">🇺🇸 미국</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="resetPage(); loadOrders()"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
+                            <div id="action-buttons" style="margin-left:auto; display:flex; gap:5px;"></div>
+                        </div>
+                        <div id="orderSummaryBar" style="display:flex; gap:20px; align-items:center; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:10px 15px; border-radius:6px; font-size:14px;">
+                            <div>📦 검색된 주문: <b id="sumCount">0</b></div>
+                            <div style="width:1px; height:15px; background:#bfdbfe;"></div>
+                            <div>💰 총 매출(검색기준): <b id="sumRevenue" style="font-size:16px; color:#2563eb;">0원</b></div>
+                            <div style="margin-left:auto; font-size:12px; color:#64748b;">* 페이지네이션과 관계없이 검색된 전체 합계입니다.</div>
+                        </div>
+                    </div>
+                    <table style="margin:0; font-size:12px;">
+                        <thead>
+    <tr>
+        <th style="width:30px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
+        <th style="width:40px;">Site</th>
+        <th style="width:60px;">날짜</th>
+        <th style="width:110px;">고객 정보</th>
+        <th style="">주문 내역</th> <th style="width:90px; text-align:center; background:#fff7ed;">입찰</th> 
+        <th style="width:80px; text-align:right; background:#f8fafc;">주문총액</th>
+        <th style="width:70px; text-align:right; color:#ef4444; background:#f8fafc;">할인액</th>
+        <th style="width:70px; text-align:right; color:#d97706; background:#f8fafc;">예치금</th>
+        <th style="width:80px; text-align:right; color:#15803d; background:#dcfce7;">실입금액</th>
+        <th style="width:80px; background:#f0f9ff;">매니저/배송</th> <th style="width:50px; text-align:center;">파일</th> <th style="width:100px;">상태/결제</th>
+    </tr>
+</thead>
+                        </thead>
+                        <tbody id="orderListBody"></tbody>
+                    </table>
+                    <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin-top:20px;">
+                        <button class="btn btn-outline btn-sm" onclick="changePage(-1)">◀ 이전</button>
+                        <span id="pageLabel" style="font-weight:bold; color:#334155;">Page 1</span>
+                        <button class="btn btn-outline btn-sm" onclick="changePage(1)">다음 ▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-bankda" class="section">
+                <div class="card" style="margin-bottom:20px; background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <h3 style="margin-top:0; border-bottom:1px solid #bbf7d0; padding-bottom:15px; display:flex; align-items:center; gap:10px; color:#15803d;">
+                        <i class="fa-solid fa-robot"></i> 페이엑션(국민은행) 입금 자동연동
+                    </h3>
+                    <div style="display:flex; gap:15px; align-items:flex-end;">
+                        <div><label class="form-label">조회 시작일</label><input type="date" id="bankStartDate" class="input-text"></div>
+                        <div><label class="form-label">조회 종료일</label><input type="date" id="bankEndDate" class="input-text"></div>
+                        <button class="btn btn-success" style="height:42px;" onclick="loadBankdaList()"><i class="fa-solid fa-magnifying-glass"></i> DB 조회</button>
+                        <button class="btn btn-primary" style="height:42px; margin-left:auto; background:#15803d; border:none;" onclick="runBankdaScraping()"><i class="fa-solid fa-rotate"></i> 국민은행 최신내역 가져오기</button>
+                    </div>
+                    <p style="font-size:12px; color:#166534; margin-top:10px; margin-bottom:0;">* [최신내역 가져오기] 버튼을 누르면 페이엑션을 통해 국민은행의 오늘 입금 내역을 조회하여 DB에 저장합니다.</p>
+                </div>
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <h4 style="margin:0;">🏦 입금 내역 리스트 (DB: bank_transactions)</h4>
+                        <span class="badge" style="background:#f1f5f9; color:#64748b;">자동매칭 포함</span>
+                    </div>
+                    <table>
+                        <thead><tr><th width="150">거래일시</th><th width="120">입금자명</th><th width="120" style="text-align:right;">입금액</th><th width="120">은행/계좌</th><th width="100">매칭 상태</th><th>관리 (주문연동)</th></tr></thead>
+                        <tbody id="bankListBody"><tr><td colspan="6" style="text-align:center; padding:30px;">조회 버튼을 눌러주세요.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="sec-stats" class="section">
+                <div class="card" style="margin-bottom:20px;">
+                    <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-calendar-days" style="color:#6366f1;"></i> 기간별 매출 조회
+                    </h3>
+                    <div style="display:flex; gap:10px; align-items:flex-end; background:#f8fafc; padding:20px; border-radius:8px;">
+                        <div><label class="form-label">시작일</label><input type="date" id="statStartDate" class="input-text"></div>
+                        <div><label class="form-label">종료일</label><input type="date" id="statEndDate" class="input-text"></div>
+                        <button class="btn btn-primary" style="height:42px;" onclick="loadStatsData()"><i class="fa-solid fa-magnifying-glass"></i> 조회하기</button>
+                    </div>
+                </div>
+                <div class="stat-card-group">
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-won-sign"></i></div><div class="stat-info"><div>기간 내 총 매출 (계산됨)</div><div id="totalRevenue">0</div></div></div>
+                    <div class="stat-card"><div class="stat-icon" style="background:#ecfdf5; color:#059669;"><i class="fa-solid fa-receipt"></i></div><div class="stat-info"><div>총 주문 건수</div><div id="totalCount">0건</div></div></div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div class="card"><h4 style="margin-top:0;">👨‍💼 담당 매니저별 실적</h4><table style="margin-top:0;"><thead><tr><th>매니저</th><th style="text-align:right;">매출 기여도</th></tr></thead><tbody id="statManagerBody"></tbody></table></div>
+                    <div class="card"><h4 style="margin-top:0;">🚚 배송 기사별 실적</h4><table style="margin-top:0;"><thead><tr><th>기사님</th><th style="text-align:right;">매출 기여도</th></tr></thead><tbody id="statDriverBody"></tbody></table></div>
+                </div>
+            </div>
+
+            <div id="sec-tasks" class="section">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-truck-fast" style="color:#6366f1;"></i> 날짜별 배송 스케줄</h3>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <select id="filterTaskDriver" class="input-text" style="width:200px; font-weight:bold;" onchange="loadDailyTasks()">
+                                <option value="all">🚛 전체 기사 보기</option>
+                            </select>
+                            <input type="date" id="taskDate" class="input-text" style="width:140px;" onchange="loadDailyTasks()">
+                            <button class="btn btn-primary" onclick="loadDailyTasks()">조회</button>
+                        </div>
+                    </div>
+                    <table style="margin-top:0;">
+                        <thead><tr><th style="width:90px; white-space:nowrap;">상태</th><th style="width:180px;">고객 정보 (이름/연락처)</th><th>주문 파일</th><th style="width:180px;">🚚 배송 기사 배정</th><th style="width:160px;">⏰ 시간 / 완료체크</th></tr></thead>
+                        <tbody id="taskListBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="sec-withdrawals" class="section">
+    <div class="card">
+        <h3 style="margin-top:0;">💸 고객 출금 신청 목록</h3>
+        <button class="btn btn-outline btn-sm" onclick="loadWithdrawals()">
+            <i class="fa-solid fa-rotate"></i> 새로고침
+        </button>
+        <table>
+            <thead>
+                <tr>
+                    <th>신청일</th>
+                    <th>유저 (ID)</th>
+                    <th style="text-align:right;">출금액</th>
+                    <th>주민번호</th> <th>계좌정보 (은행/번호/예금주)</th> <th style="text-align:center;">상태</th>
+                    <th style="text-align:center;">관리</th>
+                </tr>
+            </thead>
+            <tbody id="withdrawalListBody"></tbody>
+        </table>
+    </div>
+</div>
+            <div id="sec-partner-apps" class="section">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <h3 style="margin:0;">🏪 가맹점 신청 내역 관리</h3>
+                        <div style="display:flex; gap:10px;">
+                            <select id="filterPartnerStatus" class="input-text" style="width:120px; font-weight:bold;" onchange="loadPartnerApplications()">
+                                <option value="all">📂 전체 보기</option>
+                                <option value="pending" selected>⏳ 대기중</option>
+                                <option value="approved">✅ 승인됨</option>
+                                <option value="rejected">❌ 거절됨</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="loadPartnerApplications()">
+                                <i class="fa-solid fa-rotate"></i> 새로고침
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="120">신청일</th>
+                                <th>신청자 (이메일)</th>
+                                <th>업체명 (상호)</th>
+                                <th>연락처</th>
+                                <th>희망 지역</th>
+                                <th>주력 품목</th>
+                                <th width="100">상태</th>
+                                <th width="140">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnerAppListBody"><tr><td colspan="8" style="text-align:center; padding:30px;">로딩 중...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="sec-accounting" class="section">
+                <div class="card" style="margin-bottom:20px; border-left:5px solid #059669;">
+                    <div style="border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:15px;">
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px; color:#059669;">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> 경리과 통합 결산 관리
+                        </h3>
+                    </div>
+                    <div style="display:flex; gap:15px; align-items:flex-end; background:#f0fdf4; padding:20px; border-radius:8px;">
+                        <div><label class="form-label">📅 조회 시작일</label><input type="date" id="accStartDate" class="input-text"></div>
+                        <div><label class="form-label">📅 조회 종료일</label><input type="date" id="accEndDate" class="input-text"></div>
+                        <button class="btn btn-primary" style="height:42px; padding:0 25px; font-size:14px;" onclick="loadAccountingData()"><i class="fa-solid fa-magnifying-glass"></i> 데이터 조회</button>
+                    </div>
+                    <p style="font-size:12px; color:#666; margin-top:10px; margin-bottom:0;">※ <b>결제완료, 입금확인, 카드결제완료</b> 상태인 주문만 매출로 집계됩니다.</p>
+                </div>
+                <div class="stat-card-group">
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;"><div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#dcfce7; color:#15803d;"><i class="fa-solid fa-won-sign"></i></div><div style="font-size:13px; font-weight:bold; color:#64748b;">기간 내 결제 총액</div></div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccSales()" title="주문별 상세 엑셀"><i class="fa-solid fa-file-excel"></i> 엑셀</button>
+                        </div>
+                        <div id="accTotalSales" style="font-size:24px; font-weight:800; color:#0f172a; margin-top:5px;">0원</div>
+                    </div>
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;"><div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#fef3c7; color:#d97706;"><i class="fa-solid fa-hand-holding-dollar"></i></div><div style="font-size:13px; font-weight:bold; color:#64748b;">미지급(정산대기) 총액</div></div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccUnpaid()" title="미지급 계좌 엑셀"><i class="fa-solid fa-file-excel"></i> 엑셀</button>
+                        </div>
+                        <div id="accUnpaidTotal" style="font-size:24px; font-weight:800; color:#d97706; margin-top:5px;">0원</div>
+                    </div>
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;"><div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#e0e7ff; color:#4338ca;"><i class="fa-solid fa-coins"></i></div><div style="font-size:13px; font-weight:bold; color:#64748b;">고객 예치금 (현재잔고)</div></div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccDeposit()" title="예치금 보유자리스트"><i class="fa-solid fa-file-excel"></i> 엑셀</button>
+                        </div>
+                        <div id="accTotalDeposit" style="font-size:24px; font-weight:800; color:#4338ca; margin-top:5px;">0원</div>
+                    </div>
+                    <div class="stat-card" style="display:block; padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;"><div class="stat-icon" style="width:40px; height:40px; font-size:18px; background:#fee2e2; color:#ef4444;"><i class="fa-solid fa-tags"></i></div><div style="font-size:13px; font-weight:bold; color:#64748b;">기간 내 할인 총액</div></div>
+                            <button class="btn btn-success btn-sm" onclick="downloadAccDiscount()" title="할인 내역 상세"><i class="fa-solid fa-file-excel"></i> 엑셀</button>
+                        </div>
+                        <div id="accTotalDiscount" style="font-size:24px; font-weight:800; color:#ef4444; margin-top:5px;">0원</div>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div class="card">
+                        <h4 style="margin-top:0; color:#1e40af;">🏢 [6] 가맹점/파트너스 입금요청 (세금계산서 O)</h4>
+                        <div style="max-height:400px; overflow-y:auto;">
+                            <table style="font-size:12px;">
+                                <thead><tr><th>신청일</th><th>업체명(상호)</th><th style="text-align:right;">금액</th><th style="text-align:center;">증빙</th><th style="text-align:center;">상태</th></tr></thead>
+                                <tbody id="accPartnerBody"><tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">조회 버튼을 눌러주세요.</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4 style="margin-top:0; color:#c2410c;">🧑‍💻 [5] 프리랜서/디자이너 입금요청 (주민번호 O)</h4>
+                        <div style="max-height:400px; overflow-y:auto;">
+                            <table style="font-size:12px;">
+                                <thead><tr><th>신청일</th><th>성명</th><th style="text-align:right;">금액</th><th style="text-align:center;">주민번호</th><th style="text-align:center;">상태</th></tr></thead>
+                                <tbody id="accFreelancerBody"><tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">조회 버튼을 눌러주세요.</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-products" class="section">
+    
+    <div class="card" style="background:#fff7ed; border:1px solid #ffedd5; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0; color:#c2410c;">👑 대분류(Top Category) 관리</h3>
+            <span style="font-size:12px; color:#c2410c;">* 드래그하여 순서 변경 가능</span>
+        </div>
+        
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
+            <div style="flex:1; min-width:150px;">
+                <label class="form-label">코드 (영문)</label>
+                <input id="newTopCatCode" class="input-text" placeholder="예: banner_stand">
+            </div>
+            <div style="flex:1; min-width:150px;">
+                <label class="form-label">🇰🇷 한국명</label>
+                <input id="newTopCatName" class="input-text" placeholder="예: 배너거치대">
+            </div>
+            <div style="flex:1; min-width:150px;">
+                <label class="form-label">🇯🇵 일본명</label>
+                <input id="newTopCatNameJP" class="input-text">
+            </div>
+            <div style="flex:1; min-width:150px;">
+                <label class="form-label">🇺🇸 미국명</label>
+                <input id="newTopCatNameUS" class="input-text">
+            </div>
+            <div style="display:flex; gap:5px;">
+                <button class="btn btn-outline" onclick="resetTopCategoryForm()" title="입력 초기화"><i class="fa-solid fa-rotate-left"></i></button>
+                <button class="btn btn-vip" onclick="autoTranslateTopCategoryInputs()"><i class="fa-solid fa-language"></i></button>
+                <button id="btnTopCatSave" class="btn btn-primary" onclick="addTopCategoryDB()" style="background:#f97316;">저장</button>
+            </div>
+        </div>
+
+        <div id="topCategoryListArea" style="display:flex; flex-wrap:wrap; gap:8px; padding-top:15px; border-top:1px solid #ffedd5;"></div>
+    </div>
+
+    <div class="card" style="background:#f0f9ff; border:1px solid #bae6fd; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0; color:#0369a1;">0️⃣ 소분류(Sub Category) 관리</h3>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <select id="filterCategoryTop" class="input-text" style="width:200px; font-weight:bold; color:#0369a1;" onchange="loadCategories()">
+                    <option value="all">📂 전체 대분류 보기</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
+            <div style="width:160px;">
+                <label class="form-label">📂 대분류 선택</label>
+                <select id="newCatTop" class="input-text" style="background:#fff;"><option value="">(상위 없음)</option></select>
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label class="form-label">폴더 코드 (영문)</label>
+                <input id="newCatCode" class="input-text" placeholder="예: honeycomb">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label class="form-label">🇰🇷 한국명</label>
+                <input id="newCatName" class="input-text" placeholder="예: 허니콤">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label class="form-label">🇯🇵 일본명</label>
+                <input id="newCatNameJP" class="input-text">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label class="form-label">🇺🇸 미국명</label>
+                <input id="newCatNameUS" class="input-text">
+            </div>
+            <div style="display:flex; gap:5px;">
+                <button class="btn btn-outline" onclick="resetCategoryForm()" title="입력 초기화"><i class="fa-solid fa-rotate-left"></i></button>
+                <button class="btn btn-vip" onclick="autoTranslateCategoryInputs()"><i class="fa-solid fa-language"></i></button>
+                <button id="btnCatSave" class="btn btn-primary" onclick="addCategoryDB()">저장</button>
+            </div>
+        </div>
+
+        <div id="categoryListArea" style="display:flex; flex-wrap:wrap; gap:8px; padding-top:15px; border-top:1px solid #bae6fd;"></div>
+    </div>
+
+    <div class="product-layout">
+        <div class="card product-form">
+            <h3 style="margin-top:0;">2️⃣ 상품 등록 (Product)</h3>
+            
+            <div class="form-group" style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                <label class="form-label">🌐 판매 국가</label>
+                <select id="newProdSite" class="input-text" style="font-weight:bold; color:#6366f1;">
+                    <option value="KR" selected>🇰🇷 한국</option>
+                    <option value="JP">🇯🇵 일본</option>
+                    <option value="US">🇺🇸 미국</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">카테고리</label><select id="newProdCategory" class="input-text"><option value="">로딩 중...</option></select></div>
+            <div class="form-group"><label class="form-label">상품코드</label><input id="newProdCode" class="input-text" placeholder="고유 코드 입력"></div>
+            
+            <div class="form-group" style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <label class="form-label" style="margin:0;">상품명 & 가격 (다국어)</label>
+                    <button class="btn btn-vip btn-sm" onclick="autoTranslateInputs()">자동번역</button>
+                </div>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <input id="newProdName" class="input-text" placeholder="🇰🇷 상품명" style="flex:2;">
+                    <input id="newProdPrice" type="number" class="input-text" placeholder="₩ 가격" style="flex:1;">
+                </div>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <input id="newProdNameJP" class="input-text" placeholder="🇯🇵 일본어" style="flex:2;">
+                    <input id="newProdPriceJP" type="number" class="input-text" placeholder="¥ 엔화" style="flex:1;">
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <input id="newProdNameUS" class="input-text" placeholder="🇺🇸 영어" style="flex:2;">
+                    <input id="newProdPriceUS" type="number" class="input-text" placeholder="$ 달러" style="flex:1;">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div style="flex:1;"><label class="form-label">가로(mm)</label><input id="newProdW" type="number" class="input-text"></div>
+                <div style="flex:1;"><label class="form-label">세로(mm)</label><input id="newProdH" type="number" class="input-text"></div>
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold;">
+                    <input type="checkbox" id="newProdIsCustom" style="width:18px; height:18px;"> 사용자 사이즈 입력 허용 (헤베 계산)
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">상세 설명</label>
+                <textarea id="newProdDesc" class="input-text" style="height:50px; margin-bottom:5px;" placeholder="🇰🇷 설명"></textarea>
+                <div style="display:flex; gap:5px;">
+                    <textarea id="newProdDescJP" class="input-text" style="height:50px;" placeholder="🇯🇵 설명"></textarea>
+                    <textarea id="newProdDescUS" class="input-text" style="height:50px;" placeholder="🇺🇸 설명"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">이미지</label>
+                <div class="file-drop-zone"><input type="file" id="newProdFile" accept="image/*" onchange="previewProductImage(this)"><span>이미지 업로드</span></div>
+                <input id="newProdImg" class="input-text" style="margin-top:5px;" placeholder="URL 직접입력 가능">
+                <img id="prodPreview" class="preview-img">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">옵션 연결</label>
+                <div id="addonCheckboxArea" class="addon-checkbox-group"></div>
+                <button class="btn btn-sky btn-sm" onclick="bulkApplyAddonsToCategory()" style="width:100%; margin-top:5px;">
+                    <i class="fa-solid fa-layer-group"></i> 체크된 옵션 카테고리 전체 적용
+                </button>
+            </div>
+
+            <button id="btnProductSave" class="btn btn-primary" style="width:100%;" onclick="addProductDB()">상품 등록하기</button>
+            <div style="margin-top:10px; display:flex; gap:5px;">
+                <button id="btnCancelEdit" class="btn btn-outline" style="flex:1; display:none;" onclick="resetProductForm()">취소</button>
+            </div>
+        </div>
+
+        <div class="product-grid-area">
+            <div class="card" style="margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0;">1️⃣ 옵션 통합 관리</h3>
+                    <button class="btn btn-vip btn-sm" onclick="autoTranslateAddonInputs()">자동번역</button>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                    <div style="width:100px;"><label class="form-label">구분</label><select id="newAddonCat" class="input-text"><option value="addon">추가</option><option value="material">재질</option><option value="finish">마감</option></select></div>
+                    <div style="flex:1;"><label class="form-label">코드</label><input id="newAddonCode" class="input-text"></div>
+                    <div style="flex:1;"><label class="form-label">🇰🇷 명칭/가격</label><input id="nmKR" class="input-text"><input id="prKR" type="number" class="input-text" style="margin-top:2px;"></div>
+                    <div style="flex:1;"><label class="form-label">🇯🇵 명칭/가격</label><input id="nmJP" class="input-text"><input id="prJP" type="number" class="input-text" style="margin-top:2px;"></div>
+                    <div style="flex:1;"><label class="form-label">🇺🇸 명칭/가격</label><input id="nmUS" class="input-text"><input id="prUS" type="number" class="input-text" style="margin-top:2px;"></div>
+                    <button class="btn btn-primary" onclick="addAddonDB()">저장</button>
+                </div>
+                
+                <div style="margin-top:15px;">
+                    <select id="newAddonSite" onchange="loadSystemDB(this.value)" class="input-text" style="width:120px; font-size:12px; margin-bottom:5px;">
+                        <option value="KR">🇰🇷 보기</option>
+                        <option value="JP">🇯🇵 보기</option>
+                        <option value="US">🇺🇸 보기</option>
+                    </select>
+                </div>
+                <div style="max-height:200px; overflow-y:auto; border-top:1px solid #eee;">
+                    <table style="font-size:12px;"><tbody id="addonTableBody"></tbody></table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3>📜 상품 목록</h3>
+                    <button class="btn btn-success btn-sm" onclick="bulkTranslateAll()">일괄 번역</button>
+                </div>
+                <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center;">
+                    <span style="font-weight:bold; color:#64748b;">🔍 필터:</span>
+                    <select id="filterProdSite" onchange="filterProductList()" class="input-text" style="width:130px;"><option value="all">🌏 전체</option><option value="KR">🇰🇷</option><option value="JP">🇯🇵</option><option value="US">🇺🇸</option></select>
+                    <select id="filterProdCat" onchange="filterProductList()" class="input-text" style="width:150px;"><option value="all">📂 전체</option></select>
+                </div>
+                <table>
+                    <thead><tr><th width="50">국가</th><th width="60">이미지</th><th>코드/상품명</th><th>사이즈</th><th>가격</th><th width="80">관리</th></tr></thead>
+                    <tbody id="prodTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <div id="sec-staff" class="section">
+                <div class="product-layout">
+                    <div class="card tpl-form">
+                        <h3 style="margin-top:0;">👤 스태프 등록</h3>
+                        <div class="form-group"><label class="form-label">이름</label><input id="staffName" class="input-text"></div>
+                        <div class="form-group"><label class="form-label">역할</label><select id="staffRole" class="input-text"><option value="manager">담당 매니저</option><option value="driver">배송 기사</option></select></div>
+                        <div class="form-group"><label class="form-label">색상</label><input id="staffColor" type="color" class="input-text" style="height:40px;" value="#6366f1"></div>
+                        <button class="btn btn-primary" style="width:100%;" onclick="addStaffDB()">등록하기</button>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-top:0;">📋 스태프 목록</h3>
+                        <button class="btn btn-outline btn-sm" onclick="loadStaffList()" style="margin-bottom:10px;">새로고침</button>
+                        <table><thead><tr><th width="50">색상</th><th>이름</th><th>역할</th><th>관리</th></tr></thead><tbody id="staffListBody"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-members" class="section">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+            <h3>👥 회원 목록 <span id="totalMemberCount" style="font-size:14px; color:#6366f1; background:#e0e7ff; padding:2px 8px; border-radius:12px; vertical-align:middle; margin-left:5px;">0명</span></h3>
+            
+            <div style="display:flex; gap:8px; align-items:center;">
+                <label class="btn btn-success btn-sm" style="cursor:pointer;" title="고도몰 엑셀 업로드">
+                    <i class="fa-solid fa-file-excel"></i> 마일리지 이관
+                    <input type="file" id="mileageExcelInput" accept=".xlsx, .xls" style="display:none;" onchange="importMileageExcel(this)">
+                </label>
+
+                <select id="memberSort" class="input-text" style="width:140px; font-size:12px;" onchange="loadMembers()">
+                    <option value="newest">📅 가입일순 (최신)</option>
+                    <option value="deposit_desc">💰 예치금 많은순</option>
+                    <option value="deposit_asc">💰 예치금 적은순</option>
+                    <option value="mileage_desc">Ⓜ️ 마일리지 많은순</option>
+                    <option value="mileage_asc">Ⓜ️ 마일리지 적은순</option>
+                    <option value="spend_desc">💳 구매금액 많은순</option>
+                </select>
+
+                <select id="memberFilterRole" class="input-text" style="width:110px; font-size:12px; font-weight:bold;" onchange="loadMembers()">
+                    <option value="all">👑 전체 등급</option>
+                    <option value="customer">😐 일반</option>
+                    <option value="gold">🥇 골드</option>
+                    <option value="platinum">💎 플래티넘</option>
+                    <option value="franchise">🏢 가맹점</option>
+                    <option value="admin">🛠 관리자</option>
+                </select>
+
+                <input type="text" id="memberSearchInput" class="input-text" placeholder="이름 또는 이메일 검색" style="width:180px;" onkeyup="if(event.key=='Enter') loadMembers()">
+                <button class="btn btn-primary" onclick="loadMembers()"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; min-width:1000px;">
+    <colgroup>
+        <col style="width: 9%;">   <col style="width: 18%;">  <col style="width: 14%;">  <col style="width: 10%;">  <col style="width: 25%;">  <col style="width: 8%;">   <col style="width: 16%;">  </colgroup>
+    <thead>
+        <tr style="background:#f8fafc; color:#475569; border-bottom:1px solid #e2e8f0; height:45px; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">
+            <th style="padding:0 15px; text-align:center;">가입일</th>
+            <th style="padding:0 15px;">고객 정보 (이름/이메일)</th>
+            <th style="padding:0 15px; text-align:right;">💰 예치금 / Ⓜ️ 마일리지</th>
+            <th style="padding:0 15px; text-align:center;">자산 관리</th> 
+            <th style="padding:0 15px;">📝 관리자 메모 (특이사항)</th>
+            <th style="padding:0 15px; text-align:center;">등급</th>
+            <th style="padding:0 15px;">등급 변경</th>
+        </tr>
+    </thead>
+    <tbody id="memberListBody"></tbody>
+</table>
+
+        <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin-top:20px; padding-top:15px; border-top:1px solid #f1f5f9;">
+            <button class="btn btn-outline btn-sm" onclick="changeMemberPage(-1)">◀ 이전</button>
+            <span id="memberPageLabel" style="font-size:13px; font-weight:bold; color:#334155;">Page 1</span>
+            <button class="btn btn-outline btn-sm" onclick="changeMemberPage(1)">다음 ▶</button>
+        </div>
+    </div> </div> <div id="sec-templates" class="section">
+    <div class="product-layout">
+        <div class="card tpl-form">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">📤 템플릿 등록</h3>
+                <button class="btn btn-outline btn-sm" onclick="resetTemplateForm()">초기화</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">카테고리</label>
+                <select id="tplCategory" class="input-text" onchange="toggleFileInputs()">
+                    <option value="logo">🎨 로고 (Logo)</option>
+                    <option value="transparent-graphic">🏁 패턴 (Pattern)</option>
+                    <option value="vector">🖼 벡터 배경 (Vector)</option>
+                    <option value="photo-bg">📷 사진 배경 (Photo)</option>
+                    <option value="graphic">🧸 그래픽/스티커 (Graphic)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">검색어 (태그)</label>
+                <input id="tplTags" class="input-text" placeholder="예: 삼성, 로고, 여름">
+            </div>
+            <div class="form-group">
+                <label class="form-label">연결 제품 (Product Key)</label>
+                <select id="tplProductKey" class="input-text">
+                    <option value="custom">공통 / 지정안함</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="lblThumb">1. 썸네일 (이미지)</label>
+                <div class="file-drop-zone">
+                    <input type="file" id="fileThumb" accept="image/*" onchange="previewTemplateImage(this)">
+                    <span>이미지 선택</span>
+                </div>
+                <img id="previewThumb" class="preview-img" style="display:none; margin-top:5px; max-height:150px; border:1px solid #eee;">
+            </div>
+            <div class="form-group" id="groupDataFile">
+                <label class="form-label">2. 벡터 데이터 (SVG/JSON)</label>
+                <div class="file-drop-zone">
+                    <input type="file" id="fileData" accept=".svg,.json">
+                    <span>파일 선택</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="uploadTemplate()">등록하기</button>
+        </div>
+
+        <div class="card">
+            <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="margin:0;">🗂️ 템플릿 라이브러리</h3>
+                    <button class="btn btn-danger" onclick="deleteSelectedTemplates()">
+                        <i class="fa-solid fa-trash-can"></i> 선택 삭제
+                    </button>
+                </div>
+                
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="text" id="tplSearchInput" class="input-text" style="flex:2;" placeholder="태그 검색..." onkeyup="if(event.key=='Enter') loadTemplates(true)">
+                    
+                    <select id="filterTplCat" class="input-text" style="flex:1;" onchange="loadTemplates(true)">
+                        <option value="all">📂 카테고리 전체</option>
+                        <option value="logo">🎨 로고</option>
+                        <option value="transparent-graphic">🏁 패턴</option>
+                        <option value="vector">🖼 벡터 배경</option>
+                        <option value="photo-bg">📷 사진 배경</option>
+                        <option value="graphic">🧸 그래픽</option>
+                    </select>
+                    
+                    <select id="filterTplProduct" class="input-text" style="flex:1;" onchange="loadTemplates(true)">
+                        <option value="all">📦 제품연결 전체</option>
+                    </select>
+                    
+                    <button class="btn btn-primary" onclick="loadTemplates(true)">검색</button>
+                </div>
+                
+                <div style="margin-top:10px;">
+                    <label style="cursor:pointer; font-weight:bold; font-size:13px;">
+                        <input type="checkbox" onchange="toggleAllTemplates(this)"> 전체 선택
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin: 15px 0; padding:10px; background:#f8fafc; border-radius:8px;">
+                <button class="btn btn-outline btn-sm" onclick="changeTplPage(-1)">◀ 이전</button>
+                <span id="tplPageLabel" style="font-weight:bold; font-size:14px; color:#334155;">Page 1</span>
+                <button class="btn btn-outline btn-sm" onclick="changeTplPage(1)">다음 ▶</button>
+            </div>
+
+            <div id="tplGrid" class="tpl-card-grid"></div>
+        </div>
+    </div>
+</div>
+
+            <div id="sec-fonts" class="section">
+    <div class="product-layout">
+        <div class="card tpl-form">
+            <h3 style="margin-top:0;">🔤 폰트 등록</h3>
+            <div class="form-group">
+                <label class="form-label">국가</label>
+                <select id="fontSite" class="input-text">
+                    <option value="KR">🇰🇷 한국 (KR)</option>
+                    <option value="JP">🇯🇵 일본 (JP)</option>
+                    <option value="US">🇺🇸 미국 (US)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">폰트명 (표시용)</label>
+                <input id="fontName" class="input-text" placeholder="예: 나눔고딕">
+            </div>
+            <div class="form-group">
+                <label class="form-label">CSS Family Name</label>
+                <input id="fontFamily" class="input-text" placeholder="예: NanumGothic">
+                <p style="font-size:11px; color:#666; margin-top:3px;">* 영문, 공백없이 입력하세요.</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">폰트 파일 (.woff2 / .ttf)</label>
+                <div class="file-drop-zone">
+                    <input type="file" id="fontFile" accept=".woff2,.ttf,.otf">
+                    <span>파일 선택</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="uploadFont()">등록하기</button>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">폰트 목록</h3>
+                <button class="btn btn-outline btn-sm" onclick="loadFonts()">새로고침</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="60">국가</th>
+                        <th>폰트 정보</th>
+                        <th>미리보기</th>
+                        <th width="60">삭제</th>
+                    </tr>
+                </thead>
+                <tbody id="fontListBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+    <script type="module" src="global_admin.js"></script>
+
+</body>
+</html>

@@ -381,11 +381,8 @@ function initMobileTextEditor() {
 // [파트너스 시스템] (기존 코드 유지)
 // ============================================================
 window.openPartnerConsole = function() {
-    const modal = document.getElementById('partnerConsoleModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        if (window.switchPartnerTab) window.switchPartnerTab('pool');
-    }
+    // [변경] 모달 대신 별도 페이지로 이동
+    location.href = 'partner.html';
 };
 let lastOrderCount = -1;
 

@@ -282,12 +282,27 @@ async function loadOrders() {
         }
 
         let badgeClass = 'status-wait';
-        if(['완료됨','배송완료','결제완료'].includes(o.status)) badgeClass = 'status-done';
+        if(['완료됨','배송완료','구매확정'].includes(o.status)) badgeClass = 'status-done';
         if(o.status === '취소됨') badgeClass = 'status-cancel';
 
         const canCancel = ['접수대기','입금대기'].includes(o.status);
         const safeId = String(o.id); 
         const displayId = safeId.length > 8 ? safeId.substring(0,8) + '...' : safeId;
+
+        // [수정됨] 상태별 버튼 분기 처리
+        let actionBtn = '';
+        
+        if (o.status === '접수대기' || o.status === '접수됨') {
+            // 1. 견적 확인 버튼
+            actionBtn = `<button onclick="window.checkBidsForOrder('${o.id}')" class="btn-round" style="margin-top:5px; background:#4f46e5; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">📢 도착한 견적 확인</button>`;
+        } 
+        else if (o.status === '배송완료') {
+            // 2. 후기 작성 버튼 (파트너가 납품 완료했을 때)
+            actionBtn = `<button onclick="window.openPartnerReviewModal('${o.id}')" class="btn-round" style="margin-top:5px; background:#f59e0b; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">⭐ 파트너 후기 작성</button>`;
+        }
+        else if (o.status === '구매확정') {
+            actionBtn = `<span style="font-size:11px; color:#16a34a; font-weight:bold;">✅ 후기작성 완료</span>`;
+        }
 
         tbody.innerHTML += `
             <tr>
@@ -297,8 +312,10 @@ async function loadOrders() {
                 </td>
                 <td><div style="font-weight:bold;">${summary}</div></td>
                 <td style="font-weight:bold;">${(o.total_amount || 0).toLocaleString()}원</td>
-                <td><span class="status-badge ${badgeClass}">${o.status}</span></td>
                 <td>
+                    <span class="status-badge ${badgeClass}">${o.status}</span>
+                    ${actionBtn}
+                </td>
                     <div style="display:flex; flex-direction:column; gap:4px;">
                         ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')">취소</button>` : ''}
                         <button class="btn-round" onclick="reOrder('${o.id}')" style="height:26px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; justify-content:center;">다시담기</button>
@@ -472,3 +489,299 @@ async function logout() {
         location.href = 'index.html';
     }
 }
+// [수정됨] 오타 수정 완료된 함수
+window.checkBidsForOrder = async function(orderId) {
+    // 1. 입찰 내역 조회
+    const { data: bids, error } = await sb.from('bids')
+        .select('*')
+        .eq('order_id', orderId)
+        .order('price', { ascending: true });
+
+    if(error || !bids || bids.length === 0) {
+        alert("아직 도착한 견적(입찰)이 없습니다.\n파트너사들이 확인 중이니 잠시만 기다려주세요.");
+        return;
+    }
+
+    // 2. 파트너 평점 정보 조회
+    // (여기서 map(b => ...) 부분은 안전하지만, 아래쪽 forEach에서 헷갈리지 않게 bid로 통일합니다)
+    const partnerIds = bids.map(bid => bid.partner_id); 
+    let profileMap = {};
+    
+    try {
+        const { data: profiles } = await sb.from('profiles')
+            .select('id, avg_rating, review_count, company_name')
+            .in('id', partnerIds);
+        
+        if(profiles) {
+            profiles.forEach(p => { profileMap[p.id] = p; });
+        }
+    } catch(e) {
+        console.warn("평점 로드 실패:", e);
+    }
+
+    // 3. 모달 UI 생성
+    const old = document.getElementById('bidListModal');
+    if(old) old.remove();
+
+    let listHtml = '';
+    
+    // ★ 여기가 문제였을 수 있습니다. bid로 통일합니다.
+    bids.forEach(bid => {
+        const isSelected = bid.status === 'selected';
+        
+        // 파트너 정보 (없으면 기본값)
+        const partnerInfo = profileMap[bid.partner_id] || { avg_rating: 0, review_count: 0, company_name: bid.company_name };
+        
+        // 별점 생성
+        const score = partnerInfo.avg_rating || 0;
+        let stars = '';
+        for(let i=0; i<5; i++) stars += i < Math.round(score) ? '⭐' : '<span style="opacity:0.3">⭐</span>';
+        
+        // 후기 보기 링크
+        const reviewText = partnerInfo.review_count > 0 
+            ? `<span style="font-size:11px; color:#64748b; text-decoration:underline; cursor:pointer;" onclick="viewPartnerReviews('${bid.partner_id}')">후기 ${partnerInfo.review_count}개 보기</span>` 
+            : `<span style="font-size:11px; color:#ccc;">후기 없음</span>`;
+
+        let actionArea = '';
+        if(isSelected) {
+            actionArea = `
+                <div style="margin-top:10px; padding:10px; background:#dcfce7; border:1px solid #bbf7d0; border-radius:8px; text-align:center;">
+                    <div style="font-weight:bold; color:#166534; font-size:14px;">✅ 선택 완료</div>
+                    <div style="font-size:18px; font-weight:900; color:#1e293b; margin-top:5px;">📞 ${bid.partner_phone}</div>
+                    <div style="font-size:12px; color:#166534;">위 번호로 연락하여 일정을 조율하세요.</div>
+                </div>`;
+        } else {
+            actionArea = `<button onclick="window.selectBid('${bid.id}', '${bid.order_id}')" class="btn-round primary" style="width:100%; margin-top:10px; height:40px; justify-content:center;">이 파트너 선택하기</button>`;
+        }
+
+        listHtml += `
+            <div style="padding:20px; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:15px; background:white; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:5px;">
+                    <div>
+                        <div style="font-weight:bold; font-size:16px; color:#1e293b;">${partnerInfo.company_name || '파트너사'}</div>
+                        <div style="margin-top:2px;">${stars} <span style="font-size:12px; font-weight:bold; color:#1e293b;">${score.toFixed(1)}</span> ${reviewText}</div>
+                    </div>
+                    <div style="font-weight:800; color:#6366f1; font-size:18px;">${bid.price.toLocaleString()}원</div>
+                </div>
+                <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:13px; color:#475569; line-height:1.5; margin-top:10px;">
+                    "${bid.message}"
+                </div>
+                ${actionArea}
+            </div>
+        `;
+    });
+
+    const modalHtml = `
+        <div id="bidListModal" class="modal-overlay" style="display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(2px);">
+            <div class="modal-box" style="width:450px; max-height:85vh; overflow-y:auto; background:#f8fafc; padding:0; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+                <div style="background:white; padding:20px; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:10;">
+                    <h3 style="margin:0; font-size:18px;">📋 도착한 견적서 (${bids.length}건)</h3>
+                    <p style="color:#64748b; font-size:13px; margin:5px 0 0 0;">가격과 평점을 비교하고 파트너를 선택하세요.</p>
+                </div>
+                <div style="padding:20px;">
+                    ${listHtml}
+                </div>
+                <div style="padding:15px; text-align:center;">
+                    <button onclick="document.getElementById('bidListModal').remove()" class="btn-round" style="width:100%; background:#e2e8f0; color:#334155; border:none; height:45px; justify-content:center;">닫기</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+};
+
+// [추가] 파트너 후기 모달 보기 함수 (함수가 없다면 추가)
+window.viewPartnerReviews = async function(partnerId) {
+    const { data: reviews } = await sb.from('partner_reviews')
+        .select('*')
+        .eq('partner_id', partnerId)
+        .order('created_at', {ascending: false})
+        .limit(10);
+
+    let html = '';
+    if(!reviews || reviews.length === 0) {
+        html = '<div style="padding:20px; text-align:center; color:#999;">등록된 후기가 없습니다.</div>';
+    } else {
+        reviews.forEach(r => {
+            let stars = '⭐'.repeat(r.rating);
+            html += `
+                <div style="border-bottom:1px solid #eee; padding:10px 0;">
+                    <div style="font-size:12px; color:#f59e0b;">${stars}</div>
+                    <div style="font-size:13px; color:#333; margin-top:4px;">${r.comment}</div>
+                    <div style="font-size:11px; color:#aaa; margin-top:2px;">${new Date(r.created_at).toLocaleDateString()}</div>
+                </div>
+            `;
+        });
+    }
+
+    const reviewModal = document.createElement('div');
+    reviewModal.style.cssText = "position:fixed; inset:0; z-index:20001; background:rgba(0,0,0,0.3); display:flex; justify-content:center; align-items:center;";
+    reviewModal.innerHTML = `
+        <div style="background:white; width:350px; padding:20px; border-radius:12px; max-height:60vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h4 style="margin:0 0 10px 0;">💬 파트너 후기</h4>
+            ${html}
+            <button onclick="this.parentElement.parentElement.remove()" style="width:100%; margin-top:15px; padding:10px; border:1px solid #ddd; background:white; border-radius:8px; cursor:pointer;">닫기</button>
+        </div>
+    `;
+    document.body.appendChild(reviewModal);
+};
+
+// [파트너 선택 실행 함수] (함수가 없다면 추가)
+// [파트너 선택 실행 함수] (수정됨: 고객 연락처 입력)
+window.selectBid = async function(bidId, orderId) {
+    // 1. 고객 연락처 입력받기
+    const myPhone = prompt("파트너에게 전달할 고객님의 연락처를 입력해주세요:", "010-");
+    
+    if(!myPhone) return alert("연락처를 입력해야 파트너와 연결될 수 있습니다.");
+    
+    if(!confirm(`입력하신 번호(${myPhone})를 파트너에게 전달하고\n이 업체를 최종 선택하시겠습니까?`)) return;
+
+    // 2. 해당 입찰 승인
+    const { error: err1 } = await sb.from('bids').update({ status: 'selected' }).eq('id', bidId);
+    if(err1) return alert("오류 발생: " + err1.message);
+
+    // 3. 나머지 입찰 거절
+    await sb.from('bids').update({ status: 'rejected' }).eq('order_id', orderId).neq('id', bidId);
+    
+    // 4. 주문 상태 변경 + 고객 연락처 저장
+    await sb.from('orders').update({ 
+        status: '제작준비',
+        selected_customer_phone: myPhone // [핵심] 고객 연락처 저장
+    }).eq('id', orderId);
+
+    alert("✅ 매칭이 완료되었습니다!\n파트너 연락처가 공개되었습니다.");
+    document.getElementById('bidListModal').remove();
+    
+    // 화면 갱신 (입찰 내역 다시 불러와서 매칭된 정보 보여주기)
+    window.checkBidsForOrder(orderId);
+    loadOrders();
+};
+// ==========================================
+// [고객용] 실시간 입찰 알림 시스템 (TTS)
+// ==========================================
+let lastBidCountGlobal = 0;
+
+async function monitorMyBids() {
+    if (!currentUser) return;
+
+    // 내 주문들에 달린 입찰 개수 조회
+    // (복잡한 조인 대신, 내 주문 ID를 먼저 가져오고 입찰 수를 셈)
+    const { data: myOrders } = await sb.from('orders').select('id').eq('user_id', currentUser.id);
+    
+    if (myOrders && myOrders.length > 0) {
+        const orderIds = myOrders.map(o => o.id);
+        
+        const { count: bidCount } = await sb.from('bids')
+            .select('*', { count: 'exact', head: true })
+            .in('order_id', orderIds);
+
+        // 이전보다 입찰 수가 늘어났으면 알림
+        if (lastBidCountGlobal !== 0 && bidCount > lastBidCountGlobal) {
+            speakTTS("입찰에 참여한 파트너스가 있습니다. 견적을 확인해주세요.");
+            
+            // 현재 보고 있는 탭이 '주문내역'이라면 리스트 새로고침
+            const orderTab = document.getElementById('tab-orders');
+            if (orderTab && orderTab.classList.contains('active')) {
+                loadOrders();
+            }
+        }
+        lastBidCountGlobal = bidCount || 0;
+    }
+}
+
+function speakTTS(text) {
+    if ('speechSynthesis' in window) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'ko-KR';
+        msg.rate = 1.0; 
+        window.speechSynthesis.speak(msg);
+    }
+}
+
+// 10초마다 입찰 확인
+setInterval(monitorMyBids, 10000);
+// [신규] 후기 작성 모달 열기
+window.openPartnerReviewModal = async function(orderId) {
+    // 해당 주문의 파트너(입찰 승자) 찾기
+    const { data: bids } = await sb.from('bids').select('partner_id').eq('order_id', orderId).eq('status', 'selected').single();
+    
+    if(!bids || !bids.partner_id) {
+        alert("매칭된 파트너 정보를 찾을 수 없습니다.");
+        return;
+    }
+
+    const partnerId = bids.partner_id;
+    const rating = prompt("파트너의 평점을 입력해주세요 (1~5점):", "5");
+    if(!rating) return;
+    
+    const comment = prompt("다른 고객들이 볼 수 있도록 후기를 남겨주세요:", "친절하고 꼼꼼하게 시공해주셨습니다.");
+    if(!comment) return;
+
+    // [핵심] partner_reviews 테이블에 저장 (공개용)
+    const { error } = await sb.from('partner_reviews').insert({
+        order_id: orderId,
+        partner_id: partnerId,
+        customer_id: currentUser.id,
+        rating: parseInt(rating),
+        comment: comment
+    });
+
+    if(error) {
+        alert("후기 저장 실패: " + error.message);
+    } else {
+        // 주문 상태도 '구매확정'으로 변경
+        await sb.from('orders').update({ status: '구매확정' }).eq('id', orderId);
+        
+        // 파트너 평균 평점 업데이트 (RPC 함수가 있다면 좋지만, 없다면 생략 가능)
+        alert("소중한 후기가 등록되었습니다! 감사합니다.");
+        loadOrders(); // 목록 새로고침
+    }
+};
+// [누락된 함수 복구] 5. 내 리뷰/평점 로드
+    async function loadMyReviews() {
+        if (!myPartnerInfo) return;
+
+        // 평점 정보 표시
+        const avg = myPartnerInfo.avg_rating || 0;
+        const count = myPartnerInfo.review_count || 0;
+        
+        const avgEl = document.getElementById('myAvgRating');
+        if(avgEl) avgEl.innerText = avg.toFixed(1);
+        
+        const countEl = document.getElementById('myReviewCount');
+        if(countEl) countEl.innerText = count;
+        
+        let stars = '';
+        for(let i=0; i<5; i++) stars += i < Math.round(avg) ? '★' : '☆';
+        
+        const starEl = document.getElementById('myStarDisplay');
+        if(starEl) starEl.innerText = stars;
+
+        // 리뷰 리스트 로드
+        const list = document.getElementById('reviewList');
+        if(!list) return;
+
+        const { data: reviews } = await sb.from('partner_reviews')
+            .select('*')
+            .eq('partner_id', myPartnerInfo.id)
+            .order('created_at', { ascending: false });
+            
+        list.innerHTML = '';
+        if(reviews && reviews.length > 0) {
+            reviews.forEach(r => {
+                let rStars = '';
+                for(let i=0; i<5; i++) rStars += i < r.rating ? '★' : '☆';
+                
+                list.innerHTML += `
+                    <div class="order-card">
+                        <div style="color:#f59e0b; font-size:18px; margin-bottom:5px;">${rStars}</div>
+                        <div style="font-weight:bold; color:#334155; margin-bottom:10px;">"${r.comment}"</div>
+                        <div style="font-size:12px; color:#94a3b8; text-align:right;">${new Date(r.created_at).toLocaleDateString()}</div>
+                    </div>
+                `;
+            });
+        } else {
+            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">아직 등록된 후기가 없습니다.</div>';
+        }
+    }
+    // [신규] 강력한 소리 재생 함수 (마이페이지용)
