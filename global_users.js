@@ -1,9 +1,6 @@
 import { sb } from "./global_config.js";
 import { showLoading } from "./global_common.js";
 
-// [회원 목록 로드]
-// [회원 목록 로드 - 필터/정렬/검색 기능 강화]
-// [회원 목록 로드]
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
 // ==========================================
@@ -94,7 +91,7 @@ window.loadMembers = async (isNewSearch = false) => {
             </div>
         `;
 
-        // 자산 관리 버튼
+        // 자산 관리 버튼 (예치금/마일리지)
         const walletBtn = `
             <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${deposit})" style="width:100%; margin-bottom:2px; padding:2px;">
                 <i class="fa-solid fa-coins" style="color:#eab308;"></i> 예치금
@@ -111,7 +108,7 @@ window.loadMembers = async (isNewSearch = false) => {
         if (r === 'franchise') { badgeColor = '#f3e8ff'; badgeText = '#7e22ce'; }
         if (r === 'admin') { badgeColor = '#fee2e2'; badgeText = '#dc2626'; }
 
-        // 메모 입력창 (너비는 CSS colgroup으로 200px 제한됨)
+        // 메모 입력창
         const memoHtml = `
             <div style="display:flex; flex-direction:column; gap:2px;">
                 <textarea id="memo_${m.id}" style="width:100%; height:34px; font-size:11px; padding:4px; border:1px solid #e2e8f0; border-radius:4px; resize:vertical; box-sizing:border-box;">${memo}</textarea>
@@ -119,7 +116,6 @@ window.loadMembers = async (isNewSearch = false) => {
             </div>
         `;
 
-        // (loadMembers 함수 내부의 반복문 안쪽)
         tbody.innerHTML += `
             <tr style="border-bottom:1px solid #f1f5f9; height:50px;">
                 <td style="color:#64748b; font-size:12px; text-align:center;">${new Date(m.created_at).toLocaleDateString()}</td>
@@ -160,9 +156,6 @@ window.loadMembers = async (isNewSearch = false) => {
 window.changeMemberPage = (step) => {
     const next = currentMemberPage + step;
     if(next < 1) return alert("첫 페이지입니다.");
-    
-    // 다음 페이지 데이터 존재 여부는 loadMembers 내부에서 빈 배열일 때 처리됨
-    // (또는 현재 페이지가 totalPages와 같으면 막을 수도 있음)
     currentMemberPage = next;
     loadMembers(false); 
 };
@@ -194,6 +187,117 @@ window.updateContributorTier = async (id, newTier) => {
     if(error) alert("실패: " + error.message);
     else alert("변경되었습니다.");
 };
+
+// =======================================================
+// [새로 추가된 기능] 예치금(Wallet) 모달 제어 함수들
+// =======================================================
+
+// 1. 모달 열기
+window.openWalletModal = (id, email, currentAmount) => {
+    const modal = document.getElementById('walletModal');
+    if(!modal) return;
+
+    // hidden input에 값 설정
+    document.getElementById('walletTargetId').value = id;
+    
+    // UI 텍스트 설정
+    document.getElementById('walletTargetName').innerText = email;
+    document.getElementById('walletTargetBalance').innerText = (currentAmount || 0).toLocaleString() + '원';
+    
+    // 입력창 초기화
+    document.getElementById('walletAmount').value = '';
+    document.getElementById('walletDesc').value = '';
+
+    // 기본 모드를 '충전(add)'으로 설정
+    setWalletMode('add');
+    
+    modal.style.display = 'flex';
+};
+
+// 2. 충전/차감 모드 전환
+window.setWalletMode = (mode) => {
+    const btnAdd = document.getElementById('btnWalletAdd');
+    const btnSub = document.getElementById('btnWalletSub');
+    const submitBtn = document.getElementById('btnWalletSubmit');
+    
+    document.getElementById('walletMode').value = mode;
+
+    if(mode === 'add') {
+        // 충전 모드 스타일
+        btnAdd.classList.add('btn-primary');
+        btnAdd.classList.remove('btn-outline');
+        btnSub.classList.add('btn-outline');
+        btnSub.classList.remove('btn-danger'); // 기존 CSS에 없으면 무시됨
+        
+        submitBtn.innerText = "충전하기";
+        submitBtn.className = "btn btn-primary"; // 파란 버튼
+    } else {
+        // 차감 모드 스타일
+        btnAdd.classList.add('btn-outline');
+        btnAdd.classList.remove('btn-primary');
+        btnSub.classList.remove('btn-outline');
+        // btn-danger 클래스가 있다면 사용, 없으면 inline style
+        btnSub.style.background = '#fee2e2';
+        btnSub.style.color = '#ef4444';
+        
+        submitBtn.innerText = "차감하기";
+        submitBtn.className = "btn btn-danger"; // 빨간 버튼
+    }
+    submitBtn.style.width = '100%';
+    submitBtn.style.marginTop = '10px';
+};
+
+// 3. 예치금 변경 실행 (DB 업데이트)
+window.submitWalletChange = async () => {
+    const id = document.getElementById('walletTargetId').value;
+    const mode = document.getElementById('walletMode').value;
+    const amountVal = document.getElementById('walletAmount').value;
+    
+    if(!amountVal || parseInt(amountVal) <= 0) return alert("금액을 정확히 입력해주세요.");
+    
+    const amount = parseInt(amountVal);
+    
+    showLoading(true);
+
+    try {
+        // 1. 현재 잔액 다시 확인 (안전장치)
+        const { data: profile, error: fetchErr } = await sb.from('profiles').select('deposit').eq('id', id).single();
+        if(fetchErr) throw fetchErr;
+
+        const currentDeposit = profile.deposit || 0;
+        let newDeposit = 0;
+
+        if(mode === 'add') {
+            newDeposit = currentDeposit + amount;
+        } else {
+            newDeposit = currentDeposit - amount;
+            if(newDeposit < 0) {
+                if(!confirm(`잔액이 부족합니다. (현재: ${currentDeposit}원)\n그래도 차감하여 마이너스로 만드시겠습니까?`)) {
+                    showLoading(false);
+                    return;
+                }
+            }
+        }
+
+        // 2. DB 업데이트
+        const { error: updateErr } = await sb.from('profiles').update({ deposit: newDeposit }).eq('id', id);
+        if(updateErr) throw updateErr;
+
+        // 3. 성공 처리
+        alert("처리가 완료되었습니다.");
+        document.getElementById('walletModal').style.display = 'none';
+        loadMembers(); // 목록 새로고침
+
+    } catch(e) {
+        alert("오류 발생: " + e.message);
+    } finally {
+        showLoading(false);
+    }
+};
+
+// =======================================================
+// 기존 함수들 계속...
+// =======================================================
 
 // [마일리지 엑셀 업로드]
 window.importMileageExcel = async (input) => {
@@ -367,7 +471,6 @@ window.loadWithdrawals = async () => {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">로딩 중...</td></tr>';
 
     try {
-        // [수정] .limit(50) 추가: 데이터가 많으면 프로필 조회(in 쿼리)가 실패하여 모두 '삭제된 회원'으로 뜰 수 있음
         const { data: requests, error } = await sb.from('withdrawal_requests')
             .select('*')
             .order('created_at', { ascending: false })
@@ -380,17 +483,13 @@ window.loadWithdrawals = async () => {
             return;
         }
 
-        // 사용자 프로필 정보 가져오기
         const userIds = [...new Set(requests.map(r => r.user_id))];
         
         const { data: users, error: userError } = await sb.from('profiles')
             .select('id, email, full_name')
             .in('id', userIds);
 
-        if(userError) {
-            console.error("프로필 조회 실패:", userError);
-            // 에러가 나도 목록은 보여주되 유저 정보만 비게 됨
-        }
+        if(userError) console.error("프로필 조회 실패:", userError);
 
         const userMap = {};
         if (users) users.forEach(u => userMap[u.id] = u);
@@ -400,7 +499,6 @@ window.loadWithdrawals = async () => {
             const amount = (r.amount || 0).toLocaleString() + '원';
             const date = new Date(r.created_at).toLocaleDateString();
             
-            // 은행 정보
             const bankName = r.bank_name || '은행미상';
             const accHolder = r.account_holder || '예금주미상';
             const accNum = r.account_number || '-';
@@ -413,16 +511,13 @@ window.loadWithdrawals = async () => {
                 <div style="font-size:12px; color:#475569; letter-spacing:0.5px;">${accNum}</div>
             `;
 
-            // 주민번호
             const residentNum = r.resident_number || r.rrn || '-';
 
-            // 유저 정보 매핑
             const user = userMap[r.user_id];
             const displayUser = user ? 
                 `<div><span style="font-weight:bold;">${user.full_name || '이름미상'}</span></div><div style="font-size:11px; color:#888;">${user.email}</div>` 
                 : `<span style="font-size:11px; color:#999;">삭제된 회원<br>(${r.user_id ? r.user_id.substring(0,8) : 'unknown'}...)</span>`;
 
-            // 상태 뱃지 및 버튼
             let statusBadge = `<span class="badge" style="background:#f1f5f9; color:#64748b;">${r.status}</span>`;
             let actionBtn = '-';
 
@@ -430,15 +525,12 @@ window.loadWithdrawals = async () => {
                 statusBadge = `<span class="badge" style="background:#fee2e2; color:#ef4444;">승인대기</span>`;
                 actionBtn = `
                     <div style="display:flex; gap:4px; justify-content:center;">
-                        <button class="btn btn-success btn-sm" onclick="processWithdrawal('${r.id}', 'approved')">승인</button>
-                        <button class="btn btn-danger btn-sm" onclick="processWithdrawal('${r.id}', 'rejected')">반려</button>
+                        <button class="btn btn-success btn-sm" onclick="approveWithdrawal('${r.id}')">승인(지급)</button>
                     </div>
                 `;
             } else if (r.status === 'approved') {
                 statusBadge = `<span class="badge" style="background:#dcfce7; color:#15803d;">지급완료</span>`;
                 actionBtn = `<span style="font-size:11px; color:#aaa;">처리됨</span>`;
-            } else if (r.status === 'rejected') {
-                statusBadge = `<span class="badge" style="background:#94a3b8; color:#fff;">반려됨</span>`;
             }
 
             tbody.innerHTML += `
@@ -458,6 +550,7 @@ window.loadWithdrawals = async () => {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
     }
 };
+
 window.approveWithdrawal = async (requestId) => {
     if(!confirm("해당 건을 '입금완료' 처리하시겠습니까?")) return;
 
@@ -479,5 +572,5 @@ window.approveWithdrawal = async (requestId) => {
 
 // [결산]
 window.loadAccountingData = async () => {
-    alert("결산 조회 기능 (global_admin.js 또는 별도 구현 필요)");
+    alert("결산 조회 기능 준비중...");
 };
