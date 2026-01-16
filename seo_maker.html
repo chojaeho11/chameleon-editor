@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>카멜레온 다국어 SEO 생성기</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; padding: 50px; text-align: center; background: #f8fafc; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #1e293b; margin-bottom: 5px; }
+        .badge { display: inline-block; background: #dbeafe; color: #1e40af; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 20px; }
+        .btn { 
+            width: 100%; padding: 20px; font-size: 18px; font-weight: bold; color: white; 
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); 
+            border: none; border-radius: 12px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+        .btn:hover { transform: translateY(-3px); }
+        .log { margin-top: 20px; color: #475569; background: #f1f5f9; padding: 15px; border-radius: 10px; font-size: 13px; text-align: left; white-space: pre-line; height: 250px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌏 글로벌 SEO 생성기</h1>
+        <div class="badge">KR / EN / JP + 회사명 자동 적용</div>
+        <p style="color:#64748b; margin-bottom:30px; font-size:15px;">
+            모든 페이지에 3개 국어 메타태그가 심어집니다.<br>
+            접속 도메인(cafe2626/3355/0101)에 따라<br>자동으로 언어가 바뀌어 노출됩니다.
+        </p>
+        
+        <button class="btn" onclick="startCloning()">🚀 26개 페이지 생성하기</button>
+        <div class="log" id="log">대기 중...</div>
+    </div>
+
+    <script>
+        // ★ 설정된 도메인
+        const TARGET_DOMAIN = "https://www.cafe2626.com";
+
+        // ★ 다국어 회사명 정의
+        const COMPANY_NAMES = {
+            "KR": " | 카멜레온프린팅",
+            "EN": " | Chameleon Printing",
+            "JP": " | カメレオンプリンティング"
+        };
+
+        // ▼ 26개 제품 데이터 (3개 국어 완비)
+        const SEO_DATA = {
+            "honeycomb": {
+                "KR": { "title": "허니콤보드 제작 - 친환경 전시부스", "desc": "100% 재활용 가능한 종이 소재. 전시회 백월, 등신대, 가벽 제작.", "keywords": "허니콤보드, 종이부스" },
+                "EN": { "title": "Honeycomb Board Printing", "desc": "Eco-friendly paper exhibition booths and standees.", "keywords": "Honeycomb Board, Eco Display" },
+                "JP": { "title": "ハニカムボード制作 - エコ展示ブース", "desc": "リサイクル可能な紙製展示ブース・バックウォール。", "keywords": "ハニカムボード, エコ展示" }
+            },
+            "fabric-print": {
+                "KR": { "title": "패브릭 광목천 인쇄", "desc": "내추럴한 광목천 UV 출력. 가림막, 포스터 제작.", "keywords": "광목천인쇄, 패브릭포스터" },
+                "EN": { "title": "Fabric Cotton Printing", "desc": "Natural cotton fabric printing for interior design.", "keywords": "Cotton Printing, Fabric Poster" },
+                "JP": { "title": "ファブリック綿印刷", "desc": "ナチュラルな綿素材へのUV印刷。インテリアに最適。", "keywords": "ファブリック印刷, 綿印刷" }
+            },
+            "paper-stand": {
+                "KR": { "title": "종이매대 진열대 제작", "desc": "가볍고 조립이 쉬운 종이 매대. 팝업스토어 진열대.", "keywords": "종이매대, 팝업집기" },
+                "EN": { "title": "Cardboard Display Stand", "desc": "Lightweight and easy-to-assemble paper display stands.", "keywords": "Paper Display, Cardboard Stand" },
+                "JP": { "title": "紙製ディスプレイ什器", "desc": "軽くて組立簡単な紙製陳列棚。ポップアップストアに。", "keywords": "紙製什器, ディスプレイスタンド" }
+            },
+            "paper-furniture": {
+                "KR": { "title": "종이가구 제작 - 친환경 테이블", "desc": "사람이 앉아도 튼튼한 허니콤 종이 가구.", "keywords": "종이가구, 종이의자" },
+                "EN": { "title": "Paper Furniture", "desc": "Sturdy honeycomb paper tables and chairs.", "keywords": "Paper Furniture, Cardboard Chair" },
+                "JP": { "title": "紙製家具制作", "desc": "人が座れる丈夫なハニカム紙家具。", "keywords": "紙家具, 紙椅子" }
+            },
+            "foamex-print": {
+                "KR": { "title": "포맥스 인쇄 - 간판 및 메뉴판", "desc": "단단하고 내구성 좋은 포맥스 실사출력.", "keywords": "포맥스인쇄, 안내판" },
+                "EN": { "title": "Foamex Printing", "desc": "Durable PVC foam board printing for signs.", "keywords": "Foamex Print, PVC Board" },
+                "JP": { "title": "フォーメックス印刷", "desc": "耐久性に優れたPVCボード印刷。看板やメニューに。", "keywords": "フォーメックス, 看板制作" }
+            },
+            "foamboard-print": {
+                "KR": { "title": "폼보드 인쇄 - 가벼운 POP", "desc": "가볍고 저렴한 폼보드 출력. 행사용 피켓.", "keywords": "폼보드, 피켓" },
+                "EN": { "title": "Foamboard Printing", "desc": "Lightweight foam board printing for POP.", "keywords": "Foamboard, Foam Core" },
+                "JP": { "title": "フォームボード印刷", "desc": "軽くて安価なフォームボード。イベント用ピケットに。", "keywords": "フォームボード, パネル印刷" }
+            },
+            "goods": {
+                "KR": { "title": "굿즈 제작 - 소량 커스텀", "desc": "키링, 코스터, 아크릴 등 나만의 굿즈 제작.", "keywords": "굿즈제작, 키링" },
+                "EN": { "title": "Custom Goods & Merch", "desc": "Custom keyrings, coasters, and acrylic merchandise.", "keywords": "Custom Goods, Merch" },
+                "JP": { "title": "オリジナルグッズ制作", "desc": "小ロットからのアクリルキーホルダー、コースター制作。", "keywords": "オリジナルグッズ, アクキー" }
+            },
+            "foamex-stand": {
+                "KR": { "title": "포맥스 매대 진열대", "desc": "반영구적으로 사용 가능한 튼튼한 진열대.", "keywords": "포맥스진열대" },
+                "EN": { "title": "Foamex Display Shelf", "desc": "Durable and long-lasting Foamex display shelves.", "keywords": "Foamex Display, Retail Shelf" },
+                "JP": { "title": "フォーメックス陳列台", "desc": "丈夫で長持ちするフォーメックス製ディスプレイ什器。", "keywords": "陳列台, ディスプレイ什器" }
+            },
+            "biz-print": {
+                "KR": { "title": "명함 리플릿 전단", "desc": "고품질 명함, 리플릿, 전단지 당일판.", "keywords": "명함, 전단지" },
+                "EN": { "title": "Business Cards & Flyers", "desc": "High-quality business cards, leaflets, and flyers.", "keywords": "Business Cards, Flyers" },
+                "JP": { "title": "名刺・チラシ・リーフレット", "desc": "高品質な名刺、チラシ、パンフレット印刷。", "keywords": "名刺作成, チラシ印刷" }
+            },
+            "roll-blind": {
+                "KR": { "title": "롤블라인드 제작", "desc": "원하는 이미지로 만드는 커스텀 롤스크린.", "keywords": "롤블라인드, 롤스크린" },
+                "EN": { "title": "Custom Roll Blinds", "desc": "Personalized photo roll blinds for home and office.", "keywords": "Roll Blinds, Photo Blinds" },
+                "JP": { "title": "ロールスクリーン制作", "desc": "好きな写真で作るオリジナルロールスクリーン。", "keywords": "ロールスクリーン, フォトブラインド" }
+            },
+            "home-interior": {
+                "KR": { "title": "홈인테리어 소품", "desc": "패브릭 포스터, 쿠션, 가리개 등 인테리어 소품.", "keywords": "인테리어소품, 패브릭포스터" },
+                "EN": { "title": "Home Interior Decor", "desc": "Custom fabric posters, cushions, and decor items.", "keywords": "Home Decor, Fabric Poster" },
+                "JP": { "title": "ホームインテリア雑貨", "desc": "ファブリックポスターやクッションなどオリジナル雑貨。", "keywords": "インテリア雑貨, ファブリックパネル" }
+            },
+            "promo-items": {
+                "KR": { "title": "판촉물 제작", "desc": "볼펜, 메모지, 부채 등 효과적인 기업 판촉물.", "keywords": "판촉물, 기념품" },
+                "EN": { "title": "Promotional Items", "desc": "Effective corporate gifts and promotional products.", "keywords": "Promotional Items, Corporate Gifts" },
+                "JP": { "title": "販促品・ノベルティ", "desc": "企業向け販促品、記念品、ノベルティグッズ制作。", "keywords": "販促品, ノベルティ" }
+            },
+            "flexible-package": {
+                "KR": { "title": "연포장 인쇄", "desc": "식품, 화장품 포장을 위한 비닐 파우치 소량 인쇄.", "keywords": "연포장, 파우치" },
+                "EN": { "title": "Flexible Packaging", "desc": "Small batch flexible packaging pouches.", "keywords": "Flexible Packaging, Pouch Printing" },
+                "JP": { "title": "軟包装・パウチ印刷", "desc": "食品や化粧品向けの小ロットパウチ印刷。", "keywords": "軟包装, パウチ印刷" }
+            },
+            "box-package": {
+                "KR": { "title": "박스 패키지 제작", "desc": "제품 포장을 위한 칼라박스, 단상자 맞춤 제작.", "keywords": "박스제작, 패키지" },
+                "EN": { "title": "Custom Box Packaging", "desc": "Custom printed boxes and product packaging.", "keywords": "Box Packaging, Custom Boxes" },
+                "JP": { "title": "箱・パッケージ制作", "desc": "商品パッケージ用の化粧箱、カスタムボックス制作。", "keywords": "箱制作, パッケージ印刷" }
+            },
+            "shopping-bag": {
+                "KR": { "title": "쇼핑백 맞춤제작", "desc": "브랜드 로고가 들어간 고급 종이 쇼핑백.", "keywords": "쇼핑백, 종이가방" },
+                "EN": { "title": "Custom Shopping Bags", "desc": "Custom printed paper shopping bags with your logo.", "keywords": "Shopping Bags, Paper Bags" },
+                "JP": { "title": "ショッピングバッグ制作", "desc": "ロゴ入りオリジナル紙袋・ショッピングバッグ制作。", "keywords": "紙袋, ショッピングバッグ" }
+            },
+            "acrylic-print": {
+                "KR": { "title": "아크릴 인쇄 재단", "desc": "투명 아크릴 배면인쇄, 키링, 현판 제작.", "keywords": "아크릴인쇄, 아크릴키링" },
+                "EN": { "title": "Acrylic Printing", "desc": "UV printing on acrylic for signs and keyrings.", "keywords": "Acrylic Printing, Acrylic Sign" },
+                "JP": { "title": "アクリル印刷・カット", "desc": "透明アクリルへのUV印刷。キーホルダーや看板に。", "keywords": "アクリル印刷, アクリルカット" }
+            },
+            "banner-stand": {
+                "KR": { "title": "배너 거치대 제작", "desc": "실내외 홍보용 X배너, Y배너 출력.", "keywords": "X배너, 배너거치대" },
+                "EN": { "title": "Banner Stands", "desc": "X-Banners and standing banners for promo.", "keywords": "Banner Stand, X-Banner" },
+                "JP": { "title": "バナースタンド制作", "desc": "室内・屋外用Xバナー、Yバナー制作。", "keywords": "バナースタンド, Xバナー" }
+            },
+            "standee": {
+                "KR": { "title": "등신대 제작", "desc": "폼보드, 포맥스 소재의 실사 등신대 제작.", "keywords": "등신대, 포토존" },
+                "EN": { "title": "Life-size Standee", "desc": "Custom life-size standees for events.", "keywords": "Standee, Life-size Cutout" },
+                "JP": { "title": "等身大パネル制作", "desc": "イベントやフォトゾーン用の等身大パネル制作。", "keywords": "等身大パネル, スタンディ" }
+            },
+            "rubber-magnet": {
+                "KR": { "title": "고무자석 전단", "desc": "냉장고 부착용 홍보 자석, 차량용 자석.", "keywords": "고무자석, 자석전단" },
+                "EN": { "title": "Rubber Magnet Printing", "desc": "Promotional fridge magnets and car magnetic stickers.", "keywords": "Rubber Magnet, Car Magnet" },
+                "JP": { "title": "ゴムマグネット印刷", "desc": "冷蔵庫用広告マグネットや車両用マグネットステッカー。", "keywords": "ゴムマグネット, マグネット広告" }
+            },
+            "placard": {
+                "KR": { "title": "현수막 제작", "desc": "게릴라 현수막, 대형 외벽 현수막 출력.", "keywords": "현수막, 플랜카드" },
+                "EN": { "title": "Banners & Placards", "desc": "Large format banners and placards for events.", "keywords": "Banner, Placard" },
+                "JP": { "title": "横断幕・懸垂幕", "desc": "イベントや広告用の大型横断幕制作。", "keywords": "横断幕, 懸垂幕" }
+            },
+            "sheet-print": {
+                "KR": { "title": "시트지 인쇄", "desc": "유리창 썬팅, 인테리어용 시트지 컷팅.", "keywords": "시트지, 썬팅" },
+                "EN": { "title": "Adhesive Sheet Printing", "desc": "Window decals and adhesive sheet printing.", "keywords": "Window Decal, Sticker Printing" },
+                "JP": { "title": "シート印刷", "desc": "ウィンドウ用シート印刷、カッティングシート制作。", "keywords": "カッティングシート, ウィンドウシール" }
+            },
+            "flex-sign": {
+                "KR": { "title": "플렉스 인쇄", "desc": "간판 교체용 후렉스(Flex) 천 인쇄.", "keywords": "플렉스, 간판천" },
+                "EN": { "title": "Flex Banner Printing", "desc": "Flex material printing for backlit signage.", "keywords": "Flex Printing, Backlit Banner" },
+                "JP": { "title": "フレックス看板印刷", "desc": "看板用フレックス素材への印刷。", "keywords": "フレックス印刷, 看板印刷" }
+            },
+            "uv-print": {
+                "KR": { "title": "UV 평판 인쇄", "desc": "나무, 금속, 가죽, 타일 등 특수 소재 출력.", "keywords": "UV인쇄, 평판출력" },
+                "EN": { "title": "UV Flatbed Printing", "desc": "High-quality printing on wood, metal, leather.", "keywords": "UV Printing, Flatbed Print" },
+                "JP": { "title": "UVフラットベッド印刷", "desc": "木材、金属、革など多様な素材への高画質印刷。", "keywords": "UV印刷, 平板印刷" }
+            },
+            "tshirt-print": {
+                "KR": { "title": "티셔츠 인쇄", "desc": "가족티, 행사용 단체티 커스텀 소량 제작.", "keywords": "티셔츠, 단체티" },
+                "EN": { "title": "Custom T-shirt Printing", "desc": "Custom t-shirts for groups and events.", "keywords": "T-shirt Printing, Custom Apparel" },
+                "JP": { "title": "Tシャツプリント", "desc": "オリジナルTシャツ、クラスTシャツ制作。", "keywords": "Tシャツ印刷, オリジナルTシャツ" }
+            },
+            "blackout-blind": {
+                "KR": { "title": "암막 블라인드", "desc": "완벽한 빛 차단을 위한 암막 롤스크린.", "keywords": "암막, 롤스크린" },
+                "EN": { "title": "Blackout Blinds", "desc": "Blackout roll screens for complete light blocking.", "keywords": "Blackout Blinds, Roll Shades" },
+                "JP": { "title": "暗幕ブラインド", "desc": "完全遮光のための暗幕ロールスクリーン。", "keywords": "暗幕ブラインド, 遮光ロールスクリーン" }
+            },
+            "curtain": {
+                "KR": { "title": "가림막 커튼", "desc": "공간 분리 및 인테리어용 가림막 커튼, 노렌.", "keywords": "가림막, 노렌" },
+                "EN": { "title": "Partition Curtains", "desc": "Fabric curtains and Noren for space division.", "keywords": "Partition Curtain, Noren" },
+                "JP": { "title": "間仕切りカーテン", "desc": "空間仕切りやインテリア用の間仕切りカーテン。", "keywords": "間仕切りカーテン, 暖簾" }
+            }
+        };
+
+        async function startCloning() {
+            const log = document.getElementById('log');
+            log.innerHTML = "♻️ index.html 원본 읽는 중...";
+
+            try {
+                // 1. index.html 원본 가져오기
+                const response = await fetch('index.html');
+                if (!response.ok) throw new Error("index.html 파일을 찾을 수 없습니다. (Live Server 확인)");
+                let originalHtml = await response.text();
+
+                log.innerHTML += "<br>✅ 원본 로드 성공! 복제 시작...";
+                const zip = new JSZip();
+                
+                // 사이트맵 헤더
+                let sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${TARGET_DOMAIN}/</loc>
+    <priority>1.0</priority>
+  </url>`;
+
+                // 2. 루프 돌면서 파일 생성
+                for (const [filename, data] of Object.entries(SEO_DATA)) {
+                    let newHtml = originalHtml;
+                    
+                    // ★ 제목에 회사명 붙이기
+                    const titles = {
+                        "KR": data.KR.title + COMPANY_NAMES.KR,
+                        "EN": data.EN.title + COMPANY_NAMES.EN,
+                        "JP": data.JP.title + COMPANY_NAMES.JP
+                    };
+
+                    // (1) 기본(KR) 타이틀/설명 교체 (HTML 정적 교체)
+                    newHtml = newHtml.replace(/<title>.*?<\/title>/i, `<title>${titles.KR}</title>`);
+                    
+                    if (newHtml.includes('name="description"')) {
+                        newHtml = newHtml.replace(/<meta name="description" content="[^"]*"/i, `<meta name="description" content="${data.KR.desc}"`);
+                    } else {
+                        newHtml = newHtml.replace('</head>', `<meta name="description" content="${data.KR.desc}">\n</head>`);
+                    }
+
+                    if (newHtml.includes('name="keywords"')) {
+                        newHtml = newHtml.replace(/<meta name="keywords" content="[^"]*"/i, `<meta name="keywords" content="${data.KR.keywords}"`);
+                    } else {
+                        newHtml = newHtml.replace('</head>', `<meta name="keywords" content="${data.KR.keywords}">\n</head>`);
+                    }
+
+                    // (2) 오픈그래프 교체
+                    newHtml = newHtml.replace(/property="og:title" content="[^"]*"/i, `property="og:title" content="${titles.KR}"`);
+                    newHtml = newHtml.replace(/property="og:description" content="[^"]*"/i, `property="og:description" content="${data.KR.desc}"`);
+
+                    // (3) ★ 핵심: 다국어 자동 전환 스크립트 주입 (접속 도메인에 따라 JS가 태그 내용 바꿈)
+                    const multiLangScript = `
+    <script>
+        (function() {
+            var h = window.location.hostname;
+            var l = 'KR';
+            if (h.includes('cafe3355')) l = 'EN';
+            else if (h.includes('cafe0101')) l = 'JP';
+            
+            var t = ${JSON.stringify(titles)};
+            var d = ${JSON.stringify({ KR: data.KR.desc, EN: data.EN.desc, JP: data.JP.desc })};
+            var k = ${JSON.stringify({ KR: data.KR.keywords, EN: data.EN.keywords, JP: data.JP.keywords })};
+            
+            if(l !== 'KR') {
+                document.title = t[l];
+                var md = document.querySelector('meta[name="description"]'); if(md) md.setAttribute('content', d[l]);
+                var mk = document.querySelector('meta[name="keywords"]'); if(mk) mk.setAttribute('content', k[l]);
+                var ot = document.querySelector('meta[property="og:title"]'); if(ot) ot.setAttribute('content', t[l]);
+                var od = document.querySelector('meta[property="og:description"]'); if(od) od.setAttribute('content', d[l]);
+            }
+        })();
+    <\/script>`;
+                    
+                    newHtml = newHtml.replace('</head>', `${multiLangScript}\n</head>`);
+
+                    // (4) Canonical 태그 (중복 방지)
+                    const canonicalTag = `<link rel="canonical" href="${TARGET_DOMAIN}/${filename}.html">`;
+                    if (newHtml.includes('rel="canonical"')) {
+                        newHtml = newHtml.replace(/<link rel="canonical" href="[^"]*">/i, canonicalTag);
+                    } else {
+                        newHtml = newHtml.replace('</head>', `${canonicalTag}\n</head>`);
+                    }
+
+                    // ZIP에 추가
+                    zip.file(`${filename}.html`, newHtml);
+                    
+                    // 사이트맵에 추가
+                    sitemapContent += `
+  <url>
+    <loc>${TARGET_DOMAIN}/${filename}.html</loc>
+    <priority>0.8</priority>
+  </url>`;
+                    
+                    log.innerHTML += `<br>✨ ${filename}.html (3개 국어 적용됨)`;
+                }
+
+                // 사이트맵 마무리 및 저장
+                sitemapContent += `\n</urlset>`;
+                zip.file("sitemap.xml", sitemapContent);
+                log.innerHTML += `<br>🗺️ sitemap.xml 생성 완료`;
+
+                // 3. 다운로드 실행
+                log.innerHTML += "<br><br>📦 압축 중...";
+                const content = await zip.generateAsync({type: "blob"});
+                saveAs(content, "chameleon_seo_multilang.zip");
+                log.innerHTML += "<br>🎉 <strong>다운로드 완료!</strong> 압축을 풀어 서버에 올리세요.";
+
+            } catch (err) {
+                log.innerHTML += `<br>❌ 오류: ${err.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

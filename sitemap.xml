@@ -1,30 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-
-    <url>
-        <loc>https://cafe2626.com/</loc>
-        <xhtml:link rel="alternate" hreflang="ko" href="https://cafe2626.com/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://cafe2626.com/en.html"/>
-        <xhtml:link rel="alternate" hreflang="ja" href="https://cafe2626.com/jp.html"/>
-        <lastmod>2025-05-20</lastmod>
-        <priority>1.0</priority>
-    </url>
-
-    <url>
-        <loc>https://cafe2626.com/en.html</loc>
-        <xhtml:link rel="alternate" hreflang="ko" href="https://cafe2626.com/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://cafe2626.com/en.html"/>
-        <xhtml:link rel="alternate" hreflang="ja" href="https://cafe2626.com/jp.html"/>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://cafe2626.com/jp.html</loc>
-        <xhtml:link rel="alternate" hreflang="ko" href="https://cafe2626.com/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://cafe2626.com/en.html"/>
-        <xhtml:link rel="alternate" hreflang="ja" href="https://cafe2626.com/jp.html"/>
-        <priority>0.8</priority>
-    </url>
-
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.cafe2626.com/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/honeycomb.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/fabric-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/paper-stand.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/paper-furniture.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/foamex-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/foamboard-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/goods.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/foamex-stand.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/biz-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/roll-blind.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/home-interior.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/promo-items.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/flexible-package.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/box-package.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/shopping-bag.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/acrylic-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/banner-stand.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/standee.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/rubber-magnet.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/placard.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/sheet-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/flex-sign.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/uv-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/tshirt-print.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/blackout-blind.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe2626.com/curtain.html</loc>
+    <priority>0.8</priority>
+  </url>
 </urlset>
