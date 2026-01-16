@@ -58,7 +58,9 @@ window.addEventListener("DOMContentLoaded", async () => {
         // 3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
         if (currentUser) {
             await checkPartnerStatus();
-            await initContributorSystem(); // [신규] 기여자 시스템 초기화
+            await initContributorSystem(); 
+            // [추가] 유저 등급(파트너스) 및 수익금(예치금) UI 강제 갱신
+            if(window.updateMainPageUserInfo) await window.updateMainPageUserInfo();
         }
 
         // 폰트 미리 로드
@@ -1223,5 +1225,52 @@ window.submitVipOrder = async function() {
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
+    }
+};
+
+// [신규] 메인 페이지 유저 정보(등급/수익금) UI 갱신 함수
+window.updateMainPageUserInfo = async function() {
+    // 1. 로그인 정보 확인
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) return;
+
+    // 2. 프로필 정보 가져오기 (role, deposit 확인)
+    const { data: profile } = await sb.from('profiles')
+        .select('role, deposit, contributor_tier')
+        .eq('id', user.id)
+        .single();
+
+    if (profile) {
+        // (1) 등급 뱃지 표시 ('platinum' -> 'PARTNERS')
+        const badgeEl = document.getElementById('myTierBadge');
+        if (badgeEl) {
+            let role = profile.role || 'customer';
+            
+            if (role === 'platinum') {
+                badgeEl.innerText = 'PARTNERS'; // 파트너스 표시
+                badgeEl.style.backgroundColor = '#e0e7ff';
+                badgeEl.style.color = '#4338ca';
+                badgeEl.style.fontWeight = '800';
+            } else if (role === 'franchise') {
+                badgeEl.innerText = 'PARTNER (가맹)';
+                badgeEl.style.backgroundColor = '#f3e8ff';
+                badgeEl.style.color = '#7e22ce';
+            } else if (role === 'gold') {
+                badgeEl.innerText = 'GOLD';
+                badgeEl.style.backgroundColor = '#fef9c3';
+                badgeEl.style.color = '#ca8a04';
+            } else {
+                // 그 외(일반)는 기여자 등급(Hero/Excellent) 등을 보여주거나 기본값
+                // initContributorSystem에서 처리한 내용을 유지하거나 여기서 덮어씌움
+                if(badgeEl.innerText === 'Loading...') badgeEl.innerText = 'USER';
+            }
+        }
+
+        // (2) 수익금(예치금 deposit) 표시
+        const balanceEl = document.getElementById('contributorBalance');
+        if (balanceEl) {
+            // DB의 deposit 값을 가져와서 표시 (기존 mileage 아님)
+            balanceEl.innerText = (profile.deposit || 0).toLocaleString();
+        }
     }
 };

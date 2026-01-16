@@ -123,9 +123,26 @@ async function uploadFileToSupabase(file, folder) {
 // ============================================================
 // [2] 주문 시스템 초기화 및 이벤트 바인딩
 // ============================================================
+// [수정됨] 제외 목록을 'window' 전역 변수에 안전하게 로드
 export async function initOrderSystem() {
-    await fetchUserDiscountRate(); // 할인율 조회
+    await fetchUserDiscountRate(); 
+    
+    // 1. 제외 목록 불러오기 (window 객체에 저장)
+    window.excludedCategoryCodes = new Set(); // 초기화
+    try {
+        const { data: topCats } = await sb.from('admin_top_categories').select('code').eq('is_excluded', true);
+        if (topCats && topCats.length > 0) {
+            const topCodes = topCats.map(c => c.code);
+            const { data: subCats } = await sb.from('admin_categories').select('code').in('top_category_code', topCodes);
+            
+            if (subCats) {
+                subCats.forEach(sc => window.excludedCategoryCodes.add(sc.code));
+                console.log("✅ 제외 목록 로드됨(전역):", Array.from(window.excludedCategoryCodes));
+            }
+        }
+    } catch(e) { console.warn("제외 목록 로드 실패:", e); }
 
+    // 2. UI 설정
     const krForm = document.getElementById("addrFormKR");
     const globalForm = document.getElementById("addrFormGlobal");
     const bankArea = document.getElementById("bankTransferInfoArea");
@@ -840,31 +857,93 @@ function renderCart() {
     updateSummary(grandProductTotal, grandAddonTotal, grandTotal);
 }
 
+// [수정됨] 전역 변수를 사용하여 마일리지 제한 적용
 function updateSummary(prodTotal, addonTotal, total) { 
     const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal); 
     const elAddon = document.getElementById("summaryAddonPrice"); if(elAddon) elAddon.innerText = formatCurrency(addonTotal);
     
-    const discountAmount = Math.floor(total * currentUserDiscountRate);
+    // 안전장치: 목록이 없으면 빈 값으로 생성
+    const excludedSet = window.excludedCategoryCodes || new Set();
+
+    let discountableAmount = 0;
+    let hasExcludedItem = false;
+
+    // 1. 할인 대상 금액 계산
+    cartData.forEach(item => {
+        const prodCat = item.product ? item.product.category : '';
+        
+        // 전역 변수 확인
+        if (excludedSet.has(prodCat)) {
+            hasExcludedItem = true;
+            console.log(`🚫 제외 상품 감지: ${item.product.name}`);
+        } else {
+            const unitPrice = item.product.price || 0;
+            const qty = item.qty || 1;
+            let itemTotal = unitPrice * qty; 
+            
+            if (item.selectedAddons) {
+                Object.values(item.selectedAddons).forEach(code => {
+                    const db = typeof ADDON_DB !== 'undefined' ? ADDON_DB : (window.ADDON_DB || {});
+                    const addon = db[code];
+                    if (addon) itemTotal += addon.price * (item.addonQuantities[code] || 1);
+                });
+            }
+            discountableAmount += itemTotal;
+        }
+    });
+
+    // 2. 할인 금액 계산
+    const discountAmount = Math.floor(discountableAmount * currentUserDiscountRate);
     const finalTotal = total - discountAmount;
     
-    // [중요] 최종 결제 금액을 전역변수에 저장 (결제 함수에서 사용)
+    // 전역 변수 업데이트
+    window.finalPaymentAmount = finalTotal; 
+    // 호환성을 위해 로컬 변수도 업데이트 (필요시)
     finalPaymentAmount = finalTotal;
 
-    const elDiscount = document.getElementById("summaryDiscount");
-    if(elDiscount) {
-        if(discountAmount > 0) {
-            elDiscount.innerText = `-${formatCurrency(discountAmount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
-        } else {
-            elDiscount.innerText = "0원 (0%)";
+    // 3. 마일리지 한도 설정
+    if (typeof currentUser !== 'undefined' && currentUser) {
+        const elOwn = document.getElementById('userOwnMileage');
+        const myMileage = elOwn ? parseInt(elOwn.innerText.replace(/[^0-9]/g, '')) || 0 : 0;
+        
+        let realLimit = 0;
+        // 할인 대상 금액이 있을 때만 10% 한도 부여
+        if (discountableAmount > 0) {
+            const tenPercent = Math.floor((discountableAmount - discountAmount) * 0.1);
+            realLimit = Math.min(myMileage, tenPercent);
+        }
+        
+        window.mileageLimitMax = realLimit; 
+        
+        const limitDisp = document.getElementById('mileageLimitDisplay');
+        if(limitDisp) limitDisp.innerText = realLimit.toLocaleString() + ' P';
+        
+        const mileInput = document.getElementById('inputUseMileage');
+        if(mileInput) {
+            mileInput.placeholder = `최대 ${realLimit.toLocaleString()}`;
+            // 제외 상품만 있어서 한도가 0이면 입력 막기
+            if (realLimit === 0 && hasExcludedItem) {
+                mileInput.value = "";
+                mileInput.placeholder = "사용 불가 (제외 상품 포함)";
+                mileInput.disabled = true;
+            } else {
+                mileInput.disabled = false;
+                // 입력값이 한도보다 크면 줄임
+                if(parseInt(mileInput.value || 0) > realLimit) {
+                    mileInput.value = realLimit > 0 ? realLimit : "";
+                }
+            }
         }
     }
 
-    const elTotal = document.getElementById("summaryTotal"); 
-    if(elTotal) elTotal.innerText = formatCurrency(finalTotal); 
-    
+    const elDiscount = document.getElementById("summaryDiscount");
+    if(elDiscount) {
+        if(discountAmount > 0) elDiscount.innerText = `-${formatCurrency(discountAmount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
+        else elDiscount.innerText = "0원 (0%)";
+    }
+    const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(finalTotal); 
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`; 
-    const btnCart = document.getElementById("btnViewCart"); 
-    if (btnCart) btnCart.style.display = (cartData.length > 0 || currentUser) ? "inline-flex" : "none"; 
+    const btnCart = document.getElementById("btnViewCart"); if (btnCart) btnCart.style.display = (cartData.length > 0 || (typeof currentUser !== 'undefined' && currentUser)) ? "inline-flex" : "none"; 
 }
 
 // ============================================================
@@ -1157,67 +1236,65 @@ window.applyMaxMileage = function() {
 };
 
 // [수정된 결제 프로세스]
+// [수정됨] 결제 시 최종 검사 (전역 변수 사용)
 async function processFinalPayment() {
     if (!window.currentDbId) return alert("주문 정보가 없습니다.");
     
-    // 1. 마일리지 사용 처리
     const useMileage = parseInt(document.getElementById('inputUseMileage').value) || 0;
     
     if (useMileage > 0) {
         if (!currentUser) return alert("로그인이 필요합니다.");
-        
-        // 보유량 재확인
+
+        // 안전장치
+        const excludedSet = window.excludedCategoryCodes || new Set();
+
+        let isSafe = true;
+        cartData.forEach(item => {
+            if (item.product && excludedSet.has(item.product.category)) {
+                isSafe = false;
+            }
+        });
+
+        if (!isSafe) {
+            alert("🚫 포함된 상품 중 마일리지 사용이 불가능한 품목이 있습니다.\n마일리지 입력을 취소합니다.");
+            document.getElementById('inputUseMileage').value = "";
+            if(window.calcMileageLimit) window.calcMileageLimit(document.getElementById('inputUseMileage'));
+            return;
+        }
+
         const { data: check } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
         if (!check || check.mileage < useMileage) return alert("보유 마일리지가 부족합니다.");
 
-        // 차감 및 로그 기록
         await sb.from('profiles').update({ mileage: check.mileage - useMileage }).eq('id', currentUser.id);
         await sb.from('wallet_logs').insert({
-            user_id: currentUser.id,
-            type: 'usage_purchase',
-            amount: -useMileage,
-            description: `주문 결제 사용 (10% 제한 적용)`
+            user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용`
         });
 
-        // 주문 정보에 할인금액 업데이트 (DB)
-        // 기존 discount_amount에 마일리지 사용액을 더함 (등급할인 + 마일리지)
-        const { data: order } = await sb.from('orders').select('discount_amount').eq('id', window.currentDbId).single();
-        const prevDiscount = order ? (order.discount_amount || 0) : 0;
-        
+        // 전역 변수 사용
+        const payAmt = window.finalPaymentAmount || finalPaymentAmount;
+
         await sb.from('orders').update({ 
-            discount_amount: prevDiscount + useMileage,
-            total_amount: finalPaymentAmount // 최종 실결제 금액으로 업데이트
+            discount_amount: useMileage, 
+            total_amount: payAmt 
         }).eq('id', window.currentDbId);
     }
 
-    // 2. 남은 금액 결제 진행
     const selected = document.querySelector('input[name="paymentMethod"]:checked');
     const method = selected ? selected.value : 'card';
 
     if (method === 'deposit') {
-        // [예치금 결제]
         await processDepositPayment();
     } else if (method === 'bank') {
-        // [무통장 입금]
-        // ★ 추가: 입금자명 가져오기
         const depositorName = document.getElementById('inputDepositorName').value;
         if (!depositorName) return alert("입금자명을 입력해주세요.");
-
         if(confirm(window.t('confirm_bank_payment'))) {
-            // [수정] 결제확인(신청)을 눌렀으므로 상태를 '접수됨'으로 변경하여 관리자에게 노출
             await sb.from('orders').update({ 
-                status: '접수됨', // 이제 관리자 페이지에 보임
-                payment_method: '무통장입금', 
-                payment_status: '입금대기', // 아직 입금확인은 안된 상태
-                depositor_name: depositorName 
+                status: '접수됨', payment_method: '무통장입금', payment_status: '입금대기', depositor_name: depositorName 
             }).eq('id', window.currentDbId);
-            
             alert(window.t('msg_order_complete_bank'));
             location.reload();
         }
     } else {
-        // [카드/간편결제]
-        // finalPaymentAmount는 window.calcMileageLimit에서 갱신됨
         processCardPayment();
     }
 }

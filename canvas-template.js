@@ -3,16 +3,53 @@
 import { sb, currentUser } from "./config.js";
 import { canvas } from "./canvas-core.js";
 import { applySize } from "./canvas-size.js";
-// [추가] 마일리지 적립 헬퍼 함수
+// [수정] 판매 수익금(예치금) 적립 함수 (mileage가 아닌 deposit을 업데이트)
 async function addRewardPoints(userId, amount, desc) {
-    try {
-        const { data: pf } = await sb.from('profiles').select('mileage').eq('id', userId).single();
-        const current = pf?.mileage || 0;
-        await sb.from('profiles').update({ mileage: current + amount }).eq('id', userId);
-        await sb.from('wallet_logs').insert({ user_id: userId, type: 'reward', amount: amount, description: desc });
-    } catch(e) { console.error("적립 오류", e); }
-}
+    if (!userId) return;
 
+    console.log(`[수익금 적립] 대상: ${userId}, 금액: ${amount}`);
+
+    try {
+        // 1. 현재 '예치금(deposit)' 조회 (mileage 아님!)
+        const { data: pf, error: fetchErr } = await sb.from('profiles')
+            .select('deposit')  // ★ 여기가 핵심: deposit 조회
+            .eq('id', userId)
+            .single();
+        
+        if (fetchErr) {
+            console.error("예치금 조회 실패:", fetchErr);
+        }
+
+        // 숫자로 변환하여 계산 (문자열 합침 방지)
+        const currentDeposit = parseInt(pf?.deposit || 0); 
+        const addAmount = parseInt(amount);
+        const newDeposit = currentDeposit + addAmount;
+
+        // 2. 프로필 테이블의 'deposit' 컬럼 업데이트
+        const { error: updateErr } = await sb.from('profiles')
+            .update({ deposit: newDeposit }) // ★ 여기가 핵심: deposit 업데이트
+            .eq('id', userId);
+        
+        if (updateErr) {
+            console.error("수익금 업데이트 실패:", updateErr);
+            alert("적립 오류: " + updateErr.message);
+            return;
+        }
+
+        // 3. 로그 기록 (type을 'deposit'이나 'revenue'로 구분하면 더 좋습니다)
+        await sb.from('wallet_logs').insert({ 
+            user_id: userId, 
+            type: 'deposit', // ★ 타입 변경: reward -> deposit
+            amount: addAmount, 
+            description: desc 
+        });
+
+        console.log(`✅ 수익금 적립 완료: ${newDeposit}원`);
+
+    } catch(e) { 
+        console.error("시스템 오류:", e);
+    }
+}
 // 선택된 템플릿 정보를 저장하는 변수
 let selectedTpl = null;
 let currentCategory = 'all';
@@ -709,132 +746,125 @@ function dataURLtoBlob(dataurl) {
     return new Blob([u8arr], {type:mime});
 }
 
-// [핵심] 유저 디자인 등록 함수 (스토리지 업로드 + DB 저장)
+// [수정] 템플릿 등록 및 보상 지급 함수
+// [수정] 템플릿 등록 함수
 async function registerUserTemplate() {
     if (!sb) return alert("데이터베이스 연결 실패");
-    if (!currentUser) return alert("로그인이 필요합니다.");
 
-    // 입력값 가져오기
+    // 최신 유저 정보 확인
+    const { data: { user: freshUser }, error: authError } = await sb.auth.getUser();
+
+    if (authError || !freshUser) {
+        alert("로그인 세션이 만료되었습니다. 새로고침 해주세요.");
+        return;
+    }
+
+    // 입력값 처리
     const titleEl = document.getElementById("sellTitle");
     const tagEl = document.getElementById("sellKw");
-    
-    // [수정] 무조건 'text' (유저 템플릿) 카테고리로 고정
     const selectedRadio = document.querySelector('input[name="sellType"]:checked');
-const type = selectedRadio ? selectedRadio.value : "vector"; // 라디오 버튼 값 ('vector' 또는 'image')
-
-// ★ 핵심: 시스템 템플릿과 섞이지 않게 'user_' 접두어를 붙여서 저장합니다.
-const category = 'user_' + type; // 결과: 'user_vector' 또는 'user_image'
-
+    const type = selectedRadio ? selectedRadio.value : "vector"; 
+    const category = 'user_' + type; 
     const title = titleEl ? titleEl.value.trim() : "Untitled";
     const tags = tagEl ? tagEl.value.trim() : "";
 
-    if (!title) return alert("Please enter a title.");
+    if (!title) return alert("제목을 입력해주세요.");
 
     const btn = document.getElementById("btnSellConfirm");
     const originalText = btn.innerText;
-    btn.innerText = "Uploading...";
+    btn.innerText = "저장 중...";
     btn.disabled = true;
 
     try {
-        // 1. 캔버스 선택 해제 (깔끔한 썸네일 위해)
+        // 1. 썸네일 생성 (대지 영역만 정확히 크롭)
         canvas.discardActiveObject();
-        canvas.requestRenderAll();
-
-        // 2. 캔버스 데이터(JSON) 추출 (용량 최적화)
-        const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'selectable', 'evented']);
-
-        // 3. 썸네일 이미지 생성
-        const board = canvas.getObjects().find(o => o.isBoard);
-        let dataUrl = "";
+        const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'fill', 'stroke', 'selectable', 'evented']);
         
-        // 뷰포트 잠시 초기화하여 정확한 이미지 추출
-        const originalVpt = canvas.viewportTransform;
+        // 대지(Board) 객체 찾기
+        const board = canvas.getObjects().find(o => o.isBoard === true);
+        let dataUrl = "";
+
+        // 현재 뷰포트 저장 후 초기화 (정확한 좌표 계산용)
+        const originalVpt = canvas.viewportTransform.slice();
         canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
 
-        // [수정] 썸네일 고화질 추출 (명함 등 작은 사이즈 대응)
         if (board) {
-            const currentW = board.getScaledWidth();
-            // 목표: 최소 1000px 너비 확보 (작은 명함도 선명하게)
-            const minTargetW = 1000; 
-            let multiplier = 1;
+            // 대지 크기와 위치 계산
+            const boardWidth = board.getScaledWidth();
+            const boardHeight = board.getScaledHeight();
             
-            if (currentW < minTargetW) {
-                multiplier = minTargetW / currentW; 
-            }
+            // 썸네일 너비를 약 800px로 맞추기 위한 배율 계산
+            let multiplier = 1;
+            if (boardWidth < 800) multiplier = 800 / boardWidth;
 
+            // ★ 핵심: 대지 영역만 잘라서(Crop) 저장
             dataUrl = canvas.toDataURL({
-                format: 'jpeg', 
+                format: 'jpeg',
                 quality: 0.9,
-                left: board.left, 
-                top: board.top,
-                width: currentW, 
-                height: board.getScaledHeight(),
-                multiplier: multiplier // ★ 핵심: 강제 확대
+                left: board.left,   // 자르기 시작 X
+                top: board.top,     // 자르기 시작 Y
+                width: boardWidth,  // 자를 너비
+                height: boardHeight, // 자를 높이
+                multiplier: multiplier
             });
         } else {
-            dataUrl = canvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 2 });
+            // 대지가 없으면 전체 저장 (안전장치)
+            dataUrl = canvas.toDataURL({ format: 'jpeg', quality: 0.8 });
         }
-        canvas.setViewportTransform(originalVpt); // 복구
 
-        // 4. Supabase Storage에 썸네일 업로드
+        // 뷰포트 복구
+        canvas.setViewportTransform(originalVpt);
+
         const blob = dataURLtoBlob(dataUrl);
-        // 파일명: 유저ID/시간.jpg
-        const fileName = `${currentUser.id}/${Date.now()}.jpg`;
+        const fileName = `${freshUser.id}/${Date.now()}.jpg`;
 
-        // 'templates' 버킷에 업로드
-        const { error: uploadError } = await sb.storage
-            .from('templates') 
-            .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
-
+        const { error: uploadError } = await sb.storage.from('templates').upload(fileName, blob);
         if (uploadError) throw uploadError;
+        const { data: publicUrlData } = sb.storage.from('templates').getPublicUrl(fileName);
 
-        // 업로드된 이미지의 공개 주소 가져오기
-        const { data: publicUrlData } = sb.storage
-            .from('templates')
-            .getPublicUrl(fileName);
-        
-        const finalThumbUrl = publicUrlData.publicUrl;
-
-        // 5. Library 테이블에 데이터 저장
+        // DB 저장
         const payload = {
             title: title,
             category: category,
             tags: tags,
-            thumb_url: finalThumbUrl,
+            thumb_url: publicUrlData.publicUrl,
             data_url: json,
             created_at: new Date(),
-            user_id: currentUser.id,
-            user_email: currentUser.email,
+            user_id: freshUser.id,
+            user_email: freshUser.email,
             status: 'approved',
             is_official: false,
-            product_key: canvas.currentProductKey || 'custom'
+            product_key: 'custom'
         };
 
         const { error: dbError } = await sb.from('library').insert([payload]);
         if (dbError) throw dbError;
 
-        // 성공 처리
-        await addRewardPoints(currentUser.id, 100, `Reward for registration (${title})`);
-        alert("🎉 Design registered! (+100P earned)\nCheck it in the [Templates] tab.");
+        // ★ [핵심] 이제 'deposit(예치금)' 컬럼에 500원이 더해집니다.
+        await addRewardPoints(freshUser.id, 500, `템플릿 판매등록 수익 (${title})`);
+        
+        alert("🎉 디자인 등록 완료! 판매 수익금 500원이 예치금에 적립되었습니다.");
         document.getElementById("sellModal").style.display = "none";
         
-        // 입력창 초기화
+        // 상단 금액 표시 갱신 (예치금 란이 있다면 거기를 갱신해야 함)
+        const balanceEl = document.getElementById('contributorBalance');
+        if(balanceEl) {
+            // 화면에 보이는 숫자도 업데이트
+            let current = parseInt(balanceEl.innerText.replace(/,/g, '')) || 0;
+            balanceEl.innerText = (current + 500).toLocaleString();
+        }
+
         if(titleEl) titleEl.value = "";
-        if(tagEl) tagEl.value = "";
-        
-        // 템플릿 목록 새로고침 (현재 보고있는 카테고리가 같다면)
         if(window.filterTpl) window.filterTpl(category);
 
     } catch (e) {
-        console.error("업로드 실패:", e);
-        alert("업로드 실패: " + (e.message || e));
+        console.error("등록 실패:", e);
+        alert("오류: " + e.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
-        canvas.requestRenderAll();
     }
 }
-
 // 로고 및 파일 유틸
 window.handleFileSelect = function(input) {
     const files = input.files;

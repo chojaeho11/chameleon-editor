@@ -26,7 +26,7 @@ window.loadMembers = async (isNewSearch = false) => {
     
     // 필터 조건
     if (roleVal !== 'all') query = query.eq('role', roleVal);
-    if (keyword) query = query.or(`email.ilike.%${keyword}%,full_name.ilike.%${keyword}%`);
+    if (keyword) query = query.ilike('email', `%${keyword}%`);
 
     // 2. 정렬 조건
     if (sortVal === 'deposit_desc') query = query.order('deposit', { ascending: false });
@@ -64,7 +64,8 @@ window.loadMembers = async (isNewSearch = false) => {
         const r = m.role || 'customer';
         const deposit = m.deposit || 0; 
         const mileage = m.mileage || 0;
-        const name = m.full_name || '이름 없음';
+        // [수정] 여러 컬럼 확인 후 없으면 '이름 미등록' 표시
+const name = m.full_name || m.user_name || m.name || '이름 미등록';
         const memo = m.admin_memo || ''; 
 
         // 등급 선택 박스
@@ -72,7 +73,7 @@ window.loadMembers = async (isNewSearch = false) => {
             <select onchange="updateMemberRole('${m.id}', this.value)" style="padding:2px; border:1px solid #cbd5e1; border-radius:4px; width:100%; font-size:11px;">
                 <option value="customer" ${r==='customer'?'selected':''}>일반</option>
                 <option value="gold" ${r==='gold'?'selected':''}>🥇 골드</option>
-                <option value="platinum" ${r==='platinum'?'selected':''}>💎 플래티넘</option>
+                <option value="platinum" ${r==='platinum'?'selected':''}>💎 파트너스</option>
                 <option value="franchise" ${r==='franchise'?'selected':''}>🏢 가맹점</option>
                 <option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option>
             </select>
@@ -102,11 +103,26 @@ window.loadMembers = async (isNewSearch = false) => {
         `;
 
         // 등급 뱃지 스타일
+        // 등급 뱃지 스타일 & 텍스트 (한글화)
         let badgeColor = '#f1f5f9'; let badgeText = '#64748b';
-        if (r === 'gold') { badgeColor = '#fef9c3'; badgeText = '#ca8a04'; }
-        if (r === 'platinum') { badgeColor = '#e0f2fe'; badgeText = '#0369a1'; }
-        if (r === 'franchise') { badgeColor = '#f3e8ff'; badgeText = '#7e22ce'; }
-        if (r === 'admin') { badgeColor = '#fee2e2'; badgeText = '#dc2626'; }
+        let displayRole = '일반'; // 기본값
+
+        if (r === 'gold') { 
+            badgeColor = '#fef9c3'; badgeText = '#ca8a04'; 
+            displayRole = '골드';
+        }
+        if (r === 'platinum') { 
+            badgeColor = '#e0f2fe'; badgeText = '#0369a1'; 
+            displayRole = '파트너스'; // [수정] PLATINUM -> 파트너스
+        }
+        if (r === 'franchise') { 
+            badgeColor = '#f3e8ff'; badgeText = '#7e22ce'; 
+            displayRole = '가맹점';
+        }
+        if (r === 'admin') { 
+            badgeColor = '#fee2e2'; badgeText = '#dc2626'; 
+            displayRole = '관리자';
+        }
 
         // 메모 입력창
         const memoHtml = `
@@ -140,7 +156,7 @@ window.loadMembers = async (isNewSearch = false) => {
                 </td>
                 
                 <td style="text-align:center;">
-                    <span class="badge" style="background:${badgeColor}; color:${badgeText}; border:1px solid ${badgeColor}; font-size:11px; padding:4px 8px;">${r.toUpperCase()}</span>
+                    <span class="badge" style="background:${badgeColor}; color:${badgeText}; border:1px solid ${badgeColor}; font-size:11px; padding:4px 8px;">${displayRole}</span>
                 </td>
                 
                 <td style="padding:5px 15px;">
@@ -392,14 +408,21 @@ window.loadPartnerApplications = async () => {
     
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><div class="spinner"></div></td></tr>';
 
+    // [수정] 필터링 값 가져오기
+    const filterStatus = document.getElementById('filterPartnerStatus') ? document.getElementById('filterPartnerStatus').value : 'all';
+
     try {
-        const { data: apps, error } = await sb.from('partner_applications')
-            .select('*')
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
+        // 기본 쿼리 생성
+        let query = sb.from('partner_applications').select('*').order('created_at', { ascending: false });
+
+        // '전체 보기'가 아닐 때만 상태 필터링 적용
+        if (filterStatus !== 'all') {
+            query = query.eq('status', filterStatus);
+        }
+
+        const { data: apps, error } = await query;
 
         if (error) throw error;
-        
         // 뱃지 업데이트
         const badge = document.getElementById('partnerPendingCount');
         if(badge) {
@@ -447,10 +470,12 @@ window.loadPartnerApplications = async () => {
 };
 
 window.approvePartnerApp = async (appId, userId, region, companyName) => {
-    if (!confirm(`[승인 확인]\n업체명: ${companyName}\n지역: ${region}\n\n이 회원을 '가맹점' 등급으로 승격시키겠습니까?`)) return;
+    // [수정] 안내 메시지 변경 (가맹점 -> 파트너스)
+    if (!confirm(`[승인 확인]\n업체명: ${companyName}\n지역: ${region}\n\n이 회원을 '파트너스(Platinum)' 등급으로 승격시키겠습니까?`)) return;
 
     try {
-        const { error: profileErr } = await sb.from('profiles').update({ role: 'franchise', region: region }).eq('id', userId);
+        // [수정] 승인 시 role을 'franchise'가 아닌 'platinum'으로 업데이트
+        const { error: profileErr } = await sb.from('profiles').update({ role: 'platinum', region: region }).eq('id', userId);
         if (profileErr) throw profileErr;
 
         const { error: appErr } = await sb.from('partner_applications').update({ status: 'approved' }).eq('id', appId);

@@ -330,7 +330,7 @@
   "ph_enter_tags": "Enter common tags",
   "default_title": "Untitled",
   "msg_enter_title": "Please enter a title.",
-  "msg_design_registered": "🎉 Design registered! (+100P earned)\nCheck it in the [Templates] tab.",
+  "msg_design_registered": "🎉 Design registered! (+500P earned)\nCheck it in the [Templates] tab.",
   "msg_files_selected": "{count} files selected.",
   "msg_click_to_upload": "Click upload to register all.",
   "msg_upload_success": "✅ Upload Successful!",

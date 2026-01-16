@@ -56,6 +56,9 @@ window.editTopCategoryLoad = async (id) => {
     document.getElementById('newTopCatName').value = data.name;
     document.getElementById('newTopCatNameJP').value = data.name_jp || '';
     document.getElementById('newTopCatNameUS').value = data.name_us || '';
+    // [추가] 저장된 체크박스 값 불러오기
+    const chk = document.getElementById('newTopCatExcluded');
+    if(chk) chk.checked = data.is_excluded || false;
     
     // [추가] 설명 로드
     if(document.getElementById('newTopCatDesc')) document.getElementById('newTopCatDesc').value = data.description || '';
@@ -73,8 +76,12 @@ window.addTopCategoryDB = async () => {
     const name = document.getElementById('newTopCatName').value;
     if(!code || !name) return alert("코드와 한국명은 필수입니다.");
 
+    // [추가] 체크박스 값 읽기
+    const isExcluded = document.getElementById('newTopCatExcluded') ? document.getElementById('newTopCatExcluded').checked : false;
+
     const payload = {
         code, name,
+        is_excluded: isExcluded, // ★ DB에 저장
         name_jp: document.getElementById('newTopCatNameJP').value,
         name_us: document.getElementById('newTopCatNameUS').value,
         description: document.getElementById('newTopCatDesc') ? document.getElementById('newTopCatDesc').value : '',
@@ -107,6 +114,8 @@ window.resetTopCategoryForm = () => {
     if(document.getElementById('newTopCatDesc')) document.getElementById('newTopCatDesc').value = '';
     if(document.getElementById('newTopCatDescJP')) document.getElementById('newTopCatDescJP').value = '';
     if(document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = '';
+    // [추가] 체크박스 초기화
+    if(document.getElementById('newTopCatExcluded')) document.getElementById('newTopCatExcluded').checked = false;
     
     const btn = document.getElementById('btnTopCatSave');
     btn.innerText = "저장";
@@ -425,6 +434,7 @@ window.addProductDB = async () => {
 
     const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
     const isCustom = document.getElementById('newProdIsCustom').checked;
+    const isGeneral = document.getElementById('newProdIsGeneral').checked;
 
     // [핵심 수정] 금액을 저장할 때 반드시 정수(Integer)로 변환
     const priceKR = Math.round(parseFloat(document.getElementById('newProdPrice').value || 0));
@@ -436,6 +446,7 @@ window.addProductDB = async () => {
         width_mm: document.getElementById('newProdW').value || 0,
         height_mm: document.getElementById('newProdH').value || 0,
         is_custom_size: isCustom,
+        is_general_product: isGeneral, // [추가] DB에 저장
         img_url: document.getElementById('newProdImg').value,
         
         name: document.getElementById('newProdName').value, 
@@ -479,6 +490,8 @@ window.editProductLoad = async (id) => {
     editingProdId = id;
     document.getElementById('btnProductSave').innerText = "수정사항 저장";
     document.getElementById('btnCancelEdit').style.display = 'inline-block';
+    // [추가] 수정 모드일 때 복제 버튼 표시
+    document.getElementById('btnCloneProduct').style.display = 'inline-block';
     document.querySelector('.product-form').scrollIntoView({ behavior: 'smooth' });
 
     document.getElementById('newProdSite').value = data.site_code;
@@ -487,6 +500,8 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdW').value = data.width_mm;
     document.getElementById('newProdH').value = data.height_mm;
     document.getElementById('newProdIsCustom').checked = data.is_custom_size;
+    // [추가] 일반 상품 체크박스 값 불러오기
+    document.getElementById('newProdIsGeneral').checked = data.is_general_product || false;
     document.getElementById('newProdImg').value = data.img_url;
     document.getElementById('prodPreview').src = data.img_url || '';
 
@@ -518,10 +533,15 @@ window.resetProductForm = () => {
     editingProdId = null;
     document.getElementById('btnProductSave').innerText = "상품 저장";
     document.getElementById('btnCancelEdit').style.display = 'none';
+    // [추가] 초기화 시 복제 버튼 숨김
+    document.getElementById('btnCloneProduct').style.display = 'none';
     const inputs = document.querySelectorAll('.product-form input:not([type=checkbox])');
     inputs.forEach(i => i.value = '');
     document.getElementById('prodPreview').src = '';
     document.querySelectorAll('input[name="prodAddon"]').forEach(cb => cb.checked = false);
+    // [추가] 체크박스들 초기화
+    document.getElementById('newProdIsCustom').checked = false;
+    document.getElementById('newProdIsGeneral').checked = false;
 };
 
 window.previewProductImage = async (input) => {
@@ -730,4 +750,26 @@ window.bulkTranslateAll = async () => {
         btn.innerText = oldText;
         btn.disabled = false;
     }
+};
+// [신규] 상품 복제 모드 전환 함수
+window.cloneProductMode = () => {
+    // 1. 수정 모드 해제 (새 상품으로 인식되게 함)
+    editingProdId = null; 
+    
+    // 2. 코드는 중복될 수 없으므로 비움
+    const codeInput = document.getElementById('newProdCode');
+    codeInput.value = ''; 
+    codeInput.focus();
+    codeInput.placeholder = "새 상품 코드를 입력하세요";
+
+    // 3. 버튼 상태 변경
+    document.getElementById('btnProductSave').innerText = "새 상품 등록하기";
+    document.getElementById('btnProductSave').classList.remove('btn-vip');
+    document.getElementById('btnProductSave').classList.add('btn-primary');
+    
+    // 4. 복제/취소 버튼 숨김 (이미 내용은 폼에 들어가 있음)
+    document.getElementById('btnCloneProduct').style.display = 'none';
+    document.getElementById('btnCancelEdit').style.display = 'none';
+
+    alert("📝 내용이 복제되었습니다.\n새로운 [상품코드]를 입력하고 저장 버튼을 눌러주세요.");
 };

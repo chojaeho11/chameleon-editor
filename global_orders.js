@@ -142,20 +142,24 @@ window.loadOrders = async () => {
                 deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px;">(배)${delDate}</div>`;
             }
 
-            // [입찰 표시] (백업본 스타일)
+            // [입찰 표시] (팝업 버튼 연동)
             let bidHtml = '';
             const bidCount = (order.bids && Array.isArray(order.bids)) ? order.bids.length : 0;
 
             if (order.head_office_check === true) {
                 bidHtml = `<div style="margin-bottom:2px;"><span class="badge" style="background:#333; color:#fff; font-size:11px;">⛔ 본사직권</span></div>`;
             } else {
-                const countStyle = bidCount > 0 ? 'color:#e11d48; font-weight:bold; font-size:14px;' : 'color:#94a3b8; font-size:13px;';
-                const countText = bidCount > 0 ? `🔥 ${bidCount}` : '0';
+                // 입찰 건수가 있으면 클릭 가능한 버튼으로 표시
+                const btnClass = bidCount > 0 ? 'btn-primary' : 'btn-outline';
+                const btnText = bidCount > 0 ? `${bidCount}건` : '0';
+                const subText = bidCount > 0 ? '입찰확인' : '본사처리';
+                const action = bidCount > 0 ? `openBidAdminModal('${order.id}')` : `setHeadOfficeOnly('${order.id}')`;
+
                 bidHtml = `
-                    <div style="${countStyle} margin-bottom:4px;">${countText}</div>
-                    <button class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:11px; border-radius:4px; background:#fff;" onclick="setHeadOfficeOnly('${order.id}')">
-                        본사처리
+                    <button class="btn ${btnClass} btn-sm" onclick="${action}" style="width:100%; padding:2px 0; font-size:11px;">
+                        ${btnText}
                     </button>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:2px;">${subText}</div>
                 `;
             }
 
@@ -439,5 +443,88 @@ window.setHeadOfficeOnly = async (orderId) => {
     } else {
         alert("본사 처리로 설정되었습니다.");
         loadOrders();
+    }
+};
+// [신규] 입찰 내역 관리 팝업 열기
+window.openBidAdminModal = async (orderId) => {
+    const modal = document.getElementById('bidAdminModal');
+    const tbody = document.getElementById('bidAdminListBody');
+    
+    // 1. 모달 초기화 및 열기
+    modal.style.display = 'flex';
+    document.getElementById('bidModalOrderId').innerText = orderId;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;"><div class="spinner"></div> 데이터 조회 중...</td></tr>';
+
+    try {
+        // 2. 주문 정보 가져오기 (고객명, 현재상태)
+        const { data: order } = await sb.from('orders').select('manager_name, status').eq('id', orderId).single();
+        if(order) {
+            document.getElementById('bidModalCustomer').innerText = order.manager_name || '비회원';
+            document.getElementById('bidModalStatus').innerText = order.status;
+        }
+
+        // 3. 입찰 내역 조회
+        const { data: bids, error } = await sb.from('bids')
+            .select('*')
+            .eq('order_id', orderId)
+            .order('price', { ascending: true }); // 저렴한 순 정렬
+
+        if (error) throw error;
+
+        if (!bids || bids.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">등록된 입찰이 없습니다.</td></tr>';
+            return;
+        }
+
+        // 4. 파트너 정보(업체명) 조회를 위해 ID 수집
+        const partnerIds = bids.map(b => b.partner_id);
+        const { data: profiles } = await sb.from('profiles').select('id, company_name, email').in('id', partnerIds);
+        
+        const profileMap = {};
+        if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+
+        // 5. 리스트 렌더링
+        tbody.innerHTML = '';
+        bids.forEach(bid => {
+            const partner = profileMap[bid.partner_id] || {};
+            const company = partner.company_name || '이름없음';
+            const email = partner.email || '-';
+            
+            // 상태 뱃지
+            let statusBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b;">대기중</span>';
+            let rowStyle = '';
+            
+            if (bid.status === 'selected') {
+                statusBadge = '<span class="badge" style="background:#dcfce7; color:#15803d; font-weight:bold;">✅ 매칭됨 (낙찰)</span>';
+                rowStyle = 'background:#f0fdf4;'; // 선택된 행 강조
+            } else if (bid.status === 'rejected') {
+                statusBadge = '<span class="badge" style="background:#fee2e2; color:#ef4444;">탈락</span>';
+            }
+
+            tbody.innerHTML += `
+                <tr style="border-bottom:1px solid #f1f5f9; ${rowStyle}">
+                    <td style="padding:10px;">
+                        <div style="font-weight:bold; color:#334155;">${company}</div>
+                        <div style="font-size:11px; color:#94a3b8;">${email}</div>
+                    </td>
+                    <td style="padding:10px; text-align:right; font-weight:bold; color:#6366f1;">
+                        ${bid.price.toLocaleString()}원
+                    </td>
+                    <td style="padding:10px; color:#475569; max-width:200px;">
+                        ${bid.message || '-'}
+                    </td>
+                    <td style="padding:10px; text-align:center;">
+                        ${bid.partner_phone || '-'}
+                    </td>
+                    <td style="padding:10px; text-align:center;">
+                        ${statusBadge}
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">오류 발생: ${e.message}</td></tr>`;
     }
 };

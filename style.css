@@ -2082,7 +2082,7 @@ body {
 
     .quick-menu-wrapper {
         /* 1. 배경 디자인: 노란색 -> 진한 파란색 그라데이션 */
-        background: linear-gradient(135deg, #ffa4f4 0%, #b0b4ff 100%) !important;
+        background: linear-gradient(180deg, #6928ff 0%, #ecdeff 100%) !important;
         
         /* 2. 크기 및 위치: 화면 꽉 참 방지 & 중앙 정렬 */
         width: 100% !important;

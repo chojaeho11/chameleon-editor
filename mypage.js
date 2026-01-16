@@ -174,11 +174,13 @@ async function loadDashboardStats() {
         const elLogo = document.getElementById('logoCountDisplay');
         if(elLogo) elLogo.innerText = (profile.logo_count || 0) + ' 개';
 
-        const elDeposit = document.getElementById('depositTotal');
-        if(elDeposit) elDeposit.innerText = (profile.deposit || 0).toLocaleString();
+        // [수정] 통합 예치금(왼쪽) = profile.deposit
+        const elTotalDeposit = document.getElementById('displayTotalDeposit');
+        if(elTotalDeposit) elTotalDeposit.innerText = (profile.deposit || 0).toLocaleString();
         
-        const elProfit = document.getElementById('profitTotal');
-        if(elProfit) elProfit.innerText = (profile.mileage || 0).toLocaleString();
+        // [수정] 마일리지(오른쪽) = profile.mileage
+        const elTotalMileage = document.getElementById('displayTotalMileage');
+        if(elTotalMileage) elTotalMileage.innerText = (profile.mileage || 0).toLocaleString();
 
         await checkAndUpgradeTier(currentUser.id, profile.role);
 
@@ -383,10 +385,12 @@ async function loadMySales() {
     if(elTotal) elTotal.innerText = total.toLocaleString() + ' P';
 }
 
-// [신규] 출금 모달 열기
+// [수정] 출금 모달 열기 (예치금 deposit 조회)
 function openWithdrawModal() {
-    sb.from('profiles').select('mileage').eq('id', currentUser.id).single().then(({data}) => {
-        document.getElementById('wdCurrentMileage').innerText = (data?.mileage || 0).toLocaleString();
+    sb.from('profiles').select('deposit').eq('id', currentUser.id).single().then(({data}) => {
+        // 출금 가능한 금액은 deposit 입니다.
+        const currentDeposit = data?.deposit || 0;
+        document.getElementById('wdCurrentMileage').innerText = currentDeposit.toLocaleString();
         document.getElementById('withdrawModal').style.display = 'flex';
     });
 }
@@ -403,13 +407,13 @@ async function requestWithdrawal() {
     const curEl = document.getElementById('wdCurrentMileage');
     const cur = curEl ? parseInt(curEl.innerText.replace(/,/g,'')) : 0;
 
-    if(!amt || amt < 1000) return alert("최소 1,000P 부터 신청 가능합니다.");
-    if(amt > cur) return alert("보유 포인트가 부족합니다.");
+    if(!amt || amt < 1000) return alert("최소 1,000원 부터 신청 가능합니다.");
+    if(amt > cur) return alert("출금 가능한 예치금이 부족합니다.");
     
     if(!bank || !acc || !holder) return alert("계좌 정보를 입력해주세요.");
     if(!phone || !rrn) return alert("연락처와 주민등록번호를 입력해주세요.");
 
-    if(!confirm(`${amt.toLocaleString()}P를 출금 신청하시겠습니까?\n(3.3% 세금 공제 후 입금됩니다)`)) return;
+    if(!confirm(`${amt.toLocaleString()}원을 출금 신청하시겠습니까?\n(3.3% 세금 공제 후 입금됩니다)`)) return;
 
     try {
         const { error: reqError } = await sb.from('withdrawal_requests').insert({
@@ -425,7 +429,11 @@ async function requestWithdrawal() {
 
         if (reqError) throw reqError;
 
-        const { error: profileError } = await sb.from('profiles').update({ mileage: cur - amt }).eq('id', currentUser.id);
+        // ★ [중요] 예치금(deposit)에서 차감
+        const { error: profileError } = await sb.from('profiles')
+            .update({ deposit: cur - amt }) // mileage -> deposit 변경
+            .eq('id', currentUser.id);
+            
         if (profileError) throw profileError;
 
         await sb.from('wallet_logs').insert({
