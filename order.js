@@ -1504,7 +1504,8 @@ window.updateCartQtyInput = function(idx, val) {
 let lastCartAddTime = 0;
 
 // 1. 에디터 없이 상품만 장바구니에 담기
-export function addProductToCartDirectly(productInfo) {
+// [수정] 수량(targetQty) 파라미터 추가
+export function addProductToCartDirectly(productInfo, targetQty = 1) {
     if (!productInfo) return;
 
     // [방어 코드 1] 1초 이내 재실행 방지 (더블클릭 문제 차단)
@@ -1529,7 +1530,7 @@ export function addProductToCartDirectly(productInfo) {
         width: productInfo.w || 0,
         height: productInfo.h || 0,
         isOpen: true,
-        qty: 1,
+        qty: parseInt(targetQty) || 1, // [수정] 전달받은 수량 적용
         selectedAddons: {},
         addonQuantities: {}
     });
