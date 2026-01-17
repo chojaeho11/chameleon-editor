@@ -278,9 +278,10 @@ async function fetchUserDiscountRate() {
         const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
         const role = data?.role;
         
-        if (role === 'franchise') currentUserDiscountRate = 0.15; // 15%
-        else if (role === 'platinum') currentUserDiscountRate = 0.10; // 10%
-        else if (role === 'gold') currentUserDiscountRate = 0.05; // 5%
+        // [수정] 등급별 할인율 변경 (가맹점 10%, 플레티넘 5%, 골드 3%)
+        if (role === 'franchise') currentUserDiscountRate = 0.10; // 10%
+        else if (role === 'platinum' || role === 'partner' || role === 'partners') currentUserDiscountRate = 0.05; // 5% (플레티넘/파트너스)
+        else if (role === 'gold') currentUserDiscountRate = 0.03; // 3%
         else currentUserDiscountRate = 0;
         
     } catch(e) {
@@ -907,10 +908,10 @@ function updateSummary(prodTotal, addonTotal, total) {
         const myMileage = elOwn ? parseInt(elOwn.innerText.replace(/[^0-9]/g, '')) || 0 : 0;
         
         let realLimit = 0;
-        // 할인 대상 금액이 있을 때만 10% 한도 부여
+        // 할인 대상 금액이 있을 때만 5% 한도 부여
         if (discountableAmount > 0) {
-            const tenPercent = Math.floor((discountableAmount - discountAmount) * 0.1);
-            realLimit = Math.min(myMileage, tenPercent);
+            const fivePercent = Math.floor((discountableAmount - discountAmount) * 0.05); // 0.05 = 5%
+            realLimit = Math.min(myMileage, fivePercent);
         }
         
         window.mileageLimitMax = realLimit; 
@@ -1154,11 +1155,11 @@ const quoteBlob = await generateQuotationPDF(orderInfoForPDF, cartData, currentU
             const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
             const myMileage = profile ? (profile.mileage || 0) : 0;
             
-            // 1. 10% 한도 계산 (할인 적용된 finalTotal 기준)
-            const tenPercent = Math.floor(finalTotal * 0.1);
+            // 1. 5% 한도 계산 (할인 적용된 finalTotal 기준)
+            const fivePercent = Math.floor(finalTotal * 0.05);
             
-            // 2. 실제 사용 가능 금액 (내 보유량 vs 10% 한도 중 작은 값)
-            const realLimit = Math.min(myMileage, tenPercent);
+            // 2. 실제 사용 가능 금액 (내 보유량 vs 5% 한도 중 작은 값)
+            const realLimit = Math.min(myMileage, fivePercent);
 
             // 3. 전역 변수 및 UI 세팅
             window.mileageLimitMax = realLimit; // 전역변수 저장
@@ -1217,7 +1218,7 @@ window.calcMileageLimit = function(input) {
     const limit = window.mileageLimitMax || 0;
 
     if (val > limit) {
-        alert((window.t('msg_mileage_limit_exceeded') || "Mileage usage is limited to 10% of purchase amount: ") + `${limit.toLocaleString()}P`);
+        alert(`마일리지는 구매금액의 최대 5%(${limit.toLocaleString()}P)까지만 사용 가능합니다.`);
         val = limit;
         input.value = val;
     }

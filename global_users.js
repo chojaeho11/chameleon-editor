@@ -64,16 +64,22 @@ window.loadMembers = async (isNewSearch = false) => {
         const r = m.role || 'customer';
         const deposit = m.deposit || 0; 
         const mileage = m.mileage || 0;
-        // [수정] 여러 컬럼 확인 후 없으면 '이름 미등록' 표시
-const name = m.full_name || m.user_name || m.name || '이름 미등록';
-        const memo = m.admin_memo || ''; 
+        
+        // [수정] 이름 표시 우선순위 강화 (full_name > user_name > name > 이메일 앞부분)
+        let name = m.full_name || m.user_name || m.name;
+        if (!name && m.email) {
+            name = m.email.split('@')[0]; // 이름이 없으면 이메일 아이디 사용
+        }
+        name = name || '이름 미등록';
+        
+        const memo = m.admin_memo || '';
 
         // 등급 선택 박스
         const roleSelect = `
             <select onchange="updateMemberRole('${m.id}', this.value)" style="padding:2px; border:1px solid #cbd5e1; border-radius:4px; width:100%; font-size:11px;">
                 <option value="customer" ${r==='customer'?'selected':''}>일반</option>
                 <option value="gold" ${r==='gold'?'selected':''}>🥇 골드</option>
-                <option value="platinum" ${r==='platinum'?'selected':''}>💎 파트너스</option>
+                <option value="platinum" ${r==='platinum'?'selected':''}>💎 플레티넘</option>
                 <option value="franchise" ${r==='franchise'?'selected':''}>🏢 가맹점</option>
                 <option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option>
             </select>
@@ -113,7 +119,7 @@ const name = m.full_name || m.user_name || m.name || '이름 미등록';
         }
         if (r === 'platinum') { 
             badgeColor = '#e0f2fe'; badgeText = '#0369a1'; 
-            displayRole = '파트너스'; // [수정] PLATINUM -> 파트너스
+            displayRole = '플레티넘'; // [수정] PLATINUM -> 플레티넘
         }
         if (r === 'franchise') { 
             badgeColor = '#f3e8ff'; badgeText = '#7e22ce'; 
@@ -137,8 +143,15 @@ const name = m.full_name || m.user_name || m.name || '이름 미등록';
                 <td style="color:#64748b; font-size:12px; text-align:center;">${new Date(m.created_at).toLocaleDateString()}</td>
                 
                 <td style="padding:10px 15px;">
-                    <div style="font-weight:bold; font-size:14px; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</div>
-                    <div style="font-size:12px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.email}">${m.email}</div>
+                    <div style="font-weight:bold; font-size:15px; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px;">
+                        ${name}
+                    </div>
+                    <div style="font-size:12px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.email}">
+                        <i class="fa-regular fa-envelope"></i> ${m.email}
+                    </div>
+                    <div style="font-size:11px; color:#6366f1; margin-top:2px;">
+                        ${m.phone ? '<i class="fa-solid fa-phone"></i> ' + m.phone : ''}
+                    </div>
                 </td>
                 
                 <td style="text-align:right; padding:10px 15px;">
@@ -470,8 +483,8 @@ window.loadPartnerApplications = async () => {
 };
 
 window.approvePartnerApp = async (appId, userId, region, companyName) => {
-    // [수정] 안내 메시지 변경 (가맹점 -> 파트너스)
-    if (!confirm(`[승인 확인]\n업체명: ${companyName}\n지역: ${region}\n\n이 회원을 '파트너스(Platinum)' 등급으로 승격시키겠습니까?`)) return;
+    // [수정] 안내 메시지 변경 (가맹점 -> 플레티넘)
+    if (!confirm(`[승인 확인]\n업체명: ${companyName}\n지역: ${region}\n\n이 회원을 '플레티넘(Platinum)' 등급으로 승격시키겠습니까?`)) return;
 
     try {
         // [수정] 승인 시 role을 'franchise'가 아닌 'platinum'으로 업데이트

@@ -146,7 +146,7 @@ async function checkAndUpgradeTier(userId, currentRole) {
         if (newRole !== currentRole && levels[newRole] > levels[currentRole]) {
             await sb.from('profiles').update({ role: newRole }).eq('id', userId);
             
-            const rate = newRole === 'platinum' ? '10%' : '5%';
+            const rate = newRole === 'platinum' ? '5%' : '3%';
             alert(`🎉 축하합니다! '${newRole.toUpperCase()}' 등급으로 승급되었습니다.\n(${rate} 할인 적용)`);
             location.reload(); 
         }

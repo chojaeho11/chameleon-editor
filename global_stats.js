@@ -1,8 +1,11 @@
 import { sb } from "./global_config.js";
 
-// [매출 통계 로드]
+// [매출 통계 로드] - 검색 버튼 클릭 시 실행
 window.loadStatsData = async () => {
-    // 1. 날짜 자동 설정 (이번 달 1일 ~ 오늘)
+    // 1. 대시보드 차트 로드 (자동 실행)
+    loadDashboardCharts();
+
+    // 2. 날짜 자동 설정 (이번 달 1일 ~ 오늘)
     const startDateInput = document.getElementById('statStartDate');
     const endDateInput = document.getElementById('statEndDate');
 
@@ -28,17 +31,9 @@ window.loadStatsData = async () => {
     if(drvBody) drvBody.innerHTML = '<tr><td colspan="2" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
 
     try {
-        // [백업 로직 복원 1] 상품 단가표 가져오기 (매출 0원일 때 역산용)
-        const { data: allProds } = await sb.from('admin_products').select('price, name');
-        const prodMap = {}; 
-        if(allProds) allProds.forEach(p => prodMap[p.name] = p.price);
-
-        // [백업 로직 복원 2] 스태프 목록 가져오기 (그래프 색상/이름 표시용)
-        const { data: staffList } = await sb.from('admin_staff').select('*');
-
-        // [오류 수정] DB에 없는 discount_amount 등을 빼고, 필요한 컬럼만 안전하게 조회
+        // [검색 기간 데이터 조회]
         const { data: orders, error } = await sb.from('orders')
-            .select('id, total_amount, items, staff_manager_id, staff_driver_id, status, created_at')
+            .select('id, total_amount, items, staff_manager_id, staff_driver_id, status, created_at, payment_status')
             .gte('created_at', startDate + 'T00:00:00')
             .lte('created_at', endDate + 'T23:59:59')
             .not('status', 'eq', '임시작성') 
@@ -51,50 +46,24 @@ window.loadStatsData = async () => {
         const managerStats = {};
         const driverStats = {};
 
-        orders.forEach(o => {
-            // [백업 로직 복원 3] 매출 계산 알고리즘
-            let amt = o.total_amount || 0;
-            
-            // total_amount가 0원이면 아이템 단가로 역산 시도 (백업 파일 방식)
-            if(amt === 0) {
-                let items = o.items;
-                // JSON 파싱 안전 처리
-                if (typeof items === 'string') { 
-                    try { items = JSON.parse(items); } catch(e) { items = []; } 
-                }
-                
-                if(Array.isArray(items)) {
-                    items.forEach(i => {
-                        let p = 0;
-                        // 1순위: 아이템 자체 가격, 2순위: 상품테이블 가격, 3순위: 백업 기본값
-                        if(i.product && i.product.price) p = i.product.price;
-                        else if(i.product && prodMap[i.product.name]) p = prodMap[i.product.name];
-                        else if(i.productName && prodMap[i.productName]) p = prodMap[i.productName];
-                        
-                        if(!p) p = i.price || 0; 
-                        
-                        amt += p * (i.qty || 1);
-                    });
-                }
-            }
+        // 스태프 목록 가져오기
+        const { data: staffList } = await sb.from('admin_staff').select('*');
 
+        orders.forEach(o => {
+            // 매출 인정 기준: 결제완료 계열 상태
+            const validPayment = ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'].includes(o.payment_status);
+            if(!validPayment) return; // 미결제 건은 매출 통계에서 제외 (원하시면 주석 처리)
+
+            let amt = o.total_amount || 0;
             totalRevenue += amt;
 
-            // 매니저별 집계 (ID 기준)
-            if(o.staff_manager_id) {
-                managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt;
-            }
-            // 기사별 집계 (ID 기준)
-            if(o.staff_driver_id) {
-                driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt;
-            }
+            if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt;
+            if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt;
         });
 
-        // 결과 표시
         document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + '원';
         document.getElementById('totalCount').innerText = orders.length + '건';
 
-        // 테이블 렌더링 (그래프바 포함)
         renderStaffStats('statManagerBody', managerStats, staffList || [], totalRevenue);
         renderStaffStats('statDriverBody', driverStats, staffList || [], totalRevenue);
 
@@ -106,13 +75,115 @@ window.loadStatsData = async () => {
     }
 };
 
-// [백업 로직 복원 4] 그래프바가 포함된 렌더링 함수
+// [신규] 대시보드 차트 데이터 로드 및 렌더링
+async function loadDashboardCharts() {
+    const yearTotalEl = document.getElementById('yearTotalRevenue');
+    if(!yearTotalEl) return;
+
+    // 올해 1월 1일부터 조회
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const startOfYear = `${currentYear}-01-01T00:00:00`;
+    
+    try {
+        // 올해 전체 주문 가져오기 (결제완료된 것만)
+        const { data: orders, error } = await sb.from('orders')
+            .select('created_at, total_amount, payment_status')
+            .gte('created_at', startOfYear)
+            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']);
+
+        if(error) throw error;
+
+        let yearSum = 0;
+        const monthlySum = new Array(12).fill(0); // 0~11 (1월~12월)
+        
+        // 최근 7일 날짜 라벨 생성
+        const dailyLabels = [];
+        const dailyData = [];
+        const today = new Date();
+        
+        for(let i=6; i>=0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
+            dailyLabels.push(i === 0 ? "오늘" : (i === 1 ? "어제" : `${i}일전`));
+            dailyData.push({ date: dateStr, sum: 0 });
+        }
+
+        // 데이터 집계
+        orders.forEach(o => {
+            const amt = o.total_amount || 0;
+            const date = new Date(o.created_at);
+            const dateStr = o.created_at.split('T')[0];
+            const monthIdx = date.getMonth(); // 0(1월) ~ 11(12월)
+
+            // 1. 올해 총 매출
+            yearSum += amt;
+
+            // 2. 월별 매출
+            monthlySum[monthIdx] += amt;
+
+            // 3. 최근 7일 매출
+            const dayObj = dailyData.find(d => d.date === dateStr);
+            if(dayObj) dayObj.sum += amt;
+        });
+
+        // UI 업데이트
+        yearTotalEl.innerText = yearSum.toLocaleString() + "원";
+        document.querySelector('.page-title').innerText = `통계 대시보드 (${currentYear}년)`;
+
+        // 차트 그리기
+        renderChart('chartDaily', 'bar', dailyLabels, dailyData.map(d => d.sum), '#6366f1');
+        renderChart('chartMonthly', 'line', ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'], monthlySum, '#10b981');
+
+    } catch(e) {
+        console.error("차트 로드 실패:", e);
+    }
+}
+
+let chartInstances = {}; // 차트 중복 생성 방지용
+
+function renderChart(canvasId, type, labels, data, color) {
+    const ctx = document.getElementById(canvasId);
+    if(!ctx) return;
+
+    // 기존 차트 파괴 (메모리 누수 방지)
+    if(chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+    }
+
+    chartInstances[canvasId] = new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '매출액',
+                data: data,
+                backgroundColor: color,
+                borderColor: color,
+                borderWidth: 1,
+                tension: 0.3 // 곡선
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: (val) => val.toLocaleString() } }
+            }
+        }
+    });
+}
+
+
 function renderStaffStats(elemId, statsObj, staffList, totalRev) { 
     const tbody = document.getElementById(elemId); 
     if(!tbody) return;
     tbody.innerHTML = ''; 
 
-    // 매출 높은 순 정렬
     const sortedIds = Object.keys(statsObj).sort((a,b) => statsObj[b] - statsObj[a]); 
 
     if(sortedIds.length === 0) { 
@@ -122,7 +193,6 @@ function renderStaffStats(elemId, statsObj, staffList, totalRev) {
 
     sortedIds.forEach(id => { 
         const s = staffList.find(st => st.id == id); 
-        // 스태프 정보가 삭제되었을 경우 대비
         const name = s ? s.name : `(삭제됨:${id})`;
         const color = s ? s.color : '#cbd5e1';
         
@@ -147,20 +217,19 @@ function renderStaffStats(elemId, statsObj, staffList, totalRev) {
             </tr>`; 
     }); 
 }
-// ==========================================
-// [경리과 통합 결산 관리]
-// ==========================================
 
+// [경리과 통합 결산 관리] - 기존 코드 유지
+// (이전에 작성된 loadAccountingData 등의 코드는 여기에 그대로 두거나, 필요한 경우 아래 코드로 덮어쓰세요)
+// ==========================================
 // [전역 변수] 엑셀 다운로드용 데이터 캐싱
 let cachedAccOrders = [];
 let cachedAccWithdrawals = [];
 let cachedAccProfiles = [];
 
 window.loadAccountingData = async () => {
+    // (기존 코드와 동일)
     const startInput = document.getElementById('accStartDate');
     const endInput = document.getElementById('accEndDate');
-
-    // 1. 날짜가 비어있으면 자동 설정
     if (!startInput.value || !endInput.value) {
         const now = new Date();
         const krNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
@@ -171,7 +240,6 @@ window.loadAccountingData = async () => {
         startInput.value = firstDayStr;
         endInput.value = todayStr;
     }
-
     const start = startInput.value;
     const end = endInput.value;
     showLoading(true);

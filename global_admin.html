@@ -12,9 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
-    <link rel="stylesheet" href="global_admin.css">
+   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link rel="stylesheet" href="global_admin.css">
 </head>
 <body>
 
@@ -238,8 +237,31 @@
 
             <div id="sec-stats" class="section">
                 <div class="card" style="margin-bottom:20px;">
+                     <h3 style="margin-top:0; margin-bottom:15px; color:#1e293b;"><i class="fa-solid fa-chart-simple"></i> 실시간 매출 대시보드</h3>
+                     
+                     <div style="background:#1e1b4b; color:white; padding:20px; border-radius:12px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:14px; color:#a5b4fc; margin-bottom:5px;">📅 2024년 올해 누적 매출</div>
+                            <div id="yearTotalRevenue" style="font-size:28px; font-weight:800;">0원</div>
+                        </div>
+                        <div style="font-size:40px; opacity:0.2;"><i class="fa-solid fa-sack-dollar"></i></div>
+                     </div>
+
+                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:15px;">
+                            <h4 style="margin:0 0 10px 0; color:#475569;">📊 최근 7일 매출 (일별)</h4>
+                            <div style="height:250px;"><canvas id="chartDaily"></canvas></div>
+                        </div>
+                        <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:15px;">
+                            <h4 style="margin:0 0 10px 0; color:#475569;">📅 월별 매출 추이</h4>
+                            <div style="height:250px;"><canvas id="chartMonthly"></canvas></div>
+                        </div>
+                     </div>
+                </div>
+
+                <div class="card" style="margin-bottom:20px;">
                     <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-calendar-days" style="color:#6366f1;"></i> 기간별 매출 조회
+                        <i class="fa-solid fa-calendar-days" style="color:#6366f1;"></i> 기간별 상세 검색
                     </h3>
                     <div style="display:flex; gap:10px; align-items:flex-end; background:#f8fafc; padding:20px; border-radius:8px;">
                         <div><label class="form-label">시작일</label><input type="date" id="statStartDate" class="input-text"></div>
@@ -248,7 +270,7 @@
                     </div>
                 </div>
                 <div class="stat-card-group">
-                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-won-sign"></i></div><div class="stat-info"><div>기간 내 총 매출 (계산됨)</div><div id="totalRevenue">0</div></div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-won-sign"></i></div><div class="stat-info"><div>기간 내 총 매출 (검색결과)</div><div id="totalRevenue">0</div></div></div>
                     <div class="stat-card"><div class="stat-icon" style="background:#ecfdf5; color:#059669;"><i class="fa-solid fa-receipt"></i></div><div class="stat-info"><div>총 주문 건수</div><div id="totalCount">0건</div></div></div>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
