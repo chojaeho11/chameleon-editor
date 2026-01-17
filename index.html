@@ -1726,6 +1726,74 @@
 
 <script src="./text-wizard.js?v=119"></script> 
 <script>
+    // [0] 파트너스 센터 입장 함수 (마스터키 + 호환성 적용)
+    // [0] 파트너스 센터 입장 함수 (마스터키 + Platinum 허용)
+    window.enterPartnerCenter = function() {
+        // 1. 로그인 체크
+        if (!window.currentUser) {
+            alert(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.");
+            document.getElementById('loginModal').style.display = 'flex';
+            return;
+        }
+
+        // 2. 현재 로그인 정보 확인
+        const myEmail = (window.currentUser.email || '').toLowerCase().trim();
+        
+        // 등급 가져오기 (DB 위치별 체크)
+        let r = window.currentUser.role;
+        if (!r && window.currentUser.user_metadata) r = window.currentUser.user_metadata.role;
+        if (!r && window.currentUser.app_metadata) r = window.currentUser.app_metadata.role;
+        
+        let finalRole = (r || 'user').toLowerCase().trim();
+
+        // ★ partners(복수형)만 partner로 통일
+        if (finalRole === 'partners') finalRole = 'partner';
+
+        // ★ [핵심] 사장님 이메일 프리패스 (DB 오류 무시하고 무조건 입장)
+        const adminEmails = ['korea900@daum.net', 'korea900as@gmail.com'];
+        if (adminEmails.includes(myEmail)) {
+            console.log("👑 관리자(파트너스) 계정 확인됨 -> 프리패스 입장");
+            finalRole = 'partner'; 
+        }
+
+        console.log("최종 인식 등급:", finalRole);
+
+        // 3. 입장 허용 목록 (platinum 포함)
+        const allowedRoles = ['admin', 'franchise', 'partner', 'platinum'];
+
+        if (allowedRoles.includes(finalRole)) {
+            // 1. 모달이 있는 페이지(index.html)라면 모달 열기
+            const modal = document.getElementById('partnerConsoleModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                
+                // 뱃지 UI 업데이트
+                const badge = document.getElementById('partnerRegionBadge');
+                if (badge) {
+                    if (finalRole === 'franchise') {
+                        badge.innerText = window.currentUser.region || '가맹점';
+                        badge.style.backgroundColor = '#6366f1'; 
+                    } else if (finalRole === 'admin') {
+                        badge.innerText = '관리자 (Master)';
+                        badge.style.backgroundColor = '#1e293b'; 
+                    } else {
+                        // partner, platinum 모두 파트너스로 표시
+                        badge.innerText = '파트너스 (Partners)';
+                        badge.style.backgroundColor = '#64748b'; 
+                    }
+                }
+                // 데이터 로드
+                if (window.switchPartnerTab) window.switchPartnerTab('pool');
+            } 
+            // 2. 모달이 없는 페이지라면 partner.html로 이동
+            else {
+                location.href = 'partner.html';
+            }
+        } else {
+            // 실패 시 메시지
+            alert(`🚫 입장 권한이 없습니다.\n\n[진단 정보]\n- 계정: ${myEmail}\n- 인식된 등급: ${finalRole}\n\n관리자 승인 후 이용해주세요.`);
+        }
+    };
     // [1] 파트너 신청 제출 함수
     window.submitRealPartnerApp = async function() {
         // sb(Supabase) 객체가 로드되었는지 확인

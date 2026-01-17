@@ -381,14 +381,26 @@ window.filterProductList = async () => {
         return;
     }
 
+    // 1. 데이터 로드 (sort_order 기준)
     if(cat !== lastFetchedCategory) {
         showLoading(true);
-        const { data } = await sb.from('admin_products').select('*').eq('category', cat).order('sort_order');
+        const { data } = await sb.from('admin_products').select('*').eq('category', cat).order('sort_order', {ascending: true});
         allProducts = data || [];
         lastFetchedCategory = cat;
         showLoading(false);
     }
     renderProductList(allProducts);
+
+    // 2. 드래그 앤 드롭 활성화 (SortableJS)
+    if(tbody) {
+        new Sortable(tbody, {
+            animation: 150,
+            handle: '.drag-handle', // 햄버거 아이콘으로만 드래그 가능
+            onEnd: function (evt) {
+                updateProductSortOrder(); // 드래그가 끝나면 DB 업데이트
+            }
+        });
+    }
 };
 
 window.renderProductList = (products) => {
@@ -409,9 +421,15 @@ window.renderProductList = (products) => {
         
         const displayPrice = formatCurrency(price, filterSite === 'all' ? 'KR' : filterSite);
 
+        // [수정] tr에 data-id 추가 및 드래그 핸들 아이콘 추가
         tbody.innerHTML += `
-            <tr>
-                <td><span class="badge-site ${(p.site_code||'KR').toLowerCase()}">${p.site_code||'KR'}</span></td>
+            <tr data-id="${p.id}">
+                <td>
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <i class="fa-solid fa-bars drag-handle" style="cursor:grab; color:#cbd5e1;" title="순서변경"></i>
+                        <span class="badge-site ${(p.site_code||'KR').toLowerCase()}">${p.site_code||'KR'}</span>
+                    </div>
+                </td>
                 <td><img src="${p.img_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;"></td>
                 <td><small style="color:#6366f1">${p.code}</small><br><b>${name}</b></td>
                 <td>${p.width_mm}x${p.height_mm}</td>
@@ -423,6 +441,24 @@ window.renderProductList = (products) => {
             </tr>`;
     });
 }
+
+// [신규] 상품 순서 변경 DB 저장 함수
+window.updateProductSortOrder = async () => {
+    const rows = document.querySelectorAll('#prodTableBody tr');
+    if(rows.length === 0) return;
+
+    const updates = [];
+    rows.forEach((row, index) => {
+        const id = row.getAttribute('data-id');
+        if(id) {
+            // 현재 화면 순서(index)대로 sort_order 업데이트
+            updates.push(sb.from('admin_products').update({ sort_order: index + 1 }).eq('id', id));
+        }
+    });
+
+    await Promise.all(updates);
+    // console.log("순서 저장 완료");
+};
 
 // [수정됨] 상품 저장 함수: 소수점 오류 해결 및 정수 변환
 window.addProductDB = async () => {

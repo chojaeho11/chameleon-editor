@@ -15,7 +15,11 @@ body { margin: 0; display: flex; height: 100vh; font-family: 'Pretendard', sans-
 .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .top-bar { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
 .page-title { font-size: 18px; font-weight: 700; color: #0f172a; }
-.content-scroll { flex: 1; overflow-y: auto; padding: 30px; }
+.content-scroll { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 100px 30px; /* 상하 여백 40px, 좌우 여백 30px */
+}
 
 /* 섹션 및 카드 레이아웃 */
 .section { display: none; animation: fadeIn 0.3s; }
@@ -103,3 +107,9 @@ tr:hover td { background: #f8fafc; }
 .file-list-area { max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #f8fafc; }
 .file-item-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; margin-bottom: 6px; border: 1px solid #eee; border-radius: 6px; font-size: 13px; }
 .file-item-row:last-child { margin-bottom: 0; }
+/* 드래그 핸들 스타일 */
+.drag-handle { cursor: grab; margin-right: 8px; color: #94a3b8; transition: 0.2s; }
+.drag-handle:hover { color: #6366f1; }
+.drag-handle:active { cursor: grabbing; }
+
+/* 옵션 */

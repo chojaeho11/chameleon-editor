@@ -334,27 +334,121 @@ window.uploadFileDirect = async (orderId, input) => {
     loadOrders();
 };
 
-// [뱅크다]
 window.loadBankdaList = async () => {
-    const start = document.getElementById('bankStartDate').value || new Date().toISOString().split('T')[0];
-    const end = document.getElementById('bankEndDate').value || new Date().toISOString().split('T')[0];
+    const startInput = document.getElementById('bankStartDate');
+    const endInput = document.getElementById('bankEndDate');
+    
+    // 1. 날짜가 비어있으면 '이번 달 1일 ~ 오늘'로 자동 설정
+    if (!startInput.value || !endInput.value) {
+        const now = new Date();
+        const krNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+        const todayStr = krNow.toISOString().split('T')[0];
+        const year = krNow.getFullYear();
+        const month = String(krNow.getMonth() + 1).padStart(2, '0');
+        const firstDayStr = `${year}-${month}-01`;
+        startInput.value = firstDayStr;
+        endInput.value = todayStr;
+    }
+
+    const start = startInput.value;
+    const end = endInput.value;
     const tbody = document.getElementById('bankListBody');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
 
-    const { data: txs } = await sb.from('bank_transactions')
-        .select('*')
-        .gte('transaction_date', start + 'T00:00:00')
-        .lte('transaction_date', end + 'T23:59:59')
-        .order('transaction_date', { ascending: false });
+    try {
+        // [수정] select('*') 로 변경하여 컬럼 오류 방지
+        const { data: txs, error } = await sb.from('bank_transactions')
+            .select('*')
+            .gte('transaction_date', start + 'T00:00:00')
+            .lte('transaction_date', end + 'T23:59:59')
+            .order('transaction_date', { ascending: false });
 
-    tbody.innerHTML = '';
-    if(!txs || txs.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">내역 없음</td></tr>'; return; }
+        if (error) throw error;
 
-    txs.forEach(tx => {
-        let status = tx.match_status === 'matched' ? '<span style="color:blue">매칭됨</span>' : '미매칭';
-        let btn = tx.match_status !== 'matched' ? `<button class="btn btn-sm btn-outline" onclick="matchOrderManual('${tx.id}', '${tx.depositor}')">연결</button>` : '-';
-        tbody.innerHTML += `<tr><td>${tx.transaction_date}</td><td>${tx.depositor}</td><td>${tx.amount.toLocaleString()}</td><td>${tx.bank_name}</td><td>${status}</td><td>${btn}</td></tr>`;
-    });
+        // 2. 미결제 주문 목록 조회
+        const { data: orders } = await sb.from('orders')
+            .select('*') // [수정] 전체 컬럼 가져오기
+            .gte('created_at', start + 'T00:00:00')
+            .neq('payment_status', '결제완료')
+            .neq('payment_status', '입금확인');
+
+        tbody.innerHTML = '';
+        if (!txs || txs.length === 0) { 
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">기간 내 입금 내역이 없습니다.</td></tr>'; 
+            return; 
+        }
+
+        let autoMatchList = [];
+
+        txs.forEach(tx => {
+            // [디버깅] 콘솔창(F12)을 확인해보세요. 실제 데이터에 이름이 어디 들어있는지 확인용입니다.
+            console.log("Bank TX:", tx); 
+
+            // [수정] 가능한 모든 이름 필드를 다 검사
+            const displayName = tx.bk_jukyo || tx.input_name || tx.depositor || tx.sender || tx.content || tx.description || '이름미상';
+
+            const matchOrder = orders ? orders.find(o => {
+                const orderName = (o.manager_name || '').replace(/\s/g, ''); 
+                const bankName = String(displayName).replace(/\s/g, '');
+                return orderName === bankName && Math.abs((o.total_amount || 0) - tx.amount) < 100;
+            }) : null;
+
+            let statusBadge = '<span class="badge" style="background:#f1f5f9; color:#94a3b8;">미매칭</span>';
+            let actionBtn = `<button class="btn btn-sm btn-outline" onclick="matchOrderManual('${tx.id}', '${displayName}')">수동 연결</button>`;
+
+            if (tx.match_status === 'matched') {
+                statusBadge = `<span class="badge" style="background:#e0e7ff; color:#3730a3;">연결됨</span>`;
+                actionBtn = `<span style="font-size:11px; color:#aaa;">완료</span>`;
+            } 
+            else if (matchOrder) {
+                statusBadge = `<span class="badge" style="background:#dcfce7; color:#166534; font-weight:bold;">✅ 매칭가능</span>`;
+                actionBtn = `<button class="btn btn-success btn-sm" onclick="matchOrderManual('${tx.id}', '${displayName}', '${matchOrder.id}')">연결 (${matchOrder.manager_name})</button>`;
+                autoMatchList.push({ txId: tx.id, orderId: matchOrder.id });
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${new Date(tx.transaction_date).toLocaleString()}</td>
+                    <td style="font-weight:bold; color:#0f172a;">${displayName}</td>
+                    <td style="text-align:right; font-weight:bold;">${tx.amount.toLocaleString()}원</td>
+                    <td>${tx.bank_name || '-'}</td>
+                    <td style="text-align:center;">${statusBadge}</td>
+                    <td style="text-align:center;">${actionBtn}</td>
+                </tr>`;
+        });
+
+        const existingBtn = document.getElementById('btnAutoMatch');
+        if(existingBtn) existingBtn.remove();
+        
+        if(autoMatchList.length > 0) {
+            const table = document.querySelector('#sec-bankda table');
+            const btnHtml = `
+                <div id="btnAutoMatch" style="margin-bottom:10px; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#166534; font-weight:bold;">✨ ${autoMatchList.length}건 자동 매칭됨</span>
+                    <button class="btn btn-success" onclick='executeAutoMatching(${JSON.stringify(autoMatchList)})'>🚀 일괄 연결하기</button>
+                </div>`;
+            table.insertAdjacentHTML('beforebegin', btnHtml);
+        }
+
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
+    }
+};
+// [일괄 자동매칭 실행]
+window.executeAutoMatching = async (list) => {
+    if(!confirm(`${list.length}건을 일괄 연결하시겠습니까?`)) return;
+    showLoading(true);
+    try {
+        const updates = list.map(item => {
+            const p1 = sb.from('orders').update({ payment_status: '결제완료', payment_method: '무통장입금' }).eq('id', item.orderId);
+            const p2 = sb.from('bank_transactions').update({ match_status: 'matched', matched_order_id: item.orderId }).eq('id', item.txId);
+            return Promise.all([p1, p2]);
+        });
+        await Promise.all(updates);
+        alert("완료되었습니다.");
+        loadBankdaList();
+    } catch(e) { alert("오류: " + e.message); } finally { showLoading(false); }
 };
 
 window.runBankdaScraping = async () => {
@@ -363,38 +457,174 @@ window.runBankdaScraping = async () => {
     try {
         const { data, error } = await sb.functions.invoke('bank-scraper', { method: 'POST' });
         if(error) throw error;
-        alert(`완료: ${data.message}`);
+        alert(`업데이트 완료: ${data.message || '성공'}`);
         loadBankdaList();
-    } catch(e) { alert("실패: " + e.message); }
-    finally { showLoading(false); }
+    } catch(e) { alert("실패: " + e.message); } finally { showLoading(false); }
 };
 
-window.matchOrderManual = async (txId, name) => {
-    const orderId = prompt(`[${name}] 입금건과 연결할 주문번호를 입력하세요.`);
+window.matchOrderManual = async (txId, name, suggestedId = '') => {
+    const orderId = prompt(`[${name}] 입금건과 연결할 주문번호를 입력하세요.`, suggestedId);
     if(!orderId) return;
-    await sb.from('orders').update({ payment_status: '결제완료', payment_method: '무통장입금' }).eq('id', orderId);
-    await sb.from('bank_transactions').update({ match_status: 'matched', matched_order_id: orderId }).eq('id', txId);
-    alert("연결되었습니다.");
-    loadBankdaList();
+    try {
+        await sb.from('orders').update({ payment_status: '결제완료', payment_method: '무통장입금' }).eq('id', orderId);
+        await sb.from('bank_transactions').update({ match_status: 'matched', matched_order_id: orderId }).eq('id', txId);
+        alert("연결되었습니다.");
+        loadBankdaList();
+    } catch(e) { alert("오류: " + e.message); }
 };
 
-// [배송 스케줄]
+// [배송 스케줄 및 기사 배정]
 window.loadDailyTasks = async () => {
-    const date = document.getElementById('taskDate').value || new Date().toISOString().split('T')[0];
-    const driverId = document.getElementById('filterTaskDriver').value;
-    let query = sb.from('orders').select('*').eq('delivery_target_date', date);
-    if(driverId !== 'all') query = query.eq('staff_driver_id', driverId);
-    
-    const { data } = await query;
+    // 1. 날짜가 없으면 오늘 날짜로 강제 설정 (한국 시간 기준)
+    const dateInput = document.getElementById('taskDate');
+    if (!dateInput.value) {
+        const now = new Date();
+        const krNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+        dateInput.value = krNow.toISOString().split('T')[0];
+    }
+    const targetDate = dateInput.value;
+    const driverFilterId = document.getElementById('filterTaskDriver').value;
+
+    showLoading(true);
     const tbody = document.getElementById('taskListBody');
     tbody.innerHTML = '';
-    
-    if(!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">일정 없음</td></tr>'; return; }
-    
-    data.forEach(o => {
-        tbody.innerHTML += `<tr><td>${o.status}</td><td>${o.manager_name}</td><td>파일(${o.files?.length})</td><td>${o.staff_driver_id || '미배정'}</td><td>${o.delivery_time || '-'}</td></tr>`;
-    });
+
+    try {
+        // 2. 스태프 목록이 로드되지 않았다면 가져오기
+        if (staffList.length === 0) {
+            const { data } = await sb.from('admin_staff').select('*');
+            staffList = data || [];
+        }
+
+        // 3. 필터 드롭다운에 기사님 목록 채우기 (옵션이 '전체' 하나뿐일 때)
+        const filterSelect = document.getElementById('filterTaskDriver');
+        if (filterSelect && filterSelect.options.length === 1) {
+            staffList.filter(s => s.role === 'driver').forEach(s => {
+                filterSelect.innerHTML += `<option value="${s.id}">${s.name} 기사님</option>`;
+            });
+        }
+
+        // 4. 해당 날짜의 배송 건 조회
+        let query = sb.from('orders').select('*').eq('delivery_target_date', targetDate);
+        if (driverFilterId !== 'all') {
+            query = query.eq('staff_driver_id', driverFilterId);
+        }
+
+        const { data: orders, error } = await query;
+
+        if (error) throw error;
+
+        if (!orders || orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#999;">${targetDate} 배송 일정이 없습니다.</td></tr>`;
+            showLoading(false);
+            return;
+        }
+
+        // 5. 정렬 (기사님 이름순 -> 배송 시간순)
+        orders.sort((a, b) => {
+            const driverA = staffList.find(s => s.id == a.staff_driver_id)?.name || 'zzz'; // 미배정은 뒤로
+            const driverB = staffList.find(s => s.id == b.staff_driver_id)?.name || 'zzz';
+            if (driverA !== driverB) return driverA.localeCompare(driverB);
+            
+            const timeA = a.delivery_time || "99:99";
+            const timeB = b.delivery_time || "99:99";
+            return timeA.localeCompare(timeB);
+        });
+
+        // 6. 테이블 렌더링
+        orders.forEach(o => {
+            const isDone = (o.status === '배송완료' || o.status === '완료됨');
+            const dotColor = isDone ? '#22c55e' : '#cbd5e1';
+            const statusBadge = isDone 
+                ? `<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">배송완료</span>` 
+                : `<span class="badge" style="background:#f1f5f9; color:#64748b;">${o.status}</span>`;
+            const rowStyle = isDone ? 'background-color: #f0fdf4;' : '';
+            const textStyle = isDone ? 'opacity: 0.6;' : '';
+
+            // 파일 링크 생성
+            let fileLinks = '';
+            if (o.files && Array.isArray(o.files)) {
+                o.files.forEach(f => {
+                    fileLinks += `<a href="${f.url}" target="_blank" class="badge" style="text-decoration:none; background:#fff; border:1px solid #ddd; color:#334155; margin-right:4px;">📄 ${f.name}</a>`;
+                });
+            } else {
+                fileLinks = '<span style="font-size:11px; color:#ccc;">파일 없음</span>';
+            }
+
+            // 기사 선택 옵션
+            let driverOpts = `<option value="">미지정 (택배/퀵)</option>`;
+            staffList.filter(s => s.role === 'driver').forEach(s => {
+                const selected = o.staff_driver_id == s.id ? 'selected' : '';
+                driverOpts += `<option value="${s.id}" ${selected}>${s.name}</option>`;
+            });
+
+            // 시간 선택 옵션
+            const timeOpts = getDeliveryTimeOptions(o.delivery_time);
+
+            tbody.innerHTML += `
+                <tr style="${rowStyle}">
+                    <td style="text-align:center;">${statusBadge}</td>
+                    <td style="${textStyle}">
+                        <div style="font-weight:bold; font-size:14px;">${o.manager_name}</div>
+                        <div style="font-size:12px; color:#6366f1;">${o.phone}</div>
+                        <div style="font-size:12px; color:#666; margin-top:2px;">${o.address || '주소 미입력'}</div>
+                    </td>
+                    <td style="${textStyle}">
+                        <div style="display:flex; flex-wrap:wrap; gap:2px;">${fileLinks}</div>
+                    </td>
+                    <td>
+                        <select class="input-text" onchange="updateTaskDB('${o.id}', 'staff_driver_id', this.value)" style="width:100%; ${isDone ? 'background:transparent; border:none; font-weight:bold;' : ''}" ${isDone?'disabled':''}>
+                            ${driverOpts}
+                        </select>
+                    </td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <select class="input-text" onchange="updateTaskDB('${o.id}', 'delivery_time', this.value)" style="flex:1; ${isDone ? 'background:transparent; border:none; font-weight:bold;' : ''}" ${isDone?'disabled':''}>
+                                ${timeOpts}
+                            </select>
+                            <button class="btn btn-sm ${isDone ? 'btn-outline' : 'btn-success'}" onclick="updateTaskDB('${o.id}', 'status', '${isDone ? '제작준비' : '배송완료'}')" title="완료/취소 토글">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
+    } finally {
+        showLoading(false);
+    }
 };
+
+// [헬퍼] 배송 데이터 업데이트 (기사 배정, 시간, 완료체크)
+window.updateTaskDB = async (orderId, field, value) => {
+    const valToSave = value === "" ? null : value;
+    
+    // 상태 변경일 경우 UI 즉시 반응을 위해 리로드
+    const shouldReload = (field === 'status');
+    
+    try {
+        const { error } = await sb.from('orders').update({ [field]: valToSave }).eq('id', orderId);
+        if (error) throw error;
+        
+        if (shouldReload) loadDailyTasks(); // 완료 체크 시 새로고침
+    } catch (e) {
+        alert("업데이트 실패: " + e.message);
+    }
+};
+
+// [헬퍼] 시간 옵션 생성기
+function getDeliveryTimeOptions(selectedTime) {
+    let html = '<option value="">시간 미정</option>';
+    for (let i = 9; i <= 20; i++) { // 9시부터 20시까지
+        const timeStr = (i < 10 ? '0' + i : i) + ":00";
+        const isSelected = selectedTime === timeStr ? 'selected' : '';
+        html += `<option value="${timeStr}" ${isSelected}>${timeStr}</option>`;
+    }
+    return html;
+}
 
 window.updateOrderStaff = async (id, role, selectEl) => {
     const val = selectEl.value;

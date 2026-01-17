@@ -394,67 +394,68 @@ async function checkPartnerStatus() {
 
     const { data: { user } } = await sb.auth.getUser();
     
+    // 1. 비로그인 상태
     if (!user) {
         if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
         if (btnApply) {
             btnApply.style.display = 'inline-flex';
-            btnApply.onclick = () => alert("로그인이 필요한 서비스입니다.");
+            btnApply.onclick = () => {
+                const modal = document.getElementById('partnerApplyModal');
+                if(modal) modal.style.display = 'flex';
+            };
         }
         return;
     }
 
+    // 2. 로그인 상태 (등급 확인)
     const { data } = await sb.from('profiles').select('role, region').eq('id', user.id).single();
     
-    if (data && (data.role === 'franchise' || data.role === 'admin')) {
-        if (btnConsole) btnConsole.style.setProperty('display', 'inline-flex', 'important');
-        if (btnApply) btnApply.style.display = 'none';
+    if (data) {
+        let role = (data.role || 'user').toLowerCase().trim();
         
-        const badge = document.getElementById('partnerRegionBadge');
-        if(badge) badge.innerText = data.region ? `📍 ${data.region} 지역` : '📍 지역 전체';
-        window.currentPartnerRegion = data.region;
+        // s가 붙은 경우만 단수로 통일
+        if (role === 'partners') role = 'partner';
 
-        setInterval(() => loadPartnerOrders('pool', true), 30000);
-    } 
-    else {
-        if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
-        if (btnApply) {
-            btnApply.style.display = 'inline-flex';
-            btnApply.onclick = applyForPartner; 
+        // ★ 입장 허용 등급 (platinum 명시적 추가)
+        const allowed = ['admin', 'franchise', 'partner', 'platinum'];
+
+        if (allowed.includes(role)) {
+            // [권한 있음] 입장 버튼 보이기 / 신청 버튼 숨기기
+            if (btnConsole) btnConsole.style.setProperty('display', 'inline-flex', 'important');
+            if (btnApply) btnApply.style.display = 'none';
+            
+            const badge = document.getElementById('partnerRegionBadge');
+            if(badge) badge.innerText = data.region ? `📍 ${data.region}` : '📍 전체 지역';
+            window.currentPartnerRegion = data.region;
+        } 
+        else {
+            // [권한 없음] 입장 버튼 숨기기 / 신청 버튼 보이기
+            if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
+            if (btnApply) {
+                btnApply.style.display = 'inline-flex';
+                btnApply.onclick = applyForPartner;
+            }
         }
     }
 }
 
 async function applyForPartner() {
     const { data: { user } } = await sb.auth.getUser();
-    if (!user) return alert("로그인이 필요합니다.");
+    
+    if (!user) {
+        alert(window.t('msg_login_required') || "로그인이 필요합니다.");
+        const loginModal = document.getElementById('loginModal');
+        if(loginModal) loginModal.style.display = 'flex';
+        return;
+    }
 
-    const name = prompt(window.t('prompt_partner_name'));
-    if(!name) return;
-    const phone = prompt(window.t('prompt_partner_phone'));
-    if(!phone) return;
-    const region = prompt(window.t('prompt_partner_region'));
-    if(!region) return;
-
-    if(!confirm(window.t('confirm_partner_apply')
-        .replace('{name}', name)
-        .replace('{phone}', phone)
-        .replace('{region}', region))) return;
-
-    try {
-        const { error } = await sb.from('partner_applications').insert({
-            user_id: user.id,
-            company_name: name,
-            contact_phone: phone,
-            region: region,
-            status: 'pending'
-        });
-
-        if (error) throw error;
-
-        alert(window.t('msg_partner_apply_success'));
-    } catch (e) {
-        console.error(e);
-        alert("신청 실패: " + e.message);
+    // 구린 입력창(prompt) 대신 index.html에 있는 예쁜 모달 띄우기
+    const modal = document.getElementById('partnerApplyModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        console.error("partnerApplyModal 요소를 찾을 수 없습니다.");
+        alert("신청 화면을 불러올 수 없습니다.");
     }
 }
 

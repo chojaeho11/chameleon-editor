@@ -6,6 +6,7 @@ import "./global_orders.js";
 import "./global_products.js";
 import "./global_users.js";
 import "./global_assets.js";
+import "./global_stats.js";
 
 window.addEventListener('DOMContentLoaded', async () => { 
     // 1. 화면 깜빡임 방지
