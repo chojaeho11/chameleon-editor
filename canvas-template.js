@@ -61,7 +61,7 @@ let tplCurrentPage = 0; // 현재 페이지 (0부터 시작)
 let tplIsLoading = false;
 let tplLastCategory = 'all';
 let tplLastKeyword = '';
-const TPL_PER_PAGE = 30; // 한 페이지당 30개
+const TPL_PER_PAGE = 12; // 한 페이지당 30개
 
 // =========================================================
 // [0] 스마트 검색어 확장 DB
@@ -506,14 +506,17 @@ async function useSelectedTemplate() {
     }
 }
 
-// [수정] 템플릿 로드 함수 (레이어 순서 정리 + 템플릿 강제 잠금 해제 + 가이드 고정)
+// [최종 수정] 템플릿 로드 함수 (구형 데이터 잠금 해제 패치)
 async function processLoad(mode) {
+    if (!selectedTpl && window.selectedTpl) selectedTpl = window.selectedTpl;
+    if (!selectedTpl) return alert("선택된 템플릿 정보가 없습니다.");
+
     document.getElementById("templateActionModal").style.display = "none"; 
     document.getElementById("templateOverlay").style.display = "none";
     document.getElementById("loading").style.display = "flex";
 
     try {
-        // 1. DB 데이터 가져오기
+        // 1. 데이터 가져오기
         const { data, error } = await sb
             .from('library')
             .select('data_url, width, height, category') 
@@ -526,7 +529,10 @@ async function processLoad(mode) {
         selectedTpl.height = data.height || 1000;
         selectedTpl.category = data.category;
 
-        // 2. 데이터 파싱
+        // 배경으로 취급할 카테고리 정의
+        const bgCategories = ['user_vector', 'user_image', 'photo-bg', 'vector', 'transparent-graphic', 'pattern'];
+        const isBgMode = bgCategories.includes(selectedTpl.category);
+
         let rawData = data.data_url;
         let finalJson = null;
         let isImage = false;
@@ -542,13 +548,13 @@ async function processLoad(mode) {
             isImage = true; imageUrl = rawData;
         }
 
-        // '새 작업' 모드 시 기존 디자인 삭제 (대지, 가이드 제외)
+        // 기존 디자인 삭제 (대지, 가이드 제외)
         if (mode === 'replace') {
             const objects = canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay');
             objects.forEach(o => canvas.remove(o));
         }
 
-        // ★ [핵심] 템플릿 속성 적용 (잠금 해제!)
+        // 설정 적용 헬퍼 함수
         function applyTemplateSettings(obj) {
             const board = canvas.getObjects().find(o => o.isBoard);
             let bW = canvas.width, bH = canvas.height;
@@ -562,143 +568,142 @@ async function processLoad(mode) {
             }
 
             let finalScale = 1;
-            // 배경형 카테고리는 꽉 채우기
-            if (['photo-bg', 'vector', 'user_vector', 'user_image', 'transparent-graphic'].includes(selectedTpl.category)) {
+
+            if (isBgMode) {
+                // 배경 모드: 꽉 채우기
                 finalScale = Math.max(bW / obj.width, bH / obj.height);
             } else {
-                finalScale = (bW / 3) / obj.width; 
+                // 객체 모드: 적당히 줄이기 (30%)
+                finalScale = (bW * 0.3) / obj.width; 
+                if(finalScale > 1) finalScale = 1; 
             }
             
             obj.set({
                 originX: 'center', originY: 'center',
                 left: centerX, top: centerY,
-                scaleX: finalScale, scaleY: finalScale,
-                
-                // ▼ [중요] 고객이 선택한 템플릿은 무조건 움직일 수 있어야 함 (잠금 해제)
-                selectable: true,
-                evented: true,
-                lockMovementX: false,
-                lockMovementY: false,
-                lockRotation: false,
-                lockScalingX: false,
-                lockScalingY: false,
-                hasControls: true,
-                hasBorders: true,
-                hoverCursor: 'move',
-                
-                // 배경 식별자 (레이어 정렬용)
-                isTemplateBackground: true 
+                scaleX: finalScale, scaleY: finalScale
             });
+            
+            obj.setCoords();
         }
 
-        // ★ [핵심] 레이어 순서 정리 (가이드 고정 + 템플릿 배치)
+        // 레이어 정리 함수
         const arrangeLayers = () => {
-            const allObjects = canvas.getObjects();
+            const board = canvas.getObjects().find(o => o.isBoard);
+            const guide = canvas.getObjects().find(o => o.id === 'product_fixed_overlay');
+            const bgObjects = canvas.getObjects().filter(o => o.isTemplateBackground);
             
-            // 객체 분류
-            const board = allObjects.find(o => o.isBoard);
-            const guide = allObjects.find(o => o.id === 'product_fixed_overlay');
-            const backgrounds = allObjects.filter(o => o.isTemplateBackground); // 방금 불러온 템플릿
-            const others = allObjects.filter(o => 
-                !o.isBoard && 
-                o.id !== 'product_fixed_overlay' && 
-                !o.isTemplateBackground
-            ); // 텍스트, 로고, 기타
-
-            // [Layer 1] 흰색 대지 (가장 아래)
             if (board) canvas.sendToBack(board);
-
-            // [Layer 2] 배경 템플릿 (대지 바로 위)
-            backgrounds.forEach(bg => {
-                canvas.bringToFront(bg); 
+            bgObjects.forEach(bg => {
+                canvas.sendToBack(bg);
+                if(board) canvas.bringForward(bg);
             });
-
-            // [Layer 3] 고정 가이드 (배경 위) - ★ 여기서 가이드를 확실히 잠급니다.
-            if (guide) {
-                canvas.bringToFront(guide);
-                guide.set({ 
-                    selectable: false, 
-                    evented: false, 
-                    lockMovementX: true, 
-                    lockMovementY: true,
-                    hoverCursor: 'default'
-                });
-            }
-
-            // [Layer 4] 텍스트, 로고, 기타 (가장 위)
-            others.forEach(obj => {
-                canvas.bringToFront(obj);
-            });
-            
+            if (guide) canvas.bringToFront(guide);
             canvas.requestRenderAll();
         };
 
-        // [헬퍼] 로딩 완료 후 처리
-        function finishLoad(obj) {
-            obj.setCoords(); 
-            // 배경형이면 선택만 해제 (잠그는게 아님), 로고형이면 선택 상태로
-            if(['photo-bg','vector','transparent-graphic'].includes(selectedTpl.category)){
-                canvas.discardActiveObject();
-            } else {
-                canvas.setActiveObject(obj);
-            }
-            canvas.requestRenderAll();
-            if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-        }
-
         // 3. 로딩 실행
         if (isImage) {
+            // [단일 이미지]
             const cleanUrl = String(imageUrl).trim().replace(/^"|"$/g, '');
             const isSvg = cleanUrl.toLowerCase().includes('.svg') || cleanUrl.startsWith('data:image/svg+xml');
 
+            const callback = (obj) => {
+                if(!obj) return;
+                applyTemplateSettings(obj);
+                
+                // 단일 이미지는 배경 모드면 잠금, 아니면 해제
+                if(isBgMode) {
+                    obj.set({ selectable: false, evented: false, isTemplateBackground: true });
+                } else {
+                    obj.set({ selectable: true, evented: true, isTemplateBackground: false });
+                }
+
+                canvas.add(obj);
+                arrangeLayers();
+                canvas.discardActiveObject();
+                canvas.requestRenderAll();
+
+                if (window.innerWidth < 768 && window.smartMobileFit) setTimeout(() => window.smartMobileFit(), 100);
+                if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+            };
+
             if (isSvg) {
                 fabric.loadSVGFromURL(cleanUrl, (objects, options) => {
-                    if (!objects || objects.length === 0) {
-                         if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-                         return;
-                    }
+                    if (!objects || objects.length === 0) return;
                     const group = fabric.util.groupSVGElements(objects, options);
-                    applyTemplateSettings(group);
-                    canvas.add(group);
-                    arrangeLayers(); // 전체 재정렬
-                    finishLoad(group);
+                    callback(group);
                 });
             } else {
                 fabric.Image.fromURL(cleanUrl, (img) => {
-                    if (!img || !img.width) {
-                        if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-                        return alert("이미지 로드 실패");
-                    }
-                    applyTemplateSettings(img);
-                    canvas.add(img);
-                    arrangeLayers(); // 전체 재정렬
-                    finishLoad(img);
+                    if (!img || !img.width) return alert("이미지 로드 실패");
+                    callback(img);
                 }, { crossOrigin: 'anonymous' }); 
             }
         } else {
-            // [JSON]
+            // [JSON 데이터]
             let jsonData = finalJson;
             const objectsToRender = jsonData.objects.filter(o => !o.isBoard);
 
             fabric.util.enlivenObjects(objectsToRender, (objs) => {
-                if (objs.length === 0) { 
-                    if(document.getElementById("loading")) document.getElementById("loading").style.display = "none"; 
-                    return; 
+                if (objs.length === 0) {
+                    if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
+                    return;
                 }
+                
+                // 1. 그룹화하여 위치/크기 잡기
                 const group = new fabric.Group(objs);
-                applyTemplateSettings(group);
+                applyTemplateSettings(group); 
                 canvas.add(group);
                 
-                arrangeLayers(); // 전체 재정렬
-                
-                // JSON 로드는 그룹을 깨줘야 편집이 편함
-                const items = group.toActiveSelection(); 
-                items.getObjects().forEach(o => {
-                    // 개별 객체들도 잠금 해제
-                    o.set({ selectable: true, evented: true });
+                // 2. 그룹 해제
+                canvas.setActiveObject(group);
+                const items = group.toActiveSelection();
+                canvas.discardActiveObject(); 
+
+                // ★ [핵심 패치] 불러온 모든 객체의 잠금을 일단 강제로 다 풉니다.
+                // (예전 데이터에 locked=true가 저장되어 있어도 여기서 무시됨)
+                objs.forEach(o => {
+                    o.set({ 
+                        selectable: true, 
+                        evented: true, 
+                        lockMovementX: false, lockMovementY: false, 
+                        lockRotation: false, lockScalingX: false, lockScalingY: false,
+                        hasControls: true, 
+                        isTemplateBackground: false 
+                    });
                 });
 
+                // 3. 배경 모드일 때만 다시 잠금 (가장 큰 객체 찾기)
+                if (isBgMode) {
+                    let largestObj = null;
+                    let maxArea = 0;
+
+                    objs.forEach(o => {
+                        if (o.type === 'text' || o.type === 'i-text' || o.type === 'textbox') return;
+                        const area = (o.width * o.scaleX) * (o.height * o.scaleY);
+                        if (area > maxArea) {
+                            maxArea = area;
+                            largestObj = o;
+                        }
+                    });
+
+                    // 가장 큰 객체를 배경으로 지정하고 잠금
+                    if (largestObj) {
+                        largestObj.set({
+                            selectable: false, evented: false,
+                            lockMovementX: true, lockMovementY: true,
+                            hasControls: false,
+                            isTemplateBackground: true
+                        });
+                        canvas.sendToBack(largestObj);
+                    }
+                }
+
+                arrangeLayers();
                 canvas.requestRenderAll();
+
+                if (window.innerWidth < 768 && window.smartMobileFit) setTimeout(() => window.smartMobileFit(), 100);
                 if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
             });
         }
@@ -834,7 +839,8 @@ async function registerUserTemplate() {
             user_email: freshUser.email,
             status: 'approved',
             is_official: false,
-            product_key: 'custom'
+            // ★ [수정] 현재 편집 중인 상품 코드를 저장 (없으면 custom)
+            product_key: window.currentProductKey || 'custom'
         };
 
         const { error: dbError } = await sb.from('library').insert([payload]);
@@ -1065,5 +1071,232 @@ window.applyStartTemplate = async function(tpl) {
     selectedTpl = tpl; 
     
     // 기존 로딩 함수(processLoad)를 'replace' 모드로 실행
-    await processLoad('replace');
+   await processLoad('replace');
+};
+// [페이징 상태 변수]
+// [페이징 상태 변수]
+let sideCurrentPage = 0;
+const SIDE_ITEMS_PER_PAGE = 5; // ★ 5개 -> 20개로 대폭 상향
+
+// =========================================================
+// ★ [수정] 사이드바 템플릿 로드 (20개씩 보기 + 상품/공용 혼합 노출)
+// =========================================================
+export async function loadSideBarTemplates(targetProductKey, keyword = "", page = 0) {
+    const drawer = document.getElementById("sideTemplateDrawer");
+    const list = document.getElementById("sideTemplateList");
+    
+    if (!drawer || !list) return;
+
+    sideCurrentPage = page;
+
+    if(drawer.style.display !== "flex") drawer.style.display = "flex";
+    
+    const msg = keyword ? `"${keyword}" 검색 중...` : "디자인 불러오는 중...";
+    list.innerHTML = `<div style="padding:20px; text-align:center; color:#999; font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> ${msg}</div>`;
+
+    try {
+        // 1. 쿼리 작성 (20개씩 끊어서 가져오기)
+        let query = sb.from('library')
+            .select('id, thumb_url, title, category, product_key, tags') 
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false })
+            .range(sideCurrentPage * SIDE_ITEMS_PER_PAGE, (sideCurrentPage + 1) * SIDE_ITEMS_PER_PAGE - 1);
+
+        const pKey = targetProductKey || window.currentProductKey || 'custom';
+
+        // ★ [핵심 변경] 특정 상품이라도 '전용 템플릿' + '공용 템플릿'을 같이 보여줍니다.
+        // 이렇게 하면 전용 템플릿이 적어도 리스트가 썰렁하지 않습니다.
+        if (pKey && pKey !== 'custom') {
+             // 상품 코드가 일치하거나 OR 카테고리가 공용(user_vector, image, bg)인 것 모두 검색
+             // (검색어가 있든 없든 항상 풍성하게 보여줍니다)
+             if(keyword) {
+                 query = query.or(`product_key.eq.${pKey},category.in.(user_vector,user_image,photo-bg)`);
+             } else {
+                 // 검색어가 없어도 공용 템플릿을 섞어서 보여줌 (단, 전용이 먼저 나오진 않고 최신순 정렬됨)
+                 query = query.or(`product_key.eq.${pKey},category.in.(user_vector,user_image,photo-bg)`);
+             }
+        } else {
+            // 자유 모드일 때는 공용 카테고리 전체 노출
+            query = query.in('category', ['user_vector', 'user_image', 'photo-bg']);
+        }
+
+        // 키워드 검색 필터 추가
+        if (keyword && keyword.trim() !== "") {
+            const term = keyword.trim();
+            query = query.or(`title.ilike.%${term}%,tags.ilike.%${term}%`);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // 2. 목록 그리기
+        list.innerHTML = "";
+        
+        if (!data || data.length === 0) {
+            list.innerHTML = `
+                <div style="padding:30px 10px; text-align:center; color:#94a3b8; font-size:13px; line-height:1.5;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size:24px; margin-bottom:10px; opacity:0.5;"></i><br>
+                    데이터가 없습니다.<br>
+                    ${sideCurrentPage > 0 ? '<button class="btn-round" onclick="loadSideBarTemplates(null, \'\', 0)" style="margin-top:10px;">처음으로</button>' : ''}
+                </div>`;
+            return;
+        }
+
+        data.forEach((tpl, index) => {
+            const div = document.createElement("div");
+            div.className = "side-tpl-card";
+            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 200) : tpl.thumb_url;
+
+            // 랭킹 뱃지 (1페이지 1~3위만)
+            let badgeHtml = "";
+            if (sideCurrentPage === 0 && index < 3 && !keyword) {
+                const rankColors = ["rank-1", "rank-2", "rank-3"];
+                badgeHtml = `<div class="rank-badge ${rankColors[index]}">${index + 1}위</div>`;
+            }
+            
+            // 전용 상품 뱃지 (Exclusive)
+            if (pKey && tpl.product_key === pKey && pKey !== 'custom') {
+                 badgeHtml = `<div class="rank-badge" style="background:#ef4444; border:none;">전용</div>`;
+            }
+
+            div.innerHTML = `
+                ${badgeHtml}
+                <img src="${imgUrl}" class="side-tpl-img">
+                <div class="side-tpl-info" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${tpl.title || '제목 없음'}
+                </div>
+            `;
+
+            div.onclick = async () => {
+                if(confirm("이 디자인을 적용하시겠습니까?\n(현재 캔버스 위에 추가됩니다)")) {
+                    window.selectedTpl = tpl;
+                    if (typeof applyStartTemplate === 'function') {
+                        await applyStartTemplate(tpl);
+                    } else {
+                        window.processLoad('add');
+                    }
+                }
+            };
+            list.appendChild(div);
+        });
+
+        // 3. 하단 페이징 버튼 (20개씩)
+        const paginationDiv = document.createElement("div");
+        paginationDiv.className = "sidebar-pagination";
+        paginationDiv.style.cssText = "display:flex; justify-content:center; gap:10px; padding:15px 0;";
+
+        const prevBtn = document.createElement("button");
+        prevBtn.className = "side-page-btn";
+        prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+        prevBtn.disabled = (sideCurrentPage === 0);
+        prevBtn.onclick = () => loadSideBarTemplates(pKey, keyword, sideCurrentPage - 1);
+
+        const pageLabel = document.createElement("span");
+        pageLabel.innerText = `${sideCurrentPage + 1}`;
+        pageLabel.style.cssText = "font-weight:bold; color:#64748b; font-size:14px;";
+
+        const nextBtn = document.createElement("button");
+        nextBtn.className = "side-page-btn";
+        nextBtn.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
+        nextBtn.disabled = (data.length < SIDE_ITEMS_PER_PAGE); 
+        nextBtn.onclick = () => loadSideBarTemplates(pKey, keyword, sideCurrentPage + 1);
+
+        paginationDiv.appendChild(prevBtn);
+        paginationDiv.appendChild(pageLabel);
+        paginationDiv.appendChild(nextBtn);
+
+        list.appendChild(paginationDiv);
+
+    } catch (e) {
+        console.error("사이드바 로드 실패:", e);
+        list.innerHTML = '<div style="padding:20px; text-align:center; color:red; font-size:12px;">로딩 실패</div>';
+    }
+}
+// 전역 함수로 등록
+window.loadSideBarTemplates = loadSideBarTemplates;
+// ★ [핵심 수정] 템플릿 로드 함수 전역 등록 (이게 없어서 에러가 난 것임)
+window.processLoad = processLoad;
+window.useSelectedTemplate = useSelectedTemplate;
+// =========================================================
+// [추가 기능] 배경 잠금/해제 토글 버튼 (원래 있던 버튼 연결)
+// =========================================================
+window.toggleBackgroundLock = function() {
+    if (!canvas) return;
+
+    // 1. 현재 "배경"으로 지정된 객체 찾기
+    let bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
+
+    // 2. 만약 배경 태그가 붙은 게 없다면? -> 가장 큰 객체를 배경으로 간주
+    if (!bgObj) {
+        let largestObj = null;
+        let maxArea = 0;
+        canvas.getObjects().forEach(o => {
+            if (o.type === 'text' || o.type === 'i-text') return; // 텍스트 제외
+            const area = o.getScaledWidth() * o.getScaledHeight();
+            if (area > maxArea) {
+                maxArea = area;
+                largestObj = o;
+            }
+        });
+        if (largestObj) {
+            bgObj = largestObj;
+            bgObj.isTemplateBackground = true; // 태그 붙여주기
+        }
+    }
+
+    if (!bgObj) return alert("배경으로 설정할 이미지가 없습니다.");
+
+    // 3. 현재 잠겨있는지 확인 (selectable이 false면 잠긴 상태)
+    const isLocked = !bgObj.selectable;
+
+    if (isLocked) {
+        // [잠금 해제] -> 이동/편집 가능하게 변경
+        bgObj.set({
+            selectable: true,
+            evented: true,          // 클릭 가능
+            lockMovementX: false,
+            lockMovementY: false,
+            lockRotation: false,
+            lockScalingX: false,
+            lockScalingY: false,
+            hasControls: true,      // 조절점 표시
+            hasBorders: true,
+            hoverCursor: 'move'
+        });
+        
+        // 사용자가 바로 알 수 있게 선택 처리
+        canvas.setActiveObject(bgObj);
+        
+        // (선택사항) 토스트 메시지나 알림
+        // alert("🔓 배경 잠금이 해제되었습니다. 이동이 가능합니다."); 
+        console.log("배경 잠금 해제됨");
+
+    } else {
+        // [다시 잠금] -> 배경 모드로 변경
+        bgObj.set({
+            selectable: false,
+            evented: false,         // 클릭 통과 (중요)
+            lockMovementX: true,
+            lockMovementY: true,
+            lockRotation: true,
+            lockScalingX: true,
+            lockScalingY: true,
+            hasControls: false,
+            hasBorders: false,
+            hoverCursor: 'default'
+        });
+
+        // 선택 해제 및 맨 뒤로 보내기
+        canvas.discardActiveObject();
+        canvas.sendToBack(bgObj);
+        
+        // 대지(Board)가 있다면 대지는 더 뒤로
+        const board = canvas.getObjects().find(o => o.isBoard);
+        if(board) canvas.sendToBack(board);
+
+        // alert("🔒 배경이 고정되었습니다.");
+        console.log("배경 다시 잠김");
+    }
+
+    canvas.requestRenderAll();
 };

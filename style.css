@@ -534,10 +534,17 @@ button, input, textarea, select { font-family: inherit; }
 .tpl-cate-btn.active { background: #fff; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 .tpl-content { flex: 1; display: flex; flex-direction: column; background: #fff; }
 .tpl-grid { 
-    display: block !important; column-count: 3 !important; column-gap: 20px; 
-    width: 100%; padding: 20px; box-sizing: border-box; height: auto !important; 
-    flex: 1; overflow-y: auto !important; overflow-x: hidden; scrollbar-width: thin; 
+    /* [수정] block/column-count 대신 grid 사용으로 레이아웃 안정화 */
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important; 
+    gap: 20px; 
+    padding: 20px; 
+    width: 100%; 
+    height: 100%; /* 부모 높이 채우기 */
+    overflow-y: auto !important; /* 스크롤 활성화 */
     background-color: #f1f5f9; 
+    box-sizing: border-box;
+    align-content: start;
 }
 .tpl-item { 
     position: relative; background-color: #ffffff; border-radius: 16px; 
@@ -722,22 +729,41 @@ button, input, textarea, select { font-family: inherit; }
     }
     .right-stack.open { transform: translateX(0); }
 
-    /* 플로팅 버튼 (FAB) */
+    /* [수정] 모바일 컨트롤 독 (좌측 세로 배치로 변경) */
     #mobileControlDock {
-        display: flex; position: fixed; bottom: 20px;
-        left: 0; right: 0; justify-content: space-between;
-        padding: 0 20px; z-index: 9000; pointer-events: none;
+        display: block; /* flex 제거 */
+        position: fixed; 
+        top: 0; left: 0; bottom: 0; width: 0; /* 공간 차지 안함 */
+        z-index: 9000; 
+        pointer-events: none;
     }
+
     .mobile-fab {
-        pointer-events: auto; width: 60px; height: 60px;
-        border-radius: 50%; border: none; color: white; font-size: 20px;
+        pointer-events: auto; 
+        position: fixed; /* 화면 기준 고정 */
+        left: 15px; /* 화면 왼쪽에서 15px 떨어짐 */
+        width: 55px; height: 55px;
+        border-radius: 50%; border: none; color: white; font-size: 18px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.1s;
+        z-index: 9100;
     }
     .mobile-fab:active { transform: scale(0.95); }
-    .mobile-fab span { font-size: 10px; margin-top: 2px; font-weight: bold; }
-    .mobile-fab.left { background: #6366f1; }
-    .mobile-fab.right { background: #111827; }
+    .mobile-fab span { font-size: 9px; margin-top: 2px; font-weight: bold; letter-spacing: -0.5px; }
+
+    /* 1. 글자/도형 버튼 (좌측 상단) - 탑바 아래 */
+    .mobile-fab.left { 
+        top: 70px; /* 탑바 높이 고려 */
+        background: #6366f1; 
+    }
+
+    /* 2. 편집/정렬 버튼 (좌측 하단) - 독바 위 */
+    .mobile-fab.right { 
+        bottom: 160px; /* 하단 독바보다 위로 */
+        background: #1e293b; 
+    }
+
+    /* [추가] 템플릿 버튼도 좌측으로 이동 (탑바에서 숨기고 FAB로 추가 가능하지만, 일단 기존 탑바 유지 추천) */
 
     /* [3] 템플릿 모달 (카테고리 잘림 해결) */
     .tpl-modal-box {
@@ -829,7 +855,39 @@ button, input, textarea, select { font-family: inherit; }
     }
 
     #startScreen { padding-top: 20px !important; }
-    .bottom-dock { display: none !important; }
+    
+    /* [강력 수정] 하단 독바: 화면 기준 고정 및 최상위 노출 */
+    .bottom-dock { 
+        display: flex !important;
+        position: fixed !important;   /* absolute -> fixed로 변경하여 스크롤 무시하고 고정 */
+        bottom: 110px !important;     /* 하단 FAB 버튼(60px)보다 더 위에 배치 */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        
+        z-index: 999999 !important;   /* 모든 팝업/레이어보다 위에 오도록 설정 */
+        
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important;
+        border-radius: 50px !important;
+        padding: 8px 20px !important;
+        gap: 12px !important;
+        width: auto !important;
+        white-space: nowrap !important;
+    }
+
+    /* 버튼 크기 및 아이콘 조정 */
+    .bottom-dock .zoom-btn {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+        background: #fff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #334155 !important;
+    }
+
+    /* 모바일에서는 도움말 텍스트 숨김 */
+    .bottom-dock .help-text { display: none !important; }
 }
 
 /* 모바일 텍스트 에디터 (항상 최상위) */
@@ -2888,3 +2946,317 @@ body {
         .review-pill:hover { background: #eff6ff; border-color: #6366f1; color: #6366f1; transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .star-score { color: #334155; font-weight: 800; margin-left: 2px; }
         .star-icon { color: #f59e0b; }
+        /* =========================================
+   [추가] 에디터 레이아웃 Flex 변경 및 사이드 패널 스타일
+   ========================================= */
+.editor-wrap {
+    display: flex !important;       /* Grid -> Flex 변경 */
+    flex-direction: row !important;
+    height: 100% !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+}
+
+/* 왼쪽 도구창 고정 */
+.side {
+    width: 280px !important;
+    flex-shrink: 0 !important;
+    z-index: 20 !important;
+    border-right: 1px solid #e2e8f0;
+}
+
+/* 추천 템플릿 패널 (숨김/표시) */
+.side-drawer {
+    width: 260px !important;
+    flex-shrink: 0 !important;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: none; /* JS로 제어 */
+    flex-direction: column;
+    z-index: 15;
+    animation: drawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 캔버스 영역 (남은 공간 채우기) */
+.stage {
+    flex: 1 !important;
+    min-width: 0 !important;
+    position: relative !important;
+}
+
+/* 패널 닫기 버튼 스타일 */
+.btn-close-drawer {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.btn-close-drawer:hover {
+    background: #f8fafc; color: #ef4444; border-color: #fee2e2;
+}
+
+@keyframes drawerSlideIn {
+    from { width: 0; opacity: 0; transform: translateX(-20px); }
+    to { width: 260px; opacity: 1; transform: translateX(0); }
+}
+/* =========================================
+   [필수 추가] 추천 템플릿 내부 디자인 (크기 오류 해결용)
+   ========================================= */
+
+/* 패널 헤더 (제목 + 닫기 버튼) */
+.drawer-header {
+    height: 50px;
+    padding: 0 15px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+/* 템플릿 목록 스크롤 영역 */
+.drawer-content {
+    flex: 1;                /* 남은 높이 채우기 */
+    overflow-y: auto;       /* 세로 스크롤 허용 */
+    overflow-x: hidden;     /* 가로 스크롤 방지 */
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: #f8fafc;
+}
+
+/* 개별 템플릿 카드 */
+/* [수정] 카드 전체 틀 (회색 배경) */
+.side-tpl-card {
+    width: 100% !important;
+    
+    /* ★ 핵심: 카드 전체 배경을 회색으로 설정 */
+    background: #e5e5e5 !important; 
+    
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 1px solid #d4d4d4; /* 테두리도 약간 진하게 */
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.side-tpl-card:hover {
+    transform: translateY(-2px);
+    border-color: #6366f1;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.15);
+}
+
+/* ★ [핵심] 이미지 크기 제한 (이게 없어서 엄청 크게 나왔던 것임) */
+.side-tpl-img {
+    width: 100%;            /* 가로 꽉 채우기 */
+    height: 80px;          /* 높이 고정 (원하는대로 조절 가능) */
+object-fit: cover;
+    display: block;
+    background: #f8fafc;
+    border-bottom: 1px solid #eee;
+    
+    /* [수정됨] 찌글거림 방지를 위해 'auto'로 변경 (부드럽게 처리) */
+    image-rendering: auto; 
+    
+    /* GPU 가속을 켜서 렌더링 품질 향상 */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* 템플릿 제목 정보 */
+.side-tpl-info {
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    background: #fff;
+    border-top: 1px solid #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 긴 제목 ... 처리 */
+}
+
+/* 닫기 버튼 아이콘 정렬 */
+.btn-close-drawer i {
+    pointer-events: none;
+}
+/* style.css 수정 */
+
+ 
+
+/* 로딩 스피너가 자연스럽게 보이도록 */
+.fa-spinner {
+    font-size: 24px;
+    margin-top: 10px;
+}
+/* style.css - 사이드바 1열 디자인 & 검색창 스타일 */
+
+/* =========================================
+   1. 예쁜 검색창 디자인 (수정됨)
+   ========================================= */
+.drawer-search-box {
+    position: relative !important;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* 입력창 스타일 */
+#sideTemplateSearch {
+    width: 100%;
+    padding: 12px 15px 12px 42px !important; /* 왼쪽에 아이콘 공간 확보 */
+    border: 2px solid #f1f5f9;
+    border-radius: 50px;
+    background: #f8fafc;
+    font-size: 14px;
+    color: #334155;
+    outline: none;
+    transition: all 0.2s;
+    height: 45px; /* 높이 고정 */
+}
+
+#sideTemplateSearch:focus {
+    background: #fff;
+    border-color: #6366f1;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+}
+
+/* 돋보기 아이콘 위치 강제 고정 */
+.drawer-search-box i.fa-magnifying-glass {
+    position: absolute !important;
+    left: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #94a3b8;
+    font-size: 16px;
+    pointer-events: none; /* 클릭 통과 */
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+}
+/* =========================================
+   2. 템플릿 목록 (1열 수직 배치)
+   ========================================= */
+#sideTemplateList {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 15px !important;
+    padding: 15px !important;
+    /* [수정] 높이 계산을 명확히 하고 스크롤 강제 */
+    height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    min-height: 0; /* 플렉스 박스 스크롤 버그 방지 */
+}
+
+/* 개별 카드 스타일 */
+.side-tpl-card {
+    width: 100% !important;
+    
+    /* ★ 핵심: 카드 전체 배경을 회색으로 변경 */
+    background: #e5e5e5 !important; 
+    
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 1px solid #d4d4d4; /* 테두리도 약간 진하게 */
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.side-tpl-card:hover {
+    transform: translateY(-5px); /* 마우스 올리면 둥실 */
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
+    border-color: #c7d2fe;
+}
+
+/* 이미지: 1:1 비율 유지하면서 꽉 차게 */
+.side-tpl-img {
+    width: 100% !important;
+    aspect-ratio: 1 / 1 !important; 
+    object-fit: cover;
+    background: #f8fafc;
+    display: block;
+}
+
+/* 정보창 (제목 표시) */
+.side-tpl-info {
+    padding: 12px 15px !important;
+    
+    /* ★ 핵심: 텍스트 영역 배경도 회색으로 변경 */
+    background: #e5e5e5 !important; 
+    
+    border-top: 1px solid #d4d4d4;
+    text-align: center;
+}
+
+.side-tpl-title {
+    font-size: 14px !important;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* =========================================
+   [추가] 사이드바 템플릿: 랭킹 / 없음 / 페이징
+   ========================================= */
+
+/* 1. 랭킹 뱃지 (1~3위) */
+.rank-badge {
+    position: absolute;
+    top: 0; left: 0;
+    padding: 6px 10px;
+    font-size: 11px; font-weight: 900; color: #fff;
+    border-bottom-right-radius: 12px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+    letter-spacing: -0.5px;
+}
+/* 금/은/동 컬러 */
+.rank-1 { background: linear-gradient(135deg, #FFD700, #FDB931); border: 1px solid rgba(255,255,255,0.5); }
+.rank-2 { background: linear-gradient(135deg, #E0E0E0, #BDBDBD); border: 1px solid rgba(255,255,255,0.5); color: #555; }
+.rank-3 { background: linear-gradient(135deg, #CD7F32, #A0522D); border: 1px solid rgba(255,255,255,0.5); }
+
+/* 2. 데이터 없음 (이미지 표시) */
+.empty-sidebar-box {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 20px; text-align: center;
+    color: #94a3b8; height: 100%;
+}
+.empty-sidebar-img {
+    width: 100px; height: 100px;
+    object-fit: contain; margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+/* 3. 하단 페이징 버튼 */
+.sidebar-pagination {
+    display: flex; justify-content: center; align-items: center;
+    gap: 10px; padding: 20px 0; margin-top: auto;
+}
+.side-page-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+}
+.side-page-btn:hover:not(:disabled) {
+    background: #6366f1; color: #fff; border-color: #6366f1;
+}
+.side-page-btn:disabled {
+    background: #f8fafc; color: #cbd5e1; cursor: not-allowed;
+}

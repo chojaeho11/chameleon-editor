@@ -3,19 +3,79 @@
 <head>
 <meta charset="UTF-8" />
 <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                    console.log("좀비 서비스 워커 삭제 완료!");
+    window.addEventListener('load', function() {
+        // Fabric.js가 로드되었는지 확인
+        if (typeof fabric === 'undefined') return;
+
+        const originalFromURL = fabric.Image.fromURL;
+        
+        // 이미지 로딩 함수를 '스마트 로더'로 교체
+        fabric.Image.fromURL = function(url, callback, options) {
+            // 1. URL 유효성 검사 (비어있으면 무시)
+            if (!url || typeof url !== 'string') {
+                if(callback) callback(null); // 콜백을 강제로 실행해 로딩을 끝냄
+                return;
+            }
+
+            // 2. [핵심] URL 자리에 JSON 데이터가 들어온 경우 -> 디자인으로 로드 (LoadFromJSON)
+            // %7B는 '{' 의 URL 인코딩 문자입니다.
+            if (url.includes('%7B') || url.trim().startsWith('{') || url.includes('{"version"')) {
+                console.warn("🚨 이미지 주소 자리에 JSON 데이터 발견! -> 캔버스 복원으로 전환합니다.");
+                
+                // 만약 전역 canvas 객체가 있다면 즉시 데이터 복원 시도
+                if (window.canvas) {
+                    try {
+                        // URL 인코딩된 경우 디코딩
+                        const jsonStr = decodeURIComponent(url);
+                        const jsonObj = JSON.parse(jsonStr);
+
+                        window.canvas.loadFromJSON(jsonObj, function() {
+                            console.log("✅ JSON 데이터 복원 완료");
+                            window.canvas.requestRenderAll();
+                            
+                            // ★ 중요: 무한 로딩을 끄기 위해 로딩 화면을 강제로 숨김
+                            const loadingEl = document.getElementById('loading');
+                            if(loadingEl) loadingEl.style.display = 'none';
+                            
+                            // 콜백이 있다면 빈 이미지라도 넘겨서 에러 방지
+                            if (callback) callback(new fabric.Image('')); 
+                        });
+                    } catch (e) {
+                        console.error("JSON 복원 실패:", e);
+                        if(document.getElementById('loading')) document.getElementById('loading').style.display = 'none';
+                    }
                 }
-            });
-            caches.keys().then(function(names) {
-                for (let name of names) caches.delete(name);
-                console.log("좀비 캐시 저장소 삭제 완료!");
-            });
-        }
-    </script>
+                return; // 원래의 fromURL 실행 차단
+            }
+
+            // 3. 정상적인 이미지 URL인 경우 -> 원래대로 실행
+            return originalFromURL.call(this, url, callback, options);
+        };
+        
+        console.log("✅ 스마트 에러 방지 시스템 가동 (JSON 자동 변환 모드)");
+    });
+</script>
+<script>
+    // [기존 코드] 서비스 워커 및 캐시 삭제
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+                console.log("좀비 서비스 워커 삭제 완료!");
+            }
+        });
+        caches.keys().then(function(names) {
+            for (let name of names) caches.delete(name);
+            console.log("좀비 캐시 저장소 삭제 완료!");
+        });
+    }
+
+    // [★추가할 코드] 431 에러 방지를 위한 모든 쿠키 삭제
+    document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    console.log("헤더 용량 초과 방지를 위해 쿠키를 초기화했습니다.");
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
 <meta name="description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.">
@@ -938,6 +998,23 @@
             <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
         </div>
         
+        <div id="sideTemplateDrawer" class="side-drawer" style="display:none;">
+            <div class="drawer-header">
+                <span style="font-weight:800; color:#334155; font-size:14px;">🎨 추천 디자인</span>
+                <button class="btn-close-drawer" onclick="document.getElementById('sideTemplateDrawer').style.display='none'">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="drawer-search-box">
+                <input type="text" id="sideTemplateSearch" placeholder="디자인 검색 (예: 카페, 세일)" autocomplete="off" onkeyup="window.handleSideSearch(this.value)">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <div id="sideTemplateList" class="drawer-content">
+                </div>
+        </div>
+
         <div class="stage" id="stage">
            <div id="textWizardToolbar" class="wizard-toolbar floating-island">
     <div class="wiz-brand" style="display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.2; padding: 0 5px;">
@@ -981,7 +1058,7 @@
         white-space: nowrap;
         letter-spacing: -0.5px; /* 자간을 좁혀서 가로 공간 추가 확보 */
     ">
-        배경지정
+        배경풀기
     </span>
 </button>
 
@@ -1025,6 +1102,10 @@
     </div>
 </div>
             <div class="bottom-dock">
+                <button onclick="window.toggleBackgroundLock()" class="zoom-btn" title="배경 잠금/해제"><i class="fa-solid fa-lock"></i></button>
+                <button onclick="document.getElementById('btnFitScreen').click()" class="zoom-btn" title="화면 맞춤"><i class="fa-solid fa-compress"></i></button>
+                <div class="divider"></div>
+                
                 <button id="btnZoomOut" class="zoom-btn"><i class="fa-solid fa-minus"></i></button>
                 <button id="btnZoomIn" class="zoom-btn"><i class="fa-solid fa-plus"></i></button>
                 <div class="divider"></div>
@@ -1723,6 +1804,76 @@
 <script type="module" src="./login.js?v=119"></script>
 <script type="module" src="./my-design.js?v=119"></script>
 <script type="module" src="./main.js?v=119"></script>
+<script>
+    // [추가] 모바일 전용 스마트 화면 맞춤 함수
+    window.smartMobileFit = function() {
+        if (!window.canvas) return;
+        
+        // 1. 대지(Board) 찾기
+        const board = window.canvas.getObjects().find(o => o.isBoard);
+        if (!board) return;
+
+        const canvasW = window.canvas.getWidth();
+        const canvasH = window.canvas.getHeight();
+        const boardW = board.getScaledWidth();
+        const boardH = board.getScaledHeight();
+
+        // 2. 모바일 환경 설정
+        // 좌측 버튼(55px + 여백)과 하단 독바(약 100px)를 피하기 위한 안전 영역 계산
+        const paddingX = 40;  // 좌우 여백
+        const paddingY = 180; // 상하 여백 (하단 독바 공간 확보)
+
+        // 3. 기본 줌 계산
+        const safeW = canvasW - paddingX;
+        const safeH = canvasH - paddingY;
+        let zoom = Math.min(safeW / boardW, safeH / boardH);
+
+        // ★ [핵심] 세로가 더 긴(배너) 경우 로직
+        const isVertical = boardH > boardW * 1.2; // 세로가 가로보다 20% 이상 길면
+        if (isVertical) {
+            zoom *= 0.85; // 85% 수준으로 더 작게 축소 (한눈에 들어오게)
+        } else {
+            zoom *= 0.95; // 일반 비율은 꽉 차게
+        }
+
+        // 줌 레벨 제한
+        zoom = Math.min(Math.max(zoom, 0.05), 5);
+
+        // 4. 위치 잡기 (세로형은 위쪽으로, 일반형은 중앙으로)
+        const vpt = window.canvas.viewportTransform;
+        vpt[0] = zoom;
+        vpt[3] = zoom;
+        
+        // X축: 중앙 정렬 (좌측 버튼 피해서 살짝 오른쪽으로 밀고 싶으면 +20 추가)
+        vpt[4] = (canvasW - boardW * zoom) / 2 + 10; 
+
+        if (isVertical) {
+            // Y축: 세로형은 상단 여백(70px) 아래에 바로 붙임 (하단 버튼 안 가리게 위로 올림)
+            vpt[5] = 80; 
+        } else {
+            // Y축: 일반형은 수직 중앙 정렬 (단, 하단 독바 고려해 살짝 위로)
+            vpt[5] = (canvasH - boardH * zoom) / 2 - 30; 
+        }
+
+        window.canvas.setViewportTransform(vpt);
+        window.canvas.requestRenderAll();
+        console.log("📱 모바일 스마트 맞춤 실행완료 (세로모드:", isVertical, ")");
+    };
+</script>
+<script>
+    // [추가] 사이드바 검색 핸들러 (0.5초 딜레이)
+    let sideSearchTimeout;
+    window.handleSideSearch = function(keyword) {
+        if (sideSearchTimeout) clearTimeout(sideSearchTimeout);
+        
+        sideSearchTimeout = setTimeout(() => {
+            const currentKey = window.currentProductKey || 'custom';
+            if (window.loadSideBarTemplates) {
+                window.loadSideBarTemplates(currentKey, keyword);
+            }
+        }, 500);
+    };
+</script>
 <div id="generalProductModal" class="modal-bg" style="z-index: 15500; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 800px; max-width: 95%; display: flex; overflow: hidden; padding: 0;">
         <div style="width: 45%; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 20px;">
@@ -1774,6 +1925,7 @@
 
 <script src="./text-wizard.js?v=119"></script> 
 <script>
+    
     // [0] 파트너스 센터 입장 함수 (마스터키 + 호환성 적용)
     // [0] 파트너스 센터 입장 함수 (마스터키 + Platinum 허용)
     window.enterPartnerCenter = function() {
@@ -1988,17 +2140,23 @@
     // [1] 전역 변수 및 헬퍼 함수 설정
     // -----------------------------------------------------------
     window.canvas = canvas;
-    window.getTinyThumb = function(url, size = 150) {
+    // index.html 내부 스크립트 수정
+
+window.getTinyThumb = function(url, size = 150) {
     if (!url) return '';
     
-    // 1. Base64 데이터(이미지 자체)인 경우 리사이징 불가하므로 그대로 반환
+    // 1. Base64 데이터는 그대로 반환
     if (url.startsWith('data:image')) return url;
 
-    // 2. URL에 이미 ?가 있으면 &로 연결, 없으면 ?로 시작
+    // [★수정] 이미 Supabase 리사이징 옵션이 붙어있다면 원본 그대로 반환 (중복 방지)
+    if (url.includes('width=') && url.includes('resize=')) {
+        return url;
+    }
+
+    // 2. URL 파라미터 연결자 결정
     const separator = url.includes('?') ? '&' : '?';
 
-    // 3. Supabase 외 다른 서버도 지원할 수 있도록 조건문 제거 후 파라미터 강제 부착
-    // (서버가 지원하지 않으면 이 파라미터는 무시되고 원본이 나오지만, 시도는 해봅니다)
+    // 3. 리사이징 파라미터 추가
     return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=50&format=webp`;
 };
     window.openProductDetail = openProductDetail;
@@ -3160,12 +3318,21 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
-        // 3. [핵심] 화면 전환을 먼저 실행 (로딩 체감 속도 향상)
+        // 3. [핵심] 화면 전환을 먼저 실행
         document.getElementById("startScreen").style.display = "none";
-        document.getElementById("mainEditor").style.display = "flex";
+        // ★ [수정] Grid가 아닌 Flex로 강제 지정 (CSS 오버라이딩 확실하게)
+        document.getElementById("mainEditor").style.display = "flex"; 
+        
         const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
         document.body.classList.add('editor-active'); 
+
+        // ★ [추가] 사이드바 템플릿 추천 패널 로드
+        if (typeof window.loadSideBarTemplates === 'function') {
+            // 'custom'이 아니거나, 특정 상품일 때 사이드바를 엽니다.
+            console.log(`📂 사이드바 템플릿 로드 시도: ${key}`);
+            window.loadSideBarTemplates(key);
+        }
         
         if (window.ChannelIO) ChannelIO('hide');
         window.dispatchEvent(new Event('resize'));
@@ -3193,28 +3360,6 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             window.initCanvasFonts().then(() => {
                 console.log("✅ 서체 로딩 완료");
             }); 
-        }
-
-        // 5. [자동 로드] 고정 가이드(칼선)가 있는지 확인
-        // ★ [수정] 'custom'(템플릿 만들기) 모드에서는 가이드 로드를 차단합니다.
-        if (key !== 'custom') {
-            try {
-                const { data, error } = await sb.from('library')
-                    .select('data_url')
-                    .eq('product_key', key)
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-
-                if (data && data.length > 0) {
-                    const templateUrl = data[0].data_url;
-                    console.log("📢 고정 가이드 발견! 자동 로드합니다.");
-                    setTimeout(() => {
-                        if (window.loadProductFixedTemplate) window.loadProductFixedTemplate(templateUrl);
-                    }, 500);
-                }
-            } catch(e) { 
-                console.error("자동 로드 오류:", e); 
-            }
         }
 
         // 6. 템플릿 처리 (기존 선택된 템플릿만 적용)
