@@ -624,7 +624,17 @@ async function processLoad(mode) {
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
 
-                if (window.innerWidth < 768 && window.smartMobileFit) setTimeout(() => window.smartMobileFit(), 100);
+                // [강력 수정] 모바일 자동 맞춤 (버튼 클릭 + 스마트 함수)
+                if (window.innerWidth < 768) {
+                    // 1. 기존 '화면 맞춤' 버튼 강제 클릭 (가장 확실함)
+                    const btnFit = document.getElementById('btnFitScreen');
+                    if(btnFit) btnFit.click();
+
+                    // 2. 0.2초 뒤 한번 더 정렬 (렌더링 딜레이 보정)
+                    if (window.smartMobileFit) {
+                        setTimeout(() => { window.smartMobileFit(); }, 200);
+                    }
+                }
                 if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
             };
 
@@ -1168,6 +1178,11 @@ export async function loadSideBarTemplates(targetProductKey, keyword = "", page 
             `;
 
             div.onclick = async () => {
+                // [추가] 모바일이면 템플릿 선택 즉시 사이드바 닫기
+                if (window.innerWidth < 768) {
+                    document.getElementById("sideTemplateDrawer").style.display = "none";
+                }
+
                 if(confirm("이 디자인을 적용하시겠습니까?\n(현재 캔버스 위에 추가됩니다)")) {
                     window.selectedTpl = tpl;
                     if (typeof applyStartTemplate === 'function') {

@@ -1806,9 +1806,13 @@
 <script type="module" src="./main.js?v=119"></script>
 <script>
     // [추가] 모바일 전용 스마트 화면 맞춤 함수
+    // [개선된] 모바일 전용 스마트 화면 맞춤 함수
     window.smartMobileFit = function() {
         if (!window.canvas) return;
         
+        // ★ 핵심: 좌표가 틀어진 상태에서 계산하면 엉뚱한 곳으로 가므로, 일단 초기화
+        window.canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); 
+
         // 1. 대지(Board) 찾기
         const board = window.canvas.getObjects().find(o => o.isBoard);
         if (!board) return;
@@ -1818,46 +1822,40 @@
         const boardW = board.getScaledWidth();
         const boardH = board.getScaledHeight();
 
-        // 2. 모바일 환경 설정
-        // 좌측 버튼(55px + 여백)과 하단 독바(약 100px)를 피하기 위한 안전 영역 계산
+        // 2. 안전 영역 (버튼 피하기)
         const paddingX = 40;  // 좌우 여백
-        const paddingY = 180; // 상하 여백 (하단 독바 공간 확보)
+        const paddingY = 200; // 상하 여백 (하단 독바 + 상단 메뉴 고려 넉넉하게)
 
-        // 3. 기본 줌 계산
+        // 3. 줌 계산
         const safeW = canvasW - paddingX;
         const safeH = canvasH - paddingY;
         let zoom = Math.min(safeW / boardW, safeH / boardH);
 
-        // ★ [핵심] 세로가 더 긴(배너) 경우 로직
-        const isVertical = boardH > boardW * 1.2; // 세로가 가로보다 20% 이상 길면
-        if (isVertical) {
-            zoom *= 0.85; // 85% 수준으로 더 작게 축소 (한눈에 들어오게)
-        } else {
-            zoom *= 0.95; // 일반 비율은 꽉 차게
-        }
+        // 세로 배너형일 경우 더 작게 (한눈에 들어오게)
+        const isVertical = boardH > boardW * 1.2;
+        if (isVertical) zoom *= 0.85; 
+        else zoom *= 0.95;
 
-        // 줌 레벨 제한
         zoom = Math.min(Math.max(zoom, 0.05), 5);
 
-        // 4. 위치 잡기 (세로형은 위쪽으로, 일반형은 중앙으로)
+        // 4. 중앙 좌표 계산 (초기화된 상태 기준)
         const vpt = window.canvas.viewportTransform;
         vpt[0] = zoom;
         vpt[3] = zoom;
         
-        // X축: 중앙 정렬 (좌측 버튼 피해서 살짝 오른쪽으로 밀고 싶으면 +20 추가)
-        vpt[4] = (canvasW - boardW * zoom) / 2 + 10; 
+        // 가로 중앙 정렬
+        vpt[4] = (canvasW - boardW * zoom) / 2;
 
+        // 세로 정렬 (세로형은 위로, 일반형은 중앙)
         if (isVertical) {
-            // Y축: 세로형은 상단 여백(70px) 아래에 바로 붙임 (하단 버튼 안 가리게 위로 올림)
-            vpt[5] = 80; 
+            vpt[5] = 80; // 상단 여백 80px 띄우고 배치
         } else {
-            // Y축: 일반형은 수직 중앙 정렬 (단, 하단 독바 고려해 살짝 위로)
-            vpt[5] = (canvasH - boardH * zoom) / 2 - 30; 
+            vpt[5] = (canvasH - boardH * zoom) / 2 - 20; // 중앙에서 살짝 위
         }
 
         window.canvas.setViewportTransform(vpt);
         window.canvas.requestRenderAll();
-        console.log("📱 모바일 스마트 맞춤 실행완료 (세로모드:", isVertical, ")");
+        console.log("📱 스마트 맞춤 완료 (치우침 보정됨)");
     };
 </script>
 <script>

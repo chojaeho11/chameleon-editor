@@ -751,15 +751,15 @@ button, input, textarea, select { font-family: inherit; }
     .mobile-fab:active { transform: scale(0.95); }
     .mobile-fab span { font-size: 9px; margin-top: 2px; font-weight: bold; letter-spacing: -0.5px; }
 
-    /* 1. 글자/도형 버튼 (좌측 상단) - 탑바 아래 */
+    
     .mobile-fab.left { 
-        top: 70px; /* 탑바 높이 고려 */
+        top: 130px; /* 70px -> 130px */
         background: #6366f1; 
     }
 
-    /* 2. 편집/정렬 버튼 (좌측 하단) - 독바 위 */
+  
     .mobile-fab.right { 
-        bottom: 160px; /* 하단 독바보다 위로 */
+        bottom: 90px; /* 160px -> 90px */
         background: #1e293b; 
     }
 
@@ -860,7 +860,7 @@ button, input, textarea, select { font-family: inherit; }
     .bottom-dock { 
         display: flex !important;
         position: fixed !important;   /* absolute -> fixed로 변경하여 스크롤 무시하고 고정 */
-        bottom: 110px !important;     /* 하단 FAB 버튼(60px)보다 더 위에 배치 */
+        bottom: 30px !important;     /* 하단 FAB 버튼(60px)보다 더 위에 배치 */
         left: 50% !important;
         transform: translateX(-50%) !important;
         
