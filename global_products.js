@@ -266,18 +266,30 @@ async function updateOrder(table, container) {
 // ==========================================
 // 3. 옵션 관리 (Addons)
 // ==========================================
-window.loadSystemDB = async (filterSite = 'KR') => {
-    const tbody = document.getElementById('addonTableBody');
-    const chkArea = document.getElementById('addonCheckboxArea');
-    if(!tbody) return;
+// [옵션 목록 로드 - 그리드형 & 검색기능 추가]
+window.loadSystemDB = async (filterSite) => {
+    // 1. 사이트 값 유지 (인자 없으면 현재 선택된 값 가져오기)
+    if (!filterSite) {
+        const sel = document.getElementById('newAddonSite');
+        filterSite = sel ? sel.value : 'KR';
+    }
 
-    tbody.innerHTML = '<tr><td colspan="3">로딩...</td></tr>';
+    const listArea = document.getElementById('addonListArea'); // 테이블바디 대신 div 영역 사용
+    const searchKeyword = document.getElementById('addonSearchInput') ? document.getElementById('addonSearchInput').value.toLowerCase().trim() : '';
+    const chkArea = document.getElementById('addonCheckboxArea');
+
+    if(!listArea) return;
+
+    listArea.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px;">로딩 중...</div>';
     if(chkArea) chkArea.innerHTML = '';
 
+    // 데이터 조회
     const { data } = await sb.from('admin_addons').select('*').order('category').order('code');
     
-    tbody.innerHTML = '';
+    listArea.innerHTML = '';
+    
     if(data) {
+        let count = 0;
         data.forEach(item => {
             let dName = item.name_kr || item.name;
             let dPrice = item.price_kr || item.price || 0;
@@ -286,16 +298,37 @@ window.loadSystemDB = async (filterSite = 'KR') => {
             if(filterSite === 'JP') { dName = item.name_jp || item.name; dPrice = item.price_jp || 0; symbol = '¥'; }
             if(filterSite === 'US') { dName = item.name_us || item.name; dPrice = item.price_us || 0; symbol = '$'; }
 
-            tbody.innerHTML += `
-                <tr style="${editingAddonId === item.id ? 'background:#eff6ff' : ''}">
-                    <td><span class="badge" style="background:#f1f5f9; font-size:10px;">${item.category}</span><br><b>${item.code}</b></td>
-                    <td>${dName}<br><span style="color:#666;">${symbol}${dPrice}</span></td>
-                    <td>
-                        <button class="btn btn-outline btn-sm" style="padding:2px 4px;" onclick="editAddonLoad(${item.id})">수정</button>
-                        <button class="btn btn-danger btn-sm" style="padding:2px 4px;" onclick="deleteAddonDB(${item.id})">x</button>
-                    </td>
-                </tr>`;
+            // [검색 필터링]
+            const searchTarget = `${item.code} ${dName} ${item.category}`.toLowerCase();
+            if(searchKeyword && !searchTarget.includes(searchKeyword)) return;
 
+            // [그리드 카드 렌더링]
+            const bgStyle = editingAddonId === item.id ? 'border:2px solid #6366f1; background:#e0e7ff;' : 'border:1px solid #e2e8f0; background:#fff;';
+            const catColor = item.category === 'material' ? '#dbeafe' : (item.category === 'finish' ? '#fce7f3' : '#f1f5f9');
+            
+            listArea.innerHTML += `
+                <div style="${bgStyle} border-radius:6px; padding:10px; font-size:12px; position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="background:${catColor}; padding:2px 6px; border-radius:4px; font-weight:bold; color:#475569; font-size:10px;">
+                            ${item.category}
+                        </span>
+                        <div>
+                            <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; margin-right:6px;" title="수정"></i>
+                            <i class="fa-solid fa-xmark" onclick="deleteAddonDB(${item.id})" style="cursor:pointer; color:#ef4444;" title="삭제"></i>
+                        </div>
+                    </div>
+                    <div style="font-weight:bold; color:#1e293b; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        ${dName}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; color:#64748b;">
+                        <span style="font-size:11px;">${item.code}</span>
+                        <span style="font-weight:bold; color:#6366f1;">${symbol}${dPrice.toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+            count++;
+
+            // (상품 등록 하단 체크박스는 기존대로 유지)
             if(chkArea) {
                 const badgeClass = item.category === 'material' ? 'kr' : (item.category === 'finish' ? 'jp' : 'us');
                 chkArea.innerHTML += `
@@ -306,6 +339,10 @@ window.loadSystemDB = async (filterSite = 'KR') => {
                     </label>`;
             }
         });
+
+        if(count === 0) {
+            listArea.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#aaa;">검색 결과가 없습니다.</div>';
+        }
     }
 };
 
@@ -882,5 +919,22 @@ window.updateAllCurrency = async () => {
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
+    }
+};
+// [신규] 옵션 연결 체크박스 필터링 함수
+window.filterAddonCheckboxes = () => {
+    const input = document.getElementById('addonConnectionSearch');
+    const filter = input.value.toLowerCase(); // 검색어 소문자 변환
+    const container = document.getElementById('addonCheckboxArea');
+    const labels = container.getElementsByTagName('label'); // 모든 옵션 라벨 가져오기
+
+    for (let i = 0; i < labels.length; i++) {
+        const txtValue = labels[i].textContent || labels[i].innerText;
+        // 검색어가 포함되어 있으면 표시, 없으면 숨김
+        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+            labels[i].style.display = ""; 
+        } else {
+            labels[i].style.display = "none";
+        }
     }
 };

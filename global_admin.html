@@ -648,7 +648,14 @@
 
             <div class="form-group">
                 <label class="form-label">옵션 연결</label>
-                <div id="addonCheckboxArea" class="addon-checkbox-group"></div>
+                
+                <input type="text" id="addonConnectionSearch" class="input-text" 
+                       placeholder="🔍 옵션명 검색..." 
+                       style="margin-bottom:5px; font-size:12px; padding:6px;" 
+                       onkeyup="filterAddonCheckboxes()">
+
+                <div id="addonCheckboxArea" class="addon-checkbox-group" style="max-height: 200px; overflow-y: auto;"></div>
+                
                 <button class="btn btn-sky btn-sm" onclick="bulkApplyAddonsToCategory()" style="width:100%; margin-top:5px;">
                     <i class="fa-solid fa-layer-group"></i> 체크된 옵션 카테고리 전체 적용
                 </button>
@@ -678,15 +685,26 @@
                     <button class="btn btn-primary" onclick="addAddonDB()">저장</button>
                 </div>
                 
-                <div style="margin-top:15px;">
-                    <select id="newAddonSite" onchange="loadSystemDB(this.value)" class="input-text" style="width:120px; font-size:12px; margin-bottom:5px;">
+                <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <select id="newAddonSite" onchange="loadSystemDB(this.value)" class="input-text" style="width:100px; font-size:12px;">
                         <option value="KR">🇰🇷 보기</option>
                         <option value="JP">🇯🇵 보기</option>
                         <option value="US">🇺🇸 보기</option>
                     </select>
+                    
+                    <input type="text" id="addonSearchInput" class="input-text" placeholder="🔍 옵션명/코드 검색" style="width:200px;" onkeyup="loadSystemDB()">
                 </div>
-                <div style="max-height:200px; overflow-y:auto; border-top:1px solid #eee;">
-                    <table style="font-size:12px;"><tbody id="addonTableBody"></tbody></table>
+
+                <div id="addonListArea" style="
+                    display: grid; 
+                    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+                    gap: 8px; 
+                    max-height: 400px; 
+                    overflow-y: auto; 
+                    padding: 10px; 
+                    background: #f8fafc; 
+                    border: 1px solid #e2e8f0; 
+                    border-radius: 6px;">
                 </div>
             </div>
 
