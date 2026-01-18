@@ -70,3 +70,183 @@ window.showSection = (secId, navEl) => {
         case 'sec-partner-apps': if(window.loadPartnerApplications) window.loadPartnerApplications(); break;
     }
 };
+// =========================================================
+// [대량 등록] 전용 로직
+// =========================================================
+
+// 1. 카테고리 불러오기 (대량 등록용)
+window.loadCategoriesForBulk = async function() {
+    const select = document.getElementById('bulkCategory');
+    // 기존에 로드된 카테고리 데이터가 있다면 활용 (없으면 DB호출)
+    const { data, error } = await sb.from('admin_categories').select('code, name').order('name');
+    if (data) {
+        select.innerHTML = '<option value="">선택하세요</option>';
+        data.forEach(cat => {
+            select.innerHTML += `<option value="${cat.code}">${cat.name}</option>`;
+        });
+    }
+}
+
+let selectedBulkFiles = [];
+
+// 2. 파일 선택 시 미리보기 및 준비
+window.previewBulkFiles = function(input) {
+    const files = Array.from(input.files);
+    if (files.length === 0) return;
+
+    selectedBulkFiles = files;
+    
+    // UI 업데이트
+    document.getElementById('bulkStatusText').innerText = `${files.length}개의 파일이 선택되었습니다.`;
+    document.getElementById('btnBulkExecute').style.display = 'block';
+    
+    // 미리보기 생성
+    const grid = document.getElementById('bulkPreviewList');
+    grid.innerHTML = '';
+    
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const div = document.createElement('div');
+            div.style.cssText = "font-size:11px; text-align:center; overflow:hidden;";
+            
+            // 파일명에서 확장자 제거하여 상품명으로 표시
+            const prodName = file.name.substring(0, file.name.lastIndexOf('.'));
+            
+            div.innerHTML = `
+                <img src="${e.target.result}" style="width:100%; height:80px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">
+                <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">${prodName}</div>
+            `;
+            grid.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// 3. 대량 등록 실행 (핵심 로직)
+// [최종 수정] 대량 등록 실행 함수 (addons 빈값 처리 + site_code 수정)
+window.executeBulkUpload = async function() {
+    // 1. 필수값 체크
+    const category = document.getElementById('bulkCategory').value;
+    const priceVal = document.getElementById('bulkPrice').value;
+    const site = document.getElementById('bulkSite').value;
+    
+    if (!category || !priceVal) {
+        alert("카테고리와 기본 가격은 필수입니다.");
+        return;
+    }
+    
+    if (selectedBulkFiles.length === 0) return;
+    if (!confirm(`총 ${selectedBulkFiles.length}개의 상품을 등록하시겠습니까?\n파일명이 상품명으로 사용됩니다.`)) return;
+
+    // UI 잠금 및 로딩바 표시
+    document.getElementById('btnBulkExecute').disabled = true;
+    document.getElementById('bulkProgressArea').style.display = 'block';
+    
+    const w = document.getElementById('bulkW').value || 0;
+    const h = document.getElementById('bulkH').value || 0;
+    const isCustom = document.getElementById('bulkIsCustom').checked;
+    const basePrice = parseInt(priceVal);
+
+    // 환율 자동 계산 (근사치)
+    const priceUS = Math.round(basePrice / 1350); 
+    const priceJP = Math.round(basePrice / 9);    
+
+    let successCount = 0;
+    let failCount = 0;
+
+    // 순차 처리
+    for (let i = 0; i < selectedBulkFiles.length; i++) {
+        const file = selectedBulkFiles[i];
+        
+        // 프로그레스바 업데이트
+        const percent = Math.round(((i + 1) / selectedBulkFiles.length) * 100);
+        document.getElementById('bulkProgressBar').style.width = `${percent}%`;
+        document.getElementById('bulkPercent').innerText = `${percent}%`;
+        document.getElementById('bulkProgressLabel').innerText = `처리 중... (${i + 1}/${selectedBulkFiles.length})`;
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            // 파일명 안전하게 변경
+            const safeFileName = `bulk_${Date.now()}_${i}.${fileExt}`;
+            
+            // ★ 버킷 이름: products
+            const BUCKET_NAME = 'products'; 
+            const filePath = `${safeFileName}`; 
+
+            const { data: uploadData, error: uploadError } = await sb.storage
+                .from(BUCKET_NAME)
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // 공개 URL 가져오기
+            const { data: { publicUrl } } = sb.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(filePath);
+
+            // 상품명 추출
+            let prodNameKR = file.name.substring(0, file.name.lastIndexOf('.'));
+            
+            // 고유 코드 생성
+            const uniqueCode = `${category}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+            // DB Insert 데이터 구성
+            const insertData = {
+                code: uniqueCode,
+                category: category,
+                
+                name: prodNameKR,
+                price: basePrice,
+                
+                name_us: prodNameKR, 
+                price_us: priceUS,
+
+                name_jp: prodNameKR,
+                price_jp: priceJP,
+
+                img_url: publicUrl,
+                width_mm: parseInt(w),
+                height_mm: parseInt(h),
+                is_custom_size: isCustom,
+                
+                // ★★★ [수정 1] 컬럼명 site -> site_code 로 변경 ★★★
+                site_code: site,
+
+                // ★★★ [수정 2] addons 필수값 처리 (빈 문자열) ★★★
+                // DB가 Not Null이라서 이걸 안 보내면 에러가 납니다.
+                addons: '' 
+            };
+
+            const { error: dbError } = await sb.from('admin_products').insert(insertData);
+            
+            if (dbError) throw dbError;
+            successCount++;
+
+        } catch (err) {
+            console.error(`[업로드 실패] ${file.name}:`, err);
+            // 에러 상세 알림
+            if (err.message && (err.message.includes('Column') || err.message.includes('constraint'))) {
+                alert(`DB 오류 발생!\n내용: ${err.message}\n(관리자에게 이 화면을 캡쳐해서 보내주세요)`);
+                failCount = selectedBulkFiles.length - i; 
+                break;
+            }
+            failCount++;
+        }
+    }
+
+    // 완료 처리
+    setTimeout(() => {
+        alert(`작업 완료!\n성공: ${successCount}건\n실패: ${failCount}건`);
+        
+        // 초기화
+        document.getElementById('bulkFiles').value = '';
+        document.getElementById('bulkPreviewList').innerHTML = '';
+        document.getElementById('btnBulkExecute').style.display = 'none';
+        document.getElementById('btnBulkExecute').disabled = false;
+        document.getElementById('bulkProgressArea').style.display = 'none';
+        
+        // 목록 새로고침
+        if (window.filterProductList) window.filterProductList();
+    }, 500);
+};

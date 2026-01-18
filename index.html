@@ -2507,19 +2507,48 @@ async function renderQuickMenu() {
         let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
         const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
         
-        // 2. 상품 데이터 (★중요: code, price 추가)
+        // 2. 상품 데이터 (전체 정보 가져오기)
         const { data: prodImages } = await sb.from('admin_products')
-            .select('category, img_url, name, code, price') 
+            .select('*') // [수정] 상세 정보(사이즈,설명 등)를 위해 전체 컬럼 선택
             .not('img_url', 'is', null).neq('img_url', '');
 
         // 전역 변수 저장
         globalSubCats = subCats || [];
         globalProdImages = prodImages || [];
 
-        // 3. 썸네일 매핑
+        // 3. 썸네일 매핑 및 PRODUCT_DB 등록 (검색된 상품 클릭 시 정보 로드용)
         if (prodImages) {
+            // PRODUCT_DB 초기화 확인
+            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+
             prodImages.forEach(p => {
-                if (p.category && !globalCatThumbMap[p.category]) globalCatThumbMap[p.category] = p.img_url;
+                // 3-1. 썸네일 매핑 (기존 로직)
+                if (p.category && !globalCatThumbMap[p.category]) {
+                    globalCatThumbMap[p.category] = p.img_url;
+                }
+
+                // 3-2. [추가] 상세 정보 전역 DB 등록
+                // 다국어 처리 확인
+                let localName = p.name;
+                let localPrice = p.price;
+                if(typeof window.getLocalizedData === 'function') {
+                    const localData = window.getLocalizedData(p);
+                    localName = localData.name;
+                    localPrice = localData.price;
+                }
+
+                window.PRODUCT_DB[p.code] = {
+                    name: localName,
+                    price: localPrice,
+                    w_mm: p.width_mm, 
+                    h_mm: p.height_mm,
+                    img: p.img_url, 
+                    description: p.description, 
+                    addons: p.addons ? p.addons.split(',') : [], 
+                    category: p.category,
+                    is_custom_size: p.is_custom_size,
+                    is_general_product: p.is_general_product
+                };
             });
         }
 
@@ -2594,8 +2623,12 @@ async function renderQuickMenu() {
                 let badge = '';
 
                 if (isProduct) {
-                    // 상품 클릭 시 -> 장바구니/에디터 선택 모달
-                    clickAction = `window.showChoiceModal('${item.code}')`;
+                    // ★ 상품 클릭 시 분기 처리 (일반상품 vs 디자인상품)
+                    if (item.is_general_product) {
+                        clickAction = `window.openGeneralProductModal('${item.code}')`;
+                    } else {
+                        clickAction = `window.showChoiceModal('${item.code}')`;
+                    }
                     badge = `<span style="position:absolute; top:5px; left:5px; background:#6366f1; color:white; font-size:10px; padding:2px 6px; border-radius:4px; z-index:2;">상품</span>`;
                 } else {
                     // 카테고리 클릭 시 -> 상품 리스트 모달
@@ -4201,18 +4234,22 @@ window.filterModalItems = function(keyword) {
         // 클릭 이벤트 연결
         div.onclick = () => {
             if (type === 'category') {
-                // 카테고리면 -> 하위 상품 목록 보여주기 (기존 함수 사용)
                 window.showCategoryProducts(item.code, item.name);
             } else {
-                // 상품이면 -> ★ 바로 에디터 시작 (템플릿 적용)
+                // 상품 클릭 시 분기 처리
                 document.getElementById('categoryDetailModal').style.display = 'none'; // 모달 닫기
                 
-                // pendingTemplate이 있으면 그것을 적용하며 에디터 진입
-                window.startEditorDirect(
-                    item.code, 
-                    item.width_mm, 
-                    item.height_mm
-                );
+                if (item.is_general_product) {
+                    // [수정] 일반 상품: 수량 입력 모달 열기
+                    window.openGeneralProductModal(item.code);
+                } else {
+                    // [수정] 디자인 상품: 에디터 시작
+                    window.startEditorDirect(
+                        item.code, 
+                        item.width_mm, 
+                        item.height_mm
+                    );
+                }
             }
         };
         return div;

@@ -375,30 +375,48 @@ window.resetAddonForm = () => {
 // ==========================================
 window.filterProductList = async () => {
     const cat = document.getElementById('filterProdCat').value;
+    const siteFilter = document.getElementById('filterProdSite').value;
+    const keyword = document.getElementById('prodSearchInput').value.toLowerCase().trim(); // 검색어 가져오기
     const tbody = document.getElementById('prodTableBody');
-    if(!cat || cat === 'all') {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#aaa;">카테고리를 선택하세요</td></tr>';
-        return;
-    }
-
-    // 1. 데이터 로드 (sort_order 기준)
+    
+    // 1. 데이터 로드 (카테고리가 변경되었을 때만 DB 조회)
     if(cat !== lastFetchedCategory) {
         showLoading(true);
-        const { data } = await sb.from('admin_products').select('*').eq('category', cat).order('sort_order', {ascending: true});
+        let query = sb.from('admin_products').select('*');
+        
+        // 카테고리 필터 ('all'이면 전체 조회)
+        if(cat && cat !== 'all') {
+            query = query.eq('category', cat);
+        }
+        
+        const { data } = await query.order('sort_order', {ascending: true});
         allProducts = data || [];
         lastFetchedCategory = cat;
         showLoading(false);
     }
-    renderProductList(allProducts);
 
-    // 2. 드래그 앤 드롭 활성화 (SortableJS)
-    if(tbody) {
+    // 2. 메모리 상에서 필터링 (국가 + 검색어)
+    const filteredList = allProducts.filter(p => {
+        // (1) 국가 필터
+        if (siteFilter !== 'all' && p.site_code !== siteFilter) return false;
+
+        // (2) 검색어 필터 (상품명, 코드, 영문명 등 포함 여부)
+        if (keyword) {
+            const searchTarget = `${p.name} ${p.code} ${p.name_us||''} ${p.name_jp||''}`.toLowerCase();
+            if (!searchTarget.includes(keyword)) return false;
+        }
+        return true;
+    });
+
+    // 3. 렌더링
+    renderProductList(filteredList);
+    
+    // 4. 드래그 앤 드롭 (검색어가 없을 때만 활성화 - 순서 꼬임 방지)
+    if(tbody && !keyword && siteFilter === 'all') {
         new Sortable(tbody, {
             animation: 150,
-            handle: '.drag-handle', // 햄버거 아이콘으로만 드래그 가능
-            onEnd: function (evt) {
-                updateProductSortOrder(); // 드래그가 끝나면 DB 업데이트
-            }
+            handle: '.drag-handle',
+            onEnd: function (evt) { updateProductSortOrder(); }
         });
     }
 };
@@ -808,4 +826,61 @@ window.cloneProductMode = () => {
     document.getElementById('btnCancelEdit').style.display = 'none';
 
     alert("📝 내용이 복제되었습니다.\n새로운 [상품코드]를 입력하고 저장 버튼을 눌러주세요.");
+};
+// ==========================================
+// [신규 기능] 전체 상품 환율 일괄 적용
+// 1000원 -> 100엔 (0.1배)
+// 1000원 -> 1달러 (0.001배)
+// ==========================================
+window.updateAllCurrency = async () => {
+    if (!confirm("전체 상품의 가격을 아래 환율로 일괄 변경하시겠습니까?\n\n🇯🇵 1000원 = 100엔 (10:1)\n🇺🇸 1000원 = 1달러 (1000:1)\n\n(주의: 기존에 입력된 해외 가격이 모두 덮어씌워집니다.)")) return;
+
+    const btn = document.getElementById('btnCurrencyUpdate');
+    const oldText = btn.innerText;
+    btn.innerText = "업데이트 중...";
+    btn.disabled = true;
+
+    try {
+        // 1. 전체 상품의 ID와 한국 가격 가져오기
+        const { data: products, error } = await sb.from('admin_products').select('id, price');
+        
+        if (error) throw error;
+        if (!products || products.length === 0) {
+            alert("상품이 없습니다.");
+            return;
+        }
+
+        let successCount = 0;
+
+        // 2. 루프 돌면서 업데이트 (서버 부하 방지를 위해 순차 처리)
+        for (const p of products) {
+            const krw = p.price || 0;
+
+            // 계산 로직 (정수 반올림)
+            const priceJP = Math.round(krw * 0.1);   // 1000원 -> 100엔
+            const priceUS = Math.round(krw * 0.001); // 1000원 -> 1달러
+
+            // 업데이트 실행
+            const { error: updateErr } = await sb.from('admin_products')
+                .update({ 
+                    price_jp: priceJP, 
+                    price_us: priceUS 
+                })
+                .eq('id', p.id);
+
+            if (!updateErr) successCount++;
+        }
+
+        alert(`✅ 총 ${successCount}개 상품의 환율 가격이 업데이트되었습니다.`);
+        
+        // 목록 새로고침
+        if (window.filterProductList) window.filterProductList();
+
+    } catch (e) {
+        console.error(e);
+        alert("업데이트 중 오류 발생: " + e.message);
+    } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+    }
 };
