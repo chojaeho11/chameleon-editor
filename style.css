@@ -2184,15 +2184,15 @@ body {
     
     /* 뱃지 스타일 변경 (노랑 -> 파랑 포인트) */
     .qt-badge {
-        background-color: #111111 !important; /* 브랜드 컬러 */
-        color: #ffffff !important;
+        background-color: #dcff17 !important; /* 브랜드 컬러 */
+        color: #252525 !important;
         padding: 6px 15px;
         border-radius: 10px;
         font-size: 14px;
         font-weight: 600;
         display: inline-block;
         margin-bottom: 15px;
-        box-shadow: 0 4px 15px rgba(209, 209, 209, 0.671);
+        box-shadow: 0 4px 15px rgba(32, 32, 32, 0.671);
     }
 
     /* 텍스트 색상 변경 (검정 -> 흰색) */
