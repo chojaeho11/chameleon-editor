@@ -6,6 +6,7 @@ import { initSizeControls, applySize } from "./canvas-size.js";
 import { initGuides } from "./canvas-guides.js";
 import { initZoomPan } from "./canvas-zoom-pan.js";
 import { initObjectTools } from "./canvas-objects.js";
+import { initPageTools } from "./canvas-pages.js"; // [추가] 페이지 도구
 import { initImageTools } from "./canvas-image.js";
 import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js";
 import { initAiTools } from "./canvas-ai.js";
@@ -45,6 +46,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         initZoomPan();
         initObjectTools();
         initImageTools();
+        initPageTools();
         initTemplateTools();
         initAiTools();
         initExport();

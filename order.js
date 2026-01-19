@@ -2,8 +2,9 @@ import { canvas } from "./canvas-core.js";
 import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js";
 import { SITE_CONFIG } from "./site-config.js";
 import { applySize } from "./canvas-size.js";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js"; // [추가] 페이지 데이터 가져오기
 import { 
-    generateOrderSheetPDF, 
+    generateOrderSheetPDF,
     generateQuotationPDF, 
     generateProductVectorPDF, 
     generateRasterPDF 
@@ -645,14 +646,31 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
     // [중복 방지 2차 체크] 이미지 생성 중에 직접 담기가 실행되었다면 여기서 중단
     if (window.isDirectCartAddInProgress) return;
 
-    // 3. 카트에 담기
+    // 3. 카트에 담기 (멀티 페이지 데이터 저장)
+    // [중요] 현재 화면의 최신 상태를 pageDataList의 해당 인덱스에 업데이트
+    let finalPages = [json]; // 기본값: 현재 1장
+    
+    if (typeof pageDataList !== 'undefined' && pageDataList.length > 0) {
+        // 배열 복사
+        finalPages = [...pageDataList];
+        
+        // 현재 보고 있는 페이지가 있다면 최신 상태(json)로 덮어쓰기
+        if (typeof currentPageIndex !== 'undefined' && currentPageIndex >= 0 && currentPageIndex < finalPages.length) {
+            finalPages[currentPageIndex] = json;
+        } else {
+            // 인덱스 오류 시 마지막에 추가하거나 현재꺼만 씀
+            if(finalPages.length === 0) finalPages = [json];
+        }
+    }
+
     cartData.push({ 
         uid: Date.now(), 
-        product: calcProduct, // [변경] product -> calcProduct (계산된 가격 적용)
+        product: calcProduct,
         type: 'design',
         thumb: thumbUrl, 
-        json: json, 
-        originalUrl: originalFileUrl, 
+        json: json, // 썸네일용 대표 JSON (현재 보고있는 페이지)
+        pages: finalPages, // ★ [핵심] 전체 페이지 데이터 저장
+        originalUrl: originalFileUrl,
         fileName: fileName, 
         width: finalW, 
         height: finalH, 
@@ -1124,9 +1142,11 @@ const quoteBlob = await generateQuotationPDF(orderInfoForPDF, cartData, currentU
 
                 loading.querySelector('p').innerText = `디자인 변환 중 (${i+1}/${cartData.length})...`;
                 try { 
-                    // [수정] 대지 좌표(x, y)까지 전달하여 정확한 위치 크롭
-                    let fileBlob = await generateProductVectorPDF(item.json, item.width, item.height, item.boardX || 0, item.boardY || 0); 
-                    if (!fileBlob) fileBlob = await generateRasterPDF(item.json, item.width, item.height, item.boardX || 0, item.boardY || 0);
+                    // [수정] 멀티 페이지 처리를 위해 배열(pages)을 전달
+                    const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
+                    
+                    let fileBlob = await generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0); 
+                    if (!fileBlob) fileBlob = await generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0);
                     
                     if(fileBlob) {
                         const url = await uploadFileToSupabase(fileBlob, `orders/${newOrderId}/design_${idx}.pdf`); 
