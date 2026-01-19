@@ -3575,6 +3575,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             let query = sb.from('library')
                 .select('id, thumb_url, category, tags', { count: 'exact' }) // 전체 개수도 같이 가져옴
                 .order('created_at', { ascending: false })
+                // ★ [수정] 오직 유저 템플릿(벡터/이미지)만 필터링 (로고 제외)
+                .in('category', ['user_vector', 'user_image']) 
                 .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); // 범위 설정
 
             // 검색어 필터 (태그 검색)
