@@ -248,7 +248,7 @@ async function loadTemplatePage(pageIndex) {
         // [수정] 함수 실행 시점의 화면 크기를 체크하여 개수 결정 (모바일 6개, PC 12개)
         // [수정] 화면 크기에 따라 개수 결정 (모바일 8개, PC 12개)
         const currentIsMobile = window.innerWidth < 768;
-        const dynamicPerPage = currentIsMobile ? 4 : 12; // ★ 2줄 x 4개 = 8개로 변경
+        const dynamicPerPage = currentIsMobile ? 8 : 12; // ★ 2줄 x 4개 = 8개로 변경
 
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, product_key, created_at')
@@ -388,8 +388,8 @@ async function loadTemplatePage(pageIndex) {
             grid.appendChild(card);
         });
 
-        // 7. 페이지네이션 버튼 업데이트 (데이터 개수 확인)
-        renderPaginationControls(true, data.length);
+        // 7. 페이지네이션 버튼 업데이트 (현재 설정된 개수(4, 8, 12 등)를 같이 전달)
+        renderPaginationControls(true, data.length, dynamicPerPage);
 
     } catch (e) {
         console.error("로딩 에러:", e);
@@ -402,15 +402,8 @@ async function loadTemplatePage(pageIndex) {
     }
 }
 
-// ★ 하단 페이지네이션 버튼 그리기 함수
-// ★ 하단 페이지네이션 버튼 그리기 함수 (가로폭 강제 축소)
-// [수정 전 코드의 문제점]
-// 1. 이전 버튼: changeTemplatePage(-1) -> 함수 이름 틀림 (changeModalTemplatePage여야 함)
-// 2. 다음 버튼: prevBtn.onclick = ... -> 변수 이름 틀림 (nextBtn이어야 함)
-
-// ▼▼▼ [수정된 코드] 복사해서 덮어씌우세요 ▼▼▼
-
-function renderPaginationControls(isEnabled, dataCount = 0) {
+// [수정] limit(페이지당 개수)를 인자로 받아서 다음 버튼 활성화 여부를 판단
+function renderPaginationControls(isEnabled, dataCount = 0, limit = 12) {
     const grid = document.getElementById("tplGrid");
     if(!grid) return;
 
@@ -430,6 +423,7 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
     prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left" style="font-size:11px;"></i> Prev`;
     prevBtn.style.cssText = btnStyle;
     
+    // 0페이지면 이전 버튼 비활성화
     if (!isEnabled || tplCurrentPage === 0) {
         prevBtn.disabled = true;
         prevBtn.style.opacity = "0.5";
@@ -441,7 +435,6 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
         prevBtn.style.background = "#fff";
         prevBtn.style.border = "1px solid #cbd5e1";
         prevBtn.style.color = "#334155";
-        // [수정 1] 함수 이름 변경: changeTemplatePage -> changeModalTemplatePage
         prevBtn.onclick = () => changeModalTemplatePage(-1);
     }
 
@@ -456,7 +449,8 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
     nextBtn.innerHTML = `Next <i class="fa-solid fa-chevron-right" style="font-size:11px;"></i>`;
     nextBtn.style.cssText = btnStyle;
 
-    if (!isEnabled || dataCount < TPL_PER_PAGE) {
+    // ★ 핵심 수정: 가져온 데이터(dataCount)가 설정된 개수(limit, 모바일은 8)보다 적을 때만 비활성화
+    if (!isEnabled || dataCount < limit) {
         nextBtn.disabled = true;
         nextBtn.style.opacity = "0.5";
         nextBtn.style.cursor = "not-allowed";
@@ -467,11 +461,10 @@ function renderPaginationControls(isEnabled, dataCount = 0) {
         nextBtn.style.background = "#fff"; 
         nextBtn.style.border = "1px solid #6366f1";
         nextBtn.style.color = "#6366f1";
-        // [수정 2] 변수 이름 변경: prevBtn -> nextBtn (여기가 원인이었습니다!)
         nextBtn.onclick = () => changeModalTemplatePage(1);
     }
 
-    // ... (이후 마우스 오버 효과 코드는 그대로 유지)
+    // 호버 효과
     const addHover = (btn, isPrimary) => {
         if(btn.disabled) return;
         btn.onmouseover = () => { 

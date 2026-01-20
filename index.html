@@ -3390,11 +3390,13 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         if(tplTabs) tplTabs.style.display = 'flex';
         document.body.classList.add('editor-active'); 
 
-        // ★ [추가] 사이드바 템플릿 추천 패널 로드
-        if (typeof window.loadSideBarTemplates === 'function') {
-            // 'custom'이 아니거나, 특정 상품일 때 사이드바를 엽니다.
+        // ★ [추가] 사이드바 템플릿 추천 패널 로드 (모바일에서는 자동 실행 안 함)
+        if (window.innerWidth > 768 && typeof window.loadSideBarTemplates === 'function') {
+            // PC 화면일 때만 사이드바 자동 열기
             console.log(`📂 사이드바 템플릿 로드 시도: ${key}`);
             window.loadSideBarTemplates(key);
+        } else {
+            console.log("📱 모바일 환경이므로 사이드바 자동 열림 방지");
         }
         
         if (window.ChannelIO) ChannelIO('hide');
