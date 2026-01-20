@@ -1119,6 +1119,39 @@ window.openTemplateCreator = function() {
     if(confirm("디자인 에디터로 이동하시겠습니까?")) window.startEditorDirect('custom'); 
 };
 
+// [수정] 디자인 판매 등록 (관리자 전용)
+window.openSellModal = async function() {
+    // 1. 로그인 체크
+    if (!window.currentUser) {
+        alert(window.t('msg_login_required'));
+        document.getElementById('loginModal').style.display = 'flex';
+        return;
+    }
+
+    try {
+        // 2. 관리자 권한 체크 (DB 조회)
+        const { data: profile, error } = await sb.from('profiles')
+            .select('role')
+            .eq('id', window.currentUser.id)
+            .single();
+
+        if (error) throw error;
+
+        // role이 admin이 아니면 차단
+        if (!profile || profile.role !== 'admin') {
+            alert("관리자만 디자인 판매 등록이 가능합니다.");
+            return;
+        }
+
+        // 3. 관리자라면 모달 열기
+        document.getElementById('sellModal').style.display = 'flex';
+        
+    } catch (e) {
+        console.error("권한 확인 오류:", e);
+        alert("권한 정보를 확인할 수 없습니다.");
+    }
+};
+
 async function addReward(amount, description) {
     try {
         const { data: pf } = await sb.from('profiles').select('deposit').eq('id', window.currentUser.id).single();
