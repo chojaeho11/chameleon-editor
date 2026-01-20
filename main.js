@@ -1033,7 +1033,23 @@ window.submitContributorUpload = async function() {
             const category = currentUploadType === 'logo' ? 'logo' : 'graphic';
 
             for (const file of files) {
-                await processSingleUpload(file, null, tags, category);
+                // 1. 파일 해시 계산
+                const fileHash = await calculateFileHash(file);
+
+                // 2. DB 중복 체크 (내 보관함에 같은 파일이 있는지)
+                const { data: duplicate } = await sb.from('library')
+                    .select('id')
+                    .eq('file_hash', fileHash)
+                    .eq('user_id', window.currentUser.id) // 내 파일 중에서만 체크 (전체에서 체크하려면 이 줄 삭제)
+                    .maybeSingle();
+
+                if (duplicate) {
+                    alert(`이미 업로드된 파일입니다: ${file.name}\n(중복 방지를 위해 건너뜁니다)`);
+                    continue; // 업로드 건너뛰기
+                }
+
+                // 3. 중복이 아니면 업로드 진행 (해시값 전달)
+                await processSingleUpload(file, null, tags, category, fileHash);
                 uploadCount++;
             }
         }
@@ -1058,7 +1074,7 @@ window.submitContributorUpload = async function() {
 };
 
 // 5. 단일 파일 업로드 (리사이징 제거 & 1MB 용량 제한 적용)
-async function processSingleUpload(file1, file2, userTags, category) {
+async function processSingleUpload(file1, file2, userTags, category, fileHash = null) {
     // [1] 용량 체크 (1MB = 1024 * 1024 bytes)
     const MAX_SIZE = 1 * 1024 * 1024;
     if (file1.size > MAX_SIZE) {
@@ -1108,7 +1124,8 @@ async function processSingleUpload(file1, file2, userTags, category) {
         user_id: window.currentUser.id,
         created_at: new Date(),
         status: 'approved',
-        contributor_type: currentUploadType
+        contributor_type: currentUploadType,
+        file_hash: fileHash // [추가] 해시값 저장
     });
 
     if (dbErr) throw dbErr;
@@ -1310,3 +1327,10 @@ window.updateMainPageUserInfo = async function() {
         }
     }
 };
+// [신규] 파일의 고유 해시값(SHA-256) 계산 함수
+async function calculateFileHash(file) {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
