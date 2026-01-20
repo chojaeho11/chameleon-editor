@@ -2421,9 +2421,21 @@ window.t = function(key) {
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
         if (searchBtn && searchInput) {
-            const doSearch = () => { if(window.searchTemplates) window.searchTemplates(searchInput.value); };
+            const doSearch = () => { 
+                // 모바일 키보드 닫기 (UX 개선)
+                searchInput.blur();
+                if(window.searchTemplates) window.searchTemplates(searchInput.value); 
+            };
+            
             searchBtn.onclick = doSearch;
-            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
+            
+            // [수정] 모바일 호환성을 위해 keydown 사용 & 엔터키 처리 강화
+            searchInput.addEventListener('keydown', (e) => { 
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault(); // 폼 자동제출 방지
+                    doSearch(); 
+                }
+            });
         }
         
         document.getElementById("loading").style.display = "none";

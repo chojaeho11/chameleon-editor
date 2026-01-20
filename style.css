@@ -767,9 +767,23 @@ button, input, textarea, select { font-family: inherit; }
 
     /* [3] 템플릿 모달 (카테고리 잘림 해결) */
     .tpl-modal-box {
-        width: 100% !important; height: 100% !important;
-        border-radius: 0 !important; flex-direction: column !important;
-        display: flex !important; overflow: hidden !important;
+        /* [수정] 모바일 화면 꽉 채우기 및 밀림 방지 */
+        position: fixed !important; 
+        top: 0 !important; 
+        left: 0 !important;
+        width: 100% !important; 
+        height: 100dvh !important; /* ★ 핵심: 주소창 크기 변화에 대응하는 동적 높이 */
+        border-radius: 0 !important; 
+        flex-direction: column !important;
+        display: flex !important; 
+        overflow: hidden !important;
+        z-index: 20000 !important;
+    }
+
+    /* [추가] 모바일 상단 안전 영역 확보 (노치/상태바 때문에 닫기 버튼 가림 방지) */
+    .tpl-content > div:first-child {
+        padding-top: max(20px, env(safe-area-inset-top)) !important; 
+        min-height: 70px !important; /* 헤더 높이를 충분히 확보 */
     }
     .tpl-sidebar {
         flex-direction: row !important; height: auto !important;
@@ -785,7 +799,14 @@ button, input, textarea, select { font-family: inherit; }
     .tpl-content { display: flex !important; flex-direction: column !important; height: 100% !important; overflow: hidden !important; }
     .tpl-content > div:first-child { display: flex !important; align-items: center !important; padding: 10px 15px !important; flex-shrink: 0 !important; }
     #tplSearchInput { width: auto !important; flex: 1 !important; margin-bottom: 0 !important; }
-    .tpl-grid { flex: 1 !important; overflow-y: auto !important; column-count: 2 !important; padding: 10px !important; }
+    .tpl-grid { 
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; /* ★ 한 줄에 4개 배치 */
+        gap: 6px !important; /* 간격을 좁게 조정 */
+        padding: 10px 5px !important;
+        overflow-y: auto !important;
+        flex: 1 !important;
+    }
     #btnUseTpl { width: 100% !important; height: 50px !important; font-size: 16px !important; font-weight: bold !important; }
 
     /* [4] 장바구니 화면 모바일 최적화 */

@@ -245,10 +245,16 @@ async function loadTemplatePage(pageIndex) {
         const currentKey = window.currentProductKey || (canvas ? canvas.currentProductKey : 'custom') || 'custom';
         
        
+        // [수정] 함수 실행 시점의 화면 크기를 체크하여 개수 결정 (모바일 6개, PC 12개)
+        // [수정] 화면 크기에 따라 개수 결정 (모바일 8개, PC 12개)
+        const currentIsMobile = window.innerWidth < 768;
+        const dynamicPerPage = currentIsMobile ? 8 : 12; // ★ 2줄 x 4개 = 8개로 변경
+
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, product_key, created_at')
             .order('created_at', { ascending: false })
-            .range(pageIndex * TPL_PER_PAGE, (pageIndex + 1) * TPL_PER_PAGE - 1);
+            // 기존 TPL_PER_PAGE 변수 대신, 방금 만든 dynamicPerPage 변수를 사용합니다.
+            .range(pageIndex * dynamicPerPage, (pageIndex + 1) * dynamicPerPage - 1);
 
       
         query = query.or('product_key.eq.custom,product_key.is.null,product_key.eq."",category.eq.user_vector,category.eq.user_image,category.eq.text');
@@ -1083,8 +1089,7 @@ window.applyStartTemplate = async function(tpl) {
     // 기존 로딩 함수(processLoad)를 'replace' 모드로 실행
    await processLoad('replace');
 };
-// [페이징 상태 변수]
-// [페이징 상태 변수]
+
 let sideCurrentPage = 0;
 const SIDE_ITEMS_PER_PAGE = 5; // ★ 5개 -> 20개로 대폭 상향
 
