@@ -248,7 +248,7 @@ async function loadTemplatePage(pageIndex) {
         // [수정] 함수 실행 시점의 화면 크기를 체크하여 개수 결정 (모바일 6개, PC 12개)
         // [수정] 화면 크기에 따라 개수 결정 (모바일 8개, PC 12개)
         const currentIsMobile = window.innerWidth < 768;
-        const dynamicPerPage = currentIsMobile ? 8 : 12; // ★ 2줄 x 4개 = 8개로 변경
+        const dynamicPerPage = currentIsMobile ? 4 : 12; // ★ 2줄 x 4개 = 8개로 변경
 
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, product_key, created_at')
