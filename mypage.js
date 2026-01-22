@@ -9,7 +9,7 @@ const I18N_KO = {
     "mp_menu_profit": "수익금 & 예치금",
     "btn_logout": "로그아웃",
     "mp_welcome_title": "반갑습니다!",
-    "mp_welcome_desc": "오늘도 멋진 디자인을 만들어보세요.",
+    "mp_welcome_desc": "혹시 설치시공이 필요하다면 주문내역에서 시공입찰에 참여한 가까운 파트너스에게 연락해보세요. 저렴하고 친절합니다.",
     "btn_back_to_editor": "에디터로 돌아가기",
     "mp_label_mileage": "보유 마일리지",
     "mp_label_total_spend": "총 구매금액",
@@ -296,7 +296,7 @@ async function loadOrders() {
         
         if (o.status === '접수대기' || o.status === '접수됨') {
             // 1. 견적 확인 버튼
-            actionBtn = `<button onclick="window.checkBidsForOrder('${o.id}')" class="btn-round" style="margin-top:5px; background:#4f46e5; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">📢 도착한 견적 확인</button>`;
+            actionBtn = `<button onclick="window.checkBidsForOrder('${o.id}')" class="btn-round" style="margin-top:5px; background:#4f46e5; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">📢 참여한 지역 시공업체 확인</button>`;
         } 
         else if (o.status === '배송완료') {
             // 2. 후기 작성 버튼 (파트너가 납품 완료했을 때)

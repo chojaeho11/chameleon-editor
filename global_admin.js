@@ -250,3 +250,120 @@ window.executeBulkUpload = async function() {
         if (window.filterProductList) window.filterProductList();
     }, 500);
 };
+// ============================================================
+// [파트너스 관리] 신청 목록 불러오기
+// ============================================================
+window.loadPartnerApplications = async function() {
+    const tbody = document.getElementById('partnerAppListBody');
+    const filter = document.getElementById('filterPartnerStatus').value; // all, pending, approved, rejected
+    
+    if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">로딩 중...</td></tr>';
+
+    let query = sb.from('partner_applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (filter !== 'all') {
+        query = query.eq('status', filter);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        alert("로드 실패: " + error.message);
+        return;
+    }
+
+    tbody.innerHTML = '';
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">신청 내역이 없습니다.</td></tr>';
+        return;
+    }
+
+    // 뱃지 표시용
+    const updateCount = data.filter(d => d.status === 'pending').length;
+    const badge = document.getElementById('partnerPendingCount');
+    if(badge) {
+        badge.innerText = updateCount;
+        badge.style.display = updateCount > 0 ? 'inline-block' : 'none';
+    }
+
+    data.forEach(item => {
+        let statusBadge = '';
+        let actionBtn = '';
+
+        if (item.status === 'pending') {
+            statusBadge = `<span class="badge" style="background:#fef3c7; color:#d97706;">⏳ 대기중</span>`;
+            // 승인 버튼 클릭 시 approvePartner 함수 실행
+            actionBtn = `
+                <button onclick="approvePartner('${item.id}', '${item.user_id}')" class="btn btn-primary btn-sm">승인 (등급UP)</button>
+                <button onclick="rejectPartner('${item.id}')" class="btn btn-outline btn-sm" style="color:#ef4444; border-color:#ef4444;">거절</button>
+            `;
+        } else if (item.status === 'approved') {
+            statusBadge = `<span class="badge" style="background:#dcfce7; color:#166534;">✅ 승인됨</span>`;
+            actionBtn = `<span style="font-size:12px; color:#aaa;">처리완료</span>`;
+        } else {
+            statusBadge = `<span class="badge" style="background:#fee2e2; color:#ef4444;">❌ 거절됨</span>`;
+            actionBtn = `<span style="font-size:12px; color:#aaa;">처리완료</span>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${new Date(item.created_at).toLocaleDateString()}</td>
+            <td>${item.email || '-'}</td>
+            <td style="font-weight:bold;">${item.company_name}</td>
+            <td>${item.contact_phone}</td>
+            <td>${item.region}</td>
+            <td>${item.main_items}</td>
+            <td style="text-align:center;">${statusBadge}</td>
+            <td style="text-align:center;">${actionBtn}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+};
+
+// ============================================================
+// [파트너스 관리] 승인 및 등급 업그레이드 (핵심 기능)
+// ============================================================
+window.approvePartner = async function(appId, userId) {
+    if (!confirm("이 업체를 파트너(가맹점)로 승인하시겠습니까?\n해당 회원의 등급이 'franchise'로 즉시 변경됩니다.")) return;
+
+    try {
+        // 1. 신청 상태를 'approved'로 변경
+        const { error: appErr } = await sb.from('partner_applications')
+            .update({ status: 'approved', approved_at: new Date() })
+            .eq('id', appId);
+
+        if (appErr) throw appErr;
+
+        // 2. 해당 유저의 프로필 등급을 'franchise'로 변경
+        const { error: profileErr } = await sb.from('profiles')
+            .update({ role: 'franchise' })
+            .eq('id', userId);
+
+        if (profileErr) throw profileErr;
+
+        alert("✅ 승인 완료! 회원이 가맹점 등급으로 변경되었습니다.");
+        loadPartnerApplications(); // 목록 새로고침
+
+    } catch (e) {
+        console.error(e);
+        alert("처리 중 오류 발생: " + e.message);
+    }
+};
+
+// [파트너스 관리] 거절 처리
+window.rejectPartner = async function(appId) {
+    if (!confirm("정말 거절하시겠습니까?")) return;
+
+    const { error } = await sb.from('partner_applications')
+        .update({ status: 'rejected' })
+        .eq('id', appId);
+
+    if (error) alert("오류: " + error.message);
+    else {
+        alert("거절 처리되었습니다.");
+        loadPartnerApplications();
+    }
+};

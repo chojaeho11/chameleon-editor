@@ -148,10 +148,9 @@
                                 <button class="btn btn-outline" id="btnFilterDone" onclick="filterOrders('완료됨', this)">✅ 완료 (배송/수령)</button>
                             </div>
                             <div style="display:flex; gap:5px; align-items:center; background:#f0fdf4; padding:5px 10px; border-radius:8px; border:1px solid #bbf7d0;">
-                                <span style="font-size:12px; font-weight:bold; color:#166534;">📊 매출정산 엑셀:</span>
-                                <input type="month" id="excelMonth" class="input-text" style="width:130px; height:32px; font-size:12px;">
-                                <button class="btn btn-success btn-sm" onclick="downloadMonthlyExcel()">
-                                    <i class="fa-solid fa-file-excel"></i> 다운로드
+                                <span style="font-weight:bold;">매출정산 엑셀: </span>
+<input type="month" id="excelMonth" class="input-text" style="width:130px; display:inline-block;" value="2026-01">
+<button class="btn btn-success" onclick="downloadMonthlyExcel()">📊 다운로드</button>
                                 </button>
                             </div>
                         </div>
@@ -191,6 +190,7 @@
         <th style="width:40px;">Site</th>
         <th style="width:60px;">날짜</th>
         <th style="width:110px;">고객 정보</th>
+        <th style="width: 60px; text-align: center;">주문번호</th>
         <th style="">주문 내역</th> <th style="width:90px; text-align:center; background:#fff7ed;">입찰</th> 
         <th style="width:80px; text-align:right; background:#f8fafc;">주문총액</th>
         <th style="width:70px; text-align:right; color:#ef4444; background:#f8fafc;">할인액</th>

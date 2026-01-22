@@ -1615,6 +1615,14 @@
                 <i class="fa-solid fa-clipboard-list"></i> 작업지시서 다운
             </button>
         </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+    <button id="btnDownReceipt" class="btn-round btn-secondary" style="flex:1; justify-content: center; background:#fff; color:#475569; border:1px solid #cbd5e1;">
+        <i class="fa-solid fa-receipt"></i> 영수증
+    </button>
+    <button id="btnDownStatement" class="btn-round btn-secondary" style="flex:1; justify-content: center; background:#fff; color:#475569; border:1px solid #cbd5e1;">
+        <i class="fa-solid fa-file-contract"></i> 거래명세서
+    </button>
+</div>
 
         <button onclick="document.getElementById('checkoutModal').style.display='none'; if(window.isOrderCompleted) location.reload();" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
     </div>
@@ -2045,38 +2053,7 @@
             alert(`🚫 입장 권한이 없습니다.\n\n[진단 정보]\n- 계정: ${myEmail}\n- 인식된 등급: ${finalRole}\n\n관리자 승인 후 이용해주세요.`);
         }
     };
-    // [1] 파트너 신청 제출 함수
-    window.submitRealPartnerApp = async function() {
-        // sb(Supabase) 객체가 로드되었는지 확인
-        if (typeof sb === 'undefined') { alert("시스템 로딩 중입니다. 잠시 후 다시 시도해주세요."); return; }
-
-        const comp = document.getElementById('applyCompName').value;
-        const phone = document.getElementById('applyPhone').value;
-        const region = document.getElementById('applyRegion').value;
-        const items = document.getElementById('applyMainItems').value;
-
-        if(!comp || !phone || !region) return alert("필수 정보(업체명, 연락처, 지역)를 모두 입력해주세요.");
-
-        const { data: { user } } = await sb.auth.getUser();
-        if(!user) return alert("로그인이 필요합니다.");
-
-        // DB에 저장
-        const { error } = await sb.from('partner_applications').insert({
-            user_id: user.id,
-            company_name: comp,
-            contact_phone: phone,
-            region: region,
-            main_items: items, // 주생산품목
-            status: 'pending'
-        });
-
-        if(error) {
-            alert("신청 오류: " + error.message);
-        } else {
-            alert("✅ 신청이 완료되었습니다.\n관리자 승인 후 '파트너스 센터'에 접속하실 수 있습니다.");
-            document.getElementById('partnerApplyModal').style.display='none';
-        }
-    };
+    
 
     // [2] 고객용: 도착한 입찰(견적) 확인 및 모달 띄우기
     window.checkBidsForOrder = async function(orderId) {
@@ -4167,6 +4144,12 @@ function updateVipFileList(input) {
             // 상세 분석된 유입 경로 가져오기
             const visitSource = getTrafficSource();
 
+            // ★ [추가] 유입 경로가 '내 사이트'이거나 '내부 이동'이면 저장하지 않음 (DB 절약 & 정확도 향상)
+            if (visitSource.includes(window.location.hostname) || visitSource.includes('cafe2626.com')) {
+                console.log("내부 이동임으로 카운트 생략");
+                return;
+            }
+
             // 1. 방문 기록 저장
             const { data, error } = await sb
                 .from('page_views')
@@ -4502,168 +4485,6 @@ window.filterModalItems = function(keyword) {
         </div>
     </div>
 </div>
-<div id="partnerApplyModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 500px; max-width: 95%;">
-        <h3 style="margin-top:0;">🤝 파트너(가맹점) 신청</h3>
-        <p style="color:#666; font-size:13px; margin-bottom:20px;">지역 광고/제조 파트너가 되어 수익을 창출하세요.</p>
-        
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;">업체명 (상호)</label>
-            <input id="applyCompName" class="ai-input-pretty" placeholder="예: 카멜레온디자인">
-        </div>
-        
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;">연락처</label>
-            <input id="applyPhone" class="ai-input-pretty" placeholder="010-1234-5678">
-        </div>
-        
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;">활동 지역 (구 단위까지 입력)</label>
-            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 경기 화성시">
-            <p style="font-size:11px; color:#ef4444; margin-top:5px;">* 정확한 매칭을 위해 시/군/구 단위까지 입력해주세요.</p>
-        </div>
-        
-        <div style="margin-bottom:20px;">
-            <label class="form-label" style="font-weight:bold;">주 생산 품목 (제조사인 경우)</label>
-            <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)">
-        </div>
-
-        <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;">신청하기</button>
-        <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;">닫기</button>
-    </div>
-</div>
-
-<script>
-    // 파트너 신청 제출 스크립트 (index.html 내부에 포함)
-    window.submitRealPartnerApp = async function() {
-        if (typeof sb === 'undefined') { alert("시스템 로딩 중입니다."); return; }
-
-        const comp = document.getElementById('applyCompName').value;
-        const phone = document.getElementById('applyPhone').value;
-        const region = document.getElementById('applyRegion').value;
-        const items = document.getElementById('applyMainItems').value;
-
-        if(!comp || !phone || !region) return alert("업체명, 연락처, 지역은 필수입니다.");
-
-        const { data: { user } } = await sb.auth.getUser();
-        if(!user) return alert("로그인이 필요합니다.");
-
-        const { error } = await sb.from('partner_applications').insert({
-            user_id: user.id,
-            company_name: comp,
-            contact_phone: phone,
-            region: region,
-            main_items: items,
-            status: 'pending'
-        });
-
-        if(error) alert("신청 오류: " + error.message);
-        else {
-            alert("✅ 신청이 완료되었습니다. 관리자 승인 후 이용 가능합니다.");
-            document.getElementById('partnerApplyModal').style.display='none';
-        }
-    };
-
-    // [추가] 파트너스 신청 취소 함수 (피드백 4)
-    window.cancelPartnerApp = async function() {
-        if(!confirm("신청을 철회하시겠습니까?")) return;
-        const { data: { user } } = await sb.auth.getUser();
-        if(!user) return;
-        
-        const { error } = await sb.from('partner_applications')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('status', 'pending'); // 대기중인 것만 취소 가능
-
-        if(error) alert("철회 실패: " + error.message);
-        else {
-            alert("신청이 철회되었습니다.");
-            document.getElementById('partnerApplyModal').style.display='none';
-        }
-    };
-
-    // [추가] 파트너스 탭 전환
-    window.switchPartnerTab = function(tabName) {
-        document.querySelectorAll('.partner-tab-content').forEach(el => el.style.display = 'none');
-        document.getElementById('tab-' + tabName).style.display = 'block';
-        
-        document.querySelectorAll('.nav-menu .nav-item').forEach(el => el.classList.remove('active'));
-        // 스타일 처리는 간소화 (필요시 구현)
-        
-        if(tabName === 'pool' || tabName === 'my') loadPartnerOrders(tabName);
-    };
-
-    // [추가] 파트너스 주문 로드 (피드백 1, 4 반영)
-    window.loadPartnerOrders = async function(mode) {
-        const listDiv = (mode === 'pool') ? document.getElementById('orderPoolList') : document.getElementById('myOrderList');
-        if(!listDiv) return;
-        
-        listDiv.innerHTML = '<div style="padding:20px; text-align:center;">로딩 중...</div>';
-        
-        const { data: { user } } = await sb.auth.getUser();
-        if(!user) return;
-
-        let query = sb.from('orders').select('*').order('created_at', { ascending: false });
-
-        if(mode === 'pool') {
-            // [피드백 1 반영] 미결제 주문 제외 (결제완료, 입금확인 상태만 노출)
-            query = query.in('payment_status', ['결제완료', '입금확인'])
-                         .eq('status', '접수됨'); // 아직 배정되지 않은 접수 상태
-        } else if(mode === 'my') {
-            // 내가 입찰한 주문 조회 (bids 테이블 조인 필요하지만, 간소화를 위해 orders에서 필터링하거나 별도 로직)
-            // 여기서는 예시로 status가 진행중인 것들만 보여준다고 가정
-             query = query.in('status', ['제작준비', '칼선작업', '출력중']); 
-             // 실제로는 bids 테이블과 join하여 내가 입찰한 order_id를 가져와야 정확함
-             // (Supabase join 쿼리가 복잡하므로, 여기서는 UI 구조만 잡습니다)
-        }
-
-        const { data: orders, error } = await query.limit(20);
-        
-        if(error || !orders || orders.length === 0) {
-            listDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#888;">주문 내역이 없습니다.</div>';
-            return;
-        }
-
-        listDiv.innerHTML = '';
-        orders.forEach(o => {
-            const isMyTab = mode === 'my';
-            
-            // [피드백 4 반영] 잘못 접수한 경우 취소 버튼 (나의 주문 탭에서만)
-            let actionBtn = `<button class="btn-round primary" onclick="window.bidOrder('${o.id}')">입찰하기</button>`;
-            if(isMyTab) {
-                actionBtn = `<button class="btn-round" style="background:#fee2e2; color:#ef4444; border:1px solid #fca5a5;" onclick="window.cancelBid('${o.id}')">접수 취소/철회</button>`;
-            }
-
-            listDiv.innerHTML += `
-                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:15px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span class="badge">${o.status}</span>
-                        <span style="font-weight:bold; color:#6366f1;">${(o.total_amount||0).toLocaleString()}원</span>
-                    </div>
-                    <div style="font-weight:bold; margin-bottom:5px;">${o.manager_name || '고객'} (${o.site_code})</div>
-                    <div style="font-size:13px; color:#64748b; margin-bottom:10px;">${o.addr_basic || '주소 비공개'}</div>
-                    ${actionBtn}
-                </div>
-            `;
-        });
-    };
-
-    // [추가] 입찰 취소 함수 (피드백 4)
-    window.cancelBid = async function(orderId) {
-        if(!confirm("정말로 접수를 철회하시겠습니까?\n고객에게 알림이 갈 수 있습니다.")) return;
-        
-        const { data: { user } } = await sb.auth.getUser();
-        
-        // bids 테이블에서 내 입찰 삭제
-        const { error } = await sb.from('bids').delete().eq('order_id', orderId).eq('partner_id', user.id);
-        
-        if(error) alert("철회 실패: " + error.message);
-        else {
-            alert("정상적으로 철회되었습니다.");
-            loadPartnerOrders('my');
-        }
-    };
-
 
 
 </script>

@@ -1334,3 +1334,58 @@ async function calculateFileHash(file) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+// ============================================================
+// [신규] 파트너(가맹점) 신청 제출 함수
+// ============================================================
+window.submitRealPartnerApp = async function() {
+    // 1. 로그인 체크
+    if (!currentUser) {
+        alert("로그인이 필요합니다.");
+        document.getElementById('loginModal').style.display = 'flex';
+        return;
+    }
+
+    // 2. 입력값 가져오기
+    const comp = document.getElementById('applyCompName').value;
+    const phone = document.getElementById('applyPhone').value;
+    const region = document.getElementById('applyRegion').value;
+    const items = document.getElementById('applyMainItems').value;
+
+    // 3. 유효성 검사
+    if(!comp || !phone || !region) return alert("업체명, 연락처, 활동 지역은 필수입니다.");
+
+    // 4. DB 전송
+    try {
+        const { error } = await sb.from('partner_applications').insert({
+            user_id: currentUser.id,
+            email: currentUser.email, // 유저 이메일 저장
+            company_name: comp,
+            contact_phone: phone,
+            region: region,
+            main_items: items,
+            status: 'pending' // 대기 상태로 저장
+        });
+
+        if (error) throw error;
+
+        alert("✅ 파트너 신청이 완료되었습니다.\n관리자 승인 후 '가맹점' 등급으로 전환됩니다.");
+        document.getElementById('partnerApplyModal').style.display = 'none';
+        
+        // 입력창 초기화
+        document.getElementById('applyCompName').value = '';
+        document.getElementById('applyPhone').value = '';
+        document.getElementById('applyRegion').value = '';
+        document.getElementById('applyMainItems').value = '';
+
+    } catch (e) {
+        console.error(e);
+        alert("신청 중 오류가 발생했습니다: " + e.message);
+    }
+};
+
+// 신청 철회(취소) 함수
+window.cancelPartnerApp = function() {
+    if(confirm("작성 중인 내용을 취소하고 닫으시겠습니까?")) {
+        document.getElementById('partnerApplyModal').style.display = 'none';
+    }
+};

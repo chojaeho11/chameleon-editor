@@ -164,27 +164,39 @@ window.loadOrders = async () => {
             }
 
             // [상태 & 결제정보] (카드/무통장 디테일 표시)
-            let statusHtml = `<span class="badge">${order.status}</span>`;
+            // [상태 & 결제정보] (카드/무통장 디테일 표시)
+            let statusHtml = '';
+
+            // 1. 상태 뱃지 표시 (완료됨일 때만 녹색, 나머지는 기본)
+            if (order.status === '완료됨' || order.status === '발송완료') {
+                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#dcfce7; color:#15803d;">${order.status}</span></div>`;
+            } else {
+                statusHtml = `<div style="margin-bottom:4px;"><span class="badge">${order.status}</span></div>`;
+            }
+
             const isCard = (order.payment_method && (order.payment_method.includes('카드') || order.payment_method.includes('card')));
             const isBank = (order.payment_method && (order.payment_method.includes('무통장') || order.payment_method.includes('bank')));
             const depositor = order.depositor_name || order.depositor || '입금자 미정';
 
-            if (order.status === '완료됨' || order.status === '발송완료') {
-                statusHtml = `<span class="badge" style="background:#dcfce7; color:#15803d;">완료됨</span>`;
-            } else {
-                if (isCard) {
-                    statusHtml += `<div style="font-size:11px; color:#2563eb; font-weight:bold; margin-top:4px;">💳 카드결제</div>`;
-                    if(order.payment_status === '결제완료') statusHtml += `<div style="font-size:10px; color:#15803d;">(승인완료)</div>`;
-                } 
-                else if (isBank) {
-                    statusHtml += `<div style="font-size:11px; color:#d97706; font-weight:bold; margin-top:4px;">🏦 무통장</div>`;
-                    statusHtml += `<div style="font-size:11px; color:#334155;">${depositor}</div>`;
-                    
-                    if (order.payment_status !== '입금확인' && order.payment_status !== '결제완료') {
-                        statusHtml += `<button class="btn btn-success btn-sm" style="width:100%; margin-top:3px; font-size:11px; padding:2px;" onclick="confirmDeposit('${order.id}')">입금확인</button>`;
-                    } else {
-                        statusHtml += `<div style="font-size:10px; color:#15803d; font-weight:bold;">(확인됨)</div>`;
-                    }
+            // 2. 결제 정보 표시 (상태와 무관하게 무조건 표시)
+            if (isCard) {
+                statusHtml += `<div style="font-size:11px; color:#2563eb; font-weight:bold;">💳 카드결제</div>`;
+                if(order.payment_status === '결제완료') {
+                    statusHtml += `<div style="font-size:10px; color:#15803d;">(승인완료)</div>`;
+                } else {
+                     // 카드인데 결제완료가 아니면 (드문 경우지만) 표시
+                    statusHtml += `<div style="font-size:10px; color:#ef4444;">(미결제)</div>`;
+                }
+            } 
+            else if (isBank) {
+                statusHtml += `<div style="font-size:11px; color:#d97706; font-weight:bold;">🏦 무통장</div>`;
+                statusHtml += `<div style="font-size:11px; color:#334155;">${depositor}</div>`;
+                
+                // [핵심] 입금확인이 안 되었다면 '입금확인' 버튼을 계속 보여줌 (완료된 주문이라도 후불 처리를 위해)
+                if (order.payment_status !== '입금확인' && order.payment_status !== '결제완료') {
+                    statusHtml += `<button class="btn btn-success btn-sm" style="width:100%; margin-top:3px; font-size:11px; padding:2px;" onclick="confirmDeposit('${order.id}')">입금확인</button>`;
+                } else {
+                    statusHtml += `<div style="font-size:10px; color:#15803d; font-weight:bold;">(확인됨)</div>`;
                 }
             }
 
@@ -203,6 +215,9 @@ window.loadOrders = async () => {
                         ${deliveryHtml}
                     </td>
                     <td><b>${order.manager_name}</b><br><span style="font-size:11px; color:#666;">${order.phone}</span></td>
+                    
+                    <td style="text-align:center; font-size:12px; color:#64748b; font-weight:bold;">${order.id}</td>
+                    
                     <td style="font-size:11px;">${items.map(i => `<div>- ${i.productName || '상품'} (${i.qty})</div>`).join('')}</td>
                     
                     <td style="text-align:center;">${bidHtml}</td> <td style="text-align:right;">${total.toLocaleString()}</td>
@@ -660,7 +675,113 @@ window.confirmDeposit = async (id) => {
     }
 };
 
-window.downloadMonthlyExcel = () => alert("엑셀 다운로드 기능은 사용자 관리(users.js)에서 구현됨");
+// [수정됨] 엑셀 다운로드 기능 구현 (기존 alert 함수 대체)
+// [수정됨] 월별 매출 정산 엑셀 다운로드 (선택한 월의 1일~말일)
+window.downloadMonthlyExcel = async () => {
+    // 1. HTML에 있는 월 선택 박스(id="excelMonth") 값 가져오기
+    const monthInput = document.getElementById('excelMonth');
+    const siteFilter = document.getElementById('filterSite') ? document.getElementById('filterSite').value : 'all';
+
+    // 월 선택이 안 되어있으면 오늘 날짜 기준으로 설정
+    let targetYear, targetMonth;
+    
+    if (monthInput && monthInput.value) {
+        [targetYear, targetMonth] = monthInput.value.split('-');
+    } else {
+        const now = new Date();
+        targetYear = now.getFullYear();
+        targetMonth = String(now.getMonth() + 1).padStart(2, '0');
+    }
+
+    // 2. 해당 월의 시작일(1일)과 마지막 날 계산
+    // 예: 2026-01-01 ~ 2026-01-31
+    const startDate = `${targetYear}-${targetMonth}-01`;
+    const lastDay = new Date(targetYear, targetMonth, 0).getDate(); // 해당 월의 마지막 날짜 구하기
+    const endDate = `${targetYear}-${targetMonth}-${lastDay}`;
+
+    if(!confirm(`${targetYear}년 ${targetMonth}월 (${startDate} ~ ${endDate})\n전체 주문 데이터를 다운로드하시겠습니까?`)) return;
+    showLoading(true);
+
+    try {
+        // 3. 쿼리 구성 (해당 기간 내의 모든 주문 조회)
+        let query = sb.from('orders')
+            .select('*')
+            .gte('created_at', startDate + 'T00:00:00')
+            .lte('created_at', endDate + 'T23:59:59')
+            .order('created_at', { ascending: false });
+
+        // '임시작성' 제외
+        query = query.neq('status', '임시작성');
+
+        // 사이트 필터가 있다면 적용 (전체 사이트가 아닐 경우)
+        if (siteFilter !== 'all') {
+            query = query.eq('site_code', siteFilter);
+        }
+
+        const { data, error } = await query;
+        if(error) throw error;
+
+        if(!data || data.length === 0) {
+            alert("해당 기간에 조회된 주문 내역이 없습니다.");
+            showLoading(false);
+            return;
+        }
+
+        // 4. 엑셀 데이터 매핑
+        const excelData = data.map(o => {
+            // 상품 목록 텍스트 변환
+            let itemText = '';
+            try {
+                const items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
+                itemText = items.map(i => `${i.productName || '상품'}(${i.qty})`).join(', ');
+            } catch(e) {}
+
+            return {
+                "주문번호": o.id,
+                "주문일자": new Date(o.created_at).toLocaleDateString(),
+                "사이트": o.site_code || 'KR',
+                "고객명": o.manager_name,
+                "연락처": o.phone,
+                "주문내역": itemText,
+                "총금액": o.total_amount || 0,
+                "할인액": o.discount_amount || 0,
+                "실결제액": o.actual_payment || o.total_amount || 0,
+                "결제상태": o.payment_status || '-',
+                "현재상태": o.status,
+                "배송요청일": o.delivery_target_date || '-'
+            };
+        });
+
+        // 5. 엑셀 파일 생성 (SheetJS)
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(excelData);
+
+        // 컬럼 너비 설정
+        ws['!cols'] = [
+            { wch: 8 },  // 주문번호
+            { wch: 12 }, // 날짜
+            { wch: 6 },  // 사이트
+            { wch: 10 }, // 고객명
+            { wch: 15 }, // 연락처
+            { wch: 40 }, // 주문내역
+            { wch: 12 }, // 총금액
+            { wch: 10 }, // 할인액
+            { wch: 12 }, // 실결제액
+            { wch: 10 }, // 결제상태
+            { wch: 10 }, // 현재상태
+            { wch: 12 }  // 배송일
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, `${targetMonth}월_매출정산`);
+        XLSX.writeFile(wb, `매출정산_${targetYear}_${targetMonth}.xlsx`);
+
+    } catch (e) {
+        console.error(e);
+        alert("다운로드 실패: " + e.message);
+    } finally {
+        showLoading(false);
+    }
+};
 // [추가] 입찰 본사 직권 처리 (파트너 입찰 막기)
 window.setHeadOfficeOnly = async (orderId) => {
     if(!confirm("본사 직권 처리하시겠습니까?\n(파트너사는 더 이상 입찰할 수 없습니다.)")) return;

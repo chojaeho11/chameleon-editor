@@ -981,3 +981,255 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
     } // end of cart item loop
     return doc.output('blob');
 }
+// ==========================================================
+// [신규] 간편 영수증 생성 함수 (Receipt)
+// ==========================================================
+export async function generateReceiptPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
+    if (!window.jspdf) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    await loadPdfFonts(doc);
+
+    // 1. 금액 계산 (견적서 로직과 동일)
+    let totalAmt = 0;
+    cartItems.forEach(item => {
+        if (!item.product) return;
+        totalAmt += (item.product.price || 0) * (item.qty || 1);
+        if (item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = ADDON_DB[code];
+                if(add) totalAmt += add.price * ((item.addonQuantities && item.addonQuantities[code]) || 1);
+            });
+        }
+    });
+    
+    // 할인 및 최종 금액
+    const afterRateDiscount = Math.floor(totalAmt * (1 - discountRate));
+    const finalAmt = afterRateDiscount - usedMileage;
+    const vat = Math.floor(finalAmt / 11); // 부가세
+    const supply = finalAmt - vat;         // 공급가
+
+    // 2. 디자인 그리기
+    const centerX = 105;
+    const startY = 30;
+    const boxW = 120;
+    const boxX = centerX - (boxW / 2);
+
+    // 외곽 테두리
+    doc.setDrawColor(0); doc.setLineWidth(0.5);
+    doc.rect(boxX, startY, boxW, 140);
+
+    // 제목
+    doc.setFontSize(22);
+    drawText(doc, "영 수 증", centerX, startY + 15, { align: 'center', weight: 'bold' });
+    doc.setFontSize(10);
+    drawText(doc, "( RECEIPT )", centerX, startY + 22, { align: 'center' });
+
+    // 공급자 정보
+    const infoY = startY + 35;
+    doc.setFontSize(10);
+    drawText(doc, "공급자 : (주)카멜레온프린팅", boxX + 10, infoY);
+    drawText(doc, "등록번호 : 470-81-02808", boxX + 10, infoY + 6);
+    drawText(doc, "대 표 자 : 조재호", boxX + 10, infoY + 12);
+    drawText(doc, "주 소 : 경기 화성시 우정읍 한말길 72-2", boxX + 10, infoY + 18);
+
+    // 구분선
+    doc.setLineWidth(0.2);
+    doc.line(boxX + 5, infoY + 25, boxX + boxW - 5, infoY + 25);
+
+    // 공급받는 자 & 날짜
+    const custY = infoY + 35;
+    drawText(doc, `고 객 명 : ${orderInfo.manager}`, boxX + 10, custY);
+    drawText(doc, `발행일자 : ${new Date().toLocaleDateString()}`, boxX + 10, custY + 6);
+
+    // 금액 박스 (회색 배경)
+    const priceY = custY + 15;
+    doc.setFillColor(240, 240, 240);
+    doc.rect(boxX + 10, priceY, boxW - 20, 20, 'F');
+    
+    doc.setFontSize(12);
+    drawText(doc, "합계금액 (VAT포함)", boxX + 15, priceY + 12, { weight: 'bold' });
+    doc.setFontSize(16);
+    drawText(doc, `₩ ${finalAmt.toLocaleString()}`, boxX + boxW - 15, priceY + 12, { align: 'right', weight: 'bold' }, "#1a237e");
+
+    // 상세 내역
+    const detY = priceY + 30;
+    doc.setFontSize(9);
+    drawText(doc, `공급가액 : ${supply.toLocaleString()} 원`, boxX + boxW - 15, detY, { align: 'right' });
+    drawText(doc, `부 가 세 : ${vat.toLocaleString()} 원`, boxX + boxW - 15, detY + 5, { align: 'right' });
+    
+    if(usedMileage > 0) {
+        drawText(doc, `마일리지 사용 : -${usedMileage.toLocaleString()}`, boxX + boxW - 15, detY + 10, { align: 'right' }, "#ff0000");
+    }
+
+    // 하단 문구
+    doc.setFontSize(9);
+    drawText(doc, "위 금액을 정히 영수(청구)합니다.", centerX, startY + 125, { align: 'center' });
+
+    // 직인 (이미지가 로드되어 있다면)
+    if (typeof STAMP_IMAGE_URL !== 'undefined' && STAMP_IMAGE_URL) {
+        try {
+            const response = await fetch(STAMP_IMAGE_URL);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            await new Promise(resolve => {
+                reader.onloadend = () => {
+                    if (reader.result) doc.addImage(reader.result, 'PNG', boxX + 85, infoY - 5, 15, 15);
+                    resolve();
+                };
+                reader.readAsDataURL(blob);
+            });
+        } catch(e) {}
+    }
+
+    return doc.output('blob');
+}
+
+// ==========================================================
+// [신규] 거래명세서 생성 함수 (Transaction Statement)
+// ==========================================================
+export async function generateTransactionStatementPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
+    if (!window.jspdf) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    await loadPdfFonts(doc);
+
+    // 1. 타이틀
+    doc.setFontSize(24);
+    drawText(doc, "거 래 명 세 서", 105, 20, { align: 'center', weight: 'bold' });
+    
+    // 2. 상단 정보 박스 (좌: 공급받는자, 우: 공급자)
+    const startY = 30;
+    const boxH = 40;
+    
+    // [공급자] (우측)
+    doc.setDrawColor(0); doc.setLineWidth(0.3);
+    doc.rect(105, startY, 90, boxH);
+    
+    doc.setFontSize(10);
+    const rightX = 108;
+    drawText(doc, "[공급자]", rightX, startY + 6, { weight: 'bold' });
+    drawText(doc, "등록번호 : 470-81-02808", rightX, startY + 12);
+    drawText(doc, "상   호 : (주)카멜레온프린팅", rightX, startY + 18);
+    drawText(doc, "대 표 자 : 조재호", rightX, startY + 24);
+    drawText(doc, "주   소 : 경기 화성시 우정읍 한말길 72-2", rightX, startY + 30);
+    drawText(doc, "연 락 처 : 031-366-1984", rightX, startY + 36);
+
+    // [공급받는자] (좌측)
+    doc.rect(15, startY, 90, boxH);
+    const leftX = 18;
+    drawText(doc, "[공급받는자]", leftX, startY + 6, { weight: 'bold' });
+    drawText(doc, `성   명 : ${orderInfo.manager}`, leftX, startY + 12);
+    drawText(doc, `연 락 처 : ${orderInfo.phone}`, leftX, startY + 18);
+    drawText(doc, `배 송 지 : ${orderInfo.address}`, leftX, startY + 24, { maxWidth: 85 });
+    drawText(doc, `일   자 : ${new Date().toLocaleDateString()}`, leftX, startY + 36);
+
+    // 도장
+    if (typeof STAMP_IMAGE_URL !== 'undefined' && STAMP_IMAGE_URL) {
+        try {
+            const response = await fetch(STAMP_IMAGE_URL);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            await new Promise(resolve => {
+                reader.onloadend = () => {
+                    if (reader.result) doc.addImage(reader.result, 'PNG', 180, startY + 12, 12, 12);
+                    resolve();
+                };
+                reader.readAsDataURL(blob);
+            });
+        } catch(e) {}
+    }
+
+    // 3. 품목 테이블 헤더
+    let y = 80;
+    const cols = [10, 80, 20, 30, 30, 15]; // No, 품목, 수량, 단가, 공급가액, 세액
+    const headers = ["No", "품목 및 규격", "수량", "단가", "공급가액", "세액"];
+    let curX = 15;
+    
+    // 테이블 헤더 그리기
+    headers.forEach((h, i) => { 
+        drawCell(doc, curX, y, cols[i], 8, h, 'center', 9, true); 
+        curX += cols[i]; 
+    });
+    y += 8;
+
+    // 4. 품목 리스트 출력
+    let totalSupply = 0;
+    let totalVat = 0;
+    let no = 1;
+
+    cartItems.forEach(item => {
+        if (!item.product) return;
+        
+        // 아이템별 합계 (옵션 포함)
+        let itemTotal = (item.product.price || 0) * (item.qty || 1);
+        if (item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = ADDON_DB[code];
+                if(add) itemTotal += add.price * ((item.addonQuantities && item.addonQuantities[code]) || 1);
+            });
+        }
+
+        // 공급가/세액 분리 (간이 계산: 1.1 나누기)
+        const iVat = Math.floor(itemTotal - (itemTotal / 1.1));
+        const iSupply = itemTotal - iVat;
+
+        totalSupply += iSupply;
+        totalVat += iVat;
+
+        curX = 15;
+        // No
+        drawCell(doc, curX, y, cols[0], 8, no++, 'center'); curX += cols[0];
+        // 품목명
+        let pName = item.product.name;
+        if(item.selectedAddons && Object.keys(item.selectedAddons).length > 0) pName += " (옵션포함)";
+        drawCell(doc, curX, y, cols[1], 8, pName, 'left'); curX += cols[1];
+        // 수량
+        drawCell(doc, curX, y, cols[2], 8, String(item.qty), 'center'); curX += cols[2];
+        // 단가 (단순 표기를 위해 총액/수량으로 역산 표시)
+        drawCell(doc, curX, y, cols[3], 8, Math.floor(itemTotal/item.qty).toLocaleString(), 'right'); curX += cols[3];
+        // 공급가액
+        drawCell(doc, curX, y, cols[4], 8, iSupply.toLocaleString(), 'right'); curX += cols[4];
+        // 세액
+        drawCell(doc, curX, y, cols[5], 8, iVat.toLocaleString(), 'right');
+        
+        y += 8;
+        // 페이지 넘어감 처리
+        if(y > 260) { doc.addPage(); y = 20; }
+    });
+
+    // 5. 최종 합계 계산 (할인 및 마일리지 적용)
+    let grandTotal = totalSupply + totalVat; // 할인 전 총액
+    
+    const discountAmt = Math.floor(grandTotal * discountRate);
+    const usedMil = usedMileage;
+    
+    // 최종 결제 금액
+    const finalTotal = grandTotal - discountAmt - usedMil;
+    
+    // 최종 금액 기준 공급가/세액 역산 (문서 하단 표시용)
+    const finalVat = Math.floor(finalTotal / 11);
+    const finalSupply = finalTotal - finalVat;
+
+    // 6. 하단 합계 박스
+    y += 5;
+    doc.setDrawColor(0); doc.setLineWidth(0.5);
+    doc.rect(15, y, 180, 25);
+    
+    doc.setFontSize(10);
+    drawText(doc, `공급가액 합계 : ${finalSupply.toLocaleString()}`, 25, y + 8);
+    drawText(doc, `부 가 세 합계 : ${finalVat.toLocaleString()}`, 100, y + 8);
+    
+    // 할인 내역 표시
+    if (discountAmt > 0 || usedMil > 0) {
+        let dcText = `(할인: -${discountAmt.toLocaleString()}`;
+        if(usedMil > 0) dcText += `, 마일리지: -${usedMil.toLocaleString()}`;
+        dcText += ")";
+        drawText(doc, dcText, 25, y + 16, {color: '#ef4444'});
+    }
+
+    doc.setFontSize(14);
+    drawText(doc, `총 합 계 : ₩ ${finalTotal.toLocaleString()}`, 190, y + 18, { align: 'right', weight: 'bold' }, "#1a237e");
+
+    return doc.output('blob');
+}

@@ -7,7 +7,9 @@ import {
     generateOrderSheetPDF,
     generateQuotationPDF, 
     generateProductVectorPDF, 
-    generateRasterPDF 
+    generateRasterPDF,
+    generateReceiptPDF,              // [추가됨]
+    generateTransactionStatementPDF  // [추가됨]
 } from "./export.js";
 
 // ============================================================
@@ -265,7 +267,40 @@ export async function initOrderSystem() {
             } catch(e) { console.error(e); alert("PDF 생성 실패"); }
         };
     }
-    
+    // [추가] 영수증 다운로드 버튼 연결
+    const btnReceipt = document.getElementById("btnDownReceipt");
+    if(btnReceipt) {
+        btnReceipt.onclick = async () => {
+            if(cartData.length === 0) return alert("장바구니가 비어있습니다.");
+            
+            const info = getOrderInfo();
+            // 마일리지 사용값 가져오기
+            const mileageInput = document.getElementById('inputUseMileage');
+            const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
+
+            try {
+                const blob = await generateReceiptPDF(info, cartData, currentUserDiscountRate, useMileage);
+                if(blob) downloadBlob(blob, `영수증_${info.manager}.pdf`);
+            } catch(e) { console.error(e); alert("영수증 생성 실패: " + e.message); }
+        };
+    }
+
+    // [추가] 거래명세서 다운로드 버튼 연결
+    const btnStatement = document.getElementById("btnDownStatement");
+    if(btnStatement) {
+        btnStatement.onclick = async () => {
+            if(cartData.length === 0) return alert("장바구니가 비어있습니다.");
+            
+            const info = getOrderInfo();
+            const mileageInput = document.getElementById('inputUseMileage');
+            const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
+
+            try {
+                const blob = await generateTransactionStatementPDF(info, cartData, currentUserDiscountRate, useMileage);
+                if(blob) downloadBlob(blob, `거래명세서_${info.manager}.pdf`);
+            } catch(e) { console.error(e); alert("거래명세서 생성 실패: " + e.message); }
+        };
+    }
     renderCart(); // 초기 렌더링
 }
 
