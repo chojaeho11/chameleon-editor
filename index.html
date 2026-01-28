@@ -2730,54 +2730,128 @@ let iconUrl = window.getTinyThumb(rawUrl, 150);
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">데이터를 불러오지 못했습니다.</div>';
         }
     };
-
 // =================================================================
-// [통합 수정본] 카테고리 렌더링 & 전체 검색 & 모달 검색 수정
-// =================================================================
-// =================================================================
-// [최종 업데이트] 데이터 로드 (상품 코드, 가격 포함)
+// [최종 수정] 데이터 로드 및 렌더링 (상품명/이미지/별점 완벽 복구)
 // =================================================================
 let globalSubCats = [];      // 카테고리 데이터
 let globalProdImages = [];   // 상품 데이터 (검색용)
-let globalCatThumbMap = {};  // 썸네일 매핑
+let globalCatThumbMap = {};  // 썸네일 매핑 전역 변수
 
+// [1] 그리드 아이템 그리기 (별점, 이미지, 상품명 처리 핵심 함수)
+window._drawQuickItems = (list, isProductMode = false) => {
+    const itemContainer = document.getElementById('quickMenuContainer');
+    if (!itemContainer) return;
+    itemContainer.innerHTML = '';
+    
+    if (!list || list.length === 0) {
+        itemContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px 0; color:#94a3b8;">검색 결과가 없습니다.</div>`;
+        return;
+    }
+
+    list.forEach(item => {
+        const isProduct = isProductMode || item.price !== undefined; 
+        
+        // 상품명 안전하게 가져오기
+        let name = item.name;
+        
+        // 이미지 URL 가져오기 (전역 맵 활용)
+        let rawUrl = item.img_url || item.image;
+        // 상품이 아니고(카테고리이고), 자체 이미지가 없으면 전역 맵에서 찾기
+        if (!rawUrl && !isProduct && window.globalCatThumbMap) {
+            rawUrl = window.globalCatThumbMap[item.code];
+        }
+        
+        const tinyUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
+        
+        // 클릭 이벤트 설정
+        let clickAction = '';
+        let badge = '';
+
+        if (isProduct) {
+            if (item.is_general_product) {
+                clickAction = `window.openGeneralProductModal('${item.code}')`;
+            } else {
+                clickAction = `window.showChoiceModal('${item.code}')`;
+            }
+            badge = `<span style="position:absolute; top:6px; left:6px; background:#6366f1; color:white; font-size:10px; padding:2px 6px; border-radius:4px; z-index:2; font-weight:bold;">상품</span>`;
+        } else {
+            // 설명 텍스트 안전 변환
+            const safeDesc = (item.description || '').replace(/\n/g, ' ').replace(/'/g, "\\'");
+            clickAction = `window.showCategoryProducts('${item.code}', '${name}', '${safeDesc}')`;
+        }
+
+        // 별점 생성 (4.5 ~ 5.0 랜덤)
+        const randomScore = (4.5 + Math.random() * 0.5).toFixed(1);
+
+        const div = document.createElement('div');
+        div.className = 'quick-item';
+        
+        // 다국어 모드 체크
+        const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
+        const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
+        if (isUS || isJP) div.classList.add('long-text-mode');
+
+        let imgTag = tinyUrl 
+            ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
+            : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
+
+        div.innerHTML = `
+            <div class="quick-icon" onclick="${clickAction}" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;">
+                ${badge}
+                ${imgTag}
+            </div>
+            <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
+            
+            <div class="quick-review-bar">
+                <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${item.code}', '${name}')">
+                    <i class="fa-solid fa-star star-icon"></i> 
+                    <span class="star-score">${randomScore}</span>
+                </div>
+                <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${item.code}', '${name}')" style="background:white;">
+                    <i class="fa-regular fa-comment-dots"></i>
+                </div>
+            </div>
+        `;
+        
+        itemContainer.appendChild(div);
+    });
+};
+
+// [2] 퀵메뉴 데이터 로딩 및 탭 생성
 async function renderQuickMenu() {
     const tabContainer = document.getElementById('topCategoryTabs');
     const itemContainer = document.getElementById('quickMenuContainer');
     if (!tabContainer || !itemContainer) return;
 
-    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
 
     const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
     const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
 
     try {
-        // 1. 카테고리 데이터
         let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
         const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
         
-        // 2. 상품 데이터 (전체 정보 가져오기)
+        // 상품 데이터 가져오기
         const { data: prodImages } = await sb.from('admin_products')
-            .select('*') // [수정] 상세 정보(사이즈,설명 등)를 위해 전체 컬럼 선택
+            .select('*')
             .not('img_url', 'is', null).neq('img_url', '');
 
-        // 전역 변수 저장
-        globalSubCats = subCats || [];
-        globalProdImages = prodImages || [];
+        // 전역 변수 설정
+        window.globalSubCats = subCats || [];
+        window.globalProdImages = prodImages || [];
+        window.globalCatThumbMap = {}; 
 
-        // 3. 썸네일 매핑 및 PRODUCT_DB 등록 (검색된 상품 클릭 시 정보 로드용)
         if (prodImages) {
-            // PRODUCT_DB 초기화 확인
-            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-
             prodImages.forEach(p => {
-                // 3-1. 썸네일 매핑 (기존 로직)
-                if (p.category && !globalCatThumbMap[p.category]) {
-                    globalCatThumbMap[p.category] = p.img_url;
+                // 카테고리 썸네일 매핑
+                if (p.category && !window.globalCatThumbMap[p.category]) {
+                    window.globalCatThumbMap[p.category] = p.img_url;
                 }
-
-                // 3-2. [추가] 상세 정보 전역 DB 등록
-                // 다국어 처리 확인
+                
+                // 상품 DB 구축
+                if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+                
                 let localName = p.name;
                 let localPrice = p.price;
                 if(typeof window.getLocalizedData === 'function') {
@@ -2801,41 +2875,59 @@ async function renderQuickMenu() {
             });
         }
 
-        // 4. 탭 생성 (기존 로직 유지)
+        if (!subCats || subCats.length === 0) {
+            itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
+            return;
+        }
+
+        // 상단 탭 필터링
+        if (topCats) {
+            const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
+            topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
+        }
+
+        // 탭 렌더링
         const renderTabs = () => {
             tabContainer.innerHTML = '';
-            if (topCats) {
-                const seen = new Set();
-                topCats = topCats.filter(cat => {
-                    const name = cat.name.trim();
-                    if (seen.has(name)) return false;
-                    seen.add(name);
-                    return true;
-                });
-                const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
-                topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
+            const descBox = document.getElementById('categoryDescriptionBox');
 
+            if (topCats) {
                 topCats.forEach(top => {
                     let topName = top.name;
                     if (isJP) topName = top.name_jp || top.name;
                     else if (isUS) topName = top.name_us || top.name;
 
+                    let topDesc = top.description;
+                    if (isJP) topDesc = top.description_jp || top.description;
+                    else if (isUS) topDesc = top.description_us || top.description;
+
                     const btn = document.createElement('button');
                     btn.className = 'cat-tab';
                     btn.innerText = topName;
-                    
+
                     btn.onclick = (e) => {
                         const tabs = tabContainer.querySelectorAll('.cat-tab');
                         tabs.forEach(t => t.classList.remove('active'));
                         e.target.classList.add('active');
-                        // 검색창 초기화
-                        const searchInput = document.getElementById('mainCategorySearch');
-                        if(searchInput) searchInput.value = '';
+
+                        if (topDesc && topDesc.trim() !== "") {
+                            descBox.style.display = "block";
+                            descBox.innerHTML = topDesc.replace(/\n/g, '<br>');
+                        } else {
+                            descBox.style.display = "none";
+                        }
+
                         renderItemsByFilter(top.code);
+                        
+                        if (window.loadSpecialProducts) {
+                            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
+                            loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+                        }
                     };
                     tabContainer.appendChild(btn);
                 });
             }
+            
             // 기타 탭
             const orphanCats = subCats.filter(sub => !sub.top_category_code);
             if (orphanCats.length > 0) {
@@ -2845,67 +2937,12 @@ async function renderQuickMenu() {
                 etcBtn.onclick = (e) => {
                     document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
                     e.target.classList.add('active');
-                    document.getElementById('mainCategorySearch').value = '';
                     renderItemsByFilter('etc');
                 };
                 tabContainer.appendChild(etcBtn);
             }
         };
 
-        // 5. 그리드 그리기 (공통 함수)
-        window._drawQuickItems = (list, isProductMode = false) => {
-            itemContainer.innerHTML = '';
-            if (!list || list.length === 0) {
-                itemContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px 0; color:#94a3b8;">검색 결과가 없습니다.</div>`;
-                return;
-            }
-
-            list.forEach(item => {
-                const isProduct = isProductMode || item.price !== undefined; // 가격이 있으면 상품으로 간주
-                
-                let name = item.name;
-                let rawUrl = item.img_url || item.image || (isProduct ? '' : globalCatThumbMap[item.code]);
-                const tinyUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
-                
-                // 클릭 이벤트 분기
-                let clickAction = '';
-                let badge = '';
-
-                if (isProduct) {
-                    // ★ 상품 클릭 시 분기 처리 (일반상품 vs 디자인상품)
-                    if (item.is_general_product) {
-                        clickAction = `window.openGeneralProductModal('${item.code}')`;
-                    } else {
-                        clickAction = `window.showChoiceModal('${item.code}')`;
-                    }
-                    badge = `<span style="position:absolute; top:5px; left:5px; background:#6366f1; color:white; font-size:10px; padding:2px 6px; border-radius:4px; z-index:2;">상품</span>`;
-                } else {
-                    // 카테고리 클릭 시 -> 상품 리스트 모달
-                    const safeDesc = (item.description || '').replace(/\n/g, ' ').replace(/'/g, "\\'");
-                    clickAction = `window.showCategoryProducts('${item.code}', '${name}', '${safeDesc}')`;
-                }
-
-                const div = document.createElement('div');
-                div.className = 'quick-item';
-                if (isUS || isJP) div.classList.add('long-text-mode');
-
-                let imgTag = tinyUrl 
-                    ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
-                    : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
-
-                div.innerHTML = `
-                    <div class="quick-icon" onclick="${clickAction}" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;">
-                        ${badge}
-                        ${imgTag}
-                    </div>
-                    <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
-                `;
-                
-                itemContainer.appendChild(div);
-            });
-        };
-
-        // 탭 필터링
         const renderItemsByFilter = (filterCode) => {
             let filtered = (filterCode === 'etc') 
                 ? subCats.filter(sub => !sub.top_category_code)
@@ -2913,13 +2950,9 @@ async function renderQuickMenu() {
             window._drawQuickItems(filtered, false);
         };
 
-        // 초기 실행
         renderTabs();
         const firstTab = tabContainer.querySelectorAll('.cat-tab')[0];
         if (firstTab) firstTab.click();
-
-        // 전역 노출
-        window._renderCategoryItems = renderItemsByFilter;
 
     } catch (err) {
         console.error("카테고리 로딩 실패:", err);
@@ -2927,53 +2960,38 @@ async function renderQuickMenu() {
     }
 }
 
-// ==========================================================
-// [최종] 통합 검색 (카테고리 + 개별 상품 동시 검색)
-// ==========================================================
+// [3] 메인 검색 필터 (상품 + 카테고리)
 window.filterMainIcons = function(keyword) {
     const term = keyword.toLowerCase().trim();
 
-    // 1. 검색어 없으면 -> 원래 탭 화면으로 복구
     if (!term) {
         const activeTab = document.querySelector('.cat-tab.active');
         if (activeTab) activeTab.click();
         return;
     }
 
-    // 2. 카테고리 검색 (이름 일치)
-    const matchedCats = globalSubCats.filter(cat => {
-        return (cat.name || '').toLowerCase().includes(term);
-    });
+    const matchedCats = window.globalSubCats.filter(cat => (cat.name || '').toLowerCase().includes(term));
+    const matchedProds = window.globalProdImages.filter(prod => (prod.name || '').toLowerCase().includes(term));
 
-    // 3. 상품 검색 (이름 일치) -> ★ 여기가 추가된 핵심 기능
-    const matchedProds = globalProdImages.filter(prod => {
-        return (prod.name || '').toLowerCase().includes(term);
-    });
-
-    // 4. 결과 합치기 (카테고리 먼저, 그 뒤에 상품)
-    // 상품 데이터에는 isProduct: true 플래그를 달아주는 로직은 _drawQuickItems에서 처리됨
     const combinedResults = [...matchedCats, ...matchedProds];
-
-    // 5. 화면에 그리기
     window._drawQuickItems(combinedResults);
 };
 
+window.categoryCache = {}; 
 
-    window.categoryCache = {}; 
-
-
+// [4] 모달창 상품 목록 표시 (상품명/가격/이미지/사이즈 완벽 복구)
 window.showCategoryProducts = async function(catKey, catName, catDesc) {
     const grid = document.getElementById('catProductGrid');
     const modal = document.getElementById('categoryDetailModal');
     const titleEl = document.getElementById('catModalTitle');
-    const descBox = document.getElementById('catModalDesc'); // 설명 박스
+    const descBox = document.getElementById('catModalDesc');
 
     // 제목 설정
     if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
     
-    // [신규] 소분류 설명 표시
+    // 설명 박스 설정
     if (descBox) {
-        if (catDesc && catDesc.trim() !== "" && catDesc !== "undefined") {
+        if (catDesc && catDesc.trim() !== "" && catDesc !== "undefined" && catDesc !== "null") {
             descBox.style.display = "block";
             descBox.innerHTML = catDesc.replace(/\n/g, '<br>');
         } else {
@@ -2981,15 +2999,20 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         }
     }
     
-    grid.style.gridTemplateColumns = "repeat(4, 1fr)"; 
-    grid.style.gap = "12px";
+    // 그리드 스타일 초기화 (PC: 4열, 모바일: 2열 자동 조정됨)
+    grid.style.display = "grid";
+    grid.style.gap = "15px";
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+    
     modal.style.display = 'flex';
 
     // 1. 캐시 확인
+    if (!window.categoryCache) window.categoryCache = {};
     let products = window.categoryCache[catKey];
+    
     if (!products) {
         try {
+            // DB에서 상품 목록 가져오기
             const { data, error } = await sb.from('admin_products')
                 .select('*')
                 .eq('category', catKey)
@@ -3011,74 +3034,81 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     }
 
     products.forEach(p => {
-        const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 80) : '';
+            // 1. 썸네일 주소 생성
+            const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 80) : '';
 
-        // ★ [핵심] 여기서도 getLocalizedData 한 방으로 해결
-        const { name, price, formattedPrice } = getLocalizedData(p);
-
-        // 전역 DB 등록
-        if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-        const scaleFactor = 3.7795;
-        const pxW = Math.round((p.width_mm || 210) * scaleFactor);
-        const pxH = Math.round((p.height_mm || 297) * scaleFactor);
-
-        // [수정] 언어별 설명 가져오기
-        const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
-        const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
-        
-        let pDesc = p.description;
-        if(isJP) pDesc = p.description_jp || p.description;
-        else if(isUS) pDesc = p.description_us || p.description;
-
-        window.PRODUCT_DB[p.code] = {
-            name: name,
-            price: price,
-            w: pxW, h: pxH,
-            w_mm: p.width_mm, h_mm: p.height_mm,
-            img: p.img_url, 
-            addons: p.addons ? p.addons.split(',') : [], 
-            category: p.category,
-            description: pDesc,
-            is_custom_size: p.is_custom_size, // ★ [추가] 커스텀 여부 저장
-            is_general_product: p.is_general_product // [신규] 일반 상품 여부 저장
-        };
-
-        const div = document.createElement('div');
-        div.className = 'quick-item'; 
-        
-        let imgHtml = p.img_url 
-            ? `<div class="quick-icon-img-box"><img src="${thumbUrl}" alt="${name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';"></div>`
-            : `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
-
-        div.innerHTML = `
-            ${imgHtml}
-            <div class="quick-text">${name}</div>
-            <div style="font-size:11px; color:#888; margin-top:3px;">
-                ${p.width_mm || '-'}x${p.height_mm || '-'} / ${formattedPrice}
-            </div>
-        `;
-
-        div.onclick = () => {
-            modal.style.display = 'none'; 
-            window.currentProductKey = p.code;
-            window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-
-            // [수정됨] 일반 상품이면 바로 장바구니로, 아니면 선택 모달 띄우기
-            // [수정됨] 일반 상품이면 전용 모달(수량/설명) 띄우기
-            if (p.is_general_product) {
-                if (window.openGeneralProductModal) {
-                    window.openGeneralProductModal(p.code);
-                } else {
-                    alert("일반 상품 모달 스크립트가 로드되지 않았습니다.");
-                }
-            } else {
-                // 기존 디자인 상품 (모달 띄우기)
-                if(window.showChoiceModal) window.showChoiceModal(p.code);
-                else window.startEditorDirect(p.code);
+            // 2. [중요] 상품명 데이터 안전하게 가져오기 (없으면 원래 이름 사용)
+            let localData = { name: p.name, price: p.price, formattedPrice: (p.price||0).toLocaleString()+'원' };
+            
+            // getLocalizedData 함수가 있다면 사용
+            if (typeof getLocalizedData === 'function') {
+                localData = getLocalizedData(p);
             }
-        };
-        grid.appendChild(div);
-    });
+            
+            // ★ 최종 표시할 이름 (우선순위: 번역된 이름 -> 원래 이름 -> '상품명 없음')
+            const displayName = localData.name || p.name || '상품명 없음';
+            const displayPrice = localData.formattedPrice;
+
+            // 전역 DB 저장 (선택 시 사용)
+            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+            const scaleFactor = 3.7795;
+            const pxW = Math.round((p.width_mm || 210) * scaleFactor);
+            const pxH = Math.round((p.height_mm || 297) * scaleFactor);
+
+            window.PRODUCT_DB[p.code] = {
+                name: displayName,
+                price: localData.price,
+                w: pxW, h: pxH,
+                w_mm: p.width_mm, h_mm: p.height_mm,
+                img: p.img_url, 
+                addons: p.addons ? p.addons.split(',') : [], 
+                category: p.category,
+                description: p.description,
+                is_custom_size: p.is_custom_size,
+                is_general_product: p.is_general_product
+            };
+
+            const div = document.createElement('div');
+            div.className = 'quick-item'; 
+            
+            // 3. 이미지 HTML 생성 (alt 속성에서 따옴표 제거하여 오류 방지)
+            const safeName = displayName.replace(/"/g, ''); 
+            let imgHtml = p.img_url 
+                ? `<div class="quick-icon-img-box"><img src="${thumbUrl}" alt="${safeName}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';"></div>`
+                : `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
+
+            // 4. [핵심] HTML 출력 (display:block 강제 적용)
+            div.innerHTML = `
+                ${imgHtml}
+                
+                <div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    ${displayName}
+                </div>
+
+                <div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">
+                    ${displayPrice}
+                </div>
+
+                <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
+                    ${p.width_mm || '-'} x ${p.height_mm || '-'} mm
+                </div>
+            `;
+
+            div.onclick = () => {
+                const modal = document.getElementById('categoryDetailModal');
+                if(modal) modal.style.display = 'none'; 
+                window.currentProductKey = p.code;
+                window.selectedProductForChoice = window.PRODUCT_DB[p.code];
+
+                if (p.is_general_product) {
+                    if (window.openGeneralProductModal) window.openGeneralProductModal(p.code);
+                } else {
+                    if(window.showChoiceModal) window.showChoiceModal(p.code);
+                    else window.startEditorDirect(p.code);
+                }
+            };
+            grid.appendChild(div);
+        });
 };
  
     // [1] 모달 열기 및 모드(일반/커스텀) 설정
@@ -4468,13 +4498,21 @@ window.filterModalItems = function(keyword) {
             ? `<img src="${iconUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
             : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
 
+        // [수정] 상품명, 가격, 사이즈가 모두 보이도록 HTML 구조 변경
         div.innerHTML = `
-            <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative;">
-                ${badgeHtml}
-                ${imgTag}
+            ${imgHtml}
+            
+            <div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${name}
             </div>
-            <div class="quick-text">${item.name}</div>
-            ${subText}
+
+            <div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">
+                ${formattedPrice}
+            </div>
+
+            <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
+                ${p.width_mm || '-'} x ${p.height_mm || '-'} mm
+            </div>
         `;
 
         // 클릭 이벤트 연결

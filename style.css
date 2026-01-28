@@ -2816,7 +2816,7 @@ body {
         font-size: 16px !important;   /* 글자 크기 확대 (기존 13px -> 16px) */
         font-weight: 400 !important;
         margin-top: 5px !important;
-        color: #ffffff !important;
+        color: #000 !important;
     }
     
     /* 호버 효과 강화 */
