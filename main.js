@@ -1000,16 +1000,56 @@ window.handleContributorUpload = function(type) {
 
 // 4. 업로드 실행
 window.submitContributorUpload = async function() {
-    const tags = document.getElementById('cUploadTags').value.trim();
+    // 1. 입력값 가져오기
+    let tagsInput = document.getElementById('cUploadTags').value.trim();
     const loading = document.getElementById('loading');
     
-    if (!tags) return alert("검색 키워드를 입력해주세요.");
+    if (!tagsInput) return alert("검색 키워드를 입력해주세요.");
     
     if(loading) loading.style.display = 'flex';
+
+    // ★ [추가됨] 자동 번역 로직 (한글 -> 영어, 일본어)
+    try {
+        if(loading.querySelector('p')) loading.querySelector('p').innerText = "키워드 번역 중...";
+
+        // ★ [수정] 한/영/일 3개 국어 모두 번역 요청 (입력 언어가 무엇이든 상관없음)
+        const [koText, enText, jpText] = await Promise.all([
+            googleTranslate(tagsInput, 'ko'), // 한국어 변환 추가
+            googleTranslate(tagsInput, 'en'),
+            googleTranslate(tagsInput, 'ja')
+        ]);
+
+        // 콤마(,)로 분리하여 배열로 만듦
+        const originalTags = tagsInput.split(',').map(t => t.trim());
+        const koTags = koText ? koText.split(',').map(t => t.trim()) : [];
+        const enTags = enText ? enText.split(',').map(t => t.trim()) : [];
+        const jpTags = jpText ? jpText.split(',').map(t => t.trim()) : [];
+
+        // 원본 + 한/영/일 합치기 (Set이 알아서 중복 제거함)
+        const combinedSet = new Set([
+            ...originalTags, 
+            ...koTags, 
+            ...enTags, 
+            ...jpTags
+        ]);
+        
+        // 최종 태그 문자열 (예: "사과, Apple, Ringo")
+        // tags 변수는 const가 아닌 let으로 선언하거나, 아래 로직에서 바로 사용
+        tagsInput = Array.from(combinedSet).join(', ');
+        
+        console.log("최종 저장 태그:", tagsInput);
+
+    } catch (e) {
+        console.warn("번역 실패, 원본만 저장합니다.", e);
+    }
+    
+    // 변수명 통일 (기존 로직과 연결)
+    const tags = tagsInput; 
 
     try {
         let uploadCount = 0;
         let totalReward = 0;
+        // ... (이하 기존 코드 그대로 유지)
 
         if (currentUploadType === 'svg') {
             const thumbFile = document.getElementById('cFileThumb').files[0];
@@ -1397,3 +1437,18 @@ window.cancelPartnerApp = function() {
         document.getElementById('partnerApplyModal').style.display = 'none';
     }
 };
+// [공통] 구글 무료 번역 함수 (global_products.js에서 가져옴)
+async function googleTranslate(text, targetLang) {
+    if (!text) return "";
+    try {
+        // client=gtx 방식을 사용하여 무료로 번역
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURI(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        // 번역된 문장들을 합쳐서 반환
+        return data[0].map(x => x[0]).join('');
+    } catch (e) {
+        console.error("번역 API 오류:", e);
+        return ""; // 오류 시 빈 문자열 반환
+    }
+}
