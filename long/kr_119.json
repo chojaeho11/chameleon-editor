@@ -266,7 +266,7 @@
 
   "contrib_title": "카멜레온 기여자 시스템",
   "contrib_balance_label": "내 누적 수익금",
-  "contrib_desc": "내가 만든 디자인 소스를 공유하고 현금을 적립받으세요. <br>좋은 소스를 많이 올리면 등급이 올라가 수익도 2배, 4배로 뜁니다.<br><span style='color:#ef4444; font-weight:bold;'>투명한 공개!</span> 올리는 즉시 적립 + 전세계 유저 사용 시 로열티 지급",
+  "contrib_desc": "내가 만든 디자인 소스를 공유하고 현금을 적립받으세요. <br>저품질 이미지를 반복해서 올리면 등급이 하락합니다.등급 상승 2배 4배, 하락 시 절반 비용이 지급됩니다.<br><span style='color:#ef4444; font-weight:bold;'>카테고리 확인!</span> 객체 로고 등 카테고리를 맞추지 않거나 키워드를 3개 이하 등록 시 등록 권한이 삭제됩니다.",
   "contrib_btn_png": "PNG 객체",
   "contrib_btn_svg": "SVG 객체",
   "contrib_btn_logo": "로고 업로드",

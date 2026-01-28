@@ -893,10 +893,10 @@ window.submitOrderReview = async function() {
 let currentUploadType = 'png'; 
 
 const REWARD_RATES = {
-    'png': 100,
-    'svg': 200,
+    'png': 150,
+    'svg': 150,
     'logo': 150,
-    'template': 100,
+    'template': 150,
     'usage_share': 0.1 
 };
 
