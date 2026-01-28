@@ -675,8 +675,7 @@ window.confirmDeposit = async (id) => {
     }
 };
 
-// [수정됨] 엑셀 다운로드 기능 구현 (기존 alert 함수 대체)
-// [수정됨] 월별 매출 정산 엑셀 다운로드 (선택한 월의 1일~말일)
+// [수정됨] 월별 매출 정산 엑셀 다운로드 (결제일, 담당매니저 추가)
 window.downloadMonthlyExcel = async () => {
     // 1. HTML에 있는 월 선택 박스(id="excelMonth") 값 가져오기
     const monthInput = document.getElementById('excelMonth');
@@ -694,26 +693,29 @@ window.downloadMonthlyExcel = async () => {
     }
 
     // 2. 해당 월의 시작일(1일)과 마지막 날 계산
-    // 예: 2026-01-01 ~ 2026-01-31
     const startDate = `${targetYear}-${targetMonth}-01`;
-    const lastDay = new Date(targetYear, targetMonth, 0).getDate(); // 해당 월의 마지막 날짜 구하기
+    const lastDay = new Date(targetYear, targetMonth, 0).getDate(); 
     const endDate = `${targetYear}-${targetMonth}-${lastDay}`;
 
     if(!confirm(`${targetYear}년 ${targetMonth}월 (${startDate} ~ ${endDate})\n전체 주문 데이터를 다운로드하시겠습니까?`)) return;
     showLoading(true);
 
     try {
-        // 3. 쿼리 구성 (해당 기간 내의 모든 주문 조회)
+        // [중요] 매니저 이름을 찾기 위해 스태프 목록이 비어있다면 먼저 로드
+        if (staffList.length === 0) {
+            const { data: sData } = await sb.from('admin_staff').select('*');
+            staffList = sData || [];
+        }
+
+        // 3. 쿼리 구성
         let query = sb.from('orders')
             .select('*')
             .gte('created_at', startDate + 'T00:00:00')
             .lte('created_at', endDate + 'T23:59:59')
             .order('created_at', { ascending: false });
 
-        // '임시작성' 제외
         query = query.neq('status', '임시작성');
 
-        // 사이트 필터가 있다면 적용 (전체 사이트가 아닐 경우)
         if (siteFilter !== 'all') {
             query = query.eq('site_code', siteFilter);
         }
@@ -736,10 +738,27 @@ window.downloadMonthlyExcel = async () => {
                 itemText = items.map(i => `${i.productName || '상품'}(${i.qty})`).join(', ');
             } catch(e) {}
 
+            // [추가] 담당 매니저 이름 찾기
+            const managerObj = staffList.find(s => s.id == o.staff_manager_id);
+            const managerName = managerObj ? managerObj.name : '미지정';
+
+            // [추가] 결제일 포맷팅 (payment_date 컬럼이 없으면 payment_updated_at 등을 사용하거나, 없으면 - 처리)
+            // DB에 payment_date 컬럼이 있다면 그것을 쓰고, 없다면 상태 변경일을 쓰거나 빈칸 처리
+            let payDate = '-';
+            if (o.payment_date) {
+                payDate = new Date(o.payment_date).toLocaleDateString();
+            } else if (o.payment_status === '결제완료' || o.payment_status === '입금확인') {
+                // 결제일 컬럼이 따로 없고 결제가 완료된 상태라면, 수정일(updated_at)을 임시로 사용하거나 빈칸
+                // 여기서는 데이터가 있으면 표시하고 없으면 - 로 둡니다.
+                payDate = o.updated_at ? new Date(o.updated_at).toLocaleDateString() : '-'; 
+            }
+
             return {
                 "주문번호": o.id,
-                "주문일자": new Date(o.created_at).toLocaleDateString(),
                 "사이트": o.site_code || 'KR',
+                "주문일자": new Date(o.created_at).toLocaleDateString(),
+                "결제일": payDate,           // [NEW] 결제일
+                "담당매니저": managerName,   // [NEW] 담당 매니저
                 "고객명": o.manager_name,
                 "연락처": o.phone,
                 "주문내역": itemText,
@@ -756,11 +775,13 @@ window.downloadMonthlyExcel = async () => {
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(excelData);
 
-        // 컬럼 너비 설정
+        // 컬럼 너비 설정 (순서에 맞춰 조정)
         ws['!cols'] = [
             { wch: 8 },  // 주문번호
-            { wch: 12 }, // 날짜
             { wch: 6 },  // 사이트
+            { wch: 12 }, // 주문일자
+            { wch: 12 }, // [NEW] 결제일
+            { wch: 10 }, // [NEW] 담당매니저
             { wch: 10 }, // 고객명
             { wch: 15 }, // 연락처
             { wch: 40 }, // 주문내역
@@ -769,7 +790,7 @@ window.downloadMonthlyExcel = async () => {
             { wch: 12 }, // 실결제액
             { wch: 10 }, // 결제상태
             { wch: 10 }, // 현재상태
-            { wch: 12 }  // 배송일
+            { wch: 12 }  // 배송요청일
         ];
 
         XLSX.utils.book_append_sheet(wb, ws, `${targetMonth}월_매출정산`);
