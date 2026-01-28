@@ -3052,59 +3052,44 @@ body {
     background: #f8fafc;
 }
 
-/* 개별 템플릿 카드 */
-/* [수정] 카드 전체 틀 (회색 배경) */
+/* =========================================
+   [추가 수정] 사이드바 카드 이미지 꽉 차게
+   ========================================= */
+
+/* 1. 카드 디자인 (둥근 모서리 적용) */
 .side-tpl-card {
     width: 100% !important;
-    
-    /* ★ 핵심: 카드 전체 배경을 회색으로 설정 */
-    background: #e5e5e5 !important; 
-    
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    border: 1px solid #d4d4d4; /* 테두리도 약간 진하게 */
-    transition: transform 0.3s, box-shadow 0.3s;
+    background: #fff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important; /* 이미지가 카드 밖으로 나가지 않게 잘라냄 */
+    position: relative !important; /* 뱃지 위치 기준 */
 }
 
-.side-tpl-card:hover {
-    transform: translateY(-2px);
-    border-color: #6366f1;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.15);
-}
-
-/* ★ [핵심] 이미지 크기 제한 (이게 없어서 엄청 크게 나왔던 것임) */
+/* 2. 이미지 꽉 차게 설정 (핵심 수정) */
 .side-tpl-img {
-    width: 100%;            /* 가로 꽉 채우기 */
-    height: 80px;          /* 높이 고정 (원하는대로 조절 가능) */
-object-fit: cover;
-    display: block;
-    background: #f8fafc;
-    border-bottom: 1px solid #eee;
-    
-    /* [수정됨] 찌글거림 방지를 위해 'auto'로 변경 (부드럽게 처리) */
-    image-rendering: auto; 
-    
-    /* GPU 가속을 켜서 렌더링 품질 향상 */
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    width: 100% !important;       /* 너비 100% */
+    height: auto !important;      /* 높이 자동 */
+    aspect-ratio: 1 / 1;          /* 1:1 정사각형 비율 (필요에 따라 삭제 가능) */
+    object-fit: cover !important; /* 영역을 빈틈없이 꽉 채움 */
+    padding: 0 !important;        /* 안쪽 여백 제거 */
+    display: block !important;    /* 이미지 하단 미세한 공백 제거 */
+    background: #f1f5f9 !important; /* 로딩 전 배경색 */
 }
 
-/* 템플릿 제목 정보 */
+/* 3. 하단 정보 영역 스타일 */
 .side-tpl-info {
-    padding: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #334155;
-    background: #fff;
-    border-top: 1px solid #f1f5f9;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; /* 긴 제목 ... 처리 */
+    padding: 12px !important;     /* 내부 여백 */
+    font-size: 13px !important;
+    color: #334155 !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    border-top: 1px solid #f1f5f9 !important; /* 이미지와 구분선 */
 }
-
 /* 닫기 버튼 아이콘 정렬 */
 .btn-close-drawer i {
     pointer-events: none;

@@ -235,97 +235,79 @@
         }
         
         // 2. [포스터]
+        // 2. [포스터/전단지] - 테두리 없음, 연한 회색 (모던 타이포)
         else if (type === 'flyer') {
             useSafetyGroup = false; 
-            const COLOR_WHITE = '#ffffff'; 
+            
+            // ★ [수정] 흰색에 가까운 아주 연한 회색
+            const COLOR_MAIN = '#eeeeee'; 
+            
             const refS = Math.min(boardW, boardH); 
-            const LINE_THICKNESS = 1.8; 
-            const shiftUp = boardH * 0.15; 
-            const centerY = cy - shiftUp; 
-            const gridCols = 5;
-            const gridRows = 2;
-            const gridW = boardW * 0.40; 
-            const cellW = gridW / gridCols; 
-            const cellH = cellW;            
-            const gridH = cellH * gridRows; 
-            const gridStartX = cx - (gridW / 2);
-            const gridStartY = centerY - (gridH / 2); 
+            const LINE_THICKNESS = 2; 
+            
+            // (테두리 코드 제거됨)
 
-            const gridLines = [];
-            const outerRect = new fabric.Rect({
-                width: gridW, height: gridH, fill: 'transparent', 
-                stroke: COLOR_WHITE, strokeWidth: LINE_THICKNESS,
-                left: gridStartX, top: gridStartY, originX: 'left', originY: 'top'
-            });
-            gridLines.push(outerRect);
-            const hLine = new fabric.Rect({
-                width: gridW, height: LINE_THICKNESS, fill: COLOR_WHITE,
-                left: gridStartX, top: gridStartY + cellH - (LINE_THICKNESS/2), originX: 'left', originY: 'top'
-            });
-            gridLines.push(hLine);
-            for (let i = 1; i < gridCols; i++) {
-                const vLine = new fabric.Rect({
-                    width: LINE_THICKNESS, height: gridH, fill: COLOR_WHITE,
-                    left: gridStartX + (cellW * i) - (LINE_THICKNESS/2), top: gridStartY, originX: 'left', originY: 'top'
-                });
-                gridLines.push(vLine);
-            }
-            const gridGroup = new fabric.Group(gridLines, {
-                selectable: true, evented: true, originX: 'center', originY: 'center', left: cx, top: centerY 
+            // 1. 상단 소제목
+            const topLabel = new fabric.IText("EXHIBITION 2024", {
+                fontFamily: FONT_SUB, 
+                fontSize: refS * 0.03, 
+                fill: COLOR_MAIN, 
+                fontWeight: 'bold',
+                letterSpacing: 200, 
+                originX: 'center', originY: 'center', 
+                left: cx, 
+                top: cy - (boardH * 0.25) 
             });
 
-            const textObjs = [];
-            const strRow1 = "오늘의행사";
-            const strRow2 = "아름다운밤";
-            const fontSize = cellH * 0.55; 
+            // 2. 메인 타이틀 (크고 임팩트 있게)
+            const mainTitle = new fabric.IText("SIMPLE\nDESIGN", {
+                fontFamily: FONT_TITLE, 
+                fontSize: refS * 0.15, 
+                fill: COLOR_MAIN, 
+                fontWeight: 'bold',
+                textAlign: 'center',
+                lineHeight: 0.9,
+                originX: 'center', originY: 'center', 
+                left: cx, 
+                top: cy - (boardH * 0.05) 
+            });
 
-            for (let i = 0; i < strRow1.length; i++) {
-                const char = strRow1[i];
-                const charX = gridStartX + (cellW * i) + (cellW / 2);
-                const charY = gridStartY + (cellH / 2);
-                const t = new fabric.IText(char, {
-                    fontFamily: FONT_TITLE, fontSize: fontSize, fill: COLOR_WHITE,
-                    originX: 'center', originY: 'center', left: charX, top: charY, selectable: true 
-                });
-                textObjs.push(t);
-            }
-            for (let i = 0; i < strRow2.length; i++) {
-                const char = strRow2[i];
-                const charX = gridStartX + (cellW * i) + (cellW / 2);
-                const charY = gridStartY + cellH + (cellH / 2);
-                const t = new fabric.IText(char, {
-                    fontFamily: FONT_TITLE, fontSize: fontSize, fill: COLOR_WHITE,
-                    originX: 'center', originY: 'center', left: charX, top: charY, selectable: true
-                });
-                textObjs.push(t);
-            }
+            // 3. 중앙 구분선
+            const centerLine = new fabric.Rect({
+                width: boardW * 0.1, 
+                height: LINE_THICKNESS * 2, 
+                fill: COLOR_MAIN,
+                originX: 'center', originY: 'center', 
+                left: cx, 
+                top: cy + (boardH * 0.15)
+            });
 
-            const decoGap = 15; const textGap = 20;
-            const lineTop = new fabric.Rect({
-                width: gridW, height: LINE_THICKNESS, fill: COLOR_WHITE,
-                originX: 'center', originY: 'bottom', left: cx, top: gridStartY - decoGap, selectable: true
+            // 4. 하단 상세 내용
+            const subDetail = new fabric.IText("2024. 05. 01 — 05. 31\nART CENTER HALL A", {
+                fontFamily: FONT_POINT, 
+                fontSize: refS * 0.035, 
+                fill: COLOR_MAIN, 
+                fontWeight: 'normal',
+                textAlign: 'center',
+                lineHeight: 1.5,
+                originX: 'center', originY: 'center', 
+                left: cx, 
+                top: cy + (boardH * 0.25)
             });
-            const topSubText = new fabric.IText("행복한 여름바다의 꿈.", {
-                fontFamily: FONT_SUB, fontSize: refS * 0.035, fill: COLOR_WHITE, fontWeight: 'normal',
-                originX: 'center', originY: 'bottom', left: cx, top: lineTop.top - textGap 
+
+            // 5. 바닥 로고/기관명
+            const footerText = new fabric.IText("CHAMELEON DESIGN", {
+                fontFamily: FONT_SUB, 
+                fontSize: refS * 0.025, 
+                fill: COLOR_MAIN, 
+                fontWeight: 'bold',
+                originX: 'center', originY: 'bottom', 
+                left: cx, 
+                top: boardH - 30 // 위치 살짝 조정
             });
-            const lineBot = new fabric.Rect({
-                width: gridW, height: LINE_THICKNESS, fill: COLOR_WHITE,
-                originX: 'center', originY: 'top', left: cx, top: gridStartY + gridH + decoGap, selectable: true
-            });
-            const dateText = new fabric.IText("2099. 09. 10 ~ 09. 11", {
-                fontFamily: FONT_POINT, fontSize: refS * 0.022, fill: COLOR_WHITE, fontWeight: 'normal', letterSpacing: 100,
-                originX: 'center', originY: 'top', left: cx, top: lineBot.top + textGap 
-            });
-            const emotionalText = new fabric.IText("Starry Night in Caravan", {
-                fontFamily: FONT_POINT, fontSize: refS * 0.03, fill: COLOR_WHITE, fontWeight: 'normal', fontStyle: 'normal', 
-                originX: 'center', originY: 'top', left: cx, top: dateText.top + dateText.height + 30
-            });
-            const footerText = new fabric.IText("기관명을 넣어주세요", {
-                fontFamily: FONT_SUB, fontSize: refS * 0.03, fill: COLOR_WHITE, fontWeight: 'bold',
-                originX: 'center', originY: 'bottom', left: cx, top: boardH - (refS * 0.08)
-            });
-            objs = [ topSubText, lineTop, gridGroup, ...textObjs, lineBot, dateText, emotionalText, footerText ];
+
+            // objs 배열에서 borderRect 제거
+            objs = [ topLabel, mainTitle, centerLine, subDetail, footerText ];
         }
         
         // 3. [명함]

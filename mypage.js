@@ -155,16 +155,47 @@ async function checkAndUpgradeTier(userId, currentRole) {
     }
 }
 
-// [4] 대시보드 통계 로드
+// [4] 대시보드 통계 로드 (패널티 경고창 기능 강화)
 async function loadDashboardStats() {
     try {
+        // ★ [수정] contributor_tier와 penalty_reason을 명시적으로 조회
         const { data: profile, error } = await sb.from('profiles')
-            .select('mileage, role, total_spend, logo_count, deposit')
+            .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason')
             .eq('id', currentUser.id)
             .single();
         
         if (error) throw error;
 
+        // ★ [핵심] 패널티 등급 확인 및 알림 표시 로직
+        const tier = profile.contributor_tier || 'regular';
+        const warningBox = document.getElementById('penaltyWarningBox');
+        
+        if (tier === 'penalty') {
+            const reason = profile.penalty_reason || '운영 정책 위반 / 저작권 문제';
+            
+            // 경고 박스가 없으면 생성해서 삽입
+            if (!warningBox) {
+                const alertHtml = `
+                    <div id="penaltyWarningBox" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:15px; border-radius:12px; margin-bottom:20px; display:flex; align-items:start; gap:10px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:20px; margin-top:2px;"></i>
+                        <div>
+                            <strong style="display:block; font-size:15px; margin-bottom:4px;">🚫 계정 패널티 안내</strong>
+                            <div style="font-size:13px;">회원님은 현재 <b>패널티 등급</b>으로 조정되었습니다.<br>이 기간 동안 판매(등록) 수익이 <b>건당 50원</b>으로 제한됩니다.</div>
+                            <div style="margin-top:8px; font-size:12px; background:white; padding:6px 10px; border-radius:6px; border:1px solid #fca5a5; display:inline-block;">
+                                <b>사유:</b> ${reason}
+                            </div>
+                        </div>
+                    </div>`;
+                const dashboardTab = document.getElementById('tab-dashboard');
+                // 대시보드 맨 위에 삽입
+                if(dashboardTab) dashboardTab.insertAdjacentHTML('afterbegin', alertHtml);
+            }
+        } else {
+            // 패널티가 풀렸으면 경고 박스 제거
+            if (warningBox) warningBox.remove();
+        }
+
+        // 기존 통계 데이터 바인딩
         const elMileage = document.getElementById('mileageDisplay');
         if(elMileage) elMileage.innerText = (profile.mileage || 0).toLocaleString() + ' P';
 
@@ -174,16 +205,16 @@ async function loadDashboardStats() {
         const elLogo = document.getElementById('logoCountDisplay');
         if(elLogo) elLogo.innerText = (profile.logo_count || 0) + ' 개';
 
-        // [수정] 통합 예치금(왼쪽) = profile.deposit
         const elTotalDeposit = document.getElementById('displayTotalDeposit');
         if(elTotalDeposit) elTotalDeposit.innerText = (profile.deposit || 0).toLocaleString();
         
-        // [수정] 마일리지(오른쪽) = profile.mileage
         const elTotalMileage = document.getElementById('displayTotalMileage');
         if(elTotalMileage) elTotalMileage.innerText = (profile.mileage || 0).toLocaleString();
 
+        // 등급 승급 체크
         await checkAndUpgradeTier(currentUser.id, profile.role);
 
+        // 진행중 주문 건수 조회
         const { count: orderCount } = await sb.from('orders')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', currentUser.id)
@@ -194,11 +225,9 @@ async function loadDashboardStats() {
         const elOrder = document.getElementById('activeOrderCount');
         if(elOrder) elOrder.innerText = (orderCount || 0) + ' 건';
 
-        // 최근 수익 알림 로드 (더미 또는 실제 데이터)
         const recentLogArea = document.getElementById('recentLogs');
         if(recentLogArea) {
              recentLogArea.innerHTML = '<li>최근 30일간 수익 내역이 없습니다.</li>';
-             // 필요시 wallet_logs 조회하여 업데이트
         }
 
     } catch(e) {
@@ -354,11 +383,13 @@ async function reOrder(orderId) {
 }
 
 // [신규] 판매중인 디자인 로드
+// [신규] 판매중인 디자인 로드 (패널티 적용 수정판)
 async function loadMySales() {
     const grid = document.getElementById('mySalesGrid');
     if(!grid) return;
     grid.innerHTML = '로딩 중...';
 
+    // 1. 라이브러리(디자인) 조회
     const { data } = await sb.from('library').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
     
     if(!data || data.length === 0) {
@@ -366,21 +397,44 @@ async function loadMySales() {
         return;
     }
 
+    // ★ [핵심] 현재 유저의 '패널티 등급' 여부를 DB에서 다시 조회
+    const { data: profile } = await sb.from('profiles')
+        .select('contributor_tier')
+        .eq('id', currentUser.id)
+        .single();
+    
+    // 패널티인지 확인
+    const isPenalty = profile?.contributor_tier === 'penalty';
+
     grid.innerHTML = '';
     let total = 0;
+
     data.forEach(d => {
-        const reward = d.category === 'logo' ? 150 : 100;
+        // 기본 보상: 로고 150P, 기타 100P
+        let reward = d.category === 'logo' ? 150 : 100;
+        
+        // ★ [패널티 적용] 등급이 penalty라면 무조건 50P로 고정
+        if (isPenalty) {
+            reward = 50; 
+        }
+
         total += reward;
+        
+        // 화면 표시 스타일 (패널티면 빨간색)
+        const rewardStyle = isPenalty ? 'color:#ef4444; font-weight:bold;' : 'color:#16a34a;';
+        const rewardText = isPenalty ? `🚫 패널티 적용: ${reward}P` : `🎁 등록보상: ${reward}P`;
+
         grid.innerHTML += `
             <div class="mp-design-card">
                 <img src="${d.thumb_url}" class="mp-design-thumb" style="height:150px; object-fit:cover;">
                 <div class="mp-design-body">
                     <div style="font-weight:bold;">${d.title || '제목없음'}</div>
                     <div style="font-size:12px; color:#666;">${d.category}</div>
-                    <div style="margin-top:5px; font-size:12px; color:#16a34a;">🎁 등록보상: ${reward}P</div>
+                    <div style="margin-top:5px; font-size:12px; ${rewardStyle}">${rewardText}</div>
                 </div>
             </div>`;
     });
+
     const elTotal = document.getElementById('totalSalesPoint');
     if(elTotal) elTotal.innerText = total.toLocaleString() + ' P';
 }

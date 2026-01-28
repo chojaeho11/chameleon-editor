@@ -1054,7 +1054,15 @@ window.submitContributorUpload = async function() {
             }
         }
 
-        const baseAmount = REWARD_RATES[currentUploadType] || 100;
+        // [수정] 보상금 계산 로직 (패널티 적용)
+        let baseAmount = REWARD_RATES[currentUploadType] || 100;
+        
+        // ★ 패널티 등급 확인 (currentUserTier 변수 사용)
+        if (currentUserTier === 'penalty') {
+            baseAmount = 50;       // 기본금을 50원으로 강제 변경
+            currentMultiplier = 1; // 배율도 1배로 고정 (혹시 모를 보너스 방지)
+        }
+
         const finalAmount = (baseAmount * currentMultiplier) * uploadCount;
         
         await addReward(finalAmount, `${currentUploadType.toUpperCase()} 업로드 보상 (${uploadCount}개)`);

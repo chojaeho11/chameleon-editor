@@ -220,7 +220,7 @@ window.changeModalTemplatePage = async function(direction) {
     await loadTemplatePage(newPage);
 }
 
-// ★ 실제 데이터를 불러와서 그리는 함수
+// ★ 실제 데이터를 불러와서 그리는 함수 (그룹핑 로직 적용 수정판)
 async function loadTemplatePage(pageIndex) {
     if (tplIsLoading) return;
     tplIsLoading = true;
@@ -229,11 +229,11 @@ async function loadTemplatePage(pageIndex) {
     const grid = document.getElementById("tplGrid");
     if (!grid) return;
 
-    // 1. 로딩 표시 (기존 그리드 지우고 로딩바)
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#666;">Loading data...</div>';
+    // 1. 로딩 표시
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#666;"><i class="fa-solid fa-spinner fa-spin"></i> Loading data...</div>';
 
-    // 2. 하단 페이징 컨트롤 영역 생성 (그리드 밖 부모 요소에 추가)
-    renderPaginationControls(false); // 로딩 중에는 버튼 비활성화
+    // 2. 페이징 컨트롤 비활성화
+    renderPaginationControls(false); 
 
     if (!sb) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">DB Not Connected</div>';
@@ -242,125 +242,92 @@ async function loadTemplatePage(pageIndex) {
     }
 
     try {
-        const currentKey = window.currentProductKey || (canvas ? canvas.currentProductKey : 'custom') || 'custom';
-        
-       
-        // [수정] 함수 실행 시점의 화면 크기를 체크하여 개수 결정 (모바일 6개, PC 12개)
-        // [수정] 화면 크기에 따라 개수 결정 (모바일 8개, PC 12개)
+        // 화면 크기에 따른 개수 설정
         const currentIsMobile = window.innerWidth < 768;
-        const dynamicPerPage = currentIsMobile ? 8 : 12; // ★ 2줄 x 4개 = 8개로 변경
+        const dynamicPerPage = currentIsMobile ? 8 : 12;
 
         let query = sb.from('library')
             .select('id, thumb_url, tags, category, product_key, created_at')
             .order('created_at', { ascending: false })
-            // 기존 TPL_PER_PAGE 변수 대신, 방금 만든 dynamicPerPage 변수를 사용합니다.
             .range(pageIndex * dynamicPerPage, (pageIndex + 1) * dynamicPerPage - 1);
 
-      
-        query = query.or('product_key.eq.custom,product_key.is.null,product_key.eq."",category.eq.user_vector,category.eq.user_image,category.eq.text');
+        // ★ [수정 1] 쿼리 제약 해제: 카테고리 제한을 없애고 제품키(custom/null)만 필터링
+        // (기존 코드에 있던 category.eq.user_vector 등은 삭제하여 모든 카테고리가 나올 수 있게 함)
+        query = query.or('product_key.eq.custom,product_key.is.null,product_key.eq.""');
         
+        // ★ [수정] 벡터를 객체 그룹으로 이동
+        const groups = {
+            'group_template': ['user_image', 'photo-bg', 'text'],
+            'group_asset': ['vector', 'user_vector', 'graphic', 'transparent-graphic', 'pattern', 'logo']
+        };
+
         if (tplLastCategory && tplLastCategory !== 'all') {
-            // 'user_image' 탭 선택 시 -> 'user_image' + 예전 데이터('text') 모두 가져오기
-            if (tplLastCategory === 'user_image') {
-                query = query.in('category', ['user_image', 'text']);
-            } 
-            // 그 외(user_vector 등)는 해당 카테고리만 정확히 가져오기
-            else {
+            if (groups[tplLastCategory]) {
+                // 그룹 이름이 넘어오면 -> 배열에 포함된 모든 카테고리 검색 (.in)
+                query = query.in('category', groups[tplLastCategory]);
+            } else {
+                // 단일 카테고리가 넘어오면 -> 해당 카테고리만 검색 (.eq)
                 query = query.eq('category', tplLastCategory); 
             }
         }
         
-        // [수정] 키워드 검색 로직 (태그 + 제목 동시 검색)
+        // 키워드 검색 로직
         if (tplLastKeyword && tplLastKeyword.trim() !== '') {
             const term = tplLastKeyword.trim();
-            
-            // 1. 숫자인 경우 ID로 정밀 검색
             if (!isNaN(term)) {
                 query = query.eq('id', term);
-            } 
-            // 2. 문자인 경우 태그(tags) 또는 제목(title)에 포함된 것 검색
-            else {
-                // tags 컬럼과 title 컬럼 모두에서 검색 (OR 조건)
-                // (만약 DB에 title 컬럼이 없다면 `tags.ilike.%${term}%` 만 쓰세요)
+            } else {
                 query = query.or(`tags.ilike.%${term}%,title.ilike.%${term}%`);
             }
         }
 
-        // 제품 필터
-        // const filterCondition = `product_key.eq.${currentKey},product_key.eq.custom,product_key.is.null`;
-        // query = query.or(filterCondition);
-
-        // 4. 실행
+        // 4. 쿼리 실행
         const { data, error } = await query;
-        
         if (error) throw error;
 
-        // 5. 그리드 비우기 (데이터 렌더링 준비)
+        // 5. 그리드 비우기
         grid.innerHTML = "";
 
-        // 데이터가 없을 때
+        // 데이터 없음 처리
         if (!data || data.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
-        No data to display.<br>
-        ${pageIndex > 0 ? '<button class="btn-round" onclick="changeModalTemplatePage(-1)" style="margin-top:10px;">Go back to previous page</button>' : ''}
-    </div>`;
-    renderPaginationControls(true, 0); 
-    tplIsLoading = false;
-    return;
-}
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
+                No data to display.<br>
+                ${pageIndex > 0 ? '<button class="btn-round" onclick="changeModalTemplatePage(-1)" style="margin-top:10px;">Go back</button>' : ''}
+            </div>`;
+            renderPaginationControls(true, 0); 
+            tplIsLoading = false;
+            return;
+        }
 
         // 6. 카드 렌더링
         data.forEach((item) => {
             const card = document.createElement("div");
             card.className = "tpl-item";
             
-            // [수정] 300px -> 200px로 더 줄여서 로딩 속도 극대화
             const rawUrl = item.thumb_url || 'https://via.placeholder.com/200?text=No+Image';
             const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 200) : rawUrl;
-
             const displayTitle = item.tags ? item.tags.split(',')[0] : '무제';
             
-            // [수정] 카테고리별 영문 뱃지 설정
+            // 뱃지 설정
             let badgeText = '';
-            let badgeColor = '#64748b'; // 기본 회색
+            let badgeColor = '#64748b';
 
-            // [수정됨] 카테고리별 영문 뱃지 설정 (Vector 표시 강화)
             switch(item.category) {
-                case 'vector': 
-                    badgeText = 'VECTOR';  // 벡터 강조
-                    badgeColor = '#7c3aed'; // 보라색
-                    break;
-                case 'graphic': 
-                    badgeText = 'PNG Object'; 
-                    badgeColor = '#2563eb'; // 파란색
-                    break;
-                case 'logo': 
-                    badgeText = 'LOGO'; 
-                    badgeColor = '#d97706'; // 주황색
-                    break;
-                case 'user_vector': 
-                    badgeText = 'USER VECTOR'; 
-                    badgeColor = '#9333ea'; 
-                    break;
-                case 'user_image': 
-                    badgeText = 'USER IMG'; 
-                    badgeColor = '#059669'; 
-                    break;
-                
-                // 기존 시스템 템플릿들
+                case 'vector': badgeText = 'VECTOR'; badgeColor = '#7c3aed'; break;
+                case 'graphic': badgeText = 'PNG Object'; badgeColor = '#2563eb'; break;
+                case 'logo': badgeText = 'LOGO'; badgeColor = '#d97706'; break;
+                case 'user_vector': badgeText = 'USER VEC'; badgeColor = '#9333ea'; break;
+                case 'user_image': badgeText = 'USER IMG'; badgeColor = '#059669'; break;
                 case 'photo-bg': badgeText = 'IMAGE'; badgeColor = '#059669'; break;
                 case 'transparent-graphic': badgeText = 'PATTERN'; badgeColor = '#db2777'; break;
-                case 'text': badgeText = 'TEXT'; badgeColor = '#475569'; break;
             }
 
             const isExclusive = item.product_key && item.product_key !== 'custom';
             let finalBadgeHtml = '';
             
             if (isExclusive) {
-                // 전용 상품 (Exclusive)
                 finalBadgeHtml = `<span style="position:absolute; top:8px; left:8px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:3px 6px; border-radius:4px; z-index:2;">Exclusive</span>`;
             } else if (badgeText) {
-                // 일반 카테고리 뱃지
                 finalBadgeHtml = `<span style="position:absolute; top:8px; left:8px; background:${badgeColor}; color:white; font-size:10px; font-weight:bold; padding:3px 6px; border-radius:4px; z-index:2; text-transform:uppercase;">${badgeText}</span>`;
             }
 
@@ -388,7 +355,7 @@ async function loadTemplatePage(pageIndex) {
             grid.appendChild(card);
         });
 
-        // 7. 페이지네이션 버튼 업데이트 (현재 설정된 개수(4, 8, 12 등)를 같이 전달)
+        // 7. 페이지네이션 업데이트
         renderPaginationControls(true, data.length, dynamicPerPage);
 
     } catch (e) {
@@ -1082,53 +1049,74 @@ window.applyStartTemplate = async function(tpl) {
     // 기존 로딩 함수(processLoad)를 'replace' 모드로 실행
    await processLoad('replace');
 };
+// =========================================================
+// ★ [최종 수정] 사이드바 로직 (닫힘 방지 + 배경 고정 강화)
+// =========================================================
 
 let sideCurrentPage = 0;
-const SIDE_ITEMS_PER_PAGE = 5; // ★ 5개 -> 20개로 대폭 상향
+const SIDE_ITEMS_PER_PAGE = 5; 
+let sideCurrentGroup = 'group_template'; 
 
-// =========================================================
-// ★ [수정] 사이드바 템플릿 로드 (20개씩 보기 + 상품/공용 혼합 노출)
-// =========================================================
-export async function loadSideBarTemplates(targetProductKey, keyword = "", page = 0) {
+// [1] 탭 전환 함수
+window.switchSideGroup = function(group) {
+    sideCurrentGroup = group;
+    sideCurrentPage = 0;
+    
+    const btnTpl = document.getElementById('btnSideTabTpl');
+    const btnObj = document.getElementById('btnSideTabObj');
+    
+    if (btnTpl && btnObj) {
+        if (group === 'group_template') {
+            btnTpl.style.background = '#6366f1'; btnTpl.style.color = '#fff'; btnTpl.style.border = 'none';
+            btnObj.style.background = '#fff'; btnObj.style.color = '#64748b'; btnObj.style.border = '1px solid #e2e8f0';
+        } else {
+            btnObj.style.background = '#059669'; btnObj.style.color = '#fff'; btnObj.style.border = 'none';
+            btnTpl.style.background = '#fff'; btnTpl.style.color = '#64748b'; btnTpl.style.border = '1px solid #e2e8f0';
+        }
+    }
+
+    const searchInput = document.getElementById('sideTemplateSearch');
+    if (searchInput) searchInput.value = '';
+    
+    const pKey = window.currentProductKey || 'custom';
+    window.loadSideBarTemplates(pKey, '', 0);
+};
+
+// [2] 사이드바 로드 함수
+window.loadSideBarTemplates = async function(targetProductKey, keyword = "", page = 0) {
     const drawer = document.getElementById("sideTemplateDrawer");
     const list = document.getElementById("sideTemplateList");
-    
     if (!drawer || !list) return;
-
-    sideCurrentPage = page;
 
     if(drawer.style.display !== "flex") drawer.style.display = "flex";
     
-    const msg = keyword ? `"${keyword}" 검색 중...` : "디자인 불러오는 중...";
-    list.innerHTML = `<div style="padding:20px; text-align:center; color:#999; font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> ${msg}</div>`;
+    sideCurrentPage = page;
+    const msg = keyword ? `"${keyword}" 검색...` : "불러오는 중...";
+    list.innerHTML = `<div style="padding:40px 20px; text-align:center; color:#64748b; font-size:13px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#6366f1; margin-bottom:10px;"></i><br>${msg}</div>`;
 
     try {
-        // 1. 쿼리 작성 (20개씩 끊어서 가져오기)
+        const groups = {
+            'group_template': ['user_vector', 'user_image', 'photo-bg', 'text'],
+            'group_asset': ['vector', 'graphic', 'transparent-graphic', 'pattern', 'logo']
+        };
+
         let query = sb.from('library')
             .select('id, thumb_url, title, category, product_key, tags') 
             .eq('status', 'approved')
             .order('created_at', { ascending: false })
             .range(sideCurrentPage * SIDE_ITEMS_PER_PAGE, (sideCurrentPage + 1) * SIDE_ITEMS_PER_PAGE - 1);
 
-        const pKey = targetProductKey || window.currentProductKey || 'custom';
+        const targetCats = groups[sideCurrentGroup];
+        if(targetCats) query = query.in('category', targetCats);
 
-        // ★ [핵심 변경] 특정 상품이라도 '전용 템플릿' + '공용 템플릿'을 같이 보여줍니다.
-        // 이렇게 하면 전용 템플릿이 적어도 리스트가 썰렁하지 않습니다.
-        if (pKey && pKey !== 'custom') {
-             // 상품 코드가 일치하거나 OR 카테고리가 공용(user_vector, image, bg)인 것 모두 검색
-             // (검색어가 있든 없든 항상 풍성하게 보여줍니다)
-             if(keyword) {
-                 query = query.or(`product_key.eq.${pKey},category.in.(user_vector,user_image,photo-bg)`);
-             } else {
-                 // 검색어가 없어도 공용 템플릿을 섞어서 보여줌 (단, 전용이 먼저 나오진 않고 최신순 정렬됨)
-                 query = query.or(`product_key.eq.${pKey},category.in.(user_vector,user_image,photo-bg)`);
-             }
+        const pKey = targetProductKey || window.currentProductKey || 'custom';
+        
+        if (sideCurrentGroup === 'group_template' && pKey && pKey !== 'custom') {
+             query = query.or(`product_key.eq.${pKey},product_key.eq.custom,product_key.is.null,product_key.eq.""`);
         } else {
-            // 자유 모드일 때는 공용 카테고리 전체 노출
-            query = query.in('category', ['user_vector', 'user_image', 'photo-bg']);
+             query = query.or(`product_key.eq.custom,product_key.is.null,product_key.eq.""`);
         }
 
-        // 키워드 검색 필터 추가
         if (keyword && keyword.trim() !== "") {
             const term = keyword.trim();
             query = query.or(`title.ilike.%${term}%,tags.ilike.%${term}%`);
@@ -1137,82 +1125,72 @@ export async function loadSideBarTemplates(targetProductKey, keyword = "", page 
         const { data, error } = await query;
         if (error) throw error;
 
-        // 2. 목록 그리기
         list.innerHTML = "";
         
         if (!data || data.length === 0) {
             list.innerHTML = `
-                <div style="padding:30px 10px; text-align:center; color:#94a3b8; font-size:13px; line-height:1.5;">
-                    <i class="fa-solid fa-circle-exclamation" style="font-size:24px; margin-bottom:10px; opacity:0.5;"></i><br>
+                <div style="padding:60px 20px; text-align:center; color:#94a3b8; font-size:13px;">
+                    <i class="fa-solid fa-folder-open" style="font-size:30px; margin-bottom:10px; opacity:0.5;"></i><br>
                     데이터가 없습니다.<br>
-                    ${sideCurrentPage > 0 ? '<button class="btn-round" onclick="loadSideBarTemplates(null, \'\', 0)" style="margin-top:10px;">처음으로</button>' : ''}
+                    ${page > 0 ? `<button class="btn-round" style="margin-top:15px; width:auto; padding:8px 15px;" onclick="window.loadSideBarTemplates('${pKey}', '${keyword}', 0)">처음으로</button>` : ''}
                 </div>`;
             return;
         }
 
-        data.forEach((tpl, index) => {
+        data.forEach((tpl) => {
             const div = document.createElement("div");
             div.className = "side-tpl-card";
             const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 200) : tpl.thumb_url;
 
-            // 랭킹 뱃지 (1페이지 1~3위만)
             let badgeHtml = "";
-            if (sideCurrentPage === 0 && index < 3 && !keyword) {
-                const rankColors = ["rank-1", "rank-2", "rank-3"];
-                badgeHtml = `<div class="rank-badge ${rankColors[index]}">${index + 1}위</div>`;
-            }
-            
-            // 전용 상품 뱃지 (Exclusive)
-            if (pKey && tpl.product_key === pKey && pKey !== 'custom') {
-                 badgeHtml = `<div class="rank-badge" style="background:#ef4444; border:none;">전용</div>`;
+            if (sideCurrentGroup === 'group_asset' && tpl.category === 'vector') {
+                badgeHtml = `<div style="position:absolute; top:8px; left:8px; background:#7c3aed; color:white; font-size:10px; padding:3px 6px; border-radius:4px; font-weight:bold;">Vector</div>`;
             }
 
             div.innerHTML = `
                 ${badgeHtml}
-                <img src="${imgUrl}" class="side-tpl-img">
-                <div class="side-tpl-info" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                    ${tpl.title || '제목 없음'}
+                <img src="${imgUrl}" class="side-tpl-img" loading="lazy">
+                <div class="side-tpl-info">
+                    ${tpl.title || tpl.tags || '제목 없음'}
                 </div>
             `;
 
             div.onclick = async () => {
-                // [추가] 모바일이면 템플릿 선택 즉시 사이드바 닫기
-                if (window.innerWidth < 768) {
-                    document.getElementById("sideTemplateDrawer").style.display = "none";
-                }
+                // ★ [수정 1] 클릭해도 사이드바 닫지 않음 (모바일 코드 제거)
+                
+                window.selectedTpl = tpl;
 
-                if(confirm("이 디자인을 적용하시겠습니까?\n(현재 캔버스 위에 추가됩니다)")) {
-                    window.selectedTpl = tpl;
-                    if (typeof applyStartTemplate === 'function') {
-                        await applyStartTemplate(tpl);
-                    } else {
-                        window.processLoad('add');
+                if (sideCurrentGroup === 'group_template') {
+                    if(confirm("이 배경 디자인을 적용하시겠습니까?\n(기존 배경은 교체됩니다)")) {
+                        window.processLoad('replace');
                     }
+                } else {
+                    window.processLoad('add'); 
                 }
             };
             list.appendChild(div);
         });
 
-        // 3. 하단 페이징 버튼 (20개씩)
+        // 페이징 버튼
         const paginationDiv = document.createElement("div");
         paginationDiv.className = "sidebar-pagination";
-        paginationDiv.style.cssText = "display:flex; justify-content:center; gap:10px; padding:15px 0;";
+        paginationDiv.style.cssText = "display:flex; justify-content:center; gap:10px; padding:15px 0; margin-top:auto;";
 
         const prevBtn = document.createElement("button");
         prevBtn.className = "side-page-btn";
         prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
         prevBtn.disabled = (sideCurrentPage === 0);
-        prevBtn.onclick = () => loadSideBarTemplates(pKey, keyword, sideCurrentPage - 1);
+        prevBtn.onclick = () => window.loadSideBarTemplates(pKey, keyword, sideCurrentPage - 1);
 
         const pageLabel = document.createElement("span");
         pageLabel.innerText = `${sideCurrentPage + 1}`;
-        pageLabel.style.cssText = "font-weight:bold; color:#64748b; font-size:14px;";
+        pageLabel.style.cssText = "font-weight:bold; color:#64748b; font-size:14px; line-height:32px;";
 
         const nextBtn = document.createElement("button");
         nextBtn.className = "side-page-btn";
         nextBtn.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
         nextBtn.disabled = (data.length < SIDE_ITEMS_PER_PAGE); 
-        nextBtn.onclick = () => loadSideBarTemplates(pKey, keyword, sideCurrentPage + 1);
+        nextBtn.onclick = () => window.loadSideBarTemplates(pKey, keyword, sideCurrentPage + 1);
 
         paginationDiv.appendChild(prevBtn);
         paginationDiv.appendChild(pageLabel);
@@ -1222,73 +1200,47 @@ export async function loadSideBarTemplates(targetProductKey, keyword = "", page 
 
     } catch (e) {
         console.error("사이드바 로드 실패:", e);
-        list.innerHTML = '<div style="padding:20px; text-align:center; color:red; font-size:12px;">로딩 실패</div>';
+        list.innerHTML = '<div style="padding:20px; text-align:center; color:red; font-size:12px;">오류가 발생했습니다.</div>';
     }
-}
-// 전역 함수로 등록
-window.loadSideBarTemplates = loadSideBarTemplates;
-// ★ [핵심 수정] 템플릿 로드 함수 전역 등록 (이게 없어서 에러가 난 것임)
-window.processLoad = processLoad;
-window.useSelectedTemplate = useSelectedTemplate;
+};
 // =========================================================
-// [추가 기능] 배경 잠금/해제 토글 버튼 (원래 있던 버튼 연결)
+// [1] 배경 잠금/해제 토글 함수 (누락된 기능 복구)
 // =========================================================
 window.toggleBackgroundLock = function() {
     if (!canvas) return;
 
-    // 1. 현재 "배경"으로 지정된 객체 찾기
-    let bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
+    // 1. 배경으로 지정된 객체 찾기
+    const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
 
-    // 2. 만약 배경 태그가 붙은 게 없다면? -> 가장 큰 객체를 배경으로 간주
     if (!bgObj) {
-        let largestObj = null;
-        let maxArea = 0;
-        canvas.getObjects().forEach(o => {
-            if (o.type === 'text' || o.type === 'i-text') return; // 텍스트 제외
-            const area = o.getScaledWidth() * o.getScaledHeight();
-            if (area > maxArea) {
-                maxArea = area;
-                largestObj = o;
-            }
-        });
-        if (largestObj) {
-            bgObj = largestObj;
-            bgObj.isTemplateBackground = true; // 태그 붙여주기
-        }
+        alert("잠겨있는 배경 이미지가 없습니다.");
+        return;
     }
 
-    if (!bgObj) return alert("배경으로 설정할 이미지가 없습니다.");
+    // 2. 현재 상태 확인 (선택 불가능하면 잠긴 상태)
+    const isCurrentlyLocked = !bgObj.selectable;
 
-    // 3. 현재 잠겨있는지 확인 (selectable이 false면 잠긴 상태)
-    const isLocked = !bgObj.selectable;
-
-    if (isLocked) {
-        // [잠금 해제] -> 이동/편집 가능하게 변경
+    // 3. 상태 반전 (잠김 <-> 풀림)
+    if (isCurrentlyLocked) {
+        // [해제 모드]
         bgObj.set({
             selectable: true,
-            evented: true,          // 클릭 가능
+            evented: true,
             lockMovementX: false,
             lockMovementY: false,
             lockRotation: false,
             lockScalingX: false,
             lockScalingY: false,
-            hasControls: true,      // 조절점 표시
+            hasControls: true,
             hasBorders: true,
             hoverCursor: 'move'
         });
-        
-        // 사용자가 바로 알 수 있게 선택 처리
-        canvas.setActiveObject(bgObj);
-        
-        // (선택사항) 토스트 메시지나 알림
-        // alert("🔓 배경 잠금이 해제되었습니다. 이동이 가능합니다."); 
-        console.log("배경 잠금 해제됨");
-
+        alert("🔓 배경 잠금이 해제되었습니다. 이제 편집할 수 있습니다.");
     } else {
-        // [다시 잠금] -> 배경 모드로 변경
+        // [잠금 모드]
         bgObj.set({
             selectable: false,
-            evented: false,         // 클릭 통과 (중요)
+            evented: false,
             lockMovementX: true,
             lockMovementY: true,
             lockRotation: true,
@@ -1298,18 +1250,436 @@ window.toggleBackgroundLock = function() {
             hasBorders: false,
             hoverCursor: 'default'
         });
-
-        // 선택 해제 및 맨 뒤로 보내기
-        canvas.discardActiveObject();
-        canvas.sendToBack(bgObj);
-        
-        // 대지(Board)가 있다면 대지는 더 뒤로
-        const board = canvas.getObjects().find(o => o.isBoard);
-        if(board) canvas.sendToBack(board);
-
-        // alert("🔒 배경이 고정되었습니다.");
-        console.log("배경 다시 잠김");
+        alert("🔒 배경이 잠겼습니다.");
     }
 
     canvas.requestRenderAll();
+};
+// =========================================================
+// [중요] 템플릿/객체 불러오기 (다중 페이지 호환성 강화)
+// =========================================================
+window.processLoad = async function(mode) {
+    // ★ 안전장치: 현재 활성화된 캔버스를 확실하게 가져옴
+    const currentCanvas = window.canvas; 
+    if (!currentCanvas) return alert("캔버스가 초기화되지 않았습니다.");
+
+    if (!window.selectedTpl) return alert("선택된 디자인이 없습니다.");
+    
+    const loading = document.getElementById("loading");
+    if(loading) loading.style.display = "flex";
+
+    try {
+        // 1. DB 데이터 조회
+        const { data, error } = await sb
+            .from('library')
+            .select('data_url, width, height, category') 
+            .eq('id', window.selectedTpl.id)
+            .single();
+
+        if (error || !data) throw new Error("데이터 로드 실패");
+
+        // 배경 모드 여부 확인
+        let isBgMode = (window.sideCurrentGroup === 'group_template');
+        if (mode === 'replace') isBgMode = true;
+
+        // 2. 데이터 파싱
+        let jsonData = null;
+        let imageUrl = null;
+        let isImage = false;
+
+        try {
+            if (typeof data.data_url === 'object') jsonData = data.data_url;
+            else jsonData = JSON.parse(data.data_url);
+            
+            if (typeof jsonData === 'string') { isImage = true; imageUrl = jsonData; }
+        } catch (e) {
+            isImage = true; imageUrl = data.data_url;
+        }
+
+        // 3. [배경 교체] 기존 배경 삭제
+        if (mode === 'replace') {
+            // 현재 캔버스에서 배경 태그가 있는 객체를 모두 찾음
+            const oldBgs = currentCanvas.getObjects().filter(o => o.isTemplateBackground);
+            oldBgs.forEach(o => currentCanvas.remove(o));
+        }
+
+        // 4. [설정 적용 함수]
+        const applyForcedSettings = (obj) => {
+            const board = currentCanvas.getObjects().find(o => o.isBoard);
+            let centerX = currentCanvas.width / 2;
+            let centerY = currentCanvas.height / 2;
+            let bW = currentCanvas.width;
+            let bH = currentCanvas.height;
+
+            if (board) {
+                bW = board.getScaledWidth();
+                bH = board.getScaledHeight();
+                centerX = board.left + bW / 2;
+                centerY = board.top + bH / 2;
+            }
+
+            let finalScale = 1;
+
+            if (isBgMode) {
+                // 배경: 꽉 채우기
+                const scaleX = bW / obj.width;
+                const scaleY = bH / obj.height;
+                finalScale = Math.max(scaleX, scaleY); 
+            } else {
+                // 요소: 적당히 맞추기
+                const targetSize = Math.min(bW, bH) * 0.4; 
+                const objSize = Math.max(obj.width, obj.height);
+                finalScale = targetSize / objSize;
+                if(finalScale > 1) finalScale = 1; 
+            }
+
+            obj.set({
+                originX: 'center', originY: 'center',
+                left: centerX, top: centerY,
+                scaleX: finalScale, scaleY: finalScale
+            });
+            
+            obj.setCoords();
+        };
+
+        // 레이어 정리
+        const arrangeLayers = () => {
+            const board = currentCanvas.getObjects().find(o => o.isBoard);
+            const guide = currentCanvas.getObjects().find(o => o.id === 'product_fixed_overlay');
+            const bgObjects = currentCanvas.getObjects().filter(o => o.isTemplateBackground);
+            
+            if (board) currentCanvas.sendToBack(board);
+            
+            bgObjects.forEach(bg => {
+                currentCanvas.sendToBack(bg);
+                if(board) currentCanvas.bringForward(bg);
+            });
+
+            if (guide) currentCanvas.bringToFront(guide);
+            currentCanvas.requestRenderAll();
+        };
+
+        // 5. 로딩 실행 (이미지 vs 벡터)
+        const onObjectLoaded = (obj) => {
+            applyForcedSettings(obj);
+            
+            if (isBgMode) {
+                obj.set({
+                    selectable: false, evented: false,
+                    lockMovementX: true, lockMovementY: true,
+                    hasControls: false, isTemplateBackground: true
+                });
+            } else {
+                obj.set({
+                    selectable: true, evented: true,
+                    isTemplateBackground: false
+                });
+            }
+            
+            currentCanvas.add(obj);
+            arrangeLayers();
+            if(!isBgMode) currentCanvas.setActiveObject(obj);
+            
+            if(loading) loading.style.display = "none";
+        };
+
+        if (isImage) {
+            const cleanUrl = imageUrl.replace(/"/g, '');
+            if (cleanUrl.includes('.svg')) {
+                fabric.loadSVGFromURL(cleanUrl, (objects, options) => {
+                    if (!objects || objects.length === 0) { if(loading) loading.style.display="none"; return; }
+                    const group = fabric.util.groupSVGElements(objects, options);
+                    onObjectLoaded(group);
+                });
+            } else {
+                fabric.Image.fromURL(cleanUrl, (img) => {
+                    if(!img) { if(loading) loading.style.display="none"; return; }
+                    onObjectLoaded(img);
+                }, { crossOrigin: 'anonymous' });
+            }
+        } else {
+            // JSON 벡터 처리
+            const objectsToLoad = jsonData.objects.filter(o => !o.isBoard);
+            fabric.util.enlivenObjects(objectsToLoad, (objs) => {
+                if (!objs || objs.length === 0) { if(loading) loading.style.display="none"; return; }
+
+                const group = new fabric.Group(objs);
+                applyForcedSettings(group);
+                currentCanvas.add(group);
+                
+                // 그룹 해제
+                currentCanvas.setActiveObject(group);
+                const items = group.toActiveSelection(); 
+                currentCanvas.discardActiveObject(); 
+                
+                let largestObj = null;
+                let maxArea = 0;
+
+                objs.forEach(o => {
+                    o.setCoords();
+                    // 기본 잠금 해제
+                    o.set({
+                        selectable: true, evented: true,
+                        lockMovementX: false, lockMovementY: false,
+                        hasControls: true, isTemplateBackground: false
+                    });
+
+                    if (isBgMode && !o.type.includes('text')) {
+                        const area = o.getScaledWidth() * o.getScaledHeight();
+                        if (area > maxArea) { maxArea = area; largestObj = o; }
+                    }
+                });
+
+                if (isBgMode && largestObj) {
+                    largestObj.set({
+                        selectable: false, evented: false,
+                        lockMovementX: true, lockMovementY: true,
+                        hasControls: false, isTemplateBackground: true
+                    });
+                    currentCanvas.sendToBack(largestObj);
+                } else if (!isBgMode) {
+                    const sel = new fabric.ActiveSelection(objs, { canvas: currentCanvas });
+                    currentCanvas.setActiveObject(sel);
+                }
+
+                arrangeLayers();
+                if(loading) loading.style.display = "none";
+            });
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("오류: " + e.message);
+        if(loading) loading.style.display = "none";
+    }
+};
+// =========================================================
+// [중요] 템플릿/객체 불러오기 (배경 교체 시 글씨 유지 로직 적용)
+// =========================================================
+window.processLoad = async function(mode) {
+    if (!window.selectedTpl) return alert("선택된 디자인이 없습니다.");
+    
+    const loading = document.getElementById("loading");
+    if(loading) loading.style.display = "flex";
+
+    try {
+        // 1. DB 데이터 조회
+        const { data, error } = await sb
+            .from('library')
+            .select('data_url, width, height, category') 
+            .eq('id', window.selectedTpl.id)
+            .single();
+
+        if (error || !data) throw new Error("데이터 로드 실패");
+
+        // ★ 배경 모드 여부 결정
+        let isBgMode = (window.sideCurrentGroup === 'group_template');
+        if (mode === 'replace') isBgMode = true;
+
+        // 2. 데이터 파싱
+        let jsonData = null;
+        let imageUrl = null;
+        let isImage = false;
+
+        try {
+            if (typeof data.data_url === 'object') jsonData = data.data_url;
+            else jsonData = JSON.parse(data.data_url);
+            
+            if (typeof jsonData === 'string') { isImage = true; imageUrl = jsonData; }
+        } catch (e) {
+            isImage = true; imageUrl = data.data_url;
+        }
+
+        // 3. ★ [핵심 수정] 기존 배경만 지우기 (글씨/요소 유지)
+        if (mode === 'replace') {
+            // 캔버스 전체를 비우지 않고, '배경으로 지정된 객체'만 찾아서 제거합니다.
+            const oldBgs = canvas.getObjects().filter(o => o.isTemplateBackground);
+            oldBgs.forEach(o => canvas.remove(o));
+        }
+
+        // 4. [설정 적용 함수]
+        const applyForcedSettings = (obj) => {
+            const board = canvas.getObjects().find(o => o.isBoard);
+            let centerX = canvas.width / 2;
+            let centerY = canvas.height / 2;
+            let bW = canvas.width;
+            let bH = canvas.height;
+
+            if (board) {
+                bW = board.getScaledWidth();
+                bH = board.getScaledHeight();
+                centerX = board.left + bW / 2;
+                centerY = board.top + bH / 2;
+            }
+
+            let finalScale = 1;
+
+            if (isBgMode) {
+                // [배경 모드] 꽉 채우기 (Cover)
+                const scaleX = bW / obj.width;
+                const scaleY = bH / obj.height;
+                finalScale = Math.max(scaleX, scaleY); 
+            } else {
+                // [객체 모드] 적당히 줄이기 (Fit)
+                const targetSize = Math.min(bW, bH) * 0.4; 
+                const objSize = Math.max(obj.width, obj.height);
+                finalScale = targetSize / objSize;
+                if(finalScale > 1) finalScale = 1; 
+            }
+
+            obj.set({
+                originX: 'center', originY: 'center',
+                left: centerX, top: centerY,
+                scaleX: finalScale, scaleY: finalScale
+            });
+            
+            obj.setCoords();
+        };
+
+        // 레이어 정리 함수
+        const arrangeLayers = () => {
+            const board = canvas.getObjects().find(o => o.isBoard);
+            const guide = canvas.getObjects().find(o => o.id === 'product_fixed_overlay');
+            const bgObjects = canvas.getObjects().filter(o => o.isTemplateBackground);
+            
+            // 1. 대지를 맨 뒤로
+            if (board) canvas.sendToBack(board);
+            
+            // 2. 배경 객체들을 그 위로 (일반 요소보다 뒤)
+            bgObjects.forEach(bg => {
+                canvas.sendToBack(bg);
+                if(board) canvas.bringForward(bg);
+            });
+
+            // 3. 가이드는 맨 앞으로
+            if (guide) canvas.bringToFront(guide);
+            canvas.requestRenderAll();
+        };
+
+        // 5. 실제 로딩 실행
+        if (isImage) {
+            // [이미지/SVG 로드]
+            const cleanUrl = imageUrl.replace(/"/g, '');
+            const isSvg = cleanUrl.includes('.svg');
+
+            const handleLoadedObj = (obj) => {
+                applyForcedSettings(obj);
+                
+                if (isBgMode) {
+                    // 배경 모드면 잠금
+                    obj.set({
+                        selectable: false, evented: false,
+                        lockMovementX: true, lockMovementY: true,
+                        hasControls: false, isTemplateBackground: true
+                    });
+                } else {
+                    // 객체 모드면 해제
+                    obj.set({
+                        selectable: true, evented: true,
+                        isTemplateBackground: false
+                    });
+                }
+                
+                canvas.add(obj);
+                arrangeLayers(); // 레이어 순서 정리 (배경은 뒤로)
+                if(!isBgMode) canvas.setActiveObject(obj);
+                
+                if(loading) loading.style.display = "none";
+            };
+
+            if (isSvg) {
+                fabric.loadSVGFromURL(cleanUrl, (objects, options) => {
+                    if (!objects || objects.length === 0) {
+                        if(loading) loading.style.display = "none";
+                        return;
+                    }
+                    const group = fabric.util.groupSVGElements(objects, options);
+                    handleLoadedObj(group);
+                });
+            } else {
+                fabric.Image.fromURL(cleanUrl, (img) => {
+                    if(!img) {
+                        if(loading) loading.style.display = "none";
+                        return;
+                    }
+                    handleLoadedObj(img);
+                }, { crossOrigin: 'anonymous' });
+            }
+        } else {
+            // [JSON 벡터 로드]
+            const objectsToLoad = jsonData.objects.filter(o => !o.isBoard);
+            
+            fabric.util.enlivenObjects(objectsToLoad, (objs) => {
+                if (!objs || objs.length === 0) {
+                    if(loading) loading.style.display = "none";
+                    return;
+                }
+
+                const group = new fabric.Group(objs);
+                applyForcedSettings(group);
+                canvas.add(group);
+                
+                // 그룹 해제 (낱개로 풀기 - 글씨 편집 가능하도록)
+                canvas.setActiveObject(group);
+                const items = group.toActiveSelection(); 
+                canvas.discardActiveObject(); 
+                
+                let largestObj = null;
+                let maxArea = 0;
+
+                objs.forEach(o => {
+                    o.setCoords();
+
+                    // 일단 모두 잠금 해제
+                    o.set({
+                        selectable: true, evented: true,
+                        lockMovementX: false, lockMovementY: false,
+                        lockRotation: false, lockScalingX: false, lockScalingY: false,
+                        hasControls: true, isTemplateBackground: false
+                    });
+
+                    // 배경 모드라면 가장 큰 도형 찾기 (텍스트 제외)
+                    if (isBgMode) {
+                        if (!o.type.includes('text')) {
+                            const area = o.getScaledWidth() * o.getScaledHeight();
+                            if (area > maxArea) {
+                                maxArea = area;
+                                largestObj = o;
+                            }
+                        }
+                    }
+                });
+
+                // 배경 모드: 가장 큰 것만 잠그고 배경 태그 달기
+                if (isBgMode && largestObj) {
+                    largestObj.set({
+                        selectable: false, evented: false,
+                        lockMovementX: true, lockMovementY: true,
+                        hasControls: false,
+                        isTemplateBackground: true
+                    });
+                    canvas.sendToBack(largestObj);
+                    arrangeLayers(); // 레이어 재정렬
+                } 
+                // 객체 모드: 전체 선택
+                else if (!isBgMode) {
+                    const sel = new fabric.ActiveSelection(objs, { canvas: canvas });
+                    canvas.setActiveObject(sel);
+                    
+                    if(loading) loading.style.display = "none";
+                    return; 
+                }
+
+                arrangeLayers();
+                canvas.requestRenderAll();
+                
+                if(loading) loading.style.display = "none";
+            });
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("오류: " + e.message);
+        if(loading) loading.style.display = "none";
+    }
 };

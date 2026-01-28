@@ -9,173 +9,83 @@ import { showLoading } from "./global_common.js";
 let currentMemberPage = 1;
 const memberItemsPerPage = 30; // 한 페이지당 30명
 
-// [회원 목록 로드]
+// [회원 목록 로드] - 원상복구
 window.loadMembers = async (isNewSearch = false) => { 
-    // 검색이나 필터 변경 시 1페이지로 초기화
     if(isNewSearch) currentMemberPage = 1;
 
     const keyword = document.getElementById('memberSearchInput') ? document.getElementById('memberSearchInput').value.trim() : '';
     const sortVal = document.getElementById('memberSort').value;
     const roleVal = document.getElementById('memberFilterRole').value;
-    
     const tbody = document.getElementById('memberListBody'); 
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
     
-    // 1. 쿼리 구성 (전체 개수 파악을 위해 count 옵션 사용)
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
+    
     let query = sb.from('profiles').select('*', { count: 'exact' });
-    
-    // 필터 조건
     if (roleVal !== 'all') query = query.eq('role', roleVal);
     if (keyword) query = query.ilike('email', `%${keyword}%`);
 
-    // 2. 정렬 조건
     if (sortVal === 'deposit_desc') query = query.order('deposit', { ascending: false });
     else if (sortVal === 'deposit_asc') query = query.order('deposit', { ascending: true });
     else if (sortVal === 'mileage_desc') query = query.order('mileage', { ascending: false });
     else if (sortVal === 'spend_desc') query = query.order('total_spend', { ascending: false });
-    else query = query.order('created_at', { ascending: false }); // 기본값
+    else query = query.order('created_at', { ascending: false });
 
-    // 3. 페이지네이션 범위 설정 (0부터 시작)
     const from = (currentMemberPage - 1) * memberItemsPerPage;
     const to = from + memberItemsPerPage - 1;
-    
-    const { data: members, error, count } = await query.range(from, to);
+    const { data: members, count } = await query.range(from, to);
 
-    if (error) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">로드 실패: ${error.message}</td></tr>`;
-        return;
-    }
-
-    // 4. 상단 정보 업데이트 (전체 인원수 & 페이지 번호)
-    const totalCount = count || 0;
-    document.getElementById('totalMemberCount').innerText = `${totalCount.toLocaleString()}명`;
-    
-    const totalPages = Math.ceil(totalCount / memberItemsPerPage) || 1;
+    document.getElementById('totalMemberCount').innerText = `${(count||0).toLocaleString()}명`;
+    const totalPages = Math.ceil((count||0) / memberItemsPerPage) || 1;
     document.getElementById('memberPageLabel').innerText = `Page ${currentMemberPage} / ${totalPages}`;
 
-    // 5. 테이블 렌더링
     tbody.innerHTML = '';
     if (!members || members.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">회원이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">회원이 없습니다.</td></tr>';
         return;
     }
 
     members.forEach(m => {
-        const r = m.role || 'customer';
-        const deposit = m.deposit || 0; 
-        const mileage = m.mileage || 0;
-        
-        // [수정] 이름 표시 우선순위 강화 (full_name > user_name > name > 이메일 앞부분)
-        let name = m.full_name || m.user_name || m.name;
-        if (!name && m.email) {
-            name = m.email.split('@')[0]; // 이름이 없으면 이메일 아이디 사용
-        }
-        name = name || '이름 미등록';
-        
-        const memo = m.admin_memo || '';
+        let name = m.full_name || m.user_name || m.email?.split('@')[0] || '미등록';
+        let badgeColor = '#f1f5f9'; let displayRole = '일반';
+        if (m.role === 'gold') { badgeColor = '#fef9c3'; displayRole = '골드'; }
+        if (m.role === 'platinum') { badgeColor = '#e0f2fe'; displayRole = '플레티넘'; }
+        if (m.role === 'franchise') { badgeColor = '#f3e8ff'; displayRole = '가맹점'; }
+        if (m.role === 'admin') { badgeColor = '#fee2e2'; displayRole = '관리자'; }
 
         // 등급 선택 박스
         const roleSelect = `
-            <select onchange="updateMemberRole('${m.id}', this.value)" style="padding:2px; border:1px solid #cbd5e1; border-radius:4px; width:100%; font-size:11px;">
-                <option value="customer" ${r==='customer'?'selected':''}>일반</option>
-                <option value="gold" ${r==='gold'?'selected':''}>🥇 골드</option>
-                <option value="platinum" ${r==='platinum'?'selected':''}>💎 플레티넘</option>
-                <option value="franchise" ${r==='franchise'?'selected':''}>🏢 가맹점</option>
-                <option value="admin" ${r==='admin'?'selected':''}>🛠 관리자</option>
+            <select onchange="updateMemberRole('${m.id}', this.value)" style="border:1px solid #ddd; font-size:11px;">
+                <option value="customer" ${m.role==='customer'?'selected':''}>일반</option>
+                <option value="gold" ${m.role==='gold'?'selected':''}>골드</option>
+                <option value="platinum" ${m.role==='platinum'?'selected':''}>플레티넘</option>
+                <option value="franchise" ${m.role==='franchise'?'selected':''}>가맹점</option>
+                <option value="admin" ${m.role==='admin'?'selected':''}>관리자</option>
             </select>
         `;
 
-        // 기여자 등급 선택 박스
-        const tier = m.contributor_tier || 'regular';
-        const tierSelect = `
-            <div style="margin-top:2px; display:flex; align-items:center; gap:2px;">
-                <span style="font-size:10px; color:#6366f1; font-weight:bold;">기여:</span>
-                <select onchange="updateContributorTier('${m.id}', this.value)" style="padding:1px; border:1px solid #6366f1; color:#6366f1; border-radius:4px; font-weight:bold; font-size:10px; flex:1;">
-                    <option value="regular" ${tier==='regular'?'selected':''}>😐 일반</option>
-                    <option value="excellent" ${tier==='excellent'?'selected':''}>🏆 우수</option>
-                    <option value="hero" ${tier==='hero'?'selected':''}>👑 영웅</option>
-                </select>
-            </div>
-        `;
-
-        // 자산 관리 버튼 (예치금/마일리지)
-        const walletBtn = `
-            <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${deposit})" style="width:100%; margin-bottom:2px; padding:2px;">
-                <i class="fa-solid fa-coins" style="color:#eab308;"></i> 예치금
-            </button>
-            <button class="btn btn-outline btn-sm" onclick="editMileageManual('${m.id}', '${m.email}', ${mileage})" style="width:100%; padding:2px;">
-                <i class="fa-solid fa-star" style="color:#059669;"></i> 마일리지
-            </button>
-        `;
-
-        // 등급 뱃지 스타일
-        // 등급 뱃지 스타일 & 텍스트 (한글화)
-        let badgeColor = '#f1f5f9'; let badgeText = '#64748b';
-        let displayRole = '일반'; // 기본값
-
-        if (r === 'gold') { 
-            badgeColor = '#fef9c3'; badgeText = '#ca8a04'; 
-            displayRole = '골드';
-        }
-        if (r === 'platinum') { 
-            badgeColor = '#e0f2fe'; badgeText = '#0369a1'; 
-            displayRole = '플레티넘'; // [수정] PLATINUM -> 플레티넘
-        }
-        if (r === 'franchise') { 
-            badgeColor = '#f3e8ff'; badgeText = '#7e22ce'; 
-            displayRole = '가맹점';
-        }
-        if (r === 'admin') { 
-            badgeColor = '#fee2e2'; badgeText = '#dc2626'; 
-            displayRole = '관리자';
-        }
-
-        // 메모 입력창
         const memoHtml = `
-            <div style="display:flex; flex-direction:column; gap:2px;">
-                <textarea id="memo_${m.id}" style="width:100%; height:34px; font-size:11px; padding:4px; border:1px solid #e2e8f0; border-radius:4px; resize:vertical; box-sizing:border-box;">${memo}</textarea>
-                <button class="btn btn-sky btn-sm" style="align-self:flex-end; padding:1px 6px; font-size:10px;" onclick="updateMemberMemo('${m.id}')">저장</button>
+            <div style="display:flex; gap:2px;">
+                <input id="memo_${m.id}" value="${m.admin_memo||''}" style="width:100%; border:1px solid #eee; font-size:11px;">
+                <button class="btn btn-sky btn-sm" onclick="updateMemberMemo('${m.id}')">저장</button>
             </div>
         `;
 
         tbody.innerHTML += `
             <tr style="border-bottom:1px solid #f1f5f9; height:50px;">
                 <td style="color:#64748b; font-size:12px; text-align:center;">${new Date(m.created_at).toLocaleDateString()}</td>
-                
                 <td style="padding:10px 15px;">
-                    <div style="font-weight:bold; font-size:15px; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px;">
-                        ${name}
-                    </div>
-                    <div style="font-size:12px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.email}">
-                        <i class="fa-regular fa-envelope"></i> ${m.email}
-                    </div>
-                    <div style="font-size:11px; color:#6366f1; margin-top:2px;">
-                        ${m.phone ? '<i class="fa-solid fa-phone"></i> ' + m.phone : ''}
-                    </div>
+                    <div style="font-weight:bold; font-size:14px; color:#1e293b;">${name}</div>
+                    <div style="font-size:12px; color:#64748b;">${m.email}</div>
                 </td>
-                
                 <td style="text-align:right; padding:10px 15px;">
-                   <div style="font-size:13px; margin-bottom:2px;">💰 <b style="color:#334155;">${deposit.toLocaleString()}</b></div>
-                   <div style="font-size:13px;">Ⓜ️ <b style="color:#059669;">${mileage.toLocaleString()}</b></div>
-                   <div style="font-size:10px; color:#94a3b8; margin-top:3px;">(총구매: ${(m.total_spend || 0).toLocaleString()})</div>
+                   <div style="font-size:13px;">💰 ${(m.deposit||0).toLocaleString()} / Ⓜ️ ${(m.mileage||0).toLocaleString()}</div>
                 </td>
-                
                 <td style="padding:5px; text-align:center;">
-                    ${walletBtn}
+                    <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${m.deposit||0})">예치금</button>
                 </td> 
-                
-                <td style="padding:5px 15px;">
-                    ${memoHtml}
-                </td>
-                
-                <td style="text-align:center;">
-                    <span class="badge" style="background:${badgeColor}; color:${badgeText}; border:1px solid ${badgeColor}; font-size:11px; padding:4px 8px;">${displayRole}</span>
-                </td>
-                
-                <td style="padding:5px 15px;">
-                    ${roleSelect}
-                    ${tierSelect}
-                </td>
+                <td style="padding:5px 15px;">${memoHtml}</td>
+                <td style="text-align:center;"><span class="badge" style="background:${badgeColor}; font-size:11px;">${displayRole}</span></td>
+                <td style="padding:5px 15px;">${roleSelect}</td>
             </tr>
         `;
     });
@@ -207,14 +117,27 @@ window.updateMemberRole = async (id, newRole) => {
     else alert("변경되었습니다."); 
 };
 
-// [기여자 등급 변경]
+// [기여자 등급 변경] - 패널티 사유 입력 기능 추가
 window.updateContributorTier = async (id, newTier) => {
-    if(!confirm("기여자 등급을 변경하시겠습니까?")) {
-        loadMembers(false); return;
+    let reason = null;
+
+    if (newTier === 'penalty') {
+        reason = prompt("🚫 패널티 부여 사유를 입력해주세요.\n(이 내용은 사용자 마이페이지에 표시됩니다.)", "저작권 위반 / 부적절한 이미지");
+        if (reason === null) { // 취소 시 복구
+            loadMembers(false); 
+            return;
+        }
+    } else {
+        if(!confirm("기여자 등급을 변경하시겠습니까?")) {
+            loadMembers(false); return;
+        }
     }
-    const { error } = await sb.from('profiles').update({ contributor_tier: newTier }).eq('id', id);
+
+    const updateData = { contributor_tier: newTier, penalty_reason: reason };
+    const { error } = await sb.from('profiles').update(updateData).eq('id', id);
+    
     if(error) alert("실패: " + error.message);
-    else alert("변경되었습니다.");
+    else { alert("변경되었습니다."); loadMembers(false); }
 };
 
 // =======================================================
@@ -501,94 +424,162 @@ window.approvePartnerApp = async (appId, userId, region, companyName) => {
     }
 };
 
-// [출금 요청 목록 로드]
+// [출금 요청 관리] - 이미지 확인, 기여자 등급, 사유 메모 기능 통합
 window.loadWithdrawals = async () => {
     const tbody = document.getElementById('withdrawalListBody');
     if(!tbody) return;
-    
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">로딩 중...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">로딩 중...</td></tr>';
 
     try {
+        // 1. 출금 요청 목록 조회
         const { data: requests, error } = await sb.from('withdrawal_requests')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(50); 
-
+            
         if (error) throw error;
 
         if (!requests || requests.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">출금 신청 내역이 없습니다.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">출금 신청이 없습니다.</td></tr>';
             return;
         }
 
         const userIds = [...new Set(requests.map(r => r.user_id))];
         
+        // 2. 유저 정보 조회 (모든 컬럼 조회로 오류 방지)
         const { data: users, error: userError } = await sb.from('profiles')
-            .select('id, email, full_name')
+            .select('*') 
             .in('id', userIds);
-
-        if(userError) console.error("프로필 조회 실패:", userError);
+            
+        if(userError) console.error("프로필 조회 에러:", userError);
 
         const userMap = {};
         if (users) users.forEach(u => userMap[u.id] = u);
 
+        // 3. 최근 이미지 조회 (한도 1000개로 증가)
+        const { data: images } = await sb.from('library')
+            .select('user_id, data_url')
+            .in('user_id', userIds)
+            .order('created_at', { ascending: false })
+            .limit(1000); 
+            
+        const imageList = images || [];
+
         tbody.innerHTML = '';
         requests.forEach(r => {
-            const amount = (r.amount || 0).toLocaleString() + '원';
-            const date = new Date(r.created_at).toLocaleDateString();
-            
-            const bankName = r.bank_name || '은행미상';
-            const accHolder = r.account_holder || '예금주미상';
-            const accNum = r.account_number || '-';
-            
-            const bankInfoHtml = `
-                <div>
-                    <span style="font-weight:bold; color:#334155;">${bankName}</span> 
-                    <span style="font-size:11px; color:#64748b;">(${accHolder})</span>
-                </div>
-                <div style="font-size:12px; color:#475569; letter-spacing:0.5px;">${accNum}</div>
-            `;
-
-            const residentNum = r.resident_number || r.rrn || '-';
-
             const user = userMap[r.user_id];
-            const displayUser = user ? 
-                `<div><span style="font-weight:bold;">${user.full_name || '이름미상'}</span></div><div style="font-size:11px; color:#888;">${user.email}</div>` 
-                : `<span style="font-size:11px; color:#999;">삭제된 회원<br>(${r.user_id ? r.user_id.substring(0,8) : 'unknown'}...)</span>`;
-
-            let statusBadge = `<span class="badge" style="background:#f1f5f9; color:#64748b;">${r.status}</span>`;
-            let actionBtn = '-';
-
-            if (r.status === 'pending') {
-                statusBadge = `<span class="badge" style="background:#fee2e2; color:#ef4444;">승인대기</span>`;
-                actionBtn = `
-                    <div style="display:flex; gap:4px; justify-content:center;">
-                        <button class="btn btn-success btn-sm" onclick="approveWithdrawal('${r.id}')">승인(지급)</button>
-                    </div>
-                `;
-            } else if (r.status === 'approved') {
-                statusBadge = `<span class="badge" style="background:#dcfce7; color:#15803d;">지급완료</span>`;
-                actionBtn = `<span style="font-size:11px; color:#aaa;">처리됨</span>`;
+            
+            // 이름 필드 찾기
+            let userName = '이름미상';
+            let userEmail = '이메일 없음';
+            
+            if (user) {
+                userName = user.full_name || user.user_name || user.name || '이름미상';
+                userEmail = user.email || '';
             }
 
+            // 유저 정보 표시 HTML
+            const displayUser = user ? 
+                `<div><b>${userName}</b></div><div style="font-size:11px; color:#888;">${userEmail}</div>` 
+                : `<div style="color:#ef4444; font-weight:bold;">정보 없음</div><div style="font-size:10px; color:#999;">ID: ${r.user_id}</div>`;
+
+            // 이미지 3개 표시
+            const myImgs = imageList.filter(img => img.user_id === r.user_id).slice(0, 3);
+            let imgHtml = '<div style="display:flex; gap:4px;">';
+            if(myImgs.length === 0) imgHtml += '<span style="font-size:11px; color:#ccc;">없음</span>';
+            else {
+                myImgs.forEach(img => {
+                    let src = img.data_url;
+                    try { if (src.startsWith('{')) src = JSON.parse(src).thumbnail || ''; } catch(e){}
+                    if(src) imgHtml += `<img src="${src}" onclick="window.open('${src}')" style="width:36px; height:36px; border-radius:4px; border:1px solid #ddd; cursor:pointer; object-fit:cover;">`;
+                });
+            }
+            imgHtml += '</div>';
+
+            // 등급 & 메모 컨트롤
+            let tierControl = '-';
+            if (user) {
+                const tier = user.contributor_tier || 'regular';
+                const memo = user.penalty_reason || '';
+                const isPenalty = tier === 'penalty';
+                const style = isPenalty ? 'border:1px solid #ef4444; color:#ef4444; background:#fef2f2;' : 'border:1px solid #cbd5e1;';
+                
+                tierControl = `
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <select onchange="updateContributorTier('${user.id}', this.value)" style="padding:3px; border-radius:4px; font-size:11px; width:100%; font-weight:bold; ${style}">
+                            <option value="regular" ${tier==='regular'?'selected':''}>😐 일반</option>
+                            <option value="excellent" ${tier==='excellent'?'selected':''}>🏆 우수</option>
+                            <option value="hero" ${tier==='hero'?'selected':''}>👑 영웅</option>
+                            <option value="penalty" ${tier==='penalty'?'selected':''}>🚫 패널티(50원)</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" onclick="editPenaltyMemo('${user.id}', '${memo}')" style="width:100%; padding:2px; font-size:10px; display:flex; align-items:center; justify-content:center; gap:3px;">
+                            <i class="fa-regular fa-comment-dots"></i> ${memo ? '메모수정' : '메모작성'}
+                        </button>
+                    </div>
+                `;
+            } else {
+                 tierControl = `<span style="font-size:11px; color:#ccc;">회원정보 로드불가</span>`;
+            }
+
+            // 상태 뱃지 및 버튼
+            let statusHtml = r.status === 'pending' 
+                ? `<span class="badge" style="background:#fee2e2; color:#ef4444;">승인대기</span>` 
+                : `<span class="badge" style="background:#dcfce7; color:#15803d;">지급완료</span>`;
+            
+            let actionBtn = r.status === 'pending'
+                ? `<button class="btn btn-success btn-sm" onclick="approveWithdrawal('${r.id}')">승인(지급)</button>`
+                : `<span style="font-size:11px; color:#aaa;">완료됨</span>`;
+
             tbody.innerHTML += `
-                <tr>
-                    <td>${date}</td>
+                <tr style="height:60px;">
+                    <td style="font-size:12px;">${new Date(r.created_at).toLocaleDateString()}</td>
                     <td>${displayUser}</td>
-                    <td style="text-align:right; font-weight:bold; color:#d97706;">${amount}</td>
-                    <td style="letter-spacing:1px;">${residentNum}</td>
-                    <td>${bankInfoHtml}</td>
-                    <td style="text-align:center;">${statusBadge}</td>
+                    <td>${imgHtml}</td>
+                    <td style="text-align:right; font-weight:bold; color:#d97706;">${(r.amount||0).toLocaleString()}원</td>
+                    <td style="padding:5px 10px;">${tierControl}</td>
+                    <td style="font-size:12px;">
+                        <div><b>${r.bank_name}</b> (${r.account_holder})</div>
+                        <div style="color:#666;">${r.account_number}</div>
+                    </td>
+                    <td style="text-align:center;">${statusHtml}</td>
                     <td style="text-align:center;">${actionBtn}</td>
                 </tr>`;
         });
-
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">${e.message}</td></tr>`;
     }
 };
 
+// [기여자 등급 변경 함수 - 필수]
+window.updateContributorTier = async (id, newTier) => {
+    let reason = null;
+    if (newTier === 'penalty') {
+        reason = prompt("🚫 패널티 사유를 입력해주세요 (유저에게 표시됨):", "저작권 위반 / 퀄리티 미달");
+        if (reason === null) { loadWithdrawals(); return; }
+    } else {
+        if(!confirm(`등급을 변경하시겠습니까?`)) { loadWithdrawals(); return; }
+    }
+
+    const updateData = { contributor_tier: newTier };
+    if (reason !== null) updateData.penalty_reason = reason;
+
+    const { error } = await sb.from('profiles').update(updateData).eq('id', id);
+    if(error) alert("오류: " + error.message);
+    else { alert("반영되었습니다."); loadWithdrawals(); }
+};
+
+// [메모(사유)만 수정하는 함수]
+window.editPenaltyMemo = async (id, currentMemo) => {
+    const newMemo = prompt("고객에게 전달할 메모(사유)를 입력하세요:", currentMemo);
+    if (newMemo === null) return;
+
+    const { error } = await sb.from('profiles').update({ penalty_reason: newMemo }).eq('id', id);
+    if(error) alert("오류: " + error.message);
+    else { alert("메모가 저장되었습니다."); loadWithdrawals(); }
+};
+
+// [승인(지급) 처리 함수 - 이게 없어서 에러가 났습니다]
 window.approveWithdrawal = async (requestId) => {
     if(!confirm("해당 건을 '입금완료' 처리하시겠습니까?")) return;
 

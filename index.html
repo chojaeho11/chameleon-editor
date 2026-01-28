@@ -145,31 +145,18 @@
 <div class="topbar">
         <div class="brand" onclick="location.reload()"><i class="fa-solid fa-palette"></i> Chameleon</div>
         
-        <div class="template-tabs" style="display:none;">
-            <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('photo-bg');">🎨 <span data-i18n="tab_all">템플릿</span></button>
+        <div class="template-tabs">
+            <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');">🎨 템플릿</button>
             
-            <button class="tpl-tab active" data-tpl="all" 
-                style="background: linear-gradient(135deg, #410175 0%, #f00064 100%); color: #fff; font-weight: 800; border: none; box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3); margin-right: 5px;">
-                🎨 전체 템플릿
+            <button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template', this);" 
+                style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-weight: 800; border: none; margin-right: 5px;">
+                🎨 템플릿 (배경)
             </button>
 
-            <button class="tpl-tab" data-tpl="user_vector">
-   유저 템플릿 벡터
-</button>
-
-<button class="tpl-tab" data-tpl="user_image">
-   유저 템플릿 이미지
-</button>
-
-            <button class="tpl-tab" data-tpl="photo-bg">사진</button>
-
-            <button class="tpl-tab" data-tpl="vector" data-i18n="tab_vector">배경</button>
-
-            <button class="tpl-tab" data-tpl="graphic" data-i18n="tab_graphic">객체</button>
-
-            <button class="tpl-tab" data-tpl="transparent-graphic" data-i18n="tab_pattern">패턴</button>
-
-            <button class="tpl-tab" data-tpl="logo" data-i18n="tab_logo">로고</button>
+            <button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_asset', this);" 
+                style="background: #fff; color: #059669; border: 1px solid #059669; font-weight: 800;">
+                🧩 객체 (요소/벡터)
+            </button>
         </div>
         
         <div style="flex:1;"></div>
@@ -1059,6 +1046,8 @@
             <label class="upload-box" for="imgUpload" style="height: 60px; padding: 10px;"><span style="font-size:18px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> <span style="font-size: 12px;">Image/PDF</span></label>
             <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
         </div>
+
+        
         
         <div id="sideTemplateDrawer" class="side-drawer" style="display:none;">
             <div class="drawer-header">
@@ -1068,13 +1057,29 @@
                 </button>
             </div>
             
-            <div class="drawer-search-box">
-                <input type="text" id="sideTemplateSearch" placeholder="디자인 검색 (예: 카페, 세일)" autocomplete="off" onkeyup="window.handleSideSearch(this.value)">
-                <i class="fa-solid fa-magnifying-glass"></i>
+            <div style="display:flex; padding:15px 15px 0 15px; gap:8px;">
+                <button id="btnSideTabTpl" class="btn-round" onclick="window.switchSideGroup('group_template')" 
+                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#6366f1; color:white; border:none; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                    템플릿
+                </button>
+                <button id="btnSideTabObj" class="btn-round" onclick="window.switchSideGroup('group_asset')" 
+                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#fff; color:#64748b; border:1px solid #e2e8f0; font-weight:bold;">
+                    요소
+                </button>
             </div>
 
-            <div id="sideTemplateList" class="drawer-content">
+            <div class="drawer-search-box" style="padding:15px; margin-bottom:0;">
+                <div style="position:relative;">
+                    <input type="text" id="sideTemplateSearch" 
+                           placeholder="검색어 입력 (예: 카페, 세일)" 
+                           autocomplete="off" 
+                           onkeyup="window.handleSideSearch(this.value)"
+                           style="width:100%; padding:10px 10px 10px 35px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:13px; outline:none;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
                 </div>
+            </div>
+
+            <div id="sideTemplateList" class="drawer-content" style="padding-top:0;"></div>
         </div>
 
         <div class="stage" id="stage">
@@ -1376,35 +1381,12 @@
 <div id="templateOverlay">
     <div class="tpl-modal-box">
         <div class="tpl-sidebar">
-            <button class="tpl-cate-btn" onclick="window.filterTpl('all', this)">
-                <span style="font-weight:800; color:#6366f1;">🎨 전체 디자인</span>
+            <button class="tpl-cate-btn active" onclick="window.filterTpl('group_template', this)">
+                <span style="font-weight:800; color:#6366f1; font-size:16px;">🎨 템플릿</span>
             </button>
             
-            <button class="tpl-cate-btn" onclick="window.filterTpl('user_vector', this)">
-    <span>유저 템플릿 (벡터)</span>
-</button>
-<button class="tpl-cate-btn" onclick="window.filterTpl('user_image', this)">
-    <span>유저 템플릿 (이미지)</span>
-</button>
-
-            <button class="tpl-cate-btn active" onclick="window.filterTpl('photo-bg', this)">
-                <span>이미지</span>
-            </button>
-
-            <button class="tpl-cate-btn" onclick="window.filterTpl('vector', this)">
-                <span>심플배경 (백터)</span>
-            </button>
-
-            <button class="tpl-cate-btn" onclick="window.filterTpl('graphic', this)">
-                <span>PNG객체</span>
-            </button>
-
-            <button class="tpl-cate-btn" onclick="window.filterTpl('transparent-graphic', this)">
-                <span>패턴디자인</span>
-            </button>
-
-            <button class="tpl-cate-btn" onclick="window.filterTpl('logo', this)">
-                <span>로고모음</span>
+            <button class="tpl-cate-btn" onclick="window.filterTpl('group_asset', this)">
+                <span style="font-weight:800; color:#059669; font-size:16px;">🧩 객체</span>
             </button>
         </div>
         <div class="tpl-content">
@@ -1760,11 +1742,12 @@
                 <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="btn_design_direct_sub">에디터에서 꾸미기</span>
             </button>
 
-            <button onclick="window.confirmChoice('cart')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#fff; color:#334155; border:2px solid #cbd5e1; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
-                <i class="fa-solid fa-cart-plus" style="font-size:32px; color:#ef4444;"></i>
-                <span style="font-size:16px; font-weight:bold;">장바구니</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;">담기</span>
-            </button>
+            <button onclick="window.confirmChoice('cart')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#4ccc02; color:#ffffff; border:2px solid #2ec500; box-shadow:0 4px 10px rgba(74, 222, 128, 0.2);">
+    <i class="fa-solid fa-basket-shopping" style="font-size:32px; color:#ffffff;"></i>
+    
+    <span style="font-size:16px; font-weight:800;">구매하기</span>
+    <span style="font-size:12px; font-weight:normal; opacity:0.9;">파일업로드는 장바구니</span>
+</button>
         </div>
 
         <button onclick="document.getElementById('choiceModal').style.display='none'; location.reload();" class="btn-round" style="width:100%; margin-bottom:10px; background:#f1f5f9; color:#64748b; border:none;">
@@ -2387,42 +2370,103 @@ window.t = function(key) {
         }
     };
 
+    // [전역] 현재 그룹 기억
+    window.currentTplGroup = 'group_template';
+
     window.filterTpl = async function(category, btnElement) {
+        // 1. 버튼 스타일 활성화
         if (btnElement) {
+            // 상단바 버튼인지 사이드바 버튼인지 확인 후 스타일 적용
             const sidebar = document.querySelector('.tpl-sidebar');
-            if(sidebar) sidebar.querySelectorAll('.tpl-cate-btn').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
+            if(sidebar) {
+                // 사이드바 버튼들 초기화
+                sidebar.querySelectorAll('.tpl-cate-btn').forEach(b => b.classList.remove('active'));
+                
+                // 만약 클릭한 버튼이 사이드바 안에 있다면 active 추가
+                if(sidebar.contains(btnElement)) {
+                    btnElement.classList.add('active');
+                } else {
+                    // 상단바 버튼을 눌렀을 때 사이드바도 맞춰주기
+                    const targetBtn = sidebar.querySelector(`button[onclick*="'${category}'"]`);
+                    if(targetBtn) targetBtn.classList.add('active');
+                }
+            }
+            window.currentTplGroup = category;
         }
+
+        // 검색어 및 타겟 그룹 설정
+        const searchInput = document.getElementById('tplSearchInput');
+        const searchKeyword = searchInput ? searchInput.value.trim() : "";
+        const targetGroup = category || window.currentTplGroup;
+
         const grid = document.getElementById('tplGrid');
         if (!grid) return;
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#888;">로딩 중...</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#6366f1;"></i></div>';
 
         try {
+            // ★ [핵심 수정] 벡터(vector, user_vector)를 객체(group_asset)로 이동!
+            const groups = {
+                // 템플릿: 사진, 유저이미지, 텍스트 (배경형)
+                'group_template': ['user_image', 'photo-bg', 'text'],
+                
+                // 객체: 벡터, 유저벡터, 그래픽, 패턴, 로고 (요소형)
+                'group_asset': ['vector', 'user_vector', 'graphic', 'transparent-graphic', 'pattern', 'logo']
+            };
+
+            // 쿼리 작성
             let query = sb.from('library')
-              .select('id, thumb_url, category, tags') 
+              .select('id, thumb_url, category, tags, product_key') 
               .order('created_at', { ascending: false })
-              .limit(50);
-            if (category && category !== 'all') {
-                query = query.ilike('category', `%${category}%`); 
+              .limit(60); 
+
+            // 그룹 필터링
+            if (groups[targetGroup]) {
+                query = query.in('category', groups[targetGroup]);
+            } else if (targetGroup && targetGroup !== 'all') {
+                query = query.eq('category', targetGroup);
             }
+
+            // 검색어 필터링
+            if (searchKeyword) {
+                query = query.ilike('tags', `%${searchKeyword}%`);
+            }
+
             const { data, error } = await query;
             if (error) throw error;
+
             grid.innerHTML = '';
             if (!data || data.length === 0) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#999;">데이터가 없습니다.</div>';
                 return;
             }
+
             data.forEach(tpl => {
                 const div = document.createElement('div');
                 div.className = 'tpl-item';
-                div.style.cssText = 'cursor:pointer; position:relative; overflow:hidden; border-radius:8px; aspect-ratio:1/1.4; background:#f1f5f9;';
-                const imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300?text=No+Image';
-                div.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover;">`;
+                div.style.cssText = 'cursor:pointer; position:relative; overflow:hidden; border-radius:8px; aspect-ratio:1/1; background:#f1f5f9; border:1px solid #e2e8f0;';
+                
+                let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
+                if (imgSrc.includes('supabase.co')) {
+                    const sep = imgSrc.includes('?') ? '&' : '?';
+                    imgSrc += `${sep}width=300&height=300&resize=cover&quality=60`;
+                }
+
+                // 뱃지 표시 (벡터인지 확인용)
+                let badge = '';
+                if(tpl.category === 'vector' || tpl.category === 'user_vector') {
+                    badge = `<span style="position:absolute; top:5px; left:5px; background:#7c3aed; color:white; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">VECTOR</span>`;
+                }
+
+                div.innerHTML = `
+                    ${badge}
+                    <img src="${imgSrc}" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+                `;
                 div.onclick = () => window.onTemplateClick(tpl);
                 grid.appendChild(div);
             });
+
         } catch (e) {
-            console.error(e);
+            console.error("Load Error:", e);
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">오류 발생</div>';
         }
     };

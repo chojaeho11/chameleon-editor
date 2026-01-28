@@ -58,6 +58,26 @@ export function initCanvas() {
     });
 
     window.canvas = canvas;
+    // ★ [핵심 패치] 페이지 이동/저장 시 커스텀 속성(배경, 잠금 등) 유지하기
+    fabric.Object.prototype.toObject = (function(toObject) {
+        return function(propertiesToInclude) {
+            return toObject.call(this, (propertiesToInclude || []).concat([
+                'id', 
+                'isBoard', 
+                'isTemplateBackground', // ★ 배경 식별 태그
+                'product_key', 
+                'category', 
+                'selectable', 
+                'evented', 
+                'lockMovementX', 
+                'lockMovementY', 
+                'hasControls',
+                'lockRotation',
+                'lockScalingX',
+                'lockScalingY'
+            ]));
+        };
+    })(fabric.Object.prototype.toObject);
 
     const ro = new ResizeObserver(entries => {
         for (let entry of entries) {
