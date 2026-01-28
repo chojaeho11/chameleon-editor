@@ -3,94 +3,34 @@
 <head>
 <meta charset="UTF-8" />
 <script>
-    window.addEventListener('load', function() {
-        // Fabric.js가 로드되었는지 확인
-        if (typeof fabric === 'undefined') return;
-
-        const originalFromURL = fabric.Image.fromURL;
-        
-        // 이미지 로딩 함수를 '스마트 로더'로 교체
-        fabric.Image.fromURL = function(url, callback, options) {
-            // 1. URL 유효성 검사 (비어있으면 무시)
-            if (!url || typeof url !== 'string') {
-                if(callback) callback(null); // 콜백을 강제로 실행해 로딩을 끝냄
-                return;
-            }
-
-            // 2. [핵심] URL 자리에 JSON 데이터가 들어온 경우 -> 디자인으로 로드 (LoadFromJSON)
-            // %7B는 '{' 의 URL 인코딩 문자입니다.
-            if (url.includes('%7B') || url.trim().startsWith('{') || url.includes('{"version"')) {
-                console.warn("🚨 이미지 주소 자리에 JSON 데이터 발견! -> 캔버스 복원으로 전환합니다.");
-                
-                // 만약 전역 canvas 객체가 있다면 즉시 데이터 복원 시도
-                if (window.canvas) {
-                    try {
-                        // URL 인코딩된 경우 디코딩
-                        const jsonStr = decodeURIComponent(url);
-                        const jsonObj = JSON.parse(jsonStr);
-
-                        window.canvas.loadFromJSON(jsonObj, function() {
-                            console.log("✅ JSON 데이터 복원 완료");
-                            window.canvas.requestRenderAll();
-                            
-                            // ★ 중요: 무한 로딩을 끄기 위해 로딩 화면을 강제로 숨김
-                            const loadingEl = document.getElementById('loading');
-                            if(loadingEl) loadingEl.style.display = 'none';
-                            
-                            // 콜백이 있다면 빈 이미지라도 넘겨서 에러 방지
-                            if (callback) callback(new fabric.Image('')); 
-                        });
-                    } catch (e) {
-                        console.error("JSON 복원 실패:", e);
-                        if(document.getElementById('loading')) document.getElementById('loading').style.display = 'none';
-                    }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log("좀비 서비스 워커 삭제 완료!");
                 }
-                return; // 원래의 fromURL 실행 차단
-            }
-
-            // 3. 정상적인 이미지 URL인 경우 -> 원래대로 실행
-            return originalFromURL.call(this, url, callback, options);
-        };
-        
-        console.log("✅ 스마트 에러 방지 시스템 가동 (JSON 자동 변환 모드)");
-    });
-</script>
-<script>
-    // [기존 코드] 서비스 워커 및 캐시 삭제
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for(let registration of registrations) {
-                registration.unregister();
-                console.log("좀비 서비스 워커 삭제 완료!");
-            }
-        });
-        caches.keys().then(function(names) {
-            for (let name of names) caches.delete(name);
-            console.log("좀비 캐시 저장소 삭제 완료!");
-        });
-    }
-
-    // [★추가할 코드] 431 에러 방지를 위한 모든 쿠키 삭제
-    document.cookie.split(";").forEach(function(c) { 
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-    });
-    console.log("헤더 용량 초과 방지를 위해 쿠키를 초기화했습니다.");
-</script>
+            });
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+                console.log("좀비 캐시 저장소 삭제 완료!");
+            });
+        }
+    </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
-<meta name="description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.">
+<title>패브릭 광목천 인쇄 | 카멜레온프린팅</title>
+<meta name="description" content="내추럴한 광목천 UV 출력. 가림막, 포스터 제작.">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="카멜레온프린팅">
-<meta property="og:title" content="카멜레온프린팅 - 친환경 전시 인쇄 & 무료 에디터">
-<meta property="og:description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 쉽고 빠르게 디자인하세요.">
+<meta property="og:title" content="패브릭 광목천 인쇄 | 카멜레온프린팅">
+<meta property="og:description" content="내추럴한 광목천 UV 출력. 가림막, 포스터 제작.">
 <meta property="og:url" content="https://www.cafe2626.com/">
 <meta property="og:image" content="https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png">
 <link rel="shortcut icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
-<meta name="keywords" content="카멜레온프린팅, 허니콤보드, 종이매대, 패브릭인쇄, 팝업스토어, 등신대제작, 실사출력, 연포장, 친환경전시, 백월디자인, 전시부스, 폼보드인쇄">
+<meta name="keywords" content="광목천인쇄, 패브릭포스터">
 <link rel="canonical" href="https://www.cafe2626.com/" />
 
-<link rel="canonical" href="https://www.cafe3355.com/">
+<link rel="canonical" href="https://www.cafe2626.com/fabric-print.html">
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/">
     <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/">
@@ -125,6 +65,27 @@
     const PROJECT_VERSION = '119';
     const DATA_PATH = './long/';
 </script>
+
+    <script>
+        (function() {
+            var h = window.location.hostname;
+            var l = 'KR';
+            if (h.includes('cafe3355')) l = 'EN';
+            else if (h.includes('cafe0101')) l = 'JP';
+            
+            var t = {"KR":"패브릭 광목천 인쇄 | 카멜레온프린팅","EN":"Fabric Cotton Printing | Chameleon Printing","JP":"ファブリック綿印刷 | カメレオンプリンティング"};
+            var d = {"KR":"내추럴한 광목천 UV 출력. 가림막, 포스터 제작.","EN":"Natural cotton fabric printing for interior design.","JP":"ナチュラルな綿素材へのUV印刷。インテリアに最適。"};
+            var k = {"KR":"광목천인쇄, 패브릭포스터","EN":"Cotton Printing, Fabric Poster","JP":"ファブリック印刷, 綿印刷"};
+            
+            if(l !== 'KR') {
+                document.title = t[l];
+                var md = document.querySelector('meta[name="description"]'); if(md) md.setAttribute('content', d[l]);
+                var mk = document.querySelector('meta[name="keywords"]'); if(mk) mk.setAttribute('content', k[l]);
+                var ot = document.querySelector('meta[property="og:title"]'); if(ot) ot.setAttribute('content', t[l]);
+                var od = document.querySelector('meta[property="og:description"]'); if(od) od.setAttribute('content', d[l]);
+            }
+        })();
+    </script>
 </head>
 <body>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;">로딩 중입니다...</p></div>
@@ -231,39 +192,6 @@
     ">
     </div>
 
-    <div class="main-search-wrapper" style="max-width: 1000px; margin: 0 auto 25px auto; padding: 0 15px; position: relative; z-index: 10;">
-    <div style="position: relative; transition: all 0.3s;">
-        <input type="text" id="mainCategorySearch" 
-               placeholder="🔍 찾으시는 상품이나 카테고리를 입력해보세요! (예: 배너, 아크릴, 현수막)" 
-               onkeyup="window.filterMainIcons(this.value)"
-               style="
-                   width: 100%; 
-                   padding: 18px 20px 18px 55px; 
-                   font-size: 16px; 
-                   border: 2px solid #e2e8f0; 
-                   border-radius: 50px; 
-                   background: #ffffff; 
-                   box-shadow: 0 8px 20px rgba(99, 102, 241, 0.1); 
-                   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                   outline: none;
-                   color: #334155;
-                   font-weight: 600;
-               "
-               onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 12px 25px rgba(99, 102, 241, 0.2)';"
-               onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 8px 20px rgba(99, 102, 241, 0.1)';"
-        >
-        <i class="fa-solid fa-magnifying-glass" style="
-            position: absolute; 
-            left: 25px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            color: #6366f1; 
-            font-size: 20px;
-            pointer-events: none;
-        "></i>
-    </div>
-</div>
-
     
     <div class="quick-menu-track" id="quickMenuContainer"></div>
     <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
@@ -273,61 +201,10 @@
             파일만 올려주시면 <strong>전담 매니저</strong>가 분석 후 견적서와 함께 30분 이내에 연락드립니다.<br>
             매니저의 가이드에 따라 결제만 하시면 디자인/파일변환/접수/배송/설치까지 논스톱으로 도와드립니다.
         </p>
-        
-        <button onclick="document.getElementById('vipOrderModal').style.display='flex'" class="btn-round" style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); color: white; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(67, 56, 202, 0.3); width: auto; display: inline-flex; gap: 10px; align-items: center; margin-bottom: 25px;">
+        <button onclick="document.getElementById('vipOrderModal').style.display='flex'" class="btn-round" style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); color: white; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(67, 56, 202, 0.3); width: auto; display: inline-flex; gap: 10px; align-items: center;">
             <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span data-i18n="home_btn_vip_upload">VIP 주문 파일 업로드 (원스톱 접수)</span>
         </button>
-
-        <div style="border-top: 2px dashed #e2e8f0; padding-top: 25px; margin-top: 10px;">
-            <div style="display: inline-block; background: #eff6ff; color: #4f46e5; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; margin-bottom: 15px;">
-                ⚡ 쉽고 빠른 문의
-            </div>
-            <p style="margin: 0 0 20px 0; color: #334155; font-size: 16px; font-weight: 600;">
-                "친절한 매니저가 전화로 빠르게 응대합니다"
-            </p>
-            
-            <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
-                
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
-                    <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;">
-                        👩‍💼 지숙 매니저
-                    </span>
-                    <a href="tel:010-3455-1946" style="text-decoration: none; color: #4338ca; transition: 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#4338ca'">
-                        <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">
-                            010-3455-1946
-                        </div>
-                    </a>
-                </div>
-
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
-                    <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;">
-                        👩‍💼 은미 매니저
-                    </span>
-                    <a href="tel:010-7793-5393" style="text-decoration: none; color: #4338ca; transition: 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#4338ca'">
-                        <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">
-                            010-7793-5393
-                        </div>
-                    </a>
-                </div>
-
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
-                    <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;">
-                        👩‍💼 성희 매니저
-                    </span>
-                    <a href="tel:010-3490-3328" style="text-decoration: none; color: #4338ca; transition: 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#4338ca'">
-                        <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">
-                            010-3490-3328
-                        </div>
-                    </a>
-                </div>
-
-            </div>
-
-            <p style="margin: 0; font-size: 14px; color: #64748b;">
-                <i class="fa-regular fa-clock"></i> 문의시간 : <span style="color:#1e293b; font-weight:bold;">오전 9시 ~ 오후 6시</span>
-            </p>
-        </div>
-        </div>
+    </div>
 </div>
 
 <!-- 오늘의핫딜 -->
@@ -493,7 +370,7 @@
         <div class="tier-card gold">
             <div class="tier-icon"><i class="fa-solid fa-medal"></i></div>
             <div class="tier-name" data-i18n="tier_gold_name">골드 (GOLD)</div>
-            <div class="tier-discount" data-i18n="tier_gold_discount" style="color:#ca8a04;">3% 할인</div>
+            <div class="tier-discount" data-i18n="tier_gold_discount">5% 할인</div>
             <div class="tier-desc">
                 <span class="tier-badge" data-i18n="tier_cond_1">조건 1</span> <span data-i18n="tier_gold_cond_1">누적 구매 <strong>500만원</strong> 이상</span><br>
                 <div style="margin: 5px 0; font-size:12px; color:#94a3b8;">OR</div>
@@ -503,8 +380,8 @@
 
         <div class="tier-card platinum">
             <div class="tier-icon"><i class="fa-solid fa-crown"></i></div>
-            <div class="tier-name" data-i18n="tier_plat_name">플레티넘 (PLATINUM)</div>
-            <div class="tier-discount" data-i18n="tier_plat_discount" style="color:#475569;">5% 할인</div>
+            <div class="tier-name" data-i18n="tier_plat_name">플래티넘 (PLATINUM)</div>
+            <div class="tier-discount" data-i18n="tier_plat_discount">10% 할인</div>
             <div class="tier-desc">
                 <span class="tier-badge" data-i18n="tier_cond_1">조건 1</span> <span data-i18n="tier_plat_cond_1">누적 구매 <strong>1,000만원</strong> 이상</span><br>
                 <div style="margin: 5px 0; font-size:12px; color:#94a3b8;">OR</div>
@@ -515,11 +392,11 @@
         <div class="tier-card franchise">
             <div class="tier-icon"><i class="fa-solid fa-store"></i></div>
             <div class="tier-name" data-i18n="tier_partner_name">가맹점 (PARTNER)</div>
-            <div class="tier-discount" data-i18n="tier_partner_discount" style="color:#4f46e5;">10% 할인</div>
+            <div class="tier-discount" data-i18n="tier_partner_discount">15% 할인</div>
             <div class="tier-desc">
                 <span class="tier-badge" style="background:#e0e7ff; color:#4338ca;" data-i18n="tier_partner_cond_label">가입조건</span><br>
-                <span data-i18n="tier_partner_cond_fee">파트너스 신청자</span><br>
-                <span style="font-size:12px; color:#888;" data-i18n="tier_partner_cond_note">(사업자등록증 필수)</span>
+                <span data-i18n="tier_partner_cond_fee">가맹비 <strong>100만원</strong></span><br>
+                <span style="font-size:12px; color:#888;" data-i18n="tier_partner_cond_note">(별도 문의 요망)</span>
             </div>
         </div>
     </div>
@@ -794,7 +671,7 @@
         <div class="review-img" style="background-image: url('https://godomall.speedycdn.net/783b37df7f47037a1e127a356662e4f6/goods/1000004101/image/main/1000004101_main_028.png');"></div>
         <div class="review-content">
             <div class="review-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-            <p class="review-text" data-i18n="rev_3_text">"키링 제작 진짜 너무 퀄리티 높은거 아닌가요? 도매구매 너무 저렴해서 저희같은 판매자에게는 최고입니다."</p>
+            <p class="review-text" data-i18n="rev_3_text">"키링 제작 진짜 너무 퀄리티 높은거 아닌가요? 소량구매는 안되서 아쉽지만 저희같은 판매자에게는 최고입니다."</p>
             <div class="review-user">
                 <span class="u-name" data-i18n="rev_3_user">도치맘**</span>
                 <span class="u-date" data-i18n="rev_3_date">2024.03.10</span>
@@ -842,7 +719,7 @@
         <div class="review-img" style="background-image: url('https://godomall.speedycdn.net/783b37df7f47037a1e127a356662e4f6/goods/1000003080/image/detail/1000003080_detail_042.jpg');"></div>
         <div class="review-content">
             <div class="review-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-            <p class="review-text" data-i18n="rev_7_text">"미리캔버스 캔바 성원애드피아 다 써봤는데 가격과 퀄리티는 카멜레온프린팅이 진짜 가성비 최고입니다."</p>
+            <p class="review-text" data-i18n="rev_7_text">"단상이 너무 옛날거라 촌스러워서 허니콤보드로 감싸서 사용했는데 행사의 품격이 올라갑니다."</p>
             <div class="review-user">
                 <span class="u-name" data-i18n="rev_7_user">엡손 김지수</span>
                 <span class="u-date" data-i18n="rev_7_date">2024.03.10</span>
@@ -969,9 +846,9 @@
 
             <div class="section-title" data-i18n="label_ai_tools" style="margin-bottom: 5px; font-size: 12px;">AI TOOLS</div>
             <button class="btn-round ai-red" id="btnAIBox" style="justify-content: center; height: 38px; margin-bottom: 5px;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_ai_gen">AI 생성</span></button>
-            <!-- <button class="btn-round" id="btnOpenSellModal" onclick="window.openSellModal()"  -->
-                  <!-- style="width: 100%; justify-content: center; height: 38px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border: none; color: white; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);"> -->
-                 <!-- <i class="fa-solid fa-sack-dollar"></i> <span data-i18n="btn_sell_design">디자인 판매 등록</span> -->
+            <button class="btn-round" id="btnOpenSellModal" onclick="window.openSellModal()" 
+                  style="width: 100%; justify-content: center; height: 38px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border: none; color: white; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
+                 <i class="fa-solid fa-sack-dollar"></i> <span data-i18n="btn_sell_design">디자인 판매 등록</span>
             </button>
             <div style="display: flex; gap: 5px; margin-bottom: 5px;">
                 <button class="btn-round" id="btnOpenSaveModal" style="flex: 1; justify-content: center; height: 38px;">
@@ -1043,40 +920,12 @@
                 <button class="shape-btn" data-shape="round">▢</button>
                 <button class="shape-btn" data-shape="line">━</button>
             </div>
-
-            <div class="section-title" style="font-size: 12px; margin-top: 15px; margin-bottom: 5px;">BACKGROUND</div>
-            <button id="btnBgColor" class="btn-round" style="width:100%; justify-content: flex-start; margin-bottom: 5px; height: 38px;">
-                <div style="width:20px; height:20px; background:linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius:4px; margin-right:8px; border:1px solid #ddd;"></div>
-                <span>배경색 설정</span>
-            </button>
-
-            <div id="bgColorPanel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
-                <div style="font-size:11px; font-weight:bold; color:#666; margin-bottom:5px; text-align:left;">기본 팔레트</div>
-                <div id="colorPaletteGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;">
-                    </div>
-            </div>
+            
             <div class="section-title" data-i18n="label_upload" style="font-size: 12px; margin-top: 10px; margin-bottom: 5px;">UPLOAD</div>
             <label class="upload-box" for="imgUpload" style="height: 60px; padding: 10px;"><span style="font-size:18px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> <span style="font-size: 12px;">Image/PDF</span></label>
             <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
         </div>
         
-        <div id="sideTemplateDrawer" class="side-drawer" style="display:none;">
-            <div class="drawer-header">
-                <span style="font-weight:800; color:#334155; font-size:14px;">🎨 추천 디자인</span>
-                <button class="btn-close-drawer" onclick="document.getElementById('sideTemplateDrawer').style.display='none'">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <div class="drawer-search-box">
-                <input type="text" id="sideTemplateSearch" placeholder="디자인 검색 (예: 카페, 세일)" autocomplete="off" onkeyup="window.handleSideSearch(this.value)">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </div>
-
-            <div id="sideTemplateList" class="drawer-content">
-                </div>
-        </div>
-
         <div class="stage" id="stage">
            <div id="textWizardToolbar" class="wizard-toolbar floating-island">
     <div class="wiz-brand" style="display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.2; padding: 0 5px;">
@@ -1120,7 +969,7 @@
         white-space: nowrap;
         letter-spacing: -0.5px; /* 자간을 좁혀서 가로 공간 추가 확보 */
     ">
-        배경풀기
+        배경지정
     </span>
 </button>
 
@@ -1163,49 +1012,11 @@
         
     </div>
 </div>
-            <div id="pageControls" class="page-controls-bar">
-                <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-                
-                <span id="pageCounter" style="font-weight:800; font-size:14px; min-width:60px; text-align:center; color:#334155;">1 / 1</span>
-                
-                <button class="btn-icon-only" id="btnPageNext" onclick="window.changePage(1)" title="다음 페이지">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-
-                <div style="width:1px; height:14px; background:#cbd5e1; margin:0 8px;"></div>
-
-                <button class="btn-text-icon" onclick="window.addPage()" title="Page">
-                    <i class="fa-solid fa-plus"></i> <span style="font-size:12px; font-weight:bold;">Page</span>
-                </button>
-                
-                <button class="btn-text-icon delete" onclick="window.deletePage()" title="현재 페이지 삭제">
-                    <i class="fa-regular fa-trash-can"></i>
-                </button>
-            </div>
             <div class="bottom-dock">
-                <button onclick="window.toggleBackgroundLock()" class="zoom-btn" title="배경 잠금/해제"><i class="fa-solid fa-lock"></i></button>
-                <button onclick="document.getElementById('btnFitScreen').click()" class="zoom-btn" title="화면 맞춤"><i class="fa-solid fa-compress"></i></button>
-                <div class="divider"></div>
-                
                 <button id="btnZoomOut" class="zoom-btn"><i class="fa-solid fa-minus"></i></button>
                 <button id="btnZoomIn" class="zoom-btn"><i class="fa-solid fa-plus"></i></button>
                 <div class="divider"></div>
-                <div style="position:relative;">
-                    <div id="guideMenuPanel" class="guide-popup" style="display:none;">
-                        <button class="guide-opt-btn" data-mode="off" onclick="window.setGuideMode('off')">🚫 끔</button>
-                        <button class="guide-opt-btn" data-mode="cross" onclick="window.setGuideMode('cross')">✚ 십자</button>
-                        <button class="guide-opt-btn" data-mode="3" onclick="window.setGuideMode('3')">3단</button>
-                        <button class="guide-opt-btn" data-mode="4" onclick="window.setGuideMode('4')">4단</button>
-                        <button class="guide-opt-btn" data-mode="5" onclick="window.setGuideMode('5')">5단</button>
-                        <button class="guide-opt-btn" data-mode="grid" onclick="window.setGuideMode('grid')">▦ 격자</button>
-                    </div>
-                    
-                    <button id="guideToggle" class="zoom-btn" style="width:auto; padding:0 15px; border-radius:20px; font-size:12px;">
-                        <i class="fa-solid fa-ruler-horizontal"></i> 가이드
-                    </button>
-                </div>
+                <button id="guideToggle" class="zoom-btn" style="width:auto; padding:0 15px; border-radius:20px; font-size:12px;">가이드 켜기</button>
                 <span class="help-text">Space: 이동 / 휠: 줌</span>
             </div>
             
@@ -1488,7 +1299,7 @@
                     </div>
                 </div>
                 <button onclick="window.openDeliveryCategory()" class="btn-round" style="width:auto; flex-grow:1; max-width:100%; height:38px; padding:0 15px; background:#fff; border:1px solid #d97706; color:#d97706; font-weight:800; font-size:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05); white-space:nowrap;">
-                    + 배송비 추가 (서울 경기는 모든 고객 무료배송) 시간지정 및 설치요청만 결제하세요.
+                    + 배송비 추가
                 </button>
             </div>
             
@@ -1606,7 +1417,7 @@
             </div>
 
             <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px;">
-                <span style="color:#ef4444; font-weight:bold;">* 결제금액의 5%까지만 사용 가능</span>
+                <span style="color:#ef4444; font-weight:bold;">* 결제금액의 10%까지만 사용 가능</span>
                 <span style="color:#0369a1;">사용가능 한도: <b id="mileageLimitDisplay">0 P</b></span>
             </div>
         </div>
@@ -1666,14 +1477,6 @@
                 <i class="fa-solid fa-clipboard-list"></i> 작업지시서 다운
             </button>
         </div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-    <button id="btnDownReceipt" class="btn-round btn-secondary" style="flex:1; justify-content: center; background:#fff; color:#475569; border:1px solid #cbd5e1;">
-        <i class="fa-solid fa-receipt"></i> 영수증
-    </button>
-    <button id="btnDownStatement" class="btn-round btn-secondary" style="flex:1; justify-content: center; background:#fff; color:#475569; border:1px solid #cbd5e1;">
-        <i class="fa-solid fa-file-contract"></i> 거래명세서
-    </button>
-</div>
 
         <button onclick="document.getElementById('checkoutModal').style.display='none'; if(window.isOrderCompleted) location.reload();" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
     </div>
@@ -1762,8 +1565,8 @@
 
             <button onclick="window.confirmChoice('cart')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#fff; color:#334155; border:2px solid #cbd5e1; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
                 <i class="fa-solid fa-cart-plus" style="font-size:32px; color:#ef4444;"></i>
-                <span style="font-size:16px; font-weight:bold;">장바구니</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;">담기</span>
+                <span style="font-size:16px; font-weight:bold;">CART</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;">Add to Cart</span>
             </button>
         </div>
 
@@ -1801,7 +1604,7 @@
             </div>
             
             <p style="font-size:12px; color:#64748b; margin-top:10px; line-height:1.5; word-break:keep-all;">
-                ※ 최종 금액은 마일리지 등급할인 등으로 이보다 더더더! 저렴합니다.<br>
+                ※ 예상 금액입니다. 배송비와 마감 비용 등이 추가될 수 있으며, 회원 등급에 따라 할인이 적용됩니다.<br>
                 <b>최종 금액은 장바구니에서 확인하세요.</b>
             </p>
                 
@@ -1832,16 +1635,7 @@
             <i class="fa-solid fa-xmark"></i>
         </button>
         <h3 id="catModalTitle">📏 사이즈(제품)를 선택해주세요</h3>
-        
-        <div style="margin-bottom: 15px; position: relative;">
-            <input type="text" id="modalProdSearch" class="ai-input-pretty" 
-                   placeholder="🔍 찾으시는 상품명이나 사이즈를 입력하세요..." 
-                   style="width:100%; margin:0; padding-left: 35px;"
-                   onkeyup="window.filterModalItems(this.value)">
-            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-        </div>
-
-        <div id="catModalDesc" class="info-desc-box" style="display:none;"></div>
+<div id="catModalDesc" class="info-desc-box" style="display:none;"></div>
         
         <div id="catProductGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
         
@@ -1903,208 +1697,46 @@
 <script type="module" src="./canvas-utils.js?v=119"></script>
 <script type="module" src="./shortcuts.js?v=119"></script>
 <script type="module" src="./context-menu.js?v=119"></script>
-<script type="module" src="./export.js?v=121"></script>
+<script type="module" src="./export.js?v=119"></script>
 <script type="module" src="./order.js?v=119"></script>
 <script type="module" src="./login.js?v=119"></script>
 <script type="module" src="./my-design.js?v=119"></script>
 <script type="module" src="./main.js?v=119"></script>
 
-<script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage } from "./canvas-pages.js";
-    // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
-    window.addPage = addNewPage;
-    window.changePage = switchPage;
-    window.deletePage = deleteCurrentPage;
-</script>
-<script>
-    // [추가] 모바일 전용 스마트 화면 맞춤 함수
-    // [개선된] 모바일 전용 스마트 화면 맞춤 함수
-    window.smartMobileFit = function() {
-        if (!window.canvas) return;
-        
-        // ★ 핵심: 좌표가 틀어진 상태에서 계산하면 엉뚱한 곳으로 가므로, 일단 초기화
-        window.canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); 
-
-        // 1. 대지(Board) 찾기
-        const board = window.canvas.getObjects().find(o => o.isBoard);
-        if (!board) return;
-
-        const canvasW = window.canvas.getWidth();
-        const canvasH = window.canvas.getHeight();
-        const boardW = board.getScaledWidth();
-        const boardH = board.getScaledHeight();
-
-        // 2. 안전 영역 (버튼 피하기)
-        const paddingX = 40;  // 좌우 여백
-        const paddingY = 200; // 상하 여백 (하단 독바 + 상단 메뉴 고려 넉넉하게)
-
-        // 3. 줌 계산
-        const safeW = canvasW - paddingX;
-        const safeH = canvasH - paddingY;
-        let zoom = Math.min(safeW / boardW, safeH / boardH);
-
-        // 세로 배너형일 경우 더 작게 (한눈에 들어오게)
-        const isVertical = boardH > boardW * 1.2;
-        if (isVertical) zoom *= 0.85; 
-        else zoom *= 0.95;
-
-        zoom = Math.min(Math.max(zoom, 0.05), 5);
-
-        // 4. 중앙 좌표 계산 (초기화된 상태 기준)
-        const vpt = window.canvas.viewportTransform;
-        vpt[0] = zoom;
-        vpt[3] = zoom;
-        
-        // 가로 중앙 정렬
-        vpt[4] = (canvasW - boardW * zoom) / 2;
-
-        // 세로 정렬 (세로형은 위로, 일반형은 중앙)
-        if (isVertical) {
-            vpt[5] = 80; // 상단 여백 80px 띄우고 배치
-        } else {
-            vpt[5] = (canvasH - boardH * zoom) / 2 - 20; // 중앙에서 살짝 위
-        }
-
-        window.canvas.setViewportTransform(vpt);
-        window.canvas.requestRenderAll();
-        console.log("📱 스마트 맞춤 완료 (치우침 보정됨)");
-    };
-</script>
-<script>
-    // [추가] 사이드바 검색 핸들러 (0.5초 딜레이)
-    let sideSearchTimeout;
-    window.handleSideSearch = function(keyword) {
-        if (sideSearchTimeout) clearTimeout(sideSearchTimeout);
-        
-        sideSearchTimeout = setTimeout(() => {
-            const currentKey = window.currentProductKey || 'custom';
-            if (window.loadSideBarTemplates) {
-                window.loadSideBarTemplates(currentKey, keyword);
-            }
-        }, 500);
-    };
-</script>
-<div id="generalProductModal" class="modal-bg" style="z-index: 15500; display: none; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 800px; max-width: 95%; display: flex; overflow: hidden; padding: 0;">
-        <div style="width: 45%; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 20px;">
-            <img id="genProdImg" src="" style="max-width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px;">
-        </div>
-        
-        <div style="width: 55%; padding: 30px; display: flex; flex-direction: column;">
-            <div style="flex: 1;">
-                <h2 id="genProdTitle" style="margin: 0 0 10px 0; color: #1e293b;">상품명</h2>
-                <div id="genProdDesc" style="font-size: 13px; color: #64748b; margin-bottom: 20px; line-height: 1.5;">설명</div>
-                
-                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-weight: bold; color: #334155;">단가</span>
-                        <span id="genProdPrice" style="font-weight: bold;">0원</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: bold; color: #334155;">수량</span>
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <input type="number" id="genProdQty" value="1" min="1" 
-                                   style="width: 100px; padding: 5px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 16px;"
-                                   onclick="this.select()" 
-                                   onchange="window.updateGeneralTotal()" 
-                                   oninput="window.updateGeneralTotal()">
-                            <span>개</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-size: 14px; color: #64748b;">총 결제금액</span>
-                    <span id="genProdTotal" style="font-size: 24px; font-weight: 900; color: #6366f1;">0원</span>
-                </div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="window.addGeneralToCart()" class="btn-round primary" style="flex: 1; height: 50px; font-size: 16px;">
-                        🛒 장바구니 담기
-                    </button>
-                    <button onclick="document.getElementById('generalProductModal').style.display='none'" class="btn-round" style="width: 80px; border: 1px solid #e2e8f0; color: #64748b; background: white;">
-                        취소
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="./text-wizard.js?v=119"></script> 
 <script>
-    
-    // [0] 파트너스 센터 입장 함수 (마스터키 + 호환성 적용)
-    // [0] 파트너스 센터 입장 함수 (마스터키 + Platinum 허용)
-    window.enterPartnerCenter = function() {
-        // 1. 로그인 체크
-        if (!window.currentUser) {
-            alert(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.");
-            document.getElementById('loginModal').style.display = 'flex';
-            return;
-        }
+    // [1] 파트너 신청 제출 함수
+    window.submitRealPartnerApp = async function() {
+        // sb(Supabase) 객체가 로드되었는지 확인
+        if (typeof sb === 'undefined') { alert("시스템 로딩 중입니다. 잠시 후 다시 시도해주세요."); return; }
 
-        // 2. 현재 로그인 정보 확인
-        const myEmail = (window.currentUser.email || '').toLowerCase().trim();
-        
-        // 등급 가져오기 (DB 위치별 체크)
-        let r = window.currentUser.role;
-        if (!r && window.currentUser.user_metadata) r = window.currentUser.user_metadata.role;
-        if (!r && window.currentUser.app_metadata) r = window.currentUser.app_metadata.role;
-        
-        let finalRole = (r || 'user').toLowerCase().trim();
+        const comp = document.getElementById('applyCompName').value;
+        const phone = document.getElementById('applyPhone').value;
+        const region = document.getElementById('applyRegion').value;
+        const items = document.getElementById('applyMainItems').value;
 
-        // ★ partners(복수형)만 partner로 통일
-        if (finalRole === 'partners') finalRole = 'partner';
+        if(!comp || !phone || !region) return alert("필수 정보(업체명, 연락처, 지역)를 모두 입력해주세요.");
 
-        // ★ [핵심] 사장님 이메일 프리패스 (DB 오류 무시하고 무조건 입장)
-        const adminEmails = ['korea900@daum.net', 'korea900as@gmail.com'];
-        if (adminEmails.includes(myEmail)) {
-            console.log("👑 관리자(파트너스) 계정 확인됨 -> 프리패스 입장");
-            finalRole = 'partner'; 
-        }
+        const { data: { user } } = await sb.auth.getUser();
+        if(!user) return alert("로그인이 필요합니다.");
 
-        console.log("최종 인식 등급:", finalRole);
+        // DB에 저장
+        const { error } = await sb.from('partner_applications').insert({
+            user_id: user.id,
+            company_name: comp,
+            contact_phone: phone,
+            region: region,
+            main_items: items, // 주생산품목
+            status: 'pending'
+        });
 
-        // 3. 입장 허용 목록 (platinum 포함)
-        const allowedRoles = ['admin', 'franchise', 'partner', 'platinum'];
-
-        if (allowedRoles.includes(finalRole)) {
-            // 1. 모달이 있는 페이지(index.html)라면 모달 열기
-            const modal = document.getElementById('partnerConsoleModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                
-                // 뱃지 UI 업데이트
-                const badge = document.getElementById('partnerRegionBadge');
-                if (badge) {
-                    if (finalRole === 'franchise') {
-                        badge.innerText = window.currentUser.region || '가맹점';
-                        badge.style.backgroundColor = '#6366f1'; 
-                    } else if (finalRole === 'admin') {
-                        badge.innerText = '관리자 (Master)';
-                        badge.style.backgroundColor = '#1e293b'; 
-                    } else {
-                        // partner, platinum 모두 파트너스로 표시
-                        badge.innerText = '파트너스 (Partners)';
-                        badge.style.backgroundColor = '#64748b'; 
-                    }
-                }
-                // 데이터 로드
-                if (window.switchPartnerTab) window.switchPartnerTab('pool');
-            } 
-            // 2. 모달이 없는 페이지라면 partner.html로 이동
-            else {
-                location.href = 'partner.html';
-            }
+        if(error) {
+            alert("신청 오류: " + error.message);
         } else {
-            // 실패 시 메시지
-            alert(`🚫 입장 권한이 없습니다.\n\n[진단 정보]\n- 계정: ${myEmail}\n- 인식된 등급: ${finalRole}\n\n관리자 승인 후 이용해주세요.`);
+            alert("✅ 신청이 완료되었습니다.\n관리자 승인 후 '파트너스 센터'에 접속하실 수 있습니다.");
+            document.getElementById('partnerApplyModal').style.display='none';
         }
     };
-    
 
     // [2] 고객용: 도착한 입찰(견적) 확인 및 모달 띄우기
     window.checkBidsForOrder = async function(orderId) {
@@ -2205,13 +1837,51 @@
     };
 </script>
 
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
 </body>
 </html>
 
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=119 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=119';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=119'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct } from './order.js?v=119';
     import { applySize } from './canvas-size.js?v=119';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=119';
 
@@ -2219,23 +1889,17 @@
     // [1] 전역 변수 및 헬퍼 함수 설정
     // -----------------------------------------------------------
     window.canvas = canvas;
-    // index.html 내부 스크립트 수정
-
-window.getTinyThumb = function(url, size = 150) {
+    window.getTinyThumb = function(url, size = 150) {
     if (!url) return '';
     
-    // 1. Base64 데이터는 그대로 반환
+    // 1. Base64 데이터(이미지 자체)인 경우 리사이징 불가하므로 그대로 반환
     if (url.startsWith('data:image')) return url;
 
-    // [★수정] 이미 Supabase 리사이징 옵션이 붙어있다면 원본 그대로 반환 (중복 방지)
-    if (url.includes('width=') && url.includes('resize=')) {
-        return url;
-    }
-
-    // 2. URL 파라미터 연결자 결정
+    // 2. URL에 이미 ?가 있으면 &로 연결, 없으면 ?로 시작
     const separator = url.includes('?') ? '&' : '?';
 
-    // 3. 리사이징 파라미터 추가
+    // 3. Supabase 외 다른 서버도 지원할 수 있도록 조건문 제거 후 파라미터 강제 부착
+    // (서버가 지원하지 않으면 이 파라미터는 무시되고 원본이 나오지만, 시도는 해봅니다)
     return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=50&format=webp`;
 };
     window.openProductDetail = openProductDetail;
@@ -2449,21 +2113,9 @@ window.t = function(key) {
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
         if (searchBtn && searchInput) {
-            const doSearch = () => { 
-                // 모바일 키보드 닫기 (UX 개선)
-                searchInput.blur();
-                if(window.searchTemplates) window.searchTemplates(searchInput.value); 
-            };
-            
+            const doSearch = () => { if(window.searchTemplates) window.searchTemplates(searchInput.value); };
             searchBtn.onclick = doSearch;
-            
-            // [수정] 모바일 호환성을 위해 keydown 사용 & 엔터키 처리 강화
-            searchInput.addEventListener('keydown', (e) => { 
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault(); // 폼 자동제출 방지
-                    doSearch(); 
-                }
-            });
+            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
         }
         
         document.getElementById("loading").style.display = "none";
@@ -2731,237 +2383,197 @@ let iconUrl = window.getTinyThumb(rawUrl, 150);
         }
     };
 
-// =================================================================
-// [통합 수정본] 카테고리 렌더링 & 전체 검색 & 모달 검색 수정
-// =================================================================
-// =================================================================
-// [최종 업데이트] 데이터 로드 (상품 코드, 가격 포함)
-// =================================================================
-let globalSubCats = [];      // 카테고리 데이터
-let globalProdImages = [];   // 상품 데이터 (검색용)
-let globalCatThumbMap = {};  // 썸네일 매핑
-
+// [수정] index.html 내부의 renderQuickMenu 함수 교체
+// [최적화 적용] 퀵메뉴 렌더링 (이미지 100px로 제한)
+    // [수정됨] 카테고리 메뉴 렌더링 (언어 감지 추가)
 async function renderQuickMenu() {
     const tabContainer = document.getElementById('topCategoryTabs');
     const itemContainer = document.getElementById('quickMenuContainer');
     if (!tabContainer || !itemContainer) return;
 
-    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
 
+    // ★ [1] 현재 국가 감지 (도메인 기준)
     const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
     const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
 
     try {
-        // 1. 카테고리 데이터
         let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
         const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
         
-        // 2. 상품 데이터 (전체 정보 가져오기)
         const { data: prodImages } = await sb.from('admin_products')
-            .select('*') // [수정] 상세 정보(사이즈,설명 등)를 위해 전체 컬럼 선택
+            .select('category, img_url')
             .not('img_url', 'is', null).neq('img_url', '');
 
-        // 전역 변수 저장
-        globalSubCats = subCats || [];
-        globalProdImages = prodImages || [];
-
-        // 3. 썸네일 매핑 및 PRODUCT_DB 등록 (검색된 상품 클릭 시 정보 로드용)
+        const catThumbMap = {};
         if (prodImages) {
-            // PRODUCT_DB 초기화 확인
-            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-
             prodImages.forEach(p => {
-                // 3-1. 썸네일 매핑 (기존 로직)
-                if (p.category && !globalCatThumbMap[p.category]) {
-                    globalCatThumbMap[p.category] = p.img_url;
-                }
-
-                // 3-2. [추가] 상세 정보 전역 DB 등록
-                // 다국어 처리 확인
-                let localName = p.name;
-                let localPrice = p.price;
-                if(typeof window.getLocalizedData === 'function') {
-                    const localData = window.getLocalizedData(p);
-                    localName = localData.name;
-                    localPrice = localData.price;
-                }
-
-                window.PRODUCT_DB[p.code] = {
-                    name: localName,
-                    price: localPrice,
-                    w_mm: p.width_mm, 
-                    h_mm: p.height_mm,
-                    img: p.img_url, 
-                    description: p.description, 
-                    addons: p.addons ? p.addons.split(',') : [], 
-                    category: p.category,
-                    is_custom_size: p.is_custom_size,
-                    is_general_product: p.is_general_product
-                };
+                if (p.category && !catThumbMap[p.category]) catThumbMap[p.category] = p.img_url;
             });
         }
 
-        // 4. 탭 생성 (기존 로직 유지)
+        if (!subCats || subCats.length === 0) {
+            itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
+            return;
+        }
+
+        if (topCats) {
+            const seen = new Set();
+            topCats = topCats.filter(cat => {
+                const name = cat.name.trim();
+                if (seen.has(name)) return false;
+                seen.add(name);
+                return true;
+            });
+            const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
+            topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
+        }
+
         const renderTabs = () => {
-            tabContainer.innerHTML = '';
-            if (topCats) {
-                const seen = new Set();
-                topCats = topCats.filter(cat => {
-                    const name = cat.name.trim();
-                    if (seen.has(name)) return false;
-                    seen.add(name);
-                    return true;
-                });
-                const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
-                topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
+    tabContainer.innerHTML = '';
+    const descBox = document.getElementById('categoryDescriptionBox'); // 설명 박스 엘리먼트
 
-                topCats.forEach(top => {
-                    let topName = top.name;
-                    if (isJP) topName = top.name_jp || top.name;
-                    else if (isUS) topName = top.name_us || top.name;
+    if (topCats) {
+        topCats.forEach(top => {
+            // 이름 다국어 처리
+            let topName = top.name;
+            if (isJP) topName = top.name_jp || top.name;
+            else if (isUS) topName = top.name_us || top.name;
 
-                    const btn = document.createElement('button');
-                    btn.className = 'cat-tab';
-                    btn.innerText = topName;
-                    
-                    btn.onclick = (e) => {
-                        const tabs = tabContainer.querySelectorAll('.cat-tab');
-                        tabs.forEach(t => t.classList.remove('active'));
-                        e.target.classList.add('active');
-                        // 검색창 초기화
-                        const searchInput = document.getElementById('mainCategorySearch');
-                        if(searchInput) searchInput.value = '';
-                        renderItemsByFilter(top.code);
-                    };
-                    tabContainer.appendChild(btn);
-                });
-            }
-            // 기타 탭
-            const orphanCats = subCats.filter(sub => !sub.top_category_code);
-            if (orphanCats.length > 0) {
-                const etcBtn = document.createElement('button');
-                etcBtn.className = 'cat-tab';
-                etcBtn.innerText = isJP ? 'Others' : '기타';
-                etcBtn.onclick = (e) => {
-                    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-                    e.target.classList.add('active');
-                    document.getElementById('mainCategorySearch').value = '';
-                    renderItemsByFilter('etc');
-                };
-                tabContainer.appendChild(etcBtn);
-            }
+            // ★ [신규] 설명 다국어 처리
+            let topDesc = top.description;
+            if (isJP) topDesc = top.description_jp || top.description;
+            else if (isUS) topDesc = top.description_us || top.description;
+
+            const btn = document.createElement('button');
+            btn.className = 'cat-tab';
+            btn.innerText = topName;
+
+            btn.onclick = (e) => {
+                handleTabClick(e);
+                renderItems(top.code);
+
+                // ★ [신규] 탭 클릭 시 설명 업데이트 로직
+                if (topDesc && topDesc.trim() !== "") {
+                    descBox.style.display = "block";
+                    // 줄바꿈(\n)을 <br>로 변환하여 출력
+                    descBox.innerHTML = topDesc.replace(/\n/g, '<br>');
+                } else {
+                    descBox.style.display = "none";
+                }
+
+                // (기존) 핫딜 로드 로직 유지
+                if (window.loadSpecialProducts) {
+                    loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
+                    loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+                    loadSpecialProducts('categoryDetailModal', 'catProductGrid', top.code, 50);
+                }
+            };
+            tabContainer.appendChild(btn);
+        });
+    }
+
+    const orphanCats = subCats.filter(sub => !sub.top_category_code);
+    if (orphanCats.length > 0) {
+        const etcBtn = document.createElement('button');
+        etcBtn.className = 'cat-tab';
+        etcBtn.innerText = isJP ? 'その他' : (isUS ? 'Others' : '기타');
+        etcBtn.onclick = (e) => {
+            handleTabClick(e);
+            renderItems('etc');
+        };
+        tabContainer.appendChild(etcBtn);
+    }
+};
+
+        const handleTabClick = (e) => {
+            const tabs = tabContainer.querySelectorAll('.cat-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
         };
 
-        // 5. 그리드 그리기 (공통 함수)
-        window._drawQuickItems = (list, isProductMode = false) => {
+        const renderItems = (filterCode) => {
             itemContainer.innerHTML = '';
-            if (!list || list.length === 0) {
-                itemContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px 0; color:#94a3b8;">검색 결과가 없습니다.</div>`;
+            let filtered = (filterCode === 'etc') 
+                ? subCats.filter(sub => !sub.top_category_code)
+                : subCats.filter(sub => sub.top_category_code === filterCode);
+
+            if (filtered.length === 0) {
+                itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">Empty.</div>';
                 return;
             }
 
-            list.forEach(item => {
-                const isProduct = isProductMode || item.price !== undefined; // 가격이 있으면 상품으로 간주
-                
-                let name = item.name;
-                let rawUrl = item.img_url || item.image || (isProduct ? '' : globalCatThumbMap[item.code]);
-                const tinyUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
-                
-                // 클릭 이벤트 분기
-                let clickAction = '';
-                let badge = '';
+            filtered.forEach(cat => {
+                // 1. 다국어 이름 설정
+                let catName = cat.name;
+                if(isJP) catName = cat.name_jp || cat.name;
+                else if(isUS) catName = cat.name_us || cat.name;
 
-                if (isProduct) {
-                    // ★ 상품 클릭 시 분기 처리 (일반상품 vs 디자인상품)
-                    if (item.is_general_product) {
-                        clickAction = `window.openGeneralProductModal('${item.code}')`;
-                    } else {
-                        clickAction = `window.showChoiceModal('${item.code}')`;
-                    }
-                    badge = `<span style="position:absolute; top:5px; left:5px; background:#6366f1; color:white; font-size:10px; padding:2px 6px; border-radius:4px; z-index:2;">상품</span>`;
-                } else {
-                    // 카테고리 클릭 시 -> 상품 리스트 모달
-                    const safeDesc = (item.description || '').replace(/\n/g, ' ').replace(/'/g, "\\'");
-                    clickAction = `window.showCategoryProducts('${item.code}', '${name}', '${safeDesc}')`;
-                }
+                // 2. [핵심 수정] 설명글(description) 안전하게 변환
+                // 줄바꿈(\n)이나 따옴표(')가 있으면 에러가 나므로 제거합니다.
+                let rawDesc = cat.description;
+                if(isJP) rawDesc = cat.description_jp || cat.description;
+                else if(isUS) rawDesc = cat.description_us || cat.description;
+                
+                const safeDesc = (rawDesc || '').replace(/\n/g, ' ').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
+                // 3. 코드 공백 제거 (링크 오류 방지)
+                const safeCode = (cat.code || '').trim();
+
+                // 4. 이미지 처리
+                let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+                const tinyUrl = window.getTinyThumb(rawUrl, 100);
+                
+                // 5. 랜덤 평점 (4.5 ~ 5.0)
+                const randomScore = (4.5 + Math.random() * 0.5).toFixed(1);
 
                 const div = document.createElement('div');
                 div.className = 'quick-item';
                 if (isUS || isJP) div.classList.add('long-text-mode');
 
                 let imgTag = tinyUrl 
-                    ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
+                    ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-folder-open\\'></i>'">`
                     : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
 
+                // 6. HTML 생성 (safeDesc, safeCode 사용)
                 div.innerHTML = `
-                    <div class="quick-icon" onclick="${clickAction}" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;">
-                        ${badge}
+                    <div class="quick-icon" onclick="window.showCategoryProducts('${safeCode}', '${catName}', '${safeDesc}')" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                         ${imgTag}
                     </div>
-                    <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
+                    <div class="quick-text" onclick="window.showCategoryProducts('${safeCode}', '${catName}', '${safeDesc}')" style="cursor:pointer;">${catName}</div>
+                    
+                    <div class="quick-review-bar">
+                        <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${safeCode}', '${catName}')">
+                            <i class="fa-solid fa-star star-icon"></i> 
+                            <span class="star-score">${randomScore}</span>
+                        </div>
+                        <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${safeCode}', '${catName}')" style="background:white;">
+                            <i class="fa-regular fa-comment-dots"></i>
+                        </div>
+                    </div>
                 `;
                 
                 itemContainer.appendChild(div);
             });
         };
 
-        // 탭 필터링
-        const renderItemsByFilter = (filterCode) => {
-            let filtered = (filterCode === 'etc') 
-                ? subCats.filter(sub => !sub.top_category_code)
-                : subCats.filter(sub => sub.top_category_code === filterCode);
-            window._drawQuickItems(filtered, false);
-        };
-
-        // 초기 실행
         renderTabs();
-        const firstTab = tabContainer.querySelectorAll('.cat-tab')[0];
-        if (firstTab) firstTab.click();
-
-        // 전역 노출
-        window._renderCategoryItems = renderItemsByFilter;
+        const allTab = tabContainer.querySelectorAll('.cat-tab')[0];
+        if (allTab) allTab.click();
 
     } catch (err) {
         console.error("카테고리 로딩 실패:", err);
-        itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading Error.</div>';
     }
 }
-
-// ==========================================================
-// [최종] 통합 검색 (카테고리 + 개별 상품 동시 검색)
-// ==========================================================
-window.filterMainIcons = function(keyword) {
-    const term = keyword.toLowerCase().trim();
-
-    // 1. 검색어 없으면 -> 원래 탭 화면으로 복구
-    if (!term) {
-        const activeTab = document.querySelector('.cat-tab.active');
-        if (activeTab) activeTab.click();
-        return;
-    }
-
-    // 2. 카테고리 검색 (이름 일치)
-    const matchedCats = globalSubCats.filter(cat => {
-        return (cat.name || '').toLowerCase().includes(term);
-    });
-
-    // 3. 상품 검색 (이름 일치) -> ★ 여기가 추가된 핵심 기능
-    const matchedProds = globalProdImages.filter(prod => {
-        return (prod.name || '').toLowerCase().includes(term);
-    });
-
-    // 4. 결과 합치기 (카테고리 먼저, 그 뒤에 상품)
-    // 상품 데이터에는 isProduct: true 플래그를 달아주는 로직은 _drawQuickItems에서 처리됨
-    const combinedResults = [...matchedCats, ...matchedProds];
-
-    // 5. 화면에 그리기
-    window._drawQuickItems(combinedResults);
-};
-
-
+    // ============================================================
+    // [3] 제품 선택 모달 (서버 보호: 클릭 시 로딩 & 캐싱 적용)
+    // ============================================================
+    // ★ 전역 캐시 저장소 (한 번 불러온 카테고리는 서버에 다시 요청 안 함)
     window.categoryCache = {}; 
 
-
+    // [수정된 버전] 언어 감지 기능이 강화된 상품 목록 표시 함수
+// [최적화됨] 카테고리 상품 목록 (언어 로직 제거됨)
+// [수정] catDesc 인자 추가
 window.showCategoryProducts = async function(catKey, catName, catDesc) {
     const grid = document.getElementById('catProductGrid');
     const modal = document.getElementById('categoryDetailModal');
@@ -3039,8 +2651,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             addons: p.addons ? p.addons.split(',') : [], 
             category: p.category,
             description: pDesc,
-            is_custom_size: p.is_custom_size, // ★ [추가] 커스텀 여부 저장
-            is_general_product: p.is_general_product // [신규] 일반 상품 여부 저장
+            is_custom_size: p.is_custom_size // ★ [추가] 커스텀 여부 저장
         };
 
         const div = document.createElement('div');
@@ -3062,20 +2673,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             modal.style.display = 'none'; 
             window.currentProductKey = p.code;
             window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-
-            // [수정됨] 일반 상품이면 바로 장바구니로, 아니면 선택 모달 띄우기
-            // [수정됨] 일반 상품이면 전용 모달(수량/설명) 띄우기
-            if (p.is_general_product) {
-                if (window.openGeneralProductModal) {
-                    window.openGeneralProductModal(p.code);
-                } else {
-                    alert("일반 상품 모달 스크립트가 로드되지 않았습니다.");
-                }
-            } else {
-                // 기존 디자인 상품 (모달 띄우기)
-                if(window.showChoiceModal) window.showChoiceModal(p.code);
-                else window.startEditorDirect(p.code);
-            }
+            if(window.showChoiceModal) window.showChoiceModal(p.code);
+            else window.startEditorDirect(p.code);
         };
         grid.appendChild(div);
     });
@@ -3409,23 +3008,12 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
-        // 3. [핵심] 화면 전환을 먼저 실행
+        // 3. [핵심] 화면 전환을 먼저 실행 (로딩 체감 속도 향상)
         document.getElementById("startScreen").style.display = "none";
-        // ★ [수정] Grid가 아닌 Flex로 강제 지정 (CSS 오버라이딩 확실하게)
-        document.getElementById("mainEditor").style.display = "flex"; 
-        
+        document.getElementById("mainEditor").style.display = "flex";
         const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
         document.body.classList.add('editor-active'); 
-
-        // ★ [추가] 사이드바 템플릿 추천 패널 로드 (모바일에서는 자동 실행 안 함)
-        if (window.innerWidth > 768 && typeof window.loadSideBarTemplates === 'function') {
-            // PC 화면일 때만 사이드바 자동 열기
-            console.log(`📂 사이드바 템플릿 로드 시도: ${key}`);
-            window.loadSideBarTemplates(key);
-        } else {
-            console.log("📱 모바일 환경이므로 사이드바 자동 열림 방지");
-        }
         
         if (window.ChannelIO) ChannelIO('hide');
         window.dispatchEvent(new Event('resize'));
@@ -3453,6 +3041,25 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             window.initCanvasFonts().then(() => {
                 console.log("✅ 서체 로딩 완료");
             }); 
+        }
+
+        // 5. [자동 로드] 고정 가이드(칼선)가 있는지 확인
+        try {
+            const { data, error } = await sb.from('library')
+                .select('data_url')
+                .eq('product_key', key)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (data && data.length > 0) {
+                const templateUrl = data[0].data_url;
+                console.log("📢 고정 가이드 발견! 자동 로드합니다.");
+                setTimeout(() => {
+                    if (window.loadProductFixedTemplate) window.loadProductFixedTemplate(templateUrl);
+                }, 500);
+            }
+        } catch(e) { 
+            console.error("자동 로드 오류:", e); 
         }
 
         // 6. 템플릿 처리 (기존 선택된 템플릿만 적용)
@@ -3514,6 +3121,102 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             showCategorySelectionModal(); 
         }
     };
+
+    // ▼▼▼ [3단계 적용] 수정된 showCategorySelectionModal 함수
+    // ▼▼▼ [수정] 카테고리 이미지가 없을 때 상품 이미지로 대체하는 로직 추가 ▼▼▼
+    window.showCategorySelectionModal = async function() {
+        const modal = document.getElementById('categoryDetailModal');
+        const grid = document.getElementById('catProductGrid');
+        const titleEl = document.getElementById('catModalTitle');
+        const descEl = modal.querySelector('p');
+
+        // 1. 텍스트 설정 (window.t 사용으로 변경)
+        const titleText = window.t('modal_size_select_title');
+        const subText = window.t('modal_size_select_sub');
+        const descText = window.t('modal_size_select_desc');
+        const loadingMsg = window.t('msg_loading');
+
+        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">${subText}</span>`;
+        if(descEl) descEl.innerText = descText;
+        
+        modal.style.display = 'flex';
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center;">${loadingMsg}</div>`;
+        
+        try {
+            // 2. 카테고리 목록 가져오기
+            const { data: categories, error } = await sb.from('admin_categories')
+                .select('*').order('sort_order', { ascending: true });
+
+            if (!categories || categories.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Categories</div>';
+                return;
+            }
+
+            // 3. ★ [추가됨] 상품 이미지 가져오기 (이미지가 있는 상품만)
+            const { data: prodImages } = await sb.from('admin_products')
+                .select('category, img_url')
+                .not('img_url', 'is', null)
+                .neq('img_url', '');
+
+            // 카테고리 코드별로 첫 번째 상품 이미지를 매핑 (Dictionary 만들기)
+            const catThumbMap = {};
+            if (prodImages) {
+                prodImages.forEach(p => {
+                    // 해당 카테고리에 아직 이미지가 등록 안 되었으면, 이 상품의 이미지를 대표로 설정
+                    if (p.category && !catThumbMap[p.category]) {
+                        catThumbMap[p.category] = p.img_url;
+                    }
+                });
+            }
+
+            grid.innerHTML = ''; // 로딩 메시지 지우기
+
+            // 4. 그리드 생성
+            categories.forEach(cat => {
+    // 1. 원본 URL 가져오기
+    let rawUrl = cat.img_url || cat.image || cat.thumbnail || catThumbMap[cat.code] || '';
+    
+    // 2. 리사이징 시도 (150px)
+    let iconUrl = window.getTinyThumb(rawUrl, 150);
+    
+    const div = document.createElement('div');
+    div.className = 'quick-item';
+
+    // 3. ★ 핵심 수정: 이미지 태그 최적화 (버벅임 방지) ★
+    // decoding="async": 이미지 해독을 병렬로 처리하여 스크롤 끊김 방지
+    // content-visibility: auto: 화면에 보일 때만 렌더링하여 성능 향상
+    // contain: strict: 레이아웃 재계산 비용 최소화
+    let imgTag = '';
+    if (iconUrl) {
+        imgTag = `<img src="${iconUrl}" 
+                       loading="lazy" 
+                       decoding="async" 
+                       style="width:100%; height:100%; object-fit:cover; border-radius:12px; content-visibility: auto; contain: strict; image-rendering: -webkit-optimize-contrast; transform: translateZ(0); backface-visibility: hidden;"
+                       onerror="this.style.display='none'; this.parentNode.innerText='No Img'; this.parentNode.style.background='#f1f5f9'; this.parentNode.style.color='#ccc';">`;
+    } else {
+        imgTag = `<div style="width:100%; height:100%; background:#f1f5f9; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:12px;">No Img</div>`;
+    }
+
+    div.innerHTML = `
+        <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; padding:0; overflow:hidden;">
+            ${imgTag}
+        </div>
+        <div class="quick-text">${cat.name}</div>
+    `;
+    
+    div.onclick = () => window.showCategoryProducts(cat.code, cat.name);
+    grid.appendChild(div);
+});
+
+        } catch (e) {
+            console.error("카테고리 로딩 실패:", e);
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Error loading categories</div>';
+        }
+    };
+
+    // (삭제됨: applyTemplateDirectly 함수는 canvas-template.js의 applyStartTemplate으로 대체되었습니다.)
+
+    
 
     function finishLoading() {
         document.getElementById("loading").style.display = "none";
@@ -3617,8 +3320,6 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             let query = sb.from('library')
                 .select('id, thumb_url, category, tags', { count: 'exact' }) // 전체 개수도 같이 가져옴
                 .order('created_at', { ascending: false })
-                // ★ [수정] 유저 템플릿(벡터/이미지) + 사진(photo-bg)까지 포함
-                .in('category', ['user_vector', 'user_image', 'photo-bg']) 
                 .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); // 범위 설정
 
             // 검색어 필터 (태그 검색)
@@ -3798,61 +3499,6 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     window.alignObject = function(d) { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return; const b=canvas.getObjects().find(o=>o.isBoard); const r=b?b.getBoundingRect():{left:0,top:0,width:canvas.width,height:canvas.height}; const w=a.getScaledWidth(); const h=a.getScaledHeight(); if(d=='left') a.left=r.left+w/2; if(d=='centerH') a.left=r.left+r.width/2; if(d=='right') a.left=r.left+r.width-w/2; if(d=='top') a.top=r.top+h/2; if(d=='centerV') a.top=r.top+r.height/2; if(d=='bottom') a.top=r.top+r.height-h/2; if(d=='center') { a.left=r.left+r.width/2; a.top=r.top+r.height/2; } a.setCoords(); canvas.requestRenderAll(); };
 
     if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    // =========================================================
-    // [신규] 일반 상품 모달 로직 (오류 해결용)
-    // =========================================================
-    window.currentGenProduct = null;
-
-    // 1. 모달 열기
-    window.openGeneralProductModal = function(code) {
-        // 상품 정보 가져오기 (이미 전역변수에 로드됨)
-        const product = window.PRODUCT_DB[code];
-        if (!product) return alert("상품 정보를 찾을 수 없습니다.");
-
-        window.currentGenProduct = product;
-
-        // UI 설정
-        document.getElementById('genProdImg').src = product.img || 'https://placehold.co/400?text=No+Image';
-        document.getElementById('genProdTitle').innerText = product.name;
-        document.getElementById('genProdDesc').innerText = product.description || '';
-        document.getElementById('genProdPrice').innerText = (product.price || 0).toLocaleString() + '원';
-        
-        // 수량 및 합계 초기화
-        document.getElementById('genProdQty').value = 1;
-        window.updateGeneralTotal();
-
-        // 모달 표시
-        document.getElementById('categoryDetailModal').style.display = 'none'; // 기존 창 닫기
-        document.getElementById('generalProductModal').style.display = 'flex';
-    };
-
-    // 2. 합계 금액 실시간 계산
-    window.updateGeneralTotal = function() {
-        const qty = parseInt(document.getElementById('genProdQty').value) || 1;
-        const price = window.currentGenProduct ? (window.currentGenProduct.price || 0) : 0;
-        const total = price * qty;
-        document.getElementById('genProdTotal').innerText = total.toLocaleString() + '원';
-    };
-
-    // 3. 장바구니 담기 실행
-    window.addGeneralToCart = function() {
-        if (!window.currentGenProduct) return;
-        const qty = parseInt(document.getElementById('genProdQty').value) || 1;
-
-        // 중복 방지 (이미 진행중이면 차단)
-        if (window.isDirectCartAddInProgress) return;
-        
-        // 로딩 표시
-        window.isDirectCartAddInProgress = true;
-        
-        // order.js의 함수 호출 (수량 포함)
-        addProductToCartDirectly(window.currentGenProduct, qty);
-
-        // 모달 닫기 및 완료 모달 열기 (order.js에서 처리되지만 안전장치)
-        document.getElementById('generalProductModal').style.display = 'none';
-        setTimeout(() => { window.isDirectCartAddInProgress = false; }, 1000);
-    };
 </script>
 </script>
 <script>
@@ -4057,20 +3703,20 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             <label class="form-label" style="font-weight:bold; font-size:13px; margin-bottom:5px; display:block;" data-i18n="label_select_manager">담당 매니저 선택 (Optional)</label>
             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px;">
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="은미 매니저" checked>
-                    <div class="mgr-box">은미 매니저</div>
+                    <input type="radio" name="vipManager" value="Manager A" checked>
+                    <div class="mgr-box">Manager A</div>
                 </label>
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="지숙 매니저">
-                    <div class="mgr-box">지숙 매니저</div>
+                    <input type="radio" name="vipManager" value="Manager B">
+                    <div class="mgr-box">Manager B</div>
                 </label>
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="성희 매니저">
-                    <div class="mgr-box">성희 매니저</div>
+                    <input type="radio" name="vipManager" value="Manager C">
+                    <div class="mgr-box">Manager C</div>
                 </label>
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="본사담당자">
-                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;">본사담당자</div>
+                    <input type="radio" name="vipManager" value="Head Office">
+                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;" data-i18n="label_new_customer">New</div>
                 </label>
             </div>
             <style>
@@ -4120,17 +3766,17 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         </div>
         
         <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;">활동 지역 (다중 입력 가능)</label>
-            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 서초구, 경기 화성시 (쉼표로 구분)">
-            <p style="font-size:11px; color:#ef4444; margin-top:5px;">* 여러 지역 활동 시 쉼표(,)로 구분하여 모두 적어주세요.</p>
+            <label class="form-label" style="font-weight:bold;">활동 지역 (구 단위까지 입력)</label>
+            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 경기 화성시">
+            <p style="font-size:11px; color:#ef4444; margin-top:5px;">* 정확한 매칭을 위해 시/군/구 단위까지 입력해주세요.</p>
         </div>
+        
         <div style="margin-bottom:20px;">
             <label class="form-label" style="font-weight:bold;">주 생산 품목 (제조사인 경우)</label>
             <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)">
         </div>
 
         <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;">신청하기</button>
-        <button onclick="window.cancelPartnerApp()" class="btn-round" style="width:100%; margin-top:5px; background:#fff1f2; color:#be123c; border:1px solid #fda4af;">신청 철회하기</button>
         <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;">닫기</button>
     </div>
 </div>
@@ -4194,12 +3840,6 @@ function updateVipFileList(input) {
         try {
             // 상세 분석된 유입 경로 가져오기
             const visitSource = getTrafficSource();
-
-            // ★ [추가] 유입 경로가 '내 사이트'이거나 '내부 이동'이면 저장하지 않음 (DB 절약 & 정확도 향상)
-            if (visitSource.includes(window.location.hostname) || visitSource.includes('cafe2626.com')) {
-                console.log("내부 이동임으로 카운트 생략");
-                return;
-            }
 
             // 1. 방문 기록 저장
             const { data, error } = await sb
@@ -4271,244 +3911,7 @@ function updateVipFileList(input) {
         document.getElementById('cartPage').style.display = 'block';
         if(window.renderCart) window.renderCart();
     };
-    // [수정 1] 템플릿 만들기 버튼 클릭 시 -> 전용 모달 열기
-    window.openTemplateCreator = function() {
-        // 1. 로그인 체크
-        if (!window.currentUser) {
-            alert(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.");
-            document.getElementById('loginModal').style.display = 'flex';
-            return;
-        }
-
-        // 2. 모달 열기 (값 초기화)
-        document.getElementById('tplCreateW').value = '1000';
-        document.getElementById('tplCreateH').value = '1000';
-        document.getElementById('templateCreatorModal').style.display = 'flex';
-    };
-
-    // [수정 2] "디자인 시작하기" 버튼 클릭 시 실행 (초기화 및 에디터 진입)
-    // [최종 수정] "디자인 시작하기" 버튼 클릭 시 실행 (강력 초기화 적용)
-    window.confirmTemplateCreation = function() {
-        const wVal = document.getElementById('tplCreateW').value;
-        const hVal = document.getElementById('tplCreateH').value;
-        const w = parseInt(wVal);
-        const h = parseInt(hVal);
-
-        if (!w || !h || w <= 0 || h <= 0) {
-            alert("올바른 사이즈를 입력해주세요.");
-            return;
-        }
-
-        // ★ [핵심] 유령 이미지 완벽 차단: 모든 관련 변수 초기화
-        window.pendingTemplate = null; 
-        window.pendingAiImage = null;
-        window.selectedTpl = null; // ★ 이 부분이 중요합니다 (갤러리 선택 해제)
-        
-        // 파일 입력창들도 싹 비우기
-        const inputs = ['contributorFileInput', 'imgUpload', 'logoFileInput', 'vipFileInput'];
-        inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.value = '';
-        });
-
-        // 모달 닫기
-        document.getElementById('templateCreatorModal').style.display = 'none';
-
-        // 에디터 열기 (빈 화면)
-        if (window.startEditorDirect) {
-            // custom 키로 빈 캔버스 시작
-            window.startEditorDirect('custom', w, h);
-            
-            // [안전장치] 에디터 로드 직후 캔버스를 한 번 더 비워줌 (0.5초 뒤 실행)
-            setTimeout(() => {
-                if(window.canvas) {
-                    // 배경(Board)을 제외한 모든 객체 삭제
-                    const objects = window.canvas.getObjects().filter(o => !o.isBoard);
-                    objects.forEach(o => window.canvas.remove(o));
-                    window.canvas.requestRenderAll();
-                }
-            }, 500);
-        } else {
-            alert("에디터 로드 중 오류가 발생했습니다. 새로고침 해주세요.");
-        }
-    };
-
-
-// =================================================================
-// [최종] 템플릿 모달: 카테고리 + 상품 통합 검색 기능
-// =================================================================
-
-// 전역 변수에 모달용 데이터를 저장해둡니다.
-window.modalGlobalData = {
-    categories: [],
-    products: [],
-    thumbMap: {}
-};
-
-// 1. 모달 열기 및 데이터 준비
-window.showCategorySelectionModal = async function() {
-    const modal = document.getElementById('categoryDetailModal');
-    const grid = document.getElementById('catProductGrid');
-    const titleEl = document.getElementById('catModalTitle');
-    const descEl = modal.querySelector('p');
-    const searchInput = document.getElementById('modalProdSearch');
-
-    // UI 초기화
-    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">템플릿을 적용할 상품 검색</span>`;
-    if(descEl) descEl.style.display = 'none'; // 설명 숨김
-    
-    // 검색창 초기화
-    if(searchInput) {
-        searchInput.value = ''; 
-        setTimeout(() => searchInput.focus(), 100); 
-    }
-
-    modal.style.display = 'flex';
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#6366f1;"></i><br><br>데이터 로딩 중...</div>';
-    
-    try {
-        if (typeof sb === 'undefined') throw new Error("DB 연결이 없습니다.");
-
-        // (1) 카테고리 가져오기
-        const { data: categories } = await sb.from('admin_categories')
-            .select('*').order('sort_order', { ascending: true });
-
-        // (2) 상품 데이터 가져오기 (코드, 가격, 이미지 포함)
-        const { data: products } = await sb.from('admin_products')
-            .select('category, img_url, name, code, price, width_mm, height_mm')
-            .not('img_url', 'is', null)
-            .neq('img_url', '');
-
-        // (3) 데이터 전역 저장
-        window.modalGlobalData.categories = categories || [];
-        window.modalGlobalData.products = products || [];
-        window.modalGlobalData.thumbMap = {};
-
-        // 썸네일 매핑 (카테고리 대표 이미지용)
-        if (products) {
-            products.forEach(p => {
-                if (p.category && !window.modalGlobalData.thumbMap[p.category]) {
-                    window.modalGlobalData.thumbMap[p.category] = p.img_url;
-                }
-            });
-        }
-
-        // (4) 초기 화면 그리기 (검색어 없음 -> 안내 문구 표시)
-        window.filterModalItems('');
-
-    } catch (e) {
-        console.error("로딩 실패:", e);
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">오류가 발생했습니다.</div>';
-    }
-};
-
-// 2. 검색 및 화면 그리기 (통합 검색 로직)
-window.filterModalItems = function(keyword) {
-    const term = keyword.toLowerCase().trim();
-    const grid = document.getElementById('catProductGrid');
-    if (!grid) return;
-
-    // A. 검색어가 없을 때 -> 안내 문구만 표시 (깔끔하게)
-    if (term === '') {
-        grid.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding: 60px 0; color:#94a3b8;">
-                <i class="fa-solid fa-magnifying-glass" style="font-size:40px; margin-bottom:15px; opacity:0.5;"></i><br>
-                <span style="font-size:18px; font-weight:bold; color:#475569;">찾으시는 상품을 검색해주세요.</span><br>
-                <span style="font-size:14px; margin-top:5px; display:inline-block;">(예: 배너, 현수막, 텀블러 등)</span>
-            </div>
-        `;
-        return;
-    }
-
-    // B. 검색어가 있을 때 -> 필터링 시작
-    const { categories, products, thumbMap } = window.modalGlobalData;
-
-    // 1) 카테고리 검색
-    const matchedCats = categories.filter(cat => (cat.name || '').toLowerCase().includes(term));
-    
-    // 2) 상품 검색 (이름 일치)
-    const matchedProds = products.filter(prod => (prod.name || '').toLowerCase().includes(term));
-
-    // 결과가 없을 때
-    if (matchedCats.length === 0 && matchedProds.length === 0) {
-        grid.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding: 50px 0; color:#94a3b8;">
-                <i class="fa-solid fa-circle-exclamation" style="font-size:30px; margin-bottom:10px;"></i><br>
-                <span>검색 결과가 없습니다.</span>
-            </div>
-        `;
-        return;
-    }
-
-    // C. 결과 그리기 (기존 내용 비우고 새로 그림)
-    grid.innerHTML = '';
-
-    // [헬퍼] 아이템 HTML 생성 함수
-    const createItem = (item, type) => {
-        const div = document.createElement('div');
-        div.className = 'quick-item';
-        
-        // 이미지 주소 결정
-        let rawUrl = '';
-        let badgeHtml = '';
-        let subText = '';
-
-        if (type === 'category') {
-            rawUrl = item.img_url || item.image || thumbMap[item.code] || '';
-            // 카테고리는 뱃지 없음
-        } else {
-            // 상품인 경우
-            rawUrl = item.img_url || '';
-            badgeHtml = `<span style="position:absolute; top:6px; left:6px; background:#6366f1; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:2;">상품</span>`;
-            subText = `<div style="font-size:11px; color:#888; margin-top:2px;">${(item.price||0).toLocaleString()}원</div>`;
-        }
-
-        const iconUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
-        const imgTag = iconUrl 
-            ? `<img src="${iconUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
-            : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
-
-        div.innerHTML = `
-            <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative;">
-                ${badgeHtml}
-                ${imgTag}
-            </div>
-            <div class="quick-text">${item.name}</div>
-            ${subText}
-        `;
-
-        // 클릭 이벤트 연결
-        div.onclick = () => {
-            if (type === 'category') {
-                window.showCategoryProducts(item.code, item.name);
-            } else {
-                // 상품 클릭 시 분기 처리
-                document.getElementById('categoryDetailModal').style.display = 'none'; // 모달 닫기
-                
-                if (item.is_general_product) {
-                    // [수정] 일반 상품: 수량 입력 모달 열기
-                    window.openGeneralProductModal(item.code);
-                } else {
-                    // [수정] 디자인 상품: 에디터 시작
-                    window.startEditorDirect(
-                        item.code, 
-                        item.width_mm, 
-                        item.height_mm
-                    );
-                }
-            }
-        };
-        return div;
-    };
-
-    // 카테고리 먼저 추가
-    matchedCats.forEach(cat => grid.appendChild(createItem(cat, 'category')));
-    // 상품 그 뒤에 추가
-    matchedProds.forEach(prod => grid.appendChild(createItem(prod, 'product')));
-};
-
 </script>
-
 <div id="cartAddedModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 400px; text-align: center; padding: 40px 30px;">
         <div style="font-size: 50px; color: #6366f1; margin-bottom: 20px;">
@@ -4536,54 +3939,66 @@ window.filterModalItems = function(keyword) {
         </div>
     </div>
 </div>
-
-
-</script>
-<div id="templateCreatorModal" class="modal-bg" style="z-index: 21000; display: none; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 500px; max-width: 95%; text-align: left; border-radius: 16px; overflow: hidden; padding: 0;">
+<div id="partnerApplyModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 500px; max-width: 95%;">
+        <h3 style="margin-top:0;">🤝 파트너(가맹점) 신청</h3>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">지역 광고/제조 파트너가 되어 수익을 창출하세요.</p>
         
-        <div style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); padding: 20px 25px; color: white;">
-            <h3 style="margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-palette"></i> 템플릿 만들기 시작
-            </h3>
-            <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 13px;">나만의 멋진 디자인을 등록하고 수익을 창출하세요!</p>
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">업체명 (상호)</label>
+            <input id="applyCompName" class="ai-input-pretty" placeholder="예: 카멜레온디자인">
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">연락처</label>
+            <input id="applyPhone" class="ai-input-pretty" placeholder="010-1234-5678">
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;">활동 지역 (구 단위까지 입력)</label>
+            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 경기 화성시">
+            <p style="font-size:11px; color:#ef4444; margin-top:5px;">* 정확한 매칭을 위해 시/군/구 단위까지 입력해주세요.</p>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+            <label class="form-label" style="font-weight:bold;">주 생산 품목 (제조사인 경우)</label>
+            <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)">
         </div>
 
-        <div style="padding: 25px;">
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 13px; line-height: 1.8;">
-                    <li>📷 <strong>이미지/벡터 구분:</strong> 배경이 벡터라면 벡터로, 이미지라면 이미지로 등록.</li>
-                    <li>💡 <strong>꿀팁:</strong> 글씨 배치 후 배경만 바꾸면 빠르게 등록가능.</li>
-                    <li>💰 <strong>수익 UP:</strong> 태그를 많이 입력할수록 노출이 잘 되어 수익금 상승.</li>
-                    <li>⚡ <strong>즉시 적립:</strong> 템플릿 등록 즉시 수익 + 판매수익까지.</li>
-                </ul>
-            </div>
-
-            <label style="font-weight: bold; font-size: 14px; color: #1e293b; display: block; margin-bottom: 8px;">
-                📏 만들고 싶은 탬플릿 사이즈 (mm)
-            </label>
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <div style="flex: 1; position: relative;">
-                    <input type="number" id="tplCreateW" class="ai-input-pretty" placeholder="가로" value="1000" style="padding-right: 30px; font-weight: bold; color: #334155;">
-                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;">mm</span>
-                </div>
-                <span style="display: flex; align-items: center; color: #cbd5e1;">X</span>
-                <div style="flex: 1; position: relative;">
-                    <input type="number" id="tplCreateH" class="ai-input-pretty" placeholder="세로" value="1000" style="padding-right: 30px; font-weight: bold; color: #334155;">
-                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;">mm</span>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button onclick="document.getElementById('templateCreatorModal').style.display='none'" class="btn-round" style="flex: 1; justify-content: center; background: #fff; border: 1px solid #cbd5e1; color: #64748b;">
-                    취소
-                </button>
-                <button onclick="window.confirmTemplateCreation()" class="btn-round primary" style="flex: 2; justify-content: center; height: 45px; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);">
-                    🚀 디자인 시작하기
-                </button>
-            </div>
-        </div>
+        <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;">신청하기</button>
+        <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;">닫기</button>
     </div>
 </div>
-</body>
-</html>
+
+<script>
+    // 파트너 신청 제출 스크립트 (index.html 내부에 포함)
+    window.submitRealPartnerApp = async function() {
+        if (typeof sb === 'undefined') { alert("시스템 로딩 중입니다."); return; }
+
+        const comp = document.getElementById('applyCompName').value;
+        const phone = document.getElementById('applyPhone').value;
+        const region = document.getElementById('applyRegion').value;
+        const items = document.getElementById('applyMainItems').value;
+
+        if(!comp || !phone || !region) return alert("업체명, 연락처, 지역은 필수입니다.");
+
+        const { data: { user } } = await sb.auth.getUser();
+        if(!user) return alert("로그인이 필요합니다.");
+
+        const { error } = await sb.from('partner_applications').insert({
+            user_id: user.id,
+            company_name: comp,
+            contact_phone: phone,
+            region: region,
+            main_items: items,
+            status: 'pending'
+        });
+
+        if(error) alert("신청 오류: " + error.message);
+        else {
+            alert("✅ 신청이 완료되었습니다. 관리자 승인 후 이용 가능합니다.");
+            document.getElementById('partnerApplyModal').style.display='none';
+        }
+    };
+</script>
+<!-- Code inject

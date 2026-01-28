@@ -2814,9 +2814,9 @@ body {
     /* 5. 텍스트 스타일: 이미지가 커진 만큼 글씨도 조정 */
     .quick-text {
         font-size: 16px !important;   /* 글자 크기 확대 (기존 13px -> 16px) */
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         margin-top: 5px !important;
-        color: #1e293b !important;
+        color: #ffffff !important;
     }
     
     /* 호버 효과 강화 */
