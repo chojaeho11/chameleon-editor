@@ -81,8 +81,9 @@ window.loadMembers = async (isNewSearch = false) => {
                    <div style="font-size:13px;">💰 ${(m.deposit||0).toLocaleString()} / Ⓜ️ ${(m.mileage||0).toLocaleString()}</div>
                 </td>
                 <td style="padding:5px; text-align:center;">
-                    <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${m.deposit||0})">예치금</button>
-                </td> 
+    <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${m.deposit||0})">예치금</button>
+    <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#d97706; border-color:#d97706;" onclick="editMileageManual('${m.id}', '${m.email}', ${m.mileage||0})">마일리지</button>
+</td>
                 <td style="padding:5px 15px;">${memoHtml}</td>
                 <td style="text-align:center;"><span class="badge" style="background:${badgeColor}; font-size:11px;">${displayRole}</span></td>
                 <td style="padding:5px 15px;">${roleSelect}</td>
