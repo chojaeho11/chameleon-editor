@@ -35,9 +35,19 @@ export function initConfig() {
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
         try {
-            sb = createClient(SUPABASE_URL, SUPABASE_KEY, { 
-                auth: { persistSession: true, autoRefreshToken: true } 
-            });
+            // 중복 초기화 방지 로직 추가
+            if (!sb) {
+                sb = createClient(SUPABASE_URL, SUPABASE_KEY, { 
+                    auth: { 
+                        persistSession: true, 
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true 
+                    } 
+                });
+                console.log("🚀 Supabase 클라이언트가 새로 생성되었습니다.");
+            } else {
+                console.log("♻️ 기존 Supabase 인스턴스를 재사용합니다.");
+            }
             
             // 2. 세션 상태 확인
             const { data: { session } } = await sb.auth.getSession();

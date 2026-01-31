@@ -704,13 +704,26 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
         }
     }
 
+    // [추가] 에디터 진입 전 선택했던 옵션 정보 복구 로직
+    const recoveredAddons = {};
+    const recoveredAddonQtys = {};
+    
+    if (window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
+        window.pendingSelectedAddons.forEach(code => {
+            recoveredAddons[`opt_${code}`] = code;
+            recoveredAddonQtys[code] = 1;
+        });
+        // 사용 후 초기화 (다음 주문에 섞이지 않도록)
+        // window.pendingSelectedAddons = null; 
+    }
+
     cartData.push({ 
         uid: Date.now(), 
         product: calcProduct,
         type: 'design',
         thumb: thumbUrl, 
-        json: json, // 썸네일용 대표 JSON (현재 보고있는 페이지)
-        pages: finalPages, // ★ [핵심] 전체 페이지 데이터 저장
+        json: json, 
+        pages: finalPages, 
         originalUrl: originalFileUrl,
         fileName: fileName, 
         width: finalW, 
@@ -719,8 +732,8 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
         boardY: boardY, 
         isOpen: true,
         qty: 1, 
-        selectedAddons: {}, 
-        addonQuantities: {} 
+        selectedAddons: recoveredAddons, // 복구된 옵션 적용
+        addonQuantities: recoveredAddonQtys // 복구된 옵션 수량 적용
     });
     
     // 4. 저장 및 갱신
@@ -842,75 +855,164 @@ function renderCart() {
         grandAddonTotal += optionTotal; 
         grandTotal += totalItemPrice;
         
-        const div = document.createElement("div"); div.className = "cart-item"; 
-        div.innerHTML = `
-            <div class="cart-top-row" onclick="window.toggleCartAccordion(${idx})" style="display:flex; gap:15px; align-items:center; cursor:pointer;">
-                <div style="width:80px; height:80px; background:#f8fafc; border:1px solid #eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                    <img src="${item.thumb}" style="max-width:100%; max-height:100%; object-fit:contain;">
-                </div>
-                <div style="flex:1;">
-                    <h4 style="margin:0; font-size:16px;">${item.product.name}</h4>
-                    <div style="font-size:13px; color:#666; margin-top:4px;">${item.fileName || window.t('label_user_design')}</div>
-                    <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${formatCurrency(totalItemPrice)}</div>
-                </div>
-                <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444;"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
+        const div = document.createElement("div"); 
+        div.className = "cart-item"; 
         
-        if(item.isOpen) {
-            const optionContainer = document.createElement("div"); optionContainer.style.marginTop = "15px";
-            
-            if (matOpts.length > 0) {
-                const box = document.createElement("div"); box.className = "cart-opt-group required-group";
-            box.innerHTML = `<div class="opt-group-header">① ${window.t('label_opt_material')} <span class="badge-req">${window.t('badge_required')}</span></div>`;
-            const sel = document.createElement("select"); sel.className = "opt-select-box";
-                sel.onchange = (e) => window.updateCartOption(idx, 'opt_mat', e.target.value);
-                let optsHTML = `<option value="">${window.t('msg_select_option') || "Select Option"}</option>`;
-                matOpts.forEach(opt => {
-                    const selected = item.selectedAddons['opt_mat'] === opt.code ? 'selected' : ''; 
-                    const priceStr = opt.price > 0 ? ` (+${formatCurrency(opt.price)})` : ''; 
-                    optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`; 
-                });
-                sel.innerHTML = optsHTML; box.appendChild(sel); optionContainer.appendChild(box);
-            }
-            if (finOpts.length > 0) {
-                const box = document.createElement("div"); box.className = "cart-opt-group required-group";
-            box.innerHTML = `<div class="opt-group-header">② ${window.t('label_opt_finish')} <span class="badge-req">${window.t('badge_required')}</span></div>`;
-            const sel = document.createElement("select"); sel.className = "opt-select-box";
-                sel.onchange = (e) => window.updateCartOption(idx, 'opt_fin', e.target.value);
-                let optsHTML = `<option value="">선택해주세요</option>`;
-                finOpts.forEach(opt => { 
-                    const selected = item.selectedAddons['opt_fin'] === opt.code ? 'selected' : ''; 
-                    const priceStr = opt.price > 0 ? ` (+${formatCurrency(opt.price)})` : ''; 
-                    optsHTML += `<option value="${opt.code}" ${selected}>${opt.name}${priceStr}</option>`; 
-                });
-                sel.innerHTML = optsHTML; box.appendChild(sel); optionContainer.appendChild(box);
-            }
-            if (addOpts.length > 0) {
-            const box = document.createElement("div"); box.className = "cart-opt-group optional-group";
-            box.innerHTML = `<div class="opt-group-header">③ ${window.t('label_opt_addon')} <span class="badge-sel">${window.t('badge_optional')}</span></div>`;
-            const grid = document.createElement("div");
-                grid.style.display = "flex"; grid.style.flexDirection = "column"; grid.style.gap = "8px";
-                addOpts.forEach(opt => {
-                    const key = `addon_${opt.code}`;
-                    const isChecked = item.selectedAddons[key] === opt.code;
-                    const currentQty = (item.addonQuantities[opt.code] || 1);
-                    const row = document.createElement("div");
-                    row.style.cssText = "display:flex; align-items:center; justify-content:space-between; border:1px solid #eee; padding:8px; border-radius:6px;";
-                    row.innerHTML = `
-                        <label style="display:flex; align-items:center; cursor:pointer; flex:1;">
-                            <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isChecked?'checked':''} style="margin-right:8px; accent-color:#6366f1;">
-                            <span style="font-size:13px;">${opt.name} <span style="color:#6366f1; font-weight:bold;">(+${formatCurrency(opt.price)})</span></span>
-                        </label>
-                        ${isChecked ? `<div style="display:flex; align-items:center; gap:5px; margin-left:10px;"><span style="font-size:11px; color:#888;">Qty</span><input type="number" min="1" value="${currentQty}" onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)" onclick="event.stopPropagation()" style="width:40px; text-align:center; border:1px solid #ddd; border-radius:4px; font-size:12px; padding:2px;"></div>` : ''}`;
-                    grid.appendChild(row);
-                });
-                box.appendChild(grid); optionContainer.appendChild(box);
-            }
-            const qtyBox = document.createElement("div"); 
-            qtyBox.style.cssText = "display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px;";
-            qtyBox.innerHTML = `<span style="font-size:13px; font-weight:bold;">${window.t('label_quantity')}</span><div class="qty-wrapper" style="border:1px solid #ddd; border-radius:5px; display:flex;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, -1)">-</button><input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:50px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; height:30px; font-weight:bold; outline:none;"><button class="qty-btn" onclick="window.updateCartQty(${idx}, 1)">+</button></div>`;
-            optionContainer.appendChild(qtyBox); div.appendChild(optionContainer);
+        // [중요] 화면 너비에 따라 레이아웃 구조를 동적으로 결정
+        const isMobile = window.innerWidth <= 768;
+        
+        div.style.cssText = `
+            background:#fff; border-radius:12px; margin-bottom:15px; border:1px solid #e2e8f0; 
+            overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.02); display:flex; 
+            flex-direction: ${isMobile ? 'column' : 'row'};
+        `;
+
+        // [옵션 생성 로직] 작고 콤팩트한 디자인
+        let addonHtml = '';
+        if (item.product.addons) {
+            const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
+            const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
+            const categories = [...new Set(allAddons.map(a => a.category_code || '옵션'))];
+
+            categories.forEach(cat => {
+                const catAddons = allAddons.filter(a => (a.category_code || '옵션') === cat);
+                addonHtml += `
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${cat.toUpperCase()}</div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            ${catAddons.map(opt => {
+                                const isSelected = Object.values(item.selectedAddons).includes(opt.code);
+                                return `
+                                    <label style="display:flex; align-items:center; justify-content:space-between; padding:5px 10px; border-radius:8px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; cursor:pointer; transition:0.2s;">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:14px; height:14px; accent-color:#6366f1; cursor:pointer;">
+                                            <div style="width:24px; height:24px; background:#f8fafc; border:1px solid #eee; border-radius:4px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                                                ${opt.img_url ? `<img src="${opt.img_url}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fa-solid fa-cube" style="font-size:10px; color:#cbd5e1;"></i>`}
+                                            </div>
+                                            <div style="display:flex; flex-direction:column;">
+                                                <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.name_kr || opt.name}</span>
+                                                <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
         }
+
+        // [최종 레이아웃 주입]
+        if (!isMobile) {
+            // PC 레이아웃: 정보 좌측 / 옵션 영역 우측 끝으로 이동
+            div.innerHTML = `
+                <div style="display:flex; width:100%; padding:20px; gap:30px; align-items:flex-start;">
+                    <div style="width:100px; height:100px; background:#f8fafc; border:1px solid #eee; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                        <img src="${item.thumb}" style="width:100%; height:100%; object-fit:contain;">
+                    </div>
+
+                    <div style="flex:1; min-width:300px;">
+                        <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${item.product.name}</h4>
+                        <div style="font-size:13px; color:#64748b; margin-top:5px;">단가: ${formatCurrency(item.product.price)}</div>
+                        <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
+                            <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
+                                <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">-</button>
+                                <input type="number" value="${item.qty}" readonly style="width:35px; text-align:center; border:none; font-weight:bold; font-size:14px;">
+                                <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, 1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">+</button>
+                            </div>
+                            <span style="font-size:12px; color:#64748b; font-weight:bold;">본품 수량</span>
+                        </div>
+                    </div>
+
+                    <div style="width:320px; max-height:220px; overflow-y:auto; background:#f8fafc; border:1px solid #f1f5f9; border-radius:12px; padding:15px; flex-shrink:0;">
+                        <div style="font-size:12px; font-weight:800; color:#334155; margin-bottom:10px;"><i class="fa-solid fa-circle-plus"></i> 추가 구성 상품</div>
+                        ${addonHtml || '<div style="font-size:11px; color:#94a3b8; text-align:center;">연결된 옵션 없음</div>'}
+                    </div>
+
+                    <div style="width:160px; text-align:right; display:flex; flex-direction:column; justify-content:space-between; align-self:stretch; flex-shrink:0;">
+                        <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#cbd5e1; cursor:pointer; align-self:flex-end;"><i class="fa-solid fa-trash-can"></i></button>
+                        <div>
+                            <div style="font-size:11px; color:#6366f1; font-weight:bold; margin-bottom:3px;">옵션포함 총액</div>
+                            <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${formatCurrency(totalItemPrice)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // 모바일 레이아웃: 상품 요약 아래로 옵션 영역을 배치
+            div.innerHTML = `
+                <div style="padding:15px; display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:center;">
+                        <img src="${item.thumb}" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;">
+                        <div style="flex:1;">
+                            <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${item.product.name}</h4>
+                            <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">합계: ${formatCurrency(totalItemPrice)}</div>
+                        </div>
+                        <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    
+                    <div style="background:#f1f5f9; border-radius:12px; padding:12px;">
+                        <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:5px;">
+                            <i class="fa-solid fa-circle-plus" style="color:#6366f1;"></i> 선택된 옵션 관리
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            ${addonHtml || '<div style="font-size:12px; color:#94a3b8; text-align:center;">연결된 옵션이 없습니다.</div>'}
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0;">
+                        <span style="font-size:13px; font-weight:bold; color:#475569;">주문 수량</span>
+                        <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden;">
+                            <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:10px 20px; font-weight:bold; font-size:18px;">-</button>
+                            <input type="number" value="${item.qty}" readonly style="width:50px; text-align:center; border:none; font-weight:bold; font-size:16px;">
+                            <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, 1)" style="border:none; background:none; padding:10px 20px; font-weight:bold; font-size:18px;">+</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        div.innerHTML = `
+            <div class="cart-top-row" style="display:flex; padding:20px; gap:20px;">
+                <div style="width:100px; height:100px; background:#f8fafc; border:1px solid #eee; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                    <img src="${item.thumb}" style="width:100%; height:100%; object-fit:contain;">
+                </div>
+
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                    <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900;">${item.product.name}</h4>
+                    <div style="font-size:13px; color:#64748b; margin-top:4px;">(${item.fileName || '파일 별도 첨부'})</div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:8px;">본품 단가: ${formatCurrency(item.product.price)}</div>
+                </div>
+
+                <div style="width:320px; max-height:220px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:15px; padding:15px; flex-shrink:0;">
+                    <div style="font-size:13px; font-weight:800; color:#1e1b4b; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-plus" style="color:#6366f1;"></i> 추가 상품
+                        <span style="font-size:10px; font-weight:normal; color:#94a3b8; margin-left:auto;">선택/추가</span>
+                    </div>
+                    ${addonHtml || '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:20px;">선택 가능한 옵션이 없습니다.</div>'}
+                </div>
+
+                <div style="width:200px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; flex-shrink:0;">
+                    <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#cbd5e1; font-size:18px; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'" title="삭제">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    
+                    <div style="text-align:right; margin-bottom: 12px;">
+                        <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">옵션포함 합계</div>
+                        <div style="font-size:24px; font-weight:900; color:#1e1b4b;">${formatCurrency(totalItemPrice)}</div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; background:#f1f5f9; padding:8px 12px; border-radius:12px; width:100%; justify-content:space-between;">
+                        <span style="font-size:12px; font-weight:bold; color:#475569;">본품 수량</span>
+                        <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden;">
+                            <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:5px 12px; font-weight:bold; cursor:pointer;">-</button>
+                            <input type="number" value="${item.qty}" readonly style="width:35px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-weight:bold; font-size:15px;">
+                            <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, 1)" style="border:none; background:none; padding:5px 12px; font-weight:bold; cursor:pointer;">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
         listArea.appendChild(div);
     });
     
@@ -1557,36 +1659,42 @@ window.updateCartQtyInput = function(idx, val) {
 // 중복 방지용 타임스탬프 변수
 let lastCartAddTime = 0;
 
-// 1. 에디터 없이 상품만 장바구니에 담기
-// [수정] 수량(targetQty) 파라미터 추가
-export function addProductToCartDirectly(productInfo, targetQty = 1) {
+export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes = []) {
     if (!productInfo) return;
 
-    // [방어 코드 1] 1초 이내 재실행 방지 (더블클릭 문제 차단)
     const now = Date.now();
-    if (now - lastCartAddTime < 1000) {
-        console.warn("중복 추가 방지됨");
-        return;
-    }
+    if (now - lastCartAddTime < 1000) return;
     lastCartAddTime = now;
 
-    // [방어 코드 2] 디자인 저장 기능(회색박스 생성)이 동시에 실행되지 않도록 깃발 꽂기
     window.isDirectCartAddInProgress = true;
-    setTimeout(() => { window.isDirectCartAddInProgress = false; }, 2000); // 2초간 유지
+    setTimeout(() => { window.isDirectCartAddInProgress = false; }, 2000);
+
+    // [추가] 전달받은 옵션 코드를 장바구니 데이터 형식(selectedAddons)으로 변환
+    const selectedAddons = {};
+    const addonQuantities = {};
+    
+    if (addonCodes && addonCodes.length > 0) {
+        addonCodes.forEach(code => {
+            // 카테고리를 알 수 없는 경우 임시로 'addon_' 접두사를 붙여 저장
+            // renderCart 로직이 selectedAddons의 value 값을 기반으로 그리므로 핵심은 value입니다.
+            selectedAddons[`opt_${code}`] = code; 
+            addonQuantities[code] = 1; // 기본 수량 1
+        });
+    }
 
     cartData.push({
-        uid: now, // Date.now() 사용
+        uid: now,
         product: productInfo,
-        type: 'product_only', // 에디터 작업 아님 표시
+        type: 'product_only',
         fileName: '(파일 별도 첨부)',
         thumb: productInfo.img || 'https://placehold.co/100?text=Product',
         json: null,
         width: productInfo.w || 0,
         height: productInfo.h || 0,
         isOpen: true,
-        qty: parseInt(targetQty) || 1, // [수정] 전달받은 수량 적용
-        selectedAddons: {},
-        addonQuantities: {}
+        qty: parseInt(targetQty) || 1,
+        selectedAddons: selectedAddons, // 수집된 옵션 적용
+        addonQuantities: addonQuantities
     });
 
     saveCart();

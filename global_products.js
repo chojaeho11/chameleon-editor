@@ -143,14 +143,28 @@ window.loadCategories = async () => {
     const filterProdCat = document.getElementById('filterProdCat');
 
     if(!listArea) return;
-    listArea.innerHTML = '';
+    
+    // [수정] 대분류가 선택되지 않았거나 '전체보기'인 경우 목록을 비우고 종료
+    if(!filterTopVal || filterTopVal === 'all') {
+        listArea.innerHTML = '<div style="width:100%; text-align:center; padding:40px; color:#94a3b8; font-size:14px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">왼쪽 상단에서 [대분류]를 선택하시면 해당 소분류 목록이 나타납니다.</div>';
+        return;
+    }
+
+    listArea.innerHTML = '<div style="padding:20px;">로딩 중...</div>';
     if(prodCatSelect) prodCatSelect.innerHTML = '<option value="">카테고리 선택</option>';
     if(filterProdCat) filterProdCat.innerHTML = '<option value="all">📂 전체</option>';
 
+    // 데이터 조회 (선택된 대분류 코드 기반)
     let q = sb.from('admin_categories').select('*').order('sort_order', {ascending: true});
-    if(filterTopVal && filterTopVal !== 'all') q = q.eq('top_category_code', filterTopVal);
+    q = q.eq('top_category_code', filterTopVal);
 
     const { data } = await q;
+
+    listArea.innerHTML = '';
+    
+    if(!data || data.length === 0) {
+        listArea.innerHTML = '<div style="padding:20px; color:#94a3b8;">등록된 소분류가 없습니다.</div>';
+    }
 
     data?.forEach(c => {
         const div = document.createElement('div');
@@ -264,198 +278,304 @@ async function updateOrder(table, container) {
 }
 
 // ==========================================
-// 3. 옵션 관리 (Addons)
+// 3. 옵션 및 카테고리 관리 (Addons & Categories)
 // ==========================================
-// [옵션 목록 로드 - 그리드형 & 검색기능 추가]
-window.loadSystemDB = async (filterSite) => {
-    // 1. 사이트 값 유지 (인자 없으면 현재 선택된 값 가져오기)
-    if (!filterSite) {
-        const sel = document.getElementById('newAddonSite');
-        filterSite = sel ? sel.value : 'KR';
-    }
+// [주의] 파일 상단(Line 9 부근)에 이미 editingAddonId가 선언되어 있으므로 여기서 let으로 다시 선언하지 않습니다.
 
-    const listArea = document.getElementById('addonListArea'); // 테이블바디 대신 div 영역 사용
-    const searchKeyword = document.getElementById('addonSearchInput') ? document.getElementById('addonSearchInput').value.toLowerCase().trim() : '';
-    const chkArea = document.getElementById('addonCheckboxArea');
+// 1. 카테고리 및 옵션 전체 데이터 초기 로드
+window.loadAddonCategories = async () => {
+    try {
+        const [catRes, addonRes] = await Promise.all([
+            sb.from('addon_categories').select('*').order('sort_order', {ascending: true}),
+            sb.from('admin_addons').select('*').order('code', {ascending: true})
+        ]);
 
-    if(!listArea) return;
+        if (catRes.error) throw catRes.error;
+        window.cachedAddonCategories = catRes.data || [];
+        window.cachedAddons = addonRes.data || [];
 
-    listArea.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px;">로딩 중...</div>';
-    if(chkArea) chkArea.innerHTML = '';
-
-    // 데이터 조회
-    const { data } = await sb.from('admin_addons').select('*').order('category').order('code');
-    
-    listArea.innerHTML = '';
-    
-    if(data) {
-        let count = 0;
-        data.forEach(item => {
-            let dName = item.name_kr || item.name;
-            let dPrice = item.price_kr || item.price || 0;
-            let symbol = '₩';
-
-            if(filterSite === 'JP') { dName = item.name_jp || item.name; dPrice = item.price_jp || 0; symbol = '¥'; }
-            if(filterSite === 'US') { dName = item.name_us || item.name; dPrice = item.price_us || 0; symbol = '$'; }
-
-            // [검색 필터링]
-            const searchTarget = `${item.code} ${dName} ${item.category}`.toLowerCase();
-            if(searchKeyword && !searchTarget.includes(searchKeyword)) return;
-
-            // [그리드 카드 렌더링 - '옵션'으로 명칭 통일 및 스타일 개선]
-            const bgStyle = editingAddonId === item.id ? 'border:2px solid #6366f1; background:#e0e7ff;' : 'border:1px solid #e2e8f0; background:#fff;';
-            
-            listArea.innerHTML += `
-                <div style="${bgStyle} border-radius:8px; padding:12px; font-size:12px; position:relative; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="background:#f1f5f9; padding:2px 8px; border-radius:4px; font-weight:bold; color:#6366f1; font-size:10px; border:1px solid #e2e8f0;">
-                            옵션
-                        </span>
-                        <div>
-                            <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; margin-right:8px;" title="수정"></i>
-                            <i class="fa-solid fa-xmark" onclick="deleteAddonDB(${item.id})" style="cursor:pointer; color:#ef4444;" title="삭제"></i>
-                        </div>
-                    </div>
-                    <div style="font-weight:bold; color:#1e293b; margin-bottom:4px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        ${dName}
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:#94a3b8; font-size:11px;">${item.code}</span>
-                        <span style="font-weight:bold; color:#1e293b;">${symbol}${dPrice.toLocaleString()}</span>
-                    </div>
-                </div>
-            `;
-            count++;
-
-            // [상품 등록 하단 체크박스 - 명칭 통일 및 검색 용이성 개선]
-            if(chkArea) {
-                chkArea.innerHTML += `
-                    <label class="addon-check-item" style="display:flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; margin-bottom:2px; font-size:12px; transition:0.2s;">
-                        <input type="checkbox" name="prodAddon" value="${item.code}">
-                        <span style="background:#6366f1; color:white; font-size:9px; padding:1px 5px; border-radius:3px; font-weight:bold;">옵션</span>
-                        <span style="font-weight:500;">${item.name_kr || item.name}</span>
-                    </label>`;
+        // 마스터 관리용 셀렉트 박스 갱신
+        ['newAddonCatCode', 'filterAddonCategory'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = (id === 'filterAddonCategory') ? '<option value="all">📁 카테고리 전체</option>' : '';
+                window.cachedAddonCategories.forEach(c => {
+                    el.innerHTML += `<option value="${c.code}">${c.name_kr || c.name}</option>`;
+                });
             }
         });
 
-        if(count === 0) {
-            listArea.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#aaa;">검색 결과가 없습니다.</div>';
+        // 상품 연결용 동적 컨테이너 초기화 및 첫 줄 생성
+        const container = document.getElementById('dynamicCategoryContainer');
+        if (container) {
+            container.innerHTML = '';
+            addCategorySelectRow(); 
         }
+        
+        loadSystemDB(); // 우측 옵션 리스트 렌더링
+    } catch (err) {
+        console.error("데이터 로딩 오류:", err);
     }
 };
 
+// 2. [핵심] 옵션 이미지 업로드 기능 (이 함수가 활성화되어야 업로드가 됩니다)
+window.previewAddonImage = async (input) => {
+    if(!input.files[0]) return;
+    const file = input.files[0];
+    
+    showLoading(true);
+    try {
+        // Supabase storage의 'products' 버킷 내 'addons' 폴더에 저장
+        const path = `addons/${Date.now()}_${file.name}`;
+        const { error } = await sb.storage.from('products').upload(path, file);
+        if (error) throw error;
+
+        const { data } = sb.storage.from('products').getPublicUrl(path);
+        
+        // 업로드된 URL을 입력창에 자동 삽입
+        const imgInput = document.getElementById('newAddonImgUrl');
+        if (imgInput) {
+            imgInput.value = data.publicUrl;
+            alert("✅ 이미지 업로드 성공!");
+        }
+    } catch(e) { 
+        console.error("이미지 업로드 오류:", e);
+        alert("업로드 실패: " + e.message); 
+    } finally { 
+        showLoading(false); 
+    }
+};
+
+// 3. 카테고리별 개별 옵션 목록 생성 (따로따로 표시용)
+window.addCategorySelectRow = () => {
+    const container = document.getElementById('dynamicCategoryContainer');
+    if (!container) return;
+
+    const rowId = 'row_' + Date.now();
+    const wrapper = document.createElement('div');
+    wrapper.id = rowId;
+    wrapper.style.cssText = "background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;";
+
+    let optionsHtml = `<option value="">📦 카테고리 선택</option>`;
+    (window.cachedAddonCategories || []).forEach(c => {
+        optionsHtml += `<option value="${c.code}">${c.name_kr || c.name}</option>`;
+    });
+
+    wrapper.innerHTML = `
+        <div style="display:flex; gap:5px; align-items:center; margin-bottom:8px;">
+            <select class="input-text dynamic-cat-select" style="font-size:11px; font-weight:bold; flex:1;" onchange="renderAddonsInRow('${rowId}', this.value)">
+                ${optionsHtml}
+            </select>
+            <button type="button" class="btn btn-outline btn-sm" onclick="removeCategorySelectRow('${rowId}')" style="color:#ef4444; border:none; background:transparent;">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+        </div>
+        <div class="row-addon-area" style="display:flex; flex-wrap:wrap; gap:5px; min-height:20px;">
+            <span style="font-size:11px; color:#94a3b8; padding:5px;">카테고리를 선택해 주세요.</span>
+        </div>`;
+    container.appendChild(wrapper);
+};
+
+window.renderAddonsInRow = (rowId, categoryCode) => {
+    const rowEl = document.getElementById(rowId);
+    if(!rowEl) return;
+    const area = rowEl.querySelector('.row-addon-area');
+    area.innerHTML = '';
+    if (!categoryCode) return;
+
+    const filtered = (window.cachedAddons || []).filter(a => a.category_code === categoryCode);
+    if (filtered.length === 0) {
+        area.innerHTML = '<span style="font-size:11px; color:#94a3b8; padding:5px;">옵션이 없습니다.</span>';
+        return;
+    }
+
+    filtered.forEach(addon => {
+        area.innerHTML += `
+            <label style="display:flex; align-items:center; gap:5px; padding:5px 8px; background:#fff; border:1px solid #cbd5e1; border-radius:6px; font-size:11px; cursor:pointer;">
+                <input type="checkbox" name="prodAddon" value="${addon.code}">
+                <span>${addon.name_kr || addon.name}</span>
+            </label>`;
+    });
+};
+
+window.removeCategorySelectRow = (rowId) => document.getElementById(rowId)?.remove();
+
+// 4. 우측 옵션 리스트 렌더링 (수정/삭제 버튼 포함)
+window.loadSystemDB = async (filterSite) => {
+    if (!filterSite) filterSite = document.getElementById('newAddonSite')?.value || 'KR';
+    const listArea = document.getElementById('addonListArea');
+    const searchKeyword = document.getElementById('addonSearchInput')?.value.toLowerCase().trim() || '';
+    const catFilter = document.getElementById('filterAddonCategory')?.value || 'all';
+
+    if(!listArea) return;
+    listArea.innerHTML = '';
+
+    const filtered = (window.cachedAddons || []).filter(item => {
+        const dName = (item.name_kr || item.name || "").toLowerCase();
+        const matchCat = (catFilter === 'all' || item.category_code === catFilter);
+        const matchKey = !searchKeyword || dName.includes(searchKeyword) || item.code.toLowerCase().includes(searchKeyword);
+        return matchCat && matchKey;
+    });
+
+    filtered.forEach(item => {
+        const dPrice = (filterSite === 'JP') ? (item.price_jp || 0) : (filterSite === 'US' ? (item.price_us || 0) : (item.price_kr || item.price || 0));
+        const symbol = (filterSite === 'JP') ? '¥' : (filterSite === 'US' ? '$' : '₩');
+
+        listArea.innerHTML += `
+            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; gap:10px; align-items:center;">
+                <img src="${item.img_url || 'https://placehold.co/80'}" style="width:50px; height:50px; border-radius:6px; object-fit:cover;">
+                <div style="flex:1;">
+                    <div style="font-size:10px; color:#6366f1; font-weight:800;">${item.category_code || '미분류'}</div>
+                    <div style="font-size:13px; font-weight:bold;">${item.name_kr || item.name}</div>
+                    <div style="font-size:12px; font-weight:900;">${symbol}${dPrice.toLocaleString()}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; font-size:14px; padding:5px;"></i>
+                    <i class="fa-solid fa-trash" onclick="deleteAddonDB(${item.id})" style="cursor:pointer; color:#ef4444; font-size:14px; padding:5px;"></i>
+                </div>
+            </div>`;
+    });
+};
+
+// 5. 옵션 수정 로직
+window.editAddonLoad = (id) => {
+    const item = window.cachedAddons.find(a => a.id === id);
+    if(!item) return;
+
+    editingAddonId = id; // 전역 변수 사용
+    document.getElementById('newAddonCatCode').value = item.category_code || '';
+    document.getElementById('newAddonCode').value = item.code;
+    document.getElementById('newAddonImgUrl').value = item.img_url || '';
+    document.getElementById('nmKR').value = item.name_kr || item.name || '';
+    document.getElementById('prKR').value = item.price_kr || item.price || 0;
+    document.getElementById('nmJP').value = item.name_jp || '';
+    document.getElementById('prJP').value = item.price_jp || 0;
+    document.getElementById('nmUS').value = item.name_us || '';
+    document.getElementById('prUS').value = item.price_us || 0;
+
+    const btn = document.querySelector('button[onclick="addAddonDB()"]');
+    if(btn) btn.innerText = "옵션 수정저장";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// 6. 옵션 삭제 로직
+window.deleteAddonDB = async (id) => {
+    if(!confirm("정말로 삭제하시겠습니까?")) return;
+    showLoading(true);
+    try {
+        const { error } = await sb.from('admin_addons').delete().eq('id', id);
+        if (error) throw error;
+        alert("✅ 삭제되었습니다.");
+        loadAddonCategories(); 
+    } catch (err) { alert("삭제 실패: " + err.message); } finally { showLoading(false); }
+};
+
+// 7. 옵션 저장/수정 실행
 window.addAddonDB = async () => {
     const code = document.getElementById('newAddonCode').value;
-    if(!code) return alert("코드 필수");
+    if(!code) return alert("코드를 입력하세요.");
 
-    // [중요] 옵션 가격도 소수점 없이 정수로 저장 (Math.round 추가)
     const payload = {
-        category: document.getElementById('newAddonCat').value,
+        category_code: document.getElementById('newAddonCatCode').value,
         code: code,
-        name_kr: document.getElementById('nmKR').value, 
+        img_url: document.getElementById('newAddonImgUrl').value,
+        name_kr: document.getElementById('nmKR').value,
         price_kr: Math.round(parseFloat(document.getElementById('prKR').value || 0)),
-        name_jp: document.getElementById('nmJP').value, 
+        name_jp: document.getElementById('nmJP').value,
         price_jp: Math.round(parseFloat(document.getElementById('prJP').value || 0)),
-        name_us: document.getElementById('nmUS').value, 
+        name_us: document.getElementById('nmUS').value,
         price_us: Math.round(parseFloat(document.getElementById('prUS').value || 0)),
-        name: document.getElementById('nmKR').value, 
+        name: document.getElementById('nmKR').value,
         price: Math.round(parseFloat(document.getElementById('prKR').value || 0))
     };
 
-    let error;
-    if(editingAddonId) {
-        const res = await sb.from('admin_addons').update(payload).eq('id', editingAddonId);
-        error = res.error;
-    } else {
-        const res = await sb.from('admin_addons').insert([payload]);
-        error = res.error;
-    }
+    showLoading(true);
+    try {
+        let error;
+        if(editingAddonId) error = (await sb.from('admin_addons').update(payload).eq('id', editingAddonId)).error;
+        else error = (await sb.from('admin_addons').insert([payload])).error;
 
-    if(error) alert("실패: " + error.message);
-    else { alert("저장됨"); resetAddonForm(); }
-};
-
-window.editAddonLoad = async (id) => {
-    const { data } = await sb.from('admin_addons').select('*').eq('id', id).single();
-    if(!data) return;
-    editingAddonId = id;
-    document.getElementById('newAddonCat').value = data.category;
-    document.getElementById('newAddonCode').value = data.code;
-    document.getElementById('nmKR').value = data.name_kr || data.name; document.getElementById('prKR').value = data.price_kr || data.price;
-    document.getElementById('nmJP').value = data.name_jp || ''; document.getElementById('prJP').value = data.price_jp || 0;
-    document.getElementById('nmUS').value = data.name_us || ''; document.getElementById('prUS').value = data.price_us || 0;
-    
-    const siteVal = document.getElementById('newAddonSite') ? document.getElementById('newAddonSite').value : 'KR';
-    loadSystemDB(siteVal);
-};
-
-window.deleteAddonDB = async (id) => {
-    if(confirm("삭제?")) {
-        await sb.from('admin_addons').delete().eq('id', id);
-        loadSystemDB();
-    }
+        if(error) throw error;
+        alert("✅ 저장되었습니다.");
+        resetAddonForm();
+        loadAddonCategories();
+    } catch (err) { alert("저장 실패: " + err.message); } finally { showLoading(false); }
 };
 
 window.resetAddonForm = () => {
     editingAddonId = null;
-    document.getElementById('newAddonCode').value = '';
-    document.getElementById('nmKR').value = ''; document.getElementById('prKR').value = '';
-    document.getElementById('nmJP').value = ''; document.getElementById('prJP').value = '';
-    document.getElementById('nmUS').value = ''; document.getElementById('prUS').value = '';
-    loadSystemDB();
+    ['newAddonCode', 'newAddonImgUrl', 'nmKR', 'prKR', 'nmJP', 'prJP', 'nmUS', 'prUS'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.value = '';
+    });
+    const btn = document.querySelector('button[onclick="addAddonDB()"]');
+    if(btn) btn.innerText = "옵션 저장";
 };
 
+// 카테고리 추가 팝업
+window.openAddonCatManager = async () => {
+    const name = prompt("새로운 옵션 분류 명칭을 입력하세요\n(예: 배송, 마감, 가공 등)");
+    if (!name) return;
+    let code = prompt(`'${name}' 분류에 사용할 영문 코드를 입력하세요`, "opt_" + Date.now().toString().slice(-4));
+    if (!code) return;
+    const { error } = await sb.from('addon_categories').insert([{ code: code.trim().toLowerCase(), name_kr: name.trim(), sort_order: 99 }]);
+    if (error) alert("오류: " + error.message);
+    else { alert("✅ 추가되었습니다."); loadAddonCategories(); }
+};
+
+// 8. 초기 실행
+loadAddonCategories();
 // ==========================================
 // 4. 상품 관리 (Products)
 // ==========================================
+// [수정된 함수] 상품 목록 필터링 및 로드
 window.filterProductList = async () => {
     const cat = document.getElementById('filterProdCat').value;
     const siteFilter = document.getElementById('filterProdSite').value;
-    const keyword = document.getElementById('prodSearchInput').value.toLowerCase().trim(); // 검색어 가져오기
+    const keyword = document.getElementById('prodSearchInput').value.toLowerCase().trim();
     const tbody = document.getElementById('prodTableBody');
     
-    // 1. 데이터 로드 (카테고리가 변경되었을 때만 DB 조회)
-    if(cat !== lastFetchedCategory) {
-        showLoading(true);
-        let query = sb.from('admin_products').select('*');
-        
-        // 카테고리 필터 ('all'이면 전체 조회)
-        if(cat && cat !== 'all') {
-            query = query.eq('category', cat);
-        }
-        
-        const { data } = await query.order('sort_order', {ascending: true});
-        allProducts = data || [];
-        lastFetchedCategory = cat;
+    showLoading(true);
+
+    // 1. 데이터 로드 (조건을 완화하여 카테고리가 'all'이거나 변경될 때 항상 최신화 가능하게 수정)
+    let query = sb.from('admin_products').select('*');
+    
+    if(cat && cat !== 'all') {
+        query = query.eq('category', cat);
+    }
+    
+    const { data, error } = await query.order('sort_order', {ascending: true});
+    
+    if(error) {
+        console.error("데이터 로드 실패:", error);
         showLoading(false);
+        return;
     }
 
-    // 2. 메모리 상에서 필터링 (국가 + 검색어)
-    const filteredList = allProducts.filter(p => {
-        // (1) 국가 필터
-        if (siteFilter !== 'all' && p.site_code !== siteFilter) return false;
+    allProducts = data || [];
+    lastFetchedCategory = cat; // 현재 카테고리 상태 업데이트
 
-        // (2) 검색어 필터 (상품명, 코드, 영문명 등 포함 여부)
-        if (keyword) {
-            const searchTarget = `${p.name} ${p.code} ${p.name_us||''} ${p.name_jp||''}`.toLowerCase();
-            if (!searchTarget.includes(keyword)) return false;
-        }
-        return true;
+    // 2. 메모리 상에서 국가 및 검색어 필터링
+    const filteredList = allProducts.filter(p => {
+        const matchSite = (siteFilter === 'all' || p.site_code === siteFilter);
+        const matchKeyword = !keyword || `${p.name} ${p.code} ${p.name_us||''} ${p.name_jp||''}`.toLowerCase().includes(keyword);
+        return matchSite && matchKeyword;
     });
 
     // 3. 렌더링
     renderProductList(filteredList);
+    showLoading(false);
     
-    // 4. 드래그 앤 드롭 (검색어가 없을 때만 활성화 - 순서 꼬임 방지)
+    // 4. 드래그 앤 드롭 재설정
     if(tbody && !keyword && siteFilter === 'all') {
-        new Sortable(tbody, {
+        // 기존 Sortable 인스턴스 파괴 후 재설정 권장 (중복 방지)
+        if (tbody.sortable) tbody.sortable.destroy();
+        tbody.sortable = new Sortable(tbody, {
             animation: 150,
             handle: '.drag-handle',
-            onEnd: function (evt) { updateProductSortOrder(); }
+            onEnd: () => updateProductSortOrder()
         });
     }
 };
-
 window.renderProductList = (products) => {
     const tbody = document.getElementById('prodTableBody');
     const filterSite = document.getElementById('filterProdSite').value;
@@ -540,7 +660,7 @@ window.addProductDB = async () => {
         
         name: document.getElementById('newProdName').value, 
         price: priceKR,
-        description: document.getElementById('newProdDetailKR').value || adminQuill.root.innerHTML,
+        description: document.getElementById('newProdDetailKR').value || (window.popupQuill ? window.popupQuill.root.innerHTML : ""),
 
         name_jp: document.getElementById('newProdNameJP').value, 
         price_jp: priceJP,
@@ -915,20 +1035,28 @@ window.updateAllCurrency = async () => {
     }
 };
 // [신규] 옵션 연결 체크박스 필터링 함수
-window.filterAddonCheckboxes = () => {
-    const input = document.getElementById('addonConnectionSearch');
-    const filter = input.value.toLowerCase(); // 검색어 소문자 변환
+window.filterAddonsMulti = () => {
     const container = document.getElementById('addonCheckboxArea');
-    const labels = container.getElementsByTagName('label'); // 모든 옵션 라벨 가져오기
+    if (!container) return;
+
+    // 현재 생성된 모든 .dynamic-cat-select의 선택값들을 수집
+    const selects = document.querySelectorAll('.dynamic-cat-select');
+    const activeFilters = Array.from(selects).map(s => s.value).filter(v => v !== 'all');
+
+    const labels = container.getElementsByTagName('label');
 
     for (let i = 0; i < labels.length; i++) {
-        const txtValue = labels[i].textContent || labels[i].innerText;
-        // 검색어가 포함되어 있으면 표시, 없으면 숨김
-        if (txtValue.toLowerCase().indexOf(filter) > -1) {
-            labels[i].style.display = ""; 
-        } else {
-            labels[i].style.display = "none";
+        const addonCat = labels[i].dataset.category;
+        
+        // 필터가 '전체' 뿐이면 모두 보여줌
+        if (activeFilters.length === 0) {
+            labels[i].style.display = "flex";
+            continue;
         }
+
+        // 선택된 필터들 중 하나라도 일치하는 카테고리면 표시 (OR 조건)
+        const isMatch = activeFilters.includes(addonCat);
+        labels[i].style.display = isMatch ? "flex" : "none";
     }
 };
 

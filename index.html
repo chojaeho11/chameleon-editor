@@ -3,56 +3,34 @@
 <head>
 <meta charset="UTF-8" />
 <script>
-    window.addEventListener('load', function() {
-        // Fabric.js가 로드되었는지 확인
+    // [통합 미디어 로더] 로딩 속도 개선 및 데이터 오인식 방지
+    window.addEventListener('DOMContentLoaded', function() {
         if (typeof fabric === 'undefined') return;
-
         const originalFromURL = fabric.Image.fromURL;
         
-        // 이미지 로딩 함수를 '스마트 로더'로 교체
         fabric.Image.fromURL = function(url, callback, options) {
-            // 1. URL 유효성 검사 (비어있으면 무시)
-            if (!url || typeof url !== 'string') {
-                if(callback) callback(null); // 콜백을 강제로 실행해 로딩을 끝냄
-                return;
-            }
+            if (!url || typeof url !== 'string') return callback && callback(null);
 
-            // 2. [핵심] URL 자리에 JSON 데이터가 들어온 경우 -> 디자인으로 로드 (LoadFromJSON)
-            // %7B는 '{' 의 URL 인코딩 문자입니다.
-            if (url.includes('%7B') || url.trim().startsWith('{') || url.includes('{"version"')) {
-                console.warn("🚨 이미지 주소 자리에 JSON 데이터 발견! -> 캔버스 복원으로 전환합니다.");
-                
-                // 만약 전역 canvas 객체가 있다면 즉시 데이터 복원 시도
-                if (window.canvas) {
-                    try {
-                        // URL 인코딩된 경우 디코딩
-                        const jsonStr = decodeURIComponent(url);
-                        const jsonObj = JSON.parse(jsonStr);
+            // JSON 데이터가 이미지 주소로 잘못 들어온 경우만 필터링 (영상 파일 .mp4 등은 제외)
+            const isJson = url.startsWith('{') || url.includes('%7B') || url.includes('{"version"');
+            const isVideo = url.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/);
 
-                        window.canvas.loadFromJSON(jsonObj, function() {
-                            console.log("✅ JSON 데이터 복원 완료");
+            if (isJson && !isVideo) {
+                try {
+                    const jsonObj = JSON.parse(decodeURIComponent(url));
+                    if (window.canvas) {
+                        window.canvas.loadFromJSON(jsonObj, () => {
                             window.canvas.requestRenderAll();
-                            
-                            // ★ 중요: 무한 로딩을 끄기 위해 로딩 화면을 강제로 숨김
-                            const loadingEl = document.getElementById('loading');
-                            if(loadingEl) loadingEl.style.display = 'none';
-                            
-                            // 콜백이 있다면 빈 이미지라도 넘겨서 에러 방지
-                            if (callback) callback(new fabric.Image('')); 
+                            const loader = document.getElementById('loading');
+                            if(loader) loader.style.display = 'none';
                         });
-                    } catch (e) {
-                        console.error("JSON 복원 실패:", e);
-                        if(document.getElementById('loading')) document.getElementById('loading').style.display = 'none';
                     }
-                }
-                return; // 원래의 fromURL 실행 차단
+                    return;
+                } catch (e) { console.error("JSON 복원 실패"); }
             }
-
-            // 3. 정상적인 이미지 URL인 경우 -> 원래대로 실행
             return originalFromURL.call(this, url, callback, options);
         };
-        
-        console.log("✅ 스마트 에러 방지 시스템 가동 (JSON 자동 변환 모드)");
+        console.log("✅ 미디어 최적화 엔진 가동");
     });
 </script>
 <script>
@@ -2841,9 +2819,10 @@ window._drawQuickItems = (list, isProductMode = false) => {
         const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
         if (isUS || isJP) div.classList.add('long-text-mode');
 
+        // 성능 최적화: loading="lazy"와 decode="async"를 추가하여 렌더링 차단 방지
         let imgTag = tinyUrl 
-            ? `<img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
-            : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
+            ? `<img src="${tinyUrl}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;background:#f8fafc;\\'><i class=\\'fa-solid fa-cube\\' style=\\'color:#cbd5e1;\\'></i></div>'">`
+            : `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#f8fafc;"><i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i></div>`;
 
         div.innerHTML = `
             <div class="quick-icon" onclick="${clickAction}" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;">
@@ -3182,8 +3161,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         });
 };
  
-    window.showChoiceModal = function(key) {
-    // [중요] 에디터 자동 실행 방지: 함수 호출 시 즉시 리턴하거나 캔버스를 건드리지 않음
+    window.showChoiceModal = async function(key) {
     window.currentProductKey = key;
     const product = window.PRODUCT_DB[key];
     if (!product) return alert("상품 정보를 불러오는 중입니다.");
@@ -3192,16 +3170,59 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     const modal = document.getElementById('choiceModal');
     const modalBox = modal.querySelector('.modal-box');
     
-    // 다국어 본문 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     const lang = urlParams.get('lang') || 'kr';
     let detailContent = product.description; 
     if(lang === 'ja') detailContent = product.description_jp || product.description;
     if(lang === 'en') detailContent = product.description_us || product.description;
 
-    // 헤베 계산기 조건부 설정
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
+
+    // 옵션 카테고리 렌더링 로직
+    let optionsHtml = '<div id="addonCategoryArea" style="margin-top:15px; display:flex; flex-direction:column; gap:12px;">';
+    const addonCodes = product.addons || [];
+    
+    if (addonCodes.length > 0) {
+        const { data: addons } = await sb.from('admin_addons').select('*').in('code', addonCodes);
+        const { data: addonCats } = await sb.from('addon_categories').select('*').order('sort_order', {ascending: true});
+
+        if (addons && addonCats) {
+            addonCats.forEach(cat => {
+                const catAddons = addons.filter(a => a.category_code === cat.code);
+                if (catAddons.length > 0) {
+                    optionsHtml += `
+                        <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-weight:800; font-size:13px; color:#1e1b4b; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                                <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${cat.name_kr || cat.name}
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                ${catAddons.map(a => `
+                                    <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; transition:0.2s;" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#f1f5f9'">
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <input type="checkbox" name="userOption" value="${a.code}" data-price="${a.price}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal()">
+                                            <img src="${a.img_url || 'https://placehold.co/40'}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
+                                            <div style="display:flex; flex-direction:column;">
+                                                <span style="font-size:13px; font-weight:600; color:#334155;">${a.name_kr || a.name}</span>
+                                                <span style="font-size:12px; color:#6366f1; font-weight:bold;">+${(a.price || 0).toLocaleString()}원</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                }
+            });
+        }
+    }
+    optionsHtml += '</div>';
+
+    const totalDisplayHtml = `
+        <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:10px; text-align:right;">
+            <div style="font-size:12px; color:#64748b; margin-bottom:5px;">선택 옵션 포함 합계</div>
+            <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">${product.price.toLocaleString()}원</div>
+        </div>
+    `;
 
     let rightSideContent = isCustom ? `
         <div id="customSizePanel" style="display:flex; flex-direction:column; gap:12px; background:#fff; padding:20px; border-radius:15px; border:1px solid #e2e8f0; margin-bottom:15px;">
@@ -3215,77 +3236,100 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0원</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.7;">-</div>
             </div>
+            ${optionsHtml}
         </div>
     ` : `
         <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
             <img src="${product.img}" style="width:100%; max-height:220px; object-fit:contain; border-radius:10px; margin-bottom:10px;">
             <div style="font-size:22px; font-weight:900; color:#6366f1;">${product.price.toLocaleString()}원</div>
             <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${product.w_mm || 0} x ${product.h_mm || 0} mm</div>
+            ${optionsHtml}
         </div>
     `;
 
-    // 레이아웃 렌더링 (startEditorDirect를 여기서 호출하지 않음)
+    // 닫기 버튼을 최상단(우측 상단)으로 배치한 레이아웃
     modalBox.innerHTML = `
-        <div class="choice-layout" style="display:flex; height:90vh; overflow:hidden;">
-            <div class="choice-left-content view-content" style="flex:1; padding:40px; overflow-y:auto; background:#fff; text-align:left;">
-                <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${product.name}</h2>
+        <div class="choice-layout" style="display:flex; flex-direction:${window.innerWidth <= 768 ? 'column' : 'row'}; height:${window.innerWidth <= 768 ? 'auto' : '90vh'}; overflow-y:auto; position:relative;">
+            <button onclick="document.getElementById('choiceModal').style.display='none'" 
+                style="position:fixed; top:20px; right:20px; width:45px; height:45px; background:#FFEB3B; border:3px solid #fff; border-radius:50%; z-index:10001; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-xmark" style="font-size:20px; color:#333;"></i>
+            </button>
+
+            <div class="choice-left-content view-content" style="flex:1; padding:${window.innerWidth <= 768 ? '20px' : '40px'}; background:#fff; text-align:left;">
+                <h2 style="font-size:${window.innerWidth <= 768 ? '22px' : '28px'}; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${product.name}</h2>
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
                     ${detailContent || '<p style="color:#999; text-align:center;">상세 정보 준비 중입니다.</p>'}
                 </div>
             </div>
-            <div class="choice-right-actions" style="width:360px; background:#f8fafc; padding:30px; border-left:1px solid #eee; display:flex; flex-direction:column; gap:10px; overflow-y:auto;">
+
+            <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; background:#f8fafc; padding:${window.innerWidth <= 768 ? '20px 20px 100px 20px' : '30px'}; border-left:${window.innerWidth <= 768 ? 'none' : '1px solid #eee'}; display:flex; flex-direction:column; gap:10px;">
                 ${rightSideContent}
-                <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:65px; font-size:17px; font-weight:800;">
-                    <i class="fa-solid fa-palette"></i> 직접 디자인하기
-                </button>
-                <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:65px; background:#4ccc02; color:white; border:none; font-size:17px; font-weight:800;">
-                    <i class="fa-solid fa-basket-shopping"></i> 바로 구매하기
-                </button>
-                
-                <button onclick="document.getElementById('choiceModal').style.display='none'" class="btn-round" style="margin-top:auto; background:#eee; border:none;">닫기</button>
+                ${totalDisplayHtml}
+                <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                    <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px; font-weight:800;">🎨 직접 디자인하기</button>
+                    <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; background:#4ccc02; color:white; border:none; font-size:16px; font-weight:800;">🛒 바로 구매하기</button>
+                </div>
             </div>
         </div>
     `;
 
     modal.style.display = 'flex';
+    window.updateModalTotal(); 
 
-    // [핵심] 비디오 여백 제거 및 강제 자동 재생 로직
+    // [강력 최적화] 상세페이지 미디어 풀사이즈 및 지연 로딩 적용
+    // [비디오 위치/크기/자동재생 최종 조절]
     setTimeout(() => {
         const renderArea = modalBox.querySelector('.product-detail-render');
         if (!renderArea) return;
+        
+        renderArea.querySelectorAll('video, .ql-video').forEach(v => {
+            // 1. 스타일 설정: 검은 여백 없이 꽉 채우기
+            v.style.setProperty('width', '100%', 'important');
+            v.style.setProperty('height', '300px', 'important'); // 박스 높이에 맞게 강제 고정
+            v.style.setProperty('object-fit', 'fill', 'important'); // 비율 무시하고 꽉 채움
+            v.style.setProperty('display', 'block', 'important');
+            v.style.setProperty('background', 'transparent', 'important');
+            v.style.setProperty('border-radius', '12px', 'important');
 
-        renderArea.querySelectorAll('iframe.ql-video, video').forEach(v => {
-            const src = v.getAttribute('src') || v.src;
-            if (!src) return;
-
-            const videoTag = document.createElement('video');
-            videoTag.src = src;
-            videoTag.setAttribute('autoplay', 'autoplay');
-            videoTag.setAttribute('muted', 'muted'); // 무음 설정 필수
-            videoTag.setAttribute('loop', 'loop');
-            videoTag.setAttribute('playsinline', 'true');
-            videoTag.setAttribute('webkit-playsinline', 'true');
-            
-            // 검은 부분 없이 꽉 채우는 스타일
-            videoTag.style.width = '100%';
-            videoTag.style.height = 'auto';
-            videoTag.style.display = 'block';
-            videoTag.style.objectFit = 'cover'; // 비율에 맞춰 꽉 채움
-            videoTag.style.backgroundColor = 'transparent';
-            videoTag.style.borderRadius = '12px';
-            videoTag.style.margin = '20px 0';
-
-            v.parentNode.replaceChild(videoTag, v);
-            videoTag.play().catch(e => {}); // 재생 시도
+            if (v.tagName === 'VIDEO') {
+                // 2. 자동 재생 필수 설정
+                v.muted = true;               // 필수: 음소거여야 자동재생됨
+                v.autoplay = true;            // 자동 재생
+                v.loop = true;                // 무한 반복
+                v.setAttribute('playsinline', 'true'); 
+                v.controls = false;           // 깔끔하게 컨트롤러 숨김
+                
+                // 브라우저 차단 우회 강제 실행
+                v.play().catch(err => {
+                    console.log("재생 재시도...");
+                    v.muted = true;
+                    v.play();
+                });
+            }
         });
+    }, 400);
+};
 
-        renderArea.querySelectorAll('img').forEach(img => {
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            img.style.display = 'block';
-            img.style.borderRadius = '12px';
-        });
-    }, 100);
+// 실시간 합계 업데이트 함수
+window.updateModalTotal = function() {
+    const product = window.selectedProductForChoice;
+    if(!product) return;
+
+    let basePrice = product.price;
+    const calcPriceEl = document.getElementById('calcResultPrice');
+    // 커스텀(헤베) 상품이면 계산된 금액을 기본가로 사용
+    if(calcPriceEl && window.isCustomModeCurrent) {
+        basePrice = parseInt(calcPriceEl.innerText.replace(/[^0-9]/g, '')) || 0;
+    }
+
+    let optionTotal = 0;
+    document.querySelectorAll('input[name="userOption"]:checked').forEach(input => {
+        optionTotal += parseInt(input.dataset.price || 0);
+    });
+
+    const finalTotal = basePrice + optionTotal;
+    const display = document.getElementById('modalRealtimeTotal');
+    if(display) display.innerText = finalTotal.toLocaleString() + '원';
 };
 
     // [2] 실시간 가격 계산 함수 (완전 수정 버전)
@@ -3358,14 +3402,22 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             console.log(`[헤베계산적용] ${finalW}x${finalH} = ${finalPricePerItem}원 (단가:${unitPrice})`);
         }
 
+        // [수정] 선택된 옵션들 수집
+        const selectedAddonCodes = [];
+        document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
+            selectedAddonCodes.push(chk.value);
+        });
+
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
-            // 에디터 실행 (4번째 인자로 '확정된 가격' 전달)
+            // 에디터로 넘어갈 때도 옵션 정보를 유지하고 싶다면 전역 변수에 저장 가능
+            window.pendingSelectedAddons = selectedAddonCodes; 
+            
             window.startEditorDirect(
                 window.currentProductKey, 
                 window.isCustomModeCurrent ? finalW : null, 
                 window.isCustomModeCurrent ? finalH : null,
-                window.isCustomModeCurrent ? finalPricePerItem : null // ★ 추가됨
+                window.isCustomModeCurrent ? finalPricePerItem : null
             );
         } else if (mode === 'cart') {
             window.isDirectCartAddInProgress = true;
@@ -3373,20 +3425,18 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             document.getElementById('choiceModal').style.display = 'none';
 
             import('./order.js?v=119').then(m => {
-                // 원본 객체 복사 (중요: 원본을 수정하면 안됨)
                 const productToCart = { ...window.selectedProductForChoice };
                 
-                // ★ [수정 포인트] 커스텀 모드면 '계산된 가격'으로 덮어쓰기
                 if (window.isCustomModeCurrent) {
-                    productToCart.price = finalPricePerItem; // 여기서 1헤베 가격 -> 계산된 가격으로 변경됨
-                    productToCart.name += ` (${finalW}x${finalH}mm)`; // 이름 뒤에 사이즈 명시
+                    productToCart.price = finalPricePerItem;
+                    productToCart.name += ` (${finalW}x${finalH}mm)`;
                     productToCart.width_mm = finalW;
                     productToCart.height_mm = finalH;
-                    productToCart.is_custom = true; // 커스텀 상품임을 표시
+                    productToCart.is_custom = true;
                 }
                 
-                // 장바구니 추가 함수 호출 (최종 확정된 가격의 객체 전달)
-                m.addProductToCartDirectly(productToCart, finalQty); 
+                // [핵심] 3번째 인자로 선택된 옵션 코드 배열을 전달합니다.
+                m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes); 
                 document.getElementById('cartAddedModal').style.display = 'flex'; 
             });
         }
