@@ -3413,8 +3413,8 @@ video {
         /* X 버튼을 모달 박스 오른쪽 상단 안쪽으로 이동 */
 #choiceModal button[onclick*="none"] {
     position: absolute !important; /* fixed에서 absolute로 변경 */
-    top: 15px !important;
-    right: 15px !important;
+    top: 25px !important;
+    right: 335px !important;
     width: 40px !important;
     height: 40px !important;
     background: #ffeb3b !important;
@@ -3612,4 +3612,17 @@ video {
 }
 @media (max-width: 768px) {
     .ql-video { min-height: 250px; }
+}
+/* 상세페이지 내부 미디어 지연 로딩 스타일 */
+.product-detail-render video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    background: #000;
+}
+
+/* 텍스트 마법사 및 상단바 최적화 (모바일) */
+@media (max-width: 768px) {
+    /* 화면에 안 보이는 요소는 렌더링 제외 */
+    .hero-section { content-visibility: auto; }
 }

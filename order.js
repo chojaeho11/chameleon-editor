@@ -868,6 +868,9 @@ function renderCart() {
         `;
 
         // [옵션 생성 로직] 작고 콤팩트한 디자인
+        // [수정된 옵션 생성 로직] 수량 선택 및 키보드 입력 기능 추가
+// [수정된 옵션 생성 로직] 체크 시 이름 옆에 바로 수량 조절기가 나타나도록 개선
+// [수정된 옵션 생성 로직] 이름 옆 우측 끝에 수량 조절기 배치
         let addonHtml = '';
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
@@ -877,24 +880,37 @@ function renderCart() {
             categories.forEach(cat => {
                 const catAddons = allAddons.filter(a => (a.category_code || '옵션') === cat);
                 addonHtml += `
-                    <div style="margin-bottom:10px;">
+                    <div style="margin-bottom:12px;">
                         <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${cat.toUpperCase()}</div>
-                        <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; flex-direction:column; gap:6px;">
                             ${catAddons.map(opt => {
                                 const isSelected = Object.values(item.selectedAddons).includes(opt.code);
+                                const currentAddonQty = (item.addonQuantities && item.addonQuantities[opt.code]) || 1;
                                 return `
-                                    <label style="display:flex; align-items:center; justify-content:space-between; padding:5px 10px; border-radius:8px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; cursor:pointer; transition:0.2s;">
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:14px; height:14px; accent-color:#6366f1; cursor:pointer;">
-                                            <div style="width:24px; height:24px; background:#f8fafc; border:1px solid #eee; border-radius:4px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
-                                                ${opt.img_url ? `<img src="${opt.img_url}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fa-solid fa-cube" style="font-size:10px; color:#cbd5e1;"></i>`}
+                                    <div style="display:flex; flex-direction:column; padding:8px; border-radius:10px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; transition:0.2s; margin-bottom:6px;">
+                                        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+                                                <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:16px; height:16px; accent-color:#6366f1;">
+                                                <div style="display:flex; flex-direction:column;">
+                                                    <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.name_kr || opt.name}</span>
+                                                    <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
+                                                </div>
+                                            </label>
+                                            
+                                            ${isSelected ? `
+                                            <div style="display:flex; align-items:center; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; background:#fff; height:26px;">
+                                                <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty - 1})" 
+                                                        style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">-</button>
+                                                <input type="number" 
+                                                       value="${currentAddonQty}" 
+                                                       onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)"
+                                                       style="width:34px; height:100%; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-size:11px; font-weight:bold; outline:none; -webkit-appearance:none; margin:0;">
+                                                <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty + 1})" 
+                                                        style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">+</button>
                                             </div>
-                                            <div style="display:flex; flex-direction:column;">
-                                                <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.name_kr || opt.name}</span>
-                                                <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
-                                            </div>
+                                            ` : ''}
                                         </div>
-                                    </label>
+                                    </div>
                                 `;
                             }).join('')}
                         </div>
@@ -1624,15 +1640,58 @@ window.toggleCartAddon = function(idx, code, isChecked) {
         renderCart();
     }
 };
+// [수정] 키보드 입력 대응 및 수량 동기화
 window.updateCartAddonQty = function(idx, code, qty) {
-    const quantity = parseInt(qty); 
-    if (quantity < 1) return;
+    let quantity = parseInt(qty); 
+    if (isNaN(quantity) || quantity < 1) quantity = 1;
+    
     if (cartData[idx]) { 
+        if (!cartData[idx].addonQuantities) cartData[idx].addonQuantities = {};
         cartData[idx].addonQuantities[code] = quantity; 
         saveCart(); 
         renderCart(); 
     }
 };
+
+// [수정] 외부 호출 시 수량 정보를 함께 저장하도록 변경
+// order.js 내에 이 함수는 딱 하나만 존재해야 합니다.
+export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes = [], addonQtys = {}) {
+    if (!productInfo) return;
+
+    const now = Date.now();
+    // 중복 방지 로직 (필요시)
+    window.isDirectCartAddInProgress = true;
+    setTimeout(() => { window.isDirectCartAddInProgress = false; }, 2000);
+
+    const selectedAddons = {};
+    const addonQuantities = {};
+    
+    if (addonCodes && addonCodes.length > 0) {
+        addonCodes.forEach(code => {
+            selectedAddons[`opt_${code}`] = code; 
+            // 전달받은 옵션 수량이 있으면 사용, 없으면 1개로 세팅
+            addonQuantities[code] = addonQtys[code] || 1; 
+        });
+    }
+
+    cartData.push({
+        uid: now,
+        product: productInfo,
+        type: 'product_only',
+        fileName: '(파일 별도 첨부)',
+        thumb: productInfo.img || 'https://placehold.co/100?text=Product',
+        json: null,
+        width: productInfo.w || 0,
+        height: productInfo.h || 0,
+        isOpen: true,
+        qty: parseInt(targetQty) || 1,
+        selectedAddons: selectedAddons,
+        addonQuantities: addonQuantities
+    });
+
+    saveCart();
+    renderCart();
+}
 window.updateCartQty = function(idx, delta) {
     if (cartData[idx]) { 
         let newQty = (cartData[idx].qty || 1) + delta; 
@@ -1656,50 +1715,6 @@ window.updateCartQtyInput = function(idx, val) {
 // [9] 직접 장바구니 담기 및 일괄 업로드 (추가 기능)
 // ============================================================
 
-// 중복 방지용 타임스탬프 변수
-let lastCartAddTime = 0;
-
-export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes = []) {
-    if (!productInfo) return;
-
-    const now = Date.now();
-    if (now - lastCartAddTime < 1000) return;
-    lastCartAddTime = now;
-
-    window.isDirectCartAddInProgress = true;
-    setTimeout(() => { window.isDirectCartAddInProgress = false; }, 2000);
-
-    // [추가] 전달받은 옵션 코드를 장바구니 데이터 형식(selectedAddons)으로 변환
-    const selectedAddons = {};
-    const addonQuantities = {};
-    
-    if (addonCodes && addonCodes.length > 0) {
-        addonCodes.forEach(code => {
-            // 카테고리를 알 수 없는 경우 임시로 'addon_' 접두사를 붙여 저장
-            // renderCart 로직이 selectedAddons의 value 값을 기반으로 그리므로 핵심은 value입니다.
-            selectedAddons[`opt_${code}`] = code; 
-            addonQuantities[code] = 1; // 기본 수량 1
-        });
-    }
-
-    cartData.push({
-        uid: now,
-        product: productInfo,
-        type: 'product_only',
-        fileName: '(파일 별도 첨부)',
-        thumb: productInfo.img || 'https://placehold.co/100?text=Product',
-        json: null,
-        width: productInfo.w || 0,
-        height: productInfo.h || 0,
-        isOpen: true,
-        qty: parseInt(targetQty) || 1,
-        selectedAddons: selectedAddons, // 수집된 옵션 적용
-        addonQuantities: addonQuantities
-    });
-
-    saveCart();
-    renderCart();
-}
 
 // 2. 장바구니 내 파일 일괄 업로드 처리 (수정됨: 배열 복사 및 병렬 처리)
 export async function processBulkCartUpload(files) {

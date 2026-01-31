@@ -1421,20 +1421,7 @@
             </div>
 
             <div id="cartListArea" style="width: 100%;"></div>
-            <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:12px; padding:15px; display:flex; flex-wrap:wrap; gap:15px; justify-content:space-between; align-items:center; margin: 20px 0;">
-                <div style="display:flex; align-items:center; gap:12px; min-width: 200px;">
-                    <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#d97706; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">
-                        <i class="fa-solid fa-truck-fast" style="font-size:18px;"></i>
-                    </div>
-                    <div>
-                        <div style="font-size:14px; font-weight:800; color:#92400e; word-break:keep-all;">배송비 선택을 잊으셨나요?</div>
-                        <div style="font-size:12px; color:#b45309; margin-top:2px; word-break:keep-all;">제품에 맞는 배송/설치 옵션을 꼭 추가해주세요.</div>
-                    </div>
-                </div>
-                <button onclick="window.openDeliveryCategory()" class="btn-round" style="width:auto; flex-grow:1; max-width:100%; height:38px; padding:0 15px; background:#fff; border:1px solid #d97706; color:#d97706; font-weight:800; font-size:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05); white-space:nowrap;">
-                    + 배송비 추가 (서울 경기는 모든 고객 무료배송) 시간지정 및 설치요청만 결제하세요.
-                </button>
-            </div>
+            
             
             <div style="width: 100%;">
                 <div style="background:white; padding:20px; border-radius:12px;">
@@ -2763,283 +2750,217 @@ let globalSubCats = [];      // 카테고리 데이터
 let globalProdImages = [];   // 상품 데이터 (검색용)
 let globalCatThumbMap = {};  // 썸네일 매핑 전역 변수
 
-// [1] 그리드 아이템 그리기 (별점, 이미지, 상품명 처리 핵심 함수)
+// [최종 수정] 안내 문구 삭제 및 칸 넓이(높이) 최소화
 window._drawQuickItems = (list, isProductMode = false) => {
     const itemContainer = document.getElementById('quickMenuContainer');
     if (!itemContainer) return;
-    itemContainer.innerHTML = '';
     
-    if (!list || list.length === 0) {
-        itemContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px 0; color:#94a3b8;">검색 결과가 없습니다.</div>`;
+    // 1. 결과가 없거나 데이터가 올바르지 않을 때 (칸을 확 좁힘)
+    if (!list || !Array.isArray(list) || list.length === 0) {
+        itemContainer.innerHTML = ''; // 문구 완전 삭제
+        // 영역의 높이를 20px로 확 좁혀서 허전함을 방지 (위아래 여백만 유지)
+        itemContainer.style.minHeight = '20px'; 
+        itemContainer.style.padding = '0';
         return;
     }
 
+    // 2. 결과가 있을 때 기존 렌더링 로직 (높이 자동 복구)
+    itemContainer.style.minHeight = 'auto'; 
+    itemContainer.style.padding = '20px 0'; // 필요시 원래 패딩값으로 조절
+    itemContainer.innerHTML = '';
+    
     list.forEach(item => {
-    const isProduct = isProductMode || item.price !== undefined;
-    let name = item.name;
-    if (typeof getLocalizedData === 'function') {
-        const localData = getLocalizedData(item);
-        name = localData.name;
-    }
+        const isProduct = isProductMode || item.price !== undefined;
+        const name = item.name || '';
+        const itemCode = item.code || '';
         
-        // 이미지 URL 가져오기 (전역 맵 활용)
-        let rawUrl = item.img_url || item.image;
-        // 상품이 아니고(카테고리이고), 자체 이미지가 없으면 전역 맵에서 찾기
+        let rawUrl = item.img_url || item.image || item.thumbnail;
         if (!rawUrl && !isProduct && window.globalCatThumbMap) {
-            rawUrl = window.globalCatThumbMap[item.code];
+            rawUrl = window.globalCatThumbMap[itemCode];
         }
         
-        const tinyUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
+        const tinyUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 200) : rawUrl;
         
-        // 클릭 이벤트 설정
-        let clickAction = '';
-        let badge = '';
-
-        if (isProduct) {
-            if (item.is_general_product) {
-                clickAction = `window.openGeneralProductModal('${item.code}')`;
-            } else {
-                clickAction = `window.showChoiceModal('${item.code}')`;
-            }
-            badge = `<span style="position:absolute; top:6px; left:6px; background:#6366f1; color:white; font-size:10px; padding:2px 6px; border-radius:4px; z-index:2; font-weight:bold;">상품</span>`;
-        } else {
-            // 설명 텍스트 안전 변환
-            const safeDesc = (item.description || '').replace(/\n/g, ' ').replace(/'/g, "\\'");
-            clickAction = `window.showCategoryProducts('${item.code}', '${name}', '${safeDesc}')`;
-        }
-
-        // 별점 생성 (4.5 ~ 5.0 랜덤)
-        const randomScore = (4.5 + Math.random() * 0.5).toFixed(1);
+        let clickAction = isProduct 
+            ? `window.loadProductDetailAndOpen('${itemCode}')` 
+            : `window.showCategoryProducts('${itemCode}', '${name.replace(/'/g, "\\'")}')`;
 
         const div = document.createElement('div');
         div.className = 'quick-item';
-        
-        // 다국어 모드 체크
-        const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
-        const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
-        if (isUS || isJP) div.classList.add('long-text-mode');
-
-        // 성능 최적화: loading="lazy"와 decode="async"를 추가하여 렌더링 차단 방지
-        let imgTag = tinyUrl 
-            ? `<img src="${tinyUrl}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;background:#f8fafc;\\'><i class=\\'fa-solid fa-cube\\' style=\\'color:#cbd5e1;\\'></i></div>'">`
-            : `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#f8fafc;"><i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i></div>`;
-
         div.innerHTML = `
-            <div class="quick-icon" onclick="${clickAction}" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;">
-                ${badge}
-                ${imgTag}
+            <div class="quick-icon" onclick="${clickAction}" style="position:relative; overflow:hidden; cursor:pointer;">
+                ${isProduct ? '<span style="position:absolute;top:6px;left:6px;background:#6366f1;color:white;font-size:10px;padding:2px 6px;border-radius:4px;z-index:2;font-weight:bold;">상품</span>' : ''}
+                <img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/200?text=No+Img'">
             </div>
             <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
-            
-            <div class="quick-review-bar">
-                <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${item.code}', '${name}')">
-                    <i class="fa-solid fa-star star-icon"></i> 
-                    <span class="star-score">${randomScore}</span>
-                </div>
-                <div class="review-pill" onclick="event.stopPropagation(); window.goBoardWithCategory('review', '${item.code}', '${name}')" style="background:white;">
-                    <i class="fa-regular fa-comment-dots"></i>
-                </div>
-            </div>
         `;
-        
         itemContainer.appendChild(div);
     });
 };
 
+// [수정] 검색 시 데이터 미로딩에 의한 undefined 에러 방지
+// [수정] 메인 검색 필터 (카테고리 제외, 상품만 검색)
+window.filterMainIcons = function(keyword) {
+    const term = keyword.toLowerCase().trim();
+    
+    // 데이터 로드 여부 체크 (undefined 에러 방지)
+    if (!window.globalSubCats || !window.globalProdImages) return;
+
+    if (!term) {
+        // 검색어가 없으면 현재 활성화된 카테고리 탭 내용을 다시 보여줌
+        const activeTab = document.querySelector('.cat-tab.active');
+        if (activeTab) activeTab.click();
+        return;
+    }
+
+    // matchedCats(카테고리 검색)를 제외하고 matchedProds(상품 검색)만 수행함
+    const matchedProds = window.globalProdImages.filter(prod => 
+        (prod.name || '').toLowerCase().includes(term)
+    );
+
+    // 결과물로 상품 리스트만 전달 (두 번째 인자 true는 상품 모드 활성화를 의미)
+    window._drawQuickItems(matchedProds, true);
+};
 // [2] 퀵메뉴 데이터 로딩 및 탭 생성
 async function renderQuickMenu() {
     const tabContainer = document.getElementById('topCategoryTabs');
     const itemContainer = document.getElementById('quickMenuContainer');
     if (!tabContainer || !itemContainer) return;
 
-    itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
-
-    const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
-    const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
+    itemContainer.innerHTML = '<div style="text-align:center; padding:50px; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
     try {
-        let { data: topCats } = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
-        const { data: subCats } = await sb.from('admin_categories').select('*').order('sort_order', { ascending: true });
-        
-        // 상품 데이터 가져오기
-        const { data: prodImages } = await sb.from('admin_products')
-            .select('*')
-            .not('img_url', 'is', null).neq('img_url', '');
+        // 대분류, 중분류, 검색용 상품 정보를 동시에 가져옴
+        const [{ data: topCats }, { data: subCats }, { data: allProds }] = await Promise.all([
+            sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true }),
+            sb.from('admin_categories').select('*').order('sort_order', { ascending: true }),
+            sb.from('admin_products').select('code, name, category, img_url, price').order('sort_order', { ascending: true })
+        ]);
 
-        // 전역 변수 설정
+        // 전역 변수 초기화 (검색 오류 방지 핵심)
         window.globalSubCats = subCats || [];
-        window.globalProdImages = prodImages || [];
-        window.globalCatThumbMap = {}; 
+        window.globalProdImages = allProds || [];
+        window.globalCatThumbMap = {};
 
-        if (prodImages) {
-            prodImages.forEach(p => {
-                // 카테고리 썸네일 매핑
+        // 카테고리별 대표 이미지 매핑
+        if (allProds) {
+            allProds.forEach(p => {
                 if (p.category && !window.globalCatThumbMap[p.category]) {
                     window.globalCatThumbMap[p.category] = p.img_url;
                 }
-                
-                // 상품 DB 구축
-                if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-                
-                let localName = p.name;
-                let localPrice = p.price;
-                if(typeof window.getLocalizedData === 'function') {
-                    const localData = window.getLocalizedData(p);
-                    localName = localData.name;
-                    localPrice = localData.price;
-                }
-
-                window.PRODUCT_DB[p.code] = {
-                    name: localName,
-                    price: localPrice,
-                    w_mm: p.width_mm, 
-                    h_mm: p.height_mm,
-                    img: p.img_url, 
-                    description: p.description, 
-                    addons: p.addons ? p.addons.split(',') : [], 
-                    category: p.category,
-                    is_custom_size: p.is_custom_size,
-                    is_general_product: p.is_general_product
-                };
             });
         }
 
-        if (!subCats || subCats.length === 0) {
-            itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Category.</div>';
-            return;
-        }
+        tabContainer.innerHTML = '';
+        topCats.forEach(top => {
+            const btn = document.createElement('button');
+            btn.className = 'cat-tab';
+            btn.innerText = top.name; 
+            btn.onclick = () => {
+                document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                const filteredSub = subCats.filter(s => s.top_category_code === top.code);
+                window._drawQuickItems(filteredSub, false);
+            };
+            tabContainer.appendChild(btn);
+        });
 
-        // 상단 탭 필터링
-        if (topCats) {
-            const hiddenNames = ['배너/현수막', '전시/매대', '기본 대분류', '기본대분류'];
-            topCats = topCats.filter(cat => !hiddenNames.includes(cat.name));
-        }
-
-        // 탭 렌더링
-        const renderTabs = () => {
-            tabContainer.innerHTML = '';
-            const descBox = document.getElementById('categoryDescriptionBox');
-
-            if (topCats) {
-                topCats.forEach(top => {
-                    let topName = top.name;
-                    if (isJP) topName = top.name_jp || top.name;
-                    else if (isUS) topName = top.name_us || top.name;
-
-                    let topDesc = top.description;
-                    if (isJP) topDesc = top.description_jp || top.description;
-                    else if (isUS) topDesc = top.description_us || top.description;
-
-                    const btn = document.createElement('button');
-                    btn.className = 'cat-tab';
-                    btn.innerText = topName;
-
-                    btn.onclick = (e) => {
-                        const tabs = tabContainer.querySelectorAll('.cat-tab');
-                        tabs.forEach(t => t.classList.remove('active'));
-                        e.target.classList.add('active');
-
-                        if (topDesc && topDesc.trim() !== "") {
-                            descBox.style.display = "block";
-                            descBox.innerHTML = topDesc.replace(/\n/g, '<br>');
-                        } else {
-                            descBox.style.display = "none";
-                        }
-
-                        renderItemsByFilter(top.code);
-                        
-                        if (window.loadSpecialProducts) {
-                            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
-                            loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
-                        }
-                    };
-                    tabContainer.appendChild(btn);
-                });
-            }
-            
-            // 기타 탭
-            const orphanCats = subCats.filter(sub => !sub.top_category_code);
-            if (orphanCats.length > 0) {
-                const etcBtn = document.createElement('button');
-                etcBtn.className = 'cat-tab';
-                etcBtn.innerText = isJP ? 'Others' : '기타';
-                etcBtn.onclick = (e) => {
-                    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-                    e.target.classList.add('active');
-                    renderItemsByFilter('etc');
-                };
-                tabContainer.appendChild(etcBtn);
-            }
-        };
-
-        const renderItemsByFilter = (filterCode) => {
-            let filtered = (filterCode === 'etc') 
-                ? subCats.filter(sub => !sub.top_category_code)
-                : subCats.filter(sub => sub.top_category_code === filterCode);
-            window._drawQuickItems(filtered, false);
-        };
-
-        renderTabs();
-        const firstTab = tabContainer.querySelectorAll('.cat-tab')[0];
-        if (firstTab) firstTab.click();
+        if (tabContainer.firstChild) tabContainer.firstChild.click();
 
     } catch (err) {
-        console.error("카테고리 로딩 실패:", err);
-        itemContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading Error.</div>';
+        console.error("초기 로딩 실패:", err);
+        itemContainer.innerHTML = "데이터 로드 오류가 발생했습니다.";
     }
 }
 
+
+
+// [신규] 상품 클릭 시에만 상세 이미지/영상 로드
+// [추가] 상품 상세 정보 로드 후 상세 모달 오픈
+window.loadProductDetailAndOpen = async function(productCode) {
+    const loading = document.getElementById('loading');
+    if(loading) {
+        loading.style.display = 'flex';
+        const pMsg = loading.querySelector('p');
+        if(pMsg) pMsg.innerText = "상세 정보를 불러오는 중...";
+    }
+
+    try {
+        // DB에서 해당 상품의 모든 정보(description 포함)를 가져옴
+        const { data: product, error } = await sb.from('admin_products')
+            .select('*')
+            .eq('code', productCode)
+            .single();
+
+        if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
+
+        // 캐시 업데이트
+        if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+        window.PRODUCT_DB[productCode] = product;
+        
+        // 카테고리 팝업 닫기
+        const catModal = document.getElementById('categoryDetailModal');
+        if(catModal) catModal.style.display = 'none';
+
+        // 일반 상품 여부에 따른 모달 실행
+        if (product.is_general_product) {
+            window.openGeneralProductModal(productCode);
+        } else {
+            // ChoiceModal 실행
+            window.showChoiceModal(productCode);
+        }
+    } catch (e) {
+        console.error("상세 로드 실패:", e);
+        alert(e.message);
+    } finally {
+        if(loading) loading.style.display = 'none';
+    }
+};
+
 // [3] 메인 검색 필터 (상품 + 카테고리)
+// [수정 코드] 메인 검색 필터 (카테고리 제외, 상품만 검색하도록 수정)
 window.filterMainIcons = function(keyword) {
     const term = keyword.toLowerCase().trim();
+    
+    // 데이터 로드 여부 체크 (undefined 에러 방지)
+    if (!window.globalSubCats || !window.globalProdImages) return;
 
     if (!term) {
+        // 검색어가 비어있으면 현재 선택된 탭의 카테고리 목록을 다시 보여줌
         const activeTab = document.querySelector('.cat-tab.active');
         if (activeTab) activeTab.click();
         return;
     }
 
-    const matchedCats = window.globalSubCats.filter(cat => (cat.name || '').toLowerCase().includes(term));
-    const matchedProds = window.globalProdImages.filter(prod => (prod.name || '').toLowerCase().includes(term));
+    // matchedCats(카테고리) 검색을 생략하고 matchedProds(상품) 검색 결과만 추출
+    const matchedProds = window.globalProdImages.filter(prod => 
+        (prod.name || '').toLowerCase().includes(term)
+    );
 
-    const combinedResults = [...matchedCats, ...matchedProds];
-    window._drawQuickItems(combinedResults);
+    // 상품 리스트만 그리도록 전달 (두 번째 인자 true는 상품 배지를 표시하기 위함)
+    window._drawQuickItems(matchedProds, true);
 };
-
 window.categoryCache = {}; 
 
-// [4] 모달창 상품 목록 표시 (상품명/가격/이미지/사이즈 완벽 복구)
+// [최종 통합] 카테고리 클릭 시 상품 목록 로드 (상세정보는 제외하여 로딩 속도 최적화)
 window.showCategoryProducts = async function(catKey, catName, catDesc) {
     const grid = document.getElementById('catProductGrid');
     const modal = document.getElementById('categoryDetailModal');
     const titleEl = document.getElementById('catModalTitle');
     const descBox = document.getElementById('catModalDesc');
 
-    // 제목 설정
+    // 1. UI 초기화
     if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
     
-    // 설명 박스 설정 (DB 일본어 필드 우선 참조 적용)
+    // 설명 박스 처리 (일본어 대응 포함)
     if (descBox) {
         const urlParams = new URLSearchParams(window.location.search);
         const currentLang = urlParams.get('lang') || 'kr';
-        
-        let displayDesc = catDesc; // 기본은 전달받은 설명
-
-        // 1. 일본어 모드일 때 DB의 일본어 필드(description_ja)가 있는지 체크
-        // window.modalGlobalData에 저장된 카테고리 원본 데이터를 직접 뒤집니다.
-        if (currentLang === 'ja' && window.modalGlobalData && window.modalGlobalData.categories) {
+        let displayDesc = catDesc;
+        if (currentLang === 'ja' && window.modalGlobalData?.categories) {
             const catData = window.modalGlobalData.categories.find(c => c.code === catKey);
-            if (catData && catData.description_ja) {
-                displayDesc = catData.description_ja;
-            } else {
-                // DB에 없으면 JSON 파일(window.t)에서 예비로 가져옴
-                const tKey = 'cat_desc_' + catKey;
-                const tVal = window.t(tKey);
-                if (tVal !== tKey) displayDesc = tVal;
-            }
+            if (catData?.description_ja) displayDesc = catData.description_ja;
         }
-
-        // 2. 최종 출력 (줄바꿈 처리 포함)
         if (displayDesc && displayDesc !== "undefined" && displayDesc.trim() !== "") {
             descBox.style.display = "block";
             descBox.innerHTML = displayDesc.replace(/\n/g, '<br>');
@@ -3048,122 +2969,86 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         }
     }
     
-    // 그리드 스타일 초기화 (PC: 4열, 모바일: 2열 자동 조정됨)
-    grid.style.display = "grid";
-    grid.style.gap = "15px";
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
-    
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>';
     modal.style.display = 'flex';
 
-    // 1. 캐시 확인
-    if (!window.categoryCache) window.categoryCache = {};
-    let products = window.categoryCache[catKey];
-    
-    if (!products) {
-        try {
-            // DB에서 상품 목록 가져오기
-            const { data, error } = await sb.from('admin_products')
-                .select('*')
-                .eq('category', catKey)
-                .order('sort_order', { ascending: true });
-            if (error) throw error;
-            products = data;
-            window.categoryCache[catKey] = data;
-        } catch (e) {
-            console.error("Error:", e);
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Error loading products.</div>';
+    try {
+        // [핵심 최적화] 무거운 description(상세설명) 필드를 빼고 목록에 필요한 최소 데이터만 가져옴
+        const { data: products, error } = await sb.from('admin_products')
+            .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us')
+            .eq('category', catKey)
+            .order('sort_order', { ascending: true });
+
+        if (error) throw error;
+        grid.innerHTML = '';
+
+        if (!products || products.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">상품이 없습니다.</div>';
             return;
         }
-    }
 
-    grid.innerHTML = '';
-    if (!products || products.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#999;">No products found.</div>';
-        return;
-    }
-
-    products.forEach(p => {
-            // 1. 썸네일 주소 생성
-            const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 80) : '';
-
-            // 2. [중요] 상품명 데이터 안전하게 가져오기 (없으면 원래 이름 사용)
-            let localData = { name: p.name, price: p.price, formattedPrice: (p.price||0).toLocaleString()+'원' };
+        products.forEach(p => {
+            const localized = typeof getLocalizedData === 'function' ? getLocalizedData(p) : { name: p.name, formattedPrice: (p.price||0).toLocaleString() + '원' };
+            const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 150) : '';
             
-            // getLocalizedData 함수가 있다면 사용
-            if (typeof getLocalizedData === 'function') {
-                localData = getLocalizedData(p);
-            }
-            
-            // getLocalizedData를 통해 국가별로 변환된 데이터 가져오기
-            const localized = getLocalizedData(p);
-            const displayName = localized.name || 'No Name';
-            const displayPrice = localized.formattedPrice;
-
-            // 전역 DB 저장 (선택 시 사용)
-            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-            const scaleFactor = 3.7795;
-            const pxW = Math.round((p.width_mm || 210) * scaleFactor);
-            const pxH = Math.round((p.height_mm || 297) * scaleFactor);
-
-            window.PRODUCT_DB[p.code] = {
-                name: displayName,
-                price: localData.price,
-                w: pxW, h: pxH,
-                w_mm: p.width_mm, h_mm: p.height_mm,
-                img: p.img_url, 
-                addons: p.addons ? p.addons.split(',') : [], 
-                category: p.category,
-                description: p.description,
-                is_custom_size: p.is_custom_size,
-                is_general_product: p.is_general_product
-            };
-
             const div = document.createElement('div');
-            div.className = 'quick-item'; 
-            
-            // 3. 이미지 HTML 생성 (alt 속성에서 따옴표 제거하여 오류 방지)
-            const safeName = displayName.replace(/"/g, ''); 
-            let imgHtml = p.img_url 
-                ? `<div class="quick-icon-img-box"><img src="${thumbUrl}" alt="${safeName}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'quick-icon\\'><i class=\\'fa-solid fa-cube\\'></i></div>';"></div>`
-                : `<div class="quick-icon"><i class="fa-solid fa-cube"></i></div>`;
-
-            // 4. [핵심] HTML 출력 (display:block 강제 적용)
+            div.className = 'quick-item';
             div.innerHTML = `
-                ${imgHtml}
-                
-                <div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                    ${displayName}
+                <div class="quick-icon-img-box">
+                    <img src="${thumbUrl}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
                 </div>
-
-                <div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">
-                    ${displayPrice}
-                </div>
-
-                <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
-                    ${p.width_mm || '-'} x ${p.height_mm || '-'} mm
-                </div>
+                <div class="quick-text" style="display:block !important; font-weight:bold; margin-top:8px;">${localized.name}</div>
+                <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${localized.formattedPrice}</div>
             `;
 
-            div.onclick = () => {
-                const modal = document.getElementById('categoryDetailModal');
-                if(modal) modal.style.display = 'none'; 
-                window.currentProductKey = p.code;
-                window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-
-                if (p.is_general_product) {
-                    if (window.openGeneralProductModal) window.openGeneralProductModal(p.code);
-                } else {
-                    if(window.showChoiceModal) window.showChoiceModal(p.code);
-                    else window.startEditorDirect(p.code);
-                }
-            };
+            // 클릭 시 상세 정보를 로드하는 별도 함수 호출 (지연 로딩의 핵심)
+            div.onclick = () => window.loadProductDetailAndOpen(p.code);
             grid.appendChild(div);
         });
+    } catch (e) {
+        console.error("로드 실패:", e);
+        grid.innerHTML = '<div style="text-align:center; padding:20px;">데이터를 불러오지 못했습니다.</div>';
+    }
 };
- 
-    window.showChoiceModal = async function(key) {
+
+// [신규] 상품 클릭 시에만 상세 이미지/설명/영상 데이터를 서버에서 로드하는 함수
+window.loadProductDetailAndOpen = async function(productCode) {
+    const loading = document.getElementById('loading');
+    if(loading) {
+        loading.style.display = 'flex';
+        const pTag = loading.querySelector('p');
+        if(pTag) pTag.innerText = "상세 정보를 불러오는 중...";
+    }
+
+    try {
+        // 실제 무거운 상세페이지 데이터(description)는 여기서만 호출
+        const { data: product, error } = await sb.from('admin_products')
+            .select('*')
+            .eq('code', productCode)
+            .single();
+
+        if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
+
+        if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+        window.PRODUCT_DB[productCode] = product;
+        
+        document.getElementById('categoryDetailModal').style.display = 'none';
+
+        if (product.is_general_product) {
+            window.openGeneralProductModal(productCode);
+        } else {
+            window.showChoiceModal(productCode);
+        }
+    } catch (e) {
+        alert(e.message);
+    } finally {
+        if(loading) loading.style.display = 'none';
+    }
+};
+    // [최종 안정화 버전] 상세 페이지 모달 오픈 함수
+window.showChoiceModal = async function(key) {
     window.currentProductKey = key;
-    const product = window.PRODUCT_DB[key];
+    const product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
     if (!product) return alert("상품 정보를 불러오는 중입니다.");
 
     window.selectedProductForChoice = product;
@@ -3172,16 +3057,17 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     
     const urlParams = new URLSearchParams(window.location.search);
     const lang = urlParams.get('lang') || 'kr';
-    let detailContent = product.description; 
+    let detailContent = product.description || "";
     if(lang === 'ja') detailContent = product.description_jp || product.description;
     if(lang === 'en') detailContent = product.description_us || product.description;
 
+    // 헤베 계산(커스텀 사이즈) 여부 확인
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
-    // 옵션 카테고리 렌더링 로직
+    // [1] 옵션 렌더링 로직 (이미지 우측 빈 공간에 수량 조절기 배치)
     let optionsHtml = '<div id="addonCategoryArea" style="margin-top:15px; display:flex; flex-direction:column; gap:12px;">';
-    const addonCodes = product.addons || [];
+    const addonCodes = Array.isArray(product.addons) ? product.addons : (product.addons ? product.addons.split(',') : []);
     
     if (addonCodes.length > 0) {
         const { data: addons } = await sb.from('admin_addons').select('*').in('code', addonCodes);
@@ -3192,22 +3078,28 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 const catAddons = addons.filter(a => a.category_code === cat.code);
                 if (catAddons.length > 0) {
                     optionsHtml += `
-                        <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.02); margin-bottom:10px;">
                             <div style="font-weight:800; font-size:13px; color:#1e1b4b; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
                                 <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${cat.name_kr || cat.name}
                             </div>
                             <div style="display:flex; flex-direction:column; gap:8px;">
                                 ${catAddons.map(a => `
-                                    <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; transition:0.2s;" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#f1f5f9'">
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <input type="checkbox" name="userOption" value="${a.code}" data-price="${a.price}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal()">
-                                            <img src="${a.img_url || 'https://placehold.co/40'}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
+                                    <div class="addon-item-row" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:10px; background:#fff; margin-bottom:6px;">
+                                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;">
+                                            <input type="checkbox" name="userOption" value="${a.code}" data-price="${a.price}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal(); this.closest('.addon-item-row').querySelector('.addon-qty-box').style.display = this.checked ? 'flex' : 'none';">
+                                            <img src="${a.img_url || 'https://placehold.co/40'}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #eee;" onerror="this.src='https://placehold.co/40?text=No+Img'">
                                             <div style="display:flex; flex-direction:column;">
                                                 <span style="font-size:13px; font-weight:600; color:#334155;">${a.name_kr || a.name}</span>
                                                 <span style="font-size:12px; color:#6366f1; font-weight:bold;">+${(a.price || 0).toLocaleString()}원</span>
                                             </div>
+                                        </label>
+                                        
+                                        <div class="addon-qty-box" style="display:none; align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden; height:28px; background:#fff;">
+                                            <button onclick="const inp=this.nextElementSibling; inp.value=Math.max(1, parseInt(inp.value)-1); window.updateModalTotal();" style="border:none; background:#f8fafc; width:24px; height:100%; cursor:pointer;">-</button>
+                                            <input type="number" class="addon-qty-input" data-code="${a.code}" value="1" min="1" oninput="window.updateModalTotal()" style="width:40px; height:100%; text-align:center; border:none; font-size:12px; font-weight:bold; outline:none;">
+                                            <button onclick="const inp=this.previousElementSibling; inp.value=parseInt(inp.value)+1; window.updateModalTotal();" style="border:none; background:#f8fafc; width:24px; height:100%; cursor:pointer;">+</button>
                                         </div>
-                                    </label>
+                                    </div>
                                 `).join('')}
                             </div>
                         </div>`;
@@ -3217,55 +3109,153 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     }
     optionsHtml += '</div>';
 
-    const totalDisplayHtml = `
-        <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:10px; text-align:right;">
-            <div style="font-size:12px; color:#64748b; margin-bottom:5px;">선택 옵션 포함 합계</div>
-            <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">${product.price.toLocaleString()}원</div>
-        </div>
-    `;
+// [수정] 수량 정보를 반영한 실시간 합계 업데이트
+window.updateModalTotal = function() {
+    const product = window.selectedProductForChoice;
+    if(!product) return;
 
-    let rightSideContent = isCustom ? `
-        <div id="customSizePanel" style="display:flex; flex-direction:column; gap:12px; background:#fff; padding:20px; border-radius:15px; border:1px solid #e2e8f0; margin-bottom:15px;">
+    // 1. 본품 단가 결정
+    let unitPrice = product.price;
+    if(window.isCustomModeCurrent) {
+        const calcPriceEl = document.getElementById('calcResultPrice');
+        // 회베계산기는 이미 (면적 x 단가 x 수량)이 계산된 텍스트를 가져옴
+        unitPrice = parseInt(calcPriceEl.innerText.replace(/[^0-9]/g, '')) || 0;
+    }
+    
+    // 2. 본품 수량 및 총액 계산
+    const mainQty = parseInt(document.getElementById(window.isCustomModeCurrent ? 'inputCustQty' : 'fixedProdQty').value) || 1;
+    // 회베계산기 모드면 unitPrice에 이미 수량이 포함되어 있고, 고정 사이즈면 단가 * 수량을 직접 함
+    let baseProductTotal = window.isCustomModeCurrent ? unitPrice : (unitPrice * mainQty);
+
+    // 3. 옵션 총액 계산 (옵션 단가 * 옵션 수량)
+    let optionTotal = 0;
+    document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
+        const row = chk.closest('.addon-item-row');
+        const optQty = parseInt(row.querySelector('.addon-qty-input').value) || 1;
+        optionTotal += (parseInt(chk.dataset.price || 0) * optQty);
+    });
+
+    // 4. 최종 합계 표시
+    const finalTotal = baseProductTotal + optionTotal;
+    const display = document.getElementById('modalRealtimeTotal');
+    if(display) display.innerText = finalTotal.toLocaleString() + '원';
+};
+window.confirmChoice = function(mode) {
+    if (window.isDirectCartAddInProgress) return;
+    if (!window.selectedProductForChoice) return alert("상품 정보가 없습니다.");
+
+    const product = window.selectedProductForChoice;
+    let finalW = product.width_mm || product.w || 0;
+    let finalH = product.height_mm || product.h || 0;
+    let finalPrice = product.price;
+    
+    // 수량 가져오기
+    const qtyInput = document.getElementById(window.isCustomModeCurrent ? 'inputCustQty' : 'fixedProdQty');
+    const finalQty = parseInt(qtyInput.value) || 1;
+
+    if (window.isCustomModeCurrent) {
+        finalW = parseInt(document.getElementById('inputCustW').value || 0);
+        finalH = parseInt(document.getElementById('inputCustH').value || 0);
+        if (finalW < 100 || finalH < 100) return alert("최소 사이즈는 100mm 이상이어야 합니다.");
+        // 회베계산기 상품은 단가(1헤베당)를 기준으로 재계산된 금액을 장바구니에 보냄
+        finalPrice = Math.floor((((finalW * finalH) / 1000000) * product.price) / 100) * 100;
+    }
+
+    // 선택된 옵션 및 개별 수량 수집
+    const selectedAddonCodes = [];
+    const addonQtys = {}; 
+    document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
+        const code = chk.value;
+        const row = chk.closest('.addon-item-row');
+        selectedAddonCodes.push(code);
+        addonQtys[code] = parseInt(row.querySelector('.addon-qty-input').value) || 1;
+    });
+
+    if (mode === 'editor') {
+        document.getElementById('choiceModal').style.display = 'none';
+        window.pendingSelectedAddons = selectedAddonCodes; 
+        window.pendingAddonQtys = addonQtys;
+        // 에디터 진입 시 규격 전달 (A4 고정 방지)
+        window.startEditorDirect(window.currentProductKey, finalW, finalH, window.isCustomModeCurrent ? finalPrice : null);
+    } else if (mode === 'cart') {
+        window.isDirectCartAddInProgress = true;
+        setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
+        document.getElementById('choiceModal').style.display = 'none';
+
+        import('./order.js?v=119').then(m => {
+            const productToCart = { 
+                ...product,
+                price: finalPrice, // 확정된 단가
+                width_mm: finalW,
+                height_mm: finalH
+            };
+            if (window.isCustomModeCurrent) {
+                productToCart.name += ` (${finalW}x${finalH}mm)`;
+            }
+            // 수량, 옵션코드, 옵션수량을 함께 전송
+            m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, addonQtys); 
+            document.getElementById('cartAddedModal').style.display = 'flex'; 
+        });
+    }
+};
+
+    // [2] 우측 상단 레이아웃 결정 (헤베 계산기 vs 일반 카드)
+    let rightSideUI = isCustom ? `
+        <div id="customSizePanel" style="display:flex; flex-direction:column; gap:12px; background:#fff; padding:20px; border-radius:15px; border:2px solid #6366f1; margin-bottom:15px;">
             <h3 style="margin:0; font-size:16px; text-align:center; color:#1e1b4b;">📏 사이즈 입력 (면적 계산)</h3>
             <div style="display:flex; gap:8px;">
                 <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="가로 mm" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
                 <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="세로 mm" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
             </div>
-            <input type="number" id="inputCustQty" class="ai-input-pretty" value="1" min="1" style="margin:0;" oninput="window.calcCustomPrice()">
+            <div style="font-size:12px; color:#666; font-weight:bold;">주문 수량</div>
+            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden; height:45px;">
+                <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
+                <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:16px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
+                <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
+            </div>
             <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center;">
                 <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0원</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.7;">-</div>
             </div>
-            ${optionsHtml}
         </div>
     ` : `
         <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
-            <img src="${product.img}" style="width:100%; max-height:220px; object-fit:contain; border-radius:10px; margin-bottom:10px;">
-            <div style="font-size:22px; font-weight:900; color:#6366f1;">${product.price.toLocaleString()}원</div>
-            <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${product.w_mm || 0} x ${product.h_mm || 0} mm</div>
-            ${optionsHtml}
+            <img src="${product.img || product.img_url}" style="width:100%; max-height:180px; object-fit:contain; border-radius:10px; margin-bottom:10px;">
+            <div style="font-size:20px; font-weight:900; color:#1e293b; margin-bottom:15px;">${(product.price || 0).toLocaleString()}원</div>
+            
+            <div style="font-size:12px; color:#64748b; margin-bottom:8px; text-align:left; font-weight:bold;">본품 수량 선택</div>
+            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden; height:40px; margin-bottom:10px;">
+                <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
+                <input type="number" id="fixedProdQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.updateModalTotal();">
+                <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
+            </div>
+            <div style="font-size:11px; color:#94a3b8;">${product.w_mm || 0} x ${product.h_mm || 0} mm</div>
         </div>
     `;
 
-    // 닫기 버튼을 최상단(우측 상단)으로 배치한 레이아웃
+    // [3] 최종 HTML 출력
     modalBox.innerHTML = `
-        <div class="choice-layout" style="display:flex; flex-direction:${window.innerWidth <= 768 ? 'column' : 'row'}; height:${window.innerWidth <= 768 ? 'auto' : '90vh'}; overflow-y:auto; position:relative;">
+        <div class="choice-layout" style="display:flex; flex-direction:${window.innerWidth <= 768 ? 'column' : 'row'}; height:90vh; overflow:hidden;">
             <button onclick="document.getElementById('choiceModal').style.display='none'" 
-                style="position:fixed; top:20px; right:20px; width:45px; height:45px; background:#FFEB3B; border:3px solid #fff; border-radius:50%; z-index:10001; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
+                style="position:absolute; top:20px; right:20px; width:45px; height:45px; background:#FFEB3B; border:3px solid #fff; border-radius:50%; z-index:10001; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
                 <i class="fa-solid fa-xmark" style="font-size:20px; color:#333;"></i>
             </button>
 
-            <div class="choice-left-content view-content" style="flex:1; padding:${window.innerWidth <= 768 ? '20px' : '40px'}; background:#fff; text-align:left;">
-                <h2 style="font-size:${window.innerWidth <= 768 ? '22px' : '28px'}; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${product.name}</h2>
+            <div class="choice-left-content" style="flex:1; overflow-y:auto; padding:40px; background:#fff; text-align:left;">
+                <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${product.name}</h2>
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
-                    ${detailContent || '<p style="color:#999; text-align:center;">상세 정보 준비 중입니다.</p>'}
+                    ${detailContent}
                 </div>
             </div>
 
-            <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; background:#f8fafc; padding:${window.innerWidth <= 768 ? '20px 20px 100px 20px' : '30px'}; border-left:${window.innerWidth <= 768 ? 'none' : '1px solid #eee'}; display:flex; flex-direction:column; gap:10px;">
-                ${rightSideContent}
-                ${totalDisplayHtml}
-                <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+            <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto;">
+                ${rightSideUI}
+                ${optionsHtml}
+                <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:20px; text-align:right;">
+                    <div style="font-size:12px; color:#64748b; margin-bottom:5px;">최종 합계</div>
+                    <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">${(product.price || 0).toLocaleString()}원</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
                     <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px; font-weight:800;">🎨 직접 디자인하기</button>
                     <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; background:#4ccc02; color:white; border:none; font-size:16px; font-weight:800;">🛒 바로 구매하기</button>
                 </div>
@@ -3274,42 +3264,19 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     `;
 
     modal.style.display = 'flex';
-    window.updateModalTotal(); 
-
-    // [강력 최적화] 상세페이지 미디어 풀사이즈 및 지연 로딩 적용
-    // [비디오 위치/크기/자동재생 최종 조절]
+    
+    // 미디어 최적화 실행
     setTimeout(() => {
         const renderArea = modalBox.querySelector('.product-detail-render');
         if (!renderArea) return;
-        
-        renderArea.querySelectorAll('video, .ql-video').forEach(v => {
-            // 1. 스타일 설정: 검은 여백 없이 꽉 채우기
-            v.style.setProperty('width', '100%', 'important');
-            v.style.setProperty('height', '300px', 'important'); // 박스 높이에 맞게 강제 고정
-            v.style.setProperty('object-fit', 'fill', 'important'); // 비율 무시하고 꽉 채움
-            v.style.setProperty('display', 'block', 'important');
-            v.style.setProperty('background', 'transparent', 'important');
-            v.style.setProperty('border-radius', '12px', 'important');
-
-            if (v.tagName === 'VIDEO') {
-                // 2. 자동 재생 필수 설정
-                v.muted = true;               // 필수: 음소거여야 자동재생됨
-                v.autoplay = true;            // 자동 재생
-                v.loop = true;                // 무한 반복
-                v.setAttribute('playsinline', 'true'); 
-                v.controls = false;           // 깔끔하게 컨트롤러 숨김
-                
-                // 브라우저 차단 우회 강제 실행
-                v.play().catch(err => {
-                    console.log("재생 재시도...");
-                    v.muted = true;
-                    v.play();
-                });
-            }
+        renderArea.querySelectorAll('video').forEach(v => {
+            v.style.width = '100%'; v.muted = true; v.autoplay = true; v.loop = true; v.setAttribute('playsinline', 'true');
+            v.play().catch(() => {});
         });
     }, 400);
-};
 
+    window.updateModalTotal(); 
+};
 // 실시간 합계 업데이트 함수
 window.updateModalTotal = function() {
     const product = window.selectedProductForChoice;
@@ -3846,7 +3813,7 @@ window.updateModalTotal = function() {
 
             // 데이터가 없을 때
             if (!data || data.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#999;">검색 결과가 없습니다.</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#FFFFFF;">검색 결과가 없습니다.</div>';
                 updatePaginationButtons(page, 0);
                 return;
             }
