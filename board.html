@@ -28,7 +28,7 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     
     <link rel="stylesheet" href="./style.css">
-    
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <style>
         /* =========================================
            기본 레이아웃 및 스타일
@@ -434,15 +434,25 @@
                     <option value="US">🇺🇸 미국</option>
                     <option value="JP">🇯🇵 일본</option>
                 </select>
-                <button id="btnWrite" class="btn primary" style="display:inline-block; margin-left:10px;">✏️ 글쓰기</button>
+                <button id="btnWrite" class="btn primary" style="display:inline-block; margin-left:10px;" data-i18n="btn_write_post">✏️ 글쓰기</button>
             </div>
         </div>
 
         <div id="boardList" class="post-grid">Loading...</div>
 
         <div id="boardView" class="view-wrap">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <button onclick="goToList()" class="btn">← 목록으로</button>
+            <div class="btn-close-yellow" onclick="goToList()" title="닫기">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+            
+            <button onclick="goToList()" style="position:absolute; top:20px; right:20px; border:none; background:none; font-size:24px; cursor:pointer; color:#999;">&times;</button>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:10px;">
+                <div style="display:flex; gap:10px;">
+                    <button onclick="goToList()" class="btn">← 목록</button>
+                    <button onclick="copyPostToLang('JP')" class="btn" style="background:#fff0f0; border-color:#ffccd5;">🇯🇵 일본어로 복제</button>
+                    <button onclick="copyPostToLang('US')" class="btn" style="background:#f0f7ff; border-color:#cce3ff;">🇺🇸 영어로 복제</button>
+                </div>
                 <div id="btnGroupAuth" style="display:none;">
                     <button id="btnEditPost" class="btn-edit" onclick="editCurrentPost()"><i class="fa-solid fa-pen"></i> 수정</button>
                     <button id="btnDeletePost" class="btn-delete" onclick="deleteCurrentPost()"><i class="fa-solid fa-trash"></i> 삭제</button>
@@ -603,19 +613,66 @@
         
         document.getElementById('btnWrite').style.display = 'inline-block';
 
+        // 영상 업로드 커스텀 핸들러
+        async function videoHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'video/mp4,video/webm');
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files[0];
+                if (!file) return;
+
+                if (file.size > 50 * 1024 * 1024) { // 50MB 제한
+                    alert("파일이 너무 큽니다. 50MB 이하의 영상만 업로드 가능합니다.");
+                    return;
+                }
+
+                const fileName = `${Date.now()}_${file.name}`;
+                // [수정] 한글 파일명 오류 방지를 위해 확장자만 추출하고 이름은 숫자로 변경
+        const fileExt = file.name.split('.').pop(); // 확장자 추출 (mp4 등)
+        const filePath = `${Date.now()}.${fileExt}`; // 예: 1738234567.mp4
+
+                try {
+                    // Supabase Storage 'public' 버킷에 업로드
+                    // 수정 후 코드 예시
+const { data, error } = await sb.storage
+    .from('videos') // 여기 수정
+    .upload(filePath, file);
+
+const { data: { publicUrl } } = sb.storage
+    .from('videos') // 여기도 수정
+    .getPublicUrl(filePath);
+
+                    const range = quill.getSelection();
+                    quill.insertEmbed(range.index, 'video', publicUrl);
+                } catch (err) {
+                    console.error('Upload error:', err);
+                    alert('영상 업로드 실패. Storage 버킷 정책을 확인하세요.');
+                }
+            };
+        }
+
         quill = new Quill('#editor-container', {
             modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'align': [] }],
-                    ['image', 'link'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['clean']
-                ]
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }], // 정렬 버튼 추가
+                        ['image', 'video', 'link'],
+                        ['blockquote', 'code-block'], // 유용한 도구 추가
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ],
+                    handlers: {
+                        'video': videoHandler // 비디오 버튼 클릭 시 업로드 함수 실행
+                    }
+                }
             },
-            placeholder: '내용을 입력하세요...',
+            placeholder: '제품 설명 영상을 업로드하세요...',
             theme: 'snow'
         });
 
@@ -732,7 +789,8 @@
             await sb.rpc('increment_view_count', { post_id: id });
             const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
             if (error) throw error;
-            if (!post) return alert('삭제된 글입니다.'), goToList();
+            // [수정] 다국어 적용
+            if (!post) return alert(window.t ? window.t('msg_post_deleted') : 'Post deleted.'), goToList();
 
             updateBoardSEO(post.title, post.content, post.thumbnail);
             
@@ -749,6 +807,33 @@
             document.getElementById('viewDate').innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date(post.created_at).toLocaleString()}`;
             document.getElementById('viewCount').innerHTML = `<i class="fa-regular fa-eye"></i> ${post.view_count}`;
             document.getElementById('viewContent').innerHTML = post.content;
+            // 업로드된 MP4 주소를 실제 재생 가능한 <video> 태그로 변환
+            // [수정] 자동 재생 및 여백 제거 설정
+            const videoElements = document.querySelectorAll('#viewContent .ql-video, #viewContent video');
+            videoElements.forEach(el => {
+                const src = el.getAttribute('src') || el.src;
+                if (src && (src.includes('supabase.co') || src.endsWith('.mp4'))) {
+                    const videoTag = document.createElement('video');
+                    videoTag.src = src;
+                    
+                    // 자동 재생을 위해 반드시 muted(음소거)가 필요합니다.
+                    videoTag.autoplay = true; 
+                    videoTag.muted = true;    
+                    videoTag.loop = true;     // 반복 재생
+                    videoTag.playsInline = true; 
+                    videoTag.controls = true; // 컨트롤바 유지
+                    
+                    // 검은 옆부분 제거 스타일
+                    videoTag.style.width = "100%";
+                    videoTag.style.aspectRatio = "16 / 9"; // 일반적인 영상 비율 유지
+                    videoTag.style.objectFit = "cover";    // 여백 없이 꽉 채움
+                    videoTag.style.display = "block";
+                    videoTag.style.margin = "15px 0";
+                    videoTag.style.borderRadius = "8px";
+                    
+                    el.parentNode.replaceChild(videoTag, el);
+                }
+            });
 
             const btnGroup = document.getElementById('btnGroupAuth');
             if (currentUser && (isAdmin || currentUser.id === post.author_id)) btnGroup.style.display = 'block';
@@ -903,7 +988,17 @@
         if(!confirm("수정하시겠습니까?")) return;
         isEditMode = true; 
         document.getElementById('inputTitle').value = document.getElementById('viewTitle').innerText;
-        quill.root.innerHTML = document.getElementById('viewContent').innerHTML;
+        
+        // [수정] 에디터 진입 시 video 태그를 Quill이 인식하는 iframe으로 일시 변환
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = document.getElementById('viewContent').innerHTML;
+        tempDiv.querySelectorAll('video').forEach(v => {
+            const iframe = document.createElement('iframe');
+            iframe.setAttribute('class', 'ql-video');
+            iframe.setAttribute('src', v.src);
+            v.parentNode.replaceChild(iframe, v);
+        });
+        quill.root.innerHTML = tempDiv.innerHTML;
         if (category === 'review') document.getElementById('ratingInputArea').style.display = 'flex';
         showSection('write');
     };
@@ -959,11 +1054,27 @@
         document.getElementById('btnSubmitPost').onclick = async () => {
             const btn = document.getElementById('btnSubmitPost');
             const title = document.getElementById('inputTitle').value;
-            const content = quill.root.innerHTML; 
-            if (!title) return alert('제목을 입력해주세요.');
+            
+            // [수정] 저장 전 비디오 태그 변환
+            const tempSaveDiv = document.createElement('div');
+            tempSaveDiv.innerHTML = quill.root.innerHTML;
+            const qlVideos = tempSaveDiv.querySelectorAll('.ql-video');
+            qlVideos.forEach(el => {
+                const src = el.getAttribute('src');
+                if (src && src.includes('supabase.co')) {
+                    const videoTag = document.createElement('video');
+                    videoTag.src = src;
+                    videoTag.controls = true; videoTag.autoplay = true; videoTag.muted = true; videoTag.loop = true;
+                    videoTag.style.width = "100%"; videoTag.style.objectFit = "cover"; videoTag.style.aspectRatio = "16/9";
+                    el.parentNode.replaceChild(videoTag, el);
+                }
+            });
+            const content = tempSaveDiv.innerHTML;
+            // [수정] 다국어 적용
+            if (!title) return alert(window.t ? window.t('msg_enter_title') : 'Please enter title.');
 
             const originalText = btn.innerText;
-            btn.innerText = "처리 중...";
+            btn.innerText = window.t ? window.t('msg_processing') : "Processing...";
             btn.disabled = true;
 
             try {
@@ -1028,7 +1139,74 @@
             if(error) alert("실패"); else { document.getElementById('commentInput').value = ''; loadComments(postId); }
         };
     }
+// 게시글 다른 언어로 복제 기능 (DeepL/Google 번역 연동 대신 구조 복제)
+    // [업그레이드] 자동 번역 기능을 포함한 게시글 복제
+    // [개선형] 긴 본문도 번역 가능한 자동 번역 복제 함수
+    // [최종 개선] 굵은 글씨(태그 내부)까지 모두 번역하는 복제 함수
+    window.copyPostToLang = async function(targetLang) {
+        if(!confirm(`${targetLang === 'JP' ? '일본어' : '영어'}로 번역하여 복제하시겠습니까?`)) return;
+        
+        const langMap = { 'JP': 'ja', 'US': 'en' };
+        const targetTag = langMap[targetLang];
 
+        try {
+            const { data: post } = await sb.from('community_posts').select('*').eq('id', postId).single();
+            alert("타이틀과 본문을 정밀 번역 중입니다. 잠시만 기다려 주세요...");
+
+            async function translateSafe(text, target) {
+                if(!text || text.trim().length === 0) return text;
+                try {
+                    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+                    const res = await fetch(url);
+                    const json = await res.json();
+                    return json[0].map(item => item[0]).join('');
+                } catch (e) {
+                    return text; 
+                }
+            }
+
+            // 1. 제목 번역
+            const translatedTitle = await translateSafe(post.title, targetTag);
+
+            // 2. 본문 번역 (모든 자식 노드를 탐색하여 텍스트만 추출 번역)
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = post.content;
+            
+            async function translateNode(node) {
+                for (let child of node.childNodes) {
+                    if (child.nodeType === 3 && child.nodeValue.trim().length > 0) {
+                        // 텍스트 노드인 경우만 번역하여 값 교체
+                        child.nodeValue = await translateSafe(child.nodeValue, targetTag);
+                    } else if (child.nodeType === 1) {
+                        // strong, b, span 등 태그인 경우 내부로 더 들어감 (재귀)
+                        await translateNode(child);
+                    }
+                }
+            }
+            await translateNode(tempDiv);
+
+            // 3. 새 게시글 생성 및 저장
+            const newPost = {
+                ...post,
+                id: undefined,
+                title: translatedTitle,
+                content: tempDiv.innerHTML,
+                country_code: targetLang,
+                view_count: 0,
+                created_at: new Date()
+            };
+            delete newPost.id;
+
+            const { data, error } = await sb.from('community_posts').insert(newPost).select().single();
+            if (error) throw error;
+            
+            if(confirm("번역 복제 완료! 새 게시물로 이동할까요?")) {
+                location.href = `board.html?cat=${post.category}&country=${targetLang}&id=${data.id}`;
+            }
+        } catch (e) {
+            alert("오류 발생: " + e.message);
+        }
+    };
     init();
 </script>
 <script type="module">
@@ -1117,5 +1295,6 @@
     // 페이지 로드 시 실행
     trackVisit();
 </script>
+
 </body>
 </html>

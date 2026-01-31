@@ -14,6 +14,8 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link rel="stylesheet" href="global_admin.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 </head>
 <body>
 
@@ -633,19 +635,59 @@
 </label>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">상세 설명</label>
-                <textarea id="newProdDesc" class="input-text" style="height:50px; margin-bottom:5px;" placeholder="🇰🇷 설명"></textarea>
-                <div style="display:flex; gap:5px;">
-                    <textarea id="newProdDescJP" class="input-text" style="height:50px;" placeholder="🇯🇵 설명"></textarea>
-                    <textarea id="newProdDescUS" class="input-text" style="height:50px;" placeholder="🇺🇸 설명"></textarea>
-                </div>
+            <div class="form-group" style="margin-top: 25px; padding: 18px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+    <label class="form-label" style="font-weight: 800; color: #1e1b4b; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+        <i class="fa-solid fa-file-circle-plus" style="color: #6366f1;"></i> 럭셔리 상세페이지 편집
+    </label>
+    <button type="button" class="btn btn-vip" style="width: 100%; height: 50px; font-size: 15px; font-weight: 800; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); border: none; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);" onclick="window.openDetailPageEditor()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> 상세페이지 제작 (이미지/영상 업로드)
+    </button>
+    <input type="hidden" id="newProdDetailKR">
+    <input type="hidden" id="newProdDetailJP">
+    <input type="hidden" id="newProdDetailUS">
+</div>
+
+<div id="detailEditorModal" class="modal-overlay" style="z-index: 40000; display: none;">
+    <div class="modal-box" style="width: 1100px; max-width: 98%; height: 92vh; display: flex; flex-direction: column; padding: 0; background: #fff; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+        <div style="background: #1e1b4b; color: #fff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-shrink:0;">
+            <h3 style="margin:0; font-size: 20px; font-weight: 900;"><i class="fa-solid fa-pen-to-square"></i> 상세페이지 마스터 에디터</h3>
+            <div style="display: flex; gap: 12px;">
+                <button type="button" class="btn" onclick="window.saveDetailAndClose()" style="background: #10b981; color:#fff; border: none; padding: 10px 25px; font-weight:800;">작업 완료 후 닫기</button>
+                <button type="button" class="btn" onclick="document.getElementById('detailEditorModal').style.display='none'" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3);">취소</button>
             </div>
+        </div>
+
+        <div style="background: #f1f5f9; padding: 12px 30px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: flex-end; gap: 5px; flex-shrink:0;">
+            <button type="button" id="tabKR" class="pop-editor-tab active" onclick="window.switchPopupLang('KR')">🇰🇷 한국어</button>
+            <button type="button" id="tabJP" class="pop-editor-tab" onclick="window.switchPopupLang('JP')">🇯🇵 日本語</button>
+            <button type="button" id="tabUS" class="pop-editor-tab" onclick="window.switchPopupLang('US')">🇺🇸 English</button>
+            <button type="button" class="btn btn-vip btn-sm" onclick="window.autoTranslatePopupDetail()" style="margin-left: auto; height: 34px; margin-bottom: 5px; font-size: 12px;">
+                <i class="fa-solid fa-language"></i> KR 본문으로 전체 자동번역
+            </button>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative;">
+            <div id="popup-quill-editor" style="height: 100%; font-size: 16px; border: none;"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pop-editor-tab {
+        padding: 12px 24px; border-radius: 12px 12px 0 0; border: 1px solid #e2e8f0; border-bottom: none;
+        background: #cbd5e1; font-size: 14px; font-weight: 800; color: #475569; cursor: pointer; transition: 0.2s;
+    }
+    .pop-editor-tab.active { background: #fff; color: #6366f1; border-top: 4px solid #6366f1; height: 45px; }
+    #popup-quill-editor .ql-toolbar { border: none !important; background: #fff; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #e2e8f0 !important; }
+    #popup-quill-editor .ql-container { border: none !important; flex: 1; overflow-y: auto; }
+    #popup-quill-editor .ql-editor { padding: 40px; min-height: 100%; max-width: 900px; margin: 0 auto; background: #fff; }
+</style>
 
             <div class="form-group">
                 <label class="form-label">이미지</label>
                 <div class="file-drop-zone"><input type="file" id="newProdFile" accept="image/*" onchange="previewProductImage(this)"><span>이미지 업로드</span></div>
                 <input id="newProdImg" class="input-text" style="margin-top:5px;" placeholder="URL 직접입력 가능">
+
                 <img id="prodPreview" class="preview-img">
             </div>
 

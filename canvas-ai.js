@@ -115,8 +115,9 @@ export function initAiTools() {
     if (btnGen) {
         btnGen.onclick = async () => {
             const userText = promptInput.value.trim();
-            if (!userText) return alert("설명 입력 필요");
-            resultArea.innerHTML = '<div class="loading-spin"></div><p>생성 중...</p>';
+            // [수정] 다국어 적용
+            if (!userText) return alert(window.t('msg_input_desc', "Description required"));
+            resultArea.innerHTML = `<div class="loading-spin"></div><p>${window.t('msg_generating', 'Generating...')}</p>`;
             btnUse.style.display = "none";
             btnGen.disabled = true;
             try {
@@ -125,7 +126,7 @@ export function initAiTools() {
                 resultArea.innerHTML = `<img src="${imageUrl}" style="width:100%; height:100%; object-fit:contain;">`;
                 btnUse.style.display = "block";
             } catch (e) {
-                alert("실패: " + e.message);
+                alert(window.t('msg_failed', 'Failed: ') + e.message);
             } finally {
                 btnGen.disabled = false;
             }
@@ -151,17 +152,16 @@ export function initAiTools() {
     if (btnCutout) {
         btnCutout.onclick = async () => {
             const active = canvas.getActiveObject();
-            // 다국어 적용
-            const t = (k, def) => (window.t ? window.t(k) : def);
-
-            if (!active || active.type !== 'image') return alert(t('msg_select_click', "이미지를 선택해주세요."));
+            
+            // [수정] 다국어 적용 (전역 window.t 사용)
+            if (!active || active.type !== 'image') return alert(window.t('msg_select_image', "Please select an image."));
             const key = await getApiKey('REMOVE_BG_API_KEY');
             if (!key) return alert("API Key Error");
             
-            if(!confirm(t('msg_confirm_bg_remove', "배경을 제거할까요?"))) return;
+            if(!confirm(window.t('confirm_bg_remove', "배경을 제거할까요?"))) return;
             
             const originalText = btnCutout.innerText;
-            btnCutout.innerText = "✂️ " + t('msg_processing', "처리중...");
+            btnCutout.innerText = "✂️ " + window.t('msg_processing_file', "Processing...");
             try {
                 // 1. 원본 해상도 추출 (multiplier 중요)
                 // 화면에 보이는 크기가 아니라, 원본 파일의 크기를 계산해서 가져옵니다.
@@ -214,11 +214,11 @@ export function initAiTools() {
                     canvas.add(newImg);
                     canvas.setActiveObject(newImg);
                     canvas.requestRenderAll();
-                    alert("완료! (고해상도 유지)");
+                    alert(window.t('msg_upload_success', "Success!"));
                 });
             } catch(e) { 
                 console.error(e);
-                alert("실패: " + e.message); 
+                alert(window.t('msg_failed', "Failed: ") + e.message); 
             }
             finally { btnCutout.innerText = originalText; }
         };
@@ -229,15 +229,15 @@ export function initAiTools() {
     if (btnUpscale) {
         btnUpscale.onclick = async () => {
             const active = canvas.getActiveObject();
-            const t = (k, def) => (window.t ? window.t(k) : def);
 
-            if (!active || active.type !== 'image') return alert(t('msg_select_click', "이미지를 선택해주세요!"));
+            // [수정] 다국어 적용
+            if (!active || active.type !== 'image') return alert(window.t('msg_select_image', "Please select an image!"));
             
-            const confirmMsg = t('msg_confirm_upscale', "해상도를 2배 높이시겠습니까?");
+            const confirmMsg = window.t('confirm_upscale', "해상도를 2배 높이시겠습니까?");
             if (!confirm(confirmMsg)) return;
 
             const originalText = btnUpscale.innerText;
-            btnUpscale.innerText = "✨ " + t('msg_sending', "전송 중...");
+            btnUpscale.innerText = "✨ " + window.t('msg_sending', "Sending...");
             btnUpscale.disabled = true;
 
             try {
@@ -284,12 +284,12 @@ export function initAiTools() {
                     canvas.add(newImg);
                     canvas.setActiveObject(newImg);
                     canvas.requestRenderAll();
-                    alert("🎉 성공! 해상도가 2배 좋아졌습니다.");
+                    alert("🎉 " + window.t('msg_upload_success', "Success!"));
                 }, { crossOrigin: 'anonymous' });
 
             } catch (e) {
                 console.error("업스케일링 실패:", e);
-                alert("작업 실패: " + e.message);
+                alert(window.t('msg_failed', "Failed: ") + e.message);
             } finally {
                 btnUpscale.innerText = originalText;
                 btnUpscale.disabled = false;

@@ -212,7 +212,8 @@ export function createVectorOutline(imageSrc, options = {}) {
                     const pathNode = doc.querySelector('path');
 
                     if (!pathNode) {
-                        reject(new Error("Outline not found."));
+                        // [수정] 다국어 적용 (실패 메시지)
+                        reject(new Error(window.t ? window.t('msg_outline_failed') : "Outline generation failed."));
                         return;
                     }
 
@@ -229,6 +230,6 @@ export function createVectorOutline(imageSrc, options = {}) {
                 reject(e);
             }
         };
-        img.onerror = () => reject(new Error("Failed to load image."));
+        img.onerror = () => reject(new Error(window.t ? window.t('msg_image_load_failed') : "Failed to load image."));
     });
 }

@@ -72,7 +72,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         const btnMyPage = document.getElementById("btnMyLibrary");
         if (btnMyPage) {
             btnMyPage.onclick = () => {
-                if (!currentUser) return alert(window.t('msg_login_required'));
+                // [수정] 다국어 적용
+                if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
                 location.href = 'mypage.html';
             };
         }
@@ -155,7 +156,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                     }
                 }, 500);
             } else {
-                alert("디자인 데이터를 찾을 수 없습니다.");
+                alert(window.t('msg_no_data', "Design data not found."));
                 if(loading) loading.style.display = 'none';
             }
         

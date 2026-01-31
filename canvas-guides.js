@@ -73,7 +73,8 @@ function updateGuideMenuUI() {
         btnGuide.innerHTML = `<i class="fa-solid fa-ruler-combined"></i> ON`;
     } else {
         btnGuide.classList.remove("active");
-        btnGuide.innerHTML = `<i class="fa-solid fa-ruler-horizontal"></i> 가이드`;
+        // [수정] 다국어 적용
+        btnGuide.innerHTML = `<i class="fa-solid fa-ruler-horizontal"></i> ${window.t('btn_guide_on', 'Guides')}`;
     }
 
     // 서브 메뉴 버튼 활성화

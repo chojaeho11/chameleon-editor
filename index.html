@@ -149,14 +149,14 @@
             <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');">🎨 템플릿</button>
             
             <button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template', this);" 
-                style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-weight: 800; border: none; margin-right: 5px;">
-                🎨 템플릿 (배경)
-            </button>
+    style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-weight: 800; border: none; margin-right: 5px;">
+    <span data-i18n="tab_all">🎨 템플릿 (배경)</span>
+</button>
 
-            <button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_asset', this);" 
-                style="background: #fff; color: #059669; border: 1px solid #059669; font-weight: 800;">
-                🧩 객체 (요소/벡터)
-            </button>
+<button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_asset', this);" 
+    style="background: #fff; color: #059669; border: 1px solid #059669; font-weight: 800;">
+    <span data-i18n="tab_graphic">🧩 객체 (요소/벡터)</span>
+</button>
         </div>
         
         <div style="flex:1;"></div>
@@ -179,7 +179,7 @@
             <span data-i18n="btn_my_library">📂 보관함</span>
         </button>
         <button class="btn" onclick="window.openMyOrderList()" style="background:white; border:1px solid #ddd; color:#333; margin-right:5px;">
-    🚚 주문배송조회
+    <span data-i18n="menu_orders">🚚 주문배송조회</span>
 </button>
     </div>
 
@@ -197,8 +197,8 @@
     
     
     <div class="quick-title-box">
-        <span class="qt-badge" data-i18n="home_quick_badge">가격 퀄리티 두가지는 자신있다. 대한민국 프린팅계의 코스트코</span>
-        <h2 class="qt-text" data-i18n="home_quick_title">카멜레온의 제품 카테고리</h2>
+        <span class="qt-badge" data-i18n="home_quick_badge">담당 매니저에게 사업자를 보내주세요 10%할인과 무료배송을 지원합니다.</span>
+        <h2 class="qt-text" data-i18n="home_quick_title">사업자에게 특별한 혜택, 수도권 무료배송 총알배송</h2>
     </div>
     <div id="topCategoryTabs" class="category-tabs"></div>
 
@@ -221,8 +221,9 @@
     <div class="main-search-wrapper" style="max-width: 1000px; margin: 0 auto 25px auto; padding: 0 15px; position: relative; z-index: 10;">
     <div style="position: relative; transition: all 0.3s;">
         <input type="text" id="mainCategorySearch" 
-               placeholder="🔍 찾으시는 상품이나 카테고리를 입력해보세요! (예: 배너, 아크릴, 현수막)" 
-               onkeyup="window.filterMainIcons(this.value)"
+       placeholder="🔍 Search..." 
+       data-i18n-placeholder="search_placeholder"
+       onkeyup="window.filterMainIcons(this.value)"
                style="
                    width: 100%; 
                    padding: 18px 20px 18px 55px; 
@@ -254,7 +255,7 @@
     
     <div class="quick-menu-track" id="quickMenuContainer"></div>
     <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
-        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">골드 등급 이상 또는 대량주문 전용 VIP 라운지</h3>
+        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">대량주문 전용 VIP 라운지</h3>
         <p style="margin: 0 0 20px 0; color: #64748b; font-size: 15px;" data-i18n="home_vip_desc">
             팝업스토어나 전시장 꾸미기 같이 대량이거나 복잡한 주문인가요? 골드 등급이상의 VIP고객이신가요?<br>
             파일만 올려주시면 <strong>전담 매니저</strong>가 분석 후 견적서와 함께 30분 이내에 연락드립니다.<br>
@@ -266,54 +267,34 @@
         </button>
 
         <div style="border-top: 2px dashed #e2e8f0; padding-top: 25px; margin-top: 10px;">
-            <div style="display: inline-block; background: #eff6ff; color: #4f46e5; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; margin-bottom: 15px;">
-                ⚡ 쉽고 빠른 문의
-            </div>
-            <p style="margin: 0 0 20px 0; color: #334155; font-size: 16px; font-weight: 600;">
-                "친절한 매니저가 전화로 빠르게 응대합니다"
-            </p>
-            
-            <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
-                
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
-                    <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;">
-                        👩‍💼 지숙 매니저
-                    </span>
-                    <a href="tel:010-3455-1946" style="text-decoration: none; color: #4338ca; transition: 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#4338ca'">
-                        <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">
-                            010-3455-1946
-                        </div>
-                    </a>
-                </div>
+    <div style="display: inline-block; background: #eff6ff; color: #4f46e5; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; margin-bottom: 15px;" data-i18n="vip_fast_inquiry">
+        ⚡ 쉽고 빠른 문의
+    </div>
+    <p style="margin: 0 0 20px 0; color: #334155; font-size: 16px; font-weight: 600;" data-i18n="vip_manager_intro">
+        "친절한 매니저가 전화로 빠르게 응대합니다"
+    </p>
+    
+    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
+        <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;" data-i18n="vip_manager_1_name">👩‍💼 지숙 매니저</span>
+        <a href="tel:010-3455-1946" class="mgr-phone" style="text-decoration: none; color: #4338ca; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;" data-i18n="vip_manager_1_phone">010-3455-1946</a>
+    </div>
 
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
-                    <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;">
-                        👩‍💼 은미 매니저
-                    </span>
-                    <a href="tel:010-7793-5393" style="text-decoration: none; color: #4338ca; transition: 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#4338ca'">
-                        <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">
-                            010-7793-5393
-                        </div>
-                    </a>
-                </div>
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
+        <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;" data-i18n="vip_manager_2_name">👩‍💼 은미 매니저</span>
+        <a href="tel:010-7793-5393" class="mgr-phone" style="text-decoration: none; color: #4338ca; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;" data-i18n="vip_manager_2_phone">010-7793-5393</a>
+    </div>
 
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
-                    <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;">
-                        👩‍💼 성희 매니저
-                    </span>
-                    <a href="tel:010-3490-3328" style="text-decoration: none; color: #4338ca; transition: 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#4338ca'">
-                        <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">
-                            010-3490-3328
-                        </div>
-                    </a>
-                </div>
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">
+        <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 800; margin-bottom: 5px; border: 1px solid #e2e8f0;" data-i18n="vip_manager_3_name">👩‍💼 성희 매니저</span>
+        <a href="tel:010-3490-3328" class="mgr-phone" style="text-decoration: none; color: #4338ca; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;" data-i18n="vip_manager_3_phone">010-3490-3328</a>
+    </div>
+</div>
 
-            </div>
-
-            <p style="margin: 0; font-size: 14px; color: #64748b;">
-                <i class="fa-regular fa-clock"></i> 문의시간 : <span style="color:#1e293b; font-weight:bold;">오전 9시 ~ 오후 6시</span>
-            </p>
-        </div>
+<p style="margin: 0; font-size: 14px; color: #64748b;" data-i18n="vip_inquiry_time">
+    <i class="fa-regular fa-clock"></i> 문의시간 : 오전 9시 ~ 오후 6시
+</p>
+</div>
         </div>
 </div>
 
@@ -321,7 +302,7 @@
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
         <h2>🔥 <span data-i18n="home_hotdeal_title">오늘의 핫딜</span> <span class="badge-hot">Time Sale</span></h2>
-        <p data-i18n="home_hotdeal_desc">지금 놓치면 후회하는 초특가 상품을 만나보세요. 친구에서 선물하세요. 집들이 선물 핫딜상품은 최대 10개까지 주문가능</p>
+        <p data-i18n="home_hotdeal_desc">지금 놓치면 후회하는 초특가 상품을 만나보세요. 친구에게 선물하세요. 집들이 선물 핫딜상품은 최대 10개까지 주문가능</p>
     </div>
     <div id="hotDealGrid" class="hotdeal-grid">
         </div>
@@ -521,7 +502,7 @@
             <span style="background: #6366f1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 10px; display: inline-block;">PARTNER CENTER</span>
             <h2 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 800;" data-i18n="partner_banner_title">우리 지역 인쇄/광고 주문, <br><span style="color: #818cf8;">직접 접수받고 수익을 창출하세요!</span></h2>
             <p style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6;" data-i18n="partner_banner_desc">
-                영업은 본사가 가맹점주님은 제작 납품, 허니콤보드는 설치비 무료...
+                카멜레온은 전국 3천개 거래처가 확보되어 있습니다. 오더를 가맹점주님들께 연결해 드립니다. <br>특화된 제작 전문회사라면 상품등록을 신청하시면 전국 모든 가맹점들에게 판매하실 수 있습니다.<br>소재 출력물 등 장비가 없어 못만드시는 제품은 카멜레온이 만들어서 가맹점으로 배송해드립니다.<br>
             </p>
         </div>
         
@@ -550,7 +531,7 @@
     </div>
 
     <div class="contributor-desc" data-i18n="contrib_desc">
-        내가 만든 디자인 소스를 공유하고 현금을 적립받으세요...
+        내가 만든 디자인 소스를 공유하고 현금을 적립받으세요. <br>저품질 이미지를 반복해서 올리면 등급이 하락합니다.등급 상승 2배 4배, 하락 시 절반 비용이 지급됩니다.<br><span style='color:#ef4444; font-weight:bold;'>카테고리 확인!</span> 객체 로고 등 카테고리를 맞추지 않거나 키워드를 3개 이하 등록 시 등록 권한이 삭제됩니다.
     </div>
 
     <div class="contributor-grid">
@@ -692,24 +673,27 @@
            id="startSearchInput" 
            name="q_search_query_final_v2" 
            class="hero-search-input" 
-           placeholder="어떤 디자인을 찾으세요? (예: 고양이, 바다, 하늘)" 
+           data-i18n-placeholder="search_placeholder_start"
+           placeholder="" 
            autocomplete="off" 
            readonly 
            onfocus="this.removeAttribute('readonly');"
     >
     <button id="btnStartSearch" class="hero-search-btn">
-        <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">검색</span>
+        <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">Search</span>
     </button>
 </div> 
 <div class="pagination-wrapper" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:20px 0 40px 0;">
     <button id="btnTplPrev" class="btn-round" onclick="changeTemplatePage(-1)" style="width:100px; justify-content:center;" disabled>
-        <i class="fa-solid fa-chevron-left"></i> 이전
+        <i class="fa-solid fa-chevron-left"></i> <span data-i18n="btn_prev">이전</span>
     </button>
     
-    <span id="tplPageLabel" style="font-weight:bold; color:#334155; font-size:16px;">1 페이지</span>
+    <span id="tplPageLabel" style="font-weight:bold; color:#334155; font-size:16px;">
+    <span data-i18n="label_page_prefix">Page</span> <span id="currentPageNum">1</span>
+</span>
     
     <button id="btnTplNext" class="btn-round" onclick="changeTemplatePage(1)" style="width:100px; justify-content:center;">
-        다음 <i class="fa-solid fa-chevron-right"></i>
+        <span data-i18n="btn_next">다음</span> <i class="fa-solid fa-chevron-right"></i>
     </button>
 </div>
 <div class="community-nav-wrapper">
@@ -896,11 +880,11 @@
                     <dd>470-81-02808</dd>
                     
                     <dt data-i18n="footer_mail_order_label">통신판매업신고번호 :</dt>
-                    <dd>2025-화성우정-0033</dd>
+                    <dd>2025-0033</dd>
                 </dl>
                 <dl>
                     <dt data-i18n="footer_privacy_manager_label">개인정보관리자 :</dt>
-                    <dd>변지웅</dd>
+                    <dd>Haruto</dd>
                 </dl>
                 <p class="copyright">Copyright © <strong>Chameleon Canvas</strong>. all rights reserved.</p>
             </div>
@@ -908,7 +892,7 @@
 
         <div class="cs-center">
             <h3 data-i18n="footer_cs_title">고객센터 (CS CENTER)</h3>
-            <strong>031-366-1984</strong>
+            <strong>Channel Talk</strong>
             <p>
                 <span data-i18n="footer_cs_time">평일 09:00 ~ 18:00</span> <br>
                 <span data-i18n="footer_cs_lunch">점심 12:00 ~ 13:00</span> <br>
@@ -1734,6 +1718,14 @@
     선택하신 <span id="choiceProdName" style="color:#6366f1; font-weight:bold;">상품</span>으로 디자인을 시작하거나,<br>
     이미 완성된 파일이 있다면 바로 주문할 수 있습니다.
 </p>
+<div id="extraLinksArea" style="display:flex; gap:10px; margin-bottom:15px;">
+    <button id="btnGoDetail" class="btn-round" style="display:none; flex:1; background:#f8fafc; border:1px solid #cbd5e1; color:#475569; font-size:13px; height:40px; justify-content:center; align-items:center; gap:5px;">
+        <i class="fa-solid fa-circle-info"></i> 상세페이지 보기
+    </button>
+    <button id="btnGoStory" class="btn-round" style="display:none; flex:1; background:#fff7ed; border:1px solid #ffedd5; color:#c2410c; font-size:13px; height:40px; justify-content:center; align-items:center; gap:5px;">
+        <i class="fa-solid fa-book-open"></i> 스토리 보기
+    </button>
+</div>
 
         <div style="display:flex; gap:15px; margin-bottom:20px;">
             <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px;">
@@ -1818,7 +1810,8 @@
         
         <div style="margin-bottom: 15px; position: relative;">
             <input type="text" id="modalProdSearch" class="ai-input-pretty" 
-                   placeholder="🔍 찾으시는 상품명이나 사이즈를 입력하세요..." 
+                   data-i18n-placeholder="search_placeholder"
+                   placeholder="🔍 Search..." 
                    style="width:100%; margin:0; padding-left: 35px;"
                    onkeyup="window.filterModalItems(this.value)">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
@@ -2153,7 +2146,8 @@
 
     // [3] 파트너 선택 함수
     window.selectBid = async function(bidId, orderId) {
-        if(!confirm("이 파트너를 선택하시겠습니까?\n선택 시 파트너의 연락처가 공개되며, 다른 입찰은 마감됩니다.")) return;
+        // [수정] 다국어 적용
+        if(!confirm(window.t('confirm_select_partner', "Select this partner?\nContact info will be revealed and other bids will be closed."))) return;
 
         // 1. 해당 입찰 승인
         await sb.from('bids').update({ status: 'selected' }).eq('id', bidId);
@@ -2183,8 +2177,8 @@
             comment: comment
         });
 
-        if(error) alert("작성 실패: " + error.message);
-        else alert("소중한 후기가 등록되었습니다!");
+        if(error) alert(window.t('msg_failed', "Failed: ") + error.message);
+        else alert(window.t('msg_review_saved', "Review saved!"));
     };
 </script>
 
@@ -2293,16 +2287,26 @@ window.t = function(key) {
             const langData = await response.json();
             window.translations = langData; 
 
-            // 텍스트 교체
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (langData[key]) el.innerHTML = langData[key];
-            });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (langData[key]) el.placeholder = langData[key];
-            });
-
+            // index.html 내 번역 적용 부분 수정
+// index.html 하단 loadAndApplyTranslations 함수 내의 루프를 다음과 같이 교체
+document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (langData[key]) {
+        const icon = el.querySelector('i'); // 기존 아이콘(<i>) 보존
+        
+        if (icon) {
+            el.innerHTML = ''; 
+            el.appendChild(icon); 
+            // 태그가 섞인 번역 데이터도 정상 출력되도록 innerHTML 사용
+            const textSpan = document.createElement('span');
+            textSpan.innerHTML = ' ' + langData[key]; 
+            el.appendChild(textSpan);
+        } else {
+            // 일반 요소도 태그가 코드로 보이지 않게 innerHTML로 삽입
+            el.innerHTML = langData[key]; 
+        }
+    }
+});
             // 버튼 강제 번역
             const loginBtn = document.getElementById('btnLoginBtn');
             if (loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
@@ -2793,10 +2797,12 @@ window._drawQuickItems = (list, isProductMode = false) => {
     }
 
     list.forEach(item => {
-        const isProduct = isProductMode || item.price !== undefined; 
-        
-        // 상품명 안전하게 가져오기
-        let name = item.name;
+    const isProduct = isProductMode || item.price !== undefined;
+    let name = item.name;
+    if (typeof getLocalizedData === 'function') {
+        const localData = getLocalizedData(item);
+        name = localData.name;
+    }
         
         // 이미지 URL 가져오기 (전역 맵 활용)
         let rawUrl = item.img_url || item.image;
@@ -3033,11 +3039,31 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     // 제목 설정
     if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
     
-    // 설명 박스 설정
+    // 설명 박스 설정 (DB 일본어 필드 우선 참조 적용)
     if (descBox) {
-        if (catDesc && catDesc.trim() !== "" && catDesc !== "undefined" && catDesc !== "null") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentLang = urlParams.get('lang') || 'kr';
+        
+        let displayDesc = catDesc; // 기본은 전달받은 설명
+
+        // 1. 일본어 모드일 때 DB의 일본어 필드(description_ja)가 있는지 체크
+        // window.modalGlobalData에 저장된 카테고리 원본 데이터를 직접 뒤집니다.
+        if (currentLang === 'ja' && window.modalGlobalData && window.modalGlobalData.categories) {
+            const catData = window.modalGlobalData.categories.find(c => c.code === catKey);
+            if (catData && catData.description_ja) {
+                displayDesc = catData.description_ja;
+            } else {
+                // DB에 없으면 JSON 파일(window.t)에서 예비로 가져옴
+                const tKey = 'cat_desc_' + catKey;
+                const tVal = window.t(tKey);
+                if (tVal !== tKey) displayDesc = tVal;
+            }
+        }
+
+        // 2. 최종 출력 (줄바꿈 처리 포함)
+        if (displayDesc && displayDesc !== "undefined" && displayDesc.trim() !== "") {
             descBox.style.display = "block";
-            descBox.innerHTML = catDesc.replace(/\n/g, '<br>');
+            descBox.innerHTML = displayDesc.replace(/\n/g, '<br>');
         } else {
             descBox.style.display = "none";
         }
@@ -3089,9 +3115,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 localData = getLocalizedData(p);
             }
             
-            // ★ 최종 표시할 이름 (우선순위: 번역된 이름 -> 원래 이름 -> '상품명 없음')
-            const displayName = localData.name || p.name || '상품명 없음';
-            const displayPrice = localData.formattedPrice;
+            // getLocalizedData를 통해 국가별로 변환된 데이터 가져오기
+            const localized = getLocalizedData(p);
+            const displayName = localized.name || 'No Name';
+            const displayPrice = localized.formattedPrice;
 
             // 전역 DB 저장 (선택 시 사용)
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
@@ -3155,77 +3182,149 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         });
 };
  
-    // [1] 모달 열기 및 모드(일반/커스텀) 설정
     window.showChoiceModal = function(key) {
-        window.currentProductKey = key;
-        window.selectedProductForChoice = window.PRODUCT_DB[key];
-        
-        if (!window.selectedProductForChoice) return alert("상품 정보를 불러오는 중입니다.");
-        
-        const product = window.selectedProductForChoice;
-        
-        // 텍스트 및 설명 설정
-        const nameEl = document.getElementById('choiceProdName');
-        if(nameEl) nameEl.innerText = product.name;
+    // [중요] 에디터 자동 실행 방지: 함수 호출 시 즉시 리턴하거나 캔버스를 건드리지 않음
+    window.currentProductKey = key;
+    const product = window.PRODUCT_DB[key];
+    if (!product) return alert("상품 정보를 불러오는 중입니다.");
 
-        const descEl = document.getElementById('choiceProdDesc');
-        if (descEl) {
-            descEl.style.display = product.description ? "block" : "none";
-            descEl.innerHTML = (product.description || '').replace(/\n/g, '<br>');
-        }
+    window.selectedProductForChoice = product;
+    const modal = document.getElementById('choiceModal');
+    const modalBox = modal.querySelector('.modal-box');
+    
+    // 다국어 본문 가져오기
+    const urlParams = new URLSearchParams(window.location.search);
+    const lang = urlParams.get('lang') || 'kr';
+    let detailContent = product.description; 
+    if(lang === 'ja') detailContent = product.description_jp || product.description;
+    if(lang === 'en') detailContent = product.description_us || product.description;
 
-        // ★ [중요] 커스텀(헤베 계산) 모드인지 여부를 전역 변수에 확실히 저장
-        const isCustom = product.is_custom_size === true; 
-        window.isCustomModeCurrent = isCustom; 
+    // 헤베 계산기 조건부 설정
+    const isCustom = product.is_custom_size === true;
+    window.isCustomModeCurrent = isCustom;
 
-        if (isCustom) {
-            // [계산기 모드]
-            document.getElementById('choiceProductImg').style.display = 'none';
-            const panel = document.getElementById('customSizePanel');
-            if(panel) {
-                panel.style.display = 'flex';
-                // 입력창 초기화
-                document.getElementById('inputCustW').value = '';
-                document.getElementById('inputCustH').value = '';
-                document.getElementById('inputCustQty').value = 1;
-                document.getElementById('calcResultPrice').innerText = '0원';
-                document.getElementById('calcResultSize').innerText = '-';
-            }
-        } else {
-            // [일반 모드]
-            document.getElementById('choiceProductImg').src = product.img || 'https://placehold.co/400?text=No+Image';
-            document.getElementById('choiceProductImg').style.display = 'block';
-            if(document.getElementById('customSizePanel')) {
-                document.getElementById('customSizePanel').style.display = 'none';
-            }
-        }
+    let rightSideContent = isCustom ? `
+        <div id="customSizePanel" style="display:flex; flex-direction:column; gap:12px; background:#fff; padding:20px; border-radius:15px; border:1px solid #e2e8f0; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:16px; text-align:center; color:#1e1b4b;">📏 사이즈 입력 (면적 계산)</h3>
+            <div style="display:flex; gap:8px;">
+                <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="가로 mm" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
+                <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="세로 mm" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
+            </div>
+            <input type="number" id="inputCustQty" class="ai-input-pretty" value="1" min="1" style="margin:0;" oninput="window.calcCustomPrice()">
+            <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center;">
+                <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0원</div>
+                <div id="calcResultSize" style="font-size:11px; opacity:0.7;">-</div>
+            </div>
+        </div>
+    ` : `
+        <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
+            <img src="${product.img}" style="width:100%; max-height:220px; object-fit:contain; border-radius:10px; margin-bottom:10px;">
+            <div style="font-size:22px; font-weight:900; color:#6366f1;">${product.price.toLocaleString()}원</div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${product.w_mm || 0} x ${product.h_mm || 0} mm</div>
+        </div>
+    `;
 
-        document.getElementById('choiceModal').style.display = 'flex';
-    };
+    // 레이아웃 렌더링 (startEditorDirect를 여기서 호출하지 않음)
+    modalBox.innerHTML = `
+        <div class="choice-layout" style="display:flex; height:90vh; overflow:hidden;">
+            <div class="choice-left-content view-content" style="flex:1; padding:40px; overflow-y:auto; background:#fff; text-align:left;">
+                <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${product.name}</h2>
+                <div class="product-detail-render" style="line-height:1.8; width:100%;">
+                    ${detailContent || '<p style="color:#999; text-align:center;">상세 정보 준비 중입니다.</p>'}
+                </div>
+            </div>
+            <div class="choice-right-actions" style="width:360px; background:#f8fafc; padding:30px; border-left:1px solid #eee; display:flex; flex-direction:column; gap:10px; overflow-y:auto;">
+                ${rightSideContent}
+                <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:65px; font-size:17px; font-weight:800;">
+                    <i class="fa-solid fa-palette"></i> 직접 디자인하기
+                </button>
+                <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:65px; background:#4ccc02; color:white; border:none; font-size:17px; font-weight:800;">
+                    <i class="fa-solid fa-basket-shopping"></i> 바로 구매하기
+                </button>
+                
+                <button onclick="document.getElementById('choiceModal').style.display='none'" class="btn-round" style="margin-top:auto; background:#eee; border:none;">닫기</button>
+            </div>
+        </div>
+    `;
 
-    // [2] 실시간 가격 계산 함수 (입력할 때마다 실행)
+    modal.style.display = 'flex';
+
+    // [핵심] 비디오 여백 제거 및 강제 자동 재생 로직
+    setTimeout(() => {
+        const renderArea = modalBox.querySelector('.product-detail-render');
+        if (!renderArea) return;
+
+        renderArea.querySelectorAll('iframe.ql-video, video').forEach(v => {
+            const src = v.getAttribute('src') || v.src;
+            if (!src) return;
+
+            const videoTag = document.createElement('video');
+            videoTag.src = src;
+            videoTag.setAttribute('autoplay', 'autoplay');
+            videoTag.setAttribute('muted', 'muted'); // 무음 설정 필수
+            videoTag.setAttribute('loop', 'loop');
+            videoTag.setAttribute('playsinline', 'true');
+            videoTag.setAttribute('webkit-playsinline', 'true');
+            
+            // 검은 부분 없이 꽉 채우는 스타일
+            videoTag.style.width = '100%';
+            videoTag.style.height = 'auto';
+            videoTag.style.display = 'block';
+            videoTag.style.objectFit = 'cover'; // 비율에 맞춰 꽉 채움
+            videoTag.style.backgroundColor = 'transparent';
+            videoTag.style.borderRadius = '12px';
+            videoTag.style.margin = '20px 0';
+
+            v.parentNode.replaceChild(videoTag, v);
+            videoTag.play().catch(e => {}); // 재생 시도
+        });
+
+        renderArea.querySelectorAll('img').forEach(img => {
+            img.style.width = '100%';
+            img.style.height = 'auto';
+            img.style.display = 'block';
+            img.style.borderRadius = '12px';
+        });
+    }, 100);
+};
+
+    // [2] 실시간 가격 계산 함수 (완전 수정 버전)
     window.calcCustomPrice = function() {
-        const w = parseInt(document.getElementById('inputCustW').value || 0);
-        const h = parseInt(document.getElementById('inputCustH').value || 0);
-        const qty = parseInt(document.getElementById('inputCustQty').value || 1);
-        
-        // 제품의 1헤베(1m x 1m)당 단가
-        const unitPrice = window.selectedProductForChoice.price; 
+        const wInput = document.getElementById('inputCustW');
+        const hInput = document.getElementById('inputCustH');
+        const qInput = document.getElementById('inputCustQty');
+        const priceDisplay = document.getElementById('calcResultPrice');
+        const sizeDisplay = document.getElementById('calcResultSize');
 
-        if (w > 0 && h > 0) {
-            // 헤베 계산식: (가로mm * 세로mm / 1,000,000) * 단가
+        if (!wInput || !hInput || !window.selectedProductForChoice) return;
+
+        const w = parseInt(wInput.value || 0);
+        const h = parseInt(hInput.value || 0);
+        const qty = parseInt(qInput ? qInput.value : 1) || 1;
+        const unitPrice = window.selectedProductForChoice.price || 0;
+
+        // 화폐 포맷팅 함수 (내부 정의로 에러 방지)
+        const formatValue = (val) => {
+            const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
+            const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
+            if (isJP) return '¥' + Math.floor(val).toLocaleString();
+            if (isUS) return '$' + (val / 1300).toFixed(2);
+            return Math.floor(val).toLocaleString() + '원';
+        };
+
+        if (w >= 100 && h >= 100) {
+            // 1. 면적 계산 (㎡)
             const area = (w * h) / 1000000;
-            // 1개당 가격 (올림 처리)
-            // [수정] 10원 단위 절사 (내림 처리): 242,001원 -> 242,000원
-            const pricePerItem = Math.floor((area * unitPrice) / 100) * 100;
-            // 총 합계 (수량 포함)
+            // 2. 단가 계산 (10원 단위 절사)
+            const pricePerItem = Math.floor((area * unitPrice) / 10) * 10;
+            // 3. 최종 합계
             const totalPrice = pricePerItem * qty;
             
-            document.getElementById('calcResultPrice').innerText = totalPrice.toLocaleString() + '원';
-            document.getElementById('calcResultSize').innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
+            if (priceDisplay) priceDisplay.innerText = formatValue(totalPrice);
+            if (sizeDisplay) sizeDisplay.innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
         } else {
-            document.getElementById('calcResultPrice').innerText = '0원';
-            document.getElementById('calcResultSize').innerText = '-';
+            if (priceDisplay) priceDisplay.innerText = formatValue(0);
+            if (sizeDisplay) sizeDisplay.innerText = '최소 100mm 이상 입력';
         }
     };
 
@@ -3536,17 +3635,6 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 window.pendingTemplate = null;
             }, 500);
         } else {
-            // [수정됨] 템플릿 검색 팝업(Overlay) 띄우는 코드를 주석 처리하여 실행되지 않게 함
-            /* if (!hasFixedGuide) {
-                setTimeout(() => {
-                    const tplOverlay = document.getElementById('templateOverlay');
-                    if (tplOverlay) {
-                        tplOverlay.style.display = 'flex';
-                        if (window.filterTpl) window.filterTpl('photo-bg'); 
-                    }
-                }, 300);
-            } 
-            */
         }
 
         // AI 이미지 시작일 경우 처리
@@ -3667,7 +3755,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     // 1. 검색 시작 (초기화)
     window.searchTemplates = function(keyword = '') {
         lastSearchKeyword = keyword;
-        currentTemplatePage = 0; // 1페이지로 리셋
+        currentTemplatePage = 0; 
         loadTemplatePage(0);
     };
 
@@ -3777,11 +3865,14 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 
     // 4. 버튼 활성화/비활성화 및 페이지 번호 표시
     function updatePaginationButtons(page, currentItemsCount) {
-        const btnPrev = document.getElementById('btnTplPrev');
-        const btnNext = document.getElementById('btnTplNext');
-        const lblPage = document.getElementById('tplPageLabel');
+    const btnPrev = document.getElementById('btnTplPrev');
+    const btnNext = document.getElementById('btnTplNext');
+    const lblPage = document.getElementById('tplPageLabel');
 
-        if(lblPage) lblPage.innerText = `${page + 1} 페이지`;
+    // 한글 '페이지' 대신 영문 'PAGE'로 직접 주입
+    if(lblPage) lblPage.innerHTML = `PAGE <span id="currentPageNum">${page + 1}</span>`;
+    
+    // ... 이하 기존 코드 유지
 
         // 첫 페이지면 '이전' 버튼 비활성화
         if(btnPrev) {
@@ -3890,7 +3981,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         document.getElementById('genProdImg').src = product.img || 'https://placehold.co/400?text=No+Image';
         document.getElementById('genProdTitle').innerText = product.name;
         document.getElementById('genProdDesc').innerText = product.description || '';
-        document.getElementById('genProdPrice').innerText = (product.price || 0).toLocaleString() + '원';
+        document.getElementById('genProdPrice').innerText = formatCurrency(product.price);
         
         // 수량 및 합계 초기화
         document.getElementById('genProdQty').value = 1;
@@ -4561,8 +4652,12 @@ window.filterModalItems = function(keyword) {
 
         // 클릭 이벤트 연결
         div.onclick = () => {
-            if (type === 'category') {
-                window.showCategoryProducts(item.code, item.name);
+           if (type === 'category') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentLang = urlParams.get('lang') || 'kr';
+                // 일본어 모드고 DB에 일본어 이름(name_ja)이 있으면 그것을 전달
+                const displayName = (currentLang === 'ja' && item.name_ja) ? item.name_ja : item.name;
+                window.showCategoryProducts(item.code, displayName, item.description);
             } else {
                 // 상품 클릭 시 분기 처리
                 document.getElementById('categoryDetailModal').style.display = 'none'; // 모달 닫기
@@ -4593,28 +4688,12 @@ window.filterModalItems = function(keyword) {
 
 <div id="cartAddedModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 400px; text-align: center; padding: 40px 30px;">
-        <div style="font-size: 50px; color: #6366f1; margin-bottom: 20px;">
-            <i class="fa-regular fa-circle-check"></i>
-        </div>
-        <h3 style="margin: 0 0 10px 0; font-size: 22px;">장바구니에 담겼습니다!</h3>
-        <p style="color: #666; margin-bottom: 30px;">선택하신 상품이 장바구니에 추가되었습니다.</p>
+        <h3 style="margin: 0 0 10px 0; font-size: 22px;" data-i18n="msg_added_to_cart">장바구니에 담겼습니다!</h3>
+        <p style="color: #666; margin-bottom: 30px;" data-i18n="msg_added_to_cart_desc">선택하신 상품이 장바구니에 추가되었습니다.</p>
         
         <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button onclick="window.goToCartFromSuccess()" class="btn-round primary" style="width: 100%; justify-content: center; height: 45px; font-size: 15px;">
-                💳 바로 결제하러 가기
-            </button>
-
-            <button onclick="window.openDeliveryCategory()" class="btn-round" style="width: 100%; justify-content: center; height: 45px; background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; font-weight:800;">
-                🚚 배송비/설치비 추가하기
-            </button>
-
-            <button onclick="window.goToCartPageOnly()" class="btn-round" style="width: 100%; justify-content: center; height: 45px; background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd;">
-                🛒 장바구니로 가기
-            </button>
-
-            <button onclick="window.continueShopping()" class="btn-round" style="width: 100%; justify-content: center; height: 45px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;">
-                🛍️ 다른상품 더 쇼핑하기
-            </button>
+            <button onclick="window.goToCartFromSuccess()" class="btn-round primary" data-i18n="btn_go_to_payment">💳 바로 결제하러 가기</button>
+            <button onclick="window.continueShopping()" class="btn-round" data-i18n="btn_continue_shopping">🛍️ 다른상품 더 쇼핑하기</button>
         </div>
     </div>
 </div>
@@ -4667,5 +4746,6 @@ window.filterModalItems = function(keyword) {
         </div>
     </div>
 </div>
+
 </body>
 </html>

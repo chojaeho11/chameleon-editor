@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyTranslations();
 
     if (!currentUser) {
-        alert("로그인이 필요한 서비스입니다.");
+        alert(window.t('msg_login_required') || "Login is required.");
         location.href = 'index.html';
         return;
     }
@@ -788,16 +788,13 @@ window.openPartnerReviewModal = async function(orderId) {
         comment: comment
     });
 
-    if(error) {
-        alert("후기 저장 실패: " + error.message);
-    } else {
-        // 주문 상태도 '구매확정'으로 변경
-        await sb.from('orders').update({ status: '구매확정' }).eq('id', orderId);
-        
-        // 파트너 평균 평점 업데이트 (RPC 함수가 있다면 좋지만, 없다면 생략 가능)
-        alert("소중한 후기가 등록되었습니다! 감사합니다.");
-        loadOrders(); // 목록 새로고침
-    }
+    if (error) {
+            alert((window.t('msg_save_failed') || "Save Failed: ") + error.message);
+        } else {
+            await sb.from('orders').update({ status: '구매확정' }).eq('id', orderId);
+            alert(window.t('msg_review_saved') || "Thank you for your review!");
+            loadOrders(); 
+        }
 };
 // [누락된 함수 복구] 5. 내 리뷰/평점 로드
     async function loadMyReviews() {

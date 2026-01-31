@@ -24,6 +24,7 @@
     const TIGHT_SPACING = -30;     
 
     // 4. 내용 데이터
+    // 4. 내용 데이터 (다국어 지원 확장)
     const WIZ_DATA = {
         kr: {
             basic:   { main: "전시부스디자인\n멋진연출을위한", sub: "전시부스 디자인의 배경은 템플릿 중\n배경용 백터를 이용하는게 이미지가 깨지지 않아서 좋습니다.", deco: "01" },
@@ -41,18 +42,55 @@
             bannerV: { main: "ECO-FRIENDLY\nDISPLAY", sub: "친환경 종이집기 제작", desc: "가볍고 튼튼한 허니콤보드" },
             fabric:  { main: "Natural Mood", sub: "Every moment is a fresh beginning.\nKeep your face always toward the sunshine.", bottom: "Since 2025. Chameleon Printing Lab" },
             insta:   { id: "chameleon_official", likes: "좋아요 9,999개", desc: "카멜레온 프린팅과 함께하는\n친환경 전시 라이프 🌱", hash: "#전시 #디자인 #팝업스토어" }
+        },
+        en: {
+            basic:   { main: "Exhibition Booth\nDesign Solution", sub: "Use vector backgrounds from templates\nfor high-quality large format printing.", deco: "01" },
+            flyer:   { main: "POSTER\nDESIGN", sub: "Create a new world with paper.\nInsert your event details here.\nSearch logos in the PNG tab.", host: "Hosted by Chameleon Printing" },
+            card:    { name: "Chameleon Corp", job: "Design Team Manager", phone: "+1-234-567-890", email: "design@chameleon.com", company: "CHAMELEON" },
+            menu:    { 
+                title: "MENU DESIGN", 
+                items: [
+                    "1. Americano (HOT/ICE)", "2. Cafe Latte", "3. Vanilla Latte", "4. Caramel Macchiato", "5. Cold Brew", 
+                    "6. Choco Latte", "7. Green Tea Latte", "8. Lemonade", "9. Grapefruit Ade", "10. Herbal Tea"
+                ],
+                prices: [ "$3.5", "$4.0", "$4.5", "$4.5", "$4.0", "$4.5", "$4.5", "$5.0", "$5.0", "$4.0" ]
+            },
+            bannerH: { main: "GRAND OPEN SALE", sub: "Happy Banner Making with Chameleon", desc: "Search for logos in the PNG tab. Share your own logos!" },
+            bannerV: { main: "ECO-FRIENDLY\nDISPLAY", sub: "Eco-friendly Paper Display", desc: "Lightweight and Durable Honeycomb Board" },
+            fabric:  { main: "Natural Mood", sub: "Every moment is a fresh beginning.\nKeep your face always toward the sunshine.", bottom: "Since 2025. Chameleon Printing Lab" },
+            insta:   { id: "chameleon_official", likes: "9,999 likes", desc: "Eco-friendly Exhibition Life\nwith Chameleon Printing 🌱", hash: "#exhibition #design #popup" }
+        },
+        ja: {
+            basic:   { main: "展示ブースデザイン\n素敵な演出のために", sub: "展示ブースの背景はテンプレートの\n背景用ベクターを使うと画質が落ちません。", deco: "01" },
+            flyer:   { main: "POSTER\nDESIGN", sub: "紙で作る新しい世界\nポスターデザイン、ここにイベント\n内容を入れると良いです。\nロゴは上段のロゴPNGから\n検索してください。", host: "主催 : カメレオン・プリンティング   |   主管 : デザイン研究所" },
+            card:    { name: "カメレオン株式会社", job: "デザインチーム マネージャー", phone: "03-1234-5678", email: "design@chameleon.jp", company: "CHAMELEON" },
+            menu:    { 
+                title: "メニューデザイン", 
+                items: [
+                    "1. アメリカーノ (HOT/ICE)", "2. カフェラテ", "3. バニララテ", "4. キャラメルマキアート", "5. コールドブリュー", 
+                    "6. チョコラテ", "7. 抹茶ラテ", "8. レモネード", "9. グレープフルーツエイド", "10. ハーブティー"
+                ],
+                prices: [ "¥350", "¥400", "¥450", "¥450", "¥400", "¥450", "¥450", "¥500", "¥500", "¥400" ]
+            },
+            bannerH: { main: "GRAND OPEN SALE", sub: "カメレオンと一緒に幸せな横断幕作り", desc: "ロゴは上段のロゴPNGから検索してください。お持ちのロゴを共有してください。" },
+            bannerV: { main: "ECO-FRIENDLY\nDISPLAY", sub: "環境に優しい紙製什器製作", desc: "軽くて丈夫なハニカムボード" },
+            fabric:  { main: "Natural Mood", sub: "Every moment is a fresh beginning.\nKeep your face always toward the sunshine.", bottom: "Since 2025. Chameleon Printing Lab" },
+            insta:   { id: "chameleon_official", likes: "いいね！9,999件", desc: "カメレオン・プリンティングと共に\n環境に優しい展示ライフ 🌱", hash: "#展示 #デザイン #ポップアップ" }
         }
     };
 
     // 5. 실행 함수
     window.applyNewWizard = function(type) {
         if (!window.canvas) {
+            // [수정] 다국어 메시지 키 사용 (이미 적용되어 있음, 확인용)
             alert(window.t ? window.t('err_canvas_not_ready') : "Canvas is not ready.");
             return;
         }
 
         const canvas = window.canvas;
-        const data = WIZ_DATA[currentLang] || WIZ_DATA['kr'];
+        // [수정] 언어별 데이터 매핑 (기본값 kr)
+        const langKey = (currentLang === 'en' || currentLang === 'us') ? 'en' : (currentLang === 'ja' || currentLang === 'jp') ? 'ja' : 'kr';
+        const data = WIZ_DATA[langKey] || WIZ_DATA['kr'];
 
         // 충돌 방지를 위해 기존 선택 해제
         canvas.discardActiveObject();

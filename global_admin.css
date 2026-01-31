@@ -113,3 +113,24 @@ tr:hover td { background: #f8fafc; }
 .drag-handle:active { cursor: grabbing; }
 
 /* 옵션 */
+.input-text {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+}
+
+.form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+/* 카드 내 그리드 정렬로 복잡도 감소 */
+.product-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+    align-items: start;
+}

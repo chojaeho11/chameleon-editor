@@ -7,9 +7,10 @@ export function initMyDesign() {
     // 1. 상단 '보관함' 버튼 (기존 유지, 이름 변경)
     const btnLib = document.getElementById("btnMyLibrary");
     if(btnLib) {
+        // [수정] innerHTML 내부는 data-i18n으로 처리되므로 놔두고, 알림 메시지만 수정
         btnLib.innerHTML = `<span data-i18n="btn_my_library">📂 MY page</span>`;
         btnLib.onclick = () => {
-            if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
+            if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
             location.href = 'mypage.html'; 
         };
     }
@@ -27,7 +28,7 @@ export function initMyDesign() {
     const btnOpenSave = document.getElementById("btnOpenSaveModal");
     if (btnOpenSave) {
         btnOpenSave.onclick = () => {
-            if (!currentUser) return alert("로그인 후에 저장할 수 있습니다.");
+            if (!currentUser) return alert(window.t('msg_login_required', "Login is required to save."));
             document.getElementById("saveDesignModal").style.display = "flex";
         };
     }
@@ -44,8 +45,8 @@ async function saveCurrentDesign() {
     const titleInput = document.getElementById("saveDesignTitle");
     const title = titleInput ? titleInput.value : "";
     
-    if(!currentUser) return alert("로그인이 필요합니다.");
-    if(!title.trim()) return alert("제목을 입력해주세요.");
+    if(!currentUser) return alert(window.t('msg_login_required', "Login is required."));
+    if(!title.trim()) return alert(window.t('msg_enter_title', "Please enter a title."));
 
     const btn = document.getElementById("btnConfirmSave");
     const originalText = btn.innerText;

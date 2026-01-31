@@ -109,9 +109,9 @@
         </div>
         
         <div class="desktop-nav">
-            <div class="d-nav-item active" onclick="switchTab('pool')" id="pc-tab-pool">입찰 가능 오더</div>
-            <div class="d-nav-item" onclick="switchTab('my')" id="pc-tab-my">내 입찰 현황</div>
-            <div class="d-nav-item" onclick="switchTab('reviews')" id="pc-tab-reviews">평점/후기</div>
+            <div class="d-nav-item active" onclick="switchTab('pool')" id="pc-tab-pool" data-i18n="partner_menu_pool">입찰 가능 오더</div>
+            <div class="d-nav-item" onclick="switchTab('my')" id="pc-tab-my" data-i18n="partner_menu_my">내 입찰 현황</div>
+            <div class="d-nav-item" onclick="switchTab('reviews')" id="pc-tab-reviews" data-i18n="partner_menu_reviews">평점/후기</div>
         </div>
 
         <div style="display:flex; align-items:center; gap:10px;">
@@ -125,10 +125,10 @@
     </div>
 
     <div id="tab-pool" class="container">
-        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;">📍 우리 지역 실시간 입찰 (Order Pool)</h2>
+        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;" data-i18n="partner_title_pool">📍 우리 지역 실시간 입찰 (Order Pool)</h2>
         <div id="orderPoolList" class="grid-layout">
             <div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">
-                <i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>주문을 불러오는 중...
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br><span data-i18n="msg_loading_orders">주문을 불러오는 중...</span>
             </div>
         </div>
     </div>
@@ -209,15 +209,16 @@
     // 파트너 권한 체크 및 정보 로드
     async function checkPartnerAuth() {
         const { data: { user } } = await sb.auth.getUser();
+        // [수정] 다국어 적용
         if(!user) {
-            alert("로그인이 필요합니다.");
+            alert(window.t ? window.t('msg_login_required') : "Login required.");
             location.href = 'index.html';
             return;
         }
 
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
         if(!profile || (profile.role !== 'franchise' && profile.role !== 'admin')) {
-            alert("파트너(가맹점) 권한이 없습니다.");
+            alert(window.t ? window.t('msg_no_partner_auth') : "No partner authority.");
             location.href = 'index.html';
             return;
         }

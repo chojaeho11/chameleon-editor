@@ -94,9 +94,8 @@ export function initCanvas() {
     canvas.on("selection:updated", updateLockUI);
     canvas.on("selection:cleared", updateLockUI);
 
-    console.log("✅ 캔버스 코어 초기화 완료 (클릭 간섭 방지 적용됨)");
+    console.log("✅ Canvas Core Initialized");
 }
-
 export function setMaxLimits(w_mm, h_mm) { maxLimitMM.w = w_mm; maxLimitMM.h = h_mm; }
 export function setBaseSize(w, h) { baseW = w; baseH = h; }
 export function setGlobalSize(w, h) { setBaseSize(w, h); }

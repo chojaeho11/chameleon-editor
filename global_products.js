@@ -302,40 +302,38 @@ window.loadSystemDB = async (filterSite) => {
             const searchTarget = `${item.code} ${dName} ${item.category}`.toLowerCase();
             if(searchKeyword && !searchTarget.includes(searchKeyword)) return;
 
-            // [그리드 카드 렌더링]
+            // [그리드 카드 렌더링 - '옵션'으로 명칭 통일 및 스타일 개선]
             const bgStyle = editingAddonId === item.id ? 'border:2px solid #6366f1; background:#e0e7ff;' : 'border:1px solid #e2e8f0; background:#fff;';
-            const catColor = item.category === 'material' ? '#dbeafe' : (item.category === 'finish' ? '#fce7f3' : '#f1f5f9');
             
             listArea.innerHTML += `
-                <div style="${bgStyle} border-radius:6px; padding:10px; font-size:12px; position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <span style="background:${catColor}; padding:2px 6px; border-radius:4px; font-weight:bold; color:#475569; font-size:10px;">
-                            ${item.category}
+                <div style="${bgStyle} border-radius:8px; padding:12px; font-size:12px; position:relative; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="background:#f1f5f9; padding:2px 8px; border-radius:4px; font-weight:bold; color:#6366f1; font-size:10px; border:1px solid #e2e8f0;">
+                            옵션
                         </span>
                         <div>
-                            <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; margin-right:6px;" title="수정"></i>
+                            <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; margin-right:8px;" title="수정"></i>
                             <i class="fa-solid fa-xmark" onclick="deleteAddonDB(${item.id})" style="cursor:pointer; color:#ef4444;" title="삭제"></i>
                         </div>
                     </div>
-                    <div style="font-weight:bold; color:#1e293b; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div style="font-weight:bold; color:#1e293b; margin-bottom:4px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                         ${dName}
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; color:#64748b;">
-                        <span style="font-size:11px;">${item.code}</span>
-                        <span style="font-weight:bold; color:#6366f1;">${symbol}${dPrice.toLocaleString()}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#94a3b8; font-size:11px;">${item.code}</span>
+                        <span style="font-weight:bold; color:#1e293b;">${symbol}${dPrice.toLocaleString()}</span>
                     </div>
                 </div>
             `;
             count++;
 
-            // (상품 등록 하단 체크박스는 기존대로 유지)
+            // [상품 등록 하단 체크박스 - 명칭 통일 및 검색 용이성 개선]
             if(chkArea) {
-                const badgeClass = item.category === 'material' ? 'kr' : (item.category === 'finish' ? 'jp' : 'us');
                 chkArea.innerHTML += `
-                    <label class="addon-check-item">
+                    <label class="addon-check-item" style="display:flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; margin-bottom:2px; font-size:12px; transition:0.2s;">
                         <input type="checkbox" name="prodAddon" value="${item.code}">
-                        <span class="badge-site ${badgeClass}" style="font-size:9px; padding:1px 3px;">${item.category.substr(0,1).toUpperCase()}</span>
-                        ${item.name_kr || item.name}
+                        <span style="background:#6366f1; color:white; font-size:9px; padding:1px 5px; border-radius:3px; font-weight:bold;">옵션</span>
+                        <span style="font-weight:500;">${item.name_kr || item.name}</span>
                     </label>`;
             }
         });
@@ -542,15 +540,15 @@ window.addProductDB = async () => {
         
         name: document.getElementById('newProdName').value, 
         price: priceKR,
-        description: document.getElementById('newProdDesc').value,
+        description: document.getElementById('newProdDetailKR').value || adminQuill.root.innerHTML,
 
         name_jp: document.getElementById('newProdNameJP').value, 
         price_jp: priceJP,
-        description_jp: document.getElementById('newProdDescJP').value,
+        description_jp: document.getElementById('newProdDetailJP').value,
 
         name_us: document.getElementById('newProdNameUS').value, 
         price_us: priceUS, // 이제 에러 없이 정수로 저장됨
-        description_us: document.getElementById('newProdDescUS').value,
+        description_us: document.getElementById('newProdDetailUS').value,
         addons: addons
     };
 
@@ -581,37 +579,46 @@ window.editProductLoad = async (id) => {
     editingProdId = id;
     document.getElementById('btnProductSave').innerText = "수정사항 저장";
     document.getElementById('btnCancelEdit').style.display = 'inline-block';
-    // [추가] 수정 모드일 때 복제 버튼 표시
     document.getElementById('btnCloneProduct').style.display = 'inline-block';
     document.querySelector('.product-form').scrollIntoView({ behavior: 'smooth' });
 
-    document.getElementById('newProdSite').value = data.site_code;
-    document.getElementById('newProdCategory').value = data.category;
-    document.getElementById('newProdCode').value = data.code;
-    document.getElementById('newProdW').value = data.width_mm;
-    document.getElementById('newProdH').value = data.height_mm;
-    document.getElementById('newProdIsCustom').checked = data.is_custom_size;
-    // [추가] 일반 상품 체크박스 값 불러오기
+    // 기본 정보 로드
+    document.getElementById('newProdSite').value = data.site_code || 'KR';
+    document.getElementById('newProdCategory').value = data.category || '';
+    document.getElementById('newProdCode').value = data.code || '';
+    document.getElementById('newProdW').value = data.width_mm || 0;
+    document.getElementById('newProdH').value = data.height_mm || 0;
+    document.getElementById('newProdIsCustom').checked = data.is_custom_size || false;
     document.getElementById('newProdIsGeneral').checked = data.is_general_product || false;
-    document.getElementById('newProdImg').value = data.img_url;
+    document.getElementById('newProdImg').value = data.img_url || '';
     document.getElementById('prodPreview').src = data.img_url || '';
 
-    document.getElementById('newProdName').value = data.name; 
-    document.getElementById('newProdPrice').value = data.price; 
-    document.getElementById('newProdDesc').value = data.description || '';
+    // [핵심] 한국어/일본어/영어 이름과 가격 보존
+    document.getElementById('newProdName').value = data.name || ''; 
+    document.getElementById('newProdPrice').value = data.price || 0; 
     
     document.getElementById('newProdNameJP').value = data.name_jp || ''; 
     document.getElementById('newProdPriceJP').value = data.price_jp || 0; 
-    document.getElementById('newProdDescJP').value = data.description_jp || '';
     
     document.getElementById('newProdNameUS').value = data.name_us || ''; 
     document.getElementById('newProdPriceUS').value = data.price_us || 0; 
-    document.getElementById('newProdDescUS').value = data.description_us || '';
 
+    // [핵심] 상세페이지 데이터(description) 보존
+    document.getElementById('newProdDetailKR').value = data.description || '';
+    document.getElementById('newProdDetailJP').value = data.description_jp || '';
+    document.getElementById('newProdDetailUS').value = data.description_us || '';
+    
+    // 에디터용 일반 설명 필드(있는 경우) 대응
+    if(document.getElementById('newProdDesc')) {
+        document.getElementById('newProdDesc').value = data.description || '';
+    }
+
+    // 옵션 체크박스 복구
     const addonList = data.addons ? data.addons.split(',') : [];
-    document.querySelectorAll('input[name="prodAddon"]').forEach(cb => { cb.checked = addonList.includes(cb.value); });
+    document.querySelectorAll('input[name="prodAddon"]').forEach(cb => { 
+        cb.checked = addonList.includes(cb.value); 
+    });
 };
-
 window.deleteProductDB = async (id) => {
     if(confirm("삭제?")) {
         await sb.from('admin_products').delete().eq('id', id);
@@ -684,13 +691,14 @@ async function googleTranslate(text, targetLang) {
 // 1. 상품 등록 화면 번역 (환율 업데이트됨)
 window.autoTranslateInputs = async () => {
     const krName = document.getElementById('newProdName').value;
-    const krDesc = document.getElementById('newProdDesc').value;
     const krPrice = document.getElementById('newProdPrice').value;
-    
-    const wMM = document.getElementById('newProdW').value || 0;
-    const hMM = document.getElementById('newProdH').value || 0;
 
     if (!krName) return alert("한국어 상품명을 입력해주세요.");
+
+    // [보완] 이미 입력된 값이 있는 경우 덮어쓰기 확인
+    if (document.getElementById('newProdNameJP').value || document.getElementById('newProdNameUS').value) {
+        if (!confirm("이미 입력된 번역 데이터가 있습니다. 기존 내용을 유지하시겠습니까? (취소 시 새로 번역)")) return;
+    }
 
     const btn = document.querySelector('button[onclick="autoTranslateInputs()"]');
     const oldText = btn.innerHTML;
@@ -698,34 +706,20 @@ window.autoTranslateInputs = async () => {
     btn.disabled = true;
 
     try {
-        // [수정] 요청하신 환율 반영 (1000원 -> 200엔 / 1000원 -> 2달러)
         const rateJPY = 0.2; 
         const rateUSD = 0.002;
 
-        if (krPrice) {
-            // 일본: 1000 * 0.2 = 200 (정수)
+        // 가격이 입력되어 있을 때만 환율 적용
+        if (krPrice && krPrice > 0) {
             document.getElementById('newProdPriceJP').value = Math.round(krPrice * rateJPY);
-            
-            // 미국: 1000 * 0.002 = 2.00 (UI에는 소수점 보이게, 저장 시엔 addProductDB에서 정수로 변환됨)
             document.getElementById('newProdPriceUS').value = (krPrice * rateUSD).toFixed(2);
         }
 
+        // 비어있는 상품명만 번역하거나 전체 갱신
         document.getElementById('newProdNameJP').value = await googleTranslate(krName, 'ja');
-        
-        let enName = await googleTranslate(krName, 'en');
-        if (wMM > 0 && hMM > 0) {
-            const wFt = (wMM * 0.00328084).toFixed(1);
-            const hFt = (hMM * 0.00328084).toFixed(1);
-            enName += ` (${wFt} x ${hFt} ft)`;
-        }
-        document.getElementById('newProdNameUS').value = enName;
+        document.getElementById('newProdNameUS').value = await googleTranslate(krName, 'en');
 
-        if (krDesc) {
-            document.getElementById('newProdDescJP').value = await googleTranslate(krDesc, 'ja');
-            document.getElementById('newProdDescUS').value = await googleTranslate(krDesc, 'en');
-        }
-
-        alert("✅ 번역 및 환율 계산 완료!");
+        alert("✅ 상품명 및 가격 번역 완료!");
 
     } catch (e) {
         alert("번역 실패: " + e.message);
@@ -734,7 +728,6 @@ window.autoTranslateInputs = async () => {
         btn.disabled = false;
     }
 };
-
 // 2. 대분류 번역
 window.autoTranslateTopCategoryInputs = async () => {
     const krName = document.getElementById('newTopCatName').value;
@@ -894,8 +887,8 @@ window.updateAllCurrency = async () => {
             const krw = p.price || 0;
 
             // 계산 로직 (정수 반올림)
-            const priceJP = Math.round(krw * 0.1);   // 1000원 -> 100엔
-            const priceUS = Math.round(krw * 0.001); // 1000원 -> 1달러
+            const priceJP = Math.round(krw * 0.2);   // 1000원 -> 200엔
+            const priceUS = Math.round(krw * 0.002); // 1000원 -> 2달러
 
             // 업데이트 실행
             const { error: updateErr } = await sb.from('admin_products')
@@ -937,4 +930,198 @@ window.filterAddonCheckboxes = () => {
             labels[i].style.display = "none";
         }
     }
+};
+
+// ==========================================
+// [최종 완성형] 팝업 에디터 & 번역 엔진 통합 시스템
+// ==========================================
+
+let popupQuill;
+let currentPopupLang = 'KR';
+
+// 1. 번역 실행 엔진 (is not a function 오류 해결용 전역 등록)
+window.googleTranslateSimple = async (text, target) => {
+    try {
+        if (!text || text.trim().length === 0) return text;
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        return json[0].map(item => item[0]).join('');
+    } catch (e) {
+        console.error("번역 엔진 통신 실패:", e);
+        return text; 
+    }
+};
+
+// 2. 에디터 초기화 및 비디오 핸들러
+window.initPopupQuill = () => {
+    if (popupQuill) return;
+
+    async function videoHandler() {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'video/mp4,video/webm');
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 50 * 1024 * 1024) return alert("50MB 이하 영상만 가능합니다.");
+            
+            showLoading(true);
+            try {
+                const fileExt = file.name.split('.').pop();
+                const filePath = `${Date.now()}.${fileExt}`;
+                const { error } = await sb.storage.from('videos').upload(filePath, file);
+                if (error) throw error;
+
+                const { data: { publicUrl } } = sb.storage.from('videos').getPublicUrl(filePath);
+                const range = popupQuill.getSelection();
+                popupQuill.insertEmbed(range.index, 'video', publicUrl);
+                
+                // 삽입 즉시 스타일 강제 보정
+                setTimeout(() => {
+                    const vids = document.querySelectorAll('#popup-quill-editor video');
+                    vids.forEach(v => {
+                        v.style.width = '100%';
+                        v.setAttribute('controls', 'true');
+                    });
+                }, 100);
+            } catch (err) { alert("업로드 중 오류 발생"); } 
+            finally { showLoading(false); }
+        };
+    }
+
+    popupQuill = new Quill('#popup-quill-editor', {
+        modules: {
+            toolbar: {
+                container: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'align': [] }],
+                    ['image', 'video', 'link'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['clean']
+                ],
+                handlers: { 'video': videoHandler }
+            }
+        },
+        theme: 'snow',
+        placeholder: '보드와 동일한 방식으로 사진과 영상을 드래그하거나 버튼을 눌러 넣으세요...'
+    });
+};
+
+// 3. 팝업 에디터 열기
+window.openDetailPageEditor = () => {
+    window.initPopupQuill();
+    document.getElementById('detailEditorModal').style.display = 'flex';
+    currentPopupLang = 'KR';
+    const krData = document.getElementById('newProdDetailKR').value;
+    popupQuill.root.innerHTML = (krData === "" || krData === "<p><br></p>") ? "" : krData;
+    document.querySelectorAll('.pop-editor-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tabKR').classList.add('active');
+};
+
+// 4. 언어 전환 (내용 자동 저장 포함)
+window.switchPopupLang = (lang) => {
+    // 1. 현재 편집 중인 내용을 현재 언어 변수(currentPopupLang)에 해당하는 필드에 즉시 저장
+    const currentContent = popupQuill.root.innerHTML;
+    if (currentContent !== "<p><br></p>") {
+        document.getElementById(`newProdDetail${currentPopupLang}`).value = currentContent;
+    }
+
+    // 2. 언어 타겟 변경
+    currentPopupLang = lang;
+
+    // 3. 변경된 언어의 기존 데이터를 불러와서 에디터에 세팅
+    const savedData = document.getElementById(`newProdDetail${lang}`).value;
+    popupQuill.root.innerHTML = (savedData === "" || savedData === "<p><br></p>") ? "" : savedData;
+
+    // 4. UI 탭 활성화 처리
+    document.querySelectorAll('.pop-editor-tab').forEach(t => t.classList.remove('active'));
+    const targetTab = document.getElementById(`tab${lang}`);
+    if (targetTab) targetTab.classList.add('active');
+};
+
+// 5. 작업 완료 및 닫기
+window.saveDetailAndClose = () => {
+    document.getElementById(`newProdDetail${currentPopupLang}`).value = popupQuill.root.innerHTML;
+    document.getElementById('detailEditorModal').style.display = 'none';
+    alert("상세페이지가 임시 저장되었습니다.\n최종 등록을 위해 [수정사항 저장] 버튼을 꼭 눌러주세요.");
+};
+
+// 6. 다국어 자동 번역 로직 (is not a function 오류 완전 해결)
+window.autoTranslatePopupDetail = async () => {
+    const sourceHtml = popupQuill.root.innerHTML;
+    if(!sourceHtml || sourceHtml === "<p><br></p>") return alert("번역할 한국어 내용이 없습니다.");
+    if(!confirm("한국어 본문을 바탕으로 일본어와 영어 상세페이지를 자동 생성하시겠습니까?")) return;
+
+    const btn = document.querySelector('button[onclick*="autoTranslatePopupDetail"]');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
+    btn.disabled = true;
+
+    try {
+        const targets = [ {code:'ja', f:'JP'}, {code:'en', f:'US'} ];
+        for(const t of targets) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = sourceHtml;
+            async function translateNode(node) {
+                for (let child of node.childNodes) {
+                    if (child.nodeType === 3 && child.nodeValue.trim().length > 0) {
+                        child.nodeValue = await window.googleTranslateSimple(child.nodeValue, t.code);
+                    } else if (child.nodeType === 1) await translateNode(child);
+                }
+            }
+            await translateNode(tempDiv);
+            document.getElementById(`newProdDetail${t.f}`).value = tempDiv.innerHTML;
+        }
+        alert("✅ 다국어 번역 완료! 탭을 넘겨 확인하세요.");
+    } catch(e) { 
+        console.error(e);
+        alert("번역 중 오류 발생"); 
+    } finally { 
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+    }
+};
+
+// ==========================================
+// [신규] 프론트엔드 상품 상세페이지 전용 옵션 로드 함수
+// ==========================================
+window.loadProductOptionsFront = async (addonCodesStr) => {
+    const area = document.getElementById('productOptionsArea'); // index.html의 빨간 원 영역 ID
+    if (!area) return;
+    area.innerHTML = '';
+
+    if (!addonCodesStr || addonCodesStr.trim() === '') {
+        area.innerHTML = '<div style="color:#94a3b8; font-size:13px; text-align:center; padding:20px;">선택 가능한 옵션이 없습니다.</div>';
+        return;
+    }
+
+    const codes = addonCodesStr.split(',').map(c => c.trim()).filter(c => c);
+    const { data, error } = await sb.from('admin_addons').select('*').in('code', codes);
+    
+    if (error || !data || data.length === 0) return;
+
+    area.innerHTML = '<div style="font-weight:800; margin-bottom:12px; font-size:14px; color:#1e293b; padding-left:5px;">🎁 추가 옵션 선택</div>';
+    
+    data.forEach(addon => {
+        const itemLabel = document.createElement('label');
+        itemLabel.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:8px; background:#fff; cursor:pointer; transition:0.2s; font-size:13px; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
+        
+        // 마우스 호버 효과
+        itemLabel.onmouseover = () => { itemLabel.style.borderColor = "#6366f1"; itemLabel.style.background = "#f5f3ff"; };
+        itemLabel.onmouseout = () => { itemLabel.style.borderColor = "#e2e8f0"; itemLabel.style.background = "#fff"; };
+
+        itemLabel.innerHTML = `
+            <div style="display:flex; align-items:center; gap:12px;">
+                <input type="checkbox" name="userOption" value="${addon.code}" data-price="${addon.price}" style="width:18px; height:18px; accent-color:#6366f1; cursor:pointer;">
+                <span style="font-weight:600; color:#334155;">${addon.name_kr || addon.name}</span>
+            </div>
+            <span style="color:#6366f1; font-weight:800; font-size:14px;">+${addon.price.toLocaleString()}원</span>
+        `;
+        area.appendChild(itemLabel);
+    });
 };

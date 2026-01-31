@@ -97,7 +97,9 @@ function renderFontList() {
     listContainer.innerHTML = ""; // 초기화
 
     if (DYNAMIC_FONTS.length === 0) {
-        listContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No fonts registered.<br>Please register fonts in the admin page.</div>`;
+        // [수정] 다국어 메시지 적용
+        const msg = window.t('msg_no_fonts', 'No fonts registered.<br>Please register fonts in the admin page.');
+        listContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">${msg}</div>`;
         return;
     }
 
@@ -195,7 +197,8 @@ function initTextHandlers() {
     const btnFontSelect = document.getElementById("btnFontSelect");
     if (btnFontSelect) {
         btnFontSelect.onclick = () => {
-            if (!canvas.getActiveObject()) return alert("Please select a text object to change the font.");
+            // [수정] 다국어 적용
+            if (!canvas.getActiveObject()) return alert(window.t('msg_select_text_font', "Please select a text object to change the font."));
             
             const modal = document.getElementById("fontModal");
             if (modal) {
@@ -445,7 +448,8 @@ function applyToSelection(prop, val) {
 // ============================================================
 window.applyTextEffect = function(type) {
     const active = canvas.getActiveObject();
-    if (!active) return alert("텍스트를 선택해주세요.");
+    // [수정] 다국어 적용
+    if (!active) return alert(window.t('msg_select_text_font', "Please select a text object."));
 
     // 기존 효과 그룹 해제 후 원본 추출
     let originalText = active;
@@ -722,7 +726,8 @@ function initColorHandlers() {
     if (btnOutline) {
         btnOutline.onclick = () => {
             const active = canvas.getActiveObject();
-            if (!active) return alert("Please select an object to apply the outline.");
+            // [수정] 다국어 적용
+            if (!active) return alert(window.t('msg_select_obj_outline', "Please select an object to apply the outline."));
 
             const defaultColor = "#ff6060ff"; // 갈색 (SaddleBrown)
             const defaultWidth = 5;         // 중간 두께
@@ -861,7 +866,8 @@ function initAlignHandlers() {
 
 function alignObjects(direction) {
     const active = canvas.getActiveObject();
-    if (!active) return alert("Please select an object to align.");
+    // [수정] 다국어 적용
+    if (!active) return alert(window.t('msg_select_obj_align', "Please select an object to align."));
 
     const processObj = (obj, bound) => {
         const w = obj.getScaledWidth();

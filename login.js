@@ -9,20 +9,17 @@ export function initAuth() {
     const btnLogin = document.getElementById("btnLoginBtn");
     if (btnLogin) {
         btnLogin.updateState = () => {
-            // ★ 상태 업데이트 시마다 최신 번역 데이터 가져오기
-            const t = window.translations || {}; 
-
             if (currentUser) {
                 // 관리자/일반 로그아웃 텍스트 처리
                 btnLogin.innerText = isAdmin 
-                    ? (t['btn_admin_logout'] || "관리자 로그아웃") 
-                    : (t['btn_logout'] || "로그아웃");
+                    ? (window.t('btn_admin_logout', "Admin Logout")) 
+                    : (window.t('btn_logout', "Logout"));
                 
                 btnLogin.classList.add("primary");
                 if (isAdmin) btnLogin.style.backgroundColor = "#dc2626"; 
             } else {
                 // 로그인 텍스트 처리
-                btnLogin.innerText = t['btn_login'] || "로그인";
+                btnLogin.innerText = window.t('btn_login', "Login");
                 btnLogin.classList.remove("primary");
                 btnLogin.style.backgroundColor = ""; 
             }
@@ -145,20 +142,19 @@ function updateModalUI() {
 }
 
 async function handleAuthAction() {
-    const t = window.translations || {}; // 알림 메시지용 번역
-
+    // [수정] window.t 함수 사용
     const emailInput = document.getElementById("loginId");
     const pwInput = document.getElementById("loginPw");
     const pwConfirmInput = document.getElementById("loginPwConfirm");
     const email = emailInput?.value.trim();
     const password = pwInput?.value.trim();
 
-    if (!email || !password) return alert(t['err_input_required'] || "입력 정보 확인 필요");
-    if (!sb) return alert(t['err_db_connection'] || "DB 연결 오류");
+    if (!email || !password) return alert(window.t('err_input_required', "Input required."));
+    if (!sb) return alert(window.t('err_db_connection', "DB Error."));
 
     const btn = document.getElementById("btnAuthAction");
     const originalText = btn.innerText;
-    btn.innerText = t['msg_processing'] || "처리 중...";
+    btn.innerText = window.t('msg_processing', "Processing...");
     btn.disabled = true;
 
     try {

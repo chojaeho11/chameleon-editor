@@ -50,7 +50,8 @@ function handleImageUpload(file) {
 
     // PDF 파일 처리
     if (file.type === 'application/pdf') {
-        alert("Please upload PDF in the 'Order' step. Only images are supported in the editor.");
+        // [수정] 다국어 적용
+        alert(window.t('msg_pdf_error', "Please upload PDF in the 'Order' step. Only images are supported in the editor."));
         return;
     }
 

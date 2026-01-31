@@ -42,7 +42,7 @@ export function initSizeControls() {
             let reqH = parseInt(inputH.value); // mm 단위
 
             if (!reqW || !reqH || reqW <= 0 || reqH <= 0) {
-                return alert("Please enter a valid number.");
+                return alert(window.t('msg_invalid_number', "Please enter a valid number."));
             }
 
             // 최대 크기(현재 대지 크기) 체크
@@ -53,10 +53,10 @@ export function initSizeControls() {
             const isFitRotated = (reqW <= limitH && reqH <= limitW);
 
             if (!isFitNormal && !isFitRotated) {
-                return alert(
-                    `Cannot exceed the maximum size (${limitW}x${limitH}mm).\n` +
-                    `You can only set within the current canvas dimensions.`
-                );
+                // [수정] 다국어 적용 (치환 포함)
+                const msg = window.t('msg_max_size_exceeded', "Cannot exceed maximum size.")
+                    .replace('{w}', limitW).replace('{h}', limitH);
+                return alert(msg);
             }
 
             // 회전 자동 적용 (가로/세로 교차 허용)
@@ -64,7 +64,7 @@ export function initSizeControls() {
                 const temp = reqW;
                 reqW = reqH;
                 reqH = temp;
-                alert("The dimensions were rotated to fit the canvas.");
+                alert(window.t('msg_size_rotated', "The dimensions were rotated to fit the canvas."));
                 
                 // 입력창 값도 스왑해서 보여줌
                 inputW.value = reqW;

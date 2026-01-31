@@ -70,7 +70,8 @@ export function initContextMenu() {
     });
 
     bindAction("ctxPaste", () => {
-        if (!_clipboard) return alert(window.t('msg_clipboard_empty') || "Clipboard is empty.");
+        // [수정] 다국어 적용 (이미 적용되어 있다면 유지)
+        if (!_clipboard) return alert(window.t('msg_clipboard_empty', "Clipboard is empty."));
         _clipboard.clone((cloned) => {
             canvas.discardActiveObject();
             cloned.set({
@@ -160,9 +161,10 @@ function showMenu(x, y, activeObj) {
         if (btnLock) {
             btnLock.style.display = 'flex';
             if (activeObj.lockMovementX) {
-                btnLock.innerHTML = `<i class="fa-solid fa-lock-open"></i> ${window.t('ctx_unlock') || "Unlock"}`;
+                // [수정] 기본값 fallback 추가
+                btnLock.innerHTML = `<i class="fa-solid fa-lock-open"></i> ${window.t('ctx_unlock', "Unlock")}`;
             } else {
-                btnLock.innerHTML = `<i class="fa-solid fa-lock"></i> ${window.t('ctx_lock') || "Lock"}`;
+                btnLock.innerHTML = `<i class="fa-solid fa-lock"></i> ${window.t('ctx_lock', "Lock")}`;
             }
         }
     } else {
@@ -173,7 +175,8 @@ function showMenu(x, y, activeObj) {
         const hasLocked = canvas.getObjects().some(o => o.lockMovementX);
         if (btnLock) {
             if (hasLocked) {
-                btnLock.innerHTML = `<i class="fa-solid fa-lock-open"></i> ${window.t('ctx_unlock_all') || "Unlock All"}`;
+                // [수정] 기본값 fallback 추가
+                btnLock.innerHTML = `<i class="fa-solid fa-lock-open"></i> ${window.t('ctx_unlock_all', "Unlock All")}`;
                 btnLock.style.display = 'flex';
             } else {
                 btnLock.style.display = 'none';

@@ -161,7 +161,8 @@ export function initTemplateTools() {
     if(btnOpenSell) {
         btnOpenSell.onclick = () => {
             if (!currentUser) {
-                alert("Login required.");
+                // [수정] 다국어 적용
+                alert(window.t('msg_login_required', "Login required."));
                 document.getElementById('loginModal').style.display = 'flex';
                 return;
             }
@@ -749,11 +750,11 @@ async function registerUserTemplate() {
     const title = titleEl ? titleEl.value.trim() : "Untitled";
     const tags = tagEl ? tagEl.value.trim() : "";
 
-    if (!title) return alert("제목을 입력해주세요.");
+    if (!title) return alert(window.t('msg_enter_title', "Please enter a title."));
 
     const btn = document.getElementById("btnSellConfirm");
     const originalText = btn.innerText;
-    btn.innerText = "저장 중...";
+    btn.innerText = window.t('msg_saving', "Saving...");
     btn.disabled = true;
 
     try {
@@ -825,7 +826,7 @@ async function registerUserTemplate() {
         // ★ [핵심] 이제 'deposit(예치금)' 컬럼에 500원이 더해집니다.
         await addRewardPoints(freshUser.id, 500, `템플릿 판매등록 수익 (${title})`);
         
-        alert("🎉 디자인 등록 완료! 판매 수익금 500원이 예치금에 적립되었습니다.");
+        alert(window.t('msg_design_registered', "Design Registered!"));
         document.getElementById("sellModal").style.display = "none";
         
         // 상단 금액 표시 갱신 (예치금 란이 있다면 거기를 갱신해야 함)
@@ -897,7 +898,7 @@ window.uploadUserLogo = async function() {
     const keywordInput = document.getElementById("logoKeywordInput");
     const files = fileInput.files;
     const commonTag = keywordInput.value.trim();
-    if (files.length === 0) return alert("이미지를 선택해주세요!");
+    if (files.length === 0) return alert(window.t('msg_select_image', "Please select an image!"));
     const btn = event.target;
     const originalText = btn.innerText;
     btn.disabled = true;
@@ -1091,7 +1092,9 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     if(drawer.style.display !== "flex") drawer.style.display = "flex";
     
     sideCurrentPage = page;
-    const msg = keyword ? `"${keyword}" 검색...` : "불러오는 중...";
+    // [수정] 다국어 적용
+    const loadingText = window.t('msg_loading', "Loading...");
+    const msg = keyword ? `"${keyword}"...` : loadingText;
     list.innerHTML = `<div style="padding:40px 20px; text-align:center; color:#64748b; font-size:13px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#6366f1; margin-bottom:10px;"></i><br>${msg}</div>`;
 
     try {
@@ -1128,11 +1131,14 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         list.innerHTML = "";
         
         if (!data || data.length === 0) {
+            // [수정] 다국어 적용
+            const noDataMsg = window.t('msg_no_data', "No data.");
+            const retryBtn = window.t('btn_retry', "Retry"); 
             list.innerHTML = `
                 <div style="padding:60px 20px; text-align:center; color:#94a3b8; font-size:13px;">
                     <i class="fa-solid fa-folder-open" style="font-size:30px; margin-bottom:10px; opacity:0.5;"></i><br>
-                    데이터가 없습니다.<br>
-                    ${page > 0 ? `<button class="btn-round" style="margin-top:15px; width:auto; padding:8px 15px;" onclick="window.loadSideBarTemplates('${pKey}', '${keyword}', 0)">처음으로</button>` : ''}
+                    ${noDataMsg}<br>
+                    ${page > 0 ? `<button class="btn-round" style="margin-top:15px; width:auto; padding:8px 15px;" onclick="window.loadSideBarTemplates('${pKey}', '${keyword}', 0)">First Page</button>` : ''}
                 </div>`;
             return;
         }
@@ -1213,7 +1219,7 @@ window.toggleBackgroundLock = function() {
     const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
 
     if (!bgObj) {
-        alert("잠겨있는 배경 이미지가 없습니다.");
+        alert(window.t('msg_no_locked_bg', "No locked background found."));
         return;
     }
 
@@ -1235,7 +1241,7 @@ window.toggleBackgroundLock = function() {
             hasBorders: true,
             hoverCursor: 'move'
         });
-        alert("🔓 배경 잠금이 해제되었습니다. 이제 편집할 수 있습니다.");
+        alert("🔓 " + window.t('msg_bg_unlocked', "Background unlocked."));
     } else {
         // [잠금 모드]
         bgObj.set({
@@ -1250,7 +1256,7 @@ window.toggleBackgroundLock = function() {
             hasBorders: false,
             hoverCursor: 'default'
         });
-        alert("🔒 배경이 잠겼습니다.");
+        alert("🔒 " + window.t('msg_bg_locked', "Background locked."));
     }
 
     canvas.requestRenderAll();
@@ -1457,7 +1463,7 @@ window.processLoad = async function(mode) {
 // [중요] 템플릿/객체 불러오기 (배경 교체 시 글씨 유지 로직 적용)
 // =========================================================
 window.processLoad = async function(mode) {
-    if (!window.selectedTpl) return alert("선택된 디자인이 없습니다.");
+    if (!window.selectedTpl) return alert(window.t('msg_select_design', "No design selected."));
     
     const loading = document.getElementById("loading");
     if(loading) loading.style.display = "flex";

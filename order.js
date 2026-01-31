@@ -27,10 +27,16 @@ const CURRENT_LANG = (urlParams.get('lang') || 'kr').toLowerCase();
 // [1] 헬퍼 함수 (유틸리티)
 // ============================================================
 function formatCurrency(amount) {
-    const num = parseInt(amount) || 0;
-    if (CURRENT_LANG === 'jp') return '¥' + num.toLocaleString();
-    else if (CURRENT_LANG === 'us') return '$' + num.toLocaleString();
-    else return num.toLocaleString() + '원';
+    const num = Number(amount) || 0;
+    const country = SITE_CONFIG.COUNTRY;
+
+    if (country === 'JP') {
+        return '¥' + Math.floor(num).toLocaleString();
+    } else if (country === 'US') {
+        return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    } else {
+        return num.toLocaleString() + '원';
+    }
 }
 
 function downloadBlob(blob, filename) {
@@ -180,7 +186,7 @@ export async function initOrderSystem() {
     const btnGoCheckout = document.getElementById("btnGoCheckout");
     if(btnGoCheckout) { 
         btnGoCheckout.onclick = () => { 
-            if(cartData.length === 0) return alert("장바구니가 비어있습니다."); 
+            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty.")); 
             openCalendarModal(); 
         }; 
     }
@@ -242,7 +248,7 @@ export async function initOrderSystem() {
 
     if(btnDownSheet) {
         btnDownSheet.onclick = async () => {
-            if(cartData.length === 0) return alert("데이터가 없습니다.");
+            if(cartData.length === 0) return alert(window.t('msg_no_data', "No data available."));
             const info = getOrderInfo();
             if(window.currentDbId) info.id = window.currentDbId;
             try {
@@ -1277,14 +1283,14 @@ async function processFinalPayment() {
     
     // 마일리지 유효성 검사
     if (useMileage > 0) {
-        if (!currentUser) return alert("로그인이 필요합니다.");
+        if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
         const excludedSet = window.excludedCategoryCodes || new Set();
         let isSafe = true;
         cartData.forEach(item => { if (item.product && excludedSet.has(item.product.category)) isSafe = false; });
         if (!isSafe) return alert("마일리지 사용 불가 상품이 포함되어 있습니다.");
 
         const { data: check } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
-        if (!check || check.mileage < useMileage) return alert("보유 마일리지가 부족합니다.");
+        if (!check || check.mileage < useMileage) return alert(window.t('alert_mileage_shortage', "Insufficient mileage."));
     }
 
     const btn = document.getElementById("btnFinalPay");
@@ -1312,9 +1318,9 @@ async function processFinalPayment() {
             await processDepositPayment(realFinalPayAmount, useMileage); // 파라미터 전달
         } else if (method === 'bank') {
             const depositorName = document.getElementById('inputDepositorName').value;
-            if (!depositorName) { btn.disabled = false; return alert("입금자명을 입력해주세요."); }
+            if (!depositorName) { btn.disabled = false; return alert(window.t('alert_input_depositor', "Please enter depositor name.")); }
             
-            if(confirm(window.t('confirm_bank_payment'))) {
+            if(confirm(window.t('confirm_bank_payment', "Proceed with Bank Transfer?"))) {
                 // 마일리지 차감 수행
                 if(useMileage > 0) {
                      const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();

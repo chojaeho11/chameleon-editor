@@ -27,11 +27,12 @@ export function initExport() {
     const btnPNG = document.getElementById("btnPNG");
     if (btnPNG) {
         btnPNG.onclick = async () => {
-            if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
+            // [수정] 다국어 적용
+            if (!currentUser) return alert(window.t('msg_login_required', "Login required."));
             
             const btn = btnPNG;
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${window.t('msg_saving', "Saving...")}`;
             btn.disabled = true;
 
             try {
@@ -72,7 +73,8 @@ export function initExport() {
 
             } catch (err) {
                 console.error("PNG 저장 실패:", err);
-                alert("이미지 저장에 실패했습니다.");
+                // [수정] 다국어 적용
+                alert(window.t('msg_save_failed', "Save Failed."));
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
@@ -84,11 +86,13 @@ export function initExport() {
     const btnPDF = document.getElementById("btnPDF");
     if (btnPDF) {
         btnPDF.onclick = async () => {
-            if (!currentUser) return alert(window.t('msg_login_required') || "Login is required.");
+            // [수정] fallback 추가
+            if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
 
             const btn = btnPDF;
             const originalText = btn.innerText;
-            btn.innerText = "PDF 생성 중...";
+            // [수정] 다국어 적용
+            btn.innerText = window.t('msg_generating_print_pdf', "Generating PDF...");
             btn.disabled = true;
 
             try {
@@ -127,14 +131,16 @@ export function initExport() {
 
                 if (blob) {
                     downloadBlob(blob, `design_result_${Date.now()}.pdf`);
-                    alert("PDF 다운로드가 완료되었습니다.");
+                    // [수정] 다국어 적용
+                    alert(window.t('msg_design_saved', "PDF Downloaded!"));
                 } else {
-                    throw new Error("PDF 생성에 실패했습니다.");
+                    throw new Error("PDF Generation Failed.");
                 }
 
             } catch (err) {
                 console.error("PDF 생성 오류:", err);
-                alert("PDF 생성 중 오류가 발생했습니다.\n" + err.message);
+                // [수정] 다국어 적용
+                alert(window.t('err_quote_gen_failed', "Error generating PDF.") + "\n" + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = originalText;
@@ -538,7 +544,8 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 
 // 4. 작업지시서 (Order Sheet)
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
-    if (!window.jspdf) return alert("PDF 라이브러리 로딩 중...");
+    // [수정] 다국어 적용
+    if (!window.jspdf) return alert(window.t('msg_loading', "Loading PDF library..."));
     
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });

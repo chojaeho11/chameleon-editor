@@ -2,7 +2,16 @@
 <html>
 <head><title>Payment Failed</title></head>
 <body>
-<h2>Payment Failed</h2>
-<p>The payment was cancelled or an error occurred.</p>
+<h2 data-i18n="msg_payment_failed">Payment Failed</h2>
+<p data-i18n="msg_payment_error_desc">The payment was cancelled or an error occurred.</p>
+<script>
+    // 간단한 다국어 처리 스크립트 추가
+    const urlParams = new URLSearchParams(window.location.search);
+    const lang = urlParams.get('lang') || 'kr';
+    if(lang === 'kr') {
+        document.querySelector('h2').innerText = "결제 실패";
+        document.querySelector('p').innerText = "결제가 취소되었거나 오류가 발생했습니다.";
+    }
+</script>
 </body>
 </html>

@@ -13,8 +13,8 @@
 </head>
 <body>
     <div class="loader"></div>
-    <h2 id="title">Processing Payment...</h2>
-    <p id="desc">Please wait a moment.</p>
+    <h2 id="title" data-i18n="msg_processing_payment">Processing Payment...</h2>
+    <p id="desc" data-i18n="msg_wait_moment">Please wait a moment.</p>
 
     <script type="module">
         // 1. Supabase 설정 (기존 키 그대로 사용)
@@ -60,6 +60,8 @@
 
                 // 성공 시 이동
                 document.getElementById('title').innerText = "Payment Successful!";
+                if(window.t) document.getElementById('title').innerText = window.t('msg_payment_complete');
+                
                 localStorage.removeItem('chameleon_cart_guest');
                 const user = await sb.auth.getUser();
                 if(user?.data?.user) localStorage.removeItem(`chameleon_cart_${user.data.user.id}`);

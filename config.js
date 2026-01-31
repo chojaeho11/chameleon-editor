@@ -129,32 +129,32 @@ function loadUserCart() {
 export async function getUserLogoCount() { return 0; }
 // [신규] 통합 데이터 변환 헬퍼 (언어별 이름, 가격, 포맷팅 자동 처리)
 export function getLocalizedData(item) {
-    const country = SITE_CONFIG.COUNTRY; // 'KR', 'JP', 'US'
+    const country = SITE_CONFIG.COUNTRY; 
     
-    let name = item.name;
-    let price = item.price || 0;
-    let currencyPrefix = '';
-    let currencySuffix = '원';
+    if (!item) return { name: '', price: 0, formattedPrice: '0' };
 
-    // 1. 국가별 데이터 선택
+    let name = item.name || '';
+    let price = Number(item.price) || 0;
+    let formattedPrice = '';
+
     if (country === 'JP') {
         name = item.name_jp || item.name;
-        price = item.price_jp || item.price;
-        currencyPrefix = '¥';
-        currencySuffix = '';
+        price = Number(item.price_jp) || price;
+        // 일본: 기호 ¥를 앞에 붙이고 소수점 제거
+        formattedPrice = '¥' + Math.floor(price).toLocaleString();
     } else if (country === 'US') {
         name = item.name_us || item.name;
-        price = item.price_us || item.price;
-        currencyPrefix = '$';
-        currencySuffix = '';
+        price = Number(item.price_us) || price;
+        // 미국: 기호 $를 앞에 붙이고 소수점 2자리 허용
+        formattedPrice = '$' + price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    } else {
+        // 한국: 금액 뒤에 '원' 표기
+        formattedPrice = price.toLocaleString() + '원';
     }
-
-    // 2. 가격 콤마 찍기
-    const formattedPrice = currencyPrefix + price.toLocaleString() + currencySuffix;
 
     return { 
         name, 
-        price, 
+        price: Number(price) || 0, 
         formattedPrice,
         raw: item 
     };

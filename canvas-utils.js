@@ -161,14 +161,15 @@ export function toggleLockWizard() {
     // 2. 선택된 객체가 없는데 잠긴 객체가 있다면 -> 전체 잠금 해제
     const lockedObjects = canvas.getObjects().filter(o => o.locked);
     if (lockedObjects.length > 0) {
-        if(confirm(`Do you want to unlock all ${lockedObjects.length} locked objects?`)) {
+        const msg = window.t('confirm_unlock_all', "Unlock all objects?").replace('{count}', lockedObjects.length);
+        if(confirm(msg)) {
             lockedObjects.forEach(o => unlockObject(o));
             canvas.requestRenderAll();
             saveHistory();
             updateLockUI();
         }
     } else {
-        alert("Please select an object to lock.");
+        alert(window.t('msg_select_obj_lock', "Please select an object to lock."));
     }
 }
 

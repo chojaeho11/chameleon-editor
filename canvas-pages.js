@@ -119,9 +119,10 @@ export function switchPage(direction) {
 }
 
 export function deleteCurrentPage() {
-    if (pageDataList.length <= 1) return alert("최소 1개의 페이지는 있어야 합니다.");
+    // [수정] 다국어 적용
+    if (pageDataList.length <= 1) return alert(window.t('msg_min_page_limit', "At least one page is required."));
     
-    if(confirm("현재 페이지를 삭제하시겠습니까?")) {
+    if(confirm(window.t('confirm_delete', "Are you sure you want to delete?"))) {
         pageDataList.splice(currentPageIndex, 1);
         
         // 인덱스 조정
