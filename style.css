@@ -3626,3 +3626,19 @@ video {
     /* 화면에 안 보이는 요소는 렌더링 제외 */
     .hero-section { content-visibility: auto; }
 }
+/* =========================================
+   [타겟 수정] 팝업창(소분류) 내부의 파란색 가격만 흰색으로 변경
+   ========================================= */
+
+/* 팝업창(catProductGrid) 내부의 마지막 자식 요소(가격)만 선택 */
+#catProductGrid .quick-item > div:last-child {
+    color: #ffffff !important;   /* 글자색 흰색 */
+    text-decoration: none;       /* 혹시 모를 밑줄 제거 */
+    user-select: none;           /* 드래그 방지 */
+    opacity: 1;                  /* 투명도 유지 */
+}
+
+/* 마우스 올렸을 때(hover)도 계속 흰색 유지 */
+#catProductGrid .quick-item:hover > div:last-child {
+    color: #ffffff !important;
+}
