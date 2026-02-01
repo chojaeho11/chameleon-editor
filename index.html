@@ -121,7 +121,7 @@
     <div class="ctx-item" id="ctxLock"><i class="fa-solid fa-lock"></i> <span data-i18n="ctx_lock">잠금 (Lock)</span></div>
 </div>
 <div class="topbar">
-        <div class="brand" onclick="location.reload()"><i class="fa-solid fa-palette"></i> Chameleon</div>
+        <div class="brand" onclick="window.location.href = window.location.pathname"><i class="fa-solid fa-palette"></i> Chameleon</div>
         
         <div class="template-tabs">
             <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');">🎨 템플릿</button>
@@ -3011,40 +3011,161 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     }
 };
 
-// [신규] 상품 클릭 시에만 상세 이미지/설명/영상 데이터를 서버에서 로드하는 함수
-window.loadProductDetailAndOpen = async function(productCode) {
-    const loading = document.getElementById('loading');
-    if(loading) {
-        loading.style.display = 'flex';
-        const pTag = loading.querySelector('p');
-        if(pTag) pTag.innerText = "상세 정보를 불러오는 중...";
-    }
+// ============================================================
+    // [통합] 상품 상세페이지 전체화면 모드 시스템 (상단바+URL변경)
+    // ============================================================
 
-    try {
-        // 실제 무거운 상세페이지 데이터(description)는 여기서만 호출
-        const { data: product, error } = await sb.from('admin_products')
-            .select('*')
-            .eq('code', productCode)
-            .single();
-
-        if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
-
-        if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-        window.PRODUCT_DB[productCode] = product;
-        
-        document.getElementById('categoryDetailModal').style.display = 'none';
-
-        if (product.is_general_product) {
-            window.openGeneralProductModal(productCode);
-        } else {
-            window.showChoiceModal(productCode);
+    // 1. 상품 상세 정보 로드 및 전체화면 열기
+    window.loadProductDetailAndOpen = async function(productCode) {
+        const loading = document.getElementById('loading');
+        if(loading) {
+            loading.style.display = 'flex';
+            const p = loading.querySelector('p');
+            if(p) p.innerText = "상품 페이지로 이동 중...";
         }
-    } catch (e) {
-        alert(e.message);
-    } finally {
-        if(loading) loading.style.display = 'none';
-    }
-};
+
+        try {
+            // DB 조회
+            const { data: product, error } = await sb.from('admin_products')
+                .select('*').eq('code', productCode).single();
+
+            if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
+
+            // 전역 변수 저장
+            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+            window.PRODUCT_DB[productCode] = product;
+
+            // ★ 주소창 변경 (새로고침 없이 URL만 변경)
+            const newUrl = `${window.location.pathname}?product=${productCode}`;
+            window.history.pushState({ page: 'product', code: productCode }, '', newUrl);
+
+            // ★ 화면 전환 (홈 숨김)
+            const startScreen = document.getElementById('startScreen');
+            const catModal = document.getElementById('categoryDetailModal');
+            if(startScreen) startScreen.style.display = 'none';
+            if(catModal) catModal.style.display = 'none';
+
+            // ★ 전체화면 모드 실행 함수
+            const transformToFullScreen = (modalId, productName) => {
+                const modal = document.getElementById(modalId);
+                const box = modal.querySelector('.modal-box');
+                
+                if (!modal || !box) return;
+
+                // [스타일 강제 적용] 팝업 느낌 제거 -> 전체 페이지화
+                modal.classList.add('product-full-page'); // CSS 클래스 추가
+                modal.style.display = 'flex';
+                modal.style.padding = '0';
+                modal.style.background = '#ffffff';
+                
+                // 박스 스타일 초기화 (전체 채우기)
+                box.style.width = '100%';
+                box.style.maxWidth = '100%';
+                box.style.height = '100%';
+                box.style.borderRadius = '0';
+                box.style.boxShadow = 'none';
+                box.style.margin = '0';
+                box.style.overflowY = 'auto'; 
+
+                // 기존 헤더 제거 (중복 방지)
+                const oldHeader = box.querySelector('.product-full-header');
+                const oldGuide = box.querySelector('.product-guide-banner');
+                if(oldHeader) oldHeader.remove();
+                if(oldGuide) oldGuide.remove();
+
+                // [HTML 주입] 상단바 + 안내문구
+                const headerHTML = `
+                    <div class="product-full-header">
+                        <button class="back-btn" onclick="window.history.back()">
+                            <i class="fa-solid fa-arrow-left"></i> 뒤로가기
+                        </button>
+                        <div class="page-title">${productName}</div>
+                        <div class="right-menu">
+                            <button onclick="location.href='/'" class="btn-round" style="padding:6px 12px; font-size:12px; height:auto;">
+                                <i class="fa-solid fa-house"></i> 홈
+                            </button>
+                        </div>
+                    </div>
+                    <div class="product-guide-banner">
+                        <i class="fa-solid fa-circle-info"></i> 
+                        상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.<br>
+                        (디자인이 어렵다면 '파일 업로드'를 이용하세요)
+                    </div>
+                `;
+                
+                // 박스 맨 앞에 삽입
+                box.insertAdjacentHTML('afterbegin', headerHTML);
+
+                // 기존 닫기 버튼들 숨기기
+                const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
+                closeBtns.forEach(btn => btn.style.display = 'none');
+            };
+
+            // 상품 타입에 따라 창 열기
+            if (product.is_general_product) {
+                window.openGeneralProductModal(productCode);
+                transformToFullScreen('generalProductModal', product.name);
+            } else {
+                window.showChoiceModal(productCode);
+                transformToFullScreen('choiceModal', product.name);
+            }
+
+            // 스크롤 최상단 이동
+            window.scrollTo(0, 0);
+
+        } catch (e) {
+            console.error(e);
+            alert("오류: " + e.message);
+            window.history.back(); // 실패 시 되돌아가기
+        } finally {
+            if(loading) loading.style.display = 'none';
+        }
+    };
+
+    // 2. [뒤로가기 감지] 브라우저 뒤로가기 버튼 누르면 홈으로 복귀
+    window.addEventListener('popstate', function(event) {
+        // 모든 전체화면 모달 닫기
+        const modals = ['choiceModal', 'generalProductModal'];
+        
+        modals.forEach(id => {
+            const m = document.getElementById(id);
+            if(m) {
+                m.style.display = 'none';
+                m.classList.remove('product-full-page'); // 클래스 제거
+                m.style.padding = ''; // 패딩 복구
+                m.style.background = ''; // 배경 복구
+                
+                // 내부 스타일 복구 (팝업용)
+                const box = m.querySelector('.modal-box');
+                if(box) {
+                    box.style = ''; // 인라인 스타일 초기화
+                    // 주입했던 헤더 제거
+                    const h = box.querySelector('.product-full-header');
+                    const g = box.querySelector('.product-guide-banner');
+                    if(h) h.remove();
+                    if(g) g.remove();
+                    
+                    // 숨겼던 닫기 버튼 다시 보이기
+                    const closeBtns = box.querySelectorAll('button[onclick*="none"]');
+                    closeBtns.forEach(btn => btn.style.display = '');
+                }
+            }
+        });
+
+        // 홈 화면 다시 보이기
+        const startScreen = document.getElementById('startScreen');
+        if(startScreen) startScreen.style.display = 'block';
+    });
+
+    // 3. [초기 접속] URL에 ?product=코드 있으면 바로 열기
+    setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const productCode = urlParams.get('product');
+        if (productCode) {
+            console.log("🔗 URL 접속 감지:", productCode);
+            window.loadProductDetailAndOpen(productCode);
+        }
+    }, 500);
     // [최종 안정화 버전] 상세 페이지 모달 오픈 함수
 window.showChoiceModal = async function(key) {
     window.currentProductKey = key;

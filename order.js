@@ -897,7 +897,7 @@ function renderCart() {
                                                 </div>
                                             </label>
                                             
-                                            ${isSelected ? `
+                                            ${isSelected && opt.is_swatch !== true ? `
                                             <div style="display:flex; align-items:center; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; background:#fff; height:26px;">
                                                 <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty - 1})" 
                                                         style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">-</button>

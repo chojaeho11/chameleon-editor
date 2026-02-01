@@ -470,15 +470,20 @@ window.deleteAddonDB = async (id) => {
     } catch (err) { alert("삭제 실패: " + err.message); } finally { showLoading(false); }
 };
 
-// 7. 옵션 저장/수정 실행
+// 7. 옵션 저장/수정 실행 (스와치 모드 포함)
 window.addAddonDB = async () => {
     const code = document.getElementById('newAddonCode').value;
     if(!code) return alert("코드를 입력하세요.");
+
+    // 스와치 모드 체크박스가 있다면 값 읽기 (없으면 false)
+    const isSwatchEl = document.getElementById('newAddonIsSwatch');
+    const isSwatch = isSwatchEl ? isSwatchEl.checked : false;
 
     const payload = {
         category_code: document.getElementById('newAddonCatCode').value,
         code: code,
         img_url: document.getElementById('newAddonImgUrl').value,
+        is_swatch: isSwatch, // ★ 스와치 모드 저장
         name_kr: document.getElementById('nmKR').value,
         price_kr: Math.round(parseFloat(document.getElementById('prKR').value || 0)),
         name_jp: document.getElementById('nmJP').value,
@@ -511,17 +516,121 @@ window.resetAddonForm = () => {
     if(btn) btn.innerText = "옵션 저장";
 };
 
-// 카테고리 추가 팝업
+// [신규] 옵션 카테고리 관리 모달 열기
 window.openAddonCatManager = async () => {
-    const name = prompt("새로운 옵션 분류 명칭을 입력하세요\n(예: 배송, 마감, 가공 등)");
-    if (!name) return;
-    let code = prompt(`'${name}' 분류에 사용할 영문 코드를 입력하세요`, "opt_" + Date.now().toString().slice(-4));
-    if (!code) return;
-    const { error } = await sb.from('addon_categories').insert([{ code: code.trim().toLowerCase(), name_kr: name.trim(), sort_order: 99 }]);
-    if (error) alert("오류: " + error.message);
-    else { alert("✅ 추가되었습니다."); loadAddonCategories(); }
+    // 입력창 초기화
+    document.getElementById('modalCatCode').value = "opt_" + Date.now().toString().slice(-4);
+    document.getElementById('modalCatNameKR').value = "";
+    document.getElementById('modalCatNameJP').value = "";
+    document.getElementById('modalCatNameUS').value = "";
+    
+    // 모달 표시
+    document.getElementById('addonCatModal').style.display = 'flex';
+    document.getElementById('modalCatNameKR').focus();
 };
 
+// [신규] 모달 내부 자동 번역 실행
+window.autoTranslateAddonCatModal = async () => {
+    const krName = document.getElementById('modalCatNameKR').value;
+    if(!krName) return alert("한국어 명칭을 먼저 입력해주세요.");
+
+    const btn = document.querySelector('button[onclick="autoTranslateAddonCatModal()"]');
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리중';
+    btn.disabled = true;
+
+    try {
+        // googleTranslate 함수 재사용 (이미 파일 하단에 존재함)
+        const jp = await googleTranslate(krName, 'ja');
+        const us = await googleTranslate(krName, 'en');
+        
+        document.getElementById('modalCatNameJP').value = jp;
+        document.getElementById('modalCatNameUS').value = us;
+    } catch(e) {
+        alert("번역 오류: " + e.message);
+    } finally {
+        btn.innerHTML = oldHtml;
+        btn.disabled = false;
+    }
+};
+
+// [신규] 카테고리 저장 (모달에서 호출)
+window.saveAddonCategoryFromModal = async () => {
+    const code = document.getElementById('modalCatCode').value.trim();
+    const nameKR = document.getElementById('modalCatNameKR').value.trim();
+    const nameJP = document.getElementById('modalCatNameJP').value.trim();
+    const nameUS = document.getElementById('modalCatNameUS').value.trim();
+
+    if(!code || !nameKR) return alert("코드와 한국어 명칭은 필수입니다.");
+
+    showLoading(true);
+    try {
+        // 기존에 존재하는 코드인지 확인 (중복 방지)
+        const { data: existing } = await sb.from('addon_categories').select('id').eq('code', code).single();
+        
+        const payload = {
+            code: code,
+            name_kr: nameKR,
+            name_jp: nameJP,
+            name_us: nameUS,
+            // name: nameKR, <-- 이 부분이 에러 원인이므로 삭제했습니다.
+            sort_order: 99
+        };
+        let error;
+        if(existing) {
+            // 이미 존재하면 업데이트 (코드는 그대로, 이름만)
+            const { error: upErr } = await sb.from('addon_categories').update(payload).eq('code', code);
+            error = upErr;
+        } else {
+            // 신규 추가
+            const { error: inErr } = await sb.from('addon_categories').insert([payload]);
+            error = inErr;
+        }
+
+        if(error) throw error;
+        
+        alert("✅ 카테고리가 저장되었습니다.");
+        document.getElementById('addonCatModal').style.display = 'none';
+        loadAddonCategories(); // 목록 새로고침
+
+    } catch(e) {
+        alert("저장 실패: " + e.message);
+    } finally {
+        showLoading(false);
+    }
+};
+// [신규] 선택된 카테고리 수정 모드 진입
+window.editCurrentAddonCategory = async () => {
+    const select = document.getElementById('newAddonCatCode');
+    const selectedCode = select.value;
+
+    if (!selectedCode) return alert("수정할 카테고리를 선택해주세요.");
+
+    // 캐시된 데이터에서 정보 찾기
+    const catData = window.cachedAddonCategories.find(c => c.code === selectedCode);
+    if (!catData) return alert("정보를 찾을 수 없습니다.");
+
+    // 모달에 값 채우기
+    document.getElementById('modalCatCode').value = catData.code;
+    document.getElementById('modalCatCode').disabled = true; // 코드는 수정 불가
+    
+    document.getElementById('modalCatNameKR').value = catData.name_kr || catData.name || "";
+    document.getElementById('modalCatNameJP').value = catData.name_jp || "";
+    document.getElementById('modalCatNameUS').value = catData.name_us || "";
+
+    // 모달 열기
+    document.getElementById('addonCatModal').style.display = 'flex';
+    
+    // 안내 메시지 (선택 사항)
+    // alert("기존 정보를 불러왔습니다. [자동번역]을 누르고 저장하세요.");
+};
+
+// [보완] 새 카테고리 추가 시에는 코드 입력창 활성화
+const originalOpenAddonCatManager = window.openAddonCatManager;
+window.openAddonCatManager = async () => {
+    await originalOpenAddonCatManager(); // 기존 로직 실행
+    document.getElementById('modalCatCode').disabled = false; // 코드 입력 가능하게 풀기
+};
 // 8. 초기 실행
 loadAddonCategories();
 // ==========================================

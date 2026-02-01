@@ -657,11 +657,14 @@
 
                 <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
                     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                        <div style="width:180px;">
+                        <div style="width:200px;">
     <label class="form-label">📂 카테고리 선택</label>
     <div style="display:flex; gap:5px;">
         <select id="newAddonCatCode" class="input-text" style="font-weight:bold; flex:1;"></select>
-        <button class="btn btn-outline btn-sm" onclick="openAddonCatManager()" title="새 분류 추가" style="padding: 0 10px;">
+        <button class="btn btn-outline btn-sm" onclick="editCurrentAddonCategory()" title="선택한 분류 번역/수정" style="padding: 0 8px; color:#6366f1; border-color:#6366f1;">
+            <i class="fa-solid fa-pen"></i>
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="openAddonCatManager()" title="새 분류 추가" style="padding: 0 8px;">
             <i class="fa-solid fa-plus"></i>
         </button>
     </div>
@@ -684,9 +687,17 @@
                         <div style="flex:1;"><label class="form-label">🇰🇷 명칭/가격</label><input id="nmKR" class="input-text"><input id="prKR" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
                         <div style="flex:1;"><label class="form-label">🇯🇵 명칭/가격</label><input id="nmJP" class="input-text"><input id="prJP" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
                         <div style="flex:1;"><label class="form-label">🇺🇸 명칭/가격</label><input id="nmUS" class="input-text"><input id="prUS" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
-                        <div style="display:flex; align-items:flex-end;">
-                            <button class="btn btn-primary" onclick="addAddonDB()" style="height:70px; width:100px; font-weight:800;">옵션 저장</button>
-                        </div>
+
+<div style="display:flex; flex-direction:column; justify-content:center; height:70px; margin-left:10px;">
+    <label style="cursor:pointer; display:flex; align-items:center; gap:5px; font-weight:bold; color:#e11d48; font-size:12px;">
+        <input type="checkbox" id="newAddonIsSwatch" style="width:18px; height:18px;">
+        <span>🎨 스와치 모드</span>
+    </label>
+    <div style="font-size:10px; color:#999; margin-top:2px;">(이미지만 표시)</div>
+</div>
+<div style="display:flex; align-items:flex-end;">
+    <button class="btn btn-primary" onclick="addAddonDB()" style="height:70px; width:100px; font-weight:800;">옵션 저장</button>
+</div>
                     </div>
                 </div>
 
@@ -988,6 +999,47 @@
     </div>
 
     <script type="module" src="global_admin.js"></script>
+
+<div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
+    <div class="modal-box" style="width:500px;">
+        <div class="modal-header">
+            <span>📂 옵션 분류(카테고리) 관리</span>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('addonCatModal').style.display='none'">✕</button>
+        </div>
+        
+        <div style="background:#f0f9ff; padding:15px; border-radius:8px; border:1px solid #bae6fd; margin-bottom:15px;">
+            <div style="margin-bottom:10px;">
+                <label class="form-label">고유 코드 (영문)</label>
+                <input id="modalCatCode" class="input-text" placeholder="예: frame_color (수정불가)" style="background:#fff;">
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
+                <label class="form-label" style="margin:0;">분류 명칭 (다국어)</label>
+                <button class="btn btn-vip btn-sm" onclick="autoTranslateAddonCatModal()">
+                    <i class="fa-solid fa-language"></i> 자동번역
+                </button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="width:30px;">🇰🇷</span>
+                    <input id="modalCatNameKR" class="input-text" placeholder="한국어 명칭 (예: 프레임 색상)">
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="width:30px;">🇯🇵</span>
+                    <input id="modalCatNameJP" class="input-text" placeholder="일본어 명칭">
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="width:30px;">🇺🇸</span>
+                    <input id="modalCatNameUS" class="input-text" placeholder="영어 명칭">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%; height:45px; font-size:16px;" onclick="saveAddonCategoryFromModal()">저장하기</button>
+        
+    </div>
+</div>
 
 </body>
 </html>
