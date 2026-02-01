@@ -3357,7 +3357,7 @@ window.confirmChoice = function(mode) {
     // [3] 최종 HTML 출력
     modalBox.innerHTML = `
         <div class="choice-layout" style="display:flex; flex-direction:${window.innerWidth <= 768 ? 'column' : 'row'}; height:90vh; overflow:hidden;">
-            <button onclick="document.getElementById('choiceModal').style.display='none'" 
+            <button onclick="window.location.href = window.location.pathname" 
                 style="position:absolute; top:20px; right:20px; width:45px; height:45px; background:#FFEB3B; border:3px solid #fff; border-radius:50%; z-index:10001; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
                 <i class="fa-solid fa-xmark" style="font-size:20px; color:#333;"></i>
             </button>
