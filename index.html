@@ -3266,15 +3266,14 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         }
     }, 500);
     // [최종 안정화 버전] 상세 페이지 모달 오픈 함수
-// [최종 수정] 상세페이지 모달 (상품명, 설명, 옵션, 가격 - 언어별/컬럼별 완벽 대응)
+// [수정 2] 상세페이지 모달 (DB 공통정보 연동 + 애니메이션 강제 실행)
+// [최종 복구] 상세페이지 모달 (DB 연동 복구 + 디자인/기능 개선 유지)
 window.showChoiceModal = async function(key) {
     console.clear();
-    console.log("🛠️ [Debug] 모달 열기 시작. 상품키:", key);
+    console.log("🛠️ [Debug] 모달 열기. 상품키:", key);
 
-    // 1. 상품 정보 가져오기 (DB 조회 강화)
+    // 1. 상품 정보 가져오기
     let product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
-    
-    // 상세 정보가 없으면 DB에서 다시 조회
     if (!product || !product.description) {
         const { data, error } = await sb.from('admin_products').select('*').eq('code', key).single();
         if (error || !data) return alert("상품 정보를 찾을 수 없습니다.");
@@ -3282,12 +3281,11 @@ window.showChoiceModal = async function(key) {
         if(!window.PRODUCT_DB) window.PRODUCT_DB = {};
         window.PRODUCT_DB[key] = product;
     }
-
     window.selectedProductForChoice = product;
     const modal = document.getElementById('choiceModal');
     const modalBox = modal.querySelector('.modal-box');
     
-    // 2. 언어 설정 감지 (주소창 > 도메인 순)
+    // 2. 언어 설정
     const urlParams = new URLSearchParams(window.location.search);
     let lang = urlParams.get('lang');
     if (!lang) {
@@ -3295,32 +3293,40 @@ window.showChoiceModal = async function(key) {
         else if (window.location.hostname.includes('cafe3355.com')) lang = 'en';
         else lang = 'kr';
     }
-    console.log("🌍 언어 모드:", lang);
 
-    // 3. 상품명 & 설명 번역 (안전 장치 적용)
-    // 기본값: name_kr이 있으면 쓰고, 없으면 name 사용
+    // 3. 상품명 & 설명
     let dName = product.name_kr || product.name || "상품명 없음";
     let dDesc = product.description_kr || product.description || "";
-    let dPrice = product.price; // 기본 가격
-
-    // 일본어 모드 (데이터가 있을 때만 덮어쓰기)
+    let dPrice = product.price;
     if (lang === 'ja') {
-        if (product.name_jp && product.name_jp.trim()) dName = product.name_jp;
-        if (product.description_jp && product.description_jp.trim()) dDesc = product.description_jp;
-        if (product.price_jp && product.price_jp > 0) dPrice = product.price_jp;
-    } 
-    // 영어 모드
-    else if (lang === 'en') {
-        if (product.name_us && product.name_us.trim()) dName = product.name_us;
-        if (product.description_us && product.description_us.trim()) dDesc = product.description_us;
-        if (product.price_us && product.price_us > 0) dPrice = product.price_us;
+        if (product.name_jp) dName = product.name_jp;
+        if (product.description_jp) dDesc = product.description_jp;
+        if (product.price_jp) dPrice = product.price_jp;
+    } else if (lang === 'en') {
+        if (product.name_us) dName = product.name_us;
+        if (product.description_us) dDesc = product.description_us;
+        if (product.price_us) dPrice = product.price_us;
     }
-
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
-    // 4. 옵션(Add-on) 목록 생성 (컬럼명 _kr 대응 추가)
-    let optionsHtml = '<div id="addonCategoryArea" style="margin-top:15px; display:flex; flex-direction:column; gap:12px;">';
+    // ★★★ [DB 연동 복구] 공통 정보 가져오기 ★★★
+    // 아까 강제로 넣었던 긴 코드는 삭제하고, 관리자 페이지에서 저장한 내용을 불러옵니다.
+    let commonInfoHtml = "";
+    try {
+        const { data: commonData } = await sb.from('common_info')
+            .select('content')
+            .eq('section', 'top')
+            .single();
+        if (commonData && commonData.content) {
+            commonInfoHtml = `<div class="common-info-area" style="margin-bottom:40px;">${commonData.content}</div>`;
+        }
+    } catch (err) {
+        console.warn("공통 정보 로드 실패:", err);
+    }
+
+    // 4. 옵션(Add-on) 생성
+    let optionsHtml = '<div id="addonCategoryArea" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;">';
     const addonCodes = Array.isArray(product.addons) ? product.addons : (product.addons ? product.addons.split(',') : []);
     
     if (addonCodes.length > 0) {
@@ -3331,118 +3337,133 @@ window.showChoiceModal = async function(key) {
             addonCats.forEach(cat => {
                 const catAddons = addons.filter(a => a.category_code === cat.code);
                 if (catAddons.length > 0) {
-                    
-                    // [수정] 카테고리명 번역 (name_kr 우선 확인)
-                    let catName = cat.name_kr || cat.name || '옵션';
+                    let catName = cat.name_kr || cat.name;
                     if (lang === 'ja' && cat.name_jp) catName = cat.name_jp;
                     if (lang === 'en' && cat.name_us) catName = cat.name_us;
 
+                    const isColorCategory = (cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color'));
+
                     optionsHtml += `
-                        <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.02); margin-bottom:10px;">
-                            <div style="font-weight:800; font-size:13px; color:#1e1b4b; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                        <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                            <div style="font-weight:800; font-size:14px; color:#1e1b4b; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
                                 <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${catName}
-                            </div>
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                ${catAddons.map(a => {
-                                    // [핵심 수정] 옵션명 & 가격 (_kr 컬럼 대응)
-                                    let optName = a.name_kr || a.name || '옵션명 없음';
-                                    let basePrice = a.price_kr || a.price || 0;
-                                    
-                                    // 번역 적용
-                                    let finalPrice = basePrice;
-                                    let priceStr = `+${basePrice.toLocaleString()}원`;
+                            </div>`;
 
-                                    if (lang === 'ja') {
-                                        if (a.name_jp) optName = a.name_jp;
-                                        if (a.price_jp) {
-                                            finalPrice = a.price_jp;
-                                            priceStr = `+¥${finalPrice.toLocaleString()}`;
-                                        }
-                                    } else if (lang === 'en') {
-                                        if (a.name_us) optName = a.name_us;
-                                        if (a.price_us) {
-                                            finalPrice = a.price_us;
-                                            priceStr = `+$${finalPrice.toLocaleString()}`;
-                                        }
-                                    }
+                    if (isColorCategory) {
+                        // 컬러: 5열 그리드 + 이름 삭제
+                        optionsHtml += `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px;">`;
+                        catAddons.forEach(a => {
+                            let basePrice = a.price_kr || a.price || 0;
+                            if (lang === 'ja' && a.price_jp) basePrice = a.price_jp;
+                            else if (lang === 'en' && a.price_us) basePrice = a.price_us;
+                            const imgUrl = a.img_url || 'https://placehold.co/60/eeeeee/cccccc?text=+';
 
-                                    return `
-                                    <div class="addon-item-row" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:10px; background:#fff; margin-bottom:6px;">
-                                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;">
-                                            <input type="checkbox" name="userOption" value="${a.code}" data-price="${finalPrice}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal(); this.closest('.addon-item-row').querySelector('.addon-qty-box').style.display = this.checked ? 'flex' : 'none';">
-                                            <img src="${a.img_url || 'https://placehold.co/40'}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #eee;" onerror="this.src='https://placehold.co/40?text=No+Img'">
-                                            <div style="display:flex; flex-direction:column;">
-                                                <span style="font-size:13px; font-weight:600; color:#334155;">${optName}</span>
-                                                <span style="font-size:12px; color:#6366f1; font-weight:bold;">${priceStr}</span>
-                                            </div>
-                                        </label>
-                                        
-                                        <div class="addon-qty-box" style="display:none; align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden; height:28px; background:#fff;">
-                                            <button onclick="const inp=this.nextElementSibling; inp.value=Math.max(1, parseInt(inp.value)-1); window.updateModalTotal();" style="border:none; background:#f8fafc; width:24px; height:100%; cursor:pointer;">-</button>
-                                            <input type="number" class="addon-qty-input" data-code="${a.code}" value="1" min="1" oninput="window.updateModalTotal()" style="width:40px; height:100%; text-align:center; border:none; font-size:12px; font-weight:bold; outline:none;">
-                                            <button onclick="const inp=this.previousElementSibling; inp.value=parseInt(inp.value)+1; window.updateModalTotal();" style="border:none; background:#f8fafc; width:24px; height:100%; cursor:pointer;">+</button>
-                                        </div>
+                            optionsHtml += `
+                                <label class="color-btn-item" style="cursor:pointer; position:relative;" title="${a.name}">
+                                    <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" 
+                                           style="position:absolute; opacity:0; width:0; height:0;" 
+                                           onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">
+                                    <div class="color-btn-box" style="border:1px solid #e2e8f0; border-radius:8px; padding:8px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; height:100%; background-color:#fff;">
+                                        <img src="${imgUrl}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid #eee;">
+                                        ${basePrice > 0 ? `<span style="font-size:10px; color:#6366f1; margin-top:4px; font-weight:bold;">+${basePrice.toLocaleString()}</span>` : ''}
                                     </div>
-                                `}).join('')}
-                            </div>
-                        </div>`;
+                                </label>`;
+                        });
+                        optionsHtml += `</div><style>.color-btn-item.selected .color-btn-box { border:2px solid #6366f1; background:#eff6ff; box-shadow:0 0 0 1px #6366f1; }</style>`;
+                    } else {
+                        // 일반 옵션: 리스트형 + 썸네일 + data-category (배송비 구분용)
+                        optionsHtml += `<div style="display:flex; flex-direction:column; gap:8px;">`;
+                        catAddons.forEach(a => {
+                            let optName = a.name_kr || a.name;
+                            let basePrice = a.price_kr || a.price || 0;
+                            let priceStr = `+${basePrice.toLocaleString()}원`;
+                            if (lang === 'ja') { if (a.name_jp) optName = a.name_jp; if (a.price_jp) { basePrice = a.price_jp; priceStr = `+¥${basePrice.toLocaleString()}`; } }
+                            else if (lang === 'en') { if (a.name_us) optName = a.name_us; if (a.price_us) { basePrice = a.price_us; priceStr = `+$${basePrice.toLocaleString()}`; } }
+                            const imgUrl = a.img_url || 'https://placehold.co/40?text=IMG';
+
+                            optionsHtml += `
+                            <div class="addon-item-row" style="display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid #f1f5f9; background:#fff; border-radius:8px;">
+                                <label style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;">
+                                    <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-category="${catName}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal(); this.closest('.addon-item-row').querySelector('.addon-qty-box').style.display = this.checked ? 'flex' : 'none';">
+                                    <img src="${imgUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
+                                    <div style="display:flex; flex-direction:column;">
+                                        <span style="font-size:13px; font-weight:600; color:#333;">${optName}</span>
+                                        <span style="font-size:12px; color:#6366f1; font-weight:bold;">${priceStr}</span>
+                                    </div>
+                                </label>
+                                <div class="addon-qty-box" style="display:none; align-items:center; border:1px solid #ddd; height:30px; border-radius:4px; overflow:hidden;">
+                                    <button onclick="const inp=this.nextElementSibling; inp.value=Math.max(1, parseInt(inp.value)-1); window.updateModalTotal();" style="border:none; width:26px; height:100%; cursor:pointer;">-</button>
+                                    <input type="number" class="addon-qty-input" value="1" min="1" oninput="window.updateModalTotal()" style="width:36px; text-align:center; border:none; font-weight:bold; font-size:12px; outline:none;">
+                                    <button onclick="const inp=this.previousElementSibling; inp.value=parseInt(inp.value)+1; window.updateModalTotal();" style="border:none; width:26px; height:100%; cursor:pointer;">+</button>
+                                </div>
+                            </div>`;
+                        });
+                        optionsHtml += `</div>`;
+                    }
+                    optionsHtml += `</div>`;
                 }
             });
         }
     }
     optionsHtml += '</div>';
 
-    // [5] 가격 포맷
+    // 5. 우측 UI (기존 유지)
     const formatPriceSimple = (p) => {
         if(lang === 'ja') return `¥${p.toLocaleString()}`;
         if(lang === 'en') return `$${p.toLocaleString()}`;
         return `${p.toLocaleString()}원`;
     };
 
-    let rightSideUI = isCustom ? `
-        <div id="customSizePanel" style="display:flex; flex-direction:column; gap:12px; background:#fff; padding:20px; border-radius:15px; border:2px solid #6366f1; margin-bottom:15px;">
-            <h3 style="margin:0; font-size:16px; text-align:center; color:#1e1b4b;">📏 ${lang=='kr'?'사이즈 입력':'Size Input'}</h3>
-            <div style="display:flex; gap:8px;">
-                <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W (mm)" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
-                <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H (mm)" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
+    let productHeaderHtml = `
+        <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
+            <img src="${product.img || product.img_url}" style="width:100%; max-height:180px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
+            <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
+    `;
+
+    let rightSideUI = "";
+    if (isCustom) {
+        rightSideUI = productHeaderHtml + `
+            <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang=='kr'?'사이즈 입력 (mm)':'Enter Size (mm)'}</div>
+                <div style="display:flex; gap:5px;">
+                    <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
+                    <span style="display:flex; align-items:center; color:#999;">x</span>
+                    <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
+                </div>
             </div>
-            <div style="font-size:12px; color:#666; font-weight:bold;">${lang=='kr'?'수량':'Quantity'}</div>
-            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden; height:45px;">
+            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang=='kr'?'수량':'Quantity'}</div>
+            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
-                <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:16px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
+                <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
-            <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center;">
-                <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0</div>
-                <div id="calcResultSize" style="font-size:11px; opacity:0.7;">-</div>
+            <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center; margin-top:15px;">
+                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">예상 견적가</div>
+                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">0원</div>
+                <div id="calcResultSize" style="font-size:11px; opacity:0.7; margin-top:2px;">-</div>
             </div>
-        </div>
-    ` : `
-        <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
-            <img src="${product.img || product.img_url}" style="width:100%; max-height:180px; object-fit:contain; border-radius:10px; margin-bottom:10px;">
-            <div style="font-size:20px; font-weight:900; color:#1e293b; margin-bottom:15px;">
-                ${formatPriceSimple(dPrice)}
-            </div>
-            
-            <div style="font-size:12px; color:#64748b; margin-bottom:8px; text-align:left; font-weight:bold;">${lang=='kr'?'수량':'Quantity'}</div>
-            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden; height:40px; margin-bottom:10px;">
+        </div>`;
+    } else {
+        rightSideUI = productHeaderHtml + `
+            <div style="font-size:20px; font-weight:900; color:#1e293b; margin-bottom:15px;">${formatPriceSimple(dPrice)}</div>
+            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px;">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="fixedProdQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
-            <div style="font-size:11px; color:#94a3b8;">${product.width_mm || 0} x ${product.height_mm || 0} mm</div>
-        </div>
-    `;
+        </div>`;
+    }
 
+    // 6. 모달 조립
     modalBox.innerHTML = `
         <div class="choice-layout" style="display:flex; flex-direction:${window.innerWidth <= 768 ? 'column' : 'row'}; height:90vh; overflow:hidden;">
-            <button onclick="window.location.href = window.location.pathname" 
-                style="position:absolute; top:20px; right:20px; width:45px; height:45px; background:#FFEB3B; border:3px solid #fff; border-radius:50%; z-index:10001; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
+            <button onclick="window.location.href = window.location.pathname" style="position:absolute; top:20px; right:20px; width:45px; height:45px; background:#FFEB3B; border-radius:50%; z-index:10001; cursor:pointer; display:flex; align-items:center; justify-content:center; border:3px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
                 <i class="fa-solid fa-xmark" style="font-size:20px; color:#333;"></i>
             </button>
 
             <div class="choice-left-content" style="flex:1; overflow-y:auto; padding:40px; background:#fff; text-align:left;">
                 <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
+                ${commonInfoHtml}
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
                     ${dDesc}
                 </div>
@@ -3452,12 +3473,12 @@ window.showChoiceModal = async function(key) {
                 ${rightSideUI}
                 ${optionsHtml}
                 <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:20px; text-align:right;">
-                    <div style="font-size:12px; color:#64748b; margin-bottom:5px;">Total</div>
+                    <div style="font-size:12px; color:#64748b;">Total</div>
                     <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">0</div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
-                    <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px; font-weight:800;">🎨 Design Editor</button>
-                    <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; background:#4ccc02; color:white; border:none; font-size:16px; font-weight:800;">🛒 Add to Cart</button>
+                    <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 Design Editor</button>
+                    <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; background:#4ccc02; color:white;">🛒 Add to Cart</button>
                 </div>
             </div>
         </div>
@@ -3465,37 +3486,84 @@ window.showChoiceModal = async function(key) {
 
     modal.style.display = 'flex';
     
-    // 미디어(영상) 자동재생
+    // ★★★ [핵심] 애니메이션(AOS) 강제 재실행 (블랙스크린 방지) ★★★
     setTimeout(() => {
-        const renderArea = modalBox.querySelector('.product-detail-render');
-        if (!renderArea) return;
-        renderArea.querySelectorAll('video').forEach(v => {
+        // 비디오 자동 재생
+        modalBox.querySelectorAll('video').forEach(v => {
             v.style.width = '100%'; v.muted = true; v.autoplay = true; v.loop = true; v.setAttribute('playsinline', 'true');
             v.play().catch(() => {});
         });
+
+        // 팝업 안의 AOS 요소들을 찾아서 강제로 '나타난 상태'로 만듦
+        if (window.AOS) {
+            const aosElements = modalBox.querySelectorAll('[data-aos]');
+            aosElements.forEach(el => {
+                el.classList.add('aos-animate'); // 애니메이션 클래스 강제 주입
+                el.style.opacity = '1';          // 투명도 복구
+                el.style.transform = 'none';     // 위치 복구
+            });
+        }
     }, 400);
 
     window.updateModalTotal(); 
 };
 // 실시간 합계 업데이트 함수
+// [수정 1] 금액 계산 함수 (단품/옵션 모두 수량 곱하기 적용)
+// [최종 수정] 금액 계산 함수 (상품과 옵션 수량 완전 분리)
 window.updateModalTotal = function() {
     const product = window.selectedProductForChoice;
     if(!product) return;
 
-    let basePrice = product.price;
-    const calcPriceEl = document.getElementById('calcResultPrice');
-    // 커스텀(헤베) 상품이면 계산된 금액을 기본가로 사용
-    if(calcPriceEl && window.isCustomModeCurrent) {
-        basePrice = parseInt(calcPriceEl.innerText.replace(/[^0-9]/g, '')) || 0;
+    // 1. [상품] 수량 및 가격 계산
+    const prodQtyInput = document.getElementById('fixedProdQty') || document.getElementById('inputCustQty');
+    const prodQty = prodQtyInput ? (parseInt(prodQtyInput.value) || 1) : 1;
+    
+    let productTotal = 0;
+
+    if (window.isCustomModeCurrent) {
+        // 커스텀: 이미 계산된(수량 포함된) 가격 가져오기
+        const calcPriceEl = document.getElementById('calcResultPrice');
+        productTotal = parseInt(calcPriceEl.innerText.replace(/[^0-9]/g, '')) || 0;
+    } else {
+        // 일반: (국가별 단가) * (상품 수량)
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang && window.location.hostname.includes('cafe0101.com')) lang = 'ja';
+        else if (!lang && window.location.hostname.includes('cafe3355.com')) lang = 'en';
+
+        let unitPrice = product.price;
+        if (lang === 'ja' && product.price_jp) unitPrice = product.price_jp;
+        else if (lang === 'en' && product.price_us) unitPrice = product.price_us;
+
+        productTotal = unitPrice * prodQty; 
     }
 
+    // 2. [옵션] 수량 및 가격 계산 (상품 수량과 무관하게 독립 계산)
     let optionTotal = 0;
-    document.querySelectorAll('input[name="userOption"]:checked').forEach(input => {
-        optionTotal += parseInt(input.dataset.price || 0);
+    
+    document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
+        let price = parseInt(chk.dataset.price || 0);
+        
+        // 해당 옵션 줄(row)에서 수량 입력칸 찾기
+        // (리스트형 옵션은 .addon-qty-input이 있고, 버튼형은 보통 1개로 침)
+        const row = chk.closest('.addon-item-row') || chk.closest('.color-btn-item');
+        let optQty = 1; // 기본 1개
+
+        if(row) {
+            const qtyInput = row.querySelector('.addon-qty-input');
+            if(qtyInput) {
+                optQty = parseInt(qtyInput.value || 1);
+            }
+        }
+
+        // ★ 핵심: (옵션단가 * 옵션수량)만 더함. 상품수량은 곱하지 않음.
+        optionTotal += (price * optQty);
     });
 
-    const finalTotal = basePrice + optionTotal;
+    // 3. 최종 합산
+    const finalTotal = productTotal + optionTotal;
     const display = document.getElementById('modalRealtimeTotal');
+    
     if(display) display.innerText = finalTotal.toLocaleString() + '원';
 };
 

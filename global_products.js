@@ -1362,3 +1362,33 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
         area.appendChild(itemLabel);
     });
 };
+// [긴급 복구] 모든 상품의 '에디터 없이 장바구니' 체크 해제 함수
+window.resetAllGeneralProducts = async () => {
+    if (!confirm("⚠️ 정말로 모든 상품의 [에디터 없이 장바구니] 설정을 해제하시겠습니까?\n\n모든 상품이 다시 '디자인 에디터' 모드로 작동하게 됩니다.")) return;
+
+    // 로딩 표시
+    const btn = document.getElementById('btnEmergencyReset');
+    const originalText = btn ? btn.innerText : '';
+    if(btn) btn.innerText = "처리 중...";
+
+    try {
+        // DB 업데이트: is_general_product가 true인 것들을 모두 false로 변경
+        const { error } = await sb
+            .from('admin_products')
+            .update({ is_general_product: false })
+            .eq('is_general_product', true);
+
+        if (error) throw error;
+
+        alert("✅ 완료되었습니다! 모든 상품이 정상적으로 복구되었습니다.");
+        
+        // 목록 새로고침
+        if (window.filterProductList) window.filterProductList();
+
+    } catch (e) {
+        console.error(e);
+        alert("오류 발생: " + e.message);
+    } finally {
+        if(btn) btn.innerText = originalText;
+    }
+};
