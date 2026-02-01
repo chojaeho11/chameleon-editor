@@ -806,6 +806,9 @@ async function addFileToCart(e) {
 // ============================================================
 // [5] 장바구니 렌더링
 // ============================================================
+// ============================================================
+// [5] 장바구니 렌더링 (수정됨)
+// ============================================================
 function renderCart() {
     const listArea = document.getElementById("cartListArea"); 
     if(!listArea) return;
@@ -817,6 +820,7 @@ function renderCart() {
         listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">${window.t('msg_cart_empty')}</div>`; 
         updateSummary(0, 0, 0); return; 
     }
+
     cartData.forEach((item, idx) => {
         if (!item.product) return;
 
@@ -824,24 +828,10 @@ function renderCart() {
         if (item.isOpen === undefined) item.isOpen = true; 
         if (!item.selectedAddons) item.selectedAddons = {};
         
-        let matOpts = []; let finOpts = []; let addOpts = [];
-        if (item.product.addons) {
-             const arr = Array.isArray(item.product.addons) ? item.product.addons : item.product.addons.split(',');
-             arr.forEach(c => {
-                 const code = c.trim(); 
-                 const info = ADDON_DB[code];
-                 if(info) {
-                     const cat = (info.category||'').toLowerCase();
-                     if(cat==='material') matOpts.push({code,...info});
-                     else if(cat==='finish') finOpts.push({code,...info});
-                     else addOpts.push({code,...info});
-                 }
-             });
-        }
-
         let baseProductTotal = (item.product.price || 0) * item.qty;
         let optionTotal = 0;
         
+        // 옵션 가격 계산
         Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) {
@@ -858,7 +848,7 @@ function renderCart() {
         const div = document.createElement("div"); 
         div.className = "cart-item"; 
         
-        // [중요] 화면 너비에 따라 레이아웃 구조를 동적으로 결정
+        // 화면 너비에 따라 레이아웃 결정 (768px 이하 모바일)
         const isMobile = window.innerWidth <= 768;
         
         div.style.cssText = `
@@ -867,70 +857,73 @@ function renderCart() {
             flex-direction: ${isMobile ? 'column' : 'row'};
         `;
 
-        // [옵션 생성 로직] 작고 콤팩트한 디자인
-        // [수정된 옵션 생성 로직] 수량 선택 및 키보드 입력 기능 추가
-// [수정된 옵션 생성 로직] 체크 시 이름 옆에 바로 수량 조절기가 나타나도록 개선
-// [수정된 옵션 생성 로직] 이름 옆 우측 끝에 수량 조절기 배치
+        // [옵션 HTML 생성]
         let addonHtml = '';
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
             const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
             const categories = [...new Set(allAddons.map(a => a.category_code || '옵션'))];
 
-            categories.forEach(cat => {
-                const catAddons = allAddons.filter(a => (a.category_code || '옵션') === cat);
-                addonHtml += `
-                    <div style="margin-bottom:12px;">
-                        <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${cat.toUpperCase()}</div>
-                        <div style="display:flex; flex-direction:column; gap:6px;">
-                            ${catAddons.map(opt => {
-                                const isSelected = Object.values(item.selectedAddons).includes(opt.code);
-                                const currentAddonQty = (item.addonQuantities && item.addonQuantities[opt.code]) || 1;
-                                return `
-                                    <div style="display:flex; flex-direction:column; padding:8px; border-radius:10px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; transition:0.2s; margin-bottom:6px;">
-                                        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
-                                                <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:16px; height:16px; accent-color:#6366f1;">
-                                                <div style="display:flex; flex-direction:column;">
-                                                    <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.name_kr || opt.name}</span>
-                                                    <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
+            if(categories.length > 0 && allAddons.length > 0) {
+                categories.forEach(cat => {
+                    const catAddons = allAddons.filter(a => (a.category_code || '옵션') === cat);
+                    addonHtml += `
+                        <div style="margin-bottom:12px;">
+                            <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${cat.toUpperCase()}</div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                ${catAddons.map(opt => {
+                                    const isSelected = Object.values(item.selectedAddons).includes(opt.code);
+                                    const currentAddonQty = (item.addonQuantities && item.addonQuantities[opt.code]) || 1;
+                                    return `
+                                        <div style="display:flex; flex-direction:column; padding:8px; border-radius:10px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; transition:0.2s; margin-bottom:6px;">
+                                            <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+                                                    <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:16px; height:16px; accent-color:#6366f1;">
+                                                    <div style="display:flex; flex-direction:column;">
+                                                        <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.name_kr || opt.name}</span>
+                                                        <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
+                                                    </div>
+                                                </label>
+                                                
+                                                ${isSelected && opt.is_swatch !== true ? `
+                                                <div style="display:flex; align-items:center; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; background:#fff; height:26px;">
+                                                    <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty - 1})" 
+                                                            style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">-</button>
+                                                    <input type="number" 
+                                                           value="${currentAddonQty}" 
+                                                           onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)"
+                                                           style="width:34px; height:100%; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-size:11px; font-weight:bold; outline:none; -webkit-appearance:none; margin:0;">
+                                                    <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty + 1})" 
+                                                            style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">+</button>
                                                 </div>
-                                            </label>
-                                            
-                                            ${isSelected && opt.is_swatch !== true ? `
-                                            <div style="display:flex; align-items:center; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; background:#fff; height:26px;">
-                                                <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty - 1})" 
-                                                        style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">-</button>
-                                                <input type="number" 
-                                                       value="${currentAddonQty}" 
-                                                       onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)"
-                                                       style="width:34px; height:100%; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-size:11px; font-weight:bold; outline:none; -webkit-appearance:none; margin:0;">
-                                                <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty + 1})" 
-                                                        style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">+</button>
+                                                ` : ''}
                                             </div>
-                                            ` : ''}
                                         </div>
-                                    </div>
-                                `;
-                            }).join('')}
+                                    `;
+                                }).join('')}
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
         }
 
-        // [최종 레이아웃 주입]
+        // [HTML 주입]
         if (!isMobile) {
-            // PC 레이아웃: 정보 좌측 / 옵션 영역 우측 끝으로 이동
+            // [PC 레이아웃]
+            // 수정 포인트 1: 우측 영역(가격/삭제)에 margin-left: auto를 주어 강제로 우측 끝에 붙임
+            // 수정 포인트 2: 옵션이 없으면 옵션 박스를 아예 그리지 않음 (빈 공간 제거)
             div.innerHTML = `
                 <div style="display:flex; width:100%; padding:20px; gap:30px; align-items:flex-start;">
                     <div style="width:100px; height:100px; background:#f8fafc; border:1px solid #eee; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
                         <img src="${item.thumb}" style="width:100%; height:100%; object-fit:contain;">
                     </div>
 
-                    <div style="flex:1; min-width:300px;">
+                    <div style="flex:1; min-width:200px;">
                         <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${item.product.name}</h4>
-                        <div style="font-size:13px; color:#64748b; margin-top:5px;">단가: ${formatCurrency(item.product.price)}</div>
+                        <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : '(파일 별도 첨부)'}</div>
+                        <div style="font-size:12px; color:#94a3b8; margin-top:5px;">단가: ${formatCurrency(item.product.price)}</div>
+                        
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
                             <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
                                 <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">-</button>
@@ -941,13 +934,14 @@ function renderCart() {
                         </div>
                     </div>
 
+                    ${addonHtml ? `
                     <div style="width:320px; max-height:220px; overflow-y:auto; background:#f8fafc; border:1px solid #f1f5f9; border-radius:12px; padding:15px; flex-shrink:0;">
                         <div style="font-size:12px; font-weight:800; color:#334155; margin-bottom:10px;"><i class="fa-solid fa-circle-plus"></i> 추가 구성 상품</div>
-                        ${addonHtml || '<div style="font-size:11px; color:#94a3b8; text-align:center;">연결된 옵션 없음</div>'}
-                    </div>
+                        ${addonHtml}
+                    </div>` : ''}
 
-                    <div style="width:160px; text-align:right; display:flex; flex-direction:column; justify-content:space-between; align-self:stretch; flex-shrink:0;">
-                        <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#cbd5e1; cursor:pointer; align-self:flex-end;"><i class="fa-solid fa-trash-can"></i></button>
+                    <div style="width:160px; margin-left:auto; text-align:right; display:flex; flex-direction:column; justify-content:space-between; align-self:stretch; flex-shrink:0;">
+                        <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#cbd5e1; cursor:pointer; align-self:flex-end; font-size:18px;"><i class="fa-solid fa-trash-can"></i></button>
                         <div>
                             <div style="font-size:11px; color:#6366f1; font-weight:bold; margin-bottom:3px;">옵션포함 총액</div>
                             <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${formatCurrency(totalItemPrice)}</div>
@@ -956,7 +950,8 @@ function renderCart() {
                 </div>
             `;
         } else {
-            // 모바일 레이아웃: 상품 요약 아래로 옵션 영역을 배치
+            // [모바일 레이아웃]
+            // 옵션 영역을 상단 정보(이미지,이름) 아래쪽(div 순서상 뒤)에 배치하여 아래로 내려가게 함
             div.innerHTML = `
                 <div style="padding:15px; display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:center;">
@@ -968,14 +963,15 @@ function renderCart() {
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                     
+                    ${addonHtml ? `
                     <div style="background:#f1f5f9; border-radius:12px; padding:12px;">
                         <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:5px;">
                             <i class="fa-solid fa-circle-plus" style="color:#6366f1;"></i> 선택된 옵션 관리
                         </div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
-                            ${addonHtml || '<div style="font-size:12px; color:#94a3b8; text-align:center;">연결된 옵션이 없습니다.</div>'}
+                            ${addonHtml}
                         </div>
-                    </div>
+                    </div>` : ''}
 
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0;">
                         <span style="font-size:13px; font-weight:bold; color:#475569;">주문 수량</span>
@@ -989,52 +985,12 @@ function renderCart() {
             `;
         }
 
-        div.innerHTML = `
-            <div class="cart-top-row" style="display:flex; padding:20px; gap:20px;">
-                <div style="width:100px; height:100px; background:#f8fafc; border:1px solid #eee; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
-                    <img src="${item.thumb}" style="width:100%; height:100%; object-fit:contain;">
-                </div>
-
-                <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                    <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900;">${item.product.name}</h4>
-                    <div style="font-size:13px; color:#64748b; margin-top:4px;">(${item.fileName || '파일 별도 첨부'})</div>
-                    <div style="font-size:12px; color:#94a3b8; margin-top:8px;">본품 단가: ${formatCurrency(item.product.price)}</div>
-                </div>
-
-                <div style="width:320px; max-height:220px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:15px; padding:15px; flex-shrink:0;">
-                    <div style="font-size:13px; font-weight:800; color:#1e1b4b; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-                        <i class="fa-solid fa-circle-plus" style="color:#6366f1;"></i> 추가 상품
-                        <span style="font-size:10px; font-weight:normal; color:#94a3b8; margin-left:auto;">선택/추가</span>
-                    </div>
-                    ${addonHtml || '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:20px;">선택 가능한 옵션이 없습니다.</div>'}
-                </div>
-
-                <div style="width:200px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; flex-shrink:0;">
-                    <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#cbd5e1; font-size:18px; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'" title="삭제">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                    
-                    <div style="text-align:right; margin-bottom: 12px;">
-                        <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">옵션포함 합계</div>
-                        <div style="font-size:24px; font-weight:900; color:#1e1b4b;">${formatCurrency(totalItemPrice)}</div>
-                    </div>
-
-                    <div style="display:flex; align-items:center; gap:10px; background:#f1f5f9; padding:8px 12px; border-radius:12px; width:100%; justify-content:space-between;">
-                        <span style="font-size:12px; font-weight:bold; color:#475569;">본품 수량</span>
-                        <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden;">
-                            <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:5px 12px; font-weight:bold; cursor:pointer;">-</button>
-                            <input type="number" value="${item.qty}" readonly style="width:35px; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-weight:bold; font-size:15px;">
-                            <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, 1)" style="border:none; background:none; padding:5px 12px; font-weight:bold; cursor:pointer;">+</button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+        // [중요] 기존에 이곳에 있던 중복된 div.innerHTML = ... 코드를 삭제하여 위에서 설정한 분기 처리가 적용되도록 함
         listArea.appendChild(div);
     });
     
     updateSummary(grandProductTotal, grandAddonTotal, grandTotal);
 }
-
 // [수정됨] 전역 변수를 사용하여 마일리지 제한 적용
 function updateSummary(prodTotal, addonTotal, total) { 
     const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal); 

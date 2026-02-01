@@ -121,7 +121,7 @@
     <div class="ctx-item" id="ctxLock"><i class="fa-solid fa-lock"></i> <span data-i18n="ctx_lock">잠금 (Lock)</span></div>
 </div>
 <div class="topbar">
-        <div class="brand" onclick="window.location.href = window.location.pathname"><i class="fa-solid fa-palette"></i> Chameleon</div>
+        <div class="brand" onclick="window.goHome()"><i class="fa-solid fa-palette"></i> Chameleon</div>
         
         <div class="template-tabs">
             <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');">🎨 템플릿</button>
@@ -139,7 +139,7 @@
         
         <div style="flex:1;"></div>
         
-        <button class="btn" onclick="if(confirm('첫 화면으로 돌아가시겠습니까?\n(저장하지 않은 작업은 사라질 수 있습니다)')) location.reload()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
+        <button class="btn" onclick="window.goHome()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
     <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
 </button>
 
@@ -2771,7 +2771,12 @@ window._drawQuickItems = (list, isProductMode = false) => {
     
     list.forEach(item => {
         const isProduct = isProductMode || item.price !== undefined;
-        const name = item.name || '';
+        
+        // [수정] 언어별 이름 적용 (이 코드가 모달 제목까지 해결합니다)
+        let name = item.name || '';
+        if (CURRENT_LANG === 'ja' && item.name_jp) name = item.name_jp;
+        if (CURRENT_LANG === 'en' && item.name_us) name = item.name_us;
+
         const itemCode = item.code || '';
         
         let rawUrl = item.img_url || item.image || item.thumbnail;
@@ -2855,7 +2860,13 @@ async function renderQuickMenu() {
         topCats.forEach(top => {
             const btn = document.createElement('button');
             btn.className = 'cat-tab';
-            btn.innerText = top.name; 
+            
+            // [수정] 대분류 언어별 명칭 적용
+            let tName = top.name;
+            if (CURRENT_LANG === 'ja' && top.name_jp) tName = top.name_jp;
+            if (CURRENT_LANG === 'en' && top.name_us) tName = top.name_us;
+            btn.innerText = tName; 
+            
             btn.onclick = () => {
                 document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
                 btn.classList.add('active');
@@ -2874,49 +2885,133 @@ async function renderQuickMenu() {
 }
 
 
-
-// [신규] 상품 클릭 시에만 상세 이미지/영상 로드
-// [추가] 상품 상세 정보 로드 후 상세 모달 오픈
-window.loadProductDetailAndOpen = async function(productCode) {
-    const loading = document.getElementById('loading');
-    if(loading) {
-        loading.style.display = 'flex';
-        const pMsg = loading.querySelector('p');
-        if(pMsg) pMsg.innerText = "상세 정보를 불러오는 중...";
-    }
-
-    try {
-        // DB에서 해당 상품의 모든 정보(description 포함)를 가져옴
-        const { data: product, error } = await sb.from('admin_products')
-            .select('*')
-            .eq('code', productCode)
-            .single();
-
-        if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
-
-        // 캐시 업데이트
-        if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-        window.PRODUCT_DB[productCode] = product;
-        
-        // 카테고리 팝업 닫기
-        const catModal = document.getElementById('categoryDetailModal');
-        if(catModal) catModal.style.display = 'none';
-
-        // 일반 상품 여부에 따른 모달 실행
-        if (product.is_general_product) {
-            window.openGeneralProductModal(productCode);
-        } else {
-            // ChoiceModal 실행
-            window.showChoiceModal(productCode);
-        }
-    } catch (e) {
-        console.error("상세 로드 실패:", e);
-        alert(e.message);
-    } finally {
-        if(loading) loading.style.display = 'none';
+// [신규] 언어 설정을 유지하면서 홈으로 이동하는 함수
+window.goHome = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentLang = urlParams.get('lang');
+    
+    if (currentLang) {
+        // 언어 설정이 있으면 붙여서 이동
+        window.location.href = `/?lang=${currentLang}`;
+    } else {
+        // 없으면 그냥 이동
+        window.location.href = '/';
     }
 };
 
+// [최종 수정] 상품 클릭 시 URL 변경 (언어 설정 유지 기능 추가)
+// [수정됨] 상품 상세 정보 로드 (DB 연결 안정화: window.sb 사용)
+    window.loadProductDetailAndOpen = async function(productCode) {
+        const loading = document.getElementById('loading');
+        if(loading) {
+            loading.style.display = 'flex';
+            const p = loading.querySelector('p');
+            if(p) p.innerText = "상품 페이지로 이동 중...";
+        }
+
+        try {
+            // 1. 언어 설정 유지
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentLang = urlParams.get('lang');
+
+            // ★ [핵심 수정] sb 대신 window.sb 사용 (전역 변수 강제 참조)
+            if (!window.sb) throw new Error("데이터베이스 연결 대기 중... 잠시 후 다시 시도해주세요.");
+
+            // DB 조회
+            const { data: product, error } = await window.sb.from('admin_products')
+                .select('*').eq('code', productCode).single();
+
+            if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
+
+            // 전역 변수 저장
+            if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+            window.PRODUCT_DB[productCode] = product;
+
+            // 2. 주소창 변경 (언어 유지)
+            let newUrl = `${window.location.pathname}?product=${productCode}`;
+            if (currentLang) {
+                newUrl += `&lang=${currentLang}`;
+            }
+            window.history.pushState({ page: 'product', code: productCode }, '', newUrl);
+
+            // 화면 전환
+            const startScreen = document.getElementById('startScreen');
+            const catModal = document.getElementById('categoryDetailModal');
+            if(startScreen) startScreen.style.display = 'none';
+            if(catModal) catModal.style.display = 'none';
+
+            // 전체화면 모드 실행 함수
+            const transformToFullScreen = (modalId, productName) => {
+                const modal = document.getElementById(modalId);
+                const box = modal.querySelector('.modal-box');
+                
+                if (!modal || !box) return;
+
+                modal.classList.add('product-full-page'); 
+                modal.style.display = 'flex';
+                modal.style.padding = '0';
+                modal.style.background = '#ffffff';
+                
+                box.style.width = '100%';
+                box.style.maxWidth = '100%';
+                box.style.height = '100%';
+                box.style.borderRadius = '0';
+                box.style.boxShadow = 'none';
+                box.style.margin = '0';
+                box.style.overflowY = 'auto'; 
+
+                const oldHeader = box.querySelector('.product-full-header');
+                const oldGuide = box.querySelector('.product-guide-banner');
+                if(oldHeader) oldHeader.remove();
+                if(oldGuide) oldGuide.remove();
+
+                let homeLink = "/";
+                if (currentLang) homeLink += `?lang=${currentLang}`;
+
+                const headerHTML = `
+                    <div class="product-full-header">
+                        <button class="back-btn" onclick="window.history.back()">
+                            <i class="fa-solid fa-arrow-left"></i> 뒤로가기
+                        </button>
+                        <div class="page-title">${productName}</div>
+                        <div class="right-menu">
+                            <button onclick="location.href='${homeLink}'" class="btn-round" style="padding:6px 12px; font-size:12px; height:auto;">
+                                <i class="fa-solid fa-house"></i> 홈
+                            </button>
+                        </div>
+                    </div>
+                    <div class="product-guide-banner">
+                        <i class="fa-solid fa-circle-info"></i> 
+                        상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.<br>
+                        (디자인이 어렵다면 '파일 업로드'를 이용하세요)
+                    </div>
+                `;
+                
+                box.insertAdjacentHTML('afterbegin', headerHTML);
+
+                const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
+                closeBtns.forEach(btn => btn.style.display = 'none');
+            };
+
+            // 창 열기
+            if (product.is_general_product) {
+                window.openGeneralProductModal(productCode);
+                transformToFullScreen('generalProductModal', product.name);
+            } else {
+                window.showChoiceModal(productCode);
+                transformToFullScreen('choiceModal', product.name);
+            }
+
+            window.scrollTo(0, 0);
+
+        } catch (e) {
+            console.error(e);
+            alert("오류: " + e.message);
+            window.history.back(); 
+        } finally {
+            if(loading) loading.style.display = 'none';
+        }
+    };
 // [3] 메인 검색 필터 (상품 + 카테고리)
 // [수정 코드] 메인 검색 필터 (카테고리 제외, 상품만 검색하도록 수정)
 window.filterMainIcons = function(keyword) {
@@ -3015,7 +3110,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     // [통합] 상품 상세페이지 전체화면 모드 시스템 (상단바+URL변경)
     // ============================================================
 
-    // 1. 상품 상세 정보 로드 및 전체화면 열기
+    // 1. 상품 상세 정보 로드 및 전체화면 열기 (언어 유지 버전)
     window.loadProductDetailAndOpen = async function(productCode) {
         const loading = document.getElementById('loading');
         if(loading) {
@@ -3025,6 +3120,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         }
 
         try {
+            // 1. 현재 언어 설정 확인 (이걸 잃어버리지 않게 잡아야 함)
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentLang = urlParams.get('lang'); // 'ja', 'en' 등
+
             // DB 조회
             const { data: product, error } = await sb.from('admin_products')
                 .select('*').eq('code', productCode).single();
@@ -3035,30 +3134,31 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             window.PRODUCT_DB[productCode] = product;
 
-            // ★ 주소창 변경 (새로고침 없이 URL만 변경)
-            const newUrl = `${window.location.pathname}?product=${productCode}`;
+            // 2. ★ [핵심] 주소창 바꿀 때 언어 꼬리표 붙이기
+            let newUrl = `${window.location.pathname}?product=${productCode}`;
+            if (currentLang) {
+                newUrl += `&lang=${currentLang}`; // 여기서 &lang=ja를 붙여줌
+            }
             window.history.pushState({ page: 'product', code: productCode }, '', newUrl);
 
-            // ★ 화면 전환 (홈 숨김)
+            // 화면 전환 (홈 숨김)
             const startScreen = document.getElementById('startScreen');
             const catModal = document.getElementById('categoryDetailModal');
             if(startScreen) startScreen.style.display = 'none';
             if(catModal) catModal.style.display = 'none';
 
-            // ★ 전체화면 모드 실행 함수
+            // 전체화면 모드 실행 함수
             const transformToFullScreen = (modalId, productName) => {
                 const modal = document.getElementById(modalId);
                 const box = modal.querySelector('.modal-box');
                 
                 if (!modal || !box) return;
 
-                // [스타일 강제 적용] 팝업 느낌 제거 -> 전체 페이지화
-                modal.classList.add('product-full-page'); // CSS 클래스 추가
+                modal.classList.add('product-full-page'); 
                 modal.style.display = 'flex';
                 modal.style.padding = '0';
                 modal.style.background = '#ffffff';
                 
-                // 박스 스타일 초기화 (전체 채우기)
                 box.style.width = '100%';
                 box.style.maxWidth = '100%';
                 box.style.height = '100%';
@@ -3067,13 +3167,15 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 box.style.margin = '0';
                 box.style.overflowY = 'auto'; 
 
-                // 기존 헤더 제거 (중복 방지)
                 const oldHeader = box.querySelector('.product-full-header');
                 const oldGuide = box.querySelector('.product-guide-banner');
                 if(oldHeader) oldHeader.remove();
                 if(oldGuide) oldGuide.remove();
 
-                // [HTML 주입] 상단바 + 안내문구
+                // ★ [핵심] 홈 버튼 링크에도 언어 설정 적용
+                let homeLink = "/";
+                if (currentLang) homeLink += `?lang=${currentLang}`;
+
                 const headerHTML = `
                     <div class="product-full-header">
                         <button class="back-btn" onclick="window.history.back()">
@@ -3081,7 +3183,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                         </button>
                         <div class="page-title">${productName}</div>
                         <div class="right-menu">
-                            <button onclick="location.href='/'" class="btn-round" style="padding:6px 12px; font-size:12px; height:auto;">
+                            <button onclick="location.href='${homeLink}'" class="btn-round" style="padding:6px 12px; font-size:12px; height:auto;">
                                 <i class="fa-solid fa-house"></i> 홈
                             </button>
                         </div>
@@ -3093,10 +3195,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                     </div>
                 `;
                 
-                // 박스 맨 앞에 삽입
                 box.insertAdjacentHTML('afterbegin', headerHTML);
 
-                // 기존 닫기 버튼들 숨기기
                 const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
                 closeBtns.forEach(btn => btn.style.display = 'none');
             };
@@ -3110,13 +3210,12 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 transformToFullScreen('choiceModal', product.name);
             }
 
-            // 스크롤 최상단 이동
             window.scrollTo(0, 0);
 
         } catch (e) {
             console.error(e);
             alert("오류: " + e.message);
-            window.history.back(); // 실패 시 되돌아가기
+            window.history.back(); 
         } finally {
             if(loading) loading.style.display = 'none';
         }
@@ -3167,26 +3266,60 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         }
     }, 500);
     // [최종 안정화 버전] 상세 페이지 모달 오픈 함수
+// [최종 수정] 상세페이지 모달 (상품명, 설명, 옵션, 가격 - 언어별/컬럼별 완벽 대응)
 window.showChoiceModal = async function(key) {
-    window.currentProductKey = key;
-    const product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
-    if (!product) return alert("상품 정보를 불러오는 중입니다.");
+    console.clear();
+    console.log("🛠️ [Debug] 모달 열기 시작. 상품키:", key);
+
+    // 1. 상품 정보 가져오기 (DB 조회 강화)
+    let product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
+    
+    // 상세 정보가 없으면 DB에서 다시 조회
+    if (!product || !product.description) {
+        const { data, error } = await sb.from('admin_products').select('*').eq('code', key).single();
+        if (error || !data) return alert("상품 정보를 찾을 수 없습니다.");
+        product = data;
+        if(!window.PRODUCT_DB) window.PRODUCT_DB = {};
+        window.PRODUCT_DB[key] = product;
+    }
 
     window.selectedProductForChoice = product;
     const modal = document.getElementById('choiceModal');
     const modalBox = modal.querySelector('.modal-box');
     
+    // 2. 언어 설정 감지 (주소창 > 도메인 순)
     const urlParams = new URLSearchParams(window.location.search);
-    const lang = urlParams.get('lang') || 'kr';
-    let detailContent = product.description || "";
-    if(lang === 'ja') detailContent = product.description_jp || product.description;
-    if(lang === 'en') detailContent = product.description_us || product.description;
+    let lang = urlParams.get('lang');
+    if (!lang) {
+        if (window.location.hostname.includes('cafe0101.com')) lang = 'ja';
+        else if (window.location.hostname.includes('cafe3355.com')) lang = 'en';
+        else lang = 'kr';
+    }
+    console.log("🌍 언어 모드:", lang);
 
-    // 헤베 계산(커스텀 사이즈) 여부 확인
+    // 3. 상품명 & 설명 번역 (안전 장치 적용)
+    // 기본값: name_kr이 있으면 쓰고, 없으면 name 사용
+    let dName = product.name_kr || product.name || "상품명 없음";
+    let dDesc = product.description_kr || product.description || "";
+    let dPrice = product.price; // 기본 가격
+
+    // 일본어 모드 (데이터가 있을 때만 덮어쓰기)
+    if (lang === 'ja') {
+        if (product.name_jp && product.name_jp.trim()) dName = product.name_jp;
+        if (product.description_jp && product.description_jp.trim()) dDesc = product.description_jp;
+        if (product.price_jp && product.price_jp > 0) dPrice = product.price_jp;
+    } 
+    // 영어 모드
+    else if (lang === 'en') {
+        if (product.name_us && product.name_us.trim()) dName = product.name_us;
+        if (product.description_us && product.description_us.trim()) dDesc = product.description_us;
+        if (product.price_us && product.price_us > 0) dPrice = product.price_us;
+    }
+
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
-    // [1] 옵션 렌더링 로직 (이미지 우측 빈 공간에 수량 조절기 배치)
+    // 4. 옵션(Add-on) 목록 생성 (컬럼명 _kr 대응 추가)
     let optionsHtml = '<div id="addonCategoryArea" style="margin-top:15px; display:flex; flex-direction:column; gap:12px;">';
     const addonCodes = Array.isArray(product.addons) ? product.addons : (product.addons ? product.addons.split(',') : []);
     
@@ -3198,20 +3331,49 @@ window.showChoiceModal = async function(key) {
             addonCats.forEach(cat => {
                 const catAddons = addons.filter(a => a.category_code === cat.code);
                 if (catAddons.length > 0) {
+                    
+                    // [수정] 카테고리명 번역 (name_kr 우선 확인)
+                    let catName = cat.name_kr || cat.name || '옵션';
+                    if (lang === 'ja' && cat.name_jp) catName = cat.name_jp;
+                    if (lang === 'en' && cat.name_us) catName = cat.name_us;
+
                     optionsHtml += `
                         <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.02); margin-bottom:10px;">
                             <div style="font-weight:800; font-size:13px; color:#1e1b4b; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                                <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${cat.name_kr || cat.name}
+                                <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${catName}
                             </div>
                             <div style="display:flex; flex-direction:column; gap:8px;">
-                                ${catAddons.map(a => `
+                                ${catAddons.map(a => {
+                                    // [핵심 수정] 옵션명 & 가격 (_kr 컬럼 대응)
+                                    let optName = a.name_kr || a.name || '옵션명 없음';
+                                    let basePrice = a.price_kr || a.price || 0;
+                                    
+                                    // 번역 적용
+                                    let finalPrice = basePrice;
+                                    let priceStr = `+${basePrice.toLocaleString()}원`;
+
+                                    if (lang === 'ja') {
+                                        if (a.name_jp) optName = a.name_jp;
+                                        if (a.price_jp) {
+                                            finalPrice = a.price_jp;
+                                            priceStr = `+¥${finalPrice.toLocaleString()}`;
+                                        }
+                                    } else if (lang === 'en') {
+                                        if (a.name_us) optName = a.name_us;
+                                        if (a.price_us) {
+                                            finalPrice = a.price_us;
+                                            priceStr = `+$${finalPrice.toLocaleString()}`;
+                                        }
+                                    }
+
+                                    return `
                                     <div class="addon-item-row" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:10px; background:#fff; margin-bottom:6px;">
                                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;">
-                                            <input type="checkbox" name="userOption" value="${a.code}" data-price="${a.price}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal(); this.closest('.addon-item-row').querySelector('.addon-qty-box').style.display = this.checked ? 'flex' : 'none';">
+                                            <input type="checkbox" name="userOption" value="${a.code}" data-price="${finalPrice}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal(); this.closest('.addon-item-row').querySelector('.addon-qty-box').style.display = this.checked ? 'flex' : 'none';">
                                             <img src="${a.img_url || 'https://placehold.co/40'}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #eee;" onerror="this.src='https://placehold.co/40?text=No+Img'">
                                             <div style="display:flex; flex-direction:column;">
-                                                <span style="font-size:13px; font-weight:600; color:#334155;">${a.name_kr || a.name}</span>
-                                                <span style="font-size:12px; color:#6366f1; font-weight:bold;">+${(a.price || 0).toLocaleString()}원</span>
+                                                <span style="font-size:13px; font-weight:600; color:#334155;">${optName}</span>
+                                                <span style="font-size:12px; color:#6366f1; font-weight:bold;">${priceStr}</span>
                                             </div>
                                         </label>
                                         
@@ -3221,7 +3383,7 @@ window.showChoiceModal = async function(key) {
                                             <button onclick="const inp=this.previousElementSibling; inp.value=parseInt(inp.value)+1; window.updateModalTotal();" style="border:none; background:#f8fafc; width:24px; height:100%; cursor:pointer;">+</button>
                                         </div>
                                     </div>
-                                `).join('')}
+                                `}).join('')}
                             </div>
                         </div>`;
                 }
@@ -3230,131 +3392,48 @@ window.showChoiceModal = async function(key) {
     }
     optionsHtml += '</div>';
 
-// [수정] 수량 정보를 반영한 실시간 합계 업데이트
-window.updateModalTotal = function() {
-    const product = window.selectedProductForChoice;
-    if(!product) return;
+    // [5] 가격 포맷
+    const formatPriceSimple = (p) => {
+        if(lang === 'ja') return `¥${p.toLocaleString()}`;
+        if(lang === 'en') return `$${p.toLocaleString()}`;
+        return `${p.toLocaleString()}원`;
+    };
 
-    // 1. 본품 단가 결정
-    let unitPrice = product.price;
-    if(window.isCustomModeCurrent) {
-        const calcPriceEl = document.getElementById('calcResultPrice');
-        // 회베계산기는 이미 (면적 x 단가 x 수량)이 계산된 텍스트를 가져옴
-        unitPrice = parseInt(calcPriceEl.innerText.replace(/[^0-9]/g, '')) || 0;
-    }
-    
-    // 2. 본품 수량 및 총액 계산
-    const mainQty = parseInt(document.getElementById(window.isCustomModeCurrent ? 'inputCustQty' : 'fixedProdQty').value) || 1;
-    // 회베계산기 모드면 unitPrice에 이미 수량이 포함되어 있고, 고정 사이즈면 단가 * 수량을 직접 함
-    let baseProductTotal = window.isCustomModeCurrent ? unitPrice : (unitPrice * mainQty);
-
-    // 3. 옵션 총액 계산 (옵션 단가 * 옵션 수량)
-    let optionTotal = 0;
-    document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
-        const row = chk.closest('.addon-item-row');
-        const optQty = parseInt(row.querySelector('.addon-qty-input').value) || 1;
-        optionTotal += (parseInt(chk.dataset.price || 0) * optQty);
-    });
-
-    // 4. 최종 합계 표시
-    const finalTotal = baseProductTotal + optionTotal;
-    const display = document.getElementById('modalRealtimeTotal');
-    if(display) display.innerText = finalTotal.toLocaleString() + '원';
-};
-window.confirmChoice = function(mode) {
-    if (window.isDirectCartAddInProgress) return;
-    if (!window.selectedProductForChoice) return alert("상품 정보가 없습니다.");
-
-    const product = window.selectedProductForChoice;
-    let finalW = product.width_mm || product.w || 0;
-    let finalH = product.height_mm || product.h || 0;
-    let finalPrice = product.price;
-    
-    // 수량 가져오기
-    const qtyInput = document.getElementById(window.isCustomModeCurrent ? 'inputCustQty' : 'fixedProdQty');
-    const finalQty = parseInt(qtyInput.value) || 1;
-
-    if (window.isCustomModeCurrent) {
-        finalW = parseInt(document.getElementById('inputCustW').value || 0);
-        finalH = parseInt(document.getElementById('inputCustH').value || 0);
-        if (finalW < 100 || finalH < 100) return alert("최소 사이즈는 100mm 이상이어야 합니다.");
-        // 회베계산기 상품은 단가(1헤베당)를 기준으로 재계산된 금액을 장바구니에 보냄
-        finalPrice = Math.floor((((finalW * finalH) / 1000000) * product.price) / 100) * 100;
-    }
-
-    // 선택된 옵션 및 개별 수량 수집
-    const selectedAddonCodes = [];
-    const addonQtys = {}; 
-    document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
-        const code = chk.value;
-        const row = chk.closest('.addon-item-row');
-        selectedAddonCodes.push(code);
-        addonQtys[code] = parseInt(row.querySelector('.addon-qty-input').value) || 1;
-    });
-
-    if (mode === 'editor') {
-        document.getElementById('choiceModal').style.display = 'none';
-        window.pendingSelectedAddons = selectedAddonCodes; 
-        window.pendingAddonQtys = addonQtys;
-        // 에디터 진입 시 규격 전달 (A4 고정 방지)
-        window.startEditorDirect(window.currentProductKey, finalW, finalH, window.isCustomModeCurrent ? finalPrice : null);
-    } else if (mode === 'cart') {
-        window.isDirectCartAddInProgress = true;
-        setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
-        document.getElementById('choiceModal').style.display = 'none';
-
-        import('./order.js?v=119').then(m => {
-            const productToCart = { 
-                ...product,
-                price: finalPrice, // 확정된 단가
-                width_mm: finalW,
-                height_mm: finalH
-            };
-            if (window.isCustomModeCurrent) {
-                productToCart.name += ` (${finalW}x${finalH}mm)`;
-            }
-            // 수량, 옵션코드, 옵션수량을 함께 전송
-            m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, addonQtys); 
-            document.getElementById('cartAddedModal').style.display = 'flex'; 
-        });
-    }
-};
-
-    // [2] 우측 상단 레이아웃 결정 (헤베 계산기 vs 일반 카드)
     let rightSideUI = isCustom ? `
         <div id="customSizePanel" style="display:flex; flex-direction:column; gap:12px; background:#fff; padding:20px; border-radius:15px; border:2px solid #6366f1; margin-bottom:15px;">
-            <h3 style="margin:0; font-size:16px; text-align:center; color:#1e1b4b;">📏 사이즈 입력 (면적 계산)</h3>
+            <h3 style="margin:0; font-size:16px; text-align:center; color:#1e1b4b;">📏 ${lang=='kr'?'사이즈 입력':'Size Input'}</h3>
             <div style="display:flex; gap:8px;">
-                <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="가로 mm" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
-                <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="세로 mm" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
+                <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W (mm)" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
+                <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H (mm)" style="flex:1; margin:0;" oninput="window.calcCustomPrice()">
             </div>
-            <div style="font-size:12px; color:#666; font-weight:bold;">주문 수량</div>
+            <div style="font-size:12px; color:#666; font-weight:bold;">${lang=='kr'?'수량':'Quantity'}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden; height:45px;">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:16px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
             <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center;">
-                <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0원</div>
+                <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.7;">-</div>
             </div>
         </div>
     ` : `
         <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
             <img src="${product.img || product.img_url}" style="width:100%; max-height:180px; object-fit:contain; border-radius:10px; margin-bottom:10px;">
-            <div style="font-size:20px; font-weight:900; color:#1e293b; margin-bottom:15px;">${(product.price || 0).toLocaleString()}원</div>
+            <div style="font-size:20px; font-weight:900; color:#1e293b; margin-bottom:15px;">
+                ${formatPriceSimple(dPrice)}
+            </div>
             
-            <div style="font-size:12px; color:#64748b; margin-bottom:8px; text-align:left; font-weight:bold;">본품 수량 선택</div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:8px; text-align:left; font-weight:bold;">${lang=='kr'?'수량':'Quantity'}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden; height:40px; margin-bottom:10px;">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="fixedProdQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
-            <div style="font-size:11px; color:#94a3b8;">${product.w_mm || 0} x ${product.h_mm || 0} mm</div>
+            <div style="font-size:11px; color:#94a3b8;">${product.width_mm || 0} x ${product.height_mm || 0} mm</div>
         </div>
     `;
 
-    // [3] 최종 HTML 출력
     modalBox.innerHTML = `
         <div class="choice-layout" style="display:flex; flex-direction:${window.innerWidth <= 768 ? 'column' : 'row'}; height:90vh; overflow:hidden;">
             <button onclick="window.location.href = window.location.pathname" 
@@ -3363,9 +3442,9 @@ window.confirmChoice = function(mode) {
             </button>
 
             <div class="choice-left-content" style="flex:1; overflow-y:auto; padding:40px; background:#fff; text-align:left;">
-                <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${product.name}</h2>
+                <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
-                    ${detailContent}
+                    ${dDesc}
                 </div>
             </div>
 
@@ -3373,12 +3452,12 @@ window.confirmChoice = function(mode) {
                 ${rightSideUI}
                 ${optionsHtml}
                 <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:20px; text-align:right;">
-                    <div style="font-size:12px; color:#64748b; margin-bottom:5px;">최종 합계</div>
-                    <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">${(product.price || 0).toLocaleString()}원</div>
+                    <div style="font-size:12px; color:#64748b; margin-bottom:5px;">Total</div>
+                    <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">0</div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
-                    <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px; font-weight:800;">🎨 직접 디자인하기</button>
-                    <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; background:#4ccc02; color:white; border:none; font-size:16px; font-weight:800;">🛒 바로 구매하기</button>
+                    <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px; font-weight:800;">🎨 Design Editor</button>
+                    <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; background:#4ccc02; color:white; border:none; font-size:16px; font-weight:800;">🛒 Add to Cart</button>
                 </div>
             </div>
         </div>
@@ -3386,7 +3465,7 @@ window.confirmChoice = function(mode) {
 
     modal.style.display = 'flex';
     
-    // 미디어 최적화 실행
+    // 미디어(영상) 자동재생
     setTimeout(() => {
         const renderArea = modalBox.querySelector('.product-detail-render');
         if (!renderArea) return;
@@ -3420,7 +3499,8 @@ window.updateModalTotal = function() {
     if(display) display.innerText = finalTotal.toLocaleString() + '원';
 };
 
-    // [2] 실시간 가격 계산 함수 (완전 수정 버전)
+    // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
+    // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
     window.calcCustomPrice = function() {
         const wInput = document.getElementById('inputCustW');
         const hInput = document.getElementById('inputCustH');
@@ -3433,22 +3513,51 @@ window.updateModalTotal = function() {
         const w = parseInt(wInput.value || 0);
         const h = parseInt(hInput.value || 0);
         const qty = parseInt(qInput ? qInput.value : 1) || 1;
-        const unitPrice = window.selectedProductForChoice.price || 0;
+        const product = window.selectedProductForChoice;
 
-        // 화폐 포맷팅 함수 (내부 정의로 에러 방지)
+        // ★ [핵심] 언어 감지
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang) {
+            if (window.location.hostname.includes('cafe0101.com')) lang = 'ja';
+            else if (window.location.hostname.includes('cafe3355.com')) lang = 'en';
+            else lang = 'kr';
+        }
+
+        // ★ [핵심] 단가(unitPrice)를 언어에 맞게 가져오기
+        let unitPrice = product.price || 0; // 기본 한국 가격
+
+        // 일본어면 price_jp 사용
+        if (lang === 'ja' && product.price_jp && product.price_jp > 0) {
+            unitPrice = product.price_jp;
+        } 
+        // 영어면 price_us 사용
+        else if (lang === 'en' && product.price_us && product.price_us > 0) {
+            unitPrice = product.price_us;
+        }
+
+        // 화폐 포맷팅 함수
         const formatValue = (val) => {
-            const isJP = window.location.hostname.includes('cafe0101.com') || window.location.href.includes('lang=ja');
-            const isUS = window.location.hostname.includes('cafe3355.com') || window.location.href.includes('lang=en');
-            if (isJP) return '¥' + Math.floor(val).toLocaleString();
-            if (isUS) return '$' + (val / 1300).toFixed(2);
+            if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
+            if (lang === 'en') return '$' + val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             return Math.floor(val).toLocaleString() + '원';
         };
 
         if (w >= 100 && h >= 100) {
             // 1. 면적 계산 (㎡)
             const area = (w * h) / 1000000;
-            // 2. 단가 계산 (10원 단위 절사)
-            const pricePerItem = Math.floor((area * unitPrice) / 10) * 10;
+            
+            // 2. 단가 계산
+            let pricePerItem = area * unitPrice;
+
+            if (lang === 'kr') {
+                // 한국: 10원 단위 절사
+                pricePerItem = Math.floor(pricePerItem / 10) * 10;
+            } else {
+                // 일본/미국: 소수점 버림 (정수)
+                pricePerItem = Math.floor(pricePerItem);
+            }
+
             // 3. 최종 합계
             const totalPrice = pricePerItem * qty;
             
@@ -3456,22 +3565,42 @@ window.updateModalTotal = function() {
             if (sizeDisplay) sizeDisplay.innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
         } else {
             if (priceDisplay) priceDisplay.innerText = formatValue(0);
-            if (sizeDisplay) sizeDisplay.innerText = '최소 100mm 이상 입력';
+            if (sizeDisplay) sizeDisplay.innerText = lang === 'en' ? 'Min 100mm required' : '최소 100mm 이상 입력';
         }
     };
 
-    // [3] 선택 완료 및 장바구니 담기 (핵심 수정)
-    // [3] 선택 완료 및 장바구니 담기 (헤베 가격 적용 수정판)
+    // [3] 선택 완료 -> 에디터 이동 또는 장바구니 (안전성 강화 버전)
     window.confirmChoice = function(mode) {
         if (window.isDirectCartAddInProgress) return;
-        if (!window.selectedProductForChoice) return alert("상품 정보가 없습니다.");
+        
+        // 1. 상품 정보 확인 (없으면 중단)
+        const product = window.selectedProductForChoice;
+        if (!product) return alert("상품 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.");
 
-        // 변수 초기화
+        // ★ [핵심] 상품 코드 확실하게 가져오기 (변수 의존성 제거)
+        const targetCode = product.code || window.currentProductKey;
+        if (!targetCode) return alert("상품 코드가 누락되었습니다.");
+
+        // 2. 언어 감지
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang) {
+            if (window.location.hostname.includes('cafe0101.com')) lang = 'ja';
+            else if (window.location.hostname.includes('cafe3355.com')) lang = 'en';
+            else lang = 'kr';
+        }
+
+        // 3. 단가 결정 (국가별 가격)
+        let unitPrice = product.price || 0;
+        if (lang === 'ja' && product.price_jp && product.price_jp > 0) unitPrice = product.price_jp;
+        else if (lang === 'en' && product.price_us && product.price_us > 0) unitPrice = product.price_us;
+
+        // 4. 최종 가격 및 사이즈 계산
         let finalW = 0, finalH = 0;
-        let finalPricePerItem = window.selectedProductForChoice.price; // 기본값 (1헤베 단가)
+        let finalPricePerItem = unitPrice;
         let finalQty = 1;
 
-        // ★ [핵심] 커스텀 모드일 경우 여기서 가격을 '재계산'해서 확정함
+        // 커스텀 모드일 경우 재계산
         if (window.isCustomModeCurrent) {
             finalW = parseInt(document.getElementById('inputCustW').value || 0);
             finalH = parseInt(document.getElementById('inputCustH').value || 0);
@@ -3479,30 +3608,35 @@ window.updateModalTotal = function() {
             
             if (finalW < 100 || finalH < 100) return alert("최소 사이즈는 100mm 이상이어야 합니다.");
             
-            // 1헤베 단가 가져오기
-            const unitPrice = window.selectedProductForChoice.price;
-            
-            // 1개당 가격 계산: (가로mm * 세로mm / 1,000,000) * 단가
-            // Math.ceil로 소수점 올림 처리 (1원 단위 보존)
-            // [수정] 10원 단위 절사 (내림 처리): 242,001원 -> 242,000원
-            finalPricePerItem = Math.floor((((finalW * finalH) / 1000000) * unitPrice) / 100) * 100;
-            
-            console.log(`[헤베계산적용] ${finalW}x${finalH} = ${finalPricePerItem}원 (단가:${unitPrice})`);
+            const area = (finalW * finalH) / 1000000;
+            let rawPrice = area * unitPrice;
+
+            if (lang === 'kr') {
+                finalPricePerItem = Math.floor(rawPrice / 10) * 10;
+            } else {
+                finalPricePerItem = Math.floor(rawPrice);
+            }
+        } else {
+            // 일반 상품이면 기본 사이즈 사용
+            finalW = product.width_mm || 0;
+            finalH = product.height_mm || 0;
+            finalQty = parseInt(document.getElementById('fixedProdQty') ? document.getElementById('fixedProdQty').value : 1);
         }
 
-        // [수정] 선택된 옵션들 수집
+        // 5. 옵션 수집
         const selectedAddonCodes = [];
         document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
             selectedAddonCodes.push(chk.value);
         });
 
+        // 6. 실행 (에디터 or 장바구니)
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
-            // 에디터로 넘어갈 때도 옵션 정보를 유지하고 싶다면 전역 변수에 저장 가능
             window.pendingSelectedAddons = selectedAddonCodes; 
             
+            // ★ [수정] 확실하게 찾은 targetCode를 넘겨줌
             window.startEditorDirect(
-                window.currentProductKey, 
+                targetCode, 
                 window.isCustomModeCurrent ? finalW : null, 
                 window.isCustomModeCurrent ? finalH : null,
                 window.isCustomModeCurrent ? finalPricePerItem : null
@@ -3513,17 +3647,16 @@ window.updateModalTotal = function() {
             document.getElementById('choiceModal').style.display = 'none';
 
             import('./order.js?v=119').then(m => {
-                const productToCart = { ...window.selectedProductForChoice };
-                
+                const productToCart = { ...product };
+                productToCart.price = finalPricePerItem;
+
                 if (window.isCustomModeCurrent) {
-                    productToCart.price = finalPricePerItem;
                     productToCart.name += ` (${finalW}x${finalH}mm)`;
                     productToCart.width_mm = finalW;
                     productToCart.height_mm = finalH;
                     productToCart.is_custom = true;
                 }
                 
-                // [핵심] 3번째 인자로 선택된 옵션 코드 배열을 전달합니다.
                 m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes); 
                 document.getElementById('cartAddedModal').style.display = 'flex'; 
             });
@@ -3666,11 +3799,11 @@ window.updateModalTotal = function() {
         window.isFontsLoaded = true;
     }
 
-    // [수정] customW, customH, customPrice 파라미터 추가
-    // [수정됨] 템플릿 팝업 제거 + 화면 먼저 보여주고 폰트 로딩 (속도 개선)
+    // [수정됨] 에디터 진입 (DB 데이터 안전 로딩 추가)
+    // [수정됨] 에디터 진입 (DB 데이터 안전 로딩 추가)
     window.startEditorDirect = async function(key, customW = null, customH = null, customPrice = null) {
         
-        // 1. [검증] 로그인 및 필수값 체크
+        // 1. [검증] 로그인 체크
         const { data } = await sb.auth.getSession();
         if (!data || !data.session || !data.session.user) {
             alert(window.t('msg_login_required_design'));
@@ -3680,11 +3813,23 @@ window.updateModalTotal = function() {
 
         if (!key) return alert("상품 코드가 올바르지 않습니다.");
 
-        // 2. [설정] 전역 변수 및 상품 정보 설정
+        // 2. [설정] 상품 정보 로드 (전역 변수에 없으면 DB에서 가져옴)
         window.currentProductKey = key;
         if(canvas) canvas.currentProductKey = key;
         
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+        
+        // ★ [핵심] 데이터가 비어있으면 DB에서 불러오는 안전장치
+        if (!window.PRODUCT_DB[key]) {
+            console.log("🔄 에디터용 상품 정보 로딩 중...");
+            const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).single();
+            if (error || !prodData) {
+                console.error("상품 로드 실패:", error);
+                return alert("상품 정보를 찾을 수 없습니다.");
+            }
+            window.PRODUCT_DB[key] = prodData;
+        }
+
         const product = window.PRODUCT_DB[key];
 
         // 커스텀 가격/사이즈 적용
@@ -3693,7 +3838,7 @@ window.updateModalTotal = function() {
             product.is_custom_size = true; 
             product.w_mm = customW; 
             product.h_mm = customH;
-            console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()}원`);
+            console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()}`);
         }
 
         // 사이즈 계산
@@ -3720,36 +3865,27 @@ window.updateModalTotal = function() {
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
-        // 3. [핵심] 화면 전환을 먼저 실행
+        // 3. 화면 전환
         document.getElementById("startScreen").style.display = "none";
-        // ★ [수정] Grid가 아닌 Flex로 강제 지정 (CSS 오버라이딩 확실하게)
         document.getElementById("mainEditor").style.display = "flex"; 
         
         const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
         document.body.classList.add('editor-active'); 
 
-        // ★ [추가] 사이드바 템플릿 추천 패널 로드 (모바일에서는 자동 실행 안 함)
+        // 사이드바 템플릿 로드 (PC만)
         if (window.innerWidth > 768 && typeof window.loadSideBarTemplates === 'function') {
-            // PC 화면일 때만 사이드바 자동 열기
-            console.log(`📂 사이드바 템플릿 로드 시도: ${key}`);
             window.loadSideBarTemplates(key);
-        } else {
-            console.log("📱 모바일 환경이므로 사이드바 자동 열림 방지");
         }
         
         if (window.ChannelIO) ChannelIO('hide');
         window.dispatchEvent(new Event('resize'));
 
-        // 캔버스 크기 적용 (화면이 보여야 캔버스도 제대로 그려짐)
         if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
 
-        // 4. [지연 로딩] 폰트와 스크립트를 화면 전환 후에 로드
-        console.log("🚀 화면 진입 완료. 서체 및 스크립트 로딩 시작...");
-        
-        loadEditorFonts(); // CSS 폰트
+        // 4. 리소스 로딩
+        loadEditorFonts(); 
 
-        // 필수 스크립트 로드 (await를 쓰되, 이미 화면은 떴음)
         if (!window.isObjectsLoaded) {
             try {
                 await import('./canvas-objects.js?v=119');
@@ -3759,23 +3895,19 @@ window.updateModalTotal = function() {
             }
         }
 
-        // ★ [핵심] 폰트 로딩을 비동기로 처리 (await 제거)하여 멈춤 현상 제거
         if (window.initCanvasFonts) {
-            window.initCanvasFonts().then(() => {
-                console.log("✅ 서체 로딩 완료");
-            }); 
+            window.initCanvasFonts().then(() => console.log("✅ 서체 로딩 완료")); 
         }
 
-        // 6. 템플릿 처리 (기존 선택된 템플릿만 적용)
+        // 템플릿 처리
         if (window.pendingTemplate) {
             setTimeout(async () => {
                 if (window.applyStartTemplate) await window.applyStartTemplate(window.pendingTemplate);
                 window.pendingTemplate = null;
             }, 500);
-        } else {
         }
 
-        // AI 이미지 시작일 경우 처리
+        // AI 이미지 처리
         if (window.pendingAiImage) {
             const loading = document.getElementById("loading");
             if(loading) loading.style.display = 'flex';

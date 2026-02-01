@@ -137,10 +137,23 @@ function loadUserCart() {
 }
 
 export async function getUserLogoCount() { return 0; }
-// [신규] 통합 데이터 변환 헬퍼 (언어별 이름, 가격, 포맷팅 자동 처리)
+// [신규] 통합 데이터 변환 헬퍼 (도메인 자동 감지 적용)
 export function getLocalizedData(item) {
-    const country = SITE_CONFIG.COUNTRY; 
+    // 1. 도메인 및 URL 파라미터로 국가 자동 감지
+    let country = 'KR'; // 기본값
     
+    // 현재 접속한 주소 확인
+    const hostname = window.location.hostname; 
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramLang = urlParams.get('lang');
+
+    // 도메인 또는 ?lang= 파라미터로 국가 결정
+    if (hostname.includes('cafe0101.com') || paramLang === 'ja' || paramLang === 'jp') {
+        country = 'JP';
+    } else if (hostname.includes('cafe3355.com') || paramLang === 'en' || paramLang === 'us') {
+        country = 'US';
+    }
+
     if (!item) return { name: '', price: 0, formattedPrice: '0' };
 
     let name = item.name || '';
@@ -148,12 +161,12 @@ export function getLocalizedData(item) {
     let formattedPrice = '';
 
     if (country === 'JP') {
-        name = item.name_jp || item.name;
+        name = item.name_jp || item.name; // 일본어 이름 없으면 한글 이름
         price = Number(item.price_jp) || price;
         // 일본: 기호 ¥를 앞에 붙이고 소수점 제거
         formattedPrice = '¥' + Math.floor(price).toLocaleString();
     } else if (country === 'US') {
-        name = item.name_us || item.name;
+        name = item.name_us || item.name; // 영어 이름 없으면 한글 이름
         price = Number(item.price_us) || price;
         // 미국: 기호 $를 앞에 붙이고 소수점 2자리 허용
         formattedPrice = '$' + price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
