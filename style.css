@@ -4306,3 +4306,14 @@ video {
 .product-full-header {
     display: none !important;
 }
+/* 상세페이지 유튜브 영상 예쁘게 만들기 */
+.product-detail-render iframe, 
+.product-detail-render .ql-video {
+    border-radius: 24px !important;  /* 둥근 모서리 */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2) !important; /* 그림자 */
+    aspect-ratio: 16 / 9 !important; /* 16:9 비율 유지 */
+    width: 100% !important;
+    height: auto !important;
+    margin: 30px 0 !important;
+    display: block;
+}

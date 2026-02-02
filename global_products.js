@@ -794,10 +794,13 @@ window.addProductDB = async () => {
 };
 
 window.editProductLoad = async (id) => {
+    // 1. DB에서 상품 정보 가져오기
     const { data } = await sb.from('admin_products').select('*').eq('id', id).single();
     if(!data) return;
     
     editingProdId = id;
+
+    // 2. 기본 정보 채우기
     document.getElementById('btnProductSave').innerText = "수정사항 저장";
     document.getElementById('btnCancelEdit').style.display = 'inline-block';
     document.getElementById('btnCloneProduct').style.display = 'inline-block';
@@ -828,10 +831,72 @@ window.editProductLoad = async (id) => {
         document.getElementById('newProdDesc').value = data.description || '';
     }
 
-    const addonList = data.addons ? data.addons.split(',') : [];
-    document.querySelectorAll('input[name="prodAddon"]').forEach(cb => { 
-        cb.checked = addonList.includes(cb.value); 
-    });
+    // ============================================================
+    // 🛑 [수정됨] 옵션(Addon) 복구 로직
+    // 저장된 옵션 코드를 분석하여 카테고리 행을 자동으로 생성하고 체크합니다.
+    // ============================================================
+    const container = document.getElementById('dynamicCategoryContainer');
+    if (container) {
+        container.innerHTML = ''; // 기존에 열려있던 행들 초기화
+
+        const savedAddonCodes = data.addons ? data.addons.split(',') : [];
+
+        // 저장된 옵션이 있고, 캐시된 데이터(전체 옵션 목록)가 있다면 복구 시도
+        if (savedAddonCodes.length > 0 && window.cachedAddons) {
+            
+            // (1) 저장된 옵션들이 어떤 '카테고리'에 속해있는지 먼저 파악 (중복 제거)
+            const activeCategories = new Set();
+            savedAddonCodes.forEach(code => {
+                const addonItem = window.cachedAddons.find(a => a.code === code);
+                if (addonItem) activeCategories.add(addonItem.category_code);
+            });
+
+            // (2) 파악된 카테고리 개수만큼 행(Row)을 생성
+            activeCategories.forEach(catCode => {
+                const rowId = 'row_' + Math.random().toString(36).substr(2, 9);
+
+                // Select 박스 HTML 생성 (해당 카테고리를 selected 상태로 만듦)
+                let optionsHtml = `<option value="">📦 카테고리 선택</option>`;
+                (window.cachedAddonCategories || []).forEach(c => {
+                    const isSelected = (c.code === catCode) ? 'selected' : '';
+                    optionsHtml += `<option value="${c.code}" ${isSelected}>${c.name_kr || c.name}</option>`;
+                });
+
+                // 행(Div) 생성
+                const wrapper = document.createElement('div');
+                wrapper.id = rowId;
+                wrapper.style.cssText = "background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;";
+                wrapper.innerHTML = `
+                    <div style="display:flex; gap:5px; align-items:center; margin-bottom:8px;">
+                        <select class="input-text dynamic-cat-select" style="font-size:11px; font-weight:bold; flex:1;" onchange="renderAddonsInRow('${rowId}', this.value)">
+                            ${optionsHtml}
+                        </select>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="removeCategorySelectRow('${rowId}')" style="color:#ef4444; border:none; background:transparent;">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="row-addon-area" style="display:flex; flex-wrap:wrap; gap:5px; min-height:20px;"></div>`;
+                
+                container.appendChild(wrapper);
+
+                // (3) 해당 카테고리의 체크박스 목록 렌더링
+                renderAddonsInRow(rowId, catCode);
+
+                // (4) 렌더링된 체크박스 중 저장된 값과 일치하는 것 체크하기
+                const checkboxes = wrapper.querySelectorAll('input[name="prodAddon"]');
+                checkboxes.forEach(chk => {
+                    if (savedAddonCodes.includes(chk.value)) {
+                        chk.checked = true;
+                    }
+                });
+            });
+
+        } else {
+            // 저장된 옵션이 없으면 기본 빈 줄 하나 추가 (기존 동작 유지)
+            addCategorySelectRow();
+        }
+    }
+    // ============================================================
 };
 window.deleteProductDB = async (id) => {
     if(confirm("삭제?")) {
@@ -1120,30 +1185,43 @@ window.googleTranslateSimple = async (text, target) => {
 // ==========================================
 // [개선된] 팝업 에디터 (줄간격, 유튜브 스타일, HTML편집, 구분선)
 // ==========================================
+// ==========================================
+// [개선된] 팝업 에디터 (유튜브 라운딩 디자인 + 파라미터 자동 적용)
+// ==========================================
 window.initPopupQuill = () => {
     if (popupQuill) return;
 
-    // 1. 스타일 CSS 강제 주입 (줄간격 & 유튜브 라운딩 & 구분선)
+    // 1. 스타일 CSS 강제 주입 (줄간격 & 유튜브 디자인)
     const style = document.createElement('style');
     style.innerHTML = `
-        /* 줄바꿈 간격 해결 */
+        /* 텍스트 줄간격 */
         #popup-quill-editor .ql-editor p, 
         .product-detail-render p {
             margin-bottom: 5px !important;
             line-height: 1.6 !important;
             min-height: 1.6em;
         }
-        /* 유튜브/비디오 스타일링: 둥근 모서리 + 그림자 */
+        
+        /* [핵심] 유튜브/비디오 스타일링: 둥근 모서리 + 그림자 + 꽉 찬 화면 */
         #popup-quill-editor .ql-video,
         .product-detail-render iframe,
         .product-detail-render video {
-            display: block; width: 100% !important; max-width: 100%; height: auto;
-            aspect-ratio: 16 / 9; border-radius: 20px !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: none; margin: 20px auto;
+            display: block; 
+            width: 100% !important; 
+            max-width: 100%; 
+            height: auto;
+            aspect-ratio: 16 / 9; /* 16:9 비율 고정 */
+            border-radius: 24px !important; /* 둥근 모서리 (원하는 만큼 조절) */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); /* 고급스러운 그림자 */
+            border: none; 
+            margin: 30px auto; /* 위아래 여백 */
+            background: #000; /* 로딩 전 검은 배경 */
         }
-        /* 구분선(hr) 스타일링 */
+
+        /* 구분선 스타일 */
         hr { border: 0; height: 1px; background: #e2e8f0; margin: 30px 0; }
         hr.dashed { border-top: 2px dashed #cbd5e1; background: none; height: 0; }
+        
         /* HTML 편집창 스타일 */
         .ql-html-editor {
             width: 100%; height: 100%; border: none; padding: 20px;
@@ -1153,13 +1231,31 @@ window.initPopupQuill = () => {
     `;
     document.head.appendChild(style);
 
-    // 2. 유튜브/비디오 핸들러 (주소 입력 방식)
+    // 2. [핵심] 유튜브 핸들러 (깔끔한 URL 변환)
     function videoHandler() {
         let url = prompt("유튜브 영상 주소(URL)를 입력하세요:");
         if (url) {
-            url = url.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/");
+            // (1) 일반 주소를 임베드 주소로 변환
+            // 예: https://www.youtube.com/watch?v=VIDEO_ID -> https://www.youtube.com/embed/VIDEO_ID
+            let embedUrl = url;
+            if (url.includes("watch?v=")) {
+                embedUrl = url.replace("watch?v=", "embed/");
+            } else if (url.includes("youtu.be/")) {
+                embedUrl = url.replace("youtu.be/", "youtube.com/embed/");
+            }
+
+            // (2) 깔끔하게 보이는 파라미터 강제 추가
+            // modestbranding=1 : 유튜브 로고 최소화
+            // rel=0 : 재생 종료 후 관련 영상에 내 채널 영상만 표시 (타사 광고 방지)
+            // showinfo=0 (deprecated되긴 했지만 일부 환경 지원)
+            if (!embedUrl.includes('?')) {
+                embedUrl += '?modestbranding=1&rel=0&controls=1&playsinline=1';
+            } else {
+                embedUrl += '&modestbranding=1&rel=0&controls=1&playsinline=1';
+            }
+
             const range = popupQuill.getSelection();
-            popupQuill.insertEmbed(range.index, 'video', url);
+            popupQuill.insertEmbed(range.index, 'video', embedUrl);
         }
     }
 
@@ -1222,7 +1318,7 @@ window.initPopupQuill = () => {
                     ['clean']
                 ],
                 handlers: {
-                    'video': videoHandler,
+                    'video': videoHandler, // 커스텀 핸들러 연결
                     'code-block': htmlEditHandler,
                     'divider': hrHandler
                 }
@@ -1238,7 +1334,6 @@ window.initPopupQuill = () => {
     const divBtn = document.querySelector('.ql-divider');
     if(divBtn) { divBtn.innerHTML = '<b>―</b>'; divBtn.title = "구분선 넣기"; }
 };
-
 // ==========================================
 // [개선] 공통 정보(Common Info) 관리 로직 (다국어 + 카테고리 + 백업)
 // ==========================================
