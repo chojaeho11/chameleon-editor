@@ -1117,43 +1117,97 @@ window.googleTranslateSimple = async (text, target) => {
     }
 };
 
+// ==========================================
+// [개선된] 팝업 에디터 (줄간격, 유튜브 스타일, HTML편집, 구분선)
+// ==========================================
 window.initPopupQuill = () => {
     if (popupQuill) return;
 
-    async function videoHandler() {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'video/mp4,video/webm');
-        input.click();
+    // 1. 스타일 CSS 강제 주입 (줄간격 & 유튜브 라운딩 & 구분선)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        /* 줄바꿈 간격 해결 */
+        #popup-quill-editor .ql-editor p, 
+        .product-detail-render p {
+            margin-bottom: 5px !important;
+            line-height: 1.6 !important;
+            min-height: 1.6em;
+        }
+        /* 유튜브/비디오 스타일링: 둥근 모서리 + 그림자 */
+        #popup-quill-editor .ql-video,
+        .product-detail-render iframe,
+        .product-detail-render video {
+            display: block; width: 100% !important; max-width: 100%; height: auto;
+            aspect-ratio: 16 / 9; border-radius: 20px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: none; margin: 20px auto;
+        }
+        /* 구분선(hr) 스타일링 */
+        hr { border: 0; height: 1px; background: #e2e8f0; margin: 30px 0; }
+        hr.dashed { border-top: 2px dashed #cbd5e1; background: none; height: 0; }
+        /* HTML 편집창 스타일 */
+        .ql-html-editor {
+            width: 100%; height: 100%; border: none; padding: 20px;
+            font-family: monospace; font-size: 14px; background: #1e1e1e; color: #d4d4d4;
+            resize: none; outline: none;
+        }
+    `;
+    document.head.appendChild(style);
 
-        input.onchange = async () => {
-            const file = input.files[0];
-            if (!file) return;
-            if (file.size > 50 * 1024 * 1024) return alert("50MB 이하 영상만 가능합니다.");
-            
-            showLoading(true);
-            try {
-                const fileExt = file.name.split('.').pop();
-                const filePath = `${Date.now()}.${fileExt}`;
-                const { error } = await sb.storage.from('videos').upload(filePath, file);
-                if (error) throw error;
-
-                const { data: { publicUrl } } = sb.storage.from('videos').getPublicUrl(filePath);
-                const range = popupQuill.getSelection();
-                popupQuill.insertEmbed(range.index, 'video', publicUrl);
-                
-                setTimeout(() => {
-                    const vids = document.querySelectorAll('#popup-quill-editor video');
-                    vids.forEach(v => {
-                        v.style.width = '100%';
-                        v.setAttribute('controls', 'true');
-                    });
-                }, 100);
-            } catch (err) { alert("업로드 중 오류 발생"); } 
-            finally { showLoading(false); }
-        };
+    // 2. 유튜브/비디오 핸들러 (주소 입력 방식)
+    function videoHandler() {
+        let url = prompt("유튜브 영상 주소(URL)를 입력하세요:");
+        if (url) {
+            url = url.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/");
+            const range = popupQuill.getSelection();
+            popupQuill.insertEmbed(range.index, 'video', url);
+        }
     }
 
+    // 3. HTML 직접 편집 핸들러
+    function htmlEditHandler() {
+        const container = document.getElementById('popup-quill-editor');
+        const editorArea = container.querySelector('.ql-editor');
+        let txtArea = container.querySelector('.ql-html-editor');
+
+        if (txtArea) {
+            const html = txtArea.value;
+            popupQuill.clipboard.dangerouslyPasteHTML(html);
+            txtArea.remove();
+            editorArea.style.display = 'block';
+        } else {
+            const html = popupQuill.root.innerHTML;
+            txtArea = document.createElement('textarea');
+            txtArea.className = 'ql-html-editor';
+            txtArea.value = html;
+            container.appendChild(txtArea);
+            editorArea.style.display = 'none';
+            txtArea.focus();
+        }
+    }
+
+    // 4. 구분선 핸들러
+    function hrHandler() {
+        const range = popupQuill.getSelection();
+        if (range) {
+            popupQuill.insertEmbed(range.index, 'divider', true, 'user');
+            popupQuill.setSelection(range.index + 1, Quill.sources.SILENT);
+        }
+    }
+
+    // Quill 모듈 등록
+    const BlockEmbed = Quill.import('blots/block/embed');
+    class DividerBlot extends BlockEmbed {
+        static create() {
+            let node = super.create();
+            node.setAttribute('class', 'dashed');
+            return node;
+        }
+    }
+    DividerBlot.blotName = 'divider';
+    DividerBlot.tagName = 'hr';
+    Quill.register(DividerBlot);
+
+    // 5. 에디터 생성
     popupQuill = new Quill('#popup-quill-editor', {
         modules: {
             toolbar: {
@@ -1163,15 +1217,106 @@ window.initPopupQuill = () => {
                     [{ 'color': [] }, { 'background': [] }],
                     [{ 'align': [] }],
                     ['image', 'video', 'link'],
+                    ['divider', 'code-block'], 
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                     ['clean']
                 ],
-                handlers: { 'video': videoHandler }
+                handlers: {
+                    'video': videoHandler,
+                    'code-block': htmlEditHandler,
+                    'divider': hrHandler
+                }
             }
         },
         theme: 'snow',
-        placeholder: '보드와 동일한 방식으로 사진과 영상을 드래그하거나 버튼을 눌러 넣으세요...'
+        placeholder: '내용을 입력하세요...'
     });
+
+    // 아이콘 커스터마이징
+    const codeBtn = document.querySelector('.ql-code-block');
+    if(codeBtn) { codeBtn.innerHTML = '<i class="fa-solid fa-code" style="font-weight:bold;"></i>'; codeBtn.title = "HTML 소스 편집"; }
+    const divBtn = document.querySelector('.ql-divider');
+    if(divBtn) { divBtn.innerHTML = '<b>―</b>'; divBtn.title = "구분선 넣기"; }
+};
+
+// ==========================================
+// [개선] 공통 정보(Common Info) 관리 로직 (다국어 + 카테고리 + 백업)
+// ==========================================
+window.openCommonInfoModal = async () => {
+    const dbClient = window.sb || window._supabase;
+    if (!dbClient) return alert("DB 연결 실패");
+
+    document.getElementById('commonInfoModal').style.display = 'flex';
+    
+    // 카테고리 목록 로드
+    const catSelect = document.getElementById('commonInfoCategory');
+    if (catSelect.options.length <= 1) { 
+        const { data: cats } = await dbClient.from('admin_top_categories').select('code, name');
+        if(cats) {
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.code;
+                opt.innerText = c.name;
+                catSelect.appendChild(opt);
+            });
+        }
+    }
+    loadCommonInfoContent('all');
+};
+
+window.loadCommonInfoContent = async (categoryCode) => {
+    const dbClient = window.sb || window._supabase;
+    ['commonHtmlKR', 'commonHtmlJP', 'commonHtmlUS'].forEach(id => document.getElementById(id).value = "로딩 중...");
+
+    const { data } = await dbClient.from('common_info').select('*')
+        .eq('section', 'top').eq('category_code', categoryCode).single();
+
+    document.getElementById('commonHtmlKR').value = data ? (data.content || '') : '';
+    document.getElementById('commonHtmlJP').value = data ? (data.content_jp || '') : '';
+    document.getElementById('commonHtmlUS').value = data ? (data.content_us || '') : '';
+    
+    const btnRestore = document.getElementById('btnRestoreCommon');
+    if (data && (data.content_backup || data.content_backup_jp)) {
+        btnRestore.disabled = false;
+        btnRestore.innerText = "↺ 이전 백업 불러오기";
+        btnRestore.onclick = () => restoreCommonInfo(data);
+    } else {
+        btnRestore.disabled = true;
+        btnRestore.innerText = "이전 백업 없음";
+    }
+};
+
+window.saveCommonInfo = async () => {
+    const dbClient = window.sb || window._supabase;
+    const catCode = document.getElementById('commonInfoCategory').value || 'all';
+    
+    if(!confirm(`[${catCode === 'all' ? '전체상품' : catCode}] 공통정보를 저장하시겠습니까?`)) return;
+
+    // 기존 데이터 백업용 조회
+    const { data: oldData } = await dbClient.from('common_info')
+        .select('*').eq('section', 'top').eq('category_code', catCode).single();
+
+    const payload = {
+        section: 'top', category_code: catCode,
+        content: document.getElementById('commonHtmlKR').value,
+        content_jp: document.getElementById('commonHtmlJP').value,
+        content_us: document.getElementById('commonHtmlUS').value,
+        content_backup: oldData ? oldData.content : null,
+        content_backup_jp: oldData ? oldData.content_jp : null,
+        content_backup_us: oldData ? oldData.content_us : null
+    };
+
+    const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
+    if (error) alert("저장 실패: " + error.message);
+    else { alert("✅ 저장 및 백업 완료!"); loadCommonInfoContent(catCode); }
+};
+
+window.restoreCommonInfo = async (data) => {
+    if(!confirm("가장 최근 백업본으로 되돌리시겠습니까?")) return;
+    document.getElementById('commonHtmlKR').value = data.content_backup || '';
+    document.getElementById('commonHtmlJP').value = data.content_backup_jp || '';
+    document.getElementById('commonHtmlUS').value = data.content_backup_us || '';
+    alert("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.");
 };
 
 window.openDetailPageEditor = () => {
