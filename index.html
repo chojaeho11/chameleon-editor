@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script>
     // [통합 미디어 로더] 로딩 속도 개선 및 데이터 오인식 방지
     window.addEventListener('DOMContentLoaded', function() {
@@ -3317,17 +3318,30 @@ window.showChoiceModal = async function(key) {
 // ============================================================
     // [최종 수정] 공통 정보 로드 (순서: 전체공통 -> 카테고리공통)
     // ============================================================
+    // ============================================================
+    // [최종 수정] 공통 정보 로드 (전체 -> 카테고리 순서 + 대분류 자동매칭)
+    // ============================================================
     let commonInfoHtml = "";
     
     try {
-        // 1. DB 클라이언트 확보 (전역 변수 또는 모듈 변수 sb 사용)
         const dbClient = window.sb || sb; 
         if (!dbClient) throw new Error("DB 연결이 초기화되지 않았습니다.");
 
-        // 2. 카테고리 안전 처리 (없으면 'NO_CAT'으로 처리해 에러 방지)
-        const targetCat = (product.category && product.category.trim() !== "") ? product.category : 'NO_CAT';
+        // [핵심] 상품의 소분류 코드로 '대분류(Top Category) 코드' 찾기
+        // 관리자에서 대분류 기준으로 저장했기 때문에, 여기서 변환이 필요합니다.
+        const subCatCode = product.category;
+        let targetCat = subCatCode || 'NO_CAT';
+
+        if (window.globalSubCats) {
+            // 미리 로드된 카테고리 목록에서 현재 상품의 소분류를 찾고, 그 부모(대분류) 코드를 가져옵니다.
+            const match = window.globalSubCats.find(c => c.code === subCatCode);
+            if (match && match.top_category_code) {
+                targetCat = match.top_category_code;
+                console.log(`🔗 카테고리 매칭: ${subCatCode} (소분류) -> ${targetCat} (대분류)`);
+            }
+        }
         
-        // 3. 데이터 조회
+        // 3. 데이터 조회 ('전체'와 '찾아낸 대분류' 두 가지 조회)
         const { data: commonList } = await dbClient.from('common_info')
             .select('*')
             .in('category_code', ['all', targetCat]) 

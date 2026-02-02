@@ -1286,60 +1286,29 @@ window.loadCommonInfoContent = async (categoryCode) => {
     }
 };
 
-// [최종 수정] 공통정보 저장 (전체/카테고리 구분 저장 + 백업)
 window.saveCommonInfo = async () => {
     const dbClient = window.sb || window._supabase;
+    const catCode = document.getElementById('commonInfoCategory').value || 'all';
     
-    // 1. 선택된 카테고리 확인 (없으면 'all'로 강제)
-    let catCode = document.getElementById('commonInfoCategory').value;
-    if (!catCode || catCode.trim() === "") catCode = "all";
-    
-    // 2. 입력값 가져오기
-    const contentKR = document.getElementById('commonHtmlKR').value;
-    const contentJP = document.getElementById('commonHtmlJP').value;
-    const contentUS = document.getElementById('commonHtmlUS').value;
+    if(!confirm(`[${catCode === 'all' ? '전체상품' : catCode}] 공통정보를 저장하시겠습니까?`)) return;
 
-    const targetName = catCode === 'all' ? '🌍 전체 상품' : `📂 ${catCode} 카테고리`;
+    // 기존 데이터 백업용 조회
+    const { data: oldData } = await dbClient.from('common_info')
+        .select('*').eq('section', 'top').eq('category_code', catCode).single();
 
-    if(!confirm(`[${targetName}] 공통정보를 저장하시겠습니까?\n기존 내용은 백업됩니다.`)) return;
+    const payload = {
+        section: 'top', category_code: catCode,
+        content: document.getElementById('commonHtmlKR').value,
+        content_jp: document.getElementById('commonHtmlJP').value,
+        content_us: document.getElementById('commonHtmlUS').value,
+        content_backup: oldData ? oldData.content : null,
+        content_backup_jp: oldData ? oldData.content_jp : null,
+        content_backup_us: oldData ? oldData.content_us : null
+    };
 
-    try {
-        // 3. 백업을 위해 기존 데이터 조회
-        const { data: oldData } = await dbClient.from('common_info')
-            .select('*')
-            .eq('section', 'top')
-            .eq('category_code', catCode)
-            .maybeSingle();
-
-        // 4. 저장할 데이터 구성
-        const payload = {
-            section: 'top',
-            category_code: catCode,
-            content: contentKR,
-            content_jp: contentJP,
-            content_us: contentUS,
-            // 백업 필드
-            content_backup: oldData ? oldData.content : null,
-            content_backup_jp: oldData ? oldData.content_jp : null,
-            content_backup_us: oldData ? oldData.content_us : null
-        };
-
-        // 5. DB에 저장 (Upsert: 없으면 추가, 있으면 수정)
-        const { error } = await dbClient
-            .from('common_info')
-            .upsert(payload, { onConflict: 'section, category_code' });
-
-        if (error) throw error;
-
-        alert(`✅ [${targetName}] 설정이 저장되었습니다.`);
-        
-        // 저장 후 화면 갱신
-        loadCommonInfoContent(catCode);
-
-    } catch (e) {
-        console.error(e);
-        alert("저장 중 오류 발생: " + e.message);
-    }
+    const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
+    if (error) alert("저장 실패: " + error.message);
+    else { alert("✅ 저장 및 백업 완료!"); loadCommonInfoContent(catCode); }
 };
 
 window.restoreCommonInfo = async (data) => {
