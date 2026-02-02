@@ -2160,7 +2160,11 @@
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
     // -----------------------------------------------------------
+    // -----------------------------------------------------------
+    // [1] 전역 변수 및 헬퍼 함수 설정
+    // -----------------------------------------------------------
     window.canvas = canvas;
+    window.sb = sb; // ★ [핵심] 데이터베이스 연결 도구 전역 등록
     // index.html 내부 스크립트 수정
 
 window.getTinyThumb = function(url, size = 150) {
@@ -3310,36 +3314,60 @@ window.showChoiceModal = async function(key) {
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
-    // ★★★ [DB 연동 복구] 공통 정보 가져오기 ★★★
-    // 아까 강제로 넣었던 긴 코드는 삭제하고, 관리자 페이지에서 저장한 내용을 불러옵니다.
-    // ★★★ [업그레이드] 공통 정보 가져오기 (카테고리 우선 + 다국어) ★★★
+// ============================================================
+    // [최종 수정] 공통 정보 로드 (순서: 전체공통 -> 카테고리공통)
+    // ============================================================
     let commonInfoHtml = "";
+    
     try {
-        const dbClient = window.sb || window._supabase;
+        // 1. DB 클라이언트 확보 (전역 변수 또는 모듈 변수 sb 사용)
+        const dbClient = window.sb || sb; 
+        if (!dbClient) throw new Error("DB 연결이 초기화되지 않았습니다.");
+
+        // 2. 카테고리 안전 처리 (없으면 'NO_CAT'으로 처리해 에러 방지)
+        const targetCat = (product.category && product.category.trim() !== "") ? product.category : 'NO_CAT';
         
-        // 1. 전체('all')와 현재 상품 카테고리 정보 조회
+        // 3. 데이터 조회
         const { data: commonList } = await dbClient.from('common_info')
             .select('*')
-            .in('category_code', ['all', product.category])
+            .in('category_code', ['all', targetCat]) 
             .eq('section', 'top');
 
         if (commonList && commonList.length > 0) {
-            // 2. 우선순위 결정 (카테고리 설정 있으면 우선 사용)
-            let targetInfo = commonList.find(c => c.category_code === product.category);
-            if (!targetInfo) targetInfo = commonList.find(c => c.category_code === 'all');
+            // (1) 데이터 분류
+            const globalData = commonList.find(c => c.category_code === 'all');
+            const catData = commonList.find(c => c.category_code === targetCat);
 
-            if (targetInfo) {
-                // 3. 언어별 내용 선택
-                let content = targetInfo.content; // 기본 KR
-                if (lang === 'ja' && targetInfo.content_jp) content = targetInfo.content_jp;
-                if (lang === 'en' && targetInfo.content_us) content = targetInfo.content_us;
+            // 언어별 내용 추출 헬퍼
+            const getContentByLang = (data) => {
+                if (!data) return "";
+                if (lang === 'ja' && data.content_jp) return data.content_jp;
+                if (lang === 'en' && data.content_us) return data.content_us;
+                return data.content || ""; // 기본 KR
+            };
 
-                if (content) {
-                    commonInfoHtml = `<div class="common-info-area product-detail-render" style="margin-bottom:40px;">${content}</div>`;
-                }
+            // (2) HTML 합치기
+            let combinedHtml = "";
+
+            // 전체 공통 (상단)
+            const globalContent = getContentByLang(globalData);
+            if (globalContent) {
+                combinedHtml += `<div class="common-global-section" style="margin-bottom:30px;">${globalContent}</div>`;
+            }
+
+            // 카테고리 공통 (하단)
+            const catContent = getContentByLang(catData);
+            if (catContent) {
+                combinedHtml += `<div class="common-category-section" style="margin-bottom:30px;">${catContent}</div>`;
+            }
+
+            if (combinedHtml) {
+                commonInfoHtml = `<div class="common-info-area product-detail-render">${combinedHtml}</div>`;
             }
         }
-    } catch (err) { console.warn("공통 정보 로드 실패:", err); }
+    } catch (err) {
+        console.warn("공통 정보 로드 경고:", err);
+    }
 
     // 4. 옵션(Add-on) 생성
     let optionsHtml = '<div id="addonCategoryArea" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;">';
