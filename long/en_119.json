@@ -208,7 +208,7 @@
   "msg_login_required": "Login is required for this service.",
   "msg_login_required_design": "Login is required to start designing.",
   "msg_template_apply_confirm": "Apply template to current canvas?\n(This will be added on top of your design)",
-  "msg_large_product_warning": "📢 You selected a large format product.\n\nFor Honeycomb Walls, using vector templates ensures the best quality.\nImages are fine for fabric products or banners.",
+  "msg_large_product_warning": "📢 The editor is easy and convenient.\n\nCreate a great design.\nClick a template to get started.",
   
   "msg_processing_file": "Processing file...",
   "msg_unsupported_file": "Unsupported file format.",

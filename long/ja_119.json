@@ -206,7 +206,7 @@
   "msg_login_required": "このサービスを利用するにはログインが必要です。",
   "msg_login_required_design": "デザインを始めるにはログインが必要です。",
   "msg_template_apply_confirm": "現在のキャンバスにテンプレートを適用しますか？\n(既存のデザインの上に追加されます)",
-  "msg_large_product_warning": "📢 サイズの大きい製品が選択されました。\n\nハニカムボードなどはベクターテンプレートで作業すると綺麗に仕上がります。\nファブリック製品やバナーは画像データでも問題ありません。",
+  "msg_large_product_warning": "📢エディターは簡単で使いやすいです。\n\n素敵なデザインを作ってみましょう。\nテンプレートをクリックして始めてください。",
   
   "msg_processing_file": "ファイルを処理しています...",
   "msg_unsupported_file": "対応していないファイル形式です。",

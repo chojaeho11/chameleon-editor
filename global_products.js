@@ -296,15 +296,20 @@ window.deleteCategoryDB = async (id) => {
 };
 
 async function updateOrder(table, container) {
-    const items = container.querySelectorAll('.badge');
-    const updates = [];
-    items.forEach((el, idx) => {
-        updates.push(sb.from(table).update({ sort_order: idx + 1 }).eq('id', el.dataset.id));
+    // [수정] .badge 클래스뿐만 아니라 data-id를 가진 직계 자식 요소를 모두 찾습니다.
+    const items = Array.from(container.children).filter(el => el.dataset.id);
+    
+    // 순서대로 sort_order 업데이트
+    const updates = items.map((el, idx) => {
+        return sb.from(table).update({ sort_order: idx + 1 }).eq('id', el.dataset.id);
     });
-    // 작은 카테고리 목록은 동시 업데이트 해도 괜찮음
-    await Promise.all(updates);
-}
 
+    try {
+        await Promise.all(updates);
+    } catch (e) {
+        console.error("순서 저장 실패:", e);
+    }
+}
 // ==========================================
 // 3. 옵션 및 카테고리 관리
 // ==========================================
@@ -312,26 +317,54 @@ window.loadAddonCategories = async () => {
     try {
         const [catRes, addonRes] = await Promise.all([
             sb.from('addon_categories').select('*').order('sort_order', {ascending: true}),
-            sb.from('admin_addons').select('*').order('code', {ascending: true})
+            sb.from('admin_addons').select('*').order('sort_order', {ascending: true}) // 순서대로 정렬
         ]);
 
         if (catRes.error) throw catRes.error;
         window.cachedAddonCategories = catRes.data || [];
         window.cachedAddons = addonRes.data || [];
 
+        // 1. Select 박스 갱신
         ['newAddonCatCode', 'filterAddonCategory'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
+                const oldVal = el.value;
                 el.innerHTML = (id === 'filterAddonCategory') ? '<option value="all">📁 카테고리 전체</option>' : '';
                 window.cachedAddonCategories.forEach(c => {
                     el.innerHTML += `<option value="${c.code}">${c.name_kr || c.name}</option>`;
                 });
+                if(oldVal) el.value = oldVal;
             }
         });
 
+        // 2. [신규] 카테고리 순서변경 영역 렌더링
+        const catListArea = document.getElementById('addonCategoryListArea');
+        if (catListArea) {
+            catListArea.innerHTML = '';
+            window.cachedAddonCategories.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'badge draggable-item'; // 식별용 클래스
+                div.dataset.id = c.id;
+                div.style.cssText = "background:#fff; border:1px solid #cbd5e1; color:#334155; padding:6px 12px; cursor:grab; display:flex; align-items:center; gap:6px; user-select:none;";
+                div.innerHTML = `
+                    <i class="fa-solid fa-bars" style="color:#94a3b8; font-size:11px;"></i>
+                    <b>${c.name_kr || c.name}</b> <small style="color:#94a3b8;">(${c.code})</small>
+                    <i class="fa-solid fa-pen" onclick="editCurrentAddonCategory('${c.code}')" style="cursor:pointer; color:#6366f1; margin-left:5px;" title="수정"></i>
+                `;
+                catListArea.appendChild(div);
+            });
+
+            // Sortable 연결
+            if (catListArea.sortable) catListArea.sortable.destroy();
+            catListArea.sortable = new Sortable(catListArea, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: () => updateOrder('addon_categories', catListArea)
+            });
+        }
+
         const container = document.getElementById('dynamicCategoryContainer');
-        if (container) {
-            container.innerHTML = '';
+        if (container && container.children.length === 0) {
             addCategorySelectRow(); 
         }
         
@@ -436,25 +469,47 @@ window.loadSystemDB = debounce(async (filterSite) => {
         return matchCat && matchKey;
     });
 
+    if(filtered.length === 0) {
+        listArea.innerHTML = '<div style="width:100%; text-align:center; padding:20px; color:#999;">표시할 옵션이 없습니다.</div>';
+        return;
+    }
+
     filtered.forEach(item => {
         const dPrice = (filterSite === 'JP') ? (item.price_jp || 0) : (filterSite === 'US' ? (item.price_us || 0) : (item.price_kr || item.price || 0));
         const symbol = (filterSite === 'JP') ? '¥' : (filterSite === 'US' ? '$' : '₩');
 
-        listArea.innerHTML += `
-            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; gap:10px; align-items:center;">
-                <img src="${item.img_url || 'https://placehold.co/80'}" style="width:50px; height:50px; border-radius:6px; object-fit:cover;">
-                <div style="flex:1;">
-                    <div style="font-size:10px; color:#6366f1; font-weight:800;">${item.category_code || '미분류'}</div>
-                    <div style="font-size:13px; font-weight:bold;">${item.name_kr || item.name}</div>
-                    <div style="font-size:12px; font-weight:900;">${symbol}${dPrice.toLocaleString()}</div>
-                </div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; font-size:14px; padding:5px;"></i>
-                    <i class="fa-solid fa-trash" onclick="deleteAddonDB(${item.id})" style="cursor:pointer; color:#ef4444; font-size:14px; padding:5px;"></i>
-                </div>
+        const div = document.createElement('div');
+        div.className = 'draggable-item'; // 식별용
+        div.dataset.id = item.id;
+        div.style.cssText = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; gap:10px; align-items:center; position:relative;";
+        
+        div.innerHTML = `
+            <div class="drag-handle" style="cursor:grab; padding:5px; color:#cbd5e1; display:${searchKeyword ? 'none' : 'block'};">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <img src="${item.img_url || 'https://placehold.co/80'}" style="width:50px; height:50px; border-radius:6px; object-fit:cover;">
+            <div style="flex:1;">
+                <div style="font-size:10px; color:#6366f1; font-weight:800;">${item.category_code || '미분류'}</div>
+                <div style="font-size:13px; font-weight:bold;">${item.name_kr || item.name}</div>
+                <div style="font-size:12px; font-weight:900;">${symbol}${dPrice.toLocaleString()}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; font-size:14px; padding:5px;"></i>
+                <i class="fa-solid fa-trash" onclick="deleteAddonDB(${item.id})" style="cursor:pointer; color:#ef4444; font-size:14px; padding:5px;"></i>
             </div>`;
+        listArea.appendChild(div);
     });
-}, 300); // 0.3초 딜레이
+
+    // 검색어가 없을 때만 정렬 기능 활성화
+    if (!searchKeyword) {
+        if (listArea.sortable) listArea.sortable.destroy();
+        listArea.sortable = new Sortable(listArea, {
+            animation: 150,
+            handle: '.drag-handle',
+            onEnd: () => updateOrder('admin_addons', listArea)
+        });
+    }
+}, 300);
 
 window.editAddonLoad = (id) => {
     const item = window.cachedAddons.find(a => a.id === id);

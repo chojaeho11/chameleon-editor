@@ -190,7 +190,7 @@
   "msg_login_required": "로그인이 필요한 서비스입니다.",
   "msg_login_required_design": "디자인을 시작하려면 로그인이 필요합니다.",
   "msg_template_apply_confirm": "현재 캔버스에 템플릿을 적용하시겠습니까?\n(기존 디자인 위에 추가됩니다)",
-  "msg_large_product_warning": "📢 크기가 큰 제품을 선택하셨네요\n\n허니콤가벽은 백터 탬플릿으로 작업해야 깨짐없이 깔끔해요\n\n패브릭 제품이나 배너는 이미지도 괜찮아요 ",
+  "msg_large_product_warning": "📢 에디터는 쉽고 편합니다.\n\n멋진디자인 해보세요\n\n템프릿을 눌러 시작해보세요 ",
   
   "msg_processing_file": "파일 처리 중...",
   "msg_unsupported_file": "지원하지 않는 파일 형식입니다.",

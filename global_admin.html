@@ -650,15 +650,20 @@
         </div> <div class="product-grid-area" style="flex: 1.5; display: flex; flex-direction: column; gap: 20px;">
             
             <div class="card" style="margin-bottom:0; border-left: 5px solid #6366f1;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="margin:0; color:#1e1b4b;"><i class="fa-solid fa-layer-group"></i> 1️⃣ 옵션 & 카테고리 마스터</h3>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn btn-outline btn-sm" onclick="openAddonCatManager()">📂 분류 관리</button>
-                        <button class="btn btn-vip btn-sm" onclick="autoTranslateAddonInputs()"><i class="fa-solid fa-language"></i> 전체 자동번역</button>
-                    </div>
-                </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 style="margin:0; color:#1e1b4b;"><i class="fa-solid fa-layer-group"></i> 1️⃣ 옵션 & 카테고리 마스터</h3>
+        <div style="display:flex; gap:5px;">
+            <button class="btn btn-outline btn-sm" onclick="openAddonCatManager()">➕ 새 분류 추가</button>
+            <button class="btn btn-vip btn-sm" onclick="autoTranslateAddonInputs()"><i class="fa-solid fa-language"></i> 전체 자동번역</button>
+        </div>
+    </div>
 
-                <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
+    <div style="background:#f0f9ff; border:1px dashed #bae6fd; border-radius:8px; padding:10px; margin-bottom:20px;">
+        <div style="font-size:12px; font-weight:bold; color:#0369a1; margin-bottom:8px;">📂 카테고리 순서 관리 (드래그하여 변경)</div>
+        <div id="addonCategoryListArea" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
                     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
                         <div style="width:200px;">
     <label class="form-label">📂 카테고리 선택</label>
