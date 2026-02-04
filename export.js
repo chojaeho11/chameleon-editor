@@ -2,12 +2,119 @@ import { canvas } from "./canvas-core.js";
 import { ADDON_DB, currentUser, sb } from "./config.js";
 import { pageDataList, currentPageIndex } from "./canvas-pages.js"; // 페이지 인덱스 가져오기
 
-// [안전장치] 기본 폰트 로드 실패 시 사용할 폰트
-const SAFE_KOREAN_FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf";
-const BASE_FONT_NAME = "NanumGothic"; 
+// [안전장치] 언어별 기본 폰트 URL 설정
+const FONT_CONFIG = {
+    kr: {
+        url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf",
+        name: "NanumGothic"
+    },
+    jp: {
+        url: "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/JP/1767880510037_gn95s1ps.ttf",
+        name: "NotoSansJP"
+    },
+    us: { // 영어는 한글 폰트로도 표현 가능하므로 KR과 동일하게 설정 (또는 별도 설정 가능)
+        url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf",
+        name: "NanumGothic"
+    }
+};
+
+// 현재 URL에서 언어 설정 가져오기 (없으면 'kr' 기본)
+const urlParams = new URLSearchParams(window.location.search);
+const CURRENT_LANG_CODE = (urlParams.get('lang') || 'kr').toLowerCase();
+const TARGET_FONT = FONT_CONFIG[CURRENT_LANG_CODE] || FONT_CONFIG['kr'];
+
+const BASE_FONT_NAME = TARGET_FONT.name;
+
+// [신규] PDF 내부 고정 텍스트 다국어 정의
+const PDF_LABELS = {
+    kr: {
+        quote_title: "견 적 서",
+        receipt_title: "영 수 증",
+        statement_title: "거 래 명 세 서",
+        ordersheet_title: "작 업 지 시 서",
+        recipient: "[ 수신자 ]",
+        name: "성   명 :",
+        phone: "연 락 처 :",
+        address: "주   소 :",
+        provider_labels: ["등록번호", "상      호", "대      표", "주      소", "업      태", "연 락 처"],
+        provider_values: ["470-81-02808", "(주)카멜레온프린팅", "조재호", "경기 화성시 우정읍 한말길 72-2", "제조업 / 서비스업", "031-366-1984"],
+        headers: ["No", "품목명", "규격/옵션", "수량", "단가", "금액"],
+        supply_price: "공급가액 :",
+        vat: "부 가 세 :",
+        discount: "할인금액 :",
+        mileage: "마일리지 :",
+        total_amount: "합계금액 (VAT포함)",
+        footer_claim: "위와 같이 청구(영수)합니다.",
+        staff_make: "제 작 담 당",
+        staff_check: "검 수 / 출 고",
+        staff_ship: "배 송 담 당",
+        payment_card: "신용카드로 결제되었습니다.",
+        payment_bank: "계좌이체로 결제되었습니다.",
+        payment_deposit: "예치금으로 결제되었습니다.",
+        opt_default: "기본 사양",
+        opt_add: "추가 옵션"
+    },
+    ja: {
+        quote_title: "御 見 積 書",
+        receipt_title: "領 収 書",
+        statement_title: "納 品 書",
+        ordersheet_title: "発 注 書",
+        recipient: "[ 受信者 ]",
+        name: "氏   名 :",
+        phone: "連絡先 :",
+        address: "住   所 :",
+        provider_labels: ["登録番号", "商      号", "代      表", "住      所", "業      態", "連絡先"],
+        provider_values: ["2025-京畿華城-0033", "(株)カメレオンプリンティング", "趙 宰鎬", "京畿道 華城市 雨汀邑 ハンマルギル 72-2", "製造業 / サービス業", "047-712-1148"],
+        headers: ["No", "品名", "仕様/オプション", "数量", "単価", "金額"],
+        supply_price: "税抜金額 :",
+        vat: "消費税 :",
+        discount: "割引金額 :",
+        mileage: "ポイント使用 :",
+        total_amount: "合計金額 (税込)",
+        footer_claim: "上記の通り、相違なく領収いたしました。",
+        staff_make: "制作担当",
+        staff_check: "検品/出荷",
+        staff_ship: "配送担当",
+        payment_card: "クレジットカード決済完了",
+        payment_bank: "銀行振込完了",
+        payment_deposit: "デポジット決済完了",
+        opt_default: "基本仕様",
+        opt_add: "追加オプション"
+    },
+    us: {
+        quote_title: "QUOTATION",
+        receipt_title: "RECEIPT",
+        statement_title: "INVOICE",
+        ordersheet_title: "WORK ORDER",
+        recipient: "[ Customer ]",
+        name: "Name :",
+        phone: "Phone :",
+        address: "Addr :",
+        provider_labels: ["Reg No.", "Company", "CEO", "Address", "Type", "Contact"],
+        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Manufacturing", "+82-31-366-1984"],
+        headers: ["No", "Item", "Spec/Option", "Qty", "Price", "Amount"],
+        supply_price: "Subtotal :",
+        vat: "VAT :",
+        discount: "Discount :",
+        mileage: "Points Used :",
+        total_amount: "Grand Total",
+        footer_claim: "Authorized Signature",
+        staff_make: "Production",
+        staff_check: "Inspection",
+        staff_ship: "Shipping",
+        payment_card: "Paid by Credit Card",
+        payment_bank: "Paid by Bank Transfer",
+        payment_deposit: "Paid by Deposit",
+        opt_default: "Basic Spec",
+        opt_add: "Add-ons"
+    }
+};
+
+// 현재 언어 라벨 가져오기 (없으면 한국어)
+const TEXT = PDF_LABELS[CURRENT_LANG_CODE] || PDF_LABELS['kr'];
 
 // 직인 이미지
-const STAMP_IMAGE_URL = "https://gdadmin.signmini.com/data/etc/stampImage"; 
+const STAMP_IMAGE_URL = "https://gdadmin.signmini.com/data/etc/stampImage";
 
 // ==========================================================
 // [1] 내보내기 버튼 초기화 (주문 시스템 방식 적용)
@@ -208,12 +315,29 @@ async function getSafeImageDataUrl(url) {
 const fontBufferCache = {};
 
 async function loadPdfFonts(doc) {
+    // [수정] 언어에 맞는 폰트 로드
     if (!fontBufferCache[BASE_FONT_NAME]) {
         try {
-            const res = await fetch(SAFE_KOREAN_FONT_URL);
-            if (res.ok) fontBufferCache[BASE_FONT_NAME] = await res.arrayBuffer();
-        } catch (e) { console.error("기본 폰트 로드 실패:", e); }
+            console.log(`[PDF] ${CURRENT_LANG_CODE} 언어용 폰트 로딩 중... (${TARGET_FONT.url})`);
+            const res = await fetch(TARGET_FONT.url);
+            if (res.ok) {
+                fontBufferCache[BASE_FONT_NAME] = await res.arrayBuffer();
+            } else {
+                throw new Error("폰트 다운로드 실패");
+            }
+        } catch (e) { 
+            console.error("폰트 로드 실패, 백업 폰트 시도:", e);
+            // 실패 시 한국어 폰트로 재시도 (최후의 수단)
+            try {
+                const backupRes = await fetch(FONT_CONFIG['kr'].url);
+                if(backupRes.ok) {
+                    fontBufferCache[BASE_FONT_NAME] = await backupRes.arrayBuffer();
+                    console.log("백업(KR) 폰트 로드 성공");
+                }
+            } catch(err) { console.error("백업 폰트도 실패:", err); }
+        }
     }
+    
     if (fontBufferCache[BASE_FONT_NAME]) {
         const fontData = (function(buffer) {
             let binary = ''; const bytes = new Uint8Array(buffer); const len = bytes.byteLength;
@@ -226,6 +350,8 @@ async function loadPdfFonts(doc) {
             doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "normal");
             doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "bold");
         }
+        // [추가] 폰트 설정 적용
+        doc.setFont(BASE_FONT_NAME);
     }
 }
 
@@ -247,11 +373,28 @@ function drawLine(doc, x1, y1, x2, y2, colorHex = "#000000", width = 0.1) {
 function drawCell(doc, x, y, w, h, text, align='center', fontSize=9, isHeader=false) {
     doc.setFontSize(fontSize);
     if (isHeader) { doc.setFillColor(240, 240, 240); doc.rect(x, y, w, h, 'F'); }
-    doc.setDrawColor(0); doc.setLineWidth(0.1); doc.rect(x, y, w, h);
+    
+    doc.setDrawColor(0); 
+    doc.setLineWidth(0.1); 
+    doc.rect(x, y, w, h);
+    
     doc.setTextColor(0, 0, 0, 1);
     doc.setFont(BASE_FONT_NAME, isHeader ? 'bold' : 'normal');
+    
     const textX = align === 'left' ? x + 2 : (align === 'right' ? x + w - 2 : x + w/2);
-    doc.text(String(text), textX, y + (h/2) + (fontSize/3.5), { align: align, maxWidth: w-4 });
+    
+    // [수정] 텍스트가 배열(여러 줄)일 때 수직 중앙 정렬 계산
+    if (Array.isArray(text)) {
+        const lineHeight = fontSize * 0.45; // 줄 간격 보정값
+        // 텍스트 블록의 전체 높이 계산 후 시작 Y좌표 설정
+        const totalTextHeight = (text.length - 1) * lineHeight * 1.15;
+        const startY = y + (h / 2) - (totalTextHeight / 2) + (fontSize / 3.5);
+        
+        doc.text(text, textX, startY, { align: align, lineHeightFactor: 1.15 });
+    } else {
+        // 한 줄일 때는 기존 방식 유지
+        doc.text(String(text), textX, y + (h/2) + (fontSize/3.5), { align: align, maxWidth: w-4 });
+    }
 }
 
 // ==========================================================
@@ -316,10 +459,14 @@ async function convertCanvasTextToPaths(fabricCanvas) {
     
     const loadedFonts = {}; 
     const findFontUrl = (name) => {
-        if (!name) return SAFE_KOREAN_FONT_URL;
+        // [수정] 기본 폰트를 현재 언어 설정에 맞게 변경
+        if (!name) return TARGET_FONT.url;
+        
         const target = name.toLowerCase().replace(/[\s\-_]/g, '');
         const match = fontList.find(f => target.includes(f.normalized));
-        return match ? match.url : SAFE_KOREAN_FONT_URL;
+        
+        // 매칭되는 폰트가 없으면 현재 언어의 기본 폰트 사용
+        return match ? match.url : TARGET_FONT.url;
     };
 
     const processObjects = async (objects) => {
@@ -414,7 +561,8 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     await loadPdfFonts(doc); 
-    return generateCommonDocument(doc, "견 적 서", orderInfo, cartItems, discountRate, usedMileage);
+    // [수정] 언어에 맞는 제목 사용
+    return generateCommonDocument(doc, TEXT.quote_title, orderInfo, cartItems, discountRate, usedMileage);
 }
 
 export async function generateTransactionStatementPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
@@ -422,7 +570,7 @@ export async function generateTransactionStatementPDF(orderInfo, cartItems, disc
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     await loadPdfFonts(doc); 
-    return generateCommonDocument(doc, "거 래 명 세 서", orderInfo, cartItems, discountRate, usedMileage);
+    return generateCommonDocument(doc, TEXT.statement_title, orderInfo, cartItems, discountRate, usedMileage);
 }
 
 export async function generateReceiptPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
@@ -430,30 +578,47 @@ export async function generateReceiptPDF(orderInfo, cartItems, discountRate = 0,
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     await loadPdfFonts(doc); 
-    return generateCommonDocument(doc, "영 수 증", orderInfo, cartItems, discountRate, usedMileage);
+    return generateCommonDocument(doc, TEXT.receipt_title, orderInfo, cartItems, discountRate, usedMileage);
 }
 
 // 공통 문서 생성기 (견적서/명세서/영수증)
+// 공통 문서 생성기 (견적서/명세서/영수증) - 다국어 완벽 적용
 async function generateCommonDocument(doc, title, orderInfo, cartItems, discountRate, usedMileage) {
     doc.setFontSize(26); 
+    // 제목 출력
     drawText(doc, title, 105, 22, { align: 'center', weight: 'bold' });
     drawLine(doc, 15, 28, 195, 28, "#000000", 0.5); 
 
     const topY = 35; const leftX = 15;
     doc.setFontSize(10);
-    drawText(doc, `[ 수신자 ]`, leftX, topY);
-    drawText(doc, `성   명 :  ${orderInfo.manager || '-'}`, leftX, topY+8);
-    drawText(doc, `연 락 처 :  ${orderInfo.phone || '-'}`, leftX, topY+14);
-    drawText(doc, `주   소 :  ${orderInfo.address || '-'}`, leftX, topY+20, { maxWidth: 85 });
+    
+    // [수정] 수신자 정보 (다국어 라벨 TEXT 사용)
+    drawText(doc, TEXT.recipient, leftX, topY);
+    drawText(doc, `${TEXT.name}  ${orderInfo.manager || '-'}`, leftX, topY+8);
+    drawText(doc, `${TEXT.phone}  ${orderInfo.phone || '-'}`, leftX, topY+14);
+    drawText(doc, `${TEXT.address}  ${orderInfo.address || '-'}`, leftX, topY+20, { maxWidth: 85 });
 
     const boxX = 105; const boxY = 32; const cellH = 7; const labelW = 20; const valW = 70;
-    const providerInfo = [ ["등록번호", "470-81-02808"], ["상      호", "(주)카멜레온프린팅"], ["대      표", "조재호"], ["주      소", "경기 화성시 우정읍 한말길 72-2"], ["업      태", "제조업 / 서비스업"], ["연 락 처", "031-366-1984"] ];
+    
+    // [수정] 공급자 정보 (한국/일본/미국 정보 자동 전환)
+    const pLabels = TEXT.provider_labels;
+    const pValues = TEXT.provider_values;
+    const providerInfo = [ 
+        [pLabels[0], pValues[0]], 
+        [pLabels[1], pValues[1]], 
+        [pLabels[2], pValues[2]], 
+        [pLabels[3], pValues[3]], 
+        [pLabels[4], pValues[4]], 
+        [pLabels[5], pValues[5]] 
+    ];
+
     providerInfo.forEach((row, i) => {
         const curY = boxY + (i * cellH);
         drawCell(doc, boxX, curY, labelW, cellH, row[0], 'center', 9, true);
         drawCell(doc, boxX+labelW, curY, valW, cellH, row[1], 'left', 9, false);
     });
 
+    // 직인 이미지
     if (STAMP_IMAGE_URL) {
         try {
             const response = await fetch(STAMP_IMAGE_URL);
@@ -471,7 +636,8 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 
     let y = 85;
     const cols = [10, 50, 40, 20, 30, 30]; 
-    const headers = ["No", "품목명", "규격/옵션", "수량", "단가", "금액"];
+    // [수정] 테이블 헤더 다국어 적용
+    const headers = TEXT.headers;
     let curX = 15;
     headers.forEach((h, i) => { drawCell(doc, curX, y, cols[i], 8, h, 'center', 10, true); curX += cols[i]; });
     y += 8;
@@ -479,30 +645,78 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     let totalAmt = 0; let no = 1;
     cartItems.forEach(item => {
         if (!item.product) return;
-        const pTotal = (item.product.price || 0) * (item.qty || 1); totalAmt += pTotal;
+        
+        // 다국어 상품명/가격 선택 로직
+        let pdfName = item.product.name;
+        let pdfPrice = item.product.price;
+        let pdfOptionLabel = TEXT.opt_default; 
+
+        if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
+            if (item.product.name_jp) pdfName = item.product.name_jp;
+            if (item.product.price_jp) pdfPrice = item.product.price_jp;
+        } else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') {
+            if (item.product.name_us) pdfName = item.product.name_us;
+            if (item.product.price_us) pdfPrice = item.product.price_us;
+        }
+
+        const pTotal = (pdfPrice || 0) * (item.qty || 1); 
+        totalAmt += pTotal;
+
+        const nameColWidth = cols[1];
+        const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
+        const lineCount = splitTitle.length;
+        
+        const rowHeight = Math.max(8, 4 + (lineCount * 5));
+
         curX = 15;
-        drawCell(doc, curX, y, cols[0], 8, no++, 'center'); curX += cols[0];
-        drawCell(doc, curX, y, cols[1], 8, item.product.name, 'left'); curX += cols[1];
-        drawCell(doc, curX, y, cols[2], 8, "기본 사양", 'left'); curX += cols[2];
-        drawCell(doc, curX, y, cols[3], 8, String(item.qty), 'center'); curX += cols[3];
-        drawCell(doc, curX, y, cols[4], 8, item.product.price.toLocaleString(), 'right'); curX += cols[4];
-        drawCell(doc, curX, y, cols[5], 8, pTotal.toLocaleString(), 'right');
-        y += 8;
+        drawCell(doc, curX, y, cols[0], rowHeight, no++, 'center'); curX += cols[0];
+        drawCell(doc, curX, y, cols[1], rowHeight, splitTitle, 'left'); curX += cols[1]; 
+        drawCell(doc, curX, y, cols[2], rowHeight, pdfOptionLabel, 'left'); curX += cols[2];
+        drawCell(doc, curX, y, cols[3], rowHeight, String(item.qty), 'center'); curX += cols[3];
+        
+        // [수정] 가격 포맷 적용 (formatCurrencyForPDF 사용)
+        const priceStr = formatCurrencyForPDF(pdfPrice); 
+        const totalStr = formatCurrencyForPDF(pTotal);
+        
+        drawCell(doc, curX, y, cols[4], rowHeight, priceStr, 'right'); curX += cols[4];
+        drawCell(doc, curX, y, cols[5], rowHeight, totalStr, 'right');
+        
+        y += rowHeight; 
         if(y > 260) { doc.addPage(); y = 20; }
         
         if (item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = ADDON_DB[code]; if(!add) return;
                 const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                const aTotal = add.price * uQty; totalAmt += aTotal;
+                
+                // [수정] 옵션 가격 다국어 처리
+                let addPrice = add.price;
+                let addName = add.name;
+                if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')) {
+                    if (add.price_jp) addPrice = add.price_jp;
+                    if (add.name_jp) addName = add.name_jp;
+                } else if (CURRENT_LANG_CODE === 'us') {
+                    if (add.price_us) addPrice = add.price_us;
+                    if (add.name_us) addName = add.name_us;
+                }
+
+                const aTotal = addPrice * uQty; totalAmt += aTotal;
+                
+                const addonName = "└ " + addName;
+                const splitAddon = doc.splitTextToSize(addonName, nameColWidth - 4);
+                const addonRows = splitAddon.length;
+                const addonHeight = Math.max(8, 4 + (addonRows * 5));
+
                 curX = 15;
-                drawCell(doc, curX, y, cols[0], 8, "", 'center'); curX += cols[0];
-                drawCell(doc, curX, y, cols[1], 8, "└ " + add.name, 'left', 8); curX += cols[1];
-                drawCell(doc, curX, y, cols[2], 8, "추가 옵션", 'left', 8); curX += cols[2];
-                drawCell(doc, curX, y, cols[3], 8, String(uQty), 'center'); curX += cols[3];
-                drawCell(doc, curX, y, cols[4], 8, add.price.toLocaleString(), 'right'); curX += cols[4];
-                drawCell(doc, curX, y, cols[5], 8, aTotal.toLocaleString(), 'right');
-                y += 8; if(y > 260) { doc.addPage(); y = 20; }
+                drawCell(doc, curX, y, cols[0], addonHeight, "", 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1], addonHeight, splitAddon, 'left', 8); curX += cols[1];
+                drawCell(doc, curX, y, cols[2], addonHeight, TEXT.opt_add, 'left', 8); curX += cols[2];
+                drawCell(doc, curX, y, cols[3], addonHeight, String(uQty), 'center'); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], addonHeight, formatCurrencyForPDF(addPrice), 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], addonHeight, formatCurrencyForPDF(aTotal), 'right');
+                
+                y += addonHeight; 
+                if(y > 260) { doc.addPage(); y = 20; }
             });
         }
     });
@@ -511,35 +725,85 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     const afterRateDiscount = Math.floor(totalAmt * (1 - discountRate));
     const rateDiscountAmt = totalAmt - afterRateDiscount;
     const finalAmt = afterRateDiscount - usedMileage;
+    
+    // [수정] 부가세 계산 (일본 10%, 한국 10%)
     const vat = Math.floor(finalAmt / 11);
     const supply = finalAmt - vat;
     
+    // 통화 기호 설정
+    const currencySym = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '¥' : (CURRENT_LANG_CODE === 'us' ? '$' : '원');
+    const suffix = (CURRENT_LANG_CODE === 'kr') ? ' 원' : '';
+    const prefix = (CURRENT_LANG_CODE !== 'kr') ? currencySym : '';
+
     const summaryX = 105; 
-    drawText(doc, "공급가액 :", summaryX, y+5, {align:'right'});
-    drawText(doc, supply.toLocaleString() + " 원", 195, y+5, {align:'right'}); y+=6;
-    drawText(doc, "부 가 세 :", summaryX, y+5, {align:'right'});
-    drawText(doc, vat.toLocaleString() + " 원", 195, y+5, {align:'right'}); y+=6;
+    // [수정] 합계 라벨 다국어
+    drawText(doc, TEXT.supply_price, summaryX, y+5, {align:'right'});
+    drawText(doc, prefix + supply.toLocaleString() + suffix, 195, y+5, {align:'right'}); y+=6;
+    
+    drawText(doc, TEXT.vat, summaryX, y+5, {align:'right'});
+    drawText(doc, prefix + vat.toLocaleString() + suffix, 195, y+5, {align:'right'}); y+=6;
 
     if (rateDiscountAmt > 0) {
         doc.setTextColor(255, 0, 0); 
-        drawText(doc, `등급할인 (${(discountRate*100).toFixed(0)}%) :`, summaryX, y+5, {align:'right'}, "#ff0000");
-        drawText(doc, "-" + rateDiscountAmt.toLocaleString() + " 원", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
+        drawText(doc, `${TEXT.discount} (${(discountRate*100).toFixed(0)}%) :`, summaryX, y+5, {align:'right'}, "#ff0000");
+        drawText(doc, "-" + prefix + rateDiscountAmt.toLocaleString() + suffix, 195, y+5, {align:'right'}, "#ff0000"); y+=6;
     }
     if (usedMileage > 0) {
         doc.setTextColor(255, 0, 0); 
-        drawText(doc, `마일리지 사용 :`, summaryX, y+5, {align:'right'}, "#ff0000");
+        drawText(doc, TEXT.mileage, summaryX, y+5, {align:'right'}, "#ff0000");
         drawText(doc, "-" + usedMileage.toLocaleString() + " P", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
     }
     y += 2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(summaryX-20, y, 195, y); y += 8;
-    drawText(doc, "합계금액 (VAT포함)", summaryX, y, {align:'right', weight:'bold'});
+    
+    // 합계 금액 (다국어 라벨)
+    drawText(doc, TEXT.total_amount, summaryX, y, {align:'right', weight:'bold'});
     doc.setFontSize(14);
-    drawText(doc, finalAmt.toLocaleString() + " 원", 195, y, {align:'right', weight:'bold'}, "#1a237e"); 
+    drawText(doc, prefix + finalAmt.toLocaleString() + suffix, 195, y, {align:'right', weight:'bold'}, "#1a237e"); 
+
+    // 결제 수단 표기
+    if (title.includes(TEXT.receipt_title) || title.includes(TEXT.statement_title)) {
+        y += 8;
+        doc.setFontSize(10);
+        let methodLabel = TEXT.payment_card;
+        
+        if (orderInfo.payMethod === 'bank') methodLabel = `${TEXT.payment_bank} (${orderInfo.depositor || ''})`;
+        else if (orderInfo.payMethod === 'deposit') methodLabel = TEXT.payment_deposit;
+        
+        doc.setTextColor(100, 100, 100); 
+        drawText(doc, `[${methodLabel}]`, summaryX, y, {align:'right'});
+        drawText(doc, prefix + finalAmt.toLocaleString() + suffix, 195, y, {align:'right'});
+        doc.setTextColor(0, 0, 0); 
+    }
 
     doc.setFontSize(10);
-    drawText(doc, "위와 같이 청구(영수)합니다.", 105, 250, {align:'center'});
-    drawText(doc, new Date().toLocaleDateString(), 105, 256, {align:'center'});
+    // [수정] 하단 청구 메시지 다국어
+    drawText(doc, TEXT.footer_claim, 105, 250, {align:'center'});
+
+    // 결제 방식 하단 표시 (중복 표시)
+    let paymentText = "";
+    if (orderInfo.payMethod === 'card') paymentText = TEXT.payment_card;
+    else if (orderInfo.payMethod === 'bank') paymentText = `${TEXT.payment_bank} (${orderInfo.depositor || ''})`;
+    else if (orderInfo.payMethod === 'deposit') paymentText = TEXT.payment_deposit;
+
+    if (paymentText) {
+        doc.setFontSize(9); 
+        doc.setTextColor(80, 80, 80); 
+        drawText(doc, paymentText, 105, 256, {align:'center'});
+        doc.setTextColor(0, 0, 0); 
+    }
+
+    doc.setFontSize(10);
+    drawText(doc, new Date().toLocaleDateString(), 105, 262, {align:'center'}); 
     
     return doc.output('blob');
+}
+
+// [추가] PDF용 통화 포맷 함수 (이게 꼭 있어야 합니다)
+function formatCurrencyForPDF(val) {
+    const num = Number(val) || 0;
+    if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') return '¥' + Math.floor(num).toLocaleString();
+    if (CURRENT_LANG_CODE === 'us') return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    return num.toLocaleString();
 }
 
 // 4. 작업지시서 (Order Sheet)

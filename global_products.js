@@ -494,7 +494,6 @@ window.loadSystemDB = debounce(async (filterSite) => {
                     ${item.is_swatch ? '<span style="background:#fecaca; color:#dc2626; padding:1px 4px; border-radius:4px; margin-left:5px;">🎨Swatch</span>' : ''}
                 </div>
                 <div style="font-size:13px; font-weight:bold;">${item.name_kr || item.name}</div>
-                <div style="font-size:12px; font-weight:900;">${symbol}${dPrice.toLocaleString()}</div>
             </div>
             <div style="display:flex; flex-direction:column; gap:8px;">
                 <i class="fa-solid fa-pen" onclick="editAddonLoad(${item.id})" style="cursor:pointer; color:#94a3b8; font-size:14px; padding:5px;"></i>
@@ -529,11 +528,12 @@ window.editAddonLoad = (id) => {
     document.getElementById('nmUS').value = item.name_us || '';
     document.getElementById('prUS').value = item.price_us || 0;
 
-    // [수정] 저장된 스와치 모드 상태를 불러와 체크박스에 반영
+    // ▼▼▼ [누락된 코드 추가] 저장된 스와치 모드 상태를 불러와 체크박스에 반영 ▼▼▼
     const swatchEl = document.getElementById('newAddonIsSwatch');
     if(swatchEl) {
         swatchEl.checked = item.is_swatch || false; 
     }
+    // ▲▲▲ 추가 끝 ▲▲▲
 
     const btn = document.querySelector('button[onclick="addAddonDB()"]');
     if(btn) btn.innerText = "옵션 수정저장";
@@ -592,9 +592,10 @@ window.resetAddonForm = () => {
         const el = document.getElementById(id); if(el) el.value = '';
     });
     
-    // [수정] 초기화 시 체크박스도 해제
+    // ▼▼▼ [누락된 코드 추가] 초기화 시 체크박스도 해제 ▼▼▼
     const swatchEl = document.getElementById('newAddonIsSwatch');
     if(swatchEl) swatchEl.checked = false;
+    // ▲▲▲ 추가 끝 ▲▲▲
 
     const btn = document.querySelector('button[onclick="addAddonDB()"]');
     if(btn) btn.innerText = "옵션 저장";
@@ -812,12 +813,53 @@ window.updateProductSortOrder = async () => {
 };
 
 // [수정] 소수점 저장 오류 수정 및 정수 변환
+// [수정] 상품 저장 시 Base64 이미지를 자동으로 서버에 업로드 후 URL 저장
 window.addProductDB = async () => {
     const site = document.getElementById('newProdSite').value;
     const cat = document.getElementById('newProdCategory').value;
     const code = document.getElementById('newProdCode').value;
     
+    // 1. 입력값 가져오기
+    let imgUrl = document.getElementById('newProdImg').value; // let으로 선언 (수정 가능하게)
+
     if(!cat || !code) return alert("카테고리와 코드는 필수입니다.");
+
+    // 2. [핵심] 이미지가 Base64(긴 문자열)인지 확인 후 자동 업로드 처리
+    if (imgUrl && imgUrl.startsWith('data:image')) {
+        const btn = document.getElementById('btnProductSave');
+        const oldText = btn.innerText;
+        btn.innerText = "이미지 변환 업로드 중...";
+        btn.disabled = true;
+
+        try {
+            // (1) Base64 -> 파일(Blob) 변환
+            const response = await fetch(imgUrl);
+            const blob = await response.blob();
+            
+            // (2) 파일명 생성 (코드_시간.jpg)
+            const ext = blob.type.split('/')[1] || 'jpg';
+            const fileName = `products/${code}_${Date.now()}.${ext}`;
+
+            // (3) 수파베이스 업로드
+            const { error: uploadError } = await sb.storage.from('products').upload(fileName, blob);
+            if (uploadError) throw uploadError;
+
+            // (4) URL 주소 가져오기
+            const { data: urlData } = sb.storage.from('products').getPublicUrl(fileName);
+            imgUrl = urlData.publicUrl; // 긴 문자열을 짧은 URL로 교체!
+            
+            console.log("이미지 자동 변환 성공:", imgUrl);
+
+        } catch (err) {
+            console.error("이미지 변환 실패:", err);
+            btn.innerText = oldText;
+            btn.disabled = false;
+            return alert("이미지 자동 업로드에 실패했습니다. 용량이 너무 크거나 네트워크 문제일 수 있습니다.\n(직접 파일 선택 버튼으로 업로드해주세요)");
+        }
+        
+        btn.innerText = oldText;
+        btn.disabled = false;
+    }
 
     const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
     const isCustom = document.getElementById('newProdIsCustom').checked;
@@ -827,13 +869,14 @@ window.addProductDB = async () => {
     const priceJP = Math.round(parseFloat(document.getElementById('newProdPriceJP').value || 0));
     const priceUS = Math.round(parseFloat(document.getElementById('newProdPriceUS').value || 0));
 
+    // 3. 변환된 imgUrl을 사용하여 데이터 저장
     const payload = {
         site_code: site, category: cat, code: code,
         width_mm: document.getElementById('newProdW').value || 0,
         height_mm: document.getElementById('newProdH').value || 0,
         is_custom_size: isCustom,
         is_general_product: isGeneral,
-        img_url: document.getElementById('newProdImg').value,
+        img_url: imgUrl, // 여기에 짧은 주소가 들어감
         name: document.getElementById('newProdName').value, 
         price: priceKR,
         description: document.getElementById('newProdDetailKR').value || (window.popupQuill ? window.popupQuill.root.innerHTML : ""),
@@ -859,7 +902,6 @@ window.addProductDB = async () => {
     else {
         alert("저장되었습니다.");
         resetProductForm();
-        // 저장 후 목록 갱신 시 카테고리가 유지되어 있으면 부분 갱신
         if(document.getElementById('filterProdCat').value === cat) {
             filterProductList();
         }
@@ -1391,14 +1433,62 @@ window.initPopupQuill = () => {
                     ['clean']
                 ],
                 handlers: {
-                    'video': videoHandler, // 커스텀 핸들러 연결
+                    'video': videoHandler,
                     'code-block': htmlEditHandler,
-                    'divider': hrHandler
+                    'divider': hrHandler,
+                    'image': function() {
+                        const input = document.createElement('input');
+                        input.setAttribute('type', 'file');
+                        input.setAttribute('accept', 'image/*');
+                        input.click();
+
+                        input.onchange = async () => {
+                            const file = input.files[0];
+                            if (!file) return;
+
+                            // 로딩 표시 (임시)
+                            const range = this.quill.getSelection(true);
+                            
+                            try {
+                                // 1. Supabase Storage에 자동 업로드
+                                const fileName = `detail_${Date.now()}_${file.name}`;
+                                const path = `products/${fileName}`;
+                                
+                                // global_config.js에서 가져온 sb 객체 사용
+                                const { data, error } = await sb.storage.from('products').upload(path, file);
+                                if (error) throw error;
+
+                                // 2. 업로드된 이미지의 공용 URL 가져오기
+                                const { data: urlData } = sb.storage.from('products').getPublicUrl(path);
+                                const publicUrl = urlData.publicUrl;
+
+                                // 3. 에디터에 Base64가 아닌 짧은 URL 주소로 이미지 삽입
+                                this.quill.insertEmbed(range.index, 'image', publicUrl);
+                                this.quill.setSelection(range.index + 1);
+                                
+                                console.log("이미지 서버 업로드 완료:", publicUrl);
+                            } catch (err) {
+                                console.error("자동 업로드 실패:", err);
+                                alert("이미지 업로드 중 오류가 발생했습니다. 파일 크기나 네트워크를 확인해주세요.");
+                            }
+                        };
+                    }
                 }
             }
         },
         theme: 'snow',
         placeholder: '내용을 입력하세요...'
+    });
+    // [추가] 복사+붙여넣기로 들어오는 Base64 이미지 자동 차단 및 안내
+    popupQuill.clipboard.addMatcher('img', (node, delta) => {
+        let ops = delta.ops.map(op => {
+            if (op.insert && op.insert.image && op.insert.image.startsWith('data:')) {
+                alert("이미지는 복사+붙여넣기 대신 '이미지 버튼'을 눌러서 업로드해주세요. (웹사이트 속도 유지 목적)");
+                return { insert: '' }; // 이미지 삽입 무효화
+            }
+            return op;
+        });
+        return { ops: ops };
     });
 
     // 아이콘 커스터마이징
@@ -1552,19 +1642,20 @@ window.autoTranslatePopupDetail = async () => {
 };
 
 // [최종 수정] DB 연결 체크 기능이 추가된 옵션 로드 함수
+// [최종 수정] index.html 내부의 함수 교체용
 window.loadProductOptionsFront = async (addonCodesStr) => {
     const area = document.getElementById('productOptionsArea'); 
     if (!area) return;
     area.innerHTML = '';
 
-    // [안전장치] DB 연결객체(sb) 찾기
-    // window.sb가 있으면 쓰고, 없으면 모듈 scope의 sb를 시도, 둘 다 없으면 에러 방지
-    const dbClient = window.sb || (typeof sb !== 'undefined' ? sb : null);
+    // [1] DB 연결 객체 찾기 (안전장치)
+    let dbClient = window.sb; 
+    if (!dbClient && typeof sb !== 'undefined') dbClient = sb;
 
+    // [2] 연결 안 되어 있으면 0.3초 뒤에 재시도 (에러 방지 핵심)
     if (!dbClient) {
-        console.error("⛔ DB 연결(sb)이 아직 준비되지 않았습니다. 잠시 후 다시 시도합니다.");
-        // 0.5초 뒤에 다시 시도 (재귀 호출)
-        setTimeout(() => window.loadProductOptionsFront(addonCodesStr), 500);
+        console.warn("⏳ DB 연결 대기중...");
+        setTimeout(() => window.loadProductOptionsFront(addonCodesStr), 300);
         return;
     }
 
@@ -1575,7 +1666,7 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
 
     const codes = addonCodesStr.split(',').map(c => c.trim()).filter(c => c);
     
-    // dbClient를 사용하여 데이터 조회
+    // [3] 데이터 가져오기 (순서 정렬 포함)
     const { data, error } = await dbClient
         .from('admin_addons')
         .select('*')
@@ -1586,16 +1677,18 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
 
     area.innerHTML = '<div style="font-weight:800; margin-bottom:12px; font-size:14px; color:#1e293b; padding-left:5px;">🎁 추가 옵션 선택</div>';
     
+    // [4] 디자인 그릇 만들기
     const swatchContainer = document.createElement('div');
     swatchContainer.style.cssText = "display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;";
     
     const listContainer = document.createElement('div');
     listContainer.style.cssText = "display:flex; flex-direction:column; gap:8px;";
 
+    // [5] 스와치 vs 리스트 분류하여 담기
     data.forEach(addon => {
         const priceTag = addon.price > 0 ? `+${addon.price.toLocaleString()}원` : '';
 
-        // [A] 스와치 모드
+        // (A) 스와치 모드인 경우 (DB의 is_swatch 값을 확인)
         if (addon.is_swatch) {
             const label = document.createElement('label');
             label.className = 'swatch-item';
@@ -1617,6 +1710,7 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
             
             const input = label.querySelector('input');
             const overlay = label.querySelector('.check-overlay');
+            
             input.addEventListener('change', () => {
                 if(input.checked) {
                     label.style.borderColor = '#6366f1';
@@ -1625,10 +1719,12 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
                     label.style.borderColor = '#e2e8f0';
                     overlay.style.display = 'none';
                 }
+                // (중요) 모달의 총 금액 업데이트 함수 호출
+                if(window.updateModalTotal) window.updateModalTotal();
             });
             swatchContainer.appendChild(label);
         } 
-        // [B] 리스트 모드
+        // (B) 일반 리스트 모드인 경우
         else {
             const itemLabel = document.createElement('label');
             itemLabel.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; cursor:pointer; transition:0.2s; font-size:13px; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
@@ -1652,6 +1748,8 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
             input.addEventListener('change', () => {
                 itemLabel.style.borderColor = input.checked ? "#6366f1" : "#e2e8f0";
                 itemLabel.style.background = input.checked ? "#f5f3ff" : "#fff";
+                // (중요) 모달의 총 금액 업데이트 함수 호출
+                if(window.updateModalTotal) window.updateModalTotal();
             });
             listContainer.appendChild(itemLabel);
         }

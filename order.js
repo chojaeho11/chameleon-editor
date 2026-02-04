@@ -2,15 +2,18 @@ import { canvas } from "./canvas-core.js";
 import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js";
 import { SITE_CONFIG } from "./site-config.js";
 import { applySize } from "./canvas-size.js";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js"; // [추가] 페이지 데이터 가져오기
+import { pageDataList, currentPageIndex } from "./canvas-pages.js";
 import { 
     generateOrderSheetPDF,
     generateQuotationPDF, 
     generateProductVectorPDF, 
     generateRasterPDF,
-    generateReceiptPDF,              // [추가됨]
-    generateTransactionStatementPDF  // [추가됨]
+    generateReceiptPDF,
+    generateTransactionStatementPDF
 } from "./export.js";
+
+// [안전장치] 번역 함수가 없으면 기본값 반환
+window.t = window.t || function(key, def) { return def || key; };
 
 // ============================================================
 // [설정] 전역 변수
@@ -76,13 +79,13 @@ async function createPdfThumbnailBlob(file) {
         const scale = 800 / viewport.width; 
         const scaledViewport = page.getViewport({ scale });
         
-        const canvas = document.createElement('canvas'); 
-        const context = canvas.getContext('2d');
-        canvas.height = scaledViewport.height; 
-        canvas.width = scaledViewport.width;
+        const tempCanvas = document.createElement('canvas'); 
+        const context = tempCanvas.getContext('2d');
+        tempCanvas.height = scaledViewport.height; 
+        tempCanvas.width = scaledViewport.width;
         
         await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
-        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+        return new Promise(resolve => tempCanvas.toBlob(resolve, 'image/jpeg', 0.8));
     } catch (e) { return null; }
 }
 
@@ -101,11 +104,11 @@ const resizeImageToBlob = (file) => {
                     if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
                     else { w = Math.round(w * maxDim / h); h = maxDim; }
                 }
-                const canvas = document.createElement('canvas'); 
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d'); 
+                const tempCanvas = document.createElement('canvas'); 
+                tempCanvas.width = w; tempCanvas.height = h;
+                const ctx = tempCanvas.getContext('2d'); 
                 ctx.drawImage(img, 0, 0, w, h);
-                canvas.toBlob(resolve, 'image/jpeg', 0.8);
+                tempCanvas.toBlob(resolve, 'image/jpeg', 0.8);
             };
         };
     });
@@ -129,15 +132,35 @@ async function uploadFileToSupabase(file, folder) {
     return publicData.publicUrl;
 }
 
+// [추가] 장바구니 로드 함수
+function loadCartFromStorage() {
+    try {
+        const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+        const savedCart = localStorage.getItem(storageKey);
+        if (savedCart) {
+            const parsed = JSON.parse(savedCart);
+            if (Array.isArray(parsed)) {
+                cartData.length = 0; 
+                parsed.forEach(item => cartData.push(item)); 
+            }
+        }
+    } catch (e) {
+        console.warn("장바구니 로드 실패:", e);
+    }
+}
+
 // ============================================================
 // [2] 주문 시스템 초기화 및 이벤트 바인딩
 // ============================================================
-// [수정됨] 제외 목록을 'window' 전역 변수에 안전하게 로드
 export async function initOrderSystem() {
+    // [수정] 무조건적인 초기화 코드 제거 (기존 상품 보존)
+    // 용량 부족 문제는 addProductToCartDirectly나 saveCart의 에러 핸들링에서 처리합니다.
+    
+    loadCartFromStorage();
+    
     await fetchUserDiscountRate(); 
     
-    // 1. 제외 목록 불러오기 (window 객체에 저장)
-    window.excludedCategoryCodes = new Set(); // 초기화
+    window.excludedCategoryCodes = new Set();
     try {
         const { data: topCats } = await sb.from('admin_top_categories').select('code').eq('is_excluded', true);
         if (topCats && topCats.length > 0) {
@@ -146,16 +169,13 @@ export async function initOrderSystem() {
             
             if (subCats) {
                 subCats.forEach(sc => window.excludedCategoryCodes.add(sc.code));
-                console.log("✅ 제외 목록 로드됨(전역):", Array.from(window.excludedCategoryCodes));
             }
         }
     } catch(e) { console.warn("제외 목록 로드 실패:", e); }
 
-    // 2. UI 설정
     const krForm = document.getElementById("addrFormKR");
     const globalForm = document.getElementById("addrFormGlobal");
-    const bankArea = document.getElementById("bankTransferInfoArea");
-
+    
     if (CURRENT_LANG === 'kr') {
         if(krForm) krForm.style.display = 'block';
         if(globalForm) globalForm.style.display = 'none';
@@ -167,12 +187,12 @@ export async function initOrderSystem() {
     const btnOrderTop = document.getElementById("btnOrderTop");
     if(btnOrderTop) btnOrderTop.onclick = addCanvasToCart;
 
-    // [신규] 장바구니 열기 버튼(아이콘) 강제 연결
     const btnViewCart = document.getElementById("btnViewCart");
     if (btnViewCart) {
         btnViewCart.onclick = function() {
+            loadCartFromStorage();
+            renderCart();
             document.getElementById("cartPage").style.display = "block";
-            // 모바일 메뉴 등에서 겹치지 않게 클래스 제거
             document.body.classList.remove('editor-active');
         };
     }
@@ -225,7 +245,6 @@ export async function initOrderSystem() {
     const btnSubmit = document.getElementById("btnSubmitOrderInfo");
     if(btnSubmit) btnSubmit.onclick = processOrderSubmission;
     
-    // [UI 이벤트] 결제 수단 라디오 버튼 변경 시 UI 대응
     const radios = document.getElementsByName('paymentMethod');
     radios.forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -240,7 +259,6 @@ export async function initOrderSystem() {
         });
     });
 
-    // 전역 함수 연결 (HTML onclick 대응)
     window.handleFinalPayment = processFinalPayment;
 
     const btnDownSheet = document.getElementById("btnDownOrderSheetCheckout");
@@ -261,26 +279,28 @@ export async function initOrderSystem() {
         btnDownQuote.onclick = async () => {
             if(cartData.length === 0) return alert("데이터가 없습니다.");
             const info = getOrderInfo();
-            
-            // [수정] 현재 입력된 마일리지 값 가져오기
             const mileageInput = document.getElementById('inputUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
-                // [수정] 마일리지 값(useMileage)을 4번째 인자로 전달
                 const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate, useMileage);
                 if(blob) downloadBlob(blob, `견적서_${info.manager}.pdf`);
             } catch(e) { console.error(e); alert("PDF 생성 실패"); }
         };
     }
-    // [추가] 영수증 다운로드 버튼 연결
     const btnReceipt = document.getElementById("btnDownReceipt");
     if(btnReceipt) {
         btnReceipt.onclick = async () => {
             if(cartData.length === 0) return alert("장바구니가 비어있습니다.");
-            
             const info = getOrderInfo();
-            // 마일리지 사용값 가져오기
+            
+            // [수정] 결제정보 및 입금자명 추출
+            const payRadio = document.querySelector('input[name="paymentMethod"]:checked');
+            info.payMethod = payRadio ? payRadio.value : 'card'; 
+            
+            const depositorInput = document.getElementById('inputDepositorName');
+            info.depositor = (depositorInput && depositorInput.value) ? depositorInput.value : info.manager;
+
             const mileageInput = document.getElementById('inputUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
@@ -291,13 +311,20 @@ export async function initOrderSystem() {
         };
     }
 
-    // [추가] 거래명세서 다운로드 버튼 연결
     const btnStatement = document.getElementById("btnDownStatement");
     if(btnStatement) {
         btnStatement.onclick = async () => {
             if(cartData.length === 0) return alert("장바구니가 비어있습니다.");
-            
             const info = getOrderInfo();
+
+            // [추가] 결제정보(카드/무통장) 및 입금자명 확인
+            const payRadio = document.querySelector('input[name="paymentMethod"]:checked');
+            info.payMethod = payRadio ? payRadio.value : 'card'; 
+            
+            const depositorInput = document.getElementById('inputDepositorName');
+            // 입금자명이 입력되어 있으면 쓰고, 없으면 주문자명 사용
+            info.depositor = (depositorInput && depositorInput.value) ? depositorInput.value : info.manager;
+
             const mileageInput = document.getElementById('inputUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
@@ -307,7 +334,7 @@ export async function initOrderSystem() {
             } catch(e) { console.error(e); alert("거래명세서 생성 실패: " + e.message); }
         };
     }
-    renderCart(); // 초기 렌더링
+    renderCart(); 
 }
 
 // 사용자 등급별 할인율 가져오기
@@ -317,13 +344,12 @@ async function fetchUserDiscountRate() {
         return;
     }
     try {
-        const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
+        const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
         const role = data?.role;
         
-        // [수정] 등급별 할인율 변경 (가맹점 10%, 플레티넘 5%, 골드 3%)
-        if (role === 'franchise') currentUserDiscountRate = 0.10; // 10%
-        else if (role === 'platinum' || role === 'partner' || role === 'partners') currentUserDiscountRate = 0.05; // 5% (플레티넘/파트너스)
-        else if (role === 'gold') currentUserDiscountRate = 0.03; // 3%
+        if (role === 'franchise') currentUserDiscountRate = 0.10; 
+        else if (role === 'platinum' || role === 'partner' || role === 'partners') currentUserDiscountRate = 0.05; 
+        else if (role === 'gold') currentUserDiscountRate = 0.03; 
         else currentUserDiscountRate = 0;
         
     } catch(e) {
@@ -411,12 +437,45 @@ function openDeliveryInfoModal() {
     document.getElementById("deliveryInfoModal").style.display = "flex"; 
 }
 
+// [수정] 용량 초과 방지: 잘못된 이미지 데이터 자동 청소
 function saveCart() { 
+    const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+
+    // 1. 데이터 다이어트: 무거운 데이터는 빼고 저장
+    const cleanData = cartData.map(item => {
+        const { json, pages, fileData, ...rest } = item;
+        
+        // [핵심] 썸네일 검사: URL 형식이 아니거나(Base64), 길이가 너무 길면 삭제
+        if (rest.thumb && (!rest.thumb.startsWith('http') || rest.thumb.length > 500)) {
+            rest.thumb = null; // 여기서 null로 만들면 renderCart에서 제품 이미지(product.img)를 대신 보여줌
+        }
+        return rest;
+    });
+    
     try { 
-        const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
-        const dataStr = JSON.stringify(cartData);
-        localStorage.setItem(storageKey, dataStr); 
-    } catch(e) { console.warn("장바구니 로컬 저장 실패:", e); } 
+        localStorage.setItem(storageKey, JSON.stringify(cleanData)); 
+    } catch(e) { 
+        // 2. 용량 부족 시 비상 청소 (기존 찌꺼기 데이터 제거)
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+            console.warn("저장 공간 부족! 불필요한 데이터 정리 중...");
+            
+            Object.keys(localStorage).forEach(key => {
+                if (key !== storageKey && !key.startsWith('sb-') && !key.includes('token')) {
+                    localStorage.removeItem(key);
+                }
+            });
+
+            // 3. 재시도
+            try {
+                // 썸네일을 아예 제거한 초경량 버전으로 저장 시도
+                const superClean = cleanData.map(item => ({ ...item, thumb: null }));
+                localStorage.setItem(storageKey, JSON.stringify(superClean));
+                console.log("비상 저장 성공");
+            } catch (finalErr) {
+                alert("브라우저 저장 공간이 부족합니다. 불필요한 장바구니 항목을 삭제해주세요.");
+            }
+        }
+    } 
 }
 
 // ============================================================
@@ -473,32 +532,9 @@ export async function startDesignFromProduct() {
     } catch (e) { console.error("템플릿 로드 오류:", e); }
 }
 
-// [수정됨] 장바구니 담기 (상품 정보 누락 시 자동 복구 기능 추가)
+// [수정됨] 장바구니 담기 (용량 초과 방지: JSON 클라우드 업로드)
 async function addCanvasToCart() {
-    // [방어 코드 1] 상품 직접 담기 로직이 돌고 있으면 중단
     if (window.isDirectCartAddInProgress) return;
-
-    // [방어 코드 2] ★핵심★ 에디터 화면(mainEditor)이 숨겨져 있다면 저장하지 않음
-    const mainEditor = document.getElementById("mainEditor");
-// 에디터 화면(mainEditor)이 숨겨져 있다면 (즉, 시작 화면이라면)
-if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
-    
-    // 1. 경고창 대신 장바구니 화면을 바로 엽니다.
-    const cartPage = document.getElementById('cartPage');
-    if (cartPage) {
-        cartPage.style.display = 'block';
-        
-        // 2. 혹시 모를 레이아웃 꼬임 방지를 위해 클래스 제거
-        document.body.classList.remove('editor-active');
-        
-        // 3. 장바구니 데이터 갱신 (안전장치)
-        if (typeof renderCart === 'function') renderCart();
-    }
-
-    // 4. 캔버스 저장 로직은 실행하지 않고 여기서 함수 종료
-    return; 
-}
-
     if (!canvas) return;
     
     const loading = document.getElementById("loading");
@@ -507,98 +543,23 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
         loading.querySelector('p').innerText = window.t('msg_processing_design') || "Processing design...";
     }
 
-    const originalVpt = canvas.viewportTransform;
-    const board = canvas.getObjects().find(o => o.isBoard);
-    let thumbUrl = "https://placehold.co/100?text=Design";
-    
-    // 1. 썸네일 생성
-    // 1. 썸네일 생성 (작업지시서 이미지 복구 로직 포함)
-    try {
-        let blob = null;
-        if (board) {
-            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); // 뷰포트 초기화
-            
-            const targetW = board.width * board.scaleX;
-            const targetH = board.height * board.scaleY;
-            
-            // 메모리 보호를 위해 800px 제한
-            const maxDimension = 800; 
-            let dynamicMultiplier = 1.0;
-            const maxSide = Math.max(targetW, targetH);
-            
-            if (maxSide > maxDimension) {
-                dynamicMultiplier = maxDimension / maxSide;
-            }
-
-            try {
-                // [시도 1] 정상적인 캔버스 캡처 시도
-                const dataUrl = canvas.toDataURL({ 
-                    format: 'jpeg', left: board.left, top: board.top, 
-                    width: targetW, height: targetH, 
-                    multiplier: dynamicMultiplier, quality: 0.7 
-                });
-                blob = await (await fetch(dataUrl)).blob();
-            } catch (innerErr) {
-                console.warn("캔버스 캡처 차단됨(CORS), 대체 이미지 탐색:", innerErr);
-                
-                // [시도 2] 캡처가 막혔다면, 캔버스 안에 있는 '이미지 객체'의 원본 URL을 사용
-                // 배경 이미지나 가장 큰 이미지를 찾아서 썸네일로 씁니다.
-                const objects = canvas.getObjects();
-                let mainImgUrl = null;
-
-                // 배경 이미지 확인
-                if (canvas.backgroundImage && canvas.backgroundImage.src) {
-                    mainImgUrl = canvas.backgroundImage.src;
-                }
-                // 없으면 객체 중 가장 큰 이미지 찾기
-                else {
-                    const imgObj = objects.find(o => o.type === 'image');
-                    if (imgObj && imgObj.getSrc()) {
-                        mainImgUrl = imgObj.getSrc();
-                    }
-                }
-
-                if (mainImgUrl) {
-                    console.log("대체 썸네일 발견:", mainImgUrl);
-                    // 원본 URL을 썸네일 주소로 바로 사용 (업로드 불필요)
-                    thumbUrl = mainImgUrl; 
-                }
-            }
-            canvas.setViewportTransform(originalVpt); // 뷰포트 복구
-        }
-        
-        // 캡처에 성공하여 blob이 있는 경우에만 업로드 진행
-        if (blob) {
-             const thumbUrlUpload = await uploadFileToSupabase(blob, 'thumbs');
-             if(thumbUrlUpload) thumbUrl = thumbUrlUpload;
-        }
-
-    } catch(e) { 
-        console.error("썸네일 프로세스 오류:", e); 
-        try { canvas.setViewportTransform(originalVpt); } catch(ex){}
-    }
-
-    // 2. 상품 정보 확인 (없으면 복구)
+    // 1. 상품 정보 먼저 확보
     let key = window.currentProductKey || canvas.currentProductKey;
     if (!key) key = localStorage.getItem('current_product_key') || 'A4';
 
-    // ★ [핵심 수정 1] index.html에서 수정한(가격이 확정된) 정보를 최우선으로 가져옵니다.
-    // window.PRODUCT_DB에 정보가 있으면 그걸 쓰고, 없으면 모듈 내부의 PRODUCT_DB를 씁니다.
     let product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
 
-    // 정보가 없거나, 커스텀인데 가격이 0원(데이터 유실)인 경우에만 DB에서 다시 가져옵니다.
+    // 상품 정보 복구 로직
     if (!product || (product.is_custom_size && product.price === 0)) {
         try {
             console.log(`상품 정보('${key}') 복구 시도...`);
-            const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).single();
+            const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).maybeSingle();
             
             if (prodData) {
-                // config.js의 데이터 구조에 맞춰 변환
                 const scaleFactor = 3.7795;
                 const pxW = Math.round((prodData.width_mm || 210) * scaleFactor);
                 const pxH = Math.round((prodData.height_mm || 297) * scaleFactor);
                 
-                // 다국어 처리 (SITE_CONFIG 필요, 없으면 KR 기본)
                 const country = (typeof SITE_CONFIG !== 'undefined' ? SITE_CONFIG.COUNTRY : 'KR');
                 let dName = prodData.name;
                 let dPrice = prodData.price;
@@ -621,14 +582,77 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
         }
     }
 
-    // ★ [핵심 수정 2] 위에서 정의한 product 변수를 갱신합니다 (여기서 다시 PRODUCT_DB[key]로 덮어쓰면 안됩니다)
     product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
     
-    // 그래도 없으면 안전장치
     if (!product) {
-        product = { name: '상품 정보 없음', price: 0, img: 'https://placehold.co/100', addons: [] };
+        if (loading) loading.style.display = "none";
+        document.getElementById('cartPage').style.display = 'block';
+        document.body.classList.remove('editor-active');
+        return; 
     }
+
+    let thumbUrl = product.img || "https://placehold.co/100?text=No+Image";
+
+    const originalVpt = canvas.viewportTransform;
+    const board = canvas.getObjects().find(o => o.isBoard);
     
+    // 2. 캔버스 캡처 시도
+    try {
+        let blob = null;
+        if (board) {
+            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); 
+            
+            const targetW = board.width * board.scaleX;
+            const targetH = board.height * board.scaleY;
+            
+            const maxDimension = 800; 
+            let dynamicMultiplier = 1.0;
+            const maxSide = Math.max(targetW, targetH);
+            
+            if (maxSide > maxDimension) {
+                dynamicMultiplier = maxDimension / maxSide;
+            }
+
+            try {
+                const dataUrl = canvas.toDataURL({ 
+                    format: 'jpeg', left: board.left, top: board.top, 
+                    width: targetW, height: targetH, 
+                    multiplier: dynamicMultiplier, quality: 0.7 
+                });
+                blob = await (await fetch(dataUrl)).blob();
+            } catch (innerErr) {
+                console.warn("캔버스 캡처 차단됨(CORS), 대체 이미지 탐색:", innerErr);
+                
+                const objects = canvas.getObjects();
+                let mainImgUrl = null;
+
+                if (canvas.backgroundImage && canvas.backgroundImage.src) {
+                    mainImgUrl = canvas.backgroundImage.src;
+                }
+                else {
+                    const imgObj = objects.find(o => o.type === 'image');
+                    if (imgObj && imgObj.getSrc()) {
+                        mainImgUrl = imgObj.getSrc();
+                    }
+                }
+
+                if (mainImgUrl) {
+                    thumbUrl = mainImgUrl; 
+                }
+            }
+            canvas.setViewportTransform(originalVpt); 
+        }
+        
+        if (blob) {
+             const thumbUrlUpload = await uploadFileToSupabase(blob, 'thumbs');
+             if(thumbUrlUpload) thumbUrl = thumbUrlUpload;
+        }
+
+    } catch(e) { 
+        console.error("썸네일 프로세스 오류:", e); 
+        try { canvas.setViewportTransform(originalVpt); } catch(ex){}
+    }
+
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow']);
     const finalW = board ? board.width * board.scaleX : (product.w || canvas.width); 
     const finalH = board ? board.height * board.scaleY : (product.h || canvas.height);
@@ -641,39 +665,22 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
 
     if (product.is_custom_size && product.price > 0 && Math.abs(product.w_mm - currentMmW) < 5) {
          console.log(`[가격 유지] 기존 계산된 가격 사용: ${product.price.toLocaleString()}원`);
-
     }
     else if (product.is_custom_size) {
-        
-        // 1-1. 단가 설정 (사장님 환경에 맞게 숫자 수정 필요)
-        const sqmPrice = 50000;  // 1제곱미터(헤베)당 가격
-        const minPrice = 60000;  // 최소 주문 금액
-
-        // 1-2. mm 단위 및 면적(m2) 계산
-        const mmToPx = 3.7795; // Fabric.js 기준 (96DPI)
+        const sqmPrice = 50000;
+        const minPrice = 60000;
+        const mmToPx = 3.7795;
         const w_mm = finalW / mmToPx;
         const h_mm = finalH / mmToPx;
-        const area_m2 = (w_mm / 1000) * (h_mm / 1000); // 가로(m) x 세로(m)
-
-        // 1-3. 가격 계산 (100원 단위 반올림)
+        const area_m2 = (w_mm / 1000) * (h_mm / 1000);
         let calcPrice = Math.round((area_m2 * sqmPrice) / 100) * 100;
-        
-        // 1-4. 최소 금액 적용
         if (calcPrice < minPrice) calcPrice = minPrice;
-
-        // 1-5. 계산된 가격으로 덮어쓰기
         calcProduct.price = calcPrice;
-        
-        // (옵션) 이름 뒤에 사이즈 표기
-        // calcProduct.name = `${product.name} (${Math.round(w_mm)}x${Math.round(h_mm)}mm)`;
-
         console.log(`[가격계산 적용] ${Math.round(w_mm)}x${Math.round(h_mm)}mm / 면적:${area_m2.toFixed(2)}m2 / 계산가:${calcPrice.toLocaleString()}원`);
-    
     } else {
-        // 커스텀 제품이 아니면(핫딜 등), 원래 DB 가격을 사용합니다.
         console.log(`[고정가 적용] ${product.name}: ${product.price.toLocaleString()}원`);
     }
-    // =================================================================
+    
     let originalFileUrl = null; 
     let fileName = window.t('default_design_name') || "My Design";
     if (window.currentUploadedPdfUrl) {
@@ -684,27 +691,18 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
 
     if(loading) loading.style.display = "none";
 
-    // [중복 방지 2차 체크] 이미지 생성 중에 직접 담기가 실행되었다면 여기서 중단
     if (window.isDirectCartAddInProgress) return;
 
-    // 3. 카트에 담기 (멀티 페이지 데이터 저장)
-    // [중요] 현재 화면의 최신 상태를 pageDataList의 해당 인덱스에 업데이트
-    let finalPages = [json]; // 기본값: 현재 1장
-    
+    let finalPages = [json]; 
     if (typeof pageDataList !== 'undefined' && pageDataList.length > 0) {
-        // 배열 복사
         finalPages = [...pageDataList];
-        
-        // 현재 보고 있는 페이지가 있다면 최신 상태(json)로 덮어쓰기
         if (typeof currentPageIndex !== 'undefined' && currentPageIndex >= 0 && currentPageIndex < finalPages.length) {
             finalPages[currentPageIndex] = json;
         } else {
-            // 인덱스 오류 시 마지막에 추가하거나 현재꺼만 씀
             if(finalPages.length === 0) finalPages = [json];
         }
     }
 
-    // [추가] 에디터 진입 전 선택했던 옵션 정보 복구 로직
     const recoveredAddons = {};
     const recoveredAddonQtys = {};
     
@@ -713,46 +711,96 @@ if (mainEditor && window.getComputedStyle(mainEditor).display === 'none') {
             recoveredAddons[`opt_${code}`] = code;
             recoveredAddonQtys[code] = 1;
         });
-        // 사용 후 초기화 (다음 주문에 섞이지 않도록)
-        // window.pendingSelectedAddons = null; 
     }
 
-    cartData.push({ 
-        uid: Date.now(), 
+    // [수정] 수량이 1로 리셋되는 문제 해결
+    let initialQty = 1;
+    const storedQty = localStorage.getItem('pending_product_qty');
+    if (storedQty) {
+        initialQty = parseInt(storedQty);
+        localStorage.removeItem('pending_product_qty'); 
+    }
+
+    // [수정] 용량 초과 방지: 모든 디자인 데이터를 클라우드에 업로드하고 로컬 저장소에는 URL만 남깁니다.
+    let savedJsonUrl = null;
+    if (json) {
+        try {
+            const jsonStr = JSON.stringify({ main: json, pages: (typeof pageDataList !== 'undefined' ? pageDataList : []) });
+            const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
+            // 'cart_json' 폴더에 업로드하여 로컬 스토리지 점유율을 0에 가깝게 만듭니다.
+            savedJsonUrl = await uploadFileToSupabase(jsonBlob, 'cart_json');
+        } catch (err) {
+            console.error("JSON 업로드 필수 실패:", err);
+            return alert("디자인 저장 공간 확보에 실패했습니다. 인터넷 연결을 확인해주세요.");
+        }
+    }
+
+    const newItem = { 
+        uid: Date.now() + Math.random().toString(36).substr(2, 5), 
         product: calcProduct,
         type: 'design',
         thumb: thumbUrl, 
-        json: json, 
-        pages: finalPages, 
+        json: null,      // 로컬에는 거대 데이터를 저장하지 않음
+        pages: [],       // 로컬에는 거대 데이터를 저장하지 않음
+        jsonUrl: savedJsonUrl,
         originalUrl: originalFileUrl,
         fileName: fileName, 
         width: finalW, 
         height: finalH, 
         boardX: boardX, 
         boardY: boardY, 
-        isOpen: true,
-        qty: 1, 
-        selectedAddons: recoveredAddons, // 복구된 옵션 적용
-        addonQuantities: recoveredAddonQtys // 복구된 옵션 수량 적용
-    });
-    
-    // 4. 저장 및 갱신
+        isOpen: true, 
+        qty: initialQty, // [수정] 불러온 수량 적용
+        selectedAddons: recoveredAddons, 
+        addonQuantities: recoveredAddonQtys 
+    };
+
+    // 1. 저장소에서 최신 데이터 가져오기
+    const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+    let currentCartList = [];
+    try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) currentCartList = JSON.parse(saved);
+        if (!Array.isArray(currentCartList)) currentCartList = [];
+    } catch(e) { currentCartList = []; }
+
+    // 2. 리스트에 추가
+    currentCartList.push(newItem);
+
+    // 3. [핵심] 저장소에 저장 (용량 다이어트 적용)
     try { 
-        const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
-        localStorage.setItem(storageKey, JSON.stringify(cartData)); 
-    } catch(e) {}
+        const optimizedList = currentCartList.map(item => {
+            const { json, pages, ...rest } = item;
+            return rest;
+        });
+        localStorage.setItem(storageKey, JSON.stringify(optimizedList)); 
+    } catch(e) { 
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+             // 다른 사용자의 장바구니 찌꺼기 삭제
+             Object.keys(localStorage).forEach(key => {
+                 if (key.startsWith('chameleon_cart_') && !key.includes(currentUser?.id || 'guest')) {
+                     localStorage.removeItem(key);
+                 }
+             });
+             alert("브라우저의 저장 공간이 꽉 찼습니다. 다른 불필요한 창을 닫거나 캐시를 비워주세요.");
+        }
+    }
+
+    // 4. 그 다음 메모리(cartData) 동기화 및 렌더링
+    cartData.length = 0;
+    currentCartList.forEach(item => cartData.push(item));
 
     renderCart(); 
 
     if(loading) loading.style.display = "none";
     
-    // [수정] 장바구니로 바로 이동하는 코드를 주석 처리하고 팝업을 띄움
-    // document.getElementById('cartPage').style.display = 'block'; 
-    document.getElementById('cartAddedModal').style.display = 'flex';
+    const modal = document.getElementById('cartAddedModal');
+    if (modal) modal.style.display = 'none';
+
+    const cartPage = document.getElementById('cartPage');
+    if (cartPage) cartPage.style.display = 'block';
     
-    if(document.body.classList.contains('editor-active')) {
-        document.body.classList.remove('editor-active');
-    }
+    document.body.classList.remove('editor-active'); 
 }
 
 async function addFileToCart(e) {
@@ -806,9 +854,6 @@ async function addFileToCart(e) {
 // ============================================================
 // [5] 장바구니 렌더링
 // ============================================================
-// ============================================================
-// [5] 장바구니 렌더링 (수정됨)
-// ============================================================
 function renderCart() {
     const listArea = document.getElementById("cartListArea"); 
     if(!listArea) return;
@@ -824,31 +869,65 @@ function renderCart() {
     cartData.forEach((item, idx) => {
         if (!item.product) return;
 
+        // [수정] 다국어 상품명/가격 자동 선택
+        let displayName = item.product.name;
+        let displayPrice = item.product.price;
+        
+        // 상단에 정의된 전역 변수 CURRENT_LANG 사용 ('ja', 'jp', 'us' 등)
+        if (CURRENT_LANG === 'ja' || CURRENT_LANG === 'jp') {
+            if (item.product.name_jp) displayName = item.product.name_jp;
+            if (item.product.price_jp) displayPrice = item.product.price_jp;
+        } else if (CURRENT_LANG === 'us' || CURRENT_LANG === 'en') {
+            if (item.product.name_us) displayName = item.product.name_us;
+            if (item.product.price_us) displayPrice = item.product.price_us;
+        }
+
         if (!item.qty) item.qty = 1; 
         if (item.isOpen === undefined) item.isOpen = true; 
         if (!item.selectedAddons) item.selectedAddons = {};
         
-        let baseProductTotal = (item.product.price || 0) * item.qty;
-        let optionTotal = 0;
+        // [중요] 가격 계산 시 displayPrice 사용
+        let baseProductTotal = (displayPrice || 0) * item.qty;
         
-        // 옵션 가격 계산
-        Object.values(item.selectedAddons).forEach(code => {
-            const addon = ADDON_DB[code];
-            if (addon) {
-                const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                optionTotal += addon.price * aq;
-            }
-        });
+        // [수정] 누락된 옵션 가격 합계 계산 로직 추가
+        let optionTotal = 0;
+        if (item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const db = typeof ADDON_DB !== 'undefined' ? ADDON_DB : (window.ADDON_DB || {});
+                const addon = db[code];
+                if (addon) {
+                    const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                    optionTotal += addon.price * aq;
+                }
+            });
+        }
 
         const totalItemPrice = baseProductTotal + optionTotal;
         grandProductTotal += baseProductTotal; 
         grandAddonTotal += optionTotal; 
         grandTotal += totalItemPrice;
         
-        const div = document.createElement("div"); 
-        div.className = "cart-item"; 
+       const div = document.createElement("div"); 
         
-        // 화면 너비에 따라 레이아웃 결정 (768px 이하 모바일)
+        // [수정됨] 썸네일 우선순위 및 유효성 검사 강화
+        let displayImg = null;
+        
+        // 1. 유효한 웹 URL인 경우에만 썸네일 사용 (Base64나 깨진 문자열 제외)
+        if (item.thumb && typeof item.thumb === 'string' && item.thumb.startsWith('http') && !item.thumb.includes('placehold.co')) {
+            displayImg = item.thumb;
+        }
+        
+        // 2. 썸네일이 없으면 제품 원본 이미지 사용
+        if (!displayImg && item.product && item.product.img) {
+            displayImg = item.product.img;
+        }
+        
+        // 3. 그래도 없으면 기본 이미지
+        if (!displayImg) {
+            displayImg = 'https://placehold.co/100?text=No+Image';
+        }
+
+        div.className = "cart-item";
         const isMobile = window.innerWidth <= 768;
         
         div.style.cssText = `
@@ -857,7 +936,6 @@ function renderCart() {
             flex-direction: ${isMobile ? 'column' : 'row'};
         `;
 
-        // [옵션 HTML 생성]
         let addonHtml = '';
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
@@ -892,7 +970,7 @@ function renderCart() {
                                                     <input type="number" 
                                                            value="${currentAddonQty}" 
                                                            onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)"
-                                                           style="width:34px; height:100%; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-size:11px; font-weight:bold; outline:none; -webkit-appearance:none; margin:0;">
+                                                           style="width:50px; height:100%; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-size:11px; font-weight:bold; outline:none; -webkit-appearance:none; margin:0;">
                                                     <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty + 1})" 
                                                             style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">+</button>
                                                 </div>
@@ -908,26 +986,22 @@ function renderCart() {
             }
         }
 
-        // [HTML 주입]
         if (!isMobile) {
-            // [PC 레이아웃]
-            // 수정 포인트 1: 우측 영역(가격/삭제)에 margin-left: auto를 주어 강제로 우측 끝에 붙임
-            // 수정 포인트 2: 옵션이 없으면 옵션 박스를 아예 그리지 않음 (빈 공간 제거)
             div.innerHTML = `
                 <div style="display:flex; width:100%; padding:20px; gap:30px; align-items:flex-start;">
                     <div style="width:100px; height:100px; background:#f8fafc; border:1px solid #eee; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
-                        <img src="${item.thumb}" style="width:100%; height:100%; object-fit:contain;">
+                        <img src="${displayImg}" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                     </div>
 
                     <div style="flex:1; min-width:200px;">
-                        <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${item.product.name}</h4>
-                        <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : '(파일 별도 첨부)'}</div>
-                        <div style="font-size:12px; color:#94a3b8; margin-top:5px;">단가: ${formatCurrency(item.product.price)}</div>
+                        <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${displayName}</h4>
+<div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : '(파일 별도 첨부)'}</div>
+<div style="font-size:12px; color:#94a3b8; margin-top:5px;">단가: ${formatCurrency(displayPrice)}</div>
                         
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
                             <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
                                 <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">-</button>
-                                <input type="number" value="${item.qty}" readonly style="width:35px; text-align:center; border:none; font-weight:bold; font-size:14px;">
+                                <input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:160px; text-align:center; border:none; font-weight:bold; font-size:14px;">
                                 <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, 1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">+</button>
                             </div>
                             <span style="font-size:12px; color:#64748b; font-weight:bold;">본품 수량</span>
@@ -950,14 +1024,12 @@ function renderCart() {
                 </div>
             `;
         } else {
-            // [모바일 레이아웃]
-            // 옵션 영역을 상단 정보(이미지,이름) 아래쪽(div 순서상 뒤)에 배치하여 아래로 내려가게 함
             div.innerHTML = `
                 <div style="padding:15px; display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:center;">
-                        <img src="${item.thumb}" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;">
+                        <img src="${displayImg}" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
-                            <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${item.product.name}</h4>
+                            <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${displayName}</h4>
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">합계: ${formatCurrency(totalItemPrice)}</div>
                         </div>
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
@@ -977,7 +1049,7 @@ function renderCart() {
                         <span style="font-size:13px; font-weight:bold; color:#475569;">주문 수량</span>
                         <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden;">
                             <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:10px 20px; font-weight:bold; font-size:18px;">-</button>
-                            <input type="number" value="${item.qty}" readonly style="width:50px; text-align:center; border:none; font-weight:bold; font-size:16px;">
+                            <input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:16px;">
                             <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, 1)" style="border:none; background:none; padding:10px 20px; font-weight:bold; font-size:18px;">+</button>
                         </div>
                     </div>
@@ -985,28 +1057,24 @@ function renderCart() {
             `;
         }
 
-        // [중요] 기존에 이곳에 있던 중복된 div.innerHTML = ... 코드를 삭제하여 위에서 설정한 분기 처리가 적용되도록 함
         listArea.appendChild(div);
     });
     
     updateSummary(grandProductTotal, grandAddonTotal, grandTotal);
 }
-// [수정됨] 전역 변수를 사용하여 마일리지 제한 적용
+
 function updateSummary(prodTotal, addonTotal, total) { 
     const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal); 
     const elAddon = document.getElementById("summaryAddonPrice"); if(elAddon) elAddon.innerText = formatCurrency(addonTotal);
     
-    // 안전장치: 목록이 없으면 빈 값으로 생성
     const excludedSet = window.excludedCategoryCodes || new Set();
 
     let discountableAmount = 0;
     let hasExcludedItem = false;
 
-    // 1. 할인 대상 금액 계산
     cartData.forEach(item => {
         const prodCat = item.product ? item.product.category : '';
         
-        // 전역 변수 확인
         if (excludedSet.has(prodCat)) {
             hasExcludedItem = true;
             console.log(`🚫 제외 상품 감지: ${item.product.name}`);
@@ -1026,24 +1094,19 @@ function updateSummary(prodTotal, addonTotal, total) {
         }
     });
 
-    // 2. 할인 금액 계산
     const discountAmount = Math.floor(discountableAmount * currentUserDiscountRate);
     const finalTotal = total - discountAmount;
     
-    // 전역 변수 업데이트
     window.finalPaymentAmount = finalTotal; 
-    // 호환성을 위해 로컬 변수도 업데이트 (필요시)
     finalPaymentAmount = finalTotal;
 
-    // 3. 마일리지 한도 설정
     if (typeof currentUser !== 'undefined' && currentUser) {
         const elOwn = document.getElementById('userOwnMileage');
         const myMileage = elOwn ? parseInt(elOwn.innerText.replace(/[^0-9]/g, '')) || 0 : 0;
         
         let realLimit = 0;
-        // 할인 대상 금액이 있을 때만 5% 한도 부여
         if (discountableAmount > 0) {
-            const fivePercent = Math.floor((discountableAmount - discountAmount) * 0.05); // 0.05 = 5%
+            const fivePercent = Math.floor((discountableAmount - discountAmount) * 0.05);
             realLimit = Math.min(myMileage, fivePercent);
         }
         
@@ -1055,14 +1118,12 @@ function updateSummary(prodTotal, addonTotal, total) {
         const mileInput = document.getElementById('inputUseMileage');
         if(mileInput) {
             mileInput.placeholder = `최대 ${realLimit.toLocaleString()}`;
-            // 제외 상품만 있어서 한도가 0이면 입력 막기
             if (realLimit === 0 && hasExcludedItem) {
                 mileInput.value = "";
                 mileInput.placeholder = "사용 불가 (제외 상품 포함)";
                 mileInput.disabled = true;
             } else {
                 mileInput.disabled = false;
-                // 입력값이 한도보다 크면 줄임
                 if(parseInt(mileInput.value || 0) > realLimit) {
                     mileInput.value = realLimit > 0 ? realLimit : "";
                 }
@@ -1081,7 +1142,7 @@ function updateSummary(prodTotal, addonTotal, total) {
 }
 
 // ============================================================
-// [수정] 주문 정보 제출 (DB 저장 X, 임시 데이터 저장 및 UI 전환만 수행)
+// [수정] 주문 정보 제출
 // ============================================================
 async function processOrderSubmission() {
     const manager = document.getElementById("inputManagerName").value;
@@ -1102,10 +1163,8 @@ async function processOrderSubmission() {
 
     if(!manager || !address) return alert(window.t('alert_input_shipping'));
     
-    // 1. 임시 데이터 생성 (DB에 아직 안 넣음)
     const deliveryDate = selectedDeliveryDate || new Date().toISOString().split('T')[0];
 
-    // 전역 변수에 임시 저장 (결제 시점에 사용)
     window.tempOrderInfo = {
         manager,
         phone,
@@ -1114,7 +1173,6 @@ async function processOrderSubmission() {
         deliveryDate
     };
 
-    // 2. 할인 적용 전 총액 계산 (단순 표시용)
     let rawTotal = 0;
     cartData.forEach(item => {
         if (!item.product) return;
@@ -1134,24 +1192,20 @@ async function processOrderSubmission() {
     const discountAmt = Math.floor(rawTotal * currentUserDiscountRate);
     const finalTotal = rawTotal - discountAmt;
     
-    // UI 표시용 전역 변수 세팅
     window.originalPayAmount = finalTotal; 
     window.finalPaymentAmount = finalTotal; 
 
-    // 3. UI 전환 (DB 저장 과정 없이 바로 모달 띄움)
     document.getElementById("deliveryInfoModal").style.display = "none"; 
     const checkoutModal = document.getElementById("checkoutModal");
     checkoutModal.style.display = "flex";
     
-    // 결제창 UI 세팅
     document.getElementById("orderName").value = manager; 
     document.getElementById("orderPhone").value = phone; 
     document.getElementById("orderAddr").value = address; 
     document.getElementById("orderMemo").value = request;
 
-    // 마일리지 UI 초기화 로직
     if (currentUser) {
-        const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
+        const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
         const myMileage = profile ? (profile.mileage || 0) : 0;
         
         const fivePercent = Math.floor(finalTotal * 0.05);
@@ -1165,7 +1219,6 @@ async function processOrderSubmission() {
         document.getElementById('inputUseMileage').placeholder = `최대 ${realLimit.toLocaleString()}`;
         document.getElementById('finalPayAmountDisplay').innerText = finalTotal.toLocaleString() + '원';
         
-        // 버튼 텍스트 초기화
         document.getElementById('btnFinalPay').innerText = `${finalTotal.toLocaleString()}원 결제하기`;
     } else {
         window.mileageLimitMax = 0;
@@ -1175,9 +1228,8 @@ async function processOrderSubmission() {
         document.getElementById('btnFinalPay').innerText = `${finalTotal.toLocaleString()}원 결제하기`;
     }
 
-    // 예치금 잔액 표시
     if(currentUser) {
-        const { data: profile } = await sb.from('profiles').select('deposit').eq('id', currentUser.id).single();
+        const { data: profile } = await sb.from('profiles').select('deposit').eq('id', currentUser.id).maybeSingle();
         const balance = profile ? profile.deposit : 0;
         const elBal = document.getElementById('myCurrentDepositDisplay');
         if(elBal) {
@@ -1188,9 +1240,8 @@ async function processOrderSubmission() {
 }
 
 // ============================================================
-// [신규] 실제 DB 생성 및 파일 업로드 (결제 버튼 클릭 시 호출됨)
+// [신규] 실제 DB 생성 및 파일 업로드
 // ============================================================
-// [수정됨] 마일리지 값이 견적서에 반영되도록 수정
 async function createRealOrderInDb(finalPayAmount, useMileage) {
     if (!window.tempOrderInfo) throw new Error("주문 임시 데이터가 없습니다.");
 
@@ -1200,7 +1251,20 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 
     const { manager, phone, address, request, deliveryDate } = window.tempOrderInfo;
 
-    // 1. 주문 아이템 데이터 구성
+    // [중요] 주문 생성 직전에만 클라우드에서 디자인 데이터를 일시적으로 복구합니다.
+    for(let item of cartData) {
+        if(item.jsonUrl) {
+            try {
+                const res = await fetch(item.jsonUrl);
+                if(res.ok) {
+                    const recovered = await res.json();
+                    item.json = recovered.main || recovered;
+                    item.pages = recovered.pages || [];
+                }
+            } catch(e) { console.error("데이터 복구 실패:", e); }
+        }
+    }
+
     const itemsToSave = cartData.map(item => {
         if (!item.product) return null; 
         
@@ -1241,7 +1305,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         };
     }).filter(i => i !== null);
 
-    // 2. DB Insert (결제 대기 상태로 생성)
     const { data: orderData, error: orderError } = await sb.from('orders').insert([{ 
         user_id: currentUser?.id, 
         order_date: new Date().toISOString(),           
@@ -1253,7 +1316,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         status: '임시작성', 
         payment_status: '미결제', 
         total_amount: finalPayAmount, 
-        discount_amount: useMileage, // DB에는 잘 들어가고 있음
+        discount_amount: useMileage, 
         items: itemsToSave, 
         site_code: CURRENT_LANG.toUpperCase() 
     }]).select();
@@ -1263,10 +1326,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
     const newOrderId = orderData[0].id;
     window.currentDbId = newOrderId; 
 
-    // 3. 파일 업로드 및 PDF 생성 프로세스
     let uploadedFiles = [];
     
-    // (1) 고객 업로드 파일
     for (let i = 0; i < cartData.length; i++) {
         const item = cartData[i]; 
         const idx = String(i + 1).padStart(2, '0');
@@ -1284,7 +1345,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         manager, phone, address, note: request, date: deliveryDate 
     };
     
-    // (2) 문서 생성 (작업지시서, 견적서)
     try {
         loading.querySelector('p').innerText = "문서 생성 중...";
         const orderSheetBlob = await generateOrderSheetPDF(orderInfoForPDF, cartData);
@@ -1293,9 +1353,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             if(url) uploadedFiles.push({ name: `작업지시서.pdf`, url: url, type: 'order_sheet' }); 
         }
         
-        // ★★★ [수정된 부분] ★★★
-        // 기존: generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate);
-        // 변경: 4번째 인자로 useMileage를 전달해야 PDF 생성기가 마일리지 차감을 반영합니다.
         const quoteBlob = await generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate, useMileage);
         
         if(quoteBlob) { 
@@ -1304,13 +1361,11 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         } 
     } catch(pdfErr) { console.warn("문서 생성 오류:", pdfErr); }
 
-    // (3) 디자인 파일 변환
     for (let i = 0; i < cartData.length; i++) {
         const item = cartData[i]; 
         const idx = String(i + 1).padStart(2, '0');
         
         if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
-            // 내용물 체크
             let hasContent = false;
             if (item.json.objects && Array.isArray(item.json.objects)) {
                 const validObjects = item.json.objects.filter(obj => !obj.isBoard);
@@ -1332,7 +1387,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         }
     }
 
-    // 파일 정보 업데이트
     if (uploadedFiles.length > 0) {
         await sb.from('orders').update({ files: uploadedFiles }).eq('id', newOrderId);
     }
@@ -1341,13 +1395,11 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 }
 
 // ============================================================
-// [수정됨] 최종 결제 버튼 클릭 시 실행 (DB 생성 -> 결제)
+// [수정됨] 최종 결제 버튼 클릭 시 실행
 // ============================================================
 async function processFinalPayment() {
-    // 1. 임시 데이터 확인
     if (!window.tempOrderInfo && !window.currentDbId) return alert("주문 정보가 없습니다. 처음부터 다시 시도해주세요.");
     
-    // 2. 금액 및 마일리지 계산
     const mileageInput = document.getElementById('inputUseMileage');
     const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
     const baseAmount = window.originalPayAmount || 0;
@@ -1355,7 +1407,6 @@ async function processFinalPayment() {
 
     if (realFinalPayAmount < 0) return alert("결제 금액 오류입니다.");
     
-    // 마일리지 유효성 검사
     if (useMileage > 0) {
         if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
         const excludedSet = window.excludedCategoryCodes || new Set();
@@ -1363,7 +1414,7 @@ async function processFinalPayment() {
         cartData.forEach(item => { if (item.product && excludedSet.has(item.product.category)) isSafe = false; });
         if (!isSafe) return alert("마일리지 사용 불가 상품이 포함되어 있습니다.");
 
-        const { data: check } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
+        const { data: check } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
         if (!check || check.mileage < useMileage) return alert(window.t('alert_mileage_shortage', "Insufficient mileage."));
     }
 
@@ -1371,33 +1422,52 @@ async function processFinalPayment() {
     btn.disabled = true;
 
     try {
-        // ★★★ 여기서 DB를 생성합니다. (이미 생성된 상태면 건너뜀) ★★★
         if (!window.currentDbId) {
             await createRealOrderInDb(realFinalPayAmount, useMileage);
         } else {
-            // 혹시라도 재시도인 경우 금액 업데이트
-             await sb.from('orders').update({ 
+            const itemsToSave = cartData.map(item => {
+                 if (!item.product) return null;
+                 let unitPrice = item.product.price || 0;
+                 let qty = item.qty || 1;
+                 let optTotal = 0;
+                 if(item.selectedAddons) {
+                    Object.values(item.selectedAddons).forEach(code => {
+                        let ad = ADDON_DB[code];
+                        if(ad) optTotal += ad.price * (item.addonQuantities[code] || 1);
+                    });
+                 }
+                 let compatible = Math.floor((unitPrice*qty + optTotal)/qty);
+                 return {
+                    productName: item.product.name,
+                    qty: qty,
+                    price: compatible,
+                    product: { name: item.product.name, price: item.product.price, code: item.product.code||item.product.key, img: item.product.img },
+                    selectedAddons: item.selectedAddons,
+                    addonQuantities: item.addonQuantities
+                 };
+            }).filter(x=>x);
+
+            await sb.from('orders').update({ 
                 discount_amount: useMileage, 
-                total_amount: realFinalPayAmount 
+                total_amount: realFinalPayAmount,
+                items: itemsToSave 
             }).eq('id', window.currentDbId);
         }
         
-        const orderId = window.currentDbId; // 이제 DB ID가 확실히 존재함
+        const orderId = window.currentDbId; 
 
-        // 3. 결제 수단별 분기 처리
         const selected = document.querySelector('input[name="paymentMethod"]:checked');
         const method = selected ? selected.value : 'card';
 
         if (method === 'deposit') {
-            await processDepositPayment(realFinalPayAmount, useMileage); // 파라미터 전달
+            await processDepositPayment(realFinalPayAmount, useMileage); 
         } else if (method === 'bank') {
             const depositorName = document.getElementById('inputDepositorName').value;
             if (!depositorName) { btn.disabled = false; return alert(window.t('alert_input_depositor', "Please enter depositor name.")); }
             
             if(confirm(window.t('confirm_bank_payment', "Proceed with Bank Transfer?"))) {
-                // 마일리지 차감 수행
                 if(useMileage > 0) {
-                     const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
+                     const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
                      await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
                      await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용` });
                 }
@@ -1410,7 +1480,6 @@ async function processFinalPayment() {
                 location.reload();
             }
         } else {
-            // (C) 카드 결제 (Toss / Stripe)
             processCardPayment(realFinalPayAmount);
         }
 
@@ -1423,7 +1492,7 @@ async function processFinalPayment() {
 }
 
 // ============================================================
-// [수정] 예치금 결제 (파라미터로 금액과 마일리지를 받아서 처리)
+// [수정] 예치금 결제
 // ============================================================
 async function processDepositPayment(payAmount, useMileage) {
     if (!currentUser) return alert("로그인이 필요합니다.");
@@ -1445,19 +1514,16 @@ async function processDepositPayment(payAmount, useMileage) {
     }
 
     try {
-        // 1. 마일리지 차감 (있을 경우)
         if (useMileage > 0) {
-            const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).single();
+            const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
             await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
             await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용` });
         }
 
-        // 2. 예치금 차감
         const newBalance = currentBalance - payAmount;
         const { error: profileErr } = await sb.from('profiles').update({ deposit: newBalance }).eq('id', currentUser.id);
         if (profileErr) throw profileErr;
 
-        // 3. 로그 기록
         await sb.from('wallet_logs').insert({
             user_id: currentUser.id,
             type: 'payment_order',
@@ -1465,7 +1531,6 @@ async function processDepositPayment(payAmount, useMileage) {
             description: `주문 결제 (주문번호: ${window.currentDbId})`
         });
 
-        // 4. 주문 상태 변경
         await sb.from('orders').update({ 
             payment_status: '결제완료', 
             payment_method: '예치금',
@@ -1484,7 +1549,7 @@ async function processDepositPayment(payAmount, useMileage) {
 }
 
 // ============================================================
-// [수정] 카드 결제 (확정된 금액 파라미터 사용)
+// [수정] 카드 결제
 // ============================================================
 function processCardPayment(confirmedAmount) {
     const country = SITE_CONFIG.COUNTRY;
@@ -1494,10 +1559,8 @@ function processCardPayment(confirmedAmount) {
     const orderName = `Chameleon Order #${window.currentDbId}`;
     const customerName = document.getElementById("orderName").value;
 
-    // processFinalPayment에서 넘겨준 확정 금액 사용
     const realPayAmount = (confirmedAmount !== undefined) ? confirmedAmount : window.finalPaymentAmount;
 
-    // (안전장치) 금액이 0원 이하인 경우
     if (realPayAmount < 0) return alert("결제 금액 오류입니다.");
 
     if (pgConfig.provider === 'toss') {
@@ -1505,7 +1568,7 @@ function processCardPayment(confirmedAmount) {
         
         const tossPayments = TossPayments(pgConfig.clientKey);
         tossPayments.requestPayment("카드", { 
-            amount: realPayAmount,  // DB에 저장된 그 금액으로 결제 요청
+            amount: realPayAmount,  
             orderId: "ORD-" + new Date().getTime() + "-" + window.currentDbId, 
             orderName: orderName, 
             customerName: customerName, 
@@ -1524,7 +1587,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
     if (typeof Stripe === 'undefined') return alert("Stripe 모듈 로드 실패");
     
     const stripe = Stripe(pubKey);
-    const btn = document.getElementById("btnFinalPay"); // 버튼 ID 변경 대응
+    const btn = document.getElementById("btnFinalPay"); 
     const originalText = btn.innerText;
     
     btn.innerText = "Stripe 연결 중...";
@@ -1583,20 +1646,32 @@ window.updateCartOption = function(idx, key, value) {
         renderCart(); 
     } 
 };
+// [수정] 옵션 체크/해제 로직 개선 (키값 불일치 문제 해결)
 window.toggleCartAddon = function(idx, code, isChecked) {
     if (cartData[idx]) {
-        const key = `addon_${code}`;
         if (isChecked) { 
+            // 체크 시: 'opt_' 접두사로 통일하여 저장
+            const key = `opt_${code}`;
             cartData[idx].selectedAddons[key] = code; 
-            if (!cartData[idx].addonQuantities[code]) cartData[idx].addonQuantities[code] = 1; 
+            
+            // 수량이 없으면 1로 초기화
+            if (!cartData[idx].addonQuantities[code]) {
+                cartData[idx].addonQuantities[code] = 1; 
+            }
         } else { 
-            delete cartData[idx].selectedAddons[key]; 
+            // 해제 시: 키값(Prefix)이 'addon_'인지 'opt_'인지 상관없이
+            // 해당 옵션 코드를 값으로 가지고 있는 모든 항목을 찾아서 삭제
+            const addons = cartData[idx].selectedAddons;
+            Object.keys(addons).forEach(key => {
+                if (addons[key] === code) {
+                    delete addons[key];
+                }
+            });
         }
         saveCart(); 
         renderCart();
     }
 };
-// [수정] 키보드 입력 대응 및 수량 동기화
 window.updateCartAddonQty = function(idx, code, qty) {
     let quantity = parseInt(qty); 
     if (isNaN(quantity) || quantity < 1) quantity = 1;
@@ -1609,13 +1684,10 @@ window.updateCartAddonQty = function(idx, code, qty) {
     }
 };
 
-// [수정] 외부 호출 시 수량 정보를 함께 저장하도록 변경
-// order.js 내에 이 함수는 딱 하나만 존재해야 합니다.
 export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes = [], addonQtys = {}) {
     if (!productInfo) return;
 
     const now = Date.now();
-    // 중복 방지 로직 (필요시)
     window.isDirectCartAddInProgress = true;
     setTimeout(() => { window.isDirectCartAddInProgress = false; }, 2000);
 
@@ -1625,27 +1697,45 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
     if (addonCodes && addonCodes.length > 0) {
         addonCodes.forEach(code => {
             selectedAddons[`opt_${code}`] = code; 
-            // 전달받은 옵션 수량이 있으면 사용, 없으면 1개로 세팅
             addonQuantities[code] = addonQtys[code] || 1; 
         });
     }
 
-    cartData.push({
+    const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+    let currentCartList = [];
+    try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) currentCartList = parsed;
+        }
+    } catch(e) {}
+
+    const newItem = {
         uid: now,
         product: productInfo,
         type: 'product_only',
         fileName: '(파일 별도 첨부)',
-        thumb: productInfo.img || 'https://placehold.co/100?text=Product',
+        thumb: productInfo.img ? productInfo.img : 'https://placehold.co/100?text=No+Image',
         json: null,
         width: productInfo.w || 0,
         height: productInfo.h || 0,
         isOpen: true,
+        // [수정] 수량 반영
         qty: parseInt(targetQty) || 1,
         selectedAddons: selectedAddons,
         addonQuantities: addonQuantities
-    });
+    };
 
-    saveCart();
+    currentCartList.push(newItem);
+
+    cartData.length = 0;
+    currentCartList.forEach(item => cartData.push(item));
+
+    saveCart(); // 중복 코드를 제거하고 최적화된 saveCart 함수를 사용합니다.
+    
+    // 만약 saveCart 내부에서 에러가 처리되었더라도, 여기서 UI 렌더링은 진행
+
     renderCart();
 }
 window.updateCartQty = function(idx, delta) {
@@ -1668,15 +1758,11 @@ window.updateCartQtyInput = function(idx, val) {
 };
 
 // ============================================================
-// [9] 직접 장바구니 담기 및 일괄 업로드 (추가 기능)
+// [9] 직접 장바구니 담기 및 일괄 업로드
 // ============================================================
-
-
-// 2. 장바구니 내 파일 일괄 업로드 처리 (수정됨: 배열 복사 및 병렬 처리)
 export async function processBulkCartUpload(files) {
     if (!files || files.length === 0) return;
 
-    // [중요] FileList를 즉시 배열로 복사하여, 외부에서 input이 초기화되어도 안전하게 유지함
     const fileList = Array.from(files);
 
     const loading = document.getElementById("loading");
@@ -1688,13 +1774,10 @@ export async function processBulkCartUpload(files) {
     try {
         let successCount = 0;
 
-        // [성능 개선] Promise.all을 사용하여 모든 파일을 동시에 업로드 (하나씩 기다리지 않음)
         const uploadPromises = fileList.map(async (file, index) => {
             try {
-                // 1. 원본 파일 업로드
                 const originalUrl = await uploadFileToSupabase(file, 'customer_uploads');
                 
-                // 2. 썸네일 생성
                 let thumbUrl = 'https://cdn-icons-png.flaticon.com/512/337/337946.png';
                 if (file.type.startsWith('image/')) {
                     try {
@@ -1704,9 +1787,8 @@ export async function processBulkCartUpload(files) {
                     } catch(e) {}
                 }
 
-                // 3. 결과 객체 반환
                 return {
-                    uid: Date.now() + index + Math.random(), // 고유 ID 보장
+                    uid: Date.now() + index + Math.random(), 
                     product: { 
                         name: '📄 첨부 파일', 
                         price: 0, 
@@ -1729,10 +1811,8 @@ export async function processBulkCartUpload(files) {
             }
         });
 
-        // 모든 업로드가 끝날 때까지 대기
         const results = await Promise.all(uploadPromises);
 
-        // 성공한 결과만 장바구니에 담기
         results.forEach(item => {
             if (item) {
                 cartData.push(item);
@@ -1756,32 +1836,26 @@ export async function processBulkCartUpload(files) {
         if(loading) loading.style.display = "none";
     }
 }
+
 // ============================================================
-// [8] 마일리지 계산 헬퍼 함수 (필수 추가)
+// [8] 마일리지 계산 헬퍼 함수
 // ============================================================
 
-// 1. 마일리지 입력 시 한도 체크 및 금액 실시간 반영
 window.calcMileageLimit = function(input) {
     let val = parseInt(input.value) || 0;
     const limit = window.mileageLimitMax || 0;
 
-    // 한도 초과 시 조정
     if (val > limit) {
         alert(`마일리지는 구매금액의 최대 5%(${limit.toLocaleString()}P)까지만 사용 가능합니다.`);
         val = limit;
         input.value = val;
     }
     
-    // 최종 금액 계산 (원금 - 마일리지)
-    // window.originalPayAmount가 정의되어 있어야 정확합니다.
     const baseAmount = window.originalPayAmount || 0;
-    
-    // 만약 originalPayAmount가 0이면(로직 오류 등), 현재 finalPaymentAmount + val로 역산 시도
     const safeBase = baseAmount > 0 ? baseAmount : (window.finalPaymentAmount || 0) + val;
     
     window.finalPaymentAmount = safeBase - val;
     
-    // UI 업데이트
     const amountDisplay = document.getElementById('finalPayAmountDisplay');
     if(amountDisplay) amountDisplay.innerText = window.finalPaymentAmount.toLocaleString() + '원';
     
@@ -1789,12 +1863,10 @@ window.calcMileageLimit = function(input) {
     if(payBtn) payBtn.innerText = `${window.finalPaymentAmount.toLocaleString()}원 결제하기`;
 };
 
-// 2. '최대' 버튼 클릭 시 호출되는 함수
 window.applyMaxMileage = function() {
     const input = document.getElementById('inputUseMileage');
     if(input) {
         input.value = window.mileageLimitMax || 0;
-        // 값 입력 후 계산 함수 강제 실행
         window.calcMileageLimit(input);
     }
 };

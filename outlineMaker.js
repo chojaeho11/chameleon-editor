@@ -17,8 +17,8 @@ export function createVectorOutline(imageSrc, options = {}) {
     // ============================================================
     // [강제 설정 구역]
     // ============================================================
-    const FORCED_DILATION = 120;     // 간격 유지
-    const FORCED_STROKE = 10;       // 두께 유지
+    const FORCED_DILATION = 20;      // 간격을 절반으로 줄여 이미지에 밀착
+    const FORCED_STROKE = 5;       // 두께 유지
     const FORCED_COLOR = '#FF0000'; // 빨강 유지
     const FORCED_TYPE = options.type || 'normal'; 
     // ============================================================
@@ -72,9 +72,9 @@ export function createVectorOutline(imageSrc, options = {}) {
                 window.Potrace.loadImageFromUrl(processingSrc);
                 window.Potrace.setParameter({
                     turnpolicy: "black",
-                    turdsize: 100,      
+                    turdsize: 1000,     // 아주 작은 지글거림은 아예 무시
                     optcurve: true,     
-                    alphamax: 1.3,      
+                    alphamax: 0.5,      // 수치를 낮춰 곡선을 극도로 부드럽게
                     blacklevel: 0.5
                 });
 
@@ -120,7 +120,10 @@ export function createVectorOutline(imageSrc, options = {}) {
 
                         outlinePath = outlinePath.clone(); 
                         mainItem.remove(); 
-                        
+
+                        // ★ 외곽선을 아주 부드럽게 다듬는 핵심 로직 추가
+                        // 안쪽으로 꺾인 부분과 지글거리는 점들을 부드러운 곡선으로 연결합니다.
+                        outlinePath.simplify(8);
                         // 스타일 초기화
                         outlinePath.fillColor = 'black'; 
                         outlinePath.strokeWidth = 0;
@@ -129,8 +132,8 @@ export function createVectorOutline(imageSrc, options = {}) {
                         let bounds = finalPath.bounds;
 
                         if (FORCED_TYPE === 'keyring') {
-                            const outerRadius = mmToPx(16.0); 
-                            const innerRadius = mmToPx(8.0); 
+                            const outerRadius = mmToPx(2.5); // 고리 외경 (약 11mm)
+                            const innerRadius = mmToPx(1.5); // 고리 내경 (3mm 고정)
                             const centerX = bounds.topCenter.x;
                             const centerY = bounds.topCenter.y + mmToPx(3.0); 
 
