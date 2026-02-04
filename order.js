@@ -294,11 +294,12 @@ export async function initOrderSystem() {
             if(cartData.length === 0) return alert("장바구니가 비어있습니다.");
             const info = getOrderInfo();
             
-            // [수정] 결제정보 및 입금자명 추출
+            // [추가] 결제정보(카드/무통장) 및 입금자명 확인
             const payRadio = document.querySelector('input[name="paymentMethod"]:checked');
             info.payMethod = payRadio ? payRadio.value : 'card'; 
             
             const depositorInput = document.getElementById('inputDepositorName');
+            // 입금자명이 입력되어 있으면 쓰고, 없으면 주문자명 사용
             info.depositor = (depositorInput && depositorInput.value) ? depositorInput.value : info.manager;
 
             const mileageInput = document.getElementById('inputUseMileage');
@@ -869,38 +870,20 @@ function renderCart() {
     cartData.forEach((item, idx) => {
         if (!item.product) return;
 
-        // [수정] 다국어 상품명/가격 자동 선택
-        let displayName = item.product.name;
-        let displayPrice = item.product.price;
-        
-        // 상단에 정의된 전역 변수 CURRENT_LANG 사용 ('ja', 'jp', 'us' 등)
-        if (CURRENT_LANG === 'ja' || CURRENT_LANG === 'jp') {
-            if (item.product.name_jp) displayName = item.product.name_jp;
-            if (item.product.price_jp) displayPrice = item.product.price_jp;
-        } else if (CURRENT_LANG === 'us' || CURRENT_LANG === 'en') {
-            if (item.product.name_us) displayName = item.product.name_us;
-            if (item.product.price_us) displayPrice = item.product.price_us;
-        }
-
         if (!item.qty) item.qty = 1; 
         if (item.isOpen === undefined) item.isOpen = true; 
         if (!item.selectedAddons) item.selectedAddons = {};
         
-        // [중요] 가격 계산 시 displayPrice 사용
-        let baseProductTotal = (displayPrice || 0) * item.qty;
-        
-        // [수정] 누락된 옵션 가격 합계 계산 로직 추가
+        let baseProductTotal = (item.product.price || 0) * item.qty;
         let optionTotal = 0;
-        if (item.selectedAddons) {
-            Object.values(item.selectedAddons).forEach(code => {
-                const db = typeof ADDON_DB !== 'undefined' ? ADDON_DB : (window.ADDON_DB || {});
-                const addon = db[code];
-                if (addon) {
-                    const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                    optionTotal += addon.price * aq;
-                }
-            });
-        }
+        
+        Object.values(item.selectedAddons).forEach(code => {
+            const addon = ADDON_DB[code];
+            if (addon) {
+                const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                optionTotal += addon.price * aq;
+            }
+        });
 
         const totalItemPrice = baseProductTotal + optionTotal;
         grandProductTotal += baseProductTotal; 
@@ -911,11 +894,14 @@ function renderCart() {
         
         // [수정됨] 썸네일 우선순위 및 유효성 검사 강화
         let displayImg = null;
-        
-        // 1. 유효한 웹 URL인 경우에만 썸네일 사용 (Base64나 깨진 문자열 제외)
-        if (item.thumb && typeof item.thumb === 'string' && item.thumb.startsWith('http') && !item.thumb.includes('placehold.co')) {
-            displayImg = item.thumb;
-        }
+// 1. 에디터 작업물인 경우 (업로드된 썸네일 URL이 있는 경우만)
+if (item.type === 'design' && item.thumb && item.thumb.startsWith('http')) {
+    displayImg = item.thumb;
+} 
+// 2. 일반 제품이거나 썸네일이 없는 경우, 제품 DB의 이미지 URL을 직접 참조
+else if (item.product && item.product.img && item.product.img.startsWith('http')) {
+    displayImg = item.product.img;
+}
         
         // 2. 썸네일이 없으면 제품 원본 이미지 사용
         if (!displayImg && item.product && item.product.img) {
@@ -994,9 +980,9 @@ function renderCart() {
                     </div>
 
                     <div style="flex:1; min-width:200px;">
-                        <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${displayName}</h4>
-<div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : '(파일 별도 첨부)'}</div>
-<div style="font-size:12px; color:#94a3b8; margin-top:5px;">단가: ${formatCurrency(displayPrice)}</div>
+                        <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${item.product.name}</h4>
+                        <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : '(파일 별도 첨부)'}</div>
+                        <div style="font-size:12px; color:#94a3b8; margin-top:5px;">단가: ${formatCurrency(item.product.price)}</div>
                         
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
                             <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
@@ -1029,7 +1015,7 @@ function renderCart() {
                     <div style="display:flex; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:center;">
                         <img src="${displayImg}" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
-                            <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${displayName}</h4>
+                            <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${item.product.name}</h4>
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">합계: ${formatCurrency(totalItemPrice)}</div>
                         </div>
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
@@ -1711,21 +1697,40 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
         }
     } catch(e) {}
 
-    const newItem = {
-        uid: now,
-        product: productInfo,
-        type: 'product_only',
-        fileName: '(파일 별도 첨부)',
-        thumb: productInfo.img ? productInfo.img : 'https://placehold.co/100?text=No+Image',
-        json: null,
-        width: productInfo.w || 0,
-        height: productInfo.h || 0,
-        isOpen: true,
-        // [수정] 수량 반영
-        qty: parseInt(targetQty) || 1,
-        selectedAddons: selectedAddons,
-        addonQuantities: addonQuantities
-    };
+    // [1] 상품 정보 다이어트 (거대 이미지 코드 원천 차단)
+// productInfo를 그대로 쓰지 않고, 필요한 정보만 골라 담으면서 이미지가 길면 삭제합니다.
+const cleanProduct = {
+    name: productInfo.name,
+    price: productInfo.price,
+    code: productInfo.code || productInfo.key, // 코드 정보 안전하게 확보
+    // ★ 핵심: 이미지 경로가 500자를 넘거나 'data:image'로 시작하면 아예 저장하지 않음 (DB 이미지 참조 유도)
+    img: (productInfo.img && productInfo.img.length < 500 && !productInfo.img.startsWith('data:')) ? productInfo.img : null,
+    w: productInfo.w || 0,
+    h: productInfo.h || 0,
+    w_mm: productInfo.w_mm || 0,
+    h_mm: productInfo.h_mm || 0,
+    category: productInfo.category || '',
+    addons: productInfo.addons || []
+};
+
+// [2] 장바구니 아이템 생성
+const newItem = {
+    uid: now,
+    product: cleanProduct, // ★ 세탁된 상품 정보 사용
+    type: 'product_only',
+    fileName: '(파일 별도 첨부)',
+    
+    // [3] 썸네일도 동일한 규칙으로 한 번 더 방어
+    thumb: cleanProduct.img, 
+    
+    json: null,
+    width: cleanProduct.w,
+    height: cleanProduct.h,
+    isOpen: true,
+    qty: parseInt(targetQty) || 1,
+    selectedAddons: selectedAddons,
+    addonQuantities: addonQuantities
+};
 
     currentCartList.push(newItem);
 

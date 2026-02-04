@@ -8,10 +8,12 @@ const FONT_CONFIG = {
         url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf",
         name: "NanumGothic"
     },
-    jp: {
-        url: "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/JP/1767880510037_gn95s1ps.ttf",
-        name: "NotoSansJP"
-    },
+    // export.js 수정 (일본어 폰트 주소 변경)
+jp: {
+    // 수파베이스 대신 빠르고 제한 없는 구글 폰트 CDN 주소 사용
+    url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf",
+    name: "NotoSansJP"
+},
     us: { // 영어는 한글 폰트로도 표현 가능하므로 KR과 동일하게 설정 (또는 별도 설정 가능)
         url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf",
         name: "NanumGothic"
@@ -312,29 +314,55 @@ async function getSafeImageDataUrl(url) {
 // ==========================================================
 // [3] PDF 폰트 로더
 // ==========================================================
+// [3] PDF 폰트 로더 (DB 연동형으로 업그레이드)
 const fontBufferCache = {};
 
 async function loadPdfFonts(doc) {
-    // [수정] 언어에 맞는 폰트 로드
+    let targetUrl = TARGET_FONT.url; // 기본값 (백업용)
+    
+    // 1. 에디터처럼 DB에서 폰트 주소 가져오기
+    try {
+        // 언어 코드 매핑 (kr->KR, jp->JA, us->US 등)
+        const langMap = { 'kr': 'KR', 'jp': 'JA', 'ja': 'JA', 'us': 'EN', 'en': 'EN' };
+        const dbLangCode = langMap[CURRENT_LANG_CODE] || 'KR';
+        
+        console.log(`[PDF] DB에서 ${dbLangCode} 폰트 검색 시도...`);
+        
+        // Supabase DB 조회 (site_fonts 테이블)
+        const { data, error } = await sb
+            .from('site_fonts')
+            .select('file_url')
+            .eq('site_code', dbLangCode)
+            .order('id', { ascending: true }) // 정렬 기준
+            .limit(1); // 가장 첫 번째 폰트 가져오기
+
+        if (data && data.length > 0 && data[0].file_url) {
+            targetUrl = data[0].file_url;
+            console.log(`[PDF] DB 폰트 주소 확보 성공: ${targetUrl}`);
+        } else {
+            console.warn("[PDF] DB에 해당 언어 폰트가 없어 기본 설정 사용");
+        }
+    } catch (err) {
+        console.error("[PDF] DB 조회 중 오류 (기본값 사용):", err);
+    }
+
+    // 2. 확보된 주소로 폰트 다운로드 및 적용 (기존 로직 유지)
     if (!fontBufferCache[BASE_FONT_NAME]) {
         try {
-            console.log(`[PDF] ${CURRENT_LANG_CODE} 언어용 폰트 로딩 중... (${TARGET_FONT.url})`);
-            const res = await fetch(TARGET_FONT.url);
+            // [중요] fetch 옵션에 mode: 'cors' 명시
+            const res = await fetch(targetUrl, { mode: 'cors' });
             if (res.ok) {
                 fontBufferCache[BASE_FONT_NAME] = await res.arrayBuffer();
             } else {
-                throw new Error("폰트 다운로드 실패");
+                throw new Error(`다운로드 실패 상태코드: ${res.status}`);
             }
         } catch (e) { 
-            console.error("폰트 로드 실패, 백업 폰트 시도:", e);
-            // 실패 시 한국어 폰트로 재시도 (최후의 수단)
+            console.error("폰트 다운로드 실패, 백업(KR) 시도:", e);
             try {
+                // 실패 시 한국어 폰트라도 시도
                 const backupRes = await fetch(FONT_CONFIG['kr'].url);
-                if(backupRes.ok) {
-                    fontBufferCache[BASE_FONT_NAME] = await backupRes.arrayBuffer();
-                    console.log("백업(KR) 폰트 로드 성공");
-                }
-            } catch(err) { console.error("백업 폰트도 실패:", err); }
+                if(backupRes.ok) fontBufferCache[BASE_FONT_NAME] = await backupRes.arrayBuffer();
+            } catch(err) { console.error("백업 폰트 치명적 오류:", err); }
         }
     }
     
@@ -350,7 +378,6 @@ async function loadPdfFonts(doc) {
             doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "normal");
             doc.addFont(BASE_FONT_NAME + ".ttf", BASE_FONT_NAME, "bold");
         }
-        // [추가] 폰트 설정 적용
         doc.setFont(BASE_FONT_NAME);
     }
 }
