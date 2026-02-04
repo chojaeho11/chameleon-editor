@@ -671,58 +671,62 @@ window.editCurrentAddonCategory = async () => {
 
 loadAddonCategories();
 
-// ==========================================
-// 4. 상품 관리 (Products)
-// ==========================================
-// [수정] 디바운스 적용으로 검색 시 서버 부하 획기적 감소
+// [수정] 서버 폭주 방지: 디바운스 + 로딩 중복 방지(Lock) 적용
 window.filterProductList = debounce(async () => {
-    const cat = document.getElementById('filterProdCat').value;
-    const siteFilter = document.getElementById('filterProdSite').value;
-    const keyword = document.getElementById('prodSearchInput').value.toLowerCase().trim();
-    const tbody = document.getElementById('prodTableBody');
+    // [안전장치] DB 연결이 없으면 즉시 중단 (콘솔 에러 방지)
+    if (!sb) { console.warn("DB 미연결"); return; }
     
-    // [보호] 검색어나 카테고리가 없는데 전체 리스트를 요청하면 부하가 큼
-    // 500개 이상이면 로딩 딜레이 발생. 검색어를 입력하거나 카테고리 선택 유도 가능.
+    // [안전장치] 이미 로딩 중이면 중복 요청 차단
+    if (window.isProductLoading) return; 
+    window.isProductLoading = true; // 깃발 올림
+
+    const cat = document.getElementById('filterProdCat')?.value || 'all'; // 요소가 없을 경우 대비
+    const siteFilter = document.getElementById('filterProdSite')?.value || 'all';
+    const keywordInput = document.getElementById('prodSearchInput');
+    const keyword = keywordInput ? keywordInput.value.toLowerCase().trim() : '';
+    const tbody = document.getElementById('prodTableBody');
     
     showLoading(true);
 
-    let query = sb.from('admin_products').select('*');
-    
-    if(cat && cat !== 'all') {
-        query = query.eq('category', cat);
-    }
-    
-    // [최적화] limit을 걸거나 페이지네이션을 해야 하지만, 일단 전체 로드하되 정렬
-    const { data, error } = await query.order('sort_order', {ascending: true});
-    
-    if(error) {
-        console.error("상품 데이터 로드 실패:", error);
-        showLoading(false);
-        return;
-    }
+    try {
+        let query = sb.from('admin_products').select('*');
+        
+        if(cat && cat !== 'all') {
+            query = query.eq('category', cat);
+        }
+        
+        // 데이터 조회 및 정렬
+        const { data, error } = await query.order('sort_order', {ascending: true});
+        
+        if(error) throw error;
 
-    allProducts = data || [];
-    lastFetchedCategory = cat;
+        allProducts = data || [];
+        lastFetchedCategory = cat;
 
-    const filteredList = allProducts.filter(p => {
-        const matchSite = (siteFilter === 'all' || p.site_code === siteFilter);
-        const matchKeyword = !keyword || `${p.name} ${p.code} ${p.name_us||''} ${p.name_jp||''}`.toLowerCase().includes(keyword);
-        return matchSite && matchKeyword;
-    });
-
-    renderProductList(filteredList);
-    showLoading(false);
-    
-    // [중요] 드래그 앤 드롭 인스턴스 재생성
-    if(tbody && !keyword && siteFilter === 'all') {
-        if (tbody.sortable) tbody.sortable.destroy();
-        tbody.sortable = new Sortable(tbody, {
-            animation: 150,
-            handle: '.drag-handle',
-            onEnd: () => updateProductSortOrder() // 드래그 종료 시 업데이트
+        const filteredList = allProducts.filter(p => {
+            const matchSite = (siteFilter === 'all' || p.site_code === siteFilter);
+            const matchKeyword = !keyword || `${p.name} ${p.code} ${p.name_us||''} ${p.name_jp||''}`.toLowerCase().includes(keyword);
+            return matchSite && matchKeyword;
         });
+
+        renderProductList(filteredList);
+
+        // 드래그 앤 드롭 재설정
+        if(tbody && !keyword && siteFilter === 'all') {
+            if (tbody.sortable) tbody.sortable.destroy();
+            tbody.sortable = new Sortable(tbody, {
+                animation: 150,
+                handle: '.drag-handle',
+                onEnd: () => updateProductSortOrder()
+            });
+        }
+    } catch (err) {
+        console.error("상품 로드 실패:", err);
+    } finally {
+        showLoading(false);
+        window.isProductLoading = false; // 깃발 내림
     }
-}, 500); // 0.5초 디바운스
+}, 500);
 
 window.renderProductList = (products) => {
     const tbody = document.getElementById('prodTableBody');
@@ -1533,10 +1537,22 @@ window.autoTranslatePopupDetail = async () => {
     }
 };
 
+// [최종 수정] DB 연결 체크 기능이 추가된 옵션 로드 함수
 window.loadProductOptionsFront = async (addonCodesStr) => {
     const area = document.getElementById('productOptionsArea'); 
     if (!area) return;
     area.innerHTML = '';
+
+    // [안전장치] DB 연결객체(sb) 찾기
+    // window.sb가 있으면 쓰고, 없으면 모듈 scope의 sb를 시도, 둘 다 없으면 에러 방지
+    const dbClient = window.sb || (typeof sb !== 'undefined' ? sb : null);
+
+    if (!dbClient) {
+        console.error("⛔ DB 연결(sb)이 아직 준비되지 않았습니다. 잠시 후 다시 시도합니다.");
+        // 0.5초 뒤에 다시 시도 (재귀 호출)
+        setTimeout(() => window.loadProductOptionsFront(addonCodesStr), 500);
+        return;
+    }
 
     if (!addonCodesStr || addonCodesStr.trim() === '') {
         area.innerHTML = '<div style="color:#94a3b8; font-size:13px; text-align:center; padding:20px;">선택 가능한 옵션이 없습니다.</div>';
@@ -1544,28 +1560,91 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
     }
 
     const codes = addonCodesStr.split(',').map(c => c.trim()).filter(c => c);
-    const { data, error } = await sb.from('admin_addons').select('*').in('code', codes);
+    
+    // dbClient를 사용하여 데이터 조회
+    const { data, error } = await dbClient
+        .from('admin_addons')
+        .select('*')
+        .in('code', codes)
+        .order('sort_order', {ascending: true}); 
     
     if (error || !data || data.length === 0) return;
 
     area.innerHTML = '<div style="font-weight:800; margin-bottom:12px; font-size:14px; color:#1e293b; padding-left:5px;">🎁 추가 옵션 선택</div>';
     
-    data.forEach(addon => {
-        const itemLabel = document.createElement('label');
-        itemLabel.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:8px; background:#fff; cursor:pointer; transition:0.2s; font-size:13px; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
-        
-        itemLabel.onmouseover = () => { itemLabel.style.borderColor = "#6366f1"; itemLabel.style.background = "#f5f3ff"; };
-        itemLabel.onmouseout = () => { itemLabel.style.borderColor = "#e2e8f0"; itemLabel.style.background = "#fff"; };
+    const swatchContainer = document.createElement('div');
+    swatchContainer.style.cssText = "display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;";
+    
+    const listContainer = document.createElement('div');
+    listContainer.style.cssText = "display:flex; flex-direction:column; gap:8px;";
 
-        itemLabel.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px;">
-                <input type="checkbox" name="userOption" value="${addon.code}" data-price="${addon.price}" style="width:18px; height:18px; accent-color:#6366f1; cursor:pointer;">
-                <span style="font-weight:600; color:#334155;">${addon.name_kr || addon.name}</span>
-            </div>
-            <span style="color:#6366f1; font-weight:800; font-size:14px;">+${addon.price.toLocaleString()}원</span>
-        `;
-        area.appendChild(itemLabel);
+    data.forEach(addon => {
+        const priceTag = addon.price > 0 ? `+${addon.price.toLocaleString()}원` : '';
+
+        // [A] 스와치 모드
+        if (addon.is_swatch) {
+            const label = document.createElement('label');
+            label.className = 'swatch-item';
+            label.style.cssText = `
+                position: relative; cursor: pointer; width: 50px; height: 50px; 
+                border-radius: 8px; border: 2px solid #e2e8f0; overflow: hidden;
+                background-image: url('${addon.img_url}'); background-size: cover; background-position: center;
+                transition: 0.2s; box-sizing: border-box; background-color: #f8fafc;
+            `;
+            label.title = `${addon.name_kr || addon.name} (${priceTag})`;
+
+            label.innerHTML = `
+                <input type="checkbox" name="userOption" value="${addon.code}" data-price="${addon.price}" 
+                    style="position:absolute; opacity:0; width:0; height:0;">
+                <div class="check-overlay" style="position:absolute; inset:0; background:rgba(99,102,241,0.5); display:none; align-items:center; justify-content:center;">
+                    <i class="fa-solid fa-check" style="color:white; font-size:20px;"></i>
+                </div>
+            `;
+            
+            const input = label.querySelector('input');
+            const overlay = label.querySelector('.check-overlay');
+            input.addEventListener('change', () => {
+                if(input.checked) {
+                    label.style.borderColor = '#6366f1';
+                    overlay.style.display = 'flex';
+                } else {
+                    label.style.borderColor = '#e2e8f0';
+                    overlay.style.display = 'none';
+                }
+            });
+            swatchContainer.appendChild(label);
+        } 
+        // [B] 리스트 모드
+        else {
+            const itemLabel = document.createElement('label');
+            itemLabel.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; cursor:pointer; transition:0.2s; font-size:13px; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
+            
+            itemLabel.onmouseover = () => { itemLabel.style.borderColor = "#6366f1"; itemLabel.style.background = "#f5f3ff"; };
+            itemLabel.onmouseout = () => { 
+                const chk = itemLabel.querySelector('input');
+                if(!chk.checked) { itemLabel.style.borderColor = "#e2e8f0"; itemLabel.style.background = "#fff"; }
+            };
+
+            itemLabel.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <input type="checkbox" name="userOption" value="${addon.code}" data-price="${addon.price}" style="width:18px; height:18px; accent-color:#6366f1; cursor:pointer;">
+                    ${addon.img_url ? `<img src="${addon.img_url}" style="width:30px; height:30px; border-radius:4px; object-fit:cover;">` : ''}
+                    <span style="font-weight:600; color:#334155;">${addon.name_kr || addon.name}</span>
+                </div>
+                <span style="color:#6366f1; font-weight:800; font-size:14px;">${priceTag}</span>
+            `;
+            
+            const input = itemLabel.querySelector('input');
+            input.addEventListener('change', () => {
+                itemLabel.style.borderColor = input.checked ? "#6366f1" : "#e2e8f0";
+                itemLabel.style.background = input.checked ? "#f5f3ff" : "#fff";
+            });
+            listContainer.appendChild(itemLabel);
+        }
     });
+
+    if(swatchContainer.children.length > 0) area.appendChild(swatchContainer);
+    if(listContainer.children.length > 0) area.appendChild(listContainer);
 };
 
 window.resetAllGeneralProducts = async () => {
