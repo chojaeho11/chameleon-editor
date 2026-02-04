@@ -489,7 +489,10 @@ window.loadSystemDB = debounce(async (filterSite) => {
             </div>
             <img src="${item.img_url || 'https://placehold.co/80'}" style="width:50px; height:50px; border-radius:6px; object-fit:cover;">
             <div style="flex:1;">
-                <div style="font-size:10px; color:#6366f1; font-weight:800;">${item.category_code || '미분류'}</div>
+                <div style="font-size:10px; color:#6366f1; font-weight:800;">
+                    ${item.category_code || '미분류'}
+                    ${item.is_swatch ? '<span style="background:#fecaca; color:#dc2626; padding:1px 4px; border-radius:4px; margin-left:5px;">🎨Swatch</span>' : ''}
+                </div>
                 <div style="font-size:13px; font-weight:bold;">${item.name_kr || item.name}</div>
                 <div style="font-size:12px; font-weight:900;">${symbol}${dPrice.toLocaleString()}</div>
             </div>
@@ -525,6 +528,12 @@ window.editAddonLoad = (id) => {
     document.getElementById('prJP').value = item.price_jp || 0;
     document.getElementById('nmUS').value = item.name_us || '';
     document.getElementById('prUS').value = item.price_us || 0;
+
+    // [수정] 저장된 스와치 모드 상태를 불러와 체크박스에 반영
+    const swatchEl = document.getElementById('newAddonIsSwatch');
+    if(swatchEl) {
+        swatchEl.checked = item.is_swatch || false; 
+    }
 
     const btn = document.querySelector('button[onclick="addAddonDB()"]');
     if(btn) btn.innerText = "옵션 수정저장";
@@ -582,6 +591,11 @@ window.resetAddonForm = () => {
     ['newAddonCode', 'newAddonImgUrl', 'nmKR', 'prKR', 'nmJP', 'prJP', 'nmUS', 'prUS'].forEach(id => {
         const el = document.getElementById(id); if(el) el.value = '';
     });
+    
+    // [수정] 초기화 시 체크박스도 해제
+    const swatchEl = document.getElementById('newAddonIsSwatch');
+    if(swatchEl) swatchEl.checked = false;
+
     const btn = document.querySelector('button[onclick="addAddonDB()"]');
     if(btn) btn.innerText = "옵션 저장";
 };

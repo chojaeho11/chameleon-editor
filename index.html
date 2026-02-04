@@ -3669,12 +3669,14 @@ window.updateModalTotal = function() {
             return Math.floor(val).toLocaleString() + '원';
         };
 
-        if (w >= 100 && h >= 100) {
+        // [수정] 키링(3cm~5cm)도 입력되도록 100을 30으로 변경
+if (w >= 20 && h >= 20) {
             // 1. 면적 계산 (㎡)
             const area = (w * h) / 1000000;
             
             // 2. 단가 계산
             let pricePerItem = area * unitPrice;
+            const MIN_PRICE = 2000;
 
             if (lang === 'kr') {
                 // 한국: 10원 단위 절사
@@ -3732,7 +3734,7 @@ window.updateModalTotal = function() {
             finalH = parseInt(document.getElementById('inputCustH').value || 0);
             finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
             
-            if (finalW < 100 || finalH < 100) return alert("최소 사이즈는 100mm 이상이어야 합니다.");
+            if (finalW < 20 || finalH < 20) return alert("최소 사이즈는 100mm 이상이어야 합니다.");
             
             const area = (finalW * finalH) / 1000000;
             let rawPrice = area * unitPrice;
