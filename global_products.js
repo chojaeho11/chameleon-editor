@@ -814,6 +814,8 @@ window.updateProductSortOrder = async () => {
 
 // [수정] 소수점 저장 오류 수정 및 정수 변환
 // [수정] 상품 저장 시 Base64 이미지를 자동으로 서버에 업로드 후 URL 저장
+// [수정] 소수점 저장 오류 수정 및 정수 변환
+// [수정] 상품 저장 시 Base64 이미지를 자동으로 서버에 업로드 후 URL 저장
 window.addProductDB = async () => {
     const site = document.getElementById('newProdSite').value;
     const cat = document.getElementById('newProdCategory').value;
@@ -837,7 +839,13 @@ window.addProductDB = async () => {
             const blob = await response.blob();
             
             // (2) 파일명 생성 (코드_시간.jpg)
-            const ext = blob.type.split('/')[1] || 'jpg';
+            // GIF인 경우 확장자를 gif로 유지하기 위해 type 확인
+            const mimeType = blob.type; 
+            let ext = 'jpg';
+            if (mimeType.includes('gif')) ext = 'gif';
+            else if (mimeType.includes('png')) ext = 'png';
+            else if (mimeType.includes('webp')) ext = 'webp';
+
             const fileName = `products/${code}_${Date.now()}.${ext}`;
 
             // (3) 수파베이스 업로드
@@ -909,42 +917,44 @@ window.addProductDB = async () => {
 };
 
 window.editProductLoad = async (id) => {
-    // 1. DB에서 상품 정보 가져오기
     const { data } = await sb.from('admin_products').select('*').eq('id', id).single();
     if(!data) return;
-    
+
     editingProdId = id;
+    window.scrollTo(0, 0);
 
-    // 2. 기본 정보 채우기
-    document.getElementById('btnProductSave').innerText = "수정사항 저장";
-    document.getElementById('btnCancelEdit').style.display = 'inline-block';
-    document.getElementById('btnCloneProduct').style.display = 'inline-block';
-    document.querySelector('.product-form').scrollIntoView({ behavior: 'smooth' });
-
+    // 기본 정보
     document.getElementById('newProdSite').value = data.site_code || 'KR';
-    document.getElementById('newProdCategory').value = data.category || '';
-    document.getElementById('newProdCode').value = data.code || '';
-    document.getElementById('newProdW').value = data.width_mm || 0;
-    document.getElementById('newProdH').value = data.height_mm || 0;
-    document.getElementById('newProdIsCustom').checked = data.is_custom_size || false;
-    document.getElementById('newProdIsGeneral').checked = data.is_general_product || false;
+    document.getElementById('newProdCategory').value = data.category;
+    document.getElementById('newProdCode').value = data.code;
+    document.getElementById('newProdName').value = data.name;
+    document.getElementById('newProdPrice').value = data.price;
+    document.getElementById('newProdNameJP').value = data.name_jp || '';
+    document.getElementById('newProdPriceJP').value = data.price_jp || '';
+    document.getElementById('newProdNameUS').value = data.name_us || '';
+    document.getElementById('newProdPriceUS').value = data.price_us || '';
+    
+    // 상세 정보 및 미리보기
+    document.getElementById('newProdW').value = data.width_mm;
+    document.getElementById('newProdH').value = data.height_mm;
     document.getElementById('newProdImg').value = data.img_url || '';
     document.getElementById('prodPreview').src = data.img_url || '';
+    
+    document.getElementById('newProdIsCustom').checked = data.is_custom_size || false;
+    document.getElementById('newProdIsGeneral').checked = data.is_general_product || false;
 
-    document.getElementById('newProdName').value = data.name || ''; 
-    document.getElementById('newProdPrice').value = data.price || 0; 
-    document.getElementById('newProdNameJP').value = data.name_jp || ''; 
-    document.getElementById('newProdPriceJP').value = data.price_jp || 0; 
-    document.getElementById('newProdNameUS').value = data.name_us || ''; 
-    document.getElementById('newProdPriceUS').value = data.price_us || 0; 
-
+    // 상세 설명
     document.getElementById('newProdDetailKR').value = data.description || '';
     document.getElementById('newProdDetailJP').value = data.description_jp || '';
     document.getElementById('newProdDetailUS').value = data.description_us || '';
+
+    // 버튼 상태 변경
+    document.getElementById('btnProductSave').innerText = "상품 수정 저장";
+    document.getElementById('btnProductSave').classList.remove('btn-primary');
+    document.getElementById('btnProductSave').classList.add('btn-vip');
     
-    if(document.getElementById('newProdDesc')) {
-        document.getElementById('newProdDesc').value = data.description || '';
-    }
+    document.getElementById('btnCancelEdit').style.display = 'block';
+    document.getElementById('btnCloneProduct').style.display = 'block';
 
     // ============================================================
     // 🛑 [수정됨] 옵션(Addon) 복구 로직
@@ -1013,6 +1023,7 @@ window.editProductLoad = async (id) => {
     }
     // ============================================================
 };
+
 window.deleteProductDB = async (id) => {
     if(confirm("삭제?")) {
         await sb.from('admin_products').delete().eq('id', id);
@@ -1035,15 +1046,20 @@ window.resetProductForm = () => {
 };
 
 // [수정] 이미지 업로드 에러 핸들링 강화 (폴더/버킷 없음 에러 잡기)
+// [수정] 이미지 업로드 에러 핸들링 강화 (폴더/버킷 없음 에러 잡기)
 window.previewProductImage = async (input) => {
     if(!input.files[0]) return;
     const file = input.files[0];
+    
+    // 1. 일단 미리보기는 즉시 보여줌 (UX용)
     const reader = new FileReader();
     reader.onload = (e) => document.getElementById('prodPreview').src = e.target.result;
     reader.readAsDataURL(file);
     
     const btn = document.getElementById('btnProductSave');
-    const oldText = btn.innerText; btn.innerText = "이미지 업로드..."; btn.disabled = true;
+    const oldText = btn.innerText; 
+    btn.innerText = "이미지 업로드 중... (대기)"; 
+    btn.disabled = true; // 업로드 완료 전까지 저장 금지
 
     try {
         const path = `products/${Date.now()}_${file.name}`;
@@ -1061,13 +1077,18 @@ window.previewProductImage = async (input) => {
         }
 
         const { data } = sb.storage.from('products').getPublicUrl(path);
+        // [중요] 업로드가 성공해야만 URL 입력칸에 값을 넣음
         document.getElementById('newProdImg').value = data.publicUrl;
+        console.log("업로드 완료:", data.publicUrl);
+
     } catch(e) { 
         alert("업로드 처리 중 오류 발생"); 
     } 
-    finally { btn.innerText = oldText; btn.disabled = false; }
+    finally { 
+        btn.innerText = oldText; 
+        btn.disabled = false; 
+    }
 };
-
 window.bulkApplyAddonsToCategory = async () => {
     const cat = document.getElementById('newProdCategory').value;
     if(!cat) return alert("카테고리 선택 필요");
