@@ -1806,3 +1806,76 @@ window.resetAllGeneralProducts = async () => {
         if(btn) btn.innerText = originalText;
     }
 };
+// [긴급 복구] 영어/일본어 내용을 기반으로 -> 이미지 제거 후 -> 한국어로 복구
+window.recoverDescription = async () => {
+    if (!confirm("⚠️ 주의: 한국어 상세페이지가 비어있는 상품들을 복구합니다.\n\n1. 영어(없으면 일본어) 내용을 가져옵니다.\n2. 이미지(Base64)는 모두 제거합니다.\n3. 텍스트를 한국어로 번역해 저장합니다.\n\n진행하시겠습니까?")) return;
+
+    console.log("🚀 복구 작업 시작...");
+    const btn = document.getElementById('btnProductSave'); // 로딩 표시용 버튼 아무거나
+    if(btn) btn.innerText = "복구 중... (콘솔 확인)";
+
+    try {
+        // 1. 전체 상품 가져오기
+        const { data: products, error } = await sb.from('admin_products').select('*');
+        if (error) throw error;
+
+        let count = 0;
+
+        // 2. 하나씩 검사하며 복구
+        for (let p of products) {
+            // 한국어 설명이 비어있고, 외국어 설명은 있는 경우만 타겟
+            if ((!p.description || p.description.trim() === '') && (p.description_us || p.description_jp)) {
+                
+                // 소스 선택 (영어가 있으면 영어, 없으면 일본어)
+                let sourceHtml = p.description_us || p.description_jp;
+                let sourceLang = p.description_us ? 'en' : 'ja';
+
+                // [중요] HTML에서 <img> 태그만 싹 제거하기 (Base64 삭제)
+                let tempDiv = document.createElement('div');
+                tempDiv.innerHTML = sourceHtml;
+                const images = tempDiv.getElementsByTagName('img');
+                while(images.length > 0){
+                    images[0].parentNode.removeChild(images[0]);
+                }
+                
+                // 이미지가 제거된 텍스트만 추출
+                let cleanText = tempDiv.innerHTML;
+
+                // 내용이 너무 짧으면 패스
+                if (cleanText.trim().length < 2) continue;
+
+                // 3. 한국어로 역번역 (전용 번역 함수 사용)
+                let translatedText = await translateToKR(cleanText, sourceLang);
+
+                // 4. 복구된 내용 저장 (안내 문구 추가)
+                const finalHtml = `<p style="color:blue;">[시스템 복구됨]</p>` + translatedText;
+
+                await sb.from('admin_products').update({ description: finalHtml }).eq('id', p.id);
+                
+                console.log(`✅ [${p.code}] 복구 완료`);
+                count++;
+            }
+        }
+
+        alert(`🎉 총 ${count}개의 상품 상세페이지가 복구되었습니다!`);
+        location.reload(); // 새로고침
+
+    } catch (e) {
+        console.error(e);
+        alert("복구 중 오류 발생: " + e.message);
+    }
+};
+
+// [보조] 한국어로 번역하는 전용 함수
+async function translateToKR(text, sourceLang) {
+    try {
+        // HTML 태그를 유지하면서 번역하기 위해 간단한 처리 (완벽하진 않음)
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=ko&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        return data[0].map(x => x[0]).join('');
+    } catch (e) {
+        console.error("번역 실패:", e);
+        return text; // 실패하면 원문 그대로 반환
+    }
+}
