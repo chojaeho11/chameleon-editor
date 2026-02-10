@@ -224,6 +224,7 @@
 
   "msg_select_image_for_outline": "Please select an image to create an outline!",
   "msg_generating": "Generating...",
+  "msg_generating_docs": "Generating documents...",
 
   "prompt_partner_name": "Enter Company Name (Store Name)",
   "prompt_partner_phone": "Enter Contact Phone Number",

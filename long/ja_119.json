@@ -224,6 +224,7 @@
 
   "msg_select_image_for_outline": "外郭線を作成する画像を選択してください。",
   "msg_generating": "生成中...",
+  "msg_generating_docs": "ドキュメント生成中...",
 
   "prompt_partner_name": "加盟店(会社)の商号を入力してください。",
   "prompt_partner_phone": "担当者の連絡先を入力してください。",

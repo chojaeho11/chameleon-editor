@@ -336,23 +336,29 @@ function hexToCMYK(hex) {
 async function getSafeImageDataUrl(url) {
     if (!url) return null;
     return new Promise(resolve => {
-        const img = new Image(); 
-        img.crossOrigin = "Anonymous"; 
+        const timeout = setTimeout(() => {
+            console.warn("[getSafeImageDataUrl] 15초 타임아웃:", url);
+            resolve(null);
+        }, 15000);
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
         img.src = url;
         img.onload = () => {
-            const MAX_SIZE = 1500;
+            clearTimeout(timeout);
+            const isMobile = window.innerWidth <= 768;
+            const MAX_SIZE = isMobile ? 800 : 1500;
             let w = img.width; let h = img.height;
             if (w > MAX_SIZE || h > MAX_SIZE) {
-                if (w > h) { h = Math.round((h * MAX_SIZE) / w); w = MAX_SIZE; } 
+                if (w > h) { h = Math.round((h * MAX_SIZE) / w); w = MAX_SIZE; }
                 else { w = Math.round((w * MAX_SIZE) / h); h = MAX_SIZE; }
             }
-            const c = document.createElement('canvas'); 
+            const c = document.createElement('canvas');
             c.width = w; c.height = h;
             const ctx = c.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-            try { resolve(c.toDataURL('image/jpeg', 0.8)); } catch(e) { resolve(null); }
+            try { resolve(c.toDataURL('image/jpeg', isMobile ? 0.6 : 0.8)); } catch(e) { resolve(null); }
         };
-        img.onerror = () => resolve(null);
+        img.onerror = () => { clearTimeout(timeout); resolve(null); };
     });
 }
 
@@ -613,10 +619,11 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
                     // 좌표 보정
                     tempCvs.setViewportTransform([1, 0, 0, 1, -x, -y]);
                     tempCvs.renderAll();
-                    setTimeout(resolve, 500); 
+                    setTimeout(resolve, 300);
                 });
             });
-            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: 2 });
+            const isMobileDevice = window.innerWidth <= 768;
+            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: isMobileDevice ? 0.7 : 0.95, multiplier: isMobileDevice ? 1 : 2 });
             doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
             tempCvs.dispose();
         }

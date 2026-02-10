@@ -198,6 +198,7 @@
   
   "msg_select_image_for_outline": "외곽선을 만들 이미지를 선택해주세요!",
   "msg_generating": "생성 중...",
+  "msg_generating_docs": "문서 생성 중...",
   
   "prompt_partner_name": "가맹점(업체) 상호명을 입력해주세요.",
   "prompt_partner_phone": "담당자 연락처를 입력해주세요.",

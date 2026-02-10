@@ -2252,14 +2252,11 @@ window.getTinyThumb = function(url, size = 150) {
     window.translations = {};
 
 // ★ [신규 추가] 전역 번역 헬퍼 함수
-window.t = function(key) {
+window.t = function(key, fallback) {
     if (window.translations && window.translations[key]) {
         return window.translations[key];
     }
-    // 번역 데이터가 아직 로드되지 않았거나 키가 없으면, 키 자체를 반환하거나 임시 처리
-    // (디버깅을 위해 콘솔에 로그를 남겨도 좋습니다)
-    // console.warn(`Missing translation: ${key}`);
-    return key; 
+    return fallback || key;
 };
 
     async function loadAndApplyTranslations() {
