@@ -217,7 +217,10 @@
         }
 
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-        if(!profile || (profile.role !== 'franchise' && profile.role !== 'admin')) {
+        let role = profile?.role || '';
+        if (role === 'partners') role = 'partner';
+        const allowed = ['admin', 'franchise', 'partner', 'platinum'];
+        if(!profile || !allowed.includes(role)) {
             alert(window.t ? window.t('msg_no_partner_auth') : "No partner authority.");
             location.href = 'index.html';
             return;

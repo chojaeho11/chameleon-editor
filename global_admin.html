@@ -17,6 +17,13 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <link rel="icon" href="data:;base64,iVBORw0KGgo">
+
+<style>
+.sidebar { display: flex; flex-direction: column; height: 100vh; }
+.sidebar .nav-menu { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 10px; }
+.sidebar .nav-menu::-webkit-scrollbar { width: 4px; }
+.sidebar .nav-menu::-webkit-scrollbar-thumb { background: #4338ca; border-radius: 4px; }
+</style>
 </head>
 <body>
 
@@ -95,6 +102,10 @@
             <div class="nav-label">Assets</div>
             <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 & 로고</li>
             <li class="nav-item" onclick="showSection('sec-fonts', this)"><i class="fa-solid fa-font"></i> 폰트(서체) 관리</li>
+
+            <div class="nav-label">AI Chatbot</div>
+            <li class="nav-item" onclick="showSection('sec-chatbot', this)"><i class="fa-solid fa-robot"></i> 🦎 AI 챗봇 학습</li>
+            <li class="nav-item" onclick="showSection('sec-live-chat', this)"><i class="fa-solid fa-headset"></i> 💬 실시간 상담</li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
             <button class="btn btn-danger" style="width: 100%;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
@@ -965,6 +976,135 @@
     </div>
 </div>
 
+
+<!-- ===== AI 챗봇 학습 관리 섹션 ===== -->
+<div id="sec-chatbot" class="section">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #6366f1; padding-bottom:15px;">
+            <h3 style="margin:0; color:#4338ca;">🦎 AI 챗봇 학습 관리</h3>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="cbShowTab('logs')" id="cbTabLogs">📋 상담 로그</button>
+                <button class="btn btn-primary btn-sm" onclick="cbShowTab('knowledge')" id="cbTabKnowledge">📚 학습 데이터</button>
+                <button class="btn btn-outline btn-sm" onclick="cbShowTab('settings')" id="cbTabSettings">⚙️ 설정</button>
+            </div>
+        </div>
+        <div id="cbPanelLogs" style="display:none;">
+            <div id="cbDailyReport" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:15px;"></div>
+            <div id="cbUrgentBox" style="display:none; background:#fef2f2; border:2px solid #fca5a5; border-radius:10px; padding:15px; margin-bottom:15px;">
+                <h4 style="margin:0 0 10px; color:#dc2626;">🚨 AI가 곤란했던 질문들</h4>
+                <div id="cbUrgentList"></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                <input type="date" id="cbLogDate" class="input-text" style="width:150px;">
+                <select id="cbLogFilter" class="input-text" style="width:150px;">
+                    <option value="all">전체</option>
+                    <option value="unresolved">❌ 미해결</option>
+                    <option value="needs_training">📝 학습필요</option>
+                </select>
+                <button class="btn btn-primary btn-sm" onclick="cbLoadLogs()">조회</button>
+                <span id="cbLogCount" style="font-size:12px; color:#64748b; align-self:center;"></span>
+            </div>
+            <div id="cbLogList" style="max-height:600px; overflow-y:auto;"></div>
+        </div>
+        <div id="cbPanelKnowledge" style="display:block;">
+            <div style="background:#f0fdf4; border:1px dashed #86efac; border-radius:10px; padding:15px; margin-bottom:15px;">
+                <h4 style="margin:0 0 10px; color:#16a34a;">➕ 새 학습 데이터 추가</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div><label style="font-size:12px; font-weight:700;">카테고리</label>
+                        <select id="cbNewCat" class="input-text"><option>배송</option><option>결제</option><option>가격</option><option>상품</option><option>사업자</option><option>에디터</option><option>취소/환불</option><option>글로벌</option><option>서비스</option><option>기타</option></select></div>
+                    <div><label style="font-size:12px; font-weight:700;">언어</label>
+                        <select id="cbNewLang" class="input-text"><option value="ko">🇰🇷 한국어</option><option value="ja">🇯🇵 日本語</option><option value="en">🇺🇸 English</option></select></div>
+                </div>
+                <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">고객 질문</label>
+                    <input id="cbNewQ" class="input-text" placeholder="예: 배송 며칠 걸려요?" style="width:100%;"></div>
+                <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">답변</label>
+                    <textarea id="cbNewA" class="input-text" rows="3" placeholder="예: 수도권 1~2일, 지방 2~3일" style="width:100%; resize:vertical;"></textarea></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <div style="flex:1;"><label style="font-size:12px; font-weight:700;">키워드</label><input id="cbNewKw" class="input-text" placeholder="배송,택배" style="width:100%;"></div>
+                    <div style="width:80px;"><label style="font-size:12px; font-weight:700;">우선순위</label><input id="cbNewPri" class="input-text" type="number" value="5" style="width:100%;"></div>
+                </div>
+                <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="cbAddKnowledge()">💾 저장</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 style="margin:0;">📚 등록된 학습 데이터</h4>
+                <div style="display:flex; gap:8px;">
+                    <select id="cbKnFilter" class="input-text" style="width:120px;" onchange="cbLoadKnowledge()"><option value="all">전체</option><option value="ko">🇰🇷</option><option value="ja">🇯🇵</option><option value="en">🇺🇸</option></select>
+                    <button class="btn btn-outline btn-sm" onclick="cbLoadKnowledge()">새로고침</button>
+                </div>
+            </div>
+            <div id="cbKnList" style="max-height:500px; overflow-y:auto;"></div>
+        </div>
+        <div id="cbPanelSettings" style="display:none;">
+            <div style="background:#fefce8; border:1px solid #fde047; border-radius:10px; padding:15px;">
+                <h4 style="margin:0 0 15px; color:#a16207;">⚙️ 챗봇 설정</h4>
+                <label style="font-size:12px; font-weight:700;">추가 업무 지시</label>
+                <textarea id="cbCustomPrompt" class="input-text" rows="6" style="width:100%; resize:vertical;" placeholder="예: 현재 설날 이벤트 10% 할인 중"></textarea>
+                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="cbSaveSettings()">💾 설정 저장</button>
+            </div>
+            <div class="card" style="margin-top:15px;"><h4 style="margin:0 0 10px;">📊 통계</h4><div id="cbStats" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 실시간 상담 섹션 ===== -->
+<div id="sec-live-chat" class="section">
+    <div style="display:grid; grid-template-columns:320px 1fr; gap:15px; height:calc(100vh - 120px);">
+        <div class="card" style="overflow-y:auto; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
+                <h4 style="margin:0; color:#4338ca;">💬 상담 대기열</h4>
+                <button class="btn btn-outline btn-sm" onclick="lcLoadRooms()" style="font-size:11px;">새로고침</button>
+            </div>
+            <div style="display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="lcFilterRooms('all')" id="lcFilterAll" style="font-size:11px; flex:1;">전체</button>
+                <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('waiting')" id="lcFilterWait" style="font-size:11px; flex:1;">⏳ 대기</button>
+                <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('active')" id="lcFilterActive" style="font-size:11px; flex:1;">💬 상담중</button>
+                <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('closed')" id="lcFilterClosed" style="font-size:11px; flex:1;">✅ 종료</button>
+                <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('ai_chatting')" id="lcFilterAiChat" style="font-size:11px; flex:1;">🤖 AI상담</button>
+                <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('chatbot')" id="lcFilterBot" style="font-size:11px; flex:1;">📋 로그</button>
+            </div>
+            <div id="lcRoomList"></div>
+            
+            <!-- 상담사 관리 -->
+            <div style="border-top:1px solid #e2e8f0; padding-top:10px; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <h5 style="margin:0; font-size:12px; color:#64748b;">👥 등록된 상담사</h5>
+                    <button class="btn btn-outline btn-sm" onclick="lcShowAddManager()" style="font-size:10px; padding:2px 8px;">+ 추가</button>
+                </div>
+                <div id="lcManagerList" style="font-size:12px;"></div>
+                <div id="lcAddManagerForm" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:8px; margin-top:6px;">
+                    <input id="lcNewMgrName" class="input-text" placeholder="이름" style="width:100%; font-size:12px; margin-bottom:4px;">
+                    <input id="lcNewMgrPhone" class="input-text" placeholder="전화번호" style="width:100%; font-size:12px; margin-bottom:4px;">
+                    <input id="lcNewMgrRole" class="input-text" placeholder="역할 (예: 주간/야간)" style="width:100%; font-size:12px; margin-bottom:4px;">
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn btn-primary btn-sm" onclick="lcAddManager()" style="flex:1; font-size:11px;">저장</button>
+                        <button class="btn btn-outline btn-sm" onclick="document.getElementById('lcAddManagerForm').style.display='none'" style="font-size:11px;">취소</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="display:flex; flex-direction:column; padding:0; overflow:hidden;">
+            <div style="background:#f8fafc; padding:12px 15px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                <div><div id="lcChatTitle" style="font-weight:700; color:#334155;">상담방을 선택하세요</div><div id="lcChatSub" style="font-size:11px; color:#94a3b8;"></div></div>
+                <div style="display:flex; gap:5px;">
+                    <button id="lcInterveneBtn" class="btn btn-primary btn-sm" onclick="lcIntervene()" style="font-size:11px; display:none; background:#f59e0b; border-color:#f59e0b;">🖐️ 끼어들기</button>
+                    <button class="btn btn-outline btn-sm" onclick="lcSaveToKnowledge()" style="font-size:11px;">📚 학습저장</button>
+                    <button class="btn btn-outline btn-sm" onclick="lcCloseRoom()" style="font-size:11px; color:#ef4444; border-color:#ef4444;">종료</button>
+                </div>
+            </div>
+            <div id="lcAiSummary" style="display:none; background:#ede9fe; padding:8px 15px; font-size:12px; color:#6366f1; border-bottom:1px solid #c4b5fd;"><b>🤖 AI 요약:</b> <span id="lcAiSummaryText"></span></div>
+            <div id="lcChatMessages" style="flex:1; overflow-y:auto; padding:15px; background:#fff;">
+                <div style="text-align:center; color:#94a3b8; padding:60px;"><i class="fa-solid fa-headset" style="font-size:48px; display:block; margin-bottom:15px;"></i>왼쪽에서 상담방을 선택하세요</div>
+            </div>
+            <div style="padding:10px 15px; border-top:1px solid #e2e8f0; background:#f8fafc; display:flex; gap:8px; align-items:center;">
+                <label style="cursor:pointer; color:#6366f1; font-size:18px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="lcFileInput" style="display:none;" multiple></label>
+                <input type="text" id="lcMsgInput" class="input-text" placeholder="메시지 입력..." style="flex:1;" onkeydown="if(event.key==='Enter')lcSendMsg()">
+                <button class="btn btn-primary" onclick="lcSendMsg()" style="padding:8px 16px;">전송</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <script type="module" src="global_admin.js"></script>
 <div id="bidAdminModal" class="modal-overlay" style="display:none;">
         <div class="modal-box" style="width: 700px; max-width: 95%;">
@@ -1178,5 +1318,294 @@ async function saveCommonInfo() {
     }
 }
 </script>
+
+<script>
+// ═══ AI 챗봇 학습 관리 ═══
+(function() {
+    function getSb() { return window.sb; }
+    window.cbShowTab = function(tab) {
+        document.getElementById('cbPanelLogs').style.display = (tab === 'logs') ? 'block' : 'none';
+        document.getElementById('cbPanelKnowledge').style.display = (tab === 'knowledge') ? 'block' : 'none';
+        document.getElementById('cbPanelSettings').style.display = (tab === 'settings') ? 'block' : 'none';
+        document.getElementById('cbTabLogs').className = 'btn btn-' + (tab === 'logs' ? 'primary' : 'outline') + ' btn-sm';
+        document.getElementById('cbTabKnowledge').className = 'btn btn-' + (tab === 'knowledge' ? 'primary' : 'outline') + ' btn-sm';
+        document.getElementById('cbTabSettings').className = 'btn btn-' + (tab === 'settings' ? 'primary' : 'outline') + ' btn-sm';
+        if (tab === 'logs') cbLoadLogs();
+        if (tab === 'knowledge') cbLoadKnowledge();
+        if (tab === 'settings') cbLoadSettings();
+    };
+    window.cbLoadKnowledge = async function() {
+        var sb = getSb(); if (!sb) return;
+        var lang = document.getElementById('cbKnFilter').value;
+        var q = sb.from('chatbot_knowledge').select('*').eq('is_active', true).order('priority', {ascending: false}).limit(50);
+        if (lang !== 'all') q = q.eq('language', lang);
+        var res = await q;
+        var list = document.getElementById('cbKnList');
+        if (!res.data || res.data.length === 0) { list.innerHTML = '<p style="color:#94a3b8; text-align:center;">데이터 없음</p>'; return; }
+        var html = '<table style="width:100%; font-size:12px;"><thead><tr style="background:#f8fafc;"><th style="padding:6px;">카테고리</th><th style="padding:6px;">질문</th><th style="padding:6px;">답변</th><th style="padding:6px;">삭제</th></tr></thead><tbody>';
+        res.data.forEach(function(k) {
+            html += '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px;"><span style="background:#e0e7ff; padding:2px 6px; border-radius:6px; font-size:11px;">' + (k.category||'일반') + '</span></td>';
+            html += '<td style="padding:6px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + k.question.substring(0,40) + '</td>';
+            html += '<td style="padding:6px; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + k.answer.substring(0,50) + '</td>';
+            html += '<td style="padding:6px;"><button class="btn btn-outline btn-sm" style="color:#ef4444; font-size:11px; padding:2px 6px;" onclick="cbDeleteKn(' + k.id + ')">삭제</button></td></tr>';
+        });
+        list.innerHTML = html + '</tbody></table>';
+    };
+    window.cbAddKnowledge = async function() {
+        var sb = getSb(); if (!sb) return;
+        var q = document.getElementById('cbNewQ').value.trim(), a = document.getElementById('cbNewA').value.trim();
+        if (!q || !a) return alert('질문과 답변을 입력하세요');
+        await sb.from('chatbot_knowledge').insert({ category: document.getElementById('cbNewCat').value, question: q, answer: a, keywords: document.getElementById('cbNewKw').value.trim(), language: document.getElementById('cbNewLang').value, priority: parseInt(document.getElementById('cbNewPri').value) || 5 });
+        document.getElementById('cbNewQ').value = ''; document.getElementById('cbNewA').value = ''; document.getElementById('cbNewKw').value = '';
+        alert('✅ 저장! AI에 즉시 반영됩니다.'); cbLoadKnowledge();
+    };
+    window.cbDeleteKn = async function(id) { if (!confirm('삭제?')) return; await getSb().from('chatbot_knowledge').update({is_active:false}).eq('id',id); cbLoadKnowledge(); };
+    window.cbLoadLogs = async function() {
+        var sb = getSb(); if (!sb) return;
+        var filter = document.getElementById('cbLogFilter').value, today = new Date().toISOString().split('T')[0];
+        try {
+            var ta = await sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00');
+            var tu = await sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('is_resolved',false);
+            var tt = await sb.from('chatbot_logs').select('id',{count:'exact',head:true}).eq('needs_training',true).eq('is_resolved',false);
+            var tk = await sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true);
+            document.getElementById('cbDailyReport').innerHTML = '<div style="background:#ede9fe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#6366f1;">'+(ta.count||0)+'</div><div style="font-size:11px;color:#64748b;">오늘 상담</div></div><div style="background:#fef2f2;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#ef4444;">'+(tu.count||0)+'</div><div style="font-size:11px;">미해결</div></div><div style="background:#fefce8;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#f59e0b;">'+(tt.count||0)+'</div><div style="font-size:11px;">🚨 학습필요</div></div><div style="background:#d1fae5;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#059669;">'+(tk.count||0)+'</div><div style="font-size:11px;">학습데이터</div></div>';
+        } catch(e){}
+        var urgR = await sb.from('chatbot_logs').select('*').eq('needs_training',true).eq('is_resolved',false).order('created_at',{ascending:false}).limit(10);
+        var ub = document.getElementById('cbUrgentBox'), ul = document.getElementById('cbUrgentList');
+        if (urgR.data && urgR.data.length > 0) { ub.style.display='block'; var h=''; urgR.data.forEach(function(l){ h+='<div style="background:#fff;border:1px solid #fca5a5;border-radius:8px;padding:8px;margin-bottom:4px;font-size:12px;"><b style="color:#dc2626;">❓</b> '+l.user_message+'<br><span style="color:#94a3b8;">AI: '+((l.bot_reply||'').substring(0,80))+'</span><br><button class="btn btn-primary btn-sm" style="font-size:10px;margin-top:4px;background:#dc2626;" onclick="cbTrainFromLog('+l.id+',\''+l.user_message.replace(/'/g,"\\'").replace(/\n/g," ")+'\')">📚 답변등록</button> <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="cbResolveLog('+l.id+')">✅ 문제없음</button></div>'; }); ul.innerHTML=h; } else { ub.style.display='none'; }
+        var q2 = sb.from('chatbot_logs').select('*').order('created_at',{ascending:false}).limit(30);
+        if (filter==='unresolved') q2=q2.eq('is_resolved',false); if (filter==='needs_training') q2=q2.eq('needs_training',true);
+        var dv = document.getElementById('cbLogDate').value; if(dv) q2=q2.gte('created_at',dv+'T00:00:00').lte('created_at',dv+'T23:59:59');
+        var r = await q2; var list = document.getElementById('cbLogList'); document.getElementById('cbLogCount').textContent='총 '+(r.data?r.data.length:0)+'건';
+        if(!r.data||r.data.length===0){list.innerHTML='<p style="text-align:center;color:#94a3b8;">기록 없음</p>';return;}
+        var h=''; r.data.forEach(function(l){ var t=new Date(l.created_at).toLocaleString('ko-KR'); h+='<div style="border:1px solid '+(l.needs_training?'#fca5a5':'#e2e8f0')+';border-radius:8px;padding:10px;margin-bottom:6px;background:'+(l.needs_training?'#fffbeb':'#fff')+';font-size:12px;"><div style="display:flex;justify-content:space-between;"><span style="color:#94a3b8;font-size:11px;">'+t+'</span><span style="background:'+(l.is_resolved?'#10b981':'#ef4444')+';color:#fff;padding:1px 6px;border-radius:6px;font-size:10px;">'+(l.is_resolved?'해결':'미해결')+'</span></div><div style="background:#f0f9ff;padding:6px 10px;border-radius:6px;margin:6px 0;"><b style="color:#0284c7;">고객:</b> '+l.user_message+'</div><div style="background:#f8fafc;padding:6px 10px;border-radius:6px;"><b style="color:#6366f1;">AI:</b> '+((l.bot_reply||'').substring(0,150))+'</div><div style="margin-top:6px;display:flex;gap:4px;">'+(l.is_resolved?'':'<button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="cbResolveLog('+l.id+')">✅</button>')+'<button class="btn btn-outline btn-sm" style="font-size:10px;color:#f59e0b;" onclick="cbTrainFromLog('+l.id+',\''+l.user_message.replace(/'/g,"\\'").replace(/\n/g," ")+'\')">📚 학습</button></div></div>'; });
+        list.innerHTML=h;
+    };
+    window.cbResolveLog = async function(id) { await getSb().from('chatbot_logs').update({is_resolved:true}).eq('id',id); cbLoadLogs(); };
+    window.cbTrainFromLog = function(id, q) { cbShowTab('knowledge'); document.getElementById('cbNewQ').value=q; document.getElementById('cbNewA').focus(); getSb().from('chatbot_logs').update({needs_training:true}).eq('id',id).then(function(){}); };
+    window.cbLoadSettings = async function() {
+        var sb = getSb(); var r = await sb.from('chatbot_knowledge').select('answer').eq('category','_system_prompt').eq('is_active',true).maybeSingle();
+        if(r.data) document.getElementById('cbCustomPrompt').value=r.data.answer;
+        var ta=await sb.from('chatbot_logs').select('id',{count:'exact',head:true}); var tk=await sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true);
+        document.getElementById('cbStats').innerHTML='<div style="background:#ede9fe;padding:15px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:900;color:#6366f1;">'+(ta.count||0)+'</div><div style="font-size:11px;">총 상담</div></div><div style="background:#d1fae5;padding:15px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:900;color:#059669;">'+(tk.count||0)+'</div><div style="font-size:11px;">학습 데이터</div></div>';
+    };
+    window.cbSaveSettings = async function() {
+        var sb=getSb(); await sb.from('chatbot_knowledge').update({is_active:false}).eq('category','_system_prompt');
+        var p=document.getElementById('cbCustomPrompt').value.trim();
+        if(p) await sb.from('chatbot_knowledge').insert({category:'_system_prompt',question:'시스템설정',answer:p,language:'ko',priority:100});
+        alert('✅ 설정 저장!');
+    };
+})();
+
+// ═══ 실시간 상담 관리 ═══
+(function() {
+    var currentRoom=null, currentFilter='waiting', subscription=null;
+    function getSb(){return window.sb;}
+    window.lcLoadRooms = async function() {
+        var sb=getSb(); if(!sb) return;
+        var q = sb.from('chat_rooms').select('*').order('created_at',{ascending:false}).limit(30);
+        if (currentFilter === 'ai_chatting') {
+            q = q.eq('status', 'ai_chatting');
+        } else if (currentFilter !== 'all' && currentFilter !== 'chatbot') {
+            q = q.eq('status', currentFilter);
+        }
+        var r = await q;
+        var list=document.getElementById('lcRoomList');
+        if(!r.data||r.data.length===0){list.innerHTML='<div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">상담방 없음</div>';return;}
+        var h=''; r.data.forEach(function(rm){
+            var t=new Date(rm.created_at).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+            var si=rm.status==='waiting'?'⏳':rm.status==='active'?'💬':rm.status==='ai_chatting'?'🤖':'✅';
+            var bg=currentRoom&&currentRoom.id===rm.id?'#ede9fe':'#fff';
+            var bd=rm.status==='waiting'?'#fca5a5':rm.status==='active'?'#86efac':rm.status==='ai_chatting'?'#fde68a':'#e2e8f0';
+            h+='<div onclick="lcSelectRoom(\''+rm.id+'\')" style="background:'+bg+';border:1px solid '+bd+';border-radius:10px;padding:10px;margin-bottom:6px;cursor:pointer;">';
+            h+='<div style="display:flex;justify-content:space-between;"><span style="font-weight:700;font-size:13px;">'+si+' '+(rm.customer_name||'고객')+'</span><span style="font-size:10px;color:#94a3b8;">'+t+'</span></div>';
+            h+='<div style="font-size:11px;margin-top:3px;"><span style="background:'+(rm.status==='ai_chatting'?'#fef3c7':rm.assigned_manager==='지숙'?'#dbeafe':rm.assigned_manager==='은미'?'#fce7f3':rm.assigned_manager==='성희'?'#d1fae5':'#f1f5f9')+';color:#334155;padding:1px 8px;border-radius:10px;font-weight:600;">'+(rm.status==='ai_chatting'?'🤖 AI 상담중':'👤 '+(rm.assigned_manager||'미배정'))+'</span> <span style="color:#94a3b8;">| '+(rm.source==='chatbot'?'🤖AI→상담':'직접')+'</span></div>';
+            if(rm.ai_summary) h+='<div style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🤖 '+rm.ai_summary.substring(0,50)+'</div>';
+            h+='</div>';
+        }); list.innerHTML=h;
+    };
+    window.lcFilterRooms = function(f) {
+        currentFilter=f;
+        ['All','Wait','Active','Closed','AiChat','Bot'].forEach(function(k) {
+            var el = document.getElementById('lcFilter'+k);
+            if (el) el.className = 'btn btn-outline btn-sm';
+        });
+        var activeId = {all:'All',waiting:'Wait',active:'Active',closed:'Closed',ai_chatting:'AiChat',chatbot:'Bot'}[f];
+        var el = document.getElementById('lcFilter'+(activeId||'All'));
+        if (el) el.className = 'btn btn-primary btn-sm';
+        if (f === 'chatbot') { lcLoadChatbotLogs(); return; }
+        lcLoadRooms();
+    };
+    // AI 챗봇 상담 로그 표시
+    window.lcLoadChatbotLogs = async function() {
+        var sb=getSb(); if(!sb) return;
+        var r=await sb.from('chatbot_logs').select('*').order('created_at',{ascending:false}).limit(30);
+        var list=document.getElementById('lcRoomList');
+        if(!r.data||r.data.length===0){list.innerHTML='<div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">AI 상담 기록 없음</div>';return;}
+        var h='';
+        r.data.forEach(function(log){
+            var t=new Date(log.created_at).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+            var nt=log.needs_training?'#fca5a5':'#e2e8f0';
+            h+='<div onclick="lcShowBotLog('+log.id+')" style="background:#fff;border:1px solid '+nt+';border-radius:10px;padding:10px;margin-bottom:6px;cursor:pointer;">';
+            h+='<div style="display:flex;justify-content:space-between;"><span style="font-weight:700;font-size:13px;">🤖 AI 상담</span><span style="font-size:10px;color:#94a3b8;">'+t+'</span></div>';
+            h+='<div style="font-size:11px;color:#334155;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">❓ '+log.user_message.substring(0,40)+'</div>';
+            h+='<div style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">💬 '+(log.bot_reply||'').substring(0,40)+'</div>';
+            if(log.needs_training) h+='<span style="background:#fef2f2;color:#dc2626;font-size:10px;padding:1px 6px;border-radius:4px;">학습필요</span>';
+            h+='</div>';
+        });
+        list.innerHTML=h;
+    };
+    // AI 상담 로그 상세 보기
+    window.lcShowBotLog = async function(logId) {
+        var sb=getSb(); if(!sb) return;
+        var r=await sb.from('chatbot_logs').select('*').eq('id',logId).single();
+        if(!r.data) return;
+        var log=r.data;
+        var area=document.getElementById('lcChatMessages');
+        document.getElementById('lcChatTitle').textContent='🤖 AI 상담 기록';
+        document.getElementById('lcChatSub').textContent=new Date(log.created_at).toLocaleString('ko-KR')+' | '+log.language;
+        document.getElementById('lcAiSummary').style.display='none';
+        var h='';
+        h+='<div style="display:flex;flex-direction:column;align-items:flex-start;margin-bottom:8px;"><span style="font-size:10px;color:#94a3b8;">고객</span><div style="background:#f1f5f9;color:#334155;padding:8px 14px;border-radius:14px;max-width:300px;font-size:13px;">'+log.user_message+'</div></div>';
+        h+='<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:8px;"><span style="font-size:10px;color:#94a3b8;">AI</span><div style="background:#6366f1;color:#fff;padding:8px 14px;border-radius:14px;max-width:300px;font-size:13px;line-height:1.5;">'+(log.bot_reply||'')+'</div></div>';
+        if(log.needs_training) h+='<div style="text-align:center;padding:10px;"><span style="background:#fef2f2;color:#dc2626;padding:4px 12px;border-radius:8px;font-size:12px;">⚠️ 학습이 필요한 응답</span></div>';
+        area.innerHTML=h;
+    };
+    window.lcSelectRoom = async function(roomId) {
+        var sb=getSb(); if(subscription){subscription.unsubscribe();subscription=null;}
+        var rr=await sb.from('chat_rooms').select('*').eq('id',roomId).single();
+        if(rr.error) return; currentRoom=rr.data;
+        var isAiChat = currentRoom.status==='ai_chatting';
+        document.getElementById('lcChatTitle').textContent=(isAiChat?'🤖 ':'👤 ')+(currentRoom.customer_name||'고객')+' 님'+(isAiChat?' AI 상담':' 상담');
+        document.getElementById('lcChatSub').textContent='담당: '+(isAiChat?'AI 봇':currentRoom.assigned_manager||'미배정')+' | '+(currentRoom.status==='waiting'?'⏳ 대기':currentRoom.status==='active'?'💬 상담중':isAiChat?'🤖 AI 상담중':'✅ 종료');
+        // 끼어들기 버튼 표시/숨김
+        var interveneBtn=document.getElementById('lcInterveneBtn');
+        if(interveneBtn) interveneBtn.style.display=isAiChat?'inline-block':'none';
+        if(currentRoom.ai_summary){document.getElementById('lcAiSummary').style.display='block';document.getElementById('lcAiSummaryText').textContent=currentRoom.ai_summary;}else{document.getElementById('lcAiSummary').style.display='none';}
+        if(currentRoom.status==='waiting'){
+            await sb.from('chat_rooms').update({status:'active',updated_at:new Date().toISOString()}).eq('id',roomId);
+            currentRoom.status='active';
+            await sb.from('chat_messages').insert({room_id:roomId,sender_type:'system',message:'✅ '+(currentRoom.assigned_manager||'매니저')+' 매니저가 접속했습니다!'});
+        }
+        var mr=await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(100);
+        var area=document.getElementById('lcChatMessages');
+        if(!mr.data||mr.data.length===0){area.innerHTML='<div style="text-align:center;color:#94a3b8;padding:30px;">메시지 없음</div>';}
+        else{var h='';mr.data.forEach(function(m){h+=renderMsg(m);});area.innerHTML=h;area.scrollTop=area.scrollHeight;}
+        sb.from('chat_messages').update({is_read:true}).eq('room_id',roomId).eq('sender_type','customer').eq('is_read',false).then(function(){});
+        subscription=sb.channel('admin-'+roomId).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room_id=eq.'+roomId},async function(p){
+            var m=p.new;
+            if(m.sender_type==='customer'||m.sender_type==='system'){
+                // Realtime payload에 file_url이 누락될 수 있으므로 DB에서 전체 데이터 재조회
+                if(m.id){
+                    var fresh=await sb.from('chat_messages').select('*').eq('id',m.id).single();
+                    if(fresh.data) m=fresh.data;
+                }
+                area.insertAdjacentHTML('beforeend',renderMsg(m));
+                area.scrollTop=area.scrollHeight;
+                if(m.sender_type==='customer') sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
+            }
+        }).subscribe();
+        lcLoadRooms();
+    };
+    function renderMsg(m){
+        var t=new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+        if(m.sender_type==='system') return '<div style="text-align:center;padding:4px;font-size:11px;color:#94a3b8;">'+m.message+'</div>';
+        var isMgr=m.sender_type==='manager';var isBot=m.sender_type==='chatbot';var al=isMgr?'flex-end':'flex-start';var bg=isMgr?'#6366f1':isBot?'#f0fdf4':'#f1f5f9';var cl=isMgr?'#fff':'#334155';
+        var name=isMgr?(m.sender_name||'매니저'):isBot?'🤖 AI 봇':(m.sender_name||'고객');
+        var h='<div style="display:flex;flex-direction:column;align-items:'+al+';margin-bottom:8px;"><span style="font-size:10px;color:'+(isMgr?'#6366f1':isBot?'#059669':'#f59e0b')+';font-weight:600;">'+(isMgr?'💬 ':isBot?'':'👤 ')+name+' · '+t+'</span>';
+        if(m.file_url){if(m.file_type&&m.file_type.startsWith('image/')){h+='<img src="'+m.file_url+'" style="max-width:250px;border-radius:10px;cursor:pointer;margin:4px 0;" onclick="window.open(this.src)">';}else{h+='<a href="'+m.file_url+'" target="_blank" style="background:#dbeafe;padding:8px 12px;border-radius:10px;color:#2563eb;text-decoration:none;font-size:13px;display:inline-block;margin:4px 0;">📎 '+(m.file_name||'파일')+'</a>';}}
+        if(m.message){var mt=m.message.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(isMgr?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:8px 14px;border-radius:14px;max-width:300px;font-size:13px;line-height:1.5;word-break:break-all;">'+mt+'</div>';}
+        return h+'</div>';
+    }
+    window.lcSendMsg = async function(){
+        if(!currentRoom) return; var sb=getSb();var inp=document.getElementById('lcMsgInput');var txt=inp.value.trim();if(!txt) return;inp.value='';
+        var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt,created_at:new Date().toISOString()};
+        var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;
+        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt});
+    };
+    document.addEventListener('change',function(e){if(e.target.id!=='lcFileInput'||!currentRoom) return;var fs=e.target.files;for(var i=0;i<fs.length;i++){lcUpFile(fs[i]);}e.target.value='';});
+    async function lcUpFile(f){var sb=getSb();var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error)return alert('업로드 실패');var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
+    window.lcCloseRoom = async function(){
+        if(!currentRoom||!confirm('상담 종료?')) return;var sb=getSb();
+        await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',currentRoom.id);
+        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:'상담이 종료되었습니다. 감사합니다! 😊'});
+        currentRoom=null;if(subscription){subscription.unsubscribe();subscription=null;}
+        document.getElementById('lcChatTitle').textContent='상담방을 선택하세요';document.getElementById('lcChatSub').textContent='';
+        document.getElementById('lcChatMessages').innerHTML='<div style="text-align:center;color:#94a3b8;padding:60px;">상담 종료</div>';lcLoadRooms();
+    };
+    // ── 매니저 끼어들기 (AI 상담 → 매니저 상담으로 전환) ──
+    window.lcIntervene = async function(){
+        if(!currentRoom || currentRoom.status!=='ai_chatting') return;
+        var mgrName=prompt('끼어들기 - 매니저 이름을 입력하세요:');
+        if(!mgrName||!mgrName.trim()) return;
+        mgrName=mgrName.trim();
+        var sb=getSb();
+        // 상태를 active로 변경, 매니저 배정
+        await sb.from('chat_rooms').update({status:'active',assigned_manager:mgrName,updated_at:new Date().toISOString()}).eq('id',currentRoom.id);
+        currentRoom.status='active';
+        currentRoom.assigned_manager=mgrName;
+        // 시스템 메시지 전송 (고객 화면에도 실시간 표시됨)
+        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:'✅ '+mgrName+' 매니저가 대화에 참여했습니다!'});
+        // UI 업데이트
+        document.getElementById('lcChatTitle').textContent='👤 '+(currentRoom.customer_name||'고객')+' 님 상담';
+        document.getElementById('lcChatSub').textContent='담당: '+mgrName+' | 💬 상담중';
+        var interveneBtn=document.getElementById('lcInterveneBtn');
+        if(interveneBtn) interveneBtn.style.display='none';
+        // 실시간 구독 시작 (매니저 메시지 수신)
+        var area=document.getElementById('lcChatMessages');
+        subscription=sb.channel('admin-'+currentRoom.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room_id=eq.'+currentRoom.id},async function(p){
+            var m=p.new;
+            if(m.sender_type==='customer'||m.sender_type==='system'){
+                if(m.id){var fresh=await sb.from('chat_messages').select('*').eq('id',m.id).single();if(fresh.data) m=fresh.data;}
+                area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;
+                if(m.sender_type==='customer') sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
+            }
+        }).subscribe();
+        lcLoadRooms();
+    };
+    window.lcSaveToKnowledge = async function(){
+        if(!currentRoom) return;var sb=getSb();
+        var mr=await sb.from('chat_messages').select('sender_type,message').eq('room_id',currentRoom.id).order('created_at').limit(50);
+        if(!mr.data||mr.data.length===0) return alert('메시지 없음');
+        var cq=mr.data.filter(function(m){return m.sender_type==='customer'&&m.message;}).map(function(m){return m.message;});
+        var ma=mr.data.filter(function(m){return m.sender_type==='manager'&&m.message;}).map(function(m){return m.message;});
+        if(!cq.length||!ma.length) return alert('질문과 답변 필요');
+        await sb.from('chatbot_knowledge').insert({category:'상담사례',question:cq.join(' / ').substring(0,500),answer:ma.join(' ').substring(0,1000),language:'ko',priority:3,is_active:true});
+        alert('✅ AI 학습 데이터로 저장!');
+    };
+})();
+
+// ═══ 상담사 관리 ═══
+window.lcShowAddManager = function() { document.getElementById('lcAddManagerForm').style.display = 'block'; };
+window.lcLoadManagers = async function() {
+    var sb = window.sb; if (!sb) return;
+    var r = await sb.from('chatbot_knowledge').select('*').eq('category', '_managers').eq('is_active', true).order('priority', {ascending: false});
+    var list = document.getElementById('lcManagerList');
+    if (!r.data || r.data.length === 0) { list.innerHTML = '<div style="color:#94a3b8;font-size:11px;text-align:center;padding:8px;">상담사 없음 (+ 추가 버튼으로 등록)</div>'; return; }
+    var h = '';
+    r.data.forEach(function(m) {
+        try { var info = JSON.parse(m.answer); } catch(e) { var info = {name: m.question, phone: '', role: ''}; }
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#f8fafc;border-radius:6px;margin-bottom:3px;">';
+        h += '<div><span style="font-weight:700;">' + info.name + '</span> <span style="color:#6366f1;font-size:11px;">' + (info.phone||'') + '</span>';
+        if (info.role) h += ' <span style="background:#e0e7ff;padding:1px 6px;border-radius:4px;font-size:10px;">' + info.role + '</span>';
+        h += '</div><button class="btn btn-outline btn-sm" style="font-size:10px;color:#ef4444;padding:1px 5px;" onclick="lcDeleteManager(' + m.id + ')">삭제</button></div>';
+    });
+    list.innerHTML = h;
+};
+window.lcAddManager = async function() {
+    var sb = window.sb; if (!sb) return;
+    var name = document.getElementById('lcNewMgrName').value.trim();
+    var phone = document.getElementById('lcNewMgrPhone').value.trim();
+    var role = document.getElementById('lcNewMgrRole').value.trim();
+    if (!name) return alert('이름 입력');
+    await sb.from('chatbot_knowledge').insert({category:'_managers',question:name,answer:JSON.stringify({name:name,phone:phone,role:role}),keywords:phone,language:'ko',priority:5,is_active:true});
+    document.getElementById('lcNewMgrName').value='';document.getElementById('lcNewMgrPhone').value='';document.getElementById('lcNewMgrRole').value='';
+    document.getElementById('lcAddManagerForm').style.display='none';
+    lcLoadManagers(); alert('✅ 상담사 등록!');
+};
+window.lcDeleteManager = async function(id) { if(!confirm('삭제?'))return; await window.sb.from('chatbot_knowledge').update({is_active:false}).eq('id',id); lcLoadManagers(); };
+
+</script>
+
 </body>
 </html>

@@ -107,7 +107,7 @@
 </script>
 </head>
 <body>
-<div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;">로딩 중입니다...</p></div>
+<div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 
 <div id="contextMenu">
     <div class="ctx-item" id="ctxUndo"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="ctx_undo">실행 취소</span></div>
@@ -126,7 +126,7 @@
         <div class="brand" onclick="window.goHome()"><i class="fa-solid fa-palette"></i> Chameleon</div>
         
         <div class="template-tabs">
-            <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');">🎨 템플릿</button>
+            <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');" data-i18n="btn_mobile_template">🎨 템플릿</button>
             
             <button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template', this);" 
     style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-weight: 800; border: none; margin-right: 5px;">
@@ -556,23 +556,23 @@
         
         <div style="background: #fff; padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-store" style="color:#6366f1;"></i> 파트너스 콘솔</h3>
-                <span class="badge" style="background: #e0e7ff; color: #4338ca;" id="partnerRegionBadge">지역 미설정</span>
+                <h3 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-store" style="color:#6366f1;"></i> <span data-i18n="partner_console_title">파트너스 콘솔</span></h3>
+                <span class="badge" style="background: #e0e7ff; color: #4338ca;" id="partnerRegionBadge" data-i18n="partner_region_unset">지역 미설정</span>
             </div>
-            <button onclick="document.getElementById('partnerConsoleModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;">닫기</button>
+            <button onclick="document.getElementById('partnerConsoleModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;" data-i18n="btn_close">닫기</button>
         </div>
 
         <div style="display: flex; flex: 1; overflow: hidden;">
             <div style="width: 220px; background: #fff; border-right: 1px solid #e2e8f0; padding: 20px;">
                 <div class="nav-menu" style="display: flex; flex-direction: column; gap: 5px;">
                     <button class="nav-item active" onclick="switchPartnerTab('pool')" style="text-align: left; padding: 12px; border: none; background: #eff6ff; color: #6366f1; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        <i class="fa-solid fa-list-ul"></i> 실시간 주문접수
+                        <i class="fa-solid fa-list-ul"></i> <span data-i18n="partner_tab_pool">실시간 주문접수</span>
                     </button>
                     <button class="nav-item" onclick="switchPartnerTab('my')" style="text-align: left; padding: 12px; border: none; background: transparent; color: #64748b; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        <i class="fa-solid fa-clipboard-check"></i> 나의 진행 주문
+                        <i class="fa-solid fa-clipboard-check"></i> <span data-i18n="partner_tab_my_orders">나의 진행 주문</span>
                     </button>
                     <button class="nav-item" onclick="switchPartnerTab('settlement')" style="text-align: left; padding: 12px; border: none; background: transparent; color: #64748b; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        <i class="fa-solid fa-sack-dollar"></i> 정산 및 출금
+                        <i class="fa-solid fa-sack-dollar"></i> <span data-i18n="partner_tab_settlement">정산 및 출금</span>
                     </button>
                 </div>
             </div>
@@ -580,15 +580,15 @@
             <div style="flex: 1; padding: 25px; overflow-y: auto;">
                 <div id="tab-pool" class="partner-tab-content">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="margin: 0;">📍 실시간 오더 (선착순)</h2>
-                        <button class="btn-round primary" onclick="loadPartnerOrders('pool')" style="width: auto;"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                        <h2 style="margin: 0;" data-i18n="partner_pool_title">📍 실시간 오더 (선착순)</h2>
+                        <button class="btn-round primary" onclick="loadPartnerOrders('pool')" style="width: auto;"><i class="fa-solid fa-rotate"></i> <span data-i18n="btn_refresh">새로고침</span></button>
                     </div>
-                    <div id="orderPoolList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">로딩 중...</div>
+                    <div id="orderPoolList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;" data-i18n="msg_loading_text">로딩 중...</div>
                 </div>
 
                 <div id="tab-my" class="partner-tab-content" style="display: none;">
-                    <h2 style="margin-bottom: 20px;">📋 나의 진행 주문</h2>
-                    <div id="myOrderList" style="display: flex; flex-direction: column; gap: 15px;">내역 없음</div>
+                    <h2 style="margin-bottom: 20px;" data-i18n="partner_my_orders_title">📋 나의 진행 주문</h2>
+                    <div id="myOrderList" style="display: flex; flex-direction: column; gap: 15px;" data-i18n="msg_no_history">내역 없음</div>
                 </div>
 
                 <div id="tab-settlement" class="partner-tab-content" style="display: none;">
@@ -596,28 +596,28 @@
     <div style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; align-items: center;">
         
         <div style="margin-right: 50px;">
-            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;">출금 가능 금액 (수수료 제외)</div>
+            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;" data-i18n="partner_withdraw_label">출금 가능 금액 (수수료 제외)</div>
             <div style="font-size: 32px; font-weight: 900; color: #1e293b;" id="partnerAvailableBalance">0원</div>
         </div>
 
         <div>
-            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;">출금 대기중 (신청완료)</div>
+            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;" data-i18n="partner_pending_label">출금 대기중 (신청완료)</div>
             <div style="font-size: 32px; font-weight: 900; color: #d97706;" id="partnerPendingBalance">0원</div>
         </div>
 
         <button class="btn-round primary" onclick="requestPartnerWithdrawal()" style="width: auto; padding: 15px 30px; margin-left: auto;">
-            💸 출금 요청하기
+            <span data-i18n="btn_withdraw">💸 출금 요청하기</span>
         </button>
     </div>
     
-    <h4 style="margin-bottom: 15px; color: #334155;">정산 상세 내역</h4>
+    <h4 style="margin-bottom: 15px; color: #334155;" data-i18n="partner_settlement_title">정산 상세 내역</h4>
     <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
         <thead style="background: #f8fafc;">
             <tr>
-                <th style="padding: 12px; text-align: left; color: #64748b; font-size: 13px;">날짜</th>
-                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;">주문금액</th>
-                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;">정산금액</th>
-                <th style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;">상태</th>
+                <th style="padding: 12px; text-align: left; color: #64748b; font-size: 13px;" data-i18n="th_date_col">날짜</th>
+                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;" data-i18n="th_order_amount">주문금액</th>
+                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;" data-i18n="th_settled_amount">정산금액</th>
+                <th style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;" data-i18n="th_status_col">상태</th>
             </tr>
         </thead>
         <tbody id="settlementListBody"></tbody>
@@ -632,8 +632,8 @@
     <div class="modal-box" style="width: 800px; max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden;">
         
         <div style="background: #fff; padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; color: #1e293b;">📦 나의 주문 배송 조회</h3>
-            <button onclick="document.getElementById('myOrderModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;">닫기</button>
+            <h3 style="margin: 0; color: #1e293b;" data-i18n="my_order_tracking_title">📦 나의 주문 배송 조회</h3>
+            <button onclick="document.getElementById('myOrderModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;" data-i18n="btn_close">닫기</button>
         </div>
 
         <div style="flex: 1; padding: 20px; overflow-y: auto;">
@@ -961,15 +961,15 @@
                     <button class="tool-btn" id="btnAlignRightText" style="flex:1;"><i class="fa-solid fa-align-right"></i></button>
                 </div>
                 <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
-                    <span style="font-size:11px; color:#666;">크기</span>
+                    <span style="font-size:11px; color:#666;" data-i18n="editor_size">크기</span>
                     <input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
                 </div>
                 <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
-                    <span style="font-size:11px; color:#666;">자간</span>
+                    <span style="font-size:11px; color:#666;" data-i18n="editor_char_spacing">자간</span>
                     <input type="range" id="textCharSpacing" min="-50" max="300" value="0" style="width:100%;">
                 </div>
                 <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center;">
-                    <span style="font-size:11px; color:#666;">행간</span>
+                    <span style="font-size:11px; color:#666;" data-i18n="editor_line_height">행간</span>
                     <input type="range" id="textLineHeight" min="0.5" max="2.5" step="0.1" value="1.2" style="width:100%;">
                 </div>
             </div>
@@ -998,11 +998,11 @@
             <div class="section-title" style="font-size: 12px; margin-top: 15px; margin-bottom: 5px;">BACKGROUND</div>
             <button id="btnBgColor" class="btn-round" style="width:100%; justify-content: flex-start; margin-bottom: 5px; height: 38px;">
                 <div style="width:20px; height:20px; background:linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius:4px; margin-right:8px; border:1px solid #ddd;"></div>
-                <span>배경색 설정</span>
+                <span data-i18n="editor_bg_color">배경색 설정</span>
             </button>
 
             <div id="bgColorPanel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
-                <div style="font-size:11px; font-weight:bold; color:#666; margin-bottom:5px; text-align:left;">기본 팔레트</div>
+                <div style="font-size:11px; font-weight:bold; color:#666; margin-bottom:5px; text-align:left;" data-i18n="editor_basic_palette">기본 팔레트</div>
                 <div id="colorPaletteGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;">
                     </div>
             </div>
@@ -1015,19 +1015,19 @@
         
         <div id="sideTemplateDrawer" class="side-drawer" style="display:none;">
             <div class="drawer-header">
-                <span style="font-weight:800; color:#334155; font-size:14px;">🎨 추천 디자인</span>
+                <span style="font-weight:800; color:#334155; font-size:14px;" data-i18n="editor_recommended">🎨 추천 디자인</span>
                 <button class="btn-close-drawer" onclick="document.getElementById('sideTemplateDrawer').style.display='none'">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
             <div style="display:flex; padding:15px 15px 0 15px; gap:8px;">
-                <button id="btnSideTabTpl" class="btn-round" onclick="window.switchSideGroup('group_template')" 
-                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#6366f1; color:white; border:none; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                <button id="btnSideTabTpl" class="btn-round" onclick="window.switchSideGroup('group_template')"
+                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#6366f1; color:white; border:none; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);" data-i18n="editor_tab_template">
                     템플릿
                 </button>
-                <button id="btnSideTabObj" class="btn-round" onclick="window.switchSideGroup('group_asset')" 
-                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#fff; color:#64748b; border:1px solid #e2e8f0; font-weight:bold;">
+                <button id="btnSideTabObj" class="btn-round" onclick="window.switchSideGroup('group_asset')"
+                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#fff; color:#64748b; border:1px solid #e2e8f0; font-weight:bold;" data-i18n="editor_tab_element">
                     요소
                 </button>
             </div>
@@ -1035,7 +1035,7 @@
             <div class="drawer-search-box" style="padding:15px; margin-bottom:0;">
                 <div style="position:relative;">
                     <input type="text" id="sideTemplateSearch" 
-                           placeholder="검색어 입력 (예: 카페, 세일)" 
+                           placeholder="검색어 입력 (예: 카페, 세일)" data-i18n-placeholder="ph_search_template" 
                            autocomplete="off" 
                            onkeyup="window.handleSideSearch(this.value)"
                            style="width:100%; padding:10px 10px 10px 35px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:13px; outline:none;">
@@ -1050,7 +1050,7 @@
            <div id="textWizardToolbar" class="wizard-toolbar floating-island">
     <div class="wiz-brand" style="display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.2; padding: 0 5px;">
         <span class="wiz-icon" style="font-size:20px; margin-bottom:2px;">🧙‍♂️</span>
-        <span style="font-size:10px; font-weight:bold; color:#8b00a7; letter-spacing:-0.5px;">디자인마법사</span>
+        <span style="font-size:10px; font-weight:bold; color:#8b00a7; letter-spacing:-0.5px;" data-i18n="editor_design_wizard">디자인마법사</span>
     </div>
     
     <div class="wiz-scroll-track">
@@ -1089,37 +1089,37 @@
         white-space: nowrap;
         letter-spacing: -0.5px; /* 자간을 좁혀서 가로 공간 추가 확보 */
     ">
-        배경풀기
+        <span data-i18n="editor_unlock_bg">배경풀기</span>
     </span>
 </button>
 
 
         <button class="wiz-btn" onclick="window.applyNewWizard('basic')">
             <div class="icon-box c-indigo"><i class="fa-solid fa-store"></i></div>
-            <span>전단지</span>
+            <span data-i18n="wiz_flyer">전단지</span>
         </button>
         <button class="wiz-btn" onclick="window.applyNewWizard('flyer')">
             <div class="icon-box c-red"><i class="fa-solid fa-bullhorn"></i></div>
-            <span>포스터</span>
+            <span data-i18n="wiz_poster">포스터</span>
         </button>
         <button class="wiz-btn" onclick="window.applyNewWizard('card')">
             <div class="icon-box c-green"><i class="fa-solid fa-address-card"></i></div>
-            <span>명함</span>
+            <span data-i18n="wiz_card">명함</span>
         </button>
         <button class="wiz-btn" onclick="window.applyNewWizard('menu')">
             <div class="icon-box c-orange"><i class="fa-solid fa-utensils"></i></div>
-            <span>메뉴판</span>
+            <span data-i18n="wiz_menu">메뉴판</span>
         </button>
 
         <div class="wiz-divider"></div>
 
         <button class="wiz-btn" onclick="window.applyNewWizard('banner-h')">
             <div class="icon-box c-blue"><i class="fa-solid fa-scroll"></i></div>
-            <span>가로현수막</span>
+            <span data-i18n="wiz_banner_h">가로현수막</span>
         </button>
         <button class="wiz-btn" onclick="window.applyNewWizard('banner-v')">
             <div class="icon-box c-purple"><i class="fa-solid fa-flag"></i></div>
-            <span>세로배너</span>
+            <span data-i18n="wiz_banner_v">세로배너</span>
         </button>
         <button class="wiz-btn" onclick="window.applyNewWizard('fabric')">
             <div class="icon-box c-pink"><i class="fa-solid fa-shirt"></i></div>
@@ -1127,7 +1127,7 @@
         </button>
         <button class="wiz-btn" onclick="window.applyNewWizard('vertical-text')">
             <div class="icon-box c-teal"><i class="fa-solid fa-text-height"></i></div>
-            <span>인스타판넬</span>
+            <span data-i18n="wiz_insta_panel">인스타판넬</span>
         </button>
         
     </div>
@@ -1163,19 +1163,19 @@
                 <div class="divider"></div>
                 <div style="position:relative;">
                     <div id="guideMenuPanel" class="guide-popup" style="display:none;">
-                        <button class="guide-opt-btn" data-mode="off" onclick="window.setGuideMode('off')">🚫 끔</button>
-                        <button class="guide-opt-btn" data-mode="cross" onclick="window.setGuideMode('cross')">✚ 십자</button>
-                        <button class="guide-opt-btn" data-mode="3" onclick="window.setGuideMode('3')">3단</button>
-                        <button class="guide-opt-btn" data-mode="4" onclick="window.setGuideMode('4')">4단</button>
-                        <button class="guide-opt-btn" data-mode="5" onclick="window.setGuideMode('5')">5단</button>
-                        <button class="guide-opt-btn" data-mode="grid" onclick="window.setGuideMode('grid')">▦ 격자</button>
+                        <button class="guide-opt-btn" data-mode="off" onclick="window.setGuideMode('off')" data-i18n="guide_off">🚫 끔</button>
+                        <button class="guide-opt-btn" data-mode="cross" onclick="window.setGuideMode('cross')" data-i18n="guide_cross">✚ 십자</button>
+                        <button class="guide-opt-btn" data-mode="3" onclick="window.setGuideMode('3')" data-i18n="guide_3col">3단</button>
+                        <button class="guide-opt-btn" data-mode="4" onclick="window.setGuideMode('4')" data-i18n="guide_4col">4단</button>
+                        <button class="guide-opt-btn" data-mode="5" onclick="window.setGuideMode('5')" data-i18n="guide_5col">5단</button>
+                        <button class="guide-opt-btn" data-mode="grid" onclick="window.setGuideMode('grid')" data-i18n="guide_grid">▦ 격자</button>
                     </div>
                     
                     <button id="guideToggle" class="zoom-btn" style="width:auto; padding:0 15px; border-radius:20px; font-size:12px;">
-                        <i class="fa-solid fa-ruler-horizontal"></i> 가이드
+                        <i class="fa-solid fa-ruler-horizontal"></i> <span data-i18n="btn_guide_on">가이드</span>
                     </button>
                 </div>
-                <span class="help-text">Space: 이동 / 휠: 줌</span>
+                <span class="help-text" data-i18n="help_text_shortcuts">Space: 이동 / 휠: 줌</span>
             </div>
             
             <div class="right-stack" id="rightStackPanel">
@@ -1217,7 +1217,7 @@
     </button>
 
     <button id="btnLockWizard" class="btn-round" style="margin-top:5px; height: 32px; font-size: 11px;">
-        <i class="fa-solid fa-lock"></i> <span>선택-잠그기</span>
+        <i class="fa-solid fa-lock"></i> <span data-i18n="editor_lock_selection">선택-잠그기</span>
     </button>
                 </div>
 
@@ -1273,14 +1273,14 @@
 
 </div>
                     
-                    <div class="section-title" style="margin-top:10px; font-size: 11px; text-align: left;">선 두께</div>
+                    <div class="section-title" style="margin-top:10px; font-size: 11px; text-align: left;" data-i18n="editor_stroke_width">선 두께</div>
                     <input type="range" id="globalStroke" min="0" max="30" value="0" style="width:100%;">
                     <div style="display:flex; gap:5px; margin-top:5px;">
-                        <button class="tool-btn" id="btnStrokeMiter" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-square"></i> 각지게</button>
-                        <button class="tool-btn" id="btnStrokeRound" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-circle"></i> 둥글게</button>
+                        <button class="tool-btn" id="btnStrokeMiter" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-square"></i> <span data-i18n="style_miter">각지게</span></button>
+                        <button class="tool-btn" id="btnStrokeRound" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-circle"></i> <span data-i18n="style_round">둥글게</span></button>
                     </div>
 
-                    <div class="section-title" style="margin-top: 10px; font-size: 11px; text-align: left;">투명도</div>
+                    <div class="section-title" style="margin-top: 10px; font-size: 11px; text-align: left;" data-i18n="label_opacity">투명도</div>
                     <input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
                 </div>
             </div>
@@ -1290,24 +1290,24 @@
 </div>
 <div id="mobileTextEditor" style="display:none;">
     <div class="m-text-header">
-        <span style="color:#6366f1; font-weight:bold;"><i class="fa-solid fa-pen"></i> 텍스트 수정</span>
+        <span style="color:#6366f1; font-weight:bold;"><i class="fa-solid fa-pen"></i> <span data-i18n="editor_text_edit">텍스트 수정</span></span>
         
         <div style="display:flex; gap:5px;">
             <button onclick="window.deleteMobileObject()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;">
-                <i class="fa-solid fa-trash"></i> 삭제
+                <i class="fa-solid fa-trash"></i> <span data-i18n="btn_delete_obj">삭제</span>
             </button>
             
-            <button onclick="window.closeMobileTextEditor()" style="background:#6366f1; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;">
+            <button onclick="window.closeMobileTextEditor()" style="background:#6366f1; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" data-i18n="btn_done_edit">
                 완료
             </button>
         </div>
     </div>
-    <textarea id="mobileTextInput" placeholder="여기에 내용을 입력하세요..."></textarea>
+    <textarea id="mobileTextInput" placeholder="여기에 내용을 입력하세요..." data-i18n-placeholder="ph_text_input"></textarea>
 </div>
 <div id="templateActionModal" class="modal-bg" style="z-index: 20000;">
     <div class="modal-box" style="width: 500px; max-width: 90%;">
-        <h3 style="margin-top:0; font-size: 20px;">🎨 템플릿 불러오기</h3>
-        <p style="color:#666; font-size:15px; margin-bottom:30px; line-height: 1.5;">
+        <h3 style="margin-top:0; font-size: 20px;" data-i18n="tpl_load_title">🎨 템플릿 불러오기</h3>
+        <p style="color:#666; font-size:15px; margin-bottom:30px; line-height: 1.5;" data-i18n="tpl_load_desc">
             현재 작업 중인 디자인이 있습니다.<br>
             선택한 템플릿을 어떻게 적용하시겠습니까?
         </p>
@@ -1315,55 +1315,55 @@
         <div style="display:flex; gap:15px;">
             <button id="btnActionAdd" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155;">
                 <i class="fa-solid fa-layer-group" style="font-size:32px; color:#6366f1;"></i>
-                <span style="font-size:16px; font-weight:bold;">현재 작업에 추가</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;">기존 디자인 위에 겹치기</span>
+                <span style="font-size:16px; font-weight:bold;" data-i18n="tpl_action_add">현재 작업에 추가</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="tpl_action_add_desc">기존 디자인 위에 겹치기</span>
             </button>
 
             <button id="btnActionReplace" class="btn-round ai-red" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; border:none;">
                 <i class="fa-solid fa-file-circle-check" style="font-size:32px;"></i>
-                <span style="font-size:16px; font-weight:bold;">새 작업 시작</span>
-                <span style="font-size:12px; font-weight:normal; opacity:0.8;">기존 내용 지우고 덮어쓰기</span>
+                <span style="font-size:16px; font-weight:bold;" data-i18n="tpl_action_replace">새 작업 시작</span>
+                <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="tpl_action_replace_desc">기존 내용 지우고 덮어쓰기</span>
             </button>
         </div>
 
         <button onclick="document.getElementById('templateActionModal').style.display='none'" class="btn-round" style="margin-top:20px; border:none; color:#999;">
-            취소하고 돌아가기
+            <span data-i18n="btn_cancel_back">취소하고 돌아가기</span>
         </button>
     </div>
 </div>
 <div id="sizeSelectModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 800px; max-width: 95%;">
-        <h3>📏 어떤 크기로 만드시겠습니까?</h3>
-        <p style="margin-bottom:20px; color:#666;">선택한 제품 크기에 맞춰 템플릿이 자동으로 조절됩니다.</p>
+        <h3 data-i18n="size_select_title">📏 어떤 크기로 만드시겠습니까?</h3>
+        <p style="margin-bottom:20px; color:#666;" data-i18n="size_select_desc">선택한 제품 크기에 맞춰 템플릿이 자동으로 조절됩니다.</p>
         
         <div id="productSelectGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
         
-        <button onclick="document.getElementById('sizeSelectModal').style.display='none'" class="btn-round" style="margin-top:20px;">취소</button>
+        <button onclick="document.getElementById('sizeSelectModal').style.display='none'" class="btn-round" style="margin-top:20px;" data-i18n="btn_cancel">취소</button>
     </div>
 </div>
-<div id="aiDrawer" class="ai-drawer"><h3>✨ AI 이미지 생성</h3><p class="label">설명 (Prompt)</p><textarea id="aiPrompt" class="ai-input-pretty" placeholder="예: 숲속에 앉아있는 귀여운 갈색 토끼" style="height:100px;"></textarea><button id="aiGenerateBtn" class="btn-round primary" style="margin-top:10px;">생성하기</button><div id="aiResultArea" style="min-height:200px; background:#f9f9f9; margin-top:20px; display:flex; justify-content:center; align-items:center;"><span style="color:#ccc;">결과 대기 중</span></div><button id="aiUseBtn" class="btn-round" style="display:none; margin-top:10px;">캔버스에 넣기</button><button onclick="document.getElementById('aiDrawer').classList.remove('open')" class="btn-round" style="margin-top:10px;">닫기</button></div>
+<div id="aiDrawer" class="ai-drawer"><h3 data-i18n="ai_title">✨ AI 이미지 생성</h3><p class="label" data-i18n="ai_prompt_label">설명 (Prompt)</p><textarea id="aiPrompt" class="ai-input-pretty" placeholder="예: 숲속에 앉아있는 귀여운 갈색 토끼" data-i18n-placeholder="ph_ai_prompt" style="height:100px;"></textarea><button id="aiGenerateBtn" class="btn-round primary" style="margin-top:10px;" data-i18n="btn_generate">생성하기</button><div id="aiResultArea" style="min-height:200px; background:#f9f9f9; margin-top:20px; display:flex; justify-content:center; align-items:center;"><span style="color:#ccc;" data-i18n="ai_waiting">결과 대기 중</span></div><button id="aiUseBtn" class="btn-round" style="display:none; margin-top:10px;" data-i18n="btn_add_to_canvas">캔버스에 넣기</button><button onclick="document.getElementById('aiDrawer').classList.remove('open')" class="btn-round" style="margin-top:10px;" data-i18n="btn_close">닫기</button></div>
 <div id="templateOverlay">
     <div class="tpl-modal-box">
         <div class="tpl-sidebar">
             <button class="tpl-cate-btn active" onclick="window.filterTpl('group_template', this)">
-                <span style="font-weight:800; color:#6366f1; font-size:16px;">🎨 템플릿</span>
+                <span style="font-weight:800; color:#6366f1; font-size:16px;" data-i18n="editor_tab_template">🎨 템플릿</span>
             </button>
-            
+
             <button class="tpl-cate-btn" onclick="window.filterTpl('group_asset', this)">
-                <span style="font-weight:800; color:#059669; font-size:16px;">🧩 객체</span>
+                <span style="font-weight:800; color:#059669; font-size:16px;" data-i18n="tpl_obj_label">🧩 객체</span>
             </button>
         </div>
         <div class="tpl-content">
             <div style="padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin:0;">검색</h2>
-                <input type="text" id="tplSearchInput" class="ai-input-pretty" style="width:300px; margin-bottom:0;" placeholder="검색어 입력...">
+                <h2 style="margin:0;" data-i18n="search_label">검색</h2>
+                <input type="text" id="tplSearchInput" class="ai-input-pretty" style="width:300px; margin-bottom:0;" placeholder="검색어 입력..." data-i18n-placeholder="ph_search_input">
                 <button onclick="document.getElementById('templateOverlay').style.display='none'" style="border:none; background:none; cursor:pointer;">
                     <i class="fa-solid fa-xmark fa-2x"></i>
                 </button>
             </div>
             <div id="tplGrid" class="tpl-grid"></div>
             <div style="padding:15px; text-align:right; border-top:1px solid #eee;">
-                <button id="btnUseTpl" class="btn primary" onclick="window.useSelectedTemplate()">선택한 템플릿 적용</button>
+                <button id="btnUseTpl" class="btn primary" onclick="window.useSelectedTemplate()" data-i18n="btn_apply_template">선택한 템플릿 적용</button>
             </div> 
         </div>
     </div>
@@ -1593,73 +1593,73 @@
 
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button id="btnDownQuotationCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
-                <i class="fa-solid fa-file-invoice"></i> 견적서 다운
+                <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_download_quote">견적서 다운</span>
             </button>
             <button id="btnDownOrderSheetCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
-                <i class="fa-solid fa-clipboard-list"></i> 작업지시서 다운
+                <i class="fa-solid fa-clipboard-list"></i> <span data-i18n="btn_download_work_sheet">작업지시서 다운</span>
             </button>
         </div>
         <div style="display:flex; gap:10px; margin-top:10px;">
     <button id="btnDownReceipt" class="btn-round btn-secondary" style="flex:1; justify-content: center; background:#fff; color:#475569; border:1px solid #cbd5e1;">
-        <i class="fa-solid fa-receipt"></i> 영수증
+        <i class="fa-solid fa-receipt"></i> <span data-i18n="pdf_receipt_title">영수증</span>
     </button>
     <button id="btnDownStatement" class="btn-round btn-secondary" style="flex:1; justify-content: center; background:#fff; color:#475569; border:1px solid #cbd5e1;">
-        <i class="fa-solid fa-file-contract"></i> 거래명세서
+        <i class="fa-solid fa-file-contract"></i> <span data-i18n="pdf_statement_title">거래명세서</span>
     </button>
 </div>
 
-        <button onclick="document.getElementById('checkoutModal').style.display='none'; if(window.isOrderCompleted) location.reload();" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
+        <button onclick="document.getElementById('checkoutModal').style.display='none'; if(window.isOrderCompleted) location.reload();" class="btn-round" style="margin-top:10px; border:none; color:#888;" data-i18n="btn_close">닫기</button>
     </div>
 </div>
         </div>
 
-        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
+        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;" data-i18n="btn_close">닫기</button>
     </div>
 </div>
 
-        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;">닫기</button>
+        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;" data-i18n="btn_close">닫기</button>
     </div>
 </div>
 </div>
-<div id="successModal" class="modal-bg" style="z-index: 14000;"><div class="modal-box"><h2>🎉 주문 완료!</h2><button id="btnDownOrderSheet" class="btn-round">📄 작업지시서 다운로드</button><button id="btnDownQuotation" class="btn-round" style="margin-top:5px;">📑 견적서 다운로드</button><button onclick="window.closeSuccessModal()" class="btn-round primary" style="margin-top:15px;">확인</button></div></div>
+<div id="successModal" class="modal-bg" style="z-index: 14000;"><div class="modal-box"><h2 data-i18n="msg_order_complete_title">🎉 주문 완료!</h2><button id="btnDownOrderSheet" class="btn-round" data-i18n="btn_download_order_sheet">📄 작업지시서 다운로드</button><button id="btnDownQuotation" class="btn-round" style="margin-top:5px;" data-i18n="btn_download_quotation">📑 견적서 다운로드</button><button onclick="window.closeSuccessModal()" class="btn-round primary" style="margin-top:15px;" data-i18n="btn_confirm">확인</button></div></div>
 <div id="sellModal" class="modal-bg" style="display: none;"> <div class="modal-box">
-        <h3 class="modal-title">💎 디자인 공유/판매 등록</h3>
+        <h3 class="modal-title" data-i18n="sell_title">💎 디자인 공유/판매 등록</h3>
         
         <div class="benefit-box">
             <div class="benefit-item">
                 <span class="benefit-icon">💰</span>
-                <span>등록 즉시 <span class="highlight">100원</span>, 사용될 때마다 <span class="highlight">200원</span> 적립</span>
+                <span data-i18n="sell_benefit_1">등록 즉시 <span class="highlight">100원</span>, 사용될 때마다 <span class="highlight">200원</span> 적립</span>
             </div>
             <div class="benefit-item">
                 <span class="benefit-icon">💳</span>
-                <span>1,000원부터 바로 <span class="highlight">현금 환전</span> 가능</span>
+                <span data-i18n="sell_benefit_2">1,000원부터 바로 <span class="highlight">현금 환전</span> 가능</span>
             </div>
             <div class="benefit-item">
                 <span class="benefit-icon">🚀</span>
-                <span>텍스트/로고 공유로 매일 자동 수입 만들기!</span>
+                <span data-i18n="sell_benefit_3">텍스트/로고 공유로 매일 자동 수입 만들기!</span>
             </div>
         </div>
 
         
 
         <div class="input-row" style="margin-bottom: 15px;">
-    <label style="display:block; font-weight:bold; margin-bottom:5px;">템플릿 유형</label>
+    <label style="display:block; font-weight:bold; margin-bottom:5px;" data-i18n="sell_type_label">템플릿 유형</label>
     <div style="display: flex; gap: 20px;">
         <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-            <input type="radio" name="sellType" value="vector" checked> 
-            벡터
+            <input type="radio" name="sellType" value="vector" checked>
+            <span data-i18n="sell_type_vector">벡터</span>
         </label>
         <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-            <input type="radio" name="sellType" value="image"> 
-            이미지
+            <input type="radio" name="sellType" value="image">
+            <span data-i18n="sell_type_image">이미지</span>
         </label>
     </div>
 </div>
         <div class="input-group">
-            <label class="input-label">키워드 & 제목</label>
+            <label class="input-label" data-i18n="sell_keyword_label">키워드 & 제목</label>
             <input id="sellTitle" class="ai-input-pretty" 
                    type="text"
-                   placeholder="예: 피부과 이벤트, 여름 포스터" 
+                   placeholder="예: 피부과 이벤트, 여름 포스터" data-i18n-placeholder="ph_sell_title" 
                    oninput="document.getElementById('sellKw').value = this.value;">
         </div>
 
@@ -1667,12 +1667,12 @@
         
 
         <div class="btn-group">
-            <button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round cancel">취소</button>
-            <button id="btnSellConfirm" class="btn-round primary">등록하기</button>
+            <button onclick="document.getElementById('sellModal').style.display='none'" class="btn-round cancel" data-i18n="btn_cancel">취소</button>
+            <button id="btnSellConfirm" class="btn-round primary" data-i18n="btn_register">등록하기</button>
         </div>
     </div>
 </div>
-<div id="fontModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3>폰트 선택</h3><div id="fontList" style="max-height:300px; overflow-y:auto;"></div><button onclick="document.getElementById('fontModal').style.display='none'" class="btn-round" style="margin-top:10px;">닫기</button></div></div>
+<div id="fontModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3 data-i18n="modal_font_title">폰트 선택</h3><div id="fontList" style="max-height:300px; overflow-y:auto;"></div><button onclick="document.getElementById('fontModal').style.display='none'" class="btn-round" style="margin-top:10px;" data-i18n="btn_close">닫기</button></div></div>
 <div id="choiceModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 900px; max-width: 95%;">
         
@@ -1687,10 +1687,10 @@
 </p>
 <div id="extraLinksArea" style="display:flex; gap:10px; margin-bottom:15px;">
     <button id="btnGoDetail" class="btn-round" style="display:none; flex:1; background:#f8fafc; border:1px solid #cbd5e1; color:#475569; font-size:13px; height:40px; justify-content:center; align-items:center; gap:5px;">
-        <i class="fa-solid fa-circle-info"></i> 상세페이지 보기
+        <i class="fa-solid fa-circle-info"></i> <span data-i18n="btn_detail_page">상세페이지 보기</span>
     </button>
     <button id="btnGoStory" class="btn-round" style="display:none; flex:1; background:#fff7ed; border:1px solid #ffedd5; color:#c2410c; font-size:13px; height:40px; justify-content:center; align-items:center; gap:5px;">
-        <i class="fa-solid fa-book-open"></i> 스토리 보기
+        <i class="fa-solid fa-book-open"></i> <span data-i18n="btn_story_page">스토리 보기</span>
     </button>
 </div>
 
@@ -1704,8 +1704,8 @@
             <button onclick="window.confirmChoice('cart')" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#4ccc02; color:#ffffff; border:2px solid #2ec500; box-shadow:0 4px 10px rgba(74, 222, 128, 0.2);">
     <i class="fa-solid fa-basket-shopping" style="font-size:32px; color:#ffffff;"></i>
     
-    <span style="font-size:16px; font-weight:800;">구매하기</span>
-    <span style="font-size:12px; font-weight:normal; opacity:0.9;">파일업로드는 장바구니</span>
+    <span style="font-size:16px; font-weight:800;" data-i18n="btn_purchase">구매하기</span>
+    <span style="font-size:12px; font-weight:normal; opacity:0.9;" data-i18n="btn_purchase_sub">파일업로드는 장바구니</span>
 </button>
         </div>
 
@@ -2278,6 +2278,16 @@ document.querySelectorAll('[data-i18n]').forEach(el => {
         }
     }
 });
+// placeholder 번역
+document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (langData[key]) el.setAttribute('placeholder', langData[key]);
+});
+// title 번역
+document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (langData[key]) el.setAttribute('title', langData[key]);
+});
             // 버튼 강제 번역
             const loginBtn = document.getElementById('btnLoginBtn');
             if (loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
@@ -2337,9 +2347,9 @@ document.querySelectorAll('[data-i18n]').forEach(el => {
             document.getElementById('templateOverlay').style.display = 'none';
             window.pendingTemplate = tpl;
             if (window.showCategorySelectionModal) window.showCategorySelectionModal();
-            else alert("사이즈 선택 화면을 불러올 수 없습니다.");
+            else alert(window.t('msg_invalid_size'));
         } else {
-            if(!confirm("현재 캔버스에 템플릿을 적용하시겠습니까?\n(기존 디자인 위에 추가됩니다)")) return;
+            if(!confirm(window.t('msg_template_apply_confirm'))) return;
             document.getElementById('templateOverlay').style.display = 'none';
             await window.applyTemplateDirectly(tpl);
         }
@@ -4881,7 +4891,7 @@ function updateVipFileList(input) {
         const h = parseInt(hVal);
 
         if (!w || !h || w <= 0 || h <= 0) {
-            alert("올바른 사이즈를 입력해주세요.");
+            alert(window.t('msg_invalid_size'));
             return;
         }
 
@@ -4915,7 +4925,7 @@ function updateVipFileList(input) {
                 }
             }, 500);
         } else {
-            alert("에디터 로드 중 오류가 발생했습니다. 새로고침 해주세요.");
+            alert(window.t('msg_editor_load_error'));
         }
     };
 
@@ -4940,7 +4950,7 @@ window.showCategorySelectionModal = async function() {
     const searchInput = document.getElementById('modalProdSearch');
 
     // UI 초기화
-    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">템플릿을 적용할 상품 검색</span>`;
+    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${window.t('tpl_search_product')}</span>`;
     if(descEl) descEl.style.display = 'none'; // 설명 숨김
     
     // 검색창 초기화
@@ -5126,41 +5136,41 @@ window.filterModalItems = function(keyword) {
         
         <div style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); padding: 20px 25px; color: white;">
             <h3 style="margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-palette"></i> 템플릿 만들기 시작
+                <i class="fa-solid fa-palette"></i> <span data-i18n="tpl_create_title">템플릿 만들기 시작</span>
             </h3>
-            <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 13px;">나만의 멋진 디자인을 등록하고 수익을 창출하세요!</p>
+            <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 13px;" data-i18n="tpl_create_desc">나만의 멋진 디자인을 등록하고 수익을 창출하세요!</p>
         </div>
 
         <div style="padding: 25px;">
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
                 <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 13px; line-height: 1.8;">
-                    <li>📷 <strong>이미지/벡터 구분:</strong> 배경이 벡터라면 벡터로, 이미지라면 이미지로 등록.</li>
-                    <li>💡 <strong>꿀팁:</strong> 글씨 배치 후 배경만 바꾸면 빠르게 등록가능.</li>
-                    <li>💰 <strong>수익 UP:</strong> 태그를 많이 입력할수록 노출이 잘 되어 수익금 상승.</li>
-                    <li>⚡ <strong>즉시 적립:</strong> 템플릿 등록 즉시 수익 + 판매수익까지.</li>
+                    <li data-i18n="tpl_create_tip_1">📷 <strong>이미지/벡터 구분:</strong> 배경이 벡터라면 벡터로, 이미지라면 이미지로 등록.</li>
+                    <li data-i18n="tpl_create_tip_2">💡 <strong>꿀팁:</strong> 글씨 배치 후 배경만 바꾸면 빠르게 등록가능.</li>
+                    <li data-i18n="tpl_create_tip_3">💰 <strong>수익 UP:</strong> 태그를 많이 입력할수록 노출이 잘 되어 수익금 상승.</li>
+                    <li data-i18n="tpl_create_tip_4">⚡ <strong>즉시 적립:</strong> 템플릿 등록 즉시 수익 + 판매수익까지.</li>
                 </ul>
             </div>
 
-            <label style="font-weight: bold; font-size: 14px; color: #1e293b; display: block; margin-bottom: 8px;">
+            <label style="font-weight: bold; font-size: 14px; color: #1e293b; display: block; margin-bottom: 8px;" data-i18n="tpl_create_size_label">
                 📏 만들고 싶은 탬플릿 사이즈 (mm)
             </label>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <div style="flex: 1; position: relative;">
-                    <input type="number" id="tplCreateW" class="ai-input-pretty" placeholder="가로" value="1000" style="padding-right: 30px; font-weight: bold; color: #334155;">
+                    <input type="number" id="tplCreateW" class="ai-input-pretty" placeholder="가로" data-i18n-placeholder="ph_width" value="1000" style="padding-right: 30px; font-weight: bold; color: #334155;">
                     <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;">mm</span>
                 </div>
                 <span style="display: flex; align-items: center; color: #cbd5e1;">X</span>
                 <div style="flex: 1; position: relative;">
-                    <input type="number" id="tplCreateH" class="ai-input-pretty" placeholder="세로" value="1000" style="padding-right: 30px; font-weight: bold; color: #334155;">
+                    <input type="number" id="tplCreateH" class="ai-input-pretty" placeholder="세로" data-i18n-placeholder="ph_height" value="1000" style="padding-right: 30px; font-weight: bold; color: #334155;">
                     <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;">mm</span>
                 </div>
             </div>
 
             <div style="display: flex; gap: 10px;">
-                <button onclick="document.getElementById('templateCreatorModal').style.display='none'" class="btn-round" style="flex: 1; justify-content: center; background: #fff; border: 1px solid #cbd5e1; color: #64748b;">
+                <button onclick="document.getElementById('templateCreatorModal').style.display='none'" class="btn-round" style="flex: 1; justify-content: center; background: #fff; border: 1px solid #cbd5e1; color: #64748b;" data-i18n="btn_cancel">
                     취소
                 </button>
-                <button onclick="window.confirmTemplateCreation()" class="btn-round primary" style="flex: 2; justify-content: center; height: 45px; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);">
+                <button onclick="window.confirmTemplateCreation()" class="btn-round primary" style="flex: 2; justify-content: center; height: 45px; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);" data-i18n="btn_start_design">
                     🚀 디자인 시작하기
                 </button>
             </div>

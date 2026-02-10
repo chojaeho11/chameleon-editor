@@ -471,7 +471,7 @@ window.applyTextEffect = function(type) {
         return;
     }
 
-    if (!originalText.type.includes('text')) return alert("텍스트만 가능합니다.");
+    if (!originalText.type.includes('text')) return alert(window.t('msg_text_only', "Text objects only."));
 
     const fontSize = originalText.fontSize * originalText.scaleY; 
     const strokeW = Math.max(2, fontSize * 0.05);
@@ -968,7 +968,7 @@ window.uploadUserLogo = async () => {
         document.getElementById('logoUploadModal').style.display = 'none';
     } catch (e) {
         console.error(e);
-        alert("업로드 실패: " + e.message);
+        alert(window.t('msg_upload_failed', "Upload failed: ") + e.message);
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -981,7 +981,7 @@ window.handleFileSelect = (input) => {
         const fileNameNoExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
         const tagInput = document.getElementById('logoKeywordInput');
         if (tagInput && !tagInput.value) {
-            tagInput.value = fileNameNoExt + " 로고";
+            tagInput.value = fileNameNoExt + " logo";
         }
         const reader = new FileReader();
         reader.onload = (e) => {

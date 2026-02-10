@@ -27,7 +27,7 @@ async function getApiKey(keyName) {
 // [코어] Flux 이미지 생성
 // ==========================================================
 async function generateImageCore(prompt) {
-    if (!sb) throw new Error("Supabase 연결 실패");
+    if (!sb) throw new Error("Supabase connection failed");
     const { data, error } = await sb.functions.invoke('generate-image-flux', {
         body: { prompt: prompt, ratio: "1:1" }
     });
@@ -51,7 +51,7 @@ export function initAiTools() {
         const btnStartGo = document.getElementById('btnAiStartGo');
         const btnStartGen = document.getElementById('btnAiStartGen');
 
-        if(startResult) startResult.innerHTML = '<span style="color:#cbd5e1;">이미지가 여기에 표시됩니다</span>';
+        if(startResult) startResult.innerHTML = `<span style="color:#cbd5e1;">${window.t('msg_image_placeholder', 'Image will appear here')}</span>`;
         if(btnStartGo) btnStartGo.style.display = 'none';
         if(btnStartGen) btnStartGen.disabled = false;
         if(promptInput) promptInput.value = '';
@@ -72,9 +72,9 @@ export function initAiTools() {
     if (btnStartGen) {
         btnStartGen.onclick = async () => {
             const text = startPrompt.value.trim();
-            if (!text) return alert(t('msg_input_desc', "설명을 입력해주세요."));
+            if (!text) return alert(t('msg_input_desc', "Please enter a description."));
             
-            const loadingText = t('msg_generating', "AI가 그리는 중...");
+            const loadingText = t('msg_generating', "AI is generating...");
             startResult.innerHTML = `<div class="loading-spin" style="width:40px; height:40px;"></div><p style="margin-top:10px; color:#666;">${loadingText}</p>`;
             
             btnStartGen.disabled = true;
@@ -83,10 +83,10 @@ export function initAiTools() {
                 window.pendingAiImage = imageUrl;
                 startResult.innerHTML = `<img src="${imageUrl}" style="max-height:250px; object-fit:contain; border-radius:8px;">`;
                 btnStartGo.style.display = 'flex';
-                const retryText = t('btn_retry', "또 만들기");
+                const retryText = t('btn_retry', "Generate Again");
                 btnStartGo.innerHTML = `<i class="fa-solid fa-rotate-right"></i> ${retryText}`;
             } catch (e) {
-                alert(t('msg_gen_fail', "생성 실패") + ": " + e.message);
+                alert(t('msg_gen_fail', "Generation failed") + ": " + e.message);
                 startResult.innerHTML = '<span style="color:red;">Failed</span>';
                 btnStartGen.disabled = false;
             }
@@ -94,7 +94,7 @@ export function initAiTools() {
     }
     if (btnStartGo) {
         btnStartGo.onclick = () => {
-            if(startResult) startResult.innerHTML = '<span style="color:#cbd5e1;">이미지가 여기에 표시됩니다</span>';
+            if(startResult) startResult.innerHTML = `<span style="color:#cbd5e1;">${window.t('msg_image_placeholder', 'Image will appear here')}</span>`;
             btnStartGo.style.display = 'none';
             if(btnStartGen) btnStartGen.disabled = false;
             if(startPrompt) { startPrompt.value = ''; startPrompt.focus(); }
@@ -158,10 +158,10 @@ export function initAiTools() {
             const key = await getApiKey('REMOVE_BG_API_KEY');
             if (!key) return alert("API Key Error");
             
-            if(!confirm(window.t('confirm_bg_remove', "배경을 제거할까요?"))) return;
+            if(!confirm(window.t('confirm_bg_remove', "Remove the background?"))) return;
             
             const originalText = btnCutout.innerText;
-            btnCutout.innerText = "✂️ " + window.t('msg_processing_file', "Processing...");
+            btnCutout.innerText = window.t('msg_processing', "Processing...");
             try {
                 // 1. 원본 해상도 추출 (multiplier 중요)
                 // 화면에 보이는 크기가 아니라, 원본 파일의 크기를 계산해서 가져옵니다.
@@ -185,7 +185,7 @@ export function initAiTools() {
                     const errTxt = await res.text();
                     // 무료 계정 제한 등으로 'full'이 안 될 경우 재시도 안내
                     if(res.status === 402 || errTxt.includes("credits")) {
-                        throw new Error("크레딧 부족으로 고해상도 변환 불가 (무료 계정 제한)");
+                        throw new Error(window.t('msg_credits_insufficient', "Insufficient credits for high-res conversion (free account limit)"));
                     }
                     throw new Error(errTxt);
                 }
@@ -233,11 +233,11 @@ export function initAiTools() {
             // [수정] 다국어 적용
             if (!active || active.type !== 'image') return alert(window.t('msg_select_image', "Please select an image!"));
             
-            const confirmMsg = window.t('confirm_upscale', "해상도를 2배 높이시겠습니까?");
+            const confirmMsg = window.t('confirm_upscale', "Upscale resolution by 2x?");
             if (!confirm(confirmMsg)) return;
 
             const originalText = btnUpscale.innerText;
-            btnUpscale.innerText = "✨ " + window.t('msg_sending', "Sending...");
+            btnUpscale.innerText = window.t('msg_sending', "Sending...");
             btnUpscale.disabled = true;
 
             try {
@@ -268,10 +268,10 @@ export function initAiTools() {
                 }
                 
                 const newUrl = data.url || data.imageUrl || data;
-                if (!newUrl) throw new Error("결과 URL 없음");
+                if (!newUrl) throw new Error(window.t('msg_no_result_url', "No result URL"));
 
                 fabric.Image.fromURL(newUrl, (newImg) => {
-                    if (!newImg) return alert("이미지 로드 실패");
+                    if (!newImg) return alert(window.t('msg_image_load_failed', "Image load failed"));
                     newImg.set({
                         left: active.left, top: active.top,
                         angle: active.angle,

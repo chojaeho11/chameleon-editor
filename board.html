@@ -613,7 +613,7 @@
         
         document.getElementById('btnWrite').style.display = 'inline-block';
 
-        // 영상 업로드 커스텀 핸들러
+        // [수정] 1. 영상 업로드 핸들러
         async function videoHandler() {
             const input = document.createElement('input');
             input.setAttribute('type', 'file');
@@ -623,37 +623,60 @@
             input.onchange = async () => {
                 const file = input.files[0];
                 if (!file) return;
+                if (file.size > 50 * 1024 * 1024) return alert("50MB 이하 영상만 가능합니다.");
 
-                if (file.size > 50 * 1024 * 1024) { // 50MB 제한
-                    alert("파일이 너무 큽니다. 50MB 이하의 영상만 업로드 가능합니다.");
-                    return;
-                }
-
-                const fileName = `${Date.now()}_${file.name}`;
-                // [수정] 한글 파일명 오류 방지를 위해 확장자만 추출하고 이름은 숫자로 변경
-        const fileExt = file.name.split('.').pop(); // 확장자 추출 (mp4 등)
-        const filePath = `${Date.now()}.${fileExt}`; // 예: 1738234567.mp4
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                const filePath = `vid_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
 
                 try {
-                    // Supabase Storage 'public' 버킷에 업로드
-                    // 수정 후 코드 예시
-const { data, error } = await sb.storage
-    .from('videos') // 여기 수정
-    .upload(filePath, file);
-
-const { data: { publicUrl } } = sb.storage
-    .from('videos') // 여기도 수정
-    .getPublicUrl(filePath);
-
+                    // 'community' 버킷에 영상 저장 (없으면 만들어야 함)
+                    const { error } = await sb.storage.from('community').upload(filePath, file);
+                    if(error) throw error;
+                    
+                    const { data } = sb.storage.from('community').getPublicUrl(filePath);
                     const range = quill.getSelection();
-                    quill.insertEmbed(range.index, 'video', publicUrl);
+                    quill.insertEmbed(range.index, 'video', data.publicUrl);
                 } catch (err) {
-                    console.error('Upload error:', err);
-                    alert('영상 업로드 실패. Storage 버킷 정책을 확인하세요.');
+                    console.error(err);
+                    alert('영상 업로드 실패. Supabase에 "community" 버킷이 있는지 확인하세요.');
                 }
             };
         }
 
+        // [신규] 2. 이미지 업로드 핸들러 (서버 저장 강제)
+        async function imageHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files[0];
+                if (!file) return;
+
+                // 한글/특수문자 파일명 오류 방지
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                const filePath = `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+                try {
+                    // 'community' 버킷에 이미지 저장
+                    const { error } = await sb.storage.from('community').upload(filePath, file);
+                    if (error) throw error;
+
+                    const { data } = sb.storage.from('community').getPublicUrl(filePath);
+                    
+                    // 에디터에 Base64 대신 짧은 URL 삽입
+                    const range = quill.getSelection();
+                    quill.insertEmbed(range.index, 'image', data.publicUrl);
+                    
+                } catch (err) {
+                    console.error(err);
+                    alert('이미지 업로드 실패. Supabase Storage에 "community" 버킷을 만들고 정책(Policy)을 설정해주세요.');
+                }
+            };
+        }
+
+        // [수정] 3. 에디터 생성 (이미지 핸들러 연결)
         quill = new Quill('#editor-container', {
             modules: {
                 toolbar: {
@@ -661,19 +684,32 @@ const { data: { publicUrl } } = sb.storage
                         [{ 'header': [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline', 'strike'],
                         [{ 'color': [] }, { 'background': [] }],
-                        [{ 'align': [] }], // 정렬 버튼 추가
-                        ['image', 'video', 'link'],
-                        ['blockquote', 'code-block'], // 유용한 도구 추가
+                        [{ 'align': [] }],
+                        ['image', 'video', 'link'], 
+                        ['blockquote', 'code-block'],
                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                         ['clean']
                     ],
                     handlers: {
-                        'video': videoHandler // 비디오 버튼 클릭 시 업로드 함수 실행
+                        'video': videoHandler,
+                        'image': imageHandler // ★ 핵심: 이미지 버튼을 가로채서 서버로 보냄
                     }
                 }
             },
-            placeholder: '제품 설명 영상을 업로드하세요...',
+            placeholder: '내용을 작성해주세요...',
             theme: 'snow'
+        });
+
+        // [신규] 4. 붙여넣기 방지 (Base64 차단)
+        quill.clipboard.addMatcher('img', (node, delta) => {
+            let ops = delta.ops.map(op => {
+                if (op.insert && op.insert.image && op.insert.image.startsWith('data:')) {
+                    alert("이미지는 붙여넣기 대신 상단 툴바의 '이미지 아이콘'을 눌러 업로드해주세요.");
+                    return { insert: '' }; // 이미지 삽입 무효화
+                }
+                return op;
+            });
+            return { ops: ops };
         });
 
         setupStarRating();

@@ -105,7 +105,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
                     if (!savedKey || savedKey === 'A4' || savedKey === 'custom' || !PRODUCT_DB[savedKey]) {
                         if(window.restoreDesignFromData) window.restoreDesignFromData(data);
-                        alert("⚠️ 이 디자인의 상품 정보가 확인되지 않습니다.\n제작하실 상품 규격을 다시 선택해주세요.");
+                        alert(window.t('msg_product_info_missing'));
                         if (window.showCategorySelectionModal) {
                             window.showCategorySelectionModal();
                         } else {
@@ -238,7 +238,7 @@ async function handleUniversalUpload(file, isFromStartScreen) {
         }
     } catch (err) {
         console.error(err);
-        alert("오류: " + err.message);
+        alert(window.t('err_prefix') + err.message);
     } finally {
         if(loading) loading.style.display = "none";
         const dInput = document.getElementById('directUploadInput');
@@ -305,27 +305,136 @@ function initOutlineTool() {
         btn.innerText = window.t('msg_generating');
         btn.disabled = true;
         try {
-            const src = activeObj.getSrc();
-            const result = await createVectorOutline(src, {
-                dilation: 15, color: '#FF00FF', strokeWidth: 2, type: type 
+            var src = activeObj.getSrc();
+            var result = await createVectorOutline(src, {
+                offset: 20, type: type
             });
-            const pathObj = new fabric.Path(result.pathData, {
-                fill: '', stroke: result.color, strokeWidth: result.strokeWidth,
-                strokeLineJoin: 'round', strokeLineCap: 'round', objectCaching: false,
-                selectable: true, evented: true, originX: 'center', originY: 'center'
+
+            var pathObj = new fabric.Path(result.pathData, {
+                fill: 'rgba(200,200,200,0.25)',
+                stroke: result.color,
+                strokeWidth: result.strokeWidth,
+                strokeLineJoin: 'round',
+                strokeLineCap: 'round',
+                objectCaching: false,
+                selectable: true,
+                evented: true,
+                originX: 'center',
+                originY: 'center'
             });
-            const imgCenter = activeObj.getCenterPoint();
+
+            var ob = result.outlineBounds;
+            var s = activeObj.scaleX;
+            var sY = activeObj.scaleY;
+
+            var imgLeft, imgTop;
+            if (activeObj.originX === 'center') {
+                imgLeft = activeObj.left - (activeObj.width * s / 2);
+            } else {
+                imgLeft = activeObj.left;
+            }
+            if (activeObj.originY === 'center') {
+                imgTop = activeObj.top - (activeObj.height * sY / 2);
+            } else {
+                imgTop = activeObj.top;
+            }
+
+            var imgCenterX = imgLeft + (activeObj.width * s / 2);
+            var imgCenterY = imgTop + (activeObj.height * sY / 2);
+
+            var outlineCenterX = (ob.left + ob.width / 2);
+            var outlineCenterY = (ob.top + ob.height / 2);
+            var imgOriginX = result.imgWidth / 2;
+            var imgOriginY = result.imgHeight / 2;
+
             pathObj.set({
-                left: imgCenter.x, top: imgCenter.y,
-                scaleX: activeObj.scaleX, scaleY: activeObj.scaleY, angle: activeObj.angle
+                left: imgCenterX + (outlineCenterX - imgOriginX) * s,
+                top: imgCenterY + (outlineCenterY - imgOriginY) * sY,
+                scaleX: s,
+                scaleY: sY,
+                angle: activeObj.angle
             });
+
             currentCanvas.add(pathObj);
+
+            if (type === 'keyring') {
+                var outerR = 29.5 * s;
+                var innerR = 17.7 * s;
+                var outlineTopCenterX = imgCenterX + (outlineCenterX - imgOriginX) * s;
+                var outlineTopY = imgCenterY + (ob.top - imgOriginY) * sY;
+                var holeCx = outlineTopCenterX;
+                var holeCy = outlineTopY - outerR * 0.5;
+
+                var outerCircle = new fabric.Circle({
+                    radius: outerR,
+                    left: 0, top: 0,
+                    fill: 'rgba(200,200,200,0.3)',
+                    stroke: result.color,
+                    strokeWidth: result.strokeWidth * s,
+                    originX: 'center', originY: 'center'
+                });
+                var innerCircle = new fabric.Circle({
+                    radius: innerR,
+                    left: 0, top: 0,
+                    fill: 'white',
+                    stroke: result.color,
+                    strokeWidth: result.strokeWidth * s,
+                    originX: 'center', originY: 'center'
+                });
+
+                // 고리 그룹 (안쪽/바깥쪽 함께 이동)
+                var holeGroup = new fabric.Group([outerCircle, innerCircle], {
+                    left: holeCx,
+                    top: holeCy,
+                    originX: 'center', originY: 'center',
+                    selectable: true, evented: true,
+                    hasControls: false, hasBorders: true,
+                    lockScalingX: true, lockScalingY: true,
+                    lockRotation: true,
+                    hoverCursor: 'move'
+                });
+                currentCanvas.add(holeGroup);
+                currentCanvas.bringToFront(holeGroup);
+            }
+
+            // standee base
+            if (type === 'standee') {
+                var baseH3 = Math.max(pathObj.height * s * 0.10, 15);
+                var baseW3 = pathObj.width * s * 0.6;
+                var outlineBotX = imgCenterX + (outlineCenterX - imgOriginX) * s;
+                var outlineBotY = imgCenterY + (ob.top + ob.height - imgOriginY) * sY;
+
+                var baseRect = new fabric.Rect({
+                    width: baseW3,
+                    height: baseH3,
+                    left: outlineBotX,
+                    top: outlineBotY - baseH3 * 0.5,
+                    fill: 'rgba(200,200,200,0.3)',
+                    stroke: result.color,
+                    strokeWidth: result.strokeWidth * s,
+                    rx: 3 * s,
+                    ry: 3 * s,
+                    originX: 'center',
+                    originY: 'top',
+                    selectable: true,
+                    evented: true,
+                    hasControls: false,
+                    hasBorders: true,
+                    lockScalingX: true,
+                    lockScalingY: true,
+                    lockRotation: true,
+                    hoverCursor: 'move'
+                });
+                currentCanvas.add(baseRect);
+                currentCanvas.bringToFront(baseRect);
+            }
+
             currentCanvas.bringToFront(pathObj);
             pathObj.setCoords();
             currentCanvas.requestRenderAll();
         } catch (error) {
             console.error("벡터 생성 실패:", error);
-            alert("생성 실패: " + error.message);
+            alert(window.t('msg_gen_fail') + ": " + error.message);
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -458,7 +567,7 @@ async function applyForPartner() {
         modal.style.display = 'flex';
     } else {
         console.error("partnerApplyModal 요소를 찾을 수 없습니다.");
-        alert("신청 화면을 불러올 수 없습니다.");
+        alert(window.t('msg_cannot_load_form'));
     }
 }
 
@@ -627,7 +736,7 @@ window.dibsOrder = async function(orderId) {
 };
 
 window.updateOrderStatus = async function(orderId, status) {
-    if(!confirm(`상태를 '${status}'로 변경하시겠습니까?`)) return;
+    if(!confirm(window.t('confirm_status_change').replace('{status}', status))) return;
     await sb.from('orders').update({ status: status }).eq('id', orderId);
     window.loadPartnerOrders('my');
 };
@@ -689,7 +798,7 @@ window.loadSettlementInfo = async function() {
 
 window.requestPartnerWithdrawal = function() {
     const amt = window.currentWithdrawableAmount || 0;
-    if (amt < 10000) return alert("최소 10,000원 이상부터 출금 가능합니다.");
+    if (amt < 10000) return alert(window.t('msg_min_withdraw'));
     document.getElementById('wdAmount').value = amt.toLocaleString() + '원';
     document.getElementById('withdrawModal').style.display = 'flex';
 };
@@ -705,10 +814,10 @@ window.submitWithdrawal = async function() {
     const fileInput = document.getElementById('wdTaxFile');
 
     // [수정] 필수값 체크 강화
-    if (!realName) return alert("예금주(실명)을 입력해주세요.");
-    if (!phone) return alert("연락처를 입력해주세요.");
-    if (!rrn || rrn.length < 13) return alert("주민등록번호를 정확히 입력해주세요.");
-    if (!bankInfo) return alert("계좌 정보를 입력해주세요.");
+    if (!realName) return alert(window.t('msg_input_real_name'));
+    if (!phone) return alert(window.t('msg_input_phone'));
+    if (!rrn || rrn.length < 13) return alert(window.t('msg_input_id_number'));
+    if (!bankInfo) return alert(window.t('msg_input_bank_info'));
     // 파일은 선택사항으로 변경 (원하시면 아래 주석 해제하여 필수로 만드세요)
     // if (fileInput.files.length === 0) return alert("신분증 또는 통장사본을 첨부해주세요.");
 
@@ -769,7 +878,7 @@ window.submitWithdrawal = async function() {
 
     } catch(e) {
         console.error(e);
-        alert("오류: " + e.message);
+        alert(window.t('err_prefix') + e.message);
     } finally {
         btn.innerText = "신청하기"; btn.disabled = false;
     }
@@ -779,7 +888,7 @@ window.submitWithdrawal = async function() {
 // ============================================================
 window.openMyOrderList = async function() {
     const { data: { user } } = await sb.auth.getUser();
-    if (!user) return alert("로그인이 필요한 서비스입니다.");
+    if (!user) return alert(window.t('msg_login_required'));
 
     document.getElementById('myOrderModal').style.display = 'flex';
     const container = document.getElementById('myOrderListUser');
@@ -866,7 +975,7 @@ window.submitOrderReview = async function() {
     const score = parseInt(document.getElementById('targetReviewScore').value);
     const comment = document.getElementById('reviewCommentInput').value;
 
-    if(!confirm("구매를 확정하시겠습니까? (반품 불가)")) return;
+    if(!confirm(window.t('confirm_purchase_final'))) return;
 
     const { error } = await sb.from('orders').update({
         status: '구매확정',
@@ -876,9 +985,9 @@ window.submitOrderReview = async function() {
     }).eq('id', orderId);
 
     if (error) {
-        alert("오류: " + error.message);
+        alert(window.t('err_prefix') + error.message);
     } else {
-        alert("구매확정 되었습니다. 감사합니다!");
+        alert(window.t('msg_purchase_confirmed'));
         document.getElementById('reviewWriteModal').style.display = 'none';
         window.openMyOrderList();
         
@@ -969,7 +1078,7 @@ window.autoFillTags = function(input) {
 // 3. 업로드 모달 열기
 window.handleContributorUpload = function(type) {
     if (!window.currentUser) {
-        alert("로그인이 필요한 서비스입니다.");
+        alert(window.t('msg_login_required'));
         document.getElementById('loginModal').style.display = 'flex';
         return;
     }
@@ -1005,7 +1114,7 @@ window.submitContributorUpload = async function() {
     let tagsInput = document.getElementById('cUploadTags').value.trim();
     const loading = document.getElementById('loading');
     
-    if (!tagsInput) return alert("검색 키워드를 입력해주세요.");
+    if (!tagsInput) return alert(window.t('msg_input_search_keyword'));
     
     if(loading) loading.style.display = 'flex';
 
@@ -1058,7 +1167,7 @@ window.submitContributorUpload = async function() {
 
             if (!thumbFile || !svgFile) {
                 if(loading) loading.style.display = 'none';
-                return alert("썸네일 이미지와 SVG 파일을 모두 선택해주세요.");
+                return alert(window.t('msg_select_thumb_svg'));
             }
 
             await processSingleUpload(thumbFile, svgFile, tags, 'vector'); 
@@ -1068,7 +1177,7 @@ window.submitContributorUpload = async function() {
             const files = document.getElementById('cFileSimple').files;
             if (files.length === 0) {
                 if(loading) loading.style.display = 'none';
-                return alert("파일을 선택해주세요.");
+                return alert(window.t('msg_select_file'));
             }
 
             const category = currentUploadType === 'logo' ? 'logo' : 'graphic';
@@ -1085,7 +1194,7 @@ window.submitContributorUpload = async function() {
                     .maybeSingle();
 
                 if (duplicate) {
-                    alert(`이미 업로드된 파일입니다: ${file.name}\n(중복 방지를 위해 건너뜁니다)`);
+                    alert(window.t('msg_file_already_uploaded').replace('{name}', file.name));
                     continue; // 업로드 건너뛰기
                 }
 
@@ -1108,7 +1217,7 @@ window.submitContributorUpload = async function() {
         
         await addReward(finalAmount, `${currentUploadType.toUpperCase()} 업로드 보상 (${uploadCount}개)`);
 
-        alert(`🎉 업로드 완료! 총 ${finalAmount.toLocaleString()}원이 적립되었습니다.`);
+        alert(window.t('msg_upload_complete_points').replace('{amount}', finalAmount.toLocaleString()));
         document.getElementById('contributorUploadModal').style.display = 'none';
         
         window.initContributorSystem();
@@ -1116,7 +1225,7 @@ window.submitContributorUpload = async function() {
 
     } catch (e) {
         console.error(e);
-        alert("업로드 실패: " + e.message);
+        alert(window.t('msg_upload_failed') + e.message);
     } finally {
         if(loading) loading.style.display = 'none';
     }
@@ -1127,7 +1236,7 @@ async function processSingleUpload(file1, file2, userTags, category, fileHash = 
     // [1] 용량 체크 (1MB = 1024 * 1024 bytes)
     const MAX_SIZE = 1 * 1024 * 1024;
     if (file1.size > MAX_SIZE) {
-        alert(`이미지 용량이 너무 큽니다. (현재: ${(file1.size/1024/1024).toFixed(1)}MB)\n1MB 이하의 파일만 업로드 가능합니다.`);
+        alert(window.t('msg_image_too_large').replace('{size}', (file1.size/1024/1024).toFixed(1)));
         throw new Error("File size limit exceeded"); // 실행 중단
     }
 
@@ -1181,8 +1290,8 @@ async function processSingleUpload(file1, file2, userTags, category, fileHash = 
 }
 
 window.openTemplateCreator = function() {
-    if (!window.currentUser) return alert("로그인 필요");
-    if(confirm("디자인 에디터로 이동하시겠습니까?")) window.startEditorDirect('custom'); 
+    if (!window.currentUser) return alert(window.t('msg_login_required'));
+    if(confirm(window.t('confirm_go_editor'))) window.startEditorDirect('custom'); 
 };
 
 // [수정] 디자인 판매 등록 (관리자 전용)
@@ -1205,7 +1314,7 @@ window.openSellModal = async function() {
 
         // role이 admin이 아니면 차단
         if (!profile || profile.role !== 'admin') {
-            alert("관리자만 디자인 판매 등록이 가능합니다.");
+            alert(window.t('msg_admin_only_sell'));
             return;
         }
 
@@ -1214,7 +1323,7 @@ window.openSellModal = async function() {
         
     } catch (e) {
         console.error("권한 확인 오류:", e);
-        alert("권한 정보를 확인할 수 없습니다.");
+        alert(window.t('msg_no_permission'));
     }
 };
 
@@ -1323,7 +1432,7 @@ window.submitVipOrder = async function() {
 
     } catch (e) {
         console.error(e);
-        alert("접수 중 오류가 발생했습니다: " + e.message);
+        alert(window.t('msg_submit_error') + e.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -1389,7 +1498,7 @@ async function calculateFileHash(file) {
 window.submitRealPartnerApp = async function() {
     // 1. 로그인 체크
     if (!currentUser) {
-        alert("로그인이 필요합니다.");
+        alert(window.t('msg_login_required'));
         document.getElementById('loginModal').style.display = 'flex';
         return;
     }
@@ -1401,7 +1510,7 @@ window.submitRealPartnerApp = async function() {
     const items = document.getElementById('applyMainItems').value;
 
     // 3. 유효성 검사
-    if(!comp || !phone || !region) return alert("업체명, 연락처, 활동 지역은 필수입니다.");
+    if(!comp || !phone || !region) return alert(window.t('msg_partner_fields_required'));
 
     // 4. DB 전송
     try {
@@ -1417,7 +1526,7 @@ window.submitRealPartnerApp = async function() {
 
         if (error) throw error;
 
-        alert("✅ 파트너 신청이 완료되었습니다.\n관리자 승인 후 '가맹점' 등급으로 전환됩니다.");
+        alert(window.t('msg_partner_applied'));
         document.getElementById('partnerApplyModal').style.display = 'none';
         
         // 입력창 초기화
@@ -1428,13 +1537,13 @@ window.submitRealPartnerApp = async function() {
 
     } catch (e) {
         console.error(e);
-        alert("신청 중 오류가 발생했습니다: " + e.message);
+        alert(window.t('msg_apply_error') + e.message);
     }
 };
 
 // 신청 철회(취소) 함수
 window.cancelPartnerApp = function() {
-    if(confirm("작성 중인 내용을 취소하고 닫으시겠습니까?")) {
+    if(confirm(window.t('confirm_cancel_form'))) {
         document.getElementById('partnerApplyModal').style.display = 'none';
     }
 };

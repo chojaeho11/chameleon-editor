@@ -73,6 +73,8 @@ window.showSection = (secId, navEl) => {
         case 'sec-staff': if(window.loadStaffList) window.loadStaffList(); break;
         case 'sec-withdrawals': if(window.loadWithdrawals) window.loadWithdrawals(); break;
         case 'sec-partner-apps': if(window.loadPartnerApplications) window.loadPartnerApplications(); break;
+        case 'sec-live-chat': if(window.lcLoadRooms) window.lcLoadRooms(); break;
+        case 'sec-chatbot': if(window.cbShowTab) window.cbShowTab('knowledge'); break;
     }
 };
 // =========================================================

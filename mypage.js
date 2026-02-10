@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const displayTitle = document.getElementById('userNameDisplay');
         if(displayTitle) {
             // window.t가 안전하게 정의되었으므로 호출 가능
-            const tpl = window.t('mp_welcome_user') || "{name}님, 환영합니다!";
+            const tpl = window.t('mp_welcome_user') || "Welcome, {name}!";
             displayTitle.innerText = tpl.replace('{name}', userName);
         }
     } catch(e) { console.warn("유저명 표시 오류", e); }
@@ -147,7 +147,7 @@ async function checkAndUpgradeTier(userId, currentRole) {
             await sb.from('profiles').update({ role: newRole }).eq('id', userId);
             
             const rate = newRole === 'platinum' ? '5%' : '3%';
-            alert(`🎉 축하합니다! '${newRole.toUpperCase()}' 등급으로 승급되었습니다.\n(${rate} 할인 적용)`);
+            alert(window.t('msg_tier_upgraded', `Congratulations! Upgraded to '${newRole.toUpperCase()}'.\n(${rate} discount applied)`));
             location.reload(); 
         }
     } catch (e) {
@@ -171,7 +171,7 @@ async function loadDashboardStats() {
         const warningBox = document.getElementById('penaltyWarningBox');
         
         if (tier === 'penalty') {
-            const reason = profile.penalty_reason || '운영 정책 위반 / 저작권 문제';
+            const reason = profile.penalty_reason || window.t('msg_default_penalty_reason', 'Policy violation / Copyright issue');
             
             // 경고 박스가 없으면 생성해서 삽입
             if (!warningBox) {
@@ -179,10 +179,10 @@ async function loadDashboardStats() {
                     <div id="penaltyWarningBox" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:15px; border-radius:12px; margin-bottom:20px; display:flex; align-items:start; gap:10px;">
                         <i class="fa-solid fa-triangle-exclamation" style="font-size:20px; margin-top:2px;"></i>
                         <div>
-                            <strong style="display:block; font-size:15px; margin-bottom:4px;">🚫 계정 패널티 안내</strong>
-                            <div style="font-size:13px;">회원님은 현재 <b>패널티 등급</b>으로 조정되었습니다.<br>이 기간 동안 판매(등록) 수익이 <b>건당 50원</b>으로 제한됩니다.</div>
+                            <strong style="display:block; font-size:15px; margin-bottom:4px;">${window.t('msg_penalty_notice_title', 'Account Penalty Notice')}</strong>
+                            <div style="font-size:13px;">${window.t('msg_penalty_notice_body', 'Your account has been placed under <b>penalty status</b>.<br>During this period, sales revenue is limited to <b>50P per registration</b>.')}</div>
                             <div style="margin-top:8px; font-size:12px; background:white; padding:6px 10px; border-radius:6px; border:1px solid #fca5a5; display:inline-block;">
-                                <b>사유:</b> ${reason}
+                                <b>${window.t('label_reason', 'Reason')}:</b> ${reason}
                             </div>
                         </div>
                     </div>`;
@@ -200,10 +200,10 @@ async function loadDashboardStats() {
         if(elMileage) elMileage.innerText = (profile.mileage || 0).toLocaleString() + ' P';
 
         const elSpend = document.getElementById('totalSpendDisplay');
-        if(elSpend) elSpend.innerText = (profile.total_spend || 0).toLocaleString() + ' 원';
+        if(elSpend) elSpend.innerText = (profile.total_spend || 0).toLocaleString();
 
         const elLogo = document.getElementById('logoCountDisplay');
-        if(elLogo) elLogo.innerText = (profile.logo_count || 0) + ' 개';
+        if(elLogo) elLogo.innerText = (profile.logo_count || 0);
 
         const elTotalDeposit = document.getElementById('displayTotalDeposit');
         if(elTotalDeposit) elTotalDeposit.innerText = (profile.deposit || 0).toLocaleString();
@@ -223,11 +223,11 @@ async function loadDashboardStats() {
             .neq('status', '배송완료');
 
         const elOrder = document.getElementById('activeOrderCount');
-        if(elOrder) elOrder.innerText = (orderCount || 0) + ' 건';
+        if(elOrder) elOrder.innerText = (orderCount || 0);
 
         const recentLogArea = document.getElementById('recentLogs');
         if(recentLogArea) {
-             recentLogArea.innerHTML = '<li>최근 30일간 수익 내역이 없습니다.</li>';
+             recentLogArea.innerHTML = `<li>${window.t('msg_no_recent_revenue', 'No revenue in the last 30 days.')}</li>`;
         }
 
     } catch(e) {
@@ -286,7 +286,7 @@ async function loadOrders() {
     const tbody = document.getElementById('orderListBody');
     if(!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">로딩 중...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">${window.t('msg_loading', 'Loading...')}</td></tr>`;
 
     const { data: orders } = await sb.from('orders')
         .select('*')
@@ -296,7 +296,7 @@ async function loadOrders() {
     tbody.innerHTML = '';
     
     if (!orders || orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:50px; color:#999;">주문 내역이 없습니다.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:50px; color:#999;">${window.t('msg_no_orders', 'No order history.')}</td></tr>`;
         return;
     }
 
@@ -306,10 +306,10 @@ async function loadOrders() {
         let items = [];
         try { items = (typeof o.items === 'string') ? JSON.parse(o.items) : o.items; } catch(e) {}
         
-        let summary = "상품 정보 없음";
+        let summary = window.t('msg_no_product_info', "No product info");
         if (Array.isArray(items) && items.length > 0) {
-            summary = items[0].productName || items[0].product?.name || "상품";
-            if (items.length > 1) summary += ` 외 ${items.length - 1}건`;
+            summary = items[0].productName || items[0].product?.name || window.t('label_product', "Product");
+            if (items.length > 1) summary += ` + ${items.length - 1} ${window.t('label_more_items', 'more')}`;
         }
 
         let badgeClass = 'status-wait';
@@ -325,14 +325,14 @@ async function loadOrders() {
         
         if (o.status === '접수대기' || o.status === '접수됨') {
             // 1. 견적 확인 버튼
-            actionBtn = `<button onclick="window.checkBidsForOrder('${o.id}')" class="btn-round" style="margin-top:5px; background:#4f46e5; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">📢 참여한 지역 시공업체 확인</button>`;
+            actionBtn = `<button onclick="window.checkBidsForOrder('${o.id}')" class="btn-round" style="margin-top:5px; background:#4f46e5; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">${window.t('btn_check_bids', 'Check Local Partner Bids')}</button>`;
         } 
         else if (o.status === '배송완료') {
             // 2. 후기 작성 버튼 (파트너가 납품 완료했을 때)
-            actionBtn = `<button onclick="window.openPartnerReviewModal('${o.id}')" class="btn-round" style="margin-top:5px; background:#f59e0b; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">⭐ 파트너 후기 작성</button>`;
+            actionBtn = `<button onclick="window.openPartnerReviewModal('${o.id}')" class="btn-round" style="margin-top:5px; background:#f59e0b; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">${window.t('btn_write_review', 'Write Partner Review')}</button>`;
         }
         else if (o.status === '구매확정') {
-            actionBtn = `<span style="font-size:11px; color:#16a34a; font-weight:bold;">✅ 후기작성 완료</span>`;
+            actionBtn = `<span style="font-size:11px; color:#16a34a; font-weight:bold;">${window.t('msg_review_completed', 'Review Completed')}</span>`;
         }
 
         tbody.innerHTML += `
@@ -342,14 +342,14 @@ async function loadOrders() {
                     <small style="color:#888;">${displayId}</small>
                 </td>
                 <td><div style="font-weight:bold;">${summary}</div></td>
-                <td style="font-weight:bold;">${(o.total_amount || 0).toLocaleString()}원</td>
+                <td style="font-weight:bold;">${(o.total_amount || 0).toLocaleString()}</td>
                 <td>
                     <span class="status-badge ${badgeClass}">${o.status}</span>
                     ${actionBtn}
                 </td>
                     <div style="display:flex; flex-direction:column; gap:4px;">
-                        ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')">취소</button>` : ''}
-                        <button class="btn-round" onclick="reOrder('${o.id}')" style="height:26px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; justify-content:center;">다시담기</button>
+                        ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
+                        <button class="btn-round" onclick="reOrder('${o.id}')" style="height:26px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; justify-content:center;">${window.t('btn_reorder', 'Reorder')}</button>
                     </div>
                 </td>
             </tr>`;
@@ -357,7 +357,7 @@ async function loadOrders() {
 }
 
 async function cancelOrder(orderId) {
-    if (!confirm("주문을 취소하시겠습니까?")) return;
+    if (!confirm(window.t('confirm_cancel_order', "Cancel this order?"))) return;
     await sb.from('orders').update({ status: '취소됨' }).eq('id', orderId);
     loadOrders();
 }
@@ -369,13 +369,13 @@ async function reOrder(orderId) {
     let items = [];
     try { items = (typeof order.items === 'string') ? JSON.parse(order.items) : order.items; } catch(e) {}
     
-    if (confirm("해당 상품을 장바구니에 다시 담으시겠습니까?")) {
+    if (confirm(window.t('confirm_reorder', "Add these items to cart again?"))) {
         items.forEach(item => {
             const newItem = { ...item, uid: Date.now() + Math.random() };
             cartData.push(newItem);
         });
         localStorage.setItem(`chameleon_cart_${currentUser.id}`, JSON.stringify(cartData));
-        if(confirm("장바구니로 이동할까요?")) {
+        if(confirm(window.t('confirm_go_to_cart', "Go to cart?"))) {
             localStorage.setItem('open_cart_on_load', 'true');
             location.href = 'index.html';
         }
@@ -387,13 +387,13 @@ async function reOrder(orderId) {
 async function loadMySales() {
     const grid = document.getElementById('mySalesGrid');
     if(!grid) return;
-    grid.innerHTML = '로딩 중...';
+    grid.innerHTML = window.t('msg_loading', 'Loading...');
 
     // 1. 라이브러리(디자인) 조회
     const { data } = await sb.from('library').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
     
     if(!data || data.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">판매중인 디자인이 없습니다.</div>';
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">${window.t('msg_no_sales', 'No designs for sale.')}</div>`;
         return;
     }
 
@@ -422,13 +422,13 @@ async function loadMySales() {
         
         // 화면 표시 스타일 (패널티면 빨간색)
         const rewardStyle = isPenalty ? 'color:#ef4444; font-weight:bold;' : 'color:#16a34a;';
-        const rewardText = isPenalty ? `🚫 패널티 적용: ${reward}P` : `🎁 등록보상: ${reward}P`;
+        const rewardText = isPenalty ? `${window.t('msg_penalty_applied', 'Penalty applied')}: ${reward}P` : `${window.t('msg_registration_reward', 'Registration reward')}: ${reward}P`;
 
         grid.innerHTML += `
             <div class="mp-design-card">
                 <img src="${d.thumb_url}" class="mp-design-thumb" style="height:150px; object-fit:cover;">
                 <div class="mp-design-body">
-                    <div style="font-weight:bold;">${d.title || '제목없음'}</div>
+                    <div style="font-weight:bold;">${d.title || window.t('msg_untitled', 'Untitled')}</div>
                     <div style="font-size:12px; color:#666;">${d.category}</div>
                     <div style="margin-top:5px; font-size:12px; ${rewardStyle}">${rewardText}</div>
                 </div>
@@ -461,13 +461,13 @@ async function requestWithdrawal() {
     const curEl = document.getElementById('wdCurrentMileage');
     const cur = curEl ? parseInt(curEl.innerText.replace(/,/g,'')) : 0;
 
-    if(!amt || amt < 1000) return alert("최소 1,000원 부터 신청 가능합니다.");
-    if(amt > cur) return alert("출금 가능한 예치금이 부족합니다.");
-    
-    if(!bank || !acc || !holder) return alert("계좌 정보를 입력해주세요.");
-    if(!phone || !rrn) return alert("연락처와 주민등록번호를 입력해주세요.");
+    if(!amt || amt < 1000) return alert(window.t('msg_min_withdraw', "Minimum withdrawal amount is 1,000."));
+    if(amt > cur) return alert(window.t('msg_insufficient_deposit', "Insufficient deposit balance."));
 
-    if(!confirm(`${amt.toLocaleString()}원을 출금 신청하시겠습니까?\n(3.3% 세금 공제 후 입금됩니다)`)) return;
+    if(!bank || !acc || !holder) return alert(window.t('msg_enter_bank_info', "Please enter bank account info."));
+    if(!phone || !rrn) return alert(window.t('msg_enter_contact_id', "Please enter contact and ID number."));
+
+    if(!confirm(window.t('confirm_withdraw', `Request withdrawal of ${amt.toLocaleString()}?\n(3.3% tax will be deducted)`))) return;
 
     try {
         const { error: reqError } = await sb.from('withdrawal_requests').insert({
@@ -494,7 +494,7 @@ async function requestWithdrawal() {
             user_id: currentUser.id, type: 'withdraw_req', amount: -amt, description: `출금신청(${bank})`
         });
 
-        alert("✅ 출금 신청 완료! 관리자 확인 후 입금됩니다.");
+        alert(window.t('msg_withdraw_submitted', "Withdrawal request submitted! Payment will be processed after admin review."));
         document.getElementById('withdrawModal').style.display = 'none';
         
         // 초기화
@@ -503,7 +503,7 @@ async function requestWithdrawal() {
 
     } catch (e) {
         console.error(e);
-        alert("오류 발생: " + e.message);
+        alert(window.t('err_prefix', "Error: ") + e.message);
     }
 }
 
@@ -519,7 +519,7 @@ async function loadWalletLogs() {
         .limit(20);
 
     if(!logs || logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">내역이 없습니다.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">${window.t('msg_no_records', 'No records found.')}</td></tr>`;
         return;
     }
 
@@ -529,24 +529,24 @@ async function loadWalletLogs() {
         const color = isPlus ? '#2563eb' : '#ef4444';
         const sign = isPlus ? '+' : '';
         
-        let typeName = '기타';
-        if(log.type?.includes('deposit')) typeName = '충전/입금';
-        if(log.type?.includes('payment')) typeName = '사용/결제';
-        if(log.type?.includes('withdraw')) typeName = '출금/차감';
-        if(log.type?.includes('admin')) typeName = '관리자조정';
+        let typeName = window.t('label_other', 'Other');
+        if(log.type?.includes('deposit')) typeName = window.t('label_deposit', 'Deposit');
+        if(log.type?.includes('payment')) typeName = window.t('label_payment', 'Payment');
+        if(log.type?.includes('withdraw')) typeName = window.t('label_withdrawal', 'Withdrawal');
+        if(log.type?.includes('admin')) typeName = window.t('label_admin_adjust', 'Admin Adjust');
 
         tbody.innerHTML += `
             <tr>
                 <td>${new Date(log.created_at).toLocaleDateString()}</td>
                 <td><span class="status-badge" style="background:#f1f5f9; color:#64748b;">${typeName}</span></td>
                 <td>${log.description || '-'}</td>
-                <td style="text-align:right; font-weight:bold; color:${color};">${sign}${log.amount.toLocaleString()}원</td>
+                <td style="text-align:right; font-weight:bold; color:${color};">${sign}${log.amount.toLocaleString()}</td>
             </tr>`;
     });
 }
 
 async function logout() {
-    if(confirm("로그아웃 하시겠습니까?")) {
+    if(confirm(window.t('confirm_logout', "Log out?"))) {
         await sb.auth.signOut();
         location.href = 'index.html';
     }
@@ -560,7 +560,7 @@ window.checkBidsForOrder = async function(orderId) {
         .order('price', { ascending: true });
 
     if(error || !bids || bids.length === 0) {
-        alert("아직 도착한 견적(입찰)이 없습니다.\n파트너사들이 확인 중이니 잠시만 기다려주세요.");
+        alert(window.t('msg_no_bids_yet', "No bids received yet.\nPartners are reviewing. Please wait."));
         return;
     }
 
@@ -593,37 +593,37 @@ window.checkBidsForOrder = async function(orderId) {
         
         // 파트너 정보 (없으면 기본값)
         const partnerInfo = profileMap[bid.partner_id] || { avg_rating: 0, review_count: 0, company_name: bid.company_name };
-        
+
         // 별점 생성
         const score = partnerInfo.avg_rating || 0;
         let stars = '';
         for(let i=0; i<5; i++) stars += i < Math.round(score) ? '⭐' : '<span style="opacity:0.3">⭐</span>';
-        
+
         // 후기 보기 링크
-        const reviewText = partnerInfo.review_count > 0 
-            ? `<span style="font-size:11px; color:#64748b; text-decoration:underline; cursor:pointer;" onclick="viewPartnerReviews('${bid.partner_id}')">후기 ${partnerInfo.review_count}개 보기</span>` 
-            : `<span style="font-size:11px; color:#ccc;">후기 없음</span>`;
+        const reviewText = partnerInfo.review_count > 0
+            ? `<span style="font-size:11px; color:#64748b; text-decoration:underline; cursor:pointer;" onclick="viewPartnerReviews('${bid.partner_id}')">${window.t('btn_view_reviews', 'View Reviews')} (${partnerInfo.review_count})</span>`
+            : `<span style="font-size:11px; color:#ccc;">${window.t('msg_no_reviews', 'No reviews')}</span>`;
 
         let actionArea = '';
         if(isSelected) {
             actionArea = `
                 <div style="margin-top:10px; padding:10px; background:#dcfce7; border:1px solid #bbf7d0; border-radius:8px; text-align:center;">
-                    <div style="font-weight:bold; color:#166534; font-size:14px;">✅ 선택 완료</div>
-                    <div style="font-size:18px; font-weight:900; color:#1e293b; margin-top:5px;">📞 ${bid.partner_phone}</div>
-                    <div style="font-size:12px; color:#166534;">위 번호로 연락하여 일정을 조율하세요.</div>
+                    <div style="font-weight:bold; color:#166534; font-size:14px;">${window.t('msg_selection_complete', 'Selection Complete')}</div>
+                    <div style="font-size:18px; font-weight:900; color:#1e293b; margin-top:5px;">${bid.partner_phone}</div>
+                    <div style="font-size:12px; color:#166534;">${window.t('msg_contact_partner', 'Contact this number to arrange a schedule.')}</div>
                 </div>`;
         } else {
-            actionArea = `<button onclick="window.selectBid('${bid.id}', '${bid.order_id}')" class="btn-round primary" style="width:100%; margin-top:10px; height:40px; justify-content:center;">이 파트너 선택하기</button>`;
+            actionArea = `<button onclick="window.selectBid('${bid.id}', '${bid.order_id}')" class="btn-round primary" style="width:100%; margin-top:10px; height:40px; justify-content:center;">${window.t('btn_select_partner', 'Select This Partner')}</button>`;
         }
 
         listHtml += `
             <div style="padding:20px; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:15px; background:white; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
                 <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:5px;">
                     <div>
-                        <div style="font-weight:bold; font-size:16px; color:#1e293b;">${partnerInfo.company_name || '파트너사'}</div>
+                        <div style="font-weight:bold; font-size:16px; color:#1e293b;">${partnerInfo.company_name || window.t('label_partner', 'Partner')}</div>
                         <div style="margin-top:2px;">${stars} <span style="font-size:12px; font-weight:bold; color:#1e293b;">${score.toFixed(1)}</span> ${reviewText}</div>
                     </div>
-                    <div style="font-weight:800; color:#6366f1; font-size:18px;">${bid.price.toLocaleString()}원</div>
+                    <div style="font-weight:800; color:#6366f1; font-size:18px;">${bid.price.toLocaleString()}</div>
                 </div>
                 <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:13px; color:#475569; line-height:1.5; margin-top:10px;">
                     "${bid.message}"
@@ -637,14 +637,14 @@ window.checkBidsForOrder = async function(orderId) {
         <div id="bidListModal" class="modal-overlay" style="display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(2px);">
             <div class="modal-box" style="width:450px; max-height:85vh; overflow-y:auto; background:#f8fafc; padding:0; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
                 <div style="background:white; padding:20px; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:10;">
-                    <h3 style="margin:0; font-size:18px;">📋 도착한 견적서 (${bids.length}건)</h3>
-                    <p style="color:#64748b; font-size:13px; margin:5px 0 0 0;">가격과 평점을 비교하고 파트너를 선택하세요.</p>
+                    <h3 style="margin:0; font-size:18px;">${window.t('msg_received_bids', 'Received Bids')} (${bids.length})</h3>
+                    <p style="color:#64748b; font-size:13px; margin:5px 0 0 0;">${window.t('msg_compare_bids', 'Compare prices and ratings to select a partner.')}</p>
                 </div>
                 <div style="padding:20px;">
                     ${listHtml}
                 </div>
                 <div style="padding:15px; text-align:center;">
-                    <button onclick="document.getElementById('bidListModal').remove()" class="btn-round" style="width:100%; background:#e2e8f0; color:#334155; border:none; height:45px; justify-content:center;">닫기</button>
+                    <button onclick="document.getElementById('bidListModal').remove()" class="btn-round" style="width:100%; background:#e2e8f0; color:#334155; border:none; height:45px; justify-content:center;">${window.t('btn_close', 'Close')}</button>
                 </div>
             </div>
         </div>
@@ -662,7 +662,7 @@ window.viewPartnerReviews = async function(partnerId) {
 
     let html = '';
     if(!reviews || reviews.length === 0) {
-        html = '<div style="padding:20px; text-align:center; color:#999;">등록된 후기가 없습니다.</div>';
+        html = `<div style="padding:20px; text-align:center; color:#999;">${window.t('msg_no_reviews', 'No reviews registered.')}</div>`;
     } else {
         reviews.forEach(r => {
             let stars = '⭐'.repeat(r.rating);
@@ -680,9 +680,9 @@ window.viewPartnerReviews = async function(partnerId) {
     reviewModal.style.cssText = "position:fixed; inset:0; z-index:20001; background:rgba(0,0,0,0.3); display:flex; justify-content:center; align-items:center;";
     reviewModal.innerHTML = `
         <div style="background:white; width:350px; padding:20px; border-radius:12px; max-height:60vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h4 style="margin:0 0 10px 0;">💬 파트너 후기</h4>
+            <h4 style="margin:0 0 10px 0;">${window.t('label_partner_reviews', 'Partner Reviews')}</h4>
             ${html}
-            <button onclick="this.parentElement.parentElement.remove()" style="width:100%; margin-top:15px; padding:10px; border:1px solid #ddd; background:white; border-radius:8px; cursor:pointer;">닫기</button>
+            <button onclick="this.parentElement.parentElement.remove()" style="width:100%; margin-top:15px; padding:10px; border:1px solid #ddd; background:white; border-radius:8px; cursor:pointer;">${window.t('btn_close', 'Close')}</button>
         </div>
     `;
     document.body.appendChild(reviewModal);
@@ -692,15 +692,15 @@ window.viewPartnerReviews = async function(partnerId) {
 // [파트너 선택 실행 함수] (수정됨: 고객 연락처 입력)
 window.selectBid = async function(bidId, orderId) {
     // 1. 고객 연락처 입력받기
-    const myPhone = prompt("파트너에게 전달할 고객님의 연락처를 입력해주세요:", "010-");
-    
-    if(!myPhone) return alert("연락처를 입력해야 파트너와 연결될 수 있습니다.");
-    
-    if(!confirm(`입력하신 번호(${myPhone})를 파트너에게 전달하고\n이 업체를 최종 선택하시겠습니까?`)) return;
+    const myPhone = prompt(window.t('prompt_enter_phone', "Enter your phone number to share with the partner:"), "010-");
+
+    if(!myPhone) return alert(window.t('msg_phone_required', "Phone number is required to connect with the partner."));
+
+    if(!confirm(window.t('confirm_select_partner', `Share your number (${myPhone}) with the partner\nand confirm this selection?`))) return;
 
     // 2. 해당 입찰 승인
     const { error: err1 } = await sb.from('bids').update({ status: 'selected' }).eq('id', bidId);
-    if(err1) return alert("오류 발생: " + err1.message);
+    if(err1) return alert(window.t('err_prefix', "Error: ") + err1.message);
 
     // 3. 나머지 입찰 거절
     await sb.from('bids').update({ status: 'rejected' }).eq('order_id', orderId).neq('id', bidId);
@@ -711,7 +711,7 @@ window.selectBid = async function(bidId, orderId) {
         selected_customer_phone: myPhone // [핵심] 고객 연락처 저장
     }).eq('id', orderId);
 
-    alert("✅ 매칭이 완료되었습니다!\n파트너 연락처가 공개되었습니다.");
+    alert(window.t('msg_matching_complete', "Matching complete!\nPartner contact info is now available."));
     document.getElementById('bidListModal').remove();
     
     // 화면 갱신 (입찰 내역 다시 불러와서 매칭된 정보 보여주기)
@@ -739,7 +739,7 @@ async function monitorMyBids() {
 
         // 이전보다 입찰 수가 늘어났으면 알림
         if (lastBidCountGlobal !== 0 && bidCount > lastBidCountGlobal) {
-            speakTTS("입찰에 참여한 파트너스가 있습니다. 견적을 확인해주세요.");
+            speakTTS(window.t('msg_new_bid_notification', "A partner has submitted a bid. Please check the quotes."));
             
             // 현재 보고 있는 탭이 '주문내역'이라면 리스트 새로고침
             const orderTab = document.getElementById('tab-orders');
@@ -768,15 +768,15 @@ window.openPartnerReviewModal = async function(orderId) {
     const { data: bids } = await sb.from('bids').select('partner_id').eq('order_id', orderId).eq('status', 'selected').single();
     
     if(!bids || !bids.partner_id) {
-        alert("매칭된 파트너 정보를 찾을 수 없습니다.");
+        alert(window.t('msg_no_matched_partner', "No matched partner found."));
         return;
     }
 
     const partnerId = bids.partner_id;
-    const rating = prompt("파트너의 평점을 입력해주세요 (1~5점):", "5");
+    const rating = prompt(window.t('prompt_enter_rating', "Enter partner rating (1-5):"), "5");
     if(!rating) return;
     
-    const comment = prompt("다른 고객들이 볼 수 있도록 후기를 남겨주세요:", "친절하고 꼼꼼하게 시공해주셨습니다.");
+    const comment = prompt(window.t('prompt_enter_review', "Leave a review for other customers:"), window.t('default_review', "Great service and quality work."));
     if(!comment) return;
 
     // [핵심] partner_reviews 테이블에 저장 (공개용)
@@ -840,7 +840,7 @@ window.openPartnerReviewModal = async function(orderId) {
                 `;
             });
         } else {
-            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">아직 등록된 후기가 없습니다.</div>';
+            list.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">${window.t('msg_no_reviews', 'No reviews registered yet.')}</div>`;
         }
     }
     // [신규] 강력한 소리 재생 함수 (마이페이지용)

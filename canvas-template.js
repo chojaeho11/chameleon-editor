@@ -32,7 +32,7 @@ async function addRewardPoints(userId, amount, desc) {
         
         if (updateErr) {
             console.error("수익금 업데이트 실패:", updateErr);
-            alert("적립 오류: " + updateErr.message);
+            alert(window.t('err_prefix', "Error: ") + updateErr.message);
             return;
         }
 
@@ -307,7 +307,7 @@ async function loadTemplatePage(pageIndex) {
             
             const rawUrl = item.thumb_url || 'https://via.placeholder.com/200?text=No+Image';
             const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 200) : rawUrl;
-            const displayTitle = item.tags ? item.tags.split(',')[0] : '무제';
+            const displayTitle = item.tags ? item.tags.split(',')[0] : window.t('msg_untitled', 'Untitled');
             
             // 뱃지 설정
             let badgeText = '';
@@ -476,7 +476,7 @@ async function useSelectedTemplate() {
 // [최종 수정] 템플릿 로드 함수 (구형 데이터 잠금 해제 패치)
 async function processLoad(mode) {
     if (!selectedTpl && window.selectedTpl) selectedTpl = window.selectedTpl;
-    if (!selectedTpl) return alert("선택된 템플릿 정보가 없습니다.");
+    if (!selectedTpl) return alert(window.t('msg_no_template_selected', "No template selected."));
 
     document.getElementById("templateActionModal").style.display = "none"; 
     document.getElementById("templateOverlay").style.display = "none";
@@ -490,8 +490,8 @@ async function processLoad(mode) {
             .eq('id', selectedTpl.id)
             .single();
 
-        if (error || !data) throw new Error("데이터 로드 실패");
-        
+        if (error || !data) throw new Error(window.t('msg_data_load_failed', "Data load failed"));
+
         selectedTpl.width = data.width || 1000;
         selectedTpl.height = data.height || 1000;
         selectedTpl.category = data.category;
@@ -613,7 +613,7 @@ async function processLoad(mode) {
                 });
             } else {
                 fabric.Image.fromURL(cleanUrl, (img) => {
-                    if (!img || !img.width) return alert("이미지 로드 실패");
+                    if (!img || !img.width) return alert(window.t('msg_image_load_failed', "Image load failed"));
                     callback(img);
                 }, { crossOrigin: 'anonymous' }); 
             }
@@ -688,7 +688,7 @@ async function processLoad(mode) {
     } catch (e) {
         console.error(e);
         if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-        alert("오류: " + e.message);
+        alert(window.t('err_prefix', "Error: ") + e.message);
     }
 }
 
@@ -731,13 +731,13 @@ function dataURLtoBlob(dataurl) {
 // [수정] 템플릿 등록 및 보상 지급 함수
 // [수정] 템플릿 등록 함수
 async function registerUserTemplate() {
-    if (!sb) return alert("데이터베이스 연결 실패");
+    if (!sb) return alert(window.t('msg_db_connection_failed', "Database connection failed"));
 
     // 최신 유저 정보 확인
     const { data: { user: freshUser }, error: authError } = await sb.auth.getUser();
 
     if (authError || !freshUser) {
-        alert("로그인 세션이 만료되었습니다. 새로고침 해주세요.");
+        alert(window.t('msg_session_expired', "Login session has expired. Please refresh."));
         return;
     }
 
@@ -842,7 +842,7 @@ async function registerUserTemplate() {
 
     } catch (e) {
         console.error("등록 실패:", e);
-        alert("오류: " + e.message);
+        alert(window.t('err_prefix', "Error: ") + e.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -907,7 +907,7 @@ window.uploadUserLogo = async function() {
     try {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            btn.innerText = `업로드 중... (${i + 1}/${files.length})`;
+            btn.innerText = `${window.t('msg_uploading', "Uploading...")} (${i + 1}/${files.length})`;
             let autoTags = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
             if(commonTag) autoTags = `${autoTags}, ${commonTag}`;
             const fileExt = file.name.split('.').pop();
@@ -931,12 +931,12 @@ window.uploadUserLogo = async function() {
                 await addRewardPoints(currentUser.id, 150, `로고 공유 보상 (${files[i].name})`);
             }
         }
-        alert(`완료! 성공: ${successCount}개, 실패: ${failCount}개`);
+        alert(window.t('msg_upload_complete', "Complete!") + ` ${window.t('msg_success', "Success")}: ${successCount}, ${window.t('msg_fail', "Fail")}: ${failCount}`);
         window.resetUpload(null);
         document.getElementById("logoUploadModal").style.display = "none";
         if (currentCategory === 'logo') searchTemplates('logo', '');
     } catch (e) {
-        alert("시스템 오류: " + e.message);
+        alert(window.t('msg_system_error', "System Error: ") + e.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -1157,7 +1157,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
                 ${badgeHtml}
                 <img src="${imgUrl}" class="side-tpl-img" loading="lazy">
                 <div class="side-tpl-info">
-                    ${tpl.title || tpl.tags || '제목 없음'}
+                    ${tpl.title || tpl.tags || window.t('msg_untitled', 'Untitled')}
                 </div>
             `;
 
@@ -1167,7 +1167,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
                 window.selectedTpl = tpl;
 
                 if (sideCurrentGroup === 'group_template') {
-                    if(confirm("이 배경 디자인을 적용하시겠습니까?\n(기존 배경은 교체됩니다)")) {
+                    if(confirm(window.t('confirm_apply_bg', "Apply this background design?\n(Current background will be replaced)"))) {
                         window.processLoad('replace');
                     }
                 } else {
@@ -1206,7 +1206,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
 
     } catch (e) {
         console.error("사이드바 로드 실패:", e);
-        list.innerHTML = '<div style="padding:20px; text-align:center; color:red; font-size:12px;">오류가 발생했습니다.</div>';
+        list.innerHTML = `<div style="padding:20px; text-align:center; color:red; font-size:12px;">${window.t('msg_error_occurred', 'An error occurred.')}</div>`;
     }
 };
 // =========================================================
@@ -1267,9 +1267,9 @@ window.toggleBackgroundLock = function() {
 window.processLoad = async function(mode) {
     // ★ 안전장치: 현재 활성화된 캔버스를 확실하게 가져옴
     const currentCanvas = window.canvas; 
-    if (!currentCanvas) return alert("캔버스가 초기화되지 않았습니다.");
+    if (!currentCanvas) return alert(window.t('msg_canvas_not_init', "Canvas is not initialized."));
 
-    if (!window.selectedTpl) return alert("선택된 디자인이 없습니다.");
+    if (!window.selectedTpl) return alert(window.t('msg_select_design', "No design selected."));
     
     const loading = document.getElementById("loading");
     if(loading) loading.style.display = "flex";
@@ -1282,7 +1282,7 @@ window.processLoad = async function(mode) {
             .eq('id', window.selectedTpl.id)
             .single();
 
-        if (error || !data) throw new Error("데이터 로드 실패");
+        if (error || !data) throw new Error(window.t('msg_data_load_failed', "Data load failed"));
 
         // 배경 모드 여부 확인
         let isBgMode = (window.sideCurrentGroup === 'group_template');
@@ -1455,7 +1455,7 @@ window.processLoad = async function(mode) {
 
     } catch (e) {
         console.error(e);
-        alert("오류: " + e.message);
+        alert(window.t('err_prefix', "Error: ") + e.message);
         if(loading) loading.style.display = "none";
     }
 };
@@ -1476,7 +1476,7 @@ window.processLoad = async function(mode) {
             .eq('id', window.selectedTpl.id)
             .single();
 
-        if (error || !data) throw new Error("데이터 로드 실패");
+        if (error || !data) throw new Error(window.t('msg_data_load_failed', "Data load failed"));
 
         // ★ 배경 모드 여부 결정
         let isBgMode = (window.sideCurrentGroup === 'group_template');
@@ -1685,7 +1685,7 @@ window.processLoad = async function(mode) {
 
     } catch (e) {
         console.error(e);
-        alert("오류: " + e.message);
+        alert(window.t('err_prefix', "Error: ") + e.message);
         if(loading) loading.style.display = "none";
     }
 };

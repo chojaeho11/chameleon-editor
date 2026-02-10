@@ -214,7 +214,7 @@ export async function initOrderSystem() {
     const btnPrintQuote = document.getElementById("btnPrintQuote");
     if(btnPrintQuote) {
         btnPrintQuote.onclick = async () => {
-            if(cartData.length === 0) return alert("상품이 없습니다.");
+            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
             const btn = btnPrintQuote;
             btn.innerText = window.t('msg_generating_quote') || "Generating Quote..."; btn.disabled = true;
             try {
@@ -271,33 +271,33 @@ export async function initOrderSystem() {
             if(window.currentDbId) info.id = window.currentDbId;
             try {
                 const blob = await generateOrderSheetPDF(info, cartData);
-                if(blob) downloadBlob(blob, `작업지시서_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert("PDF 생성 실패"); }
+                if(blob) downloadBlob(blob, `order_sheet_${info.manager}.pdf`);
+            } catch(e) { console.error(e); alert(window.t('msg_pdf_gen_failed', "PDF generation failed")); }
         };
     }
     if(btnDownQuote) {
         btnDownQuote.onclick = async () => {
-            if(cartData.length === 0) return alert("데이터가 없습니다.");
+            if(cartData.length === 0) return alert(window.t('msg_no_data', "No data available."));
             const info = getOrderInfo();
             const mileageInput = document.getElementById('inputUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
                 const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate, useMileage);
-                if(blob) downloadBlob(blob, `견적서_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert("PDF 생성 실패"); }
+                if(blob) downloadBlob(blob, `quotation_${info.manager}.pdf`);
+            } catch(e) { console.error(e); alert(window.t('msg_pdf_gen_failed', "PDF generation failed")); }
         };
     }
     const btnReceipt = document.getElementById("btnDownReceipt");
     if(btnReceipt) {
         btnReceipt.onclick = async () => {
-            if(cartData.length === 0) return alert("장바구니가 비어있습니다.");
+            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
             const info = getOrderInfo();
-            
+
             // [추가] 결제정보(카드/무통장) 및 입금자명 확인
             const payRadio = document.querySelector('input[name="paymentMethod"]:checked');
-            info.payMethod = payRadio ? payRadio.value : 'card'; 
-            
+            info.payMethod = payRadio ? payRadio.value : 'card';
+
             const depositorInput = document.getElementById('inputDepositorName');
             // 입금자명이 입력되어 있으면 쓰고, 없으면 주문자명 사용
             info.depositor = (depositorInput && depositorInput.value) ? depositorInput.value : info.manager;
@@ -307,21 +307,21 @@ export async function initOrderSystem() {
 
             try {
                 const blob = await generateReceiptPDF(info, cartData, currentUserDiscountRate, useMileage);
-                if(blob) downloadBlob(blob, `영수증_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert("영수증 생성 실패: " + e.message); }
+                if(blob) downloadBlob(blob, `receipt_${info.manager}.pdf`);
+            } catch(e) { console.error(e); alert(window.t('msg_receipt_gen_failed', "Receipt generation failed: ") + e.message); }
         };
     }
 
     const btnStatement = document.getElementById("btnDownStatement");
     if(btnStatement) {
         btnStatement.onclick = async () => {
-            if(cartData.length === 0) return alert("장바구니가 비어있습니다.");
+            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
             const info = getOrderInfo();
 
             // [추가] 결제정보(카드/무통장) 및 입금자명 확인
             const payRadio = document.querySelector('input[name="paymentMethod"]:checked');
-            info.payMethod = payRadio ? payRadio.value : 'card'; 
-            
+            info.payMethod = payRadio ? payRadio.value : 'card';
+
             const depositorInput = document.getElementById('inputDepositorName');
             // 입금자명이 입력되어 있으면 쓰고, 없으면 주문자명 사용
             info.depositor = (depositorInput && depositorInput.value) ? depositorInput.value : info.manager;
@@ -331,8 +331,8 @@ export async function initOrderSystem() {
 
             try {
                 const blob = await generateTransactionStatementPDF(info, cartData, currentUserDiscountRate, useMileage);
-                if(blob) downloadBlob(blob, `거래명세서_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert("거래명세서 생성 실패: " + e.message); }
+                if(blob) downloadBlob(blob, `statement_${info.manager}.pdf`);
+            } catch(e) { console.error(e); alert(window.t('msg_statement_gen_failed', "Statement generation failed: ") + e.message); }
         };
     }
     renderCart(); 
@@ -361,7 +361,7 @@ async function fetchUserDiscountRate() {
 
 function getOrderInfo() {
     return {
-        manager: document.getElementById("orderName").value || "고객",
+        manager: document.getElementById("orderName").value || window.t('default_customer', "Customer"),
         phone: document.getElementById("orderPhone").value || "",
         address: document.getElementById("orderAddr").value || "",
         note: document.getElementById("orderMemo").value || "",
@@ -393,7 +393,7 @@ function renderCalendar() {
     document.getElementById("currentMonthYear").innerText = `${year}. ${String(month+1).padStart(2,'0')}`; 
     grid.innerHTML = "";
     
-    const days = ['일','월','화','수','목','금','토'];
+    const days = CURRENT_LANG === 'kr' ? ['일','월','화','수','목','금','토'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     days.forEach(d => grid.innerHTML += `<div class="cal-day-header">${d}</div>`);
     
     const firstDay = new Date(year, month, 1).getDay(); 
@@ -473,7 +473,7 @@ function saveCart() {
                 localStorage.setItem(storageKey, JSON.stringify(superClean));
                 console.log("비상 저장 성공");
             } catch (finalErr) {
-                alert("브라우저 저장 공간이 부족합니다. 불필요한 장바구니 항목을 삭제해주세요.");
+                alert(window.t('msg_storage_full', "Browser storage is full. Please remove unnecessary cart items."));
             }
         }
     } 
@@ -732,7 +732,7 @@ async function addCanvasToCart() {
             savedJsonUrl = await uploadFileToSupabase(jsonBlob, 'cart_json');
         } catch (err) {
             console.error("JSON 업로드 필수 실패:", err);
-            return alert("디자인 저장 공간 확보에 실패했습니다. 인터넷 연결을 확인해주세요.");
+            return alert(window.t('msg_design_save_failed', "Failed to save design data. Please check your internet connection."));
         }
     }
 
@@ -783,7 +783,7 @@ async function addCanvasToCart() {
                      localStorage.removeItem(key);
                  }
              });
-             alert("브라우저의 저장 공간이 꽉 찼습니다. 다른 불필요한 창을 닫거나 캐시를 비워주세요.");
+             alert(window.t('msg_storage_full', "Browser storage is full. Please close unnecessary tabs or clear cache."));
         }
     }
 
@@ -926,11 +926,11 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
             const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
-            const categories = [...new Set(allAddons.map(a => a.category_code || '옵션'))];
+            const categories = [...new Set(allAddons.map(a => a.category_code || window.t('label_options', 'Options')))];
 
             if(categories.length > 0 && allAddons.length > 0) {
                 categories.forEach(cat => {
-                    const catAddons = allAddons.filter(a => (a.category_code || '옵션') === cat);
+                    const catAddons = allAddons.filter(a => (a.category_code || window.t('label_options', 'Options')) === cat);
                     addonHtml += `
                         <div style="margin-bottom:12px;">
                             <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${cat.toUpperCase()}</div>
@@ -981,8 +981,8 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 
                     <div style="flex:1; min-width:200px;">
                         <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${item.product.name}</h4>
-                        <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : '(파일 별도 첨부)'}</div>
-                        <div style="font-size:12px; color:#94a3b8; margin-top:5px;">단가: ${formatCurrency(item.product.price)}</div>
+                        <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : window.t('msg_file_attached_separately', '(File attached separately)')}</div>
+                        <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
                         
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
                             <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
@@ -990,20 +990,20 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                                 <input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:160px; text-align:center; border:none; font-weight:bold; font-size:14px;">
                                 <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, 1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">+</button>
                             </div>
-                            <span style="font-size:12px; color:#64748b; font-weight:bold;">본품 수량</span>
+                            <span style="font-size:12px; color:#64748b; font-weight:bold;">${window.t('label_product_qty', 'Product Qty')}</span>
                         </div>
                     </div>
 
                     ${addonHtml ? `
                     <div style="width:320px; max-height:220px; overflow-y:auto; background:#f8fafc; border:1px solid #f1f5f9; border-radius:12px; padding:15px; flex-shrink:0;">
-                        <div style="font-size:12px; font-weight:800; color:#334155; margin-bottom:10px;"><i class="fa-solid fa-circle-plus"></i> 추가 구성 상품</div>
+                        <div style="font-size:12px; font-weight:800; color:#334155; margin-bottom:10px;"><i class="fa-solid fa-circle-plus"></i> ${window.t('label_addon_products', 'Add-on Products')}</div>
                         ${addonHtml}
                     </div>` : ''}
 
                     <div style="width:160px; margin-left:auto; text-align:right; display:flex; flex-direction:column; justify-content:space-between; align-self:stretch; flex-shrink:0;">
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#cbd5e1; cursor:pointer; align-self:flex-end; font-size:18px;"><i class="fa-solid fa-trash-can"></i></button>
                         <div>
-                            <div style="font-size:11px; color:#6366f1; font-weight:bold; margin-bottom:3px;">옵션포함 총액</div>
+                            <div style="font-size:11px; color:#6366f1; font-weight:bold; margin-bottom:3px;">${window.t('label_total_with_options', 'Total (incl. options)')}</div>
                             <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${formatCurrency(totalItemPrice)}</div>
                         </div>
                     </div>
@@ -1016,7 +1016,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                         <img src="${displayImg}" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${item.product.name}</h4>
-                            <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">합계: ${formatCurrency(totalItemPrice)}</div>
+                            <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
                         </div>
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
@@ -1024,7 +1024,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                     ${addonHtml ? `
                     <div style="background:#f1f5f9; border-radius:12px; padding:12px;">
                         <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:5px;">
-                            <i class="fa-solid fa-circle-plus" style="color:#6366f1;"></i> 선택된 옵션 관리
+                            <i class="fa-solid fa-circle-plus" style="color:#6366f1;"></i> ${window.t('label_manage_options', 'Manage Options')}
                         </div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             ${addonHtml}
@@ -1032,7 +1032,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                     </div>` : ''}
 
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0;">
-                        <span style="font-size:13px; font-weight:bold; color:#475569;">주문 수량</span>
+                        <span style="font-size:13px; font-weight:bold; color:#475569;">${window.t('label_order_qty', 'Order Qty')}</span>
                         <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; background:#fff; overflow:hidden;">
                             <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:10px 20px; font-weight:bold; font-size:18px;">-</button>
                             <input type="number" value="${item.qty}" onchange="window.updateCartQtyInput(${idx}, this.value)" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:16px;">
@@ -1103,10 +1103,10 @@ function updateSummary(prodTotal, addonTotal, total) {
         
         const mileInput = document.getElementById('inputUseMileage');
         if(mileInput) {
-            mileInput.placeholder = `최대 ${realLimit.toLocaleString()}`;
+            mileInput.placeholder = `${window.t('label_max', 'Max')} ${realLimit.toLocaleString()}`;
             if (realLimit === 0 && hasExcludedItem) {
                 mileInput.value = "";
-                mileInput.placeholder = "사용 불가 (제외 상품 포함)";
+                mileInput.placeholder = window.t('msg_mileage_unavailable', "Unavailable (excluded products)");
                 mileInput.disabled = true;
             } else {
                 mileInput.disabled = false;
@@ -1120,7 +1120,7 @@ function updateSummary(prodTotal, addonTotal, total) {
     const elDiscount = document.getElementById("summaryDiscount");
     if(elDiscount) {
         if(discountAmount > 0) elDiscount.innerText = `-${formatCurrency(discountAmount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
-        else elDiscount.innerText = "0원 (0%)";
+        else elDiscount.innerText = formatCurrency(0) + " (0%)";
     }
     const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(finalTotal); 
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`; 
@@ -1202,16 +1202,16 @@ async function processOrderSubmission() {
         document.getElementById('userOwnMileage').innerText = myMileage.toLocaleString() + ' P';
         document.getElementById('mileageLimitDisplay').innerText = realLimit.toLocaleString() + ' P';
         document.getElementById('inputUseMileage').value = ''; 
-        document.getElementById('inputUseMileage').placeholder = `최대 ${realLimit.toLocaleString()}`;
-        document.getElementById('finalPayAmountDisplay').innerText = finalTotal.toLocaleString() + '원';
-        
-        document.getElementById('btnFinalPay').innerText = `${finalTotal.toLocaleString()}원 결제하기`;
+        document.getElementById('inputUseMileage').placeholder = `${window.t('label_max', 'Max')} ${realLimit.toLocaleString()}`;
+        document.getElementById('finalPayAmountDisplay').innerText = formatCurrency(finalTotal);
+
+        document.getElementById('btnFinalPay').innerText = `${formatCurrency(finalTotal)} ${window.t('btn_pay', 'Pay')}`;
     } else {
         window.mileageLimitMax = 0;
         document.getElementById('userOwnMileage').innerText = '-';
         document.getElementById('mileageLimitDisplay').innerText = '0 P';
-        document.getElementById('finalPayAmountDisplay').innerText = finalTotal.toLocaleString() + '원';
-        document.getElementById('btnFinalPay').innerText = `${finalTotal.toLocaleString()}원 결제하기`;
+        document.getElementById('finalPayAmountDisplay').innerText = formatCurrency(finalTotal);
+        document.getElementById('btnFinalPay').innerText = `${formatCurrency(finalTotal)} ${window.t('btn_pay', 'Pay')}`;
     }
 
     if(currentUser) {
@@ -1219,7 +1219,7 @@ async function processOrderSubmission() {
         const balance = profile ? profile.deposit : 0;
         const elBal = document.getElementById('myCurrentDepositDisplay');
         if(elBal) {
-            elBal.innerText = `(보유: ${balance.toLocaleString()}원)`;
+            elBal.innerText = `(${window.t('label_balance', 'Balance')}: ${formatCurrency(balance)})`;
             elBal.dataset.balance = balance;
         }
     }
@@ -1229,11 +1229,11 @@ async function processOrderSubmission() {
 // [신규] 실제 DB 생성 및 파일 업로드
 // ============================================================
 async function createRealOrderInDb(finalPayAmount, useMileage) {
-    if (!window.tempOrderInfo) throw new Error("주문 임시 데이터가 없습니다.");
+    if (!window.tempOrderInfo) throw new Error(window.t('msg_no_temp_order', "No temporary order data found."));
 
     const loading = document.getElementById("loading");
     loading.style.display = "flex";
-    loading.querySelector('p').innerText = "주문 데이터 생성 중...";
+    loading.querySelector('p').innerText = window.t('msg_creating_order', "Creating order data...");
 
     const { manager, phone, address, request, deliveryDate } = window.tempOrderInfo;
 
@@ -1319,7 +1319,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         const idx = String(i + 1).padStart(2, '0');
         if (item.originalUrl) {
             uploadedFiles.push({ 
-                name: `고객파일_${idx}_${item.fileName || 'file'}`, 
+                name: `customer_file_${idx}_${item.fileName || 'file'}`,
                 url: item.originalUrl, 
                 type: 'customer_file' 
             });
@@ -1332,18 +1332,18 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
     };
     
     try {
-        loading.querySelector('p').innerText = "문서 생성 중...";
+        loading.querySelector('p').innerText = window.t('msg_generating_docs', "Generating documents...");
         const orderSheetBlob = await generateOrderSheetPDF(orderInfoForPDF, cartData);
         if(orderSheetBlob) { 
             const url = await uploadFileToSupabase(orderSheetBlob, `orders/${newOrderId}/order_sheet.pdf`); 
-            if(url) uploadedFiles.push({ name: `작업지시서.pdf`, url: url, type: 'order_sheet' }); 
+            if(url) uploadedFiles.push({ name: `order_sheet.pdf`, url: url, type: 'order_sheet' });
         }
         
         const quoteBlob = await generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate, useMileage);
         
         if(quoteBlob) { 
             const url = await uploadFileToSupabase(quoteBlob, `orders/${newOrderId}/quotation.pdf`); 
-            if(url) uploadedFiles.push({ name: `견적서.pdf`, url: url, type: 'quotation' }); 
+            if(url) uploadedFiles.push({ name: `quotation.pdf`, url: url, type: 'quotation' });
         } 
     } catch(pdfErr) { console.warn("문서 생성 오류:", pdfErr); }
 
@@ -1359,7 +1359,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             }
             if (!hasContent) continue;
 
-            loading.querySelector('p').innerText = `디자인 변환 중 (${i+1}/${cartData.length})...`;
+            loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try { 
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
                 let fileBlob = await generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0); 
@@ -1367,7 +1367,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                 
                 if(fileBlob) {
                     const url = await uploadFileToSupabase(fileBlob, `orders/${newOrderId}/design_${idx}.pdf`); 
-                    if(url) uploadedFiles.push({ name: `제작물_${idx}_${item.product.name}.pdf`, url: url, type: 'product' }); 
+                    if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.pdf`, url: url, type: 'product' });
                 }
             } catch(err) { console.warn("디자인 변환 실패:", err); }
         }
@@ -1384,21 +1384,21 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 // [수정됨] 최종 결제 버튼 클릭 시 실행
 // ============================================================
 async function processFinalPayment() {
-    if (!window.tempOrderInfo && !window.currentDbId) return alert("주문 정보가 없습니다. 처음부터 다시 시도해주세요.");
+    if (!window.tempOrderInfo && !window.currentDbId) return alert(window.t('msg_no_order_info', "No order info. Please try again from the start."));
     
     const mileageInput = document.getElementById('inputUseMileage');
     const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
     const baseAmount = window.originalPayAmount || 0;
     const realFinalPayAmount = baseAmount - useMileage;
 
-    if (realFinalPayAmount < 0) return alert("결제 금액 오류입니다.");
-    
+    if (realFinalPayAmount < 0) return alert(window.t('msg_payment_amount_error', "Payment amount error."));
+
     if (useMileage > 0) {
         if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
         const excludedSet = window.excludedCategoryCodes || new Set();
         let isSafe = true;
         cartData.forEach(item => { if (item.product && excludedSet.has(item.product.category)) isSafe = false; });
-        if (!isSafe) return alert("마일리지 사용 불가 상품이 포함되어 있습니다.");
+        if (!isSafe) return alert(window.t('msg_mileage_excluded_items', "Cart contains items where mileage cannot be used."));
 
         const { data: check } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
         if (!check || check.mileage < useMileage) return alert(window.t('alert_mileage_shortage', "Insufficient mileage."));
@@ -1471,7 +1471,7 @@ async function processFinalPayment() {
 
     } catch (e) {
         console.error(e);
-        alert("주문 생성 중 오류가 발생했습니다: " + e.message);
+        alert(window.t('msg_order_create_error', "Error creating order: ") + e.message);
         document.getElementById("loading").style.display = "none";
         btn.disabled = false;
     }
@@ -1481,8 +1481,8 @@ async function processFinalPayment() {
 // [수정] 예치금 결제
 // ============================================================
 async function processDepositPayment(payAmount, useMileage) {
-    if (!currentUser) return alert("로그인이 필요합니다.");
-    
+    if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
+
     const balanceSpan = document.getElementById('myCurrentDepositDisplay');
     const currentBalance = parseInt(balanceSpan.dataset.balance || 0);
 
@@ -1528,7 +1528,7 @@ async function processDepositPayment(payAmount, useMileage) {
 
     } catch (e) {
         console.error(e);
-        alert("결제 처리 중 오류가 발생했습니다: " + e.message);
+        alert(window.t('msg_payment_error', "Payment processing error: ") + e.message);
         document.getElementById("loading").style.display = "none";
         document.getElementById("btnFinalPay").disabled = false;
     }
@@ -1540,20 +1540,20 @@ async function processDepositPayment(payAmount, useMileage) {
 function processCardPayment(confirmedAmount) {
     const country = SITE_CONFIG.COUNTRY;
     const pgConfig = SITE_CONFIG.PG_CONFIG[country];
-    if (!pgConfig) return alert("PG 설정 오류: 해당 국가의 결제 설정이 없습니다.");
+    if (!pgConfig) return alert(window.t('msg_pg_config_error', "PG config error: No payment settings for this country."));
 
     const orderName = `Chameleon Order #${window.currentDbId}`;
     const customerName = document.getElementById("orderName").value;
 
     const realPayAmount = (confirmedAmount !== undefined) ? confirmedAmount : window.finalPaymentAmount;
 
-    if (realPayAmount < 0) return alert("결제 금액 오류입니다.");
+    if (realPayAmount < 0) return alert(window.t('msg_payment_amount_error', "Payment amount error."));
 
     if (pgConfig.provider === 'toss') {
-        if (!window.TossPayments) return alert("Toss Payments SDK가 로드되지 않았습니다.");
+        if (!window.TossPayments) return alert(window.t('msg_toss_sdk_missing', "Toss Payments SDK is not loaded."));
         
         const tossPayments = TossPayments(pgConfig.clientKey);
-        tossPayments.requestPayment("카드", { 
+        tossPayments.requestPayment("카드", {
             amount: realPayAmount,  
             orderId: "ORD-" + new Date().getTime() + "-" + window.currentDbId, 
             orderName: orderName, 
@@ -1561,7 +1561,7 @@ function processCardPayment(confirmedAmount) {
             successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}`, 
             failUrl: window.location.origin + `/fail.html?db_id=${window.currentDbId}`, 
         }).catch(error => { 
-            if (error.code !== "USER_CANCEL") alert("결제 오류: " + error.message); 
+            if (error.code !== "USER_CANCEL") alert(window.t('msg_payment_error_prefix', "Payment Error: ") + error.message);
         });
 
     } else if (pgConfig.provider === 'stripe') {
@@ -1570,13 +1570,13 @@ function processCardPayment(confirmedAmount) {
 }
 
 async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId) {
-    if (typeof Stripe === 'undefined') return alert("Stripe 모듈 로드 실패");
+    if (typeof Stripe === 'undefined') return alert(window.t('msg_stripe_load_failed', "Stripe module load failed"));
     
     const stripe = Stripe(pubKey);
     const btn = document.getElementById("btnFinalPay"); 
     const originalText = btn.innerText;
     
-    btn.innerText = "Stripe 연결 중...";
+    btn.innerText = window.t('msg_connecting_stripe', "Connecting to Stripe...");
     btn.disabled = true;
 
     const currency = currencyCountry === 'JP' ? 'jpy' : 'usd';
@@ -1602,7 +1602,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
         
     } catch (e) {
         console.error("Stripe Error:", e);
-        alert("결제 초기화 실패: " + e.message);
+        alert(window.t('msg_payment_init_failed', "Payment initialization failed: ") + e.message);
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -1619,7 +1619,7 @@ window.toggleCartAccordion = function(idx) {
     } 
 };
 window.removeCartItem = function(idx) { 
-    if (confirm("삭제하시겠습니까?")) { 
+    if (confirm(window.t('confirm_delete', "Delete this item?"))) {
         cartData.splice(idx, 1); 
         saveCart(); 
         renderCart(); 
@@ -1718,7 +1718,7 @@ const newItem = {
     uid: now,
     product: cleanProduct, // ★ 세탁된 상품 정보 사용
     type: 'product_only',
-    fileName: '(파일 별도 첨부)',
+    fileName: window.t('msg_file_attached_separately', '(File attached separately)'),
     
     // [3] 썸네일도 동일한 규칙으로 한 번 더 방어
     thumb: cleanProduct.img, 
@@ -1773,7 +1773,7 @@ export async function processBulkCartUpload(files) {
     const loading = document.getElementById("loading");
     if(loading) {
         loading.style.display = "flex";
-        loading.querySelector('p').innerText = `파일 ${fileList.length}개 업로드 중...`;
+        loading.querySelector('p').innerText = `${window.t('msg_uploading_files', "Uploading files...")} (${fileList.length})`;
     }
 
     try {
@@ -1794,8 +1794,8 @@ export async function processBulkCartUpload(files) {
 
                 return {
                     uid: Date.now() + index + Math.random(), 
-                    product: { 
-                        name: '📄 첨부 파일', 
+                    product: {
+                        name: window.t('label_attached_file', 'Attached File'),
                         price: 0, 
                         img: thumbUrl,
                         addons: []
@@ -1829,14 +1829,14 @@ export async function processBulkCartUpload(files) {
         renderCart();
         
         if (successCount > 0) {
-            alert(`${successCount}개의 파일이 장바구니에 추가되었습니다.`);
+            alert(`${successCount} ${window.t('msg_files_added_to_cart', "file(s) added to cart.")}`);
         } else {
-            alert("파일 업로드에 실패했습니다.");
+            alert(window.t('msg_upload_failed', "File upload failed."));
         }
 
     } catch (e) {
         console.error("일괄 업로드 실패:", e);
-        alert("파일 업로드 중 오류가 발생했습니다.");
+        alert(window.t('msg_upload_error', "Error occurred during file upload."));
     } finally {
         if(loading) loading.style.display = "none";
     }
@@ -1851,7 +1851,7 @@ window.calcMileageLimit = function(input) {
     const limit = window.mileageLimitMax || 0;
 
     if (val > limit) {
-        alert(`마일리지는 구매금액의 최대 5%(${limit.toLocaleString()}P)까지만 사용 가능합니다.`);
+        alert(window.t('msg_mileage_limit', `Mileage can be used up to 5% of purchase amount (${limit.toLocaleString()}P).`));
         val = limit;
         input.value = val;
     }
@@ -1862,10 +1862,10 @@ window.calcMileageLimit = function(input) {
     window.finalPaymentAmount = safeBase - val;
     
     const amountDisplay = document.getElementById('finalPayAmountDisplay');
-    if(amountDisplay) amountDisplay.innerText = window.finalPaymentAmount.toLocaleString() + '원';
-    
+    if(amountDisplay) amountDisplay.innerText = formatCurrency(window.finalPaymentAmount);
+
     const payBtn = document.getElementById('btnFinalPay');
-    if(payBtn) payBtn.innerText = `${window.finalPaymentAmount.toLocaleString()}원 결제하기`;
+    if(payBtn) payBtn.innerText = `${formatCurrency(window.finalPaymentAmount)} ${window.t('btn_pay', 'Pay')}`;
 };
 
 window.applyMaxMileage = function() {
