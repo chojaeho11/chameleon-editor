@@ -1,6 +1,15 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" },
+        { "key": "CDN-Cache-Control", "value": "max-age=0" }
+      ]
+    }
+  ],
   "redirects": [
     {
       "source": "/en.html",
