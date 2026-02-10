@@ -3963,9 +3963,13 @@ if (w >= 20 && h >= 20) {
         reviews.forEach(r => {
             const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
             const date = new Date(r.created_at).toLocaleDateString();
-            const photoHtml = r.photo_url ? `<img src="${r.photo_url}" class="review-photo" onclick="window.open('${r.photo_url}','_blank')">` : '';
+            const hasPhoto = r.photo_url && r.photo_url.trim();
+            const photoHtml = hasPhoto ? `
+                <div class="review-photo-wrap">
+                    <img src="${r.photo_url}" class="review-photo" alt="리뷰 사진" onclick="window.openReviewPhoto('${r.photo_url}')" loading="lazy">
+                </div>` : '';
             html += `
-                <div class="review-card">
+                <div class="review-card ${hasPhoto ? 'has-photo' : ''}">
                     <div class="review-stars">${stars}</div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
                         <span style="font-weight:700;font-size:14px;color:#333;">${r.user_name}</span>
@@ -4052,6 +4056,15 @@ if (w >= 20 && h >= 20) {
                 if (previewEl) previewEl.innerHTML = '';
             }
         });
+    };
+
+    // 리뷰 사진 라이트박스
+    window.openReviewPhoto = function(url) {
+        const overlay = document.createElement('div');
+        overlay.className = 'review-lightbox';
+        overlay.innerHTML = `<img src="${url}" alt="리뷰 사진"><div class="review-lightbox-close">&times;</div>`;
+        overlay.addEventListener('click', () => overlay.remove());
+        document.body.appendChild(overlay);
     };
 
     window.submitProductReview = async function() {
