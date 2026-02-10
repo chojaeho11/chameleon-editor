@@ -2670,9 +2670,7 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
             `;
 
             card.onclick = () => {
-                window.currentProductKey = p.code;
-                window.selectedProductForChoice = window.PRODUCT_DB[p.code];
-                window.startEditorDirect(p.code);
+                window.loadProductDetailAndOpen(p.code);
             };
 
             grid.appendChild(card);
