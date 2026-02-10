@@ -3169,7 +3169,14 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 
     // 1. 상품 상세 정보 로드 및 전체화면 열기 (언어 유지 버전)
     window.loadProductDetailAndOpen = async function(productCode) {
-        if (!sb) { console.warn("[loadProductDetailAndOpen] sb가 아직 초기화되지 않음"); return; }
+        // sb 초기화 대기 (최대 5초)
+        if (!sb) {
+            for (let i = 0; i < 50; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                if (sb) break;
+            }
+            if (!sb) { console.warn("[loadProductDetailAndOpen] sb 초기화 실패"); return; }
+        }
         const loading = document.getElementById('loading');
         if(loading) {
             loading.style.display = 'flex';
@@ -3314,15 +3321,19 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         if(startScreen) startScreen.style.display = 'block';
     });
 
-    // 3. [초기 접속] URL에 ?product=코드 있으면 바로 열기
-    setTimeout(() => {
+    // 3. [초기 접속] URL에 ?product=코드 있으면 바로 열기 (sb 대기 포함)
+    (async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const productCode = urlParams.get('product');
         if (productCode) {
             console.log("🔗 URL 접속 감지:", productCode);
-            window.loadProductDetailAndOpen(productCode);
+            // sb 초기화 대기 (최대 5초)
+            for (let i = 0; i < 50 && !sb; i++) {
+                await new Promise(r => setTimeout(r, 100));
+            }
+            if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(productCode);
         }
-    }, 500);
+    })();
     // [최종 안정화 버전] 상세 페이지 모달 오픈 함수
 // [수정 2] 상세페이지 모달 (DB 공통정보 연동 + 애니메이션 강제 실행)
 // [최종 복구] 상세페이지 모달 (DB 연동 복구 + 디자인/기능 개선 유지)
