@@ -30,13 +30,16 @@ if (paramLang) {
 
 export const SITE_CONFIG = {
     COUNTRY: country, // 'KR', 'JP', 'US'
-    
+
     // 국가별 화폐 단위
     CURRENCY_UNIT: {
         'KR': '원',
         'JP': '¥',
         'US': '$'
     },
+
+    // 국가별 환산율 (DB는 KRW 기준 저장, 표시 시 환산)
+    CURRENCY_RATE: { 'KR': 1, 'JP': 0.2, 'US': 0.002 },
     
     // 국가별 폰트 정의
     FONTS: {
@@ -61,5 +64,14 @@ export const SITE_CONFIG = {
         }
     }
 };
+
+// window 전역에 노출 (비모듈 스크립트에서 참조용)
+window.SITE_CONFIG = SITE_CONFIG;
+
+// 글로벌 환산 헬퍼: KRW → 현지 통화
+export function convertCurrency(krwAmount) {
+    const rate = SITE_CONFIG.CURRENCY_RATE[SITE_CONFIG.COUNTRY] || 1;
+    return krwAmount * rate;
+}
 
 console.log(`🌍 현재 접속 국가 모드: ${country} (Domain: ${hostname})`);

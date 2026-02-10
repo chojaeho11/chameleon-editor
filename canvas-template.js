@@ -44,7 +44,7 @@ async function addRewardPoints(userId, amount, desc) {
             description: desc 
         });
 
-        console.log(`✅ 수익금 적립 완료: ${newDeposit}원`);
+        console.log(`✅ 수익금 적립 완료: ${newDeposit}KRW`);
 
     } catch(e) { 
         console.error("시스템 오류:", e);
@@ -825,16 +825,22 @@ async function registerUserTemplate() {
 
         // ★ [핵심] 이제 'deposit(예치금)' 컬럼에 500원이 더해집니다.
         await addRewardPoints(freshUser.id, 500, `템플릿 판매등록 수익 (${title})`);
-        
+
+        // 환산된 보상 금액 표시
+        const cfg = window.SITE_CONFIG || {};
+        const tplRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
+        const reward500 = 500 * tplRate;
+        const rewardDisplay = cfg.COUNTRY === 'JP' ? '¥' + Math.floor(reward500) : cfg.COUNTRY === 'US' ? '$' + reward500.toFixed(2) : reward500.toLocaleString() + '원';
+
         alert(window.t('msg_design_registered', "Design Registered!"));
         document.getElementById("sellModal").style.display = "none";
-        
-        // 상단 금액 표시 갱신 (예치금 란이 있다면 거기를 갱신해야 함)
+
+        // 상단 금액 표시 갱신
         const balanceEl = document.getElementById('contributorBalance');
         if(balanceEl) {
-            // 화면에 보이는 숫자도 업데이트
-            let current = parseInt(balanceEl.innerText.replace(/,/g, '')) || 0;
-            balanceEl.innerText = (current + 500).toLocaleString();
+            let current = parseFloat(balanceEl.innerText.replace(/[^0-9.]/g, '')) || 0;
+            const newVal = current + reward500;
+            balanceEl.innerText = cfg.COUNTRY === 'JP' ? '¥' + Math.floor(newVal).toLocaleString() : cfg.COUNTRY === 'US' ? '$' + newVal.toFixed(2) : newVal.toLocaleString() + '원';
         }
 
         if(titleEl) titleEl.value = "";
@@ -927,7 +933,7 @@ window.uploadUserLogo = async function() {
                 failCount++;
             } else {
                 successCount++;
-                // 로고 1개당 150P 적립
+                // 로고 1개당 150P(KRW) 적립
                 await addRewardPoints(currentUser.id, 150, `로고 공유 보상 (${files[i].name})`);
             }
         }

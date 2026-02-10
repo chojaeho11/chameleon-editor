@@ -6,12 +6,15 @@ export function showLoading(show) {
     if(el) el.style.display = show ? 'flex' : 'none';
 }
 
-// [공통] 화폐 단위 포맷
+// [공통] 화폐 단위 포맷 (KRW → 현지 통화 환산 포함)
 export const formatCurrency = (amount, siteCode) => {
     if (!amount) return '0';
-    if (siteCode === 'JP') return '¥' + amount.toLocaleString();
-    if (siteCode === 'US') return '$' + amount.toLocaleString();
-    return amount.toLocaleString() + '원';
+    const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002 };
+    const rate = rates[siteCode] || 1;
+    const converted = amount * rate;
+    if (siteCode === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+    if (siteCode === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return converted.toLocaleString() + '원';
 }
 
 // [보안] 관리자 권한 체크

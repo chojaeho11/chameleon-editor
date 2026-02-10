@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카멜레온프린팅 AI 상담봇</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+/* ========================================
+   카멜레온 AI 상담봇 - 챗봇 위젯 스타일
+   ======================================== */
+:root {
+    --bot-primary: #6366f1;
+    --bot-primary-dark: #4338ca;
+    --bot-accent: #f59e0b;
+    --bot-bg: #f8fafc;
+    --bot-card: #ffffff;
+    --bot-text: #1e293b;
+    --bot-text-sub: #64748b;
+    --bot-border: #e2e8f0;
+    --bot-radius: 16px;
+    --bot-shadow: 0 20px 60px rgba(99, 102, 241, 0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* 데모 미리보기 컨테이너 */
+.demo-container {
+    text-align: center;
+    padding: 40px;
+}
+.demo-container h1 {
+    font-size: 24px;
+    color: var(--bot-text);
+    margin-bottom: 8px;
+}
+.demo-container p {
+    color: var(--bot-text-sub);
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+/* ===== 플로팅 버튼 ===== */
+#chameleon-bot-trigger {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bot-primary) 0%, var(--bot-primary-dark) 100%);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99998;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: bot-pulse 2s infinite;
+}
+#chameleon-bot-trigger:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 40px rgba(99, 102, 241, 0.5);
+}
+#chameleon-bot-trigger i {
+    font-size: 26px;
+    color: #fff;
+    transition: transform 0.3s;
+}
+#chameleon-bot-trigger.open i { transform: rotate(90deg); }
+
+@keyframes bot-pulse {
+    0%, 100% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4); }
+    50% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.6), 0 0 0 8px rgba(99, 102, 241, 0.1); }
+}
+
+/* ===== 챗봇 윈도우 ===== */
+#chameleon-bot-window {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    height: 640px;
+    max-height: calc(100vh - 140px);
+    background: var(--bot-bg);
+    border-radius: var(--bot-radius);
+    box-shadow: var(--bot-shadow);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 99999;
+    border: 1px solid var(--bot-border);
+    animation: bot-slide-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#chameleon-bot-window.visible { display: flex; }
+
+@keyframes bot-slide-up {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 헤더 */
+.bot-header {
+    background: linear-gradient(135deg, var(--bot-primary) 0%, var(--bot-primary-dark) 100%);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.bot-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.bot-header-info h3 {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+}
+.bot-header-info span {
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+}
+.bot-header-close {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.bot-header-close:hover { background: rgba(255,255,255,0.3); }
+
+/* 메시지 영역 */
+.bot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+}
+.bot-messages::-webkit-scrollbar { width: 4px; }
+.bot-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* 메시지 버블 */
+.msg-row {
+    display: flex;
+    gap: 8px;
+    max-width: 88%;
+    animation: msg-in 0.3s ease-out;
+}
+.msg-row.bot { align-self: flex-start; }
+.msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+
+@keyframes msg-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.msg-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bot-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.msg-row.user .msg-avatar { display: none; }
+
+.msg-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--bot-text);
+    word-break: keep-all;
+}
+.msg-row.bot .msg-bubble {
+    background: var(--bot-card);
+    border: 1px solid var(--bot-border);
+    border-top-left-radius: 4px;
+}
+.msg-row.user .msg-bubble {
+    background: var(--bot-primary);
+    color: #fff;
+    border-top-right-radius: 4px;
+}
+
+/* 타이핑 인디케이터 */
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 14px 18px;
+}
+.typing-indicator span {
+    width: 7px;
+    height: 7px;
+    background: #94a3b8;
+    border-radius: 50%;
+    animation: typing-bounce 1.4s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* 빠른 액션 버튼 */
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+.quick-btn {
+    padding: 7px 14px;
+    border: 1px solid var(--bot-primary);
+    border-radius: 20px;
+    background: #f5f3ff;
+    color: var(--bot-primary);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.quick-btn:hover {
+    background: var(--bot-primary);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* 상품 카드 */
+.product-card {
+    background: var(--bot-card);
+    border: 1px solid var(--bot-border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 8px;
+}
+.product-card .pc-name {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--bot-text);
+}
+.product-card .pc-price {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--bot-primary);
+    margin-top: 4px;
+}
+.product-card .pc-meta {
+    font-size: 12px;
+    color: var(--bot-text-sub);
+    margin-top: 4px;
+}
+
+/* 견적 결과 카드 */
+.estimate-card {
+    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+    border: 2px solid var(--bot-primary);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 10px;
+}
+.estimate-card h4 {
+    font-size: 13px;
+    color: var(--bot-primary-dark);
+    margin-bottom: 10px;
+}
+.estimate-card .est-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+    color: #475569;
+}
+.estimate-card .est-total {
+    border-top: 2px solid var(--bot-primary);
+    margin-top: 10px;
+    padding-top: 10px;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--bot-primary-dark);
+    text-align: right;
+}
+
+/* 주문 상태 카드 */
+.order-card {
+    background: var(--bot-card);
+    border: 1px solid var(--bot-border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 8px;
+}
+.order-card .oc-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+}
+.status-접수됨 { background: #dbeafe; color: #2563eb; }
+.status-제작중 { background: #fef3c7; color: #d97706; }
+.status-배송중 { background: #d1fae5; color: #059669; }
+.status-완료 { background: #f1f5f9; color: #64748b; }
+
+/* 입력 영역 */
+.bot-input-area {
+    padding: 12px 16px;
+    background: var(--bot-card);
+    border-top: 1px solid var(--bot-border);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+.bot-input-area input {
+    flex: 1;
+    border: 1px solid var(--bot-border);
+    border-radius: 12px;
+    padding: 11px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    background: var(--bot-bg);
+}
+.bot-input-area input:focus { border-color: var(--bot-primary); }
+.bot-input-area input::placeholder { color: #94a3b8; }
+
+.bot-send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--bot-primary);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.bot-send-btn:hover { background: var(--bot-primary-dark); transform: scale(1.05); }
+.bot-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 모바일 */
+@media (max-width: 480px) {
+    #chameleon-bot-window {
+        bottom: 0;
+        right: 0;
+        width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    #chameleon-bot-trigger { bottom: 16px; right: 16px; width: 56px; height: 56px; }
+}
+</style>
+</head>
+<body>
+
+<div class="demo-container">
+    <h1>🦎 카멜레온 AI 상담봇</h1>
+    <p>오른쪽 하단의 채팅 버튼을 눌러 테스트하세요</p>
+    <p style="font-size:12px; color:#94a3b8; margin-top:10px;">
+        ※ 이 파일은 독립 데모입니다. 실제 적용 시 index.html에 스크립트를 삽입하세요.
+    </p>
+</div>
+
+<!-- ===== 챗봇 트리거 버튼 ===== -->
+<button id="chameleon-bot-trigger" onclick="toggleBot()">
+    <i class="fa-solid fa-comments"></i>
+</button>
+
+<!-- ===== 챗봇 윈도우 ===== -->
+<div id="chameleon-bot-window">
+    <div class="bot-header">
+        <div class="bot-avatar">🦎</div>
+        <div class="bot-header-info">
+            <h3>카멜레온 AI 상담</h3>
+            <span><i class="fa-solid fa-circle" style="color:#4ade80; font-size:8px;"></i> 24시간 자동응답</span>
+        </div>
+        <button class="bot-header-close" onclick="toggleBot()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="bot-messages" id="botMessages"></div>
+
+    <div class="bot-input-area">
+        <input type="text" id="botInput" placeholder="궁금한 점을 입력하세요..." 
+               onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="bot-send-btn" onclick="sendMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 카멜레온 AI 상담봇 엔진
+// ============================================================
+
+// ▼▼▼ [설정] Supabase 연결 정보 (실제 프로젝트 값으로 교체하세요) ▼▼▼
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';      // 예: https://xxxxx.supabase.co
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';  // 공개 anon 키
+// ▲▲▲ 설정 끝 ▲▲▲
+
+let sb = null;
+try {
+    if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+        sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+} catch(e) { console.warn('Supabase 미연결 - 데모 모드로 작동합니다.'); }
+
+// ============================================================
+// [1] 가격 계산 엔진 (order.js의 로직을 그대로 이식)
+// ============================================================
+const PRICING = {
+    SQM_PRICE: 50000,      // ㎡당 가격 (원)
+    MIN_PRICE: 60000,       // 최소 가격 (원)
+    MM_TO_PX: 3.7795,       // mm → px 변환 비율
+
+    // 면적 기반 가격 계산 (회베계산기)
+    calcByArea(widthMm, heightMm) {
+        const area_m2 = (widthMm / 1000) * (heightMm / 1000);
+        let price = Math.round((area_m2 * this.SQM_PRICE) / 100) * 100;
+        if (price < this.MIN_PRICE) price = this.MIN_PRICE;
+        return { area_m2, price };
+    },
+
+    // 등급별 할인율
+    getDiscountRate(role) {
+        if (role === 'franchise') return 0.10;
+        if (['platinum', 'partner', 'partners'].includes(role)) return 0.05;
+        if (role === 'gold') return 0.03;
+        return 0;
+    },
+
+    formatPrice(num) {
+        const amount = num || 0;
+        // URL lang 파라미터로 통화 결정
+        const params = new URLSearchParams(window.location.search);
+        const langParam = (params.get('lang') || '').toUpperCase();
+        let country = 'KR';
+        if (langParam === 'JA' || langParam === 'JP') country = 'JP';
+        else if (langParam === 'EN' || langParam === 'US') country = 'US';
+
+        const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002 };
+        const rate = rates[country] || 1;
+        const converted = amount * rate;
+
+        if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+        if (country === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return converted.toLocaleString() + '원';
+    }
+};
+
+// ============================================================
+// [2] FAQ 지식베이스 (채널톡 상담 내용 기반으로 확장하세요)
+// ============================================================
+const FAQ_DB = [
+    {
+        keywords: ['배송', '배달', '택배', '언제 도착', '며칠', '배송기간'],
+        answer: `배송 안내드립니다 📦\n\n• <b>수도권</b>: 제작완료 후 1~2일 (무료배송)\n• <b>지방</b>: 제작완료 후 2~3일\n• <b>제작기간</b>: 주문 후 보통 2~3 영업일\n• <b>급행 제작</b>: 담당 매니저에게 문의해주세요\n\n⏰ 오전 주문 시 당일 접수 가능합니다!`
+    },
+    {
+        keywords: ['결제', '카드', '무통장', '입금', '계좌', '결제방법', '토스'],
+        answer: `결제 방법 안내입니다 💳\n\n• <b>카드결제</b>: 토스페이먼츠 (모든 카드)\n• <b>무통장입금</b>: 주문 후 안내 계좌로 입금\n• <b>예치금</b>: 충전 후 차감 결제\n• <b>마일리지</b>: 구매금액의 최대 5%까지 사용 가능\n\n사업자 고객은 세금계산서 발행도 가능합니다!`
+    },
+    {
+        keywords: ['사업자', '할인', '등급', 'VIP', '도매', '대량', 'B2B', '프랜차이즈'],
+        answer: `사업자 고객 특별 혜택 🏢\n\n• <b>사업자등록증</b>을 매니저에게 보내주시면 등급 업그레이드!\n• <b>Gold 등급</b>: 3% 할인\n• <b>Platinum/Partner</b>: 5% 할인\n• <b>Franchise</b>: 10% 할인 + 무료배송\n\n문의시간: 오전 9시 ~ 오후 6시\n👩‍💼 지숙 매니저: 010-3455-1946\n👩‍💼 은미 매니저: 010-7793-5393\n👩‍💼 성희 매니저: 010-3490-3328`
+    },
+    {
+        keywords: ['디자인', '에디터', '무료', '편집', '직접', '만들기'],
+        answer: `무료 디자인 에디터 안내 🎨\n\n카멜레온프린팅은 <b>무료 온라인 에디터</b>를 제공합니다!\n\n• 상품 선택 → 에디터에서 직접 디자인\n• 다양한 <b>무료 템플릿</b> 제공\n• 텍스트, 이미지, 벡터 편집 가능\n• 완성 후 바로 장바구니에 담기\n\n디자인이 어려우시면 파일만 보내주셔도 매니저가 도와드립니다!`
+    },
+    {
+        keywords: ['허니콤', '보드', '허니콤보드', '친환경'],
+        answer: `허니콤보드 안내 🍯\n\n• 벌집 구조의 <b>친환경 종이 소재</b>\n• 가볍고 튼튼해서 전시/팝업스토어에 최적\n• 재활용 가능한 친환경 인쇄물\n• 다양한 사이즈 맞춤 제작 가능\n\n정확한 가격은 사이즈를 알려주시면 바로 견적 드리겠습니다!`
+    },
+    {
+        keywords: ['패브릭', '천', '원단', '현수막', '배너'],
+        answer: `패브릭(천) 인쇄 안내 🧵\n\n• <b>고해상도 디지털 인쇄</b>\n• 백월, 현수막, 배너 등 다양한 용도\n• 실내/실외 겸용 소재 선택 가능\n• 마감처리 (열재단, 봉제 등) 옵션 제공\n\n사이즈와 용도를 알려주시면 정확한 견적을 안내해 드립니다.`
+    },
+    {
+        keywords: ['등신대', '스탠드', '포토존', '포토', '인물'],
+        answer: `등신대 / 포토존 안내 📸\n\n• 실물 크기 등신대 제작 가능\n• 팝업스토어, 이벤트용 포토존\n• 양면/단면 선택 가능\n• 지지대 포함\n\n무료 에디터에서 직접 디자인하시거나, 이미지를 보내주시면 제작해 드립니다!`
+    },
+    {
+        keywords: ['팝업', '전시', '부스', '행사', '이벤트'],
+        answer: `팝업스토어 / 전시 서비스 🏪\n\n카멜레온프린팅은 <b>전시·팝업스토어 전문</b>입니다!\n\n• 백월(배경벽), 등신대, 현수막\n• 종이매대, 허니콤보드\n• 포토존, 배너 등 원스톱 제작\n• 대량 주문 시 VIP 전담 매니저 배정\n\n행사 규모와 필요한 품목을 알려주시면 패키지 견적을 보내드립니다!`
+    },
+    {
+        keywords: ['파일', '입고', '형식', 'pdf', 'ai', '일러스트', '포토샵', '해상도'],
+        answer: `파일 입고 안내 📄\n\n• <b>권장 형식</b>: PDF, AI, PSD\n• <b>해상도</b>: 150~300 DPI 권장\n• 텍스트는 아웃라인(윤곽선) 처리 필요\n• 재단선·여백 포함 시 더 정확한 제작 가능\n\n파일이 없으시면 무료 에디터로 직접 만드실 수도 있습니다!`
+    },
+    {
+        keywords: ['마일리지', '적립', '포인트', '리워드'],
+        answer: `마일리지 안내 💰\n\n• 구매 시 마일리지가 자동 적립됩니다\n• 결제 시 <b>구매금액의 최대 5%</b>까지 사용 가능\n• 마일리지는 로그인 후 마이페이지에서 확인\n• 일부 제외 상품에는 사용 불가`
+    },
+    {
+        keywords: ['취소', '환불', '교환', '반품'],
+        answer: `취소/환불 안내 🔄\n\n• <b>제작 전</b>: 전액 환불 가능\n• <b>제작 중/후</b>: 맞춤 제작 특성상 교환·환불 어려움\n• <b>불량 시</b>: 100% 재제작 또는 환불\n\n주문 취소는 담당 매니저에게 빠르게 연락해주세요!`
+    },
+    {
+        keywords: ['영업시간', '운영시간', '언제', '전화', '연락처', '상담시간'],
+        answer: `영업 안내 🕐\n\n• <b>상담시간</b>: 오전 9시 ~ 오후 6시 (평일)\n• <b>AI 상담봇</b>: 24시간 운영 중\n\n📞 전화 문의:\n👩‍💼 지숙 매니저: 010-3455-1946\n👩‍💼 은미 매니저: 010-7793-5393\n👩‍💼 성희 매니저: 010-3490-3328`
+    }
+];
+
+// ============================================================
+// [3] 상태 관리
+// ============================================================
+let botState = {
+    mode: 'idle',           // idle | awaiting_size | awaiting_order_id | awaiting_product_search
+    pendingProduct: null,    // 견적 중인 상품 정보
+    conversationHistory: []  // 대화 기록
+};
+
+// ============================================================
+// [4] UI 함수
+// ============================================================
+function toggleBot() {
+    const win = document.getElementById('chameleon-bot-window');
+    const trigger = document.getElementById('chameleon-bot-trigger');
+    const isVisible = win.classList.contains('visible');
+
+    if (isVisible) {
+        win.classList.remove('visible');
+        trigger.classList.remove('open');
+        trigger.querySelector('i').className = 'fa-solid fa-comments';
+    } else {
+        win.classList.add('visible');
+        trigger.classList.add('open');
+        trigger.querySelector('i').className = 'fa-solid fa-xmark';
+
+        if (document.getElementById('botMessages').children.length === 0) {
+            showWelcome();
+        }
+    }
+}
+
+function addMessage(content, sender = 'bot', isHtml = true) {
+    const container = document.getElementById('botMessages');
+    const row = document.createElement('div');
+    row.className = `msg-row ${sender}`;
+
+    let avatarHtml = sender === 'bot' ? '<div class="msg-avatar">🦎</div>' : '';
+    
+    row.innerHTML = `
+        ${avatarHtml}
+        <div class="msg-bubble">${isHtml ? content : escapeHtml(content)}</div>
+    `;
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+    const container = document.getElementById('botMessages');
+    const row = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.id = 'typingRow';
+    row.innerHTML = `
+        <div class="msg-avatar">🦎</div>
+        <div class="msg-bubble">
+            <div class="typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    `;
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+    const el = document.getElementById('typingRow');
+    if (el) el.remove();
+}
+
+function addQuickActions(actions) {
+    const container = document.getElementById('botMessages');
+    const lastMsg = container.lastElementChild;
+    if (!lastMsg) return;
+    
+    const bubble = lastMsg.querySelector('.msg-bubble');
+    if (!bubble) return;
+
+    const div = document.createElement('div');
+    div.className = 'quick-actions';
+    actions.forEach(action => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-btn';
+        btn.textContent = action.label;
+        btn.onclick = () => {
+            // 퀵 액션 영역 제거 (한 번만 사용)
+            document.querySelectorAll('.quick-actions').forEach(el => el.remove());
+            handleUserInput(action.value || action.label);
+        };
+        div.appendChild(btn);
+    });
+    bubble.appendChild(div);
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============================================================
+// [5] 환영 메시지
+// ============================================================
+function showWelcome() {
+    addMessage(`안녕하세요! 🦎 <b>카멜레온프린팅</b> AI 상담봇입니다.\n\n친환경 전시·팝업스토어 인쇄 전문 쇼핑몰에 오신 것을 환영합니다. 무엇을 도와드릴까요?`);
+    
+    setTimeout(() => {
+        addQuickActions([
+            { label: '💰 가격/견적 문의', value: '견적' },
+            { label: '🔍 상품 검색', value: '상품검색' },
+            { label: '📦 주문 조회', value: '주문조회' },
+            { label: '❓ 자주 묻는 질문', value: 'FAQ' }
+        ]);
+    }, 100);
+}
+
+// ============================================================
+// [6] 메시지 전송 및 처리 메인 핸들러
+// ============================================================
+function sendMessage() {
+    const input = document.getElementById('botInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    addMessage(text, 'user', false);
+    
+    showTyping();
+    
+    // 타이핑 효과 후 응답
+    setTimeout(() => {
+        removeTyping();
+        handleUserInput(text);
+    }, 600 + Math.random() * 600);
+}
+
+async function handleUserInput(text) {
+    const lower = text.toLowerCase();
+
+    // ── [A] 상태 기반 분기 ──
+    if (botState.mode === 'awaiting_size') {
+        return handleSizeInput(text);
+    }
+    if (botState.mode === 'awaiting_order_id') {
+        return handleOrderIdInput(text);
+    }
+    if (botState.mode === 'awaiting_product_search') {
+        return handleProductSearch(text);
+    }
+
+    // ── [B] 의도 분석 ──
+    
+    // 1) 견적/가격 문의
+    if (/견적|가격|얼마|비용|계산|단가|금액/.test(lower)) {
+        return startEstimate();
+    }
+
+    // 2) 주문 조회
+    if (/주문.*조회|주문.*확인|배송.*조회|배송.*확인|내.*주문|주문.*상태|주문조회/.test(lower)) {
+        return startOrderLookup();
+    }
+
+    // 3) 상품 검색
+    if (/상품.*검색|상품.*찾|뭐.*있|상품검색|카테고리|종류/.test(lower)) {
+        return startProductSearch();
+    }
+
+    // 4) FAQ
+    if (/faq|자주|질문/.test(lower)) {
+        return showFaqMenu();
+    }
+
+    // 5) FAQ 키워드 매칭
+    const faqMatch = matchFAQ(lower);
+    if (faqMatch) {
+        addMessage(faqMatch);
+        addReturnToMenu();
+        return;
+    }
+
+    // 6) 인사
+    if (/안녕|하이|hello|hi|반가/.test(lower)) {
+        addMessage('안녕하세요! 😊 무엇을 도와드릴까요?');
+        addQuickActions([
+            { label: '💰 가격/견적 문의', value: '견적' },
+            { label: '🔍 상품 검색', value: '상품검색' },
+            { label: '📦 주문 조회', value: '주문조회' },
+            { label: '❓ FAQ', value: 'FAQ' }
+        ]);
+        return;
+    }
+
+    // 7) 매니저 연결 요청
+    if (/상담원|매니저|직원|사람|전화|연결/.test(lower)) {
+        addMessage(`매니저 연결 안내 📞\n\n현재 AI 상담봇이 응대 중입니다.\n매니저 상담을 원하시면 아래 번호로 연락해주세요!\n\n👩‍💼 지숙 매니저: <b>010-3455-1946</b>\n👩‍💼 은미 매니저: <b>010-7793-5393</b>\n👩‍💼 성희 매니저: <b>010-3490-3328</b>\n\n⏰ 상담시간: 오전 9시 ~ 오후 6시`);
+        addReturnToMenu();
+        return;
+    }
+
+    // 8) 사이즈 입력 패턴 감지 (바로 견적으로)
+    const sizeMatch = text.match(/(\d+)\s*[xX×*]\s*(\d+)/);
+    if (sizeMatch) {
+        botState.mode = 'awaiting_size';
+        return handleSizeInput(text);
+    }
+
+    // 9) 기본 응답
+    addMessage(`죄송합니다, 정확히 이해하지 못했어요 😅\n아래 메뉴에서 선택해 주시거나 더 구체적으로 물어봐 주세요!`);
+    addQuickActions([
+        { label: '💰 견적 문의', value: '견적' },
+        { label: '🔍 상품 검색', value: '상품검색' },
+        { label: '📦 주문 조회', value: '주문조회' },
+        { label: '❓ FAQ', value: 'FAQ' },
+        { label: '📞 매니저 연결', value: '매니저 연결' }
+    ]);
+}
+
+// ============================================================
+// [7] 견적 계산 플로우
+// ============================================================
+function startEstimate() {
+    botState.mode = 'awaiting_size';
+    addMessage(`📐 <b>자동 견적 안내</b>\n\n원하시는 인쇄물의 사이즈를 입력해주세요.\n\n<b>입력 예시:</b>\n• <code>1000 x 2000</code> (가로 x 세로, mm)\n• <code>500x700</code>\n• <code>가로 1500 세로 1000</code>\n\n💡 사이즈를 모르시면 상품명을 입력하시면 고정가를 안내해 드립니다.`);
+}
+
+function handleSizeInput(text) {
+    // 사이즈 파싱 시도
+    let w = null, h = null;
+    
+    // 패턴1: 1000x2000, 1000 x 2000, 1000*2000, 1000×2000
+    const p1 = text.match(/(\d+)\s*[xX×*]\s*(\d+)/);
+    if (p1) { w = parseInt(p1[1]); h = parseInt(p1[2]); }
+    
+    // 패턴2: 가로 1000 세로 2000
+    if (!w) {
+        const p2 = text.match(/가로\s*(\d+).*세로\s*(\d+)/);
+        if (p2) { w = parseInt(p2[1]); h = parseInt(p2[2]); }
+    }
+
+    // 패턴3: 숫자만 2개
+    if (!w) {
+        const nums = text.match(/\d+/g);
+        if (nums && nums.length >= 2) {
+            w = parseInt(nums[0]); h = parseInt(nums[1]);
+        }
+    }
+
+    if (!w || !h || w < 10 || h < 10) {
+        // 상품명으로 간주
+        botState.mode = 'idle';
+        return searchProductByName(text);
+    }
+
+    // 면적 계산
+    const { area_m2, price } = PRICING.calcByArea(w, h);
+    
+    botState.mode = 'idle';
+
+    let estimateHtml = `
+        <div class="estimate-card">
+            <h4>📋 자동 견적 결과</h4>
+            <div class="est-row"><span>사이즈</span><b>${w} × ${h} mm</b></div>
+            <div class="est-row"><span>면적</span><b>${area_m2.toFixed(3)} m²</b></div>
+            <div class="est-row"><span>단가</span><b>㎡당 ${PRICING.formatPrice(PRICING.SQM_PRICE)}</b></div>
+            ${price === PRICING.MIN_PRICE ? `<div class="est-row" style="color:#f59e0b;"><span>최소주문금액 적용</span><b>${PRICING.formatPrice(PRICING.MIN_PRICE)}</b></div>` : ''}
+            <div class="est-total">${PRICING.formatPrice(price)}</div>
+        </div>
+    `;
+
+    addMessage(`견적이 완료되었습니다! ✨\n${estimateHtml}\n\n<small>💡 위 금액은 기본 인쇄비이며, 옵션(마감처리 등)에 따라 추가될 수 있습니다.\n사업자 고객은 등급별 추가 할인이 적용됩니다.</small>`);
+    
+    addQuickActions([
+        { label: '📐 다른 사이즈 견적', value: '견적' },
+        { label: '🛒 바로 주문하기', value: '주문하고 싶어' },
+        { label: '📞 매니저 문의', value: '매니저 연결' },
+        { label: '🏠 처음으로', value: '안녕' }
+    ]);
+}
+
+// ============================================================
+// [8] 상품 검색 (Supabase 연동)
+// ============================================================
+function startProductSearch() {
+    botState.mode = 'awaiting_product_search';
+    addMessage(`🔍 <b>상품 검색</b>\n\n찾으시는 상품명 또는 키워드를 입력해주세요.\n\n예: 허니콤보드, 등신대, 배너, 폼보드, 백월 등`);
+}
+
+async function handleProductSearch(text) {
+    botState.mode = 'idle';
+    
+    if (!sb) {
+        return searchProductByName(text);
+    }
+    
+    try {
+        const keyword = text.trim();
+        const { data, error } = await sb.from('admin_products')
+            .select('code, name, price, width_mm, height_mm, img_url, is_custom_size, is_general_product, category')
+            .or(`name.ilike.%${keyword}%,code.ilike.%${keyword}%`)
+            .order('sort_order', { ascending: true })
+            .limit(5);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            addMessage(`"<b>${escapeHtml(keyword)}</b>"에 대한 검색 결과가 없습니다 😥\n\n다른 키워드로 다시 검색해 보시겠어요?`);
+            addQuickActions([
+                { label: '🔍 다시 검색', value: '상품검색' },
+                { label: '📞 매니저 문의', value: '매니저 연결' },
+                { label: '🏠 처음으로', value: '안녕' }
+            ]);
+            return;
+        }
+
+        let resultHtml = `"<b>${escapeHtml(keyword)}</b>" 검색 결과 (${data.length}건)\n\n`;
+        
+        data.forEach(p => {
+            const priceText = p.is_custom_size 
+                ? '사이즈별 자동 계산' 
+                : PRICING.formatPrice(p.price);
+            const sizeText = (p.width_mm && p.height_mm) 
+                ? `${p.width_mm} × ${p.height_mm} mm` 
+                : '맞춤 사이즈';
+            
+            resultHtml += `
+                <div class="product-card">
+                    <div class="pc-name">${p.name}</div>
+                    <div class="pc-price">${priceText}</div>
+                    <div class="pc-meta">📏 ${sizeText} ${p.is_custom_size ? '| 📐 면적 자동 계산' : ''}</div>
+                </div>
+            `;
+        });
+
+        addMessage(resultHtml);
+        addQuickActions([
+            { label: '📐 견적 계산', value: '견적' },
+            { label: '🔍 다시 검색', value: '상품검색' },
+            { label: '🏠 처음으로', value: '안녕' }
+        ]);
+
+    } catch (e) {
+        console.error('상품 검색 오류:', e);
+        searchProductByName(text);
+    }
+}
+
+function searchProductByName(text) {
+    // Supabase 미연결 시 로컬 FAQ 기반 응답
+    const lower = text.toLowerCase();
+    const faqMatch = matchFAQ(lower);
+    if (faqMatch) {
+        addMessage(faqMatch);
+        addReturnToMenu();
+        return;
+    }
+    
+    addMessage(`"<b>${escapeHtml(text)}</b>"에 대한 정보를 찾고 있어요.\n\nDB 연결 시 실시간 상품 검색이 가능합니다. 현재는 자주 묻는 질문 기반으로 응답 중입니다.\n\n아래 메뉴를 이용해주세요!`);
+    addQuickActions([
+        { label: '💰 견적 문의', value: '견적' },
+        { label: '❓ FAQ', value: 'FAQ' },
+        { label: '📞 매니저 연결', value: '매니저 연결' }
+    ]);
+}
+
+// ============================================================
+// [9] 주문 조회 (Supabase 연동)
+// ============================================================
+function startOrderLookup() {
+    botState.mode = 'awaiting_order_id';
+    addMessage(`📦 <b>주문 조회</b>\n\n주문번호 또는 주문 시 입력하신 <b>이름</b>을 알려주세요.\n\n예: <code>12345</code> 또는 <code>홍길동</code>`);
+}
+
+async function handleOrderIdInput(text) {
+    botState.mode = 'idle';
+    const keyword = text.trim();
+
+    if (!sb) {
+        addMessage(`주문 조회를 위해서는 Supabase 연결이 필요합니다.\n\n현재 데모 모드에서는 조회가 불가능합니다. 매니저에게 문의해주세요!`);
+        addReturnToMenu();
+        return;
+    }
+
+    try {
+        let query;
+        if (/^\d+$/.test(keyword)) {
+            query = sb.from('orders').select('*').eq('id', parseInt(keyword));
+        } else {
+            query = sb.from('orders').select('*').ilike('customer_name', `%${keyword}%`).order('created_at', { ascending: false }).limit(3);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            addMessage(`"<b>${escapeHtml(keyword)}</b>"로 조회된 주문이 없습니다 😥\n\n주문번호나 이름을 다시 확인해주세요.`);
+            addQuickActions([
+                { label: '🔍 다시 조회', value: '주문조회' },
+                { label: '📞 매니저 문의', value: '매니저 연결' }
+            ]);
+            return;
+        }
+
+        let resultHtml = `주문 조회 결과입니다 📋\n\n`;
+        
+        data.forEach(order => {
+            const statusClass = `status-${order.status || '접수됨'}`;
+            const date = new Date(order.created_at).toLocaleDateString('ko-KR');
+            
+            resultHtml += `
+                <div class="order-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <b>주문번호 #${order.id}</b>
+                        <span class="oc-status ${statusClass}">${order.status || '접수됨'}</span>
+                    </div>
+                    <div style="font-size:12px; color:#64748b;">
+                        📅 ${date}<br>
+                        💰 ${PRICING.formatPrice(order.total_amount)}<br>
+                        💳 ${order.payment_method || '-'} | ${order.payment_status || '-'}
+                    </div>
+                </div>
+            `;
+        });
+
+        addMessage(resultHtml);
+        addReturnToMenu();
+
+    } catch (e) {
+        console.error('주문 조회 오류:', e);
+        addMessage(`조회 중 오류가 발생했습니다. 매니저에게 문의해주세요.\n\n📞 010-3455-1946`);
+        addReturnToMenu();
+    }
+}
+
+// ============================================================
+// [10] FAQ 메뉴
+// ============================================================
+function showFaqMenu() {
+    addMessage(`❓ <b>자주 묻는 질문</b>\n\n궁금한 항목을 선택해주세요!`);
+    addQuickActions([
+        { label: '🚚 배송 안내', value: '배송' },
+        { label: '💳 결제 방법', value: '결제' },
+        { label: '🏢 사업자 혜택', value: '사업자 할인' },
+        { label: '🎨 에디터 사용', value: '무료 에디터' },
+        { label: '📄 파일 형식', value: '파일 형식' },
+        { label: '🔄 취소/환불', value: '취소 환불' },
+        { label: '💰 마일리지', value: '마일리지' },
+        { label: '🕐 영업시간', value: '영업시간' }
+    ]);
+}
+
+function matchFAQ(text) {
+    for (const faq of FAQ_DB) {
+        if (faq.keywords.some(k => text.includes(k))) {
+            return faq.answer;
+        }
+    }
+    return null;
+}
+
+function addReturnToMenu() {
+    setTimeout(() => {
+        addQuickActions([
+            { label: '🏠 처음으로', value: '안녕' },
+            { label: '📐 견적 문의', value: '견적' },
+            { label: '📞 매니저 연결', value: '매니저 연결' }
+        ]);
+    }, 100);
+}
+
+// ============================================================
+// [11] 초기화
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🦎 카멜레온 AI 상담봇 로드 완료');
+});
+</script>
+
+</body>
+</html>

@@ -193,6 +193,17 @@
 <script type="module">
     import { sb, initConfig, currentUser } from './config.js?v=119';
 
+    // 통화 환산 헬퍼 (KRW → 현지 통화)
+    function fmtMoney(krw) {
+        const cfg = window.SITE_CONFIG || {};
+        const country = cfg.COUNTRY || 'KR';
+        const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+        const converted = (krw || 0) * rate;
+        if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+        if (country === 'US') return '$' + converted.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        return converted.toLocaleString() + '원';
+    }
+
     // 전역 변수
     let myPartnerInfo = null;
 
@@ -275,7 +286,6 @@
         orders.forEach(o => {
             const dateStr = new Date(o.created_at).toLocaleDateString();
             const addr = o.address || '주소 미기재';
-            const cost = o.total_amount.toLocaleString();
             const phone = o.phone || '연락처 없음'; // [복구] 고객 연락처
             
             // 아이템 요약
@@ -317,7 +327,7 @@
                         <div class="card-info">
                             <div><i class="fa-solid fa-location-dot"></i> ${addr}</div>
                             <div><i class="fa-solid fa-box"></i> ${itemText}</div>
-                            <div style="margin-top:5px; color:#6366f1; font-weight:bold;">예산 규모: ${cost}원</div>
+                            <div style="margin-top:5px; color:#6366f1; font-weight:bold;">예산 규모: ${fmtMoney(o.total_amount)}</div>
                         </div>
                         ${fileHtml} </div>
                     <button class="btn btn-primary" style="margin-top:15px;" onclick="openBidModal('${o.id}')">
@@ -438,7 +448,7 @@
                     </div>
                     <div class="card-title">${bid.orders?.manager_name} 고객님</div>
                     <div class="card-info">
-                        <div>내 입찰가: <b>${bid.price.toLocaleString()}원</b></div>
+                        <div>내 입찰가: <b>${fmtMoney(bid.price)}</b></div>
                         <div style="white-space:pre-wrap;">"${bid.message}"</div>
                     </div>
                     ${extraInfo}

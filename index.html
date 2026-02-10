@@ -2090,7 +2090,7 @@
                 <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:10px; ${bgClass}">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-weight:bold; font-size:15px;">${bid.company_name || '파트너사'}</span>
-                        <span style="font-weight:bold; color:#6366f1; font-size:16px;">${bid.price.toLocaleString()}원</span>
+                        <span style="font-weight:bold; color:#6366f1; font-size:16px;">${fmtMoney(bid.price)}</span>
                     </div>
                     <p style="font-size:13px; color:#475569; margin:10px 0; line-height:1.4;">"${bid.message}"</p>
                     ${actionArea}
@@ -2165,6 +2165,24 @@
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
     // -----------------------------------------------------------
+    // 통화 환산 헬퍼 (KRW → 현지 통화)
+    function fmtMoney(krw) {
+        const cfg = window.SITE_CONFIG || {};
+        const country = cfg.COUNTRY || 'KR';
+        const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+        const converted = (krw || 0) * rate;
+        if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+        if (country === 'US') return '$' + converted.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        return converted.toLocaleString() + '원';
+    }
+    // 이미 현지 통화인 금액에 심볼만 붙이기 (환산 불필요)
+    function fmtLocal(amt) {
+        const country = (window.SITE_CONFIG || {}).COUNTRY || 'KR';
+        if (country === 'JP') return '¥' + Math.floor(amt).toLocaleString();
+        if (country === 'US') return '$' + (amt||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        return (amt||0).toLocaleString() + '원';
+    }
+
     window.canvas = canvas;
     window.sb = sb; // ★ [핵심] 데이터베이스 연결 도구 전역 등록
     // index.html 내부 스크립트 수정
@@ -3121,7 +3139,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         }
 
         products.forEach(p => {
-            const localized = typeof getLocalizedData === 'function' ? getLocalizedData(p) : { name: p.name, formattedPrice: (p.price||0).toLocaleString() + '원' };
+            const localized = typeof getLocalizedData === 'function' ? getLocalizedData(p) : { name: p.name, formattedPrice: fmtMoney(p.price||0) };
             const thumbUrl = p.img_url ? window.getTinyThumb(p.img_url, 150) : '';
             
             const div = document.createElement('div');
@@ -3655,7 +3673,7 @@ window.updateModalTotal = function() {
     const finalTotal = productTotal + optionTotal;
     const display = document.getElementById('modalRealtimeTotal');
     
-    if(display) display.innerText = finalTotal.toLocaleString() + '원';
+    if(display) display.innerText = fmtLocal(finalTotal);
 };
 
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
@@ -4428,7 +4446,7 @@ if (w >= 20 && h >= 20) {
         const qty = parseInt(document.getElementById('genProdQty').value) || 1;
         const price = window.currentGenProduct ? (window.currentGenProduct.price || 0) : 0;
         const total = price * qty;
-        document.getElementById('genProdTotal').innerText = total.toLocaleString() + '원';
+        document.getElementById('genProdTotal').innerText = fmtMoney(total);
     };
 
     // 3. 장바구니 담기 실행
@@ -5056,7 +5074,7 @@ window.filterModalItems = function(keyword) {
             // 상품인 경우
             rawUrl = item.img_url || '';
             badgeHtml = `<span style="position:absolute; top:6px; left:6px; background:#6366f1; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:2;">상품</span>`;
-            subText = `<div style="font-size:11px; color:#888; margin-top:2px;">${(item.price||0).toLocaleString()}원</div>`;
+            subText = `<div style="font-size:11px; color:#888; margin-top:2px;">${fmtMoney(item.price||0)}</div>`;
         }
 
         const iconUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;

@@ -32,13 +32,15 @@ const CURRENT_LANG = (urlParams.get('lang') || 'kr').toLowerCase();
 function formatCurrency(amount) {
     const num = Number(amount) || 0;
     const country = SITE_CONFIG.COUNTRY;
+    const rate = SITE_CONFIG.CURRENCY_RATE?.[country] || 1;
+    const converted = num * rate;
 
     if (country === 'JP') {
-        return '¥' + Math.floor(num).toLocaleString();
+        return '¥' + Math.floor(converted).toLocaleString();
     } else if (country === 'US') {
-        return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     } else {
-        return num.toLocaleString() + '원';
+        return converted.toLocaleString() + '원';
     }
 }
 
@@ -1096,22 +1098,27 @@ function updateSummary(prodTotal, addonTotal, total) {
             realLimit = Math.min(myMileage, fivePercent);
         }
         
-        window.mileageLimitMax = realLimit; 
-        
+        window.mileageLimitMax = realLimit; // KRW 기준 저장
+
+        // 표시용 환산
+        const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+        const limitLocal = realLimit * mileRate;
+
         const limitDisp = document.getElementById('mileageLimitDisplay');
-        if(limitDisp) limitDisp.innerText = realLimit.toLocaleString() + ' P';
-        
+        if(limitDisp) limitDisp.innerText = formatCurrency(realLimit).replace(/[원¥$]/g, '').trim() + ' P';
+
         const mileInput = document.getElementById('inputUseMileage');
         if(mileInput) {
-            mileInput.placeholder = `${window.t('label_max', 'Max')} ${realLimit.toLocaleString()}`;
+            mileInput.placeholder = `${window.t('label_max', 'Max')} ${formatCurrency(realLimit).replace(/[원¥$]/g, '').trim()}`;
             if (realLimit === 0 && hasExcludedItem) {
                 mileInput.value = "";
                 mileInput.placeholder = window.t('msg_mileage_unavailable', "Unavailable (excluded products)");
                 mileInput.disabled = true;
             } else {
                 mileInput.disabled = false;
-                if(parseInt(mileInput.value || 0) > realLimit) {
-                    mileInput.value = realLimit > 0 ? realLimit : "";
+                const inputLocalVal = parseFloat(mileInput.value || 0);
+                if(inputLocalVal > limitLocal) {
+                    mileInput.value = limitLocal > 0 ? limitLocal : "";
                 }
             }
         }
@@ -1199,10 +1206,10 @@ async function processOrderSubmission() {
 
         window.mileageLimitMax = realLimit; 
         
-        document.getElementById('userOwnMileage').innerText = myMileage.toLocaleString() + ' P';
-        document.getElementById('mileageLimitDisplay').innerText = realLimit.toLocaleString() + ' P';
-        document.getElementById('inputUseMileage').value = ''; 
-        document.getElementById('inputUseMileage').placeholder = `${window.t('label_max', 'Max')} ${realLimit.toLocaleString()}`;
+        document.getElementById('userOwnMileage').innerText = formatCurrency(myMileage).replace(/[원¥$]/g, '').trim() + ' P';
+        document.getElementById('mileageLimitDisplay').innerText = formatCurrency(realLimit).replace(/[원¥$]/g, '').trim() + ' P';
+        document.getElementById('inputUseMileage').value = '';
+        document.getElementById('inputUseMileage').placeholder = `${window.t('label_max', 'Max')} ${formatCurrency(realLimit).replace(/[원¥$]/g, '').trim()}`;
         document.getElementById('finalPayAmountDisplay').innerText = formatCurrency(finalTotal);
 
         document.getElementById('btnFinalPay').innerText = `${formatCurrency(finalTotal)} ${window.t('btn_pay', 'Pay')}`;
@@ -1387,7 +1394,10 @@ async function processFinalPayment() {
     if (!window.tempOrderInfo && !window.currentDbId) return alert(window.t('msg_no_order_info', "No order info. Please try again from the start."));
     
     const mileageInput = document.getElementById('inputUseMileage');
-    const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
+    const localMileageVal = mileageInput ? (parseFloat(mileageInput.value) || 0) : 0;
+    // 역환산: 현지 통화 → KRW
+    const payRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+    const useMileage = Math.round(localMileageVal / payRate);
     const baseAmount = window.originalPayAmount || 0;
     const realFinalPayAmount = baseAmount - useMileage;
 
@@ -1487,13 +1497,13 @@ async function processDepositPayment(payAmount, useMileage) {
     const currentBalance = parseInt(balanceSpan.dataset.balance || 0);
 
     if (currentBalance < payAmount) {
-        const shortage = (payAmount - currentBalance).toLocaleString();
+        const shortage = formatCurrency(payAmount - currentBalance);
         document.getElementById("loading").style.display = "none";
         document.getElementById("btnFinalPay").disabled = false;
         return alert(window.t('alert_deposit_shortage').replace('{amount}', shortage));
     }
 
-    if (!confirm(window.t('confirm_deposit_pay').replace('{amount}', payAmount.toLocaleString()))) {
+    if (!confirm(window.t('confirm_deposit_pay').replace('{amount}', formatCurrency(payAmount)))) {
         document.getElementById("loading").style.display = "none";
         document.getElementById("btnFinalPay").disabled = false;
         return;
@@ -1847,20 +1857,26 @@ export async function processBulkCartUpload(files) {
 // ============================================================
 
 window.calcMileageLimit = function(input) {
-    let val = parseInt(input.value) || 0;
-    const limit = window.mileageLimitMax || 0;
+    // 사용자 입력은 현지 통화 기준
+    let localVal = parseFloat(input.value) || 0;
+    const limitKRW = window.mileageLimitMax || 0;
+    const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+    const limitLocal = limitKRW * mileRate;
 
-    if (val > limit) {
-        alert(window.t('msg_mileage_limit', `Mileage can be used up to 5% of purchase amount (${limit.toLocaleString()}P).`));
-        val = limit;
-        input.value = val;
+    if (localVal > limitLocal) {
+        alert(window.t('msg_mileage_limit', `Mileage can be used up to 5% of purchase amount.`));
+        localVal = limitLocal;
+        input.value = localVal;
     }
-    
+
+    // 역환산하여 KRW 기준으로 계산
+    const valKRW = Math.round(localVal / mileRate);
+
     const baseAmount = window.originalPayAmount || 0;
-    const safeBase = baseAmount > 0 ? baseAmount : (window.finalPaymentAmount || 0) + val;
-    
-    window.finalPaymentAmount = safeBase - val;
-    
+    const safeBase = baseAmount > 0 ? baseAmount : (window.finalPaymentAmount || 0) + valKRW;
+
+    window.finalPaymentAmount = safeBase - valKRW;
+
     const amountDisplay = document.getElementById('finalPayAmountDisplay');
     if(amountDisplay) amountDisplay.innerText = formatCurrency(window.finalPaymentAmount);
 
@@ -1871,7 +1887,8 @@ window.calcMileageLimit = function(input) {
 window.applyMaxMileage = function() {
     const input = document.getElementById('inputUseMileage');
     if(input) {
-        input.value = window.mileageLimitMax || 0;
+        const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+        input.value = (window.mileageLimitMax || 0) * mileRate;
         window.calcMileageLimit(input);
     }
 };

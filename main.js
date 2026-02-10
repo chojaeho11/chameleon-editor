@@ -19,7 +19,18 @@ import { initShortcuts } from "./shortcuts.js";
 import { initContextMenu } from "./context-menu.js";
 import { createVectorOutline } from "./outlineMaker.js";
 
-window.currentUploadedPdfUrl = null; 
+window.currentUploadedPdfUrl = null;
+
+// KRW → 현지 통화 표시 헬퍼
+function fmtMoney(krw) {
+    const cfg = window.SITE_CONFIG || {};
+    const country = cfg.COUNTRY || 'KR';
+    const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+    const converted = (krw || 0) * rate;
+    if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+    if (country === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return converted.toLocaleString() + '원';
+}
 
 // ==========================================================
 // 1. 메인 초기화 및 통합 로직
@@ -692,8 +703,8 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
                 <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">📍 ${o.address}</div>
                 <div style="font-size:13px; color:#666; margin-bottom:10px;">${itemSummary}</div>
                 <div style="text-align:right;">
-                    <div style="font-weight:bold; font-size:16px;">${o.total_amount.toLocaleString()}원</div>
-                    <div style="font-size:11px; color:#6366f1;">예상 정산금(90%): ${Math.floor(o.total_amount * 0.9).toLocaleString()}원</div>
+                    <div style="font-weight:bold; font-size:16px;">${fmtMoney(o.total_amount)}</div>
+                    <div style="font-size:11px; color:#6366f1;">${window.t('label_estimated_settlement', '예상 정산금')}(90%): ${fmtMoney(Math.floor(o.total_amount * 0.9))}</div>
                 </div>
                 ${btnHtml}
             `;
@@ -779,8 +790,8 @@ window.loadSettlementInfo = async function() {
             html += `
                 <tr>
                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(o.created_at).toLocaleDateString()}</td>
-                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; color:#64748b;">${amount.toLocaleString()}원</td>
-                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; font-weight:bold; color:#16a34a;">${profit.toLocaleString()}원</td>
+                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; color:#64748b;">${fmtMoney(amount)}</td>
+                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; font-weight:bold; color:#16a34a;">${fmtMoney(profit)}</td>
                     <td style="padding:12px; text-align:center; border-bottom:1px solid #f1f5f9;"><span class="badge" style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:4px; font-size:12px;">출금가능</span></td>
                 </tr>
             `;
@@ -788,10 +799,10 @@ window.loadSettlementInfo = async function() {
         tbody.innerHTML = html;
     }
 
-    document.getElementById('partnerAvailableBalance').innerText = availableTotal.toLocaleString() + '원';
-    
+    document.getElementById('partnerAvailableBalance').innerText = fmtMoney(availableTotal);
+
     const pendingEl = document.getElementById('partnerPendingBalance');
-    if(pendingEl) pendingEl.innerText = pendingTotal.toLocaleString() + '원';
+    if(pendingEl) pendingEl.innerText = fmtMoney(pendingTotal);
     
     window.currentWithdrawableAmount = availableTotal;
 };
@@ -799,7 +810,7 @@ window.loadSettlementInfo = async function() {
 window.requestPartnerWithdrawal = function() {
     const amt = window.currentWithdrawableAmount || 0;
     if (amt < 10000) return alert(window.t('msg_min_withdraw'));
-    document.getElementById('wdAmount').value = amt.toLocaleString() + '원';
+    document.getElementById('wdAmount').value = fmtMoney(amt);
     document.getElementById('withdrawModal').style.display = 'flex';
 };
 
@@ -942,7 +953,7 @@ window.openMyOrderList = async function() {
             <div>
                 <div style="font-size:12px; color:#94a3b8; margin-bottom:5px;">${new Date(o.created_at).toLocaleDateString()} 주문</div>
                 <div style="font-size:16px; font-weight:bold; color:#333; margin-bottom:5px;">${itemSummary}</div>
-                <div style="font-size:14px; color:#64748b;">결제금액: <b>${o.total_amount.toLocaleString()}원</b></div>
+                <div style="font-size:14px; color:#64748b;">결제금액: <b>${fmtMoney(o.total_amount)}</b></div>
                 <div style="margin-top:8px;">${statusBadge}</div>
             </div>
             <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
@@ -1021,10 +1032,13 @@ let currentMultiplier = 1;
 
 // 1. 초기화
 window.initContributorSystem = async function() {
-    if (!window.currentUser) return; 
+    // 비로그인 상태에서도 보상금 표시는 환산
+    updateContributorRewardDisplay();
+
+    if (!window.currentUser) return;
 
     const { data: profile } = await sb.from('profiles')
-        .select('contributor_tier, mileage, deposit') 
+        .select('contributor_tier, mileage, deposit')
         .eq('id', window.currentUser.id)
         .single();
 
@@ -1042,7 +1056,7 @@ function updateContributorUI(balance) {
 
     let tierName = '일반 기여자';
     let badgeClass = 'contributor-badge';
-    
+
     if (currentUserTier === 'excellent') {
         tierName = '🏆 우수 기여자 (x2)';
         badgeClass += ' badge-excellent';
@@ -1050,16 +1064,40 @@ function updateContributorUI(balance) {
         tierName = '👑 영웅 기여자 (x4)';
         badgeClass += ' badge-hero';
     }
-    
+
     if(badge) {
         badge.className = badgeClass;
         badge.innerText = tierName;
     }
 
-    if(balEl) balEl.innerText = balance.toLocaleString() + '원';
+    if(balEl) balEl.innerText = fmtMoney(balance);
 
     if (currentMultiplier > 1) {
         bonusEls.forEach(el => el.innerText = ` (x${currentMultiplier})`);
+    }
+
+    // 로그인 상태에서도 보상금 표시 갱신
+    updateContributorRewardDisplay();
+}
+
+// 기여자 보상금 표시 환산 (150 KRW → 현지 통화) - 로그인 불필요
+function updateContributorRewardDisplay() {
+    const cfg = window.SITE_CONFIG || {};
+    const cRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
+    const baseReward = 150 * cRate;
+    const rewardDisplay = cfg.COUNTRY === 'JP' ? Math.floor(baseReward) : cfg.COUNTRY === 'US' ? baseReward.toFixed(2) : baseReward;
+    document.querySelectorAll('.c-reward').forEach(el => {
+        const bonusSpan = el.querySelector('.tier-bonus');
+        el.textContent = rewardDisplay + ' ';
+        if(bonusSpan) el.appendChild(bonusSpan);
+    });
+
+    // 로고 업로드 placeholder 보상금 환산
+    const logoInput = document.getElementById('logoKeywordInput');
+    if(logoInput) {
+        const unit = cfg.COUNTRY === 'JP' ? '¥' : cfg.COUNTRY === 'US' ? '$' : '';
+        const suffix = cfg.COUNTRY === 'KR' ? '원' : '';
+        logoInput.placeholder = `PNG로고 등록시 ${unit}${rewardDisplay}${suffix} 즉시 지급 MY page에서 확인`;
     }
 }
 
@@ -1217,7 +1255,7 @@ window.submitContributorUpload = async function() {
         
         await addReward(finalAmount, `${currentUploadType.toUpperCase()} 업로드 보상 (${uploadCount}개)`);
 
-        alert(window.t('msg_upload_complete_points').replace('{amount}', finalAmount.toLocaleString()));
+        alert(window.t('msg_upload_complete_points').replace('{amount}', fmtMoney(finalAmount)));
         document.getElementById('contributorUploadModal').style.display = 'none';
         
         window.initContributorSystem();
@@ -1480,8 +1518,7 @@ window.updateMainPageUserInfo = async function() {
         // (2) 수익금(예치금 deposit) 표시
         const balanceEl = document.getElementById('contributorBalance');
         if (balanceEl) {
-            // DB의 deposit 값을 가져와서 표시 (기존 mileage 아님)
-            balanceEl.innerText = (profile.deposit || 0).toLocaleString();
+            balanceEl.innerText = fmtMoney(profile.deposit || 0);
         }
     }
 };

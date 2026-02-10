@@ -70,6 +70,7 @@ async function loadDynamicFonts() {
         if (error) throw error;
 
         DYNAMIC_FONTS = data || [];
+        window.DYNAMIC_FONTS = DYNAMIC_FONTS;
 
         // FontFace API를 사용하여 폰트 파일 비동기 로드
         const fontPromises = DYNAMIC_FONTS.map(font => {

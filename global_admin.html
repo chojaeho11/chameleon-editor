@@ -79,6 +79,10 @@
         <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
         <ul class="nav-menu">
             <div class="nav-label">Business</div>
+            <div class="nav-label">AI Chatbot</div>
+            <li class="nav-item" onclick="showSection('sec-live-chat', this)"><i class="fa-solid fa-headset"></i> 💬 실시간 상담</li>
+            <li class="nav-item" onclick="showSection('sec-chatbot', this)"><i class="fa-solid fa-robot"></i> 🦎 AI 챗봇 학습</li>
+
             <li class="nav-item active" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
                 <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
             </li>
@@ -91,10 +95,10 @@
                 <i class="fa-solid fa-store"></i> 파트너스 신청 관리 <span id="partnerPendingCount" class="badge" style="background:#ef4444; color:white; font-size:10px; display:none;">N</span>
             </li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
-            
+
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this)"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
-            
+
             <div class="nav-label">Management</div>
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
             <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
@@ -102,10 +106,6 @@
             <div class="nav-label">Assets</div>
             <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 & 로고</li>
             <li class="nav-item" onclick="showSection('sec-fonts', this)"><i class="fa-solid fa-font"></i> 폰트(서체) 관리</li>
-
-            <div class="nav-label">AI Chatbot</div>
-            <li class="nav-item" onclick="showSection('sec-chatbot', this)"><i class="fa-solid fa-robot"></i> 🦎 AI 챗봇 학습</li>
-            <li class="nav-item" onclick="showSection('sec-live-chat', this)"><i class="fa-solid fa-headset"></i> 💬 실시간 상담</li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
             <button class="btn btn-danger" style="width: 100%;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>

@@ -1,5 +1,16 @@
 import { sb, initConfig, currentUser, cartData, PRODUCT_DB } from "./config.js";
 
+// KRW → 현지 통화 표시 헬퍼
+function fmtMoney(krw) {
+    const cfg = window.SITE_CONFIG || {};
+    const country = cfg.COUNTRY || 'KR';
+    const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+    const converted = (krw || 0) * rate;
+    if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+    if (country === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return converted.toLocaleString() + '원';
+}
+
 // [긴급 수정] 번역 사전 (한글 데이터)
 const I18N_KO = {
     "mp_menu_dashboard": "대시보드",
@@ -197,19 +208,19 @@ async function loadDashboardStats() {
 
         // 기존 통계 데이터 바인딩
         const elMileage = document.getElementById('mileageDisplay');
-        if(elMileage) elMileage.innerText = (profile.mileage || 0).toLocaleString() + ' P';
+        if(elMileage) elMileage.innerText = fmtMoney(profile.mileage || 0).replace(/[원¥$]/g, '').trim() + ' P';
 
         const elSpend = document.getElementById('totalSpendDisplay');
-        if(elSpend) elSpend.innerText = (profile.total_spend || 0).toLocaleString();
+        if(elSpend) elSpend.innerText = fmtMoney(profile.total_spend || 0);
 
         const elLogo = document.getElementById('logoCountDisplay');
         if(elLogo) elLogo.innerText = (profile.logo_count || 0);
 
         const elTotalDeposit = document.getElementById('displayTotalDeposit');
-        if(elTotalDeposit) elTotalDeposit.innerText = (profile.deposit || 0).toLocaleString();
-        
+        if(elTotalDeposit) elTotalDeposit.innerText = fmtMoney(profile.deposit || 0);
+
         const elTotalMileage = document.getElementById('displayTotalMileage');
-        if(elTotalMileage) elTotalMileage.innerText = (profile.mileage || 0).toLocaleString();
+        if(elTotalMileage) elTotalMileage.innerText = fmtMoney(profile.mileage || 0);
 
         // 등급 승급 체크
         await checkAndUpgradeTier(currentUser.id, profile.role);
@@ -342,7 +353,7 @@ async function loadOrders() {
                     <small style="color:#888;">${displayId}</small>
                 </td>
                 <td><div style="font-weight:bold;">${summary}</div></td>
-                <td style="font-weight:bold;">${(o.total_amount || 0).toLocaleString()}</td>
+                <td style="font-weight:bold;">${fmtMoney(o.total_amount || 0)}</td>
                 <td>
                     <span class="status-badge ${badgeClass}">${o.status}</span>
                     ${actionBtn}
@@ -422,7 +433,8 @@ async function loadMySales() {
         
         // 화면 표시 스타일 (패널티면 빨간색)
         const rewardStyle = isPenalty ? 'color:#ef4444; font-weight:bold;' : 'color:#16a34a;';
-        const rewardText = isPenalty ? `${window.t('msg_penalty_applied', 'Penalty applied')}: ${reward}P` : `${window.t('msg_registration_reward', 'Registration reward')}: ${reward}P`;
+        const displayReward = fmtMoney(reward).replace(/[원¥$]/g, '').trim();
+        const rewardText = isPenalty ? `${window.t('msg_penalty_applied', 'Penalty applied')}: ${displayReward}P` : `${window.t('msg_registration_reward', 'Registration reward')}: ${displayReward}P`;
 
         grid.innerHTML += `
             <div class="mp-design-card">
@@ -436,15 +448,16 @@ async function loadMySales() {
     });
 
     const elTotal = document.getElementById('totalSalesPoint');
-    if(elTotal) elTotal.innerText = total.toLocaleString() + ' P';
+    if(elTotal) elTotal.innerText = fmtMoney(total).replace(/[원¥$]/g, '').trim() + ' P';
 }
 
 // [수정] 출금 모달 열기 (예치금 deposit 조회)
 function openWithdrawModal() {
     sb.from('profiles').select('deposit').eq('id', currentUser.id).single().then(({data}) => {
-        // 출금 가능한 금액은 deposit 입니다.
         const currentDeposit = data?.deposit || 0;
-        document.getElementById('wdCurrentMileage').innerText = currentDeposit.toLocaleString();
+        // 환산된 금액으로 표시
+        const displayAmount = fmtMoney(currentDeposit).replace(/[원¥$]/g, '').trim();
+        document.getElementById('wdCurrentMileage').innerText = displayAmount;
         document.getElementById('withdrawModal').style.display = 'flex';
     });
 }
@@ -461,7 +474,11 @@ async function requestWithdrawal() {
     const curEl = document.getElementById('wdCurrentMileage');
     const cur = curEl ? parseInt(curEl.innerText.replace(/,/g,'')) : 0;
 
-    if(!amt || amt < 1000) return alert(window.t('msg_min_withdraw', "Minimum withdrawal amount is 1,000."));
+    const cfg = window.SITE_CONFIG || {};
+    const wdCountry = cfg.COUNTRY || 'KR';
+    const wdRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[wdCountry]) || 1;
+    const minLocal = 1000 * wdRate; // KR:1000, JP:200, US:2
+    if(!amt || amt < minLocal) return alert(window.t('msg_min_withdraw', "Minimum withdrawal amount is 1,000."));
     if(amt > cur) return alert(window.t('msg_insufficient_deposit', "Insufficient deposit balance."));
 
     if(!bank || !acc || !holder) return alert(window.t('msg_enter_bank_info', "Please enter bank account info."));
@@ -469,10 +486,13 @@ async function requestWithdrawal() {
 
     if(!confirm(window.t('confirm_withdraw', `Request withdrawal of ${amt.toLocaleString()}?\n(3.3% tax will be deducted)`))) return;
 
+    // 역환산: 사용자 입력(현지 통화) → KRW로 변환하여 DB 저장
+    const amtKRW = Math.round(amt / wdRate);
+
     try {
         const { error: reqError } = await sb.from('withdrawal_requests').insert({
-            user_id: currentUser.id, 
-            amount: amt, 
+            user_id: currentUser.id,
+            amount: amtKRW,
             bank_name: bank, 
             account_number: acc, 
             account_holder: holder,
@@ -483,15 +503,17 @@ async function requestWithdrawal() {
 
         if (reqError) throw reqError;
 
-        // ★ [중요] 예치금(deposit)에서 차감
+        // ★ [중요] 예치금(deposit)에서 차감 (KRW 기준)
+        // cur는 표시용(환산된 값)이므로 KRW로 역환산하여 차감
+        const curKRW = Math.round(cur / wdRate);
         const { error: profileError } = await sb.from('profiles')
-            .update({ deposit: cur - amt }) // mileage -> deposit 변경
+            .update({ deposit: curKRW - amtKRW })
             .eq('id', currentUser.id);
-            
+
         if (profileError) throw profileError;
 
         await sb.from('wallet_logs').insert({
-            user_id: currentUser.id, type: 'withdraw_req', amount: -amt, description: `출금신청(${bank})`
+            user_id: currentUser.id, type: 'withdraw_req', amount: -amtKRW, description: `출금신청(${bank})`
         });
 
         alert(window.t('msg_withdraw_submitted', "Withdrawal request submitted! Payment will be processed after admin review."));
