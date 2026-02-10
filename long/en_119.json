@@ -646,5 +646,25 @@
   "th_settled_amount": "Settled Amount",
   "th_status_col": "Status",
   "my_order_tracking_title": "📦 Order Tracking",
-  "msg_loading_text": "Loading..."
+  "msg_loading_text": "Loading...",
+
+  "//_COMMENT_15": "=== Cart & Payment Page ===",
+  "cart_upload_guide": "Upload your own design files here",
+  "btn_bulk_upload": "Bulk File Upload",
+  "label_mileage_use": "Ⓜ️ Use Mileage Points",
+  "label_mileage_owned": "Balance:",
+  "btn_max": "Max",
+  "msg_mileage_5pct": "* Up to 5% of payment amount",
+  "label_available_limit": "Available limit:",
+  "label_final_pay_amount": "Total Payment",
+  "label_pay_method": "Payment Method",
+  "label_card_pay": "💳 Card / Express Pay (Instant)",
+  "label_bank_transfer": "🏦 Wire Transfer (Production after confirmation)",
+  "label_deposit_use": "💰 Use My Credit Balance",
+  "label_balance": "Balance",
+  "label_balance_loading": "(Checking balance...)",
+  "btn_do_final_pay": "Pay Now",
+  "label_estimate_price": "Estimated Price (per unit)",
+  "estimate_note_1": "* Final price may be lower with mileage & tier discounts.",
+  "estimate_note_2": "Check the final price in your cart."
 }

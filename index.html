@@ -947,7 +947,7 @@
 
             <button id="btnAddBasicText" class="btn-round" style="width:100%; margin-bottom:10px; border:1px solid #cbd5e1; background:#fff; color:#333; font-weight:bold; padding:10px; display:flex; align-items:center; justify-content:center;">
                 <span style="display:inline-flex; width:20px; height:20px; background:#222; color:#fff; border-radius:4px; align-items:center; justify-content:center; margin-right:6px; font-size:12px;">T</span>
-                <span style="font-size: 13px;">텍스트 추가</span>
+                <span style="font-size: 13px;" data-i18n="btn_add_text">텍스트 추가</span>
             </button>
 
             <button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height: 38px;">
@@ -1415,9 +1415,9 @@
         <div style="display: flex; flex-direction: column; gap: 20px; padding: 0 20px;">
             
             <div style="background:#ffe70e; padding:15px; border-radius:12px; border:1px dashed #ffde39; text-align:center;">
-                <p style="margin:0 0 10px 0; font-size:13px; color:#64748b;">직접 디자인한 파일은 여기에 일괄 업로드 해주세요</p>
+                <p style="margin:0 0 10px 0; font-size:13px; color:#64748b;" data-i18n="cart_upload_guide">직접 디자인한 파일은 여기에 일괄 업로드 해주세요</p>
                 <button onclick="document.getElementById('bulkCartUpload').click()" class="btn-round" style="width:100%; justify-content:center; background:#f8fafc; border:1px solid #6366f1; color:#6366f1;">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> 파일 일괄 업로드
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_bulk_upload">파일 일괄 업로드</span>
                 </button>
                 <input type="file" id="bulkCartUpload" multiple style="display:none;" onchange="window.handleBulkCartUpload(this)">
             </div>
@@ -1529,48 +1529,48 @@
 
         <div style="background:#f0f9ff; padding:15px; border-radius:8px; border:1px solid #bae6fd; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-weight:bold; color:#0369a1;">Ⓜ️ 마일리지 사용</span>
-                <span style="font-size:12px; color:#64748b;">보유: <b id="userOwnMileage">0 P</b></span>
+                <span style="font-weight:bold; color:#0369a1;" data-i18n="label_mileage_use">Ⓜ️ 마일리지 사용</span>
+                <span style="font-size:12px; color:#64748b;"><span data-i18n="label_mileage_owned">보유:</span> <b id="userOwnMileage">0 P</b></span>
             </div>
             
             <div style="display:flex; gap:8px; align-items:center;">
                 <input type="number" id="inputUseMileage" class="ai-input-pretty" placeholder="0" style="margin:0; text-align:right; font-weight:bold; color:#0369a1;" oninput="window.calcMileageLimit(this)">
-                <button class="btn-round" onclick="window.applyMaxMileage()" style="width:60px; font-size:12px; background:#fff; border:1px solid #cbd5e1; color:#333; justify-content:center;">최대</button>
+                <button class="btn-round" onclick="window.applyMaxMileage()" style="width:60px; font-size:12px; background:#fff; border:1px solid #cbd5e1; color:#333; justify-content:center;" data-i18n="btn_max">최대</button>
             </div>
 
             <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px;">
-                <span style="color:#ef4444; font-weight:bold;">* 결제금액의 5%까지만 사용 가능</span>
-                <span style="color:#0369a1;">사용가능 한도: <b id="mileageLimitDisplay">0 P</b></span>
+                <span style="color:#ef4444; font-weight:bold;" data-i18n="msg_mileage_5pct">* 결제금액의 5%까지만 사용 가능</span>
+                <span style="color:#0369a1;"><span data-i18n="label_available_limit">사용가능 한도:</span> <b id="mileageLimitDisplay">0 P</b></span>
             </div>
         </div>
 
         <div style="text-align:right; margin-bottom:20px;">
-            <div style="font-size:13px; color:#666;">최종 결제 금액</div>
+            <div style="font-size:13px; color:#666;" data-i18n="label_final_pay_amount">최종 결제 금액</div>
             <div id="finalPayAmountDisplay" style="font-size:24px; font-weight:900; color:#6366f1;">0원</div>
         </div>
-        <label style="font-size:14px; font-weight:bold; color:#333; margin-bottom:10px; display:block;">결제 수단 선택</label>
+        <label style="font-size:14px; font-weight:bold; color:#333; margin-bottom:10px; display:block;" data-i18n="label_pay_method">결제 수단 선택</label>
         
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
             <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
                 <input type="radio" name="paymentMethod" value="card" checked style="margin-right:10px; accent-color:#6366f1;">
-                <span>💳 카드 / 간편결제 (즉시 완료)</span>
+                <span data-i18n="label_card_pay">💳 카드 / 간편결제 (즉시 완료)</span>
             </label>
 
             <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
                 <input type="radio" name="paymentMethod" value="bank" style="margin-right:10px; accent-color:#6366f1;">
-                <span>🏦 무통장 입금 (확인 후 제작)</span>
+                <span data-i18n="label_bank_transfer">🏦 무통장 입금 (확인 후 제작)</span>
             </label>
 
             <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
                 <input type="radio" name="paymentMethod" value="deposit" style="margin-right:10px; accent-color:#6366f1;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
-                    <span>💰 나의 예치금 사용</span>
-                    <span id="myCurrentDepositDisplay" style="font-weight:bold; color:#6366f1;">(잔액 조회중...)</span>
+                    <span data-i18n="label_deposit_use">💰 나의 예치금 사용</span>
+                    <span id="myCurrentDepositDisplay" style="font-weight:bold; color:#6366f1;" data-i18n="label_balance_loading">(잔액 조회중...)</span>
                 </div>
             </label>
         </div>
 
-        <button id="btnFinalPay" class="btn-round primary" style="width:100%; height: 50px; font-size: 16px;" onclick="window.handleFinalPayment()">
+        <button id="btnFinalPay" class="btn-round primary" style="width:100%; height: 50px; font-size: 16px;" onclick="window.handleFinalPayment()" data-i18n="btn_do_final_pay">
             결제하기
         </button>
 
@@ -1737,14 +1737,14 @@
             <input type="hidden" id="inputCustQty" value="1">
 
             <div style="background:#1e293b; color:white; padding:15px; border-radius:8px; text-align:center;">
-                <div style="font-size:12px; opacity:0.8;">예상 견적 금액 (1개 기준)</div>
+                <div style="font-size:12px; opacity:0.8;" data-i18n="label_estimate_price">예상 견적 금액 (1개 기준)</div>
                 <div id="calcResultPrice" style="font-size:24px; font-weight:800; color:#fbbf24;">0원</div>
                 <div id="calcResultSize" style="font-size:11px; margin-top:5px; color:#94a3b8;">-</div>
             </div>
             
             <p style="font-size:12px; color:#64748b; margin-top:10px; line-height:1.5; word-break:keep-all;">
-                ※ 최종 금액은 마일리지 등급할인 등으로 이보다 더더더! 저렴합니다.<br>
-                <b>최종 금액은 장바구니에서 확인하세요.</b>
+                <span data-i18n="estimate_note_1">※ 최종 금액은 마일리지 등급할인 등으로 이보다 더더더! 저렴합니다.</span><br>
+                <b data-i18n="estimate_note_2">최종 금액은 장바구니에서 확인하세요.</b>
             </p>
                 
                 <div id="calcResultSize" style="font-size:11px; margin-top:5px; color:#94a3b8;">-</div>
