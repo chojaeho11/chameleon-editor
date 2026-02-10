@@ -108,6 +108,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             document.body.classList.add('editor-active');
             
             // DB 조회
+            if (!sb) throw new Error("DB 연결이 아직 초기화되지 않았습니다.");
             const { data, error } = await sb.from('user_designs').select('*').eq('id', loadId).single();
 
             if (data && !error) {
@@ -512,6 +513,7 @@ window.openPartnerConsole = function() {
 let lastOrderCount = -1;
 
 async function checkPartnerStatus() {
+    if (!sb) { console.warn("[checkPartnerStatus] sb가 아직 초기화되지 않음"); return; }
     const btnConsole = document.getElementById('btnPartnerConsole');
     const btnApply = document.getElementById('btnPartnerApply');
 
@@ -595,9 +597,10 @@ window.switchPartnerTab = function(tabName) {
 };
 
 window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
+    if (!sb) { console.warn("[loadPartnerOrders] sb가 아직 초기화되지 않음"); return; }
     const listId = mode === 'pool' ? 'orderPoolList' : 'myOrderList';
     const container = document.getElementById(listId);
-    
+
     if (!isAutoCheck && container) {
         container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>';
     }
@@ -898,6 +901,7 @@ window.submitWithdrawal = async function() {
 // [고객용] 주문 조회 & 리뷰
 // ============================================================
 window.openMyOrderList = async function() {
+    if (!sb) { console.warn("[openMyOrderList] sb가 아직 초기화되지 않음"); return; }
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return alert(window.t('msg_login_required'));
 
@@ -1036,6 +1040,7 @@ window.initContributorSystem = async function() {
     updateContributorRewardDisplay();
 
     if (!window.currentUser) return;
+    if (!sb) { console.warn("[initContributorSystem] sb가 아직 초기화되지 않음"); return; }
 
     const { data: profile } = await sb.from('profiles')
         .select('contributor_tier, mileage, deposit')
@@ -1479,6 +1484,7 @@ window.submitVipOrder = async function() {
 
 // [신규] 메인 페이지 유저 정보(등급/수익금) UI 갱신 함수
 window.updateMainPageUserInfo = async function() {
+    if (!sb) { console.warn("[updateMainPageUserInfo] sb가 아직 초기화되지 않음"); return; }
     // 1. 로그인 정보 확인
     const { data: { user } } = await sb.auth.getUser();
     if(!user) return;

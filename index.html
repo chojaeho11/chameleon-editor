@@ -2403,12 +2403,13 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (!grid) return;
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#6366f1;"></i></div>';
 
+        if (!sb) { grid.innerHTML = ''; return; }
         try {
             // ★ [핵심 수정] 벡터(vector, user_vector)를 객체(group_asset)로 이동!
             const groups = {
                 // 템플릿: 사진, 유저이미지, 텍스트 (배경형)
                 'group_template': ['user_image', 'photo-bg', 'text'],
-                
+
                 // 객체: 벡터, 유저벡터, 그래픽, 패턴, 로고 (요소형)
                 'group_asset': ['vector', 'user_vector', 'graphic', 'transparent-graphic', 'pattern', 'logo']
             };
@@ -2556,6 +2557,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             const loading = document.getElementById('loading');
             if(loading) loading.style.display = 'flex';
             try {
+                if (!sb) throw new Error("DB 연결이 아직 초기화되지 않았습니다.");
                 const { data, error } = await sb.from('user_designs').select('*').eq('id', loadId).single();
                 if (error || !data) throw new Error("디자인을 찾을 수 없습니다.");
                 if (data.json && !data.json_data) data.json_data = data.json;
@@ -2610,6 +2612,7 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
     const section = document.getElementById(sectionId);
     const grid = document.getElementById(gridId);
     if (!grid) return;
+    if (!sb) { console.warn("[loadSpecialProducts] sb가 아직 초기화되지 않음"); return; }
 
     try {
         const { data: products, error } = await sb.from('admin_products')
@@ -2690,6 +2693,7 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
         window.open(url, '_blank');
     };
     window.openTopMenu = async function(topCode, titleText) {
+        if (!sb) { console.warn("[openTopMenu] sb가 아직 초기화되지 않음"); return; }
         const modal = document.getElementById('categoryDetailModal');
         const grid = document.getElementById('catProductGrid');
         const titleEl = document.getElementById('catModalTitle');
@@ -2699,7 +2703,7 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
         modal.style.display = 'flex';
         if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(세부 항목 선택)</span>`;
         if(descEl) descEl.innerText = "원하시는 카테고리를 선택해주세요.";
-        
+
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;">Loading...</div>';
 
         try {
@@ -2860,6 +2864,7 @@ async function renderQuickMenu() {
     const tabContainer = document.getElementById('topCategoryTabs');
     const itemContainer = document.getElementById('quickMenuContainer');
     if (!tabContainer || !itemContainer) return;
+    if (!sb) { console.warn("[renderQuickMenu] sb가 아직 초기화되지 않음"); return; }
 
     itemContainer.innerHTML = '<div style="text-align:center; padding:50px; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
@@ -3090,6 +3095,7 @@ window.categoryCache = {};
 
 // [최종 통합] 카테고리 클릭 시 상품 목록 로드 (상세정보는 제외하여 로딩 속도 최적화)
 window.showCategoryProducts = async function(catKey, catName, catDesc) {
+    if (!sb) { console.warn("[showCategoryProducts] sb가 아직 초기화되지 않음"); return; }
     const grid = document.getElementById('catProductGrid');
     const modal = document.getElementById('categoryDetailModal');
     const titleEl = document.getElementById('catModalTitle');
@@ -3163,6 +3169,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 
     // 1. 상품 상세 정보 로드 및 전체화면 열기 (언어 유지 버전)
     window.loadProductDetailAndOpen = async function(productCode) {
+        if (!sb) { console.warn("[loadProductDetailAndOpen] sb가 아직 초기화되지 않음"); return; }
         const loading = document.getElementById('loading');
         if(loading) {
             loading.style.display = 'flex';
@@ -3322,6 +3329,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 window.showChoiceModal = async function(key) {
     console.clear();
     console.log("🛠️ [Debug] 모달 열기. 상품키:", key);
+    if (!sb) { console.warn("[showChoiceModal] sb가 아직 초기화되지 않음"); return; }
 
     // 1. 상품 정보 가져오기
     let product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
@@ -4214,10 +4222,11 @@ if (w >= 20 && h >= 20) {
     async function loadTemplatePage(page) {
         const grid = document.getElementById('startTemplateGrid');
         if (!grid) return;
+        if (!sb) { console.warn("[loadTemplatePage] sb가 아직 초기화되지 않음"); return; }
 
         // 로딩 표시
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>로딩 중...</div>';
-        
+
         try {
             // DB 쿼리 준비
             let query = sb.from('library')
@@ -4799,6 +4808,7 @@ function updateVipFileList(input) {
         if (!sb || !sb.from) {
             if (typeof initConfig === 'function') await initConfig();
         }
+        if (!sb) { console.warn("[trackVisit] sb가 초기화되지 않음 — 방문 추적 생략"); return; }
 
         try {
             // 상세 분석된 유입 경로 가져오기
@@ -4843,8 +4853,9 @@ function updateVipFileList(input) {
     window.addEventListener('load', trackVisit);
     // [신규] '배송' 카테고리 자동 열기 함수
     window.openDeliveryCategory = async function() {
+        if (!sb) { console.warn("[openDeliveryCategory] sb가 아직 초기화되지 않음"); return; }
         document.getElementById('cartAddedModal').style.display = 'none'; // 완료 모달 닫기
-        
+
         // 로딩 표시를 위해 카테고리 모달을 먼저 엽니다 (빈 상태)
         const modal = document.getElementById('categoryDetailModal');
         const grid = document.getElementById('catProductGrid');
