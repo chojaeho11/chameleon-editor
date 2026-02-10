@@ -3910,32 +3910,48 @@ if (w >= 20 && h >= 20) {
 
             if (error) {
                 console.warn('[리뷰] 조회 에러:', error.message);
-                window.renderReviews([], 0, 0);
+                window.renderReviews([], 0, 0, 0);
                 return;
             }
-            window.renderReviews(data || [], count || 0, page);
+
+            // page 0일 때 평균 별점 계산
+            let avgRating = 0;
+            if (page === 0 && (count || 0) > 0) {
+                try {
+                    const { data: allRatings } = await dbClient.from('product_reviews')
+                        .select('rating')
+                        .eq('product_code', productCode)
+                        .eq('lang', lang);
+                    if (allRatings && allRatings.length > 0) {
+                        avgRating = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+                    }
+                } catch(e2) { console.warn('[리뷰] 평균 계산 실패:', e2); }
+            }
+            window.renderReviews(data || [], count || 0, page, avgRating);
         } catch (e) {
             console.warn('[리뷰] 예외:', e);
-            window.renderReviews([], 0, 0);
+            window.renderReviews([], 0, 0, 0);
         }
     };
 
-    window.renderReviews = function(reviews, total, page) {
+    window.renderReviews = function(reviews, total, page, avgRating) {
         const listEl = document.getElementById('reviewList');
         const summaryEl = document.getElementById('reviewSummary');
         const moreBtn = document.getElementById('btnLoadMoreReviews');
         if (!listEl) return;
 
-        // 요약 (평균 별점)
+        // 요약 (평균 별점 + 숫자)
         if (page === 0 && summaryEl) {
             if (total > 0) {
-                const avgText = window.t('rv_avg_rating', '평균 평점');
+                const avg = avgRating ? avgRating.toFixed(1) : '0.0';
+                const fullStars = Math.round(avgRating || 0);
+                const avgStars = '★'.repeat(Math.min(fullStars, 5)) + '☆'.repeat(Math.max(5 - fullStars, 0));
                 const countText = total + ' ' + window.t('rv_total_reviews', '개의 리뷰');
                 summaryEl.innerHTML = `
-                    <div style="font-size:36px;font-weight:900;color:#f59e0b;">⭐</div>
+                    <div class="review-avg-score">${avg}</div>
                     <div>
-                        <div style="font-weight:800;font-size:16px;">${avgText}</div>
-                        <div style="font-size:13px;color:#64748b;">${countText}</div>
+                        <div class="review-avg-stars">${avgStars}</div>
+                        <div style="font-size:13px;color:#64748b;margin-top:4px;">${countText}</div>
                     </div>`;
             } else {
                 summaryEl.innerHTML = `<div style="color:#999;font-size:14px;">${window.t('rv_no_reviews','아직 리뷰가 없습니다')}</div>`;
