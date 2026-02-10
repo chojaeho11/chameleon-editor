@@ -3340,12 +3340,13 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 window.showChoiceModal = async function(key) {
     console.clear();
     console.log("🛠️ [Debug] 모달 열기. 상품키:", key);
-    if (!sb) { console.warn("[showChoiceModal] sb가 아직 초기화되지 않음"); return; }
+    if (!sb && !window.sb) { console.warn("[showChoiceModal] sb가 아직 초기화되지 않음"); return; }
+    const _sb = window.sb || sb;
 
     // 1. 상품 정보 가져오기
     let product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
     if (!product || !product.description) {
-        const { data, error } = await sb.from('admin_products').select('*').eq('code', key).single();
+        const { data, error } = await _sb.from('admin_products').select('*').eq('code', key).single();
         if (error || !data) return alert("상품 정보를 찾을 수 없습니다.");
         product = data;
         if(!window.PRODUCT_DB) window.PRODUCT_DB = {};
@@ -3453,8 +3454,8 @@ window.showChoiceModal = async function(key) {
     const addonCodes = Array.isArray(product.addons) ? product.addons : (product.addons ? product.addons.split(',') : []);
     
     if (addonCodes.length > 0) {
-        const { data: addons } = await sb.from('admin_addons').select('*').in('code', addonCodes);
-        const { data: addonCats } = await sb.from('addon_categories').select('*').order('sort_order', {ascending: true});
+        const { data: addons } = await _sb.from('admin_addons').select('*').in('code', addonCodes);
+        const { data: addonCats } = await _sb.from('addon_categories').select('*').order('sort_order', {ascending: true});
 
         if (addons && addonCats) {
             addonCats.forEach(cat => {
@@ -3547,22 +3548,22 @@ window.showChoiceModal = async function(key) {
     if (isCustom) {
         rightSideUI = productHeaderHtml + `
             <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
-                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang=='kr'?'사이즈 입력 (mm)':'Enter Size (mm)'}</div>
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'サイズ入力 (mm)':lang==='en'?'Enter Size (mm)':'사이즈 입력 (mm)'}</div>
                 <div style="display:flex; gap:5px;">
                     <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                     <span style="display:flex; align-items:center; color:#999;">x</span>
                     <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
             </div>
-            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang=='kr'?'수량':'Quantity'}</div>
+            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='en'?'Quantity':'수량'}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
             <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center; margin-top:15px;">
-                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">예상 견적가</div>
-                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">0원</div>
+                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">${lang==='ja'?'見積価格':lang==='en'?'Estimated Price':'예상 견적가'}</div>
+                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">${lang==='ja'?'¥0':lang==='en'?'$0':'0원'}</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.7; margin-top:2px;">-</div>
             </div>
         </div>`;
@@ -3784,7 +3785,7 @@ if (w >= 20 && h >= 20) {
             if (sizeDisplay) sizeDisplay.innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
         } else {
             if (priceDisplay) priceDisplay.innerText = formatValue(0);
-            if (sizeDisplay) sizeDisplay.innerText = lang === 'en' ? 'Min 100mm required' : '최소 100mm 이상 입력';
+            if (sizeDisplay) sizeDisplay.innerText = lang === 'ja' ? '最低100mm以上入力' : lang === 'en' ? 'Min 100mm required' : '최소 100mm 이상 입력';
         }
     };
 
@@ -3886,7 +3887,7 @@ if (w >= 20 && h >= 20) {
     window.productReviewPage = 0;
     window.REVIEW_PAGE_SIZE = 10;
     window.currentReviewProductCode = null;
-    window.currentReviewLang = 'kr';
+    window.currentReviewLang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase() === 'jp' ? 'ja' : p.toLowerCase() === 'us' ? 'en' : p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
     window.productReviewRating = 5;
 
     window.loadProductReviews = async function(productCode, page) {
@@ -5682,7 +5683,7 @@ window.filterModalItems = function(keyword) {
         var d = document.createElement('div');
         d.className = 'cm-actions';
         d.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;padding:8px 0;';
-        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
         var quickBtns = {
             kr: ['\uD83D\uDCB0 \uAC00\uACA9 \uACAC\uC801 \uBB38\uC758', '\uD83D\uDCE6 \uBC30\uC1A1\uC740 \uC5BC\uB9C8\uB098 \uAC78\uB824\uC694?', '\uD83C\uDFE2 \uC0AC\uC5C5\uC790 \uD560\uC778 \uD61C\uD0DD'],
             ja: ['\uD83D\uDCB0 お見積もり', '\uD83D\uDCE6 配送日数は？', '\uD83C\uDFE2 法人割引について'],
@@ -5707,7 +5708,7 @@ window.filterModalItems = function(keyword) {
     function ensureAiRoom() {
         if (_aiRoom) return Promise.resolve(_aiRoom);
         if (!db) return Promise.resolve(null);
-        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
         var _custName = _lang === 'ja' ? 'ウェブ顧客' : (_lang === 'us' || _lang === 'en' ? 'Web Customer' : '웹 고객');
         return db.from('chat_rooms').insert({
             customer_name: _custName,
@@ -5727,7 +5728,7 @@ window.filterModalItems = function(keyword) {
     // DB에 메시지 저장
     function saveMsg(senderType, message) {
         if (!db || !_aiRoom) return;
-        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
         var _custLabel = _lang === 'ja' ? 'ウェブ顧客' : (_lang === 'us' || _lang === 'en' ? 'Web Customer' : '웹 고객');
         var _botLabel = _lang === 'ja' ? 'AI ボット' : (_lang === 'us' || _lang === 'en' ? 'AI Bot' : 'AI 봇');
         db.from('chat_messages').insert({
@@ -5772,7 +5773,7 @@ window.filterModalItems = function(keyword) {
         // AI 구독 해제 (인간 상담 모듈이 새로 구독)
         if (_aiSub) { _aiSub.unsubscribe(); _aiSub = null; }
         // 헤더 변경
-        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
         var title = document.querySelector('.cham-title');
         var sub = document.querySelector('.cham-subtitle');
         var _mgrChat = _lang === 'ja' ? managerName + ' マネージャー相談' : (_lang === 'us' || _lang === 'en' ? managerName + ' Manager Chat' : managerName + ' 매니저 상담');
@@ -5787,7 +5788,7 @@ window.filterModalItems = function(keyword) {
     }
 
     function askAI(userMessage) {
-        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
         var _errOffline = {
             kr: "현재 서버 연결 중입니다. 잠시 후 다시 시도해주세요!\n\n급하신 문의는 하단 '상담사 연결' 버튼을 눌러주세요 😊",
             ja: "現在サーバーに接続中です。しばらくしてから再度お試しください！\n\nお急ぎの場合は下の「相談員に接続」ボタンをご利用ください 😊",
