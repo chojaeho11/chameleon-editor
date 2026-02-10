@@ -3878,19 +3878,34 @@ if (w >= 20 && h >= 20) {
     window.productReviewRating = 5;
 
     window.loadProductReviews = async function(productCode, page) {
-        if (!sb) return;
+        const dbClient = window.sb || sb;
+        if (!dbClient || typeof dbClient.from !== 'function') {
+            console.warn('[리뷰] DB 클라이언트 없음');
+            window.renderReviews([], 0, 0);
+            return;
+        }
         const lang = window.currentReviewLang || 'kr';
         const from = page * window.REVIEW_PAGE_SIZE;
         const to = from + window.REVIEW_PAGE_SIZE - 1;
 
-        const { data, count } = await sb.from('product_reviews')
-            .select('*', { count: 'exact' })
-            .eq('product_code', productCode)
-            .eq('lang', lang)
-            .order('created_at', { ascending: false })
-            .range(from, to);
+        try {
+            const { data, count, error } = await dbClient.from('product_reviews')
+                .select('*', { count: 'exact' })
+                .eq('product_code', productCode)
+                .eq('lang', lang)
+                .order('created_at', { ascending: false })
+                .range(from, to);
 
-        window.renderReviews(data || [], count || 0, page);
+            if (error) {
+                console.warn('[리뷰] 조회 에러:', error.message);
+                window.renderReviews([], 0, 0);
+                return;
+            }
+            window.renderReviews(data || [], count || 0, page);
+        } catch (e) {
+            console.warn('[리뷰] 예외:', e);
+            window.renderReviews([], 0, 0);
+        }
     };
 
     window.renderReviews = function(reviews, total, page) {
@@ -3999,7 +4014,8 @@ if (w >= 20 && h >= 20) {
     };
 
     window.submitProductReview = async function() {
-        if (!sb || !window.currentUser) return alert(window.t('rv_login_required', '로그인이 필요합니다'));
+        const dbClient = window.sb || sb;
+        if (!dbClient || !window.currentUser) return alert(window.t('rv_login_required', '로그인이 필요합니다'));
         const comment = document.getElementById('prvComment').value.trim();
         if (!comment) return alert(window.t('rv_placeholder', '리뷰를 입력해주세요'));
 
@@ -4014,14 +4030,14 @@ if (w >= 20 && h >= 20) {
         if (fileInput && fileInput.files[0]) {
             const file = fileInput.files[0];
             const fileName = `review_${Date.now()}_${Math.random().toString(36).slice(2)}.${file.name.split('.').pop()}`;
-            const { data, error } = await sb.storage.from('review-photos').upload(fileName, file);
+            const { data, error } = await dbClient.storage.from('review-photos').upload(fileName, file);
             if (!error && data) {
-                const { data: urlData } = sb.storage.from('review-photos').getPublicUrl(fileName);
+                const { data: urlData } = dbClient.storage.from('review-photos').getPublicUrl(fileName);
                 photoUrl = urlData.publicUrl;
             }
         }
 
-        const { error } = await sb.from('product_reviews').insert({
+        const { error } = await dbClient.from('product_reviews').insert({
             product_code: productCode,
             user_id: window.currentUser.id,
             user_name: userName,
