@@ -8,11 +8,23 @@
  */
 
 (async function seedReviews() {
-    if (!window.sb) {
-        console.error('❌ Supabase 클라이언트(sb)를 찾을 수 없습니다. 사이트에서 실행해주세요.');
-        return;
+    // Supabase 클라이언트 찾기 (여러 방법 시도)
+    let sb = window.sb;
+
+    // window.sb가 null이거나 .from이 없으면 직접 생성
+    if (!sb || typeof sb.from !== 'function') {
+        console.log('⏳ window.sb를 사용할 수 없어 직접 Supabase 클라이언트를 생성합니다...');
+        if (typeof window.supabase === 'undefined') {
+            console.error('❌ Supabase 라이브러리가 로드되지 않았습니다. cafe2626.com 사이트에서 실행해주세요.');
+            return;
+        }
+        const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+        sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+        console.log('✅ Supabase 클라이언트 직접 생성 완료');
+    } else {
+        console.log('✅ window.sb 사용');
     }
-    const sb = window.sb;
 
     // ===== 1. 전체 상품 목록 가져오기 =====
     const { data: products, error: prodErr } = await sb.from('admin_products').select('code, name, name_jp, name_us, category');
