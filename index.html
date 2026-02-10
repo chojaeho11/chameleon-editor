@@ -82,6 +82,7 @@
 <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/plugins/svg.js" defer></script>
 <script src="https://cdn.jsdelivr.net/gh/kilobtye/potrace@master/potrace.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/js-clipper@1.0.1/clipper.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" defer></script>
@@ -2894,13 +2895,35 @@ async function renderQuickMenu() {
 window.goHome = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const currentLang = urlParams.get('lang');
-    
-    if (currentLang) {
-        // 언어 설정이 있으면 붙여서 이동
-        window.location.href = `/?lang=${currentLang}`;
+    const path = window.location.pathname;
+    const isHome = path === '/' || path.endsWith('/index.html') || path.endsWith('/index');
+
+    if (isHome) {
+        // 이미 홈 → 모달 닫고 스크롤 (채팅 유지)
+        ['choiceModal','generalProductModal','categoryDetailModal','productDetailModal'].forEach(function(id) {
+            var m = document.getElementById(id);
+            if (m) {
+                m.style.display = 'none';
+                m.classList.remove('product-full-page');
+                m.style.padding = '';
+                m.style.background = '';
+                var box = m.querySelector('.modal-box');
+                if (box) {
+                    box.style = '';
+                    var h = box.querySelector('.product-full-header');
+                    var g = box.querySelector('.product-guide-banner');
+                    if (h) h.remove();
+                    if (g) g.remove();
+                }
+            }
+        });
+        var ss = document.getElementById('startScreen');
+        if (ss) ss.style.display = 'block';
+        window.history.pushState(null, '', currentLang ? '/?lang=' + currentLang : '/');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-        // 없으면 그냥 이동
-        window.location.href = '/';
+        // 다른 페이지면 홈으로 이동
+        window.location.href = currentLang ? '/?lang=' + currentLang : '/';
     }
 };
 
@@ -4517,7 +4540,7 @@ if (w >= 20 && h >= 20) {
             상호 : <strong>(주)카멜레온프린팅</strong> (대표: 조재호)<br>
             사업자등록번호 : <strong>470-81-02808</strong><br>
             주소 : 경기도 화성시 우정읍 한말길 72-2<br>
-            이메일 : korea900as@gmail.com
+            이메일 : <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2f44405d4a4e161f1f4e5c6f48424e4643014c4042">[email&#160;protected]</a>
         </div>
 
         <div style="margin-bottom: 15px;">
@@ -4597,7 +4620,7 @@ if (w >= 20 && h >= 20) {
         </div>
     </div>
 </div>
-<script src="./text-wizard.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="./text-wizard.js"></script>
 <div id="vipOrderModal" class="modal-bg" style="z-index: 30000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 550px; max-width: 95%;">
         <div style="background: #1e1b4b; margin: -25px -25px 20px -25px; padding: 25px; color: white; border-radius: 12px 12px 0 0; text-align: center;">
@@ -5144,6 +5167,832 @@ window.filterModalItems = function(keyword) {
         </div>
     </div>
 </div>
+
+<!-- ===== 카멜레온 AI 상담봇 ===== -->
+<div id="cham-bot-trigger">
+    <i class="fa-solid fa-comments" id="cham-bot-icon"></i>
+    <span id="cham-bot-badge">1</span>
+</div>
+
+<div id="cham-bot-window">
+    <div class="cham-header">
+        <div class="cham-header-left">
+            <div class="cham-avatar"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:24px;height:24px;border-radius:50%;"></div>
+            <div>
+                <div class="cham-title">카멜레온 AI 상담</div>
+                <div class="cham-subtitle"><i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>AI 실시간 상담 · 24시간</div>
+            </div>
+        </div>
+        <button class="cham-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="cham-messages" id="chamMessages"></div>
+    <div id="chamConnectBar" style="padding:6px 14px; background:#f0f9ff; border-top:1px solid #e0e7ff; display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0;">
+        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : alert('상담 연결을 준비 중입니다. 페이지를 새로고침 후 다시 시도해주세요!');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> 상담사 연결</button>
+    </div>
+    <div class="cham-input-area">
+        <label id="chamFileBtn" style="cursor:pointer; padding:8px; color:#6366f1; font-size:18px; display:flex; align-items:center;"><i class="fa-solid fa-paperclip"></i><input type="file" id="chamFileInput" style="display:none;" multiple accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp"></label>
+        <input type="text" id="chamInput" placeholder="무엇이든 물어보세요...">
+        <button class="cham-send" id="chamSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<style>
+#cham-bot-trigger{position:fixed;bottom:24px;right:24px;width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4338ca);border:none;cursor:pointer;box-shadow:0 8px 30px rgba(99,102,241,.4);display:flex;align-items:center;justify-content:center;z-index:99998;transition:all .3s cubic-bezier(.4,0,.2,1);animation:chamPulse 2.5s infinite}
+#cham-bot-trigger:hover{transform:scale(1.08);box-shadow:0 12px 40px rgba(99,102,241,.55)}
+#cham-bot-trigger i{font-size:25px;color:#fff;transition:transform .3s}
+#cham-bot-trigger.open i{transform:rotate(90deg)}
+#cham-bot-badge{position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;transition:opacity .3s}
+#cham-bot-badge.hide{opacity:0;pointer-events:none}
+@keyframes chamPulse{0%,100%{box-shadow:0 8px 30px rgba(99,102,241,.4)}50%{box-shadow:0 8px 30px rgba(99,102,241,.6),0 0 0 10px rgba(99,102,241,.08)}}
+#cham-bot-window{position:fixed;bottom:100px;right:24px;width:400px;max-width:calc(100vw - 32px);height:640px;max-height:calc(100vh - 140px);background:#f8fafc;border-radius:18px;box-shadow:0 25px 80px rgba(30,27,75,.18);display:none;flex-direction:column;overflow:hidden;z-index:99999;border:1px solid #e2e8f0}
+#cham-bot-window.visible{display:flex;animation:chamSlide .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes chamSlide{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.cham-header{background:linear-gradient(135deg,#6366f1 0%,#4338ca 100%);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cham-header-left{display:flex;align-items:center;gap:10px}
+.cham-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px}
+.cham-title{color:#fff;font-size:15px;font-weight:800}
+.cham-subtitle{color:rgba(255,255,255,.8);font-size:11px;margin-top:1px}
+.cham-close{background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.cham-close:hover{background:rgba(255,255,255,.25)}
+.cham-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.cham-messages::-webkit-scrollbar{width:4px}
+.cham-messages::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+.cm-row{display:flex;gap:7px;max-width:88%;animation:cmIn .3s ease-out}
+.cm-row.bot{align-self:flex-start}
+.cm-row.user{align-self:flex-end;flex-direction:row-reverse}
+@keyframes cmIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cm-ava{width:28px;height:28px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;margin-top:2px}
+.cm-row.user .cm-ava{display:none}
+.cm-bub{padding:11px 15px;border-radius:16px;font-size:13.5px;line-height:1.7;word-break:keep-all;white-space:pre-line}
+.cm-row.bot .cm-bub{background:#fff;border:1px solid #e2e8f0;border-top-left-radius:4px;color:#1e293b}
+.cm-row.user .cm-bub{background:#6366f1;color:#fff;border-top-right-radius:4px}
+.cm-typing{display:flex;gap:4px;padding:12px 16px}
+.cm-typing span{width:6px;height:6px;background:#94a3b8;border-radius:50%;animation:cmBounce 1.4s infinite}
+.cm-typing span:nth-child(2){animation-delay:.2s}
+.cm-typing span:nth-child(3){animation-delay:.4s}
+@keyframes cmBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.cm-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.cm-qbtn{padding:6px 13px;border:1.5px solid #6366f1;border-radius:20px;background:#f5f3ff;color:#6366f1;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
+.cm-qbtn:hover{background:#6366f1;color:#fff;transform:translateY(-1px)}
+.cham-input-area{padding:10px 14px;background:#fff;border-top:1px solid #e2e8f0;display:flex;gap:7px;align-items:center;flex-shrink:0}
+.cham-input-area input{flex:1;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:13.5px;font-family:inherit;outline:none;transition:border-color .2s;background:#f8fafc}
+.cham-input-area input:focus{border-color:#6366f1}
+.cham-input-area input::placeholder{color:#94a3b8}
+.cham-send{width:40px;height:40px;border-radius:50%;background:#6366f1;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.cham-send:hover{background:#4338ca;transform:scale(1.05)}
+.cham-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.cham-send.loading i{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:480px){
+    #cham-bot-window{bottom:0;right:0;width:100vw;height:100vh;max-height:100vh;border-radius:0}
+    #cham-bot-trigger{bottom:16px;right:16px;width:54px;height:54px}
+}
+</style>
+
+<script>
+(function() {
+    'use strict';
+
+    var SUPA_URL = "https://qinvtnhiidtmrzosyvys.supabase.co";
+    var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y";
+
+    var db = window.sb || null;
+    if (!db && typeof supabase !== 'undefined') {
+        try { db = supabase.createClient(SUPA_URL, SUPA_KEY); window.sb = db; } catch(e) { console.warn('챗봇 DB 연결 실패', e); }
+    }
+    if (!window.sb && db) window.sb = db;
+
+    var chatHistory = [];
+    var opened = false;
+    var isProcessing = false;
+    var _aiRoom = null;       // AI 대화용 채팅방
+    var _aiSub = null;        // 매니저 끼어들기 감지용 realtime 구독
+
+    function getEl(id) { return document.getElementById(id); }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function fmtBot(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+            .replace(/`(.*?)`/g, '<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>');
+    }
+
+    function addMsg(text, who) {
+        who = who || 'bot';
+        var c = getEl('chamMessages');
+        if (!c) return;
+        var r = document.createElement('div');
+        r.className = 'cm-row ' + who;
+        var html = (who === 'bot') ? fmtBot(text) : escHtml(text);
+        if (who === 'bot') {
+            r.innerHTML = '<div class="cm-ava"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:20px;height:20px;border-radius:50%;"></div><div class="cm-bub">' + html + '</div>';
+        } else {
+            r.innerHTML = '<div class="cm-bub">' + html + '</div>';
+        }
+        c.appendChild(r);
+        c.scrollTop = c.scrollHeight;
+    }
+
+    // 매니저 메시지 표시 (끼어들기 시)
+    function addManagerMsg(name, text) {
+        var c = getEl('chamMessages');
+        if (!c) return;
+        var h = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
+        h += '<span style="font-size:10px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + escHtml(name) + '</span>';
+        h += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + escHtml(text) + '</div>';
+        h += '</div>';
+        c.insertAdjacentHTML('beforeend', h);
+        c.scrollTop = c.scrollHeight;
+    }
+
+    function showTyping() {
+        var c = getEl('chamMessages');
+        if (!c) return;
+        var r = document.createElement('div');
+        r.className = 'cm-row bot';
+        r.id = 'chamTyping';
+        r.innerHTML = '<div class="cm-ava"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:20px;height:20px;border-radius:50%;"></div><div class="cm-bub"><div class="cm-typing"><span></span><span></span><span></span></div></div>';
+        c.appendChild(r);
+        c.scrollTop = c.scrollHeight;
+    }
+
+    function removeTyping() {
+        var el = getEl('chamTyping');
+        if (el) el.remove();
+    }
+
+    function addQuickBtns(arr) {
+        var c = getEl('chamMessages');
+        if (!c || !c.lastElementChild) return;
+        var bub = c.lastElementChild.querySelector('.cm-bub');
+        if (!bub) return;
+        var d = document.createElement('div');
+        d.className = 'cm-actions';
+        arr.forEach(function(label) {
+            var b = document.createElement('button');
+            b.className = 'cm-qbtn';
+            b.textContent = label;
+            b.addEventListener('click', function() {
+                var actions = document.querySelectorAll('.cm-actions');
+                actions.forEach(function(el) { el.remove(); });
+                processInput(label);
+            });
+            d.appendChild(b);
+        });
+        bub.appendChild(d);
+    }
+
+    function setLoading(on) {
+        var btn = getEl('chamSendBtn');
+        var inp = getEl('chamInput');
+        if (!btn || !inp) return;
+        isProcessing = on;
+        btn.disabled = on;
+        inp.disabled = on;
+        if (on) {
+            btn.classList.add('loading');
+            btn.innerHTML = '<i class="fa-solid fa-spinner"></i>';
+        } else {
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+            inp.focus();
+        }
+    }
+
+    function welcome() {
+        var c = getEl('chamMessages');
+        if (!c) return;
+        var d = document.createElement('div');
+        d.className = 'cm-actions';
+        d.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;padding:8px 0;';
+        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var quickBtns = {
+            kr: ['\uD83D\uDCB0 \uAC00\uACA9 \uACAC\uC801 \uBB38\uC758', '\uD83D\uDCE6 \uBC30\uC1A1\uC740 \uC5BC\uB9C8\uB098 \uAC78\uB824\uC694?', '\uD83C\uDFE2 \uC0AC\uC5C5\uC790 \uD560\uC778 \uD61C\uD0DD'],
+            ja: ['\uD83D\uDCB0 お見積もり', '\uD83D\uDCE6 配送日数は？', '\uD83C\uDFE2 法人割引について'],
+            us: ['\uD83D\uDCB0 Get a Quote', '\uD83D\uDCE6 Shipping Times?', '\uD83C\uDFE2 Business Discounts']
+        };
+        var btns = quickBtns[_lang] || quickBtns[(_lang==='en'?'us':_lang)] || quickBtns['kr'];
+        btns.forEach(function(label) {
+            var b = document.createElement('button');
+            b.className = 'cm-qbtn';
+            b.textContent = label;
+            b.addEventListener('click', function() {
+                var actions = document.querySelectorAll('.cm-actions');
+                actions.forEach(function(el) { el.remove(); });
+                processInput(label);
+            });
+            d.appendChild(b);
+        });
+        c.appendChild(d);
+    }
+
+    // ── AI 대화용 채팅방 생성 (첫 메시지 시 1회) ──
+    function ensureAiRoom() {
+        if (_aiRoom) return Promise.resolve(_aiRoom);
+        if (!db) return Promise.resolve(null);
+        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _custName = _lang === 'ja' ? 'ウェブ顧客' : (_lang === 'us' || _lang === 'en' ? 'Web Customer' : '웹 고객');
+        return db.from('chat_rooms').insert({
+            customer_name: _custName,
+            status: 'ai_chatting',
+            source: 'chatbot',
+            assigned_manager: ''
+        }).select().single().then(function(res) {
+            if (res.error || !res.data) { console.warn('AI 채팅방 생성 실패:', res.error); return null; }
+            _aiRoom = res.data;
+            console.log('✅ AI 채팅방 생성:', _aiRoom.id);
+            // 매니저 끼어들기 감지용 realtime 구독
+            subscribeManagerIntervene();
+            return _aiRoom;
+        });
+    }
+
+    // DB에 메시지 저장
+    function saveMsg(senderType, message) {
+        if (!db || !_aiRoom) return;
+        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _custLabel = _lang === 'ja' ? 'ウェブ顧客' : (_lang === 'us' || _lang === 'en' ? 'Web Customer' : '웹 고객');
+        var _botLabel = _lang === 'ja' ? 'AI ボット' : (_lang === 'us' || _lang === 'en' ? 'AI Bot' : 'AI 봇');
+        db.from('chat_messages').insert({
+            room_id: _aiRoom.id,
+            sender_type: senderType,
+            sender_name: senderType === 'customer' ? _custLabel : _botLabel,
+            message: message
+        }).then(function(r) {
+            if (r.error) console.warn('메시지 저장 실패:', r.error);
+        });
+    }
+
+    // 매니저 끼어들기 감지 (realtime 구독)
+    function subscribeManagerIntervene() {
+        if (!db || !_aiRoom || _aiSub) return;
+        var msgArea = getEl('chamMessages');
+        _aiSub = db.channel('ai-room-' + _aiRoom.id)
+            .on('postgres_changes', {
+                event: 'INSERT', schema: 'public', table: 'chat_messages',
+                filter: 'room_id=eq.' + _aiRoom.id
+            }, function(payload) {
+                var m = payload.new;
+                if (m.sender_type === 'manager') {
+                    // 매니저가 끼어들었음! → 실시간 상담 모드로 전환
+                    switchToLiveFromAI(m.sender_name || '매니저');
+                    addManagerMsg(m.sender_name || '매니저', m.message);
+                } else if (m.sender_type === 'system') {
+                    if (msgArea) {
+                        msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+                        msgArea.scrollTop = msgArea.scrollHeight;
+                    }
+                }
+            }).subscribe();
+    }
+
+    // 매니저 끼어들기 시 → AI 모드에서 실시간 상담으로 전환
+    function switchToLiveFromAI(managerName) {
+        if (window._chamLiveMode) return; // 이미 실시간 모드면 무시
+        // 인간 상담 모듈에 방 정보 전달
+        window._chamAiRoomForLive = _aiRoom;
+        window._chamLiveMode = true;
+        // AI 구독 해제 (인간 상담 모듈이 새로 구독)
+        if (_aiSub) { _aiSub.unsubscribe(); _aiSub = null; }
+        // 헤더 변경
+        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var title = document.querySelector('.cham-title');
+        var sub = document.querySelector('.cham-subtitle');
+        var _mgrChat = _lang === 'ja' ? managerName + ' マネージャー相談' : (_lang === 'us' || _lang === 'en' ? managerName + ' Manager Chat' : managerName + ' 매니저 상담');
+        var _mgrConn = _lang === 'ja' ? 'マネージャー接続済み' : (_lang === 'us' || _lang === 'en' ? 'Manager Connected' : '매니저 연결됨');
+        if (title) title.textContent = _mgrChat;
+        if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _mgrConn;
+        // 상담사 연결 바 숨기기
+        var bar = getEl('chamConnectBar');
+        if (bar) bar.style.display = 'none';
+        // 인간 상담 모듈에 전환 알림
+        if (window._chamOnManagerTakeover) window._chamOnManagerTakeover(_aiRoom, managerName);
+    }
+
+    function askAI(userMessage) {
+        var _lang = (new URLSearchParams(window.location.search).get('lang') || 'kr').toLowerCase();
+        var _errOffline = {
+            kr: "현재 서버 연결 중입니다. 잠시 후 다시 시도해주세요!\n\n급하신 문의는 하단 '상담사 연결' 버튼을 눌러주세요 😊",
+            ja: "現在サーバーに接続中です。しばらくしてから再度お試しください！\n\nお急ぎの場合は下の「相談員に接続」ボタンをご利用ください 😊",
+            us: "Connecting to server. Please try again shortly!\n\nFor urgent inquiries, click 'Connect to Agent' below 😊"
+        };
+        var _errEmpty = {
+            kr: "응답을 처리하지 못했습니다. 다시 시도해주세요.",
+            ja: "応答を処理できませんでした。もう一度お試しください。",
+            us: "Could not process the response. Please try again."
+        };
+        var _errGeneral = {
+            kr: "죄송합니다, 일시적인 오류가 발생했어요 😥\n잠시 후 다시 시도하시거나, 하단 '상담사 연결' 버튼을 눌러주세요!",
+            ja: "申し訳ございません、一時的なエラーが発生しました 😥\nしばらくしてから再度お試しいただくか、下の「相談員に接続」ボタンをご利用ください！",
+            us: "Sorry, a temporary error occurred 😥\nPlease try again shortly, or click 'Connect to Agent' below!"
+        };
+        var _l = (_lang === 'en') ? 'us' : _lang;
+        if (!db) {
+            return Promise.resolve(_errOffline[_l] || _errOffline['kr']);
+        }
+        return db.functions.invoke('chatbot-ai', {
+            body: { message: userMessage, history: chatHistory.slice(-8), lang: _lang }
+        }).then(function(result) {
+            if (result.error) throw result.error;
+            return (result.data && result.data.reply) || (_errEmpty[_l] || _errEmpty['kr']);
+        }).catch(function(e) {
+            console.error('AI 호출 오류:', e);
+            return _errGeneral[_l] || _errGeneral['kr'];
+        });
+    }
+
+    function processInput(text) {
+        if (isProcessing) return;
+        addMsg(text, 'user');
+        chatHistory.push({ role: 'user', content: text });
+        setLoading(true);
+        showTyping();
+
+        // 첫 메시지 시 AI 채팅방 생성 후 진행
+        ensureAiRoom().then(function() {
+            saveMsg('customer', text);
+            return askAI(text);
+        }).then(function(reply) {
+            removeTyping();
+            addMsg(reply);
+            chatHistory.push({ role: 'assistant', content: reply });
+            if (chatHistory.length > 20) chatHistory = chatHistory.slice(-16);
+            saveMsg('chatbot', reply);
+        }).catch(function() {
+            removeTyping();
+            addMsg("오류가 발생했습니다. 다시 시도해주세요.");
+        }).finally(function() {
+            setLoading(false);
+        });
+    }
+
+    function toggleBot() {
+        var win = getEl('cham-bot-window');
+        var trg = getEl('cham-bot-trigger');
+        var ico = getEl('cham-bot-icon');
+        var badge = getEl('cham-bot-badge');
+        if (!win || !trg) return;
+
+        if (win.classList.contains('visible')) {
+            win.classList.remove('visible');
+            trg.classList.remove('open');
+            if (ico) ico.className = 'fa-solid fa-comments';
+        } else {
+            win.classList.add('visible');
+            trg.classList.add('open');
+            if (ico) ico.className = 'fa-solid fa-xmark';
+            if (badge) badge.classList.add('hide');
+            if (!opened) { welcome(); opened = true; }
+            setTimeout(function() { var inp = getEl('chamInput'); if(inp) inp.focus(); }, 300);
+        }
+    }
+
+    function sendMsg() {
+        // 실시간 상담 모드면 AI가 아닌 매니저에게 전송
+        if (window._chamLiveMode) return;
+        if (isProcessing) return;
+        var inp = getEl('chamInput');
+        if (!inp) return;
+        var text = inp.value.trim();
+        if (!text) return;
+        inp.value = '';
+        processInput(text);
+    }
+
+    // 파일 첨부 처리 (AI 모드: 미리보기 + DB 저장)
+    function handleFileAttach(files) {
+        var c = getEl('chamMessages');
+        if (!c) return;
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            if (file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = (function(f) {
+                    return function(e) {
+                        c.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + e.target.result + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(99,102,241,0.2);" onclick="window.open(this.src)"></div>');
+                        c.scrollTop = c.scrollHeight;
+                    };
+                })(file);
+                reader.readAsDataURL(file);
+            } else {
+                c.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:13px;">📎 ' + escHtml(file.name) + '</div></div>');
+                c.scrollTop = c.scrollHeight;
+            }
+        }
+        addMsg("파일을 확인했습니다! 파일 관련 상담이 필요하시면 하단 '상담사 연결' 버튼을 눌러 매니저에게 직접 전달해주세요 😊");
+    }
+
+    // 이벤트 바인딩 (DOMContentLoaded - 로딩 순서 안전)
+    function bindEvents() {
+        var trigger = getEl('cham-bot-trigger');
+        if (trigger) trigger.addEventListener('click', toggleBot);
+
+        var closeBtn = document.querySelector('.cham-close');
+        if (closeBtn) closeBtn.addEventListener('click', toggleBot);
+
+        var sendBtn = getEl('chamSendBtn');
+        if (sendBtn) sendBtn.addEventListener('click', sendMsg);
+
+        var input = getEl('chamInput');
+        if (input) {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.isComposing) sendMsg();
+            });
+        }
+
+        var fileInput = getEl('chamFileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                if (window._chamLiveMode) return;
+                if (e.target.files.length > 0) handleFileAttach(e.target.files);
+                e.target.value = '';
+            });
+        }
+    }
+
+    // DOM 준비되면 바인딩
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindEvents);
+    } else {
+        bindEvents();
+    }
+
+    // 전역 접근용
+    window.ChamBot = { toggle: toggleBot, send: sendMsg };
+
+    console.log('\uD83E\uDD8E \uCE74\uBA5C\uB808\uC628 AI \uC0C1\uB2F4\uBD07 \uB85C\uB4DC \uC644\uB8CC');
+
+})();
+</script>
+
+<script>
+// ═══ 인간 상담 연결 모듈 ═══
+(function() {
+    'use strict';
+    
+    var _room = null, _sub = null, _live = false;
+    
+    function getSb() {
+        if (window.sb) return window.sb;
+        // window.sb가 없으면 직접 생성
+        try {
+            window.sb = supabase.createClient(
+                "https://qinvtnhiidtmrzosyvys.supabase.co",
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y"
+            );
+            console.log('🔗 상담모듈: Supabase 직접 생성 완료');
+            return window.sb;
+        } catch(e) {
+            console.error('상담모듈: Supabase 생성 실패', e);
+            return null;
+        }
+    }
+    
+    // 기본 상담사 (DB 로드 실패 시)
+    var DEFAULT_MANAGERS = [
+        {name:'지숙', phone:'010-3455-1946'},
+        {name:'은미', phone:'010-7793-5393'},
+        {name:'성희', phone:'010-3490-3328'}
+    ];
+
+    // ── 매니저 선택 UI 표시 ──
+    function showManagerPicker(managers, msgArea) {
+        var h = '<div style="padding:4px 0;">';
+        h += '<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:16px; padding:16px; color:#fff; box-shadow:0 4px 15px rgba(102,126,234,0.3);">';
+        h += '<div style="text-align:center; margin-bottom:12px;">';
+        h += '<div style="font-size:28px; margin-bottom:4px;">👋</div>';
+        h += '<div style="font-weight:700; font-size:15px;">상담 매니저를 선택해주세요</div>';
+        h += '<div style="font-size:11px; opacity:0.8; margin-top:2px;">선택하시면 바로 연결됩니다</div>';
+        h += '</div>';
+        h += '<div style="display:flex; flex-direction:column; gap:8px;">';
+        var colors = ['#4f46e5','#7c3aed','#2563eb','#0891b2','#059669'];
+        managers.forEach(function(mgr, i) {
+            var c = colors[i % colors.length];
+            h += '<button class="cham-mgr-btn" data-name="' + mgr.name + '" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background=\'rgba(255,255,255,0.3)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">';
+            h += '<span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">📞</span>';
+            h += '<span style="flex:1; text-align:left;"><div>' + mgr.name + ' 매니저</div>';
+            if (mgr.phone) h += '<div style="font-size:11px; opacity:0.7; font-weight:400;">' + mgr.phone + '</div>';
+            h += '</span><span style="font-size:18px;">→</span></button>';
+        });
+        h += '</div></div></div>';
+        msgArea.insertAdjacentHTML('beforeend', h);
+        msgArea.scrollTop = msgArea.scrollHeight;
+        
+        var btns = msgArea.querySelectorAll('.cham-mgr-btn');
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                startLive(btn.getAttribute('data-name'));
+            });
+        });
+    }
+
+    // ── 상담사 연결 (진입점) ──
+    var _customerName = '';
+    
+    window.ChamBot_connectHuman = function() {
+        var msgArea = document.getElementById('chamMessages');
+        if (!msgArea) return;
+        
+        // 먼저 고객 이름 입력 받기
+        var h = '<div style="padding:4px 0;">';
+        h += '<div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px;">';
+        h += '<div style="text-align:center; margin-bottom:10px;">';
+        h += '<div style="font-size:24px;">✨</div>';
+        h += '<div style="font-weight:700; color:#0369a1; font-size:14px;">상담사에게 연결합니다</div>';
+        h += '<div style="font-size:12px; color:#0284c7; margin-top:2px;">먼저 성함을 알려주세요!</div>';
+        h += '</div>';
+        h += '<div style="display:flex; gap:6px;">';
+        h += '<input id="chamCustName" type="text" placeholder="이름 (예: 홍길동)" style="flex:1; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit;">';
+        h += '<button id="chamCustNameBtn" style="background:#0284c7; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap;">확인</button>';
+        h += '</div></div></div>';
+        msgArea.insertAdjacentHTML('beforeend', h);
+        msgArea.scrollTop = msgArea.scrollHeight;
+        
+        var nameInput = document.getElementById('chamCustName');
+        var nameBtn = document.getElementById('chamCustNameBtn');
+        if (nameInput) nameInput.focus();
+        
+        function onNameSubmit() {
+            var name = nameInput.value.trim();
+            if (!name) { nameInput.style.borderColor = '#ef4444'; nameInput.placeholder = '이름을 입력해주세요!'; return; }
+            _customerName = name;
+            
+            // 이름 입력 UI 제거
+            var card = nameBtn.closest('div[style*="padding:4px"]');
+            if (card) card.remove();
+            
+            // 매니저 선택 UI 표시
+            var sb = getSb();
+            if (!sb) { showManagerPicker(DEFAULT_MANAGERS, msgArea); return; }
+            
+            sb.from('chatbot_knowledge').select('question,answer')
+              .eq('category', '_managers').eq('is_active', true)
+              .then(function(res) {
+                var mgrs = [];
+                if (res.data && res.data.length > 0) {
+                    res.data.forEach(function(m) {
+                        try { mgrs.push(JSON.parse(m.answer)); } catch(e) { mgrs.push({name: m.question}); }
+                    });
+                }
+                showManagerPicker(mgrs.length > 0 ? mgrs : DEFAULT_MANAGERS, msgArea);
+            }).catch(function() {
+                showManagerPicker(DEFAULT_MANAGERS, msgArea);
+            });
+        }
+        
+        if (nameBtn) nameBtn.addEventListener('click', onNameSubmit);
+        if (nameInput) nameInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') onNameSubmit(); });
+    };
+
+    // ── 실시간 상담 시작 ──
+    function startLive(managerName) {
+        var sb = getSb();
+        var msgArea = document.getElementById('chamMessages');
+        if (!sb || !msgArea) {
+            if (msgArea) msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">연결 중 오류! 📞 직접 전화해주세요.</div>');
+            return;
+        }
+        
+        // AI 대화 요약
+        var summary = '';
+        try {
+            var hist = window.ChamBot && window.ChamBot._history ? window.ChamBot._history : [];
+            summary = hist.slice(-4).map(function(h) {
+                return (h.role === 'user' ? '고객: ' : 'AI: ') + String(h.content).substring(0, 80);
+            }).join('\n');
+        } catch(e) {}
+        
+        sb.from('chat_rooms').insert({
+            customer_name: _customerName || '고객',
+            assigned_manager: managerName,
+            status: 'waiting',
+            source: 'chatbot',
+            ai_summary: summary
+        }).select().single().then(function(res) {
+            if (res.error || !res.data) {
+                console.error('chat_rooms INSERT 에러:', res.error);
+                msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">상담 연결 실패 😥 직접 전화해주세요!<br>📞 지숙: 010-3455-1946</div>');
+                return;
+            }
+            console.log('✅ 상담방 생성 성공:', res.data.id);
+            
+            _room = res.data;
+            _live = true; window._chamLiveMode = true;
+            
+            // 헤더 변경
+            var title = document.querySelector('.cham-title');
+            var sub = document.querySelector('.cham-subtitle');
+            if (title) title.textContent = managerName + ' 매니저 상담';
+            if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#fbbf24;font-size:7px;margin-right:4px;"></i>' + (_customerName||'고객') + '님 연결 대기 중...';
+            
+            // 안내 메시지
+            msgArea.insertAdjacentHTML('beforeend',
+                '<div style="padding:4px 0;">' +
+                '<div style="background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%); border-radius:16px; padding:16px; border:1px solid #6ee7b7;">' +
+                '<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">' +
+                '<span style="background:#10b981; color:#fff; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">🔗</span>' +
+                '<div><div style="font-weight:700; color:#065f46; font-size:14px;">' + managerName + ' 매니저에게 연결 요청!</div>' +
+                '<div style="font-size:12px; color:#047857;">잠시만 기다려주세요 😊</div></div>' +
+                '</div>' +
+                '<div style="background:rgba(255,255,255,0.6); border-radius:10px; padding:10px; font-size:12px; color:#065f46;">' +
+                '💡 <b>Tip:</b> 아래 📎 버튼으로 사진/파일도 보낼 수 있어요!' +
+                '</div></div></div>'
+            );
+            
+            // 파일 버튼: 실시간 상담 모드 전용 핸들러 등록
+            var fileInput = document.getElementById('chamFileInput');
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    if (!_live) return;
+                    for (var i = 0; i < e.target.files.length; i++) uploadFile(e.target.files[i]);
+                    e.target.value = '';
+                }, true);
+            }
+            
+            // 상담사 연결 바 숨기기
+            var bar = document.getElementById('chamConnectBar');
+            if (bar) bar.style.display = 'none';
+            
+            // Realtime 구독
+            _sub = sb.channel('room-' + _room.id)
+                .on('postgres_changes', {
+                    event: 'INSERT', schema: 'public', table: 'chat_messages',
+                    filter: 'room_id=eq.' + _room.id
+                }, function(payload) {
+                    var m = payload.new;
+                    if (m.sender_type === 'manager') {
+                        var mn = m.sender_name || '매니저';
+                        var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
+                        mh += '<span style="font-size:10px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
+                        if (m.file_url) {
+                            if (m.file_type && m.file_type.startsWith('image/'))
+                                mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
+                            else
+                                mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;">📎 ' + (m.file_name||'파일 다운로드') + '</a>';
+                        }
+                        if (m.message) {
+                            // URL을 클릭 가능한 링크로 변환
+                            var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
+                            mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
+                        }
+                        mh += '</div>';
+                        msgArea.insertAdjacentHTML('beforeend', mh);
+                    } else if (m.sender_type === 'system') {
+                        msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+                        if (m.message.indexOf('접속') >= 0 && sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>상담 중';
+                        if (m.message.indexOf('종료') >= 0) endLive();
+                    }
+                    msgArea.scrollTop = msgArea.scrollHeight;
+                }).subscribe();
+            
+            msgArea.scrollTop = msgArea.scrollHeight;
+        }).catch(function(err) {
+            console.error('상담 연결 에러:', err);
+            msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">연결 오류! 📞 지숙 매니저: 010-3455-1946</div>');
+        });
+    }
+    
+    // ── 파일 업로드 ──
+    function uploadFile(file) {
+        if (!_room) return;
+        var sb = getSb(); if (!sb) return;
+        var msgArea = document.getElementById('chamMessages');
+        // 한글 파일명 → 안전한 영문명 변환
+        var ext = file.name.split('.').pop().toLowerCase();
+        var safeName = Date.now() + '-' + Math.random().toString(36).substr(2,6) + '.' + ext;
+        var path = 'room-' + _room.id + '/' + safeName;
+        sb.storage.from('chat-files').upload(path, file, {upsert: true}).then(function(up) {
+            if (up.error) { console.error('파일 업로드 에러:', up.error); msgArea.insertAdjacentHTML('beforeend', '<div style="padding:4px 0;"><div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:8px 12px; font-size:12px; color:#dc2626;">❌ 파일 업로드 실패: ' + (up.error.message||'권한 오류') + '</div></div>'); return; }
+            console.log('✅ 파일 업로드 성공:', path);
+            var url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
+            console.log('📎 파일 URL:', url, '파일타입:', file.type, '파일명:', file.name);
+            sb.from('chat_messages').insert({
+                room_id: _room.id,
+                sender_type: 'customer',
+                sender_name: _customerName || '고객',
+                file_url: url,
+                file_name: file.name,
+                file_type: file.type,
+                message: ''
+            }).then(function(r) {
+                if (r.error) console.error('❌ 파일 메시지 DB 저장 에러:', r.error);
+                else console.log('✅ 파일 메시지 DB 저장 성공, file_url:', url);
+            });
+            if (file.type.startsWith('image/'))
+                msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + url + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(99,102,241,0.2);cursor:pointer;" onclick="window.open(this.src)"></div>');
+            else
+                msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:13px;">📎 ' + file.name + ' ✅</div></div>');
+            msgArea.scrollTop = msgArea.scrollHeight;
+        });
+    }
+
+    // ── 메시지 전송 오버라이드 ──
+    function overrideSend() {
+        var sendBtn = document.getElementById('chamSendBtn');
+        var input = document.getElementById('chamInput');
+        if (sendBtn) {
+            sendBtn.addEventListener('click', function(e) {
+                if (_live) { e.stopImmediatePropagation(); liveSend(); }
+            }, true);
+        }
+        if (input) {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.isComposing && _live) { e.stopImmediatePropagation(); e.preventDefault(); liveSend(); }
+            }, true);
+        }
+    }
+    
+    function liveSend() {
+        var inp = document.getElementById('chamInput');
+        if (!inp || !_room) return;
+        var text = inp.value.trim(); if (!text) return;
+        inp.value = '';
+        var msgArea = document.getElementById('chamMessages');
+        msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + text + '</div></div>');
+        msgArea.scrollTop = msgArea.scrollHeight;
+        var sb = getSb();
+        if (sb) {
+            sb.from('chat_messages').insert({ room_id: _room.id, sender_type: 'customer', sender_name: _customerName || '고객', message: text })
+              .then(function(r) { if(r.error) console.error('메시지 전송 에러:', r.error); else console.log('✅ 고객 메시지 전송 성공'); });
+        }
+    }
+
+    // ── 상담 종료 ──
+    function endLive() {
+        _live = false; _room = null; window._chamLiveMode = false;
+        if (_sub) { _sub.unsubscribe(); _sub = null; }
+        var title = document.querySelector('.cham-title');
+        var sub = document.querySelector('.cham-subtitle');
+        if (title) title.textContent = '카멜레온 AI 상담';
+        if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>AI 실시간 상담 · 24시간';
+        var bar = document.getElementById('chamConnectBar'); if (bar) bar.style.display = 'flex';
+    }
+    
+    // ── 매니저 끼어들기 전환 핸들러 ──
+    // AI 챗봇 모듈에서 매니저가 끼어들면 이 함수가 호출됨
+    window._chamOnManagerTakeover = function(aiRoom, managerName) {
+        var sb = getSb();
+        if (!sb || !aiRoom) return;
+        _room = aiRoom;
+        _customerName = _customerName || '웹 고객';
+        _live = true;
+        window._chamLiveMode = true;
+
+        // 파일 버튼: 실시간 상담 모드 전용 핸들러 등록
+        var fileInput = document.getElementById('chamFileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                if (!_live) return;
+                for (var i = 0; i < e.target.files.length; i++) uploadFile(e.target.files[i]);
+                e.target.value = '';
+            }, true);
+        }
+
+        // 상담사 연결 바 숨기기
+        var bar = document.getElementById('chamConnectBar');
+        if (bar) bar.style.display = 'none';
+
+        // Realtime 구독 (매니저 메시지 수신)
+        var msgArea = document.getElementById('chamMessages');
+        _sub = sb.channel('room-' + _room.id)
+            .on('postgres_changes', {
+                event: 'INSERT', schema: 'public', table: 'chat_messages',
+                filter: 'room_id=eq.' + _room.id
+            }, function(payload) {
+                var m = payload.new;
+                if (m.sender_type === 'manager') {
+                    var mn = m.sender_name || '매니저';
+                    var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
+                    mh += '<span style="font-size:10px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + mn + '</span>';
+                    if (m.file_url) {
+                        if (m.file_type && m.file_type.startsWith('image/'))
+                            mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
+                        else
+                            mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;">📎 ' + (m.file_name||'파일 다운로드') + '</a>';
+                    }
+                    if (m.message) {
+                        var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
+                        mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
+                    }
+                    mh += '</div>';
+                    msgArea.insertAdjacentHTML('beforeend', mh);
+                } else if (m.sender_type === 'system') {
+                    msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+                    if (m.message.indexOf('종료') >= 0) endLive();
+                }
+                msgArea.scrollTop = msgArea.scrollHeight;
+            }).subscribe();
+    };
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', overrideSend);
+    else setTimeout(overrideSend, 300);
+
+    console.log('🔗 인간 상담 연결 모듈 로드 완료');
+})();
+</script>
 
 </body>
 </html>

@@ -54,7 +54,22 @@ const PDF_LABELS = {
         payment_bank: "계좌이체로 결제되었습니다.",
         payment_deposit: "예치금으로 결제되었습니다.",
         opt_default: "기본 사양",
-        opt_add: "추가 옵션"
+        opt_add: "추가 옵션",
+        ordersheet_order_no: "주 문 번 호",
+        ordersheet_date: "접 수 일 자",
+        ordersheet_customer: "주   문   자",
+        ordersheet_phone: "연   락   처",
+        ordersheet_address: "배 송 주 소",
+        ordersheet_request: "요 청 사 항",
+        ordersheet_none: "없음",
+        ordersheet_unspecified: "미지정",
+        ordersheet_delivery_date: "배송 희망일",
+        ordersheet_prod_spec: "제 작 사 양",
+        ordersheet_qty_unit: "개",
+        ordersheet_qty_label: "수량",
+        ordersheet_design_preview: "디자인 시안 확인",
+        ordersheet_no_image: "이미지 없음 (파일 별도 확인)",
+        ordersheet_page_label: "Page"
     },
     ja: {
         quote_title: "御 見 積 書",
@@ -81,7 +96,22 @@ const PDF_LABELS = {
         payment_bank: "銀行振込完了",
         payment_deposit: "デポジット決済完了",
         opt_default: "基本仕様",
-        opt_add: "追加オプション"
+        opt_add: "追加オプション",
+        ordersheet_order_no: "注文番号",
+        ordersheet_date: "受付日",
+        ordersheet_customer: "注文者",
+        ordersheet_phone: "連絡先",
+        ordersheet_address: "配送先住所",
+        ordersheet_request: "備考・要望",
+        ordersheet_none: "なし",
+        ordersheet_unspecified: "未指定",
+        ordersheet_delivery_date: "配送希望日",
+        ordersheet_prod_spec: "製作仕様",
+        ordersheet_qty_unit: "個",
+        ordersheet_qty_label: "数量",
+        ordersheet_design_preview: "デザインプレビュー",
+        ordersheet_no_image: "画像なし（ファイルを別途ご確認ください）",
+        ordersheet_page_label: "Page"
     },
     us: {
         quote_title: "QUOTATION",
@@ -96,7 +126,7 @@ const PDF_LABELS = {
         provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Manufacturing", "+82-31-366-1984"],
         headers: ["No", "Item", "Spec/Option", "Qty", "Price", "Amount"],
         supply_price: "Subtotal :",
-        vat: "VAT :",
+        vat: "Sales Tax :",
         discount: "Discount :",
         mileage: "Points Used :",
         total_amount: "Grand Total",
@@ -108,7 +138,22 @@ const PDF_LABELS = {
         payment_bank: "Paid by Bank Transfer",
         payment_deposit: "Paid by Deposit",
         opt_default: "Basic Spec",
-        opt_add: "Add-ons"
+        opt_add: "Add-ons",
+        ordersheet_order_no: "Order No.",
+        ordersheet_date: "Date",
+        ordersheet_customer: "Customer",
+        ordersheet_phone: "Phone",
+        ordersheet_address: "Ship To",
+        ordersheet_request: "Notes",
+        ordersheet_none: "None",
+        ordersheet_unspecified: "TBD",
+        ordersheet_delivery_date: "Requested Delivery",
+        ordersheet_prod_spec: "SPECIFICATIONS",
+        ordersheet_qty_unit: "pcs",
+        ordersheet_qty_label: "Qty",
+        ordersheet_design_preview: "Design Preview",
+        ordersheet_no_image: "No image (see attached file)",
+        ordersheet_page_label: "Page"
     }
 };
 
@@ -856,7 +901,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             const [c,m,yk,k] = hexToCMYK(NAVY_CMYK);
             doc.setFillColor(c,m,yk,k); doc.rect(0, 0, 210, 20, 'F');
             doc.setTextColor(0,0,0,0); doc.setFontSize(22); 
-            drawText(doc, "작 업 지 시 서", 105, 14, { align: 'center', weight: 'bold' }, "#ffffff");
+            drawText(doc, TEXT.ordersheet_title, 105, 14, { align: 'center', weight: 'bold' }, "#ffffff");
             
             const startY = 30; const boxH = 50;
             doc.setTextColor(0,0,0,1); doc.setDrawColor(0); doc.setLineWidth(0.4);
@@ -864,26 +909,26 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 
             doc.setFontSize(10); 
             let curY = startY + 8;
-            drawText(doc, `주 문 번 호 :  ${orderInfo.id || '-'}`, 20, curY, {weight:'bold'});
-            drawText(doc, `접 수 일 자 :  ${new Date().toLocaleDateString()}`, 80, curY);
+            drawText(doc, `${TEXT.ordersheet_order_no} :  ${orderInfo.id || '-'}`, 20, curY, {weight:'bold'});
+            drawText(doc, `${TEXT.ordersheet_date} :  ${new Date().toLocaleDateString()}`, 80, curY);
             doc.setDrawColor(200); doc.setLineWidth(0.1); doc.line(20, curY + 3, 130, curY + 3); curY += 8; 
             doc.setFontSize(11);
-            drawText(doc, `주   문   자 :  ${orderInfo.manager || '-'}`, 20, curY); curY += 6; 
-            drawText(doc, `연   락   처 :  ${orderInfo.phone || '-'}`, 20, curY); curY += 6; 
-            drawText(doc, `배 송 주 소 :`, 20, curY); doc.setFontSize(10);
-            drawText(doc, `${orderInfo.address || '-'}`, 45, curY, {maxWidth: 90}); curY += 10; 
+            drawText(doc, `${TEXT.ordersheet_customer} :  ${orderInfo.manager || '-'}`, 20, curY); curY += 6;
+            drawText(doc, `${TEXT.ordersheet_phone} :  ${orderInfo.phone || '-'}`, 20, curY); curY += 6;
+            drawText(doc, `${TEXT.ordersheet_address} :`, 20, curY); doc.setFontSize(10);
+            drawText(doc, `${orderInfo.address || '-'}`, 45, curY, {maxWidth: 90}); curY += 10;
             doc.setFontSize(11);
-            drawText(doc, `요 청 사 항 :`, 20, curY);
-            drawText(doc, `${orderInfo.note || '없음'}`, 45, curY, {maxWidth: 130, weight:'bold'}, "#1d4ed8");
+            drawText(doc, `${TEXT.ordersheet_request} :`, 20, curY);
+            drawText(doc, `${orderInfo.note || TEXT.ordersheet_none}`, 45, curY, {maxWidth: 130, weight:'bold'}, "#1d4ed8");
 
-            let dateStr = "미지정";
+            let dateStr = TEXT.ordersheet_unspecified;
             if (orderInfo.date) {
                 const parts = orderInfo.date.split('-');
                 if(parts.length === 3) dateStr = `${parts[1]}.${parts[2]}`;
                 else dateStr = orderInfo.date;
             }
             doc.setFontSize(12);
-            drawText(doc, "배송 희망일", 165, startY + 12, {align:'center', weight:'bold'}, "#ff0000");
+            drawText(doc, TEXT.ordersheet_delivery_date, 165, startY + 12, {align:'center', weight:'bold'}, "#ff0000");
             doc.setFontSize(42); 
             drawText(doc, dateStr, 165, startY + 32, {align:'center', weight:'bold'}, "#ff0000");
             doc.setDrawColor(255, 0, 0); doc.setLineWidth(0.5); doc.roundedRect(135, startY + 5, 55, 35, 3, 3); 
@@ -896,7 +941,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 
             if (window.QRCode) {
                 try {
-                    let optionText = "기본 사양";
+                    let optionText = TEXT.opt_default;
                     if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
                         const optNames = [];
                         Object.values(item.selectedAddons).forEach(code => {
@@ -914,8 +959,8 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             doc.setFillColor(240, 240, 240); doc.setDrawColor(0); doc.setLineWidth(0.1);
             doc.rect(15, prodY, 180, 10, 'FD');
             doc.setTextColor(0); doc.setFontSize(11);
-            drawText(doc, "제 작 사 양", 20, prodY + 7, {weight:'bold'});
-            drawText(doc, `수량: ${item.qty}개`, 185, prodY + 7, {align:'right', weight:'bold', fontSize:12}, "#ff0000");
+            drawText(doc, TEXT.ordersheet_prod_spec, 20, prodY + 7, {weight:'bold'});
+            drawText(doc, `${TEXT.ordersheet_qty_label}: ${item.qty}${TEXT.ordersheet_qty_unit}`, 185, prodY + 7, {align:'right', weight:'bold', fontSize:12}, "#ff0000");
 
             const infoY = prodY + 18; doc.setFontSize(16);
             drawText(doc, `${item.product.name}`, 20, infoY, {weight:'bold'});
@@ -927,13 +972,13 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                     drawText(doc, `• ${add.name} (x${qty})`, 25, optY); optY += 6;
                 });
             } else {
-                drawText(doc, "• 기본 사양", 25, optY); optY += 6;
+                drawText(doc, "• " + TEXT.opt_default, 25, optY); optY += 6;
             }
 
             const imgBoxY = optY + 5; const footerY = 255; const imgBoxH = footerY - imgBoxY - 5; 
             doc.setDrawColor(0); doc.setLineWidth(0.2); doc.rect(15, imgBoxY, 180, imgBoxH); 
-            const pageLabel = loopCount > 1 ? ` (Page ${p + 1} / ${loopCount})` : "";
-            drawText(doc, `< 디자인 시안 확인${pageLabel} >`, 105, imgBoxY - 2, {align:'center', size:9, color:"#888888"});
+            const pageLabel = loopCount > 1 ? ` (${TEXT.ordersheet_page_label} ${p + 1} / ${loopCount})` : "";
+            drawText(doc, `< ${TEXT.ordersheet_design_preview}${pageLabel} >`, 105, imgBoxY - 2, {align:'center', size:9, color:"#888888"});
 
             let imgData = null; 
             if (item.type === 'design' && itemPages.length > 0 && itemPages[p]) {
@@ -973,7 +1018,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                     doc.addImage(imgData, format, imgX, imgY, w, h);
                 } catch (err) {}
             } else {
-                drawText(doc, "이미지 없음 (파일 별도 확인)", 105, imgBoxY + (imgBoxH/2), {align:'center'});
+                drawText(doc, TEXT.ordersheet_no_image, 105, imgBoxY + (imgBoxH/2), {align:'center'});
             }
 
             doc.setDrawColor(0); doc.setLineWidth(0.1);
@@ -983,9 +1028,9 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             doc.line(15 + colW, footerY, 15 + colW, footerY + signBoxH); 
             doc.line(15 + colW*2, footerY, 15 + colW*2, footerY + signBoxH); 
             doc.setFontSize(10);
-            drawText(doc, "제 작 담 당", 15 + colW/2, footerY+5.5, {align:'center'});
-            drawText(doc, "검 수 / 출 고", 15 + colW*1.5, footerY+5.5, {align:'center'});
-            drawText(doc, "배 송 담 당", 15 + colW*2.5, footerY+5.5, {align:'center'});
+            drawText(doc, TEXT.staff_make, 15 + colW/2, footerY+5.5, {align:'center'});
+            drawText(doc, TEXT.staff_check, 15 + colW*1.5, footerY+5.5, {align:'center'});
+            drawText(doc, TEXT.staff_ship, 15 + colW*2.5, footerY+5.5, {align:'center'});
             doc.setFontSize(8); drawText(doc, "Generated by Chameleon Printing System", 105, 292, { align: 'center' }, "#888888");
         } 
     } 
