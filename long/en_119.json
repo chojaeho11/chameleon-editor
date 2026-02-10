@@ -667,5 +667,16 @@
   "btn_do_final_pay": "Pay Now",
   "label_estimate_price": "Estimated Price (per unit)",
   "estimate_note_1": "* Final price may be lower with mileage & tier discounts.",
-  "estimate_note_2": "Check the final price in your cart."
+  "estimate_note_2": "Check the final price in your cart.",
+  "rv_title": "Customer Reviews",
+  "rv_write": "Write a Review",
+  "rv_login_required": "Log in to write a review",
+  "rv_placeholder": "Share your honest experience with this product",
+  "rv_submit": "Submit Review",
+  "rv_photo_add": "Add Photo",
+  "rv_load_more": "Load More",
+  "rv_no_reviews": "No reviews yet. Be the first to share!",
+  "rv_total_reviews": "reviews",
+  "rv_avg_rating": "Average Rating",
+  "rv_submitted": "Review submitted!"
 }

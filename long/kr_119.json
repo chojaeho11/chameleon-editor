@@ -500,6 +500,17 @@
   "btn_prev": "이전",
   "btn_next": "다음",
   "label_page_suffix": "페이지",
-  "search_placeholder_start": "어떤 디자인을 찾으세요? (예: 고양이, 바다, 하늘)"
+  "search_placeholder_start": "어떤 디자인을 찾으세요? (예: 고양이, 바다, 하늘)",
+  "rv_title": "고객 리뷰",
+  "rv_write": "리뷰 작성",
+  "rv_login_required": "로그인 후 리뷰를 작성할 수 있습니다",
+  "rv_placeholder": "상품에 대한 솔직한 리뷰를 남겨주세요",
+  "rv_submit": "리뷰 등록",
+  "rv_photo_add": "사진 첨부",
+  "rv_load_more": "더보기",
+  "rv_no_reviews": "아직 리뷰가 없습니다. 첫 리뷰를 남겨보세요!",
+  "rv_total_reviews": "개의 리뷰",
+  "rv_avg_rating": "평균 평점",
+  "rv_submitted": "리뷰가 등록되었습니다!"
 }
   

@@ -667,5 +667,16 @@
   "btn_do_final_pay": "決済する",
   "label_estimate_price": "見積もり金額（1個基準）",
   "estimate_note_1": "※ 最終金額はポイント・等級割引等でさらにお安くなります。",
-  "estimate_note_2": "最終金額はカートでご確認ください。"
+  "estimate_note_2": "最終金額はカートでご確認ください。",
+  "rv_title": "カスタマーレビュー",
+  "rv_write": "レビューを書く",
+  "rv_login_required": "レビューを書くにはログインが必要です",
+  "rv_placeholder": "商品についての率直なレビューをお聞かせください",
+  "rv_submit": "レビュー投稿",
+  "rv_photo_add": "写真を添付",
+  "rv_load_more": "もっと見る",
+  "rv_no_reviews": "まだレビューはありません。最初のレビューを書いてみましょう！",
+  "rv_total_reviews": "件のレビュー",
+  "rv_avg_rating": "平均評価",
+  "rv_submitted": "レビューが投稿されました！"
 }
