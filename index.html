@@ -3590,13 +3590,6 @@ window.showChoiceModal = async function(key) {
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
                     ${dDesc}
                 </div>
-                <div id="productReviewSection" class="product-review-section">
-                    <h3 class="review-section-title">${window.t('rv_title','고객 리뷰')}</h3>
-                    <div id="reviewSummary" class="review-summary"></div>
-                    <div id="reviewWriteArea"></div>
-                    <div id="reviewList" class="review-list"></div>
-                    <button id="btnLoadMoreReviews" onclick="window.loadMoreReviews()" class="btn-round" style="display:none;width:100%;margin-top:10px;">${window.t('rv_load_more','더보기')}</button>
-                </div>
             </div>
 
             <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto;">
@@ -3637,12 +3630,32 @@ window.showChoiceModal = async function(key) {
 
     window.updateModalTotal();
 
-    // ★ 리뷰 시스템 초기화
-    window.currentReviewProductCode = key;
-    window.currentReviewLang = lang;
-    window.productReviewPage = 0;
-    window.renderReviewWriteForm(key);
-    window.loadProductReviews(key, 0);
+    // ★ 리뷰 시스템 초기화 (dDesc HTML 깨짐 방지 — DOM 직접 append)
+    setTimeout(() => {
+        const leftContent = modalBox.querySelector('.choice-left-content');
+        if (leftContent) {
+            // 기존 리뷰 섹션 제거 (중복 방지)
+            const old = leftContent.querySelector('#productReviewSection');
+            if (old) old.remove();
+
+            const reviewDiv = document.createElement('div');
+            reviewDiv.id = 'productReviewSection';
+            reviewDiv.className = 'product-review-section';
+            reviewDiv.innerHTML = `
+                <h3 class="review-section-title">${window.t('rv_title','고객 리뷰')}</h3>
+                <div id="reviewSummary" class="review-summary"></div>
+                <div id="reviewWriteArea"></div>
+                <div id="reviewList" class="review-list"></div>
+                <button id="btnLoadMoreReviews" onclick="window.loadMoreReviews()" class="btn-round" style="display:none;width:100%;margin-top:10px;">${window.t('rv_load_more','더보기')}</button>
+            `;
+            leftContent.appendChild(reviewDiv);
+        }
+        window.currentReviewProductCode = key;
+        window.currentReviewLang = lang;
+        window.productReviewPage = 0;
+        window.renderReviewWriteForm(key);
+        window.loadProductReviews(key, 0);
+    }, 300);
 };
 // 실시간 합계 업데이트 함수
 // [수정 1] 금액 계산 함수 (단품/옵션 모두 수량 곱하기 적용)
