@@ -5921,20 +5921,37 @@ window.filterModalItems = function(keyword) {
 // ═══ 인간 상담 연결 모듈 ═══
 (function() {
     'use strict';
-    
+
     var _room = null, _sub = null, _live = false;
-    
-    function getSb() {
-        // window.sb 싱글톤 사용 (중복 GoTrueClient 방지)
-        return window.sb || null;
-    }
-    
-    // 기본 상담사 (DB 로드 실패 시)
-    var DEFAULT_MANAGERS = [
-        {name:'지숙', phone:'010-3455-1946'},
-        {name:'은미', phone:'010-7793-5393'},
-        {name:'성희', phone:'010-3490-3328'}
-    ];
+
+    function getSb() { return window.sb || null; }
+
+    // 언어 감지
+    var _lang2 = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
+    var _liveText = {
+        selectMgr:    { kr:'상담 매니저를 선택해주세요', ja:'相談マネージャーを選択してください', en:'Please select a manager' },
+        selectSub:    { kr:'선택하시면 바로 연결됩니다', ja:'選択するとすぐに接続されます', en:"You'll be connected right away" },
+        mgrSuffix:    { kr:' 매니저', ja:'', en:'' },
+        mgrChat:      { kr:' 매니저 상담', ja:' マネージャー相談', en:' - Live Chat' },
+        custLabel:    { kr:'고객', ja:'お客様', en:'Customer' },
+        waiting:      { kr:'님 연결 대기 중...', ja:'様 接続待機中...', en:' connecting...' },
+        connectReq:   { kr:' 매니저에게 연결 요청!', ja:' マネージャーに接続リクエスト！', en:' - Connection requested!' },
+        pleaseWait:   { kr:'잠시만 기다려주세요 😊', ja:'少々お待ちください 😊', en:'Please wait a moment 😊' },
+        tipFile:      { kr:'아래 📎 버튼으로 사진/파일도 보낼 수 있어요!', ja:'下の📎ボタンで写真/ファイルも送れます！', en:'You can send photos/files using the 📎 button below!' },
+        consulting:   { kr:'상담 중', ja:'相談中', en:'In consultation' },
+        fileDl:       { kr:'파일 다운로드', ja:'ファイルダウンロード', en:'Download file' },
+        connectErr:   { kr:'연결 중 오류! 📞 직접 전화해주세요.', ja:'接続エラー！📞 直接お電話ください。', en:'Connection error! 📞 Please call us directly.' },
+        connectFail:  { kr:'상담 연결 실패 😥 직접 전화해주세요!<br>📞 지숙: 010-3455-1946', ja:'接続失敗 😥 直接お電話ください！<br>📞 047-712-1148', en:'Connection failed 😥 Please call us directly!<br>📞 047-712-1148' },
+        errPhone:     { kr:'연결 오류! 📞 지숙 매니저: 010-3455-1946', ja:'接続エラー！📞 047-712-1148', en:'Connection error! 📞 047-712-1148' }
+    };
+    function _lt(key) { return (_liveText[key] && _liveText[key][_lang2]) || (_liveText[key] && _liveText[key]['en']) || ''; }
+
+    // 기본 상담사 (DB 로드 실패 시) — 국가별
+    var DEFAULT_MANAGERS = _lang2 === 'ja'
+        ? [{name:'田中', phone:'047-712-1148'}, {name:'佐藤', phone:'047-712-1148'}, {name:'鈴木', phone:'047-712-1148'}]
+        : _lang2 === 'en'
+        ? [{name:'Sarah', phone:'047-712-1148'}, {name:'Emily', phone:'047-712-1148'}, {name:'Jessica', phone:'047-712-1148'}]
+        : [{name:'지숙', phone:'010-3455-1946'}, {name:'은미', phone:'010-7793-5393'}, {name:'성희', phone:'010-3490-3328'}];
 
     // ── 매니저 선택 UI 표시 ──
     function showManagerPicker(managers, msgArea) {
@@ -5942,8 +5959,8 @@ window.filterModalItems = function(keyword) {
         h += '<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:16px; padding:16px; color:#fff; box-shadow:0 4px 15px rgba(102,126,234,0.3);">';
         h += '<div style="text-align:center; margin-bottom:12px;">';
         h += '<div style="font-size:28px; margin-bottom:4px;">👋</div>';
-        h += '<div style="font-weight:700; font-size:15px;">상담 매니저를 선택해주세요</div>';
-        h += '<div style="font-size:11px; opacity:0.8; margin-top:2px;">선택하시면 바로 연결됩니다</div>';
+        h += '<div style="font-weight:700; font-size:15px;">' + _lt('selectMgr') + '</div>';
+        h += '<div style="font-size:11px; opacity:0.8; margin-top:2px;">' + _lt('selectSub') + '</div>';
         h += '</div>';
         h += '<div style="display:flex; flex-direction:column; gap:8px;">';
         var colors = ['#4f46e5','#7c3aed','#2563eb','#0891b2','#059669'];
@@ -5951,7 +5968,7 @@ window.filterModalItems = function(keyword) {
             var c = colors[i % colors.length];
             h += '<button class="cham-mgr-btn" data-name="' + mgr.name + '" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background=\'rgba(255,255,255,0.3)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">';
             h += '<span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">📞</span>';
-            h += '<span style="flex:1; text-align:left;"><div>' + mgr.name + ' 매니저</div>';
+            h += '<span style="flex:1; text-align:left;"><div>' + mgr.name + _lt('mgrSuffix') + '</div>';
             if (mgr.phone) h += '<div style="font-size:11px; opacity:0.7; font-weight:400;">' + mgr.phone + '</div>';
             h += '</span><span style="font-size:18px;">→</span></button>';
         });
@@ -6030,7 +6047,7 @@ window.filterModalItems = function(keyword) {
         var sb = getSb();
         var msgArea = document.getElementById('chamMessages');
         if (!sb || !msgArea) {
-            if (msgArea) msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">연결 중 오류! 📞 직접 전화해주세요.</div>');
+            if (msgArea) msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('connectErr') + '</div>');
             return;
         }
         
@@ -6039,12 +6056,12 @@ window.filterModalItems = function(keyword) {
         try {
             var hist = window.ChamBot && window.ChamBot._history ? window.ChamBot._history : [];
             summary = hist.slice(-4).map(function(h) {
-                return (h.role === 'user' ? '고객: ' : 'AI: ') + String(h.content).substring(0, 80);
+                return (h.role === 'user' ? _lt('custLabel') + ': ' : 'AI: ') + String(h.content).substring(0, 80);
             }).join('\n');
         } catch(e) {}
         
         sb.from('chat_rooms').insert({
-            customer_name: _customerName || '고객',
+            customer_name: _customerName || _lt('custLabel'),
             assigned_manager: managerName,
             status: 'waiting',
             source: 'chatbot',
@@ -6052,7 +6069,7 @@ window.filterModalItems = function(keyword) {
         }).select().single().then(function(res) {
             if (res.error || !res.data) {
                 console.error('chat_rooms INSERT 에러:', res.error);
-                msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">상담 연결 실패 😥 직접 전화해주세요!<br>📞 지숙: 010-3455-1946</div>');
+                msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('connectFail') + '</div>');
                 return;
             }
             console.log('✅ 상담방 생성 성공:', res.data.id);
@@ -6063,8 +6080,8 @@ window.filterModalItems = function(keyword) {
             // 헤더 변경
             var title = document.querySelector('.cham-title');
             var sub = document.querySelector('.cham-subtitle');
-            if (title) title.textContent = managerName + ' 매니저 상담';
-            if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#fbbf24;font-size:7px;margin-right:4px;"></i>' + (_customerName||'고객') + '님 연결 대기 중...';
+            if (title) title.textContent = managerName + _lt('mgrChat');
+            if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#fbbf24;font-size:7px;margin-right:4px;"></i>' + (_customerName||_lt('custLabel')) + _lt('waiting');
             
             // 안내 메시지
             msgArea.insertAdjacentHTML('beforeend',
@@ -6072,11 +6089,11 @@ window.filterModalItems = function(keyword) {
                 '<div style="background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%); border-radius:16px; padding:16px; border:1px solid #6ee7b7;">' +
                 '<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">' +
                 '<span style="background:#10b981; color:#fff; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">🔗</span>' +
-                '<div><div style="font-weight:700; color:#065f46; font-size:14px;">' + managerName + ' 매니저에게 연결 요청!</div>' +
-                '<div style="font-size:12px; color:#047857;">잠시만 기다려주세요 😊</div></div>' +
+                '<div><div style="font-weight:700; color:#065f46; font-size:14px;">' + managerName + _lt('connectReq') + '</div>' +
+                '<div style="font-size:12px; color:#047857;">' + _lt('pleaseWait') + '</div></div>' +
                 '</div>' +
                 '<div style="background:rgba(255,255,255,0.6); border-radius:10px; padding:10px; font-size:12px; color:#065f46;">' +
-                '💡 <b>Tip:</b> 아래 📎 버튼으로 사진/파일도 보낼 수 있어요!' +
+                '💡 <b>Tip:</b> ' + _lt('tipFile') +
                 '</div></div></div>'
             );
             
@@ -6102,14 +6119,14 @@ window.filterModalItems = function(keyword) {
                 }, function(payload) {
                     var m = payload.new;
                     if (m.sender_type === 'manager') {
-                        var mn = m.sender_name || '매니저';
+                        var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
                         var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
                         mh += '<span style="font-size:10px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
                         if (m.file_url) {
                             if (m.file_type && m.file_type.startsWith('image/'))
                                 mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
                             else
-                                mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;">📎 ' + (m.file_name||'파일 다운로드') + '</a>';
+                                mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;">📎 ' + (m.file_name||_lt('fileDl')) + '</a>';
                         }
                         if (m.message) {
                             // URL을 클릭 가능한 링크로 변환
@@ -6120,7 +6137,7 @@ window.filterModalItems = function(keyword) {
                         msgArea.insertAdjacentHTML('beforeend', mh);
                     } else if (m.sender_type === 'system') {
                         msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
-                        if (m.message.indexOf('접속') >= 0 && sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>상담 중';
+                        if (m.message.indexOf('접속') >= 0 && sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _lt('consulting');
                         if (m.message.indexOf('종료') >= 0) endLive();
                     }
                     msgArea.scrollTop = msgArea.scrollHeight;
@@ -6129,7 +6146,7 @@ window.filterModalItems = function(keyword) {
             msgArea.scrollTop = msgArea.scrollHeight;
         }).catch(function(err) {
             console.error('상담 연결 에러:', err);
-            msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">연결 오류! 📞 지숙 매니저: 010-3455-1946</div>');
+            msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('errPhone') + '</div>');
         });
     }
     
@@ -6150,7 +6167,7 @@ window.filterModalItems = function(keyword) {
             sb.from('chat_messages').insert({
                 room_id: _room.id,
                 sender_type: 'customer',
-                sender_name: _customerName || '고객',
+                sender_name: _customerName || _lt('custLabel'),
                 file_url: url,
                 file_name: file.name,
                 file_type: file.type,
