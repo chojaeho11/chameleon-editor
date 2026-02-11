@@ -467,6 +467,9 @@ const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
         return;
     }
 
+    // OAuth 콜백 처리 (sb 초기화 후 실행)
+    handleOAuthCallback();
+
     // 데이터 로드
     loadDashboard();
     loadTopics();
@@ -1062,8 +1065,8 @@ window.saveSettings = function() {
     } catch(e) {}
 })();
 
-// OAuth 콜백 처리
-(function handleOAuthCallback() {
+// OAuth 콜백 처리 (init 에서 sb 초기화 후 호출됨)
+async function handleOAuthCallback() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     if (!code) return;
@@ -1071,60 +1074,58 @@ window.saveSettings = function() {
     // URL 정리
     window.history.replaceState({}, document.title, window.location.pathname);
 
-    (async () => {
-        try {
-            const { data: config } = await sb.from('marketing_youtube_config').select('client_id, client_secret').limit(1).single();
-            if (!config) { alert('YouTube 설정을 먼저 저장해주세요'); return; }
+    try {
+        const { data: config } = await sb.from('marketing_youtube_config').select('client_id, client_secret').limit(1).single();
+        if (!config) { alert('YouTube 설정을 먼저 저장해주세요'); return; }
 
-            // 토큰 교환
-            const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    code,
-                    client_id: config.client_id,
-                    client_secret: config.client_secret,
-                    redirect_uri: window.location.origin + window.location.pathname,
-                    grant_type: 'authorization_code'
-                })
-            });
+        // 토큰 교환
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                code,
+                client_id: config.client_id,
+                client_secret: config.client_secret,
+                redirect_uri: window.location.origin + window.location.pathname,
+                grant_type: 'authorization_code'
+            })
+        });
 
-            const tokens = await tokenRes.json();
-            if (tokens.error) throw new Error(tokens.error_description || tokens.error);
+        const tokens = await tokenRes.json();
+        if (tokens.error) throw new Error(tokens.error_description || tokens.error);
 
-            // 채널 정보 가져오기
-            const channelRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
-                headers: { 'Authorization': 'Bearer ' + tokens.access_token }
-            });
-            const channelData = await channelRes.json();
-            const channelName = channelData.items?.[0]?.snippet?.title || 'Unknown';
-            const channelId = channelData.items?.[0]?.id || '';
+        // 채널 정보 가져오기
+        const channelRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+            headers: { 'Authorization': 'Bearer ' + tokens.access_token }
+        });
+        const channelData = await channelRes.json();
+        const channelName = channelData.items?.[0]?.snippet?.title || 'Unknown';
+        const channelId = channelData.items?.[0]?.id || '';
 
-            // DB에 토큰 저장
-            const { data: existing } = await sb.from('marketing_youtube_config').select('id').limit(1).single();
-            const update = {
-                access_token: tokens.access_token,
-                refresh_token: tokens.refresh_token || null,
-                token_expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
-                channel_id: channelId,
-                channel_name: channelName,
-                updated_at: new Date().toISOString()
-            };
+        // DB에 토큰 저장
+        const { data: existing } = await sb.from('marketing_youtube_config').select('id').limit(1).single();
+        const update = {
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token || null,
+            token_expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
+            channel_id: channelId,
+            channel_name: channelName,
+            updated_at: new Date().toISOString()
+        };
 
-            if (existing) {
-                await sb.from('marketing_youtube_config').update(update).eq('id', existing.id);
-            } else {
-                await sb.from('marketing_youtube_config').insert({ ...update, api_key: '', client_id: '', client_secret: '' });
-            }
-
-            alert(`YouTube 채널 연결 완료: ${channelName}`);
-            loadYoutubeConfig();
-        } catch(e) {
-            console.error('OAuth error:', e);
-            alert('YouTube 인증 실패: ' + e.message);
+        if (existing) {
+            await sb.from('marketing_youtube_config').update(update).eq('id', existing.id);
+        } else {
+            await sb.from('marketing_youtube_config').insert({ ...update, api_key: '', client_id: '', client_secret: '' });
         }
-    })();
-})();
+
+        alert(`YouTube 채널 연결 완료: ${channelName}`);
+        loadYoutubeConfig();
+    } catch(e) {
+        console.error('OAuth error:', e);
+        alert('YouTube 인증 실패: ' + e.message);
+    }
+}
 
 </script>
 </body>
