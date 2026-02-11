@@ -810,5 +810,19 @@
   "label_payment": "決済",
   "label_withdrawal": "出金",
   "label_admin_adjust": "管理者調整",
-  "label_other": "その他"
+  "label_other": "その他",
+
+  "contrib_upload_title": "📤 アップロード",
+  "contrib_upload_png": "PNG オブジェクト アップロード",
+  "contrib_upload_svg": "SVG ベクター アップロード",
+  "contrib_upload_logo": "ロゴ アップロード",
+  "contrib_label_tags": "検索キーワード（タグ）",
+  "contrib_ph_tags": "ファイルを選択すると自動入力されます。",
+  "contrib_label_thumb": "1. サムネイル (JPG/PNG)",
+  "contrib_label_svg": "2. SVG オリジナル",
+  "contrib_label_file": "ファイル選択",
+  "contrib_file_tip": "* 背景が透明なPNGファイルを推奨します。",
+  "contrib_btn_submit": "アップロード＆ポイント獲得",
+  "contrib_btn_cancel": "キャンセル",
+  "contrib_balance_label": "累計収益"
 }

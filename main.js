@@ -836,12 +836,15 @@ window.handleContributorUpload = function(type) {
     document.getElementById('cFileSimple').value = '';
 
     if (type === 'svg') {
-        title.innerText = '📤 SVG 벡터 업로드';
+        title.innerText = '📤 ' + window.t('contrib_upload_svg', 'SVG Vector Upload');
         svgArea.style.display = 'flex';
         simpleArea.style.display = 'none';
+    } else if (type === 'logo') {
+        title.innerText = '📤 ' + window.t('contrib_upload_logo', 'Logo Upload');
+        svgArea.style.display = 'none';
+        simpleArea.style.display = 'block';
     } else {
-        const name = type === 'logo' ? '로고' : 'PNG 객체';
-        title.innerText = `📤 ${name} 업로드`;
+        title.innerText = '📤 ' + window.t('contrib_upload_png', 'PNG Object Upload');
         svgArea.style.display = 'none';
         simpleArea.style.display = 'block';
     }

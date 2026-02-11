@@ -553,6 +553,20 @@
   "label_payment": "결제",
   "label_withdrawal": "출금",
   "label_admin_adjust": "관리자 조정",
-  "label_other": "기타"
+  "label_other": "기타",
+
+  "contrib_upload_title": "📤 업로드",
+  "contrib_upload_png": "PNG 객체 업로드",
+  "contrib_upload_svg": "SVG 벡터 업로드",
+  "contrib_upload_logo": "로고 업로드",
+  "contrib_label_tags": "검색 키워드 (태그)",
+  "contrib_ph_tags": "파일을 선택하면 자동 입력됩니다.",
+  "contrib_label_thumb": "1. 썸네일 (JPG/PNG)",
+  "contrib_label_svg": "2. SVG 원본",
+  "contrib_label_file": "파일 선택",
+  "contrib_file_tip": "* 배경이 투명한 PNG 파일을 권장합니다.",
+  "contrib_btn_submit": "업로드 및 적립받기",
+  "contrib_btn_cancel": "취소",
+  "contrib_balance_label": "내 누적 수익금"
 }
   

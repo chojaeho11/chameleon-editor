@@ -4823,33 +4823,33 @@ if (w >= 20 && h >= 20) {
 
 <div id="contributorUploadModal" class="modal-bg" style="display: none; z-index: 20000; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 500px; max-width: 95%;">
-        <h3 id="cUploadTitle" style="margin-top:0;">📤 업로드</h3>
-        
+        <h3 id="cUploadTitle" style="margin-top:0;" data-i18n="contrib_upload_title">📤 업로드</h3>
+
         <div style="margin-bottom: 15px;">
-            <label class="form-label" style="font-weight:bold; display:block; margin-bottom:5px;">검색 키워드 (태그)</label>
-            <input type="text" id="cUploadTags" class="ai-input-pretty" placeholder="파일을 선택하면 자동 입력됩니다.">
+            <label class="form-label" style="font-weight:bold; display:block; margin-bottom:5px;" data-i18n="contrib_label_tags">검색 키워드 (태그)</label>
+            <input type="text" id="cUploadTags" class="ai-input-pretty" data-i18n-placeholder="contrib_ph_tags" placeholder="파일을 선택하면 자동 입력됩니다.">
         </div>
 
         <div id="cUploadSvgArea" style="display:none; gap:10px; margin-bottom:15px;">
             <div style="flex:1;">
-                <label class="form-label" style="font-size:12px; font-weight:bold;">1. 썸네일 (JPG/PNG)</label>
+                <label class="form-label" style="font-size:12px; font-weight:bold;" data-i18n="contrib_label_thumb">1. 썸네일 (JPG/PNG)</label>
                 <input type="file" id="cFileThumb" class="ai-input-pretty" accept="image/png, image/jpeg" style="padding:5px;" onchange="window.autoFillTags(this)">
             </div>
             <div style="flex:1;">
-                <label class="form-label" style="font-size:12px; font-weight:bold;">2. SVG 원본</label>
+                <label class="form-label" style="font-size:12px; font-weight:bold;" data-i18n="contrib_label_svg">2. SVG 원본</label>
                 <input type="file" id="cFileSvg" class="ai-input-pretty" accept=".svg" style="padding:5px;">
             </div>
         </div>
 
         <div id="cUploadSimpleArea" style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold; display:block; margin-bottom:5px;">파일 선택</label>
+            <label class="form-label" style="font-weight:bold; display:block; margin-bottom:5px;" data-i18n="contrib_label_file">파일 선택</label>
             <input type="file" id="cFileSimple" class="ai-input-pretty" accept="image/png, image/jpeg" multiple style="padding:5px;" onchange="window.autoFillTags(this)">
-            <p style="font-size:11px; color:#666; margin-top:5px;">* 배경이 투명한 PNG 파일을 권장합니다.</p>
+            <p style="font-size:11px; color:#666; margin-top:5px;" data-i18n="contrib_file_tip">* 배경이 투명한 PNG 파일을 권장합니다.</p>
         </div>
 
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="window.submitContributorUpload()" class="btn-round primary" style="flex:1;">업로드 및 적립받기</button>
-            <button onclick="document.getElementById('contributorUploadModal').style.display='none'" class="btn-round" style="flex:1; background:#f1f5f9; color:#333;">취소</button>
+            <button onclick="window.submitContributorUpload()" class="btn-round primary" style="flex:1;" data-i18n="contrib_btn_submit">업로드 및 적립받기</button>
+            <button onclick="document.getElementById('contributorUploadModal').style.display='none'" class="btn-round" style="flex:1; background:#f1f5f9; color:#333;" data-i18n="contrib_btn_cancel">취소</button>
         </div>
     </div>
 </div>

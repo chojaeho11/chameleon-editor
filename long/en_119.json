@@ -810,5 +810,19 @@
   "label_payment": "Payment",
   "label_withdrawal": "Withdrawal",
   "label_admin_adjust": "Admin Adjust",
-  "label_other": "Other"
+  "label_other": "Other",
+
+  "contrib_upload_title": "📤 Upload",
+  "contrib_upload_png": "PNG Object Upload",
+  "contrib_upload_svg": "SVG Vector Upload",
+  "contrib_upload_logo": "Logo Upload",
+  "contrib_label_tags": "Search Keywords (Tags)",
+  "contrib_ph_tags": "Auto-filled when you select a file.",
+  "contrib_label_thumb": "1. Thumbnail (JPG/PNG)",
+  "contrib_label_svg": "2. SVG Original",
+  "contrib_label_file": "Select File",
+  "contrib_file_tip": "* Transparent PNG files are recommended.",
+  "contrib_btn_submit": "Upload & Earn Points",
+  "contrib_btn_cancel": "Cancel",
+  "contrib_balance_label": "My Total Earnings"
 }
