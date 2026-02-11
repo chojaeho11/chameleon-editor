@@ -90,7 +90,7 @@ window.loadPartnerProducts = async function() {
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
 
     const filter = document.getElementById('filterPartnerProdStatus')?.value || 'pending';
-    let query = sb.from('admin_products').select('*, profiles(company_name, full_name, email)')
+    let query = sb.from('admin_products').select('*')
         .not('partner_id', 'is', null)
         .order('created_at', { ascending: false });
 
@@ -99,6 +99,14 @@ window.loadPartnerProducts = async function() {
     const { data, error } = await query;
     if (error) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">오류: ${error.message}</div>`; return; }
     if (!data || data.length === 0) { container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fa-solid fa-inbox fa-3x" style="margin-bottom:12px;display:block;"></i>해당 상태의 상품이 없습니다.</div>'; return; }
+
+    // 파트너 프로필 별도 조회
+    const partnerIds = [...new Set(data.map(p => p.partner_id).filter(Boolean))];
+    let profileMap = {};
+    if (partnerIds.length > 0) {
+        const { data: profiles } = await sb.from('profiles').select('id, company_name, full_name, email').in('id', partnerIds);
+        if (profiles) profiles.forEach(p => { profileMap[p.id] = p; });
+    }
 
     // 배지 카운트 업데이트
     const pendingCount = filter === 'pending' ? data.length : null;
@@ -109,7 +117,8 @@ window.loadPartnerProducts = async function() {
 
     container.innerHTML = '';
     data.forEach(p => {
-        const sellerName = p.profiles?.company_name || p.profiles?.full_name || p.profiles?.email || '알 수 없음';
+        const prof = profileMap[p.partner_id] || {};
+        const sellerName = prof.company_name || prof.full_name || prof.email || '알 수 없음';
         const statusMap = { pending: { label:'심사 대기', cls:'background:#fef3c7;color:#92400e;' }, approved: { label:'승인됨', cls:'background:#dcfce7;color:#166534;' }, rejected: { label:'반려됨', cls:'background:#fee2e2;color:#b91c1c;' } };
         const st = statusMap[p.partner_status] || statusMap.pending;
         const price = p.price ? p.price.toLocaleString() + '원' : '-';
