@@ -109,6 +109,7 @@
   "btn_card_payment": "💳 Credit Card / Express Pay",
   "msg_bank_info": "[Wire Transfer Info]",
   "msg_bank_name": "Bank of America",
+  "msg_bank_account": "Contact us for details",
   "msg_bank_owner": "Account Holder: Chameleon Printing Inc.",
   "msg_bank_note": "* Please include your order number as a reference. Orders are confirmed once payment is received.",
   "btn_bank_confirm": "✅ I have transferred (Request Confirm)",
