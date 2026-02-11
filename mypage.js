@@ -111,25 +111,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 // [번역 적용 함수]
 function applyTranslations() {
     const dict = window.translations || {};
-    const elements = document.querySelectorAll('[data-i18n]');
-    elements.forEach(el => {
+    const t = (k) => dict[k] || I18N_KO[k] || '';
+    // data-i18n 속성
+    document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        const text = dict[key] || I18N_KO[key];
+        const text = t(key);
         if (text) {
-            if(el.children.length > 0) {
-                const icon = el.querySelector('i');
-                if(icon) {
-                    el.innerHTML = '';
-                    el.appendChild(icon);
-                    el.append(" " + text);
-                } else {
-                    el.innerText = text;
-                }
+            // HTML 태그 포함 시 innerHTML, 아니면 innerText
+            if (text.includes('<')) {
+                el.innerHTML = text;
             } else {
                 el.innerText = text;
             }
         }
     });
+    // data-i18n-placeholder 속성
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        const text = t(key);
+        if (text) el.placeholder = text;
+    });
+
+    // 국가별 통화 단위 설정
+    const cfg = window.SITE_CONFIG || {};
+    const country = cfg.COUNTRY || 'KR';
+    const currUnit = country === 'JP' ? '¥' : country === 'US' ? '$' : '원';
+    const depositUnit = document.getElementById('depositCurrencyUnit');
+    if (depositUnit) depositUnit.innerText = currUnit;
+    const wdCurrLabel = document.getElementById('wdCurrencyLabel');
+    if (wdCurrLabel) wdCurrLabel.innerText = currUnit;
+
+    // 해외 사이트에서 주민등록번호 행 숨김 (JP/US는 Tax ID/マイナンバー로 변경됨)
+    // KR 이외에서는 placeholder도 변경
+    if (country !== 'KR') {
+        const phoneInput = document.getElementById('wdPhone');
+        if (phoneInput) phoneInput.placeholder = '';
+    }
 }
 
 // [2] 탭 전환 기능
@@ -243,10 +260,10 @@ async function loadDashboardStats() {
         if(elLogo) elLogo.innerText = (profile.logo_count || 0);
 
         const elTotalDeposit = document.getElementById('displayTotalDeposit');
-        if(elTotalDeposit) elTotalDeposit.innerText = fmtMoney(profile.deposit || 0);
+        if(elTotalDeposit) elTotalDeposit.innerText = fmtMoney(profile.deposit || 0).replace(/[원¥$]/g, '').trim();
 
         const elTotalMileage = document.getElementById('displayTotalMileage');
-        if(elTotalMileage) elTotalMileage.innerText = fmtMoney(profile.mileage || 0);
+        if(elTotalMileage) elTotalMileage.innerText = fmtMoney(profile.mileage || 0).replace(/[원¥$]/g, '').trim();
 
         // 등급 승급 체크
         await checkAndUpgradeTier(currentUser.id, profile.role);
@@ -479,11 +496,16 @@ async function loadMySales() {
 
 // [수정] 출금 모달 열기 (예치금 deposit 조회)
 function openWithdrawModal() {
+    const cfg = window.SITE_CONFIG || {};
+    const country = cfg.COUNTRY || 'KR';
+    const currUnit = country === 'JP' ? '¥' : country === 'US' ? '$' : '원';
+
     sb.from('profiles').select('deposit').eq('id', currentUser.id).single().then(({data}) => {
         const currentDeposit = data?.deposit || 0;
-        // 환산된 금액으로 표시
         const displayAmount = fmtMoney(currentDeposit).replace(/[원¥$]/g, '').trim();
         document.getElementById('wdCurrentMileage').innerText = displayAmount;
+        const wdCurrLabel = document.getElementById('wdCurrencyLabel');
+        if (wdCurrLabel) wdCurrLabel.innerText = currUnit;
         document.getElementById('withdrawModal').style.display = 'flex';
     });
 }
@@ -503,8 +525,9 @@ async function requestWithdrawal() {
     const cfg = window.SITE_CONFIG || {};
     const wdCountry = cfg.COUNTRY || 'KR';
     const wdRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[wdCountry]) || 1;
-    const minLocal = 1000 * wdRate; // KR:1000, JP:200, US:2
-    if(!amt || amt < minLocal) return alert(window.t('msg_min_withdraw', "Minimum withdrawal amount is 1,000."));
+    const minAmounts = { 'KR': 1000, 'JP': 200, 'US': 20 };
+    const minLocal = minAmounts[wdCountry] || 1000;
+    if(!amt || amt < minLocal) return alert(window.t('msg_min_withdraw', `Minimum withdrawal amount is ${minLocal}.`));
     if(amt > cur) return alert(window.t('msg_insufficient_deposit', "Insufficient deposit balance."));
 
     if(!bank || !acc || !holder) return alert(window.t('msg_enter_bank_info', "Please enter bank account info."));
@@ -538,8 +561,9 @@ async function requestWithdrawal() {
 
         if (profileError) throw profileError;
 
+        const wdDesc = window.t('label_withdrawal', 'Withdrawal') + `(${bank})`;
         await sb.from('wallet_logs').insert({
-            user_id: currentUser.id, type: 'withdraw_req', amount: -amtKRW, description: `출금신청(${bank})`
+            user_id: currentUser.id, type: 'withdraw_req', amount: -amtKRW, description: wdDesc
         });
 
         alert(window.t('msg_withdraw_success', "출금 신청이 완료되었습니다.\n관리자 확인 후(D+5일 내) 입금됩니다."));

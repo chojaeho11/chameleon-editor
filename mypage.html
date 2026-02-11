@@ -138,13 +138,13 @@
         </div>
         <div id="tab-sales" class="mp-section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3>🎨 판매중인 디자인 (내가 등록한 템플릿)</h3>
+                <h3 data-i18n="mp_sales_title">🎨 판매중인 디자인 (내가 등록한 템플릿)</h3>
                 <div style="text-align:right;">
-                    <span style="font-size:12px; color:#666;">예상 수익 합계</span><br>
+                    <span style="font-size:12px; color:#666;" data-i18n="mp_sales_total">예상 수익 합계</span><br>
                     <strong style="color:#6366f1; font-size:18px;" id="totalSalesPoint">0 P</strong>
                 </div>
             </div>
-            <p style="font-size:13px; color:#64748b; background:#f1f5f9; padding:10px; border-radius:8px;">
+            <p style="font-size:13px; color:#64748b; background:#f1f5f9; padding:10px; border-radius:8px;" data-i18n="mp_sales_guide">
                 <i class="fa-solid fa-circle-info"></i> 템플릿 등록 시 <b>100P</b>, 로고 등록 시 <b>150P</b>가 즉시 적립됩니다.<br>
                 다른 유저가 내 디자인을 구매(사용)하면 건당 <b>200P</b>가 추가로 적립됩니다.
             </p>
@@ -173,21 +173,21 @@
                 <div style="background: #1e293b; color: white; padding: 30px; border-radius: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                         <div>
-                            <h3 style="margin: 0; font-size: 16px; opacity: 0.9; color: #94a3b8;">💰 통합 예치금 (출금/사용가능)</h3>
-                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;">판매 수익금과 충전한 예치금이 합산됩니다.</p>
+                            <h3 style="margin: 0; font-size: 16px; opacity: 0.9; color: #94a3b8;" data-i18n="mp_deposit_title">💰 통합 예치금 (출금/사용가능)</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;" data-i18n="mp_deposit_desc">판매 수익금과 충전한 예치금이 합산됩니다.</p>
                         </div>
                         <span style="background: #fbbf24; color: #1e293b; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px;">CASH</span>
                     </div>
                     
                     <div style="font-size: 36px; font-weight: 800; margin: 20px 0; letter-spacing: -1px; color: #fbbf24;">
-                        <span id="displayTotalDeposit">0</span> <span style="font-size: 20px; font-weight: normal; color:white;">원</span>
+                        <span id="displayTotalDeposit">0</span> <span id="depositCurrencyUnit" style="font-size: 20px; font-weight: normal; color:white;">원</span>
                     </div>
 
                     <div style="display: flex; gap: 10px;">
-                        <button onclick="openWithdrawModal()" style="flex: 1; background: #4f46e5; border: none; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        <button onclick="openWithdrawModal()" style="flex: 1; background: #4f46e5; border: none; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_withdraw">
                             💸 출금 신청
                         </button>
-                        <button onclick="alert('관리자 계좌로 입금 후 고객센터에 문의해주세요.')" style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        <button onclick="alert(window.t('mp_charge_notice','관리자 계좌로 입금 후 고객센터에 문의해주세요.'))" style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_charge">
                             💳 충전하기
                         </button>
                     </div>
@@ -196,8 +196,8 @@
                 <div style="background: #fff; border: 1px solid #e2e8f0; padding: 30px; border-radius: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                         <div>
-                            <h3 style="margin: 0; font-size: 16px; color: #475569;">Ⓜ️ 보유 마일리지 (포인트)</h3>
-                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #94a3b8;">이벤트 참여 및 활동 보상 (결제 시 사용가능)</p>
+                            <h3 style="margin: 0; font-size: 16px; color: #475569;" data-i18n="mp_mileage_title">Ⓜ️ 보유 마일리지 (포인트)</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #94a3b8;" data-i18n="mp_mileage_desc">이벤트 참여 및 활동 보상 (결제 시 사용가능)</p>
                         </div>
                         <span style="background: #e0e7ff; color: #4338ca; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px;">POINT</span>
                     </div>
@@ -206,25 +206,25 @@
                         <span id="displayTotalMileage">0</span> <span style="font-size: 20px; font-weight: normal; color: #64748b;">P</span>
                     </div>
 
-                    <div style="padding: 15px; background: #f8fafc; border-radius: 8px; font-size: 13px; color: #64748b;">
-                        💡 마일리지는 현금으로 출금할 수 없으며,<br> 
+                    <div style="padding: 15px; background: #f8fafc; border-radius: 8px; font-size: 13px; color: #64748b;" data-i18n="mp_mileage_notice">
+                        💡 마일리지는 현금으로 출금할 수 없으며,<br>
                         상품 구매 시 <strong>최대 10%</strong>까지 사용 가능합니다.
                     </div>
                 </div>
             </div>
             
-            <h4>📊 입출금 내역 (Wallet Log)</h4>
+            <h4 data-i18n="mp_wallet_log_title">📊 입출금 내역 (Wallet Log)</h4>
             <table class="mp-table">
                 <thead>
                     <tr>
-                        <th>일시</th>
-                        <th>구분</th>
-                        <th>내용</th>
-                        <th style="text-align:right;">금액</th>
+                        <th data-i18n="mp_th_datetime">일시</th>
+                        <th data-i18n="mp_th_type">구분</th>
+                        <th data-i18n="mp_th_desc">내용</th>
+                        <th style="text-align:right;" data-i18n="mp_th_amount">금액</th>
                     </tr>
                 </thead>
                 <tbody id="walletListBody">
-                    <tr><td colspan="4" style="text-align:center; padding:30px;">내역이 없습니다.</td></tr>
+                    <tr><td colspan="4" style="text-align:center; padding:30px;" data-i18n="mp_no_records">내역이 없습니다.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -240,44 +240,44 @@
             <input type="password" name="fake_password_prevention" autocomplete="new-password">
         </div>
 
-        <h3>💸 포인트 출금 신청</h3>
-        <p style="font-size:13px; color:#666; margin-bottom:20px;">
-            보유하신 마일리지를 현금으로 출금합니다.<br>
-            <strong>최소 출금 가능액은 1,000P 입니다.</strong>
+        <h3 data-i18n="mp_wd_title">💸 포인트 출금 신청</h3>
+        <p id="wdNotice" style="font-size:13px; color:#666; margin-bottom:20px;" data-i18n="mp_wd_notice">
+            보유하신 예치금을 현금으로 출금합니다.<br>
+            <strong>최소 출금 가능액은 1,000원 입니다.</strong>
         </p>
 
         <div style="margin-bottom:10px;">
-            <label style="font-size:12px; font-weight:bold;">출금할 포인트</label>
-            <input type="number" id="wdAmount" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="1000 이상 입력">
-            <div style="font-size:11px; color:#6366f1; margin-top:4px;">보유: <span id="wdCurrentMileage">0</span> P</div>
+            <label style="font-size:12px; font-weight:bold;" data-i18n="mp_wd_amount">출금할 금액</label>
+            <input type="number" id="wdAmount" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;" data-i18n-placeholder="mp_wd_amount_ph" placeholder="1000 이상 입력">
+            <div style="font-size:11px; color:#6366f1; margin-top:4px;"><span data-i18n="mp_wd_balance">보유</span>: <span id="wdCurrentMileage">0</span> <span id="wdCurrencyLabel">원</span></div>
         </div>
 
         <div style="margin-bottom:10px;">
-            <label style="font-size:12px; font-weight:bold;">은행명</label>
+            <label style="font-size:12px; font-weight:bold;" data-i18n="mp_wd_bank">은행명</label>
             <input type="text" id="wdBank" name="wd_bank_name" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;">
         </div>
         <div style="margin-bottom:10px;">
-            <label style="font-size:12px; font-weight:bold;">계좌번호</label>
-            <input type="text" id="wdAccount" name="wd_account_num" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="- 없이 입력">
+            <label style="font-size:12px; font-weight:bold;" data-i18n="mp_wd_account">계좌번호</label>
+            <input type="text" id="wdAccount" name="wd_account_num" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;" data-i18n-placeholder="mp_wd_account_ph" placeholder="- 없이 입력">
         </div>
         <div style="margin-bottom:10px;">
-            <label style="font-size:12px; font-weight:bold;">예금주</label>
+            <label style="font-size:12px; font-weight:bold;" data-i18n="mp_wd_holder">예금주</label>
             <input type="text" id="wdHolder" name="wd_holder_name" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;">
         </div>
-        
+
         <div style="margin-bottom:10px;">
-            <label style="font-size:12px; font-weight:bold;">연락처</label>
+            <label style="font-size:12px; font-weight:bold;" data-i18n="mp_wd_phone">연락처</label>
             <input type="tel" id="wdPhone" name="wd_contact_phone" class="input-text" autocomplete="off" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="010-0000-0000">
         </div>
 
-        <div style="margin-bottom:20px;">
-            <label style="font-size:12px; font-weight:bold;">주민등록번호 (세금신고용)</label>
+        <div id="wdRrnRow" style="margin-bottom:20px;">
+            <label style="font-size:12px; font-weight:bold;" data-i18n="mp_wd_rrn">주민등록번호 (세금신고용)</label>
             <input type="password" id="wdRRN" name="wd_rrn_code" class="input-text" autocomplete="new-password" style="width:100%; padding:8px; border:1px solid #ddd;" placeholder="123456-1234567" maxlength="14">
         </div>
 
         <div style="display:flex; gap:10px;">
-            <button class="btn-round primary" style="flex:1; justify-content:center;" onclick="requestWithdrawal()">신청하기</button>
-            <button class="btn-round" style="flex:1; justify-content:center; background:#f1f5f9; color:#666;" onclick="document.getElementById('withdrawModal').style.display='none'">취소</button>
+            <button class="btn-round primary" style="flex:1; justify-content:center;" onclick="requestWithdrawal()" data-i18n="mp_wd_submit">신청하기</button>
+            <button class="btn-round" style="flex:1; justify-content:center; background:#f1f5f9; color:#666;" onclick="document.getElementById('withdrawModal').style.display='none'" data-i18n="mp_wd_cancel">취소</button>
         </div>
     </div>
 </div>
