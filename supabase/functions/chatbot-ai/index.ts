@@ -174,14 +174,20 @@ serve(async (req) => {
         });
         let products = rawProducts.map((p: any) => {
             const perSqm = calcPricePerSqm(p, allRawProducts);
+            // 통화 변환 적용된 가격
+            const displayPrice = convertPrice(p.price || 0);
+            const displayPerSqm = perSqm ? convertPrice(perSqm) : null;
             return {
                 ...p,
+                price: p.price,
+                display_price: displayPrice,
                 price_per_sqm: perSqm,
-                pricing_note: p.is_custom_size 
-                    ? (perSqm 
-                        ? `면적기반: ㎡당 ${perSqm.toLocaleString()}원 (기본 ${p.width_mm}x${p.height_mm}mm = ${(p.price||0).toLocaleString()}원)` 
+                display_price_per_sqm: displayPerSqm,
+                pricing_note: p.is_custom_size
+                    ? (perSqm
+                        ? `면적기반: ㎡당 ${displayPerSqm} (기본 ${p.width_mm}x${p.height_mm}mm = ${displayPrice})`
                         : "면적기반: 단가 문의")
-                    : `고정가: ${(p.price || 0).toLocaleString()}원`
+                    : `고정가: ${displayPrice}`
             };
         });
         
@@ -209,10 +215,14 @@ serve(async (req) => {
                 if (p.is_custom_size && p.price_per_sqm) {
                     let unitPrice = Math.round(area * p.price_per_sqm / 100) * 100;
                     const total = unitPrice * qty;
-                    calcResults.push(`- ${p.name}: ${w}×${h}mm ${qty > 1 ? qty + '개 = ' + total.toLocaleString() + '원' : '= ' + unitPrice.toLocaleString() + '원'}${qty > 1 ? ' (개당 ' + unitPrice.toLocaleString() + '원)' : ''}`);
+                    const dUnit = convertPrice(unitPrice);
+                    const dTotal = convertPrice(total);
+                    calcResults.push(`- ${p.name}: ${w}×${h}mm ${qty > 1 ? qty + '개 = ' + dTotal : '= ' + dUnit}${qty > 1 ? ' (개당 ' + dUnit + ')' : ''}`);
                 } else if (!p.is_custom_size && p.price) {
                     const total = p.price * qty;
-                    calcResults.push(`- ${p.name}: ${qty > 1 ? qty + '개 = ' + total.toLocaleString() + '원' : p.price.toLocaleString() + '원'} (고정가)`);
+                    const dPrice = convertPrice(p.price);
+                    const dTotal = convertPrice(total);
+                    calcResults.push(`- ${p.name}: ${qty > 1 ? qty + '개 = ' + dTotal : dPrice} (고정가)`);
                 }
             });
             
@@ -257,6 +267,23 @@ serve(async (req) => {
 
         const lp = langPrompts[clientLang === 'en' ? 'us' : clientLang] || langPrompts['kr'];
 
+        // 통화 변환 헬퍼 (1000원 = 200엔 = $2)
+        function convertPrice(krw: number): string {
+            if (clientLang === 'ja') {
+                const jpy = Math.round(krw * 0.2);
+                return '¥' + jpy.toLocaleString();
+            } else if (clientLang === 'en' || clientLang === 'us') {
+                const usd = krw * 0.002;
+                return '$' + usd.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            }
+            return krw.toLocaleString() + '원';
+        }
+        function currencyUnit(): string {
+            if (clientLang === 'ja') return '円';
+            if (clientLang === 'en' || clientLang === 'us') return 'USD';
+            return '원';
+        }
+
         const systemPrompt = `${lp.intro}
 
 ## 핵심 규칙 / Core Rules
@@ -277,6 +304,8 @@ ${lp.rules}
 - 서버 계산이 없을 때만: (가로mm / 1000) × (세로mm / 1000) × 해당 상품의 price_per_sqm, 100원 단위 반올림
 - 고정가 상품(is_general_product=true): DB 가격 그대로.
 - ❌ 절대 계산 과정(공식, ㎡당 단가, 곱셈식)을 보여주지 마세요.
+- ⚠️ 통화: display_price, display_price_per_sqm 필드가 이미 현지 통화(${currencyUnit()})로 변환되어 있습니다. 반드시 이 값을 사용하세요! 원화(₩, 원)로 표시하지 마세요!
+- 환율 기준: 1,000원 = ¥200 = $2
 
 ## 회원 등급 할인 / Member Discounts
 ${lp.discount}
