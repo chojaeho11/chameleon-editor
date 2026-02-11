@@ -5005,9 +5005,10 @@ function updateVipFileList(input) {
             // 1. 방문 기록 저장
             const { data, error } = await sb
                 .from('page_views')
-                .insert([{ 
-                    referrer: visitSource, // 분석된 결과를 저장
-                    duration: 0 
+                .insert([{
+                    referrer: visitSource,
+                    duration: 0,
+                    site: (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR'
                 }])
                 .select()
                 .single();

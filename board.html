@@ -1300,9 +1300,10 @@
 
             const { data, error } = await sb
                 .from('page_views')
-                .insert([{ 
-                    referrer: finalReferrer, 
-                    duration: 0 
+                .insert([{
+                    referrer: finalReferrer,
+                    duration: 0,
+                    site: (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR'
                 }])
                 .select()
                 .single();
