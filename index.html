@@ -550,84 +550,7 @@
 
     <input type="file" id="contributorFileInput" style="display:none;" multiple>
 </div>
-<!-- 마이페이지 -->
-<div id="partnerConsoleModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
-    <button class="partner-mobile-close" onclick="document.getElementById('partnerConsoleModal').style.display='none'"><i class="fa-solid fa-xmark"></i> <span data-i18n="btn_close">닫기</span></button>
-    <div class="modal-box" style="width: 1200px; max-width: 98%; height: 90vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden;">
-        
-        <div style="background: #fff; padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-store" style="color:#6366f1;"></i> <span data-i18n="partner_console_title">파트너스 콘솔</span></h3>
-                <span class="badge" style="background: #e0e7ff; color: #4338ca;" id="partnerRegionBadge" data-i18n="partner_region_unset">지역 미설정</span>
-            </div>
-            <button onclick="document.getElementById('partnerConsoleModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;" data-i18n="btn_close">닫기</button>
-        </div>
-
-        <div style="display: flex; flex: 1; overflow: hidden;">
-            <div style="width: 220px; background: #fff; border-right: 1px solid #e2e8f0; padding: 20px;">
-                <div class="nav-menu" style="display: flex; flex-direction: column; gap: 5px;">
-                    <button class="nav-item active" onclick="switchPartnerTab('pool')" style="text-align: left; padding: 12px; border: none; background: #eff6ff; color: #6366f1; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        <i class="fa-solid fa-list-ul"></i> <span data-i18n="partner_tab_pool">실시간 주문접수</span>
-                    </button>
-                    <button class="nav-item" onclick="switchPartnerTab('my')" style="text-align: left; padding: 12px; border: none; background: transparent; color: #64748b; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        <i class="fa-solid fa-clipboard-check"></i> <span data-i18n="partner_tab_my_orders">나의 진행 주문</span>
-                    </button>
-                    <button class="nav-item" onclick="switchPartnerTab('settlement')" style="text-align: left; padding: 12px; border: none; background: transparent; color: #64748b; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        <i class="fa-solid fa-sack-dollar"></i> <span data-i18n="partner_tab_settlement">정산 및 출금</span>
-                    </button>
-                </div>
-            </div>
-
-            <div style="flex: 1; padding: 25px; overflow-y: auto;">
-                <div id="tab-pool" class="partner-tab-content">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="margin: 0;" data-i18n="partner_pool_title">📍 실시간 오더 (선착순)</h2>
-                        <button class="btn-round primary" onclick="loadPartnerOrders('pool')" style="width: auto;"><i class="fa-solid fa-rotate"></i> <span data-i18n="btn_refresh">새로고침</span></button>
-                    </div>
-                    <div id="orderPoolList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;" data-i18n="msg_loading_text">로딩 중...</div>
-                </div>
-
-                <div id="tab-my" class="partner-tab-content" style="display: none;">
-                    <h2 style="margin-bottom: 20px;" data-i18n="partner_my_orders_title">📋 나의 진행 주문</h2>
-                    <div id="myOrderList" style="display: flex; flex-direction: column; gap: 15px;" data-i18n="msg_no_history">내역 없음</div>
-                </div>
-
-                <div id="tab-settlement" class="partner-tab-content" style="display: none;">
-    
-    <div style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; align-items: center;">
-        
-        <div style="margin-right: 50px;">
-            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;" data-i18n="partner_withdraw_label">출금 가능 금액 (수수료 제외)</div>
-            <div style="font-size: 32px; font-weight: 900; color: #1e293b;" id="partnerAvailableBalance">0원</div>
-        </div>
-
-        <div>
-            <div style="font-size: 14px; color: #64748b; margin-bottom: 5px;" data-i18n="partner_pending_label">출금 대기중 (신청완료)</div>
-            <div style="font-size: 32px; font-weight: 900; color: #d97706;" id="partnerPendingBalance">0원</div>
-        </div>
-
-        <button class="btn-round primary" onclick="requestPartnerWithdrawal()" style="width: auto; padding: 15px 30px; margin-left: auto;">
-            <span data-i18n="btn_withdraw">💸 출금 요청하기</span>
-        </button>
-    </div>
-    
-    <h4 style="margin-bottom: 15px; color: #334155;" data-i18n="partner_settlement_title">정산 상세 내역</h4>
-    <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-        <thead style="background: #f8fafc;">
-            <tr>
-                <th style="padding: 12px; text-align: left; color: #64748b; font-size: 13px;" data-i18n="th_date_col">날짜</th>
-                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;" data-i18n="th_order_amount">주문금액</th>
-                <th style="padding: 12px; text-align: right; color: #64748b; font-size: 13px;" data-i18n="th_settled_amount">정산금액</th>
-                <th style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;" data-i18n="th_status_col">상태</th>
-            </tr>
-        </thead>
-        <tbody id="settlementListBody"></tbody>
-    </table>
-</div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- 파트너 콘솔 모달 제거됨 — partner.html로 이동 -->
 
 <div id="myOrderModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 800px; max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden;">
@@ -1980,72 +1903,14 @@
 <script src="./text-wizard.js?v=119"></script> 
 <script>
     
-    // [0] 파트너스 센터 입장 함수 (마스터키 + 호환성 적용)
-    // [0] 파트너스 센터 입장 함수 (마스터키 + Platinum 허용)
+    // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
     window.enterPartnerCenter = function() {
-        // 1. 로그인 체크
         if (!window.currentUser) {
             alert(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.");
             document.getElementById('loginModal').style.display = 'flex';
             return;
         }
-
-        // 2. 현재 로그인 정보 확인
-        const myEmail = (window.currentUser.email || '').toLowerCase().trim();
-        
-        // 등급 가져오기 (DB 위치별 체크)
-        let r = window.currentUser.role;
-        if (!r && window.currentUser.user_metadata) r = window.currentUser.user_metadata.role;
-        if (!r && window.currentUser.app_metadata) r = window.currentUser.app_metadata.role;
-        
-        let finalRole = (r || 'user').toLowerCase().trim();
-
-        // ★ partners(복수형)만 partner로 통일
-        if (finalRole === 'partners') finalRole = 'partner';
-
-        // ★ [핵심] 사장님 이메일 프리패스 (DB 오류 무시하고 무조건 입장)
-        const adminEmails = ['korea900@daum.net', 'korea900as@gmail.com'];
-        if (adminEmails.includes(myEmail)) {
-            console.log("👑 관리자(파트너스) 계정 확인됨 -> 프리패스 입장");
-            finalRole = 'partner'; 
-        }
-
-        console.log("최종 인식 등급:", finalRole);
-
-        // 3. 입장 허용 목록 (platinum 포함)
-        const allowedRoles = ['admin', 'franchise', 'partner', 'platinum'];
-
-        if (allowedRoles.includes(finalRole)) {
-            // 1. 모달이 있는 페이지(index.html)라면 모달 열기
-            const modal = document.getElementById('partnerConsoleModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                
-                // 뱃지 UI 업데이트
-                const badge = document.getElementById('partnerRegionBadge');
-                if (badge) {
-                    if (finalRole === 'franchise') {
-                        badge.innerText = window.currentUser.region || window.t('pt_badge_franchise','가맹점');
-                        badge.style.backgroundColor = '#6366f1';
-                    } else if (finalRole === 'admin') {
-                        badge.innerText = window.t('pt_badge_admin','관리자 (Master)');
-                        badge.style.backgroundColor = '#1e293b';
-                    } else {
-                        badge.innerText = window.t('pt_badge_partner','파트너스 (Partners)');
-                        badge.style.backgroundColor = '#64748b';
-                    }
-                }
-                // 데이터 로드
-                if (window.switchPartnerTab) window.switchPartnerTab('pool');
-            } 
-            // 2. 모달이 없는 페이지라면 partner.html로 이동
-            else {
-                location.href = 'partner.html';
-            }
-        } else {
-            // 실패 시 메시지
-            alert(window.t('pt_no_access',`🚫 입장 권한이 없습니다.\n\n관리자 승인 후 이용해주세요.`));
-        }
+        location.href = 'partner.html';
     };
     
 
@@ -2873,7 +2738,7 @@ async function renderQuickMenu() {
         const [{ data: topCats }, { data: subCats }, { data: allProds }] = await Promise.all([
             sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true }),
             sb.from('admin_categories').select('*').order('sort_order', { ascending: true }),
-            sb.from('admin_products').select('code, name, category, img_url, price').order('sort_order', { ascending: true })
+            sb.from('admin_products').select('code, name, category, img_url, price').or('partner_id.is.null,partner_status.eq.approved').order('sort_order', { ascending: true })
         ]);
 
         // 전역 변수 초기화 (검색 오류 방지 핵심)
@@ -3127,8 +2992,9 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     try {
         // [핵심 최적화] 무거운 description(상세설명) 필드를 빼고 목록에 필요한 최소 데이터만 가져옴
         const { data: products, error } = await sb.from('admin_products')
-            .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us')
+            .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us, partner_id')
             .eq('category', catKey)
+            .or('partner_id.is.null,partner_status.eq.approved')
             .order('sort_order', { ascending: true });
 
         if (error) throw error;

@@ -510,8 +510,6 @@ window.openPartnerConsole = function() {
     // [변경] 모달 대신 별도 페이지로 이동
     location.href = 'partner.html';
 };
-let lastOrderCount = -1;
-
 async function checkPartnerStatus() {
     if (!sb) { console.warn("[checkPartnerStatus] sb가 아직 초기화되지 않음"); return; }
     const btnConsole = document.getElementById('btnPartnerConsole');
@@ -584,319 +582,7 @@ async function applyForPartner() {
     }
 }
 
-window.switchPartnerTab = function(tabName) {
-    document.querySelectorAll('.partner-tab-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.nav-menu .nav-item').forEach(el => {
-        el.style.background = 'transparent'; el.style.color = '#64748b';
-    });
-    document.getElementById(`tab-${tabName}`).style.display = 'block';
-    
-    if(tabName === 'pool') loadPartnerOrders('pool');
-    if(tabName === 'my') loadPartnerOrders('my');
-    if(tabName === 'settlement') loadSettlementInfo();
-};
-
-window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
-    if (!sb) { console.warn("[loadPartnerOrders] sb가 아직 초기화되지 않음"); return; }
-    const listId = mode === 'pool' ? 'orderPoolList' : 'myOrderList';
-    const container = document.getElementById(listId);
-
-    if (!isAutoCheck && container) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> ${window.t('msg_loading_text','로딩 중...')}</div>`;
-    }
-
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return;
-
-    let query = sb.from('orders').select('*').order('created_at', {ascending: false});
-
-    if (mode === 'pool') {
-        query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
-        
-        if (window.currentPartnerRegion && window.currentPartnerRegion !== '전체') {
-            query = query.ilike('address', `%${window.currentPartnerRegion}%`);
-        }
-    } else {
-        query = query.eq('franchise_id', user.id);
-    }
-
-    const { data: orders, error } = await query;
-    if (error) return;
-
-    const currentCount = orders ? orders.length : 0;
-
-    if (mode === 'pool') {
-        if (lastOrderCount !== -1 && currentCount > lastOrderCount) {
-            if ('speechSynthesis' in window) {
-                const text = window.t('msg_voice_new_order') || "New order received.";
-                const lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'US') ? 'en-US' : 'ko-KR';
-                const msg = new SpeechSynthesisUtterance(text);
-                msg.lang = lang; 
-                msg.rate = 1.0; 
-                window.speechSynthesis.speak(msg);
-            } else {
-                try { document.getElementById('orderAlertSound')?.play(); } catch(e){}
-            }
-        }
-        lastOrderCount = currentCount;
-    }
-
-    if (isAutoCheck && document.getElementById('partnerConsoleModal').style.display === 'none') return;
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (!orders || orders.length === 0) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">
-            ${mode==='pool' ? window.t('pt_no_pool_orders','현재 접수 가능한 주문이 없습니다.') : window.t('pt_no_my_orders','진행 중인 주문이 없습니다.')}
-        </div>`;
-        return;
-    }
-
-    orders.forEach(o => {
-        let itemSummary = window.t('pt_no_product_info','상품 정보 없음');
-        try {
-            const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-            if(items && items.length > 0) itemSummary = items.map(i => `${i.productName || i.product?.name} (${i.qty}개)`).join(', ');
-        } catch(e){}
-
-        let fileBtns = '';
-        if(o.files && o.files.length > 0) {
-            o.files.forEach((f) => {
-                let displayName = f.name;
-                if (!displayName) {
-                    const decoded = decodeURIComponent(f.url.split('/').pop());
-                    displayName = decoded.split('_').pop(); 
-                }
-                let icon = '📄';
-                if(displayName.includes('견적서')) icon = '📑';
-                if(displayName.includes('지시서')) icon = '📋';
-                fileBtns += `<a href="${f.url}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:6px 10px; background:#f1f5f9; color:#334155; margin-right:5px; margin-bottom:5px; text-decoration:none; border-radius:4px; border:1px solid #e2e8f0; font-weight:500;">${icon} ${displayName}</a>`;
-            });
-        } else {
-            fileBtns = `<span style="font-size:12px; color:#ef4444;">${window.t('pt_no_attachments','첨부파일 없음')}</span>`;
-        }
-
-        const card = document.createElement('div');
-        
-        if (mode === 'pool') {
-            const timeDiff = Math.floor((new Date() - new Date(o.created_at)) / (1000 * 60));
-            const isTaken = (o.franchise_id !== null);
-            
-            let cardStyle = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:15px;";
-            let btnHtml = `<button onclick="window.dibsOrder('${o.id}')" style="width:100%; margin-top:10px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚡ ${window.t('pt_btn_accept','접수하기')}</button>`;
-            let badgeHtml = `<span style="background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">NEW ${timeDiff}${window.t('pt_min_ago','분전')}</span>`;
-
-            if (isTaken) {
-                if (o.franchise_id !== user.id) {
-                    cardStyle = "background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:20px; margin-bottom:15px; opacity:0.7;";
-                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#94a3b8; color:white; border:none; border-radius:8px; font-weight:bold; cursor:not-allowed;">🚫 ${window.t('pt_taken_by_other','본사/타점 제작중')}</button>`;
-                    badgeHtml = `<span style="background:#64748b; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔒 ${window.t('pt_accepted','접수완료')}</span>`;
-                } else {
-                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#10b981; color:white; border:none; border-radius:8px; font-weight:bold;">✅ ${window.t('pt_my_accepted','내가 접수함')}</button>`;
-                }
-            }
-
-            card.className = 'partner-order-card';
-            card.style.cssText = cardStyle;
-            card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    ${badgeHtml}
-                    <span style="font-size:12px; color:#888;">${o.manager_name}</span>
-                </div>
-                <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">📍 ${o.address}</div>
-                <div style="font-size:13px; color:#666; margin-bottom:10px;">${itemSummary}</div>
-                <div style="text-align:right;">
-                    <div style="font-weight:bold; font-size:16px;">${fmtMoney(o.total_amount)}</div>
-                    <div style="font-size:11px; color:#6366f1;">${window.t('label_estimated_settlement', '예상 정산금')}(90%): ${fmtMoney(Math.floor(o.total_amount * 0.9))}</div>
-                </div>
-                ${btnHtml}
-            `;
-        } else {
-            let statusHtml = '';
-            if (o.status === '구매확정') statusHtml = `<span style="color:#16a34a; font-weight:bold; font-size:13px;">✅ ${window.t('pt_status_confirmed','구매확정 (정산대기)')}</span>`;
-            else if (o.status === '배송중') statusHtml = `<span style="color:#2563eb; font-weight:bold; font-size:13px;">🚚 ${window.t('pt_status_shipping','배송중 (수령대기)')}</span>`;
-            else statusHtml = `<button onclick="window.updateOrderStatus('${o.id}', '배송중')" style="padding:6px 12px; background:#334155; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px;">🚚 ${window.t('pt_btn_ship','배송 출발')}</button>`;
-
-            card.style.cssText = "background:#fff; border:1px solid #e2e8f0; padding:20px; border-radius:12px; margin-bottom:15px;";
-            card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:start;">
-                    <div style="flex:1;">
-                        <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">${o.manager_name} ${window.t('pt_order_suffix','주문')}</div>
-                        <div style="font-size:13px; color:#666; margin-bottom:8px;">${o.address}</div>
-                        <div style="font-size:13px; color:#333; font-weight:bold; margin-bottom:10px;">${itemSummary}</div>
-                        <div style="display:flex; flex-wrap:wrap;">${fileBtns}</div>
-                    </div>
-                    <div style="text-align:right; min-width:100px;">
-                        ${statusHtml}
-                        <div style="margin-top:5px; font-size:12px; color:#888;">${new Date(o.created_at).toLocaleDateString()}</div>
-                    </div>
-                </div>
-            `;
-        }
-        container.appendChild(card);
-    });
-};
-
-window.dibsOrder = async function(orderId) {
-    if(!confirm(window.t('confirm_order_accept'))) return;
-    const { data: { user } } = await sb.auth.getUser();
-    
-    const { data: check } = await sb.from('orders').select('franchise_id').eq('id', orderId).single();
-    if(check.franchise_id) return alert(window.t('msg_order_already_taken'));
-
-    await sb.from('orders').update({ franchise_id: user.id, status: '제작준비' }).eq('id', orderId);
-    alert(window.t('msg_order_accept_success'));
-    window.switchPartnerTab('my');
-};
-
-window.updateOrderStatus = async function(orderId, status) {
-    if(!confirm(window.t('confirm_status_change').replace('{status}', status))) return;
-    await sb.from('orders').update({ status: status }).eq('id', orderId);
-    window.loadPartnerOrders('my');
-};
-
-window.loadSettlementInfo = async function() {
-    const tbody = document.getElementById('settlementListBody');
-    if(!tbody) return;
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px;">${window.t('msg_loading_text','로딩 중...')}</td></tr>`;
-
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user) return;
-
-    const { data: orders } = await sb.from('orders')
-        .select('*')
-        .eq('franchise_id', user.id)
-        .eq('status', '구매확정')
-        .neq('settlement_status', 'withdrawn');
-
-    const { data: pendings } = await sb.from('withdrawal_requests')
-        .select('amount')
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
-
-    let availableTotal = 0;
-    let pendingTotal = 0;
-    let html = '';
-
-    if (pendings) {
-        pendings.forEach(p => pendingTotal += (p.amount || 0));
-    }
-
-    if(!orders || orders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">${window.t('pt_no_settlement','정산 가능한 내역이 없습니다.')}</td></tr>`;
-    } else {
-        orders.forEach(o => {
-            const amount = o.total_amount || 0;
-            const profit = Math.floor(amount * 0.9); 
-            availableTotal += profit;
-
-            html += `
-                <tr>
-                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(o.created_at).toLocaleDateString()}</td>
-                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; color:#64748b;">${fmtMoney(amount)}</td>
-                    <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; font-weight:bold; color:#16a34a;">${fmtMoney(profit)}</td>
-                    <td style="padding:12px; text-align:center; border-bottom:1px solid #f1f5f9;"><span class="badge" style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:4px; font-size:12px;">${window.t('pt_withdrawable','출금가능')}</span></td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html;
-    }
-
-    document.getElementById('partnerAvailableBalance').innerText = fmtMoney(availableTotal);
-
-    const pendingEl = document.getElementById('partnerPendingBalance');
-    if(pendingEl) pendingEl.innerText = fmtMoney(pendingTotal);
-    
-    window.currentWithdrawableAmount = availableTotal;
-};
-
-window.requestPartnerWithdrawal = function() {
-    const amt = window.currentWithdrawableAmount || 0;
-    if (amt < 10000) return alert(window.t('msg_min_withdraw'));
-    document.getElementById('wdAmount').value = fmtMoney(amt);
-    document.getElementById('withdrawModal').style.display = 'flex';
-};
-
-window.submitWithdrawal = async function() {
-    const amount = window.currentWithdrawableAmount;
-    
-    // [수정] 새로 추가된 입력 필드 값 가져오기
-    const realName = document.getElementById('wdRealName').value.trim();
-    const phone = document.getElementById('wdPhone').value.trim();
-    const rrn = document.getElementById('wdRRN').value.trim();
-    const bankInfo = document.getElementById('wdBankInfo').value.trim();
-    const fileInput = document.getElementById('wdTaxFile');
-
-    // [수정] 필수값 체크 강화
-    if (!realName) return alert(window.t('msg_input_real_name'));
-    if (!phone) return alert(window.t('msg_input_phone'));
-    if (!rrn || rrn.length < 13) return alert(window.t('msg_input_id_number'));
-    if (!bankInfo) return alert(window.t('msg_input_bank_info'));
-    // 파일은 선택사항으로 변경 (원하시면 아래 주석 해제하여 필수로 만드세요)
-    // if (fileInput.files.length === 0) return alert("신분증 또는 통장사본을 첨부해주세요.");
-
-    if (!confirm(window.t('confirm_withdraw_request') || "Submit withdrawal request?\n(Incorrect info may delay deposit.)")) return;
-
-    const btn = document.querySelector('#withdrawModal .btn-round.primary');
-    btn.innerText = window.t('msg_sending') || "Sending..."; btn.disabled = true;
-
-    try {
-        const { data: { user } } = await sb.auth.getUser();
-        
-        let publicUrl = null;
-
-        // 파일이 있는 경우에만 업로드 진행
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            const ext = file.name.split('.').pop();
-            const path = `tax_invoices/${user.id}_${Date.now()}.${ext}`;
-            
-            const { error: upErr } = await sb.storage.from('orders').upload(path, file);
-            if (upErr) throw upErr;
-            
-            const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
-            publicUrl = urlData.publicUrl;
-        }
-
-        // [수정] DB Insert 시 새로 추가된 컬럼(account_holder, rrn, contact_phone) 포함
-        const { error: dbErr } = await sb.from('withdrawal_requests').insert({
-            user_id: user.id,
-            amount: amount,
-            bank_name: bankInfo,
-            account_holder: realName, // 예금주
-            contact_phone: phone,     // 연락처
-            rrn: rrn,                 // 주민번호
-            status: 'pending',
-            tax_invoice_url: publicUrl
-        });
-
-        if (dbErr) throw dbErr;
-
-        await sb.from('orders')
-            .update({ settlement_status: 'withdrawn' })
-            .eq('franchise_id', user.id)
-            .eq('status', '구매확정')
-            .neq('settlement_status', 'withdrawn');
-
-        alert(window.t('msg_withdraw_success') || "Withdrawal request submitted.\nDeposit within 5 days after admin check.");
-        document.getElementById('withdrawModal').style.display = 'none';
-        
-        // 입력창 초기화
-        document.getElementById('wdRealName').value = '';
-        document.getElementById('wdPhone').value = '';
-        document.getElementById('wdRRN').value = '';
-        document.getElementById('wdBankInfo').value = '';
-        document.getElementById('wdTaxFile').value = '';
-
-        if(window.loadSettlementInfo) window.loadSettlementInfo();
-
-    } catch(e) {
-        console.error(e);
-        alert(window.t('err_prefix') + e.message);
-    } finally {
-        btn.innerText = "신청하기"; btn.disabled = false;
-    }
-};
+// [파트너 마켓플레이스] 기존 시공주문 접수/입찰 시스템 제거됨 — partner.html로 이전
 // ============================================================
 // [고객용] 주문 조회 & 리뷰
 // ============================================================
@@ -1005,8 +691,20 @@ window.submitOrderReview = async function() {
         alert(window.t('msg_purchase_confirmed'));
         document.getElementById('reviewWriteModal').style.display = 'none';
         window.openMyOrderList();
-        
-        if(typeof loadSettlementInfo === 'function') loadSettlementInfo();
+
+        // [파트너 마켓플레이스] 구매확정 시 partner_settlements 상태 업데이트
+        try {
+            const now = new Date().toISOString();
+            const eligible = new Date(Date.now() + 15*24*60*60*1000).toISOString();
+            await sb.from('partner_settlements')
+                .update({
+                    customer_confirmed_at: now,
+                    withdrawal_eligible_at: eligible,
+                    settlement_status: 'waiting'
+                })
+                .eq('order_id', orderId)
+                .eq('settlement_status', 'pending');
+        } catch(e) { console.warn('partner_settlements update:', e); }
     }
 };
 

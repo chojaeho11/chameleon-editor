@@ -1400,6 +1400,28 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         await sb.from('orders').update({ files: uploadedFiles }).eq('id', newOrderId);
     }
 
+    // [파트너 마켓플레이스] 파트너 상품이 포함된 경우 partner_settlements 생성
+    try {
+        const partnerItems = itemsToSave.filter(i => i.product?.partner_id);
+        if (partnerItems.length > 0) {
+            await sb.from('orders').update({ has_partner_items: true }).eq('id', newOrderId);
+            for (const item of partnerItems) {
+                const amt = (item.price || 0) * (item.qty || 1);
+                const comm = Math.floor(amt * 0.10);
+                await sb.from('partner_settlements').insert({
+                    order_id: newOrderId,
+                    partner_id: item.product.partner_id,
+                    item_code: item.product.code || 'unknown',
+                    item_amount: amt,
+                    commission_rate: 10.0,
+                    commission_amount: comm,
+                    net_amount: amt - comm,
+                    settlement_status: 'pending'
+                });
+            }
+        }
+    } catch(e) { console.warn('partner_settlements 생성:', e); }
+
     return newOrderId;
 }
 
@@ -1729,15 +1751,15 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
 const cleanProduct = {
     name: productInfo.name,
     price: productInfo.price,
-    code: productInfo.code || productInfo.key, // 코드 정보 안전하게 확보
-    // ★ 핵심: 이미지 경로가 500자를 넘거나 'data:image'로 시작하면 아예 저장하지 않음 (DB 이미지 참조 유도)
+    code: productInfo.code || productInfo.key,
     img: (productInfo.img && productInfo.img.length < 500 && !productInfo.img.startsWith('data:')) ? productInfo.img : null,
     w: productInfo.w || 0,
     h: productInfo.h || 0,
     w_mm: productInfo.w_mm || 0,
     h_mm: productInfo.h_mm || 0,
     category: productInfo.category || '',
-    addons: productInfo.addons || []
+    addons: productInfo.addons || [],
+    partner_id: productInfo.partner_id || null
 };
 
 // [2] 장바구니 아이템 생성

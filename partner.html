@@ -3,197 +3,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>카멜레온 파트너스 센터</title>
+    <title>Partners Marketplace</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
     <style>
-        /* 공통 스타일 (PC/모바일 모두 적용) */
-        body { margin: 0; background: #f8fafc; font-family: 'Pretendard', sans-serif; color: #334155; }
-        * { box-sizing: border-box; }
+        body { margin:0; background:#f8fafc; font-family:'Pretendard',sans-serif; color:#334155; }
+        *{box-sizing:border-box;}
+        .header{background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;padding:0 20px;height:60px;display:flex;justify-content:space-between;align-items:center;}
+        .brand{font-size:18px;font-weight:800;color:#1e293b;display:flex;align-items:center;gap:8px;cursor:pointer;}
+        .header-right{display:flex;align-items:center;gap:10px;}
+        .header-right button{padding:6px 14px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;color:#475569;}
+        .header-right button:hover{background:#f1f5f9;}
 
-        /* 상단 헤더 */
-        .header { 
-            background: white; border-bottom: 1px solid #e2e8f0; 
-            position: sticky; top: 0; z-index: 100; 
-            padding: 0 20px; height: 60px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .brand { font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .my-badge { background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        /* 탭 네비게이션 */
+        .tab-nav{display:flex;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+        .tab-btn{flex:1;min-width:0;padding:14px 10px;text-align:center;font-size:14px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;transition:0.2s;white-space:nowrap;}
+        .tab-btn.active{color:#6366f1;border-bottom-color:#6366f1;}
+        .tab-btn i{display:block;font-size:18px;margin-bottom:4px;}
 
-        /* PC용 상단 네비게이션 (모바일에서 숨김) */
-        .desktop-nav { display: flex; gap: 20px; height: 100%; }
-        .d-nav-item { 
-            display: flex; align-items: center; height: 100%; 
-            font-size: 15px; font-weight: bold; color: #64748b; cursor: pointer; 
-            border-bottom: 3px solid transparent; transition: 0.2s;
-        }
-        .d-nav-item:hover { color: #6366f1; }
-        .d-nav-item.active { color: #6366f1; border-bottom-color: #6366f1; }
+        .container{max-width:1100px;margin:0 auto;padding:25px 20px 100px;}
+        .tab-content{display:none;}
+        .tab-content.active{display:block;}
 
-        /* 메인 컨테이너 (반응형 핵심) */
-        .container { 
-            max-width: 1200px; margin: 0 auto; padding: 30px 20px; 
-            padding-bottom: 80px; /* 모바일 하단바 공간 확보 */
-        }
+        /* 카드 */
+        .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+        .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
 
-        /* 그리드 시스템 (PC: 3열 / 태블릿: 2열 / 모바일: 1열) */
-        .grid-layout { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
-            gap: 20px; 
-        }
+        /* 상품 카드 */
+        .prod-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;transition:0.2s;}
+        .prod-card:hover{box-shadow:0 8px 20px rgba(0,0,0,0.08);transform:translateY(-2px);}
+        .prod-card img{width:100%;height:180px;object-fit:cover;background:#f1f5f9;}
+        .prod-card .info{padding:14px;}
+        .prod-card .info h4{margin:0 0 6px;font-size:15px;color:#1e293b;}
+        .prod-card .info .price{font-size:16px;font-weight:800;color:#6366f1;}
+        .prod-card .info .status-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-top:6px;}
+        .badge-pending{background:#fef3c7;color:#92400e;}
+        .badge-approved{background:#dcfce7;color:#166534;}
+        .badge-rejected{background:#fee2e2;color:#b91c1c;}
+        .prod-card .actions{display:flex;gap:8px;padding:0 14px 14px;}
+        .prod-card .actions button{flex:1;padding:8px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
 
-        /* 카드 스타일 */
-        .order-card { 
-            background: white; border: 1px solid #e2e8f0; border-radius: 16px; 
-            padding: 25px; position: relative; transition: 0.2s;
-            display: flex; flex-direction: column; justify-content: space-between;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-        .order-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
-        .status-badge { font-size: 12px; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
-        .badge-new { background: #dbeafe; color: #1e40af; }
-        .badge-wait { background: #f1f5f9; color: #64748b; }
-        
-        .card-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
-        .card-info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
-        .card-info i { width: 20px; text-align: center; margin-right: 5px; color: #94a3b8; }
+        /* 폼 */
+        .form-group{margin-bottom:18px;}
+        .form-group label{display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;}
+        .form-group input,.form-group textarea,.form-group select{width:100%;padding:11px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;}
+        .form-group textarea{height:120px;resize:vertical;}
+        .form-group select{appearance:auto;}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 
-        /* 버튼 */
-        .btn { 
-            width: 100%; padding: 12px; border-radius: 8px; border: none; 
-            font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s;
-        }
-        .btn-primary { background: #6366f1; color: white; }
-        .btn-primary:hover { background: #4f46e5; }
-        .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
-        .btn-outline:hover { background: #f8fafc; }
+        .btn-primary{background:#6366f1;color:#fff;border:none;padding:13px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:0.2s;}
+        .btn-primary:hover{background:#4f46e5;}
+        .btn-danger{background:#ef4444;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+        .btn-outline{background:#fff;border:1px solid #cbd5e1;color:#475569;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
 
-        /* 모바일 하단 네비게이션 (기본 숨김 -> 미디어쿼리에서 표시) */
-        .mobile-bottom-nav { 
-            display: none; /* PC에서는 안보임 */
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: white; border-top: 1px solid #e2e8f0; 
-            justify-content: space-around; padding: 12px 0; z-index: 90;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-        }
-        .m-nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #94a3b8; cursor: pointer; }
-        .m-nav-item.active { color: #6366f1; font-weight: bold; }
-        .m-nav-item i { font-size: 20px; margin-bottom: 4px; }
+        /* 정산 요약 */
+        .settlement-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+        .settle-box{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;text-align:center;}
+        .settle-box .label{font-size:13px;color:#64748b;margin-bottom:8px;}
+        .settle-box .amount{font-size:28px;font-weight:900;color:#1e293b;}
+        .settle-box .sub{font-size:12px;color:#94a3b8;margin-top:4px;}
 
-        /* 모달 스타일 */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-        .modal-box { background: white; width: 450px; max-width: 90%; border-radius: 16px; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .input-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; font-family: inherit; }
+        /* 주문 테이블 */
+        .order-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;}
+        .order-table th{background:#f8fafc;padding:12px;text-align:left;font-size:13px;color:#64748b;font-weight:600;}
+        .order-table td{padding:12px;border-top:1px solid #f1f5f9;font-size:14px;color:#334155;}
 
-        /* ★ 반응형 미디어 쿼리 (모바일 화면 설정) */
-        @media (max-width: 768px) {
-            .desktop-nav { display: none; } /* PC 메뉴 숨김 */
-            .mobile-bottom-nav { display: flex; } /* 모바일 하단바 표시 */
-            .header { padding: 0 15px; }
-            .container { padding: 20px 15px 90px 15px; } /* 하단바 가림 방지 */
-            .grid-layout { grid-template-columns: 1fr; } /* 카드를 1열로 */
-            .order-card { padding: 20px; }
+        /* 안내 탭 */
+        .guide-section{margin-bottom:24px;}
+        .guide-section h3{font-size:17px;margin:0 0 10px;color:#1e293b;}
+        .guide-section p,.guide-section li{font-size:14px;color:#475569;line-height:1.7;}
+        .guide-section ul{padding-left:20px;}
+
+        /* 이미지 업로드 */
+        .img-upload-box{width:100%;height:200px;border:2px dashed #cbd5e1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#94a3b8;transition:0.2s;background:#fafbfc;position:relative;overflow:hidden;}
+        .img-upload-box:hover{border-color:#6366f1;color:#6366f1;}
+        .img-upload-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+        .img-upload-box i{font-size:32px;margin-bottom:8px;}
+
+        @media(max-width:768px){
+            .tab-btn{font-size:12px;padding:10px 6px;}
+            .tab-btn i{font-size:16px;margin-bottom:2px;}
+            .container{padding:16px 12px 100px;}
+            .card-grid{grid-template-columns:1fr;}
+            .form-row{grid-template-columns:1fr;}
+            .settlement-summary{grid-template-columns:1fr 1fr;}
+            .prod-card img{height:140px;}
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="brand" onclick="location.reload()">
-            <i class="fa-solid fa-handshake" style="color:#6366f1;"></i> Partners Center
+<div class="header">
+    <div class="brand" onclick="location.href='index.html'">
+        <i class="fa-solid fa-store" style="color:#6366f1;"></i> <span id="headerTitle">Partners Marketplace</span>
+    </div>
+    <div class="header-right">
+        <span id="userBadge" style="font-size:13px;font-weight:700;color:#6366f1;"></span>
+        <button onclick="location.href='index.html'"><i class="fa-solid fa-house"></i></button>
+        <button onclick="logout()" style="color:#ef4444;border-color:#fca5a5;"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+</div>
+
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('products')"><i class="fa-solid fa-box-open"></i><span data-i18n="pt_tab_products">내 상품</span></button>
+    <button class="tab-btn" onclick="switchTab('register')"><i class="fa-solid fa-plus-circle"></i><span data-i18n="pt_tab_register">상품 등록</span></button>
+    <button class="tab-btn" onclick="switchTab('orders')"><i class="fa-solid fa-clipboard-list"></i><span data-i18n="pt_tab_orders">주문 관리</span></button>
+    <button class="tab-btn" onclick="switchTab('settlement')"><i class="fa-solid fa-sack-dollar"></i><span data-i18n="pt_tab_settlement">정산</span></button>
+    <button class="tab-btn" onclick="switchTab('guide')"><i class="fa-solid fa-info-circle"></i><span data-i18n="pt_tab_guide">안내</span></button>
+</div>
+
+<!-- 탭1: 내 상품 -->
+<div id="tab-products" class="container tab-content active">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 style="margin:0;font-size:20px;" data-i18n="pt_tab_products">내 상품</h2>
+        <button class="btn-primary" onclick="switchTab('register')" style="padding:10px 20px;font-size:13px;"><i class="fa-solid fa-plus"></i> <span data-i18n="pt_register_submit">등록 신청</span></button>
+    </div>
+    <div id="myProductGrid" class="card-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;">
+            <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
         </div>
-        
-        <div class="desktop-nav">
-            <div class="d-nav-item active" onclick="switchTab('pool')" id="pc-tab-pool" data-i18n="partner_menu_pool">입찰 가능 오더</div>
-            <div class="d-nav-item" onclick="switchTab('my')" id="pc-tab-my" data-i18n="partner_menu_my">내 입찰 현황</div>
-            <div class="d-nav-item" onclick="switchTab('reviews')" id="pc-tab-reviews" data-i18n="partner_menu_reviews">평점/후기</div>
+    </div>
+</div>
+
+<!-- 탭2: 상품 등록 -->
+<div id="tab-register" class="container tab-content">
+    <h2 style="margin:0 0 20px;font-size:20px;" data-i18n="pt_tab_register">상품 등록</h2>
+    <div class="card">
+        <div class="form-group">
+            <label data-i18n="pt_category">카테고리 *</label>
+            <select id="regCategory"><option value="">로딩 중...</option></select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label data-i18n="pt_product_name_kr">상품명 (한국어) *</label>
+                <input type="text" id="regNameKR" placeholder="예: 맞춤형 판촉 볼펜">
+            </div>
+            <div class="form-group">
+                <label data-i18n="pt_product_name_jp">상품명 (日本語)</label>
+                <input type="text" id="regNameJP" placeholder="例: カスタムプロモーションペン">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label data-i18n="pt_product_name_en">Product Name (English)</label>
+                <input type="text" id="regNameEN" placeholder="e.g. Custom Promotion Pen">
+            </div>
+            <div class="form-group">
+                <label data-i18n="pt_stock">재고 수량 *</label>
+                <input type="number" id="regStock" value="100" min="0">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label data-i18n="pt_price_krw">가격 (원) *</label>
+                <input type="number" id="regPriceKRW" placeholder="5000">
+            </div>
+            <div class="form-group">
+                <label data-i18n="pt_price_jpy">가격 (¥)</label>
+                <input type="number" id="regPriceJPY" placeholder="500">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label data-i18n="pt_price_usd">Price ($)</label>
+                <input type="number" id="regPriceUSD" step="0.01" placeholder="3.50">
+            </div>
+            <div class="form-group"></div>
         </div>
 
-        <div style="display:flex; align-items:center; gap:10px;">
-            <button id="btnSoundOn" onclick="window.enableSound()" class="btn-primary" style="padding:6px 12px; width:auto; font-size:12px; border-radius:20px; background:#ef4444; border:none; box-shadow:0 0 10px rgba(239, 68, 68, 0.5);">
-                🔕 소리 알림 켜기 (클릭)
+        <div class="form-group">
+            <label data-i18n="pt_product_image">상품 이미지 *</label>
+            <div class="img-upload-box" id="imgUploadBox" onclick="document.getElementById('regImageFile').click()">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span data-i18n="pt_click_upload">클릭하여 이미지 업로드</span>
+            </div>
+            <input type="file" id="regImageFile" accept="image/*" style="display:none;" onchange="previewImage(this)">
+        </div>
+
+        <div class="form-group">
+            <label data-i18n="pt_description_kr">상품 설명 (한국어) *</label>
+            <textarea id="regDescKR" placeholder="상품에 대한 상세 설명을 입력하세요."></textarea>
+        </div>
+        <div class="form-group">
+            <label data-i18n="pt_description_jp">商品説明 (日本語)</label>
+            <textarea id="regDescJP" placeholder="商品の詳細説明を入力してください。"></textarea>
+        </div>
+        <div class="form-group">
+            <label data-i18n="pt_description_en">Description (English)</label>
+            <textarea id="regDescEN" placeholder="Enter product description."></textarea>
+        </div>
+        <div class="form-group">
+            <label data-i18n="pt_shipping_info">배송 안내</label>
+            <input type="text" id="regShipping" placeholder="예: 주문 후 3~5일 내 출고">
+        </div>
+
+        <div style="text-align:center;margin-top:20px;">
+            <button class="btn-primary" onclick="submitProduct()" style="min-width:200px;">
+                <i class="fa-solid fa-paper-plane"></i> <span data-i18n="pt_register_submit">등록 신청</span>
             </button>
-            
-            <div class="my-badge" id="myRegionBadge">지역 로딩중</div>
-            <button onclick="logout()" class="btn-outline" style="padding:6px 12px; width:auto; font-size:12px; display:none;" id="pcLogoutBtn">로그아웃</button>
+        </div>
+    </div>
+</div>
+
+<!-- 탭3: 주문 관리 -->
+<div id="tab-orders" class="container tab-content">
+    <h2 style="margin:0 0 20px;font-size:20px;" data-i18n="pt_tab_orders">주문 관리</h2>
+    <div id="partnerOrderList">
+        <div style="text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
+    </div>
+</div>
+
+<!-- 탭4: 정산 -->
+<div id="tab-settlement" class="container tab-content">
+    <h2 style="margin:0 0 20px;font-size:20px;" data-i18n="pt_tab_settlement">정산</h2>
+    <div class="settlement-summary">
+        <div class="settle-box">
+            <div class="label" data-i18n="pt_eligible_amount">출금 가능 금액</div>
+            <div class="amount" id="settleEligible" style="color:#16a34a;">0</div>
+        </div>
+        <div class="settle-box">
+            <div class="label" data-i18n="pt_waiting_amount">대기중 (15일)</div>
+            <div class="amount" id="settleWaiting" style="color:#d97706;">0</div>
+            <div class="sub" id="settleWaitingSub"></div>
+        </div>
+        <div class="settle-box">
+            <div class="label" data-i18n="pt_requested_amount">출금 신청됨</div>
+            <div class="amount" id="settleRequested" style="color:#6366f1;">0</div>
         </div>
     </div>
 
-    <div id="tab-pool" class="container">
-        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;" data-i18n="partner_title_pool">📍 우리 지역 실시간 입찰 (Order Pool)</h2>
-        <div id="orderPoolList" class="grid-layout">
-            <div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">
-                <i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br><span data-i18n="msg_loading_orders">주문을 불러오는 중...</span>
-            </div>
-        </div>
+    <div class="card" style="margin-bottom:16px;padding:16px;background:#f0fdf4;border-color:#bbf7d0;">
+        <p style="margin:0;font-size:13px;color:#166534;" data-i18n="pt_commission_notice">수수료: 카드 3.4% + 판매 6.6% = 총 10% 공제 후 지급됩니다.</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#166534;" data-i18n="pt_15day_notice">고객 수령확인 후 15일 경과 시 출금 가능합니다.</p>
     </div>
 
-    <div id="tab-my" class="container" style="display:none;">
-        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;">📋 내가 참여한 입찰</h2>
-        <div id="myBidList" class="grid-layout"></div>
+    <div style="text-align:right;margin-bottom:16px;">
+        <button class="btn-primary" onclick="requestWithdrawal()" style="padding:10px 24px;font-size:14px;">
+            <i class="fa-solid fa-money-bill-transfer"></i> <span data-i18n="pt_btn_withdraw">출금 요청</span>
+        </button>
     </div>
 
-    <div id="tab-reviews" class="container" style="display:none;">
-        <h2 style="margin:0 0 20px 0; font-size:20px; color:#1e293b;">⭐ 고객 후기 관리</h2>
-        <div style="background:white; padding:30px; border-radius:16px; border:1px solid #e2e8f0; text-align:center; margin-bottom:30px;">
-            <div style="font-size:14px; color:#64748b;">나의 평균 평점</div>
-            <div style="font-size:48px; font-weight:900; color:#1e293b;" id="myAvgRating">0.0</div>
-            <div style="color:#f59e0b; letter-spacing:2px; font-size:20px;" id="myStarDisplay">⭐⭐⭐⭐⭐</div>
-            <p style="margin-top:10px; color:#64748b;">총 <strong id="myReviewCount">0</strong>개의 시공 후기가 있습니다.</p>
-        </div>
-        <div id="reviewList" class="grid-layout"></div>
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th data-i18n="th_date_col">날짜</th>
+                <th>상품</th>
+                <th data-i18n="th_order_amount">주문금액</th>
+                <th>수수료</th>
+                <th data-i18n="th_settled_amount">정산금액</th>
+                <th data-i18n="th_status_col">상태</th>
+            </tr>
+        </thead>
+        <tbody id="settlementBody"></tbody>
+    </table>
+</div>
+
+<!-- 탭5: 안내 -->
+<div id="tab-guide" class="container tab-content">
+    <h2 style="margin:0 0 20px;font-size:20px;" data-i18n="pt_tab_guide">안내</h2>
+
+    <div class="card guide-section">
+        <h3><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> <span data-i18n="pt_guide_fee_title">수수료 안내</span></h3>
+        <ul>
+            <li data-i18n="pt_guide_fee_1">카드결제 수수료: 3.4%</li>
+            <li data-i18n="pt_guide_fee_2">판매 수수료: 6.6%</li>
+            <li data-i18n="pt_guide_fee_3"><strong>총 수수료: 10%</strong> (주문금액에서 공제 후 지급)</li>
+        </ul>
     </div>
 
-    <div id="bidModal" class="modal">
-        <div class="modal-box">
-            <h3 style="margin-top:0; font-size:20px;">📝 고객님께 제안하기</h3>
-            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">고객에게 제시할 최종 시공 비용을 입력하세요.</p>
-            
-            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">별도 시공비용 (원)</label>
-            <input type="number" id="bidPrice" class="input-box" placeholder="숫자만 입력 (예: 150000)">
-            
-            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">담당자 연락처 (필수)</label>
-            <input type="text" id="bidPartnerPhone" class="input-box" placeholder="예: 010-1234-5678">
-
-            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">파트너 코멘트 (어필하기)</label>
-            <textarea id="bidMessage" class="input-box" style="height:100px; resize:none;" placeholder="예: 고객님과 가까운 인천 모모기획입니다. 시공이 필요하시다면 저렴하고 깔끔하게 시공해드릴게요."></textarea>
-            
-            <input type="hidden" id="targetOrderId">
-            
-            <div style="display:flex; gap:10px;">
-                <button onclick="closeBidModal()" class="btn btn-outline">취소</button>
-                <button onclick="submitBid()" class="btn btn-primary">제출하기</button>
-            </div>
-        </div>
+    <div class="card guide-section">
+        <h3><i class="fa-solid fa-calendar-check" style="color:#6366f1;"></i> <span data-i18n="pt_guide_settle_title">정산 및 입금일</span></h3>
+        <ul>
+            <li data-i18n="pt_guide_settle_1">고객이 상품을 수령하고 '수령확인'을 누른 날로부터 <strong>15일 후</strong> 출금 가능합니다.</li>
+            <li data-i18n="pt_guide_settle_2">출금 요청 시 <strong>세금계산서</strong>를 첨부해야 합니다.</li>
+            <li data-i18n="pt_guide_settle_3">출금 요청 후 관리자 확인을 거쳐 <strong>5영업일 이내</strong> 입금됩니다.</li>
+        </ul>
     </div>
 
-    <div class="mobile-bottom-nav">
-        <div class="m-nav-item active" onclick="switchTab('pool')" id="mb-tab-pool">
-            <i class="fa-solid fa-map-location-dot"></i> 오더찾기
+    <div class="card guide-section">
+        <h3><i class="fa-solid fa-truck-fast" style="color:#10b981;"></i> <span data-i18n="pt_guide_flow_title">판매 흐름</span></h3>
+        <ol>
+            <li data-i18n="pt_guide_flow_1">상품 등록 신청 (파트너)</li>
+            <li data-i18n="pt_guide_flow_2">관리자 승인 → 쇼핑몰에 상품 노출</li>
+            <li data-i18n="pt_guide_flow_3">고객 주문 → 주문관리 탭에서 확인</li>
+            <li data-i18n="pt_guide_flow_4">배송 출발 처리</li>
+            <li data-i18n="pt_guide_flow_5">고객 수령확인 → 15일 대기</li>
+            <li data-i18n="pt_guide_flow_6">출금 요청 + 세금계산서 첨부 → 입금</li>
+        </ol>
+    </div>
+</div>
+
+<!-- 출금 모달 -->
+<div id="withdrawModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);">
+    <div style="background:#fff;width:450px;max-width:90%;border-radius:16px;padding:30px;box-shadow:0 20px 25px rgba(0,0,0,0.1);">
+        <h3 style="margin:0 0 20px;font-size:18px;" data-i18n="pt_withdraw_title">출금 요청</h3>
+        <div class="form-group">
+            <label data-i18n="pt_wd_amount">출금 금액</label>
+            <input type="text" id="wdAmount" readonly style="background:#f1f5f9;font-weight:800;font-size:18px;">
         </div>
-        <div class="m-nav-item" onclick="switchTab('my')" id="mb-tab-my">
-            <i class="fa-solid fa-clipboard-list"></i> 내 입찰
+        <div class="form-group">
+            <label data-i18n="pt_wd_bank">계좌 정보 (은행명 + 계좌번호) *</label>
+            <input type="text" id="wdBankInfo" placeholder="예: 국민은행 123-456-789012">
         </div>
-        <div class="m-nav-item" onclick="switchTab('reviews')" id="mb-tab-reviews">
-            <i class="fa-solid fa-star"></i> 평점관리
+        <div class="form-group">
+            <label data-i18n="pt_wd_holder">예금주 *</label>
+            <input type="text" id="wdHolder" placeholder="홍길동">
         </div>
-        <div class="m-nav-item" onclick="location.href='index.html'">
-            <i class="fa-solid fa-house"></i> 홈으로
+        <div class="form-group">
+            <label data-i18n="pt_wd_tax_invoice">세금계산서 첨부 *</label>
+            <input type="file" id="wdTaxFile" accept=".pdf,.jpg,.png">
         </div>
-        <div class="m-nav-item" onclick="logout()" style="color:#ef4444;">
-            <i class="fa-solid fa-right-from-bracket"></i> 로그아웃
+        <div style="display:flex;gap:10px;margin-top:20px;">
+            <button class="btn-outline" onclick="document.getElementById('withdrawModal').style.display='none'" style="flex:1;" data-i18n="btn_cancel">취소</button>
+            <button class="btn-primary" onclick="submitWithdrawal()" style="flex:1;" id="wdSubmitBtn" data-i18n="pt_wd_submit">신청하기</button>
         </div>
     </div>
+</div>
 
 <script type="module">
     import { sb, initConfig, currentUser } from './config.js?v=119';
 
-    // 통화 환산 헬퍼 (KRW → 현지 통화)
+    // 통화 환산 헬퍼
     function fmtMoney(krw) {
         const cfg = window.SITE_CONFIG || {};
         const country = cfg.COUNTRY || 'KR';
@@ -204,379 +335,438 @@
         return converted.toLocaleString() + '원';
     }
 
-    // 전역 변수
-    let myPartnerInfo = null;
+    let myUser = null;
+    let myProfile = null;
+    let currentWithdrawable = 0;
 
     window.onload = async () => {
         await initConfig();
-        checkPartnerAuth();
-        
-        // 화면 크기에 따라 로그아웃 버튼 표시 조정
-        if(window.innerWidth > 768) {
-            document.getElementById('pcLogoutBtn').style.display = 'block';
-        }
+        await checkAuth();
     };
 
-    // 파트너 권한 체크 및 정보 로드
-    async function checkPartnerAuth() {
+    async function checkAuth() {
         const { data: { user } } = await sb.auth.getUser();
-        // [수정] 다국어 적용
-        if(!user) {
-            alert(window.t ? window.t('msg_login_required') : "Login required.");
+        if (!user) {
+            alert(window.t ? window.t('msg_login_required') : '로그인이 필요합니다.');
             location.href = 'index.html';
             return;
         }
+        myUser = user;
 
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-        let role = profile?.role || '';
+        let role = (profile?.role || '').toLowerCase();
         if (role === 'partners') role = 'partner';
+
+        const adminEmails = ['korea900@daum.net', 'korea900as@gmail.com'];
+        if (adminEmails.includes((user.email || '').toLowerCase())) role = 'partner';
+
         const allowed = ['admin', 'franchise', 'partner', 'platinum'];
-        if(!profile || !allowed.includes(role)) {
-            alert(window.t ? window.t('msg_no_partner_auth') : "No partner authority.");
+        if (!allowed.includes(role)) {
+            alert(window.t ? window.t('pt_no_access') : '접근 권한이 없습니다.');
             location.href = 'index.html';
             return;
         }
 
-        myPartnerInfo = profile;
-        document.getElementById('myRegionBadge').innerText = profile.region ? `📍 ${profile.region}` : '전국';
-        
-        loadOrderPool(); 
-        loadMyReviews(); 
+        myProfile = profile;
+        document.getElementById('userBadge').innerText = profile?.company_name || user.email.split('@')[0];
+
+        loadMyProducts();
+        loadCategories();
+        loadPartnerOrders();
+        loadSettlement();
     }
 
-    // 탭 전환 (PC/모바일 메뉴 동시 적용)
-    window.switchTab = (tabId) => {
-        // 컨텐츠 전환
-        document.querySelectorAll('.container').forEach(el => el.style.display = 'none');
-        document.getElementById('tab-' + tabId).style.display = 'block';
-        
-        // PC 메뉴 활성화
-        document.querySelectorAll('.d-nav-item').forEach(el => el.classList.remove('active'));
-        const pcTab = document.getElementById('pc-tab-' + tabId);
-        if(pcTab) pcTab.classList.add('active');
+    // ========== 탭 전환 ==========
+    window.switchTab = function(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        // 해당 버튼 활성화
+        const btns = document.querySelectorAll('.tab-btn');
+        const tabMap = ['products','register','orders','settlement','guide'];
+        const idx = tabMap.indexOf(tabId);
+        if (idx >= 0 && btns[idx]) btns[idx].classList.add('active');
 
-        // 모바일 메뉴 활성화
-        document.querySelectorAll('.m-nav-item').forEach(el => el.classList.remove('active'));
-        const mbTab = document.getElementById('mb-tab-' + tabId);
-        if(mbTab) mbTab.classList.add('active');
-
-        if(tabId === 'pool') loadOrderPool();
-        if(tabId === 'my') loadMyBids();
+        if (tabId === 'products') loadMyProducts();
+        if (tabId === 'orders') loadPartnerOrders();
+        if (tabId === 'settlement') loadSettlement();
     };
 
-    // 1. 주문 풀 로드 (수정됨: 접수대기 + 접수됨 모두 조회)
-    // 1. 주문 풀 로드 (수정됨: 파일/연락처 보기 복구)
-    async function loadOrderPool() {
-        const list = document.getElementById('orderPoolList');
-        
-        // 접수대기 또는 접수됨 상태인 주문 조회
-        const { data: orders, error } = await sb.from('orders')
+    // ========== 탭1: 내 상품 ==========
+    async function loadMyProducts() {
+        const grid = document.getElementById('myProductGrid');
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+        const { data, error } = await sb.from('admin_products')
             .select('*')
-            .in('status', ['접수대기', '접수됨']) 
+            .eq('partner_id', myUser.id)
             .order('created_at', { ascending: false });
 
-        if(error) return console.error(error);
-        
-        list.innerHTML = '';
-        if(!orders || orders.length === 0) {
-            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">현재 입찰 가능한 주문이 없습니다.</div>';
+        grid.innerHTML = '';
+        if (error || !data || data.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;">
+                <i class="fa-solid fa-box-open fa-3x" style="margin-bottom:16px;display:block;"></i>
+                ${window.t ? window.t('pt_no_products','등록된 상품이 없습니다.') : '등록된 상품이 없습니다.'}
+            </div>`;
+            return;
+        }
+
+        data.forEach(p => {
+            const statusClass = p.partner_status === 'approved' ? 'badge-approved' : p.partner_status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+            const statusText = p.partner_status === 'approved' ? (window.t ? window.t('pt_product_approved','판매중') : '판매중')
+                : p.partner_status === 'rejected' ? (window.t ? window.t('pt_product_rejected','반려') : '반려')
+                : (window.t ? window.t('pt_product_pending','심사중') : '심사중');
+
+            const card = document.createElement('div');
+            card.className = 'prod-card';
+            card.innerHTML = `
+                <img src="${p.img_url || ''}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22><rect fill=%22%23f1f5f9%22 width=%22300%22 height=%22180%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2214%22>No Image</text></svg>'">
+                <div class="info">
+                    <h4>${p.name}</h4>
+                    <div class="price">${fmtMoney(p.price)}</div>
+                    <div><span class="status-badge ${statusClass}">${statusText}</span></div>
+                    <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${window.t ? window.t('pt_stock','재고') : '재고'}: ${p.stock_quantity || 0}</div>
+                </div>
+                <div class="actions">
+                    <button class="btn-outline" onclick="deleteProduct('${p.code}')"><i class="fa-solid fa-trash"></i> ${window.t ? window.t('btn_delete','삭제') : '삭제'}</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    window.deleteProduct = async function(code) {
+        if (!confirm(window.t ? window.t('confirm_delete','삭제하시겠습니까?') : '삭제하시겠습니까?')) return;
+        await sb.from('admin_products').delete().eq('code', code).eq('partner_id', myUser.id);
+        loadMyProducts();
+    };
+
+    // ========== 탭2: 상품 등록 ==========
+    async function loadCategories() {
+        // 도매라운지 대분류의 하위 카테고리만 로드
+        const { data: topCats } = await sb.from('admin_top_categories').select('code, name').order('sort_order');
+        // "도매라운지" 찾기 (name에 '도매' 포함)
+        const wholesaleTop = topCats?.find(t => t.name.includes('도매'));
+
+        const sel = document.getElementById('regCategory');
+        sel.innerHTML = '<option value="">-- ' + (window.t ? window.t('pt_select_category','카테고리 선택') : '카테고리 선택') + ' --</option>';
+
+        if (wholesaleTop) {
+            const { data: subCats } = await sb.from('admin_categories')
+                .select('key, name')
+                .eq('top_category_code', wholesaleTop.code)
+                .order('sort_order');
+
+            if (subCats) {
+                subCats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.key;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            }
+        }
+
+        // 도매라운지 없으면 전체 카테고리 표시
+        if (sel.options.length <= 1) {
+            const { data: allCats } = await sb.from('admin_categories').select('key, name').order('sort_order');
+            if (allCats) {
+                allCats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.key;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            }
+        }
+    }
+
+    window.previewImage = function(input) {
+        if (!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const box = document.getElementById('imgUploadBox');
+            box.innerHTML = `<img src="${e.target.result}">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+    };
+
+    window.submitProduct = async function() {
+        const category = document.getElementById('regCategory').value;
+        const nameKR = document.getElementById('regNameKR').value.trim();
+        const priceKRW = parseInt(document.getElementById('regPriceKRW').value);
+        const stock = parseInt(document.getElementById('regStock').value) || 0;
+        const fileInput = document.getElementById('regImageFile');
+
+        if (!category) return alert(window.t ? window.t('pt_err_category','카테고리를 선택하세요.') : '카테고리를 선택하세요.');
+        if (!nameKR) return alert(window.t ? window.t('pt_err_name','상품명을 입력하세요.') : '상품명을 입력하세요.');
+        if (!priceKRW || priceKRW <= 0) return alert(window.t ? window.t('pt_err_price','가격을 입력하세요.') : '가격을 입력하세요.');
+        if (!fileInput.files[0]) return alert(window.t ? window.t('pt_err_image','상품 이미지를 선택하세요.') : '상품 이미지를 선택하세요.');
+
+        const btn = document.querySelector('#tab-register .btn-primary');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (window.t ? window.t('msg_sending','처리중...') : '처리중...');
+
+        try {
+            // 이미지 업로드
+            const file = fileInput.files[0];
+            const ext = file.name.split('.').pop();
+            const code = `PP_${myUser.id.substring(0,6)}_${Date.now()}`;
+            const path = `products/${code}.${ext}`;
+
+            const { error: upErr } = await sb.storage.from('products').upload(path, file, { upsert: true });
+            if (upErr) throw upErr;
+
+            const { data: urlData } = sb.storage.from('products').getPublicUrl(path);
+            const imgUrl = urlData.publicUrl;
+
+            // DB 삽입
+            const { error: dbErr } = await sb.from('admin_products').insert({
+                code: code,
+                name: nameKR,
+                name_jp: document.getElementById('regNameJP').value.trim() || null,
+                name_us: document.getElementById('regNameEN').value.trim() || null,
+                price: priceKRW,
+                price_jp: parseInt(document.getElementById('regPriceJPY').value) || null,
+                price_us: parseFloat(document.getElementById('regPriceUSD').value) || null,
+                category: category,
+                img_url: imgUrl,
+                description: document.getElementById('regDescKR').value.trim() || null,
+                description_jp: document.getElementById('regDescJP').value.trim() || null,
+                description_us: document.getElementById('regDescEN').value.trim() || null,
+                partner_id: myUser.id,
+                partner_status: 'pending',
+                partner_shipping_info: document.getElementById('regShipping').value.trim() || null,
+                stock_quantity: stock,
+                is_general_product: true
+            });
+
+            if (dbErr) throw dbErr;
+
+            alert(window.t ? window.t('pt_register_success','상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.') : '상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.');
+
+            // 폼 초기화
+            document.getElementById('regCategory').selectedIndex = 0;
+            document.getElementById('regNameKR').value = '';
+            document.getElementById('regNameJP').value = '';
+            document.getElementById('regNameEN').value = '';
+            document.getElementById('regPriceKRW').value = '';
+            document.getElementById('regPriceJPY').value = '';
+            document.getElementById('regPriceUSD').value = '';
+            document.getElementById('regStock').value = '100';
+            document.getElementById('regDescKR').value = '';
+            document.getElementById('regDescJP').value = '';
+            document.getElementById('regDescEN').value = '';
+            document.getElementById('regShipping').value = '';
+            document.getElementById('imgUploadBox').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>클릭하여 이미지 업로드</span>';
+            document.getElementById('regImageFile').value = '';
+
+            switchTab('products');
+        } catch(e) {
+            console.error(e);
+            alert((window.t ? window.t('err_prefix','오류: ') : '오류: ') + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + (window.t ? window.t('pt_register_submit','등록 신청') : '등록 신청');
+        }
+    };
+
+    // ========== 탭3: 주문 관리 ==========
+    async function loadPartnerOrders() {
+        const container = document.getElementById('partnerOrderList');
+        container.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+        // 내 settlement 레코드에서 order_id 추출
+        const { data: settlements } = await sb.from('partner_settlements')
+            .select('order_id, item_code, item_amount, settlement_status')
+            .eq('partner_id', myUser.id)
+            .order('created_at', { ascending: false });
+
+        if (!settlements || settlements.length === 0) {
+            container.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#94a3b8;">
+                <i class="fa-solid fa-clipboard-list fa-3x" style="margin-bottom:16px;display:block;"></i>
+                ${window.t ? window.t('pt_no_orders','주문 내역이 없습니다.') : '주문 내역이 없습니다.'}
+            </div>`;
+            return;
+        }
+
+        const orderIds = [...new Set(settlements.map(s => s.order_id))];
+        const { data: orders } = await sb.from('orders')
+            .select('id, created_at, manager_name, phone, address, status, items')
+            .in('id', orderIds)
+            .order('created_at', { ascending: false });
+
+        container.innerHTML = '';
+        if (!orders || orders.length === 0) {
+            container.innerHTML = '<div class="card" style="text-align:center;padding:40px;color:#94a3b8;">주문 내역이 없습니다.</div>';
             return;
         }
 
         orders.forEach(o => {
-            const dateStr = new Date(o.created_at).toLocaleDateString();
-            const addr = o.address || '주소 미기재';
-            const phone = o.phone || '연락처 없음'; // [복구] 고객 연락처
-            
-            // 아이템 요약
-            let itemText = '상세내용 없음';
-            try {
-                const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-                if(items && items.length > 0) itemText = items[0].productName + (items.length>1 ? ` 외 ${items.length-1}건` : '');
-            } catch(e){}
+            const mySettlements = settlements.filter(s => s.order_id === o.id);
+            const totalAmt = mySettlements.reduce((sum, s) => sum + s.item_amount, 0);
 
-            // [복구] 파일 다운로드 버튼 생성
-            let fileHtml = '';
-            if (o.files && Array.isArray(o.files) && o.files.length > 0) {
-                fileHtml = '<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e2e8f0;">';
-                fileHtml += '<div style="font-size:11px; font-weight:bold; color:#64748b; margin-bottom:5px;">📂 고객 첨부 파일 (클릭하여 확인)</div>';
-                fileHtml += '<div style="display:flex; flex-wrap:wrap; gap:5px;">';
-                o.files.forEach(f => {
-                    // 파일명 디코딩 (한글 깨짐 방지)
-                    let fname = f.name;
-                    try { fname = decodeURIComponent(fname); } catch(e){}
-                    
-                    fileHtml += `<a href="${f.url}" target="_blank" class="btn-outline" style="padding:6px 10px; font-size:11px; text-decoration:none; display:inline-flex; align-items:center; width:auto; border-radius:4px; background:#f8fafc;">📄 ${fname}</a>`;
-                });
-                fileHtml += '</div></div>';
-            } else {
-                fileHtml = '<div style="font-size:12px; color:#ccc; margin-top:10px;">첨부파일 없음</div>';
-            }
+            let statusBadge = '';
+            if (o.status === '구매확정') statusBadge = '<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">구매확정</span>';
+            else if (o.status === '배송중') statusBadge = '<span style="background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">배송중</span>';
+            else if (o.status === '배송완료') statusBadge = '<span style="background:#e0e7ff;color:#4338ca;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">배송완료</span>';
+            else statusBadge = `<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">${o.status}</span>`;
 
-            list.innerHTML += `
-                <div class="order-card">
-                    <div>
-                        <div class="card-header">
-                            <span class="status-badge badge-new">신규주문</span>
-                            <span style="font-size:12px; color:#94a3b8;">${dateStr}</span>
-                        </div>
-                        <div class="card-title">
-                            ${o.manager_name} 고객님 
-                            <span style="font-size:14px; font-weight:normal; color:#2563eb; margin-left:5px;">(${phone})</span>
-                        </div>
-                        <div class="card-info">
-                            <div><i class="fa-solid fa-location-dot"></i> ${addr}</div>
-                            <div><i class="fa-solid fa-box"></i> ${itemText}</div>
-                            <div style="margin-top:5px; color:#6366f1; font-weight:bold;">예산 규모: ${fmtMoney(o.total_amount)}</div>
-                        </div>
-                        ${fileHtml} </div>
-                    <button class="btn btn-primary" style="margin-top:15px;" onclick="openBidModal('${o.id}')">
-                        🖐 입찰 참여하기
-                    </button>
+            const canShip = ['접수됨','제작준비','임시작성'].includes(o.status) || o.status === '결제완료';
+            const shipBtn = canShip ? `<button class="btn-primary" onclick="shipOrder('${o.id}')" style="padding:8px 16px;font-size:13px;margin-top:10px;"><i class="fa-solid fa-truck"></i> ${window.t ? window.t('pt_ship_now','배송 출발') : '배송 출발'}</button>` : '';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div style="font-size:13px;color:#94a3b8;">${new Date(o.created_at).toLocaleDateString()}</div>
+                    ${statusBadge}
                 </div>
+                <div style="font-weight:700;font-size:16px;margin-bottom:6px;">${o.manager_name || ''}</div>
+                <div style="font-size:13px;color:#64748b;margin-bottom:4px;"><i class="fa-solid fa-location-dot"></i> ${o.address || ''}</div>
+                <div style="font-size:13px;color:#64748b;margin-bottom:4px;"><i class="fa-solid fa-phone"></i> ${o.phone || ''}</div>
+                <div style="font-weight:800;font-size:17px;color:#6366f1;margin-top:8px;">${fmtMoney(totalAmt)}</div>
+                ${shipBtn}
             `;
+            container.appendChild(card);
         });
     }
 
-    // 2. 입찰 모달
-    window.openBidModal = (orderId) => {
-        document.getElementById('targetOrderId').value = orderId;
-        document.getElementById('bidPrice').value = '';
-        document.getElementById('bidMessage').value = '';
-        document.getElementById('bidModal').style.display = 'flex';
-    };
-    window.closeBidModal = () => document.getElementById('bidModal').style.display = 'none';
-
-    // 3. 입찰 제출 (수정됨)
-    window.submitBid = async () => {
-        const orderId = document.getElementById('targetOrderId').value;
-        const price = document.getElementById('bidPrice').value;
-        const msg = document.getElementById('bidMessage').value;
-        const phone = document.getElementById('bidPartnerPhone').value; // [추가]
-
-        if(!price) return alert("견적 금액을 입력해주세요.");
-        if(!phone) return alert("연락처를 입력해주세요."); // [추가]
-
-        const { error } = await sb.from('bids').insert({
-            order_id: orderId,
-            partner_id: myPartnerInfo.id,
-            company_name: myPartnerInfo.company_name || '파트너', 
-            partner_phone: phone, // [변경] 입력한 연락처 저장
-            price: parseInt(price),
-            message: msg,
-            status: 'pending'
-        });
-
-        if(error) {
-            alert("입찰 실패: " + error.message);
-        } else {
-            alert("✅ 입찰서가 고객님께 전달되었습니다.");
-            closeBidModal();
-            window.switchTab('my');
+    window.shipOrder = async function(orderId) {
+        if (!confirm(window.t ? window.t('pt_confirm_ship','배송 출발 처리하시겠습니까?') : '배송 출발 처리하시겠습니까?')) return;
+        const { error } = await sb.from('orders').update({ status: '배송중' }).eq('id', orderId);
+        if (error) alert('오류: ' + error.message);
+        else {
+            alert(window.t ? window.t('pt_ship_success','배송 출발 처리되었습니다.') : '배송 출발 처리되었습니다.');
+            loadPartnerOrders();
         }
     };
 
-    // [수정됨] 4. 내 입찰 현황 (파일 보기 기능 추가)
-    async function loadMyBids() {
-        const list = document.getElementById('myBidList');
-        
-        // [수정] orders 테이블에서 'files' 컬럼도 같이 가져오도록 추가
-        const { data: bids, error } = await sb.from('bids')
-            .select('*, orders(manager_name, address, phone, selected_customer_phone, files)')
-            .eq('partner_id', myPartnerInfo.id)
+    // ========== 탭4: 정산 ==========
+    async function loadSettlement() {
+        const tbody = document.getElementById('settlementBody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">로딩 중...</td></tr>';
+
+        const { data, error } = await sb.from('partner_settlements')
+            .select('*')
+            .eq('partner_id', myUser.id)
             .order('created_at', { ascending: false });
 
-        if(error) return;
-        
-        list.innerHTML = '';
-        if(!bids || bids.length === 0) {
-            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">참여한 입찰 내역이 없습니다.</div>';
-            return;
-        }
+        let eligible = 0, waiting = 0, requested = 0;
+        let html = '';
 
-        bids.forEach(bid => {
-            let badge = `<span class="status-badge badge-wait">대기중</span>`;
-            let extraInfo = '';
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">' + (window.t ? window.t('pt_no_settlement','정산 내역이 없습니다.') : '정산 내역이 없습니다.') + '</td></tr>';
+        } else {
+            data.forEach(s => {
+                const now = new Date();
+                let statusText = '';
+                let statusColor = '#94a3b8';
 
-            // 매칭 상태에 따른 배지 및 연락처 표시
-            if(bid.status === 'selected') {
-                badge = `<span class="status-badge" style="background:#dcfce7; color:#166534;">🎉 매칭성공</span>`;
-                const customerPhone = bid.orders?.selected_customer_phone || bid.orders?.phone || "번호 없음";
-                
-                // [추가됨] 납품완료 버튼
-                let completeBtn = '';
-                // [수정됨] 이미 배송완료 상태가 아니라면 버튼 표시
-                if (bid.orders?.status !== '배송완료' && bid.orders?.status !== '구매확정') {
-                    // ★ 중요: bid.orders.id 대신 bid.order_id 사용 (안전함)
-                    completeBtn = `<button onclick="window.completeDelivery('${bid.order_id}')" class="btn btn-primary" style="margin-top:10px; background:#15803d;">🚀 납품/시공 완료 처리</button>`;
+                if (s.settlement_status === 'requested' || s.settlement_status === 'withdrawn') {
+                    requested += s.net_amount;
+                    statusText = window.t ? window.t('pt_status_requested','출금신청됨') : '출금신청됨';
+                    statusColor = '#6366f1';
+                } else if (s.settlement_status === 'waiting' && s.withdrawal_eligible_at) {
+                    const eligibleDate = new Date(s.withdrawal_eligible_at);
+                    if (now >= eligibleDate) {
+                        eligible += s.net_amount;
+                        statusText = window.t ? window.t('pt_withdrawable','출금가능') : '출금가능';
+                        statusColor = '#16a34a';
+                    } else {
+                        waiting += s.net_amount;
+                        const daysLeft = Math.ceil((eligibleDate - now) / (1000*60*60*24));
+                        statusText = `D-${daysLeft}`;
+                        statusColor = '#d97706';
+                    }
                 } else {
-                    completeBtn = `<div style="margin-top:10px; color:#15803d; font-weight:bold; text-align:center;">🏁 납품 완료됨 (후기 대기중)</div>`;
+                    waiting += s.net_amount;
+                    statusText = window.t ? window.t('pt_status_pending_confirm','수령확인 대기') : '수령확인 대기';
+                    statusColor = '#94a3b8';
                 }
 
-                extraInfo = `
-                    <div style="margin-top:15px; padding:15px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px;">
-                        <div style="font-size:14px; font-weight:bold; color:#166534; margin-bottom:5px;">✅ 고객님과 매칭되었습니다!</div>
-                        <div style="font-size:20px; font-weight:900; color:#1e293b;">📞 ${customerPhone}</div>
-                        <div style="font-size:12px; color:#15803d; margin-top:5px;">위 번호로 연락하여 일정을 조율해주세요.</div>
-                        ${completeBtn}
-                    </div>`;
-            } else if (bid.status === 'rejected') {
-                badge = `<span class="status-badge" style="background:#fee2e2; color:#b91c1c;">미선택</span>`;
-            }
+                html += `<tr>
+                    <td>${new Date(s.created_at).toLocaleDateString()}</td>
+                    <td>${s.item_code}</td>
+                    <td style="text-align:right;">${fmtMoney(s.item_amount)}</td>
+                    <td style="text-align:right;color:#ef4444;">-${fmtMoney(s.commission_amount)}</td>
+                    <td style="text-align:right;font-weight:700;color:#16a34a;">${fmtMoney(s.net_amount)}</td>
+                    <td style="text-align:center;"><span style="color:${statusColor};font-weight:700;font-size:13px;">${statusText}</span></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
 
-            // [추가됨] 파일 다운로드 버튼 생성 로직
-            let fileHtml = '';
-            if (bid.orders?.files && Array.isArray(bid.orders.files) && bid.orders.files.length > 0) {
-                fileHtml = '<div style="margin-top:15px; padding-top:10px; border-top:1px dashed #e2e8f0;">';
-                fileHtml += '<div style="font-size:11px; font-weight:bold; color:#64748b; margin-bottom:5px;">📂 관련 첨부 파일</div>';
-                fileHtml += '<div style="display:flex; flex-wrap:wrap; gap:5px;">';
-                bid.orders.files.forEach(f => {
-                    let fname = f.name;
-                    try { fname = decodeURIComponent(fname); } catch(e){}
-                    fileHtml += `<a href="${f.url}" target="_blank" class="btn-outline" style="padding:6px 10px; font-size:11px; text-decoration:none; display:inline-flex; align-items:center; width:auto; border-radius:4px; background:#f8fafc;">📄 ${fname}</a>`;
-                });
-                fileHtml += '</div></div>';
-            } else {
-                fileHtml = '<div style="margin-top:10px; font-size:12px; color:#ccc;">첨부파일 없음</div>';
-            }
-
-            list.innerHTML += `
-                <div class="order-card">
-                    <div class="card-header">
-                        ${badge}
-                        <span style="font-size:12px; color:#94a3b8;">${new Date(bid.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div class="card-title">${bid.orders?.manager_name} 고객님</div>
-                    <div class="card-info">
-                        <div>내 입찰가: <b>${fmtMoney(bid.price)}</b></div>
-                        <div style="white-space:pre-wrap;">"${bid.message}"</div>
-                    </div>
-                    ${extraInfo}
-                    ${fileHtml} </div>
-            `;
-        });
+        document.getElementById('settleEligible').innerText = fmtMoney(eligible);
+        document.getElementById('settleWaiting').innerText = fmtMoney(waiting);
+        document.getElementById('settleRequested').innerText = fmtMoney(requested);
+        currentWithdrawable = eligible;
     }
 
-    // [신규] 파트너용 실시간 음성 알림 시스템
-    let lastOrderCountGlobal = 0;
-    let lastMatchCountGlobal = 0;
+    // ========== 출금 요청 ==========
+    window.requestWithdrawal = function() {
+        if (currentWithdrawable <= 0) return alert(window.t ? window.t('pt_no_eligible','출금 가능한 금액이 없습니다.') : '출금 가능한 금액이 없습니다.');
+        document.getElementById('wdAmount').value = fmtMoney(currentWithdrawable);
+        document.getElementById('withdrawModal').style.display = 'flex';
+    };
 
-    async function monitorPartnerStatus() {
-        if(!myPartnerInfo) return;
+    window.submitWithdrawal = async function() {
+        const bankInfo = document.getElementById('wdBankInfo').value.trim();
+        const holder = document.getElementById('wdHolder').value.trim();
+        const fileInput = document.getElementById('wdTaxFile');
 
-        // 1. 새로운 주문 체크 (입찰 요청)
-        const { count: orderCount } = await sb.from('orders')
-            .select('*', { count: 'exact', head: true })
-            .in('status', ['접수대기', '접수됨']);
-        
-        if (lastOrderCountGlobal !== 0 && orderCount > lastOrderCountGlobal) {
-            speakTTS("새로운 주문이 들어왔습니다. 입찰에 참여해주세요.");
-            loadOrderPool(); // 화면 갱신
-        }
-        lastOrderCountGlobal = orderCount || 0;
+        if (!bankInfo) return alert(window.t ? window.t('pt_err_bank','계좌 정보를 입력하세요.') : '계좌 정보를 입력하세요.');
+        if (!holder) return alert(window.t ? window.t('pt_err_holder','예금주를 입력하세요.') : '예금주를 입력하세요.');
+        if (!fileInput.files[0]) return alert(window.t ? window.t('pt_err_tax','세금계산서를 첨부하세요.') : '세금계산서를 첨부하세요.');
 
-        // 2. 매칭 성공 체크 (연락 요청)
-        const { count: matchCount } = await sb.from('bids')
-            .select('*', { count: 'exact', head: true })
-            .eq('partner_id', myPartnerInfo.id)
-            .eq('status', 'selected');
+        const btn = document.getElementById('wdSubmitBtn');
+        btn.disabled = true;
+        btn.innerText = window.t ? window.t('msg_sending','처리중...') : '처리중...';
 
-        if (lastMatchCountGlobal !== 0 && matchCount > lastMatchCountGlobal) {
-            speakTTS("축하합니다! 고객님과 매칭되었습니다. 지금 바로 연락해주세요.");
-            loadMyBids(); // 화면 갱신
-        }
-        lastMatchCountGlobal = matchCount || 0;
-    }
+        try {
+            // 세금계산서 업로드
+            const file = fileInput.files[0];
+            const ext = file.name.split('.').pop();
+            const path = `tax_invoices/${myUser.id}_${Date.now()}.${ext}`;
+            const { error: upErr } = await sb.storage.from('orders').upload(path, file);
+            if (upErr) throw upErr;
 
-    // TTS 음성 출력 함수
-    function speakTTS(text) {
-        if ('speechSynthesis' in window) {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'ko-KR';
-            msg.rate = 1.0; 
-            window.speechSynthesis.speak(msg);
-        }
-    }
+            const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
 
-    // [중요] 10초마다 상태 체크 실행
-    setInterval(monitorPartnerStatus, 10000);
+            // withdrawal_requests에 기록
+            const { error: dbErr } = await sb.from('withdrawal_requests').insert({
+                user_id: myUser.id,
+                amount: currentWithdrawable,
+                bank_name: bankInfo,
+                account_holder: holder,
+                status: 'pending',
+                tax_invoice_url: urlData.publicUrl
+            });
+            if (dbErr) throw dbErr;
 
-    // [신규] 파트너용 납품 완료 처리 함수
-    window.completeDelivery = async function(orderId) {
-        if(!confirm("작업(배송/시공)을 완료하셨습니까?\n확인 시 고객님에게 '후기 작성' 버튼이 활성화됩니다.")) return;
+            // settlement 상태 업데이트 (eligible → requested)
+            await sb.from('partner_settlements')
+                .update({ settlement_status: 'requested' })
+                .eq('partner_id', myUser.id)
+                .eq('settlement_status', 'waiting')
+                .lte('withdrawal_eligible_at', new Date().toISOString());
 
-        const { error } = await sb.from('orders').update({ status: '배송완료' }).eq('id', orderId);
-        
-        if(error) alert("오류: " + error.message);
-        else {
-            alert("✅ 완료 처리되었습니다. 수고하셨습니다!");
-            loadMyBids();
+            alert(window.t ? window.t('pt_wd_success','출금 요청이 접수되었습니다. 관리자 확인 후 입금됩니다.') : '출금 요청이 접수되었습니다. 관리자 확인 후 입금됩니다.');
+            document.getElementById('withdrawModal').style.display = 'none';
+            loadSettlement();
+        } catch(e) {
+            console.error(e);
+            alert((window.t ? window.t('err_prefix','오류: ') : '오류: ') + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = window.t ? window.t('pt_wd_submit','신청하기') : '신청하기';
         }
     };
-    // [누락된 함수 복구] 5. 내 리뷰/평점 로드
-    async function loadMyReviews() {
-        if (!myPartnerInfo) return;
 
-        // 평점 정보 표시 (UI 업데이트)
-        const avg = myPartnerInfo.avg_rating || 0;
-        const count = myPartnerInfo.review_count || 0;
-        
-        const avgEl = document.getElementById('myAvgRating');
-        if(avgEl) avgEl.innerText = avg.toFixed(1);
-        
-        const countEl = document.getElementById('myReviewCount');
-        if(countEl) countEl.innerText = count;
-        
-        let stars = '';
-        for(let i=0; i<5; i++) stars += i < Math.round(avg) ? '★' : '☆';
-        
-        const starEl = document.getElementById('myStarDisplay');
-        if(starEl) starEl.innerText = stars;
-
-        // 리뷰 리스트 로드
-        const list = document.getElementById('reviewList');
-        if(!list) return;
-
-        // DB에서 리뷰 가져오기
-        const { data: reviews } = await sb.from('partner_reviews')
-            .select('*')
-            .eq('partner_id', myPartnerInfo.id)
-            .order('created_at', { ascending: false });
-            
-        list.innerHTML = '';
-        if(reviews && reviews.length > 0) {
-            reviews.forEach(r => {
-                let rStars = '';
-                for(let i=0; i<5; i++) rStars += i < r.rating ? '★' : '☆';
-                
-                list.innerHTML += `
-                    <div class="order-card">
-                        <div style="color:#f59e0b; font-size:18px; margin-bottom:5px;">${rStars}</div>
-                        <div style="font-weight:bold; color:#334155; margin-bottom:10px;">"${r.comment}"</div>
-                        <div style="font-size:12px; color:#94a3b8; text-align:right;">${new Date(r.created_at).toLocaleDateString()}</div>
-                    </div>
-                `;
-            });
-        } else {
-            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">아직 등록된 후기가 없습니다.</div>';
-        }
-    }
-    // [신규] 소리 알림 활성화 (브라우저 정책 해제용)
-    window.enableSound = function() {
-        // 1. 강제 음성 재생으로 브라우저 차단 해제
-        speakTTS("소리 알림이 활성화되었습니다. 주문이 들어오면 음성으로 알려드립니다.");
-        
-        // 2. 버튼 스타일 변경 (빨강 -> 초록)
-        const btn = document.getElementById('btnSoundOn');
-        if(btn) {
-            btn.innerHTML = "🔊 알림 켜짐 (테스트)";
-            btn.style.background = "#10b981"; // 초록색
-            btn.style.boxShadow = "none";
-            // 이후 클릭 시 테스트 기능으로 작동하게 변경
-            btn.onclick = function() {
-                speakTTS("알림 소리가 정상적으로 켜져 있습니다.");
-            };
-        }
+    // ========== 로그아웃 ==========
+    window.logout = async function() {
+        await sb.auth.signOut();
+        location.href = 'index.html';
     };
 </script>
 </body>
