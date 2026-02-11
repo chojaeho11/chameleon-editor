@@ -35,19 +35,45 @@ const I18N_KO = {
     "btn_delete": "삭제"
 };
 
-// [긴급 수정] window.t 함수 강제 주입 (오류 방지)
+// window.t 함수 초기화 (번역 로드 전 한국어 fallback)
 if (typeof window.t !== 'function') {
-    window.t = function(key) {
-        return I18N_KO[key] || key;
+    window.t = function(key, fallback) {
+        return (window.translations && window.translations[key]) || I18N_KO[key] || fallback || key;
     };
+}
+
+// 다국어 번역 파일 로드
+async function loadMyPageTranslations() {
+    const cfg = window.SITE_CONFIG || {};
+    const country = cfg.COUNTRY || 'KR';
+    const langMap = { 'KR': 'kr', 'JP': 'ja', 'US': 'en' };
+    const lang = langMap[country] || 'kr';
+    if (lang === 'kr') return; // 한국어는 I18N_KO로 충분
+
+    try {
+        const jsonPath = `long/${lang}_119.json?t=${Date.now()}`;
+        const res = await fetch(jsonPath);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        window.translations = data;
+        // window.t를 번역 데이터 우선으로 갱신
+        window.t = function(key, fallback) {
+            return (window.translations && window.translations[key]) || fallback || key;
+        };
+    } catch(e) {
+        console.warn('마이페이지 번역 로드 실패, 한국어 유지:', e);
+    }
 }
 
 // [1] 초기화
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. 설정 로드
     await initConfig();
-    
-    // 2. 번역 적용 (HTML의 data-i18n 태그들을 한글로 변환)
+
+    // 2. 다국어 번역 로드 (JP/US인 경우 JSON 파일에서 로드)
+    await loadMyPageTranslations();
+
+    // 3. 번역 적용 (HTML의 data-i18n 태그들)
     applyTranslations();
 
     if (!currentUser) {
@@ -84,23 +110,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // [번역 적용 함수]
 function applyTranslations() {
+    const dict = window.translations || {};
     const elements = document.querySelectorAll('[data-i18n]');
     elements.forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (I18N_KO[key]) {
-            // 버튼 안에 아이콘이 있는 경우 텍스트 노드만 교체하거나 innerHTML 사용
+        const text = dict[key] || I18N_KO[key];
+        if (text) {
             if(el.children.length > 0) {
-                // 아이콘 유지를 위해 텍스트만 찾아서 교체 시도 (간단히는 innerHTML 덮어쓰기)
                 const icon = el.querySelector('i');
                 if(icon) {
                     el.innerHTML = '';
                     el.appendChild(icon);
-                    el.append(" " + I18N_KO[key]);
+                    el.append(" " + text);
                 } else {
-                    el.innerText = I18N_KO[key];
+                    el.innerText = text;
                 }
             } else {
-                el.innerText = I18N_KO[key];
+                el.innerText = text;
             }
         }
     });
