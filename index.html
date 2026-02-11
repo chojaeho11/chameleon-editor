@@ -5405,19 +5405,19 @@ window.filterModalItems = function(keyword) {
         <div class="cham-header-left">
             <div class="cham-avatar"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:24px;height:24px;border-radius:50%;"></div>
             <div>
-                <div class="cham-title">카멜레온 AI 상담</div>
-                <div class="cham-subtitle"><i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>AI 실시간 상담 · 24시간</div>
+                <div class="cham-title" id="chamTitle">카멜레온 AI 상담</div>
+                <div class="cham-subtitle" id="chamSubtitle"><i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>AI 실시간 상담 · 24시간</div>
             </div>
         </div>
         <button class="cham-close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="cham-messages" id="chamMessages"></div>
     <div id="chamConnectBar" style="padding:6px 14px; background:#f0f9ff; border-top:1px solid #e0e7ff; display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0;">
-        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : alert('상담 연결을 준비 중입니다. 페이지를 새로고침 후 다시 시도해주세요!');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> 상담사 연결</button>
+        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : alert(typeof _ct==='function'?_ct('connectAlert'):'Please refresh and try again.');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> <span id="chamConnectText">상담사 연결</span></button>
     </div>
     <div class="cham-input-area">
         <label id="chamFileBtn" style="cursor:pointer; padding:8px; color:#6366f1; font-size:18px; display:flex; align-items:center;"><i class="fa-solid fa-paperclip"></i><input type="file" id="chamFileInput" style="display:none;" multiple accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp"></label>
-        <input type="text" id="chamInput" placeholder="무엇이든 물어보세요...">
+        <input type="text" id="chamInput" placeholder="무엇이든 물어보세요..." data-i18n-placeholder="cham_placeholder">
         <button class="cham-send" id="chamSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 </div>
@@ -5493,6 +5493,25 @@ window.filterModalItems = function(keyword) {
     var isProcessing = false;
     var _aiRoom = null;       // AI 대화용 채팅방
     var _aiSub = null;        // 매니저 끼어들기 감지용 realtime 구독
+
+    // 챗봇 전역 언어 감지 (한번만)
+    var _chamLang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
+    var _chamI18n = {
+        title:      { kr: '카멜레온 AI 상담', ja: 'カメレオン AI相談', en: 'Chameleon AI Chat' },
+        subtitle:   { kr: 'AI 실시간 상담 · 24시간', ja: 'AIリアルタイム相談・24時間', en: 'AI Live Support · 24/7' },
+        placeholder:{ kr: '무엇이든 물어보세요...', ja: 'ご質問をどうぞ...', en: 'Ask anything...' },
+        connect:    { kr: '상담사 연결', ja: '相談員に接続', en: 'Connect to Agent' },
+        connectTo:  { kr: '상담사에게 연결합니다', ja: '相談員に接続します', en: 'Connecting to Agent' },
+        enterName:  { kr: '먼저 성함을 알려주세요!', ja: 'まずお名前を教えてください！', en: 'Please enter your name first!' },
+        namePh:     { kr: '이름 (예: 홍길동)', ja: 'お名前 (例: 田中太郎)', en: 'Name (e.g. John)' },
+        nameBtn:    { kr: '확인', ja: '確認', en: 'OK' },
+        nameErr:    { kr: '이름을 입력해주세요!', ja: 'お名前を入力してください！', en: 'Please enter your name!' },
+        fileMsg:    { kr: '파일을 확인했습니다! 파일 관련 상담이 필요하시면 하단 \'상담사 연결\' 버튼을 눌러 매니저에게 직접 전달해주세요 😊', ja: 'ファイルを確認しました！ファイルに関するご相談は下の「相談員に接続」ボタンからマネージャーに直接お伝えください 😊', en: 'File received! For file-related inquiries, click \'Connect to Agent\' below to reach a manager directly 😊' },
+        customer:   { kr: '고객', ja: 'お客様', en: 'Customer' },
+        webCustomer:{ kr: '웹 고객', ja: 'Webお客様', en: 'Web Customer' },
+        connectAlert:{ kr: '상담 연결을 준비 중입니다. 페이지를 새로고침 후 다시 시도해주세요!', ja: '相談接続を準備中です。ページを更新して再度お試しください！', en: 'Preparing connection. Please refresh the page and try again!' }
+    };
+    function _ct(key) { return (_chamI18n[key] && _chamI18n[key][_chamLang]) || (_chamI18n[key] && _chamI18n[key]['en']) || ''; }
 
     function getEl(id) { return document.getElementById(id); }
 
@@ -5808,11 +5827,21 @@ window.filterModalItems = function(keyword) {
                 c.scrollTop = c.scrollHeight;
             }
         }
-        addMsg("파일을 확인했습니다! 파일 관련 상담이 필요하시면 하단 '상담사 연결' 버튼을 눌러 매니저에게 직접 전달해주세요 😊");
+        addMsg(_ct('fileMsg'));
     }
 
     // 이벤트 바인딩 (DOMContentLoaded - 로딩 순서 안전)
     function bindEvents() {
+        // 챗봇 UI 다국어 적용
+        var chamTitle = getEl('chamTitle');
+        if (chamTitle) chamTitle.textContent = _ct('title');
+        var chamSub = getEl('chamSubtitle');
+        if (chamSub) chamSub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _ct('subtitle');
+        var chamPh = getEl('chamInput');
+        if (chamPh) chamPh.placeholder = _ct('placeholder');
+        var chamConn = getEl('chamConnectText');
+        if (chamConn) chamConn.textContent = _ct('connect');
+
         var trigger = getEl('cham-bot-trigger');
         if (trigger) trigger.addEventListener('click', toggleBot);
 
@@ -5927,12 +5956,12 @@ window.filterModalItems = function(keyword) {
         h += '<div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px;">';
         h += '<div style="text-align:center; margin-bottom:10px;">';
         h += '<div style="font-size:24px;">✨</div>';
-        h += '<div style="font-weight:700; color:#0369a1; font-size:14px;">상담사에게 연결합니다</div>';
-        h += '<div style="font-size:12px; color:#0284c7; margin-top:2px;">먼저 성함을 알려주세요!</div>';
+        h += '<div style="font-weight:700; color:#0369a1; font-size:14px;">' + _ct('connectTo') + '</div>';
+        h += '<div style="font-size:12px; color:#0284c7; margin-top:2px;">' + _ct('enterName') + '</div>';
         h += '</div>';
         h += '<div style="display:flex; gap:6px;">';
-        h += '<input id="chamCustName" type="text" placeholder="이름 (예: 홍길동)" style="flex:1; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit;">';
-        h += '<button id="chamCustNameBtn" style="background:#0284c7; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap;">확인</button>';
+        h += '<input id="chamCustName" type="text" placeholder="' + _ct('namePh') + '" style="flex:1; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit;">';
+        h += '<button id="chamCustNameBtn" style="background:#0284c7; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap;">' + _ct('nameBtn') + '</button>';
         h += '</div></div></div>';
         msgArea.insertAdjacentHTML('beforeend', h);
         msgArea.scrollTop = msgArea.scrollHeight;
@@ -5943,7 +5972,7 @@ window.filterModalItems = function(keyword) {
         
         function onNameSubmit() {
             var name = nameInput.value.trim();
-            if (!name) { nameInput.style.borderColor = '#ef4444'; nameInput.placeholder = '이름을 입력해주세요!'; return; }
+            if (!name) { nameInput.style.borderColor = '#ef4444'; nameInput.placeholder = _ct('nameErr'); return; }
             _customerName = name;
             
             // 이름 입력 UI 제거
@@ -6141,7 +6170,7 @@ window.filterModalItems = function(keyword) {
         msgArea.scrollTop = msgArea.scrollHeight;
         var sb = getSb();
         if (sb) {
-            sb.from('chat_messages').insert({ room_id: _room.id, sender_type: 'customer', sender_name: _customerName || '고객', message: text })
+            sb.from('chat_messages').insert({ room_id: _room.id, sender_type: 'customer', sender_name: _customerName || _ct('customer'), message: text })
               .then(function(r) { if(r.error) console.error('메시지 전송 에러:', r.error); else console.log('✅ 고객 메시지 전송 성공'); });
         }
     }
@@ -6152,8 +6181,8 @@ window.filterModalItems = function(keyword) {
         if (_sub) { _sub.unsubscribe(); _sub = null; }
         var title = document.querySelector('.cham-title');
         var sub = document.querySelector('.cham-subtitle');
-        if (title) title.textContent = '카멜레온 AI 상담';
-        if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>AI 실시간 상담 · 24시간';
+        if (title) title.textContent = _ct('title');
+        if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _ct('subtitle');
         var bar = document.getElementById('chamConnectBar'); if (bar) bar.style.display = 'flex';
     }
     
@@ -6163,7 +6192,7 @@ window.filterModalItems = function(keyword) {
         var sb = getSb();
         if (!sb || !aiRoom) return;
         _room = aiRoom;
-        _customerName = _customerName || '웹 고객';
+        _customerName = _customerName || _ct('webCustomer');
         _live = true;
         window._chamLiveMode = true;
 
