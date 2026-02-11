@@ -167,24 +167,11 @@
 </button>
     </div>
 
-<!-- 국가 바로가기 + 브레드크럼 네비 -->
-<div id="siteNavBar" style="position:fixed; top:60px; left:0; right:0; z-index:9998; background:#f1f5f9; border-bottom:1px solid #e2e8f0; padding:6px 16px; display:flex; align-items:center; justify-content:space-between; font-size:13px; height:36px; box-sizing:border-box;">
-    <div style="display:flex; align-items:center; gap:4px;">
-        <button onclick="window._navBack()" id="navBackBtn" style="background:none; border:none; font-size:16px; cursor:pointer; color:#94a3b8; padding:4px 6px;" disabled>
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <button onclick="window._navForward()" id="navFwdBtn" style="background:none; border:none; font-size:16px; cursor:pointer; color:#94a3b8; padding:4px 6px;" disabled>
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
-        <div id="breadcrumb" style="display:flex; align-items:center; gap:2px; margin-left:4px; color:#64748b; font-weight:500; overflow:hidden; white-space:nowrap;">
-            <span style="cursor:pointer; color:#6366f1; font-weight:700;" onclick="window.goHome()">Home</span>
-        </div>
-    </div>
-    <div style="display:flex; align-items:center; gap:6px;">
-        <a href="https://cafe2626.com" style="text-decoration:none; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700; background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe;">KR</a>
-        <a href="https://cafe0101.com" style="text-decoration:none; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700; background:#fef3c7; color:#d97706; border:1px solid #fde68a;">JP</a>
-        <a href="https://cafe3355.com" style="text-decoration:none; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700; background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;">US</a>
-    </div>
+<!-- 국가 바로가기 -->
+<div id="siteNavBar" style="position:fixed; top:60px; left:0; right:0; z-index:9998; background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:5px 0; display:flex; align-items:center; justify-content:center; gap:10px; height:38px; box-sizing:border-box;">
+    <a href="https://cafe2626.com" style="text-decoration:none; display:inline-flex; align-items:center; gap:5px; padding:6px 16px; border-radius:20px; font-size:14px; font-weight:700; background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; transition:transform .15s;">🇰🇷 한국</a>
+    <a href="https://cafe0101.com" style="text-decoration:none; display:inline-flex; align-items:center; gap:5px; padding:6px 16px; border-radius:20px; font-size:14px; font-weight:700; background:#fff7ed; color:#d97706; border:1px solid #fde68a; transition:transform .15s;">🇯🇵 日本</a>
+    <a href="https://cafe3355.com" style="text-decoration:none; display:inline-flex; align-items:center; gap:5px; padding:6px 16px; border-radius:20px; font-size:14px; font-weight:700; background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; transition:transform .15s;">🇺🇸 USA</a>
 </div>
 
 <div id="startScreen">
@@ -2794,7 +2781,6 @@ async function renderQuickMenu() {
             btn.onclick = () => {
                 document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
                 btn.classList.add('active');
-                window._navPush({type:'topcat', label: tName, data: {code: top.code}});
                 const filteredSub = subCats.filter(s => s.top_category_code === top.code);
                 window._drawQuickItems(filteredSub, false);
             };
@@ -2802,7 +2788,6 @@ async function renderQuickMenu() {
         });
 
         if (tabContainer.firstChild) tabContainer.firstChild.click();
-        window._navReady = true;
 
     } catch (err) {
         console.error("초기 로딩 실패:", err);
@@ -2811,137 +2796,13 @@ async function renderQuickMenu() {
 }
 
 
-// ===== 브레드크럼 네비게이션 시스템 =====
-(function() {
-    window._navHistory = [{ type: 'home', label: 'Home' }];
-    window._navIndex = 0;
-    window._navNavigating = false;
-    window._navReady = false;
-
-    window._navPush = function(entry) {
-        if (window._navNavigating || !window._navReady) return;
-        var cur = window._navHistory[window._navIndex];
-        if (cur && cur.type === entry.type && cur.label === entry.label) return;
-        // 같은 레벨이면 교체 (탭 전환 시 히스토리 쌓이지 않도록)
-        if (cur && cur.type === entry.type) {
-            window._navHistory[window._navIndex] = entry;
-            window._updateBreadcrumb();
-            return;
-        }
-        window._navHistory = window._navHistory.slice(0, window._navIndex + 1);
-        window._navHistory.push(entry);
-        window._navIndex = window._navHistory.length - 1;
-        window._updateBreadcrumb();
-    };
-
-    function _closeModals(ids) {
-        ids.forEach(function(id) {
-            var m = document.getElementById(id);
-            if (m) {
-                m.style.display = 'none';
-                m.classList.remove('product-full-page');
-                m.style.padding = '';
-                m.style.background = '';
-                var box = m.querySelector('.modal-box');
-                if (box) {
-                    box.style = '';
-                    var h = box.querySelector('.product-full-header');
-                    var g = box.querySelector('.product-guide-banner');
-                    if (h) h.remove();
-                    if (g) g.remove();
-                }
-            }
-        });
-    }
-
-    function _navExecute(entry) {
-        switch(entry.type) {
-            case 'home':
-                _closeModals(['choiceModal','generalProductModal','categoryDetailModal','productDetailModal']);
-                var ss = document.getElementById('startScreen');
-                if (ss) ss.style.display = '';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                break;
-            case 'topcat':
-                _closeModals(['choiceModal','generalProductModal','categoryDetailModal']);
-                var ss2 = document.getElementById('startScreen');
-                if (ss2) ss2.style.display = '';
-                var tabs = document.querySelectorAll('.cat-tab');
-                tabs.forEach(function(t) {
-                    if (t.dataset.topCode === entry.data.code) t.click();
-                });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                break;
-            case 'subcat':
-                _closeModals(['choiceModal','generalProductModal']);
-                window.showCategoryProducts(entry.data.code, entry.data.name, entry.data.desc);
-                break;
-            case 'product':
-                window.loadProductDetailAndOpen(entry.data.code);
-                break;
-        }
-    }
-
-    window._navBack = function() {
-        if (window._navIndex <= 0) return;
-        window._navIndex--;
-        window._navNavigating = true;
-        _navExecute(window._navHistory[window._navIndex]);
-        window._navNavigating = false;
-        window._updateBreadcrumb();
-    };
-
-    window._navForward = function() {
-        if (window._navIndex >= window._navHistory.length - 1) return;
-        window._navIndex++;
-        window._navNavigating = true;
-        _navExecute(window._navHistory[window._navIndex]);
-        window._navNavigating = false;
-        window._updateBreadcrumb();
-    };
-
-    window._updateBreadcrumb = function() {
-        var bc = document.getElementById('breadcrumb');
-        var backBtn = document.getElementById('navBackBtn');
-        var fwdBtn = document.getElementById('navFwdBtn');
-        if (!bc) return;
-        if (backBtn) {
-            backBtn.disabled = window._navIndex <= 0;
-            backBtn.style.color = window._navIndex > 0 ? '#6366f1' : '#94a3b8';
-        }
-        if (fwdBtn) {
-            fwdBtn.disabled = window._navIndex >= window._navHistory.length - 1;
-            fwdBtn.style.color = window._navIndex < window._navHistory.length - 1 ? '#6366f1' : '#94a3b8';
-        }
-        var html = '';
-        for (var i = 0; i <= window._navIndex; i++) {
-            var entry = window._navHistory[i];
-            if (i > 0) html += '<span style="color:#cbd5e1; margin:0 4px;">›</span>';
-            if (i === window._navIndex) {
-                html += '<span style="color:#334155; font-weight:700;">' + entry.label + '</span>';
-            } else {
-                html += '<span style="cursor:pointer; color:#6366f1;" onclick="window._navGoto(' + i + ')">' + entry.label + '</span>';
-            }
-        }
-        bc.innerHTML = html;
-    };
-
-    window._navGoto = function(index) {
-        if (index < 0 || index >= window._navHistory.length || index === window._navIndex) return;
-        window._navIndex = index;
-        window._navNavigating = true;
-        _navExecute(window._navHistory[index]);
-        window._navNavigating = false;
-        window._updateBreadcrumb();
-    };
-})();
+// ===== 브라우저 뒤로가기 계층 네비게이션 =====
+window._navNavigating = false; // popstate 처리 중 pushState 방지 플래그
+// 초기 상태 설정
+history.replaceState({ type: 'home' }, '', window.location.href);
 
 // [신규] 언어 설정을 유지하면서 홈으로 이동하는 함수
 window.goHome = function() {
-    // 브레드크럼 리셋
-    window._navHistory = [{ type: 'home', label: 'Home' }];
-    window._navIndex = 0;
-    if (window._updateBreadcrumb) window._updateBreadcrumb();
     const urlParams = new URLSearchParams(window.location.search);
     const currentLang = urlParams.get('lang');
     const path = window.location.pathname;
@@ -2979,18 +2840,6 @@ window.goHome = function() {
 // [최종 수정] 상품 클릭 시 URL 변경 (언어 설정 유지 기능 추가)
 // [수정됨] 상품 상세 정보 로드 (DB 연결 안정화: window.sb 사용)
     window.loadProductDetailAndOpen = async function(productCode) {
-        // 브레드크럼 업데이트
-        var _pName = productCode;
-        var _pInfo = (window.globalProdImages || []).find(function(p) { return p.code === productCode; });
-        if (_pInfo) {
-            _pName = _pInfo.name || productCode;
-            if (typeof CURRENT_LANG !== 'undefined') {
-                if (CURRENT_LANG === 'ja' && _pInfo.name_jp) _pName = _pInfo.name_jp;
-                if (CURRENT_LANG === 'en' && _pInfo.name_us) _pName = _pInfo.name_us;
-            }
-        }
-        window._navPush({type:'product', label: _pName, data: {code: productCode}});
-
         const loading = document.getElementById('loading');
         if(loading) {
             loading.style.display = 'flex';
@@ -3021,7 +2870,7 @@ window.goHome = function() {
             if (currentLang) {
                 newUrl += `&lang=${currentLang}`;
             }
-            window.history.pushState({ page: 'product', code: productCode }, '', newUrl);
+            if (!window._navNavigating) window.history.pushState({ type: 'product', code: productCode }, '', newUrl);
 
             // 화면 전환
             const startScreen = document.getElementById('startScreen');
@@ -3132,7 +2981,11 @@ window.categoryCache = {};
 
 // [최종 통합] 카테고리 클릭 시 상품 목록 로드 (상세정보는 제외하여 로딩 속도 최적화)
 window.showCategoryProducts = async function(catKey, catName, catDesc) {
-    window._navPush({type:'subcat', label: catName || catKey, data: {code: catKey, name: catName, desc: catDesc}});
+    if (!window._navNavigating) {
+        var langParam = new URLSearchParams(window.location.search).get('lang');
+        var catUrl = '/?cat=' + catKey + (langParam ? '&lang=' + langParam : '');
+        window.history.pushState({ type: 'subcat', code: catKey, name: catName, desc: catDesc }, '', catUrl);
+    }
     if (!sb) { console.warn("[showCategoryProducts] sb가 아직 초기화되지 않음"); return; }
     const grid = document.getElementById('catProductGrid');
     const modal = document.getElementById('categoryDetailModal');
@@ -3208,18 +3061,6 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 
     // 1. 상품 상세 정보 로드 및 전체화면 열기 (언어 유지 버전)
     window.loadProductDetailAndOpen = async function(productCode) {
-        // 브레드크럼 업데이트
-        var _pName2 = productCode;
-        var _pInfo2 = (window.globalProdImages || []).find(function(p) { return p.code === productCode; });
-        if (_pInfo2) {
-            _pName2 = _pInfo2.name || productCode;
-            if (typeof CURRENT_LANG !== 'undefined') {
-                if (CURRENT_LANG === 'ja' && _pInfo2.name_jp) _pName2 = _pInfo2.name_jp;
-                if (CURRENT_LANG === 'en' && _pInfo2.name_us) _pName2 = _pInfo2.name_us;
-            }
-        }
-        window._navPush({type:'product', label: _pName2, data: {code: productCode}});
-
         // sb 초기화 대기 (최대 5초)
         if (!sb) {
             for (let i = 0; i < 50; i++) {
@@ -3255,7 +3096,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             if (currentLang) {
                 newUrl += `&lang=${currentLang}`; // 여기서 &lang=ja를 붙여줌
             }
-            window.history.pushState({ page: 'product', code: productCode }, '', newUrl);
+            if (!window._navNavigating) window.history.pushState({ type: 'product', code: productCode }, '', newUrl);
 
             // 화면 전환 (홈 숨김)
             const startScreen = document.getElementById('startScreen');
@@ -3341,44 +3182,51 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         }
     };
 
-    // 2. [뒤로가기 감지] 브라우저 뒤로가기 버튼 누르면 홈으로 복귀
-    window.addEventListener('popstate', function(event) {
-        // 모든 전체화면 모달 닫기
-        const modals = ['choiceModal', 'generalProductModal'];
-        
-        modals.forEach(id => {
-            const m = document.getElementById(id);
-            if(m) {
+    // 2. [뒤로가기 감지] 브라우저 뒤로가기 → 계층 네비게이션 (상품→소분류→홈)
+    function _closeAllModals() {
+        ['choiceModal','generalProductModal','categoryDetailModal','productDetailModal'].forEach(function(id) {
+            var m = document.getElementById(id);
+            if (m) {
                 m.style.display = 'none';
-                m.classList.remove('product-full-page'); // 클래스 제거
-                m.style.padding = ''; // 패딩 복구
-                m.style.background = ''; // 배경 복구
-                
-                // 내부 스타일 복구 (팝업용)
-                const box = m.querySelector('.modal-box');
-                if(box) {
-                    box.style = ''; // 인라인 스타일 초기화
-                    // 주입했던 헤더 제거
-                    const h = box.querySelector('.product-full-header');
-                    const g = box.querySelector('.product-guide-banner');
-                    if(h) h.remove();
-                    if(g) g.remove();
-                    
-                    // 숨겼던 닫기 버튼 다시 보이기
-                    const closeBtns = box.querySelectorAll('button[onclick*="none"]');
-                    closeBtns.forEach(btn => btn.style.display = '');
+                m.classList.remove('product-full-page');
+                m.style.padding = '';
+                m.style.background = '';
+                var box = m.querySelector('.modal-box');
+                if (box) {
+                    box.style = '';
+                    var h = box.querySelector('.product-full-header');
+                    var g = box.querySelector('.product-guide-banner');
+                    if (h) h.remove();
+                    if (g) g.remove();
+                    var closeBtns = box.querySelectorAll('button[onclick*="none"]');
+                    closeBtns.forEach(function(btn) { btn.style.display = ''; });
                 }
             }
         });
+    }
 
-        // 홈 화면 다시 보이기
-        const startScreen = document.getElementById('startScreen');
-        if(startScreen) startScreen.style.display = '';
+    window.addEventListener('popstate', function(event) {
+        var state = event.state;
+        window._navNavigating = true;
 
-        // 브레드크럼도 홈으로 리셋
-        window._navHistory = [{ type: 'home', label: 'Home' }];
-        window._navIndex = 0;
-        if (window._updateBreadcrumb) window._updateBreadcrumb();
+        if (state && state.type === 'subcat') {
+            // 상품 → 소분류: 상품 모달 닫고 카테고리 모달 열기
+            _closeAllModals();
+            var ss = document.getElementById('startScreen');
+            if (ss) ss.style.display = '';
+            window.showCategoryProducts(state.code, state.name, state.desc);
+        } else if (state && state.type === 'product') {
+            // 앞으로가기로 상품 복귀
+            window.loadProductDetailAndOpen(state.code);
+        } else {
+            // 소분류 → 홈 (또는 기본)
+            _closeAllModals();
+            var ss2 = document.getElementById('startScreen');
+            if (ss2) ss2.style.display = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window._navNavigating = false;
     });
 
     // 3. [초기 접속] URL에 ?product=코드 있으면 바로 열기 (sb 대기 포함)

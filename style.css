@@ -664,8 +664,9 @@ button, input, textarea, select { font-family: inherit; }
         overflow-x: auto !important; white-space: nowrap !important; background: #fff !important;
     }
     .topbar::-webkit-scrollbar { display: none; }
-    #siteNavBar { top: 50px !important; height: 32px !important; padding: 4px 10px !important; font-size: 12px !important; }
-    #startScreen { top: 82px !important; height: calc(100vh - 82px) !important; }
+    #siteNavBar { top: 50px !important; height: 34px !important; padding: 4px 0 !important; font-size: 12px !important; }
+    #siteNavBar a { padding: 4px 12px !important; font-size: 12px !important; }
+    #startScreen { top: 84px !important; height: calc(100vh - 84px) !important; }
     .brand { order: 1 !important; margin-right: 5px !important; flex-shrink: 0 !important; }
     .brand { display: none !important; } /* 로고 숨김 요청 반영 */
     
@@ -1525,7 +1526,7 @@ body {
     height: 100vh; 
     overflow: hidden; /* 스크롤은 내부 div에서 처리 */
     background: var(--bg-sidebar); 
-    padding-top: 96px; /* ★ 탑바(60) + 네비바(36) 높이만큼 여백 확보 */
+    padding-top: 98px; /* ★ 탑바(60) + 국가바(38) 높이만큼 여백 확보 */
     box-sizing: border-box;
 }
 
@@ -1543,13 +1544,13 @@ body {
 
 /* 시작 화면 스크롤 처리 */
 #startScreen {
-    position: absolute; inset: 0; top: 96px; /* ★ 탑바(60) + 네비바(36) 아래부터 시작 */
+    position: absolute; inset: 0; top: 98px; /* ★ 탑바(60) + 국가바(38) 아래부터 시작 */
     background: #fff;
     z-index: 9999;
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     overflow-y: auto; /* ★ 내부 스크롤 활성화 */
     padding-bottom: 80px;
-    height: calc(100vh - 96px); /* 높이 계산 */
+    height: calc(100vh - 98px); /* 높이 계산 */
 }
 
 /* 에디터 화면 높이 조정 */
