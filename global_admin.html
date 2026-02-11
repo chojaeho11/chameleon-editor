@@ -1141,6 +1141,32 @@
                 <input type="text" id="lcMsgInput" class="input-text" placeholder="메시지 입력..." style="flex:1;" onkeydown="if(event.key==='Enter')lcSendMsg()">
                 <button class="btn btn-primary" onclick="lcSendMsg()" style="padding:8px 16px;">전송</button>
             </div>
+            <!-- 번역 도구 -->
+            <div style="border-top:1px solid #e2e8f0; background:#fefce8; padding:10px 15px;">
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                    <span style="font-size:12px; font-weight:700; color:#854d0e;"><i class="fa-solid fa-language"></i> 번역 도구</span>
+                    <select id="lcTransFrom" style="font-size:11px; padding:2px 6px; border:1px solid #d4d4d8; border-radius:4px;">
+                        <option value="kr">한국어</option>
+                        <option value="ja">日本語</option>
+                        <option value="en">English</option>
+                    </select>
+                    <span style="font-size:12px; color:#a1a1aa;">→</span>
+                    <select id="lcTransTo" style="font-size:11px; padding:2px 6px; border:1px solid #d4d4d8; border-radius:4px;">
+                        <option value="ja">日本語</option>
+                        <option value="en">English</option>
+                        <option value="kr">한국어</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="lcTranslate()" id="lcTransBtn" style="font-size:11px; padding:3px 12px; background:#ca8a04; border-color:#ca8a04;">번역</button>
+                </div>
+                <textarea id="lcTransInput" placeholder="번역할 텍스트 입력..." style="width:100%; height:40px; border:1px solid #d4d4d8; border-radius:6px; padding:6px 8px; font-size:12px; resize:vertical; font-family:inherit;"></textarea>
+                <div id="lcTransResult" style="display:none; margin-top:6px; background:#fff; border:1px solid #86efac; border-radius:6px; padding:8px 10px; font-size:12px; line-height:1.5; position:relative;">
+                    <div id="lcTransText" style="padding-right:60px; white-space:pre-wrap;"></div>
+                    <div style="position:absolute; top:6px; right:6px; display:flex; gap:4px;">
+                        <button onclick="lcCopyTrans()" style="font-size:10px; background:#6366f1; color:#fff; border:none; padding:3px 8px; border-radius:4px; cursor:pointer;" title="복사">📋 복사</button>
+                        <button onclick="lcUseTrans()" style="font-size:10px; background:#22c55e; color:#fff; border:none; padding:3px 8px; border-radius:4px; cursor:pointer;" title="입력창에 넣기">↗ 사용</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1555,7 +1581,7 @@ async function saveCommonInfo() {
         var name=isMgr?(m.sender_name||'매니저'):isBot?'🤖 AI 봇':(m.sender_name||'고객');
         var h='<div style="display:flex;flex-direction:column;align-items:'+al+';margin-bottom:8px;"><span style="font-size:10px;color:'+(isMgr?'#6366f1':isBot?'#059669':'#f59e0b')+';font-weight:600;">'+(isMgr?'💬 ':isBot?'':'👤 ')+name+' · '+t+'</span>';
         if(m.file_url){if(m.file_type&&m.file_type.startsWith('image/')){h+='<img src="'+m.file_url+'" style="max-width:250px;border-radius:10px;cursor:pointer;margin:4px 0;" onclick="window.open(this.src)">';}else{h+='<a href="'+m.file_url+'" target="_blank" style="background:#dbeafe;padding:8px 12px;border-radius:10px;color:#2563eb;text-decoration:none;font-size:13px;display:inline-block;margin:4px 0;">📎 '+(m.file_name||'파일')+'</a>';}}
-        if(m.message){var mt=m.message.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(isMgr?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:8px 14px;border-radius:14px;max-width:300px;font-size:13px;line-height:1.5;word-break:break-all;">'+mt+'</div>';}
+        if(m.message){var mt=m.message.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(isMgr?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:8px 14px;border-radius:14px;max-width:300px;font-size:13px;line-height:1.5;word-break:break-all;">'+mt+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:2px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:10px;background:none;border:1px solid #d4d4d8;color:#64748b;padding:1px 6px;border-radius:4px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:11px;color:#6366f1;margin-left:4px;"></span></div>';}}
         return h+'</div>';
     }
     window.lcSendMsg = async function(){
@@ -1613,6 +1639,78 @@ async function saveCommonInfo() {
         if(!cq.length||!ma.length) return alert('질문과 답변 필요');
         await sb.from('chatbot_knowledge').insert({category:'상담사례',question:cq.join(' / ').substring(0,500),answer:ma.join(' ').substring(0,1000),language:'ko',priority:3,is_active:true});
         alert('✅ AI 학습 데이터로 저장!');
+    };
+})();
+
+// ═══ 번역 기능 ═══
+(function(){
+    var SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+
+    async function callTranslate(text, from, to) {
+        var sb = window.sb;
+        if (!sb) throw new Error('Supabase not ready');
+        var res = await sb.functions.invoke('translate', { body: { text: text, from: from, to: to } });
+        if (res.error) throw res.error;
+        return (res.data && res.data.translated) || '';
+    }
+
+    // 개별 메시지 번역 (한국어로)
+    window.lcTranslateMsg = async function(btn, spanId) {
+        var msg = btn.getAttribute('data-msg');
+        if (!msg) return;
+        var span = document.getElementById(spanId);
+        if (!span) return;
+        btn.disabled = true; btn.textContent = '번역중...';
+        try {
+            var result = await callTranslate(msg, 'auto', 'kr');
+            span.textContent = result;
+            span.style.display = 'inline';
+            btn.textContent = '✅ 완료';
+        } catch(e) {
+            span.textContent = '번역 실패';
+            btn.textContent = '재시도';
+            btn.disabled = false;
+            console.error('Translation error:', e);
+        }
+    };
+
+    // 번역 도구 (하단)
+    window.lcTranslate = async function() {
+        var inp = document.getElementById('lcTransInput');
+        var text = inp.value.trim();
+        if (!text) return alert('번역할 텍스트를 입력하세요');
+        var from = document.getElementById('lcTransFrom').value;
+        var to = document.getElementById('lcTransTo').value;
+        if (from === to) return alert('원본 언어와 번역 언어가 같습니다');
+        var btn = document.getElementById('lcTransBtn');
+        btn.disabled = true; btn.textContent = '번역중...';
+        try {
+            var result = await callTranslate(text, from, to);
+            document.getElementById('lcTransText').textContent = result;
+            document.getElementById('lcTransResult').style.display = 'block';
+        } catch(e) {
+            alert('번역 실패: ' + (e.message || e));
+            console.error('Translation error:', e);
+        } finally {
+            btn.disabled = false; btn.textContent = '번역';
+        }
+    };
+
+    // 복사
+    window.lcCopyTrans = function() {
+        var text = document.getElementById('lcTransText').textContent;
+        navigator.clipboard.writeText(text).then(function() {
+            var btn = event.target.closest('button');
+            btn.textContent = '✅ 복사됨';
+            setTimeout(function() { btn.textContent = '📋 복사'; }, 1500);
+        });
+    };
+
+    // 입력창에 넣기
+    window.lcUseTrans = function() {
+        var text = document.getElementById('lcTransText').textContent;
+        document.getElementById('lcMsgInput').value = text;
+        document.getElementById('lcMsgInput').focus();
     };
 })();
 
