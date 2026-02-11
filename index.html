@@ -2373,8 +2373,10 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     // [5] 초기화 (Load Event)
     // -----------------------------------------------------------
     window.addEventListener('load', async () => {
-        if (window.initConfig) await window.initConfig(); 
+        if (window.initConfig) await window.initConfig();
         else if (typeof initConfig === 'function') await initConfig();
+        // initConfig 완료 후 window.sb 갱신 (챗봇 등 비모듈 스크립트용)
+        window.sb = sb;
 
         updateLoginButtonState();
 
@@ -5512,8 +5514,9 @@ window.filterModalItems = function(keyword) {
     var db = window.sb || null;
     // window.sb가 config.js 모듈 초기화 전일 수 있으므로 지연 재확인 (중복 GoTrueClient 방지)
     if (!db) {
-        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 500);
-        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 1500);
+        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 1000);
+        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 2500);
+        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 5000);
     }
 
     var chatHistory = [];
