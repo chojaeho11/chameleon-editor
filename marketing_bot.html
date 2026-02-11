@@ -882,13 +882,26 @@ window.saveYoutubeConfig = async function() {
 };
 
 window.connectYoutube = async function() {
-    const clientId = document.getElementById('ytClientId').value;
+    const clientId = document.getElementById('ytClientId').value.trim();
     if (!clientId) { alert('OAuth2 Client ID를 먼저 입력하세요'); return; }
 
-    // Google OAuth2 플로우
-    const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+    // 현재 접속 URL 기반 redirect_uri 생성 (프로토콜+호스트+경로, 쿼리/해시 제외)
+    const currentUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+
+    // 디버깅: 실제 전송되는 redirect_uri 표시
+    console.log('redirect_uri:', currentUrl);
+    console.log('client_id:', clientId);
+
+    if (!confirm('redirect_uri: ' + currentUrl + '\n\nGoogle Console에 이 URI가 등록되어 있는지 확인하세요.\n계속하시겠습니까?')) return;
+
     const scope = encodeURIComponent('https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl');
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
+        + '?client_id=' + encodeURIComponent(clientId)
+        + '&redirect_uri=' + encodeURIComponent(currentUrl)
+        + '&response_type=code'
+        + '&scope=' + scope
+        + '&access_type=offline'
+        + '&prompt=consent';
     window.location.href = authUrl;
 };
 
