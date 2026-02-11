@@ -1752,7 +1752,7 @@ const cleanProduct = {
     name: productInfo.name,
     price: productInfo.price,
     code: productInfo.code || productInfo.key,
-    img: (productInfo.img && productInfo.img.length < 500 && !productInfo.img.startsWith('data:')) ? productInfo.img : null,
+    img: ((productInfo.img || productInfo.img_url) && (productInfo.img || productInfo.img_url).length < 500 && !(productInfo.img || productInfo.img_url).startsWith('data:')) ? (productInfo.img || productInfo.img_url) : null,
     w: productInfo.w || 0,
     h: productInfo.h || 0,
     w_mm: productInfo.w_mm || 0,

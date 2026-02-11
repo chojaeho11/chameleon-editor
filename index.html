@@ -2918,14 +2918,9 @@ window.goHome = function() {
                 closeBtns.forEach(btn => btn.style.display = 'none');
             };
 
-            // 창 열기
-            if (product.is_general_product) {
-                window.openGeneralProductModal(productCode);
-                transformToFullScreen('generalProductModal', product.name);
-            } else {
-                window.showChoiceModal(productCode);
-                transformToFullScreen('choiceModal', product.name);
-            }
+            // 창 열기 (모든 상품 동일 인터페이스)
+            window.showChoiceModal(productCode);
+            transformToFullScreen('choiceModal', product.name);
 
             window.scrollTo(0, 0);
 
@@ -3136,14 +3131,9 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 closeBtns.forEach(btn => btn.style.display = 'none');
             };
 
-            // 상품 타입에 따라 창 열기
-            if (product.is_general_product) {
-                window.openGeneralProductModal(productCode);
-                transformToFullScreen('generalProductModal', product.name);
-            } else {
-                window.showChoiceModal(productCode);
-                transformToFullScreen('choiceModal', product.name);
-            }
+            // 창 열기 (모든 상품 동일 인터페이스)
+            window.showChoiceModal(productCode);
+            transformToFullScreen('choiceModal', product.name);
 
             window.scrollTo(0, 0);
 
@@ -3456,6 +3446,7 @@ window.showChoiceModal = async function(key) {
             </button>
 
             <div class="choice-left-content" style="flex:1; overflow-y:auto; padding:40px; background:#fff; text-align:left;">
+                ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
                 <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
                 ${commonInfoHtml}
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
@@ -3471,8 +3462,8 @@ window.showChoiceModal = async function(key) {
                     <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">0</div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
-                    <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 Design Editor</button>
-                    <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; background:#4ccc02; color:white;">🛒 Add to Cart</button>
+                    ${product.is_general_product ? '' : '<button onclick="window.confirmChoice(\'editor\')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 Design Editor</button>'}
+                    <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${product.is_general_product ? (lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기') : 'Add to Cart'}</button>
                 </div>
             </div>
         </div>
@@ -5280,17 +5271,8 @@ window.filterModalItems = function(keyword) {
                 // 상품 클릭 시 분기 처리
                 document.getElementById('categoryDetailModal').style.display = 'none'; // 모달 닫기
                 
-                if (item.is_general_product) {
-                    // [수정] 일반 상품: 수량 입력 모달 열기
-                    window.openGeneralProductModal(item.code);
-                } else {
-                    // [수정] 디자인 상품: 에디터 시작
-                    window.startEditorDirect(
-                        item.code, 
-                        item.width_mm, 
-                        item.height_mm
-                    );
-                }
+                // 모든 상품 동일 인터페이스 (상세페이지 + 구매)
+                window.loadProductDetailAndOpen(item.code);
             }
         };
         return div;
