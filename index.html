@@ -5438,6 +5438,7 @@ window.filterModalItems = function(keyword) {
                 <div class="cham-subtitle" id="chamSubtitle"><i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>AI 실시간 상담 · 24시간</div>
             </div>
         </div>
+        <button class="cham-newchat" onclick="window.ChamBot && window.ChamBot.newChat()" title="New Chat" style="background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 10px;border-radius:14px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='none'"><i class="fa-solid fa-plus" style="margin-right:3px;font-size:10px;"></i><span id="chamNewChatText">새 대화</span></button>
         <button class="cham-close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="cham-messages" id="chamMessages"></div>
@@ -5525,6 +5526,26 @@ window.filterModalItems = function(keyword) {
     var _aiRoom = null;       // AI 대화용 채팅방
     var _aiSub = null;        // 매니저 끼어들기 감지용 realtime 구독
 
+    // ── 채팅 기록 localStorage 영속화 ──
+    function _chatStorageKey() {
+        var u = window.currentUser;
+        return u ? 'cham_chat_' + u.id : 'cham_chat_guest';
+    }
+    function _saveChatHistory() {
+        try { localStorage.setItem(_chatStorageKey(), JSON.stringify(chatHistory)); } catch(e) {}
+    }
+    function _loadChatHistory() {
+        try {
+            var saved = localStorage.getItem(_chatStorageKey());
+            if (saved) { chatHistory = JSON.parse(saved); return true; }
+        } catch(e) {}
+        return false;
+    }
+    function _clearChatHistory() {
+        chatHistory = [];
+        try { localStorage.removeItem(_chatStorageKey()); } catch(e) {}
+    }
+
     // 챗봇 전역 언어 감지 (한번만)
     var _chamLang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
     var _chamI18n = {
@@ -5541,7 +5562,8 @@ window.filterModalItems = function(keyword) {
         customer:   { kr: '고객', ja: 'お客様', en: 'Customer' },
         webCustomer:{ kr: '웹 고객', ja: 'Webお客様', en: 'Web Customer' },
         connectAlert:{ kr: '상담 연결을 준비 중입니다. 페이지를 새로고침 후 다시 시도해주세요!', ja: '相談接続を準備中です。ページを更新して再度お試しください！', en: 'Preparing connection. Please refresh the page and try again!' },
-        welcome:     { kr: '무엇이 필요하신가요? 가격, 제작기간, 할인혜택 등 아무 질문이나 괜찮아요.\n빠르게 상담해 드릴게요. 항상 상담사가 대기하고 있어요!', ja: '何かお探しですか？価格、納期、割引特典など、どんなご質問でも大丈夫です。\n迅速にご対応いたします。いつでも相談員が待機しております！', en: 'What do you need? Pricing, production time, discounts — any question is welcome.\nWe\'ll help you right away. Our agents are always standing by!' }
+        welcome:     { kr: '무엇이 필요하신가요? 가격, 제작기간, 할인혜택 등 아무 질문이나 괜찮아요.\n빠르게 상담해 드릴게요. 항상 상담사가 대기하고 있어요!', ja: '何かお探しですか？価格、納期、割引特典など、どんなご質問でも大丈夫です。\n迅速にご対応いたします。いつでも相談員が待機しております！', en: 'What do you need? Pricing, production time, discounts — any question is welcome.\nWe\'ll help you right away. Our agents are always standing by!' },
+        newChat:     { kr: '새 대화', ja: '新しい会話', en: 'New Chat' }
     };
     function _ct(key) { return (_chamI18n[key] && _chamI18n[key][_chamLang]) || (_chamI18n[key] && _chamI18n[key]['en']) || ''; }
 
@@ -5798,6 +5820,7 @@ window.filterModalItems = function(keyword) {
             addMsg(reply);
             chatHistory.push({ role: 'assistant', content: reply });
             if (chatHistory.length > 20) chatHistory = chatHistory.slice(-16);
+            _saveChatHistory();
             saveMsg('chatbot', reply);
         }).catch(function() {
             removeTyping();
@@ -5823,7 +5846,15 @@ window.filterModalItems = function(keyword) {
             trg.classList.add('open');
             if (ico) ico.className = 'fa-solid fa-xmark';
             if (badge) badge.classList.add('hide');
-            if (!opened) { welcome(); opened = true; }
+            if (!opened) {
+                // 저장된 채팅 기록이 있으면 복원, 없으면 환영 메시지
+                if (_loadChatHistory() && chatHistory.length > 0) {
+                    chatHistory.forEach(function(m) { addMsg(m.content, m.role === 'user' ? 'user' : 'bot'); });
+                } else {
+                    welcome();
+                }
+                opened = true;
+            }
             setTimeout(function() { var inp = getEl('chamInput'); if(inp) inp.focus(); }, 300);
         }
     }
@@ -5874,6 +5905,8 @@ window.filterModalItems = function(keyword) {
         if (chamPh) chamPh.placeholder = _ct('placeholder');
         var chamConn = getEl('chamConnectText');
         if (chamConn) chamConn.textContent = _ct('connect');
+        var chamNew = getEl('chamNewChatText');
+        if (chamNew) chamNew.textContent = _ct('newChat');
 
         var trigger = getEl('cham-bot-trigger');
         if (trigger) trigger.addEventListener('click', toggleBot);
@@ -5908,8 +5941,18 @@ window.filterModalItems = function(keyword) {
         bindEvents();
     }
 
+    // ── 새 대화 시작 ──
+    function newChat() {
+        _clearChatHistory();
+        _aiRoom = null;
+        if (_aiSub) { _aiSub.unsubscribe(); _aiSub = null; }
+        var c = getEl('chamMessages');
+        if (c) c.innerHTML = '';
+        welcome();
+    }
+
     // 전역 접근용
-    window.ChamBot = { toggle: toggleBot, send: sendMsg };
+    window.ChamBot = { toggle: toggleBot, send: sendMsg, newChat: newChat };
     window._ct = _ct;
 
     console.log('\uD83E\uDD8E \uCE74\uBA5C\uB808\uC628 AI \uC0C1\uB2F4\uBD07 \uB85C\uB4DC \uC644\uB8CC');
