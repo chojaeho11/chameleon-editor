@@ -3360,7 +3360,7 @@ window.showChoiceModal = async function(key) {
                     if (lang === 'ja' && cat.name_jp) catName = cat.name_jp;
                     if (lang === 'en' && cat.name_us) catName = cat.name_us;
 
-                    const isColorCategory = (cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color'));
+                    const isColorCategory = cat.is_swatch || cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color');
 
                     optionsHtml += `
                         <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
