@@ -2467,28 +2467,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     // PDF 폰트 설정
     window.pdfFontCache = null;
     window.pdfFontName = 'NanumGothic'; 
-    window.preloadLanguageFont = async function() { 
-        try { 
-            let fontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf'; 
-            const r = await fetch(fontUrl); 
-            if(r.ok) { 
-                const b = await r.blob(); 
-                const rd = new FileReader(); 
-                rd.onloadend = function() { window.pdfFontCache = rd.result.split(',')[1]; }; 
-                rd.readAsDataURL(b); 
-            } 
-        } catch(e) { console.error("Font Load Error:", e); } 
-    };
-    window.loadKoreanFontForPDF = async function(doc) { 
-        if(window.pdfFontCache) { 
-            try { 
-                const fileName = window.pdfFontName + '.ttf';
-                doc.addFileToVFS(fileName, window.pdfFontCache); 
-                doc.addFont(fileName, window.pdfFontName, 'normal'); 
-                doc.setFont(window.pdfFontName); 
-            } catch(e) { console.warn(e); } 
-        } 
-    };
+    // (PDF 폰트는 두번째 preloadLanguageFont에서 처리)
 
     // PDF.js 워커 설정
     if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -4535,40 +4514,39 @@ if (w >= 20 && h >= 20) {
         }
     }
 
-    // PDF 폰트 설정 (폰트 깨짐 방지)
+    // PDF 폰트 설정 (국가별 분기)
     window.pdfFontCache = null;
-    window.pdfFontName = 'NanumGothic'; // 기본
+    const _pdfFontMap = {
+        'ja': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf', name: 'NotoSansJP' },
+        'en': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf', name: 'Inter' },
+        'kr': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf', name: 'NanumGothic' }
+    };
+    const _pdfFont = _pdfFontMap[CURRENT_LANG] || _pdfFontMap['kr'];
+    window.pdfFontName = _pdfFont.name;
 
-    window.preloadLanguageFont = async function() { 
-        try { 
-            let fontUrl = '';
-            if (CURRENT_LANG === 'jp') {
-                fontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf'; 
-            } else {
-                fontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf';
+    window.preloadLanguageFont = async function() {
+        try {
+            const r = await fetch(_pdfFont.url);
+            if(r.ok) {
+                const b = await r.blob();
+                const rd = new FileReader();
+                rd.onloadend = function() {
+                    window.pdfFontCache = rd.result.split(',')[1];
+                };
+                rd.readAsDataURL(b);
             }
-
-            const r = await fetch(fontUrl); 
-            if(r.ok) { 
-                const b = await r.blob(); 
-                const rd = new FileReader(); 
-                rd.onloadend = function() { 
-                    window.pdfFontCache = rd.result.split(',')[1]; 
-                }; 
-                rd.readAsDataURL(b); 
-            } 
-        } catch(e) { console.error("Font Load Error:", e); } 
+        } catch(e) { console.error("Font Load Error:", e); }
     };
 
-    window.loadKoreanFontForPDF = async function(doc) { 
-        if(window.pdfFontCache) { 
-            try { 
+    window.loadKoreanFontForPDF = async function(doc) {
+        if(window.pdfFontCache) {
+            try {
                 const fileName = window.pdfFontName + '.ttf';
-                doc.addFileToVFS(fileName, window.pdfFontCache); 
-                doc.addFont(fileName, window.pdfFontName, 'normal'); 
-                doc.setFont(window.pdfFontName); 
-            } catch(e) { console.warn(e); } 
-        } 
+                doc.addFileToVFS(fileName, window.pdfFontCache);
+                doc.addFont(fileName, window.pdfFontName, 'normal');
+                doc.setFont(window.pdfFontName);
+            } catch(e) { console.warn(e); }
+        }
     };
 
     // 기타 유틸

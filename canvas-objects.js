@@ -13,8 +13,8 @@ if (!_detectedLang) {
     else if (_h.includes('cafe3355.com')) _detectedLang = 'US';
     else _detectedLang = 'KR';
 }
-// 언어코드→국가코드 매핑 (DB site_fonts.site_code = KR/JP/US)
-const _langMap = { 'JA': 'JP', 'EN': 'US', 'JP': 'JP', 'US': 'US', 'KR': 'KR' };
+// DB site_fonts.site_code = KR / JA / EN
+const _langMap = { 'JA': 'JA', 'JP': 'JA', 'EN': 'EN', 'US': 'EN', 'KR': 'KR' };
 const CURRENT_LANG = _langMap[_detectedLang.toUpperCase()] || 'KR';
 
 // DB에서 불러온 폰트 목록을 저장할 전역 변수

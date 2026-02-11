@@ -20,10 +20,18 @@ jp: {
     }
 };
 
-// 현재 URL에서 언어 설정 가져오기 (없으면 'kr' 기본)
+// 현재 URL/도메인에서 언어 설정 가져오기
 const urlParams = new URLSearchParams(window.location.search);
-const CURRENT_LANG_CODE = (urlParams.get('lang') || 'kr').toLowerCase();
-const TARGET_FONT = FONT_CONFIG[CURRENT_LANG_CODE] || FONT_CONFIG['kr'];
+let _exportLang = urlParams.get('lang');
+if (!_exportLang) {
+    const _eh = window.location.hostname;
+    if (_eh.includes('cafe0101.com')) _exportLang = 'ja';
+    else if (_eh.includes('cafe3355.com')) _exportLang = 'us';
+    else _exportLang = 'kr';
+}
+const CURRENT_LANG_CODE = _exportLang.toLowerCase();
+const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr' }[CURRENT_LANG_CODE] || 'kr';
+const TARGET_FONT = FONT_CONFIG[_fontKey] || FONT_CONFIG['kr'];
 
 const BASE_FONT_NAME = TARGET_FONT.name;
 
