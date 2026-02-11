@@ -6019,10 +6019,11 @@ window.filterModalItems = function(keyword) {
             var card = nameBtn.closest('div[style*="padding:4px"]');
             if (card) card.remove();
             
-            // 매니저 선택 UI 표시
+            // 매니저 선택 UI 표시 (JP/EN은 현지화된 기본 매니저 사용)
+            if (_lang2 !== 'kr') { showManagerPicker(DEFAULT_MANAGERS, msgArea); return; }
             var sb = getSb();
             if (!sb) { showManagerPicker(DEFAULT_MANAGERS, msgArea); return; }
-            
+
             sb.from('chatbot_knowledge').select('question,answer')
               .eq('category', '_managers').eq('is_active', true)
               .then(function(res) {
