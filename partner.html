@@ -483,12 +483,12 @@
         const sel = document.getElementById('regCategory');
         sel.innerHTML = '<option value="">-- 카테고리 선택 --</option>';
         if (wholesaleTop) {
-            const { data: subCats } = await sb.from('admin_categories').select('key, name').eq('top_category_code', wholesaleTop.code).order('sort_order');
-            if (subCats) subCats.forEach(c => { const o = document.createElement('option'); o.value = c.key; o.textContent = c.name; sel.appendChild(o); });
+            const { data: subCats } = await sb.from('admin_categories').select('code, name').eq('top_category_code', wholesaleTop.code).order('sort_order');
+            if (subCats) subCats.forEach(c => { const o = document.createElement('option'); o.value = c.code; o.textContent = c.name; sel.appendChild(o); });
         }
         if (sel.options.length <= 1) {
-            const { data: allCats } = await sb.from('admin_categories').select('key, name').order('sort_order');
-            if (allCats) allCats.forEach(c => { const o = document.createElement('option'); o.value = c.key; o.textContent = c.name; sel.appendChild(o); });
+            const { data: allCats } = await sb.from('admin_categories').select('code, name').order('sort_order');
+            if (allCats) allCats.forEach(c => { const o = document.createElement('option'); o.value = c.code; o.textContent = c.name; sel.appendChild(o); });
         }
     }
 
