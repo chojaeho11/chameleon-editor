@@ -4348,20 +4348,3 @@ video {
     .review-summary { flex-direction:column; text-align:center; }
 }
 
-/* ===== 파트너스 모달 모바일 반응형 ===== */
-@media (max-width:768px) {
-    #partnerConsoleModal .modal-box { width:100% !important; height:100vh !important; max-width:100% !important; border-radius:0 !important; }
-    #partnerConsoleModal .modal-box > div:nth-child(2) { flex-direction:column !important; }
-    #partnerConsoleModal .modal-box > div:nth-child(2) > div:first-child { width:100% !important; padding:10px !important; border-right:none !important; border-bottom:1px solid #e2e8f0; }
-    #partnerConsoleModal .nav-menu { flex-direction:row !important; gap:3px !important; overflow-x:auto; }
-    #partnerConsoleModal .nav-menu .nav-item { white-space:nowrap; font-size:12px !important; padding:8px 10px !important; }
-    #partnerConsoleModal .nav-menu .nav-item i { display:none; }
-    #partnerConsoleModal .modal-box > div:nth-child(2) > div:last-child { padding:15px !important; }
-    #tab-settlement > div:first-child { flex-direction:column !important; gap:15px; }
-    #tab-settlement > div:first-child button { margin-left:0 !important; width:100%; }
-}
-/* 파트너스 모바일 닫기 버튼 (플로팅) */
-.partner-mobile-close { display:none; }
-@media (max-width:768px) {
-    .partner-mobile-close { display:flex !important; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:20001; background:#1e293b; color:#fff; border:none; border-radius:50px; padding:12px 30px; font-size:14px; font-weight:700; box-shadow:0 4px 20px rgba(0,0,0,0.3); cursor:pointer; align-items:center; gap:6px; }
-}

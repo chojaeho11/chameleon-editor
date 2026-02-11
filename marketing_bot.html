@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마케팅 봇 관리</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard',sans-serif; background:#0f172a; color:#e2e8f0; min-height:100vh; }
+
+/* 상단 헤더 */
+.top-header { background:#1e293b; border-bottom:1px solid #334155; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.top-header .logo { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; color:#a78bfa; cursor:pointer; }
+.top-header .logo i { font-size:22px; }
+.top-header .user-info { font-size:13px; color:#94a3b8; }
+.top-header .back-btn { background:none; border:1px solid #475569; color:#94a3b8; padding:6px 14px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:all .2s; }
+.top-header .back-btn:hover { background:#334155; color:#fff; }
+
+/* 탭 네비게이션 */
+.tab-nav { background:#1e293b; border-bottom:1px solid #334155; padding:0 24px; display:flex; gap:0; overflow-x:auto; }
+.tab-nav .tab { padding:14px 20px; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; transition:all .2s; display:flex; align-items:center; gap:8px; }
+.tab-nav .tab:hover { color:#a78bfa; background:rgba(167,139,250,.05); }
+.tab-nav .tab.active { color:#a78bfa; border-bottom-color:#a78bfa; }
+.tab-nav .tab i { font-size:14px; }
+
+/* 메인 콘텐츠 */
+.main-content { max-width:1200px; margin:0 auto; padding:24px; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* 카드 */
+.card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin-bottom:16px; }
+.card-title { font-size:15px; font-weight:700; color:#f1f5f9; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-title i { color:#a78bfa; }
+
+/* 통계 그리드 */
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:20px; }
+.stat-box { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; text-align:center; }
+.stat-box .num { font-size:28px; font-weight:800; color:#a78bfa; }
+.stat-box .label { font-size:12px; color:#94a3b8; margin-top:4px; }
+.stat-box.green .num { color:#22c55e; }
+.stat-box.blue .num { color:#3b82f6; }
+.stat-box.orange .num { color:#f97316; }
+.stat-box.pink .num { color:#ec4899; }
+
+/* 폼 스타일 */
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; }
+.form-input { width:100%; background:#0f172a; border:1px solid #334155; border-radius:8px; padding:10px 14px; color:#e2e8f0; font-size:14px; font-family:inherit; }
+.form-input:focus { outline:none; border-color:#a78bfa; }
+select.form-input { cursor:pointer; }
+textarea.form-input { resize:vertical; min-height:80px; }
+
+/* 버튼 */
+.btn { padding:10px 20px; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:6px; font-family:inherit; }
+.btn-primary { background:#7c3aed; color:#fff; }
+.btn-primary:hover { background:#6d28d9; }
+.btn-success { background:#16a34a; color:#fff; }
+.btn-success:hover { background:#15803d; }
+.btn-danger { background:#dc2626; color:#fff; }
+.btn-danger:hover { background:#b91c1c; }
+.btn-outline { background:transparent; border:1px solid #475569; color:#94a3b8; }
+.btn-outline:hover { background:#334155; color:#fff; }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-lg { padding:12px 28px; font-size:15px; }
+
+/* 콘텐츠 리스트 */
+.content-item { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:16px; margin-bottom:10px; transition:all .2s; }
+.content-item:hover { border-color:#475569; }
+.content-item .ci-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.content-item .ci-title { font-size:14px; font-weight:700; color:#f1f5f9; }
+.content-item .ci-meta { font-size:11px; color:#64748b; display:flex; gap:10px; flex-wrap:wrap; }
+.content-item .ci-body { font-size:13px; color:#94a3b8; line-height:1.6; margin-top:8px; }
+.content-item .ci-actions { margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; }
+
+/* 상태 뱃지 */
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.badge-draft { background:#1e293b; border:1px solid #475569; color:#94a3b8; }
+.badge-approved { background:#052e16; border:1px solid #166534; color:#22c55e; }
+.badge-published { background:#172554; border:1px solid #1e40af; color:#3b82f6; }
+.badge-failed { background:#450a0a; border:1px solid #991b1b; color:#f87171; }
+.badge-platform { background:#2e1065; border:1px solid #6d28d9; color:#a78bfa; }
+
+/* 주제 카드 */
+.topic-card { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:14px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+.topic-card .tc-info { flex:1; }
+.topic-card .tc-name { font-size:14px; font-weight:700; color:#f1f5f9; }
+.topic-card .tc-keywords { font-size:12px; color:#64748b; margin-top:4px; }
+.topic-card .tc-toggle { width:44px; height:24px; border-radius:12px; background:#334155; cursor:pointer; position:relative; transition:all .2s; border:none; }
+.topic-card .tc-toggle.on { background:#7c3aed; }
+.topic-card .tc-toggle::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:all .2s; }
+.topic-card .tc-toggle.on::after { left:23px; }
+
+/* YouTube 설정 */
+.yt-status { display:flex; align-items:center; gap:8px; padding:12px 16px; border-radius:10px; margin-bottom:16px; }
+.yt-status.connected { background:#052e16; border:1px solid #166534; }
+.yt-status.disconnected { background:#450a0a; border:1px solid #991b1b; }
+.yt-status i { font-size:18px; }
+
+/* 모달 */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:#1e293b; border:1px solid #334155; border-radius:16px; padding:24px; width:90%; max-width:600px; max-height:85vh; overflow-y:auto; }
+.modal-box h3 { font-size:17px; font-weight:800; margin-bottom:16px; color:#f1f5f9; }
+
+/* 로딩 */
+.loading-spinner { display:inline-block; width:18px; height:18px; border:3px solid #334155; border-top-color:#a78bfa; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* 빈 상태 */
+.empty-state { text-align:center; padding:40px; color:#64748b; }
+.empty-state i { font-size:40px; margin-bottom:12px; color:#334155; }
+.empty-state p { font-size:14px; }
+
+/* 반응형 */
+@media (max-width:768px) {
+    .tab-nav .tab { padding:12px 14px; font-size:12px; }
+    .tab-nav .tab span { display:none; }
+    .stat-grid { grid-template-columns:repeat(2, 1fr); }
+    .main-content { padding:16px; }
+}
+
+/* 생성 진행 상태 */
+.gen-progress { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:16px; margin-bottom:16px; }
+.gen-progress .step { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; color:#64748b; }
+.gen-progress .step.active { color:#a78bfa; }
+.gen-progress .step.done { color:#22c55e; }
+.gen-progress .step i { width:20px; text-align:center; }
+
+/* 블로그 미리보기 */
+.blog-preview { background:#fff; color:#1e293b; border-radius:12px; padding:24px; }
+.blog-preview h2 { font-size:20px; margin-bottom:12px; }
+.blog-preview p { line-height:1.8; font-size:14px; color:#475569; }
+</style>
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<div class="top-header">
+    <div class="logo" onclick="location.href='global_admin.html'">
+        <i class="fa-solid fa-robot"></i> 마케팅 봇
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+        <span class="user-info" id="userInfo">로딩 중...</span>
+        <button class="back-btn" onclick="location.href='global_admin.html'"><i class="fa-solid fa-arrow-left"></i> 관리자</button>
+    </div>
+</div>
+
+<!-- 탭 네비게이션 -->
+<div class="tab-nav">
+    <div class="tab active" onclick="switchTab('dashboard',this)"><i class="fa-solid fa-chart-pie"></i> <span>대시보드</span></div>
+    <div class="tab" onclick="switchTab('content',this)"><i class="fa-solid fa-file-lines"></i> <span>콘텐츠</span></div>
+    <div class="tab" onclick="switchTab('generate',this)"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>AI 생성</span></div>
+    <div class="tab" onclick="switchTab('topics',this)"><i class="fa-solid fa-tags"></i> <span>주제 설정</span></div>
+    <div class="tab" onclick="switchTab('youtube',this)"><i class="fa-brands fa-youtube"></i> <span>YouTube</span></div>
+    <div class="tab" onclick="switchTab('blog',this)"><i class="fa-solid fa-blog"></i> <span>블로그</span></div>
+    <div class="tab" onclick="switchTab('settings',this)"><i class="fa-solid fa-gear"></i> <span>설정</span></div>
+</div>
+
+<!-- ===== 대시보드 탭 ===== -->
+<div class="main-content">
+<div class="tab-panel active" id="panel-dashboard">
+    <div class="stat-grid">
+        <div class="stat-box"><div class="num" id="statTotal">0</div><div class="label">전체 콘텐츠</div></div>
+        <div class="stat-box green"><div class="num" id="statPublished">0</div><div class="label">발행됨</div></div>
+        <div class="stat-box blue"><div class="num" id="statDraft">0</div><div class="label">대기중</div></div>
+        <div class="stat-box orange"><div class="num" id="statScheduled">0</div><div class="label">예약됨</div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> 최근 생성 콘텐츠</div>
+        <div id="recentContent">
+            <div class="empty-state"><i class="fa-solid fa-inbox"></i><p>아직 생성된 콘텐츠가 없습니다</p></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><i class="fa-brands fa-youtube"></i> YouTube 활동</div>
+        <div id="youtubeActivity">
+            <div class="empty-state"><i class="fa-solid fa-link-slash"></i><p>YouTube 채널을 연결해주세요</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 콘텐츠 관리 탭 ===== -->
+<div class="tab-panel" id="panel-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="filterContent('all')">전체</button>
+            <button class="btn btn-outline btn-sm" onclick="filterContent('draft')">대기</button>
+            <button class="btn btn-outline btn-sm" onclick="filterContent('approved')">승인</button>
+            <button class="btn btn-outline btn-sm" onclick="filterContent('published')">발행</button>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="switchTab('generate',document.querySelector('.tab:nth-child(3)'))"><i class="fa-solid fa-plus"></i> 새 콘텐츠</button>
+    </div>
+    <div id="contentList">
+        <div class="empty-state"><i class="fa-solid fa-folder-open"></i><p>콘텐츠가 없습니다. AI 생성 탭에서 만들어보세요!</p></div>
+    </div>
+</div>
+
+<!-- ===== AI 콘텐츠 생성 탭 ===== -->
+<div class="tab-panel" id="panel-generate">
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 콘텐츠 생성</div>
+
+        <div class="form-group">
+            <label>플랫폼 선택</label>
+            <select class="form-input" id="genPlatform">
+                <option value="youtube_shorts">YouTube Shorts (60초 대본)</option>
+                <option value="blog">블로그 포스트</option>
+                <option value="instagram">Instagram 게시물</option>
+                <option value="tiktok">TikTok 대본</option>
+                <option value="website">자사 사이트 콘텐츠</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>주제 선택 (또는 직접 입력)</label>
+            <select class="form-input" id="genTopic">
+                <option value="">-- 저장된 주제에서 선택 --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>커스텀 주제/키워드 (직접 입력)</label>
+            <input type="text" class="form-input" id="genCustomTopic" placeholder="예: 허니컴보드 인테리어 활용법, 카페 포토존 만들기">
+        </div>
+
+        <div class="form-group">
+            <label>톤 & 스타일</label>
+            <select class="form-input" id="genTone">
+                <option value="professional">전문적/신뢰감</option>
+                <option value="casual">캐주얼/친근</option>
+                <option value="energetic">에너지/열정적</option>
+                <option value="educational">교육적/정보제공</option>
+                <option value="storytelling">스토리텔링</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>언어</label>
+            <select class="form-input" id="genLang">
+                <option value="kr">한국어</option>
+                <option value="ja">일본어</option>
+                <option value="en">영어</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>추가 지시사항 (선택)</label>
+            <textarea class="form-input" id="genInstructions" placeholder="예: CTA에 cafe2626.com 링크 포함, 프로모션 할인 언급"></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-lg" onclick="generateContent()" id="btnGenerate">
+            <i class="fa-solid fa-sparkles"></i> AI 콘텐츠 생성
+        </button>
+
+        <div id="genProgress" style="display:none; margin-top:16px;">
+            <div class="gen-progress">
+                <div class="step" id="step1"><i class="fa-solid fa-circle-notch fa-spin"></i> 주제 분석 중...</div>
+                <div class="step" id="step2"><i class="fa-solid fa-circle"></i> 콘텐츠 생성 중...</div>
+                <div class="step" id="step3"><i class="fa-solid fa-circle"></i> 해시태그 최적화...</div>
+                <div class="step" id="step4"><i class="fa-solid fa-circle"></i> 썸네일 프롬프트 생성...</div>
+            </div>
+        </div>
+
+        <div id="genResult" style="display:none; margin-top:16px;"></div>
+    </div>
+</div>
+
+<!-- ===== 주제 설정 탭 ===== -->
+<div class="tab-panel" id="panel-topics">
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-plus-circle"></i> 새 주제 등록</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <input type="text" class="form-input" id="newTopicName" placeholder="주제명 (예: 카페 인테리어)" style="flex:1; min-width:200px;">
+            <input type="text" class="form-input" id="newTopicKeywords" placeholder="키워드 (콤마 구분)" style="flex:1; min-width:200px;">
+            <select class="form-input" id="newTopicFreq" style="width:120px;">
+                <option value="daily">매일</option>
+                <option value="weekly">주 1회</option>
+                <option value="biweekly">주 2회</option>
+            </select>
+            <button class="btn btn-primary" onclick="addTopic()"><i class="fa-solid fa-plus"></i> 추가</button>
+        </div>
+    </div>
+    <div id="topicList">
+        <div class="empty-state"><i class="fa-solid fa-tags"></i><p>등록된 주제가 없습니다</p></div>
+    </div>
+</div>
+
+<!-- ===== YouTube 탭 ===== -->
+<div class="tab-panel" id="panel-youtube">
+    <div class="card">
+        <div class="card-title"><i class="fa-brands fa-youtube"></i> YouTube 채널 연결</div>
+        <div id="ytConnectionStatus" class="yt-status disconnected">
+            <i class="fa-solid fa-circle-xmark" style="color:#f87171;"></i>
+            <span>YouTube 채널이 연결되지 않았습니다</span>
+        </div>
+
+        <div class="form-group">
+            <label>YouTube Data API Key</label>
+            <input type="password" class="form-input" id="ytApiKey" placeholder="AIzaSy...">
+        </div>
+        <div class="form-group">
+            <label>OAuth2 Client ID</label>
+            <input type="password" class="form-input" id="ytClientId" placeholder="xxxxx.apps.googleusercontent.com">
+        </div>
+        <div class="form-group">
+            <label>OAuth2 Client Secret</label>
+            <input type="password" class="form-input" id="ytClientSecret" placeholder="GOCSPX-...">
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" onclick="saveYoutubeConfig()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
+            <button class="btn btn-success" onclick="connectYoutube()"><i class="fa-brands fa-google"></i> Google OAuth 인증</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-upload"></i> Shorts 업로드</div>
+        <div class="form-group">
+            <label>영상 파일 (MP4, 60초 이하)</label>
+            <input type="file" class="form-input" id="ytVideoFile" accept="video/mp4">
+        </div>
+        <div class="form-group">
+            <label>제목</label>
+            <input type="text" class="form-input" id="ytVideoTitle" placeholder="영상 제목">
+        </div>
+        <div class="form-group">
+            <label>설명</label>
+            <textarea class="form-input" id="ytVideoDesc" placeholder="영상 설명"></textarea>
+        </div>
+        <div class="form-group">
+            <label>태그 (콤마 구분)</label>
+            <input type="text" class="form-input" id="ytVideoTags" placeholder="인테리어,간판,포토존">
+        </div>
+        <button class="btn btn-danger" onclick="uploadToYoutube()"><i class="fa-brands fa-youtube"></i> YouTube 업로드</button>
+        <div id="uploadProgress" style="display:none; margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-reply"></i> 댓글 자동 답글</div>
+        <div class="form-group">
+            <label>자동 답글 활성화</label>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="tc-toggle" id="autoReplyToggle" onclick="toggleAutoReply()"></button>
+                <span id="autoReplyStatus" style="font-size:13px; color:#64748b;">비활성</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>답글 템플릿</label>
+            <textarea class="form-input" id="autoReplyTemplate" placeholder="감사합니다! 더 궁금한 점은 cafe2626.com을 방문해주세요 😊"></textarea>
+            <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                변수: {commenter} = 댓글 작성자, {video_title} = 영상 제목
+            </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveAutoReply()"><i class="fa-solid fa-save"></i> 답글 설정 저장</button>
+
+        <div style="margin-top:16px;">
+            <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> 최근 자동 답글</div>
+            <div id="replyLog">
+                <div class="empty-state" style="padding:20px;"><p>아직 자동 답글 기록이 없습니다</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 블로그 탭 ===== -->
+<div class="tab-panel" id="panel-blog">
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-blog"></i> 자사 사이트 블로그 관리</div>
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">
+            AI가 생성한 블로그 콘텐츠를 자사 사이트(cafe2626.com/cafe0101.com/cafe3355.com)에 게시합니다.
+        </p>
+        <div id="blogContentList">
+            <div class="empty-state"><i class="fa-solid fa-newspaper"></i><p>발행할 블로그 콘텐츠가 없습니다. AI 생성 탭에서 블로그 포스트를 만들어보세요!</p></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-eye"></i> 블로그 미리보기</div>
+        <div id="blogPreview">
+            <div class="empty-state" style="padding:20px;"><p>콘텐츠를 선택하면 미리보기가 표시됩니다</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 설정 탭 ===== -->
+<div class="tab-panel" id="panel-settings">
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-globe"></i> 사이트 정보</div>
+        <div class="form-group">
+            <label>회사/브랜드명</label>
+            <input type="text" class="form-input" id="setBrandName" value="카멜레온 프린트">
+        </div>
+        <div class="form-group">
+            <label>사이트 URL (KR)</label>
+            <input type="text" class="form-input" id="setSiteKr" value="https://cafe2626.com">
+        </div>
+        <div class="form-group">
+            <label>사이트 URL (JP)</label>
+            <input type="text" class="form-input" id="setSiteJp" value="https://cafe0101.com">
+        </div>
+        <div class="form-group">
+            <label>사이트 URL (US)</label>
+            <input type="text" class="form-input" id="setSiteUs" value="https://cafe3355.com">
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-bullseye"></i> 마케팅 포인트</div>
+        <div class="form-group">
+            <label>핵심 키워드 (전체 콘텐츠에 반영)</label>
+            <input type="text" class="form-input" id="setCoreKeywords" value="허니컴보드,패브릭인쇄,포토존,등신대,카페인테리어,친환경인쇄">
+        </div>
+        <div class="form-group">
+            <label>USP (핵심 강점)</label>
+            <textarea class="form-input" id="setUsp">친환경 종이 허니컴보드 전문, 무료 온라인 디자인 에디터, 전국 당일배송, 포토존/등신대/배너 전문 인쇄</textarea>
+        </div>
+        <div class="form-group">
+            <label>CTA 메시지</label>
+            <input type="text" class="form-input" id="setCtaMsg" value="지금 바로 무료 디자인 시작하기 → cafe2626.com">
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-save"></i> 설정 저장</button>
+    </div>
+</div>
+
+</div><!-- /main-content -->
+
+<!-- 콘텐츠 상세 모달 -->
+<div class="modal-overlay" id="contentDetailModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 id="modalTitle">콘텐츠 상세</h3>
+            <button class="btn btn-outline btn-sm" onclick="closeModal('contentDetailModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="modalBody"></div>
+        <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;" id="modalActions"></div>
+    </div>
+</div>
+
+<script type="module">
+import { initConfig, sb as _sb, currentUser, isAdmin } from './config.js?v=119';
+
+let sb;
+const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+
+// ===== 초기화 =====
+(async function init() {
+    await initConfig();
+    sb = window.sb || _sb;
+    if (!sb) { alert('시스템 초기화 실패'); return; }
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) { location.href = 'index.html'; return; }
+
+    document.getElementById('userInfo').innerText = user.email;
+
+    // 관리자 확인
+    const adminEmails = ['korea900as@gmail.com', 'ceo@test.com'];
+    if (!adminEmails.includes(user.email)) {
+        alert('관리자만 접근 가능합니다');
+        location.href = 'index.html';
+        return;
+    }
+
+    // 데이터 로드
+    loadDashboard();
+    loadTopics();
+    loadYoutubeConfig();
+})();
+
+// ===== 탭 전환 =====
+window.switchTab = function(tabId, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + tabId).classList.add('active');
+    if (el) el.classList.add('active');
+
+    if (tabId === 'dashboard') loadDashboard();
+    if (tabId === 'content') loadContentList();
+    if (tabId === 'topics') loadTopics();
+    if (tabId === 'blog') loadBlogContent();
+};
+
+// ===== 대시보드 =====
+async function loadDashboard() {
+    try {
+        const { data: contents } = await sb.from('marketing_content').select('id, status, platform, title, created_at').order('created_at', { ascending: false }).limit(50);
+        if (!contents) return;
+
+        document.getElementById('statTotal').innerText = contents.length;
+        document.getElementById('statPublished').innerText = contents.filter(c => c.status === 'published').length;
+        document.getElementById('statDraft').innerText = contents.filter(c => c.status === 'draft' || c.status === 'approved').length;
+        document.getElementById('statScheduled').innerText = contents.filter(c => c.status === 'scheduled').length;
+
+        // 최근 콘텐츠
+        const recent = contents.slice(0, 5);
+        if (recent.length === 0) return;
+
+        const platformIcon = { youtube_shorts: 'fa-brands fa-youtube', blog: 'fa-solid fa-blog', instagram: 'fa-brands fa-instagram', tiktok: 'fa-brands fa-tiktok', website: 'fa-solid fa-globe' };
+        const platformName = { youtube_shorts: 'YouTube Shorts', blog: '블로그', instagram: 'Instagram', tiktok: 'TikTok', website: '사이트' };
+
+        let html = '';
+        recent.forEach(c => {
+            const date = new Date(c.created_at).toLocaleDateString('ko-KR');
+            html += `<div class="content-item" onclick="viewContent(${c.id})" style="cursor:pointer;">
+                <div class="ci-header">
+                    <div class="ci-title">${c.title || '(제목 없음)'}</div>
+                    <span class="badge badge-${c.status}">${c.status}</span>
+                </div>
+                <div class="ci-meta">
+                    <span><i class="${platformIcon[c.platform] || 'fa-solid fa-file'}"></i> ${platformName[c.platform] || c.platform}</span>
+                    <span>${date}</span>
+                </div>
+            </div>`;
+        });
+        document.getElementById('recentContent').innerHTML = html;
+    } catch(e) { console.error('Dashboard error:', e); }
+}
+
+// ===== 콘텐츠 목록 =====
+let contentFilter = 'all';
+window.filterContent = function(f) { contentFilter = f; loadContentList(); };
+
+async function loadContentList() {
+    const container = document.getElementById('contentList');
+    container.innerHTML = '<div style="text-align:center; padding:20px;"><div class="loading-spinner"></div></div>';
+
+    let query = sb.from('marketing_content').select('*').order('created_at', { ascending: false });
+    if (contentFilter !== 'all') query = query.eq('status', contentFilter);
+
+    const { data } = await query.limit(50);
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-folder-open"></i><p>콘텐츠가 없습니다</p></div>';
+        return;
+    }
+
+    const platformIcon = { youtube_shorts: 'fa-brands fa-youtube', blog: 'fa-solid fa-blog', instagram: 'fa-brands fa-instagram', tiktok: 'fa-brands fa-tiktok', website: 'fa-solid fa-globe' };
+
+    let html = '';
+    data.forEach(c => {
+        const date = new Date(c.created_at).toLocaleDateString('ko-KR');
+        const body = (c.body || c.short_script || '').substring(0, 120);
+        const tags = (c.hashtags || []).slice(0, 5).map(t => `#${t}`).join(' ');
+        html += `<div class="content-item">
+            <div class="ci-header">
+                <div>
+                    <div class="ci-title">${c.title || '(제목 없음)'}</div>
+                    <div class="ci-meta">
+                        <span><i class="${platformIcon[c.platform] || 'fa-solid fa-file'}"></i> ${c.platform}</span>
+                        <span>${date}</span>
+                        ${tags ? '<span style="color:#a78bfa;">'+tags+'</span>' : ''}
+                    </div>
+                </div>
+                <span class="badge badge-${c.status}">${c.status}</span>
+            </div>
+            <div class="ci-body">${body}${body.length >= 120 ? '...' : ''}</div>
+            <div class="ci-actions">
+                <button class="btn btn-outline btn-sm" onclick="viewContent(${c.id})"><i class="fa-solid fa-eye"></i> 보기</button>
+                ${c.status === 'draft' ? '<button class="btn btn-success btn-sm" onclick="approveContent('+c.id+')"><i class="fa-solid fa-check"></i> 승인</button>' : ''}
+                ${c.status === 'approved' ? '<button class="btn btn-primary btn-sm" onclick="publishContent('+c.id+')"><i class="fa-solid fa-paper-plane"></i> 발행</button>' : ''}
+                <button class="btn btn-outline btn-sm" onclick="copyContent(${c.id})"><i class="fa-solid fa-copy"></i> 복사</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteContent(${c.id})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+// ===== AI 콘텐츠 생성 =====
+window.generateContent = async function() {
+    const platform = document.getElementById('genPlatform').value;
+    const topicSelect = document.getElementById('genTopic').value;
+    const customTopic = document.getElementById('genCustomTopic').value.trim();
+    const tone = document.getElementById('genTone').value;
+    const lang = document.getElementById('genLang').value;
+    const instructions = document.getElementById('genInstructions').value.trim();
+
+    const topic = customTopic || topicSelect;
+    if (!topic) { alert('주제를 입력하거나 선택해주세요'); return; }
+
+    const btn = document.getElementById('btnGenerate');
+    const progress = document.getElementById('genProgress');
+    const result = document.getElementById('genResult');
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="loading-spinner"></div> 생성 중...';
+    progress.style.display = 'block';
+    result.style.display = 'none';
+
+    // 설정 가져오기
+    const coreKeywords = document.getElementById('setCoreKeywords')?.value || '';
+    const usp = document.getElementById('setUsp')?.value || '';
+    const ctaMsg = document.getElementById('setCtaMsg')?.value || '';
+
+    try {
+        // Step 1
+        updateStep(1, 'active');
+
+        const { data, error } = await sb.functions.invoke('marketing-content', {
+            body: { platform, topic, tone, lang, instructions, coreKeywords, usp, ctaMsg }
+        });
+
+        if (error) throw error;
+
+        updateStep(1, 'done');
+        updateStep(2, 'done');
+        updateStep(3, 'done');
+        updateStep(4, 'done');
+
+        if (data && data.content) {
+            const content = data.content;
+
+            // DB에 저장
+            const { data: saved, error: saveErr } = await sb.from('marketing_content').insert({
+                topic_id: topicSelect ? parseInt(topicSelect) : null,
+                platform: platform,
+                title: content.title || '',
+                body: content.body || '',
+                short_script: content.short_script || '',
+                hashtags: content.hashtags || [],
+                thumbnail_prompt: content.thumbnail_prompt || '',
+                status: 'draft'
+            }).select().single();
+
+            if (saveErr) console.error('Save error:', saveErr);
+
+            // 결과 표시
+            result.style.display = 'block';
+            result.innerHTML = renderGeneratedContent(content, saved?.id);
+        }
+    } catch(e) {
+        console.error('Generate error:', e);
+        result.style.display = 'block';
+        result.innerHTML = `<div class="card" style="border-color:#991b1b;"><div class="card-title" style="color:#f87171;"><i class="fa-solid fa-circle-exclamation"></i> 생성 실패</div><p style="color:#94a3b8; font-size:13px;">${e.message || e}</p></div>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> AI 콘텐츠 생성';
+    }
+};
+
+function updateStep(num, state) {
+    const el = document.getElementById('step' + num);
+    el.className = 'step ' + state;
+    if (state === 'active') el.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+    if (state === 'done') el.querySelector('i').className = 'fa-solid fa-circle-check';
+}
+
+function renderGeneratedContent(content, savedId) {
+    return `<div class="card" style="border-color:#166534;">
+        <div class="card-title" style="color:#22c55e;"><i class="fa-solid fa-check-circle"></i> 콘텐츠 생성 완료!</div>
+        <div class="form-group"><label>제목</label><div style="font-size:16px; font-weight:700; color:#f1f5f9;">${content.title || ''}</div></div>
+        ${content.short_script ? `<div class="form-group"><label>숏츠 대본 (60초)</label><div style="background:#0f172a; padding:12px; border-radius:8px; font-size:13px; line-height:1.8; color:#e2e8f0; white-space:pre-wrap;">${content.short_script}</div></div>` : ''}
+        ${content.body ? `<div class="form-group"><label>본문</label><div style="background:#0f172a; padding:12px; border-radius:8px; font-size:13px; line-height:1.8; color:#e2e8f0; white-space:pre-wrap;">${content.body}</div></div>` : ''}
+        ${content.hashtags && content.hashtags.length ? `<div class="form-group"><label>해시태그</label><div style="color:#a78bfa; font-size:13px;">${content.hashtags.map(t => '#'+t).join(' ')}</div></div>` : ''}
+        ${content.thumbnail_prompt ? `<div class="form-group"><label>썸네일 이미지 프롬프트</label><div style="background:#0f172a; padding:12px; border-radius:8px; font-size:12px; color:#94a3b8;">${content.thumbnail_prompt}</div></div>` : ''}
+        <div style="display:flex; gap:8px; margin-top:12px;">
+            ${savedId ? `<button class="btn btn-success" onclick="approveContent(${savedId})"><i class="fa-solid fa-check"></i> 승인</button>` : ''}
+            <button class="btn btn-outline" onclick="switchTab('content',document.querySelector('.tab:nth-child(2)'))"><i class="fa-solid fa-list"></i> 콘텐츠 목록</button>
+        </div>
+    </div>`;
+}
+
+// ===== 콘텐츠 액션 =====
+window.viewContent = async function(id) {
+    const { data } = await sb.from('marketing_content').select('*').eq('id', id).single();
+    if (!data) return;
+
+    document.getElementById('modalTitle').innerText = data.title || '(제목 없음)';
+    let html = '';
+    if (data.short_script) html += `<div class="form-group"><label>숏츠 대본</label><div style="background:#0f172a; padding:12px; border-radius:8px; font-size:13px; line-height:1.8; white-space:pre-wrap;">${data.short_script}</div></div>`;
+    if (data.body) html += `<div class="form-group"><label>본문</label><div style="background:#0f172a; padding:12px; border-radius:8px; font-size:13px; line-height:1.8; white-space:pre-wrap;">${data.body}</div></div>`;
+    if (data.hashtags?.length) html += `<div class="form-group"><label>해시태그</label><div style="color:#a78bfa;">${data.hashtags.map(t=>'#'+t).join(' ')}</div></div>`;
+    if (data.thumbnail_prompt) html += `<div class="form-group"><label>썸네일 프롬프트</label><div style="font-size:12px; color:#94a3b8;">${data.thumbnail_prompt}</div></div>`;
+    html += `<div style="font-size:12px; color:#64748b; margin-top:8px;">상태: <span class="badge badge-${data.status}">${data.status}</span> | 생성: ${new Date(data.created_at).toLocaleString('ko-KR')}</div>`;
+
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalActions').innerHTML = `
+        ${data.status === 'draft' ? '<button class="btn btn-success" onclick="approveContent('+id+'); closeModal(\'contentDetailModal\');"><i class="fa-solid fa-check"></i> 승인</button>' : ''}
+        ${data.status === 'approved' ? '<button class="btn btn-primary" onclick="publishContent('+id+'); closeModal(\'contentDetailModal\');"><i class="fa-solid fa-paper-plane"></i> 발행</button>' : ''}
+        <button class="btn btn-outline" onclick="closeModal('contentDetailModal')">닫기</button>`;
+    document.getElementById('contentDetailModal').classList.add('show');
+};
+
+window.approveContent = async function(id) {
+    await sb.from('marketing_content').update({ status: 'approved' }).eq('id', id);
+    loadContentList();
+    loadDashboard();
+};
+
+window.publishContent = async function(id) {
+    const { data } = await sb.from('marketing_content').select('*').eq('id', id).single();
+    if (!data) return;
+
+    if (data.platform === 'blog' || data.platform === 'website') {
+        // 블로그/사이트: community_posts에 실제 게시 + marketing_content 상태 업데이트
+        try {
+            const { data: { user } } = await sb.auth.getUser();
+            const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '카멜레온';
+
+            // 마크다운 → HTML 간단 변환
+            let htmlBody = (data.body || '')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                .replace(/## (.*)/g, '<h2>$1</h2>')
+                .replace(/### (.*)/g, '<h3>$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            htmlBody = '<p>' + htmlBody + '</p>';
+
+            // KR 블로그에 게시
+            await sb.from('community_posts').insert({
+                category: 'blog',
+                country_code: 'KR',
+                title: data.title || '(제목 없음)',
+                content: htmlBody,
+                author_name: authorName,
+                author_email: user?.email || '',
+                author_id: user?.id || null,
+                thumbnail: data.thumbnail_url || null
+            });
+
+            await sb.from('marketing_content').update({
+                status: 'published',
+                published_at: new Date().toISOString()
+            }).eq('id', id);
+
+            alert('블로그에 게시되었습니다! board.html?cat=blog 에서 확인하세요.');
+        } catch(e) {
+            console.error('Blog publish error:', e);
+            alert('블로그 게시 실패: ' + e.message);
+        }
+    } else if (data.platform === 'youtube_shorts') {
+        // YouTube: 업로드 탭으로 이동하고 데이터 채우기
+        switchTab('youtube', document.querySelector('.tab:nth-child(5)'));
+        if (data.title) document.getElementById('ytVideoTitle').value = data.title;
+        if (data.body || data.short_script) document.getElementById('ytVideoDesc').value = data.body || data.short_script;
+        if (data.hashtags?.length) document.getElementById('ytVideoTags').value = data.hashtags.join(',');
+        alert('YouTube 탭에 콘텐츠가 채워졌습니다. 영상 파일을 선택하고 업로드하세요.');
+    } else {
+        // Instagram/TikTok: 콘텐츠 복사
+        const text = `${data.title}\n\n${data.body || data.short_script || ''}\n\n${(data.hashtags || []).map(t=>'#'+t).join(' ')}`;
+        await navigator.clipboard.writeText(text);
+        await sb.from('marketing_content').update({ status: 'published', published_at: new Date().toISOString() }).eq('id', id);
+        alert('콘텐츠가 클립보드에 복사되었습니다! Instagram/TikTok에 직접 붙여넣기 하세요.');
+    }
+    loadContentList();
+    loadDashboard();
+};
+
+window.copyContent = async function(id) {
+    const { data } = await sb.from('marketing_content').select('*').eq('id', id).single();
+    if (!data) return;
+    const text = `${data.title || ''}\n\n${data.body || data.short_script || ''}\n\n${(data.hashtags || []).map(t=>'#'+t).join(' ')}`;
+    await navigator.clipboard.writeText(text);
+    alert('클립보드에 복사되었습니다!');
+};
+
+window.deleteContent = async function(id) {
+    if (!confirm('이 콘텐츠를 삭제하시겠습니까?')) return;
+    await sb.from('marketing_content').delete().eq('id', id);
+    loadContentList();
+    loadDashboard();
+};
+
+window.closeModal = function(id) { document.getElementById(id).classList.remove('show'); };
+
+// ===== 주제 관리 =====
+async function loadTopics() {
+    const { data } = await sb.from('marketing_topics').select('*').order('created_at', { ascending: false });
+    const container = document.getElementById('topicList');
+    const select = document.getElementById('genTopic');
+
+    // 드롭다운 업데이트
+    if (select) {
+        select.innerHTML = '<option value="">-- 저장된 주제에서 선택 --</option>';
+        (data || []).forEach(t => {
+            select.innerHTML += `<option value="${t.id}">${t.topic}</option>`;
+        });
+    }
+
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-tags"></i><p>등록된 주제가 없습니다</p></div>';
+        return;
+    }
+
+    let html = '';
+    data.forEach(t => {
+        const kw = (t.keywords || []).join(', ');
+        html += `<div class="topic-card">
+            <div class="tc-info">
+                <div class="tc-name">${t.topic}</div>
+                <div class="tc-keywords">${kw} | ${t.frequency || 'daily'}</div>
+            </div>
+            <button class="tc-toggle ${t.is_active ? 'on' : ''}" onclick="toggleTopic(${t.id}, ${!t.is_active})"></button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTopic(${t.id})" style="margin-left:6px;"><i class="fa-solid fa-trash"></i></button>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+window.addTopic = async function() {
+    const name = document.getElementById('newTopicName').value.trim();
+    const keywords = document.getElementById('newTopicKeywords').value.split(',').map(k => k.trim()).filter(Boolean);
+    const freq = document.getElementById('newTopicFreq').value;
+    if (!name) { alert('주제명을 입력해주세요'); return; }
+
+    await sb.from('marketing_topics').insert({ topic: name, keywords, frequency: freq });
+    document.getElementById('newTopicName').value = '';
+    document.getElementById('newTopicKeywords').value = '';
+    loadTopics();
+};
+
+window.toggleTopic = async function(id, active) {
+    await sb.from('marketing_topics').update({ is_active: active }).eq('id', id);
+    loadTopics();
+};
+
+window.deleteTopic = async function(id) {
+    if (!confirm('이 주제를 삭제하시겠습니까?')) return;
+    await sb.from('marketing_topics').delete().eq('id', id);
+    loadTopics();
+};
+
+// ===== YouTube 설정 =====
+async function loadYoutubeConfig() {
+    const { data } = await sb.from('marketing_youtube_config').select('*').limit(1).single();
+    if (!data) return;
+
+    if (data.api_key) document.getElementById('ytApiKey').value = data.api_key;
+    if (data.client_id) document.getElementById('ytClientId').value = data.client_id;
+    if (data.client_secret) document.getElementById('ytClientSecret').value = data.client_secret;
+    if (data.auto_reply_template) document.getElementById('autoReplyTemplate').value = data.auto_reply_template;
+
+    const toggle = document.getElementById('autoReplyToggle');
+    const status = document.getElementById('autoReplyStatus');
+    if (data.auto_reply_enabled) {
+        toggle.classList.add('on');
+        status.innerText = '활성';
+        status.style.color = '#22c55e';
+    }
+
+    if (data.channel_name || data.access_token) {
+        const el = document.getElementById('ytConnectionStatus');
+        el.className = 'yt-status connected';
+        el.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#22c55e;"></i> <span>연결됨: ${data.channel_name || 'YouTube 채널'}</span>`;
+    }
+
+    // 댓글 답글 로그
+    const { data: replies } = await sb.from('marketing_comment_replies').select('*').order('replied_at', { ascending: false }).limit(10);
+    if (replies && replies.length > 0) {
+        let html = '';
+        replies.forEach(r => {
+            html += `<div style="padding:8px 0; border-bottom:1px solid #334155; font-size:12px;">
+                <div style="color:#94a3b8;">영상: ${r.video_id} | ${new Date(r.replied_at).toLocaleString('ko-KR')}</div>
+                <div style="color:#64748b; margin-top:2px;">원글: ${(r.comment_text || '').substring(0, 50)}</div>
+                <div style="color:#a78bfa; margin-top:2px;">답글: ${r.reply_text}</div>
+            </div>`;
+        });
+        document.getElementById('replyLog').innerHTML = html;
+    }
+}
+
+window.saveYoutubeConfig = async function() {
+    const config = {
+        api_key: document.getElementById('ytApiKey').value,
+        client_id: document.getElementById('ytClientId').value,
+        client_secret: document.getElementById('ytClientSecret').value,
+        updated_at: new Date().toISOString()
+    };
+
+    const { data: existing } = await sb.from('marketing_youtube_config').select('id').limit(1).single();
+    if (existing) {
+        await sb.from('marketing_youtube_config').update(config).eq('id', existing.id);
+    } else {
+        await sb.from('marketing_youtube_config').insert(config);
+    }
+    alert('YouTube 설정이 저장되었습니다!');
+};
+
+window.connectYoutube = async function() {
+    const clientId = document.getElementById('ytClientId').value;
+    if (!clientId) { alert('OAuth2 Client ID를 먼저 입력하세요'); return; }
+
+    // Google OAuth2 플로우
+    const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+    const scope = encodeURIComponent('https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl');
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+    window.location.href = authUrl;
+};
+
+window.toggleAutoReply = function() {
+    const toggle = document.getElementById('autoReplyToggle');
+    const status = document.getElementById('autoReplyStatus');
+    toggle.classList.toggle('on');
+    const isOn = toggle.classList.contains('on');
+    status.innerText = isOn ? '활성' : '비활성';
+    status.style.color = isOn ? '#22c55e' : '#64748b';
+};
+
+window.saveAutoReply = async function() {
+    const toggle = document.getElementById('autoReplyToggle');
+    const template = document.getElementById('autoReplyTemplate').value;
+
+    const { data: existing } = await sb.from('marketing_youtube_config').select('id').limit(1).single();
+    const update = { auto_reply_enabled: toggle.classList.contains('on'), auto_reply_template: template, updated_at: new Date().toISOString() };
+
+    if (existing) {
+        await sb.from('marketing_youtube_config').update(update).eq('id', existing.id);
+    } else {
+        await sb.from('marketing_youtube_config').insert(update);
+    }
+    alert('자동 답글 설정이 저장되었습니다!');
+};
+
+// ===== YouTube 업로드 =====
+window.uploadToYoutube = async function() {
+    const file = document.getElementById('ytVideoFile').files[0];
+    const title = document.getElementById('ytVideoTitle').value;
+    const desc = document.getElementById('ytVideoDesc').value;
+    const tags = document.getElementById('ytVideoTags').value.split(',').map(t => t.trim()).filter(Boolean);
+
+    if (!file) { alert('영상 파일을 선택해주세요'); return; }
+    if (!title) { alert('제목을 입력해주세요'); return; }
+
+    const progress = document.getElementById('uploadProgress');
+    progress.style.display = 'block';
+    progress.innerHTML = '<div class="loading-spinner"></div> YouTube 업로드 중...';
+
+    try {
+        const { data: config } = await sb.from('marketing_youtube_config').select('access_token').limit(1).single();
+        if (!config?.access_token) {
+            progress.innerHTML = '<span style="color:#f87171;">Google OAuth 인증이 필요합니다. 먼저 "Google OAuth 인증" 버튼을 클릭하세요.</span>';
+            return;
+        }
+
+        // YouTube Data API v3 - Resumable Upload
+        const metadata = {
+            snippet: { title, description: desc, tags, categoryId: '22' },
+            status: { privacyStatus: 'public', selfDeclaredMadeForKids: false }
+        };
+
+        // Step 1: Initiate upload
+        const initRes = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + config.access_token,
+                'Content-Type': 'application/json; charset=UTF-8',
+                'X-Upload-Content-Length': file.size,
+                'X-Upload-Content-Type': file.type
+            },
+            body: JSON.stringify(metadata)
+        });
+
+        if (!initRes.ok) {
+            const errText = await initRes.text();
+            throw new Error('Upload init failed: ' + errText);
+        }
+
+        const uploadUrl = initRes.headers.get('Location');
+
+        // Step 2: Upload video
+        const uploadRes = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file
+        });
+
+        if (!uploadRes.ok) throw new Error('Upload failed: ' + uploadRes.status);
+
+        const result = await uploadRes.json();
+        progress.innerHTML = `<span style="color:#22c55e;"><i class="fa-solid fa-check-circle"></i> 업로드 완료! Video ID: ${result.id}</span>
+            <br><a href="https://youtube.com/shorts/${result.id}" target="_blank" style="color:#a78bfa;">YouTube에서 보기</a>`;
+
+    } catch(e) {
+        console.error('Upload error:', e);
+        progress.innerHTML = `<span style="color:#f87171;"><i class="fa-solid fa-circle-exclamation"></i> 업로드 실패: ${e.message}</span>`;
+    }
+};
+
+// ===== 블로그 콘텐츠 =====
+async function loadBlogContent() {
+    const { data } = await sb.from('marketing_content').select('*').in('platform', ['blog', 'website']).order('created_at', { ascending: false });
+    const container = document.getElementById('blogContentList');
+
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-newspaper"></i><p>블로그 콘텐츠가 없습니다</p></div>';
+        return;
+    }
+
+    let html = '';
+    data.forEach(c => {
+        const date = new Date(c.created_at).toLocaleDateString('ko-KR');
+        html += `<div class="content-item" style="cursor:pointer;" onclick="previewBlog(${c.id})">
+            <div class="ci-header">
+                <div class="ci-title">${c.title || '(제목 없음)'}</div>
+                <span class="badge badge-${c.status}">${c.status}</span>
+            </div>
+            <div class="ci-meta"><span>${date}</span></div>
+            <div class="ci-actions" style="margin-top:8px;">
+                ${c.status === 'draft' ? '<button class="btn btn-success btn-sm" onclick="event.stopPropagation(); approveContent('+c.id+')"><i class="fa-solid fa-check"></i> 승인</button>' : ''}
+                ${c.status === 'approved' ? '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); publishContent('+c.id+')"><i class="fa-solid fa-paper-plane"></i> 발행</button>' : ''}
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+window.previewBlog = async function(id) {
+    const { data } = await sb.from('marketing_content').select('*').eq('id', id).single();
+    if (!data) return;
+
+    document.getElementById('blogPreview').innerHTML = `
+        <div class="blog-preview">
+            <h2>${data.title || ''}</h2>
+            <p>${(data.body || '').replace(/\n/g, '<br>')}</p>
+            ${data.hashtags?.length ? '<div style="margin-top:16px; color:#6366f1; font-size:13px;">'+data.hashtags.map(t=>'#'+t).join(' ')+'</div>' : ''}
+        </div>`;
+};
+
+// ===== 설정 =====
+window.saveSettings = function() {
+    localStorage.setItem('mkt_settings', JSON.stringify({
+        brandName: document.getElementById('setBrandName').value,
+        siteKr: document.getElementById('setSiteKr').value,
+        siteJp: document.getElementById('setSiteJp').value,
+        siteUs: document.getElementById('setSiteUs').value,
+        coreKeywords: document.getElementById('setCoreKeywords').value,
+        usp: document.getElementById('setUsp').value,
+        ctaMsg: document.getElementById('setCtaMsg').value
+    }));
+    alert('설정이 저장되었습니다!');
+};
+
+// 설정 불러오기
+(function loadSettings() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('mkt_settings') || '{}');
+        if (saved.brandName) document.getElementById('setBrandName').value = saved.brandName;
+        if (saved.siteKr) document.getElementById('setSiteKr').value = saved.siteKr;
+        if (saved.siteJp) document.getElementById('setSiteJp').value = saved.siteJp;
+        if (saved.siteUs) document.getElementById('setSiteUs').value = saved.siteUs;
+        if (saved.coreKeywords) document.getElementById('setCoreKeywords').value = saved.coreKeywords;
+        if (saved.usp) document.getElementById('setUsp').value = saved.usp;
+        if (saved.ctaMsg) document.getElementById('setCtaMsg').value = saved.ctaMsg;
+    } catch(e) {}
+})();
+
+// OAuth 콜백 처리
+(function handleOAuthCallback() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (!code) return;
+
+    // URL 정리
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    (async () => {
+        try {
+            const { data: config } = await sb.from('marketing_youtube_config').select('client_id, client_secret').limit(1).single();
+            if (!config) { alert('YouTube 설정을 먼저 저장해주세요'); return; }
+
+            // 토큰 교환
+            const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    code,
+                    client_id: config.client_id,
+                    client_secret: config.client_secret,
+                    redirect_uri: window.location.origin + window.location.pathname,
+                    grant_type: 'authorization_code'
+                })
+            });
+
+            const tokens = await tokenRes.json();
+            if (tokens.error) throw new Error(tokens.error_description || tokens.error);
+
+            // 채널 정보 가져오기
+            const channelRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+                headers: { 'Authorization': 'Bearer ' + tokens.access_token }
+            });
+            const channelData = await channelRes.json();
+            const channelName = channelData.items?.[0]?.snippet?.title || 'Unknown';
+            const channelId = channelData.items?.[0]?.id || '';
+
+            // DB에 토큰 저장
+            const { data: existing } = await sb.from('marketing_youtube_config').select('id').limit(1).single();
+            const update = {
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token || null,
+                token_expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
+                channel_id: channelId,
+                channel_name: channelName,
+                updated_at: new Date().toISOString()
+            };
+
+            if (existing) {
+                await sb.from('marketing_youtube_config').update(update).eq('id', existing.id);
+            } else {
+                await sb.from('marketing_youtube_config').insert({ ...update, api_key: '', client_id: '', client_secret: '' });
+            }
+
+            alert(`YouTube 채널 연결 완료: ${channelName}`);
+            loadYoutubeConfig();
+        } catch(e) {
+            console.error('OAuth error:', e);
+            alert('YouTube 인증 실패: ' + e.message);
+        }
+    })();
+})();
+
+</script>
+</body>
+</html>
