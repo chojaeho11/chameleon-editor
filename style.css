@@ -33,7 +33,7 @@ body {
     height: 100dvh; 
     overflow: hidden; 
     background: var(--bg-sidebar); 
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Nanum Gothic', sans-serif; 
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     color: var(--text-main);
 }
 
@@ -2248,7 +2248,7 @@ body {
     border-radius: 20px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     text-align: center;
-    font-family: 'Pretendard', sans-serif; /* 폰트가 없다면 기본 폰트 사용됨 */
+    font-family: inherit;
     box-sizing: border-box;
 }
 
