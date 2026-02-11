@@ -1468,6 +1468,24 @@ async function saveCommonInfo() {
 (function() {
     var currentRoom=null, currentFilter='waiting', subscription=null;
     function getSb(){return window.sb;}
+    // 고객 이름으로 언어 감지
+    function detectRoomLang(room) {
+        if (!room) return 'kr';
+        var cn = (room.customer_name || '').toLowerCase();
+        if (cn.includes('ウェブ') || cn.includes('顧客') || /[\u3040-\u30FF]/.test(cn)) return 'ja';
+        if (cn.includes('web') || cn.includes('customer') || /^[a-zA-Z\s]+$/.test(cn)) return 'en';
+        return 'kr';
+    }
+    // 다국어 시스템 메시지
+    function sysMsg(key, mgrName) {
+        var lang = detectRoomLang(currentRoom);
+        var msgs = {
+            connected: { kr: '✅ '+(mgrName||'매니저')+' 매니저가 접속했습니다!', ja: '✅ '+(mgrName||'マネージャー')+' マネージャーが接続しました！', en: '✅ '+(mgrName||'Manager')+' has connected!' },
+            joined: { kr: '✅ '+(mgrName||'매니저')+' 매니저가 대화에 참여했습니다!', ja: '✅ '+(mgrName||'マネージャー')+' マネージャーが会話に参加しました！', en: '✅ '+(mgrName||'Manager')+' has joined the conversation!' },
+            closed: { kr: '상담이 종료되었습니다. 감사합니다! 😊', ja: 'ご相談は終了しました。ありがとうございました！😊', en: 'This consultation has ended. Thank you! 😊' }
+        };
+        return (msgs[key] && msgs[key][lang]) || msgs[key]['kr'];
+    }
     window.lcLoadRooms = async function() {
         var sb=getSb(); if(!sb) return;
         var q = sb.from('chat_rooms').select('*').order('created_at',{ascending:false}).limit(30);
@@ -1552,7 +1570,7 @@ async function saveCommonInfo() {
         if(currentRoom.status==='waiting'){
             await sb.from('chat_rooms').update({status:'active',updated_at:new Date().toISOString()}).eq('id',roomId);
             currentRoom.status='active';
-            await sb.from('chat_messages').insert({room_id:roomId,sender_type:'system',message:'✅ '+(currentRoom.assigned_manager||'매니저')+' 매니저가 접속했습니다!'});
+            await sb.from('chat_messages').insert({room_id:roomId,sender_type:'system',message:sysMsg('connected', currentRoom.assigned_manager)});
         }
         var mr=await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(100);
         var area=document.getElementById('lcChatMessages');
@@ -1595,7 +1613,7 @@ async function saveCommonInfo() {
     window.lcCloseRoom = async function(){
         if(!currentRoom||!confirm('상담 종료?')) return;var sb=getSb();
         await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',currentRoom.id);
-        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:'상담이 종료되었습니다. 감사합니다! 😊'});
+        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:sysMsg('closed')});
         currentRoom=null;if(subscription){subscription.unsubscribe();subscription=null;}
         document.getElementById('lcChatTitle').textContent='상담방을 선택하세요';document.getElementById('lcChatSub').textContent='';
         document.getElementById('lcChatMessages').innerHTML='<div style="text-align:center;color:#94a3b8;padding:60px;">상담 종료</div>';lcLoadRooms();
@@ -1612,7 +1630,7 @@ async function saveCommonInfo() {
         currentRoom.status='active';
         currentRoom.assigned_manager=mgrName;
         // 시스템 메시지 전송 (고객 화면에도 실시간 표시됨)
-        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:'✅ '+mgrName+' 매니저가 대화에 참여했습니다!'});
+        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:sysMsg('joined', mgrName)});
         // UI 업데이트
         document.getElementById('lcChatTitle').textContent='👤 '+(currentRoom.customer_name||'고객')+' 님 상담';
         document.getElementById('lcChatSub').textContent='담당: '+mgrName+' | 💬 상담중';
