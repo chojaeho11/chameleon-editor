@@ -3497,8 +3497,8 @@ window.showChoiceModal = async function(key) {
                     <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">0</div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
-                    ${product.is_general_product ? '' : '<button onclick="window.confirmChoice(\'editor\')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 Design Editor</button>'}
-                    <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${product.is_general_product ? (lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기') : 'Add to Cart'}</button>
+                    ${product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>`}
+                    <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
                 </div>
             </div>
         </div>
