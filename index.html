@@ -82,7 +82,9 @@
 <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/plugins/svg.js" defer></script>
 <script src="https://cdn.jsdelivr.net/gh/kilobtye/potrace@master/potrace.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/js-clipper@1.0.1/clipper.min.js" defer></script>
+<script>if(typeof module==='undefined'){window.module={exports:{}};window._clipperShim=true;}</script>
+<script src="https://cdn.jsdelivr.net/npm/js-clipper@1.0.1/clipper.min.js"></script>
+<script>if(window._clipperShim){delete window.module;delete window._clipperShim;}</script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" defer></script>
@@ -5015,7 +5017,7 @@ if (w >= 20 && h >= 20) {
         </div>
     </div>
 </div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="./text-wizard.js"></script>
+<script src="./text-wizard.js"></script>
 <div id="vipOrderModal" class="modal-bg" style="z-index: 30000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 550px; max-width: 95%;">
         <div style="background: #1e1b4b; margin: -25px -25px 20px -25px; padding: 25px; color: white; border-radius: 12px 12px 0 0; text-align: center;">
@@ -5660,10 +5662,11 @@ window.filterModalItems = function(keyword) {
     var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y";
 
     var db = window.sb || null;
-    if (!db && typeof supabase !== 'undefined') {
-        try { db = supabase.createClient(SUPA_URL, SUPA_KEY); window.sb = db; } catch(e) { console.warn('챗봇 DB 연결 실패', e); }
+    // window.sb가 config.js 모듈 초기화 전일 수 있으므로 지연 재확인 (중복 GoTrueClient 방지)
+    if (!db) {
+        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 500);
+        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 1500);
     }
-    if (!window.sb && db) window.sb = db;
 
     var chatHistory = [];
     var opened = false;
@@ -6068,19 +6071,8 @@ window.filterModalItems = function(keyword) {
     var _room = null, _sub = null, _live = false;
     
     function getSb() {
-        if (window.sb) return window.sb;
-        // window.sb가 없으면 직접 생성
-        try {
-            window.sb = supabase.createClient(
-                "https://qinvtnhiidtmrzosyvys.supabase.co",
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y"
-            );
-            console.log('🔗 상담모듈: Supabase 직접 생성 완료');
-            return window.sb;
-        } catch(e) {
-            console.error('상담모듈: Supabase 생성 실패', e);
-            return null;
-        }
+        // window.sb 싱글톤 사용 (중복 GoTrueClient 방지)
+        return window.sb || null;
     }
     
     // 기본 상담사 (DB 로드 실패 시)
