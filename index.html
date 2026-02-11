@@ -4581,7 +4581,7 @@ if (w >= 20 && h >= 20) {
         document.getElementById('genProdImg').src = product.img || 'https://placehold.co/400?text=No+Image';
         document.getElementById('genProdTitle').innerText = product.name;
         document.getElementById('genProdDesc').innerText = product.description || '';
-        document.getElementById('genProdPrice').innerText = formatCurrency(product.price);
+        document.getElementById('genProdPrice').innerText = fmtMoney(product.price);
         
         // 수량 및 합계 초기화
         document.getElementById('genProdQty').value = 1;
