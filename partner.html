@@ -6,89 +6,77 @@
     <title>Partners Marketplace</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
     <style>
-        body { margin:0; background:#f8fafc; font-family:'Pretendard',sans-serif; color:#334155; }
+        body{margin:0;background:#f8fafc;font-family:'Pretendard',sans-serif;color:#334155;}
         *{box-sizing:border-box;}
         .header{background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;padding:0 20px;height:60px;display:flex;justify-content:space-between;align-items:center;}
         .brand{font-size:18px;font-weight:800;color:#1e293b;display:flex;align-items:center;gap:8px;cursor:pointer;}
         .header-right{display:flex;align-items:center;gap:10px;}
         .header-right button{padding:6px 14px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;color:#475569;}
         .header-right button:hover{background:#f1f5f9;}
-
-        /* 탭 네비게이션 */
         .tab-nav{display:flex;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
         .tab-btn{flex:1;min-width:0;padding:14px 10px;text-align:center;font-size:14px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;transition:0.2s;white-space:nowrap;}
         .tab-btn.active{color:#6366f1;border-bottom-color:#6366f1;}
         .tab-btn i{display:block;font-size:18px;margin-bottom:4px;}
-
         .container{max-width:1100px;margin:0 auto;padding:25px 20px 100px;}
-        .tab-content{display:none;}
-        .tab-content.active{display:block;}
-
-        /* 카드 */
+        .tab-content{display:none;}.tab-content.active{display:block;}
         .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
-        .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
-
-        /* 상품 카드 */
+        .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
         .prod-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;transition:0.2s;}
         .prod-card:hover{box-shadow:0 8px 20px rgba(0,0,0,0.08);transform:translateY(-2px);}
-        .prod-card img{width:100%;height:180px;object-fit:cover;background:#f1f5f9;}
+        .prod-card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#f1f5f9;}
         .prod-card .info{padding:14px;}
-        .prod-card .info h4{margin:0 0 6px;font-size:15px;color:#1e293b;}
+        .prod-card .info h4{margin:0 0 6px;font-size:15px;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .prod-card .info .price{font-size:16px;font-weight:800;color:#6366f1;}
         .prod-card .info .status-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-top:6px;}
-        .badge-pending{background:#fef3c7;color:#92400e;}
-        .badge-approved{background:#dcfce7;color:#166534;}
-        .badge-rejected{background:#fee2e2;color:#b91c1c;}
+        .badge-pending{background:#fef3c7;color:#92400e;}.badge-approved{background:#dcfce7;color:#166534;}.badge-rejected{background:#fee2e2;color:#b91c1c;}
         .prod-card .actions{display:flex;gap:8px;padding:0 14px 14px;}
         .prod-card .actions button{flex:1;padding:8px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
-
-        /* 폼 */
         .form-group{margin-bottom:18px;}
         .form-group label{display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;}
         .form-group input,.form-group textarea,.form-group select{width:100%;padding:11px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;}
         .form-group textarea{height:120px;resize:vertical;}
         .form-group select{appearance:auto;}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-
+        .form-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
         .btn-primary{background:#6366f1;color:#fff;border:none;padding:13px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:0.2s;}
         .btn-primary:hover{background:#4f46e5;}
-        .btn-danger{background:#ef4444;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
         .btn-outline{background:#fff;border:1px solid #cbd5e1;color:#475569;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
-
-        /* 정산 요약 */
+        .btn-sm{padding:6px 14px;font-size:12px;border-radius:6px;border:none;cursor:pointer;font-weight:700;}
+        .btn-translate{background:#dbeafe;color:#1e40af;}.btn-translate:hover{background:#bfdbfe;}
         .settlement-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
         .settle-box{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;text-align:center;}
         .settle-box .label{font-size:13px;color:#64748b;margin-bottom:8px;}
         .settle-box .amount{font-size:28px;font-weight:900;color:#1e293b;}
-        .settle-box .sub{font-size:12px;color:#94a3b8;margin-top:4px;}
-
-        /* 주문 테이블 */
         .order-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;}
         .order-table th{background:#f8fafc;padding:12px;text-align:left;font-size:13px;color:#64748b;font-weight:600;}
         .order-table td{padding:12px;border-top:1px solid #f1f5f9;font-size:14px;color:#334155;}
-
-        /* 안내 탭 */
         .guide-section{margin-bottom:24px;}
         .guide-section h3{font-size:17px;margin:0 0 10px;color:#1e293b;}
         .guide-section p,.guide-section li{font-size:14px;color:#475569;line-height:1.7;}
-        .guide-section ul{padding-left:20px;}
-
-        /* 이미지 업로드 */
-        .img-upload-box{width:100%;height:200px;border:2px dashed #cbd5e1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#94a3b8;transition:0.2s;background:#fafbfc;position:relative;overflow:hidden;}
+        .guide-section ul,.guide-section ol{padding-left:20px;}
+        .img-upload-box{width:250px;height:250px;border:2px dashed #cbd5e1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#94a3b8;transition:0.2s;background:#fafbfc;position:relative;overflow:hidden;}
         .img-upload-box:hover{border-color:#6366f1;color:#6366f1;}
         .img-upload-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
         .img-upload-box i{font-size:32px;margin-bottom:8px;}
-
+        /* Quill editor */
+        .quill-wrap{border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;margin-bottom:10px;}
+        .quill-wrap .ql-toolbar{background:#f8fafc;border:none;border-bottom:1px solid #e2e8f0;}
+        .quill-wrap .ql-container{border:none;min-height:200px;font-family:'Pretendard',sans-serif;}
+        .quill-wrap .ql-editor{padding:16px;font-size:14px;line-height:1.7;}
+        .quill-wrap .ql-editor p{margin-bottom:4px !important;}
+        .desc-lang-tabs{display:flex;gap:4px;margin-bottom:8px;}
+        .desc-lang-tab{padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px 6px 0 0;background:#f1f5f9;cursor:pointer;font-size:13px;font-weight:600;color:#64748b;}
+        .desc-lang-tab.active{background:#fff;border-bottom-color:#fff;color:#6366f1;}
+        .overseas-notice{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:16px;margin-top:12px;}
+        .overseas-notice p{margin:0;font-size:13px;color:#9a3412;line-height:1.6;}
         @media(max-width:768px){
-            .tab-btn{font-size:12px;padding:10px 6px;}
-            .tab-btn i{font-size:16px;margin-bottom:2px;}
-            .container{padding:16px 12px 100px;}
-            .card-grid{grid-template-columns:1fr;}
-            .form-row{grid-template-columns:1fr;}
-            .settlement-summary{grid-template-columns:1fr 1fr;}
-            .prod-card img{height:140px;}
+            .tab-btn{font-size:12px;padding:10px 6px;}.tab-btn i{font-size:16px;margin-bottom:2px;}
+            .container{padding:16px 12px 100px;}.card-grid{grid-template-columns:repeat(2,1fr);}
+            .form-row{grid-template-columns:1fr;}.settlement-summary{grid-template-columns:1fr 1fr;}
+            .img-upload-box{width:200px;height:200px;}
         }
     </style>
 </head>
@@ -96,7 +84,7 @@
 
 <div class="header">
     <div class="brand" onclick="location.href='index.html'">
-        <i class="fa-solid fa-store" style="color:#6366f1;"></i> <span id="headerTitle">Partners Marketplace</span>
+        <i class="fa-solid fa-store" style="color:#6366f1;"></i> Partners Marketplace
     </div>
     <div class="header-right">
         <span id="userBadge" style="font-size:13px;font-weight:700;color:#6366f1;"></span>
@@ -120,9 +108,7 @@
         <button class="btn-primary" onclick="switchTab('register')" style="padding:10px 20px;font-size:13px;"><i class="fa-solid fa-plus"></i> <span data-i18n="pt_register_submit">등록 신청</span></button>
     </div>
     <div id="myProductGrid" class="card-grid">
-        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;">
-            <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-        </div>
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
     </div>
 </div>
 
@@ -134,72 +120,66 @@
             <label data-i18n="pt_category">카테고리 *</label>
             <select id="regCategory"><option value="">로딩 중...</option></select>
         </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label data-i18n="pt_product_name_kr">상품명 (한국어) *</label>
-                <input type="text" id="regNameKR" placeholder="예: 맞춤형 판촉 볼펜">
-            </div>
-            <div class="form-group">
-                <label data-i18n="pt_product_name_jp">상품명 (日本語)</label>
-                <input type="text" id="regNameJP" placeholder="例: カスタムプロモーションペン">
-            </div>
+
+        <!-- 상품명 -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <label style="font-size:13px;font-weight:700;color:#334155;margin:0;">상품명 *</label>
+            <button class="btn-sm btn-translate" onclick="translateNames()"><i class="fa-solid fa-language"></i> 일괄 번역</button>
         </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label data-i18n="pt_product_name_en">Product Name (English)</label>
-                <input type="text" id="regNameEN" placeholder="e.g. Custom Promotion Pen">
-            </div>
-            <div class="form-group">
+        <div class="form-row" style="margin-bottom:18px;">
+            <div class="form-group" style="margin:0;"><input type="text" id="regNameKR" placeholder="한국어 상품명 *"></div>
+            <div class="form-group" style="margin:0;"><input type="text" id="regNameJP" placeholder="日本語商品名"></div>
+            <div class="form-group" style="margin:0;"><input type="text" id="regNameEN" placeholder="English Name"></div>
+        </div>
+
+        <!-- 가격 (자동환산) -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <label style="font-size:13px;font-weight:700;color:#334155;margin:0;">가격 *</label>
+            <span style="font-size:11px;color:#6366f1;font-weight:600;" id="priceRateInfo"></span>
+        </div>
+        <div class="form-row" style="margin-bottom:18px;">
+            <div class="form-group" style="margin:0;"><input type="number" id="regPriceKRW" placeholder="원 (KRW)" oninput="autoConvertPrice('KRW')"></div>
+            <div class="form-group" style="margin:0;"><input type="number" id="regPriceJPY" placeholder="¥ (JPY)" oninput="autoConvertPrice('JPY')"></div>
+            <div class="form-group" style="margin:0;"><input type="number" id="regPriceUSD" placeholder="$ (USD)" step="0.01" oninput="autoConvertPrice('USD')"></div>
+        </div>
+
+        <div class="form-row" style="grid-template-columns:1fr 1fr;margin-bottom:18px;">
+            <div class="form-group" style="margin:0;">
                 <label data-i18n="pt_stock">재고 수량 *</label>
                 <input type="number" id="regStock" value="100" min="0">
             </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label data-i18n="pt_price_krw">가격 (원) *</label>
-                <input type="number" id="regPriceKRW" placeholder="5000">
+            <div class="form-group" style="margin:0;">
+                <label data-i18n="pt_shipping_info">배송 안내</label>
+                <input type="text" id="regShipping" placeholder="예: 주문 후 3~5일 내 출고">
             </div>
-            <div class="form-group">
-                <label data-i18n="pt_price_jpy">가격 (¥)</label>
-                <input type="number" id="regPriceJPY" placeholder="500">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label data-i18n="pt_price_usd">Price ($)</label>
-                <input type="number" id="regPriceUSD" step="0.01" placeholder="3.50">
-            </div>
-            <div class="form-group"></div>
         </div>
 
+        <!-- 상품 이미지 (정사각형) -->
         <div class="form-group">
-            <label data-i18n="pt_product_image">상품 이미지 *</label>
+            <label data-i18n="pt_product_image">상품 이미지 (정사각형 권장) *</label>
             <div class="img-upload-box" id="imgUploadBox" onclick="document.getElementById('regImageFile').click()">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
-                <span data-i18n="pt_click_upload">클릭하여 이미지 업로드</span>
+                <span>클릭하여 업로드</span>
             </div>
             <input type="file" id="regImageFile" accept="image/*" style="display:none;" onchange="previewImage(this)">
         </div>
 
-        <div class="form-group">
-            <label data-i18n="pt_description_kr">상품 설명 (한국어) *</label>
-            <textarea id="regDescKR" placeholder="상품에 대한 상세 설명을 입력하세요."></textarea>
+        <!-- 상품 설명 (Quill 리치에디터) -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <label style="font-size:13px;font-weight:700;color:#334155;margin:0;">상품 상세설명</label>
+            <button class="btn-sm btn-translate" onclick="translateDescs()"><i class="fa-solid fa-language"></i> 일괄 번역</button>
         </div>
-        <div class="form-group">
-            <label data-i18n="pt_description_jp">商品説明 (日本語)</label>
-            <textarea id="regDescJP" placeholder="商品の詳細説明を入力してください。"></textarea>
+        <div class="desc-lang-tabs">
+            <div class="desc-lang-tab active" onclick="switchDescLang('KR')">한국어 *</div>
+            <div class="desc-lang-tab" onclick="switchDescLang('JP')">日本語</div>
+            <div class="desc-lang-tab" onclick="switchDescLang('EN')">English</div>
         </div>
-        <div class="form-group">
-            <label data-i18n="pt_description_en">Description (English)</label>
-            <textarea id="regDescEN" placeholder="Enter product description."></textarea>
-        </div>
-        <div class="form-group">
-            <label data-i18n="pt_shipping_info">배송 안내</label>
-            <input type="text" id="regShipping" placeholder="예: 주문 후 3~5일 내 출고">
-        </div>
+        <div id="descEditorKR" class="quill-wrap"></div>
+        <div id="descEditorJP" class="quill-wrap" style="display:none;"></div>
+        <div id="descEditorEN" class="quill-wrap" style="display:none;"></div>
 
-        <div style="text-align:center;margin-top:20px;">
-            <button class="btn-primary" onclick="submitProduct()" style="min-width:200px;">
+        <div style="text-align:center;margin-top:24px;">
+            <button class="btn-primary" onclick="submitProduct()" style="min-width:220px;">
                 <i class="fa-solid fa-paper-plane"></i> <span data-i18n="pt_register_submit">등록 신청</span>
             </button>
         </div>
@@ -209,52 +189,31 @@
 <!-- 탭3: 주문 관리 -->
 <div id="tab-orders" class="container tab-content">
     <h2 style="margin:0 0 20px;font-size:20px;" data-i18n="pt_tab_orders">주문 관리</h2>
-    <div id="partnerOrderList">
-        <div style="text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
-    </div>
+    <div id="partnerOrderList"><div style="text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div></div>
 </div>
 
 <!-- 탭4: 정산 -->
 <div id="tab-settlement" class="container tab-content">
     <h2 style="margin:0 0 20px;font-size:20px;" data-i18n="pt_tab_settlement">정산</h2>
     <div class="settlement-summary">
-        <div class="settle-box">
-            <div class="label" data-i18n="pt_eligible_amount">출금 가능 금액</div>
-            <div class="amount" id="settleEligible" style="color:#16a34a;">0</div>
-        </div>
-        <div class="settle-box">
-            <div class="label" data-i18n="pt_waiting_amount">대기중 (15일)</div>
-            <div class="amount" id="settleWaiting" style="color:#d97706;">0</div>
-            <div class="sub" id="settleWaitingSub"></div>
-        </div>
-        <div class="settle-box">
-            <div class="label" data-i18n="pt_requested_amount">출금 신청됨</div>
-            <div class="amount" id="settleRequested" style="color:#6366f1;">0</div>
-        </div>
+        <div class="settle-box"><div class="label" data-i18n="pt_eligible_amount">출금 가능</div><div class="amount" id="settleEligible" style="color:#16a34a;">0</div></div>
+        <div class="settle-box"><div class="label" data-i18n="pt_waiting_amount">대기중 (15일)</div><div class="amount" id="settleWaiting" style="color:#d97706;">0</div></div>
+        <div class="settle-box"><div class="label" data-i18n="pt_requested_amount">출금 신청됨</div><div class="amount" id="settleRequested" style="color:#6366f1;">0</div></div>
     </div>
-
-    <div class="card" style="margin-bottom:16px;padding:16px;background:#f0fdf4;border-color:#bbf7d0;">
-        <p style="margin:0;font-size:13px;color:#166534;" data-i18n="pt_commission_notice">수수료: 카드 3.4% + 판매 6.6% = 총 10% 공제 후 지급됩니다.</p>
-        <p style="margin:6px 0 0;font-size:13px;color:#166534;" data-i18n="pt_15day_notice">고객 수령확인 후 15일 경과 시 출금 가능합니다.</p>
+    <div class="card" style="padding:16px;background:#f0fdf4;border-color:#bbf7d0;margin-bottom:16px;">
+        <p style="margin:0;font-size:13px;color:#166534;" data-i18n="pt_commission_notice">국내 판매: 카드 3.4% + 판매 6.6% = 총 10% 공제 후 지급</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#166534;" data-i18n="pt_15day_notice">고객 수령확인 후 15일 경과 시 출금 가능</p>
     </div>
-
+    <div class="overseas-notice" style="margin-bottom:16px;">
+        <p><strong>해외 판매 추가 안내:</strong> 통관수수료 및 해외배송 비용으로 <strong>20% 추가 공제</strong> (국내 10% + 해외 20% = 총 30%)</p>
+    </div>
     <div style="text-align:right;margin-bottom:16px;">
         <button class="btn-primary" onclick="requestWithdrawal()" style="padding:10px 24px;font-size:14px;">
             <i class="fa-solid fa-money-bill-transfer"></i> <span data-i18n="pt_btn_withdraw">출금 요청</span>
         </button>
     </div>
-
     <table class="order-table">
-        <thead>
-            <tr>
-                <th data-i18n="th_date_col">날짜</th>
-                <th>상품</th>
-                <th data-i18n="th_order_amount">주문금액</th>
-                <th>수수료</th>
-                <th data-i18n="th_settled_amount">정산금액</th>
-                <th data-i18n="th_status_col">상태</th>
-            </tr>
-        </thead>
+        <thead><tr><th>날짜</th><th>상품</th><th>주문금액</th><th>수수료</th><th>정산금액</th><th>상태</th></tr></thead>
         <tbody id="settlementBody"></tbody>
     </table>
 </div>
@@ -262,34 +221,40 @@
 <!-- 탭5: 안내 -->
 <div id="tab-guide" class="container tab-content">
     <h2 style="margin:0 0 20px;font-size:20px;" data-i18n="pt_tab_guide">안내</h2>
-
     <div class="card guide-section">
-        <h3><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> <span data-i18n="pt_guide_fee_title">수수료 안내</span></h3>
+        <h3><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> 수수료 안내</h3>
         <ul>
-            <li data-i18n="pt_guide_fee_1">카드결제 수수료: 3.4%</li>
-            <li data-i18n="pt_guide_fee_2">판매 수수료: 6.6%</li>
-            <li data-i18n="pt_guide_fee_3"><strong>총 수수료: 10%</strong> (주문금액에서 공제 후 지급)</li>
+            <li><strong>국내 판매:</strong> 카드결제 수수료 3.4% + 판매수수료 6.6% = <strong>총 10%</strong></li>
+            <li><strong>해외 판매:</strong> 국내 수수료 10% + 통관/해외배송 20% = <strong>총 30%</strong></li>
+            <li>주문금액에서 공제 후 지급됩니다.</li>
         </ul>
     </div>
-
     <div class="card guide-section">
-        <h3><i class="fa-solid fa-calendar-check" style="color:#6366f1;"></i> <span data-i18n="pt_guide_settle_title">정산 및 입금일</span></h3>
+        <h3><i class="fa-solid fa-globe" style="color:#3b82f6;"></i> 해외 판매 가격 기준</h3>
         <ul>
-            <li data-i18n="pt_guide_settle_1">고객이 상품을 수령하고 '수령확인'을 누른 날로부터 <strong>15일 후</strong> 출금 가능합니다.</li>
-            <li data-i18n="pt_guide_settle_2">출금 요청 시 <strong>세금계산서</strong>를 첨부해야 합니다.</li>
-            <li data-i18n="pt_guide_settle_3">출금 요청 후 관리자 확인을 거쳐 <strong>5영업일 이내</strong> 입금됩니다.</li>
+            <li><strong>한국 파트너:</strong> 1,000원 → 200¥ / $2 로 해외에 판매</li>
+            <li><strong>일본 파트너:</strong> 100¥ → 2,000원 / $2 로 해외에 판매</li>
+            <li><strong>미국 파트너:</strong> $1 → 2,000원 / 200¥ 로 해외에 판매</li>
+            <li>해외 판매 시 약 <strong>2배 마진</strong>으로 수익 극대화 가능!</li>
         </ul>
     </div>
-
     <div class="card guide-section">
-        <h3><i class="fa-solid fa-truck-fast" style="color:#10b981;"></i> <span data-i18n="pt_guide_flow_title">판매 흐름</span></h3>
+        <h3><i class="fa-solid fa-calendar-check" style="color:#6366f1;"></i> 정산 및 입금일</h3>
+        <ul>
+            <li>고객 수령확인 후 <strong>15일 후</strong> 출금 가능</li>
+            <li>출금 시 <strong>세금계산서</strong> 첨부 필수</li>
+            <li>관리자 확인 후 <strong>5영업일 이내</strong> 입금</li>
+        </ul>
+    </div>
+    <div class="card guide-section">
+        <h3><i class="fa-solid fa-truck-fast" style="color:#10b981;"></i> 판매 흐름</h3>
         <ol>
-            <li data-i18n="pt_guide_flow_1">상품 등록 신청 (파트너)</li>
-            <li data-i18n="pt_guide_flow_2">관리자 승인 → 쇼핑몰에 상품 노출</li>
-            <li data-i18n="pt_guide_flow_3">고객 주문 → 주문관리 탭에서 확인</li>
-            <li data-i18n="pt_guide_flow_4">배송 출발 처리</li>
-            <li data-i18n="pt_guide_flow_5">고객 수령확인 → 15일 대기</li>
-            <li data-i18n="pt_guide_flow_6">출금 요청 + 세금계산서 첨부 → 입금</li>
+            <li>상품 등록 신청 (파트너)</li>
+            <li>관리자 승인 → 쇼핑몰 노출</li>
+            <li>고객 주문 → 주문관리에서 확인</li>
+            <li>배송 출발 처리</li>
+            <li>고객 수령확인 → 15일 대기</li>
+            <li>출금 요청 + 세금계산서 → 입금</li>
         </ol>
     </div>
 </div>
@@ -297,26 +262,14 @@
 <!-- 출금 모달 -->
 <div id="withdrawModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);">
     <div style="background:#fff;width:450px;max-width:90%;border-radius:16px;padding:30px;box-shadow:0 20px 25px rgba(0,0,0,0.1);">
-        <h3 style="margin:0 0 20px;font-size:18px;" data-i18n="pt_withdraw_title">출금 요청</h3>
-        <div class="form-group">
-            <label data-i18n="pt_wd_amount">출금 금액</label>
-            <input type="text" id="wdAmount" readonly style="background:#f1f5f9;font-weight:800;font-size:18px;">
-        </div>
-        <div class="form-group">
-            <label data-i18n="pt_wd_bank">계좌 정보 (은행명 + 계좌번호) *</label>
-            <input type="text" id="wdBankInfo" placeholder="예: 국민은행 123-456-789012">
-        </div>
-        <div class="form-group">
-            <label data-i18n="pt_wd_holder">예금주 *</label>
-            <input type="text" id="wdHolder" placeholder="홍길동">
-        </div>
-        <div class="form-group">
-            <label data-i18n="pt_wd_tax_invoice">세금계산서 첨부 *</label>
-            <input type="file" id="wdTaxFile" accept=".pdf,.jpg,.png">
-        </div>
+        <h3 style="margin:0 0 20px;font-size:18px;">출금 요청</h3>
+        <div class="form-group"><label>출금 금액</label><input type="text" id="wdAmount" readonly style="background:#f1f5f9;font-weight:800;font-size:18px;"></div>
+        <div class="form-group"><label>계좌 정보 (은행명 + 계좌번호) *</label><input type="text" id="wdBankInfo" placeholder="예: 국민은행 123-456-789012"></div>
+        <div class="form-group"><label>예금주 *</label><input type="text" id="wdHolder" placeholder="홍길동"></div>
+        <div class="form-group"><label>세금계산서 첨부 *</label><input type="file" id="wdTaxFile" accept=".pdf,.jpg,.png"></div>
         <div style="display:flex;gap:10px;margin-top:20px;">
-            <button class="btn-outline" onclick="document.getElementById('withdrawModal').style.display='none'" style="flex:1;" data-i18n="btn_cancel">취소</button>
-            <button class="btn-primary" onclick="submitWithdrawal()" style="flex:1;" id="wdSubmitBtn" data-i18n="pt_wd_submit">신청하기</button>
+            <button class="btn-outline" onclick="document.getElementById('withdrawModal').style.display='none'" style="flex:1;">취소</button>
+            <button class="btn-primary" onclick="submitWithdrawal()" style="flex:1;" id="wdSubmitBtn">신청하기</button>
         </div>
     </div>
 </div>
@@ -324,7 +277,6 @@
 <script type="module">
     import { sb, initConfig, currentUser } from './config.js?v=119';
 
-    // 통화 환산 헬퍼
     function fmtMoney(krw) {
         const cfg = window.SITE_CONFIG || {};
         const country = cfg.COUNTRY || 'KR';
@@ -338,156 +290,212 @@
     let myUser = null;
     let myProfile = null;
     let currentWithdrawable = 0;
+    let quillKR, quillJP, quillEN;
+    const SITE_COUNTRY = () => (window.SITE_CONFIG?.COUNTRY || 'KR');
+
+    const QUILL_TOOLBAR = [
+        [{'header':[1,2,3,false]}],
+        ['bold','italic','underline','strike'],
+        [{'color':[]},{'background':[]}],
+        [{'align':[]}],
+        ['image','video','link'],
+        [{'list':'ordered'},{'list':'bullet'}],
+        ['clean']
+    ];
 
     window.onload = async () => {
         await initConfig();
+        initQuillEditors();
+        initPriceInfo();
         await checkAuth();
+    };
+
+    function initQuillEditors() {
+        quillKR = new Quill('#descEditorKR', { theme:'snow', modules:{toolbar:QUILL_TOOLBAR}, placeholder:'상품 상세설명을 입력하세요...' });
+        quillJP = new Quill('#descEditorJP', { theme:'snow', modules:{toolbar:QUILL_TOOLBAR}, placeholder:'商品の詳細説明を入力してください...' });
+        quillEN = new Quill('#descEditorEN', { theme:'snow', modules:{toolbar:QUILL_TOOLBAR}, placeholder:'Enter product description...' });
+
+        // 이미지 핸들러 - Supabase 업로드
+        [quillKR, quillJP, quillEN].forEach(q => {
+            q.getModule('toolbar').addHandler('image', () => {
+                const input = document.createElement('input');
+                input.type = 'file'; input.accept = 'image/*';
+                input.onchange = async () => {
+                    const file = input.files[0]; if (!file) return;
+                    const path = `products/desc_${Date.now()}_${Math.random().toString(36).slice(2,8)}.${file.name.split('.').pop()}`;
+                    const { error } = await sb.storage.from('products').upload(path, file, {upsert:true});
+                    if (error) return alert('업로드 실패: ' + error.message);
+                    const { data } = sb.storage.from('products').getPublicUrl(path);
+                    const range = q.getSelection(true);
+                    q.insertEmbed(range.index, 'image', data.publicUrl);
+                };
+                input.click();
+            });
+            q.getModule('toolbar').addHandler('video', () => {
+                let url = prompt('YouTube URL을 입력하세요:');
+                if (!url) return;
+                url = url.replace('watch?v=','embed/').replace('youtu.be/','www.youtube.com/embed/');
+                const range = q.getSelection(true);
+                q.insertEmbed(range.index, 'video', url);
+            });
+        });
+    }
+
+    function initPriceInfo() {
+        const c = SITE_COUNTRY();
+        const info = document.getElementById('priceRateInfo');
+        if (c === 'JP') info.textContent = '기준: 100¥ = 2,000원 = $2';
+        else if (c === 'US') info.textContent = 'Rate: $1 = 2,000원 = ¥200';
+        else info.textContent = '기준: 1,000원 = ¥200 = $2';
+    }
+
+    // 가격 자동환산
+    window.autoConvertPrice = function(from) {
+        const krwEl = document.getElementById('regPriceKRW');
+        const jpyEl = document.getElementById('regPriceJPY');
+        const usdEl = document.getElementById('regPriceUSD');
+        const c = SITE_COUNTRY();
+
+        if (from === 'KRW') {
+            const v = parseFloat(krwEl.value) || 0;
+            if (c === 'KR') { jpyEl.value = Math.round(v * 0.2); usdEl.value = (v * 0.002).toFixed(2); }
+            else if (c === 'JP') { jpyEl.value = Math.round(v * 0.1); usdEl.value = (v * 0.001).toFixed(2); }
+            else { jpyEl.value = Math.round(v * 0.1); usdEl.value = (v * 0.0005).toFixed(2); }
+        } else if (from === 'JPY') {
+            const v = parseFloat(jpyEl.value) || 0;
+            if (c === 'JP') { krwEl.value = Math.round(v * 20); usdEl.value = (v * 0.02).toFixed(2); }
+            else if (c === 'KR') { krwEl.value = Math.round(v * 5); usdEl.value = (v * 0.01).toFixed(2); }
+            else { krwEl.value = Math.round(v * 10); usdEl.value = (v * 0.01).toFixed(2); }
+        } else {
+            const v = parseFloat(usdEl.value) || 0;
+            if (c === 'US') { krwEl.value = Math.round(v * 2000); jpyEl.value = Math.round(v * 200); }
+            else if (c === 'KR') { krwEl.value = Math.round(v * 500); jpyEl.value = Math.round(v * 100); }
+            else { krwEl.value = Math.round(v * 1000); jpyEl.value = Math.round(v * 100); }
+        }
+    };
+
+    // 상품명 번역
+    window.translateNames = async function() {
+        const kr = document.getElementById('regNameKR').value.trim();
+        if (!kr) return alert('한국어 상품명을 먼저 입력하세요.');
+        const btn = document.querySelector('.btn-translate');
+        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역중...';
+        try {
+            const [jp, en] = await Promise.all([translateText(kr, 'ko', 'ja'), translateText(kr, 'ko', 'en')]);
+            if (jp) document.getElementById('regNameJP').value = jp;
+            if (en) document.getElementById('regNameEN').value = en;
+        } catch(e) { console.warn(e); alert('번역 실패. 수동으로 입력해주세요.'); }
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-language"></i> 일괄 번역';
+    };
+
+    // 상세설명 번역
+    window.translateDescs = async function() {
+        const krHtml = quillKR.root.innerHTML;
+        const krText = quillKR.getText().trim();
+        if (!krText) return alert('한국어 설명을 먼저 입력하세요.');
+        const btns = document.querySelectorAll('.btn-translate');
+        const btn = btns[1]; btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역중...';
+        try {
+            const [jp, en] = await Promise.all([translateText(krText, 'ko', 'ja'), translateText(krText, 'ko', 'en')]);
+            if (jp) { quillJP.setText(''); quillJP.clipboard.dangerouslyPasteHTML(0, jp.replace(/\n/g,'<br>')); }
+            if (en) { quillEN.setText(''); quillEN.clipboard.dangerouslyPasteHTML(0, en.replace(/\n/g,'<br>')); }
+        } catch(e) { console.warn(e); alert('번역 실패. 수동으로 입력해주세요.'); }
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-language"></i> 일괄 번역';
+    };
+
+    async function translateText(text, from, to) {
+        try {
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0,500))}&langpair=${from}|${to}`);
+            const data = await res.json();
+            return data?.responseData?.translatedText || null;
+        } catch(e) { return null; }
+    }
+
+    // 설명 탭 전환
+    window.switchDescLang = function(lang) {
+        document.querySelectorAll('.desc-lang-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.quill-wrap').forEach(w => w.style.display = 'none');
+        event.target.classList.add('active');
+        document.getElementById('descEditor' + lang).style.display = 'block';
     };
 
     async function checkAuth() {
         const { data: { user } } = await sb.auth.getUser();
-        if (!user) {
-            alert(window.t ? window.t('msg_login_required') : '로그인이 필요합니다.');
-            location.href = 'index.html';
-            return;
-        }
+        if (!user) { alert(window.t ? window.t('msg_login_required') : '로그인이 필요합니다.'); location.href = 'index.html'; return; }
         myUser = user;
-
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
         let role = (profile?.role || '').toLowerCase();
         if (role === 'partners') role = 'partner';
-
         const adminEmails = ['korea900@daum.net', 'korea900as@gmail.com'];
-        if (adminEmails.includes((user.email || '').toLowerCase())) role = 'partner';
-
-        const allowed = ['admin', 'franchise', 'partner', 'platinum'];
-        if (!allowed.includes(role)) {
-            alert(window.t ? window.t('pt_no_access') : '접근 권한이 없습니다.');
-            location.href = 'index.html';
-            return;
-        }
-
+        if (adminEmails.includes((user.email||'').toLowerCase())) role = 'partner';
+        const allowed = ['admin','franchise','partner','platinum'];
+        if (!allowed.includes(role)) { alert(window.t ? window.t('pt_no_access') : '접근 권한이 없습니다.'); location.href = 'index.html'; return; }
         myProfile = profile;
         document.getElementById('userBadge').innerText = profile?.company_name || user.email.split('@')[0];
-
-        loadMyProducts();
-        loadCategories();
-        loadPartnerOrders();
-        loadSettlement();
+        loadMyProducts(); loadCategories(); loadPartnerOrders(); loadSettlement();
     }
 
-    // ========== 탭 전환 ==========
     window.switchTab = function(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
-        // 해당 버튼 활성화
         const btns = document.querySelectorAll('.tab-btn');
-        const tabMap = ['products','register','orders','settlement','guide'];
-        const idx = tabMap.indexOf(tabId);
+        const map = ['products','register','orders','settlement','guide'];
+        const idx = map.indexOf(tabId);
         if (idx >= 0 && btns[idx]) btns[idx].classList.add('active');
-
         if (tabId === 'products') loadMyProducts();
         if (tabId === 'orders') loadPartnerOrders();
         if (tabId === 'settlement') loadSettlement();
     };
 
-    // ========== 탭1: 내 상품 ==========
+    // ===== 탭1: 내 상품 =====
     async function loadMyProducts() {
         const grid = document.getElementById('myProductGrid');
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
-
-        const { data, error } = await sb.from('admin_products')
-            .select('*')
-            .eq('partner_id', myUser.id)
-            .order('created_at', { ascending: false });
-
+        const { data, error } = await sb.from('admin_products').select('*').eq('partner_id', myUser.id).order('created_at', {ascending:false});
         grid.innerHTML = '';
         if (error || !data || data.length === 0) {
-            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;">
-                <i class="fa-solid fa-box-open fa-3x" style="margin-bottom:16px;display:block;"></i>
-                ${window.t ? window.t('pt_no_products','등록된 상품이 없습니다.') : '등록된 상품이 없습니다.'}
-            </div>`;
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-box-open fa-3x" style="margin-bottom:16px;display:block;"></i>등록된 상품이 없습니다.</div>';
             return;
         }
-
         data.forEach(p => {
-            const statusClass = p.partner_status === 'approved' ? 'badge-approved' : p.partner_status === 'rejected' ? 'badge-rejected' : 'badge-pending';
-            const statusText = p.partner_status === 'approved' ? (window.t ? window.t('pt_product_approved','판매중') : '판매중')
-                : p.partner_status === 'rejected' ? (window.t ? window.t('pt_product_rejected','반려') : '반려')
-                : (window.t ? window.t('pt_product_pending','심사중') : '심사중');
-
-            const card = document.createElement('div');
-            card.className = 'prod-card';
+            const sc = p.partner_status==='approved'?'badge-approved':p.partner_status==='rejected'?'badge-rejected':'badge-pending';
+            const st = p.partner_status==='approved'?'판매중':p.partner_status==='rejected'?'반려':'심사중';
+            const card = document.createElement('div'); card.className = 'prod-card';
             card.innerHTML = `
-                <img src="${p.img_url || ''}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22><rect fill=%22%23f1f5f9%22 width=%22300%22 height=%22180%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2214%22>No Image</text></svg>'">
-                <div class="info">
-                    <h4>${p.name}</h4>
-                    <div class="price">${fmtMoney(p.price)}</div>
-                    <div><span class="status-badge ${statusClass}">${statusText}</span></div>
-                    <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${window.t ? window.t('pt_stock','재고') : '재고'}: ${p.stock_quantity || 0}</div>
-                </div>
-                <div class="actions">
-                    <button class="btn-outline" onclick="deleteProduct('${p.code}')"><i class="fa-solid fa-trash"></i> ${window.t ? window.t('btn_delete','삭제') : '삭제'}</button>
-                </div>
-            `;
+                <img src="${p.img_url||''}" alt="${p.name}" onerror="this.style.background='#f1f5f9';this.alt='No Image';">
+                <div class="info"><h4>${p.name}</h4><div class="price">${fmtMoney(p.price)}</div><div><span class="status-badge ${sc}">${st}</span></div><div style="font-size:12px;color:#94a3b8;margin-top:4px;">재고: ${p.stock_quantity||0}</div></div>
+                <div class="actions"><button class="btn-outline" onclick="deleteProduct('${p.code}')"><i class="fa-solid fa-trash"></i> 삭제</button></div>`;
             grid.appendChild(card);
         });
     }
 
     window.deleteProduct = async function(code) {
-        if (!confirm(window.t ? window.t('confirm_delete','삭제하시겠습니까?') : '삭제하시겠습니까?')) return;
+        if (!confirm('삭제하시겠습니까?')) return;
         await sb.from('admin_products').delete().eq('code', code).eq('partner_id', myUser.id);
         loadMyProducts();
     };
 
-    // ========== 탭2: 상품 등록 ==========
+    // ===== 탭2: 상품 등록 =====
     async function loadCategories() {
-        // 도매라운지 대분류의 하위 카테고리만 로드
         const { data: topCats } = await sb.from('admin_top_categories').select('code, name').order('sort_order');
-        // "도매라운지" 찾기 (name에 '도매' 포함)
         const wholesaleTop = topCats?.find(t => t.name.includes('도매'));
-
         const sel = document.getElementById('regCategory');
-        sel.innerHTML = '<option value="">-- ' + (window.t ? window.t('pt_select_category','카테고리 선택') : '카테고리 선택') + ' --</option>';
-
+        sel.innerHTML = '<option value="">-- 카테고리 선택 --</option>';
         if (wholesaleTop) {
-            const { data: subCats } = await sb.from('admin_categories')
-                .select('key, name')
-                .eq('top_category_code', wholesaleTop.code)
-                .order('sort_order');
-
-            if (subCats) {
-                subCats.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.key;
-                    opt.textContent = c.name;
-                    sel.appendChild(opt);
-                });
-            }
+            const { data: subCats } = await sb.from('admin_categories').select('key, name').eq('top_category_code', wholesaleTop.code).order('sort_order');
+            if (subCats) subCats.forEach(c => { const o = document.createElement('option'); o.value = c.key; o.textContent = c.name; sel.appendChild(o); });
         }
-
-        // 도매라운지 없으면 전체 카테고리 표시
         if (sel.options.length <= 1) {
             const { data: allCats } = await sb.from('admin_categories').select('key, name').order('sort_order');
-            if (allCats) {
-                allCats.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.key;
-                    opt.textContent = c.name;
-                    sel.appendChild(opt);
-                });
-            }
+            if (allCats) allCats.forEach(c => { const o = document.createElement('option'); o.value = c.key; o.textContent = c.name; sel.appendChild(o); });
         }
     }
 
     window.previewImage = function(input) {
         if (!input.files[0]) return;
         const reader = new FileReader();
-        reader.onload = e => {
-            const box = document.getElementById('imgUploadBox');
-            box.innerHTML = `<img src="${e.target.result}">`;
-        };
+        reader.onload = e => { document.getElementById('imgUploadBox').innerHTML = `<img src="${e.target.result}">`; };
         reader.readAsDataURL(input.files[0]);
     };
 
@@ -497,215 +505,116 @@
         const priceKRW = parseInt(document.getElementById('regPriceKRW').value);
         const stock = parseInt(document.getElementById('regStock').value) || 0;
         const fileInput = document.getElementById('regImageFile');
-
-        if (!category) return alert(window.t ? window.t('pt_err_category','카테고리를 선택하세요.') : '카테고리를 선택하세요.');
-        if (!nameKR) return alert(window.t ? window.t('pt_err_name','상품명을 입력하세요.') : '상품명을 입력하세요.');
-        if (!priceKRW || priceKRW <= 0) return alert(window.t ? window.t('pt_err_price','가격을 입력하세요.') : '가격을 입력하세요.');
-        if (!fileInput.files[0]) return alert(window.t ? window.t('pt_err_image','상품 이미지를 선택하세요.') : '상품 이미지를 선택하세요.');
+        if (!category) return alert('카테고리를 선택하세요.');
+        if (!nameKR) return alert('상품명을 입력하세요.');
+        if (!priceKRW || priceKRW <= 0) return alert('가격을 입력하세요.');
+        if (!fileInput.files[0]) return alert('상품 이미지를 선택하세요.');
 
         const btn = document.querySelector('#tab-register .btn-primary');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (window.t ? window.t('msg_sending','처리중...') : '처리중...');
-
+        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리중...';
         try {
-            // 이미지 업로드
             const file = fileInput.files[0];
             const ext = file.name.split('.').pop();
             const code = `PP_${myUser.id.substring(0,6)}_${Date.now()}`;
             const path = `products/${code}.${ext}`;
-
-            const { error: upErr } = await sb.storage.from('products').upload(path, file, { upsert: true });
+            const { error: upErr } = await sb.storage.from('products').upload(path, file, {upsert:true});
             if (upErr) throw upErr;
-
             const { data: urlData } = sb.storage.from('products').getPublicUrl(path);
-            const imgUrl = urlData.publicUrl;
-
-            // DB 삽입
             const { error: dbErr } = await sb.from('admin_products').insert({
-                code: code,
-                name: nameKR,
+                code, name: nameKR,
                 name_jp: document.getElementById('regNameJP').value.trim() || null,
                 name_us: document.getElementById('regNameEN').value.trim() || null,
                 price: priceKRW,
                 price_jp: parseInt(document.getElementById('regPriceJPY').value) || null,
                 price_us: parseFloat(document.getElementById('regPriceUSD').value) || null,
-                category: category,
-                img_url: imgUrl,
-                description: document.getElementById('regDescKR').value.trim() || null,
-                description_jp: document.getElementById('regDescJP').value.trim() || null,
-                description_us: document.getElementById('regDescEN').value.trim() || null,
-                partner_id: myUser.id,
-                partner_status: 'pending',
+                category, img_url: urlData.publicUrl,
+                description: quillKR.root.innerHTML !== '<p><br></p>' ? quillKR.root.innerHTML : null,
+                description_jp: quillJP.root.innerHTML !== '<p><br></p>' ? quillJP.root.innerHTML : null,
+                description_us: quillEN.root.innerHTML !== '<p><br></p>' ? quillEN.root.innerHTML : null,
+                partner_id: myUser.id, partner_status: 'pending',
                 partner_shipping_info: document.getElementById('regShipping').value.trim() || null,
-                stock_quantity: stock,
-                is_general_product: true
+                stock_quantity: stock, is_general_product: true
             });
-
             if (dbErr) throw dbErr;
-
-            alert(window.t ? window.t('pt_register_success','상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.') : '상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.');
-
+            alert('상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.');
             // 폼 초기화
             document.getElementById('regCategory').selectedIndex = 0;
-            document.getElementById('regNameKR').value = '';
-            document.getElementById('regNameJP').value = '';
-            document.getElementById('regNameEN').value = '';
-            document.getElementById('regPriceKRW').value = '';
-            document.getElementById('regPriceJPY').value = '';
-            document.getElementById('regPriceUSD').value = '';
+            ['regNameKR','regNameJP','regNameEN','regPriceKRW','regPriceJPY','regPriceUSD','regShipping'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('regStock').value = '100';
-            document.getElementById('regDescKR').value = '';
-            document.getElementById('regDescJP').value = '';
-            document.getElementById('regDescEN').value = '';
-            document.getElementById('regShipping').value = '';
-            document.getElementById('imgUploadBox').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>클릭하여 이미지 업로드</span>';
+            quillKR.setText(''); quillJP.setText(''); quillEN.setText('');
+            document.getElementById('imgUploadBox').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>클릭하여 업로드</span>';
             document.getElementById('regImageFile').value = '';
-
             switchTab('products');
-        } catch(e) {
-            console.error(e);
-            alert((window.t ? window.t('err_prefix','오류: ') : '오류: ') + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + (window.t ? window.t('pt_register_submit','등록 신청') : '등록 신청');
-        }
+        } catch(e) { console.error(e); alert('오류: ' + e.message); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 등록 신청'; }
     };
 
-    // ========== 탭3: 주문 관리 ==========
+    // ===== 탭3: 주문 관리 =====
     async function loadPartnerOrders() {
         const container = document.getElementById('partnerOrderList');
         container.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
-
-        // 내 settlement 레코드에서 order_id 추출
-        const { data: settlements } = await sb.from('partner_settlements')
-            .select('order_id, item_code, item_amount, settlement_status')
-            .eq('partner_id', myUser.id)
-            .order('created_at', { ascending: false });
-
+        const { data: settlements } = await sb.from('partner_settlements').select('order_id, item_code, item_amount, settlement_status').eq('partner_id', myUser.id).order('created_at', {ascending:false});
         if (!settlements || settlements.length === 0) {
-            container.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#94a3b8;">
-                <i class="fa-solid fa-clipboard-list fa-3x" style="margin-bottom:16px;display:block;"></i>
-                ${window.t ? window.t('pt_no_orders','주문 내역이 없습니다.') : '주문 내역이 없습니다.'}
-            </div>`;
+            container.innerHTML = '<div class="card" style="text-align:center;padding:40px;color:#94a3b8;"><i class="fa-solid fa-clipboard-list fa-3x" style="margin-bottom:16px;display:block;"></i>주문 내역이 없습니다.</div>';
             return;
         }
-
         const orderIds = [...new Set(settlements.map(s => s.order_id))];
-        const { data: orders } = await sb.from('orders')
-            .select('id, created_at, manager_name, phone, address, status, items')
-            .in('id', orderIds)
-            .order('created_at', { ascending: false });
-
+        const { data: orders } = await sb.from('orders').select('id, created_at, manager_name, phone, address, status').in('id', orderIds).order('created_at', {ascending:false});
         container.innerHTML = '';
-        if (!orders || orders.length === 0) {
-            container.innerHTML = '<div class="card" style="text-align:center;padding:40px;color:#94a3b8;">주문 내역이 없습니다.</div>';
-            return;
-        }
-
+        if (!orders || orders.length === 0) { container.innerHTML = '<div class="card" style="text-align:center;padding:40px;color:#94a3b8;">주문 없음</div>'; return; }
         orders.forEach(o => {
-            const mySettlements = settlements.filter(s => s.order_id === o.id);
-            const totalAmt = mySettlements.reduce((sum, s) => sum + s.item_amount, 0);
-
-            let statusBadge = '';
-            if (o.status === '구매확정') statusBadge = '<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">구매확정</span>';
-            else if (o.status === '배송중') statusBadge = '<span style="background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">배송중</span>';
-            else if (o.status === '배송완료') statusBadge = '<span style="background:#e0e7ff;color:#4338ca;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">배송완료</span>';
-            else statusBadge = `<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">${o.status}</span>`;
-
-            const canShip = ['접수됨','제작준비','임시작성'].includes(o.status) || o.status === '결제완료';
-            const shipBtn = canShip ? `<button class="btn-primary" onclick="shipOrder('${o.id}')" style="padding:8px 16px;font-size:13px;margin-top:10px;"><i class="fa-solid fa-truck"></i> ${window.t ? window.t('pt_ship_now','배송 출발') : '배송 출발'}</button>` : '';
-
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <div style="font-size:13px;color:#94a3b8;">${new Date(o.created_at).toLocaleDateString()}</div>
-                    ${statusBadge}
-                </div>
-                <div style="font-weight:700;font-size:16px;margin-bottom:6px;">${o.manager_name || ''}</div>
-                <div style="font-size:13px;color:#64748b;margin-bottom:4px;"><i class="fa-solid fa-location-dot"></i> ${o.address || ''}</div>
-                <div style="font-size:13px;color:#64748b;margin-bottom:4px;"><i class="fa-solid fa-phone"></i> ${o.phone || ''}</div>
-                <div style="font-weight:800;font-size:17px;color:#6366f1;margin-top:8px;">${fmtMoney(totalAmt)}</div>
-                ${shipBtn}
-            `;
+            const myS = settlements.filter(s => s.order_id === o.id);
+            const amt = myS.reduce((s,i) => s + i.item_amount, 0);
+            let badge = `<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">${o.status}</span>`;
+            if (o.status === '구매확정') badge = '<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">구매확정</span>';
+            else if (o.status === '배송중') badge = '<span style="background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">배송중</span>';
+            const canShip = ['접수됨','제작준비','임시작성','결제완료'].includes(o.status);
+            const shipBtn = canShip ? `<button class="btn-primary" onclick="shipOrder('${o.id}')" style="padding:8px 16px;font-size:13px;margin-top:10px;"><i class="fa-solid fa-truck"></i> 배송 출발</button>` : '';
+            const card = document.createElement('div'); card.className = 'card';
+            card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div style="font-size:13px;color:#94a3b8;">${new Date(o.created_at).toLocaleDateString()}</div>${badge}</div>
+                <div style="font-weight:700;font-size:16px;margin-bottom:6px;">${o.manager_name||''}</div>
+                <div style="font-size:13px;color:#64748b;margin-bottom:4px;"><i class="fa-solid fa-location-dot"></i> ${o.address||''}</div>
+                <div style="font-size:13px;color:#64748b;"><i class="fa-solid fa-phone"></i> ${o.phone||''}</div>
+                <div style="font-weight:800;font-size:17px;color:#6366f1;margin-top:8px;">${fmtMoney(amt)}</div>${shipBtn}`;
             container.appendChild(card);
         });
     }
 
-    window.shipOrder = async function(orderId) {
-        if (!confirm(window.t ? window.t('pt_confirm_ship','배송 출발 처리하시겠습니까?') : '배송 출발 처리하시겠습니까?')) return;
-        const { error } = await sb.from('orders').update({ status: '배송중' }).eq('id', orderId);
-        if (error) alert('오류: ' + error.message);
-        else {
-            alert(window.t ? window.t('pt_ship_success','배송 출발 처리되었습니다.') : '배송 출발 처리되었습니다.');
-            loadPartnerOrders();
-        }
+    window.shipOrder = async function(id) {
+        if (!confirm('배송 출발 처리하시겠습니까?')) return;
+        const { error } = await sb.from('orders').update({status:'배송중'}).eq('id', id);
+        if (error) alert('오류: '+error.message); else { alert('배송 출발 처리됨'); loadPartnerOrders(); }
     };
 
-    // ========== 탭4: 정산 ==========
+    // ===== 탭4: 정산 =====
     async function loadSettlement() {
         const tbody = document.getElementById('settlementBody');
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">로딩 중...</td></tr>';
-
-        const { data, error } = await sb.from('partner_settlements')
-            .select('*')
-            .eq('partner_id', myUser.id)
-            .order('created_at', { ascending: false });
-
-        let eligible = 0, waiting = 0, requested = 0;
-        let html = '';
-
+        const { data } = await sb.from('partner_settlements').select('*').eq('partner_id', myUser.id).order('created_at', {ascending:false});
+        let eligible=0, waiting=0, requested=0; let html='';
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">' + (window.t ? window.t('pt_no_settlement','정산 내역이 없습니다.') : '정산 내역이 없습니다.') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">정산 내역 없음</td></tr>';
         } else {
             data.forEach(s => {
-                const now = new Date();
-                let statusText = '';
-                let statusColor = '#94a3b8';
-
-                if (s.settlement_status === 'requested' || s.settlement_status === 'withdrawn') {
-                    requested += s.net_amount;
-                    statusText = window.t ? window.t('pt_status_requested','출금신청됨') : '출금신청됨';
-                    statusColor = '#6366f1';
-                } else if (s.settlement_status === 'waiting' && s.withdrawal_eligible_at) {
-                    const eligibleDate = new Date(s.withdrawal_eligible_at);
-                    if (now >= eligibleDate) {
-                        eligible += s.net_amount;
-                        statusText = window.t ? window.t('pt_withdrawable','출금가능') : '출금가능';
-                        statusColor = '#16a34a';
-                    } else {
-                        waiting += s.net_amount;
-                        const daysLeft = Math.ceil((eligibleDate - now) / (1000*60*60*24));
-                        statusText = `D-${daysLeft}`;
-                        statusColor = '#d97706';
-                    }
-                } else {
-                    waiting += s.net_amount;
-                    statusText = window.t ? window.t('pt_status_pending_confirm','수령확인 대기') : '수령확인 대기';
-                    statusColor = '#94a3b8';
-                }
-
-                html += `<tr>
-                    <td>${new Date(s.created_at).toLocaleDateString()}</td>
-                    <td>${s.item_code}</td>
-                    <td style="text-align:right;">${fmtMoney(s.item_amount)}</td>
-                    <td style="text-align:right;color:#ef4444;">-${fmtMoney(s.commission_amount)}</td>
-                    <td style="text-align:right;font-weight:700;color:#16a34a;">${fmtMoney(s.net_amount)}</td>
-                    <td style="text-align:center;"><span style="color:${statusColor};font-weight:700;font-size:13px;">${statusText}</span></td>
-                </tr>`;
+                const now = new Date(); let st='', sc='#94a3b8';
+                if (s.settlement_status==='requested'||s.settlement_status==='withdrawn') { requested+=s.net_amount; st='출금신청됨'; sc='#6366f1'; }
+                else if (s.settlement_status==='waiting' && s.withdrawal_eligible_at) {
+                    const ed = new Date(s.withdrawal_eligible_at);
+                    if (now >= ed) { eligible+=s.net_amount; st='출금가능'; sc='#16a34a'; }
+                    else { waiting+=s.net_amount; st=`D-${Math.ceil((ed-now)/(864e5))}`; sc='#d97706'; }
+                } else { waiting+=s.net_amount; st='수령확인 대기'; }
+                html += `<tr><td>${new Date(s.created_at).toLocaleDateString()}</td><td>${s.item_code}</td><td style="text-align:right;">${fmtMoney(s.item_amount)}</td><td style="text-align:right;color:#ef4444;">-${fmtMoney(s.commission_amount)}</td><td style="text-align:right;font-weight:700;color:#16a34a;">${fmtMoney(s.net_amount)}</td><td style="text-align:center;"><span style="color:${sc};font-weight:700;font-size:13px;">${st}</span></td></tr>`;
             });
             tbody.innerHTML = html;
         }
-
         document.getElementById('settleEligible').innerText = fmtMoney(eligible);
         document.getElementById('settleWaiting').innerText = fmtMoney(waiting);
         document.getElementById('settleRequested').innerText = fmtMoney(requested);
         currentWithdrawable = eligible;
     }
 
-    // ========== 출금 요청 ==========
     window.requestWithdrawal = function() {
-        if (currentWithdrawable <= 0) return alert(window.t ? window.t('pt_no_eligible','출금 가능한 금액이 없습니다.') : '출금 가능한 금액이 없습니다.');
+        if (currentWithdrawable <= 0) return alert('출금 가능 금액이 없습니다.');
         document.getElementById('wdAmount').value = fmtMoney(currentWithdrawable);
         document.getElementById('withdrawModal').style.display = 'flex';
     };
@@ -714,60 +623,26 @@
         const bankInfo = document.getElementById('wdBankInfo').value.trim();
         const holder = document.getElementById('wdHolder').value.trim();
         const fileInput = document.getElementById('wdTaxFile');
-
-        if (!bankInfo) return alert(window.t ? window.t('pt_err_bank','계좌 정보를 입력하세요.') : '계좌 정보를 입력하세요.');
-        if (!holder) return alert(window.t ? window.t('pt_err_holder','예금주를 입력하세요.') : '예금주를 입력하세요.');
-        if (!fileInput.files[0]) return alert(window.t ? window.t('pt_err_tax','세금계산서를 첨부하세요.') : '세금계산서를 첨부하세요.');
-
+        if (!bankInfo) return alert('계좌 정보를 입력하세요.');
+        if (!holder) return alert('예금주를 입력하세요.');
+        if (!fileInput.files[0]) return alert('세금계산서를 첨부하세요.');
         const btn = document.getElementById('wdSubmitBtn');
-        btn.disabled = true;
-        btn.innerText = window.t ? window.t('msg_sending','처리중...') : '처리중...';
-
+        btn.disabled = true; btn.innerText = '처리중...';
         try {
-            // 세금계산서 업로드
-            const file = fileInput.files[0];
-            const ext = file.name.split('.').pop();
+            const file = fileInput.files[0]; const ext = file.name.split('.').pop();
             const path = `tax_invoices/${myUser.id}_${Date.now()}.${ext}`;
             const { error: upErr } = await sb.storage.from('orders').upload(path, file);
             if (upErr) throw upErr;
-
             const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
-
-            // withdrawal_requests에 기록
-            const { error: dbErr } = await sb.from('withdrawal_requests').insert({
-                user_id: myUser.id,
-                amount: currentWithdrawable,
-                bank_name: bankInfo,
-                account_holder: holder,
-                status: 'pending',
-                tax_invoice_url: urlData.publicUrl
-            });
+            const { error: dbErr } = await sb.from('withdrawal_requests').insert({ user_id:myUser.id, amount:currentWithdrawable, bank_name:bankInfo, account_holder:holder, status:'pending', tax_invoice_url:urlData.publicUrl });
             if (dbErr) throw dbErr;
-
-            // settlement 상태 업데이트 (eligible → requested)
-            await sb.from('partner_settlements')
-                .update({ settlement_status: 'requested' })
-                .eq('partner_id', myUser.id)
-                .eq('settlement_status', 'waiting')
-                .lte('withdrawal_eligible_at', new Date().toISOString());
-
-            alert(window.t ? window.t('pt_wd_success','출금 요청이 접수되었습니다. 관리자 확인 후 입금됩니다.') : '출금 요청이 접수되었습니다. 관리자 확인 후 입금됩니다.');
-            document.getElementById('withdrawModal').style.display = 'none';
-            loadSettlement();
-        } catch(e) {
-            console.error(e);
-            alert((window.t ? window.t('err_prefix','오류: ') : '오류: ') + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerText = window.t ? window.t('pt_wd_submit','신청하기') : '신청하기';
-        }
+            await sb.from('partner_settlements').update({settlement_status:'requested'}).eq('partner_id',myUser.id).eq('settlement_status','waiting').lte('withdrawal_eligible_at',new Date().toISOString());
+            alert('출금 요청이 접수되었습니다.'); document.getElementById('withdrawModal').style.display='none'; loadSettlement();
+        } catch(e) { alert('오류: '+e.message); }
+        finally { btn.disabled=false; btn.innerText='신청하기'; }
     };
 
-    // ========== 로그아웃 ==========
-    window.logout = async function() {
-        await sb.auth.signOut();
-        location.href = 'index.html';
-    };
+    window.logout = async function() { await sb.auth.signOut(); location.href='index.html'; };
 </script>
 </body>
 </html>
