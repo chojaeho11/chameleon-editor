@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,8 +11,25 @@ serve(async (req) => {
     }
 
     try {
-        const { text, from, to } = await req.json();
-        if (!text) throw new Error("text is required");
+        const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+        if (!ANTHROPIC_API_KEY) {
+            return new Response(
+                JSON.stringify({ translated: "", error: "API key not configured" }),
+                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+        const body = await req.json();
+        const text = body.text;
+        const from = body.from || "auto";
+        const to = body.to || "kr";
+
+        if (!text) {
+            return new Response(
+                JSON.stringify({ translated: "", error: "text is required" }),
+                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
 
         const langNames: Record<string, string> = {
             kr: "Korean", ja: "Japanese", en: "English"
@@ -33,11 +48,11 @@ Rules:
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-api-key": ANTHROPIC_API_KEY!,
+                "x-api-key": ANTHROPIC_API_KEY,
                 "anthropic-version": "2023-06-01",
             },
             body: JSON.stringify({
-                model: "claude-haiku-4-5-20241022",
+                model: "claude-haiku-4-5-20251001",
                 max_tokens: 1000,
                 system: systemPrompt,
                 messages: [{ role: "user", content: text }],
@@ -47,7 +62,10 @@ Rules:
         if (!res.ok) {
             const errText = await res.text();
             console.error("Claude API Error:", res.status, errText);
-            throw new Error("API error " + res.status);
+            return new Response(
+                JSON.stringify({ translated: "", error: "Claude API " + res.status + ": " + errText.substring(0, 200) }),
+                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
         }
 
         const data = await res.json();
@@ -58,13 +76,13 @@ Rules:
 
         return new Response(
             JSON.stringify({ translated }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
-    } catch (error) {
+    } catch (error: any) {
         console.error("Translate Error:", error);
         return new Response(
-            JSON.stringify({ error: "Translation failed" }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            JSON.stringify({ translated: "", error: String(error?.message || error) }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
 });

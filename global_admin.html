@@ -1651,6 +1651,7 @@ async function saveCommonInfo() {
         if (!sb) throw new Error('Supabase not ready');
         var res = await sb.functions.invoke('translate', { body: { text: text, from: from, to: to } });
         if (res.error) throw res.error;
+        if (res.data && res.data.error) throw new Error(res.data.error);
         return (res.data && res.data.translated) || '';
     }
 

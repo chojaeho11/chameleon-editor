@@ -367,9 +367,9 @@ ${lp.orderTracking}`;
                     await new Promise(r => setTimeout(r, 1500 * (retries + 1)));
                     return callClaude(model, retries + 1);
                 }
-                if (model !== "claude-haiku-4-5-20241022") {
+                if (model !== "claude-haiku-4-5-20251001") {
                     console.log("Sonnet 429 → Haiku fallback");
-                    return callClaude("claude-haiku-4-5-20241022", 0);
+                    return callClaude("claude-haiku-4-5-20251001", 0);
                 }
                 throw new Error("API 요청 한도 초과");
             }
