@@ -484,7 +484,7 @@ async function requestWithdrawal() {
     if(!bank || !acc || !holder) return alert(window.t('msg_enter_bank_info', "Please enter bank account info."));
     if(!phone || !rrn) return alert(window.t('msg_enter_contact_id', "Please enter contact and ID number."));
 
-    if(!confirm(window.t('confirm_withdraw', `Request withdrawal of ${amt.toLocaleString()}?\n(3.3% tax will be deducted)`))) return;
+    if(!confirm(window.t('confirm_withdraw_request', `입력하신 정보로 출금을 신청하시겠습니까?\n(입력 정보 오류 시 입금이 지연될 수 있습니다.)`))) return;
 
     // 역환산: 사용자 입력(현지 통화) → KRW로 변환하여 DB 저장
     const amtKRW = Math.round(amt / wdRate);
@@ -516,7 +516,7 @@ async function requestWithdrawal() {
             user_id: currentUser.id, type: 'withdraw_req', amount: -amtKRW, description: `출금신청(${bank})`
         });
 
-        alert(window.t('msg_withdraw_submitted', "Withdrawal request submitted! Payment will be processed after admin review."));
+        alert(window.t('msg_withdraw_success', "출금 신청이 완료되었습니다.\n관리자 확인 후(D+5일 내) 입금됩니다."));
         document.getElementById('withdrawModal').style.display = 'none';
         
         // 초기화
