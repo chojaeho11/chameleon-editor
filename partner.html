@@ -64,8 +64,8 @@
         /* Quill editor */
         .quill-wrap{border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;margin-bottom:10px;}
         .quill-wrap .ql-toolbar{background:#f8fafc;border:none;border-bottom:1px solid #e2e8f0;}
-        .quill-wrap .ql-container{border:none;min-height:200px;font-family:'Pretendard',sans-serif;}
-        .quill-wrap .ql-editor{padding:16px;font-size:14px;line-height:1.7;}
+        .quill-wrap .ql-container{border:none;min-height:450px;font-family:'Pretendard',sans-serif;}
+        .quill-wrap .ql-editor{padding:16px;font-size:14px;line-height:1.7;min-height:450px;}
         .quill-wrap .ql-editor p{margin-bottom:4px !important;}
         .desc-lang-tabs{display:flex;gap:4px;margin-bottom:8px;}
         .desc-lang-tab{padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px 6px 0 0;background:#f1f5f9;cursor:pointer;font-size:13px;font-weight:600;color:#64748b;}
@@ -388,7 +388,7 @@
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-language"></i> 일괄 번역';
     };
 
-    // 상세설명 번역
+    // 상세설명 번역 (HTML 구조 보존)
     window.translateDescs = async function() {
         const krHtml = quillKR.root.innerHTML;
         const krText = quillKR.getText().trim();
@@ -396,12 +396,59 @@
         const btns = document.querySelectorAll('.btn-translate');
         const btn = btns[1]; btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역중...';
         try {
-            const [jp, en] = await Promise.all([translateText(krText, 'ko', 'ja'), translateText(krText, 'ko', 'en')]);
-            if (jp) { quillJP.setText(''); quillJP.clipboard.dangerouslyPasteHTML(0, jp.replace(/\n/g,'<br>')); }
-            if (en) { quillEN.setText(''); quillEN.clipboard.dangerouslyPasteHTML(0, en.replace(/\n/g,'<br>')); }
+            const [jpHtml, enHtml] = await Promise.all([
+                translateHtml(krHtml, 'ko', 'ja'),
+                translateHtml(krHtml, 'ko', 'en')
+            ]);
+            if (jpHtml) { quillJP.root.innerHTML = jpHtml; }
+            if (enHtml) { quillEN.root.innerHTML = enHtml; }
         } catch(e) { console.warn(e); alert('번역 실패. 수동으로 입력해주세요.'); }
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-language"></i> 일괄 번역';
     };
+
+    // HTML 구조(정렬, 글꼴크기, 색상, 이미지, 영상)를 보존하면서 텍스트만 번역
+    async function translateHtml(html, from, to) {
+        // HTML을 태그와 텍스트로 분리
+        const parts = html.split(/(<[^>]+>)/g);
+        const textParts = [];
+        const textIndices = [];
+        parts.forEach((p, i) => {
+            if (!p.startsWith('<') && p.trim()) {
+                textParts.push(p.trim());
+                textIndices.push(i);
+            }
+        });
+        if (textParts.length === 0) return html;
+        // 구분자로 묶어서 한 번에 번역 (API 호출 최소화)
+        const separator = ' ||| ';
+        const joined = textParts.join(separator);
+        // 500자씩 나눠서 번역 (API 제한)
+        const chunks = [];
+        if (joined.length <= 500) {
+            chunks.push(joined);
+        } else {
+            let current = '';
+            textParts.forEach((t, i) => {
+                const add = i === 0 ? t : separator + t;
+                if ((current + add).length > 500 && current) {
+                    chunks.push(current);
+                    current = t;
+                } else {
+                    current += add;
+                }
+            });
+            if (current) chunks.push(current);
+        }
+        // 번역 실행
+        const translatedChunks = await Promise.all(chunks.map(c => translateText(c, from, to)));
+        const translatedJoined = translatedChunks.filter(Boolean).join(separator);
+        const translatedParts = translatedJoined.split(/\s*\|\|\|\s*/);
+        // 번역된 텍스트를 원래 위치에 삽입
+        translatedParts.forEach((t, i) => {
+            if (i < textIndices.length) parts[textIndices[i]] = t;
+        });
+        return parts.join('');
+    }
 
     async function translateText(text, from, to) {
         try {
@@ -533,7 +580,8 @@
                 description_us: quillEN.root.innerHTML !== '<p><br></p>' ? quillEN.root.innerHTML : null,
                 partner_id: myUser.id, partner_status: 'pending',
                 partner_shipping_info: document.getElementById('regShipping').value.trim() || null,
-                stock_quantity: stock, is_general_product: true
+                stock_quantity: stock, is_general_product: true,
+                addons: '', site_code: 'all', width_mm: 0, height_mm: 0, is_custom_size: false
             });
             if (dbErr) throw dbErr;
             alert('상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.');
