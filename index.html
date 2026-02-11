@@ -2893,41 +2893,50 @@ window.goHome = function() {
                 let homeLink = "/";
                 if (currentLang) homeLink += `?lang=${currentLang}`;
 
+                const _backText = currentLang==='ja'?'戻る':currentLang==='en'?'Back':'뒤로가기';
+                const _homeText = currentLang==='ja'?'ホーム':currentLang==='en'?'Home':'홈';
+                const _guideText = currentLang==='ja'
+                    ?'商品情報を確認し、<strong>オプション</strong>を選択してください。'
+                    :currentLang==='en'
+                    ?'Check product info and select <strong>options</strong>.'
+                    :'상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.';
+
                 const headerHTML = `
                     <div class="product-full-header">
                         <button class="back-btn" onclick="window.history.back()">
-                            <i class="fa-solid fa-arrow-left"></i> 뒤로가기
+                            <i class="fa-solid fa-arrow-left"></i> ${_backText}
                         </button>
                         <div class="page-title">${productName}</div>
                         <div class="right-menu">
                             <button onclick="location.href='${homeLink}'" class="btn-round" style="padding:6px 12px; font-size:12px; height:auto;">
-                                <i class="fa-solid fa-house"></i> 홈
+                                <i class="fa-solid fa-house"></i> ${_homeText}
                             </button>
                         </div>
                     </div>
                     <div class="product-guide-banner">
-                        <i class="fa-solid fa-circle-info"></i> 
-                        상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.<br>
-                        (디자인이 어렵다면 '파일 업로드'를 이용하세요)
+                        <i class="fa-solid fa-circle-info"></i> ${_guideText}
                     </div>
                 `;
-                
+
                 box.insertAdjacentHTML('afterbegin', headerHTML);
 
                 const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
                 closeBtns.forEach(btn => btn.style.display = 'none');
             };
 
+            // 다국어 상품명 가져오기
+            const localized = typeof getLocalizedData === 'function' ? getLocalizedData(product) : { name: product.name };
+
             // 창 열기 (모든 상품 동일 인터페이스)
             window.showChoiceModal(productCode);
-            transformToFullScreen('choiceModal', product.name);
+            transformToFullScreen('choiceModal', localized.name);
 
             window.scrollTo(0, 0);
 
         } catch (e) {
             console.error(e);
             alert("오류: " + e.message);
-            window.history.back(); 
+            window.history.back();
         } finally {
             if(loading) loading.style.display = 'none';
         }
@@ -3106,41 +3115,50 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 let homeLink = "/";
                 if (currentLang) homeLink += `?lang=${currentLang}`;
 
+                const _backText = currentLang==='ja'?'戻る':currentLang==='en'?'Back':'뒤로가기';
+                const _homeText = currentLang==='ja'?'ホーム':currentLang==='en'?'Home':'홈';
+                const _guideText = currentLang==='ja'
+                    ?'商品情報を確認し、<strong>オプション</strong>を選択してください。'
+                    :currentLang==='en'
+                    ?'Check product info and select <strong>options</strong>.'
+                    :'상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.';
+
                 const headerHTML = `
                     <div class="product-full-header">
                         <button class="back-btn" onclick="window.history.back()">
-                            <i class="fa-solid fa-arrow-left"></i> 뒤로가기
+                            <i class="fa-solid fa-arrow-left"></i> ${_backText}
                         </button>
                         <div class="page-title">${productName}</div>
                         <div class="right-menu">
                             <button onclick="location.href='${homeLink}'" class="btn-round" style="padding:6px 12px; font-size:12px; height:auto;">
-                                <i class="fa-solid fa-house"></i> 홈
+                                <i class="fa-solid fa-house"></i> ${_homeText}
                             </button>
                         </div>
                     </div>
                     <div class="product-guide-banner">
-                        <i class="fa-solid fa-circle-info"></i> 
-                        상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.<br>
-                        (디자인이 어렵다면 '파일 업로드'를 이용하세요)
+                        <i class="fa-solid fa-circle-info"></i> ${_guideText}
                     </div>
                 `;
-                
+
                 box.insertAdjacentHTML('afterbegin', headerHTML);
 
                 const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
                 closeBtns.forEach(btn => btn.style.display = 'none');
             };
 
+            // 다국어 상품명 가져오기
+            const localized = typeof getLocalizedData === 'function' ? getLocalizedData(product) : { name: product.name };
+
             // 창 열기 (모든 상품 동일 인터페이스)
             window.showChoiceModal(productCode);
-            transformToFullScreen('choiceModal', product.name);
+            transformToFullScreen('choiceModal', localized.name);
 
             window.scrollTo(0, 0);
 
         } catch (e) {
             console.error(e);
             alert("오류: " + e.message);
-            window.history.back(); 
+            window.history.back();
         } finally {
             if(loading) loading.style.display = 'none';
         }
@@ -3868,16 +3886,28 @@ if (w >= 20 && h >= 20) {
         }
     };
 
+    window._reviewFormRetryCount = 0;
     window.renderReviewWriteForm = function(productCode) {
         const area = document.getElementById('reviewWriteArea');
         if (!area) return;
 
         if (!window.currentUser) {
+            // 인증 로딩 대기 (최대 3초, 6회 재시도)
+            if (window._reviewFormRetryCount < 6) {
+                window._reviewFormRetryCount++;
+                area.innerHTML = `<div class="review-write-box" style="text-align:center;color:#94a3b8;font-size:14px;padding:15px;">
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right:5px;"></i> ${window.t('rv_loading','로딩 중...')}
+                </div>`;
+                setTimeout(() => window.renderReviewWriteForm(productCode), 500);
+                return;
+            }
+            window._reviewFormRetryCount = 0;
             area.innerHTML = `<div class="review-write-box" style="text-align:center;color:#94a3b8;font-size:14px;padding:15px;">
                 <i class="fa-solid fa-lock" style="margin-right:5px;"></i> ${window.t('rv_login_required','로그인 후 리뷰를 작성할 수 있습니다')}
             </div>`;
             return;
         }
+        window._reviewFormRetryCount = 0;
 
         area.innerHTML = `
             <div class="review-write-box">
