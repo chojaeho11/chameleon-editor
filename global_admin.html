@@ -94,6 +94,9 @@
             <li class="nav-item" onclick="showSection('sec-partner-apps', this)">
                 <i class="fa-solid fa-store"></i> 파트너스 신청 관리 <span id="partnerPendingCount" class="badge" style="background:#ef4444; color:white; font-size:10px; display:none;">N</span>
             </li>
+            <li class="nav-item" onclick="showSection('sec-partner-products', this)">
+                <i class="fa-solid fa-box-check" style="color:#6366f1;"></i> 파트너 상품 심사 <span id="partnerProductPendingCount" class="badge" style="background:#f59e0b; color:white; font-size:10px; display:none;">0</span>
+            </li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
 
             <div class="nav-label">Product & Stock</div>
@@ -366,6 +369,44 @@
                         </thead>
                         <tbody id="partnerAppListBody"><tr><td colspan="8" style="text-align:center; padding:30px;">로딩 중...</td></tr></tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- 파트너 상품 심사 섹션 -->
+            <div id="sec-partner-products" class="section">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <h3 style="margin:0;">📦 파트너 상품 심사</h3>
+                        <div style="display:flex; gap:10px;">
+                            <select id="filterPartnerProdStatus" class="input-text" style="width:120px; font-weight:bold;" onchange="loadPartnerProducts()">
+                                <option value="pending" selected>⏳ 심사 대기</option>
+                                <option value="approved">✅ 승인됨</option>
+                                <option value="rejected">❌ 반려됨</option>
+                                <option value="all">📂 전체</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="loadPartnerProducts()">
+                                <i class="fa-solid fa-rotate"></i> 새로고침
+                            </button>
+                        </div>
+                    </div>
+                    <div id="partnerProductList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+                        <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">로딩 중...</div>
+                    </div>
+                </div>
+                <!-- 반려 사유 모달 -->
+                <div id="rejectReasonModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);">
+                    <div style="background:#fff;width:480px;max-width:90%;border-radius:16px;padding:30px;box-shadow:0 20px 25px rgba(0,0,0,0.15);">
+                        <h3 style="margin:0 0 6px;font-size:18px;color:#b91c1c;"><i class="fa-solid fa-triangle-exclamation"></i> 상품 반려</h3>
+                        <p style="margin:0 0 16px;font-size:13px;color:#64748b;" id="rejectProductName"></p>
+                        <div style="margin-bottom:16px;">
+                            <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;">반려 사유 *</label>
+                            <textarea id="rejectReasonText" class="input-text" style="width:100%;height:120px;resize:vertical;font-size:14px;padding:12px;" placeholder="파트너에게 전달될 반려 사유를 입력하세요...&#10;예: 이미지 해상도가 낮습니다. 최소 800x800px 이상의 이미지를 등록해 주세요."></textarea>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button class="btn btn-outline" onclick="document.getElementById('rejectReasonModal').style.display='none'" style="flex:1;padding:10px;">취소</button>
+                            <button class="btn btn-danger" onclick="confirmRejectProduct()" style="flex:1;padding:10px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">반려 확정</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

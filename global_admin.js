@@ -73,10 +73,121 @@ window.showSection = (secId, navEl) => {
         case 'sec-staff': if(window.loadStaffList) window.loadStaffList(); break;
         case 'sec-withdrawals': if(window.loadWithdrawals) window.loadWithdrawals(); break;
         case 'sec-partner-apps': if(window.loadPartnerApplications) window.loadPartnerApplications(); break;
+        case 'sec-partner-products': if(window.loadPartnerProducts) window.loadPartnerProducts(); break;
         case 'sec-live-chat': if(window.lcLoadRooms) window.lcLoadRooms(); break;
         case 'sec-chatbot': if(window.cbShowTab) window.cbShowTab('knowledge'); break;
     }
 };
+
+// =========================================================
+// [파트너 상품 심사] 관리
+// =========================================================
+let rejectingProductId = null;
+
+window.loadPartnerProducts = async function() {
+    const container = document.getElementById('partnerProductList');
+    if (!container) return;
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+    const filter = document.getElementById('filterPartnerProdStatus')?.value || 'pending';
+    let query = sb.from('admin_products').select('*, profiles(company_name, full_name, email)')
+        .not('partner_id', 'is', null)
+        .order('created_at', { ascending: false });
+
+    if (filter !== 'all') query = query.eq('partner_status', filter);
+
+    const { data, error } = await query;
+    if (error) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">오류: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fa-solid fa-inbox fa-3x" style="margin-bottom:12px;display:block;"></i>해당 상태의 상품이 없습니다.</div>'; return; }
+
+    // 배지 카운트 업데이트
+    const pendingCount = filter === 'pending' ? data.length : null;
+    if (pendingCount !== null) {
+        const badge = document.getElementById('partnerProductPendingCount');
+        if (badge) { badge.textContent = pendingCount; badge.style.display = pendingCount > 0 ? 'inline' : 'none'; }
+    }
+
+    container.innerHTML = '';
+    data.forEach(p => {
+        const sellerName = p.profiles?.company_name || p.profiles?.full_name || p.profiles?.email || '알 수 없음';
+        const statusMap = { pending: { label:'심사 대기', cls:'background:#fef3c7;color:#92400e;' }, approved: { label:'승인됨', cls:'background:#dcfce7;color:#166534;' }, rejected: { label:'반려됨', cls:'background:#fee2e2;color:#b91c1c;' } };
+        const st = statusMap[p.partner_status] || statusMap.pending;
+        const price = p.price ? p.price.toLocaleString() + '원' : '-';
+
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;';
+        card.innerHTML = `
+            <div style="display:flex;gap:16px;padding:16px;">
+                <img src="${p.img_url || ''}" style="width:100px;height:100px;object-fit:cover;border-radius:10px;background:#f1f5f9;flex-shrink:0;" onerror="this.style.background='#f1f5f9'">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:15px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name || ''}</div>
+                    <div style="font-size:13px;color:#64748b;margin-bottom:4px;">판매자: <b>${sellerName}</b></div>
+                    <div style="font-size:16px;font-weight:800;color:#6366f1;margin-bottom:6px;">${price}</div>
+                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                        <span style="display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;${st.cls}">${st.label}</span>
+                        <span style="font-size:11px;color:#94a3b8;">${p.code}</span>
+                        <span style="font-size:11px;color:#94a3b8;">재고:${p.stock_quantity||0}</span>
+                    </div>
+                    ${p.reject_reason ? `<div style="margin-top:6px;padding:6px 10px;background:#fef2f2;border-radius:6px;font-size:12px;color:#b91c1c;"><b>반려사유:</b> ${p.reject_reason}</div>` : ''}
+                </div>
+            </div>
+            ${p.description ? `<div style="padding:0 16px 12px;font-size:12px;color:#64748b;max-height:60px;overflow:hidden;border-top:1px solid #f1f5f9;padding-top:10px;">${p.description.replace(/<[^>]+>/g,'').substring(0,100)}...</div>` : ''}
+            <div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid #f1f5f9;background:#fafbfc;">
+                ${p.partner_status === 'pending' ? `
+                    <button onclick="approvePartnerProduct(${p.id})" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="fa-solid fa-check"></i> 승인</button>
+                    <button onclick="openRejectModal(${p.id}, '${(p.name||'').replace(/'/g,"\\'")}')" style="flex:1;padding:8px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="fa-solid fa-xmark"></i> 반려</button>
+                ` : p.partner_status === 'approved' ? `
+                    <button onclick="openRejectModal(${p.id}, '${(p.name||'').replace(/'/g,"\\'")}')" style="flex:1;padding:8px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="fa-solid fa-xmark"></i> 판매 중지(반려)</button>
+                ` : `
+                    <button onclick="approvePartnerProduct(${p.id})" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="fa-solid fa-check"></i> 재승인</button>
+                `}
+                <button onclick="deletePartnerProduct(${p.id})" style="padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;cursor:pointer;color:#94a3b8;" title="삭제"><i class="fa-solid fa-trash"></i></button>
+            </div>`;
+        container.appendChild(card);
+    });
+};
+
+window.approvePartnerProduct = async function(id) {
+    if (!confirm('이 상품을 승인하시겠습니까?\n승인 후 즉시 쇼핑몰에 노출됩니다.')) return;
+    const { error } = await sb.from('admin_products').update({ partner_status: 'approved', reject_reason: null }).eq('id', id);
+    if (error) return alert('오류: ' + error.message);
+    alert('승인 완료! 상품이 쇼핑몰에 노출됩니다.');
+    loadPartnerProducts();
+};
+
+window.openRejectModal = function(id, name) {
+    rejectingProductId = id;
+    document.getElementById('rejectProductName').textContent = `상품: ${name}`;
+    document.getElementById('rejectReasonText').value = '';
+    document.getElementById('rejectReasonModal').style.display = 'flex';
+};
+
+window.confirmRejectProduct = async function() {
+    const reason = document.getElementById('rejectReasonText').value.trim();
+    if (!reason) return alert('반려 사유를 입력해 주세요.');
+    const { error } = await sb.from('admin_products').update({ partner_status: 'rejected', reject_reason: reason }).eq('id', rejectingProductId);
+    if (error) return alert('오류: ' + error.message);
+    document.getElementById('rejectReasonModal').style.display = 'none';
+    alert('반려 처리되었습니다. 파트너에게 사유가 전달됩니다.');
+    loadPartnerProducts();
+};
+
+window.deletePartnerProduct = async function(id) {
+    if (!confirm('이 상품을 완전히 삭제하시겠습니까?\n(복구 불가)')) return;
+    const { error } = await sb.from('admin_products').delete().eq('id', id);
+    if (error) return alert('오류: ' + error.message);
+    loadPartnerProducts();
+};
+
+// 페이지 로드 시 파트너 상품 대기 건수 배지 업데이트
+(async function updatePartnerProductBadge() {
+    try {
+        const { count } = await sb.from('admin_products').select('id', { count: 'exact', head: true }).eq('partner_status', 'pending').not('partner_id', 'is', null);
+        const badge = document.getElementById('partnerProductPendingCount');
+        if (badge && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
+    } catch(e) {}
+})();
+
 // =========================================================
 // [대량 등록] 전용 로직
 // =========================================================
