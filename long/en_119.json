@@ -678,5 +678,26 @@
   "rv_no_reviews": "No reviews yet. Be the first to share!",
   "rv_total_reviews": "reviews",
   "rv_avg_rating": "Average Rating",
-  "rv_submitted": "Review submitted!"
+  "rv_submitted": "Review submitted!",
+
+  "//_COMMENT_PARTNER": "=== Partner Console i18n ===",
+  "pt_no_pool_orders": "No available orders right now.",
+  "pt_no_my_orders": "No orders in progress.",
+  "pt_no_product_info": "No product info",
+  "pt_no_attachments": "No attachments",
+  "pt_btn_accept": "Accept Order",
+  "pt_min_ago": " min ago",
+  "pt_taken_by_other": "Taken by HQ/Other",
+  "pt_accepted": "Accepted",
+  "pt_my_accepted": "Accepted by me",
+  "pt_status_confirmed": "Confirmed (Pending Settlement)",
+  "pt_status_shipping": "Shipping (Awaiting Delivery)",
+  "pt_btn_ship": "Ship Now",
+  "pt_order_suffix": "Order",
+  "pt_no_settlement": "No settlement records available.",
+  "pt_withdrawable": "Withdrawable",
+  "pt_badge_franchise": "Franchise",
+  "pt_badge_admin": "Admin (Master)",
+  "pt_badge_partner": "Partners",
+  "pt_no_access": "🚫 Access denied.\n\nPlease wait for admin approval."
 }

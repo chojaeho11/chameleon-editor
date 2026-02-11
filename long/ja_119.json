@@ -678,5 +678,26 @@
   "rv_no_reviews": "まだレビューはありません。最初のレビューを書いてみましょう！",
   "rv_total_reviews": "件のレビュー",
   "rv_avg_rating": "平均評価",
-  "rv_submitted": "レビューが投稿されました！"
+  "rv_submitted": "レビューが投稿されました！",
+
+  "//_COMMENT_PARTNER": "=== パートナーコンソール i18n ===",
+  "pt_no_pool_orders": "現在受注可能な注文はありません。",
+  "pt_no_my_orders": "進行中の注文はありません。",
+  "pt_no_product_info": "商品情報なし",
+  "pt_no_attachments": "添付ファイルなし",
+  "pt_btn_accept": "受注する",
+  "pt_min_ago": "分前",
+  "pt_taken_by_other": "本社/他店で製作中",
+  "pt_accepted": "受注済み",
+  "pt_my_accepted": "自分が受注済み",
+  "pt_status_confirmed": "購入確定 (精算待ち)",
+  "pt_status_shipping": "配送中 (受取待ち)",
+  "pt_btn_ship": "配送開始",
+  "pt_order_suffix": "の注文",
+  "pt_no_settlement": "精算可能な履歴がありません。",
+  "pt_withdrawable": "出金可能",
+  "pt_badge_franchise": "加盟店",
+  "pt_badge_admin": "管理者 (Master)",
+  "pt_badge_partner": "パートナーズ",
+  "pt_no_access": "🚫 アクセス権限がありません。\n\n管理者承認後にご利用ください。"
 }

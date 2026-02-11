@@ -552,6 +552,7 @@
 </div>
 <!-- 마이페이지 -->
 <div id="partnerConsoleModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
+    <button class="partner-mobile-close" onclick="document.getElementById('partnerConsoleModal').style.display='none'"><i class="fa-solid fa-xmark"></i> <span data-i18n="btn_close">닫기</span></button>
     <div class="modal-box" style="width: 1200px; max-width: 98%; height: 90vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden;">
         
         <div style="background: #fff; padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
@@ -2024,15 +2025,14 @@
                 const badge = document.getElementById('partnerRegionBadge');
                 if (badge) {
                     if (finalRole === 'franchise') {
-                        badge.innerText = window.currentUser.region || '가맹점';
-                        badge.style.backgroundColor = '#6366f1'; 
+                        badge.innerText = window.currentUser.region || window.t('pt_badge_franchise','가맹점');
+                        badge.style.backgroundColor = '#6366f1';
                     } else if (finalRole === 'admin') {
-                        badge.innerText = '관리자 (Master)';
-                        badge.style.backgroundColor = '#1e293b'; 
+                        badge.innerText = window.t('pt_badge_admin','관리자 (Master)');
+                        badge.style.backgroundColor = '#1e293b';
                     } else {
-                        // partner, platinum 모두 파트너스로 표시
-                        badge.innerText = '파트너스 (Partners)';
-                        badge.style.backgroundColor = '#64748b'; 
+                        badge.innerText = window.t('pt_badge_partner','파트너스 (Partners)');
+                        badge.style.backgroundColor = '#64748b';
                     }
                 }
                 // 데이터 로드
@@ -2044,7 +2044,7 @@
             }
         } else {
             // 실패 시 메시지
-            alert(`🚫 입장 권한이 없습니다.\n\n[진단 정보]\n- 계정: ${myEmail}\n- 인식된 등급: ${finalRole}\n\n관리자 승인 후 이용해주세요.`);
+            alert(window.t('pt_no_access',`🚫 입장 권한이 없습니다.\n\n관리자 승인 후 이용해주세요.`));
         }
     };
     

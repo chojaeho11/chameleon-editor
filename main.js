@@ -602,7 +602,7 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
     const container = document.getElementById(listId);
 
     if (!isAutoCheck && container) {
-        container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>';
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> ${window.t('msg_loading_text','로딩 중...')}</div>`;
     }
 
     const { data: { user } } = await sb.auth.getUser();
@@ -647,13 +647,13 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
 
     if (!orders || orders.length === 0) {
         container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">
-            ${mode==='pool' ? '현재 접수 가능한 주문이 없습니다.' : '진행 중인 주문이 없습니다.'}
+            ${mode==='pool' ? window.t('pt_no_pool_orders','현재 접수 가능한 주문이 없습니다.') : window.t('pt_no_my_orders','진행 중인 주문이 없습니다.')}
         </div>`;
         return;
     }
 
     orders.forEach(o => {
-        let itemSummary = '상품 정보 없음';
+        let itemSummary = window.t('pt_no_product_info','상품 정보 없음');
         try {
             const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
             if(items && items.length > 0) itemSummary = items.map(i => `${i.productName || i.product?.name} (${i.qty}개)`).join(', ');
@@ -673,7 +673,7 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
                 fileBtns += `<a href="${f.url}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:6px 10px; background:#f1f5f9; color:#334155; margin-right:5px; margin-bottom:5px; text-decoration:none; border-radius:4px; border:1px solid #e2e8f0; font-weight:500;">${icon} ${displayName}</a>`;
             });
         } else {
-            fileBtns = '<span style="font-size:12px; color:#ef4444;">첨부파일 없음</span>';
+            fileBtns = `<span style="font-size:12px; color:#ef4444;">${window.t('pt_no_attachments','첨부파일 없음')}</span>`;
         }
 
         const card = document.createElement('div');
@@ -683,16 +683,16 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
             const isTaken = (o.franchise_id !== null);
             
             let cardStyle = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:15px;";
-            let btnHtml = `<button onclick="window.dibsOrder('${o.id}')" style="width:100%; margin-top:10px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚡ 접수하기</button>`;
-            let badgeHtml = `<span style="background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">NEW ${timeDiff}분전</span>`;
+            let btnHtml = `<button onclick="window.dibsOrder('${o.id}')" style="width:100%; margin-top:10px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚡ ${window.t('pt_btn_accept','접수하기')}</button>`;
+            let badgeHtml = `<span style="background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">NEW ${timeDiff}${window.t('pt_min_ago','분전')}</span>`;
 
             if (isTaken) {
                 if (o.franchise_id !== user.id) {
                     cardStyle = "background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:20px; margin-bottom:15px; opacity:0.7;";
-                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#94a3b8; color:white; border:none; border-radius:8px; font-weight:bold; cursor:not-allowed;">🚫 본사/타점 제작중</button>`;
-                    badgeHtml = `<span style="background:#64748b; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔒 접수완료</span>`;
+                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#94a3b8; color:white; border:none; border-radius:8px; font-weight:bold; cursor:not-allowed;">🚫 ${window.t('pt_taken_by_other','본사/타점 제작중')}</button>`;
+                    badgeHtml = `<span style="background:#64748b; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔒 ${window.t('pt_accepted','접수완료')}</span>`;
                 } else {
-                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#10b981; color:white; border:none; border-radius:8px; font-weight:bold;">✅ 내가 접수함</button>`;
+                    btnHtml = `<button disabled style="width:100%; margin-top:10px; padding:10px; background:#10b981; color:white; border:none; border-radius:8px; font-weight:bold;">✅ ${window.t('pt_my_accepted','내가 접수함')}</button>`;
                 }
             }
 
@@ -701,7 +701,7 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                     ${badgeHtml}
-                    <span style="font-size:12px; color:#888;">${o.manager_name}님</span>
+                    <span style="font-size:12px; color:#888;">${o.manager_name}</span>
                 </div>
                 <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">📍 ${o.address}</div>
                 <div style="font-size:13px; color:#666; margin-bottom:10px;">${itemSummary}</div>
@@ -713,15 +713,15 @@ window.loadPartnerOrders = async function(mode, isAutoCheck = false) {
             `;
         } else {
             let statusHtml = '';
-            if (o.status === '구매확정') statusHtml = `<span style="color:#16a34a; font-weight:bold; font-size:13px;">✅ 구매확정 (정산대기)</span>`;
-            else if (o.status === '배송중') statusHtml = `<span style="color:#2563eb; font-weight:bold; font-size:13px;">🚚 배송중 (수령대기)</span>`;
-            else statusHtml = `<button onclick="window.updateOrderStatus('${o.id}', '배송중')" style="padding:6px 12px; background:#334155; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px;">🚚 배송 출발</button>`;
+            if (o.status === '구매확정') statusHtml = `<span style="color:#16a34a; font-weight:bold; font-size:13px;">✅ ${window.t('pt_status_confirmed','구매확정 (정산대기)')}</span>`;
+            else if (o.status === '배송중') statusHtml = `<span style="color:#2563eb; font-weight:bold; font-size:13px;">🚚 ${window.t('pt_status_shipping','배송중 (수령대기)')}</span>`;
+            else statusHtml = `<button onclick="window.updateOrderStatus('${o.id}', '배송중')" style="padding:6px 12px; background:#334155; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px;">🚚 ${window.t('pt_btn_ship','배송 출발')}</button>`;
 
             card.style.cssText = "background:#fff; border:1px solid #e2e8f0; padding:20px; border-radius:12px; margin-bottom:15px;";
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:start;">
                     <div style="flex:1;">
-                        <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">${o.manager_name}님 주문</div>
+                        <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">${o.manager_name} ${window.t('pt_order_suffix','주문')}</div>
                         <div style="font-size:13px; color:#666; margin-bottom:8px;">${o.address}</div>
                         <div style="font-size:13px; color:#333; font-weight:bold; margin-bottom:10px;">${itemSummary}</div>
                         <div style="display:flex; flex-wrap:wrap;">${fileBtns}</div>
@@ -758,7 +758,7 @@ window.updateOrderStatus = async function(orderId, status) {
 window.loadSettlementInfo = async function() {
     const tbody = document.getElementById('settlementListBody');
     if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">로딩 중...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px;">${window.t('msg_loading_text','로딩 중...')}</td></tr>`;
 
     const { data: { user } } = await sb.auth.getUser();
     if(!user) return;
@@ -783,7 +783,7 @@ window.loadSettlementInfo = async function() {
     }
 
     if(!orders || orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">정산 가능한 내역이 없습니다.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">${window.t('pt_no_settlement','정산 가능한 내역이 없습니다.')}</td></tr>`;
     } else {
         orders.forEach(o => {
             const amount = o.total_amount || 0;
@@ -795,7 +795,7 @@ window.loadSettlementInfo = async function() {
                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(o.created_at).toLocaleDateString()}</td>
                     <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; color:#64748b;">${fmtMoney(amount)}</td>
                     <td style="padding:12px; text-align:right; border-bottom:1px solid #f1f5f9; font-weight:bold; color:#16a34a;">${fmtMoney(profit)}</td>
-                    <td style="padding:12px; text-align:center; border-bottom:1px solid #f1f5f9;"><span class="badge" style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:4px; font-size:12px;">출금가능</span></td>
+                    <td style="padding:12px; text-align:center; border-bottom:1px solid #f1f5f9;"><span class="badge" style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:4px; font-size:12px;">${window.t('pt_withdrawable','출금가능')}</span></td>
                 </tr>
             `;
         });
@@ -922,7 +922,7 @@ window.openMyOrderList = async function() {
     container.innerHTML = '';
 
     orders.forEach(o => {
-        let itemSummary = '상품 정보 없음';
+        let itemSummary = window.t('pt_no_product_info','상품 정보 없음');
         try {
             const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
             if(items && items.length > 0) {
