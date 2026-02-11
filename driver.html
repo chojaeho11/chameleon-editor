@@ -6,33 +6,29 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#6366f1">
-    
+
     <title>배송 파트너</title>
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
-    
+
     <style>
-        /* 앱스러운 UI 디자인 */
         body { margin: 0; background: #f1f5f9; font-family: 'Pretendard', sans-serif; color: #334155; -webkit-tap-highlight-color: transparent; padding-bottom: 30px; }
-        
-        /* 상단 네비게이션 바 */
+
         .navbar { background: #6366f1; color: white; padding: 15px 20px; padding-top: env(safe-area-inset-top, 20px); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(99,102,241,0.3); }
         .app-header { display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
-        
-        /* 컨트롤 패널 (기사선택/날짜) */
+
         .controls { background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
         .form-row { display: flex; gap: 10px; }
         .input-box { border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 14px; width: 100%; background: #f8fafc; color: #333; outline: none; }
         .input-box:focus { border-color: #6366f1; }
 
-        /* 리스트 영역 */
         .task-list { padding: 0 15px; }
         .task-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; position: relative; overflow: hidden; transition: 0.2s; }
         .task-card.completed { border: 2px solid #22c55e; background: #f0fdf4; }
-        
+
         .status-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; background: #e2e8f0; color: #64748b; margin-bottom: 10px; }
         .status-tag.active { background: #e0e7ff; color: #4338ca; }
         .status-tag.done { background: #22c55e; color: white; }
@@ -41,29 +37,27 @@
         .client-addr { font-size: 14px; color: #64748b; line-height: 1.5; display: flex; align-items: start; gap: 5px; }
         .note-box { background: #fff1f2; color: #be123c; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 10px; line-height: 1.4; border: 1px solid #fecdd3; }
 
-        /* [추가] 노하우 박스 스타일 */
         .knowhow-area { margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px; }
         .knowhow-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; font-weight: 700; color: #d97706; }
         .knowhow-content { background: #fffbeb; padding: 10px; border-radius: 8px; font-size: 13px; color: #92400e; border: 1px solid #fcd34d; line-height: 1.4; }
         .knowhow-input { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 5px; resize: none; height: 60px; }
         .btn-knowhow-save { background: #d97706; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; float: right; }
 
-        /* 액션 버튼 그룹 */
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .action-btn { padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: 0.1s; }
         .btn-call { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
         .btn-map { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
         .btn-call:active, .btn-map:active { transform: scale(0.98); }
 
-        /* 시간 선택 & 완료 버튼 */
         .time-select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: 2px solid #e2e8f0; font-weight: bold; color: #334155; background: #fff; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right .7em top 50%; background-size: .65em auto; }
-        
+
         .finish-btn { width: 100%; margin-top: 10px; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; color: white; background: #1e293b; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .finish-btn.done { background: #22c55e; pointer-events: none; }
         .finish-btn:active { transform: scale(0.98); }
 
         #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px; }
         .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+        .error-box { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 15px; margin: 15px; border-radius: 12px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -76,7 +70,7 @@
 <div class="navbar">
     <div class="app-header">
         <div class="logo"><i class="fa-solid fa-box"></i> 배송 파트너</div>
-        <div style="font-size:13px; opacity:0.8;">v1.1</div>
+        <div style="font-size:13px; opacity:0.8;">v1.2</div>
     </div>
 </div>
 
@@ -94,240 +88,258 @@
 
 <div id="taskList" class="task-list"></div>
 
-<script type="module">
-    import { sb, initConfig } from "./config.js";
+<script>
+    // ========== 독립 Supabase 초기화 (config.js 의존성 제거) ==========
+    const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
-    window.addEventListener('DOMContentLoaded', async () => {
-        await initConfig();
-        
+    let sb = null;
+
+    async function initDriver() {
+        // Supabase UMD 로드 대기 (최대 5초)
+        for (let i = 0; i < 50; i++) {
+            if (typeof window.supabase !== 'undefined') break;
+            await new Promise(r => setTimeout(r, 100));
+        }
+
+        if (typeof window.supabase === 'undefined') {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('taskList').innerHTML = '<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> Supabase 라이브러리 로드 실패. 페이지를 새로고침 해주세요.</div>';
+            return;
+        }
+
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('Supabase 연결 완료');
+
+        // 날짜 초기화
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('workDate').value = today;
 
+        // 기사 목록 로드
         await loadDriverList();
-        
+
+        // 저장된 기사 ID가 있으면 자동 선택
         const savedDriverId = localStorage.getItem('my_driver_id');
-        if(savedDriverId) {
+        if (savedDriverId) {
             document.getElementById('driverSelect').value = savedDriverId;
-            loadMyTasks();
+            await loadMyTasks();
         } else {
             document.getElementById('loading').style.display = 'none';
         }
-    });
+    }
 
     // 기사님 목록 로드
     async function loadDriverList() {
-        const { data } = await sb.from('admin_staff').select('*').eq('role', 'driver');
-        const sel = document.getElementById('driverSelect');
-        if(data) {
-            data.forEach(d => {
-                sel.innerHTML += `<option value="${d.id}">${d.name} 기사님</option>`;
-            });
+        try {
+            const { data, error } = await sb.from('admin_staff').select('*').eq('role', 'driver');
+            if (error) throw error;
+
+            const sel = document.getElementById('driverSelect');
+            if (data && data.length > 0) {
+                data.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = d.name + ' 기사님';
+                    sel.appendChild(opt);
+                });
+                console.log(`기사 ${data.length}명 로드 완료`);
+            } else {
+                console.warn('등록된 기사가 없습니다.');
+            }
+        } catch (e) {
+            console.error('기사 목록 로드 실패:', e);
+            document.getElementById('taskList').innerHTML = `<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> 기사 목록 로드 실패: ${e.message}</div>`;
         }
     }
 
     // 기사 선택 시 저장 및 로드
-    window.saveDriverAndLoad = () => {
+    window.saveDriverAndLoad = function() {
         const id = document.getElementById('driverSelect').value;
-        if(id) localStorage.setItem('my_driver_id', id);
+        if (id) localStorage.setItem('my_driver_id', id);
         loadMyTasks();
     };
 
     // 데이터 로드
-    window.loadMyTasks = async () => {
+    window.loadMyTasks = async function() {
         const driverId = document.getElementById('driverSelect').value;
         const date = document.getElementById('workDate').value;
-        
-        if(!driverId) return;
+
+        if (!driverId) return;
         document.getElementById('loading').style.display = 'flex';
 
-        // 1. 주문 데이터 가져오기
-        const { data: orders, error } = await sb.from('orders')
-            .select('*')
-            .eq('staff_driver_id', driverId)
-            .eq('delivery_target_date', date)
-            .order('delivery_time', {ascending: true});
+        try {
+            // 1. 주문 데이터 가져오기
+            const { data: orders, error } = await sb.from('orders')
+                .select('*')
+                .eq('staff_driver_id', driverId)
+                .eq('delivery_target_date', date)
+                .order('delivery_time', { ascending: true });
 
-        const list = document.getElementById('taskList');
-        list.innerHTML = '';
+            if (error) throw error;
 
-        if(!orders || orders.length === 0) {
-            list.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa-solid fa-mug-hot fa-3x" style="margin-bottom:15px; opacity:0.5;"></i><br>
-                    <strong>오늘은 배송 일정이 없습니다.</strong><br>
-                    <small>날짜를 확인하거나 관리자에게 문의하세요.</small>
-                </div>`;
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+
+            if (!orders || orders.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-mug-hot fa-3x" style="margin-bottom:15px; opacity:0.5;"></i><br>
+                        <strong>오늘은 배송 일정이 없습니다.</strong><br>
+                        <small>날짜를 확인하거나 관리자에게 문의하세요.</small>
+                    </div>`;
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            // 2. 노하우 데이터 한 번에 가져오기
+            const addresses = orders.map(o => o.address).filter(a => a);
+            let knowhowMap = {};
+
+            if (addresses.length > 0) {
+                const { data: tips } = await sb.from('delivery_knowhow').select('*').in('address', addresses);
+                if (tips) {
+                    tips.forEach(t => { knowhowMap[t.address] = t; });
+                }
+            }
+
+            // 3. 카드 렌더링
+            orders.forEach(o => {
+                const isDone = o.status === '배송완료';
+                const timeVal = o.delivery_time || '';
+
+                let timeOptions = '<option value="">⏱️ 도착 예정 시간 입력</option>';
+                for (let i = 8; i <= 22; i++) {
+                    let t = (i < 10 ? '0' + i : i) + ':00';
+                    let t_next = (i + 1 < 10 ? '0' + (i + 1) : (i + 1)) + ':00';
+                    timeOptions += `<option value="${t}" ${timeVal === t ? 'selected' : ''}>${t} ~ ${t_next}</option>`;
+                }
+
+                const tip = knowhowMap[o.address];
+                let knowhowHtml = '';
+
+                if (tip) {
+                    knowhowHtml = `
+                        <div class="knowhow-area">
+                            <div class="knowhow-header">
+                                <span><i class="fa-solid fa-lightbulb"></i> 동료 기사님의 공유 노하우</span>
+                                <span style="color:#999; font-weight:normal; cursor:pointer;" onclick="toggleEditKnowhow('${o.id}')">수정</span>
+                            </div>
+                            <div id="view_tip_${o.id}" class="knowhow-content">
+                                ${tip.content.replace(/\n/g, '<br>')}
+                                <div style="margin-top:5px; font-size:11px; opacity:0.7; text-align:right;">- ${tip.writer_name || '동료기사'}님 작성</div>
+                            </div>
+                            <div id="edit_tip_${o.id}" style="display:none;">
+                                <textarea id="input_tip_${o.id}" class="knowhow-input" placeholder="이곳의 주차/배송 꿀팁을 공유해주세요!">${tip.content}</textarea>
+                                <button class="btn-knowhow-save" onclick="saveKnowhow('${o.address}', '${o.id}')">수정 저장</button>
+                            </div>
+                        </div>`;
+                } else {
+                    knowhowHtml = `
+                        <div class="knowhow-area">
+                            <div class="knowhow-header" onclick="toggleEditKnowhow('${o.id}')" style="cursor:pointer; color:#94a3b8;">
+                                <span><i class="fa-regular fa-lightbulb"></i> 주차/배송 노하우 등록하기 <i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div id="edit_tip_${o.id}" style="display:none; margin-top:5px;">
+                                <textarea id="input_tip_${o.id}" class="knowhow-input" placeholder="예: 101동 뒤쪽 쪽문 이용, 비밀번호 1234"></textarea>
+                                <button class="btn-knowhow-save" onclick="saveKnowhow('${o.address}', '${o.id}')">공유하기</button>
+                            </div>
+                        </div>`;
+                }
+
+                list.innerHTML += `
+                    <div class="task-card ${isDone ? 'completed' : ''}">
+                        <span class="status-tag ${isDone ? 'done' : 'active'}">
+                            ${isDone ? '배송완료' : '배송중'}
+                        </span>
+                        <div class="client-name">${o.manager_name || o.user_name || '고객'}</div>
+                        <div class="client-addr">
+                            <i class="fa-solid fa-map-pin" style="margin-top:3px; color:#ef4444;"></i>
+                            ${o.address || '주소 없음'}
+                        </div>
+                        ${o.request_note ? `<div class="note-box"><i class="fa-solid fa-bullhorn"></i> ${o.request_note}</div>` : ''}
+                        ${knowhowHtml}
+                        <select class="time-select" onchange="updateDeliveryTime('${o.id}', this.value)" ${isDone ? 'disabled' : ''}>
+                            ${timeOptions}
+                        </select>
+                        <div class="btn-group">
+                            <a href="tel:${o.phone || ''}" class="action-btn btn-call">
+                                <i class="fa-solid fa-phone"></i> 전화걸기
+                            </a>
+                            <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address || '')}" target="_blank" class="action-btn btn-map">
+                                <i class="fa-solid fa-map"></i> 지도보기
+                            </a>
+                        </div>
+                        <button class="finish-btn ${isDone ? 'done' : ''}" onclick="toggleComplete('${o.id}', '${o.status}')">
+                            ${isDone ? '<i class="fa-solid fa-check"></i> 완료된 배송입니다' : '📦 배송 완료 처리'}
+                        </button>
+                    </div>`;
+            });
+
+        } catch (e) {
+            console.error('주문 로드 실패:', e);
+            document.getElementById('taskList').innerHTML = `<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> 데이터 로드 실패: ${e.message}</div>`;
+        } finally {
             document.getElementById('loading').style.display = 'none';
-            return;
         }
-
-        // 2. [추가] 이번 주문들에 해당하는 주소의 노하우 데이터 한 번에 가져오기
-        const addresses = orders.map(o => o.address).filter(a => a); // 주소만 추출
-        let knowhowMap = {};
-        
-        if(addresses.length > 0) {
-            // delivery_knowhow 테이블에서 해당 주소들 검색
-            const { data: tips } = await sb.from('delivery_knowhow').select('*').in('address', addresses);
-            if(tips) {
-                tips.forEach(t => {
-                    knowhowMap[t.address] = t; // 주소를 키로 하여 맵핑
-                });
-            }
-        }
-
-        // 3. 카드 렌더링
-        orders.forEach(o => {
-            const isDone = o.status === '배송완료';
-            const timeVal = o.delivery_time || '';
-            
-            // 시간 옵션
-            let timeOptions = `<option value="">⏱️ 도착 예정 시간 입력</option>`;
-            for(let i=8; i<=22; i+=1) {
-                 let t = (i<10?'0'+i:i) + ":00";
-                 let t_next = (i+1<10?'0'+(i+1):(i+1)) + ":00";
-                 timeOptions += `<option value="${t}" ${timeVal===t?'selected':''}>${t} ~ ${t_next}</option>`;
-            }
-
-            // 노하우 데이터 확인
-            const tip = knowhowMap[o.address];
-            let knowhowHtml = '';
-
-            if (tip) {
-                // 노하우가 있는 경우
-                knowhowHtml = `
-                    <div class="knowhow-area">
-                        <div class="knowhow-header">
-                            <span><i class="fa-solid fa-lightbulb"></i> 동료 기사님의 공유 노하우</span>
-                            <span style="color:#999; font-weight:normal; cursor:pointer;" onclick="toggleEditKnowhow('${o.id}')">수정</span>
-                        </div>
-                        <div id="view_tip_${o.id}" class="knowhow-content">
-                            ${tip.content.replace(/\n/g, '<br>')}
-                            <div style="margin-top:5px; font-size:11px; opacity:0.7; text-align:right;">- ${tip.writer_name || '동료기사'}님 작성</div>
-                        </div>
-                        <div id="edit_tip_${o.id}" style="display:none;">
-                            <textarea id="input_tip_${o.id}" class="knowhow-input" placeholder="이곳의 주차/배송 꿀팁을 공유해주세요!">${tip.content}</textarea>
-                            <button class="btn-knowhow-save" onclick="saveKnowhow('${o.address}', '${o.id}')">수정 저장</button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // 노하우가 없는 경우
-                knowhowHtml = `
-                    <div class="knowhow-area">
-                        <div class="knowhow-header" onclick="toggleEditKnowhow('${o.id}')" style="cursor:pointer; color:#94a3b8;">
-                            <span><i class="fa-regular fa-lightbulb"></i> 주차/배송 노하우 등록하기 <i class="fa-solid fa-chevron-down"></i></span>
-                        </div>
-                        <div id="edit_tip_${o.id}" style="display:none; margin-top:5px;">
-                            <textarea id="input_tip_${o.id}" class="knowhow-input" placeholder="예: 101동 뒤쪽 쪽문 이용, 비밀번호 1234"></textarea>
-                            <button class="btn-knowhow-save" onclick="saveKnowhow('${o.address}', '${o.id}')">공유하기</button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            list.innerHTML += `
-                <div class="task-card ${isDone ? 'completed' : ''}">
-                    <span class="status-tag ${isDone ? 'done' : 'active'}">
-                        ${isDone ? '배송완료' : '배송중'}
-                    </span>
-                    
-                    <div class="client-name">${o.manager_name}</div>
-                    <div class="client-addr">
-                        <i class="fa-solid fa-map-pin" style="margin-top:3px; color:#ef4444;"></i> 
-                        ${o.address}
-                    </div>
-                    
-                    ${o.request_note ? `<div class="note-box"><i class="fa-solid fa-bullhorn"></i> ${o.request_note}</div>` : ''}
-
-                    ${knowhowHtml}
-
-                    <select class="time-select" onchange="updateDeliveryTime('${o.id}', this.value)" ${isDone?'disabled':''}>
-                        ${timeOptions}
-                    </select>
-
-                    <div class="btn-group">
-                        <a href="tel:${o.phone}" class="action-btn btn-call">
-                            <i class="fa-solid fa-phone"></i> 전화걸기
-                        </a>
-                        <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address)}" target="_blank" class="action-btn btn-map">
-                            <i class="fa-solid fa-map"></i> 지도보기
-                        </a>
-                    </div>
-
-                    <button class="finish-btn ${isDone?'done':''}" onclick="toggleComplete('${o.id}', '${o.status}')">
-                        ${isDone ? '<i class="fa-solid fa-check"></i> 완료된 배송입니다' : '📦 배송 완료 처리'}
-                    </button>
-                </div>
-            `;
-        });
-        document.getElementById('loading').style.display = 'none';
     };
 
     // 노하우 입력창 토글
-    window.toggleEditKnowhow = (id) => {
-        const viewDiv = document.getElementById(`view_tip_${id}`);
-        const editDiv = document.getElementById(`edit_tip_${id}`);
-        
+    window.toggleEditKnowhow = function(id) {
+        const viewDiv = document.getElementById('view_tip_' + id);
+        const editDiv = document.getElementById('edit_tip_' + id);
         if (viewDiv) viewDiv.style.display = 'none';
         if (editDiv) editDiv.style.display = (editDiv.style.display === 'none') ? 'block' : 'none';
     };
 
-    // 노하우 저장 (Upsert)
-    window.saveKnowhow = async (address, orderId) => {
-        const content = document.getElementById(`input_tip_${orderId}`).value;
-        if (!content.trim()) return alert("내용을 입력해주세요.");
+    // 노하우 저장
+    window.saveKnowhow = async function(address, orderId) {
+        const content = document.getElementById('input_tip_' + orderId).value;
+        if (!content.trim()) return alert('내용을 입력해주세요.');
 
-        // 현재 선택된 기사 이름 가져오기
         const driverSelect = document.getElementById('driverSelect');
         const driverName = driverSelect.options[driverSelect.selectedIndex].text.replace(' 기사님', '');
 
-        // 주소가 같은 기존 데이터가 있으면 업데이트, 없으면 추가
-        // address 컬럼이 Unique 제약조건이 없다면 select 후 update/insert 분기 처리
-        
-        // 1. 기존 데이터 확인
-        const { data: existing } = await sb.from('delivery_knowhow').select('id').eq('address', address).single();
-        
-        let error;
-        if (existing) {
-            // 업데이트
-            const res = await sb.from('delivery_knowhow').update({ 
-                content: content, 
-                writer_name: driverName,
-                created_at: new Date()
-            }).eq('id', existing.id);
-            error = res.error;
-        } else {
-            // 신규 등록
-            const res = await sb.from('delivery_knowhow').insert([{ 
-                address: address, 
-                content: content, 
-                writer_name: driverName 
-            }]);
-            error = res.error;
-        }
+        try {
+            const { data: existing } = await sb.from('delivery_knowhow').select('id').eq('address', address).single();
 
-        if (error) {
-            alert("저장 실패: " + error.message);
-        } else {
-            alert("노하우가 공유되었습니다! 감사합니다 👍");
-            loadMyTasks(); // 화면 새로고침하여 반영
+            let error;
+            if (existing) {
+                const res = await sb.from('delivery_knowhow').update({
+                    content: content, writer_name: driverName, created_at: new Date()
+                }).eq('id', existing.id);
+                error = res.error;
+            } else {
+                const res = await sb.from('delivery_knowhow').insert([{
+                    address: address, content: content, writer_name: driverName
+                }]);
+                error = res.error;
+            }
+
+            if (error) throw error;
+            alert('노하우가 공유되었습니다! 감사합니다 👍');
+            loadMyTasks();
+        } catch (e) {
+            alert('저장 실패: ' + e.message);
         }
     };
 
-    window.updateDeliveryTime = async (orderId, time) => {
-        if(!time) return;
+    window.updateDeliveryTime = async function(orderId, time) {
+        if (!time) return;
         const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
-        if(error) alert("저장 실패");
+        if (error) alert('저장 실패: ' + error.message);
     };
 
-    window.toggleComplete = async (orderId, currentStatus) => {
-        if(currentStatus === '배송완료') return;
-        if(!confirm("배송을 완료 처리 하시겠습니까?\n(관리자 페이지에 즉시 반영됩니다)")) return;
+    window.toggleComplete = async function(orderId, currentStatus) {
+        if (currentStatus === '배송완료') return;
+        if (!confirm('배송을 완료 처리 하시겠습니까?\n(관리자 페이지에 즉시 반영됩니다)')) return;
 
         const { error } = await sb.from('orders').update({ status: '배송완료' }).eq('id', orderId);
-        if(error) alert("오류 발생: " + error.message);
+        if (error) alert('오류 발생: ' + error.message);
         else loadMyTasks();
     };
+
+    // ========== 앱 시작 ==========
+    document.addEventListener('DOMContentLoaded', initDriver);
 </script>
 
 </body>
