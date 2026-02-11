@@ -6,7 +6,16 @@ import { sb, currentUser } from "./config.js";
 // [설정] 현재 사이트 언어 및 폰트 변수
 // ============================================================
 const urlParams = new URLSearchParams(window.location.search);
-const CURRENT_LANG = (urlParams.get('lang') || 'kr').toUpperCase(); 
+let _detectedLang = urlParams.get('lang');
+if (!_detectedLang) {
+    const _h = window.location.hostname;
+    if (_h.includes('cafe0101.com')) _detectedLang = 'JP';
+    else if (_h.includes('cafe3355.com')) _detectedLang = 'US';
+    else _detectedLang = 'KR';
+}
+// 언어코드→국가코드 매핑 (DB site_fonts.site_code = KR/JP/US)
+const _langMap = { 'JA': 'JP', 'EN': 'US', 'JP': 'JP', 'US': 'US', 'KR': 'KR' };
+const CURRENT_LANG = _langMap[_detectedLang.toUpperCase()] || 'KR';
 
 // DB에서 불러온 폰트 목록을 저장할 전역 변수
 let DYNAMIC_FONTS = [];
@@ -52,7 +61,13 @@ function loadGoogleWebFontsCSS() {
     const link = document.createElement("link");
     link.id = "google-fonts-link";
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic&family=Nanum+Myeongjo&family=Noto+Sans+KR&display=swap";
+    if (CURRENT_LANG === 'JP' || CURRENT_LANG === 'JA') {
+        link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=M+PLUS+Rounded+1c&family=Zen+Maru+Gothic&display=swap";
+    } else if (CURRENT_LANG === 'US' || CURRENT_LANG === 'EN') {
+        link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap";
+    } else {
+        link.href = "https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic&family=Nanum+Myeongjo&family=Noto+Sans+KR&display=swap";
+    }
     document.head.appendChild(link);
 }
 
