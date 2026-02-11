@@ -5002,13 +5002,27 @@ function updateVipFileList(input) {
                 return;
             }
 
+            // 타임존 기반 실제 국가 감지
+            function _detectCountry() {
+                try {
+                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                    if (tz.includes('Seoul') || tz.includes('Korea')) return 'KR';
+                    if (tz.includes('Tokyo') || tz.includes('Japan')) return 'JP';
+                    if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) return 'US';
+                    if (tz.includes('Europe')) return 'EU';
+                    if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Taipei')) return 'CN';
+                    if (tz.includes('Bangkok') || tz.includes('Ho_Chi_Minh') || tz.includes('Singapore') || tz.includes('Jakarta')) return 'SEA';
+                    return 'OTHER';
+                } catch(e) { return 'KR'; }
+            }
+
             // 1. 방문 기록 저장
             const { data, error } = await sb
                 .from('page_views')
                 .insert([{
                     referrer: visitSource,
                     duration: 0,
-                    site: (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR'
+                    site: _detectCountry()
                 }])
                 .select()
                 .single();
