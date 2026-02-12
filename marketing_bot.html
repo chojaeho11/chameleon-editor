@@ -1559,16 +1559,85 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec) {
             // 폰트 로딩 대기
             await document.fonts.ready;
 
-            // 3. MediaRecorder 셋업
-            const stream = cvs.captureStream(30);
-            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-                ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
-            const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4000000 });
+            // 3. BGM 생성 (Web Audio API - 부드러운 앰비언트)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const bgmDest = audioCtx.createMediaStreamDestination();
+
+            // 부드러운 패드 사운드 생성
+            function createPadOsc(freq, detune, gain) {
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                osc.detune.value = detune;
+                filter.type = 'lowpass';
+                filter.frequency.value = 800;
+                filter.Q.value = 1;
+                g.gain.value = gain;
+                osc.connect(filter);
+                filter.connect(g);
+                g.connect(bgmDest);
+                return { osc, gain: g };
+            }
+
+            // 코드 진행: 따뜻한 앰비언트 패드
+            const pads = [
+                createPadOsc(261.63, 5, 0.06),   // C4
+                createPadOsc(329.63, -3, 0.05),   // E4
+                createPadOsc(392.00, 7, 0.04),    // G4
+                createPadOsc(523.25, -5, 0.03),   // C5 (옥타브)
+                createPadOsc(196.00, 0, 0.05),    // G3 (베이스)
+            ];
+
+            // 볼륨 엔벨로프 (페이드 인/아웃)
+            const masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 2); // 2초 페이드인
+            masterGain.gain.setValueAtTime(0.15, audioCtx.currentTime + durationSec - 3);
+            masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + durationSec); // 3초 페이드아웃
+            bgmDest.stream.getAudioTracks().forEach(t => {
+                const src = audioCtx.createMediaStreamSource(new MediaStream([t]));
+                src.connect(masterGain);
+            });
+            const finalAudioDest = audioCtx.createMediaStreamDestination();
+            masterGain.connect(finalAudioDest);
+
+            pads.forEach(p => {
+                p.osc.start(audioCtx.currentTime);
+                p.osc.stop(audioCtx.currentTime + durationSec + 1);
+            });
+
+            // LFO로 미세한 떨림 추가 (더 유기적인 느낌)
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.3; // 매우 느린 떨림
+            lfoGain.gain.value = 10;
+            lfo.connect(lfoGain);
+            pads.forEach(p => lfoGain.connect(p.osc.frequency));
+            lfo.start(audioCtx.currentTime);
+            lfo.stop(audioCtx.currentTime + durationSec + 1);
+
+            // 4. MediaRecorder 셋업 (비디오 + 오디오 믹싱)
+            const videoStream = cvs.captureStream(30);
+            const audioTracks = finalAudioDest.stream.getAudioTracks();
+            const combinedStream = new MediaStream([
+                ...videoStream.getVideoTracks(),
+                ...audioTracks
+            ]);
+
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+                ? 'video/webm;codecs=vp9,opus'
+                : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                    ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
+            const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4000000 });
             const chunks = [];
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
                 const blob = new Blob(chunks, { type: mimeType });
                 URL.revokeObjectURL(imgUrl);
+                audioCtx.close().catch(() => {});
                 resolve(blob);
             };
             recorder.onerror = (e) => reject(e.error || new Error('MediaRecorder error'));
@@ -1580,10 +1649,10 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec) {
             const accentColor = aiContent.video_style?.color_accent || '#a78bfa';
             const overlays = aiContent.overlay_texts || {};
             const textSegments = [
-                { text: overlays.hook || aiContent.title || '', start: 0.0, end: 0.15, fontSize: 72, y: 0.45 },
-                { text: overlays.main || '', start: 0.18, end: 0.50, fontSize: 56, y: 0.50 },
-                { text: overlays.detail || '', start: 0.53, end: 0.78, fontSize: 48, y: 0.55 },
-                { text: overlays.cta || 'Link in bio!', start: 0.80, end: 0.98, fontSize: 60, y: 0.50 },
+                { text: overlays.hook || aiContent.title || '', start: 0.0, end: 0.15, fontSize: 46, y: 0.45 },
+                { text: overlays.main || '', start: 0.18, end: 0.50, fontSize: 36, y: 0.50 },
+                { text: overlays.detail || '', start: 0.53, end: 0.78, fontSize: 32, y: 0.55 },
+                { text: overlays.cta || 'Link in bio!', start: 0.80, end: 0.98, fontSize: 40, y: 0.50 },
             ];
 
             // 5. 녹화 시작
@@ -1685,7 +1754,7 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec) {
                 ctx.font = '600 28px "Pretendard", sans-serif';
                 ctx.textAlign = 'right';
                 ctx.fillStyle = '#ffffff';
-                ctx.fillText('Chameleon Print', W - 40, H - 40);
+                ctx.fillText('카멜레온프린팅', W - 40, H - 40);
                 ctx.restore();
 
                 if (progress < 1.0) {
