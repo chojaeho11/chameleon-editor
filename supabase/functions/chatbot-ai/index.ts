@@ -331,7 +331,7 @@ ${lp.payment}
 ${lp.manager}
 
 ## 현재 등록 상품 (price = 현지통화 가격, price_per_sqm = ㎡당 현지통화 단가)
-${JSON.stringify(products.map((p: any) => { const { _raw_price, _raw_per_sqm, ...clean } = p; return clean; }))}
+${JSON.stringify(products.map((p: any) => { const c = Object.assign({}, p); delete c._raw_price; delete c._raw_per_sqm; return c; }))}
 ${preCalculated}
 
 ## 카테고리
