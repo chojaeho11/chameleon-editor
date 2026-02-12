@@ -1809,29 +1809,26 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                 let baseScale = imgAspect > canvasAspect ? H / img.height : W / img.width;
                 let scale, offsetX, offsetY;
 
-                // 빠른 비트 동기화 미세 펄스 (줌 흔들림)
-                const beatPulse = Math.sin(progress * durationSec * Math.PI * 4) * 0.008;
-
                 switch (zoomDir) {
                     case 'out':
-                        scale = baseScale * (1.45 - 0.45 * progress + beatPulse);
-                        offsetX = -(img.width * scale - W) / 2 + (progress * 120);
-                        offsetY = -(img.height * scale - H) / 2 + Math.sin(progress * 8) * 30;
+                        scale = baseScale * (1.4 - 0.4 * progress);
+                        offsetX = -(img.width * scale - W) / 2 + (progress * 100);
+                        offsetY = -(img.height * scale - H) / 2;
                         break;
                     case 'left_to_right':
-                        scale = baseScale * (1.3 + beatPulse);
+                        scale = baseScale * 1.25;
                         offsetX = -(img.width * scale - W) * progress;
-                        offsetY = -(img.height * scale - H) / 2 + Math.sin(progress * 6) * 25;
+                        offsetY = -(img.height * scale - H) / 2;
                         break;
                     case 'right_to_left':
-                        scale = baseScale * (1.3 + beatPulse);
+                        scale = baseScale * 1.25;
                         offsetX = -(img.width * scale - W) * (1 - progress);
-                        offsetY = -(img.height * scale - H) / 2 + Math.sin(progress * 6) * 25;
+                        offsetY = -(img.height * scale - H) / 2;
                         break;
                     default: // 'in'
-                        scale = baseScale * (1.0 + 0.45 * progress + beatPulse);
-                        offsetX = -(img.width * scale - W) / 2 - (progress * 120);
-                        offsetY = -(img.height * scale - H) / 2 - (progress * 80);
+                        scale = baseScale * (1.0 + 0.4 * progress);
+                        offsetX = -(img.width * scale - W) / 2 - (progress * 100);
+                        offsetY = -(img.height * scale - H) / 2 - (progress * 60);
                 }
 
                 ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
