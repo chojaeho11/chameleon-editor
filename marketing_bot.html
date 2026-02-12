@@ -161,6 +161,21 @@ textarea.form-input { resize:vertical; min-height:80px; }
 .site-badge.kr { background:rgba(59,130,246,.15); color:#60a5fa; }
 .site-badge.jp { background:rgba(248,113,113,.15); color:#f87171; }
 .site-badge.us { background:rgba(52,211,153,.15); color:#34d399; }
+
+/* Video Pipeline */
+.video-canvas-container { position:relative; width:100%; max-width:220px; aspect-ratio:9/16; margin:16px auto; border-radius:12px; overflow:hidden; background:#000; border:2px solid #334155; }
+.video-canvas-container canvas { width:100%; height:100%; display:block; }
+.video-preview-label { position:absolute; top:8px; left:8px; background:rgba(0,0,0,.7); color:#a78bfa; font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; z-index:2; }
+.pipeline-steps { display:flex; flex-direction:column; gap:2px; margin-top:16px; }
+.pipeline-steps .p-step { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; font-size:13px; color:#64748b; transition:all .3s; }
+.pipeline-steps .p-step.active { color:#a78bfa; background:rgba(167,139,250,.08); }
+.pipeline-steps .p-step.done { color:#22c55e; }
+.pipeline-steps .p-step.error { color:#f87171; }
+.pipeline-steps .p-step i { width:20px; text-align:center; }
+.video-meta-preview { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:14px; margin-top:12px; }
+.video-meta-preview .meta-title { font-size:14px; font-weight:700; color:#f1f5f9; margin-bottom:8px; }
+.video-meta-preview .meta-tags { font-size:12px; color:#a78bfa; margin-top:6px; }
+.video-meta-preview .meta-desc { font-size:12px; color:#94a3b8; line-height:1.6; }
 </style>
 </head>
 <body>
@@ -345,26 +360,88 @@ textarea.form-input { resize:vertical; min-height:80px; }
         </div>
     </div>
 
+    <!-- 원클릭 Shorts 자동 생성 파이프라인 -->
     <div class="card">
-        <div class="card-title"><i class="fa-solid fa-upload"></i> Shorts 업로드</div>
-        <div class="form-group">
-            <label>영상 파일 (MP4, 60초 이하)</label>
-            <input type="file" class="form-input" id="ytVideoFile" accept="video/mp4">
+        <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> 원클릭 Shorts 생성</div>
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">
+            사진 1장 업로드 → AI 분석 → 영상 자동 생성 → YouTube Shorts 업로드
+        </p>
+
+        <div class="upload-dropzone" id="ytShortsDropzone" onclick="document.getElementById('ytShortsPhotoInput').click()">
+            <div id="ytShortsDropzoneContent">
+                <i class="fa-solid fa-image" style="font-size:36px; color:#475569;"></i>
+                <p style="margin-top:8px;">상품/서비스 사진을 업로드하세요</p>
+                <p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (최대 5MB) - 세로 사진 추천</p>
+            </div>
         </div>
-        <div class="form-group">
-            <label>제목</label>
-            <input type="text" class="form-input" id="ytVideoTitle" placeholder="영상 제목">
+        <input type="file" id="ytShortsPhotoInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleShortsPhoto(this)">
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
+            <div class="form-group" style="margin:0;">
+                <label>언어</label>
+                <select class="form-input" id="shortsLang">
+                    <option value="kr">한국어 (KR)</option>
+                    <option value="ja">日本語 (JP)</option>
+                    <option value="en">English (US)</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>영상 길이</label>
+                <select class="form-input" id="shortsDuration">
+                    <option value="15">15초</option>
+                    <option value="20">20초</option>
+                    <option value="30" selected>30초 (추천)</option>
+                </select>
+            </div>
         </div>
-        <div class="form-group">
-            <label>설명</label>
-            <textarea class="form-input" id="ytVideoDesc" placeholder="영상 설명"></textarea>
+
+        <div class="form-group" style="margin-top:12px;">
+            <label>주제 (선택 - 비워두면 AI가 이미지에서 자동 감지)</label>
+            <input type="text" class="form-input" id="shortsTopic" placeholder="예: 허니콤보드 카페 인테리어">
         </div>
-        <div class="form-group">
-            <label>태그 (콤마 구분)</label>
-            <input type="text" class="form-input" id="ytVideoTags" placeholder="인테리어,간판,포토존">
+
+        <button class="oneclick-btn" id="shortsOneClickBtn" onclick="generateShortsOneClick()" style="margin-top:16px;">
+            <i class="fa-solid fa-rocket"></i> AI Shorts 생성 & YouTube 업로드
+        </button>
+
+        <div class="pipeline-steps" id="shortsPipelineSteps" style="display:none;">
+            <div class="p-step" id="sp-upload"><i class="fa-solid fa-circle-notch"></i> 이미지 분석 준비 중...</div>
+            <div class="p-step" id="sp-ai"><i class="fa-solid fa-circle-notch"></i> AI가 콘텐츠 생성 중...</div>
+            <div class="p-step" id="sp-video"><i class="fa-solid fa-circle-notch"></i> 영상 렌더링 중...</div>
+            <div class="p-step" id="sp-youtube"><i class="fa-solid fa-circle-notch"></i> YouTube에 업로드 중...</div>
         </div>
-        <button class="btn btn-danger" onclick="uploadToYoutube()"><i class="fa-brands fa-youtube"></i> YouTube 업로드</button>
-        <div id="uploadProgress" style="display:none; margin-top:12px;"></div>
+
+        <div id="shortsPreviewArea" style="display:none; margin-top:20px;">
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div class="video-canvas-container">
+                    <div class="video-preview-label">미리보기</div>
+                    <canvas id="shortsCanvas" width="1080" height="1920"></canvas>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <div class="video-meta-preview" id="shortsMetaPreview"></div>
+                    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-success btn-sm" onclick="confirmAndUpload()"><i class="fa-brands fa-youtube"></i> 업로드 확인</button>
+                        <button class="btn btn-outline btn-sm" onclick="cancelPipeline()"><i class="fa-solid fa-xmark"></i> 취소</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수동 MP4 업로드 (접힌 상태) -->
+    <div class="card">
+        <div class="card-title" style="cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <i class="fa-solid fa-upload"></i> 수동 업로드 (MP4 파일)
+            <i class="fa-solid fa-chevron-down" style="margin-left:auto; font-size:11px; color:#64748b;"></i>
+        </div>
+        <div style="display:none;">
+            <div class="form-group"><label>영상 파일 (MP4, 60초 이하)</label><input type="file" class="form-input" id="ytVideoFile" accept="video/mp4"></div>
+            <div class="form-group"><label>제목</label><input type="text" class="form-input" id="ytVideoTitle" placeholder="영상 제목"></div>
+            <div class="form-group"><label>설명</label><textarea class="form-input" id="ytVideoDesc" placeholder="영상 설명"></textarea></div>
+            <div class="form-group"><label>태그 (콤마 구분)</label><input type="text" class="form-input" id="ytVideoTags" placeholder="인테리어,간판,포토존"></div>
+            <button class="btn btn-danger" onclick="uploadToYoutube()"><i class="fa-brands fa-youtube"></i> YouTube 업로드</button>
+            <div id="uploadProgress" style="display:none; margin-top:12px;"></div>
+        </div>
     </div>
 
     <div class="card">
@@ -1345,6 +1422,452 @@ async function handleOAuthCallback() {
         console.error('OAuth error:', e);
         alert('YouTube 인증 실패: ' + e.message);
     }
+}
+
+// ===== 원클릭 YouTube Shorts 자동 생성 파이프라인 =====
+let shortsPhotoFile = null;
+let shortsAiContent = null;
+let shortsVideoBlob = null;
+
+window.handleShortsPhoto = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('파일 크기는 5MB 이하여야 합니다'); input.value = ''; return; }
+    shortsPhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('ytShortsDropzoneContent').innerHTML =
+            `<img src="${e.target.result}" alt="preview" style="max-height:120px; border-radius:8px;">
+             <p style="margin-top:8px; color:#a78bfa; font-size:12px;">클릭하여 다른 사진 선택</p>`;
+    };
+    reader.readAsDataURL(file);
+};
+
+// 드래그&드롭 지원
+document.addEventListener('DOMContentLoaded', function() {
+    const dz = document.getElementById('ytShortsDropzone');
+    if (dz) {
+        dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+        dz.addEventListener('dragleave', () => { dz.classList.remove('dragover'); });
+        dz.addEventListener('drop', (e) => {
+            e.preventDefault(); dz.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const input = document.getElementById('ytShortsPhotoInput');
+                const dt = new DataTransfer(); dt.items.add(file);
+                input.files = dt.files;
+                handleShortsPhoto(input);
+            }
+        });
+    }
+});
+
+// 이미지 리사이즈 후 base64 변환 (AI 전송용, 최대 1024px)
+function resizeImageToBase64(file, maxDim) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+                if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            cv.getContext('2d').drawImage(img, 0, 0, w, h);
+            const dataUrl = cv.toDataURL('image/jpeg', 0.85);
+            resolve(dataUrl.split(',')[1]);
+            URL.revokeObjectURL(img.src);
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+// AI 콘텐츠 생성 호출
+async function generateShortsAI(imageBase64, lang, topic) {
+    const settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}');
+    const { data, error } = await sb.functions.invoke('marketing-content', {
+        body: {
+            platform: 'youtube_shorts_from_image',
+            topic: topic || 'Analyze the image and create YouTube Shorts content about this product/service',
+            tone: 'energetic',
+            lang: lang,
+            instructions: 'Analyze the provided product/service image carefully. Generate engaging YouTube Shorts content based on what you see.',
+            coreKeywords: settings.coreKeywords || '',
+            usp: settings.usp || '',
+            ctaMsg: settings.ctaMsg || '',
+            imageBase64: imageBase64
+        }
+    });
+    if (error) throw new Error('AI 생성 실패: ' + error.message);
+    const content = data?.content || data;
+    if (content?.error) throw new Error('AI 오류: ' + content.error);
+    return content;
+}
+
+// Canvas 텍스트 줄바꿈 (CJK 지원)
+function wrapCanvasText(ctx, text, maxWidth) {
+    if (!text) return [''];
+    // CJK 문자 감지
+    if (/[\u3000-\u9fff\uac00-\ud7af]/.test(text)) {
+        const fontSize = parseInt(ctx.font) || 48;
+        const charsPerLine = Math.max(6, Math.floor(maxWidth / (fontSize * 0.9)));
+        const lines = [];
+        for (let i = 0; i < text.length; i += charsPerLine) {
+            lines.push(text.substring(i, i + charsPerLine));
+        }
+        return lines.length > 0 ? lines : [text];
+    }
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    words.forEach(word => {
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = testLine;
+        }
+    });
+    if (currentLine) lines.push(currentLine);
+    return lines.length > 0 ? lines : [text];
+}
+
+// ★ 핵심: Canvas + MediaRecorder 영상 생성 엔진
+async function generateVideoFromImage(imageFile, aiContent, durationSec) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // 1. 이미지 로드
+            const img = new Image();
+            const imgUrl = URL.createObjectURL(imageFile);
+            await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgUrl; });
+
+            // 2. 캔버스 셋업 (9:16 세로 Shorts)
+            const W = 1080, H = 1920;
+            const cvs = document.getElementById('shortsCanvas');
+            cvs.width = W; cvs.height = H;
+            const ctx = cvs.getContext('2d');
+
+            // 폰트 로딩 대기
+            await document.fonts.ready;
+
+            // 3. MediaRecorder 셋업
+            const stream = cvs.captureStream(30);
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
+            const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4000000 });
+            const chunks = [];
+            recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: mimeType });
+                URL.revokeObjectURL(imgUrl);
+                resolve(blob);
+            };
+            recorder.onerror = (e) => reject(e.error || new Error('MediaRecorder error'));
+
+            // 4. 애니메이션 파라미터
+            const totalMs = durationSec * 1000;
+            const startTime = performance.now();
+            const zoomDir = aiContent.video_style?.zoom_direction || 'in';
+            const accentColor = aiContent.video_style?.color_accent || '#a78bfa';
+            const overlays = aiContent.overlay_texts || {};
+            const textSegments = [
+                { text: overlays.hook || aiContent.title || '', start: 0.0, end: 0.15, fontSize: 72, y: 0.45 },
+                { text: overlays.main || '', start: 0.18, end: 0.50, fontSize: 56, y: 0.50 },
+                { text: overlays.detail || '', start: 0.53, end: 0.78, fontSize: 48, y: 0.55 },
+                { text: overlays.cta || 'Link in bio!', start: 0.80, end: 0.98, fontSize: 60, y: 0.50 },
+            ];
+
+            // 5. 녹화 시작
+            recorder.start(100);
+
+            // 6. 프레임 렌더링 루프
+            function drawFrame() {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / totalMs, 1.0);
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+
+                // Ken Burns 효과
+                const imgAspect = img.width / img.height;
+                const canvasAspect = W / H;
+                let baseScale = imgAspect > canvasAspect ? H / img.height : W / img.width;
+                let scale, offsetX, offsetY;
+
+                switch (zoomDir) {
+                    case 'out':
+                        scale = baseScale * (1.25 - 0.25 * progress);
+                        offsetX = -(img.width * scale - W) / 2 + (progress * 50);
+                        offsetY = -(img.height * scale - H) / 2;
+                        break;
+                    case 'left_to_right':
+                        scale = baseScale * 1.15;
+                        offsetX = -(img.width * scale - W) * progress;
+                        offsetY = -(img.height * scale - H) / 2;
+                        break;
+                    case 'right_to_left':
+                        scale = baseScale * 1.15;
+                        offsetX = -(img.width * scale - W) * (1 - progress);
+                        offsetY = -(img.height * scale - H) / 2;
+                        break;
+                    default: // 'in'
+                        scale = baseScale * (1.0 + 0.25 * progress);
+                        offsetX = -(img.width * scale - W) / 2 - (progress * 50);
+                        offsetY = -(img.height * scale - H) / 2 - (progress * 30);
+                }
+
+                ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+
+                // 그라데이션 오버레이 (텍스트 가독성)
+                const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.15);
+                topGrad.addColorStop(0, 'rgba(0,0,0,0.6)');
+                topGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = topGrad;
+                ctx.fillRect(0, 0, W, H * 0.15);
+
+                const botGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+                botGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                botGrad.addColorStop(0.4, 'rgba(0,0,0,0.5)');
+                botGrad.addColorStop(1, 'rgba(0,0,0,0.8)');
+                ctx.fillStyle = botGrad;
+                ctx.fillRect(0, H * 0.55, W, H * 0.45);
+
+                // 텍스트 오버레이
+                textSegments.forEach(seg => {
+                    if (progress >= seg.start && progress <= seg.end && seg.text) {
+                        const segP = (progress - seg.start) / (seg.end - seg.start);
+                        let alpha = 1;
+                        if (segP < 0.15) alpha = segP / 0.15;
+                        else if (segP > 0.85) alpha = (1 - segP) / 0.15;
+                        alpha = Math.max(0, Math.min(1, alpha));
+
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        ctx.textAlign = 'center';
+                        ctx.font = `800 ${seg.fontSize}px "Pretendard", "Noto Sans JP", "Inter", sans-serif`;
+
+                        const maxW = W - 120;
+                        const lines = wrapCanvasText(ctx, seg.text, maxW);
+                        const lineH = seg.fontSize * 1.3;
+                        const startY = H * seg.y - ((lines.length - 1) * lineH) / 2;
+
+                        lines.forEach((line, i) => {
+                            const y = startY + i * lineH;
+                            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+                            ctx.lineWidth = 6;
+                            ctx.lineJoin = 'round';
+                            ctx.strokeText(line, W / 2, y);
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillText(line, W / 2, y);
+                        });
+                        ctx.restore();
+                    }
+                });
+
+                // 액센트 바
+                const barW = W * 0.6;
+                const barP = Math.min(progress * 3, 1);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect((W - barW) / 2, H * 0.72, barW * barP, 4);
+
+                // 브랜드 워터마크
+                ctx.save();
+                ctx.globalAlpha = 0.6;
+                ctx.font = '600 28px "Pretendard", sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('Chameleon Print', W - 40, H - 40);
+                ctx.restore();
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(drawFrame);
+                } else {
+                    setTimeout(() => recorder.stop(), 500);
+                }
+            }
+
+            requestAnimationFrame(drawFrame);
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+// blob → YouTube 업로드
+async function uploadVideoToYoutube(videoBlob, title, description, tags) {
+    const { data: config } = await sb.from('marketing_youtube_config').select('access_token').limit(1).single();
+    if (!config?.access_token) throw new Error('Google OAuth 인증이 필요합니다. YouTube 채널을 먼저 연결하세요.');
+
+    const metadata = {
+        snippet: { title, description, tags, categoryId: '22' },
+        status: { privacyStatus: 'public', selfDeclaredMadeForKids: false }
+    };
+
+    const initRes = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + config.access_token,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Upload-Content-Length': videoBlob.size,
+            'X-Upload-Content-Type': videoBlob.type
+        },
+        body: JSON.stringify(metadata)
+    });
+
+    if (!initRes.ok) throw new Error('YouTube 업로드 초기화 실패: ' + await initRes.text());
+    const uploadUrl = initRes.headers.get('Location');
+
+    const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': videoBlob.type },
+        body: videoBlob
+    });
+
+    if (!uploadRes.ok) throw new Error('YouTube 업로드 실패: ' + uploadRes.status);
+    return await uploadRes.json();
+}
+
+// 파이프라인 스텝 상태 업데이트
+function setPipelineStep(id, state) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'p-step ' + state;
+    const icon = el.querySelector('i');
+    if (!icon) return;
+    if (state === 'active') icon.className = 'fa-solid fa-circle-notch fa-spin';
+    else if (state === 'done') icon.className = 'fa-solid fa-circle-check';
+    else if (state === 'error') icon.className = 'fa-solid fa-circle-exclamation';
+    else icon.className = 'fa-solid fa-circle-notch';
+}
+
+// ★ 메인 오케스트레이터
+window.generateShortsOneClick = async function() {
+    if (!shortsPhotoFile) { alert('사진을 먼저 업로드해주세요'); return; }
+
+    // 브라우저 체크 (Chrome 필수)
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+        alert('이 기능은 Chrome 브라우저에서만 지원됩니다.');
+        return;
+    }
+
+    const btn = document.getElementById('shortsOneClickBtn');
+    const steps = document.getElementById('shortsPipelineSteps');
+    const previewArea = document.getElementById('shortsPreviewArea');
+
+    btn.disabled = true;
+    steps.style.display = 'flex';
+    previewArea.style.display = 'none';
+    shortsAiContent = null;
+    shortsVideoBlob = null;
+    ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => setPipelineStep(id, ''));
+
+    try {
+        // Step 1: 이미지 → base64 (리사이즈)
+        setPipelineStep('sp-upload', 'active');
+        const base64 = await resizeImageToBase64(shortsPhotoFile, 1024);
+        setPipelineStep('sp-upload', 'done');
+
+        // Step 2: AI 콘텐츠 생성
+        setPipelineStep('sp-ai', 'active');
+        const lang = document.getElementById('shortsLang').value;
+        const topic = document.getElementById('shortsTopic').value.trim();
+        shortsAiContent = await generateShortsAI(base64, lang, topic);
+        setPipelineStep('sp-ai', 'done');
+
+        // 메타데이터 미리보기
+        document.getElementById('shortsMetaPreview').innerHTML = `
+            <div class="meta-title">${shortsAiContent.title || ''}</div>
+            <div class="meta-desc">${(shortsAiContent.body || '').substring(0, 200)}...</div>
+            <div class="meta-tags">${(shortsAiContent.hashtags || []).map(t => '#' + t).join(' ')}</div>
+        `;
+
+        // Step 3: 영상 생성
+        setPipelineStep('sp-video', 'active');
+        const duration = parseInt(document.getElementById('shortsDuration').value) || 30;
+        shortsVideoBlob = await generateVideoFromImage(shortsPhotoFile, shortsAiContent, duration);
+        setPipelineStep('sp-video', 'done');
+
+        // 미리보기 영역 표시
+        previewArea.style.display = 'block';
+
+        // Step 4 대기 (사용자가 "업로드 확인" 클릭)
+        document.getElementById('sp-youtube').querySelector('i').className = 'fa-solid fa-pause';
+        document.getElementById('sp-youtube').className = 'p-step active';
+
+    } catch(e) {
+        console.error('Shorts pipeline error:', e);
+        alert('Shorts 생성 실패: ' + e.message);
+        ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.classList.contains('active')) setPipelineStep(id, 'error');
+        });
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+// 업로드 확인
+window.confirmAndUpload = async function() {
+    if (!shortsVideoBlob || !shortsAiContent) { alert('영상이 아직 생성되지 않았습니다'); return; }
+
+    try {
+        setPipelineStep('sp-youtube', 'active');
+        const title = shortsAiContent.title || 'Shorts Video';
+        const desc = shortsAiContent.body || '';
+        const tags = shortsAiContent.hashtags || ['Shorts'];
+        if (!tags.includes('Shorts')) tags.unshift('Shorts');
+
+        const result = await uploadVideoToYoutube(shortsVideoBlob, title, desc, tags);
+        setPipelineStep('sp-youtube', 'done');
+
+        // marketing_content에 기록
+        await sb.from('marketing_content').insert({
+            platform: 'youtube_shorts',
+            title: title,
+            body: desc,
+            hashtags: tags,
+            thumbnail_prompt: '',
+            status: 'published',
+            published_at: new Date().toISOString()
+        });
+
+        alert('YouTube Shorts 업로드 완료!\nVideo ID: ' + result.id);
+
+        const pa = document.getElementById('shortsPreviewArea');
+        pa.innerHTML += `
+            <div style="margin-top:12px; padding:12px; background:#052e16; border:1px solid #166534; border-radius:10px;">
+                <span style="color:#22c55e; font-weight:700;"><i class="fa-solid fa-check-circle"></i> 업로드 완료!</span>
+                <a href="https://youtube.com/shorts/${result.id}" target="_blank" style="color:#a78bfa; margin-left:8px;">YouTube에서 보기</a>
+            </div>`;
+
+        resetShortsPipeline();
+    } catch(e) {
+        console.error('Upload error:', e);
+        setPipelineStep('sp-youtube', 'error');
+        alert('YouTube 업로드 실패: ' + e.message);
+    }
+};
+
+window.cancelPipeline = function() {
+    shortsVideoBlob = null;
+    shortsAiContent = null;
+    document.getElementById('shortsPreviewArea').style.display = 'none';
+    document.getElementById('shortsPipelineSteps').style.display = 'none';
+};
+
+function resetShortsPipeline() {
+    shortsPhotoFile = null;
+    shortsAiContent = null;
+    shortsVideoBlob = null;
+    const input = document.getElementById('ytShortsPhotoInput');
+    if (input) input.value = '';
+    const dzc = document.getElementById('ytShortsDropzoneContent');
+    if (dzc) dzc.innerHTML = '<i class="fa-solid fa-image" style="font-size:36px; color:#475569;"></i><p style="margin-top:8px;">상품/서비스 사진을 업로드하세요</p>';
+    const topic = document.getElementById('shortsTopic');
+    if (topic) topic.value = '';
 }
 
 </script>

@@ -20,7 +20,7 @@ serve(async (req) => {
         }
 
         const body = await req.json();
-        const { platform, topic, tone, lang, instructions, coreKeywords, usp, ctaMsg } = body;
+        const { platform, topic, tone, lang, instructions, coreKeywords, usp, ctaMsg, imageBase64 } = body;
 
         if (!platform || !topic) {
             return new Response(
@@ -95,6 +95,37 @@ JSON 출력 형식:
   "thumbnail_prompt": "썸네일 이미지 생성용 영어 프롬프트"
 }`,
 
+            youtube_shorts_from_image: `제공된 이미지를 분석하여 YouTube Shorts 영상용 콘텐츠를 생성하세요.
+
+이미지를 자세히 분석한 후:
+1. SEO 최적화된 매력적인 영상 제목
+2. 영상 설명란 텍스트 (키워드 포함)
+3. 관련 해시태그 (#Shorts 필수 포함)
+4. 영상에 표시할 4단계 텍스트 오버레이:
+   - hook: 처음 3초 주의를 끄는 문구 (15단어 이내)
+   - main: 핵심 가치/장점 (20단어 이내)
+   - detail: 세부 특징/기능 (20단어 이내)
+   - cta: 행동 유도 문구 (10단어 이내)
+5. 영상 스타일 제안
+
+JSON 출력 형식:
+{
+  "title": "영상 제목 (60자 이내, SEO 최적화)",
+  "body": "YouTube 설명란 텍스트 (200-500자, 키워드 포함)",
+  "hashtags": ["Shorts", "해시태그1", "해시태그2", ...최대 15개],
+  "overlay_texts": {
+    "hook": "시선을 사로잡는 오프닝 문구",
+    "main": "핵심 가치 제안",
+    "detail": "세부 특징 또는 장점",
+    "cta": "행동 유도 문구"
+  },
+  "video_style": {
+    "mood": "energetic 또는 calm 또는 professional 또는 playful 중 하나",
+    "zoom_direction": "in 또는 out 또는 left_to_right 또는 right_to_left 중 하나",
+    "color_accent": "#hex 이미지 분위기에 맞는 강조 색상"
+  }
+}`,
+
             website: `자사 웹사이트에 게시할 콘텐츠를 작성하세요.
 - 상품/서비스 홍보 + 정보 제공의 균형
 - 고객이 실제로 관심가질 실용적 정보
@@ -149,6 +180,24 @@ ${platformPrompts[platform] || platformPrompts.blog}`;
 
 위 가이드에 따라 콘텐츠를 생성하세요. 반드시 지정된 JSON 형식으로만 출력하세요.`;
 
+        // 멀티모달 메시지 구성 (이미지가 있으면 Vision 모드)
+        let userContent: any;
+        if (imageBase64) {
+            userContent = [
+                {
+                    type: "image",
+                    source: {
+                        type: "base64",
+                        media_type: "image/jpeg",
+                        data: imageBase64
+                    }
+                },
+                { type: "text", text: userMessage }
+            ];
+        } else {
+            userContent = userMessage;
+        }
+
         // Claude API 호출
         const res = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -161,7 +210,7 @@ ${platformPrompts[platform] || platformPrompts.blog}`;
                 model: "claude-sonnet-4-5-20250929",
                 max_tokens: 4000,
                 system: systemPrompt,
-                messages: [{ role: "user", content: userMessage }],
+                messages: [{ role: "user", content: userContent }],
             }),
         });
 
@@ -183,7 +232,7 @@ ${platformPrompts[platform] || platformPrompts.blog}`;
                         model: "claude-haiku-4-5-20251001",
                         max_tokens: 4000,
                         system: systemPrompt,
-                        messages: [{ role: "user", content: userMessage }],
+                        messages: [{ role: "user", content: userContent }],
                     }),
                 });
 
