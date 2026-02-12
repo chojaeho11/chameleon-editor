@@ -1515,17 +1515,9 @@ async function generateShortsAI(imageBase64, lang, topic) {
 // Canvas 텍스트 줄바꿈 (CJK 지원)
 function wrapCanvasText(ctx, text, maxWidth) {
     if (!text) return [''];
-    // CJK 문자 감지
-    if (/[\u3000-\u9fff\uac00-\ud7af]/.test(text)) {
-        const fontSize = parseInt(ctx.font) || 48;
-        const charsPerLine = Math.max(6, Math.floor(maxWidth / (fontSize * 0.9)));
-        const lines = [];
-        for (let i = 0; i < text.length; i += charsPerLine) {
-            lines.push(text.substring(i, i + charsPerLine));
-        }
-        return lines.length > 0 ? lines : [text];
-    }
-    const words = text.split(' ');
+    // 띄어쓰기 단위로 줄바꿈 (한국어/영어 모두 동일 로직)
+    const words = text.split(' ').filter(w => w.length > 0);
+    if (words.length === 0) return [text];
     const lines = [];
     let currentLine = '';
     words.forEach(word => {
@@ -1538,7 +1530,26 @@ function wrapCanvasText(ctx, text, maxWidth) {
         }
     });
     if (currentLine) lines.push(currentLine);
-    return lines.length > 0 ? lines : [text];
+    // 한 단어가 maxWidth를 초과하는 경우만 강제 줄바꿈
+    const result = [];
+    lines.forEach(line => {
+        if (ctx.measureText(line).width > maxWidth * 1.2) {
+            // 글자 단위로 분할 (매우 긴 단어일 때만)
+            let sub = '';
+            for (const ch of line) {
+                if (ctx.measureText(sub + ch).width > maxWidth && sub) {
+                    result.push(sub);
+                    sub = ch;
+                } else {
+                    sub += ch;
+                }
+            }
+            if (sub) result.push(sub);
+        } else {
+            result.push(line);
+        }
+    });
+    return result.length > 0 ? result : [text];
 }
 
 // ★ 핵심: Canvas + MediaRecorder 영상 생성 엔진
