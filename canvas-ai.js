@@ -138,6 +138,7 @@ export function initAiTools() {
             fabric.Image.fromURL(internalGeneratedUrl, (img) => {
                 if(img) {
                     img.scaleToWidth(500);
+                    img.set('isAiGenerated', true);
                     canvas.add(img);
                     canvas.centerObject(img);
                     canvas.setActiveObject(img);

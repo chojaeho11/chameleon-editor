@@ -752,6 +752,13 @@ async function registerUserTemplate() {
 
     if (!title) return alert(window.t('msg_enter_title', "Please enter a title."));
 
+    // AI 생성 이미지 포함 여부 체크
+    const hasAiImage = canvas.getObjects().some(o => o.isAiGenerated === true);
+    if (hasAiImage) {
+        alert(window.t('msg_ai_image_not_allowed', "AI generated images cannot be registered as templates.\nPlease remove the AI image first."));
+        return;
+    }
+
     const btn = document.getElementById("btnSellConfirm");
     const originalText = btn.innerText;
     btn.innerText = window.t('msg_saving', "Saving...");

@@ -74,7 +74,8 @@ export function initCanvas() {
                 'hasControls',
                 'lockRotation',
                 'lockScalingX',
-                'lockScalingY'
+                'lockScalingY',
+                'isAiGenerated'
             ]));
         };
     })(fabric.Object.prototype.toObject);
