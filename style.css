@@ -664,9 +664,9 @@ button, input, textarea, select { font-family: inherit; }
         overflow-x: auto !important; white-space: nowrap !important; background: #fff !important;
     }
     .topbar::-webkit-scrollbar { display: none; }
-    #siteNavBar { top: 50px !important; height: 34px !important; padding: 4px 0 !important; font-size: 12px !important; }
-    #siteNavBar a { padding: 4px 12px !important; font-size: 12px !important; }
-    #startScreen { top: 84px !important; height: calc(100vh - 84px) !important; }
+    #siteNavBar { top: 50px !important; height: 40px !important; padding: 4px 0 !important; font-size: 12px !important; }
+    #siteNavBar a { padding: 5px 14px !important; font-size: 12px !important; }
+    #startScreen { top: 90px !important; height: calc(100vh - 90px) !important; }
     .brand { order: 1 !important; margin-right: 5px !important; flex-shrink: 0 !important; }
     .brand { display: none !important; } /* 로고 숨김 요청 반영 */
     
@@ -1544,7 +1544,7 @@ body {
 
 /* 시작 화면 스크롤 처리 */
 #startScreen {
-    position: absolute; inset: 0; top: 98px; /* ★ 탑바(60) + 국가바(38) 아래부터 시작 */
+    position: absolute; inset: 0; top: 106px; /* ★ 탑바(60) + 국가바(46) 아래부터 시작 */
     background: #fff;
     z-index: 9999;
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
