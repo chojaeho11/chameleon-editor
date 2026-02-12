@@ -148,6 +148,12 @@ JSON 출력 형식:
             en: "English"
         };
 
+        const domainMap: Record<string, string> = {
+            kr: "www.cafe2626.com",
+            ja: "www.cafe0101.com",
+            en: "www.cafe3355.com"
+        };
+
         const toneMap: Record<string, string> = {
             professional: "전문적이고 신뢰감 있는 톤",
             casual: "캐주얼하고 친근한 톤",
@@ -161,8 +167,10 @@ JSON 출력 형식:
 ## 브랜드 정보
 - 브랜드: 카멜레온프린팅 (Chameleon Printing)
 - 사업: 친환경 종이 허니컴보드, 패브릭 인쇄, 포토존, 등신대, 배너, PVC/폼보드, 디스플레이 전문 인쇄 업체
-- 웹사이트: cafe2626.com (한국), cafe0101.com (일본), cafe3355.com (미국)
+- 웹사이트: ${domainMap[lang] || 'www.cafe2626.com'} (이 언어의 대상 웹사이트)
+- 전체 도메인: cafe2626.com (한국), cafe0101.com (일본), cafe3355.com (미국)
 - 특징: 무료 온라인 디자인 에디터, 전국 당일배송, 친환경 소재
+- 중요: 콘텐츠 내 웹사이트 링크는 반드시 ${domainMap[lang] || 'www.cafe2626.com'} 을 사용하세요
 ${coreKeywords ? `- 핵심 키워드: ${coreKeywords}` : ''}
 ${usp ? `- 핵심 강점: ${usp}` : ''}
 ${ctaMsg ? `- CTA: ${ctaMsg}` : ''}

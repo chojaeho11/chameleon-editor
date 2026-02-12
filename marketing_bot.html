@@ -1553,7 +1553,7 @@ function wrapCanvasText(ctx, text, maxWidth) {
 }
 
 // ★ 핵심: Canvas + MediaRecorder 영상 생성 엔진
-async function generateVideoFromImage(imageFile, aiContent, durationSec) {
+async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
     return new Promise(async (resolve, reject) => {
         try {
             // 1. 이미지 로드
@@ -1765,7 +1765,9 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec) {
                 ctx.font = '600 28px "Pretendard", sans-serif';
                 ctx.textAlign = 'right';
                 ctx.fillStyle = '#ffffff';
-                ctx.fillText('카멜레온프린팅', W - 40, H - 40);
+                const domainByLang = { kr: 'www.cafe2626.com', ja: 'www.cafe0101.com', en: 'www.cafe3355.com' };
+                const siteUrl = domainByLang[lang] || 'www.cafe2626.com';
+                ctx.fillText('카멜레온프린팅 | ' + siteUrl, W - 40, H - 40);
                 ctx.restore();
 
                 if (progress < 1.0) {
@@ -1918,7 +1920,7 @@ window.generateShortsOneClick = async function() {
             // Step 3: 영상 생성
             setPipelineStep('sp-video', 'active');
             document.getElementById('sp-video').lastChild.textContent = ` 영상 렌더링 중...${label}`;
-            const videoBlob = await generateVideoFromImage(file, aiContent, duration);
+            const videoBlob = await generateVideoFromImage(file, aiContent, duration, lang);
             setPipelineStep('sp-video', 'done');
 
             // Step 4: YouTube 업로드
