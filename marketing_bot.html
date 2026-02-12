@@ -364,17 +364,17 @@ textarea.form-input { resize:vertical; min-height:80px; }
     <div class="card">
         <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> 원클릭 Shorts 생성</div>
         <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">
-            사진 1장 업로드 → AI 분석 → 영상 자동 생성 → YouTube Shorts 업로드
+            사진 업로드 (여러 장 가능) → AI 분석 → 영상 자동 생성 → YouTube Shorts 업로드
         </p>
 
         <div class="upload-dropzone" id="ytShortsDropzone" onclick="document.getElementById('ytShortsPhotoInput').click()">
             <div id="ytShortsDropzoneContent">
                 <i class="fa-solid fa-image" style="font-size:36px; color:#475569;"></i>
-                <p style="margin-top:8px;">상품/서비스 사진을 업로드하세요</p>
-                <p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (최대 5MB) - 세로 사진 추천</p>
+                <p style="margin-top:8px;">상품/서비스 사진을 업로드하세요 (여러 장 선택 가능)</p>
+                <p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) - 세로 사진 추천 | 여러 장 → 배치 자동 처리</p>
             </div>
         </div>
-        <input type="file" id="ytShortsPhotoInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleShortsPhoto(this)">
+        <input type="file" id="ytShortsPhotoInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="handleShortsPhoto(this)">
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
             <div class="form-group" style="margin:0;">
@@ -1425,22 +1425,27 @@ async function handleOAuthCallback() {
 }
 
 // ===== 원클릭 YouTube Shorts 자동 생성 파이프라인 =====
-let shortsPhotoFile = null;
+let shortsPhotoFiles = []; // 다중 사진 지원
 let shortsAiContent = null;
 let shortsVideoBlob = null;
 
 window.handleShortsPhoto = function(input) {
-    const file = input.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('파일 크기는 5MB 이하여야 합니다'); input.value = ''; return; }
-    shortsPhotoFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        document.getElementById('ytShortsDropzoneContent').innerHTML =
-            `<img src="${e.target.result}" alt="preview" style="max-height:120px; border-radius:8px;">
-             <p style="margin-top:8px; color:#a78bfa; font-size:12px;">클릭하여 다른 사진 선택</p>`;
-    };
-    reader.readAsDataURL(file);
+    const files = Array.from(input.files).filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
+    if (files.length === 0) { alert('유효한 이미지 파일을 선택해주세요 (5MB 이하)'); return; }
+    shortsPhotoFiles = files;
+    const dzc = document.getElementById('ytShortsDropzoneContent');
+    if (files.length === 1) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            dzc.innerHTML = `<img src="${e.target.result}" alt="preview" style="max-height:120px; border-radius:8px;">
+                <p style="margin-top:8px; color:#a78bfa; font-size:12px;">1장 선택됨 - 클릭하여 변경</p>`;
+        };
+        reader.readAsDataURL(files[0]);
+    } else {
+        dzc.innerHTML = `<i class="fa-solid fa-images" style="font-size:36px; color:#a78bfa;"></i>
+            <p style="margin-top:8px; color:#a78bfa; font-weight:700;">${files.length}장 선택됨</p>
+            <p style="font-size:11px; color:#94a3b8;">각 사진마다 영상 1개씩 자동 생성됩니다</p>`;
+    }
 };
 
 // 드래그&드롭 지원
@@ -1451,10 +1456,11 @@ document.addEventListener('DOMContentLoaded', function() {
         dz.addEventListener('dragleave', () => { dz.classList.remove('dragover'); });
         dz.addEventListener('drop', (e) => {
             e.preventDefault(); dz.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length > 0) {
                 const input = document.getElementById('ytShortsPhotoInput');
-                const dt = new DataTransfer(); dt.items.add(file);
+                const dt = new DataTransfer();
+                files.forEach(f => dt.items.add(f));
                 input.files = dt.files;
                 handleShortsPhoto(input);
             }
@@ -1696,10 +1702,48 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec) {
     });
 }
 
-// blob → YouTube 업로드
-async function uploadVideoToYoutube(videoBlob, title, description, tags) {
-    const { data: config } = await sb.from('marketing_youtube_config').select('access_token').limit(1).single();
+// YouTube 토큰 갱신 (만료 시 자동)
+async function getValidYoutubeToken() {
+    const { data: config } = await sb.from('marketing_youtube_config')
+        .select('id, access_token, refresh_token, client_id, client_secret, token_expires_at')
+        .limit(1).single();
     if (!config?.access_token) throw new Error('Google OAuth 인증이 필요합니다. YouTube 채널을 먼저 연결하세요.');
+
+    // 토큰 만료 체크 (5분 여유)
+    const expiresAt = config.token_expires_at ? new Date(config.token_expires_at).getTime() : 0;
+    if (Date.now() < expiresAt - 300000) return config.access_token;
+
+    // 갱신 필요
+    if (!config.refresh_token) throw new Error('Refresh token이 없습니다. YouTube 채널을 다시 연결해주세요.');
+    console.log('YouTube 토큰 갱신 중...');
+
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: config.client_id,
+            client_secret: config.client_secret,
+            refresh_token: config.refresh_token,
+            grant_type: 'refresh_token'
+        })
+    });
+
+    const tokens = await tokenRes.json();
+    if (tokens.error) throw new Error('토큰 갱신 실패: ' + (tokens.error_description || tokens.error));
+
+    // DB 업데이트
+    await sb.from('marketing_youtube_config').update({
+        access_token: tokens.access_token,
+        token_expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString()
+    }).eq('id', config.id);
+
+    console.log('YouTube 토큰 갱신 완료');
+    return tokens.access_token;
+}
+
+// blob → YouTube 업로드 (토큰 자동 갱신)
+async function uploadVideoToYoutube(videoBlob, title, description, tags) {
+    const accessToken = await getValidYoutubeToken();
 
     const metadata = {
         snippet: { title, description, tags, categoryId: '22' },
@@ -1709,7 +1753,7 @@ async function uploadVideoToYoutube(videoBlob, title, description, tags) {
     const initRes = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
         method: 'POST',
         headers: {
-            'Authorization': 'Bearer ' + config.access_token,
+            'Authorization': 'Bearer ' + accessToken,
             'Content-Type': 'application/json; charset=UTF-8',
             'X-Upload-Content-Length': videoBlob.size,
             'X-Upload-Content-Type': videoBlob.type
@@ -1717,7 +1761,10 @@ async function uploadVideoToYoutube(videoBlob, title, description, tags) {
         body: JSON.stringify(metadata)
     });
 
-    if (!initRes.ok) throw new Error('YouTube 업로드 초기화 실패: ' + await initRes.text());
+    if (!initRes.ok) {
+        const errText = await initRes.text();
+        throw new Error('YouTube 업로드 초기화 실패: ' + errText);
+    }
     const uploadUrl = initRes.headers.get('Location');
 
     const uploadRes = await fetch(uploadUrl, {
@@ -1743,11 +1790,10 @@ function setPipelineStep(id, state) {
     else icon.className = 'fa-solid fa-circle-notch';
 }
 
-// ★ 메인 오케스트레이터
+// ★ 메인 오케스트레이터 (다중 사진 배치 처리)
 window.generateShortsOneClick = async function() {
-    if (!shortsPhotoFile) { alert('사진을 먼저 업로드해주세요'); return; }
+    if (shortsPhotoFiles.length === 0) { alert('사진을 먼저 업로드해주세요'); return; }
 
-    // 브라우저 체크 (Chrome 필수)
     if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
         alert('이 기능은 Chrome 브라우저에서만 지원됩니다.');
         return;
@@ -1756,99 +1802,114 @@ window.generateShortsOneClick = async function() {
     const btn = document.getElementById('shortsOneClickBtn');
     const steps = document.getElementById('shortsPipelineSteps');
     const previewArea = document.getElementById('shortsPreviewArea');
+    const lang = document.getElementById('shortsLang').value;
+    const topic = document.getElementById('shortsTopic').value.trim();
+    const duration = parseInt(document.getElementById('shortsDuration').value) || 30;
+    const totalFiles = shortsPhotoFiles.length;
 
     btn.disabled = true;
     steps.style.display = 'flex';
-    previewArea.style.display = 'none';
-    shortsAiContent = null;
-    shortsVideoBlob = null;
-    ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => setPipelineStep(id, ''));
+    previewArea.style.display = 'block';
 
-    try {
-        // Step 1: 이미지 → base64 (리사이즈)
-        setPipelineStep('sp-upload', 'active');
-        const base64 = await resizeImageToBase64(shortsPhotoFile, 1024);
-        setPipelineStep('sp-upload', 'done');
+    // 배치 결과 영역 초기화
+    document.getElementById('shortsMetaPreview').innerHTML = '';
+    let batchResults = [];
 
-        // Step 2: AI 콘텐츠 생성
-        setPipelineStep('sp-ai', 'active');
-        const lang = document.getElementById('shortsLang').value;
-        const topic = document.getElementById('shortsTopic').value.trim();
-        shortsAiContent = await generateShortsAI(base64, lang, topic);
-        setPipelineStep('sp-ai', 'done');
+    for (let i = 0; i < totalFiles; i++) {
+        const file = shortsPhotoFiles[i];
+        const label = totalFiles > 1 ? ` (${i + 1}/${totalFiles})` : '';
 
-        // 메타데이터 미리보기
-        document.getElementById('shortsMetaPreview').innerHTML = `
-            <div class="meta-title">${shortsAiContent.title || ''}</div>
-            <div class="meta-desc">${(shortsAiContent.body || '').substring(0, 200)}...</div>
-            <div class="meta-tags">${(shortsAiContent.hashtags || []).map(t => '#' + t).join(' ')}</div>
-        `;
+        // 스텝 초기화
+        ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => setPipelineStep(id, ''));
 
-        // Step 3: 영상 생성
-        setPipelineStep('sp-video', 'active');
-        const duration = parseInt(document.getElementById('shortsDuration').value) || 30;
-        shortsVideoBlob = await generateVideoFromImage(shortsPhotoFile, shortsAiContent, duration);
-        setPipelineStep('sp-video', 'done');
+        try {
+            // Step 1: 이미지 → base64
+            setPipelineStep('sp-upload', 'active');
+            document.getElementById('sp-upload').lastChild.textContent = ` 이미지 분석 준비 중...${label}`;
+            const base64 = await resizeImageToBase64(file, 1024);
+            setPipelineStep('sp-upload', 'done');
 
-        // 미리보기 영역 표시
-        previewArea.style.display = 'block';
+            // Step 2: AI 콘텐츠 생성
+            setPipelineStep('sp-ai', 'active');
+            document.getElementById('sp-ai').lastChild.textContent = ` AI가 콘텐츠 생성 중...${label}`;
+            const aiContent = await generateShortsAI(base64, lang, topic);
+            setPipelineStep('sp-ai', 'done');
 
-        // Step 4 대기 (사용자가 "업로드 확인" 클릭)
-        document.getElementById('sp-youtube').querySelector('i').className = 'fa-solid fa-pause';
-        document.getElementById('sp-youtube').className = 'p-step active';
+            // Step 3: 영상 생성
+            setPipelineStep('sp-video', 'active');
+            document.getElementById('sp-video').lastChild.textContent = ` 영상 렌더링 중...${label}`;
+            const videoBlob = await generateVideoFromImage(file, aiContent, duration);
+            setPipelineStep('sp-video', 'done');
 
-    } catch(e) {
-        console.error('Shorts pipeline error:', e);
-        alert('Shorts 생성 실패: ' + e.message);
-        ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el && el.classList.contains('active')) setPipelineStep(id, 'error');
-        });
-    } finally {
-        btn.disabled = false;
+            // Step 4: YouTube 업로드
+            setPipelineStep('sp-youtube', 'active');
+            document.getElementById('sp-youtube').lastChild.textContent = ` YouTube에 업로드 중...${label}`;
+
+            const title = aiContent.title || 'Shorts Video';
+            const desc = aiContent.body || '';
+            const tags = aiContent.hashtags || ['Shorts'];
+            if (!tags.includes('Shorts')) tags.unshift('Shorts');
+
+            const result = await uploadVideoToYoutube(videoBlob, title, desc, tags);
+            setPipelineStep('sp-youtube', 'done');
+
+            // marketing_content에 기록
+            await sb.from('marketing_content').insert({
+                platform: 'youtube_shorts',
+                title: title,
+                body: desc,
+                hashtags: tags,
+                thumbnail_prompt: '',
+                status: 'published',
+                published_at: new Date().toISOString()
+            });
+
+            batchResults.push({ success: true, title, videoId: result.id });
+
+            // 결과 표시
+            document.getElementById('shortsMetaPreview').innerHTML += `
+                <div style="padding:10px; margin-bottom:8px; background:#052e16; border:1px solid #166534; border-radius:8px;">
+                    <span style="color:#22c55e; font-weight:600;"><i class="fa-solid fa-check-circle"></i> ${i + 1}. ${title}</span>
+                    <a href="https://youtube.com/shorts/${result.id}" target="_blank" style="color:#a78bfa; margin-left:8px; font-size:12px;">YouTube에서 보기</a>
+                </div>`;
+
+        } catch(e) {
+            console.error(`Shorts pipeline error (${i + 1}/${totalFiles}):`, e);
+            batchResults.push({ success: false, error: e.message });
+
+            document.getElementById('shortsMetaPreview').innerHTML += `
+                <div style="padding:10px; margin-bottom:8px; background:#450a0a; border:1px solid #991b1b; border-radius:8px;">
+                    <span style="color:#f87171; font-weight:600;"><i class="fa-solid fa-circle-exclamation"></i> ${i + 1}. 실패: ${e.message}</span>
+                </div>`;
+
+            ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('active')) setPipelineStep(id, 'error');
+            });
+        }
+
+        // 다음 사진 처리 전 잠시 대기 (API 부하 방지)
+        if (i < totalFiles - 1) await new Promise(r => setTimeout(r, 2000));
     }
+
+    // 완료 요약
+    const successCount = batchResults.filter(r => r.success).length;
+    const failCount = batchResults.filter(r => !r.success).length;
+    document.getElementById('shortsMetaPreview').innerHTML += `
+        <div style="padding:12px; margin-top:12px; background:#1e293b; border-radius:8px; text-align:center;">
+            <span style="color:#f1f5f9; font-weight:700;">
+                총 ${totalFiles}개 중 <span style="color:#22c55e;">${successCount}개 성공</span>${failCount > 0 ? `, <span style="color:#f87171;">${failCount}개 실패</span>` : ''}
+            </span>
+        </div>`;
+
+    btn.disabled = false;
+    resetShortsPipeline();
 };
 
-// 업로드 확인
+// 더 이상 미리보기 후 확인 불필요 (자동 처리), 하지만 수동 업로드용은 유지
 window.confirmAndUpload = async function() {
-    if (!shortsVideoBlob || !shortsAiContent) { alert('영상이 아직 생성되지 않았습니다'); return; }
-
-    try {
-        setPipelineStep('sp-youtube', 'active');
-        const title = shortsAiContent.title || 'Shorts Video';
-        const desc = shortsAiContent.body || '';
-        const tags = shortsAiContent.hashtags || ['Shorts'];
-        if (!tags.includes('Shorts')) tags.unshift('Shorts');
-
-        const result = await uploadVideoToYoutube(shortsVideoBlob, title, desc, tags);
-        setPipelineStep('sp-youtube', 'done');
-
-        // marketing_content에 기록
-        await sb.from('marketing_content').insert({
-            platform: 'youtube_shorts',
-            title: title,
-            body: desc,
-            hashtags: tags,
-            thumbnail_prompt: '',
-            status: 'published',
-            published_at: new Date().toISOString()
-        });
-
-        alert('YouTube Shorts 업로드 완료!\nVideo ID: ' + result.id);
-
-        const pa = document.getElementById('shortsPreviewArea');
-        pa.innerHTML += `
-            <div style="margin-top:12px; padding:12px; background:#052e16; border:1px solid #166534; border-radius:10px;">
-                <span style="color:#22c55e; font-weight:700;"><i class="fa-solid fa-check-circle"></i> 업로드 완료!</span>
-                <a href="https://youtube.com/shorts/${result.id}" target="_blank" style="color:#a78bfa; margin-left:8px;">YouTube에서 보기</a>
-            </div>`;
-
-        resetShortsPipeline();
-    } catch(e) {
-        console.error('Upload error:', e);
-        setPipelineStep('sp-youtube', 'error');
-        alert('YouTube 업로드 실패: ' + e.message);
-    }
+    // 배치 모드에서는 자동 처리되므로 이 함수는 수동 업로드 시에만 사용
+    alert('배치 처리가 자동으로 진행됩니다.');
 };
 
 window.cancelPipeline = function() {
@@ -1859,15 +1920,11 @@ window.cancelPipeline = function() {
 };
 
 function resetShortsPipeline() {
-    shortsPhotoFile = null;
+    shortsPhotoFiles = [];
     shortsAiContent = null;
     shortsVideoBlob = null;
     const input = document.getElementById('ytShortsPhotoInput');
     if (input) input.value = '';
-    const dzc = document.getElementById('ytShortsDropzoneContent');
-    if (dzc) dzc.innerHTML = '<i class="fa-solid fa-image" style="font-size:36px; color:#475569;"></i><p style="margin-top:8px;">상품/서비스 사진을 업로드하세요</p>';
-    const topic = document.getElementById('shortsTopic');
-    if (topic) topic.value = '';
 }
 
 </script>
