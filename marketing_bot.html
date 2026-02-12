@@ -1572,67 +1572,62 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
 
             // 3. BGM 생성 (Web Audio API - 부드러운 앰비언트)
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const bgmDest = audioCtx.createMediaStreamDestination();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-            // 부드러운 패드 사운드 생성
-            function createPadOsc(freq, detune, gain) {
+            // 마스터 게인 → 최종 출력
+            const masterGain = audioCtx.createGain();
+            const audioDest = audioCtx.createMediaStreamDestination();
+            masterGain.connect(audioDest);
+
+            // 페이드 인/아웃 엔벨로프
+            const now = audioCtx.currentTime;
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(0.2, now + 2);
+            masterGain.gain.setValueAtTime(0.2, now + durationSec - 3);
+            masterGain.gain.linearRampToValueAtTime(0, now + durationSec);
+
+            // 부드러운 앰비언트 패드 (오실레이터 → 필터 → 게인 → 마스터)
+            const padConfigs = [
+                { freq: 261.63, detune: 5, vol: 0.08 },    // C4
+                { freq: 329.63, detune: -3, vol: 0.07 },   // E4
+                { freq: 392.00, detune: 7, vol: 0.06 },    // G4
+                { freq: 523.25, detune: -5, vol: 0.04 },   // C5
+                { freq: 196.00, detune: 0, vol: 0.06 },    // G3 베이스
+            ];
+
+            const oscillators = padConfigs.map(cfg => {
                 const osc = audioCtx.createOscillator();
-                const g = audioCtx.createGain();
+                const gain = audioCtx.createGain();
                 const filter = audioCtx.createBiquadFilter();
                 osc.type = 'sine';
-                osc.frequency.value = freq;
-                osc.detune.value = detune;
+                osc.frequency.value = cfg.freq;
+                osc.detune.value = cfg.detune;
                 filter.type = 'lowpass';
                 filter.frequency.value = 800;
                 filter.Q.value = 1;
-                g.gain.value = gain;
+                gain.gain.value = cfg.vol;
                 osc.connect(filter);
-                filter.connect(g);
-                g.connect(bgmDest);
-                return { osc, gain: g };
-            }
-
-            // 코드 진행: 따뜻한 앰비언트 패드
-            const pads = [
-                createPadOsc(261.63, 5, 0.06),   // C4
-                createPadOsc(329.63, -3, 0.05),   // E4
-                createPadOsc(392.00, 7, 0.04),    // G4
-                createPadOsc(523.25, -5, 0.03),   // C5 (옥타브)
-                createPadOsc(196.00, 0, 0.05),    // G3 (베이스)
-            ];
-
-            // 볼륨 엔벨로프 (페이드 인/아웃)
-            const masterGain = audioCtx.createGain();
-            masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 2); // 2초 페이드인
-            masterGain.gain.setValueAtTime(0.15, audioCtx.currentTime + durationSec - 3);
-            masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + durationSec); // 3초 페이드아웃
-            bgmDest.stream.getAudioTracks().forEach(t => {
-                const src = audioCtx.createMediaStreamSource(new MediaStream([t]));
-                src.connect(masterGain);
-            });
-            const finalAudioDest = audioCtx.createMediaStreamDestination();
-            masterGain.connect(finalAudioDest);
-
-            pads.forEach(p => {
-                p.osc.start(audioCtx.currentTime);
-                p.osc.stop(audioCtx.currentTime + durationSec + 1);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + durationSec + 1);
+                return osc;
             });
 
-            // LFO로 미세한 떨림 추가 (더 유기적인 느낌)
+            // LFO (미세한 주파수 떨림)
             const lfo = audioCtx.createOscillator();
             const lfoGain = audioCtx.createGain();
             lfo.type = 'sine';
-            lfo.frequency.value = 0.3; // 매우 느린 떨림
-            lfoGain.gain.value = 10;
+            lfo.frequency.value = 0.3;
+            lfoGain.gain.value = 8;
             lfo.connect(lfoGain);
-            pads.forEach(p => lfoGain.connect(p.osc.frequency));
-            lfo.start(audioCtx.currentTime);
-            lfo.stop(audioCtx.currentTime + durationSec + 1);
+            oscillators.forEach(osc => lfoGain.connect(osc.frequency));
+            lfo.start(now);
+            lfo.stop(now + durationSec + 1);
 
             // 4. MediaRecorder 셋업 (비디오 + 오디오 믹싱)
             const videoStream = cvs.captureStream(30);
-            const audioTracks = finalAudioDest.stream.getAudioTracks();
+            const audioTracks = audioDest.stream.getAudioTracks();
             const combinedStream = new MediaStream([
                 ...videoStream.getVideoTracks(),
                 ...audioTracks
