@@ -216,12 +216,12 @@ button, input, textarea, select { font-family: inherit; }
 /* 상단바 (Topbar) */
 .topbar { 
     height: 60px; display: flex; align-items: center; 
-    padding: 0 25px; background: #fff; border-bottom: 1px solid var(--border); 
-    gap: 10px; z-index: 100; justify-content: space-between; 
-    overflow-x: auto; white-space: nowrap; 
+    padding: 0 25px; background: #1a1a1a; border-bottom: 1px solid #333;
+    gap: 10px; z-index: 100; justify-content: space-between;
+    overflow-x: auto; white-space: nowrap;
 }
 .topbar::-webkit-scrollbar { display: none; }
-.brand { font-weight: 800; font-size: 22px; color: var(--primary); cursor: pointer; flex-shrink: 0; }
+.brand { font-weight: 800; font-size: 22px; color: #a5b4fc; cursor: pointer; flex-shrink: 0; }
 
 .template-tabs { display: flex; gap: 5px; }
 .tpl-tab { 
@@ -244,6 +244,8 @@ button, input, textarea, select { font-family: inherit; }
 }
 .btn.primary { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2); }
 .btn:hover:not(.primary) { background: #f1f5f9; }
+.topbar .btn { color: #e2e8f0; }
+.topbar .btn:hover:not(.primary) { background: rgba(255,255,255,0.15); }
 .btn-save-top { background: #741e9c; color: white; display: flex; align-items: center; gap: 6px; }
 #btnOpenSaveModal { 
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; 
@@ -661,7 +663,7 @@ button, input, textarea, select { font-family: inherit; }
     .topbar {
         display: flex !important; align-items: center !important; justify-content: flex-start !important;
         gap: 8px !important; padding: 0 10px !important; height: 50px !important;
-        overflow-x: auto !important; white-space: nowrap !important; background: #fff !important;
+        overflow-x: auto !important; white-space: nowrap !important; background: #1a1a1a !important;
     }
     .topbar::-webkit-scrollbar { display: none; }
     #siteNavBar { top: 50px !important; height: 34px !important; padding: 4px 0 !important; font-size: 12px !important; }
@@ -1537,7 +1539,7 @@ body {
 .topbar { 
     position: fixed; top: 0; left: 0; right: 0; /* ★ 상단 고정 */
     height: 60px; display: flex; align-items: center; 
-    padding: 0 25px; background: #fff; border-bottom: 1px solid var(--border); 
+    padding: 0 25px; background: #1a1a1a; border-bottom: 1px solid #333;
     gap: 10px; z-index: 1000; /* z-index 높임 */
     overflow-x: auto; white-space: nowrap; 
 }
@@ -4286,8 +4288,8 @@ video {
     position: fixed !important;
     top: 0; left: 0; right: 0;
     z-index: 99999 !important; /* 무조건 최상위 */
-    background: #ffffff;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    background: #1a1a1a;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 /* [상품 상세페이지 스타일 수정] */
