@@ -1413,6 +1413,19 @@ window.publishBlogOneClick = async function() {
     document.getElementById('blogViewLinkJP').href = 'https://www.cafe0101.com/board?cat=blog';
     document.getElementById('blogViewLinkEN').href = 'https://www.cafe3355.com/board?cat=blog';
 
+    // Google에 새 블로그 포스트 알림 (사이트맵 ping)
+    if (successCount > 0) {
+        const sitemapUrls = [
+            'https://www.cafe2626.com/sitemap.xml',
+            'https://www.cafe0101.com/sitemap.xml',
+            'https://www.cafe3355.com/sitemap.xml'
+        ];
+        for (const smUrl of sitemapUrls) {
+            fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(smUrl)}`, { mode: 'no-cors' }).catch(() => {});
+        }
+        console.log('Google sitemap ping sent for all 3 domains');
+    }
+
     // 초기화
     blogPhotoFiles = [];
     document.getElementById('blogPhotoInput').value = '';

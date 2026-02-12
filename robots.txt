@@ -7,3 +7,8 @@ Disallow: /driver
 Sitemap: https://www.cafe2626.com/sitemap.xml
 Sitemap: https://www.cafe0101.com/sitemap.xml
 Sitemap: https://www.cafe3355.com/sitemap.xml
+
+# 블로그 동적 사이트맵 (Supabase Edge Function)
+Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-blog?country=KR
+Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-blog?country=JP
+Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-blog?country=US
