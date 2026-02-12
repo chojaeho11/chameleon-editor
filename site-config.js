@@ -65,6 +65,40 @@ export const SITE_CONFIG = {
     }
 };
 
+// SEO 메타데이터 (국가별)
+SITE_CONFIG.SEO = {
+    'KR': {
+        title: '카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터',
+        description: '허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.',
+        keywords: '카멜레온프린팅,허니콤보드,종이매대,패브릭인쇄,팝업스토어,등신대제작,실사출력,연포장,친환경전시,백월디자인,전시부스,폼보드인쇄,아크릴인쇄,배너스탠드,현수막',
+        lang: 'ko',
+        domain: 'https://www.cafe2626.com',
+        siteName: '카멜레온프린팅',
+        boardTitle: '카멜레온 커뮤니티 - 블로그 & 후기',
+        boardDesc: '카멜레온프린팅 글로벌 커뮤니티입니다. 제작 후기, 디자인 정보, 인쇄 팁을 확인하세요.'
+    },
+    'JP': {
+        title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
+        description: 'ハニカムボード、ファブリック印刷、ポップアップストア専門。無料エディターで等身大パネル・バックウォールのデザインから印刷まで一括対応。',
+        keywords: 'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,紙什器',
+        lang: 'ja',
+        domain: 'https://www.cafe0101.com',
+        siteName: 'カメレオンプリンティング',
+        boardTitle: 'カメレオン コミュニティ - ブログ & レビュー',
+        boardDesc: 'カメレオンプリンティングのグローバルコミュニティ。制作レビュー、デザイン情報、印刷のヒントをご覧ください。'
+    },
+    'US': {
+        title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
+        description: 'Honeycomb boards, fabric printing, pop-up store displays. Free online editor for life-size cutouts, backwalls, and custom printing solutions.',
+        keywords: 'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,foam board',
+        lang: 'en',
+        domain: 'https://www.cafe3355.com',
+        siteName: 'Chameleon Printing',
+        boardTitle: 'Chameleon Community - Blog & Reviews',
+        boardDesc: 'Chameleon Printing global community. Check out production reviews, design tips, and printing information.'
+    }
+};
+
 // window 전역에 노출 (비모듈 스크립트에서 참조용)
 window.SITE_CONFIG = SITE_CONFIG;
 

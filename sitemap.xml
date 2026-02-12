@@ -1,111 +1,138 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ===== 메인 페이지 (3개 도메인) ===== -->
   <url>
     <loc>https://www.cafe2626.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/"/>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.cafe2626.com/honeycomb</loc>
+    <loc>https://www.cafe0101.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/"/>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe3355.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/"/>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- ===== 커뮤니티/블로그 (3개 도메인) ===== -->
+  <url>
+    <loc>https://www.cafe2626.com/board</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board"/>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.cafe2626.com/fabric-print</loc>
+    <loc>https://www.cafe0101.com/board</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board"/>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.cafe2626.com/paper-stand</loc>
+    <loc>https://www.cafe3355.com/board</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board"/>
     <priority>0.8</priority>
   </url>
-  <url>
-    <loc>https://www.cafe2626.com/paper-furniture</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/foamex-print</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/foamboard-print</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/goods</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/foamex-stand</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/biz-print</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/roll-blind</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/home-interior</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/promo-items</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/flexible-package</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/box-package</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/shopping-bag</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/acrylic-print</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/banner-stand</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/standee</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/rubber-magnet</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/placard</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/sheet-print</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/flex-sign</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/uv-print</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/tshirt-print</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/blackout-blind</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cafe2626.com/curtain</loc>
-    <priority>0.8</priority>
-  </url>
+
+  <!-- ===== 제품 페이지 (KR) ===== -->
+  <url><loc>https://www.cafe2626.com/honeycomb</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/fabric-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/paper-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/paper-furniture</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/foamex-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/foamboard-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/goods</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/foamex-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/biz-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/roll-blind</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/home-interior</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/promo-items</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/flexible-package</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/box-package</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/shopping-bag</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/acrylic-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/banner-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/standee</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/rubber-magnet</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/placard</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/sheet-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/flex-sign</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/uv-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/tshirt-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/blackout-blind</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe2626.com/curtain</loc><priority>0.8</priority></url>
+
+  <!-- ===== 제품 페이지 (JP) ===== -->
+  <url><loc>https://www.cafe0101.com/honeycomb</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/fabric-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/paper-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/paper-furniture</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/foamex-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/foamboard-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/goods</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/foamex-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/biz-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/roll-blind</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/home-interior</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/promo-items</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/flexible-package</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/box-package</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/shopping-bag</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/acrylic-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/banner-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/standee</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/rubber-magnet</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/placard</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/sheet-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/flex-sign</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/uv-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/tshirt-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/blackout-blind</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe0101.com/curtain</loc><priority>0.8</priority></url>
+
+  <!-- ===== 제품 페이지 (US) ===== -->
+  <url><loc>https://www.cafe3355.com/honeycomb</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/fabric-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-furniture</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/foamboard-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/goods</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/biz-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/roll-blind</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/home-interior</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/promo-items</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/flexible-package</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/box-package</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/shopping-bag</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/acrylic-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/banner-stand</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/standee</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/rubber-magnet</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/placard</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/sheet-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/flex-sign</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/uv-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/tshirt-print</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/blackout-blind</loc><priority>0.8</priority></url>
+  <url><loc>https://www.cafe3355.com/curtain</loc><priority>0.8</priority></url>
+
 </urlset>

@@ -58,6 +58,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
 <meta name="description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.">
+<meta name="keywords" content="카멜레온프린팅,허니콤보드,종이매대,패브릭인쇄,팝업스토어,등신대제작">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="카멜레온프린팅">
@@ -65,15 +66,107 @@
 <meta property="og:description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 쉽고 빠르게 디자인하세요.">
 <meta property="og:url" content="https://www.cafe2626.com/">
 <meta property="og:image" content="https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png">
-<link rel="shortcut icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
-<meta name="keywords" content="카멜레온프린팅, 허니콤보드, 종이매대, 패브릭인쇄, 팝업스토어, 등신대제작, 실사출력, 연포장, 친환경전시, 백월디자인, 전시부스, 폼보드인쇄">
-<link rel="canonical" href="https://www.cafe2626.com/" />
 
-<link rel="canonical" href="https://www.cafe3355.com/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="카멜레온프린팅">
+<meta name="twitter:description" content="친환경 전시 인쇄 & 무료 디자인 에디터">
+<meta name="twitter:image" content="https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png">
+
+<link rel="shortcut icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
+<link rel="canonical" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/">
     <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/">
     <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/">
+
+<script>
+// [SEO 동적 설정] 도메인 기반으로 lang, title, meta, canonical, OG, JSON-LD 자동 설정
+(function(){
+    var h = location.hostname;
+    var cc = h.includes('cafe0101') ? 'JP' : h.includes('cafe3355') ? 'US' : 'KR';
+    var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com' };
+    var seoData = {
+        KR: {
+            title:'카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터',
+            desc:'허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.',
+            keywords:'카멜레온프린팅,허니콤보드,종이매대,패브릭인쇄,팝업스토어,등신대제작,실사출력,연포장,친환경전시,백월디자인,전시부스,폼보드인쇄,아크릴인쇄,배너스탠드,현수막',
+            lang:'ko', siteName:'카멜레온프린팅'
+        },
+        JP: {
+            title:'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
+            desc:'ハニカムボード、ファブリック印刷、ポップアップストア専門。無料エディターで等身大パネル・バックウォールのデザインから印刷まで一括対応。',
+            keywords:'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド',
+            lang:'ja', siteName:'カメレオンプリンティング'
+        },
+        US: {
+            title:'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
+            desc:'Honeycomb boards, fabric printing, pop-up store displays. Free online editor for life-size cutouts, backwalls, and custom printing solutions.',
+            keywords:'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand',
+            lang:'en', siteName:'Chameleon Printing'
+        }
+    };
+    var s = seoData[cc];
+    if (!s) return;
+    var d = domains[cc];
+
+    // 1. html lang 속성
+    document.documentElement.lang = s.lang;
+    // 2. title
+    document.title = s.title;
+    // 3. meta description
+    var mDesc = document.querySelector('meta[name="description"]');
+    if(mDesc) mDesc.content = s.desc;
+    // 4. meta keywords
+    var mKey = document.querySelector('meta[name="keywords"]');
+    if(mKey) mKey.content = s.keywords;
+    // 5. canonical
+    var canon = document.querySelector('link[rel="canonical"]');
+    if(canon) canon.href = d + '/';
+    // 6. OG tags
+    var ogTitle = document.querySelector('meta[property="og:title"]');
+    if(ogTitle) ogTitle.content = s.title;
+    var ogDesc = document.querySelector('meta[property="og:description"]');
+    if(ogDesc) ogDesc.content = s.desc;
+    var ogUrl = document.querySelector('meta[property="og:url"]');
+    if(ogUrl) ogUrl.content = d + '/';
+    var ogSite = document.querySelector('meta[property="og:site_name"]');
+    if(ogSite) ogSite.content = s.siteName;
+    // 7. Twitter Card
+    var twTitle = document.querySelector('meta[name="twitter:title"]');
+    if(twTitle) twTitle.content = s.title;
+    var twDesc = document.querySelector('meta[name="twitter:description"]');
+    if(twDesc) twDesc.content = s.desc;
+
+    // 8. JSON-LD 구조화 데이터
+    var jsonld = document.createElement('script');
+    jsonld.type = 'application/ld+json';
+    jsonld.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Organization",
+                "name": s.siteName,
+                "url": d,
+                "logo": "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png",
+                "sameAs": [domains.KR, domains.JP, domains.US],
+                "description": s.desc
+            },
+            {
+                "@type": "WebSite",
+                "name": s.siteName,
+                "url": d,
+                "inLanguage": s.lang,
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": d + "/?q={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                }
+            }
+        ]
+    });
+    document.head.appendChild(jsonld);
+})();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 
