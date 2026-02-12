@@ -5157,32 +5157,32 @@ if (w >= 20 && h >= 20) {
 
 <div id="partnerApplyModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 500px; max-width: 95%;">
-        <h3 style="margin-top:0;">🤝 파트너(가맹점) 신청</h3>
-        <p style="color:#666; font-size:13px; margin-bottom:20px;">지역 광고/제조 파트너가 되어 수익을 창출하세요.</p>
-        
+        <h3 style="margin-top:0;" data-i18n="partner_apply_title">🤝 파트너(가맹점) 신청</h3>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;" data-i18n="partner_apply_desc">지역 광고/제조 파트너가 되어 수익을 창출하세요.</p>
+
         <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;">업체명 (상호)</label>
-            <input id="applyCompName" class="ai-input-pretty" placeholder="예: 카멜레온디자인">
-        </div>
-        
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;">연락처</label>
-            <input id="applyPhone" class="ai-input-pretty" placeholder="010-1234-5678">
-        </div>
-        
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;">활동 지역 (다중 입력 가능)</label>
-            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 서초구, 경기 화성시 (쉼표로 구분)">
-            <p style="font-size:11px; color:#ef4444; margin-top:5px;">* 여러 지역 활동 시 쉼표(,)로 구분하여 모두 적어주세요.</p>
-        </div>
-        <div style="margin-bottom:20px;">
-            <label class="form-label" style="font-weight:bold;">주 생산 품목 (제조사인 경우)</label>
-            <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)">
+            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_company">업체명 (상호)</label>
+            <input id="applyCompName" class="ai-input-pretty" placeholder="예: 카멜레온디자인" data-i18n-placeholder="partner_ph_company">
         </div>
 
-        <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;">신청하기</button>
-        <button onclick="window.cancelPartnerApp()" class="btn-round" style="width:100%; margin-top:5px; background:#fff1f2; color:#be123c; border:1px solid #fda4af;">신청 철회하기</button>
-        <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;">닫기</button>
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_phone">연락처</label>
+            <input id="applyPhone" class="ai-input-pretty" placeholder="010-1234-5678" data-i18n-placeholder="partner_ph_phone">
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_region">활동 지역 (다중 입력 가능)</label>
+            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 서초구, 경기 화성시 (쉼표로 구분)" data-i18n-placeholder="partner_ph_region">
+            <p style="font-size:11px; color:#ef4444; margin-top:5px;" data-i18n="partner_region_hint">* 여러 지역 활동 시 쉼표(,)로 구분하여 모두 적어주세요.</p>
+        </div>
+        <div style="margin-bottom:20px;">
+            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_items">주 생산 품목 (제조사인 경우)</label>
+            <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)" data-i18n-placeholder="partner_ph_items">
+        </div>
+
+        <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;" data-i18n="partner_btn_apply">신청하기</button>
+        <button onclick="window.cancelPartnerApp()" class="btn-round" style="width:100%; margin-top:5px; background:#fff1f2; color:#be123c; border:1px solid #fda4af;" data-i18n="partner_btn_cancel">신청 철회하기</button>
+        <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;" data-i18n="partner_btn_close">닫기</button>
     </div>
 </div>
 
