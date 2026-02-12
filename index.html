@@ -3794,10 +3794,9 @@ window.updateModalTotal = function() {
     let productTotal = 0;
 
     if (window.isCustomModeCurrent) {
-        // 커스텀: 이미 계산된(수량 포함된) 가격 가져오기
+        // 커스텀: data-raw-price에서 원본 숫자 직접 읽기 (텍스트 파싱 안 함)
         const calcPriceEl = document.getElementById('calcResultPrice');
-        // ★ parseFloat + 소수점 유지 (USD $288.00 → 288, KRW 288,000원 → 288000)
-        productTotal = parseFloat(calcPriceEl.innerText.replace(/[^0-9.]/g, '')) || 0;
+        productTotal = parseFloat(calcPriceEl.dataset.rawPrice) || 0;
     } else {
         // 일반: (국가별 단가) * (상품 수량)
         const urlParams = new URLSearchParams(window.location.search);
@@ -3904,11 +3903,17 @@ if (w >= 20 && h >= 20) {
 
             // 3. 최종 합계
             const totalPrice = pricePerItem * qty;
-            
-            if (priceDisplay) priceDisplay.innerText = formatValue(totalPrice);
+
+            if (priceDisplay) {
+                priceDisplay.innerText = formatValue(totalPrice);
+                priceDisplay.dataset.rawPrice = totalPrice; // ★ 원본 숫자 저장
+            }
             if (sizeDisplay) sizeDisplay.innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
         } else {
-            if (priceDisplay) priceDisplay.innerText = formatValue(0);
+            if (priceDisplay) {
+                priceDisplay.innerText = formatValue(0);
+                priceDisplay.dataset.rawPrice = 0;
+            }
             if (sizeDisplay) sizeDisplay.innerText = lang === 'ja' ? '最低100mm以上入力' : lang === 'en' ? 'Min 100mm required' : '최소 100mm 이상 입력';
         }
     };
