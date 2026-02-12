@@ -387,6 +387,7 @@
   "//_COMMENT_2": "=== 누락된 항목 추가 ===",
   "msg_input_desc": "설명을 입력해주세요.",
   "msg_gen_fail": "생성 실패",
+  "confirm_apply_bg": "이 배경 디자인을 적용하시겠습니까?\n(현재 배경이 교체됩니다)",
   "confirm_bg_remove": "배경을 제거하시겠습니까?",
   "confirm_upscale": "해상도를 2배 높이시겠습니까?",
   "msg_min_page_limit": "최소 1페이지 이상이어야 합니다.",

@@ -371,6 +371,7 @@
   "msg_pdf_error": "Please upload PDF files at the 'Order' step. Only images are supported in the editor.",
 
   "//_COMMENT_2": "=== Added Missing Strings ===",
+  "confirm_apply_bg": "Apply this background design?\n(Current background will be replaced)",
   "confirm_bg_remove": "Would you like to remove the background?",
   "confirm_upscale": "Would you like to double the resolution using AI?",
   "msg_input_desc": "Please enter a description.",
