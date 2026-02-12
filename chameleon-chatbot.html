@@ -474,14 +474,21 @@ const PRICING = {
         return 0;
     },
 
-    formatPrice(num) {
-        const amount = num || 0;
-        // URL lang 파라미터로 통화 결정
+    // 현재 국가 감지 (도메인 + URL 파라미터)
+    detectCountry() {
+        const hostname = window.location.hostname;
+        if (hostname.includes('cafe0101.com')) return 'JP';
+        if (hostname.includes('cafe3355.com')) return 'US';
         const params = new URLSearchParams(window.location.search);
         const langParam = (params.get('lang') || '').toUpperCase();
-        let country = 'KR';
-        if (langParam === 'JA' || langParam === 'JP') country = 'JP';
-        else if (langParam === 'EN' || langParam === 'US') country = 'US';
+        if (langParam === 'JA' || langParam === 'JP') return 'JP';
+        if (langParam === 'EN' || langParam === 'US') return 'US';
+        return 'KR';
+    },
+
+    formatPrice(num) {
+        const amount = num || 0;
+        const country = this.detectCountry();
 
         const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002 };
         const rate = rates[country] || 1;
@@ -490,6 +497,29 @@ const PRICING = {
         if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
         if (country === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         return converted.toLocaleString() + '원';
+    },
+
+    // 제품 데이터에서 현지화된 이름/가격 가져오기
+    getLocalized(product) {
+        const country = this.detectCountry();
+        let name = product.name || '';
+        let price = Number(product.price) || 0;
+
+        if (country === 'JP') {
+            name = product.name_jp || name;
+            price = Number(product.price_jp) || price;
+        } else if (country === 'US') {
+            name = product.name_us || name;
+            price = Number(product.price_us) || price;
+        }
+
+        return { name, price, formattedPrice: this.formatPriceByCountry(price, country) };
+    },
+
+    formatPriceByCountry(price, country) {
+        if (country === 'JP') return '¥' + Math.floor(price).toLocaleString();
+        if (country === 'US') return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return price.toLocaleString() + '원';
     }
 };
 
@@ -841,8 +871,8 @@ async function handleProductSearch(text) {
     try {
         const keyword = text.trim();
         const { data, error } = await sb.from('admin_products')
-            .select('code, name, price, width_mm, height_mm, img_url, is_custom_size, is_general_product, category')
-            .or(`name.ilike.%${keyword}%,code.ilike.%${keyword}%`)
+            .select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, is_custom_size, is_general_product, category')
+            .or(`name.ilike.%${keyword}%,code.ilike.%${keyword}%,name_jp.ilike.%${keyword}%,name_us.ilike.%${keyword}%`)
             .order('sort_order', { ascending: true })
             .limit(5);
 
@@ -861,18 +891,19 @@ async function handleProductSearch(text) {
         let resultHtml = `"<b>${escapeHtml(keyword)}</b>" 검색 결과 (${data.length}건)\n\n`;
         
         data.forEach(p => {
-            const priceText = p.is_custom_size 
-                ? '사이즈별 자동 계산' 
-                : PRICING.formatPrice(p.price);
-            const sizeText = (p.width_mm && p.height_mm) 
-                ? `${p.width_mm} × ${p.height_mm} mm` 
-                : '맞춤 사이즈';
-            
+            const localized = PRICING.getLocalized(p);
+            const priceText = p.is_custom_size
+                ? (PRICING.detectCountry() === 'JP' ? 'サイズ別自動計算' : PRICING.detectCountry() === 'US' ? 'Auto-calculated by size' : '사이즈별 자동 계산')
+                : localized.formattedPrice;
+            const sizeText = (p.width_mm && p.height_mm)
+                ? `${p.width_mm} × ${p.height_mm} mm`
+                : (PRICING.detectCountry() === 'JP' ? 'カスタムサイズ' : PRICING.detectCountry() === 'US' ? 'Custom size' : '맞춤 사이즈');
+
             resultHtml += `
                 <div class="product-card">
-                    <div class="pc-name">${p.name}</div>
+                    <div class="pc-name">${localized.name}</div>
                     <div class="pc-price">${priceText}</div>
-                    <div class="pc-meta">📏 ${sizeText} ${p.is_custom_size ? '| 📐 면적 자동 계산' : ''}</div>
+                    <div class="pc-meta">📏 ${sizeText} ${p.is_custom_size ? '| 📐 ' + (PRICING.detectCountry() === 'JP' ? '面積自動計算' : PRICING.detectCountry() === 'US' ? 'Area calculation' : '면적 자동 계산') : ''}</div>
                 </div>
             `;
         });
