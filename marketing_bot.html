@@ -1352,16 +1352,18 @@ window.publishBlogOneClick = async function() {
                 }
 
                 // marketing_content에도 저장
-                await sb.from('marketing_content').insert({
-                    platform: 'blog',
-                    title: content.title || topic,
-                    body: bodyText,
-                    hashtags: content.hashtags || [],
-                    thumbnail_prompt: content.thumbnail_prompt || '',
-                    thumbnail_url: photoUrl,
-                    status: 'published',
-                    published_at: new Date().toISOString()
-                }).catch(() => {});
+                try {
+                    await sb.from('marketing_content').insert({
+                        platform: 'blog',
+                        title: content.title || topic,
+                        body: bodyText,
+                        hashtags: content.hashtags || [],
+                        thumbnail_prompt: content.thumbnail_prompt || '',
+                        thumbnail_url: photoUrl,
+                        status: 'published',
+                        published_at: new Date().toISOString()
+                    });
+                } catch(_) {}
 
                 publishedCount++;
                 batchResults.push({ success: true, lang, title: content.title || topic });
