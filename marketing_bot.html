@@ -1618,14 +1618,14 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
             // 폰트 로딩 대기
             await document.fonts.ready;
 
-            // 3. BGM 생성 (Web Audio API - 신나는 일렉트로닉)
+            // 3. BGM 생성 (효율적: 고정 오실레이터 + 게인 스케줄링)
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') await audioCtx.resume();
 
             const masterGain = audioCtx.createGain();
             const audioDest = audioCtx.createMediaStreamDestination();
             const compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20;
+            compressor.threshold.value = -18;
             compressor.ratio.value = 4;
             masterGain.connect(compressor);
             compressor.connect(audioDest);
@@ -1637,127 +1637,123 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
             masterGain.gain.linearRampToValueAtTime(0, now + durationSec);
 
             const bpm = 120;
-            const beatTime = 60 / bpm;
-            const totalBeats = Math.floor(durationSec / beatTime);
+            const bt = 60 / bpm; // beat time
+            const end = now + durationSec + 0.5;
 
-            // ── 킥 드럼 (4분 음표마다) ──
-            for (let i = 0; i < totalBeats; i++) {
-                const t = now + i * beatTime;
-                const kickOsc = audioCtx.createOscillator();
-                const kickGain = audioCtx.createGain();
-                kickOsc.type = 'sine';
+            // ── 킥: 1개 오실레이터, 게인/주파수 스케줄링 ──
+            const kickOsc = audioCtx.createOscillator();
+            const kickGain = audioCtx.createGain();
+            kickOsc.type = 'sine';
+            kickOsc.connect(kickGain);
+            kickGain.connect(masterGain);
+            kickGain.gain.setValueAtTime(0, now);
+            for (let t = now; t < end; t += bt) {
                 kickOsc.frequency.setValueAtTime(150, t);
                 kickOsc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
-                kickGain.gain.setValueAtTime(0.4, t);
-                kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-                kickOsc.connect(kickGain);
-                kickGain.connect(masterGain);
-                kickOsc.start(t);
-                kickOsc.stop(t + 0.25);
+                kickGain.gain.setValueAtTime(0.35, t);
+                kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
             }
+            kickOsc.start(now);
+            kickOsc.stop(end);
 
-            // ── 하이햇 (8분 음표마다) ──
-            for (let i = 0; i < totalBeats * 2; i++) {
-                const t = now + i * (beatTime / 2);
-                const bufSize = audioCtx.sampleRate * 0.03;
-                const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-                const data = noiseBuf.getChannelData(0);
-                for (let j = 0; j < bufSize; j++) data[j] = Math.random() * 2 - 1;
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = noiseBuf;
-                const hhFilter = audioCtx.createBiquadFilter();
-                hhFilter.type = 'highpass';
-                hhFilter.frequency.value = 8000;
-                const hhGain = audioCtx.createGain();
-                const vol = (i % 2 === 0) ? 0.08 : 0.04;
-                hhGain.gain.setValueAtTime(vol, t);
-                hhGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-                noise.connect(hhFilter);
-                hhFilter.connect(hhGain);
-                hhGain.connect(masterGain);
-                noise.start(t);
-                noise.stop(t + 0.06);
+            // ── 하이햇: 노이즈 버퍼 1개 재사용, 게인 스케줄링 ──
+            const hhBufLen = audioCtx.sampleRate * durationSec + audioCtx.sampleRate;
+            const hhBuf = audioCtx.createBuffer(1, hhBufLen, audioCtx.sampleRate);
+            const hhData = hhBuf.getChannelData(0);
+            for (let j = 0; j < hhBufLen; j++) hhData[j] = Math.random() * 2 - 1;
+            const hhSrc = audioCtx.createBufferSource();
+            hhSrc.buffer = hhBuf;
+            const hhFilter = audioCtx.createBiquadFilter();
+            hhFilter.type = 'highpass';
+            hhFilter.frequency.value = 8000;
+            const hhGain = audioCtx.createGain();
+            hhSrc.connect(hhFilter);
+            hhFilter.connect(hhGain);
+            hhGain.connect(masterGain);
+            hhGain.gain.setValueAtTime(0, now);
+            for (let t = now; t < end; t += bt / 2) {
+                const isDown = (Math.round((t - now) / (bt / 2)) % 2 === 0);
+                hhGain.gain.setValueAtTime(isDown ? 0.07 : 0.03, t);
+                hhGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
             }
+            hhSrc.start(now);
+            hhSrc.stop(end);
 
-            // ── 베이스라인 (C-G-Am-F 진행) ──
-            const bassNotes = [130.81, 98.00, 110.00, 87.31]; // C3 G2 A2 F2
-            for (let i = 0; i < totalBeats; i++) {
-                const t = now + i * beatTime;
-                const noteIdx = Math.floor(i / 4) % bassNotes.length;
-                const bassOsc = audioCtx.createOscillator();
-                const bassGain = audioCtx.createGain();
-                const bassFilter = audioCtx.createBiquadFilter();
-                bassOsc.type = 'sawtooth';
-                bassOsc.frequency.value = bassNotes[noteIdx];
-                bassFilter.type = 'lowpass';
-                bassFilter.frequency.value = 400;
+            // ── 베이스: 1개 오실레이터, 주파수 스케줄링 (C-G-Am-F) ──
+            const bassOsc = audioCtx.createOscillator();
+            const bassGain = audioCtx.createGain();
+            const bassFlt = audioCtx.createBiquadFilter();
+            bassOsc.type = 'sawtooth';
+            bassFlt.type = 'lowpass';
+            bassFlt.frequency.value = 400;
+            bassOsc.connect(bassFlt);
+            bassFlt.connect(bassGain);
+            bassGain.connect(masterGain);
+            const bassNotes = [130.81, 98.00, 110.00, 87.31];
+            bassGain.gain.setValueAtTime(0, now);
+            let beatIdx = 0;
+            for (let t = now; t < end; t += bt) {
+                const noteIdx = Math.floor(beatIdx / 4) % bassNotes.length;
+                bassOsc.frequency.setValueAtTime(bassNotes[noteIdx], t);
                 bassGain.gain.setValueAtTime(0.12, t);
-                bassGain.gain.setValueAtTime(0.12, t + beatTime * 0.8);
-                bassGain.gain.linearRampToValueAtTime(0, t + beatTime);
-                bassOsc.connect(bassFilter);
-                bassFilter.connect(bassGain);
-                bassGain.connect(masterGain);
-                bassOsc.start(t);
-                bassOsc.stop(t + beatTime + 0.01);
+                bassGain.gain.setValueAtTime(0.12, t + bt * 0.7);
+                bassGain.gain.linearRampToValueAtTime(0.001, t + bt * 0.95);
+                beatIdx++;
             }
+            bassOsc.start(now);
+            bassOsc.stop(end);
 
-            // ── 아르페지오 멜로디 (16분 음표) ──
+            // ── 아르페지오: 1개 오실레이터, 주파수 점프로 멜로디 ──
+            const arpOsc = audioCtx.createOscillator();
+            const arpGain = audioCtx.createGain();
+            const arpFlt = audioCtx.createBiquadFilter();
+            arpOsc.type = 'triangle';
+            arpFlt.type = 'lowpass';
+            arpFlt.frequency.value = 2500;
+            arpOsc.connect(arpFlt);
+            arpFlt.connect(arpGain);
+            arpGain.connect(masterGain);
             const chords = [
-                [523.25, 659.25, 783.99], // C5 E5 G5
-                [392.00, 493.88, 587.33], // G4 B4 D5
-                [440.00, 523.25, 659.25], // A4 C5 E5
-                [349.23, 440.00, 523.25], // F4 A4 C5
+                [523.25, 659.25, 783.99],
+                [392.00, 493.88, 587.33],
+                [440.00, 523.25, 659.25],
+                [349.23, 440.00, 523.25],
             ];
-            const sixteenth = beatTime / 4;
-            for (let i = 0; i < totalBeats * 4; i++) {
-                const t = now + i * sixteenth;
-                if (t >= now + durationSec) break;
-                const chordIdx = Math.floor(i / 16) % chords.length;
-                const noteIdx = i % 3;
-                const arpOsc = audioCtx.createOscillator();
-                const arpGain = audioCtx.createGain();
-                const arpFilter = audioCtx.createBiquadFilter();
-                arpOsc.type = 'triangle';
-                arpOsc.frequency.value = chords[chordIdx][noteIdx];
-                arpFilter.type = 'lowpass';
-                arpFilter.frequency.value = 2500;
+            const sixteenth = bt / 4;
+            arpGain.gain.setValueAtTime(0, now);
+            let arpIdx = 0;
+            for (let t = now; t < end; t += sixteenth) {
+                const chordIdx = Math.floor(arpIdx / 16) % chords.length;
+                const nIdx = arpIdx % 3;
+                arpOsc.frequency.setValueAtTime(chords[chordIdx][nIdx], t);
                 arpGain.gain.setValueAtTime(0.06, t);
-                arpGain.gain.exponentialRampToValueAtTime(0.001, t + sixteenth * 0.9);
-                arpOsc.connect(arpFilter);
-                arpFilter.connect(arpGain);
-                arpGain.connect(masterGain);
-                arpOsc.start(t);
-                arpOsc.stop(t + sixteenth);
+                arpGain.gain.exponentialRampToValueAtTime(0.001, t + sixteenth * 0.85);
+                arpIdx++;
             }
+            arpOsc.start(now);
+            arpOsc.stop(end);
 
-            // ── 패드 코드 (배경 깔기) ──
-            const padChordFreqs = [
-                [261.63, 329.63, 392.00], // C
-                [196.00, 246.94, 293.66], // G
-                [220.00, 261.63, 329.63], // Am
-                [174.61, 220.00, 261.63], // F
+            // ── 패드: 3개 오실레이터, 주파수 스케줄링 ──
+            const padChords = [
+                [261.63, 329.63, 392.00],
+                [196.00, 246.94, 293.66],
+                [220.00, 261.63, 329.63],
+                [174.61, 220.00, 261.63],
             ];
-            for (let c = 0; c < Math.ceil(totalBeats / 4); c++) {
-                const t = now + c * 4 * beatTime;
-                const chd = padChordFreqs[c % padChordFreqs.length];
-                chd.forEach(freq => {
-                    const padOsc = audioCtx.createOscillator();
-                    const padGain = audioCtx.createGain();
-                    const padFlt = audioCtx.createBiquadFilter();
-                    padOsc.type = 'sine';
-                    padOsc.frequency.value = freq;
-                    padFlt.type = 'lowpass';
-                    padFlt.frequency.value = 1200;
-                    padGain.gain.setValueAtTime(0, t);
-                    padGain.gain.linearRampToValueAtTime(0.04, t + 0.3);
-                    padGain.gain.setValueAtTime(0.04, t + 4 * beatTime - 0.3);
-                    padGain.gain.linearRampToValueAtTime(0, t + 4 * beatTime);
-                    padOsc.connect(padFlt);
-                    padFlt.connect(padGain);
-                    padGain.connect(masterGain);
-                    padOsc.start(t);
-                    padOsc.stop(t + 4 * beatTime + 0.1);
-                });
+            for (let v = 0; v < 3; v++) {
+                const padOsc = audioCtx.createOscillator();
+                const padGain = audioCtx.createGain();
+                padOsc.type = 'sine';
+                padGain.gain.setValueAtTime(0.04, now);
+                let ci = 0;
+                for (let t = now; t < end; t += bt * 4) {
+                    padOsc.frequency.setValueAtTime(padChords[ci % 4][v], t);
+                    ci++;
+                }
+                padOsc.connect(padGain);
+                padGain.connect(masterGain);
+                padOsc.start(now);
+                padOsc.stop(end);
             }
 
             // 4. MediaRecorder 셋업 (비디오 + 오디오 믹싱)
