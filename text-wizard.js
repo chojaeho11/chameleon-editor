@@ -4,9 +4,15 @@
  */
 
 (function() {
-    // 1. 언어 감지
+    // 1. 언어 감지 (URL 파라미터 우선, 없으면 도메인 기반)
     const urlParams = new URLSearchParams(window.location.search);
-    const currentLang = urlParams.get('lang') ? urlParams.get('lang').toLowerCase() : 'kr';
+    let currentLang = urlParams.get('lang') ? urlParams.get('lang').toLowerCase() : null;
+    if (!currentLang) {
+        const _h = window.location.hostname;
+        if (_h.includes('cafe0101.com')) currentLang = 'jp';
+        else if (_h.includes('cafe3355.com')) currentLang = 'us';
+        else currentLang = 'kr';
+    }
     const langKey = (currentLang === 'en' || currentLang === 'us') ? 'en' : (currentLang === 'ja' || currentLang === 'jp') ? 'ja' : 'kr';
 
     // 2. 폰트 선택 함수 (DYNAMIC_FONTS가 로드된 후 실행 시점에 호출)
