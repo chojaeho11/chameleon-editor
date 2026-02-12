@@ -3796,7 +3796,8 @@ window.updateModalTotal = function() {
     if (window.isCustomModeCurrent) {
         // 커스텀: 이미 계산된(수량 포함된) 가격 가져오기
         const calcPriceEl = document.getElementById('calcResultPrice');
-        productTotal = parseInt(calcPriceEl.innerText.replace(/[^0-9]/g, '')) || 0;
+        // ★ parseFloat + 소수점 유지 (USD $288.00 → 288, KRW 288,000원 → 288000)
+        productTotal = parseFloat(calcPriceEl.innerText.replace(/[^0-9.]/g, '')) || 0;
     } else {
         // 일반: (국가별 단가) * (상품 수량)
         const urlParams = new URLSearchParams(window.location.search);
@@ -3815,7 +3816,7 @@ window.updateModalTotal = function() {
     let optionTotal = 0;
     
     document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
-        let price = parseInt(chk.dataset.price || 0);
+        let price = parseFloat(chk.dataset.price || 0);
         
         // 해당 옵션 줄(row)에서 수량 입력칸 찾기
         // (리스트형 옵션은 .addon-qty-input이 있고, 버튼형은 보통 1개로 침)
