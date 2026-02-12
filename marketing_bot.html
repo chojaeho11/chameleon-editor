@@ -476,7 +476,7 @@ textarea.form-input { resize:vertical; min-height:80px; }
     <div class="card">
         <div class="card-title"><i class="fa-solid fa-bolt"></i> 원클릭 블로그 발행</div>
         <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">
-            사진 업로드 (여러 장 가능) → AI가 각 사진별 블로그 글 작성 → 자사 사이트에 자동 게시
+            사진 업로드 → AI가 <strong style="color:#a78bfa;">한국어/日本語/English</strong> 3개 블로그 자동 작성 → 3개 사이트에 동시 게시 (SEO 최적화)
         </p>
 
         <!-- 사진 업로드 -->
@@ -484,40 +484,37 @@ textarea.form-input { resize:vertical; min-height:80px; }
             <div id="blogDropzoneContent">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
                 <p>클릭 또는 사진을 여기에 드래그하세요 (여러 장 선택 가능)</p>
-                <p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 여러 장 → 각각 블로그 글 자동 생성</p>
+                <p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 사진 1장 → 한/일/영 블로그 3개 자동 생성</p>
             </div>
         </div>
         <input type="file" id="blogPhotoInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="handleBlogPhoto(this)">
 
-        <!-- 주제 + 언어 -->
-        <div style="display:grid; grid-template-columns:1fr auto; gap:12px; margin-top:16px;">
+        <!-- 주제 -->
+        <div style="margin-top:16px;">
             <div class="form-group" style="margin:0;">
-                <label>주제 (선택사항)</label>
+                <label>주제 (선택사항 - 비우면 AI가 사진에서 자동 감지)</label>
                 <input type="text" class="form-input" id="blogTopic" placeholder="예: 허니컴보드로 카페 인테리어 꾸미기">
             </div>
-            <div class="form-group" style="margin:0; min-width:130px;">
-                <label>언어 / 사이트</label>
-                <select class="form-input" id="blogLang" onchange="updateBlogSite()">
-                    <option value="kr">한국어 (KR)</option>
-                    <option value="ja">日本語 (JP)</option>
-                    <option value="en">English (US)</option>
-                </select>
-            </div>
         </div>
-        <div style="font-size:12px; color:#64748b; margin-top:6px;">
-            게시 대상: <strong id="blogTargetSite" style="color:#a78bfa;">cafe2626.com</strong>
+        <div style="font-size:12px; color:#64748b; margin-top:8px; display:flex; gap:12px; align-items:center;">
+            <span>게시 대상:</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#60a5fa; font-weight:600; font-size:11px;">cafe2626.com</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#f472b6; font-weight:600; font-size:11px;">cafe0101.com</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#34d399; font-weight:600; font-size:11px;">cafe3355.com</span>
         </div>
 
         <!-- 원클릭 버튼 -->
         <button class="oneclick-btn" id="blogOneClickBtn" onclick="publishBlogOneClick()" style="margin-top:20px;">
-            <i class="fa-solid fa-rocket"></i> AI 생성 & 블로그 발행
+            <i class="fa-solid fa-rocket"></i> AI 생성 & 3개국어 블로그 발행
         </button>
 
         <!-- 진행 상황 -->
         <div class="oneclick-progress" id="blogProgress">
             <div class="step" id="step-upload"><i class="fa-solid fa-circle-notch fa-spin"></i> 사진 업로드 중...</div>
-            <div class="step" id="step-ai"><i class="fa-solid fa-circle-notch fa-spin"></i> AI 블로그 글 생성 중...</div>
-            <div class="step" id="step-publish"><i class="fa-solid fa-circle-notch fa-spin"></i> 블로그에 게시 중...</div>
+            <div class="step" id="step-ai-kr"><i class="fa-solid fa-circle-notch fa-spin"></i> 한국어 블로그 생성 중...</div>
+            <div class="step" id="step-ai-ja"><i class="fa-solid fa-circle-notch fa-spin"></i> 日本語 블로그 생성 중...</div>
+            <div class="step" id="step-ai-en"><i class="fa-solid fa-circle-notch fa-spin"></i> English 블로그 생성 중...</div>
+            <div class="step" id="step-publish"><i class="fa-solid fa-circle-notch fa-spin"></i> 3개 사이트에 게시 중...</div>
         </div>
     </div>
 
@@ -525,9 +522,15 @@ textarea.form-input { resize:vertical; min-height:80px; }
     <div class="card" id="blogPreviewCard" style="display:none;">
         <div class="card-title"><i class="fa-solid fa-eye"></i> 발행 완료 미리보기</div>
         <div class="blog-preview" id="blogPreview"></div>
-        <div style="margin-top:12px; display:flex; gap:8px;">
-            <a id="blogViewLink" href="#" target="_blank" class="btn" style="background:#7c3aed; color:#fff; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; text-decoration:none;">
-                <i class="fa-solid fa-external-link-alt"></i> 사이트에서 보기
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <a id="blogViewLinkKR" href="#" target="_blank" class="btn" style="background:#2563eb; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> KR 사이트
+            </a>
+            <a id="blogViewLinkJP" href="#" target="_blank" class="btn" style="background:#db2777; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> JP サイト
+            </a>
+            <a id="blogViewLinkEN" href="#" target="_blank" class="btn" style="background:#059669; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> EN Site
             </a>
         </div>
     </div>
@@ -1142,19 +1145,15 @@ window.uploadToYoutube = async function() {
     }
 };
 
-// ===== 원클릭 블로그 발행 =====
+// ===== 원클릭 블로그 발행 (3개국어 동시) =====
 let blogPhotoFiles = []; // 다중 사진 지원
 
 const langConfig = {
-    kr: { countryCode: 'KR', site: 'cafe2626.com' },
-    ja: { countryCode: 'JP', site: 'cafe0101.com' },
-    en: { countryCode: 'US', site: 'cafe3355.com' }
+    kr: { countryCode: 'KR', site: 'cafe2626.com', label: '한국어', flag: 'KR', color: '#60a5fa' },
+    ja: { countryCode: 'JP', site: 'cafe0101.com', label: '日本語', flag: 'JP', color: '#f472b6' },
+    en: { countryCode: 'US', site: 'cafe3355.com', label: 'English', flag: 'EN', color: '#34d399' }
 };
-
-window.updateBlogSite = function() {
-    const lang = document.getElementById('blogLang').value;
-    document.getElementById('blogTargetSite').textContent = langConfig[lang].site;
-};
+const blogLangs = ['kr', 'ja', 'en']; // 항상 3개국어 생성
 
 window.handleBlogPhoto = function(input) {
     const files = Array.from(input.files).filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
@@ -1164,13 +1163,13 @@ window.handleBlogPhoto = function(input) {
     if (files.length === 1) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            dzc.innerHTML = `<img src="${e.target.result}" alt="preview" style="max-height:120px; border-radius:8px;"><p style="margin-top:8px; color:#a78bfa; font-size:12px;">1장 선택됨 - 클릭하여 변경</p>`;
+            dzc.innerHTML = `<img src="${e.target.result}" alt="preview" style="max-height:120px; border-radius:8px;"><p style="margin-top:8px; color:#a78bfa; font-size:12px;">1장 선택됨 → 한/일/영 블로그 3개 생성</p>`;
         };
         reader.readAsDataURL(files[0]);
     } else {
         dzc.innerHTML = `<i class="fa-solid fa-images" style="font-size:36px; color:#a78bfa;"></i>
             <p style="margin-top:8px; color:#a78bfa; font-weight:700;">${files.length}장 선택됨</p>
-            <p style="font-size:11px; color:#94a3b8;">각 사진마다 블로그 글 1개씩 자동 생성됩니다</p>`;
+            <p style="font-size:11px; color:#94a3b8;">각 사진마다 한/일/영 블로그 3개씩 (총 ${files.length * 3}개) 자동 생성</p>`;
     }
 };
 
@@ -1206,7 +1205,6 @@ window.publishBlogOneClick = async function() {
 
     const btn = document.getElementById('blogOneClickBtn');
     const progress = document.getElementById('blogProgress');
-    const lang = document.getElementById('blogLang').value;
     const topic = document.getElementById('blogTopic').value.trim() || '카멜레온프린팅 제품 활용 사례 소개';
     const settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}');
     const totalFiles = blogPhotoFiles.length;
@@ -1219,18 +1217,50 @@ window.publishBlogOneClick = async function() {
     document.getElementById('blogPreview').innerHTML = '';
 
     let batchResults = [];
+    const { data: { user } } = await sb.auth.getUser();
+    const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '카멜레온';
+
+    // 마크다운 → HTML 변환 함수
+    function mdToHtml(bodyText, photoUrl, title, hashtags, metaDesc, focusKw, lang) {
+        let htmlBody = bodyText
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>')
+            .replace(/## (.*)/g, '<h2>$1</h2>')
+            .replace(/### (.*)/g, '<h3>$1</h3>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // SEO: 이미지 alt에 focus keyword 포함
+        const altText = focusKw || title || topic;
+        htmlBody = `<p><img src="${photoUrl}" alt="${altText}" style="max-width:100%; border-radius:12px; margin-bottom:20px;" loading="lazy"/></p><p>${htmlBody}</p>`;
+        if (hashtags?.length) {
+            htmlBody += `<p style="color:#6366f1; margin-top:20px;">${hashtags.map(t => '#' + t).join(' ')}</p>`;
+        }
+        // SEO: 다국어 hreflang 안내 (검색엔진 크롤러용 hidden)
+        const domain = { kr: 'www.cafe2626.com', ja: 'www.cafe0101.com', en: 'www.cafe3355.com' };
+        htmlBody += `<div style="display:none;" data-seo="hreflang" data-lang="${lang}" data-domain="${domain[lang]}"></div>`;
+        return htmlBody;
+    }
 
     for (let i = 0; i < totalFiles; i++) {
         const file = blogPhotoFiles[i];
-        const label = totalFiles > 1 ? ` (${i + 1}/${totalFiles})` : '';
+        const photoLabel = totalFiles > 1 ? `사진 ${i + 1}/${totalFiles}` : '';
 
         // 스텝 초기화
-        ['step-upload','step-ai','step-publish'].forEach(s => { const el = document.getElementById(s); if(el) el.className = 'step'; });
+        ['step-upload','step-ai-kr','step-ai-ja','step-ai-en','step-publish'].forEach(s => {
+            const el = document.getElementById(s); if(el) el.className = 'step';
+        });
+
+        // 사진 구분 헤더
+        if (totalFiles > 1) {
+            document.getElementById('blogPreview').innerHTML += `
+                <div style="padding:8px 12px; margin:12px 0 4px; background:#334155; border-radius:6px; font-size:13px; color:#e2e8f0; font-weight:600;">
+                    <i class="fa-solid fa-image"></i> ${photoLabel}
+                </div>`;
+        }
 
         try {
-            // 1. 사진 업로드
+            // 1. 사진 업로드 (1번만)
             setStep('step-upload', 'active');
-            document.getElementById('step-upload').lastChild.textContent = ` 사진 업로드 중...${label}`;
+            document.getElementById('step-upload').lastChild.textContent = ` 사진 업로드 중... ${photoLabel}`;
             const ext = file.name.split('.').pop().toLowerCase();
             const filePath = `blog_${Date.now()}_${Math.random().toString(36).substring(2,7)}.${ext}`;
             const { error: uploadErr } = await sb.storage.from('community').upload(filePath, file);
@@ -1239,114 +1269,154 @@ window.publishBlogOneClick = async function() {
             const photoUrl = urlData.publicUrl;
             setStep('step-upload', 'done');
 
-            // 2. AI 블로그 글 생성
-            setStep('step-ai', 'active');
-            document.getElementById('step-ai').lastChild.textContent = ` AI 블로그 글 생성 중...${label}`;
+            // 2. 3개국어 AI 블로그 생성 (순차 - API 부하 방지)
+            const langResults = {};
+            for (const lang of blogLangs) {
+                const cfg = langConfig[lang];
+                const stepId = `step-ai-${lang}`;
+                setStep(stepId, 'active');
 
-            const { data: aiData, error: aiErr } = await sb.functions.invoke('marketing-content', {
-                body: {
-                    platform: 'blog',
-                    topic: topic,
-                    tone: 'professional',
-                    lang: lang,
-                    instructions: '사진이 포함된 블로그 포스트입니다. 제품 사진을 참고하여 실용적인 글을 작성하세요.',
-                    coreKeywords: settings.coreKeywords || '',
-                    usp: settings.usp || '',
-                    ctaMsg: settings.ctaMsg || ''
+                try {
+                    const { data: aiData, error: aiErr } = await sb.functions.invoke('marketing-content', {
+                        body: {
+                            platform: 'blog',
+                            topic: topic,
+                            tone: 'professional',
+                            lang: lang,
+                            instructions: `사진이 포함된 블로그 포스트입니다. ${cfg.site} 사이트에 게시될 ${cfg.label} 콘텐츠입니다. 해당 언어 시장의 검색 트렌드를 반영하여 SEO에 최적화된 고품질 글을 작성하세요. 웹사이트 링크는 반드시 https://${cfg.site} 을 사용하세요.`,
+                            coreKeywords: settings.coreKeywords || '',
+                            usp: settings.usp || '',
+                            ctaMsg: settings.ctaMsg || ''
+                        }
+                    });
+                    if (aiErr) throw new Error(aiErr.message);
+                    const content = aiData.content || aiData;
+                    if (content.error) throw new Error(content.error);
+                    langResults[lang] = content;
+                    setStep(stepId, 'done');
+                } catch (langErr) {
+                    console.error(`AI generation failed for ${lang}:`, langErr);
+                    langResults[lang] = null;
+                    setStep(stepId, 'error');
                 }
-            });
-            if (aiErr) throw new Error('AI 생성 실패: ' + aiErr.message);
-            const content = aiData.content || aiData;
-            if (content.error) throw new Error('AI 오류: ' + content.error);
-            setStep('step-ai', 'done');
 
-            // 3. HTML 본문 생성 (사진 포함)
-            setStep('step-publish', 'active');
-            document.getElementById('step-publish').lastChild.textContent = ` 블로그에 게시 중...${label}`;
-            let bodyText = content.body || '';
-            let htmlBody = bodyText
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>')
-                .replace(/## (.*)/g, '<h2>$1</h2>')
-                .replace(/### (.*)/g, '<h3>$1</h3>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            htmlBody = `<p><img src="${photoUrl}" alt="${content.title || topic}" style="max-width:100%; border-radius:12px; margin-bottom:20px;"/></p><p>${htmlBody}</p>`;
-            if (content.hashtags?.length) {
-                htmlBody += `<p style="color:#6366f1; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
+                // API 부하 방지 대기
+                if (lang !== blogLangs[blogLangs.length - 1]) {
+                    await new Promise(r => setTimeout(r, 1500));
+                }
             }
 
-            // 4. community_posts에 게시
-            const { data: { user } } = await sb.auth.getUser();
-            const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '카멜레온';
-            const countryCode = langConfig[lang].countryCode;
+            // 3. 3개 사이트에 동시 게시
+            setStep('step-publish', 'active');
+            let publishedCount = 0;
 
-            const { error: postErr } = await sb.from('community_posts').insert({
-                category: 'blog',
-                country_code: countryCode,
-                title: content.title || topic,
-                content: htmlBody,
-                author_name: authorName,
-                author_email: user?.email || '',
-                author_id: user?.id || null,
-                thumbnail: photoUrl
-            });
-            if (postErr) throw new Error('게시 실패: ' + postErr.message);
+            for (const lang of blogLangs) {
+                const content = langResults[lang];
+                if (!content) continue;
 
-            // 5. marketing_content에도 저장
-            await sb.from('marketing_content').insert({
-                platform: 'blog',
-                title: content.title || topic,
-                body: bodyText,
-                hashtags: content.hashtags || [],
-                thumbnail_prompt: content.thumbnail_prompt || '',
-                thumbnail_url: photoUrl,
-                status: 'published',
-                published_at: new Date().toISOString()
-            });
+                const cfg = langConfig[lang];
+                const bodyText = content.body || '';
+                const metaDesc = content.meta_description || '';
+                const focusKw = content.focus_keyword || '';
+                const htmlBody = mdToHtml(bodyText, photoUrl, content.title, content.hashtags, metaDesc, focusKw, lang);
 
-            setStep('step-publish', 'done');
-            batchResults.push({ success: true, title: content.title || topic });
+                // community_posts에 게시 (SEO 메타데이터를 markdown 필드에 JSON으로 저장)
+                const seoMeta = JSON.stringify({
+                    meta_description: metaDesc,
+                    focus_keyword: focusKw,
+                    hashtags: content.hashtags || [],
+                    og_image: photoUrl
+                });
 
-            // 결과 표시
-            document.getElementById('blogPreview').innerHTML += `
-                <div style="padding:10px; margin-bottom:8px; background:#052e16; border:1px solid #166534; border-radius:8px;">
-                    <span style="color:#22c55e; font-weight:600;"><i class="fa-solid fa-check-circle"></i> ${i + 1}. ${content.title || topic}</span>
-                </div>`;
+                const { error: postErr } = await sb.from('community_posts').insert({
+                    category: 'blog',
+                    country_code: cfg.countryCode,
+                    title: content.title || topic,
+                    content: htmlBody,
+                    author_name: authorName,
+                    author_email: user?.email || '',
+                    author_id: user?.id || null,
+                    thumbnail: photoUrl,
+                    markdown: seoMeta
+                });
+
+                if (postErr) {
+                    console.error(`Publish failed for ${lang}:`, postErr);
+                    document.getElementById('blogPreview').innerHTML += `
+                        <div style="padding:6px 10px; margin-bottom:4px; background:#450a0a; border:1px solid #991b1b; border-radius:6px; font-size:12px;">
+                            <span style="color:${cfg.color}; font-weight:600;">${cfg.flag}</span>
+                            <span style="color:#f87171;"> 게시 실패: ${postErr.message}</span>
+                        </div>`;
+                    batchResults.push({ success: false, lang, error: postErr.message });
+                    continue;
+                }
+
+                // marketing_content에도 저장
+                await sb.from('marketing_content').insert({
+                    platform: 'blog',
+                    title: content.title || topic,
+                    body: bodyText,
+                    hashtags: content.hashtags || [],
+                    thumbnail_prompt: content.thumbnail_prompt || '',
+                    thumbnail_url: photoUrl,
+                    status: 'published',
+                    published_at: new Date().toISOString()
+                }).catch(() => {});
+
+                publishedCount++;
+                batchResults.push({ success: true, lang, title: content.title || topic });
+
+                // 결과 표시
+                document.getElementById('blogPreview').innerHTML += `
+                    <div style="padding:6px 10px; margin-bottom:4px; background:#052e16; border:1px solid #166534; border-radius:6px; font-size:12px; display:flex; align-items:center; gap:8px;">
+                        <span style="background:${cfg.color}22; color:${cfg.color}; padding:2px 6px; border-radius:3px; font-weight:700; font-size:11px;">${cfg.flag}</span>
+                        <span style="color:#22c55e; font-weight:600;">${content.title || topic}</span>
+                    </div>`;
+            }
+
+            if (publishedCount > 0) setStep('step-publish', 'done');
+            else setStep('step-publish', 'error');
 
         } catch(e) {
-            console.error(`Blog pipeline error (${i + 1}/${totalFiles}):`, e);
+            console.error(`Blog pipeline error (photo ${i + 1}/${totalFiles}):`, e);
             batchResults.push({ success: false, error: e.message });
 
             document.getElementById('blogPreview').innerHTML += `
                 <div style="padding:10px; margin-bottom:8px; background:#450a0a; border:1px solid #991b1b; border-radius:8px;">
-                    <span style="color:#f87171; font-weight:600;"><i class="fa-solid fa-circle-exclamation"></i> ${i + 1}. 실패: ${e.message}</span>
+                    <span style="color:#f87171; font-weight:600;"><i class="fa-solid fa-circle-exclamation"></i> ${photoLabel} 실패: ${e.message}</span>
                 </div>`;
 
-            ['step-upload','step-ai','step-publish'].forEach(id => {
+            ['step-upload','step-ai-kr','step-ai-ja','step-ai-en','step-publish'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && el.className.includes('active')) el.className = 'step error';
             });
         }
 
-        // 다음 사진 처리 전 대기 (API 부하 방지)
+        // 다음 사진 처리 전 대기
         if (i < totalFiles - 1) await new Promise(r => setTimeout(r, 2000));
     }
 
     // 완료 요약
     const successCount = batchResults.filter(r => r.success).length;
     const failCount = batchResults.filter(r => !r.success).length;
+    const totalExpected = totalFiles * 3;
     document.getElementById('blogPreview').innerHTML += `
         <div style="padding:12px; margin-top:12px; background:#1e293b; border-radius:8px; text-align:center;">
             <span style="color:#f1f5f9; font-weight:700;">
-                총 ${totalFiles}개 중 <span style="color:#22c55e;">${successCount}개 발행 성공</span>${failCount > 0 ? `, <span style="color:#f87171;">${failCount}개 실패</span>` : ''}
+                사진 ${totalFiles}장 × 3개국어 = 총 ${totalExpected}개 중
+                <span style="color:#22c55e;">${successCount}개 발행 성공</span>${failCount > 0 ? `, <span style="color:#f87171;">${failCount}개 실패</span>` : ''}
             </span>
         </div>`;
-    document.getElementById('blogViewLink').href = `https://${langConfig[lang].site}/board?cat=blog`;
+
+    // 사이트별 링크 업데이트
+    document.getElementById('blogViewLinkKR').href = 'https://www.cafe2626.com/board?cat=blog';
+    document.getElementById('blogViewLinkJP').href = 'https://www.cafe0101.com/board?cat=blog';
+    document.getElementById('blogViewLinkEN').href = 'https://www.cafe3355.com/board?cat=blog';
 
     // 초기화
     blogPhotoFiles = [];
     document.getElementById('blogPhotoInput').value = '';
-    document.getElementById('blogDropzoneContent').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><p>클릭 또는 사진을 여기에 드래그하세요 (여러 장 선택 가능)</p><p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 여러 장 → 각각 블로그 글 자동 생성</p>';
+    document.getElementById('blogDropzoneContent').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><p>클릭 또는 사진을 여기에 드래그하세요 (여러 장 선택 가능)</p><p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 사진 1장 → 한/일/영 블로그 3개 자동 생성</p>';
     document.getElementById('blogTopic').value = '';
     loadBlogHistory();
 

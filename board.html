@@ -875,7 +875,81 @@
             if (!post) return alert(window.t ? window.t('msg_post_deleted') : 'Post deleted.'), goToList();
 
             updateBoardSEO(post.title, post.content, post.thumbnail);
-            
+
+            // SEO: BlogPosting JSON-LD 구조화 데이터 추가
+            if (category === 'blog') {
+                const existingLd = document.getElementById('blogPostingJsonLd');
+                if (existingLd) existingLd.remove();
+
+                const domainMap = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.cafe3355.com' };
+                const langMap = { KR: 'ko', JP: 'ja', US: 'en' };
+                const siteNameMap = { KR: '카멜레온프린팅', JP: 'カメレオンプリンティング', US: 'Chameleon Printing' };
+                const cc = post.country_code || currentCountry;
+                const baseDomain = domainMap[cc] || domainMap.KR;
+                const postUrl = `${baseDomain}/board.html?cat=blog&country=${cc}&id=${post.id}`;
+                const plainDesc = (post.content || '').replace(/<[^>]*>?/gm, '').substring(0, 160).trim();
+
+                // markdown 필드에서 SEO 메타 추출
+                let seoMeta = {};
+                try { seoMeta = JSON.parse(post.markdown || '{}'); } catch(e) {}
+                const metaDesc = seoMeta.meta_description || plainDesc;
+                const focusKw = seoMeta.focus_keyword || '';
+
+                // meta description 업데이트
+                let descMeta = document.querySelector('meta[name="description"]');
+                if (descMeta) descMeta.setAttribute('content', metaDesc);
+
+                // focus keyword → meta keywords
+                if (focusKw) {
+                    let kwMeta = document.querySelector('meta[name="keywords"]');
+                    if (!kwMeta) { kwMeta = document.createElement('meta'); kwMeta.name = 'keywords'; document.head.appendChild(kwMeta); }
+                    const kws = (seoMeta.hashtags || []).join(',') || focusKw;
+                    kwMeta.setAttribute('content', kws);
+                }
+
+                // hreflang 동적 업데이트 (같은 포스트의 다른 언어 버전은 없지만, 카테고리 페이지 hreflang)
+                document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(link => {
+                    const hl = link.getAttribute('hreflang');
+                    const hlMap = { ko: 'KR', ja: 'JP', en: 'US', 'x-default': 'KR' };
+                    const hlCC = hlMap[hl] || 'KR';
+                    link.href = `${domainMap[hlCC]}/board.html?cat=blog&country=${hlCC}`;
+                });
+
+                // canonical URL
+                let canonical = document.querySelector('link[rel="canonical"]');
+                if (canonical) canonical.href = postUrl;
+
+                // BlogPosting JSON-LD
+                const jsonLd = document.createElement('script');
+                jsonLd.type = 'application/ld+json';
+                jsonLd.id = 'blogPostingJsonLd';
+                jsonLd.textContent = JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "BlogPosting",
+                    "headline": post.title,
+                    "description": metaDesc,
+                    "image": post.thumbnail || '',
+                    "author": {
+                        "@type": "Organization",
+                        "name": siteNameMap[cc] || '카멜레온프린팅',
+                        "url": baseDomain
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": siteNameMap[cc] || '카멜레온프린팅',
+                        "url": baseDomain,
+                        "logo": { "@type": "ImageObject", "url": baseDomain + "/img/logo.png" }
+                    },
+                    "datePublished": post.created_at,
+                    "dateModified": post.created_at,
+                    "url": postUrl,
+                    "inLanguage": langMap[cc] || 'ko',
+                    "keywords": focusKw || (seoMeta.hashtags || []).join(', '),
+                    "mainEntityOfPage": { "@type": "WebPage", "@id": postUrl }
+                });
+                document.head.appendChild(jsonLd);
+            }
+
             const ratingArea = document.getElementById('viewRatingArea');
             if (category === 'review' && post.rating) {
                 let starHtml = '';
