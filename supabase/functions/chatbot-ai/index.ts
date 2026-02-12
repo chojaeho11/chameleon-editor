@@ -177,18 +177,27 @@ serve(async (req) => {
             // 통화 변환 적용된 가격
             const displayPrice = convertPrice(p.price || 0);
             const displayPerSqm = perSqm ? convertPrice(perSqm) : null;
-            return {
-                ...p,
-                price: p.price,
-                display_price: displayPrice,
-                price_per_sqm: perSqm,
-                display_price_per_sqm: displayPerSqm,
+            const base: any = {
+                code: p.code,
+                name: p.name,
+                width_mm: p.width_mm,
+                height_mm: p.height_mm,
+                is_custom_size: p.is_custom_size,
+                is_general_product: p.is_general_product,
+                category: p.category,
+                description: p.description,
+                price: displayPrice,
+                price_per_sqm: displayPerSqm,
                 pricing_note: p.is_custom_size
                     ? (perSqm
                         ? `면적기반: ㎡당 ${displayPerSqm} (기본 ${p.width_mm}x${p.height_mm}mm = ${displayPrice})`
                         : "면적기반: 단가 문의")
                     : `고정가: ${displayPrice}`
             };
+            // 서버 계산용으로 원화 숫자값은 내부에만 보관
+            base._raw_price = p.price || 0;
+            base._raw_per_sqm = perSqm;
+            return base;
         });
         
         // 두께 필터가 있으면 결과에서 추가 필터링
@@ -212,15 +221,15 @@ serve(async (req) => {
             
             const calcResults: string[] = [];
             products.forEach((p: any) => {
-                if (p.is_custom_size && p.price_per_sqm) {
-                    let unitPrice = Math.round(area * p.price_per_sqm / 100) * 100;
+                if (p.is_custom_size && p._raw_per_sqm) {
+                    let unitPrice = Math.round(area * p._raw_per_sqm / 100) * 100;
                     const total = unitPrice * qty;
                     const dUnit = convertPrice(unitPrice);
                     const dTotal = convertPrice(total);
                     calcResults.push(`- ${p.name}: ${w}×${h}mm ${qty > 1 ? qty + '개 = ' + dTotal : '= ' + dUnit}${qty > 1 ? ' (개당 ' + dUnit + ')' : ''}`);
-                } else if (!p.is_custom_size && p.price) {
-                    const total = p.price * qty;
-                    const dPrice = convertPrice(p.price);
+                } else if (!p.is_custom_size && p._raw_price) {
+                    const total = p._raw_price * qty;
+                    const dPrice = convertPrice(p._raw_price);
                     const dTotal = convertPrice(total);
                     calcResults.push(`- ${p.name}: ${qty > 1 ? qty + '개 = ' + dTotal : dPrice} (고정가)`);
                 }
@@ -304,7 +313,9 @@ ${lp.rules}
 - 서버 계산이 없을 때만: (가로mm / 1000) × (세로mm / 1000) × 해당 상품의 price_per_sqm, 100원 단위 반올림
 - 고정가 상품(is_general_product=true): DB 가격 그대로.
 - ❌ 절대 계산 과정(공식, ㎡당 단가, 곱셈식)을 보여주지 마세요.
-- ⚠️ 통화: display_price, display_price_per_sqm 필드가 이미 현지 통화(${currencyUnit()})로 변환되어 있습니다. 반드시 이 값을 사용하세요! 원화(₩, 원)로 표시하지 마세요!
+- ⚠️ 통화: 모든 가격(price, price_per_sqm)이 이미 현지 통화(${currencyUnit()})로 변환되어 있습니다.
+- 반드시 이 값을 그대로 사용하세요! ${clientLang !== 'kr' ? '절대 원화(₩, 원, KRW, 원화)를 사용하지 마세요!' : ''}
+- ${clientLang === 'ja' ? '모든 가격을 ¥(엔)으로 표시하세요. 예: ¥200, ¥1,000' : clientLang === 'en' ? 'Display all prices in $(USD). Example: $2, $10' : '모든 가격을 원(₩)으로 표시하세요.'}
 - 환율 기준: 1,000원 = ¥200 = $2
 
 ## 회원 등급 할인 / Member Discounts
@@ -319,15 +330,15 @@ ${lp.payment}
 ## 매니저 / Manager (09:00~18:00)
 ${lp.manager}
 
-## 현재 등록 상품 (price_per_sqm = ㎡당 단가)
-${JSON.stringify(products)}
+## 현재 등록 상품 (price = 현지통화 가격, price_per_sqm = ㎡당 현지통화 단가)
+${JSON.stringify(products.map((p: any) => { const { _raw_price, _raw_per_sqm, ...clean } = p; return clean; }))}
 ${preCalculated}
 
 ## 카테고리
 ${JSON.stringify(catRes.data || [])}
 
 ## 추가옵션
-${JSON.stringify(addonRes.data || [])}
+${JSON.stringify((addonRes.data || []).map((a: any) => ({ ...a, price: convertPrice(a.price_kr || 0) })))}
 
 ## 주요 서비스 / Key Services
 ${lp.services}
