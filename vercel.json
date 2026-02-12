@@ -34,6 +34,18 @@
   ],
   "rewrites": [
     {
+      "source": "/google624fc809d06901b9",
+      "destination": "/google624fc809d06901b9.html"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
