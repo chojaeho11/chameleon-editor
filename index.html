@@ -83,8 +83,9 @@
     <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/">
     <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/">
 
+<script src="product-seo.js"></script>
 <script>
-// [SEO 동적 설정] 도메인 기반으로 lang, title, meta, canonical, OG, JSON-LD 자동 설정
+// [SEO 동적 설정] 도메인 + 제품 경로 기반으로 lang, title, meta, canonical, OG, JSON-LD 자동 설정
 (function(){
     var h = location.hostname;
     var cc = h.includes('cafe0101') ? 'JP' : h.includes('cafe3355') ? 'US' : 'KR';
@@ -92,20 +93,20 @@
     var seoData = {
         KR: {
             title:'카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터',
-            desc:'허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.',
-            keywords:'카멜레온프린팅,허니콤보드,종이매대,패브릭인쇄,팝업스토어,등신대제작,실사출력,연포장,친환경전시,백월디자인,전시부스,폼보드인쇄,아크릴인쇄,배너스탠드,현수막',
+            desc:'허니콤보드, 패브릭인쇄, 아크릴굿즈, 배너, 간판, 포장까지. 무료 에디터로 직접 디자인하고 전국 당일배송. 판매자 입점도 가능한 글로벌 인쇄 플랫폼.',
+            keywords:'카멜레온프린팅,허니콤보드,종이매대,패브릭인쇄,팝업스토어,등신대제작,실사출력,연포장,친환경전시,백월디자인,전시부스,폼보드인쇄,아크릴인쇄,배너스탠드,현수막,무료디자인에디터,온라인인쇄,포맥스인쇄,UV인쇄,티셔츠인쇄',
             lang:'ko', siteName:'카멜레온프린팅'
         },
         JP: {
             title:'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-            desc:'ハニカムボード、ファブリック印刷、ポップアップストア専門。無料エディターで等身大パネル・バックウォールのデザインから印刷まで一括対応。',
-            keywords:'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド',
+            desc:'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
+            keywords:'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,無料エディター,オンライン印刷,UV印刷,Tシャツ印刷',
             lang:'ja', siteName:'カメレオンプリンティング'
         },
         US: {
             title:'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-            desc:'Honeycomb boards, fabric printing, pop-up store displays. Free online editor for life-size cutouts, backwalls, and custom printing solutions.',
-            keywords:'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand',
+            desc:'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
+            keywords:'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing,UV printing,custom printing',
             lang:'en', siteName:'Chameleon Printing'
         }
     };
@@ -113,62 +114,125 @@
     if (!s) return;
     var d = domains[cc];
 
+    // ★ 제품 경로 감지 (/honeycomb, /fabric-print 등)
+    var path = location.pathname.replace(/^\/|\/$/g, '').replace(/\.html$/, '');
+    var productSeo = window.PRODUCT_SEO && window.PRODUCT_SEO[path] && window.PRODUCT_SEO[path][cc];
+    var isProductPage = !!productSeo;
+
+    // 제품 페이지면 제품 SEO 데이터 사용, 아니면 홈 SEO 데이터 사용
+    var pageTitle = isProductPage ? productSeo.title : s.title;
+    var pageDesc = isProductPage ? productSeo.desc : s.desc;
+    var pageKeywords = isProductPage ? productSeo.keywords : s.keywords;
+    var pageUrl = isProductPage ? (d + '/' + path) : (d + '/');
+
     // 1. html lang 속성
     document.documentElement.lang = s.lang;
     // 2. title
-    document.title = s.title;
+    document.title = pageTitle;
     // 3. meta description
     var mDesc = document.querySelector('meta[name="description"]');
-    if(mDesc) mDesc.content = s.desc;
+    if(mDesc) mDesc.content = pageDesc;
     // 4. meta keywords
     var mKey = document.querySelector('meta[name="keywords"]');
-    if(mKey) mKey.content = s.keywords;
+    if(mKey) mKey.content = pageKeywords;
     // 5. canonical
     var canon = document.querySelector('link[rel="canonical"]');
-    if(canon) canon.href = d + '/';
+    if(canon) canon.href = pageUrl;
     // 6. OG tags
     var ogTitle = document.querySelector('meta[property="og:title"]');
-    if(ogTitle) ogTitle.content = s.title;
+    if(ogTitle) ogTitle.content = pageTitle;
     var ogDesc = document.querySelector('meta[property="og:description"]');
-    if(ogDesc) ogDesc.content = s.desc;
+    if(ogDesc) ogDesc.content = pageDesc;
     var ogUrl = document.querySelector('meta[property="og:url"]');
-    if(ogUrl) ogUrl.content = d + '/';
+    if(ogUrl) ogUrl.content = pageUrl;
     var ogSite = document.querySelector('meta[property="og:site_name"]');
     if(ogSite) ogSite.content = s.siteName;
     // 7. Twitter Card
     var twTitle = document.querySelector('meta[name="twitter:title"]');
-    if(twTitle) twTitle.content = s.title;
+    if(twTitle) twTitle.content = pageTitle;
     var twDesc = document.querySelector('meta[name="twitter:description"]');
-    if(twDesc) twDesc.content = s.desc;
+    if(twDesc) twDesc.content = pageDesc;
 
-    // 8. JSON-LD 구조화 데이터
+    // 8. hreflang 업데이트 (제품 페이지면 경로 포함)
+    if (isProductPage) {
+        var hrefKo = document.querySelector('link[hreflang="ko"]');
+        var hrefJa = document.querySelector('link[hreflang="ja"]');
+        var hrefEn = document.querySelector('link[hreflang="en"]');
+        var hrefDef = document.querySelector('link[hreflang="x-default"]');
+        if(hrefKo) hrefKo.href = domains.KR + '/' + path;
+        if(hrefJa) hrefJa.href = domains.JP + '/' + path;
+        if(hrefEn) hrefEn.href = domains.US + '/' + path;
+        if(hrefDef) hrefDef.href = domains.KR + '/' + path;
+    }
+
+    // 9. JSON-LD 구조화 데이터
+    var graphItems = [
+        {
+            "@type": "Organization",
+            "name": s.siteName,
+            "url": d,
+            "logo": "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png",
+            "sameAs": [domains.KR, domains.JP, domains.US],
+            "description": s.desc,
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "availableLanguage": ["Korean", "Japanese", "English"]
+            }
+        },
+        {
+            "@type": "WebSite",
+            "name": s.siteName,
+            "url": d,
+            "inLanguage": s.lang,
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": d + "/?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+    ];
+
+    // 제품 페이지면 Product + BreadcrumbList JSON-LD 추가
+    if (isProductPage) {
+        graphItems.push({
+            "@type": "Product",
+            "name": pageTitle.split(' - ')[0].split(' | ')[0],
+            "description": pageDesc,
+            "url": pageUrl,
+            "brand": { "@type": "Brand", "name": s.siteName },
+            "image": "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png",
+            "offers": {
+                "@type": "Offer",
+                "availability": "https://schema.org/InStock",
+                "priceCurrency": cc === 'JP' ? 'JPY' : cc === 'US' ? 'USD' : 'KRW',
+                "seller": { "@type": "Organization", "name": s.siteName }
+            }
+        });
+        graphItems.push({
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": s.siteName, "item": d },
+                { "@type": "ListItem", "position": 2, "name": pageTitle.split(' - ')[0].split(' | ')[0], "item": pageUrl }
+            ]
+        });
+    }
+
     var jsonld = document.createElement('script');
     jsonld.type = 'application/ld+json';
-    jsonld.textContent = JSON.stringify({
-        "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "Organization",
-                "name": s.siteName,
-                "url": d,
-                "logo": "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png",
-                "sameAs": [domains.KR, domains.JP, domains.US],
-                "description": s.desc
-            },
-            {
-                "@type": "WebSite",
-                "name": s.siteName,
-                "url": d,
-                "inLanguage": s.lang,
-                "potentialAction": {
-                    "@type": "SearchAction",
-                    "target": d + "/?q={search_term_string}",
-                    "query-input": "required name=search_term_string"
-                }
-            }
-        ]
-    });
+    jsonld.id = 'seo-jsonld';
+    jsonld.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": graphItems });
     document.head.appendChild(jsonld);
+
+    // 전역 변수로 저장 (나중에 제품 로드 시 업데이트용)
+    window._SEO_CC = cc;
+    window._SEO_DOMAINS = domains;
+    window._SEO_SITE = s;
+
+    // ★ 제품 경로 감지 시 해당 제품 자동 로드를 위한 플래그
+    if (isProductPage) {
+        window._SEO_PRODUCT_CODE = path;
+    }
 })();
 </script>
 
@@ -3190,10 +3254,55 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             window.PRODUCT_DB[productCode] = product;
 
-            // 2. ★ [핵심] 주소창 바꿀 때 언어 꼬리표 붙이기
-            let newUrl = `${window.location.pathname}?product=${productCode}`;
+            // ★ [SEO] 제품 로드 후 메타태그 + JSON-LD 업데이트 (DB 실제 이미지/가격 반영)
+            (function updateProductSEO() {
+                var cc = window._SEO_CC || 'KR';
+                var domains = window._SEO_DOMAINS || {};
+                var d = domains[cc] || 'https://www.cafe2626.com';
+                var pSeo = window.PRODUCT_SEO && window.PRODUCT_SEO[productCode] && window.PRODUCT_SEO[productCode][cc];
+                if (!pSeo) return;
+
+                // 제품 이미지 URL
+                var imgUrl = product.img_url || '';
+
+                // 언어별 이름/가격
+                var pName = product.name || '';
+                var pPrice = product.price || 0;
+                var currency = 'KRW';
+                if (cc === 'JP') { pName = product.name_jp || pName; pPrice = product.price_jp || pPrice; currency = 'JPY'; }
+                if (cc === 'US') { pName = product.name_us || pName; pPrice = product.price_us || pPrice; currency = 'USD'; }
+
+                // OG 이미지 업데이트 (실제 제품 이미지)
+                if (imgUrl) {
+                    var ogImg = document.querySelector('meta[property="og:image"]');
+                    if(ogImg) ogImg.content = imgUrl;
+                    var twImg = document.querySelector('meta[name="twitter:image"]');
+                    if(twImg) twImg.content = imgUrl;
+                }
+
+                // JSON-LD Product 업데이트 (실제 가격/이미지)
+                var oldLd = document.getElementById('seo-jsonld');
+                if (oldLd) {
+                    try {
+                        var ldData = JSON.parse(oldLd.textContent);
+                        var productSchema = ldData['@graph'].find(function(i){ return i['@type'] === 'Product'; });
+                        if (productSchema) {
+                            if (imgUrl) productSchema.image = imgUrl;
+                            if (pPrice > 0) {
+                                productSchema.offers.price = pPrice;
+                                productSchema.offers.priceCurrency = currency;
+                            }
+                            productSchema.name = pName;
+                            oldLd.textContent = JSON.stringify(ldData);
+                        }
+                    } catch(e) {}
+                }
+            })();
+
+            // 2. ★ [핵심] 주소창 바꿀 때 SEO 클린 URL 유지
+            let newUrl = '/' + productCode;
             if (currentLang) {
-                newUrl += `&lang=${currentLang}`; // 여기서 &lang=ja를 붙여줌
+                newUrl += '?lang=' + currentLang;
             }
             if (!window._navNavigating) window.history.pushState({ type: 'product', code: productCode }, '', newUrl);
 
@@ -3328,10 +3437,16 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         window._navNavigating = false;
     });
 
-    // 3. [초기 접속] URL에 ?product=코드 있으면 바로 열기 (sb 대기 포함)
+    // 3. [초기 접속] URL에 ?product=코드 또는 /제품코드 경로가 있으면 바로 열기 (sb 대기 포함)
     (async () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const productCode = urlParams.get('product');
+        let productCode = urlParams.get('product');
+
+        // 경로 기반 제품 감지 (/honeycomb, /fabric-print 등 - SEO 크롤러용)
+        if (!productCode && window._SEO_PRODUCT_CODE) {
+            productCode = window._SEO_PRODUCT_CODE;
+        }
+
         if (productCode) {
             console.log("🔗 URL 접속 감지:", productCode);
             // sb 초기화 대기 (최대 5초)

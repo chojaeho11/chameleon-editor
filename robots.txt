@@ -12,3 +12,8 @@ Sitemap: https://www.cafe3355.com/sitemap.xml
 Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-blog?country=KR
 Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-blog?country=JP
 Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-blog?country=US
+
+# 제품 동적 사이트맵 (이미지·hreflang 포함)
+Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-products?country=KR
+Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-products?country=JP
+Sitemap: https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/sitemap-products?country=US
