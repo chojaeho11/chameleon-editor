@@ -227,7 +227,7 @@ window.loadOrders = async () => {
             tbody.innerHTML += `
                 <tr>
                     <td style="text-align:center;"><input type="checkbox" class="row-chk" value="${order.id}"></td>
-                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}">${site}</span></td>
+                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}" style="cursor:pointer;" onclick="fixSiteCode('${order.id}')" title="클릭하여 변경">${site}</span>${(pmLower.includes('stripe') && site === 'KR') ? '<div style="font-size:9px;color:#ef4444;">⚠️오류?</div>' : ''}</td>
                     <td style="text-align:center; line-height:1.2;">
                         <span style="color:#334155;">${orderDate}</span>
                         ${deliveryHtml}
@@ -278,6 +278,18 @@ function createStaffSelectHTML(orderId, role, selectedId) {
                 ${opts}
             </select>`;
 }
+// [사이트 코드 수정] 관리자가 site_code를 직접 변경
+window.fixSiteCode = async (orderId) => {
+    const newCode = prompt('사이트 코드 변경 (KR / JP / US):', '');
+    if (!newCode) return;
+    const code = newCode.trim().toUpperCase();
+    if (!['KR', 'JP', 'US'].includes(code)) return alert('KR, JP, US 중 선택');
+    const { error } = await sb.from('orders').update({ site_code: code }).eq('id', orderId);
+    if (error) return alert('변경 실패: ' + error.message);
+    alert(`주문 #${orderId} → ${code} 변경 완료`);
+    loadOrders();
+};
+
 window.filterOrders = (status, btn) => {
     currentOrderStatus = status;
     document.querySelectorAll('#sec-orders .btn-primary').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-outline'); });
