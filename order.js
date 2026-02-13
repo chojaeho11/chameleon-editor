@@ -590,6 +590,8 @@ async function addCanvasToCart() {
 
                 PRODUCT_DB[key] = {
                     name: dName,
+                    name_jp: prodData.name_jp || '',
+                    name_us: prodData.name_us || '',
                     price: prodData.price,  // 항상 KRW (formatCurrency가 환산)
                     price_jp: prodData.price_jp, price_us: prodData.price_us,
                     img: prodData.img_url,
@@ -888,11 +890,22 @@ function renderCart() {
         updateSummary(0, 0, 0); return; 
     }
 
+    // 기존 장바구니 데이터 보강: name_jp/name_us 없으면 PRODUCT_DB에서 채움
+    cartData.forEach(item => {
+        if (item.product && !item.product.name_jp && item.product.code) {
+            const dbProd = (window.PRODUCT_DB && window.PRODUCT_DB[item.product.code]) || PRODUCT_DB[item.product.code];
+            if (dbProd) {
+                if (dbProd.name_jp) item.product.name_jp = dbProd.name_jp;
+                if (dbProd.name_us) item.product.name_us = dbProd.name_us;
+            }
+        }
+    });
+
     cartData.forEach((item, idx) => {
         if (!item.product) return;
 
-        if (!item.qty) item.qty = 1; 
-        if (item.isOpen === undefined) item.isOpen = true; 
+        if (!item.qty) item.qty = 1;
+        if (item.isOpen === undefined) item.isOpen = true;
         if (!item.selectedAddons) item.selectedAddons = {};
         
         let baseProductTotal = (item.product.price || 0) * item.qty;
@@ -1774,6 +1787,8 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
 // productInfo를 그대로 쓰지 않고, 필요한 정보만 골라 담으면서 이미지가 길면 삭제합니다.
 const cleanProduct = {
     name: productInfo.name,
+    name_jp: productInfo.name_jp || '',
+    name_us: productInfo.name_us || '',
     price: productInfo.price,
     code: productInfo.code || productInfo.key,
     img: ((productInfo.img || productInfo.img_url) && (productInfo.img || productInfo.img_url).length < 500 && !(productInfo.img || productInfo.img_url).startsWith('data:')) ? (productInfo.img || productInfo.img_url) : null,

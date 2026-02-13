@@ -2679,6 +2679,7 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
             // 전역 DB 저장 (에디터 연동용) - price는 항상 KRW 기준 (formatCurrency가 환산)
             window.PRODUCT_DB[p.code] = {
                 name: name,
+                name_jp: p.name_jp || '', name_us: p.name_us || '',
                 price: Number(p.price) || 0,
                 price_jp: p.price_jp, price_us: p.price_us,
                 w: p.width_mm, h: p.height_mm,
