@@ -1648,6 +1648,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
         });
 
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
 
         const result = await stripe.redirectToCheckout({
             sessionId: data.sessionId

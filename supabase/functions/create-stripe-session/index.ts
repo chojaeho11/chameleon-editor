@@ -53,16 +53,16 @@ Deno.serve(async (req) => {
 
     if (!response.ok) {
       console.error('Stripe API Error:', data)
+      // 200으로 반환 (Supabase client가 non-2xx 에러 상세를 삼키는 문제 방지)
       return new Response(
-        JSON.stringify({ error: data.error?.message || 'Stripe session creation failed' }),
+        JSON.stringify({ error: data.error?.message || 'Stripe session creation failed', stripe_error: data.error }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
+          status: 200,
         }
       )
     }
 
-    // sessionId 반환 (order.js에서 stripe.redirectToCheckout에 사용)
     return new Response(
       JSON.stringify({ sessionId: data.id, url: data.url }),
       {
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: error.message || 'Unknown error occurred' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200,
       }
     )
   }
