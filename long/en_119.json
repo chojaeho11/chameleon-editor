@@ -67,6 +67,7 @@
   "label_payment_amt": "Payment Amount",
   "label_product_price": "Subtotal",
   "label_option_price": "Options",
+  "label_grade_discount": "Member Discount",
   "label_total_price": "Total",
   "btn_do_checkout": "Checkout",
   "btn_print_quote": "Print Quote",

@@ -67,6 +67,7 @@
   "label_payment_amt": "결제 금액",
   "label_product_price": "상품",
   "label_option_price": "옵션",
+  "label_grade_discount": "등급 할인",
   "label_total_price": "합계",
   "btn_do_checkout": "결제하기",
   "btn_print_quote": "견적서 출력",

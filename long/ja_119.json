@@ -67,6 +67,7 @@
   "label_payment_amt": "お支払い金額",
   "label_product_price": "商品代金",
   "label_option_price": "オプション",
+  "label_grade_discount": "ランク割引",
   "label_total_price": "合計金額",
   "btn_do_checkout": "購入手続きへ",
   "btn_print_quote": "見積書発行",

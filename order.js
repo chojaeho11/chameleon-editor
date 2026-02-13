@@ -55,6 +55,14 @@ function formatCurrency(amount) {
     }
 }
 
+// 국가별 상품명 표시
+function localName(product) {
+    const c = SITE_CONFIG.COUNTRY;
+    if (c === 'JP') return product.name_jp || product.name || '';
+    if (c === 'US') return product.name_us || product.name || '';
+    return product.name || '';
+}
+
 function downloadBlob(blob, filename) {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
@@ -501,7 +509,7 @@ export function openProductDetail(key, w, h, mode) {
     
     currentTargetProduct = { key, w, h, mode, info: product };
     
-    document.getElementById("pdpTitle").innerText = product.name; 
+    document.getElementById("pdpTitle").innerText = localName(product);
     document.getElementById("pdpPrice").innerText = formatCurrency(product.price);
     
     const imgElem = document.getElementById("pdpImage"); 
@@ -993,7 +1001,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                     </div>
 
                     <div style="flex:1; min-width:200px;">
-                        <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${item.product.name}</h4>
+                        <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${localName(item.product)}</h4>
                         <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : window.t('msg_file_attached_separately', '(File attached separately)')}</div>
                         <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
                         
@@ -1028,7 +1036,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                     <div style="display:flex; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:center;">
                         <img src="${displayImg}" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
-                            <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${item.product.name}</h4>
+                            <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${localName(item.product)}</h4>
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
                         </div>
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
@@ -1288,9 +1296,9 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         const compatibleUnitPrice = Math.floor(itemFinalTotal / qty);
 
         return {
-            product: { 
-                name: item.product.name, 
-                price: item.product.price, 
+            product: {
+                name: localName(item.product),
+                price: item.product.price,
                 code: item.product.code || item.product.key,
                 img: item.product.img 
             },
@@ -1472,10 +1480,10 @@ async function processFinalPayment() {
                  }
                  let compatible = Math.floor((unitPrice*qty + optTotal)/qty);
                  return {
-                    productName: item.product.name,
+                    productName: localName(item.product),
                     qty: qty,
                     price: compatible,
-                    product: { name: item.product.name, price: item.product.price, code: item.product.code||item.product.key, img: item.product.img },
+                    product: { name: localName(item.product), price: item.product.price, code: item.product.code||item.product.key, img: item.product.img },
                     selectedAddons: item.selectedAddons,
                     addonQuantities: item.addonQuantities
                  };
