@@ -87,13 +87,13 @@ async function loadSystemData() {
         // 옵션 로드
         const { data: addons } = await sb.from('admin_addons').select('*');
         if (addons) {
-            ADDON_DB = {}; 
+            ADDON_DB = {};
             addons.forEach(item => {
                 let dName = item.name;
-                let dPrice = item.price;
-                if (country === 'JP') { dName = item.name_jp || item.name; dPrice = item.price_jp || 0; } 
-                else if (country === 'US') { dName = item.name_us || item.name; dPrice = item.price_us || 0; }
-                ADDON_DB[item.code] = { name: dName, price: dPrice };
+                if (country === 'JP') { dName = item.name_jp || item.name; }
+                else if (country === 'US') { dName = item.name_us || item.name; }
+                // price는 항상 KRW 기준 저장 (formatCurrency가 표시 시 환산)
+                ADDON_DB[item.code] = { ...item, display_name: dName };
             });
         }
         PRODUCT_DB = {};

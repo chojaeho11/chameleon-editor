@@ -2676,10 +2676,11 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
             // ★ [핵심] 여기서 지저분한 if문을 싹 제거하고 한 줄로 끝냅니다!
             const { name, price, formattedPrice } = getLocalizedData(p);
             
-            // 전역 DB 저장 (에디터 연동용)
+            // 전역 DB 저장 (에디터 연동용) - price는 항상 KRW 기준 (formatCurrency가 환산)
             window.PRODUCT_DB[p.code] = {
                 name: name,
-                price: price,
+                price: Number(p.price) || 0,
+                price_jp: p.price_jp, price_us: p.price_us,
                 w: p.width_mm, h: p.height_mm,
                 img: p.img_url,
                 addons: p.addons ? p.addons.split(',') : [],
@@ -3939,10 +3940,8 @@ if (w >= 20 && h >= 20) {
             else lang = 'kr';
         }
 
-        // 3. 단가 결정 (국가별 가격)
+        // 3. 단가 결정 (항상 KRW 기준 - formatCurrency가 표시 시 환산)
         let unitPrice = product.price || 0;
-        if (lang === 'ja' && product.price_jp && product.price_jp > 0) unitPrice = product.price_jp;
-        else if (lang === 'en' && product.price_us && product.price_us > 0) unitPrice = product.price_us;
 
         // 4. 최종 가격 및 사이즈 계산
         let finalW = 0, finalH = 0;

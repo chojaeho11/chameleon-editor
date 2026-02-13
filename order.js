@@ -576,17 +576,17 @@ async function addCanvasToCart() {
                 
                 const country = (typeof SITE_CONFIG !== 'undefined' ? SITE_CONFIG.COUNTRY : 'KR');
                 let dName = prodData.name;
-                let dPrice = prodData.price;
-                
-                if (country === 'JP') { dName = prodData.name_jp || dName; dPrice = prodData.price_jp || 0; }
-                else if (country === 'US') { dName = prodData.name_us || dName; dPrice = prodData.price_us || 0; }
+
+                if (country === 'JP') { dName = prodData.name_jp || dName; }
+                else if (country === 'US') { dName = prodData.name_us || dName; }
 
                 PRODUCT_DB[key] = {
                     name: dName,
-                    price: dPrice,
+                    price: prodData.price,  // 항상 KRW (formatCurrency가 환산)
+                    price_jp: prodData.price_jp, price_us: prodData.price_us,
                     img: prodData.img_url,
-                    w: pxW, h: pxH, 
-                    w_mm: prodData.width_mm, h_mm: prodData.height_mm, 
+                    w: pxW, h: pxH,
+                    w_mm: prodData.width_mm, h_mm: prodData.height_mm,
                     addons: prodData.addons ? prodData.addons.split(',') : [],
                     category: prodData.category
                 };
@@ -957,7 +957,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
                                                     <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:16px; height:16px; accent-color:#6366f1;">
                                                     <div style="display:flex; flex-direction:column;">
-                                                        <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.name_kr || opt.name}</span>
+                                                        <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.display_name || opt.name}</span>
                                                         <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
                                                     </div>
                                                 </label>
@@ -1636,9 +1636,9 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
         ? Math.round(amount * rate)       // JPY: 정수 (소수점 없음)
         : Math.round(amount * rate * 100) / 100; // USD: 소수 2자리
 
-    // Stripe 최소 결제금액 체크
-    const minAmount = currency === 'jpy' ? 50 : 0.50;
-    const minLabel = currency === 'jpy' ? '¥50' : '$0.50';
+    // Stripe 최소 결제금액 체크 (US 기반 계정 → JPY도 USD $0.50 환산 기준 적용)
+    const minAmount = currency === 'jpy' ? 100 : 0.50;
+    const minLabel = currency === 'jpy' ? '¥100' : '$0.50';
     if (localAmount < minAmount) {
         btn.innerText = originalText;
         btn.disabled = false;
