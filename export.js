@@ -729,21 +729,24 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     headers.forEach((h, i) => { drawCell(doc, curX, y, cols[i], 8, h, 'center', 10, true); curX += cols[i]; });
     y += 8;
 
+    const _cr = window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE;
     let totalAmt = 0; let no = 1;
     cartItems.forEach(item => {
         if (!item.product) return;
-        
+
         // 다국어 상품명/가격 선택 로직
         let pdfName = item.product.name;
         let pdfPrice = item.product.price;
-        let pdfOptionLabel = TEXT.opt_default; 
+        let pdfOptionLabel = TEXT.opt_default;
 
         if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
             if (item.product.name_jp) pdfName = item.product.name_jp;
             if (item.product.price_jp) pdfPrice = item.product.price_jp;
+            else if (_cr && _cr.JP) pdfPrice = Math.round(pdfPrice * _cr.JP);
         } else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') {
             if (item.product.name_us) pdfName = item.product.name_us;
             if (item.product.price_us) pdfPrice = item.product.price_us;
+            else if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
         }
 
         const pTotal = (pdfPrice || 0) * (item.qty || 1); 
@@ -778,12 +781,14 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 
                 // [수정] 옵션 가격 다국어 처리
                 let addPrice = add.price;
-                let addName = add.name;
+                let addName = add.display_name || add.name;
                 if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')) {
                     if (add.price_jp) addPrice = add.price_jp;
+                    else if (_cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP);
                     if (add.name_jp) addName = add.name_jp;
-                } else if (CURRENT_LANG_CODE === 'us') {
+                } else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') {
                     if (add.price_us) addPrice = add.price_us;
+                    else if (_cr && _cr.US) addPrice = Math.round(addPrice * _cr.US * 100) / 100;
                     if (add.name_us) addName = add.name_us;
                 }
 
@@ -818,34 +823,32 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     const supply = finalAmt - vat;
     
     // 통화 기호 설정
-    const currencySym = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '¥' : (CURRENT_LANG_CODE === 'us' ? '$' : '원');
-    const suffix = (CURRENT_LANG_CODE === 'kr') ? ' 원' : '';
-    const prefix = (CURRENT_LANG_CODE !== 'kr') ? currencySym : '';
+    const _fmtSummary = (v) => formatCurrencyForPDF(v);
 
-    const summaryX = 105; 
+    const summaryX = 105;
     // [수정] 합계 라벨 다국어
     drawText(doc, TEXT.supply_price, summaryX, y+5, {align:'right'});
-    drawText(doc, prefix + supply.toLocaleString() + suffix, 195, y+5, {align:'right'}); y+=6;
-    
+    drawText(doc, _fmtSummary(supply), 195, y+5, {align:'right'}); y+=6;
+
     drawText(doc, TEXT.vat, summaryX, y+5, {align:'right'});
-    drawText(doc, prefix + vat.toLocaleString() + suffix, 195, y+5, {align:'right'}); y+=6;
+    drawText(doc, _fmtSummary(vat), 195, y+5, {align:'right'}); y+=6;
 
     if (rateDiscountAmt > 0) {
-        doc.setTextColor(255, 0, 0); 
+        doc.setTextColor(255, 0, 0);
         drawText(doc, `${TEXT.discount} (${(discountRate*100).toFixed(0)}%) :`, summaryX, y+5, {align:'right'}, "#ff0000");
-        drawText(doc, "-" + prefix + rateDiscountAmt.toLocaleString() + suffix, 195, y+5, {align:'right'}, "#ff0000"); y+=6;
+        drawText(doc, "-" + _fmtSummary(rateDiscountAmt), 195, y+5, {align:'right'}, "#ff0000"); y+=6;
     }
     if (usedMileage > 0) {
-        doc.setTextColor(255, 0, 0); 
+        doc.setTextColor(255, 0, 0);
         drawText(doc, TEXT.mileage, summaryX, y+5, {align:'right'}, "#ff0000");
         drawText(doc, "-" + usedMileage.toLocaleString() + " P", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
     }
     y += 2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(summaryX-20, y, 195, y); y += 8;
-    
+
     // 합계 금액 (다국어 라벨)
     drawText(doc, TEXT.total_amount, summaryX, y, {align:'right', weight:'bold'});
     doc.setFontSize(14);
-    drawText(doc, prefix + finalAmt.toLocaleString() + suffix, 195, y, {align:'right', weight:'bold'}, "#1a237e"); 
+    drawText(doc, _fmtSummary(finalAmt), 195, y, {align:'right', weight:'bold'}, "#1a237e"); 
 
     // 결제 수단 표기
     if (title.includes(TEXT.receipt_title) || title.includes(TEXT.statement_title)) {

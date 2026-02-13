@@ -1794,6 +1794,8 @@ const cleanProduct = {
     name_jp: productInfo.name_jp || '',
     name_us: productInfo.name_us || '',
     price: productInfo.price,
+    price_jp: productInfo.price_jp || 0,
+    price_us: productInfo.price_us || 0,
     code: productInfo.code || productInfo.key,
     img: ((productInfo.img || productInfo.img_url) && (productInfo.img || productInfo.img_url).length < 500 && !(productInfo.img || productInfo.img_url).startsWith('data:')) ? (productInfo.img || productInfo.img_url) : null,
     w: productInfo.w || 0,
