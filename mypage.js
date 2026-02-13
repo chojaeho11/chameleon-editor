@@ -1059,9 +1059,12 @@ const PTXT = PDF_LABELS[PDF_LANG] || PDF_LABELS['kr'];
 const PDF_FONT_CONFIG = {
     kr: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" },
     jp: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf", name: "NotoSansJP" },
-    us: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" }
+    us: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" },
+    cn: { url: "https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYw.ttf", name: "NotoSansSC" },
+    ar: { url: "https://fonts.gstatic.com/s/notosansarabic/v33/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvuw.ttf", name: "NotoSansArabic" },
+    es: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf", name: "Inter" }
 };
-const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr' }[PDF_LANG] || 'kr';
+const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr', 'zh': 'cn', 'cn': 'cn', 'ar': 'ar', 'es': 'es' }[PDF_LANG] || 'kr';
 const PDF_FONT = PDF_FONT_CONFIG[_fontKey] || PDF_FONT_CONFIG['kr'];
 const PDF_FONT_NAME = PDF_FONT.name;
 let _pdfFontCache = null;
