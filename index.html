@@ -4065,10 +4065,18 @@ if (w >= 20 && h >= 20) {
             finalQty = parseInt(document.getElementById('fixedProdQty') ? document.getElementById('fixedProdQty').value : 1);
         }
 
-        // 5. 옵션 수집
+        // 5. 옵션 수집 (코드 + 수량)
         const selectedAddonCodes = [];
+        const selectedAddonQtys = {};
         document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
             selectedAddonCodes.push(chk.value);
+            const row = chk.closest('.addon-item-row') || chk.closest('.color-btn-item');
+            let optQty = 1;
+            if (row) {
+                const qtyInput = row.querySelector('.addon-qty-input');
+                if (qtyInput) optQty = parseInt(qtyInput.value) || 1;
+            }
+            selectedAddonQtys[chk.value] = optQty;
         });
 
         // 6. 실행 (에디터 or 장바구니)
@@ -4099,7 +4107,7 @@ if (w >= 20 && h >= 20) {
                     productToCart.is_custom = true;
                 }
                 
-                m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes); 
+                m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, selectedAddonQtys);
                 document.getElementById('cartAddedModal').style.display = 'flex'; 
             });
         }
