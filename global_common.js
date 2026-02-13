@@ -13,7 +13,7 @@ export const formatCurrency = (amount, siteCode) => {
     const rate = rates[siteCode] || 1;
     const converted = amount * rate;
     if (siteCode === 'JP') return '¥' + Math.floor(converted).toLocaleString();
-    if (siteCode === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (siteCode === 'US') return '$' + Math.round(converted).toLocaleString();
     return converted.toLocaleString() + '원';
 }
 

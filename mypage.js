@@ -7,7 +7,7 @@ function fmtMoney(krw) {
     const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
     const converted = (krw || 0) * rate;
     if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
-    if (country === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (country === 'US') return '$' + Math.round(converted).toLocaleString();
     return converted.toLocaleString() + '원';
 }
 
@@ -1113,7 +1113,7 @@ function _dc(doc, x, y, w, h, text, align = 'center', fontSize = 9, isHeader = f
 function _fmtPdf(val) {
     const num = Number(val) || 0;
     if (PDF_LANG === 'ja' || PDF_LANG === 'jp') return '¥' + Math.floor(num).toLocaleString();
-    if (PDF_LANG === 'us' || PDF_LANG === 'en') return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    if (PDF_LANG === 'us' || PDF_LANG === 'en') return '$' + Math.round(num).toLocaleString();
     return num.toLocaleString();
 }
 

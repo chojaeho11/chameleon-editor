@@ -176,7 +176,7 @@ export function getLocalizedData(item) {
         name = item.name_us || item.name; // 영어 이름 없으면 한글 이름
         price = Number(item.price_us) || price;
         // 미국: 기호 $를 앞에 붙이고 소수점 2자리 허용
-        formattedPrice = '$' + price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        formattedPrice = '$' + Math.round(price).toLocaleString();
     } else {
         // 한국: 금액 뒤에 '원' 표기
         formattedPrice = price.toLocaleString() + '원';

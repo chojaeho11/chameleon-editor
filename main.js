@@ -28,7 +28,7 @@ function fmtMoney(krw) {
     const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
     const converted = (krw || 0) * rate;
     if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
-    if (country === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (country === 'US') return '$' + Math.round(converted).toLocaleString();
     return converted.toLocaleString() + '원';
 }
 
@@ -793,7 +793,7 @@ function updateContributorRewardDisplay() {
     const cfg = window.SITE_CONFIG || {};
     const cRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
     const baseReward = 150 * cRate;
-    const rewardDisplay = cfg.COUNTRY === 'JP' ? Math.floor(baseReward) : cfg.COUNTRY === 'US' ? baseReward.toFixed(2) : baseReward;
+    const rewardDisplay = cfg.COUNTRY === 'JP' ? Math.floor(baseReward) : cfg.COUNTRY === 'US' ? Math.round(baseReward) : baseReward;
     document.querySelectorAll('.c-reward').forEach(el => {
         const bonusSpan = el.querySelector('.tier-bonus');
         el.textContent = rewardDisplay + ' ';

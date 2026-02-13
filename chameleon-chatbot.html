@@ -495,7 +495,7 @@ const PRICING = {
         const converted = amount * rate;
 
         if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
-        if (country === 'US') return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (country === 'US') return '$' + Math.round(converted).toLocaleString();
         return converted.toLocaleString() + '원';
     },
 
@@ -518,7 +518,7 @@ const PRICING = {
 
     formatPriceByCountry(price, country) {
         if (country === 'JP') return '¥' + Math.floor(price).toLocaleString();
-        if (country === 'US') return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (country === 'US') return '$' + Math.round(price).toLocaleString();
         return price.toLocaleString() + '원';
     }
 };

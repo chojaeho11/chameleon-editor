@@ -889,7 +889,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 function formatCurrencyForPDF(val) {
     const num = Number(val) || 0;
     if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') return '¥' + Math.floor(num).toLocaleString();
-    if (CURRENT_LANG_CODE === 'us') return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    if (CURRENT_LANG_CODE === 'us') return '$' + Math.round(num).toLocaleString();
     return num.toLocaleString();
 }
 

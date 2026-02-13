@@ -135,7 +135,7 @@ window.loadOrders = async () => {
             const sym = currSymbols[site] || '';
             const fmtAmt = (krw) => {
                 const v = Math.round(krw * rate);
-                return site === 'KR' ? v.toLocaleString() : `${sym}${site === 'US' ? (krw * rate).toFixed(2) : v.toLocaleString()}`;
+                return site === 'KR' ? v.toLocaleString() : `${sym}${v.toLocaleString()}`;
             };
             
             // [스태프 선택] 배경색 꽉 차게 변경된 함수 사용

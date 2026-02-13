@@ -49,7 +49,7 @@ function formatCurrency(amount) {
     if (country === 'JP') {
         return '¥' + Math.floor(converted).toLocaleString();
     } else if (country === 'US') {
-        return '$' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return '$' + Math.round(converted).toLocaleString();
     } else {
         return converted.toLocaleString() + '원';
     }
