@@ -98,8 +98,14 @@ async function loadSystemData() {
                 } else if (country === 'US') {
                     dName = item.name_us || item.name;
                     if (item.price_us) dbPrice = Math.round(item.price_us / rate);
-                } else if (country === 'CN' || country === 'AR' || country === 'ES') {
-                    dName = item.name_us || item.name;
+                } else if (country === 'CN') {
+                    dName = item.name_cn || item.name_us || item.name;
+                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
+                } else if (country === 'AR') {
+                    dName = item.name_ar || item.name_us || item.name;
+                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
+                } else if (country === 'ES') {
+                    dName = item.name_es || item.name_us || item.name;
                     if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 }
                 ADDON_DB[item.code] = { ...item, display_name: dName, price: dbPrice };
@@ -184,15 +190,15 @@ export function getLocalizedData(item) {
         price = Number(item.price_us) || price;
         formattedPrice = '$' + Math.round(price).toLocaleString();
     } else if (country === 'CN') {
-        name = item.name_us || item.name;
+        name = item.name_cn || item.name_us || item.name;
         price = Number(item.price_us) || price;
         formattedPrice = '¥' + Math.round(price).toLocaleString();
     } else if (country === 'AR') {
-        name = item.name_us || item.name;
+        name = item.name_ar || item.name_us || item.name;
         price = Number(item.price_us) || price;
         formattedPrice = Math.round(price).toLocaleString() + ' ﷼';
     } else if (country === 'ES') {
-        name = item.name_us || item.name;
+        name = item.name_es || item.name_us || item.name;
         price = Number(item.price_us) || price;
         formattedPrice = '€' + price.toFixed(2);
     } else {

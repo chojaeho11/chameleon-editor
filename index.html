@@ -2275,6 +2275,9 @@
         const country = (window.SITE_CONFIG || {}).COUNTRY || 'KR';
         if (country === 'JP') return '¥' + Math.floor(amt).toLocaleString();
         if (country === 'US') return '$' + Math.round(amt||0).toLocaleString();
+        if (country === 'CN') return '¥' + Math.round(amt||0).toLocaleString();
+        if (country === 'AR') return Math.round(amt||0).toLocaleString() + ' ﷼';
+        if (country === 'ES') return '€' + (amt||0).toFixed(2);
         return (amt||0).toLocaleString() + '원';
     }
 
@@ -2899,7 +2902,10 @@ window._drawQuickItems = (list, isProductMode = false) => {
         // [수정] 언어별 이름 적용 (이 코드가 모달 제목까지 해결합니다)
         let name = item.name || '';
         if (CURRENT_LANG === 'ja' && item.name_jp) name = item.name_jp;
-        if ((CURRENT_LANG === 'en' || CURRENT_LANG === 'zh' || CURRENT_LANG === 'ar' || CURRENT_LANG === 'es') && item.name_us) name = item.name_us;
+        if (CURRENT_LANG === 'en' && item.name_us) name = item.name_us;
+        if (CURRENT_LANG === 'zh' && (item.name_cn || item.name_us)) name = item.name_cn || item.name_us;
+        if (CURRENT_LANG === 'ar' && (item.name_ar || item.name_us)) name = item.name_ar || item.name_us;
+        if (CURRENT_LANG === 'es' && (item.name_es || item.name_us)) name = item.name_es || item.name_us;
 
         const itemCode = item.code || '';
         
@@ -2990,7 +2996,10 @@ async function renderQuickMenu() {
             // [수정] 대분류 언어별 명칭 적용
             let tName = top.name;
             if (CURRENT_LANG === 'ja' && top.name_jp) tName = top.name_jp;
-            if (['en','zh','ar','es'].includes(CURRENT_LANG) && top.name_us) tName = top.name_us;
+            if (CURRENT_LANG === 'en' && top.name_us) tName = top.name_us;
+            if (CURRENT_LANG === 'zh') tName = top.name_cn || top.name_us || tName;
+            if (CURRENT_LANG === 'ar') tName = top.name_ar || top.name_us || tName;
+            if (CURRENT_LANG === 'es') tName = top.name_es || top.name_us || tName;
             btn.innerText = tName;
 
             btn.onclick = () => {
@@ -3551,6 +3560,18 @@ window.showChoiceModal = async function(key) {
         if (product.name_us) dName = product.name_us;
         if (product.description_us) dDesc = product.description_us;
         if (product.price_us) dPrice = product.price_us;
+    } else if (lang === 'zh') {
+        dName = product.name_cn || product.name_us || dName;
+        dDesc = product.description_us || dDesc;
+        if (product.price_us) dPrice = product.price_us;
+    } else if (lang === 'ar') {
+        dName = product.name_ar || product.name_us || dName;
+        dDesc = product.description_us || dDesc;
+        if (product.price_us) dPrice = product.price_us;
+    } else if (lang === 'es') {
+        dName = product.name_es || product.name_us || dName;
+        dDesc = product.description_us || dDesc;
+        if (product.price_us) dPrice = product.price_us;
     }
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
@@ -3638,6 +3659,9 @@ window.showChoiceModal = async function(key) {
                     let catName = cat.name_kr || cat.name;
                     if (lang === 'ja' && cat.name_jp) catName = cat.name_jp;
                     if (lang === 'en' && cat.name_us) catName = cat.name_us;
+                    if (lang === 'zh') catName = cat.name_cn || cat.name_us || catName;
+                    if (lang === 'ar') catName = cat.name_ar || cat.name_us || catName;
+                    if (lang === 'es') catName = cat.name_es || cat.name_us || catName;
 
                     const isColorCategory = cat.is_swatch || cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color');
 
@@ -3654,6 +3678,7 @@ window.showChoiceModal = async function(key) {
                             let basePrice = a.price_kr || a.price || 0;
                             if (lang === 'ja' && a.price_jp) basePrice = a.price_jp;
                             else if (lang === 'en' && a.price_us) basePrice = a.price_us;
+                            else if ((lang === 'zh' || lang === 'ar' || lang === 'es') && a.price_us) basePrice = a.price_us;
                             const imgUrl = a.img_url || 'https://placehold.co/60/eeeeee/cccccc?text=+';
 
                             optionsHtml += `
@@ -3663,7 +3688,7 @@ window.showChoiceModal = async function(key) {
                                            onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">
                                     <div class="color-btn-box" style="border:1px solid #e2e8f0; border-radius:8px; padding:8px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; height:100%; background-color:#fff;">
                                         <img src="${imgUrl}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid #eee;">
-                                        ${basePrice > 0 ? `<span style="font-size:10px; color:#6366f1; margin-top:4px; font-weight:bold;">+${basePrice.toLocaleString()}</span>` : ''}
+                                        ${basePrice > 0 ? `<span style="font-size:10px; color:#6366f1; margin-top:4px; font-weight:bold;">+${lang === 'ja' ? '¥' : lang === 'en' ? '$' : lang === 'zh' ? '¥' : lang === 'ar' ? '' : lang === 'es' ? '€' : ''}${basePrice.toLocaleString()}${lang === 'ar' ? ' ﷼' : lang !== 'ja' && lang !== 'en' && lang !== 'zh' && lang !== 'es' ? '원' : ''}</span>` : ''}
                                     </div>
                                 </label>`;
                         });
@@ -3677,6 +3702,9 @@ window.showChoiceModal = async function(key) {
                             let priceStr = `+${basePrice.toLocaleString()}원`;
                             if (lang === 'ja') { if (a.name_jp) optName = a.name_jp; if (a.price_jp) { basePrice = a.price_jp; priceStr = `+¥${basePrice.toLocaleString()}`; } }
                             else if (lang === 'en') { if (a.name_us) optName = a.name_us; if (a.price_us) { basePrice = a.price_us; priceStr = `+$${basePrice.toLocaleString()}`; } }
+                            else if (lang === 'zh') { optName = a.name_cn || a.name_us || optName; if (a.price_us) { basePrice = a.price_us; priceStr = `+¥${Math.round(basePrice).toLocaleString()}`; } }
+                            else if (lang === 'ar') { optName = a.name_ar || a.name_us || optName; if (a.price_us) { basePrice = a.price_us; priceStr = `+${Math.round(basePrice).toLocaleString()} ﷼`; } }
+                            else if (lang === 'es') { optName = a.name_es || a.name_us || optName; if (a.price_us) { basePrice = a.price_us; priceStr = `+€${basePrice.toFixed(2)}`; } }
                             const imgUrl = a.img_url || 'https://placehold.co/40?text=IMG';
 
                             optionsHtml += `
@@ -3859,8 +3887,9 @@ window.updateModalTotal = function() {
         let unitPrice = product.price;
         if (lang === 'ja' && product.price_jp) unitPrice = product.price_jp;
         else if (lang === 'en' && product.price_us) unitPrice = product.price_us;
+        else if ((lang === 'zh' || lang === 'ar' || lang === 'es') && product.price_us) unitPrice = product.price_us;
 
-        productTotal = unitPrice * prodQty; 
+        productTotal = unitPrice * prodQty;
     }
 
     // 2. [옵션] 수량 및 가격 계산 (상품 수량과 무관하게 독립 계산)
@@ -3928,11 +3957,18 @@ window.updateModalTotal = function() {
         else if (lang === 'en' && product.price_us && product.price_us > 0) {
             unitPrice = product.price_us;
         }
+        // CN/AR/ES도 price_us 사용
+        else if ((lang === 'zh' || lang === 'ar' || lang === 'es') && product.price_us && product.price_us > 0) {
+            unitPrice = product.price_us;
+        }
 
         // 화폐 포맷팅 함수
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
             if (lang === 'en') return '$' + Math.round(val).toLocaleString();
+            if (lang === 'zh') return '¥' + Math.round(val).toLocaleString();
+            if (lang === 'ar') return Math.round(val).toLocaleString() + ' ﷼';
+            if (lang === 'es') return '€' + val.toFixed(2);
             return Math.floor(val).toLocaleString() + '원';
         };
 
