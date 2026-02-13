@@ -892,11 +892,15 @@ function renderCart() {
 
     // 기존 장바구니 데이터 보강: name_jp/name_us 없으면 PRODUCT_DB에서 채움
     cartData.forEach(item => {
-        if (item.product && !item.product.name_jp && item.product.code) {
-            const dbProd = (window.PRODUCT_DB && window.PRODUCT_DB[item.product.code]) || PRODUCT_DB[item.product.code];
-            if (dbProd) {
-                if (dbProd.name_jp) item.product.name_jp = dbProd.name_jp;
-                if (dbProd.name_us) item.product.name_us = dbProd.name_us;
+        if (item.product && item.product.code) {
+            const needsJp = !item.product.name_jp;
+            const needsUs = !item.product.name_us;
+            if (needsJp || needsUs) {
+                const dbProd = (window.PRODUCT_DB && window.PRODUCT_DB[item.product.code]) || PRODUCT_DB[item.product.code];
+                if (dbProd) {
+                    if (needsJp && dbProd.name_jp) item.product.name_jp = dbProd.name_jp;
+                    if (needsUs && dbProd.name_us) item.product.name_us = dbProd.name_us;
+                }
             }
         }
     });

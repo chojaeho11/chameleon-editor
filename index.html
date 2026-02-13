@@ -3941,8 +3941,15 @@ if (w >= 20 && h >= 20) {
             else lang = 'kr';
         }
 
-        // 3. 단가 결정 (항상 KRW 기준 - formatCurrency가 표시 시 환산)
+        // 3. 단가 결정 (KRW 기준 - formatCurrency가 표시 시 환산)
+        // 관리자가 설정한 현지 가격(price_us/price_jp)이 있으면 KRW 역환산하여 formatCurrency 환산 시 정확하게 표시
         let unitPrice = product.price || 0;
+        const _cRate = window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE;
+        if (lang === 'ja' && product.price_jp && _cRate && _cRate.JP) {
+            unitPrice = product.price_jp / _cRate.JP;
+        } else if (lang === 'en' && product.price_us && _cRate && _cRate.US) {
+            unitPrice = product.price_us / _cRate.US;
+        }
 
         // 4. 최종 가격 및 사이즈 계산
         let finalW = 0, finalH = 0;

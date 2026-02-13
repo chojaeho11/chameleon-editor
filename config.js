@@ -88,12 +88,19 @@ async function loadSystemData() {
         const { data: addons } = await sb.from('admin_addons').select('*');
         if (addons) {
             ADDON_DB = {};
+            const rate = SITE_CONFIG.CURRENCY_RATE[country] || 1;
             addons.forEach(item => {
                 let dName = item.name;
-                if (country === 'JP') { dName = item.name_jp || item.name; }
-                else if (country === 'US') { dName = item.name_us || item.name; }
-                // price는 항상 KRW 기준 저장 (formatCurrency가 표시 시 환산)
-                ADDON_DB[item.code] = { ...item, display_name: dName };
+                let dbPrice = item.price; // KRW 기본
+                if (country === 'JP') {
+                    dName = item.name_jp || item.name;
+                    // 관리자가 설정한 현지 가격이 있으면 KRW 역환산 (formatCurrency 정확도 보장)
+                    if (item.price_jp) dbPrice = Math.round(item.price_jp / rate);
+                } else if (country === 'US') {
+                    dName = item.name_us || item.name;
+                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
+                }
+                ADDON_DB[item.code] = { ...item, display_name: dName, price: dbPrice };
             });
         }
         PRODUCT_DB = {};
