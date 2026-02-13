@@ -46,13 +46,12 @@ function formatCurrency(amount) {
     const rate = SITE_CONFIG.CURRENCY_RATE?.[country] || 1;
     const converted = num * rate;
 
-    if (country === 'JP') {
-        return '¥' + Math.floor(converted).toLocaleString();
-    } else if (country === 'US') {
-        return '$' + Math.round(converted).toLocaleString();
-    } else {
-        return converted.toLocaleString() + '원';
-    }
+    if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+    if (country === 'US') return '$' + Math.round(converted).toLocaleString();
+    if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
+    if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+    if (country === 'ES') return '€' + converted.toFixed(2);
+    return converted.toLocaleString() + '원';
 }
 
 // 국가별 상품명 표시
@@ -60,6 +59,7 @@ function localName(product) {
     const c = SITE_CONFIG.COUNTRY;
     if (c === 'JP') return product.name_jp || product.name || '';
     if (c === 'US') return product.name_us || product.name || '';
+    if (c === 'CN' || c === 'AR' || c === 'ES') return product.name_us || product.name || '';
     return product.name || '';
 }
 

@@ -8,6 +8,9 @@ function fmtMoney(krw) {
     const converted = (krw || 0) * rate;
     if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
     if (country === 'US') return '$' + Math.round(converted).toLocaleString();
+    if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
+    if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+    if (country === 'ES') return '€' + converted.toFixed(2);
     return converted.toLocaleString() + '원';
 }
 
@@ -92,7 +95,7 @@ if (typeof window.t !== 'function') {
 async function loadMyPageTranslations() {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const langMap = { 'KR': 'kr', 'JP': 'ja', 'US': 'en' };
+    const langMap = { 'KR': 'kr', 'JP': 'ja', 'US': 'en', 'CN': 'zh', 'AR': 'ar', 'ES': 'es' };
     const lang = langMap[country] || 'kr';
     if (lang === 'kr') return; // 한국어는 I18N_KO로 충분
 
@@ -181,7 +184,7 @@ function applyTranslations() {
     // 국가별 통화 단위 설정
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const currUnit = country === 'JP' ? '¥' : country === 'US' ? '$' : '원';
+    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€' }[country] || '원';
     const depositUnit = document.getElementById('depositCurrencyUnit');
     if (depositUnit) depositUnit.innerText = currUnit;
     const wdCurrLabel = document.getElementById('wdCurrencyLabel');
@@ -554,7 +557,7 @@ async function loadMySales() {
 function openWithdrawModal() {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const currUnit = country === 'JP' ? '¥' : country === 'US' ? '$' : '원';
+    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€' }[country] || '원';
 
     sb.from('profiles').select('deposit').eq('id', currentUser.id).single().then(({data}) => {
         const currentDeposit = data?.deposit || 0;
@@ -883,7 +886,7 @@ function speakTTS(text) {
     if ('speechSynthesis' in window) {
         const msg = new SpeechSynthesisUtterance(text);
         const country = (window.SITE_CONFIG || {}).COUNTRY || 'KR';
-        msg.lang = country === 'JP' ? 'ja-JP' : country === 'US' ? 'en-US' : 'ko-KR';
+        msg.lang = { KR: 'ko-KR', JP: 'ja-JP', US: 'en-US', CN: 'zh-CN', AR: 'ar-SA', ES: 'es-ES' }[country] || 'ko-KR';
         msg.rate = 1.0;
         window.speechSynthesis.speak(msg);
     }
@@ -1121,7 +1124,7 @@ function _fmtPdf(val) {
 async function _loadFont(doc) {
     if (!_pdfFontCache) {
         try {
-            const langMap = { 'kr': 'KR', 'jp': 'JA', 'ja': 'JA', 'us': 'EN', 'en': 'EN' };
+            const langMap = { 'kr': 'KR', 'jp': 'JA', 'ja': 'JA', 'us': 'EN', 'en': 'EN', 'zh': 'ZH', 'cn': 'ZH', 'ar': 'AR', 'es': 'ES' };
             const dbLang = langMap[PDF_LANG] || 'KR';
             const { data } = await sb.from('site_fonts').select('file_url').eq('site_code', dbLang).order('id', { ascending: true }).limit(1);
             const url = (data && data[0]?.file_url) || PDF_FONT.url;

@@ -81,6 +81,9 @@
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/">
     <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/">
+    <link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh">
+    <link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar">
+    <link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es">
     <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/">
 
 <script src="product-seo.js"></script>
@@ -88,8 +91,11 @@
 // [SEO 동적 설정] 도메인 + 제품 경로 기반으로 lang, title, meta, canonical, OG, JSON-LD 자동 설정
 (function(){
     var h = location.hostname;
-    var cc = h.includes('cafe0101') ? 'JP' : h.includes('cafe3355') ? 'US' : 'KR';
-    var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com' };
+    // URL ?lang= 파라미터로 국가 오버라이드
+    var _lp = (new URLSearchParams(location.search).get('lang') || '').toUpperCase();
+    var cc = _lp === 'ZH' || _lp === 'CN' ? 'CN' : _lp === 'AR' ? 'AR' : _lp === 'ES' ? 'ES'
+           : h.includes('cafe0101') ? 'JP' : h.includes('cafe3355') ? 'US' : 'KR';
+    var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com', CN:'https://www.cafe3355.com', AR:'https://www.cafe3355.com', ES:'https://www.cafe3355.com' };
     var seoData = {
         KR: {
             title:'카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터',
@@ -108,6 +114,24 @@
             desc:'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
             keywords:'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing,UV printing,custom printing',
             lang:'en', siteName:'Chameleon Printing'
+        },
+        CN: {
+            title:'变色龙印刷 - 环保展示·快闪店印刷 & 免费设计编辑器',
+            desc:'蜂窝板、布艺印刷、亚克力商品、横幅、招牌、包装。免费在线编辑器，全球印刷平台。',
+            keywords:'变色龙印刷,蜂窝板,布艺印刷,快闪店,等身大立牌,展示,环保印刷,亚克力印刷,横幅架,免费编辑器,UV印刷',
+            lang:'zh', siteName:'变色龙印刷'
+        },
+        AR: {
+            title:'طباعة كاميليون - طباعة عروض صديقة للبيئة ومتاجر مؤقتة مع محرر تصميم مجاني',
+            desc:'ألواح خلية النحل، طباعة القماش، منتجات أكريليك، لافتات. محرر تصميم مجاني عبر الإنترنت.',
+            keywords:'طباعة كاميليون,لوح خلية النحل,طباعة قماش,متجر مؤقت,طباعة عروض,طباعة صديقة للبيئة',
+            lang:'ar', siteName:'طباعة كاميليون'
+        },
+        ES: {
+            title:'Chameleon Printing - Impresion Eco Display & Pop-up Store con Editor Gratis',
+            desc:'Paneles honeycomb, impresion en tela, acrilicos, banners, letreros y packaging. Editor de diseno online gratuito.',
+            keywords:'chameleon printing,panel honeycomb,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner,editor gratis',
+            lang:'es', siteName:'Chameleon Printing'
         }
     };
     var s = seoData[cc];
@@ -2301,6 +2325,7 @@ window.getTinyThumb = function(url, size = 150) {
     let CURRENT_LANG = detectedLang ? detectedLang.toLowerCase() : 'kr';
     if (CURRENT_LANG === 'jp') CURRENT_LANG = 'ja';
     if (CURRENT_LANG === 'us') CURRENT_LANG = 'en';
+    if (CURRENT_LANG === 'cn') CURRENT_LANG = 'zh';
 
     console.log(`🌍 접속 모드: ${CURRENT_LANG} (Domain: ${window.location.hostname})`);
 
@@ -2309,7 +2334,10 @@ window.getTinyThumb = function(url, size = 150) {
         const metaData = {
             'kr': { title: "카멜레온프린팅", desc: "무료 디자인 에디터" },
             'en': { title: "Chameleon Printing", desc: "Free Design Editor" },
-            'ja': { title: "カメレオンプリンティング", desc: "無料デザインエディタ" }
+            'ja': { title: "カメレオンプリンティング", desc: "無料デザインエディタ" },
+            'zh': { title: "变色龙印刷", desc: "免费设计编辑器" },
+            'ar': { title: "طباعة كاميليون", desc: "محرر تصميم مجاني" },
+            'es': { title: "Chameleon Printing", desc: "Editor de Diseno Gratis" }
         };
         const data = metaData[lang] || metaData['kr'];
         document.title = data.title;
@@ -2402,10 +2430,18 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap';
             fontFamily = "'Noto Sans JP', sans-serif";
             window.currentCanvasFont = 'Noto Sans JP';
-        } else if (CURRENT_LANG === 'en') {
+        } else if (CURRENT_LANG === 'en' || CURRENT_LANG === 'es') {
             fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap';
             fontFamily = "'Inter', sans-serif";
             window.currentCanvasFont = 'Inter';
+        } else if (CURRENT_LANG === 'zh') {
+            fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap';
+            fontFamily = "'Noto Sans SC', sans-serif";
+            window.currentCanvasFont = 'Noto Sans SC';
+        } else if (CURRENT_LANG === 'ar') {
+            fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;700&display=swap';
+            fontFamily = "'Noto Sans Arabic', sans-serif";
+            window.currentCanvasFont = 'Noto Sans Arabic';
         } else {
             fontLink.href = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css';
             window.currentCanvasFont = 'Pretendard';
@@ -2860,7 +2896,7 @@ window._drawQuickItems = (list, isProductMode = false) => {
         // [수정] 언어별 이름 적용 (이 코드가 모달 제목까지 해결합니다)
         let name = item.name || '';
         if (CURRENT_LANG === 'ja' && item.name_jp) name = item.name_jp;
-        if (CURRENT_LANG === 'en' && item.name_us) name = item.name_us;
+        if ((CURRENT_LANG === 'en' || CURRENT_LANG === 'zh' || CURRENT_LANG === 'ar' || CURRENT_LANG === 'es') && item.name_us) name = item.name_us;
 
         const itemCode = item.code || '';
         
@@ -2951,7 +2987,7 @@ async function renderQuickMenu() {
             // [수정] 대분류 언어별 명칭 적용
             let tName = top.name;
             if (CURRENT_LANG === 'ja' && top.name_jp) tName = top.name_jp;
-            if (CURRENT_LANG === 'en' && top.name_us) tName = top.name_us;
+            if (['en','zh','ar','es'].includes(CURRENT_LANG) && top.name_us) tName = top.name_us;
             btn.innerText = tName;
 
             btn.onclick = () => {
@@ -4788,7 +4824,10 @@ if (w >= 20 && h >= 20) {
     const _pdfFontMap = {
         'ja': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf', name: 'NotoSansJP' },
         'en': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf', name: 'Inter' },
-        'kr': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf', name: 'NanumGothic' }
+        'kr': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf', name: 'NanumGothic' },
+        'zh': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf', name: 'NotoSansSC' },
+        'ar': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansarabic/NotoSansArabic%5Bwght%5D.ttf', name: 'NotoSansArabic' },
+        'es': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf', name: 'Inter' }
     };
     const _pdfFont = _pdfFontMap[CURRENT_LANG] || _pdfFontMap['kr'];
     window.pdfFontName = _pdfFont.name;
@@ -5278,6 +5317,8 @@ function updateVipFileList(input) {
                     if (tz.includes('Seoul') || tz.includes('Korea')) return 'KR';
                     if (tz.includes('Tokyo') || tz.includes('Japan')) return 'JP';
                     if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) return 'US';
+                    if (tz.includes('Riyadh') || tz.includes('Arabia') || tz.includes('Kuwait') || tz.includes('Dubai')) return 'AR';
+                    if (tz.includes('Madrid') || tz.includes('Mexico') || tz.includes('Buenos_Aires') || tz.includes('Bogota') || tz.includes('Lima')) return 'ES';
                     if (tz.includes('Europe')) return 'EU';
                     if (tz.includes('Taipei')) return 'TW';
                     if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Chongqing') || tz.includes('Urumqi')) return 'CN';

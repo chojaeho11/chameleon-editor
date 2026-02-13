@@ -29,6 +29,9 @@ function fmtMoney(krw) {
     const converted = (krw || 0) * rate;
     if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
     if (country === 'US') return '$' + Math.round(converted).toLocaleString();
+    if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
+    if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+    if (country === 'ES') return '€' + converted.toFixed(2);
     return converted.toLocaleString() + '원';
 }
 

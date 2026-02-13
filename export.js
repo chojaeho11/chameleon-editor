@@ -14,9 +14,21 @@ jp: {
     url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf",
     name: "NotoSansJP"
 },
-    us: { // 영어는 한글 폰트로도 표현 가능하므로 KR과 동일하게 설정 (또는 별도 설정 가능)
+    us: {
         url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf",
         name: "NanumGothic"
+    },
+    cn: {
+        url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",
+        name: "NotoSansSC"
+    },
+    ar: {
+        url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansarabic/NotoSansArabic%5Bwght%5D.ttf",
+        name: "NotoSansArabic"
+    },
+    es: {
+        url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+        name: "Inter"
     }
 };
 
@@ -30,7 +42,7 @@ if (!_exportLang) {
     else _exportLang = 'kr';
 }
 const CURRENT_LANG_CODE = _exportLang.toLowerCase();
-const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr' }[CURRENT_LANG_CODE] || 'kr';
+const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr', 'zh': 'cn', 'cn': 'cn', 'ar': 'ar', 'es': 'es' }[CURRENT_LANG_CODE] || 'kr';
 const TARGET_FONT = FONT_CONFIG[_fontKey] || FONT_CONFIG['kr'];
 
 const BASE_FONT_NAME = TARGET_FONT.name;
@@ -162,6 +174,132 @@ const PDF_LABELS = {
         ordersheet_design_preview: "Design Preview",
         ordersheet_no_image: "No image (see attached file)",
         ordersheet_page_label: "Page"
+    },
+    zh: {
+        quote_title: "报 价 单",
+        receipt_title: "收 据",
+        statement_title: "交 易 明 细",
+        ordersheet_title: "工 作 指 示 单",
+        recipient: "[ 收件人 ]",
+        name: "姓   名 :",
+        phone: "联系方式 :",
+        address: "地   址 :",
+        provider_labels: ["注册号", "公司名称", "代表人", "地   址", "行   业", "联系方式"],
+        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Manufacturing", "+82-31-366-1984"],
+        headers: ["No", "品名", "规格/选项", "数量", "单价", "金额"],
+        supply_price: "供应价 :",
+        vat: "增值税 :",
+        discount: "折扣金额 :",
+        mileage: "积分使用 :",
+        total_amount: "合计金额 (含税)",
+        footer_claim: "以上内容确认无误。",
+        staff_make: "制作负责",
+        staff_check: "检验/出库",
+        staff_ship: "配送负责",
+        payment_card: "信用卡支付完成",
+        payment_bank: "银行转账支付完成",
+        payment_deposit: "预存款支付完成",
+        opt_default: "基本规格",
+        opt_add: "附加选项",
+        ordersheet_order_no: "订 单 号",
+        ordersheet_date: "接 收 日",
+        ordersheet_customer: "下 单 人",
+        ordersheet_phone: "联系方式",
+        ordersheet_address: "配送地址",
+        ordersheet_request: "备注要求",
+        ordersheet_none: "无",
+        ordersheet_unspecified: "未指定",
+        ordersheet_delivery_date: "期望配送日",
+        ordersheet_prod_spec: "制 作 规 格",
+        ordersheet_qty_unit: "个",
+        ordersheet_qty_label: "数量",
+        ordersheet_design_preview: "设计预览",
+        ordersheet_no_image: "无图片（请另行确认文件）",
+        ordersheet_page_label: "Page"
+    },
+    ar: {
+        quote_title: "عرض سعر",
+        receipt_title: "إيصال",
+        statement_title: "كشف حساب",
+        ordersheet_title: "أمر عمل",
+        recipient: "[ المستلم ]",
+        name: "الاسم :",
+        phone: "الهاتف :",
+        address: "العنوان :",
+        provider_labels: ["رقم التسجيل", "الشركة", "المدير", "العنوان", "النشاط", "الاتصال"],
+        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Manufacturing", "+82-31-366-1984"],
+        headers: ["رقم", "الصنف", "المواصفات", "الكمية", "السعر", "المبلغ"],
+        supply_price: "المبلغ قبل الضريبة :",
+        vat: "ضريبة القيمة المضافة :",
+        discount: "الخصم :",
+        mileage: "النقاط المستخدمة :",
+        total_amount: "المبلغ الإجمالي",
+        footer_claim: "التوقيع المعتمد",
+        staff_make: "الإنتاج",
+        staff_check: "الفحص",
+        staff_ship: "الشحن",
+        payment_card: "تم الدفع ببطاقة الائتمان",
+        payment_bank: "تم الدفع بالتحويل البنكي",
+        payment_deposit: "تم الدفع من الرصيد",
+        opt_default: "المواصفات الأساسية",
+        opt_add: "خيارات إضافية",
+        ordersheet_order_no: "رقم الطلب",
+        ordersheet_date: "التاريخ",
+        ordersheet_customer: "العميل",
+        ordersheet_phone: "الهاتف",
+        ordersheet_address: "عنوان الشحن",
+        ordersheet_request: "ملاحظات",
+        ordersheet_none: "لا يوجد",
+        ordersheet_unspecified: "غير محدد",
+        ordersheet_delivery_date: "تاريخ التسليم المطلوب",
+        ordersheet_prod_spec: "مواصفات التصنيع",
+        ordersheet_qty_unit: "قطعة",
+        ordersheet_qty_label: "الكمية",
+        ordersheet_design_preview: "معاينة التصميم",
+        ordersheet_no_image: "لا توجد صورة (راجع الملف المرفق)",
+        ordersheet_page_label: "Page"
+    },
+    es: {
+        quote_title: "PRESUPUESTO",
+        receipt_title: "RECIBO",
+        statement_title: "FACTURA",
+        ordersheet_title: "ORDEN DE TRABAJO",
+        recipient: "[ Cliente ]",
+        name: "Nombre :",
+        phone: "Teléfono :",
+        address: "Dirección :",
+        provider_labels: ["Nº Registro", "Empresa", "Director", "Dirección", "Sector", "Contacto"],
+        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Manufacturing", "+82-31-366-1984"],
+        headers: ["Nº", "Artículo", "Especificación", "Cant.", "Precio", "Importe"],
+        supply_price: "Subtotal :",
+        vat: "IVA :",
+        discount: "Descuento :",
+        mileage: "Puntos usados :",
+        total_amount: "Total (IVA incluido)",
+        footer_claim: "Firma autorizada",
+        staff_make: "Producción",
+        staff_check: "Inspección",
+        staff_ship: "Envío",
+        payment_card: "Pagado con tarjeta de crédito",
+        payment_bank: "Pagado por transferencia bancaria",
+        payment_deposit: "Pagado con depósito",
+        opt_default: "Especificación básica",
+        opt_add: "Opciones adicionales",
+        ordersheet_order_no: "Nº de pedido",
+        ordersheet_date: "Fecha",
+        ordersheet_customer: "Cliente",
+        ordersheet_phone: "Teléfono",
+        ordersheet_address: "Dirección de envío",
+        ordersheet_request: "Observaciones",
+        ordersheet_none: "Ninguno",
+        ordersheet_unspecified: "No especificado",
+        ordersheet_delivery_date: "Fecha de entrega solicitada",
+        ordersheet_prod_spec: "ESPECIFICACIONES",
+        ordersheet_qty_unit: "uds",
+        ordersheet_qty_label: "Cant.",
+        ordersheet_design_preview: "Vista previa del diseño",
+        ordersheet_no_image: "Sin imagen (ver archivo adjunto)",
+        ordersheet_page_label: "Página"
     }
 };
 

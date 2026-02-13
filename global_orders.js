@@ -129,13 +129,15 @@ window.loadOrders = async () => {
             const site = order.site_code || 'KR';
 
             // 통화 변환 헬퍼 (DB는 KRW 기준 저장)
-            const currRates = { KR: 1, JP: 0.2, US: 0.002 };
-            const currSymbols = { KR: '', JP: '¥', US: '$' };
+            const currRates = { KR: 1, JP: 0.2, US: 0.002, CN: 0.005, AR: 0.003, ES: 0.0007 };
+            const currSymbols = { KR: '', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€' };
             const rate = currRates[site] || 1;
             const sym = currSymbols[site] || '';
             const fmtAmt = (krw) => {
-                const v = Math.round(krw * rate);
-                return site === 'KR' ? v.toLocaleString() : `${sym}${v.toLocaleString()}`;
+                const v = site === 'ES' ? (krw * rate).toFixed(2) : Math.round(krw * rate);
+                if (site === 'KR') return Number(v).toLocaleString();
+                if (site === 'AR') return `${Number(v).toLocaleString()} ﷼`;
+                return `${sym}${Number(v).toLocaleString()}`;
             };
             
             // [스태프 선택] 배경색 꽉 차게 변경된 함수 사용
@@ -283,7 +285,7 @@ window.fixSiteCode = async (orderId) => {
     const newCode = prompt('사이트 코드 변경 (KR / JP / US):', '');
     if (!newCode) return;
     const code = newCode.trim().toUpperCase();
-    if (!['KR', 'JP', 'US'].includes(code)) return alert('KR, JP, US 중 선택');
+    if (!['KR', 'JP', 'US', 'CN', 'AR', 'ES'].includes(code)) return alert('KR, JP, US, CN, AR, ES 중 선택');
     const { error } = await sb.from('orders').update({ site_code: code }).eq('id', orderId);
     if (error) return alert('변경 실패: ' + error.message);
     alert(`주문 #${orderId} → ${code} 변경 완료`);

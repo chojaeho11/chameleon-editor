@@ -94,9 +94,11 @@ async function loadSystemData() {
                 let dbPrice = item.price; // KRW 기본
                 if (country === 'JP') {
                     dName = item.name_jp || item.name;
-                    // 관리자가 설정한 현지 가격이 있으면 KRW 역환산 (formatCurrency 정확도 보장)
                     if (item.price_jp) dbPrice = Math.round(item.price_jp / rate);
                 } else if (country === 'US') {
+                    dName = item.name_us || item.name;
+                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
+                } else if (country === 'CN' || country === 'AR' || country === 'ES') {
                     dName = item.name_us || item.name;
                     if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 }
@@ -157,6 +159,12 @@ export function getLocalizedData(item) {
     // 도메인 또는 ?lang= 파라미터로 국가 결정
     if (hostname.includes('cafe0101.com') || paramLang === 'ja' || paramLang === 'jp') {
         country = 'JP';
+    } else if (paramLang === 'zh' || paramLang === 'cn') {
+        country = 'CN';
+    } else if (paramLang === 'ar') {
+        country = 'AR';
+    } else if (paramLang === 'es') {
+        country = 'ES';
     } else if (hostname.includes('cafe3355.com') || paramLang === 'en' || paramLang === 'us') {
         country = 'US';
     }
@@ -168,17 +176,26 @@ export function getLocalizedData(item) {
     let formattedPrice = '';
 
     if (country === 'JP') {
-        name = item.name_jp || item.name; // 일본어 이름 없으면 한글 이름
+        name = item.name_jp || item.name;
         price = Number(item.price_jp) || price;
-        // 일본: 기호 ¥를 앞에 붙이고 소수점 제거
         formattedPrice = '¥' + Math.floor(price).toLocaleString();
     } else if (country === 'US') {
-        name = item.name_us || item.name; // 영어 이름 없으면 한글 이름
+        name = item.name_us || item.name;
         price = Number(item.price_us) || price;
-        // 미국: 기호 $를 앞에 붙이고 소수점 2자리 허용
         formattedPrice = '$' + Math.round(price).toLocaleString();
+    } else if (country === 'CN') {
+        name = item.name_us || item.name;
+        price = Number(item.price_us) || price;
+        formattedPrice = '¥' + Math.round(price).toLocaleString();
+    } else if (country === 'AR') {
+        name = item.name_us || item.name;
+        price = Number(item.price_us) || price;
+        formattedPrice = Math.round(price).toLocaleString() + ' ﷼';
+    } else if (country === 'ES') {
+        name = item.name_us || item.name;
+        price = Number(item.price_us) || price;
+        formattedPrice = '€' + price.toFixed(2);
     } else {
-        // 한국: 금액 뒤에 '원' 표기
         formattedPrice = price.toLocaleString() + '원';
     }
 

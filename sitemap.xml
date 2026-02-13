@@ -2,12 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-  <!-- ===== 메인 페이지 (3개 도메인) ===== -->
+  <!-- ===== 메인 페이지 (6개 언어) ===== -->
   <url>
     <loc>https://www.cafe2626.com/</loc>
     <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
     <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/"/>
     <priority>1.0</priority>
   </url>
@@ -16,6 +19,9 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
     <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/"/>
     <priority>1.0</priority>
   </url>
@@ -24,16 +30,52 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
     <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/"/>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>https://www.cafe3355.com/?lang=zh</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es"/>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe3355.com/?lang=ar</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es"/>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe3355.com/?lang=es</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es"/>
+    <priority>0.9</priority>
+  </url>
 
-  <!-- ===== 커뮤니티/블로그 (3개 도메인) ===== -->
+  <!-- ===== 커뮤니티/블로그 (6개 언어) ===== -->
   <url>
     <loc>https://www.cafe2626.com/board</loc>
     <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board"/>
     <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/board?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/board?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/board?lang=es"/>
     <priority>0.8</priority>
   </url>
   <url>
@@ -41,6 +83,9 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board"/>
     <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/board?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/board?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/board?lang=es"/>
     <priority>0.8</priority>
   </url>
   <url>
@@ -48,7 +93,22 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board"/>
     <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/board?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/board?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.cafe3355.com/board?lang=es"/>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe3355.com/board?lang=zh</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe3355.com/board?lang=ar</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe3355.com/board?lang=es</loc>
+    <priority>0.7</priority>
   </url>
 
   <!-- ===== 제품 페이지 (KR) ===== -->
@@ -134,5 +194,89 @@
   <url><loc>https://www.cafe3355.com/tshirt-print</loc><priority>0.8</priority></url>
   <url><loc>https://www.cafe3355.com/blackout-blind</loc><priority>0.8</priority></url>
   <url><loc>https://www.cafe3355.com/curtain</loc><priority>0.8</priority></url>
+
+  <!-- ===== 제품 페이지 (CN - ?lang=zh) ===== -->
+  <url><loc>https://www.cafe3355.com/honeycomb?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/fabric-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-stand?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-furniture?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamboard-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/goods?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-stand?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/biz-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/roll-blind?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/home-interior?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/promo-items?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/flexible-package?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/box-package?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/shopping-bag?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/acrylic-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/banner-stand?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/standee?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/rubber-magnet?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/placard?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/sheet-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/flex-sign?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/uv-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/tshirt-print?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/blackout-blind?lang=zh</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/curtain?lang=zh</loc><priority>0.7</priority></url>
+
+  <!-- ===== 제품 페이지 (AR - ?lang=ar) ===== -->
+  <url><loc>https://www.cafe3355.com/honeycomb?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/fabric-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-stand?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-furniture?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamboard-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/goods?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-stand?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/biz-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/roll-blind?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/home-interior?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/promo-items?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/flexible-package?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/box-package?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/shopping-bag?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/acrylic-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/banner-stand?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/standee?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/rubber-magnet?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/placard?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/sheet-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/flex-sign?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/uv-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/tshirt-print?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/blackout-blind?lang=ar</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/curtain?lang=ar</loc><priority>0.7</priority></url>
+
+  <!-- ===== 제품 페이지 (ES - ?lang=es) ===== -->
+  <url><loc>https://www.cafe3355.com/honeycomb?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/fabric-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-stand?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/paper-furniture?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamboard-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/goods?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/foamex-stand?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/biz-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/roll-blind?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/home-interior?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/promo-items?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/flexible-package?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/box-package?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/shopping-bag?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/acrylic-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/banner-stand?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/standee?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/rubber-magnet?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/placard?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/sheet-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/flex-sign?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/uv-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/tshirt-print?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/blackout-blind?lang=es</loc><priority>0.7</priority></url>
+  <url><loc>https://www.cafe3355.com/curtain?lang=es</loc><priority>0.7</priority></url>
 
 </urlset>

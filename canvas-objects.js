@@ -13,8 +13,8 @@ if (!_detectedLang) {
     else if (_h.includes('cafe3355.com')) _detectedLang = 'US';
     else _detectedLang = 'KR';
 }
-// DB site_fonts.site_code = KR / JA / EN
-const _langMap = { 'JA': 'JA', 'JP': 'JA', 'EN': 'EN', 'US': 'EN', 'KR': 'KR' };
+// DB site_fonts.site_code = KR / JA / EN / ZH / AR / ES
+const _langMap = { 'JA': 'JA', 'JP': 'JA', 'EN': 'EN', 'US': 'EN', 'KR': 'KR', 'ZH': 'ZH', 'CN': 'ZH', 'AR': 'AR', 'ES': 'ES' };
 const CURRENT_LANG = _langMap[_detectedLang.toUpperCase()] || 'KR';
 
 // DB에서 불러온 폰트 목록을 저장할 전역 변수
@@ -63,8 +63,12 @@ function loadGoogleWebFontsCSS() {
     link.rel = "stylesheet";
     if (CURRENT_LANG === 'JP' || CURRENT_LANG === 'JA') {
         link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=M+PLUS+Rounded+1c&family=Zen+Maru+Gothic&display=swap";
-    } else if (CURRENT_LANG === 'US' || CURRENT_LANG === 'EN') {
+    } else if (CURRENT_LANG === 'US' || CURRENT_LANG === 'EN' || CURRENT_LANG === 'ES') {
         link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap";
+    } else if (CURRENT_LANG === 'ZH') {
+        link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap";
+    } else if (CURRENT_LANG === 'AR') {
+        link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;700&display=swap";
     } else {
         link.href = "https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic&family=Nanum+Myeongjo&family=Noto+Sans+KR&display=swap";
     }

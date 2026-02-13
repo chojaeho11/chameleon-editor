@@ -13,7 +13,11 @@
         else if (_h.includes('cafe3355.com')) currentLang = 'us';
         else currentLang = 'kr';
     }
-    const langKey = (currentLang === 'en' || currentLang === 'us') ? 'en' : (currentLang === 'ja' || currentLang === 'jp') ? 'ja' : 'kr';
+    const langKey = (currentLang === 'en' || currentLang === 'us' || currentLang === 'es') ? 'en'
+        : (currentLang === 'ja' || currentLang === 'jp') ? 'ja'
+        : (currentLang === 'zh' || currentLang === 'cn') ? 'zh'
+        : (currentLang === 'ar') ? 'ar'
+        : 'kr';
 
     // 2. 폰트 선택 함수 (DYNAMIC_FONTS가 로드된 후 실행 시점에 호출)
     function getFonts() {
@@ -21,7 +25,9 @@
         const fallbacks = {
             kr: { title: 'Black Han Sans', sub: 'Nanum Gothic', emo: 'Nanum Myeongjo', point: 'Noto Sans KR', deco: 'Nanum Gothic' },
             ja: { title: 'Noto Sans JP', sub: 'Noto Sans JP', emo: 'Noto Sans JP', point: 'Noto Sans JP', deco: 'Noto Sans JP' },
-            en: { title: 'Impact', sub: 'Arial', emo: 'Georgia', point: 'Helvetica', deco: 'Arial' }
+            en: { title: 'Impact', sub: 'Arial', emo: 'Georgia', point: 'Helvetica', deco: 'Arial' },
+            zh: { title: 'Noto Sans SC', sub: 'Noto Sans SC', emo: 'Noto Sans SC', point: 'Noto Sans SC', deco: 'Noto Sans SC' },
+            ar: { title: 'Noto Sans Arabic', sub: 'Noto Sans Arabic', emo: 'Noto Sans Arabic', point: 'Noto Sans Arabic', deco: 'Noto Sans Arabic' }
         };
         const fb = fallbacks[langKey] || fallbacks['en'];
         return {

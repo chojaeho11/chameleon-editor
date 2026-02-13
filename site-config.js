@@ -24,48 +24,72 @@ if (country === 'KR') {
 const paramLang = urlParams.get('lang');
 if (paramLang) {
     const code = paramLang.toUpperCase();
-    
-    // 언어 코드(JA, EN)를 국가 코드(JP, US)로 변환
+
+    // 언어 코드를 국가 코드로 변환
     if (code === 'JA' || code === 'JP') {
         country = 'JP';
     } else if (code === 'EN' || code === 'US') {
         country = 'US';
+    } else if (code === 'ZH' || code === 'CN') {
+        country = 'CN';
+    } else if (code === 'AR') {
+        country = 'AR';
+    } else if (code === 'ES') {
+        country = 'ES';
     } else {
         country = 'KR';
     }
 }
 
 export const SITE_CONFIG = {
-    COUNTRY: country, // 'KR', 'JP', 'US'
+    COUNTRY: country, // 'KR', 'JP', 'US', 'CN', 'AR', 'ES'
 
     // 국가별 화폐 단위
     CURRENCY_UNIT: {
         'KR': '원',
         'JP': '¥',
-        'US': '$'
+        'US': '$',
+        'CN': '¥',
+        'AR': '﷼',
+        'ES': '€'
     },
 
     // 국가별 환산율 (DB는 KRW 기준 저장, 표시 시 환산)
-    CURRENCY_RATE: { 'KR': 1, 'JP': 0.2, 'US': 0.002 },
-    
+    CURRENCY_RATE: { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.005, 'AR': 0.003, 'ES': 0.0007 },
+
     // 국가별 폰트 정의
     FONTS: {
         'KR': 'Pretendard',
         'JP': 'Noto Sans JP',
-        'US': 'Inter'
+        'US': 'Inter',
+        'CN': 'Noto Sans SC',
+        'AR': 'Noto Sans Arabic',
+        'ES': 'Inter'
     },
-    
+
     // [중요] 국가별 PG사 설정 (토스 / 스트라이프)
     PG_CONFIG: {
         'KR': {
             provider: 'toss',
-            clientKey: 'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6' 
+            clientKey: 'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6'
         },
         'JP': {
             provider: 'stripe',
             publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
         },
         'US': {
+            provider: 'stripe',
+            publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
+        },
+        'CN': {
+            provider: 'stripe',
+            publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
+        },
+        'AR': {
+            provider: 'stripe',
+            publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
+        },
+        'ES': {
             provider: 'stripe',
             publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
         }
@@ -103,6 +127,36 @@ SITE_CONFIG.SEO = {
         siteName: 'Chameleon Printing',
         boardTitle: 'Chameleon Community - Blog & Reviews',
         boardDesc: 'Chameleon Printing global community. Check out production reviews, design tips, and printing information.'
+    },
+    'CN': {
+        title: '变色龙印刷 - 环保展示·快闪店印刷 & 免费设计编辑器',
+        description: '蜂窝板、布艺印刷、快闪店展示。免费在线编辑器，从等身大立牌到背景墙设计到印刷一站式解决。',
+        keywords: '变色龙印刷,蜂窝板,布艺印刷,快闪店,等身大立牌,展示,环保印刷,背景墙,亚克力印刷,横幅架',
+        lang: 'zh',
+        domain: 'https://www.cafe3355.com',
+        siteName: '变色龙印刷',
+        boardTitle: '变色龙社区 - 博客 & 评价',
+        boardDesc: '变色龙印刷全球社区。查看制作评价、设计信息和印刷技巧。'
+    },
+    'AR': {
+        title: 'طباعة كاميليون - طباعة عروض صديقة للبيئة ومتاجر مؤقتة مع محرر تصميم مجاني',
+        description: 'ألواح خلية النحل، طباعة القماش، عروض المتاجر المؤقتة. محرر تصميم مجاني عبر الإنترنت.',
+        keywords: 'طباعة كاميليون,لوح خلية النحل,طباعة قماش,متجر مؤقت,طباعة عروض,طباعة صديقة للبيئة',
+        lang: 'ar',
+        domain: 'https://www.cafe3355.com',
+        siteName: 'طباعة كاميليون',
+        boardTitle: 'مجتمع كاميليون - مدونة ومراجعات',
+        boardDesc: 'مجتمع طباعة كاميليون العالمي. اطلع على مراجعات الإنتاج ونصائح التصميم ومعلومات الطباعة.'
+    },
+    'ES': {
+        title: 'Chameleon Printing - Impresion Eco Display & Pop-up Store con Editor de Diseno Gratis',
+        description: 'Paneles honeycomb, impresion en tela, displays para pop-up stores. Editor de diseno online gratuito.',
+        keywords: 'chameleon printing,panel honeycomb,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner',
+        lang: 'es',
+        domain: 'https://www.cafe3355.com',
+        siteName: 'Chameleon Printing',
+        boardTitle: 'Comunidad Chameleon - Blog & Resenas',
+        boardDesc: 'Comunidad global de Chameleon Printing. Consulta resenas de produccion, consejos de diseno e informacion de impresion.'
     }
 };
 

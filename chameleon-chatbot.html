@@ -476,13 +476,16 @@ const PRICING = {
 
     // 현재 국가 감지 (도메인 + URL 파라미터)
     detectCountry() {
+        const params = new URLSearchParams(window.location.search);
+        const langParam = (params.get('lang') || '').toUpperCase();
+        if (langParam === 'ZH' || langParam === 'CN') return 'CN';
+        if (langParam === 'AR') return 'AR';
+        if (langParam === 'ES') return 'ES';
+        if (langParam === 'JA' || langParam === 'JP') return 'JP';
+        if (langParam === 'EN' || langParam === 'US') return 'US';
         const hostname = window.location.hostname;
         if (hostname.includes('cafe0101.com')) return 'JP';
         if (hostname.includes('cafe3355.com')) return 'US';
-        const params = new URLSearchParams(window.location.search);
-        const langParam = (params.get('lang') || '').toUpperCase();
-        if (langParam === 'JA' || langParam === 'JP') return 'JP';
-        if (langParam === 'EN' || langParam === 'US') return 'US';
         return 'KR';
     },
 
@@ -490,12 +493,15 @@ const PRICING = {
         const amount = num || 0;
         const country = this.detectCountry();
 
-        const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002 };
+        const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.005, 'AR': 0.003, 'ES': 0.0007 };
         const rate = rates[country] || 1;
         const converted = amount * rate;
 
         if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
         if (country === 'US') return '$' + Math.round(converted).toLocaleString();
+        if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
+        if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+        if (country === 'ES') return '€' + converted.toFixed(2);
         return converted.toLocaleString() + '원';
     },
 
@@ -508,7 +514,7 @@ const PRICING = {
         if (country === 'JP') {
             name = product.name_jp || name;
             price = Number(product.price_jp) || price;
-        } else if (country === 'US') {
+        } else if (country === 'US' || country === 'CN' || country === 'AR' || country === 'ES') {
             name = product.name_us || name;
             price = Number(product.price_us) || price;
         }
@@ -519,6 +525,9 @@ const PRICING = {
     formatPriceByCountry(price, country) {
         if (country === 'JP') return '¥' + Math.floor(price).toLocaleString();
         if (country === 'US') return '$' + Math.round(price).toLocaleString();
+        if (country === 'CN') return '¥' + Math.round(price).toLocaleString();
+        if (country === 'AR') return Math.round(price).toLocaleString() + ' ﷼';
+        if (country === 'ES') return '€' + price.toFixed(2);
         return price.toLocaleString() + '원';
     }
 };

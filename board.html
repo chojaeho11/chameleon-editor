@@ -7,6 +7,9 @@
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/board.html" />
     <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/board.html" />
     <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/board.html" />
+    <link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/board.html?lang=zh" />
+    <link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/board.html?lang=ar" />
+    <link rel="alternate" hreflang="es" href="https://www.cafe3355.com/board.html?lang=es" />
     <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/board.html" />
     
     <title>카멜레온 커뮤니티 - 블로그 & 후기</title>
@@ -31,12 +34,16 @@
     // [SEO 동적 설정] board.html용
     (function(){
         var h = location.hostname;
-        var cc = h.includes('cafe0101') ? 'JP' : h.includes('cafe3355') ? 'US' : 'KR';
-        var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com' };
+        var lp = new URLSearchParams(location.search).get('lang');
+        var cc = lp === 'zh' || lp === 'cn' ? 'CN' : lp === 'ar' ? 'AR' : lp === 'es' ? 'ES' : h.includes('cafe0101') ? 'JP' : h.includes('cafe3355') ? 'US' : 'KR';
+        var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com', CN:'https://www.cafe3355.com', AR:'https://www.cafe3355.com', ES:'https://www.cafe3355.com' };
         var seoData = {
             KR: { title:'카멜레온 커뮤니티 - 블로그 & 후기', desc:'카멜레온프린팅 글로벌 커뮤니티입니다. 제작 후기, 디자인 정보, 인쇄 팁을 확인하세요.', keywords:'카멜레온프린팅,인쇄후기,디자인정보,팝업스토어,허니콤보드,커뮤니티', lang:'ko', siteName:'카멜레온프린팅' },
             JP: { title:'カメレオン コミュニティ - ブログ & レビュー', desc:'カメレオンプリンティングのグローバルコミュニティ。制作レビュー、デザイン情報、印刷のヒントをご覧ください。', keywords:'カメレオンプリンティング,印刷レビュー,デザイン情報,ポップアップストア,ハニカムボード,コミュニティ', lang:'ja', siteName:'カメレオンプリンティング' },
-            US: { title:'Chameleon Community - Blog & Reviews', desc:'Chameleon Printing global community. Check out production reviews, design tips, and printing information.', keywords:'chameleon printing,printing reviews,design tips,pop-up store,honeycomb board,community', lang:'en', siteName:'Chameleon Printing' }
+            US: { title:'Chameleon Community - Blog & Reviews', desc:'Chameleon Printing global community. Check out production reviews, design tips, and printing information.', keywords:'chameleon printing,printing reviews,design tips,pop-up store,honeycomb board,community', lang:'en', siteName:'Chameleon Printing' },
+            CN: { title:'变色龙社区 - 博客 & 评价', desc:'变色龙印刷全球社区。查看制作评价、设计信息和印刷技巧。', keywords:'变色龙印刷,印刷评价,设计信息,快闪店,蜂窝板,社区', lang:'zh', siteName:'变色龙印刷' },
+            AR: { title:'مجتمع كاميليون - مدونة ومراجعات', desc:'مجتمع كاميليون للطباعة العالمي. اطلع على مراجعات الإنتاج ونصائح التصميم ومعلومات الطباعة.', keywords:'طباعة كاميليون,مراجعات الطباعة,نصائح التصميم,متجر منبثق,لوح العسل,مجتمع', lang:'ar', siteName:'طباعة كاميليون' },
+            ES: { title:'Comunidad Chameleon - Blog y Reseñas', desc:'Comunidad global de Chameleon Printing. Consulta reseñas de producción, consejos de diseño e información sobre impresión.', keywords:'chameleon printing,reseñas de impresión,consejos de diseño,tienda pop-up,panel honeycomb,comunidad', lang:'es', siteName:'Chameleon Printing' }
         };
         var s = seoData[cc]; if(!s) return;
         var d = domains[cc];
@@ -44,10 +51,12 @@
         document.title = s.title;
         var mDesc = document.querySelector('meta[name="description"]'); if(mDesc) mDesc.content = s.desc;
         var mKey = document.querySelector('meta[name="keywords"]'); if(mKey) mKey.content = s.keywords;
-        var canon = document.querySelector('link[rel="canonical"]'); if(canon) canon.href = d + '/board';
+        var langSuffix = { CN:'?lang=zh', AR:'?lang=ar', ES:'?lang=es' };
+        var boardPath = '/board' + (langSuffix[cc] || '');
+        var canon = document.querySelector('link[rel="canonical"]'); if(canon) canon.href = d + boardPath;
         var ogTitle = document.querySelector('meta[property="og:title"]'); if(ogTitle) ogTitle.content = s.title;
         var ogDesc = document.querySelector('meta[property="og:description"]'); if(ogDesc) ogDesc.content = s.desc;
-        var ogUrl = document.querySelector('meta[property="og:url"]'); if(ogUrl) ogUrl.content = d + '/board';
+        var ogUrl = document.querySelector('meta[property="og:url"]'); if(ogUrl) ogUrl.content = d + boardPath;
         var ogSite = document.querySelector('meta[property="og:site_name"]'); if(ogSite) ogSite.content = s.siteName;
         var twTitle = document.querySelector('meta[name="twitter:title"]'); if(twTitle) twTitle.content = s.title;
         var twDesc = document.querySelector('meta[name="twitter:description"]'); if(twDesc) twDesc.content = s.desc;
@@ -59,7 +68,7 @@
             "@type":"WebPage",
             "name": s.title,
             "description": s.desc,
-            "url": d + '/board',
+            "url": d + boardPath,
             "inLanguage": s.lang,
             "isPartOf": { "@type":"WebSite", "name": s.siteName, "url": d }
         });
