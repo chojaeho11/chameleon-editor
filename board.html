@@ -1426,7 +1426,8 @@
                     if (tz.includes('Tokyo') || tz.includes('Japan')) return 'JP';
                     if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) return 'US';
                     if (tz.includes('Europe')) return 'EU';
-                    if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Taipei')) return 'CN';
+                    if (tz.includes('Taipei')) return 'TW';
+                    if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Chongqing') || tz.includes('Urumqi')) return 'CN';
                     if (tz.includes('Bangkok') || tz.includes('Ho_Chi_Minh') || tz.includes('Singapore') || tz.includes('Jakarta')) return 'SEA';
                     return 'OTHER';
                 } catch(e) { return 'KR'; }
