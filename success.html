@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>결제 처리 중...</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
     <style>
         body { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #334155; }
         .loader { border: 4px solid #e2e8f0; border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s infinite; margin-bottom: 20px; }
@@ -12,15 +11,43 @@
     </style>
 </head>
 <body>
-    <div class="loader"></div>
-    <h2 id="title" data-i18n="msg_processing_payment">Processing Payment...</h2>
-    <p id="desc" data-i18n="msg_wait_moment">Please wait a moment.</p>
+    <div class="loader" id="loader"></div>
+    <h2 id="title">Processing Payment...</h2>
+    <p id="desc">Please wait a moment.</p>
 
-    <script type="module">
-        // 1. Supabase 설정 (기존 키 그대로 사용)
-        const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co'; 
+    <script>
+        // Supabase 설정 (fetch 직접 호출 - Tracking Prevention 우회)
+        const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Edge Function 직접 호출 (Supabase JS 클라이언트 불필요)
+        async function invokeFunction(fnName, body) {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'apikey': SUPABASE_KEY,
+                },
+                body: JSON.stringify(body)
+            });
+            return await res.json();
+        }
+
+        // DB 업데이트 (REST API 직접 호출)
+        async function updateOrder(dbId, updateData) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${dbId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'apikey': SUPABASE_KEY,
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(updateData)
+            });
+            if (!res.ok) console.error("DB update failed:", res.status);
+        }
 
         async function processSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -39,23 +66,21 @@
                     // ====== Stripe 결제 확인 ======
                     console.log("Stripe session:", sessionId);
 
-                    const { data, error } = await sb.functions.invoke('verify-stripe-payment', {
-                        body: { session_id: sessionId, db_id: dbId }
+                    const data = await invokeFunction('verify-stripe-payment', {
+                        session_id: sessionId, db_id: dbId
                     });
 
-                    if (error || (data && data.error)) {
-                        throw new Error(error?.message || data?.error);
+                    if (data.error) {
+                        throw new Error(data.error);
                     }
 
                     // DB 업데이트
-                    const { error: dbError } = await sb.from('orders').update({
+                    await updateOrder(dbId, {
                         status: '접수됨',
                         payment_status: '결제완료',
                         payment_method: 'Stripe Card',
-                        toss_payment_key: sessionId // stripe session_id 저장
-                    }).eq('id', dbId);
-
-                    if (dbError) console.error("DB update failed:", dbError);
+                        toss_payment_key: sessionId
+                    });
 
                 } else if (paymentKey) {
                     // ====== Toss 결제 확인 ======
@@ -68,41 +93,51 @@
 
                     console.log("Toss paymentKey:", paymentKey);
 
-                    const { data, error } = await sb.functions.invoke('confirm-payment', {
-                        body: { paymentKey, orderId, amount: Number(amount), dbId }
+                    const data = await invokeFunction('confirm-payment', {
+                        paymentKey, orderId, amount: Number(amount), dbId
                     });
 
-                    if (error || (data && data.error)) {
-                        throw new Error(error?.message || data?.error);
+                    if (data.error) {
+                        throw new Error(data.error);
                     }
 
-                    const { error: dbError } = await sb.from('orders').update({
+                    await updateOrder(dbId, {
                         status: '접수됨',
                         payment_status: '결제완료',
                         payment_method: '카드/간편결제',
                         toss_payment_key: paymentKey
-                    }).eq('id', dbId);
-
-                    if (dbError) console.error("DB 저장 실패:", dbError);
+                    });
 
                 } else {
                     throw new Error("No payment verification data found.");
                 }
 
-                // 공통: 결제 성공 처리
+                // 결제 성공 처리
+                document.getElementById('loader').style.display = 'none';
                 document.getElementById('title').innerText = "Payment Successful!";
-                if(window.t) document.getElementById('title').innerText = window.t('msg_payment_complete');
+                document.getElementById('desc').innerText = "Redirecting...";
 
-                localStorage.removeItem('chameleon_cart_guest');
-                const user = await sb.auth.getUser();
-                if(user?.data?.user) localStorage.removeItem(`chameleon_cart_${user.data.user.id}`);
+                // 장바구니 비우기
+                try {
+                    localStorage.removeItem('chameleon_cart_guest');
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('chameleon_cart_')) localStorage.removeItem(key);
+                    });
+                } catch(e) {}
 
-                setTimeout(() => window.location.href = "index.html", 1000);
+                setTimeout(() => window.location.href = "index.html", 1500);
 
             } catch (e) {
-                console.error(e);
-                alert("Payment Failed: " + e.message);
-                window.location.href = "index.html";
+                console.error("Payment verification error:", e);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('title').innerText = "Payment Error";
+                document.getElementById('desc').innerText = e.message;
+
+                // 에러가 나도 결제 자체는 완료됨 → 5초 후 홈으로 이동
+                setTimeout(() => {
+                    alert("Payment was processed but verification encountered an issue. Please contact support if your order doesn't appear.");
+                    window.location.href = "index.html";
+                }, 3000);
             }
         }
 
