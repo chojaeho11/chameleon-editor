@@ -493,7 +493,7 @@ const PRICING = {
         const amount = num || 0;
         const country = this.detectCountry();
 
-        const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.005, 'AR': 0.003, 'ES': 0.0007 };
+        const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.01, 'AR': 0.005, 'ES': 0.001 };
         const rate = rates[country] || 1;
         const converted = amount * rate;
 
