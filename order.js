@@ -1334,20 +1334,25 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         };
     }).filter(i => i !== null);
 
-    const { data: orderData, error: orderError } = await sb.from('orders').insert([{ 
-        user_id: currentUser?.id, 
-        order_date: new Date().toISOString(),           
-        delivery_target_date: deliveryDate, 
-        manager_name: manager, 
-        phone, 
-        address, 
-        request_note: request, 
-        status: '임시작성', 
-        payment_status: '미결제', 
-        total_amount: finalPayAmount, 
-        discount_amount: useMileage, 
-        items: itemsToSave, 
-        site_code: SITE_CONFIG.COUNTRY
+    // [핵심] hostname 기반 사이트 코드 결정 (모듈 import 의존 제거)
+    const _hostname = window.location.hostname;
+    const _siteCode = _hostname.includes('cafe0101') ? 'JP' : _hostname.includes('cafe3355') ? 'US' : 'KR';
+    console.log('🌍 Order site_code:', _siteCode, '| hostname:', _hostname, '| SITE_CONFIG:', SITE_CONFIG?.COUNTRY);
+
+    const { data: orderData, error: orderError } = await sb.from('orders').insert([{
+        user_id: currentUser?.id,
+        order_date: new Date().toISOString(),
+        delivery_target_date: deliveryDate,
+        manager_name: manager,
+        phone,
+        address,
+        request_note: request,
+        status: '임시작성',
+        payment_status: '미결제',
+        total_amount: finalPayAmount,
+        discount_amount: useMileage,
+        items: itemsToSave,
+        site_code: _siteCode
     }]).select();
     
     if (orderError) throw orderError; 
