@@ -1128,8 +1128,16 @@
         </div>
         <div class="card" style="display:flex; flex-direction:column; padding:0; overflow:hidden;">
             <div style="background:#f8fafc; padding:12px 15px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-                <div><div id="lcChatTitle" style="font-weight:700; color:#334155;">상담방을 선택하세요</div><div id="lcChatSub" style="font-size:11px; color:#94a3b8;"></div></div>
-                <div style="display:flex; gap:5px;">
+                <div>
+                    <div id="lcChatTitle" style="font-weight:700; color:#334155;">상담방을 선택하세요</div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-top:3px;">
+                        <span id="lcChatManagerBadge" style="display:none; background:#6366f1; color:#fff; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px;">담당: -</span>
+                        <span id="lcChatStatusBadge" style="display:none; font-size:11px; color:#64748b;"></span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:5px; position:relative;">
+                    <button id="lcChangeMgrBtn" class="btn btn-outline btn-sm" onclick="lcShowChangeManager()" style="font-size:11px; display:none;">🔄 담당 변경</button>
+                    <div id="lcChangeMgrDropdown" style="display:none; position:absolute; top:100%; right:0; background:#fff; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 8px 25px rgba(0,0,0,0.15); z-index:100; min-width:180px; padding:6px; margin-top:4px;"></div>
                     <button id="lcInterveneBtn" class="btn btn-primary btn-sm" onclick="lcIntervene()" style="font-size:11px; display:none; background:#f59e0b; border-color:#f59e0b;">🖐️ 끼어들기</button>
                     <button class="btn btn-outline btn-sm" onclick="lcSaveToKnowledge()" style="font-size:11px;">📚 학습저장</button>
                     <button class="btn btn-outline btn-sm" onclick="lcCloseRoom()" style="font-size:11px; color:#ef4444; border-color:#ef4444;">종료</button>
@@ -1469,8 +1477,49 @@ async function saveCommonInfo() {
 
 // ═══ 실시간 상담 관리 ═══
 (function() {
-    var currentRoom=null, currentFilter='waiting', subscription=null;
+    var currentRoom=null, currentFilter='waiting', subscription=null, globalRoomSub=null;
     function getSb(){return window.sb;}
+
+    // ── [기능1+2] TTS 알림 시스템 ──
+    function speakTTS(text) {
+        try {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            var u = new SpeechSynthesisUtterance(text);
+            u.lang = 'ko-KR'; u.rate = 1.0; u.volume = 1.0;
+            window.speechSynthesis.speak(u);
+        } catch(e) { console.warn('TTS error:', e); }
+    }
+    // 전역 chat_rooms 구독 (새 채팅 입장 / 매니저 지정 알림)
+    function startGlobalRoomWatch() {
+        var sb = getSb(); if (!sb) { setTimeout(startGlobalRoomWatch, 2000); return; }
+        if (globalRoomSub) { globalRoomSub.unsubscribe(); }
+        globalRoomSub = sb.channel('global-room-watch')
+            .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_rooms'}, function(p) {
+                var rm = p.new;
+                if (rm.status === 'waiting' || rm.status === 'ai_chatting') {
+                    if (rm.assigned_manager) {
+                        speakTTS(rm.assigned_manager + ' 매니저님과의 상담요청이 있습니다');
+                    } else {
+                        speakTTS('새로운 고객님이 채팅에 입장하였습니다');
+                    }
+                    lcLoadRooms();
+                }
+            })
+            .on('postgres_changes', {event:'UPDATE', schema:'public', table:'chat_rooms'}, function(p) {
+                var rm = p.new; var old = p.old;
+                // 매니저가 새로 지정된 경우
+                if (rm.assigned_manager && rm.assigned_manager !== (old && old.assigned_manager)) {
+                    if (rm.status === 'waiting') {
+                        speakTTS(rm.assigned_manager + ' 매니저님과의 상담요청이 있습니다');
+                    }
+                }
+                lcLoadRooms();
+            })
+            .subscribe();
+    }
+    // 페이지 로드 시 전역 구독 시작
+    setTimeout(startGlobalRoomWatch, 1500);
     // 고객 이름으로 언어 감지
     function detectRoomLang(room) {
         if (!room) return 'kr';
@@ -1565,10 +1614,17 @@ async function saveCommonInfo() {
         if(rr.error) return; currentRoom=rr.data;
         var isAiChat = currentRoom.status==='ai_chatting';
         document.getElementById('lcChatTitle').textContent=(isAiChat?'🤖 ':'👤 ')+(currentRoom.customer_name||'고객')+' 님'+(isAiChat?' AI 상담':' 상담');
-        document.getElementById('lcChatSub').textContent='담당: '+(isAiChat?'AI 봇':currentRoom.assigned_manager||'미배정')+' | '+(currentRoom.status==='waiting'?'⏳ 대기':currentRoom.status==='active'?'💬 상담중':isAiChat?'🤖 AI 상담중':'✅ 종료');
+        // 담당자 배지 업데이트
+        var mgrBadge=document.getElementById('lcChatManagerBadge');
+        var statusBadge=document.getElementById('lcChatStatusBadge');
+        if(mgrBadge){mgrBadge.style.display='inline-block';mgrBadge.textContent='담당: '+(isAiChat?'AI 봇':currentRoom.assigned_manager||'미배정');mgrBadge.style.background=isAiChat?'#f59e0b':currentRoom.assigned_manager?'#6366f1':'#94a3b8';}
+        if(statusBadge){statusBadge.style.display='inline';statusBadge.textContent=currentRoom.status==='waiting'?'⏳ 대기':currentRoom.status==='active'?'💬 상담중':isAiChat?'🤖 AI 상담중':'✅ 종료';}
         // 끼어들기 버튼 표시/숨김
         var interveneBtn=document.getElementById('lcInterveneBtn');
         if(interveneBtn) interveneBtn.style.display=isAiChat?'inline-block':'none';
+        // 담당 변경 버튼 표시 (상담중일 때만)
+        var changeMgrBtn=document.getElementById('lcChangeMgrBtn');
+        if(changeMgrBtn) changeMgrBtn.style.display=(currentRoom.status==='active'||currentRoom.status==='waiting')?'inline-block':'none';
         if(currentRoom.ai_summary){document.getElementById('lcAiSummary').style.display='block';document.getElementById('lcAiSummaryText').textContent=currentRoom.ai_summary;}else{document.getElementById('lcAiSummary').style.display='none';}
         if(currentRoom.status==='waiting'){
             await sb.from('chat_rooms').update({status:'active',updated_at:new Date().toISOString()}).eq('id',roomId);
@@ -1618,7 +1674,10 @@ async function saveCommonInfo() {
         await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',currentRoom.id);
         await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:sysMsg('closed')});
         currentRoom=null;if(subscription){subscription.unsubscribe();subscription=null;}
-        document.getElementById('lcChatTitle').textContent='상담방을 선택하세요';document.getElementById('lcChatSub').textContent='';
+        document.getElementById('lcChatTitle').textContent='상담방을 선택하세요';
+        var mb=document.getElementById('lcChatManagerBadge');if(mb)mb.style.display='none';
+        var sb2=document.getElementById('lcChatStatusBadge');if(sb2)sb2.style.display='none';
+        var cb=document.getElementById('lcChangeMgrBtn');if(cb)cb.style.display='none';
         document.getElementById('lcChatMessages').innerHTML='<div style="text-align:center;color:#94a3b8;padding:60px;">상담 종료</div>';lcLoadRooms();
     };
     // ── 매니저 끼어들기 (AI 상담 → 매니저 상담으로 전환) ──
@@ -1636,9 +1695,14 @@ async function saveCommonInfo() {
         await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:sysMsg('joined', mgrName)});
         // UI 업데이트
         document.getElementById('lcChatTitle').textContent='👤 '+(currentRoom.customer_name||'고객')+' 님 상담';
-        document.getElementById('lcChatSub').textContent='담당: '+mgrName+' | 💬 상담중';
+        var mgrBadge=document.getElementById('lcChatManagerBadge');
+        if(mgrBadge){mgrBadge.textContent='담당: '+mgrName;mgrBadge.style.background='#6366f1';mgrBadge.style.display='inline-block';}
+        var statusBadge=document.getElementById('lcChatStatusBadge');
+        if(statusBadge){statusBadge.textContent='💬 상담중';statusBadge.style.display='inline';}
         var interveneBtn=document.getElementById('lcInterveneBtn');
         if(interveneBtn) interveneBtn.style.display='none';
+        var changeMgrBtn=document.getElementById('lcChangeMgrBtn');
+        if(changeMgrBtn) changeMgrBtn.style.display='inline-block';
         // 실시간 구독 시작 (매니저 메시지 수신)
         var area=document.getElementById('lcChatMessages');
         subscription=sb.channel('admin-'+currentRoom.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room_id=eq.'+currentRoom.id},async function(p){
@@ -1660,6 +1724,125 @@ async function saveCommonInfo() {
         if(!cq.length||!ma.length) return alert('질문과 답변 필요');
         await sb.from('chatbot_knowledge').insert({category:'상담사례',question:cq.join(' / ').substring(0,500),answer:ma.join(' ').substring(0,1000),language:'ko',priority:3,is_active:true});
         alert('✅ AI 학습 데이터로 저장!');
+    };
+
+    // ── [기능3] 드래그앤드롭 + 클립보드 붙여넣기 ──
+    (function setupDragDrop() {
+        var chatArea = document.getElementById('lcChatMessages');
+        if (!chatArea) { setTimeout(setupDragDrop, 500); return; }
+        // 드래그 오버 시 시각적 표시
+        chatArea.addEventListener('dragover', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            chatArea.style.background = '#f0f4ff';
+            chatArea.style.outline = '3px dashed #6366f1';
+        });
+        chatArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            chatArea.style.background = '#fff';
+            chatArea.style.outline = 'none';
+        });
+        // 파일 드롭
+        chatArea.addEventListener('drop', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            chatArea.style.background = '#fff';
+            chatArea.style.outline = 'none';
+            if (!currentRoom) { alert('상담방을 먼저 선택하세요'); return; }
+            var files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                for (var i = 0; i < files.length; i++) { lcUpFile(files[i]); }
+            }
+        });
+        // 클립보드 붙여넣기 (Ctrl+V)
+        var msgInput = document.getElementById('lcMsgInput');
+        if (msgInput) {
+            msgInput.addEventListener('paste', function(e) {
+                var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        if (!currentRoom) { alert('상담방을 먼저 선택하세요'); return; }
+                        var blob = items[i].getAsFile();
+                        if (blob) {
+                            var fname = 'clipboard_' + Date.now() + '.png';
+                            var file = new File([blob], fname, { type: blob.type });
+                            lcUpFile(file);
+                        }
+                        return;
+                    }
+                }
+            });
+        }
+    })();
+
+    // ── [기능4] 매니저 변경 기능 ──
+    window.lcShowChangeManager = async function() {
+        var dd = document.getElementById('lcChangeMgrDropdown');
+        if (!dd) return;
+        // 토글
+        if (dd.style.display === 'block') { dd.style.display = 'none'; return; }
+        dd.innerHTML = '<div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">로딩중...</div>';
+        dd.style.display = 'block';
+        var sb = getSb(); if (!sb) return;
+        var r = await sb.from('chatbot_knowledge').select('*').eq('category', '_managers').eq('is_active', true).order('priority', {ascending: false});
+        if (!r.data || r.data.length === 0) {
+            dd.innerHTML = '<div style="padding:10px; color:#94a3b8; font-size:12px; text-align:center;">등록된 매니저 없음</div>';
+            return;
+        }
+        var h = '<div style="font-size:11px; color:#64748b; padding:4px 8px; font-weight:700; border-bottom:1px solid #f1f5f9;">담당 매니저 선택</div>';
+        r.data.forEach(function(m) {
+            try { var info = JSON.parse(m.answer); } catch(e) { var info = {name: m.question, role: ''}; }
+            var isActive = currentRoom && currentRoom.assigned_manager === info.name;
+            h += '<div onclick="lcChangeManager(\'' + info.name.replace(/'/g, "\\'") + '\')" style="padding:8px 12px; cursor:pointer; border-radius:6px; margin:2px 0; display:flex; justify-content:space-between; align-items:center; background:' + (isActive ? '#ede9fe' : '#fff') + ';" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'' + (isActive ? '#ede9fe' : '#fff') + '\'">';
+            h += '<div><span style="font-weight:700; font-size:13px;">' + info.name + '</span>';
+            if (info.role) h += ' <span style="font-size:10px; color:#6366f1; background:#e0e7ff; padding:1px 6px; border-radius:4px;">' + info.role + '</span>';
+            h += '</div>';
+            if (isActive) h += '<span style="color:#6366f1; font-size:12px;">✓ 현재</span>';
+            h += '</div>';
+        });
+        dd.innerHTML = h;
+        // 바깥 클릭 시 닫기
+        setTimeout(function() {
+            document.addEventListener('click', function closeDD(e) {
+                if (!dd.contains(e.target) && e.target.id !== 'lcChangeMgrBtn') {
+                    dd.style.display = 'none';
+                    document.removeEventListener('click', closeDD);
+                }
+            });
+        }, 100);
+    };
+    window.lcChangeManager = async function(newMgrName) {
+        if (!currentRoom || !newMgrName) return;
+        var sb = getSb();
+        var oldMgr = currentRoom.assigned_manager || '미배정';
+        // DB 업데이트
+        await sb.from('chat_rooms').update({
+            assigned_manager: newMgrName,
+            updated_at: new Date().toISOString()
+        }).eq('id', currentRoom.id);
+        // 시스템 메시지
+        var lang = detectRoomLang(currentRoom);
+        var msgs = {
+            kr: '🔄 담당 매니저가 ' + oldMgr + '에서 ' + newMgrName + '(으)로 변경되었습니다.',
+            ja: '🔄 担当マネージャーが ' + oldMgr + ' から ' + newMgrName + ' に変更されました。',
+            en: '🔄 Your manager has been changed from ' + oldMgr + ' to ' + newMgrName + '.'
+        };
+        await sb.from('chat_messages').insert({
+            room_id: currentRoom.id,
+            sender_type: 'system',
+            message: msgs[lang] || msgs['kr']
+        });
+        // 로컬 상태 업데이트
+        currentRoom.assigned_manager = newMgrName;
+        // UI 업데이트
+        var mgrBadge = document.getElementById('lcChatManagerBadge');
+        if (mgrBadge) { mgrBadge.textContent = '담당: ' + newMgrName; mgrBadge.style.background = '#6366f1'; }
+        // 드롭다운 닫기
+        document.getElementById('lcChangeMgrDropdown').style.display = 'none';
+        // 채팅 새로고침
+        var mr = await sb.from('chat_messages').select('*').eq('room_id', currentRoom.id).order('created_at', {ascending: true}).limit(100);
+        var area = document.getElementById('lcChatMessages');
+        if (mr.data) { var h=''; mr.data.forEach(function(m){ h+=renderMsg(m); }); area.innerHTML=h; area.scrollTop=area.scrollHeight; }
+        lcLoadRooms();
     };
 })();
 
