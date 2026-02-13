@@ -103,6 +103,11 @@
   "label_request_memo": "備考欄(配送指定など)",
   "btn_payment_submit": "注文書作成・決済へ",
   "btn_cancel": "キャンセル",
+  "btn_documents": "書類",
+  "doc_quotation": "見積書",
+  "doc_receipt": "領収書",
+  "doc_order_sheet": "発注書",
+  "doc_statement": "納品書",
 
   "modal_checkout_title": "ご注文内容の確認",
   "label_orderer_name": "注文者名",

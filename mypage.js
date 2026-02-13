@@ -32,7 +32,12 @@ const I18N_KO = {
     "confirm_load_design": "이 디자인을 에디터로 불러오시겠습니까?",
     "confirm_delete": "정말 삭제하시겠습니까?",
     "btn_edit": "편집",
-    "btn_delete": "삭제"
+    "btn_delete": "삭제",
+    "btn_documents": "서류",
+    "doc_quotation": "견적서",
+    "doc_receipt": "영수증",
+    "doc_order_sheet": "작업지시서",
+    "doc_statement": "거래명세서"
 };
 
 // window.t 함수 초기화 (번역 로드 전 한국어 fallback)
@@ -51,7 +56,7 @@ async function loadMyPageTranslations() {
     if (lang === 'kr') return; // 한국어는 I18N_KO로 충분
 
     try {
-        const jsonPath = `long/${lang}_119.json?t=${Date.now()}`;
+        const jsonPath = `long/${lang}_120.json?t=${Date.now()}`;
         const res = await fetch(jsonPath);
         if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json();
@@ -404,6 +409,15 @@ async function loadOrders() {
                     <div style="display:flex; flex-direction:column; gap:4px;">
                         ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
                         <button class="btn-round" onclick="reOrder('${o.id}')" style="height:26px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; justify-content:center;">${window.t('btn_reorder', 'Reorder')}</button>
+                        <div style="position:relative;">
+                            <button class="btn-round doc-dropdown-btn" onclick="toggleDocDropdown(event, '${o.id}')" style="height:26px; font-size:11px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; justify-content:center; width:100%;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden;">
+                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📋 ${window.t('doc_quotation', 'Quotation')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                            </div>
+                        </div>
                     </div>
                 </td>
             </tr>`;
@@ -916,3 +930,485 @@ window.openPartnerReviewModal = async function(orderId) {
         }
     }
     // [신규] 강력한 소리 재생 함수 (마이페이지용)
+
+// ============================================================
+// [서류 다운로드] PDF 생성 시스템 (마이페이지 전용)
+// ============================================================
+
+// 드롭다운 토글
+window.toggleDocDropdown = function(e, orderId) {
+    e.stopPropagation();
+    // 모든 드롭다운 닫기
+    document.querySelectorAll('.doc-dropdown').forEach(d => { if(d.id !== `docDrop-${orderId}`) d.style.display = 'none'; });
+    const dd = document.getElementById(`docDrop-${orderId}`);
+    dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+};
+document.addEventListener('click', () => document.querySelectorAll('.doc-dropdown').forEach(d => d.style.display = 'none'));
+
+// 언어 감지
+const _pdfUrlParams = new URLSearchParams(window.location.search);
+let _pdfLang = _pdfUrlParams.get('lang');
+if (!_pdfLang) {
+    const h = window.location.hostname;
+    if (h.includes('cafe0101.com')) _pdfLang = 'ja';
+    else if (h.includes('cafe3355.com')) _pdfLang = 'us';
+    else _pdfLang = 'kr';
+}
+const PDF_LANG = _pdfLang.toLowerCase();
+
+// 다국어 라벨
+const PDF_LABELS = {
+    kr: {
+        quote_title: "견 적 서", receipt_title: "영 수 증", statement_title: "거 래 명 세 서", ordersheet_title: "작 업 지 시 서",
+        recipient: "[ 수신자 ]", name: "성   명 :", phone: "연 락 처 :", address: "주   소 :",
+        provider_labels: ["등록번호", "상      호", "대      표", "주      소", "업      태", "연 락 처"],
+        provider_values: ["470-81-02808", "(주)카멜레온프린팅", "조재호", "경기 화성시 우정읍 한말길 72-2", "제조업 / 서비스업", "031-366-1984"],
+        headers: ["No", "품목명", "규격/옵션", "수량", "단가", "금액"],
+        supply_price: "공급가액 :", vat: "부 가 세 :", discount: "할인금액 :", mileage: "마일리지 :",
+        total_amount: "합계금액 (VAT포함)", footer_claim: "위와 같이 청구(영수)합니다.",
+        payment_card: "신용카드로 결제되었습니다.", payment_bank: "계좌이체로 결제되었습니다.", payment_deposit: "예치금으로 결제되었습니다.",
+        opt_default: "기본 사양", opt_add: "추가 옵션",
+        staff_make: "제 작 담 당", staff_check: "검 수 / 출 고", staff_ship: "배 송 담 당",
+        os_order_no: "주 문 번 호", os_date: "접 수 일 자", os_customer: "주   문   자", os_phone: "연   락   처",
+        os_address: "배 송 주 소", os_request: "요 청 사 항", os_none: "없음", os_unspecified: "미지정",
+        os_delivery_date: "배송 희망일", os_prod_spec: "제 작 사 양", os_qty_unit: "개", os_qty_label: "수량",
+        os_design_preview: "디자인 시안 확인", os_no_image: "이미지 없음 (파일 별도 확인)"
+    },
+    ja: {
+        quote_title: "御 見 積 書", receipt_title: "領 収 書", statement_title: "納 品 書", ordersheet_title: "発 注 書",
+        recipient: "[ 受信者 ]", name: "氏   名 :", phone: "連絡先 :", address: "住   所 :",
+        provider_labels: ["登録番号", "商      号", "代      表", "住      所", "業      態", "連絡先"],
+        provider_values: ["2025-京畿華城-0033", "(株)カメレオンプリンティング", "趙 宰鎬", "京畿道 華城市 雨汀邑 ハンマルギル 72-2", "製造業 / サービス業", "047-712-1148"],
+        headers: ["No", "品名", "仕様/オプション", "数量", "単価", "金額"],
+        supply_price: "税抜金額 :", vat: "消費税 :", discount: "割引金額 :", mileage: "ポイント使用 :",
+        total_amount: "合計金額 (税込)", footer_claim: "上記の通り、相違なく領収いたしました。",
+        payment_card: "クレジットカード決済完了", payment_bank: "銀行振込完了", payment_deposit: "デポジット決済完了",
+        opt_default: "基本仕様", opt_add: "追加オプション",
+        staff_make: "制作担当", staff_check: "検品/出荷", staff_ship: "配送担当",
+        os_order_no: "注文番号", os_date: "受付日", os_customer: "注文者", os_phone: "連絡先",
+        os_address: "配送先住所", os_request: "備考・要望", os_none: "なし", os_unspecified: "未指定",
+        os_delivery_date: "配送希望日", os_prod_spec: "製作仕様", os_qty_unit: "個", os_qty_label: "数量",
+        os_design_preview: "デザインプレビュー", os_no_image: "画像なし（ファイルを別途ご確認ください）"
+    },
+    us: {
+        quote_title: "QUOTATION", receipt_title: "RECEIPT", statement_title: "INVOICE", ordersheet_title: "WORK ORDER",
+        recipient: "[ Customer ]", name: "Name :", phone: "Phone :", address: "Addr :",
+        provider_labels: ["Reg No.", "Company", "CEO", "Address", "Type", "Contact"],
+        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Manufacturing", "+82-31-366-1984"],
+        headers: ["No", "Item", "Spec/Option", "Qty", "Price", "Amount"],
+        supply_price: "Subtotal :", vat: "Sales Tax :", discount: "Discount :", mileage: "Points Used :",
+        total_amount: "Grand Total", footer_claim: "Authorized Signature",
+        payment_card: "Paid by Credit Card", payment_bank: "Paid by Bank Transfer", payment_deposit: "Paid by Deposit",
+        opt_default: "Basic Spec", opt_add: "Add-ons",
+        staff_make: "Production", staff_check: "Inspection", staff_ship: "Shipping",
+        os_order_no: "Order No.", os_date: "Date", os_customer: "Customer", os_phone: "Phone",
+        os_address: "Ship To", os_request: "Notes", os_none: "None", os_unspecified: "TBD",
+        os_delivery_date: "Requested Delivery", os_prod_spec: "SPECIFICATIONS", os_qty_unit: "pcs", os_qty_label: "Qty",
+        os_design_preview: "Design Preview", os_no_image: "No image (see attached file)"
+    }
+};
+const PTXT = PDF_LABELS[PDF_LANG] || PDF_LABELS['kr'];
+
+// 폰트 설정
+const PDF_FONT_CONFIG = {
+    kr: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" },
+    jp: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf", name: "NotoSansJP" },
+    us: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" }
+};
+const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr' }[PDF_LANG] || 'kr';
+const PDF_FONT = PDF_FONT_CONFIG[_fontKey] || PDF_FONT_CONFIG['kr'];
+const PDF_FONT_NAME = PDF_FONT.name;
+let _pdfFontCache = null;
+
+const STAMP_URL = "https://gdadmin.signmini.com/data/etc/stampImage";
+
+// 헬퍼: hex → CMYK
+function _hexCMYK(hex) {
+    hex = (hex.charAt(0) === "#") ? hex.substring(1, 7) : hex;
+    if (hex.length !== 6) return [0, 0, 0, 1];
+    let r = parseInt(hex.substring(0, 2), 16), g = parseInt(hex.substring(2, 4), 16), b = parseInt(hex.substring(4, 6), 16);
+    if (r === 0 && g === 0 && b === 0) return [0, 0, 0, 1];
+    if (r === 255 && g === 255 && b === 255) return [0, 0, 0, 0];
+    let c = 1 - (r / 255), m = 1 - (g / 255), y = 1 - (b / 255), k2 = Math.min(c, Math.min(m, y));
+    return [(c - k2) / (1 - k2), (m - k2) / (1 - k2), (y - k2) / (1 - k2), k2];
+}
+
+// 헬퍼: 텍스트 그리기
+function _dt(doc, text, x, y, opts = {}, colorHex = "#000000") {
+    if (!text) return;
+    const [c, m, yk, k] = _hexCMYK(colorHex);
+    doc.setTextColor(c, m, yk, k);
+    doc.setFont(PDF_FONT_NAME, opts.weight || "normal");
+    doc.text(String(text), x, y, opts);
+}
+
+// 헬퍼: 선 그리기
+function _dl(doc, x1, y1, x2, y2, colorHex = "#000000", w = 0.1) {
+    const [c, m, yk, k] = _hexCMYK(colorHex);
+    doc.setDrawColor(c, m, yk, k); doc.setLineWidth(w); doc.line(x1, y1, x2, y2);
+}
+
+// 헬퍼: 셀 그리기
+function _dc(doc, x, y, w, h, text, align = 'center', fontSize = 9, isHeader = false) {
+    doc.setFontSize(fontSize);
+    if (isHeader) { doc.setFillColor(240, 240, 240); doc.rect(x, y, w, h, 'F'); }
+    doc.setDrawColor(0); doc.setLineWidth(0.1); doc.rect(x, y, w, h);
+    doc.setTextColor(0, 0, 0, 1);
+    doc.setFont(PDF_FONT_NAME, isHeader ? 'bold' : 'normal');
+    const textX = align === 'left' ? x + 2 : (align === 'right' ? x + w - 2 : x + w / 2);
+    if (Array.isArray(text)) {
+        const lineH = fontSize * 0.45;
+        const totalH = (text.length - 1) * lineH * 1.15;
+        const startY = y + (h / 2) - (totalH / 2) + (fontSize / 3.5);
+        doc.text(text, textX, startY, { align, lineHeightFactor: 1.15 });
+    } else {
+        doc.text(String(text), textX, y + (h / 2) + (fontSize / 3.5), { align, maxWidth: w - 4 });
+    }
+}
+
+// 헬퍼: 통화 포맷
+function _fmtPdf(val) {
+    const num = Number(val) || 0;
+    if (PDF_LANG === 'ja' || PDF_LANG === 'jp') return '¥' + Math.floor(num).toLocaleString();
+    if (PDF_LANG === 'us' || PDF_LANG === 'en') return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    return num.toLocaleString();
+}
+
+// 폰트 로드
+async function _loadFont(doc) {
+    if (!_pdfFontCache) {
+        try {
+            const langMap = { 'kr': 'KR', 'jp': 'JA', 'ja': 'JA', 'us': 'EN', 'en': 'EN' };
+            const dbLang = langMap[PDF_LANG] || 'KR';
+            const { data } = await sb.from('site_fonts').select('file_url').eq('site_code', dbLang).order('id', { ascending: true }).limit(1);
+            const url = (data && data[0]?.file_url) || PDF_FONT.url;
+            const res = await fetch(url, { mode: 'cors' });
+            if (res.ok) _pdfFontCache = await res.arrayBuffer();
+        } catch (e) {
+            try { const r = await fetch(PDF_FONT_CONFIG['kr'].url); if (r.ok) _pdfFontCache = await r.arrayBuffer(); } catch (err) { }
+        }
+    }
+    if (_pdfFontCache) {
+        const bytes = new Uint8Array(_pdfFontCache);
+        let binary = ''; for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        const fontData = window.btoa(binary);
+        if (!doc.existsFileInVFS(PDF_FONT_NAME + ".ttf")) {
+            doc.addFileToVFS(PDF_FONT_NAME + ".ttf", fontData);
+            doc.addFont(PDF_FONT_NAME + ".ttf", PDF_FONT_NAME, "normal");
+            doc.addFont(PDF_FONT_NAME + ".ttf", PDF_FONT_NAME, "bold");
+        }
+        doc.setFont(PDF_FONT_NAME);
+    }
+}
+
+// 이미지 → DataURL 변환
+function _imgToDataUrl(url) {
+    return new Promise(resolve => {
+        if (!url) return resolve(null);
+        const timeout = setTimeout(() => resolve(null), 10000);
+        const img = new Image(); img.crossOrigin = "Anonymous"; img.src = url;
+        img.onload = () => {
+            clearTimeout(timeout);
+            let w = img.width, h = img.height;
+            const MAX = 1200;
+            if (w > MAX || h > MAX) { if (w > h) { h = Math.round((h * MAX) / w); w = MAX; } else { w = Math.round((w * MAX) / h); h = MAX; } }
+            const c = document.createElement('canvas'); c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            try { resolve(c.toDataURL('image/jpeg', 0.7)); } catch (e) { resolve(null); }
+        };
+        img.onerror = () => { clearTimeout(timeout); resolve(null); };
+    });
+}
+
+// ============ 공통 문서 생성 (견적서/영수증/거래명세서) ============
+async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, usedMileage) {
+    doc.setFontSize(26);
+    _dt(doc, title, 105, 22, { align: 'center', weight: 'bold' });
+    _dl(doc, 15, 28, 195, 28, "#000000", 0.5);
+
+    const topY = 35, leftX = 15;
+    doc.setFontSize(10);
+    _dt(doc, PTXT.recipient, leftX, topY);
+    _dt(doc, `${PTXT.name}  ${orderInfo.manager || '-'}`, leftX, topY + 8);
+    _dt(doc, `${PTXT.phone}  ${orderInfo.phone || '-'}`, leftX, topY + 14);
+    _dt(doc, `${PTXT.address}  ${orderInfo.address || '-'}`, leftX, topY + 20, { maxWidth: 85 });
+
+    const boxX = 105, boxY = 32, cellH = 7, labelW = 20, valW = 70;
+    const pL = PTXT.provider_labels, pV = PTXT.provider_values;
+    for (let i = 0; i < pL.length; i++) {
+        _dc(doc, boxX, boxY + (i * cellH), labelW, cellH, pL[i], 'center', 9, true);
+        _dc(doc, boxX + labelW, boxY + (i * cellH), valW, cellH, pV[i], 'left', 9, false);
+    }
+
+    // 직인
+    try {
+        const res = await fetch(STAMP_URL); const blob = await res.blob();
+        const reader = new FileReader();
+        await new Promise(resolve => { reader.onloadend = () => { if (reader.result) doc.addImage(reader.result, 'PNG', boxX + labelW + 45, boxY + cellH + 1, 14, 14); resolve(); }; reader.readAsDataURL(blob); });
+    } catch (e) { }
+
+    let y = 85;
+    const cols = [10, 50, 40, 20, 30, 30];
+    const hdrs = PTXT.headers;
+    let curX = 15;
+    hdrs.forEach((h, i) => { _dc(doc, curX, y, cols[i], 8, h, 'center', 10, true); curX += cols[i]; });
+    y += 8;
+
+    const _cr = window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE;
+    const ADDON = window.ADDON_DB || {};
+    let totalAmt = 0, no = 1;
+
+    cartItems.forEach(item => {
+        if (!item.product) return;
+        let pdfName = item.productName || item.product.name;
+        let pdfPrice = item.product.price || item.price || 0;
+
+        if (PDF_LANG === 'ja' || PDF_LANG === 'jp') {
+            if (item.product.name_jp) pdfName = item.product.name_jp;
+            if (_cr && _cr.JP) pdfPrice = Math.round(pdfPrice * _cr.JP);
+        } else if (PDF_LANG === 'us' || PDF_LANG === 'en') {
+            if (item.product.name_us) pdfName = item.product.name_us;
+            if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
+        }
+
+        const pTotal = (pdfPrice || 0) * (item.qty || 1);
+        totalAmt += pTotal;
+        const splitTitle = doc.splitTextToSize(pdfName, cols[1] - 4);
+        const rowHeight = Math.max(8, 4 + (splitTitle.length * 5));
+
+        curX = 15;
+        _dc(doc, curX, y, cols[0], rowHeight, no++, 'center'); curX += cols[0];
+        _dc(doc, curX, y, cols[1], rowHeight, splitTitle, 'left'); curX += cols[1];
+        _dc(doc, curX, y, cols[2], rowHeight, PTXT.opt_default, 'left'); curX += cols[2];
+        _dc(doc, curX, y, cols[3], rowHeight, String(item.qty || 1), 'center'); curX += cols[3];
+        _dc(doc, curX, y, cols[4], rowHeight, _fmtPdf(pdfPrice), 'right'); curX += cols[4];
+        _dc(doc, curX, y, cols[5], rowHeight, _fmtPdf(pTotal), 'right');
+        y += rowHeight;
+        if (y > 260) { doc.addPage(); y = 20; }
+
+        // 옵션
+        if (item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = ADDON[code]; if (!add) return;
+                const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                let addPrice = add.price || 0, addName = add.display_name || add.name || code;
+                if (PDF_LANG === 'ja' || PDF_LANG === 'jp') { if (_cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP); if (add.name_jp) addName = add.name_jp; }
+                else if (PDF_LANG === 'us' || PDF_LANG === 'en') { if (_cr && _cr.US) addPrice = Math.round(addPrice * _cr.US * 100) / 100; if (add.name_us) addName = add.name_us; }
+                const aTotal = addPrice * uQty; totalAmt += aTotal;
+                const splitAddon = doc.splitTextToSize("└ " + addName, cols[1] - 4);
+                const addonH = Math.max(8, 4 + (splitAddon.length * 5));
+                curX = 15;
+                _dc(doc, curX, y, cols[0], addonH, "", 'center'); curX += cols[0];
+                _dc(doc, curX, y, cols[1], addonH, splitAddon, 'left', 8); curX += cols[1];
+                _dc(doc, curX, y, cols[2], addonH, PTXT.opt_add, 'left', 8); curX += cols[2];
+                _dc(doc, curX, y, cols[3], addonH, String(uQty), 'center'); curX += cols[3];
+                _dc(doc, curX, y, cols[4], addonH, _fmtPdf(addPrice), 'right'); curX += cols[4];
+                _dc(doc, curX, y, cols[5], addonH, _fmtPdf(aTotal), 'right');
+                y += addonH;
+                if (y > 260) { doc.addPage(); y = 20; }
+            });
+        }
+    });
+
+    y += 5;
+    const afterDiscount = totalAmt - (discountAmt || 0);
+    const finalAmt = afterDiscount - (usedMileage || 0);
+    const vat = Math.floor(finalAmt / 11);
+    const supply = finalAmt - vat;
+
+    const sX = 105;
+    _dt(doc, PTXT.supply_price, sX, y + 5, { align: 'right' }); _dt(doc, _fmtPdf(supply), 195, y + 5, { align: 'right' }); y += 6;
+    _dt(doc, PTXT.vat, sX, y + 5, { align: 'right' }); _dt(doc, _fmtPdf(vat), 195, y + 5, { align: 'right' }); y += 6;
+    if (discountAmt > 0) {
+        _dt(doc, PTXT.discount, sX, y + 5, { align: 'right' }, "#ff0000"); _dt(doc, "-" + _fmtPdf(discountAmt), 195, y + 5, { align: 'right' }, "#ff0000"); y += 6;
+    }
+    if (usedMileage > 0) {
+        _dt(doc, PTXT.mileage, sX, y + 5, { align: 'right' }, "#ff0000"); _dt(doc, "-" + usedMileage.toLocaleString() + " P", 195, y + 5, { align: 'right' }, "#ff0000"); y += 6;
+    }
+    y += 2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(sX - 20, y, 195, y); y += 8;
+    _dt(doc, PTXT.total_amount, sX, y, { align: 'right', weight: 'bold' });
+    doc.setFontSize(14); _dt(doc, _fmtPdf(finalAmt), 195, y, { align: 'right', weight: 'bold' }, "#1a237e");
+
+    // 결제 정보 (영수증/명세서만)
+    if (title === PTXT.receipt_title || title === PTXT.statement_title) {
+        y += 8; doc.setFontSize(10);
+        let ml = PTXT.payment_card;
+        if (orderInfo.payMethod === 'bank') ml = `${PTXT.payment_bank} (${orderInfo.depositor || ''})`;
+        else if (orderInfo.payMethod === 'deposit') ml = PTXT.payment_deposit;
+        doc.setTextColor(100, 100, 100);
+        _dt(doc, `[${ml}]`, 105, y, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
+    }
+
+    doc.setFontSize(10); _dt(doc, PTXT.footer_claim, 105, 250, { align: 'center' });
+    doc.setFontSize(10); _dt(doc, new Date().toLocaleDateString(), 105, 262, { align: 'center' });
+    return doc.output('blob');
+}
+
+// ============ 작업지시서 (간소화 - fabric 없이 썸네일 사용) ============
+async function _genOrderSheet(doc, orderInfo, cartItems) {
+    for (let i = 0; i < cartItems.length; i++) {
+        const item = cartItems[i];
+        if (!item.product) continue;
+        if (i > 0) doc.addPage();
+
+        // 헤더 바
+        const [c, m, yk, k] = _hexCMYK("#1a237e");
+        doc.setFillColor(c, m, yk, k); doc.rect(0, 0, 210, 20, 'F');
+        doc.setTextColor(0, 0, 0, 0); doc.setFontSize(22);
+        _dt(doc, PTXT.ordersheet_title, 105, 14, { align: 'center', weight: 'bold' }, "#ffffff");
+
+        // 주문정보 박스
+        const startY = 30, boxH = 50;
+        doc.setTextColor(0, 0, 0, 1); doc.setDrawColor(0); doc.setLineWidth(0.4);
+        doc.rect(15, startY, 180, boxH);
+        doc.setFontSize(10);
+        let curY = startY + 8;
+        _dt(doc, `${PTXT.os_order_no} :  ${orderInfo.id || '-'}`, 20, curY, { weight: 'bold' });
+        _dt(doc, `${PTXT.os_date} :  ${new Date(orderInfo.orderDate || Date.now()).toLocaleDateString()}`, 80, curY);
+        doc.setDrawColor(200); doc.setLineWidth(0.1); doc.line(20, curY + 3, 130, curY + 3); curY += 8;
+        doc.setFontSize(11);
+        _dt(doc, `${PTXT.os_customer} :  ${orderInfo.manager || '-'}`, 20, curY); curY += 6;
+        _dt(doc, `${PTXT.os_phone} :  ${orderInfo.phone || '-'}`, 20, curY); curY += 6;
+        _dt(doc, `${PTXT.os_address} :`, 20, curY); doc.setFontSize(10); _dt(doc, `${orderInfo.address || '-'}`, 45, curY, { maxWidth: 90 }); curY += 10;
+        doc.setFontSize(11);
+        _dt(doc, `${PTXT.os_request} :`, 20, curY);
+        _dt(doc, `${orderInfo.note || PTXT.os_none}`, 45, curY, { maxWidth: 130, weight: 'bold' }, "#1d4ed8");
+
+        // 배송희망일
+        let dateStr = PTXT.os_unspecified;
+        if (orderInfo.date) {
+            const parts = orderInfo.date.split('-');
+            dateStr = parts.length === 3 ? `${parts[1]}.${parts[2]}` : orderInfo.date;
+        }
+        doc.setFontSize(12);
+        _dt(doc, PTXT.os_delivery_date, 165, startY + 12, { align: 'center', weight: 'bold' }, "#ff0000");
+        doc.setFontSize(42);
+        _dt(doc, dateStr, 165, startY + 32, { align: 'center', weight: 'bold' }, "#ff0000");
+        doc.setDrawColor(255, 0, 0); doc.setLineWidth(0.5); doc.roundedRect(135, startY + 5, 55, 35, 3, 3);
+
+        // 제작사양 섹션
+        const prodY = startY + boxH + 10;
+        doc.setFillColor(240, 240, 240); doc.setDrawColor(0); doc.setLineWidth(0.1);
+        doc.rect(15, prodY, 180, 10, 'FD');
+        doc.setTextColor(0); doc.setFontSize(11);
+        _dt(doc, PTXT.os_prod_spec, 20, prodY + 7, { weight: 'bold' });
+        _dt(doc, `${PTXT.os_qty_label}: ${item.qty || 1}${PTXT.os_qty_unit}`, 185, prodY + 7, { align: 'right', weight: 'bold' }, "#ff0000");
+
+        const pName = item.productName || item.product.name || '';
+        const infoY = prodY + 18; doc.setFontSize(16);
+        _dt(doc, pName, 20, infoY, { weight: 'bold' });
+
+        doc.setFontSize(11); let optY = infoY + 8;
+        const ADDON = window.ADDON_DB || {};
+        if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = ADDON[code]; if (!add) return;
+                const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                _dt(doc, `• ${add.display_name || add.name || code} (x${qty})`, 25, optY); optY += 6;
+            });
+        } else {
+            _dt(doc, "• " + PTXT.opt_default, 25, optY); optY += 6;
+        }
+
+        // 이미지 영역 (썸네일 사용)
+        const imgBoxY = optY + 5, footerY = 255, imgBoxH = footerY - imgBoxY - 5;
+        doc.setDrawColor(0); doc.setLineWidth(0.2); doc.rect(15, imgBoxY, 180, imgBoxH);
+        _dt(doc, `< ${PTXT.os_design_preview} >`, 105, imgBoxY - 2, { align: 'center' });
+
+        const thumbUrl = item.thumb || item.product.img || null;
+        let imgData = null;
+        if (thumbUrl) imgData = await _imgToDataUrl(thumbUrl);
+        if (imgData) {
+            try {
+                let fmt = 'PNG'; if (imgData.startsWith('data:image/jpeg')) fmt = 'JPEG';
+                const p = doc.getImageProperties(imgData);
+                const innerW = 176, innerH = imgBoxH - 4;
+                let w = innerW, h = (p.height * w) / p.width;
+                if (h > innerH) { h = innerH; w = (p.width * h) / p.height; }
+                doc.addImage(imgData, fmt, 105 - (w / 2), imgBoxY + (imgBoxH / 2) - (h / 2), w, h);
+            } catch (e) { }
+        } else {
+            _dt(doc, PTXT.os_no_image, 105, imgBoxY + (imgBoxH / 2), { align: 'center' });
+        }
+
+        // 서명란
+        const signW = 180, signH = 25;
+        doc.setDrawColor(0); doc.setLineWidth(0.1); doc.rect(15, footerY, signW, signH);
+        const colW = signW / 3;
+        doc.line(15, footerY + 8, 15 + signW, footerY + 8);
+        doc.line(15 + colW, footerY, 15 + colW, footerY + signH);
+        doc.line(15 + colW * 2, footerY, 15 + colW * 2, footerY + signH);
+        doc.setFontSize(10);
+        _dt(doc, PTXT.staff_make, 15 + colW / 2, footerY + 5.5, { align: 'center' });
+        _dt(doc, PTXT.staff_check, 15 + colW * 1.5, footerY + 5.5, { align: 'center' });
+        _dt(doc, PTXT.staff_ship, 15 + colW * 2.5, footerY + 5.5, { align: 'center' });
+        doc.setFontSize(8); _dt(doc, "Generated by Chameleon Printing System", 105, 292, { align: 'center' }, "#888888");
+    }
+    return doc.output('blob');
+}
+
+// ============ 메인: 서류 다운로드 함수 ============
+window.downloadOrderDoc = async function (orderId, docType) {
+    const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
+    if (!order) return alert('Order not found');
+
+    // 닫기
+    document.querySelectorAll('.doc-dropdown').forEach(d => d.style.display = 'none');
+
+    // 1. 저장된 파일 먼저 찾기 (견적서/작업지시서)
+    if (docType === 'quotation' || docType === 'order_sheet') {
+        const files = order.files || [];
+        const found = files.find(f => f.type === docType || f.name === (docType === 'quotation' ? 'quotation.pdf' : 'order_sheet.pdf'));
+        if (found && found.url) {
+            window.open(found.url, '_blank');
+            return;
+        }
+    }
+
+    // 2. jsPDF 확인
+    if (!window.jspdf) return alert('PDF library not loaded. Please refresh and try again.');
+
+    // 3. 주문 데이터 변환
+    let items = [];
+    try { items = (typeof order.items === 'string') ? JSON.parse(order.items) : (order.items || []); } catch (e) { }
+
+    const pmLower = (order.payment_method || '').toLowerCase();
+    const orderInfo = {
+        id: order.id,
+        manager: order.manager_name || '',
+        phone: order.phone || '',
+        address: order.address || '',
+        note: order.request_note || '',
+        date: order.delivery_target_date || '',
+        orderDate: order.created_at,
+        payMethod: (pmLower.includes('카드') || pmLower.includes('card') || pmLower.includes('stripe')) ? 'card'
+            : pmLower.includes('무통장') ? 'bank'
+                : pmLower.includes('예치금') ? 'deposit' : 'card',
+        depositor: order.depositor_name || ''
+    };
+
+    // 4. PDF 생성
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    await _loadFont(doc);
+
+    let blob;
+    const titleMap = { quotation: PTXT.quote_title, receipt: PTXT.receipt_title, statement: PTXT.statement_title };
+
+    if (docType === 'order_sheet') {
+        blob = await _genOrderSheet(doc, orderInfo, items);
+    } else {
+        const title = titleMap[docType] || PTXT.quote_title;
+        blob = await _genCommonDoc(doc, title, orderInfo, items, order.discount_amount || 0, 0);
+    }
+
+    if (!blob) return alert('PDF generation failed');
+
+    // 5. 다운로드
+    const nameMap = { quotation: 'Quotation', receipt: 'Receipt', statement: 'Invoice', order_sheet: 'WorkOrder' };
+    const fileName = `${nameMap[docType] || 'Document'}_${orderId}.pdf`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+};

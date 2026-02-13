@@ -103,6 +103,11 @@
   "label_request_memo": "Special Instructions",
   "btn_payment_submit": "Create Order & Pay",
   "btn_cancel": "Cancel",
+  "btn_documents": "Documents",
+  "doc_quotation": "Quotation",
+  "doc_receipt": "Receipt",
+  "doc_order_sheet": "Work Order",
+  "doc_statement": "Invoice",
 
   "modal_checkout_title": "Confirm Order & Pay",
   "label_orderer_name": "Ordered By",
