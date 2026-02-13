@@ -267,7 +267,7 @@
 -->
 <script>
     // 1. 프로젝트 버전
-    const PROJECT_VERSION = '119';
+    const PROJECT_VERSION = '120';
     const DATA_PATH = './long/';
 </script>
 </head>
@@ -1946,23 +1946,23 @@
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=119"></script>
-<script type="module" src="./canvas-core.js?v=119"></script>
-<script type="module" src="./canvas-size.js?v=119"></script>
-<script type="module" src="./canvas-guides.js?v=119"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=119"></script>
-<script type="module" src="./canvas-objects.js?v=119"></script>
-<script type="module" src="./canvas-image.js?v=119"></script>
-<script type="module" src="./canvas-template.js?v=119"></script> 
-<script type="module" src="./canvas-ai.js?v=119"></script>
-<script type="module" src="./canvas-utils.js?v=119"></script>
-<script type="module" src="./shortcuts.js?v=119"></script>
-<script type="module" src="./context-menu.js?v=119"></script>
+<script type="module" src="./config.js?v=120"></script>
+<script type="module" src="./canvas-core.js?v=120"></script>
+<script type="module" src="./canvas-size.js?v=120"></script>
+<script type="module" src="./canvas-guides.js?v=120"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=120"></script>
+<script type="module" src="./canvas-objects.js?v=120"></script>
+<script type="module" src="./canvas-image.js?v=120"></script>
+<script type="module" src="./canvas-template.js?v=120"></script> 
+<script type="module" src="./canvas-ai.js?v=120"></script>
+<script type="module" src="./canvas-utils.js?v=120"></script>
+<script type="module" src="./shortcuts.js?v=120"></script>
+<script type="module" src="./context-menu.js?v=120"></script>
 <script type="module" src="./export.js?v=121"></script>
-<script type="module" src="./order.js?v=119"></script>
-<script type="module" src="./login.js?v=119"></script>
-<script type="module" src="./my-design.js?v=119"></script>
-<script type="module" src="./main.js?v=119"></script>
+<script type="module" src="./order.js?v=120"></script>
+<script type="module" src="./login.js?v=120"></script>
+<script type="module" src="./my-design.js?v=120"></script>
+<script type="module" src="./main.js?v=120"></script>
 
 <script type="module">
     import { addNewPage, switchPage, deleteCurrentPage } from "./canvas-pages.js";
@@ -2092,7 +2092,7 @@
     </div>
 </div>
 
-<script src="./text-wizard.js?v=119"></script> 
+<script src="./text-wizard.js?v=120"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -2210,11 +2210,11 @@
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=119 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=119';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=119'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=119';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=119';
+    // ★ 여기 파일명 뒤에 ?v=120 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=120';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=120'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=120';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=120';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -4002,7 +4002,7 @@ if (w >= 20 && h >= 20) {
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
             document.getElementById('choiceModal').style.display = 'none';
 
-            import('./order.js?v=119').then(m => {
+            import('./order.js?v=120').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -4292,7 +4292,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=119').then(m => {
+        import('./order.js?v=120').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -4499,7 +4499,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=119');
+                await import('./canvas-objects.js?v=120');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -5205,7 +5205,7 @@ function updateVipFileList(input) {
 }
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=119';
+    import { sb, initConfig } from './config.js?v=120';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {

@@ -735,18 +735,17 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         if (!item.product) return;
 
         // 다국어 상품명/가격 선택 로직
+        // price는 항상 KRW 등가 (addProductToCartDirectly에서 역환산 완료)
         let pdfName = item.product.name;
         let pdfPrice = item.product.price;
         let pdfOptionLabel = TEXT.opt_default;
 
         if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
             if (item.product.name_jp) pdfName = item.product.name_jp;
-            if (item.product.price_jp) pdfPrice = item.product.price_jp;
-            else if (_cr && _cr.JP) pdfPrice = Math.round(pdfPrice * _cr.JP);
+            if (_cr && _cr.JP) pdfPrice = Math.round(pdfPrice * _cr.JP);
         } else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') {
             if (item.product.name_us) pdfName = item.product.name_us;
-            if (item.product.price_us) pdfPrice = item.product.price_us;
-            else if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
+            if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
         }
 
         const pTotal = (pdfPrice || 0) * (item.qty || 1); 
@@ -779,16 +778,14 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 const add = ADDON_DB[code]; if(!add) return;
                 const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
                 
-                // [수정] 옵션 가격 다국어 처리
+                // [수정] 옵션 가격 다국어 처리 (ADDON_DB.price는 KRW 등가 - config.js에서 역환산 완료)
                 let addPrice = add.price;
                 let addName = add.display_name || add.name;
                 if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')) {
-                    if (add.price_jp) addPrice = add.price_jp;
-                    else if (_cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP);
+                    if (_cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP);
                     if (add.name_jp) addName = add.name_jp;
                 } else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') {
-                    if (add.price_us) addPrice = add.price_us;
-                    else if (_cr && _cr.US) addPrice = Math.round(addPrice * _cr.US * 100) / 100;
+                    if (_cr && _cr.US) addPrice = Math.round(addPrice * _cr.US * 100) / 100;
                     if (add.name_us) addName = add.name_us;
                 }
 

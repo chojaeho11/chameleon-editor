@@ -1789,11 +1789,22 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
 
     // [1] 상품 정보 다이어트 (거대 이미지 코드 원천 차단)
 // productInfo를 그대로 쓰지 않고, 필요한 정보만 골라 담으면서 이미지가 길면 삭제합니다.
+// 가격 역환산: 관리자 설정 현지 가격이 있으면 KRW 등가로 변환 (formatCurrency가 정확한 현지 가격 표시)
+let finalPrice = productInfo.price;
+const _siteRate = SITE_CONFIG.CURRENCY_RATE;
+if (!productInfo.is_custom) {
+    if (SITE_CONFIG.COUNTRY === 'JP' && productInfo.price_jp && _siteRate.JP) {
+        finalPrice = Math.round(productInfo.price_jp / _siteRate.JP);
+    } else if (SITE_CONFIG.COUNTRY === 'US' && productInfo.price_us && _siteRate.US) {
+        finalPrice = Math.round(productInfo.price_us / _siteRate.US);
+    }
+}
+
 const cleanProduct = {
     name: productInfo.name,
     name_jp: productInfo.name_jp || '',
     name_us: productInfo.name_us || '',
-    price: productInfo.price,
+    price: finalPrice,
     price_jp: productInfo.price_jp || 0,
     price_us: productInfo.price_us || 0,
     code: productInfo.code || productInfo.key,
