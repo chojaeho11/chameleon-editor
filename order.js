@@ -1319,7 +1319,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                 code: item.product.code || item.product.key,
                 img: item.product.img 
             },
-            productName: item.product.name,
+            productName: localName(item.product),
             qty: qty, 
             price: compatibleUnitPrice, 
             selectedAddons: item.selectedAddons || {}, 
@@ -1347,7 +1347,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         total_amount: finalPayAmount, 
         discount_amount: useMileage, 
         items: itemsToSave, 
-        site_code: CURRENT_LANG.toUpperCase() 
+        site_code: SITE_CONFIG.COUNTRY
     }]).select();
     
     if (orderError) throw orderError; 

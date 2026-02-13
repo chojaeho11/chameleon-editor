@@ -127,6 +127,16 @@ window.loadOrders = async () => {
             const items = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
             const total = order.total_amount || 0;
             const site = order.site_code || 'KR';
+
+            // 통화 변환 헬퍼 (DB는 KRW 기준 저장)
+            const currRates = { KR: 1, JP: 0.2, US: 0.002 };
+            const currSymbols = { KR: '', JP: '¥', US: '$' };
+            const rate = currRates[site] || 1;
+            const sym = currSymbols[site] || '';
+            const fmtAmt = (krw) => {
+                const v = Math.round(krw * rate);
+                return site === 'KR' ? v.toLocaleString() : `${sym}${site === 'US' ? (krw * rate).toFixed(2) : v.toLocaleString()}`;
+            };
             
             // [스태프 선택] 배경색 꽉 차게 변경된 함수 사용
             const managerOpts = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
@@ -174,20 +184,28 @@ window.loadOrders = async () => {
                 statusHtml = `<div style="margin-bottom:4px;"><span class="badge">${order.status}</span></div>`;
             }
 
-            const isCard = (order.payment_method && (order.payment_method.includes('카드') || order.payment_method.includes('card')));
-            const isBank = (order.payment_method && (order.payment_method.includes('무통장') || order.payment_method.includes('bank')));
+            const pmLower = (order.payment_method || '').toLowerCase();
+            const isCard = pmLower.includes('카드') || pmLower.includes('card') || pmLower.includes('stripe') || pmLower.includes('간편결제');
+            const isBank = pmLower.includes('무통장') || pmLower.includes('bank');
+            const isDeposit = pmLower.includes('예치금');
             const depositor = order.depositor_name || order.depositor || '입금자 미정';
 
             // 2. 결제 정보 표시 (상태와 무관하게 무조건 표시)
             if (isCard) {
-                statusHtml += `<div style="font-size:11px; color:#2563eb; font-weight:bold;">💳 카드결제</div>`;
+                const cardLabel = pmLower.includes('stripe') ? '💳 Stripe' : '💳 카드결제';
+                statusHtml += `<div style="font-size:11px; color:#2563eb; font-weight:bold;">${cardLabel}</div>`;
                 if(order.payment_status === '결제완료') {
                     statusHtml += `<div style="font-size:10px; color:#15803d;">(승인완료)</div>`;
                 } else {
-                     // 카드인데 결제완료가 아니면 (드문 경우지만) 표시
                     statusHtml += `<div style="font-size:10px; color:#ef4444;">(미결제)</div>`;
                 }
-            } 
+            }
+            else if (isDeposit) {
+                statusHtml += `<div style="font-size:11px; color:#7c3aed; font-weight:bold;">💰 예치금</div>`;
+                if(order.payment_status === '결제완료') {
+                    statusHtml += `<div style="font-size:10px; color:#15803d;">(승인완료)</div>`;
+                }
+            }
             else if (isBank) {
                 statusHtml += `<div style="font-size:11px; color:#d97706; font-weight:bold;">🏦 무통장</div>`;
                 statusHtml += `<div style="font-size:11px; color:#334155;">${depositor}</div>`;
@@ -220,10 +238,10 @@ window.loadOrders = async () => {
                     
                     <td style="font-size:11px;">${items.map(i => `<div>- ${i.productName || '상품'} (${i.qty})</div>`).join('')}</td>
                     
-                    <td style="text-align:center;">${bidHtml}</td> <td style="text-align:right;">${total.toLocaleString()}</td>
-                    <td style="text-align:right; color:#ef4444;">${(order.discount_amount || 0).toLocaleString()}</td>
-                    <td style="text-align:right; color:#d97706;">${(order.used_deposit || 0).toLocaleString()}</td>
-                    <td style="text-align:right; font-weight:bold; color:#15803d;">${(order.actual_payment || total).toLocaleString()}</td>
+                    <td style="text-align:center;">${bidHtml}</td> <td style="text-align:right;">${fmtAmt(total)}</td>
+                    <td style="text-align:right; color:#ef4444;">${fmtAmt(order.discount_amount || 0)}</td>
+                    <td style="text-align:right; color:#d97706;">${fmtAmt(order.used_deposit || 0)}</td>
+                    <td style="text-align:right; font-weight:bold; color:#15803d;">${fmtAmt(order.actual_payment || total)}</td>
                     <td>${managerOpts} <div style="margin-top:2px;">${driverOpts}</div></td>
                     
                     <td style="padding:2px 4px;">${fileBtn}${addBtn}</td>
