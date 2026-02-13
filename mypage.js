@@ -37,8 +37,49 @@ const I18N_KO = {
     "doc_quotation": "견적서",
     "doc_receipt": "영수증",
     "doc_order_sheet": "작업지시서",
-    "doc_statement": "거래명세서"
+    "doc_statement": "거래명세서",
+    "btn_reorder": "다시담기",
+    "btn_cancel": "취소",
+    "btn_cancel_order": "주문취소",
+    "btn_write_review": "후기 작성",
+    "msg_review_completed": "후기 작성 완료",
+    "msg_no_orders": "주문 내역이 없습니다.",
+    "msg_no_product_info": "상품 정보 없음",
+    "label_product": "상품",
+    "label_more_items": "건",
+    "confirm_cancel_order": "이 주문을 취소하시겠습니까?",
+    "confirm_reorder": "이 상품들을 장바구니에 다시 담으시겠습니까?",
+    "confirm_go_to_cart": "장바구니로 이동하시겠습니까?",
+    "confirm_logout": "로그아웃 하시겠습니까?",
+    "btn_close": "닫기",
+    "msg_no_bids_yet": "아직 입찰이 없습니다.\n파트너가 검토 중입니다. 잠시만 기다려주세요.",
+    "msg_no_sales": "판매 중인 디자인이 없습니다.",
+    "msg_no_records": "내역이 없습니다.",
+    "msg_no_reviews": "등록된 후기가 없습니다.",
+    "label_partner_reviews": "파트너 후기",
+    "label_deposit": "입금",
+    "label_payment": "결제",
+    "label_withdrawal": "출금",
+    "label_admin_adjust": "관리자 조정",
+    "label_other": "기타",
+    // 주문 상태 번역
+    "status_접수대기": "접수대기",
+    "status_입금대기": "입금대기",
+    "status_접수됨": "접수됨",
+    "status_제작준비": "제작준비",
+    "status_제작중": "제작중",
+    "status_배송중": "배송중",
+    "status_배송완료": "배송완료",
+    "status_구매확정": "구매확정",
+    "status_완료됨": "완료됨",
+    "status_취소됨": "취소됨",
+    "status_임시작성": "임시작성"
 };
+
+// 주문 상태 번역 함수
+function translateStatus(rawStatus) {
+    return window.t('status_' + rawStatus, rawStatus);
+}
 
 // window.t 함수 초기화 (번역 로드 전 한국어 fallback)
 if (typeof window.t !== 'function') {
@@ -381,18 +422,16 @@ async function loadOrders() {
 
         // [수정됨] 상태별 버튼 분기 처리
         let actionBtn = '';
-        
-        if (o.status === '접수대기' || o.status === '접수됨') {
-            // 1. 견적 확인 버튼
-            actionBtn = `<button onclick="window.checkBidsForOrder('${o.id}')" class="btn-round" style="margin-top:5px; background:#4f46e5; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">${window.t('btn_check_bids', 'Check Local Partner Bids')}</button>`;
-        } 
-        else if (o.status === '배송완료') {
-            // 2. 후기 작성 버튼 (파트너가 납품 완료했을 때)
+
+        if (o.status === '배송완료') {
             actionBtn = `<button onclick="window.openPartnerReviewModal('${o.id}')" class="btn-round" style="margin-top:5px; background:#f59e0b; color:white; border:none; padding:4px 10px; font-size:11px; width:100%;">${window.t('btn_write_review', 'Write Partner Review')}</button>`;
         }
         else if (o.status === '구매확정') {
             actionBtn = `<span style="font-size:11px; color:#16a34a; font-weight:bold;">${window.t('msg_review_completed', 'Review Completed')}</span>`;
         }
+
+        // 상태 번역
+        const translatedStatus = translateStatus(o.status);
 
         tbody.innerHTML += `
             <tr>
@@ -403,7 +442,7 @@ async function loadOrders() {
                 <td><div style="font-weight:bold;">${summary}</div></td>
                 <td style="font-weight:bold; white-space:nowrap;">${fmtMoney(o.total_amount || 0)}</td>
                 <td>
-                    <span class="status-badge ${badgeClass}">${o.status}</span>
+                    <span class="status-badge ${badgeClass}">${translatedStatus}</span>
                     ${actionBtn}
                 </td>
                 <td style="min-width:110px;">
@@ -843,8 +882,9 @@ async function monitorMyBids() {
 function speakTTS(text) {
     if ('speechSynthesis' in window) {
         const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'ko-KR';
-        msg.rate = 1.0; 
+        const country = (window.SITE_CONFIG || {}).COUNTRY || 'KR';
+        msg.lang = country === 'JP' ? 'ja-JP' : country === 'US' ? 'en-US' : 'ko-KR';
+        msg.rate = 1.0;
         window.speechSynthesis.speak(msg);
     }
 }
