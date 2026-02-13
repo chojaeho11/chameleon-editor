@@ -1636,6 +1636,15 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
         ? Math.round(amount * rate)       // JPY: 정수 (소수점 없음)
         : Math.round(amount * rate * 100) / 100; // USD: 소수 2자리
 
+    // Stripe 최소 결제금액 체크
+    const minAmount = currency === 'jpy' ? 50 : 0.50;
+    const minLabel = currency === 'jpy' ? '¥50' : '$0.50';
+    if (localAmount < minAmount) {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        return alert(window.t('msg_stripe_min_amount', `Minimum payment amount is ${minLabel}. Current: `) + (currency === 'jpy' ? `¥${localAmount}` : `$${localAmount}`));
+    }
+
     try {
         const { data, error } = await sb.functions.invoke('create-stripe-session', {
             body: {
