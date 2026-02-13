@@ -1,23 +1,23 @@
 // main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js"; 
-import { initCanvas, canvas } from "./canvas-core.js";
-import { initSizeControls, applySize } from "./canvas-size.js"; 
-import { initGuides } from "./canvas-guides.js";
-import { initZoomPan } from "./canvas-zoom-pan.js";
-import { initObjectTools } from "./canvas-objects.js";
-import { initPageTools } from "./canvas-pages.js"; // [추가] 페이지 도구
-import { initImageTools } from "./canvas-image.js";
-import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js";
-import { initAiTools } from "./canvas-ai.js";
-import { initExport } from "./export.js";
-import { initOrderSystem } from "./order.js"; 
-import { initAuth } from "./login.js";
-import { initMyDesign } from "./my-design.js";
-import { initCanvasUtils } from "./canvas-utils.js";
-import { initShortcuts } from "./shortcuts.js";
-import { initContextMenu } from "./context-menu.js";
-import { createVectorOutline } from "./outlineMaker.js";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=121";
+import { initCanvas, canvas } from "./canvas-core.js?v=121";
+import { initSizeControls, applySize } from "./canvas-size.js?v=121";
+import { initGuides } from "./canvas-guides.js?v=121";
+import { initZoomPan } from "./canvas-zoom-pan.js?v=121";
+import { initObjectTools } from "./canvas-objects.js?v=121";
+import { initPageTools } from "./canvas-pages.js?v=121"; // [추가] 페이지 도구
+import { initImageTools } from "./canvas-image.js?v=121";
+import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=121";
+import { initAiTools } from "./canvas-ai.js?v=121";
+import { initExport } from "./export.js?v=121";
+import { initOrderSystem } from "./order.js?v=121";
+import { initAuth } from "./login.js?v=121";
+import { initMyDesign } from "./my-design.js?v=121";
+import { initCanvasUtils } from "./canvas-utils.js?v=121";
+import { initShortcuts } from "./shortcuts.js?v=121";
+import { initContextMenu } from "./context-menu.js?v=121";
+import { createVectorOutline } from "./outlineMaker.js?v=121";
 
 window.currentUploadedPdfUrl = null;
 
