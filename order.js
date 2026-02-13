@@ -1620,20 +1620,26 @@ function processCardPayment(confirmedAmount) {
 
 async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId) {
     if (typeof Stripe === 'undefined') return alert(window.t('msg_stripe_load_failed', "Stripe module load failed"));
-    
+
     const stripe = Stripe(pubKey);
-    const btn = document.getElementById("btnFinalPay"); 
+    const btn = document.getElementById("btnFinalPay");
     const originalText = btn.innerText;
-    
+
     btn.innerText = window.t('msg_connecting_stripe', "Connecting to Stripe...");
     btn.disabled = true;
 
     const currency = currencyCountry === 'JP' ? 'jpy' : 'usd';
 
+    // KRW → 현지 통화 변환 (DB는 KRW 기준 저장)
+    const rate = SITE_CONFIG.CURRENCY_RATE[currencyCountry] || 1;
+    const localAmount = currency === 'jpy'
+        ? Math.round(amount * rate)       // JPY: 정수 (소수점 없음)
+        : Math.round(amount * rate * 100) / 100; // USD: 소수 2자리
+
     try {
         const { data, error } = await sb.functions.invoke('create-stripe-session', {
             body: {
-                amount: amount,
+                amount: localAmount,
                 currency: currency,
                 order_id: orderDbId,
                 cancel_url: window.location.href,
