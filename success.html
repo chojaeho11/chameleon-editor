@@ -23,49 +23,80 @@
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function processSuccess() {
-            // URL에서 값 가져오기
             const urlParams = new URLSearchParams(window.location.search);
-            const paymentKey = urlParams.get("paymentKey"); // ★ 이게 진짜 결제키 (tviva...)
-            const orderId = urlParams.get("orderId");       // 이건 주문번호 (cafe...)
-            const amount = urlParams.get("amount");
             const dbId = urlParams.get("db_id");
+            const sessionId = urlParams.get("session_id"); // Stripe
+            const paymentKey = urlParams.get("paymentKey"); // Toss
 
-            console.log("받은 결제키:", paymentKey); // 콘솔에서 확인 가능
-
-            if (!paymentKey || !orderId || !amount || !dbId) {
-                alert("Missing payment information.");
+            if (!dbId) {
+                alert("Missing order information.");
                 window.location.href = "index.html";
                 return;
             }
 
             try {
-                // 1. 토스 승인 요청 (Edge Function)
-                const { data, error } = await sb.functions.invoke('confirm-payment', {
-                    body: { paymentKey, orderId, amount: Number(amount), dbId }
-                });
+                if (sessionId) {
+                    // ====== Stripe 결제 확인 ======
+                    console.log("Stripe session:", sessionId);
 
-                if (error || (data && data.error)) {
-                    throw new Error(error?.message || data?.error);
+                    const { data, error } = await sb.functions.invoke('verify-stripe-payment', {
+                        body: { session_id: sessionId, db_id: dbId }
+                    });
+
+                    if (error || (data && data.error)) {
+                        throw new Error(error?.message || data?.error);
+                    }
+
+                    // DB 업데이트
+                    const { error: dbError } = await sb.from('orders').update({
+                        status: '접수됨',
+                        payment_status: '결제완료',
+                        payment_method: 'Stripe Card',
+                        toss_payment_key: sessionId // stripe session_id 저장
+                    }).eq('id', dbId);
+
+                    if (dbError) console.error("DB update failed:", dbError);
+
+                } else if (paymentKey) {
+                    // ====== Toss 결제 확인 ======
+                    const orderId = urlParams.get("orderId");
+                    const amount = urlParams.get("amount");
+
+                    if (!orderId || !amount) {
+                        throw new Error("Missing Toss payment parameters.");
+                    }
+
+                    console.log("Toss paymentKey:", paymentKey);
+
+                    const { data, error } = await sb.functions.invoke('confirm-payment', {
+                        body: { paymentKey, orderId, amount: Number(amount), dbId }
+                    });
+
+                    if (error || (data && data.error)) {
+                        throw new Error(error?.message || data?.error);
+                    }
+
+                    const { error: dbError } = await sb.from('orders').update({
+                        status: '접수됨',
+                        payment_status: '결제완료',
+                        payment_method: '카드/간편결제',
+                        toss_payment_key: paymentKey
+                    }).eq('id', dbId);
+
+                    if (dbError) console.error("DB 저장 실패:", dbError);
+
+                } else {
+                    throw new Error("No payment verification data found.");
                 }
 
-                // 2. ★ 여기가 제일 중요합니다 ★ DB 업데이트
-                const { error: dbError } = await sb.from('orders').update({
-                    status: '접수됨', // [수정] 결제 성공했으므로 관리자에 노출
-                    payment_status: '결제완료',
-                    payment_method: '카드/간편결제',
-                    toss_payment_key: paymentKey
-                }).eq('id', dbId);
-
-                if (dbError) console.error("DB 저장 실패:", dbError);
-
-                // 성공 시 이동
+                // 공통: 결제 성공 처리
                 document.getElementById('title').innerText = "Payment Successful!";
                 if(window.t) document.getElementById('title').innerText = window.t('msg_payment_complete');
-                
+
                 localStorage.removeItem('chameleon_cart_guest');
                 const user = await sb.auth.getUser();
                 if(user?.data?.user) localStorage.removeItem(`chameleon_cart_${user.data.user.id}`);
-                
+
                 setTimeout(() => window.location.href = "index.html", 1000);
 
             } catch (e) {

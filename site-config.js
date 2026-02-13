@@ -60,7 +60,7 @@ export const SITE_CONFIG = {
         },
         'US': {
             provider: 'stripe',
-            publishableKey: 'pk_live_XXXXXXXXXXXXXXXXXXXXXXXX' // Stripe 미국 키 입력 필요
+            publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
         }
     }
 };
