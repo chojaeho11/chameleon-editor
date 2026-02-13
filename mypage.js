@@ -1,4 +1,4 @@
-import { sb, initConfig, currentUser, cartData, PRODUCT_DB } from "./config.js?v=121";
+import { sb, initConfig, currentUser, cartData, PRODUCT_DB } from "./config.js?v=122";
 
 // KRW → 현지 통화 표시 헬퍼
 function fmtMoney(krw) {
@@ -97,7 +97,7 @@ async function loadMyPageTranslations() {
     if (lang === 'kr') return; // 한국어는 I18N_KO로 충분
 
     try {
-        const jsonPath = `long/${lang}_121.json?t=${Date.now()}`;
+        const jsonPath = `long/${lang}_122.json?t=${Date.now()}`;
         const res = await fetch(jsonPath);
         if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json();

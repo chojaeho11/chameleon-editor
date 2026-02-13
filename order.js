@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=121";
-import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js?v=121";
-import { SITE_CONFIG } from "./site-config.js?v=121";
-import { applySize } from "./canvas-size.js?v=121";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=121";
+import { canvas } from "./canvas-core.js?v=122";
+import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js?v=122";
+import { SITE_CONFIG } from "./site-config.js?v=122";
+import { applySize } from "./canvas-size.js?v=122";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=122";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=121";
+} from "./export.js?v=122";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1334,10 +1334,18 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         };
     }).filter(i => i !== null);
 
-    // [핵심] hostname 기반 사이트 코드 결정 (모듈 import 의존 제거)
+    // [핵심] 3중 사이트 코드 결정:
+    // 1순위: HTML 인라인 스크립트 (CDN 캐시 불가)
+    // 2순위: SITE_CONFIG 모듈
+    // 3순위: hostname 직접 체크 (폴백)
     const _hostname = window.location.hostname;
-    const _siteCode = _hostname.includes('cafe0101') ? 'JP' : _hostname.includes('cafe3355') ? 'US' : 'KR';
-    console.log('🌍 Order site_code:', _siteCode, '| hostname:', _hostname, '| SITE_CONFIG:', SITE_CONFIG?.COUNTRY);
+    const _fromHTML = window.__SITE_CODE;
+    const _fromConfig = SITE_CONFIG?.COUNTRY;
+    const _fromHostname = _hostname.includes('cafe0101') ? 'JP' : _hostname.includes('cafe3355') ? 'US' : 'KR';
+    const _siteCode = (_fromHTML && _fromHTML !== 'KR') ? _fromHTML
+                    : (_fromConfig && _fromConfig !== 'KR') ? _fromConfig
+                    : _fromHostname;
+    console.log('[ORDER] site_code=' + _siteCode + ' (HTML=' + _fromHTML + ', CONFIG=' + _fromConfig + ', HOST=' + _fromHostname + ', hostname=' + _hostname + ')');
 
     const { data: orderData, error: orderError } = await sb.from('orders').insert([{
         user_id: currentUser?.id,

@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script>
+        // [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관
+        (function() {
+            var h = window.location.hostname || '';
+            var code = 'KR';
+            if (h.indexOf('cafe0101') !== -1) code = 'JP';
+            else if (h.indexOf('cafe3355') !== -1) code = 'US';
+            window.__SITE_CODE = code;
+        })();
+    </script>
     <style>
         /* 마이페이지 전용 레이아웃 (style.css에 추가해도 됨) */
         body.mypage-body { background: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
@@ -232,7 +242,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=121"></script>
+    <script type="module" src="./mypage.js?v=122"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

@@ -6,11 +6,18 @@ const hostname = window.location.hostname;
 
 let country = 'KR'; // 기본값
 
-// 도메인에 따른 국가 설정
-if (hostname.includes('cafe0101.com')) {
-    country = 'JP';
-} else if (hostname.includes('cafe3355.com')) {
-    country = 'US';
+// [1순위] 인라인 HTML 스크립트에서 설정된 값 (CDN 캐시 무관)
+if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') {
+    country = window.__SITE_CODE;
+}
+
+// [2순위] 도메인에 따른 국가 설정
+if (country === 'KR') {
+    if (hostname.includes('cafe0101.com') || hostname.includes('cafe0101')) {
+        country = 'JP';
+    } else if (hostname.includes('cafe3355.com') || hostname.includes('cafe3355')) {
+        country = 'US';
+    }
 }
 
 // URL 파라미터가 있다면 도메인 설정보다 우선순위

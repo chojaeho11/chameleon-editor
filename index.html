@@ -266,8 +266,19 @@
 </script>
 -->
 <script>
+    // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
+    // HTML 문서는 브라우저가 매번 재검증하므로, JS 모듈 캐시 문제를 우회함
+    (function() {
+        var h = window.location.hostname || '';
+        var code = 'KR';
+        if (h.indexOf('cafe0101') !== -1) code = 'JP';
+        else if (h.indexOf('cafe3355') !== -1) code = 'US';
+        window.__SITE_CODE = code;
+        console.log('[SITE] hostname=' + h + ' → __SITE_CODE=' + code);
+    })();
+
     // 1. 프로젝트 버전
-    const PROJECT_VERSION = '121';
+    const PROJECT_VERSION = '122';
     const DATA_PATH = './long/';
 </script>
 </head>
@@ -1946,23 +1957,23 @@
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=121"></script>
-<script type="module" src="./canvas-core.js?v=121"></script>
-<script type="module" src="./canvas-size.js?v=121"></script>
-<script type="module" src="./canvas-guides.js?v=121"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=121"></script>
-<script type="module" src="./canvas-objects.js?v=121"></script>
-<script type="module" src="./canvas-image.js?v=121"></script>
-<script type="module" src="./canvas-template.js?v=121"></script> 
-<script type="module" src="./canvas-ai.js?v=121"></script>
-<script type="module" src="./canvas-utils.js?v=121"></script>
-<script type="module" src="./shortcuts.js?v=121"></script>
-<script type="module" src="./context-menu.js?v=121"></script>
-<script type="module" src="./export.js?v=121"></script>
-<script type="module" src="./order.js?v=121"></script>
-<script type="module" src="./login.js?v=121"></script>
-<script type="module" src="./my-design.js?v=121"></script>
-<script type="module" src="./main.js?v=121"></script>
+<script type="module" src="./config.js?v=122"></script>
+<script type="module" src="./canvas-core.js?v=122"></script>
+<script type="module" src="./canvas-size.js?v=122"></script>
+<script type="module" src="./canvas-guides.js?v=122"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=122"></script>
+<script type="module" src="./canvas-objects.js?v=122"></script>
+<script type="module" src="./canvas-image.js?v=122"></script>
+<script type="module" src="./canvas-template.js?v=122"></script> 
+<script type="module" src="./canvas-ai.js?v=122"></script>
+<script type="module" src="./canvas-utils.js?v=122"></script>
+<script type="module" src="./shortcuts.js?v=122"></script>
+<script type="module" src="./context-menu.js?v=122"></script>
+<script type="module" src="./export.js?v=122"></script>
+<script type="module" src="./order.js?v=122"></script>
+<script type="module" src="./login.js?v=122"></script>
+<script type="module" src="./my-design.js?v=122"></script>
+<script type="module" src="./main.js?v=122"></script>
 
 <script type="module">
     import { addNewPage, switchPage, deleteCurrentPage } from "./canvas-pages.js";
@@ -2092,7 +2103,7 @@
     </div>
 </div>
 
-<script src="./text-wizard.js?v=121"></script> 
+<script src="./text-wizard.js?v=122"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -2210,11 +2221,11 @@
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=121 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=121';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=121'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=121';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=121';
+    // ★ 여기 파일명 뒤에 ?v=122 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=122';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=122'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=122';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=122';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -4002,7 +4013,7 @@ if (w >= 20 && h >= 20) {
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
             document.getElementById('choiceModal').style.display = 'none';
 
-            import('./order.js?v=121').then(m => {
+            import('./order.js?v=122').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -4292,7 +4303,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=121').then(m => {
+        import('./order.js?v=122').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -4499,7 +4510,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=121');
+                await import('./canvas-objects.js?v=122');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -5205,7 +5216,7 @@ function updateVipFileList(input) {
 }
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=121';
+    import { sb, initConfig } from './config.js?v=122';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
