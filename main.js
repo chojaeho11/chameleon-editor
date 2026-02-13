@@ -48,25 +48,30 @@ window.addEventListener("DOMContentLoaded", async () => {
         await initConfig(); // DB 연결 및 PRODUCT_DB 로드 대기
         initCanvas();       
         
-        // 2. 각종 도구 초기화
-        initCanvasUtils();
-        initShortcuts();
-        initContextMenu();
-        initSizeControls();
-        initGuides();
-        initZoomPan();
-        initObjectTools();
-        initImageTools();
-        initPageTools();
-        initTemplateTools();
-        initAiTools();
-        initExport();
-        initOrderSystem(); // 주문 시스템
-        initAuth();
-        initMyDesign();
-        initMobileTextEditor();
-        initOutlineTool();
-        initFileUploadListeners();
+        // 2. 각종 도구 초기화 (개별 try/catch로 하나가 실패해도 나머지 계속 실행)
+        const inits = [
+            ['CanvasUtils', initCanvasUtils],
+            ['Shortcuts', initShortcuts],
+            ['ContextMenu', initContextMenu],
+            ['SizeControls', initSizeControls],
+            ['Guides', initGuides],
+            ['ZoomPan', initZoomPan],
+            ['ObjectTools', initObjectTools],
+            ['ImageTools', initImageTools],
+            ['PageTools', initPageTools],
+            ['TemplateTools', initTemplateTools],
+            ['AiTools', initAiTools],
+            ['Export', initExport],
+            ['OrderSystem', initOrderSystem],
+            ['Auth', initAuth],
+            ['MyDesign', initMyDesign],
+            ['MobileTextEditor', initMobileTextEditor],
+            ['OutlineTool', initOutlineTool],
+            ['FileUpload', initFileUploadListeners],
+        ];
+        for (const [name, fn] of inits) {
+            try { fn(); } catch(e) { console.warn(`⚠️ ${name} init failed:`, e); }
+        }
 
         // 3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
         if (currentUser) {

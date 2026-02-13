@@ -1,5 +1,5 @@
-import { canvas } from "./canvas-core.js";
-import { addToCenter } from "./canvas-objects.js";
+import { canvas } from "./canvas-core.js?v=122";
+import { addToCenter } from "./canvas-objects.js?v=122";
 
 export function initImageTools() {
     // 1. 이미지 업로드 (파일 input 트리거)
