@@ -396,26 +396,29 @@ async function loadOrders() {
 
         tbody.innerHTML += `
             <tr>
-                <td>
+                <td style="white-space:nowrap;">
                     ${new Date(o.created_at).toLocaleDateString()}<br>
-                    <small style="color:#888;">${displayId}</small>
+                    <small style="color:#888;">#${o.id}</small>
                 </td>
                 <td><div style="font-weight:bold;">${summary}</div></td>
-                <td style="font-weight:bold;">${fmtMoney(o.total_amount || 0)}</td>
+                <td style="font-weight:bold; white-space:nowrap;">${fmtMoney(o.total_amount || 0)}</td>
                 <td>
                     <span class="status-badge ${badgeClass}">${o.status}</span>
                     ${actionBtn}
                 </td>
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
-                        <button class="btn-round" onclick="reOrder('${o.id}')" style="height:26px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; justify-content:center;">${window.t('btn_reorder', 'Reorder')}</button>
+                <td style="min-width:110px;">
+                    <div style="display:flex; flex-direction:column; gap:3px;">
+                        <div style="display:flex; gap:3px;">
+                            ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="flex:1; font-size:10px; padding:3px 6px;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
+                            <button onclick="reOrder('${o.id}')" style="flex:1; height:24px; font-size:10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
+                        </div>
                         <div style="position:relative;">
-                            <button class="btn-round doc-dropdown-btn" onclick="toggleDocDropdown(event, '${o.id}')" style="height:26px; font-size:11px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; justify-content:center; width:100%;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="width:100%; height:24px; font-size:10px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
                             <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden;">
-                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📋 ${window.t('doc_quotation', 'Quotation')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📋 ${window.t('doc_quotation', 'Quotation')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
                             </div>
                         </div>
                     </div>
