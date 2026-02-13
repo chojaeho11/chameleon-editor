@@ -1666,21 +1666,25 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
     btn.innerText = window.t('msg_connecting_stripe', "Connecting to Stripe...");
     btn.disabled = true;
 
-    const currency = currencyCountry === 'JP' ? 'jpy' : 'usd';
+    // 국가별 Stripe 통화 매핑
+    const currencyMap = { JP: 'jpy', US: 'usd', CN: 'cny', AR: 'sar', ES: 'eur' };
+    const currency = currencyMap[currencyCountry] || 'usd';
+    const zeroDec = ['jpy']; // 소수점 없는 통화
 
     // KRW → 현지 통화 변환 (DB는 KRW 기준 저장)
     const rate = SITE_CONFIG.CURRENCY_RATE[currencyCountry] || 1;
-    const localAmount = currency === 'jpy'
+    const localAmount = zeroDec.includes(currency)
         ? Math.round(amount * rate)       // JPY: 정수 (소수점 없음)
-        : Math.round(amount * rate * 100) / 100; // USD: 소수 2자리
+        : Math.round(amount * rate * 100) / 100; // USD/CNY/SAR/EUR: 소수 2자리
 
-    // Stripe 최소 결제금액 체크 (US 기반 계정 → JPY도 USD $0.50 환산 기준 적용)
-    const minAmount = currency === 'jpy' ? 100 : 0.50;
-    const minLabel = currency === 'jpy' ? '¥100' : '$0.50';
+    // Stripe 최소 결제금액 체크
+    const minAmount = zeroDec.includes(currency) ? 100 : 0.50;
+    const currSymbol = { jpy: '¥', usd: '$', cny: '¥', sar: '﷼', eur: '€' };
+    const minLabel = (currSymbol[currency] || '') + minAmount;
     if (localAmount < minAmount) {
         btn.innerText = originalText;
         btn.disabled = false;
-        return alert(window.t('msg_stripe_min_amount', `Minimum payment amount is ${minLabel}. Current: `) + (currency === 'jpy' ? `¥${localAmount}` : `$${localAmount}`));
+        return alert(window.t('msg_stripe_min_amount', `Minimum payment amount is ${minLabel}. Current: `) + (currSymbol[currency] || '') + localAmount);
     }
 
     try {

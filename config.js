@@ -191,16 +191,19 @@ export function getLocalizedData(item) {
         formattedPrice = '$' + Math.round(price).toLocaleString();
     } else if (country === 'CN') {
         name = item.name_cn || item.name_us || item.name;
-        price = Number(item.price_us) || price;
-        formattedPrice = '¥' + Math.round(price).toLocaleString();
+        const cnRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.01;
+        const cnPrice = price * cnRate;
+        formattedPrice = '¥' + Math.round(cnPrice).toLocaleString();
     } else if (country === 'AR') {
         name = item.name_ar || item.name_us || item.name;
-        price = Number(item.price_us) || price;
-        formattedPrice = Math.round(price).toLocaleString() + ' ﷼';
+        const arRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.005;
+        const arPrice = price * arRate;
+        formattedPrice = Math.round(arPrice).toLocaleString() + ' ﷼';
     } else if (country === 'ES') {
         name = item.name_es || item.name_us || item.name;
-        price = Number(item.price_us) || price;
-        formattedPrice = '€' + price.toFixed(2);
+        const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001;
+        const esPrice = price * esRate;
+        formattedPrice = '€' + esPrice.toFixed(2);
     } else {
         formattedPrice = price.toLocaleString() + '원';
     }
