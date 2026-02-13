@@ -1629,10 +1629,10 @@ async function generateShortsAI(imageBase64, lang, topic) {
     const { data, error } = await sb.functions.invoke('marketing-content', {
         body: {
             platform: 'youtube_shorts_from_image',
-            topic: topic || 'Analyze the image and create YouTube Shorts content about this product/service',
-            tone: 'energetic',
+            topic: topic || '이미지 상품을 반값으로 제작하는 꿀팁 - 카멜레온프린팅 활용법',
+            tone: 'fast_energetic',
             lang: lang,
-            instructions: 'Analyze the provided product/service image carefully. Generate engaging YouTube Shorts content based on what you see.',
+            instructions: '빨리 읽는 말투로 빠르게 설명하는 꿀팁 쇼츠 나레이션을 생성하세요. "OOO 반값으로 제작하기 꿀팁!" 스타일로, 카멜레온프린팅에서 제작하면 왜 반값인지 이유를 설명하고, 에디터로 쉽게 디자인 → 빠르게 주문하는 과정을 빠른 말투로 설명해주세요. narration 배열에 5개 문장을 넣어주세요.',
             coreKeywords: settings.coreKeywords || '',
             usp: settings.usp || '',
             ctaMsg: settings.ctaMsg || '',
@@ -1685,7 +1685,7 @@ function wrapCanvasText(ctx, text, maxWidth) {
     return result.length > 0 ? result : [text];
 }
 
-// ★ 핵심: Canvas + MediaRecorder 영상 생성 엔진
+// ★ 핵심: Canvas + TTS 나레이션 영상 생성 엔진 (음악 없음, 빠른 설명 스타일)
 async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -1699,188 +1699,85 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
             const cvs = document.getElementById('shortsCanvas');
             cvs.width = W; cvs.height = H;
             const ctx = cvs.getContext('2d');
-
-            // 폰트 로딩 대기
             await document.fonts.ready;
 
-            // 3. BGM 생성 (효율적: 고정 오실레이터 + 게인 스케줄링)
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            // 3. 나레이션 준비 (AI가 생성한 narration 배열 사용)
+            const narrationTexts = aiContent.narration || [];
+            const overlays = aiContent.overlay_texts || {};
 
-            const masterGain = audioCtx.createGain();
-            const audioDest = audioCtx.createMediaStreamDestination();
-            const compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -18;
-            compressor.ratio.value = 4;
-            masterGain.connect(compressor);
-            compressor.connect(audioDest);
-
-            const now = audioCtx.currentTime;
-            masterGain.gain.setValueAtTime(0, now);
-            masterGain.gain.linearRampToValueAtTime(0.35, now + 0.5);
-            masterGain.gain.setValueAtTime(0.35, now + durationSec - 2);
-            masterGain.gain.linearRampToValueAtTime(0, now + durationSec);
-
-            const bpm = 120;
-            const bt = 60 / bpm; // beat time
-            const end = now + durationSec + 0.5;
-
-            // ── 킥: 1개 오실레이터, 게인/주파수 스케줄링 ──
-            const kickOsc = audioCtx.createOscillator();
-            const kickGain = audioCtx.createGain();
-            kickOsc.type = 'sine';
-            kickOsc.connect(kickGain);
-            kickGain.connect(masterGain);
-            kickGain.gain.setValueAtTime(0, now);
-            for (let t = now; t < end; t += bt) {
-                kickOsc.frequency.setValueAtTime(150, t);
-                kickOsc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
-                kickGain.gain.setValueAtTime(0.35, t);
-                kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+            // TTS 나레이션을 스피커로 재생 (빠른 말투)
+            function speakNarration(text, rate) {
+                return new Promise((res) => {
+                    if (!('speechSynthesis' in window) || !text) { res(); return; }
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.lang = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR';
+                    u.rate = rate || 1.4; // 빠른 말투
+                    u.volume = 1.0;
+                    u.onend = () => res();
+                    u.onerror = () => res();
+                    window.speechSynthesis.speak(u);
+                });
             }
-            kickOsc.start(now);
-            kickOsc.stop(end);
 
-            // ── 하이햇: 노이즈 버퍼 1개 재사용, 게인 스케줄링 ──
-            const hhBufLen = audioCtx.sampleRate * durationSec + audioCtx.sampleRate;
-            const hhBuf = audioCtx.createBuffer(1, hhBufLen, audioCtx.sampleRate);
-            const hhData = hhBuf.getChannelData(0);
-            for (let j = 0; j < hhBufLen; j++) hhData[j] = Math.random() * 2 - 1;
-            const hhSrc = audioCtx.createBufferSource();
-            hhSrc.buffer = hhBuf;
-            const hhFilter = audioCtx.createBiquadFilter();
-            hhFilter.type = 'highpass';
-            hhFilter.frequency.value = 8000;
-            const hhGain = audioCtx.createGain();
-            hhSrc.connect(hhFilter);
-            hhFilter.connect(hhGain);
-            hhGain.connect(masterGain);
-            hhGain.gain.setValueAtTime(0, now);
-            for (let t = now; t < end; t += bt / 2) {
-                const isDown = (Math.round((t - now) / (bt / 2)) % 2 === 0);
-                hhGain.gain.setValueAtTime(isDown ? 0.07 : 0.03, t);
-                hhGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-            }
-            hhSrc.start(now);
-            hhSrc.stop(end);
-
-            // ── 베이스: 1개 오실레이터, 주파수 스케줄링 (C-G-Am-F) ──
-            const bassOsc = audioCtx.createOscillator();
-            const bassGain = audioCtx.createGain();
-            const bassFlt = audioCtx.createBiquadFilter();
-            bassOsc.type = 'sawtooth';
-            bassFlt.type = 'lowpass';
-            bassFlt.frequency.value = 400;
-            bassOsc.connect(bassFlt);
-            bassFlt.connect(bassGain);
-            bassGain.connect(masterGain);
-            const bassNotes = [130.81, 98.00, 110.00, 87.31];
-            bassGain.gain.setValueAtTime(0, now);
-            let beatIdx = 0;
-            for (let t = now; t < end; t += bt) {
-                const noteIdx = Math.floor(beatIdx / 4) % bassNotes.length;
-                bassOsc.frequency.setValueAtTime(bassNotes[noteIdx], t);
-                bassGain.gain.setValueAtTime(0.12, t);
-                bassGain.gain.setValueAtTime(0.12, t + bt * 0.7);
-                bassGain.gain.linearRampToValueAtTime(0.001, t + bt * 0.95);
-                beatIdx++;
-            }
-            bassOsc.start(now);
-            bassOsc.stop(end);
-
-            // ── 아르페지오: 1개 오실레이터, 주파수 점프로 멜로디 ──
-            const arpOsc = audioCtx.createOscillator();
-            const arpGain = audioCtx.createGain();
-            const arpFlt = audioCtx.createBiquadFilter();
-            arpOsc.type = 'triangle';
-            arpFlt.type = 'lowpass';
-            arpFlt.frequency.value = 2500;
-            arpOsc.connect(arpFlt);
-            arpFlt.connect(arpGain);
-            arpGain.connect(masterGain);
-            const chords = [
-                [523.25, 659.25, 783.99],
-                [392.00, 493.88, 587.33],
-                [440.00, 523.25, 659.25],
-                [349.23, 440.00, 523.25],
-            ];
-            const sixteenth = bt / 4;
-            arpGain.gain.setValueAtTime(0, now);
-            let arpIdx = 0;
-            for (let t = now; t < end; t += sixteenth) {
-                const chordIdx = Math.floor(arpIdx / 16) % chords.length;
-                const nIdx = arpIdx % 3;
-                arpOsc.frequency.setValueAtTime(chords[chordIdx][nIdx], t);
-                arpGain.gain.setValueAtTime(0.06, t);
-                arpGain.gain.exponentialRampToValueAtTime(0.001, t + sixteenth * 0.85);
-                arpIdx++;
-            }
-            arpOsc.start(now);
-            arpOsc.stop(end);
-
-            // ── 패드: 3개 오실레이터, 주파수 스케줄링 ──
-            const padChords = [
-                [261.63, 329.63, 392.00],
-                [196.00, 246.94, 293.66],
-                [220.00, 261.63, 329.63],
-                [174.61, 220.00, 261.63],
-            ];
-            for (let v = 0; v < 3; v++) {
-                const padOsc = audioCtx.createOscillator();
-                const padGain = audioCtx.createGain();
-                padOsc.type = 'sine';
-                padGain.gain.setValueAtTime(0.04, now);
-                let ci = 0;
-                for (let t = now; t < end; t += bt * 4) {
-                    padOsc.frequency.setValueAtTime(padChords[ci % 4][v], t);
-                    ci++;
+            // 나레이션 전체를 스피커로 재생 (비동기, 영상과 동시에)
+            async function playAllNarrations() {
+                for (const text of narrationTexts) {
+                    await speakNarration(text, 1.5);
+                    await new Promise(r => setTimeout(r, 200)); // 문장 간 짧은 간격
                 }
-                padOsc.connect(padGain);
-                padGain.connect(masterGain);
-                padOsc.start(now);
-                padOsc.stop(end);
             }
 
-            // 4. MediaRecorder 셋업 (비디오 + 오디오 믹싱)
+            // 4. 오디오 없이 비디오만 녹화 (음악 제거)
             const videoStream = cvs.captureStream(30);
-            const audioTracks = audioDest.stream.getAudioTracks();
-            const combinedStream = new MediaStream([
-                ...videoStream.getVideoTracks(),
-                ...audioTracks
-            ]);
-
-            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-                ? 'video/webm;codecs=vp9,opus'
-                : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-                    ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
-            const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4000000 });
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
+            const recorder = new MediaRecorder(videoStream, { mimeType, videoBitsPerSecond: 4000000 });
             const chunks = [];
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
                 const blob = new Blob(chunks, { type: mimeType });
                 URL.revokeObjectURL(imgUrl);
-                audioCtx.close().catch(() => {});
                 resolve(blob);
             };
             recorder.onerror = (e) => reject(e.error || new Error('MediaRecorder error'));
 
-            // 4. 애니메이션 파라미터
+            // 5. 나레이션 기반 자막 타이밍 (5구간으로 분배)
+            const segCount = narrationTexts.length || 5;
+            const segDur = 1.0 / segCount;
+            const textSegments = [];
+
+            // 나레이션 텍스트를 자막으로 사용 (overlay_texts는 짧은 요약용)
+            const captionTexts = narrationTexts.length > 0 ? narrationTexts : [
+                overlays.hook || aiContent.title || '',
+                overlays.main || '',
+                overlays.detail || '',
+                overlays.cta || '',
+            ];
+            captionTexts.forEach((text, i) => {
+                if (!text) return;
+                const start = i * segDur;
+                const end = start + segDur - 0.02;
+                textSegments.push({
+                    text: text,
+                    start: start,
+                    end: end,
+                    fontSize: i === 0 ? 44 : i === captionTexts.length - 1 ? 42 : 38,
+                    y: 0.70, // 하단 자막 위치
+                    isCaption: true
+                });
+            });
+
+            // 6. 애니메이션 파라미터
             const totalMs = durationSec * 1000;
             const startTime = performance.now();
             const zoomDir = aiContent.video_style?.zoom_direction || 'in';
             const accentColor = aiContent.video_style?.color_accent || '#a78bfa';
-            const overlays = aiContent.overlay_texts || {};
-            const textSegments = [
-                { text: overlays.hook || aiContent.title || '', start: 0.0, end: 0.15, fontSize: 46, y: 0.45 },
-                { text: overlays.main || '', start: 0.18, end: 0.50, fontSize: 36, y: 0.50 },
-                { text: overlays.detail || '', start: 0.53, end: 0.78, fontSize: 32, y: 0.55 },
-                { text: overlays.cta || 'Link in bio!', start: 0.80, end: 0.98, fontSize: 40, y: 0.50 },
-            ];
 
-            // 5. 녹화 시작
+            // 7. 녹화 시작 + TTS 동시 재생
             recorder.start(100);
+            playAllNarrations(); // 스피커로 나레이션 재생 (비동기)
 
-            // 6. 프레임 렌더링 루프
+            // 8. 프레임 렌더링 루프
             function drawFrame() {
                 const elapsed = performance.now() - startTime;
                 const progress = Math.min(elapsed / totalMs, 1.0);
@@ -1893,7 +1790,6 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                 const canvasAspect = W / H;
                 let baseScale = imgAspect > canvasAspect ? H / img.height : W / img.width;
                 let scale, offsetX, offsetY;
-
                 switch (zoomDir) {
                     case 'out':
                         scale = baseScale * (1.4 - 0.4 * progress);
@@ -1910,80 +1806,102 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                         offsetX = -(img.width * scale - W) * (1 - progress);
                         offsetY = -(img.height * scale - H) / 2;
                         break;
-                    default: // 'in'
+                    default:
                         scale = baseScale * (1.0 + 0.4 * progress);
                         offsetX = -(img.width * scale - W) / 2 - (progress * 100);
                         offsetY = -(img.height * scale - H) / 2 - (progress * 60);
                 }
-
                 ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
 
-                // 그라데이션 오버레이 (텍스트 가독성)
-                const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.15);
-                topGrad.addColorStop(0, 'rgba(0,0,0,0.6)');
+                // 상단 그라데이션
+                const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.12);
+                topGrad.addColorStop(0, 'rgba(0,0,0,0.5)');
                 topGrad.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.fillStyle = topGrad;
-                ctx.fillRect(0, 0, W, H * 0.15);
+                ctx.fillRect(0, 0, W, H * 0.12);
 
-                const botGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+                // 하단 그라데이션 (자막 영역 - 더 넓고 진하게)
+                const botGrad = ctx.createLinearGradient(0, H * 0.50, 0, H);
                 botGrad.addColorStop(0, 'rgba(0,0,0,0)');
-                botGrad.addColorStop(0.4, 'rgba(0,0,0,0.5)');
-                botGrad.addColorStop(1, 'rgba(0,0,0,0.8)');
+                botGrad.addColorStop(0.3, 'rgba(0,0,0,0.6)');
+                botGrad.addColorStop(1, 'rgba(0,0,0,0.9)');
                 ctx.fillStyle = botGrad;
-                ctx.fillRect(0, H * 0.55, W, H * 0.45);
+                ctx.fillRect(0, H * 0.50, W, H * 0.50);
 
-                // 텍스트 오버레이
+                // 나레이션 자막 렌더링 (하단 자막 스타일)
                 textSegments.forEach(seg => {
                     if (progress >= seg.start && progress <= seg.end && seg.text) {
                         const segP = (progress - seg.start) / (seg.end - seg.start);
                         let alpha = 1;
-                        if (segP < 0.15) alpha = segP / 0.15;
-                        else if (segP > 0.85) alpha = (1 - segP) / 0.15;
+                        if (segP < 0.08) alpha = segP / 0.08;
+                        else if (segP > 0.92) alpha = (1 - segP) / 0.08;
                         alpha = Math.max(0, Math.min(1, alpha));
+
+                        // 타이핑 효과: 글자가 하나씩 나타남
+                        const charProgress = Math.min(segP * 2.5, 1.0);
+                        const visibleChars = Math.ceil(seg.text.length * charProgress);
+                        const displayText = seg.text.substring(0, visibleChars);
 
                         ctx.save();
                         ctx.globalAlpha = alpha;
                         ctx.textAlign = 'center';
                         ctx.font = `800 ${seg.fontSize}px "Pretendard", "Noto Sans JP", "Inter", sans-serif`;
 
-                        const maxW = W - 120;
-                        const lines = wrapCanvasText(ctx, seg.text, maxW);
-                        const lineH = seg.fontSize * 1.3;
+                        const maxW = W - 100;
+                        const lines = wrapCanvasText(ctx, displayText, maxW);
+                        const lineH = seg.fontSize * 1.4;
                         const startY = H * seg.y - ((lines.length - 1) * lineH) / 2;
 
+                        // 자막 배경 박스
                         lines.forEach((line, i) => {
                             const y = startY + i * lineH;
-                            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-                            ctx.lineWidth = 6;
+                            const tw = ctx.measureText(line).width;
+                            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                            const pad = 16;
+                            ctx.beginPath();
+                            const rx = W/2 - tw/2 - pad, ry = y - seg.fontSize + 4, rw = tw + pad*2, rh = seg.fontSize + pad;
+                            ctx.roundRect(rx, ry, rw, rh, 8);
+                            ctx.fill();
+                        });
+
+                        // 자막 텍스트
+                        lines.forEach((line, i) => {
+                            const y = startY + i * lineH;
+                            ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+                            ctx.lineWidth = 5;
                             ctx.lineJoin = 'round';
                             ctx.strokeText(line, W / 2, y);
                             ctx.fillStyle = '#ffffff';
                             ctx.fillText(line, W / 2, y);
                         });
+
                         ctx.restore();
                     }
                 });
 
-                // 액센트 바
-                const barW = W * 0.6;
-                const barP = Math.min(progress * 3, 1);
+                // 진행률 바 (하단)
                 ctx.fillStyle = accentColor;
-                ctx.fillRect((W - barW) / 2, H * 0.72, barW * barP, 4);
+                ctx.fillRect(0, H - 8, W * progress, 8);
 
-                // 브랜드 워터마크
+                // 브랜드 워터마크 (상단)
                 ctx.save();
-                ctx.globalAlpha = 0.6;
-                ctx.font = '600 28px "Pretendard", sans-serif';
-                ctx.textAlign = 'right';
+                ctx.globalAlpha = 0.7;
+                ctx.font = '700 30px "Pretendard", sans-serif';
+                ctx.textAlign = 'center';
                 ctx.fillStyle = '#ffffff';
-                const domainByLang = { kr: 'www.cafe2626.com', ja: 'www.cafe0101.com', en: 'www.cafe3355.com' };
-                const siteUrl = domainByLang[lang] || 'www.cafe2626.com';
-                ctx.fillText('카멜레온프린팅 | ' + siteUrl, W - 40, H - 40);
+                ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+                ctx.lineWidth = 4;
+                ctx.lineJoin = 'round';
+                const domainByLang = { kr: 'cafe2626.com', ja: 'cafe0101.com', en: 'cafe3355.com' };
+                const siteUrl = domainByLang[lang] || 'cafe2626.com';
+                ctx.strokeText('🦎 카멜레온프린팅 | ' + siteUrl, W / 2, 60);
+                ctx.fillText('🦎 카멜레온프린팅 | ' + siteUrl, W / 2, 60);
                 ctx.restore();
 
                 if (progress < 1.0) {
                     requestAnimationFrame(drawFrame);
                 } else {
+                    window.speechSynthesis.cancel(); // TTS 중지
                     setTimeout(() => recorder.stop(), 500);
                 }
             }
