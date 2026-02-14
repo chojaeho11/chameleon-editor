@@ -3141,8 +3141,8 @@ window.goHome = function() {
             // 다국어 상품명 가져오기
             const localized = typeof getLocalizedData === 'function' ? getLocalizedData(product) : { name: product.name };
 
-            // 창 열기 (모든 상품 동일 인터페이스)
-            window.showChoiceModal(productCode);
+            // 창 열기 (await로 콘텐츠 완성 대기 → 깨진 화면 방지)
+            await window.showChoiceModal(productCode);
             transformToFullScreen('choiceModal', localized.name);
 
             window.scrollTo(0, 0);
@@ -3417,8 +3417,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             // 다국어 상품명 가져오기
             const localized = typeof getLocalizedData === 'function' ? getLocalizedData(product) : { name: product.name };
 
-            // 창 열기 (모든 상품 동일 인터페이스)
-            window.showChoiceModal(productCode);
+            // 창 열기 (await로 콘텐츠 완성 대기 → 깨진 화면 방지)
+            await window.showChoiceModal(productCode);
             transformToFullScreen('choiceModal', localized.name);
 
             window.scrollTo(0, 0);
@@ -4084,7 +4084,6 @@ if (w >= 20 && h >= 20) {
         } else if (mode === 'cart') {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
-            document.getElementById('choiceModal').style.display = 'none';
 
             import('./order.js?v=123').then(m => {
                 const productToCart = { ...product };
@@ -4096,9 +4095,14 @@ if (w >= 20 && h >= 20) {
                     productToCart.height_mm = finalH;
                     productToCart.is_custom = true;
                 }
-                
+
                 m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, selectedAddonQtys);
-                document.getElementById('cartAddedModal').style.display = 'flex'; 
+                document.getElementById('choiceModal').style.display = 'none';
+                document.getElementById('cartAddedModal').style.display = 'flex';
+            }).catch(err => {
+                console.error('장바구니 추가 오류:', err);
+                alert('장바구니 담기 실패: ' + err.message);
+                window.isDirectCartAddInProgress = false;
             });
         }
     };
