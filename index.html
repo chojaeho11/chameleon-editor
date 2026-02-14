@@ -1010,14 +1010,14 @@
                 </dl>
                 <dl>
                     <dt data-i18n="footer_biz_num_label">사업자등록번호 :</dt>
-                    <dd>470-81-02808</dd>
-                    
+                    <dd data-i18n="footer_biz_num_value">470-81-02808</dd>
+
                     <dt data-i18n="footer_mail_order_label">통신판매업신고번호 :</dt>
-                    <dd>2025-화성우정-0033</dd>
+                    <dd data-i18n="footer_mail_order_value">2025-화성우정-0033</dd>
                 </dl>
                 <dl>
                     <dt data-i18n="footer_privacy_manager_label">개인정보관리자 :</dt>
-                    <dd>Haruto</dd>
+                    <dd data-i18n="footer_privacy_manager_value">Haruto</dd>
                 </dl>
                 <p class="copyright">Copyright © <strong>Chameleon Canvas</strong>. all rights reserved.</p>
             </div>
@@ -3111,10 +3111,16 @@ window.goHome = function() {
                 let homeLink = "/";
                 if (currentLang) homeLink += `?lang=${currentLang}`;
 
-                const _backText = currentLang==='ja'?'戻る':currentLang==='en'?'Back':'뒤로가기';
-                const _homeText = currentLang==='ja'?'ホーム':currentLang==='en'?'Home':'홈';
+                const _backText = currentLang==='ja'?'戻る':currentLang==='zh'?'返回':currentLang==='ar'?'رجوع':currentLang==='es'?'Volver':currentLang==='en'?'Back':'뒤로가기';
+                const _homeText = currentLang==='ja'?'ホーム':currentLang==='zh'?'首页':currentLang==='ar'?'الرئيسية':currentLang==='es'?'Inicio':currentLang==='en'?'Home':'홈';
                 const _guideText = currentLang==='ja'
                     ?'商品情報を確認し、<strong>オプション</strong>を選択してください。'
+                    :currentLang==='zh'
+                    ?'请确认商品信息并选择<strong>选项</strong>。'
+                    :currentLang==='ar'
+                    ?'تحقق من معلومات المنتج واختر <strong>الخيارات</strong>.'
+                    :currentLang==='es'
+                    ?'Consulte la información del producto y seleccione las <strong>opciones</strong>.'
                     :currentLang==='en'
                     ?'Check product info and select <strong>options</strong>.'
                     :'상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.';
@@ -3392,10 +3398,16 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 let homeLink = "/";
                 if (currentLang) homeLink += `?lang=${currentLang}`;
 
-                const _backText = currentLang==='ja'?'戻る':currentLang==='en'?'Back':'뒤로가기';
-                const _homeText = currentLang==='ja'?'ホーム':currentLang==='en'?'Home':'홈';
+                const _backText = currentLang==='ja'?'戻る':currentLang==='zh'?'返回':currentLang==='ar'?'رجوع':currentLang==='es'?'Volver':currentLang==='en'?'Back':'뒤로가기';
+                const _homeText = currentLang==='ja'?'ホーム':currentLang==='zh'?'首页':currentLang==='ar'?'الرئيسية':currentLang==='es'?'Inicio':currentLang==='en'?'Home':'홈';
                 const _guideText = currentLang==='ja'
                     ?'商品情報を確認し、<strong>オプション</strong>を選択してください。'
+                    :currentLang==='zh'
+                    ?'请确认商品信息并选择<strong>选项</strong>。'
+                    :currentLang==='ar'
+                    ?'تحقق من معلومات المنتج واختر <strong>الخيارات</strong>.'
+                    :currentLang==='es'
+                    ?'Consulte la información del producto y seleccione las <strong>opciones</strong>.'
                     :currentLang==='en'
                     ?'Check product info and select <strong>options</strong>.'
                     :'상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.';
