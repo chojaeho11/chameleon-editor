@@ -3812,7 +3812,7 @@ window.showChoiceModal = async function(key) {
                 </div>
             </div>
 
-            <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto;">
+            <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; min-width:${window.innerWidth <= 768 ? 'auto' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto; min-height:0; flex-shrink:0;">
                 ${rightSideUI}
                 ${optionsHtml}
                 <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:20px; text-align:right;">
