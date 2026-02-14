@@ -860,7 +860,7 @@
             const SNOW_COLOR = '#a2cdf6';
 
             const topLabel = new fabric.IText(data.fabric.topLabel, {
-                fontFamily: F.POINT, fontSize: 16, fill: '#2e7d32', fontWeight: 'bold',
+                fontFamily: F.POINT, fontSize: 16, fill: '#2e7d32', fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: cy - 350
             });
 
@@ -875,13 +875,13 @@
             });
 
             const title1 = new fabric.IText(data.fabric.title1, {
-                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'bold',
+                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'normal',
                 charSpacing: -50,
                 originX: 'center', originY: 'bottom', left: cx, top: cy - 140
             });
 
             const title2 = new fabric.IText(data.fabric.title2, {
-                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'bold',
+                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'normal',
                 charSpacing: -50,
                 originX: 'center', originY: 'top', left: cx, top: cy - 140
             });
@@ -911,12 +911,12 @@
             });
 
             const coinText = new fabric.IText("P", {
-                fontFamily: F.POINT, fontSize: 40, fill: 'white', fontWeight: 'bold',
+                fontFamily: F.POINT, fontSize: 40, fill: 'white', fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: boxTopY
             });
 
             const benefitLabel = new fabric.IText("BENEFIT", {
-                fontFamily: F.POINT, fontSize: 12, fill: 'white', fontWeight: 'bold',
+                fontFamily: F.POINT, fontSize: 12, fill: 'white', fontWeight: 'normal',
                 originX: 'center', originY: 'bottom', left: cx, top: boxTopY - 45
             });
 
@@ -930,7 +930,7 @@
                 originX: 'center', originY: 'bottom', left: cx, top: boxTopY + boxHeight - 40
             });
             const btnText = new fabric.IText(data.fabric.btnText, {
-                fontFamily: F.SUB, fontSize: 18, fill: 'white', fontWeight: 'bold',
+                fontFamily: F.SUB, fontSize: 18, fill: 'white', fontWeight: 'normal',
                 originX: 'center', originY: 'center', left: cx, top: boxTopY + boxHeight - 70
             });
 
