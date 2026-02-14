@@ -35,13 +35,13 @@ serve(async (req) => {
       es: { name: "Spanish", instruction: "Escribe en español.", currency: `€${(price * 0.001).toFixed(2)}` },
     };
 
-    const details: Record<string, string> = {};
-
-    for (const lang of langs) {
+    // 각 언어별 생성 함수
+    async function generateForLang(lang: string): Promise<{ lang: string, html: string | null }> {
       const lc = langMap[lang];
-      if (!lc) continue;
+      if (!lc) return { lang, html: null };
 
-      const systemPrompt = `You are a premium product detail page HTML designer for a professional printing company.
+      try {
+        const systemPrompt = `You are a premium product detail page HTML designer for a professional printing company.
 
 Create a beautiful, modern product detail page HTML.
 
@@ -63,32 +63,45 @@ ${lc.instruction}
 
 Output ONLY the HTML content. No markdown code blocks, no explanation.`;
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
-          max_tokens: 4000,
-          system: systemPrompt,
-          messages: [{ role: "user", content: "Generate the product detail page HTML now." }],
-        }),
-      });
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": ANTHROPIC_API_KEY!,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5-20250929",
+            max_tokens: 4000,
+            system: systemPrompt,
+            messages: [{ role: "user", content: "Generate the product detail page HTML now." }],
+          }),
+        });
 
-      if (!res.ok) {
-        console.error(`Claude API error for ${lang}: ${res.status}`);
-        continue;
+        if (!res.ok) {
+          console.error(`Claude API error for ${lang}: ${res.status}`);
+          return { lang, html: null };
+        }
+
+        const data = await res.json();
+        let html = data.content.map((b: any) => b.text || "").join("");
+        html = html.replace(/```html?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+        return { lang, html };
+      } catch (e) {
+        console.error(`Error generating ${lang}:`, e.message);
+        return { lang, html: null };
       }
+    }
 
-      const data = await res.json();
-      let html = data.content.map((b: any) => b.text || "").join("");
+    // ★ 병렬 실행 (6개 언어 동시 호출 → 타임아웃 방지)
+    const validLangs = langs.filter((l: string) => langMap[l]);
+    const results = await Promise.allSettled(validLangs.map((l: string) => generateForLang(l)));
 
-      // 코드블록 제거
-      html = html.replace(/```html?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-      details[lang] = html;
+    const details: Record<string, string> = {};
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value.html) {
+        details[result.value.lang] = result.value.html;
+      }
     }
 
     return new Response(JSON.stringify({

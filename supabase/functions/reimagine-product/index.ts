@@ -28,6 +28,37 @@ serve(async (req) => {
     const replicate = new Replicate({ auth: REPLICATE_API_TOKEN });
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // ★ 핵심: 외부 이미지를 Supabase Storage에 먼저 업로드 (프록시)
+    // Replicate가 외부 사이트 이미지에 접근 못하는 문제 해결
+    let proxyImageUrl = image_url;
+    if (!image_url.includes('supabase.co')) {
+      console.log("외부 이미지 프록시 업로드 중:", image_url);
+      const proxyRes = await fetch(image_url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'image/*',
+          'Referer': new URL(image_url).origin,
+        }
+      });
+
+      if (!proxyRes.ok) throw new Error(`이미지 다운로드 실패: ${proxyRes.status}`);
+
+      const proxyBlob = await proxyRes.blob();
+      const contentType = proxyRes.headers.get('content-type') || 'image/jpeg';
+      const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+      const proxyPath = `products/proxy_${Date.now()}_${Math.floor(Math.random() * 10000)}.${ext}`;
+
+      const { error: proxyErr } = await supabase.storage
+        .from('products')
+        .upload(proxyPath, proxyBlob, { contentType, upsert: false });
+
+      if (proxyErr) throw new Error("프록시 이미지 업로드 실패: " + proxyErr.message);
+
+      const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(proxyPath);
+      proxyImageUrl = publicUrl;
+      console.log("프록시 완료:", proxyImageUrl);
+    }
+
     let generatedImageUrl: string;
     let promptUsed = "";
 
@@ -37,7 +68,7 @@ serve(async (req) => {
         "black-forest-labs/flux-redux-schnell",
         {
           input: {
-            redux_image: image_url,
+            redux_image: proxyImageUrl,
             aspect_ratio: aspect_ratio,
             num_outputs: 1,
             num_inference_steps: 4,
@@ -47,21 +78,25 @@ serve(async (req) => {
         }
       );
       generatedImageUrl = Array.isArray(output) ? String(output[0]) : String(output);
-      promptUsed = `[flux-redux-schnell] variation of: ${image_url}`;
+      promptUsed = `[flux-redux-schnell] variation`;
 
     } else {
       // Track B: Claude Vision → Flux Schnell (텍스트 기반 재생성)
       if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set for reimagine mode");
 
-      // 이미지 다운로드 → base64
-      const imgRes = await fetch(image_url);
+      // 이미지 다운로드 → base64 (Claude Vision 용)
+      const imgRes = await fetch(proxyImageUrl);
       const imgArrayBuffer = await imgRes.arrayBuffer();
       const imgBytes = new Uint8Array(imgArrayBuffer);
-      let base64 = "";
-      for (let i = 0; i < imgBytes.length; i++) {
-        base64 += String.fromCharCode(imgBytes[i]);
+
+      // 청크 단위로 base64 변환 (대용량 이미지 메모리 오류 방지)
+      const chunks: string[] = [];
+      const chunkSize = 32768;
+      for (let i = 0; i < imgBytes.length; i += chunkSize) {
+        const chunk = imgBytes.subarray(i, i + chunkSize);
+        chunks.push(String.fromCharCode(...chunk));
       }
-      base64 = btoa(base64);
+      const base64 = btoa(chunks.join(''));
       const mediaType = imgRes.headers.get('content-type') || 'image/jpeg';
 
       // Claude Vision으로 이미지 분석 → 생성 프롬프트
@@ -113,22 +148,22 @@ ${prompt_hint ? '- Product name hint: ' + prompt_hint : ''}`,
       generatedImageUrl = Array.isArray(output) ? String(output[0]) : String(output);
     }
 
-    // Supabase Storage에 저장
-    const imageRes = await fetch(generatedImageUrl);
-    const imageBlob = await imageRes.blob();
-    const fileName = `products/ai_reimagine_${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
+    // 생성된 이미지를 Supabase Storage에 저장
+    const finalRes = await fetch(generatedImageUrl);
+    const finalBlob = await finalRes.blob();
+    const finalPath = `products/ai_reimagine_${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from('products')
-      .upload(fileName, imageBlob, { contentType: 'image/jpeg', upsert: false });
+      .upload(finalPath, finalBlob, { contentType: 'image/jpeg', upsert: false });
 
     if (uploadError) throw new Error("Image upload failed: " + uploadError.message);
 
-    const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(fileName);
+    const { data: { publicUrl: finalUrl } } = supabase.storage.from('products').getPublicUrl(finalPath);
 
     return new Response(JSON.stringify({
       success: true,
-      image_url: publicUrl,
+      image_url: finalUrl,
       prompt_used: promptUsed
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
