@@ -5,151 +5,119 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// 메타태그 추출 헬퍼
+function extractMeta(html: string, property: string): string {
+  // 속성 순서가 다를 수 있으므로 두 가지 패턴 시도
+  const p1 = new RegExp(`property=["']${property}["'][^>]*content=["']([^"']+)["']`, 'i');
+  const p2 = new RegExp(`content=["']([^"']+)["'][^>]*property=["']${property}["']`, 'i');
+  const m = html.match(p1) || html.match(p2);
+  return m ? m[1] : '';
+}
+
 // ★ 네이버 스마트스토어 전용 크롤러
 async function scrapeSmartStore(url: string) {
-  // URL에서 상품번호 추출: /products/{productNo}
   const productMatch = url.match(/\/products\/(\d+)/);
   if (!productMatch) throw new Error("스마트스토어 상품 URL에서 상품번호를 찾을 수 없습니다.");
   const productNo = productMatch[1];
-
-  // URL에서 스토어명 추출: smartstore.naver.com/{storeName}/
-  const storeMatch = url.match(/smartstore\.naver\.com\/([^\/]+)\//);
+  const storeMatch = url.match(/smartstore\.naver\.com\/([^\/\?]+)/);
   const storeName = storeMatch ? storeMatch[1] : '';
 
-  // 1) 스토어 정보 조회 (merchantNo 필요)
-  let channelNo = '';
-  if (storeName) {
-    try {
-      const storeRes = await fetch(`https://smartstore.naver.com/i/v1/stores?url=${storeName}`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
-          'Accept': 'application/json',
-          'Referer': 'https://smartstore.naver.com/',
+  // 여러 UA/URL 조합으로 시도 (네이버는 클라우드 IP를 차단하므로 다양한 전략)
+  const userAgents = [
+    // Googlebot: 네이버가 검색 인덱싱을 위해 허용할 가능성 높음
+    'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    // Naver 자체 봇
+    'Mozilla/5.0 (compatible; Yeti/1.1; +http://naver.me/spd)',
+    // 일반 모바일 브라우저
+    'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+  ];
+
+  const fetchUrls = [
+    `https://m.smartstore.naver.com/${storeName}/products/${productNo}`,
+    `https://smartstore.naver.com/${storeName}/products/${productNo}`,
+  ];
+
+  let html = '';
+  const diagLog: string[] = [];
+  for (const ua of userAgents) {
+    if (html.length > 1000) break;
+    for (const fetchUrl of fetchUrls) {
+      try {
+        const res = await fetch(fetchUrl, {
+          headers: {
+            'User-Agent': ua,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9',
+          },
+          redirect: 'follow',
+        });
+        const bodyText = await res.text();
+        diagLog.push(`${res.status} len=${bodyText.length} ua=${ua.substring(0,20)}`);
+        // ★ 핵심: 429여도 본문이 크면 OG 태그가 포함된 HTML임
+        if (bodyText.length > html.length) {
+          html = bodyText; // 가장 큰 응답을 사용
         }
-      });
-      if (storeRes.ok) {
-        const storeData = await storeRes.json();
-        channelNo = storeData?.channel?.channelNo || storeData?.channelNo || '';
+        if (res.ok && bodyText.length > 5000) break;
+      } catch (e) {
+        diagLog.push(`ERR: ${e.message.substring(0,50)}`);
       }
-    } catch (e) {
-      console.log("스토어 정보 조회 실패 (무시):", e.message);
     }
   }
+  console.log("SmartStore 진단:", diagLog.join(' | '));
 
-  // 2) 상품 상세 API 호출 (여러 경로 시도)
-  const apiUrls = [
-    `https://m.smartstore.naver.com/i/v1/contents/products/${productNo}`,
-    `https://smartstore.naver.com/i/v1/contents/products/${productNo}`,
-    channelNo ? `https://smartstore.naver.com/i/v1/stores/${channelNo}/products/${productNo}` : '',
-  ].filter(Boolean);
-
-  let productData: any = null;
-
-  for (const apiUrl of apiUrls) {
-    try {
-      const res = await fetch(apiUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-          'Accept': 'application/json, text/plain, */*',
-          'Referer': url,
-          'Origin': 'https://smartstore.naver.com',
-        }
-      });
-      if (res.ok) {
-        productData = await res.json();
-        console.log("스마트스토어 API 성공:", apiUrl);
-        break;
-      }
-    } catch (e) {
-      console.log("API 실패:", apiUrl, e.message);
-    }
+  if (!html || html.length < 200) {
+    throw new Error(`스마트스토어 차단됨 [${diagLog.join(', ')}]`);
   }
 
-  // 3) API 실패 시 → 모바일 HTML에서 __NEXT_DATA__ 추출 시도
-  if (!productData) {
-    console.log("API 실패, 모바일 HTML 시도...");
-    const mobileUrl = url.replace('smartstore.naver.com', 'm.smartstore.naver.com');
-    const htmlRes = await fetch(mobileUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'ko-KR,ko;q=0.9',
-        'Referer': 'https://m.naver.com/',
-      },
-      redirect: 'follow',
-    });
+  // ★ kakao:commerce 메타태그에서 상품 정보 추출 (가장 안정적)
+  const kakaoName = extractMeta(html, 'kakao:commerce:product_name');
+  const kakaoPrice = extractMeta(html, 'kakao:commerce:price');
+  const kakaoRegPrice = extractMeta(html, 'kakao:commerce:regular_price');
+  const kakaoImage = extractMeta(html, 'kakao:commerce:product_image_url');
 
-    if (htmlRes.ok) {
-      const html = await htmlRes.text();
-      // __NEXT_DATA__ JSON 추출
-      const nextDataMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
-      if (nextDataMatch) {
-        try {
-          const nextData = JSON.parse(nextDataMatch[1]);
-          productData = nextData?.props?.pageProps?.product || nextData?.props?.pageProps || nextData;
-        } catch (e) {
-          console.log("__NEXT_DATA__ 파싱 실패:", e.message);
-        }
-      }
+  // OG 태그 fallback
+  const ogTitle = extractMeta(html, 'og:title');
+  const ogImage = extractMeta(html, 'og:image');
+  const ogDesc = extractMeta(html, 'og:description');
 
-      // OG 태그에서 기본 정보 추출
-      if (!productData) {
-        const ogTitle = html.match(/property="og:title"\s+content="([^"]+)"/i);
-        const ogImage = html.match(/property="og:image"\s+content="([^"]+)"/i);
-        const ogDesc = html.match(/property="og:description"\s+content="([^"]+)"/i);
-        const priceMatch = html.match(/(\d[\d,]+)\s*원/);
+  const name = kakaoName || ogTitle?.replace(/\s*:\s*[^:]+$/, '') || ''; // ": 스토어명" 제거
+  const mainImage = kakaoImage || ogImage || '';
+  const price = parseInt(kakaoPrice || kakaoRegPrice || '0') || 0;
+  const description = ogDesc || '';
 
-        if (ogTitle) {
-          productData = {
-            _ogFallback: true,
-            name: ogTitle[1],
-            images: ogImage ? [ogImage[1]] : [],
-            description: ogDesc ? ogDesc[1] : '',
-            price: priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : 0,
+  if (!name && !mainImage) {
+    // __NEXT_DATA__ 마지막 시도
+    const nextMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+    if (nextMatch) {
+      try {
+        const nd = JSON.parse(nextMatch[1]);
+        const p = nd?.props?.pageProps?.product || nd?.props?.pageProps;
+        if (p) {
+          return {
+            name: p.name || p.productName || '',
+            price: p.salePrice || p.price || 0,
+            currency: 'KRW',
+            price_krw: p.salePrice || p.price || 0,
+            description: p.description || '',
+            images: (p.productImages || []).map((i: any) => i.url || i),
+            main_image: p.representImage?.url || '',
+            specs: {},
+            category_guess: '기타',
+            original_url: url,
           };
         }
-      }
+      } catch (e) { /* ignore */ }
     }
-  }
-
-  if (!productData) {
-    throw new Error("스마트스토어 상품 데이터를 가져올 수 없습니다. (API/HTML 모두 실패)");
-  }
-
-  // 4) 데이터 정규화
-  // API 응답 구조에 따라 파싱
-  const name = productData.name || productData.productName || productData.title || '';
-  const price = productData.salePrice || productData.price || productData.discountedSalePrice || 0;
-  const desc = productData.description || productData.productInfoProvidedNotice || '';
-
-  // 이미지 추출
-  let images: string[] = [];
-  let mainImage = '';
-
-  if (productData.representImage) {
-    mainImage = productData.representImage.url || productData.representImage;
-  }
-  if (productData.productImages) {
-    images = productData.productImages.map((img: any) => img.url || img).filter(Boolean);
-  }
-  if (productData.images) {
-    images = Array.isArray(productData.images) ? productData.images : [];
-  }
-  if (!mainImage && images.length > 0) mainImage = images[0];
-
-  // OG fallback
-  if (productData._ogFallback) {
-    mainImage = productData.images?.[0] || '';
-    images = productData.images || [];
+    throw new Error("스마트스토어 상품 정보를 HTML에서 추출할 수 없습니다.");
   }
 
   return {
     name,
-    price: typeof price === 'number' ? price : parseInt(String(price).replace(/[^0-9]/g, '')) || 0,
+    price,
     currency: 'KRW',
-    price_krw: typeof price === 'number' ? price : parseInt(String(price).replace(/[^0-9]/g, '')) || 0,
-    description: typeof desc === 'string' ? desc.substring(0, 500) : '',
-    images,
+    price_krw: price,
+    description: description.substring(0, 500),
+    images: mainImage ? [mainImage] : [],
     main_image: mainImage,
     specs: {},
     category_guess: '기타',

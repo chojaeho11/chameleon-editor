@@ -2454,21 +2454,191 @@ window.batchCrawlProducts = async () => {
     alert(`✅ 일괄 수집 완료!\n\n총 ${urls.length}건 중 ${successCount}건 등록 성공`);
 };
 
+// ==========================================
+// 네이버 스마트스토어 북마클릿 일괄 등록
+// ==========================================
+window.batchAddNaverProducts = async () => {
+    const pasteText = document.getElementById('batchNaverPaste')?.value?.trim();
+    if (!pasteText) return alert("붙여넣은 상품 데이터가 없습니다.");
+
+    const category = document.getElementById('batchSubCategory')?.value;
+    if (!category) return alert("소분류 카테고리를 먼저 선택해주세요.");
+
+    const doBgChange = document.getElementById('batchBgChange')?.checked;
+    const doGenDetail = document.getElementById('batchGenDetail')?.checked;
+    const isGeneral = document.getElementById('batchIsGeneral')?.checked;
+
+    // JSON 파싱 (줄 단위)
+    const lines = pasteText.split('\n').map(l => l.trim()).filter(l => l);
+    const items = [];
+    for (const line of lines) {
+        try {
+            const obj = JSON.parse(line);
+            if (obj.name || obj.image) items.push(obj);
+        } catch (e) {
+            console.warn('JSON 파싱 실패:', line.substring(0, 50));
+        }
+    }
+    if (items.length === 0) return alert("유효한 상품 데이터가 없습니다.\nJSON 형식을 확인해주세요.");
+
+    const btn = document.querySelector('#batchNaverPaste + button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
+
+    const progressDiv = document.getElementById('batchProgress');
+    const countEl = document.getElementById('batchCount');
+    const barEl = document.getElementById('batchBar');
+    const logEl = document.getElementById('batchLog');
+
+    progressDiv.style.display = 'block';
+    logEl.innerHTML = '';
+    let successCount = 0;
+
+    const addLog = (msg, color = '#94a3b8') => {
+        logEl.innerHTML += `<div style="color:${color};">${msg}</div>`;
+        logEl.scrollTop = logEl.scrollHeight;
+    };
+
+    addLog(`📋 ${items.length}개 스마트스토어 상품 등록 시작`);
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const num = i + 1;
+        countEl.textContent = `${num} / ${items.length}`;
+        barEl.style.width = `${(num / items.length) * 100}%`;
+
+        addLog(`[${num}/${items.length}] ${(item.name || '이름없음').substring(0, 40)}`);
+
+        try {
+            let finalImgUrl = item.image || '';
+
+            // 1) 이미지 배경 교체
+            if (doBgChange && finalImgUrl) {
+                addLog(`  🔄 이미지 배경 교체 중...`);
+                try {
+                    const { data: reimgData, error: reimgErr } = await sb.functions.invoke('reimagine-product', {
+                        body: {
+                            image_url: finalImgUrl,
+                            mode: 'bg_change',
+                            prompt_hint: item.name,
+                            aspect_ratio: '1:1'
+                        }
+                    });
+                    if (!reimgErr && reimgData?.success) {
+                        finalImgUrl = reimgData.image_url;
+                        addLog(`  ✅ 배경 교체 완료`, '#34d399');
+                    } else {
+                        addLog(`  ⚠️ 배경 교체 실패, 원본 사용`, '#fbbf24');
+                    }
+                } catch (e) {
+                    addLog(`  ⚠️ 배경 교체 에러: ${e.message}`, '#fbbf24');
+                }
+            }
+
+            // 2) 상세페이지 생성
+            let detailHtml = {};
+            const price = parseInt(item.price) || 0;
+            if (doGenDetail) {
+                addLog(`  🔄 상세페이지 생성 중 (6개 언어)...`);
+                try {
+                    const { data: detailData, error: detailErr } = await sb.functions.invoke('generate-product-detail', {
+                        body: {
+                            product_name: item.name,
+                            product_category: category,
+                            product_specs: {},
+                            image_url: finalImgUrl,
+                            price: price,
+                            original_description: item.desc || '',
+                            langs: ["kr", "jp", "us", "cn", "ar", "es"]
+                        }
+                    });
+                    if (!detailErr && detailData?.success) {
+                        detailHtml = detailData.details || {};
+                        addLog(`  ✅ 상세페이지 완료 (${Object.keys(detailHtml).join(',')})`, '#34d399');
+                    } else {
+                        addLog(`  ⚠️ 상세페이지 실패`, '#fbbf24');
+                    }
+                } catch (e) {
+                    addLog(`  ⚠️ 상세페이지 에러: ${e.message}`, '#fbbf24');
+                }
+            }
+
+            // 3) DB 저장
+            const code = generateProductCode('NV');
+
+            const payload = {
+                site_code: 'KR',
+                category: category,
+                code: code,
+                is_general_product: isGeneral ?? true,
+                is_custom_size: false,
+                img_url: finalImgUrl,
+                name: item.name || '',
+                price: price,
+                description: detailHtml.kr || item.desc || '',
+                name_jp: '', name_us: '', name_cn: '', name_ar: '', name_es: '',
+                price_jp: Math.round(price * 0.2),
+                price_us: Math.round(price * 0.002),
+                description_jp: detailHtml.jp || '',
+                description_us: detailHtml.us || '',
+                description_cn: detailHtml.cn || '',
+                description_ar: detailHtml.ar || '',
+                description_es: detailHtml.es || '',
+                width_mm: 0, height_mm: 0,
+                addons: ''
+            };
+
+            const { error: insertErr } = await sb.from('admin_products').insert([payload]);
+            if (insertErr) {
+                addLog(`  ❌ DB 저장 실패: ${insertErr.message}`, '#f87171');
+            } else {
+                successCount++;
+                addLog(`  ✅ 등록 완료! (코드: ${code})`, '#34d399');
+            }
+
+        } catch (e) {
+            addLog(`  ❌ 실패: ${e.message}`, '#f87171');
+        }
+
+        // 건 사이 딜레이
+        if (i < items.length - 1) {
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    barEl.style.width = '100%';
+    addLog(`\n🎉 완료! 총 ${items.length}건 중 ${successCount}건 등록 성공`, '#fbbf24');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-paste"></i> 붙여넣은 상품 일괄 등록';
+
+    // 자동번역
+    if (successCount > 0) {
+        addLog('🔄 등록된 상품 이름 자동 번역 중...');
+        try {
+            await batchTranslateNewProducts(category, successCount);
+            addLog('✅ 이름 번역 완료', '#34d399');
+        } catch (e) {
+            addLog('⚠️ 이름 번역 실패: ' + e.message, '#fbbf24');
+        }
+    }
+
+    alert(`✅ 스마트스토어 상품 등록 완료!\n\n총 ${items.length}건 중 ${successCount}건 등록 성공`);
+};
+
 // 등록된 상품들의 이름 일괄 번역
 async function batchTranslateNewProducts(category, count) {
-    // 최근 등록된 AI 상품들 가져오기
+    // 최근 등록된 AI/NV 상품들 가져오기
     const { data: products } = await sb.from('admin_products')
-        .select('id, name')
+        .select('id, name, name_jp')
         .eq('category', category)
-        .like('code', 'AI_%')
-        .is('name_jp', null)
+        .or('code.like.AI_%,code.like.NV_%')
         .order('id', { ascending: false })
         .limit(count);
 
     if (!products || products.length === 0) return;
 
     for (const p of products) {
-        if (!p.name) continue;
+        if (!p.name || (p.name_jp && p.name_jp.length > 0)) continue;
         try {
             const { data: trData } = await sb.functions.invoke('translate', {
                 body: { text: p.name, sourceLang: 'ko', targetLangs: ['ja', 'en', 'zh', 'ar', 'es'] }
