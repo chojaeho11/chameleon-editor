@@ -537,8 +537,8 @@ async function processLoad(mode) {
             let finalScale = 1;
 
             if (isBgMode) {
-                // 배경 모드: 꽉 채우기
-                finalScale = Math.max(bW / obj.width, bH / obj.height);
+                // 배경 모드: 꽉 채우기 (110% 여백 방지)
+                finalScale = Math.max(bW / obj.width, bH / obj.height) * 1.1;
             } else {
                 // 객체 모드: 적당히 줄이기 (30%)
                 finalScale = (bW * 0.3) / obj.width; 
@@ -1343,7 +1343,7 @@ window.processLoad = async function(mode) {
                 // 배경: 꽉 채우기
                 const scaleX = bW / obj.width;
                 const scaleY = bH / obj.height;
-                finalScale = Math.max(scaleX, scaleY); 
+                finalScale = Math.max(scaleX, scaleY) * 1.1; // 110% 여백 방지
             } else {
                 // 요소: 적당히 맞추기
                 const targetSize = Math.min(bW, bH) * 0.4; 
@@ -1537,7 +1537,7 @@ window.processLoad = async function(mode) {
                 // [배경 모드] 꽉 채우기 (Cover)
                 const scaleX = bW / obj.width;
                 const scaleY = bH / obj.height;
-                finalScale = Math.max(scaleX, scaleY); 
+                finalScale = Math.max(scaleX, scaleY) * 1.1; // 110% 여백 방지
             } else {
                 // [객체 모드] 적당히 줄이기 (Fit)
                 const targetSize = Math.min(bW, bH) * 0.4; 
