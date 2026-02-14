@@ -2710,21 +2710,25 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
     return templates[lang] || templates.kr;
 }
 
-// 상세페이지 없는 상품 일괄 생성
+// 상세페이지 없는 상품 일괄 생성 (빈 언어 포함)
 window.batchFillDetailPages = async () => {
     const { data: products, error } = await sb.from('admin_products')
-        .select('id, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url, description')
+        .select('id, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url, description, description_jp, description_us, description_cn, description_ar, description_es, description_de, description_fr')
         .order('id');
 
     if (error) return alert('상품 조회 실패: ' + error.message);
 
-    const empty = products.filter(p => {
-        const d = p.description;
-        return !d || d.trim() === '' || d === '<p><br></p>';
-    });
+    const isEmpty = (d) => !d || d.trim() === '' || d === '<p><br></p>';
 
-    if (empty.length === 0) return alert('상세페이지가 없는 상품이 없습니다.');
-    if (!confirm(`${empty.length}개 상품에 상세페이지를 일괄 생성하시겠습니까?`)) return;
+    // 한국어가 완전히 비어있는 상품 OR 특정 언어가 비어있는 상품 모두 포함
+    const targets = products.filter(p =>
+        isEmpty(p.description) || isEmpty(p.description_jp) || isEmpty(p.description_us) ||
+        isEmpty(p.description_cn) || isEmpty(p.description_ar) || isEmpty(p.description_es) ||
+        isEmpty(p.description_de) || isEmpty(p.description_fr)
+    );
+
+    if (targets.length === 0) return alert('상세페이지가 없는 상품이 없습니다. (모든 8개 언어 채워짐)');
+    if (!confirm(`${targets.length}개 상품에 빈 언어 상세페이지를 일괄 생성하시겠습니까?`)) return;
 
     const btn = document.getElementById('btnBatchFillDetail');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...'; }
@@ -2732,19 +2736,21 @@ window.batchFillDetailPages = async () => {
     let success = 0;
     let fail = 0;
 
-    for (const p of empty) {
+    for (const p of targets) {
         try {
-            const { error: updateErr } = await sb.from('admin_products').update({
-                description: generateDetailTemplate(p.name, p.name, p.img_url, 'kr'),
-                description_jp: generateDetailTemplate(p.name, p.name_jp || p.name, p.img_url, 'jp'),
-                description_us: generateDetailTemplate(p.name, p.name_us || p.name, p.img_url, 'us'),
-                description_cn: generateDetailTemplate(p.name, p.name_cn || p.name_us || p.name, p.img_url, 'cn'),
-                description_ar: generateDetailTemplate(p.name, p.name_ar || p.name_us || p.name, p.img_url, 'ar'),
-                description_es: generateDetailTemplate(p.name, p.name_es || p.name_us || p.name, p.img_url, 'es'),
-                description_de: generateDetailTemplate(p.name, p.name_de || p.name_us || p.name, p.img_url, 'de'),
-                description_fr: generateDetailTemplate(p.name, p.name_fr || p.name_us || p.name, p.img_url, 'fr'),
-            }).eq('id', p.id);
+            const updates = {};
+            if (isEmpty(p.description)) updates.description = generateDetailTemplate(p.name, p.name, p.img_url, 'kr');
+            if (isEmpty(p.description_jp)) updates.description_jp = generateDetailTemplate(p.name, p.name_jp || p.name, p.img_url, 'jp');
+            if (isEmpty(p.description_us)) updates.description_us = generateDetailTemplate(p.name, p.name_us || p.name, p.img_url, 'us');
+            if (isEmpty(p.description_cn)) updates.description_cn = generateDetailTemplate(p.name, p.name_cn || p.name_us || p.name, p.img_url, 'cn');
+            if (isEmpty(p.description_ar)) updates.description_ar = generateDetailTemplate(p.name, p.name_ar || p.name_us || p.name, p.img_url, 'ar');
+            if (isEmpty(p.description_es)) updates.description_es = generateDetailTemplate(p.name, p.name_es || p.name_us || p.name, p.img_url, 'es');
+            if (isEmpty(p.description_de)) updates.description_de = generateDetailTemplate(p.name, p.name_de || p.name_us || p.name, p.img_url, 'de');
+            if (isEmpty(p.description_fr)) updates.description_fr = generateDetailTemplate(p.name, p.name_fr || p.name_us || p.name, p.img_url, 'fr');
 
+            if (Object.keys(updates).length === 0) continue;
+
+            const { error: updateErr } = await sb.from('admin_products').update(updates).eq('id', p.id);
             if (updateErr) { fail++; console.error('실패:', p.id, updateErr.message); }
             else { success++; }
         } catch (e) {
