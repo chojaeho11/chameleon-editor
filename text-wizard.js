@@ -13,12 +13,10 @@
         else if (_h.includes('cafe3355.com')) currentLang = 'us';
         else currentLang = 'kr';
     }
-    const langKey = (currentLang === 'en' || currentLang === 'us') ? 'en'
-        : (currentLang === 'ja' || currentLang === 'jp') ? 'ja'
-        : (currentLang === 'zh' || currentLang === 'cn') ? 'zh'
-        : (currentLang === 'ar') ? 'ar'
-        : (currentLang === 'es') ? 'es'
-        : 'kr';
+    // KR/JP만 고유, 나머지 모든 국가는 EN(미국)과 동일
+    const langKey = (currentLang === 'ja' || currentLang === 'jp') ? 'ja'
+        : (currentLang === 'kr') ? 'kr'
+        : 'en';
 
     // 2. 폰트 선택 함수 (DYNAMIC_FONTS가 로드된 후 실행 시점에 호출)
     function getFonts() {
@@ -479,6 +477,8 @@
             const refS = Math.min(boardW, boardH);
             const LINE_THICKNESS = 2;
 
+            const OFFSET = boardH * 0.08; // 위로 올리기
+
             const topLabel = new fabric.IText(data.flyer.topLabel, {
                 fontFamily: F.SUB,
                 fontSize: refS * 0.03,
@@ -487,7 +487,7 @@
                 letterSpacing: 200,
                 originX: 'center', originY: 'center',
                 left: cx,
-                top: cy - (boardH * 0.25)
+                top: cy - (boardH * 0.25) - OFFSET
             });
 
             const mainTitle = new fabric.IText(data.flyer.main, {
@@ -499,7 +499,7 @@
                 lineHeight: 0.9,
                 originX: 'center', originY: 'center',
                 left: cx,
-                top: cy - (boardH * 0.05)
+                top: cy - (boardH * 0.05) - OFFSET
             });
 
             const centerLine = new fabric.Rect({
@@ -508,7 +508,7 @@
                 fill: COLOR_MAIN,
                 originX: 'center', originY: 'center',
                 left: cx,
-                top: cy + (boardH * 0.15)
+                top: cy + (boardH * 0.15) - OFFSET
             });
 
             const subDetail = new fabric.IText(data.flyer.detail, {
@@ -520,7 +520,7 @@
                 lineHeight: 1.5,
                 originX: 'center', originY: 'center',
                 left: cx,
-                top: cy + (boardH * 0.25)
+                top: cy + (boardH * 0.25) - OFFSET
             });
 
             const footerText = new fabric.IText(data.flyer.footer, {
