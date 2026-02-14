@@ -2345,7 +2345,9 @@ window.getTinyThumb = function(url, size = 150) {
             'ja': { title: "カメレオンプリンティング", desc: "無料デザインエディタ" },
             'zh': { title: "变色龙印刷", desc: "免费设计编辑器" },
             'ar': { title: "طباعة كاميليون", desc: "محرر تصميم مجاني" },
-            'es': { title: "Chameleon Printing", desc: "Editor de Diseno Gratis" }
+            'es': { title: "Chameleon Printing", desc: "Editor de Diseno Gratis" },
+            'de': { title: "Chameleon Printing", desc: "Kostenloser Design-Editor" },
+            'fr': { title: "Chameleon Printing", desc: "Editeur de Design Gratuit" }
         };
         const data = metaData[lang] || metaData['kr'];
         document.title = data.title;
@@ -2438,7 +2440,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap';
             fontFamily = "'Noto Sans JP', sans-serif";
             window.currentCanvasFont = 'Noto Sans JP';
-        } else if (CURRENT_LANG === 'en' || CURRENT_LANG === 'es') {
+        } else if (CURRENT_LANG === 'en' || CURRENT_LANG === 'es' || CURRENT_LANG === 'de' || CURRENT_LANG === 'fr') {
             fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap';
             fontFamily = "'Inter', sans-serif";
             window.currentCanvasFont = 'Inter';
@@ -3328,6 +3330,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 if (cc === 'CN') { pName = product.name_cn || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.CN || 0.01)); currency = 'CNY'; }
                 if (cc === 'AR') { pName = product.name_ar || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.AR || 0.005)); currency = 'SAR'; }
                 if (cc === 'ES') { pName = product.name_es || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.ES || 0.001) * 100) / 100; currency = 'EUR'; }
+                if (cc === 'DE') { pName = product.name_de || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.DE || 0.001) * 100) / 100; currency = 'EUR'; }
+                if (cc === 'FR') { pName = product.name_fr || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.FR || 0.001) * 100) / 100; currency = 'EUR'; }
 
                 // OG 이미지 업데이트 (실제 제품 이미지)
                 if (imgUrl) {
