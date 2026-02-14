@@ -171,6 +171,10 @@ export function getLocalizedData(item) {
         country = 'AR';
     } else if (paramLang === 'es') {
         country = 'ES';
+    } else if (paramLang === 'de') {
+        country = 'DE';
+    } else if (paramLang === 'fr') {
+        country = 'FR';
     } else if (hostname.includes('cafe3355.com') || paramLang === 'en' || paramLang === 'us') {
         country = 'US';
     }
@@ -204,6 +208,16 @@ export function getLocalizedData(item) {
         const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001;
         const esPrice = price * esRate;
         formattedPrice = '€' + esPrice.toFixed(2);
+    } else if (country === 'DE') {
+        name = item.name_de || item.name_us || item.name;
+        const deRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.001;
+        const dePrice = price * deRate;
+        formattedPrice = '€' + dePrice.toFixed(2);
+    } else if (country === 'FR') {
+        name = item.name_fr || item.name_us || item.name;
+        const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001;
+        const frPrice = price * frRate;
+        formattedPrice = '€' + frPrice.toFixed(2);
     } else {
         formattedPrice = price.toLocaleString() + '원';
     }

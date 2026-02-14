@@ -87,6 +87,8 @@
     <link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh">
     <link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar">
     <link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es">
+    <link rel="alternate" hreflang="de" href="https://www.cafe3355.com/?lang=de">
+    <link rel="alternate" hreflang="fr" href="https://www.cafe3355.com/?lang=fr">
     <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/">
 
 <script src="product-seo.js"></script>
@@ -97,8 +99,9 @@
     // URL ?lang= 파라미터로 국가 오버라이드
     var _lp = (new URLSearchParams(location.search).get('lang') || '').toUpperCase();
     var cc = _lp === 'ZH' || _lp === 'CN' ? 'CN' : _lp === 'AR' ? 'AR' : _lp === 'ES' ? 'ES'
+           : _lp === 'DE' ? 'DE' : _lp === 'FR' ? 'FR'
            : h.includes('cafe0101') ? 'JP' : h.includes('cafe3355') ? 'US' : 'KR';
-    var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com', CN:'https://www.cafe3355.com', AR:'https://www.cafe3355.com', ES:'https://www.cafe3355.com' };
+    var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com', CN:'https://www.cafe3355.com', AR:'https://www.cafe3355.com', ES:'https://www.cafe3355.com', DE:'https://www.cafe3355.com', FR:'https://www.cafe3355.com' };
     var seoData = {
         KR: {
             title:'카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터',
@@ -135,6 +138,18 @@
             desc:'Paneles honeycomb, impresion en tela, acrilicos, banners, letreros y packaging. Editor de diseno online gratuito.',
             keywords:'chameleon printing,panel honeycomb,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner,editor gratis',
             lang:'es', siteName:'Chameleon Printing'
+        },
+        DE: {
+            title:'Chameleon Printing - Umweltfreundlicher Display- & Pop-up-Store-Druck mit kostenlosem Design-Editor',
+            desc:'Wabenplatten, Stoffdruck, Acrylprodukte, Banner, Schilder & Verpackungen. Kostenloser Online-Design-Editor. Globale Druckplattform.',
+            keywords:'chameleon printing,wabenplatte,stoffdruck,pop-up store,display druck,oeko druck,acryl druck,banner,aufsteller,kostenloser editor,online druck,UV druck',
+            lang:'de', siteName:'Chameleon Printing'
+        },
+        FR: {
+            title:'Chameleon Printing - Impression Eco Display & Pop-up Store avec Editeur de Design Gratuit',
+            desc:'Panneaux nid d\'abeille, impression textile, produits acryliques, bannieres, enseignes & emballages. Editeur de design en ligne gratuit. Plateforme d\'impression mondiale.',
+            keywords:'chameleon printing,panneau nid abeille,impression textile,pop-up store,impression display,impression ecologique,acrylique,banniere,editeur gratuit,impression en ligne,impression UV',
+            lang:'fr', siteName:'Chameleon Printing'
         }
     };
     var s = seoData[cc];
@@ -185,10 +200,14 @@
         var hrefKo = document.querySelector('link[hreflang="ko"]');
         var hrefJa = document.querySelector('link[hreflang="ja"]');
         var hrefEn = document.querySelector('link[hreflang="en"]');
+        var hrefDe = document.querySelector('link[hreflang="de"]');
+        var hrefFr = document.querySelector('link[hreflang="fr"]');
         var hrefDef = document.querySelector('link[hreflang="x-default"]');
         if(hrefKo) hrefKo.href = domains.KR + '/' + path;
         if(hrefJa) hrefJa.href = domains.JP + '/' + path;
         if(hrefEn) hrefEn.href = domains.US + '/' + path;
+        if(hrefDe) hrefDe.href = domains.DE + '/' + path + '?lang=de';
+        if(hrefFr) hrefFr.href = domains.FR + '/' + path + '?lang=fr';
         if(hrefDef) hrefDef.href = domains.KR + '/' + path;
     }
 
@@ -374,6 +393,8 @@
     <a href="https://cafe3355.com/?lang=zh" class="flag-link" title="中文">🇨🇳</a>
     <a href="https://cafe3355.com/?lang=ar" class="flag-link" title="عربي">🇸🇦</a>
     <a href="https://cafe3355.com/?lang=es" class="flag-link" title="España">🇪🇸</a>
+    <a href="https://cafe3355.com/?lang=de" class="flag-link" title="Deutschland">🇩🇪</a>
+    <a href="https://cafe3355.com/?lang=fr" class="flag-link" title="France">🇫🇷</a>
 </div>
 
 <div id="startScreen">
@@ -2244,7 +2265,7 @@
         if (country === 'US') return '$' + Math.round(converted).toLocaleString();
         if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
         if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
-        if (country === 'ES') return '€' + converted.toFixed(2);
+        if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
         return converted.toLocaleString() + '원';
     }
     // 현지 통화 표시 (JP/US는 이미 현지가, CN/AR/ES는 KRW에서 환산)
@@ -2257,6 +2278,8 @@
         if (country === 'CN') return '¥' + Math.round((amt||0) * (rates.CN || 0.01)).toLocaleString();
         if (country === 'AR') return Math.round((amt||0) * (rates.AR || 0.005)).toLocaleString() + ' ﷼';
         if (country === 'ES') return '€' + ((amt||0) * (rates.ES || 0.001)).toFixed(2);
+        if (country === 'DE') return '€' + ((amt||0) * (rates.DE || 0.001)).toFixed(2);
+        if (country === 'FR') return '€' + ((amt||0) * (rates.FR || 0.001)).toFixed(2);
         return (amt||0).toLocaleString() + '원';
     }
 
@@ -2885,6 +2908,8 @@ window._drawQuickItems = (list, isProductMode = false) => {
         if (CURRENT_LANG === 'zh' && (item.name_cn || item.name_us)) name = item.name_cn || item.name_us;
         if (CURRENT_LANG === 'ar' && (item.name_ar || item.name_us)) name = item.name_ar || item.name_us;
         if (CURRENT_LANG === 'es' && (item.name_es || item.name_us)) name = item.name_es || item.name_us;
+        if (CURRENT_LANG === 'de' && (item.name_de || item.name_us)) name = item.name_de || item.name_us;
+        if (CURRENT_LANG === 'fr' && (item.name_fr || item.name_us)) name = item.name_fr || item.name_us;
 
         const itemCode = item.code || '';
         
@@ -2949,7 +2974,7 @@ async function renderQuickMenu() {
         const [{ data: topCats }, { data: subCats }, { data: allProds }] = await Promise.all([
             sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true }),
             sb.from('admin_categories').select('*').order('sort_order', { ascending: true }),
-            sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es').or('partner_id.is.null,partner_status.eq.approved').order('sort_order', { ascending: true })
+            sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').order('sort_order', { ascending: true })
         ]);
 
         // 전역 변수 초기화 (검색 오류 방지 핵심)
@@ -2979,6 +3004,8 @@ async function renderQuickMenu() {
             if (CURRENT_LANG === 'zh') tName = top.name_cn || top.name_us || tName;
             if (CURRENT_LANG === 'ar') tName = top.name_ar || top.name_us || tName;
             if (CURRENT_LANG === 'es') tName = top.name_es || top.name_us || tName;
+            if (CURRENT_LANG === 'de') tName = top.name_de || top.name_us || tName;
+            if (CURRENT_LANG === 'fr') tName = top.name_fr || top.name_us || tName;
             btn.innerText = tName;
 
             btn.onclick = () => {
@@ -3188,6 +3215,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             else if (currentLang === 'zh' && catData?.description_cn) displayDesc = catData.description_cn;
             else if (currentLang === 'ar' && catData?.description_ar) displayDesc = catData.description_ar;
             else if (currentLang === 'es' && catData?.description_es) displayDesc = catData.description_es;
+            else if (currentLang === 'de' && catData?.description_de) displayDesc = catData.description_de;
+            else if (currentLang === 'fr' && catData?.description_fr) displayDesc = catData.description_fr;
             else if (currentLang === 'en' && catData?.description_us) displayDesc = catData.description_us;
         }
         if (displayDesc && displayDesc !== "undefined" && displayDesc.trim() !== "") {
@@ -3204,7 +3233,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     try {
         // [핵심 최적화] 무거운 description(상세설명) 필드를 빼고 목록에 필요한 최소 데이터만 가져옴
         const { data: products, error } = await sb.from('admin_products')
-            .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us, name_cn, name_ar, name_es, partner_id')
+            .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us, name_cn, name_ar, name_es, name_de, name_fr, partner_id')
             .eq('category', catKey)
             .or('partner_id.is.null,partner_status.eq.approved')
             .order('sort_order', { ascending: true });
@@ -3543,6 +3572,12 @@ window.showChoiceModal = async function(key) {
     } else if (lang === 'es') {
         dName = product.name_es || product.name_us || dName;
         dDesc = product.description_es || product.description_us || dDesc;
+    } else if (lang === 'de') {
+        dName = product.name_de || product.name_us || dName;
+        dDesc = product.description_de || product.description_us || dDesc;
+    } else if (lang === 'fr') {
+        dName = product.name_fr || product.name_us || dName;
+        dDesc = product.description_fr || product.description_us || dDesc;
     }
 
     // ★ AI 생성 HTML의 깨진 태그가 모달 레이아웃을 파괴하지 않도록 sanitize
@@ -3599,6 +3634,8 @@ window.showChoiceModal = async function(key) {
                 if (lang === 'zh' && data.content_cn) return data.content_cn;
                 if (lang === 'ar' && data.content_ar) return data.content_ar;
                 if (lang === 'es' && data.content_es) return data.content_es;
+                if (lang === 'de' && data.content_de) return data.content_de;
+                if (lang === 'fr' && data.content_fr) return data.content_fr;
                 if (lang === 'en' && data.content_us) return data.content_us;
                 return data.content || ""; // 기본 KR
             };
@@ -3644,6 +3681,8 @@ window.showChoiceModal = async function(key) {
                     if (lang === 'zh') catName = cat.name_cn || cat.name_us || catName;
                     if (lang === 'ar') catName = cat.name_ar || cat.name_us || catName;
                     if (lang === 'es') catName = cat.name_es || cat.name_us || catName;
+                    if (lang === 'de') catName = cat.name_de || cat.name_us || catName;
+                    if (lang === 'fr') catName = cat.name_fr || cat.name_us || catName;
 
                     const isColorCategory = cat.is_swatch || cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color');
                     const _cr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
@@ -3670,6 +3709,8 @@ window.showChoiceModal = async function(key) {
                                 else if (lang === 'zh') colorPriceLabel = `+¥${Math.round(basePrice * (_cr.CN || 0.01)).toLocaleString()}`;
                                 else if (lang === 'ar') colorPriceLabel = `+${Math.round(basePrice * (_cr.AR || 0.005)).toLocaleString()} ﷼`;
                                 else if (lang === 'es') colorPriceLabel = `+€${(basePrice * (_cr.ES || 0.001)).toFixed(2)}`;
+                                else if (lang === 'de') colorPriceLabel = `+€${(basePrice * (_cr.DE || 0.001)).toFixed(2)}`;
+                                else if (lang === 'fr') colorPriceLabel = `+€${(basePrice * (_cr.FR || 0.001)).toFixed(2)}`;
                                 else colorPriceLabel = `+${basePrice.toLocaleString()}원`;
                             }
 
@@ -3697,6 +3738,8 @@ window.showChoiceModal = async function(key) {
                             else if (lang === 'zh') { optName = a.name_cn || a.name_us || optName; const _r = (_cr && _cr.CN) || 0.01; priceStr = `+¥${Math.round(basePrice * _r).toLocaleString()}`; }
                             else if (lang === 'ar') { optName = a.name_ar || a.name_us || optName; const _r = (_cr && _cr.AR) || 0.005; priceStr = `+${Math.round(basePrice * _r).toLocaleString()} ﷼`; }
                             else if (lang === 'es') { optName = a.name_es || a.name_us || optName; const _r = (_cr && _cr.ES) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
+                            else if (lang === 'de') { optName = a.name_de || a.name_us || optName; const _r = (_cr && _cr.DE) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
+                            else if (lang === 'fr') { optName = a.name_fr || a.name_us || optName; const _r = (_cr && _cr.FR) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
                             const imgUrl = a.img_url || 'https://placehold.co/40?text=IMG';
 
                             optionsHtml += `
@@ -3732,6 +3775,8 @@ window.showChoiceModal = async function(key) {
         if(lang === 'zh') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.01; return `¥${Math.round(p * r).toLocaleString()}`; }
         if(lang === 'ar') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.005; return `${Math.round(p * r).toLocaleString()} ﷼`; }
         if(lang === 'es') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001; return `€${(p * r).toFixed(2)}`; }
+        if(lang === 'de') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.001; return `€${(p * r).toFixed(2)}`; }
+        if(lang === 'fr') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001; return `€${(p * r).toFixed(2)}`; }
         return `${p.toLocaleString()}원`;
     };
 
@@ -3745,7 +3790,7 @@ window.showChoiceModal = async function(key) {
     if (isCustom) {
         rightSideUI = productHeaderHtml + `
             <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
-                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'サイズ入力 (mm)':lang==='zh'?'尺寸输入 (mm)':lang==='ar'?'إدخال الحجم (mm)':lang==='es'?'Tamaño (mm)':lang==='en'?'Enter Size (mm)':'사이즈 입력 (mm)'}</div>
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'サイズ入力 (mm)':lang==='zh'?'尺寸输入 (mm)':lang==='ar'?'إدخال الحجم (mm)':lang==='es'?'Tamaño (mm)':lang==='de'?'Größe (mm)':lang==='fr'?'Taille (mm)':lang==='en'?'Enter Size (mm)':'사이즈 입력 (mm)'}</div>
                 <div style="display:flex; gap:5px;">
                     <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                     <span style="display:flex; align-items:center; color:#999;">x</span>
@@ -3969,6 +4014,8 @@ window.updateModalTotal = function() {
             if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.01)).toLocaleString();
             if (lang === 'ar') return Math.round(val * (_rates.AR || 0.005)).toLocaleString() + ' ﷼';
             if (lang === 'es') return '€' + (val * (_rates.ES || 0.001)).toFixed(2);
+            if (lang === 'de') return '€' + (val * (_rates.DE || 0.001)).toFixed(2);
+            if (lang === 'fr') return '€' + (val * (_rates.FR || 0.001)).toFixed(2);
             return Math.floor(val).toLocaleString() + '원';
         };
 
@@ -4974,6 +5021,8 @@ if (w >= 20 && h >= 20) {
         else if (country === 'CN') desc = product.description_cn || product.description_us || product.description || '';
         else if (country === 'AR') desc = product.description_ar || product.description_us || product.description || '';
         else if (country === 'ES') desc = product.description_es || product.description_us || product.description || '';
+        else if (country === 'DE') desc = product.description_de || product.description_us || product.description || '';
+        else if (country === 'FR') desc = product.description_fr || product.description_us || product.description || '';
         else if (country === 'US') desc = product.description_us || product.description || '';
         else desc = product.description || '';
         document.getElementById('genProdDesc').innerHTML = desc;
@@ -5574,7 +5623,7 @@ window.showCategorySelectionModal = async function() {
 
         // (2) 상품 데이터 가져오기 (코드, 가격, 이미지 포함)
         const { data: products } = await sb.from('admin_products')
-            .select('category, img_url, name, code, price, width_mm, height_mm, name_jp, name_us, name_cn, name_ar, name_es')
+            .select('category, img_url, name, code, price, width_mm, height_mm, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr')
             .not('img_url', 'is', null)
             .neq('img_url', '');
 
