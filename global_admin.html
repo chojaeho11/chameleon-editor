@@ -504,6 +504,18 @@
                 <label class="form-label">🇺🇸 미국명</label>
                 <input id="newTopCatNameUS" class="input-text">
             </div>
+            <div style="flex:1; min-width:150px;">
+                <label class="form-label">🇨🇳 중국명</label>
+                <input id="newTopCatNameCN" class="input-text">
+            </div>
+            <div style="flex:1; min-width:150px;">
+                <label class="form-label">🇸🇦 아랍명</label>
+                <input id="newTopCatNameAR" class="input-text">
+            </div>
+            <div style="flex:1; min-width:150px;">
+                <label class="form-label">🇪🇸 스페인명</label>
+                <input id="newTopCatNameES" class="input-text">
+            </div>
             <div style="display:flex; align-items:center; padding-bottom:10px;">
     <label style="cursor:pointer; display:flex; align-items:center; gap:5px; font-weight:bold; color:#ef4444;">
         <input type="checkbox" id="newTopCatExcluded" style="width:18px; height:18px;">
@@ -551,15 +563,30 @@
                 <label class="form-label">🇺🇸 미국명</label>
                 <input id="newCatNameUS" class="input-text">
             </div>
+            <div style="flex:1; min-width:140px;">
+                <label class="form-label">🇨🇳 중국명</label>
+                <input id="newCatNameCN" class="input-text">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label class="form-label">🇸🇦 아랍명</label>
+                <input id="newCatNameAR" class="input-text">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label class="form-label">🇪🇸 스페인명</label>
+                <input id="newCatNameES" class="input-text">
+            </div>
         </div>
 
         <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
             <div style="flex:2;">
                 <label class="form-label">설명 (Description)</label>
-                <div style="display:flex; gap:5px;">
-                    <input id="newCatDesc" class="input-text" placeholder="🇰🇷 설명 (선택)" style="flex:1;">
-                    <input id="newCatDescJP" class="input-text" placeholder="🇯🇵 설명" style="flex:1;">
-                    <input id="newCatDescUS" class="input-text" placeholder="🇺🇸 설명" style="flex:1;">
+                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                    <input id="newCatDesc" class="input-text" placeholder="🇰🇷 설명 (선택)" style="flex:1; min-width:120px;">
+                    <input id="newCatDescJP" class="input-text" placeholder="🇯🇵 설명" style="flex:1; min-width:120px;">
+                    <input id="newCatDescUS" class="input-text" placeholder="🇺🇸 설명" style="flex:1; min-width:120px;">
+                    <input id="newCatDescCN" class="input-text" placeholder="🇨🇳 설명" style="flex:1; min-width:120px;">
+                    <input id="newCatDescAR" class="input-text" placeholder="🇸🇦 설명" style="flex:1; min-width:120px;">
+                    <input id="newCatDescES" class="input-text" placeholder="🇪🇸 설명" style="flex:1; min-width:120px;">
                 </div>
             </div>
             <div style="display:flex; gap:5px;">
@@ -601,9 +628,21 @@
                     <input id="newProdNameJP" class="input-text" placeholder="🇯🇵 일본어" style="flex:2;">
                     <input id="newProdPriceJP" type="number" class="input-text" placeholder="¥ 엔화" style="flex:1;">
                 </div>
-                <div style="display:flex; gap:5px;">
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
                     <input id="newProdNameUS" class="input-text" placeholder="🇺🇸 영어" style="flex:2;">
                     <input id="newProdPriceUS" type="number" class="input-text" placeholder="$ 달러" style="flex:1;">
+                </div>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <input id="newProdNameCN" class="input-text" placeholder="🇨🇳 중국어" style="flex:2;">
+                    <input id="newProdPriceCN" type="number" class="input-text" placeholder="¥ 위안" style="flex:1;">
+                </div>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <input id="newProdNameAR" class="input-text" placeholder="🇸🇦 아랍어" style="flex:2;">
+                    <input id="newProdPriceAR" type="number" class="input-text" placeholder="﷼ 리알" style="flex:1;">
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <input id="newProdNameES" class="input-text" placeholder="🇪🇸 스페인어" style="flex:2;">
+                    <input id="newProdPriceES" type="number" class="input-text" placeholder="€ 유로" style="flex:1;">
                 </div>
             </div>
 
@@ -634,6 +673,9 @@
     <input type="hidden" id="newProdDetailKR">
     <input type="hidden" id="newProdDetailJP">
     <input type="hidden" id="newProdDetailUS">
+    <input type="hidden" id="newProdDetailCN">
+    <input type="hidden" id="newProdDetailAR">
+    <input type="hidden" id="newProdDetailES">
 </div>
 
 <div id="detailEditorModal" class="modal-overlay" style="z-index: 40000; display: none;">
@@ -650,6 +692,9 @@
             <button type="button" id="tabKR" class="pop-editor-tab active" onclick="window.switchPopupLang('KR')">🇰🇷 한국어</button>
             <button type="button" id="tabJP" class="pop-editor-tab" onclick="window.switchPopupLang('JP')">🇯🇵 日本語</button>
             <button type="button" id="tabUS" class="pop-editor-tab" onclick="window.switchPopupLang('US')">🇺🇸 English</button>
+            <button type="button" id="tabCN" class="pop-editor-tab" onclick="window.switchPopupLang('CN')">🇨🇳 中文</button>
+            <button type="button" id="tabAR" class="pop-editor-tab" onclick="window.switchPopupLang('AR')">🇸🇦 العربية</button>
+            <button type="button" id="tabES" class="pop-editor-tab" onclick="window.switchPopupLang('ES')">🇪🇸 Español</button>
             <button type="button" class="btn btn-vip btn-sm" onclick="window.autoTranslatePopupDetail()" style="margin-left: auto; height: 34px; margin-bottom: 5px; font-size: 12px;">
                 <i class="fa-solid fa-language"></i> KR 본문으로 전체 자동번역
             </button>
@@ -750,6 +795,9 @@
                         <div style="flex:1;"><label class="form-label">🇰🇷 명칭/가격</label><input id="nmKR" class="input-text"><input id="prKR" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
                         <div style="flex:1;"><label class="form-label">🇯🇵 명칭/가격</label><input id="nmJP" class="input-text"><input id="prJP" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
                         <div style="flex:1;"><label class="form-label">🇺🇸 명칭/가격</label><input id="nmUS" class="input-text"><input id="prUS" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
+                        <div style="flex:1;"><label class="form-label">🇨🇳 명칭/가격</label><input id="nmCN" class="input-text"><input id="prCN" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
+                        <div style="flex:1;"><label class="form-label">🇸🇦 명칭/가격</label><input id="nmAR" class="input-text"><input id="prAR" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
+                        <div style="flex:1;"><label class="form-label">🇪🇸 명칭/가격</label><input id="nmES" class="input-text"><input id="prES" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
 
 <div style="display:flex; flex-direction:column; justify-content:center; height:70px; margin-left:10px;">
     <label style="cursor:pointer; display:flex; align-items:center; gap:5px; font-weight:bold; color:#e11d48; font-size:12px;">
@@ -1263,6 +1311,18 @@
                     <span style="width:30px;">🇺🇸</span>
                     <input id="modalCatNameUS" class="input-text" placeholder="영어 명칭">
                 </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="width:30px;">🇨🇳</span>
+                    <input id="modalCatNameCN" class="input-text" placeholder="중국어 명칭">
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="width:30px;">🇸🇦</span>
+                    <input id="modalCatNameAR" class="input-text" placeholder="아랍어 명칭">
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="width:30px;">🇪🇸</span>
+                    <input id="modalCatNameES" class="input-text" placeholder="스페인어 명칭">
+                </div>
             </div>
         </div>
 
@@ -1324,7 +1384,7 @@
                 </div>
                 <textarea id="commonHtmlKR" class="input-text" style="width:100%; height:150px; font-family:monospace; line-height:1.5; resize:vertical;" placeholder="HTML 태그 입력..."></textarea>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
                 <div>
                     <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
                         <span style="font-size:20px;">🇯🇵</span><span style="font-weight:bold; color:#1e293b;">일본어 (JP)</span>
@@ -1336,6 +1396,24 @@
                         <span style="font-size:20px;">🇺🇸</span><span style="font-weight:bold; color:#1e293b;">영어 (US)</span>
                     </div>
                     <textarea id="commonHtmlUS" class="input-text" style="width:100%; height:120px; font-family:monospace; resize:vertical;" placeholder="영어 HTML..."></textarea>
+                </div>
+                <div>
+                    <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                        <span style="font-size:20px;">🇨🇳</span><span style="font-weight:bold; color:#1e293b;">중국어 (CN)</span>
+                    </div>
+                    <textarea id="commonHtmlCN" class="input-text" style="width:100%; height:120px; font-family:monospace; resize:vertical;" placeholder="중국어 HTML..."></textarea>
+                </div>
+                <div>
+                    <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                        <span style="font-size:20px;">🇸🇦</span><span style="font-weight:bold; color:#1e293b;">아랍어 (AR)</span>
+                    </div>
+                    <textarea id="commonHtmlAR" class="input-text" style="width:100%; height:120px; font-family:monospace; resize:vertical;" placeholder="아랍어 HTML..."></textarea>
+                </div>
+                <div>
+                    <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                        <span style="font-size:20px;">🇪🇸</span><span style="font-weight:bold; color:#1e293b;">스페인어 (ES)</span>
+                    </div>
+                    <textarea id="commonHtmlES" class="input-text" style="width:100%; height:120px; font-family:monospace; resize:vertical;" placeholder="스페인어 HTML..."></textarea>
                 </div>
             </div>
             <div style="margin-top:20px; background:#fff7ed; border:1px solid #fed7aa; padding:15px; border-radius:8px; font-size:13px; color:#c2410c;">

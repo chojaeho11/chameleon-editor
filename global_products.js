@@ -78,6 +78,9 @@ window.editTopCategoryLoad = async (id) => {
     document.getElementById('newTopCatName').value = data.name;
     document.getElementById('newTopCatNameJP').value = data.name_jp || '';
     document.getElementById('newTopCatNameUS').value = data.name_us || '';
+    document.getElementById('newTopCatNameCN').value = data.name_cn || '';
+    document.getElementById('newTopCatNameAR').value = data.name_ar || '';
+    document.getElementById('newTopCatNameES').value = data.name_es || '';
     const chk = document.getElementById('newTopCatExcluded');
     if(chk) chk.checked = data.is_excluded || false;
     
@@ -103,6 +106,9 @@ window.addTopCategoryDB = async () => {
         is_excluded: isExcluded,
         name_jp: document.getElementById('newTopCatNameJP').value,
         name_us: document.getElementById('newTopCatNameUS').value,
+        name_cn: document.getElementById('newTopCatNameCN').value,
+        name_ar: document.getElementById('newTopCatNameAR').value,
+        name_es: document.getElementById('newTopCatNameES').value,
         description: document.getElementById('newTopCatDesc') ? document.getElementById('newTopCatDesc').value : '',
         description_jp: document.getElementById('newTopCatDescJP') ? document.getElementById('newTopCatDescJP').value : '',
         description_us: document.getElementById('newTopCatDescUS') ? document.getElementById('newTopCatDescUS').value : ''
@@ -130,6 +136,7 @@ window.resetTopCategoryForm = () => {
     document.getElementById('newTopCatName').value = '';
     document.getElementById('newTopCatNameJP').value = '';
     document.getElementById('newTopCatNameUS').value = '';
+    ['newTopCatNameCN','newTopCatNameAR','newTopCatNameES'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     if(document.getElementById('newTopCatDesc')) document.getElementById('newTopCatDesc').value = '';
     if(document.getElementById('newTopCatDescJP')) document.getElementById('newTopCatDescJP').value = '';
     if(document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = '';
@@ -228,10 +235,16 @@ window.editCategoryLoad = async (id) => {
     document.getElementById('newCatName').value = data.name;
     document.getElementById('newCatNameJP').value = data.name_jp || '';
     document.getElementById('newCatNameUS').value = data.name_us || '';
-    
+    if(document.getElementById('newCatNameCN')) document.getElementById('newCatNameCN').value = data.name_cn || '';
+    if(document.getElementById('newCatNameAR')) document.getElementById('newCatNameAR').value = data.name_ar || '';
+    if(document.getElementById('newCatNameES')) document.getElementById('newCatNameES').value = data.name_es || '';
+
     if(document.getElementById('newCatDesc')) document.getElementById('newCatDesc').value = data.description || '';
     if(document.getElementById('newCatDescJP')) document.getElementById('newCatDescJP').value = data.description_jp || '';
     if(document.getElementById('newCatDescUS')) document.getElementById('newCatDescUS').value = data.description_us || '';
+    if(document.getElementById('newCatDescCN')) document.getElementById('newCatDescCN').value = data.description_cn || '';
+    if(document.getElementById('newCatDescAR')) document.getElementById('newCatDescAR').value = data.description_ar || '';
+    if(document.getElementById('newCatDescES')) document.getElementById('newCatDescES').value = data.description_es || '';
 
     const btn = document.getElementById('btnCatSave');
     btn.innerText = "수정하기";
@@ -249,9 +262,15 @@ window.addCategoryDB = async () => {
         top_category_code: document.getElementById('newCatTop').value || null,
         name_jp: document.getElementById('newCatNameJP').value,
         name_us: document.getElementById('newCatNameUS').value,
+        name_cn: document.getElementById('newCatNameCN') ? document.getElementById('newCatNameCN').value : '',
+        name_ar: document.getElementById('newCatNameAR') ? document.getElementById('newCatNameAR').value : '',
+        name_es: document.getElementById('newCatNameES') ? document.getElementById('newCatNameES').value : '',
         description: document.getElementById('newCatDesc') ? document.getElementById('newCatDesc').value : '',
         description_jp: document.getElementById('newCatDescJP') ? document.getElementById('newCatDescJP').value : '',
-        description_us: document.getElementById('newCatDescUS') ? document.getElementById('newCatDescUS').value : ''
+        description_us: document.getElementById('newCatDescUS') ? document.getElementById('newCatDescUS').value : '',
+        description_cn: document.getElementById('newCatDescCN') ? document.getElementById('newCatDescCN').value : '',
+        description_ar: document.getElementById('newCatDescAR') ? document.getElementById('newCatDescAR').value : '',
+        description_es: document.getElementById('newCatDescES') ? document.getElementById('newCatDescES').value : ''
     };
 
     let error;
@@ -276,6 +295,7 @@ window.resetCategoryForm = () => {
     document.getElementById('newCatName').value = '';
     document.getElementById('newCatNameJP').value = '';
     document.getElementById('newCatNameUS').value = '';
+    ['newCatNameCN','newCatNameAR','newCatNameES','newCatDescCN','newCatDescAR','newCatDescES'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     if(document.getElementById('newCatDesc')) document.getElementById('newCatDesc').value = '';
     if(document.getElementById('newCatDescJP')) document.getElementById('newCatDescJP').value = '';
     if(document.getElementById('newCatDescUS')) document.getElementById('newCatDescUS').value = '';
@@ -527,6 +547,12 @@ window.editAddonLoad = (id) => {
     document.getElementById('prJP').value = item.price_jp || 0;
     document.getElementById('nmUS').value = item.name_us || '';
     document.getElementById('prUS').value = item.price_us || 0;
+    document.getElementById('nmCN').value = item.name_cn || '';
+    document.getElementById('prCN').value = item.price_cn || 0;
+    document.getElementById('nmAR').value = item.name_ar || '';
+    document.getElementById('prAR').value = item.price_ar || 0;
+    document.getElementById('nmES').value = item.name_es || '';
+    document.getElementById('prES').value = item.price_es || 0;
 
     // ▼▼▼ [누락된 코드 추가] 저장된 스와치 모드 상태를 불러와 체크박스에 반영 ▼▼▼
     const swatchEl = document.getElementById('newAddonIsSwatch');
@@ -569,6 +595,9 @@ window.addAddonDB = async () => {
         price_jp: Math.round(parseFloat(document.getElementById('prJP').value || 0)),
         name_us: document.getElementById('nmUS').value,
         price_us: Math.round(parseFloat(document.getElementById('prUS').value || 0)),
+        name_cn: document.getElementById('nmCN').value,
+        name_ar: document.getElementById('nmAR').value,
+        name_es: document.getElementById('nmES').value,
         name: document.getElementById('nmKR').value,
         price: Math.round(parseFloat(document.getElementById('prKR').value || 0))
     };
@@ -588,7 +617,7 @@ window.addAddonDB = async () => {
 
 window.resetAddonForm = () => {
     editingAddonId = null;
-    ['newAddonCode', 'newAddonImgUrl', 'nmKR', 'prKR', 'nmJP', 'prJP', 'nmUS', 'prUS'].forEach(id => {
+    ['newAddonCode', 'newAddonImgUrl', 'nmKR', 'prKR', 'nmJP', 'prJP', 'nmUS', 'prUS', 'nmCN', 'prCN', 'nmAR', 'prAR', 'nmES', 'prES'].forEach(id => {
         const el = document.getElementById(id); if(el) el.value = '';
     });
     
@@ -622,9 +651,12 @@ window.autoTranslateAddonCatModal = async () => {
 
     try {
         const jp = await googleTranslate(krName, 'ja');
-        const us = await googleTranslate(krName, 'en');
+        const en = await googleTranslate(krName, 'en');
         document.getElementById('modalCatNameJP').value = jp;
-        document.getElementById('modalCatNameUS').value = us;
+        document.getElementById('modalCatNameUS').value = en;
+        document.getElementById('modalCatNameCN').value = await googleTranslate(en, 'zh-CN');
+        document.getElementById('modalCatNameAR').value = await googleTranslate(en, 'ar');
+        document.getElementById('modalCatNameES').value = await googleTranslate(en, 'es');
     } catch(e) {
         alert("번역 오류: " + e.message);
     } finally {
@@ -649,6 +681,9 @@ window.saveAddonCategoryFromModal = async () => {
             name_kr: nameKR,
             name_jp: nameJP,
             name_us: nameUS,
+            name_cn: document.getElementById('modalCatNameCN').value.trim(),
+            name_ar: document.getElementById('modalCatNameAR').value.trim(),
+            name_es: document.getElementById('modalCatNameES').value.trim(),
             sort_order: 99
         };
         let error;
@@ -891,9 +926,15 @@ window.addProductDB = async () => {
         name_jp: document.getElementById('newProdNameJP').value, 
         price_jp: priceJP,
         description_jp: document.getElementById('newProdDetailJP').value,
-        name_us: document.getElementById('newProdNameUS').value, 
+        name_us: document.getElementById('newProdNameUS').value,
         price_us: priceUS,
         description_us: document.getElementById('newProdDetailUS').value,
+        name_cn: document.getElementById('newProdNameCN').value,
+        description_cn: document.getElementById('newProdDetailCN').value,
+        name_ar: document.getElementById('newProdNameAR').value,
+        description_ar: document.getElementById('newProdDetailAR').value,
+        name_es: document.getElementById('newProdNameES').value,
+        description_es: document.getElementById('newProdDetailES').value,
         addons: addons
     };
 
@@ -933,7 +974,13 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdPriceJP').value = data.price_jp || '';
     document.getElementById('newProdNameUS').value = data.name_us || '';
     document.getElementById('newProdPriceUS').value = data.price_us || '';
-    
+    document.getElementById('newProdNameCN').value = data.name_cn || '';
+    document.getElementById('newProdPriceCN').value = data.price_cn || '';
+    document.getElementById('newProdNameAR').value = data.name_ar || '';
+    document.getElementById('newProdPriceAR').value = data.price_ar || '';
+    document.getElementById('newProdNameES').value = data.name_es || '';
+    document.getElementById('newProdPriceES').value = data.price_es || '';
+
     // 상세 정보 및 미리보기
     document.getElementById('newProdW').value = data.width_mm;
     document.getElementById('newProdH').value = data.height_mm;
@@ -947,6 +994,9 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdDetailKR').value = data.description || '';
     document.getElementById('newProdDetailJP').value = data.description_jp || '';
     document.getElementById('newProdDetailUS').value = data.description_us || '';
+    document.getElementById('newProdDetailCN').value = data.description_cn || '';
+    document.getElementById('newProdDetailAR').value = data.description_ar || '';
+    document.getElementById('newProdDetailES').value = data.description_es || '';
 
     // 버튼 상태 변경
     document.getElementById('btnProductSave').innerText = "상품 수정 저장";
@@ -1131,16 +1181,22 @@ window.autoTranslateInputs = async () => {
     btn.disabled = true;
 
     try {
-        const rateJPY = 0.2; 
-        const rateUSD = 0.002;
+        const rateJPY = 0.2, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
 
         if (krPrice && krPrice > 0) {
             document.getElementById('newProdPriceJP').value = Math.round(krPrice * rateJPY);
             document.getElementById('newProdPriceUS').value = (krPrice * rateUSD).toFixed(2);
+            document.getElementById('newProdPriceCN').value = Math.round(krPrice * rateCNY);
+            document.getElementById('newProdPriceAR').value = Math.round(krPrice * rateSAR);
+            document.getElementById('newProdPriceES').value = (krPrice * rateEUR).toFixed(2);
         }
 
         document.getElementById('newProdNameJP').value = await googleTranslate(krName, 'ja');
-        document.getElementById('newProdNameUS').value = await googleTranslate(krName, 'en');
+        const enName = await googleTranslate(krName, 'en');
+        document.getElementById('newProdNameUS').value = enName;
+        document.getElementById('newProdNameCN').value = await googleTranslate(enName, 'zh-CN');
+        document.getElementById('newProdNameAR').value = await googleTranslate(enName, 'ar');
+        document.getElementById('newProdNameES').value = await googleTranslate(enName, 'es');
 
         alert("✅ 상품명 및 가격 번역 완료!");
 
@@ -1157,7 +1213,11 @@ window.autoTranslateTopCategoryInputs = async () => {
     const krDesc = document.getElementById('newTopCatDesc') ? document.getElementById('newTopCatDesc').value : '';
     if (!krName) return alert("한국어 명칭을 입력해주세요.");
     document.getElementById('newTopCatNameJP').value = await googleTranslate(krName, 'ja');
-    document.getElementById('newTopCatNameUS').value = await googleTranslate(krName, 'en');
+    const enName = await googleTranslate(krName, 'en');
+    document.getElementById('newTopCatNameUS').value = enName;
+    document.getElementById('newTopCatNameCN').value = await googleTranslate(enName, 'zh-CN');
+    document.getElementById('newTopCatNameAR').value = await googleTranslate(enName, 'ar');
+    document.getElementById('newTopCatNameES').value = await googleTranslate(enName, 'es');
     if (krDesc) {
         if(document.getElementById('newTopCatDescJP')) document.getElementById('newTopCatDescJP').value = await googleTranslate(krDesc, 'ja');
         if(document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = await googleTranslate(krDesc, 'en');
@@ -1170,10 +1230,18 @@ window.autoTranslateCategoryInputs = async () => {
     const krDesc = document.getElementById('newCatDesc') ? document.getElementById('newCatDesc').value : '';
     if (!krName) return alert("한국어 명칭을 입력해주세요.");
     document.getElementById('newCatNameJP').value = await googleTranslate(krName, 'ja');
-    document.getElementById('newCatNameUS').value = await googleTranslate(krName, 'en');
+    const enName = await googleTranslate(krName, 'en');
+    document.getElementById('newCatNameUS').value = enName;
+    document.getElementById('newCatNameCN').value = await googleTranslate(enName, 'zh-CN');
+    document.getElementById('newCatNameAR').value = await googleTranslate(enName, 'ar');
+    document.getElementById('newCatNameES').value = await googleTranslate(enName, 'es');
     if (krDesc) {
         if(document.getElementById('newCatDescJP')) document.getElementById('newCatDescJP').value = await googleTranslate(krDesc, 'ja');
-        if(document.getElementById('newCatDescUS')) document.getElementById('newCatDescUS').value = await googleTranslate(krDesc, 'en');
+        const enDesc = await googleTranslate(krDesc, 'en');
+        if(document.getElementById('newCatDescUS')) document.getElementById('newCatDescUS').value = enDesc;
+        if(document.getElementById('newCatDescCN')) document.getElementById('newCatDescCN').value = await googleTranslate(enDesc, 'zh-CN');
+        if(document.getElementById('newCatDescAR')) document.getElementById('newCatDescAR').value = await googleTranslate(enDesc, 'ar');
+        if(document.getElementById('newCatDescES')) document.getElementById('newCatDescES').value = await googleTranslate(enDesc, 'es');
     }
     alert("✅ 소분류 번역 완료");
 };
@@ -1182,50 +1250,131 @@ window.autoTranslateAddonInputs = async () => {
     const krName = document.getElementById('nmKR').value;
     const krPrice = document.getElementById('prKR').value;
     if (!krName) return alert("한국어 명칭을 입력해주세요.");
-    const rateJPY = 0.2; 
-    const rateUSD = 0.002;
+    const rateJPY = 0.2, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
     if (krPrice) {
         document.getElementById('prJP').value = Math.round(krPrice * rateJPY);
         document.getElementById('prUS').value = (krPrice * rateUSD).toFixed(2);
+        document.getElementById('prCN').value = Math.round(krPrice * rateCNY);
+        document.getElementById('prAR').value = Math.round(krPrice * rateSAR);
+        document.getElementById('prES').value = (krPrice * rateEUR).toFixed(2);
     }
     document.getElementById('nmJP').value = await googleTranslate(krName, 'ja');
-    document.getElementById('nmUS').value = await googleTranslate(krName, 'en');
+    const enName = await googleTranslate(krName, 'en');
+    document.getElementById('nmUS').value = enName;
+    document.getElementById('nmCN').value = await googleTranslate(enName, 'zh-CN');
+    document.getElementById('nmAR').value = await googleTranslate(enName, 'ar');
+    document.getElementById('nmES').value = await googleTranslate(enName, 'es');
     alert("✅ 옵션 번역 완료");
 };
 
 window.bulkTranslateAll = async () => {
-    if (!confirm("전체 상품/옵션의 빈 칸을 자동으로 번역하시겠습니까?\n(시간이 다소 소요될 수 있습니다)")) return;
+    if (!confirm("전체 상품/옵션/카테고리의 빈 번역을 자동으로 채우시겠습니까?\n(JP/US/CN/AR/ES 모두 포함, 시간이 다소 소요됩니다)")) return;
     const btn = document.getElementById('btnBulkTranslate') || document.activeElement;
     const oldText = btn.innerText;
-    btn.innerText = "번역 진행중...";
     btn.disabled = true;
+
+    // 영어 번역 캐시 (동일 원문 중복 호출 방지)
+    const enCache = {};
+    async function getEnglish(krText) {
+        if (!krText) return '';
+        if (enCache[krText]) return enCache[krText];
+        enCache[krText] = await googleTranslate(krText, 'en');
+        return enCache[krText];
+    }
+
     try {
+        // ── 1. 상품 (admin_products) ──
         const { data: products } = await sb.from('admin_products').select('*');
         let pCount = 0;
-        for (const p of products) {
+        for (let i = 0; i < products.length; i++) {
+            const p = products[i];
+            btn.innerText = `번역 중... (상품 ${i+1}/${products.length})`;
             let updates = {};
             let needUpdate = false;
-            if (!p.name_jp) { updates.name_jp = await googleTranslate(p.name, 'ja'); needUpdate = true; }
-            if (!p.name_us) { updates.name_us = await googleTranslate(p.name, 'en'); needUpdate = true; }
+            if (!p.name_jp && p.name) { updates.name_jp = await googleTranslate(p.name, 'ja'); needUpdate = true; }
+            if (!p.name_us && p.name) { updates.name_us = await getEnglish(p.name); needUpdate = true; }
+            const enName = p.name_us || updates.name_us || await getEnglish(p.name);
+            if (!p.name_cn && enName) { updates.name_cn = await googleTranslate(enName, 'zh-CN'); needUpdate = true; }
+            if (!p.name_ar && enName) { updates.name_ar = await googleTranslate(enName, 'ar'); needUpdate = true; }
+            if (!p.name_es && enName) { updates.name_es = await googleTranslate(enName, 'es'); needUpdate = true; }
             if (needUpdate) {
                 await sb.from('admin_products').update(updates).eq('id', p.id);
                 pCount++;
             }
         }
+
+        // ── 2. 옵션 (admin_addons) ──
         const { data: addons } = await sb.from('admin_addons').select('*');
         let aCount = 0;
-        for (const a of addons) {
+        for (let i = 0; i < addons.length; i++) {
+            const a = addons[i];
+            btn.innerText = `번역 중... (옵션 ${i+1}/${addons.length})`;
             let updates = {};
             let needUpdate = false;
             const srcName = a.name_kr || a.name;
-            if (!a.name_jp) { updates.name_jp = await googleTranslate(srcName, 'ja'); needUpdate = true; }
-            if (!a.name_us) { updates.name_us = await googleTranslate(srcName, 'en'); needUpdate = true; }
+            if (!a.name_jp && srcName) { updates.name_jp = await googleTranslate(srcName, 'ja'); needUpdate = true; }
+            if (!a.name_us && srcName) { updates.name_us = await getEnglish(srcName); needUpdate = true; }
+            const enName = a.name_us || updates.name_us || await getEnglish(srcName);
+            if (!a.name_cn && enName) { updates.name_cn = await googleTranslate(enName, 'zh-CN'); needUpdate = true; }
+            if (!a.name_ar && enName) { updates.name_ar = await googleTranslate(enName, 'ar'); needUpdate = true; }
+            if (!a.name_es && enName) { updates.name_es = await googleTranslate(enName, 'es'); needUpdate = true; }
             if (needUpdate) {
                 await sb.from('admin_addons').update(updates).eq('id', a.id);
                 aCount++;
             }
         }
-        alert(`완료되었습니다! (상품 ${pCount}개, 옵션 ${aCount}개 업데이트)`);
+
+        // ── 3. 대분류 (admin_top_categories) ──
+        const { data: topCats } = await sb.from('admin_top_categories').select('*');
+        let tcCount = 0;
+        for (const tc of (topCats || [])) {
+            btn.innerText = `번역 중... (대분류)`;
+            let updates = {};
+            let needUpdate = false;
+            if (!tc.name_jp && tc.name) { updates.name_jp = await googleTranslate(tc.name, 'ja'); needUpdate = true; }
+            if (!tc.name_us && tc.name) { updates.name_us = await getEnglish(tc.name); needUpdate = true; }
+            const enN = tc.name_us || updates.name_us || await getEnglish(tc.name);
+            if (!tc.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
+            if (!tc.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
+            if (!tc.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
+            if (needUpdate) { await sb.from('admin_top_categories').update(updates).eq('id', tc.id); tcCount++; }
+        }
+
+        // ── 4. 소분류 (admin_categories) ──
+        const { data: subCats } = await sb.from('admin_categories').select('*');
+        let scCount = 0;
+        for (const sc of (subCats || [])) {
+            btn.innerText = `번역 중... (소분류)`;
+            let updates = {};
+            let needUpdate = false;
+            if (!sc.name_jp && sc.name) { updates.name_jp = await googleTranslate(sc.name, 'ja'); needUpdate = true; }
+            if (!sc.name_us && sc.name) { updates.name_us = await getEnglish(sc.name); needUpdate = true; }
+            const enN = sc.name_us || updates.name_us || await getEnglish(sc.name);
+            if (!sc.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
+            if (!sc.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
+            if (!sc.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
+            if (needUpdate) { await sb.from('admin_categories').update(updates).eq('id', sc.id); scCount++; }
+        }
+
+        // ── 5. 옵션 카테고리 (addon_categories) ──
+        const { data: addonCats } = await sb.from('addon_categories').select('*');
+        let acCount = 0;
+        for (const ac of (addonCats || [])) {
+            btn.innerText = `번역 중... (옵션카테고리)`;
+            let updates = {};
+            let needUpdate = false;
+            const src = ac.name_kr || ac.name;
+            if (!ac.name_jp && src) { updates.name_jp = await googleTranslate(src, 'ja'); needUpdate = true; }
+            if (!ac.name_us && src) { updates.name_us = await getEnglish(src); needUpdate = true; }
+            const enN = ac.name_us || updates.name_us || await getEnglish(src);
+            if (!ac.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
+            if (!ac.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
+            if (!ac.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
+            if (needUpdate) { await sb.from('addon_categories').update(updates).eq('id', ac.id); acCount++; }
+        }
+
+        const total = pCount + aCount + tcCount + scCount + acCount;
+        alert(`✅ 일괄 번역 완료!\n\n상품 ${pCount}개 | 옵션 ${aCount}개 | 대분류 ${tcCount}개 | 소분류 ${scCount}개 | 옵션카테고리 ${acCount}개\n총 ${total}개 업데이트`);
     } catch (e) {
         alert("일괄 번역 중 오류: " + e.message);
     } finally {
@@ -1545,7 +1694,7 @@ window.openCommonInfoModal = async () => {
 
 window.loadCommonInfoContent = async (categoryCode) => {
     const dbClient = window.sb || window._supabase;
-    ['commonHtmlKR', 'commonHtmlJP', 'commonHtmlUS'].forEach(id => document.getElementById(id).value = "로딩 중...");
+    ['commonHtmlKR', 'commonHtmlJP', 'commonHtmlUS', 'commonHtmlCN', 'commonHtmlAR', 'commonHtmlES'].forEach(id => { const el = document.getElementById(id); if(el) el.value = "로딩 중..."; });
 
     const { data } = await dbClient.from('common_info').select('*')
         .eq('section', 'top').eq('category_code', categoryCode).single();
@@ -1553,6 +1702,9 @@ window.loadCommonInfoContent = async (categoryCode) => {
     document.getElementById('commonHtmlKR').value = data ? (data.content || '') : '';
     document.getElementById('commonHtmlJP').value = data ? (data.content_jp || '') : '';
     document.getElementById('commonHtmlUS').value = data ? (data.content_us || '') : '';
+    document.getElementById('commonHtmlCN').value = data ? (data.content_cn || '') : '';
+    document.getElementById('commonHtmlAR').value = data ? (data.content_ar || '') : '';
+    document.getElementById('commonHtmlES').value = data ? (data.content_es || '') : '';
     
     const btnRestore = document.getElementById('btnRestoreCommon');
     if (data && (data.content_backup || data.content_backup_jp)) {
@@ -1580,9 +1732,15 @@ window.saveCommonInfo = async () => {
         content: document.getElementById('commonHtmlKR').value,
         content_jp: document.getElementById('commonHtmlJP').value,
         content_us: document.getElementById('commonHtmlUS').value,
+        content_cn: document.getElementById('commonHtmlCN').value,
+        content_ar: document.getElementById('commonHtmlAR').value,
+        content_es: document.getElementById('commonHtmlES').value,
         content_backup: oldData ? oldData.content : null,
         content_backup_jp: oldData ? oldData.content_jp : null,
-        content_backup_us: oldData ? oldData.content_us : null
+        content_backup_us: oldData ? oldData.content_us : null,
+        content_backup_cn: oldData ? oldData.content_cn : null,
+        content_backup_ar: oldData ? oldData.content_ar : null,
+        content_backup_es: oldData ? oldData.content_es : null
     };
 
     const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
@@ -1595,6 +1753,9 @@ window.restoreCommonInfo = async (data) => {
     document.getElementById('commonHtmlKR').value = data.content_backup || '';
     document.getElementById('commonHtmlJP').value = data.content_backup_jp || '';
     document.getElementById('commonHtmlUS').value = data.content_backup_us || '';
+    document.getElementById('commonHtmlCN').value = data.content_backup_cn || '';
+    document.getElementById('commonHtmlAR').value = data.content_backup_ar || '';
+    document.getElementById('commonHtmlES').value = data.content_backup_es || '';
     alert("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.");
 };
 
@@ -1638,7 +1799,7 @@ window.autoTranslatePopupDetail = async () => {
     btn.disabled = true;
 
     try {
-        const targets = [ {code:'ja', f:'JP'}, {code:'en', f:'US'} ];
+        const targets = [ {code:'ja', f:'JP'}, {code:'en', f:'US'}, {code:'zh-CN', f:'CN'}, {code:'ar', f:'AR'}, {code:'es', f:'ES'} ];
         for(const t of targets) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = sourceHtml;
