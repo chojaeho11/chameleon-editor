@@ -21,6 +21,173 @@ const CURRENT_LANG = _langMap[_detectedLang.toUpperCase()] || 'KR';
 let DYNAMIC_FONTS = [];
 
 // ============================================================
+// Google Fonts 무료 서체 (언어별 큐레이션)
+// ============================================================
+const GOOGLE_FONTS = {
+    'KR': [
+        { font_name: '노토 산스', font_family: 'Noto Sans KR', weights: '300;400;700' },
+        { font_name: '나눔고딕', font_family: 'Nanum Gothic', weights: '400;700;800' },
+        { font_name: '나눔명조', font_family: 'Nanum Myeongjo', weights: '400;700' },
+        { font_name: '검은고딕', font_family: 'Black Han Sans', weights: '400' },
+        { font_name: '나눔펜스크립트', font_family: 'Nanum Pen Script', weights: '400' },
+        { font_name: '도현', font_family: 'Do Hyeon', weights: '400' },
+        { font_name: '주아', font_family: 'Jua', weights: '400' },
+        { font_name: '싱글데이', font_family: 'Single Day', weights: '400' },
+        { font_name: '고틱 A1', font_family: 'Gothic A1', weights: '400;700;900' },
+        { font_name: '하이멜로디', font_family: 'Hi Melody', weights: '400' },
+        { font_name: '감자꽃', font_family: 'Gamja Flower', weights: '400' },
+        { font_name: '귀여운글씨', font_family: 'Cute Font', weights: '400' },
+        { font_name: '이스트 시 도쿄', font_family: 'East Sea Dokdo', weights: '400' },
+        { font_name: '가비아 솔밋', font_family: 'Gaegu', weights: '300;400;700' },
+        { font_name: '블랙앤화이트', font_family: 'Black And White Picture', weights: '400' },
+        { font_name: '송명체', font_family: 'Song Myung', weights: '400' },
+        { font_name: '스타일리쉬', font_family: 'Stylish', weights: '400' },
+        { font_name: '풍겨', font_family: 'Poor Story', weights: '400' },
+        { font_name: '요온체', font_family: 'Yeon Sung', weights: '400' },
+        { font_name: '국민연금체', font_family: 'Gowun Dodum', weights: '400' },
+        { font_name: '고운바탕', font_family: 'Gowun Batang', weights: '400;700' },
+        { font_name: '나눔브러쉬', font_family: 'Nanum Brush Script', weights: '400' },
+        { font_name: 'IBM 플렉스 산스', font_family: 'IBM Plex Sans KR', weights: '300;400;600;700' }
+    ],
+    'JA': [
+        { font_name: 'Noto Sans JP', font_family: 'Noto Sans JP', weights: '300;400;500;700;900' },
+        { font_name: 'Noto Serif JP', font_family: 'Noto Serif JP', weights: '400;700' },
+        { font_name: 'M PLUS Rounded 1c', font_family: 'M PLUS Rounded 1c', weights: '300;400;700;900' },
+        { font_name: 'Zen Maru Gothic', font_family: 'Zen Maru Gothic', weights: '400;500;700' },
+        { font_name: 'Sawarabi Mincho', font_family: 'Sawarabi Mincho', weights: '400' },
+        { font_name: 'Sawarabi Gothic', font_family: 'Sawarabi Gothic', weights: '400' },
+        { font_name: 'Kosugi Maru', font_family: 'Kosugi Maru', weights: '400' },
+        { font_name: 'Shippori Mincho', font_family: 'Shippori Mincho', weights: '400;600;700' },
+        { font_name: 'Klee One', font_family: 'Klee One', weights: '400;600' },
+        { font_name: 'Zen Kaku Gothic New', font_family: 'Zen Kaku Gothic New', weights: '400;500;700' },
+        { font_name: 'Hachi Maru Pop', font_family: 'Hachi Maru Pop', weights: '400' },
+        { font_name: 'Kaisei Opti', font_family: 'Kaisei Opti', weights: '400;700' },
+        { font_name: 'Kaisei Decol', font_family: 'Kaisei Decol', weights: '400;700' },
+        { font_name: 'Zen Antique', font_family: 'Zen Antique', weights: '400' },
+        { font_name: 'Reggae One', font_family: 'Reggae One', weights: '400' },
+        { font_name: 'RocknRoll One', font_family: 'RocknRoll One', weights: '400' },
+        { font_name: 'Stick', font_family: 'Stick', weights: '400' },
+        { font_name: 'Yomogi', font_family: 'Yomogi', weights: '400' },
+        { font_name: 'Yusei Magic', font_family: 'Yusei Magic', weights: '400' },
+        { font_name: 'DotGothic16', font_family: 'DotGothic16', weights: '400' },
+        { font_name: 'Dela Gothic One', font_family: 'Dela Gothic One', weights: '400' },
+        { font_name: 'Train One', font_family: 'Train One', weights: '400' },
+        { font_name: 'Zen Kurenaido', font_family: 'Zen Kurenaido', weights: '400' },
+        { font_name: 'M PLUS 1p', font_family: 'M PLUS 1p', weights: '300;400;700;900' },
+        { font_name: 'Murecho', font_family: 'Murecho', weights: '300;400;700;900' }
+    ],
+    'EN': [
+        { font_name: 'Inter', font_family: 'Inter', weights: '300;400;500;600;700;900' },
+        { font_name: 'Poppins', font_family: 'Poppins', weights: '300;400;500;600;700;900' },
+        { font_name: 'Roboto', font_family: 'Roboto', weights: '300;400;500;700;900' },
+        { font_name: 'Montserrat', font_family: 'Montserrat', weights: '300;400;600;700;900' },
+        { font_name: 'Open Sans', font_family: 'Open Sans', weights: '300;400;600;700' },
+        { font_name: 'Lato', font_family: 'Lato', weights: '300;400;700;900' },
+        { font_name: 'Oswald', font_family: 'Oswald', weights: '300;400;600;700' },
+        { font_name: 'Raleway', font_family: 'Raleway', weights: '300;400;600;700;900' },
+        { font_name: 'Playfair Display', font_family: 'Playfair Display', weights: '400;600;700;900' },
+        { font_name: 'Merriweather', font_family: 'Merriweather', weights: '300;400;700;900' },
+        { font_name: 'Nunito', font_family: 'Nunito', weights: '300;400;600;700;900' },
+        { font_name: 'Quicksand', font_family: 'Quicksand', weights: '300;400;500;600;700' },
+        { font_name: 'DM Sans', font_family: 'DM Sans', weights: '400;500;700' },
+        { font_name: 'Bebas Neue', font_family: 'Bebas Neue', weights: '400' },
+        { font_name: 'Lobster', font_family: 'Lobster', weights: '400' },
+        { font_name: 'Pacifico', font_family: 'Pacifico', weights: '400' },
+        { font_name: 'Dancing Script', font_family: 'Dancing Script', weights: '400;600;700' },
+        { font_name: 'Caveat', font_family: 'Caveat', weights: '400;600;700' },
+        { font_name: 'Great Vibes', font_family: 'Great Vibes', weights: '400' },
+        { font_name: 'Satisfy', font_family: 'Satisfy', weights: '400' },
+        { font_name: 'Abril Fatface', font_family: 'Abril Fatface', weights: '400' },
+        { font_name: 'Permanent Marker', font_family: 'Permanent Marker', weights: '400' },
+        { font_name: 'Josefin Sans', font_family: 'Josefin Sans', weights: '300;400;600;700' },
+        { font_name: 'Archivo Black', font_family: 'Archivo Black', weights: '400' },
+        { font_name: 'Righteous', font_family: 'Righteous', weights: '400' },
+        { font_name: 'Russo One', font_family: 'Russo One', weights: '400' },
+        { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
+        { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
+        { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
+    ],
+    'ES': [
+        { font_name: 'Inter', font_family: 'Inter', weights: '300;400;500;600;700;900' },
+        { font_name: 'Poppins', font_family: 'Poppins', weights: '300;400;500;600;700;900' },
+        { font_name: 'Roboto', font_family: 'Roboto', weights: '300;400;500;700;900' },
+        { font_name: 'Montserrat', font_family: 'Montserrat', weights: '300;400;600;700;900' },
+        { font_name: 'Open Sans', font_family: 'Open Sans', weights: '300;400;600;700' },
+        { font_name: 'Lato', font_family: 'Lato', weights: '300;400;700;900' },
+        { font_name: 'Oswald', font_family: 'Oswald', weights: '300;400;600;700' },
+        { font_name: 'Raleway', font_family: 'Raleway', weights: '300;400;600;700;900' },
+        { font_name: 'Playfair Display', font_family: 'Playfair Display', weights: '400;600;700;900' },
+        { font_name: 'Merriweather', font_family: 'Merriweather', weights: '300;400;700;900' },
+        { font_name: 'Nunito', font_family: 'Nunito', weights: '300;400;600;700;900' },
+        { font_name: 'Quicksand', font_family: 'Quicksand', weights: '300;400;500;600;700' },
+        { font_name: 'DM Sans', font_family: 'DM Sans', weights: '400;500;700' },
+        { font_name: 'Bebas Neue', font_family: 'Bebas Neue', weights: '400' },
+        { font_name: 'Lobster', font_family: 'Lobster', weights: '400' },
+        { font_name: 'Pacifico', font_family: 'Pacifico', weights: '400' },
+        { font_name: 'Dancing Script', font_family: 'Dancing Script', weights: '400;600;700' },
+        { font_name: 'Caveat', font_family: 'Caveat', weights: '400;600;700' },
+        { font_name: 'Great Vibes', font_family: 'Great Vibes', weights: '400' },
+        { font_name: 'Satisfy', font_family: 'Satisfy', weights: '400' },
+        { font_name: 'Abril Fatface', font_family: 'Abril Fatface', weights: '400' },
+        { font_name: 'Permanent Marker', font_family: 'Permanent Marker', weights: '400' },
+        { font_name: 'Josefin Sans', font_family: 'Josefin Sans', weights: '300;400;600;700' },
+        { font_name: 'Archivo Black', font_family: 'Archivo Black', weights: '400' },
+        { font_name: 'Righteous', font_family: 'Righteous', weights: '400' },
+        { font_name: 'Russo One', font_family: 'Russo One', weights: '400' },
+        { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
+        { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
+        { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
+    ],
+    'ZH': [
+        { font_name: '思源黑体', font_family: 'Noto Sans SC', weights: '300;400;500;700;900' },
+        { font_name: '思源宋体', font_family: 'Noto Serif SC', weights: '400;600;700;900' },
+        { font_name: 'ZCOOL 小薇', font_family: 'ZCOOL XiaoWei', weights: '400' },
+        { font_name: 'ZCOOL 庆科黄油', font_family: 'ZCOOL QingKe HuangYou', weights: '400' },
+        { font_name: 'ZCOOL 快乐体', font_family: 'ZCOOL KuaiLe', weights: '400' },
+        { font_name: '马善政楷', font_family: 'Ma Shan Zheng', weights: '400' },
+        { font_name: '龙藏体', font_family: 'Long Cang', weights: '400' },
+        { font_name: '刘建毛草', font_family: 'Liu Jian Mao Cao', weights: '400' },
+        { font_name: '志莽行书', font_family: 'Zhi Mang Xing', weights: '400' },
+        { font_name: '黑体 (Heiti)', font_family: 'Noto Sans SC', weights: '900' },
+        { font_name: '宋体 (Songti)', font_family: 'Noto Serif SC', weights: '400' }
+    ],
+    'AR': [
+        { font_name: 'Noto Sans Arabic', font_family: 'Noto Sans Arabic', weights: '300;400;500;600;700;900' },
+        { font_name: 'Noto Kufi Arabic', font_family: 'Noto Kufi Arabic', weights: '400;700' },
+        { font_name: 'Noto Naskh Arabic', font_family: 'Noto Naskh Arabic', weights: '400;600;700' },
+        { font_name: 'Amiri', font_family: 'Amiri', weights: '400;700' },
+        { font_name: 'Cairo', font_family: 'Cairo', weights: '300;400;600;700;900' },
+        { font_name: 'Tajawal', font_family: 'Tajawal', weights: '300;400;500;700;900' },
+        { font_name: 'El Messiri', font_family: 'El Messiri', weights: '400;500;600;700' },
+        { font_name: 'Lemonada', font_family: 'Lemonada', weights: '300;400;600;700' },
+        { font_name: 'Scheherazade New', font_family: 'Scheherazade New', weights: '400;700' },
+        { font_name: 'Readex Pro', font_family: 'Readex Pro', weights: '300;400;600;700' },
+        { font_name: 'IBM Plex Sans Arabic', font_family: 'IBM Plex Sans Arabic', weights: '300;400;500;600;700' },
+        { font_name: 'Almarai', font_family: 'Almarai', weights: '300;400;700;800' },
+        { font_name: 'Changa', font_family: 'Changa', weights: '300;400;600;700' },
+        { font_name: 'Harmattan', font_family: 'Harmattan', weights: '400;700' },
+        { font_name: 'Reem Kufi', font_family: 'Reem Kufi', weights: '400;600;700' },
+        { font_name: 'Mada', font_family: 'Mada', weights: '300;400;500;700;900' },
+        { font_name: 'Markazi Text', font_family: 'Markazi Text', weights: '400;500;600;700' },
+        { font_name: 'Aref Ruqaa', font_family: 'Aref Ruqaa', weights: '400;700' },
+        { font_name: 'Lalezar', font_family: 'Lalezar', weights: '400' },
+        { font_name: 'Baloo Bhaijaan 2', font_family: 'Baloo Bhaijaan 2', weights: '400;600;700;800' }
+    ]
+};
+
+// Google Fonts CSS URL을 폰트 리스트에서 자동 생성
+function buildGoogleFontsURL(lang) {
+    const fonts = GOOGLE_FONTS[lang] || GOOGLE_FONTS['EN'];
+    const families = fonts.map(f => {
+        const name = f.font_family.replace(/ /g, '+');
+        return `family=${name}:wght@${f.weights}`;
+    });
+    return `https://fonts.googleapis.com/css2?${families.join('&')}&display=swap`;
+}
+
+// ============================================================
 // [1] 초기화 함수 (Main Init)
 // ============================================================
 export async function initObjectTools() {
@@ -61,18 +228,9 @@ function loadGoogleWebFontsCSS() {
     const link = document.createElement("link");
     link.id = "google-fonts-link";
     link.rel = "stylesheet";
-    if (CURRENT_LANG === 'JP' || CURRENT_LANG === 'JA') {
-        link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=M+PLUS+Rounded+1c&family=Zen+Maru+Gothic&display=swap";
-    } else if (CURRENT_LANG === 'US' || CURRENT_LANG === 'EN' || CURRENT_LANG === 'ES') {
-        link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap";
-    } else if (CURRENT_LANG === 'ZH') {
-        link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap";
-    } else if (CURRENT_LANG === 'AR') {
-        link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;700&display=swap";
-    } else {
-        link.href = "https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic&family=Nanum+Myeongjo&family=Noto+Sans+KR&display=swap";
-    }
+    link.href = buildGoogleFontsURL(CURRENT_LANG);
     document.head.appendChild(link);
+    console.log(`📥 [Font] Google Fonts CSS loaded for ${CURRENT_LANG} (${(GOOGLE_FONTS[CURRENT_LANG]||[]).length} fonts)`);
 }
 
 // ★ 핵심: Supabase에서 폰트 목록을 가져와 브라우저에 등록
@@ -80,19 +238,20 @@ async function loadDynamicFonts() {
     try {
         console.log(`📥 [Font] ${CURRENT_LANG} 폰트 로딩 중...`);
         
-        // 현재 국가코드와 일치하는 폰트만 조회 (오래된 순 = 등록순)
+        // 현재 국가코드와 일치하는 폰트만 조회 (레거시 JP/US 호환)
+        const codeAliases = { 'JA': ['JA','JP'], 'EN': ['EN','US'] };
+        const codes = codeAliases[CURRENT_LANG] || [CURRENT_LANG];
         const { data, error } = await sb.from('site_fonts')
             .select('*')
-            .eq('site_code', CURRENT_LANG)
+            .in('site_code', codes)
             .order('created_at', { ascending: true });
 
         if (error) throw error;
 
-        DYNAMIC_FONTS = data || [];
-        window.DYNAMIC_FONTS = DYNAMIC_FONTS;
+        const dbFonts = data || [];
 
-        // FontFace API를 사용하여 폰트 파일 비동기 로드
-        const fontPromises = DYNAMIC_FONTS.map(font => {
+        // FontFace API를 사용하여 DB 폰트 파일 비동기 로드
+        const fontPromises = dbFonts.map(font => {
             const fontFace = new FontFace(font.font_family, `url(${encodeURI(font.file_url)})`);
             return fontFace.load().then(loadedFace => {
                 document.fonts.add(loadedFace);
@@ -103,6 +262,21 @@ async function loadDynamicFonts() {
         });
 
         await Promise.all(fontPromises);
+
+        // Google Fonts를 목록에 병합 (DB 폰트가 위, Google Fonts가 아래)
+        const googleFonts = (GOOGLE_FONTS[CURRENT_LANG] || []).map(gf => ({
+            font_name: gf.font_name,
+            font_family: gf.font_family,
+            file_url: null,
+            is_google_font: true
+        }));
+        // DB에 이미 같은 font_family가 있으면 중복 제거
+        const dbFamilies = new Set(dbFonts.map(f => f.font_family));
+        const uniqueGoogleFonts = googleFonts.filter(gf => !dbFamilies.has(gf.font_family));
+
+        DYNAMIC_FONTS = [...dbFonts, ...uniqueGoogleFonts];
+        window.DYNAMIC_FONTS = DYNAMIC_FONTS;
+        console.log(`📋 [Font] Total: ${dbFonts.length} DB + ${uniqueGoogleFonts.length} Google = ${DYNAMIC_FONTS.length} fonts`);
 
     } catch (e) {
         console.error("폰트 목록 DB 로딩 실패:", e);

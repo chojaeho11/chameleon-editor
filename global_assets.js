@@ -274,7 +274,8 @@ window.loadFonts = async () => {
                 }
             }
 
-            let flag = f.site_code === 'JP' ? '🇯🇵' : (f.site_code === 'US' ? '🇺🇸' : '🇰🇷');
+            const flagMap = { 'KR':'🇰🇷', 'JA':'🇯🇵', 'JP':'🇯🇵', 'EN':'🇺🇸', 'US':'🇺🇸', 'ZH':'🇨🇳', 'CN':'🇨🇳', 'AR':'🇸🇦', 'ES':'🇪🇸' };
+            let flag = flagMap[f.site_code] || '🌐';
 
             tbody.innerHTML += `
                 <tr>
