@@ -13,10 +13,11 @@
         else if (_h.includes('cafe3355.com')) currentLang = 'us';
         else currentLang = 'kr';
     }
-    const langKey = (currentLang === 'en' || currentLang === 'us' || currentLang === 'es') ? 'en'
+    const langKey = (currentLang === 'en' || currentLang === 'us') ? 'en'
         : (currentLang === 'ja' || currentLang === 'jp') ? 'ja'
         : (currentLang === 'zh' || currentLang === 'cn') ? 'zh'
         : (currentLang === 'ar') ? 'ar'
+        : (currentLang === 'es') ? 'es'
         : 'kr';
 
     // 2. 폰트 선택 함수 (DYNAMIC_FONTS가 로드된 후 실행 시점에 호출)
@@ -27,7 +28,8 @@
             ja: { title: 'Noto Sans JP', sub: 'Noto Sans JP', emo: 'Noto Sans JP', point: 'Noto Sans JP', deco: 'Noto Sans JP' },
             en: { title: 'Impact', sub: 'Arial', emo: 'Georgia', point: 'Helvetica', deco: 'Arial' },
             zh: { title: 'Noto Sans SC', sub: 'Noto Sans SC', emo: 'Noto Sans SC', point: 'Noto Sans SC', deco: 'Noto Sans SC' },
-            ar: { title: 'Noto Sans Arabic', sub: 'Noto Sans Arabic', emo: 'Noto Sans Arabic', point: 'Noto Sans Arabic', deco: 'Noto Sans Arabic' }
+            ar: { title: 'Noto Sans Arabic', sub: 'Noto Sans Arabic', emo: 'Noto Sans Arabic', point: 'Noto Sans Arabic', deco: 'Noto Sans Arabic' },
+            es: { title: 'Inter', sub: 'Inter', emo: 'Georgia', point: 'Inter', deco: 'Inter' }
         };
         const fb = fallbacks[langKey] || fallbacks['en'];
         return {
@@ -49,16 +51,17 @@
     const WIZ_DATA = {
         kr: {
             basic: {
-                badge: "SKIN CARE",
-                main: "숨어있던\n꿀피부 찾기",
-                sub: "지친 피부에 '수분 에너지'를 채우세요!",
-                grid: [
-                    { badge: "꿀할인.01", title: "집중 보습", sub: "<2주 프로그램>", old: "50만원", new: "34만원" },
-                    { badge: "꿀할인.02", title: "여드름 흉터", sub: "<3주 프로그램>", old: "60만원", new: "52만원" },
-                    { badge: "꿀할인.03", title: "모공 관리", sub: "<1주 프로그램>", old: "25만원", new: "18만원" }
+                brand: "GRACE FLOWER",
+                main: "그레이스\n플라워",
+                sub: "주문 겨울에도 꽃내음은 따뜻한 봄처럼",
+                sections: [
+                    { title: "꽃제품", items: "꽃다발/꽃바구니/플라워박스/부케\n꽃장식구독/화환꽃리스/센터피스" },
+                    { title: "플라워레슨", items: "기업 강의/원데이클래스/취미반수업\n1:1레슨/그룹레슨/방문레슨" }
                 ],
-                footer: "수험표 지참시 20% 할인 | 예약문의 : 012-3456-7890",
-                date: "EVENT 11.01 ~ 12.31"
+                event: "이벤트",
+                eventDesc: "전단지 찍어서 오신분 10%DC",
+                footer: "서울지역 | 꽃배달 가능",
+                contact: "문의 010.4567.8900 인스타그램 flower"
             },
             flyer: {
                 topLabel: "EXHIBITION 2024",
@@ -114,16 +117,17 @@
         },
         en: {
             basic: {
-                badge: "SKIN CARE",
-                main: "Discover Your\nGlowing Skin",
-                sub: "Recharge tired skin with 'Hydra Energy'!",
-                grid: [
-                    { badge: "DEAL.01", title: "Deep Moisture", sub: "<2 Week Program>", old: "$500", new: "$340" },
-                    { badge: "DEAL.02", title: "Acne Scar Care", sub: "<3 Week Program>", old: "$600", new: "$520" },
-                    { badge: "DEAL.03", title: "Pore Treatment", sub: "<1 Week Program>", old: "$250", new: "$180" }
+                brand: "GRACE FLOWER",
+                main: "Grace\nFlower",
+                sub: "Beautiful blooms delivered with warmth, all year round",
+                sections: [
+                    { title: "Flowers", items: "Bouquets / Baskets / Flower Boxes / Bridal\nSubscriptions / Wreaths / Centerpieces" },
+                    { title: "Flower Lessons", items: "Corporate Workshops / One-Day Class\n1:1 Lessons / Group Lessons / Home Visit" }
                 ],
-                footer: "Student ID = 20% OFF | Reserve: 012-3456-7890",
-                date: "EVENT 11.01 ~ 12.31"
+                event: "Event",
+                eventDesc: "Show this flyer for 10% OFF",
+                footer: "Delivery Available",
+                contact: "Call 010.4567.8900  IG @flower"
             },
             flyer: {
                 topLabel: "EXHIBITION 2024",
@@ -179,16 +183,17 @@
         },
         ja: {
             basic: {
-                badge: "SKIN CARE",
-                main: "隠れていた\nツヤ肌発見",
-                sub: "疲れた肌に「水分エネルギー」をチャージ！",
-                grid: [
-                    { badge: "特価.01", title: "集中保湿", sub: "<2週間コース>", old: "¥50,000", new: "¥34,000" },
-                    { badge: "特価.02", title: "ニキビ跡", sub: "<3週間コース>", old: "¥60,000", new: "¥52,000" },
-                    { badge: "特価.03", title: "毛穴ケア", sub: "<1週間コース>", old: "¥25,000", new: "¥18,000" }
+                brand: "GRACE FLOWER",
+                main: "グレース\nフラワー",
+                sub: "冬でも花の香りは暖かい春のように",
+                sections: [
+                    { title: "花製品", items: "花束/フラワーバスケット/フラワーボックス/ブーケ\n花の定期便/リース/センターピース" },
+                    { title: "フラワーレッスン", items: "企業研修/ワンデイクラス/趣味コース\nマンツーマン/グループ/出張レッスン" }
                 ],
-                footer: "学生証提示で20%OFF | ご予約 : 03-1234-5678",
-                date: "EVENT 11.01 ~ 12.31"
+                event: "イベント",
+                eventDesc: "このチラシご提示で10%OFF",
+                footer: "東京都内 | 配達対応",
+                contact: "お問合せ 03.4567.8900  IG @flower"
             },
             flyer: {
                 topLabel: "EXHIBITION 2024",
@@ -241,6 +246,51 @@
                 likes: "999,999件のいいね",
                 hashtags: "#デザイン #クリエイティブ #印刷 #カメレオン #アート\n#ブランディング #ポップアップ #展示会 #おしゃれ #最高"
             }
+        },
+        zh: {
+            basic: {
+                brand: "GRACE FLOWER",
+                main: "优雅\n花坊",
+                sub: "即使在冬天，花香也如春天般温暖",
+                sections: [
+                    { title: "花卉产品", items: "花束/花篮/花盒/新娘捧花\n鲜花订阅/花环/桌花装饰" },
+                    { title: "花艺课程", items: "企业培训/一日体验课/兴趣班\n一对一/小组课/上门教学" }
+                ],
+                event: "活动",
+                eventDesc: "出示传单享9折优惠",
+                footer: "全城配送",
+                contact: "咨询 010.4567.8900  IG @flower"
+            }
+        },
+        ar: {
+            basic: {
+                brand: "GRACE FLOWER",
+                main: "غريس\nفلاور",
+                sub: "حتى في الشتاء، عطر الزهور دافئ كالربيع",
+                sections: [
+                    { title: "منتجات الزهور", items: "باقات / سلال / صناديق زهور / بوكيه عروس\nاشتراك زهور / أكاليل / تنسيقات" },
+                    { title: "دروس تنسيق الزهور", items: "ورش عمل / حصة يوم واحد / صف هواية\nدرس خاص / مجموعات / زيارة منزلية" }
+                ],
+                event: "عرض خاص",
+                eventDesc: "أظهر هذا المنشور واحصل على خصم 10%",
+                footer: "التوصيل متاح",
+                contact: "للاستفسار 010.4567.8900  IG @flower"
+            }
+        },
+        es: {
+            basic: {
+                brand: "GRACE FLOWER",
+                main: "Grace\nFlower",
+                sub: "Incluso en invierno, el aroma floral es cálido como la primavera",
+                sections: [
+                    { title: "Productos Florales", items: "Ramos / Cestas / Cajas de Flores / Ramo Nupcial\nSuscripción Floral / Coronas / Centros de Mesa" },
+                    { title: "Clases de Flores", items: "Talleres Corporativos / Clase de Un Día\nClase Privada / Grupal / A Domicilio" }
+                ],
+                event: "Promoción",
+                eventDesc: "Muestra este folleto y obtén 10% de descuento",
+                footer: "Envío Disponible",
+                contact: "Consulta 010.4567.8900  IG @flower"
+            }
         }
     };
 
@@ -252,7 +302,14 @@
         }
 
         const canvas = window.canvas;
-        const data = WIZ_DATA[langKey] || WIZ_DATA['kr'];
+        // fallback: 해당 언어에 해당 템플릿이 없으면 en → kr 순으로 fallback
+        const rawData = WIZ_DATA[langKey] || {};
+        const fallback = WIZ_DATA['en'] || {};
+        const fallback2 = WIZ_DATA['kr'] || {};
+        const data = {};
+        const allTypes = ['basic','flyer','card','menu','bannerH','bannerV','fabric','insta'];
+        allTypes.forEach(t => { data[t] = rawData[t] || fallback[t] || fallback2[t]; });
+
         const F = getFonts();
 
         canvas.discardActiveObject();
@@ -280,153 +337,138 @@
         // 디자인 생성
         // ====================================================
 
-        // 1. [행사부스]
+        // 1. [전단지] — 심플 스타일 (제목 + 부제 + 섹션2개 + 밑줄)
         if (type === 'basic') {
-            const COLOR_SKY_BLUE = '#29b6f6';
-            const COLOR_YELLOW   = '#fff59d';
-            const COLOR_WHITE    = '#ffffff';
-            const COLOR_TEXT     = '#333333';
-            const COLOR_DATE_GREEN = '#64dd17';
+            const ACCENT = '#d4826a';      // 따뜻한 코랄/살몬 계열
+            const TEXT_DARK = '#3a3a3a';
+            const TEXT_MED = '#666666';
+            const TEXT_LIGHT = '#999999';
+            const LINE_COLOR = '#d4826a';
 
-            const centerY = cy;
-            const sizeMainTitle = boardW * 0.14;
-            const sizeSubTitle  = boardW * 0.05;
-            const sizeGridTitle = boardW * 0.045;
-            const leftAlignX = cx - (boardW * 0.45);
+            const refS = Math.min(boardW, boardH);
+            const d = data.basic;
 
-            const badgeW = boardW * 0.28;
-            const badgeH = boardW * 0.07;
-            const badgeX = leftAlignX + (badgeW / 2);
-            const badgeY = centerY - (boardH * 0.42);
+            // 기준 좌표
+            const padX = boardW * 0.12;
+            const leftX = cx - (boardW / 2) + padX;
+            const rightX = cx + (boardW / 2) - padX;
+            const contentW = rightX - leftX;
+            let curY = cy - (boardH * 0.38);
 
-            const topBadgeRect = new fabric.Rect({
-                width: badgeW, height: badgeH,
-                fill: 'transparent',
-                stroke: 'white', strokeWidth: 2,
-                rx: badgeH / 2, ry: badgeH / 2,
-                originX: 'center', originY: 'center',
-                left: badgeX, top: badgeY
-            });
-
-            const topBadgeText = new fabric.IText(data.basic.badge, {
-                fontFamily: F.POINT, fontSize: badgeH * 0.45,
-                fill: 'white', fontWeight: 'bold',
-                originX: 'center', originY: 'center',
-                left: badgeX, top: badgeY
-            });
-
-            const titleY = badgeY + (badgeH) + 15;
-
-            const mainTitle = new fabric.IText(data.basic.main, {
-                fontFamily: F.TITLE,
-                fontSize: sizeMainTitle,
-                fill: 'white', lineHeight: 1.2,
-                originX: 'left', originY: 'top',
-                left: leftAlignX, top: titleY
-            });
-
-            const roundRadius = boardW * 0.05;
-            const bottomBg = new fabric.Rect({
-                width: boardW, height: boardH / 2,
-                fill: COLOR_WHITE,
-                rx: roundRadius, ry: roundRadius,
+            // (1) 브랜드명 (작은 글씨, 상단)
+            const brandText = new fabric.IText(d.brand, {
+                fontFamily: F.POINT, fontSize: refS * 0.028,
+                fill: TEXT_LIGHT, fontWeight: 'normal',
+                charSpacing: 300,
                 originX: 'center', originY: 'top',
-                left: cx, top: centerY
+                left: cx, top: curY
             });
+            objs.push(brandText);
+            curY += refS * 0.06;
 
-            const bottomFiller = new fabric.Rect({
-                width: boardW, height: roundRadius * 2,
-                fill: COLOR_WHITE,
-                originX: 'center', originY: 'bottom',
-                left: cx, top: centerY + (boardH / 2)
-            });
-
-            const subHeadline = new fabric.IText(data.basic.sub, {
-                fontFamily: F.SUB, fontSize: sizeSubTitle,
-                fill: COLOR_TEXT, fontWeight: 'bold',
+            // (2) 메인 타이틀 (큰 글씨, 강조)
+            const mainTitle = new fabric.IText(d.main, {
+                fontFamily: F.TITLE, fontSize: refS * 0.12,
+                fill: ACCENT, fontWeight: 'bold',
+                textAlign: 'center', lineHeight: 1.1,
                 originX: 'center', originY: 'top',
-                left: cx, top: centerY + (boardH * 0.05)
+                left: cx, top: curY
             });
+            objs.push(mainTitle);
+            curY += refS * 0.27;
 
-            const gridObjs = [];
-            const gridMargin = boardW * 0.05;
-            const availableW = boardW - (gridMargin * 2);
-            const colWidth = availableW / 3;
-
-            const startX = (cx - (availableW / 2)) + (colWidth / 2);
-            const gridContentY = centerY + (boardH * 0.12);
-
-            const gridData = data.basic.grid;
-
-            gridData.forEach((item, i) => {
-                const itemX = startX + (i * colWidth);
-                const badgeRect = new fabric.Rect({
-                    width: colWidth * 0.7, height: boardH * 0.03, fill: COLOR_YELLOW,
-                    originX: 'center', originY: 'center', left: itemX, top: gridContentY
-                });
-                const badgeTxt = new fabric.IText(item.badge, {
-                    fontFamily: F.SUB, fontSize: sizeGridTitle * 0.6,
-                    fill: '#333', fontWeight: 'bold',
-                    originX: 'center', originY: 'center', left: itemX, top: gridContentY
-                });
-                const titleTxt = new fabric.IText(item.title, {
-                    fontFamily: F.SUB, fontSize: sizeGridTitle,
-                    fill: 'black', fontWeight: 'bold',
-                    originX: 'center', originY: 'top', left: itemX, top: gridContentY + (boardH * 0.03) + 5
-                });
-                const subTxt = new fabric.IText(item.sub, {
-                    fontFamily: F.SUB, fontSize: sizeGridTitle * 0.6, fill: COLOR_SKY_BLUE,
-                    originX: 'center', originY: 'top', left: itemX, top: titleTxt.top + titleTxt.height + 5
-                });
-                const oldPrice = new fabric.IText(item.old, {
-                    fontFamily: F.SUB, fontSize: sizeGridTitle * 0.7,
-                    fill: '#888', textDecoration: 'line-through',
-                    originX: 'center', originY: 'top', left: itemX, top: subTxt.top + subTxt.height + 15
-                });
-                const priceBtnH = boardH * 0.05;
-                const priceBg = new fabric.Rect({
-                    width: colWidth * 0.9, height: priceBtnH,
-                    fill: COLOR_SKY_BLUE, rx: priceBtnH/2, ry: priceBtnH/2,
-                    originX: 'center', originY: 'top', left: itemX, top: oldPrice.top + oldPrice.height + 10
-                });
-                const newPrice = new fabric.IText(item.new, {
-                    fontFamily: F.POINT, fontSize: sizeGridTitle * 0.9,
-                    fill: 'white', fontWeight: 'bold',
-                    originX: 'center', originY: 'center', left: itemX, top: priceBg.top + (priceBtnH/2) + 2
-                });
-                if (i < 2) {
-                    const divider = new fabric.Rect({
-                        width: 1, height: boardH * 0.15, fill: '#eee',
-                        originX: 'left', originY: 'top',
-                        left: itemX + (colWidth/2), top: gridContentY + 20
-                    });
-                    gridObjs.push(divider);
-                }
-                gridObjs.push(badgeRect, badgeTxt, titleTxt, subTxt, oldPrice, priceBg, newPrice);
+            // (3) 서브타이틀
+            const subText = new fabric.IText(d.sub, {
+                fontFamily: F.SUB, fontSize: refS * 0.032,
+                fill: TEXT_MED, fontWeight: 'normal',
+                textAlign: 'center', lineHeight: 1.4,
+                originX: 'center', originY: 'top',
+                left: cx, top: curY
             });
+            objs.push(subText);
+            curY += refS * 0.07;
 
-            const footerHeight = boardH * 0.06;
-            const footerBg = new fabric.Rect({
-                width: boardW, height: footerHeight,
-                fill: COLOR_SKY_BLUE,
-                originX: 'center', originY: 'bottom',
-                left: cx, top: boardH
-            });
-
-            const footerText = new fabric.IText(data.basic.footer, {
-                fontFamily: F.SUB, fontSize: sizeSubTitle * 0.6, fill: 'white',
+            // (4) 첫 번째 구분선
+            const line1 = new fabric.Rect({
+                width: contentW * 0.6, height: 1.5, fill: LINE_COLOR,
                 originX: 'center', originY: 'center',
-                left: cx, top: boardH - (footerHeight / 2)
+                left: cx, top: curY
+            });
+            objs.push(line1);
+            curY += refS * 0.04;
+
+            // (5) 섹션들
+            d.sections.forEach((sec, i) => {
+                const sectionTitle = new fabric.IText(sec.title, {
+                    fontFamily: F.SUB, fontSize: refS * 0.04,
+                    fill: ACCENT, fontWeight: 'bold',
+                    textAlign: 'center',
+                    originX: 'center', originY: 'top',
+                    left: cx, top: curY
+                });
+                objs.push(sectionTitle);
+                curY += refS * 0.055;
+
+                const sectionItems = new fabric.IText(sec.items, {
+                    fontFamily: F.SUB, fontSize: refS * 0.025,
+                    fill: TEXT_DARK, fontWeight: 'normal',
+                    textAlign: 'center', lineHeight: 1.5,
+                    originX: 'center', originY: 'top',
+                    left: cx, top: curY
+                });
+                objs.push(sectionItems);
+                curY += refS * 0.08;
             });
 
-            const dateText = new fabric.IText(data.basic.date, {
-                fontFamily: F.POINT, fontSize: sizeSubTitle * 1.2,
-                fill: COLOR_DATE_GREEN, fontWeight: 'bold',
-                originX: 'center', originY: 'bottom',
-                left: cx, top: boardH - footerHeight - 15
+            // (6) 이벤트 섹션
+            const eventTitle = new fabric.IText(d.event, {
+                fontFamily: F.SUB, fontSize: refS * 0.04,
+                fill: ACCENT, fontWeight: 'bold',
+                textAlign: 'center',
+                originX: 'center', originY: 'top',
+                left: cx, top: curY
             });
+            objs.push(eventTitle);
+            curY += refS * 0.055;
 
-            objs = [ topBadgeRect, topBadgeText, mainTitle, bottomBg, bottomFiller, subHeadline, ...gridObjs, dateText, footerBg, footerText ];
+            const eventDesc = new fabric.IText(d.eventDesc, {
+                fontFamily: F.SUB, fontSize: refS * 0.025,
+                fill: TEXT_DARK, fontWeight: 'normal',
+                textAlign: 'center',
+                originX: 'center', originY: 'top',
+                left: cx, top: curY
+            });
+            objs.push(eventDesc);
+            curY += refS * 0.06;
+
+            // (7) 두 번째 구분선
+            const line2 = new fabric.Rect({
+                width: contentW * 0.6, height: 1.5, fill: LINE_COLOR,
+                originX: 'center', originY: 'center',
+                left: cx, top: curY
+            });
+            objs.push(line2);
+            curY += refS * 0.04;
+
+            // (8) 하단 연락처
+            const footerText = new fabric.IText(d.footer, {
+                fontFamily: F.SUB, fontSize: refS * 0.028,
+                fill: TEXT_MED, fontWeight: 'bold',
+                textAlign: 'center',
+                originX: 'center', originY: 'top',
+                left: cx, top: curY
+            });
+            objs.push(footerText);
+            curY += refS * 0.045;
+
+            const contactText = new fabric.IText(d.contact, {
+                fontFamily: F.SUB, fontSize: refS * 0.022,
+                fill: TEXT_LIGHT, fontWeight: 'normal',
+                textAlign: 'center', lineHeight: 1.4,
+                originX: 'center', originY: 'top',
+                left: cx, top: curY
+            });
+            objs.push(contactText);
         }
 
         // 2. [포스터/전단지]
