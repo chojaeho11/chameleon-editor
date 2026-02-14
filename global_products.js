@@ -2412,7 +2412,8 @@ window.batchCrawlProducts = async () => {
                 description_cn: detailHtml.cn || '',
                 description_ar: detailHtml.ar || '',
                 description_es: detailHtml.es || '',
-                width_mm: 0, height_mm: 0
+                width_mm: 0, height_mm: 0,
+                addons: ''
             };
 
             const { error: insertErr } = await sb.from('admin_products').insert([payload]);
