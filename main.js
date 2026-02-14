@@ -1,23 +1,23 @@
 // main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=122";
-import { initCanvas, canvas } from "./canvas-core.js?v=122";
-import { initSizeControls, applySize } from "./canvas-size.js?v=122";
-import { initGuides } from "./canvas-guides.js?v=122";
-import { initZoomPan } from "./canvas-zoom-pan.js?v=122";
-import { initObjectTools } from "./canvas-objects.js?v=122";
-import { initPageTools } from "./canvas-pages.js?v=122"; // [추가] 페이지 도구
-import { initImageTools } from "./canvas-image.js?v=122";
-import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=122";
-import { initAiTools } from "./canvas-ai.js?v=122";
-import { initExport } from "./export.js?v=122";
-import { initOrderSystem } from "./order.js?v=122";
-import { initAuth } from "./login.js?v=122";
-import { initMyDesign } from "./my-design.js?v=122";
-import { initCanvasUtils } from "./canvas-utils.js?v=122";
-import { initShortcuts } from "./shortcuts.js?v=122";
-import { initContextMenu } from "./context-menu.js?v=122";
-import { createVectorOutline } from "./outlineMaker.js?v=122";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=123";
+import { initCanvas, canvas } from "./canvas-core.js?v=123";
+import { initSizeControls, applySize } from "./canvas-size.js?v=123";
+import { initGuides } from "./canvas-guides.js?v=123";
+import { initZoomPan } from "./canvas-zoom-pan.js?v=123";
+import { initObjectTools } from "./canvas-objects.js?v=123";
+import { initPageTools } from "./canvas-pages.js?v=123"; // [추가] 페이지 도구
+import { initImageTools } from "./canvas-image.js?v=123";
+import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=123";
+import { initAiTools } from "./canvas-ai.js?v=123";
+import { initExport } from "./export.js?v=123";
+import { initOrderSystem } from "./order.js?v=123";
+import { initAuth } from "./login.js?v=123";
+import { initMyDesign } from "./my-design.js?v=123";
+import { initCanvasUtils } from "./canvas-utils.js?v=123";
+import { initShortcuts } from "./shortcuts.js?v=123";
+import { initContextMenu } from "./context-menu.js?v=123";
+import { createVectorOutline } from "./outlineMaker.js?v=123";
 
 window.currentUploadedPdfUrl = null;
 

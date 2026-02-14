@@ -1,4 +1,4 @@
-import { canvas } from "./canvas-core.js?v=122";
+import { canvas } from "./canvas-core.js?v=123";
 
 // 전역 상태 변수 (window 객체에 할당하여 다른 곳에서도 접근 가능하게 함)
 window.isPanningMode = false;

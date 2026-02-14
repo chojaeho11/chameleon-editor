@@ -1,6 +1,6 @@
-import { canvas } from "./canvas-core.js?v=122";
-import { updateLockUI } from "./canvas-utils.js?v=122";
-import { sb, currentUser } from "./config.js?v=122";
+import { canvas } from "./canvas-core.js?v=123";
+import { updateLockUI } from "./canvas-utils.js?v=123";
+import { sb, currentUser } from "./config.js?v=123";
 
 // ============================================================
 // [설정] 현재 사이트 언어 및 폰트 변수

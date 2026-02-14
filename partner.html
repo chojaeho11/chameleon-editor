@@ -412,7 +412,7 @@
 </div>
 
 <script type="module">
-    import { sb, initConfig, currentUser } from './config.js?v=122';
+    import { sb, initConfig, currentUser } from './config.js?v=123';
 
     function fmtMoney(krw) {
         const cfg = window.SITE_CONFIG || {};
@@ -471,7 +471,7 @@
         if (lang === 'kr') return; // 한국어는 기본값
 
         try {
-            const res = await fetch(`long/${lang}_122.json?t=${Date.now()}`);
+            const res = await fetch(`long/${lang}_123.json?t=${Date.now()}`);
             if (!res.ok) return;
             const data = await res.json();
             window.translations = data;

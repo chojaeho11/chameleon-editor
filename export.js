@@ -1,6 +1,6 @@
-import { canvas } from "./canvas-core.js?v=122";
-import { ADDON_DB, currentUser, sb } from "./config.js?v=122";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=122"; // 페이지 인덱스 가져오기
+import { canvas } from "./canvas-core.js?v=123";
+import { ADDON_DB, currentUser, sb } from "./config.js?v=123";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=123"; // 페이지 인덱스 가져오기
 
 // [안전장치] 언어별 기본 폰트 URL 설정
 const FONT_CONFIG = {

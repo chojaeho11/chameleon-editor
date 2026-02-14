@@ -1,8 +1,8 @@
 /* canvas-template.js - 버튼 페이징 버전 */
 
-import { sb, currentUser } from "./config.js?v=122";
-import { canvas } from "./canvas-core.js?v=122";
-import { applySize } from "./canvas-size.js?v=122";
+import { sb, currentUser } from "./config.js?v=123";
+import { canvas } from "./canvas-core.js?v=123";
+import { applySize } from "./canvas-size.js?v=123";
 // [수정] 판매 수익금(예치금) 적립 함수 (mileage가 아닌 deposit을 업데이트)
 async function addRewardPoints(userId, amount, desc) {
     if (!userId) return;

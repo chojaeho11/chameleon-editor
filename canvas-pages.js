@@ -1,6 +1,6 @@
 /* canvas-pages.js */
-import { canvas } from "./canvas-core.js?v=122";
-import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=122"; // [수정] 화면맞춤 함수 추가
+import { canvas } from "./canvas-core.js?v=123";
+import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=123"; // [수정] 화면맞춤 함수 추가
 
 // 페이지 데이터를 저장할 배열
 export let pageDataList = [];

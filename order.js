@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=122";
-import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js?v=122";
-import { SITE_CONFIG } from "./site-config.js?v=122";
-import { applySize } from "./canvas-size.js?v=122";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=122";
+import { canvas } from "./canvas-core.js?v=123";
+import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js?v=123";
+import { SITE_CONFIG } from "./site-config.js?v=123";
+import { applySize } from "./canvas-size.js?v=123";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=123";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=122";
+} from "./export.js?v=123";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };

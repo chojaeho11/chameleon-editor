@@ -1,5 +1,5 @@
 // context-menu.js
-import { canvas } from "./canvas-core.js?v=122";
+import { canvas } from "./canvas-core.js?v=123";
 
 // 클립보드 저장 변수
 let _clipboard = null;
