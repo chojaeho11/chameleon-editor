@@ -5364,19 +5364,36 @@ function updateVipFileList(input) {
                 return;
             }
 
-            // 타임존 기반 실제 국가 감지
+            // 타임존 기반 실제 국가 감지 (세분화)
             function _detectCountry() {
                 try {
                     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                    // 한국
                     if (tz.includes('Seoul') || tz.includes('Korea')) return 'KR';
+                    // 일본
                     if (tz.includes('Tokyo') || tz.includes('Japan')) return 'JP';
-                    if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) return 'US';
-                    if (tz.includes('Riyadh') || tz.includes('Arabia') || tz.includes('Kuwait') || tz.includes('Dubai')) return 'AR';
-                    if (tz.includes('Madrid') || tz.includes('Mexico') || tz.includes('Buenos_Aires') || tz.includes('Bogota') || tz.includes('Lima')) return 'ES';
-                    if (tz.includes('Europe')) return 'EU';
+                    // 대만
                     if (tz.includes('Taipei')) return 'TW';
-                    if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Chongqing') || tz.includes('Urumqi')) return 'CN';
-                    if (tz.includes('Bangkok') || tz.includes('Ho_Chi_Minh') || tz.includes('Singapore') || tz.includes('Jakarta')) return 'SEA';
+                    // 중국 (홍콩 포함)
+                    if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Chongqing') || tz.includes('Urumqi') || tz.includes('Macau')) return 'CN';
+                    // 인도
+                    if (tz.includes('Kolkata') || tz.includes('Calcutta') || tz.includes('Mumbai') || tz.includes('Delhi') || tz.includes('Asia/Colombo')) return 'IN';
+                    // 동남아
+                    if (tz.includes('Bangkok') || tz.includes('Ho_Chi_Minh') || tz.includes('Singapore') || tz.includes('Jakarta') || tz.includes('Manila') || tz.includes('Kuala_Lumpur') || tz.includes('Phnom_Penh') || tz.includes('Yangon') || tz.includes('Vientiane')) return 'SEA';
+                    // 중동 (아랍)
+                    if (tz.includes('Riyadh') || tz.includes('Arabia') || tz.includes('Kuwait') || tz.includes('Dubai') || tz.includes('Qatar') || tz.includes('Bahrain') || tz.includes('Muscat') || tz.includes('Baghdad') || tz.includes('Tehran') || tz.includes('Istanbul') || tz.includes('Beirut') || tz.includes('Jerusalem') || tz.includes('Amman')) return 'ME';
+                    // 호주/뉴질랜드
+                    if (tz.includes('Australia') || tz.includes('Auckland') || tz.includes('Pacific/Fiji')) return 'AU';
+                    // 러시아
+                    if (tz.includes('Moscow') || tz.includes('Vladivostok') || tz.includes('Novosibirsk') || tz.includes('Yekaterinburg') || tz.includes('Kamchatka') || tz.includes('Irkutsk') || tz.includes('Krasnoyarsk') || tz.includes('Magadan') || tz.includes('Sakhalin')) return 'RU';
+                    // 중남미 (America/ 중 구체적 도시 먼저 체크)
+                    if (tz.includes('Mexico') || tz.includes('Buenos_Aires') || tz.includes('Bogota') || tz.includes('Lima') || tz.includes('Santiago') || tz.includes('Sao_Paulo') || tz.includes('Caracas') || tz.includes('Havana') || tz.includes('Argentina') || tz.includes('Brazil') || tz.includes('Colombia')) return 'LATAM';
+                    // 북미 (US/Canada - 중남미 이후에 체크)
+                    if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) return 'US';
+                    // 아프리카
+                    if (tz.includes('Africa') || tz.includes('Cairo') || tz.includes('Lagos') || tz.includes('Nairobi') || tz.includes('Johannesburg') || tz.includes('Casablanca')) return 'AF';
+                    // 유럽
+                    if (tz.includes('Europe') || tz.includes('London') || tz.includes('Berlin') || tz.includes('Paris') || tz.includes('Madrid') || tz.includes('Rome') || tz.includes('Amsterdam') || tz.includes('Warsaw')) return 'EU';
                     return 'OTHER';
                 } catch(e) { return 'KR'; }
             }
