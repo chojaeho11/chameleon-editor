@@ -14,7 +14,7 @@ if (!_detectedLang) {
     else _detectedLang = 'KR';
 }
 // DB site_fonts.site_code = KR / JA / EN / ZH / AR / ES
-const _langMap = { 'JA': 'JA', 'JP': 'JA', 'EN': 'EN', 'US': 'EN', 'KR': 'KR', 'ZH': 'ZH', 'CN': 'ZH', 'AR': 'AR', 'ES': 'ES' };
+const _langMap = { 'JA': 'JA', 'JP': 'JA', 'EN': 'EN', 'US': 'EN', 'KR': 'KR', 'ZH': 'ZH', 'CN': 'ZH', 'AR': 'AR', 'ES': 'ES', 'DE': 'DE', 'FR': 'FR' };
 const CURRENT_LANG = _langMap[_detectedLang.toUpperCase()] || 'KR';
 
 // DB에서 불러온 폰트 목록을 저장할 전역 변수
@@ -174,6 +174,70 @@ const GOOGLE_FONTS = {
         { font_name: 'Aref Ruqaa', font_family: 'Aref Ruqaa', weights: '400;700' },
         { font_name: 'Lalezar', font_family: 'Lalezar', weights: '400' },
         { font_name: 'Baloo Bhaijaan 2', font_family: 'Baloo Bhaijaan 2', weights: '400;600;700;800' }
+    ],
+    'DE': [
+        { font_name: 'Inter', font_family: 'Inter', weights: '300;400;500;600;700;900' },
+        { font_name: 'Poppins', font_family: 'Poppins', weights: '300;400;500;600;700;900' },
+        { font_name: 'Roboto', font_family: 'Roboto', weights: '300;400;500;700;900' },
+        { font_name: 'Montserrat', font_family: 'Montserrat', weights: '300;400;600;700;900' },
+        { font_name: 'Open Sans', font_family: 'Open Sans', weights: '300;400;600;700' },
+        { font_name: 'Lato', font_family: 'Lato', weights: '300;400;700;900' },
+        { font_name: 'Oswald', font_family: 'Oswald', weights: '300;400;600;700' },
+        { font_name: 'Raleway', font_family: 'Raleway', weights: '300;400;600;700;900' },
+        { font_name: 'Playfair Display', font_family: 'Playfair Display', weights: '400;600;700;900' },
+        { font_name: 'Merriweather', font_family: 'Merriweather', weights: '300;400;700;900' },
+        { font_name: 'Nunito', font_family: 'Nunito', weights: '300;400;600;700;900' },
+        { font_name: 'Quicksand', font_family: 'Quicksand', weights: '300;400;500;600;700' },
+        { font_name: 'DM Sans', font_family: 'DM Sans', weights: '400;500;700' },
+        { font_name: 'Bebas Neue', font_family: 'Bebas Neue', weights: '400' },
+        { font_name: 'Lobster', font_family: 'Lobster', weights: '400' },
+        { font_name: 'Pacifico', font_family: 'Pacifico', weights: '400' },
+        { font_name: 'Dancing Script', font_family: 'Dancing Script', weights: '400;600;700' },
+        { font_name: 'Caveat', font_family: 'Caveat', weights: '400;600;700' },
+        { font_name: 'Great Vibes', font_family: 'Great Vibes', weights: '400' },
+        { font_name: 'Satisfy', font_family: 'Satisfy', weights: '400' },
+        { font_name: 'Abril Fatface', font_family: 'Abril Fatface', weights: '400' },
+        { font_name: 'Permanent Marker', font_family: 'Permanent Marker', weights: '400' },
+        { font_name: 'Josefin Sans', font_family: 'Josefin Sans', weights: '300;400;600;700' },
+        { font_name: 'Archivo Black', font_family: 'Archivo Black', weights: '400' },
+        { font_name: 'Righteous', font_family: 'Righteous', weights: '400' },
+        { font_name: 'Russo One', font_family: 'Russo One', weights: '400' },
+        { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
+        { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
+        { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
+    ],
+    'FR': [
+        { font_name: 'Inter', font_family: 'Inter', weights: '300;400;500;600;700;900' },
+        { font_name: 'Poppins', font_family: 'Poppins', weights: '300;400;500;600;700;900' },
+        { font_name: 'Roboto', font_family: 'Roboto', weights: '300;400;500;700;900' },
+        { font_name: 'Montserrat', font_family: 'Montserrat', weights: '300;400;600;700;900' },
+        { font_name: 'Open Sans', font_family: 'Open Sans', weights: '300;400;600;700' },
+        { font_name: 'Lato', font_family: 'Lato', weights: '300;400;700;900' },
+        { font_name: 'Oswald', font_family: 'Oswald', weights: '300;400;600;700' },
+        { font_name: 'Raleway', font_family: 'Raleway', weights: '300;400;600;700;900' },
+        { font_name: 'Playfair Display', font_family: 'Playfair Display', weights: '400;600;700;900' },
+        { font_name: 'Merriweather', font_family: 'Merriweather', weights: '300;400;700;900' },
+        { font_name: 'Nunito', font_family: 'Nunito', weights: '300;400;600;700;900' },
+        { font_name: 'Quicksand', font_family: 'Quicksand', weights: '300;400;500;600;700' },
+        { font_name: 'DM Sans', font_family: 'DM Sans', weights: '400;500;700' },
+        { font_name: 'Bebas Neue', font_family: 'Bebas Neue', weights: '400' },
+        { font_name: 'Lobster', font_family: 'Lobster', weights: '400' },
+        { font_name: 'Pacifico', font_family: 'Pacifico', weights: '400' },
+        { font_name: 'Dancing Script', font_family: 'Dancing Script', weights: '400;600;700' },
+        { font_name: 'Caveat', font_family: 'Caveat', weights: '400;600;700' },
+        { font_name: 'Great Vibes', font_family: 'Great Vibes', weights: '400' },
+        { font_name: 'Satisfy', font_family: 'Satisfy', weights: '400' },
+        { font_name: 'Abril Fatface', font_family: 'Abril Fatface', weights: '400' },
+        { font_name: 'Permanent Marker', font_family: 'Permanent Marker', weights: '400' },
+        { font_name: 'Josefin Sans', font_family: 'Josefin Sans', weights: '300;400;600;700' },
+        { font_name: 'Archivo Black', font_family: 'Archivo Black', weights: '400' },
+        { font_name: 'Righteous', font_family: 'Righteous', weights: '400' },
+        { font_name: 'Russo One', font_family: 'Russo One', weights: '400' },
+        { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
+        { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
+        { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
     ]
 };
 
