@@ -507,9 +507,8 @@
             
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:10px;">
                 <div style="display:flex; gap:10px;">
-                    <button onclick="goToList()" class="btn">← 목록</button>
-                    <button onclick="copyPostToLang('JP')" class="btn" style="background:#fff0f0; border-color:#ffccd5;">🇯🇵 일본어로 복제</button>
-                    <button onclick="copyPostToLang('US')" class="btn" style="background:#f0f7ff; border-color:#cce3ff;">🇺🇸 영어로 복제</button>
+                    <button id="btnBackList" onclick="goToList()" class="btn">← 목록</button>
+                    <span id="copyLangButtons"></span>
                 </div>
                 <div id="btnGroupAuth" style="display:none;">
                     <button id="btnEditPost" class="btn-edit" onclick="editCurrentPost()"><i class="fa-solid fa-pen"></i> 수정</button>
@@ -531,7 +530,7 @@
             <article id="viewContent" class="view-content"></article>
             
             <div class="comment-section">
-                <div class="comment-header">💬 댓글</div>
+                <div class="comment-header" id="commentHeader">💬 댓글</div>
                 <div id="commentList" class="comment-list"></div>
                 <div class="comment-form">
                     <textarea id="commentInput" class="ai-input-pretty" style="height:60px; margin:0; flex:1;" placeholder="댓글을 남겨주세요..."></textarea>
@@ -562,7 +561,7 @@
                 <div id="editor-container"></div>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button onclick="goToList()" class="btn">취소</button>
+                <button id="btnCancelWrite" onclick="goToList()" class="btn">취소</button>
                 <button id="btnSubmitPost" class="btn primary">등록하기</button>
             </div>
         </div>
@@ -582,11 +581,22 @@
     const subCode = urlParams.get('sub_code'); 
     const subName = urlParams.get('sub_name'); 
 
-    let quill; 
-    let currentRating = 5; 
+    let quill;
+    let currentRating = 5;
     let isEditMode = false;
     let currentPage = 0;
     const ITEMS_PER_PAGE = 12;
+
+    // 다국어 번역맵
+    const _t = {
+        KR: { back: '← 목록', edit: '수정', delete: '삭제', comment: '💬 댓글', commentPlaceholder: '댓글을 남겨주세요...', submit: '등록', cancel: '취소', submitPost: '등록하기', emptyComment: '첫 번째 댓글을 남겨주세요!', confirmEdit: '수정하시겠습니까?', confirmDelete: '정말 삭제하시겠습니까?', confirmDeletePost: '정말 삭제하시겠습니까? (복구할 수 없습니다)', deleted: '삭제되었습니다.', editDone: '수정 완료되었습니다.', posted: '등록되었습니다.', editFail: '수정 실패', deleteFail: '삭제 실패', noPermission: '수정 권한이 없습니다.', enterContent: '내용을 입력해주세요.', commentDeleteWarn: '댓글 삭제 경고', loading: '댓글 로딩 중...', writePost: '✏️ 글쓰기' },
+        JP: { back: '← 一覧', edit: '編集', delete: '削除', comment: '💬 コメント', commentPlaceholder: 'コメントを入力してください...', submit: '投稿', cancel: 'キャンセル', submitPost: '投稿する', emptyComment: '最初のコメントを残してください！', confirmEdit: '編集しますか？', confirmDelete: '本当に削除しますか？', confirmDeletePost: '本当に削除しますか？（復元できません）', deleted: '削除されました。', editDone: '編集が完了しました。', posted: '投稿されました。', editFail: '編集失敗', deleteFail: '削除失敗', noPermission: '編集権限がありません。', enterContent: '内容を入力してください。', commentDeleteWarn: 'コメント削除警告', loading: 'コメント読み込み中...', writePost: '✏️ 投稿' },
+        US: { back: '← List', edit: 'Edit', delete: 'Delete', comment: '💬 Comments', commentPlaceholder: 'Leave a comment...', submit: 'Submit', cancel: 'Cancel', submitPost: 'Post', emptyComment: 'Be the first to comment!', confirmEdit: 'Edit this?', confirmDelete: 'Are you sure you want to delete?', confirmDeletePost: 'Delete this post? (Cannot be undone)', deleted: 'Deleted.', editDone: 'Updated successfully.', posted: 'Posted successfully.', editFail: 'Edit failed', deleteFail: 'Delete failed', noPermission: 'No edit permission.', enterContent: 'Please enter content.', commentDeleteWarn: 'Comment delete warning', loading: 'Loading comments...', writePost: '✏️ Write' },
+        CN: { back: '← 列表', edit: '编辑', delete: '删除', comment: '💬 评论', commentPlaceholder: '请留下评论...', submit: '提交', cancel: '取消', submitPost: '发布', emptyComment: '成为第一个评论的人！', confirmEdit: '确定编辑吗？', confirmDelete: '确定删除吗？', confirmDeletePost: '确定删除此帖子吗？（无法恢复）', deleted: '已删除。', editDone: '编辑完成。', posted: '发布成功。', editFail: '编辑失败', deleteFail: '删除失败', noPermission: '没有编辑权限。', enterContent: '请输入内容。', commentDeleteWarn: '评论删除警告', loading: '加载评论中...', writePost: '✏️ 写文章' },
+        AR: { back: '← القائمة', edit: 'تعديل', delete: 'حذف', comment: '💬 التعليقات', commentPlaceholder: 'اترك تعليقاً...', submit: 'إرسال', cancel: 'إلغاء', submitPost: 'نشر', emptyComment: 'كن أول من يعلق!', confirmEdit: 'هل تريد التعديل؟', confirmDelete: 'هل أنت متأكد من الحذف؟', confirmDeletePost: 'حذف هذا المنشور؟ (لا يمكن التراجع)', deleted: 'تم الحذف.', editDone: 'تم التحديث بنجاح.', posted: 'تم النشر بنجاح.', editFail: 'فشل التعديل', deleteFail: 'فشل الحذف', noPermission: 'لا توجد صلاحية للتعديل.', enterContent: 'يرجى إدخال المحتوى.', commentDeleteWarn: 'تحذير حذف التعليق', loading: 'جارٍ تحميل التعليقات...', writePost: '✏️ كتابة' },
+        ES: { back: '← Lista', edit: 'Editar', delete: 'Eliminar', comment: '💬 Comentarios', commentPlaceholder: 'Deja un comentario...', submit: 'Enviar', cancel: 'Cancelar', submitPost: 'Publicar', emptyComment: '¡Sé el primero en comentar!', confirmEdit: '¿Editar esto?', confirmDelete: '¿Estás seguro de eliminar?', confirmDeletePost: '¿Eliminar este post? (No se puede deshacer)', deleted: 'Eliminado.', editDone: 'Actualizado con éxito.', posted: 'Publicado con éxito.', editFail: 'Error al editar', deleteFail: 'Error al eliminar', noPermission: 'Sin permiso de edición.', enterContent: 'Por favor ingrese contenido.', commentDeleteWarn: 'Advertencia de eliminación', loading: 'Cargando comentarios...', writePost: '✏️ Escribir' }
+    };
+    const T = _t[currentCountry] || _t['KR'];
     let isLastPage = false;
 
     // [SEO]
@@ -676,6 +686,28 @@
         }
         
         document.getElementById('btnWrite').style.display = 'inline-block';
+        document.getElementById('btnWrite').innerHTML = T.writePost;
+
+        // i18n: 정적 UI 번역 적용
+        document.getElementById('btnBackList').textContent = T.back;
+        document.getElementById('btnEditPost').innerHTML = `<i class="fa-solid fa-pen"></i> ${T.edit}`;
+        document.getElementById('btnDeletePost').innerHTML = `<i class="fa-solid fa-trash"></i> ${T.delete}`;
+        document.getElementById('commentHeader').textContent = T.comment;
+        document.getElementById('commentInput').placeholder = T.commentPlaceholder;
+        document.getElementById('btnSubmitComment').textContent = T.submit;
+        document.getElementById('btnCancelWrite').textContent = T.cancel;
+        document.getElementById('btnSubmitPost').textContent = T.submitPost;
+
+        // i18n: 복제 버튼 (현재 국가 제외한 다른 국가들)
+        const copyTargets = { KR: { flag: '🇰🇷', label: { KR:'한국어', JP:'韓国語', US:'Korean', CN:'韩语', AR:'كوري', ES:'Coreano' }}, JP: { flag: '🇯🇵', label: { KR:'일본어', JP:'日本語', US:'Japanese', CN:'日语', AR:'ياباني', ES:'Japonés' }}, US: { flag: '🇺🇸', label: { KR:'영어', JP:'英語', US:'English', CN:'英语', AR:'إنجليزي', ES:'Inglés' }}, CN: { flag: '🇨🇳', label: { KR:'중국어', JP:'中国語', US:'Chinese', CN:'中文', AR:'صيني', ES:'Chino' }}, AR: { flag: '🇸🇦', label: { KR:'아랍어', JP:'アラビア語', US:'Arabic', CN:'阿拉伯语', AR:'عربي', ES:'Árabe' }}, ES: { flag: '🇪🇸', label: { KR:'스페인어', JP:'スペイン語', US:'Spanish', CN:'西班牙语', AR:'إسباني', ES:'Español' }}};
+        const copyContainer = document.getElementById('copyLangButtons');
+        const colors = { KR:'#f0f0ff;border-color:#ccd', JP:'#fff0f0;border-color:#ffccd5', US:'#f0f7ff;border-color:#cce3ff', CN:'#fff0f0;border-color:#fca5a5', AR:'#fffbf0;border-color:#fcd34d', ES:'#f5f0ff;border-color:#c4b5fd' };
+        let copyHtml = '';
+        for (const [code, cfg] of Object.entries(copyTargets)) {
+            if (code === currentCountry) continue;
+            copyHtml += `<button onclick="copyPostToLang('${code}')" class="btn" style="background:${colors[code]}; margin-left:6px;">${cfg.flag} ${cfg.label[currentCountry] || cfg.label['US']}</button> `;
+        }
+        copyContainer.innerHTML = copyHtml;
 
         // [수정] 1. 영상 업로드 핸들러
         async function videoHandler() {
@@ -1024,7 +1056,7 @@
     // [수정] 댓글 목록 불러오기 (수정/삭제 버튼 포함)
     async function loadComments(postId) {
         const listDiv = document.getElementById('commentList');
-        listDiv.innerHTML = '댓글 로딩 중...';
+        listDiv.innerHTML = T.loading;
         
         try {
             const { data: comments, error } = await sb
@@ -1038,7 +1070,7 @@
             listDiv.innerHTML = '';
             
             if (!comments || comments.length === 0) { 
-                listDiv.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">첫 번째 댓글을 남겨주세요!</p>'; 
+                listDiv.innerHTML = `<p style="color:#999; text-align:center; padding:20px;">${T.emptyComment}</p>`; 
                 return; 
             }
 
@@ -1047,13 +1079,14 @@
                 item.className = 'comment-item';
                 item.id = `comment-${cmt.id}`; 
 
-                const safeName = cmt.author_name ? cmt.author_name.replace(/</g, "&lt;") : "익명";
+                const anonName = { KR:'익명', JP:'匿名', US:'Anonymous', CN:'匿名', AR:'مجهول', ES:'Anónimo' }[currentCountry] || 'Anonymous';
+                const safeName = cmt.author_name ? cmt.author_name.replace(/</g, "&lt;") : anonName;
                 const safeContent = cmt.content ? cmt.content.replace(/</g, "&lt;").replace(/\n/g, '<br>') : "";
 
                 const btnHtml = `
                     <div style="margin-left:auto; font-size:12px; display:flex; gap:8px;">
-                        <span onclick="window.enableEditComment(${cmt.id})" style="cursor:pointer; color:#6366f1; font-weight:bold;">수정</span>
-                        <span onclick="window.deleteComment(${cmt.id})" style="cursor:pointer; color:#ef4444; font-weight:bold;">삭제</span>
+                        <span onclick="window.enableEditComment(${cmt.id})" style="cursor:pointer; color:#6366f1; font-weight:bold;">${T.edit}</span>
+                        <span onclick="window.deleteComment(${cmt.id})" style="cursor:pointer; color:#ef4444; font-weight:bold;">${T.delete}</span>
                     </div>
                 `;
 
@@ -1070,7 +1103,7 @@
 
         } catch(e) { 
             console.error(e);
-            listDiv.innerHTML = '<p style="color:red; text-align:center;">댓글 로딩 실패</p>'; 
+            listDiv.innerHTML = `<p style="color:red; text-align:center;">${T.loading} ❌</p>`; 
         }
     }
 
@@ -1102,8 +1135,8 @@
         const newName = document.getElementById(`edit-name-${cmtId}`).value;
         const newContent = document.getElementById(`edit-content-${cmtId}`).value;
 
-        if (!newName.trim() || !newContent.trim()) return alert("내용을 입력해주세요.");
-        if(!confirm("수정하시겠습니까?")) return;
+        if (!newName.trim() || !newContent.trim()) return alert(T.enterContent);
+        if(!confirm(T.confirmEdit)) return;
 
         try {
             const { error } = await sb.from('community_comments').update({ author_name: newName, content: newContent }).eq('id', cmtId);
@@ -1111,20 +1144,20 @@
             loadComments(postId);
         } catch (e) {
             console.error(e);
-            alert("수정 실패: " + e.message);
+            alert(T.editFail + ": " + e.message);
         }
     };
 
     // [기능] 댓글 삭제
     window.deleteComment = async function(cmtId) {
-        if (!confirm("정말 삭제하시겠습니까?")) return;
+        if (!confirm(T.confirmDelete)) return;
         try {
             const { error } = await sb.from('community_comments').delete().eq('id', cmtId);
             if (error) throw error;
             loadComments(postId);
         } catch (e) {
             console.error(e);
-            alert("삭제 실패: " + e.message);
+            alert(T.deleteFail + ": " + e.message);
         }
     };
 
@@ -1159,7 +1192,7 @@
     }
 
     window.editCurrentPost = function() {
-        if(!confirm("수정하시겠습니까?")) return;
+        if(!confirm(T.confirmEdit)) return;
         isEditMode = true; 
         document.getElementById('inputTitle').value = document.getElementById('viewTitle').innerText;
         
@@ -1178,23 +1211,23 @@
     };
 
     window.deleteCurrentPost = async function() {
-        if(!confirm("정말 삭제하시겠습니까? (복구할 수 없습니다)")) return;
+        if(!confirm(T.confirmDeletePost)) return;
         const btn = document.getElementById('btnDeletePost');
         if(btn) btn.disabled = true;
 
         try {
             const { error: cmtError } = await sb.from('community_comments').delete().eq('post_id', postId);
-            if (cmtError) console.warn("댓글 삭제 경고:", cmtError.message);
+            if (cmtError) console.warn(T.commentDeleteWarn + ":", cmtError.message);
 
             const { error: postError } = await sb.from('community_posts').delete().eq('id', postId);
             if (postError) throw postError;
 
-            alert("삭제되었습니다.");
-            window.goToList(); 
+            alert(T.deleted);
+            window.goToList();
 
-        } catch(e) { 
+        } catch(e) {
             console.error(e);
-            alert("삭제 실패: " + e.message);
+            alert(T.deleteFail + ": " + e.message);
             if(btn) btn.disabled = false;
         }
     };
@@ -1271,10 +1304,10 @@
                 };
 
                 if (isEditMode) {
-                    if (!currentUser) throw new Error("수정 권한이 없습니다.");
+                    if (!currentUser) throw new Error(T.noPermission);
                     const { error } = await sb.from('community_posts').update(payload).eq('id', postId);
                     if (error) throw error;
-                    alert("수정 완료되었습니다.");
+                    alert(T.editDone);
                     location.reload();
                 } else {
                     payload.category = category;
@@ -1293,7 +1326,7 @@
                     const { error } = await sb.from('community_posts').insert(payload);
                     if (error) throw error;
                     
-                    alert('등록되었습니다.');
+                    alert(T.posted);
                     window.goToList(); 
                 }
             } catch (e) {
