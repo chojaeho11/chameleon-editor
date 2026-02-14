@@ -364,13 +364,13 @@
     </div>
 
 <!-- 국가 바로가기 -->
-<div id="siteNavBar" style="position:fixed; top:60px; left:0; right:0; z-index:9998; background:#fff; border-bottom:1px solid #e2e8f0; padding:6px 0; display:flex; align-items:center; justify-content:center; gap:8px; height:46px; box-sizing:border-box; overflow-x:auto;">
-    <a href="https://cafe2626.com" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:24px; font-size:12px; font-weight:700; letter-spacing:0.3px; background:linear-gradient(135deg,#1e40af,#3b82f6); color:#fff; border:none; box-shadow:0 2px 8px rgba(30,64,175,0.25); transition:all .2s; white-space:nowrap;">🇰🇷 한국</a>
-    <a href="https://cafe0101.com" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:24px; font-size:12px; font-weight:700; letter-spacing:0.3px; background:linear-gradient(135deg,#b91c1c,#ef4444); color:#fff; border:none; box-shadow:0 2px 8px rgba(185,28,28,0.25); transition:all .2s; white-space:nowrap;">🇯🇵 日本</a>
-    <a href="https://cafe3355.com" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:24px; font-size:12px; font-weight:700; letter-spacing:0.3px; background:linear-gradient(135deg,#92400e,#d97706); color:#fff; border:none; box-shadow:0 2px 8px rgba(146,64,14,0.25); transition:all .2s; white-space:nowrap;">🇺🇸 USA</a>
-    <a href="https://cafe3355.com/?lang=zh" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:24px; font-size:12px; font-weight:700; letter-spacing:0.3px; background:linear-gradient(135deg,#dc2626,#f59e0b); color:#fff; border:none; box-shadow:0 2px 8px rgba(220,38,38,0.25); transition:all .2s; white-space:nowrap;">🇨🇳 中文</a>
-    <a href="https://cafe3355.com/?lang=ar" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:24px; font-size:12px; font-weight:700; letter-spacing:0.3px; background:linear-gradient(135deg,#065f46,#10b981); color:#fff; border:none; box-shadow:0 2px 8px rgba(6,95,70,0.25); transition:all .2s; white-space:nowrap;">🇸🇦 عربي</a>
-    <a href="https://cafe3355.com/?lang=es" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:24px; font-size:12px; font-weight:700; letter-spacing:0.3px; background:linear-gradient(135deg,#b45309,#c2410c); color:#fff; border:none; box-shadow:0 2px 8px rgba(180,83,9,0.25); transition:all .2s; white-space:nowrap;">🇪🇸 ESP</a>
+<div id="siteNavBar" style="position:fixed; top:60px; left:0; right:0; z-index:9998; background:#fff; border-bottom:1px solid #e2e8f0; padding:6px 0; display:flex; align-items:center; justify-content:center; gap:6px; height:46px; box-sizing:border-box; overflow-x:auto;">
+    <a href="https://cafe2626.com" class="flag-link" title="한국">🇰🇷</a>
+    <a href="https://cafe0101.com" class="flag-link" title="日本">🇯🇵</a>
+    <a href="https://cafe3355.com" class="flag-link" title="USA">🇺🇸</a>
+    <a href="https://cafe3355.com/?lang=zh" class="flag-link" title="中文">🇨🇳</a>
+    <a href="https://cafe3355.com/?lang=ar" class="flag-link" title="عربي">🇸🇦</a>
+    <a href="https://cafe3355.com/?lang=es" class="flag-link" title="España">🇪🇸</a>
 </div>
 
 <div id="startScreen">
@@ -3034,36 +3034,8 @@ history.replaceState({ type: 'home' }, '', window.location.href);
 window.goHome = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const currentLang = urlParams.get('lang');
-    const path = window.location.pathname;
-    const isHome = path === '/' || path.endsWith('/index.html') || path.endsWith('/index');
-
-    if (isHome) {
-        // 이미 홈 → 모달 닫고 스크롤 (채팅 유지)
-        ['choiceModal','generalProductModal','categoryDetailModal','productDetailModal'].forEach(function(id) {
-            var m = document.getElementById(id);
-            if (m) {
-                m.style.display = 'none';
-                m.classList.remove('product-full-page');
-                m.style.padding = '';
-                m.style.background = '';
-                var box = m.querySelector('.modal-box');
-                if (box) {
-                    box.style = '';
-                    var h = box.querySelector('.product-full-header');
-                    var g = box.querySelector('.product-guide-banner');
-                    if (h) h.remove();
-                    if (g) g.remove();
-                }
-            }
-        });
-        var ss = document.getElementById('startScreen');
-        if (ss) ss.style.display = '';
-        window.history.pushState(null, '', currentLang ? '/?lang=' + currentLang : '/');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-        // 다른 페이지면 홈으로 이동
-        window.location.href = currentLang ? '/?lang=' + currentLang : '/';
-    }
+    // 채팅 내역은 localStorage에 저장되어 있으므로 새로고침 후 자동 복원됨
+    window.location.href = currentLang ? '/?lang=' + currentLang : '/';
 };
 
 // [최종 수정] 상품 클릭 시 URL 변경 (언어 설정 유지 기능 추가)
@@ -6180,6 +6152,16 @@ window.filterModalItems = function(keyword) {
         });
     }
 
+    function _closeBotWindow() {
+        var win = getEl('cham-bot-window');
+        var trg = getEl('cham-bot-trigger');
+        var ico = getEl('cham-bot-icon');
+        if (!win || !trg) return;
+        win.classList.remove('visible');
+        trg.classList.remove('open');
+        if (ico) ico.className = 'fa-solid fa-comments';
+    }
+
     function toggleBot() {
         var win = getEl('cham-bot-window');
         var trg = getEl('cham-bot-trigger');
@@ -6188,14 +6170,22 @@ window.filterModalItems = function(keyword) {
         if (!win || !trg) return;
 
         if (win.classList.contains('visible')) {
-            win.classList.remove('visible');
-            trg.classList.remove('open');
-            if (ico) ico.className = 'fa-solid fa-comments';
+            // 닫을 때: pushState로 추가한 history가 있으면 뒤로가기
+            if (window._chamBotHistoryPushed) {
+                window._chamBotHistoryPushed = false;
+                window.history.back();
+            }
+            _closeBotWindow();
         } else {
             win.classList.add('visible');
             trg.classList.add('open');
             if (ico) ico.className = 'fa-solid fa-xmark';
             if (badge) badge.classList.add('hide');
+            // 모바일에서 뒤로가기 버튼으로 채팅 닫을 수 있도록 history 추가
+            if (window.innerWidth <= 480) {
+                window.history.pushState({ type: 'chatbot' }, '');
+                window._chamBotHistoryPushed = true;
+            }
             if (!opened) {
                 // 저장된 채팅 기록이 있으면 복원, 없으면 환영 메시지
                 if (_loadChatHistory() && chatHistory.length > 0) {
@@ -6208,6 +6198,15 @@ window.filterModalItems = function(keyword) {
             setTimeout(function() { var inp = getEl('chamInput'); if(inp) inp.focus(); }, 300);
         }
     }
+
+    // 모바일 뒤로가기로 채팅창 닫기
+    window.addEventListener('popstate', function(e) {
+        var win = getEl('cham-bot-window');
+        if (win && win.classList.contains('visible')) {
+            window._chamBotHistoryPushed = false;
+            _closeBotWindow();
+        }
+    });
 
     function sendMsg() {
         // 실시간 상담 모드면 AI가 아닌 매니저에게 전송

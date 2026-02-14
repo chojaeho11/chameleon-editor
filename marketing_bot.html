@@ -389,8 +389,8 @@ textarea.form-input { resize:vertical; min-height:80px; }
                 <label>영상 길이</label>
                 <select class="form-input" id="shortsDuration">
                     <option value="15">15초</option>
-                    <option value="20">20초</option>
-                    <option value="30" selected>30초 (추천)</option>
+                    <option value="20" selected>20초 (추천 - TTS 자동 조절)</option>
+                    <option value="30">30초</option>
                 </select>
             </div>
         </div>
@@ -407,7 +407,8 @@ textarea.form-input { resize:vertical; min-height:80px; }
         <div class="pipeline-steps" id="shortsPipelineSteps" style="display:none;">
             <div class="p-step" id="sp-upload"><i class="fa-solid fa-circle-notch"></i> 이미지 분석 준비 중...</div>
             <div class="p-step" id="sp-ai"><i class="fa-solid fa-circle-notch"></i> AI가 콘텐츠 생성 중...</div>
-            <div class="p-step" id="sp-video"><i class="fa-solid fa-circle-notch"></i> 영상 렌더링 중...</div>
+            <div class="p-step" id="sp-tts"><i class="fa-solid fa-circle-notch"></i> AI 음성 생성 중 (OpenAI TTS)...</div>
+            <div class="p-step" id="sp-video"><i class="fa-solid fa-circle-notch"></i> 영상 + 음성 합성 중...</div>
             <div class="p-step" id="sp-youtube"><i class="fa-solid fa-circle-notch"></i> YouTube에 업로드 중...</div>
         </div>
 
@@ -1685,7 +1686,25 @@ function wrapCanvasText(ctx, text, maxWidth) {
     return result.length > 0 ? result : [text];
 }
 
-// ★ 핵심: Canvas + TTS 나레이션 영상 생성 엔진 (음악 없음, 빠른 설명 스타일)
+// ★ OpenAI TTS API를 통해 고품질 나레이션 오디오 생성
+async function generateTTSAudio(texts, lang) {
+    console.log('🎙️ TTS 생성 요청:', texts.length, '문장');
+    const { data, error } = await sb.functions.invoke('tts-generate', {
+        body: { texts, lang, speed: 1.05 }
+    });
+    if (error) throw new Error('TTS 생성 실패: ' + error.message);
+    if (data?.error) throw new Error('TTS 오류: ' + data.error);
+    // base64 → ArrayBuffer → AudioBuffer
+    const binaryStr = atob(data.audio);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await audioCtx.decodeAudioData(bytes.buffer);
+    console.log('🎙️ TTS 오디오 생성 완료:', audioBuffer.duration.toFixed(1), '초');
+    return { audioCtx, audioBuffer };
+}
+
+// ★ 핵심: Canvas + OpenAI TTS 나레이션 영상 생성 엔진 (고품질 음성 포함)
 async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -1701,52 +1720,63 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
             const ctx = cvs.getContext('2d');
             await document.fonts.ready;
 
-            // 3. 나레이션 준비 (AI가 생성한 narration 배열 사용)
+            // 3. 나레이션 준비
             const narrationTexts = aiContent.narration || [];
             const overlays = aiContent.overlay_texts || {};
 
-            // TTS 나레이션을 스피커로 재생 (빠른 말투)
-            function speakNarration(text, rate) {
-                return new Promise((res) => {
-                    if (!('speechSynthesis' in window) || !text) { res(); return; }
-                    const u = new SpeechSynthesisUtterance(text);
-                    u.lang = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR';
-                    u.rate = rate || 1.4; // 빠른 말투
-                    u.volume = 1.0;
-                    u.onend = () => res();
-                    u.onerror = () => res();
-                    window.speechSynthesis.speak(u);
-                });
-            }
-
-            // 나레이션 전체를 스피커로 재생 (비동기, 영상과 동시에)
-            async function playAllNarrations() {
-                for (const text of narrationTexts) {
-                    await speakNarration(text, 1.5);
-                    await new Promise(r => setTimeout(r, 200)); // 문장 간 짧은 간격
+            // 4. OpenAI TTS로 고품질 음성 생성
+            let audioCtx, audioBuffer, audioSource, audioDest;
+            let hasTTS = false;
+            try {
+                if (narrationTexts.length > 0) {
+                    const tts = await generateTTSAudio(narrationTexts, lang);
+                    audioCtx = tts.audioCtx;
+                    audioBuffer = tts.audioBuffer;
+                    hasTTS = true;
+                    // TTS 오디오 길이에 맞춰 영상 길이 자동 조정 (최소 15초, 최대 59초 = 쇼츠 제한)
+                    durationSec = Math.max(15, Math.min(59, Math.ceil(audioBuffer.duration) + 2));
+                    console.log('🎬 TTS 기반 영상 길이:', durationSec, '초');
                 }
+            } catch (ttsErr) {
+                console.warn('⚠️ TTS 실패, 무음 영상으로 진행:', ttsErr.message);
             }
 
-            // 4. 오디오 없이 비디오만 녹화 (음악 제거)
+            // 5. 오디오+비디오 결합 스트림 생성
             const videoStream = cvs.captureStream(30);
+            let combinedStream;
+            if (hasTTS) {
+                // AudioContext → MediaStreamDestination으로 오디오 스트림 생성
+                audioDest = audioCtx.createMediaStreamDestination();
+                audioSource = audioCtx.createBufferSource();
+                audioSource.buffer = audioBuffer;
+                audioSource.connect(audioDest);
+                audioSource.connect(audioCtx.destination); // 스피커로도 출력
+                // 비디오 + 오디오 트랙 결합
+                combinedStream = new MediaStream([
+                    ...videoStream.getVideoTracks(),
+                    ...audioDest.stream.getAudioTracks()
+                ]);
+            } else {
+                combinedStream = videoStream;
+            }
+
             const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
                 ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
-            const recorder = new MediaRecorder(videoStream, { mimeType, videoBitsPerSecond: 4000000 });
+            const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 5000000 });
             const chunks = [];
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
                 const blob = new Blob(chunks, { type: mimeType });
                 URL.revokeObjectURL(imgUrl);
+                if (audioCtx) audioCtx.close();
                 resolve(blob);
             };
             recorder.onerror = (e) => reject(e.error || new Error('MediaRecorder error'));
 
-            // 5. 나레이션 기반 자막 타이밍 (5구간으로 분배)
+            // 6. 자막 타이밍 (균등 분배)
             const segCount = narrationTexts.length || 5;
             const segDur = 1.0 / segCount;
             const textSegments = [];
-
-            // 나레이션 텍스트를 자막으로 사용 (overlay_texts는 짧은 요약용)
             const captionTexts = narrationTexts.length > 0 ? narrationTexts : [
                 overlays.hook || aiContent.title || '',
                 overlays.main || '',
@@ -1758,26 +1788,23 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                 const start = i * segDur;
                 const end = start + segDur - 0.02;
                 textSegments.push({
-                    text: text,
-                    start: start,
-                    end: end,
+                    text, start, end,
                     fontSize: i === 0 ? 44 : i === captionTexts.length - 1 ? 42 : 38,
-                    y: 0.70, // 하단 자막 위치
-                    isCaption: true
+                    y: 0.72
                 });
             });
 
-            // 6. 애니메이션 파라미터
+            // 7. 애니메이션 파라미터
             const totalMs = durationSec * 1000;
             const startTime = performance.now();
             const zoomDir = aiContent.video_style?.zoom_direction || 'in';
             const accentColor = aiContent.video_style?.color_accent || '#a78bfa';
 
-            // 7. 녹화 시작 + TTS 동시 재생
+            // 8. 녹화 시작 + TTS 재생
             recorder.start(100);
-            playAllNarrations(); // 스피커로 나레이션 재생 (비동기)
+            if (hasTTS && audioSource) audioSource.start(0);
 
-            // 8. 프레임 렌더링 루프
+            // 9. 프레임 렌더링 루프
             function drawFrame() {
                 const elapsed = performance.now() - startTime;
                 const progress = Math.min(elapsed / totalMs, 1.0);
@@ -1785,7 +1812,7 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, W, H);
 
-                // Ken Burns 효과
+                // Ken Burns 효과 (부드러운 줌/팬)
                 const imgAspect = img.width / img.height;
                 const canvasAspect = W / H;
                 let baseScale = imgAspect > canvasAspect ? H / img.height : W / img.width;
@@ -1793,52 +1820,59 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                 switch (zoomDir) {
                     case 'out':
                         scale = baseScale * (1.4 - 0.4 * progress);
-                        offsetX = -(img.width * scale - W) / 2 + (progress * 100);
+                        offsetX = -(img.width * scale - W) / 2 + (progress * 80);
                         offsetY = -(img.height * scale - H) / 2;
                         break;
                     case 'left_to_right':
-                        scale = baseScale * 1.25;
+                        scale = baseScale * 1.2;
                         offsetX = -(img.width * scale - W) * progress;
                         offsetY = -(img.height * scale - H) / 2;
                         break;
                     case 'right_to_left':
-                        scale = baseScale * 1.25;
+                        scale = baseScale * 1.2;
                         offsetX = -(img.width * scale - W) * (1 - progress);
                         offsetY = -(img.height * scale - H) / 2;
                         break;
                     default:
-                        scale = baseScale * (1.0 + 0.4 * progress);
-                        offsetX = -(img.width * scale - W) / 2 - (progress * 100);
-                        offsetY = -(img.height * scale - H) / 2 - (progress * 60);
+                        scale = baseScale * (1.0 + 0.35 * progress);
+                        offsetX = -(img.width * scale - W) / 2 - (progress * 80);
+                        offsetY = -(img.height * scale - H) / 2 - (progress * 50);
                 }
                 ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
 
+                // 비네팅 (둥근 모서리 어둡게) - 영화같은 느낌
+                const vigGrad = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.8);
+                vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                vigGrad.addColorStop(1, 'rgba(0,0,0,0.4)');
+                ctx.fillStyle = vigGrad;
+                ctx.fillRect(0, 0, W, H);
+
                 // 상단 그라데이션
-                const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.12);
-                topGrad.addColorStop(0, 'rgba(0,0,0,0.5)');
+                const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.15);
+                topGrad.addColorStop(0, 'rgba(0,0,0,0.6)');
                 topGrad.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.fillStyle = topGrad;
-                ctx.fillRect(0, 0, W, H * 0.12);
+                ctx.fillRect(0, 0, W, H * 0.15);
 
-                // 하단 그라데이션 (자막 영역 - 더 넓고 진하게)
-                const botGrad = ctx.createLinearGradient(0, H * 0.50, 0, H);
+                // 하단 그라데이션 (자막 영역)
+                const botGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
                 botGrad.addColorStop(0, 'rgba(0,0,0,0)');
-                botGrad.addColorStop(0.3, 'rgba(0,0,0,0.6)');
-                botGrad.addColorStop(1, 'rgba(0,0,0,0.9)');
+                botGrad.addColorStop(0.3, 'rgba(0,0,0,0.55)');
+                botGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
                 ctx.fillStyle = botGrad;
-                ctx.fillRect(0, H * 0.50, W, H * 0.50);
+                ctx.fillRect(0, H * 0.55, W, H * 0.45);
 
-                // 나레이션 자막 렌더링 (하단 자막 스타일)
+                // 자막 렌더링
                 textSegments.forEach(seg => {
                     if (progress >= seg.start && progress <= seg.end && seg.text) {
                         const segP = (progress - seg.start) / (seg.end - seg.start);
                         let alpha = 1;
-                        if (segP < 0.08) alpha = segP / 0.08;
-                        else if (segP > 0.92) alpha = (1 - segP) / 0.08;
+                        if (segP < 0.06) alpha = segP / 0.06;
+                        else if (segP > 0.94) alpha = (1 - segP) / 0.06;
                         alpha = Math.max(0, Math.min(1, alpha));
 
-                        // 타이핑 효과: 글자가 하나씩 나타남
-                        const charProgress = Math.min(segP * 2.5, 1.0);
+                        // 타이핑 효과
+                        const charProgress = Math.min(segP * 2.0, 1.0);
                         const visibleChars = Math.ceil(seg.text.length * charProgress);
                         const displayText = seg.text.substring(0, visibleChars);
 
@@ -1847,28 +1881,27 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                         ctx.textAlign = 'center';
                         ctx.font = `800 ${seg.fontSize}px "Pretendard", "Noto Sans JP", "Inter", sans-serif`;
 
-                        const maxW = W - 100;
+                        const maxW = W - 120;
                         const lines = wrapCanvasText(ctx, displayText, maxW);
-                        const lineH = seg.fontSize * 1.4;
+                        const lineH = seg.fontSize * 1.45;
                         const startY = H * seg.y - ((lines.length - 1) * lineH) / 2;
 
-                        // 자막 배경 박스
-                        lines.forEach((line, i) => {
-                            const y = startY + i * lineH;
+                        // 자막 배경 (둥근 반투명 박스)
+                        lines.forEach((line, li) => {
+                            const y = startY + li * lineH;
                             const tw = ctx.measureText(line).width;
-                            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                            const pad = 16;
+                            const pad = 18;
+                            ctx.fillStyle = 'rgba(0,0,0,0.55)';
                             ctx.beginPath();
-                            const rx = W/2 - tw/2 - pad, ry = y - seg.fontSize + 4, rw = tw + pad*2, rh = seg.fontSize + pad;
-                            ctx.roundRect(rx, ry, rw, rh, 8);
+                            ctx.roundRect(W/2 - tw/2 - pad, y - seg.fontSize + 2, tw + pad*2, seg.fontSize + pad, 10);
                             ctx.fill();
                         });
 
-                        // 자막 텍스트
-                        lines.forEach((line, i) => {
-                            const y = startY + i * lineH;
-                            ctx.strokeStyle = 'rgba(0,0,0,0.9)';
-                            ctx.lineWidth = 5;
+                        // 자막 텍스트 (외곽선 + 흰색)
+                        lines.forEach((line, li) => {
+                            const y = startY + li * lineH;
+                            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                            ctx.lineWidth = 6;
                             ctx.lineJoin = 'round';
                             ctx.strokeText(line, W / 2, y);
                             ctx.fillStyle = '#ffffff';
@@ -1879,30 +1912,34 @@ async function generateVideoFromImage(imageFile, aiContent, durationSec, lang) {
                     }
                 });
 
-                // 진행률 바 (하단)
-                ctx.fillStyle = accentColor;
-                ctx.fillRect(0, H - 8, W * progress, 8);
+                // 진행률 바 (하단, 그라데이션)
+                const barGrad = ctx.createLinearGradient(0, 0, W * progress, 0);
+                barGrad.addColorStop(0, accentColor);
+                barGrad.addColorStop(1, '#ffffff');
+                ctx.fillStyle = barGrad;
+                ctx.fillRect(0, H - 6, W * progress, 6);
 
-                // 브랜드 워터마크 (상단)
+                // 브랜드 워터마크 (상단 중앙)
                 ctx.save();
-                ctx.globalAlpha = 0.7;
-                ctx.font = '700 30px "Pretendard", sans-serif';
+                ctx.globalAlpha = 0.8;
+                ctx.font = '700 28px "Pretendard", sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#ffffff';
-                ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+                ctx.strokeStyle = 'rgba(0,0,0,0.7)';
                 ctx.lineWidth = 4;
                 ctx.lineJoin = 'round';
                 const domainByLang = { kr: 'cafe2626.com', ja: 'cafe0101.com', en: 'cafe3355.com' };
                 const siteUrl = domainByLang[lang] || 'cafe2626.com';
-                ctx.strokeText('🦎 카멜레온프린팅 | ' + siteUrl, W / 2, 60);
-                ctx.fillText('🦎 카멜레온프린팅 | ' + siteUrl, W / 2, 60);
+                const brandText = '🦎 카멜레온프린팅 | ' + siteUrl;
+                ctx.strokeText(brandText, W / 2, 55);
+                ctx.fillText(brandText, W / 2, 55);
                 ctx.restore();
 
                 if (progress < 1.0) {
                     requestAnimationFrame(drawFrame);
                 } else {
-                    window.speechSynthesis.cancel(); // TTS 중지
-                    setTimeout(() => recorder.stop(), 500);
+                    if (audioSource) try { audioSource.stop(); } catch(e) {}
+                    setTimeout(() => recorder.stop(), 300);
                 }
             }
 
@@ -2031,7 +2068,7 @@ window.generateShortsOneClick = async function() {
         const label = totalFiles > 1 ? ` (${i + 1}/${totalFiles})` : '';
 
         // 스텝 초기화
-        ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => setPipelineStep(id, ''));
+        ['sp-upload','sp-ai','sp-tts','sp-video','sp-youtube'].forEach(id => setPipelineStep(id, ''));
 
         try {
             // Step 1: 이미지 → base64
@@ -2046,10 +2083,16 @@ window.generateShortsOneClick = async function() {
             const aiContent = await generateShortsAI(base64, lang, topic);
             setPipelineStep('sp-ai', 'done');
 
-            // Step 3: 영상 생성
+            // Step 3: TTS 음성 생성 + 영상 렌더링 (generateVideoFromImage 내부에서 TTS 호출)
+            setPipelineStep('sp-tts', 'active');
+            document.getElementById('sp-tts').lastChild.textContent = ` AI 음성 생성 중 (OpenAI TTS)...${label}`;
+            // TTS는 generateVideoFromImage 내부에서 자동 호출됨
+            await new Promise(r => setTimeout(r, 100)); // UI 업데이트 대기
+
             setPipelineStep('sp-video', 'active');
-            document.getElementById('sp-video').lastChild.textContent = ` 영상 렌더링 중...${label}`;
+            document.getElementById('sp-video').lastChild.textContent = ` 영상 + 음성 합성 중...${label}`;
             const videoBlob = await generateVideoFromImage(file, aiContent, duration, lang);
+            setPipelineStep('sp-tts', 'done');
             setPipelineStep('sp-video', 'done');
 
             // Step 4: YouTube 업로드
@@ -2093,7 +2136,7 @@ window.generateShortsOneClick = async function() {
                     <span style="color:#f87171; font-weight:600;"><i class="fa-solid fa-circle-exclamation"></i> ${i + 1}. 실패: ${e.message}</span>
                 </div>`;
 
-            ['sp-upload','sp-ai','sp-video','sp-youtube'].forEach(id => {
+            ['sp-upload','sp-ai','sp-tts','sp-video','sp-youtube'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && el.classList.contains('active')) setPipelineStep(id, 'error');
             });
