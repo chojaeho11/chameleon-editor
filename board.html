@@ -486,8 +486,11 @@
             <div>
                 <select id="countrySelect" class="ai-input-pretty" style="width:auto; display:inline-block; margin:0;">
                     <option value="KR">🇰🇷 한국</option>
-                    <option value="US">🇺🇸 미국</option>
                     <option value="JP">🇯🇵 일본</option>
+                    <option value="US">🇺🇸 미국</option>
+                    <option value="CN">🇨🇳 中文</option>
+                    <option value="AR">🇸🇦 العربية</option>
+                    <option value="ES">🇪🇸 Español</option>
                 </select>
                 <button id="btnWrite" class="btn primary" style="display:inline-block; margin-left:10px;" data-i18n="btn_write_post">✏️ 글쓰기</button>
             </div>
@@ -591,13 +594,19 @@
         const catMap = {
             'KR': { 'blog': '블로그', 'review': '제작후기', 'promo': '홍보', 'trade': '장비거래', 'job': '구인구직', 'free': '자료실' },
             'JP': { 'blog': 'ブログ', 'review': 'レビュー', 'promo': 'PR', 'trade': '中古機器', 'job': '求人', 'free': '資料室' },
-            'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files' }
+            'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files' },
+            'CN': { 'blog': '博客', 'review': '评价', 'promo': '推广', 'trade': '二手', 'job': '招聘', 'free': '资料' },
+            'AR': { 'blog': 'مدونة', 'review': 'مراجعات', 'promo': 'ترويج', 'trade': 'سوق', 'job': 'وظائف', 'free': 'ملفات' },
+            'ES': { 'blog': 'Blog', 'review': 'Reseñas', 'promo': 'Promo', 'trade': 'Mercado', 'job': 'Empleo', 'free': 'Archivos' }
         };
         const activeCatName = (catMap[currentCountry] || catMap['KR'])[category] || 'Board';
         const metaData = {
             'KR': { title: `카멜레온 ${activeCatName}`, desc: "카멜레온프린팅 커뮤니티.", locale: "ko_KR" },
             'JP': { title: `カメレオン・${activeCatName}`, desc: "カメレオンプリンティング公式コミュニティ。", locale: "ja_JP" },
-            'US': { title: `Chameleon ${activeCatName}`, desc: "Chameleon Printing Community.", locale: "en_US" }
+            'US': { title: `Chameleon ${activeCatName}`, desc: "Chameleon Printing Community.", locale: "en_US" },
+            'CN': { title: `变色龙 ${activeCatName}`, desc: "变色龙印刷社区。", locale: "zh_CN" },
+            'AR': { title: `كاميليون ${activeCatName}`, desc: "مجتمع طباعة كاميليون.", locale: "ar_SA" },
+            'ES': { title: `Chameleon ${activeCatName}`, desc: "Comunidad Chameleon Printing.", locale: "es_ES" }
         };
         const defaultData = metaData[currentCountry] || metaData['KR'];
 
@@ -648,13 +657,13 @@
         document.getElementById('countryBadge').innerText = currentCountry;
         
         const titleMap = {
-            'blog': { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ' },
-            'review': { KR: '고객 제작후기', US: 'Customer Reviews', JP: 'お客様のレビュー' },
-            'promo': { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社' },
-            'trade': { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引' },
-            'job': { KR: '구인구직', US: 'Job Market', JP: '求人・求職' },
-            'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書' }
-        }[category] || { KR: '게시판', US: 'Board', JP: '掲示板' };
+            'blog': { KR: '카멜레온 블로그', US: 'Chameleon Blog', JP: 'カメレオンブログ', CN: '变色龙博客', AR: 'مدونة كاميليون', ES: 'Blog Chameleon' },
+            'review': { KR: '고객 제작후기', US: 'Customer Reviews', JP: 'お客様のレビュー', CN: '客户评价', AR: 'مراجعات العملاء', ES: 'Reseñas' },
+            'promo': { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社', CN: '本地合作伙伴', AR: 'شركاء محليون', ES: 'Socios Locales' },
+            'trade': { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引', CN: '二手设备', AR: 'معدات مستعملة', ES: 'Equipos Usados' },
+            'job': { KR: '구인구직', US: 'Job Market', JP: '求人・求職', CN: '招聘信息', AR: 'سوق العمل', ES: 'Empleo' },
+            'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書', CN: '产品说明', AR: 'وصف المنتج', ES: 'Descripción' }
+        }[category] || { KR: '게시판', US: 'Board', JP: '掲示板', CN: '公告板', AR: 'لوحة', ES: 'Tablero' };
         
         if (subName && category === 'review') {
             document.getElementById('pageTitle').innerText = `${subName} 후기`;
