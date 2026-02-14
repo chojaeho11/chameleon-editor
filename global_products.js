@@ -2406,7 +2406,7 @@ window.batchCrawlProducts = async () => {
                 description: detailHtml.kr || product.description || '',
                 name_jp: '', name_us: '', name_cn: '', name_ar: '', name_es: '',
                 price_jp: Math.round(price * 0.2),
-                price_us: Math.round(price * 0.002 * 100) / 100,
+                price_us: Math.round(price * 0.002),
                 description_jp: detailHtml.jp || '',
                 description_us: detailHtml.us || '',
                 description_cn: detailHtml.cn || '',
