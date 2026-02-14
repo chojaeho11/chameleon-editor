@@ -2486,3 +2486,193 @@ async function batchTranslateNewProducts(category, count) {
         }
     }
 }
+
+// ==========================================
+// 상세페이지 템플릿 일괄 생성
+// ==========================================
+
+function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
+    const n = nameLocal || name || '';
+    const img = imgUrl || '';
+
+    const templates = {
+        kr: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p>카멜레온프린팅에서 제공하는 <strong>${n}</strong>입니다. 최고의 인쇄 품질과 합리적인 가격으로 만나보세요.</p>
+<p><br></p>
+<h3>주요 특징</h3>
+<ul>
+<li>고품질 UV / 라텍스 인쇄로 선명한 색상 표현</li>
+<li>내구성 높은 프리미엄 소재 사용</li>
+<li>다양한 사이즈 맞춤 제작 가능</li>
+<li>빠른 제작 및 안전한 포장 배송</li>
+</ul>
+<p><br></p>
+<h3>주문 안내</h3>
+<ul>
+<li>디자인 파일을 업로드하여 간편하게 주문하세요</li>
+<li>수량에 따른 할인 혜택이 적용됩니다</li>
+<li>주문 후 1~3일 이내 제작 완료</li>
+</ul>
+<hr>
+<p><strong>카멜레온프린팅</strong> - 당신의 디자인을 현실로 만듭니다</p>`,
+
+        jp: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p>カメレオンプリンティングがお届けする<strong>${n}</strong>です。最高の印刷品質とお手頃な価格でご利用いただけます。</p>
+<p><br></p>
+<h3>主な特徴</h3>
+<ul>
+<li>高品質UV/ラテックス印刷で鮮やかな色彩表現</li>
+<li>耐久性の高いプレミアム素材を使用</li>
+<li>多様なサイズでオーダーメイド制作が可能</li>
+<li>迅速な制作と安全な梱包配送</li>
+</ul>
+<p><br></p>
+<h3>ご注文について</h3>
+<ul>
+<li>デザインファイルをアップロードして簡単にご注文いただけます</li>
+<li>数量に応じた割引特典がございます</li>
+<li>ご注文後1〜3日以内に制作完了</li>
+</ul>
+<hr>
+<p><strong>カメレオンプリンティング</strong> - あなたのデザインを現実に</p>`,
+
+        us: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p><strong>${n}</strong> by Chameleon Printing. Premium quality printing with vivid colors at competitive prices.</p>
+<p><br></p>
+<h3>Key Features</h3>
+<ul>
+<li>High-quality UV / Latex printing with vivid color reproduction</li>
+<li>Durable premium materials for long-lasting results</li>
+<li>Custom sizes available to fit your needs</li>
+<li>Fast production and secure packaging</li>
+</ul>
+<p><br></p>
+<h3>Order Information</h3>
+<ul>
+<li>Upload your design file for easy ordering</li>
+<li>Volume discounts available for bulk orders</li>
+<li>Production completed within 1-3 business days</li>
+</ul>
+<hr>
+<p><strong>Chameleon Printing</strong> - Bringing your designs to life</p>`,
+
+        cn: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p>变色龙印刷为您提供的<strong>${n}</strong>。以最优质的印刷品质和实惠的价格为您服务。</p>
+<p><br></p>
+<h3>主要特点</h3>
+<ul>
+<li>高品质UV/乳胶印刷，色彩鲜艳生动</li>
+<li>高耐久性优质材料</li>
+<li>多种尺寸可定制生产</li>
+<li>快速制作与安全包装配送</li>
+</ul>
+<p><br></p>
+<h3>订购说明</h3>
+<ul>
+<li>上传设计文件即可便捷下单</li>
+<li>批量订购享受折扣优惠</li>
+<li>下单后1-3个工作日内完成制作</li>
+</ul>
+<hr>
+<p><strong>变色龙印刷</strong> - 将您的设计变为现实</p>`,
+
+        ar: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p><strong>${n}</strong> من كاميليون للطباعة. جودة طباعة متميزة بأسعار تنافسية.</p>
+<p><br></p>
+<h3>المميزات الرئيسية</h3>
+<ul>
+<li>طباعة UV/لاتكس عالية الجودة بألوان زاهية</li>
+<li>مواد متينة عالية الجودة</li>
+<li>أحجام مخصصة حسب احتياجاتك</li>
+<li>إنتاج سريع وتغليف آمن</li>
+</ul>
+<p><br></p>
+<h3>معلومات الطلب</h3>
+<ul>
+<li>قم بتحميل ملف التصميم للطلب بسهولة</li>
+<li>خصومات على الكميات الكبيرة</li>
+<li>يتم الإنتاج خلال 1-3 أيام عمل</li>
+</ul>
+<hr>
+<p><strong>كاميليون للطباعة</strong> - نحول تصاميمك إلى واقع</p>`,
+
+        es: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p><strong>${n}</strong> de Chameleon Printing. Impresión de calidad premium con colores vivos a precios competitivos.</p>
+<p><br></p>
+<h3>Características Principales</h3>
+<ul>
+<li>Impresión UV/Látex de alta calidad con colores vibrantes</li>
+<li>Materiales premium de alta durabilidad</li>
+<li>Tamaños personalizados según sus necesidades</li>
+<li>Producción rápida y embalaje seguro</li>
+</ul>
+<p><br></p>
+<h3>Información de Pedido</h3>
+<ul>
+<li>Sube tu archivo de diseño para un pedido fácil</li>
+<li>Descuentos por volumen disponibles</li>
+<li>Producción completada en 1-3 días hábiles</li>
+</ul>
+<hr>
+<p><strong>Chameleon Printing</strong> - Dando vida a tus diseños</p>`
+    };
+
+    return templates[lang] || templates.kr;
+}
+
+// 상세페이지 없는 상품 일괄 생성
+window.batchFillDetailPages = async () => {
+    const { data: products, error } = await sb.from('admin_products')
+        .select('id, name, name_jp, name_us, name_cn, name_ar, name_es, img_url, description')
+        .order('id');
+
+    if (error) return alert('상품 조회 실패: ' + error.message);
+
+    const empty = products.filter(p => {
+        const d = p.description;
+        return !d || d.trim() === '' || d === '<p><br></p>';
+    });
+
+    if (empty.length === 0) return alert('상세페이지가 없는 상품이 없습니다.');
+    if (!confirm(`${empty.length}개 상품에 상세페이지를 일괄 생성하시겠습니까?`)) return;
+
+    const btn = document.getElementById('btnBatchFillDetail');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...'; }
+
+    let success = 0;
+    let fail = 0;
+
+    for (const p of empty) {
+        try {
+            const { error: updateErr } = await sb.from('admin_products').update({
+                description: generateDetailTemplate(p.name, p.name, p.img_url, 'kr'),
+                description_jp: generateDetailTemplate(p.name, p.name_jp || p.name, p.img_url, 'jp'),
+                description_us: generateDetailTemplate(p.name, p.name_us || p.name, p.img_url, 'us'),
+                description_cn: generateDetailTemplate(p.name, p.name_cn || p.name_us || p.name, p.img_url, 'cn'),
+                description_ar: generateDetailTemplate(p.name, p.name_ar || p.name_us || p.name, p.img_url, 'ar'),
+                description_es: generateDetailTemplate(p.name, p.name_es || p.name_us || p.name, p.img_url, 'es'),
+            }).eq('id', p.id);
+
+            if (updateErr) { fail++; console.error('실패:', p.id, updateErr.message); }
+            else { success++; }
+        } catch (e) {
+            fail++;
+            console.error('에러:', p.id, e);
+        }
+    }
+
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-lines"></i> 상세페이지 일괄 생성 (빈 상품)'; }
+    alert(`상세페이지 일괄 생성 완료!\n\n성공: ${success}건\n실패: ${fail}건`);
+};
