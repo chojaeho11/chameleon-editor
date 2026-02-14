@@ -1759,37 +1759,101 @@ window.restoreCommonInfo = async (data) => {
     alert("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.");
 };
 
+// 복잡한 AI HTML 감지 (Quill이 파싱 못하는 구조)
+function isComplexHtml(html) {
+    return html && html.includes('<div') && html.includes('style="') && html.length > 200;
+}
+
+// HTML 편집 모드로 전환 (복잡한 HTML용)
+function enterHtmlMode(rawHtml) {
+    const container = document.getElementById('popup-quill-editor');
+    const editorArea = container.querySelector('.ql-editor');
+    let txtArea = container.querySelector('.ql-html-editor');
+    if (!txtArea) {
+        txtArea = document.createElement('textarea');
+        txtArea.className = 'ql-html-editor';
+        container.appendChild(txtArea);
+    }
+    txtArea.value = rawHtml;
+    editorArea.style.display = 'none';
+    popupQuill.root.innerHTML = '';
+}
+
+// WYSIWYG 모드로 전환 (일반 텍스트용)
+function enterWysiwygMode(html) {
+    const container = document.getElementById('popup-quill-editor');
+    const editorArea = container.querySelector('.ql-editor');
+    const txtArea = container.querySelector('.ql-html-editor');
+    if (txtArea) { txtArea.remove(); }
+    editorArea.style.display = 'block';
+    popupQuill.root.innerHTML = (!html || html === "<p><br></p>") ? "" : html;
+}
+
+// 현재 에디터 내용 가져오기 (모드에 따라)
+function getCurrentEditorContent() {
+    const container = document.getElementById('popup-quill-editor');
+    const txtArea = container.querySelector('.ql-html-editor');
+    const editorArea = container.querySelector('.ql-editor');
+    if (txtArea && editorArea.style.display === 'none') {
+        return txtArea.value; // HTML 모드
+    }
+    return popupQuill.root.innerHTML; // WYSIWYG 모드
+}
+
 window.openDetailPageEditor = () => {
     window.initPopupQuill();
     document.getElementById('detailEditorModal').style.display = 'flex';
     currentPopupLang = 'KR';
     const krData = document.getElementById('newProdDetailKR').value;
-    popupQuill.root.innerHTML = (krData === "" || krData === "<p><br></p>") ? "" : krData;
+
+    if (isComplexHtml(krData)) {
+        enterHtmlMode(krData);
+    } else {
+        enterWysiwygMode(krData);
+    }
+
     document.querySelectorAll('.pop-editor-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tabKR').classList.add('active');
 };
 
 window.switchPopupLang = (lang) => {
-    const currentContent = popupQuill.root.innerHTML;
-    if (currentContent !== "<p><br></p>") {
+    // 현재 언어 내용 저장
+    const currentContent = getCurrentEditorContent();
+    if (currentContent && currentContent !== "<p><br></p>") {
         document.getElementById(`newProdDetail${currentPopupLang}`).value = currentContent;
     }
+
     currentPopupLang = lang;
     const savedData = document.getElementById(`newProdDetail${lang}`).value;
-    popupQuill.root.innerHTML = (savedData === "" || savedData === "<p><br></p>") ? "" : savedData;
+
+    if (isComplexHtml(savedData)) {
+        enterHtmlMode(savedData);
+    } else {
+        enterWysiwygMode(savedData);
+    }
+
     document.querySelectorAll('.pop-editor-tab').forEach(t => t.classList.remove('active'));
     const targetTab = document.getElementById(`tab${lang}`);
     if (targetTab) targetTab.classList.add('active');
 };
 
 window.saveDetailAndClose = () => {
-    document.getElementById(`newProdDetail${currentPopupLang}`).value = popupQuill.root.innerHTML;
+    // 현재 모드에 맞게 내용 저장
+    document.getElementById(`newProdDetail${currentPopupLang}`).value = getCurrentEditorContent();
+
+    // HTML 모드 정리
+    const container = document.getElementById('popup-quill-editor');
+    const txtArea = container.querySelector('.ql-html-editor');
+    const editorArea = container.querySelector('.ql-editor');
+    if (txtArea) { txtArea.remove(); }
+    if (editorArea) editorArea.style.display = 'block';
+
     document.getElementById('detailEditorModal').style.display = 'none';
     alert("상세페이지가 임시 저장되었습니다.\n최종 등록을 위해 [수정사항 저장] 버튼을 꼭 눌러주세요.");
 };
 
 window.autoTranslatePopupDetail = async () => {
-    const sourceHtml = popupQuill.root.innerHTML;
+    const sourceHtml = getCurrentEditorContent();
     if(!sourceHtml || sourceHtml === "<p><br></p>") return alert("번역할 한국어 내용이 없습니다.");
     if(!confirm("한국어 본문을 바탕으로 일본어와 영어 상세페이지를 자동 생성하시겠습니까?")) return;
 
