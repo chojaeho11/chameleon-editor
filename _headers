@@ -1,0 +1,8 @@
+/index.html
+  Cache-Control: no-cache, must-revalidate
+
+/*.html
+  Cache-Control: no-cache, must-revalidate
+
+/text-wizard.js
+  Cache-Control: no-cache, must-revalidate
