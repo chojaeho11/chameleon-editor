@@ -645,6 +645,11 @@ window.openAddonCatManager = async () => {
     document.getElementById('modalCatNameKR').value = "";
     document.getElementById('modalCatNameJP').value = "";
     document.getElementById('modalCatNameUS').value = "";
+    document.getElementById('modalCatNameCN').value = "";
+    document.getElementById('modalCatNameAR').value = "";
+    document.getElementById('modalCatNameES').value = "";
+    document.getElementById('modalCatNameDE').value = "";
+    document.getElementById('modalCatNameFR').value = "";
     document.getElementById('addonCatModal').style.display = 'flex';
     document.getElementById('modalCatNameKR').focus();
     document.getElementById('modalCatCode').disabled = false;
@@ -667,6 +672,8 @@ window.autoTranslateAddonCatModal = async () => {
         document.getElementById('modalCatNameCN').value = await googleTranslate(en, 'zh-CN');
         document.getElementById('modalCatNameAR').value = await googleTranslate(en, 'ar');
         document.getElementById('modalCatNameES').value = await googleTranslate(en, 'es');
+        document.getElementById('modalCatNameDE').value = await googleTranslate(en, 'de');
+        document.getElementById('modalCatNameFR').value = await googleTranslate(en, 'fr');
     } catch(e) {
         alert("번역 오류: " + e.message);
     } finally {
@@ -694,6 +701,8 @@ window.saveAddonCategoryFromModal = async () => {
             name_cn: document.getElementById('modalCatNameCN').value.trim(),
             name_ar: document.getElementById('modalCatNameAR').value.trim(),
             name_es: document.getElementById('modalCatNameES').value.trim(),
+            name_de: document.getElementById('modalCatNameDE').value.trim(),
+            name_fr: document.getElementById('modalCatNameFR').value.trim(),
             sort_order: 99
         };
         let error;
@@ -726,6 +735,11 @@ window.editCurrentAddonCategory = async () => {
     document.getElementById('modalCatNameKR').value = catData.name_kr || catData.name || "";
     document.getElementById('modalCatNameJP').value = catData.name_jp || "";
     document.getElementById('modalCatNameUS').value = catData.name_us || "";
+    document.getElementById('modalCatNameCN').value = catData.name_cn || "";
+    document.getElementById('modalCatNameAR').value = catData.name_ar || "";
+    document.getElementById('modalCatNameES').value = catData.name_es || "";
+    document.getElementById('modalCatNameDE').value = catData.name_de || "";
+    document.getElementById('modalCatNameFR').value = catData.name_fr || "";
     document.getElementById('addonCatModal').style.display = 'flex';
 };
 
@@ -1726,7 +1740,7 @@ window.openCommonInfoModal = async () => {
 
 window.loadCommonInfoContent = async (categoryCode) => {
     const dbClient = window.sb || window._supabase;
-    ['commonHtmlKR', 'commonHtmlJP', 'commonHtmlUS', 'commonHtmlCN', 'commonHtmlAR', 'commonHtmlES'].forEach(id => { const el = document.getElementById(id); if(el) el.value = "로딩 중..."; });
+    ['commonHtmlKR', 'commonHtmlJP', 'commonHtmlUS', 'commonHtmlCN', 'commonHtmlAR', 'commonHtmlES', 'commonHtmlDE', 'commonHtmlFR'].forEach(id => { const el = document.getElementById(id); if(el) el.value = "로딩 중..."; });
 
     const { data } = await dbClient.from('common_info').select('*')
         .eq('section', 'top').eq('category_code', categoryCode).single();
@@ -1737,6 +1751,8 @@ window.loadCommonInfoContent = async (categoryCode) => {
     document.getElementById('commonHtmlCN').value = data ? (data.content_cn || '') : '';
     document.getElementById('commonHtmlAR').value = data ? (data.content_ar || '') : '';
     document.getElementById('commonHtmlES').value = data ? (data.content_es || '') : '';
+    document.getElementById('commonHtmlDE').value = data ? (data.content_de || '') : '';
+    document.getElementById('commonHtmlFR').value = data ? (data.content_fr || '') : '';
     
     const btnRestore = document.getElementById('btnRestoreCommon');
     if (data && (data.content_backup || data.content_backup_jp)) {
@@ -1767,12 +1783,16 @@ window.saveCommonInfo = async () => {
         content_cn: document.getElementById('commonHtmlCN').value,
         content_ar: document.getElementById('commonHtmlAR').value,
         content_es: document.getElementById('commonHtmlES').value,
+        content_de: document.getElementById('commonHtmlDE').value,
+        content_fr: document.getElementById('commonHtmlFR').value,
         content_backup: oldData ? oldData.content : null,
         content_backup_jp: oldData ? oldData.content_jp : null,
         content_backup_us: oldData ? oldData.content_us : null,
         content_backup_cn: oldData ? oldData.content_cn : null,
         content_backup_ar: oldData ? oldData.content_ar : null,
-        content_backup_es: oldData ? oldData.content_es : null
+        content_backup_es: oldData ? oldData.content_es : null,
+        content_backup_de: oldData ? oldData.content_de : null,
+        content_backup_fr: oldData ? oldData.content_fr : null
     };
 
     const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
@@ -1788,6 +1808,8 @@ window.restoreCommonInfo = async (data) => {
     document.getElementById('commonHtmlCN').value = data.content_backup_cn || '';
     document.getElementById('commonHtmlAR').value = data.content_backup_ar || '';
     document.getElementById('commonHtmlES').value = data.content_backup_es || '';
+    document.getElementById('commonHtmlDE').value = data.content_backup_de || '';
+    document.getElementById('commonHtmlFR').value = data.content_backup_fr || '';
     alert("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.");
 };
 
