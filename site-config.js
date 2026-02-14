@@ -36,13 +36,17 @@ if (paramLang) {
         country = 'AR';
     } else if (code === 'ES') {
         country = 'ES';
+    } else if (code === 'DE') {
+        country = 'DE';
+    } else if (code === 'FR') {
+        country = 'FR';
     } else {
         country = 'KR';
     }
 }
 
 export const SITE_CONFIG = {
-    COUNTRY: country, // 'KR', 'JP', 'US', 'CN', 'AR', 'ES'
+    COUNTRY: country, // 'KR', 'JP', 'US', 'CN', 'AR', 'ES', 'DE', 'FR'
 
     // 국가별 화폐 단위
     CURRENCY_UNIT: {
@@ -51,11 +55,13 @@ export const SITE_CONFIG = {
         'US': '$',
         'CN': '¥',
         'AR': '﷼',
-        'ES': '€'
+        'ES': '€',
+        'DE': '€',
+        'FR': '€'
     },
 
     // 국가별 환산율 (DB는 KRW 기준 저장, 표시 시 환산)
-    CURRENCY_RATE: { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.01, 'AR': 0.005, 'ES': 0.001 },
+    CURRENCY_RATE: { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.01, 'AR': 0.005, 'ES': 0.001, 'DE': 0.001, 'FR': 0.001 },
 
     // 국가별 폰트 정의
     FONTS: {
@@ -64,7 +70,9 @@ export const SITE_CONFIG = {
         'US': 'Inter',
         'CN': 'Noto Sans SC',
         'AR': 'Noto Sans Arabic',
-        'ES': 'Inter'
+        'ES': 'Inter',
+        'DE': 'Inter',
+        'FR': 'Inter'
     },
 
     // [중요] 국가별 PG사 설정 (토스 / 스트라이프)
@@ -90,6 +98,14 @@ export const SITE_CONFIG = {
             publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
         },
         'ES': {
+            provider: 'stripe',
+            publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
+        },
+        'DE': {
+            provider: 'stripe',
+            publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
+        },
+        'FR': {
             provider: 'stripe',
             publishableKey: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
         }
@@ -157,6 +173,26 @@ SITE_CONFIG.SEO = {
         siteName: 'Chameleon Printing',
         boardTitle: 'Comunidad Chameleon - Blog & Resenas',
         boardDesc: 'Comunidad global de Chameleon Printing. Consulta resenas de produccion, consejos de diseno e informacion de impresion.'
+    },
+    'DE': {
+        title: 'Chameleon Printing - Umweltfreundlicher Display- & Pop-up-Store-Druck mit kostenlosem Design-Editor',
+        description: 'Wabenplatten, Stoffdruck, Pop-up-Store-Displays. Kostenloser Online-Editor fuer lebensgrosse Aufsteller und Druckloesungen.',
+        keywords: 'chameleon printing,wabenplatte,stoffdruck,pop-up store,display druck,oeko druck,acryl druck,banner,aufsteller',
+        lang: 'de',
+        domain: 'https://www.cafe3355.com',
+        siteName: 'Chameleon Printing',
+        boardTitle: 'Chameleon Community - Blog & Bewertungen',
+        boardDesc: 'Globale Chameleon Printing Community. Produktionsbewertungen, Designtipps und Druckinformationen.'
+    },
+    'FR': {
+        title: 'Chameleon Printing - Impression Eco Display & Pop-up Store avec Editeur de Design Gratuit',
+        description: 'Panneaux nid d\'abeille, impression textile, displays pop-up store. Editeur de design en ligne gratuit.',
+        keywords: 'chameleon printing,panneau nid abeille,impression textile,pop-up store,impression display,impression ecologique,acrylique,banniere',
+        lang: 'fr',
+        domain: 'https://www.cafe3355.com',
+        siteName: 'Chameleon Printing',
+        boardTitle: 'Communaute Chameleon - Blog & Avis',
+        boardDesc: 'Communaute mondiale Chameleon Printing. Decouvrez les avis, conseils design et informations impression.'
     }
 };
 

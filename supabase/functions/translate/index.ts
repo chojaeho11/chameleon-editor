@@ -32,8 +32,40 @@ serve(async (req) => {
         }
 
         const langNames: Record<string, string> = {
-            kr: "Korean", ja: "Japanese", en: "English"
+            kr: "Korean", ko: "Korean", ja: "Japanese", en: "English",
+            zh: "Chinese Simplified", ar: "Arabic", es: "Spanish", de: "German", fr: "French"
         };
+
+        // 배치 번역 모드 (targetLangs가 배열이면)
+        const targetLangs = body.targetLangs;
+        const sourceLang = body.sourceLang || body.from || "auto";
+        if (targetLangs && Array.isArray(targetLangs)) {
+            const fromName = langNames[sourceLang] || "auto-detect";
+            const langList = targetLangs.map((l: string) => `${l}: ${langNames[l] || l}`).join(', ');
+            const batchPrompt = `You are a professional translator. Translate the following text ${fromName !== 'auto-detect' ? 'from ' + fromName + ' ' : ''}into these languages: ${langList}.
+Rules:
+- Output ONLY a JSON object with language codes as keys and translations as values.
+- Example: {"ja": "翻訳", "en": "Translation"}
+- Use natural, fluent expressions for each language.
+- No explanations, no markdown, just pure JSON.`;
+            const batchRes = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+                body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 2000, system: batchPrompt, messages: [{ role: "user", content: text }] }),
+            });
+            if (!batchRes.ok) {
+                return new Response(JSON.stringify({ translations: {}, error: "API " + batchRes.status }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+            const batchData = await batchRes.json();
+            let rawText = batchData.content.map((b: any) => b.type === "text" ? b.text : "").join("");
+            rawText = rawText.replace(/```(?:json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+            try {
+                const translations = JSON.parse(rawText);
+                return new Response(JSON.stringify({ translations }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            } catch (e) {
+                return new Response(JSON.stringify({ translations: {}, error: "Parse failed" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+        }
         const fromLang = langNames[from] || "auto-detect";
         const toLang = langNames[to] || "Korean";
 

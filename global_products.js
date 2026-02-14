@@ -2470,7 +2470,7 @@ async function batchTranslateNewProducts(category, count) {
         if (!p.name || (p.name_jp && p.name_jp.length > 0)) continue;
         try {
             const { data: trData } = await sb.functions.invoke('translate', {
-                body: { text: p.name, sourceLang: 'ko', targetLangs: ['ja', 'en', 'zh', 'ar', 'es'] }
+                body: { text: p.name, sourceLang: 'ko', targetLangs: ['ja', 'en', 'zh', 'ar', 'es', 'de', 'fr'] }
             });
             if (trData?.translations) {
                 await sb.from('admin_products').update({
@@ -2478,7 +2478,9 @@ async function batchTranslateNewProducts(category, count) {
                     name_us: trData.translations.en || '',
                     name_cn: trData.translations.zh || '',
                     name_ar: trData.translations.ar || '',
-                    name_es: trData.translations.es || ''
+                    name_es: trData.translations.es || '',
+                    name_de: trData.translations.de || '',
+                    name_fr: trData.translations.fr || ''
                 }).eq('id', p.id);
             }
         } catch (e) {
@@ -2626,7 +2628,51 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <li>Producción completada en 1-3 días hábiles</li>
 </ul>
 <hr>
-<p><strong>Chameleon Printing</strong> - Dando vida a tus diseños</p>`
+<p><strong>Chameleon Printing</strong> - Dando vida a tus diseños</p>`,
+
+        de: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p><strong>${n}</strong> von Chameleon Printing. Premium-Druckqualität mit lebendigen Farben zu wettbewerbsfähigen Preisen.</p>
+<p><br></p>
+<h3>Hauptmerkmale</h3>
+<ul>
+<li>Hochwertiger UV-/Latexdruck mit lebendiger Farbwiedergabe</li>
+<li>Langlebige Premium-Materialien</li>
+<li>Individuelle Größen nach Ihren Bedürfnissen</li>
+<li>Schnelle Produktion und sichere Verpackung</li>
+</ul>
+<p><br></p>
+<h3>Bestellinformationen</h3>
+<ul>
+<li>Laden Sie Ihre Designdatei hoch für eine einfache Bestellung</li>
+<li>Mengenrabatte für Großbestellungen verfügbar</li>
+<li>Produktion innerhalb von 1-3 Werktagen abgeschlossen</li>
+</ul>
+<hr>
+<p><strong>Chameleon Printing</strong> - Wir bringen Ihre Designs zum Leben</p>`,
+
+        fr: `<h2>${n}</h2>
+<p><img src="${img}" alt="${n}"></p>
+<p><br></p>
+<p><strong>${n}</strong> par Chameleon Printing. Impression de qualité premium avec des couleurs vives à des prix compétitifs.</p>
+<p><br></p>
+<h3>Caractéristiques Principales</h3>
+<ul>
+<li>Impression UV/Latex haute qualité avec des couleurs éclatantes</li>
+<li>Matériaux premium durables</li>
+<li>Tailles personnalisées selon vos besoins</li>
+<li>Production rapide et emballage sécurisé</li>
+</ul>
+<p><br></p>
+<h3>Informations de Commande</h3>
+<ul>
+<li>Téléchargez votre fichier de design pour une commande facile</li>
+<li>Remises sur volume disponibles</li>
+<li>Production terminée sous 1 à 3 jours ouvrables</li>
+</ul>
+<hr>
+<p><strong>Chameleon Printing</strong> - Donnons vie à vos designs</p>`
     };
 
     return templates[lang] || templates.kr;
@@ -2635,7 +2681,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 // 상세페이지 없는 상품 일괄 생성
 window.batchFillDetailPages = async () => {
     const { data: products, error } = await sb.from('admin_products')
-        .select('id, name, name_jp, name_us, name_cn, name_ar, name_es, img_url, description')
+        .select('id, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url, description')
         .order('id');
 
     if (error) return alert('상품 조회 실패: ' + error.message);
@@ -2663,6 +2709,8 @@ window.batchFillDetailPages = async () => {
                 description_cn: generateDetailTemplate(p.name, p.name_cn || p.name_us || p.name, p.img_url, 'cn'),
                 description_ar: generateDetailTemplate(p.name, p.name_ar || p.name_us || p.name, p.img_url, 'ar'),
                 description_es: generateDetailTemplate(p.name, p.name_es || p.name_us || p.name, p.img_url, 'es'),
+                description_de: generateDetailTemplate(p.name, p.name_de || p.name_us || p.name, p.img_url, 'de'),
+                description_fr: generateDetailTemplate(p.name, p.name_fr || p.name_us || p.name, p.img_url, 'fr'),
             }).eq('id', p.id);
 
             if (updateErr) { fail++; console.error('실패:', p.id, updateErr.message); }
