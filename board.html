@@ -890,9 +890,9 @@
                 const existingLd = document.getElementById('blogPostingJsonLd');
                 if (existingLd) existingLd.remove();
 
-                const domainMap = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.cafe3355.com' };
-                const langMap = { KR: 'ko', JP: 'ja', US: 'en' };
-                const siteNameMap = { KR: '카멜레온프린팅', JP: 'カメレオンプリンティング', US: 'Chameleon Printing' };
+                const domainMap = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.cafe3355.com', CN: 'https://www.cafe2626.com', AR: 'https://www.cafe3355.com', ES: 'https://www.cafe3355.com' };
+                const langMap = { KR: 'ko', JP: 'ja', US: 'en', CN: 'zh', AR: 'ar', ES: 'es' };
+                const siteNameMap = { KR: '카멜레온프린팅', JP: 'カメレオンプリンティング', US: 'Chameleon Printing', CN: '变色龙印刷', AR: 'طباعة كاميليون', ES: 'Chameleon Printing' };
                 const cc = post.country_code || currentCountry;
                 const baseDomain = domainMap[cc] || domainMap.KR;
                 const postUrl = `${baseDomain}/board.html?cat=blog&country=${cc}&id=${post.id}`;

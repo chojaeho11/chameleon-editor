@@ -65,6 +65,9 @@ JSON 출력 형식:
 - 한국어: 네이버/구글 한국 검색에 최적화, 자연스러운 한국어 표현
 - 日本語: Google Japan 검색에 최적화, 일본 시장 관점의 키워드와 표현
 - English: Google US/Global 검색에 최적화, 영어권 검색 트렌드 반영
+- 简体中文: 百度/Google 중국어 검색 최적화, 중국 시장 키워드와 자연스러운 중국어 표현
+- العربية: Google 아랍어 검색 최적화, 아랍 시장 관점의 키워드, RTL 텍스트 고려
+- Español: Google 스페인어 검색 최적화, 유럽/중남미 스페인어 시장 키워드 반영
 
 ## focus_keyword 규칙
 - 해당 언어로 사용자가 가장 많이 검색하는 핵심 키워드 1개 (2-4단어)
@@ -165,13 +168,19 @@ JSON 출력 형식:
         const langMap: Record<string, string> = {
             kr: "한국어",
             ja: "日本語 (일본어)",
-            en: "English"
+            en: "English",
+            cn: "简体中文 (중국어 간체)",
+            ar: "العربية (아랍어)",
+            es: "Español (스페인어)"
         };
 
         const domainMap: Record<string, string> = {
             kr: "www.cafe2626.com",
             ja: "www.cafe0101.com",
-            en: "www.cafe3355.com"
+            en: "www.cafe3355.com",
+            cn: "www.cafe2626.com",
+            ar: "www.cafe3355.com",
+            es: "www.cafe3355.com"
         };
 
         const toneMap: Record<string, string> = {
@@ -188,7 +197,7 @@ JSON 출력 형식:
 - 브랜드: 카멜레온프린팅 (Chameleon Printing)
 - 사업: 친환경 종이 허니컴보드, 패브릭 인쇄, 포토존, 등신대, 배너, PVC/폼보드, 디스플레이 전문 인쇄 업체
 - 웹사이트: ${domainMap[lang] || 'www.cafe2626.com'} (이 언어의 대상 웹사이트)
-- 전체 도메인: cafe2626.com (한국), cafe0101.com (일본), cafe3355.com (미국)
+- 전체 도메인: cafe2626.com (한국/중국), cafe0101.com (일본), cafe3355.com (미국/아랍/스페인)
 - 특징: 무료 온라인 디자인 에디터, 전국 당일배송, 친환경 소재
 - 중요: 콘텐츠 내 웹사이트 링크는 반드시 ${domainMap[lang] || 'www.cafe2626.com'} 을 사용하세요
 ${coreKeywords ? `- 핵심 키워드: ${coreKeywords}` : ''}

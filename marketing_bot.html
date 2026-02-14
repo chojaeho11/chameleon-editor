@@ -477,7 +477,7 @@ textarea.form-input { resize:vertical; min-height:80px; }
     <div class="card">
         <div class="card-title"><i class="fa-solid fa-bolt"></i> 원클릭 블로그 발행</div>
         <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">
-            사진 업로드 → AI가 <strong style="color:#a78bfa;">한국어/日本語/English</strong> 3개 블로그 자동 작성 → 3개 사이트에 동시 게시 (SEO 최적화)
+            사진 업로드 → AI가 <strong style="color:#a78bfa;">한국어/日本語/English/中文/العربية/Español</strong> 6개국어 블로그 자동 작성 → 동시 게시 (SEO 최적화)
         </p>
 
         <!-- 사진 업로드 -->
@@ -485,7 +485,7 @@ textarea.form-input { resize:vertical; min-height:80px; }
             <div id="blogDropzoneContent">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
                 <p>클릭 또는 사진을 여기에 드래그하세요 (여러 장 선택 가능)</p>
-                <p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 사진 1장 → 한/일/영 블로그 3개 자동 생성</p>
+                <p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 사진 1장 → 6개국어 블로그 자동 생성</p>
             </div>
         </div>
         <input type="file" id="blogPhotoInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="handleBlogPhoto(this)">
@@ -497,16 +497,19 @@ textarea.form-input { resize:vertical; min-height:80px; }
                 <input type="text" class="form-input" id="blogTopic" placeholder="예: 허니컴보드로 카페 인테리어 꾸미기">
             </div>
         </div>
-        <div style="font-size:12px; color:#64748b; margin-top:8px; display:flex; gap:12px; align-items:center;">
+        <div style="font-size:12px; color:#64748b; margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <span>게시 대상:</span>
-            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#60a5fa; font-weight:600; font-size:11px;">cafe2626.com</span>
-            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#f472b6; font-weight:600; font-size:11px;">cafe0101.com</span>
-            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#34d399; font-weight:600; font-size:11px;">cafe3355.com</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#60a5fa; font-weight:600; font-size:11px;">KR 한국어</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#f472b6; font-weight:600; font-size:11px;">JP 日本語</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#34d399; font-weight:600; font-size:11px;">US English</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#ef4444; font-weight:600; font-size:11px;">CN 中文</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#f59e0b; font-weight:600; font-size:11px;">AR العربية</span>
+            <span style="background:#1e293b; padding:3px 8px; border-radius:4px; color:#a855f7; font-weight:600; font-size:11px;">ES Español</span>
         </div>
 
         <!-- 원클릭 버튼 -->
         <button class="oneclick-btn" id="blogOneClickBtn" onclick="publishBlogOneClick()" style="margin-top:20px;">
-            <i class="fa-solid fa-rocket"></i> AI 생성 & 3개국어 블로그 발행
+            <i class="fa-solid fa-rocket"></i> AI 생성 & 6개국어 블로그 발행
         </button>
 
         <!-- 진행 상황 -->
@@ -515,7 +518,10 @@ textarea.form-input { resize:vertical; min-height:80px; }
             <div class="step" id="step-ai-kr"><i class="fa-solid fa-circle-notch fa-spin"></i> 한국어 블로그 생성 중...</div>
             <div class="step" id="step-ai-ja"><i class="fa-solid fa-circle-notch fa-spin"></i> 日本語 블로그 생성 중...</div>
             <div class="step" id="step-ai-en"><i class="fa-solid fa-circle-notch fa-spin"></i> English 블로그 생성 중...</div>
-            <div class="step" id="step-publish"><i class="fa-solid fa-circle-notch fa-spin"></i> 3개 사이트에 게시 중...</div>
+            <div class="step" id="step-ai-cn"><i class="fa-solid fa-circle-notch fa-spin"></i> 中文 블로그 생성 중...</div>
+            <div class="step" id="step-ai-ar"><i class="fa-solid fa-circle-notch fa-spin"></i> العربية 블로그 생성 중...</div>
+            <div class="step" id="step-ai-es"><i class="fa-solid fa-circle-notch fa-spin"></i> Español 블로그 생성 중...</div>
+            <div class="step" id="step-publish"><i class="fa-solid fa-circle-notch fa-spin"></i> 6개국어 게시 중...</div>
         </div>
     </div>
 
@@ -523,15 +529,24 @@ textarea.form-input { resize:vertical; min-height:80px; }
     <div class="card" id="blogPreviewCard" style="display:none;">
         <div class="card-title"><i class="fa-solid fa-eye"></i> 발행 완료 미리보기</div>
         <div class="blog-preview" id="blogPreview"></div>
-        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-            <a id="blogViewLinkKR" href="#" target="_blank" class="btn" style="background:#2563eb; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
-                <i class="fa-solid fa-external-link-alt"></i> KR 사이트
+        <div style="margin-top:12px; display:flex; gap:6px; flex-wrap:wrap;">
+            <a id="blogViewLinkKR" href="#" target="_blank" class="btn" style="background:#2563eb; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> KR
             </a>
-            <a id="blogViewLinkJP" href="#" target="_blank" class="btn" style="background:#db2777; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
-                <i class="fa-solid fa-external-link-alt"></i> JP サイト
+            <a id="blogViewLinkJP" href="#" target="_blank" class="btn" style="background:#db2777; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> JP
             </a>
-            <a id="blogViewLinkEN" href="#" target="_blank" class="btn" style="background:#059669; color:#fff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
-                <i class="fa-solid fa-external-link-alt"></i> EN Site
+            <a id="blogViewLinkEN" href="#" target="_blank" class="btn" style="background:#059669; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> EN
+            </a>
+            <a id="blogViewLinkCN" href="#" target="_blank" class="btn" style="background:#dc2626; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> CN
+            </a>
+            <a id="blogViewLinkAR" href="#" target="_blank" class="btn" style="background:#d97706; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> AR
+            </a>
+            <a id="blogViewLinkES" href="#" target="_blank" class="btn" style="background:#7c3aed; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:600; text-decoration:none;">
+                <i class="fa-solid fa-external-link-alt"></i> ES
             </a>
         </div>
     </div>
@@ -1152,9 +1167,12 @@ let blogPhotoFiles = []; // 다중 사진 지원
 const langConfig = {
     kr: { countryCode: 'KR', site: 'cafe2626.com', label: '한국어', flag: 'KR', color: '#60a5fa' },
     ja: { countryCode: 'JP', site: 'cafe0101.com', label: '日本語', flag: 'JP', color: '#f472b6' },
-    en: { countryCode: 'US', site: 'cafe3355.com', label: 'English', flag: 'EN', color: '#34d399' }
+    en: { countryCode: 'US', site: 'cafe3355.com', label: 'English', flag: 'EN', color: '#34d399' },
+    cn: { countryCode: 'CN', site: 'cafe2626.com', label: '中文', flag: 'CN', color: '#ef4444' },
+    ar: { countryCode: 'AR', site: 'cafe3355.com', label: 'العربية', flag: 'AR', color: '#f59e0b' },
+    es: { countryCode: 'ES', site: 'cafe3355.com', label: 'Español', flag: 'ES', color: '#a855f7' }
 };
-const blogLangs = ['kr', 'ja', 'en']; // 항상 3개국어 생성
+const blogLangs = ['kr', 'ja', 'en', 'cn', 'ar', 'es']; // 6개국어 생성
 
 window.handleBlogPhoto = function(input) {
     const files = Array.from(input.files).filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
@@ -1164,13 +1182,13 @@ window.handleBlogPhoto = function(input) {
     if (files.length === 1) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            dzc.innerHTML = `<img src="${e.target.result}" alt="preview" style="max-height:120px; border-radius:8px;"><p style="margin-top:8px; color:#a78bfa; font-size:12px;">1장 선택됨 → 한/일/영 블로그 3개 생성</p>`;
+            dzc.innerHTML = `<img src="${e.target.result}" alt="preview" style="max-height:120px; border-radius:8px;"><p style="margin-top:8px; color:#a78bfa; font-size:12px;">1장 선택됨 → 6개국어 블로그 생성</p>`;
         };
         reader.readAsDataURL(files[0]);
     } else {
         dzc.innerHTML = `<i class="fa-solid fa-images" style="font-size:36px; color:#a78bfa;"></i>
             <p style="margin-top:8px; color:#a78bfa; font-weight:700;">${files.length}장 선택됨</p>
-            <p style="font-size:11px; color:#94a3b8;">각 사진마다 한/일/영 블로그 3개씩 (총 ${files.length * 3}개) 자동 생성</p>`;
+            <p style="font-size:11px; color:#94a3b8;">각 사진마다 6개국어 블로그씩 (총 ${files.length * 6}개) 자동 생성</p>`;
     }
 };
 
@@ -1236,7 +1254,7 @@ window.publishBlogOneClick = async function() {
             htmlBody += `<p style="color:#6366f1; margin-top:20px;">${hashtags.map(t => '#' + t).join(' ')}</p>`;
         }
         // SEO: 다국어 hreflang 안내 (검색엔진 크롤러용 hidden)
-        const domain = { kr: 'www.cafe2626.com', ja: 'www.cafe0101.com', en: 'www.cafe3355.com' };
+        const domain = { kr: 'www.cafe2626.com', ja: 'www.cafe0101.com', en: 'www.cafe3355.com', cn: 'www.cafe2626.com', ar: 'www.cafe3355.com', es: 'www.cafe3355.com' };
         htmlBody += `<div style="display:none;" data-seo="hreflang" data-lang="${lang}" data-domain="${domain[lang]}"></div>`;
         return htmlBody;
     }
@@ -1246,7 +1264,7 @@ window.publishBlogOneClick = async function() {
         const photoLabel = totalFiles > 1 ? `사진 ${i + 1}/${totalFiles}` : '';
 
         // 스텝 초기화
-        ['step-upload','step-ai-kr','step-ai-ja','step-ai-en','step-publish'].forEach(s => {
+        ['step-upload','step-ai-kr','step-ai-ja','step-ai-en','step-ai-cn','step-ai-ar','step-ai-es','step-publish'].forEach(s => {
             const el = document.getElementById(s); if(el) el.className = 'step';
         });
 
@@ -1402,19 +1420,22 @@ window.publishBlogOneClick = async function() {
     // 완료 요약
     const successCount = batchResults.filter(r => r.success).length;
     const failCount = batchResults.filter(r => !r.success).length;
-    const totalExpected = totalFiles * 3;
+    const totalExpected = totalFiles * 6;
     document.getElementById('blogPreview').innerHTML += `
         <div style="padding:12px; margin-top:12px; background:#1e293b; border-radius:8px; text-align:center;">
             <span style="color:#f1f5f9; font-weight:700;">
-                사진 ${totalFiles}장 × 3개국어 = 총 ${totalExpected}개 중
+                사진 ${totalFiles}장 × 6개국어 = 총 ${totalExpected}개 중
                 <span style="color:#22c55e;">${successCount}개 발행 성공</span>${failCount > 0 ? `, <span style="color:#f87171;">${failCount}개 실패</span>` : ''}
             </span>
         </div>`;
 
     // 사이트별 링크 업데이트
-    document.getElementById('blogViewLinkKR').href = 'https://www.cafe2626.com/board?cat=blog';
-    document.getElementById('blogViewLinkJP').href = 'https://www.cafe0101.com/board?cat=blog';
-    document.getElementById('blogViewLinkEN').href = 'https://www.cafe3355.com/board?cat=blog';
+    document.getElementById('blogViewLinkKR').href = 'https://www.cafe2626.com/board.html?cat=blog&country=KR';
+    document.getElementById('blogViewLinkJP').href = 'https://www.cafe0101.com/board.html?cat=blog&country=JP';
+    document.getElementById('blogViewLinkEN').href = 'https://www.cafe3355.com/board.html?cat=blog&country=US';
+    document.getElementById('blogViewLinkCN').href = 'https://www.cafe2626.com/board.html?cat=blog&country=CN';
+    document.getElementById('blogViewLinkAR').href = 'https://www.cafe3355.com/board.html?cat=blog&country=AR';
+    document.getElementById('blogViewLinkES').href = 'https://www.cafe3355.com/board.html?cat=blog&country=ES';
 
     // Google에 새 블로그 포스트 알림 (사이트맵 ping)
     if (successCount > 0) {
@@ -1432,7 +1453,7 @@ window.publishBlogOneClick = async function() {
     // 초기화
     blogPhotoFiles = [];
     document.getElementById('blogPhotoInput').value = '';
-    document.getElementById('blogDropzoneContent').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><p>클릭 또는 사진을 여기에 드래그하세요 (여러 장 선택 가능)</p><p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 사진 1장 → 한/일/영 블로그 3개 자동 생성</p>';
+    document.getElementById('blogDropzoneContent').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><p>클릭 또는 사진을 여기에 드래그하세요 (여러 장 선택 가능)</p><p style="font-size:11px; color:#475569; margin-top:4px;">JPG, PNG, WebP (각 최대 5MB) | 사진 1장 → 6개국어 블로그 자동 생성</p>';
     document.getElementById('blogTopic').value = '';
     loadBlogHistory();
 
