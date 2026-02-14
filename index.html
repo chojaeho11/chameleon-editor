@@ -3573,6 +3573,14 @@ window.showChoiceModal = async function(key) {
         dName = product.name_es || product.name_us || dName;
         dDesc = product.description_es || product.description_us || dDesc;
     }
+
+    // ★ AI 생성 HTML의 깨진 태그가 모달 레이아웃을 파괴하지 않도록 sanitize
+    if (dDesc) {
+        const _sanitizeDiv = document.createElement('div');
+        _sanitizeDiv.innerHTML = dDesc;
+        dDesc = _sanitizeDiv.innerHTML;
+    }
+
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
