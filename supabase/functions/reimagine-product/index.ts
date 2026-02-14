@@ -81,8 +81,8 @@ serve(async (req) => {
       promptUsed = `[flux-redux-schnell] variation`;
 
     } else {
-      // Track B: Claude Vision → Flux Schnell (텍스트 기반 재생성)
-      if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set for reimagine mode");
+      // Track B/C: Claude Vision → Flux Schnell
+      if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set for reimagine/bg_change mode");
 
       // 이미지 다운로드 → base64 (Claude Vision 용)
       const imgRes = await fetch(proxyImageUrl);
@@ -99,6 +99,29 @@ serve(async (req) => {
       const base64 = btoa(chunks.join(''));
       const mediaType = imgRes.headers.get('content-type') || 'image/jpeg';
 
+      // 모드별 시스템 프롬프트 분기
+      const systemPrompt = mode === 'bg_change'
+        ? `You are an AI product photographer. Analyze the given product image and create a prompt for Flux image generation.
+The goal is to keep the EXACT SAME product (shape, color, design, text, logo) but place it on a DIFFERENT clean background.
+
+Rules:
+- Describe the product in EXTREME detail (exact shape, colors, materials, text/logos, proportions)
+- The product must look IDENTICAL to the original
+- Change ONLY the background: use a clean white studio background with soft shadows
+- Professional product photography style, centered composition
+- Output ONLY the English prompt, nothing else
+- Keep it under 200 words
+${prompt_hint ? '- Product name: ' + prompt_hint : ''}`
+        : `You are an AI art director. Analyze the given product image and create a detailed prompt for Flux image generation.
+The generated image should look SIMILAR in concept but NOT identical (for copyright safety).
+
+Rules:
+- Describe the product type, colors, composition, lighting, background
+- Change subtle details (angle, lighting direction, background texture)
+- Output ONLY the English prompt, nothing else
+- Keep it under 150 words
+${prompt_hint ? '- Product name hint: ' + prompt_hint : ''}`;
+
       // Claude Vision으로 이미지 분석 → 생성 프롬프트
       const analysisRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -110,20 +133,14 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 500,
-          system: `You are an AI art director. Analyze the given product image and create a detailed prompt for Flux image generation.
-The generated image should look SIMILAR in concept but NOT identical (for copyright safety).
-
-Rules:
-- Describe the product type, colors, composition, lighting, background
-- Change subtle details (angle, lighting direction, background texture)
-- Output ONLY the English prompt, nothing else
-- Keep it under 150 words
-${prompt_hint ? '- Product name hint: ' + prompt_hint : ''}`,
+          system: systemPrompt,
           messages: [{
             role: "user",
             content: [
               { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
-              { type: "text", text: "Create a Flux generation prompt for a similar product image:" }
+              { type: "text", text: mode === 'bg_change'
+                ? "Describe this product precisely and create a prompt to recreate it on a clean white background:"
+                : "Create a Flux generation prompt for a similar product image:" }
             ]
           }],
         }),

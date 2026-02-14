@@ -606,63 +606,130 @@
             <span style="font-size:11px; background:#6366f1; padding:3px 10px; border-radius:20px;">BETA</span>
         </h3>
 
-        <!-- Step 1: URL 입력 -->
-        <div id="crawlStep1" style="margin-bottom:15px;">
-            <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 1. 경쟁사 제품 URL 입력</label>
-            <div style="display:flex; gap:8px; margin-top:8px;">
-                <input id="crawlUrl" class="input-text" placeholder="https://example.com/product/12345" style="flex:1; background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
-                <button id="btnCrawlStart" class="btn btn-vip" onclick="startProductCrawl()" style="white-space:nowrap; min-width:120px;">
-                    <i class="fa-solid fa-magnifying-glass"></i> 수집 시작
-                </button>
-            </div>
-            <div id="crawlStatus" style="font-size:12px; color:#a5b4fc; margin-top:5px;"></div>
+        <!-- 모드 탭 -->
+        <div style="display:flex; gap:5px; margin-bottom:15px;">
+            <button id="tabCrawlSingle" onclick="switchCrawlMode('single')" style="flex:1; padding:8px; border-radius:8px; border:2px solid #6366f1; background:#6366f1; color:#fff; font-weight:bold; cursor:pointer; font-size:13px;">
+                <i class="fa-solid fa-link"></i> 단건 수집
+            </button>
+            <button id="tabCrawlBatch" onclick="switchCrawlMode('batch')" style="flex:1; padding:8px; border-radius:8px; border:2px solid #4338ca; background:transparent; color:#a5b4fc; font-weight:bold; cursor:pointer; font-size:13px;">
+                <i class="fa-solid fa-list"></i> 일괄 수집
+            </button>
         </div>
 
-        <!-- Step 2: 수집 결과 미리보기 -->
-        <div id="crawlStep2" style="display:none; background:rgba(255,255,255,0.05); border-radius:12px; padding:15px; margin-bottom:15px;">
-            <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 2. 수집 결과 확인 & 편집</label>
-            <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
-                <!-- 이미지 영역 -->
-                <div style="width:200px; flex-shrink:0;">
-                    <img id="crawlPreviewImg" style="width:200px; height:200px; object-fit:cover; border-radius:12px; border:2px solid #4338ca;" src="">
-                    <div style="display:flex; gap:5px; margin-top:8px;">
-                        <button class="btn btn-sm" onclick="reimagineProduct('variation')" style="flex:1; background:#7c3aed; color:#fff; border:none; font-size:11px; padding:6px 4px; border-radius:6px; cursor:pointer;">
-                            <i class="fa-solid fa-shuffle"></i> 변형
-                        </button>
-                        <button class="btn btn-sm" onclick="reimagineProduct('reimagine')" style="flex:1; background:#2563eb; color:#fff; border:none; font-size:11px; padding:6px 4px; border-radius:6px; cursor:pointer;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> 재생성
-                        </button>
-                    </div>
-                    <div id="reimagineStatus" style="font-size:11px; color:#a5b4fc; margin-top:5px;"></div>
-                    <!-- 추가 이미지 썸네일 -->
-                    <div id="crawlExtraImages" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;"></div>
+        <!-- ============ 단건 수집 모드 ============ -->
+        <div id="crawlSingleMode">
+            <!-- Step 1: URL 입력 -->
+            <div id="crawlStep1" style="margin-bottom:15px;">
+                <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 1. 경쟁사 제품 URL 입력</label>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <input id="crawlUrl" class="input-text" placeholder="https://example.com/product/12345" style="flex:1; background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                    <button id="btnCrawlStart" class="btn btn-vip" onclick="startProductCrawl()" style="white-space:nowrap; min-width:120px;">
+                        <i class="fa-solid fa-magnifying-glass"></i> 수집 시작
+                    </button>
                 </div>
-                <!-- 텍스트 정보 -->
-                <div style="flex:1; min-width:250px; display:flex; flex-direction:column; gap:8px;">
-                    <input id="crawlName" class="input-text" placeholder="상품명" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
-                    <div style="display:flex; gap:8px;">
-                        <input id="crawlPrice" type="number" class="input-text" placeholder="가격(KRW)" style="flex:1; background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
-                        <input id="crawlCurrency" class="input-text" value="KRW" style="width:80px; background:#1e1b4b; border:1px solid #4338ca; color:#fff;" readonly>
+                <div id="crawlStatus" style="font-size:12px; color:#a5b4fc; margin-top:5px;"></div>
+            </div>
+
+            <!-- Step 2: 수집 결과 미리보기 -->
+            <div id="crawlStep2" style="display:none; background:rgba(255,255,255,0.05); border-radius:12px; padding:15px; margin-bottom:15px;">
+                <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 2. 수집 결과 확인 & 편집</label>
+                <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
+                    <div style="width:200px; flex-shrink:0;">
+                        <img id="crawlPreviewImg" style="width:200px; height:200px; object-fit:cover; border-radius:12px; border:2px solid #4338ca;" src="">
+                        <div style="display:flex; gap:4px; margin-top:8px; flex-wrap:wrap;">
+                            <button class="btn btn-sm" onclick="reimagineProduct('variation')" style="flex:1; background:#7c3aed; color:#fff; border:none; font-size:11px; padding:6px 4px; border-radius:6px; cursor:pointer;">
+                                <i class="fa-solid fa-shuffle"></i> 변형
+                            </button>
+                            <button class="btn btn-sm" onclick="reimagineProduct('bg_change')" style="flex:1; background:#0891b2; color:#fff; border:none; font-size:11px; padding:6px 4px; border-radius:6px; cursor:pointer;">
+                                <i class="fa-solid fa-image"></i> 배경교체
+                            </button>
+                            <button class="btn btn-sm" onclick="reimagineProduct('reimagine')" style="flex:1; background:#2563eb; color:#fff; border:none; font-size:11px; padding:6px 4px; border-radius:6px; cursor:pointer;">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> 재생성
+                            </button>
+                        </div>
+                        <div id="reimagineStatus" style="font-size:11px; color:#a5b4fc; margin-top:5px;"></div>
+                        <div id="crawlExtraImages" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;"></div>
                     </div>
-                    <input id="crawlCategory" class="input-text" placeholder="추천 카테고리" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
-                    <textarea id="crawlDesc" class="input-text" rows="2" placeholder="간단 설명" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff; resize:vertical;"></textarea>
-                    <div id="crawlSpecs" style="font-size:11px; color:#94a3b8;"></div>
+                    <div style="flex:1; min-width:250px; display:flex; flex-direction:column; gap:8px;">
+                        <input id="crawlName" class="input-text" placeholder="상품명" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                        <div style="display:flex; gap:8px;">
+                            <input id="crawlPrice" type="number" class="input-text" placeholder="가격(KRW)" style="flex:1; background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                            <input id="crawlCurrency" class="input-text" value="KRW" style="width:80px; background:#1e1b4b; border:1px solid #4338ca; color:#fff;" readonly>
+                        </div>
+                        <input id="crawlCategory" class="input-text" placeholder="추천 카테고리" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                        <textarea id="crawlDesc" class="input-text" rows="2" placeholder="간단 설명" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff; resize:vertical;"></textarea>
+                        <div id="crawlSpecs" style="font-size:11px; color:#94a3b8;"></div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Step 3: 최종 액션 -->
+            <div id="crawlStep3" style="display:none;">
+                <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 3. 상세페이지 생성 & 등록</label>
+                <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                    <button class="btn" onclick="generateCrawledDetail()" style="flex:1; min-width:200px; background:#059669; color:#fff; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-file-code"></i> AI 상세페이지 자동 생성 (6개 언어)
+                    </button>
+                    <button class="btn" onclick="applyCrawledToForm()" style="flex:1; min-width:200px; background:#f97316; color:#fff; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-arrow-down"></i> 아래 등록폼에 적용하기
+                    </button>
+                </div>
+                <div id="detailGenStatus" style="font-size:12px; color:#a5b4fc; margin-top:5px;"></div>
             </div>
         </div>
 
-        <!-- Step 3: 최종 액션 -->
-        <div id="crawlStep3" style="display:none;">
-            <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 3. 상세페이지 생성 & 등록</label>
-            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-                <button class="btn" onclick="generateCrawledDetail()" style="flex:1; min-width:200px; background:#059669; color:#fff; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer;">
-                    <i class="fa-solid fa-file-code"></i> AI 상세페이지 자동 생성 (6개 언어)
-                </button>
-                <button class="btn" onclick="applyCrawledToForm()" style="flex:1; min-width:200px; background:#f97316; color:#fff; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer;">
-                    <i class="fa-solid fa-arrow-down"></i> 아래 등록폼에 적용하기
-                </button>
+        <!-- ============ 일괄 수집 모드 ============ -->
+        <div id="crawlBatchMode" style="display:none;">
+            <div style="margin-bottom:12px;">
+                <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">URL 목록 (한 줄에 하나씩)</label>
+                <textarea id="batchUrls" class="input-text" rows="6" placeholder="https://example.com/product/1&#10;https://example.com/product/2&#10;https://example.com/product/3" style="margin-top:8px; background:#1e1b4b; border:1px solid #4338ca; color:#fff; resize:vertical; font-size:13px; line-height:1.6;"></textarea>
             </div>
-            <div id="detailGenStatus" style="font-size:12px; color:#a5b4fc; margin-top:5px;"></div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+                <div style="flex:1; min-width:200px;">
+                    <label style="font-size:12px; color:#a5b4fc;">대분류</label>
+                    <select id="batchTopCategory" class="input-text" onchange="loadBatchSubCategories()" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff; margin-top:4px;">
+                        <option value="">로딩 중...</option>
+                    </select>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <label style="font-size:12px; color:#a5b4fc;">소분류</label>
+                    <select id="batchSubCategory" class="input-text" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff; margin-top:4px;">
+                        <option value="">대분류를 먼저 선택</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#a5b4fc; cursor:pointer;">
+                    <input type="checkbox" id="batchBgChange" checked style="accent-color:#6366f1;">
+                    대표이미지 배경 교체 (AI)
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#a5b4fc; cursor:pointer;">
+                    <input type="checkbox" id="batchGenDetail" checked style="accent-color:#6366f1;">
+                    상세페이지 자동 생성
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#a5b4fc; cursor:pointer;">
+                    <input type="checkbox" id="batchIsGeneral" checked style="accent-color:#6366f1;">
+                    일반상품 (에디터 불필요)
+                </label>
+            </div>
+
+            <button id="btnBatchStart" class="btn btn-vip" onclick="batchCrawlProducts()" style="width:100%; padding:12px; font-size:15px; font-weight:bold;">
+                <i class="fa-solid fa-rocket"></i> 일괄 수집 & 자동 등록 시작
+            </button>
+
+            <!-- 진행 상황 -->
+            <div id="batchProgress" style="display:none; margin-top:12px; background:rgba(255,255,255,0.05); border-radius:12px; padding:15px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:13px; color:#a5b4fc; font-weight:bold;">진행 상황</span>
+                    <span id="batchCount" style="font-size:13px; color:#fbbf24; font-weight:bold;">0 / 0</span>
+                </div>
+                <div style="background:#1e1b4b; border-radius:8px; height:8px; overflow:hidden;">
+                    <div id="batchBar" style="background:linear-gradient(90deg, #6366f1, #a855f7); height:100%; width:0%; transition:width 0.3s;"></div>
+                </div>
+                <div id="batchLog" style="margin-top:10px; max-height:200px; overflow-y:auto; font-size:12px; color:#94a3b8; line-height:1.8;"></div>
+            </div>
         </div>
     </div>
     <!-- ====== /AI 상품 수집기 ====== -->

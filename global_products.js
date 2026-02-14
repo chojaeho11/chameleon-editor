@@ -2232,3 +2232,257 @@ window.applyCrawledToForm = () => {
     const formEl = document.querySelector('.product-form');
     if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
 };
+
+// ==========================================
+// 일괄 수집 모드
+// ==========================================
+
+// 탭 전환
+window.switchCrawlMode = (mode) => {
+    const singleEl = document.getElementById('crawlSingleMode');
+    const batchEl = document.getElementById('crawlBatchMode');
+    const tabSingle = document.getElementById('tabCrawlSingle');
+    const tabBatch = document.getElementById('tabCrawlBatch');
+    if (mode === 'batch') {
+        singleEl.style.display = 'none';
+        batchEl.style.display = 'block';
+        tabSingle.style.background = 'transparent'; tabSingle.style.color = '#a5b4fc';
+        tabBatch.style.background = '#6366f1'; tabBatch.style.color = '#fff';
+        loadBatchTopCategories();
+    } else {
+        singleEl.style.display = 'block';
+        batchEl.style.display = 'none';
+        tabSingle.style.background = '#6366f1'; tabSingle.style.color = '#fff';
+        tabBatch.style.background = 'transparent'; tabBatch.style.color = '#a5b4fc';
+    }
+};
+
+// 대분류 로드
+window.loadBatchTopCategories = async () => {
+    const sel = document.getElementById('batchTopCategory');
+    if (!sel) return;
+    const { data } = await sb.from('admin_top_categories').select('code, name').order('sort_order');
+    sel.innerHTML = '<option value="">대분류 선택</option>';
+    (data || []).forEach(c => {
+        sel.innerHTML += `<option value="${c.code}">${c.name}</option>`;
+    });
+};
+
+// 소분류 로드
+window.loadBatchSubCategories = async () => {
+    const topCode = document.getElementById('batchTopCategory').value;
+    const sel = document.getElementById('batchSubCategory');
+    if (!topCode) { sel.innerHTML = '<option value="">대분류를 먼저 선택</option>'; return; }
+    const { data } = await sb.from('admin_categories').select('code, name').eq('top_category_code', topCode).order('sort_order');
+    sel.innerHTML = '<option value="">소분류 선택</option>';
+    (data || []).forEach(c => {
+        sel.innerHTML += `<option value="${c.code}">${c.name} (${c.code})</option>`;
+    });
+};
+
+// 상품코드 자동 생성
+function generateProductCode(prefix = 'AI') {
+    const ts = Date.now().toString(36).toUpperCase();
+    const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${prefix}_${ts}_${rand}`;
+}
+
+// 일괄 수집 & 자동 등록
+window.batchCrawlProducts = async () => {
+    const urlsText = document.getElementById('batchUrls').value.trim();
+    if (!urlsText) return alert("URL을 입력해주세요.");
+
+    const category = document.getElementById('batchSubCategory').value;
+    if (!category) return alert("소분류 카테고리를 선택해주세요.");
+
+    const urls = urlsText.split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
+    if (urls.length === 0) return alert("유효한 URL이 없습니다.");
+
+    const doBgChange = document.getElementById('batchBgChange').checked;
+    const doGenDetail = document.getElementById('batchGenDetail').checked;
+    const isGeneral = document.getElementById('batchIsGeneral').checked;
+
+    const btn = document.getElementById('btnBatchStart');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
+
+    const progressDiv = document.getElementById('batchProgress');
+    const countEl = document.getElementById('batchCount');
+    const barEl = document.getElementById('batchBar');
+    const logEl = document.getElementById('batchLog');
+
+    progressDiv.style.display = 'block';
+    logEl.innerHTML = '';
+    let successCount = 0;
+
+    const addLog = (msg, color = '#94a3b8') => {
+        logEl.innerHTML += `<div style="color:${color};">${msg}</div>`;
+        logEl.scrollTop = logEl.scrollHeight;
+    };
+
+    for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        const num = i + 1;
+        countEl.textContent = `${num} / ${urls.length}`;
+        barEl.style.width = `${(num / urls.length) * 100}%`;
+
+        addLog(`[${num}/${urls.length}] 수집 중: ${url.substring(0, 60)}...`);
+
+        try {
+            // 1) 크롤링
+            const { data: scrapeData, error: scrapeErr } = await sb.functions.invoke('scrape-product', {
+                body: { url }
+            });
+            if (scrapeErr || !scrapeData?.success) {
+                throw new Error(scrapeData?.error || scrapeErr?.message || '수집 실패');
+            }
+            const product = scrapeData.product;
+            addLog(`  ✅ 수집 완료: ${(product.name || '').substring(0, 30)}`);
+
+            // 2) 이미지 배경 교체
+            let finalImgUrl = product.main_image || '';
+            if (doBgChange && finalImgUrl) {
+                addLog(`  🔄 이미지 배경 교체 중...`);
+                try {
+                    const { data: reimgData, error: reimgErr } = await sb.functions.invoke('reimagine-product', {
+                        body: {
+                            image_url: finalImgUrl,
+                            mode: 'bg_change',
+                            prompt_hint: product.name,
+                            aspect_ratio: '1:1'
+                        }
+                    });
+                    if (!reimgErr && reimgData?.success) {
+                        finalImgUrl = reimgData.image_url;
+                        addLog(`  ✅ 배경 교체 완료`, '#34d399');
+                    } else {
+                        addLog(`  ⚠️ 배경 교체 실패, 원본 사용`, '#fbbf24');
+                    }
+                } catch (e) {
+                    addLog(`  ⚠️ 배경 교체 에러: ${e.message}`, '#fbbf24');
+                }
+            }
+
+            // 3) 상세페이지 생성
+            let detailHtml = {};
+            if (doGenDetail) {
+                addLog(`  🔄 상세페이지 생성 중 (6개 언어)...`);
+                try {
+                    const { data: detailData, error: detailErr } = await sb.functions.invoke('generate-product-detail', {
+                        body: {
+                            product_name: product.name,
+                            product_category: category,
+                            product_specs: product.specs || {},
+                            image_url: finalImgUrl,
+                            price: product.price_krw || product.price || 0,
+                            original_description: product.description,
+                            langs: ["kr", "jp", "us", "cn", "ar", "es"]
+                        }
+                    });
+                    if (!detailErr && detailData?.success) {
+                        detailHtml = detailData.details || {};
+                        addLog(`  ✅ 상세페이지 완료 (${Object.keys(detailHtml).join(',')})`, '#34d399');
+                    } else {
+                        addLog(`  ⚠️ 상세페이지 실패`, '#fbbf24');
+                    }
+                } catch (e) {
+                    addLog(`  ⚠️ 상세페이지 에러: ${e.message}`, '#fbbf24');
+                }
+            }
+
+            // 4) DB 저장
+            const code = generateProductCode('AI');
+            const price = product.price_krw || product.price || 0;
+
+            const payload = {
+                site_code: 'KR',
+                category: category,
+                code: code,
+                is_general_product: isGeneral,
+                is_custom_size: false,
+                img_url: finalImgUrl,
+                name: product.name || '',
+                price: price,
+                description: detailHtml.kr || product.description || '',
+                name_jp: '', name_us: '', name_cn: '', name_ar: '', name_es: '',
+                price_jp: Math.round(price * 0.2),
+                price_us: Math.round(price * 0.002 * 100) / 100,
+                description_jp: detailHtml.jp || '',
+                description_us: detailHtml.us || '',
+                description_cn: detailHtml.cn || '',
+                description_ar: detailHtml.ar || '',
+                description_es: detailHtml.es || '',
+                width_mm: 0, height_mm: 0
+            };
+
+            const { error: insertErr } = await sb.from('admin_products').insert([payload]);
+            if (insertErr) {
+                addLog(`  ❌ DB 저장 실패: ${insertErr.message}`, '#f87171');
+            } else {
+                successCount++;
+                addLog(`  ✅ 등록 완료! (코드: ${code})`, '#34d399');
+            }
+
+        } catch (e) {
+            addLog(`  ❌ 실패: ${e.message}`, '#f87171');
+        }
+
+        // 건 사이 딜레이 (API 과부하 방지)
+        if (i < urls.length - 1) {
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    barEl.style.width = '100%';
+    addLog(`\n🎉 완료! 총 ${urls.length}건 중 ${successCount}건 등록 성공`, '#fbbf24');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-rocket"></i> 일괄 수집 & 자동 등록 시작';
+
+    // 자동번역 트리거 (상품명 다국어)
+    if (successCount > 0 && typeof autoTranslateInputs === 'function') {
+        addLog('🔄 등록된 상품 이름 자동 번역 중...');
+        // 등록된 상품들의 이름을 일괄 번역
+        try {
+            await batchTranslateNewProducts(category, successCount);
+            addLog('✅ 이름 번역 완료', '#34d399');
+        } catch (e) {
+            addLog('⚠️ 이름 번역 실패: ' + e.message, '#fbbf24');
+        }
+    }
+
+    alert(`✅ 일괄 수집 완료!\n\n총 ${urls.length}건 중 ${successCount}건 등록 성공`);
+};
+
+// 등록된 상품들의 이름 일괄 번역
+async function batchTranslateNewProducts(category, count) {
+    // 최근 등록된 AI 상품들 가져오기
+    const { data: products } = await sb.from('admin_products')
+        .select('id, name')
+        .eq('category', category)
+        .like('code', 'AI_%')
+        .is('name_jp', null)
+        .order('id', { ascending: false })
+        .limit(count);
+
+    if (!products || products.length === 0) return;
+
+    for (const p of products) {
+        if (!p.name) continue;
+        try {
+            const { data: trData } = await sb.functions.invoke('translate', {
+                body: { text: p.name, sourceLang: 'ko', targetLangs: ['ja', 'en', 'zh', 'ar', 'es'] }
+            });
+            if (trData?.translations) {
+                await sb.from('admin_products').update({
+                    name_jp: trData.translations.ja || '',
+                    name_us: trData.translations.en || '',
+                    name_cn: trData.translations.zh || '',
+                    name_ar: trData.translations.ar || '',
+                    name_es: trData.translations.es || ''
+                }).eq('id', p.id);
+            }
+        } catch (e) {
+            console.error('번역 실패:', p.id, e);
+        }
+    }
+}
