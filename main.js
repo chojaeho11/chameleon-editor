@@ -765,14 +765,26 @@ function updateContributorUI(balance) {
     const balEl = document.getElementById('contributorBalance');
     const bonusEls = document.querySelectorAll('.tier-bonus');
 
-    let tierName = '일반 기여자';
+    const _cl = window.CURRENT_LANG || 'ko';
+    const _tn = {
+        ko: { regular: '일반 기여자', excellent: '🏆 우수 기여자 (x2)', hero: '👑 영웅 기여자 (x4)' },
+        ja: { regular: '一般貢献者', excellent: '🏆 優秀貢献者 (x2)', hero: '👑 英雄貢献者 (x4)' },
+        en: { regular: 'Contributor', excellent: '🏆 Top Contributor (x2)', hero: '👑 Hero Contributor (x4)' },
+        zh: { regular: '普通贡献者', excellent: '🏆 优秀贡献者 (x2)', hero: '👑 英雄贡献者 (x4)' },
+        ar: { regular: 'مساهم', excellent: '🏆 مساهم ممتاز (x2)', hero: '👑 مساهم بطل (x4)' },
+        es: { regular: 'Contribuidor', excellent: '🏆 Top Contribuidor (x2)', hero: '👑 Héroe Contribuidor (x4)' },
+        de: { regular: 'Mitwirkender', excellent: '🏆 Top-Mitwirkender (x2)', hero: '👑 Held-Mitwirkender (x4)' },
+        fr: { regular: 'Contributeur', excellent: '🏆 Top Contributeur (x2)', hero: '👑 Héros Contributeur (x4)' },
+    };
+    const _tl = _tn[_cl] || _tn.ko;
+    let tierName = _tl.regular;
     let badgeClass = 'contributor-badge';
 
     if (currentUserTier === 'excellent') {
-        tierName = '🏆 우수 기여자 (x2)';
+        tierName = _tl.excellent;
         badgeClass += ' badge-excellent';
     } else if (currentUserTier === 'hero') {
-        tierName = '👑 영웅 기여자 (x4)';
+        tierName = _tl.hero;
         badgeClass += ' badge-hero';
     }
 

@@ -51,6 +51,8 @@ function formatCurrency(amount) {
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
     if (country === 'ES') return '€' + converted.toFixed(2);
+    if (country === 'DE') return '€' + converted.toFixed(2);
+    if (country === 'FR') return '€' + converted.toFixed(2);
     return converted.toLocaleString() + '원';
 }
 
@@ -59,7 +61,7 @@ function localName(product) {
     const c = SITE_CONFIG.COUNTRY;
     if (c === 'JP') return product.name_jp || product.name || '';
     if (c === 'US') return product.name_us || product.name || '';
-    if (c === 'CN' || c === 'AR' || c === 'ES') return product.name_us || product.name || '';
+    if (c === 'CN' || c === 'AR' || c === 'ES' || c === 'DE' || c === 'FR') return product.name_us || product.name || '';
     return product.name || '';
 }
 

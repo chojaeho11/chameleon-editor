@@ -3049,7 +3049,7 @@ window.goHome = function() {
             loading.style.display = 'flex';
             const p = loading.querySelector('p');
             const _lp = new URLSearchParams(window.location.search).get('lang') || 'kr';
-            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
+            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':_lp==='de'?'Produktseite wird geladen...':_lp==='fr'?'Chargement du produit...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
         }
 
         try {
@@ -3295,7 +3295,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             loading.style.display = 'flex';
             const p = loading.querySelector('p');
             const _lp = new URLSearchParams(window.location.search).get('lang') || 'kr';
-            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
+            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':_lp==='de'?'Produktseite wird geladen...':_lp==='fr'?'Chargement du produit...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
         }
 
         try {

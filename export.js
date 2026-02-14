@@ -29,6 +29,14 @@ jp: {
     es: {
         url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
         name: "Inter"
+    },
+    de: {
+        url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+        name: "Inter"
+    },
+    fr: {
+        url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+        name: "Inter"
     }
 };
 
@@ -42,7 +50,7 @@ if (!_exportLang) {
     else _exportLang = 'kr';
 }
 const CURRENT_LANG_CODE = _exportLang.toLowerCase();
-const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr', 'zh': 'cn', 'cn': 'cn', 'ar': 'ar', 'es': 'es' }[CURRENT_LANG_CODE] || 'kr';
+const _fontKey = { 'ja': 'jp', 'jp': 'jp', 'en': 'us', 'us': 'us', 'kr': 'kr', 'zh': 'cn', 'cn': 'cn', 'ar': 'ar', 'es': 'es', 'de': 'de', 'fr': 'fr' }[CURRENT_LANG_CODE] || 'kr';
 const TARGET_FONT = FONT_CONFIG[_fontKey] || FONT_CONFIG['kr'];
 
 const BASE_FONT_NAME = TARGET_FONT.name;
@@ -300,6 +308,90 @@ const PDF_LABELS = {
         ordersheet_design_preview: "Vista previa del diseño",
         ordersheet_no_image: "Sin imagen (ver archivo adjunto)",
         ordersheet_page_label: "Página"
+    },
+    de: {
+        quote_title: "KOSTENVORANSCHLAG",
+        receipt_title: "QUITTUNG",
+        statement_title: "RECHNUNG",
+        ordersheet_title: "ARBEITSAUFTRAG",
+        recipient: "[ Kunde ]",
+        name: "Name :",
+        phone: "Telefon :",
+        address: "Adresse :",
+        provider_labels: ["Reg.-Nr.", "Firma", "Geschäftsführer", "Adresse", "Branche", "Kontakt"],
+        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Herstellung", "+82-31-366-1984"],
+        headers: ["Nr.", "Artikel", "Spezifikation", "Menge", "Preis", "Betrag"],
+        supply_price: "Nettobetrag :",
+        vat: "MwSt. :",
+        discount: "Rabatt :",
+        mileage: "Verwendete Punkte :",
+        total_amount: "Gesamtbetrag (inkl. MwSt.)",
+        footer_claim: "Autorisierte Unterschrift",
+        staff_make: "Produktion",
+        staff_check: "Prüfung",
+        staff_ship: "Versand",
+        payment_card: "Per Kreditkarte bezahlt",
+        payment_bank: "Per Überweisung bezahlt",
+        payment_deposit: "Per Guthaben bezahlt",
+        opt_default: "Grundspezifikation",
+        opt_add: "Zusätzliche Optionen",
+        ordersheet_order_no: "Bestellnummer",
+        ordersheet_date: "Datum",
+        ordersheet_customer: "Kunde",
+        ordersheet_phone: "Telefon",
+        ordersheet_address: "Lieferadresse",
+        ordersheet_request: "Anmerkungen",
+        ordersheet_none: "Keine",
+        ordersheet_unspecified: "Nicht angegeben",
+        ordersheet_delivery_date: "Gewünschtes Lieferdatum",
+        ordersheet_prod_spec: "FERTIGUNGSSPEZIFIKATIONEN",
+        ordersheet_qty_unit: "Stk.",
+        ordersheet_qty_label: "Menge",
+        ordersheet_design_preview: "Designvorschau",
+        ordersheet_no_image: "Kein Bild (siehe Anhang)",
+        ordersheet_page_label: "Seite"
+    },
+    fr: {
+        quote_title: "DEVIS",
+        receipt_title: "REÇU",
+        statement_title: "FACTURE",
+        ordersheet_title: "ORDRE DE FABRICATION",
+        recipient: "[ Client ]",
+        name: "Nom :",
+        phone: "Téléphone :",
+        address: "Adresse :",
+        provider_labels: ["N° Registre", "Société", "Directeur", "Adresse", "Secteur", "Contact"],
+        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Fabrication", "+82-31-366-1984"],
+        headers: ["N°", "Article", "Spécification", "Qté", "Prix", "Montant"],
+        supply_price: "Montant HT :",
+        vat: "TVA :",
+        discount: "Remise :",
+        mileage: "Points utilisés :",
+        total_amount: "Total TTC",
+        footer_claim: "Signature autorisée",
+        staff_make: "Production",
+        staff_check: "Contrôle",
+        staff_ship: "Expédition",
+        payment_card: "Payé par carte bancaire",
+        payment_bank: "Payé par virement bancaire",
+        payment_deposit: "Payé par solde",
+        opt_default: "Spécification de base",
+        opt_add: "Options supplémentaires",
+        ordersheet_order_no: "N° de commande",
+        ordersheet_date: "Date",
+        ordersheet_customer: "Client",
+        ordersheet_phone: "Téléphone",
+        ordersheet_address: "Adresse de livraison",
+        ordersheet_request: "Remarques",
+        ordersheet_none: "Aucun",
+        ordersheet_unspecified: "Non spécifié",
+        ordersheet_delivery_date: "Date de livraison souhaitée",
+        ordersheet_prod_spec: "SPÉCIFICATIONS DE FABRICATION",
+        ordersheet_qty_unit: "pcs",
+        ordersheet_qty_label: "Qté",
+        ordersheet_design_preview: "Aperçu du design",
+        ordersheet_no_image: "Pas d'image (voir fichier joint)",
+        ordersheet_page_label: "Page"
     }
 };
 

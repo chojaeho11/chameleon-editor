@@ -10,7 +10,7 @@ function fmtMoney(krw) {
     if (country === 'US') return '$' + Math.round(converted).toLocaleString();
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
-    if (country === 'ES') return '€' + converted.toFixed(2);
+    if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
     return converted.toLocaleString() + '원';
 }
 
@@ -95,7 +95,7 @@ if (typeof window.t !== 'function') {
 async function loadMyPageTranslations() {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const langMap = { 'KR': 'kr', 'JP': 'ja', 'US': 'en', 'CN': 'zh', 'AR': 'ar', 'ES': 'es' };
+    const langMap = { 'KR': 'kr', 'JP': 'ja', 'US': 'en', 'CN': 'zh', 'AR': 'ar', 'ES': 'es', 'DE': 'de', 'FR': 'fr' };
     const lang = langMap[country] || 'kr';
     if (lang === 'kr') return; // 한국어는 I18N_KO로 충분
 
@@ -184,7 +184,7 @@ function applyTranslations() {
     // 국가별 통화 단위 설정
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€' }[country] || '원';
+    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', DE: '€', FR: '€' }[country] || '원';
     const depositUnit = document.getElementById('depositCurrencyUnit');
     if (depositUnit) depositUnit.innerText = currUnit;
     const wdCurrLabel = document.getElementById('wdCurrencyLabel');
@@ -557,7 +557,7 @@ async function loadMySales() {
 function openWithdrawModal() {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€' }[country] || '원';
+    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', DE: '€', FR: '€' }[country] || '원';
 
     sb.from('profiles').select('deposit').eq('id', currentUser.id).single().then(({data}) => {
         const currentDeposit = data?.deposit || 0;
