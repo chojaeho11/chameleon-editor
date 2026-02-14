@@ -5,6 +5,158 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ★ 네이버 스마트스토어 전용 크롤러
+async function scrapeSmartStore(url: string) {
+  // URL에서 상품번호 추출: /products/{productNo}
+  const productMatch = url.match(/\/products\/(\d+)/);
+  if (!productMatch) throw new Error("스마트스토어 상품 URL에서 상품번호를 찾을 수 없습니다.");
+  const productNo = productMatch[1];
+
+  // URL에서 스토어명 추출: smartstore.naver.com/{storeName}/
+  const storeMatch = url.match(/smartstore\.naver\.com\/([^\/]+)\//);
+  const storeName = storeMatch ? storeMatch[1] : '';
+
+  // 1) 스토어 정보 조회 (merchantNo 필요)
+  let channelNo = '';
+  if (storeName) {
+    try {
+      const storeRes = await fetch(`https://smartstore.naver.com/i/v1/stores?url=${storeName}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+          'Accept': 'application/json',
+          'Referer': 'https://smartstore.naver.com/',
+        }
+      });
+      if (storeRes.ok) {
+        const storeData = await storeRes.json();
+        channelNo = storeData?.channel?.channelNo || storeData?.channelNo || '';
+      }
+    } catch (e) {
+      console.log("스토어 정보 조회 실패 (무시):", e.message);
+    }
+  }
+
+  // 2) 상품 상세 API 호출 (여러 경로 시도)
+  const apiUrls = [
+    `https://m.smartstore.naver.com/i/v1/contents/products/${productNo}`,
+    `https://smartstore.naver.com/i/v1/contents/products/${productNo}`,
+    channelNo ? `https://smartstore.naver.com/i/v1/stores/${channelNo}/products/${productNo}` : '',
+  ].filter(Boolean);
+
+  let productData: any = null;
+
+  for (const apiUrl of apiUrls) {
+    try {
+      const res = await fetch(apiUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+          'Accept': 'application/json, text/plain, */*',
+          'Referer': url,
+          'Origin': 'https://smartstore.naver.com',
+        }
+      });
+      if (res.ok) {
+        productData = await res.json();
+        console.log("스마트스토어 API 성공:", apiUrl);
+        break;
+      }
+    } catch (e) {
+      console.log("API 실패:", apiUrl, e.message);
+    }
+  }
+
+  // 3) API 실패 시 → 모바일 HTML에서 __NEXT_DATA__ 추출 시도
+  if (!productData) {
+    console.log("API 실패, 모바일 HTML 시도...");
+    const mobileUrl = url.replace('smartstore.naver.com', 'm.smartstore.naver.com');
+    const htmlRes = await fetch(mobileUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'ko-KR,ko;q=0.9',
+        'Referer': 'https://m.naver.com/',
+      },
+      redirect: 'follow',
+    });
+
+    if (htmlRes.ok) {
+      const html = await htmlRes.text();
+      // __NEXT_DATA__ JSON 추출
+      const nextDataMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+      if (nextDataMatch) {
+        try {
+          const nextData = JSON.parse(nextDataMatch[1]);
+          productData = nextData?.props?.pageProps?.product || nextData?.props?.pageProps || nextData;
+        } catch (e) {
+          console.log("__NEXT_DATA__ 파싱 실패:", e.message);
+        }
+      }
+
+      // OG 태그에서 기본 정보 추출
+      if (!productData) {
+        const ogTitle = html.match(/property="og:title"\s+content="([^"]+)"/i);
+        const ogImage = html.match(/property="og:image"\s+content="([^"]+)"/i);
+        const ogDesc = html.match(/property="og:description"\s+content="([^"]+)"/i);
+        const priceMatch = html.match(/(\d[\d,]+)\s*원/);
+
+        if (ogTitle) {
+          productData = {
+            _ogFallback: true,
+            name: ogTitle[1],
+            images: ogImage ? [ogImage[1]] : [],
+            description: ogDesc ? ogDesc[1] : '',
+            price: priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : 0,
+          };
+        }
+      }
+    }
+  }
+
+  if (!productData) {
+    throw new Error("스마트스토어 상품 데이터를 가져올 수 없습니다. (API/HTML 모두 실패)");
+  }
+
+  // 4) 데이터 정규화
+  // API 응답 구조에 따라 파싱
+  const name = productData.name || productData.productName || productData.title || '';
+  const price = productData.salePrice || productData.price || productData.discountedSalePrice || 0;
+  const desc = productData.description || productData.productInfoProvidedNotice || '';
+
+  // 이미지 추출
+  let images: string[] = [];
+  let mainImage = '';
+
+  if (productData.representImage) {
+    mainImage = productData.representImage.url || productData.representImage;
+  }
+  if (productData.productImages) {
+    images = productData.productImages.map((img: any) => img.url || img).filter(Boolean);
+  }
+  if (productData.images) {
+    images = Array.isArray(productData.images) ? productData.images : [];
+  }
+  if (!mainImage && images.length > 0) mainImage = images[0];
+
+  // OG fallback
+  if (productData._ogFallback) {
+    mainImage = productData.images?.[0] || '';
+    images = productData.images || [];
+  }
+
+  return {
+    name,
+    price: typeof price === 'number' ? price : parseInt(String(price).replace(/[^0-9]/g, '')) || 0,
+    currency: 'KRW',
+    price_krw: typeof price === 'number' ? price : parseInt(String(price).replace(/[^0-9]/g, '')) || 0,
+    description: typeof desc === 'string' ? desc.substring(0, 500) : '',
+    images,
+    main_image: mainImage,
+    specs: {},
+    category_guess: '기타',
+    original_url: url,
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -16,6 +168,22 @@ serve(async (req) => {
 
     const { url } = await req.json();
     if (!url) throw new Error("URL is required");
+
+    // ★ 스마트스토어 감지 → 전용 크롤러 사용
+    if (url.includes('smartstore.naver.com') || url.includes('m.smartstore.naver.com')) {
+      console.log("스마트스토어 감지 → 전용 API 크롤러 사용");
+      const product = await scrapeSmartStore(url);
+      return new Response(JSON.stringify({
+        success: true,
+        product,
+        raw_html_length: 0,
+        method: 'smartstore_api'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // === 일반 사이트: 기존 HTML 크롤링 ===
 
     // 1. HTML 가져오기 (리다이렉트 따라감)
     const htmlRes = await fetch(url, {
@@ -32,37 +200,29 @@ serve(async (req) => {
     let html = await htmlRes.text();
 
     // 2. HTML 전처리 (토큰 절약)
-    // <head> 에서 meta 정보 추출 (og:image, title, description 등)
     let metaInfo = "";
     const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
     if (headMatch) {
       const head = headMatch[1];
-      // og: 메타태그, title, description 추출
       const metaTags = head.match(/<meta[^>]+(og:|name="description"|name="keywords"|property="product")[^>]*>/gi);
       if (metaTags) metaInfo = metaTags.join('\n');
       const titleMatch = head.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
       if (titleMatch) metaInfo = `<title>${titleMatch[1]}</title>\n` + metaInfo;
     }
 
-    // body만 추출
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     if (bodyMatch) html = bodyMatch[1];
 
-    // script/style/주석/svg/iframe 제거
     html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
     html = html.replace(/<style[\s\S]*?<\/style>/gi, '');
     html = html.replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
     html = html.replace(/<svg[\s\S]*?<\/svg>/gi, '');
     html = html.replace(/<iframe[\s\S]*?<\/iframe>/gi, '');
     html = html.replace(/<!--[\s\S]*?-->/g, '');
-    // 속성 정리 (data-*, class, style 제거로 크기 축소)
     html = html.replace(/\s(data-[a-z-]+|class|style|onclick|onload|onerror)="[^"]*"/gi, '');
     html = html.replace(/\s+/g, ' ').trim();
 
-    // meta 정보를 앞에 붙이기
     html = metaInfo + '\n---BODY---\n' + html;
-
-    // 80KB 제한 (meta + body)
     if (html.length > 80000) html = html.substring(0, 80000);
 
     // 3. 도메인 추출
@@ -109,12 +269,9 @@ You MUST respond with ONLY a JSON object. No explanation, no markdown, no code b
     const data = await res.json();
     const rawText = data.content.map((b: any) => b.type === "text" ? b.text : "").join("");
 
-    // JSON 파싱 (여러 형태 처리)
     let cleaned = rawText.trim();
-    // 코드블록 제거
     const codeMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
     if (codeMatch) cleaned = codeMatch[1].trim();
-    // 첫 번째 { 부터 마지막 } 까지 추출
     const braceMatch = cleaned.match(/\{[\s\S]*\}/);
     if (braceMatch) cleaned = braceMatch[0];
 
