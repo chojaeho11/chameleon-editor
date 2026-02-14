@@ -2082,22 +2082,22 @@
 
             <div style="width: 55%; padding: 30px; display: flex; flex-direction: column;">
                 <div style="flex: 1;">
-                    <h2 id="genProdTitle" style="margin: 0 0 10px 0; color: #1e293b; font-size: 22px;">상품명</h2>
-                
+                    <h2 id="genProdTitle" style="margin: 0 0 10px 0; color: #1e293b; font-size: 22px;"></h2>
+
                 <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-weight: bold; color: #334155;">단가</span>
+                        <span id="genLabelPrice" style="font-weight: bold; color: #334155;">단가</span>
                         <span id="genProdPrice" style="font-weight: bold;">0원</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: bold; color: #334155;">수량</span>
+                        <span id="genLabelQty" style="font-weight: bold; color: #334155;">수량</span>
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <input type="number" id="genProdQty" value="1" min="1" 
+                            <input type="number" id="genProdQty" value="1" min="1"
                                    style="width: 100px; padding: 5px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 16px;"
-                                   onclick="this.select()" 
-                                   onchange="window.updateGeneralTotal()" 
+                                   onclick="this.select()"
+                                   onchange="window.updateGeneralTotal()"
                                    oninput="window.updateGeneralTotal()">
-                            <span>개</span>
+                            <span id="genLabelUnit">개</span>
                         </div>
                     </div>
                 </div>
@@ -2105,16 +2105,16 @@
 
             <div style="margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-size: 14px; color: #64748b;">총 결제금액</span>
+                    <span id="genLabelTotal" style="font-size: 14px; color: #64748b;">총 결제금액</span>
                     <span id="genProdTotal" style="font-size: 24px; font-weight: 900; color: #6366f1;">0원</span>
                 </div>
-                
+
                 <div style="display: flex; gap: 10px;">
                     <button onclick="window.addGeneralToCart()" class="btn-round primary" style="flex: 1; height: 50px; font-size: 16px;">
-                        🛒 장바구니 담기
+                        <span id="genLabelCart">🛒 장바구니 담기</span>
                     </button>
                     <button onclick="document.getElementById('generalProductModal').style.display='none'" class="btn-round" style="width: 80px; border: 1px solid #e2e8f0; color: #64748b; background: white;">
-                        취소
+                        <span id="genLabelCancel">취소</span>
                     </button>
                 </div>
             </div>
@@ -3111,8 +3111,8 @@ window.goHome = function() {
                 let homeLink = "/";
                 if (currentLang) homeLink += `?lang=${currentLang}`;
 
-                const _backText = currentLang==='ja'?'戻る':currentLang==='zh'?'返回':currentLang==='ar'?'رجوع':currentLang==='es'?'Volver':currentLang==='en'?'Back':'뒤로가기';
-                const _homeText = currentLang==='ja'?'ホーム':currentLang==='zh'?'首页':currentLang==='ar'?'الرئيسية':currentLang==='es'?'Inicio':currentLang==='en'?'Home':'홈';
+                const _backText = currentLang==='ja'?'戻る':currentLang==='zh'?'返回':currentLang==='ar'?'رجوع':currentLang==='es'?'Volver':currentLang==='de'?'Zurück':currentLang==='fr'?'Retour':currentLang==='en'?'Back':'뒤로가기';
+                const _homeText = currentLang==='ja'?'ホーム':currentLang==='zh'?'首页':currentLang==='ar'?'الرئيسية':currentLang==='es'?'Inicio':currentLang==='de'?'Startseite':currentLang==='fr'?'Accueil':currentLang==='en'?'Home':'홈';
                 const _guideText = currentLang==='ja'
                     ?'商品情報を確認し、<strong>オプション</strong>を選択してください。'
                     :currentLang==='zh'
@@ -3121,6 +3121,10 @@ window.goHome = function() {
                     ?'تحقق من معلومات المنتج واختر <strong>الخيارات</strong>.'
                     :currentLang==='es'
                     ?'Consulte la información del producto y seleccione las <strong>opciones</strong>.'
+                    :currentLang==='de'
+                    ?'Überprüfen Sie die Produktinformationen und wählen Sie die <strong>Optionen</strong>.'
+                    :currentLang==='fr'
+                    ?'Vérifiez les informations produit et sélectionnez les <strong>options</strong>.'
                     :currentLang==='en'
                     ?'Check product info and select <strong>options</strong>.'
                     :'상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.';
@@ -3402,8 +3406,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 let homeLink = "/";
                 if (currentLang) homeLink += `?lang=${currentLang}`;
 
-                const _backText = currentLang==='ja'?'戻る':currentLang==='zh'?'返回':currentLang==='ar'?'رجوع':currentLang==='es'?'Volver':currentLang==='en'?'Back':'뒤로가기';
-                const _homeText = currentLang==='ja'?'ホーム':currentLang==='zh'?'首页':currentLang==='ar'?'الرئيسية':currentLang==='es'?'Inicio':currentLang==='en'?'Home':'홈';
+                const _backText = currentLang==='ja'?'戻る':currentLang==='zh'?'返回':currentLang==='ar'?'رجوع':currentLang==='es'?'Volver':currentLang==='de'?'Zurück':currentLang==='fr'?'Retour':currentLang==='en'?'Back':'뒤로가기';
+                const _homeText = currentLang==='ja'?'ホーム':currentLang==='zh'?'首页':currentLang==='ar'?'الرئيسية':currentLang==='es'?'Inicio':currentLang==='de'?'Startseite':currentLang==='fr'?'Accueil':currentLang==='en'?'Home':'홈';
                 const _guideText = currentLang==='ja'
                     ?'商品情報を確認し、<strong>オプション</strong>を選択してください。'
                     :currentLang==='zh'
@@ -3412,6 +3416,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                     ?'تحقق من معلومات المنتج واختر <strong>الخيارات</strong>.'
                     :currentLang==='es'
                     ?'Consulte la información del producto y seleccione las <strong>opciones</strong>.'
+                    :currentLang==='de'
+                    ?'Überprüfen Sie die Produktinformationen und wählen Sie die <strong>Optionen</strong>.'
+                    :currentLang==='fr'
+                    ?'Vérifiez les informations produit et sélectionnez les <strong>options</strong>.'
                     :currentLang==='en'
                     ?'Check product info and select <strong>options</strong>.'
                     :'상품 정보를 확인하고 <strong>옵션</strong>을 선택해주세요.';
@@ -3801,15 +3809,15 @@ window.showChoiceModal = async function(key) {
                     <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
             </div>
-            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='en'?'Quantity':'수량'}</div>
+            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량'}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
             <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center; margin-top:15px;">
-                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">${lang==='ja'?'見積価格':lang==='zh'?'预估价格':lang==='ar'?'السعر المقدر':lang==='es'?'Precio Estimado':lang==='en'?'Estimated Price':'예상 견적가'}</div>
-                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">${lang==='ja'?'¥0':lang==='zh'?'¥0':lang==='ar'?'0 ﷼':lang==='es'?'€0':lang==='en'?'$0':'0원'}</div>
+                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">${lang==='ja'?'見積価格':lang==='zh'?'预估价格':lang==='ar'?'السعر المقدر':lang==='es'?'Precio Estimado':lang==='de'?'Geschätzter Preis':lang==='fr'?'Prix estimé':lang==='en'?'Estimated Price':'예상 견적가'}</div>
+                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">${lang==='ja'?'¥0':lang==='zh'?'¥0':lang==='ar'?'0 ﷼':lang==='es'?'€0':lang==='de'?'€0':lang==='fr'?'€0':lang==='en'?'$0':'0원'}</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.7; margin-top:2px;">-</div>
             </div>
         </div>`;
@@ -3832,7 +3840,7 @@ window.showChoiceModal = async function(key) {
             </button>
 
             <div class="choice-left-content" style="flex:1; overflow-y:auto; padding:40px; background:#fff; text-align:left; min-height:0;">
-                ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='zh'?'市场商品':lang==='ar'?'منتج السوق':lang==='es'?'Producto del Mercado':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
+                ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='zh'?'市场商品':lang==='ar'?'منتج السوق':lang==='es'?'Producto del Mercado':lang==='de'?'Marktplatz-Produkt':lang==='fr'?'Produit Marketplace':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
                 <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
                 ${commonInfoHtml}
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
@@ -3848,8 +3856,8 @@ window.showChoiceModal = async function(key) {
                     <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">0</div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
-                    ${product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='zh'?'编辑器设计':lang==='ar'?'محرر التصميم':lang==='es'?'Editor de Diseño':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>`}
-                    <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${lang==='ja'?'カートに入れる':lang==='zh'?'加入购物车':lang==='ar'?'أضف إلى السلة':lang==='es'?'Añadir al Carrito':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
+                    ${product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='zh'?'编辑器设计':lang==='ar'?'محرر التصميم':lang==='es'?'Editor de Diseño':lang==='de'?'Design-Editor':lang==='fr'?'Éditeur de design':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>`}
+                    <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${lang==='ja'?'カートに入れる':lang==='zh'?'加入购物车':lang==='ar'?'أضف إلى السلة':lang==='es'?'Añadir al Carrito':lang==='de'?'In den Warenkorb':lang==='fr'?'Ajouter au panier':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
                 </div>
             </div>
         </div>
@@ -4099,7 +4107,7 @@ if (w >= 20 && h >= 20) {
             finalH = parseInt(document.getElementById('inputCustH').value || 0);
             finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
             
-            if (finalW < 20 || finalH < 20) return alert(lang==='ja'?'最小サイズは100mm以上にしてください。':lang==='zh'?'最小尺寸必须为100mm以上。':lang==='ar'?'يجب أن يكون الحد الأدنى للحجم 100 مم أو أكثر.':lang==='es'?'El tamaño mínimo debe ser de 100 mm o más.':lang==='en'?'Minimum size must be 100mm or more.':'최소 사이즈는 100mm 이상이어야 합니다.');
+            if (finalW < 20 || finalH < 20) return alert(lang==='ja'?'最小サイズは100mm以上にしてください。':lang==='zh'?'最小尺寸必须为100mm以上。':lang==='ar'?'يجب أن يكون الحد الأدنى للحجم 100 مم أو أكثر.':lang==='es'?'El tamaño mínimo debe ser de 100 mm o más.':lang==='de'?'Die Mindestgröße muss 100 mm oder mehr betragen.':lang==='fr'?'La taille minimale doit être de 100 mm ou plus.':lang==='en'?'Minimum size must be 100mm or more.':'최소 사이즈는 100mm 이상이어야 합니다.');
             
             const area = (finalW * finalH) / 1000000;
             let rawPrice = area * unitPrice;
@@ -5017,6 +5025,26 @@ if (w >= 20 && h >= 20) {
         // 상품명: 다국어 대응
         const localized = typeof getLocalizedData === 'function' ? getLocalizedData(product) : { name: product.name, price: product.price };
         document.getElementById('genProdTitle').innerText = localized.name || product.name;
+
+        // 라벨 다국어
+        const cl = window.CURRENT_LANG || 'ko';
+        const _l = {
+            ko: { price:'단가', qty:'수량', unit:'개', total:'총 결제금액', cart:'🛒 장바구니 담기', cancel:'취소' },
+            ja: { price:'単価', qty:'数量', unit:'個', total:'合計金額', cart:'🛒 カートに入れる', cancel:'キャンセル' },
+            en: { price:'Unit Price', qty:'Quantity', unit:'pcs', total:'Total', cart:'🛒 Add to Cart', cancel:'Cancel' },
+            zh: { price:'单价', qty:'数量', unit:'个', total:'总金额', cart:'🛒 加入购物车', cancel:'取消' },
+            ar: { price:'سعر الوحدة', qty:'الكمية', unit:'قطعة', total:'المبلغ الإجمالي', cart:'🛒 أضف إلى السلة', cancel:'إلغاء' },
+            es: { price:'Precio', qty:'Cantidad', unit:'uds', total:'Total', cart:'🛒 Añadir al carrito', cancel:'Cancelar' },
+            de: { price:'Stückpreis', qty:'Menge', unit:'Stk', total:'Gesamtbetrag', cart:'🛒 In den Warenkorb', cancel:'Abbrechen' },
+            fr: { price:'Prix unitaire', qty:'Quantité', unit:'pcs', total:'Montant total', cart:'🛒 Ajouter au panier', cancel:'Annuler' },
+        };
+        const lb = _l[cl] || _l.ko;
+        document.getElementById('genLabelPrice').innerText = lb.price;
+        document.getElementById('genLabelQty').innerText = lb.qty;
+        document.getElementById('genLabelUnit').innerText = lb.unit;
+        document.getElementById('genLabelTotal').innerText = lb.total;
+        document.getElementById('genLabelCart').innerHTML = lb.cart;
+        document.getElementById('genLabelCancel').innerText = lb.cancel;
 
         // 설명: HTML 렌더링 (Quill 에디터에서 작성된 상세설명)
         const country = window.SITE_CONFIG?.COUNTRY || 'KR';
