@@ -2040,3 +2040,195 @@ async function translateToKR(text, sourceLang) {
         return text; // 실패하면 원문 그대로 반환
     }
 }
+
+// ==========================================
+// AI 상품 수집기 (경쟁사 크롤링)
+// ==========================================
+
+let crawledProduct = null;
+let crawledDetailHtml = {};
+
+// [1] 크롤링 시작
+window.startProductCrawl = async () => {
+    const url = document.getElementById('crawlUrl').value.trim();
+    if (!url) return alert("URL을 입력해주세요.");
+    if (!url.startsWith('http')) return alert("올바른 URL을 입력해주세요 (https://...)");
+
+    const btn = document.getElementById('btnCrawlStart');
+    const status = document.getElementById('crawlStatus');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 수집 중...';
+    status.textContent = 'HTML 가져오는 중... AI가 분석합니다 (약 10~20초)';
+
+    try {
+        const { data, error } = await sb.functions.invoke('scrape-product', {
+            body: { url }
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data.success) throw new Error(data.error || "수집 실패");
+
+        crawledProduct = data.product;
+
+        // UI에 결과 표시
+        document.getElementById('crawlPreviewImg').src = crawledProduct.main_image || '';
+        document.getElementById('crawlName').value = crawledProduct.name || '';
+        document.getElementById('crawlPrice').value = crawledProduct.price_krw || crawledProduct.price || 0;
+        document.getElementById('crawlCurrency').value = crawledProduct.currency || 'KRW';
+        document.getElementById('crawlCategory').value = crawledProduct.category_guess || '';
+        document.getElementById('crawlDesc').value = crawledProduct.description || '';
+
+        // 사양 표시
+        if (crawledProduct.specs && Object.keys(crawledProduct.specs).length > 0) {
+            const specsHtml = Object.entries(crawledProduct.specs)
+                .map(([k, v]) => `<span style="display:inline-block; background:#312e81; padding:2px 8px; border-radius:4px; margin:2px;">${k}: ${v}</span>`)
+                .join(' ');
+            document.getElementById('crawlSpecs').innerHTML = specsHtml;
+        }
+
+        // 추가 이미지 썸네일 표시
+        const extraDiv = document.getElementById('crawlExtraImages');
+        extraDiv.innerHTML = '';
+        if (crawledProduct.images && crawledProduct.images.length > 1) {
+            crawledProduct.images.forEach((imgUrl, i) => {
+                const thumb = document.createElement('img');
+                thumb.src = imgUrl;
+                thumb.style.cssText = 'width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #4338ca; cursor:pointer;';
+                thumb.title = `이미지 ${i + 1}`;
+                thumb.onclick = () => {
+                    document.getElementById('crawlPreviewImg').src = imgUrl;
+                    crawledProduct.main_image = imgUrl;
+                };
+                extraDiv.appendChild(thumb);
+            });
+        }
+
+        document.getElementById('crawlStep2').style.display = 'block';
+        document.getElementById('crawlStep3').style.display = 'block';
+        status.textContent = `✅ 수집 완료! (HTML ${data.raw_html_length}자 분석됨)`;
+
+    } catch (e) {
+        status.textContent = '❌ 수집 실패: ' + e.message;
+        alert("크롤링 실패: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> 수집 시작';
+    }
+};
+
+// [2] 이미지 AI 재생성
+window.reimagineProduct = async (mode) => {
+    const imgEl = document.getElementById('crawlPreviewImg');
+    const imgSrc = imgEl.src;
+    if (!imgSrc || imgSrc.endsWith('/')) return alert("이미지가 없습니다.");
+
+    const status = document.getElementById('reimagineStatus');
+    status.textContent = mode === 'variation'
+        ? '🔄 Flux Redux로 이미지 변형 중... (약 15초)'
+        : '🔄 Claude Vision 분석 + Flux 생성 중... (약 25초)';
+
+    try {
+        const { data, error } = await sb.functions.invoke('reimagine-product', {
+            body: {
+                image_url: imgSrc,
+                mode: mode,
+                prompt_hint: document.getElementById('crawlName').value
+            }
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data.success) throw new Error(data.error || "이미지 재생성 실패");
+
+        imgEl.src = data.image_url;
+        crawledProduct.main_image = data.image_url;
+        status.textContent = `✅ 이미지 재생성 완료! (${mode === 'variation' ? '변형' : '재생성'})`;
+
+    } catch (e) {
+        status.textContent = '❌ 실패: ' + e.message;
+        alert("이미지 재생성 실패: " + e.message);
+    }
+};
+
+// [3] AI 상세페이지 자동 생성 (6개 언어)
+window.generateCrawledDetail = async () => {
+    if (!crawledProduct) return alert("먼저 상품을 수집해주세요.");
+
+    const status = document.getElementById('detailGenStatus');
+    status.textContent = '🔄 Claude AI가 상세페이지를 작성 중... (6개 언어, 약 60초)';
+
+    try {
+        const { data, error } = await sb.functions.invoke('generate-product-detail', {
+            body: {
+                product_name: document.getElementById('crawlName').value,
+                product_category: document.getElementById('crawlCategory').value,
+                product_specs: crawledProduct.specs || {},
+                image_url: crawledProduct.main_image,
+                price: parseInt(document.getElementById('crawlPrice').value) || 0,
+                original_description: document.getElementById('crawlDesc').value,
+                langs: ["kr", "jp", "us", "cn", "ar", "es"]
+            }
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data.success) throw new Error(data.error || "상세페이지 생성 실패");
+
+        crawledDetailHtml = data.details;
+        status.textContent = `✅ 상세페이지 생성 완료! (${data.generated_langs.join(', ')})`;
+
+        if (confirm("상세페이지가 생성되었습니다.\n바로 상품 등록 폼에 적용하시겠습니까?")) {
+            applyCrawledToForm();
+        }
+
+    } catch (e) {
+        status.textContent = '❌ 실패: ' + e.message;
+        alert("상세페이지 생성 실패: " + e.message);
+    }
+};
+
+// [4] 수집 데이터를 기존 상품 등록 폼에 적용
+window.applyCrawledToForm = () => {
+    if (!crawledProduct) return alert("수집된 데이터가 없습니다.");
+
+    // 기본 정보
+    const nameEl = document.getElementById('newProdName');
+    const priceEl = document.getElementById('newProdPrice');
+    const imgEl = document.getElementById('newProdImg');
+    const previewEl = document.getElementById('prodPreview');
+
+    if (nameEl) nameEl.value = document.getElementById('crawlName').value || crawledProduct.name || '';
+    if (priceEl) priceEl.value = document.getElementById('crawlPrice').value || crawledProduct.price_krw || 0;
+    if (imgEl) imgEl.value = crawledProduct.main_image || '';
+    if (previewEl) previewEl.src = crawledProduct.main_image || '';
+
+    // 사이즈 (specs에서 추출)
+    if (crawledProduct.specs) {
+        const sizeStr = crawledProduct.specs['사이즈'] || crawledProduct.specs['크기'] || crawledProduct.specs['size'] || '';
+        const sizeMatch = sizeStr.match(/(\d+)\s*[x×X]\s*(\d+)/);
+        if (sizeMatch) {
+            const wEl = document.getElementById('newProdW');
+            const hEl = document.getElementById('newProdH');
+            if (wEl) wEl.value = sizeMatch[1];
+            if (hEl) hEl.value = sizeMatch[2];
+        }
+    }
+
+    // 상세페이지 HTML 적용
+    const langFields = { kr: 'KR', jp: 'JP', us: 'US', cn: 'CN', ar: 'AR', es: 'ES' };
+    for (const [lang, suffix] of Object.entries(langFields)) {
+        if (crawledDetailHtml[lang]) {
+            const el = document.getElementById(`newProdDetail${suffix}`);
+            if (el) el.value = crawledDetailHtml[lang];
+        }
+    }
+
+    // 자동번역 트리거 (상품명 다국어 번역)
+    if (typeof autoTranslateInputs === 'function') {
+        autoTranslateInputs();
+    }
+
+    alert("✅ 수집 데이터가 폼에 적용되었습니다!\n\n• 상세페이지 에디터를 열어 내용을 확인하세요\n• 카테고리를 선택해주세요\n• 최종 확인 후 [상품 등록하기] 버튼을 눌러주세요");
+
+    // 폼으로 스크롤
+    const formEl = document.querySelector('.product-form');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+};

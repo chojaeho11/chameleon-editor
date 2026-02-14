@@ -599,7 +599,74 @@
         <div id="categoryListArea" style="display:flex; flex-wrap:wrap; gap:8px; padding-top:15px; border-top:1px solid #bae6fd;"></div>
     </div>
 
-    
+    <!-- ====== AI 상품 수집기 (경쟁사 크롤링) ====== -->
+    <div class="card" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 2px solid #6366f1; margin-bottom: 20px; color: #fff;">
+        <h3 style="margin-top:0; color:#c4b5fd; display:flex; align-items:center; gap:10px;">
+            <i class="fa-solid fa-robot"></i> AI 상품 수집기 (경쟁사 크롤링)
+            <span style="font-size:11px; background:#6366f1; padding:3px 10px; border-radius:20px;">BETA</span>
+        </h3>
+
+        <!-- Step 1: URL 입력 -->
+        <div id="crawlStep1" style="margin-bottom:15px;">
+            <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 1. 경쟁사 제품 URL 입력</label>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <input id="crawlUrl" class="input-text" placeholder="https://example.com/product/12345" style="flex:1; background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                <button id="btnCrawlStart" class="btn btn-vip" onclick="startProductCrawl()" style="white-space:nowrap; min-width:120px;">
+                    <i class="fa-solid fa-magnifying-glass"></i> 수집 시작
+                </button>
+            </div>
+            <div id="crawlStatus" style="font-size:12px; color:#a5b4fc; margin-top:5px;"></div>
+        </div>
+
+        <!-- Step 2: 수집 결과 미리보기 -->
+        <div id="crawlStep2" style="display:none; background:rgba(255,255,255,0.05); border-radius:12px; padding:15px; margin-bottom:15px;">
+            <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 2. 수집 결과 확인 & 편집</label>
+            <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
+                <!-- 이미지 영역 -->
+                <div style="width:200px; flex-shrink:0;">
+                    <img id="crawlPreviewImg" style="width:200px; height:200px; object-fit:cover; border-radius:12px; border:2px solid #4338ca;" src="">
+                    <div style="display:flex; gap:5px; margin-top:8px;">
+                        <button class="btn btn-sm" onclick="reimagineProduct('variation')" style="flex:1; background:#7c3aed; color:#fff; border:none; font-size:11px; padding:6px 4px; border-radius:6px; cursor:pointer;">
+                            <i class="fa-solid fa-shuffle"></i> 변형
+                        </button>
+                        <button class="btn btn-sm" onclick="reimagineProduct('reimagine')" style="flex:1; background:#2563eb; color:#fff; border:none; font-size:11px; padding:6px 4px; border-radius:6px; cursor:pointer;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> 재생성
+                        </button>
+                    </div>
+                    <div id="reimagineStatus" style="font-size:11px; color:#a5b4fc; margin-top:5px;"></div>
+                    <!-- 추가 이미지 썸네일 -->
+                    <div id="crawlExtraImages" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;"></div>
+                </div>
+                <!-- 텍스트 정보 -->
+                <div style="flex:1; min-width:250px; display:flex; flex-direction:column; gap:8px;">
+                    <input id="crawlName" class="input-text" placeholder="상품명" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                    <div style="display:flex; gap:8px;">
+                        <input id="crawlPrice" type="number" class="input-text" placeholder="가격(KRW)" style="flex:1; background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                        <input id="crawlCurrency" class="input-text" value="KRW" style="width:80px; background:#1e1b4b; border:1px solid #4338ca; color:#fff;" readonly>
+                    </div>
+                    <input id="crawlCategory" class="input-text" placeholder="추천 카테고리" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff;">
+                    <textarea id="crawlDesc" class="input-text" rows="2" placeholder="간단 설명" style="background:#1e1b4b; border:1px solid #4338ca; color:#fff; resize:vertical;"></textarea>
+                    <div id="crawlSpecs" style="font-size:11px; color:#94a3b8;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: 최종 액션 -->
+        <div id="crawlStep3" style="display:none;">
+            <label style="font-size:13px; color:#a5b4fc; font-weight:bold;">STEP 3. 상세페이지 생성 & 등록</label>
+            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <button class="btn" onclick="generateCrawledDetail()" style="flex:1; min-width:200px; background:#059669; color:#fff; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer;">
+                    <i class="fa-solid fa-file-code"></i> AI 상세페이지 자동 생성 (6개 언어)
+                </button>
+                <button class="btn" onclick="applyCrawledToForm()" style="flex:1; min-width:200px; background:#f97316; color:#fff; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer;">
+                    <i class="fa-solid fa-arrow-down"></i> 아래 등록폼에 적용하기
+                </button>
+            </div>
+            <div id="detailGenStatus" style="font-size:12px; color:#a5b4fc; margin-top:5px;"></div>
+        </div>
+    </div>
+    <!-- ====== /AI 상품 수집기 ====== -->
+
     <div class="product-layout">
         <div class="card product-form">
             <h3 style="margin-top:0;">2️⃣ 상품 등록 (Product)</h3>
