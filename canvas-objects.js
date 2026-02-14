@@ -235,10 +235,11 @@ function loadGoogleWebFontsCSS() {
 
 // ★ 핵심: Supabase에서 폰트 목록을 가져와 브라우저에 등록
 async function loadDynamicFonts() {
+    console.log(`📥 [Font] ${CURRENT_LANG} 폰트 로딩 중...`);
+    let dbFonts = [];
+
+    // 1단계: DB 폰트 로드 (실패해도 계속 진행)
     try {
-        console.log(`📥 [Font] ${CURRENT_LANG} 폰트 로딩 중...`);
-        
-        // 현재 국가코드와 일치하는 폰트만 조회 (레거시 JP/US 호환)
         const codeAliases = { 'JA': ['JA','JP'], 'EN': ['EN','US'] };
         const codes = codeAliases[CURRENT_LANG] || [CURRENT_LANG];
         const { data, error } = await sb.from('site_fonts')
@@ -246,41 +247,36 @@ async function loadDynamicFonts() {
             .in('site_code', codes)
             .order('created_at', { ascending: true });
 
-        if (error) throw error;
-
-        const dbFonts = data || [];
-
-        // FontFace API를 사용하여 DB 폰트 파일 비동기 로드
-        const fontPromises = dbFonts.map(font => {
-            const fontFace = new FontFace(font.font_family, `url(${encodeURI(font.file_url)})`);
-            return fontFace.load().then(loadedFace => {
-                document.fonts.add(loadedFace);
-                console.log(`✅ Font Loaded: ${font.font_name} (${font.font_family})`);
-            }).catch(err => {
-                console.warn(`❌ Font Load Failed (${font.font_name}):`, err);
+        if (!error && data) {
+            dbFonts = data;
+            const fontPromises = dbFonts.map(font => {
+                const fontFace = new FontFace(font.font_family, `url(${encodeURI(font.file_url)})`);
+                return fontFace.load().then(loadedFace => {
+                    document.fonts.add(loadedFace);
+                    console.log(`✅ DB Font: ${font.font_name}`);
+                }).catch(err => {
+                    console.warn(`❌ Font Load Failed (${font.font_name}):`, err);
+                });
             });
-        });
-
-        await Promise.all(fontPromises);
-
-        // Google Fonts를 목록에 병합 (DB 폰트가 위, Google Fonts가 아래)
-        const googleFonts = (GOOGLE_FONTS[CURRENT_LANG] || []).map(gf => ({
-            font_name: gf.font_name,
-            font_family: gf.font_family,
-            file_url: null,
-            is_google_font: true
-        }));
-        // DB에 이미 같은 font_family가 있으면 중복 제거
-        const dbFamilies = new Set(dbFonts.map(f => f.font_family));
-        const uniqueGoogleFonts = googleFonts.filter(gf => !dbFamilies.has(gf.font_family));
-
-        DYNAMIC_FONTS = [...dbFonts, ...uniqueGoogleFonts];
-        window.DYNAMIC_FONTS = DYNAMIC_FONTS;
-        console.log(`📋 [Font] Total: ${dbFonts.length} DB + ${uniqueGoogleFonts.length} Google = ${DYNAMIC_FONTS.length} fonts`);
-
+            await Promise.all(fontPromises);
+        }
     } catch (e) {
-        console.error("폰트 목록 DB 로딩 실패:", e);
+        console.warn("DB 폰트 로딩 스킵:", e.message);
     }
+
+    // 2단계: Google Fonts 병합 (항상 실행)
+    const googleFonts = (GOOGLE_FONTS[CURRENT_LANG] || []).map(gf => ({
+        font_name: gf.font_name,
+        font_family: gf.font_family,
+        file_url: null,
+        is_google_font: true
+    }));
+    const dbFamilies = new Set(dbFonts.map(f => f.font_family));
+    const uniqueGoogleFonts = googleFonts.filter(gf => !dbFamilies.has(gf.font_family));
+
+    DYNAMIC_FONTS = [...dbFonts, ...uniqueGoogleFonts];
+    window.DYNAMIC_FONTS = DYNAMIC_FONTS;
+    console.log(`📋 [Font] Total: ${dbFonts.length} DB + ${uniqueGoogleFonts.length} Google = ${DYNAMIC_FONTS.length} fonts`);
 }
 
 // 폰트 전체보기 모달에 목록 렌더링
