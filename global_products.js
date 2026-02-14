@@ -1759,101 +1759,37 @@ window.restoreCommonInfo = async (data) => {
     alert("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.");
 };
 
-// 복잡한 AI HTML 감지 (Quill이 파싱 못하는 구조)
-function isComplexHtml(html) {
-    return html && html.includes('<div') && html.includes('style="') && html.length > 200;
-}
-
-// HTML 편집 모드로 전환 (복잡한 HTML용)
-function enterHtmlMode(rawHtml) {
-    const container = document.getElementById('popup-quill-editor');
-    const editorArea = container.querySelector('.ql-editor');
-    let txtArea = container.querySelector('.ql-html-editor');
-    if (!txtArea) {
-        txtArea = document.createElement('textarea');
-        txtArea.className = 'ql-html-editor';
-        container.appendChild(txtArea);
-    }
-    txtArea.value = rawHtml;
-    editorArea.style.display = 'none';
-    popupQuill.root.innerHTML = '';
-}
-
-// WYSIWYG 모드로 전환 (일반 텍스트용)
-function enterWysiwygMode(html) {
-    const container = document.getElementById('popup-quill-editor');
-    const editorArea = container.querySelector('.ql-editor');
-    const txtArea = container.querySelector('.ql-html-editor');
-    if (txtArea) { txtArea.remove(); }
-    editorArea.style.display = 'block';
-    popupQuill.root.innerHTML = (!html || html === "<p><br></p>") ? "" : html;
-}
-
-// 현재 에디터 내용 가져오기 (모드에 따라)
-function getCurrentEditorContent() {
-    const container = document.getElementById('popup-quill-editor');
-    const txtArea = container.querySelector('.ql-html-editor');
-    const editorArea = container.querySelector('.ql-editor');
-    if (txtArea && editorArea.style.display === 'none') {
-        return txtArea.value; // HTML 모드
-    }
-    return popupQuill.root.innerHTML; // WYSIWYG 모드
-}
-
 window.openDetailPageEditor = () => {
     window.initPopupQuill();
     document.getElementById('detailEditorModal').style.display = 'flex';
     currentPopupLang = 'KR';
     const krData = document.getElementById('newProdDetailKR').value;
-
-    if (isComplexHtml(krData)) {
-        enterHtmlMode(krData);
-    } else {
-        enterWysiwygMode(krData);
-    }
-
+    popupQuill.root.innerHTML = (krData === "" || krData === "<p><br></p>") ? "" : krData;
     document.querySelectorAll('.pop-editor-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tabKR').classList.add('active');
 };
 
 window.switchPopupLang = (lang) => {
-    // 현재 언어 내용 저장
-    const currentContent = getCurrentEditorContent();
-    if (currentContent && currentContent !== "<p><br></p>") {
+    const currentContent = popupQuill.root.innerHTML;
+    if (currentContent !== "<p><br></p>") {
         document.getElementById(`newProdDetail${currentPopupLang}`).value = currentContent;
     }
-
     currentPopupLang = lang;
     const savedData = document.getElementById(`newProdDetail${lang}`).value;
-
-    if (isComplexHtml(savedData)) {
-        enterHtmlMode(savedData);
-    } else {
-        enterWysiwygMode(savedData);
-    }
-
+    popupQuill.root.innerHTML = (savedData === "" || savedData === "<p><br></p>") ? "" : savedData;
     document.querySelectorAll('.pop-editor-tab').forEach(t => t.classList.remove('active'));
     const targetTab = document.getElementById(`tab${lang}`);
     if (targetTab) targetTab.classList.add('active');
 };
 
 window.saveDetailAndClose = () => {
-    // 현재 모드에 맞게 내용 저장
-    document.getElementById(`newProdDetail${currentPopupLang}`).value = getCurrentEditorContent();
-
-    // HTML 모드 정리
-    const container = document.getElementById('popup-quill-editor');
-    const txtArea = container.querySelector('.ql-html-editor');
-    const editorArea = container.querySelector('.ql-editor');
-    if (txtArea) { txtArea.remove(); }
-    if (editorArea) editorArea.style.display = 'block';
-
+    document.getElementById(`newProdDetail${currentPopupLang}`).value = popupQuill.root.innerHTML;
     document.getElementById('detailEditorModal').style.display = 'none';
     alert("상세페이지가 임시 저장되었습니다.\n최종 등록을 위해 [수정사항 저장] 버튼을 꼭 눌러주세요.");
 };
 
 window.autoTranslatePopupDetail = async () => {
-    const sourceHtml = getCurrentEditorContent();
+    const sourceHtml = popupQuill.root.innerHTML;
     if(!sourceHtml || sourceHtml === "<p><br></p>") return alert("번역할 한국어 내용이 없습니다.");
     if(!confirm("한국어 본문을 바탕으로 일본어와 영어 상세페이지를 자동 생성하시겠습니까?")) return;
 
@@ -2518,184 +2454,13 @@ window.batchCrawlProducts = async () => {
     alert(`✅ 일괄 수집 완료!\n\n총 ${urls.length}건 중 ${successCount}건 등록 성공`);
 };
 
-// ==========================================
-// 네이버 스마트스토어 북마클릿 일괄 등록
-// ==========================================
-window.batchAddNaverProducts = async () => {
-    const pasteText = document.getElementById('batchNaverPaste')?.value?.trim();
-    if (!pasteText) return alert("붙여넣은 상품 데이터가 없습니다.");
-
-    const category = document.getElementById('batchSubCategory')?.value;
-    if (!category) return alert("소분류 카테고리를 먼저 선택해주세요.");
-
-    const doBgChange = document.getElementById('batchBgChange')?.checked;
-    const doGenDetail = document.getElementById('batchGenDetail')?.checked;
-    const isGeneral = document.getElementById('batchIsGeneral')?.checked;
-
-    // JSON 파싱 (줄 단위)
-    const lines = pasteText.split('\n').map(l => l.trim()).filter(l => l);
-    const items = [];
-    for (const line of lines) {
-        try {
-            const obj = JSON.parse(line);
-            if (obj.name || obj.image) items.push(obj);
-        } catch (e) {
-            console.warn('JSON 파싱 실패:', line.substring(0, 50));
-        }
-    }
-    if (items.length === 0) return alert("유효한 상품 데이터가 없습니다.\nJSON 형식을 확인해주세요.");
-
-    const btn = document.querySelector('#batchNaverPaste + button');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
-
-    const progressDiv = document.getElementById('batchProgress');
-    const countEl = document.getElementById('batchCount');
-    const barEl = document.getElementById('batchBar');
-    const logEl = document.getElementById('batchLog');
-
-    progressDiv.style.display = 'block';
-    logEl.innerHTML = '';
-    let successCount = 0;
-
-    const addLog = (msg, color = '#94a3b8') => {
-        logEl.innerHTML += `<div style="color:${color};">${msg}</div>`;
-        logEl.scrollTop = logEl.scrollHeight;
-    };
-
-    addLog(`📋 ${items.length}개 스마트스토어 상품 등록 시작`);
-
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const num = i + 1;
-        countEl.textContent = `${num} / ${items.length}`;
-        barEl.style.width = `${(num / items.length) * 100}%`;
-
-        addLog(`[${num}/${items.length}] ${(item.name || '이름없음').substring(0, 40)}`);
-
-        try {
-            let finalImgUrl = item.image || '';
-
-            // 1) 이미지 배경 교체
-            if (doBgChange && finalImgUrl) {
-                addLog(`  🔄 이미지 배경 교체 중...`);
-                try {
-                    const { data: reimgData, error: reimgErr } = await sb.functions.invoke('reimagine-product', {
-                        body: {
-                            image_url: finalImgUrl,
-                            mode: 'bg_change',
-                            prompt_hint: item.name,
-                            aspect_ratio: '1:1'
-                        }
-                    });
-                    if (!reimgErr && reimgData?.success) {
-                        finalImgUrl = reimgData.image_url;
-                        addLog(`  ✅ 배경 교체 완료`, '#34d399');
-                    } else {
-                        addLog(`  ⚠️ 배경 교체 실패, 원본 사용`, '#fbbf24');
-                    }
-                } catch (e) {
-                    addLog(`  ⚠️ 배경 교체 에러: ${e.message}`, '#fbbf24');
-                }
-            }
-
-            // 2) 상세페이지 생성
-            let detailHtml = {};
-            const price = parseInt(item.price) || 0;
-            if (doGenDetail) {
-                addLog(`  🔄 상세페이지 생성 중 (6개 언어)...`);
-                try {
-                    const { data: detailData, error: detailErr } = await sb.functions.invoke('generate-product-detail', {
-                        body: {
-                            product_name: item.name,
-                            product_category: category,
-                            product_specs: {},
-                            image_url: finalImgUrl,
-                            price: price,
-                            original_description: item.desc || '',
-                            langs: ["kr", "jp", "us", "cn", "ar", "es"]
-                        }
-                    });
-                    if (!detailErr && detailData?.success) {
-                        detailHtml = detailData.details || {};
-                        addLog(`  ✅ 상세페이지 완료 (${Object.keys(detailHtml).join(',')})`, '#34d399');
-                    } else {
-                        addLog(`  ⚠️ 상세페이지 실패`, '#fbbf24');
-                    }
-                } catch (e) {
-                    addLog(`  ⚠️ 상세페이지 에러: ${e.message}`, '#fbbf24');
-                }
-            }
-
-            // 3) DB 저장
-            const code = generateProductCode('NV');
-
-            const payload = {
-                site_code: 'KR',
-                category: category,
-                code: code,
-                is_general_product: isGeneral ?? true,
-                is_custom_size: false,
-                img_url: finalImgUrl,
-                name: item.name || '',
-                price: price,
-                description: detailHtml.kr || item.desc || '',
-                name_jp: '', name_us: '', name_cn: '', name_ar: '', name_es: '',
-                price_jp: Math.round(price * 0.2),
-                price_us: Math.round(price * 0.002),
-                description_jp: detailHtml.jp || '',
-                description_us: detailHtml.us || '',
-                description_cn: detailHtml.cn || '',
-                description_ar: detailHtml.ar || '',
-                description_es: detailHtml.es || '',
-                width_mm: 0, height_mm: 0,
-                addons: ''
-            };
-
-            const { error: insertErr } = await sb.from('admin_products').insert([payload]);
-            if (insertErr) {
-                addLog(`  ❌ DB 저장 실패: ${insertErr.message}`, '#f87171');
-            } else {
-                successCount++;
-                addLog(`  ✅ 등록 완료! (코드: ${code})`, '#34d399');
-            }
-
-        } catch (e) {
-            addLog(`  ❌ 실패: ${e.message}`, '#f87171');
-        }
-
-        // 건 사이 딜레이
-        if (i < items.length - 1) {
-            await new Promise(r => setTimeout(r, 1000));
-        }
-    }
-
-    barEl.style.width = '100%';
-    addLog(`\n🎉 완료! 총 ${items.length}건 중 ${successCount}건 등록 성공`, '#fbbf24');
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-paste"></i> 붙여넣은 상품 일괄 등록';
-
-    // 자동번역
-    if (successCount > 0) {
-        addLog('🔄 등록된 상품 이름 자동 번역 중...');
-        try {
-            await batchTranslateNewProducts(category, successCount);
-            addLog('✅ 이름 번역 완료', '#34d399');
-        } catch (e) {
-            addLog('⚠️ 이름 번역 실패: ' + e.message, '#fbbf24');
-        }
-    }
-
-    alert(`✅ 스마트스토어 상품 등록 완료!\n\n총 ${items.length}건 중 ${successCount}건 등록 성공`);
-};
-
 // 등록된 상품들의 이름 일괄 번역
 async function batchTranslateNewProducts(category, count) {
-    // 최근 등록된 AI/NV 상품들 가져오기
+    // 최근 등록된 AI 상품들 가져오기
     const { data: products } = await sb.from('admin_products')
         .select('id, name, name_jp')
         .eq('category', category)
-        .or('code.like.AI_%,code.like.NV_%')
+        .like('code', 'AI_%')
         .order('id', { ascending: false })
         .limit(count);
 

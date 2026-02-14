@@ -41,27 +41,40 @@ serve(async (req) => {
       if (!lc) return { lang, html: null };
 
       try {
-        const systemPrompt = `You are a premium product detail page HTML designer for a professional printing company.
+        const systemPrompt = `You are a product detail page writer for a printing company.
 
-Create a beautiful, modern product detail page HTML.
+Create a SIMPLE product detail page using ONLY these HTML tags: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <img>, <hr>, <br>.
 
-Design Rules:
-- Use ONLY inline HTML with inline styles (no external CSS, no <style> tags, no <script>)
-- Modern premium design: gradients, box-shadows, border-radius
-- Sections: hero banner with product image, key features (3-4 icons), specifications table, usage examples, order benefits
-- Brand colors: primary purple (#6366f1), dark (#1e1b4b), accent (#a855f7)
-- Image URL: ${image_url}
-- Product: ${product_name}
+STRICT RULES:
+- NEVER use <div>, <span>, <table>, <section>, or any container tags
+- NEVER use inline styles (no style="" attribute at all)
+- NEVER use CSS classes
+- Images: <p><img src="URL" alt="text"></p> (one image per paragraph)
+- Structure must be flat: heading → image → text → list → heading → text
+- Keep it concise: 5-8 sections maximum
+
+Product info:
+- Name: ${product_name}
 - Category: ${product_category}
 - Price: ${lc.currency}
+- Image: ${image_url}
 - Specs: ${JSON.stringify(product_specs)}
-- Use percentage widths for responsiveness (max-width: 800px, margin: 0 auto)
-- Add relevant emojis for visual appeal
 ${original_description ? '- Reference: ' + original_description.substring(0, 200) : ''}
+
+Required structure:
+1. <h2> with product name
+2. <p><img src="${image_url}" alt="${product_name}"></p>
+3. <p> with 2-3 sentence product description
+4. <h3> for key features heading
+5. <ul> with 3-5 <li> feature items
+6. <h3> for specs/details heading (if specs available)
+7. <p> with specs info
+8. <hr>
+9. <p> with short order/shipping info
 
 ${lc.instruction}
 
-Output ONLY the HTML content. No markdown code blocks, no explanation.`;
+Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
 
         const res = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
@@ -71,8 +84,8 @@ Output ONLY the HTML content. No markdown code blocks, no explanation.`;
             "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
-            max_tokens: 4000,
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 1500,
             system: systemPrompt,
             messages: [{ role: "user", content: "Generate the product detail page HTML now." }],
           }),

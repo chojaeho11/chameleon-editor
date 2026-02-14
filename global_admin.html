@@ -719,29 +719,6 @@
                 <i class="fa-solid fa-rocket"></i> 일괄 수집 & 자동 등록 시작
             </button>
 
-            <!-- 네이버 스마트스토어 전용 -->
-            <div style="margin-top:12px; background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); border-radius:10px; padding:12px;">
-                <div style="font-size:13px; font-weight:bold; color:#fbbf24; margin-bottom:8px;">
-                    <i class="fa-solid fa-store"></i> 네이버 스마트스토어 전용
-                </div>
-                <div style="font-size:12px; color:#a5b4fc; margin-bottom:8px; line-height:1.6;">
-                    스마트스토어는 서버 크롤링이 차단됩니다.<br>
-                    <b>1.</b> 아래 버튼을 북마크바에 드래그하세요<br>
-                    <b>2.</b> 스마트스토어 상품 페이지에서 북마클릿 클릭<br>
-                    <b>3.</b> 복사된 JSON을 아래에 붙여넣기
-                </div>
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                    <a href="javascript:void((function(){var m=function(p){var e=document.querySelector('meta[property=&quot;'+p+'&quot;]');return e?e.getAttribute('content'):''};var d={name:m('kakao:commerce:product_name')||m('og:title'),price:m('kakao:commerce:price')||m('kakao:commerce:regular_price'),image:m('kakao:commerce:product_image_url')||m('og:image'),desc:m('og:description'),url:location.href};navigator.clipboard.writeText(JSON.stringify(d)).then(function(){alert('복사 완료! 관리자 페이지에 붙여넣기 하세요.')})})())" style="display:inline-block; background:#fbbf24; color:#1e1b4b; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:bold; text-decoration:none; cursor:grab;">
-                        <i class="fa-solid fa-bookmark"></i> 상품정보추출
-                    </a>
-                    <span style="font-size:11px; color:#94a3b8;">← 북마크바에 드래그</span>
-                </div>
-                <textarea id="batchNaverPaste" class="input-text" rows="3" placeholder='스마트스토어 상품 JSON 붙여넣기 (여러 줄 가능)&#10;{"name":"상품명","price":"8900","image":"https://...","url":"https://..."}' style="background:#1e1b4b; border:1px solid #4338ca; color:#fff; font-size:12px; resize:vertical;"></textarea>
-                <button class="btn" onclick="batchAddNaverProducts()" style="width:100%; margin-top:8px; background:#fbbf24; color:#1e1b4b; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer; font-size:13px;">
-                    <i class="fa-solid fa-paste"></i> 붙여넣은 상품 일괄 등록
-                </button>
-            </div>
-
             <!-- 진행 상황 -->
             <div id="batchProgress" style="display:none; margin-top:12px; background:rgba(255,255,255,0.05); border-radius:12px; padding:15px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
