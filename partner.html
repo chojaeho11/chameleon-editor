@@ -421,6 +421,9 @@
         const converted = (krw || 0) * rate;
         if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
         if (country === 'US') return '$' + Math.round(converted).toLocaleString();
+        if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
+        if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+        if (country === 'ES') return '€' + Math.round(converted).toLocaleString();
         return converted.toLocaleString() + '원';
     }
 
@@ -465,9 +468,8 @@
     // 번역 파일 로딩 + data-i18n 적용
     async function loadPartnerTranslations() {
         const c = SITE_COUNTRY();
-        let lang = 'kr';
-        if (c === 'JP') lang = 'ja';
-        else if (c === 'US') lang = 'en';
+        const langMap = { 'KR': 'kr', 'JP': 'ja', 'US': 'en', 'CN': 'zh', 'AR': 'ar', 'ES': 'es' };
+        const lang = langMap[c] || 'kr';
         if (lang === 'kr') return; // 한국어는 기본값
 
         try {

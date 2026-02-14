@@ -3048,7 +3048,8 @@ window.goHome = function() {
         if(loading) {
             loading.style.display = 'flex';
             const p = loading.querySelector('p');
-            if(p) p.innerText = "상품 페이지로 이동 중...";
+            const _lp = new URLSearchParams(window.location.search).get('lang') || 'kr';
+            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
         }
 
         try {
@@ -3281,7 +3282,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         if(loading) {
             loading.style.display = 'flex';
             const p = loading.querySelector('p');
-            if(p) p.innerText = "상품 페이지로 이동 중...";
+            const _lp = new URLSearchParams(window.location.search).get('lang') || 'kr';
+            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
         }
 
         try {
@@ -3752,22 +3754,22 @@ window.showChoiceModal = async function(key) {
     if (isCustom) {
         rightSideUI = productHeaderHtml + `
             <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
-                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'サイズ入力 (mm)':lang==='en'?'Enter Size (mm)':'사이즈 입력 (mm)'}</div>
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'サイズ入力 (mm)':lang==='zh'?'尺寸输入 (mm)':lang==='ar'?'إدخال الحجم (mm)':lang==='es'?'Tamaño (mm)':lang==='en'?'Enter Size (mm)':'사이즈 입력 (mm)'}</div>
                 <div style="display:flex; gap:5px;">
                     <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                     <span style="display:flex; align-items:center; color:#999;">x</span>
                     <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H" style="flex:1; margin:0; text-align:center;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
             </div>
-            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='en'?'Quantity':'수량'}</div>
+            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='en'?'Quantity':'수량'}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
             <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center; margin-top:15px;">
-                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">${lang==='ja'?'見積価格':lang==='en'?'Estimated Price':'예상 견적가'}</div>
-                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">${lang==='ja'?'¥0':lang==='en'?'$0':'0원'}</div>
+                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">${lang==='ja'?'見積価格':lang==='zh'?'预估价格':lang==='ar'?'السعر المقدر':lang==='es'?'Precio Estimado':lang==='en'?'Estimated Price':'예상 견적가'}</div>
+                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">${lang==='ja'?'¥0':lang==='zh'?'¥0':lang==='ar'?'0 ﷼':lang==='es'?'€0':lang==='en'?'$0':'0원'}</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.7; margin-top:2px;">-</div>
             </div>
         </div>`;
@@ -3790,7 +3792,7 @@ window.showChoiceModal = async function(key) {
             </button>
 
             <div class="choice-left-content" style="flex:1; overflow-y:auto; padding:40px; background:#fff; text-align:left;">
-                ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
+                ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='zh'?'市场商品':lang==='ar'?'منتج السوق':lang==='es'?'Producto del Mercado':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
                 <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
                 ${commonInfoHtml}
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
@@ -3806,8 +3808,8 @@ window.showChoiceModal = async function(key) {
                     <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">0</div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
-                    ${product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>`}
-                    <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
+                    ${product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='zh'?'编辑器设计':lang==='ar'?'محرر التصميم':lang==='es'?'Editor de Diseño':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>`}
+                    <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${lang==='ja'?'カートに入れる':lang==='zh'?'加入购物车':lang==='ar'?'أضف إلى السلة':lang==='es'?'Añadir al Carrito':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
                 </div>
             </div>
         </div>
@@ -4048,7 +4050,7 @@ if (w >= 20 && h >= 20) {
             finalH = parseInt(document.getElementById('inputCustH').value || 0);
             finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
             
-            if (finalW < 20 || finalH < 20) return alert("최소 사이즈는 100mm 이상이어야 합니다.");
+            if (finalW < 20 || finalH < 20) return alert(lang==='ja'?'最小サイズは100mm以上にしてください。':lang==='zh'?'最小尺寸必须为100mm以上。':lang==='ar'?'يجب أن يكون الحد الأدنى للحجم 100 مم أو أكثر.':lang==='es'?'El tamaño mínimo debe ser de 100 mm o más.':lang==='en'?'Minimum size must be 100mm or more.':'최소 사이즈는 100mm 이상이어야 합니다.');
             
             const area = (finalW * finalH) / 1000000;
             let rawPrice = area * unitPrice;
@@ -5200,17 +5202,17 @@ if (w >= 20 && h >= 20) {
 <div id="vipOrderModal" class="modal-bg" style="z-index: 30000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 550px; max-width: 95%;">
         <div style="background: #1e1b4b; margin: -25px -25px 20px -25px; padding: 25px; color: white; border-radius: 12px 12px 0 0; text-align: center;">
-            <h3 style="margin: 0; font-size: 22px; color: #fff;"><i class="fa-solid fa-crown" style="color: #fbbf24;"></i> VIP 우선 접수</h3>
-            <p style="margin: 10px 0 0 0; opacity: 0.8; font-size: 13px;">전담 매니저를 선택하고 파일을 올려주세요.</p>
+            <h3 style="margin: 0; font-size: 22px; color: #fff;"><i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span data-i18n="vip_form_title">VIP 우선 접수</span></h3>
+            <p style="margin: 10px 0 0 0; opacity: 0.8; font-size: 13px;" data-i18n="vip_form_desc">전담 매니저를 선택하고 파일을 올려주세요.</p>
         </div>
 
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <div style="flex:1;">
-                <label class="form-label" style="font-weight:bold; font-size:13px;">담당자 성함</label>
-                <input id="vipName" class="ai-input-pretty" placeholder="예: 김철수 팀장" style="margin:0;">
+                <label class="form-label" style="font-weight:bold; font-size:13px;" data-i18n="vip_form_name">담당자 성함</label>
+                <input id="vipName" class="ai-input-pretty" data-i18n-placeholder="vip_form_name_ph" placeholder="예: 김철수 팀장" style="margin:0;">
             </div>
             <div style="flex:1;">
-                <label class="form-label" style="font-weight:bold; font-size:13px;">연락처</label>
+                <label class="form-label" style="font-weight:bold; font-size:13px;" data-i18n="vip_form_phone">연락처</label>
                 <input id="vipPhone" class="ai-input-pretty" placeholder="010-0000-0000" style="margin:0;">
             </div>
         </div>
@@ -5220,19 +5222,19 @@ if (w >= 20 && h >= 20) {
             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px;">
                 <label class="manager-select">
                     <input type="radio" name="vipManager" value="은미 매니저" checked>
-                    <div class="mgr-box">은미 매니저</div>
+                    <div class="mgr-box" data-i18n="vip_form_mgr1">은미 매니저</div>
                 </label>
                 <label class="manager-select">
                     <input type="radio" name="vipManager" value="지숙 매니저">
-                    <div class="mgr-box">지숙 매니저</div>
+                    <div class="mgr-box" data-i18n="vip_form_mgr2">지숙 매니저</div>
                 </label>
                 <label class="manager-select">
                     <input type="radio" name="vipManager" value="성희 매니저">
-                    <div class="mgr-box">성희 매니저</div>
+                    <div class="mgr-box" data-i18n="vip_form_mgr3">성희 매니저</div>
                 </label>
                 <label class="manager-select">
                     <input type="radio" name="vipManager" value="본사담당자">
-                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;">본사담당자</div>
+                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;" data-i18n="vip_form_mgr4">본사담당자</div>
                 </label>
             </div>
             <style>
@@ -5243,24 +5245,24 @@ if (w >= 20 && h >= 20) {
         </div>
 
         <div style="margin-bottom: 15px;">
-            <label class="form-label" style="font-weight:bold; font-size:13px;">요청사항 (메모)</label>
-            <textarea id="vipMemo" class="ai-input-pretty" placeholder="견적 요청 내용이나 작업 지시사항을 자유롭게 적어주세요." style="height:80px; margin:0;"></textarea>
+            <label class="form-label" style="font-weight:bold; font-size:13px;" data-i18n="vip_form_memo">요청사항 (메모)</label>
+            <textarea id="vipMemo" class="ai-input-pretty" data-i18n-placeholder="vip_form_memo_ph" placeholder="견적 요청 내용이나 작업 지시사항을 자유롭게 적어주세요." style="height:80px; margin:0;"></textarea>
         </div>
 
         <div style="margin-bottom: 20px;">
-            <label class="form-label" style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">파일 업로드 (다중 선택 가능)</label>
+            <label class="form-label" style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;" data-i18n="vip_form_file">파일 업로드 (다중 선택 가능)</label>
             <div onclick="document.getElementById('vipFileInput').click()" style="border: 2px dashed #cbd5e1; background: #f8fafc; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s;">
                 <i class="fa-solid fa-cloud-arrow-up" style="font-size: 24px; color: #94a3b8; margin-bottom: 5px;"></i>
-                <div style="color: #64748b; font-size: 13px;">여기를 클릭하여 파일 선택 (여러개 가능)</div>
+                <div style="color: #64748b; font-size: 13px;" data-i18n="vip_form_file_click">여기를 클릭하여 파일 선택 (여러개 가능)</div>
                 <div id="vipFileList" style="margin-top:10px; font-size:12px; color:#4338ca; text-align:left; padding-left:10px;"></div>
             </div>
             <input type="file" id="vipFileInput" multiple style="display: none;" onchange="updateVipFileList(this)">
         </div>
 
         <button onclick="window.submitVipOrder()" class="btn-round primary" style="width: 100%; height: 50px; font-size: 16px; background: #4338ca;">
-            🚀 접수하기
+            🚀 <span data-i18n="vip_form_submit">접수하기</span>
         </button>
-        <button onclick="document.getElementById('vipOrderModal').style.display='none'" class="btn-round" style="width: 100%; margin-top: 10px; border: none; color: #64748b;">
+        <button onclick="document.getElementById('vipOrderModal').style.display='none'" class="btn-round" style="width: 100%; margin-top: 10px; border: none; color: #64748b;" data-i18n="btn_close">
             닫기
         </button>
     </div>
