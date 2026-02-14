@@ -1689,17 +1689,27 @@ function wrapCanvasText(ctx, text, maxWidth) {
 // ★ OpenAI TTS API를 통해 고품질 나레이션 오디오 생성
 async function generateTTSAudio(texts, lang) {
     console.log('🎙️ TTS 생성 요청:', texts.length, '문장');
-    const { data, error } = await sb.functions.invoke('tts-generate', {
-        body: { texts, lang, speed: 1.05 }
+    // Supabase edge function을 직접 fetch (바이너리 MP3 응답)
+    const supabaseUrl = SUPABASE_URL || 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    const resp = await fetch(`${supabaseUrl}/functions/v1/tts-generate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey
+        },
+        body: JSON.stringify({ texts, lang, speed: 1.05 })
     });
-    if (error) throw new Error('TTS 생성 실패: ' + error.message);
-    if (data?.error) throw new Error('TTS 오류: ' + data.error);
-    // base64 → ArrayBuffer → AudioBuffer
-    const binaryStr = atob(data.audio);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+    if (!resp.ok) {
+        const errData = await resp.text();
+        throw new Error('TTS 생성 실패: ' + errData);
+    }
+    // MP3 바이너리 → ArrayBuffer → AudioBuffer
+    const mp3Buffer = await resp.arrayBuffer();
+    console.log('🎙️ TTS MP3 수신:', (mp3Buffer.byteLength / 1024).toFixed(0), 'KB');
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const audioBuffer = await audioCtx.decodeAudioData(bytes.buffer);
+    const audioBuffer = await audioCtx.decodeAudioData(mp3Buffer);
     console.log('🎙️ TTS 오디오 생성 완료:', audioBuffer.duration.toFixed(1), '초');
     return { audioCtx, audioBuffer };
 }

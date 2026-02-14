@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 serve(async (req) => {
@@ -30,15 +30,15 @@ serve(async (req) => {
             );
         }
 
-        // 전체 나레이션 텍스트를 하나로 합침 (문장 간 자연스러운 쉼표 포함)
+        // 전체 나레이션을 하나로 합침 (자연스러운 쉼 포함)
         const fullText = texts.join('. ... ');
 
-        // 언어별 추천 voice
+        // 언어별 voice 추천
         const voiceMap: Record<string, string> = { kr: 'nova', ja: 'nova', en: 'onyx' };
         const selectedVoice = voice || voiceMap[lang] || 'nova';
         const selectedSpeed = speed || 1.05;
 
-        // OpenAI TTS API (tts-1-hd = 고품질 모델)
+        // OpenAI TTS API (tts-1-hd 고품질)
         const ttsResponse = await fetch("https://api.openai.com/v1/audio/speech", {
             method: "POST",
             headers: {
@@ -62,14 +62,15 @@ serve(async (req) => {
             );
         }
 
-        // MP3 바이너리를 base64로 인코딩 (Deno std 사용)
-        const audioBuffer = new Uint8Array(await ttsResponse.arrayBuffer());
-        const base64Audio = base64Encode(audioBuffer);
-
-        return new Response(
-            JSON.stringify({ audio: base64Audio, format: "mp3", sentenceCount: texts.length }),
-            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        // MP3 바이너리를 직접 스트리밍 반환 (base64 인코딩 제거 → 메모리 절약)
+        return new Response(ttsResponse.body, {
+            status: 200,
+            headers: {
+                ...corsHeaders,
+                "Content-Type": "audio/mpeg",
+                "X-Sentence-Count": String(texts.length),
+            }
+        });
 
     } catch (err) {
         return new Response(
