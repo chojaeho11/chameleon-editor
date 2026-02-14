@@ -2978,7 +2978,7 @@ async function renderQuickMenu() {
         const [{ data: topCats }, { data: subCats }, { data: allProds }] = await Promise.all([
             sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true }),
             sb.from('admin_categories').select('*').order('sort_order', { ascending: true }),
-            sb.from('admin_products').select('code, name, category, img_url, price').or('partner_id.is.null,partner_status.eq.approved').order('sort_order', { ascending: true })
+            sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es').or('partner_id.is.null,partner_status.eq.approved').order('sort_order', { ascending: true })
         ]);
 
         // 전역 변수 초기화 (검색 오류 방지 핵심)
@@ -3226,7 +3226,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     try {
         // [핵심 최적화] 무거운 description(상세설명) 필드를 빼고 목록에 필요한 최소 데이터만 가져옴
         const { data: products, error } = await sb.from('admin_products')
-            .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us, partner_id')
+            .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us, name_cn, name_ar, name_es, partner_id')
             .eq('category', catKey)
             .or('partner_id.is.null,partner_status.eq.approved')
             .order('sort_order', { ascending: true });
@@ -5557,7 +5557,7 @@ window.showCategorySelectionModal = async function() {
 
         // (2) 상품 데이터 가져오기 (코드, 가격, 이미지 포함)
         const { data: products } = await sb.from('admin_products')
-            .select('category, img_url, name, code, price, width_mm, height_mm')
+            .select('category, img_url, name, code, price, width_mm, height_mm, name_jp, name_us, name_cn, name_ar, name_es')
             .not('img_url', 'is', null)
             .neq('img_url', '');
 
