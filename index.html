@@ -3204,9 +3204,13 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         const urlParams = new URLSearchParams(window.location.search);
         const currentLang = urlParams.get('lang') || 'kr';
         let displayDesc = catDesc;
-        if (currentLang === 'ja' && window.modalGlobalData?.categories) {
+        if (window.modalGlobalData?.categories) {
             const catData = window.modalGlobalData.categories.find(c => c.code === catKey);
-            if (catData?.description_ja) displayDesc = catData.description_ja;
+            if (currentLang === 'ja' && catData?.description_jp) displayDesc = catData.description_jp;
+            else if (currentLang === 'zh' && catData?.description_cn) displayDesc = catData.description_cn;
+            else if (currentLang === 'ar' && catData?.description_ar) displayDesc = catData.description_ar;
+            else if (currentLang === 'es' && catData?.description_es) displayDesc = catData.description_es;
+            else if (currentLang === 'en' && catData?.description_us) displayDesc = catData.description_us;
         }
         if (displayDesc && displayDesc !== "undefined" && displayDesc.trim() !== "") {
             descBox.style.display = "block";
@@ -3546,14 +3550,14 @@ window.showChoiceModal = async function(key) {
         if (product.price_us) dPrice = product.price_us;
     } else if (lang === 'zh') {
         dName = product.name_cn || product.name_us || dName;
-        dDesc = product.description_us || dDesc;
+        dDesc = product.description_cn || product.description_us || dDesc;
         // CN: KRW 원가에 환산율 적용 (price_us는 달러가격이므로 사용 안 함)
     } else if (lang === 'ar') {
         dName = product.name_ar || product.name_us || dName;
-        dDesc = product.description_us || dDesc;
+        dDesc = product.description_ar || product.description_us || dDesc;
     } else if (lang === 'es') {
         dName = product.name_es || product.name_us || dName;
-        dDesc = product.description_us || dDesc;
+        dDesc = product.description_es || product.description_us || dDesc;
     }
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
@@ -3599,6 +3603,9 @@ window.showChoiceModal = async function(key) {
             const getContentByLang = (data) => {
                 if (!data) return "";
                 if (lang === 'ja' && data.content_jp) return data.content_jp;
+                if (lang === 'zh' && data.content_cn) return data.content_cn;
+                if (lang === 'ar' && data.content_ar) return data.content_ar;
+                if (lang === 'es' && data.content_es) return data.content_es;
                 if (lang === 'en' && data.content_us) return data.content_us;
                 return data.content || ""; // 기본 KR
             };
@@ -4964,6 +4971,9 @@ if (w >= 20 && h >= 20) {
         const country = window.SITE_CONFIG?.COUNTRY || 'KR';
         let desc = '';
         if (country === 'JP') desc = product.description_jp || product.description || '';
+        else if (country === 'CN') desc = product.description_cn || product.description_us || product.description || '';
+        else if (country === 'AR') desc = product.description_ar || product.description_us || product.description || '';
+        else if (country === 'ES') desc = product.description_es || product.description_us || product.description || '';
         else if (country === 'US') desc = product.description_us || product.description || '';
         else desc = product.description || '';
         document.getElementById('genProdDesc').innerHTML = desc;
