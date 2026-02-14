@@ -369,7 +369,7 @@
             // (2) 메인 타이틀 (큰 글씨, 강조)
             const mainTitle = new fabric.IText(d.main, {
                 fontFamily: F.TITLE, fontSize: refS * 0.12,
-                fill: ACCENT, fontWeight: 'bold',
+                fill: ACCENT, fontWeight: 'normal',
                 textAlign: 'center', lineHeight: 1.1,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -401,7 +401,7 @@
             d.sections.forEach((sec, i) => {
                 const sectionTitle = new fabric.IText(sec.title, {
                     fontFamily: F.SUB, fontSize: refS * 0.04,
-                    fill: ACCENT, fontWeight: 'bold',
+                    fill: ACCENT, fontWeight: 'normal',
                     textAlign: 'center',
                     originX: 'center', originY: 'top',
                     left: cx, top: curY
@@ -423,7 +423,7 @@
             // (6) 이벤트 섹션
             const eventTitle = new fabric.IText(d.event, {
                 fontFamily: F.SUB, fontSize: refS * 0.04,
-                fill: ACCENT, fontWeight: 'bold',
+                fill: ACCENT, fontWeight: 'normal',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -453,7 +453,7 @@
             // (8) 하단 연락처
             const footerText = new fabric.IText(d.footer, {
                 fontFamily: F.SUB, fontSize: refS * 0.028,
-                fill: TEXT_MED, fontWeight: 'bold',
+                fill: TEXT_MED, fontWeight: 'normal',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
