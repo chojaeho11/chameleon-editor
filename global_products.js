@@ -109,6 +109,8 @@ window.addTopCategoryDB = async () => {
         name_cn: document.getElementById('newTopCatNameCN').value,
         name_ar: document.getElementById('newTopCatNameAR').value,
         name_es: document.getElementById('newTopCatNameES').value,
+        name_de: document.getElementById('newTopCatNameDE') ? document.getElementById('newTopCatNameDE').value : '',
+        name_fr: document.getElementById('newTopCatNameFR') ? document.getElementById('newTopCatNameFR').value : '',
         description: document.getElementById('newTopCatDesc') ? document.getElementById('newTopCatDesc').value : '',
         description_jp: document.getElementById('newTopCatDescJP') ? document.getElementById('newTopCatDescJP').value : '',
         description_us: document.getElementById('newTopCatDescUS') ? document.getElementById('newTopCatDescUS').value : ''
@@ -270,7 +272,11 @@ window.addCategoryDB = async () => {
         description_us: document.getElementById('newCatDescUS') ? document.getElementById('newCatDescUS').value : '',
         description_cn: document.getElementById('newCatDescCN') ? document.getElementById('newCatDescCN').value : '',
         description_ar: document.getElementById('newCatDescAR') ? document.getElementById('newCatDescAR').value : '',
-        description_es: document.getElementById('newCatDescES') ? document.getElementById('newCatDescES').value : ''
+        description_es: document.getElementById('newCatDescES') ? document.getElementById('newCatDescES').value : '',
+        name_de: document.getElementById('newCatNameDE') ? document.getElementById('newCatNameDE').value : '',
+        name_fr: document.getElementById('newCatNameFR') ? document.getElementById('newCatNameFR').value : '',
+        description_de: document.getElementById('newCatDescDE') ? document.getElementById('newCatDescDE').value : '',
+        description_fr: document.getElementById('newCatDescFR') ? document.getElementById('newCatDescFR').value : ''
     };
 
     let error;
@@ -553,6 +559,8 @@ window.editAddonLoad = (id) => {
     document.getElementById('prAR').value = item.price_ar || 0;
     document.getElementById('nmES').value = item.name_es || '';
     document.getElementById('prES').value = item.price_es || 0;
+    if (document.getElementById('nmDE')) document.getElementById('nmDE').value = item.name_de || '';
+    if (document.getElementById('nmFR')) document.getElementById('nmFR').value = item.name_fr || '';
 
     // ▼▼▼ [누락된 코드 추가] 저장된 스와치 모드 상태를 불러와 체크박스에 반영 ▼▼▼
     const swatchEl = document.getElementById('newAddonIsSwatch');
@@ -598,6 +606,8 @@ window.addAddonDB = async () => {
         name_cn: document.getElementById('nmCN').value,
         name_ar: document.getElementById('nmAR').value,
         name_es: document.getElementById('nmES').value,
+        name_de: document.getElementById('nmDE') ? document.getElementById('nmDE').value : '',
+        name_fr: document.getElementById('nmFR') ? document.getElementById('nmFR').value : '',
         name: document.getElementById('nmKR').value,
         price: Math.round(parseFloat(document.getElementById('prKR').value || 0))
     };
@@ -617,7 +627,7 @@ window.addAddonDB = async () => {
 
 window.resetAddonForm = () => {
     editingAddonId = null;
-    ['newAddonCode', 'newAddonImgUrl', 'nmKR', 'prKR', 'nmJP', 'prJP', 'nmUS', 'prUS', 'nmCN', 'prCN', 'nmAR', 'prAR', 'nmES', 'prES'].forEach(id => {
+    ['newAddonCode', 'newAddonImgUrl', 'nmKR', 'prKR', 'nmJP', 'prJP', 'nmUS', 'prUS', 'nmCN', 'prCN', 'nmAR', 'prAR', 'nmES', 'prES', 'nmDE', 'nmFR'].forEach(id => {
         const el = document.getElementById(id); if(el) el.value = '';
     });
     
@@ -935,6 +945,10 @@ window.addProductDB = async () => {
         description_ar: document.getElementById('newProdDetailAR').value,
         name_es: document.getElementById('newProdNameES').value,
         description_es: document.getElementById('newProdDetailES').value,
+        name_de: document.getElementById('newProdNameDE') ? document.getElementById('newProdNameDE').value : '',
+        description_de: document.getElementById('newProdDetailDE') ? document.getElementById('newProdDetailDE').value : '',
+        name_fr: document.getElementById('newProdNameFR') ? document.getElementById('newProdNameFR').value : '',
+        description_fr: document.getElementById('newProdDetailFR') ? document.getElementById('newProdDetailFR').value : '',
         addons: addons
     };
 
@@ -980,6 +994,8 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdPriceAR').value = data.price_ar || '';
     document.getElementById('newProdNameES').value = data.name_es || '';
     document.getElementById('newProdPriceES').value = data.price_es || '';
+    if (document.getElementById('newProdNameDE')) document.getElementById('newProdNameDE').value = data.name_de || '';
+    if (document.getElementById('newProdNameFR')) document.getElementById('newProdNameFR').value = data.name_fr || '';
 
     // 상세 정보 및 미리보기
     document.getElementById('newProdW').value = data.width_mm;
@@ -997,6 +1013,8 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdDetailCN').value = data.description_cn || '';
     document.getElementById('newProdDetailAR').value = data.description_ar || '';
     document.getElementById('newProdDetailES').value = data.description_es || '';
+    if (document.getElementById('newProdDetailDE')) document.getElementById('newProdDetailDE').value = data.description_de || '';
+    if (document.getElementById('newProdDetailFR')) document.getElementById('newProdDetailFR').value = data.description_fr || '';
 
     // 버튼 상태 변경
     document.getElementById('btnProductSave').innerText = "상품 수정 저장";
@@ -1197,6 +1215,8 @@ window.autoTranslateInputs = async () => {
         document.getElementById('newProdNameCN').value = await googleTranslate(enName, 'zh-CN');
         document.getElementById('newProdNameAR').value = await googleTranslate(enName, 'ar');
         document.getElementById('newProdNameES').value = await googleTranslate(enName, 'es');
+        if (document.getElementById('newProdNameDE')) document.getElementById('newProdNameDE').value = await googleTranslate(enName, 'de');
+        if (document.getElementById('newProdNameFR')) document.getElementById('newProdNameFR').value = await googleTranslate(enName, 'fr');
 
         alert("✅ 상품명 및 가격 번역 완료!");
 
@@ -1264,11 +1284,13 @@ window.autoTranslateAddonInputs = async () => {
     document.getElementById('nmCN').value = await googleTranslate(enName, 'zh-CN');
     document.getElementById('nmAR').value = await googleTranslate(enName, 'ar');
     document.getElementById('nmES').value = await googleTranslate(enName, 'es');
+    if (document.getElementById('nmDE')) document.getElementById('nmDE').value = await googleTranslate(enName, 'de');
+    if (document.getElementById('nmFR')) document.getElementById('nmFR').value = await googleTranslate(enName, 'fr');
     alert("✅ 옵션 번역 완료");
 };
 
 window.bulkTranslateAll = async () => {
-    if (!confirm("전체 상품/옵션/카테고리의 빈 번역을 자동으로 채우시겠습니까?\n(JP/US/CN/AR/ES 모두 포함, 시간이 다소 소요됩니다)")) return;
+    if (!confirm("전체 상품/옵션/카테고리의 빈 번역을 자동으로 채우시겠습니까?\n(JP/US/CN/AR/ES/DE/FR 모두 포함, 시간이 다소 소요됩니다)")) return;
     const btn = document.getElementById('btnBulkTranslate') || document.activeElement;
     const oldText = btn.innerText;
     btn.disabled = true;
@@ -1297,6 +1319,8 @@ window.bulkTranslateAll = async () => {
             if (!p.name_cn && enName) { updates.name_cn = await googleTranslate(enName, 'zh-CN'); needUpdate = true; }
             if (!p.name_ar && enName) { updates.name_ar = await googleTranslate(enName, 'ar'); needUpdate = true; }
             if (!p.name_es && enName) { updates.name_es = await googleTranslate(enName, 'es'); needUpdate = true; }
+            if (!p.name_de && enName) { updates.name_de = await googleTranslate(enName, 'de'); needUpdate = true; }
+            if (!p.name_fr && enName) { updates.name_fr = await googleTranslate(enName, 'fr'); needUpdate = true; }
             if (needUpdate) {
                 await sb.from('admin_products').update(updates).eq('id', p.id);
                 pCount++;
@@ -1318,6 +1342,8 @@ window.bulkTranslateAll = async () => {
             if (!a.name_cn && enName) { updates.name_cn = await googleTranslate(enName, 'zh-CN'); needUpdate = true; }
             if (!a.name_ar && enName) { updates.name_ar = await googleTranslate(enName, 'ar'); needUpdate = true; }
             if (!a.name_es && enName) { updates.name_es = await googleTranslate(enName, 'es'); needUpdate = true; }
+            if (!a.name_de && enName) { updates.name_de = await googleTranslate(enName, 'de'); needUpdate = true; }
+            if (!a.name_fr && enName) { updates.name_fr = await googleTranslate(enName, 'fr'); needUpdate = true; }
             if (needUpdate) {
                 await sb.from('admin_addons').update(updates).eq('id', a.id);
                 aCount++;
@@ -1337,6 +1363,8 @@ window.bulkTranslateAll = async () => {
             if (!tc.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
             if (!tc.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
             if (!tc.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
+            if (!tc.name_de && enN) { updates.name_de = await googleTranslate(enN, 'de'); needUpdate = true; }
+            if (!tc.name_fr && enN) { updates.name_fr = await googleTranslate(enN, 'fr'); needUpdate = true; }
             if (needUpdate) { await sb.from('admin_top_categories').update(updates).eq('id', tc.id); tcCount++; }
         }
 
@@ -1353,6 +1381,8 @@ window.bulkTranslateAll = async () => {
             if (!sc.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
             if (!sc.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
             if (!sc.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
+            if (!sc.name_de && enN) { updates.name_de = await googleTranslate(enN, 'de'); needUpdate = true; }
+            if (!sc.name_fr && enN) { updates.name_fr = await googleTranslate(enN, 'fr'); needUpdate = true; }
             if (needUpdate) { await sb.from('admin_categories').update(updates).eq('id', sc.id); scCount++; }
         }
 
@@ -1370,6 +1400,8 @@ window.bulkTranslateAll = async () => {
             if (!ac.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
             if (!ac.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
             if (!ac.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
+            if (!ac.name_de && enN) { updates.name_de = await googleTranslate(enN, 'de'); needUpdate = true; }
+            if (!ac.name_fr && enN) { updates.name_fr = await googleTranslate(enN, 'fr'); needUpdate = true; }
             if (needUpdate) { await sb.from('addon_categories').update(updates).eq('id', ac.id); acCount++; }
         }
 
@@ -1799,7 +1831,7 @@ window.autoTranslatePopupDetail = async () => {
     btn.disabled = true;
 
     try {
-        const targets = [ {code:'ja', f:'JP'}, {code:'en', f:'US'}, {code:'zh-CN', f:'CN'}, {code:'ar', f:'AR'}, {code:'es', f:'ES'} ];
+        const targets = [ {code:'ja', f:'JP'}, {code:'en', f:'US'}, {code:'zh-CN', f:'CN'}, {code:'ar', f:'AR'}, {code:'es', f:'ES'}, {code:'de', f:'DE'}, {code:'fr', f:'FR'} ];
         for(const t of targets) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = sourceHtml;
