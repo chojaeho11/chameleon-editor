@@ -685,42 +685,28 @@ async function addCanvasToCart() {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
-    // ★ [핵심] 라이브 캔버스에서 디자인 PDF 사전 생성 (주문 시 재생성하지 않기 위함)
+    // ★ [핵심] 에디터 PDF 다운로드와 동일한 방식으로 디자인 PDF 사전 생성
     let designPdfUrl = null;
-    if (window.jspdf && board) {
-        try {
-            // 목업 오브젝트 숨기기
-            const mockups = canvas.getObjects().filter(o => o.isMockup || o.excludeFromExport);
-            mockups.forEach(o => o.set('visible', false));
-            const savedVpt = canvas.viewportTransform.slice();
-            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-            canvas.renderAll();
-
-            const maxPx = 16000000;
-            let mult = 2;
-            if (finalW * finalH * mult * mult > maxPx) mult = Math.max(1, Math.floor(Math.sqrt(maxPx / (finalW * finalH))));
-
-            const pdfImgData = canvas.toDataURL({ format: 'jpeg', quality: 0.95, left: boardX, top: boardY, width: finalW, height: finalH, multiplier: mult });
-
-            // 뷰포트 및 목업 복원
-            canvas.setViewportTransform(savedVpt);
-            mockups.forEach(o => o.set('visible', true));
-            canvas.renderAll();
-
-            const MM = 3.7795;
-            const wMM = finalW / MM, hMM = finalH / MM;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: wMM > hMM ? 'l' : 'p', unit: 'mm', format: [wMM, hMM] });
-            doc.addImage(pdfImgData, 'JPEG', 0, 0, wMM, hMM);
-            const pdfBlob = doc.output('blob');
-            if (pdfBlob && pdfBlob.size > 1000) {
-                designPdfUrl = await uploadFileToSupabase(pdfBlob, 'cart_pdf');
-                console.log("[사전 PDF] 라이브 캔버스에서 PDF 생성 완료:", designPdfUrl);
+    try {
+        // 에디터 btnPDF와 동일한 페이지 데이터 구성
+        let pdfPages = [json];
+        if (typeof pageDataList !== 'undefined' && pageDataList.length > 0) {
+            pdfPages = [...pageDataList];
+            if (typeof currentPageIndex !== 'undefined' && currentPageIndex >= 0) {
+                pdfPages[currentPageIndex] = json;
             }
-        } catch(e) {
-            console.warn("사전 PDF 생성 실패 (주문 시 재생성 예정):", e);
-            try { canvas.setViewportTransform(originalVpt); } catch(ex) {}
         }
+        // 벡터 PDF 먼저, 실패 시 래스터 (에디터 다운로드와 완전히 동일)
+        let pdfBlob = await generateProductVectorPDF(pdfPages, finalW, finalH, boardX, boardY);
+        if (!pdfBlob || pdfBlob.size < 5000) {
+            pdfBlob = await generateRasterPDF(pdfPages, finalW, finalH, boardX, boardY);
+        }
+        if (pdfBlob && pdfBlob.size > 1000) {
+            designPdfUrl = await uploadFileToSupabase(pdfBlob, 'cart_pdf');
+            console.log("[사전 PDF] 생성 완료:", designPdfUrl);
+        }
+    } catch(e) {
+        console.warn("사전 PDF 생성 실패:", e);
     }
 
     let calcProduct = { ...product }; 
@@ -830,8 +816,19 @@ async function addCanvasToCart() {
         if (!Array.isArray(currentCartList)) currentCartList = [];
     } catch(e) { currentCartList = []; }
 
-    // 2. 리스트에 추가
-    currentCartList.push(newItem);
+    // 2. 리스트에 추가 또는 기존 아이템 업데이트 (다시 편집 시)
+    if (typeof window.editingCartItemIdx === 'number' && window.editingCartItemIdx >= 0 && window.editingCartItemIdx < currentCartList.length) {
+        // 기존 아이템의 수량/옵션 보존하면서 디자인 데이터만 교체
+        const oldItem = currentCartList[window.editingCartItemIdx];
+        newItem.qty = oldItem.qty || newItem.qty;
+        newItem.selectedAddons = oldItem.selectedAddons || newItem.selectedAddons;
+        newItem.addonQuantities = oldItem.addonQuantities || newItem.addonQuantities;
+        currentCartList[window.editingCartItemIdx] = newItem;
+        console.log("[다시편집] 장바구니 아이템 업데이트 완료:", window.editingCartItemIdx);
+        window.editingCartItemIdx = undefined;
+    } else {
+        currentCartList.push(newItem);
+    }
 
     // 3. [핵심] 저장소에 저장 (용량 다이어트 적용)
     try { 
@@ -1063,7 +1060,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                         <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${localName(item.product)}</h4>
                         <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : window.t('msg_file_attached_separately', '(File attached separately)')}</div>
                         <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
-                        
+                        ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:8px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
                             <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
                                 <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">-</button>
@@ -1097,6 +1094,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${localName(item.product)}</h4>
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
+                            ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:6px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
                         </div>
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
@@ -1786,12 +1784,65 @@ window.toggleCartAccordion = function(idx) {
         renderCart(); 
     } 
 };
-window.removeCartItem = function(idx) { 
+window.removeCartItem = function(idx) {
     if (confirm(window.t('confirm_delete', "Delete this item?"))) {
-        cartData.splice(idx, 1); 
-        saveCart(); 
-        renderCart(); 
-    } 
+        cartData.splice(idx, 1);
+        saveCart();
+        renderCart();
+    }
+};
+
+// ★ 장바구니 아이템 다시 편집하기
+window.reEditCartItem = async function(idx) {
+    const item = cartData[idx];
+    if (!item || !item.jsonUrl) return alert("편집 데이터를 찾을 수 없습니다.");
+
+    const loading = document.getElementById("loading");
+    if (loading) { loading.style.display = "flex"; loading.querySelector('p').innerText = "디자인 데이터 로딩 중..."; }
+
+    try {
+        // 1. 클라우드에서 JSON 복구
+        const res = await fetch(item.jsonUrl);
+        if (!res.ok) throw new Error("JSON 로드 실패");
+        const recovered = await res.json();
+        const mainJson = recovered.main || recovered;
+        const pages = recovered.pages || [];
+
+        // 2. 편집 중인 아이템 인덱스 저장 (담기 시 업데이트용)
+        window.editingCartItemIdx = idx;
+
+        // 3. 상품 코드로 에디터 열기
+        const productCode = item.product?.code || item.product?.key || window.currentProductKey;
+        if (!productCode) throw new Error("상품 코드 없음");
+
+        // 4. 에디터 열기 + JSON 로드
+        document.getElementById('cartPage').style.display = 'none';
+        await window.startEditorDirect(productCode);
+
+        // 5. 캔버스에 JSON 로드 (에디터 초기화 대기)
+        setTimeout(async () => {
+            try {
+                // 페이지 데이터 복원
+                if (pages.length > 0 && typeof pageDataList !== 'undefined') {
+                    pageDataList.length = 0;
+                    pages.forEach(p => pageDataList.push(p));
+                }
+                // 메인 캔버스에 JSON 로드
+                canvas.loadFromJSON(mainJson, () => {
+                    canvas.renderAll();
+                    if (loading) loading.style.display = "none";
+                    console.log("[다시편집] 캔버스 로드 완료, 편집 인덱스:", idx);
+                });
+            } catch(e) {
+                console.error("캔버스 로드 실패:", e);
+                if (loading) loading.style.display = "none";
+            }
+        }, 1500); // 에디터 초기화 대기
+    } catch(e) {
+        console.error("다시 편집 실패:", e);
+        if (loading) loading.style.display = "none";
+        alert("편집 데이터를 불러올 수 없습니다: " + e.message);
+    }
 };
 window.updateCartOption = function(idx, key, value) { 
     if (cartData[idx]) { 
