@@ -733,9 +733,10 @@ async function addCanvasToCart() {
     const recoveredAddonQtys = {};
     
     if (window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
+        const savedQtys = window.pendingSelectedAddonQtys || {};
         window.pendingSelectedAddons.forEach(code => {
             recoveredAddons[`opt_${code}`] = code;
-            recoveredAddonQtys[code] = 1;
+            recoveredAddonQtys[code] = savedQtys[code] || 1;
         });
     }
 
@@ -1426,7 +1427,10 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             try {
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
                 let fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
-                if (!fileBlob) fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                if (!fileBlob || fileBlob.size < 5000) {
+                    console.log("벡터 PDF 실패/빈 결과 -> 래스터 PDF 전환 (size:", fileBlob ? fileBlob.size : 0, ")");
+                    fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                }
 
                 if(fileBlob) {
                     const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${newOrderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);

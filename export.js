@@ -511,10 +511,10 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. 벡터 PDF 먼저 시도, 실패 시 래스터 PDF
+                // 3. 벡터 PDF 먼저 시도, 실패 또는 빈 PDF시 래스터 PDF
                 let blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
-                if (!blob) {
-                    console.log("벡터 PDF 실패 -> 래스터 PDF 전환");
+                if (!blob || blob.size < 5000) {
+                    console.log("벡터 PDF 실패/빈 결과 -> 래스터 PDF 전환 (size:", blob ? blob.size : 0, ")");
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
                 }
 
@@ -744,12 +744,13 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
                     // ★ 핵심: 뷰포트를 이동시켜서 대지 영역을 (0,0)으로 맞춤
                     // 대지의 시작점(x, y)만큼 반대로 이동(-x, -y)시키면 대지가 캔버스의 (0,0)에 오게 됨
                     if (filteredJson.objects) tempCanvas.setViewportTransform([1, 0, 0, 1, -x, -y]);
-                    resolve();
+                    tempCanvas.renderAll();
+                    setTimeout(resolve, 500);
                 });
             });
-            
+
             // 텍스트 패스 변환 (글자 깨짐 방지)
-            await convertCanvasTextToPaths(tempCanvas);
+            try { await convertCanvasTextToPaths(tempCanvas); } catch(convErr) { console.warn("텍스트 패스 변환 실패 (무시):", convErr); }
 
             // SVG 생성 (뷰포트가 적용된 상태 그대로 출력)
             const svgStr = tempCanvas.toSVG({ 
@@ -869,7 +870,7 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
                     // 좌표 보정
                     tempCvs.setViewportTransform([1, 0, 0, 1, -x, -y]);
                     tempCvs.renderAll();
-                    setTimeout(resolve, 300);
+                    setTimeout(resolve, 500);
                 });
             });
             const isMobileDevice = window.innerWidth <= 768;

@@ -4332,8 +4332,9 @@ if (w >= 20 && h >= 20) {
         // 6. 실행 (에디터 or 장바구니)
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
-            window.pendingSelectedAddons = selectedAddonCodes; 
-            
+            window.pendingSelectedAddons = selectedAddonCodes;
+            window.pendingSelectedAddonQtys = selectedAddonQtys;
+
             // ★ [수정] 확실하게 찾은 targetCode를 넘겨줌
             window.startEditorDirect(
                 targetCode, 
