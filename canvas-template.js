@@ -1072,34 +1072,17 @@ const SIDE_ITEMS_PER_PAGE = 10;
 let sideCurrentGroup = 'group_template';
 window._sideCurrentGroup = 'group_template';
 
-// [1] 탭 전환 함수
+// [1] 탭 전환 함수 (템플릿 패널 전용)
 window.switchSideGroup = function(group) {
     sideCurrentGroup = group;
     window._sideCurrentGroup = group;
     sideCurrentPage = 0;
-    
-    const btnTpl = document.getElementById('btnSideTabTpl');
-    const btnObj = document.getElementById('btnSideTabObj');
-    
-    if (btnTpl && btnObj) {
-        if (group === 'group_template') {
-            btnTpl.style.background = '#6366f1'; btnTpl.style.color = '#fff'; btnTpl.style.border = 'none';
-            btnObj.style.background = '#fff'; btnObj.style.color = '#64748b'; btnObj.style.border = '1px solid #e2e8f0';
-        } else {
-            btnObj.style.background = '#059669'; btnObj.style.color = '#fff'; btnObj.style.border = 'none';
-            btnTpl.style.background = '#fff'; btnTpl.style.color = '#64748b'; btnTpl.style.border = '1px solid #e2e8f0';
-        }
-    }
 
     const searchInput = document.getElementById('sideTemplateSearch');
     if (searchInput) searchInput.value = '';
 
-    if (group === 'group_text_tpl') {
-        window.loadTextTemplates();
-    } else {
-        const pKey = window.currentProductKey || 'custom';
-        window.loadSideBarTemplates(pKey, '', 0);
-    }
+    const pKey = window.currentProductKey || 'custom';
+    window.loadSideBarTemplates(pKey, '', 0);
 };
 
 // [2] 사이드바 로드 함수
@@ -1321,7 +1304,7 @@ const WIZARD_BTNS = [
 ];
 
 window.loadTextTemplates = function(keyword) {
-    var list = document.getElementById('sideTemplateList');
+    var list = document.getElementById('sideTextTplList');
     if (!list) return;
     list.innerHTML = '';
 

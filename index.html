@@ -1102,24 +1102,14 @@
 
             <!-- 1. 템플릿 -->
             <div id="sub-template" class="sub-content">
-                <div class="sub-panel-header" data-i18n="editor_recommended">🎨 추천 디자인</div>
-                <div style="display:flex; gap:8px; margin-bottom:10px;">
-                    <button id="btnSideTabTpl" class="btn-round" onclick="window.switchSideGroup('group_template')"
-                            style="flex:1; justify-content:center; height:36px; font-size:13px; background:#6366f1; color:white; border:none; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);" data-i18n="editor_tab_template">
-                        템플릿
-                    </button>
-                    <button id="btnSideTabObj" class="btn-round" onclick="window.switchSideGroup('group_text_tpl')"
-                            style="flex:1; justify-content:center; height:36px; font-size:13px; background:#fff; color:#64748b; border:1px solid #e2e8f0; font-weight:bold;" data-i18n="editor_tab_text_tpl">
-                        글씨 템플릿
-                    </button>
-                </div>
+                <div class="sub-panel-header" style="font-weight:900; font-family:Inter,'Noto Sans KR',sans-serif; letter-spacing:0.5px;">DESIGN TEMPLATES</div>
                 <div style="margin-bottom:10px;">
                     <div style="position:relative;">
                         <input type="text" id="sideTemplateSearch"
                                placeholder="검색어 입력 (예: 카페, 세일)" data-i18n-placeholder="ph_search_template"
                                autocomplete="off"
                                onkeyup="window.handleSideSearch(this.value)"
-                               style="width:100%; padding:10px 10px 10px 35px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:13px; outline:none;">
+                               style="width:100%; padding:10px 10px 10px 35px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:13px; outline:none; font-weight:300; font-family:Inter,'Noto Sans KR',sans-serif;">
                         <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
                     </div>
                 </div>
@@ -1174,13 +1164,13 @@
 
             <!-- 3. 텍스트 -->
             <div id="sub-text" class="sub-content">
-                <div class="sub-panel-header" data-i18n="panel_text">텍스트</div>
+                <div class="sub-panel-header" style="font-weight:900; font-family:Inter,'Noto Sans KR',sans-serif; letter-spacing:0.5px;">TEXT</div>
                 <button id="btnAddBasicText" class="btn-round" style="width:100%; margin-bottom:10px; border:1px solid #cbd5e1; background:#fff; color:#333; font-weight:bold; padding:10px; display:flex; align-items:center; justify-content:center;">
                     <span style="display:inline-flex; width:20px; height:20px; background:#222; color:#fff; border-radius:4px; align-items:center; justify-content:center; margin-right:6px; font-size:12px;">T</span>
-                    <span style="font-size: 13px;" data-i18n="btn_add_text">텍스트 추가</span>
+                    <span style="font-size:13px; font-weight:300; font-family:Inter,'Noto Sans KR',sans-serif;" data-i18n="btn_add_text">텍스트 추가</span>
                 </button>
                 <button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height: 38px;">
-                    <span data-i18n="btn_font" style="font-size: 13px;">🅰️ 폰트 전체보기</span>
+                    <span data-i18n="btn_font" style="font-size:13px; font-weight:300; font-family:Inter,'Noto Sans KR',sans-serif;">🅰️ 폰트 전체보기</span>
                 </button>
                 <button id="btnTextEffect" class="btn-round" onclick="document.getElementById('textEffectModal').style.display='flex'" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height:38px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; font-weight:bold;">
                     <span style="font-size:13px;" data-i18n="btn_text_effect">✨ 텍스트 효과</span>
@@ -1213,6 +1203,8 @@
                     <span data-i18n="label_stroke">🖌️ 선색상</span>
                     <input id="textPanelStroke" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
                 </div>
+                <!-- 글씨 템플릿 (Design Wizard + Text Presets) -->
+                <div id="sideTextTplList" style="margin-top:8px;"></div>
             </div>
 
             <!-- 4. 업로드 -->
@@ -2270,13 +2262,9 @@ window.filterFxCards = function(cat, btn) {
         if (sideSearchTimeout) clearTimeout(sideSearchTimeout);
 
         sideSearchTimeout = setTimeout(() => {
-            if (window._sideCurrentGroup === 'group_text_tpl') {
-                window.loadTextTemplates && window.loadTextTemplates(keyword);
-            } else {
-                const currentKey = window.currentProductKey || 'custom';
-                if (window.loadSideBarTemplates) {
-                    window.loadSideBarTemplates(currentKey, keyword);
-                }
+            const currentKey = window.currentProductKey || 'custom';
+            if (window.loadSideBarTemplates) {
+                window.loadSideBarTemplates(currentKey, keyword);
             }
         }, 500);
     };
@@ -2311,6 +2299,8 @@ window.filterFxCards = function(cat, btn) {
             window.loadSideAssets && window.loadSideAssets();
         } else if (panelId === 'sub-upload') {
             window.loadMyUploads && window.loadMyUploads();
+        } else if (panelId === 'sub-text') {
+            window.loadTextTemplates && window.loadTextTemplates();
         }
     };
 
