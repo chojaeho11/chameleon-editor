@@ -6618,11 +6618,11 @@ window.dsmRenderProducts = function(keyword) {
         div.onmouseout = function() { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
         div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
             '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (p.name || p.code) + '</div></div>';
-        // 클릭 시 기존 상품 상세 모달 (showChoiceModal) 열기
+        // 클릭 시 기존 상품 상세 페이지 열기 (메인 페이지 제품 카드 클릭과 동일)
         div.onclick = function() {
             document.getElementById('designStartModal').style.display = 'none';
-            if (window.showChoiceModal) {
-                window.showChoiceModal(p.code);
+            if (window.loadProductDetailAndOpen) {
+                window.loadProductDetailAndOpen(p.code);
             }
         };
         grid.appendChild(div);
