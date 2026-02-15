@@ -97,7 +97,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "수량",
         ordersheet_design_preview: "디자인 시안 확인",
         ordersheet_no_image: "이미지 없음 (파일 별도 확인)",
-        ordersheet_page_label: "Page"
+        ordersheet_page_label: "Page",
+        ordersheet_size: "사이즈"
     },
     ja: {
         quote_title: "御 見 積 書",
@@ -139,7 +140,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "数量",
         ordersheet_design_preview: "デザインプレビュー",
         ordersheet_no_image: "画像なし（ファイルを別途ご確認ください）",
-        ordersheet_page_label: "Page"
+        ordersheet_page_label: "Page",
+        ordersheet_size: "サイズ"
     },
     us: {
         quote_title: "QUOTATION",
@@ -181,7 +183,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "Qty",
         ordersheet_design_preview: "Design Preview",
         ordersheet_no_image: "No image (see attached file)",
-        ordersheet_page_label: "Page"
+        ordersheet_page_label: "Page",
+        ordersheet_size: "Size"
     },
     zh: {
         quote_title: "报 价 单",
@@ -223,7 +226,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "数量",
         ordersheet_design_preview: "设计预览",
         ordersheet_no_image: "无图片（请另行确认文件）",
-        ordersheet_page_label: "Page"
+        ordersheet_page_label: "Page",
+        ordersheet_size: "尺寸"
     },
     ar: {
         quote_title: "عرض سعر",
@@ -265,7 +269,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "الكمية",
         ordersheet_design_preview: "معاينة التصميم",
         ordersheet_no_image: "لا توجد صورة (راجع الملف المرفق)",
-        ordersheet_page_label: "Page"
+        ordersheet_page_label: "Page",
+        ordersheet_size: "الحجم"
     },
     es: {
         quote_title: "PRESUPUESTO",
@@ -307,7 +312,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "Cant.",
         ordersheet_design_preview: "Vista previa del diseño",
         ordersheet_no_image: "Sin imagen (ver archivo adjunto)",
-        ordersheet_page_label: "Página"
+        ordersheet_page_label: "Página",
+        ordersheet_size: "Tamaño"
     },
     de: {
         quote_title: "KOSTENVORANSCHLAG",
@@ -349,7 +355,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "Menge",
         ordersheet_design_preview: "Designvorschau",
         ordersheet_no_image: "Kein Bild (siehe Anhang)",
-        ordersheet_page_label: "Seite"
+        ordersheet_page_label: "Seite",
+        ordersheet_size: "Größe"
     },
     fr: {
         quote_title: "DEVIS",
@@ -391,7 +398,8 @@ const PDF_LABELS = {
         ordersheet_qty_label: "Qté",
         ordersheet_design_preview: "Aperçu du design",
         ordersheet_no_image: "Pas d'image (voir fichier joint)",
-        ordersheet_page_label: "Page"
+        ordersheet_page_label: "Page",
+        ordersheet_size: "Taille"
     }
 };
 
@@ -988,6 +996,13 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         let pdfPrice = item.product.price;
         let pdfOptionLabel = TEXT.opt_default;
 
+        // 제품 사이즈 표시
+        const _wMm = item.product.w_mm || item.product.width_mm || 0;
+        const _hMm = item.product.h_mm || item.product.height_mm || 0;
+        if (_wMm && _hMm) {
+            pdfOptionLabel = `${Math.round(_wMm)}x${Math.round(_hMm)}mm`;
+        }
+
         if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
             if (item.product.name_jp) pdfName = item.product.name_jp;
             if (_cr && _cr.JP) pdfPrice = Math.round(pdfPrice * _cr.JP);
@@ -1228,6 +1243,13 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             const infoY = prodY + 18; doc.setFontSize(16);
             drawText(doc, `${item.product.name}`, 20, infoY, {weight:'bold'});
             doc.setFontSize(11); let optY = infoY + 8;
+            // 제품 사이즈 표시
+            const _wMm2 = item.product.w_mm || item.product.width_mm || 0;
+            const _hMm2 = item.product.h_mm || item.product.height_mm || 0;
+            if (_wMm2 && _hMm2) {
+                drawText(doc, `${TEXT.ordersheet_size || '사이즈'} : ${Math.round(_wMm2)} x ${Math.round(_hMm2)} mm`, 25, optY, {}, "#555555");
+                optY += 6;
+            }
             if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
                 Object.values(item.selectedAddons).forEach(code => {
                     const add = ADDON_DB[code]; if(!add) return;
