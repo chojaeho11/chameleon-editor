@@ -685,15 +685,9 @@ async function addCanvasToCart() {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
-    // ★ [핵심] 라이브 캔버스에서 직접 캡처 → 텍스트 효과/폰트 100% 보존
+    // ★ [핵심] 벡터 PDF 우선 (텍스트→패스 변환, 효과 그룹 Z-order 유지)
     let designPdfUrl = null;
     try {
-        const { jsPDF } = window.jspdf;
-        const mmToPxRatio = 3.7795;
-        const widthMM = Math.round(finalW / mmToPxRatio);
-        const heightMM = Math.round(finalH / mmToPxRatio);
-
-        // 페이지 목록 구성
         let pdfPages = [json];
         if (typeof pageDataList !== 'undefined' && pageDataList.length > 0) {
             pdfPages = [...pageDataList];
@@ -701,71 +695,16 @@ async function addCanvasToCart() {
                 pdfPages[currentPageIndex] = json;
             }
         }
-        const curPageIdx = (typeof currentPageIndex !== 'undefined') ? currentPageIndex : 0;
-
-        const doc = new jsPDF({ orientation: widthMM >= heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
-
-        for (let pi = 0; pi < pdfPages.length; pi++) {
-            if (pi > 0) doc.addPage([widthMM, heightMM], widthMM >= heightMM ? 'l' : 'p');
-
-            let imgData = null;
-
-            if (pi === curPageIdx && board) {
-                // ★ 현재 페이지: 라이브 캔버스에서 직접 캡처 (효과/폰트 완벽 보존)
-                try {
-                    const savedVpt = canvas.viewportTransform.slice();
-                    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-                    // 목업/제외 오브젝트 임시 숨김
-                    const hiddenObjs = [];
-                    canvas.getObjects().forEach(o => {
-                        if ((o.isMockup || o.excludeFromExport) && o.visible !== false) {
-                            o.visible = false;
-                            hiddenObjs.push(o);
-                        }
-                    });
-                    canvas.renderAll();
-                    const maxPixels = 16000000;
-                    const basePixels = finalW * finalH;
-                    let mult = 2;
-                    if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
-                    imgData = canvas.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: mult,
-                        left: boardX, top: boardY, width: finalW, height: finalH });
-                    // 복원
-                    hiddenObjs.forEach(o => { o.visible = true; });
-                    canvas.setViewportTransform(savedVpt);
-                    canvas.renderAll();
-                } catch (captureErr) {
-                    console.warn("[라이브 캡처 실패]", captureErr);
-                }
-            }
-
-            // 다른 페이지이거나 라이브 캡처 실패 시 → headless 래스터 폴백
-            if (!imgData && pdfPages[pi]) {
-                try {
-                    const tempEl = document.createElement('canvas');
-                    const tempCvs = new fabric.StaticCanvas(tempEl);
-                    tempCvs.setWidth(finalW); tempCvs.setHeight(finalH);
-                    const pageJson = { ...pdfPages[pi] };
-                    if (pageJson.objects) pageJson.objects = pageJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
-                    await new Promise(r => {
-                        tempCvs.loadFromJSON(pageJson, () => {
-                            tempCvs.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
-                            tempCvs.renderAll();
-                            setTimeout(r, 500);
-                        });
-                    });
-                    imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: 1 });
-                    tempCvs.dispose();
-                } catch(e2) { console.warn("[headless 폴백 실패]", e2); }
-            }
-
-            if (imgData) doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
+        // 1차: 벡터 PDF
+        let pdfBlob = await generateProductVectorPDF(pdfPages, finalW, finalH, boardX, boardY);
+        // 2차: 벡터 실패 시 래스터 폴백
+        if (!pdfBlob || pdfBlob.size < 1000) {
+            console.log("[사전 PDF] 벡터 실패 → 래스터 전환 (size:", pdfBlob?.size || 0, ")");
+            pdfBlob = await generateRasterPDF(pdfPages, finalW, finalH, boardX, boardY);
         }
-
-        const pdfBlob = doc.output('blob');
-        if (pdfBlob && pdfBlob.size > 1000) {
+        if (pdfBlob && pdfBlob.size > 500) {
             designPdfUrl = await uploadFileToSupabase(pdfBlob, 'cart_pdf');
-            console.log("[사전 PDF] 라이브캔버스 캡처 완료:", designPdfUrl);
+            console.log("[사전 PDF] 생성 완료:", designPdfUrl, "size:", pdfBlob.size);
         }
     } catch(e) {
         console.warn("사전 PDF 생성 실패:", e);

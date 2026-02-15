@@ -521,7 +521,7 @@ export function initExport() {
 
                 // 3. 벡터 PDF 먼저 시도, 실패 또는 빈 PDF시 래스터 PDF
                 let blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
-                if (!blob || blob.size < 5000) {
+                if (!blob || blob.size < 1000) {
                     console.log("벡터 PDF 실패/빈 결과 -> 래스터 PDF 전환 (size:", blob ? blob.size : 0, ")");
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
                 }
@@ -777,77 +777,96 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
 }
 
 // 텍스트 패스 변환 헬퍼 (벡터 PDF용)
+// ★ 그룹 내 Z-order 유지 + 에러 로깅
 async function convertCanvasTextToPaths(fabricCanvas) {
-    if (!window.opentype) return;
-    const fontList = []; 
+    if (!window.opentype) { console.warn("[패스변환] opentype.js 없음"); return; }
+    const fontList = [];
     try {
         const { data } = await sb.from('site_fonts').select('font_family, file_url');
         if (data) data.forEach(f => fontList.push({ normalized: f.font_family.toLowerCase().replace(/[\s\-_]/g, ''), url: f.file_url }));
-    } catch(e) {}
-    
-    const loadedFonts = {}; 
+    } catch(e) { console.warn("[패스변환] 폰트 목록 로드 실패:", e); }
+
+    const loadedFonts = {};
     const findFontUrl = (name) => {
-        // [수정] 기본 폰트를 현재 언어 설정에 맞게 변경
         if (!name) return TARGET_FONT.url;
-        
         const target = name.toLowerCase().replace(/[\s\-_]/g, '');
         const match = fontList.find(f => target.includes(f.normalized));
-        
-        // 매칭되는 폰트가 없으면 현재 언어의 기본 폰트 사용
         return match ? match.url : TARGET_FONT.url;
     };
 
-    const processObjects = async (objects) => {
-        for (let i = objects.length - 1; i >= 0; i--) {
-            let obj = objects[i];
-            if (obj.type === 'group') await processObjects(obj.getObjects());
-            else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+    // 단일 텍스트 → 패스 변환
+    const textToPath = async (obj) => {
+        const fontUrl = findFontUrl(obj.fontFamily);
+        if (!loadedFonts[fontUrl]) {
+            const buffer = await (await fetch(fontUrl)).arrayBuffer();
+            loadedFonts[fontUrl] = window.opentype.parse(buffer);
+        }
+        const font = loadedFonts[fontUrl];
+        const fontSize = obj.fontSize;
+        const lineHeightPx = obj.lineHeight * fontSize;
+        const textLines = obj.text.split(/\r\n|\r|\n/);
+        let startY = -(textLines.length * lineHeightPx / 2) + (fontSize * 0.8);
+
+        let fullPathData = "";
+        textLines.forEach((line, li) => {
+            if (line.trim()) {
+                const lineWidth = font.getAdvanceWidth(line, fontSize);
+                let lineX = -obj.width / 2;
+                if (obj.textAlign === 'center') lineX = -lineWidth / 2;
+                else if (obj.textAlign === 'right') lineX = (obj.width / 2) - lineWidth;
+                fullPathData += font.getPath(line, lineX, startY + (li * lineHeightPx), fontSize).toPathData(2);
+            }
+        });
+
+        return new fabric.Path(fullPathData, {
+            fill: obj.fill, stroke: obj.stroke, strokeWidth: obj.strokeWidth,
+            scaleX: obj.scaleX, scaleY: obj.scaleY, angle: obj.angle,
+            left: obj.left, top: obj.top, originX: obj.originX, originY: obj.originY,
+            opacity: obj.opacity, shadow: obj.shadow,
+            paintFirst: obj.paintFirst || 'fill',
+            strokeLineJoin: obj.strokeLineJoin || 'miter',
+            strokeLineCap: obj.strokeLineCap || 'butt'
+        });
+    };
+
+    // 그룹 내부 텍스트 처리 (Z-order 유지: _objects 배열 직접 교체)
+    const processGroup = async (grp) => {
+        const objs = grp.getObjects(); // 내부 _objects 참조
+        for (let i = 0; i < objs.length; i++) {
+            const obj = objs[i];
+            if (obj.type === 'group') {
+                await processGroup(obj);
+            } else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
                 try {
-                    const fontUrl = findFontUrl(obj.fontFamily);
-                    if (!loadedFonts[fontUrl]) {
-                        const buffer = await (await fetch(fontUrl)).arrayBuffer();
-                        loadedFonts[fontUrl] = window.opentype.parse(buffer);
-                    }
-                    const font = loadedFonts[fontUrl];
-                    const fontSize = obj.fontSize;
-                    const lineHeightPx = obj.lineHeight * fontSize;
-                    const textLines = obj.text.split(/\r\n|\r|\n/);
-                    let startY = -(textLines.length * lineHeightPx / 2) + (fontSize * 0.8);
-                    
-                    let fullPathData = "";
-                    textLines.forEach((line, idx) => {
-                        if(line.trim()) {
-                            const lineWidth = font.getAdvanceWidth(line, fontSize);
-                            let lineX = -obj.width / 2; 
-                            if (obj.textAlign === 'center') lineX = -lineWidth / 2;
-                            else if (obj.textAlign === 'right') lineX = (obj.width / 2) - lineWidth;
-                            fullPathData += font.getPath(line, lineX, startY + (idx * lineHeightPx), fontSize).toPathData(2);
-                        }
-                    });
-
-                    const fillPathObj = new fabric.Path(fullPathData, {
-                        fill: obj.fill, stroke: obj.stroke, strokeWidth: obj.strokeWidth,
-                        scaleX: obj.scaleX, scaleY: obj.scaleY, angle: obj.angle,
-                        left: obj.left, top: obj.top, originX: obj.originX, originY: obj.originY,
-                        opacity: obj.opacity, shadow: obj.shadow,
-                        paintFirst: obj.paintFirst || 'fill',
-                        strokeLineJoin: obj.strokeLineJoin || 'miter',
-                        strokeLineCap: obj.strokeLineCap || 'butt'
-                    });
-
-                    if (obj.group) {
-                        obj.group.removeWithUpdate(obj);
-                        obj.group.addWithUpdate(fillPathObj);
-                    } else {
-                        const idx = fabricCanvas.getObjects().indexOf(obj);
-                        fabricCanvas.remove(obj);
-                        fabricCanvas.insertAt(fillPathObj, idx);
-                    }
-                } catch (err) {}
+                    const pathObj = await textToPath(obj);
+                    pathObj.group = grp;
+                    objs[i] = pathObj; // ★ 배열 직접 교체 → Z-order 완벽 유지
+                    obj.group = undefined;
+                } catch (err) {
+                    console.warn("[패스변환] 그룹 내 텍스트 변환 실패:", obj.text, err.message);
+                }
             }
         }
     };
-    await processObjects(fabricCanvas.getObjects());
+
+    // 최상위 오브젝트 처리
+    const topObjects = fabricCanvas.getObjects().slice(); // 복사본으로 순회
+    for (let i = 0; i < topObjects.length; i++) {
+        const obj = topObjects[i];
+        if (obj.type === 'group') {
+            await processGroup(obj);
+        } else if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+            try {
+                const pathObj = await textToPath(obj);
+                const canvasIdx = fabricCanvas.getObjects().indexOf(obj);
+                fabricCanvas.remove(obj);
+                if (canvasIdx >= 0) fabricCanvas.insertAt(pathObj, canvasIdx);
+                else fabricCanvas.add(pathObj);
+            } catch (err) {
+                console.warn("[패스변환] 텍스트 변환 실패:", obj.text, err.message);
+            }
+        }
+    }
 }
 
 // 래스터(이미지) PDF 생성 함수
