@@ -173,11 +173,14 @@ button, input, textarea, select { font-family: inherit; }
 }
 .gallery-header::before, .gallery-header::after { content: ''; height: 2px; width: 40px; background: #e5e7eb; }
 
-.template-grid-start { 
+.template-grid-start {
     display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 가로 6개 강제 설정 */
-    gap: 20px; 
-    width: 100%; 
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
 /* [수정] 정사각 프레임 적용 */
