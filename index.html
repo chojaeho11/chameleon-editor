@@ -491,6 +491,18 @@
             <i class="fa-solid fa-palette"></i> 무료 디자인 시작하기
         </button>
     </div>
+    <script>
+    document.getElementById('btnDesignStart').addEventListener('click', function() {
+        var m = document.getElementById('designStartModal');
+        if (m) {
+            m.style.display = 'flex';
+            var mv = document.getElementById('dsm-main-view');
+            var pv = document.getElementById('dsm-print-view');
+            if (mv) mv.style.display = 'block';
+            if (pv) pv.style.display = 'none';
+        }
+    });
+    </script>
 
     <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
         <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">대량주문 전용 VIP 라운지</h3>
