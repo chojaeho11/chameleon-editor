@@ -5053,9 +5053,14 @@ if (w >= 20 && h >= 20) {
         // 2. [설정] 상품 정보 로드 (전역 변수에 없으면 DB에서 가져옴)
         window.currentProductKey = key;
         if(canvas) canvas.currentProductKey = key;
-        
+
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
-        
+
+        // ★ 'custom' 키: DB 조회 없이 빈 캔버스로 바로 진입
+        if (key === 'custom') {
+            window.PRODUCT_DB['custom'] = { code:'custom', name:'Custom', price:0, img_url:'', addons:[] };
+        }
+
         // ★ [핵심] 데이터가 비어있으면 DB에서 불러오는 안전장치
         if (!window.PRODUCT_DB[key]) {
             console.log("🔄 에디터용 상품 정보 로딩 중...");
@@ -6436,12 +6441,7 @@ window.filterModalItems = function(keyword) {
 
             <!-- 카테고리 버튼 -->
             <div id="dsmCategoryBtns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
-                <button class="dsm-cat-btn active" onclick="window.dsmSelectCategory('all', this)">전체</button>
-                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('허니콤보드', this)">허니콤보드</button>
-                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('패브릭인쇄', this)">패브릭인쇄</button>
-                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('실사출력', this)">실사출력</button>
-                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('상업인쇄물', this)">상업인쇄물</button>
-                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('굿즈판촉물', this)">굿즈판촉물</button>
+                <!-- DB에서 소분류 동적 로드 -->
             </div>
 
             <!-- 상품 그리드 -->
@@ -6504,6 +6504,7 @@ window.openDesignStartModal = function() {
     window.dsmBackToMain();
 };
 
+// 디지털 판형 → 로그인 체크 후 빈 에디터 열기
 window.dsmOpenEditor = async function(wMM, hMM, label) {
     document.getElementById('designStartModal').style.display = 'none';
     if (window.startEditorDirect) {
@@ -6513,35 +6514,58 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
     }
 };
 
+// 직접 입력
 window.dsmOpenCustom = function() {
-    const w = parseInt(document.getElementById('dsmCustomW').value);
-    const h = parseInt(document.getElementById('dsmCustomH').value);
+    var w = parseInt(document.getElementById('dsmCustomW').value);
+    var h = parseInt(document.getElementById('dsmCustomH').value);
     if (!w || !h || w <= 0 || h <= 0) return alert('가로/세로를 올바르게 입력해주세요.');
     window.dsmOpenEditor(w, h, 'Custom');
 };
 
+// ─── 인쇄물 카테고리 뷰 ───
 window._dsmPrintSize = { w: 0, h: 0, label: '' };
-window._dsmPrintCategory = 'all';
+window._dsmPrintCategory = '';
 
 window.dsmShowPrintCategory = async function(wMM, hMM, label) {
     window._dsmPrintSize = { w: wMM, h: hMM, label: label };
-    window._dsmPrintCategory = 'all';
+    window._dsmPrintCategory = '';
     document.getElementById('dsm-main-view').style.display = 'none';
     document.getElementById('dsm-print-view').style.display = 'block';
     document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '\u00d7' + hMM + 'mm) \u2014 어디에 인쇄할까요?';
     document.getElementById('dsmPrintSearch').value = '';
-    document.querySelectorAll('.dsm-cat-btn').forEach(function(b) { b.classList.remove('active'); });
-    document.querySelector('.dsm-cat-btn').classList.add('active');
 
     var grid = document.getElementById('dsmProductGrid');
+    var catBtns = document.getElementById('dsmCategoryBtns');
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i></div>';
+
     try {
         if (typeof sb === 'undefined') throw new Error('DB');
-        var resp = await sb.from('admin_products')
+        // 카테고리 + 상품 동시 로드
+        var catResp = await sb.from('admin_categories').select('name, slug').order('sort_order', { ascending: true });
+        var prodResp = await sb.from('admin_products')
             .select('name, code, img_url, category, price, width_mm, height_mm')
             .not('img_url', 'is', null).neq('img_url', '');
-        window._dsmProducts = resp.data || [];
-        window.dsmRenderProducts('');
+
+        var categories = catResp.data || [];
+        window._dsmProducts = prodResp.data || [];
+
+        // 카테고리 버튼 동적 생성
+        catBtns.innerHTML = '';
+        categories.forEach(function(cat, i) {
+            var btn = document.createElement('button');
+            btn.className = 'dsm-cat-btn' + (i === 0 ? ' active' : '');
+            btn.textContent = cat.name;
+            btn.onclick = function() { window.dsmSelectCategory(cat.slug || cat.name, btn); };
+            catBtns.appendChild(btn);
+        });
+
+        // 첫 카테고리 자동 선택
+        if (categories.length > 0) {
+            window._dsmPrintCategory = categories[0].slug || categories[0].name;
+            window.dsmRenderProducts('');
+        } else {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8;">카테고리가 없습니다.</div>';
+        }
     } catch(e) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
     }
@@ -6569,9 +6593,10 @@ window.dsmRenderProducts = function(keyword) {
     var cat = window._dsmPrintCategory;
     var items = (window._dsmProducts || []).slice();
 
-    if (cat !== 'all') {
+    // 카테고리 필터 (slug 또는 name 매칭)
+    if (cat) {
         items = items.filter(function(p) {
-            return (p.category || '').toLowerCase().includes(cat.toLowerCase());
+            return (p.category || '') === cat;
         });
     }
     if (term) {
@@ -6593,10 +6618,12 @@ window.dsmRenderProducts = function(keyword) {
         div.onmouseout = function() { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
         div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
             '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (p.name || p.code) + '</div></div>';
+        // 클릭 시 기존 상품 상세 모달 (showChoiceModal) 열기
         div.onclick = function() {
             document.getElementById('designStartModal').style.display = 'none';
-            var sz = window._dsmPrintSize;
-            if (window.startEditorDirect) window.startEditorDirect(p.code, sz.w, sz.h);
+            if (window.showChoiceModal) {
+                window.showChoiceModal(p.code);
+            }
         };
         grid.appendChild(div);
     });
