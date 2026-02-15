@@ -1043,156 +1043,215 @@
 
     <div class="editor-wrap">
         
-        <div class="side" id="toolsPanel" style="text-align: center; padding: 10px 12px;">
-            
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;">
-                <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between;">
-                    <span data-i18n="tool_size_change">📏 사이즈 변경(mm)</span>
-                    <span id="limitLabel" style="color:#6366f1;">Max: -</span>
-                </div>
-                <div style="display:flex; gap:5px; align-items:center;">
-                    <input type="number" id="inputUserW" class="ai-input-pretty" placeholder="W" style="margin:0; padding:5px; font-size:12px; text-align:center;">
-                    <span style="color:#999;">x</span>
-                    <input type="number" id="inputUserH" class="ai-input-pretty" placeholder="H" style="margin:0; padding:5px; font-size:12px; text-align:center;">
-                </div>
-                <button id="btnApplyUserSize" class="btn-round primary" style="width:100%; margin-top:6px; height:32px; font-size:12px;" data-i18n="btn_save_cost">변경 적용</button>
+        <!-- 아이콘 바 -->
+        <div id="iconBar">
+            <div class="icon-item" data-panel="sub-template">
+                <i class="fa-solid fa-swatchbook"></i><span data-i18n="menu_template">템플릿</span>
             </div>
-            
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="btnRotateCanvas" class="btn-round" style="flex:1; justify-content: center;"><i class="fa-solid fa-rotate"></i> <span data-i18n="btn_rotate">회전</span></button>
-                <button id="btnFitScreen" class="btn-round" style="flex:1; justify-content: center;"><i class="fa-solid fa-compress"></i> <span data-i18n="btn_fit_screen">맞춤</span></button>
+            <div class="icon-item" data-panel="sub-element">
+                <i class="fa-solid fa-shapes"></i><span data-i18n="menu_element">요소</span>
             </div>
-
-            <div class="section-title" data-i18n="label_ai_tools" style="margin-bottom: 5px; font-size: 12px;">AI TOOLS</div>
-            <button class="btn-round ai-red" id="btnAIBox" style="justify-content: center; height: 38px; margin-bottom: 5px;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_ai_gen">AI 생성</span></button>
-            <!-- <button class="btn-round" id="btnOpenSellModal" onclick="window.openSellModal()"  -->
-                  <!-- style="width: 100%; justify-content: center; height: 38px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border: none; color: white; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);"> -->
-                 <!-- <i class="fa-solid fa-sack-dollar"></i> <span data-i18n="btn_sell_design">디자인 판매 등록</span> -->
-            </button>
-            <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-                <button class="btn-round" id="btnOpenSaveModal" style="flex: 1; justify-content: center; height: 38px;">
-                    <span data-i18n="btn_save_design">💾 디자인 저장</span>
-                </button>
-                <button class="btn-round" id="btnMyPageSide" style="flex: 1; justify-content: center; height: 38px; background: white; border: 1px solid #ddd; color: #333;">
-                    <span>📂 MY page</span>
-                </button>
+            <div class="icon-item" data-panel="sub-text">
+                <i class="fa-solid fa-font"></i><span data-i18n="menu_text">텍스트</span>
             </div>
-
-            <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="width: 100%; justify-content: center; height: 38px; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1; margin-bottom: 15px;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_logo_share">로고 공유방</span>
-            </button>
-            
-            <div class="section-title" style="margin-bottom: 5px; font-size: 12px; color: #b6b6b6; letter-spacing: 1px;">무료 다운로드</div>
-            <div style="display:flex; gap:5px; margin-bottom:15px;">
-                <button id="btnPNG" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-regular fa-image"></i> PNG</button>
-                <button id="btnPDF" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            <div class="icon-item" data-panel="sub-upload">
+                <i class="fa-solid fa-cloud-arrow-up"></i><span data-i18n="menu_upload">업로드</span>
             </div>
-
-            <!-- 요기가 원래 마법사 자리 -->
-
-            <button id="btnAddBasicText" class="btn-round" style="width:100%; margin-bottom:10px; border:1px solid #cbd5e1; background:#fff; color:#333; font-weight:bold; padding:10px; display:flex; align-items:center; justify-content:center;">
-                <span style="display:inline-flex; width:20px; height:20px; background:#222; color:#fff; border-radius:4px; align-items:center; justify-content:center; margin-right:6px; font-size:12px;">T</span>
-                <span style="font-size: 13px;" data-i18n="btn_add_text">텍스트 추가</span>
-            </button>
-
-            <button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height: 38px;">
-                <span data-i18n="btn_font" style="font-size: 13px;">🅰️ 폰트 전체보기</span>
-            </button>
-
-            <button id="btnTextEffect" class="btn-round" onclick="document.getElementById('textEffectModal').style.display='flex'" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height:38px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; font-weight:bold;">
-                <span style="font-size:13px;">✨ 텍스트 효과</span>
-            </button>
-
-            <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:10px; text-align: left;">
-                <div style="display:flex; gap:4px; margin-bottom:8px;">
-                    <button class="tool-btn" id="btnAlignLeftText" style="flex:1;"><i class="fa-solid fa-align-left"></i></button>
-                    <button class="tool-btn" id="btnAlignCenterText" style="flex:1;"><i class="fa-solid fa-align-center"></i></button>
-                    <button class="tool-btn" id="btnAlignRightText" style="flex:1;"><i class="fa-solid fa-align-right"></i></button>
-                </div>
-                <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
-                    <span style="font-size:11px; color:#666;" data-i18n="editor_size">크기</span>
-                    <input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
-                </div>
-                <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
-                    <span style="font-size:11px; color:#666;" data-i18n="editor_char_spacing">자간</span>
-                    <input type="range" id="textCharSpacing" min="-50" max="300" value="0" style="width:100%;">
-                </div>
-                <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center;">
-                    <span style="font-size:11px; color:#666;" data-i18n="editor_line_height">행간</span>
-                    <input type="range" id="textLineHeight" min="0.5" max="2.5" step="0.1" value="1.2" style="width:100%;">
-                </div>
+            <div class="icon-item" data-panel="sub-ai">
+                <i class="fa-solid fa-wand-magic-sparkles"></i><span>AI</span>
             </div>
-
-            <div class="color-group" style="margin-bottom:5px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
-                <span data-i18n="label_fill">🎨 면색상</span>
-                <input id="fillColor" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
+            <div class="icon-item" data-panel="sub-cutout">
+                <i class="fa-solid fa-scissors"></i><span data-i18n="menu_cutout">누끼</span>
             </div>
-            <div class="color-group" style="margin-bottom:10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
-                <span data-i18n="label_stroke">🖌️ 선색상</span>
-                <input id="strokeColor" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
-            </div>
-
-            <div class="section-title" data-i18n="label_shapes" style="font-size: 12px; margin-bottom: 5px;">SHAPES</div>
-            <div class="shape-panel" style="gap: 4px;">
-                <button class="shape-btn" data-shape="rect">■</button>
-                <button class="shape-btn" data-shape="circle">●</button>
-                <button class="shape-btn" data-shape="triangle">▲</button>
-                <button class="shape-btn" data-shape="star">★</button>
-                <button class="shape-btn" data-shape="heart">♥</button>
-                <button class="shape-btn" data-shape="arrow">➡</button>
-                <button class="shape-btn" data-shape="round">▢</button>
-                <button class="shape-btn" data-shape="line">━</button>
-            </div>
-
-            <div class="section-title" style="font-size: 12px; margin-top: 15px; margin-bottom: 5px;">BACKGROUND</div>
-            <button id="btnBgColor" class="btn-round" style="width:100%; justify-content: flex-start; margin-bottom: 5px; height: 38px;">
-                <div style="width:20px; height:20px; background:linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius:4px; margin-right:8px; border:1px solid #ddd;"></div>
-                <span data-i18n="editor_bg_color">배경색 설정</span>
-            </button>
-
-            <div id="bgColorPanel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
-                <div style="font-size:11px; font-weight:bold; color:#666; margin-bottom:5px; text-align:left;" data-i18n="editor_basic_palette">기본 팔레트</div>
-                <div id="colorPaletteGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;">
-                    </div>
-            </div>
-            <div class="section-title" data-i18n="label_upload" style="font-size: 12px; margin-top: 10px; margin-bottom: 5px;">UPLOAD</div>
-            <label class="upload-box" for="imgUpload" style="height: 60px; padding: 10px;"><span style="font-size:18px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> <span style="font-size: 12px;">Image/PDF</span></label>
-            <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
         </div>
 
-        
-        
-        <div id="sideTemplateDrawer" class="side-drawer" style="display:none;">
-            <div class="drawer-header">
-                <span style="font-weight:800; color:#334155; font-size:14px;" data-i18n="editor_recommended">🎨 추천 디자인</span>
-                <button class="btn-close-drawer" onclick="document.getElementById('sideTemplateDrawer').style.display='none'">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <div style="display:flex; padding:15px 15px 0 15px; gap:8px;">
-                <button id="btnSideTabTpl" class="btn-round" onclick="window.switchSideGroup('group_template')"
-                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#6366f1; color:white; border:none; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);" data-i18n="editor_tab_template">
-                    템플릿
-                </button>
-                <button id="btnSideTabObj" class="btn-round" onclick="window.switchSideGroup('group_asset')"
-                        style="flex:1; justify-content:center; height:36px; font-size:13px; background:#fff; color:#64748b; border:1px solid #e2e8f0; font-weight:bold;" data-i18n="editor_tab_element">
-                    요소
-                </button>
+        <!-- 서브 패널 -->
+        <div id="subPanel" style="display:none;">
+
+            <!-- 1. 템플릿 -->
+            <div id="sub-template" class="sub-content">
+                <div class="sub-panel-header" data-i18n="editor_recommended">🎨 추천 디자인</div>
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <button id="btnSideTabTpl" class="btn-round" onclick="window.switchSideGroup('group_template')"
+                            style="flex:1; justify-content:center; height:36px; font-size:13px; background:#6366f1; color:white; border:none; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);" data-i18n="editor_tab_template">
+                        템플릿
+                    </button>
+                    <button id="btnSideTabObj" class="btn-round" onclick="window.switchSideGroup('group_asset')"
+                            style="flex:1; justify-content:center; height:36px; font-size:13px; background:#fff; color:#64748b; border:1px solid #e2e8f0; font-weight:bold;" data-i18n="editor_tab_element">
+                        요소
+                    </button>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <div style="position:relative;">
+                        <input type="text" id="sideTemplateSearch"
+                               placeholder="검색어 입력 (예: 카페, 세일)" data-i18n-placeholder="ph_search_template"
+                               autocomplete="off"
+                               onkeyup="window.handleSideSearch(this.value)"
+                               style="width:100%; padding:10px 10px 10px 35px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:13px; outline:none;">
+                        <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
+                    </div>
+                </div>
+                <div id="sideTemplateList" class="drawer-content" style="padding-top:0;"></div>
             </div>
 
-            <div class="drawer-search-box" style="padding:15px; margin-bottom:0;">
-                <div style="position:relative;">
-                    <input type="text" id="sideTemplateSearch" 
-                           placeholder="검색어 입력 (예: 카페, 세일)" data-i18n-placeholder="ph_search_template" 
-                           autocomplete="off" 
-                           onkeyup="window.handleSideSearch(this.value)"
-                           style="width:100%; padding:10px 10px 10px 35px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:13px; outline:none;">
-                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
+            <!-- 2. 요소 -->
+            <div id="sub-element" class="sub-content">
+                <div class="sub-panel-header">도형 & 색상</div>
+                <div class="section-title" data-i18n="label_shapes" style="font-size: 12px; margin-bottom: 5px;">SHAPES</div>
+                <div class="shape-panel" style="gap: 4px; margin-bottom:15px;">
+                    <button class="shape-btn" data-shape="rect">■</button>
+                    <button class="shape-btn" data-shape="circle">●</button>
+                    <button class="shape-btn" data-shape="triangle">▲</button>
+                    <button class="shape-btn" data-shape="star">★</button>
+                    <button class="shape-btn" data-shape="heart">♥</button>
+                    <button class="shape-btn" data-shape="arrow">➡</button>
+                    <button class="shape-btn" data-shape="round">▢</button>
+                    <button class="shape-btn" data-shape="line">━</button>
+                </div>
+
+                <div class="section-title" style="font-size: 12px; margin-bottom: 5px;">BACKGROUND</div>
+                <button id="btnBgColor" class="btn-round" style="width:100%; justify-content: flex-start; margin-bottom: 5px; height: 38px;">
+                    <div style="width:20px; height:20px; background:linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius:4px; margin-right:8px; border:1px solid #ddd;"></div>
+                    <span data-i18n="editor_bg_color">배경색 설정</span>
+                </button>
+                <div id="bgColorPanel" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
+                    <div style="font-size:11px; font-weight:bold; color:#666; margin-bottom:5px; text-align:left;" data-i18n="editor_basic_palette">기본 팔레트</div>
+                    <div id="colorPaletteGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;"></div>
+                </div>
+
+                <div class="color-group" style="margin-bottom:5px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span data-i18n="label_fill">🎨 면색상</span>
+                    <input id="fillColor" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
+                </div>
+                <div class="color-group" style="margin-bottom:10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span data-i18n="label_stroke">🖌️ 선색상</span>
+                    <input id="strokeColor" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
                 </div>
             </div>
 
-            <div id="sideTemplateList" class="drawer-content" style="padding-top:0;"></div>
+            <!-- 3. 텍스트 -->
+            <div id="sub-text" class="sub-content">
+                <div class="sub-panel-header">텍스트</div>
+                <button id="btnAddBasicText" class="btn-round" style="width:100%; margin-bottom:10px; border:1px solid #cbd5e1; background:#fff; color:#333; font-weight:bold; padding:10px; display:flex; align-items:center; justify-content:center;">
+                    <span style="display:inline-flex; width:20px; height:20px; background:#222; color:#fff; border-radius:4px; align-items:center; justify-content:center; margin-right:6px; font-size:12px;">T</span>
+                    <span style="font-size: 13px;" data-i18n="btn_add_text">텍스트 추가</span>
+                </button>
+                <button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height: 38px;">
+                    <span data-i18n="btn_font" style="font-size: 13px;">🅰️ 폰트 전체보기</span>
+                </button>
+                <button id="btnTextEffect" class="btn-round" onclick="document.getElementById('textEffectModal').style.display='flex'" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height:38px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; font-weight:bold;">
+                    <span style="font-size:13px;">✨ 텍스트 효과</span>
+                </button>
+                <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:10px; text-align: left;">
+                    <div style="display:flex; gap:4px; margin-bottom:8px;">
+                        <button class="tool-btn" id="btnAlignLeftText" style="flex:1;"><i class="fa-solid fa-align-left"></i></button>
+                        <button class="tool-btn" id="btnAlignCenterText" style="flex:1;"><i class="fa-solid fa-align-center"></i></button>
+                        <button class="tool-btn" id="btnAlignRightText" style="flex:1;"><i class="fa-solid fa-align-right"></i></button>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; color:#666;" data-i18n="editor_size">크기</span>
+                        <input type="range" id="textSize" min="10" max="200" value="50" style="width:100%;">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; color:#666;" data-i18n="editor_char_spacing">자간</span>
+                        <input type="range" id="textCharSpacing" min="-50" max="300" value="0" style="width:100%;">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 30px 1fr; gap:8px; align-items:center;">
+                        <span style="font-size:11px; color:#666;" data-i18n="editor_line_height">행간</span>
+                        <input type="range" id="textLineHeight" min="0.5" max="2.5" step="0.1" value="1.2" style="width:100%;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 업로드 -->
+            <div id="sub-upload" class="sub-content">
+                <div class="sub-panel-header" data-i18n="label_upload">업로드</div>
+                <label class="upload-box" for="imgUpload" style="height: 80px; padding: 15px; margin-bottom:10px;"><span style="font-size:24px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> <span style="font-size: 13px;">Image / PDF</span></label>
+                <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
+                <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="width: 100%; justify-content: center; height: 38px; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_logo_share">로고 공유방</span>
+                </button>
+            </div>
+
+            <!-- 5. AI -->
+            <div id="sub-ai" class="sub-content">
+                <div class="sub-panel-header">AI & Tools</div>
+                <button class="btn-round ai-red" id="btnAIBox" style="width:100%; justify-content: center; height: 38px; margin-bottom: 10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_ai_gen">AI 생성</span></button>
+
+                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <button class="btn-round" id="btnOpenSaveModal" style="flex: 1; justify-content: center; height: 38px;">
+                        <span data-i18n="btn_save_design">💾 저장</span>
+                    </button>
+                    <button class="btn-round" id="btnMyPageSide" style="flex: 1; justify-content: center; height: 38px; background: white; border: 1px solid #ddd; color: #333;">
+                        <span>📂 MY</span>
+                    </button>
+                </div>
+
+                <div class="section-title" style="font-size: 12px; color: #b6b6b6; letter-spacing: 1px; margin-bottom:5px;">무료 다운로드</div>
+                <div style="display:flex; gap:5px; margin-bottom:15px;">
+                    <button id="btnPNG" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-regular fa-image"></i> PNG</button>
+                    <button id="btnPDF" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                </div>
+
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;">
+                    <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between;">
+                        <span data-i18n="tool_size_change">📏 사이즈 변경(mm)</span>
+                        <span id="limitLabel" style="color:#6366f1;">Max: -</span>
+                    </div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input type="number" id="inputUserW" class="ai-input-pretty" placeholder="W" style="margin:0; padding:5px; font-size:12px; text-align:center;">
+                        <span style="color:#999;">x</span>
+                        <input type="number" id="inputUserH" class="ai-input-pretty" placeholder="H" style="margin:0; padding:5px; font-size:12px; text-align:center;">
+                    </div>
+                    <button id="btnApplyUserSize" class="btn-round primary" style="width:100%; margin-top:6px; height:32px; font-size:12px;" data-i18n="btn_save_cost">변경 적용</button>
+                </div>
+
+                <div style="display:flex; gap:5px;">
+                    <button id="btnRotateCanvas" class="btn-round" style="flex:1; justify-content: center;"><i class="fa-solid fa-rotate"></i> <span data-i18n="btn_rotate">회전</span></button>
+                    <button id="btnFitScreen" class="btn-round" style="flex:1; justify-content: center;"><i class="fa-solid fa-compress"></i> <span data-i18n="btn_fit_screen">맞춤</span></button>
+                </div>
+            </div>
+
+            <!-- 6. 누끼 -->
+            <div id="sub-cutout" class="sub-content">
+                <div class="sub-panel-header">누끼 & 효과</div>
+
+                <button id="btnCutout" class="btn-round" style="width: 100%; height: 45px; border: none; background: linear-gradient(135deg, #ff9a9e 0%, #ff6a88 100%); color: white; font-weight: 800; font-size: 13px; box-shadow: 0 4px 10px rgba(255, 106, 136, 0.4); display: flex; align-items: center; justify-content: center; margin-bottom:8px;">
+                    ✂️ <span data-i18n="btn_bg_remove">배경 제거하기</span>
+                </button>
+
+                <button id="btnUpscale" class="btn-round" style="width: 100%; height: 45px; border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 800; font-size: 13px; box-shadow: 0 4px 10px rgba(118, 75, 162, 0.4); display: flex; align-items: center; justify-content: center; margin-bottom:10px;">
+                    ✨ <span data-i18n="btn_enhance">해상도UP</span>
+                </button>
+
+                <div class="section-title" style="font-size: 12px; margin-bottom: 5px;">오려내기</div>
+                <button id="btn-create-outline" class="btn-round" style="width:100%; margin-bottom:5px; justify-content:center; height: 36px; font-size: 11px;">
+                    ✂️ <span data-i18n="btn_make_cutline">오려내기 칼선</span>
+                </button>
+                <div style="display:flex; gap:5px; margin-bottom: 10px;">
+                    <button id="btn-make-keyring" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">
+                        <span data-i18n="btn_keyring_hole">키링 고리</span>
+                    </button>
+                    <button id="btn-make-standee" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">
+                        <span data-i18n="btn_stand_base">등신대</span>
+                    </button>
+                </div>
+
+                <button class="tool-btn" id="btnOutline" style="width:100%; height: 36px; font-size: 11px; background:white; border:1px solid #ddd; color:#333; margin-bottom:10px;">
+                    🔲 <span data-i18n="btn_text_outline">외곽선</span>
+                </button>
+
+                <div class="section-title" style="font-size: 11px; text-align: left;" data-i18n="editor_stroke_width">선 두께</div>
+                <input type="range" id="globalStroke" min="0" max="30" value="0" style="width:100%;">
+                <div style="display:flex; gap:5px; margin-top:5px; margin-bottom:10px;">
+                    <button class="tool-btn" id="btnStrokeMiter" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-square"></i> <span data-i18n="style_miter">각지게</span></button>
+                    <button class="tool-btn" id="btnStrokeRound" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-circle"></i> <span data-i18n="style_round">둥글게</span></button>
+                </div>
+
+                <div class="section-title" style="font-size: 11px; text-align: left;" data-i18n="label_opacity">투명도</div>
+                <input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
+            </div>
+
         </div>
 
         <div class="stage" id="stage">
@@ -1371,67 +1430,6 @@
                 </div>
 
                 <div class="panel-box" id="panelText" style="display:none;"></div>
-                
-                <div class="panel-box" style="padding: 10px 12px; text-align: center;">
-                    <div class="section-title" style="margin-top:0; color:#333; font-size: 12px; margin-bottom: 5px;" data-i18n="label_ai_image_tools">AI & Cutout</div>
-                    <div class="tool-box-group" style="padding: 0;">
-                        <button id="btn-create-outline" class="btn-round" style="width:100%; margin-bottom:5px; justify-content:center; height: 36px; font-size: 11px;">
-                            ✂️ <span data-i18n="btn_make_cutline">오려내기 칼선</span>
-                        </button>
-                        <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                            <button id="btn-make-keyring" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">
-                                <span data-i18n="btn_keyring_hole">키링 고리</span>
-                            </button>
-                            <button id="btn-make-standee" class="btn-round" style="flex:1; justify-content: center; height:32px; font-size:11px;">
-                                <span data-i18n="btn_stand_base">등신대</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
-    
-    <button id="btnUpscale" class="btn-round" style="
-        width: 100%; 
-        height: 45px; 
-        border: none; 
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-        color: white; 
-        font-weight: 800; 
-        font-size: 13px; 
-        box-shadow: 0 4px 10px rgba(118, 75, 162, 0.4);
-        display: flex; align-items: center; justify-content: center;">
-        ✨ <span data-i18n="btn_enhance">A3이상 사진 해상도UP</span>
-    </button>
-
-    <button id="btnCutout" class="btn-round" style="
-        width: 100%; 
-        height: 45px; 
-        border: none; 
-        background: linear-gradient(135deg, #ff9a9e 0%, #ff6a88 100%); 
-        color: white; 
-        font-weight: 800; 
-        font-size: 13px; 
-        box-shadow: 0 4px 10px rgba(255, 106, 136, 0.4);
-        display: flex; align-items: center; justify-content: center;">
-        ✂️ <span data-i18n="btn_bg_remove">배경 제거하기</span>
-    </button>
-
-    <button class="tool-btn" id="btnOutline" style="height: 36px; font-size: 11px; background:white; border:1px solid #ddd; color:#333;">
-        🔲 <span data-i18n="btn_text_outline">외곽선</span>
-    </button>
-
-</div>
-                    
-                    <div class="section-title" style="margin-top:10px; font-size: 11px; text-align: left;" data-i18n="editor_stroke_width">선 두께</div>
-                    <input type="range" id="globalStroke" min="0" max="30" value="0" style="width:100%;">
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <button class="tool-btn" id="btnStrokeMiter" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-square"></i> <span data-i18n="style_miter">각지게</span></button>
-                        <button class="tool-btn" id="btnStrokeRound" style="flex:1; height: 30px; font-size: 11px;"><i class="fa-solid fa-circle"></i> <span data-i18n="style_round">둥글게</span></button>
-                    </div>
-
-                    <div class="section-title" style="margin-top: 10px; font-size: 11px; text-align: left;" data-i18n="label_opacity">투명도</div>
-                    <input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
-                </div>
             </div>
             <canvas id="designCanvas"></canvas>
         </div>
@@ -2253,7 +2251,7 @@ window.filterFxCards = function(cat, btn) {
     let sideSearchTimeout;
     window.handleSideSearch = function(keyword) {
         if (sideSearchTimeout) clearTimeout(sideSearchTimeout);
-        
+
         sideSearchTimeout = setTimeout(() => {
             const currentKey = window.currentProductKey || 'custom';
             if (window.loadSideBarTemplates) {
@@ -2261,6 +2259,40 @@ window.filterFxCards = function(cat, btn) {
             }
         }, 500);
     };
+
+    // ─── 캔바 스타일 서브패널 토글 ───
+    window.toggleSubPanel = function(panelId) {
+        const subPanel = document.getElementById('subPanel');
+        const allContents = subPanel.querySelectorAll('.sub-content');
+        const allIcons = document.querySelectorAll('.icon-item');
+        const target = document.getElementById(panelId);
+        const clickedIcon = document.querySelector('.icon-item[data-panel="' + panelId + '"]');
+
+        // 같은 패널 클릭 → 닫기
+        if (target && target.style.display === 'block') {
+            subPanel.style.display = 'none';
+            allContents.forEach(c => c.style.display = 'none');
+            allIcons.forEach(i => i.classList.remove('active'));
+            return;
+        }
+
+        // 다른 패널 열기
+        allContents.forEach(c => c.style.display = 'none');
+        allIcons.forEach(i => i.classList.remove('active'));
+        if (target) target.style.display = (panelId === 'sub-template') ? 'flex' : 'block';
+        subPanel.style.display = 'block';
+        if (clickedIcon) clickedIcon.classList.add('active');
+
+        // 템플릿 패널 열릴 때 데이터 로드 트리거
+        if (panelId === 'sub-template') {
+            window.switchSideGroup && window.switchSideGroup('group_template');
+        }
+    };
+
+    // 아이콘 클릭 이벤트 바인딩
+    document.querySelectorAll('.icon-item').forEach(function(item) {
+        item.onclick = function() { window.toggleSubPanel(item.dataset.panel); };
+    });
 </script>
 <div id="generalProductModal" class="modal-bg" style="z-index: 15500; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 900px; max-width: 95%; overflow: hidden; padding: 0; max-height: 90vh; overflow-y: auto;">

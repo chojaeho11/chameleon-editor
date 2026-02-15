@@ -1298,14 +1298,14 @@ window.deleteMobileObject = function() {
 };
 
 window.toggleMobilePanel = function(side) {
-    const leftPanel = document.getElementById('toolsPanel');
+    const subPanel = document.getElementById('subPanel');
     const rightPanel = document.getElementById('rightStackPanel');
     if (side === 'left') {
-        if (leftPanel) leftPanel.classList.toggle('open');
+        if (subPanel) subPanel.classList.toggle('open');
         if (rightPanel) rightPanel.classList.remove('open');
     } else if (side === 'right') {
         if (rightPanel) rightPanel.classList.toggle('open');
-        if (leftPanel) leftPanel.classList.remove('open');
+        if (subPanel) subPanel.classList.remove('open');
     }
 };
 

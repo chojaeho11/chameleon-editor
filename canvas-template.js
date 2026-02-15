@@ -1098,11 +1098,14 @@ window.switchSideGroup = function(group) {
 
 // [2] 사이드바 로드 함수
 window.loadSideBarTemplates = async function(targetProductKey, keyword = "", page = 0) {
-    const drawer = document.getElementById("sideTemplateDrawer");
+    const drawer = document.getElementById("sub-template");
     const list = document.getElementById("sideTemplateList");
     if (!drawer || !list) return;
 
-    if(drawer.style.display !== "flex") drawer.style.display = "flex";
+    // 서브패널이 아직 안 열려있으면 템플릿 패널 열기
+    if (drawer.style.display !== 'block') {
+        window.toggleSubPanel && window.toggleSubPanel('sub-template');
+    }
     
     sideCurrentPage = page;
     // [수정] 다국어 적용

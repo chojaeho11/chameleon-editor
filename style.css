@@ -2990,42 +2990,101 @@ body {
         .star-score { color: #334155; font-weight: 800; margin-left: 2px; }
         .star-icon { color: #f59e0b; }
         /* =========================================
-   [추가] 에디터 레이아웃 Flex 변경 및 사이드 패널 스타일
+   [캔바 스타일] 아이콘바 + 서브패널 레이아웃
    ========================================= */
 .editor-wrap {
-    display: flex !important;       /* Grid -> Flex 변경 */
+    display: flex !important;
     flex-direction: row !important;
     height: 100% !important;
     width: 100vw !important;
     overflow: hidden !important;
 }
 
-/* 왼쪽 도구창 고정 */
-.side {
-    width: 280px !important;
-    flex-shrink: 0 !important;
-    z-index: 20 !important;
-    border-right: 1px solid #e2e8f0;
-}
+/* 기존 .side 숨김 (새 아이콘바로 대체) */
+.side { display: none !important; }
 
-/* 추천 템플릿 패널 (숨김/표시) */
-.side-drawer {
-    width: 260px !important;
-    flex-shrink: 0 !important;
-    background: #ffffff;
-    border-right: 1px solid #e2e8f0;
-    display: none; /* JS로 제어 */
+/* 좌측 아이콘 바 */
+#iconBar {
+    width: 72px;
+    flex-shrink: 0;
+    background: #1e1e2e;
+    display: flex;
     flex-direction: column;
-    z-index: 15;
-    animation: drawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    align-items: center;
+    padding-top: 8px;
+    gap: 2px;
+    z-index: 25;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-right: 1px solid #2d2d44;
+}
+.icon-item {
+    width: 64px;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+    color: #94a3b8;
+    position: relative;
+}
+.icon-item i { font-size: 20px; }
+.icon-item span { font-size: 10px; font-weight: 600; letter-spacing: -0.3px; white-space: nowrap; }
+.icon-item:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+.icon-item.active {
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+}
+.icon-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 3px;
+    background: #6366f1;
+    border-radius: 0 3px 3px 0;
 }
 
-/* 캔버스 영역 (남은 공간 채우기) */
+/* 서브 패널 */
+#subPanel {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #e2e8f0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 20;
+    height: 100%;
+    animation: subPanelSlide 0.2s ease-out;
+}
+@keyframes subPanelSlide {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.sub-content { display: none; padding: 15px 12px; }
+.sub-content .section-title { margin-top: 15px; margin-bottom: 8px; }
+.sub-content .section-title:first-child { margin-top: 0; }
+/* 템플릿 패널: 리스트가 패널 내에서 스크롤 */
+#sub-template { flex-direction: column; height: 100%; padding: 15px 12px; overflow: hidden; }
+#sub-template .drawer-content { flex: 1; overflow-y: auto; min-height: 0; }
+.sub-panel-header {
+    font-size: 14px; font-weight: 800; color: #334155;
+    padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 12px;
+}
+
+/* 캔버스 영역 */
 .stage {
     flex: 1 !important;
     min-width: 0 !important;
     position: relative !important;
 }
+
+/* 기존 side-drawer 숨김 (서브패널에 통합) */
+.side-drawer { display: none !important; }
 
 /* 패널 닫기 버튼 스타일 */
 .btn-close-drawer {
@@ -3046,6 +3105,31 @@ body {
     from { width: 0; opacity: 0; transform: translateX(-20px); }
     to { width: 260px; opacity: 1; transform: translateX(0); }
 }
+
+/* =========================================
+   [모바일] 캔바 스타일 사이드바
+   ========================================= */
+@media (max-width: 768px) {
+    #iconBar { display: none !important; }
+
+    #subPanel {
+        position: fixed !important;
+        top: 50px; bottom: 0; left: 0;
+        width: 85% !important; max-width: 320px;
+        z-index: 10000 !important;
+        transform: translateX(-120%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: block !important;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        padding: 10px !important;
+    }
+    #subPanel.open { transform: translateX(0); }
+
+    /* 모바일: 모든 서브패널 내용 보이기 (스크롤) */
+    #subPanel .sub-content { display: block !important; margin-bottom: 10px; padding: 10px 8px; }
+    #subPanel .sub-panel-header { font-size: 13px; padding-bottom: 8px; margin-bottom: 8px; }
+}
+
 /* =========================================
    [필수 추가] 추천 템플릿 내부 디자인 (크기 오류 해결용)
    ========================================= */
