@@ -338,9 +338,6 @@
         // 1. [전단지] — 심플 스타일 (제목 + 부제 + 섹션2개 + 밑줄)
         if (type === 'basic') {
             const ACCENT = '#d4826a';      // 따뜻한 코랄/살몬 계열
-            const TEXT_DARK = '#3a3a3a';
-            const TEXT_MED = '#666666';
-            const TEXT_LIGHT = '#999999';
             const LINE_COLOR = '#d4826a';
 
             const refS = Math.min(boardW, boardH);
@@ -356,7 +353,7 @@
             // (1) 브랜드명 (작은 글씨, 상단)
             const brandText = new fabric.IText(d.brand, {
                 fontFamily: F.POINT, fontSize: refS * 0.028,
-                fill: TEXT_LIGHT, fontWeight: '300',
+                fill: ACCENT, fontWeight: '100',
                 charSpacing: 300,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -364,10 +361,10 @@
             objs.push(brandText);
             curY += refS * 0.06;
 
-            // (2) 메인 타이틀 (큰 글씨, 강조)
+            // (2) 메인 타이틀 (큰 글씨)
             const mainTitle = new fabric.IText(d.main, {
                 fontFamily: F.TITLE, fontSize: refS * 0.12,
-                fill: ACCENT, fontWeight: '900',
+                fill: ACCENT, fontWeight: '100',
                 textAlign: 'center', lineHeight: 1.1,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -378,7 +375,7 @@
             // (3) 서브타이틀
             const subText = new fabric.IText(d.sub, {
                 fontFamily: F.SUB, fontSize: refS * 0.032,
-                fill: TEXT_MED, fontWeight: '300',
+                fill: ACCENT, fontWeight: '100',
                 textAlign: 'center', lineHeight: 1.4,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -388,7 +385,7 @@
 
             // (4) 첫 번째 구분선
             const line1 = new fabric.Rect({
-                width: contentW * 0.6, height: 1.5, fill: LINE_COLOR,
+                width: contentW * 0.6, height: 1, fill: LINE_COLOR,
                 originX: 'center', originY: 'center',
                 left: cx, top: curY
             });
@@ -399,7 +396,7 @@
             d.sections.forEach((sec, i) => {
                 const sectionTitle = new fabric.IText(sec.title, {
                     fontFamily: F.SUB, fontSize: refS * 0.04,
-                    fill: ACCENT, fontWeight: '700',
+                    fill: ACCENT, fontWeight: '100',
                     textAlign: 'center',
                     originX: 'center', originY: 'top',
                     left: cx, top: curY
@@ -409,7 +406,7 @@
 
                 const sectionItems = new fabric.IText(sec.items, {
                     fontFamily: F.SUB, fontSize: refS * 0.025,
-                    fill: TEXT_DARK, fontWeight: '300',
+                    fill: ACCENT, fontWeight: '100',
                     textAlign: 'center', lineHeight: 1.5,
                     originX: 'center', originY: 'top',
                     left: cx, top: curY
@@ -421,7 +418,7 @@
             // (6) 이벤트 섹션
             const eventTitle = new fabric.IText(d.event, {
                 fontFamily: F.SUB, fontSize: refS * 0.04,
-                fill: ACCENT, fontWeight: '700',
+                fill: ACCENT, fontWeight: '100',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -431,7 +428,7 @@
 
             const eventDesc = new fabric.IText(d.eventDesc, {
                 fontFamily: F.SUB, fontSize: refS * 0.025,
-                fill: TEXT_DARK, fontWeight: '300',
+                fill: ACCENT, fontWeight: '100',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -441,7 +438,7 @@
 
             // (7) 두 번째 구분선
             const line2 = new fabric.Rect({
-                width: contentW * 0.6, height: 1.5, fill: LINE_COLOR,
+                width: contentW * 0.6, height: 1, fill: LINE_COLOR,
                 originX: 'center', originY: 'center',
                 left: cx, top: curY
             });
@@ -451,7 +448,7 @@
             // (8) 하단 연락처
             const footerText = new fabric.IText(d.footer, {
                 fontFamily: F.SUB, fontSize: refS * 0.028,
-                fill: TEXT_MED, fontWeight: '300',
+                fill: ACCENT, fontWeight: '100',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -461,7 +458,7 @@
 
             const contactText = new fabric.IText(d.contact, {
                 fontFamily: F.SUB, fontSize: refS * 0.022,
-                fill: TEXT_LIGHT, fontWeight: '300',
+                fill: ACCENT, fontWeight: '100',
                 textAlign: 'center', lineHeight: 1.4,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
