@@ -1476,17 +1476,14 @@ window.applyTextTemplate = function(preset, idx) {
     const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
     const t = preset.texts[country] || preset.texts['EN'];
 
-    var cw = canvas.getWidth();
-    var ch = canvas.getHeight();
-    var zoom = canvas.getZoom ? canvas.getZoom() : 1;
-    var centerX = cw / zoom / 2;
-    var centerY = ch / zoom / 2;
-
-    // 캔버스 크기에 맞게 폰트 크기 조정 (기본 800px 기준)
-    var scale = Math.min(cw / zoom, ch / zoom) / 800;
+    // 대지 크기 기준으로 폰트 크기 조정
+    var board = canvas.getObjects().find(function(o) { return o.isBoard; });
+    var baseW = board ? board.width * board.scaleX : 800;
+    var scale = baseW / 800;
     var titleFontSize = Math.round(preset.titleStyle.fontSize * scale);
     var subFontSize = Math.round(preset.subStyle.fontSize * scale);
 
+    // 타이틀 텍스트 (좌표는 임시 — addToCenter가 재배치)
     var titleObj = new fabric.IText(t.title, {
         fontSize: titleFontSize,
         fontWeight: preset.titleStyle.fontWeight || 'bold',
@@ -1494,26 +1491,37 @@ window.applyTextTemplate = function(preset, idx) {
         fontFamily: preset.titleStyle.fontFamily || 'Arial',
         originX: 'center',
         originY: 'center',
-        left: centerX,
-        top: centerY - titleFontSize * 0.7,
         textAlign: 'center',
         editable: true
     });
 
+    // 서브 텍스트
     var subObj = new fabric.IText(t.sub, {
         fontSize: subFontSize,
         fill: preset.subStyle.fill,
         fontFamily: preset.subStyle.fontFamily || 'Arial',
         originX: 'center',
         originY: 'center',
-        left: centerX,
-        top: centerY + subFontSize * 1.2,
         textAlign: 'center',
         editable: true
     });
 
-    canvas.add(titleObj);
-    canvas.add(subObj);
+    // addToCenter로 대지 중앙에 배치 후, 타이틀은 위로, 서브는 아래로 오프셋
+    if (window.addToCenter) {
+        window.addToCenter(titleObj);
+        window.addToCenter(subObj);
+    } else {
+        canvas.add(titleObj);
+        canvas.add(subObj);
+    }
+
+    // 타이틀을 위로, 서브를 아래로 약간 이동
+    var gap = titleFontSize * 0.6;
+    titleObj.set('top', titleObj.top - gap);
+    subObj.set('top', subObj.top + gap);
+    titleObj.setCoords();
+    subObj.setCoords();
+
     canvas.setActiveObject(titleObj);
     canvas.requestRenderAll();
 };

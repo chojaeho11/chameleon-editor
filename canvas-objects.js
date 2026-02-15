@@ -1075,6 +1075,7 @@ export function addToCenter(obj) {
     canvas.setActiveObject(obj);
     canvas.requestRenderAll();
 }
+window.addToCenter = addToCenter;
 
 function initSelectionEffects() {
     canvas.on("selection:created", syncSelectionUI);
