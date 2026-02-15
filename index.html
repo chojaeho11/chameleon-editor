@@ -402,9 +402,6 @@
     <div class="hero-section">
     <h1 class="hero-title" data-i18n="hero_title">광고사 기획사 파티플래너라면? <br><span>카멜레온</span>과 함께해요.</h1>
     <p class="hero-desc" data-i18n="hero_desc">대한민국 1등 광고인쇄 도매쇼핑몰, 로고를 공유하고 함께 만드는 무료에디터</p>
-    <button onclick="window.openDesignStartModal()" style="margin-top:12px; padding:14px 36px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:50px; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 4px 15px rgba(99,102,241,0.4); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <i class="fa-solid fa-palette"></i> 무료 디자인 시작하기
-    </button>
 </div>
 <!-- 퀵메뉴와퍼 -->
 <div class="quick-menu-wrapper">
@@ -487,6 +484,14 @@
 
     
     <div class="quick-menu-track" id="quickMenuContainer"></div>
+
+    <!-- 무료 디자인 시작 버튼 -->
+    <div style="text-align:center; margin: 20px auto 20px auto; max-width:1000px;">
+        <button id="btnDesignStart" style="padding:16px 48px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:50px; font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 4px 15px rgba(99,102,241,0.4); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <i class="fa-solid fa-palette"></i> 무료 디자인 시작하기
+        </button>
+    </div>
+
     <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
         <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">대량주문 전용 VIP 라운지</h3>
         <p style="margin: 0 0 20px 0; color: #64748b; font-size: 15px;" data-i18n="home_vip_desc">
@@ -6308,6 +6313,11 @@ window.openDesignStartModal = function() {
     document.getElementById('designStartModal').style.display = 'flex';
     window.dsmBackToMain();
 };
+// 버튼 바인딩 (onclick이 아닌 addEventListener로 — 스크립트 로드 순서 문제 방지)
+(function() {
+    const btn = document.getElementById('btnDesignStart');
+    if (btn) btn.addEventListener('click', () => window.openDesignStartModal());
+})();
 
 // 디지털 판형 → 바로 에디터 열기
 window.dsmOpenEditor = async function(wMM, hMM, label) {
