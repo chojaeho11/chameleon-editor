@@ -191,17 +191,17 @@ window.loadSavedDesigns = async function() {
                 : 'background:#f1f5f9; display:flex; align-items:center; justify-content:center;';
             const thumbInner = item.thumb_url ? '' : '<i class="fa-solid fa-file" style="color:#cbd5e1; font-size:16px;"></i>';
 
-            html += '<div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer; transition:all 0.15s; background:#fff;" '
-                + 'onmouseenter="this.style.borderColor=\'#6366f1\';this.style.background=\'#f8fafc\'" '
-                + 'onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'">'
-                + '<div style="width:100%; aspect-ratio:4/3; border-radius:8px; overflow:hidden; border:1px solid #f1f5f9;' + thumbStyle + '">' + thumbInner + '</div>'
-                + '<div style="width:100%;">'
-                + '<div style="font-size:12px; font-weight:400; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + title + '</div>'
-                + '<div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">'
+            html += '<div style="border-radius:10px; border:1px solid #e2e8f0; overflow:hidden; cursor:pointer; transition:all 0.15s; background:#fff;" '
+                + 'onmouseenter="this.style.borderColor=\'#6366f1\';this.style.boxShadow=\'0 2px 8px rgba(99,102,241,0.12)\'" '
+                + 'onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.boxShadow=\'none\'">'
+                + '<div style="width:100%; aspect-ratio:4/3;' + thumbStyle + '">' + thumbInner + '</div>'
+                + '<div style="padding:8px 10px;">'
+                + '<div style="font-size:12px; font-weight:500; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + title + '</div>'
+                + '<div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">'
                 + '<span style="font-size:10px; color:#94a3b8;">' + dateStr + '</span>'
-                + '<div style="display:flex; gap:6px;">'
-                + '<button onclick="event.stopPropagation(); window._loadSavedDesign(' + item.id + ')" style="font-size:10px; padding:2px 8px; border-radius:4px; border:1px solid #6366f1; background:#fff; color:#6366f1; cursor:pointer;">Load</button>'
-                + '<button onclick="event.stopPropagation(); window._deleteSavedDesign(' + item.id + ')" style="font-size:10px; padding:2px 8px; border-radius:4px; border:1px solid #e2e8f0; background:#fff; color:#ef4444; cursor:pointer;">Delete</button>'
+                + '<div style="display:flex; gap:5px;">'
+                + '<button onclick="event.stopPropagation(); window._loadSavedDesign(' + item.id + ')" style="font-size:10px; padding:3px 10px; border-radius:6px; border:1px solid #6366f1; background:#6366f1; color:#fff; cursor:pointer; font-weight:500;">Load</button>'
+                + '<button onclick="event.stopPropagation(); window._deleteSavedDesign(' + item.id + ')" style="font-size:10px; padding:3px 10px; border-radius:6px; border:1px solid #e2e8f0; background:#fff; color:#94a3b8; cursor:pointer;">Del</button>'
                 + '</div></div></div></div>';
         });
 
