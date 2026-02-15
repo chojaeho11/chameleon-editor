@@ -3157,13 +3157,25 @@ body {
         top: auto !important;
         width: 100% !important;
         max-width: 100% !important;
-        max-height: 50vh;
+        max-height: calc(100vh - 120px);
         z-index: 10000 !important;
         border-radius: 16px 16px 0 0;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
-        padding: 12px !important;
+        padding: 0 12px 12px 12px !important;
         overflow-y: auto;
         overflow-x: hidden;
+        transition: transform 0.3s ease;
+    }
+    /* 드래그 핸들 */
+    #subPanel::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: #cbd5e1;
+        border-radius: 2px;
+        margin: 10px auto 8px;
+        flex-shrink: 0;
     }
     #subPanel .sub-panel-header { font-size: 13px; padding-bottom: 8px; margin-bottom: 8px; }
 

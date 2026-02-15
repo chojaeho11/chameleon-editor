@@ -2314,6 +2314,51 @@ window.filterFxCards = function(cat, btn) {
         item.onclick = function() { window.toggleSubPanel(item.dataset.panel); };
     });
 
+    // ─── [모바일] 바텀시트 드래그로 닫기 ───
+    (function() {
+        if (window.innerWidth > 768) return;
+        const subPanel = document.getElementById('subPanel');
+        if (!subPanel) return;
+
+        let startY = 0, diffY = 0, dragging = false;
+
+        subPanel.addEventListener('touchstart', function(e) {
+            // 스크롤이 맨 위일 때만 드래그 허용
+            if (subPanel.scrollTop > 5) return;
+            startY = e.touches[0].clientY;
+            diffY = 0;
+            dragging = true;
+            subPanel.style.transition = 'none';
+        }, { passive: true });
+
+        subPanel.addEventListener('touchmove', function(e) {
+            if (!dragging) return;
+            diffY = e.touches[0].clientY - startY;
+            if (diffY > 0) {
+                subPanel.style.transform = 'translateY(' + diffY + 'px)';
+                e.preventDefault();
+            } else {
+                dragging = false;
+                subPanel.style.transform = '';
+            }
+        }, { passive: false });
+
+        subPanel.addEventListener('touchend', function() {
+            if (!dragging) return;
+            dragging = false;
+            subPanel.style.transition = 'transform 0.3s ease';
+            if (diffY > 80) {
+                // 닫기
+                subPanel.style.display = 'none';
+                subPanel.style.transform = '';
+                document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
+                document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+            } else {
+                subPanel.style.transform = '';
+            }
+        });
+    })();
+
     // ─── 텍스트 패널 색상 ↔ 요소 패널 색상 동기화 ───
     (function() {
         const fillEl = document.getElementById('fillColor');
