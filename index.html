@@ -1063,6 +1063,12 @@
             <div class="icon-item" data-panel="sub-cutout">
                 <i class="fa-solid fa-scissors"></i><span data-i18n="menu_cutout">누끼</span>
             </div>
+            <div class="icon-item" data-panel="sub-save">
+                <i class="fa-solid fa-floppy-disk"></i><span>저장</span>
+            </div>
+            <div class="icon-item" data-panel="sub-page">
+                <i class="fa-solid fa-copy"></i><span>PAGE</span>
+            </div>
         </div>
 
         <!-- 서브 패널 -->
@@ -1161,6 +1167,15 @@
                         <input type="range" id="textLineHeight" min="0.5" max="2.5" step="0.1" value="1.2" style="width:100%;">
                     </div>
                 </div>
+
+                <div class="color-group" style="margin-bottom:5px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span data-i18n="label_fill">🎨 면색상</span>
+                    <input id="textPanelFill" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
+                </div>
+                <div class="color-group" style="margin-bottom:10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span data-i18n="label_stroke">🖌️ 선색상</span>
+                    <input id="textPanelStroke" type="color" class="color-picker" value="#000000" style="width: 25px; height: 25px;">
+                </div>
             </div>
 
             <!-- 4. 업로드 -->
@@ -1168,30 +1183,25 @@
                 <div class="sub-panel-header" data-i18n="label_upload">업로드</div>
                 <label class="upload-box" for="imgUpload" style="height: 80px; padding: 15px; margin-bottom:10px;"><span style="font-size:24px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> <span style="font-size: 13px;">Image / PDF</span></label>
                 <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
-                <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="width: 100%; justify-content: center; height: 38px; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1;">
+                <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="width: 100%; justify-content: center; height: 38px; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1; margin-bottom:12px;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_logo_share">로고 공유방</span>
                 </button>
+
+                <div class="section-title" style="font-size:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>📁 내 업로드</span>
+                    <button id="btnRefreshUploads" class="tool-btn" style="font-size:10px; padding:2px 8px; height:24px;" onclick="window.loadMyUploads && window.loadMyUploads()">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
+                </div>
+                <div id="myUploadGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; min-height:60px;">
+                    <div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:15px 0;">로그인 후 이용 가능</div>
+                </div>
             </div>
 
             <!-- 5. AI -->
             <div id="sub-ai" class="sub-content">
                 <div class="sub-panel-header">AI & Tools</div>
                 <button class="btn-round ai-red" id="btnAIBox" style="width:100%; justify-content: center; height: 38px; margin-bottom: 10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_ai_gen">AI 생성</span></button>
-
-                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                    <button class="btn-round" id="btnOpenSaveModal" style="flex: 1; justify-content: center; height: 38px;">
-                        <span data-i18n="btn_save_design">💾 저장</span>
-                    </button>
-                    <button class="btn-round" id="btnMyPageSide" style="flex: 1; justify-content: center; height: 38px; background: white; border: 1px solid #ddd; color: #333;">
-                        <span>📂 MY</span>
-                    </button>
-                </div>
-
-                <div class="section-title" style="font-size: 12px; color: #b6b6b6; letter-spacing: 1px; margin-bottom:5px;">무료 다운로드</div>
-                <div style="display:flex; gap:5px; margin-bottom:15px;">
-                    <button id="btnPNG" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-regular fa-image"></i> PNG</button>
-                    <button id="btnPDF" class="btn-round" style="flex:1; justify-content: center; height: 36px;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                </div>
 
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;">
                     <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between;">
@@ -1250,6 +1260,41 @@
 
                 <div class="section-title" style="font-size: 11px; text-align: left;" data-i18n="label_opacity">투명도</div>
                 <input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
+            </div>
+
+            <!-- 7. 저장 -->
+            <div id="sub-save" class="sub-content">
+                <div class="sub-panel-header">저장 & 내보내기</div>
+                <button class="btn-round" id="btnOpenSaveModal" style="width:100%; justify-content: center; height: 42px; margin-bottom:8px; background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border:none; font-weight:bold;">
+                    <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_design" style="margin-left:4px;">디자인 저장</span>
+                </button>
+                <button class="btn-round" id="btnMyPageSide" style="width:100%; justify-content: center; height: 42px; margin-bottom:15px; background: white; border: 1px solid #ddd; color: #333;">
+                    <i class="fa-solid fa-folder-open"></i> <span style="margin-left:4px;">MY page</span>
+                </button>
+
+                <div class="section-title" style="font-size: 12px; color: #b6b6b6; letter-spacing: 1px; margin-bottom:8px;">무료 다운로드</div>
+                <button id="btnPNG" class="btn-round" style="width:100%; justify-content: center; height: 40px; margin-bottom:6px;"><i class="fa-regular fa-image"></i> <span style="margin-left:4px;">PNG 다운로드</span></button>
+                <button id="btnPDF" class="btn-round" style="width:100%; justify-content: center; height: 40px;"><i class="fa-solid fa-file-pdf"></i> <span style="margin-left:4px;">PDF 다운로드</span></button>
+            </div>
+
+            <!-- 8. 페이지 -->
+            <div id="sub-page" class="sub-content">
+                <div class="sub-panel-header">페이지 관리</div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:15px;">
+                    <button class="btn-round" id="btnPagePrevSide" onclick="window.changePage(-1)" style="width:40px; height:40px; justify-content:center; padding:0;">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span id="pageCounterSide" style="font-weight:800; font-size:16px; min-width:70px; text-align:center; color:#334155;">1 / 1</span>
+                    <button class="btn-round" id="btnPageNextSide" onclick="window.changePage(1)" style="width:40px; height:40px; justify-content:center; padding:0;">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+                <button class="btn-round" onclick="window.addPage()" style="width:100%; justify-content:center; height:42px; margin-bottom:8px; background:#6366f1; color:#fff; border:none; font-weight:bold;">
+                    <i class="fa-solid fa-plus"></i> <span style="margin-left:4px;">페이지 추가</span>
+                </button>
+                <button class="btn-round" onclick="window.deletePage()" style="width:100%; justify-content:center; height:42px; background:#fff; border:1px solid #ef4444; color:#ef4444;">
+                    <i class="fa-regular fa-trash-can"></i> <span style="margin-left:4px;">현재 페이지 삭제</span>
+                </button>
             </div>
 
         </div>
@@ -1349,16 +1394,6 @@
                 
                 <button class="btn-icon-only" id="btnPageNext" onclick="window.changePage(1)" title="다음 페이지">
                     <i class="fa-solid fa-chevron-right"></i>
-                </button>
-
-                <div style="width:1px; height:14px; background:#cbd5e1; margin:0 8px;"></div>
-
-                <button class="btn-text-icon" onclick="window.addPage()" title="Page">
-                    <i class="fa-solid fa-plus"></i> <span style="font-size:12px; font-weight:bold;">Page</span>
-                </button>
-                
-                <button class="btn-text-icon delete" onclick="window.deletePage()" title="현재 페이지 삭제">
-                    <i class="fa-regular fa-trash-can"></i>
                 </button>
             </div>
             <div class="bottom-dock">
@@ -2283,9 +2318,11 @@ window.filterFxCards = function(cat, btn) {
         subPanel.style.display = 'block';
         if (clickedIcon) clickedIcon.classList.add('active');
 
-        // 템플릿 패널 열릴 때 데이터 로드 트리거
+        // 패널별 데이터 로드 트리거
         if (panelId === 'sub-template') {
             window.switchSideGroup && window.switchSideGroup('group_template');
+        } else if (panelId === 'sub-upload') {
+            window.loadMyUploads && window.loadMyUploads();
         }
     };
 
@@ -2293,6 +2330,113 @@ window.filterFxCards = function(cat, btn) {
     document.querySelectorAll('.icon-item').forEach(function(item) {
         item.onclick = function() { window.toggleSubPanel(item.dataset.panel); };
     });
+
+    // ─── 텍스트 패널 색상 ↔ 요소 패널 색상 동기화 ───
+    (function() {
+        const fillEl = document.getElementById('fillColor');
+        const fillText = document.getElementById('textPanelFill');
+        const strokeEl = document.getElementById('strokeColor');
+        const strokeText = document.getElementById('textPanelStroke');
+
+        function applyFill(val) {
+            const c = window.canvas; if (!c) return;
+            const obj = c.getActiveObject(); if (!obj) return;
+            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('fill', val));
+            else obj.set('fill', val);
+            c.requestRenderAll();
+        }
+        function applyStroke(val) {
+            const c = window.canvas; if (!c) return;
+            const obj = c.getActiveObject(); if (!obj) return;
+            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('stroke', val));
+            else obj.set('stroke', val);
+            c.requestRenderAll();
+        }
+        if (fillText) fillText.oninput = function() {
+            applyFill(fillText.value);
+            if (fillEl) fillEl.value = fillText.value;
+        };
+        if (strokeText) strokeText.oninput = function() {
+            applyStroke(strokeText.value);
+            if (strokeEl) strokeEl.value = strokeText.value;
+        };
+        // 요소 패널 → 텍스트 패널 역동기화
+        if (fillEl) { const orig = fillEl.oninput; fillEl.oninput = function() { if (orig) orig.call(this); if (fillText) fillText.value = fillEl.value; }; }
+        if (strokeEl) { const orig = strokeEl.oninput; strokeEl.oninput = function() { if (orig) orig.call(this); if (strokeText) strokeText.value = strokeEl.value; }; }
+    })();
+
+    // ─── 사이드 페이지 카운터 동기화 ───
+    (function() {
+        const origCounter = document.getElementById('pageCounter');
+        const sideCounter = document.getElementById('pageCounterSide');
+        if (origCounter && sideCounter) {
+            new MutationObserver(function() {
+                sideCounter.textContent = origCounter.textContent;
+            }).observe(origCounter, { childList: true, characterData: true, subtree: true });
+        }
+    })();
+
+    // ─── 업로드 히스토리 (로그인 유저) ───
+    window.loadMyUploads = async function() {
+        const grid = document.getElementById('myUploadGrid');
+        if (!grid) return;
+        const user = window.currentUser || (window.sb && window.sb.auth.getUser ? (await window.sb.auth.getUser()).data?.user : null);
+        if (!user) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:15px 0;">로그인 후 이용 가능</div>';
+            return;
+        }
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:10px 0;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        try {
+            const { data, error } = await window.sb.storage.from('design').list('user-uploads/' + user.id, { limit: 30, sortBy: { column: 'created_at', order: 'desc' } });
+            if (error || !data || data.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:15px 0;">업로드한 이미지가 없습니다</div>';
+                return;
+            }
+            grid.innerHTML = '';
+            data.forEach(function(file) {
+                if (file.name.startsWith('.')) return;
+                const url = window.sb.storage.from('design').getPublicUrl('user-uploads/' + user.id + '/' + file.name).data.publicUrl;
+                const thumb = document.createElement('div');
+                thumb.style.cssText = 'aspect-ratio:1; border-radius:6px; overflow:hidden; cursor:pointer; border:1px solid #e2e8f0; background:#f8fafc; display:flex; align-items:center; justify-content:center;';
+                thumb.innerHTML = '<img src="' + url + '" style="width:100%; height:100%; object-fit:cover;" loading="lazy">';
+                thumb.title = file.name;
+                thumb.onclick = function() {
+                    fabric.Image.fromURL(url, function(img) {
+                        const board = window.canvas.getObjects().find(function(o) { return o.isBoard; });
+                        const maxW = board ? board.width * 0.6 : 300;
+                        const maxH = board ? board.height * 0.6 : 300;
+                        if (img.width > maxW || img.height > maxH) {
+                            var s = Math.min(maxW / img.width, maxH / img.height);
+                            img.set({ scaleX: s, scaleY: s });
+                        }
+                        window.addToCenter ? window.addToCenter(img) : window.canvas.add(img);
+                        window.canvas.setActiveObject(img);
+                        window.canvas.requestRenderAll();
+                    }, { crossOrigin: 'anonymous' });
+                };
+                grid.appendChild(thumb);
+            });
+        } catch(e) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444; font-size:11px; padding:10px 0;">로드 실패</div>';
+        }
+    };
+
+    // ─── 이미지 업로드 시 Supabase 저장 (히스토리용) ───
+    (function() {
+        const imgInput = document.getElementById('imgUpload');
+        if (!imgInput) return;
+        imgInput.addEventListener('change', async function() {
+            const file = imgInput.files[0];
+            if (!file || file.type === 'application/pdf') return;
+            const user = window.currentUser || (window.sb && window.sb.auth.getUser ? (await window.sb.auth.getUser()).data?.user : null);
+            if (!user || !window.sb) return;
+            try {
+                const ext = file.name.split('.').pop();
+                const name = Date.now() + '_' + Math.random().toString(36).slice(2, 6) + '.' + ext;
+                await window.sb.storage.from('design').upload('user-uploads/' + user.id + '/' + name, file);
+            } catch(e) { console.warn('Upload history save failed:', e); }
+        });
+    })();
 </script>
 <div id="generalProductModal" class="modal-bg" style="z-index: 15500; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 900px; max-width: 95%; overflow: hidden; padding: 0; max-height: 90vh; overflow-y: auto;">
