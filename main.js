@@ -304,9 +304,13 @@ function fitImageToCanvas(img) {
         targetCenterX = targetW / 2;
         targetCenterY = targetH / 2;
     }
-    const scale = Math.max(targetW / img.width, targetH / img.height);
+    // 보드의 30%에 맞춰 작게 중앙 배치 (Math.min으로 비율 유지)
+    const maxW = targetW * 0.3;
+    const maxH = targetH * 0.3;
+    const scale = Math.min(maxW / img.width, maxH / img.height, 1);
     img.set({ scaleX: scale, scaleY: scale, originX: 'center', originY: 'center', left: targetCenterX, top: targetCenterY });
     canvas.add(img);
+    canvas.bringToFront(img);
     canvas.setActiveObject(img);
     canvas.requestRenderAll();
 }

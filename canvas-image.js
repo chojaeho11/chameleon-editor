@@ -61,16 +61,14 @@ function handleImageUpload(file) {
         imgObj.src = e.target.result;
         imgObj.onload = () => {
             const fabricImg = new fabric.Image(imgObj);
-            
-            // ★ [수정] 이미지를 캔버스 대지 크기의 60%에 맞춰 리사이징
+
+            // ★ [수정] 이미지를 캔버스 대지 크기의 30%에 맞춰 리사이징
             const board = canvas.getObjects().find(o => o.isBoard);
-            const maxW = board ? board.width * 0.6 : 300;
-            const maxH = board ? board.height * 0.6 : 300;
-            
-            if (fabricImg.width > maxW || fabricImg.height > maxH) {
-                const scale = Math.min(maxW / fabricImg.width, maxH / fabricImg.height);
-                fabricImg.set({ scaleX: scale, scaleY: scale });
-            }
+            const maxW = board ? board.width * 0.3 : 200;
+            const maxH = board ? board.height * 0.3 : 200;
+
+            const scale = Math.min(maxW / fabricImg.width, maxH / fabricImg.height, 1);
+            fabricImg.set({ scaleX: scale, scaleY: scale });
             
             // 중앙에 추가
             addToCenter(fabricImg);
