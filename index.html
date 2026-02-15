@@ -402,6 +402,9 @@
     <div class="hero-section">
     <h1 class="hero-title" data-i18n="hero_title">광고사 기획사 파티플래너라면? <br><span>카멜레온</span>과 함께해요.</h1>
     <p class="hero-desc" data-i18n="hero_desc">대한민국 1등 광고인쇄 도매쇼핑몰, 로고를 공유하고 함께 만드는 무료에디터</p>
+    <button onclick="window.openDesignStartModal()" style="margin-top:12px; padding:14px 36px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:50px; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 4px 15px rgba(99,102,241,0.4); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <i class="fa-solid fa-palette"></i> 무료 디자인 시작하기
+    </button>
 </div>
 <!-- 퀵메뉴와퍼 -->
 <div class="quick-menu-wrapper">
@@ -6300,7 +6303,296 @@ window.filterModalItems = function(keyword) {
 </div>
 
 
+// ===== 디자인 판형 선택 모달 JS =====
+window.openDesignStartModal = function() {
+    document.getElementById('designStartModal').style.display = 'flex';
+    window.dsmBackToMain();
+};
+
+// 디지털 판형 → 바로 에디터 열기
+window.dsmOpenEditor = async function(wMM, hMM, label) {
+    document.getElementById('designStartModal').style.display = 'none';
+    if (window.startEditorDirect) {
+        await window.startEditorDirect('custom', wMM, hMM);
+    } else {
+        alert('에디터를 불러오는 중 오류가 발생했습니다.');
+    }
+};
+
+// 직접 입력
+window.dsmOpenCustom = function() {
+    const w = parseInt(document.getElementById('dsmCustomW').value);
+    const h = parseInt(document.getElementById('dsmCustomH').value);
+    if (!w || !h || w <= 0 || h <= 0) return alert('가로/세로를 올바르게 입력해주세요.');
+    window.dsmOpenEditor(w, h, 'Custom');
+};
+
+// 인쇄 판형 → 카테고리 선택 뷰 보여주기
+window._dsmPrintSize = { w: 0, h: 0, label: '' };
+window._dsmPrintCategory = 'all';
+
+window.dsmShowPrintCategory = async function(wMM, hMM, label) {
+    window._dsmPrintSize = { w: wMM, h: hMM, label: label };
+    window._dsmPrintCategory = 'all';
+
+    document.getElementById('dsm-main-view').style.display = 'none';
+    document.getElementById('dsm-print-view').style.display = 'block';
+    document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '×' + hMM + 'mm) — 어디에 인쇄할까요?';
+    document.getElementById('dsmPrintSearch').value = '';
+
+    // 카테고리 버튼 active 초기화
+    document.querySelectorAll('.dsm-cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.dsm-cat-btn').classList.add('active');
+
+    // 상품 로드
+    const grid = document.getElementById('dsmProductGrid');
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i></div>';
+
+    try {
+        if (typeof sb === 'undefined') throw new Error('DB 없음');
+        const { data: products } = await sb.from('admin_products')
+            .select('name, code, img_url, category, price, width_mm, height_mm, name_jp, name_us')
+            .not('img_url', 'is', null).neq('img_url', '');
+        window._dsmProducts = products || [];
+        window.dsmRenderProducts('');
+    } catch(e) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
+    }
+};
+
+window.dsmBackToMain = function() {
+    document.getElementById('dsm-main-view').style.display = 'block';
+    document.getElementById('dsm-print-view').style.display = 'none';
+};
+
+window.dsmSelectCategory = function(cat, btn) {
+    window._dsmPrintCategory = cat;
+    document.querySelectorAll('.dsm-cat-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    window.dsmRenderProducts(document.getElementById('dsmPrintSearch').value || '');
+};
+
+window.dsmFilterPrintProducts = function(keyword) {
+    window.dsmRenderProducts(keyword);
+};
+
+window.dsmRenderProducts = function(keyword) {
+    const grid = document.getElementById('dsmProductGrid');
+    const term = (keyword || '').toLowerCase().trim();
+    const cat = window._dsmPrintCategory;
+    let items = window._dsmProducts || [];
+
+    if (cat !== 'all') {
+        items = items.filter(p => {
+            const catName = (p.category || '').toLowerCase();
+            return catName.includes(cat.toLowerCase()) || catName === cat;
+        });
+    }
+    if (term) {
+        items = items.filter(p => (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term));
+    }
+
+    if (!items.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:8px;"></i><br>해당 조건의 상품이 없습니다.</div>';
+        return;
+    }
+
+    grid.innerHTML = '';
+    items.forEach(p => {
+        const div = document.createElement('div');
+        div.style.cssText = 'cursor:pointer; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; transition:all 0.2s; background:#fff;';
+        div.onmouseover = () => { div.style.borderColor='#6366f1'; div.style.transform='translateY(-2px)'; div.style.boxShadow='0 4px 12px rgba(99,102,241,0.12)'; };
+        div.onmouseout = () => { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
+        div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
+            '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (p.name || p.code) + '</div></div>';
+        div.onclick = () => {
+            document.getElementById('designStartModal').style.display = 'none';
+            const sz = window._dsmPrintSize;
+            if (window.startEditorDirect) {
+                window.startEditorDirect(p.code, sz.w, sz.h);
+            }
+        };
+        grid.appendChild(div);
+    });
+};
+
 </script>
+<!-- ===== 디자인 판형 선택 모달 (Miri Canvas 스타일) ===== -->
+<div id="designStartModal" class="modal-bg" style="z-index: 21500; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 800px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 0; text-align: left;">
+        <!-- 헤더 -->
+        <div style="padding: 25px 30px 15px 30px; position: relative;">
+            <button onclick="document.getElementById('designStartModal').style.display='none'" style="position:absolute; top:15px; right:20px; background:none; border:none; font-size:22px; cursor:pointer; color:#94a3b8; padding:5px;">&times;</button>
+            <h2 style="margin:0 0 5px 0; font-size:22px; font-weight:800; color:#1e293b;">무엇을 만들어야 하나요?</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">판형을 선택하면 바로 에디터가 열립니다.</p>
+        </div>
+
+        <!-- 메인 콘텐츠 (기본 뷰) -->
+        <div id="dsm-main-view" style="padding: 0 30px 25px 30px;">
+            <!-- 온라인/디지털 섹션 -->
+            <div style="margin-bottom:20px;">
+                <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#6366f1; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-globe"></i> 온라인 · 디지털
+                </h4>
+                <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;">
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
+                        <div class="dsm-icon"><i class="fa-solid fa-image"></i></div>
+                        <div class="dsm-name">썸네일</div>
+                        <div class="dsm-size">1280 × 720 px</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(236, 333, '웹포스터')">
+                        <div class="dsm-icon"><i class="fa-solid fa-file-image"></i></div>
+                        <div class="dsm-name">웹포스터</div>
+                        <div class="dsm-size">891 × 1260 px</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '카드뉴스')">
+                        <div class="dsm-icon"><i class="fa-solid fa-newspaper"></i></div>
+                        <div class="dsm-name">카드뉴스</div>
+                        <div class="dsm-size">1080 × 1080 px</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(227, 291, '상세페이지')">
+                        <div class="dsm-icon"><i class="fa-solid fa-scroll"></i></div>
+                        <div class="dsm-name">상세페이지</div>
+                        <div class="dsm-size">860 × 1100 px</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(286, 508, '쇼츠')">
+                        <div class="dsm-icon" style="color:#ff0050;"><i class="fa-solid fa-mobile-screen"></i></div>
+                        <div class="dsm-name">쇼츠</div>
+                        <div class="dsm-size">1080 × 1920 px</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')">
+                        <div class="dsm-icon" style="color:#ff0000;"><i class="fa-brands fa-youtube"></i></div>
+                        <div class="dsm-name">영상</div>
+                        <div class="dsm-size">1920 × 1080 px</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 인쇄물 섹션 -->
+            <div>
+                <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#f59e0b; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-print"></i> 인쇄물
+                </h4>
+                <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;">
+                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(210, 297, 'A4')">
+                        <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                        <div class="dsm-name">A4</div>
+                        <div class="dsm-size">210 × 297 mm</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(297, 420, 'A3')">
+                        <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                        <div class="dsm-name">A3</div>
+                        <div class="dsm-size">297 × 420 mm</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(420, 594, 'A2')">
+                        <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                        <div class="dsm-name">A2</div>
+                        <div class="dsm-size">420 × 594 mm</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(594, 841, 'A1')">
+                        <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                        <div class="dsm-name">A1</div>
+                        <div class="dsm-size">594 × 841 mm</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(5000, 900, '가로현수막')">
+                        <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-scroll"></i></div>
+                        <div class="dsm-name">가로현수막</div>
+                        <div class="dsm-size">5000 × 900 mm</div>
+                    </div>
+                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(600, 1800, '세로배너')">
+                        <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-flag"></i></div>
+                        <div class="dsm-name">세로배너</div>
+                        <div class="dsm-size">600 × 1800 mm</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 직접 입력 -->
+            <div style="margin-top:18px; padding-top:15px; border-top:1px solid #f1f5f9; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:13px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
+                <input type="number" id="dsmCustomW" placeholder="가로" style="width:80px; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; text-align:center;">
+                <span style="color:#cbd5e1;">×</span>
+                <input type="number" id="dsmCustomH" placeholder="세로" style="width:80px; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; text-align:center;">
+                <button onclick="window.dsmOpenCustom()" style="padding:8px 16px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">시작</button>
+            </div>
+        </div>
+
+        <!-- 인쇄 카테고리 뷰 (처음에 숨김) -->
+        <div id="dsm-print-view" style="display:none; padding: 0 30px 25px 30px;">
+            <button onclick="window.dsmBackToMain()" style="background:none; border:none; cursor:pointer; color:#6366f1; font-size:14px; font-weight:700; margin-bottom:12px; padding:0;">
+                <i class="fa-solid fa-arrow-left"></i> 뒤로
+            </button>
+            <h4 id="dsm-print-title" style="margin:0 0 12px 0; font-size:16px; font-weight:800; color:#1e293b;">A4 인쇄물 선택</h4>
+
+            <!-- 검색 -->
+            <div style="position:relative; margin-bottom:15px;">
+                <input type="text" id="dsmPrintSearch" placeholder="만들고 싶은 것을 검색해보세요!" oninput="window.dsmFilterPrintProducts(this.value)" style="width:100%; padding:12px 12px 12px 40px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
+            </div>
+
+            <!-- 카테고리 버튼 -->
+            <div id="dsmCategoryBtns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
+                <button class="dsm-cat-btn active" onclick="window.dsmSelectCategory('all', this)">전체</button>
+                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('허니콤보드', this)">허니콤보드</button>
+                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('패브릭인쇄', this)">패브릭인쇄</button>
+                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('실사출력', this)">실사출력</button>
+                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('상업인쇄물', this)">상업인쇄물</button>
+                <button class="dsm-cat-btn" onclick="window.dsmSelectCategory('굿즈판촉물', this)">굿즈판촉물</button>
+            </div>
+
+            <!-- 상품 그리드 -->
+            <div id="dsmProductGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; max-height:350px; overflow-y:auto;">
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i><br><br>로딩 중...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dsm-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.dsm-card:hover {
+    border-color: #6366f1;
+    background: #eef2ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.15);
+}
+.dsm-icon { font-size: 28px; color: #6366f1; margin-bottom: 8px; }
+.dsm-name { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 3px; }
+.dsm-size { font-size: 10px; color: #94a3b8; }
+.dsm-cat-btn {
+    padding: 6px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.dsm-cat-btn:hover { border-color: #6366f1; color: #6366f1; }
+.dsm-cat-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+@media (max-width: 768px) {
+    .dsm-card { padding: 12px 5px; }
+    .dsm-icon { font-size: 22px; margin-bottom: 5px; }
+    .dsm-name { font-size: 11px; }
+    .dsm-size { font-size: 9px; }
+    #designStartModal .modal-box { width: 100%; max-width: 100%; border-radius: 12px 12px 0 0; }
+    #dsm-main-view > div > div[style*="grid-template-columns:repeat(6"] { grid-template-columns: repeat(3, 1fr) !important; }
+    #dsmProductGrid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+</style>
+
 <div id="templateCreatorModal" class="modal-bg" style="z-index: 21000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 500px; max-width: 95%; text-align: left; border-radius: 16px; overflow: hidden; padding: 0;">
         
