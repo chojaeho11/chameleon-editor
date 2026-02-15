@@ -1068,7 +1068,7 @@ window.applyStartTemplate = async function(tpl) {
 // =========================================================
 
 let sideCurrentPage = 0;
-const SIDE_ITEMS_PER_PAGE = 5; 
+const SIDE_ITEMS_PER_PAGE = 10;
 let sideCurrentGroup = 'group_template'; 
 
 // [1] 탭 전환 함수
@@ -1102,9 +1102,15 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     const list = document.getElementById("sideTemplateList");
     if (!drawer || !list) return;
 
-    // 서브패널이 아직 안 열려있으면 템플릿 패널 열기
-    if (drawer.style.display !== 'block') {
-        window.toggleSubPanel && window.toggleSubPanel('sub-template');
+    // 서브패널이 아직 안 열려있으면 직접 열기 (toggleSubPanel 호출 X → 재귀 방지)
+    if (drawer.style.display === 'none' || drawer.style.display === '') {
+        drawer.style.display = 'flex';
+        const sp = document.getElementById('subPanel');
+        if (sp) sp.style.display = 'block';
+        // 아이콘 active 처리
+        document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
+        const icon = document.querySelector('.icon-item[data-panel="sub-template"]');
+        if (icon) icon.classList.add('active');
     }
     
     sideCurrentPage = page;

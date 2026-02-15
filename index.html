@@ -2304,7 +2304,7 @@ window.filterFxCards = function(cat, btn) {
         const clickedIcon = document.querySelector('.icon-item[data-panel="' + panelId + '"]');
 
         // 같은 패널 클릭 → 닫기
-        if (target && target.style.display === 'block') {
+        if (target && target.style.display !== 'none' && target.style.display !== '') {
             subPanel.style.display = 'none';
             allContents.forEach(c => c.style.display = 'none');
             allIcons.forEach(i => i.classList.remove('active'));
