@@ -22,12 +22,12 @@
     function getFonts() {
         const fonts = window.DYNAMIC_FONTS || [];
         const fallbacks = {
-            kr: { title: 'Black Han Sans', sub: 'Nanum Gothic', emo: 'Nanum Myeongjo', point: 'Noto Sans KR', deco: 'Nanum Gothic' },
+            kr: { title: 'Noto Sans KR', sub: 'Noto Sans KR', emo: 'Noto Sans KR', point: 'Noto Sans KR', deco: 'Noto Sans KR' },
             ja: { title: 'Noto Sans JP', sub: 'Noto Sans JP', emo: 'Noto Sans JP', point: 'Noto Sans JP', deco: 'Noto Sans JP' },
-            en: { title: 'Impact', sub: 'Arial', emo: 'Georgia', point: 'Helvetica', deco: 'Arial' },
+            en: { title: 'Inter', sub: 'Inter', emo: 'Inter', point: 'Inter', deco: 'Inter' },
             zh: { title: 'Noto Sans SC', sub: 'Noto Sans SC', emo: 'Noto Sans SC', point: 'Noto Sans SC', deco: 'Noto Sans SC' },
             ar: { title: 'Noto Sans Arabic', sub: 'Noto Sans Arabic', emo: 'Noto Sans Arabic', point: 'Noto Sans Arabic', deco: 'Noto Sans Arabic' },
-            es: { title: 'Inter', sub: 'Inter', emo: 'Georgia', point: 'Inter', deco: 'Inter' }
+            es: { title: 'Inter', sub: 'Inter', emo: 'Inter', point: 'Inter', deco: 'Inter' }
         };
         const fb = fallbacks[langKey] || fallbacks['en'];
         return {
@@ -50,7 +50,7 @@
         kr: {
             basic: {
                 brand: "GRACE FLOWER",
-                main: "그레이스\n플라워",
+                main: "Grace\nFlower",
                 sub: "주문 겨울에도 꽃내음은 따뜻한 봄처럼",
                 sections: [
                     { title: "꽃제품", items: "꽃다발/꽃바구니/플라워박스/부케\n꽃장식구독/화환꽃리스/센터피스" },
@@ -77,7 +77,7 @@
                 location: "서울특별시 강남구"
             },
             menu: {
-                title: "메뉴판 디자인",
+                title: "MENU DESIGN",
                 items: [
                     "1. 아메리카노 (HOT/ICE)", "2. 카페라떼", "3. 바닐라 라떼", "4. 카라멜 마키아또", "5. 콜드브루",
                     "6. 초코 라떼", "7. 녹차 라떼", "8. 레몬 에이드", "9. 자몽 에이드", "10. 허브티"
@@ -100,8 +100,8 @@
             fabric: {
                 topLabel: "Chameleon Event",
                 subLine: "카멜레온, 디자인, 적립금, 2배 LET'S GO",
-                title1: "걸어서",
-                title2: "SALE속으로",
+                title1: "Walk Into",
+                title2: "THE SALE",
                 desc: "운영자 피셜, 지금껏 오픈한 서비스 중\n가장 뜨거운 관심을 받았던 <카멜레온 만보기>",
                 boxText: "회원님들의 열렬한 사랑에 힘입어\n12월에도 적립금 2배 이벤트를 진행합니다!",
                 btnText: "만보기 연동하러 가기 >"
@@ -356,7 +356,7 @@
             // (1) 브랜드명 (작은 글씨, 상단)
             const brandText = new fabric.IText(d.brand, {
                 fontFamily: F.POINT, fontSize: refS * 0.028,
-                fill: TEXT_LIGHT, fontWeight: 'normal',
+                fill: TEXT_LIGHT, fontWeight: '300',
                 charSpacing: 300,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -367,7 +367,7 @@
             // (2) 메인 타이틀 (큰 글씨, 강조)
             const mainTitle = new fabric.IText(d.main, {
                 fontFamily: F.TITLE, fontSize: refS * 0.12,
-                fill: ACCENT, fontWeight: 'normal',
+                fill: ACCENT, fontWeight: '900',
                 textAlign: 'center', lineHeight: 1.1,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -378,7 +378,7 @@
             // (3) 서브타이틀
             const subText = new fabric.IText(d.sub, {
                 fontFamily: F.SUB, fontSize: refS * 0.032,
-                fill: TEXT_MED, fontWeight: 'normal',
+                fill: TEXT_MED, fontWeight: '300',
                 textAlign: 'center', lineHeight: 1.4,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -399,7 +399,7 @@
             d.sections.forEach((sec, i) => {
                 const sectionTitle = new fabric.IText(sec.title, {
                     fontFamily: F.SUB, fontSize: refS * 0.04,
-                    fill: ACCENT, fontWeight: 'normal',
+                    fill: ACCENT, fontWeight: '700',
                     textAlign: 'center',
                     originX: 'center', originY: 'top',
                     left: cx, top: curY
@@ -409,7 +409,7 @@
 
                 const sectionItems = new fabric.IText(sec.items, {
                     fontFamily: F.SUB, fontSize: refS * 0.025,
-                    fill: TEXT_DARK, fontWeight: 'normal',
+                    fill: TEXT_DARK, fontWeight: '300',
                     textAlign: 'center', lineHeight: 1.5,
                     originX: 'center', originY: 'top',
                     left: cx, top: curY
@@ -421,7 +421,7 @@
             // (6) 이벤트 섹션
             const eventTitle = new fabric.IText(d.event, {
                 fontFamily: F.SUB, fontSize: refS * 0.04,
-                fill: ACCENT, fontWeight: 'normal',
+                fill: ACCENT, fontWeight: '700',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -431,7 +431,7 @@
 
             const eventDesc = new fabric.IText(d.eventDesc, {
                 fontFamily: F.SUB, fontSize: refS * 0.025,
-                fill: TEXT_DARK, fontWeight: 'normal',
+                fill: TEXT_DARK, fontWeight: '300',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -451,7 +451,7 @@
             // (8) 하단 연락처
             const footerText = new fabric.IText(d.footer, {
                 fontFamily: F.SUB, fontSize: refS * 0.028,
-                fill: TEXT_MED, fontWeight: 'normal',
+                fill: TEXT_MED, fontWeight: '300',
                 textAlign: 'center',
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -461,7 +461,7 @@
 
             const contactText = new fabric.IText(d.contact, {
                 fontFamily: F.SUB, fontSize: refS * 0.022,
-                fill: TEXT_LIGHT, fontWeight: 'normal',
+                fill: TEXT_LIGHT, fontWeight: '300',
                 textAlign: 'center', lineHeight: 1.4,
                 originX: 'center', originY: 'top',
                 left: cx, top: curY
@@ -1106,7 +1106,7 @@
         if (objs.length > 0) {
             if (useSafetyGroup) {
                 const group = new fabric.Group(objs, { left: cx, top: cy, originX: 'center', originY: 'center' });
-                const safeW = boardW * 0.85; const safeH = boardH * 0.85;
+                const safeW = boardW * 0.72; const safeH = boardH * 0.72;
                 const scale = Math.min(safeW / group.width, safeH / group.height);
                 group.scale(scale); group.setCoords();
                 canvas.add(group); canvas.requestRenderAll();

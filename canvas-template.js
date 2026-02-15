@@ -1228,66 +1228,127 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
 // [2-B] 글씨 템플릿 프리셋 (두꺼운 고딕 타이틀 + 얇은 고딕 서브)
 // 상위 12개: 어두운 배경 (밝은 글씨+그림자), 하위 12개: 밝은 배경 (어두운 글씨+아웃라인)
 const TEXT_TPL_PRESETS = [
-    // ─── 어두운 배경 (1~12) ───
-    {
-        bg: 'linear-gradient(135deg, #1e1b4b, #4338ca)',
-        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' },
+    // ─── 어두운 배경 (1~12): 다양한 효과 ───
+    // 1) 드롭 쉐도우
+    { bg: 'linear-gradient(135deg, #1e1b4b, #4338ca)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '3px 4px 8px rgba(0,0,0,0.8)' },
         subStyle: { fontSize: 16, fontWeight: '300', fill: '#c7d2fe' },
-        texts: {
-            KR: { title: 'GRAND OPENING', sub: '최고의 서비스를 만나보세요' },
-            JP: { title: 'GRAND OPENING', sub: '最高のサービスをお届けします' },
-            EN: { title: 'GRAND OPENING', sub: 'Best Quality Service' },
-            CN: { title: 'GRAND OPENING', sub: '体验最优质的服务' },
-            AR: { title: 'GRAND OPENING', sub: 'أفضل خدمة جودة' },
-            ES: { title: 'GRAND OPENING', sub: 'Servicio de la Mejor Calidad' },
-            DE: { title: 'GRAND OPENING', sub: 'Bester Qualitätsservice' },
-            FR: { title: 'GRAND OPENING', sub: 'Service de Qualité Supérieure' }
-        }
-    },
-    { bg: 'linear-gradient(135deg, #0f0c29, #302b63)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#a5b4fc' },
+        texts: { KR: { title: 'GRAND OPENING', sub: '최고의 서비스를 만나보세요' }, JP: { title: 'GRAND OPENING', sub: '最高のサービスをお届けします' }, EN: { title: 'GRAND OPENING', sub: 'Best Quality Service' }, CN: { title: 'GRAND OPENING', sub: '体验最优质的服务' }, AR: { title: 'GRAND OPENING', sub: 'أفضل خدمة جودة' }, ES: { title: 'GRAND OPENING', sub: 'Servicio de la Mejor Calidad' }, DE: { title: 'GRAND OPENING', sub: 'Bester Qualitätsservice' }, FR: { title: 'GRAND OPENING', sub: 'Service de Qualité Supérieure' } } },
+    // 2) 네온 글로우 (보라)
+    { bg: 'linear-gradient(135deg, #0f0c29, #302b63)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#e0b0ff', shadow: '0 0 20px #a855f7, 0 0 40px #7c3aed' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#a5b4fc' },
         texts: { KR: { title: 'SPECIAL SALE', sub: '최대 50% 할인' }, JP: { title: 'SPECIAL SALE', sub: '最大50%OFF' }, EN: { title: 'SPECIAL SALE', sub: 'Up to 50% OFF' }, CN: { title: 'SPECIAL SALE', sub: '最高五折优惠' }, AR: { title: 'SPECIAL SALE', sub: 'خصم يصل إلى 50%' }, ES: { title: 'SPECIAL SALE', sub: 'Hasta 50% de Descuento' }, DE: { title: 'SPECIAL SALE', sub: 'Bis zu 50% Rabatt' }, FR: { title: 'SPECIAL SALE', sub: "Jusqu'à 50% de Réduction" } } },
-    { bg: 'linear-gradient(135deg, #134e5e, #71b280)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#d1fae5' },
+    // 3) 밝은 아웃라인
+    { bg: 'linear-gradient(135deg, #134e5e, #71b280)',
+        titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', stroke: '#065f46', strokeWidth: 2 },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#d1fae5' },
         texts: { KR: { title: 'FRESH & NATURAL', sub: '신선한 자연의 맛' }, JP: { title: 'FRESH & NATURAL', sub: '新鮮な自然の味わい' }, EN: { title: 'FRESH & NATURAL', sub: 'Organic Products' }, CN: { title: 'FRESH & NATURAL', sub: '新鲜天然有机产品' }, AR: { title: 'FRESH & NATURAL', sub: 'منتجات عضوية طبيعية' }, ES: { title: 'FRESH & NATURAL', sub: 'Productos Orgánicos' }, DE: { title: 'FRESH & NATURAL', sub: 'Bio-Produkte' }, FR: { title: 'FRESH & NATURAL', sub: 'Produits Biologiques' } } },
-    { bg: 'linear-gradient(135deg, #2d1b69, #11998e)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#99f6e4' },
+    // 4) 네온 글로우 (청록)
+    { bg: 'linear-gradient(135deg, #2d1b69, #11998e)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#5eead4', shadow: '0 0 15px #14b8a6, 0 0 30px #0d9488' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#99f6e4' },
         texts: { KR: { title: 'WELCOME', sub: '방문해 주셔서 감사합니다' }, JP: { title: 'WELCOME', sub: 'ご来店ありがとうございます' }, EN: { title: 'WELCOME', sub: "We're Happy To See You" }, CN: { title: 'WELCOME', sub: '欢迎光临' }, AR: { title: 'WELCOME', sub: 'سعداء برؤيتكم' }, ES: { title: 'WELCOME', sub: 'Encantados de Verte' }, DE: { title: 'WELCOME', sub: 'Wir Freuen Uns auf Sie' }, FR: { title: 'WELCOME', sub: 'Heureux de Vous Voir' } } },
-    { bg: 'linear-gradient(135deg, #232526, #414345)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#d1d5db' },
+    // 5) 강한 드롭 쉐도우
+    { bg: 'linear-gradient(135deg, #232526, #414345)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '4px 5px 0px #000000' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#d1d5db' },
         texts: { KR: { title: 'NEW ARRIVAL', sub: '신상품을 확인하세요' }, JP: { title: 'NEW ARRIVAL', sub: '新商品をチェック' }, EN: { title: 'NEW ARRIVAL', sub: 'Check Out Our Latest' }, CN: { title: 'NEW ARRIVAL', sub: '查看最新商品' }, AR: { title: 'NEW ARRIVAL', sub: 'تحقق من أحدث المنتجات' }, ES: { title: 'NEW ARRIVAL', sub: 'Descubre lo Nuevo' }, DE: { title: 'NEW ARRIVAL', sub: 'Entdecke das Neueste' }, FR: { title: 'NEW ARRIVAL', sub: 'Découvrez les Nouveautés' } } },
-    { bg: 'linear-gradient(135deg, #6b0f1a, #b91372)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fecdd3' },
+    // 6) 네온 글로우 (핑크)
+    { bg: 'linear-gradient(135deg, #6b0f1a, #b91372)',
+        titleStyle: { fontSize: 38, fontWeight: '900', fill: '#fda4af', shadow: '0 0 18px #f43f5e, 0 0 35px #e11d48' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#fecdd3' },
         texts: { KR: { title: 'THANK YOU', sub: '항상 감사드립니다' }, JP: { title: 'THANK YOU', sub: 'いつもありがとうございます' }, EN: { title: 'THANK YOU', sub: 'For Your Support' }, CN: { title: 'THANK YOU', sub: '感谢您的支持' }, AR: { title: 'THANK YOU', sub: 'شكراً لدعمكم' }, ES: { title: 'THANK YOU', sub: 'Por Tu Apoyo' }, DE: { title: 'THANK YOU', sub: 'Für Ihre Unterstützung' }, FR: { title: 'THANK YOU', sub: 'Pour Votre Soutien' } } },
-    { bg: 'linear-gradient(135deg, #c33764, #1d2671)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#fbbf24', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fde68a' },
+    // 7) 금색 + 쉐도우
+    { bg: 'linear-gradient(135deg, #c33764, #1d2671)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#fbbf24', shadow: '2px 3px 10px rgba(251,191,36,0.5)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#fde68a' },
         texts: { KR: { title: 'HOT DEAL', sub: '한정 특가 이벤트' }, JP: { title: 'HOT DEAL', sub: '期間限定セール' }, EN: { title: 'HOT DEAL', sub: 'Limited Time Offer' }, CN: { title: 'HOT DEAL', sub: '限时特惠' }, AR: { title: 'HOT DEAL', sub: 'عرض لفترة محدودة' }, ES: { title: 'HOT DEAL', sub: 'Oferta por Tiempo Limitado' }, DE: { title: 'HOT DEAL', sub: 'Zeitlich Begrenztes Angebot' }, FR: { title: 'HOT DEAL', sub: 'Offre à Durée Limitée' } } },
-    { bg: 'linear-gradient(135deg, #141e30, #243b55)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#93c5fd' },
+    // 8) 두꺼운 아웃라인
+    { bg: 'linear-gradient(135deg, #141e30, #243b55)',
+        titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', stroke: '#3b82f6', strokeWidth: 2 },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#93c5fd' },
         texts: { KR: { title: 'PREMIUM', sub: '프리미엄 럭셔리 컬렉션' }, JP: { title: 'PREMIUM', sub: 'ラグジュアリーコレクション' }, EN: { title: 'PREMIUM', sub: 'Luxury Collection' }, CN: { title: 'PREMIUM', sub: '奢华精品系列' }, AR: { title: 'PREMIUM', sub: 'مجموعة فاخرة' }, ES: { title: 'PREMIUM', sub: 'Colección de Lujo' }, DE: { title: 'PREMIUM', sub: 'Luxus-Kollektion' }, FR: { title: 'PREMIUM', sub: 'Collection de Luxe' } } },
-    { bg: 'linear-gradient(135deg, #7f1d1d, #ef4444)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fecaca' },
+    // 9) 레드 글로우
+    { bg: 'linear-gradient(135deg, #7f1d1d, #ef4444)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '0 0 20px rgba(239,68,68,0.8), 0 0 40px rgba(239,68,68,0.4)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#fecaca' },
         texts: { KR: { title: 'BEST PRICE', sub: '최저가 보장' }, JP: { title: 'BEST PRICE', sub: '最安値保証' }, EN: { title: 'BEST PRICE', sub: 'Guaranteed Lowest' }, CN: { title: 'BEST PRICE', sub: '保证最低价' }, AR: { title: 'BEST PRICE', sub: 'أقل سعر مضمون' }, ES: { title: 'BEST PRICE', sub: 'Precio Más Bajo Garantizado' }, DE: { title: 'BEST PRICE', sub: 'Garantiert Günstigster Preis' }, FR: { title: 'BEST PRICE', sub: 'Prix le Plus Bas Garanti' } } },
-    { bg: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fef3c7' },
+    // 10) 따뜻한 그라데이션 쉐도우
+    { bg: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '3px 3px 0px #fdbb2d, 5px 5px 0px rgba(0,0,0,0.3)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#fef3c7' },
         texts: { KR: { title: 'OPEN NOW', sub: '지금 오픈했습니다' }, JP: { title: 'OPEN NOW', sub: 'ただいまオープン中' }, EN: { title: 'OPEN NOW', sub: 'Visit Us Today' }, CN: { title: 'OPEN NOW', sub: '现在开业中' }, AR: { title: 'OPEN NOW', sub: 'زورونا اليوم' }, ES: { title: 'OPEN NOW', sub: 'Visítenos Hoy' }, DE: { title: 'OPEN NOW', sub: 'Besuchen Sie Uns Heute' }, FR: { title: 'OPEN NOW', sub: "Visitez-Nous Aujourd'hui" } } },
-    { bg: 'linear-gradient(135deg, #1e3c72, #2a5298)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#fbbf24', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fde68a' },
+    // 11) 금색 글로우
+    { bg: 'linear-gradient(135deg, #1e3c72, #2a5298)',
+        titleStyle: { fontSize: 38, fontWeight: '900', fill: '#fbbf24', shadow: '0 0 15px rgba(251,191,36,0.6), 0 0 30px rgba(251,191,36,0.3)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#fde68a' },
         texts: { KR: { title: 'HAPPY HOLIDAY', sub: '즐거운 시즌을 보내세요' }, JP: { title: 'HAPPY HOLIDAY', sub: '素敵なシーズンをお過ごしください' }, EN: { title: 'HAPPY HOLIDAY', sub: 'Enjoy the Season' }, CN: { title: 'HAPPY HOLIDAY', sub: '享受美好时光' }, AR: { title: 'HAPPY HOLIDAY', sub: 'استمتع بالموسم' }, ES: { title: 'HAPPY HOLIDAY', sub: 'Disfruta la Temporada' }, DE: { title: 'HAPPY HOLIDAY', sub: 'Genießen Sie die Saison' }, FR: { title: 'HAPPY HOLIDAY', sub: 'Profitez de la Saison' } } },
-    // ─── 밝은 배경 (13~24): 어두운 글씨 + 스트로크 ───
-    { bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#7c2d12', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#9a3412' },
+    // 12) 3D 입체 효과 (복수 그림자)
+    { bg: 'linear-gradient(135deg, #0c0c0c, #434343)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#f97316', shadow: '1px 1px 0 #c2410c, 2px 2px 0 #9a3412, 3px 3px 0 #7c2d12' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#fed7aa' },
+        texts: { KR: { title: 'MEGA EVENT', sub: '놓치면 후회할 이벤트' }, JP: { title: 'MEGA EVENT', sub: '見逃せないイベント' }, EN: { title: 'MEGA EVENT', sub: "Don't Miss This Event" }, CN: { title: 'MEGA EVENT', sub: '不容错过的活动' }, AR: { title: 'MEGA EVENT', sub: 'لا تفوت هذا الحدث' }, ES: { title: 'MEGA EVENT', sub: 'No Te Pierdas Este Evento' }, DE: { title: 'MEGA EVENT', sub: 'Verpasse Dieses Event Nicht' }, FR: { title: 'MEGA EVENT', sub: 'Ne Manquez Pas Cet Événement' } } },
+    // ─── 밝은 배경 (13~24): 다양한 효과 ───
+    // 13) 컬러 아웃라인
+    { bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#7c2d12', stroke: '#ffffff', strokeWidth: 2 },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#9a3412' },
         texts: { KR: { title: 'COFFEE TIME', sub: '커피 한잔의 여유' }, JP: { title: 'COFFEE TIME', sub: 'コーヒーでひと息' }, EN: { title: 'COFFEE TIME', sub: 'Take a Break' }, CN: { title: 'COFFEE TIME', sub: '享受咖啡时光' }, AR: { title: 'COFFEE TIME', sub: 'استراحة قهوة' }, ES: { title: 'COFFEE TIME', sub: 'Tómate un Descanso' }, DE: { title: 'COFFEE TIME', sub: 'Mach eine Pause' }, FR: { title: 'COFFEE TIME', sub: 'Prenez une Pause' } } },
-    { bg: 'linear-gradient(135deg, #fbc2eb, #a6c1ee)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#701a75', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#86198f' },
+    // 14) 소프트 쉐도우
+    { bg: 'linear-gradient(135deg, #fbc2eb, #a6c1ee)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#701a75', shadow: '2px 3px 8px rgba(112,26,117,0.3)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#86198f' },
         texts: { KR: { title: 'BEAUTY SALON', sub: '아름다움을 디자인합니다' }, JP: { title: 'BEAUTY SALON', sub: '美しさをデザインします' }, EN: { title: 'BEAUTY SALON', sub: 'Design Your Beauty' }, CN: { title: 'BEAUTY SALON', sub: '设计你的美丽' }, AR: { title: 'BEAUTY SALON', sub: 'صمم جمالك' }, ES: { title: 'BEAUTY SALON', sub: 'Diseña Tu Belleza' }, DE: { title: 'BEAUTY SALON', sub: 'Gestalte Deine Schönheit' }, FR: { title: 'BEAUTY SALON', sub: 'Créez Votre Beauté' } } },
-    { bg: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e3a5f', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#1e40af' },
+    // 15) 두꺼운 화이트 스트로크
+    { bg: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e3a5f', stroke: '#ffffff', strokeWidth: 3 },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#1e40af' },
         texts: { KR: { title: 'SUMMER VIBES', sub: '시원한 여름을 즐기세요' }, JP: { title: 'SUMMER VIBES', sub: '涼しい夏を楽しもう' }, EN: { title: 'SUMMER VIBES', sub: 'Enjoy the Cool Summer' }, CN: { title: 'SUMMER VIBES', sub: '享受清凉夏日' }, AR: { title: 'SUMMER VIBES', sub: 'استمتع بالصيف' }, ES: { title: 'SUMMER VIBES', sub: 'Disfruta del Verano' }, DE: { title: 'SUMMER VIBES', sub: 'Genieße den Sommer' }, FR: { title: 'SUMMER VIBES', sub: "Profitez de l'Été" } } },
-    { bg: 'linear-gradient(135deg, #fff1eb, #ace0f9)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#4a044e', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#6b21a8' },
+    // 16) 우아한 쉐도우
+    { bg: 'linear-gradient(135deg, #fff1eb, #ace0f9)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#4a044e', shadow: '1px 2px 6px rgba(74,4,78,0.25)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#6b21a8' },
         texts: { KR: { title: 'WEDDING', sub: '특별한 날을 축하합니다' }, JP: { title: 'WEDDING', sub: '特別な日をお祝いします' }, EN: { title: 'WEDDING', sub: 'Celebrate Your Special Day' }, CN: { title: 'WEDDING', sub: '庆祝你的特别日子' }, AR: { title: 'WEDDING', sub: 'احتفل بيومك المميز' }, ES: { title: 'WEDDING', sub: 'Celebra Tu Día Especial' }, DE: { title: 'WEDDING', sub: 'Feiern Sie Ihren Tag' }, FR: { title: 'WEDDING', sub: 'Célébrez Votre Jour' } } },
-    { bg: 'linear-gradient(135deg, #f5f7fa, #c3cfe2)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#475569' },
+    // 17) 진한 스트로크 + 쉐도우
+    { bg: 'linear-gradient(135deg, #f5f7fa, #c3cfe2)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 2, shadow: '2px 2px 4px rgba(0,0,0,0.15)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#475569' },
         texts: { KR: { title: 'FOOD FESTIVAL', sub: '맛있는 축제가 시작됩니다' }, JP: { title: 'FOOD FESTIVAL', sub: '美味しいお祭り開催中' }, EN: { title: 'FOOD FESTIVAL', sub: 'Delicious Celebration Begins' }, CN: { title: 'FOOD FESTIVAL', sub: '美食节开幕了' }, AR: { title: 'FOOD FESTIVAL', sub: 'مهرجان الطعام يبدأ' }, ES: { title: 'FOOD FESTIVAL', sub: 'Comienza la Fiesta' }, DE: { title: 'FOOD FESTIVAL', sub: 'Das Fest Beginnt' }, FR: { title: 'FOOD FESTIVAL', sub: 'La Fête Commence' } } },
-    { bg: 'linear-gradient(135deg, #fddb92, #d1fdff)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#92400e', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#a16207' },
+    // 18) 컬러 아웃라인 (옐로우)
+    { bg: 'linear-gradient(135deg, #fddb92, #d1fdff)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#92400e', stroke: '#fbbf24', strokeWidth: 1 },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#a16207' },
         texts: { KR: { title: 'KIDS PARTY', sub: '신나는 파티에 초대합니다' }, JP: { title: 'KIDS PARTY', sub: '楽しいパーティーへご招待' }, EN: { title: 'KIDS PARTY', sub: "You're Invited to the Fun" }, CN: { title: 'KIDS PARTY', sub: '邀请你参加派对' }, AR: { title: 'KIDS PARTY', sub: 'أنت مدعو للمرح' }, ES: { title: 'KIDS PARTY', sub: 'Estás Invitado a la Fiesta' }, DE: { title: 'KIDS PARTY', sub: 'Du Bist Eingeladen' }, FR: { title: 'KIDS PARTY', sub: "Vous Êtes Invité à la Fête" } } },
-    { bg: 'linear-gradient(135deg, #d4fc79, #96e6a1)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#14532d', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#166534' },
+    // 19) 그린 쉐도우
+    { bg: 'linear-gradient(135deg, #d4fc79, #96e6a1)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#14532d', shadow: '2px 3px 6px rgba(20,83,45,0.3)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#166534' },
         texts: { KR: { title: 'YOGA & WELLNESS', sub: '건강한 삶을 시작하세요' }, JP: { title: 'YOGA & WELLNESS', sub: '健康な生活を始めよう' }, EN: { title: 'YOGA & WELLNESS', sub: 'Start a Healthy Life' }, CN: { title: 'YOGA & WELLNESS', sub: '开始健康生活' }, AR: { title: 'YOGA & WELLNESS', sub: 'ابدأ حياة صحية' }, ES: { title: 'YOGA & WELLNESS', sub: 'Comienza una Vida Saludable' }, DE: { title: 'YOGA & WELLNESS', sub: 'Starte ein Gesundes Leben' }, FR: { title: 'YOGA & WELLNESS', sub: 'Commencez une Vie Saine' } } },
-    { bg: 'linear-gradient(135deg, #fee2f8, #c084fc)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#581c87', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#7e22ce' },
+    // 20) 보라 스트로크
+    { bg: 'linear-gradient(135deg, #fee2f8, #c084fc)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#581c87', stroke: '#e9d5ff', strokeWidth: 2 },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#7e22ce' },
         texts: { KR: { title: 'PET LOVE', sub: '반려동물과 함께하는 행복' }, JP: { title: 'PET LOVE', sub: 'ペットと一緒に幸せ' }, EN: { title: 'PET LOVE', sub: 'Happiness with Pets' }, CN: { title: 'PET LOVE', sub: '与宠物一起的幸福' }, AR: { title: 'PET LOVE', sub: 'سعادة مع الحيوانات' }, ES: { title: 'PET LOVE', sub: 'Felicidad con Mascotas' }, DE: { title: 'PET LOVE', sub: 'Glück mit Haustieren' }, FR: { title: 'PET LOVE', sub: 'Bonheur avec les Animaux' } } },
-    { bg: 'linear-gradient(135deg, #fecaca, #fef08a)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#991b1b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#b91c1c' },
+    // 21) 레드 입체
+    { bg: 'linear-gradient(135deg, #fecaca, #fef08a)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#991b1b', shadow: '2px 2px 0px #fca5a5, 3px 3px 0px rgba(0,0,0,0.1)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#b91c1c' },
         texts: { KR: { title: 'SPRING SALE', sub: '봄맞이 할인 이벤트' }, JP: { title: 'SPRING SALE', sub: '春のセールイベント' }, EN: { title: 'SPRING SALE', sub: 'Spring Discount Event' }, CN: { title: 'SPRING SALE', sub: '春季折扣活动' }, AR: { title: 'SPRING SALE', sub: 'تخفيضات الربيع' }, ES: { title: 'SPRING SALE', sub: 'Rebajas de Primavera' }, DE: { title: 'SPRING SALE', sub: 'Frühlingsrabatte' }, FR: { title: 'SPRING SALE', sub: 'Soldes de Printemps' } } },
-    { bg: 'linear-gradient(135deg, #e0e7ff, #cffafe)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#334155' },
+    // 22) 클린 쉐도우
+    { bg: 'linear-gradient(135deg, #e0e7ff, #cffafe)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', shadow: '0 4px 12px rgba(30,41,59,0.2)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#334155' },
         texts: { KR: { title: 'BUSINESS', sub: '전문적인 비즈니스 파트너' }, JP: { title: 'BUSINESS', sub: 'プロフェッショナルパートナー' }, EN: { title: 'BUSINESS', sub: 'Professional Partner' }, CN: { title: 'BUSINESS', sub: '专业商务合作伙伴' }, AR: { title: 'BUSINESS', sub: 'شريك أعمال محترف' }, ES: { title: 'BUSINESS', sub: 'Socio Profesional' }, DE: { title: 'BUSINESS', sub: 'Professioneller Partner' }, FR: { title: 'BUSINESS', sub: 'Partenaire Professionnel' } } },
-    { bg: 'linear-gradient(135deg, #fce4ec, #f8bbd0)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#880e4f', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#ad1457' },
+    // 23) 핑크 스트로크 + 쉐도우
+    { bg: 'linear-gradient(135deg, #fce4ec, #f8bbd0)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#880e4f', stroke: '#ffffff', strokeWidth: 1, shadow: '1px 2px 4px rgba(136,14,79,0.2)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#ad1457' },
         texts: { KR: { title: 'MUSIC LIVE', sub: '감동의 라이브 공연' }, JP: { title: 'MUSIC LIVE', sub: '感動のライブ公演' }, EN: { title: 'MUSIC LIVE', sub: 'Live Performance' }, CN: { title: 'MUSIC LIVE', sub: '精彩现场演出' }, AR: { title: 'MUSIC LIVE', sub: 'عرض حي مباشر' }, ES: { title: 'MUSIC LIVE', sub: 'Actuación en Vivo' }, DE: { title: 'MUSIC LIVE', sub: 'Live-Auftritt' }, FR: { title: 'MUSIC LIVE', sub: 'Spectacle en Direct' } } },
-    { bg: 'linear-gradient(135deg, #f3e7e9, #e3eeff)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#475569' },
+    // 24) 엠보스 효과
+    { bg: 'linear-gradient(135deg, #f3e7e9, #e3eeff)',
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 1, shadow: '1px 1px 0px #ffffff, -1px -1px 0px rgba(0,0,0,0.1)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#475569' },
         texts: { KR: { title: 'PHOTO STUDIO', sub: '최고의 순간을 담다' }, JP: { title: 'PHOTO STUDIO', sub: '最高の瞬間を残す' }, EN: { title: 'PHOTO STUDIO', sub: 'Capture the Best Moment' }, CN: { title: 'PHOTO STUDIO', sub: '记录最美瞬间' }, AR: { title: 'PHOTO STUDIO', sub: 'التقط أفضل لحظة' }, ES: { title: 'PHOTO STUDIO', sub: 'Captura el Mejor Momento' }, DE: { title: 'PHOTO STUDIO', sub: 'Den Besten Moment Festhalten' }, FR: { title: 'PHOTO STUDIO', sub: 'Capturez le Meilleur Moment' } } }
 ];
 
@@ -1362,13 +1423,13 @@ window.loadTextTemplates = function(keyword) {
         var titleStroke = (preset.titleStyle.stroke && preset.titleStyle.strokeWidth) ?
             ('-webkit-text-stroke:' + preset.titleStyle.strokeWidth + 'px ' + preset.titleStyle.stroke + '; paint-order:stroke fill;') : '';
         var card = document.createElement('div');
-        card.style.cssText = 'cursor:pointer; border-radius:10px; overflow:hidden; aspect-ratio:1; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px 8px; text-align:center; background:' + preset.bg + '; transition:transform 0.15s;';
+        card.style.cssText = 'cursor:pointer; border-radius:12px; overflow:hidden; aspect-ratio:4/3; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 10px; text-align:center; background:' + preset.bg + '; transition:transform 0.15s;';
         card.onmouseenter = function() { card.style.transform = 'scale(1.03)'; };
         card.onmouseleave = function() { card.style.transform = 'scale(1)'; };
 
         card.innerHTML =
-            '<div style="font-size:13px; font-weight:900; color:' + preset.titleStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.2; margin-bottom:5px; letter-spacing:0.5px;' + titleShadow + titleStroke + '">' + t.title + '</div>' +
-            '<div style="font-size:9px; font-weight:300; color:' + preset.subStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.4;">' + t.sub + '</div>';
+            '<div style="font-size:16px; font-weight:900; color:' + preset.titleStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.2; margin-bottom:6px; letter-spacing:0.5px;' + titleShadow + titleStroke + '">' + t.title + '</div>' +
+            '<div style="font-size:10px; font-weight:300; color:' + preset.subStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.4;">' + t.sub + '</div>';
 
         card.onclick = function() { window.applyTextTemplate(preset, idx); };
         grid.appendChild(card);
