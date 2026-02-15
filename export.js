@@ -758,18 +758,36 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
             });
 
             // 텍스트 패스 변환 (글자 깨짐 방지)
-            try { await convertCanvasTextToPaths(tempCanvas); } catch(convErr) { console.warn("텍스트 패스 변환 실패 (무시):", convErr); }
+            try { await convertCanvasTextToPaths(tempCanvas); } catch(convErr) { console.warn("텍스트 패스 변환 실패:", convErr); }
 
-            // SVG 생성 (뷰포트가 적용된 상태 그대로 출력)
-            const svgStr = tempCanvas.toSVG({ 
-                viewBox: { x: 0, y: 0, width: w, height: h }, // 여기서 x,y는 0으로 고정 (이미 Viewport로 이동했으므로)
-                width: w, height: h, 
-                suppressPreamble: true 
+            // ★ 안전장치: 변환 안 된 텍스트가 남아있으면 래스터로 전환 (외계어 방지)
+            const hasText = (objs) => objs.some(o => {
+                if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
+                if (o.type === 'group') return hasText(o.getObjects());
+                return false;
             });
-            
-            const parser = new DOMParser();
-            const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
-            await doc.svg(svgElem, { x: 0, y: 0, width: widthMM, height: heightMM });
+
+            if (hasText(tempCanvas.getObjects())) {
+                // 텍스트 잔여 → SVG 사용 불가, 래스터(이미지)로 안전하게 출력
+                console.warn("[벡터PDF] 미변환 텍스트 발견 → 래스터 전환");
+                tempCanvas.renderAll();
+                const maxPixels = 16000000;
+                const basePixels = w * h;
+                let mult = 2;
+                if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
+                const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: mult });
+                doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
+            } else {
+                // 모든 텍스트가 패스로 변환됨 → SVG 벡터 출력
+                const svgStr = tempCanvas.toSVG({
+                    viewBox: { x: 0, y: 0, width: w, height: h },
+                    width: w, height: h,
+                    suppressPreamble: true
+                });
+                const parser = new DOMParser();
+                const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
+                await doc.svg(svgElem, { x: 0, y: 0, width: widthMM, height: heightMM });
+            }
             tempCanvas.dispose();
         }
         return doc.output('blob');
@@ -794,14 +812,24 @@ async function convertCanvasTextToPaths(fabricCanvas) {
         return match ? match.url : TARGET_FONT.url;
     };
 
+    // 폰트 로드 헬퍼 (실패 시 폴백 폰트 재시도)
+    const loadFont = async (url) => {
+        if (loadedFonts[url]) return loadedFonts[url];
+        const buffer = await (await fetch(url)).arrayBuffer();
+        loadedFonts[url] = window.opentype.parse(buffer);
+        return loadedFonts[url];
+    };
+
     // 단일 텍스트 → 패스 변환
     const textToPath = async (obj) => {
         const fontUrl = findFontUrl(obj.fontFamily);
-        if (!loadedFonts[fontUrl]) {
-            const buffer = await (await fetch(fontUrl)).arrayBuffer();
-            loadedFonts[fontUrl] = window.opentype.parse(buffer);
+        let font;
+        try {
+            font = await loadFont(fontUrl);
+        } catch(e) {
+            console.warn("[패스변환] 폰트 로드 실패, 폴백 시도:", obj.fontFamily, e.message);
+            font = await loadFont(TARGET_FONT.url); // 폴백 폰트
         }
-        const font = loadedFonts[fontUrl];
         const fontSize = obj.fontSize;
         const lineHeightPx = obj.lineHeight * fontSize;
         const textLines = obj.text.split(/\r\n|\r|\n/);
