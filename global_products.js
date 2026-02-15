@@ -871,10 +871,62 @@ window.updateProductSortOrder = async () => {
     }
 };
 
-// [수정] 소수점 저장 오류 수정 및 정수 변환
-// [수정] 상품 저장 시 Base64 이미지를 자동으로 서버에 업로드 후 URL 저장
-// [수정] 소수점 저장 오류 수정 및 정수 변환
-// [수정] 상품 저장 시 Base64 이미지를 자동으로 서버에 업로드 후 URL 저장
+// ============================================================
+// 칼선/목업 파일 업로드 핸들러
+// ============================================================
+window.previewCutlineFile = async function(input) {
+    if (!input.files[0]) return;
+    const file = input.files[0];
+    const code = document.getElementById('newProdCode').value || 'temp';
+    const ext = file.name.split('.').pop();
+    const path = `cutlines/${code}_${Date.now()}.${ext}`;
+    document.getElementById('cutlineStatus').innerText = '업로드 중...';
+    try {
+        const { error } = await sb.storage.from('products').upload(path, file, { upsert: true });
+        if (error) throw error;
+        const { data } = sb.storage.from('products').getPublicUrl(path);
+        document.getElementById('newProdCutlineUrl').value = data.publicUrl;
+        document.getElementById('cutlineStatus').innerText = '✅ ' + file.name;
+        document.getElementById('btnCutlineClear').style.display = 'inline-flex';
+    } catch(e) {
+        document.getElementById('cutlineStatus').innerText = '❌ 업로드 실패';
+        console.error(e);
+    }
+};
+window.clearCutline = function() {
+    document.getElementById('newProdCutlineUrl').value = '';
+    document.getElementById('cutlineStatus').innerText = '';
+    document.getElementById('btnCutlineClear').style.display = 'none';
+    document.getElementById('newProdCutlineFile').value = '';
+};
+window.previewMockupFile = async function(input) {
+    if (!input.files[0]) return;
+    const file = input.files[0];
+    const code = document.getElementById('newProdCode').value || 'temp';
+    const ext = file.name.split('.').pop();
+    const path = `mockups/${code}_${Date.now()}.${ext}`;
+    const preview = document.getElementById('mockupPreview');
+    try {
+        const { error } = await sb.storage.from('products').upload(path, file, { upsert: true });
+        if (error) throw error;
+        const { data } = sb.storage.from('products').getPublicUrl(path);
+        document.getElementById('newProdMockupUrl').value = data.publicUrl;
+        preview.src = data.publicUrl;
+        preview.style.display = 'block';
+        document.getElementById('btnMockupClear').style.display = 'inline-flex';
+    } catch(e) {
+        console.error('목업 업로드 실패:', e);
+        alert('목업 업로드 실패: ' + e.message);
+    }
+};
+window.clearMockup = function() {
+    document.getElementById('newProdMockupUrl').value = '';
+    document.getElementById('mockupPreview').style.display = 'none';
+    document.getElementById('btnMockupClear').style.display = 'none';
+    document.getElementById('newProdMockupFile').value = '';
+};
+
+// [수정] 상품 저장
 window.addProductDB = async () => {
     const site = document.getElementById('newProdSite').value;
     const cat = document.getElementById('newProdCategory').value;
@@ -963,6 +1015,8 @@ window.addProductDB = async () => {
         description_de: document.getElementById('newProdDetailDE') ? document.getElementById('newProdDetailDE').value : '',
         name_fr: document.getElementById('newProdNameFR') ? document.getElementById('newProdNameFR').value : '',
         description_fr: document.getElementById('newProdDetailFR') ? document.getElementById('newProdDetailFR').value : '',
+        cutline_url: document.getElementById('newProdCutlineUrl') ? document.getElementById('newProdCutlineUrl').value : '',
+        mockup_url: document.getElementById('newProdMockupUrl') ? document.getElementById('newProdMockupUrl').value : '',
         addons: addons
     };
 
@@ -1029,6 +1083,23 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdDetailES').value = data.description_es || '';
     if (document.getElementById('newProdDetailDE')) document.getElementById('newProdDetailDE').value = data.description_de || '';
     if (document.getElementById('newProdDetailFR')) document.getElementById('newProdDetailFR').value = data.description_fr || '';
+
+    // 칼선/목업 URL 로드
+    if (document.getElementById('newProdCutlineUrl')) {
+        document.getElementById('newProdCutlineUrl').value = data.cutline_url || '';
+        if (data.cutline_url) {
+            document.getElementById('btnCutlineClear').style.display = 'inline-block';
+            document.getElementById('cutlineStatus').textContent = '✅ 칼선 파일 등록됨';
+        }
+    }
+    if (document.getElementById('newProdMockupUrl')) {
+        document.getElementById('newProdMockupUrl').value = data.mockup_url || '';
+        if (data.mockup_url) {
+            document.getElementById('btnMockupClear').style.display = 'inline-block';
+            const preview = document.getElementById('mockupPreview');
+            if (preview) { preview.src = data.mockup_url; preview.style.display = 'block'; }
+        }
+    }
 
     // 버튼 상태 변경
     document.getElementById('btnProductSave').innerText = "상품 수정 저장";
@@ -1125,6 +1196,15 @@ window.resetProductForm = () => {
     document.querySelectorAll('input[name="prodAddon"]').forEach(cb => cb.checked = false);
     document.getElementById('newProdIsCustom').checked = false;
     document.getElementById('newProdIsGeneral').checked = false;
+    // 칼선/목업 초기화
+    const cutlineClear = document.getElementById('btnCutlineClear');
+    if (cutlineClear) cutlineClear.style.display = 'none';
+    const cutlineStatus = document.getElementById('cutlineStatus');
+    if (cutlineStatus) cutlineStatus.textContent = '';
+    const mockupClear = document.getElementById('btnMockupClear');
+    if (mockupClear) mockupClear.style.display = 'none';
+    const mockupPreview = document.getElementById('mockupPreview');
+    if (mockupPreview) { mockupPreview.src = ''; mockupPreview.style.display = 'none'; }
 };
 
 // [수정] 이미지 업로드 에러 핸들링 강화 (폴더/버킷 없음 에러 잡기)

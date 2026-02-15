@@ -679,7 +679,7 @@ async function addCanvasToCart() {
         try { canvas.setViewportTransform(originalVpt); } catch(ex){}
     }
 
-    const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow']);
+    const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow', 'isMockup', 'excludeFromExport']);
     const finalW = board ? board.width * board.scaleX : (product.w || canvas.width); 
     const finalH = board ? board.height * board.scaleY : (product.h || canvas.height);
     const boardX = board ? board.left : 0;

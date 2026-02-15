@@ -99,7 +99,7 @@ export function addNewPage() {
     }, 50);
 
     // 5. 배열에 추가 및 인덱스 이동
-    const newJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented']);
+    const newJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'isMockup', 'excludeFromExport']);
     pageDataList.push(newJson);
     currentPageIndex = pageDataList.length - 1;
 
@@ -137,7 +137,7 @@ export function deleteCurrentPage() {
 function saveCurrentPageState() {
     if (!canvas) return;
     // 사용자 정의 속성 포함하여 저장
-    const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide']);
+    const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport']);
     pageDataList[currentPageIndex] = json;
 }
 

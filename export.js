@@ -435,12 +435,12 @@ export function initExport() {
                 const cropX = board ? board.left : 0;
                 const cropY = board ? board.top : 0;
 
-                const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented']);
-                
+                const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'isMockup', 'excludeFromExport']);
+
                 // 가상 캔버스 생성
                 const tempEl = document.createElement('canvas');
                 const tempCanvas = new fabric.StaticCanvas(tempEl);
-                tempCanvas.setWidth(finalW); 
+                tempCanvas.setWidth(finalW);
                 tempCanvas.setHeight(finalH);
                 tempCanvas.setBackgroundColor('#ffffff'); // 흰색 배경
 
@@ -489,7 +489,7 @@ export function initExport() {
 
             try {
                 // 1. 데이터 최신화 (현재 작업중인 페이지 저장)
-                const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide']);
+                const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport']);
                 let targetPages = [];
 
                 if (pageDataList && pageDataList.length > 0) {
@@ -736,11 +736,17 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
             tempCanvas.setWidth(w); tempCanvas.setHeight(h);
             tempCanvas.setBackgroundColor('#ffffff'); // 배경 흰색
 
+            // 목업 오브젝트 제거 (PDF에 포함하지 않음)
+            const filteredJson = { ...json };
+            if (filteredJson.objects) {
+                filteredJson.objects = filteredJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+            }
+
             await new Promise((resolve) => {
-                tempCanvas.loadFromJSON(json, () => {
+                tempCanvas.loadFromJSON(filteredJson, () => {
                     // ★ 핵심: 뷰포트를 이동시켜서 대지 영역을 (0,0)으로 맞춤
                     // 대지의 시작점(x, y)만큼 반대로 이동(-x, -y)시키면 대지가 캔버스의 (0,0)에 오게 됨
-                    if (json.objects) tempCanvas.setViewportTransform([1, 0, 0, 1, -x, -y]);
+                    if (filteredJson.objects) tempCanvas.setViewportTransform([1, 0, 0, 1, -x, -y]);
                     resolve();
                 });
             });
@@ -852,8 +858,14 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
             tempCvs.setWidth(w); tempCvs.setHeight(h);
             tempCvs.setBackgroundColor('#ffffff'); // 흰색 배경
 
+            // 목업 오브젝트 제거
+            const pageJson = { ...pages[i] };
+            if (pageJson.objects) {
+                pageJson.objects = pageJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+            }
+
             await new Promise(resolve => {
-                tempCvs.loadFromJSON(pages[i], () => {
+                tempCvs.loadFromJSON(pageJson, () => {
                     // 좌표 보정
                     tempCvs.setViewportTransform([1, 0, 0, 1, -x, -y]);
                     tempCvs.renderAll();
