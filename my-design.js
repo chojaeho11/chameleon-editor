@@ -213,25 +213,20 @@ window.loadSavedDesigns = async function() {
     }
 };
 
-// [불러오기] 저장된 디자인 → 제품 선택 후 로드
+// [불러오기] 저장된 디자인 → 제품 검색 모달 → 제품 선택 후 로드
 window._loadSavedDesign = async function(id) {
-    if (!confirm(window.t('msg_load_design_confirm', 'Load this design? Select a product and size first.'))) return;
-
-    // 디자인 ID를 저장하고 제품 선택 화면으로 이동
+    // 디자인 ID를 저장
     window._pendingDesignLoadId = id;
 
-    // 에디터 숨기고 시작 화면 표시
-    const mainEditor = document.getElementById("mainEditor");
-    const startScreen = document.getElementById("startScreen");
-    if (mainEditor) mainEditor.style.display = "none";
-    if (startScreen) startScreen.style.display = "flex";
-    document.body.classList.remove('editor-active');
-
-    // 서브패널 닫기
-    const subPanel = document.getElementById('subPanel');
-    if (subPanel) subPanel.style.display = 'none';
-    document.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
-    document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
+    // 제품 검색 모달 열기 (메인화면 템플릿 선택 시와 동일)
+    if (window.showCategorySelectionModal) {
+        window.showCategorySelectionModal();
+        // 모달 타이틀을 "이 디자인으로 어떤 제품을 만들어볼까요?"로 변경
+        setTimeout(() => {
+            const titleEl = document.getElementById('catModalTitle');
+            if (titleEl) titleEl.innerHTML = '<span style="color:#6366f1;">이 디자인으로 어떤 제품을 만들어볼까요?</span>';
+        }, 50);
+    }
 };
 
 // [삭제] 저장된 디자인 삭제

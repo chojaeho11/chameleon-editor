@@ -2114,7 +2114,7 @@ window.filterFxCards = function(cat, btn) {
 <div id="categoryDetailModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 800px; max-width: 95%; position: relative;">
         
-        <button onclick="document.getElementById('categoryDetailModal').style.display='none'" 
+        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null;"
                 style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; z-index: 10;">
             <i class="fa-solid fa-xmark"></i>
         </button>
@@ -2133,7 +2133,7 @@ window.filterFxCards = function(cat, btn) {
         
         <div id="catProductGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
         
-        <button onclick="document.getElementById('categoryDetailModal').style.display='none'" class="btn-round" style="margin-top:20px;">닫기</button>
+        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null;" class="btn-round" style="margin-top:20px;">닫기</button>
     </div>
 </div>
 <div id="logoUploadModal" class="modal-bg" style="z-index: 20000;">
