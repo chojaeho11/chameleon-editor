@@ -6573,30 +6573,23 @@ window.dsmOpenCustom = function() {
 window._dsmPrintSize = { w: 0, h: 0, label: '' };
 window._dsmPrintCategory = '';
 
+// 도매/소재 카테고리 제외 목록
+var DSM_EXCLUDE_CATS = [
+    'Honeycomb Board','PVC Foam Board','Foam Board','Color Acrylic Sheets',
+    'Water-based Inkjet Media','Solvent Inkjet Media','Solvent PVC Banner',
+    'Solvent PVC Tent Fabric','Nonwoven Fabric','Coated Paper','low-Den-Banner',
+    'miller','664659846','78454512','LX-FILM','Cut Vinyl','Imported Goods',
+    'Solvent Canvas Fabric','354545355'
+];
+
 window.dsmShowPrintCategory = async function(wMM, hMM, label) {
     window._dsmPrintSize = { w: wMM, h: hMM, label: label };
+    window._dsmProducts = null;
     document.getElementById('dsm-main-view').style.display = 'none';
     document.getElementById('dsm-print-view').style.display = 'block';
     document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '\u00d7' + hMM + 'mm) \u2014 어디에 인쇄할까요?';
     document.getElementById('dsmPrintSearch').value = '';
-
-    var grid = document.getElementById('dsmProductGrid');
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i></div>';
-
-    try {
-        if (typeof sb === 'undefined') throw new Error('DB');
-        var prodResp = await sb.from('admin_products')
-            .select('name, code, img_url, category, price, width_mm, height_mm')
-            .or('partner_id.is.null,partner_status.eq.approved')
-            .not('img_url', 'is', null).neq('img_url', '')
-            .order('sort_order', { ascending: true });
-
-        window._dsmProducts = prodResp.data || [];
-        // 초기에는 전체 상품 표시
-        window.dsmRenderProducts('');
-    } catch(e) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
-    }
+    document.getElementById('dsmProductGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:#94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px; margin-bottom:12px;"></i><br>인쇄할 상품을 검색해보세요<br><span style="font-size:12px;">예: 현수막, 명함, 포스터, 스티커 등</span></div>';
 };
 
 window.dsmBackToMain = function() {
@@ -6605,19 +6598,42 @@ window.dsmBackToMain = function() {
 };
 
 window.dsmFilterPrintProducts = function(keyword) {
-    window.dsmRenderProducts(keyword);
+    var term = (keyword || '').trim();
+    if (!term) {
+        document.getElementById('dsmProductGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:#94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px; margin-bottom:12px;"></i><br>인쇄할 상품을 검색해보세요<br><span style="font-size:12px;">예: 현수막, 명함, 포스터, 스티커 등</span></div>';
+        return;
+    }
+    window.dsmRenderProducts(term);
 };
 
-window.dsmRenderProducts = function(keyword) {
+window.dsmRenderProducts = async function(keyword) {
     var grid = document.getElementById('dsmProductGrid');
     var term = (keyword || '').toLowerCase().trim();
-    var items = (window._dsmProducts || []).slice();
+    if (!term) return;
 
-    if (term) {
-        items = items.filter(function(p) {
-            return (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term);
-        });
+    // 최초 검색 시 DB 로드 (1회만)
+    if (!window._dsmProducts) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i></div>';
+        try {
+            if (typeof sb === 'undefined') throw new Error('DB');
+            var prodResp = await sb.from('admin_products')
+                .select('name, code, img_url, category, price, width_mm, height_mm')
+                .or('partner_id.is.null,partner_status.eq.approved')
+                .not('img_url', 'is', null).neq('img_url', '')
+                .order('sort_order', { ascending: true });
+            var excSet = new Set(DSM_EXCLUDE_CATS);
+            window._dsmProducts = (prodResp.data || []).filter(function(p) {
+                return !excSet.has(p.category);
+            });
+        } catch(e) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
+            return;
+        }
     }
+
+    var items = window._dsmProducts.filter(function(p) {
+        return (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term);
+    });
 
     if (!items.length) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:8px;"></i><br>해당 조건의 상품이 없습니다.</div>';
