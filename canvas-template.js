@@ -1242,14 +1242,14 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     }
 };
 
-// [2-B] 글씨 템플릿 프리셋 (깔끔, 효과 없음)
-// 상위 12개: 어두운 배경용 (밝은 글씨), 하위 12개: 밝은 배경용 (어두운 글씨)
+// [2-B] 글씨 템플릿 프리셋 (두꺼운 고딕 타이틀 + 얇은 고딕 서브)
+// 상위 12개: 어두운 배경 (밝은 글씨+그림자), 하위 12개: 밝은 배경 (어두운 글씨+아웃라인)
 const TEXT_TPL_PRESETS = [
     // ─── 어두운 배경 (1~12) ───
     {
         bg: 'linear-gradient(135deg, #1e1b4b, #4338ca)',
-        titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' },
-        subStyle: { fontSize: 16, fill: '#c7d2fe', fontFamily: 'Arial' },
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#c7d2fe' },
         texts: {
             KR: { title: 'GRAND OPENING', sub: '최고의 서비스를 만나보세요' },
             JP: { title: 'GRAND OPENING', sub: '最高のサービスをお届けします' },
@@ -1261,63 +1261,63 @@ const TEXT_TPL_PRESETS = [
             FR: { title: 'GRAND OPENING', sub: 'Service de Qualité Supérieure' }
         }
     },
-    { bg: 'linear-gradient(135deg, #0f0c29, #302b63)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#a5b4fc', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #0f0c29, #302b63)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#a5b4fc' },
         texts: { KR: { title: 'SPECIAL SALE', sub: '최대 50% 할인' }, JP: { title: 'SPECIAL SALE', sub: '最大50%OFF' }, EN: { title: 'SPECIAL SALE', sub: 'Up to 50% OFF' }, CN: { title: 'SPECIAL SALE', sub: '最高五折优惠' }, AR: { title: 'SPECIAL SALE', sub: 'خصم يصل إلى 50%' }, ES: { title: 'SPECIAL SALE', sub: 'Hasta 50% de Descuento' }, DE: { title: 'SPECIAL SALE', sub: 'Bis zu 50% Rabatt' }, FR: { title: 'SPECIAL SALE', sub: "Jusqu'à 50% de Réduction" } } },
-    { bg: 'linear-gradient(135deg, #134e5e, #71b280)', titleStyle: { fontSize: 38, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#d1fae5', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #134e5e, #71b280)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#d1fae5' },
         texts: { KR: { title: 'FRESH & NATURAL', sub: '신선한 자연의 맛' }, JP: { title: 'FRESH & NATURAL', sub: '新鮮な自然の味わい' }, EN: { title: 'FRESH & NATURAL', sub: 'Organic Products' }, CN: { title: 'FRESH & NATURAL', sub: '新鲜天然有机产品' }, AR: { title: 'FRESH & NATURAL', sub: 'منتجات عضوية طبيعية' }, ES: { title: 'FRESH & NATURAL', sub: 'Productos Orgánicos' }, DE: { title: 'FRESH & NATURAL', sub: 'Bio-Produkte' }, FR: { title: 'FRESH & NATURAL', sub: 'Produits Biologiques' } } },
-    { bg: 'linear-gradient(135deg, #2d1b69, #11998e)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#99f6e4', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #2d1b69, #11998e)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#99f6e4' },
         texts: { KR: { title: 'WELCOME', sub: '방문해 주셔서 감사합니다' }, JP: { title: 'WELCOME', sub: 'ご来店ありがとうございます' }, EN: { title: 'WELCOME', sub: "We're Happy To See You" }, CN: { title: 'WELCOME', sub: '欢迎光临' }, AR: { title: 'WELCOME', sub: 'سعداء برؤيتكم' }, ES: { title: 'WELCOME', sub: 'Encantados de Verte' }, DE: { title: 'WELCOME', sub: 'Wir Freuen Uns auf Sie' }, FR: { title: 'WELCOME', sub: 'Heureux de Vous Voir' } } },
-    { bg: 'linear-gradient(135deg, #232526, #414345)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#d1d5db', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #232526, #414345)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#d1d5db' },
         texts: { KR: { title: 'NEW ARRIVAL', sub: '신상품을 확인하세요' }, JP: { title: 'NEW ARRIVAL', sub: '新商品をチェック' }, EN: { title: 'NEW ARRIVAL', sub: 'Check Out Our Latest' }, CN: { title: 'NEW ARRIVAL', sub: '查看最新商品' }, AR: { title: 'NEW ARRIVAL', sub: 'تحقق من أحدث المنتجات' }, ES: { title: 'NEW ARRIVAL', sub: 'Descubre lo Nuevo' }, DE: { title: 'NEW ARRIVAL', sub: 'Entdecke das Neueste' }, FR: { title: 'NEW ARRIVAL', sub: 'Découvrez les Nouveautés' } } },
-    { bg: 'linear-gradient(135deg, #6b0f1a, #b91372)', titleStyle: { fontSize: 38, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#fecdd3', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #6b0f1a, #b91372)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fecdd3' },
         texts: { KR: { title: 'THANK YOU', sub: '항상 감사드립니다' }, JP: { title: 'THANK YOU', sub: 'いつもありがとうございます' }, EN: { title: 'THANK YOU', sub: 'For Your Support' }, CN: { title: 'THANK YOU', sub: '感谢您的支持' }, AR: { title: 'THANK YOU', sub: 'شكراً لدعمكم' }, ES: { title: 'THANK YOU', sub: 'Por Tu Apoyo' }, DE: { title: 'THANK YOU', sub: 'Für Ihre Unterstützung' }, FR: { title: 'THANK YOU', sub: 'Pour Votre Soutien' } } },
-    { bg: 'linear-gradient(135deg, #c33764, #1d2671)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#fbbf24', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#fde68a', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #c33764, #1d2671)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#fbbf24', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fde68a' },
         texts: { KR: { title: 'HOT DEAL', sub: '한정 특가 이벤트' }, JP: { title: 'HOT DEAL', sub: '期間限定セール' }, EN: { title: 'HOT DEAL', sub: 'Limited Time Offer' }, CN: { title: 'HOT DEAL', sub: '限时特惠' }, AR: { title: 'HOT DEAL', sub: 'عرض لفترة محدودة' }, ES: { title: 'HOT DEAL', sub: 'Oferta por Tiempo Limitado' }, DE: { title: 'HOT DEAL', sub: 'Zeitlich Begrenztes Angebot' }, FR: { title: 'HOT DEAL', sub: 'Offre à Durée Limitée' } } },
-    { bg: 'linear-gradient(135deg, #141e30, #243b55)', titleStyle: { fontSize: 38, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#93c5fd', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #141e30, #243b55)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#93c5fd' },
         texts: { KR: { title: 'PREMIUM', sub: '프리미엄 럭셔리 컬렉션' }, JP: { title: 'PREMIUM', sub: 'ラグジュアリーコレクション' }, EN: { title: 'PREMIUM', sub: 'Luxury Collection' }, CN: { title: 'PREMIUM', sub: '奢华精品系列' }, AR: { title: 'PREMIUM', sub: 'مجموعة فاخرة' }, ES: { title: 'PREMIUM', sub: 'Colección de Lujo' }, DE: { title: 'PREMIUM', sub: 'Luxus-Kollektion' }, FR: { title: 'PREMIUM', sub: 'Collection de Luxe' } } },
-    { bg: 'linear-gradient(135deg, #7f1d1d, #ef4444)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#fecaca', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #7f1d1d, #ef4444)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fecaca' },
         texts: { KR: { title: 'BEST PRICE', sub: '최저가 보장' }, JP: { title: 'BEST PRICE', sub: '最安値保証' }, EN: { title: 'BEST PRICE', sub: 'Guaranteed Lowest' }, CN: { title: 'BEST PRICE', sub: '保证最低价' }, AR: { title: 'BEST PRICE', sub: 'أقل سعر مضمون' }, ES: { title: 'BEST PRICE', sub: 'Precio Más Bajo Garantizado' }, DE: { title: 'BEST PRICE', sub: 'Garantiert Günstigster Preis' }, FR: { title: 'BEST PRICE', sub: 'Prix le Plus Bas Garanti' } } },
-    { bg: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#fef3c7', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#ffffff', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fef3c7' },
         texts: { KR: { title: 'OPEN NOW', sub: '지금 오픈했습니다' }, JP: { title: 'OPEN NOW', sub: 'ただいまオープン中' }, EN: { title: 'OPEN NOW', sub: 'Visit Us Today' }, CN: { title: 'OPEN NOW', sub: '现在开业中' }, AR: { title: 'OPEN NOW', sub: 'زورونا اليوم' }, ES: { title: 'OPEN NOW', sub: 'Visítenos Hoy' }, DE: { title: 'OPEN NOW', sub: 'Besuchen Sie Uns Heute' }, FR: { title: 'OPEN NOW', sub: "Visitez-Nous Aujourd'hui" } } },
-    { bg: 'linear-gradient(135deg, #1e3c72, #2a5298)', titleStyle: { fontSize: 38, fontWeight: 'bold', fill: '#fbbf24', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#fde68a', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #1e3c72, #2a5298)', titleStyle: { fontSize: 38, fontWeight: '900', fill: '#fbbf24', shadow: '2px 3px 6px rgba(0,0,0,0.7)' }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#fde68a' },
         texts: { KR: { title: 'HAPPY HOLIDAY', sub: '즐거운 시즌을 보내세요' }, JP: { title: 'HAPPY HOLIDAY', sub: '素敵なシーズンをお過ごしください' }, EN: { title: 'HAPPY HOLIDAY', sub: 'Enjoy the Season' }, CN: { title: 'HAPPY HOLIDAY', sub: '享受美好时光' }, AR: { title: 'HAPPY HOLIDAY', sub: 'استمتع بالموسم' }, ES: { title: 'HAPPY HOLIDAY', sub: 'Disfruta la Temporada' }, DE: { title: 'HAPPY HOLIDAY', sub: 'Genießen Sie die Saison' }, FR: { title: 'HAPPY HOLIDAY', sub: 'Profitez de la Saison' } } },
-    // ─── 밝은 배경 (13~24) ───
-    { bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#7c2d12', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#9a3412', fontFamily: 'Arial' },
+    // ─── 밝은 배경 (13~24): 어두운 글씨 + 스트로크 ───
+    { bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#7c2d12', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#9a3412' },
         texts: { KR: { title: 'COFFEE TIME', sub: '커피 한잔의 여유' }, JP: { title: 'COFFEE TIME', sub: 'コーヒーでひと息' }, EN: { title: 'COFFEE TIME', sub: 'Take a Break' }, CN: { title: 'COFFEE TIME', sub: '享受咖啡时光' }, AR: { title: 'COFFEE TIME', sub: 'استراحة قهوة' }, ES: { title: 'COFFEE TIME', sub: 'Tómate un Descanso' }, DE: { title: 'COFFEE TIME', sub: 'Mach eine Pause' }, FR: { title: 'COFFEE TIME', sub: 'Prenez une Pause' } } },
-    { bg: 'linear-gradient(135deg, #fbc2eb, #a6c1ee)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#701a75', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#86198f', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #fbc2eb, #a6c1ee)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#701a75', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#86198f' },
         texts: { KR: { title: 'BEAUTY SALON', sub: '아름다움을 디자인합니다' }, JP: { title: 'BEAUTY SALON', sub: '美しさをデザインします' }, EN: { title: 'BEAUTY SALON', sub: 'Design Your Beauty' }, CN: { title: 'BEAUTY SALON', sub: '设计你的美丽' }, AR: { title: 'BEAUTY SALON', sub: 'صمم جمالك' }, ES: { title: 'BEAUTY SALON', sub: 'Diseña Tu Belleza' }, DE: { title: 'BEAUTY SALON', sub: 'Gestalte Deine Schönheit' }, FR: { title: 'BEAUTY SALON', sub: 'Créez Votre Beauté' } } },
-    { bg: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#1e3a5f', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#1e40af', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e3a5f', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#1e40af' },
         texts: { KR: { title: 'SUMMER VIBES', sub: '시원한 여름을 즐기세요' }, JP: { title: 'SUMMER VIBES', sub: '涼しい夏を楽しもう' }, EN: { title: 'SUMMER VIBES', sub: 'Enjoy the Cool Summer' }, CN: { title: 'SUMMER VIBES', sub: '享受清凉夏日' }, AR: { title: 'SUMMER VIBES', sub: 'استمتع بالصيف' }, ES: { title: 'SUMMER VIBES', sub: 'Disfruta del Verano' }, DE: { title: 'SUMMER VIBES', sub: 'Genieße den Sommer' }, FR: { title: 'SUMMER VIBES', sub: "Profitez de l'Été" } } },
-    { bg: 'linear-gradient(135deg, #fff1eb, #ace0f9)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#4a044e', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#6b21a8', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #fff1eb, #ace0f9)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#4a044e', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#6b21a8' },
         texts: { KR: { title: 'WEDDING', sub: '특별한 날을 축하합니다' }, JP: { title: 'WEDDING', sub: '特別な日をお祝いします' }, EN: { title: 'WEDDING', sub: 'Celebrate Your Special Day' }, CN: { title: 'WEDDING', sub: '庆祝你的特别日子' }, AR: { title: 'WEDDING', sub: 'احتفل بيومك المميز' }, ES: { title: 'WEDDING', sub: 'Celebra Tu Día Especial' }, DE: { title: 'WEDDING', sub: 'Feiern Sie Ihren Tag' }, FR: { title: 'WEDDING', sub: 'Célébrez Votre Jour' } } },
-    { bg: 'linear-gradient(135deg, #f5f7fa, #c3cfe2)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#1e293b', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#475569', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #f5f7fa, #c3cfe2)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#475569' },
         texts: { KR: { title: 'FOOD FESTIVAL', sub: '맛있는 축제가 시작됩니다' }, JP: { title: 'FOOD FESTIVAL', sub: '美味しいお祭り開催中' }, EN: { title: 'FOOD FESTIVAL', sub: 'Delicious Celebration Begins' }, CN: { title: 'FOOD FESTIVAL', sub: '美食节开幕了' }, AR: { title: 'FOOD FESTIVAL', sub: 'مهرجان الطعام يبدأ' }, ES: { title: 'FOOD FESTIVAL', sub: 'Comienza la Fiesta' }, DE: { title: 'FOOD FESTIVAL', sub: 'Das Fest Beginnt' }, FR: { title: 'FOOD FESTIVAL', sub: 'La Fête Commence' } } },
-    { bg: 'linear-gradient(135deg, #fddb92, #d1fdff)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#92400e', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#a16207', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #fddb92, #d1fdff)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#92400e', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#a16207' },
         texts: { KR: { title: 'KIDS PARTY', sub: '신나는 파티에 초대합니다' }, JP: { title: 'KIDS PARTY', sub: '楽しいパーティーへご招待' }, EN: { title: 'KIDS PARTY', sub: "You're Invited to the Fun" }, CN: { title: 'KIDS PARTY', sub: '邀请你参加派对' }, AR: { title: 'KIDS PARTY', sub: 'أنت مدعو للمرح' }, ES: { title: 'KIDS PARTY', sub: 'Estás Invitado a la Fiesta' }, DE: { title: 'KIDS PARTY', sub: 'Du Bist Eingeladen' }, FR: { title: 'KIDS PARTY', sub: "Vous Êtes Invité à la Fête" } } },
-    { bg: 'linear-gradient(135deg, #d4fc79, #96e6a1)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#14532d', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#166534', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #d4fc79, #96e6a1)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#14532d', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#166534' },
         texts: { KR: { title: 'YOGA & WELLNESS', sub: '건강한 삶을 시작하세요' }, JP: { title: 'YOGA & WELLNESS', sub: '健康な生活を始めよう' }, EN: { title: 'YOGA & WELLNESS', sub: 'Start a Healthy Life' }, CN: { title: 'YOGA & WELLNESS', sub: '开始健康生活' }, AR: { title: 'YOGA & WELLNESS', sub: 'ابدأ حياة صحية' }, ES: { title: 'YOGA & WELLNESS', sub: 'Comienza una Vida Saludable' }, DE: { title: 'YOGA & WELLNESS', sub: 'Starte ein Gesundes Leben' }, FR: { title: 'YOGA & WELLNESS', sub: 'Commencez une Vie Saine' } } },
-    { bg: 'linear-gradient(135deg, #fee2f8, #c084fc)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#581c87', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#7e22ce', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #fee2f8, #c084fc)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#581c87', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#7e22ce' },
         texts: { KR: { title: 'PET LOVE', sub: '반려동물과 함께하는 행복' }, JP: { title: 'PET LOVE', sub: 'ペットと一緒に幸せ' }, EN: { title: 'PET LOVE', sub: 'Happiness with Pets' }, CN: { title: 'PET LOVE', sub: '与宠物一起的幸福' }, AR: { title: 'PET LOVE', sub: 'سعادة مع الحيوانات' }, ES: { title: 'PET LOVE', sub: 'Felicidad con Mascotas' }, DE: { title: 'PET LOVE', sub: 'Glück mit Haustieren' }, FR: { title: 'PET LOVE', sub: 'Bonheur avec les Animaux' } } },
-    { bg: 'linear-gradient(135deg, #fecaca, #fef08a)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#991b1b', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#b91c1c', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #fecaca, #fef08a)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#991b1b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#b91c1c' },
         texts: { KR: { title: 'SPRING SALE', sub: '봄맞이 할인 이벤트' }, JP: { title: 'SPRING SALE', sub: '春のセールイベント' }, EN: { title: 'SPRING SALE', sub: 'Spring Discount Event' }, CN: { title: 'SPRING SALE', sub: '春季折扣活动' }, AR: { title: 'SPRING SALE', sub: 'تخفيضات الربيع' }, ES: { title: 'SPRING SALE', sub: 'Rebajas de Primavera' }, DE: { title: 'SPRING SALE', sub: 'Frühlingsrabatte' }, FR: { title: 'SPRING SALE', sub: 'Soldes de Printemps' } } },
-    { bg: 'linear-gradient(135deg, #e0e7ff, #cffafe)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#1e293b', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#334155', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #e0e7ff, #cffafe)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#334155' },
         texts: { KR: { title: 'BUSINESS', sub: '전문적인 비즈니스 파트너' }, JP: { title: 'BUSINESS', sub: 'プロフェッショナルパートナー' }, EN: { title: 'BUSINESS', sub: 'Professional Partner' }, CN: { title: 'BUSINESS', sub: '专业商务合作伙伴' }, AR: { title: 'BUSINESS', sub: 'شريك أعمال محترف' }, ES: { title: 'BUSINESS', sub: 'Socio Profesional' }, DE: { title: 'BUSINESS', sub: 'Professioneller Partner' }, FR: { title: 'BUSINESS', sub: 'Partenaire Professionnel' } } },
-    { bg: 'linear-gradient(135deg, #fce4ec, #f8bbd0)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#880e4f', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#ad1457', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #fce4ec, #f8bbd0)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#880e4f', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#ad1457' },
         texts: { KR: { title: 'MUSIC LIVE', sub: '감동의 라이브 공연' }, JP: { title: 'MUSIC LIVE', sub: '感動のライブ公演' }, EN: { title: 'MUSIC LIVE', sub: 'Live Performance' }, CN: { title: 'MUSIC LIVE', sub: '精彩现场演出' }, AR: { title: 'MUSIC LIVE', sub: 'عرض حي مباشر' }, ES: { title: 'MUSIC LIVE', sub: 'Actuación en Vivo' }, DE: { title: 'MUSIC LIVE', sub: 'Live-Auftritt' }, FR: { title: 'MUSIC LIVE', sub: 'Spectacle en Direct' } } },
-    { bg: 'linear-gradient(135deg, #f3e7e9, #e3eeff)', titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#1e293b', fontFamily: 'Arial' }, subStyle: { fontSize: 16, fill: '#475569', fontFamily: 'Arial' },
+    { bg: 'linear-gradient(135deg, #f3e7e9, #e3eeff)', titleStyle: { fontSize: 40, fontWeight: '900', fill: '#1e293b', stroke: '#ffffff', strokeWidth: 1 }, subStyle: { fontSize: 16, fontWeight: '300', fill: '#475569' },
         texts: { KR: { title: 'PHOTO STUDIO', sub: '최고의 순간을 담다' }, JP: { title: 'PHOTO STUDIO', sub: '最高の瞬間を残す' }, EN: { title: 'PHOTO STUDIO', sub: 'Capture the Best Moment' }, CN: { title: 'PHOTO STUDIO', sub: '记录最美瞬间' }, AR: { title: 'PHOTO STUDIO', sub: 'التقط أفضل لحظة' }, ES: { title: 'PHOTO STUDIO', sub: 'Captura el Mejor Momento' }, DE: { title: 'PHOTO STUDIO', sub: 'Den Besten Moment Festhalten' }, FR: { title: 'PHOTO STUDIO', sub: 'Capturez le Meilleur Moment' } } }
 ];
 
-// 마법사 버튼 데이터
+// 마법사 버튼 데이터 (영문 라벨)
 const WIZARD_BTNS = [
-    { key: 'basic',  icon: 'fa-store',       color: '#6366f1', i18n: 'wiz_flyer',       label: '전단지' },
-    { key: 'flyer',  icon: 'fa-bullhorn',     color: '#ef4444', i18n: 'wiz_poster',      label: '포스터' },
-    { key: 'card',   icon: 'fa-address-card', color: '#22c55e', i18n: 'wiz_card',        label: '명함' },
-    { key: 'menu',   icon: 'fa-utensils',     color: '#f97316', i18n: 'wiz_menu',        label: '메뉴판' },
-    { key: 'banner-h', icon: 'fa-scroll',     color: '#3b82f6', i18n: 'wiz_banner_h',    label: '가로현수막' },
-    { key: 'banner-v', icon: 'fa-flag',       color: '#8b5cf6', i18n: 'wiz_banner_v',    label: '세로배너' },
-    { key: 'fabric', icon: 'fa-shirt',        color: '#ec4899', i18n: '',                 label: 'SALE' },
-    { key: 'vertical-text', icon: 'fa-text-height', color: '#14b8a6', i18n: 'wiz_insta_panel', label: '인스타판넬' }
+    { key: 'basic',  icon: 'fa-store',       color: '#6366f1', label: 'Flyer' },
+    { key: 'flyer',  icon: 'fa-bullhorn',     color: '#ef4444', label: 'Poster' },
+    { key: 'card',   icon: 'fa-address-card', color: '#22c55e', label: 'Card' },
+    { key: 'menu',   icon: 'fa-utensils',     color: '#f97316', label: 'Menu' },
+    { key: 'banner-h', icon: 'fa-scroll',     color: '#3b82f6', label: 'Banner H' },
+    { key: 'banner-v', icon: 'fa-flag',       color: '#8b5cf6', label: 'Banner V' },
+    { key: 'fabric', icon: 'fa-shirt',        color: '#ec4899', label: 'SALE' },
+    { key: 'vertical-text', icon: 'fa-text-height', color: '#14b8a6', label: 'Insta' }
 ];
 
 window.loadTextTemplates = function(keyword) {
@@ -1328,23 +1328,22 @@ window.loadTextTemplates = function(keyword) {
     var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
     var kw = (keyword || '').trim().toLowerCase();
 
-    // --- 마법사 버튼 섹션 (2열, 크게, 돋보이게) ---
+    // --- 마법사 버튼 섹션 (2열, 세로 아이콘+텍스트) ---
     if (!kw) {
         var wizSection = document.createElement('div');
         wizSection.style.cssText = 'background:linear-gradient(135deg,#f0f4ff,#e8ecff); border-radius:12px; padding:12px; margin-bottom:14px; border:1px solid #c7d2fe;';
-        wizSection.innerHTML = '<div style="font-size:13px; font-weight:800; color:#4338ca; margin-bottom:10px; text-align:center;" data-i18n="editor_design_wizard">DESIGN WIZARD</div>';
+        wizSection.innerHTML = '<div style="font-size:14px; font-weight:900; color:#4338ca; margin-bottom:10px; text-align:center; font-family:Inter,Noto Sans KR,sans-serif; letter-spacing:1px;">DESIGN WIZARD</div>';
         var wizGrid = document.createElement('div');
-        wizGrid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;';
+        wizGrid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;';
         WIZARD_BTNS.forEach(function(wb) {
             var btn = document.createElement('button');
-            btn.style.cssText = 'background:#fff; border:1px solid #e2e8f0; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; transition:all 0.15s; text-align:left;';
+            btn.style.cssText = 'background:#fff; border:1px solid #e2e8f0; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:10px 4px; border-radius:10px; transition:all 0.15s; text-align:center; width:100%; box-sizing:border-box; overflow:hidden;';
             btn.onmouseenter = function() { btn.style.background = '#f8fafc'; btn.style.borderColor = '#6366f1'; btn.style.transform = 'translateY(-1px)'; };
             btn.onmouseleave = function() { btn.style.background = '#fff'; btn.style.borderColor = '#e2e8f0'; btn.style.transform = 'none'; };
             btn.innerHTML =
-                '<div style="width:36px; height:36px; border-radius:10px; background:' + wb.color + '; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
-                '<i class="fa-solid ' + wb.icon + '" style="color:#fff; font-size:15px;"></i></div>' +
-                '<span style="font-size:12px; font-weight:700; color:#334155;"' +
-                (wb.i18n ? ' data-i18n="' + wb.i18n + '"' : '') + '>' + wb.label + '</span>';
+                '<div style="width:34px; height:34px; border-radius:10px; background:' + wb.color + '; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
+                '<i class="fa-solid ' + wb.icon + '" style="color:#fff; font-size:14px;"></i></div>' +
+                '<span style="font-size:11px; font-weight:300; color:#334155; font-family:Inter,Noto Sans KR,sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">' + wb.label + '</span>';
             btn.onclick = function() { window.applyNewWizard && window.applyNewWizard(wb.key); };
             wizGrid.appendChild(btn);
         });
@@ -1353,7 +1352,7 @@ window.loadTextTemplates = function(keyword) {
 
         // 글씨 템플릿 구분 제목
         var secTitle = document.createElement('div');
-        secTitle.style.cssText = 'font-size:11px; font-weight:bold; color:#94a3b8; margin:10px 0 8px; text-transform:uppercase; letter-spacing:0.5px;';
+        secTitle.style.cssText = 'font-size:11px; font-weight:300; color:#94a3b8; margin:10px 0 8px; text-transform:uppercase; letter-spacing:0.5px; font-family:Inter,Noto Sans KR,sans-serif;';
         secTitle.setAttribute('data-i18n', 'editor_tab_text_tpl');
         secTitle.textContent = window.t ? window.t('editor_tab_text_tpl', 'Text Templates') : 'Text Templates';
         list.appendChild(secTitle);
@@ -1376,14 +1375,17 @@ window.loadTextTemplates = function(keyword) {
 
     filtered.forEach(function(preset, idx) {
         var t = preset.texts[country] || preset.texts['EN'];
+        var titleShadow = preset.titleStyle.shadow ? ('text-shadow:' + preset.titleStyle.shadow + ';') : '';
+        var titleStroke = (preset.titleStyle.stroke && preset.titleStyle.strokeWidth) ?
+            ('-webkit-text-stroke:' + preset.titleStyle.strokeWidth + 'px ' + preset.titleStyle.stroke + '; paint-order:stroke fill;') : '';
         var card = document.createElement('div');
         card.style.cssText = 'cursor:pointer; border-radius:10px; overflow:hidden; aspect-ratio:1; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px 8px; text-align:center; background:' + preset.bg + '; transition:transform 0.15s;';
         card.onmouseenter = function() { card.style.transform = 'scale(1.03)'; };
         card.onmouseleave = function() { card.style.transform = 'scale(1)'; };
 
         card.innerHTML =
-            '<div style="font-size:13px; font-weight:bold; color:' + preset.titleStyle.fill + '; font-family:Arial; line-height:1.2; margin-bottom:5px; letter-spacing:0.5px;">' + t.title + '</div>' +
-            '<div style="font-size:9px; color:' + preset.subStyle.fill + '; font-family:Arial; line-height:1.4;">' + t.sub + '</div>';
+            '<div style="font-size:13px; font-weight:900; color:' + preset.titleStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.2; margin-bottom:5px; letter-spacing:0.5px;' + titleShadow + titleStroke + '">' + t.title + '</div>' +
+            '<div style="font-size:9px; font-weight:300; color:' + preset.subStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.4;">' + t.sub + '</div>';
 
         card.onclick = function() { window.applyTextTemplate(preset, idx); };
         grid.appendChild(card);
@@ -1392,30 +1394,60 @@ window.loadTextTemplates = function(keyword) {
     list.appendChild(grid);
 };
 
+// 국가별 기본 고딕 폰트
+window._getDefaultGothic = function(country) {
+    var map = { KR: 'Noto Sans KR', JP: 'Noto Sans JP', CN: 'Noto Sans SC', AR: 'Noto Sans Arabic' };
+    return map[country] || 'Inter';
+};
+
 window.applyTextTemplate = function(preset) {
     if (!canvas) return;
     var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
     var t = preset.texts[country] || preset.texts['EN'];
+    var fontFamily = window._getDefaultGothic(country);
+
+    // Google Font 로드 (bold + light)
+    var fontUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontFamily) + ':wght@300;900&display=swap';
+    if (!document.querySelector('link[href="' + fontUrl + '"]')) {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = fontUrl;
+        document.head.appendChild(link);
+    }
 
     var board = canvas.getObjects().find(function(o) { return o.isBoard; });
     var baseW = board ? board.width * board.scaleX : 800;
     var sc = baseW / 800;
-    var titleFontSize = Math.round(preset.titleStyle.fontSize * sc);
-    var subFontSize = Math.round(preset.subStyle.fontSize * sc);
+    // 1.5x 크기 배율 적용
+    var titleFontSize = Math.round(preset.titleStyle.fontSize * sc * 1.5);
+    var subFontSize = Math.round(preset.subStyle.fontSize * sc * 1.5);
 
-    var titleObj = new fabric.IText(t.title, {
+    // 타이틀 옵션
+    var titleOpts = {
         fontSize: titleFontSize,
-        fontWeight: preset.titleStyle.fontWeight || 'bold',
+        fontWeight: preset.titleStyle.fontWeight || '900',
         fill: preset.titleStyle.fill,
-        fontFamily: 'Arial',
+        fontFamily: fontFamily,
         originX: 'center', originY: 'center',
         textAlign: 'center', editable: true
-    });
+    };
+    // 타이틀 텍스트 효과 적용
+    if (preset.titleStyle.shadow) {
+        titleOpts.shadow = new fabric.Shadow(preset.titleStyle.shadow);
+    }
+    if (preset.titleStyle.stroke && preset.titleStyle.strokeWidth) {
+        titleOpts.stroke = preset.titleStyle.stroke;
+        titleOpts.strokeWidth = preset.titleStyle.strokeWidth;
+        titleOpts.paintFirst = 'stroke';
+    }
+
+    var titleObj = new fabric.IText(t.title, titleOpts);
 
     var subObj = new fabric.IText(t.sub, {
         fontSize: subFontSize,
+        fontWeight: preset.subStyle.fontWeight || '300',
         fill: preset.subStyle.fill,
-        fontFamily: 'Arial',
+        fontFamily: fontFamily,
         originX: 'center', originY: 'center',
         textAlign: 'center', editable: true
     });

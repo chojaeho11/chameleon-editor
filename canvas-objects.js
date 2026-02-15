@@ -25,7 +25,7 @@ let DYNAMIC_FONTS = [];
 // ============================================================
 const GOOGLE_FONTS = {
     'KR': [
-        { font_name: '노토 산스', font_family: 'Noto Sans KR', weights: '300;400;700' },
+        { font_name: '노토 산스', font_family: 'Noto Sans KR', weights: '100;300;400;700;900' },
         { font_name: '나눔고딕', font_family: 'Nanum Gothic', weights: '400;700;800' },
         { font_name: '나눔명조', font_family: 'Nanum Myeongjo', weights: '400;700' },
         { font_name: '검은고딕', font_family: 'Black Han Sans', weights: '400' },
