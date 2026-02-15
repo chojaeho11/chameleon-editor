@@ -680,10 +680,48 @@ async function addCanvasToCart() {
     }
 
     const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone']);
-    const finalW = board ? board.width * board.scaleX : (product.w || canvas.width); 
+    const finalW = board ? board.width * board.scaleX : (product.w || canvas.width);
     const finalH = board ? board.height * board.scaleY : (product.h || canvas.height);
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
+
+    // ★ [핵심] 라이브 캔버스에서 디자인 PDF 사전 생성 (주문 시 재생성하지 않기 위함)
+    let designPdfUrl = null;
+    if (window.jspdf && board) {
+        try {
+            // 목업 오브젝트 숨기기
+            const mockups = canvas.getObjects().filter(o => o.isMockup || o.excludeFromExport);
+            mockups.forEach(o => o.set('visible', false));
+            const savedVpt = canvas.viewportTransform.slice();
+            canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+            canvas.renderAll();
+
+            const maxPx = 16000000;
+            let mult = 2;
+            if (finalW * finalH * mult * mult > maxPx) mult = Math.max(1, Math.floor(Math.sqrt(maxPx / (finalW * finalH))));
+
+            const pdfImgData = canvas.toDataURL({ format: 'jpeg', quality: 0.95, left: boardX, top: boardY, width: finalW, height: finalH, multiplier: mult });
+
+            // 뷰포트 및 목업 복원
+            canvas.setViewportTransform(savedVpt);
+            mockups.forEach(o => o.set('visible', true));
+            canvas.renderAll();
+
+            const MM = 3.7795;
+            const wMM = finalW / MM, hMM = finalH / MM;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: wMM > hMM ? 'l' : 'p', unit: 'mm', format: [wMM, hMM] });
+            doc.addImage(pdfImgData, 'JPEG', 0, 0, wMM, hMM);
+            const pdfBlob = doc.output('blob');
+            if (pdfBlob && pdfBlob.size > 1000) {
+                designPdfUrl = await uploadFileToSupabase(pdfBlob, 'cart_pdf');
+                console.log("[사전 PDF] 라이브 캔버스에서 PDF 생성 완료:", designPdfUrl);
+            }
+        } catch(e) {
+            console.warn("사전 PDF 생성 실패 (주문 시 재생성 예정):", e);
+            try { canvas.setViewportTransform(originalVpt); } catch(ex) {}
+        }
+    }
 
     let calcProduct = { ...product }; 
 
@@ -770,16 +808,17 @@ async function addCanvasToCart() {
         json: null,      // 로컬에는 거대 데이터를 저장하지 않음
         pages: [],       // 로컬에는 거대 데이터를 저장하지 않음
         jsonUrl: savedJsonUrl,
+        designPdfUrl: designPdfUrl,
         originalUrl: originalFileUrl,
-        fileName: fileName, 
-        width: finalW, 
-        height: finalH, 
-        boardX: boardX, 
-        boardY: boardY, 
-        isOpen: true, 
+        fileName: fileName,
+        width: finalW,
+        height: finalH,
+        boardX: boardX,
+        boardY: boardY,
+        isOpen: true,
         qty: initialQty, // [수정] 불러온 수량 적용
-        selectedAddons: recoveredAddons, 
-        addonQuantities: recoveredAddonQtys 
+        selectedAddons: recoveredAddons,
+        addonQuantities: recoveredAddonQtys
     };
 
     // 1. 저장소에서 최신 데이터 가져오기
@@ -1415,6 +1454,22 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         const item = cartData[i];
         const idx = String(i + 1).padStart(2, '0');
 
+        // ★ [1순위] 사전 생성된 PDF가 있으면 그대로 사용 (라이브 캔버스에서 생성한 것)
+        if (item.designPdfUrl && item.type === 'design') {
+            loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
+            try {
+                const res = await withTimeout(fetch(item.designPdfUrl), PDF_TIMEOUT);
+                if (res.ok) {
+                    const pdfBlob = await res.blob();
+                    const url = await withTimeout(uploadFileToSupabase(pdfBlob, `orders/${newOrderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
+                    if (url) uploadedFiles.push({ name: `product_${idx}_${item.product?.name || 'design'}.pdf`, url: url, type: 'product' });
+                    console.log("[주문] 사전생성 PDF 사용 완료:", url);
+                }
+            } catch(err) { console.warn("사전생성 PDF 전송 실패:", err); }
+            continue;
+        }
+
+        // ★ [2순위] 사전 PDF 없으면 기존 방식으로 재생성
         if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
             let hasContent = false;
             if (item.json.objects && Array.isArray(item.json.objects)) {

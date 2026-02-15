@@ -1243,14 +1243,20 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             const pageLabel = loopCount > 1 ? ` (${TEXT.ordersheet_page_label} ${p + 1} / ${loopCount})` : "";
             drawText(doc, `< ${TEXT.ordersheet_design_preview}${pageLabel} >`, 105, imgBoxY - 2, {align:'center', size:9, color:"#888888"});
 
-            let imgData = null; 
-            if (item.type === 'design' && itemPages.length > 0 && itemPages[p]) {
+            let imgData = null;
+
+            // ★ [1순위] 썸네일 사용 (라이브 캔버스에서 캡처한 이미지, 가장 안정적)
+            if (p === 0 && item.thumb && item.type !== 'product_only') {
+                try { imgData = await getSafeImageDataUrl(item.thumb); } catch(e) {}
+            }
+
+            // ★ [2순위] 썸네일 없으면 JSON에서 렌더링 시도
+            if (!imgData && item.type === 'design' && itemPages.length > 0 && itemPages[p]) {
                 try {
                     const tempEl = document.createElement('canvas');
                     const tempCvs = new fabric.StaticCanvas(tempEl);
                     tempCvs.setWidth(item.width || 800); tempCvs.setHeight(item.height || 800);
-                    
-                    // 목업 제거
+
                     const _pJson = { ...itemPages[p] };
                     if (_pJson.objects) _pJson.objects = _pJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
 
@@ -1258,7 +1264,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                         tempCvs.loadFromJSON(_pJson, () => {
                             tempCvs.setBackgroundColor('#ffffff', () => {});
                             tempCvs.renderAll();
-                            setTimeout(r, 500); // 이미지 로딩 대기
+                            setTimeout(r, 500);
                         });
                     });
 
@@ -1270,10 +1276,11 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                     tempCvs.dispose();
                 } catch(e) {}
             }
+
+            // ★ [3순위] 원본 이미지 URL
             if (!imgData && p === 0) {
-                let targetUrl = item.thumb;
-                if (item.type === 'product_only') targetUrl = null;
-                else if (!targetUrl && item.originalUrl && item.mimeType?.startsWith('image')) targetUrl = item.originalUrl;
+                let targetUrl = null;
+                if (!item.thumb && item.originalUrl && item.mimeType?.startsWith('image')) targetUrl = item.originalUrl;
                 if (targetUrl) imgData = await getSafeImageDataUrl(targetUrl);
             }
 
