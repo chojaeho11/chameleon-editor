@@ -470,18 +470,18 @@
         else if (type === 'flyer') {
             useSafetyGroup = false;
 
-            const COLOR_MAIN = '#eeeeee';
+            const COLOR_MAIN = '#e8e8e8';
+            const COLOR_DIM = '#999999';
             const refS = Math.min(boardW, boardH);
-            const LINE_THICKNESS = 2;
 
-            const OFFSET = boardH * 0.08; // 위로 올리기
+            const OFFSET = boardH * 0.08;
 
             const topLabel = new fabric.IText(data.flyer.topLabel, {
                 fontFamily: F.SUB,
-                fontSize: refS * 0.03,
-                fill: COLOR_MAIN,
-                fontWeight: 'bold',
-                letterSpacing: 200,
+                fontSize: refS * 0.026,
+                fill: COLOR_DIM,
+                fontWeight: '300',
+                charSpacing: 400,
                 originX: 'center', originY: 'center',
                 left: cx,
                 top: cy - (boardH * 0.25) - OFFSET
@@ -489,20 +489,20 @@
 
             const mainTitle = new fabric.IText(data.flyer.main, {
                 fontFamily: F.TITLE,
-                fontSize: refS * 0.15,
+                fontSize: refS * 0.14,
                 fill: COLOR_MAIN,
-                fontWeight: 'bold',
+                fontWeight: '100',
                 textAlign: 'center',
-                lineHeight: 0.9,
+                lineHeight: 0.95,
                 originX: 'center', originY: 'center',
                 left: cx,
                 top: cy - (boardH * 0.05) - OFFSET
             });
 
             const centerLine = new fabric.Rect({
-                width: boardW * 0.1,
-                height: LINE_THICKNESS * 2,
-                fill: COLOR_MAIN,
+                width: boardW * 0.06,
+                height: 1,
+                fill: COLOR_DIM,
                 originX: 'center', originY: 'center',
                 left: cx,
                 top: cy + (boardH * 0.15) - OFFSET
@@ -510,107 +510,77 @@
 
             const subDetail = new fabric.IText(data.flyer.detail, {
                 fontFamily: F.POINT,
-                fontSize: refS * 0.035,
-                fill: COLOR_MAIN,
-                fontWeight: 'normal',
+                fontSize: refS * 0.028,
+                fill: COLOR_DIM,
+                fontWeight: '300',
                 textAlign: 'center',
-                lineHeight: 1.5,
+                lineHeight: 1.6,
                 originX: 'center', originY: 'center',
                 left: cx,
                 top: cy + (boardH * 0.25) - OFFSET
             });
 
-            const footerText = new fabric.IText(data.flyer.footer, {
-                fontFamily: F.SUB,
-                fontSize: refS * 0.025,
-                fill: COLOR_MAIN,
-                fontWeight: 'bold',
-                originX: 'center', originY: 'bottom',
-                left: cx,
-                top: boardH - 30
-            });
-
-            objs = [ topLabel, mainTitle, centerLine, subDetail, footerText ];
+            objs = [ topLabel, mainTitle, centerLine, subDetail ];
         }
 
         // 3. [명함]
         else if (type === 'card') {
-            const greenLight = '#82c91e';
-            const greenDark = '#2b8a3e';
+            const ACCENT = '#6366f1';
 
             const baseW = 500;
             const baseH = 300;
             const refCx = cx;
             const refCy = cy;
 
-            const bottomHeight = baseH * 0.2;
-            const rectBottom1 = new fabric.Rect({
-                width: baseW * 0.7, height: bottomHeight, fill: greenLight,
-                left: refCx - (baseW/2), top: refCy + (baseH/2) - bottomHeight, originX: 'left', originY: 'top'
-            });
-            const rectBottom2 = new fabric.Rect({
-                width: baseW * 0.3, height: bottomHeight, fill: greenDark,
-                left: refCx - (baseW/2) + (baseW * 0.7), top: refCy + (baseH/2) - bottomHeight, originX: 'left', originY: 'top'
-            });
-
             const centerLine = new fabric.Rect({
-                width: 2, height: baseH * 0.4, fill: greenLight,
+                width: 1, height: baseH * 0.4, fill: '#e2e8f0',
                 left: refCx + 20, top: refCy - 20, originX: 'center', originY: 'center'
             });
 
-            const logoSize = 15; const logoGap = 2;
-            const diamond1 = new fabric.Rect({ width: logoSize, height: logoSize, fill: greenLight, angle: 45, left: 0, top: -logoSize - logoGap });
-            const diamond2 = new fabric.Rect({ width: logoSize, height: logoSize, fill: greenLight, angle: 45, left: -logoSize - logoGap, top: 0 });
-            const diamond3 = new fabric.Rect({ width: logoSize, height: logoSize, fill: greenLight, angle: 45, left: logoSize + logoGap, top: 0 });
-            const diamond4 = new fabric.Rect({ width: logoSize, height: logoSize, fill: greenDark, angle: 45, left: 0, top: logoSize + logoGap });
-            const logoGroup = new fabric.Group([diamond1, diamond2, diamond3, diamond4], { left: refCx - 120, top: refCy - 50, originX: 'center', originY: 'center' });
+            const company = new fabric.IText(data.card.company, { fontFamily: F.TITLE, fontSize: 24, fill: '#1e293b', fontWeight: '100', originX: 'center', originY: 'top', left: refCx - 120, top: refCy - 20 });
+            const slogan = new fabric.IText(data.card.slogan, { fontFamily: F.SUB, fontSize: 10, fill: '#94a3b8', fontWeight: '100', originX: 'center', originY: 'top', left: refCx - 120, top: refCy + 10 });
 
-            const company = new fabric.IText(data.card.company, { fontFamily: F.TITLE, fontSize: 24, fill: '#000000', originX: 'center', originY: 'top', left: refCx - 120, top: refCy + 10 });
-            const slogan = new fabric.IText(data.card.slogan, { fontFamily: F.SUB, fontSize: 10, fill: '#666666', originX: 'center', originY: 'top', left: refCx - 120, top: refCy + 40 });
+            const name = new fabric.IText(data.card.name, { fontFamily: F.TITLE, fontSize: 20, fill: '#1e293b', fontWeight: '100', originX: 'right', originY: 'bottom', left: refCx + (baseW/2) - 40, top: refCy - 50 });
+            const job = new fabric.IText(data.card.job, { fontFamily: F.SUB, fontSize: 12, fill: '#94a3b8', fontWeight: '100', originX: 'right', originY: 'top', left: refCx + (baseW/2) - 40, top: refCy - 45 });
 
-            const name = new fabric.IText(data.card.name, { fontFamily: F.TITLE, fontSize: 20, fill: '#000000', originX: 'right', originY: 'bottom', left: refCx + (baseW/2) - 40, top: refCy - 50 });
-            const job = new fabric.IText(data.card.job, { fontFamily: F.SUB, fontSize: 12, fill: '#666666', originX: 'right', originY: 'top', left: refCx + (baseW/2) - 40, top: refCy - 45 });
+            const infoGap = 30; const startY = refCy + 10;
+            const textX = refCx + (baseW/2) - 40;
 
-            const iconSize = 20; const infoGap = 30; const startY = refCy + 10;
-            const iconX = refCx + (baseW/2) - 50; const textX = iconX - 35;
+            const txtPhone = new fabric.IText(data.card.phone, { fontFamily: F.SUB, fontSize: 10, fill: '#64748b', fontWeight: '100', textAlign: 'right', originX: 'right', originY: 'center', left: textX, top: startY });
+            const txtMail = new fabric.IText(data.card.email, { fontFamily: F.SUB, fontSize: 10, fill: '#64748b', fontWeight: '100', textAlign: 'right', originX: 'right', originY: 'center', left: textX, top: startY + infoGap });
+            const txtLoc = new fabric.IText(data.card.location, { fontFamily: F.SUB, fontSize: 10, fill: '#64748b', fontWeight: '100', textAlign: 'right', originX: 'right', originY: 'center', left: textX, top: startY + (infoGap * 2) });
 
-            const iconPhoneBg = new fabric.Rect({ width: iconSize, height: iconSize, fill: greenLight, rx: 3, ry: 3, originX: 'center', originY: 'center', left: iconX, top: startY });
-            const txtPhone = new fabric.IText(data.card.phone, { fontFamily: F.SUB, fontSize: 10, fill: '#666', textAlign: 'right', originX: 'right', originY: 'center', left: textX, top: startY });
-            const iconMailBg = new fabric.Rect({ width: iconSize, height: iconSize, fill: greenLight, rx: 3, ry: 3, originX: 'center', originY: 'center', left: iconX, top: startY + infoGap });
-            const txtMail = new fabric.IText(data.card.email, { fontFamily: F.SUB, fontSize: 10, fill: '#666', textAlign: 'right', originX: 'right', originY: 'center', left: textX, top: startY + infoGap });
-            const iconLocBg = new fabric.Rect({ width: iconSize, height: iconSize, fill: greenLight, rx: 3, ry: 3, originX: 'center', originY: 'center', left: iconX, top: startY + (infoGap * 2) });
-            const txtLoc = new fabric.IText(data.card.location, { fontFamily: F.SUB, fontSize: 10, fill: '#666', textAlign: 'right', originX: 'right', originY: 'center', left: textX, top: startY + (infoGap * 2) });
-
-            objs = [rectBottom1, rectBottom2, centerLine, logoGroup, company, slogan, name, job, iconPhoneBg, txtPhone, iconMailBg, txtMail, iconLocBg, txtLoc];
+            objs = [centerLine, company, slogan, name, job, txtPhone, txtMail, txtLoc];
         }
 
         // 4. [메뉴판]
         else if (type === 'menu') {
             const BG_COLOR = '#FFFDF9';
-            const BORDER_COLOR = '#D4AF37';
-            const TEXT_COLOR = '#4A4A4A';
+            const BORDER_COLOR = '#c9b88c';
+            const TEXT_COLOR = '#5a5a5a';
+            const ACCENT = '#8B7355';
 
             const archPath = "M -250 350 L -250 -150 A 250 250 0 0 1 250 -150 L 250 350 Z";
 
             const bgArch = new fabric.Path(archPath, {
-                fill: BG_COLOR, stroke: BORDER_COLOR, strokeWidth: 2,
+                fill: BG_COLOR, stroke: BORDER_COLOR, strokeWidth: 1,
                 opacity: 0.85, originX: 'center', originY: 'center',
                 left: cx, top: cy,
-                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.1)', blur: 10, offsetX: 5, offsetY: 5 })
+                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.06)', blur: 15, offsetX: 3, offsetY: 3 })
             });
             objs.push(bgArch);
 
             const title = new fabric.IText(data.menu.title, {
-                fontFamily: F.TITLE, fontSize: 45, fill: '#8B4513',
-                charSpacing: TIGHT_SPACING, fontWeight: 'bold',
+                fontFamily: F.TITLE, fontSize: 38, fill: ACCENT,
+                charSpacing: 200, fontWeight: '100',
                 originX: 'center', originY: 'center',
                 left: cx, top: cy - 260
             });
 
             const titleLine = new fabric.Rect({
-                width: 60, height: 2, fill: '#8B4513',
+                width: 40, height: 1, fill: BORDER_COLOR,
                 originX: 'center', originY: 'center',
-                left: cx, top: cy - 220
+                left: cx, top: cy - 225
             });
             objs.push(title, titleLine);
 
@@ -621,7 +591,7 @@
 
             const makeDotLine = (y) => {
                 const dots = new fabric.IText("..........................................", {
-                    fontFamily: F.SUB, fontSize: 12, fill: '#ccc',
+                    fontFamily: F.SUB, fontSize: 10, fill: '#ddd',
                     originX: 'center', originY: 'center', left: cx, top: y
                 });
                 if(dots.width > 280) dots.scaleX = 280 / dots.width;
@@ -632,15 +602,15 @@
                 const currentY = startY + (i * gap);
 
                 const menuName = new fabric.IText(item, {
-                    fontFamily: F.SUB, fontSize: 15, fill: TEXT_COLOR,
-                    fontWeight: 'normal', textAlign: 'left',
+                    fontFamily: F.SUB, fontSize: 14, fill: TEXT_COLOR,
+                    fontWeight: '300', textAlign: 'left',
                     originX: 'left', originY: 'center',
                     left: textLeft, top: currentY
                 });
 
                 const menuPrice = new fabric.IText(data.menu.prices[i], {
-                    fontFamily: F.SUB, fontSize: 15, fill: '#8B4513',
-                    fontWeight: 'bold', textAlign: 'right',
+                    fontFamily: F.SUB, fontSize: 14, fill: ACCENT,
+                    fontWeight: '300', textAlign: 'right',
                     originX: 'right', originY: 'center',
                     left: priceRight, top: currentY
                 });
@@ -650,7 +620,8 @@
             });
 
             const footer = new fabric.IText("Bon Appetit", {
-                fontFamily: F.DECO, fontSize: 24, fill: '#D4AF37',
+                fontFamily: F.DECO, fontSize: 22, fill: BORDER_COLOR,
+                fontWeight: '300',
                 originX: 'center', originY: 'center',
                 left: cx, top: cy + 280
             });
@@ -659,297 +630,265 @@
 
         // 5. [가로 현수막]
         else if (type === 'banner-h') {
-            const STAR_COLOR = '#FFD700';
-            const TEXT_COLOR = '#E6A000';
+            const ACCENT = '#c9a84c';
+            const TEXT_DARK = '#3a3a3a';
+            const TEXT_DIM = '#888888';
 
-            const starPath = "M26,3.6c1.1-3.3,5.8-3.3,6.9,0l6.1,18.7c0.5,1.5,1.9,2.5,3.4,2.5h19.7c3.5,0,4.9,4.4,2.1,6.5L48.3,44.2 c-1.2,0.9-1.8,2.4-1.3,3.9l6.1,18.7c1.1,3.3-2.7,6.1-5.6,3.9L31.4,59.3c-1.2-0.9-2.9-0.9-4.1,0L11.4,70.7 c-2.8,2.1-6.7-0.6-5.6-3.9l6.1-18.7c0.5-1.5-0.1-3-1.3-3.9L-5.3,31.3c-2.8-2.1-1.4-6.5,2.1-6.5h19.7c1.5,0,2.9-1,3.4-2.5L26,3.6z";
-
-            const starL = new fabric.Path(starPath, {
-                scaleX: 1.3, scaleY: 1.3,
-                fill: STAR_COLOR, stroke: '#e0c000', strokeWidth: 1,
+            // 좌우 세로 라인 장식
+            const lineL = new fabric.Rect({
+                width: 1, height: 120, fill: ACCENT,
                 originX: 'center', originY: 'center',
-                left: cx - 360, top: cy - 20
+                left: cx - 380, top: cy
             });
-            const starR = new fabric.Path(starPath, {
-                scaleX: 1.3, scaleY: 1.3,
-                fill: STAR_COLOR, stroke: '#e0c000', strokeWidth: 1,
+            const lineR = new fabric.Rect({
+                width: 1, height: 120, fill: ACCENT,
                 originX: 'center', originY: 'center',
-                left: cx + 360, top: cy - 20
+                left: cx + 380, top: cy
             });
 
-            const makeMiniStar = (x, y, scale) => new fabric.Path(starPath, {
-                scaleX: scale, scaleY: scale,
-                fill: STAR_COLOR, originX: 'center', originY: 'center', left: x, top: y
+            // 좌우 작은 다이아몬드 장식
+            const makeDiamond = (x, y, size) => new fabric.Rect({
+                width: size, height: size, fill: ACCENT, angle: 45,
+                originX: 'center', originY: 'center', left: x, top: y
             });
-
-            const s1 = makeMiniStar(cx - 300, cy - 60, 0.5);
-            const s2 = makeMiniStar(cx - 410, cy + 20, 0.4);
-            const s3 = makeMiniStar(cx - 340, cy + 50, 0.3);
-            const s4 = makeMiniStar(cx + 300, cy - 60, 0.5);
-            const s5 = makeMiniStar(cx + 410, cy + 20, 0.4);
-            const s6 = makeMiniStar(cx + 340, cy + 50, 0.3);
-
-            const main = new fabric.IText(data.bannerH.main, {
-                fontFamily: F.TITLE, fontSize: 50, fill: TEXT_COLOR,
-                charSpacing: TIGHT_SPACING, fontWeight: 'bold',
-                originX: 'center', originY: 'center', left: cx, top: cy + 10
-            });
+            const diaL = makeDiamond(cx - 380, cy - 75, 8);
+            const diaR = makeDiamond(cx + 380, cy - 75, 8);
+            const diaL2 = makeDiamond(cx - 380, cy + 75, 8);
+            const diaR2 = makeDiamond(cx + 380, cy + 75, 8);
 
             const sub = new fabric.IText(data.bannerH.sub, {
-                fontFamily: F.SUB, fontSize: 20, fill: TEXT_COLOR,
-                charSpacing: -10, fontWeight: 'normal',
-                originX: 'center', originY: 'center', left: cx, top: cy - 40
+                fontFamily: F.SUB, fontSize: 16, fill: TEXT_DIM,
+                fontWeight: '300', charSpacing: 50,
+                originX: 'center', originY: 'center', left: cx, top: cy - 50
+            });
+
+            const main = new fabric.IText(data.bannerH.main, {
+                fontFamily: F.TITLE, fontSize: 46, fill: TEXT_DARK,
+                charSpacing: 100, fontWeight: '100',
+                originX: 'center', originY: 'center', left: cx, top: cy + 5
             });
 
             const line = new fabric.Rect({
-                width: 500, height: 2, fill: TEXT_COLOR,
-                originX: 'center', originY: 'center', left: cx, top: cy + 70
+                width: 60, height: 1, fill: ACCENT,
+                originX: 'center', originY: 'center', left: cx, top: cy + 50
             });
 
             const desc = new fabric.IText(data.bannerH.desc, {
-                fontFamily: F.SUB, fontSize: 16, fill: TEXT_COLOR,
-                charSpacing: -10, fontWeight: 'normal',
-                originX: 'center', originY: 'center', left: cx, top: cy + 100
+                fontFamily: F.SUB, fontSize: 14, fill: TEXT_DIM,
+                fontWeight: '300',
+                originX: 'center', originY: 'center', left: cx, top: cy + 80
             });
 
-            objs = [starL, starR, s1, s2, s3, s4, s5, s6, main, sub, line, desc];
+            objs = [lineL, lineR, diaL, diaR, diaL2, diaR2, sub, main, line, desc];
         }
 
         // 6. [세로 배너]
         else if (type === 'banner-v') {
-            const NAVY = '#1a237e';
-            const BLUE = '#283593';
-            const YELLOW = '#fdd835';
+            const DARK = '#1e293b';
+            const ACCENT = '#64748b';
+            const HIGHLIGHT = '#94a3b8';
+            const DIM = '#94a3b8';
 
             const topShapeY = cy - 520;
             const botShapeY = cy + 580;
 
-            const brandBar = new fabric.Rect({
-                width: 180, height: 35, fill: NAVY,
-                originX: 'left', originY: 'top', left: cx - 280, top: topShapeY
-            });
+            // 상단 브랜드
             const brandText = new fabric.IText(data.bannerV.brand, {
-                fontFamily: F.POINT, fontSize: 16, fill: '#fff', fontWeight: 'bold',
-                originX: 'left', originY: 'center', left: cx - 270, top: topShapeY + 17
+                fontFamily: F.POINT, fontSize: 14, fill: ACCENT, fontWeight: '300',
+                charSpacing: 600,
+                originX: 'left', originY: 'center', left: cx - 240, top: topShapeY + 20
             });
-
-            const topTri = new fabric.Triangle({
-                width: 160, height: 160, fill: BLUE, opacity: 1,
-                originX: 'center', originY: 'center',
-                left: cx + 220, top: topShapeY, angle: 180
+            const brandLine = new fabric.Rect({
+                width: 480, height: 1, fill: HIGHLIGHT,
+                originX: 'center', originY: 'center', left: cx, top: topShapeY + 45
             });
 
             const title1 = new fabric.IText(data.bannerV.title1, {
-                fontFamily: F.TITLE, fontSize: 110, fill: YELLOW, fontWeight: 'bold',
+                fontFamily: F.TITLE, fontSize: 100, fill: DARK, fontWeight: '100',
+                charSpacing: 50,
                 originX: 'center', originY: 'bottom', left: cx, top: cy - 250
             });
             const title2 = new fabric.IText(data.bannerV.title2, {
-                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'bold',
+                fontFamily: F.TITLE, fontSize: 100, fill: DARK, fontWeight: '100',
+                charSpacing: 50,
                 originX: 'center', originY: 'top', left: cx, top: cy - 250
             });
             const title3 = new fabric.IText(data.bannerV.title3, {
-                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'bold',
-                originX: 'center', originY: 'top', left: cx, top: cy - 140
+                fontFamily: F.TITLE, fontSize: 100, fill: ACCENT, fontWeight: '100',
+                charSpacing: 50,
+                originX: 'center', originY: 'top', left: cx, top: cy - 150
             });
 
             const divider = new fabric.Rect({
-                width: 500, height: 4, fill: NAVY,
+                width: 480, height: 1, fill: HIGHLIGHT,
                 originX: 'center', originY: 'center', left: cx, top: cy - 20
             });
 
             const startContentY = cy + 40;
 
             const step1 = new fabric.IText(data.bannerV.step1, {
-                fontFamily: F.SUB, fontSize: 22, fill: NAVY, fontWeight: 'bold',
+                fontFamily: F.SUB, fontSize: 20, fill: DARK, fontWeight: '300',
                 originX: 'left', originY: 'top', left: cx - 240, top: startContentY
             });
             const step1Sub = new fabric.IText(data.bannerV.step1Sub, {
-                fontFamily: F.SUB, fontSize: 15, fill: '#666', lineHeight: 1.4,
+                fontFamily: F.SUB, fontSize: 14, fill: DIM, fontWeight: '300', lineHeight: 1.4,
                 originX: 'left', originY: 'top', left: cx - 240, top: startContentY + 35
             });
 
             const qrBox = new fabric.Rect({
-                width: 80, height: 80, fill: 'transparent', stroke: NAVY, strokeWidth: 3,
+                width: 70, height: 70, fill: 'transparent', stroke: HIGHLIGHT, strokeWidth: 1,
                 originX: 'right', originY: 'top', left: cx + 240, top: startContentY
             });
             const qrText = new fabric.IText("QR", {
-                fontFamily: F.POINT, fontSize: 24, fill: NAVY, fontWeight: 'bold',
-                originX: 'center', originY: 'center', left: cx + 200, top: startContentY + 40
+                fontFamily: F.POINT, fontSize: 20, fill: ACCENT, fontWeight: '300',
+                originX: 'center', originY: 'center', left: cx + 205, top: startContentY + 35
             });
 
             const step2 = new fabric.IText(data.bannerV.step2, {
-                fontFamily: F.SUB, fontSize: 20, fill: NAVY, fontWeight: 'bold',
+                fontFamily: F.SUB, fontSize: 18, fill: DARK, fontWeight: '300',
                 originX: 'left', originY: 'top', left: cx - 240, top: startContentY + 120
             });
 
             const badge1Bg = new fabric.Rect({
-                width: 70, height: 24, fill: YELLOW, rx: 4, ry: 4,
-                originX: 'left', originY: 'top', left: cx + 10, top: startContentY + 120
+                width: 70, height: 22, fill: 'transparent', stroke: ACCENT, strokeWidth: 1, rx: 11, ry: 11,
+                originX: 'left', originY: 'top', left: cx + 10, top: startContentY + 121
             });
             const badge1Text = new fabric.IText(data.bannerV.step2Badge, {
-                fontFamily: F.POINT, fontSize: 14, fill: 'white', fontWeight: 'bold',
+                fontFamily: F.POINT, fontSize: 11, fill: ACCENT, fontWeight: '300',
+                charSpacing: 100,
                 originX: 'center', originY: 'center', left: cx + 45, top: startContentY + 132
             });
 
             const step2Desc = new fabric.IText(data.bannerV.step2Desc, {
-                fontFamily: F.SUB, fontSize: 15, fill: '#444', lineHeight: 1.5,
+                fontFamily: F.SUB, fontSize: 14, fill: DIM, fontWeight: '300', lineHeight: 1.5,
                 originX: 'left', originY: 'top', left: cx - 240, top: startContentY + 155
             });
 
             const step3 = new fabric.IText(data.bannerV.step3, {
-                fontFamily: F.SUB, fontSize: 20, fill: NAVY, fontWeight: 'bold',
+                fontFamily: F.SUB, fontSize: 18, fill: DARK, fontWeight: '300',
                 originX: 'left', originY: 'top', left: cx - 240, top: startContentY + 230
             });
 
             const badge2Bg = new fabric.Rect({
-                width: 80, height: 24, fill: YELLOW, rx: 4, ry: 4,
-                originX: 'left', originY: 'top', left: cx + 65, top: startContentY + 230
+                width: 80, height: 22, fill: 'transparent', stroke: ACCENT, strokeWidth: 1, rx: 11, ry: 11,
+                originX: 'left', originY: 'top', left: cx + 65, top: startContentY + 231
             });
             const badge2Text = new fabric.IText(data.bannerV.step3Badge, {
-                fontFamily: F.POINT, fontSize: 14, fill: 'white', fontWeight: 'bold',
+                fontFamily: F.POINT, fontSize: 11, fill: ACCENT, fontWeight: '300',
+                charSpacing: 100,
                 originX: 'center', originY: 'center', left: cx + 105, top: startContentY + 242
             });
 
             const step3Desc = new fabric.IText(data.bannerV.step3Desc, {
-                fontFamily: F.SUB, fontSize: 15, fill: '#444',
+                fontFamily: F.SUB, fontSize: 14, fill: DIM, fontWeight: '300',
                 originX: 'left', originY: 'top', left: cx - 240, top: startContentY + 265
             });
 
-            const botTriPath = "M 0 0 L 300 0 L 300 300 Z";
-            const botRightTri = new fabric.Path(botTriPath, {
-                fill: NAVY, opacity: 1,
-                originX: 'right', originY: 'bottom', left: cx + 300, top: botShapeY + 150
+            // 하단 라인 장식
+            const botLine = new fabric.Rect({
+                width: 480, height: 1, fill: HIGHLIGHT,
+                originX: 'center', originY: 'center', left: cx, top: botShapeY
             });
 
-            const stripes = [];
-            const stripeCount = 7;
-            const stripeW = 12;
-            const maxHeight = 150;
-
-            for(let i=0; i<stripeCount; i++) {
-                let h = maxHeight * (1 - i/stripeCount);
-                let s = new fabric.Rect({
-                    width: stripeW, height: h, fill: BLUE,
-                    left: (cx - 280) + (i * 24),
-                    top: botShapeY + 100,
-                    originX: 'left', originY: 'bottom'
-                });
-                stripes.push(s);
-            }
-            const stripeGroup = new fabric.Group(stripes);
-
             objs = [
-                brandBar, brandText, topTri,
+                brandText, brandLine,
                 title1, title2, title3, divider,
                 step1, step1Sub, qrBox, qrText,
                 step2, badge1Bg, badge1Text, step2Desc,
                 step3, badge2Bg, badge2Text, step3Desc,
-                botRightTri, stripeGroup
+                botLine
             ];
         }
 
-        // 7. [패브릭]
+        // 7. [패브릭 / SALE]
         else if (type === 'fabric') {
-            const NAVY = '#0b1e47';
-            const BROWN = '#5d4c44';
-            const GOLD = '#fecb00';
-            const BTN_BLUE = '#5282d6';
-            const SNOW_COLOR = '#a2cdf6';
+            const DARK = '#1e293b';
+            const ACCENT = '#64748b';
+            const CARD_BG = '#f1f5f9';
+            const BTN_COLOR = '#475569';
 
             const topLabel = new fabric.IText(data.fabric.topLabel, {
-                fontFamily: F.POINT, fontSize: 16, fill: '#2e7d32', fontWeight: 'normal',
+                fontFamily: F.POINT, fontSize: 13, fill: ACCENT, fontWeight: '300',
+                charSpacing: 300,
                 originX: 'center', originY: 'center', left: cx, top: cy - 350
             });
 
             const subLine = new fabric.IText(data.fabric.subLine, {
-                fontFamily: F.SUB, fontSize: 14, fill: '#666', fontWeight: 'normal',
+                fontFamily: F.SUB, fontSize: 12, fill: '#94a3b8', fontWeight: '300',
                 originX: 'center', originY: 'center', left: cx, top: cy - 320
             });
 
             const lineDecor = new fabric.Rect({
-                width: 400, height: 1, fill: '#ddd',
+                width: 60, height: 1, fill: '#cbd5e1',
                 originX: 'center', originY: 'center', left: cx, top: cy - 300
             });
 
             const title1 = new fabric.IText(data.fabric.title1, {
-                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'normal',
-                charSpacing: -50,
+                fontFamily: F.TITLE, fontSize: 100, fill: DARK, fontWeight: '100',
+                charSpacing: 50,
                 originX: 'center', originY: 'bottom', left: cx, top: cy - 140
             });
 
             const title2 = new fabric.IText(data.fabric.title2, {
-                fontFamily: F.TITLE, fontSize: 110, fill: NAVY, fontWeight: 'normal',
-                charSpacing: -50,
+                fontFamily: F.TITLE, fontSize: 100, fill: DARK, fontWeight: '100',
+                charSpacing: 50,
                 originX: 'center', originY: 'top', left: cx, top: cy - 140
             });
 
             const desc = new fabric.IText(data.fabric.desc, {
-                fontFamily: F.SUB, fontSize: 16, fill: '#555', textAlign: 'center', lineHeight: 1.5,
+                fontFamily: F.SUB, fontSize: 14, fill: '#64748b', fontWeight: '300',
+                textAlign: 'center', lineHeight: 1.6,
                 originX: 'center', originY: 'center', left: cx, top: cy + 20
             });
 
-            const boxHeight = 280;
-            const boxWidth = 500;
+            const boxHeight = 260;
+            const boxWidth = 460;
             const boxTopY = cy + 100;
 
             const benefitBox = new fabric.Rect({
-                width: boxWidth, height: boxHeight, fill: BROWN, rx: 20, ry: 20,
+                width: boxWidth, height: boxHeight, fill: CARD_BG, rx: 16, ry: 16,
+                stroke: '#e2e8f0', strokeWidth: 1,
                 originX: 'center', originY: 'top', left: cx, top: boxTopY
             });
 
-            const coinBg = new fabric.Circle({
-                radius: 40, fill: BROWN,
-                originX: 'center', originY: 'center', left: cx, top: boxTopY
-            });
-
-            const goldCoin = new fabric.Circle({
-                radius: 32, fill: GOLD, stroke: '#eeb000', strokeWidth: 3,
-                originX: 'center', originY: 'center', left: cx, top: boxTopY
-            });
-
-            const coinText = new fabric.IText("P", {
-                fontFamily: F.POINT, fontSize: 40, fill: 'white', fontWeight: 'normal',
-                originX: 'center', originY: 'center', left: cx, top: boxTopY
-            });
-
             const benefitLabel = new fabric.IText("BENEFIT", {
-                fontFamily: F.POINT, fontSize: 12, fill: 'white', fontWeight: 'normal',
-                originX: 'center', originY: 'bottom', left: cx, top: boxTopY - 45
+                fontFamily: F.POINT, fontSize: 11, fill: ACCENT, fontWeight: '300',
+                charSpacing: 400,
+                originX: 'center', originY: 'center', left: cx, top: boxTopY + 30
             });
 
             const boxText = new fabric.IText(data.fabric.boxText, {
-                fontFamily: F.SUB, fontSize: 16, fill: 'white', textAlign: 'center', lineHeight: 1.6,
+                fontFamily: F.SUB, fontSize: 14, fill: '#475569', fontWeight: '300',
+                textAlign: 'center', lineHeight: 1.7,
                 originX: 'center', originY: 'top', left: cx, top: boxTopY + 60
             });
 
             const btnRect = new fabric.Rect({
-                width: 350, height: 60, fill: BTN_BLUE, rx: 10, ry: 10,
-                originX: 'center', originY: 'bottom', left: cx, top: boxTopY + boxHeight - 40
+                width: 320, height: 48, fill: BTN_COLOR, rx: 24, ry: 24,
+                originX: 'center', originY: 'bottom', left: cx, top: boxTopY + boxHeight - 30
             });
             const btnText = new fabric.IText(data.fabric.btnText, {
-                fontFamily: F.SUB, fontSize: 18, fill: 'white', fontWeight: 'normal',
-                originX: 'center', originY: 'center', left: cx, top: boxTopY + boxHeight - 70
+                fontFamily: F.SUB, fontSize: 14, fill: 'white', fontWeight: '300',
+                originX: 'center', originY: 'center', left: cx, top: boxTopY + boxHeight - 54
             });
 
-            const snowPath = "M10,0 L10,20 M0,10 L20,10 M2.9,2.9 L17.1,17.1 M17.1,2.9 L2.9,17.1";
-
-            const makeSnow = (x, y, scale) => new fabric.Path(snowPath, {
-                stroke: SNOW_COLOR, strokeWidth: 2, fill: 'transparent', strokeLineCap: 'round',
-                scaleX: scale, scaleY: scale,
-                originX: 'center', originY: 'center', left: x, top: y
-            });
-
-            const snow1 = makeSnow(cx - 240, cy - 180, 1.5);
-            const snow2 = makeSnow(cx + 240, cy - 40, 1.2);
-            const snow3 = makeSnow(cx - 220, cy + 20, 0.8);
-            const snow4 = makeSnow(cx + 200, cy - 200, 1.0);
+            // 미니멀 십자 장식 (+)
+            const makeCross = (x, y, size) => {
+                const h = new fabric.Rect({ width: size, height: 1, fill: '#cbd5e1', originX: 'center', originY: 'center', left: x, top: y });
+                const v = new fabric.Rect({ width: 1, height: size, fill: '#cbd5e1', originX: 'center', originY: 'center', left: x, top: y });
+                return new fabric.Group([h, v]);
+            };
+            const c1 = makeCross(cx - 240, cy - 200, 16);
+            const c2 = makeCross(cx + 240, cy - 60, 12);
+            const c3 = makeCross(cx - 200, cy + 30, 10);
+            const c4 = makeCross(cx + 210, cy - 220, 14);
 
             objs = [
                 topLabel, subLine, lineDecor,
                 title1, title2, desc,
-                benefitBox, coinBg, benefitLabel, goldCoin, coinText,
+                benefitBox, benefitLabel,
                 boxText, btnRect, btnText,
-                snow1, snow2, snow3, snow4
+                c1, c2, c3, c4
             ];
         }
 
@@ -957,6 +896,8 @@
         else if (type === 'vertical-text') {
             const FRAME_W = 600;
             const FRAME_H = 980;
+            const TEXT_COLOR = '#262626';
+            const DIM_COLOR = '#8e8e8e';
 
             const instaGradient = new fabric.Gradient({
                 type: 'linear',
@@ -971,12 +912,12 @@
             const cardBg = new fabric.Rect({
                 width: FRAME_W, height: FRAME_H, fill: 'white',
                 originX: 'center', originY: 'center', left: cx, top: cy,
-                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.15)', blur: 20 })
+                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.08)', blur: 25 })
             });
 
             objs.push(cardBg);
 
-            const topBarH = 100;
+            const topBarH = 80;
             const topBar = new fabric.Rect({
                 width: FRAME_W, height: topBarH, fill: instaGradient,
                 originX: 'center', originY: 'top', left: cx, top: cy - FRAME_H/2
@@ -984,38 +925,38 @@
 
             const camPath = "M10,8 L18,8 L20,4 L36,4 L38,8 L46,8 C48,8 50,10 50,12 L50,36 C50,38 48,40 46,40 L10,40 C8,40 6,38 6,36 L6,12 C6,10 8,8 10,8 M28,14 C22,14 18,18 18,24 C18,30 22,34 28,34 C34,34 38,30 38,24 C38,18 34,14 28,14 M28,18 C31,18 34,21 34,24 C34,27 31,30 28,30 C25,30 22,27 22,24 C22,21 25,18 28,18 M42,11 C42,12 41,13 40,13 C39,13 38,12 38,11 C38,10 39,9 40,9 C41,9 42,10 42,11";
             const camIcon = new fabric.Path(camPath, {
-                scaleX: 1.0, scaleY: 1.0, fill: 'transparent', stroke: 'white', strokeWidth: 2,
+                scaleX: 0.9, scaleY: 0.9, fill: 'transparent', stroke: 'white', strokeWidth: 1.5,
                 originX: 'left', originY: 'center', left: cx - FRAME_W/2 + 25, top: cy - FRAME_H/2 + topBarH/2
             });
 
             const logoText = new fabric.IText(data.insta.logoText, {
-                fontFamily: F.POINT, fontSize: 36, fill: 'white', fontWeight: 'bold',
+                fontFamily: F.POINT, fontSize: 30, fill: 'white', fontWeight: '300',
                 originX: 'center', originY: 'center', left: cx, top: cy - FRAME_H/2 + topBarH/2
             });
 
             const planePath = "M2,21L23,12L2,3V10L17,12L2,14V21Z";
             const dmIcon = new fabric.Path(planePath, {
-                scaleX: 1.2, scaleY: 1.2, fill: 'white',
+                scaleX: 1.0, scaleY: 1.0, fill: 'white',
                 originX: 'right', originY: 'center', left: cx + FRAME_W/2 - 25, top: cy - FRAME_H/2 + topBarH/2
             });
 
             objs.push(topBar, camIcon, logoText, dmIcon);
 
             const profileY = cy - FRAME_H/2 + topBarH + 20;
-            const profileH = 70;
+            const profileH = 60;
 
             const avatar = new fabric.Circle({
-                radius: 22, fill: 'white', stroke: '#d6249f', strokeWidth: 2,
+                radius: 20, fill: '#f5f5f5', stroke: '#dbdbdb', strokeWidth: 1,
                 originX: 'left', originY: 'center', left: cx - FRAME_W/2 + 30, top: profileY + profileH/2
             });
 
             const username = new fabric.IText(data.insta.username, {
-                fontFamily: F.SUB, fontSize: 20, fill: '#262626', fontWeight: 'bold',
-                originX: 'left', originY: 'center', left: cx - FRAME_W/2 + 85, top: profileY + profileH/2
+                fontFamily: F.SUB, fontSize: 18, fill: TEXT_COLOR, fontWeight: '300',
+                originX: 'left', originY: 'center', left: cx - FRAME_W/2 + 80, top: profileY + profileH/2
             });
 
             const moreOpts = new fabric.IText("...", {
-                fontFamily: 'sans-serif', fontSize: 24, fill: '#262626', fontWeight: 'bold',
+                fontFamily: 'sans-serif', fontSize: 20, fill: DIM_COLOR, fontWeight: '300',
                 originX: 'right', originY: 'center', left: cx + FRAME_W/2 - 30, top: profileY + profileH/2 - 5
             });
 
@@ -1023,54 +964,55 @@
 
             const sideMargin = 80;
             const photoSize = FRAME_W - (sideMargin * 2);
-            const imgY = profileY + profileH + 30;
+            const imgY = profileY + profileH + 20;
 
             const photoBox = new fabric.Rect({
-                width: photoSize, height: photoSize, fill: '#555555',
+                width: photoSize, height: photoSize, fill: '#eeeeee',
                 originX: 'center', originY: 'top', left: cx, top: imgY
             });
 
             const guideText = new fabric.IText("PHOTO HERE", {
-                fontFamily: F.POINT, fontSize: 24, fill: '#888',
+                fontFamily: F.POINT, fontSize: 20, fill: '#bbb', fontWeight: '300',
+                charSpacing: 200,
                 originX: 'center', originY: 'center', left: cx, top: imgY + photoSize/2
             });
 
             objs.push(photoBox, guideText);
 
-            const actionY = imgY + photoSize + 40;
-            const iconScale = 1.3;
+            const actionY = imgY + photoSize + 35;
+            const iconScale = 1.1;
             const leftStart = cx - FRAME_W/2 + 30;
 
             const heartPath = "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z";
             const bubblePath = "M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z";
             const bookmarkPath = "M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z";
 
-            const iHeart = new fabric.Path(heartPath, { scaleX: iconScale, scaleY: iconScale, fill: '#ed4956', stroke: '#ed4956', strokeWidth: 1, originX: 'left', originY: 'center', left: leftStart, top: actionY });
-            const iComment = new fabric.Path(bubblePath, { scaleX: iconScale, scaleY: iconScale, fill: 'transparent', stroke: 'black', strokeWidth: 2, originX: 'left', originY: 'center', left: leftStart + 50, top: actionY });
-            const iSave = new fabric.Path(bookmarkPath, { scaleX: iconScale, scaleY: iconScale, fill: 'transparent', stroke: 'black', strokeWidth: 2, originX: 'right', originY: 'center', left: cx + FRAME_W/2 - 30, top: actionY });
+            const iHeart = new fabric.Path(heartPath, { scaleX: iconScale, scaleY: iconScale, fill: 'transparent', stroke: TEXT_COLOR, strokeWidth: 1.5, originX: 'left', originY: 'center', left: leftStart, top: actionY });
+            const iComment = new fabric.Path(bubblePath, { scaleX: iconScale, scaleY: iconScale, fill: 'transparent', stroke: TEXT_COLOR, strokeWidth: 1.5, originX: 'left', originY: 'center', left: leftStart + 45, top: actionY });
+            const iSave = new fabric.Path(bookmarkPath, { scaleX: iconScale, scaleY: iconScale, fill: 'transparent', stroke: TEXT_COLOR, strokeWidth: 1.5, originX: 'right', originY: 'center', left: cx + FRAME_W/2 - 30, top: actionY });
 
             objs.push(iHeart, iComment, iSave);
 
-            const textStartY = actionY + 45;
+            const textStartY = actionY + 40;
 
-            const likeIconSmall = new fabric.Path(heartPath, { scaleX: 0.6, scaleY: 0.6, fill: '#ed4956', originX: 'left', originY: 'center', left: leftStart, top: textStartY });
             const likesText = new fabric.IText(data.insta.likes, {
-                fontFamily: F.SUB, fontSize: 15, fill: '#262626', fontWeight: 'bold',
-                originX: 'left', originY: 'center', left: leftStart + 25, top: textStartY
+                fontFamily: F.SUB, fontSize: 14, fill: TEXT_COLOR, fontWeight: '300',
+                originX: 'left', originY: 'center', left: leftStart, top: textStartY
             });
 
             const hashtags = new fabric.IText(data.insta.hashtags, {
-                fontFamily: F.EMO, fontSize: 20, fill: '#00376b', lineHeight: 1.4,
+                fontFamily: F.EMO, fontSize: 17, fill: '#00376b', fontWeight: '300', lineHeight: 1.5,
                 originX: 'left', originY: 'top', left: leftStart, top: textStartY + 25,
                 width: FRAME_W - 60, splitByGrapheme: true
             });
 
-            objs.push(likeIconSmall, likesText, hashtags);
+            objs.push(likesText, hashtags);
 
-            const bottomBarH = 60;
+            const bottomBarH = 50;
 
             const botBarRect = new fabric.Rect({
-                width: FRAME_W, height: bottomBarH, fill: instaGradient,
+                width: FRAME_W, height: bottomBarH, fill: '#fafafa',
+                stroke: '#dbdbdb', strokeWidth: 1,
                 left: 0, top: 0
             });
 
@@ -1081,11 +1023,11 @@
             const step = FRAME_W / 5;
             const iconY = bottomBarH / 2;
 
-            const bHome = new fabric.Path(homePath, { scaleX: 1.5, scaleY: 1.5, fill: 'white', originX: 'center', originY: 'center', left: step/2, top: iconY });
-            const bSearch = new fabric.Path(searchPath, { scaleX: 1.5, scaleY: 1.5, fill: 'white', originX: 'center', originY: 'center', left: step/2 + step, top: iconY });
-            const bPlus = new fabric.Path(boxPlusPath, { scaleX: 1.5, scaleY: 1.5, fill: 'white', originX: 'center', originY: 'center', left: step/2 + step*2, top: iconY });
-            const bHeart = new fabric.Path(heartPath, { scaleX: 1.2, scaleY: 1.2, fill: 'white', originX: 'center', originY: 'center', left: step/2 + step*3, top: iconY });
-            const bUser = new fabric.Circle({ radius: 14, fill: 'white', stroke: 'white', strokeWidth: 1, originX: 'center', originY: 'center', left: step/2 + step*4, top: iconY });
+            const bHome = new fabric.Path(homePath, { scaleX: 1.3, scaleY: 1.3, fill: TEXT_COLOR, originX: 'center', originY: 'center', left: step/2, top: iconY });
+            const bSearch = new fabric.Path(searchPath, { scaleX: 1.3, scaleY: 1.3, fill: DIM_COLOR, originX: 'center', originY: 'center', left: step/2 + step, top: iconY });
+            const bPlus = new fabric.Path(boxPlusPath, { scaleX: 1.3, scaleY: 1.3, fill: DIM_COLOR, originX: 'center', originY: 'center', left: step/2 + step*2, top: iconY });
+            const bHeart = new fabric.Path(heartPath, { scaleX: 1.0, scaleY: 1.0, fill: DIM_COLOR, originX: 'center', originY: 'center', left: step/2 + step*3, top: iconY });
+            const bUser = new fabric.Circle({ radius: 12, fill: '#ddd', stroke: '#bbb', strokeWidth: 1, originX: 'center', originY: 'center', left: step/2 + step*4, top: iconY });
 
             const bottomGroup = new fabric.Group([botBarRect, bHome, bSearch, bPlus, bHeart, bUser], {
                 left: cx,
