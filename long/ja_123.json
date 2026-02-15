@@ -1027,5 +1027,7 @@
   "dsm_ph_h": "縦",
   "dsm_start": "開始",
   "dsm_back": "戻る",
-  "dsm_ph_search": "作りたいものを検索してみましょう！"
+  "dsm_ph_search": "作りたいものを検索してみましょう！",
+  "editor_tab_text_tpl": "テキストテンプレート",
+  "label_clipart": "クリップアート・素材"
 }

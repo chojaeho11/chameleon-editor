@@ -1121,14 +1121,18 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
 
     try {
         const groups = {
-            'group_template': ['user_vector', 'user_image', 'photo-bg', 'text'],
+            'group_template': ['user_vector', 'user_image', 'photo-bg'],
+            'group_text_tpl': ['text'],
             'group_asset': ['vector', 'graphic', 'transparent-graphic', 'pattern', 'logo']
         };
 
+        // 글씨 템플릿은 오래된 순 (ascending), 나머지는 최신순 (descending)
+        const isAsc = (sideCurrentGroup === 'group_text_tpl');
+
         let query = sb.from('library')
-            .select('id, thumb_url, title, category, product_key, tags') 
+            .select('id, thumb_url, title, category, product_key, tags')
             .eq('status', 'approved')
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: isAsc })
             .range(sideCurrentPage * SIDE_ITEMS_PER_PAGE, (sideCurrentPage + 1) * SIDE_ITEMS_PER_PAGE - 1);
 
         const targetCats = groups[sideCurrentGroup];
@@ -1231,6 +1235,70 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         list.innerHTML = `<div style="padding:20px; text-align:center; color:red; font-size:12px;">${window.t('msg_error_occurred', 'An error occurred.')}</div>`;
     }
 };
+
+// [3] 요소 패널 클립아트 로드
+let sideAssetPage = 0;
+window.loadSideAssets = async function(page) {
+    if (typeof page === 'number') sideAssetPage = page;
+    else sideAssetPage = 0;
+    const list = document.getElementById('sideAssetList');
+    if (!list || !sb) return;
+    list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin" style="color:#6366f1;"></i></div>';
+    try {
+        const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern', 'logo'];
+        const { data, error } = await sb.from('library')
+            .select('id, thumb_url, title, category, tags')
+            .eq('status', 'approved')
+            .in('category', cats)
+            .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
+            .order('created_at', { ascending: false })
+            .range(sideAssetPage * 12, (sideAssetPage + 1) * 12 - 1);
+        if (error) throw error;
+        list.innerHTML = '';
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:11px; padding:15px;">No data</div>';
+            return;
+        }
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;';
+        data.forEach(tpl => {
+            const div = document.createElement('div');
+            div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:1; background:#f8fafc; border:1px solid #e2e8f0; position:relative;';
+            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 150) : tpl.thumb_url;
+            let badge = '';
+            if (tpl.category === 'vector') badge = '<span style="position:absolute;top:3px;left:3px;background:#7c3aed;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">V</span>';
+            div.innerHTML = badge + '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
+            div.onclick = function() {
+                window.selectedTpl = tpl;
+                window.processLoad('add');
+            };
+            grid.appendChild(div);
+        });
+        list.appendChild(grid);
+        // 페이징
+        const pgDiv = document.createElement('div');
+        pgDiv.style.cssText = 'display:flex; justify-content:center; gap:10px; padding:10px 0;';
+        const prevB = document.createElement('button');
+        prevB.className = 'side-page-btn';
+        prevB.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+        prevB.disabled = sideAssetPage === 0;
+        prevB.onclick = function() { window.loadSideAssets(sideAssetPage - 1); };
+        const pageL = document.createElement('span');
+        pageL.style.cssText = 'font-weight:bold; color:#64748b; font-size:13px; line-height:32px;';
+        pageL.textContent = (sideAssetPage + 1) + '';
+        const nextB = document.createElement('button');
+        nextB.className = 'side-page-btn';
+        nextB.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+        nextB.disabled = data.length < 12;
+        nextB.onclick = function() { window.loadSideAssets(sideAssetPage + 1); };
+        pgDiv.appendChild(prevB); pgDiv.appendChild(pageL); pgDiv.appendChild(nextB);
+        list.appendChild(pgDiv);
+    } catch(e) {
+        console.error('Asset load error:', e);
+        list.innerHTML = '<div style="text-align:center; color:red; font-size:11px; padding:10px;">Error</div>';
+    }
+};
+
 // =========================================================
 // [1] 배경 잠금/해제 토글 함수 (누락된 기능 복구)
 // =========================================================

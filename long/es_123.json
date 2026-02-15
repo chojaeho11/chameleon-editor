@@ -1021,5 +1021,7 @@
   "dsm_ph_h": "Alto",
   "dsm_start": "Iniciar",
   "dsm_back": "Atrás",
-  "dsm_ph_search": "¡Busca lo que quieras crear!"
+  "dsm_ph_search": "¡Busca lo que quieras crear!",
+  "editor_tab_text_tpl": "Plantillas de Texto",
+  "label_clipart": "Clipart & Elementos"
 }

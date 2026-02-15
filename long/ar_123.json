@@ -1021,5 +1021,7 @@
   "dsm_ph_h": "الارتفاع",
   "dsm_start": "ابدأ",
   "dsm_back": "رجوع",
-  "dsm_ph_search": "ابحث عما تريد إنشاءه!"
+  "dsm_ph_search": "ابحث عما تريد إنشاءه!",
+  "editor_tab_text_tpl": "قوالب النص",
+  "label_clipart": "قصاصات فنية · عناصر"
 }

@@ -1021,5 +1021,7 @@
   "dsm_ph_h": "高",
   "dsm_start": "开始",
   "dsm_back": "返回",
-  "dsm_ph_search": "搜索您想制作的产品！"
+  "dsm_ph_search": "搜索您想制作的产品！",
+  "editor_tab_text_tpl": "文字模板",
+  "label_clipart": "剪贴画 · 元素"
 }
