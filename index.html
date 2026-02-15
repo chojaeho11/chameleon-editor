@@ -1099,6 +1099,10 @@
                 <span data-i18n="btn_font" style="font-size: 13px;">🅰️ 폰트 전체보기</span>
             </button>
 
+            <button id="btnTextEffect" class="btn-round" onclick="document.getElementById('textEffectModal').style.display='flex'" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height:38px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; font-weight:bold;">
+                <span style="font-size:13px;">✨ 텍스트 효과</span>
+            </button>
+
             <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:10px; text-align: left;">
                 <div style="display:flex; gap:4px; margin-bottom:8px;">
                     <button class="tool-btn" id="btnAlignLeftText" style="flex:1;"><i class="fa-solid fa-align-left"></i></button>
@@ -1817,6 +1821,192 @@
         </div>
     </div>
 </div>
+<!-- ============================================================ -->
+<!-- 텍스트 효과 모달 (Text Effect Modal) -->
+<!-- ============================================================ -->
+<div id="textEffectModal" class="modal-bg" style="z-index:10003; display:none;">
+<div class="modal-box" style="width:680px; max-width:95vw; max-height:85vh; padding:0; overflow:hidden; border-radius:16px;">
+<style>
+.fx-modal-header { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid #e2e8f0; }
+.fx-modal-header h3 { margin:0; font-size:18px; font-weight:800; color:#1e1b4b; }
+.fx-tabs { display:flex; gap:6px; padding:12px 24px; overflow-x:auto; border-bottom:1px solid #f1f5f9; }
+.fx-tabs::-webkit-scrollbar { height:0; }
+.fx-tab { padding:6px 14px; border-radius:20px; border:1px solid #e2e8f0; background:#fff; font-size:12px; font-weight:600; color:#64748b; cursor:pointer; white-space:nowrap; transition:all .2s; }
+.fx-tab:hover { border-color:#6366f1; color:#6366f1; }
+.fx-tab.active { background:#6366f1; color:#fff; border-color:#6366f1; }
+.fx-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:20px 24px; overflow-y:auto; max-height:calc(85vh - 140px); }
+@media (max-width:600px) { .fx-grid { grid-template-columns:repeat(3, 1fr); gap:8px; padding:12px; } }
+.fx-card { cursor:pointer; border:2px solid #f1f5f9; border-radius:12px; padding:10px 6px 8px; text-align:center; transition:all .2s; background:#fff; }
+.fx-card:hover { border-color:#6366f1; transform:translateY(-2px); box-shadow:0 4px 12px rgba(99,102,241,.15); }
+.fx-preview { font-size:32px; font-weight:900; line-height:1.2; height:52px; display:flex; align-items:center; justify-content:center; margin-bottom:4px; font-family:'Inter','Pretendard',sans-serif; overflow:hidden; }
+.fx-name { font-size:10px; color:#64748b; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+</style>
+
+<div class="fx-modal-header">
+    <h3>✨ Text Effects</h3>
+    <button onclick="document.getElementById('textEffectModal').style.display='none'" style="width:36px; height:36px; border-radius:50%; border:none; background:#f1f5f9; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+</div>
+
+<div class="fx-tabs" id="fxTabs">
+    <button class="fx-tab active" onclick="window.filterFxCards('all',this)">ALL</button>
+    <button class="fx-tab" onclick="window.filterFxCards('shadow',this)">Shadow</button>
+    <button class="fx-tab" onclick="window.filterFxCards('outline',this)">Outline</button>
+    <button class="fx-tab" onclick="window.filterFxCards('3d',this)">3D</button>
+    <button class="fx-tab" onclick="window.filterFxCards('neon',this)">Neon</button>
+    <button class="fx-tab" onclick="window.filterFxCards('pattern',this)">Pattern</button>
+    <button class="fx-tab" onclick="window.filterFxCards('retro',this)">Special</button>
+    <button class="fx-tab" onclick="window.filterFxCards('reset',this)">Reset</button>
+</div>
+
+<div class="fx-grid" id="fxGrid">
+    <!-- Shadow -->
+    <div class="fx-card" data-cat="shadow" onclick="window.applyTextEffect('shadow-drop'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#1e293b; text-shadow:4px 4px 8px rgba(0,0,0,0.4);">Aa</div>
+        <div class="fx-name">Drop Shadow</div>
+    </div>
+    <div class="fx-card" data-cat="shadow" onclick="window.applyTextEffect('shadow-hard'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#1e293b; text-shadow:3px 3px 0 #000;">Aa</div>
+        <div class="fx-name">Hard Shadow</div>
+    </div>
+    <div class="fx-card" data-cat="shadow" onclick="window.applyTextEffect('long-shadow'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#1e293b; text-shadow:1px 1px 0 #555,2px 2px 0 #555,3px 3px 0 #555,4px 4px 0 #555,5px 5px 0 #555,6px 6px 0 #555,7px 7px 0 #555,8px 8px 0 #555;">Aa</div>
+        <div class="fx-name">Long Shadow</div>
+    </div>
+    <div class="fx-card" data-cat="shadow" onclick="window.applyTextEffect('shadow-multi'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; text-shadow:-3px -3px 0 #ef4444, 3px 3px 0 #3b82f6, 0 6px 0 #22c55e;">Aa</div>
+        <div class="fx-name">Multi Shadow</div>
+    </div>
+    <div class="fx-card" data-cat="shadow" onclick="window.applyTextEffect('shadow-lift'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#1e293b; text-shadow:0 12px 20px rgba(0,0,0,0.2);">Aa</div>
+        <div class="fx-name">Lift</div>
+    </div>
+
+    <!-- Outline -->
+    <div class="fx-card" data-cat="outline" onclick="window.applyTextEffect('outline-thick'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; -webkit-text-stroke:3px #000;">Aa</div>
+        <div class="fx-name">Thick Outline</div>
+    </div>
+    <div class="fx-card" data-cat="outline" onclick="window.applyTextEffect('outline-white'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#1e293b; -webkit-text-stroke:2px #fff; text-shadow:0 2px 8px rgba(0,0,0,0.15);">Aa</div>
+        <div class="fx-name">White Outline</div>
+    </div>
+    <div class="fx-card" data-cat="outline" onclick="window.applyTextEffect('outline-double'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; -webkit-text-stroke:2px #6366f1; text-shadow:0 0 0 #000, 3px 3px 0 #000;">Aa</div>
+        <div class="fx-name">Double Outline</div>
+    </div>
+    <div class="fx-card" data-cat="outline" onclick="window.applyTextEffect('outline-color'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; -webkit-text-stroke:2.5px #6366f1;">Aa</div>
+        <div class="fx-name">Color Outline</div>
+    </div>
+
+    <!-- 3D -->
+    <div class="fx-card" data-cat="3d" onclick="window.applyTextEffect('block-3d'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#4fffa5; text-shadow:1px 1px 0 #000,2px 2px 0 #000,3px 3px 0 #000,4px 4px 0 #000,5px 5px 0 #000;">Aa</div>
+        <div class="fx-name">3D Green</div>
+    </div>
+    <div class="fx-card" data-cat="3d" onclick="window.applyTextEffect('block-3d-blue'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#38bdf8; text-shadow:1px 1px 0 #1e3a8a,2px 2px 0 #1e3a8a,3px 3px 0 #1e3a8a,4px 4px 0 #1e3a8a,5px 5px 0 #1e3a8a;">Aa</div>
+        <div class="fx-name">3D Blue</div>
+    </div>
+    <div class="fx-card" data-cat="3d" onclick="window.applyTextEffect('block-3d-red'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#f87171; text-shadow:1px 1px 0 #7f1d1d,2px 2px 0 #7f1d1d,3px 3px 0 #7f1d1d,4px 4px 0 #7f1d1d,5px 5px 0 #7f1d1d;">Aa</div>
+        <div class="fx-name">3D Red</div>
+    </div>
+    <div class="fx-card" data-cat="3d" onclick="window.applyTextEffect('block-3d-gold'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fbbf24; text-shadow:1px 1px 0 #78350f,2px 2px 0 #78350f,3px 3px 0 #78350f,4px 4px 0 #78350f,5px 5px 0 #78350f;">Aa</div>
+        <div class="fx-name">3D Gold</div>
+    </div>
+
+    <!-- Neon -->
+    <div class="fx-card" data-cat="neon" onclick="window.applyTextEffect('neon-strong'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; text-shadow:0 0 7px #7800ff, 0 0 10px #7800ff, 0 0 21px #d300c5, 0 0 42px #d300c5; background:#1a0a2e; border-radius:6px;">Aa</div>
+        <div class="fx-name">Neon Purple</div>
+    </div>
+    <div class="fx-card" data-cat="neon" onclick="window.applyTextEffect('neon-blue'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; text-shadow:0 0 7px #00d4ff, 0 0 10px #00d4ff, 0 0 21px #0066ff, 0 0 42px #0066ff; background:#0a1628; border-radius:6px;">Aa</div>
+        <div class="fx-name">Neon Blue</div>
+    </div>
+    <div class="fx-card" data-cat="neon" onclick="window.applyTextEffect('neon-green'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; text-shadow:0 0 7px #00ff88, 0 0 10px #00ff88, 0 0 21px #00cc44, 0 0 42px #00cc44; background:#0a1e14; border-radius:6px;">Aa</div>
+        <div class="fx-name">Neon Green</div>
+    </div>
+    <div class="fx-card" data-cat="neon" onclick="window.applyTextEffect('neon-pink'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; text-shadow:0 0 7px #ff00aa, 0 0 10px #ff00aa, 0 0 21px #ff66cc, 0 0 42px #ff66cc; background:#1e0a1a; border-radius:6px;">Aa</div>
+        <div class="fx-name">Neon Pink</div>
+    </div>
+
+    <!-- Pattern -->
+    <div class="fx-card" data-cat="pattern" onclick="window.applyTextEffect('retro-candy'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#ef4444; -webkit-text-stroke:2px #fff; text-shadow:3px 3px 0 rgba(0,0,0,0.2); background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(21,128,61,0.3) 3px,rgba(21,128,61,0.3) 6px); -webkit-background-clip:text;">Aa</div>
+        <div class="fx-name">Red Candy</div>
+    </div>
+    <div class="fx-card" data-cat="pattern" onclick="window.applyTextEffect('blue-candy'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#38bdf8; -webkit-text-stroke:2px #fff; text-shadow:3px 3px 0 rgba(0,0,0,0.2); background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(30,58,138,0.3) 3px,rgba(30,58,138,0.3) 6px); -webkit-background-clip:text;">Aa</div>
+        <div class="fx-name">Blue Candy</div>
+    </div>
+    <div class="fx-card" data-cat="pattern" onclick="window.applyTextEffect('candy-pink'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#ec4899; -webkit-text-stroke:2px #fff; text-shadow:3px 3px 0 rgba(0,0,0,0.2);">Aa</div>
+        <div class="fx-name">Pink Candy</div>
+    </div>
+    <div class="fx-card" data-cat="pattern" onclick="window.applyTextEffect('candy-orange'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#f97316; -webkit-text-stroke:2px #fff; text-shadow:3px 3px 0 rgba(0,0,0,0.2);">Aa</div>
+        <div class="fx-name">Orange Candy</div>
+    </div>
+
+    <!-- Special/Retro -->
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('glitch-strong'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#fff; text-shadow:-3px -3px 0 red, 3px 3px 0 cyan;">Aa</div>
+        <div class="fx-name">Glitch</div>
+    </div>
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('vintage'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#8B4513; -webkit-text-stroke:1.5px #D2691E; text-shadow:2px 2px 4px rgba(139,69,19,0.4);">Aa</div>
+        <div class="fx-name">Vintage</div>
+    </div>
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('comic'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#ffdd00; -webkit-text-stroke:3px #000; text-shadow:4px 4px 0 #000;">Aa</div>
+        <div class="fx-name">Comic</div>
+    </div>
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('emboss'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#94a3b8; text-shadow:-1px -1px 1px #fff, 1px 1px 2px rgba(0,0,0,0.4);">Aa</div>
+        <div class="fx-name">Emboss</div>
+    </div>
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-purple'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="background:linear-gradient(135deg,#6366f1,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Aa</div>
+        <div class="fx-name">Gradient</div>
+    </div>
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-sunset'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="background:linear-gradient(135deg,#f97316,#ef4444,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Aa</div>
+        <div class="fx-name">Sunset</div>
+    </div>
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-ocean'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="background:linear-gradient(135deg,#06b6d4,#3b82f6,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Aa</div>
+        <div class="fx-name">Ocean</div>
+    </div>
+    <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-gold'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="background:linear-gradient(135deg,#fbbf24,#f59e0b,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:none;">Aa</div>
+        <div class="fx-name">Gold</div>
+    </div>
+
+    <!-- Reset -->
+    <div class="fx-card" data-cat="reset" onclick="window.applyTextEffect('reset'); document.getElementById('textEffectModal').style.display='none';">
+        <div class="fx-preview" style="color:#64748b; font-size:24px;">🔄</div>
+        <div class="fx-name">Reset</div>
+    </div>
+</div>
+</div>
+</div>
+<script>
+window.filterFxCards = function(cat, btn) {
+    document.querySelectorAll('.fx-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.fx-card').forEach(c => {
+        c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
+    });
+};
+</script>
+
 <div id="fontModal" class="modal-bg" style="z-index: 10002;"><div class="modal-box"><h3 data-i18n="modal_font_title">폰트 선택</h3><div id="fontList" style="max-height:300px; overflow-y:auto;"></div><button onclick="document.getElementById('fontModal').style.display='none'" class="btn-round" style="margin-top:10px;" data-i18n="btn_close">닫기</button></div></div>
 <div id="choiceModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 900px; max-width: 95%;">

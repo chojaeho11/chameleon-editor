@@ -733,14 +733,65 @@ window.applyTextEffect = function(type) {
     const originalColor = originalText.fill || '#000000';
 
     switch (type) {
-        case 'block-3d': create3DEffect(originalText, '#4fffa5', '#000000', depth3D); break;
-        case 'neon-strong': createNeonEffect(originalText, strokeW); break;
-        case 'glitch-strong': createGlitchEffect(originalText); break;
+        // Shadow
+        case 'shadow-drop':
+            originalText.set({ shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.4)', blur: fontSize * 0.15, offsetX: fontSize * 0.08, offsetY: fontSize * 0.08 }) });
+            canvas.requestRenderAll(); break;
+        case 'shadow-hard':
+            originalText.set({ shadow: new fabric.Shadow({ color: '#000000', blur: 0, offsetX: fontSize * 0.06, offsetY: fontSize * 0.06 }) });
+            canvas.requestRenderAll(); break;
         case 'long-shadow': createLongShadow(originalText, originalColor, '#000000', 500); break;
+        case 'shadow-multi': createMultiShadowEffect(originalText); break;
+        case 'shadow-lift':
+            originalText.set({ shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.2)', blur: fontSize * 0.3, offsetX: 0, offsetY: fontSize * 0.2 }) });
+            canvas.requestRenderAll(); break;
+
+        // Outline
+        case 'outline-thick':
+            originalText.set({ stroke: '#000000', strokeWidth: Math.max(3, fontSize * 0.12), paintFirst: 'stroke', strokeLineJoin: 'round' });
+            canvas.requestRenderAll(); break;
+        case 'outline-white':
+            originalText.set({ stroke: '#ffffff', strokeWidth: Math.max(2, fontSize * 0.1), paintFirst: 'stroke', strokeLineJoin: 'round', shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.15)', blur: 8, offsetX: 0, offsetY: 2 }) });
+            canvas.requestRenderAll(); break;
+        case 'outline-double': createDoubleOutlineEffect(originalText, strokeW); break;
+        case 'outline-color':
+            originalText.set({ stroke: '#6366f1', strokeWidth: Math.max(2, fontSize * 0.08), paintFirst: 'stroke', strokeLineJoin: 'round' });
+            canvas.requestRenderAll(); break;
+
+        // 3D
+        case 'block-3d': create3DEffect(originalText, '#4fffa5', '#000000', depth3D); break;
+        case 'block-3d-blue': create3DEffect(originalText, '#38bdf8', '#1e3a8a', depth3D); break;
+        case 'block-3d-red': create3DEffect(originalText, '#f87171', '#7f1d1d', depth3D); break;
+        case 'block-3d-gold': create3DEffect(originalText, '#fbbf24', '#78350f', depth3D); break;
+
+        // Neon
+        case 'neon-strong': createNeonEffect(originalText, strokeW, '#7800ff', '#d300c5'); break;
+        case 'neon-blue': createNeonEffect(originalText, strokeW, '#00d4ff', '#0066ff'); break;
+        case 'neon-green': createNeonEffect(originalText, strokeW, '#00ff88', '#00cc44'); break;
+        case 'neon-pink': createNeonEffect(originalText, strokeW, '#ff00aa', '#ff66cc'); break;
+
+        // Pattern
         case 'retro-candy': createCandyEffect(originalText, '#ef4444', '#15803d'); break;
         case 'blue-candy': createCandyEffect(originalText, '#38bdf8', '#1e3a8a'); break;
+        case 'candy-pink': createCandyEffect(originalText, '#ec4899', '#9d174d'); break;
+        case 'candy-orange': createCandyEffect(originalText, '#f97316', '#7c2d12'); break;
+
+        // Special
+        case 'glitch-strong': createGlitchEffect(originalText); break;
+        case 'vintage':
+            originalText.set({ fill: '#8B4513', stroke: '#D2691E', strokeWidth: Math.max(1, fontSize * 0.03), paintFirst: 'stroke', shadow: new fabric.Shadow({ color: 'rgba(139,69,19,0.4)', blur: fontSize * 0.1, offsetX: 2, offsetY: 2 }) });
+            canvas.requestRenderAll(); break;
+        case 'comic':
+            originalText.set({ fill: '#ffdd00', stroke: '#000000', strokeWidth: Math.max(3, fontSize * 0.1), paintFirst: 'stroke', strokeLineJoin: 'round', shadow: new fabric.Shadow({ color: '#000000', blur: 0, offsetX: fontSize * 0.08, offsetY: fontSize * 0.08 }) });
+            canvas.requestRenderAll(); break;
+        case 'emboss': createEmbossEffect(originalText); break;
+        case 'gradient-purple': createGradientEffect(originalText, '#6366f1', '#ec4899'); break;
+        case 'gradient-sunset': createGradientEffect(originalText, '#f97316', '#ef4444', '#ec4899'); break;
+        case 'gradient-ocean': createGradientEffect(originalText, '#06b6d4', '#3b82f6', '#6366f1'); break;
+        case 'gradient-gold': createGradientEffect(originalText, '#fbbf24', '#f59e0b', '#d97706'); break;
+
         case 'reset':
-            originalText.set({ fill: '#000000', stroke: null, strokeWidth: 0, shadow: null });
+            originalText.set({ fill: '#000000', stroke: null, strokeWidth: 0, shadow: null, paintFirst: 'fill' });
             canvas.requestRenderAll();
             break;
     }
@@ -767,19 +818,21 @@ function create3DEffect(original, topColor, sideColor, depth) {
     }
 }
 
-function createNeonEffect(original, strokeW) {
+function createNeonEffect(original, strokeW, color1, color2) {
+    color1 = color1 || '#7800ff';
+    color2 = color2 || '#d300c5';
     const layers = [];
     original.clone((glow1) => {
         glow1.set({
-            stroke: '#7800ff', strokeWidth: strokeW * 1.5, fill: 'transparent',
-            shadow: new fabric.Shadow({ color: '#7800ff', blur: strokeW * 4, offsetX:0, offsetY:0 }),
+            stroke: color1, strokeWidth: strokeW * 1.5, fill: 'transparent',
+            shadow: new fabric.Shadow({ color: color1, blur: strokeW * 4, offsetX:0, offsetY:0 }),
             selectable: false, isClone: true
         });
         layers.push(glow1);
         original.clone((glow2) => {
             glow2.set({
-                stroke: '#d300c5', strokeWidth: strokeW * 0.5, fill: 'transparent',
-                shadow: new fabric.Shadow({ color: '#d300c5', blur: strokeW * 0.8, offsetX:0, offsetY:0 }),
+                stroke: color2, strokeWidth: strokeW * 0.5, fill: 'transparent',
+                shadow: new fabric.Shadow({ color: color2, blur: strokeW * 0.8, offsetX:0, offsetY:0 }),
                 selectable: false, isClone: true
             });
             layers.push(glow2);
@@ -847,6 +900,84 @@ function groupAndRender(items) {
     const group = new fabric.Group(items, { canvas: canvas, isEffectGroup: true });
     canvas.add(group);
     canvas.setActiveObject(group);
+    canvas.requestRenderAll();
+}
+
+// 다중 그림자 효과
+function createMultiShadowEffect(original) {
+    const layers = [];
+    const offset = Math.max(3, original.fontSize * 0.05);
+    original.clone((red) => {
+        red.set({ left: original.left - offset * 1.5, top: original.top - offset, fill: '#ef4444', opacity: 0.7, stroke: null, strokeWidth: 0, selectable: false, isClone: true });
+        layers.push(red);
+        original.clone((blue) => {
+            blue.set({ left: original.left + offset * 1.5, top: original.top + offset, fill: '#3b82f6', opacity: 0.7, stroke: null, strokeWidth: 0, selectable: false, isClone: true });
+            layers.push(blue);
+            original.clone((green) => {
+                green.set({ left: original.left, top: original.top + offset * 2.5, fill: '#22c55e', opacity: 0.7, stroke: null, strokeWidth: 0, selectable: false, isClone: true });
+                layers.push(green);
+                original.set({ fill: '#ffffff', isMainText: true });
+                layers.push(original);
+                groupAndRender(layers);
+            });
+        });
+    });
+}
+
+// 이중 외곽선 효과
+function createDoubleOutlineEffect(original, strokeW) {
+    const layers = [];
+    original.clone((outer) => {
+        outer.set({
+            stroke: '#000000', strokeWidth: strokeW * 3, fill: 'transparent',
+            paintFirst: 'stroke', strokeLineJoin: 'round',
+            selectable: false, isClone: true
+        });
+        layers.push(outer);
+        original.clone((inner) => {
+            inner.set({
+                stroke: '#6366f1', strokeWidth: strokeW * 1.5, fill: 'transparent',
+                paintFirst: 'stroke', strokeLineJoin: 'round',
+                selectable: false, isClone: true
+            });
+            layers.push(inner);
+            original.set({ fill: '#ffffff', stroke: null, strokeWidth: 0, isMainText: true });
+            layers.push(original);
+            groupAndRender(layers);
+        });
+    });
+}
+
+// 엠보스 효과
+function createEmbossEffect(original) {
+    const layers = [];
+    const offset = Math.max(1, original.fontSize * 0.02);
+    original.clone((dark) => {
+        dark.set({ left: original.left + offset, top: original.top + offset, fill: 'rgba(0,0,0,0.4)', stroke: null, strokeWidth: 0, selectable: false, isClone: true });
+        layers.push(dark);
+        original.clone((light) => {
+            light.set({ left: original.left - offset, top: original.top - offset, fill: 'rgba(255,255,255,0.8)', stroke: null, strokeWidth: 0, selectable: false, isClone: true });
+            layers.push(light);
+            original.set({ fill: '#94a3b8', isMainText: true });
+            layers.push(original);
+            groupAndRender(layers);
+        });
+    });
+}
+
+// 그라데이션 효과
+function createGradientEffect(original, color1, color2, color3) {
+    const stops = [{ offset: 0, color: color1 }, { offset: 1, color: color2 }];
+    if (color3) {
+        stops[1].offset = 0.5;
+        stops.push({ offset: 1, color: color3 });
+    }
+    const grad = new fabric.Gradient({
+        type: 'linear',
+        coords: { x1: 0, y1: 0, x2: original.width, y2: original.height },
+        colorStops: stops
+    });
+    original.set({ fill: grad, stroke: null, strokeWidth: 0 });
     canvas.requestRenderAll();
 }
 
