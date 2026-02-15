@@ -6320,124 +6320,6 @@ window.filterModalItems = function(keyword) {
 </div>
 
 
-// ===== 디자인 판형 선택 모달 JS =====
-window.openDesignStartModal = function() {
-    document.getElementById('designStartModal').style.display = 'flex';
-    window.dsmBackToMain();
-};
-// 버튼 바인딩 (onclick이 아닌 addEventListener로 — 스크립트 로드 순서 문제 방지)
-(function() {
-    const btn = document.getElementById('btnDesignStart');
-    if (btn) btn.addEventListener('click', () => window.openDesignStartModal());
-})();
-
-// 디지털 판형 → 바로 에디터 열기
-window.dsmOpenEditor = async function(wMM, hMM, label) {
-    document.getElementById('designStartModal').style.display = 'none';
-    if (window.startEditorDirect) {
-        await window.startEditorDirect('custom', wMM, hMM);
-    } else {
-        alert('에디터를 불러오는 중 오류가 발생했습니다.');
-    }
-};
-
-// 직접 입력
-window.dsmOpenCustom = function() {
-    const w = parseInt(document.getElementById('dsmCustomW').value);
-    const h = parseInt(document.getElementById('dsmCustomH').value);
-    if (!w || !h || w <= 0 || h <= 0) return alert('가로/세로를 올바르게 입력해주세요.');
-    window.dsmOpenEditor(w, h, 'Custom');
-};
-
-// 인쇄 판형 → 카테고리 선택 뷰 보여주기
-window._dsmPrintSize = { w: 0, h: 0, label: '' };
-window._dsmPrintCategory = 'all';
-
-window.dsmShowPrintCategory = async function(wMM, hMM, label) {
-    window._dsmPrintSize = { w: wMM, h: hMM, label: label };
-    window._dsmPrintCategory = 'all';
-
-    document.getElementById('dsm-main-view').style.display = 'none';
-    document.getElementById('dsm-print-view').style.display = 'block';
-    document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '×' + hMM + 'mm) — 어디에 인쇄할까요?';
-    document.getElementById('dsmPrintSearch').value = '';
-
-    // 카테고리 버튼 active 초기화
-    document.querySelectorAll('.dsm-cat-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.dsm-cat-btn').classList.add('active');
-
-    // 상품 로드
-    const grid = document.getElementById('dsmProductGrid');
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i></div>';
-
-    try {
-        if (typeof sb === 'undefined') throw new Error('DB 없음');
-        const { data: products } = await sb.from('admin_products')
-            .select('name, code, img_url, category, price, width_mm, height_mm, name_jp, name_us')
-            .not('img_url', 'is', null).neq('img_url', '');
-        window._dsmProducts = products || [];
-        window.dsmRenderProducts('');
-    } catch(e) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
-    }
-};
-
-window.dsmBackToMain = function() {
-    document.getElementById('dsm-main-view').style.display = 'block';
-    document.getElementById('dsm-print-view').style.display = 'none';
-};
-
-window.dsmSelectCategory = function(cat, btn) {
-    window._dsmPrintCategory = cat;
-    document.querySelectorAll('.dsm-cat-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    window.dsmRenderProducts(document.getElementById('dsmPrintSearch').value || '');
-};
-
-window.dsmFilterPrintProducts = function(keyword) {
-    window.dsmRenderProducts(keyword);
-};
-
-window.dsmRenderProducts = function(keyword) {
-    const grid = document.getElementById('dsmProductGrid');
-    const term = (keyword || '').toLowerCase().trim();
-    const cat = window._dsmPrintCategory;
-    let items = window._dsmProducts || [];
-
-    if (cat !== 'all') {
-        items = items.filter(p => {
-            const catName = (p.category || '').toLowerCase();
-            return catName.includes(cat.toLowerCase()) || catName === cat;
-        });
-    }
-    if (term) {
-        items = items.filter(p => (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term));
-    }
-
-    if (!items.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:8px;"></i><br>해당 조건의 상품이 없습니다.</div>';
-        return;
-    }
-
-    grid.innerHTML = '';
-    items.forEach(p => {
-        const div = document.createElement('div');
-        div.style.cssText = 'cursor:pointer; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; transition:all 0.2s; background:#fff;';
-        div.onmouseover = () => { div.style.borderColor='#6366f1'; div.style.transform='translateY(-2px)'; div.style.boxShadow='0 4px 12px rgba(99,102,241,0.12)'; };
-        div.onmouseout = () => { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
-        div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
-            '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (p.name || p.code) + '</div></div>';
-        div.onclick = () => {
-            document.getElementById('designStartModal').style.display = 'none';
-            const sz = window._dsmPrintSize;
-            if (window.startEditorDirect) {
-                window.startEditorDirect(p.code, sz.w, sz.h);
-            }
-        };
-        grid.appendChild(div);
-    });
-};
-
 </script>
 <!-- ===== 디자인 판형 선택 모달 (Miri Canvas 스타일) ===== -->
 <div id="designStartModal" class="modal-bg" style="z-index: 21500; display: none; align-items: center; justify-content: center;">
@@ -6614,6 +6496,112 @@ window.dsmRenderProducts = function(keyword) {
     #dsmProductGrid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 </style>
+
+<script>
+// ===== 디자인 판형 선택 모달 JS =====
+window.openDesignStartModal = function() {
+    document.getElementById('designStartModal').style.display = 'flex';
+    window.dsmBackToMain();
+};
+
+window.dsmOpenEditor = async function(wMM, hMM, label) {
+    document.getElementById('designStartModal').style.display = 'none';
+    if (window.startEditorDirect) {
+        await window.startEditorDirect('custom', wMM, hMM);
+    } else {
+        alert('에디터를 불러오는 중 오류가 발생했습니다.');
+    }
+};
+
+window.dsmOpenCustom = function() {
+    const w = parseInt(document.getElementById('dsmCustomW').value);
+    const h = parseInt(document.getElementById('dsmCustomH').value);
+    if (!w || !h || w <= 0 || h <= 0) return alert('가로/세로를 올바르게 입력해주세요.');
+    window.dsmOpenEditor(w, h, 'Custom');
+};
+
+window._dsmPrintSize = { w: 0, h: 0, label: '' };
+window._dsmPrintCategory = 'all';
+
+window.dsmShowPrintCategory = async function(wMM, hMM, label) {
+    window._dsmPrintSize = { w: wMM, h: hMM, label: label };
+    window._dsmPrintCategory = 'all';
+    document.getElementById('dsm-main-view').style.display = 'none';
+    document.getElementById('dsm-print-view').style.display = 'block';
+    document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '\u00d7' + hMM + 'mm) \u2014 어디에 인쇄할까요?';
+    document.getElementById('dsmPrintSearch').value = '';
+    document.querySelectorAll('.dsm-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelector('.dsm-cat-btn').classList.add('active');
+
+    var grid = document.getElementById('dsmProductGrid');
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i></div>';
+    try {
+        if (typeof sb === 'undefined') throw new Error('DB');
+        var resp = await sb.from('admin_products')
+            .select('name, code, img_url, category, price, width_mm, height_mm')
+            .not('img_url', 'is', null).neq('img_url', '');
+        window._dsmProducts = resp.data || [];
+        window.dsmRenderProducts('');
+    } catch(e) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
+    }
+};
+
+window.dsmBackToMain = function() {
+    document.getElementById('dsm-main-view').style.display = 'block';
+    document.getElementById('dsm-print-view').style.display = 'none';
+};
+
+window.dsmSelectCategory = function(cat, btn) {
+    window._dsmPrintCategory = cat;
+    document.querySelectorAll('.dsm-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    window.dsmRenderProducts(document.getElementById('dsmPrintSearch').value || '');
+};
+
+window.dsmFilterPrintProducts = function(keyword) {
+    window.dsmRenderProducts(keyword);
+};
+
+window.dsmRenderProducts = function(keyword) {
+    var grid = document.getElementById('dsmProductGrid');
+    var term = (keyword || '').toLowerCase().trim();
+    var cat = window._dsmPrintCategory;
+    var items = (window._dsmProducts || []).slice();
+
+    if (cat !== 'all') {
+        items = items.filter(function(p) {
+            return (p.category || '').toLowerCase().includes(cat.toLowerCase());
+        });
+    }
+    if (term) {
+        items = items.filter(function(p) {
+            return (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term);
+        });
+    }
+
+    if (!items.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:8px;"></i><br>해당 조건의 상품이 없습니다.</div>';
+        return;
+    }
+
+    grid.innerHTML = '';
+    items.forEach(function(p) {
+        var div = document.createElement('div');
+        div.style.cssText = 'cursor:pointer; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; transition:all 0.2s; background:#fff;';
+        div.onmouseover = function() { div.style.borderColor='#6366f1'; div.style.transform='translateY(-2px)'; div.style.boxShadow='0 4px 12px rgba(99,102,241,0.12)'; };
+        div.onmouseout = function() { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
+        div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
+            '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (p.name || p.code) + '</div></div>';
+        div.onclick = function() {
+            document.getElementById('designStartModal').style.display = 'none';
+            var sz = window._dsmPrintSize;
+            if (window.startEditorDirect) window.startEditorDirect(p.code, sz.w, sz.h);
+        };
+        grid.appendChild(div);
+    });
+};
+</script>
 
 <div id="templateCreatorModal" class="modal-bg" style="z-index: 21000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 500px; max-width: 95%; text-align: left; border-radius: 16px; overflow: hidden; padding: 0;">
