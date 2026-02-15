@@ -880,11 +880,16 @@ async function addCanvasToCart() {
 
     // 2. 리스트에 추가 또는 기존 아이템 업데이트 (다시 편집 시)
     if (typeof window.editingCartItemIdx === 'number' && window.editingCartItemIdx >= 0 && window.editingCartItemIdx < currentCartList.length) {
-        // 기존 아이템의 수량/옵션 보존하면서 디자인 데이터만 교체
+        // 기존 아이템의 수량/옵션/가격 보존하면서 디자인 데이터만 교체
         const oldItem = currentCartList[window.editingCartItemIdx];
         newItem.qty = oldItem.qty || newItem.qty;
         newItem.selectedAddons = oldItem.selectedAddons || newItem.selectedAddons;
         newItem.addonQuantities = oldItem.addonQuantities || newItem.addonQuantities;
+        // ★ 회배계산기로 계산된 단가 보존
+        if (oldItem.product && oldItem.product.price) {
+            newItem.product.price = oldItem.product.price;
+            console.log("[다시편집] 기존 단가 보존:", oldItem.product.price);
+        }
         currentCartList[window.editingCartItemIdx] = newItem;
         console.log("[다시편집] 장바구니 아이템 업데이트 완료:", window.editingCartItemIdx);
         window.editingCartItemIdx = undefined;
