@@ -6135,17 +6135,14 @@ window.filterModalItems = function(keyword) {
         return;
     }
 
-    // B. 검색어가 있을 때 -> 필터링 시작
-    const { categories, products, thumbMap } = window.modalGlobalData;
+    // B. 검색어가 있을 때 -> 제품만 필터링
+    const { products } = window.modalGlobalData;
 
-    // 1) 카테고리 검색
-    const matchedCats = categories.filter(cat => (cat.name || '').toLowerCase().includes(term));
-    
-    // 2) 상품 검색 (이름 일치)
+    // 상품 검색 (이름 일치)
     const matchedProds = products.filter(prod => (prod.name || '').toLowerCase().includes(term));
 
     // 결과가 없을 때
-    if (matchedCats.length === 0 && matchedProds.length === 0) {
+    if (matchedProds.length === 0) {
         grid.innerHTML = `
             <div style="grid-column:1/-1; text-align:center; padding: 50px 0; color:#94a3b8;">
                 <i class="fa-solid fa-circle-exclamation" style="font-size:30px; margin-bottom:10px;"></i><br>
@@ -6175,15 +6172,7 @@ window.filterModalItems = function(keyword) {
         };
 
         // 이미지 주소 결정
-        let rawUrl = '';
-        let badgeHtml = '';
-
-        if (type === 'category') {
-            rawUrl = item.img_url || item.image || thumbMap[item.code] || '';
-        } else {
-            rawUrl = item.img_url || '';
-            badgeHtml = `<span style="position:absolute; top:6px; left:6px; background:#6366f1; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:2;">상품</span>`;
-        }
+        const rawUrl = item.img_url || '';
 
         const iconUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
         const imgTag = iconUrl
@@ -6192,43 +6181,28 @@ window.filterModalItems = function(keyword) {
 
         div.innerHTML = `
             <div style="position:relative; width:100%; aspect-ratio:1; background:#f8fafc; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                ${badgeHtml}
                 ${imgTag}
             </div>
             <div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                 ${item.name || ''}
             </div>
-            ${type === 'product' ? `
             <div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">
                 ${_fmt(item.price || 0)}
             </div>
             <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
                 ${item.width_mm || '-'} x ${item.height_mm || '-'} mm
-            </div>` : ''}
+            </div>
         `;
 
         // 클릭 이벤트 연결
         div.onclick = () => {
-           if (type === 'category') {
-                const urlParams = new URLSearchParams(window.location.search);
-                const currentLang = urlParams.get('lang') || 'kr';
-                // 일본어 모드고 DB에 일본어 이름(name_ja)이 있으면 그것을 전달
-                const displayName = (currentLang === 'ja' && item.name_ja) ? item.name_ja : item.name;
-                window.showCategoryProducts(item.code, displayName, item.description);
-            } else {
-                // 상품 클릭 시 분기 처리
-                document.getElementById('categoryDetailModal').style.display = 'none'; // 모달 닫기
-                
-                // 모든 상품 동일 인터페이스 (상세페이지 + 구매)
-                window.loadProductDetailAndOpen(item.code);
-            }
+            document.getElementById('categoryDetailModal').style.display = 'none';
+            window.loadProductDetailAndOpen(item.code);
         };
         return div;
     };
 
-    // 카테고리 먼저 추가
-    matchedCats.forEach(cat => grid.appendChild(createItem(cat, 'category')));
-    // 상품 그 뒤에 추가
+    // 제품만 추가
     matchedProds.forEach(prod => grid.appendChild(createItem(prod, 'product')));
 };
 
