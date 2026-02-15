@@ -2469,56 +2469,108 @@ window.filterFxCards = function(cat, btn) {
         }
     };
 
-    // ─── 최근 사용한 요소 (localStorage 기반) ───
+    // ─── 최근 사용한 객체 요소 (썸네일 + JSON, localStorage 기반) ───
     (function() {
-        const RECENT_KEY = 'recentElements';
+        const RECENT_KEY = 'recentObjects';
         const MAX_RECENT = 8;
-        const SHAPE_MAP = {
-            rect: '■', circle: '●', triangle: '▲', star: '★',
-            heart: '♥', arrow: '➡', round: '▢', line: '━'
-        };
+        const THUMB_SIZE = 80;
 
-        window.trackRecentElement = function(shapeType) {
+        // 객체 → 썸네일 dataURL 생성
+        function makeThumb(obj) {
             try {
-                let arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
-                arr = arr.filter(s => s !== shapeType);
-                arr.unshift(shapeType);
+                var tmpCanvas = document.createElement('canvas');
+                tmpCanvas.width = THUMB_SIZE;
+                tmpCanvas.height = THUMB_SIZE;
+                var ctx = tmpCanvas.getContext('2d');
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(0, 0, THUMB_SIZE, THUMB_SIZE);
+
+                // fabric 임시 캔버스로 렌더
+                var clone = fabric.util.object.clone(obj);
+                var bound = obj.getBoundingRect();
+                var scale = Math.min((THUMB_SIZE - 8) / (bound.width || 1), (THUMB_SIZE - 8) / (bound.height || 1), 1);
+                var tmpFabric = new fabric.StaticCanvas(null, { width: THUMB_SIZE, height: THUMB_SIZE });
+                clone.set({
+                    left: THUMB_SIZE / 2, top: THUMB_SIZE / 2,
+                    originX: 'center', originY: 'center',
+                    scaleX: (obj.scaleX || 1) * scale, scaleY: (obj.scaleY || 1) * scale
+                });
+                clone.setCoords();
+                tmpFabric.add(clone);
+                tmpFabric.renderAll();
+                return tmpFabric.toDataURL({ format: 'png' });
+            } catch(e) { return ''; }
+        }
+
+        // 캔버스에 객체 추가 시 기록
+        window.trackRecentObject = function(obj) {
+            if (!obj || obj.isBoard || obj.isMockup || obj.excludeFromExport) return;
+            try {
+                var thumb = makeThumb(obj);
+                if (!thumb) return;
+                var json = obj.toJSON(['originX','originY']);
+                var arr = [];
+                try { arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch(e) { arr = []; }
+
+                // 중복 방지 (같은 타입+동일 크기는 제거)
+                var sig = (obj.type || '') + '_' + Math.round(obj.width||0) + '_' + Math.round(obj.height||0);
+                arr = arr.filter(function(item) { return item.sig !== sig; });
+                arr.unshift({ sig: sig, thumb: thumb, json: json });
                 if (arr.length > MAX_RECENT) arr = arr.slice(0, MAX_RECENT);
                 localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
                 window.renderRecentElements();
-            } catch(e) {}
+            } catch(e) { console.warn('Recent track error:', e); }
         };
 
         window.renderRecentElements = function() {
-            const grid = document.getElementById('recentElementGrid');
+            var grid = document.getElementById('recentElementGrid');
             if (!grid) return;
-            let arr = [];
+            var arr = [];
             try { arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch(e) {}
             if (!arr.length) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#cbd5e1; font-size:11px; padding:10px 0;">아직 없음</div>';
                 return;
             }
             grid.innerHTML = '';
-            arr.forEach(type => {
-                const btn = document.createElement('button');
-                btn.className = 'shape-btn';
-                btn.dataset.shape = type;
-                btn.textContent = SHAPE_MAP[type] || type;
-                btn.style.cssText = 'width:100%; aspect-ratio:1; font-size:18px; cursor:pointer; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; display:flex; align-items:center; justify-content:center;';
-                btn.onclick = () => {
-                    const origBtn = document.querySelector('.shape-panel .shape-btn[data-shape="' + type + '"]');
-                    if (origBtn) origBtn.click();
+            arr.forEach(function(item) {
+                var div = document.createElement('div');
+                div.style.cssText = 'cursor:pointer; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; overflow:hidden; aspect-ratio:1;';
+                div.innerHTML = '<img src="' + item.thumb + '" style="width:100%; height:100%; object-fit:contain;">';
+                div.title = (item.json && item.json.type) || '';
+                div.onmouseover = function() { div.style.borderColor='#6366f1'; };
+                div.onmouseout = function() { div.style.borderColor='#e2e8f0'; };
+                div.onclick = function() {
+                    if (!window.canvas || !item.json) return;
+                    fabric.util.enlivenObjects([item.json], function(objects) {
+                        if (!objects || !objects.length) return;
+                        var obj = objects[0];
+                        obj.set({ originX:'center', originY:'center' });
+                        if (window.addToCenter) {
+                            window.addToCenter(obj);
+                        } else {
+                            window.canvas.add(obj);
+                            window.canvas.setActiveObject(obj);
+                            window.canvas.requestRenderAll();
+                        }
+                    });
                 };
-                grid.appendChild(btn);
+                grid.appendChild(div);
             });
         };
 
-        // Hook into shape buttons via event listener (won't conflict with onclick from initShapeHandlers)
-        setTimeout(() => {
-            document.querySelectorAll('.shape-panel .shape-btn').forEach(btn => {
-                btn.addEventListener('click', () => window.trackRecentElement(btn.dataset.shape));
+        // 캔버스 object:added 이벤트 감시
+        var _trackBound = false;
+        function bindCanvasTrack() {
+            if (_trackBound || !window.canvas) return;
+            _trackBound = true;
+            window.canvas.on('object:added', function(e) {
+                if (e.target) window.trackRecentObject(e.target);
             });
             window.renderRecentElements();
+        }
+        // canvas가 늦게 초기화될 수 있으므로 반복 체크
+        var _checkInterval = setInterval(function() {
+            if (window.canvas) { bindCanvasTrack(); clearInterval(_checkInterval); }
         }, 500);
     })();
 
