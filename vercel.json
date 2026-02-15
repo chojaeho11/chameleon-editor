@@ -46,7 +46,7 @@
       "destination": "/sitemap.xml"
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
