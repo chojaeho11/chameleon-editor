@@ -1284,6 +1284,9 @@
                     <i class="fa-solid fa-folder-open"></i> <span style="margin-left:4px;">MY page</span>
                 </button>
 
+                <!-- 내 저장 디자인 목록 -->
+                <div id="savedDesignsList" style="margin-bottom:14px;"></div>
+
                 <div class="section-title" data-i18n="label_free_download" style="font-size: 12px; color: #b6b6b6; letter-spacing: 1px; margin-bottom:8px;">무료 다운로드</div>
                 <button id="btnPNG" class="btn-round" style="width:100%; justify-content: center; height: 40px; margin-bottom:6px;"><i class="fa-regular fa-image"></i> <span style="margin-left:4px;" data-i18n="btn_png">PNG 다운로드</span></button>
                 <button id="btnPDF" class="btn-round" style="width:100%; justify-content: center; height: 40px;"><i class="fa-solid fa-file-pdf"></i> <span style="margin-left:4px;" data-i18n="btn_pdf">PDF 다운로드</span></button>
@@ -2301,6 +2304,8 @@ window.filterFxCards = function(cat, btn) {
             window.loadMyUploads && window.loadMyUploads();
         } else if (panelId === 'sub-text') {
             window.loadTextTemplates && window.loadTextTemplates();
+        } else if (panelId === 'sub-save') {
+            window.loadSavedDesigns && window.loadSavedDesigns();
         }
     };
 

@@ -36,7 +36,11 @@ export function initMyDesign() {
     // 4. 모달 내부 '저장하기' 버튼
     const btnConfirmSave = document.getElementById("btnConfirmSave");
     if(btnConfirmSave) {
-        btnConfirmSave.onclick = saveCurrentDesign;
+        btnConfirmSave.onclick = async () => {
+            await saveCurrentDesign();
+            // 저장 후 목록 새로고침
+            window.loadSavedDesigns && window.loadSavedDesigns();
+        };
     }
 }
 
@@ -145,4 +149,117 @@ window.loadDesignToCanvas = (id) => {
 };
 
 window.addDesignToCart = (id) => { };
-window.deleteDesign = async (id) => { };
+
+// ========================================================
+// [사이드바 저장 목록] 저장된 디자인 로드/표시
+// ========================================================
+window.loadSavedDesigns = async function() {
+    const list = document.getElementById('savedDesignsList');
+    if (!list) return;
+
+    if (!currentUser) {
+        list.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:12px; padding:16px;">Login to see saved designs</div>';
+        return;
+    }
+
+    list.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:12px; padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+
+    try {
+        const { data, error } = await sb
+            .from('user_designs')
+            .select('id, title, thumb_url, product_key, width, height, created_at')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:11px; padding:16px; font-weight:300;">No saved designs</div>';
+            return;
+        }
+
+        // 헤더
+        let html = '<div style="font-size:11px; font-weight:300; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Saved Designs (' + data.length + ')</div>';
+        html += '<div style="display:flex; flex-direction:column; gap:6px;">';
+
+        data.forEach(function(item) {
+            const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+            const title = item.title || 'Untitled';
+            const thumbStyle = item.thumb_url
+                ? 'background-image:url(' + item.thumb_url + '); background-size:cover; background-position:center;'
+                : 'background:#f1f5f9; display:flex; align-items:center; justify-content:center;';
+            const thumbInner = item.thumb_url ? '' : '<i class="fa-solid fa-file" style="color:#cbd5e1; font-size:16px;"></i>';
+
+            html += '<div style="display:flex; align-items:center; gap:10px; padding:8px; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer; transition:all 0.15s; background:#fff;" '
+                + 'onmouseenter="this.style.borderColor=\'#6366f1\';this.style.background=\'#f8fafc\'" '
+                + 'onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'">'
+                + '<div style="width:52px; height:52px; border-radius:8px; flex-shrink:0; overflow:hidden; border:1px solid #f1f5f9;' + thumbStyle + '">' + thumbInner + '</div>'
+                + '<div style="flex:1; min-width:0;">'
+                + '<div style="font-size:12px; font-weight:400; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + title + '</div>'
+                + '<div style="font-size:10px; color:#94a3b8; margin-top:2px;">' + dateStr + '</div>'
+                + '<div style="display:flex; gap:6px; margin-top:4px;">'
+                + '<button onclick="event.stopPropagation(); window._loadSavedDesign(' + item.id + ')" style="font-size:10px; padding:2px 8px; border-radius:4px; border:1px solid #6366f1; background:#fff; color:#6366f1; cursor:pointer;">Load</button>'
+                + '<button onclick="event.stopPropagation(); window._deleteSavedDesign(' + item.id + ')" style="font-size:10px; padding:2px 8px; border-radius:4px; border:1px solid #e2e8f0; background:#fff; color:#ef4444; cursor:pointer;">Delete</button>'
+                + '</div></div></div>';
+        });
+
+        html += '</div>';
+        list.innerHTML = html;
+    } catch(e) {
+        console.error('loadSavedDesigns error:', e);
+        list.innerHTML = '<div style="text-align:center; color:#ef4444; font-size:11px; padding:16px;">Error loading designs</div>';
+    }
+};
+
+// [불러오기] 저장된 디자인을 캔버스에 로드
+window._loadSavedDesign = async function(id) {
+    if (!confirm(window.t('msg_load_design_confirm', 'Load this design? Current work will be replaced.'))) return;
+
+    const loading = document.getElementById("loading");
+    if (loading) {
+        loading.style.display = "flex";
+        const p = loading.querySelector('p');
+        if (p) p.innerText = window.t('msg_loading', 'Loading...');
+    }
+
+    try {
+        const { data, error } = await sb
+            .from('user_designs')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        if (!data) throw new Error('Design not found');
+
+        window.restoreDesignFromData(data);
+    } catch(e) {
+        console.error('Load design error:', e);
+        alert((window.t('msg_load_failed', 'Load failed: ') ) + e.message);
+        if (loading) loading.style.display = "none";
+    }
+};
+
+// [삭제] 저장된 디자인 삭제
+window._deleteSavedDesign = async function(id) {
+    if (!confirm(window.t('msg_delete_design_confirm', 'Delete this design?'))) return;
+
+    try {
+        const { error } = await sb
+            .from('user_designs')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // 목록 새로고침
+        window.loadSavedDesigns();
+    } catch(e) {
+        console.error('Delete design error:', e);
+        alert('Delete failed: ' + e.message);
+    }
+};
+
+window.deleteDesign = async (id) => { window._deleteSavedDesign(id); };
