@@ -1985,6 +1985,13 @@ body {
     padding: 1px 4px; border-radius: 8px;
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
+/* 배경풀기 플로팅 원형 버튼 */
+#btnBgLockFloat:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    border-color: #6366f1;
+}
+
 /* [슬림형] 떠있는 마법사 툴바 */
 .wizard-toolbar.floating-island {
     position: absolute;
@@ -4110,27 +4117,13 @@ video {
 
 @media (max-width: 768px) {
 
-    /* --- 1. 상단 마법사 툴바 (위로 바짝 올리기) --- */
-    .wizard-toolbar.floating-island {
-        top: 50px !important;           /* 헤더(50px) 바로 아래에 딱 붙임 */
-        margin-top: 0 !important;       /* 불필요한 여백 제거 */
-        padding-top: 5px !important;    /* 내부 여백 최소화 */
-        height: 50px !important;        /* 높이 고정 */
-        background: transparent !important;
-        box-shadow: none !important;
-        z-index: 9000 !important;
-        
-        /* 가로 스크롤 및 정렬 */
-        display: flex !important;
-        justify-content: center !important; /* 중앙 정렬 */
-        gap: 8px !important;
-        width: 100% !important;
-        left: 0 !important;
-        transform: none !important;
+    /* --- 1. 배경풀기 플로팅 버튼 모바일 --- */
+    #btnBgLockFloat {
+        width: 42px !important;
+        height: 42px !important;
+        top: 55px !important;
+        left: 8px !important;
     }
-
-    /* 브랜드 아이콘 숨김 (공간 확보) */
-    .wizard-toolbar .wiz-brand { display: none !important; }
 
 
     /* --- 2. 하단 줌/가이드 바 (맨 아래 고정) --- */

@@ -1383,91 +1383,19 @@
         </div>
 
         <div class="stage" id="stage">
-           <div id="textWizardToolbar" class="wizard-toolbar floating-island">
-    <div class="wiz-brand" style="display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.2; padding: 0 5px;">
-        <span class="wiz-icon" style="font-size:20px; margin-bottom:2px;">🧙‍♂️</span>
-        <span style="font-size:10px; font-weight:bold; color:#8b00a7; letter-spacing:-0.5px;" data-i18n="editor_design_wizard">디자인마법사</span>
-    </div>
-    
-    <div class="wiz-scroll-track">
-        
-        <button onclick="window.toggleBackgroundLock()" style="
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    margin: 0 2px; /* 좌우 여백을 줄여 공간 확보 */
-    padding: 0;
-    min-width: 40px; /* 전체 폭 축소 */
-">
-    <div style="
-        width: 30px;
-        height: 30px;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 3px;
-        border: 1px solid #eee;
-    ">
-        <span style="font-size: 16px;">🔒</span>
-    </div>
-
-    <span style="
-        font-size: 10px;
-        color: #555; /* 너무 진하지 않게 자연스러운 색상 */
-        font-weight: bold;
-        white-space: nowrap;
-        letter-spacing: -0.5px; /* 자간을 좁혀서 가로 공간 추가 확보 */
-    ">
-        <span data-i18n="editor_unlock_bg">배경풀기</span>
-    </span>
-</button>
-
-
-        <button class="wiz-btn" onclick="window.applyNewWizard('basic')">
-            <div class="icon-box c-indigo"><i class="fa-solid fa-store"></i></div>
-            <span data-i18n="wiz_flyer">전단지</span>
-        </button>
-        <button class="wiz-btn" onclick="window.applyNewWizard('flyer')">
-            <div class="icon-box c-red"><i class="fa-solid fa-bullhorn"></i></div>
-            <span data-i18n="wiz_poster">포스터</span>
-        </button>
-        <button class="wiz-btn" onclick="window.applyNewWizard('card')">
-            <div class="icon-box c-green"><i class="fa-solid fa-address-card"></i></div>
-            <span data-i18n="wiz_card">명함</span>
-        </button>
-        <button class="wiz-btn" onclick="window.applyNewWizard('menu')">
-            <div class="icon-box c-orange"><i class="fa-solid fa-utensils"></i></div>
-            <span data-i18n="wiz_menu">메뉴판</span>
-        </button>
-
-        <div class="wiz-divider"></div>
-
-        <button class="wiz-btn" onclick="window.applyNewWizard('banner-h')">
-            <div class="icon-box c-blue"><i class="fa-solid fa-scroll"></i></div>
-            <span data-i18n="wiz_banner_h">가로현수막</span>
-        </button>
-        <button class="wiz-btn" onclick="window.applyNewWizard('banner-v')">
-            <div class="icon-box c-purple"><i class="fa-solid fa-flag"></i></div>
-            <span data-i18n="wiz_banner_v">세로배너</span>
-        </button>
-        <button class="wiz-btn" onclick="window.applyNewWizard('fabric')">
-            <div class="icon-box c-pink"><i class="fa-solid fa-shirt"></i></div>
-            <span>SALE</span>
-        </button>
-        <button class="wiz-btn" onclick="window.applyNewWizard('vertical-text')">
-            <div class="icon-box c-teal"><i class="fa-solid fa-text-height"></i></div>
-            <span data-i18n="wiz_insta_panel">인스타판넬</span>
-        </button>
-        
-    </div>
-</div>
+            <!-- 배경풀기 플로팅 원형 버튼 -->
+            <button id="btnBgLockFloat" onclick="window.toggleBackgroundLock()" style="
+                position:absolute; top:15px; left:15px; z-index:50;
+                width:50px; height:50px; border-radius:50%;
+                background:#fff; border:2px solid #e2e8f0;
+                box-shadow:0 4px 15px rgba(0,0,0,0.15);
+                cursor:pointer; display:flex; flex-direction:column;
+                align-items:center; justify-content:center; gap:1px;
+                transition: all 0.2s;
+            ">
+                <span style="font-size:18px;">🔒</span>
+                <span style="font-size:7px; font-weight:bold; color:#64748b; white-space:nowrap;" data-i18n="editor_unlock_bg">배경풀기</span>
+            </button>
             <div id="pageControls" class="page-controls-bar">
                 <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
                     <i class="fa-solid fa-chevron-left"></i>
