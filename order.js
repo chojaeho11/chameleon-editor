@@ -824,10 +824,16 @@ async function addCanvasToCart() {
         newItem.qty = oldItem.qty || newItem.qty;
         newItem.selectedAddons = oldItem.selectedAddons || newItem.selectedAddons;
         newItem.addonQuantities = oldItem.addonQuantities || newItem.addonQuantities;
-        // ★ 회배계산기로 계산된 단가 보존
-        if (oldItem.product && oldItem.product.price) {
-            newItem.product.price = oldItem.product.price;
-            console.log("[다시편집] 기존 단가 보존:", oldItem.product.price);
+        // ★ 기존 단가/사이즈 보존 (회배계산기 결과 + 커스텀 사이즈)
+        if (oldItem.product) {
+            if (oldItem.product.price) newItem.product.price = oldItem.product.price;
+            if (oldItem.product.w_mm) newItem.product.w_mm = oldItem.product.w_mm;
+            if (oldItem.product.h_mm) newItem.product.h_mm = oldItem.product.h_mm;
+            if (oldItem.product.width_mm) newItem.product.width_mm = oldItem.product.width_mm;
+            if (oldItem.product.height_mm) newItem.product.height_mm = oldItem.product.height_mm;
+            if (oldItem.product.is_custom) newItem.product.is_custom = oldItem.product.is_custom;
+            if (oldItem.product.is_custom_size) newItem.product.is_custom_size = oldItem.product.is_custom_size;
+            console.log("[다시편집] 기존 단가/사이즈 보존:", oldItem.product.price, oldItem.product.w_mm, "x", oldItem.product.h_mm);
         }
         currentCartList[window.editingCartItemIdx] = newItem;
         console.log("[다시편집] 장바구니 아이템 업데이트 완료:", window.editingCartItemIdx);
