@@ -6491,13 +6491,8 @@ window.filterModalItems = function(keyword) {
                 <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
             </div>
 
-            <!-- 카테고리 버튼 -->
-            <div id="dsmCategoryBtns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
-                <!-- DB에서 소분류 동적 로드 -->
-            </div>
-
             <!-- 상품 그리드 -->
-            <div id="dsmProductGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; max-height:350px; overflow-y:auto;">
+            <div id="dsmProductGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; max-height:400px; overflow-y:auto;">
                 <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">
                     <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i><br><br>로딩 중...
                 </div>
@@ -6580,46 +6575,25 @@ window._dsmPrintCategory = '';
 
 window.dsmShowPrintCategory = async function(wMM, hMM, label) {
     window._dsmPrintSize = { w: wMM, h: hMM, label: label };
-    window._dsmPrintCategory = '';
     document.getElementById('dsm-main-view').style.display = 'none';
     document.getElementById('dsm-print-view').style.display = 'block';
     document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '\u00d7' + hMM + 'mm) \u2014 어디에 인쇄할까요?';
     document.getElementById('dsmPrintSearch').value = '';
 
     var grid = document.getElementById('dsmProductGrid');
-    var catBtns = document.getElementById('dsmCategoryBtns');
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i></div>';
 
     try {
         if (typeof sb === 'undefined') throw new Error('DB');
-        // 카테고리 + 상품 동시 로드
-        var catResp = await sb.from('admin_categories').select('name, code').order('sort_order', { ascending: true });
         var prodResp = await sb.from('admin_products')
             .select('name, code, img_url, category, price, width_mm, height_mm')
             .or('partner_id.is.null,partner_status.eq.approved')
             .not('img_url', 'is', null).neq('img_url', '')
             .order('sort_order', { ascending: true });
 
-        var categories = catResp.data || [];
         window._dsmProducts = prodResp.data || [];
-
-        // 카테고리 버튼 동적 생성
-        catBtns.innerHTML = '';
-        categories.forEach(function(cat, i) {
-            var btn = document.createElement('button');
-            btn.className = 'dsm-cat-btn' + (i === 0 ? ' active' : '');
-            btn.textContent = cat.name;
-            btn.onclick = function() { window.dsmSelectCategory(cat.code || cat.name, btn); };
-            catBtns.appendChild(btn);
-        });
-
-        // 첫 카테고리 자동 선택
-        if (categories.length > 0) {
-            window._dsmPrintCategory = categories[0].code || categories[0].name;
-            window.dsmRenderProducts('');
-        } else {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8;">카테고리가 없습니다.</div>';
-        }
+        // 초기에는 전체 상품 표시
+        window.dsmRenderProducts('');
     } catch(e) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
     }
@@ -6630,13 +6604,6 @@ window.dsmBackToMain = function() {
     document.getElementById('dsm-print-view').style.display = 'none';
 };
 
-window.dsmSelectCategory = function(cat, btn) {
-    window._dsmPrintCategory = cat;
-    document.querySelectorAll('.dsm-cat-btn').forEach(function(b) { b.classList.remove('active'); });
-    if (btn) btn.classList.add('active');
-    window.dsmRenderProducts(document.getElementById('dsmPrintSearch').value || '');
-};
-
 window.dsmFilterPrintProducts = function(keyword) {
     window.dsmRenderProducts(keyword);
 };
@@ -6644,15 +6611,8 @@ window.dsmFilterPrintProducts = function(keyword) {
 window.dsmRenderProducts = function(keyword) {
     var grid = document.getElementById('dsmProductGrid');
     var term = (keyword || '').toLowerCase().trim();
-    var cat = window._dsmPrintCategory;
     var items = (window._dsmProducts || []).slice();
 
-    // 카테고리 필터 (slug 또는 name 매칭)
-    if (cat) {
-        items = items.filter(function(p) {
-            return (p.category || '') === cat;
-        });
-    }
     if (term) {
         items = items.filter(function(p) {
             return (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term);
@@ -6672,7 +6632,6 @@ window.dsmRenderProducts = function(keyword) {
         div.onmouseout = function() { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
         div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
             '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (p.name || p.code) + '</div></div>';
-        // 클릭 시 기존 상품 상세 페이지 열기 (메인 페이지 제품 카드 클릭과 동일)
         div.onclick = function() {
             document.getElementById('designStartModal').style.display = 'none';
             if (window.loadProductDetailAndOpen) {
