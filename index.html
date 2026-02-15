@@ -6593,7 +6593,7 @@ window.dsmShowPrintCategory = async function(wMM, hMM, label) {
     try {
         if (typeof sb === 'undefined') throw new Error('DB');
         // 카테고리 + 상품 동시 로드
-        var catResp = await sb.from('admin_categories').select('name, slug').order('sort_order', { ascending: true });
+        var catResp = await sb.from('admin_categories').select('name, code').order('sort_order', { ascending: true });
         var prodResp = await sb.from('admin_products')
             .select('name, code, img_url, category, price, width_mm, height_mm')
             .or('partner_id.is.null,partner_status.eq.approved')
@@ -6609,13 +6609,13 @@ window.dsmShowPrintCategory = async function(wMM, hMM, label) {
             var btn = document.createElement('button');
             btn.className = 'dsm-cat-btn' + (i === 0 ? ' active' : '');
             btn.textContent = cat.name;
-            btn.onclick = function() { window.dsmSelectCategory(cat.slug || cat.name, btn); };
+            btn.onclick = function() { window.dsmSelectCategory(cat.code || cat.name, btn); };
             catBtns.appendChild(btn);
         });
 
         // 첫 카테고리 자동 선택
         if (categories.length > 0) {
-            window._dsmPrintCategory = categories[0].slug || categories[0].name;
+            window._dsmPrintCategory = categories[0].code || categories[0].name;
             window.dsmRenderProducts('');
         } else {
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8;">카테고리가 없습니다.</div>';
