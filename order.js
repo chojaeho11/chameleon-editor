@@ -1425,18 +1425,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                // 텍스트 효과 감지 → 래스터 PDF 우선
-                const _hasEffects = targetPages.some(p => p.objects && p.objects.some(o =>
-                    o.isEffectGroup || o.paintFirst === 'stroke' ||
-                    (o.shadow && o.shadow.blur > 0) ||
-                    (o.fill && typeof o.fill === 'object') ||
-                    (o.type === 'group' && o.objects && o.objects.some(c => c.isClone || c.isMainText))
-                ));
-                let fileBlob;
-                if (_hasEffects) {
-                    fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
-                }
-                if (!fileBlob) fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                let fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
                 if (!fileBlob) fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {

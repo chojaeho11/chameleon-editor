@@ -511,22 +511,8 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. 텍스트 효과(그림자/패턴/그라데이션 등) 감지 → 래스터 PDF 우선 사용
-                const hasEffects = targetPages.some(p => p.objects && p.objects.some(o =>
-                    o.isEffectGroup || o.paintFirst === 'stroke' ||
-                    (o.shadow && o.shadow.blur > 0) ||
-                    (o.fill && typeof o.fill === 'object') ||
-                    (o.type === 'group' && o.objects && o.objects.some(c => c.isClone || c.isMainText))
-                ));
-
-                let blob;
-                if (hasEffects) {
-                    console.log("✨ 텍스트 효과 감지 → 래스터 PDF 사용 (효과 100% 보존)");
-                    blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
-                }
-                if (!blob) {
-                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
-                }
+                // 3. 벡터 PDF 먼저 시도, 실패 시 래스터 PDF
+                let blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
                 if (!blob) {
                     console.log("벡터 PDF 실패 -> 래스터 PDF 전환");
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
@@ -887,8 +873,13 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
                 });
             });
             const isMobileDevice = window.innerWidth <= 768;
-            const imgData = tempCvs.toDataURL({ format: 'png', quality: 1, multiplier: isMobileDevice ? 1.5 : 3 });
-            doc.addImage(imgData, 'PNG', 0, 0, widthMM, heightMM);
+            // 대형 캔버스 메모리 초과 방지: 픽셀 면적 기준으로 multiplier 조절
+            const maxPixels = 16000000; // 16M pixels 안전 한계
+            const basePixels = w * h;
+            let mult = isMobileDevice ? 1 : 2;
+            if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
+            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: mult });
+            doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
             tempCvs.dispose();
         }
         return doc.output('blob');
@@ -1258,15 +1249,22 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                     const tempCvs = new fabric.StaticCanvas(tempEl);
                     tempCvs.setWidth(item.width || 800); tempCvs.setHeight(item.height || 800);
                     
-                    await new Promise(r => tempCvs.loadFromJSON(itemPages[p], r));
-                    
+                    // 목업 제거
+                    const _pJson = { ...itemPages[p] };
+                    if (_pJson.objects) _pJson.objects = _pJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+
+                    await new Promise(r => {
+                        tempCvs.loadFromJSON(_pJson, () => {
+                            tempCvs.setBackgroundColor('#ffffff', () => {});
+                            tempCvs.renderAll();
+                            setTimeout(r, 500); // 이미지 로딩 대기
+                        });
+                    });
+
                     const board = tempCvs.getObjects().find(o => o.isBoard);
                     let cx = 0, cy = 0, cw = tempCvs.width, ch = tempCvs.height;
                     if(board) { cx = board.left; cy = board.top; cw = board.width * board.scaleX; ch = board.height * board.scaleY; }
-                    
-                    // 배경 흰색 추가 (투명 방지)
-                    tempCvs.setBackgroundColor('#ffffff', () => {});
-                    
+
                     imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.7, multiplier: 0.5, left: cx, top: cy, width: cw, height: ch });
                     tempCvs.dispose();
                 } catch(e) {}
