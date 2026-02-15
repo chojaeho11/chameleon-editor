@@ -191,17 +191,18 @@ window.loadSavedDesigns = async function() {
                 : 'background:#f1f5f9; display:flex; align-items:center; justify-content:center;';
             const thumbInner = item.thumb_url ? '' : '<i class="fa-solid fa-file" style="color:#cbd5e1; font-size:16px;"></i>';
 
-            html += '<div style="display:flex; align-items:center; gap:10px; padding:8px; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer; transition:all 0.15s; background:#fff;" '
+            html += '<div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer; transition:all 0.15s; background:#fff;" '
                 + 'onmouseenter="this.style.borderColor=\'#6366f1\';this.style.background=\'#f8fafc\'" '
                 + 'onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'">'
-                + '<div style="width:52px; height:52px; border-radius:8px; flex-shrink:0; overflow:hidden; border:1px solid #f1f5f9;' + thumbStyle + '">' + thumbInner + '</div>'
-                + '<div style="flex:1; min-width:0;">'
+                + '<div style="width:100%; aspect-ratio:4/3; border-radius:8px; overflow:hidden; border:1px solid #f1f5f9;' + thumbStyle + '">' + thumbInner + '</div>'
+                + '<div style="width:100%;">'
                 + '<div style="font-size:12px; font-weight:400; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + title + '</div>'
-                + '<div style="font-size:10px; color:#94a3b8; margin-top:2px;">' + dateStr + '</div>'
-                + '<div style="display:flex; gap:6px; margin-top:4px;">'
+                + '<div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">'
+                + '<span style="font-size:10px; color:#94a3b8;">' + dateStr + '</span>'
+                + '<div style="display:flex; gap:6px;">'
                 + '<button onclick="event.stopPropagation(); window._loadSavedDesign(' + item.id + ')" style="font-size:10px; padding:2px 8px; border-radius:4px; border:1px solid #6366f1; background:#fff; color:#6366f1; cursor:pointer;">Load</button>'
                 + '<button onclick="event.stopPropagation(); window._deleteSavedDesign(' + item.id + ')" style="font-size:10px; padding:2px 8px; border-radius:4px; border:1px solid #e2e8f0; background:#fff; color:#ef4444; cursor:pointer;">Delete</button>'
-                + '</div></div></div>';
+                + '</div></div></div></div>';
         });
 
         html += '</div>';
@@ -212,33 +213,25 @@ window.loadSavedDesigns = async function() {
     }
 };
 
-// [불러오기] 저장된 디자인을 캔버스에 로드
+// [불러오기] 저장된 디자인 → 제품 선택 후 로드
 window._loadSavedDesign = async function(id) {
-    if (!confirm(window.t('msg_load_design_confirm', 'Load this design? Current work will be replaced.'))) return;
+    if (!confirm(window.t('msg_load_design_confirm', 'Load this design? Select a product and size first.'))) return;
 
-    const loading = document.getElementById("loading");
-    if (loading) {
-        loading.style.display = "flex";
-        const p = loading.querySelector('p');
-        if (p) p.innerText = window.t('msg_loading', 'Loading...');
-    }
+    // 디자인 ID를 저장하고 제품 선택 화면으로 이동
+    window._pendingDesignLoadId = id;
 
-    try {
-        const { data, error } = await sb
-            .from('user_designs')
-            .select('*')
-            .eq('id', id)
-            .single();
+    // 에디터 숨기고 시작 화면 표시
+    const mainEditor = document.getElementById("mainEditor");
+    const startScreen = document.getElementById("startScreen");
+    if (mainEditor) mainEditor.style.display = "none";
+    if (startScreen) startScreen.style.display = "flex";
+    document.body.classList.remove('editor-active');
 
-        if (error) throw error;
-        if (!data) throw new Error('Design not found');
-
-        window.restoreDesignFromData(data);
-    } catch(e) {
-        console.error('Load design error:', e);
-        alert((window.t('msg_load_failed', 'Load failed: ') ) + e.message);
-        if (loading) loading.style.display = "none";
-    }
+    // 서브패널 닫기
+    const subPanel = document.getElementById('subPanel');
+    if (subPanel) subPanel.style.display = 'none';
+    document.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
 };
 
 // [삭제] 저장된 디자인 삭제

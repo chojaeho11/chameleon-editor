@@ -1280,16 +1280,16 @@
                 <button class="btn-round" id="btnOpenSaveModal" style="width:100%; justify-content: center; height: 42px; margin-bottom:8px; background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border:none; font-weight:bold;">
                     <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_design" style="margin-left:4px;">디자인 저장</span>
                 </button>
-                <button class="btn-round" id="btnMyPageSide" style="width:100%; justify-content: center; height: 42px; margin-bottom:15px; background: white; border: 1px solid #ddd; color: #333;">
+                <button class="btn-round" id="btnMyPageSide" style="width:100%; justify-content: center; height: 42px; margin-bottom:8px; background: white; border: 1px solid #ddd; color: #333;">
                     <i class="fa-solid fa-folder-open"></i> <span style="margin-left:4px;">MY page</span>
                 </button>
 
-                <!-- 내 저장 디자인 목록 -->
-                <div id="savedDesignsList" style="margin-bottom:14px;"></div>
-
                 <div class="section-title" data-i18n="label_free_download" style="font-size: 12px; color: #b6b6b6; letter-spacing: 1px; margin-bottom:8px;">무료 다운로드</div>
                 <button id="btnPNG" class="btn-round" style="width:100%; justify-content: center; height: 40px; margin-bottom:6px;"><i class="fa-regular fa-image"></i> <span style="margin-left:4px;" data-i18n="btn_png">PNG 다운로드</span></button>
-                <button id="btnPDF" class="btn-round" style="width:100%; justify-content: center; height: 40px;"><i class="fa-solid fa-file-pdf"></i> <span style="margin-left:4px;" data-i18n="btn_pdf">PDF 다운로드</span></button>
+                <button id="btnPDF" class="btn-round" style="width:100%; justify-content: center; height: 40px; margin-bottom:14px;"><i class="fa-solid fa-file-pdf"></i> <span style="margin-left:4px;" data-i18n="btn_pdf">PDF 다운로드</span></button>
+
+                <!-- 내 저장 디자인 목록 (스크롤) -->
+                <div id="savedDesignsList" style="overflow-y:auto; max-height:calc(100vh - 420px); padding-right:2px;"></div>
             </div>
 
             <!-- 8. 페이지 -->
@@ -5083,7 +5083,7 @@ if (w >= 20 && h >= 20) {
                 const cX = board ? board.left + cW / 2 : canvas.width / 2;
                 const cY = board ? board.top + cH / 2 : canvas.height / 2;
                 const scale = Math.min((cW * 0.8) / img.width, (cH * 0.8) / img.height);
-                
+
                 img.set({
                     scaleX: scale, scaleY: scale, left: cX, top: cY,
                     originX: 'center', originY: 'center'
@@ -5094,6 +5094,44 @@ if (w >= 20 && h >= 20) {
                 window.pendingAiImage = null;
                 if(loading) loading.style.display = 'none';
             }, { crossOrigin: 'anonymous' });
+        }
+
+        // ★ 저장된 디자인 로드 (제품 선택 후)
+        if (window._pendingDesignLoadId) {
+            const designId = window._pendingDesignLoadId;
+            window._pendingDesignLoadId = null;
+
+            setTimeout(async () => {
+                const loading = document.getElementById("loading");
+                if (loading) {
+                    loading.style.display = "flex";
+                    const p = loading.querySelector('p');
+                    if (p) p.innerText = window.t ? window.t('msg_loading', 'Loading...') : 'Loading...';
+                }
+
+                try {
+                    const { data, error } = await sb.from('user_designs')
+                        .select('*').eq('id', designId).single();
+                    if (error || !data) throw error || new Error('Design not found');
+
+                    const jsonData = typeof data.json_data === 'string' ? JSON.parse(data.json_data) : data.json_data;
+                    const nonBoardObjects = (jsonData.objects || []).filter(o => !o.isBoard);
+
+                    fabric.util.enlivenObjects(nonBoardObjects, function(objs) {
+                        objs.forEach(function(obj) {
+                            if (obj.isMockup || obj.excludeFromExport) return;
+                            canvas.add(obj);
+                        });
+                        canvas.requestRenderAll();
+                        if (loading) loading.style.display = 'none';
+                        console.log("✅ 저장된 디자인 복구 완료 (제품 선택 후)");
+                    });
+                } catch(e) {
+                    console.error('Pending design load error:', e);
+                    alert('Design load failed: ' + e.message);
+                    if (loading) loading.style.display = "none";
+                }
+            }, 600);
         }
     };
 
