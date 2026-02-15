@@ -4609,9 +4609,9 @@ if (w >= 20 && h >= 20) {
             console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()}`);
         }
 
-        // 사이즈 계산
-        const displayW = customW || (product ? (product.w_mm || product.w || 210) : 210);
-        const displayH = customH || (product ? (product.h_mm || product.h || 297) : 297);
+        // 사이즈 계산 (DB 필드: width_mm, height_mm 우선 체크)
+        const displayW = customW || (product ? (product.width_mm || product.w_mm || product.w || 210) : 210);
+        const displayH = customH || (product ? (product.height_mm || product.h_mm || product.h || 297) : 297);
         const maxSide = Math.max(displayW, displayH);
 
         if (product && maxSide >= 800) {
