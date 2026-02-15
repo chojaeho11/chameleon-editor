@@ -1023,5 +1023,6 @@
   "dsm_back": "Atrás",
   "dsm_ph_search": "¡Busca lo que quieras crear!",
   "editor_tab_text_tpl": "Plantillas de Texto",
-  "label_clipart": "Clipart & Elementos"
+  "label_clipart": "Clipart & Elementos",
+  "ph_search_clipart": "Buscar clipart"
 }

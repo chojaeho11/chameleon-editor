@@ -1069,11 +1069,13 @@ window.applyStartTemplate = async function(tpl) {
 
 let sideCurrentPage = 0;
 const SIDE_ITEMS_PER_PAGE = 10;
-let sideCurrentGroup = 'group_template'; 
+let sideCurrentGroup = 'group_template';
+window._sideCurrentGroup = 'group_template';
 
 // [1] 탭 전환 함수
 window.switchSideGroup = function(group) {
     sideCurrentGroup = group;
+    window._sideCurrentGroup = group;
     sideCurrentPage = 0;
     
     const btnTpl = document.getElementById('btnSideTabTpl');
@@ -1091,9 +1093,13 @@ window.switchSideGroup = function(group) {
 
     const searchInput = document.getElementById('sideTemplateSearch');
     if (searchInput) searchInput.value = '';
-    
-    const pKey = window.currentProductKey || 'custom';
-    window.loadSideBarTemplates(pKey, '', 0);
+
+    if (group === 'group_text_tpl') {
+        window.loadTextTemplates();
+    } else {
+        const pKey = window.currentProductKey || 'custom';
+        window.loadSideBarTemplates(pKey, '', 0);
+    }
 };
 
 // [2] 사이드바 로드 함수
@@ -1236,8 +1242,296 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     }
 };
 
+// [2-B] 글씨 템플릿 프리셋 로드
+const TEXT_TPL_PRESETS = [
+    {
+        bg: 'linear-gradient(135deg, #667eea, #764ba2)',
+        titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' },
+        subStyle: { fontSize: 18, fill: '#ddd6fe', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'GRAND OPENING', sub: '최고의 서비스를 만나보세요' },
+            JP: { title: 'GRAND OPENING', sub: '最高のサービスをお届けします' },
+            EN: { title: 'GRAND OPENING', sub: 'Best Quality Service' },
+            CN: { title: 'GRAND OPENING', sub: '体验最优质的服务' },
+            AR: { title: 'GRAND OPENING', sub: 'أفضل خدمة جودة' },
+            ES: { title: 'GRAND OPENING', sub: 'Servicio de la Mejor Calidad' },
+            DE: { title: 'GRAND OPENING', sub: 'Bester Qualitätsservice' },
+            FR: { title: 'GRAND OPENING', sub: 'Service de Qualité Supérieure' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #f093fb, #f5576c)',
+        titleStyle: { fontSize: 44, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Impact' },
+        subStyle: { fontSize: 16, fill: '#fce7f3', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'SPECIAL SALE', sub: '최대 50% 할인' },
+            JP: { title: 'SPECIAL SALE', sub: '最大50%OFF' },
+            EN: { title: 'SPECIAL SALE', sub: 'Up to 50% OFF' },
+            CN: { title: 'SPECIAL SALE', sub: '最高五折优惠' },
+            AR: { title: 'SPECIAL SALE', sub: 'خصم يصل إلى 50%' },
+            ES: { title: 'SPECIAL SALE', sub: 'Hasta 50% de Descuento' },
+            DE: { title: 'SPECIAL SALE', sub: 'Bis zu 50% Rabatt' },
+            FR: { title: 'SPECIAL SALE', sub: "Jusqu'à 50% de Réduction" }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+        titleStyle: { fontSize: 38, fontWeight: 'bold', fill: '#065f46', fontFamily: 'Georgia' },
+        subStyle: { fontSize: 16, fill: '#064e3b', fontFamily: 'Georgia' },
+        texts: {
+            KR: { title: 'FRESH & NATURAL', sub: '신선한 자연의 맛' },
+            JP: { title: 'FRESH & NATURAL', sub: '新鮮な自然の味わい' },
+            EN: { title: 'FRESH & NATURAL', sub: 'Organic Products' },
+            CN: { title: 'FRESH & NATURAL', sub: '新鲜天然有机产品' },
+            AR: { title: 'FRESH & NATURAL', sub: 'منتجات عضوية طبيعية' },
+            ES: { title: 'FRESH & NATURAL', sub: 'Productos Orgánicos' },
+            DE: { title: 'FRESH & NATURAL', sub: 'Bio-Produkte' },
+            FR: { title: 'FRESH & NATURAL', sub: 'Produits Biologiques' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #fa709a, #fee140)',
+        titleStyle: { fontSize: 42, fontWeight: 'bold', fill: '#7c2d12', fontFamily: 'Arial' },
+        subStyle: { fontSize: 16, fill: '#9a3412', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'WELCOME', sub: '방문해 주셔서 감사합니다' },
+            JP: { title: 'WELCOME', sub: 'ご来店ありがとうございます' },
+            EN: { title: 'WELCOME', sub: "We're Happy To See You" },
+            CN: { title: 'WELCOME', sub: '欢迎光临' },
+            AR: { title: 'WELCOME', sub: 'سعداء برؤيتكم' },
+            ES: { title: 'WELCOME', sub: 'Encantados de Verte' },
+            DE: { title: 'WELCOME', sub: 'Wir Freuen Uns auf Sie' },
+            FR: { title: 'WELCOME', sub: 'Heureux de Vous Voir' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #a18cd1, #fbc2eb)',
+        titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#4c1d95', fontFamily: 'Arial' },
+        subStyle: { fontSize: 16, fill: '#5b21b6', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'NEW ARRIVAL', sub: '신상품을 확인하세요' },
+            JP: { title: 'NEW ARRIVAL', sub: '新商品をチェック' },
+            EN: { title: 'NEW ARRIVAL', sub: 'Check Out Our Latest' },
+            CN: { title: 'NEW ARRIVAL', sub: '查看最新商品' },
+            AR: { title: 'NEW ARRIVAL', sub: 'تحقق من أحدث المنتجات' },
+            ES: { title: 'NEW ARRIVAL', sub: 'Descubre lo Nuevo' },
+            DE: { title: 'NEW ARRIVAL', sub: 'Entdecke das Neueste' },
+            FR: { title: 'NEW ARRIVAL', sub: 'Découvrez les Nouveautés' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #ff9a9e, #fecfef)',
+        titleStyle: { fontSize: 36, fontWeight: 'bold', fill: '#be123c', fontFamily: 'Georgia' },
+        subStyle: { fontSize: 16, fill: '#9f1239', fontFamily: 'Georgia' },
+        texts: {
+            KR: { title: 'THANK YOU', sub: '항상 감사드립니다' },
+            JP: { title: 'THANK YOU', sub: 'いつもありがとうございます' },
+            EN: { title: 'THANK YOU', sub: 'For Your Support' },
+            CN: { title: 'THANK YOU', sub: '感谢您的支持' },
+            AR: { title: 'THANK YOU', sub: 'شكراً لدعمكم' },
+            ES: { title: 'THANK YOU', sub: 'Por Tu Apoyo' },
+            DE: { title: 'THANK YOU', sub: 'Für Ihre Unterstützung' },
+            FR: { title: 'THANK YOU', sub: 'Pour Votre Soutien' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #f6d365, #fda085)',
+        titleStyle: { fontSize: 44, fontWeight: 'bold', fill: '#78350f', fontFamily: 'Impact' },
+        subStyle: { fontSize: 16, fill: '#92400e', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'HOT DEAL', sub: '한정 특가 이벤트' },
+            JP: { title: 'HOT DEAL', sub: '期間限定セール' },
+            EN: { title: 'HOT DEAL', sub: 'Limited Time Offer' },
+            CN: { title: 'HOT DEAL', sub: '限时特惠' },
+            AR: { title: 'HOT DEAL', sub: 'عرض لفترة محدودة' },
+            ES: { title: 'HOT DEAL', sub: 'Oferta por Tiempo Limitado' },
+            DE: { title: 'HOT DEAL', sub: 'Zeitlich Begrenztes Angebot' },
+            FR: { title: 'HOT DEAL', sub: 'Offre à Durée Limitée' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #0c3483, #a2b6df)',
+        titleStyle: { fontSize: 38, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Georgia' },
+        subStyle: { fontSize: 16, fill: '#bfdbfe', fontFamily: 'Georgia' },
+        texts: {
+            KR: { title: 'PREMIUM', sub: '프리미엄 럭셔리 컬렉션' },
+            JP: { title: 'PREMIUM', sub: 'ラグジュアリーコレクション' },
+            EN: { title: 'PREMIUM', sub: 'Luxury Collection' },
+            CN: { title: 'PREMIUM', sub: '奢华精品系列' },
+            AR: { title: 'PREMIUM', sub: 'مجموعة فاخرة' },
+            ES: { title: 'PREMIUM', sub: 'Colección de Lujo' },
+            DE: { title: 'PREMIUM', sub: 'Luxus-Kollektion' },
+            FR: { title: 'PREMIUM', sub: 'Collection de Luxe' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #ff0844, #ffb199)',
+        titleStyle: { fontSize: 40, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Arial' },
+        subStyle: { fontSize: 16, fill: '#ffe4e6', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'BEST PRICE', sub: '최저가 보장' },
+            JP: { title: 'BEST PRICE', sub: '最安値保証' },
+            EN: { title: 'BEST PRICE', sub: 'Guaranteed Lowest' },
+            CN: { title: 'BEST PRICE', sub: '保证最低价' },
+            AR: { title: 'BEST PRICE', sub: 'أقل سعر مضمون' },
+            ES: { title: 'BEST PRICE', sub: 'Precio Más Bajo Garantizado' },
+            DE: { title: 'BEST PRICE', sub: 'Garantiert Günstigster Preis' },
+            FR: { title: 'BEST PRICE', sub: 'Prix le Plus Bas Garanti' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #96fbc4, #f9f586)',
+        titleStyle: { fontSize: 36, fontWeight: 'bold', fill: '#065f46', fontFamily: 'Arial' },
+        subStyle: { fontSize: 16, fill: '#047857', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'FREE DELIVERY', sub: '무료 배송 서비스' },
+            JP: { title: 'FREE DELIVERY', sub: '送料無料サービス' },
+            EN: { title: 'FREE DELIVERY', sub: 'Order Now' },
+            CN: { title: 'FREE DELIVERY', sub: '免费配送服务' },
+            AR: { title: 'FREE DELIVERY', sub: 'اطلب الآن' },
+            ES: { title: 'FREE DELIVERY', sub: 'Ordena Ahora' },
+            DE: { title: 'FREE DELIVERY', sub: 'Jetzt Bestellen' },
+            FR: { title: 'FREE DELIVERY', sub: 'Commandez Maintenant' }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #c471f5, #fa71cd)',
+        titleStyle: { fontSize: 42, fontWeight: 'bold', fill: '#ffffff', fontFamily: 'Impact' },
+        subStyle: { fontSize: 16, fill: '#f5d0fe', fontFamily: 'Arial' },
+        texts: {
+            KR: { title: 'OPEN NOW', sub: '지금 오픈했습니다' },
+            JP: { title: 'OPEN NOW', sub: 'ただいまオープン中' },
+            EN: { title: 'OPEN NOW', sub: 'Visit Us Today' },
+            CN: { title: 'OPEN NOW', sub: '现在开业中' },
+            AR: { title: 'OPEN NOW', sub: 'زورونا اليوم' },
+            ES: { title: 'OPEN NOW', sub: 'Visítenos Hoy' },
+            DE: { title: 'OPEN NOW', sub: 'Besuchen Sie Uns Heute' },
+            FR: { title: 'OPEN NOW', sub: "Visitez-Nous Aujourd'hui" }
+        }
+    },
+    {
+        bg: 'linear-gradient(135deg, #1e3c72, #2a5298)',
+        titleStyle: { fontSize: 38, fontWeight: 'bold', fill: '#fbbf24', fontFamily: 'Georgia' },
+        subStyle: { fontSize: 16, fill: '#fde68a', fontFamily: 'Georgia' },
+        texts: {
+            KR: { title: 'HAPPY HOLIDAY', sub: '즐거운 시즌을 보내세요' },
+            JP: { title: 'HAPPY HOLIDAY', sub: '素敵なシーズンをお過ごしください' },
+            EN: { title: 'HAPPY HOLIDAY', sub: 'Enjoy the Season' },
+            CN: { title: 'HAPPY HOLIDAY', sub: '享受美好时光' },
+            AR: { title: 'HAPPY HOLIDAY', sub: 'استمتع بالموسم' },
+            ES: { title: 'HAPPY HOLIDAY', sub: 'Disfruta la Temporada' },
+            DE: { title: 'HAPPY HOLIDAY', sub: 'Genießen Sie die Saison' },
+            FR: { title: 'HAPPY HOLIDAY', sub: 'Profitez de la Saison' }
+        }
+    }
+];
+
+window.loadTextTemplates = function(keyword) {
+    const list = document.getElementById('sideTemplateList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    var kw = (keyword || '').trim().toLowerCase();
+
+    var filtered = TEXT_TPL_PRESETS.filter(function(preset, idx) {
+        if (!kw) return true;
+        var t = preset.texts[country] || preset.texts['EN'];
+        return (t.title.toLowerCase().indexOf(kw) >= 0 || t.sub.toLowerCase().indexOf(kw) >= 0);
+    });
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:12px; padding:30px;">' + window.t('msg_no_search_result', 'No results') + '</div>';
+        return;
+    }
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;';
+
+    filtered.forEach(function(preset, idx) {
+        const t = preset.texts[country] || preset.texts['EN'];
+        const card = document.createElement('div');
+        card.style.cssText = 'cursor:pointer; border-radius:10px; overflow:hidden; aspect-ratio:1; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px; text-align:center; background:' + preset.bg + '; transition: transform 0.15s;';
+        card.onmouseenter = function() { card.style.transform = 'scale(1.03)'; };
+        card.onmouseleave = function() { card.style.transform = 'scale(1)'; };
+
+        var titleSize = Math.round(preset.titleStyle.fontSize * 0.35);
+        var subSize = Math.round(preset.subStyle.fontSize * 0.6);
+
+        card.innerHTML =
+            '<div style="font-size:' + titleSize + 'px; font-weight:bold; color:' + preset.titleStyle.fill + '; font-family:' + preset.titleStyle.fontFamily + '; line-height:1.2; margin-bottom:4px; word-break:break-word;">' + t.title + '</div>' +
+            '<div style="font-size:' + subSize + 'px; color:' + preset.subStyle.fill + '; font-family:' + preset.subStyle.fontFamily + '; line-height:1.3; word-break:break-word;">' + t.sub + '</div>';
+
+        card.onclick = function() {
+            window.applyTextTemplate(preset, idx);
+        };
+        grid.appendChild(card);
+    });
+
+    list.appendChild(grid);
+};
+
+window.applyTextTemplate = function(preset, idx) {
+    if (!canvas) return;
+    const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const t = preset.texts[country] || preset.texts['EN'];
+
+    var cw = canvas.getWidth();
+    var ch = canvas.getHeight();
+    var zoom = canvas.getZoom ? canvas.getZoom() : 1;
+    var centerX = cw / zoom / 2;
+    var centerY = ch / zoom / 2;
+
+    // 캔버스 크기에 맞게 폰트 크기 조정 (기본 800px 기준)
+    var scale = Math.min(cw / zoom, ch / zoom) / 800;
+    var titleFontSize = Math.round(preset.titleStyle.fontSize * scale);
+    var subFontSize = Math.round(preset.subStyle.fontSize * scale);
+
+    var titleObj = new fabric.IText(t.title, {
+        fontSize: titleFontSize,
+        fontWeight: preset.titleStyle.fontWeight || 'bold',
+        fill: preset.titleStyle.fill,
+        fontFamily: preset.titleStyle.fontFamily || 'Arial',
+        originX: 'center',
+        originY: 'center',
+        left: centerX,
+        top: centerY - titleFontSize * 0.7,
+        textAlign: 'center',
+        editable: true
+    });
+
+    var subObj = new fabric.IText(t.sub, {
+        fontSize: subFontSize,
+        fill: preset.subStyle.fill,
+        fontFamily: preset.subStyle.fontFamily || 'Arial',
+        originX: 'center',
+        originY: 'center',
+        left: centerX,
+        top: centerY + subFontSize * 1.2,
+        textAlign: 'center',
+        editable: true
+    });
+
+    canvas.add(titleObj);
+    canvas.add(subObj);
+    canvas.setActiveObject(titleObj);
+    canvas.requestRenderAll();
+};
+
 // [3] 요소 패널 클립아트 로드
 let sideAssetPage = 0;
+let sideAssetKeyword = '';
+let sideAssetSearchTimer = null;
+const SIDE_ASSET_PER_PAGE = 8;
+
+window.handleAssetSearch = function(val) {
+    clearTimeout(sideAssetSearchTimer);
+    sideAssetSearchTimer = setTimeout(function() {
+        sideAssetKeyword = (val || '').trim();
+        window.loadSideAssets(0);
+    }, 300);
+};
+
 window.loadSideAssets = async function(page) {
     if (typeof page === 'number') sideAssetPage = page;
     else sideAssetPage = 0;
@@ -1246,21 +1540,25 @@ window.loadSideAssets = async function(page) {
     list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin" style="color:#6366f1;"></i></div>';
     try {
         const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern', 'logo'];
-        const { data, error } = await sb.from('library')
+        let query = sb.from('library')
             .select('id, thumb_url, title, category, tags')
             .eq('status', 'approved')
             .in('category', cats)
             .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
             .order('created_at', { ascending: false })
-            .range(sideAssetPage * 12, (sideAssetPage + 1) * 12 - 1);
+            .range(sideAssetPage * SIDE_ASSET_PER_PAGE, (sideAssetPage + 1) * SIDE_ASSET_PER_PAGE - 1);
+        if (sideAssetKeyword) {
+            query = query.or('title.ilike.%' + sideAssetKeyword + '%,tags.ilike.%' + sideAssetKeyword + '%');
+        }
+        const { data, error } = await query;
         if (error) throw error;
         list.innerHTML = '';
         if (!data || data.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:11px; padding:15px;">No data</div>';
+            list.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:11px; padding:15px;">' + (sideAssetKeyword ? window.t('msg_no_search_result', 'No results') : 'No data') + '</div>';
             return;
         }
         const grid = document.createElement('div');
-        grid.style.cssText = 'display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;';
+        grid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;';
         data.forEach(tpl => {
             const div = document.createElement('div');
             div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:1; background:#f8fafc; border:1px solid #e2e8f0; position:relative;';
@@ -1289,7 +1587,7 @@ window.loadSideAssets = async function(page) {
         const nextB = document.createElement('button');
         nextB.className = 'side-page-btn';
         nextB.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
-        nextB.disabled = data.length < 12;
+        nextB.disabled = data.length < SIDE_ASSET_PER_PAGE;
         nextB.onclick = function() { window.loadSideAssets(sideAssetPage + 1); };
         pgDiv.appendChild(prevB); pgDiv.appendChild(pageL); pgDiv.appendChild(nextB);
         list.appendChild(pgDiv);

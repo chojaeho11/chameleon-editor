@@ -1029,5 +1029,6 @@
   "dsm_back": "Back",
   "dsm_ph_search": "Search for what you want to create!",
   "editor_tab_text_tpl": "Text Templates",
-  "label_clipart": "Clipart & Elements"
+  "label_clipart": "Clipart & Elements",
+  "ph_search_clipart": "Search clipart"
 }

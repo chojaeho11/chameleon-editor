@@ -1161,6 +1161,14 @@
                 </div>
 
                 <div class="section-title" data-i18n="label_clipart" style="font-size: 12px; margin-top:15px; margin-bottom: 8px;">클립아트 · 요소</div>
+                <div style="position:relative; margin-bottom:8px;">
+                    <input type="text" id="sideAssetSearch"
+                           placeholder="클립아트 검색" data-i18n-placeholder="ph_search_clipart"
+                           autocomplete="off"
+                           onkeyup="window.handleAssetSearch(this.value)"
+                           style="width:100%; padding:8px 8px 8px 30px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:12px; outline:none;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:11px;"></i>
+                </div>
                 <div id="sideAssetList" style="min-height:60px;"></div>
             </div>
 
@@ -2334,9 +2342,13 @@ window.filterFxCards = function(cat, btn) {
         if (sideSearchTimeout) clearTimeout(sideSearchTimeout);
 
         sideSearchTimeout = setTimeout(() => {
-            const currentKey = window.currentProductKey || 'custom';
-            if (window.loadSideBarTemplates) {
-                window.loadSideBarTemplates(currentKey, keyword);
+            if (window._sideCurrentGroup === 'group_text_tpl') {
+                window.loadTextTemplates && window.loadTextTemplates(keyword);
+            } else {
+                const currentKey = window.currentProductKey || 'custom';
+                if (window.loadSideBarTemplates) {
+                    window.loadSideBarTemplates(currentKey, keyword);
+                }
             }
         }, 500);
     };

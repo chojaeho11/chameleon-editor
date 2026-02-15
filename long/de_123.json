@@ -1023,5 +1023,6 @@
   "dsm_back": "Zurück",
   "dsm_ph_search": "Suchen Sie nach dem, was Sie erstellen möchten!",
   "editor_tab_text_tpl": "Text-Vorlagen",
-  "label_clipart": "Clipart & Elemente"
+  "label_clipart": "Clipart & Elemente",
+  "ph_search_clipart": "Clipart suchen"
 }
