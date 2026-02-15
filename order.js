@@ -685,10 +685,9 @@ async function addCanvasToCart() {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
-    // ★ [핵심] 에디터 PDF 다운로드와 동일한 방식으로 디자인 PDF 사전 생성
+    // ★ [핵심] 래스터 PDF 우선 (텍스트 효과/그림자/외곽선 완벽 보존)
     let designPdfUrl = null;
     try {
-        // 에디터 btnPDF와 동일한 페이지 데이터 구성
         let pdfPages = [json];
         if (typeof pageDataList !== 'undefined' && pageDataList.length > 0) {
             pdfPages = [...pageDataList];
@@ -696,14 +695,15 @@ async function addCanvasToCart() {
                 pdfPages[currentPageIndex] = json;
             }
         }
-        // 벡터 PDF 먼저, 실패 시 래스터 (에디터 다운로드와 완전히 동일)
-        let pdfBlob = await generateProductVectorPDF(pdfPages, finalW, finalH, boardX, boardY);
+        // 래스터 우선 (캔버스 렌더링 그대로 캡처 → 효과 100% 보존)
+        let pdfBlob = await generateRasterPDF(pdfPages, finalW, finalH, boardX, boardY);
+        // 래스터 실패 시 벡터 시도
         if (!pdfBlob || pdfBlob.size < 5000) {
-            pdfBlob = await generateRasterPDF(pdfPages, finalW, finalH, boardX, boardY);
+            pdfBlob = await generateProductVectorPDF(pdfPages, finalW, finalH, boardX, boardY);
         }
         if (pdfBlob && pdfBlob.size > 1000) {
             designPdfUrl = await uploadFileToSupabase(pdfBlob, 'cart_pdf');
-            console.log("[사전 PDF] 생성 완료:", designPdfUrl);
+            console.log("[사전 PDF] 래스터 생성 완료:", designPdfUrl);
         }
     } catch(e) {
         console.warn("사전 PDF 생성 실패:", e);
