@@ -486,8 +486,33 @@
     <div class="quick-menu-track" id="quickMenuContainer"></div>
 
     <!-- 무료 디자인 시작 버튼 -->
-    <div style="text-align:center; margin: 20px auto 20px auto; max-width:1000px;">
-        <button id="btnDesignStart" style="padding:16px 48px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:50px; font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 4px 15px rgba(99,102,241,0.4); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+    <style>
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        #btnDesignStart {
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #6366f1);
+            background-size: 300% 300%;
+            animation: gradientShift 4s ease infinite;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.45);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #btnDesignStart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(99,102,241,0.55);
+        }
+    </style>
+    <div style="text-align:center; margin: -5px auto 30px auto; max-width:1000px;">
+        <button id="btnDesignStart">
             <i class="fa-solid fa-palette"></i> <span data-i18n="dsm_btn_start">무료 디자인 시작하기</span>
         </button>
     </div>
