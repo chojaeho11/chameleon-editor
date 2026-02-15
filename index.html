@@ -6596,7 +6596,9 @@ window.dsmShowPrintCategory = async function(wMM, hMM, label) {
         var catResp = await sb.from('admin_categories').select('name, slug').order('sort_order', { ascending: true });
         var prodResp = await sb.from('admin_products')
             .select('name, code, img_url, category, price, width_mm, height_mm')
-            .not('img_url', 'is', null).neq('img_url', '');
+            .or('partner_id.is.null,partner_status.eq.approved')
+            .not('img_url', 'is', null).neq('img_url', '')
+            .order('sort_order', { ascending: true });
 
         var categories = catResp.data || [];
         window._dsmProducts = prodResp.data || [];
