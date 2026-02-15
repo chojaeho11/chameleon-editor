@@ -679,7 +679,7 @@ async function addCanvasToCart() {
         try { canvas.setViewportTransform(originalVpt); } catch(ex){}
     }
 
-    const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow', 'isMockup', 'excludeFromExport']);
+    const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone']);
     const finalW = board ? board.width * board.scaleX : (product.w || canvas.width); 
     const finalH = board ? board.height * board.scaleY : (product.h || canvas.height);
     const boardX = board ? board.left : 0;
@@ -1425,7 +1425,18 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                let fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                // 텍스트 효과 감지 → 래스터 PDF 우선
+                const _hasEffects = targetPages.some(p => p.objects && p.objects.some(o =>
+                    o.isEffectGroup || o.paintFirst === 'stroke' ||
+                    (o.shadow && o.shadow.blur > 0) ||
+                    (o.fill && typeof o.fill === 'object') ||
+                    (o.type === 'group' && o.objects && o.objects.some(c => c.isClone || c.isMainText))
+                ));
+                let fileBlob;
+                if (_hasEffects) {
+                    fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                }
+                if (!fileBlob) fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
                 if (!fileBlob) fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {

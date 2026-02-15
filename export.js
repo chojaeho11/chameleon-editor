@@ -435,7 +435,7 @@ export function initExport() {
                 const cropX = board ? board.left : 0;
                 const cropY = board ? board.top : 0;
 
-                const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'isMockup', 'excludeFromExport']);
+                const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
 
                 // 가상 캔버스 생성
                 const tempEl = document.createElement('canvas');
@@ -489,7 +489,7 @@ export function initExport() {
 
             try {
                 // 1. 데이터 최신화 (현재 작업중인 페이지 저장)
-                const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport']);
+                const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
                 let targetPages = [];
 
                 if (pageDataList && pageDataList.length > 0) {
@@ -511,11 +511,22 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. ★ 핵심 ★ 주문 시스템 함수(generateProductVectorPDF)를 그대로 호출
-                // 이렇게 하면 주문했을 때 관리자가 보는 파일과 똑같은 파일이 생성됩니다.
-                let blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
-                
-                // 만약 벡터 생성 실패 시 래스터(이미지) 방식으로 재시도
+                // 3. 텍스트 효과(그림자/패턴/그라데이션 등) 감지 → 래스터 PDF 우선 사용
+                const hasEffects = targetPages.some(p => p.objects && p.objects.some(o =>
+                    o.isEffectGroup || o.paintFirst === 'stroke' ||
+                    (o.shadow && o.shadow.blur > 0) ||
+                    (o.fill && typeof o.fill === 'object') ||
+                    (o.type === 'group' && o.objects && o.objects.some(c => c.isClone || c.isMainText))
+                ));
+
+                let blob;
+                if (hasEffects) {
+                    console.log("✨ 텍스트 효과 감지 → 래스터 PDF 사용 (효과 100% 보존)");
+                    blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
+                }
+                if (!blob) {
+                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
+                }
                 if (!blob) {
                     console.log("벡터 PDF 실패 -> 래스터 PDF 전환");
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
@@ -823,7 +834,10 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                         fill: obj.fill, stroke: obj.stroke, strokeWidth: obj.strokeWidth,
                         scaleX: obj.scaleX, scaleY: obj.scaleY, angle: obj.angle,
                         left: obj.left, top: obj.top, originX: obj.originX, originY: obj.originY,
-                        opacity: obj.opacity, shadow: obj.shadow
+                        opacity: obj.opacity, shadow: obj.shadow,
+                        paintFirst: obj.paintFirst || 'fill',
+                        strokeLineJoin: obj.strokeLineJoin || 'miter',
+                        strokeLineCap: obj.strokeLineCap || 'butt'
                     });
 
                     if (obj.group) {
@@ -873,8 +887,8 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
                 });
             });
             const isMobileDevice = window.innerWidth <= 768;
-            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: isMobileDevice ? 0.7 : 0.95, multiplier: isMobileDevice ? 1 : 2 });
-            doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
+            const imgData = tempCvs.toDataURL({ format: 'png', quality: 1, multiplier: isMobileDevice ? 1.5 : 3 });
+            doc.addImage(imgData, 'PNG', 0, 0, widthMM, heightMM);
             tempCvs.dispose();
         }
         return doc.output('blob');

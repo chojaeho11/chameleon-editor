@@ -64,7 +64,7 @@ async function saveCurrentDesign() {
             return;
         }
 
-        const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'isMockup', 'excludeFromExport']);
+        const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
         const thumb = window.getCleanThumbnail ? window.getCleanThumbnail() : canvas.toDataURL({ format: 'png', multiplier: 0.5, quality: 0.8 });
         
         const board = canvas.getObjects().find(o => o.isBoard);

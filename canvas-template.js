@@ -767,7 +767,7 @@ async function registerUserTemplate() {
     try {
         // 1. 썸네일 생성 (대지 영역만 정확히 크롭)
         canvas.discardActiveObject();
-        const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'fill', 'stroke', 'selectable', 'evented', 'isMockup', 'excludeFromExport']);
+        const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'fill', 'stroke', 'selectable', 'evented', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
         
         // 대지(Board) 객체 찾기
         const board = canvas.getObjects().find(o => o.isBoard === true);

@@ -43,7 +43,7 @@ function saveHistory() {
     
     // 현재 상태를 JSON으로 저장 (배경 및 가이드 제외하고 싶으면 필터링 가능)
     // 여기서는 전체 상태를 심플하게 저장
-    const json = JSON.stringify(canvas.toJSON(['id', 'locked', 'selectable', 'evented', 'isBoard', 'isGuide', 'isMockup', 'excludeFromExport']));
+    const json = JSON.stringify(canvas.toJSON(['id', 'locked', 'selectable', 'evented', 'isBoard', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']));
     
     // 중복 저장 방지 (마지막 상태와 같으면 무시)
     if (undoStack.length > 0 && undoStack[undoStack.length - 1] === json) return;
