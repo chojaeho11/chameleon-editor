@@ -50,6 +50,7 @@ window.loadMembers = async (isNewSearch = false) => {
         if (m.role === 'gold') { badgeColor = '#fef9c3'; displayRole = '골드'; }
         if (m.role === 'platinum') { badgeColor = '#e0f2fe'; displayRole = '플레티넘'; }
         if (m.role === 'franchise') { badgeColor = '#f3e8ff'; displayRole = '가맹점'; }
+        if (m.role === 'subscriber') { badgeColor = '#ede9fe'; displayRole = '⭐구독자'; }
         if (m.role === 'admin') { badgeColor = '#fee2e2'; displayRole = '관리자'; }
 
         // 등급 선택 박스
@@ -58,6 +59,7 @@ window.loadMembers = async (isNewSearch = false) => {
                 <option value="customer" ${m.role==='customer'?'selected':''}>일반</option>
                 <option value="gold" ${m.role==='gold'?'selected':''}>골드</option>
                 <option value="platinum" ${m.role==='platinum'?'selected':''}>플레티넘</option>
+                <option value="subscriber" ${m.role==='subscriber'?'selected':''}>⭐구독자</option>
                 <option value="franchise" ${m.role==='franchise'?'selected':''}>가맹점</option>
                 <option value="admin" ${m.role==='admin'?'selected':''}>관리자</option>
             </select>
