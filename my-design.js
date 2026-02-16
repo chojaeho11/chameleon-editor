@@ -232,21 +232,46 @@ window._loadSavedDesign = async function(id) {
         const jsonData = typeof data.json_data === 'string' ? JSON.parse(data.json_data) : data.json_data;
         const nonBoardObjects = (jsonData.objects || []).filter(o => !o.isBoard);
 
-        // 현재 캔버스에서 보드 제외 모든 객체 삭제
-        if (typeof canvas !== 'undefined' && canvas) {
-            const toRemove = canvas.getObjects().filter(o => !o.isBoard);
-            toRemove.forEach(o => canvas.remove(o));
-        }
+        // 원본 보드 정보 (저장 시점의 대지 크기/위치)
+        const savedBoard = (jsonData.objects || []).find(o => o.isBoard);
+        const origW = savedBoard ? (savedBoard.width * (savedBoard.scaleX || 1)) : (data.width || canvas.width);
+        const origH = savedBoard ? (savedBoard.height * (savedBoard.scaleY || 1)) : (data.height || canvas.height);
+        const origCX = savedBoard ? (savedBoard.left + origW / 2) : (canvas.width / 2);
+        const origCY = savedBoard ? (savedBoard.top + origH / 2) : (canvas.height / 2);
 
-        // 저장된 디자인 객체를 현재 대지에 로드
+        // 현재 보드 정보
+        const board = canvas.getObjects().find(o => o.isBoard);
+        const curW = board ? board.getScaledWidth() : canvas.width;
+        const curH = board ? board.getScaledHeight() : canvas.height;
+        const curCX = board ? (board.left + curW / 2) : (canvas.width / 2);
+        const curCY = board ? (board.top + curH / 2) : (canvas.height / 2);
+
+        // 스케일 팩터: 110% 꽉 채우기 (cover)
+        const scaleFactor = Math.max(curW / origW, curH / origH) * 1.1;
+
+        // 현재 캔버스에서 보드 제외 모든 객체 삭제
+        const toRemove = canvas.getObjects().filter(o => !o.isBoard);
+        toRemove.forEach(o => canvas.remove(o));
+
+        // 저장된 디자인 객체를 현재 대지에 스케일 맞춰 로드
         fabric.util.enlivenObjects(nonBoardObjects, function(objs) {
             objs.forEach(function(obj) {
                 if (obj.isMockup || obj.excludeFromExport) return;
+                // 원본 보드 중심 기준 상대좌표 → 스케일 → 현재 보드 중심으로 배치
+                const relX = obj.left - origCX;
+                const relY = obj.top - origCY;
+                obj.set({
+                    left: curCX + relX * scaleFactor,
+                    top: curCY + relY * scaleFactor,
+                    scaleX: (obj.scaleX || 1) * scaleFactor,
+                    scaleY: (obj.scaleY || 1) * scaleFactor
+                });
+                obj.setCoords();
                 canvas.add(obj);
             });
             canvas.requestRenderAll();
             if (loading) loading.style.display = 'none';
-            console.log('✅ 저장된 디자인 로드 완료:', objs.length + '개 객체');
+            console.log('✅ 저장된 디자인 로드 완료:', objs.length + '개 객체, 스케일:', scaleFactor.toFixed(2));
         });
     } catch(e) {
         console.error('Load design error:', e);
