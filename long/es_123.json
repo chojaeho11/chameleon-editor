@@ -972,5 +972,6 @@
   "sc_ph_w": "Ancho(W)",
   "sc_ph_h": "Alto(H)",
   "sc_disclaimer": "Este es un presupuesto estimado de referencia. Contáctenos por chat para un presupuesto exacto.",
-  "sc_btn_chat": "Chatear con nosotros"
+  "sc_btn_chat": "Chatear con nosotros",
+  "sc_btn_open": "Calculadora de Envío"
 }

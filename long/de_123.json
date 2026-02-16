@@ -972,5 +972,6 @@
   "sc_ph_w": "Breite(W)",
   "sc_ph_h": "Höhe(H)",
   "sc_disclaimer": "Dies ist ein geschätzter Richtpreis. Bitte kontaktieren Sie uns per Chat für ein genaues Angebot.",
-  "sc_btn_chat": "Mit uns chatten"
+  "sc_btn_chat": "Mit uns chatten",
+  "sc_btn_open": "Versandrechner"
 }

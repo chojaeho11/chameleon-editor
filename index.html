@@ -568,80 +568,90 @@
         </div>
 </div>
 
-<!-- 배송비 계산기 (AI Shipping Calculator) -->
-<div id="shippingCalcSection" class="hotdeal-wrapper" style="display:none;">
+<!-- 배송비 계산기 버튼 -->
+<div id="shippingCalcSection" style="display:none; text-align:center; margin: 20px auto; max-width:1200px; padding: 0 20px;">
+    <button onclick="document.getElementById('scModal').style.display='flex'" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 50px; padding: 16px 44px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(16,185,129,0.3); transition: all 0.25s; display: inline-flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-truck-fast"></i> <span data-i18n="sc_btn_open">배송비 계산기</span>
+    </button>
+</div>
+
+<!-- 배송비 계산기 모달 -->
+<div id="scModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:13000; justify-content:center; align-items:center; padding:16px;">
     <style>
-        .sc-box { background: #fff; border-radius: 16px; padding: 36px 32px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
-        .sc-header { text-align: center; margin-bottom: 28px; }
-        .sc-header h2 { margin: 0 0 6px 0; font-size: 22px; font-weight: 800; color: #1e293b; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .sc-header p { margin: 0; color: #64748b; font-size: 14px; }
-        .sc-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
-        .sc-form input, .sc-form select { padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 15px; outline: none; transition: all 0.2s; background: #f8fafc; color: #1e293b; font-weight: 500; }
+        .sc-modal-box { background:#fff; border-radius:20px; width:100%; max-width:640px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 25px 60px rgba(0,0,0,0.2); animation: scSlideUp 0.3s ease; }
+        @keyframes scSlideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+        .sc-modal-header { position:sticky; top:0; background:#fff; padding:20px 24px 0; border-radius:20px 20px 0 0; z-index:2; display:flex; justify-content:space-between; align-items:flex-start; }
+        .sc-modal-close { width:36px; height:36px; border-radius:50%; border:none; background:#f1f5f9; color:#64748b; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; flex-shrink:0; }
+        .sc-modal-close:hover { background:#e2e8f0; color:#1e293b; }
+        .sc-modal-body { padding:16px 24px 24px; }
+        .sc-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .sc-form input, .sc-form select { padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: all 0.2s; background: #f8fafc; color: #1e293b; font-weight: 500; }
         .sc-form input:focus, .sc-form select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); background: #fff; }
         .sc-form input::placeholder { color: #94a3b8; font-weight: 400; }
-        .sc-dim-group { grid-column: 1 / -1; }
-        .sc-dim-label { font-size: 13px; color: #64748b; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
-        .sc-dim-row { display: flex; gap: 8px; align-items: center; }
+        .sc-dim-row { display: flex; gap: 6px; align-items: center; grid-column: 1 / -1; }
         .sc-dim-row input { flex: 1; min-width: 0; text-align: center; }
-        .sc-dim-sep { color: #cbd5e1; font-weight: 700; font-size: 18px; flex-shrink: 0; }
-        .sc-btn { grid-column: 1 / -1; padding: 15px; background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 20px rgba(99,102,241,0.3); transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .sc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.4); }
+        .sc-dim-sep { color: #cbd5e1; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .sc-btn { grid-column: 1 / -1; padding: 14px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(16,185,129,0.25); transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .sc-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.35); }
         .sc-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .sc-result { margin-top: 24px; }
-        .sc-ai-banner { background: linear-gradient(135deg, #1e1b4b, #3730a3); color: #fff; border-radius: 14px; padding: 18px 22px; margin-bottom: 18px; font-size: 15px; line-height: 1.7; display: flex; gap: 14px; align-items: flex-start; }
-        .sc-ai-banner i { font-size: 24px; flex-shrink: 0; margin-top: 2px; color: #a5b4fc; }
-        .sc-wh-tag { display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 20px; padding: 6px 16px; font-size: 13px; color: #475569; font-weight: 600; margin-bottom: 16px; }
+        .sc-result { margin-top: 20px; }
+        .sc-ai-banner { background: linear-gradient(135deg, #1e1b4b, #3730a3); color: #fff; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; font-size: 14px; line-height: 1.7; display: flex; gap: 12px; align-items: flex-start; }
+        .sc-ai-banner i { font-size: 22px; flex-shrink: 0; margin-top: 2px; color: #a5b4fc; }
+        .sc-wh-tag { display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 20px; padding: 5px 14px; font-size: 12px; color: #475569; font-weight: 600; margin-bottom: 14px; }
         .sc-wh-tag i { color: #6366f1; }
-        .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
-        .sc-card { background: #f8fafc; border-radius: 14px; padding: 20px; border: 1.5px solid #e2e8f0; position: relative; transition: all 0.25s; }
-        .sc-card:hover:not(.unavailable) { border-color: #c7d2fe; box-shadow: 0 4px 12px rgba(99,102,241,0.08); }
-        .sc-card.best { background: linear-gradient(135deg, #f0fdf4, #ecfeff); border-color: #10b981; box-shadow: 0 4px 18px rgba(16,185,129,0.12); }
+        .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .sc-card { background: #f8fafc; border-radius: 12px; padding: 16px; border: 1.5px solid #e2e8f0; position: relative; transition: all 0.2s; }
+        .sc-card:hover:not(.unavailable) { border-color: #c7d2fe; }
+        .sc-card.best { background: linear-gradient(135deg, #f0fdf4, #ecfeff); border-color: #10b981; box-shadow: 0 3px 12px rgba(16,185,129,0.1); }
         .sc-card.unavailable { opacity: 0.45; }
-        .sc-badge-best { position: absolute; top: -9px; right: 14px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 10px; letter-spacing: 0.5px; }
-        .sc-card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+        .sc-badge-best { position: absolute; top: -8px; right: 12px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 8px; letter-spacing: 0.5px; }
+        .sc-card-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 8px; }
         .sc-card-icon.air { background: #dbeafe; color: #2563eb; }
         .sc-card-icon.sea { background: #e0f2fe; color: #0284c7; }
         .sc-card-icon.truck { background: #fef3c7; color: #d97706; }
         .sc-card-icon.courier { background: #fce7f3; color: #db2777; }
-        .sc-card-label { font-weight: 700; font-size: 14px; color: #374151; margin-bottom: 8px; }
-        .sc-card-price { font-size: 24px; font-weight: 800; color: #1e293b; margin-bottom: 6px; letter-spacing: -0.5px; }
+        .sc-card-label { font-weight: 700; font-size: 13px; color: #374151; margin-bottom: 6px; }
+        .sc-card-price { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 4px; letter-spacing: -0.5px; }
         .sc-card.best .sc-card-price { color: #059669; }
-        .sc-card.unavailable .sc-card-price { color: #9ca3af; font-size: 15px; font-weight: 600; }
-        .sc-card-eta { font-size: 13px; color: #6b7280; display: flex; align-items: center; gap: 4px; }
-        .sc-card-reason { font-size: 12px; color: #ef4444; margin-top: 6px; font-weight: 500; }
-        .sc-install { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 14px 18px; font-size: 14px; color: #92400e; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-        .sc-install i { font-size: 18px; }
-        .sc-disclaimer { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; text-align: center; }
-        .sc-disclaimer p { margin: 0 0 12px 0; font-size: 13px; color: #64748b; line-height: 1.5; }
-        .sc-chat-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; border: none; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(99,102,241,0.3); transition: all 0.2s; }
-        .sc-chat-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+        .sc-card.unavailable .sc-card-price { color: #9ca3af; font-size: 14px; font-weight: 600; }
+        .sc-card-eta { font-size: 12px; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+        .sc-card-reason { font-size: 11px; color: #ef4444; margin-top: 4px; font-weight: 500; }
+        .sc-install { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #92400e; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .sc-disclaimer { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; text-align: center; }
+        .sc-disclaimer p { margin: 0 0 10px 0; font-size: 12px; color: #64748b; line-height: 1.5; }
+        .sc-chat-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; border: none; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 12px rgba(99,102,241,0.25); transition: all 0.2s; }
+        .sc-chat-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(99,102,241,0.35); }
         @media (max-width: 600px) {
-            .sc-box { padding: 24px 16px; }
+            .sc-modal-box { max-height: 95vh; border-radius: 16px; }
+            .sc-modal-body { padding: 12px 16px 20px; }
             .sc-form { grid-template-columns: 1fr; }
             .sc-cards { grid-template-columns: 1fr; }
-            .sc-card-price { font-size: 20px; }
+            .sc-card-price { font-size: 18px; }
         }
     </style>
-    <div class="sc-box">
-        <div class="sc-header">
-            <h2>
-                <i class="fa-solid fa-truck-fast" style="color: #6366f1;"></i>
-                <span data-i18n="sc_title">AI 배송비 계산기</span>
-            </h2>
-            <p data-i18n="sc_desc">도시와 제품 크기를 입력하면 AI가 최적의 배송 방법을 추천해드립니다</p>
-        </div>
-        <div class="sc-form" id="scForm">
-            <input type="text" id="scCity" data-i18n-placeholder="sc_ph_city" placeholder="배송받을 도시명" style="grid-column: 1 / -1;" />
-            <select id="scProduct" onchange="window._scProductChange && window._scProductChange()">
-                <option value="general" data-i18n="sc_prod_general">일반 인쇄물</option>
-                <option value="honeycomb" data-i18n="sc_prod_honeycomb">허니콤보드</option>
-                <option value="fabric" data-i18n="sc_prod_fabric">패브릭 / 원단</option>
-                <option value="acrylic" data-i18n="sc_prod_acrylic">아크릴 / 포맥스</option>
-            </select>
-            <div style="display:flex; align-items:center; justify-content:flex-end; color:#64748b; font-size:13px; font-weight:600;">
-                <span data-i18n="sc_size_label">크기 (mm)</span>
+    <div class="sc-modal-box" onclick="event.stopPropagation()">
+        <div class="sc-modal-header">
+            <div>
+                <h2 style="margin:0 0 4px 0; font-size:20px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-truck-fast" style="color:#10b981;"></i>
+                    <span data-i18n="sc_title">AI 배송비 계산기</span>
+                </h2>
+                <p style="margin:0; color:#64748b; font-size:13px;" data-i18n="sc_desc">도시와 제품 크기를 입력하면 AI가 최적의 배송 방법을 추천해드립니다</p>
             </div>
-            <div class="sc-dim-group">
+            <button class="sc-modal-close" onclick="document.getElementById('scModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="sc-modal-body">
+            <div class="sc-form" id="scForm">
+                <input type="text" id="scCity" data-i18n-placeholder="sc_ph_city" placeholder="배송받을 도시명" style="grid-column: 1 / -1;" />
+                <select id="scProduct" onchange="window._scProductChange && window._scProductChange()">
+                    <option value="general" data-i18n="sc_prod_general">일반 인쇄물</option>
+                    <option value="honeycomb" data-i18n="sc_prod_honeycomb">허니콤보드</option>
+                    <option value="fabric" data-i18n="sc_prod_fabric">패브릭 / 원단</option>
+                    <option value="acrylic" data-i18n="sc_prod_acrylic">아크릴 / 포맥스</option>
+                </select>
+                <div style="display:flex; align-items:center; justify-content:flex-end; color:#64748b; font-size:12px; font-weight:600;">
+                    <span data-i18n="sc_size_label">크기 (mm)</span>
+                </div>
                 <div class="sc-dim-row">
                     <input type="number" id="scW" data-i18n-placeholder="sc_ph_w" placeholder="가로(W)" min="1" max="99999" />
                     <span class="sc-dim-sep">×</span>
@@ -649,15 +659,19 @@
                     <span class="sc-dim-sep">×</span>
                     <input type="number" id="scD" data-i18n-placeholder="sc_ph_depth" placeholder="두께(D)" min="1" max="99999" value="10" />
                 </div>
+                <button class="sc-btn" id="scCalcBtn" onclick="window.calcShipping()">
+                    <i class="fa-solid fa-calculator"></i> <span data-i18n="sc_btn_calc">배송비 계산하기</span>
+                </button>
             </div>
-            <button class="sc-btn" id="scCalcBtn" onclick="window.calcShipping()">
-                <i class="fa-solid fa-calculator"></i> <span data-i18n="sc_btn_calc">배송비 계산하기</span>
-            </button>
+            <div class="sc-result" id="scResult" style="display:none;"></div>
         </div>
-        <div class="sc-result" id="scResult" style="display:none;"></div>
     </div>
 </div>
 <script>
+// 모달 배경 클릭 시 닫기
+document.getElementById('scModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
 // 허니콤보드 선택 시 기본값 세팅
 window._scProductChange = function() {
     var sel = document.getElementById('scProduct');
@@ -700,17 +714,11 @@ window.calcShipping = async function() {
         if (data.error) throw new Error(data.message || 'Calculation failed');
 
         var html = '';
-
-        // AI 추천 배너
         if (data.recommendation) {
             html += '<div class="sc-ai-banner"><i class="fa-solid fa-robot"></i><div>' + _esc(data.recommendation) + '</div></div>';
         }
-
-        // 창고 태그
         html += '<div style="text-align:center;"><span class="sc-wh-tag"><i class="fa-solid fa-warehouse"></i> ' +
             _esc(data.warehouse) + ' &middot; ' + (data.distance_km || 0).toLocaleString() + 'km</span></div>';
-
-        // 4개 카드
         html += '<div class="sc-cards">';
         var iconMap = { air:'fa-plane', sea:'fa-ship', truck:'fa-truck', courier:'fa-box' };
         (data.options || []).forEach(function(opt) {
@@ -725,25 +733,20 @@ window.calcShipping = async function() {
             html += '</div>';
         });
         html += '</div>';
-
-        // 설치 정보
         if (data.installation) {
             html += '<div class="sc-install"><i class="fa-solid fa-person-digging"></i> ' + _esc(data.installation) + '</div>';
         }
-
-        // 면책 + 채팅 바로가기
         html += '<div class="sc-disclaimer">';
         html += '<p><i class="fa-solid fa-circle-info" style="color:#94a3b8;"></i> ' + (window.t && window.t('sc_disclaimer') || '본 견적은 참고용 예상 금액입니다. 정확한 견적은 상담을 통해 확인해주세요.') + '</p>';
-        html += '<button class="sc-chat-btn" onclick="if(window.ChamBot)window.ChamBot.toggle();"><i class="fa-solid fa-comments"></i> ' + (window.t && window.t('sc_btn_chat') || '채팅 상담하기') + '</button>';
+        html += '<button class="sc-chat-btn" onclick="document.getElementById(\'scModal\').style.display=\'none\'; setTimeout(function(){if(window.ChamBot)window.ChamBot.toggle();},300);"><i class="fa-solid fa-comments"></i> ' + (window.t && window.t('sc_btn_chat') || '채팅 상담하기') + '</button>';
         html += '</div>';
 
         resultDiv.innerHTML = html;
         resultDiv.style.display = 'block';
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
         console.error('shipping-calc error:', e);
-        resultDiv.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px; background:#fef2f2; border-radius:12px;">' +
-            '<i class="fa-solid fa-circle-exclamation" style="font-size:20px;"></i><br><span style="font-size:14px;">' + _esc(e.message || 'Error') + '</span></div>';
+        resultDiv.innerHTML = '<div style="text-align:center; color:#ef4444; padding:16px; background:#fef2f2; border-radius:10px;">' +
+            '<i class="fa-solid fa-circle-exclamation"></i> ' + _esc(e.message || 'Error') + '</div>';
         resultDiv.style.display = 'block';
     } finally {
         btn.disabled = false;

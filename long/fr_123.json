@@ -972,5 +972,6 @@
   "sc_ph_w": "Largeur(W)",
   "sc_ph_h": "Hauteur(H)",
   "sc_disclaimer": "Ce devis est une estimation indicative. Veuillez nous contacter par chat pour un devis précis.",
-  "sc_btn_chat": "Discuter avec nous"
+  "sc_btn_chat": "Discuter avec nous",
+  "sc_btn_open": "Calculateur de Livraison"
 }

@@ -11,7 +11,7 @@ const corsHeaders = {
 
 // ── 창고 좌표 ──
 const WAREHOUSES: Record<string, { city: string; lat: number; lng: number; name: Record<string, string> }[]> = {
-    KR: [{ city: "Gyeonggi", lat: 37.41, lng: 127.52, name: { kr: "경기도 물류센터", ja: "京畿道物流センター", en: "Gyeonggi Warehouse" } }],
+    KR: [{ city: "Hwaseong", lat: 37.20, lng: 126.83, name: { kr: "화성시 공장", ja: "華城市工場", en: "Hwaseong Factory" } }],
     JP: [
         { city: "Tokyo", lat: 35.68, lng: 139.65, name: { kr: "도쿄 물류센터", ja: "東京倉庫", en: "Tokyo Warehouse" } },
         { city: "Osaka", lat: 34.69, lng: 135.50, name: { kr: "오사카 물류센터", ja: "大阪倉庫", en: "Osaka Warehouse" } },
@@ -38,6 +38,7 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
     "울산": { lat: 35.54, lng: 129.31 }, "ulsan": { lat: 35.54, lng: 129.31 },
     "창원": { lat: 35.23, lng: 128.68 }, "changwon": { lat: 35.23, lng: 128.68 },
     "경기": { lat: 37.41, lng: 127.52 }, "경기도": { lat: 37.41, lng: 127.52 },
+    "화성": { lat: 37.20, lng: 126.83 }, "hwaseong": { lat: 37.20, lng: 126.83 }, "화성시": { lat: 37.20, lng: 126.83 },
     // Japan
     "東京": { lat: 35.68, lng: 139.65 }, "tokyo": { lat: 35.68, lng: 139.65 },
     "大阪": { lat: 34.69, lng: 135.50 }, "osaka": { lat: 34.69, lng: 135.50 },

@@ -972,5 +972,6 @@
   "sc_ph_w": "Width(W)",
   "sc_ph_h": "Height(H)",
   "sc_disclaimer": "This is an estimated quote for reference only. Please contact us via chat for an accurate quote.",
-  "sc_btn_chat": "Chat with us"
+  "sc_btn_chat": "Chat with us",
+  "sc_btn_open": "Shipping Calculator"
 }
