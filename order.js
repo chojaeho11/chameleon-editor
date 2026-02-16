@@ -247,8 +247,10 @@ export async function initOrderSystem() {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
 
-            // 배송 옵션 필수 체크
+            // 배송 옵션 필수 체크 (묶음배송: 전체 상품 중 1개라도 배송옵션 선택되면 OK)
             const shippingKeywords = ['배송', 'shipping', 'delivery', '配送', '発送', '운송'];
+            let hasShippingCategory = false;
+            let hasAnyShippingSelected = false;
             for (let i = 0; i < cartData.length; i++) {
                 const item = cartData[i];
                 if (!item.product || !item.product.addons) continue;
@@ -263,15 +265,17 @@ export async function initOrderSystem() {
                     const isShipping = shippingKeywords.some(kw => catName.includes(kw.toLowerCase()));
                     if (!isShipping) continue;
 
-                    // 이 카테고리의 옵션 중 하나라도 선택되었는지 확인
+                    hasShippingCategory = true;
                     const catAddonCodes = allAddons.filter(a => a.category_code === cat).map(a => a.code);
                     const selectedCodes = Object.values(item.selectedAddons || {});
-                    const hasShippingSelected = catAddonCodes.some(c => selectedCodes.includes(c));
-                    if (!hasShippingSelected) {
-                        alert(window.t('msg_shipping_required', '배송옵션은 필수입니다.'));
-                        return;
+                    if (catAddonCodes.some(c => selectedCodes.includes(c))) {
+                        hasAnyShippingSelected = true;
                     }
                 }
+            }
+            if (hasShippingCategory && !hasAnyShippingSelected) {
+                alert(window.t('msg_shipping_required', '배송옵션은 필수입니다.'));
+                return;
             }
 
             openCalendarModal();
