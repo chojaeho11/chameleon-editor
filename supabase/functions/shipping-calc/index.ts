@@ -114,7 +114,7 @@ const FACTORY_RATES: Record<string, Record<string, Record<string, number | null>
 // ── 해외 배송 요금표 (항공~$600, 해상~$280) ──
 const INTL_RATES: Record<string, Record<string, number | null>> = {
     general:   { air: 300000, sea: 140000, courier: 50000 },
-    honeycomb: { air: 10000000, sea: 4000000, courier: null },
+    honeycomb: { air: 300000, sea: 165000, courier: null },
     fabric:    { air: 300000, sea: 140000, courier: 50000 },
     acrylic:   { air: 300000, sea: 140000, courier: 100000 },
 };
