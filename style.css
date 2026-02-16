@@ -839,6 +839,7 @@ button, input, textarea, select { font-family: inherit; }
     .foot-menu ul { flex-wrap: wrap; gap: 10px; }
 
     
+    .hero-section { display: none !important; }
     .hero-title { font-size: 26px !important; word-break: keep-all; }
     .quick-menu-track { grid-template-columns: repeat(2, 1fr) !important; }
     
