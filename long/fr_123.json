@@ -989,5 +989,10 @@
   "sub_feat_priority": "Support de production prioritaire",
   "sub_premium_lock": "Modèle premium",
   "sub_premium_msg": "Abonnez-vous à PRO pour utiliser tous les modèles premium",
-  "sub_success_msg": "Votre abonnement PRO est maintenant actif ! 🎉"
+  "sub_success_msg": "Votre abonnement PRO est maintenant actif ! 🎉",
+  "sub_manage_title": "Gérer",
+  "sub_manage_desc": "Modifier le paiement · Annuler l'abonnement",
+  "sub_cancel_info": "Annulez à tout moment, sans tracas.<br>L'accès continue jusqu'à la fin de la période",
+  "sub_manage_btn": "Gérer l'abonnement",
+  "sub_no_subscription": "Aucun abonnement actif. Veuillez vous abonner d'abord."
 }

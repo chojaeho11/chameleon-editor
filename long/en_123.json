@@ -989,5 +989,10 @@
   "sub_feat_priority": "Priority production support",
   "sub_premium_lock": "Premium Template",
   "sub_premium_msg": "Subscribe to PRO to use all premium templates",
-  "sub_success_msg": "Your PRO subscription is now active! 🎉"
+  "sub_success_msg": "Your PRO subscription is now active! 🎉",
+  "sub_manage_title": "Manage",
+  "sub_manage_desc": "Change payment · Cancel subscription",
+  "sub_cancel_info": "Cancel anytime, no hassle.<br>Access continues until period ends",
+  "sub_manage_btn": "Manage Subscription",
+  "sub_no_subscription": "No active subscription. Please subscribe first."
 }

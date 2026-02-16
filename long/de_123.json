@@ -989,5 +989,10 @@
   "sub_feat_priority": "Bevorzugter Produktionssupport",
   "sub_premium_lock": "Premium-Vorlage",
   "sub_premium_msg": "Abonnieren Sie PRO, um alle Premium-Vorlagen zu nutzen",
-  "sub_success_msg": "Ihr PRO-Abo ist jetzt aktiv! 🎉"
+  "sub_success_msg": "Ihr PRO-Abo ist jetzt aktiv! 🎉",
+  "sub_manage_title": "Verwalten",
+  "sub_manage_desc": "Zahlung ändern · Abo kündigen",
+  "sub_cancel_info": "Jederzeit problemlos kündbar.<br>Zugang bleibt bis zum Ende der Laufzeit",
+  "sub_manage_btn": "Abo verwalten",
+  "sub_no_subscription": "Kein aktives Abo. Bitte abonnieren Sie zuerst."
 }

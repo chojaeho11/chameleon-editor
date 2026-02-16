@@ -989,5 +989,10 @@
   "sub_feat_priority": "Soporte de producción prioritario",
   "sub_premium_lock": "Plantilla premium",
   "sub_premium_msg": "Suscríbete a PRO para usar todas las plantillas premium",
-  "sub_success_msg": "¡Tu suscripción PRO está activa! 🎉"
+  "sub_success_msg": "¡Tu suscripción PRO está activa! 🎉",
+  "sub_manage_title": "Gestionar",
+  "sub_manage_desc": "Cambiar pago · Cancelar suscripción",
+  "sub_cancel_info": "Cancela cuando quieras, sin complicaciones.<br>El acceso continúa hasta el final del período",
+  "sub_manage_btn": "Gestionar Suscripción",
+  "sub_no_subscription": "No hay suscripción activa. Por favor, suscríbete primero."
 }

@@ -989,5 +989,10 @@
   "sub_feat_priority": "優先制作サポート",
   "sub_premium_lock": "プレミアムテンプレートです",
   "sub_premium_msg": "PROサブスクに登録してすべてのプレミアムテンプレートをご利用ください",
-  "sub_success_msg": "PROサブスクリプションが有効になりました！🎉"
+  "sub_success_msg": "PROサブスクリプションが有効になりました！🎉",
+  "sub_manage_title": "管理",
+  "sub_manage_desc": "お支払い方法変更 · 解約",
+  "sub_cancel_info": "いつでも簡単に解約できます。<br>解約後も期間終了まで利用可能",
+  "sub_manage_btn": "サブスク管理",
+  "sub_no_subscription": "有効なサブスクリプションがありません。"
 }
