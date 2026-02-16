@@ -209,29 +209,18 @@ export async function initOrderSystem() {
 
     const btnOrderTop = document.getElementById("btnOrderTop");
     if(btnOrderTop) btnOrderTop.onclick = function() {
-        // 현재 제품 정보 표시
-        let key = window.currentProductKey || canvas?.currentProductKey || localStorage.getItem('current_product_key') || 'A4';
-        let product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
-        const nameEl = document.getElementById('purchaseChoiceProductName');
-        if (nameEl && product) {
-            // 제품명 + 현재 사이즈 표시
-            const board = canvas?.getObjects()?.find(o => o.isBoard);
-            let sizeInfo = '';
-            if (board) {
-                const mmToPx = 3.7795;
-                const wMm = Math.round((board.width * board.scaleX) / mmToPx);
-                const hMm = Math.round((board.height * board.scaleY) / mmToPx);
-                sizeInfo = ` (${wMm}×${hMm}mm)`;
-            }
-            nameEl.textContent = (product.name || key) + sizeInfo;
-        }
-        document.getElementById('purchaseChoiceModal').style.display = 'flex';
-    };
+        const startScreen = document.getElementById('startScreen');
+        const isEditorOpen = startScreen && window.getComputedStyle(startScreen).display === 'none';
 
-    // 구매하기 모달: 현재 제품으로 장바구니 담기
-    window.purchaseCurrentProduct = function() {
-        document.getElementById('purchaseChoiceModal').style.display = 'none';
-        addCanvasToCart();
+        if (isEditorOpen) {
+            // 에디터에서 작업 중 → 바로 장바구니에 담기
+            addCanvasToCart();
+        } else {
+            // 시작 화면 → 장바구니 바로가기
+            loadCartFromStorage();
+            renderCart();
+            document.getElementById('cartPage').style.display = 'block';
+        }
     };
 
     // addCanvasToCart를 외부에서도 접근 가능하게

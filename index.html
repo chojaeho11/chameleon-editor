@@ -2292,7 +2292,7 @@ window.filterFxCards = function(cat, btn) {
 <div id="categoryDetailModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 800px; max-width: 95%; position: relative;">
         
-        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null;"
+        <button onclick="document.getElementById('categoryDetailModal').style.display='none';"
                 style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; z-index: 10;">
             <i class="fa-solid fa-xmark"></i>
         </button>
@@ -2311,7 +2311,7 @@ window.filterFxCards = function(cat, btn) {
         
         <div id="catProductGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
         
-        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null;" class="btn-round" style="margin-top:20px;">닫기</button>
+        <button onclick="document.getElementById('categoryDetailModal').style.display='none';" class="btn-round" style="margin-top:20px;">닫기</button>
     </div>
 </div>
 <div id="logoUploadModal" class="modal-bg" style="z-index: 20000;">
@@ -5318,43 +5318,6 @@ if (w >= 20 && h >= 20) {
             }, { crossOrigin: 'anonymous' });
         }
 
-        // ★ 저장된 디자인 로드 (제품 선택 후)
-        if (window._pendingDesignLoadId) {
-            const designId = window._pendingDesignLoadId;
-            window._pendingDesignLoadId = null;
-
-            setTimeout(async () => {
-                const loading = document.getElementById("loading");
-                if (loading) {
-                    loading.style.display = "flex";
-                    const p = loading.querySelector('p');
-                    if (p) p.innerText = window.t ? window.t('msg_loading', 'Loading...') : 'Loading...';
-                }
-
-                try {
-                    const { data, error } = await sb.from('user_designs')
-                        .select('*').eq('id', designId).single();
-                    if (error || !data) throw error || new Error('Design not found');
-
-                    const jsonData = typeof data.json_data === 'string' ? JSON.parse(data.json_data) : data.json_data;
-                    const nonBoardObjects = (jsonData.objects || []).filter(o => !o.isBoard);
-
-                    fabric.util.enlivenObjects(nonBoardObjects, function(objs) {
-                        objs.forEach(function(obj) {
-                            if (obj.isMockup || obj.excludeFromExport) return;
-                            canvas.add(obj);
-                        });
-                        canvas.requestRenderAll();
-                        if (loading) loading.style.display = 'none';
-                        console.log("✅ 저장된 디자인 복구 완료 (제품 선택 후)");
-                    });
-                } catch(e) {
-                    console.error('Pending design load error:', e);
-                    alert('Design load failed: ' + e.message);
-                    if (loading) loading.style.display = "none";
-                }
-            }, 600);
-        }
     };
 
     window.onTemplateClick = async function(tpl) {
@@ -6431,37 +6394,6 @@ window.filterModalItems = function(keyword) {
 </script>
 
 <!-- ===== 구매하기 선택 모달 ===== -->
-<div id="purchaseChoiceModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 420px; max-width: 92%; text-align: center; padding: 35px 30px; border-radius: 20px;">
-        <div style="font-size: 40px; margin-bottom: 12px;">🛒</div>
-        <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 800; color: #1e293b;" data-i18n="purchase_choice_title">어떻게 구매하시겠어요?</h3>
-        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 24px;" id="purchaseChoiceProductName"></p>
-
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- 현재 제품으로 장바구니 -->
-            <button onclick="window.purchaseCurrentProduct()" style="display:flex; align-items:center; gap:14px; padding:16px 20px; border-radius:14px; border:2px solid #6366f1; background:linear-gradient(135deg, #6366f1, #818cf8); color:#fff; cursor:pointer; text-align:left; transition:all 0.2s;"
-                onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(99,102,241,0.3)'"
-                onmouseleave="this.style.transform='none'; this.style.boxShadow='none'">
-                <i class="fa-solid fa-basket-shopping" style="font-size:24px; flex-shrink:0;"></i>
-                <div>
-                    <div style="font-size:15px; font-weight:700;" data-i18n="purchase_current_product">현재 제품으로 장바구니 담기</div>
-                    <div style="font-size:11px; opacity:0.85; margin-top:2px;" data-i18n="purchase_current_product_desc">지금 편집 중인 디자인을 바로 주문</div>
-                </div>
-            </button>
-
-        </div>
-
-        <!-- 장바구니 바로가기 -->
-        <button onclick="document.getElementById('purchaseChoiceModal').style.display='none'; document.getElementById('cartPage').style.display='block'; if(window.renderCart) window.renderCart();"
-            style="margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e2e8f0; background:#f8fafc; color:#64748b; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.2s;"
-            onmouseenter="this.style.borderColor='#6366f1'; this.style.color='#6366f1'"
-            onmouseleave="this.style.borderColor='#e2e8f0'; this.style.color='#64748b'">
-            <i class="fa-solid fa-cart-shopping"></i> <span data-i18n="btn_go_cart">장바구니 바로가기</span>
-        </button>
-
-        <button onclick="document.getElementById('purchaseChoiceModal').style.display='none'" style="margin-top:8px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:8px;" data-i18n="btn_close">닫기</button>
-    </div>
-</div>
 
 <div id="cartAddedModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 400px; text-align: center; padding: 40px 30px;">

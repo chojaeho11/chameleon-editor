@@ -213,19 +213,45 @@ window.loadSavedDesigns = async function() {
     }
 };
 
-// [불러오기] 저장된 디자인 → 제품 검색 모달 → 제품 선택 후 로드
+// [불러오기] 저장된 디자인 → 현재 대지에 바로 로드
 window._loadSavedDesign = async function(id) {
-    // 디자인 ID를 저장
-    window._pendingDesignLoadId = id;
+    if (!confirm('기존 디자인은 사라집니다. 이전 디자인을 로드하시겠습니까?')) return;
 
-    // 제품 검색 모달 열기 (메인화면 템플릿 선택 시와 동일)
-    if (window.showCategorySelectionModal) {
-        window.showCategorySelectionModal();
-        // 모달 타이틀을 "이 디자인으로 어떤 제품을 만들어볼까요?"로 변경
-        setTimeout(() => {
-            const titleEl = document.getElementById('catModalTitle');
-            if (titleEl) titleEl.innerHTML = '<span style="color:#6366f1;">이 디자인으로 어떤 제품을 만들어볼까요?</span>';
-        }, 50);
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.style.display = 'flex';
+        const p = loading.querySelector('p');
+        if (p) p.innerText = window.t ? window.t('msg_loading', 'Loading...') : 'Loading...';
+    }
+
+    try {
+        const { data, error } = await sb.from('user_designs')
+            .select('*').eq('id', id).single();
+        if (error || !data) throw error || new Error('Design not found');
+
+        const jsonData = typeof data.json_data === 'string' ? JSON.parse(data.json_data) : data.json_data;
+        const nonBoardObjects = (jsonData.objects || []).filter(o => !o.isBoard);
+
+        // 현재 캔버스에서 보드 제외 모든 객체 삭제
+        if (typeof canvas !== 'undefined' && canvas) {
+            const toRemove = canvas.getObjects().filter(o => !o.isBoard);
+            toRemove.forEach(o => canvas.remove(o));
+        }
+
+        // 저장된 디자인 객체를 현재 대지에 로드
+        fabric.util.enlivenObjects(nonBoardObjects, function(objs) {
+            objs.forEach(function(obj) {
+                if (obj.isMockup || obj.excludeFromExport) return;
+                canvas.add(obj);
+            });
+            canvas.requestRenderAll();
+            if (loading) loading.style.display = 'none';
+            console.log('✅ 저장된 디자인 로드 완료:', objs.length + '개 객체');
+        });
+    } catch(e) {
+        console.error('Load design error:', e);
+        alert('디자인 로드 실패: ' + e.message);
+        if (loading) loading.style.display = 'none';
     }
 };
 
