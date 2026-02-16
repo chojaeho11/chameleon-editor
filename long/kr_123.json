@@ -579,5 +579,18 @@
   "dsm_ph_search": "만들고 싶은 것을 검색해보세요!",
   "editor_tab_text_tpl": "글씨 템플릿",
   "label_clipart": "클립아트 · 요소",
-  "ph_search_clipart": "클립아트 검색"
+  "ph_search_clipart": "클립아트 검색",
+  "sc_title": "AI 배송비 계산기",
+  "sc_desc": "도시와 제품 크기를 입력하면 AI가 최적의 배송 방법을 추천해드립니다",
+  "sc_ph_city": "배송받을 도시명",
+  "sc_prod_general": "일반 인쇄물",
+  "sc_prod_honeycomb": "허니콤보드",
+  "sc_prod_fabric": "패브릭 / 원단",
+  "sc_prod_acrylic": "아크릴 / 포맥스",
+  "sc_size_label": "크기 (mm)",
+  "sc_ph_depth": "두께",
+  "sc_btn_calc": "배송비 계산하기",
+  "sc_alert_city": "도시명을 입력해주세요",
+  "sc_alert_size": "가로, 세로를 입력해주세요",
+  "sc_calculating": "계산 중..."
 }

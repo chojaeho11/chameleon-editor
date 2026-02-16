@@ -955,5 +955,18 @@
   "dsm_ph_search": "Suchen Sie nach dem, was Sie erstellen möchten!",
   "editor_tab_text_tpl": "Text-Vorlagen",
   "label_clipart": "Clipart & Elemente",
-  "ph_search_clipart": "Clipart suchen"
+  "ph_search_clipart": "Clipart suchen",
+  "sc_title": "AI Versandrechner",
+  "sc_desc": "Geben Sie Ihre Stadt und die Produktgröße ein – die KI empfiehlt die beste Versandmethode",
+  "sc_ph_city": "Name der Lieferstadt",
+  "sc_prod_general": "Allgemeiner Druck",
+  "sc_prod_honeycomb": "Wabenplatte",
+  "sc_prod_fabric": "Stoff / Textil",
+  "sc_prod_acrylic": "Acryl / Foamex",
+  "sc_size_label": "Größe (mm)",
+  "sc_ph_depth": "Tiefe",
+  "sc_btn_calc": "Versandkosten berechnen",
+  "sc_alert_city": "Bitte geben Sie einen Stadtnamen ein",
+  "sc_alert_size": "Bitte geben Sie Breite und Höhe ein",
+  "sc_calculating": "Berechnung läuft..."
 }

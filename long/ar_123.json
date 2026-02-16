@@ -955,5 +955,18 @@
   "dsm_ph_search": "ابحث عما تريد إنشاءه!",
   "editor_tab_text_tpl": "قوالب النص",
   "label_clipart": "قصاصات فنية · عناصر",
-  "ph_search_clipart": "البحث عن قصاصات فنية"
+  "ph_search_clipart": "البحث عن قصاصات فنية",
+  "sc_title": "حاسبة الشحن بالذكاء الاصطناعي",
+  "sc_desc": "أدخل مدينتك وحجم المنتج، وسيوصي الذكاء الاصطناعي بأفضل طريقة شحن",
+  "sc_ph_city": "اسم مدينة التسليم",
+  "sc_prod_general": "مطبوعات عامة",
+  "sc_prod_honeycomb": "لوح خلية النحل",
+  "sc_prod_fabric": "قماش / نسيج",
+  "sc_prod_acrylic": "أكريليك / فوماكس",
+  "sc_size_label": "الحجم (مم)",
+  "sc_ph_depth": "السُمك",
+  "sc_btn_calc": "حساب تكلفة الشحن",
+  "sc_alert_city": "يرجى إدخال اسم المدينة",
+  "sc_alert_size": "يرجى إدخال العرض والارتفاع",
+  "sc_calculating": "جاري الحساب..."
 }

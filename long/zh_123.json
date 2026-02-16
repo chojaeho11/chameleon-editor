@@ -955,5 +955,18 @@
   "dsm_ph_search": "搜索您想制作的产品！",
   "editor_tab_text_tpl": "文字模板",
   "label_clipart": "剪贴画 · 元素",
-  "ph_search_clipart": "搜索剪贴画"
+  "ph_search_clipart": "搜索剪贴画",
+  "sc_title": "AI 运费计算器",
+  "sc_desc": "输入城市和产品尺寸，AI将推荐最佳配送方式",
+  "sc_ph_city": "收货城市名",
+  "sc_prod_general": "一般印刷品",
+  "sc_prod_honeycomb": "蜂窝板",
+  "sc_prod_fabric": "布料 / 纺织品",
+  "sc_prod_acrylic": "亚克力 / 发泡板",
+  "sc_size_label": "尺寸 (mm)",
+  "sc_ph_depth": "厚度",
+  "sc_btn_calc": "计算运费",
+  "sc_alert_city": "请输入城市名",
+  "sc_alert_size": "请输入宽度和高度",
+  "sc_calculating": "计算中..."
 }

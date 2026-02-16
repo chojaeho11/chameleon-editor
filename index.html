@@ -568,6 +568,146 @@
         </div>
 </div>
 
+<!-- 배송비 계산기 (AI Shipping Calculator) -->
+<div id="shippingCalcSection" class="hotdeal-wrapper" style="display:none; margin-top:20px; background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); padding: 30px 20px; border-radius: 16px; border: 1px solid #bbf7d0;">
+    <style>
+        .sc-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 700px; margin: 0 auto 20px auto; }
+        .sc-form input, .sc-form select { padding: 12px 14px; border: 1.5px solid #d1d5db; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: #fff; }
+        .sc-form input:focus, .sc-form select:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); }
+        .sc-dim-row { display: flex; gap: 8px; }
+        .sc-dim-row input { flex: 1; min-width: 0; text-align: center; }
+        .sc-btn { grid-column: 1 / -1; padding: 14px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 20px rgba(16,185,129,0.3); transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .sc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16,185,129,0.4); }
+        .sc-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .sc-result { max-width: 700px; margin: 0 auto; }
+        .sc-ai-banner { background: linear-gradient(135deg, #312e81, #4f46e5); color: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; font-size: 15px; line-height: 1.6; display: flex; gap: 12px; align-items: flex-start; }
+        .sc-ai-banner i { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+        .sc-wh-info { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 14px; }
+        .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .sc-card { background: #fff; border-radius: 12px; padding: 16px; border: 1.5px solid #e5e7eb; position: relative; transition: border-color 0.2s, box-shadow 0.2s; }
+        .sc-card.best { border-color: #10b981; box-shadow: 0 4px 15px rgba(16,185,129,0.15); }
+        .sc-card.unavailable { opacity: 0.5; }
+        .sc-badge-best { position: absolute; top: -8px; right: 12px; background: #10b981; color: #fff; font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 10px; }
+        .sc-card-label { font-weight: 700; font-size: 14px; color: #374151; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .sc-card-price { font-size: 22px; font-weight: 800; color: #059669; margin-bottom: 4px; }
+        .sc-card.unavailable .sc-card-price { color: #9ca3af; font-size: 16px; }
+        .sc-card-eta { font-size: 13px; color: #6b7280; }
+        .sc-card-reason { font-size: 12px; color: #ef4444; margin-top: 4px; }
+        .sc-install { background: #fef3c7; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #92400e; display: flex; align-items: center; gap: 8px; }
+        @media (max-width: 600px) {
+            .sc-form { grid-template-columns: 1fr; }
+            .sc-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+    <div style="text-align:center; margin-bottom: 20px;">
+        <h2 style="margin: 0 0 8px 0; color: #065f46; font-size: 22px;">
+            <i class="fa-solid fa-truck-fast" style="color: #10b981;"></i>
+            <span data-i18n="sc_title">AI 배송비 계산기</span>
+        </h2>
+        <p style="margin: 0; color: #64748b; font-size: 14px;" data-i18n="sc_desc">도시와 제품 크기를 입력하면 AI가 최적의 배송 방법을 추천해드립니다</p>
+    </div>
+    <div class="sc-form" id="scForm">
+        <input type="text" id="scCity" data-i18n-placeholder="sc_ph_city" placeholder="배송받을 도시명" style="grid-column: 1 / -1;" />
+        <select id="scProduct">
+            <option value="general" data-i18n="sc_prod_general">일반 인쇄물</option>
+            <option value="honeycomb" data-i18n="sc_prod_honeycomb">허니콤보드</option>
+            <option value="fabric" data-i18n="sc_prod_fabric">패브릭 / 원단</option>
+            <option value="acrylic" data-i18n="sc_prod_acrylic">아크릴 / 포맥스</option>
+        </select>
+        <div style="display:flex; align-items:center; gap:4px; justify-content:center; color:#6b7280; font-size:13px;">
+            <span data-i18n="sc_size_label">크기 (mm)</span>
+        </div>
+        <div class="sc-dim-row" style="grid-column: 1 / -1;">
+            <input type="number" id="scW" placeholder="W" min="1" max="99999" />
+            <span style="align-self:center; color:#9ca3af; font-weight:700;">×</span>
+            <input type="number" id="scH" placeholder="H" min="1" max="99999" />
+            <span style="align-self:center; color:#9ca3af; font-weight:700;">×</span>
+            <input type="number" id="scD" data-i18n-placeholder="sc_ph_depth" placeholder="두께" min="1" max="99999" value="10" />
+        </div>
+        <button class="sc-btn" id="scCalcBtn" onclick="window.calcShipping()">
+            <i class="fa-solid fa-calculator"></i> <span data-i18n="sc_btn_calc">배송비 계산하기</span>
+        </button>
+    </div>
+    <div class="sc-result" id="scResult" style="display:none;"></div>
+</div>
+<script>
+window.calcShipping = async function() {
+    const city = document.getElementById('scCity').value.trim();
+    if (!city) { alert(window.t && window.t('sc_alert_city') || '도시명을 입력해주세요'); return; }
+    const w = parseInt(document.getElementById('scW').value) || 0;
+    const h = parseInt(document.getElementById('scH').value) || 0;
+    const d = parseInt(document.getElementById('scD').value) || 10;
+    if (w <= 0 || h <= 0) { alert(window.t && window.t('sc_alert_size') || '가로, 세로를 입력해주세요'); return; }
+
+    const btn = document.getElementById('scCalcBtn');
+    const resultDiv = document.getElementById('scResult');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (window.t && window.t('sc_calculating') || '계산 중...');
+    resultDiv.style.display = 'none';
+
+    try {
+        const cfg = window.SITE_CONFIG || {};
+        const country = cfg.COUNTRY || 'KR';
+        const langMap = { KR:'kr', JP:'ja', US:'en', CN:'zh', AR:'ar', ES:'es', DE:'de', FR:'fr' };
+        const lang = langMap[country] || 'en';
+        const productType = document.getElementById('scProduct').value;
+
+        const sb = window.sb || (window.supabaseClient);
+        if (!sb) throw new Error('Supabase not initialized');
+
+        const { data, error } = await sb.functions.invoke('shipping-calc', {
+            body: { country, city, width_mm: w, height_mm: h, depth_mm: d, product_type: productType, lang }
+        });
+        if (error) throw error;
+        if (data.error) throw new Error(data.message || 'Calculation failed');
+
+        // 결과 렌더링
+        let html = '';
+
+        // AI 추천 배너
+        if (data.recommendation) {
+            html += '<div class="sc-ai-banner"><i class="fa-solid fa-robot"></i><div>' + escHtml(data.recommendation) + '</div></div>';
+        }
+
+        // 창고 정보
+        html += '<div class="sc-wh-info"><i class="fa-solid fa-warehouse"></i> ' +
+            escHtml(data.warehouse) + ' &middot; ' + (data.distance_km || 0).toLocaleString() + 'km</div>';
+
+        // 4개 카드
+        html += '<div class="sc-cards">';
+        const icons = { air: 'fa-plane', sea: 'fa-ship', truck: 'fa-truck', courier: 'fa-box' };
+        (data.options || []).forEach(function(opt) {
+            const cls = opt.unavailable ? 'sc-card unavailable' : (opt.recommended ? 'sc-card best' : 'sc-card');
+            html += '<div class="' + cls + '">';
+            if (opt.recommended) html += '<div class="sc-badge-best">BEST</div>';
+            html += '<div class="sc-card-label"><i class="fa-solid ' + (icons[opt.method] || 'fa-box') + '"></i> ' + escHtml(opt.label) + '</div>';
+            html += '<div class="sc-card-price">' + escHtml(opt.price) + '</div>';
+            html += '<div class="sc-card-eta"><i class="fa-regular fa-clock"></i> ' + escHtml(opt.eta) + '</div>';
+            if (opt.reason) html += '<div class="sc-card-reason">' + escHtml(opt.reason) + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        // 설치 정보
+        if (data.installation) {
+            html += '<div class="sc-install"><i class="fa-solid fa-person-digging"></i> ' + escHtml(data.installation) + '</div>';
+        }
+
+        resultDiv.innerHTML = html;
+        resultDiv.style.display = 'block';
+    } catch (e) {
+        console.error('shipping-calc error:', e);
+        resultDiv.innerHTML = '<div style="text-align:center; color:#ef4444; padding:16px;">' +
+            '<i class="fa-solid fa-circle-exclamation"></i> ' + escHtml(e.message || 'Error') + '</div>';
+        resultDiv.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-calculator"></i> ' + (window.t && window.t('sc_btn_calc') || '배송비 계산하기');
+    }
+};
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+</script>
+
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
@@ -3170,13 +3310,16 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
 
         // ★ [중요] 아래에 있는 함수들을 여기서 호출하여 화면을 그립니다.
         if (typeof renderQuickMenu === 'function') renderQuickMenu();
-        
+
         if(window.searchTemplates) window.searchTemplates('');
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
         }
+        // 배송비 계산기 항상 표시
+        var scSec = document.getElementById('shippingCalcSection');
+        if (scSec) scSec.style.display = 'block';
 
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
@@ -5357,6 +5500,9 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
         }
+        // 배송비 계산기 항상 표시
+        var scSec2 = document.getElementById('shippingCalcSection');
+        if (scSec2) scSec2.style.display = 'block';
 
         // 4. 로그인 버튼 상태 업데이트 (config.js 완료 후 실행되므로 안전함)
         const btnLogin = document.getElementById('btnLoginBtn');

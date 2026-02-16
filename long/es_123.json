@@ -955,5 +955,18 @@
   "dsm_ph_search": "¡Busca lo que quieras crear!",
   "editor_tab_text_tpl": "Plantillas de Texto",
   "label_clipart": "Clipart & Elementos",
-  "ph_search_clipart": "Buscar clipart"
+  "ph_search_clipart": "Buscar clipart",
+  "sc_title": "Calculadora de Envío con IA",
+  "sc_desc": "Ingrese su ciudad y el tamaño del producto, y la IA recomendará el mejor método de envío",
+  "sc_ph_city": "Nombre de la ciudad de entrega",
+  "sc_prod_general": "Impresión general",
+  "sc_prod_honeycomb": "Panel de nido de abeja",
+  "sc_prod_fabric": "Tela / Textil",
+  "sc_prod_acrylic": "Acrílico / Foamex",
+  "sc_size_label": "Tamaño (mm)",
+  "sc_ph_depth": "Grosor",
+  "sc_btn_calc": "Calcular envío",
+  "sc_alert_city": "Por favor ingrese el nombre de la ciudad",
+  "sc_alert_size": "Por favor ingrese ancho y alto",
+  "sc_calculating": "Calculando..."
 }

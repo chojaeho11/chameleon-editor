@@ -955,5 +955,18 @@
   "dsm_ph_search": "Search for what you want to create!",
   "editor_tab_text_tpl": "Text Templates",
   "label_clipart": "Clipart & Elements",
-  "ph_search_clipart": "Search clipart"
+  "ph_search_clipart": "Search clipart",
+  "sc_title": "AI Shipping Calculator",
+  "sc_desc": "Enter your city and product size, and AI will recommend the best shipping method",
+  "sc_ph_city": "Delivery city name",
+  "sc_prod_general": "General Print",
+  "sc_prod_honeycomb": "Honeycomb Board",
+  "sc_prod_fabric": "Fabric / Textile",
+  "sc_prod_acrylic": "Acrylic / Foamex",
+  "sc_size_label": "Size (mm)",
+  "sc_ph_depth": "Depth",
+  "sc_btn_calc": "Calculate Shipping",
+  "sc_alert_city": "Please enter a city name",
+  "sc_alert_size": "Please enter width and height",
+  "sc_calculating": "Calculating..."
 }

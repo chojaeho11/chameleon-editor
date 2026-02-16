@@ -955,5 +955,18 @@
   "dsm_ph_search": "Recherchez ce que vous voulez créer !",
   "editor_tab_text_tpl": "Modèles de Texte",
   "label_clipart": "Clipart & Éléments",
-  "ph_search_clipart": "Rechercher clipart"
+  "ph_search_clipart": "Rechercher clipart",
+  "sc_title": "Calculateur de Livraison IA",
+  "sc_desc": "Entrez votre ville et la taille du produit, l'IA recommandera la meilleure méthode de livraison",
+  "sc_ph_city": "Nom de la ville de livraison",
+  "sc_prod_general": "Impression générale",
+  "sc_prod_honeycomb": "Panneau nid d'abeille",
+  "sc_prod_fabric": "Tissu / Textile",
+  "sc_prod_acrylic": "Acrylique / Foamex",
+  "sc_size_label": "Taille (mm)",
+  "sc_ph_depth": "Épaisseur",
+  "sc_btn_calc": "Calculer les frais de livraison",
+  "sc_alert_city": "Veuillez entrer le nom de la ville",
+  "sc_alert_size": "Veuillez entrer la largeur et la hauteur",
+  "sc_calculating": "Calcul en cours..."
 }
