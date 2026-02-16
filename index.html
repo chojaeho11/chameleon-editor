@@ -570,15 +570,15 @@
 
 <!-- 배송비 계산기 버튼 -->
 <div id="shippingCalcSection" style="display:none; text-align:center; margin: 20px auto; max-width:1200px; padding: 0 20px;">
-    <button onclick="document.getElementById('scModal').style.display='flex'" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 50px; padding: 16px 44px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(16,185,129,0.3); transition: all 0.25s; display: inline-flex; align-items: center; gap: 10px;">
+    <button onclick="document.getElementById('scModal').style.display='flex'; document.body.style.overflow='hidden';" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 50px; padding: 16px 44px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(16,185,129,0.3); transition: all 0.25s; display: inline-flex; align-items: center; gap: 10px;">
         <i class="fa-solid fa-truck-fast"></i> <span data-i18n="sc_btn_open">배송비 계산기</span>
     </button>
 </div>
 
 <!-- 배송비 계산기 모달 -->
-<div id="scModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:13000; justify-content:center; align-items:center; padding:16px;">
+<div id="scModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:13000; justify-content:center; align-items:center; padding:16px; overscroll-behavior:contain;">
     <style>
-        .sc-modal-box { background:#fff; border-radius:20px; width:100%; max-width:640px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 25px 60px rgba(0,0,0,0.2); animation: scSlideUp 0.3s ease; }
+        .sc-modal-box { background:#fff; border-radius:20px; width:100%; max-width:640px; max-height:90vh; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; position:relative; box-shadow:0 25px 60px rgba(0,0,0,0.2); animation: scSlideUp 0.3s ease; }
         @keyframes scSlideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
         .sc-modal-header { position:sticky; top:0; background:#fff; padding:20px 24px 0; border-radius:20px 20px 0 0; z-index:2; display:flex; justify-content:space-between; align-items:flex-start; }
         .sc-modal-close { width:36px; height:36px; border-radius:50%; border:none; background:#f1f5f9; color:#64748b; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; flex-shrink:0; }
@@ -620,7 +620,7 @@
         .sc-chat-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; border: none; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 12px rgba(99,102,241,0.25); transition: all 0.2s; }
         .sc-chat-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(99,102,241,0.35); }
         @media (max-width: 600px) {
-            #scModal { align-items: flex-start !important; padding: 8px !important; }
+            #scModal { align-items: flex-start !important; padding: 20px 8px 8px !important; }
             .sc-modal-box { max-height: calc(100vh - 16px); border-radius: 16px; }
             .sc-modal-header { padding: 14px 16px 0; }
             .sc-modal-body { padding: 12px 16px 20px; }
@@ -638,7 +638,7 @@
                 </h2>
                 <p style="margin:0; color:#64748b; font-size:13px;" data-i18n="sc_desc">도시와 제품 크기를 입력하면 AI가 최적의 배송 방법을 추천해드립니다</p>
             </div>
-            <button class="sc-modal-close" onclick="document.getElementById('scModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            <button class="sc-modal-close" onclick="document.getElementById('scModal').style.display='none'; document.body.style.overflow='';"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="sc-modal-body">
             <div class="sc-form" id="scForm">
@@ -660,7 +660,7 @@
 <script>
 // 모달 배경 클릭 시 닫기
 document.getElementById('scModal').addEventListener('click', function(e) {
-    if (e.target === this) this.style.display = 'none';
+    if (e.target === this) { this.style.display = 'none'; document.body.style.overflow = ''; }
 });
 window.calcShipping = async function() {
     var city = document.getElementById('scCity').value.trim();
@@ -714,7 +714,7 @@ window.calcShipping = async function() {
         }
         html += '<div class="sc-disclaimer">';
         html += '<p><i class="fa-solid fa-circle-info" style="color:#94a3b8;"></i> ' + (window.t && window.t('sc_disclaimer') || '본 견적은 참고용 예상 금액입니다. 정확한 견적은 상담을 통해 확인해주세요.') + '</p>';
-        html += '<button class="sc-chat-btn" onclick="document.getElementById(\'scModal\').style.display=\'none\'; setTimeout(function(){if(window.ChamBot)window.ChamBot.toggle();},300);"><i class="fa-solid fa-comments"></i> ' + (window.t && window.t('sc_btn_chat') || '채팅 상담하기') + '</button>';
+        html += '<button class="sc-chat-btn" onclick="document.getElementById(\'scModal\').style.display=\'none\'; document.body.style.overflow=\'\'; setTimeout(function(){if(window.ChamBot)window.ChamBot.toggle();},300);"><i class="fa-solid fa-comments"></i> ' + (window.t && window.t('sc_btn_chat') || '채팅 상담하기') + '</button>';
         html += '</div>';
 
         resultDiv.innerHTML = html;
