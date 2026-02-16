@@ -4368,8 +4368,54 @@ window.showChoiceModal = async function(key) {
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
     `;
 
+    // ★ [새 재료 모드] 원본 디자인 사이즈 잠금
+    const isNewMaterialMode = !!window._purchaseNewMaterialMode;
+    const origSize = window._originalDesignSizeMm;
+
     let rightSideUI = "";
-    if (isCustom) {
+
+    if (isNewMaterialMode && origSize) {
+        // ★ 새 재료 모드: 사이즈 잠금 + 경고문구
+        const lockedW = origSize.w;
+        const lockedH = origSize.h;
+        const area_m2 = (lockedW * lockedH) / 1000000;
+        const sqmPrice = product.price || dPrice || 0;
+        let lockedPrice = Math.floor((area_m2 * sqmPrice) / 10) * 10;
+        if (lockedPrice < 100) lockedPrice = sqmPrice;
+
+        // isCustomModeCurrent를 true로 강제 설정 (confirmChoice에서 커스텀 경로 타게)
+        window.isCustomModeCurrent = true;
+
+        rightSideUI = productHeaderHtml + `
+            <div style="background:#fef3c7; border:2px solid #f59e0b; border-radius:10px; padding:12px; margin-top:10px;">
+                <div style="font-size:12px; font-weight:800; color:#92400e; margin-bottom:6px;">🔒 ${lang==='ja'?'サイズ固定':lang==='en'?'Size Locked':'사이즈 고정'}</div>
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <input type="number" id="inputCustW" value="${lockedW}" readonly style="flex:1; text-align:center; padding:8px; border:1px solid #d97706; border-radius:6px; background:#fffbeb; font-weight:bold; color:#92400e; cursor:not-allowed;">
+                    <span style="color:#92400e; font-weight:bold;">x</span>
+                    <input type="number" id="inputCustH" value="${lockedH}" readonly style="flex:1; text-align:center; padding:8px; border:1px solid #d97706; border-radius:6px; background:#fffbeb; font-weight:bold; color:#92400e; cursor:not-allowed;">
+                    <span style="color:#92400e; font-size:12px; font-weight:bold;">mm</span>
+                </div>
+                <div style="margin-top:8px; font-size:11px; color:#92400e; line-height:1.5;">
+                    ${lang==='ja'
+                        ?'⚠️ 別の素材で購入する場合、最初に選択したサイズが維持されます。異なるサイズや比率をご希望の場合は、新しくデザインしてください。'
+                        :lang==='en'
+                        ?'⚠️ When purchasing with a different material, the originally selected size is maintained. If you want a different size or ratio, please create a new design.'
+                        :'⚠️ 다른 재질로 구매 시 처음 선택한 사이즈가 유지됩니다. 다른 크기나 비율을 원하시면 새로 디자인해주세요.'}
+                </div>
+            </div>
+            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량'}</div>
+            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
+                <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
+                <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
+                <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
+            </div>
+            <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center; margin-top:15px;">
+                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">${lang==='ja'?'見積価格':lang==='en'?'Estimated Price':'예상 견적가'}</div>
+                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">${formatPriceSimple(lockedPrice)}</div>
+                <div id="calcResultSize" style="font-size:11px; opacity:0.7; margin-top:2px;">${lockedW} x ${lockedH} mm (${area_m2.toFixed(4)}m²)</div>
+            </div>
+        </div>`;
+    } else if (isCustom) {
         rightSideUI = productHeaderHtml + `
             <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'サイズ入力 (mm)':lang==='zh'?'尺寸输入 (mm)':lang==='ar'?'إدخال الحجم (mm)':lang==='es'?'Tamaño (mm)':lang==='de'?'Größe (mm)':lang==='fr'?'Taille (mm)':lang==='en'?'Enter Size (mm)':'사이즈 입력 (mm)'}</div>
@@ -4392,7 +4438,16 @@ window.showChoiceModal = async function(key) {
             </div>
         </div>`;
     } else {
+        const fixedSizeWarning = (isNewMaterialMode && origSize) ? `
+            <div style="background:#fef3c7; border:2px solid #f59e0b; border-radius:10px; padding:10px; margin-bottom:12px;">
+                <div style="font-size:11px; font-weight:700; color:#92400e;">🔒 ${origSize.w} x ${origSize.h} mm</div>
+                <div style="font-size:11px; color:#92400e; margin-top:4px; line-height:1.4;">
+                    ${lang==='ja'?'⚠️ 別の素材で購入する場合、最初に選択したサイズが維持されます。':lang==='en'?'⚠️ The originally selected size is maintained when purchasing with a different material.':'⚠️ 다른 재질로 구매 시 처음 선택한 사이즈가 유지됩니다. 다른 크기나 비율을 원하시면 새로 디자인해주세요.'}
+                </div>
+            </div>` : '';
+
         rightSideUI = productHeaderHtml + `
+            ${fixedSizeWarning}
             <div style="font-size:20px; font-weight:900; color:#1e293b; margin-bottom:15px;">${formatPriceSimple(dPrice)}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px;">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
@@ -4462,6 +4517,10 @@ window.showChoiceModal = async function(key) {
         }
     }, 400);
 
+    // ★ 새 재료 모드: 잠긴 사이즈로 가격 계산 트리거
+    if (window.calcCustomPrice && window.isCustomModeCurrent) {
+        window.calcCustomPrice();
+    }
     window.updateModalTotal();
 
     // ★ 리뷰 시스템 초기화 (choice-left-content에 DOM append)
