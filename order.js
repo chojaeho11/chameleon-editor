@@ -261,8 +261,9 @@ export async function initOrderSystem() {
                 for (const cat of categories) {
                     const catInfo = ADDON_CAT_DB[cat];
                     if (!catInfo) continue;
-                    const catName = (catInfo.display_name || catInfo.name_kr || catInfo.name_us || '').toLowerCase();
-                    const isShipping = shippingKeywords.some(kw => catName.includes(kw.toLowerCase()));
+                    // 모든 언어 이름을 합쳐서 검사 (어느 사이트든 동일하게 감지)
+                    const allNames = [catInfo.name_kr, catInfo.name_jp, catInfo.name_us, catInfo.name_cn, catInfo.name_ar, catInfo.name_es, catInfo.display_name, catInfo.code].filter(Boolean).join(' ').toLowerCase();
+                    const isShipping = shippingKeywords.some(kw => allNames.includes(kw.toLowerCase()));
                     if (!isShipping) continue;
 
                     hasShippingCategory = true;
@@ -445,10 +446,9 @@ function getOrderInfo() {
 // ============================================================
 let currentCalDate = new Date();
 
-function openCalendarModal() { 
-    document.getElementById("cartPage").style.display = "none"; 
-    document.getElementById("calendarModal").style.display = "flex"; 
-    renderCalendar(); 
+function openCalendarModal() {
+    document.getElementById("calendarModal").style.display = "flex";
+    renderCalendar();
 }
 
 function changeMonth(delta) { 

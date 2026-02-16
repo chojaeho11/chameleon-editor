@@ -80,6 +80,7 @@
   "label_user_design": "Diseño del Usuario",
   "msg_cart_empty": "Su carrito está vacío.",
   "msg_shipping_required": "La opción de envío es obligatoria.",
+  "msg_load_design_confirm": "El diseño actual se perderá. ¿Desea cargar el diseño anterior?",
   "msg_cart_added": "Artículo añadido al carrito.",
   "modal_login_title": "Iniciar Sesión",
   "placeholder_email": "Correo Electrónico",

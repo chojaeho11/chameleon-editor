@@ -215,7 +215,7 @@ window.loadSavedDesigns = async function() {
 
 // [불러오기] 저장된 디자인 → 현재 대지에 바로 로드
 window._loadSavedDesign = async function(id) {
-    if (!confirm('기존 디자인은 사라집니다. 이전 디자인을 로드하시겠습니까?')) return;
+    if (!confirm(window.t('msg_load_design_confirm', '기존 디자인은 사라집니다. 이전 디자인을 로드하시겠습니까?'))) return;
 
     const loading = document.getElementById('loading');
     if (loading) {

@@ -80,6 +80,7 @@
   "label_user_design": "Design Utilisateur",
   "msg_cart_empty": "Votre panier est vide.",
   "msg_shipping_required": "Une option de livraison est obligatoire.",
+  "msg_load_design_confirm": "Le design actuel sera supprimé. Charger le design précédent ?",
   "msg_cart_added": "Article ajouté au panier.",
   "modal_login_title": "Connexion",
   "placeholder_email": "Adresse E-mail",

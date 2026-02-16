@@ -80,6 +80,7 @@
   "label_user_design": "用户设计",
   "msg_cart_empty": "购物车为空。",
   "msg_shipping_required": "配送选项为必选项。",
+  "msg_load_design_confirm": "当前设计将被删除。是否加载之前的设计？",
   "msg_cart_added": "已添加到购物车。",
   "modal_login_title": "登录",
   "placeholder_email": "邮箱地址",
