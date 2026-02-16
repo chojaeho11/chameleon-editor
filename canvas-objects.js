@@ -520,6 +520,12 @@ function renderFontList() {
             const applyFont = (obj) => {
                 if (obj.type && (obj.type.includes('text') || obj.type === 'i-text' || obj.type === 'textbox')) {
                     obj.set("fontFamily", font.font_family);
+                    // 크기 살짝 변경 후 복원 → fabric.js 글리프 캐시 강제 갱신
+                    const origSize = obj.fontSize || 40;
+                    obj.set("fontSize", origSize + 1);
+                    obj.dirty = true;
+                    if (obj.initDimensions) obj.initDimensions();
+                    obj.set("fontSize", origSize);
                     obj.dirty = true;
                     if (obj.initDimensions) obj.initDimensions();
                 }
