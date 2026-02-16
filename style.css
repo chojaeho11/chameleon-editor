@@ -3080,6 +3080,7 @@ body {
 /* 템플릿 패널: 리스트가 패널 내에서 스크롤 */
 #sub-template { flex-direction: column; height: 100%; padding: 15px 12px; overflow: hidden; }
 #sub-template .drawer-content { flex: 1; overflow-y: auto; min-height: 0; }
+#subPanelDragHandle { display: none; } /* PC에서 숨김, 모바일에서만 표시 */
 .sub-panel-header {
     font-size: 14px; font-weight: 800; color: #334155;
     padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;
@@ -3169,17 +3170,8 @@ body {
         overflow-x: hidden;
         transition: transform 0.3s ease;
     }
-    /* 드래그 핸들 */
-    #subPanel::before {
-        content: '';
-        display: block;
-        width: 36px;
-        height: 4px;
-        background: #cbd5e1;
-        border-radius: 2px;
-        margin: 10px auto 8px;
-        flex-shrink: 0;
-    }
+    /* 드래그 핸들 표시 */
+    #subPanelDragHandle { display: block; }
     #subPanel .sub-panel-header { font-size: 13px; padding-bottom: 8px; margin-bottom: 8px; }
 
     /* 모바일 FAB 숨김 (아이콘바로 대체) */
@@ -4131,17 +4123,21 @@ video {
     }
 }
 /* =========================================
-   [채널톡 제어] 모바일 에디터 화면에서만 숨기기
+   [채널톡 제어] 모바일
    ========================================= */
 @media (max-width: 768px) {
-    /* body에 'editor-active' 클래스가 있을 때만 (즉, 에디터 화면일 때만)
-       채널톡 버튼과 아이프레임을 화면에서 감춥니다.
-    */
+    /* 채널톡 버튼을 아이콘바 위로 올림 */
+    #ch-plugin-launcher,
+    div[id*="ch-plugin"],
+    iframe[id*="ch-plugin"] {
+        bottom: 70px !important;
+    }
+    /* 에디터 화면에서는 숨김 */
     body.editor-active #ch-plugin-launcher,
     body.editor-active iframe[id*="ch-plugin"] {
         display: none !important;
         visibility: hidden !important;
-        pointer-events: none !important; /* 터치 방지 */
+        pointer-events: none !important;
     }
 }
 /* =========================================
