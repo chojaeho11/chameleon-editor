@@ -864,6 +864,9 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
             <div class="sub-feature"><i class="fa-solid fa-percent"></i> <span data-i18n="sub_feat_discount">전 상품 10% 할인</span></div>
             <div class="sub-feature"><i class="fa-solid fa-bolt"></i> <span data-i18n="sub_feat_priority">우선 제작 지원</span></div>
         </div>
+        <div id="subKrCardNotice" style="display:none; text-align:center; margin-top:14px; padding:10px 16px; background:rgba(255,215,0,0.15); border:1px solid rgba(255,215,0,0.4); border-radius:10px;">
+            <span style="color:#ffd700; font-size:13px; font-weight:600;">⚠ 한국의 경우 해외 결제가 가능한 카드로만 구독서비스 신청이 가능합니다</span>
+        </div>
         <div class="sub-active-banner" id="subActiveBanner">
             <div><i class="fa-solid fa-crown"></i> <span data-i18n="sub_active">PRO 구독이 활성화되어 있습니다</span></div>
             <div style="margin-top:12px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
@@ -911,6 +914,8 @@ function updateSubPrices() {
     const elA = document.getElementById('subPriceAnnual');
     if (elM) elM.innerHTML = p.monthly + '<small>' + p.monthlyPer + '</small>';
     if (elA) elA.innerHTML = p.annual + '<small>' + p.annualPer + '</small>';
+    var krNotice = document.getElementById('subKrCardNotice');
+    if (krNotice) krNotice.style.display = (country === 'KR') ? 'block' : 'none';
 }
 
 // Check subscription status for current user
