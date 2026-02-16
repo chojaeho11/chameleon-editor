@@ -1072,7 +1072,137 @@
 
 
 <div id="mainEditor" style="display:none;">
-    
+
+<!-- 모바일 선택 액션바 (삭제 + 텍스트 편집) -->
+<div id="mobileActionBar" style="display:none; position:fixed; bottom:62px; left:50%; transform:translateX(-50%); z-index:10002; gap:8px; background:#fff; padding:6px 12px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.15); border:1px solid #e2e8f0;">
+    <button id="mobileEditBtn" style="display:none; padding:8px 14px; border:1px solid #6366f1; background:#6366f1; color:#fff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+        <i class="fa-solid fa-pen"></i> Edit
+    </button>
+    <button id="mobileDelBtn" style="padding:8px 14px; border:1px solid #ef4444; background:#fff; color:#ef4444; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+        <i class="fa-solid fa-trash"></i> Del
+    </button>
+</div>
+
+<!-- 모바일 텍스트 편집 입력창 -->
+<div id="mobileTextEditBar" style="display:none; position:fixed; bottom:62px; left:0; right:0; z-index:10003; background:#fff; padding:10px 12px; border-top:1px solid #e2e8f0; box-shadow:0 -2px 10px rgba(0,0,0,0.1);">
+    <div style="display:flex; gap:8px; align-items:center;">
+        <input id="mobileTextInput" type="text" style="flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:16px; outline:none;" placeholder="텍스트 입력...">
+        <button id="mobileTextApply" style="padding:10px 18px; background:#6366f1; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;">적용</button>
+        <button id="mobileTextCancel" style="padding:10px 12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;">✕</button>
+    </div>
+</div>
+
+<script>
+// ─── 모바일 액션바 로직 ───
+(function() {
+    if (window.innerWidth > 768) return;
+
+    function waitForCanvas(cb) {
+        if (window.canvas) return cb();
+        const t = setInterval(() => { if (window.canvas) { clearInterval(t); cb(); } }, 300);
+    }
+
+    waitForCanvas(function() {
+        const c = window.canvas;
+        const bar = document.getElementById('mobileActionBar');
+        const editBtn = document.getElementById('mobileEditBtn');
+        const delBtn = document.getElementById('mobileDelBtn');
+        const editBar = document.getElementById('mobileTextEditBar');
+        const textInput = document.getElementById('mobileTextInput');
+        const applyBtn = document.getElementById('mobileTextApply');
+        const cancelBtn = document.getElementById('mobileTextCancel');
+
+        let editingGroup = null;
+
+        function showBar() {
+            const active = c.getActiveObject();
+            if (!active || active.isBoard) { bar.style.display = 'none'; return; }
+            bar.style.display = 'flex';
+            // 효과 그룹이거나 텍스트 객체면 편집 버튼 표시
+            const isText = active.isEffectGroup || active.isOutlineGroup ||
+                           (active.type && active.type.includes('text'));
+            editBtn.style.display = isText ? 'inline-block' : 'none';
+        }
+
+        function hideBar() { bar.style.display = 'none'; }
+
+        c.on('selection:created', showBar);
+        c.on('selection:updated', showBar);
+        c.on('selection:cleared', hideBar);
+
+        // 삭제 버튼
+        delBtn.onclick = function() {
+            const o = c.getActiveObject();
+            if (!o) return;
+            if (o.type === 'activeSelection') {
+                o.getObjects().forEach(function(obj) { c.remove(obj); });
+                c.discardActiveObject();
+            } else {
+                c.remove(o);
+            }
+            c.requestRenderAll();
+            hideBar();
+        };
+
+        // 편집 버튼 → 텍스트 입력창 열기
+        editBtn.onclick = function() {
+            const active = c.getActiveObject();
+            if (!active) return;
+
+            let currentText = '';
+            if (active.isEffectGroup || active.isOutlineGroup) {
+                const main = active.getObjects().find(function(o) { return o.isMainText; });
+                currentText = main ? main.text : '';
+                editingGroup = active;
+            } else if (active.type && active.type.includes('text')) {
+                currentText = active.text || '';
+                editingGroup = null;
+            } else return;
+
+            textInput.value = currentText;
+            editBar.style.display = 'block';
+            bar.style.display = 'none';
+            setTimeout(function() { textInput.focus(); }, 100);
+        };
+
+        // 적용 버튼
+        applyBtn.onclick = function() {
+            const newText = textInput.value;
+            if (!newText.trim()) return;
+
+            const active = editingGroup || c.getActiveObject();
+            if (!active) { editBar.style.display = 'none'; return; }
+
+            if (active.isEffectGroup || active.isOutlineGroup) {
+                // 효과 그룹: 모든 텍스트 객체의 text 속성 변경
+                active.getObjects().forEach(function(o) {
+                    if (o.type && o.type.includes('text')) o.set('text', newText);
+                });
+                active.addWithUpdate();
+            } else if (active.type && active.type.includes('text')) {
+                active.set('text', newText);
+            }
+
+            c.requestRenderAll();
+            editBar.style.display = 'none';
+            editingGroup = null;
+            showBar();
+        };
+
+        // 취소 버튼
+        cancelBtn.onclick = function() {
+            editBar.style.display = 'none';
+            editingGroup = null;
+            showBar();
+        };
+
+        // Enter키로 적용
+        textInput.onkeydown = function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); }
+        };
+    });
+})();
+</script>
 
     <div id="wallHeightControls">
         <div class="wall-label"><i class="fa-solid fa-ruler-vertical"></i> <span data-i18n="wall_option_title">가벽 높이</span></div>
