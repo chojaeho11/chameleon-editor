@@ -865,7 +865,11 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
             <div class="sub-feature"><i class="fa-solid fa-bolt"></i> <span data-i18n="sub_feat_priority">우선 제작 지원</span></div>
         </div>
         <div class="sub-active-banner" id="subActiveBanner">
-            <i class="fa-solid fa-crown"></i> <span data-i18n="sub_active">PRO 구독이 활성화되어 있습니다</span>
+            <div><i class="fa-solid fa-crown"></i> <span data-i18n="sub_active">PRO 구독이 활성화되어 있습니다</span></div>
+            <div style="margin-top:12px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button onclick="window.manageSubscription()" style="padding:8px 20px; background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;" data-i18n="sub_manage_btn">구독 관리</button>
+                <button onclick="window.cancelSubscription()" style="padding:8px 20px; background:transparent; color:rgba(255,255,255,0.7); border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-size:13px; cursor:pointer;" data-i18n="sub_cancel_btn">구독 취소</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1047,6 +1051,12 @@ window.manageSubscription = async function() {
         console.error('Manage subscription error:', e);
         alert(e.message || 'Error');
     }
+};
+
+// Cancel subscription (via Stripe Customer Portal)
+window.cancelSubscription = async function() {
+    if (!confirm(window.t ? window.t('sub_cancel_confirm') : '정말 구독을 취소하시겠습니까?\n취소해도 현재 구독 기간이 끝날 때까지 이용할 수 있습니다.')) return;
+    window.manageSubscription();
 };
 
 // Handle return from Stripe (verify subscription)

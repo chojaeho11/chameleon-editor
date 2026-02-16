@@ -994,5 +994,7 @@
   "sub_manage_desc": "Modifier le paiement · Annuler l'abonnement",
   "sub_cancel_info": "Annulez à tout moment, sans tracas.<br>L'accès continue jusqu'à la fin de la période",
   "sub_manage_btn": "Gérer l'abonnement",
-  "sub_no_subscription": "Aucun abonnement actif. Veuillez vous abonner d'abord."
+  "sub_no_subscription": "Aucun abonnement actif. Veuillez vous abonner d'abord.",
+  "sub_cancel_btn": "Annuler l'abonnement",
+  "sub_cancel_confirm": "Êtes-vous sûr de vouloir annuler votre abonnement ?\nVous pouvez continuer à utiliser le service jusqu'à la fin de votre période de facturation actuelle."
 }

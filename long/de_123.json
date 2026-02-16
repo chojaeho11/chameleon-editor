@@ -994,5 +994,7 @@
   "sub_manage_desc": "Zahlung ändern · Abo kündigen",
   "sub_cancel_info": "Jederzeit problemlos kündbar.<br>Zugang bleibt bis zum Ende der Laufzeit",
   "sub_manage_btn": "Abo verwalten",
-  "sub_no_subscription": "Kein aktives Abo. Bitte abonnieren Sie zuerst."
+  "sub_no_subscription": "Kein aktives Abo. Bitte abonnieren Sie zuerst.",
+  "sub_cancel_btn": "Abo kündigen",
+  "sub_cancel_confirm": "Möchten Sie Ihr Abo wirklich kündigen?\nSie können den Service bis zum Ende des aktuellen Abrechnungszeitraums weiterhin nutzen."
 }

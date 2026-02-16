@@ -994,5 +994,7 @@
   "sub_manage_desc": "Change payment · Cancel subscription",
   "sub_cancel_info": "Cancel anytime, no hassle.<br>Access continues until period ends",
   "sub_manage_btn": "Manage Subscription",
-  "sub_no_subscription": "No active subscription. Please subscribe first."
+  "sub_no_subscription": "No active subscription. Please subscribe first.",
+  "sub_cancel_btn": "Cancel Subscription",
+  "sub_cancel_confirm": "Are you sure you want to cancel your subscription?\nYou can still use the service until the end of your current billing period."
 }

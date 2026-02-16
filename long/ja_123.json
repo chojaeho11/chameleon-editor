@@ -994,5 +994,7 @@
   "sub_manage_desc": "お支払い方法変更 · 解約",
   "sub_cancel_info": "いつでも簡単に解約できます。<br>解約後も期間終了まで利用可能",
   "sub_manage_btn": "サブスク管理",
-  "sub_no_subscription": "有効なサブスクリプションがありません。"
+  "sub_no_subscription": "有効なサブスクリプションがありません。",
+  "sub_cancel_btn": "サブスク解約",
+  "sub_cancel_confirm": "本当にサブスクリプションを解約しますか？\n解約後も現在の期間終了まで引き続きご利用いただけます。"
 }

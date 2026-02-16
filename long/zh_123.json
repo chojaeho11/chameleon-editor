@@ -994,5 +994,7 @@
   "sub_manage_desc": "更改支付方式 · 取消订阅",
   "sub_cancel_info": "随时可以轻松取消。<br>取消后仍可使用至到期",
   "sub_manage_btn": "管理订阅",
-  "sub_no_subscription": "没有活跃订阅，请先订阅。"
+  "sub_no_subscription": "没有活跃订阅，请先订阅。",
+  "sub_cancel_btn": "取消订阅",
+  "sub_cancel_confirm": "确定要取消订阅吗？\n取消后仍可使用至当前订阅期结束。"
 }

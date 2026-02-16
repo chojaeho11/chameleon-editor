@@ -994,5 +994,7 @@
   "sub_manage_desc": "Cambiar pago · Cancelar suscripción",
   "sub_cancel_info": "Cancela cuando quieras, sin complicaciones.<br>El acceso continúa hasta el final del período",
   "sub_manage_btn": "Gestionar Suscripción",
-  "sub_no_subscription": "No hay suscripción activa. Por favor, suscríbete primero."
+  "sub_no_subscription": "No hay suscripción activa. Por favor, suscríbete primero.",
+  "sub_cancel_btn": "Cancelar Suscripción",
+  "sub_cancel_confirm": "¿Estás seguro de que deseas cancelar tu suscripción?\nPodrás seguir usando el servicio hasta el final de tu período de facturación actual."
 }
