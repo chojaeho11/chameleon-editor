@@ -5,24 +5,24 @@
   "wall_option_desc": "Commencer un Design Personnalisé",
   "search_placeholder": "Quel produit recherchez-vous aujourd'hui ?",
   "btn_search": "Rechercher",
-
   "tab_all": "Modèles",
   "tab_vector": "Vectoriels",
   "tab_graphic": "Éléments (PNG)",
   "tab_photo": "Photos",
   "tab_pattern": "Motifs",
   "tab_logo": "Logos (PNG)",
-
   "btn_my_library": "📂 Ma Bibliothèque",
   "btn_cart": "🛒",
   "btn_add_to_cart": "🛒",
+  "btn_purchase_top": "Acheter",
+  "purchase_choice_title": "Comment souhaitez-vous acheter?",
+  "purchase_current_product": "Ajouter au panier avec le produit actuel",
+  "purchase_new_material": "Imprimer sur un nouveau matériau",
   "btn_login": "Connexion",
   "btn_logout": "Déconnexion",
-
   "wall_option_title": "Hauteur du Mur",
   "tool_size_change": "📏 Redimensionner (mm)",
   "btn_save_cost": "Appliquer",
-
   "label_canvas_tools": "OUTILS CANEVAS",
   "btn_fit_screen": "Ajuster à l'Écran",
   "btn_lock": "Verrouiller",
@@ -30,7 +30,6 @@
   "btn_ai_gen": "Générateur IA",
   "btn_save_design": "💾 Enregistrer le Design",
   "btn_logo_share": "Hub Logos",
-
   "label_basic_tools": "OUTILS DE BASE",
   "btn_add_text": "+ Texte",
   "btn_font": "🅰️ Polices",
@@ -38,7 +37,6 @@
   "label_stroke": "🖌️ Contour",
   "label_shapes": "FORMES",
   "label_upload": "TÉLÉCHARGER",
-
   "label_edit_layer": "Édition & Calques",
   "btn_undo": "Annuler",
   "btn_redo": "Rétablir",
@@ -47,22 +45,18 @@
   "btn_front": "Premier Plan",
   "btn_back": "Arrière-Plan",
   "btn_del": "Supprimer",
-
   "label_align": "Aligner",
   "btn_center_all": "Centrer",
   "btn_full_bg": "Définir comme Fond",
-
   "label_cut_shape": "Options de Découpe",
   "msg_select_click": "Sélectionnez une image et cliquez",
   "btn_make_cutline": "Créer une Ligne de Découpe",
   "btn_keyring_hole": "Trou Porte-Clés",
   "btn_stand_base": "Base Présentoir",
-
   "label_ai_image_tools": "Outils Image IA",
   "btn_bg_remove": "(Supprimer l'Arrière-Plan)",
   "btn_enhance": "Améliorer",
   "btn_text_outline": "Contour de Texte",
-
   "cart_title": "Panier",
   "label_payment_amt": "Montant du Paiement",
   "label_product_price": "Sous-total",
@@ -71,7 +65,6 @@
   "label_total_price": "Total",
   "btn_do_checkout": "Passer la Commande",
   "btn_print_quote": "Imprimer le Devis",
-
   "label_material": "① Matériau/Épaisseur",
   "label_finish": "② Finition",
   "label_addons": "③ Suppléments",
@@ -87,7 +80,6 @@
   "label_user_design": "Design Utilisateur",
   "msg_cart_empty": "Votre panier est vide.",
   "msg_cart_added": "Article ajouté au panier.",
-
   "modal_login_title": "Connexion",
   "placeholder_email": "Adresse E-mail",
   "placeholder_pw": "Mot de Passe",
@@ -95,7 +87,6 @@
   "msg_no_account": "Vous n'avez pas de compte ?",
   "btn_signup": "S'inscrire",
   "btn_close": "Fermer",
-
   "modal_delivery_title": "📝 Informations de Livraison",
   "label_manager_name": "Nom du Contact",
   "label_contact_phone": "Numéro de Téléphone",
@@ -108,7 +99,6 @@
   "doc_receipt": "Reçu",
   "doc_order_sheet": "Bon de Travail",
   "doc_statement": "Facture",
-
   "modal_checkout_title": "Confirmer la Commande & Payer",
   "label_orderer_name": "Commandé Par",
   "label_shipping_addr": "Livrer À",
@@ -121,14 +111,12 @@
   "btn_bank_confirm": "✅ J'ai effectué le virement (Demander la Confirmation)",
   "btn_download_quote": "Télécharger le Devis",
   "btn_download_work_sheet": "Télécharger le Bon de Travail",
-
   "choice_modal_title": "🎨 Choisissez Comment Créer",
   "choice_modal_desc": "Commencez à concevoir avec l'éditeur ou téléchargez un fichier prêt.",
   "btn_design_direct": "Créer avec l'Éditeur",
   "btn_design_direct_sub": "Utiliser Modèles & Outils",
   "btn_order_file": "Télécharger un Fichier",
   "btn_order_file_sub": "Télécharger un Fichier PDF/AI",
-
   "modal_size_select_title": "Q. Que souhaitez-vous créer ?",
   "modal_calendar_title": "Date de Livraison Souhaitée [Délai : 3 Jours]",
   "btn_rotate": "Pivoter",
@@ -138,11 +126,9 @@
   "label_opacity": "Opacité",
   "modal_size_select_sub": "(Sélectionner la Taille)",
   "modal_size_select_desc": "Sélectionnez une taille pour commencer le design.",
-
   "msg_loading": "Chargement...",
   "btn_guide_on": "Guides",
   "help_text_shortcuts": "Espace : Déplacer / Molette : Zoom / Flèches : Ajuster",
-
   "review_section_title": "✨ Avis Clients",
   "review_section_desc": "Découvrez les projets réussis réalisés avec Chameleon Printing.",
   "rev_1_text": "\"Nous les utilisons pour chaque événement. Il n'y a pas de meilleur partenaire pour les agences de pub. Les panneaux nid d'abeille sont abordables, les délais sont rapides et la qualité est irréprochable.\"",
@@ -163,7 +149,6 @@
   "rev_8_user": "AdPop Signalétique",
   "rev_9_text": "\"Le rendu est bien plus premium que les bannières classiques. La texture unique et l'élimination écologique sont de gros avantages.\"",
   "rev_9_user": "Directeur Créatif Ryan Brooks",
-
   "footer_company_label": "Société :",
   "footer_company_value": "Chameleon Printing SAS",
   "footer_ceo_label": "PDG :",
@@ -181,11 +166,9 @@
   "footer_cs_time": "Lun-Ven 09h00 ~ 18h00",
   "footer_cs_lunch": "Déjeuner 12h00 ~ 13h00",
   "footer_cs_closed": "* Fermé les Week-ends et Jours Fériés",
-
   "msg_deposit_complete": "Confirmation de dépôt demandée.\nCliquez sur [Fermer] pour réinitialiser.",
   "msg_confirm_bank_transfer": "Procéder au virement bancaire ?",
   "btn_confirm": "Confirmer",
-
   "pdf_quote_title": "D E V I S",
   "pdf_order_sheet_title": "Bon de Travail",
   "pdf_date": "Date",
@@ -219,49 +202,39 @@
   "pdf_label_subtotal": "Sous-total",
   "pdf_label_tax": "TVA",
   "pdf_footer_msg": "Merci pour votre confiance !",
-
   "msg_logout_confirm": "Voulez-vous vous déconnecter ?",
   "msg_login_required": "La connexion est requise.",
   "msg_login_required_design": "La connexion est requise pour commencer le design.",
   "msg_template_apply_confirm": "Appliquer le modèle au canevas actuel ?\n(Il sera ajouté par-dessus votre design)",
   "msg_large_product_warning": "📢 L'éditeur est simple et pratique.\n\nCréez un superbe design.\nCliquez sur un modèle pour commencer.",
-
   "msg_processing_file": "Traitement du fichier...",
   "msg_unsupported_file": "Format de fichier non pris en charge.",
   "msg_pdf_loaded": "✅ PDF chargé avec succès. (Original sauvegardé sur le serveur)",
-
   "msg_select_image_for_outline": "Veuillez sélectionner une image pour créer un contour !",
   "msg_generating": "Génération en cours...",
   "msg_generating_docs": "Génération des documents...",
-
   "prompt_partner_name": "Entrez le Nom de l'Entreprise (Nom du Magasin)",
   "prompt_partner_phone": "Entrez le Numéro de Téléphone",
   "prompt_partner_region": "Entrez la Région Souhaitée (ex. : Paris, Île-de-France)",
   "confirm_partner_apply": "[Confirmer la Candidature]\nNom : {name}\nTéléphone : {phone}\nRégion : {region}\n\nSoumettre cette candidature ?",
   "msg_partner_apply_success": "🎉 Candidature soumise avec succès !\nVous pourrez utiliser les fonctionnalités Partenaire après approbation de l'administrateur.",
-
   "confirm_order_accept": "Voulez-vous accepter cette commande ?",
   "msg_order_already_taken": "Cette commande a déjà été prise par un autre partenaire.",
   "msg_order_accept_success": "Commande acceptée ! Consultez l'onglet 'Mes Commandes'.",
-
   "alert_vip_info_needed": "Veuillez entrer le nom du contact et le numéro de téléphone.",
   "alert_vip_file_needed": "Veuillez sélectionner au moins un fichier à télécharger.",
   "msg_uploading_files": "Téléchargement des fichiers...",
   "msg_vip_order_success": "🎉 Soumission terminée.\nLe responsable {manager} vous contactera sous peu.",
-
   "alert_input_shipping": "Veuillez renseigner toutes les informations de livraison.",
   "msg_creating_order": "Création de la commande...",
   "msg_order_received": "Commande reçue avec succès.\nRemise membre ({rate}%) appliquée.",
   "btn_submit_complete": "Soumission Terminée",
-
   "confirm_bank_payment": "Passer la commande par virement bancaire ?\nLa production commence après confirmation du paiement.",
   "msg_order_complete_bank": "Commande terminée. Veuillez effectuer le virement sur le compte indiqué.",
-
   "alert_deposit_shortage": "Solde de dépôt insuffisant.\n(Manque : {amount})",
   "confirm_deposit_pay": "Payer {amount} depuis votre dépôt ?",
   "msg_processing_payment": "Traitement du paiement...",
   "msg_payment_complete": "Paiement effectué !",
-
   "home_quick_badge": "Envoyez votre extrait Kbis pour 10% de réduction + livraison gratuite en Île-de-France.",
   "home_quick_title": "Avantages Entreprise Exclusifs — Livraison Gratuite en Île-de-France",
   "home_vip_title": "Salon VIP pour Commandes en Gros",
@@ -271,7 +244,6 @@
   "home_hotdeal_desc": "Ne manquez pas ces prix exceptionnels. Idéal pour les cadeaux. Maximum 10 articles par commande pour les cadeaux de crémaillère.",
   "home_biz_title": "Remise Entreprise en Gros",
   "home_biz_desc": "Prix exclusifs pour les professionnels ! MOQ 10-100 unités. Remises spéciales pour les revendeurs.",
-
   "menu_blog": "Blog<br>Chameleon",
   "menu_review": "Avis<br>Clients",
   "menu_promo": "Promo<br>Locale",
@@ -279,7 +251,6 @@
   "menu_job": "Offres<br>d'Emploi",
   "menu_manual": "Guides<br>Produits",
   "menu_orders": "Suivi de Commande",
-
   "tier_main_title": "Guide des <span>Avantages Remise</span> Membres",
   "tier_gold_name": "GOLD",
   "tier_gold_discount": "3% DE REMISE",
@@ -296,29 +267,23 @@
   "tier_partner_cond_label": "Condition",
   "tier_partner_cond_fee": "Candidat Partenaire",
   "tier_partner_cond_note": "(Extrait Kbis Requis)",
-
   "partner_banner_title": "Marketplace à Faible Commission pour les Vendeurs<br><span style='color: #818cf8;'>Ventes mondiales à forte marge — confiez-les à Chameleon !</span>",
   "partner_banner_desc": "Inscrivez-vous sur Chameleon — nous gérons l'expédition et les formalités !<br>Listez vos impressions de T-shirts, articles personnalisés, objets promotionnels et plus sur notre marketplace publicitaire en gros.<br><b style='color:#818cf8;'>Commission la plus basse du secteur : 6,5%</b> + accès aux clients du réseau d'impression publicitaire N°1 de Corée,<br>et <b style='color:#818cf8;'>vendez au double du prix sur les marchés internationaux</b>. Réservez votre place dès maintenant !",
   "btn_partner_console": "Accès Console Partenaire",
   "btn_partner_apply": "Postuler au Partenariat",
-
   "contrib_title": "Système de Contributeurs Chameleon",
-  "contrib_balance_label": "Mes Revenus",
+  "contrib_balance_label": "Mes Revenus Totaux",
   "contrib_desc": "Partagez vos ressources de design et gagnez des récompenses en espèces.<br>Le téléchargement répété d'images de mauvaise qualité réduira votre grade. Grade supérieur x2, x4 ; grade inférieur divise le paiement par deux.<br><span style='color:#ef4444; font-weight:bold;'>Vérifiez les Catégories !</span> Les droits de téléchargement seront révoqués si les catégories ne correspondent pas ou si moins de 3 mots-clés sont enregistrés.",
   "contrib_btn_png": "Objet PNG",
   "contrib_btn_svg": "Objet SVG",
   "contrib_btn_logo": "Télécharger un Logo",
   "contrib_btn_template": "Créer un Modèle",
-
   "footer_menu_company": "À Propos",
   "footer_menu_notice": "Actualités",
   "footer_menu_terms": "Conditions Générales",
   "footer_menu_privacy": "Politique de Confidentialité",
-
   "//_COMMENT": "=== JS Dynamic Strings ===",
-
   "btn_guide_off": "Masquer les Guides",
-
   "msg_no_fonts": "Aucune police enregistrée.<br>Veuillez enregistrer des polices dans la page d'administration.",
   "msg_select_text_font": "Veuillez sélectionner un objet texte pour changer la police.",
   "msg_select_obj_outline": "Veuillez sélectionner un objet pour appliquer le contour.",
@@ -328,13 +293,11 @@
   "msg_uploading": "Téléchargement en cours...",
   "tag_user_upload": "Téléchargement Utilisateur",
   "suffix_logo": " Logo",
-
   "confirm_unlock_all": "Voulez-vous déverrouiller les {count} objets verrouillés ?",
   "msg_select_obj_lock": "Veuillez sélectionner un objet à verrouiller.",
   "btn_lock_selection": "Verrouiller la Sélection",
   "btn_unlock_all": "Tout Déverrouiller",
   "btn_lock_wizard": "Assistant Verrouillage",
-
   "prod_wall_1": "Mur 1 Section",
   "prod_wall_2": "Mur 2 Sections",
   "prod_wall_3": "Mur 3 Sections",
@@ -345,11 +308,9 @@
   "prod_photo_zone": "Zone Photo Texte",
   "prod_fabric_wide": "Tissu Grand Format",
   "prod_paper_stand": "Présentoir Papier",
-
   "msg_invalid_number": "Veuillez entrer un nombre valide.",
   "msg_max_size_exceeded": "Impossible de dépasser la taille maximale ({w}x{h}mm).",
   "msg_size_rotated": "Les dimensions ont été pivotées pour s'adapter au canevas.",
-
   "msg_data_loading": "Chargement des données...",
   "msg_db_disconnected": "Base de Données Non Connectée",
   "msg_no_data": "Aucune donnée à afficher.",
@@ -357,11 +318,9 @@
   "msg_load_failed": "Échec du chargement des données.",
   "btn_retry": "Réessayer",
   "btn_apply_now": "Postuler Maintenant",
-
   "btn_prev_page": "Préc.",
   "btn_next_page": "Suiv.",
   "label_page": "Page",
-
   "msg_select_template": "Veuillez sélectionner un modèle.",
   "msg_click_select": "Cliquez pour sélectionner des fichiers",
   "msg_drag_drop": "Ou glissez-déposez les fichiers ici",
@@ -376,7 +335,6 @@
   "msg_bg_remove_server": "La suppression d'arrière-plan nécessite une connexion au serveur.",
   "msg_select_image": "Veuillez sélectionner une image.",
   "msg_pdf_error": "Veuillez télécharger les fichiers PDF à l'étape 'Commande'. Seules les images sont prises en charge dans l'éditeur.",
-
   "//_COMMENT_2": "=== Added Missing Strings ===",
   "confirm_apply_bg": "Appliquer ce design d'arrière-plan ?\n(L'arrière-plan actuel sera remplacé)",
   "confirm_bg_remove": "Souhaitez-vous supprimer l'arrière-plan ?",
@@ -385,7 +343,6 @@
   "msg_gen_fail": "Échec de la génération",
   "msg_min_page_limit": "Au moins une page est requise.",
   "btn_my_page": "📂 Mon Espace",
-
   "msg_generating_quote": "Génération du Devis...",
   "err_quote_gen_failed": "Échec de la génération du devis.",
   "err_quote_error": "Erreur de Génération du Devis : ",
@@ -408,7 +365,6 @@
   "msg_sending": "Envoi en cours...",
   "msg_withdraw_success": "Demande de retrait soumise.\nVersement sous 5 jours après vérification par l'administrateur.",
   "msg_clipboard_empty": "Le presse-papiers est vide.",
-
   "mp_menu_dashboard": "Tableau de Bord",
   "mp_menu_designs": "Mes Designs",
   "mp_menu_sales": "En Vente",
@@ -427,11 +383,9 @@
   "default_customer": "Client",
   "msg_canvas_not_ready": "Le canevas n'est pas prêt.",
   "err_canvas_not_ready": "Le canevas n'est pas entièrement chargé. Veuillez patienter.",
-
   "msg_no_locked_bg": "Aucun arrière-plan verrouillé trouvé.",
   "msg_bg_unlocked": "Arrière-plan déverrouillé.",
   "msg_bg_locked": "Arrière-plan verrouillé.",
-
   "ctx_undo": "Annuler",
   "ctx_redo": "Rétablir",
   "ctx_copy": "Copier",
@@ -442,7 +396,6 @@
   "ctx_lock": "Verrouiller",
   "ctx_unlock": "Déverrouiller",
   "ctx_unlock_all": "Tout Déverrouiller",
-
   "btn_google_login": "Continuer avec Google",
   "placeholder_pw_confirm": "Confirmer le Mot de Passe",
   "label_select_manager": "Sélectionner un Responsable (Optionnel)",
@@ -460,7 +413,7 @@
   "mp_recent_logs": "📢 Historique Récent des Revenus",
   "mp_saved_designs": "📂 Designs Enregistrés",
   "msg_wait_moment": "Veuillez patienter un instant.",
-  "confirm_select_partner": "Sélectionner ce partenaire ?\nLes coordonnées seront révélées et les autres offres seront clôturées.",
+  "confirm_select_partner": "Partager votre numéro ({myPhone}) avec le partenaire\net confirmer cette sélection ?",
   "msg_review_saved": "Avis enregistré avec succès !",
   "msg_no_partner_auth": "Aucune autorisation partenaire trouvée.",
   "msg_post_deleted": "Cet article a été supprimé.",
@@ -485,7 +438,6 @@
   "alert_input_depositor": "Veuillez entrer le nom du déposant.",
   "msg_outline_failed": "Impossible de générer un contour vectoriel pour cette image.",
   "msg_image_load_failed": "Échec du chargement de l'image.",
-
   "vip_fast_inquiry": "⚡ Demande Rapide",
   "vip_manager_intro": "\"Nos responsables dédiés vous répondront rapidement par téléphone\"",
   "vip_manager_jisuk": "Responsable Alex",
@@ -510,7 +462,6 @@
   "btn_next": "Suiv.",
   "label_page_suffix": "Page",
   "search_placeholder_start": "Quel design recherchez-vous ? (ex. : chat, océan, ciel)",
-
   "//_COMMENT_3": "=== Editor UI ===",
   "editor_size": "Taille",
   "editor_char_spacing": "Espacement",
@@ -527,7 +478,6 @@
   "editor_text_edit": "Modifier le Texte",
   "editor_lock_selection": "Verrouiller la Sélection",
   "btn_mobile_template": "🎨 Modèles",
-
   "//_COMMENT_4": "=== Design Wizard Buttons ===",
   "wiz_flyer": "Flyer",
   "wiz_poster": "Affiche",
@@ -536,7 +486,6 @@
   "wiz_banner_h": "Bannière H",
   "wiz_banner_v": "Bannière V",
   "wiz_insta_panel": "Panneau Insta",
-
   "//_COMMENT_5": "=== Guide Options ===",
   "guide_off": "🚫 Désactivé",
   "guide_cross": "✚ Croix",
@@ -544,7 +493,6 @@
   "guide_4col": "4 Col",
   "guide_5col": "5 Col",
   "guide_grid": "▦ Grille",
-
   "//_COMMENT_6": "=== Template Modals ===",
   "tpl_load_title": "🎨 Charger un Modèle",
   "tpl_load_desc": "Vous avez un design en cours.\nComment souhaitez-vous appliquer le modèle sélectionné ?",
@@ -560,7 +508,6 @@
   "ph_search_input": "Rechercher...",
   "tpl_obj_label": "🧩 Éléments",
   "tpl_search_product": "Rechercher des produits pour le modèle",
-
   "//_COMMENT_7": "=== AI Drawer ===",
   "ai_title": "✨ Générateur d'Images IA",
   "ai_prompt_label": "Description (Prompt)",
@@ -568,12 +515,10 @@
   "btn_generate": "Générer",
   "ai_waiting": "En attente du résultat",
   "btn_add_to_canvas": "Ajouter au Canevas",
-
   "//_COMMENT_8": "=== Order Complete Modal ===",
   "msg_order_complete_title": "🎉 Commande Terminée !",
   "btn_download_order_sheet": "📄 Télécharger le Bon de Travail",
   "btn_download_quotation": "📑 Télécharger le Devis",
-
   "//_COMMENT_9": "=== Design Sell Modal ===",
   "sell_title": "💎 Partager/Vendre un Design",
   "sell_benefit_1": "Gagnez <span class='highlight'>100P</span> instantanément, <span class='highlight'>200P</span> par utilisation",
@@ -586,13 +531,11 @@
   "ph_sell_title": "ex. : Événement clinique, Affiche été",
   "btn_register": "Enregistrer",
   "modal_font_title": "Sélectionner une Police",
-
   "//_COMMENT_10": "=== Choice Modal ===",
   "btn_purchase": "Acheter",
   "btn_purchase_sub": "Télécharger des fichiers via le panier",
   "btn_detail_page": "Voir les Détails",
   "btn_story_page": "Voir l'Histoire",
-
   "//_COMMENT_11": "=== Template Creator Modal ===",
   "tpl_create_title": "Commencer à Créer un Modèle",
   "tpl_create_desc": "Enregistrez votre design et gagnez des revenus !",
@@ -604,17 +547,15 @@
   "ph_width": "Largeur",
   "ph_height": "Hauteur",
   "btn_start_design": "🚀 Commencer le Design",
-
   "//_COMMENT_12": "=== Mobile Editor ===",
   "btn_delete_obj": "Supprimer",
   "btn_done_edit": "Terminé",
   "ph_text_input": "Entrez le texte ici...",
-
   "//_COMMENT_13": "=== JS Dynamic Alerts (main.js) ===",
   "msg_product_info_missing": "⚠️ Informations produit introuvables pour ce design.\nVeuillez resélectionner les spécifications du produit.",
   "msg_cannot_load_form": "Impossible de charger le formulaire de candidature.",
   "confirm_status_change": "Changer le statut en '{status}' ?",
-  "msg_min_withdraw": "Le montant minimum de retrait est de 100 €.",
+  "msg_min_withdraw": "Le montant minimum de retrait est de 20 €.",
   "msg_input_real_name": "Veuillez entrer le nom du titulaire du compte.",
   "msg_input_phone": "Veuillez entrer votre numéro de téléphone.",
   "msg_input_id_number": "Veuillez entrer correctement votre numéro d'identification.",
@@ -636,7 +577,6 @@
   "confirm_go_editor": "Aller à l'éditeur de design ?",
   "msg_submit_error": "Erreur de soumission : ",
   "msg_apply_error": "Erreur de candidature : ",
-
   "//_COMMENT_PARTNER_MODAL": "=== Partner Application Modal ===",
   "partner_apply_title": "🤝 Candidature Partenaire (Franchise)",
   "partner_apply_desc": "Devenez partenaire régional de publicité/fabrication et générez des revenus.",
@@ -652,7 +592,6 @@
   "partner_btn_apply": "Postuler",
   "partner_btn_cancel": "Retirer la Candidature",
   "partner_btn_close": "Fermer",
-
   "//_COMMENT_14": "=== Partner Console ===",
   "partner_console_title": "Console Partenaire",
   "partner_region_unset": "Région non définie",
@@ -673,7 +612,6 @@
   "th_status_col": "Statut",
   "my_order_tracking_title": "📦 Suivi de Commande",
   "msg_loading_text": "Chargement...",
-
   "//_COMMENT_15": "=== Cart & Payment Page ===",
   "cart_upload_guide": "Téléchargez vos propres fichiers de design ici",
   "btn_bulk_upload": "Téléchargement Groupé",
@@ -704,7 +642,6 @@
   "rv_total_reviews": "avis",
   "rv_avg_rating": "Note Moyenne",
   "rv_submitted": "Avis soumis !",
-
   "//_COMMENT_PARTNER": "=== Partner Console i18n ===",
   "pt_no_pool_orders": "Aucune commande disponible pour le moment.",
   "pt_no_my_orders": "Aucune commande en cours.",
@@ -725,7 +662,6 @@
   "pt_badge_admin": "Admin (Principal)",
   "pt_badge_partner": "Partenaires",
   "pt_no_access": "🚫 Accès refusé.\n\nVeuillez attendre l'approbation de l'administrateur.",
-
   "pt_tab_products": "Mes Produits",
   "pt_tab_register": "Enregistrer un Produit",
   "pt_tab_orders": "Gestion des Commandes",
@@ -794,7 +730,6 @@
   "pt_guide_flow_4": "Marquer comme expédié",
   "pt_guide_flow_5": "Le client confirme la réception → Attente de 15 jours",
   "pt_guide_flow_6": "Demander un retrait + joindre la facture → Versement",
-
   "//_COMMENT_PT_PAGE": "=== Partner Page (partner.html) ===",
   "pt_btn_home": "Retour à l'Accueil",
   "pt_btn_logout": "Déconnexion",
@@ -836,7 +771,6 @@
   "pt_guide_global_margin": "Environ <strong>2x de marge</strong> sur les ventes internationales !",
   "pt_wd_bank_ph": "ex. : BNP Paribas FR76 3000 4000 0100 0000 0000 042",
   "pt_wd_holder_ph": "Jean Dupont",
-
   "mp_sales_title": "🎨 Designs en Vente (Mes Modèles)",
   "mp_sales_total": "Revenus Estimés",
   "mp_sales_guide": "<i class='fa-solid fa-circle-info'></i> Gagnez <b>100P</b> pour les modèles, <b>150P</b> pour les logos téléchargés instantanément.<br>Gagnez <b>200P</b> supplémentaires à chaque achat de votre design par un autre utilisateur.",
@@ -869,7 +803,6 @@
   "mp_wd_cancel": "Annuler",
   "mp_order_history": "📦 Commandes / Livraison",
   "mp_min_withdraw_notice": "Retrait min. : 20 €",
-  "msg_min_withdraw": "Le montant minimum de retrait est de 20 €.",
   "msg_insufficient_deposit": "Solde insuffisant.",
   "msg_enter_bank_info": "Veuillez entrer le nom de la banque, l'IBAN et le nom du titulaire.",
   "msg_enter_contact_id": "Veuillez entrer le numéro de téléphone et le N° fiscal.",
@@ -878,7 +811,6 @@
   "label_withdrawal": "Retrait",
   "label_admin_adjust": "Ajustement Admin",
   "label_other": "Autre",
-
   "contrib_upload_title": "📤 Télécharger",
   "contrib_upload_png": "Téléchargement Objet PNG",
   "contrib_upload_svg": "Téléchargement Vectoriel SVG",
@@ -891,8 +823,6 @@
   "contrib_file_tip": "* Les fichiers PNG transparents sont recommandés.",
   "contrib_btn_submit": "Télécharger & Gagner des Points",
   "contrib_btn_cancel": "Annuler",
-  "contrib_balance_label": "Mes Revenus Totaux",
-
   "//_COMMENT_MYPAGE_ORDERS": "=== Mypage Orders ===",
   "btn_reorder": "Commander à Nouveau",
   "btn_cancel_order": "Annuler la Commande",
@@ -917,7 +847,6 @@
   "btn_view_reviews": "Voir les Avis",
   "prompt_enter_phone": "Entrez votre numéro de téléphone à partager avec le partenaire :",
   "msg_phone_required": "Le numéro de téléphone est requis pour contacter le partenaire.",
-  "confirm_select_partner": "Partager votre numéro ({myPhone}) avec le partenaire\net confirmer cette sélection ?",
   "msg_matching_complete": "Mise en relation terminée !\nLes coordonnées du partenaire sont maintenant disponibles.",
   "prompt_enter_rating": "Entrez la note du partenaire (1-5) :",
   "prompt_enter_review": "Laissez un avis pour les autres clients :",
@@ -931,7 +860,6 @@
   "msg_penalty_notice_title": "Avis de Pénalité du Compte",
   "msg_penalty_notice_body": "Votre compte a été placé en <b>statut de pénalité</b>.<br>Pendant cette période, les revenus de vente sont limités à <b>50P par enregistrement</b>.",
   "label_reason": "Motif",
-
   "//_COMMENT_ORDER_STATUS": "=== Order Status ===",
   "status_접수대기": "En Attente",
   "status_입금대기": "En Attente de Paiement",

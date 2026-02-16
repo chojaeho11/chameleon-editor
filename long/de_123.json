@@ -5,24 +5,24 @@
   "wall_option_desc": "Individuelles Design starten",
   "search_placeholder": "Welches Produkt suchen Sie heute?",
   "btn_search": "Suchen",
-
   "tab_all": "Vorlagen",
   "tab_vector": "Vektoren",
   "tab_graphic": "Elemente(PNG)",
   "tab_photo": "Fotos",
   "tab_pattern": "Muster",
   "tab_logo": "Logos(PNG)",
-
   "btn_my_library": "📂 Meine Bibliothek",
   "btn_cart": "🛒",
   "btn_add_to_cart": "🛒",
+  "btn_purchase_top": "Kaufen",
+  "purchase_choice_title": "Wie möchten Sie kaufen?",
+  "purchase_current_product": "Mit aktuellem Produkt in den Warenkorb",
+  "purchase_new_material": "Auf neuem Material drucken",
   "btn_login": "Anmelden",
   "btn_logout": "Abmelden",
-
   "wall_option_title": "Wandhöhe",
   "tool_size_change": "📏 Größe ändern(mm)",
   "btn_save_cost": "Anwenden",
-
   "label_canvas_tools": "LEINWAND-WERKZEUGE",
   "btn_fit_screen": "An Bildschirm anpassen",
   "btn_lock": "Sperren",
@@ -30,7 +30,6 @@
   "btn_ai_gen": "KI-Generator",
   "btn_save_design": "💾 Design speichern",
   "btn_logo_share": "Logo-Hub",
-
   "label_basic_tools": "BASIS-WERKZEUGE",
   "btn_add_text": "+ Text",
   "btn_font": "🅰️ Schriften",
@@ -38,7 +37,6 @@
   "label_stroke": "🖌️ Kontur",
   "label_shapes": "FORMEN",
   "label_upload": "HOCHLADEN",
-
   "label_edit_layer": "Bearbeiten & Ebenen",
   "btn_undo": "Rückgängig",
   "btn_redo": "Wiederholen",
@@ -47,22 +45,18 @@
   "btn_front": "Nach vorne",
   "btn_back": "Nach hinten",
   "btn_del": "Löschen",
-
   "label_align": "Ausrichten",
   "btn_center_all": "Zentrieren",
   "btn_full_bg": "Als Hintergrund setzen",
-
   "label_cut_shape": "Schnittoptionen",
   "msg_select_click": "Bild auswählen und klicken",
   "btn_make_cutline": "Schnittlinie erstellen",
   "btn_keyring_hole": "Schlüsselanhänger-Loch",
   "btn_stand_base": "Aufsteller-Fuß",
-
   "label_ai_image_tools": "KI-Bildwerkzeuge",
   "btn_bg_remove": "(Hintergrund entfernen)",
   "btn_enhance": "Verbessern",
   "btn_text_outline": "Text-Umriss",
-
   "cart_title": "Warenkorb",
   "label_payment_amt": "Zahlungsbetrag",
   "label_product_price": "Zwischensumme",
@@ -71,7 +65,6 @@
   "label_total_price": "Gesamt",
   "btn_do_checkout": "Zur Kasse",
   "btn_print_quote": "Angebot drucken",
-
   "label_material": "① Material/Stärke",
   "label_finish": "② Veredelung",
   "label_addons": "③ Zusatzoptionen",
@@ -87,7 +80,6 @@
   "label_user_design": "Eigenes Design",
   "msg_cart_empty": "Ihr Warenkorb ist leer.",
   "msg_cart_added": "Artikel zum Warenkorb hinzugefügt.",
-
   "modal_login_title": "Anmelden",
   "placeholder_email": "E-Mail-Adresse",
   "placeholder_pw": "Passwort",
@@ -95,7 +87,6 @@
   "msg_no_account": "Noch kein Konto?",
   "btn_signup": "Registrieren",
   "btn_close": "Schließen",
-
   "modal_delivery_title": "📝 Versandinfo",
   "label_manager_name": "Kontaktname",
   "label_contact_phone": "Telefonnummer",
@@ -108,7 +99,6 @@
   "doc_receipt": "Quittung",
   "doc_order_sheet": "Arbeitsauftrag",
   "doc_statement": "Rechnung",
-
   "modal_checkout_title": "Bestellung bestätigen & bezahlen",
   "label_orderer_name": "Bestellt von",
   "label_shipping_addr": "Lieferadresse",
@@ -121,14 +111,12 @@
   "btn_bank_confirm": "✅ Ich habe überwiesen (Bestätigung anfordern)",
   "btn_download_quote": "Angebot herunterladen",
   "btn_download_work_sheet": "Arbeitsauftrag herunterladen",
-
   "choice_modal_title": "🎨 Gestaltungsart wählen",
   "choice_modal_desc": "Starten Sie mit dem Editor oder laden Sie eine fertige Datei hoch.",
   "btn_design_direct": "Mit Editor gestalten",
   "btn_design_direct_sub": "Vorlagen & Werkzeuge nutzen",
   "btn_order_file": "Datei hochladen",
   "btn_order_file_sub": "PDF/AI-Datei hochladen",
-
   "modal_size_select_title": "F. Was möchten Sie erstellen?",
   "modal_calendar_title": "Gewünschtes Lieferdatum [Vorlaufzeit: 3 Tage]",
   "btn_rotate": "Drehen",
@@ -138,11 +126,9 @@
   "label_opacity": "Deckkraft",
   "modal_size_select_sub": "(Größe wählen)",
   "modal_size_select_desc": "Wählen Sie eine Größe, um mit dem Design zu beginnen.",
-
   "msg_loading": "Wird geladen...",
   "btn_guide_on": "Hilfslinien",
   "help_text_shortcuts": "Leertaste: Verschieben / Scrollen: Zoom / Pfeiltasten: Feinbewegung",
-
   "review_section_title": "✨ Kundenbewertungen",
   "review_section_desc": "Entdecken Sie erfolgreiche Projekte, die mit Chameleon Printing erstellt wurden.",
   "rev_1_text": "\"Wir nutzen sie für jedes Event. Für Werbeagenturen gibt es keinen besseren Partner. Die Wabenplatten sind günstig, die Lieferzeit ist kurz und die Qualität erstklassig.\"",
@@ -163,7 +149,6 @@
   "rev_8_user": "AdPop Signage",
   "rev_9_text": "\"Es fühlt sich viel hochwertiger an als Standard-Banner. Die einzigartige Textur und die umweltfreundliche Entsorgung sind enorme Vorteile.\"",
   "rev_9_user": "Creative Director Ryan Brooks",
-
   "footer_company_label": "Unternehmen:",
   "footer_company_value": "Chameleon Printing GmbH",
   "footer_ceo_label": "Geschäftsführer:",
@@ -181,11 +166,9 @@
   "footer_cs_time": "Mo-Fr 09:00 ~ 18:00",
   "footer_cs_lunch": "Mittagspause 12:00 ~ 13:00",
   "footer_cs_closed": "* An Wochenenden und Feiertagen geschlossen",
-
   "msg_deposit_complete": "Zahlungsbestätigung angefordert.\nKlicken Sie auf [Schließen] zum Zurücksetzen.",
   "msg_confirm_bank_transfer": "Per Überweisung fortfahren?",
   "btn_confirm": "Bestätigen",
-
   "pdf_quote_title": "A N G E B O T",
   "pdf_order_sheet_title": "Arbeitsauftrag",
   "pdf_date": "Datum",
@@ -219,49 +202,39 @@
   "pdf_label_subtotal": "Zwischensumme",
   "pdf_label_tax": "Mehrwertsteuer",
   "pdf_footer_msg": "Vielen Dank für Ihren Auftrag!",
-
   "msg_logout_confirm": "Möchten Sie sich abmelden?",
   "msg_login_required": "Anmeldung erforderlich.",
   "msg_login_required_design": "Zum Gestalten ist eine Anmeldung erforderlich.",
   "msg_template_apply_confirm": "Vorlage auf aktuelle Leinwand anwenden?\n(Wird über Ihr Design gelegt)",
   "msg_large_product_warning": "📢 Der Editor ist einfach und praktisch.\n\nErstellen Sie ein tolles Design.\nKlicken Sie auf eine Vorlage, um zu beginnen.",
-
   "msg_processing_file": "Datei wird verarbeitet...",
   "msg_unsupported_file": "Nicht unterstütztes Dateiformat.",
   "msg_pdf_loaded": "✅ PDF erfolgreich geladen. (Original auf Server gespeichert)",
-
   "msg_select_image_for_outline": "Bitte wählen Sie ein Bild, um einen Umriss zu erstellen!",
   "msg_generating": "Wird generiert...",
   "msg_generating_docs": "Dokumente werden erstellt...",
-
   "prompt_partner_name": "Firmenname (Geschäftsname) eingeben",
   "prompt_partner_phone": "Kontakt-Telefonnummer eingeben",
   "prompt_partner_region": "Gewünschte Region eingeben (z. B. Berlin, München)",
   "confirm_partner_apply": "[Bewerbung bestätigen]\nName: {name}\nTelefon: {phone}\nRegion: {region}\n\nDiese Bewerbung absenden?",
   "msg_partner_apply_success": "🎉 Bewerbung erfolgreich eingereicht!\nSie können Partner-Funktionen nach Admin-Freigabe nutzen.",
-
   "confirm_order_accept": "Möchten Sie diese Bestellung annehmen?",
   "msg_order_already_taken": "Diese Bestellung wurde bereits von einem anderen Partner angenommen.",
   "msg_order_accept_success": "Bestellung angenommen! Prüfen Sie den Tab 'Meine Bestellungen'.",
-
   "alert_vip_info_needed": "Bitte geben Sie Kontaktname und Telefonnummer ein.",
   "alert_vip_file_needed": "Bitte wählen Sie mindestens eine Datei zum Hochladen aus.",
   "msg_uploading_files": "Dateien werden hochgeladen...",
   "msg_vip_order_success": "🎉 Einreichung abgeschlossen.\nBetreuer {manager} wird Sie in Kürze kontaktieren.",
-
   "alert_input_shipping": "Bitte geben Sie alle Versandinformationen ein.",
   "msg_creating_order": "Bestellung wird erstellt...",
   "msg_order_received": "Bestellung erfolgreich eingegangen.\nMitgliedsrabatt ({rate}%) wurde angewendet.",
   "btn_submit_complete": "Einreichung abgeschlossen",
-
   "confirm_bank_payment": "Bestellung per Überweisung aufgeben?\nDie Produktion beginnt nach Zahlungsbestätigung.",
   "msg_order_complete_bank": "Bestellung abgeschlossen. Bitte überweisen Sie auf das angegebene Konto.",
-
   "alert_deposit_shortage": "Unzureichendes Guthaben.\n(Fehlbetrag: {amount})",
   "confirm_deposit_pay": "Mit {amount} aus Ihrem Guthaben bezahlen?",
   "msg_processing_payment": "Zahlung wird verarbeitet...",
   "msg_payment_complete": "Zahlung abgeschlossen!",
-
   "home_quick_badge": "Senden Sie Ihre Gewerbeanmeldung für 10% Rabatt + kostenlose Lieferung im Berliner Stadtgebiet.",
   "home_quick_title": "Exklusive Geschäftsvorteile — Kostenlose Lieferung im Berliner Stadtgebiet",
   "home_vip_title": "VIP-Lounge für Großbestellungen",
@@ -271,7 +244,6 @@
   "home_hotdeal_desc": "Verpassen Sie nicht diese Sonderpreise. Ideal als Geschenk. Maximal 10 Artikel pro Bestellung für Einweihungsgeschenke.",
   "home_biz_title": "Geschäftskunden-Mengenrabatt",
   "home_biz_desc": "Exklusive Preise für Geschäftskunden! Mindestbestellmenge 10-100 Stück. Sonderrabatte für Wiederverkäufer.",
-
   "menu_blog": "Chameleon<br>Blog",
   "menu_review": "Kunden-<br>bewertungen",
   "menu_promo": "Lokale<br>Werbung",
@@ -279,7 +251,6 @@
   "menu_job": "Stellen-<br>markt",
   "menu_manual": "Produkt-<br>Handbücher",
   "menu_orders": "Bestellverfolgung",
-
   "tier_main_title": "Mitgliedschaft <span>Rabattvorteile</span> Übersicht",
   "tier_gold_name": "GOLD",
   "tier_gold_discount": "3% RABATT",
@@ -296,29 +267,23 @@
   "tier_partner_cond_label": "Bedingung",
   "tier_partner_cond_fee": "Partner-Bewerber",
   "tier_partner_cond_note": "(Gewerbeanmeldung erforderlich)",
-
   "partner_banner_title": "Marktplatz mit niedrigen Provisionen für Verkäufer<br><span style='color: #818cf8;'>Margenstarker globaler Vertrieb — überlassen Sie es Chameleon!</span>",
   "partner_banner_desc": "Einfach bei Chameleon registrieren — wir kümmern uns um Versand und Bürokratie!<br>Listen Sie Ihre T-Shirt-Drucke, Sonderanfertigungen, Werbeartikel und mehr auf unserem Großhandels-Werbemarktplatz.<br><b style='color:#818cf8;'>Branchenniedrigste 6,5% Provision</b> + Zugang zu Kunden von Koreas Nr. 1 Werbedrucknetzwerk,<br>plus <b style='color:#818cf8;'>zum doppelten Preis auf globalen Märkten verkaufen</b>. Sichern Sie sich jetzt den Spitzenplatz!",
   "btn_partner_console": "Partner-Verwaltung",
   "btn_partner_apply": "Partnerschaft beantragen",
-
   "contrib_title": "Chameleon Beitragssystem",
-  "contrib_balance_label": "Meine Einnahmen",
+  "contrib_balance_label": "Meine Gesamteinnahmen",
   "contrib_desc": "Teilen Sie Ihre Designquellen und verdienen Sie Prämien.<br>Wiederholtes Hochladen von Bildern niedriger Qualität senkt Ihre Stufe. Stufe hoch x2, x4; Stufe runter halbiert die Vergütung.<br><span style='color:#ef4444; font-weight:bold;'>Kategorien prüfen!</span> Upload-Rechte werden entzogen, wenn Kategorien nicht passen oder weniger als 3 Schlüsselwörter registriert sind.",
   "contrib_btn_png": "PNG-Objekt",
   "contrib_btn_svg": "SVG-Objekt",
   "contrib_btn_logo": "Logo hochladen",
   "contrib_btn_template": "Vorlage erstellen",
-
   "footer_menu_company": "Über uns",
   "footer_menu_notice": "Mitteilungen",
   "footer_menu_terms": "AGB",
   "footer_menu_privacy": "Datenschutz",
-
   "//_COMMENT": "=== JS Dynamic Strings ===",
-
   "btn_guide_off": "Hilfslinien ausblenden",
-
   "msg_no_fonts": "Keine Schriften registriert.<br>Bitte registrieren Sie Schriften auf der Admin-Seite.",
   "msg_select_text_font": "Bitte wählen Sie ein Textobjekt, um die Schriftart zu ändern.",
   "msg_select_obj_outline": "Bitte wählen Sie ein Objekt, um den Umriss anzuwenden.",
@@ -328,13 +293,11 @@
   "msg_uploading": "Wird hochgeladen...",
   "tag_user_upload": "Benutzer-Upload",
   "suffix_logo": " Logo",
-
   "confirm_unlock_all": "Möchten Sie alle {count} gesperrten Objekte entsperren?",
   "msg_select_obj_lock": "Bitte wählen Sie ein Objekt zum Sperren.",
   "btn_lock_selection": "Auswahl sperren",
   "btn_unlock_all": "Alle entsperren",
   "btn_lock_wizard": "Sperr-Assistent",
-
   "prod_wall_1": "1-Segment-Wand",
   "prod_wall_2": "2-Segment-Wand",
   "prod_wall_3": "3-Segment-Wand",
@@ -345,11 +308,9 @@
   "prod_photo_zone": "Text-Fotozone",
   "prod_fabric_wide": "Breitstoff",
   "prod_paper_stand": "Papieraufsteller",
-
   "msg_invalid_number": "Bitte geben Sie eine gültige Zahl ein.",
   "msg_max_size_exceeded": "Maximalgröße ({w}x{h}mm) kann nicht überschritten werden.",
   "msg_size_rotated": "Die Maße wurden gedreht, um auf die Leinwand zu passen.",
-
   "msg_data_loading": "Daten werden geladen...",
   "msg_db_disconnected": "DB nicht verbunden",
   "msg_no_data": "Keine Daten vorhanden.",
@@ -357,11 +318,9 @@
   "msg_load_failed": "Daten konnten nicht geladen werden.",
   "btn_retry": "Erneut versuchen",
   "btn_apply_now": "Jetzt bewerben",
-
   "btn_prev_page": "Zurück",
   "btn_next_page": "Weiter",
   "label_page": "Seite",
-
   "msg_select_template": "Bitte wählen Sie eine Vorlage.",
   "msg_click_select": "Klicken, um Dateien auszuwählen",
   "msg_drag_drop": "Oder Dateien hierher ziehen",
@@ -376,7 +335,6 @@
   "msg_bg_remove_server": "Hintergrundentfernung erfordert Serververbindung.",
   "msg_select_image": "Bitte wählen Sie ein Bild.",
   "msg_pdf_error": "Bitte laden Sie PDF-Dateien im Schritt 'Bestellen' hoch. Im Editor werden nur Bilder unterstützt.",
-
   "//_COMMENT_2": "=== Added Missing Strings ===",
   "confirm_apply_bg": "Dieses Hintergrunddesign anwenden?\n(Aktueller Hintergrund wird ersetzt)",
   "confirm_bg_remove": "Möchten Sie den Hintergrund entfernen?",
@@ -385,7 +343,6 @@
   "msg_gen_fail": "Generierung fehlgeschlagen",
   "msg_min_page_limit": "Mindestens eine Seite ist erforderlich.",
   "btn_my_page": "📂 Meine Seite",
-
   "msg_generating_quote": "Angebot wird erstellt...",
   "err_quote_gen_failed": "Angebot konnte nicht erstellt werden.",
   "err_quote_error": "Fehler bei Angebotserstellung: ",
@@ -408,7 +365,6 @@
   "msg_sending": "Wird gesendet...",
   "msg_withdraw_success": "Auszahlungsantrag eingereicht.\nÜberweisung innerhalb von 5 Tagen nach Admin-Prüfung.",
   "msg_clipboard_empty": "Zwischenablage ist leer.",
-
   "mp_menu_dashboard": "Übersicht",
   "mp_menu_designs": "Meine Designs",
   "mp_menu_sales": "Im Verkauf",
@@ -427,11 +383,9 @@
   "default_customer": "Kunde",
   "msg_canvas_not_ready": "Leinwand ist nicht bereit.",
   "err_canvas_not_ready": "Die Leinwand ist noch nicht vollständig geladen. Bitte warten.",
-
   "msg_no_locked_bg": "Kein gesperrter Hintergrund gefunden.",
   "msg_bg_unlocked": "Hintergrund entsperrt.",
   "msg_bg_locked": "Hintergrund gesperrt.",
-
   "ctx_undo": "Rückgängig",
   "ctx_redo": "Wiederholen",
   "ctx_copy": "Kopieren",
@@ -442,7 +396,6 @@
   "ctx_lock": "Sperren",
   "ctx_unlock": "Entsperren",
   "ctx_unlock_all": "Alle entsperren",
-
   "btn_google_login": "Mit Google fortfahren",
   "placeholder_pw_confirm": "Passwort bestätigen",
   "label_select_manager": "Betreuer wählen (optional)",
@@ -460,7 +413,7 @@
   "mp_recent_logs": "📢 Aktuelle Gewinnprotokolle",
   "mp_saved_designs": "📂 Gespeicherte Designs",
   "msg_wait_moment": "Bitte einen Moment warten.",
-  "confirm_select_partner": "Diesen Partner auswählen?\nKontaktdaten werden angezeigt und andere Gebote geschlossen.",
+  "confirm_select_partner": "Ihre Nummer ({myPhone}) mit dem Partner teilen\nund diese Auswahl bestätigen?",
   "msg_review_saved": "Bewertung erfolgreich gespeichert!",
   "msg_no_partner_auth": "Keine Partner-Berechtigung gefunden.",
   "msg_post_deleted": "Dieser Beitrag wurde gelöscht.",
@@ -485,7 +438,6 @@
   "alert_input_depositor": "Bitte geben Sie den Namen des Einzahlers ein.",
   "msg_outline_failed": "Vektorumriss konnte für dieses Bild nicht erstellt werden.",
   "msg_image_load_failed": "Bild konnte nicht geladen werden.",
-
   "vip_fast_inquiry": "⚡ Schnellanfrage",
   "vip_manager_intro": "\"Unsere persönlichen Betreuer antworten schnell per Telefon\"",
   "vip_manager_jisuk": "Betreuer Alex",
@@ -510,7 +462,6 @@
   "btn_next": "Weiter",
   "label_page_suffix": "Seite",
   "search_placeholder_start": "Welches Design suchen Sie? (z. B. Katze, Meer, Himmel)",
-
   "//_COMMENT_3": "=== Editor UI ===",
   "editor_size": "Größe",
   "editor_char_spacing": "Abstand",
@@ -527,7 +478,6 @@
   "editor_text_edit": "Text bearbeiten",
   "editor_lock_selection": "Auswahl sperren",
   "btn_mobile_template": "🎨 Vorlagen",
-
   "//_COMMENT_4": "=== Design Wizard Buttons ===",
   "wiz_flyer": "Flyer",
   "wiz_poster": "Poster",
@@ -536,7 +486,6 @@
   "wiz_banner_h": "H-Banner",
   "wiz_banner_v": "V-Banner",
   "wiz_insta_panel": "Insta-Paneel",
-
   "//_COMMENT_5": "=== Guide Options ===",
   "guide_off": "🚫 Aus",
   "guide_cross": "✚ Kreuz",
@@ -544,7 +493,6 @@
   "guide_4col": "4 Spalten",
   "guide_5col": "5 Spalten",
   "guide_grid": "▦ Raster",
-
   "//_COMMENT_6": "=== Template Modals ===",
   "tpl_load_title": "🎨 Vorlage laden",
   "tpl_load_desc": "Sie haben ein laufendes Design.\nWie möchten Sie die Vorlage anwenden?",
@@ -560,7 +508,6 @@
   "ph_search_input": "Suchen...",
   "tpl_obj_label": "🧩 Elemente",
   "tpl_search_product": "Produkte für Vorlage suchen",
-
   "//_COMMENT_7": "=== AI Drawer ===",
   "ai_title": "✨ KI-Bildgenerator",
   "ai_prompt_label": "Beschreibung (Prompt)",
@@ -568,12 +515,10 @@
   "btn_generate": "Generieren",
   "ai_waiting": "Warte auf Ergebnis",
   "btn_add_to_canvas": "Zur Leinwand hinzufügen",
-
   "//_COMMENT_8": "=== Order Complete Modal ===",
   "msg_order_complete_title": "🎉 Bestellung abgeschlossen!",
   "btn_download_order_sheet": "📄 Arbeitsauftrag herunterladen",
   "btn_download_quotation": "📑 Angebot herunterladen",
-
   "//_COMMENT_9": "=== Design Sell Modal ===",
   "sell_title": "💎 Design teilen/verkaufen",
   "sell_benefit_1": "Sofort <span class='highlight'>100P</span> verdienen, <span class='highlight'>200P</span> pro Nutzung",
@@ -586,13 +531,11 @@
   "ph_sell_title": "z. B. Praxis-Event, Sommerposter",
   "btn_register": "Registrieren",
   "modal_font_title": "Schriftart wählen",
-
   "//_COMMENT_10": "=== Choice Modal ===",
   "btn_purchase": "Kaufen",
   "btn_purchase_sub": "Dateien über Warenkorb hochladen",
   "btn_detail_page": "Details anzeigen",
   "btn_story_page": "Story ansehen",
-
   "//_COMMENT_11": "=== Template Creator Modal ===",
   "tpl_create_title": "Vorlage erstellen starten",
   "tpl_create_desc": "Registrieren Sie Ihr Design und verdienen Sie Einnahmen!",
@@ -604,17 +547,15 @@
   "ph_width": "Breite",
   "ph_height": "Höhe",
   "btn_start_design": "🚀 Design starten",
-
   "//_COMMENT_12": "=== Mobile Editor ===",
   "btn_delete_obj": "Löschen",
   "btn_done_edit": "Fertig",
   "ph_text_input": "Text hier eingeben...",
-
   "//_COMMENT_13": "=== JS Dynamic Alerts (main.js) ===",
   "msg_product_info_missing": "⚠️ Produktinfo für dieses Design nicht gefunden.\nBitte wählen Sie die Produktspezifikationen erneut aus.",
   "msg_cannot_load_form": "Antragsformular kann nicht geladen werden.",
   "confirm_status_change": "Status auf '{status}' ändern?",
-  "msg_min_withdraw": "Mindestauszahlungsbetrag ist €100.",
+  "msg_min_withdraw": "Mindestauszahlungsbetrag ist €20.",
   "msg_input_real_name": "Bitte geben Sie den Kontoinhaber-Namen ein.",
   "msg_input_phone": "Bitte geben Sie Ihre Telefonnummer ein.",
   "msg_input_id_number": "Bitte geben Sie Ihre Steuer-ID korrekt ein.",
@@ -636,7 +577,6 @@
   "confirm_go_editor": "Zum Design-Editor wechseln?",
   "msg_submit_error": "Einreichungsfehler: ",
   "msg_apply_error": "Bewerbungsfehler: ",
-
   "//_COMMENT_PARTNER_MODAL": "=== Partner Application Modal ===",
   "partner_apply_title": "🤝 Partner- (Franchise-) Bewerbung",
   "partner_apply_desc": "Werden Sie regionaler Werbe-/Fertigungspartner und erzielen Sie Einnahmen.",
@@ -652,7 +592,6 @@
   "partner_btn_apply": "Bewerben",
   "partner_btn_cancel": "Bewerbung zurückziehen",
   "partner_btn_close": "Schließen",
-
   "//_COMMENT_14": "=== Partner Console ===",
   "partner_console_title": "Partner-Konsole",
   "partner_region_unset": "Region nicht festgelegt",
@@ -673,7 +612,6 @@
   "th_status_col": "Status",
   "my_order_tracking_title": "📦 Bestellverfolgung",
   "msg_loading_text": "Wird geladen...",
-
   "//_COMMENT_15": "=== Cart & Payment Page ===",
   "cart_upload_guide": "Laden Sie hier Ihre eigenen Designdateien hoch",
   "btn_bulk_upload": "Massen-Upload",
@@ -704,7 +642,6 @@
   "rv_total_reviews": "Bewertungen",
   "rv_avg_rating": "Durchschnittsbewertung",
   "rv_submitted": "Bewertung eingereicht!",
-
   "//_COMMENT_PARTNER": "=== Partner Console i18n ===",
   "pt_no_pool_orders": "Derzeit keine verfügbaren Bestellungen.",
   "pt_no_my_orders": "Keine laufenden Bestellungen.",
@@ -725,7 +662,6 @@
   "pt_badge_admin": "Admin (Master)",
   "pt_badge_partner": "Partner",
   "pt_no_access": "🚫 Zugriff verweigert.\n\nBitte warten Sie auf die Admin-Freigabe.",
-
   "pt_tab_products": "Meine Produkte",
   "pt_tab_register": "Produkt registrieren",
   "pt_tab_orders": "Bestellverwaltung",
@@ -794,7 +730,6 @@
   "pt_guide_flow_4": "Als versendet markieren",
   "pt_guide_flow_5": "Kunde bestätigt Empfang → 15 Tage Wartezeit",
   "pt_guide_flow_6": "Auszahlung beantragen + Rechnung anhängen → Überweisung",
-
   "//_COMMENT_PT_PAGE": "=== Partner Page (partner.html) ===",
   "pt_btn_home": "Zur Startseite",
   "pt_btn_logout": "Abmelden",
@@ -836,7 +771,6 @@
   "pt_guide_global_margin": "Circa <strong>2-fache Marge</strong> bei internationalen Verkäufen!",
   "pt_wd_bank_ph": "z. B. Deutsche Bank DE89 3704 0044 0532 0130 00",
   "pt_wd_holder_ph": "Max Mustermann",
-
   "mp_sales_title": "🎨 Designs im Verkauf (Meine Vorlagen)",
   "mp_sales_total": "Geschätzte Einnahmen",
   "mp_sales_guide": "<i class='fa-solid fa-circle-info'></i> Verdienen Sie <b>100P</b> für Vorlagen, <b>150P</b> für sofort hochgeladene Logos.<br>Verdienen Sie zusätzlich <b>200P</b> jedes Mal, wenn ein anderer Benutzer Ihr Design kauft.",
@@ -869,7 +803,6 @@
   "mp_wd_cancel": "Abbrechen",
   "mp_order_history": "📦 Bestellungen / Lieferung",
   "mp_min_withdraw_notice": "Mindestauszahlung: €20",
-  "msg_min_withdraw": "Mindestauszahlungsbetrag ist €20.",
   "msg_insufficient_deposit": "Unzureichendes Guthaben.",
   "msg_enter_bank_info": "Bitte Bankname, IBAN und Kontoinhaber eingeben.",
   "msg_enter_contact_id": "Bitte Telefonnummer und Steuer-ID eingeben.",
@@ -878,7 +811,6 @@
   "label_withdrawal": "Auszahlung",
   "label_admin_adjust": "Admin-Anpassung",
   "label_other": "Sonstiges",
-
   "contrib_upload_title": "📤 Hochladen",
   "contrib_upload_png": "PNG-Objekt hochladen",
   "contrib_upload_svg": "SVG-Vektor hochladen",
@@ -891,8 +823,6 @@
   "contrib_file_tip": "* Transparente PNG-Dateien empfohlen.",
   "contrib_btn_submit": "Hochladen & Punkte verdienen",
   "contrib_btn_cancel": "Abbrechen",
-  "contrib_balance_label": "Meine Gesamteinnahmen",
-
   "//_COMMENT_MYPAGE_ORDERS": "=== Mypage Orders ===",
   "btn_reorder": "Nachbestellen",
   "btn_cancel_order": "Bestellung stornieren",
@@ -917,7 +847,6 @@
   "btn_view_reviews": "Bewertungen ansehen",
   "prompt_enter_phone": "Geben Sie Ihre Telefonnummer ein, um sie mit dem Partner zu teilen:",
   "msg_phone_required": "Telefonnummer erforderlich, um sich mit dem Partner zu verbinden.",
-  "confirm_select_partner": "Ihre Nummer ({myPhone}) mit dem Partner teilen\nund diese Auswahl bestätigen?",
   "msg_matching_complete": "Vermittlung abgeschlossen!\nPartner-Kontaktdaten sind jetzt verfügbar.",
   "prompt_enter_rating": "Partner-Bewertung eingeben (1-5):",
   "prompt_enter_review": "Hinterlassen Sie eine Bewertung für andere Kunden:",
@@ -931,7 +860,6 @@
   "msg_penalty_notice_title": "Kontostrafhinweis",
   "msg_penalty_notice_body": "Ihr Konto wurde unter <b>Strafstatus</b> gesetzt.<br>Während dieses Zeitraums sind Verkaufseinnahmen auf <b>50P pro Registrierung</b> begrenzt.",
   "label_reason": "Grund",
-
   "//_COMMENT_ORDER_STATUS": "=== Order Status ===",
   "status_접수대기": "Ausstehend",
   "status_입금대기": "Zahlung ausstehend",

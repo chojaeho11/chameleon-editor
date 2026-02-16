@@ -5,24 +5,24 @@
   "wall_option_desc": "Start Custom Design",
   "search_placeholder": "What product are you looking for today?",
   "btn_search": "Search",
-
   "tab_all": "Templates",
   "tab_vector": "Vectors",
   "tab_graphic": "Elements(PNG)",
   "tab_photo": "Photos",
   "tab_pattern": "Patterns",
   "tab_logo": "Logos(PNG)",
-
   "btn_my_library": "📂 My Library",
   "btn_cart": "🛒",
   "btn_add_to_cart": "🛒",
+  "btn_purchase_top": "Purchase",
+  "purchase_choice_title": "How would you like to purchase?",
+  "purchase_current_product": "Add to cart with current product",
+  "purchase_new_material": "Print on new material",
   "btn_login": "Login",
   "btn_logout": "Logout",
-
   "wall_option_title": "Wall Height",
   "tool_size_change": "📏 Resize(mm)",
   "btn_save_cost": "Apply",
-
   "label_canvas_tools": "CANVAS TOOLS",
   "btn_fit_screen": "Fit to Screen",
   "btn_lock": "Lock",
@@ -30,7 +30,6 @@
   "btn_ai_gen": "AI Generator",
   "btn_save_design": "💾 Save Design",
   "btn_logo_share": "Logo Hub",
-
   "label_basic_tools": "BASIC TOOLS",
   "btn_add_text": "+ Text",
   "btn_font": "🅰️ Fonts",
@@ -38,7 +37,6 @@
   "label_stroke": "🖌️ Stroke",
   "label_shapes": "SHAPES",
   "label_upload": "UPLOAD",
-
   "label_edit_layer": "Edit & Layer",
   "btn_undo": "Undo",
   "btn_redo": "Redo",
@@ -47,22 +45,18 @@
   "btn_front": "To Front",
   "btn_back": "To Back",
   "btn_del": "Delete",
-
   "label_align": "Align",
   "btn_center_all": "Align Center",
   "btn_full_bg": "Set as Background",
-
   "label_cut_shape": "Cutout Options",
   "msg_select_click": "Select an image and click",
   "btn_make_cutline": "Create Cutline",
   "btn_keyring_hole": "Keyring Hole",
   "btn_stand_base": "Standee Base",
-
   "label_ai_image_tools": "AI Image Tools",
   "btn_bg_remove": "(Remove Background)",
   "btn_enhance": "Enhance",
   "btn_text_outline": "Text Outline",
-
   "cart_title": "Cart",
   "label_payment_amt": "Payment Amount",
   "label_product_price": "Subtotal",
@@ -71,7 +65,6 @@
   "label_total_price": "Total",
   "btn_do_checkout": "Checkout",
   "btn_print_quote": "Print Quote",
-
   "label_material": "① Material/Thickness",
   "label_finish": "② Finishing",
   "label_addons": "③ Add-ons",
@@ -87,7 +80,6 @@
   "label_user_design": "User Design",
   "msg_cart_empty": "Your cart is empty.",
   "msg_cart_added": "Item added to cart.",
-
   "modal_login_title": "Login",
   "placeholder_email": "Email Address",
   "placeholder_pw": "Password",
@@ -95,7 +87,6 @@
   "msg_no_account": "Don't have an account?",
   "btn_signup": "Sign Up",
   "btn_close": "Close",
-
   "modal_delivery_title": "📝 Shipping Info",
   "label_manager_name": "Contact Name",
   "label_contact_phone": "Phone Number",
@@ -108,7 +99,6 @@
   "doc_receipt": "Receipt",
   "doc_order_sheet": "Work Order",
   "doc_statement": "Invoice",
-
   "modal_checkout_title": "Confirm Order & Pay",
   "label_orderer_name": "Ordered By",
   "label_shipping_addr": "Ship To",
@@ -121,14 +111,12 @@
   "btn_bank_confirm": "✅ I have transferred (Request Confirm)",
   "btn_download_quote": "Download Quote",
   "btn_download_work_sheet": "Download Work Order",
-
   "choice_modal_title": "🎨 Choose How to Create",
   "choice_modal_desc": "Start designing with the editor or upload a completed file.",
   "btn_design_direct": "Design with Editor",
   "btn_design_direct_sub": "Use Templates & Tools",
   "btn_order_file": "Upload File",
   "btn_order_file_sub": "Upload PDF/AI File",
-
   "modal_size_select_title": "Q. What are you making?",
   "modal_calendar_title": "Requested Delivery Date [Lead Time: 3 Days]",
   "btn_rotate": "Rotate",
@@ -138,11 +126,9 @@
   "label_opacity": "Opacity",
   "modal_size_select_sub": "(Select Size)",
   "modal_size_select_desc": "Select a size to start designing.",
-
   "msg_loading": "Loading...",
   "btn_guide_on": "Guides",
   "help_text_shortcuts": "Space: Pan / Scroll: Zoom / Arrows: Nudge",
-
   "review_section_title": "✨ Customer Reviews",
   "review_section_desc": "Discover successful projects created with Chameleon Printing.",
   "rev_1_text": "\"We use them for every event. There's no better partner for ad agencies. The honeycomb boards are affordable, the lead time is fast, and the quality is top-notch.\"",
@@ -163,7 +149,6 @@
   "rev_8_user": "AdPop Signage",
   "rev_9_text": "\"It feels much more premium than standard banners. The unique texture and eco-friendly disposal are huge advantages.\"",
   "rev_9_user": "Creative Director Ryan Brooks",
-
   "footer_company_label": "Company :",
   "footer_company_value": "Chameleon Printing USA, Inc.",
   "footer_ceo_label": "CEO :",
@@ -181,11 +166,9 @@
   "footer_cs_time": "Mon-Fri 09:00 ~ 18:00",
   "footer_cs_lunch": "Lunch 12:00 ~ 13:00",
   "footer_cs_closed": "* Closed on Weekends and Public Holidays",
-
   "msg_deposit_complete": "Deposit confirmation requested.\nClick [Close] to reset.",
   "msg_confirm_bank_transfer": "Proceed with Bank Transfer?",
   "btn_confirm": "Confirm",
-
   "pdf_quote_title": "Q U O T A T I O N",
   "pdf_order_sheet_title": "Work Order",
   "pdf_date": "Date",
@@ -219,49 +202,39 @@
   "pdf_label_subtotal": "Subtotal",
   "pdf_label_tax": "Sales Tax",
   "pdf_footer_msg": "Thank you for your business!",
-
   "msg_logout_confirm": "Do you want to logout?",
   "msg_login_required": "Login is required.",
   "msg_login_required_design": "Login is required to start designing.",
   "msg_template_apply_confirm": "Apply template to current canvas?\n(This will be added on top of your design)",
   "msg_large_product_warning": "📢 The editor is easy and convenient.\n\nCreate a great design.\nClick a template to get started.",
-
   "msg_processing_file": "Processing file...",
   "msg_unsupported_file": "Unsupported file format.",
   "msg_pdf_loaded": "✅ PDF loaded successfully. (Original saved to server)",
-
   "msg_select_image_for_outline": "Please select an image to create an outline!",
   "msg_generating": "Generating...",
   "msg_generating_docs": "Generating documents...",
-
   "prompt_partner_name": "Enter Company Name (Store Name)",
   "prompt_partner_phone": "Enter Contact Phone Number",
   "prompt_partner_region": "Enter Desired Region (e.g., Las Vegas, NV)",
   "confirm_partner_apply": "[Confirm Application]\nName: {name}\nPhone: {phone}\nRegion: {region}\n\nSubmit this application?",
   "msg_partner_apply_success": "🎉 Application submitted successfully!\nYou can use Partner features after admin approval.",
-
   "confirm_order_accept": "Do you want to accept this order?",
   "msg_order_already_taken": "This order has already been taken by another partner.",
   "msg_order_accept_success": "Order accepted! Check the 'My Orders' tab.",
-
   "alert_vip_info_needed": "Please enter the contact name and phone number.",
   "alert_vip_file_needed": "Please select at least one file to upload.",
   "msg_uploading_files": "Uploading files...",
   "msg_vip_order_success": "🎉 Submission complete.\nManager {manager} will contact you shortly.",
-
   "alert_input_shipping": "Please enter all shipping information.",
   "msg_creating_order": "Creating order...",
   "msg_order_received": "Order received successfully.\nMember discount ({rate}%) applied.",
   "btn_submit_complete": "Submission Complete",
-
   "confirm_bank_payment": "Place order via Bank Transfer?\nProduction begins after payment confirmation.",
   "msg_order_complete_bank": "Order complete. Please transfer to the designated account.",
-
   "alert_deposit_shortage": "Insufficient deposit balance.\n(Shortage: {amount})",
   "confirm_deposit_pay": "Pay using {amount} from your deposit?",
   "msg_processing_payment": "Processing payment...",
   "msg_payment_complete": "Payment completed!",
-
   "home_quick_badge": "Send your business license for 10% off + free Las Vegas metro area shipping.",
   "home_quick_title": "Exclusive Business Perks — Free Las Vegas Metro Delivery",
   "home_vip_title": "VIP Lounge for Bulk Orders",
@@ -271,7 +244,6 @@
   "home_hotdeal_desc": "Don't miss these super special prices. Great for gifts. Max 10 items per order for housewarming gifts.",
   "home_biz_title": "Business Bulk Discount",
   "home_biz_desc": "Exclusive prices for business customers! MOQ 10-100 units. Special discounts for resellers.",
-
   "menu_blog": "Chameleon<br>Blog",
   "menu_review": "Customer<br>Reviews",
   "menu_promo": "Local Ad<br>Promo",
@@ -279,7 +251,6 @@
   "menu_job": "Job<br>Market",
   "menu_manual": "Product<br>Manuals",
   "menu_orders": "Order Tracking",
-
   "tier_main_title": "Membership <span>Discount Benefits</span> Guide",
   "tier_gold_name": "GOLD",
   "tier_gold_discount": "3% OFF",
@@ -296,29 +267,23 @@
   "tier_partner_cond_label": "Condition",
   "tier_partner_cond_fee": "Partner Applicant",
   "tier_partner_cond_note": "(Business License Req.)",
-
   "partner_banner_title": "Low-Commission Marketplace for Sellers<br><span style='color: #818cf8;'>High-margin global sales — leave it to Chameleon!</span>",
   "partner_banner_desc": "Just register on Chameleon — we handle shipping and paperwork!<br>List your T-shirt prints, custom goods, promotional items, and more on our wholesale ad marketplace.<br><b style='color:#818cf8;'>Industry-lowest 6.5% commission</b> + access to customers from Korea's #1 ad printing network,<br>plus <b style='color:#818cf8;'>sell at 2x price in global markets</b>. Secure your top spot now!",
   "btn_partner_console": "Partner Admin Access",
   "btn_partner_apply": "Apply for Partnership",
-
   "contrib_title": "Chameleon Contributor System",
-  "contrib_balance_label": "My Earnings",
+  "contrib_balance_label": "My Total Earnings",
   "contrib_desc": "Share your design sources and earn cash rewards.<br>Repeatedly uploading low-quality images will lower your grade. Grade up x2, x4; grade down halves the payment.<br><span style='color:#ef4444; font-weight:bold;'>Check Categories!</span> Upload rights will be revoked if categories don't match or fewer than 3 keywords are registered.",
   "contrib_btn_png": "PNG Object",
   "contrib_btn_svg": "SVG Object",
   "contrib_btn_logo": "Upload Logo",
   "contrib_btn_template": "Create Template",
-
   "footer_menu_company": "About Us",
   "footer_menu_notice": "Notice",
   "footer_menu_terms": "Terms of Service",
   "footer_menu_privacy": "Privacy Policy",
-
   "//_COMMENT": "=== JS Dynamic Strings ===",
-
   "btn_guide_off": "Hide Guides",
-
   "msg_no_fonts": "No fonts registered.<br>Please register fonts in the admin page.",
   "msg_select_text_font": "Please select a text object to change the font.",
   "msg_select_obj_outline": "Please select an object to apply the outline.",
@@ -328,13 +293,11 @@
   "msg_uploading": "Uploading...",
   "tag_user_upload": "User Upload",
   "suffix_logo": " Logo",
-
   "confirm_unlock_all": "Do you want to unlock all {count} locked objects?",
   "msg_select_obj_lock": "Please select an object to lock.",
   "btn_lock_selection": "Lock Selection",
   "btn_unlock_all": "Unlock All",
   "btn_lock_wizard": "Lock Wizard",
-
   "prod_wall_1": "1-Section Wall",
   "prod_wall_2": "2-Section Wall",
   "prod_wall_3": "3-Section Wall",
@@ -345,11 +308,9 @@
   "prod_photo_zone": "Text Photo Zone",
   "prod_fabric_wide": "Wide Fabric",
   "prod_paper_stand": "Paper Stand",
-
   "msg_invalid_number": "Please enter a valid number.",
   "msg_max_size_exceeded": "Cannot exceed maximum size ({w}x{h}mm).",
   "msg_size_rotated": "Dimensions were rotated to fit the canvas.",
-
   "msg_data_loading": "Loading data...",
   "msg_db_disconnected": "DB Not Connected",
   "msg_no_data": "No data to display.",
@@ -357,11 +318,9 @@
   "msg_load_failed": "Failed to load data.",
   "btn_retry": "Retry",
   "btn_apply_now": "Apply Now",
-
   "btn_prev_page": "Prev",
   "btn_next_page": "Next",
   "label_page": "Page",
-
   "msg_select_template": "Please select a template.",
   "msg_click_select": "Click to select files",
   "msg_drag_drop": "Or drag and drop files here",
@@ -376,7 +335,6 @@
   "msg_bg_remove_server": "Background removal requires server connection.",
   "msg_select_image": "Please select an image.",
   "msg_pdf_error": "Please upload PDF files at the 'Order' step. Only images are supported in the editor.",
-
   "//_COMMENT_2": "=== Added Missing Strings ===",
   "confirm_apply_bg": "Apply this background design?\n(Current background will be replaced)",
   "confirm_bg_remove": "Would you like to remove the background?",
@@ -385,7 +343,6 @@
   "msg_gen_fail": "Generation failed",
   "msg_min_page_limit": "At least one page is required.",
   "btn_my_page": "📂 My Page",
-
   "msg_generating_quote": "Generating Quote...",
   "err_quote_gen_failed": "Failed to generate quotation.",
   "err_quote_error": "Quote Generation Error: ",
@@ -408,7 +365,6 @@
   "msg_sending": "Sending...",
   "msg_withdraw_success": "Withdrawal request submitted.\nDeposit within 5 days after admin check.",
   "msg_clipboard_empty": "Clipboard is empty.",
-
   "mp_menu_dashboard": "Dashboard",
   "mp_menu_designs": "My Designs",
   "mp_menu_sales": "On Sale",
@@ -427,11 +383,9 @@
   "default_customer": "Customer",
   "msg_canvas_not_ready": "Canvas is not ready.",
   "err_canvas_not_ready": "The canvas is not fully loaded. Please wait.",
-
   "msg_no_locked_bg": "No locked background found.",
   "msg_bg_unlocked": "Background unlocked.",
   "msg_bg_locked": "Background locked.",
-
   "ctx_undo": "Undo",
   "ctx_redo": "Redo",
   "ctx_copy": "Copy",
@@ -442,7 +396,6 @@
   "ctx_lock": "Lock",
   "ctx_unlock": "Unlock",
   "ctx_unlock_all": "Unlock All",
-
   "btn_google_login": "Continue with Google",
   "placeholder_pw_confirm": "Confirm Password",
   "label_select_manager": "Select Manager (Optional)",
@@ -460,7 +413,7 @@
   "mp_recent_logs": "📢 Recent Profit Logs",
   "mp_saved_designs": "📂 Saved Designs",
   "msg_wait_moment": "Please wait a moment.",
-  "confirm_select_partner": "Select this partner?\nContact info will be revealed and other bids will be closed.",
+  "confirm_select_partner": "Share your number ({myPhone}) with the partner\nand confirm this selection?",
   "msg_review_saved": "Review saved successfully!",
   "msg_no_partner_auth": "No partner authority found.",
   "msg_post_deleted": "This post has been deleted.",
@@ -485,7 +438,6 @@
   "alert_input_depositor": "Please enter the depositor's name.",
   "msg_outline_failed": "Vector outline could not be generated for this image.",
   "msg_image_load_failed": "Failed to load image.",
-
   "vip_fast_inquiry": "⚡ Fast Inquiry",
   "vip_manager_intro": "\"Our dedicated managers will respond quickly by phone\"",
   "vip_manager_jisuk": "Manager Alex",
@@ -510,7 +462,6 @@
   "btn_next": "Next",
   "label_page_suffix": "Page",
   "search_placeholder_start": "What design are you looking for? (e.g., cat, ocean, sky)",
-
   "//_COMMENT_3": "=== Editor UI ===",
   "editor_size": "Size",
   "editor_char_spacing": "Spacing",
@@ -527,7 +478,6 @@
   "editor_text_edit": "Edit Text",
   "editor_lock_selection": "Lock Selection",
   "btn_mobile_template": "🎨 Templates",
-
   "//_COMMENT_4": "=== Design Wizard Buttons ===",
   "wiz_flyer": "Flyer",
   "wiz_poster": "Poster",
@@ -536,7 +486,6 @@
   "wiz_banner_h": "H-Banner",
   "wiz_banner_v": "V-Banner",
   "wiz_insta_panel": "Insta Panel",
-
   "//_COMMENT_5": "=== Guide Options ===",
   "guide_off": "🚫 Off",
   "guide_cross": "✚ Cross",
@@ -544,7 +493,6 @@
   "guide_4col": "4 Col",
   "guide_5col": "5 Col",
   "guide_grid": "▦ Grid",
-
   "//_COMMENT_6": "=== Template Modals ===",
   "tpl_load_title": "🎨 Load Template",
   "tpl_load_desc": "You have a design in progress.\nHow would you like to apply the selected template?",
@@ -560,7 +508,6 @@
   "ph_search_input": "Search...",
   "tpl_obj_label": "🧩 Elements",
   "tpl_search_product": "Search products for template",
-
   "//_COMMENT_7": "=== AI Drawer ===",
   "ai_title": "✨ AI Image Generator",
   "ai_prompt_label": "Description (Prompt)",
@@ -568,12 +515,10 @@
   "btn_generate": "Generate",
   "ai_waiting": "Awaiting result",
   "btn_add_to_canvas": "Add to Canvas",
-
   "//_COMMENT_8": "=== Order Complete Modal ===",
   "msg_order_complete_title": "🎉 Order Complete!",
   "btn_download_order_sheet": "📄 Download Work Order",
   "btn_download_quotation": "📑 Download Quote",
-
   "//_COMMENT_9": "=== Design Sell Modal ===",
   "sell_title": "💎 Share/Sell Design",
   "sell_benefit_1": "Earn <span class='highlight'>100P</span> instantly, <span class='highlight'>200P</span> per use",
@@ -586,13 +531,11 @@
   "ph_sell_title": "e.g., Clinic event, Summer poster",
   "btn_register": "Register",
   "modal_font_title": "Select Font",
-
   "//_COMMENT_10": "=== Choice Modal ===",
   "btn_purchase": "Purchase",
   "btn_purchase_sub": "Upload files via cart",
   "btn_detail_page": "View Details",
   "btn_story_page": "View Story",
-
   "//_COMMENT_11": "=== Template Creator Modal ===",
   "tpl_create_title": "Start Creating Template",
   "tpl_create_desc": "Register your design and earn revenue!",
@@ -604,17 +547,15 @@
   "ph_width": "Width",
   "ph_height": "Height",
   "btn_start_design": "🚀 Start Designing",
-
   "//_COMMENT_12": "=== Mobile Editor ===",
   "btn_delete_obj": "Delete",
   "btn_done_edit": "Done",
   "ph_text_input": "Enter text here...",
-
   "//_COMMENT_13": "=== JS Dynamic Alerts (main.js) ===",
   "msg_product_info_missing": "⚠️ Product info not found for this design.\nPlease re-select the product specifications.",
   "msg_cannot_load_form": "Cannot load application form.",
   "confirm_status_change": "Change status to '{status}'?",
-  "msg_min_withdraw": "Minimum withdrawal amount is $100.",
+  "msg_min_withdraw": "Minimum withdrawal amount is $20.",
   "msg_input_real_name": "Please enter the account holder name.",
   "msg_input_phone": "Please enter your phone number.",
   "msg_input_id_number": "Please enter your ID number correctly.",
@@ -636,7 +577,6 @@
   "confirm_go_editor": "Go to design editor?",
   "msg_submit_error": "Submission error: ",
   "msg_apply_error": "Application error: ",
-
   "//_COMMENT_PARTNER_MODAL": "=== Partner Application Modal ===",
   "partner_apply_title": "🤝 Partner (Franchise) Application",
   "partner_apply_desc": "Become a regional advertising/manufacturing partner and earn revenue.",
@@ -652,7 +592,6 @@
   "partner_btn_apply": "Apply",
   "partner_btn_cancel": "Withdraw Application",
   "partner_btn_close": "Close",
-
   "//_COMMENT_14": "=== Partner Console ===",
   "partner_console_title": "Partner Console",
   "partner_region_unset": "Region not set",
@@ -673,7 +612,6 @@
   "th_status_col": "Status",
   "my_order_tracking_title": "📦 Order Tracking",
   "msg_loading_text": "Loading...",
-
   "//_COMMENT_15": "=== Cart & Payment Page ===",
   "cart_upload_guide": "Upload your own design files here",
   "btn_bulk_upload": "Bulk File Upload",
@@ -704,7 +642,6 @@
   "rv_total_reviews": "reviews",
   "rv_avg_rating": "Average Rating",
   "rv_submitted": "Review submitted!",
-
   "//_COMMENT_PARTNER": "=== Partner Console i18n ===",
   "pt_no_pool_orders": "No available orders right now.",
   "pt_no_my_orders": "No orders in progress.",
@@ -725,7 +662,6 @@
   "pt_badge_admin": "Admin (Master)",
   "pt_badge_partner": "Partners",
   "pt_no_access": "🚫 Access denied.\n\nPlease wait for admin approval.",
-
   "pt_tab_products": "My Products",
   "pt_tab_register": "Register Product",
   "pt_tab_orders": "Order Management",
@@ -794,7 +730,6 @@
   "pt_guide_flow_4": "Mark as shipped",
   "pt_guide_flow_5": "Customer confirms receipt → 15 day wait",
   "pt_guide_flow_6": "Request withdrawal + attach tax invoice → Deposit",
-
   "//_COMMENT_PT_PAGE": "=== Partner Page (partner.html) ===",
   "pt_btn_home": "Back to Home",
   "pt_btn_logout": "Logout",
@@ -836,7 +771,6 @@
   "pt_guide_global_margin": "Approximately <strong>2x margin</strong> on international sales!",
   "pt_wd_bank_ph": "e.g. Chase Bank 123-456-789",
   "pt_wd_holder_ph": "John Smith",
-
   "mp_sales_title": "🎨 Designs On Sale (My Templates)",
   "mp_sales_total": "Estimated Earnings",
   "mp_sales_guide": "<i class='fa-solid fa-circle-info'></i> Earn <b>100P</b> for templates, <b>150P</b> for logos uploaded instantly.<br>Earn an additional <b>200P</b> each time another user purchases your design.",
@@ -869,7 +803,6 @@
   "mp_wd_cancel": "Cancel",
   "mp_order_history": "📦 Orders / Delivery",
   "mp_min_withdraw_notice": "Min. withdrawal: $20",
-  "msg_min_withdraw": "Minimum withdrawal amount is $20.",
   "msg_insufficient_deposit": "Insufficient balance.",
   "msg_enter_bank_info": "Please enter bank name, account number, and holder name.",
   "msg_enter_contact_id": "Please enter phone number and Tax ID.",
@@ -878,7 +811,6 @@
   "label_withdrawal": "Withdrawal",
   "label_admin_adjust": "Admin Adjust",
   "label_other": "Other",
-
   "contrib_upload_title": "📤 Upload",
   "contrib_upload_png": "PNG Object Upload",
   "contrib_upload_svg": "SVG Vector Upload",
@@ -891,8 +823,6 @@
   "contrib_file_tip": "* Transparent PNG files are recommended.",
   "contrib_btn_submit": "Upload & Earn Points",
   "contrib_btn_cancel": "Cancel",
-  "contrib_balance_label": "My Total Earnings",
-
   "//_COMMENT_MYPAGE_ORDERS": "=== Mypage Orders ===",
   "btn_reorder": "Reorder",
   "btn_cancel_order": "Cancel Order",
@@ -917,7 +847,6 @@
   "btn_view_reviews": "View Reviews",
   "prompt_enter_phone": "Enter your phone number to share with the partner:",
   "msg_phone_required": "Phone number is required to connect with the partner.",
-  "confirm_select_partner": "Share your number ({myPhone}) with the partner\nand confirm this selection?",
   "msg_matching_complete": "Matching complete!\nPartner contact info is now available.",
   "prompt_enter_rating": "Enter partner rating (1-5):",
   "prompt_enter_review": "Leave a review for other customers:",
@@ -931,7 +860,6 @@
   "msg_penalty_notice_title": "Account Penalty Notice",
   "msg_penalty_notice_body": "Your account has been placed under <b>penalty status</b>.<br>During this period, sales revenue is limited to <b>50P per registration</b>.",
   "label_reason": "Reason",
-
   "//_COMMENT_ORDER_STATUS": "=== Order Status ===",
   "status_접수대기": "Pending",
   "status_입금대기": "Awaiting Payment",
@@ -958,7 +886,6 @@
   "vip_form_mgr2": "Manager Alex",
   "vip_form_mgr3": "Manager James",
   "vip_form_mgr4": "HQ Contact",
-
   "//_SIDEBAR_MENU": "--- Sidebar Menu ---",
   "menu_template": "Templates",
   "menu_element": "Elements",
@@ -970,7 +897,6 @@
   "menu_size": "Size",
   "menu_align": "Align",
   "menu_page": "PAGE",
-
   "//_SIDEBAR_PANELS": "--- Sidebar Panels ---",
   "panel_shapes_colors": "Shapes & Colors",
   "panel_text": "Text",
@@ -980,7 +906,6 @@
   "panel_page": "Page Management",
   "panel_size": "📏 Size & Canvas",
   "panel_align": "Align & Layers",
-
   "label_background": "BACKGROUND",
   "label_recent_elements": "Recently Used Elements",
   "label_none_yet": "None yet",
@@ -993,21 +918,18 @@
   "label_align_artboard": "Align to Artboard",
   "label_layer_order": "Layer Order",
   "label_object_rotate": "Object Rotation",
-
   "btn_text_effect": "✨ Text Effect",
   "btn_png": "PNG Download",
   "btn_pdf": "PDF Download",
   "btn_add_page": "Add Page",
   "btn_del_page": "Delete Current Page",
   "btn_bg_lock": "Lock/Unlock BG",
-
   "align_left": "L",
   "align_center": "C",
   "align_right": "R",
   "align_top": "T",
   "align_middle": "M",
   "align_bottom": "B",
-
   "//_DSM_MODAL": "--- Design Start Modal ---",
   "dsm_btn_start": "Start Free Design",
   "dsm_title": "What do you want to create?",

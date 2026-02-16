@@ -208,7 +208,35 @@ export async function initOrderSystem() {
     }
 
     const btnOrderTop = document.getElementById("btnOrderTop");
-    if(btnOrderTop) btnOrderTop.onclick = addCanvasToCart;
+    if(btnOrderTop) btnOrderTop.onclick = function() {
+        // 현재 제품 정보 표시
+        let key = window.currentProductKey || canvas?.currentProductKey || localStorage.getItem('current_product_key') || 'A4';
+        let product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
+        const nameEl = document.getElementById('purchaseChoiceProductName');
+        if (nameEl && product) {
+            nameEl.textContent = product.name || key;
+        }
+        document.getElementById('purchaseChoiceModal').style.display = 'flex';
+    };
+
+    // 구매하기 모달: 현재 제품으로 장바구니 담기
+    window.purchaseCurrentProduct = function() {
+        document.getElementById('purchaseChoiceModal').style.display = 'none';
+        addCanvasToCart();
+    };
+
+    // addCanvasToCart를 외부에서도 접근 가능하게
+    window.addCanvasToCart = addCanvasToCart;
+
+    // 구매하기 모달: 새로운 재료에 인쇄하기
+    window.purchaseNewMaterial = function() {
+        document.getElementById('purchaseChoiceModal').style.display = 'none';
+        // 제품 검색 모달 열기
+        if (window.showCategorySelectionModal) {
+            window._purchaseNewMaterialMode = true;
+            window.showCategorySelectionModal();
+        }
+    };
 
     const btnViewCart = document.getElementById("btnViewCart");
     if (btnViewCart) {

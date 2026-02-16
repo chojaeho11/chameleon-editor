@@ -5,24 +5,24 @@
   "wall_option_desc": "カスタムデザインを始める",
   "search_placeholder": "今日はどんな商品をお探しですか？",
   "btn_search": "検索",
-
   "tab_all": "テンプレート",
   "tab_vector": "背景(ベクター)",
   "tab_graphic": "素材(PNG)",
   "tab_photo": "高画質写真",
   "tab_pattern": "パターン",
   "tab_logo": "ロゴ(PNG)",
-
   "btn_my_library": "📂 マイライブラリ",
   "btn_cart": "🛒",
   "btn_add_to_cart": "🛒",
+  "btn_purchase_top": "購入する",
+  "purchase_choice_title": "どのように購入しますか？",
+  "purchase_current_product": "現在の製品でカートに追加",
+  "purchase_new_material": "新しい素材に印刷",
   "btn_login": "ログイン",
   "btn_logout": "ログアウト",
-
   "wall_option_title": "パネルの高さ",
   "tool_size_change": "📏 サイズ変更(mm)",
   "btn_save_cost": "変更を適用",
-
   "label_canvas_tools": "CANVAS TOOLS",
   "btn_fit_screen": "画面に合わせる",
   "btn_lock": "ロック",
@@ -30,7 +30,6 @@
   "btn_ai_gen": "AI画像生成",
   "btn_save_design": "💾 デザイン保存",
   "btn_logo_share": "ロゴ共有広場",
-
   "label_basic_tools": "BASIC TOOLS",
   "btn_add_text": "+ テキスト",
   "btn_font": "🅰️ フォント",
@@ -38,7 +37,6 @@
   "label_stroke": "🖌️ 線の色",
   "label_shapes": "SHAPES",
   "label_upload": "UPLOAD",
-
   "label_edit_layer": "編集・レイヤー",
   "btn_undo": "元に戻す",
   "btn_redo": "やり直す",
@@ -47,22 +45,18 @@
   "btn_front": "最前面へ",
   "btn_back": "最背面へ",
   "btn_del": "削除",
-
   "label_align": "整列",
   "btn_center_all": "選択-中央揃え",
   "btn_full_bg": "選択-背景に設定",
-
   "label_cut_shape": "形状に沿って切り抜き",
   "msg_select_click": "画像を選択してクリックしてください",
   "btn_make_cutline": "カットライン作成",
   "btn_keyring_hole": "キーホルダー穴",
   "btn_stand_base": "スタンド台座",
-
   "label_ai_image_tools": "AI画像ツール",
   "btn_bg_remove": "(背景削除・切り抜き)",
   "btn_enhance": "明るく補正",
   "btn_text_outline": "文字の縁取り",
-
   "cart_title": "買い物かご",
   "label_payment_amt": "お支払い金額",
   "label_product_price": "商品代金",
@@ -71,7 +65,6 @@
   "label_total_price": "合計金額",
   "btn_do_checkout": "購入手続きへ",
   "btn_print_quote": "見積書発行",
-
   "label_material": "① 材質/厚み",
   "label_finish": "② 加工オプション",
   "label_addons": "③ 追加オプション",
@@ -87,7 +80,6 @@
   "label_user_design": "ユーザー作成デザイン",
   "msg_cart_empty": "買い物かごに商品が入っていません。",
   "msg_cart_added": "商品を買い物かごに追加しました。",
-
   "modal_login_title": "ログイン",
   "placeholder_email": "メールアドレス",
   "placeholder_pw": "パスワード",
@@ -95,7 +87,6 @@
   "msg_no_account": "アカウントをお持ちではありませんか？",
   "btn_signup": "新規会員登録",
   "btn_close": "閉じる",
-
   "modal_delivery_title": "📝 配送先情報の入力",
   "label_manager_name": "担当者名",
   "label_contact_phone": "電話番号",
@@ -108,7 +99,6 @@
   "doc_receipt": "領収書",
   "doc_order_sheet": "発注書",
   "doc_statement": "納品書",
-
   "modal_checkout_title": "ご注文内容の確認",
   "label_orderer_name": "注文者名",
   "label_shipping_addr": "配送先",
@@ -121,14 +111,12 @@
   "btn_bank_confirm": "✅ 振込完了 (確認要請)",
   "btn_download_quote": "見積書ダウンロード",
   "btn_download_work_sheet": "発注書ダウンロード",
-
   "choice_modal_title": "🎨 制作方法を選択してください",
   "choice_modal_desc": "商品を選んでエディタでデザインするか、完成データをお持ちの場合は入稿してください。",
   "btn_design_direct": "エディタでデザイン",
   "btn_design_direct_sub": "テンプレートを使って簡単作成",
   "btn_order_file": "データ入稿注文",
   "btn_order_file_sub": "PDF/AIファイルをアップロード",
-
   "modal_size_select_title": "Q. 何を作成しますか？",
   "modal_calendar_title": "配送希望日 [納期:約3日]",
   "btn_rotate": "回転",
@@ -138,11 +126,9 @@
   "label_opacity": "不透明度",
   "modal_size_select_sub": "(サイズ選択)",
   "modal_size_select_desc": "ご希望の規格を選択するとデザインが始まります。",
-
   "msg_loading": "読み込み中...",
   "btn_guide_on": "ガイド",
   "help_text_shortcuts": "Space: 移動 / ホイール: 拡大縮小",
-
   "review_section_title": "✨ お客様からの生の声",
   "review_section_desc": "カメレオンで制作された素晴らしい実績をご紹介します。",
   "rev_1_text": "「イベントの度に利用しています。代理店にとってこれ以上のパートナーはいないですね。ハニカムボードは本当に安くて納期も早く、品質も最高です。」",
@@ -163,7 +149,6 @@
   "rev_8_user": "アドポップサイン企画",
   "rev_9_text": "「一般的なバナーとは高級感が違います。独特な風合いがあり、廃棄も楽なので非常に助かっています。」",
   "rev_9_user": "クリエイティブディレクター 斎藤",
-
   "footer_company_label": "社名 :",
   "footer_company_value": "株式会社カメレオンプリンティング ジャパン",
   "footer_ceo_label": "代表者 :",
@@ -181,11 +166,9 @@
   "footer_cs_time": "平日 09:00 ~ 18:00",
   "footer_cs_lunch": "昼休み 12:00 ~ 13:00",
   "footer_cs_closed": "* 土·日·祝日は休業日となります",
-
   "msg_deposit_complete": "入金確認の申請が完了しました。\n[閉じる]を押すとリセットされます。",
   "msg_confirm_bank_transfer": "銀行振込で注文を進めますか？",
   "btn_confirm": "確認",
-
   "pdf_quote_title": "御 見 積 書",
   "pdf_order_sheet_title": "発 注 書 (Work Order)",
   "pdf_date": "発行日",
@@ -219,49 +202,39 @@
   "pdf_label_subtotal": "税抜金額",
   "pdf_label_tax": "消費税(10%)",
   "pdf_footer_msg": "上記の通り、相違なく領収いたしました。",
-
   "msg_logout_confirm": "ログアウトしますか？",
   "msg_login_required": "ログインが必要なサービスです。",
   "msg_login_required_design": "デザインを始めるにはログインが必要です。",
   "msg_template_apply_confirm": "現在のキャンバスにテンプレートを適用しますか？\n(既存のデザインの上に追加されます)",
   "msg_large_product_warning": "📢エディターは簡単で使いやすいです。\n\n素敵なデザインを作ってみましょう。\nテンプレートをクリックして始めてください。",
-
   "msg_processing_file": "ファイルを処理しています...",
   "msg_unsupported_file": "対応していないファイル形式です。",
   "msg_pdf_loaded": "✅ PDFファイルを読み込みました。(原本はサーバーに保存済み)",
-
   "msg_select_image_for_outline": "外郭線を作成する画像を選択してください。",
   "msg_generating": "生成中...",
   "msg_generating_docs": "ドキュメント生成中...",
-
   "prompt_partner_name": "加盟店(会社)の商号を入力してください。",
   "prompt_partner_phone": "担当者の連絡先を入力してください。",
   "prompt_partner_region": "希望地域を入力してください (例: 東京 渋谷区)",
   "confirm_partner_apply": "[申請情報の確認]\n商号: {name}\n連絡先: {phone}\n地域: {region}\n\nこの内容で提出しますか？",
   "msg_partner_apply_success": "🎉 加盟店申請が正常に受け付けられました。\n管理者の承認後、パートナーズ機能をご利用いただけます。",
-
   "confirm_order_accept": "この注文を受け付けますか？",
   "msg_order_already_taken": "すでに他のパートナーが受け付けた注文です。",
   "msg_order_accept_success": "受け付けました！ [私の進行注文]タブで確認してください。",
-
   "alert_vip_info_needed": "ご担当者様の名前と連絡先を入力してください。",
   "alert_vip_file_needed": "送信するファイルを少なくとも1つ以上選択してください。",
   "msg_uploading_files": "ファイルをアップロード中...",
   "msg_vip_order_success": "🎉 受付が完了しました。\n担当マネージャー({manager})が確認後、ご連絡いたします。",
-
   "alert_input_shipping": "配送先情報をすべて入力してください。",
   "msg_creating_order": "注文書を作成しています...",
   "msg_order_received": "注文が正常に受け付けられました。\n会員ランク割引({rate}%)が適用された金額です。",
   "btn_submit_complete": "受付完了",
-
   "confirm_bank_payment": "銀行振込で注文しますか？\n入金確認後に制作が進行します。",
   "msg_order_complete_bank": "注文が完了しました。\n案内された口座へご入金をお願いいたします。",
-
   "alert_deposit_shortage": "デポジット残高が不足しています。\n(不足金額: {amount})",
   "confirm_deposit_pay": "デポジット {amount}を使用して決済しますか？",
   "msg_processing_payment": "決済処理中...",
   "msg_payment_complete": "決済が完了しました！",
-
   "home_quick_badge": "担当マネージャーに事業者情報を送ると10%割引＋東京都内送料無料をサポートします。",
   "home_quick_title": "事業者様への特別特典、東京都内即日配送",
   "home_vip_title": "大口注文専用 VIPラウンジ",
@@ -271,7 +244,6 @@
   "home_hotdeal_desc": "今見逃すと後悔する超特価商品。お友達へのプレゼントに。引越し祝いのホットディール商品は最大10個まで注文可能。",
   "home_biz_title": "事業者向け 大口割引",
   "home_biz_desc": "事業者様限定の特別価格！最小ロット10〜100個、再販業者様向けに特別割引で提供します。",
-
   "menu_blog": "公式<br>ブログ",
   "menu_review": "お客様<br>制作事例",
   "menu_promo": "地域広告<br>広報",
@@ -279,7 +251,6 @@
   "menu_job": "求人情報",
   "menu_manual": "製品<br>説明書",
   "menu_orders": "注文配送照会",
-
   "tier_main_title": "会員ランク別 <span>割引特典</span> のご案内",
   "tier_gold_name": "ゴールド (GOLD)",
   "tier_gold_discount": "3% 割引",
@@ -296,29 +267,23 @@
   "tier_partner_cond_label": "加入条件",
   "tier_partner_cond_fee": "パートナー申請者",
   "tier_partner_cond_note": "(事業者登録証必須)",
-
   "partner_banner_title": "業者向け低手数料マーケットプレイス<br><span style='color: #818cf8;'>高マージンの海外販売、カメレオンにお任せ！</span>",
   "partner_banner_desc": "カメレオンに登録するだけ — 配送も書類もすべてお任せ！<br>Tシャツ印刷・グッズ制作・販促品・その他の工業製品やギフトを卸売広告市場に登録しましょう。<br><b style='color:#818cf8;'>業界最安6.5%の手数料</b>＋韓国No.1広告印刷ネットワークの全顧客にアクセス、<br>さらに<b style='color:#818cf8;'>海外市場で2倍の価格で販売</b>が可能です。今すぐトップポジションを確保！",
   "btn_partner_console": "パートナー管理画面へ",
   "btn_partner_apply": "加盟店申請・お問い合わせ",
-
   "contrib_title": "クリエイター貢献システム",
-  "contrib_balance_label": "累積収益金",
+  "contrib_balance_label": "累計収益",
   "contrib_desc": "自作のデザインソースを共有して現金を獲得しましょう。<br>低品質な画像を繰り返しアップロードするとランクが下がります。ランクアップで報酬2倍・4倍、ランクダウンで半額支給となります。<br><span style='color:#ef4444; font-weight:bold;'>カテゴリ確認！</span> オブジェクト・ロゴなどカテゴリを合わせない場合や、キーワードが3つ以下の場合、登録権限が削除されます。",
   "contrib_btn_png": "PNG オブジェクト",
   "contrib_btn_svg": "SVG オブジェクト",
   "contrib_btn_logo": "ロゴ登録",
   "contrib_btn_template": "テンプレート作成",
-
   "footer_menu_company": "会社概要",
   "footer_menu_notice": "お知らせ",
   "footer_menu_terms": "利用規約",
   "footer_menu_privacy": "個人情報処理方針",
-
   "//_COMMENT": "=== JS Dynamic Strings ===",
-
   "btn_guide_off": "ガイドを隠す",
-
   "msg_no_fonts": "登録されたフォントがありません。<br>管理ページでフォントを登録してください。",
   "msg_select_text_font": "フォントを変更するテキストを選択してください。",
   "msg_select_obj_outline": "外枠を適用するオブジェクトを選択してください。",
@@ -328,13 +293,11 @@
   "msg_uploading": "アップロード中...",
   "tag_user_upload": "ユーザーアップロード",
   "suffix_logo": " ロゴ",
-
   "confirm_unlock_all": "ロックされている{count}個のオブジェクトをすべて解除しますか？",
   "msg_select_obj_lock": "ロックするオブジェクトを選択してください。",
   "btn_lock_selection": "選択をロック",
   "btn_unlock_all": "すべてロック解除",
   "btn_lock_wizard": "ロックウィザード",
-
   "prod_wall_1": "1スパン仮設壁",
   "prod_wall_2": "2スパン仮設壁",
   "prod_wall_3": "3スパン仮設壁",
@@ -345,11 +308,9 @@
   "prod_photo_zone": "文字フォトゾーン",
   "prod_fabric_wide": "広幅ファブリック",
   "prod_paper_stand": "紙製スタンド",
-
   "msg_invalid_number": "有効な数値を入力してください。",
   "msg_max_size_exceeded": "最大サイズ({w}x{h}mm)を超えることはできません。",
   "msg_size_rotated": "キャンバスに合わせてサイズが回転されました。",
-
   "msg_data_loading": "データを読み込んでいます...",
   "msg_db_disconnected": "DB未接続",
   "msg_no_data": "表示するデータがありません。",
@@ -357,11 +318,9 @@
   "msg_load_failed": "データの読み込みに失敗しました。",
   "btn_retry": "再試行",
   "btn_apply_now": "すぐに適用",
-
   "btn_prev_page": "前へ",
   "btn_next_page": "次へ",
   "label_page": "ページ",
-
   "msg_select_template": "テンプレートを選択してください。",
   "msg_click_select": "クリックしてファイルを選択",
   "msg_drag_drop": "またはファイルをここにドラッグ",
@@ -376,7 +335,6 @@
   "msg_bg_remove_server": "背景削除機能はサーバー接続が必要です。",
   "msg_select_image": "画像を選択してください。",
   "msg_pdf_error": "PDFファイルは「注文」段階でアップロードしてください。エディタでは画像のみ対応しています。",
-
   "//_COMMENT_2": "=== 追加文字列 ===",
   "confirm_apply_bg": "この背景デザインを適用しますか？\n（現在の背景は置き換えられます）",
   "confirm_bg_remove": "背景を削除しますか？",
@@ -385,7 +343,6 @@
   "msg_gen_fail": "生成に失敗しました。",
   "msg_min_page_limit": "少なくとも1つのページが必要です。",
   "btn_my_page": "📂 マイページ",
-
   "msg_generating_quote": "見積書を作成中...",
   "err_quote_gen_failed": "見積書の作成に失敗しました。",
   "err_quote_error": "見積書エラー: ",
@@ -408,7 +365,6 @@
   "msg_sending": "送信中...",
   "msg_withdraw_success": "出金申請が完了しました。\n管理者確認後(5日以内)に入金されます。",
   "msg_clipboard_empty": "クリップボードに内容がありません。",
-
   "mp_menu_dashboard": "ダッシュボード",
   "mp_menu_designs": "マイデザイン",
   "mp_menu_sales": "販売中のデザイン",
@@ -427,11 +383,9 @@
   "default_customer": "お客様",
   "msg_canvas_not_ready": "キャンバスの準備ができていません。",
   "err_canvas_not_ready": "キャンバスの準備ができていません。",
-
   "msg_no_locked_bg": "ロックされた背景がありません。",
   "msg_bg_unlocked": "背景のロックが解除されました。",
   "msg_bg_locked": "背景をロックしました。",
-
   "ctx_undo": "元に戻す",
   "ctx_redo": "やり直し",
   "ctx_copy": "コピー",
@@ -442,7 +396,6 @@
   "ctx_lock": "ロック",
   "ctx_unlock": "ロック解除",
   "ctx_unlock_all": "すべてのロックを解除",
-
   "btn_google_login": "Googleでログイン",
   "placeholder_pw_confirm": "パスワード再確認",
   "label_select_manager": "担当マネージャー選択 (任意)",
@@ -460,7 +413,7 @@
   "mp_recent_logs": "📢 最近の収益履歴",
   "mp_saved_designs": "📂 保存済みのデザイン",
   "msg_wait_moment": "少々お待ちください。",
-  "confirm_select_partner": "このパートナーを選択しますか？\n連絡先が公開され、他の入札は終了します。",
+  "confirm_select_partner": "あなたの番号({myPhone})をパートナーに共有し、\nこの選択を確定しますか？",
   "msg_review_saved": "レビューが保存されました！",
   "msg_no_partner_auth": "パートナー権限がありません。",
   "msg_post_deleted": "削除された投稿です。",
@@ -485,7 +438,6 @@
   "alert_input_depositor": "振込人名を入力してください。",
   "msg_outline_failed": "この画像のアウトライン生成に失敗しました。",
   "msg_image_load_failed": "画像の読み込みに失敗しました。",
-
   "vip_fast_inquiry": "⚡ スピーディーな相談",
   "vip_manager_intro": "「専任マネージャーがお電話で迅速に対応いたします」",
   "vip_manager_jisuk": "佐藤 マネージャー",
@@ -510,7 +462,6 @@
   "btn_next": "次へ",
   "label_page_suffix": "ページ",
   "search_placeholder_start": "どのようなデザインをお探しですか？ (例: 猫、海、空)",
-
   "//_COMMENT_3": "=== エディターUI ===",
   "editor_size": "サイズ",
   "editor_char_spacing": "字間",
@@ -527,7 +478,6 @@
   "editor_text_edit": "テキスト編集",
   "editor_lock_selection": "選択ロック",
   "btn_mobile_template": "🎨 テンプレート",
-
   "//_COMMENT_4": "=== デザインウィザードボタン ===",
   "wiz_flyer": "チラシ",
   "wiz_poster": "ポスター",
@@ -536,7 +486,6 @@
   "wiz_banner_h": "横断幕",
   "wiz_banner_v": "縦バナー",
   "wiz_insta_panel": "インスタパネル",
-
   "//_COMMENT_5": "=== ガイドオプション ===",
   "guide_off": "🚫 オフ",
   "guide_cross": "✚ 十字",
@@ -544,7 +493,6 @@
   "guide_4col": "4分割",
   "guide_5col": "5分割",
   "guide_grid": "▦ グリッド",
-
   "//_COMMENT_6": "=== テンプレートモーダル ===",
   "tpl_load_title": "🎨 テンプレート読み込み",
   "tpl_load_desc": "現在作業中のデザインがあります。\n選択したテンプレートをどのように適用しますか？",
@@ -560,7 +508,6 @@
   "ph_search_input": "検索ワード入力...",
   "tpl_obj_label": "🧩 素材",
   "tpl_search_product": "テンプレートを適用する商品を検索",
-
   "//_COMMENT_7": "=== AIドロワー ===",
   "ai_title": "✨ AI画像生成",
   "ai_prompt_label": "説明 (プロンプト)",
@@ -568,12 +515,10 @@
   "btn_generate": "生成する",
   "ai_waiting": "結果待機中",
   "btn_add_to_canvas": "キャンバスに追加",
-
   "//_COMMENT_8": "=== 注文完了モーダル ===",
   "msg_order_complete_title": "🎉 注文完了！",
   "btn_download_order_sheet": "📄 発注書ダウンロード",
   "btn_download_quotation": "📑 見積書ダウンロード",
-
   "//_COMMENT_9": "=== デザイン販売モーダル ===",
   "sell_title": "💎 デザイン共有/販売登録",
   "sell_benefit_1": "登録即座に<span class='highlight'>100ポイント</span>、使用されるたびに<span class='highlight'>200ポイント</span>獲得",
@@ -586,13 +531,11 @@
   "ph_sell_title": "例: 皮膚科イベント、夏のポスター",
   "btn_register": "登録する",
   "modal_font_title": "フォント選択",
-
   "//_COMMENT_10": "=== 選択モーダル ===",
   "btn_purchase": "購入する",
   "btn_purchase_sub": "ファイルアップロードはカートから",
   "btn_detail_page": "詳細ページを見る",
   "btn_story_page": "ストーリーを見る",
-
   "//_COMMENT_11": "=== テンプレート作成モーダル ===",
   "tpl_create_title": "テンプレート作成開始",
   "tpl_create_desc": "オリジナルデザインを登録して収益を得ましょう！",
@@ -604,17 +547,15 @@
   "ph_width": "横",
   "ph_height": "縦",
   "btn_start_design": "🚀 デザインを始める",
-
   "//_COMMENT_12": "=== モバイルエディター ===",
   "btn_delete_obj": "削除",
   "btn_done_edit": "完了",
   "ph_text_input": "ここに内容を入力してください...",
-
   "//_COMMENT_13": "=== JS動的アラート (main.js) ===",
   "msg_product_info_missing": "⚠️ このデザインの商品情報が確認できません。\n製作する商品規格を再度選択してください。",
   "msg_cannot_load_form": "申請画面を読み込めません。",
   "confirm_status_change": "ステータスを「{status}」に変更しますか？",
-  "msg_min_withdraw": "最低10,000円から出金可能です。",
+  "msg_min_withdraw": "最低出金額は¥200です。",
   "msg_input_real_name": "口座名義(実名)を入力してください。",
   "msg_input_phone": "連絡先を入力してください。",
   "msg_input_id_number": "身分証番号を正確に入力してください。",
@@ -636,7 +577,6 @@
   "confirm_go_editor": "デザインエディタに移動しますか？",
   "msg_submit_error": "受付中にエラーが発生しました: ",
   "msg_apply_error": "申請中にエラーが発生しました: ",
-
   "//_COMMENT_PARTNER_MODAL": "=== パートナー申請モーダル ===",
   "partner_apply_title": "🤝 パートナー（加盟店）申請",
   "partner_apply_desc": "地域の広告・製造パートナーになって収益を得ましょう。",
@@ -652,7 +592,6 @@
   "partner_btn_apply": "申請する",
   "partner_btn_cancel": "申請を撤回",
   "partner_btn_close": "閉じる",
-
   "//_COMMENT_14": "=== パートナーコンソール ===",
   "partner_console_title": "パートナーズコンソール",
   "partner_region_unset": "地域未設定",
@@ -673,7 +612,6 @@
   "th_status_col": "状態",
   "my_order_tracking_title": "📦 注文配送照会",
   "msg_loading_text": "読み込み中...",
-
   "//_COMMENT_15": "=== カート・決済ページ ===",
   "cart_upload_guide": "ご自身でデザインしたファイルはこちらに一括アップロードしてください",
   "btn_bulk_upload": "ファイル一括アップロード",
@@ -704,7 +642,6 @@
   "rv_total_reviews": "件のレビュー",
   "rv_avg_rating": "平均評価",
   "rv_submitted": "レビューが投稿されました！",
-
   "//_COMMENT_PARTNER": "=== パートナーコンソール i18n ===",
   "pt_no_pool_orders": "現在受注可能な注文はありません。",
   "pt_no_my_orders": "進行中の注文はありません。",
@@ -725,7 +662,6 @@
   "pt_badge_admin": "管理者 (Master)",
   "pt_badge_partner": "パートナーズ",
   "pt_no_access": "🚫 アクセス権限がありません。\n\n管理者承認後にご利用ください。",
-
   "pt_tab_products": "マイ商品",
   "pt_tab_register": "商品登録",
   "pt_tab_orders": "注文管理",
@@ -794,7 +730,6 @@
   "pt_guide_flow_4": "配送開始処理",
   "pt_guide_flow_5": "お客様受取確認 → 15日待機",
   "pt_guide_flow_6": "出金申請 + 税金計算書添付 → 入金",
-
   "//_COMMENT_PT_PAGE": "=== パートナーページ (partner.html) ===",
   "pt_btn_home": "ホームに戻る",
   "pt_btn_logout": "ログアウト",
@@ -836,7 +771,6 @@
   "pt_guide_global_margin": "海外販売で約<strong>2倍のマージン</strong>で収益最大化！",
   "pt_wd_bank_ph": "例：三菱UFJ銀行 123-456-789",
   "pt_wd_holder_ph": "口座名義人名",
-
   "mp_sales_title": "🎨 販売中のデザイン（マイテンプレート）",
   "mp_sales_total": "予想収益合計",
   "mp_sales_guide": "<i class='fa-solid fa-circle-info'></i> テンプレート登録で<b>100P</b>、ロゴ登録で<b>150P</b>が即時付与されます。<br>他のユーザーがデザインを購入すると、1件あたり<b>200P</b>が追加付与されます。",
@@ -869,7 +803,6 @@
   "mp_wd_cancel": "キャンセル",
   "mp_order_history": "📦 注文 / 配送照会",
   "mp_min_withdraw_notice": "最低出金額: ¥200",
-  "msg_min_withdraw": "最低出金額は¥200です。",
   "msg_insufficient_deposit": "預り金の残高が不足しています。",
   "msg_enter_bank_info": "銀行名、口座番号、口座名義を入力してください。",
   "msg_enter_contact_id": "連絡先とマイナンバーを入力してください。",
@@ -878,7 +811,6 @@
   "label_withdrawal": "出金",
   "label_admin_adjust": "管理者調整",
   "label_other": "その他",
-
   "contrib_upload_title": "📤 アップロード",
   "contrib_upload_png": "PNG オブジェクト アップロード",
   "contrib_upload_svg": "SVG ベクター アップロード",
@@ -891,8 +823,6 @@
   "contrib_file_tip": "* 背景が透明なPNGファイルを推奨します。",
   "contrib_btn_submit": "アップロード＆ポイント獲得",
   "contrib_btn_cancel": "キャンセル",
-  "contrib_balance_label": "累計収益",
-
   "//_COMMENT_MYPAGE_ORDERS": "=== マイページ注文 ===",
   "btn_reorder": "再注文",
   "btn_cancel_order": "注文取消",
@@ -917,7 +847,6 @@
   "btn_view_reviews": "レビューを見る",
   "prompt_enter_phone": "パートナーに共有する電話番号を入力してください:",
   "msg_phone_required": "パートナーとの連絡には電話番号が必要です。",
-  "confirm_select_partner": "あなたの番号({myPhone})をパートナーに共有し、\nこの選択を確定しますか？",
   "msg_matching_complete": "マッチング完了！\nパートナーの連絡先が確認できます。",
   "prompt_enter_rating": "パートナーの評価を入力してください (1-5):",
   "prompt_enter_review": "他のお客様へのレビューを書いてください:",
@@ -931,7 +860,6 @@
   "msg_penalty_notice_title": "アカウントペナルティのお知らせ",
   "msg_penalty_notice_body": "アカウントが<b>ペナルティ状態</b>になっています。<br>この期間中、販売収益は<b>50P/件</b>に制限されます。",
   "label_reason": "理由",
-
   "//_COMMENT_ORDER_STATUS": "=== 注文ステータス ===",
   "status_접수대기": "受付待ち",
   "status_입금대기": "入金待ち",
@@ -958,7 +886,6 @@
   "vip_form_mgr2": "知淑マネージャー",
   "vip_form_mgr3": "聖姫マネージャー",
   "vip_form_mgr4": "本社担当",
-
   "//_SIDEBAR_MENU": "--- サイドバーメニュー ---",
   "menu_template": "テンプレート",
   "menu_element": "要素",
@@ -970,7 +897,6 @@
   "menu_size": "サイズ",
   "menu_align": "整列",
   "menu_page": "PAGE",
-
   "//_SIDEBAR_PANELS": "--- サイドバーパネル ---",
   "panel_shapes_colors": "図形 & 色",
   "panel_text": "テキスト",
@@ -980,7 +906,6 @@
   "panel_page": "ページ管理",
   "panel_size": "📏 サイズ & キャンバス",
   "panel_align": "整列 & レイヤー",
-
   "label_background": "背景",
   "label_recent_elements": "最近使用した要素",
   "label_none_yet": "まだありません",
@@ -993,21 +918,18 @@
   "label_align_artboard": "アートボード基準整列",
   "label_layer_order": "レイヤー順序",
   "label_object_rotate": "オブジェクト回転",
-
   "btn_text_effect": "✨ テキスト効果",
   "btn_png": "PNG ダウンロード",
   "btn_pdf": "PDF ダウンロード",
   "btn_add_page": "ページ追加",
   "btn_del_page": "現在のページを削除",
   "btn_bg_lock": "背景 ロック/解除",
-
   "align_left": "左",
   "align_center": "中央",
   "align_right": "右",
   "align_top": "上",
   "align_middle": "中間",
   "align_bottom": "下",
-
   "//_DSM_MODAL": "--- デザイン開始モーダル ---",
   "dsm_btn_start": "無料デザインを始める",
   "dsm_title": "何を作りますか？",
