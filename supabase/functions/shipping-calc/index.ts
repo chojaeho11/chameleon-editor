@@ -105,18 +105,18 @@ const FACTORY_RATES: Record<string, Record<string, Record<string, number | null>
         acrylic:   { local_truck: 30000, local_courier: 3000, domestic_truck: 200000, domestic_courier: 3000, jeju_truck: 500000 },
     },
     tokyo: {
-        general:   { local_truck: 50000, local_courier: 5000, domestic_air: 80000, domestic_truck: 125000, domestic_courier: 7500 },
+        general:   { local_truck: 50000, local_courier: 4000, domestic_air: 80000, domestic_truck: 125000, domestic_courier: 4000 },
         honeycomb: { local_truck: 50000, local_courier: null, domestic_air: 1500000, domestic_truck: 150000, domestic_courier: null },
-        fabric:    { local_truck: 50000, local_courier: 5000, domestic_air: 50000, domestic_truck: 125000, domestic_courier: 7500 },
-        acrylic:   { local_truck: 50000, local_courier: 5000, domestic_air: 100000, domestic_truck: 125000, domestic_courier: 7500 },
+        fabric:    { local_truck: 50000, local_courier: 4000, domestic_air: 50000, domestic_truck: 125000, domestic_courier: 4000 },
+        acrylic:   { local_truck: 50000, local_courier: 4000, domestic_air: 100000, domestic_truck: 125000, domestic_courier: 4000 },
     },
 };
 // ── 해외 배송 요금표 (항공~$600, 해상~$280) ──
 const INTL_RATES: Record<string, Record<string, number | null>> = {
-    general:   { air: 50000, sea: 32500, courier: 50000 },
+    general:   { air: 50000, sea: 32500, courier: null },
     honeycomb: { air: 300000, sea: 165000, courier: null },
-    fabric:    { air: 50000, sea: 32500, courier: 50000 },
-    acrylic:   { air: 50000, sea: 32500, courier: 50000 },
+    fabric:    { air: 50000, sea: 32500, courier: null },
+    acrylic:   { air: 50000, sea: 32500, courier: null },
 };
 const ETA: Record<string, string> = {
     local_truck: "1", local_courier: "1-2",
