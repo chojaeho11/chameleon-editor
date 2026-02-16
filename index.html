@@ -2292,7 +2292,7 @@ window.filterFxCards = function(cat, btn) {
 <div id="categoryDetailModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 800px; max-width: 95%; position: relative;">
         
-        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null; window._purchaseNewMaterialMode=null;"
+        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null;"
                 style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; z-index: 10;">
             <i class="fa-solid fa-xmark"></i>
         </button>
@@ -2311,7 +2311,7 @@ window.filterFxCards = function(cat, btn) {
         
         <div id="catProductGrid" class="quick-menu-track" style="grid-template-columns: repeat(4, 1fr);"></div>
         
-        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null; window._purchaseNewMaterialMode=null;" class="btn-round" style="margin-top:20px;">닫기</button>
+        <button onclick="document.getElementById('categoryDetailModal').style.display='none'; window._pendingDesignLoadId=null;" class="btn-round" style="margin-top:20px;">닫기</button>
     </div>
 </div>
 <div id="logoUploadModal" class="modal-bg" style="z-index: 20000;">
@@ -4711,48 +4711,6 @@ if (w >= 20 && h >= 20) {
 
         // 6. 실행 (에디터 or 장바구니)
 
-        // ★ [추가] 에디터에서 "새로운 재료에 인쇄" 모드일 때 특별 처리
-        if (window._purchaseNewMaterialMode && mode === 'editor') {
-            window._purchaseNewMaterialMode = false;
-
-            // 현재 캔버스에서 디자인 객체(보드 제외)를 저장
-            const savedObjects = [];
-            if (typeof canvas !== 'undefined' && canvas) {
-                const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone']);
-                const nonBoardObjs = (json.objects || []).filter(o => !o.isBoard && !o.isMockup && !o.excludeFromExport);
-                window._savedDesignObjects = nonBoardObjs;
-                console.log('[새 재료] 디자인 객체 저장:', nonBoardObjs.length + '개');
-            }
-
-            // 정상적으로 새 에디터 시작 (새 제품 + 새 사이즈 + 새 가격)
-            document.getElementById('choiceModal').style.display = 'none';
-            window.pendingSelectedAddons = selectedAddonCodes;
-            window.pendingSelectedAddonQtys = selectedAddonQtys;
-            window.startEditorDirect(
-                targetCode,
-                window.isCustomModeCurrent ? finalW : null,
-                window.isCustomModeCurrent ? finalH : null,
-                window.isCustomModeCurrent ? finalPricePerItem : null
-            );
-
-            // 에디터 로드 후 저장된 디자인 객체 복원
-            setTimeout(() => {
-                if (window._savedDesignObjects && window._savedDesignObjects.length > 0 && typeof canvas !== 'undefined' && canvas) {
-                    fabric.util.enlivenObjects(window._savedDesignObjects, function(objs) {
-                        objs.forEach(function(obj) { canvas.add(obj); });
-                        canvas.requestRenderAll();
-                        console.log('[새 재료] 디자인 객체 복원 완료:', objs.length + '개');
-                    });
-                    window._savedDesignObjects = null;
-                }
-            }, 1500);
-            return;
-        }
-        // 새 재료 + cart 모드는 정상 장바구니 흐름으로 진행
-        if (window._purchaseNewMaterialMode) {
-            window._purchaseNewMaterialMode = false;
-        }
-
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
             window.pendingSelectedAddons = selectedAddonCodes;
@@ -6491,16 +6449,6 @@ window.filterModalItems = function(keyword) {
                 </div>
             </button>
 
-            <!-- 새로운 재료에 인쇄 -->
-            <button onclick="window.purchaseNewMaterial()" style="display:flex; align-items:center; gap:14px; padding:16px 20px; border-radius:14px; border:2px solid #e2e8f0; background:#fff; color:#1e293b; cursor:pointer; text-align:left; transition:all 0.2s;"
-                onmouseenter="this.style.borderColor='#a855f7'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(168,85,247,0.15)'"
-                onmouseleave="this.style.borderColor='#e2e8f0'; this.style.transform='none'; this.style.boxShadow='none'">
-                <i class="fa-solid fa-print" style="font-size:24px; color:#a855f7; flex-shrink:0;"></i>
-                <div>
-                    <div style="font-size:15px; font-weight:700;" data-i18n="purchase_new_material">새로운 재료에 인쇄하기</div>
-                    <div style="font-size:11px; color:#94a3b8; margin-top:2px;" data-i18n="purchase_new_material_desc">다른 제품을 검색해서 선택</div>
-                </div>
-            </button>
         </div>
 
         <!-- 장바구니 바로가기 -->

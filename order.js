@@ -237,16 +237,6 @@ export async function initOrderSystem() {
     // addCanvasToCart를 외부에서도 접근 가능하게
     window.addCanvasToCart = addCanvasToCart;
 
-    // 구매하기 모달: 새로운 재료에 인쇄하기
-    window.purchaseNewMaterial = function() {
-        document.getElementById('purchaseChoiceModal').style.display = 'none';
-        // 제품 검색 모달 열기 (디자인 객체는 confirmChoice에서 저장/복원)
-        if (window.showCategorySelectionModal) {
-            window._purchaseNewMaterialMode = true;
-            window.showCategorySelectionModal();
-        }
-    };
-
     const btnViewCart = document.getElementById("btnViewCart");
     if (btnViewCart) {
         btnViewCart.onclick = function() {
