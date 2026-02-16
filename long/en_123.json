@@ -81,6 +81,7 @@
   "msg_cart_empty": "Your cart is empty.",
   "msg_shipping_required": "A shipping option is required.",
   "msg_load_design_confirm": "Current design will be lost. Load saved design?",
+  "btn_re_edit": "Re-edit",
   "msg_cart_added": "Item added to cart.",
   "modal_login_title": "Login",
   "placeholder_email": "Email Address",

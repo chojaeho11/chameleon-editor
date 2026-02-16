@@ -81,6 +81,7 @@
   "msg_cart_empty": "Ihr Warenkorb ist leer.",
   "msg_shipping_required": "Eine Versandoption ist erforderlich.",
   "msg_load_design_confirm": "Das aktuelle Design geht verloren. Gespeichertes Design laden?",
+  "btn_re_edit": "Erneut bearbeiten",
   "msg_cart_added": "Artikel zum Warenkorb hinzugefügt.",
   "modal_login_title": "Anmelden",
   "placeholder_email": "E-Mail-Adresse",

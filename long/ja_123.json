@@ -81,6 +81,7 @@
   "msg_cart_empty": "買い物かごに商品が入っていません。",
   "msg_shipping_required": "配送オプションは必須です。",
   "msg_load_design_confirm": "既存のデザインは消えます。以前のデザインを読み込みますか？",
+  "btn_re_edit": "再編集する",
   "msg_cart_added": "商品を買い物かごに追加しました。",
   "modal_login_title": "ログイン",
   "placeholder_email": "メールアドレス",

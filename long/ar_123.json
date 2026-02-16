@@ -81,6 +81,7 @@
   "msg_cart_empty": "سلة التسوق فارغة.",
   "msg_shipping_required": "يجب اختيار خيار الشحن.",
   "msg_load_design_confirm": "سيتم حذف التصميم الحالي. هل تريد تحميل التصميم السابق؟",
+  "btn_re_edit": "إعادة التعديل",
   "msg_cart_added": "تمت إضافة المنتج إلى السلة.",
   "modal_login_title": "تسجيل الدخول",
   "placeholder_email": "البريد الإلكتروني",
