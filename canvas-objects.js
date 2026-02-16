@@ -505,14 +505,23 @@ function renderFontList() {
         div.onmouseover = () => div.style.background = "#f8fafc";
         div.onmouseout = () => div.style.background = "white";
 
-        // 클릭 시 텍스트에 폰트 적용
+        // 클릭 시 텍스트에 폰트 적용 (로딩 완료 후 렌더)
         div.onclick = async () => {
             const active = canvas.getActiveObject();
             if (!active) return alert("Please select a text object to change the font.");
 
+            // Google Font 바이너리 로딩 대기 (최대 5초)
+            try {
+                await document.fonts.load(`16px "${font.font_family}"`);
+            } catch (e) {
+                console.warn(`Font preload failed: ${font.font_family}`, e);
+            }
+
             const applyFont = (obj) => {
                 if (obj.type && (obj.type.includes('text') || obj.type === 'i-text' || obj.type === 'textbox')) {
                     obj.set("fontFamily", font.font_family);
+                    obj.dirty = true;
+                    if (obj.initDimensions) obj.initDimensions();
                 }
             };
 
@@ -525,7 +534,7 @@ function renderFontList() {
             } else {
                 applyFont(active);
             }
-            
+
             canvas.requestRenderAll();
             document.getElementById("fontModal").style.display = "none";
         };
