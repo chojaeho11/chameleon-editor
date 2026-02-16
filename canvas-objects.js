@@ -47,7 +47,23 @@ const GOOGLE_FONTS = {
         { font_name: '국민연금체', font_family: 'Gowun Dodum', weights: '400' },
         { font_name: '고운바탕', font_family: 'Gowun Batang', weights: '400;700' },
         { font_name: '나눔브러쉬', font_family: 'Nanum Brush Script', weights: '400' },
-        { font_name: 'IBM 플렉스 산스', font_family: 'IBM Plex Sans KR', weights: '300;400;600;700' }
+        { font_name: 'IBM 플렉스 산스', font_family: 'IBM Plex Sans KR', weights: '300;400;600;700' },
+        { font_name: '노토 세리프', font_family: 'Noto Serif KR', weights: '400;600;700;900' },
+        { font_name: '해바라기', font_family: 'Sunflower', weights: '300;500;700' },
+        { font_name: '동글', font_family: 'Dongle', weights: '300;400;700' },
+        { font_name: '함렛', font_family: 'Hahmlet', weights: '300;400;500;700;900' },
+        { font_name: '구기', font_family: 'Gugi', weights: '400' },
+        { font_name: '독도', font_family: 'Dokdo', weights: '400' },
+        { font_name: '기랑해랑', font_family: 'Kirang Haerang', weights: '400' },
+        { font_name: '거석체', font_family: 'Gasoek One', weights: '400' },
+        { font_name: '베이글팻원', font_family: 'Bagel Fat One', weights: '400' },
+        { font_name: '그랜디플로라', font_family: 'Grandiflora One', weights: '400' },
+        { font_name: '오르빗', font_family: 'Orbit', weights: '400' },
+        { font_name: '제주명조', font_family: 'Jeju Myeongjo', weights: '400' },
+        { font_name: '제주고딕', font_family: 'Jeju Gothic', weights: '400' },
+        { font_name: '제주한라산', font_family: 'Jeju Hallasan', weights: '400' },
+        { font_name: '나눔고딕코딩', font_family: 'Nanum Gothic Coding', weights: '400;700' },
+        { font_name: '디필레이아', font_family: 'Diphylleia', weights: '400' }
     ],
     'JA': [
         { font_name: 'Noto Sans JP', font_family: 'Noto Sans JP', weights: '300;400;500;700;900' },
@@ -74,7 +90,27 @@ const GOOGLE_FONTS = {
         { font_name: 'Train One', font_family: 'Train One', weights: '400' },
         { font_name: 'Zen Kurenaido', font_family: 'Zen Kurenaido', weights: '400' },
         { font_name: 'M PLUS 1p', font_family: 'M PLUS 1p', weights: '300;400;700;900' },
-        { font_name: 'Murecho', font_family: 'Murecho', weights: '300;400;700;900' }
+        { font_name: 'Murecho', font_family: 'Murecho', weights: '300;400;700;900' },
+        { font_name: 'Zen Old Mincho', font_family: 'Zen Old Mincho', weights: '400;700;900' },
+        { font_name: 'Zen Antique Soft', font_family: 'Zen Antique Soft', weights: '400' },
+        { font_name: 'Kaisei Tokumin', font_family: 'Kaisei Tokumin', weights: '400;700' },
+        { font_name: 'Kaisei HarunoUmi', font_family: 'Kaisei HarunoUmi', weights: '400;700' },
+        { font_name: 'Shippori Antique', font_family: 'Shippori Antique', weights: '400' },
+        { font_name: 'Shippori Antique B1', font_family: 'Shippori Antique B1', weights: '400' },
+        { font_name: 'Shippori Mincho B1', font_family: 'Shippori Mincho B1', weights: '400;600;700' },
+        { font_name: 'Rampart One', font_family: 'Rampart One', weights: '400' },
+        { font_name: 'Potta One', font_family: 'Potta One', weights: '400' },
+        { font_name: 'Zen Kaku Gothic Antique', font_family: 'Zen Kaku Gothic Antique', weights: '400;500;700' },
+        { font_name: 'M PLUS 1', font_family: 'M PLUS 1', weights: '300;400;500;700;900' },
+        { font_name: 'M PLUS 2', font_family: 'M PLUS 2', weights: '300;400;500;700;900' },
+        { font_name: 'Kosugi', font_family: 'Kosugi', weights: '400' },
+        { font_name: 'New Tegomin', font_family: 'New Tegomin', weights: '400' },
+        { font_name: 'Hina Mincho', font_family: 'Hina Mincho', weights: '400' },
+        { font_name: 'Kiwi Maru', font_family: 'Kiwi Maru', weights: '300;400;500' },
+        { font_name: 'BIZ UDPGothic', font_family: 'BIZ UDPGothic', weights: '400;700' },
+        { font_name: 'BIZ UDPMincho', font_family: 'BIZ UDPMincho', weights: '400' },
+        { font_name: 'Mochiy Pop One', font_family: 'Mochiy Pop One', weights: '400' },
+        { font_name: 'Mochiy Pop P One', font_family: 'Mochiy Pop P One', weights: '400' }
     ],
     'EN': [
         { font_name: 'Inter', font_family: 'Inter', weights: '300;400;500;600;700;900' },
@@ -106,7 +142,27 @@ const GOOGLE_FONTS = {
         { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
         { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
         { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
-        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' },
+        { font_name: 'Space Grotesk', font_family: 'Space Grotesk', weights: '300;400;500;600;700' },
+        { font_name: 'Sora', font_family: 'Sora', weights: '300;400;500;600;700' },
+        { font_name: 'Outfit', font_family: 'Outfit', weights: '300;400;500;600;700' },
+        { font_name: 'Lexend', font_family: 'Lexend', weights: '300;400;500;600;700' },
+        { font_name: 'Plus Jakarta Sans', font_family: 'Plus Jakarta Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Figtree', font_family: 'Figtree', weights: '300;400;500;600;700' },
+        { font_name: 'Barlow', font_family: 'Barlow', weights: '300;400;500;600;700' },
+        { font_name: 'Source Sans 3', font_family: 'Source Sans 3', weights: '300;400;600;700' },
+        { font_name: 'Crimson Text', font_family: 'Crimson Text', weights: '400;600;700' },
+        { font_name: 'Libre Baskerville', font_family: 'Libre Baskerville', weights: '400;700' },
+        { font_name: 'Cormorant Garamond', font_family: 'Cormorant Garamond', weights: '300;400;600;700' },
+        { font_name: 'Spectral', font_family: 'Spectral', weights: '300;400;600;700' },
+        { font_name: 'Cabin', font_family: 'Cabin', weights: '400;500;600;700' },
+        { font_name: 'Work Sans', font_family: 'Work Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Karla', font_family: 'Karla', weights: '300;400;500;600;700' },
+        { font_name: 'Manrope', font_family: 'Manrope', weights: '300;400;500;600;700' },
+        { font_name: 'Urbanist', font_family: 'Urbanist', weights: '300;400;500;600;700' },
+        { font_name: 'Red Hat Display', font_family: 'Red Hat Display', weights: '300;400;500;700;900' },
+        { font_name: 'Exo 2', font_family: 'Exo 2', weights: '300;400;500;600;700' },
+        { font_name: 'Overpass', font_family: 'Overpass', weights: '300;400;600;700;900' }
     ],
     'ES': [
         { font_name: 'Inter', font_family: 'Inter', weights: '300;400;500;600;700;900' },
@@ -138,7 +194,27 @@ const GOOGLE_FONTS = {
         { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
         { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
         { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
-        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' },
+        { font_name: 'Space Grotesk', font_family: 'Space Grotesk', weights: '300;400;500;600;700' },
+        { font_name: 'Sora', font_family: 'Sora', weights: '300;400;500;600;700' },
+        { font_name: 'Outfit', font_family: 'Outfit', weights: '300;400;500;600;700' },
+        { font_name: 'Lexend', font_family: 'Lexend', weights: '300;400;500;600;700' },
+        { font_name: 'Plus Jakarta Sans', font_family: 'Plus Jakarta Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Figtree', font_family: 'Figtree', weights: '300;400;500;600;700' },
+        { font_name: 'Barlow', font_family: 'Barlow', weights: '300;400;500;600;700' },
+        { font_name: 'Source Sans 3', font_family: 'Source Sans 3', weights: '300;400;600;700' },
+        { font_name: 'Crimson Text', font_family: 'Crimson Text', weights: '400;600;700' },
+        { font_name: 'Libre Baskerville', font_family: 'Libre Baskerville', weights: '400;700' },
+        { font_name: 'Cormorant Garamond', font_family: 'Cormorant Garamond', weights: '300;400;600;700' },
+        { font_name: 'Spectral', font_family: 'Spectral', weights: '300;400;600;700' },
+        { font_name: 'Cabin', font_family: 'Cabin', weights: '400;500;600;700' },
+        { font_name: 'Work Sans', font_family: 'Work Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Karla', font_family: 'Karla', weights: '300;400;500;600;700' },
+        { font_name: 'Manrope', font_family: 'Manrope', weights: '300;400;500;600;700' },
+        { font_name: 'Urbanist', font_family: 'Urbanist', weights: '300;400;500;600;700' },
+        { font_name: 'Red Hat Display', font_family: 'Red Hat Display', weights: '300;400;500;700;900' },
+        { font_name: 'Exo 2', font_family: 'Exo 2', weights: '300;400;500;600;700' },
+        { font_name: 'Overpass', font_family: 'Overpass', weights: '300;400;600;700;900' }
     ],
     'ZH': [
         { font_name: '思源黑体', font_family: 'Noto Sans SC', weights: '300;400;500;700;900' },
@@ -205,7 +281,27 @@ const GOOGLE_FONTS = {
         { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
         { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
         { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
-        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' },
+        { font_name: 'Space Grotesk', font_family: 'Space Grotesk', weights: '300;400;500;600;700' },
+        { font_name: 'Sora', font_family: 'Sora', weights: '300;400;500;600;700' },
+        { font_name: 'Outfit', font_family: 'Outfit', weights: '300;400;500;600;700' },
+        { font_name: 'Lexend', font_family: 'Lexend', weights: '300;400;500;600;700' },
+        { font_name: 'Plus Jakarta Sans', font_family: 'Plus Jakarta Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Figtree', font_family: 'Figtree', weights: '300;400;500;600;700' },
+        { font_name: 'Barlow', font_family: 'Barlow', weights: '300;400;500;600;700' },
+        { font_name: 'Source Sans 3', font_family: 'Source Sans 3', weights: '300;400;600;700' },
+        { font_name: 'Crimson Text', font_family: 'Crimson Text', weights: '400;600;700' },
+        { font_name: 'Libre Baskerville', font_family: 'Libre Baskerville', weights: '400;700' },
+        { font_name: 'Cormorant Garamond', font_family: 'Cormorant Garamond', weights: '300;400;600;700' },
+        { font_name: 'Spectral', font_family: 'Spectral', weights: '300;400;600;700' },
+        { font_name: 'Cabin', font_family: 'Cabin', weights: '400;500;600;700' },
+        { font_name: 'Work Sans', font_family: 'Work Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Karla', font_family: 'Karla', weights: '300;400;500;600;700' },
+        { font_name: 'Manrope', font_family: 'Manrope', weights: '300;400;500;600;700' },
+        { font_name: 'Urbanist', font_family: 'Urbanist', weights: '300;400;500;600;700' },
+        { font_name: 'Red Hat Display', font_family: 'Red Hat Display', weights: '300;400;500;700;900' },
+        { font_name: 'Exo 2', font_family: 'Exo 2', weights: '300;400;500;600;700' },
+        { font_name: 'Overpass', font_family: 'Overpass', weights: '300;400;600;700;900' }
     ],
     'FR': [
         { font_name: 'Inter', font_family: 'Inter', weights: '300;400;500;600;700;900' },
@@ -237,14 +333,48 @@ const GOOGLE_FONTS = {
         { font_name: 'Cinzel', font_family: 'Cinzel', weights: '400;700;900' },
         { font_name: 'Fredoka One', font_family: 'Fredoka', weights: '400;600;700' },
         { font_name: 'Comfortaa', font_family: 'Comfortaa', weights: '300;400;700' },
-        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' }
+        { font_name: 'Bitter', font_family: 'Bitter', weights: '300;400;700;900' },
+        { font_name: 'Space Grotesk', font_family: 'Space Grotesk', weights: '300;400;500;600;700' },
+        { font_name: 'Sora', font_family: 'Sora', weights: '300;400;500;600;700' },
+        { font_name: 'Outfit', font_family: 'Outfit', weights: '300;400;500;600;700' },
+        { font_name: 'Lexend', font_family: 'Lexend', weights: '300;400;500;600;700' },
+        { font_name: 'Plus Jakarta Sans', font_family: 'Plus Jakarta Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Figtree', font_family: 'Figtree', weights: '300;400;500;600;700' },
+        { font_name: 'Barlow', font_family: 'Barlow', weights: '300;400;500;600;700' },
+        { font_name: 'Source Sans 3', font_family: 'Source Sans 3', weights: '300;400;600;700' },
+        { font_name: 'Crimson Text', font_family: 'Crimson Text', weights: '400;600;700' },
+        { font_name: 'Libre Baskerville', font_family: 'Libre Baskerville', weights: '400;700' },
+        { font_name: 'Cormorant Garamond', font_family: 'Cormorant Garamond', weights: '300;400;600;700' },
+        { font_name: 'Spectral', font_family: 'Spectral', weights: '300;400;600;700' },
+        { font_name: 'Cabin', font_family: 'Cabin', weights: '400;500;600;700' },
+        { font_name: 'Work Sans', font_family: 'Work Sans', weights: '300;400;500;600;700' },
+        { font_name: 'Karla', font_family: 'Karla', weights: '300;400;500;600;700' },
+        { font_name: 'Manrope', font_family: 'Manrope', weights: '300;400;500;600;700' },
+        { font_name: 'Urbanist', font_family: 'Urbanist', weights: '300;400;500;600;700' },
+        { font_name: 'Red Hat Display', font_family: 'Red Hat Display', weights: '300;400;500;700;900' },
+        { font_name: 'Exo 2', font_family: 'Exo 2', weights: '300;400;500;600;700' },
+        { font_name: 'Overpass', font_family: 'Overpass', weights: '300;400;600;700;900' }
+    ],
+    'COMMON': [
+        { font_name: 'Roboto Mono', font_family: 'Roboto Mono', weights: '300;400;500;700' },
+        { font_name: 'Space Mono', font_family: 'Space Mono', weights: '400;700' },
+        { font_name: 'Press Start 2P', font_family: 'Press Start 2P', weights: '400' },
+        { font_name: 'Orbitron', font_family: 'Orbitron', weights: '400;500;700;900' },
+        { font_name: 'Sacramento', font_family: 'Sacramento', weights: '400' },
+        { font_name: 'Indie Flower', font_family: 'Indie Flower', weights: '400' },
+        { font_name: 'Anton', font_family: 'Anton', weights: '400' },
+        { font_name: 'Titan One', font_family: 'Titan One', weights: '400' },
+        { font_name: 'Bungee', font_family: 'Bungee', weights: '400' },
+        { font_name: 'Rubik', font_family: 'Rubik', weights: '300;400;500;600;700' }
     ]
 };
 
 // Google Fonts CSS URL을 폰트 리스트에서 자동 생성
 function buildGoogleFontsURL(lang) {
-    const fonts = GOOGLE_FONTS[lang] || GOOGLE_FONTS['EN'];
-    const families = fonts.map(f => {
+    const langFonts = GOOGLE_FONTS[lang] || GOOGLE_FONTS['EN'];
+    const commonFonts = GOOGLE_FONTS['COMMON'] || [];
+    const allFonts = [...langFonts, ...commonFonts];
+    const families = allFonts.map(f => {
         const name = f.font_family.replace(/ /g, '+');
         return `family=${name}:wght@${f.weights}`;
     });
@@ -294,7 +424,7 @@ function loadGoogleWebFontsCSS() {
     link.rel = "stylesheet";
     link.href = buildGoogleFontsURL(CURRENT_LANG);
     document.head.appendChild(link);
-    console.log(`📥 [Font] Google Fonts CSS loaded for ${CURRENT_LANG} (${(GOOGLE_FONTS[CURRENT_LANG]||[]).length} fonts)`);
+    console.log(`📥 [Font] Google Fonts CSS loaded for ${CURRENT_LANG} (${(GOOGLE_FONTS[CURRENT_LANG]||[]).length} + ${(GOOGLE_FONTS['COMMON']||[]).length} common fonts)`);
 }
 
 // ★ 핵심: Supabase에서 폰트 목록을 가져와 브라우저에 등록
@@ -328,8 +458,10 @@ async function loadDynamicFonts() {
         console.warn("DB 폰트 로딩 스킵:", e.message);
     }
 
-    // 2단계: Google Fonts 병합 (항상 실행)
-    const googleFonts = (GOOGLE_FONTS[CURRENT_LANG] || []).map(gf => ({
+    // 2단계: Google Fonts 병합 (항상 실행, COMMON 포함)
+    const langFonts = GOOGLE_FONTS[CURRENT_LANG] || [];
+    const commonFonts = GOOGLE_FONTS['COMMON'] || [];
+    const googleFonts = [...langFonts, ...commonFonts].map(gf => ({
         font_name: gf.font_name,
         font_family: gf.font_family,
         file_url: null,
