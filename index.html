@@ -4714,29 +4714,45 @@ if (w >= 20 && h >= 20) {
         // ★ [추가] 에디터에서 "새로운 재료에 인쇄" 모드일 때 특별 처리
         if (window._purchaseNewMaterialMode) {
             window._purchaseNewMaterialMode = false;
+            const origSize = window._originalDesignSizeMm;
 
             if (mode === 'cart') {
                 // 새 제품으로 현재 캔버스 디자인을 장바구니에 추가
                 document.getElementById('choiceModal').style.display = 'none';
                 window.currentProductKey = targetCode;
                 localStorage.setItem('current_product_key', targetCode);
+
+                // ★ [핵심] 원본 디자인 사이즈 + 새 제품 회배 단가로 가격 계산
+                if (origSize && product) {
+                    const area_m2 = (origSize.w * origSize.h) / 1000000;
+                    const sqmPrice = product.price || unitPrice || 0;
+                    let calcPrice = Math.floor((area_m2 * sqmPrice) / 10) * 10;
+                    if (calcPrice < 100) calcPrice = sqmPrice; // 최소 = 기본 단가
+
+                    // PRODUCT_DB에 계산된 가격 + 원본 사이즈 설정 → addCanvasToCart가 그대로 사용
+                    const pdb = window.PRODUCT_DB || {};
+                    if (pdb[targetCode]) {
+                        pdb[targetCode]._base_sqm_price = sqmPrice; // 원본 회배단가 백업
+                        pdb[targetCode].price = calcPrice;
+                        pdb[targetCode]._calculated_price = true;
+                        pdb[targetCode].w_mm = origSize.w;
+                        pdb[targetCode].h_mm = origSize.h;
+                        pdb[targetCode].is_custom_size = true;
+                    }
+                    console.log(`[새 재료 장바구니] ${origSize.w}x${origSize.h}mm / 회배단가:${sqmPrice} / 계산가:${calcPrice}`);
+                }
+
                 window.pendingSelectedAddons = selectedAddonCodes;
                 window.pendingSelectedAddonQtys = selectedAddonQtys;
-                // 현재 캔버스를 새 제품으로 장바구니에 담기
                 if (window.addCanvasToCart) window.addCanvasToCart();
                 return;
             } else if (mode === 'editor') {
-                // 새 제품 사이즈로 보드 리사이즈 (기존 디자인 유지)
+                // 제품만 변경, 보드 사이즈는 원본 디자인 유지
                 document.getElementById('choiceModal').style.display = 'none';
                 window.currentProductKey = targetCode;
                 localStorage.setItem('current_product_key', targetCode);
-                const newW = window.isCustomModeCurrent ? finalW : (product.width_mm || 210);
-                const newH = window.isCustomModeCurrent ? finalH : (product.height_mm || 297);
-                if (window.applySize) {
-                    import('./canvas-size.js?v=123').then(m => {
-                        m.applySize(newW, newH, targetCode, 'standard', 'replace');
-                    });
-                }
+                // 보드 리사이즈 안 함 (원본 디자인 사이즈 유지)
+                console.log('[새 재료 에디터] 제품 변경됨:', targetCode, '사이즈 유지:', origSize?.w + 'x' + origSize?.h + 'mm');
                 return;
             }
         }
@@ -5210,11 +5226,13 @@ if (w >= 20 && h >= 20) {
 
         // 커스텀 가격/사이즈 적용
         if (customPrice !== null) {
+            product._base_sqm_price = product.price; // 원본 회배단가 백업
             product.price = customPrice;
-            product.is_custom_size = true; 
-            product.w_mm = customW; 
+            product._calculated_price = true;
+            product.is_custom_size = true;
+            product.w_mm = customW;
             product.h_mm = customH;
-            console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()}`);
+            console.log(`[에디터 진입] 가격 조정됨: ${customPrice.toLocaleString()} (회배단가: ${product._base_sqm_price})`);
         }
 
         // 사이즈 계산 (DB 필드: width_mm, height_mm 우선 체크)

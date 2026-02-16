@@ -214,7 +214,16 @@ export async function initOrderSystem() {
         let product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
         const nameEl = document.getElementById('purchaseChoiceProductName');
         if (nameEl && product) {
-            nameEl.textContent = product.name || key;
+            // 제품명 + 현재 사이즈 표시
+            const board = canvas?.getObjects()?.find(o => o.isBoard);
+            let sizeInfo = '';
+            if (board) {
+                const mmToPx = 3.7795;
+                const wMm = Math.round((board.width * board.scaleX) / mmToPx);
+                const hMm = Math.round((board.height * board.scaleY) / mmToPx);
+                sizeInfo = ` (${wMm}×${hMm}mm)`;
+            }
+            nameEl.textContent = (product.name || key) + sizeInfo;
         }
         document.getElementById('purchaseChoiceModal').style.display = 'flex';
     };
@@ -231,6 +240,18 @@ export async function initOrderSystem() {
     // 구매하기 모달: 새로운 재료에 인쇄하기
     window.purchaseNewMaterial = function() {
         document.getElementById('purchaseChoiceModal').style.display = 'none';
+
+        // ★ 현재 캔버스 디자인 사이즈를 기억 (mm 단위)
+        const board = canvas?.getObjects()?.find(o => o.isBoard);
+        if (board) {
+            const mmToPx = 3.7795;
+            window._originalDesignSizeMm = {
+                w: Math.round((board.width * board.scaleX) / mmToPx),
+                h: Math.round((board.height * board.scaleY) / mmToPx)
+            };
+            console.log('[새 재료] 원본 디자인 사이즈 저장:', window._originalDesignSizeMm.w + 'x' + window._originalDesignSizeMm.h + 'mm');
+        }
+
         // 제품 검색 모달 열기
         if (window.showCategorySelectionModal) {
             window._purchaseNewMaterialMode = true;
@@ -738,24 +759,26 @@ async function addCanvasToCart() {
         console.warn("사전 PDF 생성 실패:", e);
     }
 
-    let calcProduct = { ...product }; 
+    let calcProduct = { ...product };
 
-    const currentMmW = finalW / 3.7795;
+    const mmToPx = 3.7795;
+    const currentMmW = finalW / mmToPx;
+    const currentMmH = finalH / mmToPx;
 
-    if (product.is_custom_size && product.price > 0 && Math.abs(product.w_mm - currentMmW) < 5) {
-         console.log(`[가격 유지] 기존 계산된 가격 사용: ${product.price.toLocaleString()}원`);
-    }
-    else if (product.is_custom_size) {
-        const sqmPrice = 50000;
-        const minPrice = 60000;
-        const mmToPx = 3.7795;
-        const w_mm = finalW / mmToPx;
-        const h_mm = finalH / mmToPx;
-        const area_m2 = (w_mm / 1000) * (h_mm / 1000);
-        let calcPrice = Math.round((area_m2 * sqmPrice) / 100) * 100;
-        if (calcPrice < minPrice) calcPrice = minPrice;
-        calcProduct.price = calcPrice;
-        console.log(`[가격계산 적용] ${Math.round(w_mm)}x${Math.round(h_mm)}mm / 면적:${area_m2.toFixed(2)}m2 / 계산가:${calcPrice.toLocaleString()}원`);
+    // ★ [수정] 가격 결정 로직: 하드코딩 제거, 제품 실제 단가 기반
+    if (product.is_custom_size) {
+        // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지
+        if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || 0) - currentMmW) < 5) {
+            console.log(`[가격 유지] 기존 계산된 가격 사용: ${product.price.toLocaleString()}원`);
+        } else {
+            // 제품 실제 회배 단가(price)로 면적 계산
+            const sqmPrice = product._base_sqm_price || product.price || 50000;
+            const area_m2 = (currentMmW / 1000) * (currentMmH / 1000);
+            let calcPrice = Math.round((area_m2 * sqmPrice) / 10) * 10;
+            if (calcPrice < 100) calcPrice = sqmPrice; // 최소 단가 = 기본 단가
+            calcProduct.price = calcPrice;
+            console.log(`[가격계산 적용] ${Math.round(currentMmW)}x${Math.round(currentMmH)}mm / 면적:${area_m2.toFixed(4)}m2 / 회배단가:${sqmPrice.toLocaleString()}원 / 계산가:${calcPrice.toLocaleString()}원`);
+        }
     } else {
         console.log(`[고정가 적용] ${product.name}: ${product.price.toLocaleString()}원`);
     }
