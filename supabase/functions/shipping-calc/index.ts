@@ -100,13 +100,13 @@ function formatPrice(krw: number, country: string): string {
 const FACTORY_RATES: Record<string, Record<string, Record<string, number | null>>> = {
     hwaseong: {
         general:   { local_truck: 30000, local_courier: 3000, domestic_truck: 200000, domestic_courier: 3000, jeju_truck: 500000 },
-        honeycomb: { local_truck: 0,     local_courier: null, domestic_truck: 200000, domestic_courier: null, jeju_truck: 500000 },
+        honeycomb: { local_truck: 30000, local_courier: null, domestic_truck: 200000, domestic_courier: null, jeju_truck: 500000 },
         fabric:    { local_truck: 30000, local_courier: 3000, domestic_truck: 200000, domestic_courier: 3000, jeju_truck: 500000 },
         acrylic:   { local_truck: 30000, local_courier: 3000, domestic_truck: 200000, domestic_courier: 3000, jeju_truck: 500000 },
     },
     tokyo: {
         general:   { local_truck: 50000, local_courier: 5000, domestic_air: 80000, domestic_truck: 125000, domestic_courier: 7500 },
-        honeycomb: { local_truck: 0,     local_courier: null, domestic_air: 1500000, domestic_truck: 150000, domestic_courier: null },
+        honeycomb: { local_truck: 50000, local_courier: null, domestic_air: 1500000, domestic_truck: 150000, domestic_courier: null },
         fabric:    { local_truck: 50000, local_courier: 5000, domestic_air: 50000, domestic_truck: 125000, domestic_courier: 7500 },
         acrylic:   { local_truck: 50000, local_courier: 5000, domestic_air: 100000, domestic_truck: 125000, domestic_courier: 7500 },
     },
