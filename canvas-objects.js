@@ -505,38 +505,50 @@ function renderFontList() {
         div.onmouseover = () => div.style.background = "#f8fafc";
         div.onmouseout = () => div.style.background = "white";
 
-        // 클릭 시 텍스트에 폰트 적용 (로딩 완료 후 렌더)
+        // 클릭 시 텍스트에 폰트 적용 (실제 텍스트로 모든 unicode-range 슬라이스 로딩)
         div.onclick = async () => {
             const active = canvas.getActiveObject();
             if (!active) return alert("Please select a text object to change the font.");
 
-            // Google Font 바이너리 로딩 대기 (최대 5초)
+            // 1. 캔버스의 실제 텍스트 수집 (Google Fonts unicode-range 슬라이스 전부 로딩용)
+            let allText = '';
+            const collectText = (obj) => {
+                if (obj.type && (obj.type.includes('text') || obj.type === 'i-text' || obj.type === 'textbox')) {
+                    allText += (obj.text || '');
+                }
+            };
+            if (active.type === 'activeSelection' || active.type === 'group' || active.isEffectGroup || active.isOutlineGroup) {
+                active.getObjects().forEach(o => collectText(o));
+            } else {
+                collectText(active);
+            }
+
+            // 2. 실제 텍스트의 모든 글자에 대한 폰트 슬라이스 다운로드 대기
             try {
-                await document.fonts.load(`16px "${font.font_family}"`);
+                await document.fonts.load(`16px "${font.font_family}"`, allText);
             } catch (e) {
                 console.warn(`Font preload failed: ${font.font_family}`, e);
             }
 
+            // 3. fabric.js 폰트 측정 캐시 클리어
+            if (typeof fabric.util.clearFabricFontCache === 'function') {
+                fabric.util.clearFabricFontCache(font.font_family);
+            }
+
+            // 4. 폰트 적용
             const applyFont = (obj) => {
                 if (obj.type && (obj.type.includes('text') || obj.type === 'i-text' || obj.type === 'textbox')) {
                     obj.set("fontFamily", font.font_family);
-                    // 크기 살짝 변경 후 복원 → fabric.js 글리프 캐시 강제 갱신
-                    const origSize = obj.fontSize || 40;
-                    obj.set("fontSize", origSize + 1);
-                    obj.dirty = true;
-                    if (obj.initDimensions) obj.initDimensions();
-                    obj.set("fontSize", origSize);
                     obj.dirty = true;
                     if (obj.initDimensions) obj.initDimensions();
                 }
             };
 
-            // 그룹이거나 다중 선택일 경우 처리
             if (active.type === 'activeSelection' || active.type === 'group') {
                 active.getObjects().forEach(o => applyFont(o));
             } else if (active.isEffectGroup || active.isOutlineGroup) {
                 active.getObjects().forEach(o => applyFont(o));
-                active.addWithUpdate(); // 그룹 갱신
+                active.addWithUpdate();
             } else {
                 applyFont(active);
             }
