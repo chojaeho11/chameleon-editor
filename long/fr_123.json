@@ -968,5 +968,9 @@
   "sc_btn_calc": "Calculer les frais de livraison",
   "sc_alert_city": "Veuillez entrer le nom de la ville",
   "sc_alert_size": "Veuillez entrer la largeur et la hauteur",
-  "sc_calculating": "Calcul en cours..."
+  "sc_calculating": "Calcul en cours...",
+  "sc_ph_w": "Largeur(W)",
+  "sc_ph_h": "Hauteur(H)",
+  "sc_disclaimer": "Ce devis est une estimation indicative. Veuillez nous contacter par chat pour un devis précis.",
+  "sc_btn_chat": "Discuter avec nous"
 }

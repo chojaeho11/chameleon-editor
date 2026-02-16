@@ -968,5 +968,9 @@
   "sc_btn_calc": "配送料を計算する",
   "sc_alert_city": "都市名を入力してください",
   "sc_alert_size": "幅と高さを入力してください",
-  "sc_calculating": "計算中..."
+  "sc_calculating": "計算中...",
+  "sc_ph_w": "横(W)",
+  "sc_ph_h": "縦(H)",
+  "sc_disclaimer": "本見積もりは参考用の概算です。正確な見積もりはチャットでお問い合わせください。",
+  "sc_btn_chat": "チャットで相談する"
 }

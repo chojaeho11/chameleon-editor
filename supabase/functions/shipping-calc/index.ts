@@ -97,6 +97,7 @@ const NA_LABEL: Record<string, string> = { kr: "이용 불가", ja: "利用不�
 const NA_REASON: Record<string, Record<string, string>> = {
     sea_short: { kr: "근거리는 해상운송 불가", ja: "近距離は海上輸送不可", en: "Sea freight unavailable for short distances", zh: "近距离不提供海运", ar: "غير متاح للمسافات القصيرة", es: "No disponible para distancias cortas", de: "Nicht für Kurzstrecken", fr: "Non disponible pour courtes distances" },
     truck_intl: { kr: "국제 트럭배송 불가", ja: "国際トラック配送不可", en: "Truck delivery unavailable internationally", zh: "不提供国际卡车运输", ar: "غير متاح دوليًا", es: "No disponible internacionalmente", de: "International nicht verfügbar", fr: "Non disponible à l'international" },
+    honeycomb_courier: { kr: "허니콤보드 제품은 택배 발송이 불가합니다", ja: "ハニカムボード製品は宅配便での発送ができません", en: "Honeycomb board products cannot be shipped via courier", zh: "蜂窝板产品无法通过快递发送", ar: "لا يمكن شحن ألواح خلية النحل عبر البريد السريع", es: "Los paneles de nido de abeja no se pueden enviar por mensajería", de: "Wabenplatten können nicht per Paketdienst versendet werden", fr: "Les panneaux nid d'abeille ne peuvent pas être expédiés par colis" },
 };
 
 const CURRENCY_RATES: Record<string, number> = { KR: 1, JP: 0.2, US: 0.002, CN: 0.01, AR: 0.005, ES: 0.001, DE: 0.001, FR: 0.001 };
@@ -132,17 +133,16 @@ function formatPrice(krw: number, country: string): string {
 function calcInstallation(productType: string, wMm: number, hMm: number, lang: string): string | null {
     if (productType !== "honeycomb") return null;
     const area = (wMm / 1000) * (hMm / 1000);
-    const maxDim = Math.max(wMm, hMm);
-    const crew = (area >= 4 || maxDim > 2000) ? 2 : 1;
+    // 허니콤보드는 항상 2명 필요
     const msgs: Record<string, string> = {
-        kr: crew === 1 ? `설치 인원: 1명 (면적 ${area.toFixed(1)}㎡)` : `설치 인원: 2명 권장 (면적 ${area.toFixed(1)}㎡, 대형 제품)`,
-        ja: crew === 1 ? `設置人数: 1名 (面積 ${area.toFixed(1)}㎡)` : `設置人数: 2名推奨 (面積 ${area.toFixed(1)}㎡、大型製品)`,
-        en: crew === 1 ? `Installation: 1 person (${area.toFixed(1)}㎡)` : `Installation: 2 people recommended (${area.toFixed(1)}㎡, oversized)`,
-        zh: crew === 1 ? `安装人员: 1人 (${area.toFixed(1)}㎡)` : `安装人员: 建议2人 (${area.toFixed(1)}㎡，大型产品)`,
-        ar: crew === 1 ? `التركيب: شخص واحد (${area.toFixed(1)}㎡)` : `التركيب: يُنصح بشخصين (${area.toFixed(1)}㎡)`,
-        es: crew === 1 ? `Instalación: 1 persona (${area.toFixed(1)}㎡)` : `Instalación: 2 personas recomendado (${area.toFixed(1)}㎡)`,
-        de: crew === 1 ? `Installation: 1 Person (${area.toFixed(1)}㎡)` : `Installation: 2 Personen empfohlen (${area.toFixed(1)}㎡)`,
-        fr: crew === 1 ? `Installation: 1 personne (${area.toFixed(1)}㎡)` : `Installation: 2 personnes recommandé (${area.toFixed(1)}㎡)`,
+        kr: `설치 인원: 2명 필요 (면적 ${area.toFixed(1)}㎡)`,
+        ja: `設置人数: 2名必要 (面積 ${area.toFixed(1)}㎡)`,
+        en: `Installation: 2 people required (${area.toFixed(1)}㎡)`,
+        zh: `安装人员: 需要2人 (${area.toFixed(1)}㎡)`,
+        ar: `التركيب: يلزم شخصان (${area.toFixed(1)}㎡)`,
+        es: `Instalación: 2 personas necesarias (${area.toFixed(1)}㎡)`,
+        de: `Installation: 2 Personen erforderlich (${area.toFixed(1)}㎡)`,
+        fr: `Installation: 2 personnes requises (${area.toFixed(1)}㎡)`,
     };
     return msgs[lang] || msgs["en"];
 }
@@ -171,24 +171,67 @@ async function resolveCity(cityName: string): Promise<{ lat: number; lng: number
     return null;
 }
 
-async function getAiRecommendation(options: any[], productType: string, distKm: number, lang: string): Promise<string> {
-    if (!ANTHROPIC_API_KEY) return "";
-    const langNames: Record<string, string> = { kr: "Korean", ja: "Japanese", en: "English", zh: "Chinese", ar: "Arabic", es: "Spanish", de: "German", fr: "French" };
-    const summary = options.filter(o => !o.unavailable).map(o => `${o.label}: ${o.price} (${o.eta})`).join(", ");
-    try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-            body: JSON.stringify({
-                model: "claude-haiku-4-5-20251001",
-                max_tokens: 150,
-                messages: [{ role: "user", content: `You are a shipping advisor. Given these options for a ${productType} product (${distKm}km distance): ${summary}. Write a 1-2 sentence recommendation in ${langNames[lang] || "English"}. Fast=air, Budget=sea/courier, Large items=truck. Be concise and helpful.` }],
-            }),
-        });
-        if (!res.ok) return "";
-        const data = await res.json();
-        return data.content?.[0]?.text?.trim() || "";
-    } catch (_) { return ""; }
+function getSmartRecommendation(options: any[], productType: string, distKm: number, whName: string, lang: string): string {
+    // 이용 가능한 옵션 중 최저가 찾기
+    const available = options.filter(o => !o.unavailable);
+    if (available.length === 0) return "";
+
+    const cheapest = available.reduce((a, b) => a.priceKrw < b.priceKrw ? a : b);
+    const isLarge = productType === "honeycomb" || productType === "acrylic";
+    const isSmall = !isLarge;
+
+    // 가까운 거리(트럭 추천) vs 먼 거리(항공/해운 추천) vs 소형(택배 추천)
+    let bestMethod = cheapest.method;
+    if (isLarge && available.find(o => o.method === "truck")) bestMethod = "truck";
+    else if (isSmall && available.find(o => o.method === "courier")) bestMethod = "courier";
+
+    const bestOpt = available.find(o => o.method === bestMethod) || cheapest;
+
+    const templates: Record<string, Record<string, string>> = {
+        truck: {
+            kr: `고객님 위치에서 가장 가까운 공장은 ${whName}에 있으며, 화물차량 배송이 가장 적합합니다.`,
+            ja: `お客様の最寄り工場は${whName}にあり、トラック配送が最適です。`,
+            en: `The nearest factory to your location is at ${whName}. Truck delivery is the most suitable option.`,
+            zh: `距您最近的工厂位于${whName}，卡车配送是最合适的选择。`,
+            ar: `أقرب مصنع إلى موقعك في ${whName}. التوصيل بالشاحنة هو الخيار الأنسب.`,
+            es: `La fábrica más cercana a su ubicación está en ${whName}. El envío por camión es la opción más adecuada.`,
+            de: `Die nächste Fabrik befindet sich in ${whName}. LKW-Lieferung ist die geeignetste Option.`,
+            fr: `L'usine la plus proche se trouve à ${whName}. La livraison par camion est l'option la plus adaptée.`,
+        },
+        courier: {
+            kr: `고객님 위치에서 가장 가까운 공장은 ${whName}에 있으며, 소형 제품이므로 택배가 가장 적합합니다.`,
+            ja: `お客様の最寄り工場は${whName}にあり、小型製品のため宅配便が最適です。`,
+            en: `The nearest factory is at ${whName}. As a smaller product, courier/parcel delivery is the best option.`,
+            zh: `最近的工厂位于${whName}。作为小型产品，快递是最佳选择。`,
+            ar: `أقرب مصنع في ${whName}. بما أن المنتج صغير، البريد السريع هو الخيار الأفضل.`,
+            es: `La fábrica más cercana está en ${whName}. Al ser un producto pequeño, la mensajería es la mejor opción.`,
+            de: `Die nächste Fabrik ist in ${whName}. Als kleineres Produkt ist der Paketdienst die beste Option.`,
+            fr: `L'usine la plus proche est à ${whName}. Pour un petit produit, le colis express est la meilleure option.`,
+        },
+        air: {
+            kr: `고객님 위치에서 가장 가까운 공장은 ${whName}에 있습니다. 빠른 배송을 원하시면 항공 배송을 추천드립니다.`,
+            ja: `お客様の最寄り工場は${whName}にあります。お急ぎの場合は航空配送をおすすめします。`,
+            en: `The nearest factory is at ${whName}. For faster delivery, we recommend air freight.`,
+            zh: `最近的工厂位于${whName}。如需快速配送，推荐航空运输。`,
+            ar: `أقرب مصنع في ${whName}. للتسليم الأسرع، نوصي بالشحن الجوي.`,
+            es: `La fábrica más cercana está en ${whName}. Para entrega rápida, recomendamos el envío aéreo.`,
+            de: `Die nächste Fabrik ist in ${whName}. Für schnelle Lieferung empfehlen wir Luftfracht.`,
+            fr: `L'usine la plus proche est à ${whName}. Pour une livraison rapide, nous recommandons le fret aérien.`,
+        },
+        sea: {
+            kr: `고객님 위치에서 가장 가까운 공장은 ${whName}에 있습니다. 비용 절감을 원하시면 해상 배송을 추천드립니다.`,
+            ja: `お客様の最寄り工場は${whName}にあります。コスト重視なら海上配送がおすすめです。`,
+            en: `The nearest factory is at ${whName}. For cost savings, we recommend sea freight.`,
+            zh: `最近的工厂位于${whName}。如需节省费用，推荐海运。`,
+            ar: `أقرب مصنع في ${whName}. لتوفير التكاليف، نوصي بالشحن البحري.`,
+            es: `La fábrica más cercana está en ${whName}. Para ahorrar costos, recomendamos el envío marítimo.`,
+            de: `Die nächste Fabrik ist in ${whName}. Zur Kosteneinsparung empfehlen wir Seefracht.`,
+            fr: `L'usine la plus proche est à ${whName}. Pour économiser, nous recommandons le fret maritime.`,
+        },
+    };
+
+    const tpl = templates[bestMethod] || templates["truck"];
+    return tpl[lang] || tpl["en"];
 }
 
 // ── Main Handler ──
@@ -251,12 +294,16 @@ serve(async (req) => {
             options.push({ method: "truck", label: LABELS.truck[lang] || LABELS.truck.en, price: NA_LABEL[lang] || "N/A", priceKrw: 0, eta: "-", unavailable: true, reason: NA_REASON.truck_intl[lang] || NA_REASON.truck_intl.en });
         }
 
-        // 택배
-        const courierRate = (RATES.courier as any)[zone];
-        if (courierRate) {
-            const weight = Math.max(volWeight_air, actualWeight, 1);
-            const price = courierRate.base + weight * courierRate.perKg;
-            options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: formatPrice(price, country), priceKrw: price, eta: `${courierRate.eta}${dLabel}`, recommended: false });
+        // 택배 (허니콤보드는 택배 불가)
+        if (product_type === "honeycomb") {
+            options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: NA_LABEL[lang] || "N/A", priceKrw: 0, eta: "-", unavailable: true, reason: NA_REASON.honeycomb_courier[lang] || NA_REASON.honeycomb_courier.en });
+        } else {
+            const courierRate = (RATES.courier as any)[zone];
+            if (courierRate) {
+                const weight = Math.max(volWeight_air, actualWeight, 1);
+                const price = courierRate.base + weight * courierRate.perKg;
+                options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: formatPrice(price, country), priceKrw: price, eta: `${courierRate.eta}${dLabel}`, recommended: false });
+            }
         }
 
         // 5. BEST 마크 (가장 저렴한 이용 가능 옵션)
@@ -269,8 +316,8 @@ serve(async (req) => {
         // 6. 설치 인원
         const installation = calcInstallation(product_type, width_mm, height_mm, lang);
 
-        // 7. AI 추천 문구
-        const recommendation = await getAiRecommendation(options, product_type, distKm, lang);
+        // 7. 스마트 추천 (가장 가까운 공장 + 최적 배송)
+        const recommendation = getSmartRecommendation(options, product_type, distKm, whName, lang);
 
         return new Response(JSON.stringify({
             warehouse: whName,

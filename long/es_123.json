@@ -968,5 +968,9 @@
   "sc_btn_calc": "Calcular envío",
   "sc_alert_city": "Por favor ingrese el nombre de la ciudad",
   "sc_alert_size": "Por favor ingrese ancho y alto",
-  "sc_calculating": "Calculando..."
+  "sc_calculating": "Calculando...",
+  "sc_ph_w": "Ancho(W)",
+  "sc_ph_h": "Alto(H)",
+  "sc_disclaimer": "Este es un presupuesto estimado de referencia. Contáctenos por chat para un presupuesto exacto.",
+  "sc_btn_chat": "Chatear con nosotros"
 }
