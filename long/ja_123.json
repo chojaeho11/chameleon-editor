@@ -79,6 +79,7 @@
   "msg_select_option": "選択してください",
   "label_user_design": "ユーザー作成デザイン",
   "msg_cart_empty": "買い物かごに商品が入っていません。",
+  "msg_shipping_required": "配送オプションは必須です。",
   "msg_cart_added": "商品を買い物かごに追加しました。",
   "modal_login_title": "ログイン",
   "placeholder_email": "メールアドレス",

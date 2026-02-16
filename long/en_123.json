@@ -79,6 +79,7 @@
   "msg_select_option": "Select Option",
   "label_user_design": "User Design",
   "msg_cart_empty": "Your cart is empty.",
+  "msg_shipping_required": "A shipping option is required.",
   "msg_cart_added": "Item added to cart.",
   "modal_login_title": "Login",
   "placeholder_email": "Email Address",

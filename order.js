@@ -1,5 +1,5 @@
 import { canvas } from "./canvas-core.js?v=123";
-import { PRODUCT_DB, ADDON_DB, cartData, currentUser, sb } from "./config.js?v=123";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=123";
 import { SITE_CONFIG } from "./site-config.js?v=123";
 import { applySize } from "./canvas-size.js?v=123";
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=123";
@@ -243,11 +243,39 @@ export async function initOrderSystem() {
     if(pdpFileUpload) pdpFileUpload.onchange = addFileToCart;
     
     const btnGoCheckout = document.getElementById("btnGoCheckout");
-    if(btnGoCheckout) { 
-        btnGoCheckout.onclick = () => { 
-            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty.")); 
-            openCalendarModal(); 
-        }; 
+    if(btnGoCheckout) {
+        btnGoCheckout.onclick = () => {
+            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
+
+            // 배송 옵션 필수 체크
+            const shippingKeywords = ['배송', 'shipping', 'delivery', '配送', '発送', '운송'];
+            for (let i = 0; i < cartData.length; i++) {
+                const item = cartData[i];
+                if (!item.product || !item.product.addons) continue;
+                const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
+                const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
+                const categories = [...new Set(allAddons.map(a => a.category_code).filter(Boolean))];
+
+                for (const cat of categories) {
+                    const catInfo = ADDON_CAT_DB[cat];
+                    if (!catInfo) continue;
+                    const catName = (catInfo.display_name || catInfo.name_kr || catInfo.name_us || '').toLowerCase();
+                    const isShipping = shippingKeywords.some(kw => catName.includes(kw.toLowerCase()));
+                    if (!isShipping) continue;
+
+                    // 이 카테고리의 옵션 중 하나라도 선택되었는지 확인
+                    const catAddonCodes = allAddons.filter(a => a.category_code === cat).map(a => a.code);
+                    const selectedCodes = Object.values(item.selectedAddons || {});
+                    const hasShippingSelected = catAddonCodes.some(c => selectedCodes.includes(c));
+                    if (!hasShippingSelected) {
+                        alert(window.t('msg_shipping_required', '배송옵션은 필수입니다.'));
+                        return;
+                    }
+                }
+            }
+
+            openCalendarModal();
+        };
     }
 
     const btnPrintQuote = document.getElementById("btnPrintQuote");
@@ -1033,14 +1061,16 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
             const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
-            const categories = [...new Set(allAddons.map(a => a.category_code || window.t('label_options', 'Options')))];
+            const categories = [...new Set(allAddons.map(a => a.category_code || '_default'))];
 
             if(categories.length > 0 && allAddons.length > 0) {
                 categories.forEach(cat => {
-                    const catAddons = allAddons.filter(a => (a.category_code || window.t('label_options', 'Options')) === cat);
+                    const catAddons = allAddons.filter(a => (a.category_code || '_default') === cat);
+                    const catInfo = ADDON_CAT_DB[cat];
+                    const catDisplayName = catInfo ? catInfo.display_name : (cat === '_default' ? window.t('label_options', 'Options') : cat);
                     addonHtml += `
                         <div style="margin-bottom:12px;">
-                            <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${cat.toUpperCase()}</div>
+                            <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${catDisplayName}</div>
                             <div style="display:flex; flex-direction:column; gap:6px;">
                                 ${catAddons.map(opt => {
                                     const isSelected = Object.values(item.selectedAddons).includes(opt.code);

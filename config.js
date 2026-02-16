@@ -9,6 +9,7 @@ export let currentUser = null;
 export let isAdmin = false; 
 export let cartData = []; 
 export let ADDON_DB = {};
+export let ADDON_CAT_DB = {};
 export let PRODUCT_DB = {};
 
 const ADMIN_EMAILS = ["korea900as@gmail.com", "ceo@test.com"];
@@ -83,6 +84,24 @@ export function initConfig() {
 async function loadSystemData() {
     try {
         const country = SITE_CONFIG.COUNTRY; 
+
+        // 옵션 카테고리 로드
+        const { data: addonCats } = await sb.from('addon_categories').select('*').order('sort_order', {ascending: true});
+        if (addonCats) {
+            ADDON_CAT_DB = {};
+            addonCats.forEach(cat => {
+                let displayName = cat.name_kr || cat.name || cat.code;
+                if (country === 'JP') displayName = cat.name_jp || displayName;
+                else if (country === 'US') displayName = cat.name_us || displayName;
+                else if (country === 'CN') displayName = cat.name_cn || cat.name_us || displayName;
+                else if (country === 'AR') displayName = cat.name_ar || cat.name_us || displayName;
+                else if (country === 'ES') displayName = cat.name_es || cat.name_us || displayName;
+                else if (country === 'DE') displayName = cat.name_de || cat.name_us || displayName;
+                else if (country === 'FR') displayName = cat.name_fr || cat.name_us || displayName;
+                ADDON_CAT_DB[cat.code] = { ...cat, display_name: displayName };
+            });
+            window.ADDON_CAT_DB = ADDON_CAT_DB;
+        }
 
         // 옵션 로드
         const { data: addons } = await sb.from('admin_addons').select('*');

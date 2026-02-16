@@ -79,6 +79,7 @@
   "msg_select_option": "선택해주세요",
   "label_user_design": "사용자 디자인",
   "msg_cart_empty": "장바구니가 비어있습니다.",
+  "msg_shipping_required": "배송옵션은 필수입니다.",
   "msg_cart_added": "상품이 장바구니에 담겼습니다.",
   "modal_login_title": "로그인",
   "placeholder_email": "이메일 주소",
