@@ -6743,17 +6743,20 @@ window.filterModalItems = function(keyword) {
             </div>
 
             <!-- 직접 입력 -->
-            <div style="margin-top:18px; padding-top:15px; border-top:1px solid #f1f5f9; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:13px; color:#64748b; font-weight:600; white-space:nowrap;" data-i18n="dsm_custom_input"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
-                <input type="number" id="dsmCustomW" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:80px; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; text-align:center;">
-                <span style="color:#cbd5e1;">×</span>
-                <input type="number" id="dsmCustomH" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:80px; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; text-align:center;">
-                <button onclick="window.dsmOpenCustom()" style="padding:8px 16px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
+            <div style="margin-top:18px; padding-top:15px; border-top:1px solid #f1f5f9;">
+                <span style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:10px;" data-i18n="dsm_custom_input"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <input type="number" id="dsmCustomW" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
+                    <span style="color:#cbd5e1;">×</span>
+                    <input type="number" id="dsmCustomH" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
+                    <button onclick="window.dsmOpenCustom()" style="padding:10px 20px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
+                </div>
             </div>
-        </div>
 
-        <div style="text-align:center; margin-top:15px;">
-            <button onclick="document.getElementById('designStartModal').style.display='none'" class="btn-round" style="width:100%; padding:12px; background:#f1f5f9; color:#64748b; border:none; font-size:14px; font-weight:600; border-radius:10px;" data-i18n="btn_close">닫기</button>
+            <!-- 닫기 -->
+            <div style="margin-top:15px;">
+                <button onclick="document.getElementById('designStartModal').style.display='none'" style="width:100%; padding:14px; background:#f1f5f9; color:#64748b; border:none; font-size:15px; font-weight:600; border-radius:10px; cursor:pointer;" data-i18n="btn_close">닫기</button>
+            </div>
         </div>
 
         <!-- 인쇄 카테고리 뷰 (처음에 숨김) -->
