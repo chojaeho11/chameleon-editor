@@ -655,10 +655,16 @@
     </div>
 </div>
 <script>
-// 모달 배경 클릭 시 닫기
-document.getElementById('scModal').addEventListener('click', function(e) {
-    if (e.target === this) { this.style.display = 'none'; document.body.style.overflow = ''; }
-});
+// 모달 배경 클릭 시 닫기 (드래그 시에는 닫지 않음)
+(function(){
+    var modal = document.getElementById('scModal');
+    var downTarget = null;
+    modal.addEventListener('mousedown', function(e) { downTarget = e.target; });
+    modal.addEventListener('click', function(e) {
+        if (e.target === this && downTarget === this) { this.style.display = 'none'; document.body.style.overflow = ''; }
+        downTarget = null;
+    });
+})();
 window.calcShipping = async function() {
     var city = document.getElementById('scCity').value.trim();
     if (!city) { alert(window.t && window.t('sc_alert_city') || '도시명을 입력해주세요'); return; }
