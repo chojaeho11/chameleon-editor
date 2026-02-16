@@ -974,5 +974,20 @@
   "sc_btn_open": "Calculadora de Envío",
   "sc_partners": "Chameleon Printing opera con 560 socios en más de 20 países en todo el mundo.",
   "sc_banner_title": "Envío a más de 20 países<br>Con 560 socios globales",
-  "sc_banner_desc": "Chameleon Printing es operado por coreanos que cumplen estrictamente sus promesas."
+  "sc_banner_desc": "Chameleon Printing es operado por coreanos que cumplen estrictamente sus promesas.",
+  "sub_title": "Desbloquea todas las plantillas premium",
+  "sub_desc": "Suscripción PRO: plantillas estrella ilimitadas + 10% dto. en todos los productos",
+  "sub_monthly": "Mensual",
+  "sub_annual": "Anual",
+  "sub_monthly_period": "Facturación mensual",
+  "sub_annual_period": "Facturación anual",
+  "sub_save": "20% dto.",
+  "sub_btn": "Suscríbete ahora",
+  "sub_active": "Tu suscripción PRO está activa",
+  "sub_feat_templates": "Plantillas premium ilimitadas",
+  "sub_feat_discount": "10% dto. en todos los productos",
+  "sub_feat_priority": "Soporte de producción prioritario",
+  "sub_premium_lock": "Plantilla premium",
+  "sub_premium_msg": "Suscríbete a PRO para usar todas las plantillas premium",
+  "sub_success_msg": "¡Tu suscripción PRO está activa! 🎉"
 }

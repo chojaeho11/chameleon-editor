@@ -974,5 +974,20 @@
   "sc_btn_open": "配送料計算機",
   "sc_partners": "カメレオンプリンティングは世界20カ国以上、560社の協力会社と運営されています。",
   "sc_banner_title": "世界20カ国以上<br>560社のパートナーと共に",
-  "sc_banner_desc": "カメレオンプリンティングは約束を徹底的に守る韓国人が運営しています。"
+  "sc_banner_desc": "カメレオンプリンティングは約束を徹底的に守る韓国人が運営しています。",
+  "sub_title": "すべてのプレミアムテンプレートを自由に",
+  "sub_desc": "PROサブスクで★テンプレート無制限 + 全商品10%割引",
+  "sub_monthly": "月額プラン",
+  "sub_annual": "年額プラン",
+  "sub_monthly_period": "毎月自動決済",
+  "sub_annual_period": "年1回決済",
+  "sub_save": "20%オフ",
+  "sub_btn": "今すぐ登録",
+  "sub_active": "PROサブスクリプションが有効です",
+  "sub_feat_templates": "プレミアムテンプレート無制限",
+  "sub_feat_discount": "全商品10%割引",
+  "sub_feat_priority": "優先制作サポート",
+  "sub_premium_lock": "プレミアムテンプレートです",
+  "sub_premium_msg": "PROサブスクに登録してすべてのプレミアムテンプレートをご利用ください",
+  "sub_success_msg": "PROサブスクリプションが有効になりました！🎉"
 }

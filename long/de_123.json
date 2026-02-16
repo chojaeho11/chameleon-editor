@@ -974,5 +974,20 @@
   "sc_btn_open": "Versandrechner",
   "sc_partners": "Chameleon Printing arbeitet mit 560 Partnern in über 20 Ländern weltweit.",
   "sc_banner_title": "Versand in über 20 Länder<br>Mit 560 globalen Partnern",
-  "sc_banner_desc": "Chameleon Printing wird von Koreanern betrieben, die ihre Versprechen strikt einhalten."
+  "sc_banner_desc": "Chameleon Printing wird von Koreanern betrieben, die ihre Versprechen strikt einhalten.",
+  "sub_title": "Alle Premium-Vorlagen freischalten",
+  "sub_desc": "PRO-Abo: unbegrenzte Stern-Vorlagen + 10% Rabatt auf alle Produkte",
+  "sub_monthly": "Monatlich",
+  "sub_annual": "Jährlich",
+  "sub_monthly_period": "Monatliche Abrechnung",
+  "sub_annual_period": "Jährliche Abrechnung",
+  "sub_save": "20% Rabatt",
+  "sub_btn": "Jetzt abonnieren",
+  "sub_active": "Ihr PRO-Abo ist aktiv",
+  "sub_feat_templates": "Unbegrenzte Premium-Vorlagen",
+  "sub_feat_discount": "10% Rabatt auf alle Produkte",
+  "sub_feat_priority": "Bevorzugter Produktionssupport",
+  "sub_premium_lock": "Premium-Vorlage",
+  "sub_premium_msg": "Abonnieren Sie PRO, um alle Premium-Vorlagen zu nutzen",
+  "sub_success_msg": "Ihr PRO-Abo ist jetzt aktiv! 🎉"
 }

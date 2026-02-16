@@ -974,5 +974,20 @@
   "sc_btn_open": "Calculateur de Livraison",
   "sc_partners": "Chameleon Printing opère avec 560 partenaires dans plus de 20 pays à travers le monde.",
   "sc_banner_title": "Livraison dans plus de 20 pays<br>Avec 560 partenaires mondiaux",
-  "sc_banner_desc": "Chameleon Printing est géré par des Coréens qui respectent strictement leurs engagements."
+  "sc_banner_desc": "Chameleon Printing est géré par des Coréens qui respectent strictement leurs engagements.",
+  "sub_title": "Débloquez tous les modèles premium",
+  "sub_desc": "Abonnement PRO : modèles étoilés illimités + 10% de remise sur tous les produits",
+  "sub_monthly": "Mensuel",
+  "sub_annual": "Annuel",
+  "sub_monthly_period": "Facturation mensuelle",
+  "sub_annual_period": "Facturation annuelle",
+  "sub_save": "-20%",
+  "sub_btn": "S'abonner maintenant",
+  "sub_active": "Votre abonnement PRO est actif",
+  "sub_feat_templates": "Modèles premium illimités",
+  "sub_feat_discount": "10% de remise sur tous les produits",
+  "sub_feat_priority": "Support de production prioritaire",
+  "sub_premium_lock": "Modèle premium",
+  "sub_premium_msg": "Abonnez-vous à PRO pour utiliser tous les modèles premium",
+  "sub_success_msg": "Votre abonnement PRO est maintenant actif ! 🎉"
 }

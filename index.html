@@ -796,6 +796,237 @@ window.calcShipping = async function() {
 function _esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 </script>
 
+<!-- ========== PRO 구독 섹션 ========== -->
+<div id="subscriptionSection" style="width:100%; max-width:1200px; padding:0 20px; box-sizing:border-box; margin:30px auto 0;">
+<style>
+    .sub-hero { position:relative; overflow:hidden; background:linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #3730a3 50%, #312e81 70%, #1e1b4b 100%); border-radius:16px; padding:50px 30px 45px; text-align:center; }
+    .sub-hero::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:radial-gradient(ellipse at 20% 30%, rgba(139,92,246,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(99,102,241,0.1) 0%, transparent 50%); pointer-events:none; }
+    @keyframes subShimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+    .sub-shimmer { background:linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%); background-size:200% 100%; animation:subShimmer 4s linear infinite; position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; }
+    .sub-badge { display:inline-block; background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; font-size:12px; font-weight:800; padding:5px 16px; border-radius:20px; letter-spacing:1px; margin-bottom:16px; }
+    .sub-title { color:#fff; font-size:26px; font-weight:900; margin:0 0 10px; line-height:1.4; letter-spacing:-0.5px; }
+    .sub-desc { color:rgba(255,255,255,0.65); font-size:14px; margin:0 0 30px; line-height:1.6; }
+    .sub-cards { display:flex; justify-content:center; gap:16px; flex-wrap:wrap; position:relative; z-index:2; }
+    .sub-card { background:rgba(255,255,255,0.08); backdrop-filter:blur(10px); border:1.5px solid rgba(255,255,255,0.15); border-radius:16px; padding:28px 24px; min-width:220px; max-width:260px; flex:1; text-align:center; transition:all 0.3s; cursor:pointer; position:relative; }
+    .sub-card:hover { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.3); transform:translateY(-3px); }
+    .sub-card.popular { border-color:rgba(251,191,36,0.5); background:rgba(251,191,36,0.08); }
+    .sub-card.popular::before { content:'BEST'; position:absolute; top:-10px; right:16px; background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; font-size:10px; font-weight:800; padding:3px 12px; border-radius:8px; letter-spacing:0.5px; }
+    .sub-card-plan { color:rgba(255,255,255,0.7); font-size:13px; font-weight:700; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; }
+    .sub-card-price { color:#fff; font-size:32px; font-weight:900; margin-bottom:4px; letter-spacing:-1px; }
+    .sub-card-price small { font-size:14px; font-weight:500; opacity:0.6; }
+    .sub-card-period { color:rgba(255,255,255,0.5); font-size:12px; margin-bottom:16px; }
+    .sub-card-save { display:inline-block; background:rgba(16,185,129,0.2); color:#34d399; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; margin-bottom:16px; }
+    .sub-card-btn { display:block; width:100%; padding:12px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+    .sub-card-btn:hover { transform:scale(1.02); box-shadow:0 4px 15px rgba(99,102,241,0.4); }
+    .sub-card.popular .sub-card-btn { background:linear-gradient(135deg,#f59e0b,#f97316); }
+    .sub-features { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-top:28px; position:relative; z-index:2; }
+    .sub-feature { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.6); font-size:12px; }
+    .sub-feature i { color:#a5b4fc; font-size:14px; }
+    .sub-active-banner { display:none; background:linear-gradient(135deg,#059669,#10b981); color:#fff; border-radius:12px; padding:16px 24px; text-align:center; font-weight:700; font-size:15px; margin-top:20px; position:relative; z-index:2; }
+    .sub-active-banner i { margin-right:8px; }
+    @media(max-width:600px) {
+        .sub-hero { padding:35px 20px 30px; border-radius:12px; }
+        .sub-title { font-size:20px; }
+        .sub-cards { flex-direction:column; align-items:center; }
+        .sub-card { min-width:0; max-width:100%; width:100%; }
+    }
+</style>
+<div class="sub-hero">
+    <div class="sub-shimmer"></div>
+    <div style="position:relative; z-index:2;">
+        <div class="sub-badge">⭐ PRO</div>
+        <h2 class="sub-title" data-i18n="sub_title">모든 프리미엄 템플릿을 자유롭게</h2>
+        <p class="sub-desc" data-i18n="sub_desc">PRO 구독으로 별표 템플릿 무제한 사용 + 전 상품 10% 할인</p>
+        <div class="sub-cards">
+            <div class="sub-card" onclick="window.startSubscription('monthly')">
+                <div class="sub-card-plan" data-i18n="sub_monthly">월간 구독</div>
+                <div class="sub-card-price" id="subPriceMonthly">₩9,000<small>/월</small></div>
+                <div class="sub-card-period" data-i18n="sub_monthly_period">매월 자동 결제</div>
+                <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
+            </div>
+            <div class="sub-card popular" onclick="window.startSubscription('annual')">
+                <div class="sub-card-plan" data-i18n="sub_annual">연간 구독</div>
+                <div class="sub-card-price" id="subPriceAnnual">₩86,400<small>/년</small></div>
+                <div class="sub-card-period" data-i18n="sub_annual_period">연 1회 결제</div>
+                <div class="sub-card-save" data-i18n="sub_save">20% 할인</div>
+                <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
+            </div>
+        </div>
+        <div class="sub-features">
+            <div class="sub-feature"><i class="fa-solid fa-star"></i> <span data-i18n="sub_feat_templates">프리미엄 템플릿 무제한</span></div>
+            <div class="sub-feature"><i class="fa-solid fa-percent"></i> <span data-i18n="sub_feat_discount">전 상품 10% 할인</span></div>
+            <div class="sub-feature"><i class="fa-solid fa-bolt"></i> <span data-i18n="sub_feat_priority">우선 제작 지원</span></div>
+        </div>
+        <div class="sub-active-banner" id="subActiveBanner">
+            <i class="fa-solid fa-crown"></i> <span data-i18n="sub_active">PRO 구독이 활성화되어 있습니다</span>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- 구독 유도 모달 (프리미엄 템플릿 클릭 시) -->
+<div id="subUpsellModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100002; justify-content:center; align-items:center; padding:16px;">
+    <div style="background:#fff; border-radius:20px; max-width:400px; width:100%; padding:40px 30px; text-align:center; animation:scSlideUp 0.3s ease;">
+        <div style="width:64px; height:64px; background:linear-gradient(135deg,#f59e0b,#f97316); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:28px;">⭐</div>
+        <h3 style="margin:0 0 8px; font-size:20px; font-weight:800; color:#1e293b;" data-i18n="sub_premium_lock">프리미엄 템플릿입니다</h3>
+        <p style="margin:0 0 24px; color:#64748b; font-size:14px; line-height:1.6;" data-i18n="sub_premium_msg">PRO 구독으로 모든 프리미엄 템플릿을 자유롭게 사용하세요</p>
+        <button onclick="window.startSubscription('monthly')" style="width:100%; padding:14px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px;" data-i18n="sub_btn">구독 시작하기</button>
+        <button onclick="document.getElementById('subUpsellModal').style.display='none'" style="width:100%; padding:12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;" data-i18n="btn_close">닫기</button>
+    </div>
+</div>
+
+<script>
+// ===== Subscription Logic =====
+window.isSubscriber = false;
+window.subscriptionPlan = null;
+
+// Pricing per country
+const SUB_PRICING = {
+    'KR': { monthly: '₩9,000', annual: '₩86,400', monthlyPer: '/월', annualPer: '/년', currency: 'krw' },
+    'JP': { monthly: '¥900', annual: '¥8,640', monthlyPer: '/月', annualPer: '/年', currency: 'jpy' },
+    'US': { monthly: '$9', annual: '$86.40', monthlyPer: '/mo', annualPer: '/yr', currency: 'usd' },
+    'CN': { monthly: '¥60', annual: '¥576', monthlyPer: '/月', annualPer: '/年', currency: 'cny' },
+    'AR': { monthly: '﷼35', annual: '﷼336', monthlyPer: '/شهر', annualPer: '/سنة', currency: 'sar' },
+    'ES': { monthly: '€9', annual: '€86.40', monthlyPer: '/mes', annualPer: '/año', currency: 'eur' },
+    'DE': { monthly: '€9', annual: '€86,40', monthlyPer: '/Mo', annualPer: '/Jahr', currency: 'eur' },
+    'FR': { monthly: '9€', annual: '86,40€', monthlyPer: '/mois', annualPer: '/an', currency: 'eur' },
+};
+
+// Set prices based on country
+function updateSubPrices() {
+    const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const p = SUB_PRICING[country] || SUB_PRICING['US'];
+    const elM = document.getElementById('subPriceMonthly');
+    const elA = document.getElementById('subPriceAnnual');
+    if (elM) elM.innerHTML = p.monthly + '<small>' + p.monthlyPer + '</small>';
+    if (elA) elA.innerHTML = p.annual + '<small>' + p.annualPer + '</small>';
+}
+
+// Check subscription status for current user
+async function checkSubscription() {
+    if (!window.sb) return;
+    try {
+        const { data: { session } } = await window.sb.auth.getSession();
+        if (!session) { window.isSubscriber = false; return; }
+
+        const { data, error } = await window.sb
+            .from('subscriptions')
+            .select('status, plan_type, current_period_end')
+            .eq('user_id', session.user.id)
+            .eq('status', 'active')
+            .maybeSingle();
+
+        if (data) {
+            window.isSubscriber = true;
+            window.subscriptionPlan = data.plan_type;
+            // Show active banner, hide cards
+            var banner = document.getElementById('subActiveBanner');
+            if (banner) banner.style.display = 'block';
+            document.querySelectorAll('.sub-card').forEach(function(c) { c.style.display = 'none'; });
+        } else {
+            window.isSubscriber = false;
+            window.subscriptionPlan = null;
+        }
+    } catch (e) {
+        console.warn('Subscription check error:', e);
+    }
+}
+
+// Determine if a template is premium (deterministic ~66%)
+window.isPremiumTemplate = function(tpl) {
+    var id = String(tpl.id || tpl.code || '');
+    if (!id) return false;
+    var hash = 0;
+    for (var i = 0; i < id.length; i++) {
+        hash = ((hash << 5) - hash) + id.charCodeAt(i);
+        hash = hash & hash; // Convert to 32-bit int
+    }
+    return Math.abs(hash) % 3 !== 0; // ~66% premium
+};
+
+// Start subscription flow
+window.startSubscription = async function(planType) {
+    if (!window.sb) { alert('Loading...'); return; }
+
+    var sess;
+    try {
+        var r = await window.sb.auth.getSession();
+        sess = r.data.session;
+    } catch(e) {}
+
+    if (!sess) {
+        // Show login modal
+        var loginModal = document.getElementById('loginModal');
+        if (loginModal) loginModal.style.display = 'flex';
+        return;
+    }
+
+    var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    var baseUrl = window.location.origin + window.location.pathname;
+
+    try {
+        var btn = event && event.target;
+        if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+        var { data, error } = await window.sb.functions.invoke('create-subscription', {
+            body: {
+                country: country,
+                plan_type: planType,
+                user_id: sess.user.id,
+                user_email: sess.user.email,
+                success_url: baseUrl + '?sub_success=1',
+                cancel_url: baseUrl + '?sub_cancel=1',
+            }
+        });
+
+        if (btn) { btn.disabled = false; btn.textContent = window.t ? window.t('sub_btn') : '구독 시작하기'; }
+
+        if (error || (data && data.error)) {
+            alert(data?.error || error?.message || 'Error');
+            return;
+        }
+
+        if (data && data.url) {
+            window.location.href = data.url;
+        }
+    } catch (e) {
+        console.error('Subscription error:', e);
+        alert(e.message || 'Error');
+    }
+};
+
+// Handle return from Stripe (verify subscription)
+async function handleSubReturn() {
+    var params = new URLSearchParams(window.location.search);
+    if (!params.get('sub_success') || !params.get('session_id')) return;
+
+    try {
+        var { data: { session } } = await window.sb.auth.getSession();
+        if (!session) return;
+
+        var { data, error } = await window.sb.functions.invoke('verify-subscription', {
+            body: {
+                session_id: params.get('session_id'),
+                user_id: session.user.id,
+            }
+        });
+
+        if (data && data.success) {
+            window.isSubscriber = true;
+            window.subscriptionPlan = data.plan_type;
+            // Clean URL
+            var cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
+            // Show success
+            alert(window.t ? window.t('sub_success_msg') : 'PRO 구독이 활성화되었습니다! 🎉');
+            location.reload();
+        }
+    } catch (e) {
+        console.error('Verify subscription error:', e);
+    }
+}
+</script>
+
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
@@ -3275,6 +3506,12 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     // [4] 템플릿 클릭 & 필터링 함수 (기존 기능 복구)
     // -----------------------------------------------------------
     window.onTemplateClick = async function(tpl) {
+        // 프리미엄 템플릿 접근 제어
+        if (window.isPremiumTemplate && window.isPremiumTemplate(tpl) && !window.isSubscriber) {
+            var modal = document.getElementById('subUpsellModal');
+            if (modal) { modal.style.display = 'flex'; return; }
+        }
+
         const startScreen = document.getElementById('startScreen');
         const isStartScreenVisible = startScreen && window.getComputedStyle(startScreen).display !== 'none';
 
@@ -3415,6 +3652,11 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         // 배송비 계산기 항상 표시
         var scSec = document.getElementById('shippingCalcSection');
         if (scSec) scSec.style.display = 'block';
+
+        // PRO 구독 초기화
+        if (typeof updateSubPrices === 'function') updateSubPrices();
+        if (typeof checkSubscription === 'function') checkSubscription();
+        if (typeof handleSubReturn === 'function') handleSubReturn();
 
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
@@ -5559,6 +5801,12 @@ if (w >= 20 && h >= 20) {
     };
 
     window.onTemplateClick = async function(tpl) {
+        // 프리미엄 템플릿 접근 제어
+        if (window.isPremiumTemplate && window.isPremiumTemplate(tpl) && !window.isSubscriber) {
+            var modal = document.getElementById('subUpsellModal');
+            if (modal) { modal.style.display = 'flex'; return; }
+        }
+
         const startScreen = document.getElementById('startScreen');
         const isEditorOpen = startScreen && window.getComputedStyle(startScreen).display === 'none';
 
@@ -5566,8 +5814,8 @@ if (w >= 20 && h >= 20) {
             if(!confirm(window.t('msg_template_apply_confirm'))) return;
             await applyTemplateDirectly(tpl);
         } else {
-            window.pendingTemplate = tpl; 
-            showCategorySelectionModal(); 
+            window.pendingTemplate = tpl;
+            showCategorySelectionModal();
         }
     };
 
@@ -5726,20 +5974,26 @@ if (w >= 20 && h >= 20) {
                     badgeHtml = `<span style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; z-index:5; box-shadow:0 2px 4px rgba(0,0,0,0.2); text-transform:uppercase; letter-spacing:0.5px;">${badgeText}</span>`;
                 }
 
+                // 프리미엄 별표 뱃지 (~66% of templates)
+                const isPremium = window.isPremiumTemplate && window.isPremiumTemplate(tpl);
+                let starHtml = '';
+                if (isPremium) {
+                    starHtml = `<span style="position:absolute; top:8px; right:8px; background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; font-size:14px; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:5; box-shadow:0 2px 8px rgba(245,158,11,0.4);">⭐</span>`;
+                }
+
                 // 2. 이미지 최적화 (정사각형 1:1 비율 요청)
                 let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
                 if (imgSrc.includes('supabase.co')) {
                     const separator = imgSrc.includes('?') ? '&' : '?';
-                    // width와 height를 똑같이 설정하고 resize=cover 옵션을 주어 정사각형으로 자름
                     imgSrc += `${separator}width=400&height=400&resize=cover&format=webp&quality=70`;
                 }
 
                 // 3. HTML 구성 및 스타일 강제 적용
-                // aspect-ratio: 1/1 을 주어 강제로 정사각형으로 만듭니다.
                 card.style.cssText = "aspect-ratio: 1/1; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid #e5e7eb; background: #f8fafc;";
-                
+
                 card.innerHTML = `
                     ${badgeHtml}
+                    ${starHtml}
                     <img src="${imgSrc}" class="tpl-card-img" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;">
                     <div class="tpl-card-overlay"></div>
                 `;

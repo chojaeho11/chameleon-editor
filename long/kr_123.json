@@ -598,5 +598,20 @@
   "sc_btn_open": "배송비 계산기",
   "sc_partners": "카멜레온프린팅은 전세계 20여 개국 560개의 협력사와 운영됩니다.",
   "sc_banner_title": "전세계 20여 개국<br>560개 파트너와 함께합니다",
-  "sc_banner_desc": "카멜레온프린팅은 철저하게 약속을 지키는 한국인이 운영합니다."
+  "sc_banner_desc": "카멜레온프린팅은 철저하게 약속을 지키는 한국인이 운영합니다.",
+  "sub_title": "모든 프리미엄 템플릿을 자유롭게",
+  "sub_desc": "PRO 구독으로 별표 템플릿 무제한 사용 + 전 상품 10% 할인",
+  "sub_monthly": "월간 구독",
+  "sub_annual": "연간 구독",
+  "sub_monthly_period": "매월 자동 결제",
+  "sub_annual_period": "연 1회 결제",
+  "sub_save": "20% 할인",
+  "sub_btn": "구독 시작하기",
+  "sub_active": "PRO 구독이 활성화되어 있습니다",
+  "sub_feat_templates": "프리미엄 템플릿 무제한",
+  "sub_feat_discount": "전 상품 10% 할인",
+  "sub_feat_priority": "우선 제작 지원",
+  "sub_premium_lock": "프리미엄 템플릿입니다",
+  "sub_premium_msg": "PRO 구독으로 모든 프리미엄 템플릿을 자유롭게 사용하세요",
+  "sub_success_msg": "PRO 구독이 활성화되었습니다! 🎉"
 }

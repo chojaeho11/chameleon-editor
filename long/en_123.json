@@ -974,5 +974,20 @@
   "sc_btn_open": "Shipping Calculator",
   "sc_partners": "Chameleon Printing operates with 560 partners across 20+ countries worldwide.",
   "sc_banner_title": "Shipping to 20+ Countries<br>With 560 Global Partners",
-  "sc_banner_desc": "Chameleon Printing is operated by Koreans who strictly keep their promises."
+  "sc_banner_desc": "Chameleon Printing is operated by Koreans who strictly keep their promises.",
+  "sub_title": "Unlock All Premium Templates",
+  "sub_desc": "PRO subscription: unlimited star templates + 10% off all products",
+  "sub_monthly": "Monthly",
+  "sub_annual": "Annual",
+  "sub_monthly_period": "Billed monthly",
+  "sub_annual_period": "Billed annually",
+  "sub_save": "20% OFF",
+  "sub_btn": "Subscribe Now",
+  "sub_active": "Your PRO subscription is active",
+  "sub_feat_templates": "Unlimited premium templates",
+  "sub_feat_discount": "10% off all products",
+  "sub_feat_priority": "Priority production support",
+  "sub_premium_lock": "Premium Template",
+  "sub_premium_msg": "Subscribe to PRO to use all premium templates",
+  "sub_success_msg": "Your PRO subscription is now active! 🎉"
 }

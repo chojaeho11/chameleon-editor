@@ -419,12 +419,27 @@ async function fetchUserDiscountRate() {
     try {
         const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
         const role = data?.role;
-        
-        if (role === 'franchise') currentUserDiscountRate = 0.10; 
-        else if (role === 'platinum' || role === 'partner' || role === 'partners') currentUserDiscountRate = 0.05; 
-        else if (role === 'gold') currentUserDiscountRate = 0.03; 
+
+        if (role === 'franchise') currentUserDiscountRate = 0.10;
+        else if (role === 'platinum' || role === 'partner' || role === 'partners') currentUserDiscountRate = 0.05;
+        else if (role === 'gold') currentUserDiscountRate = 0.03;
+        else if (role === 'subscriber') currentUserDiscountRate = 0.10;
         else currentUserDiscountRate = 0;
-        
+
+        // PRO 구독자는 최소 10% 할인 보장 (등급 할인이 더 낮을 경우)
+        if (role !== 'subscriber' && currentUserDiscountRate < 0.10) {
+            try {
+                const { data: subData } = await sb.from('subscriptions')
+                    .select('status')
+                    .eq('user_id', currentUser.id)
+                    .eq('status', 'active')
+                    .maybeSingle();
+                if (subData) {
+                    currentUserDiscountRate = Math.max(currentUserDiscountRate, 0.10);
+                }
+            } catch(subErr) { /* ignore */ }
+        }
+
     } catch(e) {
         console.warn("등급 정보 로드 실패:", e);
         currentUserDiscountRate = 0;
