@@ -878,6 +878,13 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
         <span data-i18n="btn_next">다음</span> <i class="fa-solid fa-chevron-right"></i>
     </button>
 </div>
+    <div style="max-width:600px; margin:0 auto 15px; padding:0 15px; position:relative;">
+        <input type="text" id="startTplSearch"
+               placeholder="🔍 템플릿 검색..." data-i18n-placeholder="ph_search_template"
+               onkeyup="if(window.searchTemplates) window.searchTemplates(this.value)"
+               style="width:100%; padding:12px 12px 12px 15px; border:2px solid #e2e8f0; border-radius:12px; font-size:14px; outline:none; background:#f8fafc; transition:border-color 0.2s;"
+               onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
+    </div>
     <div id="startTemplateGrid" class="template-grid-start"></div>
 
 <div class="gallery-section">
@@ -5638,7 +5645,7 @@ if (w >= 20 && h >= 20) {
     // [1] 템플릿 페이징 시스템 (28개씩 보기) - 수정됨
     // ==========================================
 
-    const ITEMS_PER_PAGE = 25; // 한 페이지당 25개 (5x5)
+    const ITEMS_PER_PAGE = 20; // 한 페이지당 20개
     let currentTemplatePage = 0;
     let lastSearchKeyword = '';
 
@@ -6648,7 +6655,7 @@ window.filterModalItems = function(keyword) {
     <div class="modal-box" style="width: 800px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 0; text-align: left;">
         <!-- 헤더 -->
         <div style="padding: 25px 30px 15px 30px; position: relative;">
-            <button onclick="document.getElementById('designStartModal').style.display='none'" style="position:absolute; top:15px; right:20px; background:none; border:none; font-size:22px; cursor:pointer; color:#94a3b8; padding:5px;">&times;</button>
+            <button onclick="document.getElementById('designStartModal').style.display='none'" style="position:absolute; top:12px; right:15px; background:#f1f5f9; border:none; font-size:24px; cursor:pointer; color:#64748b; padding:4px 10px; border-radius:8px; line-height:1;">&times;</button>
             <h2 style="margin:0 0 5px 0; font-size:22px; font-weight:800; color:#1e293b;" data-i18n="dsm_title">무엇을 만들어야 하나요?</h2>
             <p style="margin:0; font-size:13px; color:#94a3b8;" data-i18n="dsm_subtitle">판형을 선택하면 바로 에디터가 열립니다.</p>
         </div>
@@ -6741,6 +6748,10 @@ window.filterModalItems = function(keyword) {
                 <input type="number" id="dsmCustomH" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:80px; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; text-align:center;">
                 <button onclick="window.dsmOpenCustom()" style="padding:8px 16px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
             </div>
+        </div>
+
+        <div style="text-align:center; margin-top:15px;">
+            <button onclick="document.getElementById('designStartModal').style.display='none'" class="btn-round" style="width:100%; padding:12px; background:#f1f5f9; color:#64748b; border:none; font-size:14px; font-weight:600; border-radius:10px;" data-i18n="btn_close">닫기</button>
         </div>
 
         <!-- 인쇄 카테고리 뷰 (처음에 숨김) -->
