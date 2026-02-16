@@ -94,50 +94,37 @@ function formatPrice(krw: number, country: string): string {
     return val.toLocaleString("ko") + "원";
 }
 
-// ── 배송 요금표 (KRW 기준, 제품별 예상 단가) ──
-// zone: local(공장근처 ~100km), domestic(같은국가 100~1500km), intl(해외)
-const SHIPPING_RATES: Record<string, Record<string, { price: number; eta: string } | null>> = {
-    general: {
-        local_truck: { price: 50000, eta: "1" },
-        local_courier: { price: 5000, eta: "1-2" },
-        domestic_air: { price: 80000, eta: "1-2" },
-        domestic_truck: { price: 80000, eta: "2-3" },
-        domestic_courier: { price: 10000, eta: "2-3" },
-        intl_air: { price: 150000, eta: "3-5" },
-        intl_sea: { price: 80000, eta: "14-30" },
-        intl_courier: { price: 50000, eta: "5-10" },
+// ── 공장별 배송 요금표 (KRW 기준) ──
+// 화성: 서울경기=용차3만+택배3천(허니콤무료배송), 지방=용차20만+택배3천, 제주=50만, 항공없음
+// 도쿄: 도쿄=용차1만엔+택배기본(허니콤무료), 지방=항공+용차2~3만엔+택배
+const FACTORY_RATES: Record<string, Record<string, Record<string, number | null>>> = {
+    hwaseong: {
+        general:   { local_truck: 30000, local_courier: 3000, domestic_truck: 200000, domestic_courier: 3000, jeju_truck: 500000 },
+        honeycomb: { local_truck: 0,     local_courier: null, domestic_truck: 200000, domestic_courier: null, jeju_truck: 500000 },
+        fabric:    { local_truck: 30000, local_courier: 3000, domestic_truck: 200000, domestic_courier: 3000, jeju_truck: 500000 },
+        acrylic:   { local_truck: 30000, local_courier: 3000, domestic_truck: 200000, domestic_courier: 3000, jeju_truck: 500000 },
     },
-    honeycomb: {
-        local_truck: { price: 300000, eta: "1" },
-        local_courier: null,
-        domestic_air: { price: 3000000, eta: "1-2" },
-        domestic_truck: { price: 1500000, eta: "2-3" },
-        domestic_courier: null,
-        intl_air: { price: 10000000, eta: "3-7" },
-        intl_sea: { price: 4000000, eta: "14-30" },
-        intl_courier: null,
-    },
-    fabric: {
-        local_truck: { price: 30000, eta: "1" },
-        local_courier: { price: 5000, eta: "1-2" },
-        domestic_air: { price: 20000, eta: "1-2" },
-        domestic_truck: { price: 30000, eta: "2-3" },
-        domestic_courier: { price: 8000, eta: "2-3" },
-        intl_air: { price: 50000, eta: "3-5" },
-        intl_sea: { price: 30000, eta: "14-30" },
-        intl_courier: { price: 30000, eta: "5-10" },
-    },
-    acrylic: {
-        local_truck: { price: 80000, eta: "1" },
-        local_courier: { price: 8000, eta: "1-2" },
-        domestic_air: { price: 150000, eta: "1-2" },
-        domestic_truck: { price: 120000, eta: "2-3" },
-        domestic_courier: { price: 15000, eta: "2-3" },
-        intl_air: { price: 300000, eta: "3-5" },
-        intl_sea: { price: 150000, eta: "14-30" },
-        intl_courier: { price: 100000, eta: "5-10" },
+    tokyo: {
+        general:   { local_truck: 50000, local_courier: 5000, domestic_air: 80000, domestic_truck: 125000, domestic_courier: 7500 },
+        honeycomb: { local_truck: 0,     local_courier: null, domestic_air: 1500000, domestic_truck: 150000, domestic_courier: null },
+        fabric:    { local_truck: 50000, local_courier: 5000, domestic_air: 50000, domestic_truck: 125000, domestic_courier: 7500 },
+        acrylic:   { local_truck: 50000, local_courier: 5000, domestic_air: 100000, domestic_truck: 125000, domestic_courier: 7500 },
     },
 };
+// ── 해외 배송 요금표 (항공~$600, 해상~$280) ──
+const INTL_RATES: Record<string, Record<string, number | null>> = {
+    general:   { air: 300000, sea: 140000, courier: 50000 },
+    honeycomb: { air: 10000000, sea: 4000000, courier: null },
+    fabric:    { air: 300000, sea: 140000, courier: 50000 },
+    acrylic:   { air: 300000, sea: 140000, courier: 100000 },
+};
+const ETA: Record<string, string> = {
+    local_truck: "1", local_courier: "1-2",
+    domestic_air: "1-2", domestic_truck: "1-2", domestic_courier: "2-3",
+    jeju_truck: "2-3", jeju_courier: "3-5",
+    intl_air: "3-7", intl_sea: "14-30", intl_courier: "5-10",
+};
+const FREE_LABEL: Record<string, string> = { kr: "무료", ja: "無料", en: "FREE", zh: "免费", ar: "مجاني", es: "GRATIS", de: "KOSTENLOS", fr: "GRATUIT" };
 
 // ── 허니콤보드 설치비 (기사 2명, 기본 100만원/한화 기준) ──
 // 도쿄: 무료, 오사카: 20만엔, 미국: $1000 + 전시노조 별도, 기타: 100만원 환산
@@ -145,8 +132,8 @@ function getInstallationInfo(productType: string, nearestFactory: string, destCi
     if (productType !== "honeycomb") return null;
 
     const cityLower = destCity.toLowerCase();
-    // 도쿄 근처 (< 100km) → 무료 설치
-    const isTokyoLocal = nearestFactory === "tokyo" && distKm < 100;
+    // 공장 근처 (< 100km) → 무료 설치 (화성·도쿄 모두)
+    const isFactoryLocal = distKm < 100;
     // 오사카 판별
     const isOsaka = ["大阪", "osaka", "오사카"].some(k => cityLower.includes(k));
     // 미국 판별
@@ -175,7 +162,7 @@ function getInstallationInfo(productType: string, nearestFactory: string, destCi
     };
 
     let costLine = "";
-    if (isTokyoLocal) {
+    if (isFactoryLocal) {
         const free: Record<string, string> = { kr: "설치비: 무료", ja: "設置費: 無料", en: "Installation: FREE", zh: "安装费: 免费", ar: "التركيب: مجاني", es: "Instalación: GRATIS", de: "Installation: KOSTENLOS", fr: "Installation: GRATUIT" };
         costLine = free[lang] || free["en"];
     } else if (isOsaka) {
@@ -240,7 +227,7 @@ async function resolveCity(cityName: string): Promise<{ lat: number; lng: number
 }
 
 // ── 추천 메시지 ──
-function getRecommendation(zone: string, whName: string, productType: string, bestMethod: string, lang: string): string {
+function getRecommendation(zone: string, whName: string, productType: string, bestMethod: string, lang: string, factoryId: string): string {
     const isHoneycomb = productType === "honeycomb";
     if (zone === "local") {
         if (isHoneycomb) {
@@ -267,6 +254,18 @@ function getRecommendation(zone: string, whName: string, productType: string, be
             return t[lang] || t["en"];
         }
     } else if (zone === "domestic") {
+        if (factoryId === "hwaseong") {
+            const t: Record<string, string> = {
+                kr: `가장 가까운 공장은 ${whName}에 있습니다. 용차 배송 및 택배 배송이 가능합니다.`,
+                ja: `最寄りの工場は${whName}にあります。トラック配送と宅配便が利用可能です。`,
+                en: `The nearest factory is at ${whName}. Truck and courier delivery are available.`,
+                zh: `最近的工厂在${whName}。卡车和快递可选择。`, ar: `أقرب مصنع في ${whName}. الشاحنة والبريد متاحة.`,
+                es: `La fábrica más cercana está en ${whName}. Camión y mensajería disponibles.`,
+                de: `Die nächste Fabrik ist in ${whName}. LKW und Paket verfügbar.`,
+                fr: `L'usine la plus proche est à ${whName}. Camion et colis disponibles.`,
+            };
+            return t[lang] || t["en"];
+        }
         const t: Record<string, string> = {
             kr: `가장 가까운 공장은 ${whName}에 있습니다. 항공·트럭·택배 배송이 가능합니다.`,
             ja: `最寄りの工場は${whName}にあります。航空・トラック・宅配便が利用可能です。`,
@@ -315,36 +314,58 @@ serve(async (req) => {
         const zone = getZone(distKm);
         const whName = nearest.name[lang] || nearest.name.en;
 
-        // 3. 배송 옵션 (존별)
-        const rates = SHIPPING_RATES[product_type] || SHIPPING_RATES["general"];
+        // 3. 배송 옵션 (공장별·존별)
+        const factoryId = nearest.id;
+        const fRates = (FACTORY_RATES[factoryId] || {})[product_type] || (FACTORY_RATES[factoryId] || {})["general"] || {};
+        const iRates = INTL_RATES[product_type] || INTL_RATES["general"];
         const dLabel = DAYS_LABEL[lang] || " days";
         const options: any[] = [];
+        const cityLower = city.toLowerCase().trim();
+        const isJeju = ["제주", "jeju"].some(k => cityLower.includes(k));
+        const honeycombNA = { kr: "허니콤보드는 택배 불가", ja: "ハニカムボードは宅配不可", en: "Honeycomb: courier unavailable", zh: "蜂窝板无法快递" };
+
+        function priceStr(krw: number): string {
+            if (krw === 0) return FREE_LABEL[lang] || "FREE";
+            return "~" + formatPrice(krw, country);
+        }
+        function addUnavailableCourier() {
+            if (product_type === "honeycomb") options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "-", eta: "-", unavailable: true, reason: honeycombNA[lang] || "Courier unavailable" });
+        }
 
         if (zone === "local") {
-            // 근거리: 트럭 + 택배
-            const truckR = rates["local_truck"];
-            if (truckR) options.push({ method: "truck", label: LABELS.truck[lang] || LABELS.truck.en, price: "~" + formatPrice(truckR.price, country), eta: truckR.eta + dLabel });
-            const courierR = rates["local_courier"];
-            if (courierR) options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "~" + formatPrice(courierR.price, country), eta: courierR.eta + dLabel });
-            else if (product_type === "honeycomb") options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "-", eta: "-", unavailable: true, reason: { kr: "허니콤보드는 택배 불가", ja: "ハニカムボードは宅配不可", en: "Honeycomb: courier unavailable", zh: "蜂窝板无法快递" }[lang] || "Courier unavailable" });
+            // 근거리 (서울경기 / 도쿄): 트럭 + 택배
+            const truckP = fRates["local_truck"];
+            if (truckP != null) options.push({ method: "truck", label: LABELS.truck[lang] || LABELS.truck.en, price: priceStr(truckP), eta: ETA.local_truck + dLabel });
+            const courierP = fRates["local_courier"];
+            if (courierP != null) options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: priceStr(courierP), eta: ETA.local_courier + dLabel });
+            else addUnavailableCourier();
         } else if (zone === "domestic") {
-            // 국내 원거리: 항공 + 트럭 + 택배
-            const airR = rates["domestic_air"];
-            if (airR) options.push({ method: "air", label: LABELS.air[lang] || LABELS.air.en, price: "~" + formatPrice(airR.price, country), eta: airR.eta + dLabel });
-            const truckR = rates["domestic_truck"];
-            if (truckR) options.push({ method: "truck", label: LABELS.truck[lang] || LABELS.truck.en, price: "~" + formatPrice(truckR.price, country), eta: truckR.eta + dLabel });
-            const courierR = rates["domestic_courier"];
-            if (courierR) options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "~" + formatPrice(courierR.price, country), eta: courierR.eta + dLabel });
-            else if (product_type === "honeycomb") options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "-", eta: "-", unavailable: true, reason: { kr: "허니콤보드는 택배 불가", ja: "ハニカムボードは宅配不可", en: "Honeycomb: courier unavailable", zh: "蜂窝板无法快递" }[lang] || "Courier unavailable" });
+            if (isJeju && factoryId === "hwaseong") {
+                // 제주 특별 요금
+                const jejuP = fRates["jeju_truck"];
+                if (jejuP != null) options.push({ method: "truck", label: LABELS.truck[lang] || LABELS.truck.en, price: priceStr(jejuP), eta: ETA.jeju_truck + dLabel });
+                const courierP = fRates["domestic_courier"];
+                if (courierP != null) options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: priceStr(courierP), eta: ETA.jeju_courier + dLabel });
+                else addUnavailableCourier();
+            } else {
+                // 국내 원거리 (한국=트럭+택배만, 일본=항공+트럭+택배)
+                const airP = fRates["domestic_air"];
+                if (airP != null) options.push({ method: "air", label: LABELS.air[lang] || LABELS.air.en, price: priceStr(airP), eta: ETA.domestic_air + dLabel });
+                const truckP = fRates["domestic_truck"];
+                if (truckP != null) options.push({ method: "truck", label: LABELS.truck[lang] || LABELS.truck.en, price: priceStr(truckP), eta: ETA.domestic_truck + dLabel });
+                const courierP = fRates["domestic_courier"];
+                if (courierP != null) options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: priceStr(courierP), eta: ETA.domestic_courier + dLabel });
+                else addUnavailableCourier();
+            }
         } else {
-            // 해외: 항공 + 해상 + 항공택배
-            const airR = rates["intl_air"];
-            if (airR) options.push({ method: "air", label: LABELS.air[lang] || LABELS.air.en, price: "~" + formatPrice(airR.price, country), eta: airR.eta + dLabel });
-            const seaR = rates["intl_sea"];
-            if (seaR) options.push({ method: "sea", label: LABELS.sea[lang] || LABELS.sea.en, price: "~" + formatPrice(seaR.price, country), eta: seaR.eta + dLabel });
-            const courierR = rates["intl_courier"];
-            if (courierR) options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "~" + formatPrice(courierR.price, country), eta: courierR.eta + dLabel });
-            else if (product_type === "honeycomb") options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "-", eta: "-", unavailable: true, reason: { kr: "허니콤보드는 택배 불가", ja: "ハニカムボードは宅配不可", en: "Honeycomb: courier unavailable", zh: "蜂窝板无法快递" }[lang] || "Courier unavailable" });
+            // 해외: 항공($600) + 해상($280) + 항공택배
+            const airP = iRates["air"];
+            if (airP != null) options.push({ method: "air", label: LABELS.air[lang] || LABELS.air.en, price: "~" + formatPrice(airP, country), eta: ETA.intl_air + dLabel });
+            const seaP = iRates["sea"];
+            if (seaP != null) options.push({ method: "sea", label: LABELS.sea[lang] || LABELS.sea.en, price: "~" + formatPrice(seaP, country), eta: ETA.intl_sea + dLabel });
+            const courierP = iRates["courier"];
+            if (courierP != null) options.push({ method: "courier", label: LABELS.courier[lang] || LABELS.courier.en, price: "~" + formatPrice(courierP, country), eta: ETA.intl_courier + dLabel });
+            else addUnavailableCourier();
         }
 
         // 4. BEST 표시 (첫번째 이용가능 옵션)
@@ -356,7 +377,7 @@ serve(async (req) => {
 
         // 6. 추천 문구
         const bestMethod = avail.length > 0 ? avail[0].method : "truck";
-        const recommendation = getRecommendation(zone, whName, product_type, bestMethod, lang);
+        const recommendation = getRecommendation(zone, whName, product_type, bestMethod, lang, factoryId);
 
         return new Response(JSON.stringify({
             warehouse: whName,
