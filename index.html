@@ -588,9 +588,7 @@
         .sc-form input, .sc-form select { padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: all 0.2s; background: #f8fafc; color: #1e293b; font-weight: 500; }
         .sc-form input:focus, .sc-form select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); background: #fff; }
         .sc-form input::placeholder { color: #94a3b8; font-weight: 400; }
-        .sc-dim-row { display: flex; gap: 6px; align-items: center; grid-column: 1 / -1; }
-        .sc-dim-row input { flex: 1; min-width: 0; text-align: center; }
-        .sc-dim-sep { color: #cbd5e1; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .sc-form select { grid-column: 1 / -1; }
         .sc-btn { grid-column: 1 / -1; padding: 14px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(16,185,129,0.25); transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .sc-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.35); }
         .sc-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
@@ -643,22 +641,12 @@
         <div class="sc-modal-body">
             <div class="sc-form" id="scForm">
                 <input type="text" id="scCity" data-i18n-placeholder="sc_ph_city" placeholder="배송받을 도시명" style="grid-column: 1 / -1;" />
-                <select id="scProduct" onchange="window._scProductChange && window._scProductChange()">
+                <select id="scProduct">
                     <option value="general" data-i18n="sc_prod_general">일반 인쇄물</option>
                     <option value="honeycomb" data-i18n="sc_prod_honeycomb">허니콤보드</option>
                     <option value="fabric" data-i18n="sc_prod_fabric">패브릭 / 원단</option>
                     <option value="acrylic" data-i18n="sc_prod_acrylic">아크릴 / 포맥스</option>
                 </select>
-                <div style="display:flex; align-items:center; justify-content:flex-end; color:#64748b; font-size:12px; font-weight:600;">
-                    <span data-i18n="sc_size_label">크기 (mm)</span>
-                </div>
-                <div class="sc-dim-row">
-                    <input type="number" id="scW" data-i18n-placeholder="sc_ph_w" placeholder="가로(W)" min="1" max="99999" />
-                    <span class="sc-dim-sep">×</span>
-                    <input type="number" id="scH" data-i18n-placeholder="sc_ph_h" placeholder="세로(H)" min="1" max="99999" />
-                    <span class="sc-dim-sep">×</span>
-                    <input type="number" id="scD" data-i18n-placeholder="sc_ph_depth" placeholder="두께(D)" min="1" max="99999" value="10" />
-                </div>
                 <button class="sc-btn" id="scCalcBtn" onclick="window.calcShipping()">
                     <i class="fa-solid fa-calculator"></i> <span data-i18n="sc_btn_calc">배송비 계산하기</span>
                 </button>
@@ -672,23 +660,9 @@
 document.getElementById('scModal').addEventListener('click', function(e) {
     if (e.target === this) this.style.display = 'none';
 });
-// 허니콤보드 선택 시 기본값 세팅
-window._scProductChange = function() {
-    var sel = document.getElementById('scProduct');
-    if (sel && sel.value === 'honeycomb') {
-        var wI = document.getElementById('scW'), hI = document.getElementById('scH'), dI = document.getElementById('scD');
-        if (wI && (!wI.value || wI.value === '0')) wI.value = '2500';
-        if (hI && (!hI.value || hI.value === '0')) hI.value = '1300';
-        if (dI) dI.value = '1000';
-    }
-};
 window.calcShipping = async function() {
     var city = document.getElementById('scCity').value.trim();
     if (!city) { alert(window.t && window.t('sc_alert_city') || '도시명을 입력해주세요'); return; }
-    var w = parseInt(document.getElementById('scW').value) || 0;
-    var h = parseInt(document.getElementById('scH').value) || 0;
-    var d = parseInt(document.getElementById('scD').value) || 10;
-    if (w <= 0 || h <= 0) { alert(window.t && window.t('sc_alert_size') || '가로, 세로를 입력해주세요'); return; }
 
     var btn = document.getElementById('scCalcBtn');
     var resultDiv = document.getElementById('scResult');
@@ -707,7 +681,7 @@ window.calcShipping = async function() {
         if (!sb) throw new Error('Supabase not initialized');
 
         var resp = await sb.functions.invoke('shipping-calc', {
-            body: { country: country, city: city, width_mm: w, height_mm: h, depth_mm: d, product_type: productType, lang: lang }
+            body: { country: country, city: city, product_type: productType, lang: lang }
         });
         if (resp.error) throw resp.error;
         var data = resp.data;
