@@ -4130,7 +4130,7 @@ video {
     #ch-plugin-launcher,
     div[id*="ch-plugin"],
     iframe[id*="ch-plugin"] {
-        bottom: 70px !important;
+        bottom: 130px !important;
     }
     /* 에디터 화면에서는 숨김 */
     body.editor-active #ch-plugin-launcher,
