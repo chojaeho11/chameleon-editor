@@ -240,19 +240,7 @@ export async function initOrderSystem() {
     // 구매하기 모달: 새로운 재료에 인쇄하기
     window.purchaseNewMaterial = function() {
         document.getElementById('purchaseChoiceModal').style.display = 'none';
-
-        // ★ 현재 캔버스 디자인 사이즈를 기억 (mm 단위)
-        const board = canvas?.getObjects()?.find(o => o.isBoard);
-        if (board) {
-            const mmToPx = 3.7795;
-            window._originalDesignSizeMm = {
-                w: Math.round((board.width * board.scaleX) / mmToPx),
-                h: Math.round((board.height * board.scaleY) / mmToPx)
-            };
-            console.log('[새 재료] 원본 디자인 사이즈 저장:', window._originalDesignSizeMm.w + 'x' + window._originalDesignSizeMm.h + 'mm');
-        }
-
-        // 제품 검색 모달 열기
+        // 제품 검색 모달 열기 (디자인 객체는 confirmChoice에서 저장/복원)
         if (window.showCategorySelectionModal) {
             window._purchaseNewMaterialMode = true;
             window.showCategorySelectionModal();

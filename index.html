@@ -4368,54 +4368,8 @@ window.showChoiceModal = async function(key) {
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
     `;
 
-    // ★ [새 재료 모드] 원본 디자인 사이즈 잠금
-    const isNewMaterialMode = !!window._purchaseNewMaterialMode;
-    const origSize = window._originalDesignSizeMm;
-
     let rightSideUI = "";
-
-    if (isNewMaterialMode && origSize) {
-        // ★ 새 재료 모드: 사이즈 잠금 + 경고문구
-        const lockedW = origSize.w;
-        const lockedH = origSize.h;
-        const area_m2 = (lockedW * lockedH) / 1000000;
-        const sqmPrice = product.price || dPrice || 0;
-        let lockedPrice = Math.floor((area_m2 * sqmPrice) / 10) * 10;
-        if (lockedPrice < 100) lockedPrice = sqmPrice;
-
-        // isCustomModeCurrent를 true로 강제 설정 (confirmChoice에서 커스텀 경로 타게)
-        window.isCustomModeCurrent = true;
-
-        rightSideUI = productHeaderHtml + `
-            <div style="background:#fef3c7; border:2px solid #f59e0b; border-radius:10px; padding:12px; margin-top:10px;">
-                <div style="font-size:12px; font-weight:800; color:#92400e; margin-bottom:6px;">🔒 ${lang==='ja'?'サイズ固定':lang==='en'?'Size Locked':'사이즈 고정'}</div>
-                <div style="display:flex; gap:5px; align-items:center;">
-                    <input type="number" id="inputCustW" value="${lockedW}" readonly style="flex:1; text-align:center; padding:8px; border:1px solid #d97706; border-radius:6px; background:#fffbeb; font-weight:bold; color:#92400e; cursor:not-allowed;">
-                    <span style="color:#92400e; font-weight:bold;">x</span>
-                    <input type="number" id="inputCustH" value="${lockedH}" readonly style="flex:1; text-align:center; padding:8px; border:1px solid #d97706; border-radius:6px; background:#fffbeb; font-weight:bold; color:#92400e; cursor:not-allowed;">
-                    <span style="color:#92400e; font-size:12px; font-weight:bold;">mm</span>
-                </div>
-                <div style="margin-top:8px; font-size:11px; color:#92400e; line-height:1.5;">
-                    ${lang==='ja'
-                        ?'⚠️ 別の素材で購入する場合、最初に選択したサイズが維持されます。異なるサイズや比率をご希望の場合は、新しくデザインしてください。'
-                        :lang==='en'
-                        ?'⚠️ When purchasing with a different material, the originally selected size is maintained. If you want a different size or ratio, please create a new design.'
-                        :'⚠️ 다른 재질로 구매 시 처음 선택한 사이즈가 유지됩니다. 다른 크기나 비율을 원하시면 새로 디자인해주세요.'}
-                </div>
-            </div>
-            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량'}</div>
-            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
-                <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
-                <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
-                <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
-            </div>
-            <div style="background:#1e293b; color:white; padding:15px; border-radius:10px; text-align:center; margin-top:15px;">
-                <div style="font-size:11px; opacity:0.8; margin-bottom:5px;">${lang==='ja'?'見積価格':lang==='en'?'Estimated Price':'예상 견적가'}</div>
-                <div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#fbbf24;">${formatPriceSimple(lockedPrice)}</div>
-                <div id="calcResultSize" style="font-size:11px; opacity:0.7; margin-top:2px;">${lockedW} x ${lockedH} mm (${area_m2.toFixed(4)}m²)</div>
-            </div>
-        </div>`;
-    } else if (isCustom) {
+    if (isCustom) {
         rightSideUI = productHeaderHtml + `
             <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'サイズ入力 (mm)':lang==='zh'?'尺寸输入 (mm)':lang==='ar'?'إدخال الحجم (mm)':lang==='es'?'Tamaño (mm)':lang==='de'?'Größe (mm)':lang==='fr'?'Taille (mm)':lang==='en'?'Enter Size (mm)':'사이즈 입력 (mm)'}</div>
@@ -4438,16 +4392,7 @@ window.showChoiceModal = async function(key) {
             </div>
         </div>`;
     } else {
-        const fixedSizeWarning = (isNewMaterialMode && origSize) ? `
-            <div style="background:#fef3c7; border:2px solid #f59e0b; border-radius:10px; padding:10px; margin-bottom:12px;">
-                <div style="font-size:11px; font-weight:700; color:#92400e;">🔒 ${origSize.w} x ${origSize.h} mm</div>
-                <div style="font-size:11px; color:#92400e; margin-top:4px; line-height:1.4;">
-                    ${lang==='ja'?'⚠️ 別の素材で購入する場合、最初に選択したサイズが維持されます。':lang==='en'?'⚠️ The originally selected size is maintained when purchasing with a different material.':'⚠️ 다른 재질로 구매 시 처음 선택한 사이즈가 유지됩니다. 다른 크기나 비율을 원하시면 새로 디자인해주세요.'}
-                </div>
-            </div>` : '';
-
         rightSideUI = productHeaderHtml + `
-            ${fixedSizeWarning}
             <div style="font-size:20px; font-weight:900; color:#1e293b; margin-bottom:15px;">${formatPriceSimple(dPrice)}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px;">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
@@ -4517,10 +4462,6 @@ window.showChoiceModal = async function(key) {
         }
     }, 400);
 
-    // ★ 새 재료 모드: 잠긴 사이즈로 가격 계산 트리거
-    if (window.calcCustomPrice && window.isCustomModeCurrent) {
-        window.calcCustomPrice();
-    }
     window.updateModalTotal();
 
     // ★ 리뷰 시스템 초기화 (choice-left-content에 DOM append)
@@ -4771,49 +4712,45 @@ if (w >= 20 && h >= 20) {
         // 6. 실행 (에디터 or 장바구니)
 
         // ★ [추가] 에디터에서 "새로운 재료에 인쇄" 모드일 때 특별 처리
+        if (window._purchaseNewMaterialMode && mode === 'editor') {
+            window._purchaseNewMaterialMode = false;
+
+            // 현재 캔버스에서 디자인 객체(보드 제외)를 저장
+            const savedObjects = [];
+            if (typeof canvas !== 'undefined' && canvas) {
+                const json = canvas.toJSON(['id', 'isBoard', 'fontFamily', 'fontSize', 'text', 'lineHeight', 'charSpacing', 'fill', 'stroke', 'strokeWidth', 'paintFirst', 'shadow', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone']);
+                const nonBoardObjs = (json.objects || []).filter(o => !o.isBoard && !o.isMockup && !o.excludeFromExport);
+                window._savedDesignObjects = nonBoardObjs;
+                console.log('[새 재료] 디자인 객체 저장:', nonBoardObjs.length + '개');
+            }
+
+            // 정상적으로 새 에디터 시작 (새 제품 + 새 사이즈 + 새 가격)
+            document.getElementById('choiceModal').style.display = 'none';
+            window.pendingSelectedAddons = selectedAddonCodes;
+            window.pendingSelectedAddonQtys = selectedAddonQtys;
+            window.startEditorDirect(
+                targetCode,
+                window.isCustomModeCurrent ? finalW : null,
+                window.isCustomModeCurrent ? finalH : null,
+                window.isCustomModeCurrent ? finalPricePerItem : null
+            );
+
+            // 에디터 로드 후 저장된 디자인 객체 복원
+            setTimeout(() => {
+                if (window._savedDesignObjects && window._savedDesignObjects.length > 0 && typeof canvas !== 'undefined' && canvas) {
+                    fabric.util.enlivenObjects(window._savedDesignObjects, function(objs) {
+                        objs.forEach(function(obj) { canvas.add(obj); });
+                        canvas.requestRenderAll();
+                        console.log('[새 재료] 디자인 객체 복원 완료:', objs.length + '개');
+                    });
+                    window._savedDesignObjects = null;
+                }
+            }, 1500);
+            return;
+        }
+        // 새 재료 + cart 모드는 정상 장바구니 흐름으로 진행
         if (window._purchaseNewMaterialMode) {
             window._purchaseNewMaterialMode = false;
-            const origSize = window._originalDesignSizeMm;
-
-            if (mode === 'cart') {
-                // 새 제품으로 현재 캔버스 디자인을 장바구니에 추가
-                document.getElementById('choiceModal').style.display = 'none';
-                window.currentProductKey = targetCode;
-                localStorage.setItem('current_product_key', targetCode);
-
-                // ★ [핵심] 원본 디자인 사이즈 + 새 제품 회배 단가로 가격 계산
-                if (origSize && product) {
-                    const area_m2 = (origSize.w * origSize.h) / 1000000;
-                    const sqmPrice = product.price || unitPrice || 0;
-                    let calcPrice = Math.floor((area_m2 * sqmPrice) / 10) * 10;
-                    if (calcPrice < 100) calcPrice = sqmPrice; // 최소 = 기본 단가
-
-                    // PRODUCT_DB에 계산된 가격 + 원본 사이즈 설정 → addCanvasToCart가 그대로 사용
-                    const pdb = window.PRODUCT_DB || {};
-                    if (pdb[targetCode]) {
-                        pdb[targetCode]._base_sqm_price = sqmPrice; // 원본 회배단가 백업
-                        pdb[targetCode].price = calcPrice;
-                        pdb[targetCode]._calculated_price = true;
-                        pdb[targetCode].w_mm = origSize.w;
-                        pdb[targetCode].h_mm = origSize.h;
-                        pdb[targetCode].is_custom_size = true;
-                    }
-                    console.log(`[새 재료 장바구니] ${origSize.w}x${origSize.h}mm / 회배단가:${sqmPrice} / 계산가:${calcPrice}`);
-                }
-
-                window.pendingSelectedAddons = selectedAddonCodes;
-                window.pendingSelectedAddonQtys = selectedAddonQtys;
-                if (window.addCanvasToCart) window.addCanvasToCart();
-                return;
-            } else if (mode === 'editor') {
-                // 제품만 변경, 보드 사이즈는 원본 디자인 유지
-                document.getElementById('choiceModal').style.display = 'none';
-                window.currentProductKey = targetCode;
-                localStorage.setItem('current_product_key', targetCode);
-                // 보드 리사이즈 안 함 (원본 디자인 사이즈 유지)
-                console.log('[새 재료 에디터] 제품 변경됨:', targetCode, '사이즈 유지:', origSize?.w + 'x' + origSize?.h + 'mm');
-                return;
-            }
         }
 
         if (mode === 'editor') {
@@ -6566,7 +6503,15 @@ window.filterModalItems = function(keyword) {
             </button>
         </div>
 
-        <button onclick="document.getElementById('purchaseChoiceModal').style.display='none'" style="margin-top:16px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:8px;" data-i18n="btn_close">닫기</button>
+        <!-- 장바구니 바로가기 -->
+        <button onclick="document.getElementById('purchaseChoiceModal').style.display='none'; document.getElementById('cartPage').style.display='block'; if(window.renderCart) window.renderCart();"
+            style="margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e2e8f0; background:#f8fafc; color:#64748b; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.2s;"
+            onmouseenter="this.style.borderColor='#6366f1'; this.style.color='#6366f1'"
+            onmouseleave="this.style.borderColor='#e2e8f0'; this.style.color='#64748b'">
+            <i class="fa-solid fa-cart-shopping"></i> <span data-i18n="btn_go_cart">장바구니 바로가기</span>
+        </button>
+
+        <button onclick="document.getElementById('purchaseChoiceModal').style.display='none'" style="margin-top:8px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:8px;" data-i18n="btn_close">닫기</button>
     </div>
 </div>
 
