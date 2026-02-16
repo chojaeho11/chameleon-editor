@@ -568,12 +568,80 @@
         </div>
 </div>
 
-<!-- 배송비 계산기 버튼 -->
-<div id="shippingCalcSection" style="display:none; text-align:center; margin: 20px auto; max-width:1200px; padding: 0 20px;">
-    <button onclick="document.getElementById('scModal').style.display='flex'; document.body.style.overflow='hidden';" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 50px; padding: 16px 44px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(16,185,129,0.3); transition: all 0.25s; display: inline-flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-truck-fast"></i> <span data-i18n="sc_btn_open">배송비 계산기</span>
-    </button>
-    <p style="margin: 12px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;" data-i18n="sc_partners">카멜레온프린팅은 전세계 20여 개국 56개의 협력사와 운영됩니다.</p>
+<!-- 배송비 계산기 배너 -->
+<div id="shippingCalcSection" style="display:none;">
+<style>
+    .sc-banner { position:relative; overflow:hidden; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); padding:60px 20px 50px; text-align:center; max-width:100%; margin:0; }
+    .sc-banner::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background: radial-gradient(ellipse at 30% 20%, rgba(99,102,241,0.15) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(16,185,129,0.1) 0%, transparent 50%); pointer-events:none; }
+    /* 비행기 애니메이션 */
+    @keyframes scFlyPlane { 0%{transform:translate(-100px,40px) rotate(-5deg);opacity:0} 15%{opacity:0.7} 50%{transform:translate(50vw,-20px) rotate(-3deg);opacity:0.7} 85%{opacity:0.7} 100%{transform:translate(110vw,-60px) rotate(-5deg);opacity:0} }
+    .sc-plane { position:absolute; top:15%; font-size:28px; animation: scFlyPlane 8s linear infinite; opacity:0; z-index:1; filter: drop-shadow(0 0 8px rgba(99,102,241,0.5)); }
+    .sc-plane:nth-child(2) { top:65%; animation-delay:4s; animation-duration:10s; font-size:22px; }
+    /* 배 애니메이션 */
+    @keyframes scSailShip { 0%{transform:translateX(110vw)} 100%{transform:translateX(-120px)} }
+    .sc-ship { position:absolute; bottom:12%; font-size:24px; animation: scSailShip 14s linear infinite; z-index:1; filter: drop-shadow(0 0 6px rgba(56,189,248,0.4)); }
+    .sc-ship:nth-child(4) { bottom:25%; animation-duration:18s; animation-delay:6s; font-size:18px; opacity:0.5; }
+    /* 파도 */
+    @keyframes scWave { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-25px)} }
+    .sc-wave { position:absolute; bottom:0; left:0; width:200%; height:40px; background: repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(56,189,248,0.06) 40px, rgba(56,189,248,0.06) 80px); animation: scWave 4s ease-in-out infinite; }
+    /* 별 반짝임 */
+    @keyframes scTwinkle { 0%,100%{opacity:0.2} 50%{opacity:0.8} }
+    .sc-star { position:absolute; width:3px; height:3px; background:#fff; border-radius:50%; animation: scTwinkle 2s ease-in-out infinite; }
+    /* 텍스트 페이드인 */
+    @keyframes scFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .sc-fade { animation: scFadeUp 0.8s ease forwards; opacity:0; }
+    .sc-fade-d1 { animation-delay:0.2s; } .sc-fade-d2 { animation-delay:0.4s; } .sc-fade-d3 { animation-delay:0.6s; } .sc-fade-d4 { animation-delay:0.8s; }
+    /* 슬라이드 텍스트 */
+    @keyframes scSlideText { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
+    .sc-slide-track { overflow:hidden; width:100%; max-width:800px; margin:0 auto; }
+    .sc-slide-text { display:inline-block; white-space:nowrap; animation: scSlideText 18s linear infinite; color:rgba(255,255,255,0.25); font-size:13px; font-weight:600; letter-spacing:2px; }
+    /* 버튼 */
+    .sc-cta-btn { display:inline-flex; align-items:center; gap:12px; background:linear-gradient(135deg,#059669,#10b981); color:#fff; border:none; border-radius:60px; padding:18px 52px; font-size:18px; font-weight:800; cursor:pointer; box-shadow:0 8px 30px rgba(16,185,129,0.35); transition:all 0.3s; position:relative; z-index:2; }
+    .sc-cta-btn:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 12px 40px rgba(16,185,129,0.45); }
+    @media(max-width:600px) { .sc-banner { display:none !important; } }
+</style>
+<div class="sc-banner">
+    <!-- 별 -->
+    <div class="sc-star" style="top:10%;left:15%;animation-delay:0s;"></div>
+    <div class="sc-star" style="top:20%;left:45%;animation-delay:0.7s;"></div>
+    <div class="sc-star" style="top:8%;left:75%;animation-delay:1.4s;"></div>
+    <div class="sc-star" style="top:35%;left:90%;animation-delay:0.3s;"></div>
+    <div class="sc-star" style="top:15%;left:60%;animation-delay:1.8s;"></div>
+    <div class="sc-star" style="top:5%;left:30%;animation-delay:2.2s;"></div>
+    <div class="sc-star" style="top:30%;left:10%;animation-delay:1.1s;"></div>
+    <!-- 비행기 -->
+    <div class="sc-plane">✈️</div>
+    <div class="sc-plane">✈️</div>
+    <!-- 배 -->
+    <div class="sc-ship">🚢</div>
+    <div class="sc-ship">🚢</div>
+    <!-- 파도 -->
+    <div class="sc-wave"></div>
+    <!-- 콘텐츠 -->
+    <div style="position:relative; z-index:2;">
+        <div class="sc-fade sc-fade-d1" style="margin-bottom:8px;">
+            <span style="display:inline-block; background:rgba(99,102,241,0.2); color:#a5b4fc; padding:6px 18px; border-radius:30px; font-size:13px; font-weight:700; letter-spacing:1px;">
+                🌏 GLOBAL SHIPPING NETWORK
+            </span>
+        </div>
+        <h2 class="sc-fade sc-fade-d2" style="color:#fff; font-size:28px; font-weight:900; margin:16px 0 8px; line-height:1.35; letter-spacing:-0.5px;">
+            <span data-i18n="sc_banner_title">전세계 20여 개국<br>56개 파트너와 함께합니다</span>
+        </h2>
+        <p class="sc-fade sc-fade-d3" style="color:rgba(255,255,255,0.6); font-size:15px; margin:0 0 28px; line-height:1.6;">
+            <span data-i18n="sc_banner_desc">카멜레온프린팅은 철저하게 약속을 지키는 한국인이 운영합니다.</span>
+        </p>
+        <div class="sc-fade sc-fade-d3">
+            <button class="sc-cta-btn" onclick="document.getElementById('scModal').style.display='flex'; document.body.style.overflow='hidden';">
+                <i class="fa-solid fa-truck-fast"></i> <span data-i18n="sc_btn_open">배송비 계산기</span>
+            </button>
+        </div>
+        <div class="sc-fade sc-fade-d4" style="margin-top:24px;">
+            <div class="sc-slide-track">
+                <span class="sc-slide-text">KOREA · JAPAN · USA · CHINA · SINGAPORE · GERMANY · FRANCE · SPAIN · UAE · MALAYSIA · UK · AUSTRALIA · CANADA · THAILAND · VIETNAM · INDIA · INDONESIA</span>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 <!-- 배송비 계산기 모달 -->
