@@ -840,13 +840,13 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
         <div class="sub-cards">
             <div class="sub-card" onclick="window.startSubscription('monthly')">
                 <div class="sub-card-plan" data-i18n="sub_monthly">월간 구독</div>
-                <div class="sub-card-price" id="subPriceMonthly">₩9,000<small>/월</small></div>
+                <div class="sub-card-price" id="subPriceMonthly">₩5,000<small>/월</small></div>
                 <div class="sub-card-period" data-i18n="sub_monthly_period">매월 자동 결제</div>
                 <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
             </div>
             <div class="sub-card popular" onclick="window.startSubscription('annual')">
                 <div class="sub-card-plan" data-i18n="sub_annual">연간 구독</div>
-                <div class="sub-card-price" id="subPriceAnnual">₩86,400<small>/년</small></div>
+                <div class="sub-card-price" id="subPriceAnnual">₩48,000<small>/년</small></div>
                 <div class="sub-card-period" data-i18n="sub_annual_period">연 1회 결제</div>
                 <div class="sub-card-save" data-i18n="sub_save">20% 할인</div>
                 <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
@@ -889,7 +889,7 @@ window.subscriptionPlan = null;
 
 // Pricing per country
 const SUB_PRICING = {
-    'KR': { monthly: '₩9,000', annual: '₩86,400', monthlyPer: '/월', annualPer: '/년', currency: 'krw' },
+    'KR': { monthly: '₩5,000', annual: '₩48,000', monthlyPer: '/월', annualPer: '/년', currency: 'krw' },
     'JP': { monthly: '¥900', annual: '¥8,640', monthlyPer: '/月', annualPer: '/年', currency: 'jpy' },
     'US': { monthly: '$9', annual: '$86.40', monthlyPer: '/mo', annualPer: '/yr', currency: 'usd' },
     'CN': { monthly: '¥60', annual: '¥576', monthlyPer: '/月', annualPer: '/年', currency: 'cny' },

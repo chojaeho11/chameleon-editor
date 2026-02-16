@@ -20,7 +20,7 @@ const PRICE_MAP: Record<string, { monthly: string; annual: string; currency: str
 
 // Fallback: create price on-the-fly if no Price ID configured
 const AMOUNT_MAP: Record<string, { monthly: number; annual: number; currency: string }> = {
-  'KR': { monthly: 9000, annual: 86400, currency: 'krw' },
+  'KR': { monthly: 5000, annual: 48000, currency: 'krw' },
   'JP': { monthly: 900, annual: 8640, currency: 'jpy' },
   'US': { monthly: 900, annual: 8640, currency: 'usd' },   // cents
   'CN': { monthly: 6000, annual: 57600, currency: 'cny' },
