@@ -5620,7 +5620,7 @@ if (w >= 20 && h >= 20) {
 
             // 데이터가 없을 때
             if (!data || data.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#FFFFFF;">검색 결과가 없습니다.</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#FFFFFF;">' + (window.t && window.t('search_no_result') || '검색 결과가 없습니다.') + '</div>';
                 updatePaginationButtons(page, 0);
                 return;
             }
@@ -6480,8 +6480,8 @@ window.filterModalItems = function(keyword) {
         grid.innerHTML = `
             <div style="grid-column:1/-1; text-align:center; padding: 60px 0; color:#94a3b8;">
                 <i class="fa-solid fa-magnifying-glass" style="font-size:40px; margin-bottom:15px; opacity:0.5;"></i><br>
-                <span style="font-size:18px; font-weight:bold; color:#475569;">찾으시는 상품을 검색해주세요.</span><br>
-                <span style="font-size:14px; margin-top:5px; display:inline-block;">(예: 배너, 현수막, 텀블러 등)</span>
+                <span style="font-size:18px; font-weight:bold; color:#475569;">${window.t && window.t('search_guide') || '찾으시는 상품을 검색해주세요.'}</span><br>
+                <span style="font-size:14px; margin-top:5px; display:inline-block;">${window.t && window.t('search_guide_ex') || '(예: 배너, 현수막, 텀블러 등)'}</span>
             </div>
         `;
         return;
@@ -6498,7 +6498,7 @@ window.filterModalItems = function(keyword) {
         grid.innerHTML = `
             <div style="grid-column:1/-1; text-align:center; padding: 50px 0; color:#94a3b8;">
                 <i class="fa-solid fa-circle-exclamation" style="font-size:30px; margin-bottom:10px;"></i><br>
-                <span>검색 결과가 없습니다.</span>
+                <span>${window.t && window.t('search_no_result') || '검색 결과가 없습니다.'}</span>
             </div>
         `;
         return;
