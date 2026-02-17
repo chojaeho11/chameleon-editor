@@ -582,7 +582,7 @@
             전담 매니저가 쉽게 주문 하실 수 있도록 가이드 합니다.
         </p>
 
-        <button onclick="document.getElementById('vipOrderModal').style.display='flex'; loadVipHoneycombItems();" class="btn-round" style="background: linear-gradient(135deg, #fff 0%, #ede9fe 100%); color: #5b21b6; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); width: auto; display: inline-flex; gap: 10px; align-items: center; margin-bottom: 20px; border-radius: 50px;">
+        <button onclick="document.getElementById('vipOrderModal').style.display='flex';" class="btn-round" style="background: linear-gradient(135deg, #fff 0%, #ede9fe 100%); color: #5b21b6; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); width: auto; display: inline-flex; gap: 10px; align-items: center; margin-bottom: 20px; border-radius: 50px;">
             <i class="fa-solid fa-crown" style="color: #d97706;"></i> <span data-i18n="home_btn_vip_upload">VIP 주문 파일 업로드 (원스톱 접수)</span>
         </button>
 
@@ -7221,25 +7221,10 @@ if (w >= 20 && h >= 20) {
 </style>
 
 <div id="vipOrderModal" class="modal-bg" style="z-index: 30000; display: none; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 780px; max-width: 95%;">
+    <div class="modal-box" style="width: 550px; max-width: 95%;">
         <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); margin: -25px -25px 20px -25px; padding: 25px 25px 20px; color: white; border-radius: 12px 12px 0 0; text-align: center;">
             <h3 style="margin: 0; font-size: 22px; color: #fff;"><i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span data-i18n="vip_form_title">전시부스 허니콤보드 전용 접수</span></h3>
             <p style="margin: 10px 0 0 0; opacity: 0.8; font-size: 13px;" data-i18n="vip_form_desc">전담 매니저를 선택하고 파일을 올려주세요.</p>
-        </div>
-
-        <!-- 허니콤보드 소분류 -->
-        <div style="margin-bottom: 18px;">
-            <label class="form-label" style="font-weight:bold; font-size:13px; margin-bottom:8px; display:block;"><i class="fa-solid fa-th-large" style="color:#6366f1;margin-right:4px;"></i> 허니콤보드 제품 선택</label>
-            <div id="vipHoneycombGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:8px;">
-                <div style="text-align:center; grid-column:1/-1; padding:15px; color:#94a3b8; font-size:13px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>
-            </div>
-            <style>
-                .vip-hc-item { border:2px solid #e2e8f0; border-radius:10px; padding:10px 8px; text-align:center; cursor:pointer; transition:all 0.2s; background:#fff; }
-                .vip-hc-item:hover { border-color:#6366f1; background:#eef2ff; transform:translateY(-2px); box-shadow:0 4px 12px rgba(99,102,241,0.15); }
-                .vip-hc-item.selected { border-color:#4338ca; background:#e0e7ff; box-shadow:0 0 0 2px #6366f1 inset; }
-                .vip-hc-item img { width:60px; height:60px; object-fit:cover; border-radius:6px; margin-bottom:4px; }
-                .vip-hc-item .hc-name { font-size:11px; font-weight:600; color:#1e1b4b; line-height:1.3; }
-            </style>
         </div>
 
         <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -7351,80 +7336,29 @@ function updateVipFileList(input) {
     }
 }
 
-// 허니콤보드 소분류 그리드 로드 (메인 VIP 섹션)
-window.loadHomeHcGrid = async function loadHomeHcGrid(){
+// 허니콤보드 소분류 그리드 로드 (메인 VIP 섹션) — globalSubCats 사용
+window.loadHomeHcGrid = function(){
     const grid = document.getElementById('homeHoneycombGrid');
     if(!grid) return;
-    const _sb = window.sb;
-    if(!_sb) return;
-    try {
-        const { data: topCats } = await _sb.from('admin_top_categories').select('code, name').ilike('name','%허니콤%');
-        if(!topCats || !topCats.length) return;
-        const topCode = topCats[0].code;
-        const { data: subs } = await _sb.from('admin_categories').select('code, name, thumb_url').eq('top_category_code', topCode).order('sort_order',{ascending:true});
-        if(!subs || !subs.length) return;
-        const thumbMap = window.globalCatThumbMap || {};
-        let html = '';
-        subs.forEach(sc => {
-            const img = sc.thumb_url || thumbMap[sc.code] || '';
-            const name = sc.name || sc.code;
-            html += `<div class="hc-home-card" onclick="document.getElementById('vipOrderModal').style.display='flex';loadVipHoneycombItems();">`;
-            if(img) html += `<img src="${img}" alt="${name}" onerror="this.style.display='none'">`;
-            else html += `<div style="width:100%;aspect-ratio:1;background:rgba(255,255,255,0.15);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:28px;"><i class="fa-solid fa-box"></i></div>`;
-            html += `<div class="hc-label">${name}</div></div>`;
-        });
-        grid.innerHTML = html;
-    } catch(e) {
-        console.error('홈 허니콤보드 그리드 로드 실패:', e);
-    }
-}
-
-// 허니콤보드 소분류 로드
-window._vipHcLoaded = false;
-window._vipSelectedHc = null;
-async function loadVipHoneycombItems() {
-    if (window._vipHcLoaded) return;
-    const grid = document.getElementById('vipHoneycombGrid');
-    if (!grid) return;
-    try {
-        const _sb = window.sb || (window.__supabase && window.__supabase);
-        if (!_sb) { grid.innerHTML = '<div style="color:#ef4444;font-size:12px">DB 연결 대기 중... 잠시 후 다시 시도해주세요.</div>'; return; }
-        // 허니콤보드 대분류 코드 찾기
-        const { data: topCats } = await _sb.from('admin_top_categories').select('code, name').ilike('name', '%허니콤%');
-        let topCode = topCats && topCats.length > 0 ? topCats[0].code : null;
-        if (!topCode) {
-            // fallback: 전역 데이터에서 찾기
-            if (window.globalSubCats) {
-                const hcSubs = window.globalSubCats.filter(s => s.top_category_code && (s.top_category_code.includes('honey') || s.name.includes('허니콤')));
-                if (hcSubs.length > 0) topCode = hcSubs[0].top_category_code;
-            }
-        }
-        if (!topCode) { grid.innerHTML = '<div style="color:#94a3b8;font-size:12px">허니콤보드 카테고리를 찾을 수 없습니다.</div>'; return; }
-        // 소분류 로드
-        const { data: subCats } = await _sb.from('admin_categories').select('code, name, thumb_url, name_jp, name_us').eq('top_category_code', topCode).order('sort_order', { ascending: true });
-        if (!subCats || subCats.length === 0) { grid.innerHTML = '<div style="color:#94a3b8;font-size:12px">소분류가 없습니다.</div>'; return; }
-        // 소분류에 해당하는 대표 이미지 가져오기
-        const thumbMap = window.globalCatThumbMap || {};
-        let html = '';
-        subCats.forEach(sc => {
-            const img = sc.thumb_url || thumbMap[sc.code] || '';
-            const name = sc.name || sc.code;
-            html += `<div class="vip-hc-item" data-code="${sc.code}" onclick="window._selectVipHc(this,'${sc.code}','${name.replace(/'/g,"\\'")}')">`;
-            if (img) html += `<img src="${img}" alt="${name}" onerror="this.style.display='none'">`;
-            else html += `<div style="width:60px;height:60px;background:#f1f5f9;border-radius:6px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:24px;"><i class="fa-solid fa-box"></i></div>`;
-            html += `<div class="hc-name">${name}</div></div>`;
-        });
-        grid.innerHTML = html;
-        window._vipHcLoaded = true;
-    } catch(e) {
-        console.error('VIP 허니콤보드 로드 실패:', e);
-        grid.innerHTML = '<div style="color:#ef4444;font-size:12px">로드 실패. 다시 시도해주세요.</div>';
-    }
-}
-window._selectVipHc = function(el, code, name) {
-    document.querySelectorAll('.vip-hc-item').forEach(e => e.classList.remove('selected'));
-    el.classList.add('selected');
-    window._vipSelectedHc = { code, name };
+    const subs = window.globalSubCats;
+    if(!subs || !subs.length) return;
+    // 허니콤보드 대분류 코드 찾기 (이름에 "허니콤" 포함된 소분류의 top_category_code)
+    const hcSub = subs.find(s => s.name && s.name.includes('허니콤'));
+    if(!hcSub) return;
+    const topCode = hcSub.top_category_code;
+    const hcSubs = subs.filter(s => s.top_category_code === topCode);
+    if(!hcSubs.length) return;
+    const thumbMap = window.globalCatThumbMap || {};
+    let html = '';
+    hcSubs.forEach(sc => {
+        const img = sc.thumb_url || thumbMap[sc.code] || '';
+        const name = sc.name || sc.code;
+        html += `<div class="hc-home-card" onclick="document.getElementById('vipOrderModal').style.display='flex';">`;
+        if(img) html += `<img src="${img}" alt="${name}" onerror="this.style.display='none'">`;
+        else html += `<div style="width:100%;aspect-ratio:1;background:rgba(255,255,255,0.15);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:28px;"><i class="fa-solid fa-box"></i></div>`;
+        html += `<div class="hc-label">${name}</div></div>`;
+    });
+    grid.innerHTML = html;
 };
 </script>
 <script type="module">

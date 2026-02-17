@@ -1181,13 +1181,11 @@ window.submitVipOrder = async function() {
         }
 
         // 2. DB 저장 (파일 목록은 JSON으로 저장)
-        const hcSelected = window._vipSelectedHc ? window._vipSelectedHc.name : '';
-        const fullMemo = hcSelected ? `[허니콤보드: ${hcSelected}] ${memo}` : memo;
         const { error: dbErr } = await sb.from('vip_orders').insert({
             customer_name: name,
             customer_phone: phone,
             preferred_manager: managerName,
-            memo: fullMemo,
+            memo: memo,
             files: uploadedFiles, // JSONB 타입
             status: '대기중'
         });
@@ -1203,8 +1201,6 @@ window.submitVipOrder = async function() {
         document.getElementById('vipMemo').value = '';
         document.getElementById('vipFileInput').value = '';
         document.getElementById('vipFileList').innerHTML = '';
-        window._vipSelectedHc = null;
-        document.querySelectorAll('.vip-hc-item').forEach(e => e.classList.remove('selected'));
 
     } catch (e) {
         console.error(e);
