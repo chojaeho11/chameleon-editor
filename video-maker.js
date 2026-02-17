@@ -494,13 +494,26 @@ async function loadAudioFromDB(page) {
 }
 window._veAudioPage=function(pg){loadAudioFromDB(pg);};
 
+const _SB_STORAGE='https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/';
+function _isUrl(s){return s&&typeof s==='string'&&(s.startsWith('http')||s.startsWith('//')||s.startsWith('data:')||s.startsWith('blob:'));}
 function getAudioUrl(item){
     if(!item) return '';
-    const u=item.data_url;
-    if(u&&typeof u==='string'&&(u.startsWith('http')||u.startsWith('//')||u.startsWith('data:')||u.startsWith('blob:'))) return u;
-    // data_url might be thumb_url for audio uploaded via Python
-    const t=item.thumb_url;
-    if(t&&typeof t==='string'&&(t.startsWith('http')||t.startsWith('//'))) return t;
+    // 1. data_url is a full URL
+    if(_isUrl(item.data_url)) return item.data_url;
+    // 2. thumb_url is a full URL (Python upload may store here)
+    if(_isUrl(item.thumb_url)) return item.thumb_url;
+    // 3. data_url is a storage path (e.g. "design/audio/file.mp3" or "audio/file.mp3")
+    if(item.data_url&&typeof item.data_url==='string'&&!item.data_url.startsWith('{')){
+        const p=item.data_url;
+        if(p.startsWith('design/')) return _SB_STORAGE+p;
+        return _SB_STORAGE+'design/'+p;
+    }
+    if(item.thumb_url&&typeof item.thumb_url==='string'&&!item.thumb_url.startsWith('{')){
+        const p=item.thumb_url;
+        if(p.startsWith('design/')) return _SB_STORAGE+p;
+        return _SB_STORAGE+'design/'+p;
+    }
+    console.warn('Invalid audio item:',item);
     return '';
 }
 window._veSelectDBAudio = function(idx) {
