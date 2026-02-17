@@ -635,5 +635,19 @@
   "img_tool_eraser": "지우개",
   "eraser_undo": "되돌리기",
   "eraser_cancel": "취소",
-  "eraser_done": "완료"
+  "eraser_done": "완료",
+  "wizard_btn": "AI 디자인 마법사",
+  "wizard_title": "AI 디자인 마법사",
+  "wizard_desc": "제목을 입력하시면 자동으로 디자인을 해 드립니다.",
+  "wizard_label_title": "디자인 제목",
+  "wizard_placeholder": "예: 카페 오픈, 여름 세일, 생일 축하...",
+  "wizard_label_style": "스타일",
+  "wizard_generate": "디자인 생성하기",
+  "wizard_step_bg": "배경 검색 중...",
+  "wizard_step_title": "제목 배치 중...",
+  "wizard_step_desc": "설명 생성 중...",
+  "wizard_step_elements": "디자인 요소 추가 중...",
+  "wizard_step_shapes": "장식 도형 추가 중...",
+  "wizard_step_stickers": "스티커 배치 중...",
+  "wizard_content_hint": "내용을 입력하세요"
 }

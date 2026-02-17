@@ -1011,5 +1011,19 @@
   "img_tool_eraser": "ممحاة",
   "eraser_undo": "تراجع",
   "eraser_cancel": "إلغاء",
-  "eraser_done": "تم"
+  "eraser_done": "تم",
+  "wizard_btn": "معالج التصميم AI",
+  "wizard_title": "معالج التصميم AI",
+  "wizard_desc": "أدخل عنوانًا وسنقوم بإنشاء تصميم تلقائيًا لك.",
+  "wizard_label_title": "عنوان التصميم",
+  "wizard_placeholder": "مثال: افتتاح كبير، تخفيضات صيفية...",
+  "wizard_label_style": "النمط",
+  "wizard_generate": "إنشاء التصميم",
+  "wizard_step_bg": "جاري البحث عن الخلفية...",
+  "wizard_step_title": "جاري وضع العنوان...",
+  "wizard_step_desc": "جاري إنشاء الوصف...",
+  "wizard_step_elements": "جاري إضافة عناصر التصميم...",
+  "wizard_step_shapes": "جاري إضافة الأشكال الزخرفية...",
+  "wizard_step_stickers": "جاري وضع الملصقات...",
+  "wizard_content_hint": "أدخل المحتوى هنا"
 }

@@ -1011,5 +1011,19 @@
   "img_tool_eraser": "橡皮擦",
   "eraser_undo": "撤销",
   "eraser_cancel": "取消",
-  "eraser_done": "完成"
+  "eraser_done": "完成",
+  "wizard_btn": "AI设计向导",
+  "wizard_title": "AI设计向导",
+  "wizard_desc": "输入标题，我们将自动为您生成设计。",
+  "wizard_label_title": "设计标题",
+  "wizard_placeholder": "例：咖啡店开业、夏季促销、生日快乐...",
+  "wizard_label_style": "风格",
+  "wizard_generate": "生成设计",
+  "wizard_step_bg": "搜索背景中...",
+  "wizard_step_title": "放置标题中...",
+  "wizard_step_desc": "生成描述中...",
+  "wizard_step_elements": "添加设计元素中...",
+  "wizard_step_shapes": "添加装饰图形中...",
+  "wizard_step_stickers": "放置贴纸中...",
+  "wizard_content_hint": "请输入内容"
 }

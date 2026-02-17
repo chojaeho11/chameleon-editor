@@ -1011,5 +1011,19 @@
   "img_tool_eraser": "Radierer",
   "eraser_undo": "Rückgängig",
   "eraser_cancel": "Abbrechen",
-  "eraser_done": "Fertig"
+  "eraser_done": "Fertig",
+  "wizard_btn": "AI Design-Assistent",
+  "wizard_title": "AI Design-Assistent",
+  "wizard_desc": "Geben Sie einen Titel ein und wir erstellen automatisch ein Design.",
+  "wizard_label_title": "Design-Titel",
+  "wizard_placeholder": "z.B. Große Eröffnung, Sommerschlussverkauf...",
+  "wizard_label_style": "Stil",
+  "wizard_generate": "Design erstellen",
+  "wizard_step_bg": "Hintergrund wird gesucht...",
+  "wizard_step_title": "Titel wird platziert...",
+  "wizard_step_desc": "Beschreibung wird erstellt...",
+  "wizard_step_elements": "Designelemente werden hinzugefügt...",
+  "wizard_step_shapes": "Dekorative Formen werden hinzugefügt...",
+  "wizard_step_stickers": "Sticker werden platziert...",
+  "wizard_content_hint": "Geben Sie Ihren Inhalt ein"
 }

@@ -1011,5 +1011,19 @@
   "img_tool_eraser": "Eraser",
   "eraser_undo": "Undo",
   "eraser_cancel": "Cancel",
-  "eraser_done": "Done"
+  "eraser_done": "Done",
+  "wizard_btn": "AI Design Wizard",
+  "wizard_title": "AI Design Wizard",
+  "wizard_desc": "Enter a title and we'll auto-generate a design for you.",
+  "wizard_label_title": "Design Title",
+  "wizard_placeholder": "e.g. Grand Opening, Summer Sale, Birthday...",
+  "wizard_label_style": "Style",
+  "wizard_generate": "Generate Design",
+  "wizard_step_bg": "Searching background...",
+  "wizard_step_title": "Placing title...",
+  "wizard_step_desc": "Generating description...",
+  "wizard_step_elements": "Adding design elements...",
+  "wizard_step_shapes": "Adding decorative shapes...",
+  "wizard_step_stickers": "Placing stickers...",
+  "wizard_content_hint": "Enter your content here"
 }

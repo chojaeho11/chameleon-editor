@@ -1011,5 +1011,19 @@
   "img_tool_eraser": "Gomme",
   "eraser_undo": "Annuler",
   "eraser_cancel": "Annuler",
-  "eraser_done": "Terminé"
+  "eraser_done": "Terminé",
+  "wizard_btn": "Assistant Design AI",
+  "wizard_title": "Assistant Design AI",
+  "wizard_desc": "Entrez un titre et nous générerons un design automatiquement.",
+  "wizard_label_title": "Titre du design",
+  "wizard_placeholder": "Ex: Grande ouverture, Soldes d'été...",
+  "wizard_label_style": "Style",
+  "wizard_generate": "Générer le design",
+  "wizard_step_bg": "Recherche d'arrière-plan...",
+  "wizard_step_title": "Placement du titre...",
+  "wizard_step_desc": "Génération de la description...",
+  "wizard_step_elements": "Ajout des éléments...",
+  "wizard_step_shapes": "Ajout des formes décoratives...",
+  "wizard_step_stickers": "Placement des stickers...",
+  "wizard_content_hint": "Entrez votre contenu ici"
 }

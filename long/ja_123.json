@@ -1011,5 +1011,19 @@
   "img_tool_eraser": "消しゴム",
   "eraser_undo": "元に戻す",
   "eraser_cancel": "キャンセル",
-  "eraser_done": "完了"
+  "eraser_done": "完了",
+  "wizard_btn": "AIデザインウィザード",
+  "wizard_title": "AIデザインウィザード",
+  "wizard_desc": "タイトルを入力すると自動でデザインを作成します。",
+  "wizard_label_title": "デザインタイトル",
+  "wizard_placeholder": "例：カフェオープン、サマーセール、お誕生日...",
+  "wizard_label_style": "スタイル",
+  "wizard_generate": "デザイン生成",
+  "wizard_step_bg": "背景を検索中...",
+  "wizard_step_title": "タイトル配置中...",
+  "wizard_step_desc": "説明文を生成中...",
+  "wizard_step_elements": "デザイン要素追加中...",
+  "wizard_step_shapes": "装飾図形追加中...",
+  "wizard_step_stickers": "ステッカー配置中...",
+  "wizard_content_hint": "内容を入力してください"
 }

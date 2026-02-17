@@ -297,4 +297,346 @@ export function initAiTools() {
             }
         };
     }
+
+    // ============================================================
+    // [5] AI Design Wizard (디자인 마법사)
+    // ============================================================
+    window.openDesignWizard = function() {
+        const modal = document.getElementById('designWizardModal');
+        const input = document.getElementById('wizardTitleInput');
+        const prog  = document.getElementById('wizardProgressArea');
+        const btn   = document.getElementById('btnWizardGenerate');
+        if (input) input.value = '';
+        if (prog)  prog.style.display = 'none';
+        if (btn) { btn.disabled = false; btn.querySelector('span').textContent = window.t?.('wizard_generate','디자인 생성하기') || '디자인 생성하기'; }
+        if (modal) { modal.style.display = 'flex'; setTimeout(() => input?.focus(), 150); }
+    };
+
+    // Style toggle
+    document.querySelectorAll('.wizard-style-btn').forEach(b => {
+        b.onclick = () => {
+            document.querySelectorAll('.wizard-style-btn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+        };
+    });
+
+    // Generate button
+    const btnWizGen = document.getElementById('btnWizardGenerate');
+    if (btnWizGen) {
+        btnWizGen.onclick = async () => {
+            const title = document.getElementById('wizardTitleInput')?.value.trim();
+            if (!title) return alert(window.t?.('msg_input_desc','제목을 입력해주세요') || '제목을 입력해주세요');
+            const styleBtn = document.querySelector('.wizard-style-btn.active');
+            const style = styleBtn?.dataset.style || 'modern';
+            btnWizGen.disabled = true;
+            btnWizGen.innerHTML = '<div class="loading-spin" style="width:20px;height:20px;border-width:3px;"></div>';
+            document.getElementById('wizardProgressArea').style.display = 'block';
+            try {
+                await runDesignWizard(title, style);
+                document.getElementById('designWizardModal').style.display = 'none';
+            } catch(e) {
+                console.error('Wizard error:', e);
+                alert(window.t?.('msg_failed','Failed: ') + e.message);
+            } finally {
+                btnWizGen.disabled = false;
+                btnWizGen.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>' + (window.t?.('wizard_generate','디자인 생성하기') || '디자인 생성하기') + '</span>';
+            }
+        };
+    }
+
+    // Enter key trigger
+    const wizInput = document.getElementById('wizardTitleInput');
+    if (wizInput) wizInput.onkeydown = (e) => { if (e.key === 'Enter') btnWizGen?.click(); };
+}
+
+// ============================================================
+// [Design Wizard] Core logic
+// ============================================================
+const WIZARD_STYLES = {
+    modern:  { titleFont:'Black Han Sans', titleColor:'#1e293b', subColor:'#64748b', accent:'#6366f1', rectFill:'rgba(99,102,241,0.07)', rectStroke:'rgba(99,102,241,0.3)' },
+    elegant: { titleFont:'Playfair Display', titleColor:'#1a1a2e', subColor:'#4a4a6a', accent:'#d4af37', rectFill:'rgba(212,175,55,0.06)', rectStroke:'rgba(212,175,55,0.3)' },
+    playful: { titleFont:'Fredoka', titleColor:'#e11d48', subColor:'#64748b', accent:'#f43f5e', rectFill:'rgba(244,63,94,0.07)', rectStroke:'rgba(244,63,94,0.3)' },
+    minimal: { titleFont:'Inter', titleColor:'#111827', subColor:'#9ca3af', accent:'#374151', rectFill:'rgba(55,65,81,0.04)', rectStroke:'rgba(55,65,81,0.2)' }
+};
+
+function _wzSteps() {
+    const t = (k,d) => window.t?.(k,d) || d;
+    return [
+        t('wizard_step_bg',       '배경 검색 중...'),
+        t('wizard_step_title',    '제목 배치 중...'),
+        t('wizard_step_desc',     '설명 생성 중...'),
+        t('wizard_step_elements', '디자인 요소 추가 중...'),
+        t('wizard_step_shapes',   '장식 도형 추가 중...'),
+        t('wizard_step_stickers', '스티커 배치 중...')
+    ];
+}
+
+function _wzRender(steps, idx) {
+    const el = document.getElementById('wizardStepList'); if (!el) return;
+    el.innerHTML = steps.map((s,i) => {
+        const cls = i < idx ? 'done' : i === idx ? 'active' : '';
+        const ico = i < idx ? '<i class="fa-solid fa-check"></i>' : i === idx ? '<div class="loading-spin" style="width:14px;height:14px;border-width:2px;"></div>' : (i+1);
+        return `<div class="wizard-step ${cls}"><span class="step-icon">${ico}</span>${s}</div>`;
+    }).join('');
+    const bar = document.getElementById('wizardProgressBar');
+    if (bar) bar.style.width = Math.min(100, ((idx+1)/steps.length)*100) + '%';
+}
+
+async function runDesignWizard(title, style) {
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) throw new Error('No canvas board');
+    const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);
+    const bL = board.left, bT = board.top;
+    const S = WIZARD_STYLES[style] || WIZARD_STYLES.modern;
+    const steps = _wzSteps();
+
+    // Resolve font by country
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+    const fontMap = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
+    const titleFont = fontMap[country] || S.titleFont;
+
+    // Preload Google Font
+    const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(titleFont) + ':wght@400;700;900&display=swap';
+    if (!document.querySelector(`link[href="${fUrl}"]`)) {
+        const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
+    }
+    await new Promise(r => setTimeout(r, 300)); // font load grace
+
+    // ─── Step 1: Background ───
+    _wzRender(steps, 0);
+    await _wzBg(title, bW, bH, bL, bT);
+
+    // ─── Step 2: Title ───
+    _wzRender(steps, 1);
+    _wzTitle(title, titleFont, S, bW, bH, bL, bT);
+
+    // ─── Step 3: Description ───
+    _wzRender(steps, 2);
+    await _wzDesc(title, S, bW, bH, bL, bT);
+
+    // ─── Step 4: Elements ───
+    _wzRender(steps, 3);
+    await _wzElem(title, bW, bH, bL, bT);
+
+    // ─── Step 5: Shapes ───
+    _wzRender(steps, 4);
+    _wzShapes(S, bW, bH, bL, bT);
+
+    // ─── Step 6: Stickers ───
+    _wzRender(steps, 5);
+    await _wzSticker(title, bW, bH, bL, bT);
+
+    _wzRender(steps, 6);
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
+}
+
+// ─── Step 1: Background from library ───
+async function _wzBg(title, bW, bH, bL, bT) {
+    if (!sb) return;
+    let { data } = await sb.from('library')
+        .select('id, thumb_url, data_url, category')
+        .in('category', ['user_image','photo-bg'])
+        .or(`tags.ilike.%${title}%,title.ilike.%${title}%`)
+        .eq('status','approved')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+    if (!data || !data.length) {
+        // fallback: latest background
+        const r2 = await sb.from('library')
+            .select('id, thumb_url')
+            .in('category', ['user_image','photo-bg','pattern'])
+            .eq('status','approved')
+            .order('created_at', { ascending: false })
+            .limit(1);
+        data = r2.data;
+    }
+    if (!data || !data.length) return;
+
+    let imgUrl = data[0].thumb_url;
+    if (data[0].data_url && typeof data[0].data_url === 'string' && data[0].data_url.startsWith('http')) {
+        imgUrl = data[0].data_url;
+    }
+    if (!imgUrl) return;
+
+    return new Promise(resolve => {
+        fabric.Image.fromURL(imgUrl, img => {
+            if (!img) { resolve(); return; }
+            const scale = Math.max(bW/img.width, bH/img.height);
+            img.set({
+                scaleX: scale, scaleY: scale,
+                left: bL + bW/2, top: bT + bH/2,
+                originX:'center', originY:'center',
+                isTemplateBackground: true,
+                selectable: false, evented: false,
+                opacity: 0.25
+            });
+            canvas.add(img);
+            canvas.sendToBack(img);
+            const board = canvas.getObjects().find(o => o.isBoard);
+            if (board) canvas.sendToBack(board);
+            resolve();
+        }, { crossOrigin:'anonymous' });
+    });
+}
+
+// ─── Step 2: Title text ───
+function _wzTitle(title, font, S, bW, bH, bL, bT) {
+    const sz = Math.round(bW * 0.08);
+    const obj = new fabric.IText(title, {
+        fontFamily: font, fontSize: sz, fontWeight:'900',
+        fill: S.titleColor, originX:'center', originY:'center',
+        textAlign:'center',
+        left: bL + bW/2, top: bT + bH * 0.32,
+        shadow: new fabric.Shadow({ color:'rgba(255,255,255,0.8)', blur:12, offsetX:0, offsetY:0 })
+    });
+    // auto-shrink if too wide
+    if (obj.width > bW * 0.8) obj.set('fontSize', Math.round(sz * (bW*0.8) / obj.width));
+    canvas.add(obj);
+    canvas.bringToFront(obj);
+}
+
+// ─── Step 3: AI description (edge fn → fallback) ───
+async function _wzDesc(title, S, bW, bH, bL, bT) {
+    let text = '';
+    try {
+        const { data, error } = await sb.functions.invoke('generate-text', {
+            body: { prompt: `"${title}" 홍보 문구를 100자 이내로 작성. 텍스트만 반환.`, max_tokens: 80 }
+        });
+        if (!error && data) text = (typeof data === 'string' ? data : data.text || data.result || '').trim();
+    } catch(e) { /* fallback */ }
+
+    if (!text || text.length < 5) {
+        const c = window.SITE_CONFIG?.COUNTRY || 'KR';
+        const fb = {
+            KR: [`${title} - 특별한 경험을 선사합니다. 최고의 품질과 서비스로 고객님을 모십니다.`, `${title} | 지금 바로 만나보세요. 당신만을 위한 특별한 이벤트가 준비되어 있습니다.`],
+            JP: [`${title} - 特別な体験をお届けします。最高の品質とサービスでお待ちしております。`, `${title} | 今すぐチェック。あなただけの特別イベントをご用意しました。`],
+            US: [`${title} - Experience something special. Premium quality and service await you.`, `${title} | Check it out now. An exclusive event prepared just for you.`]
+        };
+        const list = fb[c] || fb['US'];
+        text = list[Math.floor(Math.random() * list.length)];
+    }
+    if (text.length > 120) text = text.substring(0, 117) + '...';
+
+    const obj = new fabric.IText(text, {
+        fontFamily: 'Noto Sans KR, sans-serif', fontSize: Math.round(bW * 0.025),
+        fontWeight:'400', fill: S.subColor,
+        originX:'center', originY:'center', textAlign:'center',
+        left: bL + bW/2, top: bT + bH * 0.44
+    });
+    // wrap: limit width
+    if (obj.width > bW * 0.75) obj.set('fontSize', Math.round(obj.fontSize * (bW*0.75) / obj.width));
+    canvas.add(obj);
+    canvas.bringToFront(obj);
+}
+
+// ─── Step 4: Related element ───
+async function _wzElem(title, bW, bH, bL, bT) {
+    if (!sb) return;
+    const { data } = await sb.from('library')
+        .select('id, thumb_url')
+        .in('category', ['vector','graphic','transparent-graphic'])
+        .or(`tags.ilike.%${title}%,title.ilike.%${title}%`)
+        .eq('status','approved')
+        .order('created_at', { ascending: false })
+        .limit(1);
+    if (!data || !data.length) return;
+
+    return new Promise(resolve => {
+        fabric.Image.fromURL(data[0].thumb_url, img => {
+            if (!img) { resolve(); return; }
+            const target = bW / 3;
+            const scale = target / Math.max(img.width, img.height);
+            img.set({
+                scaleX: scale, scaleY: scale,
+                left: bL + bW * 0.78, top: bT + bH * 0.70,
+                originX:'center', originY:'center'
+            });
+            canvas.add(img);
+            canvas.bringToFront(img);
+            resolve();
+        }, { crossOrigin:'anonymous' });
+    });
+}
+
+// ─── Step 5: Rounded rect + accent line ───
+function _wzShapes(S, bW, bH, bL, bT) {
+    // 하단 라운드 박스
+    const rect = new fabric.Rect({
+        width: bW * 0.85, height: bH * 0.16,
+        rx: 20, ry: 20,
+        fill: S.rectFill, stroke: S.rectStroke, strokeWidth: 2,
+        left: bL + bW/2, top: bT + bH * 0.88,
+        originX:'center', originY:'center'
+    });
+    canvas.add(rect);
+    canvas.bringToFront(rect);
+
+    // 하단 박스 안 안내 텍스트
+    const hint = new fabric.IText(window.t?.('wizard_content_hint','내용을 입력하세요') || '내용을 입력하세요', {
+        fontFamily:'Noto Sans KR, sans-serif', fontSize: Math.round(bW * 0.022),
+        fill: S.subColor, opacity: 0.5,
+        originX:'center', originY:'center',
+        left: bL + bW/2, top: bT + bH * 0.88
+    });
+    canvas.add(hint);
+    canvas.bringToFront(hint);
+
+    // 상단 악센트 라인
+    const line = new fabric.Rect({
+        width: bW * 0.08, height: 4, rx:2, ry:2,
+        fill: S.accent,
+        left: bL + bW/2, top: bT + bH * 0.24,
+        originX:'center', originY:'center'
+    });
+    canvas.add(line);
+    canvas.bringToFront(line);
+}
+
+// ─── Step 6: Stickers (library search → emoji fallback) ───
+async function _wzSticker(title, bW, bH, bL, bT) {
+    const positions = [
+        { left: bL + bW * 0.10, top: bT + bH * 0.10 },
+        { left: bL + bW * 0.90, top: bT + bH * 0.13 },
+        { left: bL + bW * 0.12, top: bT + bH * 0.78 }
+    ];
+
+    // Try searching library for stickers
+    let stickerUrls = [];
+    if (sb) {
+        const { data } = await sb.from('library')
+            .select('id, thumb_url')
+            .in('category', ['vector','graphic','transparent-graphic'])
+            .eq('status','approved')
+            .order('created_at', { ascending: false })
+            .limit(3);
+        if (data) stickerUrls = data.map(d => d.thumb_url).filter(Boolean);
+    }
+
+    if (stickerUrls.length >= 3) {
+        // Use library stickers
+        const promises = stickerUrls.slice(0,3).map((url, i) => new Promise(resolve => {
+            fabric.Image.fromURL(url, img => {
+                if (!img) { resolve(); return; }
+                const sz = bW * 0.12;
+                const scale = sz / Math.max(img.width, img.height);
+                img.set({ scaleX:scale, scaleY:scale, ...positions[i], originX:'center', originY:'center' });
+                canvas.add(img); canvas.bringToFront(img);
+                resolve();
+            }, { crossOrigin:'anonymous' });
+        }));
+        await Promise.all(promises);
+    } else {
+        // Fallback: emoji stickers
+        const emojis = ['✨','🎨','⭐','🌟','💫','🎯','🔥','💎','🌈','🎉','🎁','🏆'];
+        const picked = [...emojis].sort(() => Math.random() - 0.5).slice(0,3);
+        picked.forEach((em, i) => {
+            const obj = new fabric.IText(em, {
+                fontSize: Math.round(bW * 0.07), fontFamily:'sans-serif',
+                ...positions[i], originX:'center', originY:'center'
+            });
+            canvas.add(obj); canvas.bringToFront(obj);
+        });
+    }
 }

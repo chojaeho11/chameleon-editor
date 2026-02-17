@@ -2313,6 +2313,20 @@ async function handleSubReturn() {
                 <span style="font-size:18px;">🔒</span>
                 <span style="font-size:7px; font-weight:bold; color:#64748b; white-space:nowrap;" data-i18n="editor_unlock_bg">배경풀기</span>
             </button>
+            <!-- AI Design Wizard Trigger -->
+            <button id="btnDesignWizard" onclick="window.openDesignWizard()" style="
+                position:absolute; top:15px; right:15px; z-index:50;
+                height:42px; padding:0 16px; border-radius:21px;
+                background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%);
+                border:none; color:#fff; font-weight:700; font-size:12px;
+                box-shadow:0 4px 15px rgba(99,102,241,0.4);
+                cursor:pointer; display:flex; align-items:center; gap:7px;
+                transition:all .2s;
+            " onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span data-i18n="wizard_btn">AI 디자인 마법사</span>
+            </button>
+
             <div id="pageControls" class="page-controls-bar">
                 <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
                     <i class="fa-solid fa-chevron-left"></i>
@@ -3080,6 +3094,70 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
+
+<!-- ====== AI Design Wizard Modal ====== -->
+<div id="designWizardModal" class="modal-bg" style="z-index:16000;">
+    <div class="modal-box" style="width:520px;max-width:92%;padding:0;overflow:hidden;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%);padding:24px 28px 20px;color:#fff;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h3 style="margin:0;font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span data-i18n="wizard_title">AI 디자인 마법사</span>
+                </h3>
+                <button onclick="document.getElementById('designWizardModal').style.display='none'"
+                    style="border:none;background:rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p style="margin:8px 0 0;font-size:13px;opacity:0.85;" data-i18n="wizard_desc">제목을 입력하시면 자동으로 디자인을 해 드립니다.</p>
+        </div>
+        <!-- Body -->
+        <div style="padding:24px 28px;">
+            <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;" data-i18n="wizard_label_title">디자인 제목</label>
+            <input id="wizardTitleInput" type="text" class="ai-input-pretty"
+                data-i18n-placeholder="wizard_placeholder" placeholder="예: 카페 오픈, 여름 세일, 생일 축하..."
+                style="font-size:15px;font-weight:600;padding:14px 16px;margin-bottom:16px;width:100%;box-sizing:border-box;border:2px solid #e2e8f0;border-radius:12px;outline:none;transition:border .2s;"
+                onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
+
+            <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;" data-i18n="wizard_label_style">스타일</label>
+            <div id="wizardStyleGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
+                <button class="wizard-style-btn active" data-style="modern">Modern</button>
+                <button class="wizard-style-btn" data-style="elegant">Elegant</button>
+                <button class="wizard-style-btn" data-style="playful">Playful</button>
+                <button class="wizard-style-btn" data-style="minimal">Minimal</button>
+            </div>
+
+            <!-- Progress -->
+            <div id="wizardProgressArea" style="display:none;margin-bottom:16px;">
+                <div id="wizardStepList"></div>
+                <div style="background:#f1f5f9;border-radius:10px;height:6px;overflow:hidden;margin-top:12px;">
+                    <div id="wizardProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg,#6366f1,#a855f7);border-radius:10px;transition:width .5s ease;"></div>
+                </div>
+            </div>
+
+            <button id="btnWizardGenerate" style="width:100%;height:48px;font-size:15px;font-weight:800;
+                background:linear-gradient(135deg,#6366f1,#a855f7);border:none;border-radius:12px;
+                color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+                transition:all .2s;box-shadow:0 4px 15px rgba(99,102,241,0.3);"
+                onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span data-i18n="wizard_generate">디자인 생성하기</span>
+            </button>
+        </div>
+    </div>
+</div>
+<style>
+.wizard-style-btn{padding:10px 0;border-radius:10px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
+.wizard-style-btn.active{border-color:#6366f1!important;background:#f0f0ff!important;color:#6366f1!important;font-weight:700}
+.wizard-style-btn:hover{border-color:#c7d2fe}
+.wizard-step{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:#94a3b8;transition:all .3s}
+.wizard-step.active{color:#6366f1;font-weight:700}
+.wizard-step.done{color:#10b981}
+.wizard-step .step-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f1f5f9;font-size:11px;flex-shrink:0}
+.wizard-step.active .step-icon{background:#6366f1;color:#fff}
+.wizard-step.done .step-icon{background:#10b981;color:#fff}
+</style>
 
 <div id="aiStartModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 500px; max-width: 90%;">
