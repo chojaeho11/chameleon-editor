@@ -1026,8 +1026,8 @@
   "wizard_step_shapes": "Dekorative Formen werden hinzugefügt...",
   "wizard_step_stickers": "Sticker werden platziert...",
   "wizard_content_hint": "Geben Sie Ihren Inhalt ein",
-  "wizard_style_modern": "Modern",
-  "wizard_style_elegant": "Elegant",
-  "wizard_style_playful": "Verspielt",
-  "wizard_style_minimal": "Minimal"
+  "wizard_style_blue": "Blau",
+  "wizard_style_yellow": "Gelb",
+  "wizard_style_candy": "Candy",
+  "wizard_style_dark": "Dunkel"
 }

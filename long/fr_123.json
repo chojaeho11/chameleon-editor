@@ -1026,8 +1026,8 @@
   "wizard_step_shapes": "Ajout des formes décoratives...",
   "wizard_step_stickers": "Placement des stickers...",
   "wizard_content_hint": "Entrez votre contenu ici",
-  "wizard_style_modern": "Moderne",
-  "wizard_style_elegant": "Élégant",
-  "wizard_style_playful": "Ludique",
-  "wizard_style_minimal": "Minimaliste"
+  "wizard_style_blue": "Bleu",
+  "wizard_style_yellow": "Jaune",
+  "wizard_style_candy": "Bonbon",
+  "wizard_style_dark": "Sombre"
 }

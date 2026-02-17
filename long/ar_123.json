@@ -1026,8 +1026,8 @@
   "wizard_step_shapes": "جاري إضافة الأشكال الزخرفية...",
   "wizard_step_stickers": "جاري وضع الملصقات...",
   "wizard_content_hint": "أدخل المحتوى هنا",
-  "wizard_style_modern": "حديث",
-  "wizard_style_elegant": "أنيق",
-  "wizard_style_playful": "مرح",
-  "wizard_style_minimal": "بسيط"
+  "wizard_style_blue": "أزرق",
+  "wizard_style_yellow": "أصفر",
+  "wizard_style_candy": "حلوى",
+  "wizard_style_dark": "داكن"
 }

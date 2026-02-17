@@ -650,8 +650,8 @@
   "wizard_step_shapes": "장식 도형 추가 중...",
   "wizard_step_stickers": "스티커 배치 중...",
   "wizard_content_hint": "내용을 입력하세요",
-  "wizard_style_modern": "모던",
-  "wizard_style_elegant": "엘레강스",
-  "wizard_style_playful": "플레이풀",
-  "wizard_style_minimal": "미니멀"
+  "wizard_style_blue": "블루",
+  "wizard_style_yellow": "옐로우",
+  "wizard_style_candy": "캔디",
+  "wizard_style_dark": "다크"
 }

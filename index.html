@@ -3120,10 +3120,10 @@ window.filterFxCards = function(cat, btn) {
 
             <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;" data-i18n="wizard_label_style">스타일</label>
             <div id="wizardStyleGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
-                <button class="wizard-style-btn active" data-style="modern" data-i18n="wizard_style_modern">모던</button>
-                <button class="wizard-style-btn" data-style="elegant" data-i18n="wizard_style_elegant">엘레강스</button>
-                <button class="wizard-style-btn" data-style="playful" data-i18n="wizard_style_playful">플레이풀</button>
-                <button class="wizard-style-btn" data-style="minimal" data-i18n="wizard_style_minimal">미니멀</button>
+                <button class="wizard-style-btn active" data-style="blue" data-i18n="wizard_style_blue" style="background:linear-gradient(135deg,#38bdf8,#1e3a8a);color:#fff;">Blue</button>
+                <button class="wizard-style-btn" data-style="yellow" data-i18n="wizard_style_yellow" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#78350f;">Yellow</button>
+                <button class="wizard-style-btn" data-style="candy" data-i18n="wizard_style_candy" style="background:linear-gradient(135deg,#f472b6,#ec4899);color:#fff;">Candy</button>
+                <button class="wizard-style-btn" data-style="dark" data-i18n="wizard_style_dark" style="background:linear-gradient(135deg,#334155,#0f172a);color:#e2e8f0;">Dark</button>
             </div>
 
             <!-- Progress -->
@@ -3146,9 +3146,9 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 <style>
-.wizard-style-btn{padding:10px 0;border-radius:10px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
-.wizard-style-btn.active{border-color:#6366f1!important;background:#f0f0ff!important;color:#6366f1!important;font-weight:700}
-.wizard-style-btn:hover{border-color:#c7d2fe}
+.wizard-style-btn{padding:10px 0;border-radius:10px;border:2px solid transparent;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;opacity:0.7}
+.wizard-style-btn.active{border-color:#fff!important;opacity:1!important;box-shadow:0 0 0 3px #6366f1,0 2px 8px rgba(0,0,0,0.2)!important}
+.wizard-style-btn:hover{opacity:0.9}
 .wizard-step{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:#94a3b8;transition:all .3s}
 .wizard-step.active{color:#6366f1;font-weight:700}
 .wizard-step.done{color:#10b981}

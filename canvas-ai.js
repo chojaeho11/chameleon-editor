@@ -353,33 +353,33 @@ export function initAiTools() {
 // [Design Wizard] Core logic
 // ============================================================
 const WIZARD_STYLES = {
-    modern: {
+    blue: {
         titleFont:'Gothic A1', titleWeight:'900',
-        // 3D 블루 타이틀
+        // 3D 블루
         titleFill:'#38bdf8', titleStroke:'#1e3a8a', titleShadowColor:'#1e3a8a',
-        // 흰색 박스 + 어두운 글씨
-        boxFill:'rgba(255,255,255,0.92)', boxStroke:'rgba(99,102,241,0.3)', boxTextColor:'#334155'
+        // 흰색 반투명 박스
+        boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(56,189,248,0.35)', boxTextColor:'#1e3a5f'
     },
-    elegant: {
+    yellow: {
         titleFont:'Noto Serif KR', titleWeight:'900',
-        // 골드 타이틀
-        titleFill:'#fbbf24', titleStroke:'#78350f', titleShadowColor:'#78350f',
-        // 다크 네이비 박스 + 밝은 글씨
-        boxFill:'rgba(26,26,46,0.88)', boxStroke:'rgba(212,175,55,0.4)', boxTextColor:'#f5f0e1'
+        // 골드 3D
+        titleFill:'#fbbf24', titleStroke:'#92400e', titleShadowColor:'#78350f',
+        // 따뜻한 크림 박스
+        boxFill:'rgba(255,251,235,0.92)', boxStroke:'rgba(251,191,36,0.35)', boxTextColor:'#78350f'
     },
-    playful: {
+    candy: {
         titleFont:'Jua', titleWeight:'400',
-        // 핑크 타이틀
-        titleFill:'#f472b6', titleStroke:'#9d174d', titleShadowColor:'#9d174d',
-        // 연핑크 박스 + 어두운 글씨
-        boxFill:'rgba(252,231,243,0.92)', boxStroke:'rgba(244,63,94,0.3)', boxTextColor:'#831843'
+        // 캔디 핑크
+        titleFill:'#f472b6', titleStroke:'#9d174d', titleShadowColor:'#be185d',
+        // 연핑크 박스
+        boxFill:'rgba(253,242,248,0.92)', boxStroke:'rgba(244,114,182,0.35)', boxTextColor:'#831843'
     },
-    minimal: {
-        titleFont:'Noto Sans KR', titleWeight:'700',
-        // 깔끔한 다크 타이틀
-        titleFill:'#1e293b', titleStroke:'#94a3b8', titleShadowColor:'rgba(0,0,0,0.2)',
-        // 밝은 그레이 박스 + 어두운 글씨
-        boxFill:'rgba(241,245,249,0.92)', boxStroke:'rgba(55,65,81,0.2)', boxTextColor:'#334155'
+    dark: {
+        titleFont:'Gothic A1', titleWeight:'900',
+        // 흰색 글씨 + 다크 그림자
+        titleFill:'#f8fafc', titleStroke:'#0f172a', titleShadowColor:'#000000',
+        // 다크 박스 + 밝은 글씨
+        boxFill:'rgba(15,23,42,0.88)', boxStroke:'rgba(148,163,184,0.3)', boxTextColor:'#e2e8f0'
     }
 };
 
@@ -468,7 +468,7 @@ async function runDesignWizard(title, style) {
     if (!board) throw new Error('No canvas board');
     const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);
     const bL = board.left, bT = board.top;
-    const S = WIZARD_STYLES[style] || WIZARD_STYLES.modern;
+    const S = WIZARD_STYLES[style] || WIZARD_STYLES.blue;
     const steps = _wzSteps();
 
     // ★ 기존 오브젝트 모두 삭제 (보드, 고정 오버레이 제외)
@@ -738,8 +738,8 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     const boxY = bT + bH - margin - boxH / 2;
     const elemSize = bW / 7;
     const positions = [
-        { left: bL + margin * 0.6,           top: boxY, size: elemSize },  // 박스 왼쪽
-        { left: bL + bW - margin * 0.6,      top: boxY, size: elemSize }   // 박스 오른쪽
+        { left: bL + margin + elemSize * 0.35,       top: boxY, size: elemSize },  // 박스 왼쪽 안쪽
+        { left: bL + bW - margin - elemSize * 0.35,  top: boxY, size: elemSize }   // 박스 오른쪽 안쪽
     ];
 
     const promises = data.slice(0, 2).map((item, i) => new Promise(resolve => {
