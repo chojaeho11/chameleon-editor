@@ -64,6 +64,51 @@ window.addEventListener('popstate', function(e) {
     }
 });
 
+/* ─── Mobile bottom sheet drag ─── */
+(function() {
+    var panel, startY, startTransform, panelH;
+    function isMobile() { return window.innerWidth <= 768; }
+
+    document.addEventListener('touchstart', function(e) {
+        if (!isMobile()) return;
+        panel = document.getElementById('gifLeftPanel');
+        if (!panel) return;
+        var modal = document.getElementById('gifMakerModal');
+        if (!modal || modal.style.display !== 'flex') return;
+        // only handle touches on the handle area (top 30px of panel)
+        var rect = panel.getBoundingClientRect();
+        var touch = e.touches[0];
+        if (touch.clientY < rect.top || touch.clientY > rect.top + 30) return;
+        startY = touch.clientY;
+        panelH = rect.height;
+        var transform = panel.style.transform;
+        startTransform = transform ? parseInt(transform.replace(/[^-\d]/g, '')) || 0 : 0;
+        panel.style.transition = 'none';
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!panel || startY === undefined || !isMobile()) return;
+        var dy = e.touches[0].clientY - startY;
+        var newY = Math.max(0, startTransform + dy);
+        panel.style.transform = 'translateY(' + newY + 'px)';
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        if (!panel || startY === undefined || !isMobile()) return;
+        panel.style.transition = 'transform 0.3s ease';
+        var transform = panel.style.transform;
+        var currentY = transform ? parseInt(transform.replace(/[^-\d]/g, '')) || 0 : 0;
+        // if dragged more than 40% down, collapse; else snap back
+        if (currentY > panelH * 0.4) {
+            panel.style.transform = 'translateY(' + (panelH - 40) + 'px)';
+        } else {
+            panel.style.transform = 'translateY(0)';
+        }
+        startY = undefined;
+        panel = null;
+    }, { passive: true });
+})();
+
 /* ─── Fabric Canvas ─── */
 function initFabricCanvas() {
     if (GM.fabricCanvas) { try { GM.fabricCanvas.dispose(); } catch(e){} }

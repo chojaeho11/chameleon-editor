@@ -1688,3 +1688,46 @@ window.veClose = function(){
         });
     },100);
 };
+
+/* ─── Mobile bottom sheet drag for ve-left ─── */
+(function() {
+    var panel, startY, startTransform, panelH;
+    function isMobile() { return window.innerWidth <= 900; }
+
+    document.addEventListener('touchstart', function(e) {
+        if (!isMobile()) return;
+        var modal = document.getElementById('videoMakerModal');
+        if (!modal || modal.style.display === 'none') return;
+        panel = modal.querySelector('.ve-left');
+        if (!panel) return;
+        var rect = panel.getBoundingClientRect();
+        var touch = e.touches[0];
+        if (touch.clientY < rect.top || touch.clientY > rect.top + 30) { panel = null; return; }
+        startY = touch.clientY;
+        panelH = rect.height;
+        var transform = panel.style.transform;
+        startTransform = transform ? parseInt(transform.replace(/[^-\d]/g, '')) || 0 : 0;
+        panel.style.transition = 'none';
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!panel || startY === undefined || !isMobile()) return;
+        var dy = e.touches[0].clientY - startY;
+        var newY = Math.max(0, startTransform + dy);
+        panel.style.transform = 'translateY(' + newY + 'px)';
+    }, { passive: true });
+
+    document.addEventListener('touchend', function() {
+        if (!panel || startY === undefined || !isMobile()) return;
+        panel.style.transition = 'transform 0.3s ease';
+        var transform = panel.style.transform;
+        var currentY = transform ? parseInt(transform.replace(/[^-\d]/g, '')) || 0 : 0;
+        if (currentY > panelH * 0.4) {
+            panel.style.transform = 'translateY(' + (panelH - 40) + 'px)';
+        } else {
+            panel.style.transform = 'translateY(0)';
+        }
+        startY = undefined;
+        panel = null;
+    }, { passive: true });
+})();
