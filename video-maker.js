@@ -1398,12 +1398,17 @@ window.veExport = async function() {
     let combined=audioResult&&audioResult.stream?new MediaStream([...canvasStream.getVideoTracks(),...audioResult.stream.getAudioTracks()]):canvasStream;
     const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')?'video/webm;codecs=vp9,opus':MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
     const rec=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:5000000});
-    const chunks=[];rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};rec.start();
+    const chunks=[];rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+    // render first frame BEFORE starting recorder to avoid blank start
+    renderClip(0,vm.ctx,false);
+    await sleep(100); // let canvas paint
+    rec.start();
+    await sleep(200); // warmup: let recorder capture the pre-rendered frame
     for(let i=0;i<vm.clips.length;i++){
         const pct=Math.round(i/vm.clips.length*100);if(progBar)progBar.style.width=pct+'%';if(progText)progText.textContent=`${i+1}/${vm.clips.length}`;
         const c=vm.clips[i],dur=c.duration*1000;
         if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);c.overlays.forEach(o=>renderOverlay(vm.ctx,o));await sleep(dur-800);}
-        else{renderClip(i,vm.ctx,false);await sleep(dur);}
+        else{renderClip(i,vm.ctx,false);await sleep(i===0?dur-200:dur);} // first clip accounts for warmup time
     }
     if(progBar)progBar.style.width='100%';if(progText)progText.textContent='인코딩 중...';
     // stop audio source if playing
