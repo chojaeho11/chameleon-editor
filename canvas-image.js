@@ -360,158 +360,12 @@ function exitEraserMode(apply) {
     eraserState = null;
 }
 
-// ─── Background Removal (Client-side BFS, optimized) ───
-function removeBackground() {
-    const active = canvas.getActiveObject();
-    if (!active || active.type !== 'image') return alert(window.t?.('msg_select_image','Please select an image.') || 'Please select an image.');
-
+// ─── Background Removal → canvas-ai.js의 remove.bg API 사용 ───
+function triggerBgRemove() {
     hideFloatingToolbar();
-
-    // 원본 이미지 → off-screen canvas
-    const w = active.width;
-    const h = active.height;
-    if (w < 2 || h < 2) return;
-
-    const offC = document.createElement('canvas');
-    offC.width = w; offC.height = h;
-    const ctx = offC.getContext('2d', { willReadFrequently: true });
-
-    try {
-        const fc = active.toCanvasElement();
-        ctx.drawImage(fc, 0, 0, w, h);
-    } catch(e) {
-        try {
-            ctx.drawImage(active.getElement(), 0, 0, w, h);
-        } catch(e2) {
-            console.error('BG Remove: cannot read image pixels', e2);
-            alert('Cannot process this image (cross-origin).');
-            return;
-        }
-    }
-
-    let imageData;
-    try {
-        imageData = ctx.getImageData(0, 0, w, h);
-    } catch(e) {
-        console.error('BG Remove: getImageData failed', e);
-        alert('Cannot process this image (security restriction).');
-        return;
-    }
-    const data = imageData.data;
-
-    // 4 모서리 + 각 변 중앙 8개 샘플 → 배경색 추정
-    const samples = [
-        [0,0], [w-1,0], [0,h-1], [w-1,h-1],
-        [Math.floor(w/2),0], [Math.floor(w/2),h-1],
-        [0,Math.floor(h/2)], [w-1,Math.floor(h/2)]
-    ];
-    const sampleColors = samples.map(([x,y]) => {
-        const i = (y * w + x) * 4;
-        return [data[i], data[i+1], data[i+2], data[i+3]];
-    });
-    let r=0,g=0,b=0,n=0;
-    for (const c of sampleColors) {
-        if (c[3] < 128) continue;
-        r+=c[0]; g+=c[1]; b+=c[2]; n++;
-    }
-    if (n === 0) { r=255; g=255; b=255; n=1; }
-    const bgR = Math.round(r/n), bgG = Math.round(g/n), bgB = Math.round(b/n);
-
-    const tolerance = 70;  // 약간 넉넉하게
-    const tolSq = tolerance * tolerance; // squared — sqrt 안 해도 됨
-
-    // BFS flood-fill from edges (index-based queue로 성능 최적화)
-    const visited = new Uint8Array(w * h);
-    const queue = new Int32Array(w * h); // 최대 크기
-    let qHead = 0, qTail = 0;
-
-    // 배경색인지 판정 (squared distance)
-    function isBg(i) {
-        const pi = i * 4;
-        if (data[pi+3] < 10) return true; // already transparent
-        const dr = data[pi]-bgR, dg = data[pi+1]-bgG, db = data[pi+2]-bgB;
-        return (dr*dr + dg*dg + db*db) <= tolSq;
-    }
-
-    function tryEnqueue(x, y) {
-        if (x < 0 || x >= w || y < 0 || y >= h) return;
-        const i = y * w + x;
-        if (visited[i]) return;
-        if (!isBg(i)) return;
-        visited[i] = 1;
-        queue[qTail++] = i;
-    }
-
-    // 가장자리 픽셀 enqueue
-    for (let x = 0; x < w; x++) { tryEnqueue(x, 0); tryEnqueue(x, h-1); }
-    for (let y = 1; y < h-1; y++) { tryEnqueue(0, y); tryEnqueue(w-1, y); }
-
-    // BFS (index-based, O(1) dequeue)
-    while (qHead < qTail) {
-        const idx = queue[qHead++];
-        const x = idx % w;
-        const y = (idx - x) / w;
-        tryEnqueue(x-1, y);
-        tryEnqueue(x+1, y);
-        tryEnqueue(x, y-1);
-        tryEnqueue(x, y+1);
-    }
-
-    // 방문된 픽셀 → 투명화
-    for (let i = 0; i < w * h; i++) {
-        if (visited[i]) data[i * 4 + 3] = 0;
-    }
-
-    // 소프트 에지: 경계 부분 알파 부드럽게
-    const radius = 2;
-    for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-            const i = y * w + x;
-            if (visited[i]) continue; // 이미 투명
-            // 주변에 투명 픽셀이 있는지?
-            let minD = 999;
-            for (let dy = -radius; dy <= radius; dy++) {
-                for (let dx = -radius; dx <= radius; dx++) {
-                    const nx = x+dx, ny = y+dy;
-                    if (nx>=0 && nx<w && ny>=0 && ny<h && visited[ny*w+nx]) {
-                        const d = Math.sqrt(dx*dx+dy*dy);
-                        if (d < minD) minD = d;
-                    }
-                }
-            }
-            if (minD <= radius) {
-                const alpha = minD / (radius + 1);
-                data[i*4+3] = Math.round(data[i*4+3] * alpha);
-            }
-        }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-
-    // 새 fabric.Image로 교체
-    const dataURL = offC.toDataURL('image/png');
-    const oldImg = active;
-    const props = {
-        left: oldImg.left, top: oldImg.top,
-        scaleX: oldImg.scaleX, scaleY: oldImg.scaleY,
-        angle: oldImg.angle, flipX: oldImg.flipX, flipY: oldImg.flipY,
-        opacity: oldImg.opacity, originX: oldImg.originX, originY: oldImg.originY
-    };
-    const objects = canvas.getObjects();
-    const zIdx = objects.indexOf(oldImg);
-
-    fabric.Image.fromURL(dataURL, (newImg) => {
-        if (!newImg) { console.error('BG Remove: fabric.Image.fromURL failed'); return; }
-        newImg.set(props);
-        canvas.remove(oldImg);
-        if (zIdx >= 0 && zIdx < canvas.getObjects().length) {
-            canvas.insertAt(newImg, zIdx);
-        } else {
-            canvas.add(newImg);
-        }
-        canvas.setActiveObject(newImg);
-        canvas.requestRenderAll();
-    }, { crossOrigin: 'anonymous' });
+    // canvas-ai.js에서 btnCutout.onclick에 remove.bg API 연결됨
+    const btn = document.getElementById('btnCutout');
+    if (btn) btn.click();
 }
 
 // ─── Edit → 우클릭 컨텍스트 메뉴 표시 ────────
@@ -536,11 +390,7 @@ export function initImageTools() {
         fileInput.onchange = (e) => handleImageUpload(e.target.files[0]);
     }
 
-    // 2. 배경 제거 (기존 사이드바 버튼 + 플로팅 툴바 버튼)
-    const btnCutout = document.getElementById("btnCutout");
-    if (btnCutout) btnCutout.onclick = () => removeBackground();
-
-    // 3. 밝게 보정
+    // 2. 밝게 보정
     const btnEnhance = document.getElementById("btnEnhance");
     if (btnEnhance) {
         btnEnhance.onclick = () => {
@@ -565,7 +415,7 @@ export function initImageTools() {
     const btnEraser = document.getElementById('imgToolEraser');
 
     if (btnEdit)     btnEdit.onclick     = () => showEditContextMenu();
-    if (btnBgRemove) btnBgRemove.onclick = () => removeBackground();
+    if (btnBgRemove) btnBgRemove.onclick = () => triggerBgRemove();
     if (btnEraser)   btnEraser.onclick   = () => enterEraserMode();
 
     // 5. 지우개 컨트롤 바 버튼 연결
