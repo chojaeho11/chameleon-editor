@@ -12,11 +12,20 @@ const FORMATS = [
 
 const MUSIC = [
     { id:'none', name:'없음', icon:'fa-volume-xmark', desc:'음악 없음' },
-    { id:'upbeat', name:'Upbeat Pop', icon:'fa-bolt', desc:'밝고 경쾌한 팝', bpm:120, melody:[60,64,67,72,67,64,60,67], bass:[48,48,55,55,52,52,48,48], wave:'square' },
-    { id:'chill', name:'Lo-fi Chill', icon:'fa-mug-hot', desc:'편안한 로파이', bpm:75, melody:[57,60,64,62,60,57,55,57], bass:[45,45,48,48,43,43,45,45], wave:'triangle' },
-    { id:'cinema', name:'Cinematic', icon:'fa-film', desc:'웅장한 시네마틱', bpm:60, melody:[48,55,60,63,60,55,48,51], bass:[36,36,43,43,48,48,36,36], wave:'sawtooth' },
-    { id:'happy', name:'Happy Pop', icon:'fa-face-smile', desc:'신나는 팝', bpm:130, melody:[65,69,72,77,72,69,65,72], bass:[53,53,57,57,60,60,53,53], wave:'square' },
-    { id:'ambient', name:'Ambient', icon:'fa-cloud', desc:'차분한 앰비언트', bpm:50, melody:[50,57,62,57,55,50,55,57], bass:[38,38,45,45,43,43,38,38], wave:'sine' }
+    { id:'tiktok_edm', name:'TikTok EDM', icon:'fa-bolt', desc:'틱톡/쇼츠 인기 EDM', bpm:128,
+      melody:[72,72,75,79,77,75,72,79,80,79,75,72,70,72,75,79], bass:[48,48,48,48,53,53,53,53,51,51,51,51,48,48,48,48], wave:'square' },
+    { id:'trap_beat', name:'Trap Beat', icon:'fa-fire', desc:'트랩 힙합 비트', bpm:140,
+      melody:[60,60,63,67,60,63,67,70,67,63,60,58,60,63,67,70], bass:[36,36,36,36,41,41,41,41,43,43,43,43,36,36,36,36], wave:'sawtooth' },
+    { id:'lofi_hiphop', name:'Lo-fi Hip Hop', icon:'fa-mug-hot', desc:'감성 로파이 비트', bpm:85,
+      melody:[64,67,72,71,69,67,64,67,69,71,72,69,67,64,62,64], bass:[48,48,52,52,50,50,48,48,47,47,50,50,48,48,45,48], wave:'triangle' },
+    { id:'kpop_dance', name:'K-Pop Dance', icon:'fa-star', desc:'K팝 댄스 스타일', bpm:125,
+      melody:[67,67,72,74,76,74,72,67,69,72,76,79,76,74,72,69], bass:[43,43,43,43,48,48,48,48,45,45,45,45,43,43,43,43], wave:'square' },
+    { id:'viral_pop', name:'Viral Pop', icon:'fa-face-smile', desc:'바이럴 팝 멜로디', bpm:118,
+      melody:[72,76,79,84,79,76,72,74,76,79,81,84,81,79,76,72], bass:[48,48,53,53,55,55,53,53,48,48,53,53,55,55,48,48], wave:'square' },
+    { id:'cinematic', name:'Cinematic', icon:'fa-film', desc:'웅장한 시네마틱', bpm:72,
+      melody:[48,55,60,64,67,64,60,55,48,52,55,60,64,67,72,67], bass:[36,36,36,36,43,43,43,43,41,41,41,41,36,36,36,36], wave:'sawtooth' },
+    { id:'chill_wave', name:'Chill Wave', icon:'fa-cloud', desc:'몽환적 신스웨이브', bpm:95,
+      melody:[60,64,67,72,74,72,67,64,62,67,71,74,72,67,64,60], bass:[48,48,52,52,55,55,52,52,50,50,50,50,48,48,48,48], wave:'sine' }
 ];
 
 const TRANSITIONS = [
@@ -60,7 +69,8 @@ let vm = {
     leftTab: 'media',
     playTime: 0,    // current position in seconds
     tlZoom: 1,
-    addMode: null, addSticker: '⭐', drag: null
+    addMode: null, addSticker: '⭐', drag: null,
+    imgItems: null, imgPage: 0
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -246,15 +256,16 @@ function hitHandle(mx,my,o) {
 
 function hitOverlay(cx, cy) {
     const c = curClip(); if(!c) return -1;
+    const PAD = Math.max(20, vm.w * 0.015); // generous hit area padding
     for (let i=c.overlays.length-1; i>=0; i--) {
         const o=c.overlays[i];
         const b=getOBounds(o); if(!b) continue;
         const p=unrotatePoint(cx,cy,o,b);
-        if(o.type==='text'){const tw=o.fontSize*Math.max(o.text.length,1)*.55,th=o.fontSize*1.3,lx=o.align==='center'?o.x-tw/2:o.x;if(p.x>=lx&&p.x<=lx+tw&&p.y>=o.y-th&&p.y<=o.y)return i;}
-        else if(o.type==='rect'){if(p.x>=o.x&&p.x<=o.x+o.w&&p.y>=o.y&&p.y<=o.y+o.h)return i;}
-        else if(o.type==='circle'){if(Math.hypot(p.x-o.x,p.y-o.y)<=o.r)return i;}
-        else if(o.type==='sticker'){const hs=o.size/2;if(p.x>=o.x-hs&&p.x<=o.x+hs&&p.y>=o.y-hs&&p.y<=o.y+hs)return i;}
-        else if(o.type==='image'){if(p.x>=o.x&&p.x<=o.x+o.w&&p.y>=o.y&&p.y<=o.y+o.h)return i;}
+        if(o.type==='text'){const tw=o.fontSize*Math.max(o.text.length,1)*.55,th=o.fontSize*1.3,lx=o.align==='center'?o.x-tw/2:o.x;if(p.x>=lx-PAD&&p.x<=lx+tw+PAD&&p.y>=o.y-th-PAD&&p.y<=o.y+PAD)return i;}
+        else if(o.type==='rect'){if(p.x>=o.x-PAD&&p.x<=o.x+o.w+PAD&&p.y>=o.y-PAD&&p.y<=o.y+o.h+PAD)return i;}
+        else if(o.type==='circle'){if(Math.hypot(p.x-o.x,p.y-o.y)<=o.r+PAD)return i;}
+        else if(o.type==='sticker'){const hs=o.size/2;if(p.x>=o.x-hs-PAD&&p.x<=o.x+hs+PAD&&p.y>=o.y-hs-PAD&&p.y<=o.y+hs+PAD)return i;}
+        else if(o.type==='image'){if(p.x>=o.x-PAD&&p.x<=o.x+o.w+PAD&&p.y>=o.y-PAD&&p.y<=o.y+o.h+PAD)return i;}
     }
     return -1;
 }
@@ -353,6 +364,7 @@ function refreshLeftPanel() {
         case 'audio': renderAudioTab(el);break;
         case 'text': renderTextTab(el);break;
         case 'element': renderElementTab(el);break;
+        case 'image': renderImageTab(el);break;
         case 'transition': renderTransitionTab(el);break;
         case 'adjust': renderAdjustTab(el);break;
         case 'template': renderTemplateTab(el);break;
@@ -449,7 +461,7 @@ async function loadLibElements() {
         const sb=window.sb; if(!sb){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">DB 연결 없음</p>';return;}
         if(!vm.libItems){
             const { data, error } = await sb.from('library')
-                .select('id, thumb_url, category')
+                .select('id, thumb_url, data_url, category')
                 .in('category', ['vector','user_vector','graphic','transparent-graphic','pattern','logo'])
                 .order('created_at', { ascending: false })
                 .range(0, 29);
@@ -467,9 +479,9 @@ async function loadLibElements() {
 function renderLibGrid(grid) {
     if(!vm.libItems||!vm.libItems.length){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">이미지 없음</p>';return;}
     let h='';
-    vm.libItems.forEach(item=>{
-        const url=item.thumb_url||'';
-        h+=`<div class="ve-lib-item" onclick="window._veAddLibImage('${url.replace(/'/g,"\\'")}')"><img src="${url}" loading="lazy"></div>`;
+    vm.libItems.forEach((item,idx)=>{
+        const thumbUrl=item.thumb_url||'';
+        h+=`<div class="ve-lib-item" onclick="window._veAddLibImage(${idx})"><img src="${thumbUrl}" loading="lazy"></div>`;
     });
     grid.innerHTML=h;
 }
@@ -479,7 +491,7 @@ window._veLoadMoreLib = async function() {
     const page=vm.libPage||1;
     try {
         const { data, error } = await window.sb.from('library')
-            .select('id, thumb_url, category')
+            .select('id, thumb_url, data_url, category')
             .in('category', ['vector','user_vector','graphic','transparent-graphic','pattern','logo'])
             .order('created_at', { ascending: false })
             .range(page*30, (page+1)*30-1);
@@ -492,11 +504,83 @@ window._veLoadMoreLib = async function() {
     } catch(e){ showToast('로드 실패'); }
 };
 
-window._veAddLibImage = function(url) {
+window._veAddLibImage = function(idx) {
     const c=curClip();
     if(!c) return alert('클립을 먼저 추가하세요');
+    const item=vm.libItems&&vm.libItems[idx];
+    if(!item) return;
+    // Use data_url (original PNG/SVG with transparency) over thumb_url (may be JPEG)
+    const url=item.data_url||item.thumb_url||'';
     addOverlay('image', vm.w*.2, vm.h*.2, {url, w:vm.w*.4, h:vm.w*.4});
     showToast('이미지 요소 추가됨');
+};
+
+function renderImageTab(el) {
+    let h = '<div class="ve-sec"><b>이미지 템플릿</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">에디터 이미지를 오버레이로 삽입</p>';
+    h += '<div id="veImgGrid" class="ve-lib-grid"><p class="ve-empty" style="grid-column:1/-1">로딩 중...</p></div>';
+    h += '<button class="ve-lib-more" onclick="window._veLoadMoreImg()"><i class="fa-solid fa-angles-down"></i> 더 보기</button>';
+    h += '</div>';
+    el.innerHTML = h;
+    loadImageTemplates();
+}
+
+async function loadImageTemplates() {
+    const grid=document.getElementById('veImgGrid'); if(!grid) return;
+    try {
+        const sb=window.sb; if(!sb){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">DB 연결 없음</p>';return;}
+        if(!vm.imgItems){
+            const { data, error } = await sb.from('library')
+                .select('id, thumb_url, data_url, category')
+                .in('category', ['user_image','photo-bg','text'])
+                .order('created_at', { ascending: false })
+                .range(0, 29);
+            if(error) throw error;
+            vm.imgItems = data || [];
+            vm.imgPage = 1;
+        }
+        renderImgGrid(grid);
+    } catch(e) {
+        console.warn('Image template load error:', e);
+        grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">로드 실패</p>';
+    }
+}
+
+function renderImgGrid(grid) {
+    if(!vm.imgItems||!vm.imgItems.length){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">이미지 없음</p>';return;}
+    let h='';
+    vm.imgItems.forEach((item,idx)=>{
+        const thumbUrl=item.thumb_url||'';
+        h+=`<div class="ve-lib-item" onclick="window._veAddImgTemplate(${idx})"><img src="${thumbUrl}" loading="lazy"></div>`;
+    });
+    grid.innerHTML=h;
+}
+
+window._veLoadMoreImg = async function() {
+    if(!window.sb||!vm.imgItems) return;
+    const page=vm.imgPage||1;
+    try {
+        const { data, error } = await window.sb.from('library')
+            .select('id, thumb_url, data_url, category')
+            .in('category', ['user_image','photo-bg','text'])
+            .order('created_at', { ascending: false })
+            .range(page*30, (page+1)*30-1);
+        if(!error&&data&&data.length){
+            vm.imgItems=[...vm.imgItems,...data];
+            vm.imgPage=page+1;
+            const grid=document.getElementById('veImgGrid');
+            if(grid) renderImgGrid(grid);
+        } else { showToast('더 이상 이미지가 없습니다'); }
+    } catch(e){ showToast('로드 실패'); }
+};
+
+window._veAddImgTemplate = function(idx) {
+    const c=curClip();
+    if(!c) return alert('클립을 먼저 추가하세요');
+    const item=vm.imgItems&&vm.imgItems[idx];
+    if(!item) return;
+    const url=item.data_url||item.thumb_url||'';
+    addOverlay('image', vm.w*.1, vm.h*.1, {url, w:vm.w*.5, h:vm.h*.5});
+    showToast('이미지 템플릿 추가됨');
 };
 
 function renderTransitionTab(el) {
@@ -967,7 +1051,7 @@ function onDblClick(e){
 window.openVideoMaker = function(label) {
     vm.clips=[];vm.ci=0;vm.oi=-1;vm.playing=false;vm.paused=false;vm.cancel=false;
     vm.addMode=null;vm.music='none';vm.musicPlaying=null;vm.playTime=0;vm.leftTab='media';
-    vm.libItems=null;vm.libPage=0;
+    vm.libItems=null;vm.libPage=0;vm.imgItems=null;vm.imgPage=0;
     // format from label
     if(label==='쇼츠') vm.format='portrait';
     else vm.format='landscape';
