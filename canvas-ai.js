@@ -478,11 +478,11 @@ async function runDesignWizard(title, style) {
     const titleFont = titleFontMap[country] || 'Impact, Arial Black, sans-serif';
     const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
 
-    // 잘난고딕 @font-face 로드 (Supabase 호스팅 .otf)
+    // 잘난고딕 @font-face 로드 (jsdelivr CDN)
     if (titleFont === 'JalnanGothic' && !document.querySelector('style[data-jalnan]')) {
         const st = document.createElement('style');
         st.dataset.jalnan = '1';
-        st.textContent = `@font-face { font-family:'JalnanGothic'; src:url('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/JalnanGothic.otf') format('opentype'); font-weight:normal; font-display:swap; }`;
+        st.textContent = `@font-face { font-family:'JalnanGothic'; src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_231029@1.1/JalnanGothic.woff') format('woff'); font-weight:normal; font-display:swap; }`;
         document.head.appendChild(st);
     }
 
@@ -660,13 +660,13 @@ function _wzTitle(title, font, S, bW, bH, bL, bT) {
             shadow: new fabric.Shadow({ color:'rgba(0,0,0,0.35)', blur:0, offsetX:depth, offsetY:depth })
         });
     } else if (effect === 'neon') {
-        // 네온핑크: 투명 fill + 핑크 스트로크 + 핑크 글로우
+        // 네온핑크: 검정 fill + 핑크 스트로크 + 핑크 글로우
         const nCol = S.neonColor || '#ff00aa';
         Object.assign(props, {
-            fill: 'transparent',
-            stroke: nCol, strokeWidth: Math.max(2, Math.round(sz * 0.03)),
+            fill: '#0a0a0a',
+            stroke: nCol, strokeWidth: Math.max(2, Math.round(sz * 0.035)),
             paintFirst: 'fill', strokeLineJoin: 'round',
-            shadow: new fabric.Shadow({ color: nCol, blur: Math.round(sz * 0.25), offsetX:0, offsetY:0 })
+            shadow: new fabric.Shadow({ color: nCol, blur: Math.round(sz * 0.3), offsetX:0, offsetY:0 })
         });
     } else {
         // 3D: 기존 방식 (블루/옐로우)
