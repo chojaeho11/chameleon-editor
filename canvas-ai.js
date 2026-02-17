@@ -360,19 +360,20 @@ const WIZARD_STYLES = {
 };
 
 // Extract meaningful keywords from title
-// 한국어 복합어 처리: "고기집" → ["고기"], "카페오픈" → ["카페"]
+// "초록 물고기" → ["물고기","초록"] (명사 우선)
+// "고기집 간판" → ["고기","간판","고기집"] (접미사 제거 + 원본)
 function _wzExtractKeywords(title) {
     const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
     if (!words.length) return [title];
 
-    // 한국어 접미사 제거 (집, 점, 관, 원, 소, 실, 당, 방, 장)
     const suffixes = ['집','점','관','원','소','실','당','방','장'];
-    // 한국어 조사/어미 제거
     const particles = ['을','를','이','가','은','는','에','의','로','와','과','도','만','까지','에서','부터','처럼','같이','보다'];
-    // 일반 동사/형용사 어미
-    const verbEndings = ['하기','만들기','오픈','세일','이벤트','행사','축하','파티','홍보','안내','소개'];
+    // 한국어 형용사/관형어 (검색 의미 낮음 → 뒤로 보냄)
+    const adjectives = ['큰','작은','예쁜','멋진','새로운','특별한','푸른','빨간','파란','노란','초록','하얀','검은','보라','분홍','아름다운','화려한','심플한','모던한','귀여운','멋있는'];
 
-    const results = [];
+    const nouns = [];
+    const adjs = [];
+
     for (const w of words) {
         let root = w;
         // 조사 제거
@@ -382,20 +383,31 @@ function _wzExtractKeywords(title) {
                 break;
             }
         }
-        // 접미사 제거 (2글자 이상 남을 때만)
+        // 접미사 제거
+        let stripped = root;
         for (const s of suffixes) {
-            if (root.length > s.length + 1 && root.endsWith(s)) {
-                root = root.slice(0, -s.length);
+            if (stripped.length > s.length + 1 && stripped.endsWith(s)) {
+                stripped = stripped.slice(0, -s.length);
                 break;
             }
         }
-        if (root.length >= 2) results.push(root);
-        // 원본도 추가 (root와 다르면)
-        if (w !== root && w.length >= 2) results.push(w);
+
+        // 형용사인지 판별
+        const isAdj = adjectives.some(a => w.startsWith(a) || w === a);
+
+        if (isAdj) {
+            if (root.length >= 2) adjs.push(root);
+        } else {
+            if (stripped.length >= 2 && stripped !== root) nouns.push(stripped);
+            if (root.length >= 2) nouns.push(root);
+        }
     }
-    // 동사/명사 키워드는 검색 우선순위 높게
-    // 중복 제거
-    return [...new Set(results.length > 0 ? results : [title])];
+
+    // 명사를 뒤에서부터 (한국어: 뒤 단어가 핵심 명사)
+    const reversed = [...nouns].reverse();
+    const all = [...new Set([...reversed, ...adjs])];
+    console.log('[Wizard Keywords]', title, '→', all);
+    return all.length > 0 ? all : [title];
 }
 
 function _wzSteps() {
@@ -476,12 +488,12 @@ async function runDesignWizard(title, style) {
 async function _wzBg(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
-    // 1. 키워드로 템플릿 검색 (thumb + data_url 모두)
+    // 1. 키워드로 템플릿 검색 (사이드바와 동일한 카테고리)
     let found = null;
     for (const kw of keywords) {
         const res = await sb.from('library')
-            .select('id, thumb_url, data_url')
-            .in('category', ['user_image','photo-bg'])
+            .select('id, thumb_url, category, product_key, tags, title')
+            .in('category', ['user_vector','user_image','photo-bg'])
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
@@ -490,8 +502,8 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     }
     if (!found) {
         const r2 = await sb.from('library')
-            .select('id, thumb_url, data_url')
-            .in('category', ['user_image','photo-bg','pattern'])
+            .select('id, thumb_url, category, product_key, tags, title')
+            .in('category', ['user_vector','user_image','photo-bg','pattern'])
             .eq('status','approved')
             .order('created_at', { ascending: false })
             .limit(1);
@@ -499,54 +511,40 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     }
     if (!found) return;
 
-    // 2. data_url에서 이미지 URL 추출 (여러 형태 대응)
-    let cleanUrl = '';
-    const raw = found.data_url;
-    if (raw) {
-        if (typeof raw === 'string') {
-            if (raw.startsWith('http')) {
-                cleanUrl = raw;
-            } else {
-                try {
-                    const parsed = JSON.parse(raw);
-                    if (typeof parsed === 'string' && parsed.startsWith('http')) cleanUrl = parsed;
-                } catch(e) {}
-            }
-        } else if (typeof raw === 'object' && raw !== null) {
-            // JSONB 객체: backgroundImage나 첫번째 이미지 src 추출
-            if (raw.src) cleanUrl = raw.src;
-        }
-    }
-    // 폴백: thumb_url
-    if (!cleanUrl) cleanUrl = found.thumb_url || '';
-    if (!cleanUrl) return;
-    cleanUrl = String(cleanUrl).trim().replace(/^"|"$/g, '');
+    console.log('[Wizard BG] Found template:', found.id, found.category, found.title || found.tags);
 
-    console.log('[Wizard BG] data_url type:', typeof raw, '| using URL:', cleanUrl.substring(0, 80) + '...');
+    // 2. processLoad 방식으로 적용 (사이드바 클릭과 동일)
+    window.selectedTpl = found;
 
     return new Promise(resolve => {
-        fabric.Image.fromURL(cleanUrl, img => {
-            if (!img) { resolve(); return; }
-            console.log('[Wizard BG] Loaded image:', img.width, 'x', img.height);
-            const scale = Math.max(bW / img.width, bH / img.height);
-            img.set({
-                scaleX: scale, scaleY: scale,
-                left: bL + bW/2, top: bT + bH/2,
-                originX:'center', originY:'center',
-                // ★ 배경 잠금
-                selectable: false, evented: false,
-                lockMovementX: true, lockMovementY: true,
-                lockRotation: true, lockScalingX: true, lockScalingY: true,
-                hasControls: false, hasBorders: false,
-                isTemplateBackground: true,
-                opacity: 1.0
+        let resolved = false;
+        const done = () => {
+            if (resolved) return;
+            resolved = true;
+            canvas.off('object:added', onAdd);
+            // 배경 잠금 처리
+            canvas.getObjects().filter(o => o.isTemplateBackground).forEach(bg => {
+                bg.set({
+                    selectable: false, evented: false,
+                    lockMovementX: true, lockMovementY: true,
+                    lockRotation: true, lockScalingX: true, lockScalingY: true,
+                    hasControls: false, hasBorders: false
+                });
             });
-            canvas.add(img);
-            canvas.sendToBack(img);
-            const board = canvas.getObjects().find(o => o.isBoard);
-            if (board) canvas.sendToBack(board);
+            canvas.discardActiveObject();
+            canvas.requestRenderAll();
+            const ld = document.getElementById('loading');
+            if (ld) ld.style.display = 'none';
             resolve();
-        }, { crossOrigin:'anonymous' });
+        };
+        const onAdd = () => setTimeout(done, 500);
+        canvas.on('object:added', onAdd);
+
+        // processLoad 실행 (사이드바에서 클릭하는 것과 동일)
+        window.processLoad('replace');
+
+        // 안전 타임아웃 (10초)
+        setTimeout(done, 10000);
     });
 }
 
