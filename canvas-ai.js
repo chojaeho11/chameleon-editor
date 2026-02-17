@@ -498,6 +498,7 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
 
     // 1. 키워드로 템플릿 검색 (사이드바와 동일한 카테고리)
     let found = null;
+    let matchedKw = '';
     for (const kw of keywords) {
         const res = await sb.from('library')
             .select('id, thumb_url, category, product_key, tags, title')
@@ -506,7 +507,7 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
             .eq('status','approved')
             .order('created_at', { ascending: false })
             .limit(1);
-        if (res.data && res.data.length) { found = res.data[0]; break; }
+        if (res.data && res.data.length) { found = res.data[0]; matchedKw = kw; break; }
     }
     if (!found) {
         const r2 = await sb.from('library')
@@ -520,6 +521,18 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     if (!found) return;
 
     console.log('[Wizard BG] Found template:', found.id, found.category, found.title || found.tags);
+
+    // ★ 사이드바 템플릿 검색창에 매칭 키워드 표시
+    if (matchedKw) {
+        const sideInput = document.getElementById('sideTemplateSearch');
+        if (sideInput) sideInput.value = matchedKw;
+        if (window.loadSideBarTemplates) {
+            const pk = window.currentProductKey || 'custom';
+            window.loadSideBarTemplates(pk, matchedKw, 0);
+        }
+        // 템플릿 패널 열기
+        if (window.toggleSubPanel) window.toggleSubPanel('sub-template');
+    }
 
     // 2. processLoad 방식으로 적용 (사이드바 클릭과 동일)
     window.selectedTpl = found;
@@ -570,7 +583,7 @@ function _wzTitle(title, font, S, bW, bH, bL, bT) {
         }
     }
 
-    const sz = Math.round(bW * 0.06);
+    const sz = Math.round(bW * 0.07);
     const depth = Math.max(3, Math.round(sz * 0.07));
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: '900',
