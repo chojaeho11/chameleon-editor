@@ -458,7 +458,7 @@
             box-shadow: 0 8px 30px rgba(0,0,0,0.2);
         }
     </style>
-    <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px;">
+    <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px; padding:0 15px;">
         <button id="btnDesignStart">
             <i class="fa-solid fa-palette"></i> <span data-i18n="dsm_btn_start">무료 디자인 시작하기</span>
         </button>
@@ -7649,16 +7649,19 @@ window.filterModalItems = function(keyword) {
 
 /* === 보라색 박스 안 상품 아이콘 오버라이드 === */
 .quick-menu-wrapper .quick-item {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.15);
-    border-radius: 50px;
+    background: transparent;
+    border-color: transparent;
+    border-radius: 16px;
 }
 .quick-menu-wrapper .quick-item:hover {
-    background: rgba(255,255,255,0.2);
-    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    border-color: transparent;
 }
 .quick-menu-wrapper .quick-text {
-    color: #ede9fe;
+    color: #fff;
+}
+.quick-menu-wrapper .quick-icon {
+    background: rgba(255,255,255,0.15);
 }
 
 /* === 모바일 반응형 === */

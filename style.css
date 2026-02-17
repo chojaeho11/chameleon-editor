@@ -676,7 +676,7 @@ button, input, textarea, select { font-family: inherit; }
         overflow-x: auto !important; white-space: nowrap !important; background: #fff !important;
     }
     .topbar::-webkit-scrollbar { display: none; }
-    #siteNavBar { top: 50px !important; height: 36px !important; padding: 3px 8px !important; gap: 4px !important; border-bottom-left-radius: 10px !important; }
+    #siteNavBar { top: 50px !important; height: 36px !important; padding: 3px 8px !important; gap: 4px !important; border-bottom-left-radius: 0 !important; width: 100% !important; justify-content: center !important; left: 0 !important; right: auto !important; }
     #siteNavBar .flag-link { width: 28px !important; height: 28px !important; font-size: 16px !important; }
     #startScreen { top: 50px !important; height: calc(100vh - 50px) !important; }
     .brand { order: 1 !important; margin-right: 5px !important; flex-shrink: 0 !important; }
@@ -2134,10 +2134,36 @@ body {
 .qt-badge {
     font-size: 11px !important;
     padding: 4px 10px !important;
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255,255,255,0.85) !important;
 }
 .qt-text {
     font-size: 20px !important;
     color: #fff !important;
+}
+/* 모바일 시작 버튼 풀와이드 */
+#btnDesignStart {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 14px 20px !important;
+    box-sizing: border-box !important;
+}
+/* 모바일 상품 아이콘 보라배경 안 */
+.quick-menu-wrapper .quick-item {
+    background: transparent !important;
+    border-color: transparent !important;
+    border-radius: 16px !important;
+}
+.quick-menu-wrapper .quick-item:hover {
+    background: rgba(255,255,255,0.1) !important;
+}
+.quick-menu-wrapper .quick-text {
+    color: #fff !important;
+}
+.quick-menu-wrapper .quick-icon {
+    background: rgba(255,255,255,0.15) !important;
+    border: none !important;
 }
 
 /* 모바일 내부 여백 미세 조정 */
@@ -2199,8 +2225,8 @@ body {
     
     /* 뱃지 스타일 */
     .qt-badge {
-        background-color: rgba(255,255,255,0.2) !important;
-        color: #ede9fe !important;
+        background-color: rgba(255,255,255,0.15) !important;
+        color: #fff !important;
         padding: 6px 15px;
         border-radius: 50px;
         font-size: 13px;
