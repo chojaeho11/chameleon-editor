@@ -32,7 +32,12 @@ window.openGifMaker = function() {
     updateFrameUI();
     gifSwitchTab('frames');
     loadEmojis();
-    loadFonts();
+    // Load Supabase fonts
+    if (window.initCanvasFonts && !window.isFontsInitialized) {
+        window.initCanvasFonts().then(function(){ loadFonts(); });
+    } else {
+        loadFonts();
+    }
 };
 
 window.closeGifMaker = function() {
@@ -40,6 +45,8 @@ window.closeGifMaker = function() {
     if (modal) modal.style.display = 'none';
     if (GM.playTimer) { clearInterval(GM.playTimer); GM.playTimer = null; }
     GM.playing = false;
+    // remove key handler
+    document.removeEventListener('keydown', gifKeyHandler);
     // dispose fabric
     if (GM.fabricCanvas) { try { GM.fabricCanvas.dispose(); } catch(e){} GM.fabricCanvas = null; }
     // restore UI
@@ -68,6 +75,26 @@ function initFabricCanvas() {
         selection: true
     });
     GM.fabricCanvas.on('object:modified', function(){ saveOverlayPositions(); });
+    // Delete key support
+    document.addEventListener('keydown', gifKeyHandler);
+}
+
+function gifKeyHandler(e) {
+    if (!GM.fabricCanvas) return;
+    var modal = document.getElementById('gifMakerModal');
+    if (!modal || modal.style.display !== 'flex') return;
+    // Don't delete while editing text
+    var active = GM.fabricCanvas.getActiveObject();
+    if (active && active.isEditing) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (!active) return;
+        e.preventDefault();
+        GM.fabricCanvas.remove(active);
+        GM.fabricCanvas.discardActiveObject();
+        GM.fabricCanvas.renderAll();
+        updateTextList();
+        updateOverlayImageList();
+    }
 }
 
 window.gifResizeCanvas = function() {
@@ -237,8 +264,8 @@ window.gifAddText = function() {
         fontFamily: document.getElementById('gifFontSelect').value || 'Arial',
         fontSize: parseInt(document.getElementById('gifFontSize').value) || 32,
         fill: document.getElementById('gifFontColor').value || '#ffffff',
-        stroke: document.getElementById('gifStrokeColor').value || '#000000',
-        strokeWidth: parseInt(document.getElementById('gifStrokeWidth').value) || 2,
+        stroke: null,
+        strokeWidth: 0,
         fontWeight: 'bold',
         textAlign: 'center',
         editable: true
@@ -253,12 +280,13 @@ window.gifUpdateText = function() {
     if (!GM.fabricCanvas) return;
     const obj = GM.fabricCanvas.getActiveObject();
     if (!obj || obj.type !== 'i-text') return;
+    var sw = parseInt(document.getElementById('gifStrokeWidth').value) || 0;
     obj.set({
         fontFamily: document.getElementById('gifFontSelect').value,
         fontSize: parseInt(document.getElementById('gifFontSize').value) || 32,
         fill: document.getElementById('gifFontColor').value,
-        stroke: document.getElementById('gifStrokeColor').value,
-        strokeWidth: parseInt(document.getElementById('gifStrokeWidth').value) || 0
+        stroke: sw > 0 ? document.getElementById('gifStrokeColor').value : null,
+        strokeWidth: sw
     });
     GM.fabricCanvas.renderAll();
 };
@@ -350,22 +378,23 @@ window.gifAddEmoji = function(emoji) {
     GM.fabricCanvas.renderAll();
 };
 
-/* ─── Fonts ─── */
+/* ─── Fonts (Supabase DYNAMIC_FONTS) ─── */
 function loadFonts() {
     const select = document.getElementById('gifFontSelect');
     if (!select) return;
-    // add loaded fonts if available
     const defaultFonts = ['Arial','Impact','Georgia','Comic Sans MS','Verdana','Courier New','Times New Roman'];
-    if (window.__fontList && window.__fontList.length > 0) {
-        let html = '';
-        window.__fontList.forEach(function(f) {
-            html += '<option value="'+f.family+'" style="font-family:\''+f.family+'\'">'+f.family+'</option>';
+    let html = '';
+    // Supabase + Google fonts
+    if (window.DYNAMIC_FONTS && window.DYNAMIC_FONTS.length > 0) {
+        window.DYNAMIC_FONTS.forEach(function(f) {
+            html += '<option value="'+f.font_family+'" style="font-family:\''+f.font_family+'\'">'+f.font_name+'</option>';
         });
-        defaultFonts.forEach(function(f) {
-            html += '<option value="'+f+'">'+f+'</option>';
-        });
-        select.innerHTML = html;
     }
+    // fallback defaults
+    defaultFonts.forEach(function(f) {
+        html += '<option value="'+f+'">'+f+'</option>';
+    });
+    select.innerHTML = html;
 }
 
 /* ─── Save overlay positions ─── */
