@@ -528,7 +528,7 @@ function doEncode(frameDataUrls, delay) {
         quality: 10,
         width: GM.w,
         height: GM.h,
-        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+        workerScript: './gif.worker.js'
     });
 
     let loaded = 0;
