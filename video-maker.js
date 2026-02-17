@@ -71,7 +71,8 @@ let vm = {
     tlZoom: 1,
     addMode: null, addSticker: '⭐', drag: null,
     imgItems: null, imgPage: 0,
-    clipboard: null, snapLines: null
+    clipboard: null, snapLines: null,
+    audioItems: null, audioEl: null, audioUrl: null
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -210,9 +211,21 @@ function addOverlay(type, x, y, props) {
         case 'circle': o={type:'circle',x,y,r:props?.r||vm.w*.06,fill:props?.fill||'rgba(99,102,241,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2}; break;
         case 'sticker': o={type:'sticker',x,y,emoji:props?.emoji||'⭐',size:props?.size||Math.round(vm.w*.08)}; break;
         case 'image': {
-            const img=new Image(); img.crossOrigin='anonymous'; img.src=props?.url||'';
-            o={type:'image',x,y,w:props?.w||vm.w*.3,h:props?.h||vm.w*.3,url:props?.url||'',img};
-            img.onload=()=>{render();}; break;
+            const img=new Image();
+            const imgUrl=props?.url||'';
+            img.onload=()=>{
+                // auto-size: fit within target bounds keeping aspect ratio
+                if(img.naturalWidth&&img.naturalHeight){
+                    const ar=img.naturalWidth/img.naturalHeight;
+                    const tw=props?.w||vm.w*.3, th=props?.h||vm.w*.3;
+                    if(ar>tw/th){o.w=tw;o.h=tw/ar;}else{o.h=th;o.w=th*ar;}
+                }
+                render();
+            };
+            img.onerror=()=>{ console.warn('Image load failed:',imgUrl); };
+            img.src=imgUrl;
+            o={type:'image',x,y,w:props?.w||vm.w*.3,h:props?.h||vm.w*.3,url:imgUrl,img};
+            break;
         }
     }
     if (o) { o.rotation=o.rotation||0; o.tStart=0; o.tEnd=c.duration; c.overlays.push(o); vm.oi = c.overlays.length-1; render(); refreshRightPanel(); updateTimeline(); }
@@ -406,9 +419,9 @@ function renderMediaTab(el) {
 }
 
 function renderAudioTab(el) {
-    let h = '<div class="ve-sec">';
+    let h = '<div class="ve-sec"><b>내장 음악</b>';
     MUSIC.forEach(m => {
-        const sel = vm.music===m.id, playing = vm.musicPlaying===m.id;
+        const sel = vm.music===m.id&&!vm.audioUrl, playing = vm.musicPlaying===m.id;
         h += `<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectMusic('${m.id}')">`;
         h += `<i class="fa-solid ${m.icon}" style="width:24px;text-align:center;font-size:16px;color:${sel?'#818cf8':'#6b7280'}"></i>`;
         h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${m.name}</div><div style="font-size:10px;color:#6b7280">${m.desc}</div></div>`;
@@ -416,8 +429,54 @@ function renderAudioTab(el) {
         h += '</div>';
     });
     h += '</div>';
+    // Supabase uploaded audio
+    h += '<div class="ve-sec"><b>업로드된 음원</b>';
+    h += '<div id="veAudioList"><p class="ve-empty">로딩 중...</p></div></div>';
     el.innerHTML = h;
+    loadAudioFromDB();
 }
+
+async function loadAudioFromDB() {
+    const list=document.getElementById('veAudioList'); if(!list) return;
+    try {
+        const sb=window.sb; if(!sb){list.innerHTML='<p class="ve-empty">DB 연결 없음</p>';return;}
+        if(!vm.audioItems){
+            const {data,error}=await sb.from('library').select('id,thumb_url,data_url,tags').eq('category','audio').order('created_at',{ascending:false}).range(0,19);
+            if(error) throw error;
+            vm.audioItems=data||[];
+        }
+        if(!vm.audioItems.length){list.innerHTML='<p class="ve-empty">음원 없음 (관리자에서 등록)</p>';return;}
+        let h='';
+        vm.audioItems.forEach((a,i)=>{
+            const name=a.tags||`음원 ${i+1}`;
+            const sel=vm.audioUrl===a.data_url;
+            h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectDBAudio(${i})">`;
+            h+=`<i class="fa-solid fa-music" style="width:24px;text-align:center;font-size:14px;color:${sel?'#818cf8':'#6b7280'}"></i>`;
+            h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${name}</div></div>`;
+            h+=`<button class="ve-music-play" onclick="event.stopPropagation();window._vePreviewDBAudio(${i})"><i class="fa-solid fa-play"></i></button>`;
+            h+=`</div>`;
+        });
+        list.innerHTML=h;
+    } catch(e){ list.innerHTML='<p class="ve-empty">로드 실패</p>'; }
+}
+
+window._veSelectDBAudio = function(idx) {
+    const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
+    stopMusicPreview(); stopDBAudio();
+    vm.music='none'; vm.audioUrl=a.data_url;
+    refreshLeftPanel(); updateTimeline();
+};
+window._vePreviewDBAudio = function(idx) {
+    const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
+    stopMusicPreview();
+    if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}
+    const audio=new Audio(a.data_url);
+    audio.volume=0.5; audio.play().catch(()=>{});
+    vm.audioEl=audio;
+    // auto-stop after 10 seconds preview
+    setTimeout(()=>{if(vm.audioEl===audio){audio.pause();vm.audioEl=null;}},10000);
+};
+function stopDBAudio(){if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}vm.audioUrl=null;}
 
 function renderTextTab(el) {
     let h = '<div class="ve-sec"><b>텍스트</b>';
@@ -463,23 +522,26 @@ function renderElementTab(el) {
     h += `</div><button class="ve-add-btn" onclick="window._veStartAdd('sticker')"><i class="fa-solid fa-hand-pointer"></i> 캔버스에 스티커 배치</button></div>`;
     // Supabase library images
     h += '<div class="ve-sec"><b>이미지 라이브러리</b>';
-    h += '<div id="veLibGrid" class="ve-lib-grid"><p class="ve-empty" style="grid-column:1/-1">로딩 중...</p></div>';
+    h += '<input class="ve-search-inp" id="veLibSearch" placeholder="검색..." oninput="window._veSearchLib(this.value)">';
+    h += '<div id="veLibGrid" class="ve-lib-grid2"><p class="ve-empty" style="grid-column:1/-1">로딩 중...</p></div>';
     h += '<button class="ve-lib-more" onclick="window._veLoadMoreLib()"><i class="fa-solid fa-angles-down"></i> 더 보기</button>';
     h += '</div>';
     el.innerHTML = h;
     loadLibElements();
 }
 
-async function loadLibElements() {
+async function loadLibElements(search) {
     const grid=document.getElementById('veLibGrid'); if(!grid) return;
     try {
         const sb=window.sb; if(!sb){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">DB 연결 없음</p>';return;}
-        if(!vm.libItems){
-            const { data, error } = await sb.from('library')
+        if(!vm.libItems||search!=null){
+            let q=sb.from('library')
                 .select('id, thumb_url, data_url, category')
                 .in('category', ['vector','user_vector','graphic','transparent-graphic','pattern','logo'])
                 .order('created_at', { ascending: false })
-                .range(0, 29);
+                .range(0, 9);
+            if(search) q=q.ilike('tags','%'+search+'%');
+            const { data, error } = await q;
             if(error) throw error;
             vm.libItems = data || [];
             vm.libPage = 1;
@@ -509,7 +571,7 @@ window._veLoadMoreLib = async function() {
             .select('id, thumb_url, data_url, category')
             .in('category', ['vector','user_vector','graphic','transparent-graphic','pattern','logo'])
             .order('created_at', { ascending: false })
-            .range(page*30, (page+1)*30-1);
+            .range(page*10, (page+1)*10-1);
         if(!error&&data&&data.length){
             vm.libItems=[...vm.libItems,...data];
             vm.libPage=page+1;
@@ -518,37 +580,44 @@ window._veLoadMoreLib = async function() {
         } else { showToast('더 이상 이미지가 없습니다'); }
     } catch(e){ showToast('로드 실패'); }
 };
+window._veSearchLib = function(q){
+    clearTimeout(vm._libSearchTimer);
+    vm._libSearchTimer=setTimeout(()=>{vm.libItems=null;loadLibElements(q||null);},400);
+};
 
 window._veAddLibImage = function(idx) {
     const c=curClip();
     if(!c) return alert('클립을 먼저 추가하세요');
     const item=vm.libItems&&vm.libItems[idx];
     if(!item) return;
-    // Use data_url (original PNG/SVG with transparency) over thumb_url (may be JPEG)
-    const url=item.data_url||item.thumb_url||'';
+    // Use data_url only if it's an actual image URL (not fabric.js JSON)
+    const url=isImageUrl(item.data_url)?item.data_url:(item.thumb_url||'');
     addOverlay('image', vm.w*.2, vm.h*.2, {url, w:vm.w*.4, h:vm.w*.4});
     showToast('이미지 요소 추가됨');
 };
 
 function renderImageTab(el) {
     let h = '<div class="ve-sec"><b>이미지 템플릿</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">에디터 이미지를 오버레이로 삽입</p>';
-    h += '<div id="veImgGrid" class="ve-lib-grid"><p class="ve-empty" style="grid-column:1/-1">로딩 중...</p></div>';
+    h += '<input class="ve-search-inp" id="veImgSearch" placeholder="검색..." oninput="window._veSearchImg(this.value)">';
+    h += '<div id="veImgGrid" class="ve-lib-grid2"><p class="ve-empty" style="grid-column:1/-1">로딩 중...</p></div>';
     h += '<button class="ve-lib-more" onclick="window._veLoadMoreImg()"><i class="fa-solid fa-angles-down"></i> 더 보기</button>';
     h += '</div>';
     el.innerHTML = h;
     loadImageTemplates();
 }
 
-async function loadImageTemplates() {
+async function loadImageTemplates(search) {
     const grid=document.getElementById('veImgGrid'); if(!grid) return;
     try {
         const sb=window.sb; if(!sb){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">DB 연결 없음</p>';return;}
-        if(!vm.imgItems){
-            const { data, error } = await sb.from('library')
+        if(!vm.imgItems||search!=null){
+            let q=sb.from('library')
                 .select('id, thumb_url, data_url, category')
                 .in('category', ['user_image','photo-bg','text'])
                 .order('created_at', { ascending: false })
-                .range(0, 29);
+                .range(0, 9);
+            if(search) q=q.ilike('tags','%'+search+'%');
+            const { data, error } = await q;
             if(error) throw error;
             vm.imgItems = data || [];
             vm.imgPage = 1;
@@ -578,7 +647,7 @@ window._veLoadMoreImg = async function() {
             .select('id, thumb_url, data_url, category')
             .in('category', ['user_image','photo-bg','text'])
             .order('created_at', { ascending: false })
-            .range(page*30, (page+1)*30-1);
+            .range(page*10, (page+1)*10-1);
         if(!error&&data&&data.length){
             vm.imgItems=[...vm.imgItems,...data];
             vm.imgPage=page+1;
@@ -587,13 +656,17 @@ window._veLoadMoreImg = async function() {
         } else { showToast('더 이상 이미지가 없습니다'); }
     } catch(e){ showToast('로드 실패'); }
 };
+window._veSearchImg = function(q){
+    clearTimeout(vm._imgSearchTimer);
+    vm._imgSearchTimer=setTimeout(()=>{vm.imgItems=null;loadImageTemplates(q||null);},400);
+};
 
 window._veAddImgTemplate = function(idx) {
     const c=curClip();
     if(!c) return alert('클립을 먼저 추가하세요');
     const item=vm.imgItems&&vm.imgItems[idx];
     if(!item) return;
-    const url=item.data_url||item.thumb_url||'';
+    const url=isImageUrl(item.data_url)?item.data_url:(item.thumb_url||'');
     addOverlay('image', vm.w*.1, vm.h*.1, {url, w:vm.w*.5, h:vm.h*.5});
     showToast('이미지 템플릿 추가됨');
 };
@@ -708,24 +781,46 @@ function renderRuler() {
 function renderVideoTrack() {
     const el=document.getElementById('veTlVideo'); if(!el) return;
     const td=totalDur()||10; el.style.width=(td*TL_PPS*vm.tlZoom)+'px'; el.innerHTML='';
+    const pps=TL_PPS*vm.tlZoom;
     vm.clips.forEach((c,i)=>{
         const d=document.createElement('div'); d.className='ve-tl-clip'+(i===vm.ci?' active':'');
-        d.style.width=(c.duration*TL_PPS*vm.tlZoom)+'px';
-        d.innerHTML=`<img src="${c.thumbUrl}"><span class="ve-tl-clip-dur">${fmtTime(c.duration)}</span>`;
+        d.style.width=(c.duration*pps)+'px'; d.style.position='relative';
+        d.innerHTML=`<img src="${c.thumbUrl}"><span class="ve-tl-clip-dur">${fmtTime(c.duration)}</span>`
+            +`<span class="ve-tl-ol-grip right" data-ci="${i}"></span>`;
         d.onclick=()=>selectClip(i);
         // drag reorder
         d.draggable=true;
-        d.addEventListener('dragstart',e=>e.dataTransfer.setData('text',i));
+        d.addEventListener('dragstart',e=>{if(e.target.classList.contains('ve-tl-ol-grip')){e.preventDefault();return;}e.dataTransfer.setData('text',i);});
         d.addEventListener('dragover',e=>{e.preventDefault();d.style.borderColor='#818cf8';});
         d.addEventListener('dragleave',()=>d.style.borderColor='');
         d.addEventListener('drop',e=>{e.preventDefault();d.style.borderColor='';const from=parseInt(e.dataTransfer.getData('text'));if(from!==i&&!isNaN(from)){const[mv]=vm.clips.splice(from,1);vm.clips.splice(i,0,mv);vm.ci=i;updateAll();render();}});
         el.appendChild(d);
+        // right grip: resize clip duration
+        const grip=d.querySelector('.ve-tl-ol-grip.right');
+        if(grip) grip.addEventListener('mousedown',function(e){
+            e.stopPropagation();
+            const startX=e.clientX, origDur=c.duration;
+            function mv(ev){
+                const dx=ev.clientX-startX;
+                c.duration=Math.max(0.5,Math.round((origDur+dx/pps)*10)/10);
+                // update overlay tEnd if it exceeds new duration
+                c.overlays.forEach(o=>{if(o.tEnd!=null&&o.tEnd>c.duration)o.tEnd=c.duration;});
+                renderVideoTrack(); renderRuler(); renderOverlayTrack(); updatePlayhead(); refreshRightPanel();
+            }
+            function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
+            document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+        });
     });
 }
 
 function renderAudioTrack() {
     const el=document.getElementById('veTlAudio'); if(!el) return;
     const td=totalDur()||10; el.style.width=(td*TL_PPS*vm.tlZoom)+'px';
+    if(vm.audioUrl){
+        const a=vm.audioItems&&vm.audioItems.find(x=>x.data_url===vm.audioUrl);
+        el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${a?a.tags:'업로드 음원'}</div>`;
+        return;
+    }
     if(vm.music==='none'){el.innerHTML='<div class="ve-tl-audio-empty">오디오 탭에서 음악을 선택하세요</div>';return;}
     const m=MUSIC.find(x=>x.id===vm.music);
     el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${m?m.name:vm.music}</div>`;
@@ -824,7 +919,7 @@ window._veAddTextCenter = () => {
 };
 window._vePickSticker = (e) => { vm.addSticker=e; refreshLeftPanel(); };
 window._veUpOL = (p,v) => { const c=curClip(); if(c&&vm.oi>=0&&c.overlays[vm.oi]){c.overlays[vm.oi][p]=v;render();} };
-window._veSelectMusic = (id) => { vm.music=id; refreshLeftPanel(); updateTimeline(); };
+window._veSelectMusic = (id) => { stopDBAudio(); vm.audioUrl=null; vm.music=id; refreshLeftPanel(); updateTimeline(); };
 window._vePreviewMusic = (id) => { vm.musicPlaying===id ? stopMusicPreview() : playMusicPreview(id); };
 window._veSetTrans = (id) => { const c=curClip(); if(c){c.transition=id;refreshLeftPanel();updateTimeline();} };
 window._veSetDur = (v) => { const c=curClip(); if(c){c.duration=v;updateTimeline();refreshRightPanel();} };
@@ -884,6 +979,7 @@ function showToast(msg){const t=document.getElementById('veToast');if(!t)return;
 function fmtTime(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
 function rgbaHex(c){if(!c)return'#ffffff';if(c.startsWith('#')){if(c.length===4)return'#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return c.length>7?c.substring(0,7):c;}const m=c.match(/\d+/g);if(!m)return'#ffffff';return'#'+[m[0],m[1],m[2]].map(x=>(+x).toString(16).padStart(2,'0')).join('');}
 function expandHex(c){if(!c)return'#ffffff';if(c.length===4&&c.startsWith('#'))return'#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return c;}
+function isImageUrl(s){if(!s||typeof s!=='string')return false;const t=s.trim();return t.startsWith('http')||t.startsWith('//')||t.startsWith('data:')||t.startsWith('blob:');}
 
 // ═══════════════════════════════════════════════════════════════
 // TRANSITIONS
@@ -947,7 +1043,7 @@ window.vePlay = async function() {
     vm.playing=true;vm.paused=false;vm.cancel=false;vm.playTime=0;
     const btn=document.getElementById('vePlayBtn');
     if(btn)btn.innerHTML='<i class="fa-solid fa-stop"></i>';
-    playMusicPreview(vm.music);
+    if(vm.audioUrl){const a=new Audio(vm.audioUrl);a.volume=0.5;a.play().catch(()=>{});vm.audioEl=a;}else{playMusicPreview(vm.music);}
     for(let i=0;i<vm.clips.length;i++){
         if(vm.cancel)break;
         vm.ci=i;vm.oi=-1;
@@ -961,7 +1057,7 @@ window.vePlay = async function() {
             await playClipOnCanvas(i,dur);
         }
     }
-    stopMusicPreview();vm.playing=false;vm.paused=false;vm.cancel=false;
+    stopMusicPreview();if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}vm.playing=false;vm.paused=false;vm.cancel=false;
     if(btn)btn.innerHTML='<i class="fa-solid fa-play"></i>';
     updateAll();
 };
@@ -1190,6 +1286,12 @@ window.openVideoMaker = function(label) {
     vm.clips=[];vm.ci=0;vm.oi=-1;vm.playing=false;vm.paused=false;vm.cancel=false;
     vm.addMode=null;vm.music='none';vm.musicPlaying=null;vm.playTime=0;vm.leftTab='media';
     vm.libItems=null;vm.libPage=0;vm.imgItems=null;vm.imgPage=0;
+    vm.audioItems=null;vm.audioUrl=null;
+    if(vm.audioEl){try{vm.audioEl.pause();}catch(e){}vm.audioEl=null;}
+    // Load country-specific fonts from Supabase if not already loaded
+    if(window.initCanvasFonts && !window.isFontsInitialized){
+        window.initCanvasFonts().then(()=>{ console.log('📥 [VideoMaker] Fonts loaded'); refreshLeftPanel&&refreshLeftPanel(); });
+    }
     // format from label
     if(label==='쇼츠') vm.format='portrait';
     else vm.format='landscape';
@@ -1216,11 +1318,18 @@ window.veClose = function(){
     const modal=document.getElementById('videoMakerModal');
     if(!modal||modal.style.display==='none') return; // already closed
     stopMusicPreview();vm.cancel=true;vm.playing=false;
+    if(vm.audioEl){try{vm.audioEl.pause();}catch(e){}vm.audioEl=null;}
     modal.style.display='none';
     // hide context menu
     const cm=document.getElementById('veContextMenu'); if(cm) cm.style.display='none';
-    // restore site UI — always force visible
-    const topbar=document.querySelector('.topbar');if(topbar){topbar.style.display='';topbar.style.removeProperty('display');}
-    const dock=document.querySelector('.bottom-dock');if(dock){dock.style.display='';dock.style.removeProperty('display');}
-    const mcd=document.getElementById('mobileControlDock');if(mcd){mcd.style.display='';mcd.style.removeProperty('display');}
+    // restore site UI — force remove inline display:none
+    document.querySelectorAll('.topbar, .bottom-dock, #mobileControlDock').forEach(el=>{
+        if(el) el.style.removeProperty('display');
+    });
+    // schedule a second check to ensure topbar is visible (in case of race condition)
+    setTimeout(()=>{
+        document.querySelectorAll('.topbar, .bottom-dock, #mobileControlDock').forEach(el=>{
+            if(el&&getComputedStyle(el).display==='none') el.style.display='block';
+        });
+    },100);
 };

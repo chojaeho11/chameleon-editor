@@ -6567,6 +6567,7 @@ if (w >= 20 && h >= 20) {
         <!-- 상단 바 -->
         <div class="ve-topbar">
             <div class="ve-topbar-left">
+                <button class="ve-home-btn" onclick="window.veClose()" title="홈으로"><i class="fa-solid fa-house"></i></button>
                 <span id="veTitle" class="ve-title">영상 편집기</span>
                 <div class="ve-fmt-group">
                     <button class="ve-fmt-btn active" data-fmt="landscape">16:9</button>
@@ -6676,6 +6677,8 @@ if (w >= 20 && h >= 20) {
 /* 상단 바 */
 .ve-topbar { display:flex; justify-content:space-between; align-items:center; padding:0 12px; height:44px; background:#16162a; border-bottom:1px solid #2a2a4a; flex-shrink:0; }
 .ve-topbar-left, .ve-topbar-right { display:flex; align-items:center; gap:10px; }
+.ve-home-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:none; background:#2a2a4a; color:#818cf8; border-radius:6px; font-size:14px; cursor:pointer; }
+.ve-home-btn:hover { background:#3a3a5a; color:#a5b4fc; }
 .ve-title { font-size:14px; font-weight:700; color:#fff; }
 .ve-fmt-group { display:flex; gap:2px; background:#0d0d1a; border-radius:6px; padding:2px; }
 .ve-fmt-btn { padding:4px 10px; border:none; border-radius:5px; background:transparent; color:#888; font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; }
@@ -6836,6 +6839,10 @@ if (w >= 20 && h >= 20) {
 
 /* 라이브러리 이미지 그리드 */
 .ve-lib-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:8px; }
+.ve-lib-grid2 { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:8px; }
+.ve-search-inp { width:100%; padding:7px 10px; border:1px solid #3a3a5a; background:#16162a; color:#ddd; border-radius:6px; font-size:12px; outline:none; margin-top:6px; box-sizing:border-box; }
+.ve-search-inp:focus { border-color:#818cf8; }
+.ve-search-inp::placeholder { color:#555; }
 .ve-lib-item { position:relative; border-radius:5px; overflow:hidden; cursor:pointer; border:2px solid transparent; background:#0d0d1a; aspect-ratio:1; }
 .ve-lib-item img { width:100%; height:100%; object-fit:cover; display:block; }
 .ve-lib-item:hover { border-color:#4a4a6a; }

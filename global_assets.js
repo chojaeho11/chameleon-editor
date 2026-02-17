@@ -232,10 +232,23 @@ window.loadProductKeys = async () => {
 window.toggleFileInputs = () => {
     const cat = document.getElementById('tplCategory').value;
     const groupData = document.getElementById('groupDataFile');
+    const thumbInput = document.getElementById('fileThumb');
+    const lblThumb = document.getElementById('lblThumb');
     if (['vector', 'transparent-graphic', 'graphic'].includes(cat)) {
         if(groupData) groupData.style.display = 'block';
+        if(thumbInput) thumbInput.accept = 'image/*';
+        if(lblThumb) lblThumb.textContent = '1. 썸네일 (이미지)';
+    } else if (cat === 'audio') {
+        if(groupData) groupData.style.display = 'block';
+        if(thumbInput) thumbInput.accept = 'image/*';
+        if(lblThumb) lblThumb.textContent = '1. 커버 이미지 (선택)';
+        // change data file to accept audio
+        const dataInput = document.getElementById('fileData');
+        if(dataInput) dataInput.accept = 'audio/*,.mp3,.wav,.ogg,.m4a';
     } else {
         if(groupData) groupData.style.display = 'none';
+        if(thumbInput) thumbInput.accept = 'image/*';
+        if(lblThumb) lblThumb.textContent = '1. 썸네일 (이미지)';
     }
 };
 
