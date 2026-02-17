@@ -128,7 +128,8 @@ export function initContextMenu() {
     });
 }
 
-// 메뉴 위치 잡기 및 UI 갱신
+// 메뉴 위치 잡기 및 UI 갱신 (외부에서 호출 가능)
+window._showContextMenu = showMenu;
 function showMenu(x, y, activeObj) {
     const menu = document.getElementById("contextMenu");
     menu.style.display = 'block';

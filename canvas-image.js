@@ -360,7 +360,7 @@ function exitEraserMode(apply) {
     eraserState = null;
 }
 
-// ─── Background Removal (Client-side BFS) ───
+// ─── Background Removal (Client-side BFS, optimized) ───
 function removeBackground() {
     const active = canvas.getActiveObject();
     if (!active || active.type !== 'image') return alert(window.t?.('msg_select_image','Please select an image.') || 'Please select an image.');
@@ -370,73 +370,125 @@ function removeBackground() {
     // 원본 이미지 → off-screen canvas
     const w = active.width;
     const h = active.height;
+    if (w < 2 || h < 2) return;
+
     const offC = document.createElement('canvas');
     offC.width = w; offC.height = h;
-    const ctx = offC.getContext('2d');
+    const ctx = offC.getContext('2d', { willReadFrequently: true });
 
     try {
         const fc = active.toCanvasElement();
         ctx.drawImage(fc, 0, 0, w, h);
     } catch(e) {
-        ctx.drawImage(active.getElement(), 0, 0, w, h);
+        try {
+            ctx.drawImage(active.getElement(), 0, 0, w, h);
+        } catch(e2) {
+            console.error('BG Remove: cannot read image pixels', e2);
+            alert('Cannot process this image (cross-origin).');
+            return;
+        }
     }
 
-    const imageData = ctx.getImageData(0, 0, w, h);
+    let imageData;
+    try {
+        imageData = ctx.getImageData(0, 0, w, h);
+    } catch(e) {
+        console.error('BG Remove: getImageData failed', e);
+        alert('Cannot process this image (security restriction).');
+        return;
+    }
     const data = imageData.data;
 
-    // 4 모서리 샘플링 → 배경색 추정
-    const corners = [
-        getPixel(data, w, 0, 0),
-        getPixel(data, w, w-1, 0),
-        getPixel(data, w, 0, h-1),
-        getPixel(data, w, w-1, h-1)
+    // 4 모서리 + 각 변 중앙 8개 샘플 → 배경색 추정
+    const samples = [
+        [0,0], [w-1,0], [0,h-1], [w-1,h-1],
+        [Math.floor(w/2),0], [Math.floor(w/2),h-1],
+        [0,Math.floor(h/2)], [w-1,Math.floor(h/2)]
     ];
-    const bgColor = averageColor(corners);
+    const sampleColors = samples.map(([x,y]) => {
+        const i = (y * w + x) * 4;
+        return [data[i], data[i+1], data[i+2], data[i+3]];
+    });
+    let r=0,g=0,b=0,n=0;
+    for (const c of sampleColors) {
+        if (c[3] < 128) continue;
+        r+=c[0]; g+=c[1]; b+=c[2]; n++;
+    }
+    if (n === 0) { r=255; g=255; b=255; n=1; }
+    const bgR = Math.round(r/n), bgG = Math.round(g/n), bgB = Math.round(b/n);
 
-    // 유사도 기준 (tolerance)
-    const tolerance = 60;
+    const tolerance = 70;  // 약간 넉넉하게
+    const tolSq = tolerance * tolerance; // squared — sqrt 안 해도 됨
 
-    // BFS flood-fill from edges
+    // BFS flood-fill from edges (index-based queue로 성능 최적화)
     const visited = new Uint8Array(w * h);
-    const queue = [];
+    const queue = new Int32Array(w * h); // 최대 크기
+    let qHead = 0, qTail = 0;
+
+    // 배경색인지 판정 (squared distance)
+    function isBg(i) {
+        const pi = i * 4;
+        if (data[pi+3] < 10) return true; // already transparent
+        const dr = data[pi]-bgR, dg = data[pi+1]-bgG, db = data[pi+2]-bgB;
+        return (dr*dr + dg*dg + db*db) <= tolSq;
+    }
+
+    function tryEnqueue(x, y) {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        const i = y * w + x;
+        if (visited[i]) return;
+        if (!isBg(i)) return;
+        visited[i] = 1;
+        queue[qTail++] = i;
+    }
 
     // 가장자리 픽셀 enqueue
-    for (let x = 0; x < w; x++) {
-        enqueueIfBg(queue, visited, data, w, h, x, 0, bgColor, tolerance);
-        enqueueIfBg(queue, visited, data, w, h, x, h-1, bgColor, tolerance);
-    }
-    for (let y = 1; y < h-1; y++) {
-        enqueueIfBg(queue, visited, data, w, h, 0, y, bgColor, tolerance);
-        enqueueIfBg(queue, visited, data, w, h, w-1, y, bgColor, tolerance);
-    }
+    for (let x = 0; x < w; x++) { tryEnqueue(x, 0); tryEnqueue(x, h-1); }
+    for (let y = 1; y < h-1; y++) { tryEnqueue(0, y); tryEnqueue(w-1, y); }
 
-    // BFS
-    while (queue.length > 0) {
-        const idx = queue.shift();
+    // BFS (index-based, O(1) dequeue)
+    while (qHead < qTail) {
+        const idx = queue[qHead++];
         const x = idx % w;
         const y = (idx - x) / w;
-        const neighbors = [[x-1,y],[x+1,y],[x,y-1],[x,y+1]];
-        for (const [nx, ny] of neighbors) {
-            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-            enqueueIfBg(queue, visited, data, w, h, nx, ny, bgColor, tolerance);
-        }
+        tryEnqueue(x-1, y);
+        tryEnqueue(x+1, y);
+        tryEnqueue(x, y-1);
+        tryEnqueue(x, y+1);
     }
 
-    // 방문된 픽셀 → 투명화 (소프트 에지)
+    // 방문된 픽셀 → 투명화
     for (let i = 0; i < w * h; i++) {
-        if (visited[i]) {
-            const pi = i * 4;
-            // 소프트 에지: 주변 미방문 픽셀과의 거리에 따라 부분 투명
-            data[pi + 3] = 0; // fully transparent
-        }
+        if (visited[i]) data[i * 4 + 3] = 0;
     }
 
-    // 소프트 에지 패스: 투명 경계를 부드럽게
-    softEdge(data, visited, w, h);
+    // 소프트 에지: 경계 부분 알파 부드럽게
+    const radius = 2;
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const i = y * w + x;
+            if (visited[i]) continue; // 이미 투명
+            // 주변에 투명 픽셀이 있는지?
+            let minD = 999;
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    const nx = x+dx, ny = y+dy;
+                    if (nx>=0 && nx<w && ny>=0 && ny<h && visited[ny*w+nx]) {
+                        const d = Math.sqrt(dx*dx+dy*dy);
+                        if (d < minD) minD = d;
+                    }
+                }
+            }
+            if (minD <= radius) {
+                const alpha = minD / (radius + 1);
+                data[i*4+3] = Math.round(data[i*4+3] * alpha);
+            }
+        }
+    }
 
     ctx.putImageData(imageData, 0, 0);
 
-    // 교체
+    // 새 fabric.Image로 교체
     const dataURL = offC.toDataURL('image/png');
     const oldImg = active;
     const props = {
@@ -446,13 +498,14 @@ function removeBackground() {
         opacity: oldImg.opacity, originX: oldImg.originX, originY: oldImg.originY
     };
     const objects = canvas.getObjects();
-    const idx = objects.indexOf(oldImg);
+    const zIdx = objects.indexOf(oldImg);
 
     fabric.Image.fromURL(dataURL, (newImg) => {
+        if (!newImg) { console.error('BG Remove: fabric.Image.fromURL failed'); return; }
         newImg.set(props);
         canvas.remove(oldImg);
-        if (idx >= 0 && idx < canvas.getObjects().length) {
-            canvas.insertAt(newImg, idx);
+        if (zIdx >= 0 && zIdx < canvas.getObjects().length) {
+            canvas.insertAt(newImg, zIdx);
         } else {
             canvas.add(newImg);
         }
@@ -461,93 +514,18 @@ function removeBackground() {
     }, { crossOrigin: 'anonymous' });
 }
 
-function getPixel(data, w, x, y) {
-    const i = (y * w + x) * 4;
-    return [data[i], data[i+1], data[i+2], data[i+3]];
-}
-
-function averageColor(pixels) {
-    let r=0, g=0, b=0, n=0;
-    for (const p of pixels) {
-        if (p[3] < 128) continue; // skip transparent
-        r += p[0]; g += p[1]; b += p[2]; n++;
-    }
-    if (n === 0) return [255, 255, 255]; // default white
-    return [Math.round(r/n), Math.round(g/n), Math.round(b/n)];
-}
-
-function colorDist(data, idx, bg) {
-    return Math.sqrt(
-        (data[idx] - bg[0]) ** 2 +
-        (data[idx+1] - bg[1]) ** 2 +
-        (data[idx+2] - bg[2]) ** 2
-    );
-}
-
-function enqueueIfBg(queue, visited, data, w, h, x, y, bgColor, tolerance) {
-    const i = y * w + x;
-    if (visited[i]) return;
-    const pi = i * 4;
-    if (data[pi + 3] < 10) { visited[i] = 1; return; } // already transparent
-    const dist = colorDist(data, pi, bgColor);
-    if (dist <= tolerance) {
-        visited[i] = 1;
-        queue.push(i);
-    }
-}
-
-function softEdge(data, visited, w, h) {
-    // 경계 부분 (visited ↔ non-visited) 부드럽게
-    const radius = 2;
-    const edgePixels = [];
-    for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-            const i = y * w + x;
-            if (!visited[i]) {
-                // 주변에 visited가 있는지 확인
-                let nearBg = false;
-                for (let dy = -radius; dy <= radius && !nearBg; dy++) {
-                    for (let dx = -radius; dx <= radius && !nearBg; dx++) {
-                        const nx = x + dx, ny = y + dy;
-                        if (nx >= 0 && nx < w && ny >= 0 && ny < h && visited[ny * w + nx]) {
-                            nearBg = true;
-                        }
-                    }
-                }
-                if (nearBg) edgePixels.push({ x, y, i });
-            }
-        }
-    }
-    // 에지 픽셀의 알파를 거리에 따라 감소
-    for (const ep of edgePixels) {
-        let minDist = radius + 1;
-        for (let dy = -radius; dy <= radius; dy++) {
-            for (let dx = -radius; dx <= radius; dx++) {
-                const nx = ep.x + dx, ny = ep.y + dy;
-                if (nx >= 0 && nx < w && ny >= 0 && ny < h && visited[ny * w + nx]) {
-                    const d = Math.sqrt(dx*dx + dy*dy);
-                    if (d < minDist) minDist = d;
-                }
-            }
-        }
-        const alpha = Math.min(1, minDist / (radius + 1));
-        const pi = ep.i * 4;
-        data[pi + 3] = Math.round(data[pi + 3] * alpha);
-    }
-}
-
-// ─── Edit sub-panel (brightness etc) ────────
-function showEditPanel() {
+// ─── Edit → 우클릭 컨텍스트 메뉴 표시 ────────
+function showEditContextMenu() {
     const active = canvas.getActiveObject();
-    if (!active || active.type !== 'image') return;
-    // 기존 btnEnhance 패널 (sub-cutout) 열기
-    const panel = document.getElementById('sub-cutout');
-    if (panel) {
-        // 토글 패널 열기
-        document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
-        panel.classList.add('active');
-    }
+    if (!active) return;
+    const btn = document.getElementById('imgToolEdit');
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
     hideFloatingToolbar();
+    // context-menu.js에서 window._showContextMenu 노출
+    if (typeof window._showContextMenu === 'function') {
+        window._showContextMenu(rect.left, rect.bottom + 4, active);
+    }
 }
 
 // ─── Main Init ──────────────────────────────
@@ -586,7 +564,7 @@ export function initImageTools() {
     const btnBgRemove = document.getElementById('imgToolBgRemove');
     const btnEraser = document.getElementById('imgToolEraser');
 
-    if (btnEdit)     btnEdit.onclick     = () => showEditPanel();
+    if (btnEdit)     btnEdit.onclick     = () => showEditContextMenu();
     if (btnBgRemove) btnBgRemove.onclick = () => removeBackground();
     if (btnEraser)   btnEraser.onclick   = () => enterEraserMode();
 
