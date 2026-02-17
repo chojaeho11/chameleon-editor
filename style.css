@@ -2102,28 +2102,42 @@ body {
 }
 
 .quick-menu-wrapper {
-    /* 모바일에서는 배경색 투명 (원래대로) */
-    background-color: transparent !important; 
-    
+    /* 모바일에서도 보라 그라데이션 유지 */
+    background: linear-gradient(160deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%) !important;
+
     /* 여백 및 크기 초기화 */
-    padding: 0;               
-    margin: 20px 0;           
+    padding: 15px 0 20px;
+    margin: 0;
     width: 100%; /* 부모 너비에 딱 맞춤 */
-    
+
     /* 위치 강제 초기화 (PC 설정 무시) */
     position: static;
     left: auto;
     transform: none;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    
+
     box-shadow: none;
     border-radius: 0;
 }
 
-/* 모바일에서는 캐릭터 및 타이틀 숨김 */
-.bouncing-char, .quick-title-box {
-    display: none !important; 
+/* 모바일에서는 캐릭터 숨김, 타이틀은 표시 */
+.bouncing-char {
+    display: none !important;
+}
+.quick-title-box {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 0 15px;
+}
+.qt-badge {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+}
+.qt-text {
+    font-size: 20px !important;
+    color: #fff !important;
 }
 
 /* 모바일 내부 여백 미세 조정 */
@@ -2140,8 +2154,8 @@ body {
 @media screen and (min-width: 1000px) {
 
     .quick-menu-wrapper {
-        /* 1. 배경 디자인: 노란색 -> 진한 파란색 그라데이션 */
-        background: linear-gradient(180deg, #6928ff 0%, #ecdeff 100%) !important;
+        /* 1. 배경 디자인: 세련된 보라 그라데이션 */
+        background: linear-gradient(160deg, #4c1d95 0%, #6d28d9 35%, #7c3aed 60%, #a78bfa 100%) !important;
         
         /* 2. 크기 및 위치: 화면 꽉 참 방지 & 중앙 정렬 */
         width: 100% !important;
@@ -2163,13 +2177,13 @@ body {
         overflow: visible !important; /* 캐릭터가 튀어나올 수 있게 */
     }
 
-    /* 배경 장식 (선택사항: 은은한 빛 효과) */
+    /* 배경 장식 (은은한 빛 효과) */
     .quick-menu-wrapper::before {
         content: '';
         position: absolute;
-        top: -150px; right: -150px;
-        width: 500px; height: 500px;
-        background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+        top: -100px; right: -100px;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(196, 181, 253, 0.2) 0%, transparent 70%);
         border-radius: 50%;
         pointer-events: none;
     }
@@ -2183,17 +2197,18 @@ body {
         z-index: 2;
     }
     
-    /* 뱃지 스타일 변경 (노랑 -> 파랑 포인트) */
+    /* 뱃지 스타일 */
     .qt-badge {
-        background-color: #dcff17 !important; /* 브랜드 컬러 */
-        color: #252525 !important;
+        background-color: rgba(255,255,255,0.2) !important;
+        color: #ede9fe !important;
         padding: 6px 15px;
-        border-radius: 10px;
-        font-size: 14px;
+        border-radius: 50px;
+        font-size: 13px;
         font-weight: 600;
         display: inline-block;
         margin-bottom: 15px;
-        box-shadow: 0 4px 15px rgba(32, 32, 32, 0.671);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.15);
     }
 
     /* 텍스트 색상 변경 (검정 -> 흰색) */
