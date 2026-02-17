@@ -359,10 +359,43 @@ const WIZARD_STYLES = {
     minimal: { titleFont:'Noto Sans KR', titleWeight:'700', titleColor:'#111827', subColor:'#9ca3af', accent:'#374151', rectFill:'rgba(55,65,81,0.04)', rectStroke:'rgba(55,65,81,0.2)' }
 };
 
-// Extract meaningful keywords from title (split by spaces, filter short/common words)
+// Extract meaningful keywords from title
+// 한국어 복합어 처리: "고기집" → ["고기"], "카페오픈" → ["카페"]
 function _wzExtractKeywords(title) {
-    const words = title.replace(/[!@#$%^&*(),.?":{}|<>]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
-    return words.length > 0 ? words : [title];
+    const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
+    if (!words.length) return [title];
+
+    // 한국어 접미사 제거 (집, 점, 관, 원, 소, 실, 당, 방, 장)
+    const suffixes = ['집','점','관','원','소','실','당','방','장'];
+    // 한국어 조사/어미 제거
+    const particles = ['을','를','이','가','은','는','에','의','로','와','과','도','만','까지','에서','부터','처럼','같이','보다'];
+    // 일반 동사/형용사 어미
+    const verbEndings = ['하기','만들기','오픈','세일','이벤트','행사','축하','파티','홍보','안내','소개'];
+
+    const results = [];
+    for (const w of words) {
+        let root = w;
+        // 조사 제거
+        for (const p of particles) {
+            if (root.length > p.length + 1 && root.endsWith(p)) {
+                root = root.slice(0, -p.length);
+                break;
+            }
+        }
+        // 접미사 제거 (2글자 이상 남을 때만)
+        for (const s of suffixes) {
+            if (root.length > s.length + 1 && root.endsWith(s)) {
+                root = root.slice(0, -s.length);
+                break;
+            }
+        }
+        if (root.length >= 2) results.push(root);
+        // 원본도 추가 (root와 다르면)
+        if (w !== root && w.length >= 2) results.push(w);
+    }
+    // 동사/명사 키워드는 검색 우선순위 높게
+    // 중복 제거
+    return [...new Set(results.length > 0 ? results : [title])];
 }
 
 function _wzSteps() {
@@ -372,8 +405,7 @@ function _wzSteps() {
         t('wizard_step_title',    '제목 배치 중...'),
         t('wizard_step_desc',     '설명 생성 중...'),
         t('wizard_step_elements', '디자인 요소 추가 중...'),
-        t('wizard_step_shapes',   '장식 도형 추가 중...'),
-        t('wizard_step_stickers', '스티커 배치 중...')
+        t('wizard_step_shapes',   '장식 완성 중...')
     ];
 }
 
@@ -439,63 +471,62 @@ async function runDesignWizard(title, style) {
     _wzRender(steps, 4);
     _wzShapes(S, bW, bH, bL, bT);
 
-    // ─── Step 6: Stickers ───
     _wzRender(steps, 5);
-    await _wzSticker(keywords, bW, bH, bL, bT);
-
-    _wzRender(steps, 6);
     canvas.discardActiveObject();
     canvas.requestRenderAll();
 }
 
-// ─── Step 1: Background (processLoad 방식으로 고해상도 로딩) ───
+// ─── Step 1: Background (data_url 우선 → thumb_url 폴백) ───
 async function _wzBg(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
-    // 1. 키워드로 템플릿 검색 (ID만)
-    let foundId = null;
+    // 1. 키워드로 템플릿 검색 (ID + thumb_url)
+    let found = null;
     for (const kw of keywords) {
         const res = await sb.from('library')
-            .select('id')
+            .select('id, thumb_url')
             .in('category', ['user_image','photo-bg'])
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
             .limit(1);
-        if (res.data && res.data.length) { foundId = res.data[0].id; break; }
+        if (res.data && res.data.length) { found = res.data[0]; break; }
     }
-    if (!foundId) {
+    if (!found) {
         const r2 = await sb.from('library')
-            .select('id')
+            .select('id, thumb_url')
             .in('category', ['user_image','photo-bg','pattern'])
             .eq('status','approved')
             .order('created_at', { ascending: false })
             .limit(1);
-        if (r2.data && r2.data.length) foundId = r2.data[0].id;
+        if (r2.data && r2.data.length) found = r2.data[0];
     }
-    if (!foundId) return;
+    if (!found) return;
 
-    // 2. data_url 별도 조회 (processLoad와 동일한 방식)
-    const { data: fullData } = await sb.from('library')
-        .select('data_url, width, height, category')
-        .eq('id', foundId)
-        .single();
-    if (!fullData || !fullData.data_url) return;
-
-    // 3. data_url 파싱 (processLoad 로직 그대로)
-    let rawData = fullData.data_url;
-    let imageUrl = '';
+    // 2. data_url 별도 조회 → 이미지 URL 추출
+    let cleanUrl = '';
     try {
-        if (typeof rawData === 'object') return; // JSON 템플릿은 스킵
-        const parsed = JSON.parse(rawData);
-        if (typeof parsed === 'string') imageUrl = parsed;
-        else return; // JSON 오브젝트 템플릿은 스킵
-    } catch(e) {
-        imageUrl = rawData; // 파싱 실패 = 이미지 URL
-    }
-    if (!imageUrl) return;
+        const { data: fullData } = await sb.from('library')
+            .select('data_url')
+            .eq('id', found.id)
+            .single();
+        if (fullData && fullData.data_url) {
+            const raw = fullData.data_url;
+            if (typeof raw === 'string') {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (typeof parsed === 'string' && parsed.startsWith('http')) cleanUrl = parsed;
+                } catch(e) {
+                    if (raw.startsWith('http')) cleanUrl = raw;
+                }
+            }
+        }
+    } catch(e) { /* fallback to thumb */ }
 
-    const cleanUrl = String(imageUrl).trim().replace(/^"|"$/g, '');
+    // 3. data_url에서 이미지 URL을 못 얻으면 → thumb_url 사용
+    if (!cleanUrl) cleanUrl = found.thumb_url;
+    if (!cleanUrl) return;
+    cleanUrl = String(cleanUrl).trim().replace(/^"|"$/g, '');
 
     return new Promise(resolve => {
         fabric.Image.fromURL(cleanUrl, img => {
