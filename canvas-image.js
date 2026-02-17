@@ -368,17 +368,11 @@ function triggerBgRemove() {
     if (btn) btn.click();
 }
 
-// ─── Edit → 우클릭 컨텍스트 메뉴 표시 ────────
-function showEditContextMenu() {
-    const active = canvas.getActiveObject();
-    if (!active) return;
-    const btn = document.getElementById('imgToolEdit');
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
+// ─── Edit → 좌측 정렬&레이어 패널 열기 ────────
+function openAlignPanel() {
     hideFloatingToolbar();
-    // context-menu.js에서 window._showContextMenu 노출
-    if (typeof window._showContextMenu === 'function') {
-        window._showContextMenu(rect.left, rect.bottom + 4, active);
+    if (typeof window.toggleSubPanel === 'function') {
+        window.toggleSubPanel('sub-align');
     }
 }
 
@@ -414,7 +408,7 @@ export function initImageTools() {
     const btnBgRemove = document.getElementById('imgToolBgRemove');
     const btnEraser = document.getElementById('imgToolEraser');
 
-    if (btnEdit)     btnEdit.onclick     = () => showEditContextMenu();
+    if (btnEdit)     btnEdit.onclick     = () => openAlignPanel();
     if (btnBgRemove) btnBgRemove.onclick = () => triggerBgRemove();
     if (btnEraser)   btnEraser.onclick   = () => enterEraserMode();
 
