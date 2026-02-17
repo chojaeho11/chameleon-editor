@@ -18,6 +18,7 @@ import { initCanvasUtils } from "./canvas-utils.js?v=123";
 import { initShortcuts } from "./shortcuts.js?v=123";
 import { initContextMenu } from "./context-menu.js?v=123";
 import { createVectorOutline } from "./outlineMaker.js?v=123";
+import { initVideoMaker } from "./video-maker.js?v=123";
 
 window.currentUploadedPdfUrl = null;
 
@@ -97,6 +98,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             };
         }
 
+        initVideoMaker();
         console.log("🚀 에디터 모듈 초기화 완료");
 
         // =========================================================
