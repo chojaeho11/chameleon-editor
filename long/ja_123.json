@@ -1025,5 +1025,9 @@
   "wizard_step_elements": "デザイン要素追加中...",
   "wizard_step_shapes": "装飾図形追加中...",
   "wizard_step_stickers": "ステッカー配置中...",
-  "wizard_content_hint": "内容を入力してください"
+  "wizard_content_hint": "内容を入力してください",
+  "wizard_style_modern": "モダン",
+  "wizard_style_elegant": "エレガント",
+  "wizard_style_playful": "ポップ",
+  "wizard_style_minimal": "ミニマル"
 }

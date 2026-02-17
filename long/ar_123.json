@@ -1025,5 +1025,9 @@
   "wizard_step_elements": "جاري إضافة عناصر التصميم...",
   "wizard_step_shapes": "جاري إضافة الأشكال الزخرفية...",
   "wizard_step_stickers": "جاري وضع الملصقات...",
-  "wizard_content_hint": "أدخل المحتوى هنا"
+  "wizard_content_hint": "أدخل المحتوى هنا",
+  "wizard_style_modern": "حديث",
+  "wizard_style_elegant": "أنيق",
+  "wizard_style_playful": "مرح",
+  "wizard_style_minimal": "بسيط"
 }

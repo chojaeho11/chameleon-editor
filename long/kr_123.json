@@ -649,5 +649,9 @@
   "wizard_step_elements": "디자인 요소 추가 중...",
   "wizard_step_shapes": "장식 도형 추가 중...",
   "wizard_step_stickers": "스티커 배치 중...",
-  "wizard_content_hint": "내용을 입력하세요"
+  "wizard_content_hint": "내용을 입력하세요",
+  "wizard_style_modern": "모던",
+  "wizard_style_elegant": "엘레강스",
+  "wizard_style_playful": "플레이풀",
+  "wizard_style_minimal": "미니멀"
 }

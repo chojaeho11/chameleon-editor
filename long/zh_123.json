@@ -1025,5 +1025,9 @@
   "wizard_step_elements": "添加设计元素中...",
   "wizard_step_shapes": "添加装饰图形中...",
   "wizard_step_stickers": "放置贴纸中...",
-  "wizard_content_hint": "请输入内容"
+  "wizard_content_hint": "请输入内容",
+  "wizard_style_modern": "现代",
+  "wizard_style_elegant": "优雅",
+  "wizard_style_playful": "活泼",
+  "wizard_style_minimal": "简约"
 }

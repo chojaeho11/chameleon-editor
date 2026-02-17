@@ -353,10 +353,34 @@ export function initAiTools() {
 // [Design Wizard] Core logic
 // ============================================================
 const WIZARD_STYLES = {
-    modern:  { titleFont:'Gothic A1', titleWeight:'900', titleColor:'#1e293b', subColor:'#64748b', accent:'#6366f1', rectFill:'rgba(99,102,241,0.07)', rectStroke:'rgba(99,102,241,0.3)' },
-    elegant: { titleFont:'Noto Serif KR', titleWeight:'900', titleColor:'#1a1a2e', subColor:'#4a4a6a', accent:'#d4af37', rectFill:'rgba(212,175,55,0.06)', rectStroke:'rgba(212,175,55,0.3)' },
-    playful: { titleFont:'Jua', titleWeight:'400', titleColor:'#e11d48', subColor:'#64748b', accent:'#f43f5e', rectFill:'rgba(244,63,94,0.07)', rectStroke:'rgba(244,63,94,0.3)' },
-    minimal: { titleFont:'Noto Sans KR', titleWeight:'700', titleColor:'#111827', subColor:'#9ca3af', accent:'#374151', rectFill:'rgba(55,65,81,0.04)', rectStroke:'rgba(55,65,81,0.2)' }
+    modern: {
+        titleFont:'Gothic A1', titleWeight:'900',
+        // 3D 블루 타이틀
+        titleFill:'#38bdf8', titleStroke:'#1e3a8a', titleShadowColor:'#1e3a8a',
+        // 흰색 박스 + 어두운 글씨
+        boxFill:'rgba(255,255,255,0.92)', boxStroke:'rgba(99,102,241,0.3)', boxTextColor:'#334155'
+    },
+    elegant: {
+        titleFont:'Noto Serif KR', titleWeight:'900',
+        // 골드 타이틀
+        titleFill:'#fbbf24', titleStroke:'#78350f', titleShadowColor:'#78350f',
+        // 다크 네이비 박스 + 밝은 글씨
+        boxFill:'rgba(26,26,46,0.88)', boxStroke:'rgba(212,175,55,0.4)', boxTextColor:'#f5f0e1'
+    },
+    playful: {
+        titleFont:'Jua', titleWeight:'400',
+        // 핑크 타이틀
+        titleFill:'#f472b6', titleStroke:'#9d174d', titleShadowColor:'#9d174d',
+        // 연핑크 박스 + 어두운 글씨
+        boxFill:'rgba(252,231,243,0.92)', boxStroke:'rgba(244,63,94,0.3)', boxTextColor:'#831843'
+    },
+    minimal: {
+        titleFont:'Noto Sans KR', titleWeight:'700',
+        // 깔끔한 다크 타이틀
+        titleFill:'#1e293b', titleStroke:'#94a3b8', titleShadowColor:'rgba(0,0,0,0.2)',
+        // 밝은 그레이 박스 + 어두운 글씨
+        boxFill:'rgba(241,245,249,0.92)', boxStroke:'rgba(55,65,81,0.2)', boxTextColor:'#334155'
+    }
 };
 
 // Extract meaningful keywords from title
@@ -367,12 +391,12 @@ function _wzExtractKeywords(title) {
     const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
     if (!words.length) return [title];
 
-    const suffixes = ['집','점','관','원','소','실','당','방','장'];
+    const suffixes = ['집','점','관','원','소','실','당','방','장','위','아래','속','밑','앞','뒤','옆'];
     const particles = ['을','를','이','가','은','는','에','의','로','와','과','도','만','까지','에서','부터','처럼','같이','보다'];
     // 한국어 형용사/관형어 (검색 의미 낮음)
     const adjectives = ['큰','작은','예쁜','멋진','새로운','특별한','푸른','빨간','파란','노란','초록','하얀','검은','보라','분홍','아름다운','화려한','심플한','모던한','귀여운','멋있는','진정한','좋은','나쁜','높은','낮은','넓은','깊은','밝은','어두운','따뜻한','차가운','시원한'];
     // 불용어 (검색에 무의미한 일반 단어)
-    const stopWords = ['것','수','때','곳','등','중','위','아래','안','밖','속','오신','여러분','위한','함께','통해','대한','모든','이런','저런','그런','우리','당신','너의','나의','영혼','마음','세계','세상','곳에','하는','있는','없는','되는','같은'];
+    const stopWords = ['것','수','때','곳','등','중','안','밖','오신','여러분','위한','함께','통해','대한','모든','이런','저런','그런','우리','당신','너의','나의','영혼','마음','세계','세상','곳에','하는','있는','없는','되는','같은'];
 
     const nouns = [];
     const adjs = [];
@@ -530,8 +554,17 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
             const pk = window.currentProductKey || 'custom';
             window.loadSideBarTemplates(pk, matchedKw, 0);
         }
-        // 템플릿 패널 열기
-        if (window.toggleSubPanel) window.toggleSubPanel('sub-template');
+        // 템플릿 패널 열기 (toggle이 아닌 강제 open)
+        const subPanel = document.getElementById('subPanel');
+        const tplPanel = document.getElementById('sub-template');
+        if (subPanel && tplPanel) {
+            subPanel.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
+            tplPanel.style.display = 'flex';
+            subPanel.style.display = 'block';
+            const ico = document.querySelector('.icon-item[data-panel="sub-template"]');
+            if (ico) ico.classList.add('active');
+        }
     }
 
     // 2. processLoad 방식으로 적용 (사이드바 클릭과 동일)
@@ -586,16 +619,16 @@ function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const sz = Math.round(bW * 0.07);
     const depth = Math.max(3, Math.round(sz * 0.07));
     const obj = new fabric.Textbox(displayTitle, {
-        fontFamily: font, fontSize: sz, fontWeight: '900',
-        fill: '#38bdf8',
-        stroke: '#1e3a8a', strokeWidth: Math.max(1, Math.round(sz * 0.02)),
+        fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
+        fill: S.titleFill || '#38bdf8',
+        stroke: S.titleStroke || '#1e3a8a', strokeWidth: Math.max(1, Math.round(sz * 0.02)),
         paintFirst: 'stroke', strokeLineJoin: 'round',
         originX:'center', originY:'center',
         textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.42,
         width: bW * 0.85,
         lineHeight: 1.15,
-        shadow: new fabric.Shadow({ color:'#1e3a8a', blur:0, offsetX:depth, offsetY:depth }),
+        shadow: new fabric.Shadow({ color: S.titleShadowColor || '#1e3a8a', blur:0, offsetX:depth, offsetY:depth }),
         charSpacing: -10
     });
     // auto-shrink if too wide
@@ -648,22 +681,22 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     const boxH = bH * 0.20;
     const boxY = bT + bH - margin - boxH / 2; // 하단 여백 맞춤
 
-    // 불투명 박스
+    // 불투명 박스 (스타일별 색상)
     const rect = new fabric.Rect({
         width: boxW, height: boxH,
         rx: 10, ry: 10,
-        fill: '#ffffff', stroke: S.rectStroke, strokeWidth: 1.5,
-        opacity: 0.92,
+        fill: S.boxFill || 'rgba(255,255,255,0.92)',
+        stroke: S.boxStroke || 'rgba(99,102,241,0.3)', strokeWidth: 1.5,
         left: bL + bW/2, top: boxY,
         originX:'center', originY:'center'
     });
     canvas.add(rect);
     canvas.bringToFront(rect);
 
-    // 박스 안 설명 텍스트
+    // 박스 안 설명 텍스트 (스타일별 색상)
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
-        fontWeight:'400', fill: '#334155',
+        fontWeight:'400', fill: S.boxTextColor || '#334155',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: boxY,
         width: boxW * 0.88,
