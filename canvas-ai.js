@@ -602,21 +602,30 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     });
 }
 
-// ─── Step 2: Title text (3D 블루 효과, 자간 축소, 10자 이상은 2줄) ───
+// ─── Step 2: Title text (3D 효과, 가로 2/3 초과시 줄바꿈) ───
 function _wzTitle(title, font, S, bW, bH, bL, bT) {
-    // 10글자 이상이면 자연스러운 위치에서 줄바꿈
+    const sz = Math.round(bW * 0.10);
+    const maxW = bW * (2/3);
+
+    // 임시 텍스트로 실제 너비 측정
+    const temp = new fabric.Textbox(title, {
+        fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
+        charSpacing: -10
+    });
+    const textW = temp.calcTextWidth ? temp.calcTextWidth() : temp.width;
+
+    // 가로 2/3 초과 → 줄바꿈
     let displayTitle = title;
-    if (title.length > 10) {
-        const spaceIdx = title.indexOf(' ', Math.floor(title.length * 0.35));
+    if (textW > maxW) {
+        const spaceIdx = title.indexOf(' ', Math.floor(title.length * 0.3));
         if (spaceIdx > 0 && spaceIdx < title.length * 0.75) {
             displayTitle = title.substring(0, spaceIdx) + '\n' + title.substring(spaceIdx + 1);
-        } else {
+        } else if (title.length > 6) {
             const mid = Math.ceil(title.length / 2);
             displayTitle = title.substring(0, mid) + '\n' + title.substring(mid);
         }
     }
 
-    const sz = Math.round(bW * 0.07);
     const depth = Math.max(3, Math.round(sz * 0.07));
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
@@ -631,7 +640,7 @@ function _wzTitle(title, font, S, bW, bH, bL, bT) {
         shadow: new fabric.Shadow({ color: S.titleShadowColor || '#1e3a8a', blur:0, offsetX:depth, offsetY:depth }),
         charSpacing: -10
     });
-    // auto-shrink if too wide
+    // auto-shrink if still too wide
     if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
