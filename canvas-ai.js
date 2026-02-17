@@ -404,8 +404,7 @@ function _wzSteps() {
         t('wizard_step_bg',       '배경 검색 중...'),
         t('wizard_step_title',    '제목 배치 중...'),
         t('wizard_step_desc',     '설명 생성 중...'),
-        t('wizard_step_elements', '디자인 요소 추가 중...'),
-        t('wizard_step_shapes',   '장식 완성 중...')
+        t('wizard_step_elements', '디자인 요소 추가 중...')
     ];
 }
 
@@ -467,24 +466,21 @@ async function runDesignWizard(title, style) {
     _wzRender(steps, 3);
     await _wzElem(keywords, bW, bH, bL, bT);
 
-    // ─── Step 5: Shapes (악센트 라인) ───
+    // ─── Step 5: 완성 ───
     _wzRender(steps, 4);
-    _wzShapes(S, bW, bH, bL, bT);
-
-    _wzRender(steps, 5);
     canvas.discardActiveObject();
     canvas.requestRenderAll();
 }
 
-// ─── Step 1: Background (data_url 우선 → thumb_url 폴백) ───
+// ─── Step 1: Background (data_url 원본, 잠금 처리) ───
 async function _wzBg(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
-    // 1. 키워드로 템플릿 검색 (ID + thumb_url)
+    // 1. 키워드로 템플릿 검색 (thumb + data_url 모두)
     let found = null;
     for (const kw of keywords) {
         const res = await sb.from('library')
-            .select('id, thumb_url')
+            .select('id, thumb_url, data_url')
             .in('category', ['user_image','photo-bg'])
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
@@ -494,7 +490,7 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     }
     if (!found) {
         const r2 = await sb.from('library')
-            .select('id, thumb_url')
+            .select('id, thumb_url, data_url')
             .in('category', ['user_image','photo-bg','pattern'])
             .eq('status','approved')
             .order('created_at', { ascending: false })
@@ -503,40 +499,46 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     }
     if (!found) return;
 
-    // 2. data_url 별도 조회 → 이미지 URL 추출
+    // 2. data_url에서 이미지 URL 추출 (여러 형태 대응)
     let cleanUrl = '';
-    try {
-        const { data: fullData } = await sb.from('library')
-            .select('data_url')
-            .eq('id', found.id)
-            .single();
-        if (fullData && fullData.data_url) {
-            const raw = fullData.data_url;
-            if (typeof raw === 'string') {
+    const raw = found.data_url;
+    if (raw) {
+        if (typeof raw === 'string') {
+            if (raw.startsWith('http')) {
+                cleanUrl = raw;
+            } else {
                 try {
                     const parsed = JSON.parse(raw);
                     if (typeof parsed === 'string' && parsed.startsWith('http')) cleanUrl = parsed;
-                } catch(e) {
-                    if (raw.startsWith('http')) cleanUrl = raw;
-                }
+                } catch(e) {}
             }
+        } else if (typeof raw === 'object' && raw !== null) {
+            // JSONB 객체: backgroundImage나 첫번째 이미지 src 추출
+            if (raw.src) cleanUrl = raw.src;
         }
-    } catch(e) { /* fallback to thumb */ }
-
-    // 3. data_url에서 이미지 URL을 못 얻으면 → thumb_url 사용
-    if (!cleanUrl) cleanUrl = found.thumb_url;
+    }
+    // 폴백: thumb_url
+    if (!cleanUrl) cleanUrl = found.thumb_url || '';
     if (!cleanUrl) return;
     cleanUrl = String(cleanUrl).trim().replace(/^"|"$/g, '');
+
+    console.log('[Wizard BG] data_url type:', typeof raw, '| using URL:', cleanUrl.substring(0, 80) + '...');
 
     return new Promise(resolve => {
         fabric.Image.fromURL(cleanUrl, img => {
             if (!img) { resolve(); return; }
+            console.log('[Wizard BG] Loaded image:', img.width, 'x', img.height);
             const scale = Math.max(bW / img.width, bH / img.height);
             img.set({
                 scaleX: scale, scaleY: scale,
                 left: bL + bW/2, top: bT + bH/2,
                 originX:'center', originY:'center',
-                selectable: true, evented: true,
+                // ★ 배경 잠금
+                selectable: false, evented: false,
+                lockMovementX: true, lockMovementY: true,
+                lockRotation: true, lockScalingX: true, lockScalingY: true,
+                hasControls: false, hasBorders: false,
+                isTemplateBackground: true,
                 opacity: 1.0
             });
             canvas.add(img);
@@ -620,12 +622,14 @@ async function _wzGetDescText(title) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    const boxH = bH * 0.22;
-    const boxY = bT + bH * 0.88;
+    const margin = bW * 0.06; // 좌우하단 여백 동일
+    const boxW = bW - margin * 2;
+    const boxH = bH * 0.20;
+    const boxY = bT + bH - margin - boxH / 2; // 하단 여백 맞춤
 
-    // 불투명 박스 (라운드값 줄임)
+    // 불투명 박스
     const rect = new fabric.Rect({
-        width: bW * 0.88, height: boxH,
+        width: boxW, height: boxH,
         rx: 10, ry: 10,
         fill: '#ffffff', stroke: S.rectStroke, strokeWidth: 1.5,
         opacity: 0.92,
@@ -641,7 +645,7 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
         fontWeight:'400', fill: '#334155',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: boxY,
-        width: bW * 0.80,
+        width: boxW * 0.88,
         lineHeight: 1.5
     });
     canvas.add(obj);
@@ -665,11 +669,11 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     if (!data || !data.length) return;
 
-    // 3 positions: 제목 위쪽 영역 (상단 15~30%)
+    // 3 positions: 제목 위쪽 (크기 줄이고 아래로)
     const positions = [
-        { left: bL + bW * 0.20, top: bT + bH * 0.15, size: bW / 5.5 },
-        { left: bL + bW * 0.50, top: bT + bH * 0.12, size: bW / 5 },
-        { left: bL + bW * 0.80, top: bT + bH * 0.16, size: bW / 5.5 }
+        { left: bL + bW * 0.20, top: bT + bH * 0.22, size: bW / 7 },
+        { left: bL + bW * 0.50, top: bT + bH * 0.18, size: bW / 6.5 },
+        { left: bL + bW * 0.80, top: bT + bH * 0.22, size: bW / 7 }
     ];
 
     const promises = data.slice(0, 3).map((item, i) => new Promise(resolve => {
