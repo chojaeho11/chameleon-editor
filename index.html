@@ -3895,7 +3895,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (typeof renderQuickMenu === 'function') renderQuickMenu();
 
         // 허니콤보드 소분류 그리드 (메인 VIP 섹션)
-        if (typeof loadHomeHcGrid === 'function') loadHomeHcGrid();
+        if (typeof window.loadHomeHcGrid === 'function') window.loadHomeHcGrid();
 
         if(window.searchTemplates) window.searchTemplates('');
         if (window.preloadLanguageFont) window.preloadLanguageFont();
@@ -7352,7 +7352,7 @@ function updateVipFileList(input) {
 }
 
 // 허니콤보드 소분류 그리드 로드 (메인 VIP 섹션)
-async function loadHomeHcGrid(){
+window.loadHomeHcGrid = async function loadHomeHcGrid(){
     const grid = document.getElementById('homeHoneycombGrid');
     if(!grid) return;
     const _sb = window.sb;
