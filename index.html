@@ -6711,8 +6711,17 @@ if (w >= 20 && h >= 20) {
                     </div>
                     <div id="gifTextList" style="margin-top:12px;"></div>
                 </div>
-                <!-- 요소 탭 (Supabase) -->
+                <!-- 요소 탭 (스티커 + Supabase) -->
                 <div id="gifTabSticker" style="display:none;">
+                    <!-- 이모지 스티커 -->
+                    <div style="margin-bottom:14px;">
+                        <b style="color:#e0e7ff; font-size:13px; display:block; margin-bottom:8px;">스티커</b>
+                        <div id="gifStickerGrid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:4px;"></div>
+                        <button onclick="window.gifPlaceSticker()" style="display:flex; align-items:center; gap:6px; width:100%; padding:8px 12px; background:rgba(124,58,237,0.15); color:#a78bfa; border:1px dashed rgba(124,58,237,0.4); border-radius:8px; font-size:12px; cursor:pointer; margin-top:8px; font-weight:600; justify-content:center;"><i class="fa-solid fa-hand-pointer"></i> 캔버스에 스티커 배치</button>
+                    </div>
+                    <div style="width:100%; height:1px; background:rgba(255,255,255,0.08); margin-bottom:14px;"></div>
+                    <!-- Supabase 요소 -->
+                    <b style="color:#e0e7ff; font-size:13px; display:block; margin-bottom:8px;">이미지 요소</b>
                     <input type="text" placeholder="요소 검색..." oninput="window.gifSearchElements(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='#374151'">
                     <div id="gifElemGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;">로딩 중...</p></div>
                     <button onclick="window.gifLoadMoreElements()" style="width:100%; padding:10px; background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i>더 보기</button>
@@ -7108,8 +7117,8 @@ if (w >= 20 && h >= 20) {
 .ve-elem-btn { display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:#222; border:1px solid #333; border-radius:8px; cursor:pointer; font-size:10px; color:#888; }
 .ve-elem-btn:hover { border-color:#6366f1; color:#ccc; }
 .ve-elem-btn i { font-size:20px; color:#818cf8; }
-.ve-sticker-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
-.ve-sticker-btn { padding:6px; border:1px solid #333; border-radius:6px; background:#222; font-size:18px; cursor:pointer; text-align:center; }
+.ve-sticker-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:4px; }
+.ve-sticker-btn { padding:4px 2px; border:1px solid #333; border-radius:6px; background:#222; font-size:20px; cursor:pointer; text-align:center; line-height:1.2; }
 .ve-sticker-btn:hover { border-color:#6366f1; }
 .ve-sticker-btn.active { border-color:#6366f1; background:#1e1e40; }
 

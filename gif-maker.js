@@ -299,8 +299,50 @@ window.gifSwitchTab = function(tab) {
         if (isActive) btn.classList.add('active'); else btn.classList.remove('active');
     });
     // Load Supabase data on tab switch
-    if (tab === 'sticker' && !GM.elemItems) window.gifInitElementTab();
+    if (tab === 'sticker') {
+        gifRenderStickerGrid();
+        if (!GM.elemItems) window.gifInitElementTab();
+    }
     if (tab === 'image' && !GM.imgItems) window.gifInitImageTab();
+};
+
+/* ─── Emoji Stickers ─── */
+const GIF_STICKERS = ['⭐','❤️','🔥','✨','💯','👍','🎉','💡','🎵','🎯','💪','🌟','😊','🎬','📌','🏆','💎','🌈','🎨','👏','🎁','🚀'];
+GM.selectedSticker = '⭐';
+
+function gifRenderStickerGrid() {
+    var grid = document.getElementById('gifStickerGrid');
+    if (!grid) return;
+    var html = '';
+    GIF_STICKERS.forEach(function(s) {
+        var active = GM.selectedSticker === s;
+        html += '<button onclick="window.gifPickSticker(\'' + s + '\')" style="padding:6px; border:1px solid ' + (active ? '#a855f7' : '#374151') + '; border-radius:6px; background:' + (active ? '#1e1b4b' : '#111827') + '; font-size:18px; cursor:pointer; text-align:center; transition:all 0.15s;">' + s + '</button>';
+    });
+    grid.innerHTML = html;
+}
+
+window.gifPickSticker = function(emoji) {
+    GM.selectedSticker = emoji;
+    gifRenderStickerGrid();
+};
+
+window.gifPlaceSticker = function() {
+    if (!GM.fabricCanvas) return;
+    var emoji = GM.selectedSticker || '⭐';
+    var text = new fabric.IText(emoji, {
+        left: GM.w / 2 - 20,
+        top: GM.h / 2 - 20,
+        fontSize: Math.round(GM.w * 0.1),
+        fontFamily: 'sans-serif',
+        fill: '#ffffff',
+        stroke: null,
+        strokeWidth: 0,
+        editable: false,
+        selectable: true
+    });
+    GM.fabricCanvas.add(text);
+    GM.fabricCanvas.setActiveObject(text);
+    GM.fabricCanvas.renderAll();
 };
 
 /* ─── Text Overlays ─── */
