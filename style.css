@@ -2770,7 +2770,7 @@ body {
 .quick-text {
     font-size: 13px;
     font-weight: 600;
-    color: #334155;
+    color: #fff;
     text-align: center;
     line-height: 1.3;
     letter-spacing: -0.3px;
@@ -2869,7 +2869,7 @@ body {
         font-size: 14px !important;   /* 너무 크면 잘리므로 14px 권장 */
         font-weight: 700 !important;
         margin-top: 8px !important;
-        color: #1e293b !important;    /* 진한 남회색으로 고정 */
+        color: #fff !important;
         display: block !important;    /* 숨김 방지 */
         text-align: center !important;
         line-height: 1.3 !important;
@@ -2877,9 +2877,8 @@ body {
         height: auto !important;      /* 높이 제한 해제 */
     }
 
-    /* 다국어 모드에서 폰트가 흰색으로 변하는 버그 방지 */
     .long-text-mode .quick-text {
-        color: #1e293b !important;
+        color: #fff !important;
         font-size: 13px !important;
     }
     
