@@ -6711,16 +6711,17 @@ if (w >= 20 && h >= 20) {
                     </div>
                     <div id="gifTextList" style="margin-top:12px;"></div>
                 </div>
-                <!-- 요소 탭 -->
+                <!-- 요소 탭 (Supabase) -->
                 <div id="gifTabSticker" style="display:none;">
-                    <p style="color:#94a3b8; font-size:13px; margin-bottom:12px;">이모지나 도형을 추가하세요</p>
-                    <div id="gifEmojiGrid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px;"></div>
+                    <input type="text" placeholder="요소 검색..." oninput="window.gifSearchElements(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='#374151'">
+                    <div id="gifElemGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;">로딩 중...</p></div>
+                    <button onclick="window.gifLoadMoreElements()" style="width:100%; padding:10px; background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i>더 보기</button>
                 </div>
-                <!-- 이미지 탭 -->
+                <!-- 이미지 탭 (Supabase) -->
                 <div id="gifTabImage" style="display:none;">
-                    <button onclick="document.getElementById('gifOverlayInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#f59e0b,#fbbf24); color:#1e1b4b; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px;"><i class="fa-solid fa-image" style="margin-right:6px;"></i>오버레이 이미지 추가</button>
-                    <div id="gifOverlayList" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    <input type="file" id="gifOverlayInput" accept="image/*" style="display:none;" onchange="window.gifAddOverlayImage(this)">
+                    <input type="text" placeholder="이미지 검색..." oninput="window.gifSearchImages(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#374151'">
+                    <div id="gifImgGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;">로딩 중...</p></div>
+                    <button onclick="window.gifLoadMoreImages()" style="width:100%; padding:10px; background:rgba(236,72,153,0.15); color:#ec4899; border:1px solid rgba(236,72,153,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i>더 보기</button>
                 </div>
             </div>
         </div>

@@ -253,6 +253,9 @@ window.gifSwitchTab = function(tab) {
         btn.style.borderBottomColor = isActive ? '#ec4899' : 'transparent';
         if (isActive) btn.classList.add('active'); else btn.classList.remove('active');
     });
+    // Load Supabase data on tab switch
+    if (tab === 'sticker' && !GM.elemItems) window.gifInitElementTab();
+    if (tab === 'image' && !GM.imgItems) window.gifInitImageTab();
 };
 
 /* ─── Text Overlays ─── */
@@ -317,66 +320,187 @@ window.gifDeleteObject = function(idx, type) {
     }
 };
 
-/* ─── Overlay Images ─── */
-window.gifAddOverlayImage = function(input) {
-    if (!input.files[0] || !GM.fabricCanvas) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        fabric.Image.fromURL(e.target.result, function(img) {
-            const maxDim = Math.min(GM.w, GM.h) * 0.4;
-            const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
-            img.set({ left: GM.w/2, top: GM.h/2, originX:'center', originY:'center', scaleX: scale, scaleY: scale });
-            GM.fabricCanvas.add(img);
-            GM.fabricCanvas.setActiveObject(img);
-            GM.fabricCanvas.renderAll();
-            updateOverlayImageList();
-        }, { crossOrigin: 'anonymous' });
-    };
-    reader.readAsDataURL(input.files[0]);
-    input.value = '';
-};
-
-function updateOverlayImageList() {
-    const list = document.getElementById('gifOverlayList');
-    if (!list || !GM.fabricCanvas) return;
-    const imgs = GM.fabricCanvas.getObjects().filter(function(o){ return o.type === 'image'; });
-    let html = '';
-    imgs.forEach(function(img, i) {
-        html += '<div style="display:flex; align-items:center; gap:8px; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px;">';
-        html += '<div style="width:40px; height:40px; background:#1e1b4b; border-radius:6px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-image" style="color:#a78bfa;"></i></div>';
-        html += '<span style="flex:1; color:#e0e7ff; font-size:12px;">이미지 '+(i+1)+'</span>';
-        html += '<button onclick="window.gifDeleteObject('+i+',\'image\')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fa-solid fa-trash-can"></i></button>';
-        html += '</div>';
-    });
-    list.innerHTML = html;
+/* ─── Helper: best image URL from library item ─── */
+function gifBestUrl(item) {
+    if (!item) return '';
+    if (item.thumb_url) return item.thumb_url;
+    if (item.data_url && /^https?:\/\//.test(item.data_url)) return item.data_url;
+    if (item.data_url && typeof item.data_url === 'string') {
+        try {
+            var parsed = JSON.parse(item.data_url);
+            if (parsed.objects) {
+                for (var i = 0; i < parsed.objects.length; i++) {
+                    if (parsed.objects[i].src) return parsed.objects[i].src;
+                }
+            }
+        } catch(e){}
+    }
+    return item.data_url || '';
 }
 
-/* ─── Emoji / Stickers ─── */
-function loadEmojis() {
-    const emojis = ['😀','😂','🤣','😍','🥰','😎','🤩','🥳','😱','🤔',
-                    '👍','👎','👏','🙌','💪','🔥','❤️','💜','⭐','✨',
-                    '🎉','🎊','🎈','🎁','🎯','💯','🏆','🌈','☀️','🌙',
-                    '🌸','🍀','🦋','🐱','🐶','🐻','🦊','🐰','🎵','💎'];
-    const grid = document.getElementById('gifEmojiGrid');
-    if (!grid) return;
-    let html = '';
-    emojis.forEach(function(em) {
-        html += '<button onclick="window.gifAddEmoji(\''+em+'\')" style="font-size:24px; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:8px; cursor:pointer; transition:background 0.15s;" onmouseenter="this.style.background=\'rgba(236,72,153,0.2)\'" onmouseleave="this.style.background=\'rgba(255,255,255,0.05)\'">' + em + '</button>';
+/* ─── Image Templates (from Supabase library) ─── */
+GM.imgItems = null; GM.imgPage = 0;
+
+function loadEmojis() { /* placeholder - now using Supabase elements */ }
+
+window.gifInitImageTab = function() {
+    GM.imgItems = null; GM.imgPage = 0;
+    gifLoadImages(null);
+};
+
+async function gifLoadImages(search) {
+    var grid = document.getElementById('gifImgGrid'); if (!grid) return;
+    var sb = window.sb;
+    if (!sb) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">DB 연결 없음</p>'; return; }
+    try {
+        var q = sb.from('library')
+            .select('id, thumb_url, data_url, category')
+            .in('category', ['user_image','photo-bg','text'])
+            .order('created_at', { ascending: false })
+            .range(0, 11);
+        if (search) q = q.ilike('tags', '%' + search + '%');
+        var res = await q;
+        if (res.error) throw res.error;
+        GM.imgItems = res.data || [];
+        GM.imgPage = 1;
+        gifRenderImgGrid(grid);
+    } catch(e) {
+        console.warn('GIF image load error:', e);
+        grid.innerHTML = '<p style="color:#ef4444; text-align:center;">로드 실패</p>';
+    }
+}
+
+function gifRenderImgGrid(grid) {
+    if (!GM.imgItems || !GM.imgItems.length) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">이미지 없음</p>'; return; }
+    var html = '';
+    GM.imgItems.forEach(function(item, idx) {
+        var url = gifBestUrl(item);
+        html += '<div onclick="window.gifAddLibImage('+idx+')" style="border-radius:10px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:border-color 0.15s; background:#111827;" onmouseenter="this.style.borderColor=\'#ec4899\'" onmouseleave="this.style.borderColor=\'transparent\'">';
+        html += '<img src="'+url+'" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">';
+        html += '</div>';
     });
     grid.innerHTML = html;
 }
 
-window.gifAddEmoji = function(emoji) {
-    if (!GM.fabricCanvas) return;
-    const text = new fabric.Text(emoji, {
-        left: GM.w/2, top: GM.h/2,
-        originX:'center', originY:'center',
-        fontSize: 64
-    });
-    GM.fabricCanvas.add(text);
-    GM.fabricCanvas.setActiveObject(text);
-    GM.fabricCanvas.renderAll();
+window.gifLoadMoreImages = async function() {
+    if (!window.sb || !GM.imgItems) return;
+    var page = GM.imgPage || 1;
+    try {
+        var res = await window.sb.from('library')
+            .select('id, thumb_url, data_url, category')
+            .in('category', ['user_image','photo-bg','text'])
+            .order('created_at', { ascending: false })
+            .range(page * 12, (page + 1) * 12 - 1);
+        if (!res.error && res.data && res.data.length) {
+            GM.imgItems = GM.imgItems.concat(res.data);
+            GM.imgPage = page + 1;
+            var grid = document.getElementById('gifImgGrid');
+            if (grid) gifRenderImgGrid(grid);
+        }
+    } catch(e){}
 };
+
+window.gifSearchImages = function(q) {
+    clearTimeout(GM._imgSearchTimer);
+    GM._imgSearchTimer = setTimeout(function(){ GM.imgItems = null; gifLoadImages(q || null); }, 400);
+};
+
+window.gifAddLibImage = function(idx) {
+    if (!GM.fabricCanvas) return;
+    var item = GM.imgItems && GM.imgItems[idx];
+    if (!item) return;
+    var url = gifBestUrl(item);
+    fabric.Image.fromURL(url, function(img) {
+        var maxDim = Math.min(GM.w, GM.h) * 0.5;
+        var scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
+        img.set({ left: GM.w/2, top: GM.h/2, originX:'center', originY:'center', scaleX: scale, scaleY: scale });
+        GM.fabricCanvas.add(img);
+        GM.fabricCanvas.setActiveObject(img);
+        GM.fabricCanvas.renderAll();
+    }, { crossOrigin: 'anonymous' });
+};
+
+/* ─── Elements / Stickers (from Supabase library) ─── */
+GM.elemItems = null; GM.elemPage = 0;
+
+window.gifInitElementTab = function() {
+    GM.elemItems = null; GM.elemPage = 0;
+    gifLoadElements(null);
+};
+
+async function gifLoadElements(search) {
+    var grid = document.getElementById('gifElemGrid'); if (!grid) return;
+    var sb = window.sb;
+    if (!sb) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">DB 연결 없음</p>'; return; }
+    try {
+        var q = sb.from('library')
+            .select('id, thumb_url, data_url, category')
+            .in('category', ['vector','user_vector','graphic','transparent-graphic','pattern','logo'])
+            .order('created_at', { ascending: false })
+            .range(0, 11);
+        if (search) q = q.ilike('tags', '%' + search + '%');
+        var res = await q;
+        if (res.error) throw res.error;
+        GM.elemItems = res.data || [];
+        GM.elemPage = 1;
+        gifRenderElemGrid(grid);
+    } catch(e) {
+        console.warn('GIF element load error:', e);
+        grid.innerHTML = '<p style="color:#ef4444; text-align:center;">로드 실패</p>';
+    }
+}
+
+function gifRenderElemGrid(grid) {
+    if (!GM.elemItems || !GM.elemItems.length) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">요소 없음</p>'; return; }
+    var html = '';
+    GM.elemItems.forEach(function(item, idx) {
+        var url = gifBestUrl(item);
+        html += '<div onclick="window.gifAddLibElement('+idx+')" style="border-radius:10px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:border-color 0.15s; background:#111827;" onmouseenter="this.style.borderColor=\'#a855f7\'" onmouseleave="this.style.borderColor=\'transparent\'">';
+        html += '<img src="'+url+'" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:contain; display:block; padding:4px;">';
+        html += '</div>';
+    });
+    grid.innerHTML = html;
+}
+
+window.gifLoadMoreElements = async function() {
+    if (!window.sb || !GM.elemItems) return;
+    var page = GM.elemPage || 1;
+    try {
+        var res = await window.sb.from('library')
+            .select('id, thumb_url, data_url, category')
+            .in('category', ['vector','user_vector','graphic','transparent-graphic','pattern','logo'])
+            .order('created_at', { ascending: false })
+            .range(page * 12, (page + 1) * 12 - 1);
+        if (!res.error && res.data && res.data.length) {
+            GM.elemItems = GM.elemItems.concat(res.data);
+            GM.elemPage = page + 1;
+            var grid = document.getElementById('gifElemGrid');
+            if (grid) gifRenderElemGrid(grid);
+        }
+    } catch(e){}
+};
+
+window.gifSearchElements = function(q) {
+    clearTimeout(GM._elemSearchTimer);
+    GM._elemSearchTimer = setTimeout(function(){ GM.elemItems = null; gifLoadElements(q || null); }, 400);
+};
+
+window.gifAddLibElement = function(idx) {
+    if (!GM.fabricCanvas) return;
+    var item = GM.elemItems && GM.elemItems[idx];
+    if (!item) return;
+    var url = gifBestUrl(item);
+    fabric.Image.fromURL(url, function(img) {
+        var maxDim = Math.min(GM.w, GM.h) * 0.35;
+        var scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
+        img.set({ left: GM.w/2, top: GM.h/2, originX:'center', originY:'center', scaleX: scale, scaleY: scale });
+        GM.fabricCanvas.add(img);
+        GM.fabricCanvas.setActiveObject(img);
+        GM.fabricCanvas.renderAll();
+    }, { crossOrigin: 'anonymous' });
+};
+
+function updateOverlayImageList() { /* no-op, using Supabase grid */ }
 
 /* ─── Fonts (Supabase DYNAMIC_FONTS) ─── */
 function loadFonts() {
