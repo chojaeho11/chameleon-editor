@@ -629,5 +629,11 @@
   "ve_audio_label": "음원",
   "ve_audio_no_conn": "DB 연결 없음",
   "ve_audio_prev": "이전",
-  "ve_audio_next": "다음"
+  "ve_audio_next": "다음",
+  "img_tool_edit": "편집",
+  "img_tool_bg_remove": "배경 제거",
+  "img_tool_eraser": "지우개",
+  "eraser_undo": "되돌리기",
+  "eraser_cancel": "취소",
+  "eraser_done": "완료"
 }

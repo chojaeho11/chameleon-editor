@@ -1005,5 +1005,11 @@
   "ve_audio_label": "Audio",
   "ve_audio_no_conn": "Pas de connexion DB",
   "ve_audio_prev": "Précédent",
-  "ve_audio_next": "Suivant"
+  "ve_audio_next": "Suivant",
+  "img_tool_edit": "Éditer",
+  "img_tool_bg_remove": "Supprimer fond",
+  "img_tool_eraser": "Gomme",
+  "eraser_undo": "Annuler",
+  "eraser_cancel": "Annuler",
+  "eraser_done": "Terminé"
 }

@@ -1005,5 +1005,11 @@
   "ve_audio_label": "音源",
   "ve_audio_no_conn": "DB接続なし",
   "ve_audio_prev": "前へ",
-  "ve_audio_next": "次へ"
+  "ve_audio_next": "次へ",
+  "img_tool_edit": "編集",
+  "img_tool_bg_remove": "背景除去",
+  "img_tool_eraser": "消しゴム",
+  "eraser_undo": "元に戻す",
+  "eraser_cancel": "キャンセル",
+  "eraser_done": "完了"
 }

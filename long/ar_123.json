@@ -1005,5 +1005,11 @@
   "ve_audio_label": "الصوت",
   "ve_audio_no_conn": "لا يوجد اتصال بقاعدة البيانات",
   "ve_audio_prev": "السابق",
-  "ve_audio_next": "التالي"
+  "ve_audio_next": "التالي",
+  "img_tool_edit": "تحرير",
+  "img_tool_bg_remove": "إزالة الخلفية",
+  "img_tool_eraser": "ممحاة",
+  "eraser_undo": "تراجع",
+  "eraser_cancel": "إلغاء",
+  "eraser_done": "تم"
 }

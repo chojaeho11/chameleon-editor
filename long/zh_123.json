@@ -1005,5 +1005,11 @@
   "ve_audio_label": "音源",
   "ve_audio_no_conn": "无数据库连接",
   "ve_audio_prev": "上一页",
-  "ve_audio_next": "下一页"
+  "ve_audio_next": "下一页",
+  "img_tool_edit": "编辑",
+  "img_tool_bg_remove": "去除背景",
+  "img_tool_eraser": "橡皮擦",
+  "eraser_undo": "撤销",
+  "eraser_cancel": "取消",
+  "eraser_done": "完成"
 }
