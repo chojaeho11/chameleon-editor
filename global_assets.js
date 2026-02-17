@@ -64,8 +64,9 @@ window.loadTemplates = async (isNewSearch = false) => {
 
     data.forEach(t => {
         let thumbUrl = t.thumb_url;
-        // Supabase 이미지 리사이징 (옵션)
-        if(thumbUrl && thumbUrl.includes('supabase.co')) {
+        const isAudio = t.category === 'audio';
+        // Supabase 이미지 리사이징 (옵션) — 오디오 파일 URL에는 적용 안함
+        if(thumbUrl && thumbUrl.includes('supabase.co') && !isAudio) {
             thumbUrl += '?width=200&height=200&resize=cover&quality=50';
         }
 
@@ -73,12 +74,23 @@ window.loadTemplates = async (isNewSearch = false) => {
         const badgeText = (t.product_key && t.product_key !== 'custom') ? '#1e40af' : '#64748b';
         const prodName = (t.product_key === 'custom' || !t.product_key) ? '공통' : t.product_key;
 
+        // 오디오: 커버 이미지 없으면 음악 아이콘 표시
+        const isAudioUrl = isAudio && thumbUrl && (thumbUrl.endsWith('.mp3')||thumbUrl.endsWith('.wav')||thumbUrl.endsWith('.ogg')||thumbUrl.endsWith('.m4a')||thumbUrl.includes('/audio/'));
+        const thumbContent = isAudioUrl
+            ? `<div class="tpl-thumb" style="background:#f0f4ff; display:flex; align-items:center; justify-content:center; font-size:48px; color:#6366f1;">🎵</div>`
+            : `<div class="tpl-thumb" style="background-image:url('${thumbUrl}'); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>`;
+
+        // 오디오: 재생 버튼 추가
+        const audioBtn = isAudio && t.data_url
+            ? `<button class="tpl-del-btn" style="background:#e0e7ff;color:#4338ca;right:50px;" onclick="event.stopPropagation();window._adminPlayAudio('${t.data_url}',this)">▶ 재생</button>`
+            : '';
+
         grid.innerHTML += `
             <div class="tpl-card">
                 <div style="position:absolute; top:8px; right:8px; z-index:5;">
                     <input type="checkbox" class="tpl-chk" value="${t.id}" style="width:16px; height:16px; cursor:pointer;">
                 </div>
-                <div class="tpl-thumb" style="background-image:url('${thumbUrl}'); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
+                ${thumbContent}
                 <div class="tpl-info">
                     <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
                         <span style="font-weight:bold; color:#334155;">${t.category}</span>
@@ -87,6 +99,7 @@ window.loadTemplates = async (isNewSearch = false) => {
                     <div style="font-size:12px; color:#666; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.tags}">
                         ${t.tags || '-'}
                     </div>
+                    ${audioBtn}
                     <button class="tpl-del-btn" onclick="deleteTemplate(${t.id})">삭제</button>
                 </div>
             </div>
@@ -102,7 +115,12 @@ window.uploadTemplate = async () => {
     const thumbFile = document.getElementById('fileThumb').files[0];
     const dataFile = document.getElementById('fileData').files[0];
 
-    if (!thumbFile) return alert("썸네일 이미지는 필수입니다.");
+    // 오디오: 음원파일 필수, 썸네일 선택
+    if (cat === 'audio') {
+        if (!dataFile) return alert("음원 파일을 선택해주세요.");
+    } else {
+        if (!thumbFile) return alert("썸네일 이미지는 필수입니다.");
+    }
 
     const btn = document.querySelector('.tpl-form .btn-primary');
     const oldText = btn.innerText;
@@ -111,32 +129,41 @@ window.uploadTemplate = async () => {
 
     try {
         const timestamp = Date.now();
-        
-        // 1. 썸네일 업로드
-        const thumbPath = `thumbs/${timestamp}_${thumbFile.name}`;
-        const { error: thumbErr } = await sb.storage.from('design').upload(thumbPath, thumbFile);
-        if (thumbErr) throw thumbErr;
-        const { data: thumbData } = sb.storage.from('design').getPublicUrl(thumbPath);
-        
-        // 2. 데이터 파일 업로드 (선택)
-        let dataUrl = thumbData.publicUrl; 
+        let thumbPublicUrl = '';
+        let dataUrl = '';
+
+        // 1. 썸네일 업로드 (오디오는 선택)
+        if (thumbFile) {
+            const thumbPath = `thumbs/${timestamp}_${thumbFile.name}`;
+            const { error: thumbErr } = await sb.storage.from('design').upload(thumbPath, thumbFile);
+            if (thumbErr) throw thumbErr;
+            const { data: thumbData } = sb.storage.from('design').getPublicUrl(thumbPath);
+            thumbPublicUrl = thumbData.publicUrl;
+        }
+
+        // 2. 데이터/음원 파일 업로드
         if (dataFile) {
-            const dataPath = `assets/${timestamp}_${dataFile.name}`;
+            const folder = cat === 'audio' ? 'audio' : 'assets';
+            const dataPath = `${folder}/${timestamp}_${dataFile.name}`;
             const { error: dataErr } = await sb.storage.from('design').upload(dataPath, dataFile);
             if (dataErr) throw dataErr;
             const { data: dData } = sb.storage.from('design').getPublicUrl(dataPath);
             dataUrl = dData.publicUrl;
         }
 
+        // URL 결정
+        if (!thumbPublicUrl) thumbPublicUrl = dataUrl; // 오디오: 커버 없으면 data_url 사용
+        if (!dataUrl) dataUrl = thumbPublicUrl;         // 일반: 데이터 없으면 thumb 사용
+
         // 3. DB 저장
         const { error: dbErr } = await sb.from('library').insert({
             category: cat,
             tags: tags || 'No Tag',
-            thumb_url: thumbData.publicUrl,
+            thumb_url: thumbPublicUrl,
             data_url: dataUrl,
             product_key: prodKey,
-            width: 1000, 
-            height: 1000 
+            width: 1000,
+            height: 1000
         });
 
         if (dbErr) throw dbErr;
@@ -151,6 +178,16 @@ window.uploadTemplate = async () => {
         btn.innerText = oldText;
         btn.disabled = false;
     }
+};
+
+// [관리자 오디오 미리듣기]
+let _adminAudioEl = null;
+window._adminPlayAudio = (url, btn) => {
+    if(_adminAudioEl){_adminAudioEl.pause();_adminAudioEl=null;if(btn)btn.textContent='▶ 재생';return;}
+    const a=new Audio(url); a.volume=0.5;
+    a.play().catch(e=>alert('재생 실패: '+e.message));
+    _adminAudioEl=a; if(btn)btn.textContent='⏹ 정지';
+    a.onended=()=>{_adminAudioEl=null;if(btn)btn.textContent='▶ 재생';};
 };
 
 // [템플릿 삭제]
@@ -234,21 +271,26 @@ window.toggleFileInputs = () => {
     const groupData = document.getElementById('groupDataFile');
     const thumbInput = document.getElementById('fileThumb');
     const lblThumb = document.getElementById('lblThumb');
-    if (['vector', 'transparent-graphic', 'graphic'].includes(cat)) {
+    const lblData = document.getElementById('lblData');
+    const dataInput = document.getElementById('fileData');
+    if (cat === 'audio') {
+        if(groupData) groupData.style.display = 'block';
+        if(thumbInput) thumbInput.accept = 'image/*';
+        if(lblThumb) lblThumb.textContent = '1. 커버 이미지 (선택, 없으면 기본 아이콘)';
+        if(lblData) lblData.textContent = '2. 음원 파일 (필수) MP3/WAV/OGG';
+        if(dataInput) dataInput.accept = 'audio/*,.mp3,.wav,.ogg,.m4a';
+    } else if (['vector', 'transparent-graphic', 'graphic'].includes(cat)) {
         if(groupData) groupData.style.display = 'block';
         if(thumbInput) thumbInput.accept = 'image/*';
         if(lblThumb) lblThumb.textContent = '1. 썸네일 (이미지)';
-    } else if (cat === 'audio') {
-        if(groupData) groupData.style.display = 'block';
-        if(thumbInput) thumbInput.accept = 'image/*';
-        if(lblThumb) lblThumb.textContent = '1. 커버 이미지 (선택)';
-        // change data file to accept audio
-        const dataInput = document.getElementById('fileData');
-        if(dataInput) dataInput.accept = 'audio/*,.mp3,.wav,.ogg,.m4a';
+        if(lblData) lblData.textContent = '2. 벡터 데이터 (SVG/JSON)';
+        if(dataInput) dataInput.accept = '.svg,.json,image/*';
     } else {
         if(groupData) groupData.style.display = 'none';
         if(thumbInput) thumbInput.accept = 'image/*';
         if(lblThumb) lblThumb.textContent = '1. 썸네일 (이미지)';
+        if(lblData) lblData.textContent = '2. 벡터 데이터 (SVG/JSON)';
+        if(dataInput) dataInput.accept = '.svg,.json,image/*';
     }
 };
 

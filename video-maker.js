@@ -140,6 +140,27 @@ async function createMusicStream(musicId, totalMs) {
     return dest.stream;
 }
 
+// Supabase 업로드 오디오를 MediaStream으로 변환 (녹화용)
+async function createAudioFileStream(audioUrl) {
+    if(!audioUrl) return null;
+    try {
+        const ctx = await getAC();
+        const resp = await fetch(audioUrl);
+        const buf = await resp.arrayBuffer();
+        const audioBuf = await ctx.decodeAudioData(buf);
+        const dest = ctx.createMediaStreamDestination();
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuf;
+        const gain = ctx.createGain(); gain.gain.value = 0.5;
+        source.connect(gain).connect(dest);
+        source.start(0);
+        return { stream: dest.stream, source };
+    } catch(e){
+        console.warn('Audio stream creation failed:', e);
+        return null;
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CLIP MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
@@ -450,33 +471,43 @@ async function loadAudioFromDB() {
         vm.audioItems.forEach((a,i)=>{
             const name=a.tags||`음원 ${i+1}`;
             const sel=vm.audioUrl===a.data_url;
+            const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewIdx===i;
             h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectDBAudio(${i})">`;
             h+=`<i class="fa-solid fa-music" style="width:24px;text-align:center;font-size:14px;color:${sel?'#818cf8':'#6b7280'}"></i>`;
-            h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${name}</div></div>`;
-            h+=`<button class="ve-music-play" onclick="event.stopPropagation();window._vePreviewDBAudio(${i})"><i class="fa-solid fa-play"></i></button>`;
+            h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${name}</div><div style="font-size:10px;color:#555">${sel?'✓ 선택됨':''}</div></div>`;
+            h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewDBAudio(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
             h+=`</div>`;
         });
         list.innerHTML=h;
-    } catch(e){ list.innerHTML='<p class="ve-empty">로드 실패</p>'; }
+    } catch(e){ list.innerHTML='<p class="ve-empty">로드 실패</p>'; console.warn('Audio load error:',e); }
 }
 
 window._veSelectDBAudio = function(idx) {
     const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
-    stopMusicPreview(); stopDBAudio();
+    stopMusicPreview();
+    if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}
     vm.music='none'; vm.audioUrl=a.data_url;
     refreshLeftPanel(); updateTimeline();
 };
 window._vePreviewDBAudio = function(idx) {
     const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
     stopMusicPreview();
+    // toggle: if already playing this track, stop it
+    if(vm.audioEl&&!vm.audioEl.paused&&vm._previewIdx===idx){
+        vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;
+        refreshLeftPanel(); return;
+    }
     if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}
     const audio=new Audio(a.data_url);
-    audio.volume=0.5; audio.play().catch(()=>{});
-    vm.audioEl=audio;
-    // auto-stop after 10 seconds preview
-    setTimeout(()=>{if(vm.audioEl===audio){audio.pause();vm.audioEl=null;}},10000);
+    audio.volume=0.5;
+    audio.play().catch(e=>{alert('음원 재생 실패: '+e.message);});
+    audio.onended=()=>{vm.audioEl=null;vm._previewIdx=-1;refreshLeftPanel();};
+    vm.audioEl=audio; vm._previewIdx=idx;
+    refreshLeftPanel();
+    // auto-stop after 15 seconds preview
+    setTimeout(()=>{if(vm.audioEl===audio){audio.pause();vm.audioEl=null;vm._previewIdx=-1;refreshLeftPanel();}},15000);
 };
-function stopDBAudio(){if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}vm.audioUrl=null;}
+function stopDBAudio(){if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}vm.audioUrl=null;}
 
 function renderTextTab(el) {
     let h = '<div class="ve-sec"><b>텍스트</b>';
@@ -1113,8 +1144,11 @@ window.veExport = async function() {
     if(expBtn){expBtn.disabled=true;expBtn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...';}
     const fps=30; let totalMs=0; vm.clips.forEach(c=>totalMs+=c.duration*1000);
     const canvasStream=vm.canvas.captureStream(fps);
-    const musicStream=await createMusicStream(vm.music,totalMs);
-    let combined=musicStream?new MediaStream([...canvasStream.getVideoTracks(),...musicStream.getAudioTracks()]):canvasStream;
+    // 오디오 스트림: Supabase 음원 또는 내장 음악
+    let audioResult=null;
+    if(vm.audioUrl){audioResult=await createAudioFileStream(vm.audioUrl);}
+    else{const ms=await createMusicStream(vm.music,totalMs);if(ms)audioResult={stream:ms,source:null};}
+    let combined=audioResult&&audioResult.stream?new MediaStream([...canvasStream.getVideoTracks(),...audioResult.stream.getAudioTracks()]):canvasStream;
     const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')?'video/webm;codecs=vp9,opus':MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
     const rec=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:5000000});
     const chunks=[];rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};rec.start();
@@ -1125,6 +1159,8 @@ window.veExport = async function() {
         else{renderClip(i,vm.ctx,false);await sleep(dur);}
     }
     if(progBar)progBar.style.width='100%';if(progText)progText.textContent='인코딩 중...';
+    // stop audio source if playing
+    if(audioResult&&audioResult.source){try{audioResult.source.stop();}catch(e){}}
     await new Promise(r=>{rec.onstop=r;rec.stop();});
     const blob=new Blob(chunks,{type:mime}),url=URL.createObjectURL(blob);
     if(dlBtn){dlBtn.style.display='inline-flex';dlBtn.onclick=()=>{const a=document.createElement('a');a.href=url;a.download=`chameleon_${vm.format}_${Date.now()}.webm`;a.click();};}
