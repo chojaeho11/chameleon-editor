@@ -442,25 +442,29 @@
             100% { background-position: 0% 50%; }
         }
         #btnDesignStart {
-            padding: 16px 48px;
-            background: #fff;
-            color: #5b21b6;
+            padding: 18px 48px;
+            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #6366f1);
+            background-size: 300% 300%;
+            animation: gradientShift 4s ease infinite;
+            color: #fff;
             border: none;
             border-radius: 50px;
             font-size: 17px;
             font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(99,102,241,0.4);
             transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            max-width: 600px;
         }
         #btnDesignStart:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            transform: scale(1.02);
+            box-shadow: 0 8px 30px rgba(99,102,241,0.5);
         }
     </style>
     <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px; padding:0 15px;">
-        <button id="btnDesignStart">
-            <i class="fa-solid fa-palette"></i> <span data-i18n="dsm_btn_start">무료 디자인 시작하기</span>
+        <button id="btnDesignStart" onclick="window.openProductPickerModal()">
+            <i class="fa-solid fa-hand-pointer"></i> <span data-i18n="dsm_btn_start">여기를 클릭해서 제품만들기</span>
         </button>
     </div>
 
@@ -572,78 +576,13 @@
     };
     </script>
 
-    <!-- 기본 대분류 ~ 도매라운지 카테고리 -->
-    <div id="topCategoryTabs" class="category-tabs"></div>
-
-    <div id="categoryDescriptionBox" style="
-        max-width: 1000px;
-        margin: 10px auto 20px auto;
-        padding: 20px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 16px;
-        text-align: center;
-        font-size: 15px;
-        color: #ede9fe;
-        line-height: 1.6;
-        display: none;
-        border: 1px solid rgba(255,255,255,0.12);
-        word-break: keep-all;
-        backdrop-filter: blur(4px);
-    ">
+    <!-- 기본 대분류 ~ 도매라운지: 모달로 이동 (인라인 숨김) -->
+    <div id="topCategoryTabs" class="category-tabs" style="display:none;"></div>
+    <div id="categoryDescriptionBox" style="display:none;"></div>
+    <div class="main-search-wrapper" style="display:none;">
+        <input type="text" id="mainCategorySearch" style="display:none;">
     </div>
-
-    <div class="main-search-wrapper" style="max-width: 1000px; margin: 0 auto 25px auto; padding: 0 15px; position: relative; z-index: 10;">
-    <style>
-        @keyframes searchGlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .search-glow-border {
-            position: relative;
-            border-radius: 50px;
-            padding: 3px;
-            background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd, #a78bfa, #7c3aed);
-            background-size: 300% 300%;
-            animation: searchGlow 4s ease infinite;
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15), 0 0 20px rgba(167, 139, 250, 0.1);
-            transition: box-shadow 0.3s;
-        }
-        .search-glow-border:focus-within {
-            box-shadow: 0 12px 35px rgba(124, 58, 237, 0.25), 0 0 30px rgba(167, 139, 250, 0.2);
-        }
-        .search-glow-border input {
-            width: 100%;
-            padding: 16px 20px 16px 55px;
-            font-size: 16px;
-            border: none;
-            border-radius: 47px;
-            background: #ffffff;
-            outline: none;
-            color: #334155;
-            font-weight: 600;
-        }
-        .search-glow-border input::placeholder { color: #94a3b8; font-weight: 500; }
-    </style>
-    <div class="search-glow-border">
-        <input type="text" id="mainCategorySearch"
-       placeholder="오늘은 어떤 제품을 찾으시나요?"
-       data-i18n-placeholder="search_placeholder"
-       onkeyup="window.filterMainIcons(this.value)"
-        >
-        <i class="fa-solid fa-magnifying-glass" style="
-            position: absolute;
-            left: 25px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #7c3aed;
-            font-size: 20px;
-            pointer-events: none;
-        "></i>
-    </div>
-</div>
-
-    <div class="quick-menu-track" id="quickMenuContainer"></div>
+    <div class="quick-menu-track" id="quickMenuContainer" style="display:none;"></div>
 
     <div style="text-align: center; margin-top: 30px; background: rgba(0,0,0,0.25); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(8px);">
         <h3 style="margin: 0 0 15px 0; color: #fde68a; font-size: 20px;" data-i18n="home_vip_title">대량주문 전용 VIP 라운지</h3>
@@ -659,6 +598,97 @@
 
         </div>
 </div>
+
+<!-- 제품 선택 모달 -->
+<div id="productPickerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:flex-start; padding:60px 15px 20px; box-sizing:border-box; overflow-y:auto; backdrop-filter:blur(4px);">
+    <div style="background:#fff; border-radius:24px; width:100%; max-width:1000px; max-height:calc(100vh - 80px); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
+        <!-- 닫기 버튼 -->
+        <button onclick="document.getElementById('productPickerModal').style.display='none'" style="position:sticky; top:0; right:0; float:right; margin:12px 12px 0 0; width:36px; height:36px; border-radius:50%; border:none; background:#f1f5f9; color:#64748b; font-size:18px; cursor:pointer; z-index:2; display:flex; align-items:center; justify-content:center;">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div style="padding:20px 24px 24px; clear:both;">
+            <!-- 검색창 -->
+            <div style="position:relative; margin-bottom:20px;">
+                <input type="text" id="modalCategorySearch" placeholder="오늘은 어떤 제품을 찾으시나요?" data-i18n-placeholder="search_placeholder" oninput="window.filterMainIcons(this.value)" style="width:100%; padding:14px 20px 14px 50px; border:2px solid #e2e8f0; border-radius:50px; font-size:15px; outline:none; color:#334155; font-weight:600; box-sizing:border-box;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:20px; top:50%; transform:translateY(-50%); color:#7c3aed; font-size:18px; pointer-events:none;"></i>
+            </div>
+            <!-- 카테고리 탭 -->
+            <div id="modalCategoryTabs" class="category-tabs" style="margin-bottom:15px;"></div>
+            <!-- 카테고리 설명 -->
+            <div id="modalCategoryDesc" style="max-width:100%; margin:0 0 15px 0; padding:15px; background:#f8fafc; border-radius:12px; text-align:center; font-size:14px; color:#64748b; line-height:1.6; display:none; border:1px solid #e2e8f0; word-break:keep-all;"></div>
+            <!-- 상품 그리드 -->
+            <div class="quick-menu-track" id="modalProductGrid"></div>
+        </div>
+    </div>
+</div>
+<script>
+// 모달 열릴 때 카테고리/상품을 모달 내부로 복제
+(function(){
+    var origOpen = null;
+    window.openProductPickerModal = function() {
+        var modal = document.getElementById('productPickerModal');
+        modal.style.display = 'flex';
+        // 카테고리 탭 복제
+        var srcTabs = document.getElementById('topCategoryTabs');
+        var dstTabs = document.getElementById('modalCategoryTabs');
+        if (srcTabs && dstTabs && !dstTabs.hasChildNodes()) {
+            dstTabs.innerHTML = srcTabs.innerHTML;
+            // 탭 클릭 이벤트 재연결
+            dstTabs.querySelectorAll('.cat-tab').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    // 원본 탭도 클릭
+                    var idx = Array.from(dstTabs.querySelectorAll('.cat-tab')).indexOf(tab);
+                    var origTab = srcTabs.querySelectorAll('.cat-tab')[idx];
+                    if (origTab) origTab.click();
+                    // active 상태 동기화
+                    setTimeout(function() {
+                        dstTabs.querySelectorAll('.cat-tab').forEach(function(t,i) {
+                            var o = srcTabs.querySelectorAll('.cat-tab')[i];
+                            if (o) { t.className = o.className; }
+                        });
+                        // 설명 동기화
+                        var srcDesc = document.getElementById('categoryDescriptionBox');
+                        var dstDesc = document.getElementById('modalCategoryDesc');
+                        if (srcDesc && dstDesc) {
+                            dstDesc.innerHTML = srcDesc.innerHTML;
+                            dstDesc.style.display = srcDesc.style.display === 'none' ? 'none' : 'block';
+                        }
+                        // 상품 동기화
+                        var srcGrid = document.getElementById('quickMenuContainer');
+                        var dstGrid = document.getElementById('modalProductGrid');
+                        if (srcGrid && dstGrid) { dstGrid.innerHTML = srcGrid.innerHTML; }
+                    }, 200);
+                });
+            });
+        }
+        // 상품 초기 표시
+        setTimeout(function() {
+            var srcGrid = document.getElementById('quickMenuContainer');
+            var dstGrid = document.getElementById('modalProductGrid');
+            if (srcGrid && dstGrid) { dstGrid.innerHTML = srcGrid.innerHTML; }
+        }, 100);
+    };
+    // 검색 연동
+    var modalSearch = document.getElementById('modalCategorySearch');
+    if (modalSearch) {
+        modalSearch.addEventListener('input', function() {
+            if (window.filterMainIcons) window.filterMainIcons(this.value);
+            setTimeout(function() {
+                var srcGrid = document.getElementById('quickMenuContainer');
+                var dstGrid = document.getElementById('modalProductGrid');
+                if (srcGrid && dstGrid) { dstGrid.innerHTML = srcGrid.innerHTML; }
+            }, 300);
+        });
+    }
+    // 배경 클릭으로 닫기
+    var modal = document.getElementById('productPickerModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    }
+})();
+</script>
 
 <!-- 배송비 계산기 배너 -->
 <div id="shippingCalcSection" style="display:none; width:100%; max-width:1200px; padding:0 20px; box-sizing:border-box;">
