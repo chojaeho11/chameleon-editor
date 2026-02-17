@@ -6561,178 +6561,258 @@ if (w >= 20 && h >= 20) {
 <script src="./text-wizard.js"></script>
 
 <!-- 비디오 메이커 모달 -->
-<!-- ═══ 영상 편집기 v3 ═══ -->
-<div id="videoMakerModal" class="modal-bg" style="z-index:15500; display:none; align-items:center; justify-content:center;">
-    <div class="vm-editor">
-        <!-- 헤더 -->
-        <div class="vm-header">
-            <h3 id="vmTitle" style="margin:0; font-size:16px; font-weight:700;">영상 편집기</h3>
-            <button onclick="window.vmCloseEditor()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#999; line-height:1;">×</button>
+<!-- ═══ 영상 편집기 v4 (CapCut-Style Dark Theme) ═══ -->
+<div id="videoMakerModal" class="modal-bg" style="z-index:15500; display:none; align-items:stretch; justify-content:stretch;">
+    <div class="ve-app">
+        <!-- 상단 바 -->
+        <div class="ve-topbar">
+            <div class="ve-topbar-left">
+                <span id="veTitle" class="ve-title">영상 편집기</span>
+                <div class="ve-fmt-group">
+                    <button class="ve-fmt-btn active" data-fmt="landscape">16:9</button>
+                    <button class="ve-fmt-btn" data-fmt="portrait">9:16</button>
+                    <button class="ve-fmt-btn" data-fmt="square">1:1</button>
+                </div>
+            </div>
+            <div class="ve-topbar-right">
+                <span id="veTimeNow" class="ve-time">00:00</span>
+                <span class="ve-time-sep">/</span>
+                <span id="veTimeTotal" class="ve-time">00:00</span>
+                <button id="veExportBtn" class="ve-export-btn" onclick="window.veExport()"><i class="fa-solid fa-download"></i> Export</button>
+                <button id="veDlBtn" class="ve-dl-btn" style="display:none;"><i class="fa-solid fa-file-video"></i> 다운로드</button>
+                <button class="ve-close-btn" onclick="window.veClose()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
         </div>
 
-        <!-- 메인 본문: 3열 -->
-        <div class="vm-main">
-            <!-- 좌측: 장면 스트립 -->
-            <div class="vm-scene-panel">
-                <div id="vmDropZone" class="vm-drop-zone">
-                    <i class="fa-solid fa-plus" style="font-size:20px; color:#94a3b8;"></i>
-                    <span style="font-size:10px; color:#94a3b8; margin-top:4px;">이미지 추가</span>
-                    <input type="file" id="vmFileInput" accept="image/*" multiple style="display:none;">
+        <!-- 메인 본문 -->
+        <div class="ve-body">
+            <!-- 좌측: 도구 탭 -->
+            <div class="ve-left">
+                <div class="ve-ltabs">
+                    <button class="ve-ltab active" data-tab="media"><i class="fa-solid fa-photo-film"></i><span>미디어</span></button>
+                    <button class="ve-ltab" data-tab="audio"><i class="fa-solid fa-music"></i><span>오디오</span></button>
+                    <button class="ve-ltab" data-tab="text"><i class="fa-solid fa-font"></i><span>텍스트</span></button>
+                    <button class="ve-ltab" data-tab="element"><i class="fa-solid fa-shapes"></i><span>요소</span></button>
+                    <button class="ve-ltab" data-tab="transition"><i class="fa-solid fa-right-left"></i><span>전환</span></button>
+                    <button class="ve-ltab" data-tab="adjust"><i class="fa-solid fa-sliders"></i><span>보정</span></button>
+                    <button class="ve-ltab" data-tab="template"><i class="fa-solid fa-table-cells"></i><span>템플릿</span></button>
                 </div>
-                <div id="vmSceneStrip" class="vm-scene-strip"></div>
+                <div id="veLeftContent" class="ve-left-content"></div>
             </div>
 
-            <!-- 중앙: 캔버스 프리뷰 -->
-            <div class="vm-canvas-wrap">
-                <div class="vm-canvas-inner">
-                    <canvas id="vmCanvas" style="max-width:100%; max-height:100%; display:block;"></canvas>
-                </div>
-                <!-- 토스트 메시지 -->
-                <div id="vmToast" class="vm-toast" style="display:none;"></div>
-                <!-- 진행률 -->
-                <div id="vmProgress" style="display:none; padding:0 16px; margin-top:6px;">
-                    <div style="background:#e2e8f0; border-radius:6px; height:5px; overflow:hidden;">
-                        <div id="vmProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg,#6366f1,#a855f7); border-radius:6px; transition:width 0.3s;"></div>
+            <!-- 중앙 + 우측 -->
+            <div class="ve-right-area">
+                <!-- 상단: 캔버스 프리뷰 + 속성 -->
+                <div class="ve-preview-row">
+                    <!-- 캔버스 -->
+                    <div class="ve-center">
+                        <canvas id="veCanvas" style="max-width:100%; max-height:100%; display:block; border-radius:4px;"></canvas>
+                        <div id="veDropOverlay" class="ve-drop-overlay" style="display:none;">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size:36px;"></i>
+                            <span>파일을 여기에 놓으세요</span>
+                        </div>
+                        <div id="veToast" class="ve-toast" style="display:none;"></div>
+                        <!-- 진행률 -->
+                        <div id="veProgress" class="ve-progress" style="display:none;">
+                            <div class="ve-progress-track">
+                                <div id="veProgressBar" class="ve-progress-bar" style="width:0%;"></div>
+                            </div>
+                            <span id="veProgressText" class="ve-progress-text">준비 중...</span>
+                        </div>
                     </div>
-                    <p id="vmProgressText" style="margin:3px 0 0; font-size:10px; color:#64748b; text-align:center;">준비 중...</p>
+                    <!-- 우측 속성 패널 -->
+                    <div class="ve-right-panel">
+                        <div class="ve-right-header">속성</div>
+                        <div id="veRightContent" class="ve-right-content"></div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 우측: 도구 패널 -->
-            <div class="vm-tools-panel">
-                <div class="vm-tab-bar">
-                    <button class="vm-tab-btn active" data-tab="overlay" title="텍스트"><i class="fa-solid fa-font"></i></button>
-                    <button class="vm-tab-btn" data-tab="element" title="요소"><i class="fa-solid fa-shapes"></i></button>
-                    <button class="vm-tab-btn" data-tab="music" title="음악"><i class="fa-solid fa-music"></i></button>
-                    <button class="vm-tab-btn" data-tab="transition" title="전환"><i class="fa-solid fa-right-left"></i></button>
-                    <button class="vm-tab-btn" data-tab="adjust" title="보정"><i class="fa-solid fa-sliders"></i></button>
-                    <button class="vm-tab-btn" data-tab="template" title="템플릿"><i class="fa-solid fa-table-cells"></i></button>
+                <!-- 하단: 타임라인 -->
+                <div class="ve-timeline">
+                    <!-- 재생 컨트롤 -->
+                    <div class="ve-tl-controls">
+                        <button id="vePlayBtn" class="ve-tl-btn" onclick="window.vePlay()" title="재생"><i class="fa-solid fa-play"></i></button>
+                        <button id="vePauseBtn" class="ve-tl-btn" onclick="window.vePause()" title="일시정지"><i class="fa-solid fa-pause"></i></button>
+                        <button class="ve-tl-btn" onclick="window._veZoomTl(-1)" title="축소"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                        <button class="ve-tl-btn" onclick="window._veZoomTl(1)" title="확대"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                    </div>
+                    <!-- 스크롤 가능 타임라인 -->
+                    <div id="veTlScroll" class="ve-tl-scroll">
+                        <div class="ve-tl-tracks">
+                            <div id="veTlRuler" class="ve-tl-ruler"></div>
+                            <div id="veTlVideo" class="ve-tl-track ve-tl-video"></div>
+                            <div id="veTlAudio" class="ve-tl-track ve-tl-audio"></div>
+                            <div id="vePlayhead" class="ve-playhead"></div>
+                        </div>
+                    </div>
                 </div>
-                <div id="vmToolContent" class="vm-tool-content"></div>
             </div>
         </div>
 
-        <!-- 하단: 타임라인 + 컨트롤 -->
-        <div class="vm-bottom-bar">
-            <div class="vm-playback-btns">
-                <button id="vmPlayBtn" onclick="window.vmPlay()" class="vm-ctrl-btn"><i class="fa-solid fa-play"></i> 재생</button>
-                <button id="vmPauseBtn" onclick="window.vmPause()" class="vm-ctrl-btn vm-ctrl-pause"><i class="fa-solid fa-pause"></i> 일시정지</button>
-            </div>
-            <div id="vmTimeline" class="vm-timeline"></div>
-            <div class="vm-export-btns">
-                <button id="vmRecordBtn" onclick="window.vmRecord()" class="vm-ctrl-btn vm-ctrl-rec"><i class="fa-solid fa-circle" style="color:#ef4444"></i> 녹화</button>
-                <button id="vmDownloadBtn" style="display:none;" class="vm-ctrl-btn vm-ctrl-dl"><i class="fa-solid fa-download"></i> 다운로드</button>
-            </div>
-        </div>
+        <!-- 숨김 파일 입력 -->
+        <input type="file" id="veFileInput" accept="image/*,video/mp4,video/webm,video/quicktime" multiple style="display:none;">
     </div>
 </div>
 
 <style>
-/* ═══ 영상 편집기 v3 스타일 ═══ */
-.vm-editor { width:98vw; max-width:1600px; height:82vh; background:#fff; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
-.vm-header { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid #e2e8f0; flex-shrink:0; background:#f8fafc; }
-.vm-main { display:flex; flex:1; min-height:0; overflow:hidden; }
+/* ═══ 영상 편집기 v4 CapCut Dark Theme ═══ */
+.ve-app { width:100vw; height:100vh; background:#1a1a2e; display:flex; flex-direction:column; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#e0e0e8; }
 
-/* 좌측: 장면 */
-.vm-scene-panel { width:110px; min-width:100px; background:#f1f5f9; border-right:1px solid #e2e8f0; display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
-.vm-drop-zone { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px 8px; cursor:pointer; border-bottom:1px solid #e2e8f0; transition:background 0.15s; }
-.vm-drop-zone:hover { background:#e2e8f0; }
-.vm-drag-over { background:rgba(99,102,241,0.1) !important; }
-.vm-scene-strip { flex:1; overflow-y:auto; padding:6px; }
-.vm-sc-thumb { position:relative; border-radius:8px; overflow:hidden; border:2px solid transparent; cursor:pointer; margin-bottom:6px; background:#000; aspect-ratio:16/9; }
-.vm-sc-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-.vm-sc-thumb.active { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.3); }
-.vm-sc-thumb:hover { border-color:#a5b4fc; }
-.vm-sc-num { position:absolute; top:2px; left:3px; background:rgba(0,0,0,0.7); color:#fff; font-size:9px; padding:1px 5px; border-radius:4px; z-index:1; font-weight:700; }
-.vm-sc-del { position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.6); color:#fff; border:none; width:16px; height:16px; border-radius:50%; font-size:10px; cursor:pointer; z-index:1; line-height:1; padding:0; display:none; }
-.vm-sc-thumb:hover .vm-sc-del { display:block; }
+/* 상단 바 */
+.ve-topbar { display:flex; justify-content:space-between; align-items:center; padding:0 12px; height:44px; background:#16162a; border-bottom:1px solid #2a2a4a; flex-shrink:0; }
+.ve-topbar-left, .ve-topbar-right { display:flex; align-items:center; gap:10px; }
+.ve-title { font-size:14px; font-weight:700; color:#fff; }
+.ve-fmt-group { display:flex; gap:2px; background:#0d0d1a; border-radius:6px; padding:2px; }
+.ve-fmt-btn { padding:4px 10px; border:none; border-radius:5px; background:transparent; color:#888; font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; }
+.ve-fmt-btn:hover { color:#ccc; }
+.ve-fmt-btn.active { background:#6366f1; color:#fff; }
+.ve-time { font-size:12px; color:#888; font-family:monospace; }
+.ve-time-sep { color:#444; font-size:12px; }
+.ve-export-btn { padding:5px 14px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; }
+.ve-export-btn:hover { background:#5558e6; }
+.ve-export-btn:disabled { opacity:.5; cursor:not-allowed; }
+.ve-dl-btn { padding:5px 14px; background:#10b981; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
+.ve-dl-btn:hover { background:#059669; }
+.ve-close-btn { width:32px; height:32px; border:none; background:transparent; color:#888; font-size:16px; cursor:pointer; border-radius:6px; display:flex; align-items:center; justify-content:center; }
+.ve-close-btn:hover { background:#2a2a4a; color:#fff; }
 
-/* 중앙: 캔버스 */
-.vm-canvas-wrap { flex:1; display:flex; flex-direction:column; min-width:0; background:#1a1a2e; }
-.vm-canvas-inner { flex:1; display:flex; align-items:center; justify-content:center; padding:8px; min-height:0; overflow:hidden; }
-.vm-canvas-inner canvas { border-radius:6px; }
-.vm-toast { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:8px 20px; border-radius:8px; font-size:13px; transition:opacity 0.3s; z-index:10; pointer-events:none; }
+/* 메인 본문 */
+.ve-body { display:flex; flex:1; min-height:0; overflow:hidden; }
 
-/* 우측: 도구 */
-.vm-tools-panel { width:270px; min-width:240px; display:flex; flex-direction:column; border-left:1px solid #e2e8f0; flex-shrink:0; background:#fafbfc; }
-.vm-tab-bar { display:flex; border-bottom:1px solid #e2e8f0; flex-shrink:0; }
-.vm-tab-btn { flex:1; padding:10px 4px; border:none; background:none; cursor:pointer; font-size:14px; color:#94a3b8; transition:all 0.15s; border-bottom:2px solid transparent; }
-.vm-tab-btn:hover { color:#6366f1; background:#f0f0ff; }
-.vm-tab-btn.active { color:#6366f1; border-bottom-color:#6366f1; background:#fff; }
-.vm-tool-content { flex:1; overflow-y:auto; padding:12px; }
-.vm-tool-section { margin-bottom:16px; }
-.vm-tool-section b { display:block; font-size:12px; color:#334155; margin-bottom:8px; }
-.vm-tool-section label { display:block; font-size:11px; color:#64748b; margin:6px 0 3px; }
-.vm-tool-section input[type=range] { width:100%; margin:2px 0; }
-.vm-tool-section input[type=color] { width:40px; height:28px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; }
-.vm-input { width:100%; padding:6px 8px; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; box-sizing:border-box; }
-.vm-input:focus { border-color:#6366f1; outline:none; }
-.vm-add-btn { display:flex; align-items:center; gap:6px; width:100%; padding:8px 12px; background:#f0f0ff; color:#6366f1; border:1px dashed #a5b4fc; border-radius:8px; font-size:12px; cursor:pointer; margin-top:6px; font-weight:600; }
-.vm-add-btn:hover { background:#e0e7ff; }
-.vm-del-btn { display:flex; align-items:center; gap:6px; width:100%; padding:6px 10px; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; font-size:12px; cursor:pointer; margin-top:8px; }
-.vm-del-btn:hover { background:#fee2e2; }
-.vm-reset-btn { display:flex; align-items:center; gap:6px; width:100%; padding:6px 10px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; cursor:pointer; margin-top:8px; }
-/* 레이어 목록 */
-.vm-layer-row { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:12px; color:#475569; margin-bottom:3px; }
-.vm-layer-row:hover { background:#f1f5f9; }
-.vm-layer-row.active { background:#e0e7ff; color:#6366f1; font-weight:600; }
-/* 요소 그리드 */
-.vm-elem-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.vm-elem-btn { display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; font-size:11px; color:#475569; }
-.vm-elem-btn:hover { border-color:#6366f1; background:#f0f0ff; }
-.vm-elem-btn i { font-size:22px; color:#6366f1; }
-.vm-sticker-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
-.vm-sticker-btn { padding:6px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; font-size:18px; cursor:pointer; text-align:center; }
-.vm-sticker-btn:hover { border-color:#6366f1; background:#f0f0ff; }
-.vm-sticker-btn.active { border-color:#6366f1; background:#e0e7ff; }
+/* 좌측 패널 */
+.ve-left { width:280px; min-width:240px; display:flex; flex-shrink:0; border-right:1px solid #2a2a4a; background:#1e1e36; }
+.ve-ltabs { display:flex; flex-direction:column; width:60px; flex-shrink:0; background:#16162a; border-right:1px solid #2a2a4a; padding:6px 0; overflow-y:auto; }
+.ve-ltab { display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 4px; border:none; background:transparent; color:#666; font-size:9px; cursor:pointer; transition:all .15s; border-left:2px solid transparent; }
+.ve-ltab i { font-size:16px; }
+.ve-ltab:hover { color:#aaa; background:#1e1e36; }
+.ve-ltab.active { color:#818cf8; background:#1e1e36; border-left-color:#818cf8; }
+.ve-left-content { flex:1; overflow-y:auto; padding:10px; }
+
+/* 우측 영역 (캔버스+타임라인) */
+.ve-right-area { flex:1; display:flex; flex-direction:column; min-width:0; }
+
+/* 캔버스 + 속성 */
+.ve-preview-row { flex:1; display:flex; min-height:0; overflow:hidden; }
+.ve-center { flex:1; display:flex; align-items:center; justify-content:center; background:#0d0d1a; position:relative; min-width:0; padding:10px; }
+.ve-drop-overlay { position:absolute; inset:0; background:rgba(99,102,241,0.15); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#818cf8; font-size:14px; z-index:5; border:2px dashed #818cf8; border-radius:6px; }
+.ve-toast { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); color:#fff; padding:8px 20px; border-radius:8px; font-size:12px; transition:opacity 0.3s; z-index:10; pointer-events:none; white-space:nowrap; }
+.ve-progress { position:absolute; bottom:10px; left:10px; right:10px; display:flex; align-items:center; gap:8px; }
+.ve-progress-track { flex:1; height:4px; background:#2a2a4a; border-radius:4px; overflow:hidden; }
+.ve-progress-bar { height:100%; background:linear-gradient(90deg,#6366f1,#a855f7); border-radius:4px; transition:width .3s; }
+.ve-progress-text { font-size:10px; color:#aaa; white-space:nowrap; }
+
+/* 우측 속성 패널 */
+.ve-right-panel { width:220px; min-width:180px; background:#1e1e36; border-left:1px solid #2a2a4a; display:flex; flex-direction:column; flex-shrink:0; }
+.ve-right-header { padding:10px 12px; font-size:12px; font-weight:700; color:#aaa; border-bottom:1px solid #2a2a4a; flex-shrink:0; text-transform:uppercase; letter-spacing:0.5px; }
+.ve-right-content { flex:1; overflow-y:auto; padding:10px; }
+
+/* 타임라인 */
+.ve-timeline { height:140px; min-height:120px; background:#16162a; border-top:1px solid #2a2a4a; display:flex; flex-shrink:0; }
+.ve-tl-controls { display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px; border-right:1px solid #2a2a4a; flex-shrink:0; }
+.ve-tl-btn { width:30px; height:30px; border:none; background:transparent; color:#888; font-size:13px; cursor:pointer; border-radius:6px; display:flex; align-items:center; justify-content:center; }
+.ve-tl-btn:hover { background:#2a2a4a; color:#fff; }
+.ve-tl-scroll { flex:1; overflow-x:auto; overflow-y:hidden; position:relative; }
+.ve-tl-tracks { position:relative; min-width:100%; height:100%; }
+.ve-tl-ruler { position:relative; height:22px; border-bottom:1px solid #2a2a4a; }
+.ve-ruler-mark { position:absolute; top:3px; font-size:9px; color:#555; font-family:monospace; white-space:nowrap; pointer-events:none; }
+.ve-tl-track { position:relative; height:40px; display:flex; align-items:stretch; }
+.ve-tl-video { border-bottom:1px solid #222244; }
+.ve-tl-audio { min-height:40px; }
+
+/* 타임라인 클립 */
+.ve-tl-clip { height:100%; display:inline-flex; align-items:center; border:1px solid #333; border-radius:4px; overflow:hidden; cursor:pointer; position:relative; background:#2a2a4a; flex-shrink:0; }
+.ve-tl-clip img { height:100%; width:auto; object-fit:cover; opacity:.7; }
+.ve-tl-clip.active { border-color:#6366f1; box-shadow:0 0 0 1px #6366f1; }
+.ve-tl-clip-dur { position:absolute; bottom:2px; right:4px; font-size:8px; color:#aaa; background:rgba(0,0,0,0.6); padding:1px 4px; border-radius:3px; }
+
+/* 오디오 트랙 */
+.ve-tl-audio-empty { display:flex; align-items:center; justify-content:center; height:100%; font-size:10px; color:#444; width:100%; }
+.ve-tl-audio-clip { display:flex; align-items:center; gap:6px; height:100%; background:#1e3a5f; border-radius:4px; padding:0 10px; font-size:11px; color:#7dd3fc; }
+
+/* 플레이헤드 */
+.ve-playhead { position:absolute; top:0; bottom:0; width:2px; background:#ef4444; z-index:10; pointer-events:none; left:0; }
+.ve-playhead::before { content:''; position:absolute; top:0; left:-5px; width:12px; height:12px; background:#ef4444; clip-path:polygon(50% 100%,0 0,100% 0); }
+
+/* ═══ 공통 UI 컴포넌트 (다크 테마) ═══ */
+.ve-sec { margin-bottom:14px; }
+.ve-sec b { display:block; font-size:11px; color:#aaa; margin-bottom:8px; text-transform:uppercase; letter-spacing:.3px; }
+.ve-sec label { display:block; font-size:11px; color:#777; margin:5px 0 3px; }
+.ve-sec input[type=range] { width:100%; margin:2px 0; accent-color:#6366f1; }
+.ve-sec input[type=color] { width:100%; height:24px; border:1px solid #333; border-radius:4px; background:#222; cursor:pointer; }
+.ve-sec select { width:100%; padding:5px 8px; background:#222; color:#ddd; border:1px solid #333; border-radius:4px; font-size:11px; }
+.ve-inp { width:100%; padding:6px 8px; background:#0d0d1a; color:#e0e0e8; border:1px solid #333; border-radius:6px; font-size:12px; box-sizing:border-box; }
+.ve-inp:focus { border-color:#6366f1; outline:none; }
+.ve-empty { text-align:center; color:#555; font-size:12px; padding:20px 0; }
+
+/* 미디어 그리드 */
+.ve-import-btn { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:10px; background:#2a2a4a; color:#818cf8; border:1px dashed #4a4a6a; border-radius:8px; font-size:12px; cursor:pointer; font-weight:600; }
+.ve-import-btn:hover { background:#333360; border-color:#818cf8; }
+.ve-media-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
+.ve-media-item { position:relative; border-radius:6px; overflow:hidden; cursor:pointer; border:2px solid transparent; background:#0d0d1a; aspect-ratio:16/9; }
+.ve-media-item img { width:100%; height:100%; object-fit:cover; display:block; }
+.ve-media-item.active { border-color:#6366f1; }
+.ve-media-item:hover { border-color:#4a4a6a; }
+.ve-media-dur { position:absolute; bottom:3px; right:4px; font-size:9px; color:#fff; background:rgba(0,0,0,.7); padding:1px 5px; border-radius:3px; }
+.ve-media-type { position:absolute; top:3px; left:4px; font-size:10px; }
+.ve-media-del { position:absolute; top:2px; right:3px; width:16px; height:16px; border:none; background:rgba(0,0,0,.7); color:#fff; border-radius:50%; font-size:10px; cursor:pointer; display:none; line-height:1; padding:0; }
+.ve-media-item:hover .ve-media-del { display:block; }
+
 /* 음악 행 */
-.vm-music-row { display:flex; align-items:center; gap:6px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:6px; cursor:pointer; background:#fff; transition:all 0.15s; }
-.vm-music-row:hover { border-color:#a5b4fc; }
-.vm-music-row.selected { border-color:#6366f1; background:#f0f0ff; }
-.vm-music-info { display:flex; align-items:center; gap:8px; flex:1; }
-.vm-music-play { width:30px; height:30px; border-radius:50%; border:1px solid #e2e8f0; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; color:#6366f1; flex-shrink:0; transition:all 0.15s; }
-.vm-music-play:hover { background:#6366f1; color:#fff; }
-.vm-music-play.playing { background:#ef4444; color:#fff; border-color:#ef4444; }
-/* 전환 효과 그리드 */
-.vm-trans-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.vm-trans-btn { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 6px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; font-size:10px; color:#475569; }
-.vm-trans-btn:hover { border-color:#a5b4fc; }
-.vm-trans-btn.active { border-color:#6366f1; background:#e0e7ff; }
-.vm-trans-icon { font-size:20px; }
-/* 템플릿 */
-.vm-tpl-btn { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; margin-bottom:6px; text-align:left; font-size:12px; }
-.vm-tpl-btn:hover { border-color:#6366f1; background:#f0f0ff; }
-.vm-tpl-btn i { font-size:18px; color:#6366f1; width:24px; text-align:center; }
+.ve-music-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #2a2a4a; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:all .15s; }
+.ve-music-row:hover { border-color:#4a4a6a; }
+.ve-music-row.selected { border-color:#6366f1; background:#1e1e40; }
+.ve-music-play { width:28px; height:28px; border-radius:50%; border:1px solid #333; background:#222; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:10px; color:#818cf8; flex-shrink:0; }
+.ve-music-play:hover { background:#6366f1; color:#fff; }
+.ve-music-play.playing { background:#ef4444; color:#fff; border-color:#ef4444; }
 
-/* 하단: 타임라인 */
-.vm-bottom-bar { display:flex; align-items:center; gap:8px; padding:8px 12px; border-top:1px solid #e2e8f0; background:#f8fafc; flex-shrink:0; }
-.vm-playback-btns { display:flex; gap:4px; flex-shrink:0; }
-.vm-export-btns { display:flex; gap:4px; flex-shrink:0; }
-.vm-ctrl-btn { padding:6px 14px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; white-space:nowrap; }
-.vm-ctrl-btn:hover { background:#f0f0ff; border-color:#a5b4fc; }
-.vm-ctrl-pause { background:#fbbf24; color:#1e293b; border-color:#fbbf24; }
-.vm-ctrl-pause:hover { background:#f59e0b; }
-.vm-ctrl-rec { background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border-color:#6366f1; }
-.vm-ctrl-rec:hover { opacity:0.9; }
-.vm-ctrl-dl { background:#10b981; color:#fff; border-color:#10b981; }
-.vm-timeline { flex:1; display:flex; align-items:center; gap:4px; overflow-x:auto; padding:4px 8px; min-width:0; }
-.vm-tl-item { flex-shrink:0; width:60px; height:38px; border-radius:6px; overflow:hidden; border:2px solid transparent; cursor:pointer; position:relative; background:#000; }
-.vm-tl-item img { width:100%; height:100%; object-fit:cover; }
-.vm-tl-item span { position:absolute; bottom:1px; right:3px; font-size:8px; color:#fff; background:rgba(0,0,0,0.6); padding:1px 3px; border-radius:3px; }
-.vm-tl-item.active { border-color:#6366f1; }
-.vm-tl-trans { flex-shrink:0; font-size:12px; color:#94a3b8; display:flex; align-items:center; }
+/* 전환 그리드 */
+.ve-trans-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.ve-trans-btn { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 4px; background:#222; border:1px solid #333; border-radius:6px; cursor:pointer; font-size:9px; color:#888; }
+.ve-trans-btn:hover { border-color:#4a4a6a; }
+.ve-trans-btn.active { border-color:#6366f1; background:#1e1e40; color:#ccc; }
+
+/* 요소 */
+.ve-elem-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.ve-elem-btn { display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:#222; border:1px solid #333; border-radius:8px; cursor:pointer; font-size:10px; color:#888; }
+.ve-elem-btn:hover { border-color:#6366f1; color:#ccc; }
+.ve-elem-btn i { font-size:20px; color:#818cf8; }
+.ve-sticker-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+.ve-sticker-btn { padding:6px; border:1px solid #333; border-radius:6px; background:#222; font-size:18px; cursor:pointer; text-align:center; }
+.ve-sticker-btn:hover { border-color:#6366f1; }
+.ve-sticker-btn.active { border-color:#6366f1; background:#1e1e40; }
+
+/* 버튼 */
+.ve-add-btn { display:flex; align-items:center; gap:6px; width:100%; padding:8px 12px; background:#2a2a4a; color:#818cf8; border:1px dashed #4a4a6a; border-radius:8px; font-size:12px; cursor:pointer; margin-top:6px; font-weight:600; }
+.ve-add-btn:hover { background:#333360; border-color:#818cf8; }
+.ve-del-btn { display:flex; align-items:center; gap:6px; width:100%; padding:6px 10px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:6px; font-size:12px; cursor:pointer; margin-top:8px; }
+.ve-del-btn:hover { background:rgba(239,68,68,0.2); }
+.ve-reset-btn { display:flex; align-items:center; gap:6px; width:100%; padding:6px 10px; background:#222; color:#888; border:1px solid #333; border-radius:6px; font-size:12px; cursor:pointer; margin-top:8px; }
+.ve-reset-btn:hover { color:#ccc; border-color:#555; }
+
+/* 레이어 */
+.ve-layer { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:11px; color:#888; margin-bottom:3px; }
+.ve-layer:hover { background:#2a2a4a; }
+.ve-layer.active { background:#2a2a5a; color:#818cf8; font-weight:600; }
+
+/* 템플릿 */
+.ve-tpl-btn { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; background:#222; border:1px solid #333; border-radius:8px; cursor:pointer; margin-bottom:6px; text-align:left; font-size:12px; color:#ccc; }
+.ve-tpl-btn:hover { border-color:#6366f1; background:#1e1e40; }
+.ve-tpl-btn i { font-size:16px; color:#818cf8; width:20px; text-align:center; }
 
 /* 모바일 반응형 */
 @media (max-width:900px) {
-    .vm-editor { width:100vw; height:100vh; border-radius:0; }
-    .vm-main { flex-direction:column; }
-    .vm-scene-panel { width:100%; min-width:0; flex-direction:row; height:90px; border-right:none; border-bottom:1px solid #e2e8f0; }
-    .vm-drop-zone { width:70px; flex-shrink:0; border-bottom:none; border-right:1px solid #e2e8f0; }
-    .vm-scene-strip { display:flex; flex-direction:row; gap:6px; overflow-x:auto; overflow-y:hidden; padding:6px; }
-    .vm-sc-thumb { width:70px; min-width:70px; aspect-ratio:16/9; margin-bottom:0; }
-    .vm-tools-panel { width:100%; min-width:0; max-height:200px; border-left:none; border-top:1px solid #e2e8f0; }
-    .vm-tab-bar { overflow-x:auto; }
-    .vm-bottom-bar { flex-wrap:wrap; }
+    .ve-app { width:100vw; height:100vh; }
+    .ve-body { flex-direction:column; }
+    .ve-left { width:100%; min-width:0; flex-direction:row; max-height:180px; border-right:none; border-bottom:1px solid #2a2a4a; }
+    .ve-ltabs { flex-direction:row; width:auto; height:40px; border-right:none; border-bottom:1px solid #2a2a4a; overflow-x:auto; padding:0 4px; }
+    .ve-ltab { flex-direction:row; gap:4px; padding:6px 10px; font-size:10px; border-left:none; border-bottom:2px solid transparent; }
+    .ve-ltab.active { border-left-color:transparent; border-bottom-color:#818cf8; }
+    .ve-ltab span { display:none; }
+    .ve-left-content { max-height:140px; }
+    .ve-preview-row { flex-direction:column; }
+    .ve-right-panel { width:100%; min-width:0; max-height:120px; border-left:none; border-top:1px solid #2a2a4a; }
+    .ve-timeline { height:100px; min-height:80px; }
+    .ve-fmt-group { display:none; }
 }
 </style>
 
