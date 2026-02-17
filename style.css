@@ -1397,7 +1397,7 @@ button, input, textarea, select { font-family: inherit; }
 #catProductGrid .quick-text {
     font-size: 15px !important;
     font-weight: 700 !important;
-    color: #111;
+    color: #fff;
     margin-bottom: 8px !important;
     line-height: 1.4 !important;
     
