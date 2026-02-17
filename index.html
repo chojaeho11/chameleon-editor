@@ -6613,6 +6613,18 @@ if (w >= 20 && h >= 20) {
                             <span>파일을 여기에 놓으세요</span>
                         </div>
                         <div id="veToast" class="ve-toast" style="display:none;"></div>
+                        <!-- 컨텍스트 메뉴 -->
+                        <div id="veContextMenu" class="ve-ctx" style="display:none;">
+                            <button onclick="window._veCtx('front')"><i class="fa-solid fa-angles-up"></i> 맨 앞으로</button>
+                            <button onclick="window._veCtx('forward')"><i class="fa-solid fa-angle-up"></i> 앞으로</button>
+                            <button onclick="window._veCtx('backward')"><i class="fa-solid fa-angle-down"></i> 뒤로</button>
+                            <button onclick="window._veCtx('back')"><i class="fa-solid fa-angles-down"></i> 맨 뒤로</button>
+                            <div class="ve-ctx-sep"></div>
+                            <button onclick="window._veCtx('copy')"><i class="fa-solid fa-copy"></i> 복사</button>
+                            <button onclick="window._veCtx('paste')"><i class="fa-solid fa-paste"></i> 붙여넣기</button>
+                            <div class="ve-ctx-sep"></div>
+                            <button onclick="window._veCtx('delete')" style="color:#ef4444"><i class="fa-solid fa-trash"></i> 삭제</button>
+                        </div>
                         <!-- 진행률 -->
                         <div id="veProgress" class="ve-progress" style="display:none;">
                             <div class="ve-progress-track">
@@ -6699,6 +6711,11 @@ if (w >= 20 && h >= 20) {
 .ve-center { flex:1; display:flex; align-items:center; justify-content:center; background:#0d0d1a; position:relative; min-width:0; padding:10px; }
 .ve-drop-overlay { position:absolute; inset:0; background:rgba(99,102,241,0.15); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#818cf8; font-size:14px; z-index:5; border:2px dashed #818cf8; border-radius:6px; }
 .ve-toast { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); color:#fff; padding:8px 20px; border-radius:8px; font-size:12px; transition:opacity 0.3s; z-index:10; pointer-events:none; white-space:nowrap; }
+.ve-ctx { position:absolute; background:#1e1e36; border:1px solid #3a3a5a; border-radius:8px; padding:4px 0; z-index:20; min-width:140px; box-shadow:0 8px 24px rgba(0,0,0,0.6); }
+.ve-ctx button { display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; border:none; background:transparent; color:#ddd; font-size:12px; cursor:pointer; text-align:left; }
+.ve-ctx button:hover { background:#2a2a4a; }
+.ve-ctx button i { width:14px; text-align:center; font-size:11px; }
+.ve-ctx-sep { height:1px; background:#3a3a5a; margin:3px 0; }
 .ve-progress { position:absolute; bottom:10px; left:10px; right:10px; display:flex; align-items:center; gap:8px; }
 .ve-progress-track { flex:1; height:4px; background:#2a2a4a; border-radius:4px; overflow:hidden; }
 .ve-progress-bar { height:100%; background:linear-gradient(90deg,#6366f1,#a855f7); border-radius:4px; transition:width .3s; }
@@ -6735,13 +6752,17 @@ if (w >= 20 && h >= 20) {
 
 /* 오버레이 트랙 */
 .ve-tl-overlay-empty { display:flex; align-items:center; justify-content:center; height:100%; font-size:9px; color:#444; width:100%; }
-.ve-tl-ol-item { display:inline-flex; align-items:center; gap:4px; height:26px; margin:3px 1px; border-radius:3px; padding:0 6px; font-size:9px; cursor:pointer; flex-shrink:0; border:1px solid transparent; white-space:nowrap; }
+.ve-tl-ol-item { display:inline-flex; align-items:center; gap:4px; height:26px; margin:3px 0; border-radius:3px; padding:0 6px; font-size:9px; cursor:grab; flex-shrink:0; border:1px solid transparent; white-space:nowrap; overflow:hidden; box-sizing:border-box; position:relative; }
 .ve-tl-ol-item.type-text { background:#3b1f6e; color:#c4b5fd; }
 .ve-tl-ol-item.type-rect { background:#1e3a5f; color:#93c5fd; }
 .ve-tl-ol-item.type-circle { background:#1e3a5f; color:#93c5fd; }
 .ve-tl-ol-item.type-sticker { background:#4a3728; color:#fbbf24; }
 .ve-tl-ol-item.type-image { background:#1e4a3f; color:#6ee7b7; }
 .ve-tl-ol-item.active { border-color:#818cf8; }
+.ve-tl-ol-grip { position:absolute; top:0; width:6px; height:100%; cursor:ew-resize; z-index:2; }
+.ve-tl-ol-grip.left { left:0; border-left:3px solid rgba(255,255,255,0.4); border-radius:3px 0 0 3px; }
+.ve-tl-ol-grip.right { right:0; border-right:3px solid rgba(255,255,255,0.4); border-radius:0 3px 3px 0; }
+.ve-tl-ol-grip:hover { background:rgba(255,255,255,0.15); }
 
 /* 플레이헤드 */
 .ve-playhead { position:absolute; top:0; bottom:0; width:2px; background:#ef4444; z-index:10; pointer-events:none; left:0; }
