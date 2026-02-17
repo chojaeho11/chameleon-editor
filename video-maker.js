@@ -23,7 +23,13 @@ const TRANSITIONS = [
     { id:'slideUp', name:'↑ 슬라이드', icon:'fa-arrow-up', color:'#fbbf24' },
     { id:'zoomIn', name:'줌 인', icon:'fa-magnifying-glass-plus', color:'#34d399' },
     { id:'zoomOut', name:'줌 아웃', icon:'fa-magnifying-glass-minus', color:'#34d399' },
-    { id:'wipe', name:'와이프', icon:'fa-bars-staggered', color:'#f472b6' }
+    { id:'wipe', name:'와이프', icon:'fa-bars-staggered', color:'#f472b6' },
+    { id:'slideDown', name:'↓ 슬라이드', icon:'fa-arrow-down', color:'#fbbf24' },
+    { id:'flipH', name:'뒤집기', icon:'fa-right-left', color:'#f472b6' },
+    { id:'spin', name:'회전', icon:'fa-rotate', color:'#38bdf8' },
+    { id:'blur', name:'블러', icon:'fa-droplet', color:'#a78bfa' },
+    { id:'crossZoom', name:'크로스줌', icon:'fa-expand', color:'#34d399' },
+    { id:'split', name:'분할', icon:'fa-table-columns', color:'#fb923c' }
 ];
 
 const STICKERS = ['⭐','❤️','🔥','✨','💯','👍','🎉','💡','🎵','🎯','💪','🌟','😊','🎬','📌','🏆','💎','🌈','🎨','👏','🎁','🚀'];
@@ -38,7 +44,17 @@ const TEMPLATES = [
     { id:'quote', name:'인용문', icon:'fa-quote-left',
       mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.25,w:w*.8,h:h*.5,fill:'rgba(0,0,0,0.5)',stroke:'rgba(255,255,255,0.3)',strokeW:2,radius:20},{type:'text',x:w/2,y:h*.45,text:'"인용문을 입력하세요"',fontSize:Math.round(w*.035),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'serif'},{type:'text',x:w/2,y:h*.6,text:'— 저자',fontSize:Math.round(w*.02),color:'#a5b4fc',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
     { id:'announce', name:'공지', icon:'fa-bullhorn',
-      mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.35,w:w*.8,h:h*.3,fill:'#ef4444',stroke:'#fff',strokeW:4,radius:16},{type:'text',x:w/2,y:h*.48,text:'중요 공지',fontSize:Math.round(w*.05),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.57,text:'세부 내용',fontSize:Math.round(w*.022),color:'#fecaca',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]}
+      mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.35,w:w*.8,h:h*.3,fill:'#ef4444',stroke:'#fff',strokeW:4,radius:16},{type:'text',x:w/2,y:h*.48,text:'중요 공지',fontSize:Math.round(w*.05),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.57,text:'세부 내용',fontSize:Math.round(w*.022),color:'#fecaca',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'intro', name:'인트로', icon:'fa-play-circle',
+      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.7)',stroke:'',strokeW:0,radius:0},{type:'rect',x:w*.15,y:h*.25,w:w*.7,h:h*.5,fill:'rgba(99,102,241,0.3)',stroke:'#818cf8',strokeW:3,radius:20},{type:'text',x:w/2,y:h*.42,text:'채널명',fontSize:Math.round(w*.07),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.56,text:'영상 제목을 입력하세요',fontSize:Math.round(w*.03),color:'#c7d2fe',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.35,y:h*.65,w:w*.3,h:4,fill:'#818cf8',stroke:'',strokeW:0,radius:2}]},
+    { id:'outro', name:'아웃트로', icon:'fa-flag-checkered',
+      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.75)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.35,text:'시청해주셔서 감사합니다',fontSize:Math.round(w*.045),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.25,y:h*.5,w:w*.5,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:12},{type:'text',x:w/2,y:h*.545,text:'👍 좋아요 & 구독',fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.68,text:'다음 영상에서 만나요!',fontSize:Math.round(w*.022),color:'#94a3b8',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'countdown', name:'카운트다운', icon:'fa-hourglass-half',
+      mk:(w,h)=>[{type:'circle',x:w/2,y:h*.45,r:Math.round(w*.12),fill:'rgba(239,68,68,0.8)',stroke:'#fff',strokeW:4},{type:'text',x:w/2,y:h*.45,text:'3',fontSize:Math.round(w*.15),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.7,text:'곧 시작합니다',fontSize:Math.round(w*.025),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
+    { id:'subscribe', name:'구독 버튼', icon:'fa-bell',
+      mk:(w,h)=>[{type:'rect',x:w*.3,y:h*.8,w:w*.4,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:8},{type:'text',x:w/2,y:h*.845,text:'🔔 구독하기',fontSize:Math.round(w*.028),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'progress', name:'프로그레스', icon:'fa-battery-half',
+      mk:(w,h)=>[{type:'rect',x:0,y:h*.92,w,h:h*.08,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'rect',x:0,y:h*.92,w:w*.4,h:h*.08,fill:'#6366f1',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.965,text:'40% 완료',fontSize:Math.round(w*.02),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]}
 ];
 
 const TL_PPS = 60; // timeline pixels per second (base)
@@ -154,8 +170,9 @@ async function createAudioFileStream(audioUrl) {
 // CLIP MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 function curClip() { return vm.clips[vm.ci]; }
-function clipStart(i) { let t=0; for(let j=0;j<i;j++) t+=vm.clips[j].duration; return t; }
-function totalDur() { return vm.clips.reduce((s,c)=>s+c.duration,0); }
+function clipEffDur(c) { return c.duration / (c.speed || 1); }
+function clipStart(i) { let t=0; for(let j=0;j<i;j++) t+=clipEffDur(vm.clips[j]); return t; }
+function totalDur() { return vm.clips.reduce((s,c)=>s+clipEffDur(c),0); }
 
 function addFiles(fileList) {
     Array.from(fileList).forEach(f => {
@@ -172,7 +189,7 @@ function addImageFile(f) {
         const tc = document.createElement('canvas'); tc.width=160; tc.height=90;
         const tx = tc.getContext('2d'); tx.drawImage(img,0,0,160,90);
         vm.clips.push({ type:'image', file:f, url, img, thumbUrl:tc.toDataURL('image/jpeg',0.7),
-            duration:3, overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade' });
+            duration:3, overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0 });
         selectClip(vm.clips.length-1);
     };
     img.src = url;
@@ -189,11 +206,39 @@ function addVideoFile(f) {
             tc.getContext('2d').drawImage(video,0,0,160,90);
             vm.clips.push({ type:'video', file:f, url, video, thumbUrl:tc.toDataURL('image/jpeg',0.7),
                 duration: Math.min(Math.round(video.duration*10)/10, 60),
-                overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade' });
+                overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0 });
             video.onseeked = null;
             selectClip(vm.clips.length-1);
         };
     };
+}
+
+function duplicateClip(i) {
+    const c = vm.clips[i]; if (!c) return;
+    const nc = {
+        type: c.type, file: c.file, url: c.url, thumbUrl: c.thumbUrl,
+        duration: c.duration, transition: c.transition, speed: c.speed || 1.0,
+        overlays: JSON.parse(JSON.stringify(c.overlays)),
+        adj: { ...c.adj }
+    };
+    // 이미지 복제
+    if (c.type === 'image' && c.img) {
+        const ni = new Image(); ni.src = c.img.src; nc.img = ni;
+    }
+    // 비디오 복제
+    if (c.type === 'video' && c.video) {
+        const nv = document.createElement('video');
+        nv.src = c.url; nv.muted = true; nv.preload = 'auto'; nv.playsInline = true;
+        nc.video = nv;
+    }
+    // 오버레이 이미지 복원
+    nc.overlays.forEach(o => {
+        if (o.type === 'image' && o.url) {
+            const img = new Image(); img.src = o.url; o.img = img;
+        }
+    });
+    vm.clips.splice(i + 1, 0, nc);
+    selectClip(i + 1);
 }
 
 function removeClip(i) {
@@ -216,7 +261,7 @@ function addOverlay(type, x, y, props) {
     const c = curClip(); if (!c) return;
     let o; const fs = Math.round(vm.w*0.04);
     switch(type) {
-        case 'text': o={type:'text',x,y,text:props?.text||'텍스트',fontSize:props?.fontSize||fs,color:props?.color||'#fff',bold:props?.bold??true,shadow:props?.shadow??true,align:'center',fontFamily:props?.fontFamily||'sans-serif'}; break;
+        case 'text': o={type:'text',x,y,text:props?.text||'텍스트',fontSize:props?.fontSize||fs,color:props?.color||'#fff',bold:props?.bold??true,shadow:props?.shadow??true,align:'center',fontFamily:props?.fontFamily||'sans-serif',strokeColor:props?.strokeColor||'#000',strokeWidth:props?.strokeWidth||0,bgBox:props?.bgBox||false,bgColor:props?.bgColor||'rgba(0,0,0,0.5)',lineHeight:props?.lineHeight||1.2}; break;
         case 'rect': o={type:'rect',x,y,w:props?.w||vm.w*.3,h:props?.h||vm.h*.12,fill:props?.fill||'rgba(99,102,241,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2,radius:props?.radius||10}; break;
         case 'circle': o={type:'circle',x,y,r:props?.r||vm.w*.06,fill:props?.fill||'rgba(99,102,241,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2}; break;
         case 'sticker': o={type:'sticker',x,y,emoji:props?.emoji||'⭐',size:props?.size||Math.round(vm.w*.08)}; break;
@@ -331,11 +376,28 @@ function renderOverlay(ctx, o) {
     ctx.save();
     if(o.rotation){const b=getOBounds(o);if(b){ctx.translate(b.cx,b.cy);ctx.rotate(o.rotation*Math.PI/180);ctx.translate(-b.cx,-b.cy);}}
     switch(o.type) {
-        case 'text':
-            ctx.font=`${o.bold?'bold ':''} ${o.fontSize}px ${o.fontFamily||'sans-serif'}`;
-            ctx.fillStyle=o.color||'#fff'; ctx.textAlign=o.align||'center'; ctx.textBaseline='middle';
-            if(o.shadow){ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=o.fontSize*.12;ctx.shadowOffsetX=2;ctx.shadowOffsetY=2;}
-            (o.text||'').split('\n').forEach((l,li)=>ctx.fillText(l,o.x,o.y+li*o.fontSize*1.25)); break;
+        case 'text': {
+            const lines=(o.text||'').split('\n'), lh=o.lineHeight||1.2, fs=o.fontSize;
+            ctx.font=`${o.bold?'bold ':''} ${fs}px ${o.fontFamily||'sans-serif'}`;
+            ctx.textAlign=o.align||'center'; ctx.textBaseline='middle';
+            // 배경 박스
+            if(o.bgBox){
+                const maxW=Math.max(...lines.map(l=>ctx.measureText(l).width));
+                const bh=lines.length*fs*lh+fs*0.5, bw=maxW+fs*0.8;
+                const bx=o.align==='center'?o.x-bw/2:o.x-fs*0.4, by=o.y-fs*0.6;
+                ctx.fillStyle=o.bgColor||'rgba(0,0,0,0.5)';
+                rRect(ctx,bx,by,bw,bh,fs*0.2);ctx.fill();
+            }
+            if(o.shadow){ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=fs*.12;ctx.shadowOffsetX=2;ctx.shadowOffsetY=2;}
+            // 외곽선 (stroke)
+            if(o.strokeWidth>0){
+                ctx.strokeStyle=o.strokeColor||'#000';ctx.lineWidth=o.strokeWidth;ctx.lineJoin='round';
+                lines.forEach((l,li)=>ctx.strokeText(l,o.x,o.y+li*fs*lh));
+            }
+            ctx.fillStyle=o.color||'#fff';
+            lines.forEach((l,li)=>ctx.fillText(l,o.x,o.y+li*fs*lh));
+            break;
+        }
         case 'rect':
             ctx.fillStyle=o.fill||'transparent';
             if(o.radius){rRect(ctx,o.x,o.y,o.w,o.h,o.radius);ctx.fill();}else ctx.fillRect(o.x,o.y,o.w,o.h);
@@ -419,6 +481,7 @@ function renderMediaTab(el) {
             h += `<img src="${c.thumbUrl}">`;
             if(c.type==='video') h += `<span class="ve-media-dur">${fmtTime(c.duration)}</span>`;
             h += `<span class="ve-media-type">${c.type==='video'?'🎬':'🖼️'}</span>`;
+            h += `<button class="ve-media-dup" onclick="event.stopPropagation();window._veDuplicateClip(${i})" title="복제" style="position:absolute;top:2px;right:22px;background:rgba(99,102,241,0.8);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-copy"></i></button>`;
             h += `<button class="ve-media-del" onclick="event.stopPropagation();window._veRemoveClip(${i})">×</button>`;
             h += `</div>`;
         });
@@ -557,6 +620,13 @@ function renderTextTab(el) {
         h += `<label>색상</label><input type="color" value="${expandHex(o.color)}" oninput="window._veUpOL('color',this.value)" style="width:100%;height:28px">`;
         h += `<div style="display:flex;gap:8px;margin:6px 0"><label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.bold?'checked':''} onchange="window._veUpOL('bold',this.checked)"> 굵게</label>`;
         h += `<label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.shadow?'checked':''} onchange="window._veUpOL('shadow',this.checked)"> 그림자</label></div>`;
+        // 외곽선
+        h += `<div style="display:flex;gap:6px;margin:6px 0;align-items:center"><label style="color:#aaa;font-size:11px;white-space:nowrap">외곽선</label>`;
+        h += `<input type="color" value="${expandHex(o.strokeColor||'#000000')}" oninput="window._veUpOL('strokeColor',this.value)" style="width:28px;height:24px;border:none;border-radius:4px;cursor:pointer">`;
+        h += `<input type="range" min="0" max="10" value="${o.strokeWidth||0}" oninput="window._veUpOL('strokeWidth',+this.value)" style="flex:1" title="외곽선 두께: ${o.strokeWidth||0}"></div>`;
+        // 배경 박스
+        h += `<div style="display:flex;gap:6px;margin:4px 0;align-items:center"><label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.bgBox?'checked':''} onchange="window._veUpOL('bgBox',this.checked)"> 배경 박스</label>`;
+        h += `<input type="color" value="${expandHex(o.bgColor||'#000000')}" oninput="window._veUpOL('bgColor',this.value)" style="width:28px;height:24px;border:none;border-radius:4px;cursor:pointer" ${o.bgBox?'':'disabled'}></div>`;
         h += `<label>폰트</label><select class="ve-inp" onchange="window._veUpOL('fontFamily',this.value)" style="max-height:200px">`;
         const dynFonts=window.DYNAMIC_FONTS||[];
         const fallbackFonts=[{font_name:'sans-serif',font_family:'sans-serif'},{font_name:'serif',font_family:'serif'},{font_name:'monospace',font_family:'monospace'},{font_name:'cursive',font_family:'cursive'}];
@@ -741,7 +811,17 @@ function renderTransitionTab(el) {
     let h='<div class="ve-sec"><b>전환 효과</b><div class="ve-trans-grid">';
     TRANSITIONS.forEach(t=>{ h+=`<button class="ve-trans-btn${cur===t.id?' active':''}" onclick="window._veSetTrans('${t.id}')"><div style="color:${t.color};font-size:18px"><i class="fa-solid ${t.icon}"></i></div><span>${t.name}</span></button>`; });
     h+='</div></div>';
-    if(c){ h+='<div class="ve-sec"><b>장면 시간</b>'; h+=`<label>${c.duration}초</label><input type="range" min="0.5" max="15" step="0.5" value="${c.duration}" oninput="window._veSetDur(+this.value);this.previousElementSibling.textContent=this.value+'초'">`; h+='</div>'; }
+    if(c){
+        h+='<div class="ve-sec"><b>장면 시간</b>';
+        h+=`<label>${c.duration}초</label><input type="range" min="0.5" max="15" step="0.5" value="${c.duration}" oninput="window._veSetDur(+this.value);this.previousElementSibling.textContent=this.value+'초'">`;
+        h+='</div>';
+        // 속도 제어
+        const spd = c.speed || 1.0;
+        const spdLabels = {0.25:'0.25x',0.5:'0.5x',0.75:'0.75x',1:'1x (보통)',1.5:'1.5x',2:'2x',3:'3x',4:'4x'};
+        h+='<div class="ve-sec"><b>재생 속도</b>';
+        h+=`<label>${spdLabels[spd]||spd+'x'}</label><input type="range" min="0.25" max="4" step="0.25" value="${spd}" oninput="window._veSetSpeed(+this.value);this.previousElementSibling.textContent=({0.25:'0.25x',0.5:'0.5x',0.75:'0.75x',1:'1x (보통)',1.5:'1.5x',2:'2x',3:'3x',4:'4x'})[this.value]||this.value+'x'">`;
+        h+='</div>';
+    }
     el.innerHTML = h;
 }
 
@@ -773,7 +853,30 @@ const VE_SAVE_KEY='ve_projects';
 
 function renderSaveTab(el){
     const saves=_veGetSaves();
-    let h='<div class="ve-sec"><b>프로젝트 저장</b>';
+    // 내보내기 프리셋
+    const presets=[
+        {fmt:'landscape',icon:'fa-brands fa-youtube',label:'YouTube',res:'1920×1080',color:'#ff0000',tip:'16:9 가로 영상'},
+        {fmt:'portrait',icon:'fa-solid fa-mobile-screen',label:'Shorts / TikTok',res:'1080×1920',color:'#25f4ee',tip:'9:16 세로 영상'},
+        {fmt:'square',icon:'fa-brands fa-instagram',label:'Instagram',res:'1080×1080',color:'#e1306c',tip:'1:1 정사각형'},
+        {fmt:'landscape',icon:'fa-solid fa-display',label:'프레젠테이션',res:'1920×1080',color:'#4285f4',tip:'16:9 HD'},
+    ];
+    const curFmt=vm.format;
+    let h='<div class="ve-sec"><b>내보내기 프리셋</b>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px">';
+    presets.forEach(p=>{
+        const active=p.fmt===curFmt;
+        h+=`<button onclick="window._veApplyPreset('${p.fmt}')" style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;border:2px solid ${active?p.color:'#333'};background:${active?p.color+'18':'#1a1a2e'};cursor:pointer;text-align:left;transition:.2s">`;
+        h+=`<i class="${p.icon}" style="font-size:18px;color:${p.color}"></i>`;
+        h+=`<div><div style="font-size:11px;font-weight:600;color:#e0e0e8">${p.label}</div>`;
+        h+=`<div style="font-size:9px;color:#888">${p.res}</div></div>`;
+        if(active) h+=`<i class="fa-solid fa-check" style="margin-left:auto;color:${p.color};font-size:12px"></i>`;
+        h+=`</button>`;
+    });
+    h+='</div>';
+    const curF=FORMATS.find(x=>x.id===curFmt)||FORMATS[0];
+    h+=`<div style="margin-top:6px;padding:6px 8px;background:#111827;border-radius:6px;font-size:10px;color:#9ca3af"><i class="fa-solid fa-circle-info"></i> 현재: <b style="color:#e0e0e8">${curF.name} ${curF.w}×${curF.h}</b> · WebM VP9 · 5Mbps</div>`;
+    h+='</div>';
+    h+='<div class="ve-sec"><b>프로젝트 저장</b>';
     h+=`<input class="ve-inp" id="veSaveName" placeholder="프로젝트 이름" value="프로젝트 ${saves.length+1}">`;
     h+=`<button class="ve-add-btn" onclick="window._veSaveProject()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>`;
     h+='</div>';
@@ -1187,6 +1290,7 @@ function updateFormatBtns() { document.querySelectorAll('.ve-fmt-btn').forEach(b
 // ═══════════════════════════════════════════════════════════════
 window._veSelectClip = selectClip;
 window._veRemoveClip = removeClip;
+window._veDuplicateClip = duplicateClip;
 window._veSelectOL = selectOverlay;
 window._veRemoveOL = () => removeOverlay(vm.oi);
 window._veStartAdd = (mode) => { vm.addMode=mode; vm.canvas.style.cursor='crosshair'; showToast('캔버스를 클릭하여 배치'); };
@@ -1200,6 +1304,7 @@ window._veSelectMusic = (id) => { stopDBAudio(); vm.audioUrl=null; vm.music=id; 
 window._vePreviewMusic = (id) => { vm.musicPlaying===id ? stopMusicPreview() : playMusicPreview(id); };
 window._veSetTrans = (id) => { const c=curClip(); if(c){c.transition=id;refreshLeftPanel();updateTimeline();} };
 window._veSetDur = (v) => { const c=curClip(); if(c){c.duration=v;updateTimeline();refreshRightPanel();} };
+window._veSetSpeed = (v) => { const c=curClip(); if(c){c.speed=v;if(c.type==='video'&&c.video)c.video.playbackRate=v;refreshLeftPanel();} };
 window._veAdj = (p,v) => { const c=curClip(); if(c){c.adj[p]=v;render();} };
 window._veResetAdj = () => { const c=curClip(); if(c){c.adj={brightness:0,contrast:0,saturation:100,blur:0,hue:0};render();refreshLeftPanel();refreshRightPanel();} };
 // ── Context Menu (z-order, copy, paste, delete) ──
@@ -1240,6 +1345,12 @@ window._veChangeFormat = (fmtId) => {
     vm.format=f.id; vm.w=f.w; vm.h=f.h;
     if(vm.canvas){vm.canvas.width=vm.w;vm.canvas.height=vm.h;vm.ctx=vm.canvas.getContext('2d');}
     render(); updateAll();
+};
+window._veApplyPreset = (fmtId) => {
+    window._veChangeFormat(fmtId);
+    updateFormatBtns();
+    refreshLeftPanel();
+    showToast(`프리셋 적용: ${(FORMATS.find(x=>x.id===fmtId)||{}).name||fmtId}`);
 };
 window._veTlClick = (e) => {
     const rect=document.getElementById('veTlScroll').getBoundingClientRect();
@@ -1308,6 +1419,12 @@ function animateTransition(fromSrc, toClip, type, ms) {
                 case 'zoomIn': ctx.save();ctx.globalAlpha=1-t;ctx.translate(vm.w/2,vm.h/2);ctx.scale(1+t*.3,1+t*.3);ctx.translate(-vm.w/2,-vm.h/2);drawCover(ctx,fromSrc,vm.w,vm.h);ctx.restore();ctx.globalAlpha=t;applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.globalAlpha=1;break;
                 case 'zoomOut': ctx.save();ctx.globalAlpha=1-t;drawCover(ctx,fromSrc,vm.w,vm.h);ctx.restore();ctx.save();ctx.globalAlpha=t;ctx.translate(vm.w/2,vm.h/2);ctx.scale(2-t,2-t);ctx.translate(-vm.w/2,-vm.h/2);applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.restore();ctx.globalAlpha=1;break;
                 case 'wipe': drawCover(ctx,fromSrc,vm.w,vm.h);ctx.save();ctx.beginPath();ctx.rect(0,0,vm.w*t,vm.h);ctx.clip();applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.restore();break;
+                case 'slideDown': drawCoverAt(ctx,fromSrc,0,vm.h*t,vm.w,vm.h);applyAdj(ctx,toAdj);drawCoverAt(ctx,toSrc,0,-vm.h*(1-t),vm.w,vm.h);ctx.filter='none';break;
+                case 'flipH': ctx.save();ctx.globalAlpha=1-t;ctx.translate(vm.w/2,0);ctx.scale(1-t*2,1);ctx.translate(-vm.w/2,0);drawCover(ctx,fromSrc,vm.w,vm.h);ctx.restore();ctx.save();ctx.globalAlpha=t;ctx.translate(vm.w/2,0);ctx.scale(t*2-1>0?t*2-1:0.01,1);ctx.translate(-vm.w/2,0);applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.restore();ctx.globalAlpha=1;break;
+                case 'spin': ctx.save();ctx.globalAlpha=1-t;ctx.translate(vm.w/2,vm.h/2);ctx.rotate(t*Math.PI);ctx.scale(1-t,1-t);ctx.translate(-vm.w/2,-vm.h/2);drawCover(ctx,fromSrc,vm.w,vm.h);ctx.restore();ctx.save();ctx.globalAlpha=t;ctx.translate(vm.w/2,vm.h/2);ctx.rotate((1-t)*-Math.PI);ctx.scale(t,t);ctx.translate(-vm.w/2,-vm.h/2);applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.restore();ctx.globalAlpha=1;break;
+                case 'blur': ctx.save();ctx.filter='blur('+Math.round((1-t)*20)+'px)';ctx.globalAlpha=1-t;drawCover(ctx,fromSrc,vm.w,vm.h);ctx.restore();ctx.save();ctx.filter='blur('+Math.round(t<0.5?(0.5-t)*20:0)+'px)';ctx.globalAlpha=t;applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.restore();ctx.globalAlpha=1;break;
+                case 'crossZoom': ctx.save();ctx.globalAlpha=1-t;var cz=1+t*0.5;ctx.translate(vm.w/2,vm.h/2);ctx.scale(cz,cz);ctx.translate(-vm.w/2,-vm.h/2);drawCover(ctx,fromSrc,vm.w,vm.h);ctx.restore();ctx.save();ctx.globalAlpha=t;var cz2=1.5-t*0.5;ctx.translate(vm.w/2,vm.h/2);ctx.scale(cz2,cz2);ctx.translate(-vm.w/2,-vm.h/2);applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.restore();ctx.globalAlpha=1;break;
+                case 'split': var hw=vm.w/2;drawCover(ctx,fromSrc,vm.w,vm.h);ctx.save();ctx.beginPath();ctx.rect(0,0,hw*(1-t),vm.h);ctx.rect(hw+hw*t,0,hw*(1-t),vm.h);ctx.clip();drawCover(ctx,fromSrc,vm.w,vm.h);ctx.restore();ctx.save();ctx.beginPath();ctx.rect(hw*(1-t),0,vm.w*t,vm.h);ctx.clip();applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';ctx.restore();break;
                 default: applyAdj(ctx,toAdj);drawCover(ctx,toSrc,vm.w,vm.h);ctx.filter='none';break;
             }
             if(t<1)requestAnimationFrame(frame);else resolve();
@@ -1355,7 +1472,8 @@ window.vePlay = async function() {
     for(let i=0;i<vm.clips.length;i++){
         if(vm.cancel)break;
         vm.ci=i;vm.oi=-1;
-        const c=vm.clips[i],dur=c.duration*1000,transMs=800;
+        const c=vm.clips[i],dur=clipEffDur(c)*1000,transMs=800;
+        if(c.type==='video'&&c.video) c.video.playbackRate=c.speed||1;
         if(i>0&&c.transition!=='none'){
             const prevSrc=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;
             await animateTransition(prevSrc,c,c.transition,transMs);
@@ -1389,7 +1507,7 @@ window.veExport = async function() {
     const expBtn=document.getElementById('veExportBtn'),dlBtn=document.getElementById('veDlBtn');
     if(prog)prog.style.display='block';if(dlBtn)dlBtn.style.display='none';
     if(expBtn){expBtn.disabled=true;expBtn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...';}
-    const fps=30; let totalMs=0; vm.clips.forEach(c=>totalMs+=c.duration*1000);
+    const fps=30; let totalMs=0; vm.clips.forEach(c=>totalMs+=clipEffDur(c)*1000);
     const canvasStream=vm.canvas.captureStream(fps);
     // 오디오 스트림: Supabase 음원 또는 내장 음악
     let audioResult=null;
@@ -1406,7 +1524,8 @@ window.veExport = async function() {
     await sleep(200); // warmup: let recorder capture the pre-rendered frame
     for(let i=0;i<vm.clips.length;i++){
         const pct=Math.round(i/vm.clips.length*100);if(progBar)progBar.style.width=pct+'%';if(progText)progText.textContent=`${i+1}/${vm.clips.length}`;
-        const c=vm.clips[i],dur=c.duration*1000;
+        const c=vm.clips[i],dur=clipEffDur(c)*1000;
+        if(c.type==='video'&&c.video) c.video.playbackRate=c.speed||1;
         if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);c.overlays.forEach(o=>renderOverlay(vm.ctx,o));await sleep(dur-800);}
         else{renderClip(i,vm.ctx,false);await sleep(i===0?dur-200:dur);} // first clip accounts for warmup time
     }
