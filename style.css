@@ -1397,7 +1397,7 @@ button, input, textarea, select { font-family: inherit; }
 #catProductGrid .quick-text {
     font-size: 15px !important;
     font-weight: 700 !important;
-    color: #fff;
+    color: #1e293b !important;
     margin-bottom: 8px !important;
     line-height: 1.4 !important;
     
@@ -2770,7 +2770,7 @@ body {
 .quick-text {
     font-size: 13px;
     font-weight: 600;
-    color: #fff;
+    color: #1e293b;
     text-align: center;
     line-height: 1.3;
     letter-spacing: -0.3px;
@@ -2866,19 +2866,19 @@ body {
     /* 5. 텍스트 스타일: 이미지가 커진 만큼 글씨도 조정 */
     /* 상품명 텍스트 색상 및 레이아웃 강제 수정 */
     .quick-item .quick-text {
-        font-size: 14px !important;   /* 너무 크면 잘리므로 14px 권장 */
+        font-size: 14px !important;
         font-weight: 700 !important;
         margin-top: 8px !important;
-        color: #fff !important;
-        display: block !important;    /* 숨김 방지 */
+        color: #1e293b !important;
+        display: block !important;
         text-align: center !important;
         line-height: 1.3 !important;
         white-space: normal !important;
-        height: auto !important;      /* 높이 제한 해제 */
+        height: auto !important;
     }
 
     .long-text-mode .quick-text {
-        color: #fff !important;
+        color: #1e293b !important;
         font-size: 13px !important;
     }
     
