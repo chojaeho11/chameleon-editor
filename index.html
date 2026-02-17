@@ -429,13 +429,55 @@
     <p class="hero-desc" data-i18n="hero_desc">캔바보다 쉽다. 캔바보다 저렴하다. 캔바보다 강력한 편집툴 카프</p>
 </div>
 
-    <!-- 디자인 시작 패널 (인라인) -->
-    <div id="dsmInlinePanel" style="max-width:1200px; margin:0 auto 30px auto; background:#fff; border-radius:16px; padding:25px 30px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.06);">
-        <!-- 온라인/디지털 -->
-        <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#6366f1; display:flex; align-items:center; gap:6px;">
+<!-- 퀵메뉴와퍼 (통합) -->
+<div class="quick-menu-wrapper">
+
+    <img src="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png" class="bouncing-char" alt="캐릭터">
+
+    <!-- 무료 디자인 시작 버튼 (최상단) -->
+    <style>
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        #btnDesignStart {
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #6366f1);
+            background-size: 300% 300%;
+            animation: gradientShift 4s ease infinite;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.45);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #btnDesignStart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(99,102,241,0.55);
+        }
+    </style>
+    <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px;">
+        <button id="btnDesignStart">
+            <i class="fa-solid fa-palette"></i> <span data-i18n="dsm_btn_start">무료 디자인 시작하기</span>
+        </button>
+    </div>
+
+    <!-- 카프와 함께 멋진 작품을 만들어봐요 -->
+    <div class="quick-title-box">
+        <span class="qt-badge" data-i18n="home_quick_badge">세상에 인쇄가 필요한 모든것을 가장 저렴하고 퀄리티 높게 제작합니다.</span>
+        <h2 class="qt-text" data-i18n="home_quick_title">카프와 함께 멋진 작품을 만들어봐요.</h2>
+    </div>
+
+    <!-- 온라인/디지털 카드 -->
+    <div id="dsmInlinePanel" style="max-width:1100px; margin:0 auto 15px auto; padding:0 10px;">
+        <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
             <i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span>
         </h4>
-        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:20px;">
+        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:16px;">
             <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '파워포인트')" style="border:2px solid #d97706;">
                 <div class="dsm-icon" style="color:#d97706;"><i class="fa-solid fa-file-powerpoint"></i></div>
                 <div class="dsm-name" data-i18n="dsm_ppt">파워포인트</div>
@@ -468,11 +510,11 @@
             </div>
         </div>
 
-        <!-- 인쇄물 -->
-        <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#f59e0b; display:flex; align-items:center; gap:6px;">
+        <!-- 인쇄물 카드 -->
+        <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#fbbf24; display:flex; align-items:center; gap:6px;">
             <i class="fa-solid fa-print"></i> <span data-i18n="dsm_print">인쇄물</span>
         </h4>
-        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:18px;">
+        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:16px;">
             <div class="dsm-card" onclick="window.dsmOpenPrintInline(210, 297, 'A4')">
                 <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
                 <div class="dsm-name">A4</div>
@@ -505,33 +547,22 @@
             </div>
         </div>
 
-        <!-- 직접 입력 -->
-        <div style="padding-top:15px; border-top:1px solid #f1f5f9;">
-            <span style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:10px;" data-i18n="dsm_custom_input"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <input type="number" id="dsmCustomW2" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
-                <span style="color:#cbd5e1;">×</span>
-                <input type="number" id="dsmCustomH2" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
-                <button onclick="window.dsmOpenCustomInline()" style="padding:10px 20px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
-            </div>
+        <!-- 직접 입력 (가운데 정렬) -->
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; padding-top:12px; border-top:1px solid rgba(255,255,255,0.15);">
+            <span style="font-size:13px; color:#e2e8f0; font-weight:600;" data-i18n="dsm_custom_input"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
+            <input type="number" id="dsmCustomW2" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:75px; padding:8px 10px; border:1px solid rgba(255,255,255,0.3); border-radius:50px; font-size:13px; text-align:center; background:rgba(255,255,255,0.15); color:#fff;">
+            <span style="color:rgba(255,255,255,0.5);">×</span>
+            <input type="number" id="dsmCustomH2" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:75px; padding:8px 10px; border:1px solid rgba(255,255,255,0.3); border-radius:50px; font-size:13px; text-align:center; background:rgba(255,255,255,0.15); color:#fff;">
+            <button onclick="window.dsmOpenCustomInline()" style="padding:8px 20px; background:#fff; color:#6366f1; border:none; border-radius:50px; font-size:13px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
         </div>
     </div>
     <script>
-    // 인라인 패널의 직접 입력
     window.dsmOpenCustomInline = function() {
         var w = parseInt(document.getElementById('dsmCustomW2').value);
         var h = parseInt(document.getElementById('dsmCustomH2').value);
         if (!w || !h || w < 10 || h < 10) return alert('가로/세로 크기를 입력해주세요 (최소 10mm)');
         if (window.startEditorDirect) window.startEditorDirect('custom', w, h);
     };
-    // "무료 디자인 시작하기" 버튼 → 인라인 패널로 스크롤
-    document.addEventListener('DOMContentLoaded', function() {
-        var btn = document.getElementById('btnDesignStart');
-        if(btn) btn.addEventListener('click', function() {
-            document.getElementById('dsmInlinePanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-    });
-    // 인쇄물 카테고리 클릭 → 모달 열기 (인라인에서 호출)
     window.dsmOpenPrintInline = function(w, h, label) {
         var m = document.getElementById('designStartModal');
         if (m) m.style.display = 'flex';
@@ -541,30 +572,21 @@
     };
     </script>
 
-<!-- 퀵메뉴와퍼 -->
-<div class="quick-menu-wrapper">
-    
-    <img src="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png" class="bouncing-char" alt="캐릭터">
-    
-    
-    <div class="quick-title-box">
-        <span class="qt-badge" data-i18n="home_quick_badge">세상에 인쇄가 필요한 모든것을 가장 저렴하고 퀄리티 높게 제작합니다.</span>
-        <h2 class="qt-text" data-i18n="home_quick_title">카프와 함께 멋진 작품을 만들어봐요.</h2>
-    </div>
+    <!-- 기본 대분류 ~ 도매라운지 카테고리 -->
     <div id="topCategoryTabs" class="category-tabs"></div>
 
     <div id="categoryDescriptionBox" style="
         max-width: 1000px;
-        margin: 10px auto 30px auto; 
-        padding: 20px; 
-        background: #f8fafc; 
-        border-radius: 12px; 
-        text-align: center; 
-        font-size: 15px; 
-        color: #475569; 
+        margin: 10px auto 20px auto;
+        padding: 20px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        text-align: center;
+        font-size: 15px;
+        color: #e2e8f0;
         line-height: 1.6;
-        display: none; 
-        border: 1px solid #e2e8f0;
+        display: none;
+        border: 1px solid rgba(255,255,255,0.15);
         word-break: keep-all;
     ">
     </div>
@@ -620,44 +642,11 @@
     </div>
 </div>
 
-    
     <div class="quick-menu-track" id="quickMenuContainer"></div>
 
-    <!-- 무료 디자인 시작 버튼 -->
-    <style>
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        #btnDesignStart {
-            padding: 16px 48px;
-            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #6366f1);
-            background-size: 300% 300%;
-            animation: gradientShift 4s ease infinite;
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-size: 17px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(99,102,241,0.45);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        #btnDesignStart:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 25px rgba(99,102,241,0.55);
-        }
-    </style>
-    <div style="text-align:center; margin: -5px auto 10px auto; max-width:1000px;">
-        <button id="btnDesignStart">
-            <i class="fa-solid fa-palette"></i> <span data-i18n="dsm_btn_start">무료 디자인 시작하기</span>
-        </button>
-    </div>
-
-    <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
-        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">대량주문 전용 VIP 라운지</h3>
-        <p style="margin: 0 0 20px 0; color: #64748b; font-size: 15px;" data-i18n="home_vip_desc">
+    <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: rgba(255,255,255,0.08); border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.15);">
+        <h3 style="margin: 0 0 15px 0; color: #fff; font-size: 20px;" data-i18n="home_vip_title">대량주문 전용 VIP 라운지</h3>
+        <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 15px;" data-i18n="home_vip_desc">
             팝업스토어나 전시장 꾸미기 같이 대량이거나 복잡한 주문인가요? 골드 등급이상의 VIP고객이신가요?<br>
             파일만 올려주시면 <strong>전담 매니저</strong>가 분석 후 견적서와 함께 30분 이내에 연락드립니다.<br>
             매니저의 가이드에 따라 결제만 하시면 디자인/파일변환/접수/배송/설치까지 논스톱으로 도와드립니다.
@@ -7581,41 +7570,72 @@ window.filterModalItems = function(keyword) {
 
 <style>
 .dsm-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px 8px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50px;
+    padding: 14px 8px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
 }
 .dsm-card:hover {
-    border-color: #6366f1;
-    background: #eef2ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99,102,241,0.15);
+    border-color: #fbbf24;
+    background: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.25);
 }
-.dsm-icon { font-size: 28px; color: #6366f1; margin-bottom: 8px; }
-.dsm-name { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 3px; }
+.dsm-icon { font-size: 26px; color: #6366f1; margin-bottom: 6px; }
+.dsm-name { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 2px; }
 .dsm-size { font-size: 10px; color: #94a3b8; }
 .dsm-cat-btn {
-    padding: 6px 14px;
-    border: 1px solid #e2e8f0;
-    border-radius: 20px;
-    background: #fff;
+    padding: 8px 18px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50px;
+    background: rgba(255,255,255,0.15);
     font-size: 13px;
     font-weight: 600;
-    color: #64748b;
+    color: #e2e8f0;
     cursor: pointer;
     transition: all 0.15s;
 }
-.dsm-cat-btn:hover { border-color: #6366f1; color: #6366f1; }
-.dsm-cat-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+.dsm-cat-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.25); }
+.dsm-cat-btn.active { background: #fff; color: #6366f1; border-color: #fff; }
+/* 보라색 박스 안 카테고리 탭 오버라이드 */
+.quick-menu-wrapper .cat-tab {
+    background: rgba(255,255,255,0.12) !important;
+    border-color: rgba(255,255,255,0.25) !important;
+    color: #e2e8f0 !important;
+    border-radius: 50px !important;
+}
+.quick-menu-wrapper .cat-tab:hover {
+    background: rgba(255,255,255,0.25) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.4) !important;
+}
+.quick-menu-wrapper .cat-tab.active {
+    background: #fff !important;
+    color: #6366f1 !important;
+    border-color: #fff !important;
+    box-shadow: 0 4px 12px rgba(255,255,255,0.2) !important;
+}
+/* 보라색 박스 안 상품 아이콘 오버라이드 */
+.quick-menu-wrapper .quick-item {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.15);
+    border-radius: 50px;
+}
+.quick-menu-wrapper .quick-item:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.3);
+}
+.quick-menu-wrapper .quick-text {
+    color: #e2e8f0;
+}
 @media (max-width: 768px) {
-    .dsm-card { padding: 12px 5px; }
-    .dsm-icon { font-size: 22px; margin-bottom: 5px; }
-    .dsm-name { font-size: 11px; }
-    .dsm-size { font-size: 9px; }
+    .dsm-card { padding: 10px 5px; border-radius: 30px; }
+    .dsm-icon { font-size: 20px; margin-bottom: 4px; }
+    .dsm-name { font-size: 10px; }
+    .dsm-size { font-size: 8px; }
     #designStartModal .modal-box { width: 100%; max-width: 100%; border-radius: 12px 12px 0 0; }
     #dsm-main-view > div > div[style*="grid-template-columns:repeat(6"] { grid-template-columns: repeat(3, 1fr) !important; }
     #dsmInlinePanel div[style*="grid-template-columns:repeat(6"] { grid-template-columns: repeat(3, 1fr) !important; }
