@@ -139,6 +139,7 @@ async function createAudioFileStream(audioUrl) {
         const dest = ctx.createMediaStreamDestination();
         const source = ctx.createBufferSource();
         source.buffer = audioBuf;
+        source.loop = true;
         const gain = ctx.createGain(); gain.gain.value = 0.5;
         source.connect(gain).connect(dest);
         source.start(0);
@@ -1350,7 +1351,7 @@ window.vePlay = async function() {
     vm.playing=true;vm.paused=false;vm.cancel=false;vm.playTime=0;
     const btn=document.getElementById('vePlayBtn');
     if(btn)btn.innerHTML='<i class="fa-solid fa-stop"></i>';
-    if(vm.audioUrl){const a=new Audio(vm.audioUrl);a.volume=0.5;a.play().catch(()=>{});vm.audioEl=a;}else{playMusicPreview(vm.music);}
+    if(vm.audioUrl){const a=new Audio(vm.audioUrl);a.volume=0.5;a.loop=true;a.play().catch(()=>{});vm.audioEl=a;}else{playMusicPreview(vm.music);}
     for(let i=0;i<vm.clips.length;i++){
         if(vm.cancel)break;
         vm.ci=i;vm.oi=-1;
