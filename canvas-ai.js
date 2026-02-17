@@ -396,26 +396,29 @@ async function runDesignWizard(title, style) {
     const S = WIZARD_STYLES[style] || WIZARD_STYLES.modern;
     const steps = _wzSteps();
 
+    // ★ 기존 오브젝트 모두 삭제 (보드, 고정 오버레이 제외)
+    canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
+
     // Resolve font by country
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
     const fontMap = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
     const titleFont = fontMap[country] || S.titleFont;
     const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
 
-    // Preload Google Fonts (title + description)
-    const fontsToLoad = [titleFont, descFont];
-    fontsToLoad.forEach(f => {
+    // Preload Google Fonts
+    [titleFont, descFont].forEach(f => {
         const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f) + ':wght@400;700;900&display=swap';
         if (!document.querySelector(`link[href="${fUrl}"]`)) {
             const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
         }
     });
-    await new Promise(r => setTimeout(r, 500)); // font load grace
+    await new Promise(r => setTimeout(r, 500));
 
-    // Extract keywords from title for search
     const keywords = _wzExtractKeywords(title);
 
-    // ─── Step 1: Background ───
+    // ─── Step 1: Background (template 방식) ───
     _wzRender(steps, 0);
     await _wzBg(keywords, bW, bH, bL, bT);
 
@@ -423,15 +426,16 @@ async function runDesignWizard(title, style) {
     _wzRender(steps, 1);
     _wzTitle(title, titleFont, S, bW, bH, bL, bT);
 
-    // ─── Step 3: Description ───
+    // ─── Step 3: Description (하단 박스 안에 삽입) ───
     _wzRender(steps, 2);
-    await _wzDesc(title, S, descFont, bW, bH, bL, bT);
+    const descText = await _wzGetDescText(title);
+    _wzBottomBox(descText, S, descFont, bW, bH, bL, bT);
 
-    // ─── Step 4: Elements ───
+    // ─── Step 4: Elements (제목 위에 배치) ───
     _wzRender(steps, 3);
     await _wzElem(keywords, bW, bH, bL, bT);
 
-    // ─── Step 5: Shapes ───
+    // ─── Step 5: Shapes (악센트 라인) ───
     _wzRender(steps, 4);
     _wzShapes(S, bW, bH, bL, bT);
 
@@ -444,58 +448,63 @@ async function runDesignWizard(title, style) {
     canvas.requestRenderAll();
 }
 
-// ─── Step 1: Background from library (keywords search, full quality) ───
+// ─── Step 1: Background (processLoad 방식으로 고해상도 로딩) ───
 async function _wzBg(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
-    // Search with each keyword until we find a match
-    let data = null;
+    // 1. 키워드로 템플릿 검색 (ID만)
+    let foundId = null;
     for (const kw of keywords) {
         const res = await sb.from('library')
-            .select('id, thumb_url, data_url, category')
+            .select('id')
             .in('category', ['user_image','photo-bg'])
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
             .limit(1);
-        if (res.data && res.data.length) { data = res.data; break; }
+        if (res.data && res.data.length) { foundId = res.data[0].id; break; }
     }
-
-    if (!data || !data.length) {
-        // fallback: latest background
+    if (!foundId) {
         const r2 = await sb.from('library')
-            .select('id, thumb_url, data_url')
+            .select('id')
             .in('category', ['user_image','photo-bg','pattern'])
             .eq('status','approved')
             .order('created_at', { ascending: false })
             .limit(1);
-        data = r2.data;
+        if (r2.data && r2.data.length) foundId = r2.data[0].id;
     }
-    if (!data || !data.length) return;
+    if (!foundId) return;
 
-    // Prefer high-res data_url over thumb_url
-    let imgUrl = null;
-    const raw = data[0].data_url;
-    if (raw) {
-        if (typeof raw === 'string' && raw.startsWith('http')) {
-            imgUrl = raw;
-        } else if (typeof raw === 'string') {
-            // Might be JSON-encoded URL string
-            try { const parsed = JSON.parse(raw); if (typeof parsed === 'string' && parsed.startsWith('http')) imgUrl = parsed; } catch(e) {}
-        }
+    // 2. data_url 별도 조회 (processLoad와 동일한 방식)
+    const { data: fullData } = await sb.from('library')
+        .select('data_url, width, height, category')
+        .eq('id', foundId)
+        .single();
+    if (!fullData || !fullData.data_url) return;
+
+    // 3. data_url 파싱 (processLoad 로직 그대로)
+    let rawData = fullData.data_url;
+    let imageUrl = '';
+    try {
+        if (typeof rawData === 'object') return; // JSON 템플릿은 스킵
+        const parsed = JSON.parse(rawData);
+        if (typeof parsed === 'string') imageUrl = parsed;
+        else return; // JSON 오브젝트 템플릿은 스킵
+    } catch(e) {
+        imageUrl = rawData; // 파싱 실패 = 이미지 URL
     }
-    if (!imgUrl) imgUrl = data[0].thumb_url;
-    if (!imgUrl) return;
+    if (!imageUrl) return;
+
+    const cleanUrl = String(imageUrl).trim().replace(/^"|"$/g, '');
 
     return new Promise(resolve => {
-        fabric.Image.fromURL(imgUrl, img => {
+        fabric.Image.fromURL(cleanUrl, img => {
             if (!img) { resolve(); return; }
-            const scale = Math.max(bW/img.width, bH/img.height);
+            const scale = Math.max(bW / img.width, bH / img.height);
             img.set({
                 scaleX: scale, scaleY: scale,
                 left: bL + bW/2, top: bT + bH/2,
                 originX:'center', originY:'center',
-                isTemplateBackground: true,
                 selectable: true, evented: true,
                 opacity: 1.0
             });
@@ -508,28 +517,43 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     });
 }
 
-// ─── Step 2: Title text ───
+// ─── Step 2: Title text (자간 축소, 10자 이상은 2줄) ───
 function _wzTitle(title, font, S, bW, bH, bL, bT) {
+    // 10글자 이상이면 자연스러운 위치에서 줄바꿈
+    let displayTitle = title;
+    if (title.length > 10) {
+        // 공백이 있으면 중간 공백에서 줄바꿈
+        const spaceIdx = title.indexOf(' ', Math.floor(title.length * 0.35));
+        if (spaceIdx > 0 && spaceIdx < title.length * 0.75) {
+            displayTitle = title.substring(0, spaceIdx) + '\n' + title.substring(spaceIdx + 1);
+        } else {
+            // 공백 없으면 중간에서 강제 줄바꿈
+            const mid = Math.ceil(title.length / 2);
+            displayTitle = title.substring(0, mid) + '\n' + title.substring(mid);
+        }
+    }
+
     const sz = Math.round(bW * 0.09);
-    const obj = new fabric.IText(title, {
+    const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
         fill: S.titleColor, originX:'center', originY:'center',
         textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.30,
+        left: bL + bW/2, top: bT + bH * 0.42,
+        width: bW * 0.85,
+        lineHeight: 1.15,
         shadow: new fabric.Shadow({ color:'rgba(0,0,0,0.15)', blur:8, offsetX:2, offsetY:2 }),
-        charSpacing: 80
+        charSpacing: -10
     });
     // auto-shrink if too wide
-    if (obj.width > bW * 0.8) obj.set('fontSize', Math.round(sz * (bW*0.8) / obj.width));
+    if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
 }
 
-// ─── Step 3: AI description (edge fn → fallback, longer text) ───
-async function _wzDesc(title, S, descFont, bW, bH, bL, bT) {
+// ─── Step 3a: AI 설명 텍스트 생성 (텍스트만 반환) ───
+async function _wzGetDescText(title) {
     let text = '';
     const c = window.SITE_CONFIG?.COUNTRY || 'KR';
-
     try {
         const langPrompts = {
             KR: `"${title}" 관련 홍보/소개 문구를 3~4줄(200자 이내)로 작성해주세요. 감성적이고 전문적인 느낌으로. 텍스트만 반환.`,
@@ -545,30 +569,49 @@ async function _wzDesc(title, S, descFont, bW, bH, bL, bT) {
     if (!text || text.length < 10) {
         const fb = {
             KR: [
-                `${title}\n\n특별한 순간을 위한 최고의 선택.\n감각적인 디자인과 프리미엄 퀄리티로\n당신의 소중한 순간을 더욱 빛나게 만들어 드립니다.\n지금 바로 경험해 보세요.`,
-                `${title}\n\n당신만을 위한 특별한 공간.\n세심한 서비스와 따뜻한 감성이 어우러진\n잊을 수 없는 경험을 선사합니다.\n새로운 시작을 함께하세요.`
+                `특별한 순간을 위한 최고의 선택.\n감각적인 디자인과 프리미엄 퀄리티로\n당신의 소중한 순간을 더욱 빛나게 만들어 드립니다.\n지금 바로 경험해 보세요.`,
+                `당신만을 위한 특별한 공간.\n세심한 서비스와 따뜻한 감성이 어우러진\n잊을 수 없는 경험을 선사합니다.\n새로운 시작을 함께하세요.`
             ],
             JP: [
-                `${title}\n\n特別な瞬間のための最高の選択。\n感性的なデザインとプレミアムクオリティで\nあなたの大切な瞬間をより輝かせます。\n今すぐ体験してください。`,
-                `${title}\n\nあなただけの特別な空間。\n細やかなサービスと温かい感性が調和した\n忘れられない体験をお届けします。\n新しい始まりを一緒に。`
+                `特別な瞬間のための最高の選択。\n感性的なデザインとプレミアムクオリティで\nあなたの大切な瞬間をより輝かせます。\n今すぐ体験してください。`,
+                `あなただけの特別な空間。\n細やかなサービスと温かい感性が調和した\n忘れられない体験をお届けします。\n新しい始まりを一緒に。`
             ],
             US: [
-                `${title}\n\nThe perfect choice for your special moment.\nElevated design meets premium quality\nto make your precious occasions truly shine.\nExperience it today.`,
-                `${title}\n\nA space crafted just for you.\nWhere meticulous service meets warm ambiance\nfor an unforgettable experience.\nStart your new journey with us.`
+                `The perfect choice for your special moment.\nElevated design meets premium quality\nto make your precious occasions truly shine.\nExperience it today.`,
+                `A space crafted just for you.\nWhere meticulous service meets warm ambiance\nfor an unforgettable experience.\nStart your new journey with us.`
             ]
         };
         const list = fb[c] || fb['US'];
         text = list[Math.floor(Math.random() * list.length)];
     }
+    return text;
+}
 
-    const obj = new fabric.Textbox(text, {
-        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.026),
-        fontWeight:'400', fill: S.subColor,
+// ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
+function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
+    const boxH = bH * 0.22;
+    const boxY = bT + bH * 0.88;
+
+    // 불투명 박스 (라운드값 줄임)
+    const rect = new fabric.Rect({
+        width: bW * 0.88, height: boxH,
+        rx: 10, ry: 10,
+        fill: '#ffffff', stroke: S.rectStroke, strokeWidth: 1.5,
+        opacity: 0.92,
+        left: bL + bW/2, top: boxY,
+        originX:'center', originY:'center'
+    });
+    canvas.add(rect);
+    canvas.bringToFront(rect);
+
+    // 박스 안 설명 텍스트
+    const obj = new fabric.Textbox(descText, {
+        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.022),
+        fontWeight:'400', fill: '#334155',
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.50,
-        width: bW * 0.75,
-        lineHeight: 1.6,
-        charSpacing: 20
+        left: bL + bW/2, top: boxY,
+        width: bW * 0.80,
+        lineHeight: 1.5
     });
     canvas.add(obj);
     canvas.bringToFront(obj);
@@ -591,11 +634,11 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     if (!data || !data.length) return;
 
-    // 3 positions: top-left, bottom-right, bottom-left
+    // 3 positions: 제목 위쪽 영역 (상단 15~30%)
     const positions = [
-        { left: bL + bW * 0.15, top: bT + bH * 0.15, size: bW / 5 },
-        { left: bL + bW * 0.82, top: bT + bH * 0.72, size: bW / 4 },
-        { left: bL + bW * 0.18, top: bT + bH * 0.78, size: bW / 5.5 }
+        { left: bL + bW * 0.20, top: bT + bH * 0.15, size: bW / 5.5 },
+        { left: bL + bW * 0.50, top: bT + bH * 0.12, size: bW / 5 },
+        { left: bL + bW * 0.80, top: bT + bH * 0.16, size: bW / 5.5 }
     ];
 
     const promises = data.slice(0, 3).map((item, i) => new Promise(resolve => {
@@ -618,46 +661,35 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     await Promise.all(promises);
 }
 
-// ─── Step 5: Decorative shapes + bottom box ───
+// ─── Step 5: Decorative shapes (악센트 라인) ───
 function _wzShapes(S, bW, bH, bL, bT) {
-    // 상단 악센트 라인 (제목 위)
+    // 제목 위 악센트 라인
     const line = new fabric.Rect({
         width: bW * 0.10, height: 4, rx:2, ry:2,
         fill: S.accent,
-        left: bL + bW/2, top: bT + bH * 0.22,
+        left: bL + bW/2, top: bT + bH * 0.34,
         originX:'center', originY:'center'
     });
     canvas.add(line);
     canvas.bringToFront(line);
 
-    // 하단 라운드 박스
-    const rect = new fabric.Rect({
-        width: bW * 0.85, height: bH * 0.14,
-        rx: 20, ry: 20,
-        fill: S.rectFill, stroke: S.rectStroke, strokeWidth: 2,
-        left: bL + bW/2, top: bT + bH * 0.90,
+    // 제목 아래 서브 라인
+    const line2 = new fabric.Rect({
+        width: bW * 0.06, height: 3, rx:2, ry:2,
+        fill: S.accent, opacity: 0.5,
+        left: bL + bW/2, top: bT + bH * 0.55,
         originX:'center', originY:'center'
     });
-    canvas.add(rect);
-    canvas.bringToFront(rect);
-
-    // 하단 박스 안 안내 텍스트
-    const hint = new fabric.IText(window.t?.('wizard_content_hint','내용을 입력하세요') || '내용을 입력하세요', {
-        fontFamily:'Noto Sans KR, sans-serif', fontSize: Math.round(bW * 0.022),
-        fill: S.subColor, opacity: 0.5,
-        originX:'center', originY:'center',
-        left: bL + bW/2, top: bT + bH * 0.90
-    });
-    canvas.add(hint);
-    canvas.bringToFront(hint);
+    canvas.add(line2);
+    canvas.bringToFront(line2);
 }
 
 // ─── Step 6: Stickers (keyword search → emoji fallback) ───
 async function _wzSticker(keywords, bW, bH, bL, bT) {
     const positions = [
-        { left: bL + bW * 0.10, top: bT + bH * 0.10 },
-        { left: bL + bW * 0.90, top: bT + bH * 0.13 },
-        { left: bL + bW * 0.12, top: bT + bH * 0.82 }
+        { left: bL + bW * 0.08, top: bT + bH * 0.38 },
+        { left: bL + bW * 0.92, top: bT + bH * 0.45 },
+        { left: bL + bW * 0.10, top: bT + bH * 0.62 }
     ];
 
     // Try searching library for stickers matching keywords
