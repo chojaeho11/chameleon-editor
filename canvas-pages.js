@@ -118,6 +118,14 @@ export function switchPage(direction) {
     loadPage(currentPageIndex);
 }
 
+// 직접 특정 페이지로 이동 (PPT 썸네일 클릭용)
+export function goToPage(index) {
+    if (index < 0 || index >= pageDataList.length || index === currentPageIndex) return;
+    saveCurrentPageState();
+    currentPageIndex = index;
+    loadPage(currentPageIndex);
+}
+
 export function deleteCurrentPage() {
     // [수정] 다국어 적용
     if (pageDataList.length <= 1) return alert(window.t('msg_min_page_limit', "At least one page is required."));
