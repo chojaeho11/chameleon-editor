@@ -353,11 +353,17 @@ export function initAiTools() {
 // [Design Wizard] Core logic
 // ============================================================
 const WIZARD_STYLES = {
-    modern:  { titleFont:'Black Han Sans', titleColor:'#1e293b', subColor:'#64748b', accent:'#6366f1', rectFill:'rgba(99,102,241,0.07)', rectStroke:'rgba(99,102,241,0.3)' },
-    elegant: { titleFont:'Playfair Display', titleColor:'#1a1a2e', subColor:'#4a4a6a', accent:'#d4af37', rectFill:'rgba(212,175,55,0.06)', rectStroke:'rgba(212,175,55,0.3)' },
-    playful: { titleFont:'Fredoka', titleColor:'#e11d48', subColor:'#64748b', accent:'#f43f5e', rectFill:'rgba(244,63,94,0.07)', rectStroke:'rgba(244,63,94,0.3)' },
-    minimal: { titleFont:'Inter', titleColor:'#111827', subColor:'#9ca3af', accent:'#374151', rectFill:'rgba(55,65,81,0.04)', rectStroke:'rgba(55,65,81,0.2)' }
+    modern:  { titleFont:'Gothic A1', titleWeight:'900', titleColor:'#1e293b', subColor:'#64748b', accent:'#6366f1', rectFill:'rgba(99,102,241,0.07)', rectStroke:'rgba(99,102,241,0.3)' },
+    elegant: { titleFont:'Noto Serif KR', titleWeight:'900', titleColor:'#1a1a2e', subColor:'#4a4a6a', accent:'#d4af37', rectFill:'rgba(212,175,55,0.06)', rectStroke:'rgba(212,175,55,0.3)' },
+    playful: { titleFont:'Jua', titleWeight:'400', titleColor:'#e11d48', subColor:'#64748b', accent:'#f43f5e', rectFill:'rgba(244,63,94,0.07)', rectStroke:'rgba(244,63,94,0.3)' },
+    minimal: { titleFont:'Noto Sans KR', titleWeight:'700', titleColor:'#111827', subColor:'#9ca3af', accent:'#374151', rectFill:'rgba(55,65,81,0.04)', rectStroke:'rgba(55,65,81,0.2)' }
 };
+
+// Extract meaningful keywords from title (split by spaces, filter short/common words)
+function _wzExtractKeywords(title) {
+    const words = title.replace(/[!@#$%^&*(),.?":{}|<>]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
+    return words.length > 0 ? words : [title];
+}
 
 function _wzSteps() {
     const t = (k,d) => window.t?.(k,d) || d;
@@ -394,17 +400,24 @@ async function runDesignWizard(title, style) {
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
     const fontMap = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
     const titleFont = fontMap[country] || S.titleFont;
+    const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
 
-    // Preload Google Font
-    const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(titleFont) + ':wght@400;700;900&display=swap';
-    if (!document.querySelector(`link[href="${fUrl}"]`)) {
-        const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
-    }
-    await new Promise(r => setTimeout(r, 300)); // font load grace
+    // Preload Google Fonts (title + description)
+    const fontsToLoad = [titleFont, descFont];
+    fontsToLoad.forEach(f => {
+        const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f) + ':wght@400;700;900&display=swap';
+        if (!document.querySelector(`link[href="${fUrl}"]`)) {
+            const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
+        }
+    });
+    await new Promise(r => setTimeout(r, 500)); // font load grace
+
+    // Extract keywords from title for search
+    const keywords = _wzExtractKeywords(title);
 
     // ─── Step 1: Background ───
     _wzRender(steps, 0);
-    await _wzBg(title, bW, bH, bL, bT);
+    await _wzBg(keywords, bW, bH, bL, bT);
 
     // ─── Step 2: Title ───
     _wzRender(steps, 1);
@@ -412,11 +425,11 @@ async function runDesignWizard(title, style) {
 
     // ─── Step 3: Description ───
     _wzRender(steps, 2);
-    await _wzDesc(title, S, bW, bH, bL, bT);
+    await _wzDesc(title, S, descFont, bW, bH, bL, bT);
 
     // ─── Step 4: Elements ───
     _wzRender(steps, 3);
-    await _wzElem(title, bW, bH, bL, bT);
+    await _wzElem(keywords, bW, bH, bL, bT);
 
     // ─── Step 5: Shapes ───
     _wzRender(steps, 4);
@@ -424,28 +437,34 @@ async function runDesignWizard(title, style) {
 
     // ─── Step 6: Stickers ───
     _wzRender(steps, 5);
-    await _wzSticker(title, bW, bH, bL, bT);
+    await _wzSticker(keywords, bW, bH, bL, bT);
 
     _wzRender(steps, 6);
     canvas.discardActiveObject();
     canvas.requestRenderAll();
 }
 
-// ─── Step 1: Background from library ───
-async function _wzBg(title, bW, bH, bL, bT) {
+// ─── Step 1: Background from library (keywords search, full quality) ───
+async function _wzBg(keywords, bW, bH, bL, bT) {
     if (!sb) return;
-    let { data } = await sb.from('library')
-        .select('id, thumb_url, data_url, category')
-        .in('category', ['user_image','photo-bg'])
-        .or(`tags.ilike.%${title}%,title.ilike.%${title}%`)
-        .eq('status','approved')
-        .order('created_at', { ascending: false })
-        .limit(1);
+
+    // Search with each keyword until we find a match
+    let data = null;
+    for (const kw of keywords) {
+        const res = await sb.from('library')
+            .select('id, thumb_url, data_url, category')
+            .in('category', ['user_image','photo-bg'])
+            .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
+            .eq('status','approved')
+            .order('created_at', { ascending: false })
+            .limit(1);
+        if (res.data && res.data.length) { data = res.data; break; }
+    }
 
     if (!data || !data.length) {
         // fallback: latest background
         const r2 = await sb.from('library')
-            .select('id, thumb_url')
+            .select('id, thumb_url, data_url')
             .in('category', ['user_image','photo-bg','pattern'])
             .eq('status','approved')
             .order('created_at', { ascending: false })
@@ -454,9 +473,10 @@ async function _wzBg(title, bW, bH, bL, bT) {
     }
     if (!data || !data.length) return;
 
-    let imgUrl = data[0].thumb_url;
-    if (data[0].data_url && typeof data[0].data_url === 'string' && data[0].data_url.startsWith('http')) {
-        imgUrl = data[0].data_url;
+    // Prefer high-res data_url over thumb_url
+    let imgUrl = data[0].data_url;
+    if (!imgUrl || typeof imgUrl !== 'string' || !imgUrl.startsWith('http')) {
+        imgUrl = data[0].thumb_url;
     }
     if (!imgUrl) return;
 
@@ -469,8 +489,8 @@ async function _wzBg(title, bW, bH, bL, bT) {
                 left: bL + bW/2, top: bT + bH/2,
                 originX:'center', originY:'center',
                 isTemplateBackground: true,
-                selectable: false, evented: false,
-                opacity: 0.25
+                selectable: true, evented: true,
+                opacity: 1.0
             });
             canvas.add(img);
             canvas.sendToBack(img);
@@ -483,13 +503,14 @@ async function _wzBg(title, bW, bH, bL, bT) {
 
 // ─── Step 2: Title text ───
 function _wzTitle(title, font, S, bW, bH, bL, bT) {
-    const sz = Math.round(bW * 0.08);
+    const sz = Math.round(bW * 0.09);
     const obj = new fabric.IText(title, {
-        fontFamily: font, fontSize: sz, fontWeight:'900',
+        fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
         fill: S.titleColor, originX:'center', originY:'center',
         textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.32,
-        shadow: new fabric.Shadow({ color:'rgba(255,255,255,0.8)', blur:12, offsetX:0, offsetY:0 })
+        left: bL + bW/2, top: bT + bH * 0.30,
+        shadow: new fabric.Shadow({ color:'rgba(0,0,0,0.15)', blur:8, offsetX:2, offsetY:2 }),
+        charSpacing: 80
     });
     // auto-shrink if too wide
     if (obj.width > bW * 0.8) obj.set('fontSize', Math.round(sz * (bW*0.8) / obj.width));
@@ -497,129 +518,172 @@ function _wzTitle(title, font, S, bW, bH, bL, bT) {
     canvas.bringToFront(obj);
 }
 
-// ─── Step 3: AI description (edge fn → fallback) ───
-async function _wzDesc(title, S, bW, bH, bL, bT) {
+// ─── Step 3: AI description (edge fn → fallback, longer text) ───
+async function _wzDesc(title, S, descFont, bW, bH, bL, bT) {
     let text = '';
+    const c = window.SITE_CONFIG?.COUNTRY || 'KR';
+
     try {
+        const langPrompts = {
+            KR: `"${title}" 관련 홍보/소개 문구를 3~4줄(200자 이내)로 작성해주세요. 감성적이고 전문적인 느낌으로. 텍스트만 반환.`,
+            JP: `「${title}」に関するプロモーション文を3〜4行（200文字以内）で書いてください。感性的でプロフェッショナルに。テキストのみ返してください。`,
+            US: `Write a 3-4 line promotional text about "${title}" (under 200 chars). Make it emotional and professional. Return text only.`
+        };
         const { data, error } = await sb.functions.invoke('generate-text', {
-            body: { prompt: `"${title}" 홍보 문구를 100자 이내로 작성. 텍스트만 반환.`, max_tokens: 80 }
+            body: { prompt: langPrompts[c] || langPrompts['US'], max_tokens: 200 }
         });
         if (!error && data) text = (typeof data === 'string' ? data : data.text || data.result || '').trim();
     } catch(e) { /* fallback */ }
 
-    if (!text || text.length < 5) {
-        const c = window.SITE_CONFIG?.COUNTRY || 'KR';
+    if (!text || text.length < 10) {
         const fb = {
-            KR: [`${title} - 특별한 경험을 선사합니다. 최고의 품질과 서비스로 고객님을 모십니다.`, `${title} | 지금 바로 만나보세요. 당신만을 위한 특별한 이벤트가 준비되어 있습니다.`],
-            JP: [`${title} - 特別な体験をお届けします。最高の品質とサービスでお待ちしております。`, `${title} | 今すぐチェック。あなただけの特別イベントをご用意しました。`],
-            US: [`${title} - Experience something special. Premium quality and service await you.`, `${title} | Check it out now. An exclusive event prepared just for you.`]
+            KR: [
+                `${title}\n\n특별한 순간을 위한 최고의 선택.\n감각적인 디자인과 프리미엄 퀄리티로\n당신의 소중한 순간을 더욱 빛나게 만들어 드립니다.\n지금 바로 경험해 보세요.`,
+                `${title}\n\n당신만을 위한 특별한 공간.\n세심한 서비스와 따뜻한 감성이 어우러진\n잊을 수 없는 경험을 선사합니다.\n새로운 시작을 함께하세요.`
+            ],
+            JP: [
+                `${title}\n\n特別な瞬間のための最高の選択。\n感性的なデザインとプレミアムクオリティで\nあなたの大切な瞬間をより輝かせます。\n今すぐ体験してください。`,
+                `${title}\n\nあなただけの特別な空間。\n細やかなサービスと温かい感性が調和した\n忘れられない体験をお届けします。\n新しい始まりを一緒に。`
+            ],
+            US: [
+                `${title}\n\nThe perfect choice for your special moment.\nElevated design meets premium quality\nto make your precious occasions truly shine.\nExperience it today.`,
+                `${title}\n\nA space crafted just for you.\nWhere meticulous service meets warm ambiance\nfor an unforgettable experience.\nStart your new journey with us.`
+            ]
         };
         const list = fb[c] || fb['US'];
         text = list[Math.floor(Math.random() * list.length)];
     }
-    if (text.length > 120) text = text.substring(0, 117) + '...';
 
-    const obj = new fabric.IText(text, {
-        fontFamily: 'Noto Sans KR, sans-serif', fontSize: Math.round(bW * 0.025),
+    const obj = new fabric.Textbox(text, {
+        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.026),
         fontWeight:'400', fill: S.subColor,
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.44
+        left: bL + bW/2, top: bT + bH * 0.50,
+        width: bW * 0.75,
+        lineHeight: 1.6,
+        charSpacing: 20
     });
-    // wrap: limit width
-    if (obj.width > bW * 0.75) obj.set('fontSize', Math.round(obj.fontSize * (bW*0.75) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
 }
 
-// ─── Step 4: Related element ───
-async function _wzElem(title, bW, bH, bL, bT) {
+// ─── Step 4: Related element (keyword search) ───
+async function _wzElem(keywords, bW, bH, bL, bT) {
     if (!sb) return;
-    const { data } = await sb.from('library')
-        .select('id, thumb_url')
-        .in('category', ['vector','graphic','transparent-graphic'])
-        .or(`tags.ilike.%${title}%,title.ilike.%${title}%`)
-        .eq('status','approved')
-        .order('created_at', { ascending: false })
-        .limit(1);
+
+    let data = null;
+    for (const kw of keywords) {
+        const res = await sb.from('library')
+            .select('id, thumb_url')
+            .in('category', ['vector','graphic','transparent-graphic'])
+            .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
+            .eq('status','approved')
+            .order('created_at', { ascending: false })
+            .limit(2);
+        if (res.data && res.data.length) { data = res.data; break; }
+    }
     if (!data || !data.length) return;
 
+    // Place first element at bottom-right
     return new Promise(resolve => {
         fabric.Image.fromURL(data[0].thumb_url, img => {
             if (!img) { resolve(); return; }
-            const target = bW / 3;
+            const target = bW / 3.5;
             const scale = target / Math.max(img.width, img.height);
             img.set({
                 scaleX: scale, scaleY: scale,
-                left: bL + bW * 0.78, top: bT + bH * 0.70,
+                left: bL + bW * 0.80, top: bT + bH * 0.72,
                 originX:'center', originY:'center'
             });
             canvas.add(img);
             canvas.bringToFront(img);
-            resolve();
+
+            // Place second element at top-left if available
+            if (data.length > 1) {
+                fabric.Image.fromURL(data[1].thumb_url, img2 => {
+                    if (!img2) { resolve(); return; }
+                    const target2 = bW / 5;
+                    const scale2 = target2 / Math.max(img2.width, img2.height);
+                    img2.set({
+                        scaleX: scale2, scaleY: scale2,
+                        left: bL + bW * 0.15, top: bT + bH * 0.18,
+                        originX:'center', originY:'center'
+                    });
+                    canvas.add(img2);
+                    canvas.bringToFront(img2);
+                    resolve();
+                }, { crossOrigin:'anonymous' });
+            } else {
+                resolve();
+            }
         }, { crossOrigin:'anonymous' });
     });
 }
 
-// ─── Step 5: Rounded rect + accent line ───
+// ─── Step 5: Decorative shapes ───
 function _wzShapes(S, bW, bH, bL, bT) {
-    // 하단 라운드 박스
-    const rect = new fabric.Rect({
-        width: bW * 0.85, height: bH * 0.16,
-        rx: 20, ry: 20,
-        fill: S.rectFill, stroke: S.rectStroke, strokeWidth: 2,
-        left: bL + bW/2, top: bT + bH * 0.88,
-        originX:'center', originY:'center'
-    });
-    canvas.add(rect);
-    canvas.bringToFront(rect);
-
-    // 하단 박스 안 안내 텍스트
-    const hint = new fabric.IText(window.t?.('wizard_content_hint','내용을 입력하세요') || '내용을 입력하세요', {
-        fontFamily:'Noto Sans KR, sans-serif', fontSize: Math.round(bW * 0.022),
-        fill: S.subColor, opacity: 0.5,
-        originX:'center', originY:'center',
-        left: bL + bW/2, top: bT + bH * 0.88
-    });
-    canvas.add(hint);
-    canvas.bringToFront(hint);
-
-    // 상단 악센트 라인
+    // 상단 악센트 라인 (제목 위)
     const line = new fabric.Rect({
-        width: bW * 0.08, height: 4, rx:2, ry:2,
+        width: bW * 0.10, height: 4, rx:2, ry:2,
         fill: S.accent,
-        left: bL + bW/2, top: bT + bH * 0.24,
+        left: bL + bW/2, top: bT + bH * 0.22,
         originX:'center', originY:'center'
     });
     canvas.add(line);
     canvas.bringToFront(line);
+
+    // 하단 악센트 라인 (설명 아래)
+    const line2 = new fabric.Rect({
+        width: bW * 0.06, height: 3, rx:2, ry:2,
+        fill: S.accent, opacity: 0.5,
+        left: bL + bW/2, top: bT + bH * 0.72,
+        originX:'center', originY:'center'
+    });
+    canvas.add(line2);
+    canvas.bringToFront(line2);
 }
 
-// ─── Step 6: Stickers (library search → emoji fallback) ───
-async function _wzSticker(title, bW, bH, bL, bT) {
+// ─── Step 6: Stickers (keyword search → emoji fallback) ───
+async function _wzSticker(keywords, bW, bH, bL, bT) {
     const positions = [
         { left: bL + bW * 0.10, top: bT + bH * 0.10 },
         { left: bL + bW * 0.90, top: bT + bH * 0.13 },
-        { left: bL + bW * 0.12, top: bT + bH * 0.78 }
+        { left: bL + bW * 0.12, top: bT + bH * 0.82 }
     ];
 
-    // Try searching library for stickers
+    // Try searching library for stickers matching keywords
     let stickerUrls = [];
     if (sb) {
-        const { data } = await sb.from('library')
-            .select('id, thumb_url')
-            .in('category', ['vector','graphic','transparent-graphic'])
-            .eq('status','approved')
-            .order('created_at', { ascending: false })
-            .limit(3);
-        if (data) stickerUrls = data.map(d => d.thumb_url).filter(Boolean);
+        for (const kw of keywords) {
+            const { data } = await sb.from('library')
+                .select('id, thumb_url')
+                .in('category', ['vector','graphic','transparent-graphic'])
+                .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
+                .eq('status','approved')
+                .order('created_at', { ascending: false })
+                .limit(3);
+            if (data && data.length >= 2) {
+                stickerUrls = data.map(d => d.thumb_url).filter(Boolean);
+                break;
+            }
+        }
+        // If not enough results from keyword search, get random approved ones
+        if (stickerUrls.length < 3) {
+            const { data } = await sb.from('library')
+                .select('id, thumb_url')
+                .in('category', ['vector','graphic','transparent-graphic'])
+                .eq('status','approved')
+                .order('created_at', { ascending: false })
+                .limit(3);
+            if (data) stickerUrls = data.map(d => d.thumb_url).filter(Boolean);
+        }
     }
 
     if (stickerUrls.length >= 3) {
-        // Use library stickers
         const promises = stickerUrls.slice(0,3).map((url, i) => new Promise(resolve => {
             fabric.Image.fromURL(url, img => {
                 if (!img) { resolve(); return; }
-                const sz = bW * 0.12;
+                const sz = bW * 0.10;
                 const scale = sz / Math.max(img.width, img.height);
                 img.set({ scaleX:scale, scaleY:scale, ...positions[i], originX:'center', originY:'center' });
                 canvas.add(img); canvas.bringToFront(img);
@@ -628,12 +692,11 @@ async function _wzSticker(title, bW, bH, bL, bT) {
         }));
         await Promise.all(promises);
     } else {
-        // Fallback: emoji stickers
         const emojis = ['✨','🎨','⭐','🌟','💫','🎯','🔥','💎','🌈','🎉','🎁','🏆'];
         const picked = [...emojis].sort(() => Math.random() - 0.5).slice(0,3);
         picked.forEach((em, i) => {
             const obj = new fabric.IText(em, {
-                fontSize: Math.round(bW * 0.07), fontFamily:'sans-serif',
+                fontSize: Math.round(bW * 0.06), fontFamily:'sans-serif',
                 ...positions[i], originX:'center', originY:'center'
             });
             canvas.add(obj); canvas.bringToFront(obj);
