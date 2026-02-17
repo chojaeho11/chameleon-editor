@@ -994,7 +994,7 @@ function refreshRightPanel() {
 // TIMELINE
 // ═══════════════════════════════════════════════════════════════
 function updateTimeline() {
-    renderRuler(); renderVideoTrack(); renderAudioTrack(); renderOverlayTrack(); updatePlayhead();
+    renderRuler(); renderVideoTrack(); renderTextTrack(); renderElementTrack(); renderAudioTrack(); updatePlayhead();
 }
 
 function renderRuler() {
@@ -1018,13 +1018,54 @@ function renderVideoTrack() {
         d.style.width=(c.duration*pps)+'px'; d.style.position='relative';
         d.innerHTML=`<img src="${c.thumbUrl}"><span class="ve-tl-clip-dur">${fmtTime(c.duration)}</span>`
             +`<span class="ve-tl-ol-grip right" data-ci="${i}"></span>`;
-        d.onclick=()=>selectClip(i);
-        // drag reorder
-        d.draggable=true;
-        d.addEventListener('dragstart',e=>{if(e.target.classList.contains('ve-tl-ol-grip')){e.preventDefault();return;}e.dataTransfer.setData('text',i);});
-        d.addEventListener('dragover',e=>{e.preventDefault();d.style.borderColor='#818cf8';});
-        d.addEventListener('dragleave',()=>d.style.borderColor='');
-        d.addEventListener('drop',e=>{e.preventDefault();d.style.borderColor='';const from=parseInt(e.dataTransfer.getData('text'));if(from!==i&&!isNaN(from)){const[mv]=vm.clips.splice(from,1);vm.clips.splice(i,0,mv);vm.ci=i;updateAll();render();}});
+        d.onclick=(e)=>{if(e.target.classList.contains('ve-tl-ol-grip'))return;selectClip(i);};
+        // smooth mousedown drag reorder
+        d.addEventListener('mousedown',function(e){
+            if(e.target.classList.contains('ve-tl-ol-grip')||e.button!==0) return;
+            e.stopPropagation();
+            const startX=e.clientX;let moved=false;
+            const ghost=d.cloneNode(true);
+            ghost.style.cssText='position:fixed;pointer-events:none;opacity:0.7;z-index:999999;height:34px;'+d.style.cssText;
+            const rect=d.getBoundingClientRect();
+            ghost.style.top=rect.top+'px';ghost.style.left=rect.left+'px';ghost.style.width=rect.width+'px';
+            function mv(ev){
+                const dx=Math.abs(ev.clientX-startX);
+                if(!moved&&dx<5) return;
+                if(!moved){moved=true;document.body.appendChild(ghost);d.style.opacity='0.3';}
+                ghost.style.left=(ev.clientX-rect.width/2)+'px';
+                // find drop target
+                const scrollRect=el.getBoundingClientRect();
+                const relX=ev.clientX-scrollRect.left+el.parentElement.parentElement.scrollLeft;
+                let acc=0,target=vm.clips.length;
+                for(let j=0;j<vm.clips.length;j++){
+                    const mid=acc+vm.clips[j].duration*pps/2;
+                    if(relX<mid){target=j;break;}
+                    acc+=vm.clips[j].duration*pps;
+                }
+                // show insert indicator
+                el.querySelectorAll('.ve-tl-insert').forEach(x=>x.remove());
+                const ins=document.createElement('div');ins.className='ve-tl-insert';
+                let insLeft=0;for(let j=0;j<target;j++)insLeft+=vm.clips[j].duration*pps;
+                ins.style.cssText=`position:absolute;left:${insLeft-1}px;top:0;width:2px;height:100%;background:#818cf8;z-index:5;pointer-events:none;`;
+                el.appendChild(ins);
+                vm._dragTarget=target;
+            }
+            function up(){
+                document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
+                if(moved){
+                    ghost.remove();d.style.opacity='';
+                    el.querySelectorAll('.ve-tl-insert').forEach(x=>x.remove());
+                    const to=vm._dragTarget; delete vm._dragTarget;
+                    if(to!==undefined&&to!==i&&to!==i+1){
+                        const[mv2]=vm.clips.splice(i,1);
+                        const idx=to>i?to-1:to;
+                        vm.clips.splice(idx,0,mv2);vm.ci=idx;
+                        updateAll();render();
+                    }
+                }
+            }
+            document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+        });
         el.appendChild(d);
         // right grip: resize clip duration
         const grip=d.querySelector('.ve-tl-ol-grip.right');
@@ -1034,9 +1075,8 @@ function renderVideoTrack() {
             function mv(ev){
                 const dx=ev.clientX-startX;
                 c.duration=Math.max(0.5,Math.round((origDur+dx/pps)*10)/10);
-                // update overlay tEnd if it exceeds new duration
                 c.overlays.forEach(o=>{if(o.tEnd!=null&&o.tEnd>c.duration)o.tEnd=c.duration;});
-                renderVideoTrack(); renderRuler(); renderOverlayTrack(); updatePlayhead(); refreshRightPanel();
+                renderVideoTrack(); renderRuler(); renderTextTrack(); renderElementTrack(); updatePlayhead(); refreshRightPanel();
             }
             function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
             document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
@@ -1057,17 +1097,16 @@ function renderAudioTrack() {
     el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${m?m.name:vm.music}</div>`;
 }
 
-function renderOverlayTrack() {
-    const el=document.getElementById('veTlOverlay'); if(!el) return;
+// shared overlay item rendering for text and element tracks
+function _renderOlItems(el, filterFn){
     const td=totalDur()||10; el.style.width=(td*TL_PPS*vm.tlZoom)+'px'; el.innerHTML='';
     let hasAny=false;
+    const pps=TL_PPS*vm.tlZoom;
     vm.clips.forEach((c,ci)=>{
-        if(!c.overlays.length) return;
-        hasAny=true;
-        const cStartPx=clipStart(ci)*TL_PPS*vm.tlZoom;
-        const pps=TL_PPS*vm.tlZoom;
+        const cStartPx=clipStart(ci)*pps;
         c.overlays.forEach((o,oi)=>{
-            // ensure overlay has time range
+            if(!filterFn(o)) return;
+            hasAny=true;
             if(o.tStart==null) o.tStart=0;
             if(o.tEnd==null) o.tEnd=c.duration;
             const leftPx=cStartPx+o.tStart*pps;
@@ -1077,50 +1116,56 @@ function renderOverlayTrack() {
             d.style.position='absolute';d.style.left=leftPx+'px';d.style.width=widPx+'px';
             const icon=o.type==='text'?'fa-font':o.type==='rect'?'fa-square':o.type==='circle'?'fa-circle':o.type==='image'?'fa-image':'fa-star';
             const nm=o.type==='text'?(o.text||'T').substring(0,8):o.type==='sticker'?o.emoji:o.type==='image'?'IMG':o.type;
-            d.innerHTML=`<span class="ve-tl-ol-grip left" data-ci="${ci}" data-oi="${oi}" data-edge="left"></span>`
+            d.innerHTML=`<span class="ve-tl-ol-grip left"></span>`
                 +`<i class="fa-solid ${icon}" style="font-size:8px"></i> ${nm}`
-                +`<span class="ve-tl-ol-grip right" data-ci="${ci}" data-oi="${oi}" data-edge="right"></span>`;
+                +`<span class="ve-tl-ol-grip right"></span>`;
             d.onclick=(e)=>{if(e.target.classList.contains('ve-tl-ol-grip'))return;e.stopPropagation();vm.ci=ci;vm.oi=oi;render();updateAll();};
-            // drag the entire item to move tStart/tEnd
-            d.addEventListener('mousedown',function olDrag(e){
-                if(e.target.classList.contains('ve-tl-ol-grip'))return;
+            // smooth drag move
+            d.addEventListener('mousedown',function(e){
+                if(e.target.classList.contains('ve-tl-ol-grip')||e.button!==0) return;
                 e.stopPropagation();
                 const startX=e.clientX, origTS=o.tStart, origTE=o.tEnd, dur=origTE-origTS;
                 function mv(ev){
-                    const dx=ev.clientX-startX;
-                    const dt=dx/pps;
+                    const dx=ev.clientX-startX, dt=dx/pps;
                     let ns=Math.max(0,origTS+dt);
                     if(ns+dur>c.duration) ns=c.duration-dur;
                     o.tStart=Math.round(ns*20)/20;
                     o.tEnd=Math.round((o.tStart+dur)*20)/20;
-                    renderOverlayTrack();
+                    d.style.left=(cStartPx+o.tStart*pps)+'px';
                 }
                 function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
                 document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
             });
             el.appendChild(d);
-            // edge grip drag handlers
-            d.querySelectorAll('.ve-tl-ol-grip').forEach(grip=>{
-                grip.addEventListener('mousedown',function(e){
-                    e.stopPropagation();
-                    const edge=grip.dataset.edge, startX=e.clientX;
-                    const origTS=o.tStart, origTE=o.tEnd;
-                    function mv(ev){
-                        const dx=ev.clientX-startX, dt=dx/pps;
-                        if(edge==='left'){
-                            o.tStart=Math.max(0,Math.min(origTE-0.1,Math.round((origTS+dt)*20)/20));
-                        } else {
-                            o.tEnd=Math.max(origTS+0.1,Math.min(c.duration,Math.round((origTE+dt)*20)/20));
-                        }
-                        renderOverlayTrack();
-                    }
-                    function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);updateAll();}
-                    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
-                });
+            // edge grips
+            const grips=d.querySelectorAll('.ve-tl-ol-grip');
+            grips[0]&&grips[0].addEventListener('mousedown',function(e){
+                e.stopPropagation();const startX=e.clientX,origTS=o.tStart;
+                function mv(ev){const dx=ev.clientX-startX;o.tStart=Math.max(0,Math.min(o.tEnd-0.1,Math.round((origTS+dx/pps)*20)/20));d.style.left=(cStartPx+o.tStart*pps)+'px';d.style.width=Math.max(20,(o.tEnd-o.tStart)*pps)+'px';}
+                function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);updateAll();}
+                document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+            });
+            grips[1]&&grips[1].addEventListener('mousedown',function(e){
+                e.stopPropagation();const startX=e.clientX,origTE=o.tEnd;
+                function mv(ev){const dx=ev.clientX-startX;o.tEnd=Math.max(o.tStart+0.1,Math.min(c.duration,Math.round((origTE+dx/pps)*20)/20));d.style.width=Math.max(20,(o.tEnd-o.tStart)*pps)+'px';}
+                function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);updateAll();}
+                document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
             });
         });
     });
-    if(!hasAny) el.innerHTML='<div class="ve-tl-overlay-empty">텍스트/요소 레이어</div>';
+    return hasAny;
+}
+
+function renderTextTrack(){
+    const el=document.getElementById('veTlText'); if(!el) return;
+    const has=_renderOlItems(el, o=>o.type==='text');
+    if(!has) el.innerHTML=`<div class="ve-tl-overlay-empty"><i class="fa-solid fa-font" style="opacity:.3"></i></div>`;
+}
+
+function renderElementTrack(){
+    const el=document.getElementById('veTlElement'); if(!el) return;
+    const has=_renderOlItems(el, o=>o.type!=='text');
+    if(!has) el.innerHTML=`<div class="ve-tl-overlay-empty"><i class="fa-solid fa-shapes" style="opacity:.3"></i></div>`;
 }
 
 function updatePlayhead() {
@@ -1398,9 +1443,41 @@ export function initVideoMaker() {
     // tabs
     document.querySelectorAll('.ve-ltab').forEach(b=>b.addEventListener('click',()=>{vm.leftTab=b.dataset.tab;refreshLeftPanel();}));
     document.querySelectorAll('.ve-fmt-btn').forEach(b=>b.addEventListener('click',()=>window._veChangeFormat(b.dataset.fmt)));
-    // timeline click
+    // timeline click + drag-scroll
     const tlScroll=document.getElementById('veTlScroll');
-    if(tlScroll) tlScroll.addEventListener('click',window._veTlClick);
+    if(tlScroll){
+        // click on ruler to seek
+        const ruler=document.getElementById('veTlRuler');
+        if(ruler) ruler.addEventListener('click',window._veTlClick);
+        // drag-scroll: mousedown on empty area or middle-button
+        let _tlDrag=null;
+        tlScroll.addEventListener('mousedown',e=>{
+            // only grab on empty track area or middle button
+            if(e.button===1||(e.button===0&&(e.target===tlScroll||e.target.classList.contains('ve-tl-tracks')||e.target.classList.contains('ve-tl-audio-empty')||e.target.classList.contains('ve-tl-overlay-empty')))){
+                e.preventDefault();
+                _tlDrag={x:e.clientX,sl:tlScroll.scrollLeft};
+                tlScroll.classList.add('grabbing');
+            }
+        });
+        document.addEventListener('mousemove',e=>{
+            if(!_tlDrag) return;
+            tlScroll.scrollLeft=_tlDrag.sl-( e.clientX-_tlDrag.x);
+        });
+        document.addEventListener('mouseup',()=>{
+            if(_tlDrag){_tlDrag=null;tlScroll.classList.remove('grabbing');}
+        });
+        // touch drag-scroll
+        let _tlTouch=null;
+        tlScroll.addEventListener('touchstart',e=>{
+            if(e.touches.length===1){_tlTouch={x:e.touches[0].clientX,sl:tlScroll.scrollLeft};}
+        },{passive:true});
+        tlScroll.addEventListener('touchmove',e=>{
+            if(_tlTouch&&e.touches.length===1){
+                tlScroll.scrollLeft=_tlTouch.sl-(e.touches[0].clientX-_tlTouch.x);
+            }
+        },{passive:true});
+        tlScroll.addEventListener('touchend',()=>{_tlTouch=null;});
+    }
     // keyboard (delete overlay)
     document.addEventListener('keydown',onKeyDown);
     // back button: close video maker & restore topbar

@@ -6651,13 +6651,22 @@ if (w >= 20 && h >= 20) {
                         <button class="ve-tl-btn" onclick="window._veZoomTl(-1)" title="축소"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
                         <button class="ve-tl-btn" onclick="window._veZoomTl(1)" title="확대"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
                     </div>
+                    <!-- 트랙 라벨 -->
+                    <div class="ve-tl-labels">
+                        <div class="ve-tl-label" style="height:22px"></div>
+                        <div class="ve-tl-label"><i class="fa-solid fa-image"></i></div>
+                        <div class="ve-tl-label"><i class="fa-solid fa-font"></i></div>
+                        <div class="ve-tl-label"><i class="fa-solid fa-shapes"></i></div>
+                        <div class="ve-tl-label"><i class="fa-solid fa-music"></i></div>
+                    </div>
                     <!-- 스크롤 가능 타임라인 -->
                     <div id="veTlScroll" class="ve-tl-scroll">
                         <div class="ve-tl-tracks">
                             <div id="veTlRuler" class="ve-tl-ruler"></div>
                             <div id="veTlVideo" class="ve-tl-track ve-tl-video"></div>
+                            <div id="veTlText" class="ve-tl-track ve-tl-overlay"></div>
+                            <div id="veTlElement" class="ve-tl-track ve-tl-overlay"></div>
                             <div id="veTlAudio" class="ve-tl-track ve-tl-audio"></div>
-                            <div id="veTlOverlay" class="ve-tl-track ve-tl-overlay"></div>
                             <div id="vePlayhead" class="ve-playhead"></div>
                         </div>
                     </div>
@@ -6731,18 +6740,22 @@ if (w >= 20 && h >= 20) {
 .ve-right-content { flex:1; overflow-y:auto; padding:10px; }
 
 /* 타임라인 */
-.ve-timeline { height:170px; min-height:150px; background:#16162a; border-top:1px solid #2a2a4a; display:flex; flex-shrink:0; }
+.ve-timeline { height:210px; min-height:180px; background:#16162a; border-top:1px solid #2a2a4a; display:flex; flex-shrink:0; }
 .ve-tl-controls { display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px; border-right:1px solid #2a2a4a; flex-shrink:0; }
 .ve-tl-btn { width:30px; height:30px; border:none; background:transparent; color:#888; font-size:13px; cursor:pointer; border-radius:6px; display:flex; align-items:center; justify-content:center; }
 .ve-tl-btn:hover { background:#2a2a4a; color:#fff; }
-.ve-tl-scroll { flex:1; overflow-x:auto; overflow-y:hidden; position:relative; }
+.ve-tl-labels { display:flex; flex-direction:column; flex-shrink:0; border-right:1px solid #2a2a4a; width:32px; background:#16162a; }
+.ve-tl-label { display:flex; align-items:center; justify-content:center; font-size:11px; color:#555; border-bottom:1px solid #1e1e36; height:36px; flex-shrink:0; }
+.ve-tl-label:first-child { height:22px; }
+.ve-tl-scroll { flex:1; overflow-x:auto; overflow-y:hidden; position:relative; cursor:grab; }
+.ve-tl-scroll.grabbing { cursor:grabbing; }
 .ve-tl-tracks { position:relative; min-width:100%; height:100%; }
-.ve-tl-ruler { position:relative; height:22px; border-bottom:1px solid #2a2a4a; }
+.ve-tl-ruler { position:relative; height:22px; border-bottom:1px solid #2a2a4a; cursor:pointer; }
 .ve-ruler-mark { position:absolute; top:3px; font-size:9px; color:#555; font-family:monospace; white-space:nowrap; pointer-events:none; }
-.ve-tl-track { position:relative; height:40px; display:flex; align-items:stretch; }
-.ve-tl-video { border-bottom:1px solid #222244; }
-.ve-tl-audio { min-height:40px; }
-.ve-tl-overlay { border-top:1px solid #222244; min-height:32px; height:32px; }
+.ve-tl-track { position:relative; height:36px; display:flex; align-items:stretch; border-bottom:1px solid #1e1e36; }
+.ve-tl-video { background:#1a1a30; }
+.ve-tl-audio { min-height:36px; }
+.ve-tl-overlay { min-height:32px; height:32px; }
 
 /* 타임라인 클립 */
 .ve-tl-clip { height:100%; display:inline-flex; align-items:center; border:1px solid #333; border-radius:4px; overflow:hidden; cursor:pointer; position:relative; background:#2a2a4a; flex-shrink:0; }
@@ -6871,7 +6884,11 @@ if (w >= 20 && h >= 20) {
     .ve-left-content { max-height:140px; }
     .ve-preview-row { flex-direction:column; }
     .ve-right-panel { width:100%; min-width:0; max-height:120px; border-left:none; border-top:1px solid #2a2a4a; }
-    .ve-timeline { height:100px; min-height:80px; }
+    .ve-timeline { height:130px; min-height:100px; }
+    .ve-tl-labels { width:24px; }
+    .ve-tl-label { font-size:9px; height:28px; }
+    .ve-tl-label:first-child { height:18px; }
+    .ve-tl-track { height:28px; }
     .ve-fmt-group { display:none; }
 }
 </style>
