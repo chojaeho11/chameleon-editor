@@ -11,21 +11,7 @@ const FORMATS = [
 ];
 
 const MUSIC = [
-    { id:'none', name:'없음', icon:'fa-volume-xmark', desc:'음악 없음' },
-    { id:'tiktok_edm', name:'TikTok EDM', icon:'fa-bolt', desc:'틱톡/쇼츠 인기 EDM', bpm:128,
-      melody:[72,72,75,79,77,75,72,79,80,79,75,72,70,72,75,79], bass:[48,48,48,48,53,53,53,53,51,51,51,51,48,48,48,48], wave:'square' },
-    { id:'trap_beat', name:'Trap Beat', icon:'fa-fire', desc:'트랩 힙합 비트', bpm:140,
-      melody:[60,60,63,67,60,63,67,70,67,63,60,58,60,63,67,70], bass:[36,36,36,36,41,41,41,41,43,43,43,43,36,36,36,36], wave:'sawtooth' },
-    { id:'lofi_hiphop', name:'Lo-fi Hip Hop', icon:'fa-mug-hot', desc:'감성 로파이 비트', bpm:85,
-      melody:[64,67,72,71,69,67,64,67,69,71,72,69,67,64,62,64], bass:[48,48,52,52,50,50,48,48,47,47,50,50,48,48,45,48], wave:'triangle' },
-    { id:'kpop_dance', name:'K-Pop Dance', icon:'fa-star', desc:'K팝 댄스 스타일', bpm:125,
-      melody:[67,67,72,74,76,74,72,67,69,72,76,79,76,74,72,69], bass:[43,43,43,43,48,48,48,48,45,45,45,45,43,43,43,43], wave:'square' },
-    { id:'viral_pop', name:'Viral Pop', icon:'fa-face-smile', desc:'바이럴 팝 멜로디', bpm:118,
-      melody:[72,76,79,84,79,76,72,74,76,79,81,84,81,79,76,72], bass:[48,48,53,53,55,55,53,53,48,48,53,53,55,55,48,48], wave:'square' },
-    { id:'cinematic', name:'Cinematic', icon:'fa-film', desc:'웅장한 시네마틱', bpm:72,
-      melody:[48,55,60,64,67,64,60,55,48,52,55,60,64,67,72,67], bass:[36,36,36,36,43,43,43,43,41,41,41,41,36,36,36,36], wave:'sawtooth' },
-    { id:'chill_wave', name:'Chill Wave', icon:'fa-cloud', desc:'몽환적 신스웨이브', bpm:95,
-      melody:[60,64,67,72,74,72,67,64,62,67,71,74,72,67,64,60], bass:[48,48,52,52,55,55,52,52,50,50,50,50,48,48,48,48], wave:'sine' }
+    { id:'none', name:'없음', icon:'fa-volume-xmark', desc:'음악 없음' }
 ];
 
 const TRANSITIONS = [
@@ -72,7 +58,8 @@ let vm = {
     addMode: null, addSticker: '⭐', drag: null,
     imgItems: null, imgPage: 0,
     clipboard: null, snapLines: null,
-    audioItems: null, audioEl: null, audioUrl: null
+    audioItems: null, audioEl: null, audioUrl: null,
+    audioPage: 0, audioHasMore: false
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -439,37 +426,53 @@ function renderMediaTab(el) {
     el.innerHTML = h;
 }
 
+function filterTagsByCountry(tags) {
+    if(!tags) return '';
+    const country=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'KR';
+    const parts=tags.split(',').map(s=>s.trim()).filter(Boolean);
+    const isKo=s=>/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(s);
+    const isJa=s=>/[ぁ-んァ-ヶー]/.test(s);
+    const isCJK=s=>/[\u4e00-\u9fff]/.test(s);
+    const isArabic=s=>/[\u0600-\u06FF]/.test(s);
+    let filtered;
+    if(country==='KR') filtered=parts.filter(s=>isKo(s));
+    else if(country==='JP') filtered=parts.filter(s=>isJa(s)||(!isKo(s)&&isCJK(s)));
+    else filtered=parts.filter(s=>!isKo(s)&&!isJa(s)&&!isCJK(s)&&!isArabic(s));
+    if(!filtered.length) filtered=parts.slice(0,3);
+    return filtered.slice(0,3).join(', ');
+}
+
 function renderAudioTab(el) {
-    let h = '<div class="ve-sec"><b>내장 음악</b>';
-    MUSIC.forEach(m => {
-        const sel = vm.music===m.id&&!vm.audioUrl, playing = vm.musicPlaying===m.id;
-        h += `<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectMusic('${m.id}')">`;
-        h += `<i class="fa-solid ${m.icon}" style="width:24px;text-align:center;font-size:16px;color:${sel?'#818cf8':'#6b7280'}"></i>`;
-        h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${m.name}</div><div style="font-size:10px;color:#6b7280">${m.desc}</div></div>`;
-        if(m.id!=='none') h += `<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewMusic('${m.id}')">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
-        h += '</div>';
-    });
-    h += '</div>';
-    // Supabase uploaded audio
-    h += '<div class="ve-sec"><b>업로드된 음원</b>';
+    let h = '<div class="ve-sec"><b>음원</b>';
+    // 음원 없음 옵션
+    const noSel=vm.music==='none'&&!vm.audioUrl;
+    h += `<div class="ve-music-row${noSel?' selected':''}" onclick="window._veSelectMusic('none')">`;
+    h += `<i class="fa-solid fa-volume-xmark" style="width:24px;text-align:center;font-size:16px;color:${noSel?'#818cf8':'#6b7280'}"></i>`;
+    h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">없음</div></div></div>`;
     h += '<div id="veAudioList"><p class="ve-empty">로딩 중...</p></div></div>';
     el.innerHTML = h;
     loadAudioFromDB();
 }
 
-async function loadAudioFromDB() {
+const AUDIO_PAGE_SIZE=20;
+async function loadAudioFromDB(page) {
+    if(page!==undefined) vm.audioPage=page;
+    const pg=vm.audioPage;
     const list=document.getElementById('veAudioList'); if(!list) return;
+    list.innerHTML='<p class="ve-empty">로딩 중...</p>';
     try {
         const sb=window.sb; if(!sb){list.innerHTML='<p class="ve-empty">DB 연결 없음</p>';return;}
-        if(!vm.audioItems){
-            const {data,error}=await sb.from('library').select('id,thumb_url,data_url,tags').eq('category','audio').order('created_at',{ascending:false}).range(0,19);
-            if(error) throw error;
-            vm.audioItems=data||[];
-        }
-        if(!vm.audioItems.length){list.innerHTML='<p class="ve-empty">음원 없음 (관리자에서 등록)</p>';return;}
+        const from=pg*AUDIO_PAGE_SIZE, to=from+AUDIO_PAGE_SIZE;
+        const {data,error}=await sb.from('library').select('id,thumb_url,data_url,tags').eq('category','audio').order('created_at',{ascending:false}).range(from,to);
+        if(error) throw error;
+        const items=data||[];
+        vm.audioHasMore=items.length>AUDIO_PAGE_SIZE;
+        vm.audioItems=items.slice(0,AUDIO_PAGE_SIZE);
+        if(!vm.audioItems.length&&pg===0){list.innerHTML='<p class="ve-empty">음원 없음</p>';return;}
+        if(!vm.audioItems.length){vm.audioPage=Math.max(0,pg-1);loadAudioFromDB();return;}
         let h='';
         vm.audioItems.forEach((a,i)=>{
-            const name=a.tags||`음원 ${i+1}`;
+            const name=filterTagsByCountry(a.tags)||`음원 ${pg*AUDIO_PAGE_SIZE+i+1}`;
             const sel=vm.audioUrl===a.data_url;
             const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewIdx===i;
             h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectDBAudio(${i})">`;
@@ -478,9 +481,17 @@ async function loadAudioFromDB() {
             h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewDBAudio(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
             h+=`</div>`;
         });
+        if(pg>0||vm.audioHasMore){
+            h+=`<div style="display:flex;justify-content:center;gap:8px;margin-top:8px">`;
+            if(pg>0) h+=`<button class="ve-page-btn" onclick="window._veAudioPage(${pg-1})"><i class="fa-solid fa-chevron-left"></i> 이전</button>`;
+            h+=`<span style="font-size:11px;color:#888;line-height:28px">${pg+1}</span>`;
+            if(vm.audioHasMore) h+=`<button class="ve-page-btn" onclick="window._veAudioPage(${pg+1})">다음 <i class="fa-solid fa-chevron-right"></i></button>`;
+            h+=`</div>`;
+        }
         list.innerHTML=h;
     } catch(e){ list.innerHTML='<p class="ve-empty">로드 실패</p>'; console.warn('Audio load error:',e); }
 }
+window._veAudioPage=function(pg){loadAudioFromDB(pg);};
 
 window._veSelectDBAudio = function(idx) {
     const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
@@ -848,7 +859,7 @@ function renderAudioTrack() {
     const td=totalDur()||10; el.style.width=(td*TL_PPS*vm.tlZoom)+'px';
     if(vm.audioUrl){
         const a=vm.audioItems&&vm.audioItems.find(x=>x.data_url===vm.audioUrl);
-        el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${a?a.tags:'업로드 음원'}</div>`;
+        el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${a?filterTagsByCountry(a.tags):'업로드 음원'}</div>`;
         return;
     }
     if(vm.music==='none'){el.innerHTML='<div class="ve-tl-audio-empty">오디오 탭에서 음악을 선택하세요</div>';return;}
