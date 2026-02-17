@@ -2267,6 +2267,16 @@ async function handleSubReturn() {
             <div id="sub-align" class="sub-content">
                 <div class="sub-panel-header" data-i18n="panel_align">정렬 & 레이어</div>
 
+                <!-- 편집 도구 (우측 패널에서 이동) -->
+                <div class="section-title" style="margin-top:0; margin-bottom:8px; font-size:12px;" data-i18n="label_edit_layer">편집</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
+                    <button class="tool-btn" id="btnUndo" style="font-size: 11px;"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="btn_undo">취소</span></button>
+                    <button class="tool-btn" id="btnRedo" style="font-size: 11px;"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_redo">다시</span></button>
+                    <button class="tool-btn" id="btnCopy" style="font-size: 11px;"><i class="fa-regular fa-copy"></i> <span data-i18n="btn_copy">복사</span></button>
+                    <button class="tool-btn" id="btnPaste" style="font-size: 11px;"><i class="fa-regular fa-paste"></i> <span data-i18n="btn_paste">붙여넣기</span></button>
+                </div>
+                <button class="tool-btn" id="btnDel" style="width:100%; color:red; font-size: 11px; height:32px; margin-top:3px; margin-bottom:12px;" data-i18n="btn_del">🗑 삭제</button>
+
                 <div class="section-title" data-i18n="label_align_artboard" style="font-size:12px; margin-bottom:8px;">대지 기준 정렬</div>
                 <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:5px; margin-bottom:12px;">
                     <button class="tool-btn" id="btnAlignLeft" style="height:36px;"><i class="fa-solid fa-align-left"></i><br><span style="font-size:9px;" data-i18n="align_left">좌</span></button>
@@ -2367,20 +2377,8 @@ async function handleSubReturn() {
                 <span class="help-text" data-i18n="help_text_shortcuts">Space: 이동 / 휠: 줌</span>
             </div>
             
-            <div class="right-stack" id="rightStackPanel">
-                <div class="panel-box" id="panelEdit" style="padding: 10px 12px; text-align: center;">
-                    <div class="section-title" style="margin-top:0; margin-bottom: 8px; font-size: 12px;" data-i18n="label_edit_layer">편집</div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
-                        <button class="tool-btn" id="btnUndo" style="font-size: 11px;"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="btn_undo">취소</span></button>
-                        <button class="tool-btn" id="btnRedo" style="font-size: 11px;"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_redo">다시</span></button>
-                        <button class="tool-btn" id="btnCopy" style="font-size: 11px;"><i class="fa-regular fa-copy"></i> <span data-i18n="btn_copy">복사</span></button>
-                        <button class="tool-btn" id="btnPaste" style="font-size: 11px;"><i class="fa-regular fa-paste"></i> <span data-i18n="btn_paste">붙여넣기</span></button>
-                    </div>
-
-                    <button class="tool-btn" id="btnDel" style="width:100%; color:red; font-size: 11px; height:32px; margin-top:3px;" data-i18n="btn_del">🗑 삭제</button>
-                </div>
-
+            <!-- 우측 편집 패널 제거 (좌측 정렬 패널로 통합) -->
+            <div class="right-stack" id="rightStackPanel" style="display:none !important;">
                 <div class="panel-box" id="panelText" style="display:none;"></div>
             </div>
             <canvas id="designCanvas"></canvas>
@@ -3046,7 +3044,7 @@ window.filterFxCards = function(cat, btn) {
         <span>글자도형</span>
     </button>
 
-    <button onclick="window.toggleMobilePanel('right')" class="mobile-fab right">
+    <button onclick="window.toggleSubPanel('sub-align')" class="mobile-fab right">
         <i class="fa-solid fa-layer-group"></i>
         <span>편집/정렬</span>
     </button>

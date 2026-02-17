@@ -310,11 +310,9 @@ button, input, textarea, select { font-family: inherit; }
 }
 .upload-box:hover { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
 
-/* 우측 레이어/속성 패널 */
-.right-stack { 
-    position: absolute; right: 20px; top: 20px; bottom: 20px; 
-    width: 260px; display: flex; flex-direction: column; gap: 15px; 
-    overflow-y: auto; z-index: 50; pointer-events: auto; 
+/* 우측 레이어/속성 패널 (좌측으로 통합됨 — 숨김) */
+.right-stack {
+    display: none !important;
 }
 .right-stack::-webkit-scrollbar { width: 6px; }
 .right-stack::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
@@ -715,15 +713,9 @@ button, input, textarea, select { font-family: inherit; }
     .side.open { transform: translateX(0); }
 
     .right-stack {
-        display: flex !important; position: fixed !important;
-        top: 50px; bottom: 0; right: 0;
-        width: 85% !important; max-width: 320px;
-        background: #fff !important; z-index: 10000 !important;
-        border-left: 1px solid #ddd; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-        transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 20px !important; pointer-events: auto !important;
+        display: none !important;
     }
-    .right-stack.open { transform: translateX(0); }
+    .right-stack.open { display: none !important; }
 
     /* [수정] 모바일 컨트롤 독 (좌측 세로 배치로 변경) */
     #mobileControlDock {
