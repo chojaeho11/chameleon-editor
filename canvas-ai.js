@@ -360,16 +360,19 @@ const WIZARD_STYLES = {
 };
 
 // Extract meaningful keywords from title
-// "초록 물고기" → ["물고기","초록"] (명사 우선)
-// "고기집 간판" → ["고기","간판","고기집"] (접미사 제거 + 원본)
+// 짧은 제목 "초록 물고기" → ["물고기","초록"] (명사 우선)
+// 긴 문장 "카페에 오신 여러분" → ["카페"] (첫 명사 우선)
+// 복합어 "고기집 간판" → ["고기","간판","고기집"]
 function _wzExtractKeywords(title) {
     const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
     if (!words.length) return [title];
 
     const suffixes = ['집','점','관','원','소','실','당','방','장'];
     const particles = ['을','를','이','가','은','는','에','의','로','와','과','도','만','까지','에서','부터','처럼','같이','보다'];
-    // 한국어 형용사/관형어 (검색 의미 낮음 → 뒤로 보냄)
-    const adjectives = ['큰','작은','예쁜','멋진','새로운','특별한','푸른','빨간','파란','노란','초록','하얀','검은','보라','분홍','아름다운','화려한','심플한','모던한','귀여운','멋있는'];
+    // 한국어 형용사/관형어 (검색 의미 낮음)
+    const adjectives = ['큰','작은','예쁜','멋진','새로운','특별한','푸른','빨간','파란','노란','초록','하얀','검은','보라','분홍','아름다운','화려한','심플한','모던한','귀여운','멋있는','진정한','좋은','나쁜','높은','낮은','넓은','깊은','밝은','어두운','따뜻한','차가운','시원한'];
+    // 불용어 (검색에 무의미한 일반 단어)
+    const stopWords = ['것','수','때','곳','등','중','위','아래','안','밖','속','오신','여러분','위한','함께','통해','대한','모든','이런','저런','그런','우리','당신','너의','나의','영혼','마음','세계','세상','곳에','하는','있는','없는','되는','같은'];
 
     const nouns = [];
     const adjs = [];
@@ -383,6 +386,10 @@ function _wzExtractKeywords(title) {
                 break;
             }
         }
+
+        // 불용어 스킵
+        if (stopWords.includes(root)) continue;
+
         // 접미사 제거
         let stripped = root;
         for (const s of suffixes) {
@@ -393,7 +400,7 @@ function _wzExtractKeywords(title) {
         }
 
         // 형용사인지 판별
-        const isAdj = adjectives.some(a => w.startsWith(a) || w === a);
+        const isAdj = adjectives.some(a => w.startsWith(a) || w === a || root === a);
 
         if (isAdj) {
             if (root.length >= 2) adjs.push(root);
@@ -403,9 +410,10 @@ function _wzExtractKeywords(title) {
         }
     }
 
-    // 명사를 뒤에서부터 (한국어: 뒤 단어가 핵심 명사)
-    const reversed = [...nouns].reverse();
-    const all = [...new Set([...reversed, ...adjs])];
+    // ★ 핵심: 짧은 제목(2단어 이하)은 뒤 명사 우선 (초록 물고기→물고기)
+    //         긴 문장(3단어+)은 앞 명사 우선 (카페에 오신 여러분→카페)
+    const ordered = words.length <= 2 ? [...nouns].reverse() : nouns;
+    const all = [...new Set([...ordered, ...adjs])];
     console.log('[Wizard Keywords]', title, '→', all);
     return all.length > 0 ? all : [title];
 }
@@ -548,31 +556,33 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     });
 }
 
-// ─── Step 2: Title text (자간 축소, 10자 이상은 2줄) ───
+// ─── Step 2: Title text (3D 블루 효과, 자간 축소, 10자 이상은 2줄) ───
 function _wzTitle(title, font, S, bW, bH, bL, bT) {
     // 10글자 이상이면 자연스러운 위치에서 줄바꿈
     let displayTitle = title;
     if (title.length > 10) {
-        // 공백이 있으면 중간 공백에서 줄바꿈
         const spaceIdx = title.indexOf(' ', Math.floor(title.length * 0.35));
         if (spaceIdx > 0 && spaceIdx < title.length * 0.75) {
             displayTitle = title.substring(0, spaceIdx) + '\n' + title.substring(spaceIdx + 1);
         } else {
-            // 공백 없으면 중간에서 강제 줄바꿈
             const mid = Math.ceil(title.length / 2);
             displayTitle = title.substring(0, mid) + '\n' + title.substring(mid);
         }
     }
 
-    const sz = Math.round(bW * 0.09);
+    const sz = Math.round(bW * 0.06);
+    const depth = Math.max(3, Math.round(sz * 0.07));
     const obj = new fabric.Textbox(displayTitle, {
-        fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
-        fill: S.titleColor, originX:'center', originY:'center',
+        fontFamily: font, fontSize: sz, fontWeight: '900',
+        fill: '#38bdf8',
+        stroke: '#1e3a8a', strokeWidth: Math.max(1, Math.round(sz * 0.02)),
+        paintFirst: 'stroke', strokeLineJoin: 'round',
+        originX:'center', originY:'center',
         textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.42,
         width: bW * 0.85,
         lineHeight: 1.15,
-        shadow: new fabric.Shadow({ color:'rgba(0,0,0,0.15)', blur:8, offsetX:2, offsetY:2 }),
+        shadow: new fabric.Shadow({ color:'#1e3a8a', blur:0, offsetX:depth, offsetY:depth }),
         charSpacing: -10
     });
     // auto-shrink if too wide
@@ -639,7 +649,7 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
 
     // 박스 안 설명 텍스트
     const obj = new fabric.Textbox(descText, {
-        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.022),
+        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
         fontWeight:'400', fill: '#334155',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: boxY,
