@@ -620,5 +620,14 @@
   "sub_manage_btn": "구독 관리하기",
   "sub_no_subscription": "활성 구독이 없습니다. 먼저 구독을 시작해주세요.",
   "sub_cancel_btn": "구독 취소",
-  "sub_cancel_confirm": "정말 구독을 취소하시겠습니까?\n취소해도 현재 구독 기간이 끝날 때까지 이용할 수 있습니다."
+  "sub_cancel_confirm": "정말 구독을 취소하시겠습니까?\n취소해도 현재 구독 기간이 끝날 때까지 이용할 수 있습니다.",
+  "ve_clip_required": "클립을 먼저 추가하세요",
+  "ve_audio_none": "음원 없음",
+  "ve_audio_no_result": "음원 없음",
+  "ve_audio_loading": "로딩 중...",
+  "ve_audio_fail": "로드 실패",
+  "ve_audio_label": "음원",
+  "ve_audio_no_conn": "DB 연결 없음",
+  "ve_audio_prev": "이전",
+  "ve_audio_next": "다음"
 }

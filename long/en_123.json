@@ -996,5 +996,14 @@
   "sub_manage_btn": "Manage Subscription",
   "sub_no_subscription": "No active subscription. Please subscribe first.",
   "sub_cancel_btn": "Cancel Subscription",
-  "sub_cancel_confirm": "Are you sure you want to cancel your subscription?\nYou can still use the service until the end of your current billing period."
+  "sub_cancel_confirm": "Are you sure you want to cancel your subscription?\nYou can still use the service until the end of your current billing period.",
+  "ve_clip_required": "Please add a clip first",
+  "ve_audio_none": "No audio",
+  "ve_audio_no_result": "No audio found",
+  "ve_audio_loading": "Loading...",
+  "ve_audio_fail": "Load failed",
+  "ve_audio_label": "Audio",
+  "ve_audio_no_conn": "No DB connection",
+  "ve_audio_prev": "Prev",
+  "ve_audio_next": "Next"
 }

@@ -996,5 +996,14 @@
   "sub_manage_btn": "管理订阅",
   "sub_no_subscription": "没有活跃订阅，请先订阅。",
   "sub_cancel_btn": "取消订阅",
-  "sub_cancel_confirm": "确定要取消订阅吗？\n取消后仍可使用至当前订阅期结束。"
+  "sub_cancel_confirm": "确定要取消订阅吗？\n取消后仍可使用至当前订阅期结束。",
+  "ve_clip_required": "请先添加剪辑",
+  "ve_audio_none": "无音源",
+  "ve_audio_no_result": "无音源",
+  "ve_audio_loading": "加载中...",
+  "ve_audio_fail": "加载失败",
+  "ve_audio_label": "音源",
+  "ve_audio_no_conn": "无数据库连接",
+  "ve_audio_prev": "上一页",
+  "ve_audio_next": "下一页"
 }

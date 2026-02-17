@@ -996,5 +996,14 @@
   "sub_manage_btn": "サブスク管理",
   "sub_no_subscription": "有効なサブスクリプションがありません。",
   "sub_cancel_btn": "サブスク解約",
-  "sub_cancel_confirm": "本当にサブスクリプションを解約しますか？\n解約後も現在の期間終了まで引き続きご利用いただけます。"
+  "sub_cancel_confirm": "本当にサブスクリプションを解約しますか？\n解約後も現在の期間終了まで引き続きご利用いただけます。",
+  "ve_clip_required": "先にクリップを追加してください",
+  "ve_audio_none": "音源なし",
+  "ve_audio_no_result": "音源なし",
+  "ve_audio_loading": "読み込み中...",
+  "ve_audio_fail": "読み込み失敗",
+  "ve_audio_label": "音源",
+  "ve_audio_no_conn": "DB接続なし",
+  "ve_audio_prev": "前へ",
+  "ve_audio_next": "次へ"
 }

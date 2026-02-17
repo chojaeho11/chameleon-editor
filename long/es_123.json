@@ -996,5 +996,14 @@
   "sub_manage_btn": "Gestionar Suscripción",
   "sub_no_subscription": "No hay suscripción activa. Por favor, suscríbete primero.",
   "sub_cancel_btn": "Cancelar Suscripción",
-  "sub_cancel_confirm": "¿Estás seguro de que deseas cancelar tu suscripción?\nPodrás seguir usando el servicio hasta el final de tu período de facturación actual."
+  "sub_cancel_confirm": "¿Estás seguro de que deseas cancelar tu suscripción?\nPodrás seguir usando el servicio hasta el final de tu período de facturación actual.",
+  "ve_clip_required": "Primero agrega un clip",
+  "ve_audio_none": "Sin audio",
+  "ve_audio_no_result": "Sin audio",
+  "ve_audio_loading": "Cargando...",
+  "ve_audio_fail": "Error al cargar",
+  "ve_audio_label": "Audio",
+  "ve_audio_no_conn": "Sin conexión DB",
+  "ve_audio_prev": "Anterior",
+  "ve_audio_next": "Siguiente"
 }

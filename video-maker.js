@@ -1,5 +1,6 @@
 // video-maker.js — CapCut-Style Video Editor v4
 // Dark theme, timeline, video+image clips, format selector, overlays, music, adjustments
+const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -443,13 +444,13 @@ function filterTagsByCountry(tags) {
 }
 
 function renderAudioTab(el) {
-    let h = '<div class="ve-sec"><b>음원</b>';
+    let h = `<div class="ve-sec"><b>${_t('ve_audio_label','Audio')}</b>`;
     // 음원 없음 옵션
     const noSel=vm.music==='none'&&!vm.audioUrl;
     h += `<div class="ve-music-row${noSel?' selected':''}" onclick="window._veSelectMusic('none')">`;
     h += `<i class="fa-solid fa-volume-xmark" style="width:24px;text-align:center;font-size:16px;color:${noSel?'#818cf8':'#6b7280'}"></i>`;
-    h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">없음</div></div></div>`;
-    h += '<div id="veAudioList"><p class="ve-empty">로딩 중...</p></div></div>';
+    h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${_t('ve_audio_none','No audio')}</div></div></div>`;
+    h += `<div id="veAudioList"><p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p></div></div>`;
     el.innerHTML = h;
     loadAudioFromDB();
 }
@@ -459,16 +460,16 @@ async function loadAudioFromDB(page) {
     if(page!==undefined) vm.audioPage=page;
     const pg=vm.audioPage;
     const list=document.getElementById('veAudioList'); if(!list) return;
-    list.innerHTML='<p class="ve-empty">로딩 중...</p>';
+    list.innerHTML=`<p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p>`;
     try {
-        const sb=window.sb; if(!sb){list.innerHTML='<p class="ve-empty">DB 연결 없음</p>';return;}
+        const sb=window.sb; if(!sb){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_no_conn','No DB connection')}</p>`;return;}
         const from=pg*AUDIO_PAGE_SIZE, to=from+AUDIO_PAGE_SIZE;
         const {data,error}=await sb.from('library').select('id,thumb_url,data_url,tags').eq('category','audio').order('created_at',{ascending:false}).range(from,to);
         if(error) throw error;
         const items=data||[];
         vm.audioHasMore=items.length>AUDIO_PAGE_SIZE;
         vm.audioItems=items.slice(0,AUDIO_PAGE_SIZE);
-        if(!vm.audioItems.length&&pg===0){list.innerHTML='<p class="ve-empty">음원 없음</p>';return;}
+        if(!vm.audioItems.length&&pg===0){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_no_result','No audio found')}</p>`;return;}
         if(!vm.audioItems.length){vm.audioPage=Math.max(0,pg-1);loadAudioFromDB();return;}
         let h='';
         vm.audioItems.forEach((a,i)=>{
@@ -483,39 +484,48 @@ async function loadAudioFromDB(page) {
         });
         if(pg>0||vm.audioHasMore){
             h+=`<div style="display:flex;justify-content:center;gap:8px;margin-top:8px">`;
-            if(pg>0) h+=`<button class="ve-page-btn" onclick="window._veAudioPage(${pg-1})"><i class="fa-solid fa-chevron-left"></i> 이전</button>`;
+            if(pg>0) h+=`<button class="ve-page-btn" onclick="window._veAudioPage(${pg-1})"><i class="fa-solid fa-chevron-left"></i> ${_t('ve_audio_prev','Prev')}</button>`;
             h+=`<span style="font-size:11px;color:#888;line-height:28px">${pg+1}</span>`;
-            if(vm.audioHasMore) h+=`<button class="ve-page-btn" onclick="window._veAudioPage(${pg+1})">다음 <i class="fa-solid fa-chevron-right"></i></button>`;
+            if(vm.audioHasMore) h+=`<button class="ve-page-btn" onclick="window._veAudioPage(${pg+1})">${_t('ve_audio_next','Next')} <i class="fa-solid fa-chevron-right"></i></button>`;
             h+=`</div>`;
         }
         list.innerHTML=h;
-    } catch(e){ list.innerHTML='<p class="ve-empty">로드 실패</p>'; console.warn('Audio load error:',e); }
+    } catch(e){ list.innerHTML=`<p class="ve-empty">${_t('ve_audio_fail','Load failed')}</p>`; console.warn('Audio load error:',e); }
 }
 window._veAudioPage=function(pg){loadAudioFromDB(pg);};
 
+function getAudioUrl(item){
+    if(!item) return '';
+    const u=item.data_url;
+    if(u&&typeof u==='string'&&(u.startsWith('http')||u.startsWith('//')||u.startsWith('data:')||u.startsWith('blob:'))) return u;
+    // data_url might be thumb_url for audio uploaded via Python
+    const t=item.thumb_url;
+    if(t&&typeof t==='string'&&(t.startsWith('http')||t.startsWith('//'))) return t;
+    return '';
+}
 window._veSelectDBAudio = function(idx) {
     const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
+    const url=getAudioUrl(a); if(!url){alert('Invalid audio URL');return;}
     stopMusicPreview();
     if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}
-    vm.music='none'; vm.audioUrl=a.data_url;
+    vm.music='none'; vm.audioUrl=url;
     refreshLeftPanel(); updateTimeline();
 };
 window._vePreviewDBAudio = function(idx) {
     const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
+    const url=getAudioUrl(a); if(!url){alert('Invalid audio URL');return;}
     stopMusicPreview();
-    // toggle: if already playing this track, stop it
     if(vm.audioEl&&!vm.audioEl.paused&&vm._previewIdx===idx){
         vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;
         refreshLeftPanel(); return;
     }
     if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}
-    const audio=new Audio(a.data_url);
+    const audio=new Audio(url);
     audio.volume=0.5;
-    audio.play().catch(e=>{alert('음원 재생 실패: '+e.message);});
+    audio.play().catch(e=>{alert('Audio playback failed: '+e.message);});
     audio.onended=()=>{vm.audioEl=null;vm._previewIdx=-1;refreshLeftPanel();};
     vm.audioEl=audio; vm._previewIdx=idx;
     refreshLeftPanel();
-    // auto-stop after 15 seconds preview
     setTimeout(()=>{if(vm.audioEl===audio){audio.pause();vm.audioEl=null;vm._previewIdx=-1;refreshLeftPanel();}},15000);
 };
 function stopDBAudio(){if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}vm.audioUrl=null;}
@@ -629,7 +639,7 @@ window._veSearchLib = function(q){
 
 window._veAddLibImage = function(idx) {
     const c=curClip();
-    if(!c) return alert('클립을 먼저 추가하세요');
+    if(!c) return alert(_t('ve_clip_required','Please add a clip first'));
     const item=vm.libItems&&vm.libItems[idx];
     if(!item) return;
     const url=bestImageUrl(item);
@@ -704,7 +714,7 @@ window._veSearchImg = function(q){
 
 window._veAddImgTemplate = function(idx) {
     const c=curClip();
-    if(!c) return alert('클립을 먼저 추가하세요');
+    if(!c) return alert(_t('ve_clip_required','Please add a clip first'));
     const item=vm.imgItems&&vm.imgItems[idx];
     if(!item) return;
     const url=bestImageUrl(item);
@@ -858,8 +868,8 @@ function renderAudioTrack() {
     const el=document.getElementById('veTlAudio'); if(!el) return;
     const td=totalDur()||10; el.style.width=(td*TL_PPS*vm.tlZoom)+'px';
     if(vm.audioUrl){
-        const a=vm.audioItems&&vm.audioItems.find(x=>x.data_url===vm.audioUrl);
-        el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${a?filterTagsByCountry(a.tags):'업로드 음원'}</div>`;
+        const a=vm.audioItems&&vm.audioItems.find(x=>getAudioUrl(x)===vm.audioUrl);
+        el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${a?filterTagsByCountry(a.tags):_t('ve_audio_label','Audio')}</div>`;
         return;
     }
     if(vm.music==='none'){el.innerHTML='<div class="ve-tl-audio-empty">오디오 탭에서 음악을 선택하세요</div>';return;}
@@ -955,7 +965,7 @@ window._veSelectOL = selectOverlay;
 window._veRemoveOL = () => removeOverlay(vm.oi);
 window._veStartAdd = (mode) => { vm.addMode=mode; vm.canvas.style.cursor='crosshair'; showToast('캔버스를 클릭하여 배치'); };
 window._veAddTextCenter = () => {
-    const c=curClip(); if(!c) return alert('클립을 먼저 추가하세요');
+    const c=curClip(); if(!c) return alert(_t('ve_clip_required','Please add a clip first'));
     addOverlay('text', vm.w/2, vm.h/2); vm.leftTab='text'; refreshLeftPanel();
 };
 window._vePickSticker = (e) => { vm.addSticker=e; refreshLeftPanel(); };
@@ -992,7 +1002,7 @@ window._veCtx = (action) => {
 };
 
 window._veApplyTpl = (id) => {
-    const c=curClip(); if(!c)return alert('클립을 먼저 추가하세요');
+    const c=curClip(); if(!c)return alert(_t('ve_clip_required','Please add a clip first'));
     const t=TEMPLATES.find(x=>x.id===id); if(!t)return;
     t.mk(vm.w,vm.h).forEach(o=>c.overlays.push(o));
     vm.oi=c.overlays.length-1; render(); vm.leftTab='text'; refreshLeftPanel();
@@ -1110,7 +1120,7 @@ async function playClipOnCanvas(ci, durMs) {
 }
 
 window.vePlay = async function() {
-    if(!vm.clips.length)return alert('클립을 먼저 추가하세요.');
+    if(!vm.clips.length)return alert(_t('ve_clip_required','Please add a clip first'));
     if(vm.playing){vm.cancel=true;return;}
     vm.playing=true;vm.paused=false;vm.cancel=false;vm.playTime=0;
     const btn=document.getElementById('vePlayBtn');
@@ -1146,7 +1156,7 @@ window.vePause = function(){
 // RECORDING
 // ═══════════════════════════════════════════════════════════════
 window.veExport = async function() {
-    if(!vm.clips.length)return alert('클립을 먼저 추가하세요.');
+    if(!vm.clips.length)return alert(_t('ve_clip_required','Please add a clip first'));
     if(vm.playing)return;
     vm.playing=true;vm.cancel=false;vm.playTime=0;
     const prog=document.getElementById('veProgress'),progBar=document.getElementById('veProgressBar'),progText=document.getElementById('veProgressText');

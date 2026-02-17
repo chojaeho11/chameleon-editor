@@ -996,5 +996,14 @@
   "sub_manage_btn": "Abo verwalten",
   "sub_no_subscription": "Kein aktives Abo. Bitte abonnieren Sie zuerst.",
   "sub_cancel_btn": "Abo kündigen",
-  "sub_cancel_confirm": "Möchten Sie Ihr Abo wirklich kündigen?\nSie können den Service bis zum Ende des aktuellen Abrechnungszeitraums weiterhin nutzen."
+  "sub_cancel_confirm": "Möchten Sie Ihr Abo wirklich kündigen?\nSie können den Service bis zum Ende des aktuellen Abrechnungszeitraums weiterhin nutzen.",
+  "ve_clip_required": "Bitte zuerst einen Clip hinzufügen",
+  "ve_audio_none": "Kein Audio",
+  "ve_audio_no_result": "Kein Audio",
+  "ve_audio_loading": "Laden...",
+  "ve_audio_fail": "Laden fehlgeschlagen",
+  "ve_audio_label": "Audio",
+  "ve_audio_no_conn": "Keine DB-Verbindung",
+  "ve_audio_prev": "Zurück",
+  "ve_audio_next": "Weiter"
 }

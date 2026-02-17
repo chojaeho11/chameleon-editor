@@ -996,5 +996,14 @@
   "sub_manage_btn": "Gérer l'abonnement",
   "sub_no_subscription": "Aucun abonnement actif. Veuillez vous abonner d'abord.",
   "sub_cancel_btn": "Annuler l'abonnement",
-  "sub_cancel_confirm": "Êtes-vous sûr de vouloir annuler votre abonnement ?\nVous pouvez continuer à utiliser le service jusqu'à la fin de votre période de facturation actuelle."
+  "sub_cancel_confirm": "Êtes-vous sûr de vouloir annuler votre abonnement ?\nVous pouvez continuer à utiliser le service jusqu'à la fin de votre période de facturation actuelle.",
+  "ve_clip_required": "Veuillez d'abord ajouter un clip",
+  "ve_audio_none": "Pas d'audio",
+  "ve_audio_no_result": "Aucun audio",
+  "ve_audio_loading": "Chargement...",
+  "ve_audio_fail": "Échec du chargement",
+  "ve_audio_label": "Audio",
+  "ve_audio_no_conn": "Pas de connexion DB",
+  "ve_audio_prev": "Précédent",
+  "ve_audio_next": "Suivant"
 }
