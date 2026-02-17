@@ -464,7 +464,7 @@
     </style>
     <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px; padding:0 15px;">
         <button id="btnDesignStart" onclick="window.openProductPickerModal()">
-            <i class="fa-solid fa-hand-pointer"></i> <span data-i18n="dsm_btn_start">여기를 클릭해서 제품만들기</span>
+            <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="dsm_btn_start">제품 검색 후 제작하기</span>
         </button>
     </div>
 
@@ -549,16 +549,6 @@
         </div>
         </div><!-- /dsm-section-box 인쇄물 -->
 
-        <!-- 직접 입력 (가운데 정렬) -->
-        <div class="dsm-section-box dsm-custom-input-box">
-        <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
-            <span style="font-size:13px; color:#ede9fe; font-weight:600;" data-i18n="dsm_custom_input"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
-            <input type="number" id="dsmCustomW2" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:75px; padding:8px 10px; border:1px solid #d4d4d8; border-radius:50px; font-size:13px; text-align:center; background:#fff; color:#334155;">
-            <span style="color:rgba(255,255,255,0.6);">×</span>
-            <input type="number" id="dsmCustomH2" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:75px; padding:8px 10px; border:1px solid #d4d4d8; border-radius:50px; font-size:13px; text-align:center; background:#fff; color:#334155;">
-            <button onclick="window.dsmOpenCustomInline()" style="padding:12px 48px; background:#fff; color:#5b21b6; border:none; border-radius:50px; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,0.12); min-width:120px;" data-i18n="dsm_start">시작</button>
-        </div>
-        </div><!-- /dsm-section-box 직접입력 -->
     </div>
     <script>
     window.dsmOpenCustomInline = function() {
@@ -616,6 +606,18 @@
             <div id="modalCategoryTabs" class="category-tabs" style="margin-bottom:20px;"></div>
             <!-- 카테고리 설명 -->
             <div id="modalCategoryDesc" style="max-width:100%; margin:0 0 20px 0; padding:15px; background:#f8fafc; border-radius:12px; text-align:center; font-size:14px; color:#64748b; line-height:1.6; display:none; border:1px solid #e2e8f0; word-break:keep-all;"></div>
+            <!-- 직접 입력 (커스텀 사이즈) -->
+            <div style="margin-bottom:20px; padding:18px 20px; background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius:16px; border:1.5px solid #c4b5fd;">
+                <p style="margin:0 0 12px 0; font-size:13px; color:#6d28d9; text-align:center; line-height:1.5;">
+                    <i class="fa-solid fa-pencil" style="margin-right:4px;"></i> 제품없이 원하는 사이즈의 디자인만 필요할때 여기에 사이즈를 입력하세요
+                </p>
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+                    <input type="number" id="dsmCustomW2" placeholder="가로(mm)" data-i18n-placeholder="dsm_ph_w" style="width:90px; padding:10px 12px; border:1.5px solid #c4b5fd; border-radius:50px; font-size:14px; text-align:center; background:#fff; color:#334155; outline:none;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#c4b5fd'">
+                    <span style="color:#7c3aed; font-weight:700; font-size:16px;">×</span>
+                    <input type="number" id="dsmCustomH2" placeholder="세로(mm)" data-i18n-placeholder="dsm_ph_h" style="width:90px; padding:10px 12px; border:1.5px solid #c4b5fd; border-radius:50px; font-size:14px; text-align:center; background:#fff; color:#334155; outline:none;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#c4b5fd'">
+                    <button onclick="window.dsmOpenCustomInline()" style="padding:10px 32px; background:linear-gradient(135deg, #7c3aed, #6d28d9); color:#fff; border:none; border-radius:50px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(124,58,237,0.3);" data-i18n="dsm_start">시작</button>
+                </div>
+            </div>
             <!-- 상품 그리드 -->
             <style>
                 #modalProductGrid .quick-text { color: #1e293b !important; }
