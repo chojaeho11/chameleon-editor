@@ -6768,13 +6768,39 @@ if (w >= 20 && h >= 20) {
 /* ═══ GIF 메이커 모바일 반응형 ═══ */
 @media (max-width:768px) {
     #gifMakerModal { overflow:hidden !important; }
-    /* 상단 바 - 컴팩트하게 */
-    #gifTopBar { height:auto !important; padding:8px 12px !important; flex-wrap:wrap !important; gap:6px !important; }
-    #gifTopBar > div:first-child { width:100%; }
-    #gifTopBar > div:last-child { width:100%; justify-content:center !important; flex-wrap:wrap !important; gap:6px !important; }
-    #gifTopBar input[type="number"] { width:50px !important; padding:5px 6px !important; font-size:12px !important; }
-    #gifTopBar select { font-size:11px !important; padding:5px 6px !important; }
-    #gifExportBtn { padding:6px 16px !important; font-size:12px !important; }
+    /* 상단 바 - 한 줄 컴팩트 */
+    #gifTopBar {
+        height:auto !important; padding:6px 8px !important; flex-wrap:nowrap !important;
+        gap:0 !important; justify-content:center !important; align-items:center !important;
+    }
+    /* 타이틀 행: 홈 버튼 + 제목 숨기고 홈버튼만 */
+    #gifTopBar > div:first-child {
+        width:auto !important; flex-shrink:0 !important;
+    }
+    #gifTopBar > div:first-child span { display:none !important; }
+    #gifTopBar > div:first-child button { padding:4px 6px !important; font-size:16px !important; }
+    /* 컨트롤 행 */
+    #gifTopBar > div:last-child {
+        width:auto !important; flex:1 !important; justify-content:flex-end !important;
+        flex-wrap:nowrap !important; gap:4px !important; overflow:hidden !important;
+    }
+    /* 라벨 "크기:", "속도:" 숨기기 */
+    #gifTopBar > div:last-child > span[style*="color:#c4b5fd"] { display:none !important; }
+    /* × 표시 */
+    #gifTopBar > div:last-child > span[style*="color:#a78bfa"] { font-size:11px !important; margin:0 1px !important; }
+    /* 구분선 숨기기 */
+    #gifTopBar > div:last-child > div[style*="width:1px"] { display:none !important; }
+    /* 사이즈 입력 */
+    #gifTopBar input[type="number"] { width:38px !important; padding:4px 2px !important; font-size:11px !important; border-radius:6px !important; }
+    /* 적용 버튼 */
+    #gifTopBar button[onclick*="gifResizeCanvas"] { padding:4px 8px !important; font-size:10px !important; border-radius:6px !important; }
+    /* 속도 셀렉트 */
+    #gifTopBar select { font-size:10px !important; padding:4px 4px !important; max-width:70px !important; border-radius:6px !important; }
+    /* 내보내기 버튼 */
+    #gifExportBtn { padding:5px 10px !important; font-size:11px !important; border-radius:8px !important; white-space:nowrap !important; }
+    #gifExportBtn i { margin-right:3px !important; }
+    /* 닫기 버튼 */
+    #gifTopBar > div:last-child > button:last-child { padding:4px 6px !important; font-size:16px !important; }
     /* 메인 영역 세로 배치 */
     #gifMakerModal > div:nth-child(2) { flex-direction:column !important; position:relative !important; }
     /* 좌측 패널 → 하단 바텀시트 */
