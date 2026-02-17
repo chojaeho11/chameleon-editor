@@ -354,32 +354,26 @@ export function initAiTools() {
 // ============================================================
 const WIZARD_STYLES = {
     blue: {
-        titleFont:'Gothic A1', titleWeight:'900',
-        // 3D 블루
+        effect:'3d',
         titleFill:'#38bdf8', titleStroke:'#1e3a8a', titleShadowColor:'#1e3a8a',
-        // 흰색 반투명 박스
         boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(56,189,248,0.35)', boxTextColor:'#1e3a5f'
     },
     yellow: {
-        titleFont:'Noto Serif KR', titleWeight:'900',
-        // 골드 3D
+        effect:'3d',
         titleFill:'#fbbf24', titleStroke:'#92400e', titleShadowColor:'#78350f',
-        // 따뜻한 크림 박스
         boxFill:'rgba(255,251,235,0.92)', boxStroke:'rgba(251,191,36,0.35)', boxTextColor:'#78350f'
     },
     candy: {
-        titleFont:'Jua', titleWeight:'400',
-        // 캔디 핑크
-        titleFill:'#f472b6', titleStroke:'#9d174d', titleShadowColor:'#be185d',
-        // 연핑크 박스
+        effect:'candy',
+        titleFill:'#ef4444', titleStroke:'#ffffff', titleShadowColor:'#000000',
+        candyColor1:'#ef4444', candyColor2:'#15803d',
         boxFill:'rgba(253,242,248,0.92)', boxStroke:'rgba(244,114,182,0.35)', boxTextColor:'#831843'
     },
     dark: {
-        titleFont:'Gothic A1', titleWeight:'900',
-        // 흰색 글씨 + 다크 그림자
-        titleFill:'#f8fafc', titleStroke:'#0f172a', titleShadowColor:'#000000',
-        // 다크 박스 + 밝은 글씨
-        boxFill:'rgba(15,23,42,0.88)', boxStroke:'rgba(148,163,184,0.3)', boxTextColor:'#e2e8f0'
+        effect:'neon',
+        titleFill:'transparent', titleStroke:'#ff00aa', titleShadowColor:'#ff00aa',
+        neonColor:'#ff00aa',
+        boxFill:'rgba(15,23,42,0.88)', boxStroke:'rgba(255,0,170,0.3)', boxTextColor:'#f9a8d4'
     }
 };
 
@@ -477,19 +471,30 @@ async function runDesignWizard(title, style) {
     canvas.requestRenderAll();
 
     // Resolve font by country
+    // KR: 잘난고딕 (Supabase에 .otf → opentype.js가 PDF 아웃라인 변환 가능)
+    // JP: Noto Sans JP 900 (굵은 기본), others: Impact (시스템 굵은 기본)
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
-    const fontMap = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
-    const titleFont = fontMap[country] || S.titleFont;
+    const titleFontMap = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
+    const titleFont = titleFontMap[country] || 'Impact, Arial Black, sans-serif';
     const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
 
-    // Preload Google Fonts
-    [titleFont, descFont].forEach(f => {
+    // 잘난고딕 @font-face 로드 (Supabase 호스팅 .otf)
+    if (titleFont === 'JalnanGothic' && !document.querySelector('style[data-jalnan]')) {
+        const st = document.createElement('style');
+        st.dataset.jalnan = '1';
+        st.textContent = `@font-face { font-family:'JalnanGothic'; src:url('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/JalnanGothic.otf') format('opentype'); font-weight:normal; font-display:swap; }`;
+        document.head.appendChild(st);
+    }
+
+    // Google Fonts (desc + overseas title)
+    [descFont, titleFont].forEach(f => {
+        if (f.includes(',') || f === 'JalnanGothic') return; // skip system/supabase fonts
         const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f) + ':wght@400;700;900&display=swap';
         if (!document.querySelector(`link[href="${fUrl}"]`)) {
             const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
         }
     });
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 600));
 
     const keywords = _wzExtractKeywords(title);
 
@@ -602,15 +607,14 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     });
 }
 
-// ─── Step 2: Title text (3D 효과, 가로 2/3 초과시 줄바꿈) ───
+// ─── Step 2: Title text (효과별: 3d/candy/neon, 가로 2/3 초과시 줄바꿈) ───
 function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const sz = Math.round(bW * 0.10);
     const maxW = bW * (2/3);
 
     // 임시 텍스트로 실제 너비 측정
     const temp = new fabric.Textbox(title, {
-        fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
-        charSpacing: -10
+        fontFamily: font, fontSize: sz, fontWeight: '900', charSpacing: -10
     });
     const textW = temp.calcTextWidth ? temp.calcTextWidth() : temp.width;
 
@@ -627,20 +631,54 @@ function _wzTitle(title, font, S, bW, bH, bL, bT) {
     }
 
     const depth = Math.max(3, Math.round(sz * 0.07));
-    const obj = new fabric.Textbox(displayTitle, {
-        fontFamily: font, fontSize: sz, fontWeight: S.titleWeight || '900',
-        fill: S.titleFill || '#38bdf8',
-        stroke: S.titleStroke || '#1e3a8a', strokeWidth: Math.max(1, Math.round(sz * 0.02)),
-        paintFirst: 'stroke', strokeLineJoin: 'round',
-        originX:'center', originY:'center',
-        textAlign:'center',
+    const effect = S.effect || '3d';
+
+    // 기본 속성
+    const props = {
+        fontFamily: font, fontSize: sz, fontWeight: '900',
+        originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.42,
-        width: bW * 0.85,
-        lineHeight: 1.15,
-        shadow: new fabric.Shadow({ color: S.titleShadowColor || '#1e3a8a', blur:0, offsetX:depth, offsetY:depth }),
-        charSpacing: -10
-    });
-    // auto-shrink if still too wide
+        width: bW * 0.85, lineHeight: 1.15, charSpacing: -10
+    };
+
+    // ★ 효과별 스타일 분기
+    if (effect === 'candy') {
+        // 레드캔디: 빨강+초록 줄무늬 패턴 + 흰 아웃라인
+        const pSize = 60;
+        const pc = document.createElement('canvas'); pc.width = pSize; pc.height = pSize;
+        const cx = pc.getContext('2d');
+        cx.fillStyle = S.candyColor1 || '#ef4444'; cx.fillRect(0,0,pSize,pSize);
+        cx.beginPath(); cx.strokeStyle = S.candyColor2 || '#15803d'; cx.lineWidth = pSize/2.2; cx.lineCap='butt';
+        cx.moveTo(0,pSize); cx.lineTo(pSize,0); cx.stroke();
+        cx.beginPath(); cx.moveTo(-pSize/2,pSize/2); cx.lineTo(pSize/2,-pSize/2); cx.stroke();
+        cx.beginPath(); cx.moveTo(pSize/2,pSize+pSize/2); cx.lineTo(pSize+pSize/2,pSize/2); cx.stroke();
+        const candyPat = new fabric.Pattern({ source: pc, repeat: 'repeat' });
+        Object.assign(props, {
+            fill: candyPat,
+            stroke: '#ffffff', strokeWidth: Math.max(3, Math.round(sz * 0.04)),
+            paintFirst: 'stroke', strokeLineJoin: 'round',
+            shadow: new fabric.Shadow({ color:'rgba(0,0,0,0.35)', blur:0, offsetX:depth, offsetY:depth })
+        });
+    } else if (effect === 'neon') {
+        // 네온핑크: 투명 fill + 핑크 스트로크 + 핑크 글로우
+        const nCol = S.neonColor || '#ff00aa';
+        Object.assign(props, {
+            fill: 'transparent',
+            stroke: nCol, strokeWidth: Math.max(2, Math.round(sz * 0.03)),
+            paintFirst: 'fill', strokeLineJoin: 'round',
+            shadow: new fabric.Shadow({ color: nCol, blur: Math.round(sz * 0.25), offsetX:0, offsetY:0 })
+        });
+    } else {
+        // 3D: 기존 방식 (블루/옐로우)
+        Object.assign(props, {
+            fill: S.titleFill, stroke: S.titleStroke,
+            strokeWidth: Math.max(1, Math.round(sz * 0.02)),
+            paintFirst: 'stroke', strokeLineJoin: 'round',
+            shadow: new fabric.Shadow({ color: S.titleShadowColor, blur:0, offsetX:depth, offsetY:depth })
+        });
+    }
+
+    const obj = new fabric.Textbox(displayTitle, props);
     if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
