@@ -474,10 +474,17 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     if (!data || !data.length) return;
 
     // Prefer high-res data_url over thumb_url
-    let imgUrl = data[0].data_url;
-    if (!imgUrl || typeof imgUrl !== 'string' || !imgUrl.startsWith('http')) {
-        imgUrl = data[0].thumb_url;
+    let imgUrl = null;
+    const raw = data[0].data_url;
+    if (raw) {
+        if (typeof raw === 'string' && raw.startsWith('http')) {
+            imgUrl = raw;
+        } else if (typeof raw === 'string') {
+            // Might be JSON-encoded URL string
+            try { const parsed = JSON.parse(raw); if (typeof parsed === 'string' && parsed.startsWith('http')) imgUrl = parsed; } catch(e) {}
+        }
     }
+    if (!imgUrl) imgUrl = data[0].thumb_url;
     if (!imgUrl) return;
 
     return new Promise(resolve => {
@@ -567,60 +574,51 @@ async function _wzDesc(title, S, descFont, bW, bH, bL, bT) {
     canvas.bringToFront(obj);
 }
 
-// ─── Step 4: Related element (keyword search) ───
+// ─── Step 4: Related elements (keyword search, 3 items) ───
 async function _wzElem(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
     let data = null;
     for (const kw of keywords) {
         const res = await sb.from('library')
-            .select('id, thumb_url')
+            .select('id, thumb_url, data_url')
             .in('category', ['vector','graphic','transparent-graphic'])
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
-            .limit(2);
+            .limit(3);
         if (res.data && res.data.length) { data = res.data; break; }
     }
     if (!data || !data.length) return;
 
-    // Place first element at bottom-right
-    return new Promise(resolve => {
-        fabric.Image.fromURL(data[0].thumb_url, img => {
+    // 3 positions: top-left, bottom-right, bottom-left
+    const positions = [
+        { left: bL + bW * 0.15, top: bT + bH * 0.15, size: bW / 5 },
+        { left: bL + bW * 0.82, top: bT + bH * 0.72, size: bW / 4 },
+        { left: bL + bW * 0.18, top: bT + bH * 0.78, size: bW / 5.5 }
+    ];
+
+    const promises = data.slice(0, 3).map((item, i) => new Promise(resolve => {
+        const url = item.thumb_url;
+        if (!url) { resolve(); return; }
+        const pos = positions[i] || positions[0];
+        fabric.Image.fromURL(url, img => {
             if (!img) { resolve(); return; }
-            const target = bW / 3.5;
-            const scale = target / Math.max(img.width, img.height);
+            const scale = pos.size / Math.max(img.width, img.height);
             img.set({
                 scaleX: scale, scaleY: scale,
-                left: bL + bW * 0.80, top: bT + bH * 0.72,
+                left: pos.left, top: pos.top,
                 originX:'center', originY:'center'
             });
             canvas.add(img);
             canvas.bringToFront(img);
-
-            // Place second element at top-left if available
-            if (data.length > 1) {
-                fabric.Image.fromURL(data[1].thumb_url, img2 => {
-                    if (!img2) { resolve(); return; }
-                    const target2 = bW / 5;
-                    const scale2 = target2 / Math.max(img2.width, img2.height);
-                    img2.set({
-                        scaleX: scale2, scaleY: scale2,
-                        left: bL + bW * 0.15, top: bT + bH * 0.18,
-                        originX:'center', originY:'center'
-                    });
-                    canvas.add(img2);
-                    canvas.bringToFront(img2);
-                    resolve();
-                }, { crossOrigin:'anonymous' });
-            } else {
-                resolve();
-            }
+            resolve();
         }, { crossOrigin:'anonymous' });
-    });
+    }));
+    await Promise.all(promises);
 }
 
-// ─── Step 5: Decorative shapes ───
+// ─── Step 5: Decorative shapes + bottom box ───
 function _wzShapes(S, bW, bH, bL, bT) {
     // 상단 악센트 라인 (제목 위)
     const line = new fabric.Rect({
@@ -632,15 +630,26 @@ function _wzShapes(S, bW, bH, bL, bT) {
     canvas.add(line);
     canvas.bringToFront(line);
 
-    // 하단 악센트 라인 (설명 아래)
-    const line2 = new fabric.Rect({
-        width: bW * 0.06, height: 3, rx:2, ry:2,
-        fill: S.accent, opacity: 0.5,
-        left: bL + bW/2, top: bT + bH * 0.72,
+    // 하단 라운드 박스
+    const rect = new fabric.Rect({
+        width: bW * 0.85, height: bH * 0.14,
+        rx: 20, ry: 20,
+        fill: S.rectFill, stroke: S.rectStroke, strokeWidth: 2,
+        left: bL + bW/2, top: bT + bH * 0.90,
         originX:'center', originY:'center'
     });
-    canvas.add(line2);
-    canvas.bringToFront(line2);
+    canvas.add(rect);
+    canvas.bringToFront(rect);
+
+    // 하단 박스 안 안내 텍스트
+    const hint = new fabric.IText(window.t?.('wizard_content_hint','내용을 입력하세요') || '내용을 입력하세요', {
+        fontFamily:'Noto Sans KR, sans-serif', fontSize: Math.round(bW * 0.022),
+        fill: S.subColor, opacity: 0.5,
+        originX:'center', originY:'center',
+        left: bL + bW/2, top: bT + bH * 0.90
+    });
+    canvas.add(hint);
+    canvas.bringToFront(hint);
 }
 
 // ─── Step 6: Stickers (keyword search → emoji fallback) ───
