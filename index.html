@@ -8246,5 +8246,60 @@ window.dsmRenderProducts = async function(keyword) {
 })();
 </script>
 
+<!-- 모바일 뒤로가기 버튼으로 모달 닫기 -->
+<script>
+(function() {
+    var modalStack = [];
+
+    function getTopmostVisibleModal() {
+        var modals = document.querySelectorAll('.modal-bg');
+        var topModal = null;
+        var topZ = -1;
+        modals.forEach(function(m) {
+            var d = m.style.display;
+            if (d && d !== 'none') {
+                var z = parseInt(m.style.zIndex) || 0;
+                if (z >= topZ) { topZ = z; topModal = m; }
+            }
+        });
+        return topModal;
+    }
+
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mut) {
+            if (mut.type !== 'attributes' || mut.attributeName !== 'style') return;
+            var el = mut.target;
+            if (!el.classList || !el.classList.contains('modal-bg') || !el.id) return;
+            var isVisible = el.style.display && el.style.display !== 'none';
+            var idx = modalStack.indexOf(el.id);
+            if (isVisible && idx === -1) {
+                modalStack.push(el.id);
+                history.pushState({ modal: el.id }, '');
+            } else if (!isVisible && idx !== -1) {
+                modalStack.splice(idx, 1);
+            }
+        });
+    });
+
+    function observeModals() {
+        document.querySelectorAll('.modal-bg').forEach(function(m) {
+            observer.observe(m, { attributes: true, attributeFilter: ['style'] });
+        });
+    }
+    observeModals();
+    new MutationObserver(function() { observeModals(); }).observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener('popstate', function() {
+        var topModal = getTopmostVisibleModal();
+        if (topModal) {
+            topModal.style.display = 'none';
+            document.body.style.overflow = '';
+            var idx = modalStack.indexOf(topModal.id);
+            if (idx !== -1) modalStack.splice(idx, 1);
+        }
+    });
+})();
+</script>
+
 </body>
 </html>
