@@ -557,8 +557,8 @@ function renderLibGrid(grid) {
     if(!vm.libItems||!vm.libItems.length){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">이미지 없음</p>';return;}
     let h='';
     vm.libItems.forEach((item,idx)=>{
-        const thumbUrl=item.thumb_url||'';
-        h+=`<div class="ve-lib-item" onclick="window._veAddLibImage(${idx})"><img src="${thumbUrl}" loading="lazy"></div>`;
+        const url=bestImageUrl(item);
+        h+=`<div class="ve-lib-item" onclick="window._veAddLibImage(${idx})"><img src="${url}" loading="lazy"></div>`;
     });
     grid.innerHTML=h;
 }
@@ -590,8 +590,7 @@ window._veAddLibImage = function(idx) {
     if(!c) return alert('클립을 먼저 추가하세요');
     const item=vm.libItems&&vm.libItems[idx];
     if(!item) return;
-    // Use data_url only if it's an actual image URL (not fabric.js JSON)
-    const url=isImageUrl(item.data_url)?item.data_url:(item.thumb_url||'');
+    const url=bestImageUrl(item);
     addOverlay('image', vm.w*.2, vm.h*.2, {url, w:vm.w*.4, h:vm.w*.4});
     showToast('이미지 요소 추가됨');
 };
@@ -633,8 +632,8 @@ function renderImgGrid(grid) {
     if(!vm.imgItems||!vm.imgItems.length){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">이미지 없음</p>';return;}
     let h='';
     vm.imgItems.forEach((item,idx)=>{
-        const thumbUrl=item.thumb_url||'';
-        h+=`<div class="ve-lib-item" onclick="window._veAddImgTemplate(${idx})"><img src="${thumbUrl}" loading="lazy"></div>`;
+        const url=bestImageUrl(item);
+        h+=`<div class="ve-lib-item" onclick="window._veAddImgTemplate(${idx})"><img src="${url}" loading="lazy"></div>`;
     });
     grid.innerHTML=h;
 }
@@ -666,7 +665,7 @@ window._veAddImgTemplate = function(idx) {
     if(!c) return alert('클립을 먼저 추가하세요');
     const item=vm.imgItems&&vm.imgItems[idx];
     if(!item) return;
-    const url=isImageUrl(item.data_url)?item.data_url:(item.thumb_url||'');
+    const url=bestImageUrl(item);
     addOverlay('image', vm.w*.1, vm.h*.1, {url, w:vm.w*.5, h:vm.h*.5});
     showToast('이미지 템플릿 추가됨');
 };
@@ -938,7 +937,7 @@ window._veCtx = (action) => {
         if(!vm.clipboard) return showToast('복사된 요소 없음');
         const no=JSON.parse(JSON.stringify(vm.clipboard));
         no.x+=30;no.y+=30; // offset
-        if(no.type==='image'){const img=new Image();img.crossOrigin='anonymous';img.src=no.url||'';no.img=img;img.onload=()=>render();}
+        if(no.type==='image'){const img=new Image();img.src=no.url||'';no.img=img;img.onload=()=>render();}
         ols.push(no); vm.oi=ols.length-1; render();updateAll(); showToast('붙여넣기 완료'); return;
     }
     if(i<0) return;
@@ -980,6 +979,37 @@ function fmtTime(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return String(
 function rgbaHex(c){if(!c)return'#ffffff';if(c.startsWith('#')){if(c.length===4)return'#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return c.length>7?c.substring(0,7):c;}const m=c.match(/\d+/g);if(!m)return'#ffffff';return'#'+[m[0],m[1],m[2]].map(x=>(+x).toString(16).padStart(2,'0')).join('');}
 function expandHex(c){if(!c)return'#ffffff';if(c.length===4&&c.startsWith('#'))return'#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return c;}
 function isImageUrl(s){if(!s||typeof s!=='string')return false;const t=s.trim();return t.startsWith('http')||t.startsWith('//')||t.startsWith('data:')||t.startsWith('blob:');}
+// Extract best image URL from a library item (handles fabric.js JSON in data_url)
+function bestImageUrl(item){
+    if(!item) return '';
+    // 1. data_url is a direct image URL → use it
+    if(isImageUrl(item.data_url)) return item.data_url;
+    // 2. data_url is fabric.js JSON → try to extract embedded image src
+    if(item.data_url && typeof item.data_url==='string'){
+        try {
+            const parsed=JSON.parse(item.data_url);
+            // fabric.js JSON with objects array
+            if(parsed&&parsed.objects){
+                for(const obj of parsed.objects){
+                    if(obj.type==='image'&&obj.src&&isImageUrl(obj.src)) return obj.src;
+                }
+            }
+            // might be a JSON-encoded URL string
+            if(typeof parsed==='string'&&isImageUrl(parsed)) return parsed;
+        } catch(e){}
+    }
+    // 3. data_url is a JS object (JSONB from Supabase)
+    if(item.data_url && typeof item.data_url==='object'){
+        const d=item.data_url;
+        if(d.objects){
+            for(const obj of d.objects){
+                if(obj.type==='image'&&obj.src&&isImageUrl(obj.src)) return obj.src;
+            }
+        }
+    }
+    // 4. Fallback to thumb_url
+    return item.thumb_url||'';
+}
 
 // ═══════════════════════════════════════════════════════════════
 // TRANSITIONS
