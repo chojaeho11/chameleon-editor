@@ -706,7 +706,7 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     canvas.bringToFront(obj);
 }
 
-// ─── Step 4: Related elements (keyword search, 3 items) ───
+// ─── Step 4: Related elements (keyword search, 2 items — 하단 박스 좌우) ───
 async function _wzElem(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
@@ -718,19 +718,22 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
-            .limit(3);
+            .limit(2);
         if (res.data && res.data.length) { data = res.data; break; }
     }
     if (!data || !data.length) return;
 
-    // 3 positions: 제목 위쪽 (크기 줄이고 아래로)
+    // 하단 박스 좌우 위치 (박스: margin=6%, boxH=20%, boxY=하단)
+    const margin = bW * 0.06;
+    const boxH = bH * 0.20;
+    const boxY = bT + bH - margin - boxH / 2;
+    const elemSize = bW / 7;
     const positions = [
-        { left: bL + bW * 0.20, top: bT + bH * 0.22, size: bW / 7 },
-        { left: bL + bW * 0.50, top: bT + bH * 0.18, size: bW / 6.5 },
-        { left: bL + bW * 0.80, top: bT + bH * 0.22, size: bW / 7 }
+        { left: bL + margin * 0.6,           top: boxY, size: elemSize },  // 박스 왼쪽
+        { left: bL + bW - margin * 0.6,      top: boxY, size: elemSize }   // 박스 오른쪽
     ];
 
-    const promises = data.slice(0, 3).map((item, i) => new Promise(resolve => {
+    const promises = data.slice(0, 2).map((item, i) => new Promise(resolve => {
         const url = item.thumb_url;
         if (!url) { resolve(); return; }
         const pos = positions[i] || positions[0];
