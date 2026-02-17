@@ -160,10 +160,23 @@ function updatePageCounter() {
     if(counter) {
         counter.innerText = `${currentPageIndex + 1} / ${pageDataList.length}`;
     }
-    
+
     // 버튼 상태 업데이트
     const btnPrev = document.getElementById('btnPagePrev');
     const btnNext = document.getElementById('btnPageNext');
     if(btnPrev) btnPrev.disabled = currentPageIndex === 0;
     if(btnNext) btnNext.disabled = currentPageIndex === pageDataList.length - 1;
+
+    // PPT 사이드바 카운터도 업데이트
+    const sideC = document.getElementById('pageCounterSide');
+    if(sideC) sideC.textContent = `${currentPageIndex + 1} / ${pageDataList.length}`;
+    const sidePrev = document.getElementById('btnPagePrevSide');
+    const sideNext = document.getElementById('btnPageNextSide');
+    if(sidePrev) sidePrev.disabled = currentPageIndex === 0;
+    if(sideNext) sideNext.disabled = currentPageIndex === pageDataList.length - 1;
+
+    // window에 pageDataList 노출 (PPT export용)
+    window.__pageDataList = pageDataList;
+    window._getPageIndex = () => currentPageIndex;
+    window.savePageState = () => saveCurrentPageState();
 }

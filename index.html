@@ -285,6 +285,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/plugins/svg.js" defer></script>
@@ -427,6 +428,119 @@
     <h1 class="hero-title" data-i18n="hero_title"><span>카멜레온프린팅</span><br>강력한 에디터 그리고 품질좋은 직접생산</h1>
     <p class="hero-desc" data-i18n="hero_desc">캔바보다 쉽다. 캔바보다 저렴하다. 캔바보다 강력한 편집툴 카프</p>
 </div>
+
+    <!-- 디자인 시작 패널 (인라인) -->
+    <div id="dsmInlinePanel" style="max-width:1200px; margin:0 auto 30px auto; background:#fff; border-radius:16px; padding:25px 30px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.06);">
+        <!-- 온라인/디지털 -->
+        <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#6366f1; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span>
+        </h4>
+        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:20px;">
+            <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '파워포인트')" style="border:2px solid #d97706;">
+                <div class="dsm-icon" style="color:#d97706;"><i class="fa-solid fa-file-powerpoint"></i></div>
+                <div class="dsm-name" data-i18n="dsm_ppt">파워포인트</div>
+                <div class="dsm-size">1280 × 720 px</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
+                <div class="dsm-icon"><i class="fa-solid fa-image"></i></div>
+                <div class="dsm-name" data-i18n="dsm_thumbnail">썸네일</div>
+                <div class="dsm-size">1280 × 720 px</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(236, 333, '웹포스터')">
+                <div class="dsm-icon"><i class="fa-solid fa-file-image"></i></div>
+                <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
+                <div class="dsm-size">891 × 1260 px</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '카드뉴스')">
+                <div class="dsm-icon"><i class="fa-solid fa-newspaper"></i></div>
+                <div class="dsm-name" data-i18n="dsm_cardnews">카드뉴스</div>
+                <div class="dsm-size">1080 × 1080 px</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(227, 291, '상세페이지')">
+                <div class="dsm-icon"><i class="fa-solid fa-scroll"></i></div>
+                <div class="dsm-name" data-i18n="dsm_detailpage">상세페이지</div>
+                <div class="dsm-size">860 × 1100 px</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')">
+                <div class="dsm-icon" style="color:#ff0000;"><i class="fa-brands fa-youtube"></i></div>
+                <div class="dsm-name" data-i18n="dsm_video">영상</div>
+                <div class="dsm-size">1920 × 1080 px</div>
+            </div>
+        </div>
+
+        <!-- 인쇄물 -->
+        <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#f59e0b; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-print"></i> <span data-i18n="dsm_print">인쇄물</span>
+        </h4>
+        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:18px;">
+            <div class="dsm-card" onclick="window.dsmOpenPrintInline(210, 297, 'A4')">
+                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                <div class="dsm-name">A4</div>
+                <div class="dsm-size">210 × 297 mm</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenPrintInline(297, 420, 'A3')">
+                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                <div class="dsm-name">A3</div>
+                <div class="dsm-size">297 × 420 mm</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenPrintInline(420, 594, 'A2')">
+                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                <div class="dsm-name">A2</div>
+                <div class="dsm-size">420 × 594 mm</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenPrintInline(594, 841, 'A1')">
+                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
+                <div class="dsm-name">A1</div>
+                <div class="dsm-size">594 × 841 mm</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenPrintInline(5000, 900, '가로현수막')">
+                <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-scroll"></i></div>
+                <div class="dsm-name" data-i18n="dsm_h_banner">가로현수막</div>
+                <div class="dsm-size">5000 × 900 mm</div>
+            </div>
+            <div class="dsm-card" onclick="window.dsmOpenPrintInline(600, 1800, '세로배너')">
+                <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-flag"></i></div>
+                <div class="dsm-name" data-i18n="dsm_v_banner">세로배너</div>
+                <div class="dsm-size">600 × 1800 mm</div>
+            </div>
+        </div>
+
+        <!-- 직접 입력 -->
+        <div style="padding-top:15px; border-top:1px solid #f1f5f9;">
+            <span style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:10px;" data-i18n="dsm_custom_input"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <input type="number" id="dsmCustomW2" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
+                <span style="color:#cbd5e1;">×</span>
+                <input type="number" id="dsmCustomH2" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
+                <button onclick="window.dsmOpenCustomInline()" style="padding:10px 20px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    // 인라인 패널의 직접 입력
+    window.dsmOpenCustomInline = function() {
+        var w = parseInt(document.getElementById('dsmCustomW2').value);
+        var h = parseInt(document.getElementById('dsmCustomH2').value);
+        if (!w || !h || w < 10 || h < 10) return alert('가로/세로 크기를 입력해주세요 (최소 10mm)');
+        if (window.startEditorDirect) window.startEditorDirect('custom', w, h);
+    };
+    // "무료 디자인 시작하기" 버튼 → 인라인 패널로 스크롤
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('btnDesignStart');
+        if(btn) btn.addEventListener('click', function() {
+            document.getElementById('dsmInlinePanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    });
+    // 인쇄물 카테고리 클릭 → 모달 열기 (인라인에서 호출)
+    window.dsmOpenPrintInline = function(w, h, label) {
+        var m = document.getElementById('designStartModal');
+        if (m) m.style.display = 'flex';
+        setTimeout(function() {
+            if (window.dsmShowPrintCategory) window.dsmShowPrintCategory(w, h, label);
+        }, 50);
+    };
+    </script>
+
 <!-- 퀵메뉴와퍼 -->
 <div class="quick-menu-wrapper">
     
@@ -540,116 +654,6 @@
             <i class="fa-solid fa-palette"></i> <span data-i18n="dsm_btn_start">무료 디자인 시작하기</span>
         </button>
     </div>
-
-    <!-- 디자인 시작 패널 (인라인) -->
-    <div id="dsmInlinePanel" style="max-width:1000px; margin:0 auto 30px auto; background:#fff; border-radius:16px; padding:25px 30px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.06);">
-        <!-- 온라인/디지털 -->
-        <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#6366f1; display:flex; align-items:center; gap:6px;">
-            <i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span>
-        </h4>
-        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:20px;">
-            <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
-                <div class="dsm-icon"><i class="fa-solid fa-image"></i></div>
-                <div class="dsm-name" data-i18n="dsm_thumbnail">썸네일</div>
-                <div class="dsm-size">1280 × 720 px</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(236, 333, '웹포스터')">
-                <div class="dsm-icon"><i class="fa-solid fa-file-image"></i></div>
-                <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
-                <div class="dsm-size">891 × 1260 px</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '카드뉴스')">
-                <div class="dsm-icon"><i class="fa-solid fa-newspaper"></i></div>
-                <div class="dsm-name" data-i18n="dsm_cardnews">카드뉴스</div>
-                <div class="dsm-size">1080 × 1080 px</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(227, 291, '상세페이지')">
-                <div class="dsm-icon"><i class="fa-solid fa-scroll"></i></div>
-                <div class="dsm-name" data-i18n="dsm_detailpage">상세페이지</div>
-                <div class="dsm-size">860 × 1100 px</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(286, 508, '쇼츠')">
-                <div class="dsm-icon" style="color:#ff0050;"><i class="fa-solid fa-mobile-screen"></i></div>
-                <div class="dsm-name" data-i18n="dsm_shorts">쇼츠</div>
-                <div class="dsm-size">1080 × 1920 px</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')">
-                <div class="dsm-icon" style="color:#ff0000;"><i class="fa-brands fa-youtube"></i></div>
-                <div class="dsm-name" data-i18n="dsm_video">영상</div>
-                <div class="dsm-size">1920 × 1080 px</div>
-            </div>
-        </div>
-
-        <!-- 인쇄물 -->
-        <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#f59e0b; display:flex; align-items:center; gap:6px;">
-            <i class="fa-solid fa-print"></i> <span data-i18n="dsm_print">인쇄물</span>
-        </h4>
-        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:18px;">
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(210, 297, 'A4')">
-                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A4</div>
-                <div class="dsm-size">210 × 297 mm</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(297, 420, 'A3')">
-                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A3</div>
-                <div class="dsm-size">297 × 420 mm</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(420, 594, 'A2')">
-                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A2</div>
-                <div class="dsm-size">420 × 594 mm</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(594, 841, 'A1')">
-                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A1</div>
-                <div class="dsm-size">594 × 841 mm</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(5000, 900, '가로현수막')">
-                <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-scroll"></i></div>
-                <div class="dsm-name" data-i18n="dsm_h_banner">가로현수막</div>
-                <div class="dsm-size">5000 × 900 mm</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(600, 1800, '세로배너')">
-                <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-flag"></i></div>
-                <div class="dsm-name" data-i18n="dsm_v_banner">세로배너</div>
-                <div class="dsm-size">600 × 1800 mm</div>
-            </div>
-        </div>
-
-        <!-- 직접 입력 -->
-        <div style="padding-top:15px; border-top:1px solid #f1f5f9;">
-            <span style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:10px;" data-i18n="dsm_custom_input"><i class="fa-solid fa-pencil"></i> 직접 입력 (mm)</span>
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <input type="number" id="dsmCustomW2" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
-                <span style="color:#cbd5e1;">×</span>
-                <input type="number" id="dsmCustomH2" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
-                <button onclick="window.dsmOpenCustomInline()" style="padding:10px 20px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
-            </div>
-        </div>
-    </div>
-    <script>
-    // 인라인 패널의 직접 입력
-    window.dsmOpenCustomInline = function() {
-        var w = parseInt(document.getElementById('dsmCustomW2').value);
-        var h = parseInt(document.getElementById('dsmCustomH2').value);
-        if (!w || !h || w < 10 || h < 10) return alert('가로/세로 크기를 입력해주세요 (최소 10mm)');
-        if (window.startEditorDirect) window.startEditorDirect('custom', w, h);
-    };
-    // "무료 디자인 시작하기" 버튼 → 인라인 패널로 스크롤
-    document.getElementById('btnDesignStart').addEventListener('click', function() {
-        document.getElementById('dsmInlinePanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-    // 인쇄물 카테고리 클릭 → 모달 열기 (인라인에서 호출)
-    window.dsmOpenPrintInline = function(w, h, label) {
-        var m = document.getElementById('designStartModal');
-        if (m) m.style.display = 'flex';
-        // 약간의 딜레이 후 print category 함수 호출 (모달 내 함수가 정의된 후)
-        setTimeout(function() {
-            if (window.dsmShowPrintCategory) window.dsmShowPrintCategory(w, h, label);
-        }, 50);
-    };
-    </script>
 
     <div style="text-align: center; margin-top: 30px; padding-bottom: 30px; background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
         <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 20px;" data-i18n="home_vip_title">대량주문 전용 VIP 라운지</h3>
@@ -1860,6 +1864,34 @@ async function handleSubReturn() {
 })();
 </script>
 
+    <!-- PPT 전용 상단 툴바 -->
+    <div id="pptToolbar" style="display:none; align-items:center; gap:10px; padding:8px 16px; background:linear-gradient(135deg,#f97316,#d97706); color:#fff; font-size:13px; font-weight:600;">
+        <i class="fa-solid fa-file-powerpoint" style="font-size:18px;"></i>
+        <span style="margin-right:6px;">PowerPoint</span>
+        <button onclick="window.addPage()" style="display:inline-flex; align-items:center; gap:5px; padding:6px 14px; background:#fff; color:#d97706; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="ppt_add_slide">슬라이드 추가</span>
+        </button>
+        <div style="display:flex; align-items:center; gap:4px; margin-left:8px;">
+            <span data-i18n="ppt_transition">전환:</span>
+            <select id="pptTransition" onchange="window._pptSetTransition(this.value)" style="padding:4px 8px; border:none; border-radius:6px; font-size:12px; cursor:pointer;">
+                <option value="none">없음</option>
+                <option value="fade">페이드</option>
+                <option value="slide">슬라이드</option>
+                <option value="zoom">확대</option>
+                <option value="wipe">와이프</option>
+                <option value="push">푸시</option>
+            </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
+            <button onclick="window.changePage(-1)" style="padding:4px 10px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="pptPageCounter" style="min-width:60px; text-align:center;">1 / 1</span>
+            <button onclick="window.changePage(1)" style="padding:4px 10px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <button id="btnExportPPTX" onclick="window.exportPPTX()" style="display:inline-flex; align-items:center; gap:5px; padding:6px 16px; background:#fff; color:#d97706; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; margin-left:8px;">
+            <i class="fa-solid fa-download"></i> <span data-i18n="ppt_export">PPT 내보내기</span>
+        </button>
+    </div>
+
     <div id="wallHeightControls">
         <div class="wall-label"><i class="fa-solid fa-ruler-vertical"></i> <span data-i18n="wall_option_title">가벽 높이</span></div>
         <button class="height-btn active" onclick="window.setWallHeight(2200, this)">220cm</button>
@@ -2205,13 +2237,17 @@ async function handleSubReturn() {
                 <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
-                
+
                 <span id="pageCounter" style="font-weight:800; font-size:14px; min-width:60px; text-align:center; color:#334155;">1 / 1</span>
-                
+
                 <button class="btn-icon-only" id="btnPageNext" onclick="window.changePage(1)" title="다음 페이지">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
+            <!-- PPT 플로팅 슬라이드 추가 버튼 -->
+            <button id="pptAddSlideFloat" onclick="window.addPage()" style="display:none; position:absolute; bottom:90px; right:20px; z-index:60; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#f97316,#d97706); color:#fff; border:none; box-shadow:0 4px 15px rgba(249,115,22,0.4); cursor:pointer; align-items:center; justify-content:center; font-size:24px; transition:transform 0.2s;" title="슬라이드 추가">
+                <i class="fa-solid fa-plus"></i>
+            </button>
             <div class="bottom-dock">
                 <button onclick="window.toggleBackgroundLock()" class="zoom-btn" title="배경 잠금/해제"><i class="fa-solid fa-lock"></i></button>
                 <button onclick="document.getElementById('btnFitScreen').click()" class="zoom-btn" title="화면 맞춤"><i class="fa-solid fa-compress"></i></button>
@@ -5861,7 +5897,14 @@ if (w >= 20 && h >= 20) {
 
         // 3. 화면 전환
         document.getElementById("startScreen").style.display = "none";
-        document.getElementById("mainEditor").style.display = "flex"; 
+        document.getElementById("mainEditor").style.display = "flex";
+        // PPT UI: 비-PPT 모드일 때 툴바 숨기기
+        if (!window.__PPT_MODE) {
+            var _pt = document.getElementById('pptToolbar');
+            if (_pt) _pt.style.display = 'none';
+            var _pf = document.getElementById('pptAddSlideFloat');
+            if (_pf) _pf.style.display = 'none';
+        }
         
         const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
@@ -7575,7 +7618,10 @@ window.filterModalItems = function(keyword) {
     .dsm-size { font-size: 9px; }
     #designStartModal .modal-box { width: 100%; max-width: 100%; border-radius: 12px 12px 0 0; }
     #dsm-main-view > div > div[style*="grid-template-columns:repeat(6"] { grid-template-columns: repeat(3, 1fr) !important; }
+    #dsmInlinePanel div[style*="grid-template-columns:repeat(6"] { grid-template-columns: repeat(3, 1fr) !important; }
     #dsmProductGrid { grid-template-columns: repeat(2, 1fr) !important; }
+    #pptToolbar { flex-wrap: wrap; font-size: 11px; padding: 6px 10px !important; gap: 6px !important; }
+    #pptToolbar button { padding: 4px 10px !important; font-size: 11px !important; }
 }
 </style>
 
@@ -7589,12 +7635,22 @@ window.openDesignStartModal = function() {
 // 디지털 판형 → 로그인 체크 후 빈 에디터 열기
 window.dsmOpenEditor = async function(wMM, hMM, label) {
     document.getElementById('designStartModal').style.display = 'none';
-    // 쇼츠/영상 → 비디오 메이커
-    if (label === '쇼츠' || label === '영상') {
+    // 영상 → 비디오 메이커
+    if (label === '영상') {
         if (window.openVideoMaker) { window.openVideoMaker(label); return; }
     }
+    // 파워포인트 모드 설정
+    window.__PPT_MODE = (label === '파워포인트');
+    window.__pptTransitions = window.__pptTransitions || {};
     if (window.startEditorDirect) {
         await window.startEditorDirect('custom', wMM, hMM);
+        // PPT 모드 UI 활성화
+        if (window.__PPT_MODE) {
+            var tb = document.getElementById('pptToolbar');
+            if (tb) tb.style.display = 'flex';
+            var addBtn = document.getElementById('pptAddSlideFloat');
+            if (addBtn) addBtn.style.display = 'flex';
+        }
     } else {
         alert('에디터를 불러오는 중 오류가 발생했습니다.');
     }
@@ -7606,6 +7662,125 @@ window.dsmOpenCustom = function() {
     var h = parseInt(document.getElementById('dsmCustomH').value);
     if (!w || !h || w <= 0 || h <= 0) return alert('가로/세로를 올바르게 입력해주세요.');
     window.dsmOpenEditor(w, h, 'Custom');
+};
+
+// ─── PPT 슬라이드 전환 효과 관리 ───
+window.__pptTransitions = {};
+window._pptSetTransition = function(val) {
+    if (!window.__PPT_MODE) return;
+    var idx = 0;
+    try { idx = window._getPageIndex ? window._getPageIndex() : 0; } catch(e) {}
+    window.__pptTransitions[idx] = val;
+};
+// PPT 페이지 카운터 동기화 (기존 updatePageCounter 후킹)
+(function() {
+    var origUpdate = null;
+    var hookInterval = setInterval(function() {
+        if (window.canvas && !origUpdate) {
+            // 페이지 변경 시 PPT 카운터 업데이트를 위한 MutationObserver
+            var pc = document.getElementById('pageCounter');
+            if (pc) {
+                var obs = new MutationObserver(function() {
+                    var pptC = document.getElementById('pptPageCounter');
+                    if (pptC && window.__PPT_MODE) pptC.textContent = pc.textContent;
+                    // 전환 효과 select 동기화
+                    var sel = document.getElementById('pptTransition');
+                    if (sel && window.__PPT_MODE) {
+                        var txt = pc.textContent.trim();
+                        var idx = parseInt(txt.split('/')[0].trim()) - 1;
+                        sel.value = window.__pptTransitions[idx] || 'none';
+                    }
+                });
+                obs.observe(pc, { childList: true, characterData: true, subtree: true });
+                clearInterval(hookInterval);
+            }
+        }
+    }, 500);
+})();
+
+// ─── PPT 내보내기 ───
+window.exportPPTX = async function() {
+    if (typeof PptxGenJS === 'undefined') return alert('PptxGenJS library not loaded.');
+    if (!window.canvas) return;
+
+    var btn = document.getElementById('btnExportPPTX');
+    var origHTML = btn ? btn.innerHTML : '';
+    if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ...'; btn.disabled = true; }
+
+    try {
+        // 현재 페이지 저장
+        if (window.savePageState) window.savePageState();
+        else if (window.canvas) {
+            // fallback: import를 쓸 수 없으므로 canvas-pages의 내부 함수 호출
+            var ev = new CustomEvent('ppt-save-page');
+            document.dispatchEvent(ev);
+        }
+
+        var pptx = new PptxGenJS();
+        pptx.defineLayout({ name: 'PPT16x9', width: 10, height: 5.625 });
+        pptx.layout = 'PPT16x9';
+
+        // pageDataList에 접근 (모듈에서 window로 노출해야 함)
+        var pages = window.__pageDataList || [];
+        if (!pages.length) {
+            // 현재 캔버스만 있는 경우
+            var json = window.canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
+            pages = [json];
+        }
+
+        for (var i = 0; i < pages.length; i++) {
+            var slide = pptx.addSlide();
+
+            // 전환 효과 적용
+            var tr = window.__pptTransitions[i] || 'none';
+            if (tr !== 'none') {
+                var trMap = { fade:'fade', slide:'push', zoom:'zoom', wipe:'wipe', push:'push' };
+                slide.addSlide = undefined; // not needed
+                try { slide.transition = { type: trMap[tr] || 'fade', speed: 1.0 }; } catch(e) {}
+            }
+
+            // 임시 캔버스에 렌더링
+            var pageJson = pages[i];
+            var board = null;
+            if (pageJson && pageJson.objects) {
+                board = pageJson.objects.find(function(o) { return o.isBoard; });
+            }
+            var bw = board ? (board.width * (board.scaleX || 1)) : 1280;
+            var bh = board ? (board.height * (board.scaleY || 1)) : 720;
+            var bx = board ? (board.left || 0) : 0;
+            var by = board ? (board.top || 0) : 0;
+
+            var tmpEl = document.createElement('canvas');
+            tmpEl.width = bw * 2; tmpEl.height = bh * 2;
+            var tmpCanvas = new fabric.StaticCanvas(tmpEl);
+            tmpCanvas.setWidth(bw * 2); tmpCanvas.setHeight(bh * 2);
+            tmpCanvas.setBackgroundColor('#ffffff');
+
+            await new Promise(function(resolve) {
+                tmpCanvas.loadFromJSON(pageJson, function() {
+                    tmpCanvas.setViewportTransform([2, 0, 0, 2, -bx * 2, -by * 2]);
+                    // 목업/가이드 제거
+                    tmpCanvas.getObjects().forEach(function(obj) {
+                        if (obj.isMockup || obj.excludeFromExport || obj.isGuide) tmpCanvas.remove(obj);
+                    });
+                    tmpCanvas.renderAll();
+                    setTimeout(resolve, 300);
+                });
+            });
+
+            var dataUrl = tmpCanvas.toDataURL({ format: 'png', quality: 1.0 });
+            slide.addImage({ data: dataUrl, x: 0, y: 0, w: '100%', h: '100%' });
+            tmpCanvas.dispose();
+        }
+
+        await pptx.writeFile({ fileName: 'presentation_' + Date.now() + '.pptx' });
+
+    } catch(err) {
+        console.error('PPTX export error:', err);
+        alert('PPT 내보내기 실패: ' + err.message);
+    } finally {
+        if (btn) { btn.innerHTML = origHTML; btn.disabled = false; }
+    }
 };
 
 // ─── 인쇄물 카테고리 뷰 ───
