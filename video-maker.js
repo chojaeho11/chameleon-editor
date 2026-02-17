@@ -405,6 +405,7 @@ function refreshLeftPanel() {
         case 'transition': renderTransitionTab(el);break;
         case 'adjust': renderAdjustTab(el);break;
         case 'template': renderTemplateTab(el);break;
+        case 'save': renderSaveTab(el);break;
     }
 }
 
@@ -763,6 +764,173 @@ function renderTemplateTab(el) {
     h+='</div>';
     el.innerHTML = h;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// SAVE / LOAD PROJECT
+// ═══════════════════════════════════════════════════════════════
+const VE_SAVE_KEY='ve_projects';
+
+function renderSaveTab(el){
+    const saves=_veGetSaves();
+    let h='<div class="ve-sec"><b>프로젝트 저장</b>';
+    h+=`<input class="ve-inp" id="veSaveName" placeholder="프로젝트 이름" value="프로젝트 ${saves.length+1}">`;
+    h+=`<button class="ve-add-btn" onclick="window._veSaveProject()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>`;
+    h+='</div>';
+    h+='<div class="ve-sec"><b>저장된 프로젝트</b>';
+    if(!saves.length){
+        h+='<p class="ve-empty">저장된 프로젝트 없음</p>';
+    } else {
+        saves.forEach((s,i)=>{
+            const date=new Date(s.savedAt).toLocaleString();
+            const clipCount=s.clips?s.clips.length:0;
+            h+=`<div class="ve-save-row">`;
+            h+=`<div style="flex:1;min-width:0">`;
+            h+=`<div style="font-size:12px;font-weight:600;color:#e0e0e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||'Untitled'}</div>`;
+            h+=`<div style="font-size:10px;color:#6b7280">${date} · ${clipCount} clips · ${s.format||'landscape'}</div>`;
+            h+=`</div>`;
+            h+=`<button class="ve-save-load" onclick="window._veLoadProject(${i})" title="불러오기"><i class="fa-solid fa-folder-open"></i></button>`;
+            h+=`<button class="ve-save-del" onclick="window._veDeleteProject(${i})" title="삭제"><i class="fa-solid fa-trash"></i></button>`;
+            h+=`</div>`;
+        });
+    }
+    h+='</div>';
+    el.innerHTML=h;
+}
+
+function _veGetSaves(){
+    try{return JSON.parse(localStorage.getItem(VE_SAVE_KEY)||'[]');}catch(e){return [];}
+}
+
+function _clipToDataUrl(clip){
+    return new Promise(resolve=>{
+        if(clip.type==='image'){
+            const c=document.createElement('canvas');
+            c.width=clip.img.naturalWidth||clip.img.width;
+            c.height=clip.img.naturalHeight||clip.img.height;
+            c.getContext('2d').drawImage(clip.img,0,0);
+            try{resolve(c.toDataURL('image/jpeg',0.85));}catch(e){resolve(clip.thumbUrl||'');}
+        } else if(clip.type==='video'){
+            // video: save thumbnail only, mark needs re-import
+            resolve(clip.thumbUrl||'');
+        } else resolve('');
+    });
+}
+
+window._veSaveProject = async function(){
+    const nameEl=document.getElementById('veSaveName');
+    const name=(nameEl&&nameEl.value)||'Untitled';
+    showToast('저장 중...');
+    const clipData=[];
+    for(const c of vm.clips){
+        const dataUrl=await _clipToDataUrl(c);
+        const overlays=c.overlays.map(o=>{
+            const oc={...o};
+            if(oc._imgEl) delete oc._imgEl;
+            if(oc.imgSrc) oc.imgSrc=oc.imgSrc; // keep image overlay src
+            return oc;
+        });
+        clipData.push({
+            type:c.type,
+            dataUrl,
+            thumbUrl:c.thumbUrl||'',
+            duration:c.duration,
+            overlays,
+            adj:c.adj,
+            transition:c.transition,
+            videoNeedsReimport:c.type==='video'
+        });
+    }
+    const project={
+        name,
+        savedAt:Date.now(),
+        format:vm.format,
+        w:vm.w, h:vm.h,
+        music:vm.music,
+        audioUrl:vm.audioUrl,
+        clips:clipData
+    };
+    const saves=_veGetSaves();
+    saves.unshift(project);
+    // keep max 10 projects
+    if(saves.length>10) saves.length=10;
+    try{
+        localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));
+        showToast('저장 완료: '+name);
+    }catch(e){
+        if(e.name==='QuotaExceededError'){
+            // try saving without full image data
+            clipData.forEach(c=>{c.dataUrl=c.thumbUrl;});
+            project.clips=clipData;
+            saves[0]=project;
+            try{localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));showToast('저장 완료 (썸네일)');}
+            catch(e2){alert('저장 실패: 용량 초과');}
+        } else alert('저장 실패: '+e.message);
+    }
+    refreshLeftPanel();
+};
+
+window._veLoadProject = function(idx){
+    const saves=_veGetSaves();
+    const p=saves[idx]; if(!p) return;
+    if(vm.clips.length&&!confirm('현재 프로젝트를 덮어쓸까요?')) return;
+    // cleanup current
+    vm.clips.forEach(c=>{try{URL.revokeObjectURL(c.url);}catch(e){}});
+    vm.clips=[];vm.ci=0;vm.oi=-1;
+    // restore format
+    vm.format=p.format||'landscape';
+    const f=FORMATS.find(x=>x.id===vm.format)||FORMATS[0];
+    vm.w=p.w||f.w; vm.h=p.h||f.h;
+    const cvs=document.getElementById('veCanvas');
+    if(cvs){cvs.width=vm.w;cvs.height=vm.h;vm.ctx=cvs.getContext('2d');}
+    // restore audio
+    vm.music=p.music||'none';
+    vm.audioUrl=p.audioUrl||null;
+    // restore clips
+    let loaded=0;
+    const total=p.clips?p.clips.length:0;
+    if(!total){updateAll();render();refreshLeftPanel();return;}
+    p.clips.forEach((cd,ci)=>{
+        if(cd.type==='video'&&cd.videoNeedsReimport){
+            // video placeholder
+            const img=new Image(); img.src=cd.thumbUrl||'';
+            img.onload=img.onerror=()=>{
+                vm.clips[ci]={type:'image',url:'',img,thumbUrl:cd.thumbUrl||'',
+                    duration:cd.duration||3,overlays:cd.overlays||[],adj:cd.adj||{},transition:cd.transition||'fade',
+                    _videoPlaceholder:true};
+                _restoreOverlayImages(vm.clips[ci]);
+                if(++loaded>=total){selectClip(0);updateAll();render();updateFormatBtns();}
+            };
+        } else {
+            const img=new Image();
+            img.onload=img.onerror=()=>{
+                vm.clips[ci]={type:'image',url:cd.dataUrl||'',img,thumbUrl:cd.thumbUrl||'',
+                    duration:cd.duration||3,overlays:cd.overlays||[],adj:cd.adj||{},transition:cd.transition||'fade'};
+                _restoreOverlayImages(vm.clips[ci]);
+                if(++loaded>=total){selectClip(0);updateAll();render();updateFormatBtns();}
+            };
+            img.src=cd.dataUrl||cd.thumbUrl||'';
+        }
+    });
+    showToast('불러옴: '+p.name);
+    vm.leftTab='media';
+};
+
+function _restoreOverlayImages(clip){
+    clip.overlays.forEach(o=>{
+        if(o.type==='image'&&o.imgSrc){
+            const im=new Image();im.src=o.imgSrc;
+            im.onload=()=>{o._imgEl=im;render();};
+        }
+    });
+}
+
+window._veDeleteProject = function(idx){
+    if(!confirm('삭제할까요?')) return;
+    const saves=_veGetSaves();
+    saves.splice(idx,1);
+    localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));
+    refreshLeftPanel();
+};
 
 // ═══════════════════════════════════════════════════════════════
 // RIGHT PANEL (Properties)
@@ -1373,9 +1541,14 @@ function onDblClick(e){
     if(o.rotation){inp.style.transform=`rotate(${o.rotation}deg)`;inp.style.transformOrigin='top left';}
     document.body.appendChild(inp);
     inp.focus();inp.select();
+    let finished=false;
     function finish(){
+        if(finished) return;
+        finished=true;
         o.text=inp.value||'텍스트';
-        inp.remove();render();refreshLeftPanel();refreshRightPanel();
+        inp.removeEventListener('blur',finish);
+        if(inp.parentNode) inp.remove();
+        render();refreshLeftPanel();refreshRightPanel();
     }
     inp.addEventListener('blur',finish);
     inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();finish();}});
