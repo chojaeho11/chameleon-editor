@@ -553,16 +553,18 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
             const pk = window.currentProductKey || 'custom';
             window.loadSideBarTemplates(pk, matchedKw, 0);
         }
-        // 템플릿 패널 열기 (toggle이 아닌 강제 open)
-        const subPanel = document.getElementById('subPanel');
-        const tplPanel = document.getElementById('sub-template');
-        if (subPanel && tplPanel) {
-            subPanel.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
-            document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
-            tplPanel.style.display = 'flex';
-            subPanel.style.display = 'block';
-            const ico = document.querySelector('.icon-item[data-panel="sub-template"]');
-            if (ico) ico.classList.add('active');
+        // 템플릿 패널 열기 (PC만 — 모바일은 열지 않음)
+        if (window.innerWidth > 768) {
+            const subPanel = document.getElementById('subPanel');
+            const tplPanel = document.getElementById('sub-template');
+            if (subPanel && tplPanel) {
+                subPanel.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
+                document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
+                tplPanel.style.display = 'flex';
+                subPanel.style.display = 'block';
+                const ico = document.querySelector('.icon-item[data-panel="sub-template"]');
+                if (ico) ico.classList.add('active');
+            }
         }
     }
 
@@ -789,7 +791,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     ];
 
     const promises = data.slice(0, 2).map((item, i) => new Promise(resolve => {
-        const url = item.thumb_url;
+        const url = item.data_url || item.thumb_url;
         if (!url) { resolve(); return; }
         const pos = positions[i] || positions[0];
         fabric.Image.fromURL(url, img => {
