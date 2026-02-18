@@ -1045,5 +1045,8 @@
   "referral_badge": "紹介",
   "referral_log_info": "預り金は現金のように使用できます。出金時に3.3%の税金が差し引かれます。",
   "referral_log_desc": "{name}さんの紹介で預り金が付与されました。",
-  "label_order_num": "注文"
+  "label_order_num": "注文",
+  "btn_delete_selected": "選択削除",
+  "confirm_delete_uploads": "選択した画像を削除しますか？",
+  "msg_delete_failed": "削除に失敗しました。"
 }

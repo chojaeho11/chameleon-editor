@@ -1045,5 +1045,8 @@
   "referral_badge": "Parrainage",
   "referral_log_info": "Le dépôt peut être utilisé comme de l'argent. Une taxe de 3,3% sera déduite lors du retrait.",
   "referral_log_desc": "Dépôt crédité grâce au parrainage de {name}.",
-  "label_order_num": "Commande"
+  "label_order_num": "Commande",
+  "btn_delete_selected": "Supprimer la sélection",
+  "confirm_delete_uploads": "Supprimer les images sélectionnées ?",
+  "msg_delete_failed": "Échec de la suppression."
 }

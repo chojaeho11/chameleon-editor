@@ -1045,5 +1045,8 @@
   "referral_badge": "Empfehlung",
   "referral_log_info": "Guthaben kann wie Bargeld verwendet werden. Bei Auszahlung werden 3,3% Steuern abgezogen.",
   "referral_log_desc": "Guthaben durch Empfehlung von {name} gutgeschrieben.",
-  "label_order_num": "Bestellung"
+  "label_order_num": "Bestellung",
+  "btn_delete_selected": "Auswahl löschen",
+  "confirm_delete_uploads": "Ausgewählte Bilder löschen?",
+  "msg_delete_failed": "Löschen fehlgeschlagen."
 }

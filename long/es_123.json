@@ -1045,5 +1045,8 @@
   "referral_badge": "Referencia",
   "referral_log_info": "El depósito se puede usar como efectivo. Se deducirá un 3.3% de impuestos al retirar.",
   "referral_log_desc": "Depósito acreditado por referencia de {name}.",
-  "label_order_num": "Pedido"
+  "label_order_num": "Pedido",
+  "btn_delete_selected": "Eliminar selección",
+  "confirm_delete_uploads": "¿Eliminar las imágenes seleccionadas?",
+  "msg_delete_failed": "Error al eliminar."
 }

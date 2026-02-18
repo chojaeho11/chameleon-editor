@@ -1045,5 +1045,8 @@
   "referral_badge": "Referral",
   "referral_log_info": "Deposit can be used like cash. A 3.3% tax will be deducted upon withdrawal.",
   "referral_log_desc": "Deposit credited through {name}'s referral.",
-  "label_order_num": "Order"
+  "label_order_num": "Order",
+  "btn_delete_selected": "Delete Selected",
+  "confirm_delete_uploads": "Delete the selected images?",
+  "msg_delete_failed": "Failed to delete."
 }

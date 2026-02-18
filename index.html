@@ -2140,9 +2140,20 @@ async function handleSubReturn() {
 
                 <div class="section-title" style="font-size:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                     <span data-i18n="label_my_uploads">📁 내 업로드</span>
-                    <button id="btnRefreshUploads" class="tool-btn" style="font-size:10px; padding:2px 8px; height:24px;" onclick="window.loadMyUploads && window.loadMyUploads()">
-                        <i class="fa-solid fa-arrows-rotate"></i>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <button id="btnSelectUploads" class="tool-btn" style="font-size:10px; padding:2px 8px; height:24px;" onclick="window.toggleUploadSelectMode && window.toggleUploadSelectMode()">
+                            <i class="fa-solid fa-check-double"></i>
+                        </button>
+                        <button id="btnRefreshUploads" class="tool-btn" style="font-size:10px; padding:2px 8px; height:24px;" onclick="window.loadMyUploads && window.loadMyUploads()">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="myUploadDeleteBar" style="display:none; margin-bottom:8px; display:none; gap:6px; align-items:center;">
+                    <button id="btnDeleteUploads" onclick="window.deleteSelectedUploads && window.deleteSelectedUploads()" style="flex:1; height:30px; border:none; border-radius:6px; background:#ef4444; color:white; font-size:12px; font-weight:700; cursor:pointer;">
+                        🗑️ <span data-i18n="btn_delete_selected">선택 삭제</span> (<span id="uploadDeleteCount">0</span>)
                     </button>
+                    <button onclick="window.toggleUploadSelectMode && window.toggleUploadSelectMode()" style="height:30px; padding:0 12px; border:1px solid #cbd5e1; border-radius:6px; background:white; color:#64748b; font-size:12px; cursor:pointer;" data-i18n="btn_cancel">취소</button>
                 </div>
                 <div id="myUploadGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; min-height:60px;">
                     <div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:15px 0;" data-i18n="label_login_required">로그인 후 이용 가능</div>
@@ -3430,6 +3441,58 @@ window.filterFxCards = function(cat, btn) {
     })();
 
     // ─── 업로드 히스토리 (로그인 유저) ───
+    window._uploadSelectMode = false;
+    window._selectedUploads = new Set();
+
+    window.toggleUploadSelectMode = function() {
+        window._uploadSelectMode = !window._uploadSelectMode;
+        window._selectedUploads.clear();
+        var bar = document.getElementById('myUploadDeleteBar');
+        var btn = document.getElementById('btnSelectUploads');
+        if (window._uploadSelectMode) {
+            bar.style.display = 'flex';
+            btn.style.background = '#6366f1';
+            btn.style.color = 'white';
+        } else {
+            bar.style.display = 'none';
+            btn.style.background = '';
+            btn.style.color = '';
+        }
+        document.getElementById('uploadDeleteCount').textContent = '0';
+        window.loadMyUploads();
+    };
+
+    window._updateDeleteCount = function() {
+        var cnt = window._selectedUploads.size;
+        document.getElementById('uploadDeleteCount').textContent = cnt;
+        var btn = document.getElementById('btnDeleteUploads');
+        btn.disabled = cnt === 0;
+        btn.style.opacity = cnt === 0 ? '0.5' : '1';
+    };
+
+    window.deleteSelectedUploads = async function() {
+        if (window._selectedUploads.size === 0) return;
+        var names = Array.from(window._selectedUploads);
+        if (!confirm(window.t('confirm_delete_uploads', '선택한 ' + names.length + '개의 이미지를 삭제하시겠습니까?'))) return;
+        var user = window.currentUser;
+        if (!user || !window.sb) return;
+        var paths = names.map(function(n) { return 'user-uploads/' + user.id + '/' + n; });
+        try {
+            var { error } = await window.sb.storage.from('design').remove(paths);
+            if (error) throw error;
+        } catch(e) {
+            console.error('Delete failed:', e);
+            alert(window.t('msg_delete_failed', '삭제에 실패했습니다.'));
+        }
+        window._selectedUploads.clear();
+        window._uploadSelectMode = false;
+        document.getElementById('myUploadDeleteBar').style.display = 'none';
+        var btn = document.getElementById('btnSelectUploads');
+        btn.style.background = '';
+        btn.style.color = '';
+        window.loadMyUploads();
+    };
+
     window.loadMyUploads = async function() {
         const grid = document.getElementById('myUploadGrid');
         if (!grid) return;
@@ -3446,27 +3509,59 @@ window.filterFxCards = function(cat, btn) {
                 return;
             }
             grid.innerHTML = '';
+            var selectMode = window._uploadSelectMode;
             data.forEach(function(file) {
                 if (file.name.startsWith('.')) return;
                 const url = window.sb.storage.from('design').getPublicUrl('user-uploads/' + user.id + '/' + file.name).data.publicUrl;
                 const thumb = document.createElement('div');
-                thumb.style.cssText = 'aspect-ratio:1; border-radius:6px; overflow:hidden; cursor:pointer; border:1px solid #e2e8f0; background:#f8fafc; display:flex; align-items:center; justify-content:center;';
+                thumb.style.cssText = 'aspect-ratio:1; border-radius:6px; overflow:hidden; cursor:pointer; border:1px solid #e2e8f0; background:#f8fafc; display:flex; align-items:center; justify-content:center; position:relative;';
                 thumb.innerHTML = '<img src="' + url + '" style="width:100%; height:100%; object-fit:cover;" loading="lazy">';
                 thumb.title = file.name;
-                thumb.onclick = function() {
-                    fabric.Image.fromURL(url, function(img) {
-                        const board = window.canvas.getObjects().find(function(o) { return o.isBoard; });
-                        const maxW = board ? board.width * 0.6 : 300;
-                        const maxH = board ? board.height * 0.6 : 300;
-                        if (img.width > maxW || img.height > maxH) {
-                            var s = Math.min(maxW / img.width, maxH / img.height);
-                            img.set({ scaleX: s, scaleY: s });
+
+                if (selectMode) {
+                    var isSelected = window._selectedUploads.has(file.name);
+                    var check = document.createElement('div');
+                    check.style.cssText = 'position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:4px; border:2px solid ' + (isSelected ? '#6366f1' : '#cbd5e1') + '; background:' + (isSelected ? '#6366f1' : 'rgba(255,255,255,0.85)') + '; display:flex; align-items:center; justify-content:center; z-index:2; transition:all 0.15s;';
+                    check.innerHTML = isSelected ? '<i class="fa-solid fa-check" style="color:white; font-size:11px;"></i>' : '';
+                    thumb.appendChild(check);
+                    if (isSelected) {
+                        thumb.style.border = '2px solid #6366f1';
+                        thumb.style.boxShadow = '0 0 0 1px #6366f1';
+                    }
+                    thumb.onclick = function() {
+                        if (window._selectedUploads.has(file.name)) {
+                            window._selectedUploads.delete(file.name);
+                            check.style.border = '2px solid #cbd5e1';
+                            check.style.background = 'rgba(255,255,255,0.85)';
+                            check.innerHTML = '';
+                            thumb.style.border = '1px solid #e2e8f0';
+                            thumb.style.boxShadow = 'none';
+                        } else {
+                            window._selectedUploads.add(file.name);
+                            check.style.border = '2px solid #6366f1';
+                            check.style.background = '#6366f1';
+                            check.innerHTML = '<i class="fa-solid fa-check" style="color:white; font-size:11px;"></i>';
+                            thumb.style.border = '2px solid #6366f1';
+                            thumb.style.boxShadow = '0 0 0 1px #6366f1';
                         }
-                        window.addToCenter ? window.addToCenter(img) : window.canvas.add(img);
-                        window.canvas.setActiveObject(img);
-                        window.canvas.requestRenderAll();
-                    }, { crossOrigin: 'anonymous' });
-                };
+                        window._updateDeleteCount();
+                    };
+                } else {
+                    thumb.onclick = function() {
+                        fabric.Image.fromURL(url, function(img) {
+                            const board = window.canvas.getObjects().find(function(o) { return o.isBoard; });
+                            const maxW = board ? board.width * 0.6 : 300;
+                            const maxH = board ? board.height * 0.6 : 300;
+                            if (img.width > maxW || img.height > maxH) {
+                                var s = Math.min(maxW / img.width, maxH / img.height);
+                                img.set({ scaleX: s, scaleY: s });
+                            }
+                            window.addToCenter ? window.addToCenter(img) : window.canvas.add(img);
+                            window.canvas.setActiveObject(img);
+                            window.canvas.requestRenderAll();
+                        }, { crossOrigin: 'anonymous' });
+                    };
+                }
                 grid.appendChild(thumb);
             });
         } catch(e) {

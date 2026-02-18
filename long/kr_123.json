@@ -669,5 +669,8 @@
   "referral_badge": "추천",
   "referral_log_info": "예치금은 현금처럼 사용 가능합니다. 출금 시 3.3%의 세금이 공제됩니다.",
   "referral_log_desc": "{name}님의 추천으로 예치금이 적립되었습니다.",
-  "label_order_num": "주문"
+  "label_order_num": "주문",
+  "btn_delete_selected": "선택 삭제",
+  "confirm_delete_uploads": "선택한 이미지를 삭제하시겠습니까?",
+  "msg_delete_failed": "삭제에 실패했습니다."
 }
