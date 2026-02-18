@@ -122,6 +122,13 @@ window.uploadTemplate = async () => {
         if (!thumbFile) return alert("썸네일 이미지는 필수입니다.");
     }
 
+    // PNG만 허용하는 카테고리 (사진배경, 패턴 제외)
+    if (['logo', 'vector', 'graphic'].includes(cat) && thumbFile) {
+        if (!thumbFile.name.toLowerCase().endsWith('.png') && thumbFile.type !== 'image/png') {
+            return alert("이 카테고리는 PNG 파일만 업로드 가능합니다.");
+        }
+    }
+
     const btn = document.querySelector('.tpl-form .btn-primary');
     const oldText = btn.innerText;
     btn.innerText = "업로드 중...";
@@ -273,6 +280,10 @@ window.toggleFileInputs = () => {
     const lblThumb = document.getElementById('lblThumb');
     const lblData = document.getElementById('lblData');
     const dataInput = document.getElementById('fileData');
+    // PNG만 허용하는 카테고리 (사진배경, 패턴 제외)
+    const pngOnly = ['logo', 'vector', 'graphic'].includes(cat);
+    const thumbAccept = pngOnly ? '.png,image/png' : 'image/*';
+
     if (cat === 'audio') {
         if(groupData) groupData.style.display = 'block';
         if(thumbInput) thumbInput.accept = 'image/*';
@@ -281,13 +292,17 @@ window.toggleFileInputs = () => {
         if(dataInput) dataInput.accept = 'audio/*,.mp3,.wav,.ogg,.m4a';
     } else if (['vector', 'transparent-graphic', 'graphic'].includes(cat)) {
         if(groupData) groupData.style.display = 'block';
-        if(thumbInput) thumbInput.accept = 'image/*';
-        if(lblThumb) lblThumb.textContent = '1. 썸네일 (이미지)';
+        if(thumbInput) thumbInput.accept = thumbAccept;
+        if(lblThumb) lblThumb.textContent = pngOnly ? '1. 썸네일 (PNG만 가능)' : '1. 썸네일 (이미지)';
         if(lblData) lblData.textContent = '2. 벡터 데이터 (SVG/JSON)';
         if(dataInput) dataInput.accept = '.svg,.json,image/*';
+    } else if (cat === 'logo') {
+        if(groupData) groupData.style.display = 'none';
+        if(thumbInput) thumbInput.accept = thumbAccept;
+        if(lblThumb) lblThumb.textContent = '1. 썸네일 (PNG만 가능)';
     } else {
         if(groupData) groupData.style.display = 'none';
-        if(thumbInput) thumbInput.accept = 'image/*';
+        if(thumbInput) thumbInput.accept = thumbAccept;
         if(lblThumb) lblThumb.textContent = '1. 썸네일 (이미지)';
         if(lblData) lblData.textContent = '2. 벡터 데이터 (SVG/JSON)';
         if(dataInput) dataInput.accept = '.svg,.json,image/*';
