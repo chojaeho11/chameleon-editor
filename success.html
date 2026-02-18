@@ -60,8 +60,8 @@
                 const logs = await logRes.json();
                 if (logs && logs.length > 0) return;
 
-                // 주문 금액 조회
-                const orderRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${dbId}&select=total_amount`, {
+                // 주문 금액 + 주문자명 조회
+                const orderRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${dbId}&select=total_amount,manager_name`, {
                     headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }
                 });
                 const [order] = await orderRes.json();
@@ -69,6 +69,7 @@
 
                 const bonus = Math.floor(order.total_amount * 0.1);
                 if (bonus <= 0) return;
+                const buyerName = order.manager_name || '고객';
 
                 // 프로필 조회
                 const pfRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${refId}&select=deposit`, {
@@ -88,7 +89,7 @@
                 await fetch(`${SUPABASE_URL}/rest/v1/wallet_logs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
-                    body: JSON.stringify({ user_id: refId, type: 'referral_bonus', amount: bonus, description: `추천인 적립 (주문: ${dbId})` })
+                    body: JSON.stringify({ user_id: refId, type: 'referral_bonus', amount: bonus, description: `${buyerName}님의 추천 적립 (주문: ${dbId})` })
                 });
                 console.log('[추천인] 적립 완료:', refId, '+' + bonus);
             } catch (e) {

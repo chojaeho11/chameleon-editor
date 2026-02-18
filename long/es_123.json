@@ -1041,5 +1041,7 @@
   "referral_self_error": "No puede referirse a sí mismo.",
   "referral_no_refund": "Los pedidos con bono de referencia no son reembolsables después de otorgar el bono.",
   "referral_no_refund_short": "Este pedido no es reembolsable tras el bono de referencia.",
-  "referral_applied": "Referente aplicado"
+  "referral_applied": "Referente aplicado",
+  "referral_badge": "Referencia",
+  "referral_log_info": "El depósito se puede usar como efectivo. Se deducirá un 3.3% de impuestos al retirar."
 }

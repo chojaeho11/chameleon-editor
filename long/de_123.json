@@ -1041,5 +1041,7 @@
   "referral_self_error": "Sie können sich nicht selbst empfehlen.",
   "referral_no_refund": "Bestellungen mit Empfehlungsbonus sind nach Gutschrift nicht erstattungsfähig.",
   "referral_no_refund_short": "Diese Bestellung ist nach dem Empfehlungsbonus nicht erstattungsfähig.",
-  "referral_applied": "Empfehler angewendet"
+  "referral_applied": "Empfehler angewendet",
+  "referral_badge": "Empfehlung",
+  "referral_log_info": "Guthaben kann wie Bargeld verwendet werden. Bei Auszahlung werden 3,3% Steuern abgezogen."
 }

@@ -1343,13 +1343,15 @@ async function creditReferralBonus(orderId, referrerId) {
             .eq('type', 'referral_bonus').ilike('description', `%주문: ${orderId}%`).maybeSingle();
         if (existing) return;
 
-        // 주문 금액 조회
+        // 주문 금액 + 주문자명 조회
         const { data: order } = await sb.from('orders')
-            .select('total_amount').eq('id', orderId).maybeSingle();
+            .select('total_amount, manager_name').eq('id', orderId).maybeSingle();
         if (!order || !order.total_amount) return;
 
         const bonusAmount = Math.floor(order.total_amount * 0.1);
         if (bonusAmount <= 0) return;
+
+        const buyerName = order.manager_name || '고객';
 
         // 예치금 적립
         const { data: pf } = await sb.from('profiles').select('deposit').eq('id', referrerId).single();
@@ -1357,7 +1359,7 @@ async function creditReferralBonus(orderId, referrerId) {
         await sb.from('profiles').update({ deposit: newDeposit }).eq('id', referrerId);
         await sb.from('wallet_logs').insert({
             user_id: referrerId, type: 'referral_bonus',
-            amount: bonusAmount, description: `추천인 적립 (주문: ${orderId})`
+            amount: bonusAmount, description: `${buyerName}님의 추천 적립 (주문: ${orderId})`
         });
         console.log(`[추천인] 적립 완료: ${referrerId} +${bonusAmount}KRW`);
     } catch (e) {

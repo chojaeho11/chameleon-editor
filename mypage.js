@@ -659,19 +659,33 @@ async function loadWalletLogs() {
         const isPlus = log.amount > 0;
         const color = isPlus ? '#2563eb' : '#ef4444';
         const sign = isPlus ? '+' : '';
-        
+        const isReferral = log.type === 'referral_bonus';
+
         let typeName = window.t('label_other', 'Other');
-        if(log.type?.includes('deposit')) typeName = window.t('label_deposit', 'Deposit');
-        if(log.type?.includes('payment')) typeName = window.t('label_payment', 'Payment');
-        if(log.type?.includes('withdraw')) typeName = window.t('label_withdrawal', 'Withdrawal');
-        if(log.type?.includes('admin')) typeName = window.t('label_admin_adjust', 'Admin Adjust');
+        if(isReferral) typeName = window.t('referral_badge', '추천');
+        else if(log.type?.includes('deposit')) typeName = window.t('label_deposit', 'Deposit');
+        else if(log.type?.includes('payment')) typeName = window.t('label_payment', 'Payment');
+        else if(log.type?.includes('withdraw')) typeName = window.t('label_withdrawal', 'Withdrawal');
+        else if(log.type?.includes('admin')) typeName = window.t('label_admin_adjust', 'Admin Adjust');
+
+        const badgeStyle = isReferral
+            ? 'background:linear-gradient(135deg,#ede9fe,#e0e7ff); color:#7c3aed; border:1px solid #a78bfa; font-weight:bold;'
+            : 'background:#f1f5f9; color:#64748b;';
+
+        let descHtml = log.description || '-';
+        if (isReferral) {
+            descHtml = `<div style="font-weight:600; color:#6d28d9;">${log.description || '-'}</div>
+                <div style="margin-top:4px; font-size:11px; color:#666; line-height:1.5; background:#f5f3ff; padding:6px 10px; border-radius:6px; border-left:3px solid #7c3aed;">
+                    ${window.t('referral_log_info', '예치금은 현금처럼 사용 가능합니다. 출금 시 3.3%의 세금이 공제됩니다.')}
+                </div>`;
+        }
 
         tbody.innerHTML += `
-            <tr>
+            <tr${isReferral ? ' style="background:#faf5ff;"' : ''}>
                 <td>${new Date(log.created_at).toLocaleDateString()}</td>
-                <td><span class="status-badge" style="background:#f1f5f9; color:#64748b;">${typeName}</span></td>
-                <td>${log.description || '-'}</td>
-                <td style="text-align:right; font-weight:bold; color:${color};">${sign}${log.amount.toLocaleString()}</td>
+                <td><span class="status-badge" style="${badgeStyle}">${isReferral ? '🎁 ' : ''}${typeName}</span></td>
+                <td>${descHtml}</td>
+                <td style="text-align:right; font-weight:bold; color:${isReferral ? '#7c3aed' : color};">${sign}${log.amount.toLocaleString()}</td>
             </tr>`;
     });
 }

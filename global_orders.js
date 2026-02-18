@@ -4,7 +4,7 @@ import { showLoading } from "./global_common.js";
 // [추천인] 무통장입금 확인 시 추천인 적립
 async function creditReferralBonus(orderId) {
     try {
-        const { data: order } = await sb.from('orders').select('request_note, total_amount').eq('id', orderId).maybeSingle();
+        const { data: order } = await sb.from('orders').select('request_note, total_amount, manager_name').eq('id', orderId).maybeSingle();
         if (!order || !order.request_note) return;
         const match = order.request_note.match(/##REF:([^:]+):([^#]+)##/);
         if (!match) return;
@@ -19,12 +19,14 @@ async function creditReferralBonus(orderId) {
         const bonusAmount = Math.floor(order.total_amount * 0.1);
         if (bonusAmount <= 0) return;
 
+        const buyerName = order.manager_name || '고객';
+
         const { data: pf } = await sb.from('profiles').select('deposit').eq('id', referrerId).single();
         const newDeposit = (parseInt(pf?.deposit || 0)) + bonusAmount;
         await sb.from('profiles').update({ deposit: newDeposit }).eq('id', referrerId);
         await sb.from('wallet_logs').insert({
             user_id: referrerId, type: 'referral_bonus',
-            amount: bonusAmount, description: `추천인 적립 (주문: ${orderId})`
+            amount: bonusAmount, description: `${buyerName}님의 추천 적립 (주문: ${orderId})`
         });
         console.log(`[추천인] 적립 완료: ${referrerId} +${bonusAmount}KRW (주문: ${orderId})`);
     } catch (e) {

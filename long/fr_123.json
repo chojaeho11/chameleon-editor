@@ -1041,5 +1041,7 @@
   "referral_self_error": "Vous ne pouvez pas vous parrainer vous-même.",
   "referral_no_refund": "Les commandes avec bonus de parrainage ne sont pas remboursables après crédit du bonus.",
   "referral_no_refund_short": "Cette commande n'est pas remboursable après le bonus de parrainage.",
-  "referral_applied": "Parrain appliqué"
+  "referral_applied": "Parrain appliqué",
+  "referral_badge": "Parrainage",
+  "referral_log_info": "Le dépôt peut être utilisé comme de l'argent. Une taxe de 3,3% sera déduite lors du retrait."
 }

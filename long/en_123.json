@@ -1041,5 +1041,7 @@
   "referral_self_error": "You cannot refer yourself.",
   "referral_no_refund": "Orders with referral bonus are non-refundable after the bonus is credited.",
   "referral_no_refund_short": "This order is non-refundable after referral bonus.",
-  "referral_applied": "Referrer applied"
+  "referral_applied": "Referrer applied",
+  "referral_badge": "Referral",
+  "referral_log_info": "Deposit can be used like cash. A 3.3% tax will be deducted upon withdrawal."
 }

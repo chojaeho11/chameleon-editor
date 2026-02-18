@@ -1041,5 +1041,7 @@
   "referral_self_error": "不能推荐自己。",
   "referral_no_refund": "推荐奖励发放后，该订单不可退款。",
   "referral_no_refund_short": "推荐奖励发放后此订单不可退款。",
-  "referral_applied": "已应用推荐人"
+  "referral_applied": "已应用推荐人",
+  "referral_badge": "推荐",
+  "referral_log_info": "存款可像现金一样使用。提款时将扣除3.3%的税款。"
 }
