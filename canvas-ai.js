@@ -704,29 +704,48 @@ async function _wzGetDescText(title) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    const margin = bW * 0.06; // 좌우하단 여백 동일
+    const margin = bW * 0.06;
     const boxW = bW - margin * 2;
-    const boxH = bH * 0.20;
-    const boxY = bT + bH - margin - boxH / 2; // 하단 여백 맞춤
+
+    // 다크: 박스를 위로 키워서 타이틀 영역까지 커버
+    const isDark = (S.effect === 'dark');
+    const boxH = isDark ? bH * 0.55 : bH * 0.20;
+    const boxY = isDark
+        ? bT + bH - margin - boxH / 2        // 하단 기준 위로 확장
+        : bT + bH - margin - boxH / 2;
 
     // 불투명 박스 (스타일별 색상)
     const rect = new fabric.Rect({
         width: boxW, height: boxH,
-        rx: 10, ry: 10,
+        rx: isDark ? 16 : 10, ry: isDark ? 16 : 10,
         fill: S.boxFill || 'rgba(255,255,255,0.92)',
-        stroke: S.boxStroke || 'rgba(99,102,241,0.3)', strokeWidth: 1.5,
+        stroke: S.boxStroke || 'rgba(99,102,241,0.3)', strokeWidth: isDark ? 2 : 1.5,
         left: bL + bW/2, top: boxY,
         originX:'center', originY:'center'
     });
     canvas.add(rect);
     canvas.bringToFront(rect);
 
-    // 박스 안 설명 텍스트 (스타일별 색상)
+    // 다크: 타이틀 효과 그룹을 박스 위(앞)로 올림
+    if (isDark) {
+        const objs = canvas.getObjects();
+        for (let i = objs.length - 1; i >= 0; i--) {
+            const o = objs[i];
+            // 텍스트 효과 그룹 (isMainText 가진 _objects) 찾기
+            if (o._objects && o._objects.some(c => c.isMainText)) {
+                canvas.bringToFront(o);
+                break;
+            }
+        }
+    }
+
+    // 박스 안 설명 텍스트 — 다크는 하단 배치
+    const descY = isDark ? boxY + boxH * 0.3 : boxY;
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
         fontWeight:'400', fill: S.boxTextColor || '#334155',
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: boxY,
+        left: bL + bW/2, top: descY,
         width: boxW * 0.88,
         lineHeight: 1.5
     });
