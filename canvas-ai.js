@@ -660,6 +660,19 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
             setTimeout(finish, 3000); // 안전 타임아웃
         });
 
+        // ★ 네온: 메인 텍스트 fill을 네온색으로 변경 (안쪽도 빛나게)
+        if (S.effect === 'dark') {
+            const objs = canvas.getObjects();
+            const grp = objs[objs.length - 1];
+            if (grp && grp._objects) {
+                grp._objects.forEach(o => {
+                    if (o.isMainText) {
+                        o.set({ fill: '#ff44cc' }); // 밝은 네온 핑크 채움
+                    }
+                });
+            }
+        }
+
         canvas.discardActiveObject();
         canvas.requestRenderAll();
     }
