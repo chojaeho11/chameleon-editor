@@ -3717,7 +3717,21 @@ window.filterFxCards = function(cat, btn) {
                     imgObj.filters.push(blend);
                 }
             }
+            safeApplyFilters(imgObj);
+        }
+
+        // applyFilters 래퍼: 크기 변경 방지
+        function safeApplyFilters(imgObj) {
+            var origW = imgObj.width;
+            var origH = imgObj.height;
+            var origSX = imgObj.scaleX;
+            var origSY = imgObj.scaleY;
             imgObj.applyFilters();
+            if (imgObj.width !== origW || imgObj.height !== origH) {
+                var ratioX = origW / (imgObj.width || 1);
+                var ratioY = origH / (imgObj.height || 1);
+                imgObj.set({ scaleX: origSX * ratioX, scaleY: origSY * ratioY });
+            }
         }
 
         // 테마 적용
@@ -3767,7 +3781,7 @@ window.filterFxCards = function(cat, btn) {
                 if (obj.type === 'image' || obj.type === 'Image') {
                     if (obj.filters) {
                         obj.filters = obj.filters.filter(function(f) { return !f._isThemeFilter; });
-                        obj.applyFilters();
+                        safeApplyFilters(obj);
                     }
                 }
                 if (obj.isEffectGroup || (obj.type === 'group' && obj.getObjects)) {
@@ -3818,7 +3832,7 @@ window.filterFxCards = function(cat, btn) {
                                 if (orig2.stroke) obj2.set('stroke', orig2.stroke);
                             }
                             if (obj2.type === 'image' || obj2.type === 'Image') {
-                                if (obj2.filters) { obj2.filters = obj2.filters.filter(function(f){return !f._isThemeFilter;}); obj2.applyFilters(); }
+                                if (obj2.filters) { obj2.filters = obj2.filters.filter(function(f){return !f._isThemeFilter;}); safeApplyFilters(obj2); }
                             }
                             if (obj2.isEffectGroup || (obj2.type === 'group' && obj2.getObjects)) {
                                 obj2.getObjects().forEach(function(ch) {
@@ -3855,7 +3869,7 @@ window.filterFxCards = function(cat, btn) {
                             if (orig3.stroke) obj3.set('stroke', orig3.stroke);
                         }
                         if (obj3.type === 'image' || obj3.type === 'Image') {
-                            if (obj3.filters) { obj3.filters = obj3.filters.filter(function(f){return !f._isThemeFilter;}); obj3.applyFilters(); }
+                            if (obj3.filters) { obj3.filters = obj3.filters.filter(function(f){return !f._isThemeFilter;}); safeApplyFilters(obj3); }
                         }
                         if (obj3.isEffectGroup || (obj3.type === 'group' && obj3.getObjects)) {
                             obj3.getObjects().forEach(function(ch2) {
@@ -3883,7 +3897,7 @@ window.filterFxCards = function(cat, btn) {
                     window.canvas.getObjects().forEach(function(o) {
                         var or2 = window._themeOriginalColors.get(o);
                         if (or2) { if (or2.fill) o.set('fill', or2.fill); if (or2.stroke) o.set('stroke', or2.stroke); }
-                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});o.applyFilters();} }
+                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});safeApplyFilters(o);} }
                     });
                 }
                 window.applyColorTheme(hsl[0], intensity * 0.6);
@@ -3900,7 +3914,7 @@ window.filterFxCards = function(cat, btn) {
                     window.canvas.getObjects().forEach(function(o) {
                         var or2 = window._themeOriginalColors.get(o);
                         if (or2) { if (or2.fill) o.set('fill', or2.fill); if (or2.stroke) o.set('stroke', or2.stroke); }
-                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});o.applyFilters();} }
+                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});safeApplyFilters(o);} }
                     });
                 }
                 window.applyColorTheme(hsl[0], intensity);
