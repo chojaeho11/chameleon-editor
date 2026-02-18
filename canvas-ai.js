@@ -375,6 +375,13 @@ const WIZARD_STYLES = {
 // 짧은 제목 "초록 물고기" → ["물고기","초록"] (명사 우선)
 // 긴 문장 "카페에 오신 여러분" → ["카페"] (첫 명사 우선)
 // 복합어 "고기집 간판" → ["고기","간판","고기집"]
+// 비구독자용 프리미엄 아이템 필터링
+function _wzFilterPremium(items) {
+    if (!items || !items.length) return items;
+    if (window.isSubscriber || !window.isPremiumTemplate) return items;
+    return items.filter(item => !window.isPremiumTemplate(item));
+}
+
 function _wzExtractKeywords(title) {
     const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
     if (!words.length) return [title];
@@ -546,8 +553,9 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
-            .limit(1);
-        if (res.data && res.data.length) { found = res.data[0]; matchedKw = kw; break; }
+            .limit(5);
+        const filtered = _wzFilterPremium(res.data);
+        if (filtered && filtered.length) { found = filtered[0]; matchedKw = kw; break; }
     }
     if (!found) {
         const r2 = await sb.from('library')
@@ -555,8 +563,9 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
             .in('category', ['user_vector','user_image','photo-bg','pattern'])
             .eq('status','approved')
             .order('created_at', { ascending: false })
-            .limit(1);
-        if (r2.data && r2.data.length) found = r2.data[0];
+            .limit(5);
+        const filtered2 = _wzFilterPremium(r2.data);
+        if (filtered2 && filtered2.length) found = filtered2[0];
     }
     if (!found) return;
 
@@ -789,8 +798,9 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
-            .limit(2);
-        if (res.data && res.data.length) { data = res.data; break; }
+            .limit(8);
+        const filtered = _wzFilterPremium(res.data);
+        if (filtered && filtered.length) { data = filtered.slice(0, 2); break; }
     }
     if (!data || !data.length) return;
 
@@ -884,9 +894,10 @@ async function _wzSticker(keywords, bW, bH, bL, bT) {
                 .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
                 .eq('status','approved')
                 .order('created_at', { ascending: false })
-                .limit(3);
-            if (data && data.length >= 2) {
-                stickerUrls = data.map(d => d.thumb_url).filter(Boolean);
+                .limit(10);
+            const filtered = _wzFilterPremium(data);
+            if (filtered && filtered.length >= 2) {
+                stickerUrls = filtered.slice(0, 3).map(d => d.thumb_url).filter(Boolean);
                 break;
             }
         }
@@ -897,8 +908,9 @@ async function _wzSticker(keywords, bW, bH, bL, bT) {
                 .in('category', ['vector','graphic','transparent-graphic'])
                 .eq('status','approved')
                 .order('created_at', { ascending: false })
-                .limit(3);
-            if (data) stickerUrls = data.map(d => d.thumb_url).filter(Boolean);
+                .limit(10);
+            const filtered2 = _wzFilterPremium(data);
+            if (filtered2) stickerUrls = filtered2.slice(0, 3).map(d => d.thumb_url).filter(Boolean);
         }
     }
 
