@@ -660,14 +660,26 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
             setTimeout(finish, 3000); // 안전 타임아웃
         });
 
-        // ★ 네온: 메인 텍스트 fill을 네온색으로 변경 (안쪽도 빛나게)
+        // ★ 네온: 전체 밝은 핑크 글로우 (흰색에 가까운 연한 핑크 + 뿌옇게 빛)
         if (S.effect === 'dark') {
             const objs = canvas.getObjects();
             const grp = objs[objs.length - 1];
             if (grp && grp._objects) {
                 grp._objects.forEach(o => {
                     if (o.isMainText) {
-                        o.set({ fill: '#ff44cc' }); // 밝은 네온 핑크 채움
+                        // 메인: 밝은 핑크 fill + 연핑크 stroke (흰색 제거)
+                        o.set({
+                            fill: '#ffe8f5',
+                            stroke: '#ffb8e0', strokeWidth: Math.max(1, o.fontSize * 0.015),
+                            shadow: new fabric.Shadow({ color:'#ff66cc', blur: o.fontSize * 0.15, offsetX:0, offsetY:0 })
+                        });
+                    } else if (o.isClone) {
+                        // 글로우 레이어: 더 밝은 핑크로
+                        const cur = o.shadow;
+                        o.set({
+                            stroke: '#ff88dd',
+                            shadow: new fabric.Shadow({ color:'#ff66cc', blur: cur ? cur.blur * 1.3 : 20, offsetX:0, offsetY:0 })
+                        });
                     }
                 });
             }
