@@ -332,25 +332,38 @@ async function loadTemplatePage(pageIndex) {
                 finalBadgeHtml = `<span style="position:absolute; top:8px; left:8px; background:${badgeColor}; color:white; font-size:10px; font-weight:bold; padding:3px 6px; border-radius:4px; z-index:2; text-transform:uppercase;">${badgeText}</span>`;
             }
 
+            // 프리미엄 크라운 뱃지
+            const isPremium = window.isPremiumTemplate && window.isPremiumTemplate(item);
+            let crownHtml = '';
+            if (isPremium) {
+                crownHtml = `<span style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.75); color:#fbbf24; font-size:13px; width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; z-index:5;"><i class="fa-solid fa-crown"></i></span>`;
+            }
+
             card.innerHTML = `
                 ${finalBadgeHtml}
+                ${crownHtml}
                 <img src="${imgUrl}" class="tpl-item-img" loading="lazy">
                 <div class="tpl-overlay-info">
                     <span class="tpl-name">${displayTitle}</span>
                     <button class="btn-use-mini" type="button">Apply Now</button>
                 </div>
             `;
-            
+
             card.onclick = (e) => {
+                // 프리미엄 접근 제어
+                if (isPremium && !window.isSubscriber) {
+                    var modal = document.getElementById('subUpsellModal');
+                    if (modal) { modal.style.display = 'flex'; return; }
+                }
                 document.querySelectorAll(".tpl-item").forEach((i) => i.classList.remove("selected"));
                 card.classList.add("selected");
-                
-                selectedTpl = { 
-                    id: item.id, 
-                    category: item.category, 
+
+                selectedTpl = {
+                    id: item.id,
+                    category: item.category,
                     product_key: item.product_key || 'custom'
                 };
-                
+
                 if (e.target.classList.contains('btn-use-mini')) useSelectedTemplate();
             };
             grid.appendChild(card);
@@ -1168,8 +1181,16 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
                 badgeHtml = `<div style="position:absolute; top:8px; left:8px; background:#7c3aed; color:white; font-size:10px; padding:3px 6px; border-radius:4px; font-weight:bold;">Vector</div>`;
             }
 
+            // 프리미엄 크라운 뱃지
+            const _isPrem = window.isPremiumTemplate && window.isPremiumTemplate(tpl);
+            let crownHtml = '';
+            if (_isPrem) {
+                crownHtml = `<span style="position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.75); color:#fbbf24; font-size:11px; width:22px; height:22px; border-radius:5px; display:flex; align-items:center; justify-content:center; z-index:5;"><i class="fa-solid fa-crown"></i></span>`;
+            }
+
             div.innerHTML = `
                 ${badgeHtml}
+                ${crownHtml}
                 <img src="${imgUrl}" class="side-tpl-img" loading="lazy">
                 <div class="side-tpl-info">
                     ${tpl.title || tpl.tags || window.t('msg_untitled', 'Untitled')}
@@ -1177,8 +1198,12 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
             `;
 
             div.onclick = async () => {
-                // ★ [수정 1] 클릭해도 사이드바 닫지 않음 (모바일 코드 제거)
-                
+                // 프리미엄 접근 제어
+                if (_isPrem && !window.isSubscriber) {
+                    var modal = document.getElementById('subUpsellModal');
+                    if (modal) { modal.style.display = 'flex'; return; }
+                }
+
                 window.selectedTpl = tpl;
 
                 if (sideCurrentGroup === 'group_template') {
@@ -1186,7 +1211,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
                         window.processLoad('replace');
                     }
                 } else {
-                    window.processLoad('add'); 
+                    window.processLoad('add');
                 }
             };
             list.appendChild(div);
@@ -1590,8 +1615,16 @@ window.loadSideAssets = async function(page) {
             const imgUrl = pngUrl || (window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 150) : tpl.thumb_url);
             let badge = '';
             if (tpl.category === 'vector') badge = '<span style="position:absolute;top:3px;left:3px;background:#7c3aed;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">V</span>';
-            div.innerHTML = badge + '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
+            // 프리미엄 크라운 뱃지
+            var _aIsPrem = window.isPremiumTemplate && window.isPremiumTemplate(tpl);
+            var crownBadge = _aIsPrem ? '<span style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.75);color:#fbbf24;font-size:10px;width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;z-index:5;"><i class="fa-solid fa-crown"></i></span>' : '';
+            div.innerHTML = badge + crownBadge + '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
             div.onclick = function() {
+                // 프리미엄 접근 제어
+                if (_aIsPrem && !window.isSubscriber) {
+                    var modal = document.getElementById('subUpsellModal');
+                    if (modal) { modal.style.display = 'flex'; return; }
+                }
                 window.selectedTpl = tpl;
                 window.processLoad('add');
             };
