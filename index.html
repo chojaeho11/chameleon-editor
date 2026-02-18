@@ -3101,20 +3101,20 @@ window.filterFxCards = function(cat, btn) {
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 style="margin:0;font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span data-i18n="wizard_title">AI 디자인 마법사</span>
+                    <span data-i18n="wizard_title">디자인마법사</span>
                 </h3>
                 <button onclick="document.getElementById('designWizardModal').style.display='none'"
                     style="border:none;background:rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <p style="margin:8px 0 0;font-size:13px;opacity:0.85;" data-i18n="wizard_desc">제목을 입력하시면 자동으로 디자인을 해 드립니다.</p>
+            <p style="margin:8px 0 0;font-size:13px;opacity:0.85;" data-i18n="wizard_desc">단어 1개를 적어주세요. 인공지능이 적절한 이미지와 내용으로 디자인합니다.</p>
         </div>
         <!-- Body -->
         <div style="padding:24px 28px;">
-            <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;" data-i18n="wizard_label_title">디자인 제목</label>
+            <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;" data-i18n="wizard_label_title">단어쓰기</label>
             <input id="wizardTitleInput" type="text" class="ai-input-pretty"
-                data-i18n-placeholder="wizard_placeholder" placeholder="예: 카페 오픈, 여름 세일, 생일 축하..."
+                data-i18n-placeholder="wizard_placeholder" placeholder="예: 카페, 구름, 바다, 여름, 생일"
                 style="font-size:15px;font-weight:600;padding:14px 16px;margin-bottom:16px;width:100%;box-sizing:border-box;border:2px solid #e2e8f0;border-radius:12px;outline:none;transition:border .2s;"
                 onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
 
