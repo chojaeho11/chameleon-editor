@@ -3,6 +3,38 @@
 import { sb, currentUser } from "./config.js?v=123";
 import { canvas } from "./canvas-core.js?v=123";
 import { applySize } from "./canvas-size.js?v=123";
+
+// ─── 프리미엄 접근 제어: 비구독자용 안내 모달 ───
+function _showPremiumUpsell() {
+    // 기존 모달이 있으면 사용
+    const existing = document.getElementById('subUpsellModal');
+    if (existing) { existing.style.display = 'flex'; return; }
+
+    // 없으면 인라인으로 생성
+    const t = window.t || function(k, fb) { return fb || k; };
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999999;display:flex;justify-content:center;align-items:center;padding:16px;';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:20px;max-width:400px;width:100%;padding:40px 30px;text-align:center;">
+            <div style="width:64px;height:64px;background:rgba(0,0,0,0.85);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#fbbf24;"><i class="fa-solid fa-crown"></i></div>
+            <h3 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#1e293b;">${t('sub_premium_lock', '프리미엄 템플릿입니다')}</h3>
+            <p style="margin:0 0 24px;color:#64748b;font-size:14px;line-height:1.6;">${t('sub_premium_msg', 'PRO 구독으로 모든 프리미엄 템플릿을 자유롭게 사용하세요')}</p>
+            <button id="_premUpsellSubBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">${t('sub_btn', '구독 시작하기')}</button>
+            <button id="_premUpsellCloseBtn" style="width:100%;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;cursor:pointer;">${t('btn_close', '닫기')}</button>
+        </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#_premUpsellSubBtn').onclick = function() {
+        overlay.remove();
+        if (window.startSubscription) window.startSubscription('monthly');
+    };
+    overlay.querySelector('#_premUpsellCloseBtn').onclick = function() { overlay.remove(); };
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+}
+
+function _isPremiumItem(item) {
+    return window.isPremiumTemplate && window.isPremiumTemplate(item) && !window.isSubscriber;
+}
+
 // [수정] 판매 수익금(예치금) 적립 함수 (mileage가 아닌 deposit을 업데이트)
 async function addRewardPoints(userId, amount, desc) {
     if (!userId) return;
@@ -352,8 +384,7 @@ async function loadTemplatePage(pageIndex) {
             card.onclick = (e) => {
                 // 프리미엄 접근 제어
                 if (isPremium && !window.isSubscriber) {
-                    const modal = document.getElementById('subUpsellModal');
-                    if (modal) { modal.style.display = 'flex'; return; }
+                    _showPremiumUpsell(); return;
                 }
                 document.querySelectorAll(".tpl-item").forEach((i) => i.classList.remove("selected"));
                 card.classList.add("selected");
@@ -1200,8 +1231,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
             div.onclick = async () => {
                 // 프리미엄 접근 제어
                 if (_isPrem && !window.isSubscriber) {
-                    const modal = document.getElementById('subUpsellModal');
-                    if (modal) { modal.style.display = 'flex'; return; }
+                    _showPremiumUpsell(); return;
                 }
 
                 window.selectedTpl = tpl;
@@ -1622,8 +1652,7 @@ window.loadSideAssets = async function(page) {
             div.onclick = function() {
                 // 프리미엄 접근 제어
                 if (aIsPrem && !window.isSubscriber) {
-                    const modal = document.getElementById('subUpsellModal');
-                    if (modal) { modal.style.display = 'flex'; return; }
+                    _showPremiumUpsell(); return;
                 }
                 window.selectedTpl = tpl;
                 window.processLoad('add');
