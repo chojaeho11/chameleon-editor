@@ -637,7 +637,7 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
         fontFamily: font, fontSize: sz, fontWeight: '900',
         fill: '#ffffff',
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.42,
+        left: bL + bW/2, top: bT + bH * (S.effect === 'dark' ? 0.50 : 0.42),
         width: bW * 0.85, lineHeight: 1.15, charSpacing: -10
     });
     if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
@@ -715,14 +715,22 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
         : bT + bH - margin - boxH / 2;
 
     // 불투명 박스 (스타일별 색상)
-    const rect = new fabric.Rect({
+    const rectOpts = {
         width: boxW, height: boxH,
         rx: isDark ? 16 : 10, ry: isDark ? 16 : 10,
         fill: S.boxFill || 'rgba(255,255,255,0.92)',
         stroke: S.boxStroke || 'rgba(99,102,241,0.3)', strokeWidth: isDark ? 2 : 1.5,
         left: bL + bW/2, top: boxY,
         originX:'center', originY:'center'
-    });
+    };
+    // 다크: 네온 글로우 테두리
+    if (isDark) {
+        rectOpts.strokeWidth = 2.5;
+        rectOpts.shadow = new fabric.Shadow({
+            color: 'rgba(255,0,170,0.6)', blur: 25, offsetX: 0, offsetY: 0
+        });
+    }
+    const rect = new fabric.Rect(rectOpts);
     canvas.add(rect);
     canvas.bringToFront(rect);
 
