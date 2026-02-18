@@ -832,7 +832,10 @@ async function convertCanvasTextToPaths(fabricCanvas) {
         }
         const fontSize = obj.fontSize;
         const lineHeightPx = obj.lineHeight * fontSize;
-        const textLines = obj.text.split(/\r\n|\r|\n/);
+        // textbox는 자동 줄바꿈된 textLines 사용, 그 외에는 명시적 줄바꿈으로 분리
+        const textLines = (obj.type === 'textbox' && obj.textLines && obj.textLines.length > 0)
+            ? obj.textLines
+            : obj.text.split(/\r\n|\r|\n/);
         let startY = -(textLines.length * lineHeightPx / 2) + (fontSize * 0.8);
 
         let fullPathData = "";
