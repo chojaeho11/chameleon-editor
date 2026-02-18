@@ -13,7 +13,7 @@ async function creditReferralBonus(orderId) {
         // 중복 적립 방지
         const { data: existing } = await sb.from('wallet_logs')
             .select('id').eq('user_id', referrerId)
-            .eq('type', 'referral_bonus').ilike('description', `%주문: ${orderId}%`).maybeSingle();
+            .eq('type', 'referral_bonus').ilike('description', `%##${orderId}##%`).maybeSingle();
         if (existing) return;
 
         const bonusAmount = Math.floor(order.total_amount * 0.1);
@@ -26,7 +26,7 @@ async function creditReferralBonus(orderId) {
         await sb.from('profiles').update({ deposit: newDeposit }).eq('id', referrerId);
         await sb.from('wallet_logs').insert({
             user_id: referrerId, type: 'referral_bonus',
-            amount: bonusAmount, description: `${buyerName}님의 추천 적립 (주문: ${orderId})`
+            amount: bonusAmount, description: `##REFERRAL##${buyerName}##${orderId}##`
         });
         console.log(`[추천인] 적립 완료: ${referrerId} +${bonusAmount}KRW (주문: ${orderId})`);
     } catch (e) {

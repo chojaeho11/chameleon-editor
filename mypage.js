@@ -674,7 +674,17 @@ async function loadWalletLogs() {
 
         let descHtml = log.description || '-';
         if (isReferral) {
-            descHtml = `<div style="font-weight:600; color:#6d28d9;">${log.description || '-'}</div>
+            // ##REFERRAL##이름##주문번호## 구조화 포맷 파싱
+            let refDesc = log.description || '';
+            const refMatch = refDesc.match(/##REFERRAL##(.+?)##(.+?)##/);
+            if (refMatch) {
+                const buyerName = refMatch[1];
+                const orderNum = refMatch[2];
+                refDesc = window.t('referral_log_desc', '{name}님의 추천으로 예치금이 적립되었습니다.')
+                    .replace('{name}', buyerName)
+                    + ` (${window.t('label_order_num', '주문')}: ${orderNum})`;
+            }
+            descHtml = `<div style="font-weight:600; color:#6d28d9;">${refDesc}</div>
                 <div style="margin-top:4px; font-size:11px; color:#666; line-height:1.5; background:#f5f3ff; padding:6px 10px; border-radius:6px; border-left:3px solid #7c3aed;">
                     ${window.t('referral_log_info', '예치금은 현금처럼 사용 가능합니다. 출금 시 3.3%의 세금이 공제됩니다.')}
                 </div>`;

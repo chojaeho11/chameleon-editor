@@ -1043,5 +1043,7 @@
   "referral_no_refund_short": "This order is non-refundable after referral bonus.",
   "referral_applied": "Referrer applied",
   "referral_badge": "Referral",
-  "referral_log_info": "Deposit can be used like cash. A 3.3% tax will be deducted upon withdrawal."
+  "referral_log_info": "Deposit can be used like cash. A 3.3% tax will be deducted upon withdrawal.",
+  "referral_log_desc": "Deposit credited through {name}'s referral.",
+  "label_order_num": "Order"
 }

@@ -1043,5 +1043,7 @@
   "referral_no_refund_short": "Diese Bestellung ist nach dem Empfehlungsbonus nicht erstattungsfähig.",
   "referral_applied": "Empfehler angewendet",
   "referral_badge": "Empfehlung",
-  "referral_log_info": "Guthaben kann wie Bargeld verwendet werden. Bei Auszahlung werden 3,3% Steuern abgezogen."
+  "referral_log_info": "Guthaben kann wie Bargeld verwendet werden. Bei Auszahlung werden 3,3% Steuern abgezogen.",
+  "referral_log_desc": "Guthaben durch Empfehlung von {name} gutgeschrieben.",
+  "label_order_num": "Bestellung"
 }

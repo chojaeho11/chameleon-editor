@@ -54,7 +54,7 @@
             if (!refId) return;
             try {
                 // 중복 체크
-                const logRes = await fetch(`${SUPABASE_URL}/rest/v1/wallet_logs?user_id=eq.${refId}&type=eq.referral_bonus&description=ilike.*${dbId}*&select=id`, {
+                const logRes = await fetch(`${SUPABASE_URL}/rest/v1/wallet_logs?user_id=eq.${refId}&type=eq.referral_bonus&description=ilike.*%23%23${dbId}%23%23*&select=id`, {
                     headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }
                 });
                 const logs = await logRes.json();
@@ -89,7 +89,7 @@
                 await fetch(`${SUPABASE_URL}/rest/v1/wallet_logs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
-                    body: JSON.stringify({ user_id: refId, type: 'referral_bonus', amount: bonus, description: `${buyerName}님의 추천 적립 (주문: ${dbId})` })
+                    body: JSON.stringify({ user_id: refId, type: 'referral_bonus', amount: bonus, description: `##REFERRAL##${buyerName}##${dbId}##` })
                 });
                 console.log('[추천인] 적립 완료:', refId, '+' + bonus);
             } catch (e) {
