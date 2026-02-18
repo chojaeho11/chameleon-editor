@@ -739,6 +739,7 @@ window.updateOrderStaff = async (id, role, selectEl) => {
 window.confirmDeposit = async (id) => {
     if(confirm('입금확인 처리하시겠습니까?')) {
         await sb.from('orders').update({ payment_status: '입금확인' }).eq('id', id);
+        await creditReferralBonus(id); // 추천인 적립
         loadOrders();
     }
 };
