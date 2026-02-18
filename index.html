@@ -3700,38 +3700,61 @@ window.filterFxCards = function(cat, btn) {
         }
 
         // 이미지 테마 필터
-        function applyImageTheme(imgObj, targetHue, alpha, isMono) {
-            if (!imgObj.filters) imgObj.filters = [];
-            imgObj.filters = imgObj.filters.filter(function(f) { return !f._isThemeFilter; });
+        // 이미지 위에 반투명 오버레이 사각형 추가 (applyFilters 크롭 문제 회피)
+        function applyImageTheme(imgObj, targetHue, alpha, isMono, canvas) {
+            // 기존 오버레이 제거
+            removeImageOverlay(imgObj, canvas);
+
+            var overlayColor;
+            var overlayAlpha;
             if (isMono) {
-                if (fabric.Image.filters.Saturation) {
-                    var sat = new fabric.Image.filters.Saturation({ saturation: -alpha });
-                    sat._isThemeFilter = true;
-                    imgObj.filters.push(sat);
-                }
+                overlayColor = '#808080';
+                overlayAlpha = alpha * 0.5;
             } else {
-                if (fabric.Image.filters.BlendColor) {
-                    var themeHex = hslToHex(targetHue, 70, 50);
-                    var blend = new fabric.Image.filters.BlendColor({ color: themeHex, mode: 'tint', alpha: alpha * 0.4 });
-                    blend._isThemeFilter = true;
-                    imgObj.filters.push(blend);
-                }
+                overlayColor = hslToHex(targetHue, 70, 50);
+                overlayAlpha = alpha * 0.3;
             }
-            safeApplyFilters(imgObj);
+
+            var bounds = imgObj.getBoundingRect(false, true);
+            var overlay = new fabric.Rect({
+                left: imgObj.left,
+                top: imgObj.top,
+                width: imgObj.getScaledWidth(),
+                height: imgObj.getScaledHeight(),
+                fill: overlayColor,
+                opacity: overlayAlpha,
+                angle: imgObj.angle || 0,
+                originX: imgObj.originX || 'left',
+                originY: imgObj.originY || 'top',
+                selectable: false,
+                evented: false,
+                excludeFromExport: true,
+                _isThemeOverlay: true,
+                _themeTargetId: imgObj.__themeId
+            });
+
+            // 고유 ID 부여
+            if (!imgObj.__themeId) imgObj.__themeId = 'timg_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+            overlay._themeTargetId = imgObj.__themeId;
+
+            canvas.add(overlay);
+            // 이미지 바로 위에 배치
+            var imgIdx = canvas.getObjects().indexOf(imgObj);
+            if (imgIdx >= 0) overlay.moveTo(imgIdx + 1);
         }
 
-        // applyFilters 래퍼: 크기 변경 방지
-        function safeApplyFilters(imgObj) {
-            var origW = imgObj.width;
-            var origH = imgObj.height;
-            var origSX = imgObj.scaleX;
-            var origSY = imgObj.scaleY;
-            imgObj.applyFilters();
-            if (imgObj.width !== origW || imgObj.height !== origH) {
-                var ratioX = origW / (imgObj.width || 1);
-                var ratioY = origH / (imgObj.height || 1);
-                imgObj.set({ scaleX: origSX * ratioX, scaleY: origSY * ratioY });
-            }
+        function removeImageOverlay(imgObj, canvas) {
+            if (!canvas) canvas = window.canvas;
+            var toRemove = canvas.getObjects().filter(function(o) {
+                return o._isThemeOverlay && o._themeTargetId && o._themeTargetId === imgObj.__themeId;
+            });
+            toRemove.forEach(function(o) { canvas.remove(o); });
+        }
+
+        function removeAllThemeOverlays(canvas) {
+            if (!canvas) canvas = window.canvas;
+            var toRemove = canvas.getObjects().filter(function(o) { return o._isThemeOverlay; });
+            toRemove.forEach(function(o) { canvas.remove(o); });
         }
 
         // 테마 적용
@@ -3747,8 +3770,8 @@ window.filterFxCards = function(cat, btn) {
             canvas.getObjects().forEach(function(obj) {
                 if (obj.isBoard) {
                     applyColorShift(obj, 'fill', targetHue, alpha, isMono, desat);
-                } else if (obj.type === 'image' || obj.type === 'Image') {
-                    applyImageTheme(obj, targetHue, alpha, isMono);
+                } else if ((obj.type === 'image' || obj.type === 'Image') && !obj._isThemeOverlay) {
+                    applyImageTheme(obj, targetHue, alpha, isMono, canvas);
                 } else if (obj.isEffectGroup) {
                     obj.getObjects().forEach(function(child) {
                         applyColorShift(child, 'fill', targetHue, alpha, isMono, desat);
@@ -3772,17 +3795,14 @@ window.filterFxCards = function(cat, btn) {
         window.resetThemeColors = function() {
             var canvas = window.canvas;
             if (!canvas || !window._themeOriginalColors) return;
+            // 오버레이 전부 제거
+            removeAllThemeOverlays(canvas);
             canvas.getObjects().forEach(function(obj) {
+                if (obj._isThemeOverlay) return;
                 var orig = window._themeOriginalColors.get(obj);
                 if (orig) {
                     if (orig.fill) obj.set('fill', orig.fill);
                     if (orig.stroke) obj.set('stroke', orig.stroke);
-                }
-                if (obj.type === 'image' || obj.type === 'Image') {
-                    if (obj.filters) {
-                        obj.filters = obj.filters.filter(function(f) { return !f._isThemeFilter; });
-                        safeApplyFilters(obj);
-                    }
                 }
                 if (obj.isEffectGroup || (obj.type === 'group' && obj.getObjects)) {
                     obj.getObjects().forEach(function(child) {
@@ -3823,16 +3843,14 @@ window.filterFxCards = function(cat, btn) {
                     var intensity = parseInt(document.getElementById('themeIntensity').value);
                     // 리셋 후 재적용 (원본 기준)
                     if (window._themeOriginalColors) {
-                        // 원본으로 복원 후 재적용
                         var canvas2 = window.canvas;
+                        removeAllThemeOverlays(canvas2);
                         canvas2.getObjects().forEach(function(obj2) {
+                            if (obj2._isThemeOverlay) return;
                             var orig2 = window._themeOriginalColors.get(obj2);
                             if (orig2) {
                                 if (orig2.fill) obj2.set('fill', orig2.fill);
                                 if (orig2.stroke) obj2.set('stroke', orig2.stroke);
-                            }
-                            if (obj2.type === 'image' || obj2.type === 'Image') {
-                                if (obj2.filters) { obj2.filters = obj2.filters.filter(function(f){return !f._isThemeFilter;}); safeApplyFilters(obj2); }
                             }
                             if (obj2.isEffectGroup || (obj2.type === 'group' && obj2.getObjects)) {
                                 obj2.getObjects().forEach(function(ch) {
@@ -3860,16 +3878,14 @@ window.filterFxCards = function(cat, btn) {
             slider.oninput = function() {
                 document.getElementById('themeIntensityVal').textContent = slider.value + '%';
                 if (window._currentTheme && window._themeOriginalColors) {
-                    // 원본 복원 후 재적용
                     var canvas3 = window.canvas;
+                    removeAllThemeOverlays(canvas3);
                     canvas3.getObjects().forEach(function(obj3) {
+                        if (obj3._isThemeOverlay) return;
                         var orig3 = window._themeOriginalColors.get(obj3);
                         if (orig3) {
                             if (orig3.fill) obj3.set('fill', orig3.fill);
                             if (orig3.stroke) obj3.set('stroke', orig3.stroke);
-                        }
-                        if (obj3.type === 'image' || obj3.type === 'Image') {
-                            if (obj3.filters) { obj3.filters = obj3.filters.filter(function(f){return !f._isThemeFilter;}); safeApplyFilters(obj3); }
                         }
                         if (obj3.isEffectGroup || (obj3.type === 'group' && obj3.getObjects)) {
                             obj3.getObjects().forEach(function(ch2) {
@@ -3894,10 +3910,11 @@ window.filterFxCards = function(cat, btn) {
                 var intensity = parseInt(document.getElementById('themeIntensity').value);
                 window._currentTheme = { hue: hsl[0], nameKey: 'custom', desat: 0 };
                 if (window._themeOriginalColors) {
+                    removeAllThemeOverlays(window.canvas);
                     window.canvas.getObjects().forEach(function(o) {
+                        if (o._isThemeOverlay) return;
                         var or2 = window._themeOriginalColors.get(o);
                         if (or2) { if (or2.fill) o.set('fill', or2.fill); if (or2.stroke) o.set('stroke', or2.stroke); }
-                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});safeApplyFilters(o);} }
                     });
                 }
                 window.applyColorTheme(hsl[0], intensity * 0.6);
@@ -3911,10 +3928,11 @@ window.filterFxCards = function(cat, btn) {
                 var intensity = parseInt(document.getElementById('themeIntensity').value);
                 window._currentTheme = { hue: hsl[0], nameKey: 'custom', desat: 0 };
                 if (window._themeOriginalColors) {
+                    removeAllThemeOverlays(window.canvas);
                     window.canvas.getObjects().forEach(function(o) {
+                        if (o._isThemeOverlay) return;
                         var or2 = window._themeOriginalColors.get(o);
                         if (or2) { if (or2.fill) o.set('fill', or2.fill); if (or2.stroke) o.set('stroke', or2.stroke); }
-                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});safeApplyFilters(o);} }
                     });
                 }
                 window.applyColorTheme(hsl[0], intensity);
