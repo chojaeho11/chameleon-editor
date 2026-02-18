@@ -545,26 +545,23 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
 
     console.log('[Wizard BG] Found template:', found.id, found.category, found.title || found.tags);
 
-    // ★ 사이드바 템플릿 검색창에 매칭 키워드 표시
-    if (matchedKw) {
+    // ★ 사이드바 템플릿 검색창에 매칭 키워드 표시 (PC만)
+    if (matchedKw && window.innerWidth > 768) {
         const sideInput = document.getElementById('sideTemplateSearch');
         if (sideInput) sideInput.value = matchedKw;
         if (window.loadSideBarTemplates) {
             const pk = window.currentProductKey || 'custom';
             window.loadSideBarTemplates(pk, matchedKw, 0);
         }
-        // 템플릿 패널 열기 (PC만 — 모바일은 열지 않음)
-        if (window.innerWidth > 768) {
-            const subPanel = document.getElementById('subPanel');
-            const tplPanel = document.getElementById('sub-template');
-            if (subPanel && tplPanel) {
-                subPanel.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
-                document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
-                tplPanel.style.display = 'flex';
-                subPanel.style.display = 'block';
-                const ico = document.querySelector('.icon-item[data-panel="sub-template"]');
-                if (ico) ico.classList.add('active');
-            }
+        const subPanel = document.getElementById('subPanel');
+        const tplPanel = document.getElementById('sub-template');
+        if (subPanel && tplPanel) {
+            subPanel.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
+            tplPanel.style.display = 'flex';
+            subPanel.style.display = 'block';
+            const ico = document.querySelector('.icon-item[data-panel="sub-template"]');
+            if (ico) ico.classList.add('active');
         }
     }
 
