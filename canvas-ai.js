@@ -513,6 +513,23 @@ async function runDesignWizard(title, style) {
     _wzRender(steps, 4);
     canvas.discardActiveObject();
     canvas.requestRenderAll();
+
+    // 서체 리렌더 (폰트 로드 완료 후 캔버스 갱신)
+    setTimeout(() => {
+        canvas.getObjects().forEach(o => {
+            if (o.type === 'textbox' || o.type === 'i-text' || o.type === 'text') {
+                o.set('dirty', true);
+                o.initDimensions && o.initDimensions();
+            }
+            if (o._objects) o._objects.forEach(c => {
+                if (c.type === 'textbox' || c.type === 'i-text' || c.type === 'text') {
+                    c.set('dirty', true);
+                    c.initDimensions && c.initDimensions();
+                }
+            });
+        });
+        canvas.requestRenderAll();
+    }, 500);
 }
 
 // ─── Step 1: Background (data_url 원본, 잠금 처리) ───
