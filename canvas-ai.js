@@ -790,13 +790,27 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         { left: bL + bW - margin - elemSize * 0.35,  top: boxY, size: elemSize }   // 박스 오른쪽 안쪽
     ];
 
-    console.log('[Wizard Elem] items:', JSON.stringify(data.map(d => ({ id:d.id, cat:d.category, thumb:d.thumb_url?.substring(0,80), data: typeof d.data_url === 'string' ? d.data_url.substring(0,80) : typeof d.data_url }))));
+    // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
+    function _extractImageUrl(item) {
+        const raw = item.data_url;
+        if (!raw) return item.thumb_url;
+        // 이미 이미지 URL이면 그대로
+        if (typeof raw === 'string' && (raw.startsWith('http') || raw.startsWith('data:image/png'))) return raw;
+        // Fabric JSON 파싱 → src 추출
+        try {
+            const json = typeof raw === 'object' ? raw : JSON.parse(raw);
+            if (json.objects && json.objects.length) {
+                for (const obj of json.objects) {
+                    if (obj.src && obj.src.startsWith('http')) return obj.src;
+                    if (obj.src && obj.src.startsWith('data:image/png')) return obj.src;
+                }
+            }
+        } catch(e) {}
+        return item.thumb_url;
+    }
+
     const promises = data.slice(0, 2).map((item, i) => new Promise(resolve => {
-        // data_url이 이미지 URL이면 사용, JSON이면 thumb_url 사용
-        let url = item.thumb_url;
-        if (item.data_url && typeof item.data_url === 'string' && (item.data_url.startsWith('http') || item.data_url.startsWith('data:'))) {
-            url = item.data_url;
-        }
+        const url = _extractImageUrl(item);
         if (!url) { resolve(); return; }
         const pos = positions[i] || positions[0];
         fabric.Image.fromURL(url, img => {
