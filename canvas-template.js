@@ -352,7 +352,7 @@ async function loadTemplatePage(pageIndex) {
             card.onclick = (e) => {
                 // 프리미엄 접근 제어
                 if (isPremium && !window.isSubscriber) {
-                    var modal = document.getElementById('subUpsellModal');
+                    const modal = document.getElementById('subUpsellModal');
                     if (modal) { modal.style.display = 'flex'; return; }
                 }
                 document.querySelectorAll(".tpl-item").forEach((i) => i.classList.remove("selected"));
@@ -1200,7 +1200,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
             div.onclick = async () => {
                 // 프리미엄 접근 제어
                 if (_isPrem && !window.isSubscriber) {
-                    var modal = document.getElementById('subUpsellModal');
+                    const modal = document.getElementById('subUpsellModal');
                     if (modal) { modal.style.display = 'flex'; return; }
                 }
 
@@ -1611,18 +1611,18 @@ window.loadSideAssets = async function(page) {
             const div = document.createElement('div');
             div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:1; background-image:linear-gradient(45deg,#e2e8f0 25%,transparent 25%),linear-gradient(-45deg,#e2e8f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e2e8f0 75%),linear-gradient(-45deg,transparent 75%,#e2e8f0 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; border:1px solid #e2e8f0; position:relative;';
             // data_url에서 실제 PNG URL 추출 (thumb_url은 JPEG라 투명 불가)
-            var pngUrl = _extractAssetPng(tpl);
+            const pngUrl = _extractAssetPng(tpl);
             const imgUrl = pngUrl || (window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 150) : tpl.thumb_url);
             let badge = '';
             if (tpl.category === 'vector') badge = '<span style="position:absolute;top:3px;left:3px;background:#7c3aed;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">V</span>';
             // 프리미엄 크라운 뱃지
-            var _aIsPrem = window.isPremiumTemplate && window.isPremiumTemplate(tpl);
-            var crownBadge = _aIsPrem ? '<span style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.75);color:#fbbf24;font-size:10px;width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;z-index:5;"><i class="fa-solid fa-crown"></i></span>' : '';
+            const aIsPrem = window.isPremiumTemplate && window.isPremiumTemplate(tpl);
+            const crownBadge = aIsPrem ? '<span style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.75);color:#fbbf24;font-size:10px;width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;z-index:5;"><i class="fa-solid fa-crown"></i></span>' : '';
             div.innerHTML = badge + crownBadge + '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
             div.onclick = function() {
                 // 프리미엄 접근 제어
-                if (_aIsPrem && !window.isSubscriber) {
-                    var modal = document.getElementById('subUpsellModal');
+                if (aIsPrem && !window.isSubscriber) {
+                    const modal = document.getElementById('subUpsellModal');
                     if (modal) { modal.style.display = 'flex'; return; }
                 }
                 window.selectedTpl = tpl;
