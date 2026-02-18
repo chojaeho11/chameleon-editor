@@ -995,7 +995,7 @@ function createNeonEffect(original, strokeW, color1, color2) {
                 selectable: false, isClone: true
             });
             layers.push(glow2);
-            original.set({ stroke: '#ffffff', strokeWidth: Math.max(1, strokeW * 0.1), fill: 'transparent', isMainText: true });
+            original.set({ stroke: '#ffffff', strokeWidth: Math.max(1, strokeW * 0.1), fill: '#ffffff', isMainText: true });
             layers.push(original);
             groupAndRender(layers);
         });
