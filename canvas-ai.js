@@ -616,7 +616,7 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
 
     // 임시 텍스트로 실제 너비 측정
     const temp = new fabric.Textbox(title, {
-        fontFamily: font, fontSize: sz, fontWeight: '900', charSpacing: -10
+        fontFamily: font, fontSize: sz, charSpacing: -10
     });
     const textW = temp.calcTextWidth ? temp.calcTextWidth() : temp.width;
 
@@ -634,7 +634,7 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
 
     // 1. 기본 흰색 텍스트 생성 (효과 적용 전)
     const obj = new fabric.Textbox(displayTitle, {
-        fontFamily: font, fontSize: sz, fontWeight: '900',
+        fontFamily: font, fontSize: sz,
         fill: '#ffffff',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: bT + bH * (S.effect === 'dark' ? 0.50 : 0.42),
