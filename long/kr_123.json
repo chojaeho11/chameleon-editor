@@ -672,5 +672,21 @@
   "label_order_num": "주문",
   "btn_delete_selected": "선택 삭제",
   "confirm_delete_uploads": "선택한 이미지를 삭제하시겠습니까?",
-  "msg_delete_failed": "삭제에 실패했습니다."
+  "msg_delete_failed": "삭제에 실패했습니다.",
+  "menu_theme": "테마",
+  "panel_theme": "🎨 색상 테마",
+  "theme_desc": "전체 캔버스의 색상 톤을 변경합니다.",
+  "theme_custom": "커스텀 색상",
+  "theme_tint": "틴트",
+  "theme_shift": "색조변환",
+  "theme_intensity": "강도",
+  "theme_reset": "원래 색상 복원",
+  "theme_warm": "웜 선셋",
+  "theme_ocean": "쿨 오션",
+  "theme_forest": "포레스트",
+  "theme_purple": "로열 퍼플",
+  "theme_pink": "로즈 핑크",
+  "theme_golden": "골든",
+  "theme_mono": "모노크롬",
+  "theme_sepia": "빈티지 세피아"
 }

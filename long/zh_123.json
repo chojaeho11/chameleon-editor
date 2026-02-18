@@ -1048,5 +1048,21 @@
   "label_order_num": "订单",
   "btn_delete_selected": "删除所选",
   "confirm_delete_uploads": "确定删除选中的图片吗？",
-  "msg_delete_failed": "删除失败。"
+  "msg_delete_failed": "删除失败。",
+  "menu_theme": "主题",
+  "panel_theme": "🎨 颜色主题",
+  "theme_desc": "更改整个画布的色调。",
+  "theme_custom": "自定义颜色",
+  "theme_tint": "着色",
+  "theme_shift": "色相变换",
+  "theme_intensity": "强度",
+  "theme_reset": "恢复原始颜色",
+  "theme_warm": "暖色夕阳",
+  "theme_ocean": "冷色海洋",
+  "theme_forest": "森林",
+  "theme_purple": "皇家紫",
+  "theme_pink": "玫瑰粉",
+  "theme_golden": "金色",
+  "theme_mono": "黑白",
+  "theme_sepia": "复古棕褐"
 }

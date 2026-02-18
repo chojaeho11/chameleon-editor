@@ -1048,5 +1048,21 @@
   "label_order_num": "Commande",
   "btn_delete_selected": "Supprimer la sélection",
   "confirm_delete_uploads": "Supprimer les images sélectionnées ?",
-  "msg_delete_failed": "Échec de la suppression."
+  "msg_delete_failed": "Échec de la suppression.",
+  "menu_theme": "Thème",
+  "panel_theme": "🎨 Thème de Couleur",
+  "theme_desc": "Modifier la tonalité de couleur de tout le canevas.",
+  "theme_custom": "Couleur Personnalisée",
+  "theme_tint": "Teinte",
+  "theme_shift": "Décalage de Teinte",
+  "theme_intensity": "Intensité",
+  "theme_reset": "Restaurer les Couleurs Originales",
+  "theme_warm": "Coucher de Soleil",
+  "theme_ocean": "Océan Froid",
+  "theme_forest": "Forêt",
+  "theme_purple": "Violet Royal",
+  "theme_pink": "Rose",
+  "theme_golden": "Doré",
+  "theme_mono": "Monochrome",
+  "theme_sepia": "Sépia Vintage"
 }

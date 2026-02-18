@@ -1048,5 +1048,21 @@
   "label_order_num": "Bestellung",
   "btn_delete_selected": "Auswahl löschen",
   "confirm_delete_uploads": "Ausgewählte Bilder löschen?",
-  "msg_delete_failed": "Löschen fehlgeschlagen."
+  "msg_delete_failed": "Löschen fehlgeschlagen.",
+  "menu_theme": "Thema",
+  "panel_theme": "🎨 Farbthema",
+  "theme_desc": "Ändert den Farbton der gesamten Leinwand.",
+  "theme_custom": "Benutzerdefinierte Farbe",
+  "theme_tint": "Tönung",
+  "theme_shift": "Farbtonverschiebung",
+  "theme_intensity": "Intensität",
+  "theme_reset": "Originalfarben wiederherstellen",
+  "theme_warm": "Warmer Sonnenuntergang",
+  "theme_ocean": "Kühler Ozean",
+  "theme_forest": "Wald",
+  "theme_purple": "Königliches Lila",
+  "theme_pink": "Rosenrosa",
+  "theme_golden": "Golden",
+  "theme_mono": "Monochrom",
+  "theme_sepia": "Vintage Sepia"
 }

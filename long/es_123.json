@@ -1048,5 +1048,21 @@
   "label_order_num": "Pedido",
   "btn_delete_selected": "Eliminar selección",
   "confirm_delete_uploads": "¿Eliminar las imágenes seleccionadas?",
-  "msg_delete_failed": "Error al eliminar."
+  "msg_delete_failed": "Error al eliminar.",
+  "menu_theme": "Tema",
+  "panel_theme": "🎨 Tema de Color",
+  "theme_desc": "Cambia el tono de color de todo el lienzo.",
+  "theme_custom": "Color Personalizado",
+  "theme_tint": "Tinte",
+  "theme_shift": "Cambio de Tono",
+  "theme_intensity": "Intensidad",
+  "theme_reset": "Restaurar Colores Originales",
+  "theme_warm": "Atardecer Cálido",
+  "theme_ocean": "Océano Frío",
+  "theme_forest": "Bosque",
+  "theme_purple": "Púrpura Real",
+  "theme_pink": "Rosa",
+  "theme_golden": "Dorado",
+  "theme_mono": "Monocromo",
+  "theme_sepia": "Sepia Vintage"
 }

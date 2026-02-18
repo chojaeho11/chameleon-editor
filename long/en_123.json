@@ -1048,5 +1048,21 @@
   "label_order_num": "Order",
   "btn_delete_selected": "Delete Selected",
   "confirm_delete_uploads": "Delete the selected images?",
-  "msg_delete_failed": "Failed to delete."
+  "msg_delete_failed": "Failed to delete.",
+  "menu_theme": "Theme",
+  "panel_theme": "🎨 Color Theme",
+  "theme_desc": "Change the color tone of the entire canvas.",
+  "theme_custom": "Custom Color",
+  "theme_tint": "Tint",
+  "theme_shift": "Hue Shift",
+  "theme_intensity": "Intensity",
+  "theme_reset": "Restore Original Colors",
+  "theme_warm": "Warm Sunset",
+  "theme_ocean": "Cool Ocean",
+  "theme_forest": "Forest",
+  "theme_purple": "Royal Purple",
+  "theme_pink": "Rose Pink",
+  "theme_golden": "Golden",
+  "theme_mono": "Monochrome",
+  "theme_sepia": "Vintage Sepia"
 }

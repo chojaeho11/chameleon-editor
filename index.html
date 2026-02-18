@@ -2001,6 +2001,9 @@ async function handleSubReturn() {
             <div class="icon-item" data-panel="sub-cutout">
                 <i class="fa-solid fa-scissors"></i><span data-i18n="menu_cutout">누끼</span>
             </div>
+            <div class="icon-item" data-panel="sub-theme">
+                <i class="fa-solid fa-palette"></i><span data-i18n="menu_theme">테마</span>
+            </div>
             <div class="icon-item" data-panel="sub-save">
                 <i class="fa-solid fa-floppy-disk"></i><span data-i18n="menu_save">저장</span>
             </div>
@@ -2205,6 +2208,39 @@ async function handleSubReturn() {
 
                 <div class="section-title" style="font-size: 11px; text-align: left;" data-i18n="label_opacity">투명도</div>
                 <input type="range" id="opacitySlider" min="0" max="100" value="100" style="width:100%;">
+            </div>
+
+            <!-- 6.5 테마 -->
+            <div id="sub-theme" class="sub-content">
+                <div class="sub-panel-header" data-i18n="panel_theme">🎨 색상 테마</div>
+                <p style="font-size:11px; color:#94a3b8; margin:0 0 12px;" data-i18n="theme_desc">전체 캔버스의 색상 톤을 변경합니다.</p>
+
+                <div id="themePresetGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:15px;"></div>
+
+                <div style="padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+                    <div style="font-size:12px; font-weight:700; color:#334155; margin-bottom:8px;" data-i18n="theme_custom">커스텀 색상</div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="color" id="themeCustomColor" value="#6366f1" style="width:40px; height:40px; border:none; cursor:pointer; border-radius:8px;">
+                        <div style="flex:1;">
+                            <div style="display:flex; gap:6px;">
+                                <button id="btnApplyThemeTint" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center;" data-i18n="theme_tint">틴트</button>
+                                <button id="btnApplyThemeShift" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center;" data-i18n="theme_shift">색조변환</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-bottom:4px;">
+                        <span data-i18n="theme_intensity">강도</span>
+                        <span id="themeIntensityVal">50%</span>
+                    </div>
+                    <input type="range" id="themeIntensity" min="10" max="100" value="50" style="width:100%;">
+                </div>
+
+                <button id="btnThemeReset" class="btn-round" style="width:100%; justify-content:center; height:36px; margin-top:12px; border:1px solid #ef4444; color:#ef4444; background:white;">
+                    <i class="fa-solid fa-rotate-left"></i> <span data-i18n="theme_reset">원래 색상 복원</span>
+                </button>
             </div>
 
             <!-- 7. 저장 -->
@@ -3570,6 +3606,315 @@ window.filterFxCards = function(cat, btn) {
     };
 
     // (최근 사용한 요소 기능 제거됨 - 요소 패널에서 클립아트 DB 로딩으로 대체)
+
+    // ─── 색상 테마 시스템 ───
+    (function() {
+        var THEME_PRESETS = [
+            { name: 'Warm Sunset',  nameKey: 'theme_warm',   hue: 15,  colors: ['#ff6b35','#ff8c61','#ffd4b8','#fff0e5'] },
+            { name: 'Cool Ocean',   nameKey: 'theme_ocean',  hue: 210, colors: ['#1e40af','#3b82f6','#93c5fd','#dbeafe'] },
+            { name: 'Forest',       nameKey: 'theme_forest', hue: 145, colors: ['#166534','#22c55e','#86efac','#dcfce7'] },
+            { name: 'Royal Purple', nameKey: 'theme_purple', hue: 270, colors: ['#6d28d9','#8b5cf6','#c4b5fd','#ede9fe'] },
+            { name: 'Rose Pink',    nameKey: 'theme_pink',   hue: 340, colors: ['#be185d','#ec4899','#f9a8d4','#fce7f3'] },
+            { name: 'Golden',       nameKey: 'theme_golden', hue: 42,  colors: ['#b45309','#f59e0b','#fcd34d','#fef3c7'] },
+            { name: 'Monochrome',   nameKey: 'theme_mono',   hue: -1,  colors: ['#1e293b','#64748b','#cbd5e1','#f1f5f9'] },
+            { name: 'Vintage Sepia',nameKey: 'theme_sepia',  hue: 30,  colors: ['#78350f','#a16207','#d4a574','#f5e6d3'], desat: 0.4 }
+        ];
+
+        window._currentTheme = null;
+
+        // hex → HSL
+        function hexToHSL(hex) {
+            hex = hex.replace('#', '');
+            if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+            var r = parseInt(hex.substr(0,2),16)/255;
+            var g = parseInt(hex.substr(2,2),16)/255;
+            var b = parseInt(hex.substr(4,2),16)/255;
+            var max = Math.max(r,g,b), min = Math.min(r,g,b);
+            var h, s, l = (max+min)/2;
+            if (max === min) { h = s = 0; }
+            else {
+                var d = max - min;
+                s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+                if (max === r) h = ((g-b)/d + (g<b?6:0))/6;
+                else if (max === g) h = ((b-r)/d + 2)/6;
+                else h = ((r-g)/d + 4)/6;
+                h *= 360;
+            }
+            return [h, s*100, l*100];
+        }
+
+        // HSL → hex
+        function hslToHex(h, s, l) {
+            h = ((h%360)+360)%360; s = Math.max(0,Math.min(100,s))/100; l = Math.max(0,Math.min(100,l))/100;
+            var c = (1 - Math.abs(2*l - 1)) * s;
+            var x = c * (1 - Math.abs((h/60) % 2 - 1));
+            var m = l - c/2;
+            var r,g,b;
+            if (h<60){r=c;g=x;b=0;} else if(h<120){r=x;g=c;b=0;} else if(h<180){r=0;g=c;b=x;}
+            else if(h<240){r=0;g=x;b=c;} else if(h<300){r=x;g=0;b=c;} else{r=c;g=0;b=x;}
+            r=Math.round((r+m)*255); g=Math.round((g+m)*255); b=Math.round((b+m)*255);
+            return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+        }
+
+        // 원본 색상 백업
+        function saveOriginalColors() {
+            var canvas = window.canvas;
+            if (!canvas) return;
+            window._themeOriginalColors = new Map();
+            canvas.getObjects().forEach(function(obj) {
+                var data = {};
+                if (obj.fill && typeof obj.fill === 'string') data.fill = obj.fill;
+                if (obj.stroke && typeof obj.stroke === 'string') data.stroke = obj.stroke;
+                data._hadFilters = obj.filters ? obj.filters.filter(function(f){return !f._isThemeFilter;}).length : 0;
+                window._themeOriginalColors.set(obj, data);
+                if (obj.isEffectGroup || (obj.type === 'group' && obj.getObjects)) {
+                    obj.getObjects().forEach(function(child) {
+                        var cd = {};
+                        if (child.fill && typeof child.fill === 'string') cd.fill = child.fill;
+                        if (child.stroke && typeof child.stroke === 'string') cd.stroke = child.stroke;
+                        window._themeOriginalColors.set(child, cd);
+                    });
+                }
+            });
+        }
+
+        // 색상 변환 적용
+        function applyColorShift(obj, prop, targetHue, alpha, isMono, desat) {
+            var color = obj[prop];
+            if (!color || typeof color !== 'string' || color === 'transparent' || color === '') return;
+            if (color.indexOf('rgb') === 0 || color.indexOf('hsl') === 0) return; // skip non-hex
+            var orig = (window._themeOriginalColors && window._themeOriginalColors.get(obj)) ? window._themeOriginalColors.get(obj)[prop] : null;
+            if (!orig) orig = color;
+            try {
+                var hsl = hexToHSL(orig);
+                var h = hsl[0], s = hsl[1], l = hsl[2];
+                if (isMono) {
+                    var newS = s * (1 - alpha);
+                    obj.set(prop, hslToHex(h, newS, l));
+                } else {
+                    var newH = h + (targetHue - h) * alpha;
+                    var newS2 = desat ? s * (1 - desat * alpha) : s;
+                    obj.set(prop, hslToHex(newH, newS2, l));
+                }
+            } catch(e) {}
+        }
+
+        // 이미지 테마 필터
+        function applyImageTheme(imgObj, targetHue, alpha, isMono) {
+            if (!imgObj.filters) imgObj.filters = [];
+            imgObj.filters = imgObj.filters.filter(function(f) { return !f._isThemeFilter; });
+            if (isMono) {
+                if (fabric.Image.filters.Saturation) {
+                    var sat = new fabric.Image.filters.Saturation({ saturation: -alpha });
+                    sat._isThemeFilter = true;
+                    imgObj.filters.push(sat);
+                }
+            } else {
+                if (fabric.Image.filters.BlendColor) {
+                    var themeHex = hslToHex(targetHue, 70, 50);
+                    var blend = new fabric.Image.filters.BlendColor({ color: themeHex, mode: 'tint', alpha: alpha * 0.4 });
+                    blend._isThemeFilter = true;
+                    imgObj.filters.push(blend);
+                }
+            }
+            imgObj.applyFilters();
+        }
+
+        // 테마 적용
+        window.applyColorTheme = function(targetHue, intensity, options) {
+            var canvas = window.canvas;
+            if (!canvas) return;
+            options = options || {};
+            if (!window._themeOriginalColors) saveOriginalColors();
+            var alpha = intensity / 100;
+            var isMono = targetHue === -1;
+            var desat = options.desat || 0;
+
+            canvas.getObjects().forEach(function(obj) {
+                if (obj.isBoard) {
+                    applyColorShift(obj, 'fill', targetHue, alpha, isMono, desat);
+                } else if (obj.type === 'image' || obj.type === 'Image') {
+                    applyImageTheme(obj, targetHue, alpha, isMono);
+                } else if (obj.isEffectGroup) {
+                    obj.getObjects().forEach(function(child) {
+                        applyColorShift(child, 'fill', targetHue, alpha, isMono, desat);
+                        applyColorShift(child, 'stroke', targetHue, alpha, isMono, desat);
+                    });
+                    if (obj.addWithUpdate) obj.addWithUpdate();
+                } else if (obj.type === 'group' && obj.getObjects) {
+                    obj.getObjects().forEach(function(child) {
+                        applyColorShift(child, 'fill', targetHue, alpha, isMono, desat);
+                        applyColorShift(child, 'stroke', targetHue, alpha, isMono, desat);
+                    });
+                } else {
+                    applyColorShift(obj, 'fill', targetHue, alpha, isMono, desat);
+                    applyColorShift(obj, 'stroke', targetHue, alpha, isMono, desat);
+                }
+            });
+            canvas.requestRenderAll();
+        };
+
+        // 리셋
+        window.resetThemeColors = function() {
+            var canvas = window.canvas;
+            if (!canvas || !window._themeOriginalColors) return;
+            canvas.getObjects().forEach(function(obj) {
+                var orig = window._themeOriginalColors.get(obj);
+                if (orig) {
+                    if (orig.fill) obj.set('fill', orig.fill);
+                    if (orig.stroke) obj.set('stroke', orig.stroke);
+                }
+                if (obj.type === 'image' || obj.type === 'Image') {
+                    if (obj.filters) {
+                        obj.filters = obj.filters.filter(function(f) { return !f._isThemeFilter; });
+                        obj.applyFilters();
+                    }
+                }
+                if (obj.isEffectGroup || (obj.type === 'group' && obj.getObjects)) {
+                    obj.getObjects().forEach(function(child) {
+                        var co = window._themeOriginalColors.get(child);
+                        if (co) {
+                            if (co.fill) child.set('fill', co.fill);
+                            if (co.stroke) child.set('stroke', co.stroke);
+                        }
+                    });
+                    if (obj.addWithUpdate) obj.addWithUpdate();
+                }
+            });
+            window._themeOriginalColors = null;
+            window._currentTheme = null;
+            canvas.requestRenderAll();
+            // UI 리셋
+            document.querySelectorAll('#themePresetGrid .theme-card').forEach(function(c) { c.style.border = '2px solid #e2e8f0'; });
+        };
+
+        // 프리셋 그리드 렌더
+        function renderThemePresets() {
+            var grid = document.getElementById('themePresetGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            THEME_PRESETS.forEach(function(preset, idx) {
+                var card = document.createElement('div');
+                card.className = 'theme-card';
+                card.style.cssText = 'cursor:pointer; border:2px solid #e2e8f0; border-radius:10px; padding:8px; background:white; transition:all 0.2s;';
+                var swatches = '<div style="display:flex; gap:3px; margin-bottom:6px;">';
+                preset.colors.forEach(function(c) {
+                    swatches += '<div style="flex:1; height:24px; background:'+c+'; border-radius:4px;"></div>';
+                });
+                swatches += '</div>';
+                var label = window.t ? window.t(preset.nameKey, preset.name) : preset.name;
+                card.innerHTML = swatches + '<div style="font-size:11px; font-weight:600; color:#334155; text-align:center;">' + label + '</div>';
+                card.onclick = function() {
+                    window._currentTheme = preset;
+                    var intensity = parseInt(document.getElementById('themeIntensity').value);
+                    // 리셋 후 재적용 (원본 기준)
+                    if (window._themeOriginalColors) {
+                        // 원본으로 복원 후 재적용
+                        var canvas2 = window.canvas;
+                        canvas2.getObjects().forEach(function(obj2) {
+                            var orig2 = window._themeOriginalColors.get(obj2);
+                            if (orig2) {
+                                if (orig2.fill) obj2.set('fill', orig2.fill);
+                                if (orig2.stroke) obj2.set('stroke', orig2.stroke);
+                            }
+                            if (obj2.type === 'image' || obj2.type === 'Image') {
+                                if (obj2.filters) { obj2.filters = obj2.filters.filter(function(f){return !f._isThemeFilter;}); obj2.applyFilters(); }
+                            }
+                            if (obj2.isEffectGroup || (obj2.type === 'group' && obj2.getObjects)) {
+                                obj2.getObjects().forEach(function(ch) {
+                                    var co2 = window._themeOriginalColors.get(ch);
+                                    if (co2) { if (co2.fill) ch.set('fill', co2.fill); if (co2.stroke) ch.set('stroke', co2.stroke); }
+                                });
+                                if (obj2.addWithUpdate) obj2.addWithUpdate();
+                            }
+                        });
+                    }
+                    window.applyColorTheme(preset.hue, intensity, { desat: preset.desat || 0 });
+                    // 선택 표시
+                    document.querySelectorAll('#themePresetGrid .theme-card').forEach(function(c2) { c2.style.border = '2px solid #e2e8f0'; });
+                    card.style.border = '2px solid #6366f1';
+                };
+                card.onmouseenter = function() { if (window._currentTheme !== preset) card.style.border = '2px solid #c7d2fe'; };
+                card.onmouseleave = function() { if (window._currentTheme !== preset) card.style.border = '2px solid #e2e8f0'; };
+                grid.appendChild(card);
+            });
+        }
+
+        // 강도 슬라이더
+        var slider = document.getElementById('themeIntensity');
+        if (slider) {
+            slider.oninput = function() {
+                document.getElementById('themeIntensityVal').textContent = slider.value + '%';
+                if (window._currentTheme && window._themeOriginalColors) {
+                    // 원본 복원 후 재적용
+                    var canvas3 = window.canvas;
+                    canvas3.getObjects().forEach(function(obj3) {
+                        var orig3 = window._themeOriginalColors.get(obj3);
+                        if (orig3) {
+                            if (orig3.fill) obj3.set('fill', orig3.fill);
+                            if (orig3.stroke) obj3.set('stroke', orig3.stroke);
+                        }
+                        if (obj3.type === 'image' || obj3.type === 'Image') {
+                            if (obj3.filters) { obj3.filters = obj3.filters.filter(function(f){return !f._isThemeFilter;}); obj3.applyFilters(); }
+                        }
+                        if (obj3.isEffectGroup || (obj3.type === 'group' && obj3.getObjects)) {
+                            obj3.getObjects().forEach(function(ch2) {
+                                var co3 = window._themeOriginalColors.get(ch2);
+                                if (co3) { if (co3.fill) ch2.set('fill', co3.fill); if (co3.stroke) ch2.set('stroke', co3.stroke); }
+                            });
+                            if (obj3.addWithUpdate) obj3.addWithUpdate();
+                        }
+                    });
+                    window.applyColorTheme(window._currentTheme.hue, parseInt(slider.value), { desat: window._currentTheme.desat || 0 });
+                }
+            };
+        }
+
+        // 커스텀 색상 버튼
+        var btnTint = document.getElementById('btnApplyThemeTint');
+        var btnShift = document.getElementById('btnApplyThemeShift');
+        if (btnTint) {
+            btnTint.onclick = function() {
+                var hex = document.getElementById('themeCustomColor').value;
+                var hsl = hexToHSL(hex);
+                var intensity = parseInt(document.getElementById('themeIntensity').value);
+                window._currentTheme = { hue: hsl[0], nameKey: 'custom', desat: 0 };
+                if (window._themeOriginalColors) {
+                    window.canvas.getObjects().forEach(function(o) {
+                        var or2 = window._themeOriginalColors.get(o);
+                        if (or2) { if (or2.fill) o.set('fill', or2.fill); if (or2.stroke) o.set('stroke', or2.stroke); }
+                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});o.applyFilters();} }
+                    });
+                }
+                window.applyColorTheme(hsl[0], intensity * 0.6);
+                document.querySelectorAll('#themePresetGrid .theme-card').forEach(function(c3) { c3.style.border = '2px solid #e2e8f0'; });
+            };
+        }
+        if (btnShift) {
+            btnShift.onclick = function() {
+                var hex = document.getElementById('themeCustomColor').value;
+                var hsl = hexToHSL(hex);
+                var intensity = parseInt(document.getElementById('themeIntensity').value);
+                window._currentTheme = { hue: hsl[0], nameKey: 'custom', desat: 0 };
+                if (window._themeOriginalColors) {
+                    window.canvas.getObjects().forEach(function(o) {
+                        var or2 = window._themeOriginalColors.get(o);
+                        if (or2) { if (or2.fill) o.set('fill', or2.fill); if (or2.stroke) o.set('stroke', or2.stroke); }
+                        if (o.type==='image'||o.type==='Image') { if(o.filters){o.filters=o.filters.filter(function(f){return !f._isThemeFilter;});o.applyFilters();} }
+                    });
+                }
+                window.applyColorTheme(hsl[0], intensity);
+                document.querySelectorAll('#themePresetGrid .theme-card').forEach(function(c3) { c3.style.border = '2px solid #e2e8f0'; });
+            };
+        }
+
+        // 리셋 버튼
+        var btnReset = document.getElementById('btnThemeReset');
+        if (btnReset) btnReset.onclick = window.resetThemeColors;
+
+        // 초기 렌더
+        renderThemePresets();
+    })();
 
     // ─── 이미지 업로드 시 Supabase 저장 (히스토리용) ───
     (function() {
