@@ -1527,6 +1527,34 @@ window.handleAssetSearch = function(val) {
     }, 300);
 };
 
+// data_url에서 실제 PNG URL 추출 (thumb_url은 JPEG라 투명도 손실)
+function _extractAssetPng(item) {
+    var raw = item.data_url;
+    if (!raw) return null;
+    if (typeof raw === 'string') {
+        if (raw.startsWith('http') && raw.toLowerCase().includes('.png')) return raw;
+        if (raw.startsWith('data:image/png')) return raw;
+        try {
+            var json = JSON.parse(raw);
+            if (json.objects && json.objects.length) {
+                for (var i = 0; i < json.objects.length; i++) {
+                    var src = json.objects[i].src;
+                    if (src && src.startsWith('http')) return src;
+                    if (src && src.startsWith('data:image/png')) return src;
+                }
+            }
+        } catch(e) {}
+    }
+    if (typeof raw === 'object' && raw && raw.objects) {
+        for (var i = 0; i < raw.objects.length; i++) {
+            var src = raw.objects[i].src;
+            if (src && src.startsWith('http')) return src;
+            if (src && src.startsWith('data:image/png')) return src;
+        }
+    }
+    return null;
+}
+
 window.loadSideAssets = async function(page) {
     if (typeof page === 'number') sideAssetPage = page;
     else sideAssetPage = 0;
@@ -1536,7 +1564,7 @@ window.loadSideAssets = async function(page) {
     try {
         const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern', 'logo'];
         let query = sb.from('library')
-            .select('id, thumb_url, title, category, tags')
+            .select('id, thumb_url, data_url, title, category, tags')
             .eq('status', 'approved')
             .in('category', cats)
             .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
@@ -1556,8 +1584,10 @@ window.loadSideAssets = async function(page) {
         grid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;';
         data.forEach(tpl => {
             const div = document.createElement('div');
-            div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:1; background:#f8fafc; border:1px solid #e2e8f0; position:relative;';
-            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 150) : tpl.thumb_url;
+            div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:1; background-image:linear-gradient(45deg,#e2e8f0 25%,transparent 25%),linear-gradient(-45deg,#e2e8f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e2e8f0 75%),linear-gradient(-45deg,transparent 75%,#e2e8f0 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; border:1px solid #e2e8f0; position:relative;';
+            // data_url에서 실제 PNG URL 추출 (thumb_url은 JPEG라 투명 불가)
+            var pngUrl = _extractAssetPng(tpl);
+            const imgUrl = pngUrl || (window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 150) : tpl.thumb_url);
             let badge = '';
             if (tpl.category === 'vector') badge = '<span style="position:absolute;top:3px;left:3px;background:#7c3aed;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">V</span>';
             div.innerHTML = badge + '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
