@@ -770,7 +770,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     let data = null;
     for (const kw of keywords) {
         const res = await sb.from('library')
-            .select('id, thumb_url, data_url')
+            .select('id, thumb_url, data_url, category')
             .in('category', ['vector','graphic','transparent-graphic'])
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
@@ -790,8 +790,13 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         { left: bL + bW - margin - elemSize * 0.35,  top: boxY, size: elemSize }   // 박스 오른쪽 안쪽
     ];
 
+    console.log('[Wizard Elem] items:', JSON.stringify(data.map(d => ({ id:d.id, cat:d.category, thumb:d.thumb_url?.substring(0,80), data: typeof d.data_url === 'string' ? d.data_url.substring(0,80) : typeof d.data_url }))));
     const promises = data.slice(0, 2).map((item, i) => new Promise(resolve => {
-        const url = item.data_url || item.thumb_url;
+        // data_url이 이미지 URL이면 사용, JSON이면 thumb_url 사용
+        let url = item.thumb_url;
+        if (item.data_url && typeof item.data_url === 'string' && (item.data_url.startsWith('http') || item.data_url.startsWith('data:'))) {
+            url = item.data_url;
+        }
         if (!url) { resolve(); return; }
         const pos = positions[i] || positions[0];
         fabric.Image.fromURL(url, img => {
