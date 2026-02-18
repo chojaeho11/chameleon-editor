@@ -3289,10 +3289,6 @@ window.filterFxCards = function(cat, btn) {
             subPanel.style.display = 'none';
             allContents.forEach(c => c.style.display = 'none');
             allIcons.forEach(i => i.classList.remove('active'));
-            if (window.innerWidth <= 768 && window._subPanelHistoryPushed) {
-                window._subPanelHistoryPushed = false;
-                window.history.back();
-            }
             return;
         }
 
@@ -3302,12 +3298,6 @@ window.filterFxCards = function(cat, btn) {
         if (target) target.style.display = (panelId === 'sub-template') ? 'flex' : 'block';
         subPanel.style.display = 'block';
         if (clickedIcon) clickedIcon.classList.add('active');
-
-        // 모바일: 뒤로가기로 패널 닫을 수 있도록 history 추가
-        if (window.innerWidth <= 768 && !window._subPanelHistoryPushed) {
-            window.history.pushState({ type: 'subpanel' }, '');
-            window._subPanelHistoryPushed = true;
-        }
 
         // 패널별 데이터 로드 트리거
         if (panelId === 'sub-template') {
@@ -3363,7 +3353,6 @@ window.filterFxCards = function(cat, btn) {
                 subPanel.style.transform = '';
                 document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
                 document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
-                if (window._subPanelHistoryPushed) { window._subPanelHistoryPushed = false; window.history.back(); }
             } else {
                 subPanel.style.transform = '';
             }
@@ -4913,6 +4902,19 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     }
 
     window.addEventListener('popstate', function(event) {
+        // 모바일: subPanel 열려있으면 닫고 네비게이션 차단
+        if (window.innerWidth <= 768) {
+            var sp = document.getElementById('subPanel');
+            if (sp && sp.style.display !== 'none' && sp.style.display !== '') {
+                sp.style.display = 'none';
+                sp.style.transform = '';
+                document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
+                document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+                if (event.state) window.history.pushState(event.state, '');
+                return;
+            }
+        }
+
         var state = event.state;
         window._navNavigating = true;
 
@@ -9429,16 +9431,18 @@ window.dsmRenderProducts = async function(keyword) {
     new MutationObserver(function() { observeModals(); }).observe(document.body, { childList: true, subtree: true });
 
     window.addEventListener('popstate', function(e) {
-        // 모바일: subPanel(사이드 패널)이 열려있으면 그것만 닫기
-        if (window._subPanelHistoryPushed || (e.state && e.state.type === 'subpanel')) {
+        // 모바일: subPanel이 열려있으면 닫고 네비게이션 차단
+        if (window.innerWidth <= 768) {
             var sp = document.getElementById('subPanel');
-            if (sp && sp.style.display !== 'none') {
+            if (sp && sp.style.display !== 'none' && sp.style.display !== '') {
                 sp.style.display = 'none';
+                sp.style.transform = '';
                 document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
                 document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+                // state 복원해서 뒤로가기 네비게이션 방지
+                if (e.state) window.history.pushState(e.state, '');
+                return;
             }
-            window._subPanelHistoryPushed = false;
-            return;
         }
         var topModal = getTopmostVisibleModal();
         if (topModal) {
