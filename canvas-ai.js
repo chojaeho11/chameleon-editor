@@ -354,25 +354,19 @@ export function initAiTools() {
 // ============================================================
 const WIZARD_STYLES = {
     blue: {
-        effect:'3d',
-        titleFill:'#38bdf8', titleStroke:'#1e3a8a', titleShadowColor:'#1e3a8a',
+        effect:'blue',
         boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(56,189,248,0.35)', boxTextColor:'#1e3a5f'
     },
     yellow: {
-        effect:'3d',
-        titleFill:'#fbbf24', titleStroke:'#92400e', titleShadowColor:'#78350f',
+        effect:'yellow',
         boxFill:'rgba(255,251,235,0.92)', boxStroke:'rgba(251,191,36,0.35)', boxTextColor:'#78350f'
     },
     candy: {
         effect:'candy',
-        titleFill:'#ef4444', titleStroke:'#ffffff', titleShadowColor:'#000000',
-        candyColor1:'#ef4444', candyColor2:'#15803d',
         boxFill:'rgba(253,242,248,0.92)', boxStroke:'rgba(244,114,182,0.35)', boxTextColor:'#831843'
     },
     dark: {
-        effect:'neon',
-        titleFill:'transparent', titleStroke:'#ff00aa', titleShadowColor:'#ff00aa',
-        neonColor:'#ff00aa',
+        effect:'dark',
         boxFill:'rgba(15,23,42,0.88)', boxStroke:'rgba(255,0,170,0.3)', boxTextColor:'#f9a8d4'
     }
 };
@@ -504,7 +498,7 @@ async function runDesignWizard(title, style) {
 
     // ─── Step 2: Title ───
     _wzRender(steps, 1);
-    _wzTitle(title, titleFont, S, bW, bH, bL, bT);
+    await _wzTitle(title, titleFont, S, bW, bH, bL, bT);
 
     // ─── Step 3: Description (하단 박스 안에 삽입) ───
     _wzRender(steps, 2);
@@ -607,8 +601,16 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     });
 }
 
-// ─── Step 2: Title text (효과별: 3d/candy/neon, 가로 2/3 초과시 줄바꿈) ───
-function _wzTitle(title, font, S, bW, bH, bL, bT) {
+// ─── Step 2: Title text (applyTextEffect 사용 — 수동 효과와 동일, PDF 정상) ───
+// 스타일별 효과 매핑
+const WIZARD_EFFECT_MAP = {
+    blue:   'block-3d-blue',
+    yellow: 'block-3d-gold',
+    candy:  'retro-candy',
+    dark:   'neon-pink'
+};
+
+async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const sz = Math.round(bW * 0.10);
     const maxW = bW * (2/3);
 
@@ -630,58 +632,37 @@ function _wzTitle(title, font, S, bW, bH, bL, bT) {
         }
     }
 
-    const depth = Math.max(3, Math.round(sz * 0.07));
-    const effect = S.effect || '3d';
-
-    // 기본 속성
-    const props = {
+    // 1. 기본 흰색 텍스트 생성 (효과 적용 전)
+    const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: '900',
+        fill: '#ffffff',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.42,
         width: bW * 0.85, lineHeight: 1.15, charSpacing: -10
-    };
-
-    // ★ 효과별 스타일 분기
-    if (effect === 'candy') {
-        // 레드캔디: 빨강+초록 줄무늬 패턴 + 흰 아웃라인
-        const pSize = 60;
-        const pc = document.createElement('canvas'); pc.width = pSize; pc.height = pSize;
-        const cx = pc.getContext('2d');
-        cx.fillStyle = S.candyColor1 || '#ef4444'; cx.fillRect(0,0,pSize,pSize);
-        cx.beginPath(); cx.strokeStyle = S.candyColor2 || '#15803d'; cx.lineWidth = pSize/2.2; cx.lineCap='butt';
-        cx.moveTo(0,pSize); cx.lineTo(pSize,0); cx.stroke();
-        cx.beginPath(); cx.moveTo(-pSize/2,pSize/2); cx.lineTo(pSize/2,-pSize/2); cx.stroke();
-        cx.beginPath(); cx.moveTo(pSize/2,pSize+pSize/2); cx.lineTo(pSize+pSize/2,pSize/2); cx.stroke();
-        const candyPat = new fabric.Pattern({ source: pc, repeat: 'repeat' });
-        Object.assign(props, {
-            fill: candyPat,
-            stroke: '#ffffff', strokeWidth: Math.max(3, Math.round(sz * 0.04)),
-            paintFirst: 'stroke', strokeLineJoin: 'round',
-            shadow: new fabric.Shadow({ color:'rgba(0,0,0,0.35)', blur:0, offsetX:depth, offsetY:depth })
-        });
-    } else if (effect === 'neon') {
-        // 네온핑크: 검정 fill + 핑크 스트로크 + 핑크 글로우
-        const nCol = S.neonColor || '#ff00aa';
-        Object.assign(props, {
-            fill: '#0a0a0a',
-            stroke: nCol, strokeWidth: Math.max(2, Math.round(sz * 0.035)),
-            paintFirst: 'fill', strokeLineJoin: 'round',
-            shadow: new fabric.Shadow({ color: nCol, blur: Math.round(sz * 0.3), offsetX:0, offsetY:0 })
-        });
-    } else {
-        // 3D: 기존 방식 (블루/옐로우)
-        Object.assign(props, {
-            fill: S.titleFill, stroke: S.titleStroke,
-            strokeWidth: Math.max(1, Math.round(sz * 0.02)),
-            paintFirst: 'stroke', strokeLineJoin: 'round',
-            shadow: new fabric.Shadow({ color: S.titleShadowColor, blur:0, offsetX:depth, offsetY:depth })
-        });
-    }
-
-    const obj = new fabric.Textbox(displayTitle, props);
+    });
     if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
+
+    // 2. applyTextEffect 호출 (수동 효과와 동일한 방식)
+    const effectName = WIZARD_EFFECT_MAP[S.effect] || WIZARD_EFFECT_MAP.blue || 'block-3d-blue';
+    if (window.applyTextEffect) {
+        canvas.setActiveObject(obj);
+        canvas.requestRenderAll();
+
+        // 효과 적용 완료 대기 (groupAndRender가 object:added 발생)
+        await new Promise(resolve => {
+            let done = false;
+            const finish = () => { if (done) return; done = true; canvas.off('object:added', onAdd); resolve(); };
+            const onAdd = () => setTimeout(finish, 300);
+            canvas.on('object:added', onAdd);
+            window.applyTextEffect(effectName);
+            setTimeout(finish, 3000); // 안전 타임아웃
+        });
+
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+    }
 }
 
 // ─── Step 3a: AI 설명 텍스트 생성 (텍스트만 반환) ───
