@@ -1031,5 +1031,15 @@
   "wizard_style_blue": "أزرق",
   "wizard_style_yellow": "أصفر",
   "wizard_style_candy": "حلوى",
-  "wizard_style_dark": "داكن"
+  "wizard_style_dark": "داكن",
+  "referral_title": "رمز الإحالة",
+  "referral_desc": "أدخل بريد المُحيل لمنحه 10% من مبلغ الشراء كرصيد.",
+  "referral_placeholder": "بريد المُحيل الإلكتروني",
+  "referral_verify": "تحقق",
+  "referral_verified": "تم التحقق من المُحيل!",
+  "referral_not_found": "البريد غير موجود.",
+  "referral_self_error": "لا يمكنك إحالة نفسك.",
+  "referral_no_refund": "الطلبات مع مكافأة الإحالة غير قابلة للاسترداد بعد منح المكافأة.",
+  "referral_no_refund_short": "هذا الطلب غير قابل للاسترداد بعد مكافأة الإحالة.",
+  "referral_applied": "تم تطبيق المُحيل"
 }

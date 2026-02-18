@@ -49,11 +49,59 @@
             if (!res.ok) console.error("DB update failed:", res.status);
         }
 
+        // [추천인] 카드결제 완료 후 추천인 적립
+        async function creditReferralBonus(dbId, refId) {
+            if (!refId) return;
+            try {
+                // 중복 체크
+                const logRes = await fetch(`${SUPABASE_URL}/rest/v1/wallet_logs?user_id=eq.${refId}&type=eq.referral_bonus&description=ilike.*${dbId}*&select=id`, {
+                    headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }
+                });
+                const logs = await logRes.json();
+                if (logs && logs.length > 0) return;
+
+                // 주문 금액 조회
+                const orderRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${dbId}&select=total_amount`, {
+                    headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }
+                });
+                const [order] = await orderRes.json();
+                if (!order || !order.total_amount) return;
+
+                const bonus = Math.floor(order.total_amount * 0.1);
+                if (bonus <= 0) return;
+
+                // 프로필 조회
+                const pfRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${refId}&select=deposit`, {
+                    headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }
+                });
+                const [pf] = await pfRes.json();
+                const newDeposit = (parseInt(pf?.deposit || 0)) + bonus;
+
+                // deposit 업데이트
+                await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${refId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ deposit: newDeposit })
+                });
+
+                // 로그 기록
+                await fetch(`${SUPABASE_URL}/rest/v1/wallet_logs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+                    body: JSON.stringify({ user_id: refId, type: 'referral_bonus', amount: bonus, description: `추천인 적립 (주문: ${dbId})` })
+                });
+                console.log('[추천인] 적립 완료:', refId, '+' + bonus);
+            } catch (e) {
+                console.error('[추천인] 적립 오류:', e);
+            }
+        }
+
         async function processSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const dbId = urlParams.get("db_id");
             const sessionId = urlParams.get("session_id"); // Stripe
             const paymentKey = urlParams.get("paymentKey"); // Toss
+            const refId = urlParams.get("ref_id"); // 추천인
 
             if (!dbId) {
                 alert("Missing order information.");
@@ -110,6 +158,11 @@
 
                 } else {
                     throw new Error("No payment verification data found.");
+                }
+
+                // 추천인 적립
+                if (refId) {
+                    await creditReferralBonus(dbId, refId);
                 }
 
                 // 결제 성공 처리

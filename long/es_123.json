@@ -1031,5 +1031,15 @@
   "wizard_style_blue": "Azul",
   "wizard_style_yellow": "Amarillo",
   "wizard_style_candy": "Candy",
-  "wizard_style_dark": "Oscuro"
+  "wizard_style_dark": "Oscuro",
+  "referral_title": "Código de referencia",
+  "referral_desc": "Ingrese el correo del referente para otorgarle el 10% de su compra como depósito.",
+  "referral_placeholder": "Correo del referente",
+  "referral_verify": "Verificar",
+  "referral_verified": "¡Referente verificado!",
+  "referral_not_found": "Correo no encontrado.",
+  "referral_self_error": "No puede referirse a sí mismo.",
+  "referral_no_refund": "Los pedidos con bono de referencia no son reembolsables después de otorgar el bono.",
+  "referral_no_refund_short": "Este pedido no es reembolsable tras el bono de referencia.",
+  "referral_applied": "Referente aplicado"
 }

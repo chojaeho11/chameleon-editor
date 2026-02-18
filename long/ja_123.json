@@ -1031,5 +1031,15 @@
   "wizard_style_blue": "ブルー",
   "wizard_style_yellow": "イエロー",
   "wizard_style_candy": "キャンディ",
-  "wizard_style_dark": "ダーク"
+  "wizard_style_dark": "ダーク",
+  "referral_title": "紹介コード",
+  "referral_desc": "紹介者のメールを入力すると、購入金額の10%が紹介者に付与されます。",
+  "referral_placeholder": "紹介者のメールアドレス",
+  "referral_verify": "確認",
+  "referral_verified": "紹介者が確認されました！",
+  "referral_not_found": "メールアドレスが見つかりません。",
+  "referral_self_error": "自分自身を紹介者にはできません。",
+  "referral_no_refund": "紹介ボーナス付与後は返金できません。",
+  "referral_no_refund_short": "この注文は紹介ボーナス付与後は返金不可です。",
+  "referral_applied": "紹介者適用済み"
 }

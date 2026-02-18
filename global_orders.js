@@ -1,6 +1,37 @@
 import { sb } from "./global_config.js";
 import { showLoading } from "./global_common.js";
 
+// [추천인] 무통장입금 확인 시 추천인 적립
+async function creditReferralBonus(orderId) {
+    try {
+        const { data: order } = await sb.from('orders').select('request_note, total_amount').eq('id', orderId).maybeSingle();
+        if (!order || !order.request_note) return;
+        const match = order.request_note.match(/##REF:([^:]+):([^#]+)##/);
+        if (!match) return;
+        const referrerId = match[1];
+
+        // 중복 적립 방지
+        const { data: existing } = await sb.from('wallet_logs')
+            .select('id').eq('user_id', referrerId)
+            .eq('type', 'referral_bonus').ilike('description', `%주문: ${orderId}%`).maybeSingle();
+        if (existing) return;
+
+        const bonusAmount = Math.floor(order.total_amount * 0.1);
+        if (bonusAmount <= 0) return;
+
+        const { data: pf } = await sb.from('profiles').select('deposit').eq('id', referrerId).single();
+        const newDeposit = (parseInt(pf?.deposit || 0)) + bonusAmount;
+        await sb.from('profiles').update({ deposit: newDeposit }).eq('id', referrerId);
+        await sb.from('wallet_logs').insert({
+            user_id: referrerId, type: 'referral_bonus',
+            amount: bonusAmount, description: `추천인 적립 (주문: ${orderId})`
+        });
+        console.log(`[추천인] 적립 완료: ${referrerId} +${bonusAmount}KRW (주문: ${orderId})`);
+    } catch (e) {
+        console.error('[추천인] 적립 오류:', e);
+    }
+}
+
 let currentOrderStatus = '접수됨';
 let currentPage = 1;
 const itemsPerPage = 10;
@@ -493,6 +524,10 @@ window.executeAutoMatching = async (list) => {
             return Promise.all([p1, p2]);
         });
         await Promise.all(updates);
+        // 추천인 적립 처리
+        for (const item of list) {
+            await creditReferralBonus(item.orderId);
+        }
         alert("완료되었습니다.");
         loadBankdaList();
     } catch(e) { alert("오류: " + e.message); } finally { showLoading(false); }
@@ -515,6 +550,7 @@ window.matchOrderManual = async (txId, name, suggestedId = '') => {
     try {
         await sb.from('orders').update({ payment_status: '결제완료', payment_method: '무통장입금' }).eq('id', orderId);
         await sb.from('bank_transactions').update({ match_status: 'matched', matched_order_id: orderId }).eq('id', txId);
+        await creditReferralBonus(orderId); // 추천인 적립
         alert("연결되었습니다.");
         loadBankdaList();
     } catch(e) { alert("오류: " + e.message); }

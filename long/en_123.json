@@ -1031,5 +1031,15 @@
   "wizard_style_blue": "Blue",
   "wizard_style_yellow": "Yellow",
   "wizard_style_candy": "Candy",
-  "wizard_style_dark": "Dark"
+  "wizard_style_dark": "Dark",
+  "referral_title": "Referral Code",
+  "referral_desc": "Enter referrer's email to give them 10% of your purchase as deposit.",
+  "referral_placeholder": "Enter referrer's email",
+  "referral_verify": "Verify",
+  "referral_verified": "Referrer verified!",
+  "referral_not_found": "Email not found.",
+  "referral_self_error": "You cannot refer yourself.",
+  "referral_no_refund": "Orders with referral bonus are non-refundable after the bonus is credited.",
+  "referral_no_refund_short": "This order is non-refundable after referral bonus.",
+  "referral_applied": "Referrer applied"
 }

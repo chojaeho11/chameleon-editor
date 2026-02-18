@@ -2573,7 +2573,7 @@ async function handleSubReturn() {
     </div>
 </div>
 <div id="deliveryInfoModal" class="modal-bg" style="z-index: 12600;">
-    <div class="modal-box" style="text-align:left;">
+    <div class="modal-box" style="text-align:left; max-width:580px; width:95%;">
         <h3 style="text-align:center;" data-i18n="modal_delivery_title">📝 배송 정보 입력</h3>
         
         <p data-i18n="label_manager_name">담당자명</p>
@@ -2600,8 +2600,25 @@ async function handleSubReturn() {
         
         <p data-i18n="label_request_memo" style="margin-top:10px;">요청사항</p>
         <textarea id="inputRequest" class="ai-input-pretty"></textarea>
-        
-        <button id="btnSubmitOrderInfo" class="btn-round primary" style="margin-top:10px;" data-i18n="btn_payment_submit">주문서 생성 및 결제</button>
+
+        <!-- 추천인 섹션 -->
+        <div id="referralSection" style="margin-top:18px; background:linear-gradient(135deg,#ede9fe,#e0e7ff); padding:18px; border-radius:12px; border:2px solid #a78bfa;">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                <span style="font-size:20px;">🎁</span>
+                <b style="color:#6d28d9; font-size:15px;" data-i18n="referral_title">추천인 코드</b>
+            </div>
+            <p style="font-size:12px; color:#555; margin:0 0 10px; line-height:1.5;" data-i18n="referral_desc">추천인의 이메일을 입력하면 구매 금액의 10%가 추천인에게 적립됩니다.</p>
+            <div style="display:flex; gap:8px;">
+                <input id="inputReferrerEmail" class="ai-input-pretty" type="email" placeholder="추천인 이메일 입력" data-i18n-placeholder="referral_placeholder" style="flex:1; margin:0;">
+                <button id="btnVerifyReferrer" class="btn-round" type="button" onclick="window.validateReferrer()" style="width:80px; background:#7c3aed; color:white; border:none; justify-content:center; font-size:13px;" data-i18n="referral_verify">확인</button>
+            </div>
+            <div id="referrerStatus" style="margin-top:8px; font-size:13px;"></div>
+            <div id="referralNotice" style="display:none; margin-top:10px; padding:10px; background:#fef2f2; border:1px solid #fca5a5; border-radius:8px; font-size:12px; color:#dc2626; line-height:1.5;">
+                <b>⚠️</b> <span data-i18n="referral_no_refund">추천인 적립이 완료되면 해당 주문의 환불이 불가합니다.</span>
+            </div>
+        </div>
+
+        <button id="btnSubmitOrderInfo" class="btn-round primary" style="margin-top:14px;" data-i18n="btn_payment_submit">주문서 생성 및 결제</button>
         <button onclick="document.getElementById('deliveryInfoModal').style.display='none'" class="btn-round" style="margin-top:5px;" data-i18n="btn_cancel">취소</button>
     </div>
 </div>
@@ -2665,6 +2682,14 @@ async function handleSubReturn() {
                     <span id="myCurrentDepositDisplay" style="font-weight:bold; color:#6366f1;" data-i18n="label_balance_loading">(잔액 조회중...)</span>
                 </div>
             </label>
+        </div>
+
+        <div id="checkoutReferralInfo" style="display:none; margin-bottom:15px; padding:12px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px;">
+            <span style="font-weight:bold;">🎁 <span data-i18n="referral_applied">추천인 적용됨</span>:</span>
+            <span id="checkoutReferrerEmail" style="color:#7c3aed; font-weight:bold;"></span>
+            <div style="margin-top:6px; font-size:12px; color:#dc2626; font-weight:bold;">
+                ⚠️ <span data-i18n="referral_no_refund_short">이 주문은 추천인 적립 후 환불이 불가합니다.</span>
+            </div>
         </div>
 
         <button id="btnFinalPay" class="btn-round primary" style="width:100%; height: 50px; font-size: 16px;" onclick="window.handleFinalPayment()" data-i18n="btn_do_final_pay">

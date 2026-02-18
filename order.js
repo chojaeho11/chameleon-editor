@@ -1290,6 +1290,82 @@ function updateSummary(prodTotal, addonTotal, total) {
 }
 
 // ============================================================
+// [추천인] 이메일 검증
+// ============================================================
+window.validateReferrer = async function() {
+    const emailInput = document.getElementById('inputReferrerEmail');
+    const status = document.getElementById('referrerStatus');
+    const notice = document.getElementById('referralNotice');
+    const email = (emailInput ? emailInput.value.trim() : '');
+
+    if (!email) {
+        window.verifiedReferrerId = null;
+        window.verifiedReferrerEmail = null;
+        if (status) status.innerHTML = '';
+        if (notice) notice.style.display = 'none';
+        return;
+    }
+
+    // 자기 자신 차단
+    if (currentUser && currentUser.email === email) {
+        if (status) { status.innerHTML = '❌ ' + window.t('referral_self_error', '자기 자신은 추천인으로 등록할 수 없습니다.'); status.style.color = '#dc2626'; }
+        window.verifiedReferrerId = null;
+        window.verifiedReferrerEmail = null;
+        if (notice) notice.style.display = 'none';
+        return;
+    }
+
+    if (status) { status.innerHTML = '⏳ ...'; status.style.color = '#666'; }
+
+    const { data } = await sb.from('profiles').select('id, email').eq('email', email).maybeSingle();
+    if (data) {
+        if (status) { status.innerHTML = '✅ ' + window.t('referral_verified', '추천인이 확인되었습니다!'); status.style.color = '#16a34a'; }
+        window.verifiedReferrerId = data.id;
+        window.verifiedReferrerEmail = email;
+        if (notice) notice.style.display = 'block';
+    } else {
+        if (status) { status.innerHTML = '❌ ' + window.t('referral_not_found', '존재하지 않는 이메일입니다.'); status.style.color = '#dc2626'; }
+        window.verifiedReferrerId = null;
+        window.verifiedReferrerEmail = null;
+        if (notice) notice.style.display = 'none';
+    }
+};
+
+// ============================================================
+// [추천인] 적립 함수 (결제 완료 후 호출)
+// ============================================================
+async function creditReferralBonus(orderId, referrerId) {
+    if (!referrerId) return;
+    try {
+        // 중복 적립 방지
+        const { data: existing } = await sb.from('wallet_logs')
+            .select('id').eq('user_id', referrerId)
+            .eq('type', 'referral_bonus').ilike('description', `%주문: ${orderId}%`).maybeSingle();
+        if (existing) return;
+
+        // 주문 금액 조회
+        const { data: order } = await sb.from('orders')
+            .select('total_amount').eq('id', orderId).maybeSingle();
+        if (!order || !order.total_amount) return;
+
+        const bonusAmount = Math.floor(order.total_amount * 0.1);
+        if (bonusAmount <= 0) return;
+
+        // 예치금 적립
+        const { data: pf } = await sb.from('profiles').select('deposit').eq('id', referrerId).single();
+        const newDeposit = (parseInt(pf?.deposit || 0)) + bonusAmount;
+        await sb.from('profiles').update({ deposit: newDeposit }).eq('id', referrerId);
+        await sb.from('wallet_logs').insert({
+            user_id: referrerId, type: 'referral_bonus',
+            amount: bonusAmount, description: `추천인 적립 (주문: ${orderId})`
+        });
+        console.log(`[추천인] 적립 완료: ${referrerId} +${bonusAmount}KRW`);
+    } catch (e) {
+        console.error('[추천인] 적립 오류:', e);
+    }
+}
+
+// ============================================================
 // [수정] 주문 정보 제출
 // ============================================================
 async function processOrderSubmission() {
@@ -1318,7 +1394,9 @@ async function processOrderSubmission() {
         phone,
         address,
         request,
-        deliveryDate
+        deliveryDate,
+        referrerId: window.verifiedReferrerId || null,
+        referrerEmail: window.verifiedReferrerEmail || null
     };
 
     let rawTotal = 0;
@@ -1349,8 +1427,20 @@ async function processOrderSubmission() {
     
     document.getElementById("orderName").value = manager; 
     document.getElementById("orderPhone").value = phone; 
-    document.getElementById("orderAddr").value = address; 
+    document.getElementById("orderAddr").value = address;
     document.getElementById("orderMemo").value = request;
+
+    // 추천인 정보 표시
+    const refInfoEl = document.getElementById('checkoutReferralInfo');
+    const refEmailEl = document.getElementById('checkoutReferrerEmail');
+    if (refInfoEl) {
+        if (window.verifiedReferrerId && window.verifiedReferrerEmail) {
+            refInfoEl.style.display = 'block';
+            if (refEmailEl) refEmailEl.textContent = window.verifiedReferrerEmail;
+        } else {
+            refInfoEl.style.display = 'none';
+        }
+    }
 
     if (currentUser) {
         const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
@@ -1466,6 +1556,14 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                     : _fromHostname;
     console.log('[ORDER] site_code=' + _siteCode + ' (HTML=' + _fromHTML + ', CONFIG=' + _fromConfig + ', HOST=' + _fromHostname + ', hostname=' + _hostname + ')');
 
+    // 추천인 정보를 request_note에 태그로 저장
+    let finalRequestNote = request;
+    const _refId = window.tempOrderInfo?.referrerId;
+    const _refEmail = window.tempOrderInfo?.referrerEmail;
+    if (_refId && _refEmail) {
+        finalRequestNote = (request || '') + `\n##REF:${_refId}:${_refEmail}##`;
+    }
+
     const { data: orderData, error: orderError } = await sb.from('orders').insert([{
         user_id: currentUser?.id,
         order_date: new Date().toISOString(),
@@ -1473,7 +1571,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         manager_name: manager,
         phone,
         address,
-        request_note: request,
+        request_note: finalRequestNote,
         status: '임시작성',
         payment_status: '미결제',
         total_amount: finalPayAmount,
@@ -1657,11 +1755,17 @@ async function processFinalPayment() {
                  };
             }).filter(x=>x);
 
-            await sb.from('orders').update({ 
-                discount_amount: useMileage, 
+            const _updateData = {
+                discount_amount: useMileage,
                 total_amount: realFinalPayAmount,
-                items: itemsToSave 
-            }).eq('id', window.currentDbId);
+                items: itemsToSave
+            };
+            // 추천인 정보를 request_note에 태그로 저장
+            if (window.tempOrderInfo?.referrerId && window.tempOrderInfo?.referrerEmail) {
+                const _existNote = window.tempOrderInfo?.request || '';
+                _updateData.request_note = _existNote + `\n##REF:${window.tempOrderInfo.referrerId}:${window.tempOrderInfo.referrerEmail}##`;
+            }
+            await sb.from('orders').update(_updateData).eq('id', window.currentDbId);
         }
         
         const orderId = window.currentDbId; 
@@ -1742,11 +1846,16 @@ async function processDepositPayment(payAmount, useMileage) {
             description: `주문 결제 (주문번호: ${window.currentDbId})`
         });
 
-        await sb.from('orders').update({ 
-            payment_status: '결제완료', 
+        await sb.from('orders').update({
+            payment_status: '결제완료',
             payment_method: '예치금',
-            status: '접수됨' 
+            status: '접수됨'
         }).eq('id', window.currentDbId);
+
+        // 추천인 적립
+        if (window.tempOrderInfo?.referrerId) {
+            await creditReferralBonus(window.currentDbId, window.tempOrderInfo.referrerId);
+        }
 
         alert(window.t('msg_payment_complete'));
         location.reload();
@@ -1783,7 +1892,7 @@ function processCardPayment(confirmedAmount) {
             orderId: "ORD-" + new Date().getTime() + "-" + window.currentDbId, 
             orderName: orderName, 
             customerName: customerName, 
-            successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}`, 
+            successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}` + (window.tempOrderInfo?.referrerId ? `&ref_id=${window.tempOrderInfo.referrerId}` : ''),
             failUrl: window.location.origin + `/fail.html?db_id=${window.currentDbId}`, 
         }).catch(error => { 
             if (error.code !== "USER_CANCEL") alert(window.t('msg_payment_error_prefix', "Payment Error: ") + error.message);
@@ -1832,7 +1941,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
                 currency: currency,
                 order_id: orderDbId,
                 cancel_url: window.location.href,
-                success_url: window.location.origin + `/success.html?db_id=${orderDbId}`
+                success_url: window.location.origin + `/success.html?db_id=${orderDbId}` + (window.tempOrderInfo?.referrerId ? `&ref_id=${window.tempOrderInfo.referrerId}` : '')
             }
         });
 

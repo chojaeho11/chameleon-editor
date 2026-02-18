@@ -1031,5 +1031,15 @@
   "wizard_style_blue": "Bleu",
   "wizard_style_yellow": "Jaune",
   "wizard_style_candy": "Bonbon",
-  "wizard_style_dark": "Sombre"
+  "wizard_style_dark": "Sombre",
+  "referral_title": "Code de parrainage",
+  "referral_desc": "Entrez l'e-mail du parrain pour lui créditer 10% de votre achat.",
+  "referral_placeholder": "E-mail du parrain",
+  "referral_verify": "Vérifier",
+  "referral_verified": "Parrain vérifié !",
+  "referral_not_found": "E-mail non trouvé.",
+  "referral_self_error": "Vous ne pouvez pas vous parrainer vous-même.",
+  "referral_no_refund": "Les commandes avec bonus de parrainage ne sont pas remboursables après crédit du bonus.",
+  "referral_no_refund_short": "Cette commande n'est pas remboursable après le bonus de parrainage.",
+  "referral_applied": "Parrain appliqué"
 }

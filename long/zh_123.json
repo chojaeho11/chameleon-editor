@@ -1031,5 +1031,15 @@
   "wizard_style_blue": "蓝色",
   "wizard_style_yellow": "黄色",
   "wizard_style_candy": "糖果",
-  "wizard_style_dark": "暗色"
+  "wizard_style_dark": "暗色",
+  "referral_title": "推荐码",
+  "referral_desc": "输入推荐人邮箱，购买金额的10%将存入推荐人账户。",
+  "referral_placeholder": "输入推荐人邮箱",
+  "referral_verify": "验证",
+  "referral_verified": "推荐人已确认！",
+  "referral_not_found": "未找到该邮箱。",
+  "referral_self_error": "不能推荐自己。",
+  "referral_no_refund": "推荐奖励发放后，该订单不可退款。",
+  "referral_no_refund_short": "推荐奖励发放后此订单不可退款。",
+  "referral_applied": "已应用推荐人"
 }

@@ -1031,5 +1031,15 @@
   "wizard_style_blue": "Blau",
   "wizard_style_yellow": "Gelb",
   "wizard_style_candy": "Candy",
-  "wizard_style_dark": "Dunkel"
+  "wizard_style_dark": "Dunkel",
+  "referral_title": "Empfehlungscode",
+  "referral_desc": "Geben Sie die E-Mail des Empfehlers ein, um ihm 10% Ihres Einkaufs als Guthaben zu geben.",
+  "referral_placeholder": "E-Mail des Empfehlers",
+  "referral_verify": "Prüfen",
+  "referral_verified": "Empfehler bestätigt!",
+  "referral_not_found": "E-Mail nicht gefunden.",
+  "referral_self_error": "Sie können sich nicht selbst empfehlen.",
+  "referral_no_refund": "Bestellungen mit Empfehlungsbonus sind nach Gutschrift nicht erstattungsfähig.",
+  "referral_no_refund_short": "Diese Bestellung ist nach dem Empfehlungsbonus nicht erstattungsfähig.",
+  "referral_applied": "Empfehler angewendet"
 }

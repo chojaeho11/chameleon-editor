@@ -655,5 +655,15 @@
   "wizard_style_blue": "블루",
   "wizard_style_yellow": "옐로우",
   "wizard_style_candy": "캔디",
-  "wizard_style_dark": "다크"
+  "wizard_style_dark": "다크",
+  "referral_title": "추천인 코드",
+  "referral_desc": "추천인의 이메일을 입력하면 구매 금액의 10%가 추천인에게 적립됩니다.",
+  "referral_placeholder": "추천인 이메일 입력",
+  "referral_verify": "확인",
+  "referral_verified": "추천인이 확인되었습니다!",
+  "referral_not_found": "존재하지 않는 이메일입니다.",
+  "referral_self_error": "자기 자신은 추천인으로 등록할 수 없습니다.",
+  "referral_no_refund": "추천인 적립이 완료되면 해당 주문의 환불이 불가합니다.",
+  "referral_no_refund_short": "이 주문은 추천인 적립 후 환불이 불가합니다.",
+  "referral_applied": "추천인 적용됨"
 }
