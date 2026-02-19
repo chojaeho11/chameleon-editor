@@ -579,14 +579,11 @@ function renderAudioTab(el) {
     h += `<div style="text-align:center;margin-bottom:14px;">`;
     h += `<div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:14px;margin-bottom:8px"><i class="fa-solid fa-wand-magic-sparkles" style="font-size:22px;color:#fff"></i></div>`;
     h += `<div style="font-size:15px;font-weight:800;color:#e0e0e8;letter-spacing:-0.3px">${_t('ve_ai_composer','AI Composer')}</div>`;
-    h += `<div style="font-size:10px;color:#94a3b8;margin-top:2px">${_t('ve_ai_composer_desc','Describe the music you want')}</div></div>`;
+    h += `<div style="font-size:10px;color:#94a3b8;margin-top:2px">${_t('ve_ai_composer_desc','Generate music with vocals and lyrics')}</div></div>`;
 
-    // Prompt
-    h += `<textarea id="veAiMusicPrompt" style="width:100%;height:55px;background:rgba(15,15,30,0.7);border:1px solid rgba(129,140,248,0.2);border-radius:10px;color:#e0e0e8;font-size:11px;padding:10px;resize:none;outline:none;box-sizing:border-box" placeholder="${_t('ve_ai_music_placeholder','ex) bright cafe BGM with piano and guitar')}"></textarea>`;
-
-    // Style
-    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">${_t('ve_ai_music_style','Style')}</div>`;
-    h += `<div id="veAiMusicStyles" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">`;
+    // Style / Prompt
+    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:5px">${_t('ve_ai_music_style','Style')}</div>`;
+    h += `<div id="veAiMusicStyles" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">`;
     const styles = [
         {id:'pop',label:_t('ve_style_pop','Pop'),icon:'🎵'},{id:'cinematic',label:_t('ve_style_cinematic','Cinematic'),icon:'🎬'},
         {id:'lofi',label:'Lo-Fi',icon:'🎧'},{id:'jazz',label:_t('ve_style_jazz','Jazz'),icon:'🎷'},
@@ -600,19 +597,16 @@ function renderAudioTab(el) {
     });
     h += `</div>`;
 
-    // Duration
-    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">${_t('ve_ai_music_duration','Duration')}</div>`;
-    h += `<div style="display:flex;gap:4px">`;
-    const curDur = vm._aiMusicDur || 10;
-    [5,10,15,20,30].forEach(d=>{
-        const sel=curDur===d;
-        h+=`<button onclick="window._veSetMusicDur(${d})" style="flex:1;padding:6px 0;border-radius:8px;border:1px solid ${sel?'#818cf8':'rgba(255,255,255,0.08)'};background:${sel?'rgba(129,140,248,0.2)':'rgba(255,255,255,0.03)'};color:${sel?'#c4b5fd':'#888'};font-size:11px;font-weight:${sel?'700':'400'};cursor:pointer;transition:all .15s">${d}${_t('ve_sec','s')}</button>`;
-    });
-    h += `</div>`;
+    h += `<textarea id="veAiMusicPrompt" style="width:100%;height:40px;background:rgba(15,15,30,0.7);border:1px solid rgba(129,140,248,0.2);border-radius:10px;color:#e0e0e8;font-size:11px;padding:10px;resize:none;outline:none;box-sizing:border-box" placeholder="${_t('ve_ai_music_placeholder','ex) bright cafe BGM with piano and guitar')}"></textarea>`;
+
+    // Lyrics
+    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">${_t('ve_ai_music_lyrics','Lyrics')} <span style="font-weight:400;color:#64748b">(${_t('ve_ai_music_lyrics_hint','max 400 chars, optional')})</span></div>`;
+    h += `<textarea id="veAiMusicLyrics" style="width:100%;height:80px;background:rgba(15,15,30,0.7);border:1px solid rgba(129,140,248,0.2);border-radius:10px;color:#e0e0e8;font-size:11px;padding:10px;resize:vertical;outline:none;box-sizing:border-box;line-height:1.5" placeholder="${_t('ve_ai_music_lyrics_placeholder','[verse]\\nWrite your lyrics here...\\n\\n[chorus]\\nChorus lyrics here...')}"></textarea>`;
+    h += `<div style="text-align:right;font-size:9px;color:#64748b;margin-top:2px"><span id="veAiLyricsCount">0</span>/400</div>`;
 
     // Generate button (big)
-    h += `<button id="veAiMusicGenBtn" onclick="window._veAiMusicGenerate()" style="width:100%;margin-top:14px;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 4px 15px rgba(99,102,241,0.3)">`;
-    h += `<i class="fa-solid fa-wand-magic-sparkles"></i> ${_t('ve_ai_music_generate','Generate Music')}</button>`;
+    h += `<button id="veAiMusicGenBtn" onclick="window._veAiMusicGenerate()" style="width:100%;margin-top:10px;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 4px 15px rgba(99,102,241,0.3)">`;
+    h += `<i class="fa-solid fa-microphone-lines"></i> ${_t('ve_ai_music_generate','Generate Music')}</button>`;
 
     // Status
     h += `<div id="veAiMusicStatus" style="display:none;margin-top:10px;text-align:center;padding:12px;background:rgba(15,15,30,0.5);border-radius:10px">`;
@@ -632,8 +626,9 @@ function renderAudioTab(el) {
             const sel=vm.audioUrl===m.url;
             const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewAiIdx===i;
             h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectAiMusic(${i})" style="margin-bottom:3px">`;
-            h+=`<i class="fa-solid fa-wand-magic-sparkles" style="width:22px;text-align:center;font-size:12px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
-            h+=`<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:#e0e0e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||'AI Music'}</div><div style="font-size:9px;color:#555">${m.duration?m.duration+_t('ve_sec','s'):''} ${m.style?'· '+m.style:''}</div></div>`;
+            const mIcon = m.hasLyrics ? 'fa-microphone-lines' : 'fa-wand-magic-sparkles';
+            h+=`<i class="fa-solid ${mIcon}" style="width:22px;text-align:center;font-size:12px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
+            h+=`<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:#e0e0e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||'AI Music'}</div><div style="font-size:9px;color:#555">${m.style||''}</div></div>`;
             h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewAiMusic(${i})" style="flex-shrink:0">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
             h+=`<button onclick="event.stopPropagation();window._veDeleteAiMusic(${i})" style="flex-shrink:0;width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:#ef4444;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0.5;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'"><i class="fa-solid fa-trash"></i></button>`;
             h+=`</div>`;
@@ -645,6 +640,13 @@ function renderAudioTab(el) {
     h += `</div>`;
     el.innerHTML = h;
     if (vm._sfxOpen) loadAudioFromDB();
+    // Lyrics character counter
+    const lyrEl = document.getElementById('veAiMusicLyrics');
+    const cntEl = document.getElementById('veAiLyricsCount');
+    if (lyrEl && cntEl) {
+        cntEl.textContent = lyrEl.value.length;
+        lyrEl.addEventListener('input', () => { cntEl.textContent = lyrEl.value.length; if (lyrEl.value.length > 400) { lyrEl.value = lyrEl.value.substring(0, 400); cntEl.textContent = '400'; } });
+    }
 }
 window._veAudioTabSwitch=function(tab){
     vm.audioTab=tab;vm.audioPage=0;vm.audioItems=null;
@@ -777,7 +779,7 @@ async function loadUserAiMusic() {
         vm._aiMusicList = (data || []).map(r => {
             let meta = {};
             try { meta = JSON.parse(r.tags || '{}'); } catch(e) { meta = { name: r.tags }; }
-            return { id: r.id, url: r.data_url, name: meta.name || 'AI Music', style: meta.style || '', duration: meta.duration || 0 };
+            return { id: r.id, url: r.data_url, name: meta.name || 'AI Music', style: meta.style || '', hasLyrics: !!meta.hasLyrics };
         });
     } catch (e) { console.warn('loadUserAiMusic error:', e); vm._aiMusicList = []; }
 }
@@ -789,11 +791,14 @@ window._veAiMusicGenerate = async function() {
     if (!user) { showToast(_t('ve_ai_music_login','Please login first')); return; }
 
     const promptEl = document.getElementById('veAiMusicPrompt');
-    const prompt = promptEl ? promptEl.value.trim() : '';
+    const lyricsEl = document.getElementById('veAiMusicLyrics');
+    const promptVal = promptEl ? promptEl.value.trim() : '';
+    const lyricsVal = lyricsEl ? lyricsEl.value.trim() : '';
     const style = vm._aiMusicStyle || 'cinematic';
-    const duration = vm._aiMusicDur || 10;
 
-    if (!prompt && !style) { showToast(_t('ve_ai_music_need_input','Enter a prompt or select a style')); return; }
+    // Build prompt: style + user prompt
+    const prompt = [style, promptVal].filter(Boolean).join(', ');
+    if (!prompt && !lyricsVal) { showToast(_t('ve_ai_music_need_input','Enter a prompt or lyrics')); return; }
 
     const genBtn = document.getElementById('veAiMusicGenBtn');
     const statusEl = document.getElementById('veAiMusicStatus');
@@ -804,10 +809,12 @@ window._veAiMusicGenerate = async function() {
     _aiMusicCancelled = false;
 
     try {
-        // 1. Create prediction
+        // 1. Create prediction (minimax/music-01 with vocals+lyrics)
         if (statusText) statusText.textContent = _t('ve_ai_music_requesting','Sending request...');
+        const reqBody = { action: 'create', prompt };
+        if (lyricsVal) reqBody.lyrics = lyricsVal.substring(0, 400);
         const { data: createData, error: createError } = await sb.functions.invoke('generate-music', {
-            body: { action: 'create', prompt, style, duration }
+            body: reqBody
         });
         if (createError) throw new Error(createError.message || 'Edge function error');
         if (createData.error) throw new Error(createData.error);
@@ -861,8 +868,8 @@ window._veAiMusicGenerate = async function() {
                 } catch (e) { console.warn('Storage upload failed:', e); }
 
                 // Save to library table (per-user)
-                const musicName = prompt ? prompt.substring(0, 30) : style;
-                const meta = JSON.stringify({ name: musicName, style, duration });
+                const musicName = lyricsVal ? lyricsVal.substring(0, 25) : (promptVal || style);
+                const meta = JSON.stringify({ name: musicName, style, hasLyrics: !!lyricsVal });
                 await sb.from('library').insert({
                     category: 'ai-music',
                     tags: meta,

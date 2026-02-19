@@ -1,5 +1,6 @@
 // supabase/functions/generate-music/index.ts
-// AI Music generation using Replicate (meta/musicgen)
+// AI Music generation using Replicate (minimax/music-01)
+// Supports vocals + lyrics generation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -19,33 +20,23 @@ serve(async (req) => {
 
     // ─── ACTION: create ───
     if (action === 'create') {
-      const { prompt, style, duration } = body;
-      if (!prompt && !style) throw new Error('prompt or style is required');
+      const { prompt, lyrics } = body;
+      if (!prompt && !lyrics) throw new Error('prompt or lyrics is required');
 
-      const fullPrompt = [prompt, style].filter(Boolean).join(', ');
+      // Build input for minimax/music-01
+      const input: Record<string, unknown> = {};
+      if (prompt) input.prompt = prompt;
+      if (lyrics) input.lyrics = lyrics.substring(0, 400); // max 400 chars
 
-      // Use version-based endpoint for meta/musicgen
-      const replicateRes = await fetch("https://api.replicate.com/v1/predictions", {
+      // Use model-based endpoint for minimax/music-01
+      const replicateRes = await fetch("https://api.replicate.com/v1/models/minimax/music-01/predictions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${REPLICATE_API_TOKEN}`,
           "Content-Type": "application/json",
           "Prefer": "respond-async",
         },
-        body: JSON.stringify({
-          version: "671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
-          input: {
-            prompt: fullPrompt,
-            duration: duration || 10,
-            model_version: "stereo-melody-large",
-            output_format: "mp3",
-            normalization_strategy: "loudness",
-            top_k: 250,
-            top_p: 0,
-            temperature: 1,
-            classifier_free_guidance: 3,
-          }
-        }),
+        body: JSON.stringify({ input }),
       });
 
       if (!replicateRes.ok) {
