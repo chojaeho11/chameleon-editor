@@ -295,7 +295,7 @@
     // 5. 실행 함수
     window.applyNewWizard = function(type) {
         if (!window.canvas) {
-            alert(window.t ? window.t('err_canvas_not_ready') : "Canvas is not ready.");
+            showToast(window.t ? window.t('err_canvas_not_ready') : "Canvas is not ready.", "error");
             return;
         }
 

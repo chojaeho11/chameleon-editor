@@ -57,6 +57,7 @@
     </style>
 </head>
 <body class="mypage-body">
+<script src="toast.js?v=123"></script>
 
     <nav class="mp-sidebar">
         <div class="mp-logo" onclick="location.href='index.html'"><i class="fa-solid fa-palette"></i> Chameleon</div>
@@ -197,7 +198,7 @@
                         <button onclick="openWithdrawModal()" style="flex: 1; background: #4f46e5; border: none; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_withdraw">
                             💸 출금 신청
                         </button>
-                        <button onclick="alert(window.t('mp_charge_notice','관리자 계좌로 입금 후 고객센터에 문의해주세요.'))" style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_charge">
+                        <button onclick="showToast(window.t('mp_charge_notice','관리자 계좌로 입금 후 고객센터에 문의해주세요.'), 'info')" style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_charge">
                             💳 충전하기
                         </button>
                     </div>

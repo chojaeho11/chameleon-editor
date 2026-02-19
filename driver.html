@@ -61,6 +61,7 @@
     </style>
 </head>
 <body>
+<script src="toast.js?v=123"></script>
 
 <div id="loading">
     <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color:#6366f1;"></i>
@@ -119,7 +120,7 @@
         await loadDriverList();
 
         // 저장된 기사 ID가 있으면 자동 선택
-        const savedDriverId = localStorage.getItem('my_driver_id');
+        let savedDriverId = null; try { savedDriverId = localStorage.getItem('my_driver_id'); } catch(e) {}
         if (savedDriverId) {
             document.getElementById('driverSelect').value = savedDriverId;
             await loadMyTasks();
@@ -155,7 +156,7 @@
     // 기사 선택 시 저장 및 로드
     window.saveDriverAndLoad = function() {
         const id = document.getElementById('driverSelect').value;
-        if (id) localStorage.setItem('my_driver_id', id);
+        if (id) try { localStorage.setItem('my_driver_id', id); } catch(e) {}
         loadMyTasks();
     };
 
@@ -294,7 +295,7 @@
     // 노하우 저장
     window.saveKnowhow = async function(address, orderId) {
         const content = document.getElementById('input_tip_' + orderId).value;
-        if (!content.trim()) return alert('내용을 입력해주세요.');
+        if (!content.trim()) { showToast('내용을 입력해주세요.', 'warn'); return; }
 
         const driverSelect = document.getElementById('driverSelect');
         const driverName = driverSelect.options[driverSelect.selectedIndex].text.replace(' 기사님', '');
@@ -316,17 +317,17 @@
             }
 
             if (error) throw error;
-            alert('노하우가 공유되었습니다! 감사합니다 👍');
+            showToast('노하우가 공유되었습니다! 감사합니다', 'success');
             loadMyTasks();
         } catch (e) {
-            alert('저장 실패: ' + e.message);
+            showToast('저장 실패: ' + e.message, 'error');
         }
     };
 
     window.updateDeliveryTime = async function(orderId, time) {
         if (!time) return;
         const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
-        if (error) alert('저장 실패: ' + error.message);
+        if (error) showToast('저장 실패: ' + error.message, 'error');
     };
 
     window.toggleComplete = async function(orderId, currentStatus) {
@@ -334,7 +335,7 @@
         if (!confirm('배송을 완료 처리 하시겠습니까?\n(관리자 페이지에 즉시 반영됩니다)')) return;
 
         const { error } = await sb.from('orders').update({ status: '배송완료' }).eq('id', orderId);
-        if (error) alert('오류 발생: ' + error.message);
+        if (error) showToast('오류 발생: ' + error.message, 'error');
         else loadMyTasks();
     };
 

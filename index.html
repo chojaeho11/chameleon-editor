@@ -325,6 +325,7 @@
 </script>
 </head>
 <body>
+<script src="toast.js?v=123"></script>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 <script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
 
@@ -550,7 +551,7 @@
     window.dsmOpenCustomInline = function() {
         var w = parseInt(document.getElementById('dsmCustomW2').value);
         var h = parseInt(document.getElementById('dsmCustomH2').value);
-        if (!w || !h || w < 10 || h < 10) return alert('가로/세로 크기를 입력해주세요 (최소 10mm)');
+        if (!w || !h || w < 10 || h < 10) { showToast('가로/세로 크기를 입력해주세요 (최소 10mm)', 'warn'); return; }
         if (window.startEditorDirect) window.startEditorDirect('custom', w, h);
     };
     window.dsmOpenPrintInline = function(w, h, label) {
@@ -898,7 +899,7 @@ function scrollHotdeal(gridId, dir) {
 })();
 window.calcShipping = async function() {
     var city = document.getElementById('scCity').value.trim();
-    if (!city) { alert(window.t && window.t('sc_alert_city') || '도시명을 입력해주세요'); return; }
+    if (!city) { showToast(window.t && window.t('sc_alert_city') || '도시명을 입력해주세요', 'warn'); return; }
 
     var btn = document.getElementById('scCalcBtn');
     var resultDiv = document.getElementById('scResult');
@@ -1131,7 +1132,7 @@ window.isPremiumTemplate = function(tpl) {
 
 // Start subscription flow
 window.startSubscription = async function(planType) {
-    if (!window.sb) { alert('Loading...'); return; }
+    if (!window.sb) { showToast('Loading...', 'info'); return; }
 
     var sess;
     try {
@@ -1167,7 +1168,7 @@ window.startSubscription = async function(planType) {
         if (btn) { btn.disabled = false; btn.textContent = window.t ? window.t('sub_btn') : '구독 시작하기'; }
 
         if (error || (data && data.error)) {
-            alert(data?.error || error?.message || 'Error');
+            showToast(data?.error || error?.message || 'Error', 'error');
             return;
         }
 
@@ -1176,13 +1177,13 @@ window.startSubscription = async function(planType) {
         }
     } catch (e) {
         console.error('Subscription error:', e);
-        alert(e.message || 'Error');
+        showToast(e.message || 'Error', 'error');
     }
 };
 
 // Manage subscription (Stripe Customer Portal)
 window.manageSubscription = async function() {
-    if (!window.sb) { alert('Loading...'); return; }
+    if (!window.sb) { showToast('Loading...', 'info'); return; }
 
     var sess;
     try { var r = await window.sb.auth.getSession(); sess = r.data.session; } catch(e) {}
@@ -1202,7 +1203,7 @@ window.manageSubscription = async function() {
             .maybeSingle();
 
         if (!subData || !subData.stripe_customer_id) {
-            alert(window.t ? window.t('sub_no_subscription') : '활성 구독이 없습니다. 먼저 구독을 시작해주세요.');
+            showToast(window.t ? window.t('sub_no_subscription') : '활성 구독이 없습니다. 먼저 구독을 시작해주세요.', 'warn');
             return;
         }
 
@@ -1214,7 +1215,7 @@ window.manageSubscription = async function() {
         });
 
         if (error || (data && data.error)) {
-            alert(data?.error || error?.message || 'Error');
+            showToast(data?.error || error?.message || 'Error', 'error');
             return;
         }
 
@@ -1223,7 +1224,7 @@ window.manageSubscription = async function() {
         }
     } catch (e) {
         console.error('Manage subscription error:', e);
-        alert(e.message || 'Error');
+        showToast(e.message || 'Error', 'error');
     }
 };
 
@@ -1256,7 +1257,7 @@ async function handleSubReturn() {
             var cleanUrl = window.location.pathname;
             window.history.replaceState({}, '', cleanUrl);
             // Show success
-            alert(window.t ? window.t('sub_success_msg') : 'PRO 구독이 활성화되었습니다! 🎉');
+            showToast(window.t ? window.t('sub_success_msg') : 'PRO 구독이 활성화되었습니다!', 'success');
             location.reload();
         }
     } catch (e) {
@@ -3583,7 +3584,7 @@ window.filterFxCards = function(cat, btn) {
             if (error) throw error;
         } catch(e) {
             console.error('Delete failed:', e);
-            alert(window.t('msg_delete_failed', '삭제에 실패했습니다.'));
+            showToast(window.t('msg_delete_failed', '삭제에 실패했습니다.'), 'error');
         }
         window._selectedUploads.clear();
         window._uploadSelectMode = false;
@@ -4088,7 +4089,7 @@ window.filterFxCards = function(cat, btn) {
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
     window.enterPartnerCenter = function() {
         if (!window.currentUser) {
-            alert(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.");
+            showToast(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.", 'warn');
             document.getElementById('loginModal').style.display = 'flex';
             return;
         }
@@ -4105,7 +4106,7 @@ window.filterFxCards = function(cat, btn) {
             .order('price', { ascending: true }); // 저렴한 순
 
         if(error || !bids || bids.length === 0) {
-            alert("아직 도착한 견적서가 없습니다.\n파트너사들이 확인 중이니 조금만 기다려주세요.");
+            showToast("아직 도착한 견적서가 없습니다.\n파트너사들이 확인 중이니 조금만 기다려주세요.", 'info');
             return;
         }
 
@@ -4170,7 +4171,7 @@ window.filterFxCards = function(cat, btn) {
         // 3. 주문 상태 변경 (제작준비)
         await sb.from('orders').update({ status: '제작준비' }).eq('id', orderId);
 
-        alert("✅ 파트너 선택 완료! 연락처를 확인하여 일정을 조율하세요.");
+        showToast("파트너 선택 완료! 연락처를 확인하여 일정을 조율하세요.", "success");
         document.getElementById('bidListModal').remove();
         checkBidsForOrder(orderId); // 모달 다시 열어서 결과 보여줌
     };
@@ -4191,8 +4192,8 @@ window.filterFxCards = function(cat, btn) {
             comment: comment
         });
 
-        if(error) alert(window.t('msg_failed', "Failed: ") + error.message);
-        else alert(window.t('msg_review_saved', "Review saved!"));
+        if(error) showToast(window.t('msg_failed', "Failed: ") + error.message, 'error');
+        else showToast(window.t('msg_review_saved', "Review saved!"), 'success');
     };
 </script>
 
@@ -4440,7 +4441,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             document.getElementById('templateOverlay').style.display = 'none';
             window.pendingTemplate = tpl;
             if (window.showCategorySelectionModal) window.showCategorySelectionModal();
-            else alert(window.t('msg_invalid_size'));
+            else showToast(window.t('msg_invalid_size'), 'warn');
         } else {
             if(!confirm(window.t('msg_template_apply_confirm'))) return;
             document.getElementById('templateOverlay').style.display = 'none';
@@ -4641,9 +4642,9 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     }
 
     // 마이페이지 복구 로직
-    const loadId = localStorage.getItem('load_design_id');
+    let loadId = null; try { loadId = localStorage.getItem('load_design_id'); } catch(e) {}
     if (loadId) {
-        localStorage.removeItem('load_design_id');
+        try { localStorage.removeItem('load_design_id'); } catch(e) {}
         setTimeout(async () => {
             const loading = document.getElementById('loading');
             if(loading) loading.style.display = 'flex';
@@ -4660,7 +4661,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                 if (window.restoreDesignFromData) window.restoreDesignFromData(data);
             } catch (e) {
                 console.error(e);
-                alert("불러오기 실패: " + e.message);
+                showToast("불러오기 실패: " + e.message, 'error');
                 if(loading) loading.style.display = 'none';
             }
         }, 800);
@@ -4731,7 +4732,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
             // HTML 생성 (이제 name과 formattedPrice 변수만 넣으면 끝)
             card.innerHTML = `
                 <div class="hotdeal-img-box">
-                    <img src="${imgSrc}" alt="${name}" onerror="this.src='https://placehold.co/300?text=No+Img'">
+                    <img src="${imgSrc}" alt="${name}" loading="lazy" onerror="this.src='https://placehold.co/300?text=No+Img'">
                     <div style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px;">${badgeText}</div>
                 </div>
                 <div class="hotdeal-info">
@@ -5137,7 +5138,7 @@ window.goHome = function() {
 
         } catch (e) {
             console.error(e);
-            alert("오류: " + e.message);
+            showToast("오류: " + e.message, 'error');
             window.history.back();
         } finally {
             if(loading) loading.style.display = 'none';
@@ -5432,7 +5433,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
 
         } catch (e) {
             console.error(e);
-            alert("오류: " + e.message);
+            showToast("오류: " + e.message, 'error');
             window.history.back();
         } finally {
             if(loading) loading.style.display = 'none';
@@ -5531,7 +5532,7 @@ window.showChoiceModal = async function(key) {
     let product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
     if (!product || !product.description) {
         const { data, error } = await _sb.from('admin_products').select('*').eq('code', key).single();
-        if (error || !data) return alert("상품 정보를 찾을 수 없습니다.");
+        if (error || !data) { showToast("상품 정보를 찾을 수 없습니다.", 'error'); return; }
         product = data;
         if(!window.PRODUCT_DB) window.PRODUCT_DB = {};
         window.PRODUCT_DB[key] = product;
@@ -5781,7 +5782,7 @@ window.showChoiceModal = async function(key) {
 
     let productHeaderHtml = `
         <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
-            <img src="${product.img || product.img_url}" style="width:100%; max-height:180px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
+            <img src="${product.img || product.img_url}" loading="lazy" style="width:100%; max-height:180px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
     `;
 
@@ -6059,11 +6060,11 @@ if (w >= 20 && h >= 20) {
         
         // 1. 상품 정보 확인 (없으면 중단)
         const product = window.selectedProductForChoice;
-        if (!product) return alert("상품 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.");
+        if (!product) { showToast("상품 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.", 'error'); return; }
 
         // ★ [핵심] 상품 코드 확실하게 가져오기 (변수 의존성 제거)
         const targetCode = product.code || window.currentProductKey;
-        if (!targetCode) return alert("상품 코드가 누락되었습니다.");
+        if (!targetCode) { showToast("상품 코드가 누락되었습니다.", 'error'); return; }
 
         // 2. 언어 감지
         const urlParams = new URLSearchParams(window.location.search);
@@ -6095,7 +6096,7 @@ if (w >= 20 && h >= 20) {
             finalH = parseInt(document.getElementById('inputCustH').value || 0);
             finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
             
-            if (finalW < 20 || finalH < 20) return alert(lang==='ja'?'最小サイズは100mm以上にしてください。':lang==='zh'?'最小尺寸必须为100mm以上。':lang==='ar'?'يجب أن يكون الحد الأدنى للحجم 100 مم أو أكثر.':lang==='es'?'El tamaño mínimo debe ser de 100 mm o más.':lang==='de'?'Die Mindestgröße muss 100 mm oder mehr betragen.':lang==='fr'?'La taille minimale doit être de 100 mm ou plus.':lang==='en'?'Minimum size must be 100mm or more.':'최소 사이즈는 100mm 이상이어야 합니다.');
+            if (finalW < 20 || finalH < 20) { showToast(lang==='ja'?'最小サイズは100mm以上にしてください。':lang==='zh'?'最小尺寸必须为100mm以上。':lang==='ar'?'يجب أن يكون الحد الأدنى للحجم 100 مم أو أكثر.':lang==='es'?'El tamaño mínimo debe ser de 100 mm o más.':lang==='de'?'Die Mindestgröße muss 100 mm oder mehr betragen.':lang==='fr'?'La taille minimale doit être de 100 mm ou plus.':lang==='en'?'Minimum size must be 100mm or more.':'최소 사이즈는 100mm 이상이어야 합니다.', 'warn'); return; }
             
             const area = (finalW * finalH) / 1000000;
             let rawPrice = area * unitPrice;
@@ -6160,7 +6161,7 @@ if (w >= 20 && h >= 20) {
                 document.getElementById('cartAddedModal').style.display = 'flex';
             }).catch(err => {
                 console.error('장바구니 추가 오류:', err);
-                alert('장바구니 담기 실패: ' + err.message);
+                showToast('장바구니 담기 실패: ' + err.message, 'error');
                 window.isDirectCartAddInProgress = false;
             });
         }
@@ -6365,9 +6366,9 @@ if (w >= 20 && h >= 20) {
 
     window.submitProductReview = async function() {
         const dbClient = window.sb || sb;
-        if (!dbClient || !window.currentUser) return alert(window.t('rv_login_required', '로그인이 필요합니다'));
+        if (!dbClient || !window.currentUser) { showToast(window.t('rv_login_required', '로그인이 필요합니다'), 'warn'); return; }
         const comment = document.getElementById('prvComment').value.trim();
-        if (!comment) return alert(window.t('rv_placeholder', '리뷰를 입력해주세요'));
+        if (!comment) { showToast(window.t('rv_placeholder', '리뷰를 입력해주세요'), 'warn'); return; }
 
         const productCode = window.currentReviewProductCode;
         const lang = window.currentReviewLang || 'kr';
@@ -6410,9 +6411,9 @@ if (w >= 20 && h >= 20) {
         });
 
         if (error) {
-            alert(window.t('err_prefix', '오류: ') + error.message);
+            showToast(window.t('err_prefix', '오류: ') + error.message, 'error');
         } else {
-            alert(window.t('rv_submitted', '리뷰가 등록되었습니다!'));
+            showToast(window.t('rv_submitted', '리뷰가 등록되었습니다!'), 'success');
             document.getElementById('prvComment').value = '';
             if (fileInput) fileInput.value = '';
             document.getElementById('prvPhotoName').innerText = '';
@@ -6452,7 +6453,7 @@ if (w >= 20 && h >= 20) {
             if (!file) return;
 
             const product = window.selectedProductForChoice;
-            if (!product) return alert("상품 정보가 없습니다.");
+            if (!product) { showToast("상품 정보가 없습니다.", 'error'); return; }
 
             const loading = document.getElementById("loading");
             if (loading) loading.style.display = "flex";
@@ -6524,7 +6525,7 @@ if (w >= 20 && h >= 20) {
                 
             } catch (err) {
                 console.error(err);
-                alert("파일 처리 중 오류가 발생했습니다.");
+                showToast("파일 처리 중 오류가 발생했습니다.", 'error');
             } finally {
                 if (loading) loading.style.display = "none";
                 directUploadInput.value = ''; 
@@ -6564,12 +6565,12 @@ if (w >= 20 && h >= 20) {
         // 1. [검증] 로그인 체크
         const { data } = await sb.auth.getSession();
         if (!data || !data.session || !data.session.user) {
-            alert(window.t('msg_login_required_design'));
+            showToast(window.t('msg_login_required_design'), 'warn');
             document.getElementById('loginModal').style.display = 'flex';
-            return; 
+            return;
         }
 
-        if (!key) return alert("상품 코드가 올바르지 않습니다.");
+        if (!key) { showToast("상품 코드가 올바르지 않습니다.", 'error'); return; }
 
         // 2. [설정] 상품 정보 로드 (전역 변수에 없으면 DB에서 가져옴)
         window.currentProductKey = key;
@@ -6588,7 +6589,7 @@ if (w >= 20 && h >= 20) {
             const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).single();
             if (error || !prodData) {
                 console.error("상품 로드 실패:", error);
-                return alert("상품 정보를 찾을 수 없습니다.");
+                showToast("상품 정보를 찾을 수 없습니다.", 'error'); return;
             }
             window.PRODUCT_DB[key] = prodData;
         }
@@ -6612,7 +6613,7 @@ if (w >= 20 && h >= 20) {
         const maxSide = Math.max(displayW, displayH);
 
         if (product && maxSide >= 800) {
-            alert(window.t('msg_large_product_warning'));
+            showToast(window.t('msg_large_product_warning'), 'warn');
         }
         
         // 픽셀 변환 및 캔버스 설정
@@ -7053,12 +7054,12 @@ if (w >= 20 && h >= 20) {
     };
 
     // 기타 유틸
-    window.toggleLockSelection = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a)return alert("선택필요"); const l=!a.lockMovementX; a.set({lockMovementX:l,lockMovementY:l,lockRotation:l,lockScalingX:l,lockScalingY:l,hasControls:!l,selectable:true}); canvas.discardActiveObject(); canvas.requestRenderAll(); };
+    window.toggleLockSelection = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a){showToast("선택필요",'info');return;} const l=!a.lockMovementX; a.set({lockMovementX:l,lockMovementY:l,lockRotation:l,lockScalingX:l,lockScalingY:l,hasControls:!l,selectable:true}); canvas.discardActiveObject(); canvas.requestRenderAll(); };
     window.setAsBackground = function() { 
     if(!canvas) return; 
     
     const a = canvas.getActiveObject(); 
-    if(!a) return alert("배경으로 만들 이미지를 선택해주세요."); 
+    if(!a) { showToast("배경으로 만들 이미지를 선택해주세요.", 'info'); return; }
     
     const b = canvas.getObjects().find(o => o.isBoard); 
     if(!b) return; 
@@ -7099,7 +7100,7 @@ if (w >= 20 && h >= 20) {
     window.openGeneralProductModal = function(code) {
         // 상품 정보 가져오기 (이미 전역변수에 로드됨)
         const product = window.PRODUCT_DB[code];
-        if (!product) return alert("상품 정보를 찾을 수 없습니다.");
+        if (!product) { showToast("상품 정보를 찾을 수 없습니다.", 'error'); return; }
 
         window.currentGenProduct = product;
 
@@ -8271,7 +8272,7 @@ window.loadHomeHcGrid = function(){
                 .single();
 
             if (error || !data) {
-                alert("배송 카테고리를 찾을 수 없습니다. 관리자에게 문의해주세요.");
+                showToast("배송 카테고리를 찾을 수 없습니다. 관리자에게 문의해주세요.", 'error');
                 modal.style.display = 'none';
                 return;
             }
@@ -8281,7 +8282,7 @@ window.loadHomeHcGrid = function(){
 
         } catch (e) {
             console.error(e);
-            alert("오류가 발생했습니다.");
+            showToast("오류가 발생했습니다.", 'error');
             modal.style.display = 'none';
         }
     };
@@ -8296,7 +8297,7 @@ window.loadHomeHcGrid = function(){
     window.openTemplateCreator = function() {
         // 1. 로그인 체크
         if (!window.currentUser) {
-            alert(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.");
+            showToast(window.t ? window.t('msg_login_required') : "로그인이 필요합니다.", 'warn');
             document.getElementById('loginModal').style.display = 'flex';
             return;
         }
@@ -8316,7 +8317,7 @@ window.loadHomeHcGrid = function(){
         const h = parseInt(hVal);
 
         if (!w || !h || w <= 0 || h <= 0) {
-            alert(window.t('msg_invalid_size'));
+            showToast(window.t('msg_invalid_size'), 'warn');
             return;
         }
 
@@ -8350,7 +8351,7 @@ window.loadHomeHcGrid = function(){
                 }
             }, 500);
         } else {
-            alert(window.t('msg_editor_load_error'));
+            showToast(window.t('msg_editor_load_error'), 'error');
         }
     };
 
@@ -8823,7 +8824,7 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
             }, 500);
         }
     } else {
-        alert('에디터를 불러오는 중 오류가 발생했습니다.');
+        showToast('에디터를 불러오는 중 오류가 발생했습니다.', 'error');
     }
 };
 
@@ -8831,7 +8832,7 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
 window.dsmOpenCustom = function() {
     var w = parseInt(document.getElementById('dsmCustomW').value);
     var h = parseInt(document.getElementById('dsmCustomH').value);
-    if (!w || !h || w <= 0 || h <= 0) return alert('가로/세로를 올바르게 입력해주세요.');
+    if (!w || !h || w <= 0 || h <= 0) { showToast('가로/세로를 올바르게 입력해주세요.', 'warn'); return; }
     window.dsmOpenEditor(w, h, 'Custom');
 };
 
@@ -8871,7 +8872,7 @@ window._pptSetTransition = function(val) {
 
 // ─── PPT 내보내기 ───
 window.exportPPTX = async function() {
-    if (typeof PptxGenJS === 'undefined') return alert('PptxGenJS library not loaded.');
+    if (typeof PptxGenJS === 'undefined') { showToast('PptxGenJS library not loaded.', 'error'); return; }
     if (!window.canvas) return;
 
     var btn = document.getElementById('btnExportPPTX');
@@ -8954,7 +8955,7 @@ window.exportPPTX = async function() {
 
     } catch(err) {
         console.error('PPTX export error:', err);
-        alert('PPT 내보내기 실패: ' + err.message);
+        showToast('PPT 내보내기 실패: ' + err.message, 'error');
     } finally {
         if (btn) { btn.innerHTML = origHTML; btn.disabled = false; }
     }
@@ -9117,7 +9118,7 @@ window.dsmRenderProducts = async function(keyword) {
     </div>
     <div class="cham-messages" id="chamMessages"></div>
     <div id="chamConnectBar" style="padding:6px 14px; background:#f0f9ff; border-top:1px solid #e0e7ff; display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0;">
-        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : alert(typeof _ct==='function'?_ct('connectAlert'):'Please refresh and try again.');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> <span id="chamConnectText">상담사 연결</span></button>
+        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : showToast(typeof _ct==='function'?_ct('connectAlert'):'Please refresh and try again.','info');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> <span id="chamConnectText">상담사 연결</span></button>
     </div>
     <div class="cham-input-area">
         <label id="chamFileBtn" style="cursor:pointer; padding:8px; color:#6366f1; font-size:18px; display:flex; align-items:center;"><i class="fa-solid fa-paperclip"></i><input type="file" id="chamFileInput" style="display:none;" multiple accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp"></label>

@@ -724,7 +724,7 @@ function getAudioUrl(item){
 }
 window._veSelectDBAudio = function(idx) {
     const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
-    const url=getAudioUrl(a); if(!url){alert('Invalid audio URL');return;}
+    const url=getAudioUrl(a); if(!url){showToast('Invalid audio URL','error');return;}
     stopMusicPreview();
     if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}
     vm.music='none'; vm.audioUrl=url;
@@ -732,7 +732,7 @@ window._veSelectDBAudio = function(idx) {
 };
 window._vePreviewDBAudio = function(idx) {
     const a=vm.audioItems&&vm.audioItems[idx]; if(!a) return;
-    const url=getAudioUrl(a); if(!url){alert('Invalid audio URL');return;}
+    const url=getAudioUrl(a); if(!url){showToast('Invalid audio URL','error');return;}
     stopMusicPreview();
     if(vm.audioEl&&!vm.audioEl.paused&&vm._previewIdx===idx){
         vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;
@@ -741,7 +741,7 @@ window._vePreviewDBAudio = function(idx) {
     if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}
     const audio=new Audio(url);
     audio.volume=0.5;
-    audio.play().catch(e=>{alert('Audio playback failed: '+e.message);});
+    audio.play().catch(e=>{showToast('Audio playback failed: '+e.message,'error');});
     audio.onended=()=>{vm.audioEl=null;vm._previewIdx=-1;refreshLeftPanel();};
     vm.audioEl=audio; vm._previewIdx=idx;
     refreshLeftPanel();
@@ -1163,7 +1163,7 @@ window._veSearchLib = function(q){
 
 window._veAddLibImage = function(idx) {
     const c=curClip();
-    if(!c) return alert(_t('ve_clip_required','Please add a clip first'));
+    if(!c) { showToast(_t('ve_clip_required','Please add a clip first'),'warn'); return; }
     const item=vm.libItems&&vm.libItems[idx];
     if(!item) return;
     const url=bestImageUrl(item);
@@ -1238,7 +1238,7 @@ window._veSearchImg = function(q){
 
 window._veAddImgTemplate = function(idx) {
     const c=curClip();
-    if(!c) return alert(_t('ve_clip_required','Please add a clip first'));
+    if(!c) { showToast(_t('ve_clip_required','Please add a clip first'),'warn'); return; }
     const item=vm.imgItems&&vm.imgItems[idx];
     if(!item) return;
     const url=bestImageUrl(item);
@@ -1411,8 +1411,8 @@ window._veSaveProject = async function(){
             project.clips=clipData;
             saves[0]=project;
             try{localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));showToast(_t('ve_saved_thumb','저장 완료 (썸네일)'));}
-            catch(e2){alert(_t('ve_save_fail_quota','저장 실패: 용량 초과'));}
-        } else alert(_t('ve_save_fail','저장 실패')+': '+e.message);
+            catch(e2){showToast(_t('ve_save_fail_quota','저장 실패: 용량 초과'),'error');}
+        } else showToast(_t('ve_save_fail','저장 실패')+': '+e.message,'error');
     }
     refreshLeftPanel();
 };
@@ -1502,7 +1502,7 @@ window._veDeleteProject = function(idx){
     if(!confirm(_t('ve_delete_confirm','삭제할까요?'))) return;
     const saves=_veGetSaves();
     saves.splice(idx,1);
-    localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));
+    try { localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves)); } catch(e) {}
     refreshLeftPanel();
 };
 
@@ -1777,7 +1777,7 @@ window._veSelectOL = selectOverlay;
 window._veRemoveOL = () => removeOverlay(vm.oi);
 window._veStartAdd = (mode) => { vm.addMode=mode; vm.canvas.style.cursor='crosshair'; showToast(_t('ve_canvas_click','캔버스를 클릭하여 배치')); };
 window._veAddTextCenter = () => {
-    const c=curClip(); if(!c) return alert(_t('ve_clip_required','Please add a clip first'));
+    const c=curClip(); if(!c){ showToast(_t('ve_clip_required','Please add a clip first'),'warn'); return; }
     addOverlay('text', vm.w/2, vm.h/2); vm.leftTab='text'; refreshLeftPanel();
 };
 window._vePickSticker = (e) => { vm.addSticker=e; refreshLeftPanel(); };
@@ -1818,7 +1818,7 @@ window._veCtx = (action) => {
 };
 
 window._veApplyTpl = (id) => {
-    const c=curClip(); if(!c)return alert(_t('ve_clip_required','Please add a clip first'));
+    const c=curClip(); if(!c){ showToast(_t('ve_clip_required','Please add a clip first'),'warn'); return; }
     const t=TEMPLATES.find(x=>x.id===id); if(!t)return;
     t.mk(vm.w,vm.h).forEach(o=>c.overlays.push(o));
     vm.oi=c.overlays.length-1; render(); vm.leftTab='text'; refreshLeftPanel();
@@ -1949,7 +1949,7 @@ async function playClipOnCanvas(ci, durMs, timeOffset) {
 }
 
 window.vePlay = async function() {
-    if(!vm.clips.length)return alert(_t('ve_clip_required','Please add a clip first'));
+    if(!vm.clips.length){ showToast(_t('ve_clip_required','Please add a clip first'),'warn'); return; }
     if(vm.playing){vm.cancel=true;return;}
     vm.playing=true;vm.paused=false;vm.cancel=false;vm.playTime=0;
     const btn=document.getElementById('vePlayBtn');
@@ -2010,7 +2010,7 @@ async function exportClipOnCanvas(ci, durMs, timeOffset) {
 // RECORDING
 // ═══════════════════════════════════════════════════════════════
 window.veExport = async function() {
-    if(!vm.clips.length)return alert(_t('ve_clip_required','Please add a clip first'));
+    if(!vm.clips.length){ showToast(_t('ve_clip_required','Please add a clip first'),'warn'); return; }
     if(vm.playing)return;
     vm.playing=true;vm.cancel=false;vm.paused=false;vm.playTime=0;
     const prog=document.getElementById('veProgress'),progBar=document.getElementById('veProgressBar'),progText=document.getElementById('veProgressText');

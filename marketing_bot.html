@@ -179,6 +179,7 @@ textarea.form-input { resize:vertical; min-height:80px; }
 </style>
 </head>
 <body>
+<script src="toast.js?v=123"></script>
 
 <!-- 상단 헤더 -->
 <div class="top-header">
@@ -634,7 +635,7 @@ const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 (async function init() {
     await initConfig();
     sb = window.sb || _sb;
-    if (!sb) { alert('시스템 초기화 실패'); return; }
+    if (!sb) { showToast('시스템 초기화 실패', 'error'); return; }
 
     const { data: { user } } = await sb.auth.getUser();
     if (!user) { location.href = 'index.html'; return; }
@@ -644,7 +645,7 @@ const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     // 관리자 확인
     const adminEmails = ['korea900as@gmail.com', 'ceo@test.com'];
     if (!adminEmails.includes(user.email)) {
-        alert('관리자만 접근 가능합니다');
+        showToast('관리자만 접근 가능합니다', 'error');
         location.href = 'index.html';
         return;
     }
@@ -766,7 +767,7 @@ window.generateContent = async function() {
     const instructions = document.getElementById('genInstructions').value.trim();
 
     const topic = customTopic || topicSelect;
-    if (!topic) { alert('주제를 입력하거나 선택해주세요'); return; }
+    if (!topic) { showToast('주제를 입력하거나 선택해주세요', 'warn'); return; }
 
     const btn = document.getElementById('btnGenerate');
     const progress = document.getElementById('genProgress');
@@ -913,10 +914,10 @@ window.publishContent = async function(id) {
                 published_at: new Date().toISOString()
             }).eq('id', id);
 
-            alert('블로그에 게시되었습니다! board.html?cat=blog 에서 확인하세요.');
+            showToast('블로그에 게시되었습니다! board.html?cat=blog 에서 확인하세요.', 'success');
         } catch(e) {
             console.error('Blog publish error:', e);
-            alert('블로그 게시 실패: ' + e.message);
+            showToast('블로그 게시 실패: ' + e.message, 'error');
         }
     } else if (data.platform === 'youtube_shorts') {
         // YouTube: 업로드 탭으로 이동하고 데이터 채우기
@@ -924,13 +925,13 @@ window.publishContent = async function(id) {
         if (data.title) document.getElementById('ytVideoTitle').value = data.title;
         if (data.body || data.short_script) document.getElementById('ytVideoDesc').value = data.body || data.short_script;
         if (data.hashtags?.length) document.getElementById('ytVideoTags').value = data.hashtags.join(',');
-        alert('YouTube 탭에 콘텐츠가 채워졌습니다. 영상 파일을 선택하고 업로드하세요.');
+        showToast('YouTube 탭에 콘텐츠가 채워졌습니다. 영상 파일을 선택하고 업로드하세요.', 'info');
     } else {
         // Instagram/TikTok: 콘텐츠 복사
         const text = `${data.title}\n\n${data.body || data.short_script || ''}\n\n${(data.hashtags || []).map(t=>'#'+t).join(' ')}`;
         await navigator.clipboard.writeText(text);
         await sb.from('marketing_content').update({ status: 'published', published_at: new Date().toISOString() }).eq('id', id);
-        alert('콘텐츠가 클립보드에 복사되었습니다! Instagram/TikTok에 직접 붙여넣기 하세요.');
+        showToast('콘텐츠가 클립보드에 복사되었습니다! Instagram/TikTok에 직접 붙여넣기 하세요.', 'success');
     }
     loadContentList();
     loadDashboard();
@@ -941,7 +942,7 @@ window.copyContent = async function(id) {
     if (!data) return;
     const text = `${data.title || ''}\n\n${data.body || data.short_script || ''}\n\n${(data.hashtags || []).map(t=>'#'+t).join(' ')}`;
     await navigator.clipboard.writeText(text);
-    alert('클립보드에 복사되었습니다!');
+    showToast('클립보드에 복사되었습니다!', 'success');
 };
 
 window.deleteContent = async function(id) {
@@ -991,7 +992,7 @@ window.addTopic = async function() {
     const name = document.getElementById('newTopicName').value.trim();
     const keywords = document.getElementById('newTopicKeywords').value.split(',').map(k => k.trim()).filter(Boolean);
     const freq = document.getElementById('newTopicFreq').value;
-    if (!name) { alert('주제명을 입력해주세요'); return; }
+    if (!name) { showToast('주제명을 입력해주세요', 'warn'); return; }
 
     await sb.from('marketing_topics').insert({ topic: name, keywords, frequency: freq });
     document.getElementById('newTopicName').value = '';
@@ -1063,12 +1064,12 @@ window.saveYoutubeConfig = async function() {
     } else {
         await sb.from('marketing_youtube_config').insert(config);
     }
-    alert('YouTube 설정이 저장되었습니다!');
+    showToast('YouTube 설정이 저장되었습니다!', 'success');
 };
 
 window.connectYoutube = async function() {
     const clientId = document.getElementById('ytClientId').value.trim();
-    if (!clientId) { alert('OAuth2 Client ID를 먼저 입력하세요'); return; }
+    if (!clientId) { showToast('OAuth2 Client ID를 먼저 입력하세요', 'warn'); return; }
 
     const currentUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
     const scope = encodeURIComponent('https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl');
@@ -1103,7 +1104,7 @@ window.saveAutoReply = async function() {
     } else {
         await sb.from('marketing_youtube_config').insert(update);
     }
-    alert('자동 답글 설정이 저장되었습니다!');
+    showToast('자동 답글 설정이 저장되었습니다!', 'success');
 };
 
 // ===== YouTube 업로드 =====
@@ -1113,8 +1114,8 @@ window.uploadToYoutube = async function() {
     const desc = document.getElementById('ytVideoDesc').value;
     const tags = document.getElementById('ytVideoTags').value.split(',').map(t => t.trim()).filter(Boolean);
 
-    if (!file) { alert('영상 파일을 선택해주세요'); return; }
-    if (!title) { alert('제목을 입력해주세요'); return; }
+    if (!file) { showToast('영상 파일을 선택해주세요', 'warn'); return; }
+    if (!title) { showToast('제목을 입력해주세요', 'warn'); return; }
 
     const progress = document.getElementById('uploadProgress');
     progress.style.display = 'block';
@@ -1188,7 +1189,7 @@ const blogLangs = ['kr', 'ja', 'en', 'cn', 'ar', 'es', 'de', 'fr']; // 8개국�
 
 window.handleBlogPhoto = function(input) {
     const files = Array.from(input.files).filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
-    if (files.length === 0) { alert('유효한 이미지 파일을 선택해주세요 (5MB 이하)'); return; }
+    if (files.length === 0) { showToast('유효한 이미지 파일을 선택해주세요 (5MB 이하)', 'warn'); return; }
     blogPhotoFiles = files;
     const dzc = document.getElementById('blogDropzoneContent');
     if (files.length === 1) {
@@ -1232,12 +1233,12 @@ function setStep(stepId, state) {
 }
 
 window.publishBlogOneClick = async function() {
-    if (blogPhotoFiles.length === 0) { alert('사진을 먼저 업로드해주세요'); return; }
+    if (blogPhotoFiles.length === 0) { showToast('사진을 먼저 업로드해주세요', 'warn'); return; }
 
     const btn = document.getElementById('blogOneClickBtn');
     const progress = document.getElementById('blogProgress');
     const topic = document.getElementById('blogTopic').value.trim() || '카멜레온프린팅 제품 활용 사례 소개';
-    const settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}');
+    let settings = {}; try { settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}'); } catch(e) {}
     const totalFiles = blogPhotoFiles.length;
 
     btn.disabled = true;
@@ -1505,7 +1506,7 @@ async function loadBlogHistory() {
 
 // ===== 설정 =====
 window.saveSettings = function() {
-    localStorage.setItem('mkt_settings', JSON.stringify({
+    try { localStorage.setItem('mkt_settings', JSON.stringify({
         brandName: document.getElementById('setBrandName').value,
         siteKr: document.getElementById('setSiteKr').value,
         siteJp: document.getElementById('setSiteJp').value,
@@ -1513,8 +1514,8 @@ window.saveSettings = function() {
         coreKeywords: document.getElementById('setCoreKeywords').value,
         usp: document.getElementById('setUsp').value,
         ctaMsg: document.getElementById('setCtaMsg').value
-    }));
-    alert('설정이 저장되었습니다!');
+    })); } catch(e) {}
+    showToast('설정이 저장되었습니다!', 'success');
 };
 
 // 설정 불러오기
@@ -1542,7 +1543,7 @@ async function handleOAuthCallback() {
 
     try {
         const { data: config } = await sb.from('marketing_youtube_config').select('client_id, client_secret').limit(1).single();
-        if (!config) { alert('YouTube 설정을 먼저 저장해주세요'); return; }
+        if (!config) { showToast('YouTube 설정을 먼저 저장해주세요', 'warn'); return; }
 
         // 토큰 교환
         const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -1585,11 +1586,11 @@ async function handleOAuthCallback() {
             await sb.from('marketing_youtube_config').insert({ ...update, api_key: '', client_id: '', client_secret: '' });
         }
 
-        alert(`YouTube 채널 연결 완료: ${channelName}`);
+        showToast(`YouTube 채널 연결 완료: ${channelName}`, 'success');
         loadYoutubeConfig();
     } catch(e) {
         console.error('OAuth error:', e);
-        alert('YouTube 인증 실패: ' + e.message);
+        showToast('YouTube 인증 실패: ' + e.message, 'error');
     }
 }
 
@@ -1600,7 +1601,7 @@ let shortsVideoBlob = null;
 
 window.handleShortsPhoto = function(input) {
     const files = Array.from(input.files).filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
-    if (files.length === 0) { alert('유효한 이미지 파일을 선택해주세요 (5MB 이하)'); return; }
+    if (files.length === 0) { showToast('유효한 이미지 파일을 선택해주세요 (5MB 이하)', 'warn'); return; }
     shortsPhotoFiles = files;
     const dzc = document.getElementById('ytShortsDropzoneContent');
     if (files.length === 1) {
@@ -1661,7 +1662,7 @@ function resizeImageToBase64(file, maxDim) {
 
 // AI 콘텐츠 생성 호출
 async function generateShortsAI(imageBase64, lang, topic) {
-    const settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}');
+    let settings = {}; try { settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}'); } catch(e) {}
     const { data, error } = await sb.functions.invoke('marketing-content', {
         body: {
             platform: 'youtube_shorts_from_image',
@@ -2085,10 +2086,10 @@ function setPipelineStep(id, state) {
 
 // ★ 메인 오케스트레이터 (다중 사진 배치 처리)
 window.generateShortsOneClick = async function() {
-    if (shortsPhotoFiles.length === 0) { alert('사진을 먼저 업로드해주세요'); return; }
+    if (shortsPhotoFiles.length === 0) { showToast('사진을 먼저 업로드해주세요', 'warn'); return; }
 
     if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
-        alert('이 기능은 Chrome 브라우저에서만 지원됩니다.');
+        showToast('이 기능은 Chrome 브라우저에서만 지원됩니다.', 'warn');
         return;
     }
 
@@ -2208,7 +2209,7 @@ window.generateShortsOneClick = async function() {
 // 더 이상 미리보기 후 확인 불필요 (자동 처리), 하지만 수동 업로드용은 유지
 window.confirmAndUpload = async function() {
     // 배치 모드에서는 자동 처리되므로 이 함수는 수동 업로드 시에만 사용
-    alert('배치 처리가 자동으로 진행됩니다.');
+    showToast('배치 처리가 자동으로 진행됩니다.', 'info');
 };
 
 window.cancelPipeline = function() {

@@ -71,7 +71,7 @@ export function initContextMenu() {
 
     bindAction("ctxPaste", () => {
         // [수정] 다국어 적용 (이미 적용되어 있다면 유지)
-        if (!_clipboard) return alert(window.t('msg_clipboard_empty', "Clipboard is empty."));
+        if (!_clipboard) { showToast(window.t('msg_clipboard_empty', "Clipboard is empty."), "info"); return; }
         _clipboard.clone((cloned) => {
             canvas.discardActiveObject();
             cloned.set({

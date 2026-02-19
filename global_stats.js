@@ -350,7 +350,7 @@ window.loadAccountingData = async () => {
     } catch (e) {
         console.error(e);
         // 에러 내용을 구체적으로 띄워줌
-        alert("경리 데이터 조회 실패 (콘솔확인필요): " + e.message);
+        showToast("경리 데이터 조회 실패 (콘솔확인필요): " + e.message, "error");
     } finally {
         showLoading(false);
     }
@@ -358,7 +358,7 @@ window.loadAccountingData = async () => {
 
 // [엑셀 다운로드 함수들]
 window.downloadAccSales = () => {
-    if (!cachedAccOrders.length) return alert("데이터가 없습니다. 먼저 조회해주세요.");
+    if (!cachedAccOrders.length) { showToast("데이터가 없습니다. 먼저 조회해주세요.", "warn"); return; }
     const data = cachedAccOrders.map(o => ({
         "주문일자": new Date(o.created_at).toLocaleDateString(),
         "주문자": o.manager_name,
@@ -372,7 +372,7 @@ window.downloadAccSales = () => {
 
 window.downloadAccUnpaid = () => {
     const list = cachedAccWithdrawals.filter(w => w.status === 'pending');
-    if (!list.length) return alert("미지급 내역이 없습니다.");
+    if (!list.length) { showToast("미지급 내역이 없습니다.", "info"); return; }
     const data = list.map(w => ({ "요청일": new Date(w.created_at).toLocaleDateString(), "이름": w.userName, "금액": w.amount, "은행": w.bank_name, "계좌": w.account_number }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "미지급");
@@ -381,7 +381,7 @@ window.downloadAccUnpaid = () => {
 
 window.downloadAccDeposit = () => {
     const list = cachedAccProfiles.filter(p => p.deposit > 0);
-    if (!list.length) return alert("예치금 보유 회원이 없습니다.");
+    if (!list.length) { showToast("예치금 보유 회원이 없습니다.", "info"); return; }
     const data = list.map(p => ({ "이름": p.full_name, "이메일": p.email, "잔액": p.deposit }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "예치금");
@@ -390,7 +390,7 @@ window.downloadAccDeposit = () => {
 
 window.downloadAccDiscount = () => {
     const list = cachedAccOrders.filter(o => o.discount_amount > 0);
-    if (!list.length) return alert("할인 내역이 없습니다.");
+    if (!list.length) { showToast("할인 내역이 없습니다.", "info"); return; }
     const data = list.map(o => ({ "주문일": new Date(o.created_at).toLocaleDateString(), "주문자": o.manager_name, "결제액": o.total_amount, "할인액": o.discount_amount }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "할인내역");

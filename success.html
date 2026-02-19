@@ -11,6 +11,7 @@
     </style>
 </head>
 <body>
+    <script src="toast.js?v=123"></script>
     <div class="loader" id="loader"></div>
     <h2 id="title">Processing Payment...</h2>
     <p id="desc">Please wait a moment.</p>
@@ -105,7 +106,7 @@
             const refId = urlParams.get("ref_id"); // 추천인
 
             if (!dbId) {
-                alert("Missing order information.");
+                showToast("Missing order information.", "error");
                 window.location.href = "index.html";
                 return;
             }
@@ -189,7 +190,7 @@
 
                 // 에러가 나도 결제 자체는 완료됨 → 5초 후 홈으로 이동
                 setTimeout(() => {
-                    alert("Payment was processed but verification encountered an issue. Please contact support if your order doesn't appear.");
+                    showToast("Payment was processed but verification encountered an issue. Please contact support if your order doesn't appear.", "warn");
                     window.location.href = "index.html";
                 }, 3000);
             }

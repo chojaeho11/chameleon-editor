@@ -97,7 +97,7 @@ window.loadMembers = async (isNewSearch = false) => {
 // [페이지 변경 함수]
 window.changeMemberPage = (step) => {
     const next = currentMemberPage + step;
-    if(next < 1) return alert("첫 페이지입니다.");
+    if(next < 1) { showToast("첫 페이지입니다.", "info"); return; }
     currentMemberPage = next;
     loadMembers(false); 
 };
@@ -106,8 +106,8 @@ window.changeMemberPage = (step) => {
 window.updateMemberMemo = async (userId) => {
     const memoVal = document.getElementById(`memo_${userId}`).value;
     const { error } = await sb.from('profiles').update({ admin_memo: memoVal }).eq('id', userId);
-    if(error) alert("저장 실패: " + error.message);
-    else alert("메모가 저장되었습니다.");
+    if(error) showToast("저장 실패: " + error.message, "error");
+    else showToast("메모가 저장되었습니다.", "success");
 };
 
 // [회원 등급 변경]
@@ -116,8 +116,8 @@ window.updateMemberRole = async (id, newRole) => {
         loadMembers(false); return; 
     } 
     const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); 
-    if(error) alert("실패: " + error.message); 
-    else alert("변경되었습니다."); 
+    if(error) showToast("실패: " + error.message, "error");
+    else showToast("변경되었습니다.", "success");
 };
 
 // [기여자 등급 변경] - 패널티 사유 입력 기능 추가
@@ -139,8 +139,8 @@ window.updateContributorTier = async (id, newTier) => {
     const updateData = { contributor_tier: newTier, penalty_reason: reason };
     const { error } = await sb.from('profiles').update(updateData).eq('id', id);
     
-    if(error) alert("실패: " + error.message);
-    else { alert("변경되었습니다."); loadMembers(false); }
+    if(error) showToast("실패: " + error.message, "error");
+    else { showToast("변경되었습니다.", "success"); loadMembers(false); }
 };
 
 // =======================================================
@@ -208,7 +208,7 @@ window.submitWalletChange = async () => {
     const mode = document.getElementById('walletMode').value;
     const amountVal = document.getElementById('walletAmount').value;
     
-    if(!amountVal || parseInt(amountVal) <= 0) return alert("금액을 정확히 입력해주세요.");
+    if(!amountVal || parseInt(amountVal) <= 0) { showToast("금액을 정확히 입력해주세요.", "warn"); return; }
     
     const amount = parseInt(amountVal);
     
@@ -239,12 +239,12 @@ window.submitWalletChange = async () => {
         if(updateErr) throw updateErr;
 
         // 3. 성공 처리
-        alert("처리가 완료되었습니다.");
+        showToast("처리가 완료되었습니다.", "success");
         document.getElementById('walletModal').style.display = 'none';
         loadMembers(); // 목록 새로고침
 
     } catch(e) {
-        alert("오류 발생: " + e.message);
+        showToast("오류 발생: " + e.message, "error");
     } finally {
         showLoading(false);
     }
@@ -291,10 +291,10 @@ window.importMileageExcel = async (input) => {
                     }
                 }
             }
-            alert(`✅ 완료: 성공 ${successCount}명, 실패 ${failCount}명`);
+            showToast(`완료: 성공 ${successCount}명, 실패 ${failCount}명`, "success");
             loadMembers();
         } catch (err) {
-            alert("엑셀 오류: " + err.message);
+            showToast("엑셀 오류: " + err.message, "error");
         } finally {
             showLoading(false);
             input.value = '';
@@ -308,11 +308,11 @@ window.editMileageManual = async (userId, email, currentMileage) => {
     const newAmountStr = prompt(`[${email}] 현재 마일리지: ${currentMileage}P\n최종 마일리지를 입력하세요:`, currentMileage);
     if (newAmountStr === null) return;
     const newAmount = parseInt(newAmountStr);
-    if (isNaN(newAmount)) return alert("숫자만 입력해주세요.");
+    if (isNaN(newAmount)) { showToast("숫자만 입력해주세요.", "warn"); return; }
 
     const { error } = await sb.from('profiles').update({ mileage: newAmount }).eq('id', userId);
-    if (error) alert("수정 실패: " + error.message);
-    else { alert("수정되었습니다."); loadMembers(); }
+    if (error) showToast("수정 실패: " + error.message, "error");
+    else { showToast("수정되었습니다.", "success"); loadMembers(); }
 };
 
 
@@ -420,10 +420,10 @@ window.approvePartnerApp = async (appId, userId, region, companyName) => {
         const { error: appErr } = await sb.from('partner_applications').update({ status: 'approved' }).eq('id', appId);
         if (appErr) throw appErr;
 
-        alert(`🎉 승인 완료! '${companyName}'님은 이제 파트너스 기능을 사용할 수 있습니다.`);
+        showToast(`승인 완료! '${companyName}'님은 이제 파트너스 기능을 사용할 수 있습니다.`, "success");
         loadPartnerApplications();
     } catch (e) {
-        alert("승인 오류: " + e.message);
+        showToast("승인 오류: " + e.message, "error");
     }
 };
 
@@ -568,8 +568,8 @@ window.updateContributorTier = async (id, newTier) => {
     if (reason !== null) updateData.penalty_reason = reason;
 
     const { error } = await sb.from('profiles').update(updateData).eq('id', id);
-    if(error) alert("오류: " + error.message);
-    else { alert("반영되었습니다."); loadWithdrawals(); }
+    if(error) showToast("오류: " + error.message, "error");
+    else { showToast("반영되었습니다.", "success"); loadWithdrawals(); }
 };
 
 // [메모(사유)만 수정하는 함수]
@@ -578,8 +578,8 @@ window.editPenaltyMemo = async (id, currentMemo) => {
     if (newMemo === null) return;
 
     const { error } = await sb.from('profiles').update({ penalty_reason: newMemo }).eq('id', id);
-    if(error) alert("오류: " + error.message);
-    else { alert("메모가 저장되었습니다."); loadWithdrawals(); }
+    if(error) showToast("오류: " + error.message, "error");
+    else { showToast("메모가 저장되었습니다.", "success"); loadWithdrawals(); }
 };
 
 // [승인(지급) 처리 함수 - 이게 없어서 에러가 났습니다]
@@ -595,14 +595,14 @@ window.approveWithdrawal = async (requestId) => {
             .eq('id', requestId);
 
         if(error) throw error;
-        alert("처리되었습니다.");
-        loadWithdrawals(); 
+        showToast("처리되었습니다.", "success");
+        loadWithdrawals();
     } catch(e) {
-        alert("처리 실패: " + e.message);
+        showToast("처리 실패: " + e.message, "error");
     }
 };
 
 // [결산]
 window.loadAccountingData = async () => {
-    alert("결산 조회 기능 준비중...");
+    showToast("결산 조회 기능 준비중...", "info");
 };

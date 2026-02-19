@@ -25,16 +25,16 @@ export async function checkAdminAccess() {
     const { data: { session } } = await sb.auth.getSession();
     
     if (!session) {
-        alert("관리자 로그인이 필요합니다.");
-        window.location.replace("index.html"); 
+        showToast("관리자 로그인이 필요합니다.", "error");
+        window.location.replace("index.html");
         return false;
     }
 
     const { data: profile, error } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
     
     if (error || !profile || profile.role !== 'admin') {
-        alert("접근 권한이 없습니다.");
-        await sb.auth.signOut(); 
+        showToast("접근 권한이 없습니다.", "error");
+        await sb.auth.signOut();
         window.location.replace("index.html");
         return false;
     }

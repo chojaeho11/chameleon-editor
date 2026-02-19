@@ -95,7 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         if (btnMyPage) {
             btnMyPage.onclick = () => {
                 // [수정] 다국어 적용
-                if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
+                if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
                 location.href = 'mypage.html';
             };
         }
@@ -106,13 +106,12 @@ window.addEventListener("DOMContentLoaded", async () => {
         // =========================================================
         // ★ 마이페이지 연동 로직 (편집/재주문 복구)
         // =========================================================
-        const loadId = localStorage.getItem('load_design_id');
-        const cartFlag = localStorage.getItem('open_cart_on_load');
+        let loadId = null; try { loadId = localStorage.getItem('load_design_id'); } catch(e) {}
+        let cartFlag = null; try { cartFlag = localStorage.getItem('open_cart_on_load'); } catch(e) {}
 
         // [CASE A] 디자인 편집으로 들어온 경우
         if (loadId) {
-            console.log("📂 마이페이지 편집 요청 ID:", loadId);
-            localStorage.removeItem('load_design_id'); 
+            try { localStorage.removeItem('load_design_id'); } catch(e) {}
 
             // 화면 강제 전환
             if(startScreen) startScreen.style.display = 'none';
@@ -129,7 +128,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
                     if (!savedKey || savedKey === 'A4' || savedKey === 'custom' || !PRODUCT_DB[savedKey]) {
                         if(window.restoreDesignFromData) window.restoreDesignFromData(data);
-                        alert(window.t('msg_product_info_missing'));
+                        showToast(window.t('msg_product_info_missing'), "warn");
                         if (window.showCategorySelectionModal) {
                             window.showCategorySelectionModal();
                         } else {
@@ -180,13 +179,13 @@ window.addEventListener("DOMContentLoaded", async () => {
                     }
                 }, 500);
             } else {
-                alert(window.t('msg_no_data', "Design data not found."));
+                showToast(window.t('msg_no_data', "Design data not found."), "warn");
                 if(loading) loading.style.display = 'none';
             }
         
         // [CASE B] 장바구니 재주문
         } else if (cartFlag) {
-            localStorage.removeItem('open_cart_on_load');
+            try { localStorage.removeItem('open_cart_on_load'); } catch(e) {}
             if(startScreen) startScreen.style.display = 'none';
             if(mainEditor) mainEditor.style.display = 'flex';
             if(loading) loading.style.display = 'none';
@@ -258,11 +257,11 @@ async function handleUniversalUpload(file, isFromStartScreen) {
             };
             reader.readAsDataURL(file);
         } else {
-            alert(window.t('msg_unsupported_file'));
+            showToast(window.t('msg_unsupported_file'), "warn");
         }
     } catch (err) {
         console.error(err);
-        alert(window.t('err_prefix') + err.message);
+        showToast(window.t('err_prefix') + err.message, "error");
     } finally {
         if(loading) loading.style.display = "none";
         const dInput = document.getElementById('directUploadInput');
@@ -289,7 +288,7 @@ async function addPdfToCanvasAsImage(file) {
     const imgData = hiddenCanvas.toDataURL('image/jpeg', 0.8);
     fabric.Image.fromURL(imgData, function(img) {
         fitImageToCanvas(img);
-        alert(window.t('msg_pdf_loaded'));
+        showToast(window.t('msg_pdf_loaded'), "success");
     });
 }
 
@@ -326,7 +325,7 @@ function initOutlineTool() {
         const currentCanvas = window.canvas || canvas;
         const activeObj = currentCanvas.getActiveObject();
         if (!activeObj || activeObj.type !== 'image') {
-            alert(window.t('msg_select_image_for_outline'));
+            showToast(window.t('msg_select_image_for_outline'), "warn");
             return;
         }
         const originalText = btn.innerHTML;
@@ -462,7 +461,7 @@ function initOutlineTool() {
             currentCanvas.requestRenderAll();
         } catch (error) {
             console.error("벡터 생성 실패:", error);
-            alert(window.t('msg_gen_fail') + ": " + error.message);
+            showToast(window.t('msg_gen_fail') + ": " + error.message, "error");
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -582,7 +581,7 @@ async function applyForPartner() {
     const { data: { user } } = await sb.auth.getUser();
     
     if (!user) {
-        alert(window.t('msg_login_required') || "로그인이 필요합니다.");
+        showToast(window.t('msg_login_required') || "로그인이 필요합니다.", "warn");
         const loginModal = document.getElementById('loginModal');
         if(loginModal) loginModal.style.display = 'flex';
         return;
@@ -594,7 +593,7 @@ async function applyForPartner() {
         modal.style.display = 'flex';
     } else {
         console.error("partnerApplyModal 요소를 찾을 수 없습니다.");
-        alert(window.t('msg_cannot_load_form'));
+        showToast(window.t('msg_cannot_load_form'), "error");
     }
 }
 
@@ -605,7 +604,7 @@ async function applyForPartner() {
 window.openMyOrderList = async function() {
     if (!sb) { console.warn("[openMyOrderList] sb가 아직 초기화되지 않음"); return; }
     const { data: { user } } = await sb.auth.getUser();
-    if (!user) return alert(window.t('msg_login_required'));
+    if (!user) { showToast(window.t('msg_login_required'), "warn"); return; }
 
     document.getElementById('myOrderModal').style.display = 'flex';
     const container = document.getElementById('myOrderListUser');
@@ -702,9 +701,9 @@ window.submitOrderReview = async function() {
     }).eq('id', orderId);
 
     if (error) {
-        alert(window.t('err_prefix') + error.message);
+        showToast(window.t('err_prefix') + error.message, "error");
     } else {
-        alert(window.t('msg_purchase_confirmed'));
+        showToast(window.t('msg_purchase_confirmed'), "success");
         document.getElementById('reviewWriteModal').style.display = 'none';
         window.openMyOrderList();
 
@@ -847,12 +846,12 @@ window.autoFillTags = function(input) {
 // 3. 업로드 모달 열기
 window.handleContributorUpload = function(type) {
     if (!window.currentUser) {
-        alert(window.t('msg_login_required'));
+        showToast(window.t('msg_login_required'), "warn");
         document.getElementById('loginModal').style.display = 'flex';
         return;
     }
 
-    currentUploadType = type; 
+    currentUploadType = type;
     const modal = document.getElementById('contributorUploadModal');
     const title = document.getElementById('cUploadTitle');
     const svgArea = document.getElementById('cUploadSvgArea');
@@ -886,7 +885,7 @@ window.submitContributorUpload = async function() {
     let tagsInput = document.getElementById('cUploadTags').value.trim();
     const loading = document.getElementById('loading');
     
-    if (!tagsInput) return alert(window.t('msg_input_search_keyword'));
+    if (!tagsInput) { showToast(window.t('msg_input_search_keyword'), "warn"); return; }
     
     if(loading) loading.style.display = 'flex';
 
@@ -939,7 +938,7 @@ window.submitContributorUpload = async function() {
 
             if (!thumbFile || !svgFile) {
                 if(loading) loading.style.display = 'none';
-                return alert(window.t('msg_select_thumb_svg'));
+                showToast(window.t('msg_select_thumb_svg'), "warn"); return;
             }
 
             await processSingleUpload(thumbFile, svgFile, tags, 'vector'); 
@@ -949,7 +948,7 @@ window.submitContributorUpload = async function() {
             const files = document.getElementById('cFileSimple').files;
             if (files.length === 0) {
                 if(loading) loading.style.display = 'none';
-                return alert(window.t('msg_select_file'));
+                showToast(window.t('msg_select_file'), "warn"); return;
             }
 
             const category = currentUploadType === 'logo' ? 'logo' : 'graphic';
@@ -966,7 +965,7 @@ window.submitContributorUpload = async function() {
                     .maybeSingle();
 
                 if (duplicate) {
-                    alert(window.t('msg_file_already_uploaded').replace('{name}', file.name));
+                    showToast(window.t('msg_file_already_uploaded').replace('{name}', file.name), "warn");
                     continue; // 업로드 건너뛰기
                 }
 
@@ -989,7 +988,7 @@ window.submitContributorUpload = async function() {
         
         await addReward(finalAmount, `${currentUploadType.toUpperCase()} 업로드 보상 (${uploadCount}개)`);
 
-        alert(window.t('msg_upload_complete_points').replace('{amount}', fmtMoney(finalAmount)));
+        showToast(window.t('msg_upload_complete_points').replace('{amount}', fmtMoney(finalAmount)), "success");
         document.getElementById('contributorUploadModal').style.display = 'none';
         
         window.initContributorSystem();
@@ -997,7 +996,7 @@ window.submitContributorUpload = async function() {
 
     } catch (e) {
         console.error(e);
-        alert(window.t('msg_upload_failed') + e.message);
+        showToast(window.t('msg_upload_failed') + e.message, "error");
     } finally {
         if(loading) loading.style.display = 'none';
     }
@@ -1008,7 +1007,7 @@ async function processSingleUpload(file1, file2, userTags, category, fileHash = 
     // [1] 용량 체크 (1MB = 1024 * 1024 bytes)
     const MAX_SIZE = 1 * 1024 * 1024;
     if (file1.size > MAX_SIZE) {
-        alert(window.t('msg_image_too_large').replace('{size}', (file1.size/1024/1024).toFixed(1)));
+        showToast(window.t('msg_image_too_large').replace('{size}', (file1.size/1024/1024).toFixed(1)), "warn");
         throw new Error("File size limit exceeded"); // 실행 중단
     }
 
@@ -1062,15 +1061,15 @@ async function processSingleUpload(file1, file2, userTags, category, fileHash = 
 }
 
 window.openTemplateCreator = function() {
-    if (!window.currentUser) return alert(window.t('msg_login_required'));
-    if(confirm(window.t('confirm_go_editor'))) window.startEditorDirect('custom'); 
+    if (!window.currentUser) { showToast(window.t('msg_login_required'), "warn"); return; }
+    if(confirm(window.t('confirm_go_editor'))) window.startEditorDirect('custom');
 };
 
 // [수정] 디자인 판매 등록 (관리자 전용)
 window.openSellModal = async function() {
     // 1. 로그인 체크
     if (!window.currentUser) {
-        alert(window.t('msg_login_required'));
+        showToast(window.t('msg_login_required'), "warn");
         document.getElementById('loginModal').style.display = 'flex';
         return;
     }
@@ -1086,7 +1085,7 @@ window.openSellModal = async function() {
 
         // role이 admin이 아니면 차단
         if (!profile || profile.role !== 'admin') {
-            alert(window.t('msg_admin_only_sell'));
+            showToast(window.t('msg_admin_only_sell'), "warn");
             return;
         }
 
@@ -1095,7 +1094,7 @@ window.openSellModal = async function() {
         
     } catch (e) {
         console.error("권한 확인 오류:", e);
-        alert(window.t('msg_no_permission'));
+        showToast(window.t('msg_no_permission'), "error");
     }
 };
 
@@ -1148,8 +1147,8 @@ window.submitVipOrder = async function() {
     const managerRadio = document.querySelector('input[name="vipManager"]:checked');
     const managerName = managerRadio ? managerRadio.value : '본사';
 
-    if(!name || !phone) return alert(window.t('alert_vip_info_needed'));
-    if(fileInput.files.length === 0) return alert(window.t('alert_vip_file_needed'));
+    if(!name || !phone) { showToast(window.t('alert_vip_info_needed'), "warn"); return; }
+    if(fileInput.files.length === 0) { showToast(window.t('alert_vip_file_needed'), "warn"); return; }
 
     const btn = document.querySelector('#vipOrderModal .btn-round.primary');
     const originalText = btn.innerText;
@@ -1192,7 +1191,7 @@ window.submitVipOrder = async function() {
 
         if(dbErr) throw dbErr;
 
-        alert(window.t('msg_vip_order_success').replace('{manager}', managerName));
+        showToast(window.t('msg_vip_order_success').replace('{manager}', managerName), "success");
         document.getElementById('vipOrderModal').style.display = 'none';
         
         // 입력창 초기화
@@ -1204,7 +1203,7 @@ window.submitVipOrder = async function() {
 
     } catch (e) {
         console.error(e);
-        alert(window.t('msg_submit_error') + e.message);
+        showToast(window.t('msg_submit_error') + e.message, "error");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -1270,7 +1269,7 @@ async function calculateFileHash(file) {
 window.submitRealPartnerApp = async function() {
     // 1. 로그인 체크
     if (!currentUser) {
-        alert(window.t('msg_login_required'));
+        showToast(window.t('msg_login_required'), "warn");
         document.getElementById('loginModal').style.display = 'flex';
         return;
     }
@@ -1282,7 +1281,7 @@ window.submitRealPartnerApp = async function() {
     const items = document.getElementById('applyMainItems').value;
 
     // 3. 유효성 검사
-    if(!comp || !phone || !region) return alert(window.t('msg_partner_fields_required'));
+    if(!comp || !phone || !region) { showToast(window.t('msg_partner_fields_required'), "warn"); return; }
 
     // 4. DB 전송
     try {
@@ -1298,7 +1297,7 @@ window.submitRealPartnerApp = async function() {
 
         if (error) throw error;
 
-        alert(window.t('msg_partner_applied'));
+        showToast(window.t('msg_partner_applied'), "success");
         document.getElementById('partnerApplyModal').style.display = 'none';
         
         // 입력창 초기화
@@ -1309,7 +1308,7 @@ window.submitRealPartnerApp = async function() {
 
     } catch (e) {
         console.error(e);
-        alert(window.t('msg_apply_error') + e.message);
+        showToast(window.t('msg_apply_error') + e.message, "error");
     }
 };
 

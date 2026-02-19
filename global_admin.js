@@ -159,8 +159,8 @@ window.loadPartnerProducts = async function() {
 window.approvePartnerProduct = async function(id) {
     if (!confirm('이 상품을 승인하시겠습니까?\n승인 후 즉시 쇼핑몰에 노출됩니다.')) return;
     const { error } = await sb.from('admin_products').update({ partner_status: 'approved', reject_reason: null }).eq('id', id);
-    if (error) return alert('오류: ' + error.message);
-    alert('승인 완료! 상품이 쇼핑몰에 노출됩니다.');
+    if (error) { showToast('오류: ' + error.message, "error"); return; }
+    showToast('승인 완료! 상품이 쇼핑몰에 노출됩니다.', "success");
     loadPartnerProducts();
 };
 
@@ -173,18 +173,18 @@ window.openRejectModal = function(id, name) {
 
 window.confirmRejectProduct = async function() {
     const reason = document.getElementById('rejectReasonText').value.trim();
-    if (!reason) return alert('반려 사유를 입력해 주세요.');
+    if (!reason) { showToast('반려 사유를 입력해 주세요.', "warn"); return; }
     const { error } = await sb.from('admin_products').update({ partner_status: 'rejected', reject_reason: reason }).eq('id', rejectingProductId);
-    if (error) return alert('오류: ' + error.message);
+    if (error) { showToast('오류: ' + error.message, "error"); return; }
     document.getElementById('rejectReasonModal').style.display = 'none';
-    alert('반려 처리되었습니다. 파트너에게 사유가 전달됩니다.');
+    showToast('반려 처리되었습니다. 파트너에게 사유가 전달됩니다.', "success");
     loadPartnerProducts();
 };
 
 window.deletePartnerProduct = async function(id) {
     if (!confirm('이 상품을 완전히 삭제하시겠습니까?\n(복구 불가)')) return;
     const { error } = await sb.from('admin_products').delete().eq('id', id);
-    if (error) return alert('오류: ' + error.message);
+    if (error) { showToast('오류: ' + error.message, "error"); return; }
     loadPartnerProducts();
 };
 
@@ -259,7 +259,7 @@ window.executeBulkUpload = async function() {
     const site = document.getElementById('bulkSite').value;
     
     if (!category || !priceVal) {
-        alert("카테고리와 기본 가격은 필수입니다.");
+        showToast("카테고리와 기본 가격은 필수입니다.", "warn");
         return;
     }
     
@@ -354,7 +354,7 @@ window.executeBulkUpload = async function() {
             console.error(`[업로드 실패] ${file.name}:`, err);
             // 에러 상세 알림
             if (err.message && (err.message.includes('Column') || err.message.includes('constraint'))) {
-                alert(`DB 오류 발생!\n내용: ${err.message}\n(관리자에게 이 화면을 캡쳐해서 보내주세요)`);
+                showToast(`DB 오류 발생!\n내용: ${err.message}\n(관리자에게 이 화면을 캡쳐해서 보내주세요)`, "error");
                 failCount = selectedBulkFiles.length - i; 
                 break;
             }
@@ -364,7 +364,7 @@ window.executeBulkUpload = async function() {
 
     // 완료 처리
     setTimeout(() => {
-        alert(`작업 완료!\n성공: ${successCount}건\n실패: ${failCount}건`);
+        showToast(`작업 완료!\n성공: ${successCount}건\n실패: ${failCount}건`, "success");
         
         // 초기화
         document.getElementById('bulkFiles').value = '';
@@ -398,7 +398,7 @@ window.loadPartnerApplications = async function() {
     const { data, error } = await query;
 
     if (error) {
-        alert("로드 실패: " + error.message);
+        showToast("로드 실패: " + error.message, "error");
         return;
     }
 
@@ -471,12 +471,12 @@ window.approvePartner = async function(appId, userId) {
 
         if (profileErr) throw profileErr;
 
-        alert("✅ 승인 완료! 회원이 가맹점 등급으로 변경되었습니다.");
+        showToast("승인 완료! 회원이 가맹점 등급으로 변경되었습니다.", "success");
         loadPartnerApplications(); // 목록 새로고침
 
     } catch (e) {
         console.error(e);
-        alert("처리 중 오류 발생: " + e.message);
+        showToast("처리 중 오류 발생: " + e.message, "error");
     }
 };
 
@@ -488,9 +488,9 @@ window.rejectPartner = async function(appId) {
         .update({ status: 'rejected' })
         .eq('id', appId);
 
-    if (error) alert("오류: " + error.message);
+    if (error) showToast("오류: " + error.message, "error");
     else {
-        alert("거절 처리되었습니다.");
+        showToast("거절 처리되었습니다.", "success");
         loadPartnerApplications();
     }
 };

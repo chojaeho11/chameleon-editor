@@ -64,7 +64,7 @@ async function addRewardPoints(userId, amount, desc) {
         
         if (updateErr) {
             console.error("수익금 업데이트 실패:", updateErr);
-            alert(window.t('err_prefix', "Error: ") + updateErr.message);
+            showToast(window.t('err_prefix', "Error: ") + updateErr.message, "error");
             return;
         }
 
@@ -194,7 +194,7 @@ export function initTemplateTools() {
         btnOpenSell.onclick = () => {
             if (!currentUser) {
                 // [수정] 다국어 적용
-                alert(window.t('msg_login_required', "Login required."));
+                showToast(window.t('msg_login_required', "Login required."), "warn");
                 document.getElementById('loginModal').style.display = 'flex';
                 return;
             }
@@ -506,7 +506,7 @@ function renderPaginationControls(isEnabled, dataCount = 0, limit = 12) {
 // =========================================================
 
 async function useSelectedTemplate() {
-    if (!selectedTpl) return alert("Please select a template.");
+    if (!selectedTpl) { showToast("Please select a template.", "info"); return; }
     
     const objects = canvas.getObjects().filter(o => !o.isBoard);
     
@@ -520,7 +520,7 @@ async function useSelectedTemplate() {
 // [최종 수정] 템플릿 로드 함수 (구형 데이터 잠금 해제 패치)
 async function processLoad(mode) {
     if (!selectedTpl && window.selectedTpl) selectedTpl = window.selectedTpl;
-    if (!selectedTpl) return alert(window.t('msg_no_template_selected', "No template selected."));
+    if (!selectedTpl) { showToast(window.t('msg_no_template_selected', "No template selected."), "info"); return; }
 
     document.getElementById("templateActionModal").style.display = "none"; 
     document.getElementById("templateOverlay").style.display = "none";
@@ -657,7 +657,7 @@ async function processLoad(mode) {
                 });
             } else {
                 fabric.Image.fromURL(cleanUrl, (img) => {
-                    if (!img || !img.width) return alert(window.t('msg_image_load_failed', "Image load failed"));
+                    if (!img || !img.width) { showToast(window.t('msg_image_load_failed', "Image load failed"), "error"); return; }
                     callback(img);
                 }, { crossOrigin: 'anonymous' }); 
             }
@@ -732,7 +732,7 @@ async function processLoad(mode) {
     } catch (e) {
         console.error(e);
         if(document.getElementById("loading")) document.getElementById("loading").style.display = "none";
-        alert(window.t('err_prefix', "Error: ") + e.message);
+        showToast(window.t('err_prefix', "Error: ") + e.message, "error");
     }
 }
 
@@ -775,13 +775,13 @@ function dataURLtoBlob(dataurl) {
 // [수정] 템플릿 등록 및 보상 지급 함수
 // [수정] 템플릿 등록 함수
 async function registerUserTemplate() {
-    if (!sb) return alert(window.t('msg_db_connection_failed', "Database connection failed"));
+    if (!sb) { showToast(window.t('msg_db_connection_failed', "Database connection failed"), "error"); return; }
 
     // 최신 유저 정보 확인
     const { data: { user: freshUser }, error: authError } = await sb.auth.getUser();
 
     if (authError || !freshUser) {
-        alert(window.t('msg_session_expired', "Login session has expired. Please refresh."));
+        showToast(window.t('msg_session_expired', "Login session has expired. Please refresh."), "warn");
         return;
     }
 
@@ -794,12 +794,12 @@ async function registerUserTemplate() {
     const title = titleEl ? titleEl.value.trim() : "Untitled";
     const tags = tagEl ? tagEl.value.trim() : "";
 
-    if (!title) return alert(window.t('msg_enter_title', "Please enter a title."));
+    if (!title) { showToast(window.t('msg_enter_title', "Please enter a title."), "info"); return; }
 
     // AI 생성 이미지 포함 여부 체크
     const hasAiImage = canvas.getObjects().some(o => o.isAiGenerated === true);
     if (hasAiImage) {
-        alert(window.t('msg_ai_image_not_allowed', "AI generated images cannot be registered as templates.\nPlease remove the AI image first."));
+        showToast(window.t('msg_ai_image_not_allowed', "AI generated images cannot be registered as templates.\nPlease remove the AI image first."), "warn");
         return;
     }
 
@@ -883,7 +883,7 @@ async function registerUserTemplate() {
         const reward500 = 500 * tplRate;
         const rewardDisplay = cfg.COUNTRY === 'JP' ? '¥' + Math.floor(reward500) : cfg.COUNTRY === 'US' ? '$' + Math.round(reward500) : reward500.toLocaleString() + '원';
 
-        alert(window.t('msg_design_registered', "Design Registered!"));
+        showToast(window.t('msg_design_registered', "Design Registered!"), "success");
         document.getElementById("sellModal").style.display = "none";
 
         // 상단 금액 표시 갱신
@@ -899,7 +899,7 @@ async function registerUserTemplate() {
 
     } catch (e) {
         console.error("등록 실패:", e);
-        alert(window.t('err_prefix', "Error: ") + e.message);
+        showToast(window.t('err_prefix', "Error: ") + e.message, "error");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -955,7 +955,7 @@ window.uploadUserLogo = async function() {
     const keywordInput = document.getElementById("logoKeywordInput");
     const files = fileInput.files;
     const commonTag = keywordInput.value.trim();
-    if (files.length === 0) return alert(window.t('msg_select_image', "Please select an image!"));
+    if (files.length === 0) { showToast(window.t('msg_select_image', "Please select an image!"), "info"); return; }
     const btn = event.target;
     const originalText = btn.innerText;
     btn.disabled = true;
@@ -988,12 +988,12 @@ window.uploadUserLogo = async function() {
                 await addRewardPoints(currentUser.id, 150, `로고 공유 보상 (${files[i].name})`);
             }
         }
-        alert(window.t('msg_upload_complete', "Complete!") + ` ${window.t('msg_success', "Success")}: ${successCount}, ${window.t('msg_fail', "Fail")}: ${failCount}`);
+        showToast(window.t('msg_upload_complete', "Complete!") + ` ${window.t('msg_success', "Success")}: ${successCount}, ${window.t('msg_fail', "Fail")}: ${failCount}`, "success");
         window.resetUpload(null);
         document.getElementById("logoUploadModal").style.display = "none";
         if (currentCategory === 'logo') searchTemplates('logo', '');
     } catch (e) {
-        alert(window.t('msg_system_error', "System Error: ") + e.message);
+        showToast(window.t('msg_system_error', "System Error: ") + e.message, "error");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -1694,7 +1694,7 @@ window.toggleBackgroundLock = function() {
     const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
 
     if (!bgObj) {
-        alert(window.t('msg_no_locked_bg', "No locked background found."));
+        showToast(window.t('msg_no_locked_bg', "No locked background found."), "info");
         return;
     }
 
@@ -1716,7 +1716,7 @@ window.toggleBackgroundLock = function() {
             hasBorders: true,
             hoverCursor: 'move'
         });
-        alert("🔓 " + window.t('msg_bg_unlocked', "Background unlocked."));
+        showToast(window.t('msg_bg_unlocked', "Background unlocked."), "info");
     } else {
         // [잠금 모드]
         bgObj.set({
@@ -1731,7 +1731,7 @@ window.toggleBackgroundLock = function() {
             hasBorders: false,
             hoverCursor: 'default'
         });
-        alert("🔒 " + window.t('msg_bg_locked', "Background locked."));
+        showToast(window.t('msg_bg_locked', "Background locked."), "info");
     }
 
     canvas.requestRenderAll();
@@ -1742,9 +1742,9 @@ window.toggleBackgroundLock = function() {
 window.processLoad = async function(mode) {
     // ★ 안전장치: 현재 활성화된 캔버스를 확실하게 가져옴
     const currentCanvas = window.canvas; 
-    if (!currentCanvas) return alert(window.t('msg_canvas_not_init', "Canvas is not initialized."));
+    if (!currentCanvas) { showToast(window.t('msg_canvas_not_init', "Canvas is not initialized."), "error"); return; }
 
-    if (!window.selectedTpl) return alert(window.t('msg_select_design', "No design selected."));
+    if (!window.selectedTpl) { showToast(window.t('msg_select_design', "No design selected."), "info"); return; }
     
     const loading = document.getElementById("loading");
     if(loading) loading.style.display = "flex";
@@ -1930,7 +1930,7 @@ window.processLoad = async function(mode) {
 
     } catch (e) {
         console.error(e);
-        alert(window.t('err_prefix', "Error: ") + e.message);
+        showToast(window.t('err_prefix', "Error: ") + e.message, "error");
         if(loading) loading.style.display = "none";
     }
 };
@@ -1938,7 +1938,7 @@ window.processLoad = async function(mode) {
 // [중요] 템플릿/객체 불러오기 (배경 교체 시 글씨 유지 로직 적용)
 // =========================================================
 window.processLoad = async function(mode) {
-    if (!window.selectedTpl) return alert(window.t('msg_select_design', "No design selected."));
+    if (!window.selectedTpl) { showToast(window.t('msg_select_design', "No design selected."), "info"); return; }
     
     const loading = document.getElementById("loading");
     if(loading) loading.style.display = "flex";
@@ -2160,7 +2160,7 @@ window.processLoad = async function(mode) {
 
     } catch (e) {
         console.error(e);
-        alert(window.t('err_prefix', "Error: ") + e.message);
+        showToast(window.t('err_prefix', "Error: ") + e.message, "error");
         if(loading) loading.style.display = "none";
     }
 };

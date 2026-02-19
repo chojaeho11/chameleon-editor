@@ -129,7 +129,7 @@ export function goToPage(index) {
 
 export function deleteCurrentPage() {
     // [수정] 다국어 적용
-    if (pageDataList.length <= 1) return alert(window.t('msg_min_page_limit', "At least one page is required."));
+    if (pageDataList.length <= 1) { showToast(window.t('msg_min_page_limit', "At least one page is required."), "warn"); return; }
     
     if(confirm(window.t('confirm_delete', "Are you sure you want to delete?"))) {
         pageDataList.splice(currentPageIndex, 1);
@@ -267,7 +267,7 @@ window.applyBoxDimensions = function() {
     const w = parseInt(document.getElementById('boxW').value);
     const h = parseInt(document.getElementById('boxH').value);
     const d = parseInt(document.getElementById('boxD').value);
-    if (!w || !h || !d) return alert('W, H, D 값을 모두 입력하세요');
+    if (!w || !h || !d) { showToast('W, H, D 값을 모두 입력하세요', "warn"); return; }
 
     // 전역 저장 (3D에서 사용)
     window.__boxDims = { w, h, d };
@@ -284,7 +284,7 @@ function updateBoxPrice(w, h, d) {
     const result = calculateBoxPrice(w, h, d, pricePerSheet);
 
     if (result.error) {
-        alert(window.t('box_too_large', '면이 시트(2400×1200)보다 큽니다'));
+        showToast(window.t('box_too_large', '면이 시트(2400×1200)보다 큽니다'), "warn");
         return;
     }
 
@@ -325,7 +325,7 @@ function updateBoxPrice(w, h, d) {
 // 배치도 PDF 다운로드
 window.downloadBoxLayoutPDF = async function() {
     if (!window.__boxNesting || !window.__boxDims) {
-        return alert(window.t('box_apply_first', '박스 치수를 먼저 적용하세요'));
+        showToast(window.t('box_apply_first', '박스 치수를 먼저 적용하세요'), "warn"); return;
     }
 
     saveCurrentPageState();
@@ -353,7 +353,7 @@ window.downloadBoxLayoutPDF = async function() {
         }
     } catch (e) {
         console.error('Layout PDF error:', e);
-        alert('PDF 생성 실패');
+        showToast('PDF 생성 실패', "error");
     } finally {
         if (btn) { btn.innerText = orig; btn.disabled = false; }
     }

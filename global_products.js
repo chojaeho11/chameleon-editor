@@ -97,7 +97,7 @@ window.editTopCategoryLoad = async (id) => {
 window.addTopCategoryDB = async () => {
     const code = document.getElementById('newTopCatCode').value;
     const name = document.getElementById('newTopCatName').value;
-    if(!code || !name) return alert("코드와 한국명은 필수입니다.");
+    if(!code || !name) { showToast("코드와 한국명은 필수입니다.", "warn"); return; }
 
     const isExcluded = document.getElementById('newTopCatExcluded') ? document.getElementById('newTopCatExcluded').checked : false;
 
@@ -125,9 +125,9 @@ window.addTopCategoryDB = async () => {
         error = res.error;
     }
 
-    if(error) alert("오류: " + error.message);
+    if(error) showToast("오류: " + error.message, "error");
     else {
-        alert(editingTopCatId ? "수정되었습니다." : "저장되었습니다.");
+        showToast(editingTopCatId ? "수정되었습니다." : "저장되었습니다.", "success");
         resetTopCategoryForm();
     }
 };
@@ -257,7 +257,7 @@ window.editCategoryLoad = async (id) => {
 window.addCategoryDB = async () => {
     const code = document.getElementById('newCatCode').value;
     const name = document.getElementById('newCatName').value;
-    if(!code || !name) return alert("필수 항목 누락");
+    if(!code || !name) { showToast("필수 항목 누락", "warn"); return; }
 
     const payload = {
         code, name,
@@ -288,9 +288,9 @@ window.addCategoryDB = async () => {
         error = res.error;
     }
 
-    if(error) alert("오류: " + error.message);
+    if(error) showToast("오류: " + error.message, "error");
     else {
-        alert(editingCategoryId ? "수정되었습니다." : "저장되었습니다.");
+        showToast(editingCategoryId ? "수정되었습니다." : "저장되었습니다.", "success");
         resetCategoryForm();
     }
 };
@@ -415,11 +415,11 @@ window.previewAddonImage = async (input) => {
         const imgInput = document.getElementById('newAddonImgUrl');
         if (imgInput) {
             imgInput.value = data.publicUrl;
-            alert("✅ 이미지 업로드 성공!");
+            showToast("이미지 업로드 성공!", "success");
         }
     } catch(e) { 
         console.error("이미지 업로드 오류:", e);
-        alert("업로드 실패: " + e.message); 
+        showToast("업로드 실패: " + e.message, "error");
     } finally { 
         showLoading(false); 
     }
@@ -513,7 +513,7 @@ window.loadSystemDB = debounce(async (filterSite) => {
             <div class="drag-handle" style="cursor:grab; padding:5px; color:#cbd5e1; display:${searchKeyword ? 'none' : 'block'};">
                 <i class="fa-solid fa-bars"></i>
             </div>
-            <img src="${item.img_url || 'https://placehold.co/80'}" style="width:50px; height:50px; border-radius:6px; object-fit:cover;">
+            <img src="${item.img_url || 'https://placehold.co/80'}" loading="lazy" style="width:50px; height:50px; border-radius:6px; object-fit:cover;">
             <div style="flex:1;">
                 <div style="font-size:10px; color:#6366f1; font-weight:800;">
                     ${item.category_code || '미분류'}
@@ -580,14 +580,14 @@ window.deleteAddonDB = async (id) => {
     try {
         const { error } = await sb.from('admin_addons').delete().eq('id', id);
         if (error) throw error;
-        alert("✅ 삭제되었습니다.");
-        loadAddonCategories(); 
-    } catch (err) { alert("삭제 실패: " + err.message); } finally { showLoading(false); }
+        showToast("삭제되었습니다.", "success");
+        loadAddonCategories();
+    } catch (err) { showToast("삭제 실패: " + err.message, "error"); } finally { showLoading(false); }
 };
 
 window.addAddonDB = async () => {
     const code = document.getElementById('newAddonCode').value;
-    if(!code) return alert("코드를 입력하세요.");
+    if(!code) { showToast("코드를 입력하세요.", "warn"); return; }
 
     const isSwatchEl = document.getElementById('newAddonIsSwatch');
     const isSwatch = isSwatchEl ? isSwatchEl.checked : false;
@@ -619,10 +619,10 @@ window.addAddonDB = async () => {
         else error = (await sb.from('admin_addons').insert([payload])).error;
 
         if(error) throw error;
-        alert("✅ 저장되었습니다.");
+        showToast("저장되었습니다.", "success");
         resetAddonForm();
         loadAddonCategories();
-    } catch (err) { alert("저장 실패: " + err.message); } finally { showLoading(false); }
+    } catch (err) { showToast("저장 실패: " + err.message, "error"); } finally { showLoading(false); }
 };
 
 window.resetAddonForm = () => {
@@ -657,7 +657,7 @@ window.openAddonCatManager = async () => {
 
 window.autoTranslateAddonCatModal = async () => {
     const krName = document.getElementById('modalCatNameKR').value;
-    if(!krName) return alert("한국어 명칭을 먼저 입력해주세요.");
+    if(!krName) { showToast("한국어 명칭을 먼저 입력해주세요.", "warn"); return; }
 
     const btn = document.querySelector('button[onclick="autoTranslateAddonCatModal()"]');
     const oldHtml = btn.innerHTML;
@@ -675,7 +675,7 @@ window.autoTranslateAddonCatModal = async () => {
         document.getElementById('modalCatNameDE').value = await googleTranslate(en, 'de');
         document.getElementById('modalCatNameFR').value = await googleTranslate(en, 'fr');
     } catch(e) {
-        alert("번역 오류: " + e.message);
+        showToast("번역 오류: " + e.message, "error");
     } finally {
         btn.innerHTML = oldHtml;
         btn.disabled = false;
@@ -688,7 +688,7 @@ window.saveAddonCategoryFromModal = async () => {
     const nameJP = document.getElementById('modalCatNameJP').value.trim();
     const nameUS = document.getElementById('modalCatNameUS').value.trim();
 
-    if(!code || !nameKR) return alert("코드와 한국어 명칭은 필수입니다.");
+    if(!code || !nameKR) { showToast("코드와 한국어 명칭은 필수입니다.", "warn"); return; }
 
     showLoading(true);
     try {
@@ -714,11 +714,11 @@ window.saveAddonCategoryFromModal = async () => {
             error = inErr;
         }
         if(error) throw error;
-        alert("✅ 카테고리가 저장되었습니다.");
+        showToast("카테고리가 저장되었습니다.", "success");
         document.getElementById('addonCatModal').style.display = 'none';
         loadAddonCategories();
     } catch(e) {
-        alert("저장 실패: " + e.message);
+        showToast("저장 실패: " + e.message, "error");
     } finally {
         showLoading(false);
     }
@@ -727,9 +727,9 @@ window.saveAddonCategoryFromModal = async () => {
 window.editCurrentAddonCategory = async () => {
     const select = document.getElementById('newAddonCatCode');
     const selectedCode = select.value;
-    if (!selectedCode) return alert("수정할 카테고리를 선택해주세요.");
+    if (!selectedCode) { showToast("수정할 카테고리를 선택해주세요.", "warn"); return; }
     const catData = window.cachedAddonCategories.find(c => c.code === selectedCode);
-    if (!catData) return alert("정보를 찾을 수 없습니다.");
+    if (!catData) { showToast("정보를 찾을 수 없습니다.", "warn"); return; }
     document.getElementById('modalCatCode').value = catData.code;
     document.getElementById('modalCatCode').disabled = true;
     document.getElementById('modalCatNameKR').value = catData.name_kr || catData.name || "";
@@ -828,7 +828,7 @@ window.renderProductList = (products) => {
                         <span class="badge-site ${(p.site_code||'KR').toLowerCase()}">${p.site_code||'KR'}</span>
                     </div>
                 </td>
-                <td><img src="${p.img_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;"></td>
+                <td><img src="${p.img_url}" loading="lazy" style="width:40px; height:40px; object-fit:cover; border-radius:4px;"></td>
                 <td><small style="color:#6366f1">${p.code}</small><br><b>${name}</b></td>
                 <td>${p.width_mm}x${p.height_mm}</td>
                 <td style="font-weight:bold;">${displayPrice}</td>
@@ -916,7 +916,7 @@ window.previewMockupFile = async function(input) {
         document.getElementById('btnMockupClear').style.display = 'inline-flex';
     } catch(e) {
         console.error('목업 업로드 실패:', e);
-        alert('목업 업로드 실패: ' + e.message);
+        showToast('목업 업로드 실패: ' + e.message, "error");
     }
 };
 window.clearMockup = function() {
@@ -935,7 +935,7 @@ window.addProductDB = async () => {
     // 1. 입력값 가져오기
     let imgUrl = document.getElementById('newProdImg').value; // let으로 선언 (수정 가능하게)
 
-    if(!cat || !code) return alert("카테고리와 코드는 필수입니다.");
+    if(!cat || !code) { showToast("카테고리와 코드는 필수입니다.", "warn"); return; }
 
     // 2. [핵심] 이미지가 Base64(긴 문자열)인지 확인 후 자동 업로드 처리
     if (imgUrl && imgUrl.startsWith('data:image')) {
@@ -972,7 +972,7 @@ window.addProductDB = async () => {
             console.error("이미지 변환 실패:", err);
             btn.innerText = oldText;
             btn.disabled = false;
-            return alert("이미지 자동 업로드에 실패했습니다. 용량이 너무 크거나 네트워크 문제일 수 있습니다.\n(직접 파일 선택 버튼으로 업로드해주세요)");
+            showToast("이미지 자동 업로드에 실패했습니다. 용량이 너무 크거나 네트워크 문제일 수 있습니다.\n(직접 파일 선택 버튼으로 업로드해주세요)", "error"); return;
         }
         
         btn.innerText = oldText;
@@ -1032,9 +1032,9 @@ window.addProductDB = async () => {
         error = res.error;
     }
 
-    if(error) alert("실패: " + error.message);
+    if(error) showToast("실패: " + error.message, "error");
     else {
-        alert("저장되었습니다.");
+        showToast("저장되었습니다.", "success");
         resetProductForm();
         if(document.getElementById('filterProdCat').value === cat) {
             filterProductList();
@@ -1236,9 +1236,9 @@ window.previewProductImage = async (input) => {
         if (error) {
             console.error("Supabase Storage Error:", error);
             if (error.message.includes("Bucket not found") || error.statusCode === '404') {
-                alert("오류: Supabase에 'products' 스토리지 버킷이 없습니다.");
+                showToast("오류: Supabase에 'products' 스토리지 버킷이 없습니다.", "error");
             } else {
-                alert("업로드 실패: " + error.message);
+                showToast("업로드 실패: " + error.message, "error");
             }
             return;
         }
@@ -1248,7 +1248,7 @@ window.previewProductImage = async (input) => {
         document.getElementById('newProdImg').value = data.publicUrl;
 
     } catch(e) { 
-        alert("업로드 처리 중 오류 발생"); 
+        showToast("업로드 처리 중 오류 발생", "error");
     } 
     finally { 
         btn.innerText = oldText; 
@@ -1257,12 +1257,12 @@ window.previewProductImage = async (input) => {
 };
 window.bulkApplyAddonsToCategory = async () => {
     const cat = document.getElementById('newProdCategory').value;
-    if(!cat) return alert("카테고리 선택 필요");
+    if(!cat) { showToast("카테고리 선택 필요", "warn"); return; }
     const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
     if(!confirm(`[${cat}] 카테고리 전체 상품에 현재 옵션을 적용합니까?`)) return;
     
     const { error } = await sb.from('admin_products').update({ addons: addons }).eq('category', cat);
-    if(error) alert("실패: " + error.message); else alert("적용 완료");
+    if(error) showToast("실패: " + error.message, "error"); else showToast("적용 완료", "success");
 };
 
 // ==========================================
@@ -1285,7 +1285,7 @@ window.autoTranslateInputs = async () => {
     const krName = document.getElementById('newProdName').value;
     const krPrice = document.getElementById('newProdPrice').value;
 
-    if (!krName) return alert("한국어 상품명을 입력해주세요.");
+    if (!krName) { showToast("한국어 상품명을 입력해주세요.", "warn"); return; }
 
     if (document.getElementById('newProdNameJP').value || document.getElementById('newProdNameUS').value) {
         if (!confirm("이미 입력된 번역 데이터가 있습니다. 기존 내용을 유지하시겠습니까? (취소 시 새로 번역)")) return;
@@ -1316,10 +1316,10 @@ window.autoTranslateInputs = async () => {
         if (document.getElementById('newProdNameDE')) document.getElementById('newProdNameDE').value = await googleTranslate(enName, 'de');
         if (document.getElementById('newProdNameFR')) document.getElementById('newProdNameFR').value = await googleTranslate(enName, 'fr');
 
-        alert("✅ 상품명 및 가격 번역 완료!");
+        showToast("상품명 및 가격 번역 완료!", "success");
 
     } catch (e) {
-        alert("번역 실패: " + e.message);
+        showToast("번역 실패: " + e.message, "error");
     } finally {
         btn.innerHTML = oldText;
         btn.disabled = false;
@@ -1329,7 +1329,7 @@ window.autoTranslateInputs = async () => {
 window.autoTranslateTopCategoryInputs = async () => {
     const krName = document.getElementById('newTopCatName').value;
     const krDesc = document.getElementById('newTopCatDesc') ? document.getElementById('newTopCatDesc').value : '';
-    if (!krName) return alert("한국어 명칭을 입력해주세요.");
+    if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
     document.getElementById('newTopCatNameJP').value = await googleTranslate(krName, 'ja');
     const enName = await googleTranslate(krName, 'en');
     document.getElementById('newTopCatNameUS').value = enName;
@@ -1340,13 +1340,13 @@ window.autoTranslateTopCategoryInputs = async () => {
         if(document.getElementById('newTopCatDescJP')) document.getElementById('newTopCatDescJP').value = await googleTranslate(krDesc, 'ja');
         if(document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = await googleTranslate(krDesc, 'en');
     }
-    alert("✅ 대분류 번역 완료");
+    showToast("대분류 번역 완료", "success");
 };
 
 window.autoTranslateCategoryInputs = async () => {
     const krName = document.getElementById('newCatName').value;
     const krDesc = document.getElementById('newCatDesc') ? document.getElementById('newCatDesc').value : '';
-    if (!krName) return alert("한국어 명칭을 입력해주세요.");
+    if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
     document.getElementById('newCatNameJP').value = await googleTranslate(krName, 'ja');
     const enName = await googleTranslate(krName, 'en');
     document.getElementById('newCatNameUS').value = enName;
@@ -1361,13 +1361,13 @@ window.autoTranslateCategoryInputs = async () => {
         if(document.getElementById('newCatDescAR')) document.getElementById('newCatDescAR').value = await googleTranslate(enDesc, 'ar');
         if(document.getElementById('newCatDescES')) document.getElementById('newCatDescES').value = await googleTranslate(enDesc, 'es');
     }
-    alert("✅ 소분류 번역 완료");
+    showToast("소분류 번역 완료", "success");
 };
 
 window.autoTranslateAddonInputs = async () => {
     const krName = document.getElementById('nmKR').value;
     const krPrice = document.getElementById('prKR').value;
-    if (!krName) return alert("한국어 명칭을 입력해주세요.");
+    if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
     const rateJPY = 0.2, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
     if (krPrice) {
         document.getElementById('prJP').value = Math.round(krPrice * rateJPY);
@@ -1384,7 +1384,7 @@ window.autoTranslateAddonInputs = async () => {
     document.getElementById('nmES').value = await googleTranslate(enName, 'es');
     if (document.getElementById('nmDE')) document.getElementById('nmDE').value = await googleTranslate(enName, 'de');
     if (document.getElementById('nmFR')) document.getElementById('nmFR').value = await googleTranslate(enName, 'fr');
-    alert("✅ 옵션 번역 완료");
+    showToast("옵션 번역 완료", "success");
 };
 
 window.bulkTranslateAll = async () => {
@@ -1504,9 +1504,9 @@ window.bulkTranslateAll = async () => {
         }
 
         const total = pCount + aCount + tcCount + scCount + acCount;
-        alert(`✅ 일괄 번역 완료!\n\n상품 ${pCount}개 | 옵션 ${aCount}개 | 대분류 ${tcCount}개 | 소분류 ${scCount}개 | 옵션카테고리 ${acCount}개\n총 ${total}개 업데이트`);
+        showToast(`일괄 번역 완료!\n\n상품 ${pCount}개 | 옵션 ${aCount}개 | 대분류 ${tcCount}개 | 소분류 ${scCount}개 | 옵션카테고리 ${acCount}개\n총 ${total}개 업데이트`, "success");
     } catch (e) {
-        alert("일괄 번역 중 오류: " + e.message);
+        showToast("일괄 번역 중 오류: " + e.message, "error");
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -1524,7 +1524,7 @@ window.cloneProductMode = () => {
     document.getElementById('btnProductSave').classList.add('btn-primary');
     document.getElementById('btnCloneProduct').style.display = 'none';
     document.getElementById('btnCancelEdit').style.display = 'none';
-    alert("📝 내용이 복제되었습니다.\n새로운 [상품코드]를 입력하고 저장 버튼을 눌러주세요.");
+    showToast("내용이 복제되었습니다.\n새로운 [상품코드]를 입력하고 저장 버튼을 눌러주세요.", "info");
 };
 
 window.updateAllCurrency = async () => {
@@ -1537,7 +1537,7 @@ window.updateAllCurrency = async () => {
         const { data: products, error } = await sb.from('admin_products').select('id, price');
         if (error) throw error;
         if (!products || products.length === 0) {
-            alert("상품이 없습니다.");
+            showToast("상품이 없습니다.", "warn");
             return;
         }
         let successCount = 0;
@@ -1553,11 +1553,11 @@ window.updateAllCurrency = async () => {
                 .eq('id', p.id);
             if (!updateErr) successCount++;
         }
-        alert(`✅ 총 ${successCount}개 상품의 환율 가격이 업데이트되었습니다.`);
+        showToast(`총 ${successCount}개 상품의 환율 가격이 업데이트되었습니다.`, "success");
         if (window.filterProductList) window.filterProductList();
     } catch (e) {
         console.error(e);
-        alert("업데이트 중 오류 발생: " + e.message);
+        showToast("업데이트 중 오류 발생: " + e.message, "error");
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -1768,7 +1768,7 @@ window.initPopupQuill = () => {
                                 
                             } catch (err) {
                                 console.error("자동 업로드 실패:", err);
-                                alert("이미지 업로드 중 오류가 발생했습니다. 파일 크기나 네트워크를 확인해주세요.");
+                                showToast("이미지 업로드 중 오류가 발생했습니다. 파일 크기나 네트워크를 확인해주세요.", "error");
                             }
                         };
                     }
@@ -1782,7 +1782,7 @@ window.initPopupQuill = () => {
     popupQuill.clipboard.addMatcher('img', (node, delta) => {
         let ops = delta.ops.map(op => {
             if (op.insert && op.insert.image && op.insert.image.startsWith('data:')) {
-                alert("이미지는 복사+붙여넣기 대신 '이미지 버튼'을 눌러서 업로드해주세요. (웹사이트 속도 유지 목적)");
+                showToast("이미지는 복사+붙여넣기 대신 '이미지 버튼'을 눌러서 업로드해주세요. (웹사이트 속도 유지 목적)", "warn");
                 return { insert: '' }; // 이미지 삽입 무효화
             }
             return op;
@@ -1801,7 +1801,7 @@ window.initPopupQuill = () => {
 // ==========================================
 window.openCommonInfoModal = async () => {
     const dbClient = window.sb || window._supabase;
-    if (!dbClient) return alert("DB 연결 실패");
+    if (!dbClient) { showToast("DB 연결 실패", "error"); return; }
 
     document.getElementById('commonInfoModal').style.display = 'flex';
     
@@ -1879,8 +1879,8 @@ window.saveCommonInfo = async () => {
     };
 
     const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
-    if (error) alert("저장 실패: " + error.message);
-    else { alert("✅ 저장 및 백업 완료!"); loadCommonInfoContent(catCode); }
+    if (error) showToast("저장 실패: " + error.message, "error");
+    else { showToast("저장 및 백업 완료!", "success"); loadCommonInfoContent(catCode); }
 };
 
 window.restoreCommonInfo = async (data) => {
@@ -1893,7 +1893,7 @@ window.restoreCommonInfo = async (data) => {
     document.getElementById('commonHtmlES').value = data.content_backup_es || '';
     document.getElementById('commonHtmlDE').value = data.content_backup_de || '';
     document.getElementById('commonHtmlFR').value = data.content_backup_fr || '';
-    alert("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.");
+    showToast("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.", "info");
 };
 
 window.openDetailPageEditor = () => {
@@ -1922,12 +1922,12 @@ window.switchPopupLang = (lang) => {
 window.saveDetailAndClose = () => {
     document.getElementById(`newProdDetail${currentPopupLang}`).value = popupQuill.root.innerHTML;
     document.getElementById('detailEditorModal').style.display = 'none';
-    alert("상세페이지가 임시 저장되었습니다.\n최종 등록을 위해 [수정사항 저장] 버튼을 꼭 눌러주세요.");
+    showToast("상세페이지가 임시 저장되었습니다.\n최종 등록을 위해 [수정사항 저장] 버튼을 꼭 눌러주세요.", "info");
 };
 
 window.autoTranslatePopupDetail = async () => {
     const sourceHtml = popupQuill.root.innerHTML;
-    if(!sourceHtml || sourceHtml === "<p><br></p>") return alert("번역할 한국어 내용이 없습니다.");
+    if(!sourceHtml || sourceHtml === "<p><br></p>") { showToast("번역할 한국어 내용이 없습니다.", "warn"); return; }
     if(!confirm("한국어 본문을 바탕으로 일본어와 영어 상세페이지를 자동 생성하시겠습니까?")) return;
 
     const btn = document.querySelector('button[onclick*="autoTranslatePopupDetail"]');
@@ -1950,10 +1950,10 @@ window.autoTranslatePopupDetail = async () => {
             await translateNode(tempDiv);
             document.getElementById(`newProdDetail${t.f}`).value = tempDiv.innerHTML;
         }
-        alert("✅ 다국어 번역 완료! 탭을 넘겨 확인하세요.");
+        showToast("다국어 번역 완료! 탭을 넘겨 확인하세요.", "success");
     } catch(e) { 
         console.error(e);
-        alert("번역 중 오류 발생"); 
+        showToast("번역 중 오류 발생", "error");
     } finally { 
         btn.innerHTML = oldText;
         btn.disabled = false;
@@ -2093,13 +2093,13 @@ window.resetAllGeneralProducts = async () => {
 
         if (error) throw error;
 
-        alert("✅ 완료되었습니다! 모든 상품이 정상적으로 복구되었습니다.");
+        showToast("완료되었습니다! 모든 상품이 정상적으로 복구되었습니다.", "success");
         
         if (window.filterProductList) window.filterProductList();
 
     } catch (e) {
         console.error(e);
-        alert("오류 발생: " + e.message);
+        showToast("오류 발생: " + e.message, "error");
     } finally {
         if(btn) btn.innerText = originalText;
     }
@@ -2153,12 +2153,12 @@ window.recoverDescription = async () => {
             }
         }
 
-        alert(`🎉 총 ${count}개의 상품 상세페이지가 복구되었습니다!`);
+        showToast(`총 ${count}개의 상품 상세페이지가 복구되었습니다!`, "success");
         location.reload(); // 새로고침
 
     } catch (e) {
         console.error(e);
-        alert("복구 중 오류 발생: " + e.message);
+        showToast("복구 중 오류 발생: " + e.message, "error");
     }
 };
 
@@ -2186,8 +2186,8 @@ let crawledDetailHtml = {};
 // [1] 크롤링 시작
 window.startProductCrawl = async () => {
     const url = document.getElementById('crawlUrl').value.trim();
-    if (!url) return alert("URL을 입력해주세요.");
-    if (!url.startsWith('http')) return alert("올바른 URL을 입력해주세요 (https://...)");
+    if (!url) { showToast("URL을 입력해주세요.", "warn"); return; }
+    if (!url.startsWith('http')) { showToast("올바른 URL을 입력해주세요 (https://...)", "warn"); return; }
 
     const btn = document.getElementById('btnCrawlStart');
     const status = document.getElementById('crawlStatus');
@@ -2244,7 +2244,7 @@ window.startProductCrawl = async () => {
 
     } catch (e) {
         status.textContent = '❌ 수집 실패: ' + e.message;
-        alert("크롤링 실패: " + e.message);
+        showToast("크롤링 실패: " + e.message, "error");
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> 수집 시작';
@@ -2255,7 +2255,7 @@ window.startProductCrawl = async () => {
 window.reimagineProduct = async (mode) => {
     const imgEl = document.getElementById('crawlPreviewImg');
     const imgSrc = imgEl.src;
-    if (!imgSrc || imgSrc.endsWith('/')) return alert("이미지가 없습니다.");
+    if (!imgSrc || imgSrc.endsWith('/')) { showToast("이미지가 없습니다.", "warn"); return; }
 
     const status = document.getElementById('reimagineStatus');
     status.textContent = mode === 'variation'
@@ -2280,13 +2280,13 @@ window.reimagineProduct = async (mode) => {
 
     } catch (e) {
         status.textContent = '❌ 실패: ' + e.message;
-        alert("이미지 재생성 실패: " + e.message);
+        showToast("이미지 재생성 실패: " + e.message, "error");
     }
 };
 
 // [3] AI 상세페이지 자동 생성 (6개 언어)
 window.generateCrawledDetail = async () => {
-    if (!crawledProduct) return alert("먼저 상품을 수집해주세요.");
+    if (!crawledProduct) { showToast("먼저 상품을 수집해주세요.", "warn"); return; }
 
     const status = document.getElementById('detailGenStatus');
     status.textContent = '🔄 Claude AI가 상세페이지를 작성 중... (6개 언어, 약 60초)';
@@ -2316,13 +2316,13 @@ window.generateCrawledDetail = async () => {
 
     } catch (e) {
         status.textContent = '❌ 실패: ' + e.message;
-        alert("상세페이지 생성 실패: " + e.message);
+        showToast("상세페이지 생성 실패: " + e.message, "error");
     }
 };
 
 // [4] 수집 데이터를 기존 상품 등록 폼에 적용
 window.applyCrawledToForm = () => {
-    if (!crawledProduct) return alert("수집된 데이터가 없습니다.");
+    if (!crawledProduct) { showToast("수집된 데이터가 없습니다.", "warn"); return; }
 
     // 기본 정보
     const nameEl = document.getElementById('newProdName');
@@ -2361,7 +2361,7 @@ window.applyCrawledToForm = () => {
         autoTranslateInputs();
     }
 
-    alert("✅ 수집 데이터가 폼에 적용되었습니다!\n\n• 상세페이지 에디터를 열어 내용을 확인하세요\n• 카테고리를 선택해주세요\n• 최종 확인 후 [상품 등록하기] 버튼을 눌러주세요");
+    showToast("수집 데이터가 폼에 적용되었습니다!\n\n• 상세페이지 에디터를 열어 내용을 확인하세요\n• 카테고리를 선택해주세요\n• 최종 확인 후 [상품 등록하기] 버튼을 눌러주세요", "success");
 
     // 폼으로 스크롤
     const formEl = document.querySelector('.product-form');
@@ -2425,13 +2425,13 @@ function generateProductCode(prefix = 'AI') {
 // 일괄 수집 & 자동 등록
 window.batchCrawlProducts = async () => {
     const urlsText = document.getElementById('batchUrls').value.trim();
-    if (!urlsText) return alert("URL을 입력해주세요.");
+    if (!urlsText) { showToast("URL을 입력해주세요.", "warn"); return; }
 
     const category = document.getElementById('batchSubCategory').value;
-    if (!category) return alert("소분류 카테고리를 선택해주세요.");
+    if (!category) { showToast("소분류 카테고리를 선택해주세요.", "warn"); return; }
 
     const urls = urlsText.split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
-    if (urls.length === 0) return alert("유효한 URL이 없습니다.");
+    if (urls.length === 0) { showToast("유효한 URL이 없습니다.", "warn"); return; }
 
     const doBgChange = document.getElementById('batchBgChange').checked;
     const doGenDetail = document.getElementById('batchGenDetail').checked;
@@ -2586,7 +2586,7 @@ window.batchCrawlProducts = async () => {
         }
     }
 
-    alert(`✅ 일괄 수집 완료!\n\n총 ${urls.length}건 중 ${successCount}건 등록 성공`);
+    showToast(`일괄 수집 완료!\n\n총 ${urls.length}건 중 ${successCount}건 등록 성공`, "success");
 };
 
 // 등록된 상품들의 이름 일괄 번역
@@ -2634,7 +2634,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 
     const templates = {
         kr: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p>카멜레온프린팅에서 제공하는 <strong>${n}</strong>입니다. 최고의 인쇄 품질과 합리적인 가격으로 만나보세요.</p>
 <p><br></p>
@@ -2656,7 +2656,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <p><strong>카멜레온프린팅</strong> - 당신의 디자인을 현실로 만듭니다</p>`,
 
         jp: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p>カメレオンプリンティングがお届けする<strong>${n}</strong>です。最高の印刷品質とお手頃な価格でご利用いただけます。</p>
 <p><br></p>
@@ -2678,7 +2678,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <p><strong>カメレオンプリンティング</strong> - あなたのデザインを現実に</p>`,
 
         us: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p><strong>${n}</strong> by Chameleon Printing. Premium quality printing with vivid colors at competitive prices.</p>
 <p><br></p>
@@ -2700,7 +2700,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <p><strong>Chameleon Printing</strong> - Bringing your designs to life</p>`,
 
         cn: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p>变色龙印刷为您提供的<strong>${n}</strong>。以最优质的印刷品质和实惠的价格为您服务。</p>
 <p><br></p>
@@ -2722,7 +2722,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <p><strong>变色龙印刷</strong> - 将您的设计变为现实</p>`,
 
         ar: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p><strong>${n}</strong> من كاميليون للطباعة. جودة طباعة متميزة بأسعار تنافسية.</p>
 <p><br></p>
@@ -2744,7 +2744,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <p><strong>كاميليون للطباعة</strong> - نحول تصاميمك إلى واقع</p>`,
 
         es: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p><strong>${n}</strong> de Chameleon Printing. Impresión de calidad premium con colores vivos a precios competitivos.</p>
 <p><br></p>
@@ -2766,7 +2766,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <p><strong>Chameleon Printing</strong> - Dando vida a tus diseños</p>`,
 
         de: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p><strong>${n}</strong> von Chameleon Printing. Premium-Druckqualität mit lebendigen Farben zu wettbewerbsfähigen Preisen.</p>
 <p><br></p>
@@ -2788,7 +2788,7 @@ function generateDetailTemplate(name, nameLocal, imgUrl, lang) {
 <p><strong>Chameleon Printing</strong> - Wir bringen Ihre Designs zum Leben</p>`,
 
         fr: `<h2>${n}</h2>
-<p><img src="${img}" alt="${n}"></p>
+<p><img src="${img}" alt="${n}" loading="lazy"></p>
 <p><br></p>
 <p><strong>${n}</strong> par Chameleon Printing. Impression de qualité premium avec des couleurs vives à des prix compétitifs.</p>
 <p><br></p>
@@ -2819,7 +2819,7 @@ window.batchFillDetailPages = async () => {
         .select('id, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url, description, description_jp, description_us, description_cn, description_ar, description_es, description_de, description_fr')
         .order('id');
 
-    if (error) return alert('상품 조회 실패: ' + error.message);
+    if (error) { showToast('상품 조회 실패: ' + error.message, "error"); return; }
 
     const isEmpty = (d) => !d || d.trim() === '' || d === '<p><br></p>';
 
@@ -2830,7 +2830,7 @@ window.batchFillDetailPages = async () => {
         isEmpty(p.description_de) || isEmpty(p.description_fr)
     );
 
-    if (targets.length === 0) return alert('상세페이지가 없는 상품이 없습니다. (모든 8개 언어 채워짐)');
+    if (targets.length === 0) { showToast('상세페이지가 없는 상품이 없습니다. (모든 8개 언어 채워짐)', "info"); return; }
     if (!confirm(`${targets.length}개 상품에 빈 언어 상세페이지를 일괄 생성하시겠습니까?`)) return;
 
     const btn = document.getElementById('btnBatchFillDetail');
@@ -2863,5 +2863,5 @@ window.batchFillDetailPages = async () => {
     }
 
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-lines"></i> 상세페이지 일괄 생성 (빈 상품)'; }
-    alert(`상세페이지 일괄 생성 완료!\n\n성공: ${success}건\n실패: ${fail}건`);
+    showToast(`상세페이지 일괄 생성 완료!\n\n성공: ${success}건\n실패: ${fail}건`, "success");
 };

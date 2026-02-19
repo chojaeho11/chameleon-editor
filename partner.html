@@ -180,6 +180,7 @@
     </style>
 </head>
 <body>
+<script src="toast.js?v=123"></script>
 
 <!-- 모바일 토글 -->
 <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><i class="fa-solid fa-bars"></i></button>
@@ -506,7 +507,7 @@
                     const file = input.files[0]; if (!file) return;
                     const path = `products/desc_${Date.now()}_${Math.random().toString(36).slice(2,8)}.${file.name.split('.').pop()}`;
                     const { error } = await sb.storage.from('products').upload(path, file, {upsert:true});
-                    if (error) return alert('업로드 실패: ' + error.message);
+                    if (error) { showToast('업로드 실패: ' + error.message, 'error'); return; }
                     const { data } = sb.storage.from('products').getPublicUrl(path);
                     const range = q.getSelection(true);
                     q.insertEmbed(range.index, 'image', data.publicUrl);
@@ -559,14 +560,14 @@
     // 상품명 번역
     window.translateNames = async function() {
         const kr = document.getElementById('regNameKR').value.trim();
-        if (!kr) return alert(window.t('pt_err_name_first', '한국어 상품명을 먼저 입력하세요.'));
+        if (!kr) { showToast(window.t('pt_err_name_first', '한국어 상품명을 먼저 입력하세요.'), 'warn'); return; }
         const btn = document.querySelector('.btn-translate');
         btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역중...';
         try {
             const [jp, en] = await Promise.all([translateText(kr, 'ko', 'ja'), translateText(kr, 'ko', 'en')]);
             if (jp) document.getElementById('regNameJP').value = jp;
             if (en) document.getElementById('regNameEN').value = en;
-        } catch(e) { console.warn(e); alert(window.t('pt_translate_fail', '번역 실패. 수동으로 입력해주세요.')); }
+        } catch(e) { console.warn(e); showToast(window.t('pt_translate_fail', '번역 실패. 수동으로 입력해주세요.'), 'error'); }
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-language"></i> ' + window.t('pt_btn_translate', '일괄 번역');
     };
 
@@ -574,7 +575,7 @@
     window.translateDescs = async function() {
         const krHtml = quillKR.root.innerHTML;
         const krText = quillKR.getText().trim();
-        if (!krText) return alert(window.t('pt_err_desc_first', '한국어 설명을 먼저 입력하세요.'));
+        if (!krText) { showToast(window.t('pt_err_desc_first', '한국어 설명을 먼저 입력하세요.'), 'warn'); return; }
         const btns = document.querySelectorAll('.btn-translate');
         const btn = btns[1]; btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역중...';
         try {
@@ -584,7 +585,7 @@
             ]);
             if (jpHtml) { quillJP.root.innerHTML = jpHtml; }
             if (enHtml) { quillEN.root.innerHTML = enHtml; }
-        } catch(e) { console.warn(e); alert(window.t('pt_translate_fail', '번역 실패. 수동으로 입력해주세요.')); }
+        } catch(e) { console.warn(e); showToast(window.t('pt_translate_fail', '번역 실패. 수동으로 입력해주세요.'), 'error'); }
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-language"></i> ' + window.t('pt_btn_translate', '일괄 번역');
     };
 
@@ -639,7 +640,7 @@
 
     async function checkAuth() {
         const { data: { user } } = await sb.auth.getUser();
-        if (!user) { alert(window.t ? window.t('msg_login_required') : '로그인이 필요합니다.'); location.href = 'index.html'; return; }
+        if (!user) { showToast(window.t ? window.t('msg_login_required') : '로그인이 필요합니다.', 'error'); location.href = 'index.html'; return; }
         myUser = user;
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
         let role = (profile?.role || '').toLowerCase();
@@ -647,7 +648,7 @@
         const adminEmails = ['korea900@daum.net', 'korea900as@gmail.com'];
         if (adminEmails.includes((user.email||'').toLowerCase())) role = 'partner';
         const allowed = ['admin','franchise','partner','platinum'];
-        if (!allowed.includes(role)) { alert(window.t ? window.t('pt_no_access') : '접근 권한이 없습니다.'); location.href = 'index.html'; return; }
+        if (!allowed.includes(role)) { showToast(window.t ? window.t('pt_no_access') : '접근 권한이 없습니다.', 'error'); location.href = 'index.html'; return; }
         myProfile = profile;
         document.getElementById('userName').innerText = profile?.company_name || user.email.split('@')[0];
         document.getElementById('userEmail').innerText = user.email;
@@ -715,7 +716,7 @@
     }
 
     window.editProduct = function(code) {
-        alert(window.t('pt_edit_coming_soon', '수정 기능은 준비 중입니다. 삭제 후 재등록해 주세요.'));
+        showToast(window.t('pt_edit_coming_soon', '수정 기능은 준비 중입니다. 삭제 후 재등록해 주세요.'), 'info');
     };
 
     window.deleteProduct = async function(code) {
@@ -753,10 +754,10 @@
         const priceKRW = parseInt(document.getElementById('regPriceKRW').value);
         const stock = parseInt(document.getElementById('regStock').value) || 0;
         const fileInput = document.getElementById('regImageFile');
-        if (!category) return alert(window.t('pt_err_category', '카테고리를 선택하세요.'));
-        if (!nameKR) return alert(window.t('pt_err_name', '상품명을 입력하세요.'));
-        if (!priceKRW || priceKRW <= 0) return alert(window.t('pt_err_price', '가격을 입력하세요.'));
-        if (!fileInput.files[0]) return alert(window.t('pt_err_image', '상품 이미지를 선택하세요.'));
+        if (!category) { showToast(window.t('pt_err_category', '카테고리를 선택하세요.'), 'warn'); return; }
+        if (!nameKR) { showToast(window.t('pt_err_name', '상품명을 입력하세요.'), 'warn'); return; }
+        if (!priceKRW || priceKRW <= 0) { showToast(window.t('pt_err_price', '가격을 입력하세요.'), 'warn'); return; }
+        if (!fileInput.files[0]) { showToast(window.t('pt_err_image', '상품 이미지를 선택하세요.'), 'warn'); return; }
 
         const btn = document.querySelector('#page-register .btn-lg');
         btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리중...';
@@ -785,7 +786,7 @@
                 addons: '', site_code: 'all', width_mm: 0, height_mm: 0, is_custom_size: false
             });
             if (dbErr) throw dbErr;
-            alert(window.t('pt_register_success', '상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.'));
+            showToast(window.t('pt_register_success', '상품이 등록 신청되었습니다. 관리자 승인 후 판매가 시작됩니다.'), 'success');
             document.getElementById('regCategory').selectedIndex = 0;
             ['regNameKR','regNameJP','regNameEN','regPriceKRW','regPriceJPY','regPriceUSD','regShipping'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('regStock').value = '100';
@@ -793,7 +794,7 @@
             document.getElementById('imgUploadBox').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span>${window.t('pt_click_upload','클릭하여 업로드')}</span>`;
             document.getElementById('regImageFile').value = '';
             switchTab('products');
-        } catch(e) { console.error(e); alert('오류: ' + e.message); }
+        } catch(e) { console.error(e); showToast('오류: ' + e.message, 'error'); }
         finally { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ${window.t('pt_register_submit','등록 신청')}`; }
     };
 
@@ -837,7 +838,7 @@
     window.shipOrder = async function(id) {
         if (!confirm(window.t('pt_confirm_ship', '배송 출발 처리하시겠습니까?'))) return;
         const { error } = await sb.from('orders').update({status:'배송중'}).eq('id', id);
-        if (error) alert('Error: '+error.message); else { alert(window.t('pt_ship_success','배송 출발 처리됨')); loadPartnerOrders(); }
+        if (error) showToast('Error: '+error.message, 'error'); else { showToast(window.t('pt_ship_success','배송 출발 처리됨'), 'success'); loadPartnerOrders(); }
     };
 
     // ===== 탭4: 정산 =====
@@ -868,7 +869,7 @@
     }
 
     window.requestWithdrawal = function() {
-        if (currentWithdrawable <= 0) return alert(window.t('pt_no_eligible', '출금 가능 금액이 없습니다.'));
+        if (currentWithdrawable <= 0) { showToast(window.t('pt_no_eligible', '출금 가능 금액이 없습니다.'), 'warn'); return; }
         document.getElementById('wdAmount').value = fmtMoney(currentWithdrawable);
         document.getElementById('withdrawModal').style.display = 'flex';
     };
@@ -877,9 +878,9 @@
         const bankInfo = document.getElementById('wdBankInfo').value.trim();
         const holder = document.getElementById('wdHolder').value.trim();
         const fileInput = document.getElementById('wdTaxFile');
-        if (!bankInfo) return alert(window.t('pt_err_bank', '계좌 정보를 입력하세요.'));
-        if (!holder) return alert(window.t('pt_err_holder', '예금주를 입력하세요.'));
-        if (!fileInput.files[0]) return alert(window.t('pt_err_tax', '세금계산서를 첨부하세요.'));
+        if (!bankInfo) { showToast(window.t('pt_err_bank', '계좌 정보를 입력하세요.'), 'warn'); return; }
+        if (!holder) { showToast(window.t('pt_err_holder', '예금주를 입력하세요.'), 'warn'); return; }
+        if (!fileInput.files[0]) { showToast(window.t('pt_err_tax', '세금계산서를 첨부하세요.'), 'warn'); return; }
         const btn = document.getElementById('wdSubmitBtn');
         btn.disabled = true; btn.innerText = '...';
         try {
@@ -891,8 +892,8 @@
             const { error: dbErr } = await sb.from('withdrawal_requests').insert({ user_id:myUser.id, amount:currentWithdrawable, bank_name:bankInfo, account_holder:holder, status:'pending', tax_invoice_url:urlData.publicUrl });
             if (dbErr) throw dbErr;
             await sb.from('partner_settlements').update({settlement_status:'requested'}).eq('partner_id',myUser.id).eq('settlement_status','waiting').lte('withdrawal_eligible_at',new Date().toISOString());
-            alert(window.t('pt_wd_success', '출금 요청이 접수되었습니다.')); document.getElementById('withdrawModal').style.display='none'; loadSettlement();
-        } catch(e) { alert('Error: '+e.message); }
+            showToast(window.t('pt_wd_success', '출금 요청이 접수되었습니다.'), 'success'); document.getElementById('withdrawModal').style.display='none'; loadSettlement();
+        } catch(e) { showToast('Error: '+e.message, 'error'); }
         finally { btn.disabled=false; btn.innerText=window.t('pt_wd_submit','신청하기'); }
     };
 

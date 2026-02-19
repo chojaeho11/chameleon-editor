@@ -502,7 +502,7 @@ function renderFontList() {
         // 클릭 시 텍스트에 폰트 적용 (실제 텍스트로 모든 unicode-range 슬라이스 로딩)
         div.onclick = async () => {
             const active = canvas.getActiveObject();
-            if (!active) return alert("Please select a text object to change the font.");
+            if (!active) { showToast("Please select a text object to change the font.", "info"); return; }
 
             // 1. 캔버스의 실제 텍스트 수집 (Google Fonts unicode-range 슬라이스 전부 로딩용)
             let allText = '';
@@ -605,7 +605,7 @@ function initTextHandlers() {
     if (btnFontSelect) {
         btnFontSelect.onclick = () => {
             // [수정] 다국어 적용
-            if (!canvas.getActiveObject()) return alert(window.t('msg_select_text_font', "Please select a text object to change the font."));
+            if (!canvas.getActiveObject()) { showToast(window.t('msg_select_text_font', "Please select a text object to change the font."), "info"); return; }
             
             const modal = document.getElementById("fontModal");
             if (modal) {
@@ -856,7 +856,7 @@ function applyToSelection(prop, val) {
 window.applyTextEffect = function(type) {
     const active = canvas.getActiveObject();
     // [수정] 다국어 적용
-    if (!active) return alert(window.t('msg_select_text_font', "Please select a text object."));
+    if (!active) { showToast(window.t('msg_select_text_font', "Please select a text object."), "info"); return; }
 
     // 기존 효과 그룹 해제 후 원본 추출
     let originalText = active;
@@ -878,7 +878,7 @@ window.applyTextEffect = function(type) {
         return;
     }
 
-    if (!originalText.type.includes('text')) return alert(window.t('msg_text_only', "Text objects only."));
+    if (!originalText.type.includes('text')) { showToast(window.t('msg_text_only', "Text objects only."), "info"); return; }
 
     const fontSize = originalText.fontSize * originalText.scaleY; 
     const strokeW = Math.max(2, fontSize * 0.05);
@@ -1266,7 +1266,7 @@ function initColorHandlers() {
         btnOutline.onclick = () => {
             const active = canvas.getActiveObject();
             // [수정] 다국어 적용
-            if (!active) return alert(window.t('msg_select_obj_outline', "Please select an object to apply the outline."));
+            if (!active) { showToast(window.t('msg_select_obj_outline', "Please select an object to apply the outline."), "info"); return; }
 
             const defaultColor = "#ff6060ff"; // 갈색 (SaddleBrown)
             const defaultWidth = 5;         // 중간 두께
@@ -1406,7 +1406,7 @@ function initAlignHandlers() {
 function alignObjects(direction) {
     const active = canvas.getActiveObject();
     // [수정] 다국어 적용
-    if (!active) return alert(window.t('msg_select_obj_align', "Please select an object to align."));
+    if (!active) { showToast(window.t('msg_select_obj_align', "Please select an object to align."), "info"); return; }
 
     const processObj = (obj, bound) => {
         const w = obj.getScaledWidth();
@@ -1468,14 +1468,14 @@ window.toggleMobilePanel = function(side) {
 // ============================================================
 window.uploadUserLogo = async () => {
     // 상단 import { currentUser } 사용
-    if (!currentUser) return alert("Login is required for this feature.");
+    if (!currentUser) { showToast("Login is required for this feature.", "warn"); return; }
     
     const fileInput = document.getElementById('logoFileInput');
     const tagInput = document.getElementById('logoKeywordInput');
     const file = fileInput.files[0];
     const tags = tagInput.value;
     
-    if (!file) return alert("Please select a file.");
+    if (!file) { showToast("Please select a file.", "info"); return; }
     
     const btn = document.querySelector('#logoUploadModal .btn-round.primary');
     const oldText = btn.innerText;
@@ -1502,12 +1502,12 @@ window.uploadUserLogo = async () => {
         const { error: dbError } = await sb.from('library').insert(payload);
         if (dbError) throw dbError;
         
-        alert(`✅ Upload Successful!`);
+        showToast("Upload Successful!", "success");
         window.resetUpload(); 
         document.getElementById('logoUploadModal').style.display = 'none';
     } catch (e) {
         console.error(e);
-        alert(window.t('msg_upload_failed', "Upload failed: ") + e.message);
+        showToast(window.t('msg_upload_failed', "Upload failed: ") + e.message, "error");
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;

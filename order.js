@@ -246,7 +246,7 @@ export async function initOrderSystem() {
     const btnGoCheckout = document.getElementById("btnGoCheckout");
     if(btnGoCheckout) {
         btnGoCheckout.onclick = () => {
-            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
+            if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
 
             // 배송 옵션 필수 체크 (묶음배송: 전체 상품 중 1개라도 배송옵션 선택되면 OK)
             const shippingKeywords = ['배송', 'shipping', 'delivery', '配送', '発送', '운송'];
@@ -276,7 +276,7 @@ export async function initOrderSystem() {
                 }
             }
             if (hasShippingCategory && !hasAnyShippingSelected) {
-                alert(window.t('msg_shipping_required', '배송옵션은 필수입니다.'));
+                showToast(window.t('msg_shipping_required', '배송옵션은 필수입니다.'), "warn");
                 return;
             }
 
@@ -287,7 +287,7 @@ export async function initOrderSystem() {
     const btnPrintQuote = document.getElementById("btnPrintQuote");
     if(btnPrintQuote) {
         btnPrintQuote.onclick = async () => {
-            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
+            if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
             const btn = btnPrintQuote;
             btn.innerText = window.t('msg_generating_quote') || "Generating Quote..."; btn.disabled = true;
             try {
@@ -300,10 +300,10 @@ export async function initOrderSystem() {
                 };
                 const blob = await generateQuotationPDF(info, cartData);
                 if(blob) downloadBlob(blob, "quotation.pdf");
-                else alert(window.t('err_quote_gen_failed') || "Failed to generate quotation.");
+                else showToast(window.t('err_quote_gen_failed') || "Failed to generate quotation.", "error");
             } catch(e) {
                 console.error(e);
-                alert((window.t('err_quote_error') || "Quote Error: ") + e.message);
+                showToast((window.t('err_quote_error') || "Quote Error: ") + e.message, "error");
             } finally {
                 btn.innerText = window.t('btn_print_quote') || "Print Quote"; btn.disabled = false;
             }
@@ -339,18 +339,18 @@ export async function initOrderSystem() {
 
     if(btnDownSheet) {
         btnDownSheet.onclick = async () => {
-            if(cartData.length === 0) return alert(window.t('msg_no_data', "No data available."));
+            if(cartData.length === 0) { showToast(window.t('msg_no_data', "No data available."), "warn"); return; }
             const info = getOrderInfo();
             if(window.currentDbId) info.id = window.currentDbId;
             try {
                 const blob = await generateOrderSheetPDF(info, cartData);
                 if(blob) downloadBlob(blob, `order_sheet_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert(window.t('msg_pdf_gen_failed', "PDF generation failed")); }
+            } catch(e) { console.error(e); showToast(window.t('msg_pdf_gen_failed', "PDF generation failed"), "error"); }
         };
     }
     if(btnDownQuote) {
         btnDownQuote.onclick = async () => {
-            if(cartData.length === 0) return alert(window.t('msg_no_data', "No data available."));
+            if(cartData.length === 0) { showToast(window.t('msg_no_data', "No data available."), "warn"); return; }
             const info = getOrderInfo();
             const mileageInput = document.getElementById('inputUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
@@ -358,13 +358,13 @@ export async function initOrderSystem() {
             try {
                 const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate, useMileage);
                 if(blob) downloadBlob(blob, `quotation_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert(window.t('msg_pdf_gen_failed', "PDF generation failed")); }
+            } catch(e) { console.error(e); showToast(window.t('msg_pdf_gen_failed', "PDF generation failed"), "error"); }
         };
     }
     const btnReceipt = document.getElementById("btnDownReceipt");
     if(btnReceipt) {
         btnReceipt.onclick = async () => {
-            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
+            if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
             const info = getOrderInfo();
 
             // [추가] 결제정보(카드/무통장) 및 입금자명 확인
@@ -381,14 +381,14 @@ export async function initOrderSystem() {
             try {
                 const blob = await generateReceiptPDF(info, cartData, currentUserDiscountRate, useMileage);
                 if(blob) downloadBlob(blob, `receipt_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert(window.t('msg_receipt_gen_failed', "Receipt generation failed: ") + e.message); }
+            } catch(e) { console.error(e); showToast(window.t('msg_receipt_gen_failed', "Receipt generation failed: ") + e.message, "error"); }
         };
     }
 
     const btnStatement = document.getElementById("btnDownStatement");
     if(btnStatement) {
         btnStatement.onclick = async () => {
-            if(cartData.length === 0) return alert(window.t('msg_cart_empty', "Your cart is empty."));
+            if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
             const info = getOrderInfo();
 
             // [추가] 결제정보(카드/무통장) 및 입금자명 확인
@@ -405,7 +405,7 @@ export async function initOrderSystem() {
             try {
                 const blob = await generateTransactionStatementPDF(info, cartData, currentUserDiscountRate, useMileage);
                 if(blob) downloadBlob(blob, `statement_${info.manager}.pdf`);
-            } catch(e) { console.error(e); alert(window.t('msg_statement_gen_failed', "Statement generation failed: ") + e.message); }
+            } catch(e) { console.error(e); showToast(window.t('msg_statement_gen_failed', "Statement generation failed: ") + e.message, "error"); }
         };
     }
     renderCart(); 
@@ -559,7 +559,7 @@ function saveCart() {
                 const superClean = cleanData.map(item => ({ ...item, thumb: null }));
                 localStorage.setItem(storageKey, JSON.stringify(superClean));
             } catch (finalErr) {
-                alert(window.t('msg_storage_full', "Browser storage is full. Please remove unnecessary cart items."));
+                showToast(window.t('msg_storage_full', "Browser storage is full. Please remove unnecessary cart items."), "warn");
             }
         }
     } 
@@ -588,7 +588,7 @@ export async function startDesignFromProduct() {
     
     document.getElementById("productDetailModal").style.display = "none"; 
     
-    localStorage.setItem('current_product_key', currentTargetProduct.key);
+    try { localStorage.setItem('current_product_key', currentTargetProduct.key); } catch(e) {}
 
     if(window.applySize) {
         window.applySize(currentTargetProduct.w, currentTargetProduct.h, currentTargetProduct.key, currentTargetProduct.mode, 'replace'); 
@@ -632,7 +632,7 @@ async function addCanvasToCart() {
 
     // 1. 상품 정보 먼저 확보
     let key = window.currentProductKey || canvas.currentProductKey;
-    if (!key) key = localStorage.getItem('current_product_key') || 'A4';
+    try { if (!key) key = localStorage.getItem('current_product_key') || 'A4'; } catch(e) { if (!key) key = 'A4'; }
 
     let product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) ? window.PRODUCT_DB[key] : PRODUCT_DB[key];
 
@@ -849,7 +849,7 @@ async function addCanvasToCart() {
 
     // [수정] 수량이 1로 리셋되는 문제 해결
     let initialQty = 1;
-    const storedQty = localStorage.getItem('pending_product_qty');
+    let storedQty = null; try { storedQty = localStorage.getItem('pending_product_qty'); } catch(e) {}
     if (storedQty) {
         initialQty = parseInt(storedQty);
         localStorage.removeItem('pending_product_qty'); 
@@ -865,7 +865,7 @@ async function addCanvasToCart() {
             savedJsonUrl = await uploadFileToSupabase(jsonBlob, 'cart_json');
         } catch (err) {
             console.error("JSON 업로드 필수 실패:", err);
-            return alert(window.t('msg_design_save_failed', "Failed to save design data. Please check your internet connection."));
+            showToast(window.t('msg_design_save_failed', "Failed to save design data. Please check your internet connection."), "error"); return;
         }
     }
 
@@ -940,7 +940,7 @@ async function addCanvasToCart() {
                      localStorage.removeItem(key);
                  }
              });
-             alert(window.t('msg_storage_full', "Browser storage is full. Please close unnecessary tabs or clear cache."));
+             showToast(window.t('msg_storage_full', "Browser storage is full. Please close unnecessary tabs or clear cache."), "warn");
         }
     }
 
@@ -999,10 +999,10 @@ async function addFileToCart(e) {
         saveCart(); 
         document.getElementById("productDetailModal").style.display = "none"; 
         renderCart(); 
-        alert(window.t('msg_file_added_to_cart') || "File order added to cart.");
+        showToast(window.t('msg_file_added_to_cart') || "File order added to cart.", "success");
     } catch(err) { 
         console.error(err); 
-        alert((window.t('msg_failed') || "Failed: ") + err.message);
+        showToast((window.t('msg_failed') || "Failed: ") + err.message, "error");
     } finally {
         if(loading) { loading.style.display = "none"; } 
         e.target.value = ''; 
@@ -1150,7 +1150,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
             div.innerHTML = `
                 <div style="display:flex; width:100%; padding:20px; gap:30px; align-items:flex-start;">
                     <div style="width:100px; height:100px; background:#f8fafc; border:1px solid #eee; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
-                        <img src="${displayImg}" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://placehold.co/100?text=No+Image'">
+                        <img src="${displayImg}" loading="lazy" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                     </div>
 
                     <div style="flex:1; min-width:200px;">
@@ -1187,7 +1187,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
             div.innerHTML = `
                 <div style="padding:15px; display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:center;">
-                        <img src="${displayImg}" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
+                        <img src="${displayImg}" loading="lazy" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${localName(item.product)}</h4>
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
@@ -1403,7 +1403,7 @@ async function processOrderSubmission() {
         address = `${st1} ${st2}, ${city}, ${state} ${zip}`;
     }
 
-    if(!manager || !address) return alert(window.t('alert_input_shipping'));
+    if(!manager || !address) { showToast(window.t('alert_input_shipping'), "warn"); return; }
     
     const deliveryDate = selectedDeliveryDate || new Date().toISOString().split('T')[0];
 
@@ -1731,7 +1731,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 // [수정됨] 최종 결제 버튼 클릭 시 실행
 // ============================================================
 async function processFinalPayment() {
-    if (!window.tempOrderInfo && !window.currentDbId) return alert(window.t('msg_no_order_info', "No order info. Please try again from the start."));
+    if (!window.tempOrderInfo && !window.currentDbId) { showToast(window.t('msg_no_order_info', "No order info. Please try again from the start."), "error"); return; }
     
     const mileageInput = document.getElementById('inputUseMileage');
     const localMileageVal = mileageInput ? (parseFloat(mileageInput.value) || 0) : 0;
@@ -1741,17 +1741,17 @@ async function processFinalPayment() {
     const baseAmount = window.originalPayAmount || 0;
     const realFinalPayAmount = baseAmount - useMileage;
 
-    if (realFinalPayAmount < 0) return alert(window.t('msg_payment_amount_error', "Payment amount error."));
+    if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
     if (useMileage > 0) {
-        if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
+        if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
         const excludedSet = window.excludedCategoryCodes || new Set();
         let isSafe = true;
         cartData.forEach(item => { if (item.product && excludedSet.has(item.product.category)) isSafe = false; });
-        if (!isSafe) return alert(window.t('msg_mileage_excluded_items', "Cart contains items where mileage cannot be used."));
+        if (!isSafe) { showToast(window.t('msg_mileage_excluded_items', "Cart contains items where mileage cannot be used."), "warn"); return; }
 
         const { data: check } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
-        if (!check || check.mileage < useMileage) return alert(window.t('alert_mileage_shortage', "Insufficient mileage."));
+        if (!check || check.mileage < useMileage) { showToast(window.t('alert_mileage_shortage', "Insufficient mileage."), "warn"); return; }
     }
 
     const btn = document.getElementById("btnFinalPay");
@@ -1805,7 +1805,7 @@ async function processFinalPayment() {
             await processDepositPayment(realFinalPayAmount, useMileage); 
         } else if (method === 'bank') {
             const depositorName = document.getElementById('inputDepositorName').value;
-            if (!depositorName) { btn.disabled = false; return alert(window.t('alert_input_depositor', "Please enter depositor name.")); }
+            if (!depositorName) { btn.disabled = false; showToast(window.t('alert_input_depositor', "Please enter depositor name."), "warn"); return; }
             
             if(confirm(window.t('confirm_bank_payment', "Proceed with Bank Transfer?"))) {
                 if(useMileage > 0) {
@@ -1818,7 +1818,7 @@ async function processFinalPayment() {
                     status: '접수됨', payment_method: '무통장입금', payment_status: '입금대기', depositor_name: depositorName 
                 }).eq('id', orderId);
                 
-                alert(window.t('msg_order_complete_bank'));
+                showToast(window.t('msg_order_complete_bank'), "success");
                 location.reload();
             }
         } else {
@@ -1827,7 +1827,7 @@ async function processFinalPayment() {
 
     } catch (e) {
         console.error(e);
-        alert(window.t('msg_order_create_error', "Error creating order: ") + e.message);
+        showToast(window.t('msg_order_create_error', "Error creating order: ") + e.message, "error");
     } finally {
         document.getElementById("loading").style.display = "none";
         btn.disabled = false;
@@ -1838,7 +1838,7 @@ async function processFinalPayment() {
 // [수정] 예치금 결제
 // ============================================================
 async function processDepositPayment(payAmount, useMileage) {
-    if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
+    if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
 
     const balanceSpan = document.getElementById('myCurrentDepositDisplay');
     const currentBalance = parseInt(balanceSpan.dataset.balance || 0);
@@ -1847,7 +1847,7 @@ async function processDepositPayment(payAmount, useMileage) {
         const shortage = formatCurrency(payAmount - currentBalance);
         document.getElementById("loading").style.display = "none";
         document.getElementById("btnFinalPay").disabled = false;
-        return alert(window.t('alert_deposit_shortage').replace('{amount}', shortage));
+        showToast(window.t('alert_deposit_shortage').replace('{amount}', shortage), "warn"); return;
     }
 
     if (!confirm(window.t('confirm_deposit_pay').replace('{amount}', formatCurrency(payAmount)))) {
@@ -1885,12 +1885,12 @@ async function processDepositPayment(payAmount, useMileage) {
             await creditReferralBonus(window.currentDbId, window.tempOrderInfo.referrerId);
         }
 
-        alert(window.t('msg_payment_complete'));
+        showToast(window.t('msg_payment_complete'), "success");
         location.reload();
 
     } catch (e) {
         console.error(e);
-        alert(window.t('msg_payment_error', "Payment processing error: ") + e.message);
+        showToast(window.t('msg_payment_error', "Payment processing error: ") + e.message, "error");
         document.getElementById("loading").style.display = "none";
         document.getElementById("btnFinalPay").disabled = false;
     }
@@ -1902,17 +1902,17 @@ async function processDepositPayment(payAmount, useMileage) {
 function processCardPayment(confirmedAmount) {
     const country = SITE_CONFIG.COUNTRY;
     const pgConfig = SITE_CONFIG.PG_CONFIG[country];
-    if (!pgConfig) return alert(window.t('msg_pg_config_error', "PG config error: No payment settings for this country."));
+    if (!pgConfig) { showToast(window.t('msg_pg_config_error', "PG config error: No payment settings for this country."), "error"); return; }
 
     const orderName = `Chameleon Order #${window.currentDbId}`;
     const customerName = document.getElementById("orderName").value;
 
     const realPayAmount = (confirmedAmount !== undefined) ? confirmedAmount : window.finalPaymentAmount;
 
-    if (realPayAmount < 0) return alert(window.t('msg_payment_amount_error', "Payment amount error."));
+    if (realPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
     if (pgConfig.provider === 'toss') {
-        if (!window.TossPayments) return alert(window.t('msg_toss_sdk_missing', "Toss Payments SDK is not loaded."));
+        if (!window.TossPayments) { showToast(window.t('msg_toss_sdk_missing', "Toss Payments SDK is not loaded."), "error"); return; }
         
         const tossPayments = TossPayments(pgConfig.clientKey);
         tossPayments.requestPayment("카드", {
@@ -1923,7 +1923,7 @@ function processCardPayment(confirmedAmount) {
             successUrl: window.location.origin + `/success.html?db_id=${window.currentDbId}` + (window.tempOrderInfo?.referrerId ? `&ref_id=${window.tempOrderInfo.referrerId}` : ''),
             failUrl: window.location.origin + `/fail.html?db_id=${window.currentDbId}`, 
         }).catch(error => { 
-            if (error.code !== "USER_CANCEL") alert(window.t('msg_payment_error_prefix', "Payment Error: ") + error.message);
+            if (error.code !== "USER_CANCEL") showToast(window.t('msg_payment_error_prefix', "Payment Error: ") + error.message, "error");
         });
 
     } else if (pgConfig.provider === 'stripe') {
@@ -1932,7 +1932,7 @@ function processCardPayment(confirmedAmount) {
 }
 
 async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId) {
-    if (typeof Stripe === 'undefined') return alert(window.t('msg_stripe_load_failed', "Stripe module load failed"));
+    if (typeof Stripe === 'undefined') { showToast(window.t('msg_stripe_load_failed', "Stripe module load failed"), "error"); return; }
 
     const stripe = Stripe(pubKey);
     const btn = document.getElementById("btnFinalPay");
@@ -1959,7 +1959,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
     if (localAmount < minAmount) {
         btn.innerText = originalText;
         btn.disabled = false;
-        return alert(window.t('msg_stripe_min_amount', `Minimum payment amount is ${minLabel}. Current: `) + (currSymbol[currency] || '') + localAmount);
+        showToast(window.t('msg_stripe_min_amount', `Minimum payment amount is ${minLabel}. Current: `) + (currSymbol[currency] || '') + localAmount, "warn"); return;
     }
 
     try {
@@ -1980,11 +1980,11 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
             sessionId: data.sessionId
         });
 
-        if (result.error) alert(result.error.message);
+        if (result.error) showToast(result.error.message, "error");
         
     } catch (e) {
         console.error("Stripe Error:", e);
-        alert(window.t('msg_payment_init_failed', "Payment initialization failed: ") + e.message);
+        showToast(window.t('msg_payment_init_failed', "Payment initialization failed: ") + e.message, "error");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -2011,7 +2011,7 @@ window.removeCartItem = function(idx) {
 // ★ 장바구니 아이템 다시 편집하기
 window.reEditCartItem = async function(idx) {
     const item = cartData[idx];
-    if (!item || !item.jsonUrl) return alert("편집 데이터를 찾을 수 없습니다.");
+    if (!item || !item.jsonUrl) { showToast("편집 데이터를 찾을 수 없습니다.", "error"); return; }
 
     const loading = document.getElementById("loading");
     if (loading) { loading.style.display = "flex"; loading.querySelector('p').innerText = "디자인 데이터 로딩 중..."; }
@@ -2056,7 +2056,7 @@ window.reEditCartItem = async function(idx) {
     } catch(e) {
         console.error("다시 편집 실패:", e);
         if (loading) loading.style.display = "none";
-        alert("편집 데이터를 불러올 수 없습니다: " + e.message);
+        showToast("편집 데이터를 불러올 수 없습니다: " + e.message, "error");
     }
 };
 window.updateCartOption = function(idx, key, value) { 
@@ -2278,14 +2278,14 @@ export async function processBulkCartUpload(files) {
         renderCart();
         
         if (successCount > 0) {
-            alert(`${successCount} ${window.t('msg_files_added_to_cart', "file(s) added to cart.")}`);
+            showToast(`${successCount} ${window.t('msg_files_added_to_cart', "file(s) added to cart.")}`, "success");
         } else {
-            alert(window.t('msg_upload_failed', "File upload failed."));
+            showToast(window.t('msg_upload_failed', "File upload failed."), "error");
         }
 
     } catch (e) {
         console.error("일괄 업로드 실패:", e);
-        alert(window.t('msg_upload_error', "Error occurred during file upload."));
+        showToast(window.t('msg_upload_error', "Error occurred during file upload."), "error");
     } finally {
         if(loading) loading.style.display = "none";
     }
@@ -2303,7 +2303,7 @@ window.calcMileageLimit = function(input) {
     const limitLocal = limitKRW * mileRate;
 
     if (localVal > limitLocal) {
-        alert(window.t('msg_mileage_limit', `Mileage can be used up to 5% of purchase amount.`));
+        showToast(window.t('msg_mileage_limit', `Mileage can be used up to 5% of purchase amount.`), "warn");
         localVal = limitLocal;
         input.value = localVal;
     }

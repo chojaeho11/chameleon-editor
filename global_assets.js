@@ -117,15 +117,15 @@ window.uploadTemplate = async () => {
 
     // 오디오: 음원파일 필수, 썸네일 선택
     if (cat === 'audio') {
-        if (!dataFile) return alert("음원 파일을 선택해주세요.");
+        if (!dataFile) { showToast("음원 파일을 선택해주세요.", "warn"); return; }
     } else {
-        if (!thumbFile) return alert("썸네일 이미지는 필수입니다.");
+        if (!thumbFile) { showToast("썸네일 이미지는 필수입니다.", "warn"); return; }
     }
 
     // PNG만 허용하는 카테고리 (사진배경, 패턴 제외)
     if (['logo', 'vector', 'graphic'].includes(cat) && thumbFile) {
         if (!thumbFile.name.toLowerCase().endsWith('.png') && thumbFile.type !== 'image/png') {
-            return alert("이 카테고리는 PNG 파일만 업로드 가능합니다.");
+            showToast("이 카테고리는 PNG 파일만 업로드 가능합니다.", "warn"); return;
         }
     }
 
@@ -175,12 +175,12 @@ window.uploadTemplate = async () => {
 
         if (dbErr) throw dbErr;
 
-        alert("✅ 등록되었습니다.");
+        showToast("등록되었습니다.", "success");
         resetTemplateForm();
         loadTemplates();
 
     } catch (e) {
-        alert("업로드 실패: " + e.message);
+        showToast("업로드 실패: " + e.message, "error");
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -192,7 +192,7 @@ let _adminAudioEl = null;
 window._adminPlayAudio = (url, btn) => {
     if(_adminAudioEl){_adminAudioEl.pause();_adminAudioEl=null;if(btn)btn.textContent='▶ 재생';return;}
     const a=new Audio(url); a.volume=0.5;
-    a.play().catch(e=>alert('재생 실패: '+e.message));
+    a.play().catch(e=>showToast('재생 실패: '+e.message, "error"));
     _adminAudioEl=a; if(btn)btn.textContent='⏹ 정지';
     a.onended=()=>{_adminAudioEl=null;if(btn)btn.textContent='▶ 재생';};
 };
@@ -201,23 +201,23 @@ window._adminPlayAudio = (url, btn) => {
 window.deleteTemplate = async (id) => {
     if (!confirm("삭제하시겠습니까?")) return;
     const { error } = await sb.from('library').delete().eq('id', id);
-    if (error) alert("실패: " + error.message);
+    if (error) showToast("실패: " + error.message, "error");
     else loadTemplates();
 };
 
 // [선택 삭제]
 window.deleteSelectedTemplates = async () => {
     const checks = document.querySelectorAll('.tpl-chk:checked');
-    if (checks.length === 0) return alert("선택된 항목이 없습니다.");
+    if (checks.length === 0) { showToast("선택된 항목이 없습니다.", "warn"); return; }
     
     if (!confirm(`선택한 ${checks.length}개를 삭제하시겠습니까?`)) return;
 
     const ids = Array.from(checks).map(c => c.value);
     const { error } = await sb.from('library').delete().in('id', ids);
     
-    if (error) alert("실패: " + error.message);
+    if (error) showToast("실패: " + error.message, "error");
     else {
-        alert("삭제되었습니다.");
+        showToast("삭제되었습니다.", "success");
         loadTemplates();
     }
 };
@@ -229,7 +229,7 @@ window.toggleAllTemplates = (source) => {
 
 window.changeTplPage = (step) => {
     const next = currentTplPage + step;
-    if (next < 1) return alert("첫 페이지입니다.");
+    if (next < 1) { showToast("첫 페이지입니다.", "info"); return; }
     currentTplPage = next;
     loadTemplates(false);
 };
@@ -375,8 +375,8 @@ window.uploadFont = async () => {
     const family = document.getElementById('fontFamily').value.trim(); 
     const file = document.getElementById('fontFile').files[0];
 
-    if (!name || !family || !file) return alert("모든 항목을 입력해주세요.");
-    if (/\s/.test(family)) return alert("Family Name에는 공백을 넣을 수 없습니다. (예: NotoSansKR)");
+    if (!name || !family || !file) { showToast("모든 항목을 입력해주세요.", "warn"); return; }
+    if (/\s/.test(family)) { showToast("Family Name에는 공백을 넣을 수 없습니다. (예: NotoSansKR)", "warn"); return; }
 
     const btn = document.querySelector('#sec-fonts .btn-primary');
     const oldText = btn.innerText;
@@ -404,14 +404,14 @@ window.uploadFont = async () => {
 
         if (dbErr) throw dbErr;
 
-        alert("✅ 폰트가 등록되었습니다.");
+        showToast("폰트가 등록되었습니다.", "success");
         document.getElementById('fontName').value = '';
         document.getElementById('fontFamily').value = '';
         document.getElementById('fontFile').value = '';
         loadFonts();
 
     } catch (e) {
-        alert("오류 발생: " + e.message);
+        showToast("오류 발생: " + e.message, "error");
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -422,6 +422,6 @@ window.uploadFont = async () => {
 window.deleteFontDB = async (id) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
     const { error } = await sb.from('site_fonts').delete().eq('id', id);
-    if (error) alert("삭제 실패: " + error.message);
+    if (error) showToast("삭제 실패: " + error.message, "error");
     else loadFonts();
 };

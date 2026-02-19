@@ -169,7 +169,7 @@ export function toggleLockWizard() {
             updateLockUI();
         }
     } else {
-        alert(window.t('msg_select_obj_lock', "Please select an object to lock."));
+        showToast(window.t('msg_select_obj_lock', "Please select an object to lock."), "info");
     }
 }
 

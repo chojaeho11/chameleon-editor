@@ -10,8 +10,8 @@ export function initMyDesign() {
         // [수정] innerHTML 내부는 data-i18n으로 처리되므로 놔두고, 알림 메시지만 수정
         btnLib.innerHTML = `<span data-i18n="btn_my_library">📂 MY page</span>`;
         btnLib.onclick = () => {
-            if (!currentUser) return alert(window.t('msg_login_required', "Login is required."));
-            location.href = 'mypage.html'; 
+            if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
+            location.href = 'mypage.html';
         };
     }
 
@@ -19,7 +19,7 @@ export function initMyDesign() {
     const btnMyPageSide = document.getElementById("btnMyPageSide");
     if(btnMyPageSide) {
         btnMyPageSide.onclick = () => {
-            if (!currentUser) return alert("로그인이 필요한 서비스입니다.");
+            if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
             location.href = 'mypage.html'; 
         };
     }
@@ -28,7 +28,7 @@ export function initMyDesign() {
     const btnOpenSave = document.getElementById("btnOpenSaveModal");
     if (btnOpenSave) {
         btnOpenSave.onclick = () => {
-            if (!currentUser) return alert(window.t('msg_login_required', "Login is required to save."));
+            if (!currentUser) { showToast(window.t('msg_login_required', "Login is required to save."), "warn"); return; }
             document.getElementById("saveDesignModal").style.display = "flex";
         };
     }
@@ -49,8 +49,8 @@ async function saveCurrentDesign() {
     const titleInput = document.getElementById("saveDesignTitle");
     const title = titleInput ? titleInput.value : "";
     
-    if(!currentUser) return alert(window.t('msg_login_required', "Login is required."));
-    if(!title.trim()) return alert(window.t('msg_enter_title', "Please enter a title."));
+    if(!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
+    if(!title.trim()) { showToast(window.t('msg_enter_title', "Please enter a title."), "warn"); return; }
 
     const btn = document.getElementById("btnConfirmSave");
     const originalText = btn.innerText;
@@ -62,8 +62,8 @@ async function saveCurrentDesign() {
             .eq('user_id', currentUser.id);
 
         if (countError) throw countError;
-        if (count >= 20) { 
-            alert("보관함이 가득 찼습니다 (최대 20개).\n마이페이지에서 기존 디자인을 삭제해주세요.");
+        if (count >= 20) {
+            showToast("보관함이 가득 찼습니다 (최대 20개). 마이페이지에서 기존 디자인을 삭제해주세요.", "warn");
             btn.innerText = originalText;
             return;
         }
@@ -89,13 +89,13 @@ async function saveCurrentDesign() {
 
         if(error) throw error;
 
-        alert(window.t('msg_design_saved') || "✅ Design Saved!");
+        showToast(window.t('msg_design_saved') || "Design Saved!", "success");
         document.getElementById("saveDesignModal").style.display = "none";
         if(titleInput) titleInput.value = ""; 
 
     } catch(e) {
         console.error("Save Error:", e);
-        alert((window.t('msg_save_failed') || "Save Failed: ") + e.message);
+        showToast((window.t('msg_save_failed') || "Save Failed: ") + e.message, "error");
     } finally {
         btn.innerText = originalText;
     }
@@ -143,8 +143,7 @@ window.restoreDesignFromData = (data) => {
 };
 
 window.loadDesignToCanvas = (id) => {
-    console.log("Old loader called, redirecting...");
-    localStorage.setItem('load_design_id', id);
+    try { localStorage.setItem('load_design_id', id); } catch(e) {}
     location.reload();
 };
 
@@ -275,7 +274,7 @@ window._loadSavedDesign = async function(id) {
         });
     } catch(e) {
         console.error('Load design error:', e);
-        alert('디자인 로드 실패: ' + e.message);
+        showToast('디자인 로드 실패: ' + e.message, "error");
         if (loading) loading.style.display = 'none';
     }
 };
@@ -297,7 +296,7 @@ window._deleteSavedDesign = async function(id) {
         window.loadSavedDesigns();
     } catch(e) {
         console.error('Delete design error:', e);
-        alert('Delete failed: ' + e.message);
+        showToast('Delete failed: ' + e.message, "error");
     }
 };
 

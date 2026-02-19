@@ -26,6 +26,7 @@
 </style>
 </head>
 <body>
+<script src="toast.js?v=123"></script>
 
     <div id="loading"><div class="spinner"></div></div>
     
@@ -1662,7 +1663,7 @@
 // 1. 모달 열기 및 데이터 불러오기
 async function openCommonInfoModal() {
     const dbClient = window.sb || window._supabase;
-    if (!dbClient) return alert("DB 연결 실패");
+    if (!dbClient) { showToast("DB 연결 실패", "error"); return; }
 
     document.getElementById('commonInfoModal').style.display = 'flex';
     document.getElementById('commonHtmlContent').value = "로딩 중...";
@@ -1676,7 +1677,7 @@ async function openCommonInfoModal() {
 
     if (error && error.code !== 'PGRST116') { // 데이터가 없으면 에러 아님
         console.error(error);
-        alert("불러오기 실패: " + error.message);
+        showToast("불러오기 실패: " + error.message, "error");
     }
 
     document.getElementById('commonHtmlContent').value = data ? data.content : '';
@@ -1695,9 +1696,9 @@ async function saveCommonInfo() {
         .upsert({ section: 'top', content: html });
 
     if (error) {
-        alert("저장 실패: " + error.message);
+        showToast("저장 실패: " + error.message, "error");
     } else {
-        alert("✅ 저장되었습니다!\n이제 쇼핑몰 상세페이지에 들어가면 상단에 이 내용이 뜹니다.");
+        showToast("저장되었습니다!\n이제 쇼핑몰 상세페이지에 들어가면 상단에 이 내용이 뜹니다.", "success");
         document.getElementById('commonInfoModal').style.display = 'none';
     }
 }
@@ -1738,10 +1739,10 @@ async function saveCommonInfo() {
     window.cbAddKnowledge = async function() {
         var sb = getSb(); if (!sb) return;
         var q = document.getElementById('cbNewQ').value.trim(), a = document.getElementById('cbNewA').value.trim();
-        if (!q || !a) return alert('질문과 답변을 입력하세요');
+        if (!q || !a) { showToast('질문과 답변을 입력하세요', 'warn'); return; }
         await sb.from('chatbot_knowledge').insert({ category: document.getElementById('cbNewCat').value, question: q, answer: a, keywords: document.getElementById('cbNewKw').value.trim(), language: document.getElementById('cbNewLang').value, priority: parseInt(document.getElementById('cbNewPri').value) || 5 });
         document.getElementById('cbNewQ').value = ''; document.getElementById('cbNewA').value = ''; document.getElementById('cbNewKw').value = '';
-        alert('✅ 저장! AI에 즉시 반영됩니다.'); cbLoadKnowledge();
+        showToast('저장! AI에 즉시 반영됩니다.', 'success'); cbLoadKnowledge();
     };
     window.cbDeleteKn = async function(id) { if (!confirm('삭제?')) return; await getSb().from('chatbot_knowledge').update({is_active:false}).eq('id',id); cbLoadKnowledge(); };
     window.cbLoadLogs = async function() {
@@ -1777,7 +1778,7 @@ async function saveCommonInfo() {
         var sb=getSb(); await sb.from('chatbot_knowledge').update({is_active:false}).eq('category','_system_prompt');
         var p=document.getElementById('cbCustomPrompt').value.trim();
         if(p) await sb.from('chatbot_knowledge').insert({category:'_system_prompt',question:'시스템설정',answer:p,language:'ko',priority:100});
-        alert('✅ 설정 저장!');
+        showToast('설정 저장!', 'success');
     };
 })();
 
@@ -1787,7 +1788,7 @@ async function saveCommonInfo() {
     function getSb(){return window.sb;}
 
     // ── 알림 시스템 (TTS + 브라우저 알림 + 사운드 + 시각) ──
-    var lcNotifyEnabled = localStorage.getItem('lcNotify') !== 'off'; // 기본 켜짐
+    var lcNotifyEnabled = true; try { lcNotifyEnabled = localStorage.getItem('lcNotify') !== 'off'; } catch(e) {}
     var lcNotifyAudio = null;
 
     // 알림 사운드 생성 (웹 오디오 — 외부 파일 불필요)
@@ -1878,7 +1879,7 @@ async function saveCommonInfo() {
                         lcNotifyEnabled = true;
                         localStorage.setItem('lcNotify', 'on');
                         updateNotifyBtn();
-                        alert('알림이 활성화되었습니다!\n\n브라우저를 열어두면 다른 작업 중에도 데스크톱 알림을 받을 수 있습니다.');
+                        showToast('알림이 활성화되었습니다!\n\n브라우저를 열어두면 다른 작업 중에도 데스크톱 알림을 받을 수 있습니다.', 'success');
                     }
                 });
             } else {
@@ -2110,7 +2111,7 @@ async function saveCommonInfo() {
         await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt});
     };
     document.addEventListener('change',function(e){if(e.target.id!=='lcFileInput'||!currentRoom) return;var fs=e.target.files;for(var i=0;i<fs.length;i++){lcUpFile(fs[i]);}e.target.value='';});
-    async function lcUpFile(f){var sb=getSb();var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error)return alert('업로드 실패');var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
+    async function lcUpFile(f){var sb=getSb();var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error){showToast('업로드 실패','error');return;}var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
     window.lcCloseRoom = async function(){
         if(!currentRoom||!confirm('상담 종료?')) return;var sb=getSb();
         await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',currentRoom.id);
@@ -2160,12 +2161,12 @@ async function saveCommonInfo() {
     window.lcSaveToKnowledge = async function(){
         if(!currentRoom) return;var sb=getSb();
         var mr=await sb.from('chat_messages').select('sender_type,message').eq('room_id',currentRoom.id).order('created_at').limit(50);
-        if(!mr.data||mr.data.length===0) return alert('메시지 없음');
+        if(!mr.data||mr.data.length===0) { showToast('메시지 없음', 'warn'); return; }
         var cq=mr.data.filter(function(m){return m.sender_type==='customer'&&m.message;}).map(function(m){return m.message;});
         var ma=mr.data.filter(function(m){return m.sender_type==='manager'&&m.message;}).map(function(m){return m.message;});
-        if(!cq.length||!ma.length) return alert('질문과 답변 필요');
+        if(!cq.length||!ma.length) { showToast('질문과 답변 필요', 'warn'); return; }
         await sb.from('chatbot_knowledge').insert({category:'상담사례',question:cq.join(' / ').substring(0,500),answer:ma.join(' ').substring(0,1000),language:'ko',priority:3,is_active:true});
-        alert('✅ AI 학습 데이터로 저장!');
+        showToast('AI 학습 데이터로 저장!', 'success');
     };
 
     // ── [기능3] 드래그앤드롭 + 클립보드 붙여넣기 ──
@@ -2188,7 +2189,7 @@ async function saveCommonInfo() {
             e.preventDefault(); e.stopPropagation();
             chatArea.style.background = '#fff';
             chatArea.style.outline = 'none';
-            if (!currentRoom) { alert('상담방을 먼저 선택하세요'); return; }
+            if (!currentRoom) { showToast('상담방을 먼저 선택하세요', 'warn'); return; }
             var files = e.dataTransfer.files;
             if (files && files.length > 0) {
                 for (var i = 0; i < files.length; i++) { lcUpFile(files[i]); }
@@ -2202,7 +2203,7 @@ async function saveCommonInfo() {
                 for (var i = 0; i < items.length; i++) {
                     if (items[i].type.indexOf('image') !== -1) {
                         e.preventDefault();
-                        if (!currentRoom) { alert('상담방을 먼저 선택하세요'); return; }
+                        if (!currentRoom) { showToast('상담방을 먼저 선택하세요', 'warn'); return; }
                         var blob = items[i].getAsFile();
                         if (blob) {
                             var fname = 'clipboard_' + Date.now() + '.png';
@@ -2325,10 +2326,10 @@ async function saveCommonInfo() {
     window.lcTranslate = async function() {
         var inp = document.getElementById('lcTransInput');
         var text = inp.value.trim();
-        if (!text) return alert('번역할 텍스트를 입력하세요');
+        if (!text) { showToast('번역할 텍스트를 입력하세요', 'warn'); return; }
         var from = document.getElementById('lcTransFrom').value;
         var to = document.getElementById('lcTransTo').value;
-        if (from === to) return alert('원본 언어와 번역 언어가 같습니다');
+        if (from === to) { showToast('원본 언어와 번역 언어가 같습니다', 'warn'); return; }
         var btn = document.getElementById('lcTransBtn');
         btn.disabled = true; btn.textContent = '번역중...';
         try {
@@ -2336,7 +2337,7 @@ async function saveCommonInfo() {
             document.getElementById('lcTransText').textContent = result;
             document.getElementById('lcTransResult').style.display = 'block';
         } catch(e) {
-            alert('번역 실패: ' + (e.message || e));
+            showToast('번역 실패: ' + (e.message || e), 'error');
             console.error('Translation error:', e);
         } finally {
             btn.disabled = false; btn.textContent = '번역';
@@ -2383,11 +2384,11 @@ window.lcAddManager = async function() {
     var name = document.getElementById('lcNewMgrName').value.trim();
     var phone = document.getElementById('lcNewMgrPhone').value.trim();
     var role = document.getElementById('lcNewMgrRole').value.trim();
-    if (!name) return alert('이름 입력');
+    if (!name) { showToast('이름 입력', 'warn'); return; }
     await sb.from('chatbot_knowledge').insert({category:'_managers',question:name,answer:JSON.stringify({name:name,phone:phone,role:role}),keywords:phone,language:'ko',priority:5,is_active:true});
     document.getElementById('lcNewMgrName').value='';document.getElementById('lcNewMgrPhone').value='';document.getElementById('lcNewMgrRole').value='';
     document.getElementById('lcAddManagerForm').style.display='none';
-    lcLoadManagers(); alert('✅ 상담사 등록!');
+    lcLoadManagers(); showToast('상담사 등록!', 'success');
 };
 window.lcDeleteManager = async function(id) { if(!confirm('삭제?'))return; await window.sb.from('chatbot_knowledge').update({is_active:false}).eq('id',id); lcLoadManagers(); };
 

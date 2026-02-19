@@ -93,7 +93,7 @@ window.toggleVipStatus = async (id, currentStatus) => {
 
 window.deleteSelectedVipOrders = async () => {
     const checks = document.querySelectorAll('.vip-chk:checked');
-    if (checks.length === 0) return alert("선택된 항목이 없습니다.");
+    if (checks.length === 0) { showToast("선택된 항목이 없습니다.", "warn"); return; }
     if (!confirm(`${checks.length}건을 삭제하시겠습니까?`)) return;
     const ids = Array.from(checks).map(c => c.value);
     const { error } = await sb.from('vip_orders').delete().in('id', ids);
@@ -318,10 +318,10 @@ window.fixSiteCode = async (orderId) => {
     const newCode = prompt('사이트 코드 변경 (KR / JP / US):', '');
     if (!newCode) return;
     const code = newCode.trim().toUpperCase();
-    if (!['KR', 'JP', 'US', 'CN', 'AR', 'ES'].includes(code)) return alert('KR, JP, US, CN, AR, ES 중 선택');
+    if (!['KR', 'JP', 'US', 'CN', 'AR', 'ES'].includes(code)) { showToast('KR, JP, US, CN, AR, ES 중 선택', "warn"); return; }
     const { error } = await sb.from('orders').update({ site_code: code }).eq('id', orderId);
-    if (error) return alert('변경 실패: ' + error.message);
-    alert(`주문 #${orderId} → ${code} 변경 완료`);
+    if (error) { showToast('변경 실패: ' + error.message, "error"); return; }
+    showToast(`주문 #${orderId} → ${code} 변경 완료`, "success");
     loadOrders();
 };
 
@@ -346,14 +346,14 @@ window.updateActionButtons = () => {
 
 window.changeStatusSelected = async (status) => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
-    if(ids.length === 0) return alert("선택된 주문이 없습니다.");
+    if(ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
     await sb.from('orders').update({ status }).in('id', ids);
     loadOrders();
 };
 
 window.deleteOrdersSelected = async (force) => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
-    if(ids.length === 0) return alert("선택된 주문이 없습니다.");
+    if(ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
     if(!confirm("삭제하시겠습니까?")) return;
     await sb.from('orders').delete().in('id', ids);
     loadOrders();
@@ -410,7 +410,7 @@ window.uploadFileDirect = async (orderId, input) => {
     
     files.push({ name: file.name, url: urlData.publicUrl, type: 'admin_added' });
     await sb.from('orders').update({ files }).eq('id', orderId);
-    alert('업로드 완료');
+    showToast('업로드 완료', "success");
     loadOrders();
 };
 
@@ -530,9 +530,9 @@ window.executeAutoMatching = async (list) => {
         for (const item of list) {
             await creditReferralBonus(item.orderId);
         }
-        alert("완료되었습니다.");
+        showToast("완료되었습니다.", "success");
         loadBankdaList();
-    } catch(e) { alert("오류: " + e.message); } finally { showLoading(false); }
+    } catch(e) { showToast("오류: " + e.message, "error"); } finally { showLoading(false); }
 };
 
 window.runBankdaScraping = async () => {
@@ -541,9 +541,9 @@ window.runBankdaScraping = async () => {
     try {
         const { data, error } = await sb.functions.invoke('bank-scraper', { method: 'POST' });
         if(error) throw error;
-        alert(`업데이트 완료: ${data.message || '성공'}`);
+        showToast(`업데이트 완료: ${data.message || '성공'}`, "success");
         loadBankdaList();
-    } catch(e) { alert("실패: " + e.message); } finally { showLoading(false); }
+    } catch(e) { showToast("실패: " + e.message, "error"); } finally { showLoading(false); }
 };
 
 window.matchOrderManual = async (txId, name, suggestedId = '') => {
@@ -553,9 +553,9 @@ window.matchOrderManual = async (txId, name, suggestedId = '') => {
         await sb.from('orders').update({ payment_status: '결제완료', payment_method: '무통장입금' }).eq('id', orderId);
         await sb.from('bank_transactions').update({ match_status: 'matched', matched_order_id: orderId }).eq('id', txId);
         await creditReferralBonus(orderId); // 추천인 적립
-        alert("연결되었습니다.");
+        showToast("연결되었습니다.", "success");
         loadBankdaList();
-    } catch(e) { alert("오류: " + e.message); }
+    } catch(e) { showToast("오류: " + e.message, "error"); }
 };
 
 // [배송 스케줄 및 기사 배정]
@@ -696,7 +696,7 @@ window.updateTaskDB = async (orderId, field, value) => {
         
         if (shouldReload) loadDailyTasks(); // 완료 체크 시 새로고침
     } catch (e) {
-        alert("업데이트 실패: " + e.message);
+        showToast("업데이트 실패: " + e.message, "error");
     }
 };
 
@@ -717,7 +717,7 @@ window.updateOrderStaff = async (id, role, selectEl) => {
     
     // 1. DB 업데이트 (비동기 처리하되 UI는 먼저 반응)
     sb.from('orders').update({ [field]: val || null }).eq('id', id).then(({ error }) => {
-        if(error) alert("담당자 변경 실패: " + error.message);
+        if(error) showToast("담당자 변경 실패: " + error.message, "error");
     });
 
     // 2. 선택된 스태프 정보 찾기
@@ -795,7 +795,7 @@ window.downloadMonthlyExcel = async () => {
         if(error) throw error;
 
         if(!data || data.length === 0) {
-            alert("해당 기간에 조회된 주문 내역이 없습니다.");
+            showToast("해당 기간에 조회된 주문 내역이 없습니다.", "info");
             showLoading(false);
             return;
         }
@@ -869,7 +869,7 @@ window.downloadMonthlyExcel = async () => {
 
     } catch (e) {
         console.error(e);
-        alert("다운로드 실패: " + e.message);
+        showToast("다운로드 실패: " + e.message, "error");
     } finally {
         showLoading(false);
     }
@@ -882,9 +882,9 @@ window.setHeadOfficeOnly = async (orderId) => {
     const { error } = await sb.from('orders').update({ head_office_check: true }).eq('id', orderId);
     
     if(error) {
-        alert("처리 실패: " + error.message);
+        showToast("처리 실패: " + error.message, "error");
     } else {
-        alert("본사 처리로 설정되었습니다.");
+        showToast("본사 처리로 설정되었습니다.", "success");
         loadOrders();
     }
 };

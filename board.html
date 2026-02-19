@@ -482,6 +482,7 @@
     </style>
 </head>
 <body>
+<script src="toast.js?v=123"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -741,7 +742,7 @@
             input.onchange = async () => {
                 const file = input.files[0];
                 if (!file) return;
-                if (file.size > 50 * 1024 * 1024) return alert("50MB 이하 영상만 가능합니다.");
+                if (file.size > 50 * 1024 * 1024) { showToast("50MB 이하 영상만 가능합니다.", "warn"); return; }
 
                 const fileExt = file.name.split('.').pop().toLowerCase();
                 const filePath = `vid_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
@@ -756,7 +757,7 @@
                     quill.insertEmbed(range.index, 'video', data.publicUrl);
                 } catch (err) {
                     console.error(err);
-                    alert('영상 업로드 실패. Supabase에 "community" 버킷이 있는지 확인하세요.');
+                    showToast('영상 업로드 실패. Supabase에 "community" 버킷이 있는지 확인하세요.', "error");
                 }
             };
         }
@@ -789,7 +790,7 @@
                     
                 } catch (err) {
                     console.error(err);
-                    alert('이미지 업로드 실패. Supabase Storage에 "community" 버킷을 만들고 정책(Policy)을 설정해주세요.');
+                    showToast('이미지 업로드 실패. Supabase Storage에 "community" 버킷을 만들고 정책(Policy)을 설정해주세요.', "error");
                 }
             };
         }
@@ -822,7 +823,7 @@
         quill.clipboard.addMatcher('img', (node, delta) => {
             let ops = delta.ops.map(op => {
                 if (op.insert && op.insert.image && op.insert.image.startsWith('data:')) {
-                    alert("이미지는 붙여넣기 대신 상단 툴바의 '이미지 아이콘'을 눌러 업로드해주세요.");
+                    showToast("이미지는 붙여넣기 대신 상단 툴바의 '이미지 아이콘'을 눌러 업로드해주세요.", "warn");
                     return { insert: '' }; // 이미지 삽입 무효화
                 }
                 return op;
@@ -944,7 +945,7 @@
             const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
             if (error) throw error;
             // [수정] 다국어 적용
-            if (!post) return alert(window.t ? window.t('msg_post_deleted') : 'Post deleted.'), goToList();
+            if (!post) { showToast(window.t ? window.t('msg_post_deleted') : 'Post deleted.', "warn"); goToList(); return; }
 
             updateBoardSEO(post.title, post.content, post.thumbnail);
 
@@ -1070,7 +1071,7 @@
             loadComments(id);
         } catch(e) {
             console.error(e);
-            alert("글을 불러오지 못했습니다.");
+            showToast("글을 불러오지 못했습니다.", "error");
             goToList();
         }
     }
@@ -1157,7 +1158,7 @@
         const newName = document.getElementById(`edit-name-${cmtId}`).value;
         const newContent = document.getElementById(`edit-content-${cmtId}`).value;
 
-        if (!newName.trim() || !newContent.trim()) return alert(T.enterContent);
+        if (!newName.trim() || !newContent.trim()) { showToast(T.enterContent, "warn"); return; }
         if(!confirm(T.confirmEdit)) return;
 
         try {
@@ -1166,7 +1167,7 @@
             loadComments(postId);
         } catch (e) {
             console.error(e);
-            alert(T.editFail + ": " + e.message);
+            showToast(T.editFail + ": " + e.message, "error");
         }
     };
 
@@ -1179,7 +1180,7 @@
             loadComments(postId);
         } catch (e) {
             console.error(e);
-            alert(T.deleteFail + ": " + e.message);
+            showToast(T.deleteFail + ": " + e.message, "error");
         }
     };
 
@@ -1244,12 +1245,12 @@
             const { error: postError } = await sb.from('community_posts').delete().eq('id', postId);
             if (postError) throw postError;
 
-            alert(T.deleted);
+            showToast(T.deleted, "success");
             window.goToList();
 
         } catch(e) {
             console.error(e);
-            alert(T.deleteFail + ": " + e.message);
+            showToast(T.deleteFail + ": " + e.message, "error");
             if(btn) btn.disabled = false;
         }
     };
@@ -1300,7 +1301,7 @@
             });
             const content = tempSaveDiv.innerHTML;
             // [수정] 다국어 적용
-            if (!title) return alert(window.t ? window.t('msg_enter_title') : 'Please enter title.');
+            if (!title) { showToast(window.t ? window.t('msg_enter_title') : 'Please enter title.', "warn"); return; }
 
             const originalText = btn.innerText;
             btn.innerText = window.t ? window.t('msg_processing') : "Processing...";
@@ -1329,7 +1330,7 @@
                     if (!currentUser) throw new Error(T.noPermission);
                     const { error } = await sb.from('community_posts').update(payload).eq('id', postId);
                     if (error) throw error;
-                    alert(T.editDone);
+                    showToast(T.editDone, "success");
                     location.reload();
                 } else {
                     payload.category = category;
@@ -1348,12 +1349,12 @@
                     const { error } = await sb.from('community_posts').insert(payload);
                     if (error) throw error;
                     
-                    alert(T.posted);
+                    showToast(T.posted, "success");
                     window.goToList(); 
                 }
             } catch (e) {
                 console.error(e);
-                alert("처리 실패: " + e.message);
+                showToast("처리 실패: " + e.message, "error");
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
@@ -1361,11 +1362,11 @@
 
         document.getElementById('btnSubmitComment').onclick = async () => {
             const txt = document.getElementById('commentInput').value;
-            if(!txt.trim()) return alert('내용을 입력하세요.');
+            if(!txt.trim()) { showToast('내용을 입력하세요.', "warn"); return; }
             const cmtAuthorId = currentUser ? currentUser.id : null;
             const cmtAuthorName = currentUser ? (currentUser.user_metadata.full_name || currentUser.email.split('@')[0]) : '익명(Guest)';
             const { error } = await sb.from('community_comments').insert({ post_id: postId, author_id: cmtAuthorId, author_name: cmtAuthorName, content: txt });
-            if(error) alert("실패"); else { document.getElementById('commentInput').value = ''; loadComments(postId); }
+            if(error) showToast("실패", "error"); else { document.getElementById('commentInput').value = ''; loadComments(postId); }
         };
     }
 // 게시글 다른 언어로 복제 기능 (DeepL/Google 번역 연동 대신 구조 복제)
@@ -1380,7 +1381,7 @@
 
         try {
             const { data: post } = await sb.from('community_posts').select('*').eq('id', postId).single();
-            alert("타이틀과 본문을 정밀 번역 중입니다. 잠시만 기다려 주세요...");
+            showToast("타이틀과 본문을 정밀 번역 중입니다. 잠시만 기다려 주세요...", "info");
 
             async function translateSafe(text, target) {
                 if(!text || text.trim().length === 0) return text;
@@ -1433,7 +1434,7 @@
                 location.href = `board.html?cat=${post.category}&country=${targetLang}&id=${data.id}`;
             }
         } catch (e) {
-            alert("오류 발생: " + e.message);
+            showToast("오류 발생: " + e.message, "error");
         }
     };
     init();

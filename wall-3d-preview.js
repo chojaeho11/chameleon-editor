@@ -523,7 +523,7 @@
         // Load Three.js on demand
         if (!threeLoaded) {
             try { await loadThreeJS(); }
-            catch (e) { console.error(e); alert('3D library load failed'); return; }
+            catch (e) { console.error(e); showToast('3D library load failed', "error"); return; }
         }
 
         const container = document.getElementById('threeDContainer');

@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyTranslations();
 
     if (!currentUser) {
-        alert(window.t('msg_login_required') || "Login is required.");
+        showToast(window.t('msg_login_required') || "Login is required.", 'info');
         location.href = 'index.html';
         return;
     }
@@ -250,7 +250,7 @@ async function checkAndUpgradeTier(userId, currentRole) {
             await sb.from('profiles').update({ role: newRole }).eq('id', userId);
             
             const rate = newRole === 'platinum' ? '5%' : '3%';
-            alert(window.t('msg_tier_upgraded', `Congratulations! Upgraded to '${newRole.toUpperCase()}'.\n(${rate} discount applied)`));
+            showToast(window.t('msg_tier_upgraded', `Congratulations! Upgraded to '${newRole.toUpperCase()}'.\n(${rate} discount applied)`), 'success');
             location.reload(); 
         }
     } catch (e) {
@@ -374,7 +374,7 @@ async function loadMyDesigns() {
 
 function loadDesignToEditor(id) {
     if(!confirm(window.t('confirm_load_design'))) return;
-    localStorage.setItem('load_design_id', id); 
+    try { localStorage.setItem('load_design_id', id); } catch(e) {}
     location.href = 'index.html'; 
 }
 
@@ -487,9 +487,9 @@ async function reOrder(orderId) {
             const newItem = { ...item, uid: Date.now() + Math.random() };
             cartData.push(newItem);
         });
-        localStorage.setItem(`chameleon_cart_${currentUser.id}`, JSON.stringify(cartData));
+        try { localStorage.setItem(`chameleon_cart_${currentUser.id}`, JSON.stringify(cartData)); } catch(e) {}
         if(confirm(window.t('confirm_go_to_cart', "Go to cart?"))) {
-            localStorage.setItem('open_cart_on_load', 'true');
+            try { localStorage.setItem('open_cart_on_load', 'true'); } catch(e) {}
             location.href = 'index.html';
         }
     }
@@ -586,11 +586,11 @@ async function requestWithdrawal() {
     const wdRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[wdCountry]) || 1;
     const minAmounts = { 'KR': 1000, 'JP': 200, 'US': 20 };
     const minLocal = minAmounts[wdCountry] || 1000;
-    if(!amt || amt < minLocal) return alert(window.t('msg_min_withdraw', `Minimum withdrawal amount is ${minLocal}.`));
-    if(amt > cur) return alert(window.t('msg_insufficient_deposit', "Insufficient deposit balance."));
+    if(!amt || amt < minLocal) { showToast(window.t('msg_min_withdraw', `Minimum withdrawal amount is ${minLocal}.`), 'warn'); return; }
+    if(amt > cur) { showToast(window.t('msg_insufficient_deposit', "Insufficient deposit balance."), 'warn'); return; }
 
-    if(!bank || !acc || !holder) return alert(window.t('msg_enter_bank_info', "Please enter bank account info."));
-    if(!phone || !rrn) return alert(window.t('msg_enter_contact_id', "Please enter contact and ID number."));
+    if(!bank || !acc || !holder) { showToast(window.t('msg_enter_bank_info', "Please enter bank account info."), 'warn'); return; }
+    if(!phone || !rrn) { showToast(window.t('msg_enter_contact_id', "Please enter contact and ID number."), 'warn'); return; }
 
     if(!confirm(window.t('confirm_withdraw_request', `입력하신 정보로 출금을 신청하시겠습니까?\n(입력 정보 오류 시 입금이 지연될 수 있습니다.)`))) return;
 
@@ -625,7 +625,7 @@ async function requestWithdrawal() {
             user_id: currentUser.id, type: 'withdraw_req', amount: -amtKRW, description: wdDesc
         });
 
-        alert(window.t('msg_withdraw_success', "출금 신청이 완료되었습니다.\n관리자 확인 후(D+5일 내) 입금됩니다."));
+        showToast(window.t('msg_withdraw_success', "출금 신청이 완료되었습니다.\n관리자 확인 후(D+5일 내) 입금됩니다."), 'success');
         document.getElementById('withdrawModal').style.display = 'none';
         
         // 초기화
@@ -634,7 +634,7 @@ async function requestWithdrawal() {
 
     } catch (e) {
         console.error(e);
-        alert(window.t('err_prefix', "Error: ") + e.message);
+        showToast(window.t('err_prefix', "Error: ") + e.message, 'error');
     }
 }
 
@@ -715,7 +715,7 @@ window.checkBidsForOrder = async function(orderId) {
         .order('price', { ascending: true });
 
     if(error || !bids || bids.length === 0) {
-        alert(window.t('msg_no_bids_yet', "No bids received yet.\nPartners are reviewing. Please wait."));
+        showToast(window.t('msg_no_bids_yet', "No bids received yet.\nPartners are reviewing. Please wait."), 'info');
         return;
     }
 
@@ -849,13 +849,13 @@ window.selectBid = async function(bidId, orderId) {
     // 1. 고객 연락처 입력받기
     const myPhone = prompt(window.t('prompt_enter_phone', "Enter your phone number to share with the partner:"), "010-");
 
-    if(!myPhone) return alert(window.t('msg_phone_required', "Phone number is required to connect with the partner."));
+    if(!myPhone) { showToast(window.t('msg_phone_required', "Phone number is required to connect with the partner."), 'warn'); return; }
 
     if(!confirm(window.t('confirm_select_partner', `Share your number (${myPhone}) with the partner\nand confirm this selection?`))) return;
 
     // 2. 해당 입찰 승인
     const { error: err1 } = await sb.from('bids').update({ status: 'selected' }).eq('id', bidId);
-    if(err1) return alert(window.t('err_prefix', "Error: ") + err1.message);
+    if(err1) { showToast(window.t('err_prefix', "Error: ") + err1.message, 'error'); return; }
 
     // 3. 나머지 입찰 거절
     await sb.from('bids').update({ status: 'rejected' }).eq('order_id', orderId).neq('id', bidId);
@@ -866,7 +866,7 @@ window.selectBid = async function(bidId, orderId) {
         selected_customer_phone: myPhone // [핵심] 고객 연락처 저장
     }).eq('id', orderId);
 
-    alert(window.t('msg_matching_complete', "Matching complete!\nPartner contact info is now available."));
+    showToast(window.t('msg_matching_complete', "Matching complete!\nPartner contact info is now available."), 'success');
     document.getElementById('bidListModal').remove();
     
     // 화면 갱신 (입찰 내역 다시 불러와서 매칭된 정보 보여주기)
@@ -924,7 +924,7 @@ window.openPartnerReviewModal = async function(orderId) {
     const { data: bids } = await sb.from('bids').select('partner_id').eq('order_id', orderId).eq('status', 'selected').single();
     
     if(!bids || !bids.partner_id) {
-        alert(window.t('msg_no_matched_partner', "No matched partner found."));
+        showToast(window.t('msg_no_matched_partner', "No matched partner found."), 'warn');
         return;
     }
 
@@ -945,10 +945,10 @@ window.openPartnerReviewModal = async function(orderId) {
     });
 
     if (error) {
-            alert((window.t('msg_save_failed') || "Save Failed: ") + error.message);
+            showToast((window.t('msg_save_failed') || "Save Failed: ") + error.message, 'error');
         } else {
             await sb.from('orders').update({ status: '구매확정' }).eq('id', orderId);
-            alert(window.t('msg_review_saved') || "Thank you for your review!");
+            showToast(window.t('msg_review_saved') || "Thank you for your review!", 'success');
             loadOrders(); 
         }
 };
@@ -1424,7 +1424,7 @@ async function _genOrderSheet(doc, orderInfo, cartItems) {
 // ============ 메인: 서류 다운로드 함수 ============
 window.downloadOrderDoc = async function (orderId, docType) {
     const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
-    if (!order) return alert('Order not found');
+    if (!order) { showToast('Order not found', 'error'); return; }
 
     // 닫기
     document.querySelectorAll('.doc-dropdown').forEach(d => d.style.display = 'none');
@@ -1440,7 +1440,7 @@ window.downloadOrderDoc = async function (orderId, docType) {
     }
 
     // 2. jsPDF 확인
-    if (!window.jspdf) return alert('PDF library not loaded. Please refresh and try again.');
+    if (!window.jspdf) { showToast('PDF library not loaded. Please refresh and try again.', 'error'); return; }
 
     // 3. 주문 데이터 변환
     let items = [];
@@ -1476,7 +1476,7 @@ window.downloadOrderDoc = async function (orderId, docType) {
         blob = await _genCommonDoc(doc, title, orderInfo, items, order.discount_amount || 0, 0);
     }
 
-    if (!blob) return alert('PDF generation failed');
+    if (!blob) { showToast('PDF generation failed', 'error'); return; }
 
     // 5. 다운로드
     const nameMap = { quotation: 'Quotation', receipt: 'Receipt', statement: 'Invoice', order_sheet: 'WorkOrder' };

@@ -164,9 +164,9 @@ window.gifUploadFiles = function(input) {
     const files = Array.from(input.files);
     if (!files.length) return;
     const remain = GM.maxFrames - GM.frames.length;
-    if (remain <= 0) { alert(_t('gm_max_frames','최대 30장까지 업로드할 수 있습니다.')); input.value=''; return; }
+    if (remain <= 0) { showToast(_t('gm_max_frames','최대 30장까지 업로드할 수 있습니다.'), "warn"); input.value=''; return; }
     const toLoad = files.slice(0, remain);
-    if (files.length > remain) alert(_t('gm_max_frames_partial','최대 30장까지!')+` ${remain}`+_t('gm_frames_added','장만 추가됩니다.'));
+    if (files.length > remain) showToast(_t('gm_max_frames_partial','최대 30장까지!')+` ${remain}`+_t('gm_frames_added','장만 추가됩니다.'), "warn");
     let loaded = 0;
     toLoad.forEach(function(file) {
         const reader = new FileReader();
@@ -735,7 +735,7 @@ function saveOverlayPositions() {
 
 /* ─── Play Preview ─── */
 window.gifPlayPreview = function() {
-    if (GM.frames.length < 2) { alert(_t('gm_need_2_frames','프레임을 2장 이상 추가해주세요.')); return; }
+    if (GM.frames.length < 2) { showToast(_t('gm_need_2_frames','프레임을 2장 이상 추가해주세요.'), "warn"); return; }
     if (GM.playing) {
         // stop
         clearInterval(GM.playTimer); GM.playTimer = null; GM.playing = false;
@@ -756,7 +756,7 @@ window.gifPlayPreview = function() {
 
 /* ─── GIF Export ─── */
 window.exportGif = function() {
-    if (GM.frames.length < 1) { alert(_t('gm_need_frames','프레임을 추가해주세요.')); return; }
+    if (GM.frames.length < 1) { showToast(_t('gm_need_frames','프레임을 추가해주세요.'), "warn"); return; }
     // stop preview if playing
     if (GM.playing) window.gifPlayPreview();
 
@@ -920,7 +920,7 @@ function encodeGifManual(frameDataUrls, delay) {
             const bar = document.getElementById('gifProgressBar');
             if(bar) bar.style.display = 'none';
         }, 3000);
-        alert(_t('gm_lib_load_fail_alert','GIF 인코딩 라이브러리를 불러올 수 없습니다. 네트워크를 확인해주세요.'));
+        showToast(_t('gm_lib_load_fail_alert','GIF 인코딩 라이브러리를 불러올 수 없습니다. 네트워크를 확인해주세요.'), "error");
     };
     document.head.appendChild(script2);
 }

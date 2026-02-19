@@ -72,7 +72,7 @@ export function initAiTools() {
     if (btnStartGen) {
         btnStartGen.onclick = async () => {
             const text = startPrompt.value.trim();
-            if (!text) return alert(t('msg_input_desc', "Please enter a description."));
+            if (!text) { showToast(t('msg_input_desc', "Please enter a description."), "info"); return; }
             
             const loadingText = t('msg_generating', "AI is generating...");
             startResult.innerHTML = `<div class="loading-spin" style="width:40px; height:40px;"></div><p style="margin-top:10px; color:#666;">${loadingText}</p>`;
@@ -86,7 +86,7 @@ export function initAiTools() {
                 const retryText = t('btn_retry', "Generate Again");
                 btnStartGo.innerHTML = `<i class="fa-solid fa-rotate-right"></i> ${retryText}`;
             } catch (e) {
-                alert(t('msg_gen_fail', "Generation failed") + ": " + e.message);
+                showToast(t('msg_gen_fail', "Generation failed") + ": " + e.message, "error");
                 startResult.innerHTML = '<span style="color:red;">Failed</span>';
                 btnStartGen.disabled = false;
             }
@@ -116,7 +116,7 @@ export function initAiTools() {
         btnGen.onclick = async () => {
             const userText = promptInput.value.trim();
             // [수정] 다국어 적용
-            if (!userText) return alert(window.t('msg_input_desc', "Description required"));
+            if (!userText) { showToast(window.t('msg_input_desc', "Description required"), "info"); return; }
             resultArea.innerHTML = `<div class="loading-spin"></div><p>${window.t('msg_generating', 'Generating...')}</p>`;
             btnUse.style.display = "none";
             btnGen.disabled = true;
@@ -126,7 +126,7 @@ export function initAiTools() {
                 resultArea.innerHTML = `<img src="${imageUrl}" style="width:100%; height:100%; object-fit:contain;">`;
                 btnUse.style.display = "block";
             } catch (e) {
-                alert(window.t('msg_failed', 'Failed: ') + e.message);
+                showToast(window.t('msg_failed', 'Failed: ') + e.message, "error");
             } finally {
                 btnGen.disabled = false;
             }
@@ -155,9 +155,9 @@ export function initAiTools() {
             const active = canvas.getActiveObject();
             
             // [수정] 다국어 적용 (전역 window.t 사용)
-            if (!active || active.type !== 'image') return alert(window.t('msg_select_image', "Please select an image."));
+            if (!active || active.type !== 'image') { showToast(window.t('msg_select_image', "Please select an image."), "info"); return; }
             const key = await getApiKey('REMOVE_BG_API_KEY');
-            if (!key) return alert("API Key Error");
+            if (!key) { showToast("API Key Error", "error"); return; }
             
             if(!confirm(window.t('confirm_bg_remove', "Remove the background?"))) return;
             
@@ -215,11 +215,11 @@ export function initAiTools() {
                     canvas.add(newImg);
                     canvas.setActiveObject(newImg);
                     canvas.requestRenderAll();
-                    alert(window.t('msg_upload_success', "Success!"));
+                    showToast(window.t('msg_upload_success', "Success!"), "success");
                 });
-            } catch(e) { 
+            } catch(e) {
                 console.error(e);
-                alert(window.t('msg_failed', "Failed: ") + e.message); 
+                showToast(window.t('msg_failed', "Failed: ") + e.message, "error");
             }
             finally { btnCutout.innerText = originalText; }
         };
@@ -232,7 +232,7 @@ export function initAiTools() {
             const active = canvas.getActiveObject();
 
             // [수정] 다국어 적용
-            if (!active || active.type !== 'image') return alert(window.t('msg_select_image', "Please select an image!"));
+            if (!active || active.type !== 'image') { showToast(window.t('msg_select_image', "Please select an image!"), "info"); return; }
             
             const confirmMsg = window.t('confirm_upscale', "Upscale resolution by 2x?");
             if (!confirm(confirmMsg)) return;
@@ -272,7 +272,7 @@ export function initAiTools() {
                 if (!newUrl) throw new Error(window.t('msg_no_result_url', "No result URL"));
 
                 fabric.Image.fromURL(newUrl, (newImg) => {
-                    if (!newImg) return alert(window.t('msg_image_load_failed', "Image load failed"));
+                    if (!newImg) { showToast(window.t('msg_image_load_failed', "Image load failed"), "error"); return; }
                     newImg.set({
                         left: active.left, top: active.top,
                         angle: active.angle,
@@ -285,12 +285,12 @@ export function initAiTools() {
                     canvas.add(newImg);
                     canvas.setActiveObject(newImg);
                     canvas.requestRenderAll();
-                    alert("🎉 " + window.t('msg_upload_success', "Success!"));
+                    showToast(window.t('msg_upload_success', "Success!"), "success");
                 }, { crossOrigin: 'anonymous' });
 
             } catch (e) {
                 console.error("업스케일링 실패:", e);
-                alert(window.t('msg_failed', "Failed: ") + e.message);
+                showToast(window.t('msg_failed', "Failed: ") + e.message, "error");
             } finally {
                 btnUpscale.innerText = originalText;
                 btnUpscale.disabled = false;
@@ -325,7 +325,7 @@ export function initAiTools() {
     if (btnWizGen) {
         btnWizGen.onclick = async () => {
             const title = document.getElementById('wizardTitleInput')?.value.trim();
-            if (!title) return alert(window.t?.('msg_input_desc','제목을 입력해주세요') || '제목을 입력해주세요');
+            if (!title) { showToast(window.t?.('msg_input_desc','제목을 입력해주세요') || '제목을 입력해주세요', "info"); return; }
             const styleBtn = document.querySelector('.wizard-style-btn.active');
             const style = styleBtn?.dataset.style || 'modern';
             btnWizGen.disabled = true;
@@ -336,7 +336,7 @@ export function initAiTools() {
                 document.getElementById('designWizardModal').style.display = 'none';
             } catch(e) {
                 console.error('Wizard error:', e);
-                alert(window.t?.('msg_failed','Failed: ') + e.message);
+                showToast(window.t?.('msg_failed','Failed: ') + e.message, "error");
             } finally {
                 btnWizGen.disabled = false;
                 btnWizGen.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>' + (window.t?.('wizard_generate','디자인 생성하기') || '디자인 생성하기') + '</span>';

@@ -149,8 +149,8 @@ async function handleAuthAction() {
     const email = emailInput?.value.trim();
     const password = pwInput?.value.trim();
 
-    if (!email || !password) return alert(window.t('err_input_required', "Input required."));
-    if (!sb) return alert(window.t('err_db_connection', "DB Error."));
+    if (!email || !password) { showToast(window.t('err_input_required', "Input required."), "warn"); return; }
+    if (!sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
 
     const btn = document.getElementById("btnAuthAction");
     const originalText = btn.innerText;
@@ -167,10 +167,10 @@ async function handleAuthAction() {
             if (error) throw error;
             
             if (data.session) {
-                alert(t['msg_signup_success'] || "가입 완료!");
+                showToast(t['msg_signup_success'] || "가입 완료!", "success");
                 location.reload();
             } else {
-                alert(t['msg_verify_email'] || "인증 메일 발송됨");
+                showToast(t['msg_verify_email'] || "인증 메일 발송됨", "info");
                 document.getElementById("loginModal").style.display = "none";
             }
         } else {
@@ -180,7 +180,7 @@ async function handleAuthAction() {
         }
     } catch (e) {
         const errPrefix = t['err_prefix'] || "오류: ";
-        alert(errPrefix + e.message);
+        showToast(errPrefix + e.message, "error");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -190,7 +190,7 @@ async function handleAuthAction() {
 async function handleSocialLogin(provider) {
     const t = window.translations || {};
 
-    if (!sb) return alert(t['err_db_connection'] || "DB 미연결");
+    if (!sb) { showToast(t['err_db_connection'] || "DB 미연결", "error"); return; }
     const redirectUrl = window.location.origin; 
     const { data, error } = await sb.auth.signInWithOAuth({
         provider: provider,
@@ -199,6 +199,6 @@ async function handleSocialLogin(provider) {
     
     if (error) {
         const errPrefix = t['err_login_fail'] || "로그인 실패: ";
-        alert(errPrefix + error.message);
+        showToast(errPrefix + error.message, "error");
     }
 }

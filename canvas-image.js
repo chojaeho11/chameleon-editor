@@ -61,7 +61,7 @@ function hookSelectionEvents() {
 // ─── Eraser Mode ────────────────────────────
 function enterEraserMode() {
     const active = canvas.getActiveObject();
-    if (!active || active.type !== 'image') return alert(window.t?.('msg_select_image','Please select an image.') || 'Please select an image.');
+    if (!active || active.type !== 'image') { showToast(window.t?.('msg_select_image','Please select an image.') || 'Please select an image.', "warn"); return; }
     hideFloatingToolbar();
 
     // 원본 이미지를 off-screen canvas에 캡처 (원본 해상도)
@@ -389,7 +389,7 @@ export function initImageTools() {
     if (btnEnhance) {
         btnEnhance.onclick = () => {
             const active = canvas.getActiveObject();
-            if (!active || active.type !== 'image') return alert(window.t?.('msg_select_image','Please select an image.') || 'Please select an image.');
+            if (!active || active.type !== 'image') { showToast(window.t?.('msg_select_image','Please select an image.') || 'Please select an image.', "warn"); return; }
             if (!active.filters) active.filters = [];
             let brightFilter = active.filters.find(f => f.type === 'Brightness');
             if (brightFilter) {
@@ -436,7 +436,7 @@ function handleImageUpload(file) {
     if (!file) return;
 
     if (file.type === 'application/pdf') {
-        alert(window.t?.('msg_pdf_error', "Please upload PDF in the 'Order' step. Only images are supported in the editor.") || "Please upload PDF in the 'Order' step.");
+        showToast(window.t?.('msg_pdf_error', "Please upload PDF in the 'Order' step. Only images are supported in the editor.") || "Please upload PDF in the 'Order' step.", "warn");
         return;
     }
 
