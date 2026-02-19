@@ -1572,17 +1572,41 @@ window.vePause = function(){
     else{if(btn)btn.innerHTML='<i class="fa-solid fa-pause"></i>';playMusicPreview(vm.music);}
 };
 
+// ── Export-dedicated render loop (no pause check, uses setTimeout for bg-tab safety) ──
+async function exportClipOnCanvas(ci, durMs, timeOffset) {
+    const c=vm.clips[ci]; if(!c) return;
+    const src=c.type==='video'?c.video:c.img;
+    const tOff=timeOffset||0;
+    if(c.type==='video'){c.video.currentTime=tOff;try{await c.video.play();}catch(e){}}
+    const startT=performance.now(), startPlayT=clipStart(ci)+tOff;
+    return new Promise(resolve=>{
+        function frame(){
+            if(vm.cancel){if(c.type==='video')c.video.pause();resolve();return;}
+            const elapsed=performance.now()-startT;
+            vm.playTime=startPlayT+elapsed/1000; updatePlayhead();
+            const ctx=vm.ctx; applyAdj(ctx,c.adj);
+            ctx.fillStyle='#000';ctx.fillRect(0,0,vm.w,vm.h);
+            drawCover(ctx,src,vm.w,vm.h,c.panX||0,c.panY||0,c.imgScale||1);ctx.filter='none';
+            const ct=tOff+elapsed/1000;
+            c.overlays.forEach(o=>{if(o.tStart!=null&&o.tEnd!=null&&(ct<o.tStart||ct>o.tEnd))return;renderOverlay(ctx,o);});
+            if(elapsed>=durMs){if(c.type==='video')c.video.pause();resolve();}
+            else setTimeout(frame,1000/30);
+        }
+        setTimeout(frame,0);
+    });
+}
+
 // ═══════════════════════════════════════════════════════════════
 // RECORDING
 // ═══════════════════════════════════════════════════════════════
 window.veExport = async function() {
     if(!vm.clips.length)return alert(_t('ve_clip_required','Please add a clip first'));
     if(vm.playing)return;
-    vm.playing=true;vm.cancel=false;vm.playTime=0;
+    vm.playing=true;vm.cancel=false;vm.paused=false;vm.playTime=0;
     const prog=document.getElementById('veProgress'),progBar=document.getElementById('veProgressBar'),progText=document.getElementById('veProgressText');
     const expBtn=document.getElementById('veExportBtn'),dlBtn=document.getElementById('veDlBtn');
     if(prog)prog.style.display='block';if(dlBtn)dlBtn.style.display='none';
-    if(expBtn){expBtn.disabled=true;expBtn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...';}
+    if(expBtn){expBtn.disabled=true;expBtn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> '+_t('ve_generating','생성 중...');}
     const fps=30; let totalMs=0; vm.clips.forEach(c=>totalMs+=clipEffDur(c)*1000);
     const canvasStream=vm.canvas.captureStream(fps);
     // 오디오 스트림: Supabase 음원 또는 내장 음악
@@ -1595,24 +1619,25 @@ window.veExport = async function() {
     const chunks=[];rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
     // render first frame BEFORE starting recorder to avoid blank start
     renderClip(0,vm.ctx,false);
-    await sleep(100); // let canvas paint
+    await sleep(100);
     rec.start();
-    await sleep(200); // warmup: let recorder capture the pre-rendered frame
+    await sleep(200);
     for(let i=0;i<vm.clips.length;i++){
+        if(vm.cancel)break;
         const pct=Math.round(i/vm.clips.length*100);if(progBar)progBar.style.width=pct+'%';if(progText)progText.textContent=`${i+1}/${vm.clips.length}`;
         const c=vm.clips[i],dur=clipEffDur(c)*1000;
         if(c.type==='video'&&c.video) c.video.playbackRate=c.speed||1;
-        if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);await playClipOnCanvas(i,dur-800,0.8);}
-        else{await playClipOnCanvas(i,i===0?dur-200:dur);} // use rAF loop so video frames render continuously
+        if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);await exportClipOnCanvas(i,dur-800,0.8);}
+        else{await exportClipOnCanvas(i,i===0?dur-200:dur);}
     }
-    if(progBar)progBar.style.width='100%';if(progText)progText.textContent='인코딩 중...';
+    if(progBar)progBar.style.width='100%';if(progText)progText.textContent=_t('ve_encoding','인코딩 중...');
     // stop audio source if playing
     if(audioResult&&audioResult.source){try{audioResult.source.stop();}catch(e){}}
     await new Promise(r=>{rec.onstop=r;rec.stop();});
     const blob=new Blob(chunks,{type:mime}),url=URL.createObjectURL(blob);
     if(dlBtn){dlBtn.style.display='inline-flex';dlBtn.onclick=()=>{const a=document.createElement('a');a.href=url;a.download=`chameleon_${vm.format}_${Date.now()}.webm`;a.click();};}
-    if(progText)progText.textContent='완료!';
-    if(expBtn){expBtn.disabled=false;expBtn.innerHTML='<i class="fa-solid fa-download"></i> Export';}
+    if(progText)progText.textContent=_t('ve_done','완료!');
+    if(expBtn){expBtn.disabled=false;expBtn.innerHTML='<i class="fa-solid fa-film"></i> '+_t('ve_make_video','영상으로 만들기');}
     vm.playing=false;
 };
 
