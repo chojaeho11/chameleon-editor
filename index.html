@@ -778,6 +778,23 @@
 </div>
 </div>
 
+<!-- 오늘의핫딜 -->
+<div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
+    <div class="hotdeal-header">
+        <h2>🔥 <span data-i18n="home_hotdeal_title">오늘의 핫딜</span> <span class="badge-hot">Time Sale</span></h2>
+        <p data-i18n="home_hotdeal_desc">지금 놓치면 후회하는 초특가 상품을 만나보세요. 친구에게 선물하세요. 집들이 선물 핫딜상품은 최대 10개까지 주문가능</p>
+    </div>
+    <div id="hotDealGrid" class="hotdeal-grid"></div>
+</div>
+
+<div id="bizDealSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f8fafc; padding: 20px; border-radius: 12px;">
+    <div class="hotdeal-header">
+        <h2 style="color: #4f46e5;">💼 <span data-i18n="home_biz_title">업자용 대박할인</span> <span class="badge-hot" style="background:#4f46e5;">B2B Only</span></h2>
+        <p data-i18n="home_biz_desc">사업자 고객님을 위한 전용 특가! 최소주문수량 10~100개 리셀러 판매자에게 드리는 업자할인</p>
+    </div>
+    <div id="bizDealGrid" class="hotdeal-grid"></div>
+</div>
+
 <!-- 배송비 계산기 모달 -->
 <div id="scModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100001; justify-content:center; align-items:center; padding:16px; overscroll-behavior:contain;">
     <style>
@@ -1235,26 +1252,6 @@ async function handleSubReturn() {
     }
 }
 </script>
-
-<!-- 오늘의핫딜 -->
-<div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
-    <div class="hotdeal-header">
-        <h2>🔥 <span data-i18n="home_hotdeal_title">오늘의 핫딜</span> <span class="badge-hot">Time Sale</span></h2>
-        <p data-i18n="home_hotdeal_desc">지금 놓치면 후회하는 초특가 상품을 만나보세요. 친구에게 선물하세요. 집들이 선물 핫딜상품은 최대 10개까지 주문가능</p>
-    </div>
-    <div id="hotDealGrid" class="hotdeal-grid">
-        </div>
-</div>
-
-<div id="bizDealSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f8fafc; padding: 20px; border-radius: 12px;">
-    <div class="hotdeal-header">
-        <h2 style="color: #4f46e5;">💼 <span data-i18n="home_biz_title">업자용 대박할인</span> <span class="badge-hot" style="background:#4f46e5;">B2B Only</span></h2>
-        <p data-i18n="home_biz_desc">사업자 고객님을 위한 전용 특가! 최소주문수량 10~100개 리셀러 판매자에게 드리는 업자할인</p>
-    </div>
-    <div id="bizDealGrid" class="hotdeal-grid">
-        </div>
-</div>
-
 
     <!-- 게시판 -->
 <div class="community-nav-wrapper">
@@ -4561,8 +4558,8 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if(window.searchTemplates) window.searchTemplates('');
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
-            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
-            loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 6);
+            loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 6);
         }
         // 배송비 계산기 항상 표시
         var scSec = document.getElementById('shippingCalcSection');
@@ -4669,7 +4666,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     // [새로운 통합 함수] 일반 핫딜 + 업자용 핫딜 모두 처리
     // [수정됨] 핫딜 상품 로드 (언어/화폐 감지 추가)
 // [최적화됨] 핫딜/추천상품 로드 (언어 로직 제거됨 -> getLocalizedData 위임)
-async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount = 6) {
+async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6) {
     const section = document.getElementById(sectionId);
     const grid = document.getElementById(gridId);
     if (!grid) return;
@@ -4678,8 +4675,8 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
     try {
         const { data: products, error } = await sb.from('admin_products')
             .select('*')
-            .eq('category', categoryCode)
-            .order('sort_order', { ascending: true }) 
+            .eq(flagColumn, true)
+            .order('sort_order', { ascending: true })
             .limit(limitCount); 
 
         if (error) throw error;
@@ -4716,8 +4713,8 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
             const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : 'Option';
             
             // 뱃지 색상
-            const badgeColor = categoryCode === 'hotdeal' ? '#ef4444' : '#4f46e5';
-            const badgeText = categoryCode === 'hotdeal' ? 'HOT' : 'BIZ';
+            const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : '#4f46e5';
+            const badgeText = flagColumn === 'is_hot_deal' ? 'HOT' : 'BIZ';
 
             // HTML 생성 (이제 name과 formattedPrice 변수만 넣으면 끝)
             card.innerHTML = `
@@ -4740,7 +4737,7 @@ async function loadSpecialProducts(sectionId, gridId, categoryCode, limitCount =
         });
 
     } catch (e) {
-        console.error(`[${categoryCode}] 로딩 실패:`, e);
+        console.error(`[${flagColumn}] 로딩 실패:`, e);
         section.style.display = 'none';
     }
 }
@@ -6801,8 +6798,8 @@ if (w >= 20 && h >= 20) {
         if(window.searchTemplates) window.searchTemplates('');
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
-            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'hotdeal', 6);
-            loadSpecialProducts('bizDealSection', 'bizDealGrid', '23432424', 6);
+            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 6);
+            loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 6);
         }
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');

@@ -983,6 +983,8 @@ window.addProductDB = async () => {
     const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
     const isCustom = document.getElementById('newProdIsCustom').checked;
     const isGeneral = document.getElementById('newProdIsGeneral').checked;
+    const isHotDeal = document.getElementById('newProdIsHotDeal').checked;
+    const isBizDeal = document.getElementById('newProdIsBizDeal').checked;
 
     const priceKR = Math.round(parseFloat(document.getElementById('newProdPrice').value || 0));
     const priceJP = Math.round(parseFloat(document.getElementById('newProdPriceJP').value || 0));
@@ -995,6 +997,8 @@ window.addProductDB = async () => {
         height_mm: document.getElementById('newProdH').value || 0,
         is_custom_size: isCustom,
         is_general_product: isGeneral,
+        is_hot_deal: isHotDeal,
+        is_biz_deal: isBizDeal,
         img_url: imgUrl, // 여기에 짧은 주소가 들어감
         name: document.getElementById('newProdName').value, 
         price: priceKR,
@@ -1073,6 +1077,8 @@ window.editProductLoad = async (id) => {
     
     document.getElementById('newProdIsCustom').checked = data.is_custom_size || false;
     document.getElementById('newProdIsGeneral').checked = data.is_general_product || false;
+    document.getElementById('newProdIsHotDeal').checked = data.is_hot_deal || false;
+    document.getElementById('newProdIsBizDeal').checked = data.is_biz_deal || false;
 
     // 상세 설명
     document.getElementById('newProdDetailKR').value = data.description || '';
