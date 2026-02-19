@@ -639,7 +639,7 @@ async function addCanvasToCart() {
     // 상품 정보 복구 로직
     if (!product || (product.is_custom_size && product.price === 0)) {
         try {
-            const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).maybeSingle();
+            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, addons, category').eq('code', key).maybeSingle();
             
             if (prodData) {
                 const scaleFactor = 3.7795;

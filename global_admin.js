@@ -90,7 +90,7 @@ window.loadPartnerProducts = async function() {
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
 
     const filter = document.getElementById('filterPartnerProdStatus')?.value || 'pending';
-    let query = sb.from('admin_products').select('*')
+    let query = sb.from('admin_products').select('id, partner_id, partner_status, reject_reason, name, code, price, img_url, description, stock_quantity, created_at')
         .not('partner_id', 'is', null)
         .order('created_at', { ascending: false });
 

@@ -679,7 +679,7 @@
     async function loadMyProducts() {
         const grid = document.getElementById('myProductGrid');
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:80px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
-        const { data, error } = await sb.from('admin_products').select('*').eq('partner_id', myUser.id).order('created_at', {ascending:false});
+        const { data, error } = await sb.from('admin_products').select('id, code, name, price, img_url, partner_status, reject_reason, stock_quantity, category, created_at').eq('partner_id', myUser.id).order('created_at', {ascending:false});
         grid.innerHTML = '';
         if (error || !data || data.length === 0) {
             grid.innerHTML = `<div style="grid-column:1/-1;" class="empty-state">

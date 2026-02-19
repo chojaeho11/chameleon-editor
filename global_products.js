@@ -763,8 +763,8 @@ window.filterProductList = debounce(async () => {
     showLoading(true);
 
     try {
-        let query = sb.from('admin_products').select('*');
-        
+        let query = sb.from('admin_products').select('id, site_code, code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, sort_order, category, is_hot_deal, is_biz_deal, partner_id, partner_status');
+
         if(cat && cat !== 'all') {
             query = query.eq('category', cat);
         }
@@ -1404,7 +1404,7 @@ window.bulkTranslateAll = async () => {
 
     try {
         // ── 1. 상품 (admin_products) ──
-        const { data: products } = await sb.from('admin_products').select('*');
+        const { data: products } = await sb.from('admin_products').select('id, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr');
         let pCount = 0;
         for (let i = 0; i < products.length; i++) {
             const p = products[i];
@@ -2113,7 +2113,7 @@ window.recoverDescription = async () => {
 
     try {
         // 1. 전체 상품 가져오기
-        const { data: products, error } = await sb.from('admin_products').select('*');
+        const { data: products, error } = await sb.from('admin_products').select('id, description, description_us, description_jp');
         if (error) throw error;
 
         let count = 0;

@@ -4687,10 +4687,10 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
 
     try {
         const { data: products, error } = await sb.from('admin_products')
-            .select('*')
+            .select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order')
             .eq(flagColumn, true)
             .order('sort_order', { ascending: true })
-            .limit(limitCount); 
+            .limit(limitCount);
 
         if (error) throw error;
 
@@ -6586,7 +6586,7 @@ if (w >= 20 && h >= 20) {
         // ★ [핵심] 데이터가 비어있으면 DB에서 불러오는 안전장치
         if (!window.PRODUCT_DB[key]) {
             console.log("🔄 에디터용 상품 정보 로딩 중...");
-            const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).single();
+            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, is_custom_size').eq('code', key).single();
             if (error || !prodData) {
                 console.error("상품 로드 실패:", error);
                 showToast("상품 정보를 찾을 수 없습니다.", 'error'); return;
