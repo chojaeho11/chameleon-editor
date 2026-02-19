@@ -77,7 +77,7 @@ let vm = {
     clipboard: null, snapLines: null,
     audioItems: null, audioEl: null, audioUrl: null,
     audioPage: 0, audioHasMore: false,
-    audioTab: 'sfx', // 'sfx' or 'bgm'
+    audioTab: 'sfx', // 'sfx' or 'ai'
     canvasZoom: 1
 };
 
@@ -555,22 +555,83 @@ function filterTagsByCountry(tags) {
 }
 
 function renderAudioTab(el) {
-    // Audio tab with SFX/BGM sub-tabs
     const isSfx=vm.audioTab==='sfx';
+    const isAi=vm.audioTab==='ai';
     let h = `<div class="ve-sec"><b>${_t('ve_audio_label','Audio')}</b>`;
-    // sub-tabs: SFX vs BGM
+    // sub-tabs: SFX vs AI Composer
     h += `<div style="display:flex;gap:4px;margin:8px 0">`;
-    h += `<button class="ve-audio-subtab${isSfx?' active':''}" onclick="window._veAudioTabSwitch('sfx')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${isSfx?'#818cf8':'#333'};background:${isSfx?'rgba(129,140,248,0.15)':'transparent'};color:${isSfx?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-bell"></i> ${_t('ve_audio_sfx','SFX')}</button>`;
-    h += `<button class="ve-audio-subtab${!isSfx?' active':''}" onclick="window._veAudioTabSwitch('bgm')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${!isSfx?'#818cf8':'#333'};background:${!isSfx?'rgba(129,140,248,0.15)':'transparent'};color:${!isSfx?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-headphones"></i> ${_t('ve_audio_bgm','BGM')}</button>`;
+    h += `<button class="ve-audio-subtab${isSfx?' active':''}" onclick="window._veAudioTabSwitch('sfx')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${isSfx?'#818cf8':'#333'};background:${isSfx?'rgba(129,140,248,0.15)':'transparent'};color:${isSfx?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-bell"></i> SFX</button>`;
+    h += `<button class="ve-audio-subtab${isAi?' active':''}" onclick="window._veAudioTabSwitch('ai')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${isAi?'#818cf8':'#333'};background:${isAi?'rgba(129,140,248,0.15)':'transparent'};color:${isAi?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 작곡</button>`;
     h += `</div>`;
     // 음원 없음 옵션
     const noSel=vm.music==='none'&&!vm.audioUrl;
     h += `<div class="ve-music-row${noSel?' selected':''}" onclick="window._veSelectMusic('none')">`;
     h += `<i class="fa-solid fa-volume-xmark" style="width:24px;text-align:center;font-size:16px;color:${noSel?'#818cf8':'#6b7280'}"></i>`;
     h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${_t('ve_audio_none','No audio')}</div></div></div>`;
-    h += `<div id="veAudioList"><p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p></div></div>`;
+
+    if (isAi) {
+        // AI Composer panel
+        h += `<div style="margin-top:10px">`;
+        h += `<div style="background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(168,85,247,0.1));border:1px solid rgba(129,140,248,0.2);border-radius:12px;padding:14px;">`;
+        h += `<div style="text-align:center;margin-bottom:12px;"><i class="fa-solid fa-wand-magic-sparkles" style="font-size:24px;color:#a78bfa"></i>`;
+        h += `<div style="font-size:13px;font-weight:700;color:#c4b5fd;margin-top:6px">AI 작곡가</div>`;
+        h += `<div style="font-size:10px;color:#64748b">원하는 분위기의 음악을 AI가 작곡합니다</div></div>`;
+        // Prompt
+        h += `<label style="font-size:11px;color:#94a3b8;font-weight:600;display:block;margin-bottom:4px">프롬프트</label>`;
+        h += `<textarea id="veAiMusicPrompt" style="width:100%;height:50px;background:#1a1a2e;border:1px solid #333;border-radius:8px;color:#e0e0e8;font-size:11px;padding:8px;resize:none;outline:none;box-sizing:border-box" placeholder="예: 밝고 경쾌한 카페 배경음악, 피아노와 기타"></textarea>`;
+        // Style
+        h += `<label style="font-size:11px;color:#94a3b8;font-weight:600;display:block;margin:8px 0 4px">스타일</label>`;
+        h += `<div id="veAiMusicStyles" style="display:flex;flex-wrap:wrap;gap:4px">`;
+        const styles = [
+            {id:'pop',label:'팝',icon:'🎵'},{id:'cinematic',label:'시네마틱',icon:'🎬'},
+            {id:'lofi',label:'Lo-Fi',icon:'🎧'},{id:'jazz',label:'재즈',icon:'🎷'},
+            {id:'electronic',label:'일렉트로닉',icon:'🎹'},{id:'acoustic',label:'어쿠스틱',icon:'🪕'},
+            {id:'classical',label:'클래식',icon:'🎻'},{id:'hiphop',label:'힙합',icon:'🎤'}
+        ];
+        styles.forEach(s=>{
+            const sel=vm._aiMusicStyle===s.id;
+            h+=`<button onclick="window._veAiMusicStyle='${s.id}';vm._aiMusicStyle='${s.id}';document.querySelectorAll('#veAiMusicStyles button').forEach(b=>b.style.borderColor='#333');this.style.borderColor='#818cf8';this.style.background='rgba(129,140,248,0.15)'" style="padding:4px 8px;border-radius:6px;border:1px solid ${sel?'#818cf8':'#333'};background:${sel?'rgba(129,140,248,0.15)':'transparent'};color:${sel?'#a5b4fc':'#888'};font-size:10px;cursor:pointer;white-space:nowrap">${s.icon} ${s.label}</button>`;
+        });
+        h += `</div>`;
+        // Duration
+        h += `<label style="font-size:11px;color:#94a3b8;font-weight:600;display:block;margin:8px 0 4px">길이</label>`;
+        h += `<div style="display:flex;gap:4px">`;
+        [5,10,15,20,30].forEach(d=>{
+            const sel=(vm._aiMusicDur||10)===d;
+            h+=`<button onclick="vm._aiMusicDur=${d};refreshLeftPanel()" style="flex:1;padding:5px 0;border-radius:6px;border:1px solid ${sel?'#818cf8':'#333'};background:${sel?'rgba(129,140,248,0.15)':'transparent'};color:${sel?'#a5b4fc':'#888'};font-size:10px;cursor:pointer">${d}초</button>`;
+        });
+        h += `</div>`;
+        // Generate button
+        h += `<button id="veAiMusicGenBtn" onclick="window._veAiMusicGenerate()" style="width:100%;margin-top:12px;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s">`;
+        h += `<i class="fa-solid fa-wand-magic-sparkles"></i> AI 음악 생성</button>`;
+        // Status
+        h += `<div id="veAiMusicStatus" style="display:none;margin-top:8px;text-align:center;padding:10px;background:rgba(129,140,248,0.1);border-radius:8px">`;
+        h += `<div style="width:18px;height:18px;border:2px solid rgba(129,140,248,0.3);border-top-color:#a78bfa;border-radius:50%;animation:veSpin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px"></div>`;
+        h += `<span id="veAiMusicStatusText" style="font-size:11px;color:#c4b5fd">생성 중...</span></div>`;
+        // Generated music list
+        h += `<div id="veAiMusicList" style="margin-top:8px"></div>`;
+        h += `</div></div>`;
+        // Show previously generated AI music
+        if (vm._aiGeneratedMusic && vm._aiGeneratedMusic.length) {
+            h += `<div style="margin-top:8px"><div style="font-size:11px;color:#64748b;margin-bottom:4px;font-weight:600">생성된 음악</div>`;
+            vm._aiGeneratedMusic.forEach((m,i)=>{
+                const sel=vm.audioUrl===m.url;
+                const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewAiIdx===i;
+                h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectAiMusic(${i})">`;
+                h+=`<i class="fa-solid fa-wand-magic-sparkles" style="width:24px;text-align:center;font-size:14px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
+                h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${m.name||'AI Music '+(i+1)}</div><div style="font-size:10px;color:#555">${m.duration||''}초 · ${m.style||''}</div></div>`;
+                h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewAiMusic(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
+                h+=`</div>`;
+            });
+            h += `</div>`;
+        }
+    } else {
+        // SFX list
+        h += `<div id="veAudioList"><p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p></div>`;
+    }
+    h += `</div>`;
     el.innerHTML = h;
-    loadAudioFromDB();
+    if (!isAi) loadAudioFromDB();
 }
 window._veAudioTabSwitch=function(tab){
     vm.audioTab=tab;vm.audioPage=0;vm.audioItems=null;
@@ -668,6 +729,158 @@ window._vePreviewDBAudio = function(idx) {
     setTimeout(()=>{if(vm.audioEl===audio){audio.pause();vm.audioEl=null;vm._previewIdx=-1;refreshLeftPanel();}},15000);
 };
 function stopDBAudio(){if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}vm.audioUrl=null;}
+
+// ─── AI Music Generation ───
+let _aiMusicCancelled = false;
+let _aiMusicPredictionId = null;
+if (!vm._aiGeneratedMusic) vm._aiGeneratedMusic = [];
+if (!vm._aiMusicStyle) vm._aiMusicStyle = 'cinematic';
+if (!vm._aiMusicDur) vm._aiMusicDur = 10;
+
+window._veAiMusicGenerate = async function() {
+    const sb = window.sb;
+    if (!sb) { showToast('DB 연결 필요'); return; }
+
+    const promptEl = document.getElementById('veAiMusicPrompt');
+    const prompt = promptEl ? promptEl.value.trim() : '';
+    const style = vm._aiMusicStyle || 'cinematic';
+    const duration = vm._aiMusicDur || 10;
+
+    if (!prompt && !style) { showToast('프롬프트 또는 스타일을 입력하세요'); return; }
+
+    const genBtn = document.getElementById('veAiMusicGenBtn');
+    const statusEl = document.getElementById('veAiMusicStatus');
+    const statusText = document.getElementById('veAiMusicStatusText');
+    if (genBtn) { genBtn.disabled = true; genBtn.style.opacity = '0.5'; }
+    if (statusEl) statusEl.style.display = 'block';
+    if (statusText) statusText.textContent = 'AI 작곡 시작...';
+    _aiMusicCancelled = false;
+
+    try {
+        // 1. Create prediction
+        if (statusText) statusText.textContent = 'AI 작곡 요청 중...';
+        const { data: createData, error: createError } = await sb.functions.invoke('generate-music', {
+            body: { action: 'create', prompt, style, duration }
+        });
+        if (createError) throw new Error(createError.message || 'Edge function error');
+        if (createData.error) throw new Error(createData.error);
+        if (!createData.predictionId) throw new Error('No prediction ID');
+
+        _aiMusicPredictionId = createData.predictionId;
+        if (_aiMusicCancelled) throw new Error('cancelled');
+
+        // 2. Poll for result
+        let attempts = 0;
+        const maxAttempts = 120; // 6 min max
+
+        while (attempts < maxAttempts) {
+            if (_aiMusicCancelled) throw new Error('cancelled');
+            await new Promise(r => setTimeout(r, 3000));
+            attempts++;
+
+            const { data: checkData, error: checkError } = await sb.functions.invoke('generate-music', {
+                body: { action: 'check', predictionId: _aiMusicPredictionId }
+            });
+            if (checkError) throw new Error(checkError.message || 'Check failed');
+            if (checkData.error && checkData.status === 'failed') throw new Error(checkData.error);
+
+            const st = checkData.status;
+            if (statusText) {
+                const sec = attempts * 3;
+                const m = Math.floor(sec / 60), s = sec % 60;
+                const elapsed = m > 0 ? `${m}분 ${s}초` : `${s}초`;
+                if (st === 'processing') statusText.textContent = `AI 작곡 중... ${elapsed} 경과 (보통 30초~2분)`;
+                else if (st === 'starting') statusText.textContent = `AI 대기열... ${elapsed} 경과`;
+            }
+
+            if (st === 'succeeded') {
+                const audioUrl = typeof checkData.output === 'string' ? checkData.output :
+                                 (Array.isArray(checkData.output) ? checkData.output[0] : checkData.output);
+                if (!audioUrl) throw new Error('No audio URL in output');
+
+                if (statusText) statusText.textContent = '음악 다운로드 중...';
+
+                // Download and upload to Supabase storage for permanent URL
+                let permanentUrl = audioUrl;
+                try {
+                    const audioRes = await fetch(audioUrl);
+                    const audioBlob = await audioRes.blob();
+                    const fileName = `ai_music_${Date.now()}_${Math.floor(Math.random()*1000)}.mp3`;
+                    const { error: upErr } = await sb.storage.from('design').upload(`ai_music/${fileName}`, audioBlob, { contentType: 'audio/mpeg', upsert: false });
+                    if (!upErr) {
+                        const { data: { publicUrl } } = sb.storage.from('design').getPublicUrl(`ai_music/${fileName}`);
+                        permanentUrl = publicUrl;
+                    }
+                } catch (e) { console.warn('Storage upload failed, using Replicate URL:', e); }
+
+                // Add to generated music list
+                const styleName = {pop:'팝',cinematic:'시네마틱',lofi:'Lo-Fi',jazz:'재즈',electronic:'일렉트로닉',acoustic:'어쿠스틱',classical:'클래식',hiphop:'힙합'}[style] || style;
+                vm._aiGeneratedMusic.push({
+                    url: permanentUrl,
+                    name: prompt ? prompt.substring(0, 20) : styleName,
+                    style: styleName,
+                    duration: duration,
+                    createdAt: Date.now()
+                });
+
+                // Auto-select the newly generated music
+                vm.music = 'none';
+                vm.audioUrl = permanentUrl;
+                showToast('AI 음악 생성 완료!');
+                break;
+            }
+
+            if (st === 'failed' || st === 'canceled') {
+                throw new Error(checkData.error || 'AI music generation failed');
+            }
+        }
+        if (attempts >= maxAttempts) throw new Error('Timeout');
+    } catch (err) {
+        if (err.message !== 'cancelled') {
+            console.error('AI Music Error:', err);
+            showToast('AI 작곡 실패: ' + (err.message || 'Unknown error'));
+        }
+    } finally {
+        _aiMusicPredictionId = null;
+        _aiMusicCancelled = false;
+        if (genBtn) { genBtn.disabled = false; genBtn.style.opacity = '1'; }
+        if (statusEl) statusEl.style.display = 'none';
+        refreshLeftPanel();
+        updateTimeline();
+    }
+};
+
+window._veSelectAiMusic = function(idx) {
+    const m = vm._aiGeneratedMusic && vm._aiGeneratedMusic[idx];
+    if (!m) return;
+    stopMusicPreview();
+    if (vm.audioEl) { vm.audioEl.pause(); vm.audioEl = null; vm._previewAiIdx = -1; }
+    vm.music = 'none';
+    vm.audioUrl = m.url;
+    refreshLeftPanel();
+    updateTimeline();
+};
+
+window._vePreviewAiMusic = function(idx) {
+    const m = vm._aiGeneratedMusic && vm._aiGeneratedMusic[idx];
+    if (!m) return;
+    stopMusicPreview();
+    if (vm.audioEl && !vm.audioEl.paused && vm._previewAiIdx === idx) {
+        vm.audioEl.pause(); vm.audioEl = null; vm._previewAiIdx = -1;
+        refreshLeftPanel(); return;
+    }
+    if (vm.audioEl) { vm.audioEl.pause(); vm.audioEl = null; }
+    const audio = new Audio(m.url);
+    audio.volume = 0.5;
+    audio.play().catch(e => { showToast('재생 실패: ' + e.message); });
+    audio.onended = () => { vm.audioEl = null; vm._previewAiIdx = -1; refreshLeftPanel(); };
+    vm.audioEl = audio;
+    vm._previewAiIdx = idx;
+    refreshLeftPanel();
+    setTimeout(() => {
+        if (vm.audioEl === audio) { audio.pause(); vm.audioEl = null; vm._previewAiIdx = -1; refreshLeftPanel(); }
+    }, 30000);
+};
 
 function renderTextTab(el) {
     let h = '<div class="ve-sec"><b>텍스트</b>';
@@ -1019,6 +1232,7 @@ window._veSaveProject = async function(){
         w:vm.w, h:vm.h,
         music:vm.music,
         audioUrl:vm.audioUrl,
+        aiGeneratedMusic:vm._aiGeneratedMusic||[],
         clips:clipData
     };
     const saves=_veGetSaves();
@@ -1057,6 +1271,7 @@ window._veLoadProject = function(idx){
     // restore audio
     vm.music=p.music||'none';
     vm.audioUrl=p.audioUrl||null;
+    vm._aiGeneratedMusic=p.aiGeneratedMusic||[];
     // restore clips
     let loaded=0;
     const total=p.clips?p.clips.length:0;
