@@ -192,7 +192,7 @@ function addImageFile(f) {
         const tx = tc.getContext('2d'); tx.drawImage(img,0,0,160,90);
         vm.clips.push({ type:'image', file:f, url, img, thumbUrl:tc.toDataURL('image/jpeg',0.7),
             duration:3, overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
-            locked:true, panX:0, panY:0 });
+            locked:true, panX:0, panY:0, imgScale:1 });
         selectClip(vm.clips.length-1);
     };
     img.src = url;
@@ -210,7 +210,7 @@ function addVideoFile(f) {
             vm.clips.push({ type:'video', file:f, url, video, thumbUrl:tc.toDataURL('image/jpeg',0.7),
                 duration: Math.min(Math.round(video.duration*10)/10, 60),
                 overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
-                locked:true, panX:0, panY:0 });
+                locked:true, panX:0, panY:0, imgScale:1 });
             video.onseeked = null;
             selectClip(vm.clips.length-1);
         };
@@ -224,7 +224,7 @@ function duplicateClip(i) {
         duration: c.duration, transition: c.transition, speed: c.speed || 1.0,
         overlays: JSON.parse(JSON.stringify(c.overlays)),
         adj: { ...c.adj },
-        locked: c.locked !== false, panX: c.panX || 0, panY: c.panY || 0
+        locked: c.locked !== false, panX: c.panX || 0, panY: c.panY || 0, imgScale: c.imgScale || 1
     };
     // 이미지 복제
     if (c.type === 'image' && c.img) {
@@ -392,7 +392,7 @@ function renderClip(ci, ctx, showSel, clipTime) {
     ctx.filter=`brightness(${1+a.brightness/100}) contrast(${1+a.contrast/100}) saturate(${a.saturation}%) blur(${a.blur}px) hue-rotate(${a.hue}deg)`;
     ctx.fillStyle='#000'; ctx.fillRect(0,0,vm.w,vm.h);
     const src = c.type==='video' ? c.video : c.img;
-    if (src) drawCover(ctx, src, vm.w, vm.h, c.panX||0, c.panY||0);
+    if (src) drawCover(ctx, src, vm.w, vm.h, c.panX||0, c.panY||0, c.imgScale||1);
     ctx.filter='none';
     c.overlays.forEach((o,i) => {
         // check time range (during playback/export)
@@ -473,14 +473,16 @@ function renderSelection(ctx, o) {
     ctx.restore();
 }
 
-function drawCover(ctx,src,cw,ch,px,py) {
+function drawCover(ctx,src,cw,ch,px,py,sc) {
     const iw=src.videoWidth||src.width, ih=src.videoHeight||src.height;
     if(!iw||!ih) return;
     const ir=iw/ih, cr=cw/ch;
-    if(px||py){
-        // panned mode: draw full image scaled to cover, then shift by pan offset
+    const s=sc||1;
+    if(px||py||s!==1){
+        // panned/scaled mode: draw full image scaled to cover, then shift by pan offset and scale
         let dw,dh;
         if(ir>cr){dh=ch;dw=dh*ir;}else{dw=cw;dh=dw/ir;}
+        dw*=s; dh*=s;
         const dx=(cw-dw)/2+(px||0), dy=(ch-dh)/2+(py||0);
         ctx.drawImage(src,0,0,iw,ih,dx,dy,dw,dh);
     } else {
@@ -1145,8 +1147,11 @@ function refreshRightPanel() {
         h+=`<button class="ve-lock-btn" onclick="window._veToggleLock()" style="width:100%;padding:8px;border-radius:8px;border:1px solid ${isLocked?'#ef4444':'#22c55e'};background:${isLocked?'rgba(239,68,68,0.1)':'rgba(34,197,94,0.1)'};color:${isLocked?'#f87171':'#4ade80'};font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">`;
         h+=`<i class="fa-solid ${isLocked?'fa-lock':'fa-lock-open'}"></i> ${isLocked?_t('ve_locked','잠김 — 클릭하여 잠금 해제'):_t('ve_unlocked','잠금 해제됨 — 드래그로 이동 가능')}</button>`;
         if(!isLocked){
-            h+=`<div style="margin-top:8px;font-size:11px;color:#94a3b8">X: ${Math.round(c.panX||0)}px, Y: ${Math.round(c.panY||0)}px</div>`;
-            h+=`<button class="ve-reset-btn" onclick="window._veResetPan()" style="margin-top:6px;width:100%;padding:6px;border-radius:6px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:11px;cursor:pointer"><i class="fa-solid fa-crosshairs"></i> ${_t('ve_reset_pos','위치 초기화')}</button>`;
+            const sc=c.imgScale||1;
+            h+=`<label style="margin-top:8px">${_t('ve_scale','크기')} ${Math.round(sc*100)}%</label>`;
+            h+=`<input type="range" min="30" max="300" value="${Math.round(sc*100)}" oninput="window._veSetScale(+this.value/100);this.previousElementSibling.textContent='${_t('ve_scale','크기')} '+this.value+'%'" style="width:100%">`;
+            h+=`<div style="margin-top:6px;font-size:11px;color:#94a3b8">X: ${Math.round(c.panX||0)}px, Y: ${Math.round(c.panY||0)}px</div>`;
+            h+=`<button class="ve-reset-btn" onclick="window._veResetPan()" style="margin-top:6px;width:100%;padding:6px;border-radius:6px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:11px;cursor:pointer"><i class="fa-solid fa-crosshairs"></i> ${_t('ve_reset_pos','위치/크기 초기화')}</button>`;
         }
         h+='</div>';
         // adjustments
@@ -1374,7 +1379,8 @@ window._veSetSpeed = (v) => { const c=curClip(); if(c){c.speed=v;if(c.type==='vi
 window._veAdj = (p,v) => { const c=curClip(); if(c){c.adj[p]=v;render();} };
 window._veResetAdj = () => { const c=curClip(); if(c){c.adj={brightness:0,contrast:0,saturation:100,blur:0,hue:0};render();refreshLeftPanel();refreshRightPanel();} };
 window._veToggleLock = () => { const c=curClip(); if(!c)return; c.locked=c.locked===false?true:false; render();refreshRightPanel(); };
-window._veResetPan = () => { const c=curClip(); if(!c)return; c.panX=0;c.panY=0; render();refreshRightPanel(); };
+window._veResetPan = () => { const c=curClip(); if(!c)return; c.panX=0;c.panY=0;c.imgScale=1; render();refreshRightPanel(); };
+window._veSetScale = (v) => { const c=curClip(); if(!c)return; c.imgScale=Math.max(0.3,Math.min(3,v)); render();refreshRightPanel(); };
 // ── Context Menu (z-order, copy, paste, delete) ──
 window._veCtx = (action) => {
     const cm=document.getElementById('veContextMenu'); if(cm) cm.style.display='none';
@@ -1520,7 +1526,7 @@ async function playClipOnCanvas(ci, durMs) {
             vm.playTime=startPlayT+elapsed/1000; updatePlayhead();
             const ctx=vm.ctx; applyAdj(ctx,c.adj);
             ctx.fillStyle='#000';ctx.fillRect(0,0,vm.w,vm.h);
-            drawCover(ctx,src,vm.w,vm.h,c.panX||0,c.panY||0);ctx.filter='none';
+            drawCover(ctx,src,vm.w,vm.h,c.panX||0,c.panY||0,c.imgScale||1);ctx.filter='none';
             const ct=elapsed/1000;
             c.overlays.forEach(o=>{if(o.tStart!=null&&o.tEnd!=null&&(ct<o.tStart||ct>o.tEnd))return;renderOverlay(ctx,o);});
             if(elapsed>=durMs){if(c.type==='video')c.video.pause();resolve();}
