@@ -531,6 +531,10 @@ function renderMediaTab(el) {
     } else {
         h += '<p class="ve-empty">이미지 또는 영상을 추가하세요</p>';
     }
+    // 빈 공간 클릭 시 파일 업로드
+    h += `<div class="ve-media-empty-area" onclick="document.getElementById('veFileInput').click()" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;" onmouseover="this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)'" onmouseout="this.style.borderColor='transparent';this.style.background='transparent'">
+        <span style="color:#4a5568;font-size:11px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>클릭하여 추가</span>
+    </div>`;
     el.innerHTML = h;
 }
 
