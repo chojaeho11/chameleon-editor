@@ -1,0 +1,8 @@
+# Legacy path redirects
+/en.html / 301
+/jp.html / 301
+/en / 301
+/jp / 301
+
+# SPA fallback — serve index.html for all non-file paths
+/* /index.html 200

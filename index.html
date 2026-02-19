@@ -80,16 +80,16 @@
 <meta name="twitter:image" content="https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png">
 
 <link rel="shortcut icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
-<link rel="canonical" href="https://www.cafe2626.com/">
-    <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
-    <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/">
-    <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/">
-    <link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh">
-    <link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar">
-    <link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es">
-    <link rel="alternate" hreflang="de" href="https://www.cafe3355.com/?lang=de">
-    <link rel="alternate" hreflang="fr" href="https://www.cafe3355.com/?lang=fr">
-    <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/">
+<link rel="canonical" href="">
+    <link rel="alternate" hreflang="ko" href="">
+    <link rel="alternate" hreflang="en" href="">
+    <link rel="alternate" hreflang="ja" href="">
+    <link rel="alternate" hreflang="zh" href="">
+    <link rel="alternate" hreflang="ar" href="">
+    <link rel="alternate" hreflang="es" href="">
+    <link rel="alternate" hreflang="de" href="">
+    <link rel="alternate" hreflang="fr" href="">
+    <link rel="alternate" hreflang="x-default" href="">
 
 <script src="product-seo.js"></script>
 <script>
@@ -195,21 +195,26 @@
     var twDesc = document.querySelector('meta[name="twitter:description"]');
     if(twDesc) twDesc.content = pageDesc;
 
-    // 8. hreflang 업데이트 (제품 페이지면 경로 포함)
-    if (isProductPage) {
-        var hrefKo = document.querySelector('link[hreflang="ko"]');
-        var hrefJa = document.querySelector('link[hreflang="ja"]');
-        var hrefEn = document.querySelector('link[hreflang="en"]');
-        var hrefDe = document.querySelector('link[hreflang="de"]');
-        var hrefFr = document.querySelector('link[hreflang="fr"]');
-        var hrefDef = document.querySelector('link[hreflang="x-default"]');
-        if(hrefKo) hrefKo.href = domains.KR + '/' + path;
-        if(hrefJa) hrefJa.href = domains.JP + '/' + path;
-        if(hrefEn) hrefEn.href = domains.US + '/' + path;
-        if(hrefDe) hrefDe.href = domains.DE + '/' + path + '?lang=de';
-        if(hrefFr) hrefFr.href = domains.FR + '/' + path + '?lang=fr';
-        if(hrefDef) hrefDef.href = domains.KR + '/' + path;
-    }
+    // 8. hreflang 업데이트 (항상 설정 — 홈/제품 모두)
+    var suffix = isProductPage ? ('/' + path) : '/';
+    var hrefKo = document.querySelector('link[hreflang="ko"]');
+    var hrefJa = document.querySelector('link[hreflang="ja"]');
+    var hrefEn = document.querySelector('link[hreflang="en"]');
+    var hrefZh = document.querySelector('link[hreflang="zh"]');
+    var hrefAr = document.querySelector('link[hreflang="ar"]');
+    var hrefEs = document.querySelector('link[hreflang="es"]');
+    var hrefDe = document.querySelector('link[hreflang="de"]');
+    var hrefFr = document.querySelector('link[hreflang="fr"]');
+    var hrefDef = document.querySelector('link[hreflang="x-default"]');
+    if(hrefKo) hrefKo.href = domains.KR + suffix;
+    if(hrefJa) hrefJa.href = domains.JP + suffix;
+    if(hrefEn) hrefEn.href = domains.US + suffix;
+    if(hrefZh) hrefZh.href = domains.US + suffix + (suffix==='/'?'?':'&') + 'lang=zh';
+    if(hrefAr) hrefAr.href = domains.US + suffix + (suffix==='/'?'?':'&') + 'lang=ar';
+    if(hrefEs) hrefEs.href = domains.US + suffix + (suffix==='/'?'?':'&') + 'lang=es';
+    if(hrefDe) hrefDe.href = domains.US + suffix + (suffix==='/'?'?':'&') + 'lang=de';
+    if(hrefFr) hrefFr.href = domains.US + suffix + (suffix==='/'?'?':'&') + 'lang=fr';
+    if(hrefDef) hrefDef.href = domains.KR + suffix;
 
     // 9. JSON-LD 구조화 데이터
     var graphItems = [
