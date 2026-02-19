@@ -1360,5 +1360,12 @@
   "gm_search_elements": "Buscar elementos...",
   "gm_loading": "Cargando...",
   "gm_load_more": "Cargar más",
-  "gm_search_images": "Buscar imágenes..."
+  "gm_search_images": "Buscar imágenes...",
+  "ve_ai_photo_upload": "Componer con foto AI",
+  "ve_ai_photo_desc": "La IA analiza la foto y genera letras y estilo automáticamente",
+  "ve_ai_photo_analyzing": "Analizando imagen...",
+  "ve_ai_photo_done": "¡Análisis completo! Haga clic en Generate",
+  "ve_ai_photo_fail": "Error en análisis de foto",
+  "ve_bgm_title": "Música de fondo",
+  "ve_bgm_empty": "No hay BGM disponible"
 }

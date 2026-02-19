@@ -1360,5 +1360,12 @@
   "gm_search_elements": "Search elements...",
   "gm_loading": "Loading...",
   "gm_load_more": "Load more",
-  "gm_search_images": "Search images..."
+  "gm_search_images": "Search images...",
+  "ve_ai_photo_upload": "Upload photo for AI music",
+  "ve_ai_photo_desc": "AI analyzes the photo and auto-creates lyrics & style",
+  "ve_ai_photo_analyzing": "Analyzing image...",
+  "ve_ai_photo_done": "Photo analyzed! Click Generate",
+  "ve_ai_photo_fail": "Photo analysis failed",
+  "ve_bgm_title": "Background Music",
+  "ve_bgm_empty": "No BGM available"
 }

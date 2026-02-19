@@ -1360,5 +1360,12 @@
   "gm_search_elements": "要素を検索...",
   "gm_loading": "読み込み中...",
   "gm_load_more": "もっと見る",
-  "gm_search_images": "画像を検索..."
+  "gm_search_images": "画像を検索...",
+  "ve_ai_photo_upload": "写真でAI作曲",
+  "ve_ai_photo_desc": "AIが写真を分析して歌詞とスタイルを自動生成します",
+  "ve_ai_photo_analyzing": "画像分析中...",
+  "ve_ai_photo_done": "分析完了！Generateをクリック",
+  "ve_ai_photo_fail": "写真分析失敗",
+  "ve_bgm_title": "BGM",
+  "ve_bgm_empty": "BGMがありません"
 }

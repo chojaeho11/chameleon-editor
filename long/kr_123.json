@@ -984,5 +984,12 @@
   "gm_search_elements": "요소 검색...",
   "gm_loading": "로딩 중...",
   "gm_load_more": "더 보기",
-  "gm_search_images": "이미지 검색..."
+  "gm_search_images": "이미지 검색...",
+  "ve_ai_photo_upload": "사진으로 AI 작곡",
+  "ve_ai_photo_desc": "AI가 사진을 분석하여 가사와 스타일을 자동 생성합니다",
+  "ve_ai_photo_analyzing": "이미지 분석 중...",
+  "ve_ai_photo_done": "분석 완료! Generate를 클릭하세요",
+  "ve_ai_photo_fail": "사진 분석 실패",
+  "ve_bgm_title": "배경음악",
+  "ve_bgm_empty": "등록된 BGM이 없습니다"
 }

@@ -1,6 +1,6 @@
 // supabase/functions/generate-music/index.ts
 // AI Music generation using Replicate (minimax/music-01)
-// Supports vocals + lyrics generation
+// Supports vocals + lyrics generation + photo analysis via Claude Vision
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -12,11 +12,84 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
-    if (!REPLICATE_API_TOKEN) throw new Error('REPLICATE_API_TOKEN not set');
-
     const body = await req.json();
     const { action } = body;
+
+    // ─── ACTION: analyze-photo (Claude Vision) ───
+    if (action === 'analyze-photo') {
+      const { imageBase64 } = body;
+      if (!imageBase64) throw new Error('imageBase64 is required');
+
+      const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+      if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not set');
+
+      // Detect media type from base64 header or default to jpeg
+      let mediaType = 'image/jpeg';
+      if (imageBase64.startsWith('/9j/')) mediaType = 'image/jpeg';
+      else if (imageBase64.startsWith('iVBOR')) mediaType = 'image/png';
+      else if (imageBase64.startsWith('R0lGOD')) mediaType = 'image/gif';
+      else if (imageBase64.startsWith('UklGR')) mediaType = 'image/webp';
+
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 800,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: { type: 'base64', media_type: mediaType, data: imageBase64 }
+              },
+              {
+                type: 'text',
+                text: `Analyze this image and suggest music that matches its mood, theme, and atmosphere.
+Return JSON ONLY (no markdown, no code fences):
+{
+  "style": "one of: pop, cinematic, lofi, jazz, electronic, acoustic, classical, hiphop",
+  "prompt": "a short English music description (10-30 words) matching the image mood and atmosphere",
+  "lyrics": "creative song lyrics inspired by this image (English, max 400 chars). Use [verse] and [chorus] tags. Write emotionally resonant lyrics."
+}`
+              }
+            ]
+          }]
+        })
+      });
+
+      if (!claudeRes.ok) {
+        const errText = await claudeRes.text();
+        throw new Error(`Claude API error: ${errText}`);
+      }
+
+      const claudeData = await claudeRes.json();
+      const text = claudeData.content?.[0]?.text || '';
+
+      // Parse JSON (handle potential markdown fences)
+      let parsed;
+      try {
+        const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        parsed = JSON.parse(cleaned);
+      } catch (_e) {
+        throw new Error('Failed to parse Claude response: ' + text.substring(0, 200));
+      }
+
+      return new Response(JSON.stringify({
+        style: parsed.style || 'cinematic',
+        prompt: parsed.prompt || '',
+        lyrics: parsed.lyrics || ''
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
+    if (!REPLICATE_API_TOKEN) throw new Error('REPLICATE_API_TOKEN not set');
 
     // ─── ACTION: create ───
     if (action === 'create') {
@@ -79,7 +152,7 @@ serve(async (req) => {
       });
     }
 
-    throw new Error("Invalid action. Use 'create' or 'check'.");
+    throw new Error("Invalid action. Use 'create', 'check', or 'analyze-photo'.");
 
   } catch (error) {
     console.error("generate-music error:", error.message);

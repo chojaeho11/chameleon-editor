@@ -562,6 +562,15 @@ function renderAudioTab(el) {
     h += `<i class="fa-solid fa-volume-xmark" style="width:24px;text-align:center;font-size:16px;color:${noSel?'#818cf8':'#6b7280'}"></i>`;
     h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${_t('ve_audio_none','No audio')}</div></div></div>`;
 
+    // ── BGM Section ──
+    h += `<div style="margin-top:6px;padding:10px;background:rgba(30,30,50,0.5);border:1px solid #333;border-radius:10px;">`;
+    h += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">`;
+    h += `<i class="fa-solid fa-cloud-moon" style="color:#a78bfa;font-size:14px"></i>`;
+    h += `<span style="font-size:12px;font-weight:700;color:#e0e0e8">${_t('ve_bgm_title','배경음악')}</span>`;
+    h += `</div>`;
+    h += `<div id="veBgmList"><p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p></div>`;
+    h += `</div>`;
+
     // ── TikTok SFX Section ──
     h += `<div style="margin-top:6px;padding:10px;background:rgba(30,30,50,0.5);border:1px solid #333;border-radius:10px;">`;
     h += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer" onclick="window._veToggleSfxPanel()">`;
@@ -597,6 +606,15 @@ function renderAudioTab(el) {
     h += `</div>`;
 
     h += `<textarea id="veAiMusicPrompt" style="width:100%;height:40px;background:rgba(15,15,30,0.7);border:1px solid rgba(129,140,248,0.2);border-radius:10px;color:#e0e0e8;font-size:11px;padding:10px;resize:none;outline:none;box-sizing:border-box" placeholder="${_t('ve_ai_music_placeholder','ex) bright cafe BGM with piano and guitar')}"></textarea>`;
+
+    // Photo upload for AI analysis
+    h += `<div style="margin:10px 0;padding:12px;background:rgba(15,15,30,0.5);border:1px dashed rgba(129,140,248,0.3);border-radius:12px;text-align:center;cursor:pointer" onclick="document.getElementById('veAiPhotoInput').click()" id="veAiPhotoDropZone">`;
+    h += `<input type="file" id="veAiPhotoInput" accept="image/*" style="display:none" onchange="window._veAiPhotoSelected(this)">`;
+    h += `<div id="veAiPhotoPreview">`;
+    h += `<i class="fa-solid fa-camera" style="font-size:20px;color:#818cf8;margin-bottom:4px"></i>`;
+    h += `<div style="font-size:11px;color:#94a3b8;font-weight:600">${_t('ve_ai_photo_upload','사진으로 AI 작곡')}</div>`;
+    h += `<div style="font-size:9px;color:#64748b;margin-top:2px">${_t('ve_ai_photo_desc','AI가 사진을 분석하여 가사와 스타일을 자동 생성합니다')}</div>`;
+    h += `</div></div>`;
 
     // Lyrics
     h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">${_t('ve_ai_music_lyrics','Lyrics')} <span style="font-weight:400;color:#64748b">(${_t('ve_ai_music_lyrics_hint','max 400 chars, optional')})</span></div>`;
@@ -638,6 +656,7 @@ function renderAudioTab(el) {
 
     h += `</div>`;
     el.innerHTML = h;
+    loadBgmFromDB();
     if (vm._sfxOpen) loadAudioFromDB();
     // Lyrics character counter
     const lyrEl = document.getElementById('veAiMusicLyrics');
@@ -665,7 +684,7 @@ window._veSetMusicDur=function(d){
     refreshLeftPanel();
 };
 
-const AUDIO_PAGE_SIZE=20;
+const AUDIO_PAGE_SIZE=5;
 async function loadAudioFromDB(page) {
     if(page!==undefined) vm.audioPage=page;
     const pg=vm.audioPage;
@@ -707,6 +726,71 @@ async function loadAudioFromDB(page) {
     } catch(e){ list.innerHTML=`<p class="ve-empty">${_t('ve_audio_fail','Load failed')}</p>`; console.warn('Audio load error:',e); }
 }
 window._veAudioPage=function(pg){loadAudioFromDB(pg);};
+
+// ─── BGM (Background Music) from DB ───
+const BGM_PAGE_SIZE=5;
+async function loadBgmFromDB(page){
+    if(page!==undefined) vm.bgmPage=page;
+    const pg=vm.bgmPage||0;
+    const list=document.getElementById('veBgmList'); if(!list) return;
+    list.innerHTML=`<p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p>`;
+    try{
+        const sb=window.sb; if(!sb){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_no_conn','No DB connection')}</p>`;return;}
+        const from=pg*BGM_PAGE_SIZE, to=from+BGM_PAGE_SIZE;
+        const{data,error}=await sb.from('library').select('id,thumb_url,data_url,tags').eq('category','bgm').order('created_at',{ascending:false}).range(from,to);
+        if(error) throw error;
+        const items=data||[];
+        vm.bgmHasMore=items.length>BGM_PAGE_SIZE;
+        vm.bgmItems=items.slice(0,BGM_PAGE_SIZE);
+        if(!vm.bgmItems.length&&pg===0){list.innerHTML=`<p class="ve-empty">${_t('ve_bgm_empty','등록된 BGM이 없습니다')}</p>`;return;}
+        if(!vm.bgmItems.length){vm.bgmPage=Math.max(0,pg-1);loadBgmFromDB();return;}
+        let h='';
+        vm.bgmItems.forEach((a,i)=>{
+            const name=filterTagsByCountry(a.tags)||`BGM ${pg*BGM_PAGE_SIZE+i+1}`;
+            const sel=vm.audioUrl===a.data_url;
+            const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewBgmIdx===i;
+            h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectBgm(${i})">`;
+            h+=`<i class="fa-solid fa-cloud-moon" style="width:24px;text-align:center;font-size:14px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
+            h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${name}</div><div style="font-size:10px;color:#555">${sel?'✓ '+_t('ve_audio_selected','Selected'):''}</div></div>`;
+            h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewBgm(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
+            h+=`</div>`;
+        });
+        if(pg>0||vm.bgmHasMore){
+            h+=`<div style="display:flex;justify-content:center;gap:8px;margin-top:8px">`;
+            if(pg>0) h+=`<button class="ve-page-btn" onclick="window._veBgmPage(${pg-1})"><i class="fa-solid fa-chevron-left"></i> ${_t('ve_audio_prev','Prev')}</button>`;
+            h+=`<span style="font-size:11px;color:#888;line-height:28px">${pg+1}</span>`;
+            if(vm.bgmHasMore) h+=`<button class="ve-page-btn" onclick="window._veBgmPage(${pg+1})">${_t('ve_audio_next','Next')} <i class="fa-solid fa-chevron-right"></i></button>`;
+            h+=`</div>`;
+        }
+        list.innerHTML=h;
+    }catch(e){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_fail','Load failed')}</p>`;console.warn('BGM load error:',e);}
+}
+window._veBgmPage=function(pg){loadBgmFromDB(pg);};
+window._veSelectBgm=function(idx){
+    const a=vm.bgmItems&&vm.bgmItems[idx]; if(!a) return;
+    const url=getAudioUrl(a); if(!url){return;}
+    stopMusicPreview();
+    if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewBgmIdx=-1;}
+    vm.music='none'; vm.audioUrl=url;
+    refreshLeftPanel(); updateTimeline();
+};
+window._vePreviewBgm=function(idx){
+    const a=vm.bgmItems&&vm.bgmItems[idx]; if(!a) return;
+    const url=getAudioUrl(a); if(!url){return;}
+    stopMusicPreview();
+    if(vm.audioEl&&!vm.audioEl.paused&&vm._previewBgmIdx===idx){
+        vm.audioEl.pause();vm.audioEl=null;vm._previewBgmIdx=-1;
+        refreshLeftPanel(); return;
+    }
+    if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}
+    const audio=new Audio(url);
+    audio.volume=0.5;
+    audio.play().catch(e=>{console.warn('BGM playback failed:',e);});
+    audio.onended=()=>{vm.audioEl=null;vm._previewBgmIdx=-1;refreshLeftPanel();};
+    vm.audioEl=audio; vm._previewBgmIdx=idx;
+    refreshLeftPanel();
+    setTimeout(()=>{if(vm.audioEl===audio){audio.pause();vm.audioEl=null;vm._previewBgmIdx=-1;refreshLeftPanel();}},15000);
+};
 
 function _isUrl(s){return s&&typeof s==='string'&&(s.startsWith('http')||s.startsWith('//')||s.startsWith('data:')||s.startsWith('blob:'));}
 function getAudioUrl(item){
@@ -761,6 +845,7 @@ let _aiMusicCancelled = false;
 let _aiMusicPredictionId = null;
 if (!vm._aiMusicStyle) vm._aiMusicStyle = 'cinematic';
 if (!vm._aiMusicDur) vm._aiMusicDur = 10;
+if (vm._sfxOpen === undefined) vm._sfxOpen = true;
 vm._aiMusicList = null; // loaded from DB
 
 async function loadUserAiMusic() {
@@ -902,6 +987,94 @@ window._veAiMusicGenerate = async function() {
         if (statusEl) statusEl.style.display = 'none';
         refreshLeftPanel();
         updateTimeline();
+    }
+};
+
+// ─── AI Photo Analysis → Auto-fill style/prompt/lyrics ───
+window._veAiPhotoSelected = async function(input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+    const sb = window.sb;
+    if (!sb) { showToast(_t('ve_ai_music_no_db','DB connection required')); return; }
+    if (!window.currentUser) { showToast(_t('ve_ai_music_login','Please login first')); return; }
+
+    // Show preview
+    const preview = document.getElementById('veAiPhotoPreview');
+    if (preview) {
+        const url = URL.createObjectURL(file);
+        preview.innerHTML = `<img src="${url}" style="max-height:80px;border-radius:8px;margin-bottom:4px"><div style="font-size:10px;color:#a78bfa"><i class="fa-solid fa-spinner fa-spin"></i> ${_t('ve_ai_photo_analyzing','이미지 분석 중...')}</div>`;
+    }
+
+    // Resize image to max 800px before sending (to keep payload small)
+    const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const maxDim = 800;
+                let w = img.width, h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                    else { w = Math.round(w * maxDim / h); h = maxDim; }
+                }
+                const cvs = document.createElement('canvas');
+                cvs.width = w; cvs.height = h;
+                cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+                const dataUrl = cvs.toDataURL('image/jpeg', 0.8);
+                resolve(dataUrl.split(',')[1]);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    try {
+        const { data, error } = await sb.functions.invoke('generate-music', {
+            body: { action: 'analyze-photo', imageBase64: base64 }
+        });
+        if (error) throw new Error(error.message || 'Edge function error');
+        if (data.error) throw new Error(data.error);
+
+        // Store result for re-fill after refreshLeftPanel
+        vm._photoAnalysis = { style: data.style, prompt: data.prompt, lyrics: data.lyrics };
+
+        // Auto-fill style
+        if (data.style) vm._aiMusicStyle = data.style;
+
+        // Auto-fill prompt and lyrics
+        const promptEl = document.getElementById('veAiMusicPrompt');
+        if (promptEl && data.prompt) promptEl.value = data.prompt;
+        const lyricsEl = document.getElementById('veAiMusicLyrics');
+        if (lyricsEl && data.lyrics) {
+            lyricsEl.value = data.lyrics;
+            const cntEl = document.getElementById('veAiLyricsCount');
+            if (cntEl) cntEl.textContent = lyricsEl.value.length;
+        }
+
+        // Update preview to success
+        if (preview) {
+            const url2 = URL.createObjectURL(file);
+            preview.innerHTML = `<img src="${url2}" style="max-height:60px;border-radius:8px;margin-bottom:4px"><div style="font-size:10px;color:#34d399"><i class="fa-solid fa-check"></i> ${_t('ve_ai_photo_done','분석 완료! Generate를 클릭하세요')}</div>`;
+        }
+
+        // Refresh to update style selection, then re-fill
+        refreshLeftPanel();
+        setTimeout(() => {
+            const p = document.getElementById('veAiMusicPrompt');
+            const l = document.getElementById('veAiMusicLyrics');
+            if (p && vm._photoAnalysis?.prompt) p.value = vm._photoAnalysis.prompt;
+            if (l && vm._photoAnalysis?.lyrics) {
+                l.value = vm._photoAnalysis.lyrics;
+                const c = document.getElementById('veAiLyricsCount');
+                if (c) c.textContent = l.value.length;
+            }
+        }, 100);
+    } catch (err) {
+        console.error('Photo analysis error:', err);
+        showToast(_t('ve_ai_photo_fail','사진 분석 실패'));
+        if (preview) {
+            preview.innerHTML = `<i class="fa-solid fa-camera" style="font-size:20px;color:#818cf8;margin-bottom:4px"></i><div style="font-size:11px;color:#94a3b8;font-weight:600">${_t('ve_ai_photo_upload','사진으로 AI 작곡')}</div>`;
+        }
     }
 };
 

@@ -1360,5 +1360,12 @@
   "gm_search_elements": "搜索元素...",
   "gm_loading": "加载中...",
   "gm_load_more": "加载更多",
-  "gm_search_images": "搜索图片..."
+  "gm_search_images": "搜索图片...",
+  "ve_ai_photo_upload": "照片AI作曲",
+  "ve_ai_photo_desc": "AI分析照片自动生成歌词和风格",
+  "ve_ai_photo_analyzing": "图像分析中...",
+  "ve_ai_photo_done": "分析完成！点击Generate",
+  "ve_ai_photo_fail": "照片分析失败",
+  "ve_bgm_title": "背景音乐",
+  "ve_bgm_empty": "暂无BGM"
 }

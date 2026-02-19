@@ -1360,5 +1360,12 @@
   "gm_search_elements": "بحث عناصر...",
   "gm_loading": "جاري التحميل...",
   "gm_load_more": "تحميل المزيد",
-  "gm_search_images": "بحث صور..."
+  "gm_search_images": "بحث صور...",
+  "ve_ai_photo_upload": "تأليف AI من صورة",
+  "ve_ai_photo_desc": "يحلل AI الصورة وينشئ كلمات وأسلوب تلقائيًا",
+  "ve_ai_photo_analyzing": "جاري تحليل الصورة...",
+  "ve_ai_photo_done": "تم التحليل! انقر على Generate",
+  "ve_ai_photo_fail": "فشل تحليل الصورة",
+  "ve_bgm_title": "موسيقى خلفية",
+  "ve_bgm_empty": "لا توجد موسيقى خلفية"
 }
