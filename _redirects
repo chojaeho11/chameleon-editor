@@ -8,5 +8,12 @@
 /index.html / 301
 /index / 301
 
+# Clean URL rewrites for existing HTML pages (Cloudflare Pages)
+/board /board.html 200
+/mypage /mypage.html 200
+/success /success.html 200
+/fail /fail.html 200
+/partner /partner.html 200
+
 # SPA fallback — serve index.html for all non-file paths
 /* /index.html 200
