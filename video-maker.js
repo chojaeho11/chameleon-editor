@@ -1190,8 +1190,9 @@ function renderVideoTrack() {
     const pps=TL_PPS*vm.tlZoom;
     vm.clips.forEach((c,i)=>{
         const d=document.createElement('div'); d.className='ve-tl-clip'+(i===vm.ci?' active':'');
-        d.style.width=(c.duration*pps)+'px'; d.style.position='relative';
-        d.innerHTML=`<img src="${c.thumbUrl}"><span class="ve-tl-clip-dur">${fmtTime(c.duration)}</span>`
+        const effDur=clipEffDur(c);
+        d.style.width=(effDur*pps)+'px'; d.style.position='relative';
+        d.innerHTML=`<img src="${c.thumbUrl}"><span class="ve-tl-clip-dur">${fmtTime(effDur)}</span>`
             +`<span class="ve-tl-ol-grip right" data-ci="${i}"></span>`;
         d.onclick=(e)=>{if(e.target.classList.contains('ve-tl-ol-grip'))return;selectClip(i);};
         // smooth mousedown drag reorder
@@ -1380,7 +1381,7 @@ window._veAdj = (p,v) => { const c=curClip(); if(c){c.adj[p]=v;render();} };
 window._veResetAdj = () => { const c=curClip(); if(c){c.adj={brightness:0,contrast:0,saturation:100,blur:0,hue:0};render();refreshLeftPanel();refreshRightPanel();} };
 window._veToggleLock = () => { const c=curClip(); if(!c)return; c.locked=c.locked===false?true:false; render();refreshRightPanel(); };
 window._veResetPan = () => { const c=curClip(); if(!c)return; c.panX=0;c.panY=0;c.imgScale=1; render();refreshRightPanel(); };
-window._veSetScale = (v) => { const c=curClip(); if(!c)return; c.imgScale=Math.max(0.3,Math.min(3,v)); render();refreshRightPanel(); };
+window._veSetScale = (v) => { const c=curClip(); if(!c)return; c.imgScale=Math.max(0.3,Math.min(3,v)); render(); };
 // ── Context Menu (z-order, copy, paste, delete) ──
 window._veCtx = (action) => {
     const cm=document.getElementById('veContextMenu'); if(cm) cm.style.display='none';
@@ -1433,7 +1434,7 @@ window._veTlClick = (e) => {
     updatePlayhead();
     // select clip at this time
     let elapsed=0;
-    for(let i=0;i<vm.clips.length;i++){if(vm.playTime>=elapsed&&vm.playTime<elapsed+vm.clips[i].duration){selectClip(i);break;}elapsed+=vm.clips[i].duration;}
+    for(let i=0;i<vm.clips.length;i++){const ed=clipEffDur(vm.clips[i]);if(vm.playTime>=elapsed&&vm.playTime<elapsed+ed){selectClip(i);break;}elapsed+=ed;}
 };
 window._veZoomTl = (dir) => { vm.tlZoom=Math.max(0.2,Math.min(5,vm.tlZoom+(dir>0?0.3:-0.3))); updateTimeline(); };
 
@@ -1512,11 +1513,12 @@ function animateTransition(fromSrc, toClip, type, ms) {
 // ═══════════════════════════════════════════════════════════════
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
-async function playClipOnCanvas(ci, durMs) {
+async function playClipOnCanvas(ci, durMs, timeOffset) {
     const c=vm.clips[ci]; if(!c) return;
     const src=c.type==='video'?c.video:c.img;
-    if(c.type==='video'){c.video.currentTime=0;try{await c.video.play();}catch(e){}}
-    const startT=performance.now(), startPlayT=clipStart(ci);
+    const tOff=timeOffset||0; // seconds already elapsed (e.g. transition time)
+    if(c.type==='video'){c.video.currentTime=tOff;try{await c.video.play();}catch(e){}}
+    const startT=performance.now(), startPlayT=clipStart(ci)+tOff;
     return new Promise(resolve=>{
         function frame(){
             if(vm.cancel){if(c.type==='video')c.video.pause();resolve();return;}
@@ -1527,7 +1529,7 @@ async function playClipOnCanvas(ci, durMs) {
             const ctx=vm.ctx; applyAdj(ctx,c.adj);
             ctx.fillStyle='#000';ctx.fillRect(0,0,vm.w,vm.h);
             drawCover(ctx,src,vm.w,vm.h,c.panX||0,c.panY||0,c.imgScale||1);ctx.filter='none';
-            const ct=elapsed/1000;
+            const ct=tOff+elapsed/1000;
             c.overlays.forEach(o=>{if(o.tStart!=null&&o.tEnd!=null&&(ct<o.tStart||ct>o.tEnd))return;renderOverlay(ctx,o);});
             if(elapsed>=durMs){if(c.type==='video')c.video.pause();resolve();}
             else requestAnimationFrame(frame);
@@ -1551,12 +1553,12 @@ window.vePlay = async function() {
         if(i>0&&c.transition!=='none'){
             const prevSrc=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;
             await animateTransition(prevSrc,c,c.transition,transMs);
-            c.overlays.forEach(o=>renderOverlay(vm.ctx,o));
-            await playClipOnCanvas(i,dur-transMs);
+            await playClipOnCanvas(i,dur-transMs,transMs/1000);
         } else {
             await playClipOnCanvas(i,dur);
         }
     }
+    vm.playTime=totalDur(); updatePlayhead();
     stopMusicPreview();if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;}vm.playing=false;vm.paused=false;vm.cancel=false;
     if(btn)btn.innerHTML='<i class="fa-solid fa-play"></i>';
     updateAll();
@@ -1600,7 +1602,7 @@ window.veExport = async function() {
         const pct=Math.round(i/vm.clips.length*100);if(progBar)progBar.style.width=pct+'%';if(progText)progText.textContent=`${i+1}/${vm.clips.length}`;
         const c=vm.clips[i],dur=clipEffDur(c)*1000;
         if(c.type==='video'&&c.video) c.video.playbackRate=c.speed||1;
-        if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);await playClipOnCanvas(i,dur-800);}
+        if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);await playClipOnCanvas(i,dur-800,0.8);}
         else{await playClipOnCanvas(i,i===0?dur-200:dur);} // use rAF loop so video frames render continuously
     }
     if(progBar)progBar.style.width='100%';if(progText)progText.textContent='인코딩 중...';
