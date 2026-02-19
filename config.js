@@ -23,8 +23,6 @@ export function initConfig() {
 
     // 백업 파일과 동일한 IIFE 구조 사용 (가장 안정적)
     initPromise = (async () => {
-        console.log(`⚙️ 설정 로딩 시작...`);
-        
         // 1. 라이브러리 로드 대기
         if (typeof window.supabase === 'undefined') {
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -45,9 +43,7 @@ export function initConfig() {
                         detectSessionInUrl: true 
                     } 
                 });
-                console.log("🚀 Supabase 클라이언트가 새로 생성되었습니다.");
             } else {
-                console.log("♻️ 기존 Supabase 인스턴스를 재사용합니다.");
             }
             
             // 2. 세션 상태 확인
@@ -69,8 +65,6 @@ export function initConfig() {
 
             // 4. 데이터 로드 (이 부분만 최적화됨)
             await loadSystemData();
-
-            console.log("✅ 설정 및 데이터 로딩 완료");
 
         } catch (e) {
             console.error("설정 오류:", e);

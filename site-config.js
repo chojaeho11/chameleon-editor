@@ -206,4 +206,3 @@ export function convertCurrency(krwAmount) {
     return krwAmount * rate;
 }
 
-console.log(`🌍 현재 접속 국가 모드: ${country} (Domain: ${hostname})`);

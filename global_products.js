@@ -967,7 +967,6 @@ window.addProductDB = async () => {
             const { data: urlData } = sb.storage.from('products').getPublicUrl(fileName);
             imgUrl = urlData.publicUrl; // 긴 문자열을 짧은 URL로 교체!
             
-            console.log("이미지 자동 변환 성공:", imgUrl);
 
         } catch (err) {
             console.error("이미지 변환 실패:", err);
@@ -1247,7 +1246,6 @@ window.previewProductImage = async (input) => {
         const { data } = sb.storage.from('products').getPublicUrl(path);
         // [중요] 업로드가 성공해야만 URL 입력칸에 값을 넣음
         document.getElementById('newProdImg').value = data.publicUrl;
-        console.log("업로드 완료:", data.publicUrl);
 
     } catch(e) { 
         alert("업로드 처리 중 오류 발생"); 
@@ -1768,7 +1766,6 @@ window.initPopupQuill = () => {
                                 this.quill.insertEmbed(range.index, 'image', publicUrl);
                                 this.quill.setSelection(range.index + 1);
                                 
-                                console.log("이미지 서버 업로드 완료:", publicUrl);
                             } catch (err) {
                                 console.error("자동 업로드 실패:", err);
                                 alert("이미지 업로드 중 오류가 발생했습니다. 파일 크기나 네트워크를 확인해주세요.");
@@ -2111,7 +2108,6 @@ window.resetAllGeneralProducts = async () => {
 window.recoverDescription = async () => {
     if (!confirm("⚠️ 주의: 한국어 상세페이지가 비어있는 상품들을 복구합니다.\n\n1. 영어(없으면 일본어) 내용을 가져옵니다.\n2. 이미지(Base64)는 모두 제거합니다.\n3. 텍스트를 한국어로 번역해 저장합니다.\n\n진행하시겠습니까?")) return;
 
-    console.log("🚀 복구 작업 시작...");
     const btn = document.getElementById('btnProductSave'); // 로딩 표시용 버튼 아무거나
     if(btn) btn.innerText = "복구 중... (콘솔 확인)";
 
@@ -2153,7 +2149,6 @@ window.recoverDescription = async () => {
 
                 await sb.from('admin_products').update({ description: finalHtml }).eq('id', p.id);
                 
-                console.log(`✅ [${p.code}] 복구 완료`);
                 count++;
             }
         }

@@ -95,7 +95,6 @@ export function initCanvas() {
     canvas.on("selection:updated", updateLockUI);
     canvas.on("selection:cleared", updateLockUI);
 
-    console.log("✅ Canvas Core Initialized");
 }
 export function setMaxLimits(w_mm, h_mm) { maxLimitMM.w = w_mm; maxLimitMM.h = h_mm; }
 export function setBaseSize(w, h) { baseW = w; baseH = h; }

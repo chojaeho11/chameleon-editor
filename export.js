@@ -522,7 +522,6 @@ export function initExport() {
                 // 3. 벡터 PDF 먼저 시도, 실패 또는 빈 PDF시 래스터 PDF
                 let blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
                 if (!blob || blob.size < 1000) {
-                    console.log("벡터 PDF 실패/빈 결과 -> 래스터 PDF 전환 (size:", blob ? blob.size : 0, ")");
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
                 }
 
@@ -620,8 +619,6 @@ async function loadPdfFonts(doc) {
         const langMap = { 'kr': 'KR', 'jp': 'JA', 'ja': 'JA', 'us': 'EN', 'en': 'EN' };
         const dbLangCode = langMap[CURRENT_LANG_CODE] || 'KR';
         
-        console.log(`[PDF] DB에서 ${dbLangCode} 폰트 검색 시도...`);
-        
         // Supabase DB 조회 (site_fonts 테이블)
         const { data, error } = await sb
             .from('site_fonts')
@@ -632,7 +629,6 @@ async function loadPdfFonts(doc) {
 
         if (data && data.length > 0 && data[0].file_url) {
             targetUrl = data[0].file_url;
-            console.log(`[PDF] DB 폰트 주소 확보 성공: ${targetUrl}`);
         } else {
             console.warn("[PDF] DB에 해당 언어 폰트가 없어 기본 설정 사용");
         }

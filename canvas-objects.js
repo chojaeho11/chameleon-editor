@@ -392,7 +392,6 @@ export async function initObjectTools() {
     // 1. 전역 함수로 폰트 로딩 기능 등록 (index.html에서 호출함)
     window.initCanvasFonts = async function() {
         if (window.isFontsInitialized) return;
-        console.log("🎨 [Editor] 폰트 동적 로딩 시작...");
         loadGoogleWebFontsCSS();
         await loadDynamicFonts();
         window.isFontsInitialized = true;
@@ -411,7 +410,6 @@ export async function initObjectTools() {
     // 4. 캔바 스타일 실시간 편집(더블클릭) 활성화
     initAdvancedEditing();
 
-    console.log(`✨ canvas-objects.js initialized (Site: ${CURRENT_LANG})`);
 }
 
 // ============================================================
@@ -424,12 +422,10 @@ function loadGoogleWebFontsCSS() {
     link.rel = "stylesheet";
     link.href = buildGoogleFontsURL(CURRENT_LANG);
     document.head.appendChild(link);
-    console.log(`📥 [Font] Google Fonts CSS loaded for ${CURRENT_LANG} (${(GOOGLE_FONTS[CURRENT_LANG]||[]).length} + ${(GOOGLE_FONTS['COMMON']||[]).length} common fonts)`);
 }
 
 // ★ 핵심: Supabase에서 폰트 목록을 가져와 브라우저에 등록
 async function loadDynamicFonts() {
-    console.log(`📥 [Font] ${CURRENT_LANG} 폰트 로딩 중...`);
     let dbFonts = [];
 
     // 1단계: DB 폰트 로드 (실패해도 계속 진행)
@@ -447,7 +443,6 @@ async function loadDynamicFonts() {
                 const fontFace = new FontFace(font.font_family, `url(${encodeURI(font.file_url)})`);
                 return fontFace.load().then(loadedFace => {
                     document.fonts.add(loadedFace);
-                    console.log(`✅ DB Font: ${font.font_name}`);
                 }).catch(err => {
                     console.warn(`❌ Font Load Failed (${font.font_name}):`, err);
                 });
@@ -472,7 +467,6 @@ async function loadDynamicFonts() {
 
     DYNAMIC_FONTS = [...dbFonts, ...uniqueGoogleFonts];
     window.DYNAMIC_FONTS = DYNAMIC_FONTS;
-    console.log(`📋 [Font] Total: ${dbFonts.length} DB + ${uniqueGoogleFonts.length} Google = ${DYNAMIC_FONTS.length} fonts`);
 }
 
 // 폰트 전체보기 모달에 목록 렌더링

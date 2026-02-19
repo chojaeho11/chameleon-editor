@@ -5,9 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<meta name="google-site-verification" content="google624fc809d06901b9" />
 <meta name="google-site-verification" content="Dhvn0owXlH08MDDE8HdQQ59qiwneoNd54FJdTA6IcbE" />
-<meta name="google-site-verification" content="buxu-y0FNf8BjLdajcAZtSc8Ts3taoLi4gz_oobOT6U" />
 <meta name="naver-site-verification" content="f6465982272d82eb6c3ce4c620a905c666e8831d" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script>
@@ -34,11 +32,10 @@
                         });
                     }
                     return;
-                } catch (e) { console.error("JSON 복원 실패"); }
+                } catch (e) { /* JSON restore fail */ }
             }
             return originalFromURL.call(this, url, callback, options);
         };
-        console.log("✅ 미디어 최적화 엔진 가동");
     });
 </script>
 <script>
@@ -47,22 +44,21 @@
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
             for(let registration of registrations) {
                 registration.unregister();
-                console.log("좀비 서비스 워커 삭제 완료!");
             }
         });
         caches.keys().then(function(names) {
             for (let name of names) caches.delete(name);
-            console.log("좀비 캐시 저장소 삭제 완료!");
         });
     }
 
-    // [★추가할 코드] 431 에러 방지를 위한 모든 쿠키 삭제
-    document.cookie.split(";").forEach(function(c) { 
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-    });
-    console.log("헤더 용량 초과 방지를 위해 쿠키를 초기화했습니다.");
+    // [431 에러 방지] 쿠키가 4KB 이상일 때만 삭제 (세션 보존)
+    if (document.cookie.length > 4000) {
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+    }
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
 <meta name="description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.">
 <meta name="keywords" content="카멜레온프린팅,허니콤보드,종이매대,패브릭인쇄,팝업스토어,등신대제작">
@@ -307,17 +303,10 @@
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="./style.css?v=123">
 
 <meta name="naver-site-verification" content="141eed82fa50fd6f98fa7bfe8dc481a202beb8cf" />
 
-<!-- 채널톡 비활성화 (카멜레온 AI 챗봇으로 대체)
-<script>
-  (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
-  ChannelIO('boot', { "pluginKey": "752ba9ff-a447-4e10-9813-715e051995cd" });
-</script>
--->
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
     // HTML 문서는 브라우저가 매번 재검증하므로, JS 모듈 캐시 문제를 우회함
@@ -327,7 +316,7 @@
         if (h.indexOf('cafe0101') !== -1) code = 'JP';
         else if (h.indexOf('cafe3355') !== -1) code = 'US';
         window.__SITE_CODE = code;
-        console.log('[SITE] hostname=' + h + ' → __SITE_CODE=' + code);
+        // Site code set silently
     })();
 
     // 1. 프로젝트 버전
@@ -337,6 +326,7 @@
 </head>
 <body>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
+<script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
 
 <div id="contextMenu">
     <div class="ctx-item" id="ctxUndo"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="ctx_undo">실행 취소</span></div>

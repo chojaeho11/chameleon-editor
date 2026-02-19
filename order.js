@@ -558,7 +558,6 @@ function saveCart() {
                 // 썸네일을 아예 제거한 초경량 버전으로 저장 시도
                 const superClean = cleanData.map(item => ({ ...item, thumb: null }));
                 localStorage.setItem(storageKey, JSON.stringify(superClean));
-                console.log("비상 저장 성공");
             } catch (finalErr) {
                 alert(window.t('msg_storage_full', "Browser storage is full. Please remove unnecessary cart items."));
             }
@@ -640,7 +639,6 @@ async function addCanvasToCart() {
     // 상품 정보 복구 로직
     if (!product || (product.is_custom_size && product.price === 0)) {
         try {
-            console.log(`상품 정보('${key}') 복구 시도...`);
             const { data: prodData, error } = await sb.from('admin_products').select('*').eq('code', key).maybeSingle();
             
             if (prodData) {
@@ -763,12 +761,10 @@ async function addCanvasToCart() {
         let pdfBlob = await generateProductVectorPDF(pdfPages, finalW, finalH, boardX, boardY);
         // 2차: 벡터 실패 시 래스터 폴백
         if (!pdfBlob || pdfBlob.size < 1000) {
-            console.log("[사전 PDF] 벡터 실패 → 래스터 전환 (size:", pdfBlob?.size || 0, ")");
             pdfBlob = await generateRasterPDF(pdfPages, finalW, finalH, boardX, boardY);
         }
         if (pdfBlob && pdfBlob.size > 500) {
             designPdfUrl = await uploadFileToSupabase(pdfBlob, 'cart_pdf');
-            console.log("[사전 PDF] 생성 완료:", designPdfUrl, "size:", pdfBlob.size);
         }
     } catch(e) {
         console.warn("사전 PDF 생성 실패:", e);
@@ -786,7 +782,6 @@ async function addCanvasToCart() {
             );
             if (layoutBlob && layoutBlob.size > 500) {
                 boxLayoutPdfUrl = await uploadFileToSupabase(layoutBlob, 'cart_pdf');
-                console.log("[박스 배치도 PDF] 생성 완료:", boxLayoutPdfUrl, "size:", layoutBlob.size);
             }
         } catch(e) {
             console.warn("박스 배치도 PDF 생성 실패:", e);
@@ -806,11 +801,9 @@ async function addCanvasToCart() {
         calcProduct.is_custom_size = true;
         calcProduct._box_sheet_count = window.__boxSheetCount;
         calcProduct._box_dims = window.__boxDims ? { ...window.__boxDims } : null;
-        console.log(`[박스 가격] ${window.__boxSheetCount}매 × 장당가격 = ${window.__boxCalculatedPrice.toLocaleString()}원`);
     } else if (product.is_custom_size) {
         // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지
         if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || 0) - currentMmW) < 5) {
-            console.log(`[가격 유지] 기존 계산된 가격 사용: ${product.price.toLocaleString()}원`);
         } else {
             // 제품 실제 회배 단가(price)로 면적 계산
             const sqmPrice = product._base_sqm_price || product.price || 50000;
@@ -818,10 +811,7 @@ async function addCanvasToCart() {
             let calcPrice = Math.round((area_m2 * sqmPrice) / 10) * 10;
             if (calcPrice < 100) calcPrice = sqmPrice; // 최소 단가 = 기본 단가
             calcProduct.price = calcPrice;
-            console.log(`[가격계산 적용] ${Math.round(currentMmW)}x${Math.round(currentMmH)}mm / 면적:${area_m2.toFixed(4)}m2 / 회배단가:${sqmPrice.toLocaleString()}원 / 계산가:${calcPrice.toLocaleString()}원`);
         }
-    } else {
-        console.log(`[고정가 적용] ${product.name}: ${product.price.toLocaleString()}원`);
     }
     
     let originalFileUrl = null; 
@@ -928,10 +918,8 @@ async function addCanvasToCart() {
             if (oldItem.product.height_mm) newItem.product.height_mm = oldItem.product.height_mm;
             if (oldItem.product.is_custom) newItem.product.is_custom = oldItem.product.is_custom;
             if (oldItem.product.is_custom_size) newItem.product.is_custom_size = oldItem.product.is_custom_size;
-            console.log("[다시편집] 기존 단가/사이즈 보존:", oldItem.product.price, oldItem.product.w_mm, "x", oldItem.product.h_mm);
         }
         currentCartList[window.editingCartItemIdx] = newItem;
-        console.log("[다시편집] 장바구니 아이템 업데이트 완료:", window.editingCartItemIdx);
         window.editingCartItemIdx = undefined;
     } else {
         currentCartList.push(newItem);
@@ -1250,7 +1238,6 @@ function updateSummary(prodTotal, addonTotal, total) {
         
         if (excludedSet.has(prodCat)) {
             hasExcludedItem = true;
-            console.log(`🚫 제외 상품 감지: ${item.product.name}`);
         } else {
             const unitPrice = item.product.price || 0;
             const qty = item.qty || 1;
@@ -1391,7 +1378,6 @@ async function creditReferralBonus(orderId, referrerId) {
             user_id: referrerId, type: 'referral_bonus',
             amount: bonusAmount, description: `##REFERRAL##${buyerName}##${orderId}##`
         });
-        console.log(`[추천인] 적립 완료: ${referrerId} +${bonusAmount}KRW`);
     } catch (e) {
         console.error('[추천인] 적립 오류:', e);
     }
@@ -1586,7 +1572,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
     const _siteCode = (_fromHTML && _fromHTML !== 'KR') ? _fromHTML
                     : (_fromConfig && _fromConfig !== 'KR') ? _fromConfig
                     : _fromHostname;
-    console.log('[ORDER] site_code=' + _siteCode + ' (HTML=' + _fromHTML + ', CONFIG=' + _fromConfig + ', HOST=' + _fromHostname + ', hostname=' + _hostname + ')');
 
     // 추천인 정보를 request_note에 태그로 저장
     let finalRequestNote = request;
@@ -1670,7 +1655,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                     const pdfBlob = await res.blob();
                     const url = await withTimeout(uploadFileToSupabase(pdfBlob, `orders/${newOrderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
                     if (url) uploadedFiles.push({ name: `product_${idx}_${item.product?.name || 'design'}.pdf`, url: url, type: 'product' });
-                    console.log("[주문] 사전생성 PDF 사용 완료:", url);
                 }
             } catch(err) { console.warn("사전생성 PDF 전송 실패:", err); }
 
@@ -1682,7 +1666,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                         const layoutBlob = await layoutRes.blob();
                         const layoutUrl = await withTimeout(uploadFileToSupabase(layoutBlob, `orders/${newOrderId}/box_layout_${idx}.pdf`), UPLOAD_TIMEOUT);
                         if (layoutUrl) uploadedFiles.push({ name: `box_layout_${idx}_${item.product?.name || 'layout'}.pdf`, url: layoutUrl, type: 'box_layout' });
-                        console.log("[주문] 박스 배치도 PDF 업로드 완료:", layoutUrl);
                     }
                 } catch(err) { console.warn("박스 배치도 PDF 전송 실패:", err); }
             }
@@ -1704,7 +1687,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
                 let fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
                 if (!fileBlob || fileBlob.size < 5000) {
-                    console.log("벡터 PDF 실패/빈 결과 -> 래스터 PDF 전환 (size:", fileBlob ? fileBlob.size : 0, ")");
                     fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
                 }
 
@@ -2065,7 +2047,6 @@ window.reEditCartItem = async function(idx) {
                 canvas.loadFromJSON(mainJson, () => {
                     canvas.renderAll();
                     if (loading) loading.style.display = "none";
-                    console.log("[다시편집] 캔버스 로드 완료, 편집 인덱스:", idx);
                 });
             } catch(e) {
                 console.error("캔버스 로드 실패:", e);
