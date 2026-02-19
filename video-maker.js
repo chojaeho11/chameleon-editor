@@ -77,7 +77,7 @@ let vm = {
     clipboard: null, snapLines: null,
     audioItems: null, audioEl: null, audioUrl: null,
     audioPage: 0, audioHasMore: false,
-    audioTab: 'sfx', // 'sfx' or 'ai'
+    audioTab: 'sfx', _sfxOpen: false,
     canvasZoom: 1
 };
 
@@ -555,87 +555,106 @@ function filterTagsByCountry(tags) {
 }
 
 function renderAudioTab(el) {
-    const isSfx=vm.audioTab==='sfx';
-    const isAi=vm.audioTab==='ai';
-    let h = `<div class="ve-sec"><b>${_t('ve_audio_label','Audio')}</b>`;
-    // sub-tabs: SFX vs AI Composer
-    h += `<div style="display:flex;gap:4px;margin:8px 0">`;
-    h += `<button class="ve-audio-subtab${isSfx?' active':''}" onclick="window._veAudioTabSwitch('sfx')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${isSfx?'#818cf8':'#333'};background:${isSfx?'rgba(129,140,248,0.15)':'transparent'};color:${isSfx?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-bell"></i> SFX</button>`;
-    h += `<button class="ve-audio-subtab${isAi?' active':''}" onclick="window._veAudioTabSwitch('ai')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${isAi?'#818cf8':'#333'};background:${isAi?'rgba(129,140,248,0.15)':'transparent'};color:${isAi?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 작곡</button>`;
-    h += `</div>`;
-    // 음원 없음 옵션
+    let h = '';
+    // ── 음원 없음 ──
     const noSel=vm.music==='none'&&!vm.audioUrl;
+    h += `<div class="ve-sec">`;
     h += `<div class="ve-music-row${noSel?' selected':''}" onclick="window._veSelectMusic('none')">`;
     h += `<i class="fa-solid fa-volume-xmark" style="width:24px;text-align:center;font-size:16px;color:${noSel?'#818cf8':'#6b7280'}"></i>`;
     h += `<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${_t('ve_audio_none','No audio')}</div></div></div>`;
 
-    if (isAi) {
-        // AI Composer panel
-        h += `<div style="margin-top:10px">`;
-        h += `<div style="background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(168,85,247,0.1));border:1px solid rgba(129,140,248,0.2);border-radius:12px;padding:14px;">`;
-        h += `<div style="text-align:center;margin-bottom:12px;"><i class="fa-solid fa-wand-magic-sparkles" style="font-size:24px;color:#a78bfa"></i>`;
-        h += `<div style="font-size:13px;font-weight:700;color:#c4b5fd;margin-top:6px">AI 작곡가</div>`;
-        h += `<div style="font-size:10px;color:#64748b">원하는 분위기의 음악을 AI가 작곡합니다</div></div>`;
-        // Prompt
-        h += `<label style="font-size:11px;color:#94a3b8;font-weight:600;display:block;margin-bottom:4px">프롬프트</label>`;
-        h += `<textarea id="veAiMusicPrompt" style="width:100%;height:50px;background:#1a1a2e;border:1px solid #333;border-radius:8px;color:#e0e0e8;font-size:11px;padding:8px;resize:none;outline:none;box-sizing:border-box" placeholder="예: 밝고 경쾌한 카페 배경음악, 피아노와 기타"></textarea>`;
-        // Style
-        h += `<label style="font-size:11px;color:#94a3b8;font-weight:600;display:block;margin:8px 0 4px">스타일</label>`;
-        h += `<div id="veAiMusicStyles" style="display:flex;flex-wrap:wrap;gap:4px">`;
-        const styles = [
-            {id:'pop',label:'팝',icon:'🎵'},{id:'cinematic',label:'시네마틱',icon:'🎬'},
-            {id:'lofi',label:'Lo-Fi',icon:'🎧'},{id:'jazz',label:'재즈',icon:'🎷'},
-            {id:'electronic',label:'일렉트로닉',icon:'🎹'},{id:'acoustic',label:'어쿠스틱',icon:'🪕'},
-            {id:'classical',label:'클래식',icon:'🎻'},{id:'hiphop',label:'힙합',icon:'🎤'}
-        ];
-        styles.forEach(s=>{
-            const sel=vm._aiMusicStyle===s.id;
-            h+=`<button onclick="window._veAiMusicStyle='${s.id}';vm._aiMusicStyle='${s.id}';document.querySelectorAll('#veAiMusicStyles button').forEach(b=>b.style.borderColor='#333');this.style.borderColor='#818cf8';this.style.background='rgba(129,140,248,0.15)'" style="padding:4px 8px;border-radius:6px;border:1px solid ${sel?'#818cf8':'#333'};background:${sel?'rgba(129,140,248,0.15)':'transparent'};color:${sel?'#a5b4fc':'#888'};font-size:10px;cursor:pointer;white-space:nowrap">${s.icon} ${s.label}</button>`;
-        });
-        h += `</div>`;
-        // Duration
-        h += `<label style="font-size:11px;color:#94a3b8;font-weight:600;display:block;margin:8px 0 4px">길이</label>`;
-        h += `<div style="display:flex;gap:4px">`;
-        [5,10,15,20,30].forEach(d=>{
-            const sel=(vm._aiMusicDur||10)===d;
-            h+=`<button onclick="vm._aiMusicDur=${d};refreshLeftPanel()" style="flex:1;padding:5px 0;border-radius:6px;border:1px solid ${sel?'#818cf8':'#333'};background:${sel?'rgba(129,140,248,0.15)':'transparent'};color:${sel?'#a5b4fc':'#888'};font-size:10px;cursor:pointer">${d}초</button>`;
-        });
-        h += `</div>`;
-        // Generate button
-        h += `<button id="veAiMusicGenBtn" onclick="window._veAiMusicGenerate()" style="width:100%;margin-top:12px;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s">`;
-        h += `<i class="fa-solid fa-wand-magic-sparkles"></i> AI 음악 생성</button>`;
-        // Status
-        h += `<div id="veAiMusicStatus" style="display:none;margin-top:8px;text-align:center;padding:10px;background:rgba(129,140,248,0.1);border-radius:8px">`;
-        h += `<div style="width:18px;height:18px;border:2px solid rgba(129,140,248,0.3);border-top-color:#a78bfa;border-radius:50%;animation:veSpin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px"></div>`;
-        h += `<span id="veAiMusicStatusText" style="font-size:11px;color:#c4b5fd">생성 중...</span></div>`;
-        // Generated music list
-        h += `<div id="veAiMusicList" style="margin-top:8px"></div>`;
-        h += `</div></div>`;
-        // Show previously generated AI music
-        if (vm._aiGeneratedMusic && vm._aiGeneratedMusic.length) {
-            h += `<div style="margin-top:8px"><div style="font-size:11px;color:#64748b;margin-bottom:4px;font-weight:600">생성된 음악</div>`;
-            vm._aiGeneratedMusic.forEach((m,i)=>{
-                const sel=vm.audioUrl===m.url;
-                const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewAiIdx===i;
-                h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectAiMusic(${i})">`;
-                h+=`<i class="fa-solid fa-wand-magic-sparkles" style="width:24px;text-align:center;font-size:14px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
-                h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${m.name||'AI Music '+(i+1)}</div><div style="font-size:10px;color:#555">${m.duration||''}초 · ${m.style||''}</div></div>`;
-                h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewAiMusic(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
-                h+=`</div>`;
-            });
-            h += `</div>`;
-        }
-    } else {
-        // SFX list
+    // ── TikTok SFX Section ──
+    h += `<div style="margin-top:6px;padding:10px;background:rgba(30,30,50,0.5);border:1px solid #333;border-radius:10px;">`;
+    h += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer" onclick="window._veToggleSfxPanel()">`;
+    h += `<div style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-music" style="color:#34d399;font-size:14px"></i><span style="font-size:12px;font-weight:700;color:#e0e0e8">TikTok SFX</span></div>`;
+    h += `<i class="fa-solid fa-chevron-${vm._sfxOpen?'up':'down'}" style="color:#666;font-size:10px"></i>`;
+    h += `</div>`;
+    if (vm._sfxOpen) {
         h += `<div id="veAudioList"><p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p></div>`;
     }
     h += `</div>`;
+
+    // ── AI Composer Section (Big) ──
+    h += `<div style="margin-top:10px;padding:16px;background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(168,85,247,0.12));border:1px solid rgba(129,140,248,0.25);border-radius:14px;">`;
+    h += `<div style="text-align:center;margin-bottom:14px;">`;
+    h += `<div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:14px;margin-bottom:8px"><i class="fa-solid fa-wand-magic-sparkles" style="font-size:22px;color:#fff"></i></div>`;
+    h += `<div style="font-size:15px;font-weight:800;color:#e0e0e8;letter-spacing:-0.3px">AI Composer</div>`;
+    h += `<div style="font-size:10px;color:#94a3b8;margin-top:2px">Describe the music you want</div></div>`;
+
+    // Prompt
+    h += `<textarea id="veAiMusicPrompt" style="width:100%;height:55px;background:rgba(15,15,30,0.7);border:1px solid rgba(129,140,248,0.2);border-radius:10px;color:#e0e0e8;font-size:11px;padding:10px;resize:none;outline:none;box-sizing:border-box" placeholder="ex) bright and cheerful cafe background music with piano and guitar"></textarea>`;
+
+    // Style
+    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">Style</div>`;
+    h += `<div id="veAiMusicStyles" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">`;
+    const styles = [
+        {id:'pop',label:'Pop',icon:'🎵'},{id:'cinematic',label:'Cinematic',icon:'🎬'},
+        {id:'lofi',label:'Lo-Fi',icon:'🎧'},{id:'jazz',label:'Jazz',icon:'🎷'},
+        {id:'electronic',label:'EDM',icon:'🎹'},{id:'acoustic',label:'Acoustic',icon:'🪕'},
+        {id:'classical',label:'Classic',icon:'🎻'},{id:'hiphop',label:'HipHop',icon:'🎤'}
+    ];
+    const curStyle = vm._aiMusicStyle || 'cinematic';
+    styles.forEach(s=>{
+        const sel=curStyle===s.id;
+        h+=`<button onclick="window._veSetMusicStyle('${s.id}')" style="padding:5px 2px;border-radius:8px;border:1px solid ${sel?'#818cf8':'rgba(255,255,255,0.08)'};background:${sel?'rgba(129,140,248,0.2)':'rgba(255,255,255,0.03)'};color:${sel?'#c4b5fd':'#888'};font-size:9px;cursor:pointer;text-align:center;line-height:1.3;transition:all .15s">${s.icon}<br>${s.label}</button>`;
+    });
+    h += `</div>`;
+
+    // Duration
+    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">Duration</div>`;
+    h += `<div style="display:flex;gap:4px">`;
+    const curDur = vm._aiMusicDur || 10;
+    [5,10,15,20,30].forEach(d=>{
+        const sel=curDur===d;
+        h+=`<button onclick="window._veSetMusicDur(${d})" style="flex:1;padding:6px 0;border-radius:8px;border:1px solid ${sel?'#818cf8':'rgba(255,255,255,0.08)'};background:${sel?'rgba(129,140,248,0.2)':'rgba(255,255,255,0.03)'};color:${sel?'#c4b5fd':'#888'};font-size:11px;font-weight:${sel?'700':'400'};cursor:pointer;transition:all .15s">${d}s</button>`;
+    });
+    h += `</div>`;
+
+    // Generate button (big)
+    h += `<button id="veAiMusicGenBtn" onclick="window._veAiMusicGenerate()" style="width:100%;margin-top:14px;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 4px 15px rgba(99,102,241,0.3)">`;
+    h += `<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Music</button>`;
+
+    // Status
+    h += `<div id="veAiMusicStatus" style="display:none;margin-top:10px;text-align:center;padding:12px;background:rgba(15,15,30,0.5);border-radius:10px">`;
+    h += `<div style="width:20px;height:20px;border:2px solid rgba(129,140,248,0.3);border-top-color:#a78bfa;border-radius:50%;animation:veSpin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px"></div>`;
+    h += `<span id="veAiMusicStatusText" style="font-size:11px;color:#c4b5fd">Generating...</span></div>`;
+
+    // Generated music list
+    if (vm._aiGeneratedMusic && vm._aiGeneratedMusic.length) {
+        h += `<div style="margin-top:12px;border-top:1px solid rgba(129,140,248,0.15);padding-top:10px">`;
+        h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:6px">Generated Music</div>`;
+        vm._aiGeneratedMusic.forEach((m,i)=>{
+            const sel=vm.audioUrl===m.url;
+            const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewAiIdx===i;
+            h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectAiMusic(${i})" style="margin-bottom:3px">`;
+            h+=`<i class="fa-solid fa-wand-magic-sparkles" style="width:24px;text-align:center;font-size:13px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
+            h+=`<div style="flex:1"><div style="font-size:11px;font-weight:600;color:#e0e0e8">${m.name||'AI Music '+(i+1)}</div><div style="font-size:9px;color:#555">${m.duration||''}s · ${m.style||''}</div></div>`;
+            h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewAiMusic(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
+            h+=`</div>`;
+        });
+        h += `</div>`;
+    }
+    h += `</div>`;
+
+    h += `</div>`;
     el.innerHTML = h;
-    if (!isAi) loadAudioFromDB();
+    if (vm._sfxOpen) loadAudioFromDB();
 }
 window._veAudioTabSwitch=function(tab){
     vm.audioTab=tab;vm.audioPage=0;vm.audioItems=null;
     if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}
+    refreshLeftPanel();
+};
+window._veToggleSfxPanel=function(){
+    vm._sfxOpen=!vm._sfxOpen;vm.audioPage=0;vm.audioItems=null;
+    refreshLeftPanel();
+};
+window._veSetMusicStyle=function(id){
+    vm._aiMusicStyle=id;
+    refreshLeftPanel();
+};
+window._veSetMusicDur=function(d){
+    vm._aiMusicDur=d;
     refreshLeftPanel();
 };
 
@@ -645,7 +664,7 @@ async function loadAudioFromDB(page) {
     const pg=vm.audioPage;
     const list=document.getElementById('veAudioList'); if(!list) return;
     list.innerHTML=`<p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p>`;
-    const category=vm.audioTab==='bgm'?'audio-calm':'audio';
+    const category='audio';
     try {
         const sb=window.sb; if(!sb){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_no_conn','No DB connection')}</p>`;return;}
         const from=pg*AUDIO_PAGE_SIZE, to=from+AUDIO_PAGE_SIZE;
@@ -654,13 +673,13 @@ async function loadAudioFromDB(page) {
         const items=data||[];
         vm.audioHasMore=items.length>AUDIO_PAGE_SIZE;
         vm.audioItems=items.slice(0,AUDIO_PAGE_SIZE);
-        const emptyLabel=vm.audioTab==='bgm'?_t('ve_audio_no_bgm','No BGM found'):_t('ve_audio_no_result','No audio found');
+        const emptyLabel=_t('ve_audio_no_result','No audio found');
         if(!vm.audioItems.length&&pg===0){list.innerHTML=`<p class="ve-empty">${emptyLabel}</p>`;return;}
         if(!vm.audioItems.length){vm.audioPage=Math.max(0,pg-1);loadAudioFromDB();return;}
         let h='';
-        const icon=vm.audioTab==='bgm'?'fa-headphones':'fa-music';
+        const icon='fa-music';
         vm.audioItems.forEach((a,i)=>{
-            const defaultName=vm.audioTab==='bgm'?`BGM ${pg*AUDIO_PAGE_SIZE+i+1}`:`SFX ${pg*AUDIO_PAGE_SIZE+i+1}`;
+            const defaultName=`SFX ${pg*AUDIO_PAGE_SIZE+i+1}`;
             const name=filterTagsByCountry(a.tags)||defaultName;
             const sel=vm.audioUrl===a.data_url;
             const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewIdx===i;

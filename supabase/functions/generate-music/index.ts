@@ -18,16 +18,14 @@ serve(async (req) => {
     const { action } = body;
 
     // ─── ACTION: create ───
-    // Accepts prompt, style, duration → creates Replicate prediction
     if (action === 'create') {
       const { prompt, style, duration } = body;
       if (!prompt && !style) throw new Error('prompt or style is required');
 
-      // Build the full prompt combining user prompt + style
       const fullPrompt = [prompt, style].filter(Boolean).join(', ');
 
-      // Create Replicate prediction (async — returns immediately)
-      const replicateRes = await fetch("https://api.replicate.com/v1/models/meta/musicgen/predictions", {
+      // Use version-based endpoint for meta/musicgen
+      const replicateRes = await fetch("https://api.replicate.com/v1/predictions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${REPLICATE_API_TOKEN}`,
@@ -35,12 +33,17 @@ serve(async (req) => {
           "Prefer": "respond-async",
         },
         body: JSON.stringify({
+          version: "671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
           input: {
             prompt: fullPrompt,
             duration: duration || 10,
             model_version: "stereo-melody-large",
             output_format: "mp3",
-            normalization_strategy: "peak",
+            normalization_strategy: "loudness",
+            top_k: 250,
+            top_p: 0,
+            temperature: 1,
+            classifier_free_guidance: 3,
           }
         }),
       });
@@ -61,7 +64,6 @@ serve(async (req) => {
     }
 
     // ─── ACTION: check ───
-    // Polls prediction status by ID
     if (action === 'check') {
       const { predictionId } = body;
       if (!predictionId) throw new Error('predictionId is required');
