@@ -1980,8 +1980,19 @@ async function handleSubReturn() {
         <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
     </div>
 
+    <!-- Box Dimension Controls -->
+    <div id="boxDimensionControls" style="display:none; align-items:center; gap:6px; padding:8px 16px; background:rgba(30,30,60,0.95); border-radius:10px; margin:0 auto;">
+        <div style="color:#a78bfa; font-size:12px; font-weight:700; white-space:nowrap;"><i class="fa-solid fa-box"></i> <span data-i18n="box_dimensions">박스 (mm)</span></div>
+        <input id="boxW" type="number" placeholder="W" value="300" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
+        <span style="color:#666;">×</span>
+        <input id="boxH" type="number" placeholder="H" value="200" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
+        <span style="color:#666;">×</span>
+        <input id="boxD" type="number" placeholder="D" value="150" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
+        <button onclick="window.applyBoxDimensions()" style="padding:5px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" data-i18n="box_apply">적용</button>
+    </div>
+
     <div class="editor-wrap">
-        
+
         <!-- 아이콘 바 -->
         <div id="iconBar">
             <div class="icon-item" data-panel="sub-template">
@@ -2398,6 +2409,16 @@ async function handleSubReturn() {
                 <i class="fa-solid fa-cube"></i>
                 <span data-i18n="btn_3d_preview">3D 미리보기</span>
             </button>
+
+            <!-- Box Face Tabs -->
+            <div id="boxFaceTabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3);">
+                <button class="box-face-tab active" onclick="window.switchBoxFace(0)" data-i18n="box_face_front">앞면</button>
+                <button class="box-face-tab" onclick="window.switchBoxFace(1)" data-i18n="box_face_back">뒷면</button>
+                <button class="box-face-tab" onclick="window.switchBoxFace(2)" data-i18n="box_face_left">좌면</button>
+                <button class="box-face-tab" onclick="window.switchBoxFace(3)" data-i18n="box_face_right">우면</button>
+                <button class="box-face-tab" onclick="window.switchBoxFace(4)" data-i18n="box_face_top">윗면</button>
+                <button class="box-face-tab" onclick="window.switchBoxFace(5)" data-i18n="box_face_bottom">아랫면</button>
+            </div>
 
             <div id="pageControls" class="page-controls-bar">
                 <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
@@ -6582,7 +6603,9 @@ if (w >= 20 && h >= 20) {
         // 픽셀 변환 및 캔버스 설정
         const canvasW = Math.round(displayW * 3.7795);
         const canvasH = Math.round(displayH * 3.7795);
-        const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall' : 'standard';
+        const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall'
+                   : (product && product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb_box')) ? 'box'
+                   : 'standard';
 
         if (typeof setMaxLimits === 'function') setMaxLimits(displayW, displayH);
         
@@ -6594,11 +6617,28 @@ if (w >= 20 && h >= 20) {
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
-        // 3D 미리보기 버튼: 허니콤보드 가벽 상품일 때만 표시
+        // 3D 미리보기 버튼: 허니콤보드 상품일 때만 표시
         const btn3d = document.getElementById('btn3DPreview');
         if (btn3d) {
-            const isHoneycomb = (product && product.category === 'honeycomb') || (typeof key === 'string' && key.startsWith('hb'));
+            const isHoneycomb = (product && product.category === 'honeycomb') || (product && product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
             btn3d.style.display = isHoneycomb ? 'flex' : 'none';
+        }
+
+        // 박스 모드 UI 표시/숨김
+        const boxDimCtrl = document.getElementById('boxDimensionControls');
+        const boxFaceTabs = document.getElementById('boxFaceTabs');
+        if (mode === 'box') {
+            if (boxDimCtrl) boxDimCtrl.style.display = 'flex';
+            if (boxFaceTabs) boxFaceTabs.style.display = 'flex';
+            window.__boxMode = true;
+            // 기본 박스 치수로 6페이지 자동 생성
+            setTimeout(() => {
+                if (window.applyBoxDimensions) window.applyBoxDimensions();
+            }, 500);
+        } else {
+            if (boxDimCtrl) boxDimCtrl.style.display = 'none';
+            if (boxFaceTabs) boxFaceTabs.style.display = 'none';
+            window.__boxMode = false;
         }
 
         // 3. 화면 전환

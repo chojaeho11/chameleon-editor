@@ -995,5 +995,13 @@
   "btn_3d_preview": "3D 미리보기",
   "modal_3d_title": "3D 미리보기",
   "hint_3d_controls": "🖱 드래그: 회전 | 스크롤: 줌 | 우클릭: 이동",
-  "btn_3d_refresh": "디자인 새로고침"
+  "btn_3d_refresh": "디자인 새로고침",
+  "box_dimensions": "박스 (mm)",
+  "box_face_front": "앞면",
+  "box_face_back": "뒷면",
+  "box_face_left": "좌면",
+  "box_face_right": "우면",
+  "box_face_top": "윗면",
+  "box_face_bottom": "아랫면",
+  "box_apply": "적용"
 }

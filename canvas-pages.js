@@ -188,3 +188,80 @@ function updatePageCounter() {
     window._getPageIndex = () => currentPageIndex;
     window.savePageState = () => saveCurrentPageState();
 }
+
+// ─── 박스 모드: 6면 페이지 ───
+
+const CUSTOM_PROPS = ['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst'];
+
+const BOX_FACE_NAMES = ['Front', 'Back', 'Left', 'Right', 'Top', 'Bottom'];
+
+export function initBoxPages(wMM, hMM, dMM) {
+    const PX = 3.7795; // mm → px
+    const faces = [
+        { name: 'Front',  w: wMM * PX, h: hMM * PX },
+        { name: 'Back',   w: wMM * PX, h: hMM * PX },
+        { name: 'Left',   w: dMM * PX, h: hMM * PX },
+        { name: 'Right',  w: dMM * PX, h: hMM * PX },
+        { name: 'Top',    w: wMM * PX, h: dMM * PX },
+        { name: 'Bottom', w: wMM * PX, h: dMM * PX },
+    ];
+
+    // 기존 페이지 제거 후 6페이지 생성
+    pageDataList = [];
+    currentPageIndex = 0;
+
+    faces.forEach((face) => {
+        canvas.clear();
+        const board = new fabric.Rect({
+            width: face.w, height: face.h, fill: 'white',
+            left: 0, top: 0, selectable: false, evented: false, isBoard: true
+        });
+        canvas.add(board);
+        canvas.sendToBack(board);
+        const json = canvas.toJSON(CUSTOM_PROPS);
+        pageDataList.push(json);
+    });
+
+    // 첫 페이지(앞면) 로드
+    currentPageIndex = 0;
+    loadPage(0);
+    setTimeout(() => resizeCanvasToFit(), 50);
+    updatePageCounter();
+
+    // 탭 active 상태 초기화
+    document.querySelectorAll('.box-face-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === 0);
+    });
+}
+
+// 박스 면 전환
+window.switchBoxFace = function(index) {
+    if (index < 0 || index >= pageDataList.length) return;
+    if (index === currentPageIndex) return;
+
+    saveCurrentPageState();
+    currentPageIndex = index;
+    loadPage(index);
+
+    // 면별 다른 크기 → 화면 맞춤
+    setTimeout(() => resizeCanvasToFit(), 50);
+
+    // 탭 active 업데이트
+    document.querySelectorAll('.box-face-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+    });
+
+    updatePageCounter();
+};
+
+// 박스 치수 적용
+window.applyBoxDimensions = function() {
+    const w = parseInt(document.getElementById('boxW').value);
+    const h = parseInt(document.getElementById('boxH').value);
+    const d = parseInt(document.getElementById('boxD').value);
+    if (!w || !h || !d) return alert('W, H, D 값을 모두 입력하세요');
+
+    // 전역 저장 (3D에서 사용)
+    window.__boxDims = { w, h, d };
+    initBoxPages(w, h, d);
+};

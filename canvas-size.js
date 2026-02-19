@@ -224,6 +224,9 @@ export function applySize(w, h, name, mode, action) {
         if(wallControls) wallControls.style.display = 'flex';
         setGuideOn(true);
         drawGuides();
+    } else if (mode === 'box') {
+        if(wallControls) wallControls.style.display = 'none';
+        setGuideOn(false);
     } else {
         if(wallControls) wallControls.style.display = 'none';
         setGuideOn(false);

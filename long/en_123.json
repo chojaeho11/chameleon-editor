@@ -1371,5 +1371,13 @@
   "btn_3d_preview": "3D Preview",
   "modal_3d_title": "3D Preview",
   "hint_3d_controls": "🖱 Drag: Rotate | Scroll: Zoom | Right-click: Pan",
-  "btn_3d_refresh": "Refresh Design"
+  "btn_3d_refresh": "Refresh Design",
+  "box_dimensions": "Box (mm)",
+  "box_face_front": "Front",
+  "box_face_back": "Back",
+  "box_face_left": "Left",
+  "box_face_right": "Right",
+  "box_face_top": "Top",
+  "box_face_bottom": "Bottom",
+  "box_apply": "Apply"
 }

@@ -1371,5 +1371,13 @@
   "btn_3d_preview": "Aperçu 3D",
   "modal_3d_title": "Aperçu 3D",
   "hint_3d_controls": "🖱 Glisser: Rotation | Molette: Zoom | Clic droit: Déplacer",
-  "btn_3d_refresh": "Actualiser le design"
+  "btn_3d_refresh": "Actualiser le design",
+  "box_dimensions": "Boîte (mm)",
+  "box_face_front": "Avant",
+  "box_face_back": "Arrière",
+  "box_face_left": "Gauche",
+  "box_face_right": "Droite",
+  "box_face_top": "Dessus",
+  "box_face_bottom": "Dessous",
+  "box_apply": "Appliquer"
 }

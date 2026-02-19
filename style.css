@@ -393,6 +393,16 @@ button, input, textarea, select { font-family: inherit; }
 }
 .height-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
+/* Box Face Tabs */
+.box-face-tab {
+    padding: 6px 14px; border: none; border-radius: 6px;
+    background: rgba(255,255,255,0.1); color: #94a3b8;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+}
+.box-face-tab:hover { background: rgba(99,102,241,0.3); color: #c7d2fe; }
+.box-face-tab.active { background: #6366f1; color: #fff; }
+
 /* 칼선 도구 */
 .tool-box-group {
     background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; 

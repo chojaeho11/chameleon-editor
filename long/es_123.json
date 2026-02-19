@@ -1371,5 +1371,13 @@
   "btn_3d_preview": "Vista 3D",
   "modal_3d_title": "Vista 3D",
   "hint_3d_controls": "🖱 Arrastrar: Rotar | Scroll: Zoom | Clic derecho: Mover",
-  "btn_3d_refresh": "Actualizar diseño"
+  "btn_3d_refresh": "Actualizar diseño",
+  "box_dimensions": "Caja (mm)",
+  "box_face_front": "Frente",
+  "box_face_back": "Atrás",
+  "box_face_left": "Izquierda",
+  "box_face_right": "Derecha",
+  "box_face_top": "Arriba",
+  "box_face_bottom": "Abajo",
+  "box_apply": "Aplicar"
 }

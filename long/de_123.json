@@ -1371,5 +1371,13 @@
   "btn_3d_preview": "3D-Vorschau",
   "modal_3d_title": "3D-Vorschau",
   "hint_3d_controls": "🖱 Ziehen: Drehen | Scrollen: Zoom | Rechtsklick: Verschieben",
-  "btn_3d_refresh": "Design aktualisieren"
+  "btn_3d_refresh": "Design aktualisieren",
+  "box_dimensions": "Box (mm)",
+  "box_face_front": "Vorne",
+  "box_face_back": "Hinten",
+  "box_face_left": "Links",
+  "box_face_right": "Rechts",
+  "box_face_top": "Oben",
+  "box_face_bottom": "Unten",
+  "box_apply": "Anwenden"
 }

@@ -1371,5 +1371,13 @@
   "btn_3d_preview": "3Dプレビュー",
   "modal_3d_title": "3Dプレビュー",
   "hint_3d_controls": "🖱 ドラッグ: 回転 | スクロール: ズーム | 右クリック: 移動",
-  "btn_3d_refresh": "デザイン更新"
+  "btn_3d_refresh": "デザイン更新",
+  "box_dimensions": "ボックス (mm)",
+  "box_face_front": "前面",
+  "box_face_back": "背面",
+  "box_face_left": "左面",
+  "box_face_right": "右面",
+  "box_face_top": "上面",
+  "box_face_bottom": "底面",
+  "box_apply": "適用"
 }
