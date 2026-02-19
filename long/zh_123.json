@@ -1367,5 +1367,9 @@
   "ve_ai_photo_done": "分析完成！点击Generate",
   "ve_ai_photo_fail": "照片分析失败",
   "ve_bgm_title": "背景音乐",
-  "ve_bgm_empty": "暂无BGM"
+  "ve_bgm_empty": "暂无BGM",
+  "btn_3d_preview": "3D预览",
+  "modal_3d_title": "3D预览",
+  "hint_3d_controls": "🖱 拖拽: 旋转 | 滚轮: 缩放 | 右键: 平移",
+  "btn_3d_refresh": "刷新设计"
 }

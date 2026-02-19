@@ -1367,5 +1367,9 @@
   "ve_ai_photo_done": "Analyse abgeschlossen! Klicken Sie auf Generate",
   "ve_ai_photo_fail": "Fotoanalyse fehlgeschlagen",
   "ve_bgm_title": "Hintergrundmusik",
-  "ve_bgm_empty": "Kein BGM verfügbar"
+  "ve_bgm_empty": "Kein BGM verfügbar",
+  "btn_3d_preview": "3D-Vorschau",
+  "modal_3d_title": "3D-Vorschau",
+  "hint_3d_controls": "🖱 Ziehen: Drehen | Scrollen: Zoom | Rechtsklick: Verschieben",
+  "btn_3d_refresh": "Design aktualisieren"
 }

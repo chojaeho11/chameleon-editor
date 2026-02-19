@@ -1367,5 +1367,9 @@
   "ve_ai_photo_done": "Photo analyzed! Click Generate",
   "ve_ai_photo_fail": "Photo analysis failed",
   "ve_bgm_title": "Background Music",
-  "ve_bgm_empty": "No BGM available"
+  "ve_bgm_empty": "No BGM available",
+  "btn_3d_preview": "3D Preview",
+  "modal_3d_title": "3D Preview",
+  "hint_3d_controls": "🖱 Drag: Rotate | Scroll: Zoom | Right-click: Pan",
+  "btn_3d_refresh": "Refresh Design"
 }

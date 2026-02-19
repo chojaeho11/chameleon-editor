@@ -299,6 +299,9 @@
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-full.min.js" defer></script>
 <script src="https://js.tosspayments.com/v1" defer></script>
+<!-- Three.js for 3D Preview -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js" defer></script>
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1977,6 +1980,7 @@ async function handleSubReturn() {
         <button class="height-btn active" onclick="window.setWallHeight(2200, this)">220cm</button>
         <button class="height-btn" onclick="window.setWallHeight(2400, this)">240cm</button>
         <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
+        <button id="btn3DPreview" onclick="window.open3DPreview()" style="margin-left:8px; padding:6px 14px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;"><i class="fa-solid fa-cube"></i> <span data-i18n="btn_3d_preview">3D</span></button>
     </div>
 
     <div class="editor-wrap">
@@ -2515,6 +2519,19 @@ async function handleSubReturn() {
 <div id="libraryModal" class="modal-bg" style="z-index: 11000;"><div class="modal-box" style="width: 800px; max-width: 90%; height: 80%; display: flex; flex-direction: column;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h3 style="margin:0;">📂 내 디자인 보관함</h3><button onclick="document.getElementById('libraryModal').style.display='none'" style="border:none; background:none; cursor:pointer; font-size:20px;">✕</button></div><div id="myDesignGrid" style="flex:1; overflow-y:auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap:20px; padding:10px;"></div></div></div>
 <div id="saveDesignModal" class="modal-bg" style="z-index: 11001;"><div class="modal-box"><h3>💾 디자인 저장하기</h3><p style="font-size:13px; color:#666;">보관함에 저장하여 나중에 다시 불러올 수 있습니다.</p><input id="saveDesignTitle" class="ai-input-pretty" placeholder="디자인 제목을 입력하세요 (예: 여름 이벤트 배너)"><div style="display:flex; gap:10px; margin-top:20px;"><button id="btnConfirmSave" class="btn-round primary">저장하기</button><button onclick="document.getElementById('saveDesignModal').style.display='none'" class="btn-round">취소</button></div></div></div>
 <div id="loadModeModal" class="modal-bg" style="z-index: 10001;"><div class="modal-box" style="width: 450px;"><h3>🎨 템플릿 불러오기</h3><p style="color:#666; font-size:14px; margin-bottom:20px;">현재 캔버스 내용이 있습니다.</p><div style="display:flex; gap:10px;"><button id="btnLoadReplace" class="btn-round ai-red" style="height:100px;">새 작업으로<br>(기존 삭제)</button><button id="btnLoadAdd" class="btn-round primary" style="height:100px;">현재 작업에<br>추가하기</button></div><button onclick="document.getElementById('loadModeModal').style.display='none'" class="btn-round" style="margin-top:15px;">취소</button></div></div>
+<!-- 3D Preview Modal -->
+<div id="wall3DModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:15000; justify-content:center; align-items:center;">
+<div style="position:relative; width:95%; max-width:1000px; height:80vh; background:#1a1a2e; border-radius:16px; overflow:hidden;">
+<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; background:rgba(0,0,0,0.3);">
+<span style="color:#fff; font-weight:700; font-size:14px;"><i class="fa-solid fa-cube"></i> <span data-i18n="modal_3d_title">3D 미리보기</span> <span id="wall3dDimLabel" style="font-weight:400; color:#94a3b8; margin-left:8px;"></span></span>
+<div style="display:flex; gap:8px; align-items:center;">
+<button onclick="window.refresh3DTexture()" style="padding:6px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; cursor:pointer;"><i class="fa-solid fa-sync"></i> <span data-i18n="btn_3d_refresh">새로고침</span></button>
+<button onclick="document.getElementById('wall3DModal').style.display='none'" style="width:32px; height:32px; background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:16px;">✕</button>
+</div></div>
+<div id="threeDContainer" style="width:100%; height:calc(100% - 52px);"></div>
+<div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.4); font-size:11px; pointer-events:none;"><span data-i18n="hint_3d_controls">🖱 드래그: 회전 | 스크롤: 줌 | 우클릭: 이동</span></div>
+</div></div>
+
 <div id="loginModal" class="modal-bg" style="z-index: 10002;">
     <div class="modal-box" style="width: 400px;">
         <h3 id="authTitle" style="margin-top:0;" data-i18n="modal_login_title">로그인</h3>
@@ -3255,6 +3272,7 @@ window.filterFxCards = function(cat, btn) {
 </div>
 <script type="module" src="./config.js?v=123"></script>
 <script type="module" src="./canvas-core.js?v=123"></script>
+<script src="./wall-3d-preview.js?v=123" defer></script>
 <script type="module" src="./canvas-size.js?v=123"></script>
 <script type="module" src="./canvas-guides.js?v=123"></script>
 <script type="module" src="./canvas-zoom-pan.js?v=123"></script>

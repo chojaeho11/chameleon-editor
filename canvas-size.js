@@ -238,6 +238,9 @@ export function applySize(w, h, name, mode, action) {
     setTimeout(() => {
         resizeCanvasToFit();
     }, 50);
+
+    // 3D 미리보기 자동 갱신
+    window.dispatchEvent(new CustomEvent('wallSizeChanged', { detail: { w, h, mode } }));
 }
 
 export function resizeCanvasToFit() {
