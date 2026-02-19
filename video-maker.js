@@ -578,20 +578,20 @@ function renderAudioTab(el) {
     h += `<div style="margin-top:10px;padding:16px;background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(168,85,247,0.12));border:1px solid rgba(129,140,248,0.25);border-radius:14px;">`;
     h += `<div style="text-align:center;margin-bottom:14px;">`;
     h += `<div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:14px;margin-bottom:8px"><i class="fa-solid fa-wand-magic-sparkles" style="font-size:22px;color:#fff"></i></div>`;
-    h += `<div style="font-size:15px;font-weight:800;color:#e0e0e8;letter-spacing:-0.3px">AI Composer</div>`;
-    h += `<div style="font-size:10px;color:#94a3b8;margin-top:2px">Describe the music you want</div></div>`;
+    h += `<div style="font-size:15px;font-weight:800;color:#e0e0e8;letter-spacing:-0.3px">${_t('ve_ai_composer','AI Composer')}</div>`;
+    h += `<div style="font-size:10px;color:#94a3b8;margin-top:2px">${_t('ve_ai_composer_desc','Describe the music you want')}</div></div>`;
 
     // Prompt
-    h += `<textarea id="veAiMusicPrompt" style="width:100%;height:55px;background:rgba(15,15,30,0.7);border:1px solid rgba(129,140,248,0.2);border-radius:10px;color:#e0e0e8;font-size:11px;padding:10px;resize:none;outline:none;box-sizing:border-box" placeholder="ex) bright and cheerful cafe background music with piano and guitar"></textarea>`;
+    h += `<textarea id="veAiMusicPrompt" style="width:100%;height:55px;background:rgba(15,15,30,0.7);border:1px solid rgba(129,140,248,0.2);border-radius:10px;color:#e0e0e8;font-size:11px;padding:10px;resize:none;outline:none;box-sizing:border-box" placeholder="${_t('ve_ai_music_placeholder','ex) bright cafe BGM with piano and guitar')}"></textarea>`;
 
     // Style
-    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">Style</div>`;
+    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">${_t('ve_ai_music_style','Style')}</div>`;
     h += `<div id="veAiMusicStyles" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">`;
     const styles = [
-        {id:'pop',label:'Pop',icon:'🎵'},{id:'cinematic',label:'Cinematic',icon:'🎬'},
-        {id:'lofi',label:'Lo-Fi',icon:'🎧'},{id:'jazz',label:'Jazz',icon:'🎷'},
-        {id:'electronic',label:'EDM',icon:'🎹'},{id:'acoustic',label:'Acoustic',icon:'🪕'},
-        {id:'classical',label:'Classic',icon:'🎻'},{id:'hiphop',label:'HipHop',icon:'🎤'}
+        {id:'pop',label:_t('ve_style_pop','Pop'),icon:'🎵'},{id:'cinematic',label:_t('ve_style_cinematic','Cinematic'),icon:'🎬'},
+        {id:'lofi',label:'Lo-Fi',icon:'🎧'},{id:'jazz',label:_t('ve_style_jazz','Jazz'),icon:'🎷'},
+        {id:'electronic',label:'EDM',icon:'🎹'},{id:'acoustic',label:_t('ve_style_acoustic','Acoustic'),icon:'🪕'},
+        {id:'classical',label:_t('ve_style_classical','Classic'),icon:'🎻'},{id:'hiphop',label:_t('ve_style_hiphop','HipHop'),icon:'🎤'}
     ];
     const curStyle = vm._aiMusicStyle || 'cinematic';
     styles.forEach(s=>{
@@ -601,35 +601,41 @@ function renderAudioTab(el) {
     h += `</div>`;
 
     // Duration
-    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">Duration</div>`;
+    h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin:10px 0 5px">${_t('ve_ai_music_duration','Duration')}</div>`;
     h += `<div style="display:flex;gap:4px">`;
     const curDur = vm._aiMusicDur || 10;
     [5,10,15,20,30].forEach(d=>{
         const sel=curDur===d;
-        h+=`<button onclick="window._veSetMusicDur(${d})" style="flex:1;padding:6px 0;border-radius:8px;border:1px solid ${sel?'#818cf8':'rgba(255,255,255,0.08)'};background:${sel?'rgba(129,140,248,0.2)':'rgba(255,255,255,0.03)'};color:${sel?'#c4b5fd':'#888'};font-size:11px;font-weight:${sel?'700':'400'};cursor:pointer;transition:all .15s">${d}s</button>`;
+        h+=`<button onclick="window._veSetMusicDur(${d})" style="flex:1;padding:6px 0;border-radius:8px;border:1px solid ${sel?'#818cf8':'rgba(255,255,255,0.08)'};background:${sel?'rgba(129,140,248,0.2)':'rgba(255,255,255,0.03)'};color:${sel?'#c4b5fd':'#888'};font-size:11px;font-weight:${sel?'700':'400'};cursor:pointer;transition:all .15s">${d}${_t('ve_sec','s')}</button>`;
     });
     h += `</div>`;
 
     // Generate button (big)
     h += `<button id="veAiMusicGenBtn" onclick="window._veAiMusicGenerate()" style="width:100%;margin-top:14px;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 4px 15px rgba(99,102,241,0.3)">`;
-    h += `<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Music</button>`;
+    h += `<i class="fa-solid fa-wand-magic-sparkles"></i> ${_t('ve_ai_music_generate','Generate Music')}</button>`;
 
     // Status
     h += `<div id="veAiMusicStatus" style="display:none;margin-top:10px;text-align:center;padding:12px;background:rgba(15,15,30,0.5);border-radius:10px">`;
     h += `<div style="width:20px;height:20px;border:2px solid rgba(129,140,248,0.3);border-top-color:#a78bfa;border-radius:50%;animation:veSpin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px"></div>`;
-    h += `<span id="veAiMusicStatusText" style="font-size:11px;color:#c4b5fd">Generating...</span></div>`;
+    h += `<span id="veAiMusicStatusText" style="font-size:11px;color:#c4b5fd"></span></div>`;
 
-    // Generated music list
-    if (vm._aiGeneratedMusic && vm._aiGeneratedMusic.length) {
+    // My generated music list (from DB)
+    const aiList = vm._aiMusicList;
+    if (aiList === null) {
+        // Not loaded yet — trigger load
+        loadUserAiMusic().then(() => refreshLeftPanel());
+        h += `<div style="margin-top:12px;text-align:center;font-size:10px;color:#64748b">${_t('ve_ai_music_loading','Loading your music...')}</div>`;
+    } else if (aiList.length) {
         h += `<div style="margin-top:12px;border-top:1px solid rgba(129,140,248,0.15);padding-top:10px">`;
-        h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:6px">Generated Music</div>`;
-        vm._aiGeneratedMusic.forEach((m,i)=>{
+        h += `<div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:6px">${_t('ve_ai_music_my_list','My Music')}</div>`;
+        aiList.forEach((m,i)=>{
             const sel=vm.audioUrl===m.url;
             const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewAiIdx===i;
             h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectAiMusic(${i})" style="margin-bottom:3px">`;
-            h+=`<i class="fa-solid fa-wand-magic-sparkles" style="width:24px;text-align:center;font-size:13px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
-            h+=`<div style="flex:1"><div style="font-size:11px;font-weight:600;color:#e0e0e8">${m.name||'AI Music '+(i+1)}</div><div style="font-size:9px;color:#555">${m.duration||''}s · ${m.style||''}</div></div>`;
-            h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewAiMusic(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
+            h+=`<i class="fa-solid fa-wand-magic-sparkles" style="width:22px;text-align:center;font-size:12px;color:${sel?'#a78bfa':'#6b7280'}"></i>`;
+            h+=`<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:#e0e0e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||'AI Music'}</div><div style="font-size:9px;color:#555">${m.duration?m.duration+_t('ve_sec','s'):''} ${m.style?'· '+m.style:''}</div></div>`;
+            h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewAiMusic(${i})" style="flex-shrink:0">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
+            h+=`<button onclick="event.stopPropagation();window._veDeleteAiMusic(${i})" style="flex-shrink:0;width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:#ef4444;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0.5;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'"><i class="fa-solid fa-trash"></i></button>`;
             h+=`</div>`;
         });
         h += `</div>`;
@@ -749,35 +755,57 @@ window._vePreviewDBAudio = function(idx) {
 };
 function stopDBAudio(){if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}vm.audioUrl=null;}
 
-// ─── AI Music Generation ───
+// ─── AI Music Generation (per-user, DB-backed) ───
 let _aiMusicCancelled = false;
 let _aiMusicPredictionId = null;
-if (!vm._aiGeneratedMusic) vm._aiGeneratedMusic = [];
 if (!vm._aiMusicStyle) vm._aiMusicStyle = 'cinematic';
 if (!vm._aiMusicDur) vm._aiMusicDur = 10;
+vm._aiMusicList = null; // loaded from DB
+
+async function loadUserAiMusic() {
+    const sb = window.sb;
+    const user = window.currentUser;
+    if (!sb || !user) { vm._aiMusicList = []; return; }
+    try {
+        const { data, error } = await sb.from('library')
+            .select('id,data_url,tags,created_at')
+            .eq('category', 'ai-music')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(30);
+        if (error) throw error;
+        vm._aiMusicList = (data || []).map(r => {
+            let meta = {};
+            try { meta = JSON.parse(r.tags || '{}'); } catch(e) { meta = { name: r.tags }; }
+            return { id: r.id, url: r.data_url, name: meta.name || 'AI Music', style: meta.style || '', duration: meta.duration || 0 };
+        });
+    } catch (e) { console.warn('loadUserAiMusic error:', e); vm._aiMusicList = []; }
+}
 
 window._veAiMusicGenerate = async function() {
     const sb = window.sb;
-    if (!sb) { showToast('DB 연결 필요'); return; }
+    const user = window.currentUser;
+    if (!sb) { showToast(_t('ve_ai_music_no_db','DB connection required')); return; }
+    if (!user) { showToast(_t('ve_ai_music_login','Please login first')); return; }
 
     const promptEl = document.getElementById('veAiMusicPrompt');
     const prompt = promptEl ? promptEl.value.trim() : '';
     const style = vm._aiMusicStyle || 'cinematic';
     const duration = vm._aiMusicDur || 10;
 
-    if (!prompt && !style) { showToast('프롬프트 또는 스타일을 입력하세요'); return; }
+    if (!prompt && !style) { showToast(_t('ve_ai_music_need_input','Enter a prompt or select a style')); return; }
 
     const genBtn = document.getElementById('veAiMusicGenBtn');
     const statusEl = document.getElementById('veAiMusicStatus');
     const statusText = document.getElementById('veAiMusicStatusText');
     if (genBtn) { genBtn.disabled = true; genBtn.style.opacity = '0.5'; }
     if (statusEl) statusEl.style.display = 'block';
-    if (statusText) statusText.textContent = 'AI 작곡 시작...';
+    if (statusText) statusText.textContent = _t('ve_ai_music_starting','Starting AI composition...');
     _aiMusicCancelled = false;
 
     try {
         // 1. Create prediction
-        if (statusText) statusText.textContent = 'AI 작곡 요청 중...';
+        if (statusText) statusText.textContent = _t('ve_ai_music_requesting','Sending request...');
         const { data: createData, error: createError } = await sb.functions.invoke('generate-music', {
             body: { action: 'create', prompt, style, duration }
         });
@@ -790,7 +818,7 @@ window._veAiMusicGenerate = async function() {
 
         // 2. Poll for result
         let attempts = 0;
-        const maxAttempts = 120; // 6 min max
+        const maxAttempts = 120;
 
         while (attempts < maxAttempts) {
             if (_aiMusicCancelled) throw new Error('cancelled');
@@ -807,9 +835,9 @@ window._veAiMusicGenerate = async function() {
             if (statusText) {
                 const sec = attempts * 3;
                 const m = Math.floor(sec / 60), s = sec % 60;
-                const elapsed = m > 0 ? `${m}분 ${s}초` : `${s}초`;
-                if (st === 'processing') statusText.textContent = `AI 작곡 중... ${elapsed} 경과 (보통 30초~2분)`;
-                else if (st === 'starting') statusText.textContent = `AI 대기열... ${elapsed} 경과`;
+                const elapsed = m > 0 ? `${m}:${String(s).padStart(2,'0')}` : `${s}s`;
+                if (st === 'processing') statusText.textContent = _t('ve_ai_music_composing','Composing...') + ` ${elapsed}`;
+                else if (st === 'starting') statusText.textContent = _t('ve_ai_music_queue','In queue...') + ` ${elapsed}`;
             }
 
             if (st === 'succeeded') {
@@ -817,9 +845,9 @@ window._veAiMusicGenerate = async function() {
                                  (Array.isArray(checkData.output) ? checkData.output[0] : checkData.output);
                 if (!audioUrl) throw new Error('No audio URL in output');
 
-                if (statusText) statusText.textContent = '음악 다운로드 중...';
+                if (statusText) statusText.textContent = _t('ve_ai_music_saving','Saving...');
 
-                // Download and upload to Supabase storage for permanent URL
+                // Download and upload to Supabase storage
                 let permanentUrl = audioUrl;
                 try {
                     const audioRes = await fetch(audioUrl);
@@ -830,22 +858,24 @@ window._veAiMusicGenerate = async function() {
                         const { data: { publicUrl } } = sb.storage.from('design').getPublicUrl(`ai_music/${fileName}`);
                         permanentUrl = publicUrl;
                     }
-                } catch (e) { console.warn('Storage upload failed, using Replicate URL:', e); }
+                } catch (e) { console.warn('Storage upload failed:', e); }
 
-                // Add to generated music list
-                const styleName = {pop:'팝',cinematic:'시네마틱',lofi:'Lo-Fi',jazz:'재즈',electronic:'일렉트로닉',acoustic:'어쿠스틱',classical:'클래식',hiphop:'힙합'}[style] || style;
-                vm._aiGeneratedMusic.push({
-                    url: permanentUrl,
-                    name: prompt ? prompt.substring(0, 20) : styleName,
-                    style: styleName,
-                    duration: duration,
-                    createdAt: Date.now()
+                // Save to library table (per-user)
+                const musicName = prompt ? prompt.substring(0, 30) : style;
+                const meta = JSON.stringify({ name: musicName, style, duration });
+                await sb.from('library').insert({
+                    category: 'ai-music',
+                    tags: meta,
+                    data_url: permanentUrl,
+                    thumb_url: '',
+                    user_id: user.id
                 });
 
-                // Auto-select the newly generated music
+                // Reload list & auto-select
+                await loadUserAiMusic();
                 vm.music = 'none';
                 vm.audioUrl = permanentUrl;
-                showToast('AI 음악 생성 완료!');
+                showToast(_t('ve_ai_music_done','AI music generated!'));
                 break;
             }
 
@@ -857,7 +887,7 @@ window._veAiMusicGenerate = async function() {
     } catch (err) {
         if (err.message !== 'cancelled') {
             console.error('AI Music Error:', err);
-            showToast('AI 작곡 실패: ' + (err.message || 'Unknown error'));
+            showToast(_t('ve_ai_music_fail','AI composition failed') + ': ' + (err.message || ''));
         }
     } finally {
         _aiMusicPredictionId = null;
@@ -870,7 +900,7 @@ window._veAiMusicGenerate = async function() {
 };
 
 window._veSelectAiMusic = function(idx) {
-    const m = vm._aiGeneratedMusic && vm._aiGeneratedMusic[idx];
+    const m = vm._aiMusicList && vm._aiMusicList[idx];
     if (!m) return;
     stopMusicPreview();
     if (vm.audioEl) { vm.audioEl.pause(); vm.audioEl = null; vm._previewAiIdx = -1; }
@@ -881,7 +911,7 @@ window._veSelectAiMusic = function(idx) {
 };
 
 window._vePreviewAiMusic = function(idx) {
-    const m = vm._aiGeneratedMusic && vm._aiGeneratedMusic[idx];
+    const m = vm._aiMusicList && vm._aiMusicList[idx];
     if (!m) return;
     stopMusicPreview();
     if (vm.audioEl && !vm.audioEl.paused && vm._previewAiIdx === idx) {
@@ -891,7 +921,7 @@ window._vePreviewAiMusic = function(idx) {
     if (vm.audioEl) { vm.audioEl.pause(); vm.audioEl = null; }
     const audio = new Audio(m.url);
     audio.volume = 0.5;
-    audio.play().catch(e => { showToast('재생 실패: ' + e.message); });
+    audio.play().catch(e => { showToast(_t('ve_ai_music_play_fail','Playback failed')); });
     audio.onended = () => { vm.audioEl = null; vm._previewAiIdx = -1; refreshLeftPanel(); };
     vm.audioEl = audio;
     vm._previewAiIdx = idx;
@@ -899,6 +929,26 @@ window._vePreviewAiMusic = function(idx) {
     setTimeout(() => {
         if (vm.audioEl === audio) { audio.pause(); vm.audioEl = null; vm._previewAiIdx = -1; refreshLeftPanel(); }
     }, 30000);
+};
+
+window._veDeleteAiMusic = async function(idx) {
+    const m = vm._aiMusicList && vm._aiMusicList[idx];
+    if (!m) return;
+    if (!confirm(_t('ve_ai_music_delete_confirm','Delete this music?'))) return;
+    const sb = window.sb;
+    if (!sb) return;
+    // If currently selected, deselect
+    if (vm.audioUrl === m.url) { vm.audioUrl = null; vm.music = 'none'; }
+    if (vm.audioEl && vm._previewAiIdx === idx) { vm.audioEl.pause(); vm.audioEl = null; vm._previewAiIdx = -1; }
+    try {
+        await sb.from('library').delete().eq('id', m.id);
+        // Also try to delete from storage
+        const urlPath = m.url.split('/design/')[1];
+        if (urlPath) { try { await sb.storage.from('design').remove([decodeURIComponent(urlPath)]); } catch(e){} }
+    } catch (e) { console.warn('Delete error:', e); }
+    await loadUserAiMusic();
+    refreshLeftPanel();
+    updateTimeline();
 };
 
 function renderTextTab(el) {
@@ -1251,7 +1301,6 @@ window._veSaveProject = async function(){
         w:vm.w, h:vm.h,
         music:vm.music,
         audioUrl:vm.audioUrl,
-        aiGeneratedMusic:vm._aiGeneratedMusic||[],
         clips:clipData
     };
     const saves=_veGetSaves();
@@ -1290,7 +1339,7 @@ window._veLoadProject = function(idx){
     // restore audio
     vm.music=p.music||'none';
     vm.audioUrl=p.audioUrl||null;
-    vm._aiGeneratedMusic=p.aiGeneratedMusic||[];
+    vm._aiMusicList=null; // reload from DB on next render
     // restore clips
     let loaded=0;
     const total=p.clips?p.clips.length:0;
