@@ -2199,7 +2199,7 @@ function onDblClick(e){
     function finish(){
         if(finished) return;
         finished=true;
-        o.text=inp.value||'텍스트';
+        o.text=inp.value||_t('ve_default_text','텍스트');
         inp.removeEventListener('blur',finish);
         if(inp.parentNode) inp.remove();
         render();refreshLeftPanel();refreshRightPanel();
@@ -2219,7 +2219,7 @@ window.openVideoMaker = function(label) {
         window.initCanvasFonts().then(()=>{ console.log('📥 [VideoMaker] Fonts loaded'); refreshLeftPanel&&refreshLeftPanel(); });
     }
     // format from label
-    if(label==='쇼츠') vm.format='portrait';
+    if(label==='쇼츠'||label==='Shorts'||label==='ショート') vm.format='portrait';
     else vm.format='landscape';
     const f=FORMATS.find(x=>x.id===vm.format);
     vm.w=f.w;vm.h=f.h;
@@ -2367,9 +2367,9 @@ window._veAiGenerate = async function() {
             if (statusText) {
                 const sec = attempts * 3;
                 const m = Math.floor(sec/60), s = sec%60;
-                const elapsed = m > 0 ? `${m}분 ${s}초` : `${s}초`;
-                if (st === 'processing') statusText.textContent = `AI 영상 처리 중... ${elapsed} 경과 (보통 2~5분 소요)`;
-                else if (st === 'starting') statusText.textContent = `AI 대기열 대기 중... ${elapsed} 경과`;
+                const elapsed = m > 0 ? `${m}m ${s}s` : `${s}s`;
+                if (st === 'processing') statusText.textContent = _t('ve_ai_processing',`AI 영상 처리 중...`) + ` ${elapsed}`;
+                else if (st === 'starting') statusText.textContent = _t('ve_ai_queue_wait','AI 대기열 대기 중...') + ` ${elapsed}`;
             }
 
             if (st === 'succeeded') {
@@ -2396,7 +2396,7 @@ window._veAiGenerate = async function() {
     } catch (err) {
         if (err.message !== 'cancelled') {
             console.error('AI Video Error:', err);
-            showToast('AI 영상 생성 실패: ' + (err.message || 'Unknown error'));
+            showToast(_t('ve_ai_video_fail','AI 영상 생성 실패') + ': ' + (err.message || 'Unknown error'));
         }
     } finally {
         _aiPredictionId = null;
@@ -2475,7 +2475,7 @@ async function _veAiReplaceClip(videoUrl) {
 window._veAiRevert = function() {
     const c = curClip();
     if (!c || !c.origImageData) return showToast(_t('ve_no_original','원본 이미지가 없습니다'));
-    if (!confirm('AI 효과를 제거하고 원래 이미지로 복원할까요?')) return;
+    if (!confirm(_t('ve_ai_revert_confirm','AI 효과를 제거하고 원래 이미지로 복원할까요?'))) return;
     const ci = vm.ci;
     const img = new Image();
     img.onload = () => {

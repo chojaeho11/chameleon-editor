@@ -7279,28 +7279,28 @@ if (w >= 20 && h >= 20) {
     <div id="gifTopBar" style="display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:56px; background:linear-gradient(135deg,#1e1b4b,#312e81); border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;">
         <div style="display:flex; align-items:center; gap:12px;">
             <button onclick="window.closeGifMaker()" style="background:none; border:none; color:#e0e7ff; font-size:20px; cursor:pointer; padding:8px;"><i class="fa-solid fa-house"></i></button>
-            <span style="color:#f0abfc; font-weight:800; font-size:17px;"><i class="fa-solid fa-film" style="margin-right:6px;"></i>움짤 메이커</span>
+            <span style="color:#f0abfc; font-weight:800; font-size:17px;"><i class="fa-solid fa-film" style="margin-right:6px;"></i><span data-i18n="gm_title">움짤 메이커</span></span>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
             <!-- 캔버스 크기 설정 -->
-            <span style="color:#c4b5fd; font-size:13px;">크기:</span>
+            <span style="color:#c4b5fd; font-size:13px;" data-i18n="gm_canvas_size">크기:</span>
             <input type="number" id="gifCanvasW" value="500" min="50" max="2000" style="width:60px; padding:6px 8px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; text-align:center; font-size:13px;">
             <span style="color:#a78bfa;">×</span>
             <input type="number" id="gifCanvasH" value="500" min="50" max="2000" style="width:60px; padding:6px 8px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; text-align:center; font-size:13px;">
-            <button onclick="window.gifResizeCanvas()" style="padding:6px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">적용</button>
+            <button onclick="window.gifResizeCanvas()" style="padding:6px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;" data-i18n="gm_apply">적용</button>
             <div style="width:1px; height:28px; background:rgba(255,255,255,0.1); margin:0 6px;"></div>
             <!-- 프레임 속도 -->
-            <span style="color:#c4b5fd; font-size:13px;">속도:</span>
+            <span style="color:#c4b5fd; font-size:13px;" data-i18n="gm_speed_label">속도:</span>
             <select id="gifSpeed" style="padding:6px 10px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; font-size:13px; cursor:pointer;">
-                <option value="100">매우 빠름 (0.1초)</option>
-                <option value="200">빠름 (0.2초)</option>
-                <option value="500" selected>보통 (0.5초)</option>
-                <option value="1000">느림 (1초)</option>
-                <option value="2000">매우 느림 (2초)</option>
+                <option value="100" data-i18n="gm_speed_fastest">매우 빠름 (0.1초)</option>
+                <option value="200" data-i18n="gm_speed_fast">빠름 (0.2초)</option>
+                <option value="500" selected data-i18n="gm_speed_normal">보통 (0.5초)</option>
+                <option value="1000" data-i18n="gm_speed_slow">느림 (1초)</option>
+                <option value="2000" data-i18n="gm_speed_slowest">매우 느림 (2초)</option>
             </select>
             <div style="width:1px; height:28px; background:rgba(255,255,255,0.1); margin:0 6px;"></div>
             <!-- 내보내기 -->
-            <button id="gifExportBtn" onclick="window.exportGif()" style="padding:8px 22px; background:linear-gradient(135deg,#ec4899,#f472b6); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 2px 12px rgba(236,72,153,0.4);"><i class="fa-solid fa-download" style="margin-right:6px;"></i>GIF 저장</button>
+            <button id="gifExportBtn" onclick="window.exportGif()" style="padding:8px 22px; background:linear-gradient(135deg,#ec4899,#f472b6); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 2px 12px rgba(236,72,153,0.4);"><i class="fa-solid fa-download" style="margin-right:6px;"></i><span data-i18n="gm_save_gif">GIF 저장</span></button>
             <button onclick="window.closeGifMaker()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer; padding:8px; margin-left:4px;"><i class="fa-solid fa-xmark"></i></button>
         </div>
     </div>
@@ -7311,26 +7311,26 @@ if (w >= 20 && h >= 20) {
         <div id="gifLeftPanel" style="width:280px; background:#1a1a2e; border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; flex-shrink:0;">
             <!-- 탭 -->
             <div style="display:flex; border-bottom:1px solid rgba(255,255,255,0.06);">
-                <button class="gif-tab active" data-tab="frames" onclick="window.gifSwitchTab('frames')" style="flex:1; padding:12px 0; background:none; border:none; color:#f0abfc; font-size:13px; font-weight:700; cursor:pointer; border-bottom:2px solid #ec4899;"><i class="fa-solid fa-images" style="margin-right:4px;"></i>프레임</button>
-                <button class="gif-tab" data-tab="text" onclick="window.gifSwitchTab('text')" style="flex:1; padding:12px 0; background:none; border:none; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent;"><i class="fa-solid fa-font" style="margin-right:4px;"></i>텍스트</button>
-                <button class="gif-tab" data-tab="sticker" onclick="window.gifSwitchTab('sticker')" style="flex:1; padding:12px 0; background:none; border:none; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent;"><i class="fa-solid fa-shapes" style="margin-right:4px;"></i>요소</button>
-                <button class="gif-tab" data-tab="image" onclick="window.gifSwitchTab('image')" style="flex:1; padding:12px 0; background:none; border:none; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent;"><i class="fa-solid fa-image" style="margin-right:4px;"></i>이미지</button>
+                <button class="gif-tab active" data-tab="frames" onclick="window.gifSwitchTab('frames')" style="flex:1; padding:12px 0; background:none; border:none; color:#f0abfc; font-size:13px; font-weight:700; cursor:pointer; border-bottom:2px solid #ec4899;"><i class="fa-solid fa-images" style="margin-right:4px;"></i><span data-i18n="gm_tab_frames">프레임</span></button>
+                <button class="gif-tab" data-tab="text" onclick="window.gifSwitchTab('text')" style="flex:1; padding:12px 0; background:none; border:none; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent;"><i class="fa-solid fa-font" style="margin-right:4px;"></i><span data-i18n="gm_tab_text">텍스트</span></button>
+                <button class="gif-tab" data-tab="sticker" onclick="window.gifSwitchTab('sticker')" style="flex:1; padding:12px 0; background:none; border:none; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent;"><i class="fa-solid fa-shapes" style="margin-right:4px;"></i><span data-i18n="gm_tab_elements">요소</span></button>
+                <button class="gif-tab" data-tab="image" onclick="window.gifSwitchTab('image')" style="flex:1; padding:12px 0; background:none; border:none; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent;"><i class="fa-solid fa-image" style="margin-right:4px;"></i><span data-i18n="gm_tab_image">이미지</span></button>
             </div>
             <!-- 탭 콘텐츠 -->
             <div id="gifTabContent" style="flex:1; overflow-y:auto; padding:16px;">
                 <!-- 프레임 탭 (기본) -->
                 <div id="gifTabFrames">
                     <button onclick="document.getElementById('gifFileInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:16px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i> 사진 업로드 (최대 10장)
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i> <span data-i18n="gm_upload_photos">사진 업로드 (최대 10장)</span>
                     </button>
                     <div id="gifFrameList" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    <p style="color:#64748b; font-size:12px; text-align:center; margin-top:12px; line-height:1.5;">드래그하여 순서 변경<br>클릭하여 프레임 선택</p>
+                    <p style="color:#64748b; font-size:12px; text-align:center; margin-top:12px; line-height:1.5;" data-i18n="gm_drag_hint">드래그하여 순서 변경<br>클릭하여 프레임 선택</p>
                 </div>
                 <!-- 텍스트 탭 -->
                 <div id="gifTabText" style="display:none;">
-                    <button onclick="window.gifAddText()" style="width:100%; padding:14px; background:linear-gradient(135deg,#06b6d4,#22d3ee); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:16px;"><i class="fa-solid fa-plus" style="margin-right:6px;"></i>텍스트 추가</button>
+                    <button onclick="window.gifAddText()" style="width:100%; padding:14px; background:linear-gradient(135deg,#06b6d4,#22d3ee); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:16px;"><i class="fa-solid fa-plus" style="margin-right:6px;"></i><span data-i18n="gm_add_text">텍스트 추가</span></button>
                     <div style="margin-bottom:12px;">
-                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;">폰트</label>
+                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;" data-i18n="gm_font">폰트</label>
                         <select id="gifFontSelect" onchange="window.gifUpdateText()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px;">
                             <option value="Arial">Arial</option>
                             <option value="Impact">Impact</option>
@@ -7339,15 +7339,15 @@ if (w >= 20 && h >= 20) {
                         </select>
                     </div>
                     <div style="margin-bottom:12px;">
-                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;">크기</label>
+                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;" data-i18n="gm_size">크기</label>
                         <input type="range" id="gifFontSize" min="12" max="120" value="32" oninput="window.gifUpdateText()" style="width:100%;">
                     </div>
                     <div style="margin-bottom:12px;">
-                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;">색상</label>
+                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;" data-i18n="gm_color">색상</label>
                         <input type="color" id="gifFontColor" value="#ffffff" oninput="window.gifUpdateText()" style="width:100%; height:36px; border:none; border-radius:8px; cursor:pointer;">
                     </div>
                     <div style="margin-bottom:12px;">
-                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;">외곽선</label>
+                        <label style="color:#94a3b8; font-size:12px; margin-bottom:4px; display:block;" data-i18n="gm_outline">외곽선</label>
                         <input type="color" id="gifStrokeColor" value="#000000" oninput="window.gifUpdateText()" style="width:60%; height:36px; border:none; border-radius:8px; cursor:pointer; vertical-align:middle;">
                         <input type="number" id="gifStrokeWidth" value="0" min="0" max="10" oninput="window.gifUpdateText()" style="width:35%; padding:8px; border-radius:8px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; vertical-align:middle;">
                     </div>
@@ -7357,22 +7357,22 @@ if (w >= 20 && h >= 20) {
                 <div id="gifTabSticker" style="display:none;">
                     <!-- 이모지 스티커 -->
                     <div style="margin-bottom:14px;">
-                        <b style="color:#e0e7ff; font-size:13px; display:block; margin-bottom:8px;">스티커</b>
+                        <b style="color:#e0e7ff; font-size:13px; display:block; margin-bottom:8px;" data-i18n="gm_stickers">스티커</b>
                         <div id="gifStickerGrid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:4px;"></div>
-                        <button onclick="window.gifPlaceSticker()" style="display:flex; align-items:center; gap:6px; width:100%; padding:8px 12px; background:rgba(124,58,237,0.15); color:#a78bfa; border:1px dashed rgba(124,58,237,0.4); border-radius:8px; font-size:12px; cursor:pointer; margin-top:8px; font-weight:600; justify-content:center;"><i class="fa-solid fa-hand-pointer"></i> 캔버스에 스티커 배치</button>
+                        <button onclick="window.gifPlaceSticker()" style="display:flex; align-items:center; gap:6px; width:100%; padding:8px 12px; background:rgba(124,58,237,0.15); color:#a78bfa; border:1px dashed rgba(124,58,237,0.4); border-radius:8px; font-size:12px; cursor:pointer; margin-top:8px; font-weight:600; justify-content:center;"><i class="fa-solid fa-hand-pointer"></i> <span data-i18n="gm_place_sticker">캔버스에 스티커 배치</span></button>
                     </div>
                     <div style="width:100%; height:1px; background:rgba(255,255,255,0.08); margin-bottom:14px;"></div>
                     <!-- Supabase 요소 -->
-                    <b style="color:#e0e7ff; font-size:13px; display:block; margin-bottom:8px;">이미지 요소</b>
-                    <input type="text" placeholder="요소 검색..." oninput="window.gifSearchElements(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='#374151'">
-                    <div id="gifElemGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;">로딩 중...</p></div>
-                    <button onclick="window.gifLoadMoreElements()" style="width:100%; padding:10px; background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i>더 보기</button>
+                    <b style="color:#e0e7ff; font-size:13px; display:block; margin-bottom:8px;" data-i18n="gm_img_elements">이미지 요소</b>
+                    <input type="text" data-i18n-placeholder="gm_search_elements" placeholder="요소 검색..." oninput="window.gifSearchElements(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='#374151'">
+                    <div id="gifElemGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;" data-i18n="gm_loading">로딩 중...</p></div>
+                    <button onclick="window.gifLoadMoreElements()" style="width:100%; padding:10px; background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i><span data-i18n="gm_load_more">더 보기</span></button>
                 </div>
                 <!-- 이미지 탭 (Supabase) -->
                 <div id="gifTabImage" style="display:none;">
-                    <input type="text" placeholder="이미지 검색..." oninput="window.gifSearchImages(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#374151'">
-                    <div id="gifImgGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;">로딩 중...</p></div>
-                    <button onclick="window.gifLoadMoreImages()" style="width:100%; padding:10px; background:rgba(236,72,153,0.15); color:#ec4899; border:1px solid rgba(236,72,153,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i>더 보기</button>
+                    <input type="text" data-i18n-placeholder="gm_search_images" placeholder="이미지 검색..." oninput="window.gifSearchImages(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#374151'">
+                    <div id="gifImgGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;" data-i18n="gm_loading">로딩 중...</p></div>
+                    <button onclick="window.gifLoadMoreImages()" style="width:100%; padding:10px; background:rgba(236,72,153,0.15); color:#ec4899; border:1px solid rgba(236,72,153,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i><span data-i18n="gm_load_more">더 보기</span></button>
                 </div>
             </div>
         </div>
@@ -7491,8 +7491,8 @@ if (w >= 20 && h >= 20) {
         <!-- 상단 바 -->
         <div class="ve-topbar">
             <div class="ve-topbar-left">
-                <button class="ve-home-btn" onclick="window.veClose()" title="홈으로"><i class="fa-solid fa-house"></i></button>
-                <span id="veTitle" class="ve-title">영상 편집기</span>
+                <button class="ve-home-btn" onclick="window.veClose()" title="Home"><i class="fa-solid fa-house"></i></button>
+                <span id="veTitle" class="ve-title" data-i18n="ve_editor_title">영상 편집기</span>
                 <div class="ve-fmt-group">
                     <button class="ve-fmt-btn active" data-fmt="landscape">16:9</button>
                     <button class="ve-fmt-btn" data-fmt="portrait">9:16</button>
@@ -7503,8 +7503,8 @@ if (w >= 20 && h >= 20) {
                 <span id="veTimeNow" class="ve-time">00:00</span>
                 <span class="ve-time-sep">/</span>
                 <span id="veTimeTotal" class="ve-time">00:00</span>
-                <button id="veExportBtn" class="ve-export-btn" onclick="window.veExport()"><i class="fa-solid fa-film"></i> 영상으로 만들기</button>
-                <button id="veDlBtn" class="ve-dl-btn" style="display:none;"><i class="fa-solid fa-download"></i> 다운로드</button>
+                <button id="veExportBtn" class="ve-export-btn" onclick="window.veExport()"><i class="fa-solid fa-film"></i> <span data-i18n="ve_make_video">영상으로 만들기</span></button>
+                <button id="veDlBtn" class="ve-dl-btn" style="display:none;"><i class="fa-solid fa-download"></i> <span data-i18n="ve_download">다운로드</span></button>
                 <button class="ve-close-btn" onclick="window.veClose()"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
@@ -7514,15 +7514,15 @@ if (w >= 20 && h >= 20) {
             <!-- 좌측: 도구 탭 -->
             <div class="ve-left">
                 <div class="ve-ltabs">
-                    <button class="ve-ltab active" data-tab="media"><i class="fa-solid fa-photo-film"></i><span>미디어</span></button>
-                    <button class="ve-ltab" data-tab="audio"><i class="fa-solid fa-music"></i><span>오디오</span></button>
-                    <button class="ve-ltab" data-tab="text"><i class="fa-solid fa-font"></i><span>텍스트</span></button>
-                    <button class="ve-ltab" data-tab="element"><i class="fa-solid fa-shapes"></i><span>요소</span></button>
-                    <button class="ve-ltab" data-tab="image"><i class="fa-solid fa-image"></i><span>이미지</span></button>
-                    <button class="ve-ltab" data-tab="transition"><i class="fa-solid fa-right-left"></i><span>전환</span></button>
-                    <button class="ve-ltab" data-tab="adjust"><i class="fa-solid fa-sliders"></i><span>보정</span></button>
-                    <button class="ve-ltab" data-tab="template"><i class="fa-solid fa-table-cells"></i><span>템플릿</span></button>
-                    <button class="ve-ltab" data-tab="save"><i class="fa-solid fa-floppy-disk"></i><span>저장</span></button>
+                    <button class="ve-ltab active" data-tab="media"><i class="fa-solid fa-photo-film"></i><span data-i18n="ve_tab_media">미디어</span></button>
+                    <button class="ve-ltab" data-tab="audio"><i class="fa-solid fa-music"></i><span data-i18n="ve_tab_audio">오디오</span></button>
+                    <button class="ve-ltab" data-tab="text"><i class="fa-solid fa-font"></i><span data-i18n="ve_tab_text">텍스트</span></button>
+                    <button class="ve-ltab" data-tab="element"><i class="fa-solid fa-shapes"></i><span data-i18n="ve_tab_element">요소</span></button>
+                    <button class="ve-ltab" data-tab="image"><i class="fa-solid fa-image"></i><span data-i18n="ve_tab_image">이미지</span></button>
+                    <button class="ve-ltab" data-tab="transition"><i class="fa-solid fa-right-left"></i><span data-i18n="ve_tab_transition">전환</span></button>
+                    <button class="ve-ltab" data-tab="adjust"><i class="fa-solid fa-sliders"></i><span data-i18n="ve_tab_adjust">보정</span></button>
+                    <button class="ve-ltab" data-tab="template"><i class="fa-solid fa-table-cells"></i><span data-i18n="ve_tab_template">템플릿</span></button>
+                    <button class="ve-ltab" data-tab="save"><i class="fa-solid fa-floppy-disk"></i><span data-i18n="ve_tab_save">저장</span></button>
                 </div>
                 <div id="veLeftContent" class="ve-left-content"></div>
             </div>
@@ -7536,56 +7536,56 @@ if (w >= 20 && h >= 20) {
                         <!-- AI 이미지→영상 변환 프롬프트 바 -->
                         <div id="veAiBar" class="ve-ai-bar" style="display:none;">
                             <div class="ve-ai-bar-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                            <input id="veAiPrompt" class="ve-ai-input" type="text" placeholder="어떤 움직임을 원하시나요? (예: 천천히 줌인, 바람에 머리카락 날림...)" />
+                            <input id="veAiPrompt" class="ve-ai-input" type="text" data-i18n-placeholder="ve_ai_prompt_placeholder" placeholder="어떤 움직임을 원하시나요? (예: 천천히 줌인, 바람에 머리카락 날림...)" />
                             <button id="veAiGenBtn" class="ve-ai-gen-btn" onclick="window._veAiGenerate()">
-                                <i class="fa-solid fa-sparkles"></i> AI 영상 생성
+                                <i class="fa-solid fa-sparkles"></i> <span data-i18n="ve_ai_generate">AI 영상 생성</span>
                             </button>
                         </div>
                         <!-- AI 효과 제거 바 -->
                         <div id="veAiRevert" class="ve-ai-bar" style="display:none;">
                             <div class="ve-ai-bar-icon"><i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa"></i></div>
-                            <span style="flex:1;color:#c4b5fd;font-size:12px;font-weight:500;">AI로 생성된 영상입니다</span>
+                            <span style="flex:1;color:#c4b5fd;font-size:12px;font-weight:500;" data-i18n="ve_ai_generated_label">AI로 생성된 영상입니다</span>
                             <button class="ve-ai-revert-btn" onclick="window._veAiRevert()">
-                                <i class="fa-solid fa-rotate-left"></i> 원본 이미지로 복원
+                                <i class="fa-solid fa-rotate-left"></i> <span data-i18n="ve_ai_revert">원본 이미지로 복원</span>
                             </button>
                         </div>
                         <!-- AI 생성 진행 상태 -->
                         <div id="veAiStatus" class="ve-ai-status" style="display:none;">
                             <div class="ve-ai-status-spinner"></div>
-                            <span id="veAiStatusText">AI 영상 생성 중...</span>
+                            <span id="veAiStatusText" data-i18n="ve_ai_status_generating">AI 영상 생성 중...</span>
                             <button id="veAiCancelBtn" class="ve-ai-cancel-btn" onclick="window._veAiCancel()">
-                                <i class="fa-solid fa-xmark"></i> 취소
+                                <i class="fa-solid fa-xmark"></i> <span data-i18n="ve_ai_cancel">취소</span>
                             </button>
                         </div>
                         <canvas id="veCanvas" style="max-width:100%; max-height:100%; display:block; border-radius:4px;"></canvas>
                         <div id="veDropOverlay" class="ve-drop-overlay" style="display:none;">
                             <i class="fa-solid fa-cloud-arrow-up" style="font-size:36px;"></i>
-                            <span>파일을 여기에 놓으세요</span>
+                            <span data-i18n="ve_drop_files">파일을 여기에 놓으세요</span>
                         </div>
                         <div id="veToast" class="ve-toast" style="display:none;"></div>
                         <!-- 컨텍스트 메뉴 -->
                         <div id="veContextMenu" class="ve-ctx" style="display:none;">
-                            <button onclick="window._veCtx('front')"><i class="fa-solid fa-angles-up"></i> 맨 앞으로</button>
-                            <button onclick="window._veCtx('forward')"><i class="fa-solid fa-angle-up"></i> 앞으로</button>
-                            <button onclick="window._veCtx('backward')"><i class="fa-solid fa-angle-down"></i> 뒤로</button>
-                            <button onclick="window._veCtx('back')"><i class="fa-solid fa-angles-down"></i> 맨 뒤로</button>
+                            <button onclick="window._veCtx('front')"><i class="fa-solid fa-angles-up"></i> <span data-i18n="ve_ctx_front">맨 앞으로</span></button>
+                            <button onclick="window._veCtx('forward')"><i class="fa-solid fa-angle-up"></i> <span data-i18n="ve_ctx_forward">앞으로</span></button>
+                            <button onclick="window._veCtx('backward')"><i class="fa-solid fa-angle-down"></i> <span data-i18n="ve_ctx_backward">뒤로</span></button>
+                            <button onclick="window._veCtx('back')"><i class="fa-solid fa-angles-down"></i> <span data-i18n="ve_ctx_back">맨 뒤로</span></button>
                             <div class="ve-ctx-sep"></div>
-                            <button onclick="window._veCtx('copy')"><i class="fa-solid fa-copy"></i> 복사</button>
-                            <button onclick="window._veCtx('paste')"><i class="fa-solid fa-paste"></i> 붙여넣기</button>
+                            <button onclick="window._veCtx('copy')"><i class="fa-solid fa-copy"></i> <span data-i18n="ve_ctx_copy">복사</span></button>
+                            <button onclick="window._veCtx('paste')"><i class="fa-solid fa-paste"></i> <span data-i18n="ve_ctx_paste">붙여넣기</span></button>
                             <div class="ve-ctx-sep"></div>
-                            <button onclick="window._veCtx('delete')" style="color:#ef4444"><i class="fa-solid fa-trash"></i> 삭제</button>
+                            <button onclick="window._veCtx('delete')" style="color:#ef4444"><i class="fa-solid fa-trash"></i> <span data-i18n="ve_ctx_delete">삭제</span></button>
                         </div>
                         <!-- 진행률 -->
                         <div id="veProgress" class="ve-progress" style="display:none;">
                             <div class="ve-progress-track">
                                 <div id="veProgressBar" class="ve-progress-bar" style="width:0%;"></div>
                             </div>
-                            <span id="veProgressText" class="ve-progress-text">준비 중...</span>
+                            <span id="veProgressText" class="ve-progress-text" data-i18n="ve_preparing">준비 중...</span>
                         </div>
                     </div>
                     <!-- 우측 속성 패널 -->
                     <div class="ve-right-panel">
-                        <div class="ve-right-header">속성</div>
+                        <div class="ve-right-header" data-i18n="ve_properties">속성</div>
                         <div id="veRightContent" class="ve-right-content"></div>
                     </div>
                 </div>
