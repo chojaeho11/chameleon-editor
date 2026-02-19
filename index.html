@@ -6604,7 +6604,7 @@ if (w >= 20 && h >= 20) {
         const canvasW = Math.round(displayW * 3.7795);
         const canvasH = Math.round(displayH * 3.7795);
         const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall'
-                   : (product && product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb_box')) ? 'box'
+                   : (typeof key === 'string' && key.startsWith('hb_bx')) ? 'box'
                    : 'standard';
 
         if (typeof setMaxLimits === 'function') setMaxLimits(displayW, displayH);
