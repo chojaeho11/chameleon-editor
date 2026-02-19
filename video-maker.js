@@ -1354,7 +1354,7 @@ function updatePlayhead() {
 // ═══════════════════════════════════════════════════════════════
 // UPDATE ALL
 // ═══════════════════════════════════════════════════════════════
-function updateAll() { refreshLeftPanel(); refreshRightPanel(); updateTimeline(); updateFormatBtns(); }
+function updateAll() { refreshLeftPanel(); refreshRightPanel(); updateTimeline(); updateFormatBtns(); updateAiBar(); }
 function updateFormatBtns() { document.querySelectorAll('.ve-fmt-btn').forEach(b=>b.classList.toggle('active',b.dataset.fmt===vm.format)); }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1942,6 +1942,188 @@ window.veClose = function(){
             if(el&&getComputedStyle(el).display==='none') el.style.display='block';
         });
     },100);
+};
+
+// ═══════════════════════════════════════════════════════════════
+// AI IMAGE → VIDEO GENERATION
+// ═══════════════════════════════════════════════════════════════
+let _aiPredictionId = null;
+let _aiCancelled = false;
+
+function updateAiBar() {
+    const bar = document.getElementById('veAiBar');
+    const status = document.getElementById('veAiStatus');
+    if (!bar) return;
+    // Show AI bar only when an image clip is selected AND not currently generating
+    const c = curClip();
+    if (c && c.type === 'image' && !_aiPredictionId) {
+        bar.style.display = 'flex';
+    } else {
+        bar.style.display = 'none';
+    }
+    // Status bar is controlled separately by the generate flow
+    if (status && !_aiPredictionId) status.style.display = 'none';
+}
+
+window._veAiGenerate = async function() {
+    const c = curClip();
+    if (!c || c.type !== 'image') return showToast('이미지 클립을 선택하세요');
+    const sb = window.sb;
+    if (!sb) return showToast('DB 연결이 필요합니다');
+
+    const promptInput = document.getElementById('veAiPrompt');
+    const prompt = promptInput ? promptInput.value.trim() : '';
+    if (!prompt) return showToast('움직임을 설명하는 프롬프트를 입력하세요');
+
+    // Disable button, show status
+    const genBtn = document.getElementById('veAiGenBtn');
+    if (genBtn) genBtn.disabled = true;
+    const bar = document.getElementById('veAiBar');
+    const statusEl = document.getElementById('veAiStatus');
+    const statusText = document.getElementById('veAiStatusText');
+    if (bar) bar.style.display = 'none';
+    if (statusEl) statusEl.style.display = 'flex';
+    if (statusText) statusText.textContent = _t('ve_ai_uploading', '이미지 업로드 중...');
+
+    _aiCancelled = false;
+
+    try {
+        // 1. Convert image to base64
+        const img = c.img;
+        const tc = document.createElement('canvas');
+        tc.width = img.naturalWidth || img.width;
+        tc.height = img.naturalHeight || img.height;
+        const tctx = tc.getContext('2d');
+        tctx.drawImage(img, 0, 0);
+        const imageBase64 = tc.toDataURL('image/png');
+
+        if (_aiCancelled) throw new Error('cancelled');
+
+        // 2. Call edge function to create prediction
+        if (statusText) statusText.textContent = _t('ve_ai_starting', 'AI 영상 생성 시작...');
+        const { data: createData, error: createError } = await sb.functions.invoke('generate-video', {
+            body: { action: 'create', imageBase64, prompt }
+        });
+
+        if (createError) throw new Error(createError.message || 'Edge function error');
+        if (createData.error) throw new Error(createData.error);
+        if (!createData.predictionId) throw new Error('No prediction ID returned');
+
+        _aiPredictionId = createData.predictionId;
+        if (_aiCancelled) throw new Error('cancelled');
+
+        // 3. Poll for result
+        if (statusText) statusText.textContent = _t('ve_ai_generating', 'AI 영상 생성 중... (1~3분 소요)');
+        let attempts = 0;
+        const maxAttempts = 120; // 120 * 3s = 6 minutes max
+
+        while (attempts < maxAttempts) {
+            if (_aiCancelled) throw new Error('cancelled');
+            await new Promise(r => setTimeout(r, 3000)); // poll every 3 seconds
+            attempts++;
+
+            const { data: checkData, error: checkError } = await sb.functions.invoke('generate-video', {
+                body: { action: 'check', predictionId: _aiPredictionId }
+            });
+
+            if (checkError) throw new Error(checkError.message || 'Check failed');
+            if (checkData.error) throw new Error(checkData.error);
+
+            const st = checkData.status;
+            if (statusText) {
+                if (st === 'processing') statusText.textContent = _t('ve_ai_processing', `AI 영상 처리 중... (${attempts * 3}초 경과)`);
+                else if (st === 'starting') statusText.textContent = _t('ve_ai_queue', 'AI 대기열에서 처리 대기 중...');
+            }
+
+            if (st === 'succeeded') {
+                // Get video URL from output
+                const videoUrl = typeof checkData.output === 'string' ? checkData.output :
+                                 (Array.isArray(checkData.output) ? checkData.output[0] : checkData.output);
+                if (!videoUrl) throw new Error('No video URL in output');
+
+                if (statusText) statusText.textContent = _t('ve_ai_downloading', '영상 다운로드 중...');
+
+                // 4. Download video and replace clip
+                await _veAiReplaceClip(videoUrl);
+                showToast(_t('ve_ai_done', 'AI 영상 생성 완료!'));
+                break;
+            }
+
+            if (st === 'failed' || st === 'canceled') {
+                throw new Error(checkData.error || 'AI generation failed');
+            }
+        }
+
+        if (attempts >= maxAttempts) throw new Error('Timeout: generation took too long');
+
+    } catch (err) {
+        if (err.message !== 'cancelled') {
+            console.error('AI Video Error:', err);
+            showToast('AI 영상 생성 실패: ' + (err.message || 'Unknown error'));
+        }
+    } finally {
+        _aiPredictionId = null;
+        _aiCancelled = false;
+        if (genBtn) genBtn.disabled = false;
+        if (statusEl) statusEl.style.display = 'none';
+        updateAiBar();
+    }
+};
+
+async function _veAiReplaceClip(videoUrl) {
+    const ci = vm.ci;
+    const c = vm.clips[ci];
+    if (!c) return;
+
+    // Fetch video as blob
+    const res = await fetch(videoUrl);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    // Create video element
+    const video = document.createElement('video');
+    video.src = url;
+    video.muted = true;
+    video.preload = 'auto';
+    video.playsInline = true;
+
+    await new Promise((resolve, reject) => {
+        video.onloadedmetadata = () => {
+            video.currentTime = 0.5;
+            video.onseeked = () => {
+                // Generate thumbnail
+                const tc = document.createElement('canvas');
+                tc.width = 160; tc.height = 90;
+                tc.getContext('2d').drawImage(video, 0, 0, 160, 90);
+
+                // Replace clip properties: image → video
+                c.type = 'video';
+                c.video = video;
+                c.url = url;
+                c.thumbUrl = tc.toDataURL('image/jpeg', 0.7);
+                c.duration = Math.min(Math.round(video.duration * 10) / 10, 60);
+                // Keep existing overlays, adj, transition etc.
+                delete c.img;
+                delete c.file;
+                video.onseeked = null;
+                resolve();
+            };
+            video.onerror = reject;
+        };
+        video.onerror = reject;
+    });
+
+    // Refresh everything
+    selectClip(ci);
+}
+
+window._veAiCancel = function() {
+    _aiCancelled = true;
+    _aiPredictionId = null;
+    const statusEl = document.getElementById('veAiStatus');
+    if (statusEl) statusEl.style.display = 'none';
+    updateAiBar();
+    showToast(_t('ve_ai_cancelled', 'AI 생성이 취소되었습니다'));
 };
 
 /* ─── Mobile bottom sheet drag for ve-left ─── */
