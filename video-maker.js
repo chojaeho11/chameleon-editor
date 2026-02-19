@@ -580,7 +580,7 @@ async function loadAudioFromDB(page) {
     const pg=vm.audioPage;
     const list=document.getElementById('veAudioList'); if(!list) return;
     list.innerHTML=`<p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p>`;
-    const category=vm.audioTab==='bgm'?'bgm':'audio';
+    const category=vm.audioTab==='bgm'?'audio-calm':'audio';
     try {
         const sb=window.sb; if(!sb){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_no_conn','No DB connection')}</p>`;return;}
         const from=pg*AUDIO_PAGE_SIZE, to=from+AUDIO_PAGE_SIZE;
