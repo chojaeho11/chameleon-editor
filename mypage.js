@@ -392,12 +392,13 @@ async function loadOrders() {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">${window.t('msg_loading', 'Loading...')}</td></tr>`;
 
     const { data: orders } = await sb.from('orders')
-        .select('*')
+        .select('id, status, total_amount, items, created_at, payment_status, manager_name, phone, address, request_note, delivery_target_date, site_code, files, has_partner_items, selected_customer_phone')
         .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
     tbody.innerHTML = '';
-    
+
     if (!orders || orders.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:50px; color:#999;">${window.t('msg_no_orders', 'No order history.')}</td></tr>`;
         return;
@@ -503,7 +504,7 @@ async function loadMySales() {
     grid.innerHTML = window.t('msg_loading', 'Loading...');
 
     // 1. 라이브러리(디자인) 조회
-    const { data } = await sb.from('library').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    const { data } = await sb.from('library').select('id, thumb_url, title, category, tags, product_key, usage_count, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(200);
     
     if(!data || data.length === 0) {
         grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">${window.t('msg_no_sales', 'No designs for sale.')}</div>`;
@@ -883,13 +884,13 @@ async function monitorMyBids() {
 
     // 내 주문들에 달린 입찰 개수 조회
     // (복잡한 조인 대신, 내 주문 ID를 먼저 가져오고 입찰 수를 셈)
-    const { data: myOrders } = await sb.from('orders').select('id').eq('user_id', currentUser.id);
-    
+    const { data: myOrders } = await sb.from('orders').select('id').eq('user_id', currentUser.id).neq('status', '완료됨').neq('status', '취소됨').neq('status', '배송완료').limit(50);
+
     if (myOrders && myOrders.length > 0) {
         const orderIds = myOrders.map(o => o.id);
-        
+
         const { count: bidCount } = await sb.from('bids')
-            .select('*', { count: 'exact', head: true })
+            .select('id', { count: 'exact', head: true })
             .in('order_id', orderIds);
 
         // 이전보다 입찰 수가 늘어났으면 알림
@@ -977,9 +978,10 @@ window.openPartnerReviewModal = async function(orderId) {
         if(!list) return;
 
         const { data: reviews } = await sb.from('partner_reviews')
-            .select('*')
+            .select('id, rating, comment, created_at, customer_id')
             .eq('partner_id', myPartnerInfo.id)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(50);
             
         list.innerHTML = '';
         if(reviews && reviews.length > 0) {

@@ -20,7 +20,7 @@ window.loadMembers = async (isNewSearch = false) => {
     
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
     
-    let query = sb.from('profiles').select('*', { count: 'exact' });
+    let query = sb.from('profiles').select('id, email, full_name, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at', { count: 'exact' });
     if (roleVal !== 'all') query = query.eq('role', roleVal);
     if (keyword) query = query.ilike('email', `%${keyword}%`);
 
@@ -279,17 +279,22 @@ window.importMileageExcel = async (input) => {
             let successCount = 0;
             let failCount = 0;
 
+            // 배치 처리: 10개씩 병렬 실행
+            const batch = [];
             for (const row of jsonData) {
                 const email = row['이메일'] || row['email'] || row['Email'];
                 const mileageVal = row['마일리지'] || row['mileage'] || row['적립금'];
-
                 if (email && mileageVal !== undefined) {
                     const amount = parseInt(mileageVal);
-                    if (!isNaN(amount)) {
-                        const { error } = await sb.from('profiles').update({ mileage: amount }).eq('email', email);
-                        if (!error) successCount++; else failCount++;
-                    }
+                    if (!isNaN(amount)) batch.push({ email, amount });
                 }
+            }
+            for (let i = 0; i < batch.length; i += 10) {
+                const chunk = batch.slice(i, i + 10);
+                const results = await Promise.all(
+                    chunk.map(({ email, amount }) => sb.from('profiles').update({ mileage: amount }).eq('email', email))
+                );
+                results.forEach(r => r.error ? failCount++ : successCount++);
             }
             showToast(`완료: 성공 ${successCount}명, 실패 ${failCount}명`, "success");
             loadMembers();
@@ -352,7 +357,7 @@ window.loadPartnerApplications = async () => {
 
     try {
         // 기본 쿼리 생성
-        let query = sb.from('partner_applications').select('*').order('created_at', { ascending: false });
+        let query = sb.from('partner_applications').select('id, user_id, company_name, business_number, representative, phone, region, status, created_at').order('created_at', { ascending: false }).limit(100);
 
         // '전체 보기'가 아닐 때만 상태 필터링 적용
         if (filterStatus !== 'all') {
@@ -436,10 +441,10 @@ window.loadWithdrawals = async () => {
     try {
         // 1. 출금 요청 목록 조회
         const { data: requests, error } = await sb.from('withdrawal_requests')
-            .select('*')
+            .select('id, user_id, amount, bank_name, account_holder, status, created_at, processed_at, tax_invoice_url')
             .order('created_at', { ascending: false })
-            .limit(50); 
-            
+            .limit(50);
+
         if (error) throw error;
 
         if (!requests || requests.length === 0) {
@@ -448,10 +453,10 @@ window.loadWithdrawals = async () => {
         }
 
         const userIds = [...new Set(requests.map(r => r.user_id))];
-        
-        // 2. 유저 정보 조회 (모든 컬럼 조회로 오류 방지)
+
+        // 2. 유저 정보 조회
         const { data: users, error: userError } = await sb.from('profiles')
-            .select('*') 
+            .select('id, email, full_name, role, contributor_tier, penalty_reason, deposit')
             .in('id', userIds);
             
         if(userError) console.error("프로필 조회 에러:", userError);

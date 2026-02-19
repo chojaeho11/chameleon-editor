@@ -611,9 +611,10 @@ window.openMyOrderList = async function() {
     container.innerHTML = '<div style="text-align:center; padding:30px;">로딩 중...</div>';
 
     const { data: orders, error } = await sb.from('orders')
-        .select('*')
+        .select('id, status, total_amount, items, created_at, payment_status, manager_name')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
     if (error || !orders || orders.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">주문 내역이 없습니다.</div>';

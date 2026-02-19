@@ -561,6 +561,9 @@ CREATE INDEX IF NOT EXISTS idx_library_status_category ON public.library (status
 -- ----------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles (email);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles (role);
+CREATE INDEX IF NOT EXISTS idx_profiles_deposit ON public.profiles (deposit);
+CREATE INDEX IF NOT EXISTS idx_profiles_mileage ON public.profiles (mileage);
+CREATE INDEX IF NOT EXISTS idx_profiles_total_spend ON public.profiles (total_spend);
 
 -- ----------------------------------------------------------
 -- bids

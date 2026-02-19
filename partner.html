@@ -845,7 +845,7 @@
     async function loadSettlement() {
         const tbody = document.getElementById('settlementBody');
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">...</td></tr>';
-        const { data } = await sb.from('partner_settlements').select('*').eq('partner_id', myUser.id).order('created_at', {ascending:false});
+        const { data } = await sb.from('partner_settlements').select('id, created_at, item_code, item_amount, commission_amount, net_amount, settlement_status, withdrawal_eligible_at').eq('partner_id', myUser.id).order('created_at', {ascending:false}).limit(200);
         let eligible=0, waiting=0, requested=0; let html='';
         if (!data || data.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">${window.t('pt_no_settlement','정산 내역 없음')}</td></tr>`;

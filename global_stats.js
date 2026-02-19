@@ -47,7 +47,7 @@ window.loadStatsData = async () => {
         const driverStats = {};
 
         // 스태프 목록 가져오기
-        const { data: staffList } = await sb.from('admin_staff').select('*');
+        const { data: staffList } = await sb.from('admin_staff').select('id, name, role, color');
 
         orders.forEach(o => {
             // 매출 인정 기준: 결제완료 계열 상태
@@ -245,32 +245,31 @@ window.loadAccountingData = async () => {
     showLoading(true);
 
     try {
-        // --- (A) 예치금 총액 조회 ---
-        // [수정] select('*')로 변경하여 'deposit' 컬럼 이름이 달라도 에러 안 나게 함
-        const { data: profiles, error: pError } = await sb.from('profiles').select('*');
-        if (pError) throw pError;
+        // --- (A) 예치금 총액 + (B) 매출 + 상품 원가를 병렬 조회 ---
+        const [depositRes, ordersRes, prodsRes] = await Promise.all([
+            sb.from('profiles').select('deposit'),
+            sb.from('orders')
+                .select('id, total_amount, discount_amount, items, payment_status')
+                .gte('created_at', start + 'T00:00:00')
+                .lte('created_at', end + 'T23:59:59')
+                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']),
+            sb.from('admin_products').select('name, price')
+        ]);
 
-        cachedAccProfiles = profiles || [];
-        // DB에 deposit 컬럼이 없으면 0으로 처리
+        if (depositRes.error) throw depositRes.error;
+        if (ordersRes.error) throw ordersRes.error;
+
+        cachedAccProfiles = depositRes.data || [];
         const totalDeposit = cachedAccProfiles.reduce((acc, cur) => acc + (cur.deposit || 0), 0);
         document.getElementById('accTotalDeposit').innerText = totalDeposit.toLocaleString() + "원";
 
-        // --- (B) 매출 조회 ---
-        // [수정] select('*')로 변경
-        const { data: orders, error: oError } = await sb.from('orders')
-            .select('*') 
-            .gte('created_at', start + 'T00:00:00')
-            .lte('created_at', end + 'T23:59:59')
-            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']);
-
-        if (oError) throw oError;
-        cachedAccOrders = orders || [];
+        cachedAccOrders = ordersRes.data || [];
 
         let totalSales = 0;
         let totalDiscount = 0;
 
         // 상품 원가표
-        const { data: prods } = await sb.from('admin_products').select('name, price');
+        const { data: prods } = prodsRes;
         const prodMap = {}; 
         if(prods) prods.forEach(p => prodMap[p.name] = p.price);
 
@@ -302,7 +301,7 @@ window.loadAccountingData = async () => {
 
         // --- (C) 정산(출금) 내역 조회 ---
         const { data: withdraws, error: wError } = await sb.from('withdrawal_requests')
-            .select('*')
+            .select('id, user_id, amount, status, created_at, tax_invoice_url, processed_at')
             .gte('created_at', start + 'T00:00:00')
             .lte('created_at', end + 'T23:59:59')
             .order('created_at', {ascending: false});
@@ -317,7 +316,7 @@ window.loadAccountingData = async () => {
         const uids = [...new Set(cachedAccWithdrawals.map(w => w.user_id))];
         const userMap = {};
         if(uids.length > 0) {
-            const { data: users } = await sb.from('profiles').select('*').in('id', uids);
+            const { data: users } = await sb.from('profiles').select('id, full_name, role').in('id', uids);
             if(users) users.forEach(u => userMap[u.id] = u);
         }
 

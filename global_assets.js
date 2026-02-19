@@ -23,7 +23,7 @@ window.loadTemplates = async (isNewSearch = false) => {
 
     // 1. 쿼리 구성
     let query = sb.from('library')
-        .select('*', { count: 'exact' })
+        .select('id, thumb_url, category, product_key, tags, data_url', { count: 'exact' })
         .order('created_at', { ascending: false });
 
     // 필터 적용
@@ -318,7 +318,7 @@ window.loadFonts = async () => {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">로딩 중...</td></tr>';
 
     try {
-        const { data, error } = await sb.from('site_fonts').select('*').order('created_at', { ascending: false });
+        const { data, error } = await sb.from('site_fonts').select('id, font_name, font_family, file_url, site_code, created_at').order('created_at', { ascending: false });
 
         if (error) throw error;
 

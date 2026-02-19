@@ -116,13 +116,13 @@ window.loadOrders = async () => {
 
         // 스태프 목록 로드 (색상 표시용)
         if(staffList.length === 0) {
-            const { data } = await sb.from('admin_staff').select('*');
+            const { data } = await sb.from('admin_staff').select('id, name, role, color');
             staffList = data || [];
         }
 
         // [핵심 1] 쿼리에 bids(id) 추가 (입찰 카운트용)
         let query = sb.from('orders')
-            .select('*, bids(id)', { count: 'exact' }) 
+            .select('id, status, total_amount, items, created_at, payment_status, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, head_office_check, has_partner_items, files, bids(id)', { count: 'exact' }) 
             .order('created_at', { ascending: false });
 
         // [핵심 2] 결제하기 안 누른 '임시작성' 건은 숨김
@@ -437,20 +437,23 @@ window.loadBankdaList = async () => {
 
     try {
         // [수정] select('*') 로 변경하여 컬럼 오류 방지
-        const { data: txs, error } = await sb.from('bank_transactions')
-            .select('*')
-            .gte('transaction_date', start + 'T00:00:00')
-            .lte('transaction_date', end + 'T23:59:59')
-            .order('transaction_date', { ascending: false });
+        // 은행거래 + 미결제 주문을 병렬 조회
+        const [txsRes, ordersRes] = await Promise.all([
+            sb.from('bank_transactions')
+                .select('id, transaction_date, amount, sender_name, match_status, matched_order_id, memo')
+                .gte('transaction_date', start + 'T00:00:00')
+                .lte('transaction_date', end + 'T23:59:59')
+                .order('transaction_date', { ascending: false }),
+            sb.from('orders')
+                .select('id, manager_name, phone, total_amount, payment_status, created_at')
+                .gte('created_at', start + 'T00:00:00')
+                .neq('payment_status', '결제완료')
+                .neq('payment_status', '입금확인')
+        ]);
 
+        const { data: txs, error } = txsRes;
         if (error) throw error;
-
-        // 2. 미결제 주문 목록 조회
-        const { data: orders } = await sb.from('orders')
-            .select('*') // [수정] 전체 컬럼 가져오기
-            .gte('created_at', start + 'T00:00:00')
-            .neq('payment_status', '결제완료')
-            .neq('payment_status', '입금확인');
+        const { data: orders } = ordersRes;
 
         tbody.innerHTML = '';
         if (!txs || txs.length === 0) { 
@@ -577,7 +580,7 @@ window.loadDailyTasks = async () => {
     try {
         // 2. 스태프 목록이 로드되지 않았다면 가져오기
         if (staffList.length === 0) {
-            const { data } = await sb.from('admin_staff').select('*');
+            const { data } = await sb.from('admin_staff').select('id, name, role, color');
             staffList = data || [];
         }
 
@@ -590,7 +593,7 @@ window.loadDailyTasks = async () => {
         }
 
         // 4. 해당 날짜의 배송 건 조회
-        let query = sb.from('orders').select('*').eq('delivery_target_date', targetDate);
+        let query = sb.from('orders').select('id, status, total_amount, items, manager_name, phone, address, delivery_target_date, delivery_time, staff_driver_id, staff_manager_id, request_note, created_at').eq('delivery_target_date', targetDate);
         if (driverFilterId !== 'all') {
             query = query.eq('staff_driver_id', driverFilterId);
         }
@@ -774,13 +777,13 @@ window.downloadMonthlyExcel = async () => {
     try {
         // [중요] 매니저 이름을 찾기 위해 스태프 목록이 비어있다면 먼저 로드
         if (staffList.length === 0) {
-            const { data: sData } = await sb.from('admin_staff').select('*');
+            const { data: sData } = await sb.from('admin_staff').select('id, name, role, color');
             staffList = sData || [];
         }
 
         // 3. 쿼리 구성
         let query = sb.from('orders')
-            .select('*')
+            .select('id, status, total_amount, items, created_at, payment_status, payment_method, manager_name, phone, address, site_code, staff_manager_id, staff_driver_id, delivery_target_date')
             .gte('created_at', startDate + 'T00:00:00')
             .lte('created_at', endDate + 'T23:59:59')
             .order('created_at', { ascending: false });

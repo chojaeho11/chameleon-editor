@@ -1749,16 +1749,18 @@ async function saveCommonInfo() {
         var sb = getSb(); if (!sb) return;
         var filter = document.getElementById('cbLogFilter').value, today = new Date().toISOString().split('T')[0];
         try {
-            var ta = await sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00');
-            var tu = await sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('is_resolved',false);
-            var tt = await sb.from('chatbot_logs').select('id',{count:'exact',head:true}).eq('needs_training',true).eq('is_resolved',false);
-            var tk = await sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true);
+            var [ta, tu, tt, tk] = await Promise.all([
+                sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00'),
+                sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('is_resolved',false),
+                sb.from('chatbot_logs').select('id',{count:'exact',head:true}).eq('needs_training',true).eq('is_resolved',false),
+                sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true)
+            ]);
             document.getElementById('cbDailyReport').innerHTML = '<div style="background:#ede9fe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#6366f1;">'+(ta.count||0)+'</div><div style="font-size:11px;color:#64748b;">오늘 상담</div></div><div style="background:#fef2f2;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#ef4444;">'+(tu.count||0)+'</div><div style="font-size:11px;">미해결</div></div><div style="background:#fefce8;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#f59e0b;">'+(tt.count||0)+'</div><div style="font-size:11px;">🚨 학습필요</div></div><div style="background:#d1fae5;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#059669;">'+(tk.count||0)+'</div><div style="font-size:11px;">학습데이터</div></div>';
         } catch(e){}
-        var urgR = await sb.from('chatbot_logs').select('*').eq('needs_training',true).eq('is_resolved',false).order('created_at',{ascending:false}).limit(10);
+        var urgR = await sb.from('chatbot_logs').select('id, user_message, bot_reply').eq('needs_training',true).eq('is_resolved',false).order('created_at',{ascending:false}).limit(10);
         var ub = document.getElementById('cbUrgentBox'), ul = document.getElementById('cbUrgentList');
         if (urgR.data && urgR.data.length > 0) { ub.style.display='block'; var h=''; urgR.data.forEach(function(l){ h+='<div style="background:#fff;border:1px solid #fca5a5;border-radius:8px;padding:8px;margin-bottom:4px;font-size:12px;"><b style="color:#dc2626;">❓</b> '+l.user_message+'<br><span style="color:#94a3b8;">AI: '+((l.bot_reply||'').substring(0,80))+'</span><br><button class="btn btn-primary btn-sm" style="font-size:10px;margin-top:4px;background:#dc2626;" onclick="cbTrainFromLog('+l.id+',\''+l.user_message.replace(/'/g,"\\'").replace(/\n/g," ")+'\')">📚 답변등록</button> <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="cbResolveLog('+l.id+')">✅ 문제없음</button></div>'; }); ul.innerHTML=h; } else { ub.style.display='none'; }
-        var q2 = sb.from('chatbot_logs').select('*').order('created_at',{ascending:false}).limit(30);
+        var q2 = sb.from('chatbot_logs').select('id, created_at, needs_training, is_resolved, user_message, bot_reply').order('created_at',{ascending:false}).limit(30);
         if (filter==='unresolved') q2=q2.eq('is_resolved',false); if (filter==='needs_training') q2=q2.eq('needs_training',true);
         var dv = document.getElementById('cbLogDate').value; if(dv) q2=q2.gte('created_at',dv+'T00:00:00').lte('created_at',dv+'T23:59:59');
         var r = await q2; var list = document.getElementById('cbLogList'); document.getElementById('cbLogCount').textContent='총 '+(r.data?r.data.length:0)+'건';
@@ -1771,7 +1773,7 @@ async function saveCommonInfo() {
     window.cbLoadSettings = async function() {
         var sb = getSb(); var r = await sb.from('chatbot_knowledge').select('answer').eq('category','_system_prompt').eq('is_active',true).maybeSingle();
         if(r.data) document.getElementById('cbCustomPrompt').value=r.data.answer;
-        var ta=await sb.from('chatbot_logs').select('id',{count:'exact',head:true}); var tk=await sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true);
+        var [ta, tk] = await Promise.all([sb.from('chatbot_logs').select('id',{count:'exact',head:true}), sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true)]);
         document.getElementById('cbStats').innerHTML='<div style="background:#ede9fe;padding:15px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:900;color:#6366f1;">'+(ta.count||0)+'</div><div style="font-size:11px;">총 상담</div></div><div style="background:#d1fae5;padding:15px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:900;color:#059669;">'+(tk.count||0)+'</div><div style="font-size:11px;">학습 데이터</div></div>';
     };
     window.cbSaveSettings = async function() {
