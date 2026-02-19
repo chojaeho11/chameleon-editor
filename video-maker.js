@@ -76,7 +76,9 @@ let vm = {
     imgItems: null, imgPage: 0,
     clipboard: null, snapLines: null,
     audioItems: null, audioEl: null, audioUrl: null,
-    audioPage: 0, audioHasMore: false
+    audioPage: 0, audioHasMore: false,
+    audioTab: 'sfx', // 'sfx' or 'bgm'
+    canvasZoom: 1
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -349,9 +351,22 @@ function render() {
     const c = curClip();
     if (!c) {
         vm.ctx.fillStyle='#0d0d1a'; vm.ctx.fillRect(0,0,vm.w,vm.h);
-        vm.ctx.fillStyle='#555'; vm.ctx.font=`${vm.w*.025}px sans-serif`; vm.ctx.textAlign='center';
-        vm.ctx.fillText('미디어를 추가하세요',vm.w/2,vm.h/2); return;
+        // upload icon circle
+        const cx=vm.w/2,cy=vm.h/2-vm.w*.03,r=vm.w*.06;
+        vm.ctx.beginPath();vm.ctx.arc(cx,cy,r,0,Math.PI*2);
+        vm.ctx.strokeStyle='#4a5568';vm.ctx.lineWidth=Math.max(3,vm.w*.002);vm.ctx.setLineDash([10,8]);vm.ctx.stroke();vm.ctx.setLineDash([]);
+        // plus icon
+        vm.ctx.strokeStyle='#6b7280';vm.ctx.lineWidth=Math.max(4,vm.w*.003);
+        const ps=r*.4;vm.ctx.beginPath();vm.ctx.moveTo(cx-ps,cy);vm.ctx.lineTo(cx+ps,cy);vm.ctx.moveTo(cx,cy-ps);vm.ctx.lineTo(cx,cy+ps);vm.ctx.stroke();
+        // text
+        vm.ctx.fillStyle='#6b7280'; vm.ctx.font=`${vm.w*.022}px sans-serif`; vm.ctx.textAlign='center';
+        vm.ctx.fillText(_t('ve_click_upload','클릭하여 미디어를 추가하세요'),vm.w/2,vm.h/2+vm.w*.06);
+        vm.ctx.fillStyle='#4a5568'; vm.ctx.font=`${vm.w*.014}px sans-serif`;
+        vm.ctx.fillText(_t('ve_drag_hint','또는 파일을 드래그하세요'),vm.w/2,vm.h/2+vm.w*.09);
+        if(vm.canvas) vm.canvas.style.cursor='pointer';
+        return;
     }
+    if(vm.canvas) vm.canvas.style.cursor='default';
     renderClip(vm.ci, vm.ctx, true);
 }
 
@@ -509,7 +524,14 @@ function filterTagsByCountry(tags) {
 }
 
 function renderAudioTab(el) {
+    // Audio tab with SFX/BGM sub-tabs
+    const isSfx=vm.audioTab==='sfx';
     let h = `<div class="ve-sec"><b>${_t('ve_audio_label','Audio')}</b>`;
+    // sub-tabs: SFX vs BGM
+    h += `<div style="display:flex;gap:4px;margin:8px 0">`;
+    h += `<button class="ve-audio-subtab${isSfx?' active':''}" onclick="window._veAudioTabSwitch('sfx')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${isSfx?'#818cf8':'#333'};background:${isSfx?'rgba(129,140,248,0.15)':'transparent'};color:${isSfx?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-bell"></i> ${_t('ve_audio_sfx','SFX')}</button>`;
+    h += `<button class="ve-audio-subtab${!isSfx?' active':''}" onclick="window._veAudioTabSwitch('bgm')" style="flex:1;padding:6px 0;border-radius:6px;border:1px solid ${!isSfx?'#818cf8':'#333'};background:${!isSfx?'rgba(129,140,248,0.15)':'transparent'};color:${!isSfx?'#a5b4fc':'#888'};font-size:11px;font-weight:600;cursor:pointer"><i class="fa-solid fa-headphones"></i> ${_t('ve_audio_bgm','BGM')}</button>`;
+    h += `</div>`;
     // 음원 없음 옵션
     const noSel=vm.music==='none'&&!vm.audioUrl;
     h += `<div class="ve-music-row${noSel?' selected':''}" onclick="window._veSelectMusic('none')">`;
@@ -519,6 +541,11 @@ function renderAudioTab(el) {
     el.innerHTML = h;
     loadAudioFromDB();
 }
+window._veAudioTabSwitch=function(tab){
+    vm.audioTab=tab;vm.audioPage=0;vm.audioItems=null;
+    if(vm.audioEl){vm.audioEl.pause();vm.audioEl=null;vm._previewIdx=-1;}
+    refreshLeftPanel();
+};
 
 const AUDIO_PAGE_SIZE=20;
 async function loadAudioFromDB(page) {
@@ -526,24 +553,28 @@ async function loadAudioFromDB(page) {
     const pg=vm.audioPage;
     const list=document.getElementById('veAudioList'); if(!list) return;
     list.innerHTML=`<p class="ve-empty">${_t('ve_audio_loading','Loading...')}</p>`;
+    const category=vm.audioTab==='bgm'?'bgm':'audio';
     try {
         const sb=window.sb; if(!sb){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_no_conn','No DB connection')}</p>`;return;}
         const from=pg*AUDIO_PAGE_SIZE, to=from+AUDIO_PAGE_SIZE;
-        const {data,error}=await sb.from('library').select('id,thumb_url,data_url,tags').eq('category','audio').order('created_at',{ascending:false}).range(from,to);
+        const {data,error}=await sb.from('library').select('id,thumb_url,data_url,tags').eq('category',category).order('created_at',{ascending:false}).range(from,to);
         if(error) throw error;
         const items=data||[];
         vm.audioHasMore=items.length>AUDIO_PAGE_SIZE;
         vm.audioItems=items.slice(0,AUDIO_PAGE_SIZE);
-        if(!vm.audioItems.length&&pg===0){list.innerHTML=`<p class="ve-empty">${_t('ve_audio_no_result','No audio found')}</p>`;return;}
+        const emptyLabel=vm.audioTab==='bgm'?_t('ve_audio_no_bgm','No BGM found'):_t('ve_audio_no_result','No audio found');
+        if(!vm.audioItems.length&&pg===0){list.innerHTML=`<p class="ve-empty">${emptyLabel}</p>`;return;}
         if(!vm.audioItems.length){vm.audioPage=Math.max(0,pg-1);loadAudioFromDB();return;}
         let h='';
+        const icon=vm.audioTab==='bgm'?'fa-headphones':'fa-music';
         vm.audioItems.forEach((a,i)=>{
-            const name=filterTagsByCountry(a.tags)||`음원 ${pg*AUDIO_PAGE_SIZE+i+1}`;
+            const defaultName=vm.audioTab==='bgm'?`BGM ${pg*AUDIO_PAGE_SIZE+i+1}`:`SFX ${pg*AUDIO_PAGE_SIZE+i+1}`;
+            const name=filterTagsByCountry(a.tags)||defaultName;
             const sel=vm.audioUrl===a.data_url;
             const playing=vm.audioEl&&!vm.audioEl.paused&&vm._previewIdx===i;
             h+=`<div class="ve-music-row${sel?' selected':''}" onclick="window._veSelectDBAudio(${i})">`;
-            h+=`<i class="fa-solid fa-music" style="width:24px;text-align:center;font-size:14px;color:${sel?'#818cf8':'#6b7280'}"></i>`;
-            h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${name}</div><div style="font-size:10px;color:#555">${sel?'✓ 선택됨':''}</div></div>`;
+            h+=`<i class="fa-solid ${icon}" style="width:24px;text-align:center;font-size:14px;color:${sel?'#818cf8':'#6b7280'}"></i>`;
+            h+=`<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#e0e0e8">${name}</div><div style="font-size:10px;color:#555">${sel?'✓ '+_t('ve_audio_selected','Selected'):''}</div></div>`;
             h+=`<button class="ve-music-play${playing?' playing':''}" onclick="event.stopPropagation();window._vePreviewDBAudio(${i})">${playing?'<i class="fa-solid fa-stop"></i>':'<i class="fa-solid fa-play"></i>'}</button>`;
             h+=`</div>`;
         });
@@ -1526,8 +1557,8 @@ window.veExport = async function() {
         const pct=Math.round(i/vm.clips.length*100);if(progBar)progBar.style.width=pct+'%';if(progText)progText.textContent=`${i+1}/${vm.clips.length}`;
         const c=vm.clips[i],dur=clipEffDur(c)*1000;
         if(c.type==='video'&&c.video) c.video.playbackRate=c.speed||1;
-        if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);c.overlays.forEach(o=>renderOverlay(vm.ctx,o));await sleep(dur-800);}
-        else{renderClip(i,vm.ctx,false);await sleep(i===0?dur-200:dur);} // first clip accounts for warmup time
+        if(i>0&&c.transition!=='none'){const ps=vm.clips[i-1].type==='video'?vm.clips[i-1].video:vm.clips[i-1].img;await animateTransition(ps,c,c.transition,800);await playClipOnCanvas(i,dur-800);}
+        else{await playClipOnCanvas(i,i===0?dur-200:dur);} // use rAF loop so video frames render continuously
     }
     if(progBar)progBar.style.width='100%';if(progText)progText.textContent='인코딩 중...';
     // stop audio source if playing
@@ -1564,6 +1595,19 @@ export function initVideoMaker() {
         cvs.addEventListener('touchstart',e=>{e.preventDefault();onDown(e.touches[0]);},{passive:false});
         cvs.addEventListener('touchmove',e=>{e.preventDefault();onMove(e.touches[0]);},{passive:false});
         cvs.addEventListener('touchend',onUp);
+        // mouse wheel zoom on canvas
+        const centerEl=document.querySelector('.ve-center');
+        if(centerEl){
+            centerEl.addEventListener('wheel',e=>{
+                e.preventDefault();
+                const delta=e.deltaY>0?-0.1:0.1;
+                vm.canvasZoom=Math.min(3,Math.max(0.3,vm.canvasZoom+delta));
+                cvs.style.transform=`scale(${vm.canvasZoom})`;
+                cvs.style.transformOrigin='center center';
+                if(vm.canvasZoom!==1){centerEl.style.overflow='auto';}
+                else{centerEl.style.overflow='hidden';}
+            },{passive:false});
+        }
     }
     // tabs
     document.querySelectorAll('.ve-ltab').forEach(b=>b.addEventListener('click',()=>{vm.leftTab=b.dataset.tab;refreshLeftPanel();}));
@@ -1627,6 +1671,12 @@ function onKeyDown(e){
 
 function onDown(e){
     if(vm.playing&&!vm.paused)return;
+    // Click on empty canvas → trigger file upload
+    if(!vm.clips.length){
+        const fi=document.getElementById('veFileInput');
+        if(fi) fi.click();
+        return;
+    }
     const{x,y}=canvasXY(e);
     if(vm.addMode){if(vm.addMode==='sticker')addOverlay('sticker',x,y,{emoji:vm.addSticker});else addOverlay(vm.addMode,x,y);vm.addMode=null;vm.canvas.style.cursor='default';return;}
     // check handles on currently selected overlay
@@ -1760,7 +1810,7 @@ window.openVideoMaker = function(label) {
     vm.clips=[];vm.ci=0;vm.oi=-1;vm.playing=false;vm.paused=false;vm.cancel=false;
     vm.addMode=null;vm.music='none';vm.musicPlaying=null;vm.playTime=0;vm.leftTab='media';
     vm.libItems=null;vm.libPage=0;vm.imgItems=null;vm.imgPage=0;
-    vm.audioItems=null;vm.audioUrl=null;
+    vm.audioItems=null;vm.audioUrl=null;vm.audioTab='sfx';vm.canvasZoom=1;
     if(vm.audioEl){try{vm.audioEl.pause();}catch(e){}vm.audioEl=null;}
     // Load country-specific fonts from Supabase if not already loaded
     if(window.initCanvasFonts && !window.isFontsInitialized){
@@ -1782,7 +1832,8 @@ window.openVideoMaker = function(label) {
     const title=document.getElementById('veTitle');
     if(title)title.textContent='영상 편집기';
     vm.canvas=document.getElementById('veCanvas');
-    if(vm.canvas){vm.canvas.width=vm.w;vm.canvas.height=vm.h;vm.ctx=vm.canvas.getContext('2d');}
+    if(vm.canvas){vm.canvas.width=vm.w;vm.canvas.height=vm.h;vm.ctx=vm.canvas.getContext('2d');vm.canvas.style.transform='';vm.canvas.style.cursor='default';}
+    const centerEl=document.querySelector('.ve-center');if(centerEl)centerEl.style.overflow='hidden';
     render();updateAll();
     const dlBtn=document.getElementById('veDlBtn');if(dlBtn)dlBtn.style.display='none';
     const prog=document.getElementById('veProgress');if(prog)prog.style.display='none';
