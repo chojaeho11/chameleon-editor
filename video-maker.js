@@ -1003,7 +1003,11 @@ window._veSaveProject = async function(){
             overlays,
             adj:c.adj,
             transition:c.transition,
-            videoNeedsReimport:c.type==='video'
+            speed:c.speed||1,
+            locked:c.locked!==false,
+            panX:c.panX||0, panY:c.panY||0, imgScale:c.imgScale||1,
+            sourceUrl:c.sourceUrl||'',
+            videoNeedsReimport:c.type==='video'&&!c.sourceUrl
         });
     }
     const project={
@@ -1056,21 +1060,45 @@ window._veLoadProject = function(idx){
     const total=p.clips?p.clips.length:0;
     if(!total){updateAll();render();refreshLeftPanel();return;}
     p.clips.forEach((cd,ci)=>{
-        if(cd.type==='video'&&cd.videoNeedsReimport){
-            // video placeholder
+        const baseProps={duration:cd.duration||3,overlays:cd.overlays||[],adj:cd.adj||{brightness:0,contrast:0,saturation:100,blur:0,hue:0},
+            transition:cd.transition||'fade',speed:cd.speed||1,locked:cd.locked!==false,panX:cd.panX||0,panY:cd.panY||0,imgScale:cd.imgScale||1};
+        if(cd.type==='video'&&cd.sourceUrl){
+            // video with permanent URL — restore as real video
+            const video=document.createElement('video');
+            video.src=cd.sourceUrl; video.muted=true; video.preload='auto'; video.playsInline=true; video.crossOrigin='anonymous';
+            video.onloadedmetadata=()=>{
+                video.currentTime=0.5;
+                video.onseeked=()=>{
+                    const tc=document.createElement('canvas');tc.width=160;tc.height=90;
+                    tc.getContext('2d').drawImage(video,0,0,160,90);
+                    vm.clips[ci]={type:'video',video,url:cd.sourceUrl,sourceUrl:cd.sourceUrl,
+                        thumbUrl:tc.toDataURL('image/jpeg',0.7),...baseProps};
+                    _restoreOverlayImages(vm.clips[ci]);
+                    video.onseeked=null;
+                    if(++loaded>=total){selectClip(0);updateAll();render();updateFormatBtns();}
+                };
+            };
+            video.onerror=()=>{
+                // fallback to image placeholder if video fails to load
+                const img=new Image(); img.src=cd.thumbUrl||'';
+                img.onload=img.onerror=()=>{
+                    vm.clips[ci]={type:'image',url:'',img,thumbUrl:cd.thumbUrl||'',...baseProps,_videoPlaceholder:true};
+                    _restoreOverlayImages(vm.clips[ci]);
+                    if(++loaded>=total){selectClip(0);updateAll();render();updateFormatBtns();}
+                };
+            };
+        } else if(cd.type==='video'&&cd.videoNeedsReimport){
+            // video without permanent URL — image placeholder
             const img=new Image(); img.src=cd.thumbUrl||'';
             img.onload=img.onerror=()=>{
-                vm.clips[ci]={type:'image',url:'',img,thumbUrl:cd.thumbUrl||'',
-                    duration:cd.duration||3,overlays:cd.overlays||[],adj:cd.adj||{},transition:cd.transition||'fade',
-                    _videoPlaceholder:true};
+                vm.clips[ci]={type:'image',url:'',img,thumbUrl:cd.thumbUrl||'',...baseProps,_videoPlaceholder:true};
                 _restoreOverlayImages(vm.clips[ci]);
                 if(++loaded>=total){selectClip(0);updateAll();render();updateFormatBtns();}
             };
         } else {
             const img=new Image();
             img.onload=img.onerror=()=>{
-                vm.clips[ci]={type:'image',url:cd.dataUrl||'',img,thumbUrl:cd.thumbUrl||'',
-                    duration:cd.duration||3,overlays:cd.overlays||[],adj:cd.adj||{},transition:cd.transition||'fade'};
+                vm.clips[ci]={type:'image',url:cd.dataUrl||'',img,thumbUrl:cd.thumbUrl||'',...baseProps};
                 _restoreOverlayImages(vm.clips[ci]);
                 if(++loaded>=total){selectClip(0);updateAll();render();updateFormatBtns();}
             };
@@ -2084,12 +2112,27 @@ async function _veAiReplaceClip(videoUrl) {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
+    // Upload to Supabase storage for permanent URL
+    let permanentUrl = '';
+    try {
+        const sb = window.sb;
+        if (sb) {
+            const fileName = `ai_video_${Date.now()}_${Math.floor(Math.random()*1000)}.mp4`;
+            const { error: upErr } = await sb.storage.from('design').upload(`ai_video/${fileName}`, blob, { contentType: 'video/mp4', upsert: false });
+            if (!upErr) {
+                const { data: { publicUrl } } = sb.storage.from('design').getPublicUrl(`ai_video/${fileName}`);
+                permanentUrl = publicUrl;
+            }
+        }
+    } catch (e) { console.warn('Video storage upload failed:', e); }
+
     // Create video element
     const video = document.createElement('video');
     video.src = url;
     video.muted = true;
     video.preload = 'auto';
     video.playsInline = true;
+    video.crossOrigin = 'anonymous';
 
     await new Promise((resolve, reject) => {
         video.onloadedmetadata = () => {
@@ -2104,6 +2147,7 @@ async function _veAiReplaceClip(videoUrl) {
                 c.type = 'video';
                 c.video = video;
                 c.url = url;
+                c.sourceUrl = permanentUrl; // permanent Supabase URL for save/load
                 c.thumbUrl = tc.toDataURL('image/jpeg', 0.7);
                 c.duration = Math.min(Math.round(video.duration * 10) / 10, 60);
                 // Keep existing overlays, adj, transition etc.
