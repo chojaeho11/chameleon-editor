@@ -1980,7 +1980,6 @@ async function handleSubReturn() {
         <button class="height-btn active" onclick="window.setWallHeight(2200, this)">220cm</button>
         <button class="height-btn" onclick="window.setWallHeight(2400, this)">240cm</button>
         <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
-        <button id="btn3DPreview" onclick="window.open3DPreview()" style="margin-left:8px; padding:6px 14px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;"><i class="fa-solid fa-cube"></i> <span data-i18n="btn_3d_preview">3D</span></button>
     </div>
 
     <div class="editor-wrap">
@@ -2386,6 +2385,20 @@ async function handleSubReturn() {
             " onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                 <span data-i18n="wizard_btn">AI 디자인 마법사</span>
+            </button>
+
+            <!-- 3D Preview Button (honeycomb products) -->
+            <button id="btn3DPreview" onclick="window.open3DPreview()" style="
+                position:absolute; top:15px; right:220px; z-index:50;
+                height:42px; padding:0 16px; border-radius:21px;
+                background:linear-gradient(135deg,#8b5cf6 0%,#06b6d4 100%);
+                border:none; color:#fff; font-weight:700; font-size:12px;
+                box-shadow:0 4px 15px rgba(139,92,246,0.4);
+                cursor:pointer; display:none; align-items:center; gap:7px;
+                transition:all .2s;
+            " onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-cube"></i>
+                <span data-i18n="btn_3d_preview">3D 미리보기</span>
             </button>
 
             <div id="pageControls" class="page-controls-bar">
@@ -6582,6 +6595,13 @@ if (w >= 20 && h >= 20) {
         const inpH = document.getElementById("inputUserH");
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
+
+        // 3D 미리보기 버튼: 허니콤보드 가벽 상품일 때만 표시
+        const btn3d = document.getElementById('btn3DPreview');
+        if (btn3d) {
+            const isHoneycomb = (product && product.category === 'honeycomb') || (typeof key === 'string' && key.startsWith('hb'));
+            btn3d.style.display = isHoneycomb ? 'flex' : 'none';
+        }
 
         // 3. 화면 전환
         document.getElementById("startScreen").style.display = "none";
