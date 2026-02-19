@@ -1383,5 +1383,16 @@
   "box_sheets": "ورقة",
   "box_download_layout": "مخطط التخطيط",
   "box_apply_first": "يرجى تطبيق أبعاد الصندوق أولاً",
-  "box_too_large": "الوجه يتجاوز حجم اللوح (2400×1200مم)"
+  "box_too_large": "الوجه يتجاوز حجم اللوح (2400×1200مم)",
+  "login_save_msg": "لحفظ أعمالك مؤقتاً،<br>يجب التسجيل أو تسجيل الدخول.",
+  "login_browse_guest": "تصفح بدون تسجيل",
+  "gm_upload_video": "استخراج إطارات من الفيديو",
+  "ppt_export": "تصدير PPT",
+  "ppt_trans_none": "بدون",
+  "ppt_trans_fade": "تلاشي",
+  "ppt_trans_slide": "انزلاق",
+  "ppt_trans_zoom": "تكبير",
+  "ppt_trans_wipe": "مسح",
+  "ppt_trans_push": "دفع",
+  "loading_product": "...جارٍ الانتقال إلى صفحة المنتج"
 }

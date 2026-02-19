@@ -6,54 +6,54 @@ const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 const FORMATS = [
-    { id:'landscape', label:'16:9', name:_t('ve_format_landscape','가로 영상'), w:1920, h:1080 },
-    { id:'portrait',  label:'9:16', name:_t('ve_format_portrait','세로/쇼츠'), w:1080, h:1920 },
-    { id:'square',    label:'1:1',  name:_t('ve_format_square','정사각형'),   w:1080, h:1080 }
+    { id:'landscape', label:'16:9', get name(){ return _t('ve_format_landscape','가로 영상') }, w:1920, h:1080 },
+    { id:'portrait',  label:'9:16', get name(){ return _t('ve_format_portrait','세로/쇼츠') }, w:1080, h:1920 },
+    { id:'square',    label:'1:1',  get name(){ return _t('ve_format_square','정사각형') },   w:1080, h:1080 }
 ];
 
 const MUSIC = [
-    { id:'none', name:_t('ve_music_none','없음'), icon:'fa-volume-xmark', desc:_t('ve_music_none_desc','음악 없음') }
+    { id:'none', get name(){ return _t('ve_music_none','없음') }, icon:'fa-volume-xmark', get desc(){ return _t('ve_music_none_desc','음악 없음') } }
 ];
 
 const TRANSITIONS = [
-    { id:'none', name:_t('ve_trans_none','없음'), icon:'fa-xmark', color:'#6b7280' },
-    { id:'fade', name:_t('ve_trans_fade','페이드'), icon:'fa-circle-half-stroke', color:'#818cf8' },
-    { id:'slideL', name:_t('ve_trans_slide_l','← 슬라이드'), icon:'fa-arrow-left', color:'#fbbf24' },
-    { id:'slideR', name:_t('ve_trans_slide_r','→ 슬라이드'), icon:'fa-arrow-right', color:'#fbbf24' },
-    { id:'slideUp', name:_t('ve_trans_slide_up','↑ 슬라이드'), icon:'fa-arrow-up', color:'#fbbf24' },
-    { id:'zoomIn', name:_t('ve_trans_zoom_in','줌 인'), icon:'fa-magnifying-glass-plus', color:'#34d399' },
-    { id:'zoomOut', name:_t('ve_trans_zoom_out','줌 아웃'), icon:'fa-magnifying-glass-minus', color:'#34d399' },
-    { id:'wipe', name:_t('ve_trans_wipe','와이프'), icon:'fa-bars-staggered', color:'#f472b6' },
-    { id:'slideDown', name:_t('ve_trans_slide_down','↓ 슬라이드'), icon:'fa-arrow-down', color:'#fbbf24' },
-    { id:'flipH', name:_t('ve_trans_flip','뒤집기'), icon:'fa-right-left', color:'#f472b6' },
-    { id:'spin', name:_t('ve_trans_spin','회전'), icon:'fa-rotate', color:'#38bdf8' },
-    { id:'blur', name:_t('ve_trans_blur','블러'), icon:'fa-droplet', color:'#a78bfa' },
-    { id:'crossZoom', name:_t('ve_trans_cross_zoom','크로스줌'), icon:'fa-expand', color:'#34d399' },
-    { id:'split', name:_t('ve_trans_split','분할'), icon:'fa-table-columns', color:'#fb923c' }
+    { id:'none', get name(){ return _t('ve_trans_none','없음') }, icon:'fa-xmark', color:'#6b7280' },
+    { id:'fade', get name(){ return _t('ve_trans_fade','페이드') }, icon:'fa-circle-half-stroke', color:'#818cf8' },
+    { id:'slideL', get name(){ return _t('ve_trans_slide_l','← 슬라이드') }, icon:'fa-arrow-left', color:'#fbbf24' },
+    { id:'slideR', get name(){ return _t('ve_trans_slide_r','→ 슬라이드') }, icon:'fa-arrow-right', color:'#fbbf24' },
+    { id:'slideUp', get name(){ return _t('ve_trans_slide_up','↑ 슬라이드') }, icon:'fa-arrow-up', color:'#fbbf24' },
+    { id:'zoomIn', get name(){ return _t('ve_trans_zoom_in','줌 인') }, icon:'fa-magnifying-glass-plus', color:'#34d399' },
+    { id:'zoomOut', get name(){ return _t('ve_trans_zoom_out','줌 아웃') }, icon:'fa-magnifying-glass-minus', color:'#34d399' },
+    { id:'wipe', get name(){ return _t('ve_trans_wipe','와이프') }, icon:'fa-bars-staggered', color:'#f472b6' },
+    { id:'slideDown', get name(){ return _t('ve_trans_slide_down','↓ 슬라이드') }, icon:'fa-arrow-down', color:'#fbbf24' },
+    { id:'flipH', get name(){ return _t('ve_trans_flip','뒤집기') }, icon:'fa-right-left', color:'#f472b6' },
+    { id:'spin', get name(){ return _t('ve_trans_spin','회전') }, icon:'fa-rotate', color:'#38bdf8' },
+    { id:'blur', get name(){ return _t('ve_trans_blur','블러') }, icon:'fa-droplet', color:'#a78bfa' },
+    { id:'crossZoom', get name(){ return _t('ve_trans_cross_zoom','크로스줌') }, icon:'fa-expand', color:'#34d399' },
+    { id:'split', get name(){ return _t('ve_trans_split','분할') }, icon:'fa-table-columns', color:'#fb923c' }
 ];
 
 const STICKERS = ['⭐','❤️','🔥','✨','💯','👍','🎉','💡','🎵','🎯','💪','🌟','😊','🎬','📌','🏆','💎','🌈','🎨','👏','🎁','🚀'];
 
 const TEMPLATES = [
-    { id:'title', name:_t('ve_tpl_title_card','타이틀 카드'), icon:'fa-heading',
+    { id:'title', get name(){ return _t('ve_tpl_title_card','타이틀 카드') }, icon:'fa-heading',
       mk:(w,h)=>[{type:'rect',x:0,y:h*.3,w,h:h*.4,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.45,text:_t('ve_tpl_enter_title','제목을 입력하세요'),fontSize:Math.round(w*.06),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.58,text:_t('ve_tpl_subtitle','부제목'),fontSize:Math.round(w*.025),color:'#ccc',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
-    { id:'lower3rd', name:_t('ve_tpl_lower_third','하단 자막'), icon:'fa-closed-captioning',
+    { id:'lower3rd', get name(){ return _t('ve_tpl_lower_third','하단 자막') }, icon:'fa-closed-captioning',
       mk:(w,h)=>[{type:'rect',x:w*.05,y:h*.82,w:w*.5,h:h*.06,fill:'#6366f1',stroke:'',strokeW:0,radius:8},{type:'text',x:w*.3,y:h*.855,text:_t('ve_tpl_name','이름'),fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.05,y:h*.88,w:w*.35,h:h*.04,fill:'rgba(255,255,255,0.9)',stroke:'',strokeW:0,radius:6},{type:'text',x:w*.22,y:h*.905,text:_t('ve_tpl_job_title','직함'),fontSize:Math.round(w*.016),color:'#333',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'caption', name:_t('ve_tpl_caption','자막'), icon:'fa-align-center',
+    { id:'caption', get name(){ return _t('ve_tpl_caption','자막') }, icon:'fa-align-center',
       mk:(w,h)=>[{type:'rect',x:0,y:h*.85,w,h:h*.15,fill:'rgba(0,0,0,0.65)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.935,text:_t('ve_tpl_caption_text','자막 텍스트'),fontSize:Math.round(w*.03),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'}]},
-    { id:'quote', name:_t('ve_tpl_quote','인용문'), icon:'fa-quote-left',
+    { id:'quote', get name(){ return _t('ve_tpl_quote','인용문') }, icon:'fa-quote-left',
       mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.25,w:w*.8,h:h*.5,fill:'rgba(0,0,0,0.5)',stroke:'rgba(255,255,255,0.3)',strokeW:2,radius:20},{type:'text',x:w/2,y:h*.45,text:_t('ve_tpl_enter_quote','"인용문을 입력하세요"'),fontSize:Math.round(w*.035),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'serif'},{type:'text',x:w/2,y:h*.6,text:_t('ve_tpl_author','— 저자'),fontSize:Math.round(w*.02),color:'#a5b4fc',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'announce', name:_t('ve_tpl_announce','공지'), icon:'fa-bullhorn',
+    { id:'announce', get name(){ return _t('ve_tpl_announce','공지') }, icon:'fa-bullhorn',
       mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.35,w:w*.8,h:h*.3,fill:'#ef4444',stroke:'#fff',strokeW:4,radius:16},{type:'text',x:w/2,y:h*.48,text:_t('ve_tpl_important','중요 공지'),fontSize:Math.round(w*.05),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.57,text:_t('ve_tpl_details','세부 내용'),fontSize:Math.round(w*.022),color:'#fecaca',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'intro', name:_t('ve_tpl_intro','인트로'), icon:'fa-play-circle',
+    { id:'intro', get name(){ return _t('ve_tpl_intro','인트로') }, icon:'fa-play-circle',
       mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.7)',stroke:'',strokeW:0,radius:0},{type:'rect',x:w*.15,y:h*.25,w:w*.7,h:h*.5,fill:'rgba(99,102,241,0.3)',stroke:'#818cf8',strokeW:3,radius:20},{type:'text',x:w/2,y:h*.42,text:_t('ve_tpl_channel','채널명'),fontSize:Math.round(w*.07),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.56,text:_t('ve_tpl_video_title','영상 제목을 입력하세요'),fontSize:Math.round(w*.03),color:'#c7d2fe',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.35,y:h*.65,w:w*.3,h:4,fill:'#818cf8',stroke:'',strokeW:0,radius:2}]},
-    { id:'outro', name:_t('ve_tpl_outro','아웃트로'), icon:'fa-flag-checkered',
+    { id:'outro', get name(){ return _t('ve_tpl_outro','아웃트로') }, icon:'fa-flag-checkered',
       mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.75)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.35,text:_t('ve_tpl_thanks','시청해주셔서 감사합니다'),fontSize:Math.round(w*.045),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.25,y:h*.5,w:w*.5,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:12},{type:'text',x:w/2,y:h*.545,text:_t('ve_tpl_like_sub','👍 좋아요 & 구독'),fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.68,text:_t('ve_tpl_see_next','다음 영상에서 만나요!'),fontSize:Math.round(w*.022),color:'#94a3b8',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'countdown', name:_t('ve_tpl_countdown','카운트다운'), icon:'fa-hourglass-half',
+    { id:'countdown', get name(){ return _t('ve_tpl_countdown','카운트다운') }, icon:'fa-hourglass-half',
       mk:(w,h)=>[{type:'circle',x:w/2,y:h*.45,r:Math.round(w*.12),fill:'rgba(239,68,68,0.8)',stroke:'#fff',strokeW:4},{type:'text',x:w/2,y:h*.45,text:'3',fontSize:Math.round(w*.15),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.7,text:_t('ve_tpl_starting_soon','곧 시작합니다'),fontSize:Math.round(w*.025),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
-    { id:'subscribe', name:_t('ve_tpl_subscribe_btn','구독 버튼'), icon:'fa-bell',
+    { id:'subscribe', get name(){ return _t('ve_tpl_subscribe_btn','구독 버튼') }, icon:'fa-bell',
       mk:(w,h)=>[{type:'rect',x:w*.3,y:h*.8,w:w*.4,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:8},{type:'text',x:w/2,y:h*.845,text:_t('ve_tpl_subscribe','🔔 구독하기'),fontSize:Math.round(w*.028),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'progress', name:_t('ve_tpl_progress','프로그레스'), icon:'fa-battery-half',
+    { id:'progress', get name(){ return _t('ve_tpl_progress','프로그레스') }, icon:'fa-battery-half',
       mk:(w,h)=>[{type:'rect',x:0,y:h*.92,w,h:h*.08,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'rect',x:0,y:h*.92,w:w*.4,h:h*.08,fill:'#6366f1',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.965,text:_t('ve_tpl_complete_pct','40% 완료'),fontSize:Math.round(w*.02),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]}
 ];
 

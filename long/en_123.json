@@ -1383,5 +1383,16 @@
   "box_sheets": "sheet(s)",
   "box_download_layout": "Layout",
   "box_apply_first": "Please apply box dimensions first",
-  "box_too_large": "Face exceeds sheet size (2400x1200mm)"
+  "box_too_large": "Face exceeds sheet size (2400x1200mm)",
+  "login_save_msg": "To save your work temporarily,<br>signing up or logging in is required.",
+  "login_browse_guest": "Browse without login",
+  "gm_upload_video": "Extract frames from video",
+  "ppt_export": "Export PPT",
+  "ppt_trans_none": "None",
+  "ppt_trans_fade": "Fade",
+  "ppt_trans_slide": "Slide",
+  "ppt_trans_zoom": "Zoom",
+  "ppt_trans_wipe": "Wipe",
+  "ppt_trans_push": "Push",
+  "loading_product": "Loading product..."
 }

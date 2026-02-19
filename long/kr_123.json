@@ -1007,5 +1007,16 @@
   "box_sheets": "매",
   "box_download_layout": "배치도",
   "box_apply_first": "박스 치수를 먼저 적용하세요",
-  "box_too_large": "면이 시트(2400×1200)보다 큽니다"
+  "box_too_large": "면이 시트(2400×1200)보다 큽니다",
+  "login_save_msg": "고객님의 소중한 작업물을 임시저장하기 위해서는<br>회원가입 또는 로그인이 꼭 필요한 서비스입니다.",
+  "login_browse_guest": "로그인 없이 둘러보기",
+  "gm_upload_video": "영상에서 프레임 추출",
+  "ppt_export": "PPT 내보내기",
+  "ppt_trans_none": "없음",
+  "ppt_trans_fade": "페이드",
+  "ppt_trans_slide": "슬라이드",
+  "ppt_trans_zoom": "확대",
+  "ppt_trans_wipe": "와이프",
+  "ppt_trans_push": "푸시",
+  "loading_product": "상품 페이지로 이동 중..."
 }

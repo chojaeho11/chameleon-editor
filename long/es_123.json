@@ -1383,5 +1383,16 @@
   "box_sheets": "hoja(s)",
   "box_download_layout": "Diseño",
   "box_apply_first": "Aplique las dimensiones de la caja primero",
-  "box_too_large": "La cara excede el tamaño de la hoja (2400x1200mm)"
+  "box_too_large": "La cara excede el tamaño de la hoja (2400x1200mm)",
+  "login_save_msg": "Para guardar tu trabajo temporalmente,<br>es necesario registrarse o iniciar sesión.",
+  "login_browse_guest": "Explorar sin iniciar sesión",
+  "gm_upload_video": "Extraer fotogramas del video",
+  "ppt_export": "Exportar PPT",
+  "ppt_trans_none": "Ninguno",
+  "ppt_trans_fade": "Fundido",
+  "ppt_trans_slide": "Deslizar",
+  "ppt_trans_zoom": "Zoom",
+  "ppt_trans_wipe": "Barrido",
+  "ppt_trans_push": "Empujar",
+  "loading_product": "Cargando producto..."
 }

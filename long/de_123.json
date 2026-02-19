@@ -1383,5 +1383,16 @@
   "box_sheets": "Blatt",
   "box_download_layout": "Layout",
   "box_apply_first": "Bitte zuerst Boxmaße anwenden",
-  "box_too_large": "Fläche überschreitet Blattgröße (2400x1200mm)"
+  "box_too_large": "Fläche überschreitet Blattgröße (2400x1200mm)",
+  "login_save_msg": "Um Ihre Arbeit vorübergehend zu speichern,<br>ist eine Registrierung oder Anmeldung erforderlich.",
+  "login_browse_guest": "Ohne Anmeldung durchsuchen",
+  "gm_upload_video": "Frames aus Video extrahieren",
+  "ppt_export": "PPT exportieren",
+  "ppt_trans_none": "Keine",
+  "ppt_trans_fade": "Einblenden",
+  "ppt_trans_slide": "Schieben",
+  "ppt_trans_zoom": "Zoom",
+  "ppt_trans_wipe": "Wischen",
+  "ppt_trans_push": "Drücken",
+  "loading_product": "Produktseite wird geladen..."
 }

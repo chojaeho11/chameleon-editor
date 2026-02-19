@@ -1383,5 +1383,16 @@
   "box_sheets": "张",
   "box_download_layout": "布局图",
   "box_apply_first": "请先应用盒子尺寸",
-  "box_too_large": "面超过板材尺寸 (2400x1200mm)"
+  "box_too_large": "面超过板材尺寸 (2400x1200mm)",
+  "login_save_msg": "为了临时保存您的作品，<br>需要注册或登录。",
+  "login_browse_guest": "无需登录浏览",
+  "gm_upload_video": "从视频提取帧",
+  "ppt_export": "导出PPT",
+  "ppt_trans_none": "无",
+  "ppt_trans_fade": "淡入淡出",
+  "ppt_trans_slide": "滑动",
+  "ppt_trans_zoom": "缩放",
+  "ppt_trans_wipe": "擦除",
+  "ppt_trans_push": "推入",
+  "loading_product": "正在前往商品页面..."
 }

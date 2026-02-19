@@ -1383,5 +1383,16 @@
   "box_sheets": "feuille(s)",
   "box_download_layout": "Plan",
   "box_apply_first": "Veuillez appliquer les dimensions de la boîte d'abord",
-  "box_too_large": "La face dépasse la taille de la feuille (2400x1200mm)"
+  "box_too_large": "La face dépasse la taille de la feuille (2400x1200mm)",
+  "login_save_msg": "Pour sauvegarder temporairement votre travail,<br>une inscription ou connexion est nécessaire.",
+  "login_browse_guest": "Parcourir sans connexion",
+  "gm_upload_video": "Extraire des images de la vidéo",
+  "ppt_export": "Exporter PPT",
+  "ppt_trans_none": "Aucun",
+  "ppt_trans_fade": "Fondu",
+  "ppt_trans_slide": "Glissement",
+  "ppt_trans_zoom": "Zoom",
+  "ppt_trans_wipe": "Balayage",
+  "ppt_trans_push": "Poussée",
+  "loading_product": "Chargement du produit..."
 }

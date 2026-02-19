@@ -1962,12 +1962,12 @@ async function handleSubReturn() {
         <div style="display:flex; align-items:center; gap:4px;">
             <span data-i18n="ppt_transition" style="font-size:12px;">전환:</span>
             <select id="pptTransition" onchange="window._pptSetTransition(this.value)" style="padding:4px 8px; border:none; border-radius:6px; font-size:12px; cursor:pointer;">
-                <option value="none">없음</option>
-                <option value="fade">페이드</option>
-                <option value="slide">슬라이드</option>
-                <option value="zoom">확대</option>
-                <option value="wipe">와이프</option>
-                <option value="push">푸시</option>
+                <option value="none" data-i18n="ppt_trans_none">없음</option>
+                <option value="fade" data-i18n="ppt_trans_fade">페이드</option>
+                <option value="slide" data-i18n="ppt_trans_slide">슬라이드</option>
+                <option value="zoom" data-i18n="ppt_trans_zoom">확대</option>
+                <option value="wipe" data-i18n="ppt_trans_wipe">와이프</option>
+                <option value="push" data-i18n="ppt_trans_push">푸시</option>
             </select>
         </div>
         <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
@@ -2604,11 +2604,11 @@ async function handleSubReturn() {
         </div>
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
     <p style="font-size: 13px; color: #6366f1; font-weight: bold; margin-bottom: 15px; line-height: 1.5; word-break: keep-all;">
-        <i class="fa-solid fa-circle-info"></i> 고객님의 소중한 작업물을 임시저장하기 위해서는<br>회원가입 또는 로그인이 꼭 필요한 서비스입니다.
+        <i class="fa-solid fa-circle-info"></i> <span data-i18n="login_save_msg">고객님의 소중한 작업물을 임시저장하기 위해서는<br>회원가입 또는 로그인이 꼭 필요한 서비스입니다.</span>
     </p>
-    
+
     <button onclick="document.getElementById('loginModal').style.display='none'" class="btn-round" style="width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-weight: normal;">
-        👀 로그인 없이 둘러보기
+        👀 <span data-i18n="login_browse_guest">로그인 없이 둘러보기</span>
     </button>
 </div>
     </div>
@@ -5023,8 +5023,7 @@ window.goHome = function() {
         if(loading) {
             loading.style.display = 'flex';
             const p = loading.querySelector('p');
-            const _lp = new URLSearchParams(window.location.search).get('lang') || 'kr';
-            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':_lp==='de'?'Produktseite wird geladen...':_lp==='fr'?'Chargement du produit...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
+            if(p) p.innerText = window.t('loading_product','상품 페이지로 이동 중...');
         }
 
         try {
@@ -5269,8 +5268,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         if(loading) {
             loading.style.display = 'flex';
             const p = loading.querySelector('p');
-            const _lp = new URLSearchParams(window.location.search).get('lang') || 'kr';
-            if(p) p.innerText = _lp==='ja'?'商品ページへ移動中...':_lp==='zh'?'正在前往商品页面...':_lp==='ar'?'...جارٍ الانتقال إلى صفحة المنتج':_lp==='es'?'Cargando producto...':_lp==='de'?'Produktseite wird geladen...':_lp==='fr'?'Chargement du produit...':(_lp==='en'||_lp==='us')?'Loading product...':'상품 페이지로 이동 중...';
+            if(p) p.innerText = window.t('loading_product','상품 페이지로 이동 중...');
         }
 
         try {

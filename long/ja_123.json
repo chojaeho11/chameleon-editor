@@ -1383,5 +1383,16 @@
   "box_sheets": "枚",
   "box_download_layout": "配置図",
   "box_apply_first": "ボックスの寸法を先に適用してください",
-  "box_too_large": "面がシートサイズを超えています (2400x1200mm)"
+  "box_too_large": "面がシートサイズを超えています (2400x1200mm)",
+  "login_save_msg": "お客様の大切な作品を一時保存するには<br>会員登録またはログインが必要です。",
+  "login_browse_guest": "ログインせずに見る",
+  "gm_upload_video": "動画からフレーム抽出",
+  "ppt_export": "PPTエクスポート",
+  "ppt_trans_none": "なし",
+  "ppt_trans_fade": "フェード",
+  "ppt_trans_slide": "スライド",
+  "ppt_trans_zoom": "ズーム",
+  "ppt_trans_wipe": "ワイプ",
+  "ppt_trans_push": "プッシュ",
+  "loading_product": "商品ページへ移動中..."
 }
