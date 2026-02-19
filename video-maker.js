@@ -191,7 +191,8 @@ function addImageFile(f) {
         const tc = document.createElement('canvas'); tc.width=160; tc.height=90;
         const tx = tc.getContext('2d'); tx.drawImage(img,0,0,160,90);
         vm.clips.push({ type:'image', file:f, url, img, thumbUrl:tc.toDataURL('image/jpeg',0.7),
-            duration:3, overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0 });
+            duration:3, overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
+            locked:true, panX:0, panY:0 });
         selectClip(vm.clips.length-1);
     };
     img.src = url;
@@ -208,7 +209,8 @@ function addVideoFile(f) {
             tc.getContext('2d').drawImage(video,0,0,160,90);
             vm.clips.push({ type:'video', file:f, url, video, thumbUrl:tc.toDataURL('image/jpeg',0.7),
                 duration: Math.min(Math.round(video.duration*10)/10, 60),
-                overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0 });
+                overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
+                locked:true, panX:0, panY:0 });
             video.onseeked = null;
             selectClip(vm.clips.length-1);
         };
@@ -221,7 +223,8 @@ function duplicateClip(i) {
         type: c.type, file: c.file, url: c.url, thumbUrl: c.thumbUrl,
         duration: c.duration, transition: c.transition, speed: c.speed || 1.0,
         overlays: JSON.parse(JSON.stringify(c.overlays)),
-        adj: { ...c.adj }
+        adj: { ...c.adj },
+        locked: c.locked !== false, panX: c.panX || 0, panY: c.panY || 0
     };
     // 이미지 복제
     if (c.type === 'image' && c.img) {
@@ -366,8 +369,21 @@ function render() {
         if(vm.canvas) vm.canvas.style.cursor='pointer';
         return;
     }
-    if(vm.canvas) vm.canvas.style.cursor='default';
+    if(vm.canvas) vm.canvas.style.cursor=c&&c.locked===false?'grab':'default';
     renderClip(vm.ci, vm.ctx, true);
+    // show unlock indicator when clip is unlocked
+    if(c&&c.locked===false&&vm.oi<0){
+        const ctx=vm.ctx,pad=8,iw=vm.w,ih=vm.h;
+        ctx.save();
+        ctx.strokeStyle='#22c55e';ctx.lineWidth=Math.max(4,iw*.003);ctx.setLineDash([14,8]);
+        ctx.strokeRect(pad,pad,iw-pad*2,ih-pad*2);ctx.setLineDash([]);
+        // lock-open badge top-left
+        const bs=Math.max(28,iw*.025);
+        ctx.fillStyle='rgba(34,197,94,0.85)';rRect(ctx,16,16,bs*2.2,bs*1.1,6);ctx.fill();
+        ctx.fillStyle='#fff';ctx.font=`bold ${Math.round(bs*.45)}px sans-serif`;ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText('\uD83D\uDD13 '+_t('ve_unlocked_short','잠금 해제'),22,16+bs*.55);
+        ctx.restore();
+    }
 }
 
 function renderClip(ci, ctx, showSel, clipTime) {
@@ -376,7 +392,7 @@ function renderClip(ci, ctx, showSel, clipTime) {
     ctx.filter=`brightness(${1+a.brightness/100}) contrast(${1+a.contrast/100}) saturate(${a.saturation}%) blur(${a.blur}px) hue-rotate(${a.hue}deg)`;
     ctx.fillStyle='#000'; ctx.fillRect(0,0,vm.w,vm.h);
     const src = c.type==='video' ? c.video : c.img;
-    if (src) drawCover(ctx, src, vm.w, vm.h);
+    if (src) drawCover(ctx, src, vm.w, vm.h, c.panX||0, c.panY||0);
     ctx.filter='none';
     c.overlays.forEach((o,i) => {
         // check time range (during playback/export)
@@ -457,12 +473,21 @@ function renderSelection(ctx, o) {
     ctx.restore();
 }
 
-function drawCover(ctx,src,cw,ch) {
+function drawCover(ctx,src,cw,ch,px,py) {
     const iw=src.videoWidth||src.width, ih=src.videoHeight||src.height;
     if(!iw||!ih) return;
-    const ir=iw/ih, cr=cw/ch; let sw,sh,sx,sy;
-    if(ir>cr){sh=ih;sw=sh*cr;sx=(iw-sw)/2;sy=0;}else{sw=iw;sh=sw/cr;sx=0;sy=(ih-sh)/2;}
-    ctx.drawImage(src,sx,sy,sw,sh,0,0,cw,ch);
+    const ir=iw/ih, cr=cw/ch;
+    if(px||py){
+        // panned mode: draw full image scaled to cover, then shift by pan offset
+        let dw,dh;
+        if(ir>cr){dh=ch;dw=dh*ir;}else{dw=cw;dh=dw/ir;}
+        const dx=(cw-dw)/2+(px||0), dy=(ch-dh)/2+(py||0);
+        ctx.drawImage(src,0,0,iw,ih,dx,dy,dw,dh);
+    } else {
+        let sw,sh,sx,sy;
+        if(ir>cr){sh=ih;sw=sh*cr;sx=(iw-sw)/2;sy=0;}else{sw=iw;sh=sw/cr;sx=0;sy=(ih-sh)/2;}
+        ctx.drawImage(src,sx,sy,sw,sh,0,0,cw,ch);
+    }
 }
 function drawCoverAt(ctx,src,ox,oy,cw,ch){ctx.save();ctx.translate(ox,oy);drawCover(ctx,src,cw,ch);ctx.restore();}
 function rRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
@@ -1114,6 +1139,16 @@ function refreshRightPanel() {
         h+=`<label>시간: ${c.duration}초</label><input type="range" min="0.5" max="15" step="0.5" value="${c.duration}" oninput="window._veSetDur(+this.value);updateTimeline()">`;
         h+=`<label>전환: ${(TRANSITIONS.find(t=>t.id===c.transition)||{}).name||'없음'}</label>`;
         h+='</div>';
+        // lock/unlock + position
+        const isLocked=c.locked!==false;
+        h+='<div class="ve-sec"><b>위치</b>';
+        h+=`<button class="ve-lock-btn" onclick="window._veToggleLock()" style="width:100%;padding:8px;border-radius:8px;border:1px solid ${isLocked?'#ef4444':'#22c55e'};background:${isLocked?'rgba(239,68,68,0.1)':'rgba(34,197,94,0.1)'};color:${isLocked?'#f87171':'#4ade80'};font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">`;
+        h+=`<i class="fa-solid ${isLocked?'fa-lock':'fa-lock-open'}"></i> ${isLocked?_t('ve_locked','잠김 — 클릭하여 잠금 해제'):_t('ve_unlocked','잠금 해제됨 — 드래그로 이동 가능')}</button>`;
+        if(!isLocked){
+            h+=`<div style="margin-top:8px;font-size:11px;color:#94a3b8">X: ${Math.round(c.panX||0)}px, Y: ${Math.round(c.panY||0)}px</div>`;
+            h+=`<button class="ve-reset-btn" onclick="window._veResetPan()" style="margin-top:6px;width:100%;padding:6px;border-radius:6px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:11px;cursor:pointer"><i class="fa-solid fa-crosshairs"></i> ${_t('ve_reset_pos','위치 초기화')}</button>`;
+        }
+        h+='</div>';
         // adjustments
         const a=c.adj;
         h+='<div class="ve-sec"><b>보정</b>';
@@ -1338,6 +1373,8 @@ window._veSetDur = (v) => { const c=curClip(); if(c){c.duration=v;updateTimeline
 window._veSetSpeed = (v) => { const c=curClip(); if(c){c.speed=v;if(c.type==='video'&&c.video)c.video.playbackRate=v;refreshLeftPanel();} };
 window._veAdj = (p,v) => { const c=curClip(); if(c){c.adj[p]=v;render();} };
 window._veResetAdj = () => { const c=curClip(); if(c){c.adj={brightness:0,contrast:0,saturation:100,blur:0,hue:0};render();refreshLeftPanel();refreshRightPanel();} };
+window._veToggleLock = () => { const c=curClip(); if(!c)return; c.locked=c.locked===false?true:false; render();refreshRightPanel(); };
+window._veResetPan = () => { const c=curClip(); if(!c)return; c.panX=0;c.panY=0; render();refreshRightPanel(); };
 // ── Context Menu (z-order, copy, paste, delete) ──
 window._veCtx = (action) => {
     const cm=document.getElementById('veContextMenu'); if(cm) cm.style.display='none';
@@ -1483,7 +1520,7 @@ async function playClipOnCanvas(ci, durMs) {
             vm.playTime=startPlayT+elapsed/1000; updatePlayhead();
             const ctx=vm.ctx; applyAdj(ctx,c.adj);
             ctx.fillStyle='#000';ctx.fillRect(0,0,vm.w,vm.h);
-            drawCover(ctx,src,vm.w,vm.h);ctx.filter='none';
+            drawCover(ctx,src,vm.w,vm.h,c.panX||0,c.panY||0);ctx.filter='none';
             const ct=elapsed/1000;
             c.overlays.forEach(o=>{if(o.tStart!=null&&o.tEnd!=null&&(ct<o.tStart||ct>o.tEnd))return;renderOverlay(ctx,o);});
             if(elapsed>=durMs){if(c.type==='video')c.video.pause();resolve();}
@@ -1693,13 +1730,28 @@ function onDown(e){
     }
     const hit=hitOverlay(x,y);
     if(hit>=0){vm.oi=hit;const o=c.overlays[hit];vm.drag={oi:hit,mode:'move',ox:x-o.x,oy:y-o.y};render();refreshRightPanel();refreshLeftPanel();}
-    else{vm.oi=-1;render();refreshRightPanel();refreshLeftPanel();}
+    else{
+        vm.oi=-1;
+        // if clip is unlocked, start panning the background
+        if(c && c.locked===false){
+            vm.drag={mode:'pan',sx:x,sy:y,origPanX:c.panX||0,origPanY:c.panY||0};
+            vm.canvas.style.cursor='grabbing';
+        }
+        render();refreshRightPanel();refreshLeftPanel();
+    }
 }
 
 function onMove(e){
     if(!vm.drag)return;
     const{x,y}=canvasXY(e);
-    const c=curClip();if(!c||!c.overlays[vm.drag.oi])return;
+    const c=curClip();if(!c)return;
+    // pan mode: move background image/video
+    if(vm.drag.mode==='pan'){
+        c.panX=vm.drag.origPanX+(x-vm.drag.sx);
+        c.panY=vm.drag.origPanY+(y-vm.drag.sy);
+        render();return;
+    }
+    if(!c.overlays[vm.drag.oi])return;
     const o=c.overlays[vm.drag.oi];
     if(vm.drag.mode==='rotate'){
         const b=getOBounds(o);if(b){
@@ -1742,7 +1794,7 @@ function onMove(e){
 }
 
 function onUp(){
-    if(vm.drag&&(vm.drag.mode==='resize'||vm.drag.mode==='rotate'))vm.canvas.style.cursor='default';
+    if(vm.drag&&(vm.drag.mode==='resize'||vm.drag.mode==='rotate'||vm.drag.mode==='pan'))vm.canvas.style.cursor='default';
     vm.drag=null; vm.snapLines=null; render();
 }
 
