@@ -148,7 +148,7 @@
             img.onload = function () {
                 frontTexture = new THREE.Texture(img);
                 frontTexture.needsUpdate = true;
-                frontTexture.colorSpace = THREE.SRGBColorSpace;
+                frontTexture.encoding = THREE.sRGBEncoding;
                 panel.material[4] = new THREE.MeshStandardMaterial({
                     map: frontTexture, roughness: 0.4
                 });
@@ -390,7 +390,7 @@
                 if (frontTexture) frontTexture.dispose();
                 frontTexture = new THREE.Texture(img);
                 frontTexture.needsUpdate = true;
-                frontTexture.colorSpace = THREE.SRGBColorSpace;
+                frontTexture.encoding = THREE.sRGBEncoding;
                 panel.material[4] = new THREE.MeshStandardMaterial({
                     map: frontTexture, roughness: 0.4
                 });
