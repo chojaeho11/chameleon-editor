@@ -299,7 +299,14 @@ function updateBoxPrice(w, h, d) {
     const displayEl = document.getElementById('boxPriceDisplay');
     const layoutBtn = document.getElementById('btnBoxLayoutPDF');
 
-    if (sheetEl) sheetEl.textContent = result.sheetCount;
+    if (sheetEl) {
+        if (result.setsPerSheet > 1) {
+            // 작은 박스: N세트가 시트에 들어감 → "1/3" 등
+            sheetEl.textContent = result.sheetCount + '/' + result.setsPerSheet;
+        } else {
+            sheetEl.textContent = result.sheetCount;
+        }
+    }
     if (priceEl) {
         priceEl.textContent = window.formatCurrency
             ? window.formatCurrency(result.totalPrice)

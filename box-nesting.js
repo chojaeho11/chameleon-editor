@@ -134,18 +134,44 @@ export function nestBoxFaces(faces) {
 }
 
 /**
- * Calculate box price: sheets x pricePerSheet
+ * Calculate box price with multi-set optimization.
+ * Finds how many complete sets fit on the same number of sheets as 1 set.
+ * Small boxes: N sets fit on 1 sheet → price = sheetPrice / N
+ * Large boxes: 1 set needs multiple sheets → price = sheets × pricePerSheet
  */
 export function calculateBoxPrice(w, h, d, pricePerSheet) {
-    const faces = getBoxFaces(w, h, d);
-    const result = nestBoxFaces(faces);
+    const faces1 = getBoxFaces(w, h, d);
+    const result1 = nestBoxFaces(faces1);
 
-    if (result.error) {
-        return { ...result, totalPrice: 0 };
+    if (result1.error) {
+        return { ...result1, totalPrice: 0 };
     }
 
+    const singleSetSheets = result1.sheetCount;
+
+    // Find max complete sets that fit on the same number of sheets
+    let maxSets = 1;
+    for (let n = 2; n <= 100; n++) {
+        const facesN = [];
+        for (let i = 0; i < n; i++) {
+            getBoxFaces(w, h, d).forEach(f => {
+                facesN.push({ ...f, setIndex: i });
+            });
+        }
+
+        const resultN = nestBoxFaces(facesN);
+        if (resultN.error) break;
+        if (resultN.sheetCount > singleSetSheets) break; // needs more sheets → stop
+        maxSets = n;
+    }
+
+    const totalPrice = Math.round((singleSetSheets * pricePerSheet) / maxSets);
+
     return {
-        ...result,
-        totalPrice: result.sheetCount * pricePerSheet
+        sheets: result1.sheets,
+        sheetCount: singleSetSheets,
+        totalPrice: totalPrice,
+        setsPerSheet: maxSets,     // how many complete sets fit
+        error: null
     };
 }
