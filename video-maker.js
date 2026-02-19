@@ -2083,8 +2083,11 @@ window._veAiGenerate = async function() {
 
             const st = checkData.status;
             if (statusText) {
-                if (st === 'processing') statusText.textContent = _t('ve_ai_processing', `AI 영상 처리 중... (${attempts * 3}초 경과)`);
-                else if (st === 'starting') statusText.textContent = _t('ve_ai_queue', 'AI 대기열에서 처리 대기 중...');
+                const sec = attempts * 3;
+                const m = Math.floor(sec/60), s = sec%60;
+                const elapsed = m > 0 ? `${m}분 ${s}초` : `${s}초`;
+                if (st === 'processing') statusText.textContent = `AI 영상 처리 중... ${elapsed} 경과 (보통 2~5분 소요)`;
+                else if (st === 'starting') statusText.textContent = `AI 대기열 대기 중... ${elapsed} 경과`;
             }
 
             if (st === 'succeeded') {
