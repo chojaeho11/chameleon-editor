@@ -715,7 +715,11 @@
         <h2>🔥 <span data-i18n="home_hotdeal_title">오늘의 핫딜</span> <span class="badge-hot">Time Sale</span></h2>
         <p data-i18n="home_hotdeal_desc">행사 이벤트 팝업스토어 준비물 오늘 사면 더 저렴해요</p>
     </div>
-    <div id="hotDealGrid" class="hotdeal-grid"></div>
+    <div class="hotdeal-scroll-wrap">
+        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('hotDealGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="hotDealGrid" class="hotdeal-grid"></div>
+        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('hotDealGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
 </div>
 
 <div id="bizDealSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f8fafc; padding: 20px; border-radius: 12px;">
@@ -723,8 +727,21 @@
         <h2 style="color: #4f46e5;">💼 <span data-i18n="home_biz_title">업자용 대박할인</span> <span class="badge-hot" style="background:#4f46e5;">B2B Only</span></h2>
         <p data-i18n="home_biz_desc">광고사 기획사가 늘 사용하는 아이템 오늘 더 저렴하게 특가로 준비했습니다</p>
     </div>
-    <div id="bizDealGrid" class="hotdeal-grid"></div>
+    <div class="hotdeal-scroll-wrap">
+        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('bizDealGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="bizDealGrid" class="hotdeal-grid"></div>
+        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('bizDealGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
 </div>
+<script>
+function scrollHotdeal(gridId, dir) {
+    var grid = document.getElementById(gridId);
+    if (!grid) return;
+    var cardW = grid.querySelector('.hotdeal-card');
+    var step = cardW ? (cardW.offsetWidth + 10) * 3 : 600;
+    grid.scrollBy({ left: dir * step, behavior: 'smooth' });
+}
+</script>
 
 <!-- 배송비 계산기 배너 -->
 <div id="shippingCalcSection" style="display:none; width:100%; max-width:1200px; padding:0 20px; box-sizing:border-box;">
@@ -4558,8 +4575,8 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if(window.searchTemplates) window.searchTemplates('');
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
-            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 6);
-            loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 6);
+            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 30);
+            loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 30);
         }
         // 배송비 계산기 항상 표시
         var scSec = document.getElementById('shippingCalcSection');
@@ -6798,8 +6815,8 @@ if (w >= 20 && h >= 20) {
         if(window.searchTemplates) window.searchTemplates('');
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
-            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 6);
-            loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 6);
+            loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 30);
+            loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 30);
         }
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');

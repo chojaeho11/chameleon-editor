@@ -1666,26 +1666,63 @@ body {
     animation: pulse 2s infinite;
 }
 
-.hotdeal-grid {
-        display: grid;
-        gap: 10px; /* ★ 간격 좁힘 */
-        /* PC 화면: 한 줄에 6개 */
-        grid-template-columns: repeat(6, 1fr); 
-        margin-top: 20px;
-    }
+.hotdeal-scroll-wrap {
+    position: relative;
+}
 
-    /* 모바일 화면 (768px 이하) */
-    @media (max-width: 768px) {
-        .hotdeal-grid {
-            /* 모바일: 한 줄에 2개 */
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 10px;
-        }
-        
-        /* 모바일에서 카드 내용 간소화 (선택사항) */
-        .hotdeal-title { font-size: 13px; }
-        .hotdeal-price { font-size: 14px; }
+.hotdeal-grid {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.hotdeal-grid::-webkit-scrollbar { display: none; }
+
+.hotdeal-grid .hotdeal-card {
+    min-width: calc((100% - 50px) / 6);
+    max-width: calc((100% - 50px) / 6);
+    scroll-snap-align: start;
+    flex-shrink: 0;
+}
+
+.hotdeal-arrow {
+    display: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: rgba(255,255,255,0.95);
+    color: #334155;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.hotdeal-arrow:hover { background: #6366f1; color: #fff; border-color: #6366f1; }
+.hotdeal-arrow-left { left: -18px; }
+.hotdeal-arrow-right { right: -18px; }
+
+@media (min-width: 769px) {
+    .hotdeal-arrow { display: flex; }
+}
+
+@media (max-width: 768px) {
+    .hotdeal-grid .hotdeal-card {
+        min-width: calc((100% - 10px) / 2);
+        max-width: calc((100% - 10px) / 2);
     }
+    .hotdeal-title { font-size: 13px; }
+    .hotdeal-price { font-size: 14px; }
+}
 
 .hotdeal-card {
     background: white;
