@@ -1379,5 +1379,9 @@
   "box_face_right": "Rechts",
   "box_face_top": "Oben",
   "box_face_bottom": "Unten",
-  "box_apply": "Anwenden"
+  "box_apply": "Anwenden",
+  "box_sheets": "Blatt",
+  "box_download_layout": "Layout",
+  "box_apply_first": "Bitte zuerst Boxmaße anwenden",
+  "box_too_large": "Fläche überschreitet Blattgröße (2400x1200mm)"
 }

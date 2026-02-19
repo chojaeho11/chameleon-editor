@@ -1003,5 +1003,9 @@
   "box_face_right": "우면",
   "box_face_top": "윗면",
   "box_face_bottom": "아랫면",
-  "box_apply": "적용"
+  "box_apply": "적용",
+  "box_sheets": "매",
+  "box_download_layout": "배치도",
+  "box_apply_first": "박스 치수를 먼저 적용하세요",
+  "box_too_large": "면이 시트(2400×1200)보다 큽니다"
 }

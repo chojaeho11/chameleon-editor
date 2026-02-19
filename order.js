@@ -55,6 +55,7 @@ function formatCurrency(amount) {
     if (country === 'FR') return '€' + converted.toFixed(2);
     return converted.toLocaleString() + '원';
 }
+window.formatCurrency = formatCurrency;
 
 // 국가별 상품명 표시
 function localName(product) {
@@ -773,14 +774,40 @@ async function addCanvasToCart() {
         console.warn("사전 PDF 생성 실패:", e);
     }
 
+    // ★ 박스 배치도 PDF 생성 + 업로드
+    let boxLayoutPdfUrl = null;
+    if (window.__boxMode && window.__boxNesting && window.__boxDims) {
+        try {
+            const { generateBoxLayoutPDF } = await import('./export.js?v=123');
+            const layoutBlob = await generateBoxLayoutPDF(
+                window.__boxNesting.sheets,
+                window.__boxDims,
+                pdfPages
+            );
+            if (layoutBlob && layoutBlob.size > 500) {
+                boxLayoutPdfUrl = await uploadFileToSupabase(layoutBlob, 'cart_pdf');
+                console.log("[박스 배치도 PDF] 생성 완료:", boxLayoutPdfUrl, "size:", layoutBlob.size);
+            }
+        } catch(e) {
+            console.warn("박스 배치도 PDF 생성 실패:", e);
+        }
+    }
+
     let calcProduct = { ...product };
 
     const mmToPx = 3.7795;
     const currentMmW = finalW / mmToPx;
     const currentMmH = finalH / mmToPx;
 
-    // ★ [수정] 가격 결정 로직: 하드코딩 제거, 제품 실제 단가 기반
-    if (product.is_custom_size) {
+    // ★ 박스 상품 가격: 시트수 × 장당가격 (배치 알고리즘 기반)
+    if (window.__boxMode && window.__boxCalculatedPrice) {
+        calcProduct.price = window.__boxCalculatedPrice;
+        calcProduct._calculated_price = true;
+        calcProduct.is_custom_size = true;
+        calcProduct._box_sheet_count = window.__boxSheetCount;
+        calcProduct._box_dims = window.__boxDims ? { ...window.__boxDims } : null;
+        console.log(`[박스 가격] ${window.__boxSheetCount}매 × 장당가격 = ${window.__boxCalculatedPrice.toLocaleString()}원`);
+    } else if (product.is_custom_size) {
         // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지
         if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || 0) - currentMmW) < 5) {
             console.log(`[가격 유지] 기존 계산된 가격 사용: ${product.price.toLocaleString()}원`);
@@ -861,6 +888,9 @@ async function addCanvasToCart() {
         pages: [],       // 로컬에는 거대 데이터를 저장하지 않음
         jsonUrl: savedJsonUrl,
         designPdfUrl: designPdfUrl,
+        boxLayoutPdfUrl: boxLayoutPdfUrl,
+        boxDims: window.__boxMode ? { ...window.__boxDims } : null,
+        boxSheetCount: window.__boxMode ? window.__boxSheetCount : null,
         originalUrl: originalFileUrl,
         fileName: fileName,
         width: finalW,
@@ -1643,6 +1673,20 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                     console.log("[주문] 사전생성 PDF 사용 완료:", url);
                 }
             } catch(err) { console.warn("사전생성 PDF 전송 실패:", err); }
+
+            // ★ 박스 배치도 PDF 업로드
+            if (item.boxLayoutPdfUrl) {
+                try {
+                    const layoutRes = await withTimeout(fetch(item.boxLayoutPdfUrl), PDF_TIMEOUT);
+                    if (layoutRes.ok) {
+                        const layoutBlob = await layoutRes.blob();
+                        const layoutUrl = await withTimeout(uploadFileToSupabase(layoutBlob, `orders/${newOrderId}/box_layout_${idx}.pdf`), UPLOAD_TIMEOUT);
+                        if (layoutUrl) uploadedFiles.push({ name: `box_layout_${idx}_${item.product?.name || 'layout'}.pdf`, url: layoutUrl, type: 'box_layout' });
+                        console.log("[주문] 박스 배치도 PDF 업로드 완료:", layoutUrl);
+                    }
+                } catch(err) { console.warn("박스 배치도 PDF 전송 실패:", err); }
+            }
+
             continue;
         }
 

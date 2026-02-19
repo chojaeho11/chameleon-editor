@@ -1379,5 +1379,9 @@
   "box_face_right": "اليمين",
   "box_face_top": "الأعلى",
   "box_face_bottom": "الأسفل",
-  "box_apply": "تطبيق"
+  "box_apply": "تطبيق",
+  "box_sheets": "ورقة",
+  "box_download_layout": "مخطط التخطيط",
+  "box_apply_first": "يرجى تطبيق أبعاد الصندوق أولاً",
+  "box_too_large": "الوجه يتجاوز حجم اللوح (2400×1200مم)"
 }

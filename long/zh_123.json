@@ -1379,5 +1379,9 @@
   "box_face_right": "右面",
   "box_face_top": "顶面",
   "box_face_bottom": "底面",
-  "box_apply": "应用"
+  "box_apply": "应用",
+  "box_sheets": "张",
+  "box_download_layout": "布局图",
+  "box_apply_first": "请先应用盒子尺寸",
+  "box_too_large": "面超过板材尺寸 (2400x1200mm)"
 }

@@ -1,6 +1,7 @@
 /* canvas-pages.js */
 import { canvas } from "./canvas-core.js?v=123";
-import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=123"; // [수정] 화면맞춤 함수 추가
+import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=123";
+import { calculateBoxPrice } from "./box-nesting.js?v=123";
 
 // 페이지 데이터를 저장할 배열
 export let pageDataList = [];
@@ -271,4 +272,82 @@ window.applyBoxDimensions = function() {
     // 전역 저장 (3D에서 사용)
     window.__boxDims = { w, h, d };
     initBoxPages(w, h, d);
+    updateBoxPrice(w, h, d);
+};
+
+// 박스 가격 계산 (시트수 × 장당가격)
+function updateBoxPrice(w, h, d) {
+    const product = window.PRODUCT_DB && window.PRODUCT_DB[window.currentProductKey];
+    if (!product) return;
+
+    const pricePerSheet = product._original_price || product.price || 0;
+    const result = calculateBoxPrice(w, h, d, pricePerSheet);
+
+    if (result.error) {
+        alert(window.t('box_too_large', '면이 시트(2400×1200)보다 큽니다'));
+        return;
+    }
+
+    // 전역 저장
+    window.__boxNesting = result;
+    window.__boxCalculatedPrice = result.totalPrice;
+    window.__boxSheetCount = result.sheetCount;
+
+    // UI 업데이트
+    const sheetEl = document.getElementById('boxSheetCount');
+    const priceEl = document.getElementById('boxTotalPrice');
+    const displayEl = document.getElementById('boxPriceDisplay');
+    const layoutBtn = document.getElementById('btnBoxLayoutPDF');
+
+    if (sheetEl) sheetEl.textContent = result.sheetCount;
+    if (priceEl) {
+        priceEl.textContent = window.formatCurrency
+            ? window.formatCurrency(result.totalPrice)
+            : result.totalPrice.toLocaleString() + '원';
+    }
+    if (displayEl) displayEl.style.display = 'inline-flex';
+    if (layoutBtn) layoutBtn.style.display = 'inline-block';
+
+    // 제품 가격 오버라이드 (장바구니용)
+    if (!product._original_price) product._original_price = product.price;
+    product.price = result.totalPrice;
+    product._calculated_price = true;
+    product.is_custom_size = true;
+}
+
+// 배치도 PDF 다운로드
+window.downloadBoxLayoutPDF = async function() {
+    if (!window.__boxNesting || !window.__boxDims) {
+        return alert(window.t('box_apply_first', '박스 치수를 먼저 적용하세요'));
+    }
+
+    saveCurrentPageState();
+
+    const btn = document.getElementById('btnBoxLayoutPDF');
+    const orig = btn ? btn.innerText : '';
+    if (btn) { btn.innerText = '...'; btn.disabled = true; }
+
+    try {
+        const { generateBoxLayoutPDF } = await import('./export.js?v=123');
+        const blob = await generateBoxLayoutPDF(
+            window.__boxNesting.sheets,
+            window.__boxDims,
+            pageDataList
+        );
+        if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `box_layout_${window.__boxDims.w}x${window.__boxDims.h}x${window.__boxDims.d}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    } catch (e) {
+        console.error('Layout PDF error:', e);
+        alert('PDF 생성 실패');
+    } finally {
+        if (btn) { btn.innerText = orig; btn.disabled = false; }
+    }
 };

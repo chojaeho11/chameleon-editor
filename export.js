@@ -946,6 +946,137 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
 }
 
 // ==========================================================
+// [4-B] 박스 배치도 PDF (Box Layout / Nesting)
+// ==========================================================
+
+export async function generateBoxLayoutPDF(sheets, boxDims, faceJsons) {
+    if (!window.jspdf || !sheets || sheets.length === 0) return null;
+
+    const { jsPDF } = window.jspdf;
+    const SHEET_W_MM = 2400;
+    const SHEET_H_MM = 1200;
+    const MM_TO_PX = 3.7795;
+
+    const doc = new jsPDF({
+        orientation: 'l',
+        unit: 'mm',
+        format: [SHEET_W_MM, SHEET_H_MM],
+        compress: true
+    });
+
+    try {
+        for (let s = 0; s < sheets.length; s++) {
+            if (s > 0) doc.addPage([SHEET_W_MM, SHEET_H_MM], 'l');
+
+            const sheet = sheets[s];
+
+            // Sheet border
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.5);
+            doc.rect(0, 0, SHEET_W_MM, SHEET_H_MM);
+
+            // Sheet info label (top-right)
+            doc.setFontSize(20);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Sheet ' + (s + 1) + ' / ' + sheets.length, SHEET_W_MM - 20, 30, { align: 'right' });
+            doc.setFontSize(14);
+            doc.text('Box: ' + boxDims.w + ' x ' + boxDims.h + ' x ' + boxDims.d + ' mm', SHEET_W_MM - 20, 50, { align: 'right' });
+
+            // Render each face piece
+            for (const piece of sheet.pieces) {
+                const faceJson = faceJsons[piece.faceIndex];
+                if (!faceJson) continue;
+
+                // 1. Determine face canvas pixel size
+                const faceWpx = Math.round(piece.w * MM_TO_PX);
+                const faceHpx = Math.round(piece.h * MM_TO_PX);
+
+                // 2. Create temp canvas and load face design
+                const tempEl = document.createElement('canvas');
+                const tempCvs = new fabric.StaticCanvas(tempEl);
+
+                // If rotated, we need to render at original dimensions then rotate
+                const origFaceW = piece.rotated ? piece.h : piece.w;
+                const origFaceH = piece.rotated ? piece.w : piece.h;
+                const origWpx = Math.round(origFaceW * MM_TO_PX);
+                const origHpx = Math.round(origFaceH * MM_TO_PX);
+
+                tempCvs.setWidth(origWpx);
+                tempCvs.setHeight(origHpx);
+                tempCvs.setBackgroundColor('#ffffff');
+
+                // Filter out mockup/export-excluded objects
+                const pageJson = { ...faceJson };
+                if (pageJson.objects) {
+                    pageJson.objects = pageJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+                }
+
+                await new Promise(resolve => {
+                    tempCvs.loadFromJSON(pageJson, () => {
+                        tempCvs.renderAll();
+                        setTimeout(resolve, 200);
+                    });
+                });
+
+                // 3. Capture face as image
+                const maxPixels = 8000000;
+                const basePixels = origWpx * origHpx;
+                let mult = 1;
+                if (basePixels * 4 <= maxPixels) mult = 2;
+                const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: mult });
+                tempCvs.dispose();
+
+                // 4. Place on PDF
+                if (piece.rotated) {
+                    // For rotated pieces: render image rotated 90deg using a temp canvas
+                    const rotCanvas = document.createElement('canvas');
+                    rotCanvas.width = faceWpx * mult;
+                    rotCanvas.height = faceHpx * mult;
+                    const ctx = rotCanvas.getContext('2d');
+                    const img = await loadImage(imgData);
+                    ctx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.drawImage(img, -rotCanvas.height / 2, -rotCanvas.width / 2, rotCanvas.height, rotCanvas.width);
+                    const rotData = rotCanvas.toDataURL('image/jpeg', 0.9);
+                    doc.addImage(rotData, 'JPEG', piece.x, piece.y, piece.w, piece.h);
+                } else {
+                    doc.addImage(imgData, 'JPEG', piece.x, piece.y, piece.w, piece.h);
+                }
+
+                // 5. Cut line border (blue)
+                doc.setDrawColor(0, 0, 200);
+                doc.setLineWidth(0.3);
+                doc.rect(piece.x, piece.y, piece.w, piece.h);
+
+                // 6. Face label
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 180);
+                doc.text(piece.labelKr || piece.label, piece.x + 5, piece.y + 14);
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text(piece.w + 'x' + piece.h + 'mm', piece.x + 5, piece.y + 24);
+            }
+        }
+
+        return doc.output('blob');
+    } catch (e) {
+        console.error('generateBoxLayoutPDF error:', e);
+        return null;
+    }
+}
+
+// Helper: load image from dataUrl
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+// ==========================================================
 // [5] 견적서, 명세서, 영수증, 지시서 (order.js용)
 // ==========================================================
 

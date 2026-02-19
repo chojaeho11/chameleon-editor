@@ -1989,6 +1989,12 @@ async function handleSubReturn() {
         <span style="color:#666;">×</span>
         <input id="boxD" type="number" placeholder="D" value="150" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
         <button onclick="window.applyBoxDimensions()" style="padding:5px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" data-i18n="box_apply">적용</button>
+        <span id="boxPriceDisplay" style="display:none; align-items:center; gap:4px; color:#22c55e; font-size:12px; font-weight:700; white-space:nowrap;">
+            <i class="fa-solid fa-calculator"></i>
+            <span id="boxSheetCount">0</span><span data-i18n="box_sheets">매</span> =
+            <span id="boxTotalPrice">0</span>
+        </span>
+        <button id="btnBoxLayoutPDF" onclick="window.downloadBoxLayoutPDF()" style="display:none; padding:5px 12px; background:#059669; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" data-i18n="box_download_layout">배치도</button>
     </div>
 
     <div class="editor-wrap">

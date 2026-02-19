@@ -1379,5 +1379,9 @@
   "box_face_right": "Right",
   "box_face_top": "Top",
   "box_face_bottom": "Bottom",
-  "box_apply": "Apply"
+  "box_apply": "Apply",
+  "box_sheets": "sheet(s)",
+  "box_download_layout": "Layout",
+  "box_apply_first": "Please apply box dimensions first",
+  "box_too_large": "Face exceeds sheet size (2400x1200mm)"
 }

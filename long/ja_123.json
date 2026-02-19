@@ -1379,5 +1379,9 @@
   "box_face_right": "右面",
   "box_face_top": "上面",
   "box_face_bottom": "底面",
-  "box_apply": "適用"
+  "box_apply": "適用",
+  "box_sheets": "枚",
+  "box_download_layout": "配置図",
+  "box_apply_first": "ボックスの寸法を先に適用してください",
+  "box_too_large": "面がシートサイズを超えています (2400x1200mm)"
 }

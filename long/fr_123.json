@@ -1379,5 +1379,9 @@
   "box_face_right": "Droite",
   "box_face_top": "Dessus",
   "box_face_bottom": "Dessous",
-  "box_apply": "Appliquer"
+  "box_apply": "Appliquer",
+  "box_sheets": "feuille(s)",
+  "box_download_layout": "Plan",
+  "box_apply_first": "Veuillez appliquer les dimensions de la boîte d'abord",
+  "box_too_large": "La face dépasse la taille de la feuille (2400x1200mm)"
 }
