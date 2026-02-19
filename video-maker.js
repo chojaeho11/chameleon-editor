@@ -77,7 +77,7 @@ let vm = {
     clipboard: null, snapLines: null,
     audioItems: null, audioEl: null, audioUrl: null,
     audioPage: 0, audioHasMore: false,
-    audioTab: 'sfx', _sfxOpen: false,
+    audioTab: 'sfx', _sfxOpen: true,
     canvasZoom: 1
 };
 
@@ -845,7 +845,6 @@ let _aiMusicCancelled = false;
 let _aiMusicPredictionId = null;
 if (!vm._aiMusicStyle) vm._aiMusicStyle = 'cinematic';
 if (!vm._aiMusicDur) vm._aiMusicDur = 10;
-if (vm._sfxOpen === undefined) vm._sfxOpen = true;
 vm._aiMusicList = null; // loaded from DB
 
 async function loadUserAiMusic() {
@@ -1029,11 +1028,23 @@ window._veAiPhotoSelected = async function(input) {
     });
 
     try {
-        const { data, error } = await sb.functions.invoke('generate-music', {
+        const resp = await sb.functions.invoke('generate-music', {
             body: { action: 'analyze-photo', imageBase64: base64 }
         });
-        if (error) throw new Error(error.message || 'Edge function error');
-        if (data.error) throw new Error(data.error);
+        const data = resp.data;
+        const error = resp.error;
+        if (error) {
+            // Try to extract actual error from response context
+            let errMsg = 'Edge function error';
+            try {
+                if (error.context && typeof error.context.json === 'function') {
+                    const body = await error.context.json();
+                    errMsg = body.error || errMsg;
+                } else { errMsg = error.message || errMsg; }
+            } catch(_e) { errMsg = error.message || errMsg; }
+            throw new Error(errMsg);
+        }
+        if (data && data.error) throw new Error(data.error);
 
         // Store result for re-fill after refreshLeftPanel
         vm._photoAnalysis = { style: data.style, prompt: data.prompt, lyrics: data.lyrics };

@@ -19,6 +19,7 @@ serve(async (req) => {
     if (action === 'analyze-photo') {
       const { imageBase64 } = body;
       if (!imageBase64) throw new Error('imageBase64 is required');
+      console.log('analyze-photo: image size =', Math.round(imageBase64.length / 1024), 'KB');
 
       const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
       if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not set');
@@ -29,7 +30,33 @@ serve(async (req) => {
       else if (imageBase64.startsWith('iVBOR')) mediaType = 'image/png';
       else if (imageBase64.startsWith('R0lGOD')) mediaType = 'image/gif';
       else if (imageBase64.startsWith('UklGR')) mediaType = 'image/webp';
+      console.log('analyze-photo: mediaType =', mediaType);
 
+      const claudeBody = {
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 800,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: imageBase64 }
+            },
+            {
+              type: 'text',
+              text: `Analyze this image and suggest music that matches its mood, theme, and atmosphere.
+Return JSON ONLY (no markdown, no code fences):
+{
+  "style": "one of: pop, cinematic, lofi, jazz, electronic, acoustic, classical, hiphop",
+  "prompt": "a short English music description (10-30 words) matching the image mood and atmosphere",
+  "lyrics": "creative song lyrics inspired by this image (English, max 400 chars). Use [verse] and [chorus] tags. Write emotionally resonant lyrics."
+}`
+            }
+          ]
+        }]
+      };
+
+      console.log('analyze-photo: calling Claude API...');
       const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -37,38 +64,19 @@ serve(async (req) => {
           'x-api-key': ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01',
         },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 800,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: mediaType, data: imageBase64 }
-              },
-              {
-                type: 'text',
-                text: `Analyze this image and suggest music that matches its mood, theme, and atmosphere.
-Return JSON ONLY (no markdown, no code fences):
-{
-  "style": "one of: pop, cinematic, lofi, jazz, electronic, acoustic, classical, hiphop",
-  "prompt": "a short English music description (10-30 words) matching the image mood and atmosphere",
-  "lyrics": "creative song lyrics inspired by this image (English, max 400 chars). Use [verse] and [chorus] tags. Write emotionally resonant lyrics."
-}`
-              }
-            ]
-          }]
-        })
+        body: JSON.stringify(claudeBody),
       });
 
+      console.log('analyze-photo: Claude response status =', claudeRes.status);
       if (!claudeRes.ok) {
         const errText = await claudeRes.text();
-        throw new Error(`Claude API error: ${errText}`);
+        console.error('analyze-photo: Claude API error:', errText);
+        throw new Error(`Claude API error (${claudeRes.status}): ${errText.substring(0, 300)}`);
       }
 
       const claudeData = await claudeRes.json();
       const text = claudeData.content?.[0]?.text || '';
+      console.log('analyze-photo: Claude response text =', text.substring(0, 200));
 
       // Parse JSON (handle potential markdown fences)
       let parsed;
@@ -155,8 +163,9 @@ Return JSON ONLY (no markdown, no code fences):
     throw new Error("Invalid action. Use 'create', 'check', or 'analyze-photo'.");
 
   } catch (error) {
-    console.error("generate-music error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("generate-music error:", errMsg);
+    return new Response(JSON.stringify({ error: errMsg }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
