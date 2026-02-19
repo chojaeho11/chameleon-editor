@@ -1716,12 +1716,32 @@ body {
 }
 
 @media (max-width: 768px) {
-    .hotdeal-grid .hotdeal-card {
-        min-width: calc((100% - 10px) / 2);
-        max-width: calc((100% - 10px) / 2);
+    .hotdeal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: 480px;
+        scroll-snap-type: none;
     }
-    .hotdeal-title { font-size: 13px; }
-    .hotdeal-price { font-size: 14px; }
+    .hotdeal-grid .hotdeal-card {
+        min-width: unset;
+        max-width: unset;
+    }
+    .hotdeal-img-box {
+        height: 120px;
+    }
+    .hotdeal-info {
+        padding: 8px 10px;
+    }
+    .hotdeal-title { font-size: 12px; }
+    .hotdeal-meta { font-size: 10px; margin-bottom: 4px; }
+    .hotdeal-price { font-size: 13px; }
+    .hotdeal-wrapper { padding: 0 12px; margin: 20px auto; }
+    .hotdeal-header h2 { font-size: 18px; }
+    .hotdeal-header p { font-size: 12px; }
+    .hotdeal-scroll-wrap { position: relative; }
 }
 
 .hotdeal-card {
@@ -1789,14 +1809,6 @@ body {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
-}
-/* 모바일 화면 (폭 768px 이하) */
-@media (max-width: 768px) {
-    .hotdeal-grid {
-        /* 한 줄에 2개씩 배치 */
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 10px;
-    }
 }
 /* 모바일 화면 (768px 이하) 설정 */
     @media (max-width: 768px) {
