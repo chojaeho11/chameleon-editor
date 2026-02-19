@@ -1007,6 +1007,8 @@ window._veSaveProject = async function(){
             locked:c.locked!==false,
             panX:c.panX||0, panY:c.panY||0, imgScale:c.imgScale||1,
             sourceUrl:c.sourceUrl||'',
+            origImageData:c.origImageData||'',
+            origThumbUrl:c.origThumbUrl||'',
             videoNeedsReimport:c.type==='video'&&!c.sourceUrl
         });
     }
@@ -1072,6 +1074,7 @@ window._veLoadProject = function(idx){
                     const tc=document.createElement('canvas');tc.width=160;tc.height=90;
                     tc.getContext('2d').drawImage(video,0,0,160,90);
                     vm.clips[ci]={type:'video',video,url:cd.sourceUrl,sourceUrl:cd.sourceUrl,
+                        origImageData:cd.origImageData||'',origThumbUrl:cd.origThumbUrl||'',
                         thumbUrl:tc.toDataURL('image/jpeg',0.7),...baseProps};
                     _restoreOverlayImages(vm.clips[ci]);
                     video.onseeked=null;
@@ -1985,13 +1988,22 @@ let _aiCancelled = false;
 function updateAiBar() {
     const bar = document.getElementById('veAiBar');
     const status = document.getElementById('veAiStatus');
+    const revertBar = document.getElementById('veAiRevert');
     if (!bar) return;
-    // Show AI bar only when an image clip is selected AND not currently generating
     const c = curClip();
+    // Show AI prompt bar only for image clips (not generating)
     if (c && c.type === 'image' && !_aiPredictionId) {
         bar.style.display = 'flex';
     } else {
         bar.style.display = 'none';
+    }
+    // Show revert bar for AI-generated video clips
+    if (revertBar) {
+        if (c && c.type === 'video' && c.origImageData && !_aiPredictionId) {
+            revertBar.style.display = 'flex';
+        } else {
+            revertBar.style.display = 'none';
+        }
     }
     // Status bar is controlled separately by the generate flow
     if (status && !_aiPredictionId) status.style.display = 'none';
@@ -2006,6 +2018,14 @@ window._veAiGenerate = async function() {
     const promptInput = document.getElementById('veAiPrompt');
     const prompt = promptInput ? promptInput.value.trim() : '';
     if (!prompt) return showToast('움직임을 설명하는 프롬프트를 입력하세요');
+
+    // Backup original image before AI conversion
+    const origCanvas = document.createElement('canvas');
+    origCanvas.width = c.img.naturalWidth || c.img.width;
+    origCanvas.height = c.img.naturalHeight || c.img.height;
+    origCanvas.getContext('2d').drawImage(c.img, 0, 0);
+    vm._aiOrigImage = origCanvas.toDataURL('image/jpeg', 0.9);
+    vm._aiOrigThumb = c.thumbUrl;
 
     // Disable button, show status
     const genBtn = document.getElementById('veAiGenBtn');
@@ -2148,6 +2168,8 @@ async function _veAiReplaceClip(videoUrl) {
                 c.video = video;
                 c.url = url;
                 c.sourceUrl = permanentUrl; // permanent Supabase URL for save/load
+                c.origImageData = vm._aiOrigImage || ''; // original image for undo
+                c.origThumbUrl = vm._aiOrigThumb || '';
                 c.thumbUrl = tc.toDataURL('image/jpeg', 0.7);
                 c.duration = Math.min(Math.round(video.duration * 10) / 10, 60);
                 // Keep existing overlays, adj, transition etc.
@@ -2164,6 +2186,30 @@ async function _veAiReplaceClip(videoUrl) {
     // Refresh everything
     selectClip(ci);
 }
+
+window._veAiRevert = function() {
+    const c = curClip();
+    if (!c || !c.origImageData) return showToast('원본 이미지가 없습니다');
+    if (!confirm('AI 효과를 제거하고 원래 이미지로 복원할까요?')) return;
+    const ci = vm.ci;
+    const img = new Image();
+    img.onload = () => {
+        const tc = document.createElement('canvas'); tc.width=160; tc.height=90;
+        tc.getContext('2d').drawImage(img, 0, 0, 160, 90);
+        c.type = 'image';
+        c.img = img;
+        c.url = c.origImageData;
+        c.thumbUrl = c.origThumbUrl || tc.toDataURL('image/jpeg', 0.7);
+        c.duration = c.duration || 3;
+        delete c.video;
+        delete c.sourceUrl;
+        delete c.origImageData;
+        delete c.origThumbUrl;
+        selectClip(ci);
+        showToast('원래 이미지로 복원됨');
+    };
+    img.src = c.origImageData;
+};
 
 window._veAiCancel = function() {
     _aiCancelled = true;

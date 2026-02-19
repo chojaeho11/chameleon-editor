@@ -7541,6 +7541,14 @@ if (w >= 20 && h >= 20) {
                                 <i class="fa-solid fa-sparkles"></i> AI 영상 생성
                             </button>
                         </div>
+                        <!-- AI 효과 제거 바 -->
+                        <div id="veAiRevert" class="ve-ai-bar" style="display:none;">
+                            <div class="ve-ai-bar-icon"><i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa"></i></div>
+                            <span style="flex:1;color:#c4b5fd;font-size:12px;font-weight:500;">AI로 생성된 영상입니다</span>
+                            <button class="ve-ai-revert-btn" onclick="window._veAiRevert()">
+                                <i class="fa-solid fa-rotate-left"></i> 원본 이미지로 복원
+                            </button>
+                        </div>
                         <!-- AI 생성 진행 상태 -->
                         <div id="veAiStatus" class="ve-ai-status" style="display:none;">
                             <div class="ve-ai-status-spinner"></div>
@@ -7684,6 +7692,8 @@ if (w >= 20 && h >= 20) {
 .ve-ai-status span { flex:1; color:#c4b5fd; font-size:12px; font-weight:500; }
 .ve-ai-cancel-btn { flex-shrink:0; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:4px; }
 .ve-ai-cancel-btn:hover { background:rgba(239,68,68,0.25); }
+.ve-ai-revert-btn { flex-shrink:0; background:rgba(251,146,60,0.15); color:#fb923c; border:1px solid rgba(251,146,60,0.3); border-radius:8px; padding:6px 14px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; white-space:nowrap; transition:background .2s; }
+.ve-ai-revert-btn:hover { background:rgba(251,146,60,0.25); }
 
 .ve-progress { position:absolute; bottom:10px; left:10px; right:10px; display:flex; align-items:center; gap:8px; }
 .ve-progress-track { flex:1; height:4px; background:#2a2a4a; border-radius:4px; overflow:hidden; }
