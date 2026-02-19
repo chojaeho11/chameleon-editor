@@ -429,8 +429,8 @@
         if (label) label.textContent = wMM + 'mm \u00D7 ' + hMM + 'mm \u00D7 ' + dMM + 'mm';
     }
 
-    // ─── Capture all 6 box faces ───
-    function captureAllBoxFaces() {
+    // ─── Capture all 6 box faces (async) ───
+    async function captureAllBoxFaces() {
         const fabricCanvas = window.canvas;
         if (!fabricCanvas) return [];
 
@@ -442,9 +442,11 @@
 
         const textures = [];
         for (let i = 0; i < 6; i++) {
-            // Load page i
-            fabricCanvas.loadFromJSON(pageList[i], () => {});
-            // Need synchronous capture — loadFromJSON callback runs sync in Fabric.js v5
+            // loadFromJSON is async when images exist — must await
+            await new Promise(resolve => {
+                fabricCanvas.loadFromJSON(pageList[i], () => resolve());
+            });
+
             const board = fabricCanvas.getObjects().find(o => o.isBoard);
             if (!board) { textures.push(null); continue; }
 
@@ -468,12 +470,15 @@
         }
 
         // Restore original page
-        fabricCanvas.loadFromJSON(pageList[origIndex], () => {
-            const b = fabricCanvas.getObjects().find(o => o.isBoard);
-            if (b) fabricCanvas.sendToBack(b);
-            const stage = document.querySelector('.stage');
-            if (stage) fabricCanvas.setDimensions({ width: stage.clientWidth, height: stage.clientHeight });
-            fabricCanvas.renderAll();
+        await new Promise(resolve => {
+            fabricCanvas.loadFromJSON(pageList[origIndex], () => {
+                const b = fabricCanvas.getObjects().find(o => o.isBoard);
+                if (b) fabricCanvas.sendToBack(b);
+                const stage = document.querySelector('.stage');
+                if (stage) fabricCanvas.setDimensions({ width: stage.clientWidth, height: stage.clientHeight });
+                fabricCanvas.renderAll();
+                resolve();
+            });
         });
 
         return textures;
@@ -529,7 +534,7 @@
         // 박스 모드 vs 벽 모드
         if (window.__boxDims && window.__boxMode) {
             const { w, h, d } = window.__boxDims;
-            const faceTextures = captureAllBoxFaces();
+            const faceTextures = await captureAllBoxFaces();
             buildBox(w, h, d, faceTextures);
         } else {
             const fabricCanvas = window.canvas;
@@ -549,13 +554,13 @@
         startAnimate();
     };
 
-    window.refresh3DTexture = function () {
+    window.refresh3DTexture = async function () {
         if (!wallGroup || !isInitialized) return;
 
         // 박스 모드: 전체 6면 재캡처
         if (window.__boxDims && window.__boxMode) {
             const { w, h, d } = window.__boxDims;
-            const faceTextures = captureAllBoxFaces();
+            const faceTextures = await captureAllBoxFaces();
             buildBox(w, h, d, faceTextures);
             return;
         }

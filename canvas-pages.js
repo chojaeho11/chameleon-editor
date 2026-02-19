@@ -241,17 +241,24 @@ window.switchBoxFace = function(index) {
 
     saveCurrentPageState();
     currentPageIndex = index;
-    loadPage(index);
 
-    // 면별 다른 크기 → 화면 맞춤
-    setTimeout(() => resizeCanvasToFit(), 50);
+    // loadFromJSON이 비동기(이미지 포함 시)이므로 콜백 내에서 resizeCanvasToFit 호출
+    const json = pageDataList[index];
+    if (!json) return;
+
+    canvas.loadFromJSON(json, () => {
+        const board = canvas.getObjects().find(o => o.isBoard);
+        if (board) canvas.sendToBack(board);
+        updatePageCounter();
+        canvas.requestRenderAll();
+        // 면별 다른 크기 → 로드 완료 후 화면 맞춤
+        resizeCanvasToFit();
+    });
 
     // 탭 active 업데이트
     document.querySelectorAll('.box-face-tab').forEach((tab, i) => {
         tab.classList.toggle('active', i === index);
     });
-
-    updatePageCounter();
 };
 
 // 박스 치수 적용
