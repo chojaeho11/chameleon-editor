@@ -9072,21 +9072,21 @@ window.dsmRenderProducts = async function(keyword) {
     // 챗봇 전역 언어 감지 (한번만)
     var _chamLang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
     var _chamI18n = {
-        title:      { kr: '카멜레온 AI 상담', ja: 'カメレオン AI相談', en: 'Chameleon AI Chat' },
-        subtitle:   { kr: 'AI 실시간 상담 · 24시간', ja: 'AIリアルタイム相談・24時間', en: 'AI Live Support · 24/7' },
-        placeholder:{ kr: '무엇이든 물어보세요...', ja: 'ご質問をどうぞ...', en: 'Ask anything...' },
-        connect:    { kr: '상담사 연결', ja: '相談員に接続', en: 'Connect to Agent' },
-        connectTo:  { kr: '상담사에게 연결합니다', ja: '相談員に接続します', en: 'Connecting to Agent' },
-        enterName:  { kr: '먼저 성함을 알려주세요!', ja: 'まずお名前を教えてください！', en: 'Please enter your name first!' },
-        namePh:     { kr: '이름 (예: 홍길동)', ja: 'お名前 (例: 田中太郎)', en: 'Name (e.g. John)' },
-        nameBtn:    { kr: '확인', ja: '確認', en: 'OK' },
-        nameErr:    { kr: '이름을 입력해주세요!', ja: 'お名前を入力してください！', en: 'Please enter your name!' },
-        fileMsg:    { kr: '파일을 확인했습니다! 파일 관련 상담이 필요하시면 하단 \'상담사 연결\' 버튼을 눌러 매니저에게 직접 전달해주세요 😊', ja: 'ファイルを確認しました！ファイルに関するご相談は下の「相談員に接続」ボタンからマネージャーに直接お伝えください 😊', en: 'File received! For file-related inquiries, click \'Connect to Agent\' below to reach a manager directly 😊' },
-        customer:   { kr: '고객', ja: 'お客様', en: 'Customer' },
-        webCustomer:{ kr: '웹 고객', ja: 'Webお客様', en: 'Web Customer' },
-        connectAlert:{ kr: '상담 연결을 준비 중입니다. 페이지를 새로고침 후 다시 시도해주세요!', ja: '相談接続を準備中です。ページを更新して再度お試しください！', en: 'Preparing connection. Please refresh the page and try again!' },
-        welcome:     { kr: '무엇이 필요하신가요? 가격, 제작기간, 할인혜택 등 아무 질문이나 괜찮아요.\n빠르게 상담해 드릴게요. 항상 상담사가 대기하고 있어요!', ja: '何かお探しですか？価格、納期、割引特典など、どんなご質問でも大丈夫です。\n迅速にご対応いたします。いつでも相談員が待機しております！', en: 'What do you need? Pricing, production time, discounts — any question is welcome.\nWe\'ll help you right away. Our agents are always standing by!' },
-        newChat:     { kr: '새 대화', ja: '新しい会話', en: 'New Chat' }
+        title:      { kr: '카멜레온 AI 상담', ja: 'カメレオン AI相談', en: 'Chameleon AI Chat', zh: '变色龙 AI 咨询', ar: 'استشارة Chameleon AI', es: 'Chat AI Chameleon', de: 'Chameleon AI Chat', fr: 'Chat AI Chameleon' },
+        subtitle:   { kr: 'AI 실시간 상담 · 24시간', ja: 'AIリアルタイム相談・24時間', en: 'AI Live Support · 24/7', zh: 'AI实时咨询 · 24小时', ar: 'دعم مباشر بالذكاء الاصطناعي · 24/7', es: 'Soporte AI en vivo · 24/7', de: 'AI Live-Support · 24/7', fr: 'Support AI en direct · 24/7' },
+        placeholder:{ kr: '무엇이든 물어보세요...', ja: 'ご質問をどうぞ...', en: 'Ask anything...', zh: '随便问...', ar: '...اسأل أي شيء', es: 'Pregunta lo que sea...', de: 'Fragen Sie alles...', fr: 'Posez votre question...' },
+        connect:    { kr: '상담사 연결', ja: '相談員に接続', en: 'Connect to Agent', zh: '连接客服', ar: 'الاتصال بالوكيل', es: 'Conectar con agente', de: 'Mit Agent verbinden', fr: 'Contacter un agent' },
+        connectTo:  { kr: '상담사에게 연결합니다', ja: '相談員に接続します', en: 'Connecting to Agent', zh: '正在连接客服', ar: 'جاري الاتصال بالوكيل', es: 'Conectando con agente', de: 'Verbindung zum Agenten', fr: 'Connexion à un agent' },
+        enterName:  { kr: '먼저 성함을 알려주세요!', ja: 'まずお名前を教えてください！', en: 'Please enter your name first!', zh: '请先输入您的姓名！', ar: 'يرجى إدخال اسمك أولاً!', es: '¡Por favor, ingrese su nombre!', de: 'Bitte geben Sie Ihren Namen ein!', fr: 'Veuillez entrer votre nom !' },
+        namePh:     { kr: '이름 (예: 홍길동)', ja: 'お名前 (例: 田中太郎)', en: 'Name (e.g. John)', zh: '姓名（例：张三）', ar: 'الاسم (مثال: أحمد)', es: 'Nombre (ej: Juan)', de: 'Name (z.B. Max)', fr: 'Nom (ex: Jean)' },
+        nameBtn:    { kr: '확인', ja: '確認', en: 'OK', zh: '确认', ar: 'تأكيد', es: 'OK', de: 'OK', fr: 'OK' },
+        nameErr:    { kr: '이름을 입력해주세요!', ja: 'お名前を入力してください！', en: 'Please enter your name!', zh: '请输入姓名！', ar: 'يرجى إدخال الاسم!', es: '¡Ingrese su nombre!', de: 'Bitte Namen eingeben!', fr: 'Veuillez entrer votre nom !' },
+        fileMsg:    { kr: '파일을 확인했습니다! 파일 관련 상담이 필요하시면 하단 \'상담사 연결\' 버튼을 눌러 매니저에게 직접 전달해주세요 😊', ja: 'ファイルを確認しました！ファイルに関するご相談は下の「相談員に接続」ボタンからマネージャーに直接お伝えください 😊', en: 'File received! For file-related inquiries, click \'Connect to Agent\' below to reach a manager directly 😊', zh: '已收到文件！如需文件相关咨询，请点击下方"连接客服"按钮直接联系经理 😊', ar: 'تم استلام الملف! للاستفسارات المتعلقة بالملف، انقر على "الاتصال بالوكيل" أدناه 😊', es: '¡Archivo recibido! Para consultas sobre archivos, haga clic en \'Conectar con agente\' abajo 😊', de: 'Datei erhalten! Für dateibezogene Anfragen klicken Sie unten auf \'Mit Agent verbinden\' 😊', fr: 'Fichier reçu ! Pour les demandes liées au fichier, cliquez sur \'Contacter un agent\' ci-dessous 😊' },
+        customer:   { kr: '고객', ja: 'お客様', en: 'Customer', zh: '客户', ar: 'عميل', es: 'Cliente', de: 'Kunde', fr: 'Client' },
+        webCustomer:{ kr: '웹 고객', ja: 'Webお客様', en: 'Web Customer', zh: '网页客户', ar: 'عميل ويب', es: 'Cliente Web', de: 'Web-Kunde', fr: 'Client Web' },
+        connectAlert:{ kr: '상담 연결을 준비 중입니다. 페이지를 새로고침 후 다시 시도해주세요!', ja: '相談接続を準備中です。ページを更新して再度お試しください！', en: 'Preparing connection. Please refresh the page and try again!', zh: '正在准备连接，请刷新页面后重试！', ar: 'جاري تحضير الاتصال. يرجى تحديث الصفحة والمحاولة مرة أخرى!', es: 'Preparando conexión. ¡Actualice la página e intente de nuevo!', de: 'Verbindung wird vorbereitet. Bitte aktualisieren Sie die Seite!', fr: 'Connexion en préparation. Veuillez rafraîchir la page !' },
+        welcome:     { kr: '무엇이 필요하신가요? 가격, 제작기간, 할인혜택 등 아무 질문이나 괜찮아요.\n빠르게 상담해 드릴게요. 항상 상담사가 대기하고 있어요!', ja: '何かお探しですか？価格、納期、割引特典など、どんなご質問でも大丈夫です。\n迅速にご対応いたします。いつでも相談員が待機しております！', en: 'What do you need? Pricing, production time, discounts — any question is welcome.\nWe\'ll help you right away. Our agents are always standing by!', zh: '您需要什么？价格、制作周期、折扣优惠等任何问题都可以。\n我们会快速为您解答，客服随时待命！', ar: 'ما الذي تحتاجه؟ الأسعار، مدة الإنتاج، الخصومات — أي سؤال مرحب به.\nسنساعدك فوراً. وكلاؤنا متاحون دائماً!', es: '¿Qué necesita? Precios, tiempos de producción, descuentos — cualquier pregunta es bienvenida.\n¡Le ayudaremos de inmediato. Nuestros agentes están siempre disponibles!', de: 'Was brauchen Sie? Preise, Produktionszeit, Rabatte — jede Frage ist willkommen.\nWir helfen Ihnen sofort. Unsere Agenten stehen immer bereit!', fr: 'De quoi avez-vous besoin ? Prix, délais, remises — toute question est bienvenue.\nNous vous aiderons immédiatement. Nos agents sont toujours disponibles !' },
+        newChat:     { kr: '새 대화', ja: '新しい会話', en: 'New Chat', zh: '新对话', ar: 'محادثة جديدة', es: 'Nuevo chat', de: 'Neuer Chat', fr: 'Nouveau chat' }
     };
     function _ct(key) { return (_chamI18n[key] && _chamI18n[key][_chamLang]) || (_chamI18n[key] && _chamI18n[key]['en']) || ''; }
 
@@ -9195,7 +9195,12 @@ window.dsmRenderProducts = async function(keyword) {
         var quickBtns = {
             kr: ['\uD83D\uDCB0 \uAC00\uACA9 \uACAC\uC801 \uBB38\uC758', '\uD83D\uDCE6 \uBC30\uC1A1\uC740 \uC5BC\uB9C8\uB098 \uAC78\uB824\uC694?', '\uD83C\uDFE2 \uC0AC\uC5C5\uC790 \uD560\uC778 \uD61C\uD0DD'],
             ja: ['\uD83D\uDCB0 お見積もり', '\uD83D\uDCE6 配送日数は？', '\uD83C\uDFE2 法人割引について'],
-            us: ['\uD83D\uDCB0 Get a Quote', '\uD83D\uDCE6 Shipping Times?', '\uD83C\uDFE2 Business Discounts']
+            us: ['\uD83D\uDCB0 Get a Quote', '\uD83D\uDCE6 Shipping Times?', '\uD83C\uDFE2 Business Discounts'],
+            zh: ['\uD83D\uDCB0 价格咨询', '\uD83D\uDCE6 配送需要多久？', '\uD83C\uDFE2 企业折扣优惠'],
+            ar: ['\uD83D\uDCB0 استفسار عن الأسعار', '\uD83D\uDCE6 مدة التوصيل؟', '\uD83C\uDFE2 خصم الشركات'],
+            es: ['\uD83D\uDCB0 Consulta de precios', '\uD83D\uDCE6 ¿Tiempos de envío?', '\uD83C\uDFE2 Descuentos empresariales'],
+            de: ['\uD83D\uDCB0 Preisanfrage', '\uD83D\uDCE6 Lieferzeiten?', '\uD83C\uDFE2 Firmenrabatte'],
+            fr: ['\uD83D\uDCB0 Demande de prix', '\uD83D\uDCE6 Délais de livraison ?', '\uD83C\uDFE2 Remises entreprises']
         };
         var btns = quickBtns[_lang] || quickBtns[(_lang==='en'?'us':_lang)] || quickBtns['kr'];
         btns.forEach(function(label) {
@@ -9217,7 +9222,8 @@ window.dsmRenderProducts = async function(keyword) {
         if (_aiRoom) return Promise.resolve(_aiRoom);
         if (!db) return Promise.resolve(null);
         var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
-        var _custName = _lang === 'ja' ? 'ウェブ顧客' : (_lang === 'us' || _lang === 'en' ? 'Web Customer' : '웹 고객');
+        var _custNameMap = { ja: 'ウェブ顧客', us: 'Web Customer', en: 'Web Customer', zh: '网页客户', ar: 'عميل ويب', es: 'Cliente Web', de: 'Web-Kunde', fr: 'Client Web' };
+        var _custName = _custNameMap[_lang] || '웹 고객';
         return db.from('chat_rooms').insert({
             customer_name: _custName,
             status: 'ai_chatting',
@@ -9237,8 +9243,10 @@ window.dsmRenderProducts = async function(keyword) {
     function saveMsg(senderType, message) {
         if (!db || !_aiRoom) return;
         var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
-        var _custLabel = _lang === 'ja' ? 'ウェブ顧客' : (_lang === 'us' || _lang === 'en' ? 'Web Customer' : '웹 고객');
-        var _botLabel = _lang === 'ja' ? 'AI ボット' : (_lang === 'us' || _lang === 'en' ? 'AI Bot' : 'AI 봇');
+        var _custLabelMap = { ja: 'ウェブ顧客', us: 'Web Customer', en: 'Web Customer', zh: '网页客户', ar: 'عميل ويب', es: 'Cliente Web', de: 'Web-Kunde', fr: 'Client Web' };
+        var _botLabelMap = { ja: 'AI ボット', us: 'AI Bot', en: 'AI Bot', zh: 'AI 机器人', ar: 'بوت AI', es: 'Bot AI', de: 'AI Bot', fr: 'Bot AI' };
+        var _custLabel = _custLabelMap[_lang] || '웹 고객';
+        var _botLabel = _botLabelMap[_lang] || 'AI 봇';
         db.from('chat_messages').insert({
             room_id: _aiRoom.id,
             sender_type: senderType,
@@ -9284,8 +9292,10 @@ window.dsmRenderProducts = async function(keyword) {
         var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
         var title = document.querySelector('.cham-title');
         var sub = document.querySelector('.cham-subtitle');
-        var _mgrChat = _lang === 'ja' ? managerName + ' マネージャー相談' : (_lang === 'us' || _lang === 'en' ? managerName + ' Manager Chat' : managerName + ' 매니저 상담');
-        var _mgrConn = _lang === 'ja' ? 'マネージャー接続済み' : (_lang === 'us' || _lang === 'en' ? 'Manager Connected' : '매니저 연결됨');
+        var _mgrChatMap = { ja: ' マネージャー相談', us: ' Manager Chat', en: ' Manager Chat', zh: ' 经理咨询', ar: ' محادثة المدير', es: ' Chat con gerente', de: ' Manager-Chat', fr: ' Chat gestionnaire' };
+        var _mgrConnMap = { ja: 'マネージャー接続済み', us: 'Manager Connected', en: 'Manager Connected', zh: '经理已连接', ar: 'تم الاتصال بالمدير', es: 'Gerente conectado', de: 'Manager verbunden', fr: 'Gestionnaire connecté' };
+        var _mgrChat = managerName + (_mgrChatMap[_lang] || ' 매니저 상담');
+        var _mgrConn = _mgrConnMap[_lang] || '매니저 연결됨';
         if (title) title.textContent = _mgrChat;
         if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _mgrConn;
         // 상담사 연결 바 숨기기
@@ -9300,17 +9310,32 @@ window.dsmRenderProducts = async function(keyword) {
         var _errOffline = {
             kr: "현재 서버 연결 중입니다. 잠시 후 다시 시도해주세요!\n\n급하신 문의는 하단 '상담사 연결' 버튼을 눌러주세요 😊",
             ja: "現在サーバーに接続中です。しばらくしてから再度お試しください！\n\nお急ぎの場合は下の「相談員に接続」ボタンをご利用ください 😊",
-            us: "Connecting to server. Please try again shortly!\n\nFor urgent inquiries, click 'Connect to Agent' below 😊"
+            us: "Connecting to server. Please try again shortly!\n\nFor urgent inquiries, click 'Connect to Agent' below 😊",
+            zh: "正在连接服务器，请稍后重试！\n\n紧急咨询请点击下方'连接客服'按钮 😊",
+            ar: "جاري الاتصال بالخادم. يرجى المحاولة لاحقاً!\n\nللاستفسارات العاجلة، انقر على 'الاتصال بالوكيل' أدناه 😊",
+            es: "Conectando al servidor. ¡Inténtelo de nuevo en breve!\n\nPara consultas urgentes, haga clic en 'Conectar con agente' abajo 😊",
+            de: "Verbindung zum Server wird hergestellt. Bitte versuchen Sie es gleich erneut!\n\nFür dringende Anfragen klicken Sie unten auf 'Mit Agent verbinden' 😊",
+            fr: "Connexion au serveur en cours. Veuillez réessayer dans un instant !\n\nPour les demandes urgentes, cliquez sur 'Contacter un agent' ci-dessous 😊"
         };
         var _errEmpty = {
             kr: "응답을 처리하지 못했습니다. 다시 시도해주세요.",
             ja: "応答を処理できませんでした。もう一度お試しください。",
-            us: "Could not process the response. Please try again."
+            us: "Could not process the response. Please try again.",
+            zh: "无法处理响应，请重试。",
+            ar: "تعذرت معالجة الاستجابة. يرجى المحاولة مرة أخرى.",
+            es: "No se pudo procesar la respuesta. Inténtelo de nuevo.",
+            de: "Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.",
+            fr: "Impossible de traiter la réponse. Veuillez réessayer."
         };
         var _errGeneral = {
             kr: "죄송합니다, 일시적인 오류가 발생했어요 😥\n잠시 후 다시 시도하시거나, 하단 '상담사 연결' 버튼을 눌러주세요!",
             ja: "申し訳ございません、一時的なエラーが発生しました 😥\nしばらくしてから再度お試しいただくか、下の「相談員に接続」ボタンをご利用ください！",
-            us: "Sorry, a temporary error occurred 😥\nPlease try again shortly, or click 'Connect to Agent' below!"
+            us: "Sorry, a temporary error occurred 😥\nPlease try again shortly, or click 'Connect to Agent' below!",
+            zh: "抱歉，发生了临时错误 😥\n请稍后重试，或点击下方'连接客服'按钮！",
+            ar: "عذراً، حدث خطأ مؤقت 😥\nيرجى المحاولة لاحقاً أو انقر على 'الاتصال بالوكيل' أدناه!",
+            es: "Lo sentimos, ocurrió un error temporal 😥\nInténtelo de nuevo o haga clic en 'Conectar con agente' abajo.",
+            de: "Entschuldigung, ein vorübergehender Fehler ist aufgetreten 😥\nBitte versuchen Sie es erneut oder klicken Sie unten auf 'Mit Agent verbinden'!",
+            fr: "Désolé, une erreur temporaire s'est produite 😥\nVeuillez réessayer ou cliquez sur 'Contacter un agent' ci-dessous !"
         };
         var _l = (_lang === 'en') ? 'us' : _lang;
         if (!db) {
