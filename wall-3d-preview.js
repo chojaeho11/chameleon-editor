@@ -400,8 +400,10 @@
         const board = fabricCanvas.getObjects().find(o => o.isBoard);
         if (!board) return;
 
-        const widthMM = Math.round(board.width);
-        const heightMM = Math.round(board.height);
+        // board.width/height is in pixels (mm × 3.7795), convert back to mm
+        const PX_PER_MM = 3.7795;
+        const widthMM = Math.round(board.width / PX_PER_MM);
+        const heightMM = Math.round(board.height / PX_PER_MM);
         const dataUrl = captureCanvas();
 
         initScene(container);
