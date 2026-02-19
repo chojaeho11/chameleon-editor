@@ -6,55 +6,55 @@ const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 const FORMATS = [
-    { id:'landscape', label:'16:9', name:'가로 영상', w:1920, h:1080 },
-    { id:'portrait',  label:'9:16', name:'세로/쇼츠', w:1080, h:1920 },
-    { id:'square',    label:'1:1',  name:'정사각형',   w:1080, h:1080 }
+    { id:'landscape', label:'16:9', name:_t('ve_format_landscape','가로 영상'), w:1920, h:1080 },
+    { id:'portrait',  label:'9:16', name:_t('ve_format_portrait','세로/쇼츠'), w:1080, h:1920 },
+    { id:'square',    label:'1:1',  name:_t('ve_format_square','정사각형'),   w:1080, h:1080 }
 ];
 
 const MUSIC = [
-    { id:'none', name:'없음', icon:'fa-volume-xmark', desc:'음악 없음' }
+    { id:'none', name:_t('ve_music_none','없음'), icon:'fa-volume-xmark', desc:_t('ve_music_none_desc','음악 없음') }
 ];
 
 const TRANSITIONS = [
-    { id:'none', name:'없음', icon:'fa-xmark', color:'#6b7280' },
-    { id:'fade', name:'페이드', icon:'fa-circle-half-stroke', color:'#818cf8' },
-    { id:'slideL', name:'← 슬라이드', icon:'fa-arrow-left', color:'#fbbf24' },
-    { id:'slideR', name:'→ 슬라이드', icon:'fa-arrow-right', color:'#fbbf24' },
-    { id:'slideUp', name:'↑ 슬라이드', icon:'fa-arrow-up', color:'#fbbf24' },
-    { id:'zoomIn', name:'줌 인', icon:'fa-magnifying-glass-plus', color:'#34d399' },
-    { id:'zoomOut', name:'줌 아웃', icon:'fa-magnifying-glass-minus', color:'#34d399' },
-    { id:'wipe', name:'와이프', icon:'fa-bars-staggered', color:'#f472b6' },
-    { id:'slideDown', name:'↓ 슬라이드', icon:'fa-arrow-down', color:'#fbbf24' },
-    { id:'flipH', name:'뒤집기', icon:'fa-right-left', color:'#f472b6' },
-    { id:'spin', name:'회전', icon:'fa-rotate', color:'#38bdf8' },
-    { id:'blur', name:'블러', icon:'fa-droplet', color:'#a78bfa' },
-    { id:'crossZoom', name:'크로스줌', icon:'fa-expand', color:'#34d399' },
-    { id:'split', name:'분할', icon:'fa-table-columns', color:'#fb923c' }
+    { id:'none', name:_t('ve_trans_none','없음'), icon:'fa-xmark', color:'#6b7280' },
+    { id:'fade', name:_t('ve_trans_fade','페이드'), icon:'fa-circle-half-stroke', color:'#818cf8' },
+    { id:'slideL', name:_t('ve_trans_slide_l','← 슬라이드'), icon:'fa-arrow-left', color:'#fbbf24' },
+    { id:'slideR', name:_t('ve_trans_slide_r','→ 슬라이드'), icon:'fa-arrow-right', color:'#fbbf24' },
+    { id:'slideUp', name:_t('ve_trans_slide_up','↑ 슬라이드'), icon:'fa-arrow-up', color:'#fbbf24' },
+    { id:'zoomIn', name:_t('ve_trans_zoom_in','줌 인'), icon:'fa-magnifying-glass-plus', color:'#34d399' },
+    { id:'zoomOut', name:_t('ve_trans_zoom_out','줌 아웃'), icon:'fa-magnifying-glass-minus', color:'#34d399' },
+    { id:'wipe', name:_t('ve_trans_wipe','와이프'), icon:'fa-bars-staggered', color:'#f472b6' },
+    { id:'slideDown', name:_t('ve_trans_slide_down','↓ 슬라이드'), icon:'fa-arrow-down', color:'#fbbf24' },
+    { id:'flipH', name:_t('ve_trans_flip','뒤집기'), icon:'fa-right-left', color:'#f472b6' },
+    { id:'spin', name:_t('ve_trans_spin','회전'), icon:'fa-rotate', color:'#38bdf8' },
+    { id:'blur', name:_t('ve_trans_blur','블러'), icon:'fa-droplet', color:'#a78bfa' },
+    { id:'crossZoom', name:_t('ve_trans_cross_zoom','크로스줌'), icon:'fa-expand', color:'#34d399' },
+    { id:'split', name:_t('ve_trans_split','분할'), icon:'fa-table-columns', color:'#fb923c' }
 ];
 
 const STICKERS = ['⭐','❤️','🔥','✨','💯','👍','🎉','💡','🎵','🎯','💪','🌟','😊','🎬','📌','🏆','💎','🌈','🎨','👏','🎁','🚀'];
 
 const TEMPLATES = [
-    { id:'title', name:'타이틀 카드', icon:'fa-heading',
-      mk:(w,h)=>[{type:'rect',x:0,y:h*.3,w,h:h*.4,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.45,text:'제목을 입력하세요',fontSize:Math.round(w*.06),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.58,text:'부제목',fontSize:Math.round(w*.025),color:'#ccc',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
-    { id:'lower3rd', name:'하단 자막', icon:'fa-closed-captioning',
-      mk:(w,h)=>[{type:'rect',x:w*.05,y:h*.82,w:w*.5,h:h*.06,fill:'#6366f1',stroke:'',strokeW:0,radius:8},{type:'text',x:w*.3,y:h*.855,text:'이름',fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.05,y:h*.88,w:w*.35,h:h*.04,fill:'rgba(255,255,255,0.9)',stroke:'',strokeW:0,radius:6},{type:'text',x:w*.22,y:h*.905,text:'직함',fontSize:Math.round(w*.016),color:'#333',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'caption', name:'자막', icon:'fa-align-center',
-      mk:(w,h)=>[{type:'rect',x:0,y:h*.85,w,h:h*.15,fill:'rgba(0,0,0,0.65)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.935,text:'자막 텍스트',fontSize:Math.round(w*.03),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'}]},
-    { id:'quote', name:'인용문', icon:'fa-quote-left',
-      mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.25,w:w*.8,h:h*.5,fill:'rgba(0,0,0,0.5)',stroke:'rgba(255,255,255,0.3)',strokeW:2,radius:20},{type:'text',x:w/2,y:h*.45,text:'"인용문을 입력하세요"',fontSize:Math.round(w*.035),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'serif'},{type:'text',x:w/2,y:h*.6,text:'— 저자',fontSize:Math.round(w*.02),color:'#a5b4fc',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'announce', name:'공지', icon:'fa-bullhorn',
-      mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.35,w:w*.8,h:h*.3,fill:'#ef4444',stroke:'#fff',strokeW:4,radius:16},{type:'text',x:w/2,y:h*.48,text:'중요 공지',fontSize:Math.round(w*.05),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.57,text:'세부 내용',fontSize:Math.round(w*.022),color:'#fecaca',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'intro', name:'인트로', icon:'fa-play-circle',
-      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.7)',stroke:'',strokeW:0,radius:0},{type:'rect',x:w*.15,y:h*.25,w:w*.7,h:h*.5,fill:'rgba(99,102,241,0.3)',stroke:'#818cf8',strokeW:3,radius:20},{type:'text',x:w/2,y:h*.42,text:'채널명',fontSize:Math.round(w*.07),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.56,text:'영상 제목을 입력하세요',fontSize:Math.round(w*.03),color:'#c7d2fe',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.35,y:h*.65,w:w*.3,h:4,fill:'#818cf8',stroke:'',strokeW:0,radius:2}]},
-    { id:'outro', name:'아웃트로', icon:'fa-flag-checkered',
-      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.75)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.35,text:'시청해주셔서 감사합니다',fontSize:Math.round(w*.045),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.25,y:h*.5,w:w*.5,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:12},{type:'text',x:w/2,y:h*.545,text:'👍 좋아요 & 구독',fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.68,text:'다음 영상에서 만나요!',fontSize:Math.round(w*.022),color:'#94a3b8',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'countdown', name:'카운트다운', icon:'fa-hourglass-half',
-      mk:(w,h)=>[{type:'circle',x:w/2,y:h*.45,r:Math.round(w*.12),fill:'rgba(239,68,68,0.8)',stroke:'#fff',strokeW:4},{type:'text',x:w/2,y:h*.45,text:'3',fontSize:Math.round(w*.15),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.7,text:'곧 시작합니다',fontSize:Math.round(w*.025),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
-    { id:'subscribe', name:'구독 버튼', icon:'fa-bell',
-      mk:(w,h)=>[{type:'rect',x:w*.3,y:h*.8,w:w*.4,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:8},{type:'text',x:w/2,y:h*.845,text:'🔔 구독하기',fontSize:Math.round(w*.028),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
-    { id:'progress', name:'프로그레스', icon:'fa-battery-half',
-      mk:(w,h)=>[{type:'rect',x:0,y:h*.92,w,h:h*.08,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'rect',x:0,y:h*.92,w:w*.4,h:h*.08,fill:'#6366f1',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.965,text:'40% 완료',fontSize:Math.round(w*.02),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]}
+    { id:'title', name:_t('ve_tpl_title_card','타이틀 카드'), icon:'fa-heading',
+      mk:(w,h)=>[{type:'rect',x:0,y:h*.3,w,h:h*.4,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.45,text:_t('ve_tpl_enter_title','제목을 입력하세요'),fontSize:Math.round(w*.06),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.58,text:_t('ve_tpl_subtitle','부제목'),fontSize:Math.round(w*.025),color:'#ccc',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
+    { id:'lower3rd', name:_t('ve_tpl_lower_third','하단 자막'), icon:'fa-closed-captioning',
+      mk:(w,h)=>[{type:'rect',x:w*.05,y:h*.82,w:w*.5,h:h*.06,fill:'#6366f1',stroke:'',strokeW:0,radius:8},{type:'text',x:w*.3,y:h*.855,text:_t('ve_tpl_name','이름'),fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.05,y:h*.88,w:w*.35,h:h*.04,fill:'rgba(255,255,255,0.9)',stroke:'',strokeW:0,radius:6},{type:'text',x:w*.22,y:h*.905,text:_t('ve_tpl_job_title','직함'),fontSize:Math.round(w*.016),color:'#333',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'caption', name:_t('ve_tpl_caption','자막'), icon:'fa-align-center',
+      mk:(w,h)=>[{type:'rect',x:0,y:h*.85,w,h:h*.15,fill:'rgba(0,0,0,0.65)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.935,text:_t('ve_tpl_caption_text','자막 텍스트'),fontSize:Math.round(w*.03),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'}]},
+    { id:'quote', name:_t('ve_tpl_quote','인용문'), icon:'fa-quote-left',
+      mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.25,w:w*.8,h:h*.5,fill:'rgba(0,0,0,0.5)',stroke:'rgba(255,255,255,0.3)',strokeW:2,radius:20},{type:'text',x:w/2,y:h*.45,text:_t('ve_tpl_enter_quote','"인용문을 입력하세요"'),fontSize:Math.round(w*.035),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'serif'},{type:'text',x:w/2,y:h*.6,text:_t('ve_tpl_author','— 저자'),fontSize:Math.round(w*.02),color:'#a5b4fc',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'announce', name:_t('ve_tpl_announce','공지'), icon:'fa-bullhorn',
+      mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.35,w:w*.8,h:h*.3,fill:'#ef4444',stroke:'#fff',strokeW:4,radius:16},{type:'text',x:w/2,y:h*.48,text:_t('ve_tpl_important','중요 공지'),fontSize:Math.round(w*.05),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.57,text:_t('ve_tpl_details','세부 내용'),fontSize:Math.round(w*.022),color:'#fecaca',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'intro', name:_t('ve_tpl_intro','인트로'), icon:'fa-play-circle',
+      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.7)',stroke:'',strokeW:0,radius:0},{type:'rect',x:w*.15,y:h*.25,w:w*.7,h:h*.5,fill:'rgba(99,102,241,0.3)',stroke:'#818cf8',strokeW:3,radius:20},{type:'text',x:w/2,y:h*.42,text:_t('ve_tpl_channel','채널명'),fontSize:Math.round(w*.07),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.56,text:_t('ve_tpl_video_title','영상 제목을 입력하세요'),fontSize:Math.round(w*.03),color:'#c7d2fe',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.35,y:h*.65,w:w*.3,h:4,fill:'#818cf8',stroke:'',strokeW:0,radius:2}]},
+    { id:'outro', name:_t('ve_tpl_outro','아웃트로'), icon:'fa-flag-checkered',
+      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.75)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.35,text:_t('ve_tpl_thanks','시청해주셔서 감사합니다'),fontSize:Math.round(w*.045),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.25,y:h*.5,w:w*.5,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:12},{type:'text',x:w/2,y:h*.545,text:_t('ve_tpl_like_sub','👍 좋아요 & 구독'),fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.68,text:_t('ve_tpl_see_next','다음 영상에서 만나요!'),fontSize:Math.round(w*.022),color:'#94a3b8',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'countdown', name:_t('ve_tpl_countdown','카운트다운'), icon:'fa-hourglass-half',
+      mk:(w,h)=>[{type:'circle',x:w/2,y:h*.45,r:Math.round(w*.12),fill:'rgba(239,68,68,0.8)',stroke:'#fff',strokeW:4},{type:'text',x:w/2,y:h*.45,text:'3',fontSize:Math.round(w*.15),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.7,text:_t('ve_tpl_starting_soon','곧 시작합니다'),fontSize:Math.round(w*.025),color:'#fff',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
+    { id:'subscribe', name:_t('ve_tpl_subscribe_btn','구독 버튼'), icon:'fa-bell',
+      mk:(w,h)=>[{type:'rect',x:w*.3,y:h*.8,w:w*.4,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:8},{type:'text',x:w/2,y:h*.845,text:_t('ve_tpl_subscribe','🔔 구독하기'),fontSize:Math.round(w*.028),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+    { id:'progress', name:_t('ve_tpl_progress','프로그레스'), icon:'fa-battery-half',
+      mk:(w,h)=>[{type:'rect',x:0,y:h*.92,w,h:h*.08,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'rect',x:0,y:h*.92,w:w*.4,h:h*.08,fill:'#6366f1',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.965,text:_t('ve_tpl_complete_pct','40% 완료'),fontSize:Math.round(w*.02),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]}
 ];
 
 const TL_PPS = 60; // timeline pixels per second (base)
@@ -266,7 +266,7 @@ function addOverlay(type, x, y, props) {
     const c = curClip(); if (!c) return;
     let o; const fs = Math.round(vm.w*0.04);
     switch(type) {
-        case 'text': o={type:'text',x,y,text:props?.text||'텍스트',fontSize:props?.fontSize||fs,color:props?.color||'#fff',bold:props?.bold??true,shadow:props?.shadow??true,align:'center',fontFamily:props?.fontFamily||'sans-serif',strokeColor:props?.strokeColor||'#000',strokeWidth:props?.strokeWidth||0,bgBox:props?.bgBox||false,bgColor:props?.bgColor||'rgba(0,0,0,0.5)',lineHeight:props?.lineHeight||1.2}; break;
+        case 'text': o={type:'text',x,y,text:props?.text||_t('ve_default_text','텍스트'),fontSize:props?.fontSize||fs,color:props?.color||'#fff',bold:props?.bold??true,shadow:props?.shadow??true,align:'center',fontFamily:props?.fontFamily||'sans-serif',strokeColor:props?.strokeColor||'#000',strokeWidth:props?.strokeWidth||0,bgBox:props?.bgBox||false,bgColor:props?.bgColor||'rgba(0,0,0,0.5)',lineHeight:props?.lineHeight||1.2}; break;
         case 'rect': o={type:'rect',x,y,w:props?.w||vm.w*.3,h:props?.h||vm.h*.12,fill:props?.fill||'rgba(99,102,241,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2,radius:props?.radius||10}; break;
         case 'circle': o={type:'circle',x,y,r:props?.r||vm.w*.06,fill:props?.fill||'rgba(99,102,241,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2}; break;
         case 'sticker': o={type:'sticker',x,y,emoji:props?.emoji||'⭐',size:props?.size||Math.round(vm.w*.08)}; break;
@@ -523,17 +523,16 @@ function renderMediaTab(el) {
             h += `<img src="${c.thumbUrl}">`;
             if(c.type==='video') h += `<span class="ve-media-dur">${fmtTime(c.duration)}</span>`;
             h += `<span class="ve-media-type">${c.type==='video'?'🎬':'🖼️'}</span>`;
-            h += `<button class="ve-media-dup" onclick="event.stopPropagation();window._veDuplicateClip(${i})" title="복제" style="position:absolute;top:2px;right:22px;background:rgba(99,102,241,0.8);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-copy"></i></button>`;
+            h += `<button class="ve-media-dup" onclick="event.stopPropagation();window._veDuplicateClip(${i})" title="${_t('ve_duplicate','복제')}" style="position:absolute;top:2px;right:22px;background:rgba(99,102,241,0.8);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-copy"></i></button>`;
             h += `<button class="ve-media-del" onclick="event.stopPropagation();window._veRemoveClip(${i})">×</button>`;
             h += `</div>`;
         });
         h += '</div>';
     } else {
-        h += '<p class="ve-empty">이미지 또는 영상을 추가하세요</p>';
+        h += `<p class="ve-empty">${_t('ve_add_clip','이미지 또는 영상을 추가하세요')}</p>`;
     }
-    // 빈 공간 클릭 시 파일 업로드
     h += `<div class="ve-media-empty-area" onclick="document.getElementById('veFileInput').click()" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;" onmouseover="this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)'" onmouseout="this.style.borderColor='transparent';this.style.background='transparent'">
-        <span style="color:#4a5568;font-size:11px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>클릭하여 추가</span>
+        <span style="color:#4a5568;font-size:11px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>${_t('ve_click_to_add','클릭하여 추가')}</span>
     </div>`;
     el.innerHTML = h;
 }
@@ -959,36 +958,34 @@ window._veDeleteAiMusic = async function(idx) {
 };
 
 function renderTextTab(el) {
-    let h = '<div class="ve-sec"><b>텍스트</b>';
-    h += `<button class="ve-add-btn" onclick="window._veAddTextCenter()"><i class="fa-solid fa-font"></i> 캔버스에 텍스트 추가</button>`;
+    let h = `<div class="ve-sec"><b>${_t('ve_text','텍스트')}</b>`;
+    h += `<button class="ve-add-btn" onclick="window._veAddTextCenter()"><i class="fa-solid fa-font"></i> ${_t('ve_add_text','캔버스에 텍스트 추가')}</button>`;
     h += '</div>';
     const c = curClip();
     if (c && vm.oi>=0 && c.overlays[vm.oi] && c.overlays[vm.oi].type==='text') {
         const o = c.overlays[vm.oi];
-        h += '<div class="ve-sec"><b>텍스트 편집</b>';
-        h += `<label>내용</label><input class="ve-inp" value="${(o.text||'').replace(/"/g,'&quot;')}" oninput="window._veUpOL('text',this.value)">`;
-        h += `<label>크기 ${o.fontSize}px</label><input type="range" min="16" max="${Math.round(vm.w*.15)}" value="${o.fontSize}" oninput="window._veUpOL('fontSize',+this.value);this.previousElementSibling.textContent='크기 '+this.value+'px'">`;
-        h += `<label>색상</label><input type="color" value="${expandHex(o.color)}" oninput="window._veUpOL('color',this.value)" style="width:100%;height:28px">`;
-        h += `<div style="display:flex;gap:8px;margin:6px 0"><label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.bold?'checked':''} onchange="window._veUpOL('bold',this.checked)"> 굵게</label>`;
-        h += `<label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.shadow?'checked':''} onchange="window._veUpOL('shadow',this.checked)"> 그림자</label></div>`;
-        // 외곽선
-        h += `<div style="display:flex;gap:6px;margin:6px 0;align-items:center"><label style="color:#aaa;font-size:11px;white-space:nowrap">외곽선</label>`;
+        h += `<div class="ve-sec"><b>${_t('ve_text_edit','텍스트 편집')}</b>`;
+        h += `<label>${_t('ve_content','내용')}</label><input class="ve-inp" value="${(o.text||'').replace(/"/g,'&quot;')}" oninput="window._veUpOL('text',this.value)">`;
+        h += `<label>${_t('ve_size','크기')} ${o.fontSize}px</label><input type="range" min="16" max="${Math.round(vm.w*.15)}" value="${o.fontSize}" oninput="window._veUpOL('fontSize',+this.value);this.previousElementSibling.textContent='${_t('ve_size','크기')} '+this.value+'px'">`;
+        h += `<label>${_t('ve_color','색상')}</label><input type="color" value="${expandHex(o.color)}" oninput="window._veUpOL('color',this.value)" style="width:100%;height:28px">`;
+        h += `<div style="display:flex;gap:8px;margin:6px 0"><label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.bold?'checked':''} onchange="window._veUpOL('bold',this.checked)"> ${_t('ve_bold','굵게')}</label>`;
+        h += `<label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.shadow?'checked':''} onchange="window._veUpOL('shadow',this.checked)"> ${_t('ve_shadow','그림자')}</label></div>`;
+        h += `<div style="display:flex;gap:6px;margin:6px 0;align-items:center"><label style="color:#aaa;font-size:11px;white-space:nowrap">${_t('ve_outline','외곽선')}</label>`;
         h += `<input type="color" value="${expandHex(o.strokeColor||'#000000')}" oninput="window._veUpOL('strokeColor',this.value)" style="width:28px;height:24px;border:none;border-radius:4px;cursor:pointer">`;
-        h += `<input type="range" min="0" max="10" value="${o.strokeWidth||0}" oninput="window._veUpOL('strokeWidth',+this.value)" style="flex:1" title="외곽선 두께: ${o.strokeWidth||0}"></div>`;
-        // 배경 박스
-        h += `<div style="display:flex;gap:6px;margin:4px 0;align-items:center"><label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.bgBox?'checked':''} onchange="window._veUpOL('bgBox',this.checked)"> 배경 박스</label>`;
+        h += `<input type="range" min="0" max="10" value="${o.strokeWidth||0}" oninput="window._veUpOL('strokeWidth',+this.value)" style="flex:1" title="${_t('ve_outline','외곽선')}: ${o.strokeWidth||0}"></div>`;
+        h += `<div style="display:flex;gap:6px;margin:4px 0;align-items:center"><label style="flex:1;display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px"><input type="checkbox" ${o.bgBox?'checked':''} onchange="window._veUpOL('bgBox',this.checked)"> ${_t('ve_bg_box','배경 박스')}</label>`;
         h += `<input type="color" value="${expandHex(o.bgColor||'#000000')}" oninput="window._veUpOL('bgColor',this.value)" style="width:28px;height:24px;border:none;border-radius:4px;cursor:pointer" ${o.bgBox?'':'disabled'}></div>`;
-        h += `<label>폰트</label><select class="ve-inp" onchange="window._veUpOL('fontFamily',this.value)" style="max-height:200px">`;
+        h += `<label>${_t('ve_font','폰트')}</label><select class="ve-inp" onchange="window._veUpOL('fontFamily',this.value)" style="max-height:200px">`;
         const dynFonts=window.DYNAMIC_FONTS||[];
         const fallbackFonts=[{font_name:'sans-serif',font_family:'sans-serif'},{font_name:'serif',font_family:'serif'},{font_name:'monospace',font_family:'monospace'},{font_name:'cursive',font_family:'cursive'}];
         const fontList=dynFonts.length?[...fallbackFonts,...dynFonts]:fallbackFonts;
         fontList.forEach(f=>h+=`<option value="${f.font_family}"${o.fontFamily===f.font_family?' selected':''}>${f.font_name}</option>`);
         h += '</select>';
-        h += `<button class="ve-del-btn" onclick="window._veRemoveOL()"><i class="fa-solid fa-trash"></i> 삭제</button></div>`;
+        h += `<button class="ve-del-btn" onclick="window._veRemoveOL()"><i class="fa-solid fa-trash"></i> ${_t('ve_delete','삭제')}</button></div>`;
     }
     // layer list
     if (c && c.overlays.length) {
-        h += '<div class="ve-sec"><b>레이어</b>';
+        h += `<div class="ve-sec"><b>${_t('ve_layer','레이어')}</b>`;
         c.overlays.forEach((o,i)=>{
             const icon=o.type==='text'?'fa-font':o.type==='rect'?'fa-square':o.type==='circle'?'fa-circle':'fa-star';
             const nm=o.type==='text'?(o.text||'').substring(0,10):o.type==='sticker'?o.emoji:o.type;
@@ -1000,18 +997,17 @@ function renderTextTab(el) {
 }
 
 function renderElementTab(el) {
-    let h = '<div class="ve-sec"><b>도형</b><div class="ve-elem-grid">';
-    h += `<button class="ve-elem-btn" onclick="window._veStartAdd('rect')"><i class="fa-regular fa-square"></i><span>사각형</span></button>`;
-    h += `<button class="ve-elem-btn" onclick="window._veStartAdd('circle')"><i class="fa-regular fa-circle"></i><span>원</span></button>`;
+    let h = `<div class="ve-sec"><b>${_t('ve_shapes','도형')}</b><div class="ve-elem-grid">`;
+    h += `<button class="ve-elem-btn" onclick="window._veStartAdd('rect')"><i class="fa-regular fa-square"></i><span>${_t('ve_rect','사각형')}</span></button>`;
+    h += `<button class="ve-elem-btn" onclick="window._veStartAdd('circle')"><i class="fa-regular fa-circle"></i><span>${_t('ve_circle','원')}</span></button>`;
     h += '</div></div>';
-    h += '<div class="ve-sec"><b>스티커</b><div class="ve-sticker-grid">';
+    h += `<div class="ve-sec"><b>${_t('ve_sticker','스티커')}</b><div class="ve-sticker-grid">`;
     STICKERS.forEach(s=>h+=`<button class="ve-sticker-btn${vm.addSticker===s?' active':''}" onclick="window._vePickSticker('${s}')">${s}</button>`);
-    h += `</div><button class="ve-add-btn" onclick="window._veStartAdd('sticker')"><i class="fa-solid fa-hand-pointer"></i> 캔버스에 스티커 배치</button></div>`;
-    // Supabase library images
-    h += '<div class="ve-sec"><b>이미지 라이브러리</b>';
-    h += '<input class="ve-search-inp" id="veLibSearch" placeholder="검색..." oninput="window._veSearchLib(this.value)">';
-    h += '<div id="veLibGrid" class="ve-lib-grid2"><p class="ve-empty" style="grid-column:1/-1">로딩 중...</p></div>';
-    h += '<button class="ve-lib-more" onclick="window._veLoadMoreLib()"><i class="fa-solid fa-angles-down"></i> 더 보기</button>';
+    h += `</div><button class="ve-add-btn" onclick="window._veStartAdd('sticker')"><i class="fa-solid fa-hand-pointer"></i> ${_t('ve_place_sticker','캔버스에 스티커 배치')}</button></div>`;
+    h += `<div class="ve-sec"><b>${_t('ve_img_library','이미지 라이브러리')}</b>`;
+    h += `<input class="ve-search-inp" id="veLibSearch" placeholder="${_t('ve_search','검색...')}" oninput="window._veSearchLib(this.value)">`;
+    h += `<div id="veLibGrid" class="ve-lib-grid2"><p class="ve-empty" style="grid-column:1/-1">${_t('ve_loading','로딩 중...')}</p></div>`;
+    h += `<button class="ve-lib-more" onclick="window._veLoadMoreLib()"><i class="fa-solid fa-angles-down"></i> ${_t('ve_load_more','더 보기')}</button>`;
     h += '</div>';
     el.innerHTML = h;
     loadLibElements();
@@ -1020,7 +1016,7 @@ function renderElementTab(el) {
 async function loadLibElements(search) {
     const grid=document.getElementById('veLibGrid'); if(!grid) return;
     try {
-        const sb=window.sb; if(!sb){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">DB 연결 없음</p>';return;}
+        const sb=window.sb; if(!sb){grid.innerHTML=`<p class="ve-empty" style="grid-column:1/-1">${_t('ve_no_db','DB 연결 없음')}</p>`;return;}
         if(!vm.libItems||search!=null){
             let q=sb.from('library')
                 .select('id, thumb_url, data_url, category')
@@ -1036,12 +1032,12 @@ async function loadLibElements(search) {
         renderLibGrid(grid);
     } catch(e) {
         console.warn('Library load error:', e);
-        grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">로드 실패</p>';
+        grid.innerHTML=`<p class="ve-empty" style="grid-column:1/-1">${_t('ve_load_fail','로드 실패')}</p>`;
     }
 }
 
 function renderLibGrid(grid) {
-    if(!vm.libItems||!vm.libItems.length){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">이미지 없음</p>';return;}
+    if(!vm.libItems||!vm.libItems.length){grid.innerHTML=`<p class="ve-empty" style="grid-column:1/-1">${_t('ve_no_images','이미지 없음')}</p>`;return;}
     let h='';
     vm.libItems.forEach((item,idx)=>{
         const url=bestImageUrl(item);
@@ -1064,8 +1060,8 @@ window._veLoadMoreLib = async function() {
             vm.libPage=page+1;
             const grid=document.getElementById('veLibGrid');
             if(grid) renderLibGrid(grid);
-        } else { showToast('더 이상 이미지가 없습니다'); }
-    } catch(e){ showToast('로드 실패'); }
+        } else { showToast(_t('ve_no_more_images','더 이상 이미지가 없습니다')); }
+    } catch(e){ showToast(_t('ve_load_fail','로드 실패')); }
 };
 window._veSearchLib = function(q){
     clearTimeout(vm._libSearchTimer);
@@ -1079,14 +1075,14 @@ window._veAddLibImage = function(idx) {
     if(!item) return;
     const url=bestImageUrl(item);
     addOverlay('image', vm.w*.2, vm.h*.2, {url, w:vm.w*.4, h:vm.w*.4});
-    showToast('이미지 요소 추가됨');
+    showToast(_t('ve_element_added','이미지 요소 추가됨'));
 };
 
 function renderImageTab(el) {
-    let h = '<div class="ve-sec"><b>이미지 템플릿</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">에디터 이미지를 오버레이로 삽입</p>';
-    h += '<input class="ve-search-inp" id="veImgSearch" placeholder="검색..." oninput="window._veSearchImg(this.value)">';
-    h += '<div id="veImgGrid" class="ve-lib-grid2"><p class="ve-empty" style="grid-column:1/-1">로딩 중...</p></div>';
-    h += '<button class="ve-lib-more" onclick="window._veLoadMoreImg()"><i class="fa-solid fa-angles-down"></i> 더 보기</button>';
+    let h = `<div class="ve-sec"><b>${_t('ve_img_templates','이미지 템플릿')}</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">${_t('ve_img_tpl_desc','에디터 이미지를 오버레이로 삽입')}</p>`;
+    h += `<input class="ve-search-inp" id="veImgSearch" placeholder="${_t('ve_search','검색...')}" oninput="window._veSearchImg(this.value)">`;
+    h += `<div id="veImgGrid" class="ve-lib-grid2"><p class="ve-empty" style="grid-column:1/-1">${_t('ve_loading','로딩 중...')}</p></div>`;
+    h += `<button class="ve-lib-more" onclick="window._veLoadMoreImg()"><i class="fa-solid fa-angles-down"></i> ${_t('ve_load_more','더 보기')}</button>`;
     h += '</div>';
     el.innerHTML = h;
     loadImageTemplates();
@@ -1095,7 +1091,7 @@ function renderImageTab(el) {
 async function loadImageTemplates(search) {
     const grid=document.getElementById('veImgGrid'); if(!grid) return;
     try {
-        const sb=window.sb; if(!sb){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">DB 연결 없음</p>';return;}
+        const sb=window.sb; if(!sb){grid.innerHTML=`<p class="ve-empty" style="grid-column:1/-1">${_t('ve_no_db','DB 연결 없음')}</p>`;return;}
         if(!vm.imgItems||search!=null){
             let q=sb.from('library')
                 .select('id, thumb_url, data_url, category')
@@ -1111,12 +1107,12 @@ async function loadImageTemplates(search) {
         renderImgGrid(grid);
     } catch(e) {
         console.warn('Image template load error:', e);
-        grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">로드 실패</p>';
+        grid.innerHTML=`<p class="ve-empty" style="grid-column:1/-1">${_t('ve_load_fail','로드 실패')}</p>`;
     }
 }
 
 function renderImgGrid(grid) {
-    if(!vm.imgItems||!vm.imgItems.length){grid.innerHTML='<p class="ve-empty" style="grid-column:1/-1">이미지 없음</p>';return;}
+    if(!vm.imgItems||!vm.imgItems.length){grid.innerHTML=`<p class="ve-empty" style="grid-column:1/-1">${_t('ve_no_images','이미지 없음')}</p>`;return;}
     let h='';
     vm.imgItems.forEach((item,idx)=>{
         const url=bestImageUrl(item);
@@ -1139,8 +1135,8 @@ window._veLoadMoreImg = async function() {
             vm.imgPage=page+1;
             const grid=document.getElementById('veImgGrid');
             if(grid) renderImgGrid(grid);
-        } else { showToast('더 이상 이미지가 없습니다'); }
-    } catch(e){ showToast('로드 실패'); }
+        } else { showToast(_t('ve_no_more_images','더 이상 이미지가 없습니다')); }
+    } catch(e){ showToast(_t('ve_load_fail','로드 실패')); }
 };
 window._veSearchImg = function(q){
     clearTimeout(vm._imgSearchTimer);
@@ -1154,23 +1150,23 @@ window._veAddImgTemplate = function(idx) {
     if(!item) return;
     const url=bestImageUrl(item);
     addOverlay('image', vm.w*.1, vm.h*.1, {url, w:vm.w*.5, h:vm.h*.5});
-    showToast('이미지 템플릿 추가됨');
+    showToast(_t('ve_img_tpl_added','이미지 템플릿 추가됨'));
 };
 
 function renderTransitionTab(el) {
     const c=curClip(), cur=c?c.transition:'fade';
-    let h='<div class="ve-sec"><b>전환 효과</b><div class="ve-trans-grid">';
+    let h=`<div class="ve-sec"><b>${_t('ve_transitions','전환 효과')}</b><div class="ve-trans-grid">`;
     TRANSITIONS.forEach(t=>{ h+=`<button class="ve-trans-btn${cur===t.id?' active':''}" onclick="window._veSetTrans('${t.id}')"><div style="color:${t.color};font-size:18px"><i class="fa-solid ${t.icon}"></i></div><span>${t.name}</span></button>`; });
     h+='</div></div>';
     if(c){
-        h+='<div class="ve-sec"><b>장면 시간</b>';
-        h+=`<label>${c.duration}초</label><input type="range" min="0.5" max="15" step="0.5" value="${c.duration}" oninput="window._veSetDur(+this.value);this.previousElementSibling.textContent=this.value+'초'">`;
+        h+=`<div class="ve-sec"><b>${_t('ve_scene_time','장면 시간')}</b>`;
+        h+=`<label>${c.duration}${_t('ve_sec_unit','초')}</label><input type="range" min="0.5" max="15" step="0.5" value="${c.duration}" oninput="window._veSetDur(+this.value);this.previousElementSibling.textContent=this.value+'${_t('ve_sec_unit','초')}'">`;
         h+='</div>';
-        // 속도 제어
         const spd = c.speed || 1.0;
-        const spdLabels = {0.25:'0.25x',0.5:'0.5x',0.75:'0.75x',1:'1x (보통)',1.5:'1.5x',2:'2x',3:'3x',4:'4x'};
-        h+='<div class="ve-sec"><b>재생 속도</b>';
-        h+=`<label>${spdLabels[spd]||spd+'x'}</label><input type="range" min="0.25" max="4" step="0.25" value="${spd}" oninput="window._veSetSpeed(+this.value);this.previousElementSibling.textContent=({0.25:'0.25x',0.5:'0.5x',0.75:'0.75x',1:'1x (보통)',1.5:'1.5x',2:'2x',3:'3x',4:'4x'})[this.value]||this.value+'x'">`;
+        const spdNormal = '1x ('+_t('ve_speed_normal','보통')+')';
+        const spdLabels = {0.25:'0.25x',0.5:'0.5x',0.75:'0.75x',1:spdNormal,1.5:'1.5x',2:'2x',3:'3x',4:'4x'};
+        h+=`<div class="ve-sec"><b>${_t('ve_play_speed','재생 속도')}</b>`;
+        h+=`<label>${spdLabels[spd]||spd+'x'}</label><input type="range" min="0.25" max="4" step="0.25" value="${spd}" oninput="window._veSetSpeed(+this.value);var _sn='1x (${_t('ve_speed_normal','보통')})',_sl={0.25:'0.25x',0.5:'0.5x',0.75:'0.75x',1:_sn,1.5:'1.5x',2:'2x',3:'3x',4:'4x'};this.previousElementSibling.textContent=_sl[this.value]||this.value+'x'">`;
         h+='</div>';
     }
     el.innerHTML = h;
@@ -1178,20 +1174,20 @@ function renderTransitionTab(el) {
 
 function renderAdjustTab(el) {
     const c=curClip();
-    if(!c){el.innerHTML='<p class="ve-empty">클립을 선택하세요</p>';return;}
+    if(!c){el.innerHTML=`<p class="ve-empty">${_t('ve_select_clip','클립을 선택하세요')}</p>`;return;}
     const a=c.adj;
-    let h='<div class="ve-sec"><b>이미지 보정</b>';
-    h+=`<label>밝기 ${a.brightness}</label><input type="range" min="-100" max="100" value="${a.brightness}" oninput="window._veAdj('brightness',+this.value);this.previousElementSibling.textContent='밝기 '+this.value">`;
-    h+=`<label>대비 ${a.contrast}</label><input type="range" min="-100" max="100" value="${a.contrast}" oninput="window._veAdj('contrast',+this.value);this.previousElementSibling.textContent='대비 '+this.value">`;
-    h+=`<label>채도 ${a.saturation}%</label><input type="range" min="0" max="300" value="${a.saturation}" oninput="window._veAdj('saturation',+this.value);this.previousElementSibling.textContent='채도 '+this.value+'%'">`;
-    h+=`<label>블러 ${a.blur}px</label><input type="range" min="0" max="20" step="0.5" value="${a.blur}" oninput="window._veAdj('blur',+this.value);this.previousElementSibling.textContent='블러 '+this.value+'px'">`;
-    h+=`<label>색조 ${a.hue}°</label><input type="range" min="0" max="360" value="${a.hue}" oninput="window._veAdj('hue',+this.value);this.previousElementSibling.textContent='색조 '+this.value+'°'">`;
-    h+=`<button class="ve-reset-btn" onclick="window._veResetAdj()"><i class="fa-solid fa-rotate-left"></i> 초기화</button></div>`;
+    let h=`<div class="ve-sec"><b>${_t('ve_img_adjust','이미지 보정')}</b>`;
+    h+=`<label>${_t('ve_brightness','밝기')} ${a.brightness}</label><input type="range" min="-100" max="100" value="${a.brightness}" oninput="window._veAdj('brightness',+this.value);this.previousElementSibling.textContent='${_t('ve_brightness','밝기')} '+this.value">`;
+    h+=`<label>${_t('ve_contrast','대비')} ${a.contrast}</label><input type="range" min="-100" max="100" value="${a.contrast}" oninput="window._veAdj('contrast',+this.value);this.previousElementSibling.textContent='${_t('ve_contrast','대비')} '+this.value">`;
+    h+=`<label>${_t('ve_saturation','채도')} ${a.saturation}%</label><input type="range" min="0" max="300" value="${a.saturation}" oninput="window._veAdj('saturation',+this.value);this.previousElementSibling.textContent='${_t('ve_saturation','채도')} '+this.value+'%'">`;
+    h+=`<label>${_t('ve_blur_label','블러')} ${a.blur}px</label><input type="range" min="0" max="20" step="0.5" value="${a.blur}" oninput="window._veAdj('blur',+this.value);this.previousElementSibling.textContent='${_t('ve_blur_label','블러')} '+this.value+'px'">`;
+    h+=`<label>${_t('ve_hue','색조')} ${a.hue}°</label><input type="range" min="0" max="360" value="${a.hue}" oninput="window._veAdj('hue',+this.value);this.previousElementSibling.textContent='${_t('ve_hue','색조')} '+this.value+'°'">`;
+    h+=`<button class="ve-reset-btn" onclick="window._veResetAdj()"><i class="fa-solid fa-rotate-left"></i> ${_t('ve_reset','초기화')}</button></div>`;
     el.innerHTML = h;
 }
 
 function renderTemplateTab(el) {
-    let h='<div class="ve-sec"><b>템플릿</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">현재 장면에 적용</p>';
+    let h=`<div class="ve-sec"><b>${_t('ve_templates','템플릿')}</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">${_t('ve_apply_to_scene','현재 장면에 적용')}</p>`;
     TEMPLATES.forEach(t=>{h+=`<button class="ve-tpl-btn" onclick="window._veApplyTpl('${t.id}')"><i class="fa-solid ${t.icon}"></i> ${t.name}</button>`;});
     h+='</div>';
     el.innerHTML = h;
@@ -1204,15 +1200,14 @@ const VE_SAVE_KEY='ve_projects';
 
 function renderSaveTab(el){
     const saves=_veGetSaves();
-    // 내보내기 프리셋
     const presets=[
-        {fmt:'landscape',icon:'fa-brands fa-youtube',label:'YouTube',res:'1920×1080',color:'#ff0000',tip:'16:9 가로 영상'},
-        {fmt:'portrait',icon:'fa-solid fa-mobile-screen',label:'Shorts / TikTok',res:'1080×1920',color:'#25f4ee',tip:'9:16 세로 영상'},
-        {fmt:'square',icon:'fa-brands fa-instagram',label:'Instagram',res:'1080×1080',color:'#e1306c',tip:'1:1 정사각형'},
-        {fmt:'landscape',icon:'fa-solid fa-display',label:'프레젠테이션',res:'1920×1080',color:'#4285f4',tip:'16:9 HD'},
+        {fmt:'landscape',icon:'fa-brands fa-youtube',label:'YouTube',res:'1920×1080',color:'#ff0000',tip:'16:9'},
+        {fmt:'portrait',icon:'fa-solid fa-mobile-screen',label:'Shorts / TikTok',res:'1080×1920',color:'#25f4ee',tip:'9:16'},
+        {fmt:'square',icon:'fa-brands fa-instagram',label:'Instagram',res:'1080×1080',color:'#e1306c',tip:'1:1'},
+        {fmt:'landscape',icon:'fa-solid fa-display',label:_t('ve_presentation','프레젠테이션'),res:'1920×1080',color:'#4285f4',tip:'16:9 HD'},
     ];
     const curFmt=vm.format;
-    let h='<div class="ve-sec"><b>내보내기 프리셋</b>';
+    let h=`<div class="ve-sec"><b>${_t('ve_export_presets','내보내기 프리셋')}</b>`;
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px">';
     presets.forEach(p=>{
         const active=p.fmt===curFmt;
@@ -1225,15 +1220,15 @@ function renderSaveTab(el){
     });
     h+='</div>';
     const curF=FORMATS.find(x=>x.id===curFmt)||FORMATS[0];
-    h+=`<div style="margin-top:6px;padding:6px 8px;background:#111827;border-radius:6px;font-size:10px;color:#9ca3af"><i class="fa-solid fa-circle-info"></i> 현재: <b style="color:#e0e0e8">${curF.name} ${curF.w}×${curF.h}</b> · WebM VP9 · 5Mbps</div>`;
+    h+=`<div style="margin-top:6px;padding:6px 8px;background:#111827;border-radius:6px;font-size:10px;color:#9ca3af"><i class="fa-solid fa-circle-info"></i> ${_t('ve_current','현재')}: <b style="color:#e0e0e8">${curF.name} ${curF.w}×${curF.h}</b> · WebM VP9 · 5Mbps</div>`;
     h+='</div>';
-    h+='<div class="ve-sec"><b>프로젝트 저장</b>';
-    h+=`<input class="ve-inp" id="veSaveName" placeholder="프로젝트 이름" value="프로젝트 ${saves.length+1}">`;
-    h+=`<button class="ve-add-btn" onclick="window._veSaveProject()"><i class="fa-solid fa-floppy-disk"></i> 저장</button>`;
+    h+=`<div class="ve-sec"><b>${_t('ve_save_project','프로젝트 저장')}</b>`;
+    h+=`<input class="ve-inp" id="veSaveName" placeholder="${_t('ve_project_name','프로젝트 이름')}" value="${_t('ve_project','프로젝트')} ${saves.length+1}">`;
+    h+=`<button class="ve-add-btn" onclick="window._veSaveProject()"><i class="fa-solid fa-floppy-disk"></i> ${_t('ve_save','저장')}</button>`;
     h+='</div>';
-    h+='<div class="ve-sec"><b>저장된 프로젝트</b>';
+    h+=`<div class="ve-sec"><b>${_t('ve_saved_projects','저장된 프로젝트')}</b>`;
     if(!saves.length){
-        h+='<p class="ve-empty">저장된 프로젝트 없음</p>';
+        h+=`<p class="ve-empty">${_t('ve_no_saved','저장된 프로젝트 없음')}</p>`;
     } else {
         saves.forEach((s,i)=>{
             const date=new Date(s.savedAt).toLocaleString();
@@ -1243,8 +1238,8 @@ function renderSaveTab(el){
             h+=`<div style="font-size:12px;font-weight:600;color:#e0e0e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||'Untitled'}</div>`;
             h+=`<div style="font-size:10px;color:#6b7280">${date} · ${clipCount} clips · ${s.format||'landscape'}</div>`;
             h+=`</div>`;
-            h+=`<button class="ve-save-load" onclick="window._veLoadProject(${i})" title="불러오기"><i class="fa-solid fa-folder-open"></i></button>`;
-            h+=`<button class="ve-save-del" onclick="window._veDeleteProject(${i})" title="삭제"><i class="fa-solid fa-trash"></i></button>`;
+            h+=`<button class="ve-save-load" onclick="window._veLoadProject(${i})" title="${_t('ve_load','불러오기')}"><i class="fa-solid fa-folder-open"></i></button>`;
+            h+=`<button class="ve-save-del" onclick="window._veDeleteProject(${i})" title="${_t('ve_delete','삭제')}"><i class="fa-solid fa-trash"></i></button>`;
             h+=`</div>`;
         });
     }
@@ -1274,7 +1269,7 @@ function _clipToDataUrl(clip){
 window._veSaveProject = async function(){
     const nameEl=document.getElementById('veSaveName');
     const name=(nameEl&&nameEl.value)||'Untitled';
-    showToast('저장 중...');
+    showToast(_t('ve_saving','저장 중...'));
     const clipData=[];
     for(const c of vm.clips){
         const dataUrl=await _clipToDataUrl(c);
@@ -1316,16 +1311,15 @@ window._veSaveProject = async function(){
     if(saves.length>10) saves.length=10;
     try{
         localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));
-        showToast('저장 완료: '+name);
+        showToast(_t('ve_saved','저장 완료')+': '+name);
     }catch(e){
         if(e.name==='QuotaExceededError'){
-            // try saving without full image data
             clipData.forEach(c=>{c.dataUrl=c.thumbUrl;});
             project.clips=clipData;
             saves[0]=project;
-            try{localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));showToast('저장 완료 (썸네일)');}
-            catch(e2){alert('저장 실패: 용량 초과');}
-        } else alert('저장 실패: '+e.message);
+            try{localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));showToast(_t('ve_saved_thumb','저장 완료 (썸네일)'));}
+            catch(e2){alert(_t('ve_save_fail_quota','저장 실패: 용량 초과'));}
+        } else alert(_t('ve_save_fail','저장 실패')+': '+e.message);
     }
     refreshLeftPanel();
 };
@@ -1333,7 +1327,7 @@ window._veSaveProject = async function(){
 window._veLoadProject = function(idx){
     const saves=_veGetSaves();
     const p=saves[idx]; if(!p) return;
-    if(vm.clips.length&&!confirm('현재 프로젝트를 덮어쓸까요?')) return;
+    if(vm.clips.length&&!confirm(_t('ve_overwrite_confirm','현재 프로젝트를 덮어쓸까요?'))) return;
     // cleanup current
     vm.clips.forEach(c=>{try{URL.revokeObjectURL(c.url);}catch(e){}});
     vm.clips=[];vm.ci=0;vm.oi=-1;
@@ -1398,7 +1392,7 @@ window._veLoadProject = function(idx){
             img.src=cd.dataUrl||cd.thumbUrl||'';
         }
     });
-    showToast('불러옴: '+p.name);
+    showToast(_t('ve_loaded','불러옴')+': '+p.name);
     vm.leftTab='media';
 };
 
@@ -1412,7 +1406,7 @@ function _restoreOverlayImages(clip){
 }
 
 window._veDeleteProject = function(idx){
-    if(!confirm('삭제할까요?')) return;
+    if(!confirm(_t('ve_delete_confirm','삭제할까요?'))) return;
     const saves=_veGetSaves();
     saves.splice(idx,1);
     localStorage.setItem(VE_SAVE_KEY,JSON.stringify(saves));
@@ -1425,50 +1419,48 @@ window._veDeleteProject = function(idx){
 function refreshRightPanel() {
     const el=document.getElementById('veRightContent'); if(!el) return;
     const c=curClip();
-    if(!c){el.innerHTML='<p class="ve-empty">클립을 선택하세요</p>';return;}
+    if(!c){el.innerHTML=`<p class="ve-empty">${_t('ve_select_clip','클립을 선택하세요')}</p>`;return;}
     let h='';
     if(vm.oi>=0 && c.overlays[vm.oi]) {
         const o=c.overlays[vm.oi];
-        h+='<div class="ve-sec"><b>선택된 요소</b>';
-        h+=`<label>타입: ${o.type}</label>`;
+        h+=`<div class="ve-sec"><b>${_t('ve_selected_element','선택된 요소')}</b>`;
+        h+=`<label>${_t('ve_type','타입')}: ${o.type}</label>`;
         if(o.type==='text'){
-            h+=`<label>내용</label><input class="ve-inp" value="${(o.text||'').replace(/"/g,'&quot;')}" oninput="window._veUpOL('text',this.value)">`;
-            h+=`<label>크기 ${o.fontSize}px</label><input type="range" min="16" max="${Math.round(vm.w*.15)}" value="${o.fontSize}" oninput="window._veUpOL('fontSize',+this.value)">`;
-            h+=`<label>색상</label><input type="color" value="${expandHex(o.color)}" oninput="window._veUpOL('color',this.value)" style="width:100%;height:24px">`;
-            h+=`<label>폰트</label><select class="ve-inp" onchange="window._veUpOL('fontFamily',this.value)">`;
+            h+=`<label>${_t('ve_content','내용')}</label><input class="ve-inp" value="${(o.text||'').replace(/"/g,'&quot;')}" oninput="window._veUpOL('text',this.value)">`;
+            h+=`<label>${_t('ve_size','크기')} ${o.fontSize}px</label><input type="range" min="16" max="${Math.round(vm.w*.15)}" value="${o.fontSize}" oninput="window._veUpOL('fontSize',+this.value)">`;
+            h+=`<label>${_t('ve_color','색상')}</label><input type="color" value="${expandHex(o.color)}" oninput="window._veUpOL('color',this.value)" style="width:100%;height:24px">`;
+            h+=`<label>${_t('ve_font','폰트')}</label><select class="ve-inp" onchange="window._veUpOL('fontFamily',this.value)">`;
             const rFonts=window.DYNAMIC_FONTS||[];const rFB=[{font_name:'sans-serif',font_family:'sans-serif'},{font_name:'serif',font_family:'serif'}];
             (rFonts.length?[...rFB,...rFonts]:rFB).forEach(f=>h+=`<option value="${f.font_family}"${o.fontFamily===f.font_family?' selected':''}>${f.font_name}</option>`);
             h+='</select>';
         } else if(o.type==='image'){
-            h+=`<label>너비 ${Math.round(o.w)}</label><input type="range" min="50" max="${vm.w}" value="${o.w}" oninput="window._veUpOL('w',+this.value)">`;
-            h+=`<label>높이 ${Math.round(o.h)}</label><input type="range" min="30" max="${vm.h}" value="${o.h}" oninput="window._veUpOL('h',+this.value)">`;
+            h+=`<label>${_t('ve_width','너비')} ${Math.round(o.w)}</label><input type="range" min="50" max="${vm.w}" value="${o.w}" oninput="window._veUpOL('w',+this.value)">`;
+            h+=`<label>${_t('ve_height','높이')} ${Math.round(o.h)}</label><input type="range" min="30" max="${vm.h}" value="${o.h}" oninput="window._veUpOL('h',+this.value)">`;
         } else if(o.type==='rect'){
-            h+=`<label>채우기</label><input type="color" value="${rgbaHex(o.fill)}" oninput="window._veUpOL('fill',this.value)" style="width:100%;height:24px">`;
-            h+=`<label>너비 ${Math.round(o.w)}</label><input type="range" min="50" max="${vm.w}" value="${o.w}" oninput="window._veUpOL('w',+this.value)">`;
-            h+=`<label>높이 ${Math.round(o.h)}</label><input type="range" min="30" max="${vm.h}" value="${o.h}" oninput="window._veUpOL('h',+this.value)">`;
+            h+=`<label>${_t('ve_fill','채우기')}</label><input type="color" value="${rgbaHex(o.fill)}" oninput="window._veUpOL('fill',this.value)" style="width:100%;height:24px">`;
+            h+=`<label>${_t('ve_width','너비')} ${Math.round(o.w)}</label><input type="range" min="50" max="${vm.w}" value="${o.w}" oninput="window._veUpOL('w',+this.value)">`;
+            h+=`<label>${_t('ve_height','높이')} ${Math.round(o.h)}</label><input type="range" min="30" max="${vm.h}" value="${o.h}" oninput="window._veUpOL('h',+this.value)">`;
         } else if(o.type==='circle'){
-            h+=`<label>채우기</label><input type="color" value="${rgbaHex(o.fill)}" oninput="window._veUpOL('fill',this.value)" style="width:100%;height:24px">`;
-            h+=`<label>반지름 ${Math.round(o.r)}</label><input type="range" min="10" max="${vm.w/2}" value="${o.r}" oninput="window._veUpOL('r',+this.value)">`;
+            h+=`<label>${_t('ve_fill','채우기')}</label><input type="color" value="${rgbaHex(o.fill)}" oninput="window._veUpOL('fill',this.value)" style="width:100%;height:24px">`;
+            h+=`<label>${_t('ve_radius','반지름')} ${Math.round(o.r)}</label><input type="range" min="10" max="${vm.w/2}" value="${o.r}" oninput="window._veUpOL('r',+this.value)">`;
         } else if(o.type==='sticker'){
-            h+=`<label>크기 ${o.size}</label><input type="range" min="20" max="${Math.round(vm.w*.2)}" value="${o.size}" oninput="window._veUpOL('size',+this.value)">`;
+            h+=`<label>${_t('ve_size','크기')} ${o.size}</label><input type="range" min="20" max="${Math.round(vm.w*.2)}" value="${o.size}" oninput="window._veUpOL('size',+this.value)">`;
         }
-        // rotation control (all overlay types)
         const rot=Math.round(o.rotation||0);
-        h+=`<label>회전 ${rot}°</label><input type="range" min="-180" max="180" value="${rot}" oninput="window._veUpOL('rotation',+this.value);this.previousElementSibling.textContent='회전 '+this.value+'°'">`;
-        // time range
+        h+=`<label>${_t('ve_rotation','회전')} ${rot}°</label><input type="range" min="-180" max="180" value="${rot}" oninput="window._veUpOL('rotation',+this.value);this.previousElementSibling.textContent='${_t('ve_rotation','회전')} '+this.value+'°'">`;
         const ts=o.tStart!=null?o.tStart:0, te=o.tEnd!=null?o.tEnd:c.duration;
-        h+=`<label>시작 ${ts.toFixed(1)}초</label><input type="range" min="0" max="${c.duration}" step="0.1" value="${ts}" oninput="window._veUpOL('tStart',+this.value);this.previousElementSibling.textContent='시작 '+(+this.value).toFixed(1)+'초';window._veRefreshTL()">`;
-        h+=`<label>끝 ${te.toFixed(1)}초</label><input type="range" min="0" max="${c.duration}" step="0.1" value="${te}" oninput="window._veUpOL('tEnd',+this.value);this.previousElementSibling.textContent='끝 '+(+this.value).toFixed(1)+'초';window._veRefreshTL()">`;
-        h+=`<button class="ve-del-btn" onclick="window._veRemoveOL()"><i class="fa-solid fa-trash"></i> 삭제</button></div>`;
+        h+=`<label>${_t('ve_start','시작')} ${ts.toFixed(1)}${_t('ve_sec_unit','초')}</label><input type="range" min="0" max="${c.duration}" step="0.1" value="${ts}" oninput="window._veUpOL('tStart',+this.value);this.previousElementSibling.textContent='${_t('ve_start','시작')} '+(+this.value).toFixed(1)+'${_t('ve_sec_unit','초')}';window._veRefreshTL()">`;
+        h+=`<label>${_t('ve_end','끝')} ${te.toFixed(1)}${_t('ve_sec_unit','초')}</label><input type="range" min="0" max="${c.duration}" step="0.1" value="${te}" oninput="window._veUpOL('tEnd',+this.value);this.previousElementSibling.textContent='${_t('ve_end','끝')} '+(+this.value).toFixed(1)+'${_t('ve_sec_unit','초')}';window._veRefreshTL()">`;
+        h+=`<button class="ve-del-btn" onclick="window._veRemoveOL()"><i class="fa-solid fa-trash"></i> ${_t('ve_delete','삭제')}</button></div>`;
     } else {
-        h+='<div class="ve-sec"><b>클립 속성</b>';
-        h+=`<label>타입: ${c.type==='video'?'영상':'이미지'}</label>`;
-        h+=`<label>시간: ${c.duration}초</label><input type="range" min="0.5" max="15" step="0.5" value="${c.duration}" oninput="window._veSetDur(+this.value);updateTimeline()">`;
-        h+=`<label>전환: ${(TRANSITIONS.find(t=>t.id===c.transition)||{}).name||'없음'}</label>`;
+        h+=`<div class="ve-sec"><b>${_t('ve_clip_props','클립 속성')}</b>`;
+        h+=`<label>${_t('ve_type','타입')}: ${c.type==='video'?_t('ve_video','영상'):_t('ve_image','이미지')}</label>`;
+        h+=`<label>${_t('ve_time','시간')}: ${c.duration}${_t('ve_sec_unit','초')}</label><input type="range" min="0.5" max="15" step="0.5" value="${c.duration}" oninput="window._veSetDur(+this.value);updateTimeline()">`;
+        h+=`<label>${_t('ve_transition','전환')}: ${(TRANSITIONS.find(t=>t.id===c.transition)||{}).name||_t('ve_trans_none','없음')}</label>`;
         h+='</div>';
         // lock/unlock + position
         const isLocked=c.locked!==false;
-        h+='<div class="ve-sec"><b>위치</b>';
+        h+=`<div class="ve-sec"><b>${_t('ve_position','위치')}</b>`;
         h+=`<button class="ve-lock-btn" onclick="window._veToggleLock()" style="width:100%;padding:8px;border-radius:8px;border:1px solid ${isLocked?'#ef4444':'#22c55e'};background:${isLocked?'rgba(239,68,68,0.1)':'rgba(34,197,94,0.1)'};color:${isLocked?'#f87171':'#4ade80'};font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">`;
         h+=`<i class="fa-solid ${isLocked?'fa-lock':'fa-lock-open'}"></i> ${isLocked?_t('ve_locked','잠김 — 클릭하여 잠금 해제'):_t('ve_unlocked','잠금 해제됨 — 드래그로 이동 가능')}</button>`;
         if(!isLocked){
@@ -1481,10 +1473,10 @@ function refreshRightPanel() {
         h+='</div>';
         // adjustments
         const a=c.adj;
-        h+='<div class="ve-sec"><b>보정</b>';
-        h+=`<label>밝기 ${a.brightness}</label><input type="range" min="-100" max="100" value="${a.brightness}" oninput="window._veAdj('brightness',+this.value)">`;
-        h+=`<label>대비 ${a.contrast}</label><input type="range" min="-100" max="100" value="${a.contrast}" oninput="window._veAdj('contrast',+this.value)">`;
-        h+=`<label>채도 ${a.saturation}%</label><input type="range" min="0" max="300" value="${a.saturation}" oninput="window._veAdj('saturation',+this.value)">`;
+        h+=`<div class="ve-sec"><b>${_t('ve_adjust','보정')}</b>`;
+        h+=`<label>${_t('ve_brightness','밝기')} ${a.brightness}</label><input type="range" min="-100" max="100" value="${a.brightness}" oninput="window._veAdj('brightness',+this.value)">`;
+        h+=`<label>${_t('ve_contrast','대비')} ${a.contrast}</label><input type="range" min="-100" max="100" value="${a.contrast}" oninput="window._veAdj('contrast',+this.value)">`;
+        h+=`<label>${_t('ve_saturation','채도')} ${a.saturation}%</label><input type="range" min="0" max="300" value="${a.saturation}" oninput="window._veAdj('saturation',+this.value)">`;
         h+='</div>';
     }
     el.innerHTML = h;
@@ -1593,7 +1585,7 @@ function renderAudioTrack() {
         el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${a?filterTagsByCountry(a.tags):_t('ve_audio_label','Audio')}</div>`;
         return;
     }
-    if(vm.music==='none'){el.innerHTML='<div class="ve-tl-audio-empty">오디오 탭에서 음악을 선택하세요</div>';return;}
+    if(vm.music==='none'){el.innerHTML=`<div class="ve-tl-audio-empty">${_t('ve_audio_select','오디오 탭에서 음악을 선택하세요')}</div>`;return;}
     const m=MUSIC.find(x=>x.id===vm.music);
     el.innerHTML=`<div class="ve-tl-audio-clip" style="width:100%"><i class="fa-solid fa-music"></i> ${m?m.name:vm.music}</div>`;
 }
@@ -1690,7 +1682,7 @@ window._veRemoveClip = removeClip;
 window._veDuplicateClip = duplicateClip;
 window._veSelectOL = selectOverlay;
 window._veRemoveOL = () => removeOverlay(vm.oi);
-window._veStartAdd = (mode) => { vm.addMode=mode; vm.canvas.style.cursor='crosshair'; showToast('캔버스를 클릭하여 배치'); };
+window._veStartAdd = (mode) => { vm.addMode=mode; vm.canvas.style.cursor='crosshair'; showToast(_t('ve_canvas_click','캔버스를 클릭하여 배치')); };
 window._veAddTextCenter = () => {
     const c=curClip(); if(!c) return alert(_t('ve_clip_required','Please add a clip first'));
     addOverlay('text', vm.w/2, vm.h/2); vm.leftTab='text'; refreshLeftPanel();
@@ -1714,17 +1706,17 @@ window._veCtx = (action) => {
     const ols=c.overlays, i=vm.oi;
     if(action==='copy'){
         if(i>=0&&ols[i]) vm.clipboard=JSON.parse(JSON.stringify(ols[i]));
-        showToast('복사됨'); return;
+        showToast(_t('ve_copied','복사됨')); return;
     }
     if(action==='paste'){
-        if(!vm.clipboard) return showToast('복사된 요소 없음');
+        if(!vm.clipboard) return showToast(_t('ve_no_clipboard','복사된 요소 없음'));
         const no=JSON.parse(JSON.stringify(vm.clipboard));
-        no.x+=30;no.y+=30; // offset
+        no.x+=30;no.y+=30;
         if(no.type==='image'){const img=new Image();img.src=no.url||'';no.img=img;img.onload=()=>render();}
-        ols.push(no); vm.oi=ols.length-1; render();updateAll(); showToast('붙여넣기 완료'); return;
+        ols.push(no); vm.oi=ols.length-1; render();updateAll(); showToast(_t('ve_pasted','붙여넣기 완료')); return;
     }
     if(i<0) return;
-    if(action==='delete'){ removeOverlay(i); showToast('삭제됨'); return; }
+    if(action==='delete'){ removeOverlay(i); showToast(_t('ve_deleted','삭제됨')); return; }
     if(action==='front'){ const [o]=ols.splice(i,1); ols.push(o); vm.oi=ols.length-1; }
     else if(action==='back'){ const [o]=ols.splice(i,1); ols.unshift(o); vm.oi=0; }
     else if(action==='forward'&&i<ols.length-1){ [ols[i],ols[i+1]]=[ols[i+1],ols[i]]; vm.oi=i+1; }
@@ -1750,7 +1742,7 @@ window._veApplyPreset = (fmtId) => {
     window._veChangeFormat(fmtId);
     updateFormatBtns();
     refreshLeftPanel();
-    showToast(`프리셋 적용: ${(FORMATS.find(x=>x.id===fmtId)||{}).name||fmtId}`);
+    showToast(_t('ve_preset_applied','프리셋 적용')+`: ${(FORMATS.find(x=>x.id===fmtId)||{}).name||fmtId}`);
 };
 window._veTlClick = (e) => {
     const rect=document.getElementById('veTlScroll').getBoundingClientRect();
@@ -1893,7 +1885,7 @@ window.vePause = function(){
     if(!vm.playing)return;
     vm.paused=!vm.paused;
     const btn=document.getElementById('vePauseBtn');
-    if(vm.paused){if(btn)btn.innerHTML='<i class="fa-solid fa-play"></i>';stopMusicPreview();showToast('일시정지 — 캔버스에서 편집 가능');}
+    if(vm.paused){if(btn)btn.innerHTML='<i class="fa-solid fa-play"></i>';stopMusicPreview();showToast(_t('ve_paused','일시정지 — 캔버스에서 편집 가능'));}
     else{if(btn)btn.innerHTML='<i class="fa-solid fa-pause"></i>';playMusicPreview(vm.music);}
 };
 
@@ -2060,7 +2052,7 @@ function onKeyDown(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
     if(e.key==='Delete'||e.key==='Backspace'){
         e.preventDefault();
-        if(vm.oi>=0){removeOverlay(vm.oi);showToast('요소 삭제됨');}
+        if(vm.oi>=0){removeOverlay(vm.oi);showToast(_t('ve_element_deleted','요소 삭제됨'));}
     }
 }
 
@@ -2240,7 +2232,7 @@ window.openVideoMaker = function(label) {
     const dock=document.querySelector('.bottom-dock');if(dock)dock.style.display='none';
     const mcd=document.getElementById('mobileControlDock');if(mcd)mcd.style.display='none';
     const title=document.getElementById('veTitle');
-    if(title)title.textContent='영상 편집기';
+    if(title)title.textContent=_t('ve_editor_title','영상 편집기');
     vm.canvas=document.getElementById('veCanvas');
     if(vm.canvas){vm.canvas.width=vm.w;vm.canvas.height=vm.h;vm.ctx=vm.canvas.getContext('2d');vm.canvas.style.transform='';vm.canvas.style.cursor='default';}
     const centerEl=document.querySelector('.ve-center');if(centerEl)centerEl.style.overflow='hidden';
@@ -2301,13 +2293,13 @@ function updateAiBar() {
 
 window._veAiGenerate = async function() {
     const c = curClip();
-    if (!c || c.type !== 'image') return showToast('이미지 클립을 선택하세요');
+    if (!c || c.type !== 'image') return showToast(_t('ve_img_clip_needed','이미지 클립을 선택하세요'));
     const sb = window.sb;
-    if (!sb) return showToast('DB 연결이 필요합니다');
+    if (!sb) return showToast(_t('ve_db_required','DB 연결이 필요합니다'));
 
     const promptInput = document.getElementById('veAiPrompt');
     const prompt = promptInput ? promptInput.value.trim() : '';
-    if (!prompt) return showToast('움직임을 설명하는 프롬프트를 입력하세요');
+    if (!prompt) return showToast(_t('ve_prompt_motion','움직임을 설명하는 프롬프트를 입력하세요'));
 
     // Backup original image before AI conversion
     const origCanvas = document.createElement('canvas');
@@ -2482,7 +2474,7 @@ async function _veAiReplaceClip(videoUrl) {
 
 window._veAiRevert = function() {
     const c = curClip();
-    if (!c || !c.origImageData) return showToast('원본 이미지가 없습니다');
+    if (!c || !c.origImageData) return showToast(_t('ve_no_original','원본 이미지가 없습니다'));
     if (!confirm('AI 효과를 제거하고 원래 이미지로 복원할까요?')) return;
     const ci = vm.ci;
     const img = new Image();
@@ -2499,7 +2491,7 @@ window._veAiRevert = function() {
         delete c.origImageData;
         delete c.origThumbUrl;
         selectClip(ci);
-        showToast('원래 이미지로 복원됨');
+        showToast(_t('ve_restored','원래 이미지로 복원됨'));
     };
     img.src = c.origImageData;
 };

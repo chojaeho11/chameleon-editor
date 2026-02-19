@@ -2,87 +2,89 @@
 import { pageDataList, currentPageIndex, goToPage, addNewPage, deleteCurrentPage } from "./canvas-pages.js?v=123";
 import { canvas } from "./canvas-core.js?v=123";
 
+const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
+
 /* ─── Constants ─── */
 const CUSTOM_PROPS = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst'];
 
 /* ─── Slide Templates ─── */
 const PPT_TEMPLATES = {
     title: {
-        name: '타이틀', icon: 'fa-heading',
+        name: _t('ppt_tpl_title','타이틀'), icon: 'fa-heading',
         build(w, h) {
             return [
-                { type:'textbox', text:'프레젠테이션 제목', left:w*0.1, top:h*0.3, width:w*0.8,
+                { type:'textbox', text:_t('ppt_presentation_title','프레젠테이션 제목'), left:w*0.1, top:h*0.3, width:w*0.8,
                   fontSize:Math.round(h*0.1), fontWeight:'bold', fontFamily:'Arial',
                   fill:'#1e293b', textAlign:'center' },
-                { type:'textbox', text:'부제목을 입력하세요', left:w*0.2, top:h*0.55, width:w*0.6,
+                { type:'textbox', text:_t('ppt_enter_subtitle','부제목을 입력하세요'), left:w*0.2, top:h*0.55, width:w*0.6,
                   fontSize:Math.round(h*0.045), fontFamily:'Arial',
                   fill:'#64748b', textAlign:'center' }
             ];
         }
     },
     titleBody: {
-        name: '제목+본문', icon: 'fa-align-left',
+        name: _t('ppt_tpl_title_body','제목+본문'), icon: 'fa-align-left',
         build(w, h) {
             return [
-                { type:'textbox', text:'슬라이드 제목', left:w*0.08, top:h*0.08, width:w*0.84,
+                { type:'textbox', text:_t('ppt_slide_title','슬라이드 제목'), left:w*0.08, top:h*0.08, width:w*0.84,
                   fontSize:Math.round(h*0.08), fontWeight:'bold', fontFamily:'Arial', fill:'#1e293b' },
                 { type:'rect', left:w*0.08, top:h*0.21, width:w*0.15, height:4,
                   fill:'#f97316', selectable:true, evented:true },
-                { type:'textbox', text:'본문 내용을 입력하세요.\n핵심 포인트와 상세 설명을 적어보세요.',
+                { type:'textbox', text:_t('ppt_body_placeholder','본문 내용을 입력하세요.\n핵심 포인트와 상세 설명을 적어보세요.'),
                   left:w*0.08, top:h*0.28, width:w*0.84,
                   fontSize:Math.round(h*0.04), fontFamily:'Arial', fill:'#475569', lineHeight:1.6 }
             ];
         }
     },
     twoColumn: {
-        name: '2열', icon: 'fa-columns',
+        name: _t('ppt_tpl_two_col','2열'), icon: 'fa-columns',
         build(w, h) {
             return [
-                { type:'textbox', text:'슬라이드 제목', left:w*0.08, top:h*0.08, width:w*0.84,
+                { type:'textbox', text:_t('ppt_slide_title','슬라이드 제목'), left:w*0.08, top:h*0.08, width:w*0.84,
                   fontSize:Math.round(h*0.07), fontWeight:'bold', fontFamily:'Arial', fill:'#1e293b' },
-                { type:'textbox', text:'왼쪽 열 내용을 입력하세요.',
+                { type:'textbox', text:_t('ppt_left_col','왼쪽 열 내용을 입력하세요.'),
                   left:w*0.08, top:h*0.28, width:w*0.38,
                   fontSize:Math.round(h*0.035), fontFamily:'Arial', fill:'#475569', lineHeight:1.5 },
-                { type:'textbox', text:'오른쪽 열 내용을 입력하세요.',
+                { type:'textbox', text:_t('ppt_right_col','오른쪽 열 내용을 입력하세요.'),
                   left:w*0.54, top:h*0.28, width:w*0.38,
                   fontSize:Math.round(h*0.035), fontFamily:'Arial', fill:'#475569', lineHeight:1.5 }
             ];
         }
     },
     imageText: {
-        name: '이미지+텍스트', icon: 'fa-image',
+        name: _t('ppt_tpl_img_text','이미지+텍스트'), icon: 'fa-image',
         build(w, h) {
             return [
                 { type:'rect', left:w*0.04, top:h*0.08, width:w*0.44, height:h*0.84,
                   fill:'#f1f5f9', rx:12, ry:12, stroke:'#e2e8f0', strokeWidth:1, selectable:true, evented:true },
-                { type:'textbox', text:'여기에 이미지를\n드래그하세요',
+                { type:'textbox', text:_t('ppt_drag_image','여기에 이미지를\n드래그하세요'),
                   left:w*0.12, top:h*0.4, width:w*0.28,
                   fontSize:Math.round(h*0.035), fontFamily:'Arial', fill:'#94a3b8', textAlign:'center' },
-                { type:'textbox', text:'콘텐츠 제목', left:w*0.54, top:h*0.12, width:w*0.4,
+                { type:'textbox', text:_t('ppt_content_title','콘텐츠 제목'), left:w*0.54, top:h*0.12, width:w*0.4,
                   fontSize:Math.round(h*0.06), fontWeight:'bold', fontFamily:'Arial', fill:'#1e293b' },
-                { type:'textbox', text:'설명 텍스트를 입력하세요. 이미지와 함께 표시됩니다.',
+                { type:'textbox', text:_t('ppt_desc_placeholder','설명 텍스트를 입력하세요. 이미지와 함께 표시됩니다.'),
                   left:w*0.54, top:h*0.3, width:w*0.4,
                   fontSize:Math.round(h*0.035), fontFamily:'Arial', fill:'#64748b', lineHeight:1.5 }
             ];
         }
     },
     quote: {
-        name: '인용구', icon: 'fa-quote-left',
+        name: _t('ppt_tpl_quote','인용구'), icon: 'fa-quote-left',
         build(w, h) {
             return [
                 { type:'textbox', text:'\u201C', left:w*0.08, top:h*0.12, width:w*0.12,
                   fontSize:Math.round(h*0.25), fontFamily:'Georgia', fill:'#f97316' },
-                { type:'textbox', text:'여기에 인상적인 인용문을 입력하세요.',
+                { type:'textbox', text:_t('ppt_quote_placeholder','여기에 인상적인 인용문을 입력하세요.'),
                   left:w*0.15, top:h*0.3, width:w*0.7,
                   fontSize:Math.round(h*0.055), fontFamily:'Georgia', fontStyle:'italic',
                   fill:'#334155', textAlign:'center', lineHeight:1.5 },
-                { type:'textbox', text:'- 발표자 이름', left:w*0.3, top:h*0.7, width:w*0.4,
+                { type:'textbox', text:_t('ppt_speaker_name','- 발표자 이름'), left:w*0.3, top:h*0.7, width:w*0.4,
                   fontSize:Math.round(h*0.035), fontFamily:'Arial', fill:'#94a3b8', textAlign:'center' }
             ];
         }
     },
     blank: {
-        name: '빈 슬라이드', icon: 'fa-square',
+        name: _t('ppt_tpl_blank','빈 슬라이드'), icon: 'fa-square',
         build() { return []; }
     }
 };
@@ -142,16 +144,16 @@ function activateSlidePanel() {
             <div style="display:flex; align-items:center; justify-content:space-between; padding:0 2px 10px; border-bottom:1px solid #e2e8f0; margin-bottom:10px;">
                 <span style="font-weight:800; font-size:14px; color:#1e293b;"><i class="fa-solid fa-file-powerpoint" style="color:#f97316; margin-right:4px;"></i>Slides</span>
                 <div style="display:flex; gap:4px;">
-                    <button onclick="window.addPage()" title="슬라이드 추가" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; color:#f97316;"><i class="fa-solid fa-plus"></i></button>
-                    <button onclick="window.pptDuplicateSlide()" title="슬라이드 복제" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#6366f1;"><i class="fa-solid fa-copy"></i></button>
-                    <button onclick="window.pptShowTemplates()" title="템플릿" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#10b981;"><i class="fa-solid fa-table-cells-large"></i></button>
-                    <button onclick="window.pptPreview()" title="미리보기" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#ec4899;"><i class="fa-solid fa-play"></i></button>
+                    <button onclick="window.addPage()" title="${_t('ppt_add_slide','슬라이드 추가')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; color:#f97316;"><i class="fa-solid fa-plus"></i></button>
+                    <button onclick="window.pptDuplicateSlide()" title="${_t('ppt_duplicate_slide','슬라이드 복제')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#6366f1;"><i class="fa-solid fa-copy"></i></button>
+                    <button onclick="window.pptShowTemplates()" title="${_t('ppt_templates','템플릿')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#10b981;"><i class="fa-solid fa-table-cells-large"></i></button>
+                    <button onclick="window.pptPreview()" title="${_t('ppt_preview','미리보기')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#ec4899;"><i class="fa-solid fa-play"></i></button>
                 </div>
             </div>
             <div id="pptSlideList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; max-height:calc(100vh - 360px);"></div>
             <div style="border-top:1px solid #e2e8f0; padding-top:10px; margin-top:10px;">
-                <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px;"><i class="fa-solid fa-sticky-note" style="margin-right:3px;"></i>발표자 노트</div>
-                <textarea id="pptNotesInput" placeholder="이 슬라이드에 대한 노트를 입력하세요..."
+                <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px;"><i class="fa-solid fa-sticky-note" style="margin-right:3px;"></i>${_t('ppt_speaker_notes','발표자 노트')}</div>
+                <textarea id="pptNotesInput" placeholder="${_t('ppt_notes_placeholder','이 슬라이드에 대한 노트를 입력하세요...')}"
                     oninput="window.pptUpdateNotes(this.value)"
                     style="width:100%; min-height:60px; max-height:100px; resize:vertical; border:1px solid #e2e8f0; border-radius:8px; padding:8px; font-size:12px; line-height:1.4; box-sizing:border-box; outline:none; font-family:inherit;"
                     onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
@@ -227,8 +229,8 @@ async function renderSlideThumbnails() {
                 ${thumbUrl ? '<img src="'+thumbUrl+'" style="width:100%; height:100%; object-fit:cover; display:block;" draggable="false">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;">Loading...</div>'}
             </div>
             <div class="ppt-sl-act" style="display:none; position:absolute; top:4px; right:4px; gap:2px;">
-                <button onclick="event.stopPropagation(); window.pptDuplicateSlide(${i})" title="복제" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-copy"></i></button>
-                <button onclick="event.stopPropagation(); window.pptDeleteSlide(${i})" title="삭제" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(239,68,68,0.8); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" ${pageDataList.length<=1?'disabled':''}><i class="fa-solid fa-trash"></i></button>
+                <button onclick="event.stopPropagation(); window.pptDuplicateSlide(${i})" title="${_t('ppt_duplicate','복제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-copy"></i></button>
+                <button onclick="event.stopPropagation(); window.pptDeleteSlide(${i})" title="${_t('ppt_delete','삭제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(239,68,68,0.8); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" ${pageDataList.length<=1?'disabled':''}><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
         container.appendChild(div);
@@ -302,7 +304,7 @@ function duplicateCurrentSlide(index) {
 
 function pptDeleteSlide(index) {
     if (pageDataList.length <= 1) return;
-    if (!confirm('이 슬라이드를 삭제하시겠습니까?')) return;
+    if (!confirm(_t('ppt_delete_confirm','이 슬라이드를 삭제하시겠습니까?'))) return;
 
     pageDataList.splice(index, 1);
 
@@ -459,7 +461,7 @@ async function openPresentationPreview() {
     ctx.fillStyle = '#fff';
     ctx.font = '20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('슬라이드 로딩 중...', cvs.width / 2, cvs.height / 2);
+    ctx.fillText(_t('ppt_loading_slides','슬라이드 로딩 중...'), cvs.width / 2, cvs.height / 2);
 
     // 모든 슬라이드 렌더링
     for (let i = 0; i < pageDataList.length; i++) {
@@ -629,5 +631,5 @@ function updatePreviewNotes() {
     const el = document.getElementById('pptPreviewNotesText');
     if (!el) return;
     const s = previewState.slides[previewState.current];
-    el.textContent = s && s.notes ? s.notes : '이 슬라이드에 대한 노트가 없습니다.';
+    el.textContent = s && s.notes ? s.notes : _t('ppt_no_notes','이 슬라이드에 대한 노트가 없습니다.');
 }

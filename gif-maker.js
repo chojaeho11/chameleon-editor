@@ -1,6 +1,7 @@
 /* ═══ GIF Maker v1 ═══ */
 (function(){
 'use strict';
+const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 
 const GM = {
     frames: [],       // [{img:Image, canvas:null}]
@@ -162,9 +163,9 @@ window.gifUploadFiles = function(input) {
     const files = Array.from(input.files);
     if (!files.length) return;
     const remain = GM.maxFrames - GM.frames.length;
-    if (remain <= 0) { alert('최대 10장까지 업로드할 수 있습니다.'); input.value=''; return; }
+    if (remain <= 0) { alert(_t('gm_max_frames','최대 10장까지 업로드할 수 있습니다.')); input.value=''; return; }
     const toLoad = files.slice(0, remain);
-    if (files.length > remain) alert(`최대 10장까지! ${remain}장만 추가됩니다.`);
+    if (files.length > remain) alert(_t('gm_max_frames_partial','최대 10장까지!')+` ${remain}`+_t('gm_frames_added','장만 추가됩니다.'));
     let loaded = 0;
     toLoad.forEach(function(file) {
         const reader = new FileReader();
@@ -247,14 +248,14 @@ function updateFrameUI() {
             html += '<div onclick="window.gifSelectFrame('+i+')" style="display:flex; align-items:center; gap:8px; padding:8px; border-radius:10px; cursor:pointer; border:2px solid '+(active?'#ec4899':'transparent')+'; background:'+(active?'rgba(236,72,153,0.1)':'rgba(255,255,255,0.03)')+'; transition:all 0.15s;">';
             html += '<img src="'+fr.src+'" style="width:50px; height:50px; object-fit:cover; border-radius:6px;">';
             html += '<div style="flex:1; min-width:0;">';
-            html += '<div style="color:#e0e7ff; font-size:13px; font-weight:600;">프레임 '+(i+1)+'</div>';
+            html += '<div style="color:#e0e7ff; font-size:13px; font-weight:600;">'+_t('gm_frame','프레임')+' '+(i+1)+'</div>';
             html += '<div style="color:#64748b; font-size:11px;">'+fr.img.naturalWidth+' × '+fr.img.naturalHeight+'</div>';
             html += '</div>';
             html += '<div style="display:flex; flex-direction:column; gap:2px;">';
             if(i>0) html += '<button onclick="window.gifMoveFrame('+i+',-1,event)" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding:2px; font-size:11px;"><i class="fa-solid fa-chevron-up"></i></button>';
             if(i<GM.frames.length-1) html += '<button onclick="window.gifMoveFrame('+i+',1,event)" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding:2px; font-size:11px;"><i class="fa-solid fa-chevron-down"></i></button>';
             html += '</div>';
-            html += '<button onclick="window.gifDeleteFrame('+i+',event)" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:4px; font-size:14px;" title="삭제"><i class="fa-solid fa-trash-can"></i></button>';
+            html += '<button onclick="window.gifDeleteFrame('+i+',event)" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:4px; font-size:14px;" title="'+_t('gm_delete','삭제')+'"><i class="fa-solid fa-trash-can"></i></button>';
             html += '</div>';
         });
         list.innerHTML = html;
@@ -348,7 +349,7 @@ window.gifPlaceSticker = function() {
 /* ─── Text Overlays ─── */
 window.gifAddText = function() {
     if (!GM.fabricCanvas) return;
-    const text = new fabric.IText('텍스트', {
+    const text = new fabric.IText(_t('gm_text','텍스트'), {
         left: GM.w / 2 - 50,
         top: GM.h / 2 - 20,
         fontFamily: document.getElementById('gifFontSelect').value || 'Arial',
@@ -438,7 +439,7 @@ window.gifInitImageTab = function() {
 async function gifLoadImages(search) {
     var grid = document.getElementById('gifImgGrid'); if (!grid) return;
     var sb = window.sb;
-    if (!sb) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">DB 연결 없음</p>'; return; }
+    if (!sb) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">'+_t('gm_no_db','DB 연결 없음')+'</p>'; return; }
     try {
         var q = sb.from('library')
             .select('id, thumb_url, data_url, category')
@@ -453,12 +454,12 @@ async function gifLoadImages(search) {
         gifRenderImgGrid(grid);
     } catch(e) {
         console.warn('GIF image load error:', e);
-        grid.innerHTML = '<p style="color:#ef4444; text-align:center;">로드 실패</p>';
+        grid.innerHTML = '<p style="color:#ef4444; text-align:center;">'+_t('gm_load_fail','로드 실패')+'</p>';
     }
 }
 
 function gifRenderImgGrid(grid) {
-    if (!GM.imgItems || !GM.imgItems.length) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">이미지 없음</p>'; return; }
+    if (!GM.imgItems || !GM.imgItems.length) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">'+_t('gm_no_images','이미지 없음')+'</p>'; return; }
     var html = '';
     GM.imgItems.forEach(function(item, idx) {
         var url = gifBestUrl(item);
@@ -518,7 +519,7 @@ window.gifInitElementTab = function() {
 async function gifLoadElements(search) {
     var grid = document.getElementById('gifElemGrid'); if (!grid) return;
     var sb = window.sb;
-    if (!sb) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">DB 연결 없음</p>'; return; }
+    if (!sb) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">'+_t('gm_no_db','DB 연결 없음')+'</p>'; return; }
     try {
         var q = sb.from('library')
             .select('id, thumb_url, data_url, category')
@@ -533,12 +534,12 @@ async function gifLoadElements(search) {
         gifRenderElemGrid(grid);
     } catch(e) {
         console.warn('GIF element load error:', e);
-        grid.innerHTML = '<p style="color:#ef4444; text-align:center;">로드 실패</p>';
+        grid.innerHTML = '<p style="color:#ef4444; text-align:center;">'+_t('gm_load_fail','로드 실패')+'</p>';
     }
 }
 
 function gifRenderElemGrid(grid) {
-    if (!GM.elemItems || !GM.elemItems.length) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">요소 없음</p>'; return; }
+    if (!GM.elemItems || !GM.elemItems.length) { grid.innerHTML = '<p style="color:#64748b; text-align:center;">'+_t('gm_no_elements','요소 없음')+'</p>'; return; }
     var html = '';
     GM.elemItems.forEach(function(item, idx) {
         var url = gifBestUrl(item);
@@ -615,7 +616,7 @@ function saveOverlayPositions() {
 
 /* ─── Play Preview ─── */
 window.gifPlayPreview = function() {
-    if (GM.frames.length < 2) { alert('프레임을 2장 이상 추가해주세요.'); return; }
+    if (GM.frames.length < 2) { alert(_t('gm_need_2_frames','프레임을 2장 이상 추가해주세요.')); return; }
     if (GM.playing) {
         // stop
         clearInterval(GM.playTimer); GM.playTimer = null; GM.playing = false;
@@ -636,7 +637,7 @@ window.gifPlayPreview = function() {
 
 /* ─── GIF Export ─── */
 window.exportGif = function() {
-    if (GM.frames.length < 1) { alert('프레임을 추가해주세요.'); return; }
+    if (GM.frames.length < 1) { alert(_t('gm_need_frames','프레임을 추가해주세요.')); return; }
     // stop preview if playing
     if (GM.playing) window.gifPlayPreview();
 
@@ -645,7 +646,7 @@ window.exportGif = function() {
     const progressText = document.getElementById('gifProgressText');
     if(progressBar) progressBar.style.display = 'block';
     if(progressFill) progressFill.style.width = '0%';
-    if(progressText) progressText.textContent = 'GIF 생성 준비 중...';
+    if(progressText) progressText.textContent = _t('gm_preparing','GIF 생성 준비 중...');
 
     const delay = parseInt(document.getElementById('gifSpeed').value) || 500;
     const fc = GM.fabricCanvas;
@@ -668,7 +669,7 @@ window.exportGif = function() {
             buildGif(frameDataUrls, delay);
             return;
         }
-        if(progressText) progressText.textContent = '프레임 ' + (idx+1) + '/' + GM.frames.length + ' 렌더링 중...';
+        if(progressText) progressText.textContent = _t('gm_frame','프레임')+' ' + (idx+1) + '/' + GM.frames.length + ' '+_t('gm_rendering','렌더링 중...');
         if(progressFill) progressFill.style.width = ((idx / GM.frames.length) * 50) + '%';
 
         const frame = GM.frames[idx];
@@ -711,7 +712,7 @@ window.exportGif = function() {
 function buildGif(frameDataUrls, delay) {
     const progressFill = document.getElementById('gifProgressFill');
     const progressText = document.getElementById('gifProgressText');
-    if(progressText) progressText.textContent = 'GIF 인코딩 중...';
+    if(progressText) progressText.textContent = _t('gm_encoding','GIF 인코딩 중...');
     if(progressFill) progressFill.style.width = '60%';
 
     // Use gif.js from CDN (loaded dynamically)
@@ -756,11 +757,11 @@ function doEncode(frameDataUrls, delay) {
                 });
                 gif.on('progress', function(p) {
                     if(progressFill) progressFill.style.width = (60 + p * 35) + '%';
-                    if(progressText) progressText.textContent = 'GIF 인코딩 중... ' + Math.round(p*100) + '%';
+                    if(progressText) progressText.textContent = _t('gm_encoding','GIF 인코딩 중...')+' ' + Math.round(p*100) + '%';
                 });
                 gif.on('finished', function(blob) {
                     if(progressFill) progressFill.style.width = '100%';
-                    if(progressText) progressText.textContent = '완료!';
+                    if(progressText) progressText.textContent = _t('gm_done','완료!');
                     setTimeout(function() {
                         const bar = document.getElementById('gifProgressBar');
                         if(bar) bar.style.display = 'none';
@@ -786,7 +787,7 @@ function doEncode(frameDataUrls, delay) {
 function encodeGifManual(frameDataUrls, delay) {
     const progressFill = document.getElementById('gifProgressFill');
     const progressText = document.getElementById('gifProgressText');
-    if(progressText) progressText.textContent = '대체 인코더 사용 중...';
+    if(progressText) progressText.textContent = _t('gm_fallback_encoder','대체 인코더 사용 중...');
 
     // Create a simple animated GIF using canvas-to-blob approach
     // We'll use a simpler method: create individual frames as a downloadable zip
@@ -795,12 +796,12 @@ function encodeGifManual(frameDataUrls, delay) {
     script2.src = 'https://unpkg.com/gif.js@0.2.0/dist/gif.js';
     script2.onload = function() { doEncode(frameDataUrls, delay); };
     script2.onerror = function() {
-        if(progressText) progressText.textContent = 'GIF 라이브러리를 로드할 수 없습니다.';
+        if(progressText) progressText.textContent = _t('gm_lib_load_fail','GIF 라이브러리를 로드할 수 없습니다.');
         setTimeout(function() {
             const bar = document.getElementById('gifProgressBar');
             if(bar) bar.style.display = 'none';
         }, 3000);
-        alert('GIF 인코딩 라이브러리를 불러올 수 없습니다. 네트워크를 확인해주세요.');
+        alert(_t('gm_lib_load_fail_alert','GIF 인코딩 라이브러리를 불러올 수 없습니다. 네트워크를 확인해주세요.'));
     };
     document.head.appendChild(script2);
 }
