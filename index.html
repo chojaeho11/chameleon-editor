@@ -7416,9 +7416,26 @@ if (w >= 20 && h >= 20) {
             <div id="gifTabContent" style="flex:1; overflow-y:auto; padding:16px;">
                 <!-- 프레임 탭 (기본) -->
                 <div id="gifTabFrames">
-                    <button onclick="document.getElementById('gifFileInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:16px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <button onclick="document.getElementById('gifFileInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i> <span data-i18n="gm_upload_photos">사진 업로드 (최대 10장)</span>
                     </button>
+                    <button onclick="document.getElementById('gifVideoInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i class="fa-solid fa-video" style="font-size:18px;"></i> <span data-i18n="gm_upload_video">영상에서 프레임 추출</span>
+                    </button>
+                    <!-- 영상 프레임 수 선택 -->
+                    <div id="gifVideoFrameOpts" style="display:none; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <span style="color:#fbbf24; font-size:12px; font-weight:700;"><i class="fa-solid fa-film"></i> <span data-i18n="gm_frame_count">추출할 프레임 수</span></span>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button onclick="window.gifSetVideoFrames(5)" class="vf-btn" data-n="5" style="padding:6px 14px; border-radius:8px; border:1px solid #f59e0b; background:#1e1b4b; color:#fbbf24; font-size:13px; font-weight:600; cursor:pointer;">5</button>
+                            <button onclick="window.gifSetVideoFrames(10)" class="vf-btn active" data-n="10" style="padding:6px 14px; border-radius:8px; border:2px solid #f59e0b; background:rgba(245,158,11,0.2); color:#fbbf24; font-size:13px; font-weight:700; cursor:pointer;">10</button>
+                            <button onclick="window.gifSetVideoFrames(15)" class="vf-btn" data-n="15" style="padding:6px 14px; border-radius:8px; border:1px solid #f59e0b; background:#1e1b4b; color:#fbbf24; font-size:13px; font-weight:600; cursor:pointer;">15</button>
+                            <button onclick="window.gifSetVideoFrames(20)" class="vf-btn" data-n="20" style="padding:6px 14px; border-radius:8px; border:1px solid #f59e0b; background:#1e1b4b; color:#fbbf24; font-size:13px; font-weight:600; cursor:pointer;">20</button>
+                            <button onclick="window.gifSetVideoFrames(30)" class="vf-btn" data-n="30" style="padding:6px 14px; border-radius:8px; border:1px solid #f59e0b; background:#1e1b4b; color:#fbbf24; font-size:13px; font-weight:600; cursor:pointer;">30</button>
+                        </div>
+                        <div id="gifVideoStatus" style="display:none; margin-top:8px; color:#fbbf24; font-size:12px; text-align:center;"></div>
+                    </div>
                     <div id="gifFrameList" style="display:flex; flex-direction:column; gap:8px;"></div>
                     <p style="color:#64748b; font-size:12px; text-align:center; margin-top:12px; line-height:1.5;" data-i18n="gm_drag_hint">드래그하여 순서 변경<br>클릭하여 프레임 선택</p>
                 </div>
@@ -7510,6 +7527,7 @@ if (w >= 20 && h >= 20) {
 
     <!-- 숨김 파일 입력 -->
     <input type="file" id="gifFileInput" accept="image/*" multiple style="display:none;" onchange="window.gifUploadFiles(this)">
+    <input type="file" id="gifVideoInput" accept="video/*" style="display:none;" onchange="window.gifUploadVideo(this)">
 </div>
 <style>
 /* ═══ GIF 메이커 모바일 반응형 ═══ */

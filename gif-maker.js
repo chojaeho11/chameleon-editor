@@ -11,7 +11,8 @@ const GM = {
     w: 500, h: 500,
     playing: false,
     playTimer: null,
-    maxFrames: 10
+    maxFrames: 30,
+    videoFrameCount: 10
 };
 window._gm = GM;
 
@@ -163,9 +164,9 @@ window.gifUploadFiles = function(input) {
     const files = Array.from(input.files);
     if (!files.length) return;
     const remain = GM.maxFrames - GM.frames.length;
-    if (remain <= 0) { alert(_t('gm_max_frames','최대 10장까지 업로드할 수 있습니다.')); input.value=''; return; }
+    if (remain <= 0) { alert(_t('gm_max_frames','최대 30장까지 업로드할 수 있습니다.')); input.value=''; return; }
     const toLoad = files.slice(0, remain);
-    if (files.length > remain) alert(_t('gm_max_frames_partial','최대 10장까지!')+` ${remain}`+_t('gm_frames_added','장만 추가됩니다.'));
+    if (files.length > remain) alert(_t('gm_max_frames_partial','최대 30장까지!')+` ${remain}`+_t('gm_frames_added','장만 추가됩니다.'));
     let loaded = 0;
     toLoad.forEach(function(file) {
         const reader = new FileReader();
@@ -185,6 +186,124 @@ window.gifUploadFiles = function(input) {
         reader.readAsDataURL(file);
     });
     input.value = '';
+};
+
+/* ─── Video Frame Count Selection ─── */
+window.gifSetVideoFrames = function(n) {
+    GM.videoFrameCount = n;
+    var btns = document.querySelectorAll('#gifVideoFrameOpts .vf-btn');
+    btns.forEach(function(btn) {
+        var isActive = parseInt(btn.dataset.n) === n;
+        btn.style.border = isActive ? '2px solid #f59e0b' : '1px solid #f59e0b';
+        btn.style.background = isActive ? 'rgba(245,158,11,0.2)' : '#1e1b4b';
+        btn.style.fontWeight = isActive ? '700' : '600';
+    });
+};
+
+/* ─── Video Upload & Frame Extraction ─── */
+window.gifUploadVideo = function(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    input.value = '';
+
+    // Show frame count options
+    var opts = document.getElementById('gifVideoFrameOpts');
+    if (opts) opts.style.display = 'block';
+
+    var status = document.getElementById('gifVideoStatus');
+    if (status) { status.style.display = 'block'; status.textContent = _t('gm_video_loading', '영상 로딩 중...'); }
+
+    var video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+
+    var url = URL.createObjectURL(file);
+    video.src = url;
+
+    video.onloadedmetadata = function() {
+        var duration = video.duration;
+        if (!duration || !isFinite(duration) || duration < 0.1) {
+            if (status) status.textContent = _t('gm_video_error', '영상을 읽을 수 없습니다.');
+            URL.revokeObjectURL(url);
+            return;
+        }
+
+        var frameCount = GM.videoFrameCount || 10;
+        var remain = GM.maxFrames - GM.frames.length;
+        if (remain <= 0) {
+            if (status) status.textContent = _t('gm_max_frames', '최대 프레임 초과');
+            URL.revokeObjectURL(url);
+            return;
+        }
+        frameCount = Math.min(frameCount, remain);
+
+        if (status) status.textContent = _t('gm_video_extracting', '프레임 추출 중...') + ' 0/' + frameCount;
+
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var vw = video.videoWidth || 500;
+        var vh = video.videoHeight || 500;
+        canvas.width = vw;
+        canvas.height = vh;
+
+        // Calculate evenly-spaced time points (avoid last frame = duration)
+        var times = [];
+        var step = duration / (frameCount + 1);
+        for (var i = 1; i <= frameCount; i++) {
+            times.push(step * i);
+        }
+
+        var extracted = 0;
+        var startLen = GM.frames.length;
+
+        function extractNext() {
+            if (extracted >= times.length) {
+                // done
+                URL.revokeObjectURL(url);
+                if (status) status.textContent = _t('gm_video_done', '완료!') + ' ' + extracted + _t('gm_video_frames_added', '장 추출됨');
+                setTimeout(function() {
+                    if (status) status.style.display = 'none';
+                }, 2000);
+                if (GM.frames.length > 0 && startLen === 0) GM.currentFrame = 0;
+                updateFrameUI();
+                renderCurrentFrame();
+                return;
+            }
+
+            video.currentTime = times[extracted];
+        }
+
+        video.onseeked = function() {
+            try {
+                ctx.drawImage(video, 0, 0, vw, vh);
+                var dataUrl = canvas.toDataURL('image/png');
+                var img = new Image();
+                img.onload = function() {
+                    GM.frames.push({ img: img, src: dataUrl });
+                    extracted++;
+                    if (status) status.textContent = _t('gm_video_extracting', '프레임 추출 중...') + ' ' + extracted + '/' + times.length;
+                    // Update UI periodically
+                    if (extracted % 5 === 0 || extracted === times.length) {
+                        updateFrameUI();
+                    }
+                    extractNext();
+                };
+                img.src = dataUrl;
+            } catch(e) {
+                console.warn('Video frame extract error:', e);
+                extracted++;
+                extractNext();
+            }
+        };
+
+        extractNext();
+    };
+
+    video.onerror = function() {
+        if (status) status.textContent = _t('gm_video_error', '영상을 읽을 수 없습니다.');
+        URL.revokeObjectURL(url);
+    };
 };
 
 /* ─── Frame Selection & Rendering ─── */
