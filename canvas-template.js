@@ -337,7 +337,8 @@ async function loadTemplatePage(pageIndex) {
             const card = document.createElement("div");
             card.className = "tpl-item";
             
-            const rawUrl = item.data_url || item.thumb_url || 'https://via.placeholder.com/400?text=No+Image';
+            const dataOk = item.data_url && item.data_url.includes('supabase.co');
+            const rawUrl = (dataOk ? item.data_url : item.thumb_url) || 'https://via.placeholder.com/400?text=No+Image';
             const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 400) : rawUrl;
             const displayTitle = item.tags ? item.tags.split(',')[0] : window.t('msg_untitled', 'Untitled');
             
@@ -1205,7 +1206,9 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         data.forEach((tpl) => {
             const div = document.createElement("div");
             div.className = "side-tpl-card";
-            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.data_url || tpl.thumb_url, 400) : (tpl.data_url || tpl.thumb_url);
+            const _dataOk = tpl.data_url && tpl.data_url.includes('supabase.co');
+            const _rawUrl = _dataOk ? tpl.data_url : tpl.thumb_url;
+            const imgUrl = window.getTinyThumb ? window.getTinyThumb(_rawUrl, 400) : _rawUrl;
 
             let badgeHtml = "";
             if (sideCurrentGroup === 'group_asset' && tpl.category === 'vector') {
