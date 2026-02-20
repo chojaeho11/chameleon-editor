@@ -122,7 +122,7 @@ window.loadOrders = async () => {
 
         // [핵심 1] 쿼리에 bids(id) 추가 (입찰 카운트용)
         let query = sb.from('orders')
-            .select('id, status, total_amount, items, created_at, payment_status, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, has_partner_items, files, bids(id)', { count: 'exact' })
+            .select('id, status, total_amount, items, created_at, payment_status, payment_method, depositor_name, discount_amount, used_deposit, actual_payment, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, has_partner_items, files, bids(id)', { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 결제하기 안 누른 '임시작성' 건은 숨김

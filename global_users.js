@@ -22,7 +22,7 @@ window.loadMembers = async (isNewSearch = false) => {
     
     let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at', { count: 'exact' });
     if (roleVal !== 'all') query = query.eq('role', roleVal);
-    if (keyword) query = query.ilike('email', `%${keyword}%`);
+    if (keyword) query = query.or(`email.ilike.%${keyword}%,username.ilike.%${keyword}%`);
 
     if (sortVal === 'deposit_desc') query = query.order('deposit', { ascending: false });
     else if (sortVal === 'deposit_asc') query = query.order('deposit', { ascending: true });
