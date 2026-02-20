@@ -1028,5 +1028,14 @@
   "wall_preset_booth": "부스",
   "wall_preset_square": "사각",
   "msg_min_wall": "가벽은 최소 1개 필요합니다",
-  "hint_3d_wall_controls": "클릭: 선택 | Shift+드래그: 이동 | 드래그: 회전"
+  "hint_3d_wall_controls": "클릭: 선택 | Shift+드래그: 이동 | 드래그: 회전",
+  "wall_config_title": "가벽 설정",
+  "wall_width": "너비",
+  "wall_sections": "섹션",
+  "wall_custom_input": "직접",
+  "wall_type": "타입",
+  "wall_single_sided": "단면",
+  "wall_double_sided": "양면",
+  "wall_count": "개수",
+  "wall_price_calc": "가격"
 }

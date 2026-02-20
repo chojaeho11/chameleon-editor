@@ -1404,5 +1404,14 @@
   "wall_preset_booth": "Puesto",
   "wall_preset_square": "Cuadrado",
   "msg_min_wall": "Se requiere al menos una pared",
-  "hint_3d_wall_controls": "Clic: seleccionar | Shift+arrastrar: mover | Arrastrar: rotar"
+  "hint_3d_wall_controls": "Clic: seleccionar | Shift+arrastrar: mover | Arrastrar: rotar",
+  "wall_config_title": "Config. pared",
+  "wall_width": "Ancho",
+  "wall_sections": "Sección",
+  "wall_custom_input": "Perso.",
+  "wall_type": "Tipo",
+  "wall_single_sided": "Simple",
+  "wall_double_sided": "Doble",
+  "wall_count": "Cantidad",
+  "wall_price_calc": "Precio"
 }

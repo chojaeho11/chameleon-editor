@@ -223,7 +223,8 @@
 
         const width = widthMM / 1000;
         const height = heightMM / 1000;
-        const depth = 0.1;
+        const doubleSided = window.__wallConfig?.doubleSided || false;
+        const depth = doubleSided ? 0.2 : 0.1; // 양면 200mm, 단면 100mm
 
         currentWidthMM = widthMM;
         currentHeightMM = heightMM;
@@ -264,7 +265,6 @@
                 backTexture = new THREE.Texture(backImg);
                 backTexture.needsUpdate = true;
                 backTexture.encoding = THREE.sRGBEncoding;
-                // 좌우반전: 뒤에서 보면 거울상이므로 repeat.x = -1
                 backTexture.wrapS = THREE.RepeatWrapping;
                 backTexture.repeat.x = -1;
                 panel.material[5] = new THREE.MeshStandardMaterial({ map: backTexture, roughness: 0.4 });
@@ -283,44 +283,52 @@
         panel.name = 'mainPanel';
         wallGroup.add(panel);
 
-        // ── 2. Back Structural Frame ──
-        const frameMat = new THREE.MeshStandardMaterial({ color: COL_FRAME, roughness: 0.6 });
-        const bracketMat = new THREE.MeshStandardMaterial({ color: COL_BRACKET, roughness: 0.5 });
+        if (!doubleSided) {
+            // ── 단면: Back Frame + Triangle Stands ──
+            const frameMat = new THREE.MeshStandardMaterial({ color: COL_FRAME, roughness: 0.6 });
+            const bracketMat = new THREE.MeshStandardMaterial({ color: COL_BRACKET, roughness: 0.5 });
 
-        const frameZ = -depth / 2 - 0.015;
-        const railThick = 0.05;
-        const railDepth = 0.025;
+            const frameZ = -depth / 2 - 0.015;
+            const railThick = 0.05;
+            const railDepth = 0.025;
 
-        // Frame rails
-        addBox(width - 0.02, railThick, railDepth, 0, height / 2 - railThick / 2, frameZ, frameMat);
-        addBox(width - 0.02, railThick, railDepth, 0, -height / 2 + railThick / 2, frameZ, frameMat);
-        addBox(railThick, height, railDepth, -width / 2 + railThick / 2, 0, frameZ, frameMat);
-        addBox(railThick, height, railDepth, width / 2 - railThick / 2, 0, frameZ, frameMat);
-        addBox(width - 0.02, 0.04, railDepth, 0, 0, frameZ, frameMat);
+            addBox(width - 0.02, railThick, railDepth, 0, height / 2 - railThick / 2, frameZ, frameMat);
+            addBox(width - 0.02, railThick, railDepth, 0, -height / 2 + railThick / 2, frameZ, frameMat);
+            addBox(railThick, height, railDepth, -width / 2 + railThick / 2, 0, frameZ, frameMat);
+            addBox(railThick, height, railDepth, width / 2 - railThick / 2, 0, frameZ, frameMat);
+            addBox(width - 0.02, 0.04, railDepth, 0, 0, frameZ, frameMat);
 
-        // Vertical dividers (every 1m)
-        const numSections = Math.max(1, Math.round(widthMM / 1000));
-        for (let i = 1; i < numSections; i++) {
-            const x = -width / 2 + (i * width / numSections);
-            addBox(0.04, height - 0.1, railDepth, x, 0, frameZ, frameMat);
-            addBox(0.06, 0.06, 0.02, x, height / 2 - 0.05, frameZ - 0.01, bracketMat);
-            addBox(0.06, 0.06, 0.02, x, 0, frameZ - 0.01, bracketMat);
-            addBox(0.06, 0.06, 0.02, x, -height / 2 + 0.05, frameZ - 0.01, bracketMat);
-        }
+            const numSections = Math.max(1, Math.round(widthMM / 1000));
+            for (let i = 1; i < numSections; i++) {
+                const x = -width / 2 + (i * width / numSections);
+                addBox(0.04, height - 0.1, railDepth, x, 0, frameZ, frameMat);
+                addBox(0.06, 0.06, 0.02, x, height / 2 - 0.05, frameZ - 0.01, bracketMat);
+                addBox(0.06, 0.06, 0.02, x, 0, frameZ - 0.01, bracketMat);
+                addBox(0.06, 0.06, 0.02, x, -height / 2 + 0.05, frameZ - 0.01, bracketMat);
+            }
 
-        // Corner brackets
-        [[-width / 2 + 0.04, height / 2 - 0.04], [width / 2 - 0.04, height / 2 - 0.04],
-         [-width / 2 + 0.04, -height / 2 + 0.04], [width / 2 - 0.04, -height / 2 + 0.04]
-        ].forEach(([cx, cy]) => addBox(0.06, 0.06, 0.02, cx, cy, frameZ - 0.01, bracketMat));
+            [[-width / 2 + 0.04, height / 2 - 0.04], [width / 2 - 0.04, height / 2 - 0.04],
+             [-width / 2 + 0.04, -height / 2 + 0.04], [width / 2 - 0.04, -height / 2 + 0.04]
+            ].forEach(([cx, cy]) => addBox(0.06, 0.06, 0.02, cx, cy, frameZ - 0.01, bracketMat));
 
-        // ── 3. Triangular Support Stands ──
-        const standMat = new THREE.MeshStandardMaterial({ color: COL_STAND, roughness: 0.5 });
-        const numStands = Math.max(2, numSections + 1);
-        const standSpacing = width / (numStands - 1);
+            const standMat = new THREE.MeshStandardMaterial({ color: COL_STAND, roughness: 0.5 });
+            const numStands = Math.max(2, numSections + 1);
+            const standSpacing = width / (numStands - 1);
 
-        for (let i = 0; i < numStands; i++) {
-            const sx = -width / 2 + i * standSpacing;
-            createTriangleStand(sx, -height / 2, -depth / 2, standMat);
+            for (let i = 0; i < numStands; i++) {
+                const sx = -width / 2 + i * standSpacing;
+                createTriangleStand(sx, -height / 2, -depth / 2, standMat);
+            }
+        } else {
+            // ── 양면: 중간 이음선 (두 패널 경계) ──
+            const seamMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.5 });
+            // 수평 중간 이음선
+            addBox(width + 0.01, 0.005, depth + 0.005, 0, 0, 0, seamMat);
+            // 양쪽 테두리
+            addBox(0.008, height, depth + 0.005, -width / 2, 0, 0, seamMat);
+            addBox(0.008, height, depth + 0.005, width / 2, 0, 0, seamMat);
+            addBox(width, 0.008, depth + 0.005, 0, height / 2, 0, seamMat);
+            addBox(width, 0.008, depth + 0.005, 0, -height / 2, 0, seamMat);
         }
 
         // Position wall on floor
@@ -338,8 +346,9 @@
         updateCamera();
 
         // Dimension label
+        const depthMM = doubleSided ? 200 : 100;
         const label = document.getElementById('wall3dDimLabel');
-        if (label) label.textContent = widthMM + 'mm \u00D7 ' + heightMM + 'mm \u00D7 100mm';
+        if (label) label.textContent = widthMM + 'mm \u00D7 ' + heightMM + 'mm \u00D7 ' + depthMM + 'mm';
     }
 
     function addBox(w, h, d, x, y, z, mat) {
@@ -519,11 +528,12 @@
         if (window.savePageState) window.savePageState();
         const origIndex = window._getPageIndex ? window._getPageIndex() : 0;
         const pageList = window.__pageDataList;
-        if (!pageList || pageList.length < 2) return [];
+        if (!pageList || pageList.length < 1) return [];
 
         const textures = [];
-        // 각 가벽당 2페이지 (앞면, 뒷면)
-        const faceCount = Math.min(pageList.length, 2); // Phase 2: 1 wall × 2 faces
+        const doubleSided = window.__wallConfig?.doubleSided || false;
+        // 단면: 1페이지(앞면만), 양면: 2페이지(앞+뒤)
+        const faceCount = doubleSided ? Math.min(pageList.length, 2) : 1;
 
         for (let i = 0; i < faceCount; i++) {
             await new Promise(resolve => {
@@ -630,10 +640,11 @@
             const widthMM = Math.round(board.width / PX_PER_MM);
             const heightMM = Math.round(board.height / PX_PER_MM);
 
-            // 양면 가벽 모드: 앞/뒤 모두 캡처
-            if (window.__wallMode && window.__pageDataList && window.__pageDataList.length >= 2) {
+            // 가벽 모드: 단면은 앞면만, 양면은 앞+뒤 캡처
+            if (window.__wallMode) {
                 const faces = await captureAllWallFaces();
-                buildWall(widthMM, heightMM, faces[0] || null, faces[1] || null);
+                const doubleSided = window.__wallConfig?.doubleSided || false;
+                buildWall(widthMM, heightMM, faces[0] || null, doubleSided ? (faces[1] || null) : null);
             } else {
                 const dataUrl = captureCanvas();
                 buildWall(widthMM, heightMM, dataUrl, null);
@@ -667,8 +678,8 @@
             return;
         }
 
-        // 벽 모드: 양면 재캡처
-        if (window.__wallMode && window.__pageDataList && window.__pageDataList.length >= 2) {
+        // 벽 모드: 단면/양면 재캡처
+        if (window.__wallMode) {
             const fabricCanvas = window.canvas;
             if (!fabricCanvas) return;
             const board = fabricCanvas.getObjects().find(o => o.isBoard);
@@ -677,7 +688,8 @@
             const widthMM = Math.round(board.width / PX_PER_MM);
             const heightMM = Math.round(board.height / PX_PER_MM);
             const faces = await captureAllWallFaces();
-            buildWall(widthMM, heightMM, faces[0] || null, faces[1] || null);
+            const doubleSided = window.__wallConfig?.doubleSided || false;
+            buildWall(widthMM, heightMM, faces[0] || null, doubleSided ? (faces[1] || null) : null);
             return;
         }
 

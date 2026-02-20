@@ -1404,5 +1404,14 @@
   "wall_preset_booth": "ブース",
   "wall_preset_square": "四角",
   "msg_min_wall": "パネルは最低1枚必要です",
-  "hint_3d_wall_controls": "クリック: 選択 | Shift+ドラッグ: 移動 | ドラッグ: 回転"
+  "hint_3d_wall_controls": "クリック: 選択 | Shift+ドラッグ: 移動 | ドラッグ: 回転",
+  "wall_config_title": "間仕切り設定",
+  "wall_width": "幅",
+  "wall_sections": "セクション",
+  "wall_custom_input": "入力",
+  "wall_type": "タイプ",
+  "wall_single_sided": "片面",
+  "wall_double_sided": "両面",
+  "wall_count": "数量",
+  "wall_price_calc": "価格"
 }

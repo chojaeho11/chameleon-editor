@@ -270,12 +270,14 @@ export function initWallPages(wallCount, widthMM, heightMM) {
     const PX = 3.7795;
     const w = widthMM * PX;
     const h = heightMM * PX;
+    const doubleSided = window.__wallConfig?.doubleSided || false;
+    const pagesPerWall = doubleSided ? 2 : 1;
 
     pageDataList = [];
     currentPageIndex = 0;
 
     for (let wi = 0; wi < wallCount; wi++) {
-        // Front face
+        // Front face (항상)
         canvas.clear();
         const frontBoard = new fabric.Rect({
             width: w, height: h, fill: 'white',
@@ -285,15 +287,17 @@ export function initWallPages(wallCount, widthMM, heightMM) {
         canvas.sendToBack(frontBoard);
         pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
 
-        // Back face
-        canvas.clear();
-        const backBoard = new fabric.Rect({
-            width: w, height: h, fill: 'white',
-            left: 0, top: 0, selectable: false, evented: false, isBoard: true
-        });
-        canvas.add(backBoard);
-        canvas.sendToBack(backBoard);
-        pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
+        // Back face (양면만)
+        if (doubleSided) {
+            canvas.clear();
+            const backBoard = new fabric.Rect({
+                width: w, height: h, fill: 'white',
+                left: 0, top: 0, selectable: false, evented: false, isBoard: true
+            });
+            canvas.add(backBoard);
+            canvas.sendToBack(backBoard);
+            pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
+        }
     }
 
     // Load first page (wall 1 front)
@@ -302,17 +306,22 @@ export function initWallPages(wallCount, widthMM, heightMM) {
     setTimeout(() => resizeCanvasToFit(), 50);
     updatePageCounter();
 
+    // wallFaceTabs 동적 생성
+    buildWallFaceTabsUI(wallCount, doubleSided);
+
     // Tab active state
     updateWallFaceTabs(0, 0);
 
     // window 노출
     window.__wallMode = true;
     window.__wallCount = wallCount;
+    window.__wallPagesPerWall = pagesPerWall;
 }
 
 // wallIndex = 가벽 번호(0-based), faceIndex = 0(앞면) / 1(뒷면)
 window.switchWallFace = function (wallIndex, faceIndex) {
-    const pageIndex = wallIndex * 2 + faceIndex;
+    const pagesPerWall = window.__wallPagesPerWall || (window.__wallConfig?.doubleSided ? 2 : 1);
+    const pageIndex = wallIndex * pagesPerWall + faceIndex;
     if (pageIndex < 0 || pageIndex >= pageDataList.length) return;
     if (pageIndex === currentPageIndex) return;
 
@@ -332,6 +341,47 @@ window.switchWallFace = function (wallIndex, faceIndex) {
 
     updateWallFaceTabs(wallIndex, faceIndex);
 };
+
+function buildWallFaceTabsUI(wallCount, doubleSided) {
+    const container = document.getElementById('wallFaceTabs');
+    if (!container) return;
+
+    // 단면 1개 → 탭 불필요
+    if (!doubleSided && wallCount <= 1) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+
+    container.style.display = 'flex';
+    container.innerHTML = '';
+
+    const frontLabel = window.t ? window.t('wall_face_front', '앞면') : '앞면';
+    const backLabel = window.t ? window.t('wall_face_back', '뒷면') : '뒷면';
+
+    for (let wi = 0; wi < wallCount; wi++) {
+        const prefix = wallCount > 1 ? `${wi + 1}-` : '';
+        // Front tab (항상)
+        const frontBtn = document.createElement('button');
+        frontBtn.className = 'wall-face-tab';
+        frontBtn.dataset.wall = wi;
+        frontBtn.dataset.face = 0;
+        frontBtn.textContent = prefix + frontLabel;
+        frontBtn.onclick = () => window.switchWallFace(wi, 0);
+        container.appendChild(frontBtn);
+
+        // Back tab (양면만)
+        if (doubleSided) {
+            const backBtn = document.createElement('button');
+            backBtn.className = 'wall-face-tab';
+            backBtn.dataset.wall = wi;
+            backBtn.dataset.face = 1;
+            backBtn.textContent = prefix + backLabel;
+            backBtn.onclick = () => window.switchWallFace(wi, 1);
+            container.appendChild(backBtn);
+        }
+    }
+}
 
 function updateWallFaceTabs(activeWall, activeFace) {
     document.querySelectorAll('.wall-face-tab').forEach(tab => {

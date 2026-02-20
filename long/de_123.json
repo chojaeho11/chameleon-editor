@@ -1404,5 +1404,14 @@
   "wall_preset_booth": "Stand",
   "wall_preset_square": "Quadrat",
   "msg_min_wall": "Mindestens eine Wand erforderlich",
-  "hint_3d_wall_controls": "Klick: auswählen | Shift+ziehen: verschieben | Ziehen: drehen"
+  "hint_3d_wall_controls": "Klick: auswählen | Shift+ziehen: verschieben | Ziehen: drehen",
+  "wall_config_title": "Wandkonfig.",
+  "wall_width": "Breite",
+  "wall_sections": "Sektion",
+  "wall_custom_input": "Eigen",
+  "wall_type": "Typ",
+  "wall_single_sided": "Einseitig",
+  "wall_double_sided": "Doppelt",
+  "wall_count": "Anzahl",
+  "wall_price_calc": "Preis"
 }

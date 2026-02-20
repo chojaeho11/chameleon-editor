@@ -1404,5 +1404,14 @@
   "wall_preset_booth": "Stand",
   "wall_preset_square": "Carré",
   "msg_min_wall": "Au moins un mur est requis",
-  "hint_3d_wall_controls": "Clic: sélectionner | Shift+glisser: déplacer | Glisser: tourner"
+  "hint_3d_wall_controls": "Clic: sélectionner | Shift+glisser: déplacer | Glisser: tourner",
+  "wall_config_title": "Config. cloison",
+  "wall_width": "Largeur",
+  "wall_sections": "Section",
+  "wall_custom_input": "Perso.",
+  "wall_type": "Type",
+  "wall_single_sided": "Simple",
+  "wall_double_sided": "Double",
+  "wall_count": "Quantité",
+  "wall_price_calc": "Prix"
 }

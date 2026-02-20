@@ -1404,5 +1404,14 @@
   "wall_preset_booth": "Booth",
   "wall_preset_square": "Square",
   "msg_min_wall": "At least one wall is required",
-  "hint_3d_wall_controls": "Click: select | Shift+drag: move | Drag: rotate view"
+  "hint_3d_wall_controls": "Click: select | Shift+drag: move | Drag: rotate view",
+  "wall_config_title": "Wall Config",
+  "wall_width": "Width",
+  "wall_sections": "Section",
+  "wall_custom_input": "Custom",
+  "wall_type": "Type",
+  "wall_single_sided": "Single",
+  "wall_double_sided": "Double",
+  "wall_count": "Count",
+  "wall_price_calc": "Price"
 }

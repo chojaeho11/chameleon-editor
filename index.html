@@ -1978,11 +1978,51 @@ async function handleSubReturn() {
         </button>
     </div>
 
-    <div id="wallHeightControls">
-        <div class="wall-label"><i class="fa-solid fa-ruler-vertical"></i> <span data-i18n="wall_option_title">가벽 높이</span></div>
-        <button class="height-btn active" onclick="window.setWallHeight(2200, this)">220cm</button>
-        <button class="height-btn" onclick="window.setWallHeight(2400, this)">240cm</button>
-        <button class="height-btn" onclick="window.setWallHeight(3000, this)">300cm</button>
+    <div id="wallConfigPanel">
+        <!-- Row 1: 너비 (섹션) -->
+        <div class="wall-cfg-row">
+            <div class="wall-cfg-label"><i class="fa-solid fa-arrows-left-right"></i> <span data-i18n="wall_width">너비</span></div>
+            <div class="wall-cfg-btns">
+                <button class="wcfg-btn" data-sections="1" onclick="window.setWallSections(1,this)">1<small>섹션</small></button>
+                <button class="wcfg-btn active" data-sections="2" onclick="window.setWallSections(2,this)">2</button>
+                <button class="wcfg-btn" data-sections="3" onclick="window.setWallSections(3,this)">3</button>
+                <button class="wcfg-btn" data-sections="4" onclick="window.setWallSections(4,this)">4</button>
+                <button class="wcfg-btn" data-sections="5" onclick="window.setWallSections(5,this)">5</button>
+                <input id="wallCustomW" type="number" placeholder="mm" style="width:60px; padding:3px 6px; border:1px solid #ddd; border-radius:6px; font-size:11px; text-align:center; display:none;" onchange="window.setWallCustomWidth(this.value)">
+                <button class="wcfg-btn wcfg-custom-toggle" onclick="window.toggleWallCustomWidth()" data-i18n="wall_custom_input">직접</button>
+            </div>
+        </div>
+        <!-- Row 2: 높이 -->
+        <div class="wall-cfg-row">
+            <div class="wall-cfg-label"><i class="fa-solid fa-ruler-vertical"></i> <span data-i18n="wall_option_title">높이</span></div>
+            <div class="wall-cfg-btns">
+                <button class="wcfg-btn active" onclick="window.setWallHeight(2200,this)">220cm</button>
+                <button class="wcfg-btn" onclick="window.setWallHeight(2400,this)">240cm</button>
+                <button class="wcfg-btn" onclick="window.setWallHeight(3000,this)">300cm</button>
+            </div>
+        </div>
+        <!-- Row 3: 타입 + 개수 -->
+        <div class="wall-cfg-row">
+            <div class="wall-cfg-label"><i class="fa-solid fa-layer-group"></i> <span data-i18n="wall_type">타입</span></div>
+            <div class="wall-cfg-btns">
+                <button class="wcfg-btn active" id="btnWallSingle" onclick="window.setWallSided(false)"><span data-i18n="wall_single_sided">단면</span></button>
+                <button class="wcfg-btn" id="btnWallDouble" onclick="window.setWallSided(true)"><span data-i18n="wall_double_sided">양면</span></button>
+            </div>
+            <div style="width:1px; height:20px; background:#e2e8f0; margin:0 6px;"></div>
+            <div class="wall-cfg-label"><i class="fa-solid fa-clone"></i> <span data-i18n="wall_count">개수</span></div>
+            <div class="wall-cfg-btns" style="gap:2px;">
+                <button class="wcfg-btn wcfg-sm" onclick="window.setWallCount(-1)">−</button>
+                <span id="wallCountDisplay" style="min-width:24px; text-align:center; font-weight:700; font-size:14px; color:#1e293b;">1</span>
+                <button class="wcfg-btn wcfg-sm" onclick="window.setWallCount(1)">+</button>
+            </div>
+        </div>
+        <!-- Row 4: 가격 -->
+        <div class="wall-cfg-row wall-cfg-price" id="wallPriceRow">
+            <i class="fa-solid fa-calculator" style="color:#6366f1;"></i>
+            <span id="wallPriceBreakdown" style="color:#475569; font-size:11px;">—</span>
+            <span style="margin:0 4px; color:#94a3b8;">=</span>
+            <span id="wallTotalPrice" style="color:#6366f1; font-weight:800; font-size:14px;">0</span>
+        </div>
     </div>
 
     <!-- Box Dimension Controls -->
@@ -6690,13 +6730,23 @@ if (w >= 20 && h >= 20) {
         } else if (mode === 'wall') {
             if (boxDimCtrl) boxDimCtrl.style.display = 'none';
             if (boxFaceTabs) boxFaceTabs.style.display = 'none';
-            if (wallFaceTabs) wallFaceTabs.style.display = 'flex';
+            if (wallFaceTabs) wallFaceTabs.style.display = 'none'; // 탭은 config가 관리
             window.__boxMode = false;
             window.__wallMode = true;
-            // 가벽 양면 2페이지 자동 생성
-            setTimeout(async () => {
-                const { initWallPages } = await import('./canvas-pages.js?v=123');
-                initWallPages(1, displayW, displayH);
+            // 가벽 설정 초기화 및 적용
+            setTimeout(() => {
+                if (window.initWallConfig) {
+                    // 현재 제품의 크기로 초기 섹션 수 추정
+                    const cfg = window.__wallConfig;
+                    if (cfg) {
+                        cfg.heightMM = displayH || 2200;
+                        // 제품 너비로 섹션 추정 (섹션×1000 + 200)
+                        const estSections = Math.max(1, Math.min(5, Math.round((displayW - 200) / 1000)));
+                        cfg.sections = estSections;
+                        cfg.customWidth = null;
+                    }
+                    window.initWallConfig();
+                }
             }, 500);
         } else {
             if (boxDimCtrl) boxDimCtrl.style.display = 'none';

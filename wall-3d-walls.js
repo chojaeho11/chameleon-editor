@@ -82,13 +82,14 @@
 
         const width = wallDef.widthMM / 1000;
         const height = wallDef.heightMM / 1000;
-        const depth = (wallDef.depthMM || 100) / 1000;
+        const doubleSided = window.__wallConfig?.doubleSided || false;
+        const depth = doubleSided ? 0.2 : ((wallDef.depthMM || 100) / 1000);
 
         // Panel
         const panelGeo = new THREE.BoxGeometry(width, height, depth);
         const sideMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.5 });
         const frontMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
-        const backMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.6 });
+        const backMat = new THREE.MeshStandardMaterial({ color: doubleSided ? 0xffffff : 0xe8e8e8, roughness: doubleSided ? 0.4 : 0.6 });
         const materials = [sideMat, sideMat.clone(), sideMat.clone(), sideMat.clone(), frontMat, backMat];
         const panel = new THREE.Mesh(panelGeo, materials);
         panel.castShadow = true;
@@ -97,23 +98,32 @@
         panel.userData.wallId = wallDef.id;
         group.add(panel);
 
-        // Back frame
-        const frameMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.6 });
-        const frameZ = -depth / 2 - 0.015;
-        const rt = 0.05, rd = 0.025;
-        addBoxToGroup(group, width - 0.02, rt, rd, 0, height / 2 - rt / 2, frameZ, frameMat);
-        addBoxToGroup(group, width - 0.02, rt, rd, 0, -height / 2 + rt / 2, frameZ, frameMat);
-        addBoxToGroup(group, rt, height, rd, -width / 2 + rt / 2, 0, frameZ, frameMat);
-        addBoxToGroup(group, rt, height, rd, width / 2 - rt / 2, 0, frameZ, frameMat);
+        if (!doubleSided) {
+            // 단면: Back frame + Triangle stands
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.6 });
+            const frameZ = -depth / 2 - 0.015;
+            const rt = 0.05, rd = 0.025;
+            addBoxToGroup(group, width - 0.02, rt, rd, 0, height / 2 - rt / 2, frameZ, frameMat);
+            addBoxToGroup(group, width - 0.02, rt, rd, 0, -height / 2 + rt / 2, frameZ, frameMat);
+            addBoxToGroup(group, rt, height, rd, -width / 2 + rt / 2, 0, frameZ, frameMat);
+            addBoxToGroup(group, rt, height, rd, width / 2 - rt / 2, 0, frameZ, frameMat);
 
-        // Triangle stands
-        const standMat = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.5 });
-        const numSections = Math.max(1, Math.round(wallDef.widthMM / 1000));
-        const numStands = Math.max(2, numSections + 1);
-        const standSpacing = width / (numStands - 1);
-        for (let i = 0; i < numStands; i++) {
-            const sx = -width / 2 + i * standSpacing;
-            createStandInGroup(group, sx, -height / 2, -depth / 2, standMat);
+            const standMat = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.5 });
+            const numSections = Math.max(1, Math.round(wallDef.widthMM / 1000));
+            const numStands = Math.max(2, numSections + 1);
+            const standSpacing = width / (numStands - 1);
+            for (let i = 0; i < numStands; i++) {
+                const sx = -width / 2 + i * standSpacing;
+                createStandInGroup(group, sx, -height / 2, -depth / 2, standMat);
+            }
+        } else {
+            // 양면: 중간 이음선 + 테두리
+            const seamMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.5 });
+            addBoxToGroup(group, width + 0.01, 0.005, depth + 0.005, 0, 0, 0, seamMat);
+            addBoxToGroup(group, 0.008, height, depth + 0.005, -width / 2, 0, 0, seamMat);
+            addBoxToGroup(group, 0.008, height, depth + 0.005, width / 2, 0, 0, seamMat);
+            addBoxToGroup(group, width, 0.008, depth + 0.005, 0, height / 2, 0, seamMat);
+            addBoxToGroup(group, width, 0.008, depth + 0.005, 0, -height / 2, 0, seamMat);
         }
 
         // Position

@@ -801,6 +801,12 @@ async function addCanvasToCart() {
         calcProduct.is_custom_size = true;
         calcProduct._box_sheet_count = window.__boxSheetCount;
         calcProduct._box_dims = window.__boxDims ? { ...window.__boxDims } : null;
+    // ★ 가벽 상품 가격: 면적 × m²단가 × 면수 × 벽수
+    } else if (window.__wallMode && window.__wallCalculatedPrice) {
+        calcProduct.price = window.__wallCalculatedPrice;
+        calcProduct._calculated_price = true;
+        calcProduct.is_custom_size = true;
+        calcProduct._wall_config = window.__wallConfig ? { ...window.__wallConfig } : null;
     } else if (product.is_custom_size) {
         // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지
         if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || 0) - currentMmW) < 5) {

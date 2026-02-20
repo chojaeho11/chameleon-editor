@@ -1404,5 +1404,14 @@
   "wall_preset_booth": "展位",
   "wall_preset_square": "方形",
   "msg_min_wall": "至少需要一面墙",
-  "hint_3d_wall_controls": "点击: 选择 | Shift+拖拽: 移动 | 拖拽: 旋转"
+  "hint_3d_wall_controls": "点击: 选择 | Shift+拖拽: 移动 | 拖拽: 旋转",
+  "wall_config_title": "隔墙设置",
+  "wall_width": "宽度",
+  "wall_sections": "区段",
+  "wall_custom_input": "自定义",
+  "wall_type": "类型",
+  "wall_single_sided": "单面",
+  "wall_double_sided": "双面",
+  "wall_count": "数量",
+  "wall_price_calc": "价格"
 }

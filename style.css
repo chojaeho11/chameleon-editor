@@ -376,22 +376,39 @@ button, input, textarea, select { font-family: inherit; }
 #guideToggle.active { background: var(--primary); color: white; }
 .help-text { font-size: 12px; color: #666; margin-left: 10px; font-weight: 500; white-space: nowrap; }
 
-/* 가벽 높이 컨트롤 */
-#wallHeightControls { 
-    position: absolute; top: 85px; left: 50%; transform: translateX(-50%); 
-    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); 
-    padding: 8px 15px; border-radius: 50px; 
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12); display: none; 
-    align-items: center; gap: 12px; z-index: 40; 
-    border: 1px solid rgba(0,0,0,0.1); white-space: nowrap; 
+/* 가벽 구성 패널 */
+#wallConfigPanel {
+    position: absolute; top: 85px; left: 50%; transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(12px);
+    padding: 10px 16px; border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12); display: none;
+    flex-direction: column; gap: 6px; z-index: 40;
+    border: 1px solid rgba(0,0,0,0.08); min-width: 320px; max-width: 520px;
 }
-.wall-label { font-size: 13px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px; }
-.height-btn { 
-    padding: 6px 16px; border-radius: 20px; border: 1px solid #e2e8f0; 
-    background: #fff; color: #64748b; font-size: 13px; font-weight: 600; 
-    cursor: pointer; transition: all 0.2s; white-space: nowrap; 
+.wall-cfg-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
 }
-.height-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.wall-cfg-label {
+    font-size: 11px; font-weight: 700; color: #475569;
+    display: flex; align-items: center; gap: 4px; white-space: nowrap; min-width: 42px;
+}
+.wall-cfg-btns {
+    display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;
+}
+.wcfg-btn {
+    padding: 4px 12px; border-radius: 8px; border: 1px solid #e2e8f0;
+    background: #fff; color: #64748b; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap; line-height: 1.3;
+}
+.wcfg-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.wcfg-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.wcfg-btn small { font-size: 9px; opacity: 0.7; margin-left: 1px; }
+.wcfg-btn.wcfg-sm { padding: 4px 10px; font-size: 14px; font-weight: 800; min-width: 28px; text-align: center; }
+.wcfg-btn.wcfg-custom-toggle { font-size: 11px; padding: 4px 8px; }
+.wall-cfg-price {
+    background: #f8fafc; border-radius: 8px; padding: 6px 10px;
+    display: flex; align-items: center; gap: 6px;
+}
 
 /* Box Face Tabs */
 .box-face-tab {
