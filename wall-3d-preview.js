@@ -156,9 +156,9 @@
         const h = container.clientHeight;
         camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         renderer.setSize(w, h);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
@@ -174,8 +174,8 @@
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
         dirLight.position.set(5, 8, 5);
         dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.mapSize.width = 512;
+        dirLight.shadow.mapSize.height = 512;
         scene.add(dirLight);
 
         const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
@@ -824,6 +824,24 @@
         if (!modal || modal.style.display === 'none' || !isInitialized) return;
         if (e.detail.mode === 'wall') window.open3DPreview();
     });
+
+    // ─── Screenshot download ───
+    window.capture3DScreenshot = function () {
+        if (!renderer || !scene || !camera) return;
+        renderer.render(scene, camera);
+        try {
+            const dataUrl = renderer.domElement.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = 'wall-3d-preview.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch (e) {
+            console.error('3D screenshot failed:', e);
+            if (window.showToast) window.showToast('Screenshot failed', 'error');
+        }
+    };
 
     // ─── Phase 3: 공유 상태 노출 ───
     // wall-3d-walls.js 등 외부 모듈이 scene, camera 등에 접근

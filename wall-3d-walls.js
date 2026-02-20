@@ -3,6 +3,8 @@
     'use strict';
 
     const WALL_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+    const ACCESSORY_COLOR = 0xFFD700; // Yellow for visibility
+    const ACCESSORY_PRICES_KRW = { cornerPillar: 100000, topLight: 50000, outdoorStand: 100000 };
 
     // ─── 데이터 ───
     window.__wallComposition = {
@@ -723,17 +725,17 @@
         const acc = window.__wallAccessories;
         if (comp.walls.length === 0) return;
 
-        // ── 모서리 기둥 ──
+        const accMat = new THREE.MeshStandardMaterial({ color: ACCESSORY_COLOR, roughness: 0.4, metalness: 0.1 });
+
+        // ── 모서리 기둥 (yellow) ──
         if (acc.cornerPillar) {
             const pillarPositions = calcCornerPillarPositions(comp);
             pillarPositions.forEach(pp => {
                 const h = pp.height;
-                const pillarSize = 0.1; // 100mm
+                const pillarSize = 0.1;
                 const geo = new THREE.BoxGeometry(pillarSize, h, pillarSize);
-                const mat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.1 });
-                const mesh = new THREE.Mesh(geo, mat);
+                const mesh = new THREE.Mesh(geo, accMat.clone());
                 mesh.position.set(pp.x, h / 2, pp.z);
-                mesh.castShadow = true;
                 ctx.scene.add(mesh);
                 accessoryMeshes.push(mesh);
             });
@@ -742,9 +744,12 @@
             updateAccessoryCount('cornerPillarCount', 0);
         }
 
-        // ── 상단 조명 ──
+        // ── 상단 조명 (yellow, position fixed to wall top) ──
         if (acc.topLight) {
             let lightCount = 0;
+            const barGeo = new THREE.BoxGeometry(0.04, 0.25, 0.04);
+            const headGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.08, 6);
+            const bulbGeo = new THREE.CircleGeometry(0.03, 6);
             comp.walls.forEach(wall => {
                 const sections = Math.max(1, Math.round(wall.widthMM / 1000));
                 const wM = wall.widthMM / 1000;
@@ -753,35 +758,29 @@
                 for (let s = 0; s < sections; s++) {
                     const localX = -wM / 2 + sectionW / 2 + s * sectionW;
                     const lightGroup = new THREE.Group();
-                    // 조명 바 (아암)
-                    const barGeo = new THREE.BoxGeometry(0.04, 0.25, 0.04);
-                    const barMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.3, metalness: 0.5 });
-                    const bar = new THREE.Mesh(barGeo, barMat);
+                    // Arm bar (yellow)
+                    const bar = new THREE.Mesh(barGeo, accMat.clone());
                     bar.position.set(0, 0.125, -0.08);
                     lightGroup.add(bar);
-                    // 조명 헤드
-                    const headGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.08, 8);
-                    const headMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.6 });
-                    const head = new THREE.Mesh(headGeo, headMat);
+                    // Light head (yellow)
+                    const head = new THREE.Mesh(headGeo, accMat.clone());
                     head.rotation.x = Math.PI / 4;
                     head.position.set(0, 0.25, -0.12);
                     lightGroup.add(head);
-                    // 발광부
-                    const bulbGeo = new THREE.CircleGeometry(0.03, 8);
+                    // Bulb (emissive warm)
                     const bulbMat = new THREE.MeshStandardMaterial({ color: 0xfff8e1, emissive: 0xfff176, emissiveIntensity: 0.8 });
                     const bulb = new THREE.Mesh(bulbGeo, bulbMat);
                     bulb.rotation.x = -Math.PI / 4;
                     bulb.position.set(0, 0.23, -0.15);
                     lightGroup.add(bulb);
 
-                    // 벽 기준 위치 (로컬 → 월드)
+                    // FIX: wall top = hM/2 in local coords (not hM)
                     if (wall.group) {
-                        const worldPos = new THREE.Vector3(localX, hM, 0);
+                        const worldPos = new THREE.Vector3(localX, hM / 2, 0);
                         wall.group.localToWorld(worldPos);
                         lightGroup.position.copy(worldPos);
                         lightGroup.rotation.y = wall.rotY || 0;
                     }
-                    lightGroup.castShadow = true;
                     ctx.scene.add(lightGroup);
                     accessoryMeshes.push(lightGroup);
                     lightCount++;
@@ -792,54 +791,66 @@
             updateAccessoryCount('topLightCount', 0);
         }
 
-        // ── 야외용 받침대 (보조 삼각 받침대) ──
+        // ── 야외용 받침대 (left+right ends only, trapezoid front+back, yellow) ──
         if (acc.outdoorStand) {
-            let standCount = 0;
+            let setCount = 0;
+            const baseExtend = 0.35;
+            const standH = 0.45;
+            const thickness = 0.04;
+            const standShape = new THREE.Shape();
+            standShape.moveTo(0, 0);
+            standShape.lineTo(0, standH);
+            standShape.lineTo(baseExtend, 0);
+            standShape.closePath();
+            const standGeo = new THREE.ExtrudeGeometry(standShape, { depth: thickness, bevelEnabled: false });
+
             comp.walls.forEach(wall => {
                 const wM = wall.widthMM / 1000;
                 const hM = wall.heightMM / 1000;
-                const sections = Math.max(1, Math.round(wall.widthMM / 1000));
-                const numStands = Math.max(2, sections + 1);
-                const spacing = wM / (numStands - 1);
-                for (let i = 0; i < numStands; i++) {
-                    const localX = -wM / 2 + i * spacing;
+                const doubleSided = window.__wallConfig?.doubleSided || false;
+                const wallDepth = doubleSided ? 0.2 : 0.1;
+
+                // Only left and right ends
+                [-wM / 2, wM / 2].forEach(localX => {
                     const standGroup = new THREE.Group();
-                    // 삼각형 받침 (앞쪽 방향)
-                    const standBase = 0.5, standH = 0.6, standW = 0.06;
-                    const shape = new THREE.Shape();
-                    shape.moveTo(0, 0);
-                    shape.lineTo(standBase, 0);
-                    shape.lineTo(0, standH);
-                    shape.closePath();
-                    const extGeo = new THREE.ExtrudeGeometry(shape, { depth: standW, bevelEnabled: false });
-                    const standMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.5 });
-                    const standMesh = new THREE.Mesh(extGeo, standMat);
-                    standMesh.rotation.y = Math.PI / 2;
-                    standMesh.position.set(0, 0, 0);
-                    standMesh.castShadow = true;
-                    standGroup.add(standMesh);
-                    // 바닥 플레이트
-                    const plateGeo = new THREE.BoxGeometry(0.1, 0.02, standBase * 0.4);
-                    const plate = new THREE.Mesh(plateGeo, standMat);
-                    plate.position.set(0, 0.01, standBase * 0.2);
+
+                    // Front triangle (extends toward +Z)
+                    const front = new THREE.Mesh(standGeo, accMat.clone());
+                    front.rotation.y = Math.PI / 2;
+                    front.position.set(thickness / 2, 0, wallDepth / 2);
+                    standGroup.add(front);
+
+                    // Back triangle (extends toward -Z)
+                    const back = new THREE.Mesh(standGeo, accMat.clone());
+                    back.rotation.y = -Math.PI / 2;
+                    back.position.set(-thickness / 2, 0, -wallDepth / 2);
+                    standGroup.add(back);
+
+                    // Ground base plate connecting front and back
+                    const totalZ = wallDepth + baseExtend * 2;
+                    const plateGeo = new THREE.BoxGeometry(thickness * 2, 0.015, totalZ);
+                    const plate = new THREE.Mesh(plateGeo, accMat.clone());
+                    plate.position.set(0, 0.0075, 0);
                     standGroup.add(plate);
 
                     if (wall.group) {
-                        const depth = 0.05; // 벽 앞면에서 약간 앞
-                        const worldPos = new THREE.Vector3(localX, -hM / 2, depth);
+                        const worldPos = new THREE.Vector3(localX, -hM / 2, 0);
                         wall.group.localToWorld(worldPos);
                         standGroup.position.copy(worldPos);
-                        standGroup.rotation.y = (wall.rotY || 0);
+                        standGroup.rotation.y = wall.rotY || 0;
                     }
                     ctx.scene.add(standGroup);
                     accessoryMeshes.push(standGroup);
-                    standCount++;
-                }
+                });
+                setCount++;
             });
-            updateAccessoryCount('outdoorStandCount', standCount);
+            // Show set count (1 set per wall, each set = left+right stands)
+            updateAccessoryCount('outdoorStandCount', setCount);
         } else {
             updateAccessoryCount('outdoorStandCount', 0);
         }
+
+        updateAccessoryPricing();
     }
 
     // 모서리 기둥 위치 계산
@@ -899,21 +910,56 @@
 
     function updateAccessoryCount(elemId, count) {
         const el = document.getElementById(elemId);
-        if (el) el.textContent = count > 0 ? '×' + count : '';
+        if (el) el.textContent = count > 0 ? '\u00D7' + count : '';
+    }
+
+    function updateAccessoryPricing() {
+        const getCount = (id) => parseInt(document.getElementById(id)?.textContent?.replace('\u00D7', '') || '0');
+        const pillarCount = getCount('cornerPillarCount');
+        const lightCount = getCount('topLightCount');
+        const standSetCount = getCount('outdoorStandCount');
+
+        const cfg = window.SITE_CONFIG || {};
+        const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
+        const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[cfg.COUNTRY]) || '\uC6D0';
+
+        const pillarTotal = pillarCount * ACCESSORY_PRICES_KRW.cornerPillar * rate;
+        const lightTotal = lightCount * ACCESSORY_PRICES_KRW.topLight * rate;
+        const standTotal = standSetCount * ACCESSORY_PRICES_KRW.outdoorStand * rate;
+        const grandTotal = pillarTotal + lightTotal + standTotal;
+
+        const priceEl = document.getElementById('accessoryPriceDisplay');
+        if (priceEl) {
+            if (grandTotal > 0) {
+                const fmt = (v) => Math.round(v).toLocaleString();
+                let lines = [];
+                if (pillarCount > 0) lines.push('\uAE30\uB465 ' + pillarCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.cornerPillar * rate));
+                if (lightCount > 0) lines.push('\uC870\uBA85 ' + lightCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.topLight * rate));
+                if (standSetCount > 0) lines.push('\uBC1B\uCE68 ' + standSetCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.outdoorStand * rate));
+                priceEl.innerHTML = lines.join('<br>') +
+                    '<div style="border-top:1px solid rgba(255,255,255,0.15);margin:4px 0;padding-top:4px;font-weight:700;color:#FFD700;">' +
+                    fmt(grandTotal) + ' ' + unit + '</div>';
+                priceEl.style.display = 'block';
+            } else {
+                priceEl.style.display = 'none';
+            }
+        }
+
+        // Store in __wallConfig for order.js
+        if (window.__wallConfig) {
+            window.__wallConfig.accessories = { ...window.__wallAccessories };
+            window.__wallConfig.accessoryPrice = Math.round(grandTotal / rate); // Store in KRW
+            window.__wallConfig.accessoryCounts = {
+                cornerPillar: pillarCount,
+                topLight: lightCount,
+                outdoorStand: standSetCount
+            };
+        }
     }
 
     window.toggleAccessory = function (key, enabled) {
         window.__wallAccessories[key] = enabled;
         rebuildAccessories();
-        // 가격 계산에 반영할 수 있도록 __wallConfig에 저장
-        if (window.__wallConfig) {
-            window.__wallConfig.accessories = { ...window.__wallAccessories };
-            window.__wallConfig.accessoryCounts = {
-                cornerPillar: parseInt(document.getElementById('cornerPillarCount')?.textContent?.replace('×', '') || '0'),
-                topLight: parseInt(document.getElementById('topLightCount')?.textContent?.replace('×', '') || '0'),
-                outdoorStand: parseInt(document.getElementById('outdoorStandCount')?.textContent?.replace('×', '') || '0')
-            };
-        }
     };
 
     // ─── 초기화: 3D 모달이 열릴 때 selection 설정 ───

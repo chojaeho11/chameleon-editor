@@ -2607,6 +2607,7 @@ async function handleSubReturn() {
 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; background:rgba(0,0,0,0.3); flex-shrink:0;">
 <span style="color:#fff; font-weight:700; font-size:14px;"><i class="fa-solid fa-cube"></i> <span data-i18n="modal_3d_title">3D 미리보기</span> <span id="wall3dDimLabel" style="font-weight:400; color:#94a3b8; margin-left:8px;"></span></span>
 <div style="display:flex; gap:8px; align-items:center;">
+<button onclick="window.capture3DScreenshot()" style="padding:6px 12px; background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:6px; font-size:11px; cursor:pointer;" title="Screenshot"><i class="fa-solid fa-camera"></i></button>
 <button onclick="window.refresh3DTexture()" style="padding:6px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; cursor:pointer;"><i class="fa-solid fa-sync"></i> <span data-i18n="btn_3d_refresh">새로고침</span></button>
 <button onclick="document.getElementById('wall3DModal').style.display='none'" style="width:32px; height:32px; background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:16px;">✕</button>
 </div></div>
@@ -2647,26 +2648,27 @@ async function handleSubReturn() {
     <div style="display:flex; flex-direction:column; gap:6px;">
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
         <input type="checkbox" id="opt3dCornerPillar" onchange="window.toggleAccessory('cornerPillar', this.checked)" style="accent-color:#6366f1;">
-        <i class="fa-solid fa-archway" style="width:14px; color:#a78bfa;"></i> 모서리 기둥
+        <i class="fa-solid fa-archway" style="width:14px; color:#FFD700;"></i> 모서리 기둥
         <span id="cornerPillarCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
         <input type="checkbox" id="opt3dTopLight" onchange="window.toggleAccessory('topLight', this.checked)" style="accent-color:#6366f1;">
-        <i class="fa-solid fa-lightbulb" style="width:14px; color:#fbbf24;"></i> 상단 조명
+        <i class="fa-solid fa-lightbulb" style="width:14px; color:#FFD700;"></i> 상단 조명
         <span id="topLightCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
         <input type="checkbox" id="opt3dOutdoorStand" onchange="window.toggleAccessory('outdoorStand', this.checked)" style="accent-color:#6366f1;">
-        <i class="fa-solid fa-wind" style="width:14px; color:#38bdf8;"></i> 야외용 받침대
+        <i class="fa-solid fa-wind" style="width:14px; color:#FFD700;"></i> 야외용 받침대
         <span id="outdoorStandCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
     </div>
+    <div id="accessoryPriceDisplay" style="display:none; margin-top:8px; padding:8px; background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.2); border-radius:6px; color:#e2e8f0; font-size:10px; line-height:1.6;"></div>
   </div>
 </div>
 <!-- 3D Viewport -->
 <div id="threeDContainer" style="flex:1; height:100%;"></div>
 </div>
-<div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.4); font-size:11px; pointer-events:none;"><span id="wall3dHint" data-i18n="hint_3d_controls">🖱 드래그: 회전 | 스크롤: 줌 | 우클릭: 이동</span></div>
+<div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.4); font-size:11px; pointer-events:none;"><span id="wall3dHint" data-i18n="hint_3d_controls">🖱 클릭+드래그: 벽 이동 | 빈 곳 드래그: 회전 | Space+드래그: 화면 이동 | 스크롤: 줌</span></div>
 </div></div>
 
 <div id="loginModal" class="modal-bg" style="z-index: 10002;">
