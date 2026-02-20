@@ -3,8 +3,10 @@
     'use strict';
 
     const WALL_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-    const ACCESSORY_COLOR = 0xFFD700; // Yellow for visibility
-    const ACCESSORY_PRICES_KRW = { cornerPillar: 100000, topLight: 50000, outdoorStand: 100000 };
+    const ACCESSORY_COLOR = 0xFFD700; // Yellow for pillar & light
+    const STAND_COLOR = 0xf0f0f0;    // White for outdoor stands
+    const ACCESSORY_PRICES_KRW = { cornerPillar: 100000, topLight: 50000, outdoorStand: 80000 };
+    const ADDON_CODE_MAP = { cornerPillar: 'For', topLight: '87545', outdoorStand: 'b0001' };
 
     // ─── 데이터 ───
     window.__wallComposition = {
@@ -747,7 +749,7 @@
             updateAccessoryCount('cornerPillarCount', 0);
         }
 
-        // ── 상단 조명 (yellow, simple rectangular bar on wall top) ──
+        // ── 상단 조명 (yellow, rotated 90°, perpendicular to wall, half length) ──
         if (acc.topLight) {
             let lightCount = 0;
             comp.walls.forEach(wall => {
@@ -756,10 +758,11 @@
                 const hM = wall.heightMM / 1000;
                 const sectionW = wM / sections;
                 const barH = 0.03;
-                const barD = 0.08;
                 for (let s = 0; s < sections; s++) {
                     const localX = -wM / 2 + sectionW / 2 + s * sectionW;
-                    const barW = sectionW * 0.85;
+                    // 90° rotated: narrow along wall, extends front-to-back, halved length
+                    const barW = 0.08;                     // narrow along wall
+                    const barD = sectionW * 0.425;         // half of original length, perpendicular
                     const barGeo = new THREE.BoxGeometry(barW, barH, barD);
                     const bar = new THREE.Mesh(barGeo, accMat.clone());
                     if (wall.group) {
@@ -778,14 +781,15 @@
             updateAccessoryCount('topLightCount', 0);
         }
 
-        // ── 야외용 받침대 (thick trapezoid at wall ends, extends front+back) ──
+        // ── 야외용 받침대 (thick white trapezoid, bigger to cover default stands) ──
         if (acc.outdoorStand) {
             let setCount = 0;
-            // Trapezoid cross-section (XY plane): wide bottom, narrow top
-            const bH = 0.25;  // bottom half-width (front-back extend)
-            const tH = 0.06;  // top half-width
-            const sH = 0.3;   // stand height
-            const sT = 0.08;  // thickness along wall direction
+            const standMat = new THREE.MeshStandardMaterial({ color: STAND_COLOR, roughness: 0.5, metalness: 0.0 });
+            // Bigger trapezoid to cover default white stands
+            const bH = 0.40;  // bottom half-width (front-back extend)
+            const tH = 0.08;  // top half-width
+            const sH = 0.50;  // stand height (taller than default 0.45)
+            const sT = 0.12;  // thickness along wall direction
             const trapShape = new THREE.Shape();
             trapShape.moveTo(-bH, 0);
             trapShape.lineTo(bH, 0);
@@ -801,7 +805,7 @@
                 // Only left and right ends of each wall
                 [-wM / 2, wM / 2].forEach(localX => {
                     const standGroup = new THREE.Group();
-                    const mesh = new THREE.Mesh(trapGeo, accMat.clone());
+                    const mesh = new THREE.Mesh(trapGeo, standMat.clone());
                     // Rotate so cross-section faces Z (front-back), extrusion along X
                     mesh.rotation.y = Math.PI / 2;
                     mesh.position.x = -sT / 2; // Center thickness
@@ -906,9 +910,9 @@
             if (grandTotal > 0) {
                 const fmt = (v) => Math.round(v).toLocaleString();
                 let lines = [];
-                if (pillarCount > 0) lines.push('\uAE30\uB465 ' + pillarCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.cornerPillar * rate));
+                if (pillarCount > 0) lines.push('\uCF54\uB108\uAE30\uB465 ' + pillarCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.cornerPillar * rate));
                 if (lightCount > 0) lines.push('\uC870\uBA85 ' + lightCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.topLight * rate));
-                if (standSetCount > 0) lines.push('\uBC1B\uCE68 ' + standSetCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.outdoorStand * rate));
+                if (standSetCount > 0) lines.push('\uC678\uBD80\uBC1B\uCE68 ' + standSetCount + '\uC870\u00D7' + fmt(ACCESSORY_PRICES_KRW.outdoorStand * rate));
                 priceEl.innerHTML = lines.join('<br>') +
                     '<div style="border-top:1px solid rgba(255,255,255,0.15);margin:4px 0;padding-top:4px;font-weight:700;color:#FFD700;">' +
                     fmt(grandTotal) + ' ' + unit + '</div>';
@@ -933,6 +937,30 @@
     window.toggleAccessory = function (key, enabled) {
         window.__wallAccessories[key] = enabled;
         rebuildAccessories();
+
+        // Sync with cart addon checkboxes
+        const addonCode = ADDON_CODE_MAP[key];
+        if (!addonCode) return;
+        const chk = document.querySelector('input[name="userOption"][value="' + addonCode + '"]');
+        if (!chk) return;
+        chk.checked = enabled;
+        // Show/hide qty box
+        const row = chk.closest('.addon-item-row');
+        if (row) {
+            const qtyBox = row.querySelector('.addon-qty-box');
+            if (qtyBox) qtyBox.style.display = enabled ? 'flex' : 'none';
+            // Set qty from accessory count
+            if (enabled) {
+                const countEl = document.getElementById(
+                    key === 'cornerPillar' ? 'cornerPillarCount' :
+                    key === 'topLight' ? 'topLightCount' : 'outdoorStandCount'
+                );
+                const count = parseInt(countEl?.textContent?.replace('\u00D7', '') || '1');
+                const qtyInput = row.querySelector('.addon-qty-input');
+                if (qtyInput && count > 0) qtyInput.value = count;
+            }
+        }
+        if (window.updateModalTotal) window.updateModalTotal();
     };
 
     // ─── 초기화: 3D 모달이 열릴 때 selection 설정 ───
