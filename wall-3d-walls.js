@@ -758,6 +758,8 @@
                 const hM = wall.heightMM / 1000;
                 const sectionW = wM / sections;
                 const barH = 0.03;
+                // Ensure world matrix is up-to-date before localToWorld
+                if (wall.group) wall.group.updateMatrixWorld(true);
                 for (let s = 0; s < sections; s++) {
                     const localX = -wM / 2 + sectionW / 2 + s * sectionW;
                     // 90° rotated: narrow along wall, extends front-to-back, halved length
@@ -781,9 +783,9 @@
             updateAccessoryCount('topLightCount', 0);
         }
 
-        // ── 야외용 받침대 (thick white trapezoid, bigger to cover default stands) ──
+        // ── 야외용 받침대 (thick white trapezoid, only at OUTER endpoints, skip junctions) ──
         if (acc.outdoorStand) {
-            let setCount = 0;
+            let standCount = 0;
             const standMat = new THREE.MeshStandardMaterial({ color: STAND_COLOR, roughness: 0.5, metalness: 0.0 });
             // Bigger trapezoid to cover default white stands
             const bH = 0.40;  // bottom half-width (front-back extend)
@@ -798,12 +800,24 @@
             trapShape.closePath();
             const trapGeo = new THREE.ExtrudeGeometry(trapShape, { depth: sT, bevelEnabled: false });
 
+            // 접합점 계산 — 다른 벽과 만나는 끝점에는 받침대 배치 안 함
+            const junctions = calcJunctionEndpoints(comp);
+
             comp.walls.forEach(wall => {
                 const wM = wall.widthMM / 1000;
                 const hM = wall.heightMM / 1000;
+                // Ensure world matrix is up-to-date
+                if (wall.group) wall.group.updateMatrixWorld(true);
 
-                // Only left and right ends of each wall
-                [-wM / 2, wM / 2].forEach(localX => {
+                const sides = [
+                    { localX: -wM / 2, key: wall.id + ':left' },
+                    { localX: wM / 2, key: wall.id + ':right' }
+                ];
+
+                sides.forEach(({ localX, key }) => {
+                    // 접합점이면 건너뜀 (L자 안쪽 등)
+                    if (junctions.has(key)) return;
+
                     const standGroup = new THREE.Group();
                     const mesh = new THREE.Mesh(trapGeo, standMat.clone());
                     // Rotate so cross-section faces Z (front-back), extrusion along X
@@ -819,15 +833,48 @@
                     }
                     ctx.scene.add(standGroup);
                     accessoryMeshes.push(standGroup);
+                    standCount++;
                 });
-                setCount++;
             });
+            // 1조 = 2개, 올림 처리
+            const setCount = Math.ceil(standCount / 2);
             updateAccessoryCount('outdoorStandCount', setCount);
         } else {
             updateAccessoryCount('outdoorStandCount', 0);
         }
 
         updateAccessoryPricing();
+    }
+
+    // 벽 끝점 중 다른 벽과 만나는 접합점 계산 (야외 받침대 배치에서 제외할 끝점)
+    function calcJunctionEndpoints(comp) {
+        const junctions = new Set();
+        const walls = comp.walls;
+        if (walls.length < 2) return junctions;
+
+        const threshold = 0.15; // 150mm 이내면 접합된 것으로 판단
+        const endpoints = [];
+        walls.forEach(wall => {
+            const wM = wall.widthMM / 1000;
+            const cos = Math.cos(wall.rotY || 0);
+            const sin = Math.sin(wall.rotY || 0);
+            const halfW = wM / 2;
+            endpoints.push({ wallId: wall.id, side: 'left', x: wall.posX - halfW * cos, z: wall.posZ + halfW * sin });
+            endpoints.push({ wallId: wall.id, side: 'right', x: wall.posX + halfW * cos, z: wall.posZ - halfW * sin });
+        });
+
+        for (let i = 0; i < endpoints.length; i++) {
+            for (let j = i + 1; j < endpoints.length; j++) {
+                if (endpoints[i].wallId === endpoints[j].wallId) continue;
+                const dx = endpoints[i].x - endpoints[j].x;
+                const dz = endpoints[i].z - endpoints[j].z;
+                if (Math.sqrt(dx * dx + dz * dz) < threshold) {
+                    junctions.add(endpoints[i].wallId + ':' + endpoints[i].side);
+                    junctions.add(endpoints[j].wallId + ':' + endpoints[j].side);
+                }
+            }
+        }
+        return junctions;
     }
 
     // 모서리 기둥 위치 계산
