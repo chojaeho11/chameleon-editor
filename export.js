@@ -461,7 +461,12 @@ export function initExport() {
                     });
                 });
 
-                const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: 2 });
+                // 고해상도 PNG: maxPixels 안전장치 적용
+                const _maxPx = 67108864; // 64M pixels
+                const _basePx = finalW * finalH;
+                let _pngMult = 4;
+                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(1, Math.floor(Math.sqrt(_maxPx / _basePx)));
+                const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: _pngMult });
                 
                 const link = document.createElement('a');
                 link.download = `design_${new Date().getTime()}.png`;
@@ -588,7 +593,7 @@ async function getSafeImageDataUrl(url) {
         img.onload = () => {
             clearTimeout(timeout);
             const isMobile = window.innerWidth <= 768;
-            const MAX_SIZE = isMobile ? 800 : 1500;
+            const MAX_SIZE = isMobile ? 1500 : 3000;
             let w = img.width; let h = img.height;
             if (w > MAX_SIZE || h > MAX_SIZE) {
                 if (w > h) { h = Math.round((h * MAX_SIZE) / w); w = MAX_SIZE; }
@@ -598,7 +603,7 @@ async function getSafeImageDataUrl(url) {
             c.width = w; c.height = h;
             const ctx = c.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-            try { resolve(c.toDataURL('image/jpeg', isMobile ? 0.6 : 0.8)); } catch(e) { resolve(null); }
+            try { resolve(c.toDataURL('image/jpeg', isMobile ? 0.75 : 0.92)); } catch(e) { resolve(null); }
         };
         img.onerror = () => { clearTimeout(timeout); resolve(null); };
     });
@@ -767,11 +772,11 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
                 // 텍스트 잔여 → SVG 사용 불가, 래스터(이미지)로 안전하게 출력
                 console.warn("[벡터PDF] 미변환 텍스트 발견 → 래스터 전환");
                 tempCanvas.renderAll();
-                const maxPixels = 16000000;
+                const maxPixels = 67108864; // 64M pixels - 고해상도 인쇄용
                 const basePixels = w * h;
-                let mult = 2;
+                let mult = 4;
                 if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
-                const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: mult });
+                const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult });
                 doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
             } else {
                 // 모든 텍스트가 패스로 변환됨 → SVG 벡터 출력
@@ -928,12 +933,12 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
                 });
             });
             const isMobileDevice = window.innerWidth <= 768;
-            // 대형 캔버스 메모리 초과 방지: 픽셀 면적 기준으로 multiplier 조절
-            const maxPixels = 16000000; // 16M pixels 안전 한계
+            // 고해상도 인쇄용 PDF: 픽셀 면적 기준으로 multiplier 조절
+            const maxPixels = 67108864; // 64M pixels - 고해상도
             const basePixels = w * h;
-            let mult = isMobileDevice ? 1 : 2;
+            let mult = isMobileDevice ? 2 : 4;
             if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
-            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: mult });
+            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult });
             doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
             tempCvs.dispose();
         }
@@ -1015,11 +1020,13 @@ export async function generateBoxLayoutPDF(sheets, boxDims, faceJsons) {
                 });
 
                 // 3. Capture face as image
-                const maxPixels = 8000000;
+                const maxPixels = 33554432; // 32M pixels - 박스 배치도 고해상도
                 const basePixels = origWpx * origHpx;
                 let mult = 1;
-                if (basePixels * 4 <= maxPixels) mult = 2;
-                const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: mult });
+                if (basePixels * 16 <= maxPixels) mult = 4;
+                else if (basePixels * 9 <= maxPixels) mult = 3;
+                else if (basePixels * 4 <= maxPixels) mult = 2;
+                const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: mult });
                 tempCvs.dispose();
 
                 // 4. Place on PDF
@@ -1471,7 +1478,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                     let cx = 0, cy = 0, cw = tempCvs.width, ch = tempCvs.height;
                     if(board) { cx = board.left; cy = board.top; cw = board.width * board.scaleX; ch = board.height * board.scaleY; }
 
-                    imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.7, multiplier: 0.5, left: cx, top: cy, width: cw, height: ch });
+                    imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 1, left: cx, top: cy, width: cw, height: ch });
                     tempCvs.dispose();
                 } catch(e) {}
             }
