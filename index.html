@@ -4255,7 +4255,7 @@ window.getTinyThumb = function(url, size = 150) {
     const separator = url.includes('?') ? '&' : '?';
 
     // 3. 리사이징 파라미터 추가
-    return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=50&format=webp`;
+    return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=65&format=webp`;
 };
     window.openProductDetail = openProductDetail;
     window.startDesignFromProduct = startDesignFromProduct;
@@ -4523,7 +4523,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                 let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
                 if (imgSrc.includes('supabase.co')) {
                     const sep = imgSrc.includes('?') ? '&' : '?';
-                    imgSrc += `${sep}width=300&height=300&resize=cover&quality=60`;
+                    imgSrc += `${sep}width=400&height=400&resize=cover&quality=70`;
                 }
 
                 // 뱃지 표시 (벡터인지 확인용)
@@ -6945,11 +6945,15 @@ if (w >= 20 && h >= 20) {
                     starHtml = `<span style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.75); color:#fbbf24; font-size:13px; width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; z-index:5;"><i class="fa-solid fa-crown"></i></span>`;
                 }
 
-                // 2. 이미지 최적화 (정사각형 1:1 비율 요청)
+                // 2. 이미지 최적화 (별표는 고해상도)
                 let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
                 if (imgSrc.includes('supabase.co')) {
                     const separator = imgSrc.includes('?') ? '&' : '?';
-                    imgSrc += `${separator}width=400&height=400&resize=cover&format=webp&quality=70`;
+                    if (isPremium) {
+                        imgSrc += `${separator}width=600&height=600&resize=cover&format=webp&quality=85`;
+                    } else {
+                        imgSrc += `${separator}width=500&height=500&resize=cover&format=webp&quality=75`;
+                    }
                 }
 
                 // 3. HTML 구성 및 스타일 강제 적용
