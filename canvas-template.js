@@ -280,7 +280,7 @@ async function loadTemplatePage(pageIndex) {
         const dynamicPerPage = currentIsMobile ? 8 : 12;
 
         let query = sb.from('library')
-            .select('id, thumb_url, tags, category, product_key, created_at')
+            .select('id, thumb_url, data_url, tags, category, product_key, created_at')
             .order('created_at', { ascending: false })
             .range(pageIndex * dynamicPerPage, (pageIndex + 1) * dynamicPerPage - 1);
 
@@ -337,7 +337,7 @@ async function loadTemplatePage(pageIndex) {
             const card = document.createElement("div");
             card.className = "tpl-item";
             
-            const rawUrl = item.thumb_url || 'https://via.placeholder.com/400?text=No+Image';
+            const rawUrl = item.data_url || item.thumb_url || 'https://via.placeholder.com/400?text=No+Image';
             const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 400) : rawUrl;
             const displayTitle = item.tags ? item.tags.split(',')[0] : window.t('msg_untitled', 'Untitled');
             
@@ -1163,7 +1163,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         const isAsc = (sideCurrentGroup === 'group_text_tpl');
 
         let query = sb.from('library')
-            .select('id, thumb_url, title, category, product_key, tags')
+            .select('id, thumb_url, data_url, title, category, product_key, tags')
             .eq('status', 'approved')
             .order('created_at', { ascending: isAsc })
             .range(sideCurrentPage * SIDE_ITEMS_PER_PAGE, (sideCurrentPage + 1) * SIDE_ITEMS_PER_PAGE - 1);
@@ -1205,7 +1205,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         data.forEach((tpl) => {
             const div = document.createElement("div");
             div.className = "side-tpl-card";
-            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 400) : tpl.thumb_url;
+            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.data_url || tpl.thumb_url, 400) : (tpl.data_url || tpl.thumb_url);
 
             let badgeHtml = "";
             if (sideCurrentGroup === 'group_asset' && tpl.category === 'vector') {
