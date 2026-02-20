@@ -6692,9 +6692,9 @@ if (w >= 20 && h >= 20) {
         // 픽셀 변환 및 캔버스 설정
         const canvasW = Math.round(displayW * 3.7795);
         const canvasH = Math.round(displayH * 3.7795);
-        const mode = (typeof key === 'string' && key.includes('Wall')) ? 'wall'
-                   : (typeof key === 'string' && key.startsWith('hb_bx')) ? 'box'
-                   : 'standard';
+        const isWallProduct = typeof key === 'string' && (key.includes('Wall') || key.startsWith('hb_dw'));
+        const isBoxProduct = typeof key === 'string' && key.startsWith('hb_bx');
+        const mode = isWallProduct ? 'wall' : isBoxProduct ? 'box' : 'standard';
 
         if (typeof setMaxLimits === 'function') setMaxLimits(displayW, displayH);
         
