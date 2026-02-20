@@ -1470,7 +1470,7 @@
             <div style="padding:14px 24px; border-top:1px solid #e2e8f0; background:#fff; display:flex; gap:10px; align-items:center; position:relative;">
                 <div id="lcQuickReplyBox" style="display:none; position:absolute; bottom:100%; left:0; right:0; max-height:300px; overflow-y:auto; background:#fff; border:1px solid #c7d2fe; border-bottom:none; border-radius:12px 12px 0 0; box-shadow:0 -6px 30px rgba(99,102,241,0.15); z-index:100;"></div>
                 <label style="cursor:pointer; color:#6366f1; font-size:22px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="lcFileInput" style="display:none;" multiple></label>
-                <input type="text" id="lcMsgInput" class="input-text" placeholder="메시지 입력..." style="flex:1; font-size:15px; padding:12px 16px; border-radius:12px;" onkeydown="if(event.key==='Enter'){lcSendMsg();lcHideQuick();}" oninput="lcSearchQuick(this.value)">
+                <input type="text" id="lcMsgInput" class="input-text" placeholder="메시지 입력..." style="flex:1; font-size:17px; padding:12px 16px; border-radius:12px;" onkeydown="if(event.key==='Enter'){lcSendMsg();lcHideQuick();}" oninput="lcSearchQuick(this.value)">
                 <button class="btn btn-primary" onclick="lcSendMsg();lcHideQuick();" style="padding:10px 24px; font-size:15px; border-radius:12px;">전송</button>
             </div>
             <!-- 번역 도구 -->
@@ -2364,7 +2364,7 @@ async function saveCommonInfo() {
     };
     function renderMsg(m){
         var t=new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
-        if(m.sender_type==='system') return '<div style="text-align:center;padding:8px;font-size:12px;color:#94a3b8;"><span style="background:#f1f5f9;padding:4px 14px;border-radius:20px;">'+m.message+'</span></div>';
+        if(m.sender_type==='system') return '<div style="text-align:center;padding:8px;font-size:14px;color:#94a3b8;"><span style="background:#f1f5f9;padding:4px 14px;border-radius:20px;">'+m.message+'</span></div>';
         var isMgr=m.sender_type==='manager';var isBot=m.sender_type==='chatbot';var al=isMgr?'flex-end':'flex-start';
         var bg=isMgr?'#6366f1':isBot?'#e8f5e9':'#fff';var cl=isMgr?'#fff':'#1e293b';
         var bdRadius=isMgr?'18px 18px 4px 18px':'18px 18px 18px 4px';
@@ -2372,9 +2372,9 @@ async function saveCommonInfo() {
         var name=isMgr?(m.sender_name||'매니저'):isBot?'🤖 AI 봇':(m.sender_name||'고객');
         var nameColor=isMgr?'#6366f1':isBot?'#059669':'#f59e0b';
         var h='<div style="display:flex;flex-direction:column;align-items:'+al+';margin-bottom:14px;">';
-        h+='<span style="font-size:11px;color:'+nameColor+';font-weight:700;margin-bottom:4px;">'+(isMgr?'💬 ':isBot?'':'👤 ')+name+' · '+t+'</span>';
-        if(m.file_url){if(m.file_type&&m.file_type.startsWith('image/')){h+='<img src="'+m.file_url+'" style="max-width:300px;border-radius:14px;cursor:pointer;margin:4px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';}else{h+='<a href="'+m.file_url+'" target="_blank" style="background:#dbeafe;padding:10px 16px;border-radius:14px;color:#2563eb;text-decoration:none;font-size:14px;display:inline-block;margin:4px 0;">📎 '+(m.file_name||'파일')+'</a>';}}
-        if(m.message){var mt=m.message.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(isMgr?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:12px 18px;border-radius:'+bdRadius+';max-width:420px;font-size:14px;line-height:1.6;word-break:break-all;box-shadow:'+shadow+';">'+mt+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:3px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:11px;background:none;border:1px solid #e2e8f0;color:#64748b;padding:2px 8px;border-radius:6px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:12px;color:#6366f1;margin-left:4px;"></span></div>';}}
+        h+='<span style="font-size:13px;color:'+nameColor+';font-weight:700;margin-bottom:4px;">'+(isMgr?'💬 ':isBot?'':'👤 ')+name+' · '+t+'</span>';
+        if(m.file_url){if(m.file_type&&m.file_type.startsWith('image/')){h+='<img src="'+m.file_url+'" style="max-width:300px;border-radius:14px;cursor:pointer;margin:4px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';}else{h+='<a href="'+m.file_url+'" target="_blank" style="background:#dbeafe;padding:10px 16px;border-radius:14px;color:#2563eb;text-decoration:none;font-size:16px;display:inline-block;margin:4px 0;">📎 '+(m.file_name||'파일')+'</a>';}}
+        if(m.message){var mt=m.message.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(isMgr?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:12px 18px;border-radius:'+bdRadius+';max-width:420px;font-size:16px;line-height:1.6;word-break:break-all;box-shadow:'+shadow+';">'+mt+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:3px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:11px;background:none;border:1px solid #e2e8f0;color:#64748b;padding:2px 8px;border-radius:6px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:12px;color:#6366f1;margin-left:4px;"></span></div>';}}
         return h+'</div>';
     }
     window.lcSendMsg = async function(){
