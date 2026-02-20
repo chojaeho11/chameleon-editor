@@ -219,16 +219,10 @@ export function applySize(w, h, name, mode, action) {
         canvas.discardActiveObject();
     }
 
-    const wallConfigPanel = document.getElementById("wallConfigPanel");
     if (mode === 'wall') {
-        if(wallConfigPanel) wallConfigPanel.style.display = 'flex';
         setGuideOn(true);
         drawGuides();
-    } else if (mode === 'box') {
-        if(wallConfigPanel) wallConfigPanel.style.display = 'none';
-        setGuideOn(false);
     } else {
-        if(wallConfigPanel) wallConfigPanel.style.display = 'none';
         setGuideOn(false);
     }
     
@@ -481,9 +475,17 @@ window.initWallConfig = () => {
     cfg.pricePerSqm = deriveWallPricePerSqm();
     rebuildAllWallPages();
     renderWallConfigUI();
-    // 패널 표시
-    const panel = document.getElementById('wallConfigPanel');
-    if (panel) panel.style.display = 'flex';
+};
+
+// --- 모달 열기/닫기 ---
+window.openWallConfig = () => {
+    renderWallConfigUI();
+    const overlay = document.getElementById('wallConfigOverlay');
+    if (overlay) overlay.style.display = 'flex';
+};
+window.closeWallConfig = () => {
+    const overlay = document.getElementById('wallConfigOverlay');
+    if (overlay) overlay.style.display = 'none';
 };
 
 // 하위 호환 (높이 단독 변경 - 사용 안 하지만 안전)

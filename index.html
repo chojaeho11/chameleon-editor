@@ -1978,24 +1978,32 @@ async function handleSubReturn() {
         </button>
     </div>
 
-    <div id="wallConfigPanel">
-        <!-- 헤더: 타입 선택 -->
-        <div class="wall-cfg-header">
-            <div class="wall-cfg-title"><i class="fa-solid fa-table-columns"></i> <span data-i18n="wall_config_title">가벽 설정</span></div>
-            <div class="wall-cfg-type">
-                <button class="wcfg-btn active" id="btnWallSingle" onclick="window.setWallSided(false)"><span data-i18n="wall_single_sided">단면</span></button>
-                <button class="wcfg-btn" id="btnWallDouble" onclick="window.setWallSided(true)"><span data-i18n="wall_double_sided">양면</span></button>
+    <!-- 가벽 설정 모달 오버레이 -->
+    <div id="wallConfigOverlay" style="display:none;" onclick="if(event.target===this)window.closeWallConfig()">
+        <div id="wallConfigModal">
+            <div class="wcm-header">
+                <div class="wcm-title"><i class="fa-solid fa-table-columns"></i> <span data-i18n="wall_config_title">가벽 설정</span></div>
+                <button class="wcm-close" onclick="window.closeWallConfig()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-        </div>
-        <!-- 벽 목록 (JS가 동적 생성) -->
-        <div id="wallListContainer"></div>
-        <!-- 벽 추가 + 합계 -->
-        <div class="wall-cfg-footer">
-            <button class="wcfg-btn wcfg-add" onclick="window.addWall()"><i class="fa-solid fa-plus"></i> <span data-i18n="wall_count">추가</span></button>
-            <div class="wall-cfg-total">
-                <span data-i18n="wall_price_calc">합계</span>
-                <span id="wallTotalPrice" class="wall-price-total">0</span>
+            <!-- 타입 선택 -->
+            <div class="wcm-type-row">
+                <span class="wcm-label" data-i18n="wall_type">타입</span>
+                <div class="wcm-type-btns">
+                    <button class="wcm-btn active" id="btnWallSingle" onclick="window.setWallSided(false)"><i class="fa-solid fa-square"></i> <span data-i18n="wall_single_sided">단면</span></button>
+                    <button class="wcm-btn" id="btnWallDouble" onclick="window.setWallSided(true)"><i class="fa-solid fa-clone"></i> <span data-i18n="wall_double_sided">양면</span></button>
+                </div>
             </div>
+            <!-- 벽 목록 (JS가 동적 생성) -->
+            <div id="wallListContainer"></div>
+            <!-- 벽 추가 + 합계 -->
+            <div class="wcm-footer">
+                <button class="wcm-btn wcm-add" onclick="window.addWall()"><i class="fa-solid fa-plus"></i> <span data-i18n="wall_count">추가</span></button>
+                <div class="wcm-total">
+                    <span data-i18n="wall_price_calc">합계</span>
+                    <span id="wallTotalPrice" class="wcm-total-price">0</span>
+                </div>
+            </div>
+            <button class="wcm-confirm" onclick="window.closeWallConfig()"><i class="fa-solid fa-check"></i> <span data-i18n="box_apply">확인</span></button>
         </div>
     </div>
 
@@ -2421,9 +2429,9 @@ async function handleSubReturn() {
                 <span data-i18n="wizard_btn">AI 디자인 마법사</span>
             </button>
 
-            <!-- 3D Preview Button (honeycomb products) -->
+            <!-- 3D Preview Button (honeycomb products) — below AI wizard -->
             <button id="btn3DPreview" onclick="window.open3DPreview()" style="
-                position:absolute; top:15px; right:220px; z-index:50;
+                position:absolute; top:65px; right:15px; z-index:50;
                 height:42px; padding:0 16px; border-radius:21px;
                 background:linear-gradient(135deg,#8b5cf6 0%,#06b6d4 100%);
                 border:none; color:#fff; font-weight:700; font-size:12px;
@@ -2433,6 +2441,20 @@ async function handleSubReturn() {
             " onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
                 <i class="fa-solid fa-cube"></i>
                 <span data-i18n="btn_3d_preview">3D 미리보기</span>
+            </button>
+
+            <!-- Wall Config Button (wall products) — below 3D preview -->
+            <button id="btnWallConfig" onclick="window.openWallConfig()" style="
+                position:absolute; top:115px; right:15px; z-index:50;
+                height:42px; padding:0 16px; border-radius:21px;
+                background:linear-gradient(135deg,#f59e0b 0%,#ef4444 100%);
+                border:none; color:#fff; font-weight:700; font-size:12px;
+                box-shadow:0 4px 15px rgba(245,158,11,0.4);
+                cursor:pointer; display:none; align-items:center; gap:7px;
+                transition:all .2s;
+            " onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-table-columns"></i>
+                <span data-i18n="wall_config_title">가벽 설정</span>
             </button>
 
             <!-- Box Face Tabs -->
@@ -6687,6 +6709,10 @@ if (w >= 20 && h >= 20) {
             btn3d.style.display = isHoneycomb ? 'flex' : 'none';
         }
 
+        // 가벽설정 버튼: wall 모드일 때만 표시
+        const btnWallCfg = document.getElementById('btnWallConfig');
+        if (btnWallCfg) btnWallCfg.style.display = mode === 'wall' ? 'flex' : 'none';
+
         // 박스 모드 UI 표시/숨김
         const boxDimCtrl = document.getElementById('boxDimensionControls');
         const boxFaceTabs = document.getElementById('boxFaceTabs');
@@ -6707,7 +6733,7 @@ if (w >= 20 && h >= 20) {
             if (wallFaceTabs) wallFaceTabs.style.display = 'none'; // 탭은 config가 관리
             window.__boxMode = false;
             window.__wallMode = true;
-            // 가벽 설정 초기화 및 적용
+            // 가벽 설정 초기화 및 적용 + 모달 자동 열기
             setTimeout(() => {
                 if (window.initWallConfig) {
                     // 현재 제품의 크기로 초기 벽 크기 추정
@@ -6719,6 +6745,8 @@ if (w >= 20 && h >= 20) {
                         cfg.activeIndex = 0;
                     }
                     window.initWallConfig();
+                    // 에디터 진입 시 자동으로 모달 열기
+                    window.openWallConfig();
                 }
             }, 500);
         } else {
