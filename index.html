@@ -4254,8 +4254,8 @@ window.getTinyThumb = function(url, size = 150) {
     // 2. URL 파라미터 연결자 결정
     const separator = url.includes('?') ? '&' : '?';
 
-    // 3. 리사이징 파라미터 추가
-    return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=65&format=webp`;
+    // 3. 리사이징 파라미터 추가 (HiDPI 대응: quality 80)
+    return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=80&format=webp`;
 };
     window.openProductDetail = openProductDetail;
     window.startDesignFromProduct = startDesignFromProduct;

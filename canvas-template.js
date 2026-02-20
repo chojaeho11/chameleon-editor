@@ -337,8 +337,8 @@ async function loadTemplatePage(pageIndex) {
             const card = document.createElement("div");
             card.className = "tpl-item";
             
-            const rawUrl = item.thumb_url || 'https://via.placeholder.com/200?text=No+Image';
-            const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 200) : rawUrl;
+            const rawUrl = item.thumb_url || 'https://via.placeholder.com/400?text=No+Image';
+            const imgUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 400) : rawUrl;
             const displayTitle = item.tags ? item.tags.split(',')[0] : window.t('msg_untitled', 'Untitled');
             
             // 뱃지 설정
@@ -1205,7 +1205,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         data.forEach((tpl) => {
             const div = document.createElement("div");
             div.className = "side-tpl-card";
-            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 200) : tpl.thumb_url;
+            const imgUrl = window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 400) : tpl.thumb_url;
 
             let badgeHtml = "";
             if (sideCurrentGroup === 'group_asset' && tpl.category === 'vector') {
