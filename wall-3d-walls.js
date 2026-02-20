@@ -529,6 +529,7 @@
         wall.group.rotation.y = wall.rotY;
         comp.presetName = null;
         updatePresetBtnUI(null);
+        rebuildAccessories();
     };
 
     // ─── 가벽 선택 + 드래그 이동 (Shift 불필요, 클릭+드래그로 이동) ───
@@ -641,9 +642,11 @@
     }
 
     function onMouseUp() {
+        const wasDragging = dragStarted;
         isPotentialDrag = false;
         dragStarted = false;
         window.__wallDragMode = false;
+        if (wasDragging) rebuildAccessories();
     }
 
     // ─── UI 업데이트 ───
@@ -744,45 +747,29 @@
             updateAccessoryCount('cornerPillarCount', 0);
         }
 
-        // ── 상단 조명 (yellow, position fixed to wall top) ──
+        // ── 상단 조명 (yellow, simple rectangular bar on wall top) ──
         if (acc.topLight) {
             let lightCount = 0;
-            const barGeo = new THREE.BoxGeometry(0.04, 0.25, 0.04);
-            const headGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.08, 6);
-            const bulbGeo = new THREE.CircleGeometry(0.03, 6);
             comp.walls.forEach(wall => {
                 const sections = Math.max(1, Math.round(wall.widthMM / 1000));
                 const wM = wall.widthMM / 1000;
                 const hM = wall.heightMM / 1000;
                 const sectionW = wM / sections;
+                const barH = 0.03;
+                const barD = 0.08;
                 for (let s = 0; s < sections; s++) {
                     const localX = -wM / 2 + sectionW / 2 + s * sectionW;
-                    const lightGroup = new THREE.Group();
-                    // Arm bar (yellow)
+                    const barW = sectionW * 0.85;
+                    const barGeo = new THREE.BoxGeometry(barW, barH, barD);
                     const bar = new THREE.Mesh(barGeo, accMat.clone());
-                    bar.position.set(0, 0.125, -0.08);
-                    lightGroup.add(bar);
-                    // Light head (yellow)
-                    const head = new THREE.Mesh(headGeo, accMat.clone());
-                    head.rotation.x = Math.PI / 4;
-                    head.position.set(0, 0.25, -0.12);
-                    lightGroup.add(head);
-                    // Bulb (emissive warm)
-                    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xfff8e1, emissive: 0xfff176, emissiveIntensity: 0.8 });
-                    const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-                    bulb.rotation.x = -Math.PI / 4;
-                    bulb.position.set(0, 0.23, -0.15);
-                    lightGroup.add(bulb);
-
-                    // FIX: wall top = hM/2 in local coords (not hM)
                     if (wall.group) {
-                        const worldPos = new THREE.Vector3(localX, hM / 2, 0);
+                        const worldPos = new THREE.Vector3(localX, hM / 2 + barH / 2, 0);
                         wall.group.localToWorld(worldPos);
-                        lightGroup.position.copy(worldPos);
-                        lightGroup.rotation.y = wall.rotY || 0;
+                        bar.position.copy(worldPos);
+                        bar.rotation.y = wall.rotY || 0;
                     }
-                    ctx.scene.add(lightGroup);
-                    accessoryMeshes.push(lightGroup);
+                    ctx.scene.add(bar);
+                    accessoryMeshes.push(bar);
                     lightCount++;
                 }
             });
@@ -791,47 +778,34 @@
             updateAccessoryCount('topLightCount', 0);
         }
 
-        // ── 야외용 받침대 (left+right ends only, trapezoid front+back, yellow) ──
+        // ── 야외용 받침대 (thick trapezoid at wall ends, extends front+back) ──
         if (acc.outdoorStand) {
             let setCount = 0;
-            const baseExtend = 0.35;
-            const standH = 0.45;
-            const thickness = 0.04;
-            const standShape = new THREE.Shape();
-            standShape.moveTo(0, 0);
-            standShape.lineTo(0, standH);
-            standShape.lineTo(baseExtend, 0);
-            standShape.closePath();
-            const standGeo = new THREE.ExtrudeGeometry(standShape, { depth: thickness, bevelEnabled: false });
+            // Trapezoid cross-section (XY plane): wide bottom, narrow top
+            const bH = 0.25;  // bottom half-width (front-back extend)
+            const tH = 0.06;  // top half-width
+            const sH = 0.3;   // stand height
+            const sT = 0.08;  // thickness along wall direction
+            const trapShape = new THREE.Shape();
+            trapShape.moveTo(-bH, 0);
+            trapShape.lineTo(bH, 0);
+            trapShape.lineTo(tH, sH);
+            trapShape.lineTo(-tH, sH);
+            trapShape.closePath();
+            const trapGeo = new THREE.ExtrudeGeometry(trapShape, { depth: sT, bevelEnabled: false });
 
             comp.walls.forEach(wall => {
                 const wM = wall.widthMM / 1000;
                 const hM = wall.heightMM / 1000;
-                const doubleSided = window.__wallConfig?.doubleSided || false;
-                const wallDepth = doubleSided ? 0.2 : 0.1;
 
-                // Only left and right ends
+                // Only left and right ends of each wall
                 [-wM / 2, wM / 2].forEach(localX => {
                     const standGroup = new THREE.Group();
-
-                    // Front triangle (extends toward +Z)
-                    const front = new THREE.Mesh(standGeo, accMat.clone());
-                    front.rotation.y = Math.PI / 2;
-                    front.position.set(thickness / 2, 0, wallDepth / 2);
-                    standGroup.add(front);
-
-                    // Back triangle (extends toward -Z)
-                    const back = new THREE.Mesh(standGeo, accMat.clone());
-                    back.rotation.y = -Math.PI / 2;
-                    back.position.set(-thickness / 2, 0, -wallDepth / 2);
-                    standGroup.add(back);
-
-                    // Ground base plate connecting front and back
-                    const totalZ = wallDepth + baseExtend * 2;
-                    const plateGeo = new THREE.BoxGeometry(thickness * 2, 0.015, totalZ);
-                    const plate = new THREE.Mesh(plateGeo, accMat.clone());
-                    plate.position.set(0, 0.0075, 0);
-                    standGroup.add(plate);
+                    const mesh = new THREE.Mesh(trapGeo, accMat.clone());
+                    // Rotate so cross-section faces Z (front-back), extrusion along X
+                    mesh.rotation.y = Math.PI / 2;
+                    mesh.position.x = -sT / 2; // Center thickness
+                    standGroup.add(mesh);
 
                     if (wall.group) {
                         const worldPos = new THREE.Vector3(localX, -hM / 2, 0);
@@ -844,7 +818,6 @@
                 });
                 setCount++;
             });
-            // Show set count (1 set per wall, each set = left+right stands)
             updateAccessoryCount('outdoorStandCount', setCount);
         } else {
             updateAccessoryCount('outdoorStandCount', 0);
