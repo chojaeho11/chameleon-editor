@@ -321,11 +321,13 @@ export function initWallPages(wallCount, widthMM, heightMM) {
 // wallIndex = 가벽 번호(0-based), faceIndex = 0(앞면) / 1(뒷면)
 window.switchWallFace = function (wallIndex, faceIndex) {
     console.log('[WallFace] switch wall=' + wallIndex + ' face=' + faceIndex);
+    // window.__pageDataList 우선 사용 (동적 import 모듈 인스턴스 불일치 대비)
+    const pages = window.__pageDataList || pageDataList;
     const pagesPerWall = window.__wallPagesPerWall || (window.__wallConfig?.doubleSided ? 2 : 1);
     const pageIndex = wallIndex * pagesPerWall + faceIndex;
 
-    if (pageIndex < 0 || pageIndex >= pageDataList.length) {
-        console.warn('[WallFace] pageIndex out of range:', pageIndex, '/', pageDataList.length);
+    if (pageIndex < 0 || pageIndex >= pages.length) {
+        console.warn('[WallFace] pageIndex out of range:', pageIndex, '/', pages.length);
         return;
     }
 
@@ -343,10 +345,15 @@ window.switchWallFace = function (wallIndex, faceIndex) {
     saveCurrentPageState();
     currentPageIndex = pageIndex;
 
-    const json = pageDataList[pageIndex];
+    const json = pages[pageIndex];
     if (!json) {
         console.warn('[WallFace] no page data at index', pageIndex);
         return;
+    }
+
+    // 모듈-레벨 pageDataList도 동기화
+    if (pages !== pageDataList) {
+        pageDataList = pages;
     }
 
     canvas.loadFromJSON(json, () => {
@@ -561,7 +568,13 @@ export function initWallPagesMulti(walls, doubleSided, activeIndex) {
     window.__wallMode = true;
     window.__wallCount = walls.length;
     window.__wallPagesPerWall = pagesPerWall;
+    window.__pageDataList = pageDataList;
 }
+
+// window에 노출 (동적 import 모듈 인스턴스 불일치 방지)
+window.initWallPagesMulti = function(walls, doubleSided, activeIndex) {
+    return initWallPagesMulti(walls, doubleSided, activeIndex);
+};
 
 // JSON 내 board 객체의 크기를 업데이트
 function updateBoardInJson(json, w, h) {

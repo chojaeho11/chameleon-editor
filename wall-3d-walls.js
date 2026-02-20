@@ -572,12 +572,10 @@
         if (!cfg) return;
         cfg.walls = walls3D.map(w => ({ widthMM: w.widthMM, heightMM: w.heightMM }));
         cfg.activeIndex = 0;
-        // 멀티월 페이지 재생성
-        import('./canvas-pages.js?v=123').then(mod => {
-            if (mod.initWallPagesMulti) {
-                mod.initWallPagesMulti(cfg.walls, cfg.doubleSided, cfg.activeIndex);
-            }
-        }).catch(e => console.error('Failed to sync wall pages:', e));
+        // 멀티월 페이지 재생성 (window에 직접 노출된 함수 사용)
+        if (window.initWallPagesMulti) {
+            window.initWallPagesMulti(cfg.walls, cfg.doubleSided, cfg.activeIndex);
+        }
         // 가격 재계산
         if (window.initWallConfig) {
             // renderUI만 갱신 (rebuild는 위에서 이미 함)

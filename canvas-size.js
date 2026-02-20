@@ -322,9 +322,10 @@ function applyActiveWallToCanvas() {
 // 전체 페이지 재생성 (벽별 다른 크기)
 function rebuildAllWallPages() {
     const cfg = window.__wallConfig;
-    import('./canvas-pages.js?v=123').then(mod => {
-        mod.initWallPagesMulti(cfg.walls, cfg.doubleSided, cfg.activeIndex);
-    });
+    // window에 직접 노출된 함수 사용 (동적 import 모듈 인스턴스 불일치 방지)
+    if (window.initWallPagesMulti) {
+        window.initWallPagesMulti(cfg.walls, cfg.doubleSided, cfg.activeIndex);
+    }
 }
 
 // --- UI 렌더링 ---
