@@ -320,23 +320,49 @@ export function initWallPages(wallCount, widthMM, heightMM) {
 
 // wallIndex = 가벽 번호(0-based), faceIndex = 0(앞면) / 1(뒷면)
 window.switchWallFace = function (wallIndex, faceIndex) {
+    console.log('[WallFace] switch wall=' + wallIndex + ' face=' + faceIndex);
     const pagesPerWall = window.__wallPagesPerWall || (window.__wallConfig?.doubleSided ? 2 : 1);
     const pageIndex = wallIndex * pagesPerWall + faceIndex;
-    if (pageIndex < 0 || pageIndex >= pageDataList.length) return;
-    if (pageIndex === currentPageIndex) return;
+
+    if (pageIndex < 0 || pageIndex >= pageDataList.length) {
+        console.warn('[WallFace] pageIndex out of range:', pageIndex, '/', pageDataList.length);
+        return;
+    }
+
+    // __wallConfig 활성 벽 동기화
+    if (window.__wallConfig) {
+        window.__wallConfig.activeIndex = wallIndex;
+    }
+
+    // 같은 페이지면 탭만 갱신
+    if (pageIndex === currentPageIndex) {
+        updateWallFaceTabs(wallIndex, faceIndex);
+        return;
+    }
 
     saveCurrentPageState();
     currentPageIndex = pageIndex;
 
     const json = pageDataList[pageIndex];
-    if (!json) return;
+    if (!json) {
+        console.warn('[WallFace] no page data at index', pageIndex);
+        return;
+    }
 
     canvas.loadFromJSON(json, () => {
         const board = canvas.getObjects().find(o => o.isBoard);
-        if (board) canvas.sendToBack(board);
+        if (board) {
+            canvas.sendToBack(board);
+            canvas.clipPath = new fabric.Rect({
+                left: 0, top: 0,
+                width: board.width, height: board.height,
+                absolutePositioned: true
+            });
+        }
         updatePageCounter();
         canvas.requestRenderAll();
         resizeCanvasToFit();
+        console.log('[WallFace] loaded page', pageIndex);
     });
 
     updateWallFaceTabs(wallIndex, faceIndex);
@@ -361,23 +387,32 @@ function buildWallFaceTabsUI(wallCount, doubleSided) {
 
     for (let wi = 0; wi < wallCount; wi++) {
         const prefix = wallCount > 1 ? `${wi + 1}-` : '';
+        const wallIdx = wi; // 클로저 안전성
         // Front tab (항상)
         const frontBtn = document.createElement('button');
         frontBtn.className = 'wall-face-tab';
-        frontBtn.dataset.wall = wi;
+        frontBtn.dataset.wall = wallIdx;
         frontBtn.dataset.face = 0;
         frontBtn.textContent = prefix + frontLabel;
-        frontBtn.onclick = () => window.switchWallFace(wi, 0);
+        frontBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('[FaceTab] clicked wall=' + wallIdx + ' face=0');
+            window.switchWallFace(wallIdx, 0);
+        });
         container.appendChild(frontBtn);
 
         // Back tab (양면만)
         if (doubleSided) {
             const backBtn = document.createElement('button');
             backBtn.className = 'wall-face-tab';
-            backBtn.dataset.wall = wi;
+            backBtn.dataset.wall = wallIdx;
             backBtn.dataset.face = 1;
             backBtn.textContent = prefix + backLabel;
-            backBtn.onclick = () => window.switchWallFace(wi, 1);
+            backBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                console.log('[FaceTab] clicked wall=' + wallIdx + ' face=1');
+                window.switchWallFace(wallIdx, 1);
+            });
             container.appendChild(backBtn);
         }
     }

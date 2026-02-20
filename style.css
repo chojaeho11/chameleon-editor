@@ -489,13 +489,13 @@ button, input, textarea, select { font-family: inherit; }
 
 /* Wall Face Tabs */
 .wall-face-tab {
-    padding: 6px 14px; border: none; border-radius: 6px;
-    background: rgba(255,255,255,0.1); color: #94a3b8;
-    font-size: 11px; font-weight: 600; cursor: pointer;
-    transition: all 0.2s;
+    padding: 8px 16px; border: none; border-radius: 8px;
+    background: rgba(255,255,255,0.15); color: #c7d2fe;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s; pointer-events: auto; position: relative; z-index: 1;
 }
-.wall-face-tab:hover { background: rgba(99,102,241,0.3); color: #c7d2fe; }
-.wall-face-tab.active { background: #6366f1; color: #fff; }
+.wall-face-tab:hover { background: rgba(99,102,241,0.4); color: #fff; }
+.wall-face-tab.active { background: #6366f1; color: #fff; box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
 
 /* 3D Wall Sidebar */
 .wall3d-preset-btn {

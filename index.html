@@ -2467,9 +2467,7 @@ async function handleSubReturn() {
                 <button class="box-face-tab" onclick="window.switchBoxFace(5)" data-i18n="box_face_bottom">아랫면</button>
             </div>
             <!-- 가벽 양면 탭 -->
-            <div id="wallFaceTabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3);">
-                <button class="wall-face-tab active" data-wall="0" data-face="0" onclick="window.switchWallFace(0,0)" data-i18n="wall_face_front">앞면</button>
-                <button class="wall-face-tab" data-wall="0" data-face="1" onclick="window.switchWallFace(0,1)" data-i18n="wall_face_back">뒷면</button>
+            <div id="wallFaceTabs" style="display:none; position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(15,15,30,0.95); border-radius:10px; padding:6px 8px; gap:4px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.4); pointer-events:auto;">
             </div>
 
             <div id="pageControls" class="page-controls-bar">
