@@ -1352,19 +1352,26 @@
                 <h4 style="margin:0; color:#4338ca;">💬 상담 대기열</h4>
                 <button class="btn btn-outline btn-sm" onclick="lcLoadRooms()" style="font-size:11px;">새로고침</button>
             </div>
+            <!-- 내 매니저 이름 선택 -->
+            <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px; padding:6px 10px; background:#eef2ff; border-radius:8px; border:1px solid #c7d2fe;">
+                <span style="font-size:12px; font-weight:700; color:#4338ca; white-space:nowrap;">👤 내 이름:</span>
+                <select id="lcMyManagerName" onchange="lcSaveMyName()" style="flex:1; font-size:12px; padding:4px 8px; border:1px solid #c7d2fe; border-radius:6px; background:#fff; font-weight:700; color:#4338ca;">
+                    <option value="">선택하세요</option>
+                </select>
+            </div>
             <!-- 알림 컨트롤 패널 -->
             <div id="lcNotifyPanel" style="display:flex; gap:6px; margin-bottom:10px; padding:8px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
-                <button id="lcNotifyAllBtn" onclick="lcToggleNotifyAll()" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 4px; border-radius:8px; border:2px solid #e2e8f0; background:#fff; cursor:pointer; transition:all .2s;" title="전체 알림">
+                <button id="lcNotifyAllBtn" onclick="lcToggleNotifyAll()" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 4px; border-radius:8px; border:2px solid #e2e8f0; background:#fff; cursor:pointer; transition:all .2s;" title="일반 유입 알림 (미배정 고객)">
                     <svg id="lcMegaAll" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:all .2s;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     <div style="text-align:left;">
-                        <div style="font-size:11px; font-weight:700; color:#334155;">전체 알림</div>
+                        <div style="font-size:11px; font-weight:700; color:#334155;">일반 유입</div>
                         <div id="lcNotifyAllStatus" style="font-size:10px; color:#94a3b8;">OFF</div>
                     </div>
                 </button>
-                <button id="lcNotifyMgrBtn" onclick="lcToggleNotifyMgr()" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 4px; border-radius:8px; border:2px solid #e2e8f0; background:#fff; cursor:pointer; transition:all .2s;" title="매니저 지정 알림">
+                <button id="lcNotifyMgrBtn" onclick="lcToggleNotifyMgr()" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 4px; border-radius:8px; border:2px solid #e2e8f0; background:#fff; cursor:pointer; transition:all .2s;" title="내 담당 고객 알림">
                     <svg id="lcMegaMgr" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:all .2s;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="18" cy="4" r="3" fill="#6366f1" stroke="none"/></svg>
                     <div style="text-align:left;">
-                        <div style="font-size:11px; font-weight:700; color:#334155;">매니저 지정</div>
+                        <div style="font-size:11px; font-weight:700; color:#334155;">내 담당</div>
                         <div id="lcNotifyMgrStatus" style="font-size:10px; color:#94a3b8;">OFF</div>
                     </div>
                 </button>
@@ -1804,59 +1811,96 @@ async function saveCommonInfo() {
     function getSb(){return window.sb;}
 
     // ══════════════════════════════════════════════
-    // ★ 강화된 알림 시스템 v2 — 전체/매니저별 + 카카오톡 스타일
+    // ★ 강화된 알림 시스템 v3 — 내 매니저 필터 + 담당자 TTS + MAX 볼륨
     // ══════════════════════════════════════════════
-    var notifyAll = false;  // 전체 알림 (모든 새 채팅 + 모든 메시지)
-    var notifyMgr = false;  // 매니저 지정 고객만
+    var notifyAll = false;  // 일반 유입 알림 (미배정 + 내 담당)
+    var notifyMgr = false;  // 내 담당 고객만
+    var myManagerName = '';  // 접속한 매니저 이름
     try { notifyAll = localStorage.getItem('lcNotifyAll') === 'on'; } catch(e) {}
     try { notifyMgr = localStorage.getItem('lcNotifyMgr') === 'on'; } catch(e) {}
+    try { myManagerName = localStorage.getItem('lcMyManager') || ''; } catch(e) {}
     var _audioCtx = null;
-    var _msgSubChannel = null; // chat_messages 전역 구독
+    var _msgSubChannel = null;
 
-    // 카카오톡 스타일 알림음 (외부 파일 불필요)
+    // 내 매니저 이름 저장/로드
+    window.lcSaveMyName = function() {
+        var sel = document.getElementById('lcMyManagerName');
+        if (!sel) return;
+        myManagerName = sel.value;
+        localStorage.setItem('lcMyManager', myManagerName);
+        updateNotifyUI();
+    };
+    // 매니저 목록 로드 → select 채우기
+    async function loadManagerOptions() {
+        var sb = getSb(); if (!sb) { setTimeout(loadManagerOptions, 2000); return; }
+        var r = await sb.from('chatbot_knowledge').select('question,answer').eq('category','_managers').eq('is_active',true);
+        var sel = document.getElementById('lcMyManagerName');
+        if (!sel || !r.data) return;
+        var saved = myManagerName;
+        sel.innerHTML = '<option value="">선택하세요</option>';
+        r.data.forEach(function(m) {
+            try { var info = JSON.parse(m.answer); } catch(e) { var info = { name: m.question }; }
+            var name = info.name || m.question;
+            var opt = document.createElement('option');
+            opt.value = name; opt.textContent = name + (info.role ? ' (' + info.role + ')' : '');
+            if (name === saved) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+    setTimeout(loadManagerOptions, 1500);
+
+    // ── 내 알림인지 판단 ──
+    function isMyNotification(assignedMgr) {
+        // 미배정(null/빈값) → 일반 유입 → notifyAll이면 알림
+        if (!assignedMgr) return notifyAll;
+        // 내 이름과 일치 → 내 담당 → notifyMgr 또는 notifyAll이면 알림
+        if (myManagerName && assignedMgr === myManagerName) return (notifyMgr || notifyAll);
+        // 다른 매니저 → 알림 안함
+        return false;
+    }
+
+    // 카카오톡 스타일 알림음 — MAX 볼륨
     function playKakaoSound() {
         try {
             if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             var ctx = _audioCtx;
             if (ctx.state === 'suspended') ctx.resume();
-            // 카카오톡 스타일: 띠리릭~ (3음 상승)
-            var notes = [784, 988, 1175]; // G5, B5, D6
+            var notes = [784, 988, 1175];
             notes.forEach(function(freq, i) {
                 var osc = ctx.createOscillator();
                 var gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.type = 'sine'; osc.frequency.value = freq;
                 var t = ctx.currentTime + i * 0.12;
-                gain.gain.setValueAtTime(0.25, t);
-                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-                osc.start(t); osc.stop(t + 0.1);
+                gain.gain.setValueAtTime(1.0, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                osc.start(t); osc.stop(t + 0.15);
             });
         } catch(e) {}
     }
 
-    // 새 상담 요청 알림음 (더 강한 소리)
+    // 새 상담 요청 — MAX 볼륨 강한 알림
     function playNewChatSound() {
         try {
             if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             var ctx = _audioCtx;
             if (ctx.state === 'suspended') ctx.resume();
-            // 긴급 알림: 띠링~ 띠링~ (2회 반복)
-            [0, 0.35].forEach(function(delay) {
+            [0, 0.4].forEach(function(delay) {
                 [660, 880, 1100].forEach(function(freq, i) {
                     var osc = ctx.createOscillator();
                     var gain = ctx.createGain();
                     osc.connect(gain); gain.connect(ctx.destination);
                     osc.type = 'triangle'; osc.frequency.value = freq;
                     var t = ctx.currentTime + delay + i * 0.1;
-                    gain.gain.setValueAtTime(0.35, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
-                    osc.start(t); osc.stop(t + 0.08);
+                    gain.gain.setValueAtTime(1.0, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+                    osc.start(t); osc.stop(t + 0.12);
                 });
             });
         } catch(e) {}
     }
 
-    // TTS 음성 알림
+    // TTS — MAX 볼륨 + 항상 담당자 이름 포함
     function speakTTS(text) {
         try {
             if (!('speechSynthesis' in window)) return;
@@ -1877,15 +1921,12 @@ async function saveCommonInfo() {
                 tag: 'chameleon-chat-' + Date.now(),
                 requireInteraction: true
             });
-            n.onclick = function() {
-                window.focus(); n.close();
-                if (window.showSection) window.showSection('sec-live-chat');
-            };
+            n.onclick = function() { window.focus(); n.close(); if (window.showSection) window.showSection('sec-live-chat'); };
             setTimeout(function() { n.close(); }, 15000);
         } catch(e) {}
     }
 
-    // 인앱 토스트 알림 (화면 상단 배너 — 어느 섹션에서든 보임)
+    // 인앱 토스트 배너
     function showChatToast(title, body, isUrgent) {
         var existing = document.getElementById('lcToastBanner');
         if (existing) existing.remove();
@@ -1897,15 +1938,10 @@ async function saveCommonInfo() {
             + '<div style="flex:1;"><div style="font-weight:700;font-size:14px;">' + title + '</div><div style="font-size:12px;opacity:0.9;margin-top:2px;">' + body + '</div></div>'
             + '<div onclick="event.stopPropagation();this.parentElement.parentElement.remove();" style="cursor:pointer;opacity:0.7;font-size:16px;padding:4px;">✕</div>'
             + '</div>';
-        div.onclick = function() {
-            div.remove();
-            if (window.showSection) window.showSection('sec-live-chat');
-        };
+        div.onclick = function() { div.remove(); if (window.showSection) window.showSection('sec-live-chat'); };
         document.body.appendChild(div);
-        // 애니메이션 CSS 주입
         if (!document.getElementById('lcToastCSS')) {
-            var st = document.createElement('style');
-            st.id = 'lcToastCSS';
+            var st = document.createElement('style'); st.id = 'lcToastCSS';
             st.textContent = '@keyframes lcSlideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes lcSlideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}';
             document.head.appendChild(st);
         }
@@ -1921,33 +1957,18 @@ async function saveCommonInfo() {
     var _titleFlash = null;
     function flashTitle(msg) {
         if (_titleFlash) return;
-        var orig = document.title;
-        var on = false;
-        _titleFlash = setInterval(function() {
-            document.title = on ? orig : '🔴 ' + msg;
-            on = !on;
-        }, 1000);
+        var orig = document.title; var on = false;
+        _titleFlash = setInterval(function() { document.title = on ? orig : '🔴 ' + msg; on = !on; }, 1000);
         window.addEventListener('focus', function restore() {
-            clearInterval(_titleFlash); _titleFlash = null;
-            document.title = orig;
+            clearInterval(_titleFlash); _titleFlash = null; document.title = orig;
             window.removeEventListener('focus', restore);
         });
     }
 
-    // ── 알림 판단 + 발송 ──
-    function shouldNotify(type, data) {
-        // type: 'new_room' | 'new_message' | 'manager_assign'
-        if (!notifyAll && !notifyMgr) return false;
-        if (notifyAll) return true;
-        // notifyMgr만 켜진 경우: 매니저 지정 관련만
-        if (type === 'manager_assign') return true;
-        if (type === 'new_room' && data && data.assigned_manager) return true;
-        return false;
-    }
-
-    function sendNotification(type, title, body, ttsText) {
-        if (!shouldNotify(type, { assigned_manager: ttsText ? true : null })) return;
-        var isUrgent = type === 'new_room';
+    // ── 통합 알림 발송 (내 알림만 통과) ──
+    function sendNotification(title, body, ttsText, assignedMgr, isUrgent) {
+        if (!notifyAll && !notifyMgr) return;
+        if (!isMyNotification(assignedMgr)) return;
         if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); }
         if (ttsText) speakTTS(ttsText);
         showDesktopNotify(title, body);
@@ -1955,69 +1976,57 @@ async function saveCommonInfo() {
         if (document.hidden) flashTitle(title);
     }
 
-    // ── 알림 토글 버튼 ──
+    // ── 알림 토글 ──
     function ensureNotifyPermission(callback) {
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission().then(function(perm) { callback(perm === 'granted'); });
-        } else {
-            callback(true);
-        }
+        } else { callback(true); }
     }
 
     window.lcToggleNotifyAll = function() {
+        if (!myManagerName) { showToast('먼저 "내 이름"을 선택하세요!', 'warn'); return; }
         if (!notifyAll) {
             ensureNotifyPermission(function() {
-                notifyAll = true;
-                localStorage.setItem('lcNotifyAll', 'on');
-                updateNotifyUI();
-                startMessageWatch();
-                playKakaoSound(); // 피드백 음
-                showToast('전체 알림 ON — 모든 새 상담 + 메시지 알림을 받습니다.', 'success');
+                notifyAll = true; localStorage.setItem('lcNotifyAll', 'on');
+                updateNotifyUI(); startMessageWatch(); playKakaoSound();
+                showToast(myManagerName + '님, 일반 유입 알림 ON — 미배정 + 내 담당 고객 알림', 'success');
             });
         } else {
-            notifyAll = false;
-            localStorage.setItem('lcNotifyAll', 'off');
-            updateNotifyUI();
-            stopMessageWatch();
+            notifyAll = false; localStorage.setItem('lcNotifyAll', 'off');
+            updateNotifyUI(); if (!notifyMgr) stopMessageWatch();
         }
     };
 
     window.lcToggleNotifyMgr = function() {
+        if (!myManagerName) { showToast('먼저 "내 이름"을 선택하세요!', 'warn'); return; }
         if (!notifyMgr) {
             ensureNotifyPermission(function() {
-                notifyMgr = true;
-                localStorage.setItem('lcNotifyMgr', 'on');
-                updateNotifyUI();
-                startMessageWatch();
-                playKakaoSound();
-                showToast('매니저 지정 알림 ON — 매니저가 지정된 고객 알림만 받습니다.', 'success');
+                notifyMgr = true; localStorage.setItem('lcNotifyMgr', 'on');
+                updateNotifyUI(); startMessageWatch(); playKakaoSound();
+                showToast(myManagerName + '님, 내 담당 고객 알림 ON', 'success');
             });
         } else {
-            notifyMgr = false;
-            localStorage.setItem('lcNotifyMgr', 'off');
-            updateNotifyUI();
-            if (!notifyAll) stopMessageWatch();
+            notifyMgr = false; localStorage.setItem('lcNotifyMgr', 'off');
+            updateNotifyUI(); if (!notifyAll) stopMessageWatch();
         }
     };
 
     function updateNotifyUI() {
+        var myName = myManagerName || '미선택';
         // 전체 알림 버튼
         var allBtn = document.getElementById('lcNotifyAllBtn');
         var megaAll = document.getElementById('lcMegaAll');
         var allSt = document.getElementById('lcNotifyAllStatus');
         if (allBtn) {
             if (notifyAll) {
-                allBtn.style.border = '2px solid #22c55e';
-                allBtn.style.background = '#f0fdf4';
-                if (megaAll) { megaAll.setAttribute('stroke', '#22c55e'); megaAll.setAttribute('fill', '#dcfce7'); }
+                allBtn.style.border = '2px solid #22c55e'; allBtn.style.background = '#f0fdf4';
+                if (megaAll) { megaAll.setAttribute('stroke', '#22c55e'); megaAll.setAttribute('fill', '#dcfce7'); megaAll.style.opacity = '1'; }
                 if (allSt) { allSt.textContent = 'ON'; allSt.style.color = '#22c55e'; allSt.style.fontWeight = '700'; }
             } else {
-                allBtn.style.border = '2px solid #e2e8f0';
-                allBtn.style.background = '#fff';
+                allBtn.style.border = '2px solid #e2e8f0'; allBtn.style.background = '#fff';
                 if (megaAll) { megaAll.setAttribute('stroke', '#cbd5e1'); megaAll.setAttribute('fill', 'none'); megaAll.style.opacity = '0.4'; }
                 if (allSt) { allSt.textContent = 'OFF'; allSt.style.color = '#94a3b8'; allSt.style.fontWeight = '400'; }
             }
-            if (megaAll) megaAll.style.opacity = notifyAll ? '1' : '0.4';
         }
         // 매니저 지정 버튼
         var mgrBtn = document.getElementById('lcNotifyMgrBtn');
@@ -2025,22 +2034,19 @@ async function saveCommonInfo() {
         var mgrSt = document.getElementById('lcNotifyMgrStatus');
         if (mgrBtn) {
             if (notifyMgr) {
-                mgrBtn.style.border = '2px solid #6366f1';
-                mgrBtn.style.background = '#eef2ff';
-                if (megaMgr) { megaMgr.setAttribute('stroke', '#6366f1'); megaMgr.setAttribute('fill', '#e0e7ff'); }
+                mgrBtn.style.border = '2px solid #6366f1'; mgrBtn.style.background = '#eef2ff';
+                if (megaMgr) { megaMgr.setAttribute('stroke', '#6366f1'); megaMgr.setAttribute('fill', '#e0e7ff'); megaMgr.style.opacity = '1'; }
                 if (mgrSt) { mgrSt.textContent = 'ON'; mgrSt.style.color = '#6366f1'; mgrSt.style.fontWeight = '700'; }
             } else {
-                mgrBtn.style.border = '2px solid #e2e8f0';
-                mgrBtn.style.background = '#fff';
-                if (megaMgr) { megaMgr.setAttribute('stroke', '#cbd5e1'); megaMgr.setAttribute('fill', 'none'); }
+                mgrBtn.style.border = '2px solid #e2e8f0'; mgrBtn.style.background = '#fff';
+                if (megaMgr) { megaMgr.setAttribute('stroke', '#cbd5e1'); megaMgr.setAttribute('fill', 'none'); megaMgr.style.opacity = '0.4'; }
                 if (mgrSt) { mgrSt.textContent = 'OFF'; mgrSt.style.color = '#94a3b8'; mgrSt.style.fontWeight = '400'; }
             }
-            if (megaMgr) megaMgr.style.opacity = notifyMgr ? '1' : '0.4';
         }
     }
     setTimeout(updateNotifyUI, 200);
 
-    // ── 전역 채널 구독: chat_rooms (새 방 / 상태 변경) ──
+    // ── 전역 구독: chat_rooms (새 방 / 상태 변경) ──
     function startGlobalRoomWatch() {
         var sb = getSb(); if (!sb) { setTimeout(startGlobalRoomWatch, 2000); return; }
         if (globalRoomSub) { globalRoomSub.unsubscribe(); }
@@ -2050,10 +2056,15 @@ async function saveCommonInfo() {
                 if (rm.status === 'waiting' || rm.status === 'ai_chatting') {
                     var name = rm.customer_name || '고객';
                     var mgr = rm.assigned_manager;
-                    sendNotification('new_room',
+                    var tts = mgr
+                        ? mgr + ' 매니저님, ' + name + ' 고객님의 상담요청입니다'
+                        : myManagerName
+                            ? myManagerName + ' 매니저님, 새로운 고객 ' + name + '님이 입장했습니다'
+                            : '새로운 고객 ' + name + '님이 채팅에 입장했습니다';
+                    sendNotification(
                         '새 상담 요청',
                         name + '님이 상담을 요청했습니다' + (mgr ? ' (담당: ' + mgr + ')' : ''),
-                        mgr ? mgr + ' 매니저님, 상담요청이 있습니다' : '새로운 고객님이 채팅에 입장하였습니다'
+                        tts, mgr, true
                     );
                     lcLoadRooms();
                 }
@@ -2061,10 +2072,11 @@ async function saveCommonInfo() {
             .on('postgres_changes', {event:'UPDATE', schema:'public', table:'chat_rooms'}, function(p) {
                 var rm = p.new; var old = p.old;
                 if (rm.assigned_manager && rm.assigned_manager !== (old && old.assigned_manager)) {
-                    sendNotification('manager_assign',
+                    sendNotification(
                         '상담 배정',
                         rm.assigned_manager + ' 매니저님에게 상담이 배정되었습니다',
-                        rm.assigned_manager + ' 매니저님, 상담요청이 있습니다'
+                        rm.assigned_manager + ' 매니저님, 새 상담이 배정되었습니다',
+                        rm.assigned_manager, true
                     );
                 }
                 lcLoadRooms();
@@ -2073,18 +2085,16 @@ async function saveCommonInfo() {
     }
     setTimeout(startGlobalRoomWatch, 1500);
 
-    // ── 전역 채널 구독: chat_messages (모든 메시지 실시간 알림) ──
+    // ── 전역 구독: chat_messages (모든 메시지 알림 — 내 담당만) ──
     function startMessageWatch() {
-        if (_msgSubChannel) return; // 이미 구독중
+        if (_msgSubChannel) return;
         var sb = getSb(); if (!sb) { setTimeout(startMessageWatch, 2000); return; }
         _msgSubChannel = sb.channel('global-msg-watch')
             .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_messages'}, async function(p) {
                 var msg = p.new;
-                // 고객 메시지만 알림 (매니저/시스템 메시지는 무시)
                 if (msg.sender_type !== 'customer') return;
-                // 현재 보고 있는 방이면 알림 스킵
                 if (currentRoom && currentRoom.id === msg.room_id) return;
-                // 방 정보 가져오기
+                // 방 정보
                 var roomInfo = null;
                 try {
                     var rr = await sb.from('chat_rooms').select('customer_name,assigned_manager,status').eq('id', msg.room_id).single();
@@ -2092,14 +2102,19 @@ async function saveCommonInfo() {
                 } catch(e) {}
                 var name = (roomInfo && roomInfo.customer_name) || '고객';
                 var mgr = roomInfo && roomInfo.assigned_manager;
+                // 내 알림인지 체크 (다른 매니저 담당이면 스킵)
+                if (!isMyNotification(mgr)) return;
                 var txt = msg.message || '(파일)';
                 if (txt.length > 30) txt = txt.substring(0, 30) + '...';
-                // 매니저 지정 알림만일 경우 → 매니저 없는 메시지 스킵
-                if (!notifyAll && notifyMgr && !mgr) return;
-                sendNotification('new_message',
+                // TTS: 항상 담당자 이름 포함
+                var tts = mgr
+                    ? mgr + ' 매니저님, ' + name + ' 고객님 메시지입니다'
+                    : myManagerName
+                        ? myManagerName + ' 매니저님, ' + name + ' 고객님 메시지입니다'
+                        : name + ' 고객님 메시지입니다';
+                sendNotification(
                     '💬 ' + name + (mgr ? ' → ' + mgr : ''),
-                    txt,
-                    null
+                    txt, tts, mgr, false
                 );
             })
             .subscribe();
@@ -2107,11 +2122,7 @@ async function saveCommonInfo() {
     function stopMessageWatch() {
         if (_msgSubChannel) { _msgSubChannel.unsubscribe(); _msgSubChannel = null; }
     }
-    // 알림이 켜져있으면 자동 시작
-    if (notifyAll || notifyMgr) {
-        setTimeout(startMessageWatch, 2000);
-    }
-    // 자동 권한 요청
+    if (notifyAll || notifyMgr) { setTimeout(startMessageWatch, 2000); }
     if ((notifyAll || notifyMgr) && 'Notification' in window && Notification.permission === 'default') {
         setTimeout(function() { Notification.requestPermission(); }, 3000);
     }
