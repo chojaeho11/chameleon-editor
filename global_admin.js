@@ -74,7 +74,7 @@ window.showSection = (secId, navEl) => {
         case 'sec-withdrawals': if(window.loadWithdrawals) window.loadWithdrawals(); break;
         case 'sec-partner-apps': if(window.loadPartnerApplications) window.loadPartnerApplications(); break;
         case 'sec-partner-products': if(window.loadPartnerProducts) window.loadPartnerProducts(); break;
-        case 'sec-live-chat': if(window.lcLoadRooms) window.lcLoadRooms(); break;
+        case 'sec-live-chat': if(window.lcLoadRooms) window.lcLoadRooms(); if(window.lcLoadQuickReplies) window.lcLoadQuickReplies(); break;
         case 'sec-chatbot': if(window.cbShowTab) window.cbShowTab('knowledge'); break;
     }
 };

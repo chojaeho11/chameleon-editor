@@ -1427,10 +1427,12 @@
             <div id="lcChatMessages" style="flex:1; overflow-y:auto; padding:15px; background:#fff;">
                 <div style="text-align:center; color:#94a3b8; padding:60px;"><i class="fa-solid fa-headset" style="font-size:48px; display:block; margin-bottom:15px;"></i>왼쪽에서 상담방을 선택하세요</div>
             </div>
-            <div style="padding:10px 15px; border-top:1px solid #e2e8f0; background:#f8fafc; display:flex; gap:8px; align-items:center;">
+            <div style="padding:10px 15px; border-top:1px solid #e2e8f0; background:#f8fafc; display:flex; gap:8px; align-items:center; position:relative;">
+                <!-- Quick Reply 추천 답변 드롭다운 -->
+                <div id="lcQuickReplyBox" style="display:none; position:absolute; bottom:100%; left:0; right:0; max-height:280px; overflow-y:auto; background:#fff; border:1px solid #c7d2fe; border-bottom:none; border-radius:10px 10px 0 0; box-shadow:0 -4px 20px rgba(99,102,241,0.15); z-index:100;"></div>
                 <label style="cursor:pointer; color:#6366f1; font-size:18px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="lcFileInput" style="display:none;" multiple></label>
-                <input type="text" id="lcMsgInput" class="input-text" placeholder="메시지 입력..." style="flex:1;" onkeydown="if(event.key==='Enter')lcSendMsg()">
-                <button class="btn btn-primary" onclick="lcSendMsg()" style="padding:8px 16px;">전송</button>
+                <input type="text" id="lcMsgInput" class="input-text" placeholder="메시지 입력..." style="flex:1;" onkeydown="if(event.key==='Enter'){lcSendMsg();lcHideQuick();}" oninput="lcSearchQuick(this.value)">
+                <button class="btn btn-primary" onclick="lcSendMsg();lcHideQuick();" style="padding:8px 16px;">전송</button>
             </div>
             <!-- 번역 도구 -->
             <div style="border-top:1px solid #e2e8f0; background:#fefce8; padding:10px 15px;">
@@ -1765,9 +1767,9 @@ async function saveCommonInfo() {
         if (!q || !a) { showToast('질문과 답변을 입력하세요', 'warn'); return; }
         await sb.from('chatbot_knowledge').insert({ category: document.getElementById('cbNewCat').value, question: q, answer: a, keywords: document.getElementById('cbNewKw').value.trim(), language: document.getElementById('cbNewLang').value, priority: parseInt(document.getElementById('cbNewPri').value) || 5 });
         document.getElementById('cbNewQ').value = ''; document.getElementById('cbNewA').value = ''; document.getElementById('cbNewKw').value = '';
-        showToast('저장! AI에 즉시 반영됩니다.', 'success'); cbLoadKnowledge();
+        showToast('저장! AI에 즉시 반영됩니다.', 'success'); cbLoadKnowledge(); if(window.lcLoadQuickReplies) lcLoadQuickReplies();
     };
-    window.cbDeleteKn = async function(id) { if (!confirm('삭제?')) return; await getSb().from('chatbot_knowledge').update({is_active:false}).eq('id',id); cbLoadKnowledge(); };
+    window.cbDeleteKn = async function(id) { if (!confirm('삭제?')) return; await getSb().from('chatbot_knowledge').update({is_active:false}).eq('id',id); cbLoadKnowledge(); if(window.lcLoadQuickReplies) lcLoadQuickReplies(); };
     window.cbLoadLogs = async function() {
         var sb = getSb(); if (!sb) return;
         var filter = document.getElementById('cbLogFilter').value, today = new Date().toISOString().split('T')[0];
@@ -2271,10 +2273,71 @@ async function saveCommonInfo() {
     }
     window.lcSendMsg = async function(){
         if(!currentRoom) return; var sb=getSb();var inp=document.getElementById('lcMsgInput');var txt=inp.value.trim();if(!txt) return;inp.value='';
+        lcHideQuick();
         var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt,created_at:new Date().toISOString()};
         var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;
         await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt});
     };
+
+    // ── Quick Reply (자동 추천 답변) ──
+    var lcQuickCache = [];
+    window.lcLoadQuickReplies = async function() {
+        var sb = getSb(); if (!sb) return;
+        var res = await sb.from('chatbot_knowledge')
+            .select('category, question, answer, keywords, priority')
+            .eq('is_active', true)
+            .neq('category', '_managers')
+            .order('priority', { ascending: false });
+        lcQuickCache = (res.data || []);
+    };
+    window.lcSearchQuick = function(val) {
+        var box = document.getElementById('lcQuickReplyBox');
+        if (!box) return;
+        var txt = (val || '').trim().toLowerCase();
+        if (txt.length < 2 || lcQuickCache.length === 0) { box.style.display = 'none'; return; }
+        var matches = [];
+        for (var i = 0; i < lcQuickCache.length; i++) {
+            var k = lcQuickCache[i];
+            var kwList = (k.keywords || '').toLowerCase().split(',').map(function(s){ return s.trim(); });
+            var hit = false;
+            for (var j = 0; j < kwList.length; j++) { if (kwList[j] && txt.indexOf(kwList[j]) >= 0) { hit = true; break; } }
+            if (!hit) { for (var j = 0; j < kwList.length; j++) { if (kwList[j] && kwList[j].indexOf(txt) >= 0) { hit = true; break; } } }
+            if (!hit && k.question && k.question.toLowerCase().indexOf(txt) >= 0) hit = true;
+            if (!hit && k.category && k.category.toLowerCase().indexOf(txt) >= 0) hit = true;
+            if (hit) matches.push(k);
+            if (matches.length >= 5) break;
+        }
+        if (matches.length === 0) { box.style.display = 'none'; return; }
+        var html = '';
+        matches.forEach(function(m, idx) {
+            var ans = (m.answer || '').length > 120 ? m.answer.substring(0, 120) + '...' : (m.answer || '');
+            html += '<div onclick="lcPickQuick(' + idx + ')" data-answer="' + (m.answer || '').replace(/"/g, '&quot;') + '" style="padding:10px 14px; cursor:pointer; border-bottom:1px solid #f1f5f9; transition:background 0.15s;' + (idx === 0 ? 'border-radius:10px 10px 0 0;' : '') + '" onmouseenter="this.style.background=\'#eef2ff\'" onmouseleave="this.style.background=\'#fff\'">'
+                + '<div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">'
+                + '<span style="background:#e0e7ff; color:#4338ca; font-size:10px; padding:1px 6px; border-radius:4px; font-weight:600;">' + (m.category || '기타') + '</span>'
+                + '<span style="font-size:11px; color:#64748b; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Q: ' + (m.question || '').substring(0, 60) + '</span>'
+                + '</div>'
+                + '<div style="font-size:12px; color:#334155; line-height:1.4;">→ ' + ans + '</div>'
+                + '</div>';
+        });
+        box.innerHTML = html;
+        box.style.display = 'block';
+        box._matches = matches;
+    };
+    window.lcPickQuick = function(idx) {
+        var box = document.getElementById('lcQuickReplyBox');
+        if (!box || !box._matches || !box._matches[idx]) return;
+        var inp = document.getElementById('lcMsgInput');
+        inp.value = box._matches[idx].answer || '';
+        inp.focus();
+        lcHideQuick();
+    };
+    window.lcHideQuick = function() {
+        var box = document.getElementById('lcQuickReplyBox');
+        if (box) box.style.display = 'none';
+    };
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') lcHideQuick(); });
+    // 채팅 섹션 진입 시 캐시 로드
+    lcLoadQuickReplies();
     document.addEventListener('change',function(e){if(e.target.id!=='lcFileInput'||!currentRoom) return;var fs=e.target.files;for(var i=0;i<fs.length;i++){lcUpFile(fs[i]);}e.target.value='';});
     async function lcUpFile(f){var sb=getSb();var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error){showToast('업로드 실패','error');return;}var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
     window.lcCloseRoom = async function(){
