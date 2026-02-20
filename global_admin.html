@@ -1325,14 +1325,45 @@
                 </div>
                 <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="cbAddKnowledge()">💾 저장</button>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h4 style="margin:0;">📚 등록된 학습 데이터</h4>
-                <div style="display:flex; gap:8px;">
-                    <select id="cbKnFilter" class="input-text" style="width:120px;" onchange="cbLoadKnowledge()"><option value="all">전체</option><option value="ko">🇰🇷</option><option value="ja">🇯🇵</option><option value="en">🇺🇸</option></select>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                <h4 style="margin:0;">📚 등록된 학습 데이터 <span id="cbKnCount" style="font-size:12px; color:#64748b; font-weight:400;"></span></h4>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" id="cbKnSearch" class="input-text" placeholder="🔍 검색 (질문/답변/키워드)" style="width:220px; font-size:12px;" oninput="cbFilterLocal()" onkeydown="if(event.key==='Enter')cbLoadKnowledge()">
+                    <select id="cbKnFilter" class="input-text" style="width:100px;" onchange="cbLoadKnowledge()"><option value="all">전체</option><option value="ko">🇰🇷</option><option value="ja">🇯🇵</option><option value="en">🇺🇸</option></select>
                     <button class="btn btn-outline btn-sm" onclick="cbLoadKnowledge()">새로고침</button>
                 </div>
             </div>
-            <div id="cbKnList" style="max-height:500px; overflow-y:auto;"></div>
+            <div id="cbKnList" style="max-height:600px; overflow-y:auto;"></div>
+            <!-- 수정 모달 -->
+            <div id="cbEditModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; display:none; align-items:center; justify-content:center;">
+                <div style="background:#fff; border-radius:12px; padding:24px; width:560px; max-width:90vw; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3 style="margin:0; color:#334155;">✏️ 학습 데이터 수정</h3>
+                        <button onclick="cbCloseEdit()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8;">✕</button>
+                    </div>
+                    <input type="hidden" id="cbEditId">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div><label style="font-size:12px; font-weight:600; color:#64748b;">카테고리</label>
+                            <select id="cbEditCat" class="input-text" style="width:100%;"><option>배송</option><option>결제</option><option>가격</option><option>상품</option><option>사업자</option><option>에디터</option><option>취소/환불</option><option>글로벌</option><option>서비스</option><option>상담사례</option><option>기타</option></select></div>
+                        <div><label style="font-size:12px; font-weight:600; color:#64748b;">언어</label>
+                            <select id="cbEditLang" class="input-text" style="width:100%;"><option value="ko">🇰🇷 한국어</option><option value="ja">🇯🇵 日本語</option><option value="en">🇺🇸 English</option></select></div>
+                    </div>
+                    <div style="margin-top:10px;"><label style="font-size:12px; font-weight:600; color:#64748b;">질문</label>
+                        <input id="cbEditQ" class="input-text" style="width:100%;"></div>
+                    <div style="margin-top:10px;"><label style="font-size:12px; font-weight:600; color:#64748b;">답변</label>
+                        <textarea id="cbEditA" class="input-text" rows="5" style="width:100%; resize:vertical;"></textarea></div>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <div style="flex:1;"><label style="font-size:12px; font-weight:600; color:#64748b;">키워드</label>
+                            <input id="cbEditKw" class="input-text" placeholder="쉼표 구분" style="width:100%;"></div>
+                        <div style="width:80px;"><label style="font-size:12px; font-weight:600; color:#64748b;">우선순위</label>
+                            <input id="cbEditPri" class="input-text" type="number" style="width:100%;"></div>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:16px;">
+                        <button class="btn btn-primary" style="flex:1;" onclick="cbSaveEdit()">💾 저장</button>
+                        <button class="btn btn-outline" style="flex:1;" onclick="cbCloseEdit()">취소</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="cbPanelSettings" style="display:none;">
             <div style="background:#fefce8; border:1px solid #fde047; border-radius:10px; padding:15px;">
@@ -1744,23 +1775,46 @@ async function saveCommonInfo() {
         if (tab === 'knowledge') cbLoadKnowledge();
         if (tab === 'settings') cbLoadSettings();
     };
+    var cbKnAllData = []; // 로컬 캐시 (검색용)
     window.cbLoadKnowledge = async function() {
         var sb = getSb(); if (!sb) return;
         var lang = document.getElementById('cbKnFilter').value;
-        var q = sb.from('chatbot_knowledge').select('*').eq('is_active', true).order('priority', {ascending: false}).limit(50);
+        var search = (document.getElementById('cbKnSearch') ? document.getElementById('cbKnSearch').value.trim() : '');
+        var q = sb.from('chatbot_knowledge').select('*').eq('is_active', true).order('priority', {ascending: false}).limit(200);
         if (lang !== 'all') q = q.eq('language', lang);
+        if (search) q = q.or('question.ilike.%' + search + '%,answer.ilike.%' + search + '%,keywords.ilike.%' + search + '%,category.ilike.%' + search + '%');
         var res = await q;
+        cbKnAllData = res.data || [];
+        cbRenderKnowledge(cbKnAllData);
+    };
+    window.cbFilterLocal = function() {
+        var search = (document.getElementById('cbKnSearch') ? document.getElementById('cbKnSearch').value.trim().toLowerCase() : '');
+        if (!search) { cbRenderKnowledge(cbKnAllData); return; }
+        var filtered = cbKnAllData.filter(function(k) {
+            return (k.question||'').toLowerCase().indexOf(search) >= 0
+                || (k.answer||'').toLowerCase().indexOf(search) >= 0
+                || (k.keywords||'').toLowerCase().indexOf(search) >= 0
+                || (k.category||'').toLowerCase().indexOf(search) >= 0;
+        });
+        cbRenderKnowledge(filtered);
+    };
+    function cbRenderKnowledge(data) {
         var list = document.getElementById('cbKnList');
-        if (!res.data || res.data.length === 0) { list.innerHTML = '<p style="color:#94a3b8; text-align:center;">데이터 없음</p>'; return; }
-        var html = '<table style="width:100%; font-size:12px;"><thead><tr style="background:#f8fafc;"><th style="padding:6px;">카테고리</th><th style="padding:6px;">질문</th><th style="padding:6px;">답변</th><th style="padding:6px;">삭제</th></tr></thead><tbody>';
-        res.data.forEach(function(k) {
-            html += '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px;"><span style="background:#e0e7ff; padding:2px 6px; border-radius:6px; font-size:11px;">' + (k.category||'일반') + '</span></td>';
-            html += '<td style="padding:6px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + k.question.substring(0,40) + '</td>';
-            html += '<td style="padding:6px; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + k.answer.substring(0,50) + '</td>';
-            html += '<td style="padding:6px;"><button class="btn btn-outline btn-sm" style="color:#ef4444; font-size:11px; padding:2px 6px;" onclick="cbDeleteKn(' + k.id + ')">삭제</button></td></tr>';
+        var countEl = document.getElementById('cbKnCount');
+        if (countEl) countEl.textContent = '(' + data.length + '건)';
+        if (!data || data.length === 0) { list.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:30px;">데이터 없음</p>'; return; }
+        var html = '<table style="width:100%; font-size:12px; border-collapse:collapse;"><thead><tr style="background:#f8fafc; position:sticky; top:0; z-index:1;"><th style="padding:8px 6px; text-align:left;">카테고리</th><th style="padding:8px 6px; text-align:left;">질문</th><th style="padding:8px 6px; text-align:left;">답변</th><th style="padding:8px 6px; text-align:left;">키워드</th><th style="padding:8px 6px; text-align:center; width:50px;">순위</th><th style="padding:8px 6px; text-align:center; width:100px;">관리</th></tr></thead><tbody>';
+        data.forEach(function(k) {
+            html += '<tr style="border-bottom:1px solid #f1f5f9; transition:background 0.1s;" onmouseenter="this.style.background=\'#f8fafc\'" onmouseleave="this.style.background=\'#fff\'">';
+            html += '<td style="padding:6px;"><span style="background:#e0e7ff; padding:2px 6px; border-radius:6px; font-size:11px;">' + (k.category||'일반') + '</span></td>';
+            html += '<td style="padding:6px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.question||'').replace(/"/g,'&quot;') + '">' + (k.question||'').substring(0,35) + '</td>';
+            html += '<td style="padding:6px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.answer||'').replace(/"/g,'&quot;') + '">' + (k.answer||'').substring(0,45) + '</td>';
+            html += '<td style="padding:6px; font-size:10px; color:#64748b; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (k.keywords||'-') + '</td>';
+            html += '<td style="padding:6px; text-align:center; color:#6366f1; font-weight:600;">' + (k.priority||0) + '</td>';
+            html += '<td style="padding:6px; text-align:center; white-space:nowrap;"><button class="btn btn-outline btn-sm" style="font-size:11px; padding:2px 8px; margin-right:3px;" onclick="cbOpenEdit(' + k.id + ')">✏️</button><button class="btn btn-outline btn-sm" style="color:#ef4444; font-size:11px; padding:2px 8px;" onclick="cbDeleteKn(' + k.id + ')">🗑</button></td></tr>';
         });
         list.innerHTML = html + '</tbody></table>';
-    };
+    }
     window.cbAddKnowledge = async function() {
         var sb = getSb(); if (!sb) return;
         var q = document.getElementById('cbNewQ').value.trim(), a = document.getElementById('cbNewA').value.trim();
@@ -1770,6 +1824,44 @@ async function saveCommonInfo() {
         showToast('저장! AI에 즉시 반영됩니다.', 'success'); cbLoadKnowledge(); if(window.lcLoadQuickReplies) lcLoadQuickReplies();
     };
     window.cbDeleteKn = async function(id) { if (!confirm('삭제?')) return; await getSb().from('chatbot_knowledge').update({is_active:false}).eq('id',id); cbLoadKnowledge(); if(window.lcLoadQuickReplies) lcLoadQuickReplies(); };
+    window.cbOpenEdit = function(id) {
+        var item = cbKnAllData.find(function(k){ return k.id === id; });
+        if (!item) { showToast('데이터를 찾을 수 없습니다.', 'warn'); return; }
+        document.getElementById('cbEditId').value = id;
+        document.getElementById('cbEditCat').value = item.category || '기타';
+        document.getElementById('cbEditLang').value = item.language || 'ko';
+        document.getElementById('cbEditQ').value = item.question || '';
+        document.getElementById('cbEditA').value = item.answer || '';
+        document.getElementById('cbEditKw').value = item.keywords || '';
+        document.getElementById('cbEditPri').value = item.priority || 5;
+        var modal = document.getElementById('cbEditModal');
+        modal.style.display = 'flex';
+    };
+    window.cbCloseEdit = function() {
+        document.getElementById('cbEditModal').style.display = 'none';
+    };
+    window.cbSaveEdit = async function() {
+        var sb = getSb(); if (!sb) return;
+        var id = parseInt(document.getElementById('cbEditId').value);
+        if (!id) return;
+        var q = document.getElementById('cbEditQ').value.trim();
+        var a = document.getElementById('cbEditA').value.trim();
+        if (!q || !a) { showToast('질문과 답변을 입력하세요.', 'warn'); return; }
+        var upd = {
+            category: document.getElementById('cbEditCat').value,
+            language: document.getElementById('cbEditLang').value,
+            question: q,
+            answer: a,
+            keywords: document.getElementById('cbEditKw').value.trim(),
+            priority: parseInt(document.getElementById('cbEditPri').value) || 5
+        };
+        var res = await sb.from('chatbot_knowledge').update(upd).eq('id', id);
+        if (res.error) { showToast('저장 실패: ' + res.error.message, 'error'); return; }
+        showToast('수정 완료!', 'success');
+        cbCloseEdit();
+        cbLoadKnowledge();
+        if (window.lcLoadQuickReplies) lcLoadQuickReplies();
+    };
     window.cbLoadLogs = async function() {
         var sb = getSb(); if (!sb) return;
         var filter = document.getElementById('cbLogFilter').value, today = new Date().toISOString().split('T')[0];
