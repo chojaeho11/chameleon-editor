@@ -3,6 +3,7 @@ import { showLoading } from "./global_common.js";
 
 // [전역 변수]
 let currentTplPage = 1;
+let totalTplPages = 1;
 const tplItemsPerPage = 12; // 한 페이지에 보여줄 개수
 
 // ==========================================
@@ -51,9 +52,9 @@ window.loadTemplates = async (isNewSearch = false) => {
     }
 
     // 2. 페이지 UI 업데이트
-    const totalPages = Math.ceil((count || 0) / tplItemsPerPage) || 1;
+    totalTplPages = Math.ceil((count || 0) / tplItemsPerPage) || 1;
     const pageLabel = document.getElementById('tplPageLabel');
-    if(pageLabel) pageLabel.innerText = `Page ${currentTplPage} / ${totalPages}`;
+    if(pageLabel) pageLabel.innerText = `Page ${currentTplPage} / ${totalTplPages}`;
 
     // 3. 그리드 렌더링
     grid.innerHTML = '';
@@ -230,7 +231,14 @@ window.toggleAllTemplates = (source) => {
 window.changeTplPage = (step) => {
     const next = currentTplPage + step;
     if (next < 1) { showToast("첫 페이지입니다.", "info"); return; }
+    if (next > totalTplPages) { showToast("마지막 페이지입니다.", "info"); return; }
     currentTplPage = next;
+    loadTemplates(false);
+};
+
+window.goTplPage = (where) => {
+    if (where === 'first') currentTplPage = 1;
+    else if (where === 'last') currentTplPage = totalTplPages;
     loadTemplates(false);
 };
 
