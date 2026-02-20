@@ -50,11 +50,29 @@
         camera.lookAt(target.x, target.y, target.z);
     }
 
+    let isSpaceHeld = false;
+
     function setupControls(domElement) {
+        // Spacebar tracking for pan mode
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat) {
+                const modal = document.getElementById('wall3DModal');
+                if (modal && modal.style.display === 'flex') {
+                    e.preventDefault();
+                    isSpaceHeld = true;
+                }
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') { isSpaceHeld = false; }
+        });
+
         domElement.addEventListener('mousedown', (e) => {
             // 벽 드래그 중이면 orbit 방지 (wall-3d-walls.js에서 설정)
             if (window.__wallDragMode) return;
-            if (e.button === 0) { isDragging = true; isPanning = false; }
+            // Space+왼클릭 = 팬, 일반 왼클릭 = 회전
+            if (e.button === 0 && isSpaceHeld) { isPanning = true; isDragging = false; }
+            else if (e.button === 0) { isDragging = true; isPanning = false; }
             if (e.button === 2) { isPanning = true; isDragging = false; }
             prevX = e.clientX; prevY = e.clientY;
         });
@@ -754,7 +772,7 @@
         const hint = document.getElementById('wall3dHint');
         if (hint && window.__wallMode && !window.__boxMode) {
             const t = window.t || ((k, d) => d);
-            hint.textContent = t('hint_3d_wall_controls', '\uD83D\uDDB1 \uD074\uB9AD+\uB4DC\uB798\uADF8: \uC774\uB3D9 | \uBE48 \uACF3 \uB4DC\uB798\uADF8: \uD68C\uC804');
+            hint.textContent = t('hint_3d_wall_controls', '\uD83D\uDDB1 \uD074\uB9AD+\uB4DC\uB798\uADF8: \uBCBD \uC774\uB3D9 | \uBE48 \uACF3 \uB4DC\uB798\uADF8: \uD68C\uC804 | Space+\uB4DC\uB798\uADF8: \uD654\uBA74 \uC774\uB3D9');
         }
 
         startAnimate();

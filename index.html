@@ -2641,6 +2641,27 @@ async function handleSubReturn() {
       <i class="fa-solid fa-trash"></i> <span data-i18n="wall_delete_btn">삭제</span>
     </button>
   </div>
+  <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:4px 0;">
+  <div>
+    <div style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:8px;">옵션</div>
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
+        <input type="checkbox" id="opt3dCornerPillar" onchange="window.toggleAccessory('cornerPillar', this.checked)" style="accent-color:#6366f1;">
+        <i class="fa-solid fa-archway" style="width:14px; color:#a78bfa;"></i> 모서리 기둥
+        <span id="cornerPillarCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
+        <input type="checkbox" id="opt3dTopLight" onchange="window.toggleAccessory('topLight', this.checked)" style="accent-color:#6366f1;">
+        <i class="fa-solid fa-lightbulb" style="width:14px; color:#fbbf24;"></i> 상단 조명
+        <span id="topLightCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
+        <input type="checkbox" id="opt3dOutdoorStand" onchange="window.toggleAccessory('outdoorStand', this.checked)" style="accent-color:#6366f1;">
+        <i class="fa-solid fa-wind" style="width:14px; color:#38bdf8;"></i> 야외용 받침대
+        <span id="outdoorStandCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
+      </label>
+    </div>
+  </div>
 </div>
 <!-- 3D Viewport -->
 <div id="threeDContainer" style="flex:1; height:100%;"></div>

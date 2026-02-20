@@ -19,6 +19,14 @@
     let dragOffset = null;
     let highlightMeshes = [];
 
+    // ─── 액세서리 상태 ───
+    window.__wallAccessories = {
+        cornerPillar: false,
+        topLight: false,
+        outdoorStand: false
+    };
+    let accessoryMeshes = []; // 3D 오브젝트 추적
+
     // ─── 프리셋 정의 (walls 배열 기반, 벽별 크기 반영) ───
     const PRESETS = {
         'I': function (walls) {
@@ -349,6 +357,7 @@
         updateHighlight();
         updateWallListUI();
         updatePresetBtnUI(presetName);
+        rebuildAccessories();
         // syncWallConfigFrom3D 제거: 프리셋은 배치만 변경, 에디터 데이터 보존
     };
 
@@ -686,6 +695,226 @@
             window.__wallCalculatedPrice = cfg.totalPrice;
         }
     }
+
+    // ─── 액세서리: 모서리 기둥 / 상단 조명 / 야외 받침대 ───
+
+    function clearAccessories() {
+        const ctx = getCtx();
+        if (!ctx || !ctx.scene) return;
+        accessoryMeshes.forEach(m => {
+            ctx.scene.remove(m);
+            m.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) child.material.forEach(mt => mt.dispose());
+                    else child.material.dispose();
+                }
+            });
+        });
+        accessoryMeshes = [];
+    }
+
+    function rebuildAccessories() {
+        clearAccessories();
+        const ctx = getCtx();
+        if (!ctx || !ctx.scene || !window.THREE) return;
+        const THREE = window.THREE;
+        const comp = getComp();
+        const acc = window.__wallAccessories;
+        if (comp.walls.length === 0) return;
+
+        // ── 모서리 기둥 ──
+        if (acc.cornerPillar) {
+            const pillarPositions = calcCornerPillarPositions(comp);
+            pillarPositions.forEach(pp => {
+                const h = pp.height;
+                const pillarSize = 0.1; // 100mm
+                const geo = new THREE.BoxGeometry(pillarSize, h, pillarSize);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.1 });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(pp.x, h / 2, pp.z);
+                mesh.castShadow = true;
+                ctx.scene.add(mesh);
+                accessoryMeshes.push(mesh);
+            });
+            updateAccessoryCount('cornerPillarCount', pillarPositions.length);
+        } else {
+            updateAccessoryCount('cornerPillarCount', 0);
+        }
+
+        // ── 상단 조명 ──
+        if (acc.topLight) {
+            let lightCount = 0;
+            comp.walls.forEach(wall => {
+                const sections = Math.max(1, Math.round(wall.widthMM / 1000));
+                const wM = wall.widthMM / 1000;
+                const hM = wall.heightMM / 1000;
+                const sectionW = wM / sections;
+                for (let s = 0; s < sections; s++) {
+                    const localX = -wM / 2 + sectionW / 2 + s * sectionW;
+                    const lightGroup = new THREE.Group();
+                    // 조명 바 (아암)
+                    const barGeo = new THREE.BoxGeometry(0.04, 0.25, 0.04);
+                    const barMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.3, metalness: 0.5 });
+                    const bar = new THREE.Mesh(barGeo, barMat);
+                    bar.position.set(0, 0.125, -0.08);
+                    lightGroup.add(bar);
+                    // 조명 헤드
+                    const headGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.08, 8);
+                    const headMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.6 });
+                    const head = new THREE.Mesh(headGeo, headMat);
+                    head.rotation.x = Math.PI / 4;
+                    head.position.set(0, 0.25, -0.12);
+                    lightGroup.add(head);
+                    // 발광부
+                    const bulbGeo = new THREE.CircleGeometry(0.03, 8);
+                    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xfff8e1, emissive: 0xfff176, emissiveIntensity: 0.8 });
+                    const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+                    bulb.rotation.x = -Math.PI / 4;
+                    bulb.position.set(0, 0.23, -0.15);
+                    lightGroup.add(bulb);
+
+                    // 벽 기준 위치 (로컬 → 월드)
+                    if (wall.group) {
+                        const worldPos = new THREE.Vector3(localX, hM, 0);
+                        wall.group.localToWorld(worldPos);
+                        lightGroup.position.copy(worldPos);
+                        lightGroup.rotation.y = wall.rotY || 0;
+                    }
+                    lightGroup.castShadow = true;
+                    ctx.scene.add(lightGroup);
+                    accessoryMeshes.push(lightGroup);
+                    lightCount++;
+                }
+            });
+            updateAccessoryCount('topLightCount', lightCount);
+        } else {
+            updateAccessoryCount('topLightCount', 0);
+        }
+
+        // ── 야외용 받침대 (보조 삼각 받침대) ──
+        if (acc.outdoorStand) {
+            let standCount = 0;
+            comp.walls.forEach(wall => {
+                const wM = wall.widthMM / 1000;
+                const hM = wall.heightMM / 1000;
+                const sections = Math.max(1, Math.round(wall.widthMM / 1000));
+                const numStands = Math.max(2, sections + 1);
+                const spacing = wM / (numStands - 1);
+                for (let i = 0; i < numStands; i++) {
+                    const localX = -wM / 2 + i * spacing;
+                    const standGroup = new THREE.Group();
+                    // 삼각형 받침 (앞쪽 방향)
+                    const standBase = 0.5, standH = 0.6, standW = 0.06;
+                    const shape = new THREE.Shape();
+                    shape.moveTo(0, 0);
+                    shape.lineTo(standBase, 0);
+                    shape.lineTo(0, standH);
+                    shape.closePath();
+                    const extGeo = new THREE.ExtrudeGeometry(shape, { depth: standW, bevelEnabled: false });
+                    const standMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.5 });
+                    const standMesh = new THREE.Mesh(extGeo, standMat);
+                    standMesh.rotation.y = Math.PI / 2;
+                    standMesh.position.set(0, 0, 0);
+                    standMesh.castShadow = true;
+                    standGroup.add(standMesh);
+                    // 바닥 플레이트
+                    const plateGeo = new THREE.BoxGeometry(0.1, 0.02, standBase * 0.4);
+                    const plate = new THREE.Mesh(plateGeo, standMat);
+                    plate.position.set(0, 0.01, standBase * 0.2);
+                    standGroup.add(plate);
+
+                    if (wall.group) {
+                        const depth = 0.05; // 벽 앞면에서 약간 앞
+                        const worldPos = new THREE.Vector3(localX, -hM / 2, depth);
+                        wall.group.localToWorld(worldPos);
+                        standGroup.position.copy(worldPos);
+                        standGroup.rotation.y = (wall.rotY || 0);
+                    }
+                    ctx.scene.add(standGroup);
+                    accessoryMeshes.push(standGroup);
+                    standCount++;
+                }
+            });
+            updateAccessoryCount('outdoorStandCount', standCount);
+        } else {
+            updateAccessoryCount('outdoorStandCount', 0);
+        }
+    }
+
+    // 모서리 기둥 위치 계산
+    function calcCornerPillarPositions(comp) {
+        const positions = [];
+        const walls = comp.walls;
+        if (walls.length < 2) return positions;
+        const preset = comp.presetName;
+        if (!preset || preset === 'I') return positions;
+
+        // 벽의 끝점 계산
+        const endpoints = [];
+        walls.forEach(wall => {
+            const wM = wall.widthMM / 1000;
+            const hM = wall.heightMM / 1000;
+            const cos = Math.cos(wall.rotY || 0);
+            const sin = Math.sin(wall.rotY || 0);
+            // 벽의 양 끝점 (XZ 평면)
+            const halfW = wM / 2;
+            endpoints.push({
+                wallId: wall.id, height: hM,
+                x1: wall.posX - halfW * cos, z1: wall.posZ + halfW * sin,
+                x2: wall.posX + halfW * cos, z2: wall.posZ - halfW * sin
+            });
+        });
+
+        // 끝점끼리 가까운 쌍 찾기 → 기둥 배치
+        const threshold = 0.15; // 150mm 이내면 연결된 것으로 판단
+        for (let i = 0; i < endpoints.length; i++) {
+            for (let j = i + 1; j < endpoints.length; j++) {
+                const ei = endpoints[i], ej = endpoints[j];
+                const pairs = [
+                    { x: ei.x1, z: ei.z1, ox: ej.x1, oz: ej.z1 },
+                    { x: ei.x1, z: ei.z1, ox: ej.x2, oz: ej.z2 },
+                    { x: ei.x2, z: ei.z2, ox: ej.x1, oz: ej.z1 },
+                    { x: ei.x2, z: ei.z2, ox: ej.x2, oz: ej.z2 }
+                ];
+                for (const p of pairs) {
+                    const dist = Math.sqrt((p.x - p.ox) ** 2 + (p.z - p.oz) ** 2);
+                    if (dist < threshold) {
+                        const mx = (p.x + p.ox) / 2;
+                        const mz = (p.z + p.oz) / 2;
+                        // 중복 방지
+                        const dup = positions.some(pp => Math.abs(pp.x - mx) < 0.05 && Math.abs(pp.z - mz) < 0.05);
+                        if (!dup) {
+                            positions.push({
+                                x: mx, z: mz,
+                                height: Math.max(ei.height, ej.height)
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        return positions;
+    }
+
+    function updateAccessoryCount(elemId, count) {
+        const el = document.getElementById(elemId);
+        if (el) el.textContent = count > 0 ? '×' + count : '';
+    }
+
+    window.toggleAccessory = function (key, enabled) {
+        window.__wallAccessories[key] = enabled;
+        rebuildAccessories();
+        // 가격 계산에 반영할 수 있도록 __wallConfig에 저장
+        if (window.__wallConfig) {
+            window.__wallConfig.accessories = { ...window.__wallAccessories };
+            window.__wallConfig.accessoryCounts = {
+                cornerPillar: parseInt(document.getElementById('cornerPillarCount')?.textContent?.replace('×', '') || '0'),
+                topLight: parseInt(document.getElementById('topLightCount')?.textContent?.replace('×', '') || '0'),
+                outdoorStand: parseInt(document.getElementById('outdoorStandCount')?.textContent?.replace('×', '') || '0')
+            };
+        }
+    };
 
     // ─── 초기화: 3D 모달이 열릴 때 selection 설정 ───
     let selectionSetup = false;
