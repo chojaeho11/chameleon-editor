@@ -11,14 +11,17 @@ const TOOLBAR_GAP = 12;   // px above image
 
 // ─── Floating Toolbar: show / hide / position ──
 function getScreenBounds(obj) {
-    const br = obj.getBoundingRect(true);          // canvas-relative
     const cEl = canvas.getElement();
     const rect = cEl.getBoundingClientRect();
+    // canvas pixel → CSS pixel 비율 (retina/DPR 보정)
+    const ratioX = rect.width  / (cEl.width  || 1);
+    const ratioY = rect.height / (cEl.height || 1);
+    const br = obj.getBoundingRect(true); // canvas-pixel 좌표 (viewport 포함)
     return {
-        left:   rect.left + br.left,
-        top:    rect.top  + br.top,
-        width:  br.width,
-        height: br.height
+        left:   rect.left + br.left   * ratioX,
+        top:    rect.top  + br.top    * ratioY,
+        width:  br.width  * ratioX,
+        height: br.height * ratioY
     };
 }
 
