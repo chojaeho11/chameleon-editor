@@ -751,11 +751,16 @@ async function addCanvasToCart() {
     // ★ [핵심] 벡터 PDF 우선 (텍스트→패스 변환, 효과 그룹 Z-order 유지)
     let designPdfUrl = null;
     try {
+        // ★ window.__pageDataList 우선 사용 (모듈 인스턴스 불일치 방지)
+        if (window.savePageState) window.savePageState();
+        const _pdl = window.__pageDataList || pageDataList;
+        const _cpi = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : currentPageIndex;
+
         let pdfPages = [json];
-        if (typeof pageDataList !== 'undefined' && pageDataList.length > 0) {
-            pdfPages = [...pageDataList];
-            if (typeof currentPageIndex !== 'undefined' && currentPageIndex >= 0) {
-                pdfPages[currentPageIndex] = json;
+        if (_pdl && _pdl.length > 0) {
+            pdfPages = [..._pdl];
+            if (typeof _cpi === 'number' && _cpi >= 0 && _cpi < pdfPages.length) {
+                pdfPages[_cpi] = json;
             }
         }
 
@@ -842,11 +847,13 @@ async function addCanvasToCart() {
 
     if (window.isDirectCartAddInProgress) return;
 
-    let finalPages = [json]; 
-    if (typeof pageDataList !== 'undefined' && pageDataList.length > 0) {
-        finalPages = [...pageDataList];
-        if (typeof currentPageIndex !== 'undefined' && currentPageIndex >= 0 && currentPageIndex < finalPages.length) {
-            finalPages[currentPageIndex] = json;
+    let finalPages = [json];
+    const _pdl2 = window.__pageDataList || pageDataList;
+    const _cpi2 = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : currentPageIndex;
+    if (_pdl2 && _pdl2.length > 0) {
+        finalPages = [..._pdl2];
+        if (typeof _cpi2 === 'number' && _cpi2 >= 0 && _cpi2 < finalPages.length) {
+            finalPages[_cpi2] = json;
         } else {
             if(finalPages.length === 0) finalPages = [json];
         }
@@ -892,7 +899,8 @@ async function addCanvasToCart() {
     let savedJsonUrl = null;
     if (json) {
         try {
-            const jsonStr = JSON.stringify({ main: json, pages: (typeof pageDataList !== 'undefined' ? pageDataList : []) });
+            const _pdl3 = window.__pageDataList || pageDataList;
+            const jsonStr = JSON.stringify({ main: json, pages: (_pdl3 && _pdl3.length > 0 ? _pdl3 : []) });
             const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
             // 'cart_json' 폴더에 업로드하여 로컬 스토리지 점유율을 0에 가깝게 만듭니다.
             savedJsonUrl = await uploadFileToSupabase(jsonBlob, 'cart_json');

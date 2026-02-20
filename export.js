@@ -502,16 +502,19 @@ export function initExport() {
 
             try {
                 // 1. 데이터 최신화 (현재 작업중인 페이지 저장)
+                if (window.savePageState) window.savePageState(); // 현재 페이지 상태 저장
                 const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
                 let targetPages = [];
 
-                if (pageDataList && pageDataList.length > 0) {
-                    targetPages = [...pageDataList];
+                // ★ window.__pageDataList 우선 사용 (모듈 인스턴스 불일치 방지)
+                const _pdl = window.__pageDataList || pageDataList;
+                const _cpi = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : currentPageIndex;
+
+                if (_pdl && _pdl.length > 0) {
+                    targetPages = [..._pdl];
                     // 현재 보고 있는 페이지 업데이트
-                    if (typeof currentPageIndex !== 'undefined' && currentPageIndex >= 0) {
-                        targetPages[currentPageIndex] = currentJson;
-                    } else {
-                        targetPages[targetPages.length - 1] = currentJson;
+                    if (typeof _cpi === 'number' && _cpi >= 0 && _cpi < targetPages.length) {
+                        targetPages[_cpi] = currentJson;
                     }
                 } else {
                     targetPages = [currentJson];
