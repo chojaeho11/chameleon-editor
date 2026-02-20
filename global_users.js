@@ -44,6 +44,23 @@ window.loadMembers = async (isNewSearch = false) => {
         return;
     }
 
+    // 추천인 적립 내역 조회 (현재 페이지 회원들)
+    const memberIds = members.map(m => m.id);
+    let refMap = {}; // { userId: { total, count } }
+    try {
+        const { data: refLogs } = await sb.from('wallet_logs')
+            .select('user_id, amount')
+            .in('user_id', memberIds)
+            .eq('type', 'referral_bonus');
+        if (refLogs) {
+            refLogs.forEach(r => {
+                if (!refMap[r.user_id]) refMap[r.user_id] = { total: 0, count: 0 };
+                refMap[r.user_id].total += (r.amount || 0);
+                refMap[r.user_id].count += 1;
+            });
+        }
+    } catch(e) {}
+
     members.forEach(m => {
         let name = m.username || m.email?.split('@')[0] || '미등록';
         let badgeColor = '#f1f5f9'; let displayRole = '일반';
@@ -52,6 +69,12 @@ window.loadMembers = async (isNewSearch = false) => {
         if (m.role === 'franchise') { badgeColor = '#f3e8ff'; displayRole = '가맹점'; }
         if (m.role === 'subscriber') { badgeColor = '#ede9fe'; displayRole = '⭐구독자'; }
         if (m.role === 'admin') { badgeColor = '#fee2e2'; displayRole = '관리자'; }
+
+        // 추천인 적립 배지
+        const ref = refMap[m.id];
+        const refBadge = ref
+            ? `<span style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px;" title="추천인 적립 ${ref.count}건 / 총 ${ref.total.toLocaleString()}원">🤝 추천 ${ref.total.toLocaleString()}원</span>`
+            : '';
 
         // 등급 선택 박스
         const roleSelect = `
@@ -67,16 +90,16 @@ window.loadMembers = async (isNewSearch = false) => {
 
         const memoHtml = `
             <div style="display:flex; gap:2px;">
-                <input id="memo_${m.id}" value="${m.admin_memo||''}" style="width:100%; border:1px solid #eee; font-size:11px;">
+                <input id="memo_${m.id}" value="${(m.admin_memo||'').replace(/"/g, '&quot;')}" style="width:100%; border:1px solid #eee; font-size:11px;">
                 <button class="btn btn-sky btn-sm" onclick="updateMemberMemo('${m.id}')">저장</button>
             </div>
         `;
 
         tbody.innerHTML += `
-            <tr style="border-bottom:1px solid #f1f5f9; height:50px;">
+            <tr style="border-bottom:1px solid #f1f5f9; height:50px;${ref ? ' background:#fffbeb;' : ''}">
                 <td style="color:#64748b; font-size:12px; text-align:center;">${new Date(m.created_at).toLocaleDateString()}</td>
                 <td style="padding:10px 15px;">
-                    <div style="font-weight:bold; font-size:14px; color:#1e293b;">${name}</div>
+                    <div style="font-weight:bold; font-size:14px; color:#1e293b;">${name}${refBadge}</div>
                     <div style="font-size:12px; color:#64748b;">${m.email}</div>
                 </td>
                 <td style="text-align:right; padding:10px 15px;">
