@@ -52,13 +52,14 @@
 
     function setupControls(domElement) {
         domElement.addEventListener('mousedown', (e) => {
-            // Shift+click reserved for wall movement (wall-3d-walls.js)
-            if (e.shiftKey && window.__wallMode) return;
+            // 벽 드래그 중이면 orbit 방지 (wall-3d-walls.js에서 설정)
+            if (window.__wallDragMode) return;
             if (e.button === 0) { isDragging = true; isPanning = false; }
             if (e.button === 2) { isPanning = true; isDragging = false; }
             prevX = e.clientX; prevY = e.clientY;
         });
         domElement.addEventListener('mousemove', (e) => {
+            if (window.__wallDragMode) return; // 벽 드래그 중이면 orbit 방지
             if (isDragging) {
                 const dx = e.clientX - prevX;
                 const dy = e.clientY - prevY;
@@ -577,6 +578,95 @@
         return textures;
     }
 
+    // ─── 벽별 개별 텍스처 캡처 (멀티월용) ───
+    async function capturePerWallTextures() {
+        const fabricCanvas = window.canvas;
+        if (!fabricCanvas) return [];
+
+        if (window.savePageState) window.savePageState();
+        const origIndex = window._getPageIndex ? window._getPageIndex() : 0;
+        const pageList = window.__pageDataList;
+        if (!pageList || pageList.length < 1) return [];
+
+        const cfg = window.__wallConfig;
+        const doubleSided = cfg?.doubleSided || false;
+        const pagesPerWall = doubleSided ? 2 : 1;
+        const wallCount = cfg?.walls?.length || 1;
+        const result = [];
+
+        for (let wi = 0; wi < wallCount; wi++) {
+            const wallTex = { front: null, back: null };
+            const frontIdx = wi * pagesPerWall;
+
+            // Front face
+            if (frontIdx < pageList.length) {
+                try {
+                    await new Promise(resolve => {
+                        fabricCanvas.loadFromJSON(pageList[frontIdx], () => resolve());
+                    });
+                    const board = fabricCanvas.getObjects().find(o => o.isBoard);
+                    if (board) {
+                        const vpt = fabricCanvas.viewportTransform.slice();
+                        fabricCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+                        fabricCanvas.setDimensions({ width: board.width, height: board.height });
+                        fabricCanvas.renderAll();
+                        wallTex.front = fabricCanvas.toDataURL({
+                            format: 'png', left: 0, top: 0,
+                            width: board.width, height: board.height
+                        });
+                        fabricCanvas.viewportTransform = vpt;
+                    }
+                } catch (e) {
+                    console.error('Wall texture capture failed for wall ' + wi + ' front', e);
+                }
+            }
+
+            // Back face (양면만)
+            if (doubleSided) {
+                const backIdx = wi * pagesPerWall + 1;
+                if (backIdx < pageList.length) {
+                    try {
+                        await new Promise(resolve => {
+                            fabricCanvas.loadFromJSON(pageList[backIdx], () => resolve());
+                        });
+                        const board = fabricCanvas.getObjects().find(o => o.isBoard);
+                        if (board) {
+                            const vpt = fabricCanvas.viewportTransform.slice();
+                            fabricCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+                            fabricCanvas.setDimensions({ width: board.width, height: board.height });
+                            fabricCanvas.renderAll();
+                            wallTex.back = fabricCanvas.toDataURL({
+                                format: 'png', left: 0, top: 0,
+                                width: board.width, height: board.height
+                            });
+                            fabricCanvas.viewportTransform = vpt;
+                        }
+                    } catch (e) {
+                        console.error('Wall texture capture failed for wall ' + wi + ' back', e);
+                    }
+                }
+            }
+
+            result.push(wallTex);
+        }
+
+        // Restore original page
+        if (origIndex < pageList.length) {
+            await new Promise(resolve => {
+                fabricCanvas.loadFromJSON(pageList[origIndex], () => {
+                    const b = fabricCanvas.getObjects().find(o => o.isBoard);
+                    if (b) fabricCanvas.sendToBack(b);
+                    const stage = document.querySelector('.stage');
+                    if (stage) fabricCanvas.setDimensions({ width: stage.clientWidth, height: stage.clientHeight });
+                    fabricCanvas.renderAll();
+                    resolve();
+                });
+            });
+        }
+
+        return result;
+    }
+
     // ─── Canvas Capture Helper ───
     function captureCanvas() {
         const fabricCanvas = window.canvas;
@@ -640,11 +730,14 @@
             const widthMM = Math.round(board.width / PX_PER_MM);
             const heightMM = Math.round(board.height / PX_PER_MM);
 
-            // 가벽 모드: 단면은 앞면만, 양면은 앞+뒤 캡처
+            // 가벽 멀티월 모드: 벽별 개별 텍스처 캡처 → wall-3d-walls.js가 벽 생성
             if (window.__wallMode) {
-                const faces = await captureAllWallFaces();
-                const doubleSided = window.__wallConfig?.doubleSided || false;
-                buildWall(widthMM, heightMM, faces[0] || null, doubleSided ? (faces[1] || null) : null);
+                const textures = await capturePerWallTextures();
+                window.__wallTextures = textures;
+                // buildWall 호출 안 함 — initWallsFromConfig가 멀티월 생성
+                if (window.initWallsFromConfig) {
+                    window.initWallsFromConfig();
+                }
             } else {
                 const dataUrl = captureCanvas();
                 buildWall(widthMM, heightMM, dataUrl, null);
@@ -661,14 +754,14 @@
         const hint = document.getElementById('wall3dHint');
         if (hint && window.__wallMode && !window.__boxMode) {
             const t = window.t || ((k, d) => d);
-            hint.textContent = t('hint_3d_wall_controls', '🖱 클릭: 선택 | Shift+드래그: 이동 | 드래그: 회전');
+            hint.textContent = t('hint_3d_wall_controls', '\uD83D\uDDB1 \uD074\uB9AD+\uB4DC\uB798\uADF8: \uC774\uB3D9 | \uBE48 \uACF3 \uB4DC\uB798\uADF8: \uD68C\uC804');
         }
 
         startAnimate();
     };
 
     window.refresh3DTexture = async function () {
-        if (!wallGroup || !isInitialized) return;
+        if (!isInitialized) return;
 
         // 박스 모드: 전체 6면 재캡처
         if (window.__boxDims && window.__boxMode) {
@@ -678,18 +771,13 @@
             return;
         }
 
-        // 벽 모드: 단면/양면 재캡처
+        // 벽 모드: 벽별 텍스처 재캡처 → 멀티월 재생성
         if (window.__wallMode) {
-            const fabricCanvas = window.canvas;
-            if (!fabricCanvas) return;
-            const board = fabricCanvas.getObjects().find(o => o.isBoard);
-            if (!board) return;
-            const PX_PER_MM = 3.7795;
-            const widthMM = Math.round(board.width / PX_PER_MM);
-            const heightMM = Math.round(board.height / PX_PER_MM);
-            const faces = await captureAllWallFaces();
-            const doubleSided = window.__wallConfig?.doubleSided || false;
-            buildWall(widthMM, heightMM, faces[0] || null, doubleSided ? (faces[1] || null) : null);
+            const textures = await capturePerWallTextures();
+            window.__wallTextures = textures;
+            if (window.initWallsFromConfig) {
+                window.initWallsFromConfig();
+            }
             return;
         }
 
