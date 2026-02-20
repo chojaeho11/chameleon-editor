@@ -13,15 +13,19 @@ const TOOLBAR_GAP = 12;   // px above image
 function getScreenBounds(obj) {
     const cEl = canvas.getElement();
     const rect = cEl.getBoundingClientRect();
-    // canvas pixel → CSS pixel 비율 (retina/DPR 보정)
-    const ratioX = rect.width  / (cEl.width  || 1);
-    const ratioY = rect.height / (cEl.height || 1);
-    const br = obj.getBoundingRect(true); // canvas-pixel 좌표 (viewport 포함)
+    // oCoords = viewport transform 적용된 좌표 (줌/팬 반영)
+    obj.setCoords();
+    const c = obj.oCoords;
+    if (!c) { return { left: 0, top: 0, width: 0, height: 0 }; }
+    const xs = [c.tl.x, c.tr.x, c.bl.x, c.br.x];
+    const ys = [c.tl.y, c.tr.y, c.bl.y, c.br.y];
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
     return {
-        left:   rect.left + br.left   * ratioX,
-        top:    rect.top  + br.top    * ratioY,
-        width:  br.width  * ratioX,
-        height: br.height * ratioY
+        left:   rect.left + minX,
+        top:    rect.top  + minY,
+        width:  maxX - minX,
+        height: maxY - minY
     };
 }
 
