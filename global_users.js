@@ -20,7 +20,7 @@ window.loadMembers = async (isNewSearch = false) => {
     
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
     
-    let query = sb.from('profiles').select('id, email, full_name, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at', { count: 'exact' });
+    let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at', { count: 'exact' });
     if (roleVal !== 'all') query = query.eq('role', roleVal);
     if (keyword) query = query.ilike('email', `%${keyword}%`);
 
@@ -45,7 +45,7 @@ window.loadMembers = async (isNewSearch = false) => {
     }
 
     members.forEach(m => {
-        let name = m.full_name || m.user_name || m.email?.split('@')[0] || '미등록';
+        let name = m.username || m.email?.split('@')[0] || '미등록';
         let badgeColor = '#f1f5f9'; let displayRole = '일반';
         if (m.role === 'gold') { badgeColor = '#fef9c3'; displayRole = '골드'; }
         if (m.role === 'platinum') { badgeColor = '#e0f2fe'; displayRole = '플레티넘'; }
