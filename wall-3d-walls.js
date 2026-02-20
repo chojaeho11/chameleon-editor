@@ -985,26 +985,39 @@
         window.__wallAccessories[key] = enabled;
         rebuildAccessories();
 
-        // Sync with cart addon checkboxes
         const addonCode = ADDON_CODE_MAP[key];
         if (!addonCode) return;
+
+        // ★ pendingSelectedAddons 직접 동기화 (장바구니 담기 시 반영)
+        if (!window.pendingSelectedAddons) window.pendingSelectedAddons = [];
+        if (!window.pendingSelectedAddonQtys) window.pendingSelectedAddonQtys = {};
+        const idx = window.pendingSelectedAddons.indexOf(addonCode);
+        if (enabled && idx === -1) {
+            window.pendingSelectedAddons.push(addonCode);
+        } else if (!enabled && idx !== -1) {
+            window.pendingSelectedAddons.splice(idx, 1);
+            delete window.pendingSelectedAddonQtys[addonCode];
+        }
+        if (enabled) {
+            const countEl = document.getElementById(
+                key === 'cornerPillar' ? 'cornerPillarCount' :
+                key === 'topLight' ? 'topLightCount' : 'outdoorStandCount'
+            );
+            window.pendingSelectedAddonQtys[addonCode] = parseInt(countEl?.textContent?.replace('\u00D7', '') || '1');
+        }
+
+        // Sync with DOM addon checkboxes (if visible)
         const chk = document.querySelector('input[name="userOption"][value="' + addonCode + '"]');
-        if (!chk) return;
-        chk.checked = enabled;
-        // Show/hide qty box
-        const row = chk.closest('.addon-item-row');
-        if (row) {
-            const qtyBox = row.querySelector('.addon-qty-box');
-            if (qtyBox) qtyBox.style.display = enabled ? 'flex' : 'none';
-            // Set qty from accessory count
-            if (enabled) {
-                const countEl = document.getElementById(
-                    key === 'cornerPillar' ? 'cornerPillarCount' :
-                    key === 'topLight' ? 'topLightCount' : 'outdoorStandCount'
-                );
-                const count = parseInt(countEl?.textContent?.replace('\u00D7', '') || '1');
-                const qtyInput = row.querySelector('.addon-qty-input');
-                if (qtyInput && count > 0) qtyInput.value = count;
+        if (chk) {
+            chk.checked = enabled;
+            const row = chk.closest('.addon-item-row');
+            if (row) {
+                const qtyBox = row.querySelector('.addon-qty-box');
+                if (qtyBox) qtyBox.style.display = enabled ? 'flex' : 'none';
+                if (enabled) {
+                    const qtyInput = row.querySelector('.addon-qty-input');
+                    if (qtyInput) qtyInput.value = window.pendingSelectedAddonQtys[addonCode] || 1;
+                }
             }
         }
         if (window.updateModalTotal) window.updateModalTotal();

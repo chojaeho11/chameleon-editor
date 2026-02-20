@@ -844,12 +844,29 @@ async function addCanvasToCart() {
 
     const recoveredAddons = {};
     const recoveredAddonQtys = {};
-    
+
     if (window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
         const savedQtys = window.pendingSelectedAddonQtys || {};
         window.pendingSelectedAddons.forEach(code => {
             recoveredAddons[`opt_${code}`] = code;
             recoveredAddonQtys[code] = savedQtys[code] || 1;
+        });
+    }
+
+    // ★ 가벽 3D 액세서리 → 장바구니 addon 자동 연동
+    if (window.__wallMode && window.__wallAccessories) {
+        const _ADDON_MAP = { cornerPillar: 'For', topLight: '87545', outdoorStand: 'b0001' };
+        const _counts = (window.__wallConfig && window.__wallConfig.accessoryCounts) || {};
+        Object.entries(window.__wallAccessories).forEach(([key, enabled]) => {
+            const code = _ADDON_MAP[key];
+            if (!code) return;
+            if (enabled) {
+                recoveredAddons['opt_' + code] = code;
+                recoveredAddonQtys[code] = _counts[key] || 1;
+            } else {
+                delete recoveredAddons['opt_' + code];
+                delete recoveredAddonQtys[code];
+            }
         });
     }
 
