@@ -1394,5 +1394,15 @@
   "ppt_trans_zoom": "Zoom",
   "ppt_trans_wipe": "Balayage",
   "ppt_trans_push": "Poussée",
-  "loading_product": "Chargement du produit..."
+  "loading_product": "Chargement du produit...",
+  "wall_preset_title": "Préréglage",
+  "wall_face_front": "Face avant",
+  "wall_face_back": "Face arrière",
+  "wall_add_btn": "Ajouter un mur",
+  "wall_delete_btn": "Supprimer",
+  "wall_rotate_btn": "Tourner",
+  "wall_preset_booth": "Stand",
+  "wall_preset_square": "Carré",
+  "msg_min_wall": "Au moins un mur est requis",
+  "hint_3d_wall_controls": "Clic: sélectionner | Shift+glisser: déplacer | Glisser: tourner"
 }

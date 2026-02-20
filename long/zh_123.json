@@ -1394,5 +1394,15 @@
   "ppt_trans_zoom": "缩放",
   "ppt_trans_wipe": "擦除",
   "ppt_trans_push": "推入",
-  "loading_product": "正在前往商品页面..."
+  "loading_product": "正在前往商品页面...",
+  "wall_preset_title": "预设",
+  "wall_face_front": "正面",
+  "wall_face_back": "背面",
+  "wall_add_btn": "添加墙",
+  "wall_delete_btn": "删除",
+  "wall_rotate_btn": "旋转",
+  "wall_preset_booth": "展位",
+  "wall_preset_square": "方形",
+  "msg_min_wall": "至少需要一面墙",
+  "hint_3d_wall_controls": "点击: 选择 | Shift+拖拽: 移动 | 拖拽: 旋转"
 }

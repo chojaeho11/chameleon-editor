@@ -1394,5 +1394,15 @@
   "ppt_trans_zoom": "تكبير",
   "ppt_trans_wipe": "مسح",
   "ppt_trans_push": "دفع",
-  "loading_product": "...جارٍ الانتقال إلى صفحة المنتج"
+  "loading_product": "...جارٍ الانتقال إلى صفحة المنتج",
+  "wall_preset_title": "الإعداد المسبق",
+  "wall_face_front": "الأمام",
+  "wall_face_back": "الخلف",
+  "wall_add_btn": "إضافة جدار",
+  "wall_delete_btn": "حذف",
+  "wall_rotate_btn": "تدوير",
+  "wall_preset_booth": "كشك",
+  "wall_preset_square": "مربع",
+  "msg_min_wall": "يلزم جدار واحد على الأقل",
+  "hint_3d_wall_controls": "انقر: تحديد | Shift+سحب: نقل | سحب: تدوير"
 }

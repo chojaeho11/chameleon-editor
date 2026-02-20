@@ -7,6 +7,7 @@
     let threeLoaded = false;
     let animFrameId = null;
     let frontTexture = null;
+    let backTexture = null;
     let currentWidthMM = 0, currentHeightMM = 0;
 
     // Orbit state
@@ -51,6 +52,8 @@
 
     function setupControls(domElement) {
         domElement.addEventListener('mousedown', (e) => {
+            // Shift+click reserved for wall movement (wall-3d-walls.js)
+            if (e.shiftKey && window.__wallMode) return;
             if (e.button === 0) { isDragging = true; isPanning = false; }
             if (e.button === 2) { isPanning = true; isDragging = false; }
             prevX = e.clientX; prevY = e.clientY;
@@ -203,8 +206,8 @@
         if (!animFrameId) animate();
     }
 
-    // ─── Build Wall ───
-    function buildWall(widthMM, heightMM, canvasDataUrl) {
+    // ─── Build Wall (양면 지원) ───
+    function buildWall(widthMM, heightMM, frontDataUrl, backDataUrl) {
         if (wallGroup) {
             scene.remove(wallGroup);
             wallGroup.traverse(child => {
@@ -229,13 +232,15 @@
         const panelGeo = new THREE.BoxGeometry(width, height, depth);
 
         if (frontTexture) frontTexture.dispose();
+        if (backTexture) backTexture.dispose();
         frontTexture = null;
+        backTexture = null;
 
         const sideMat = new THREE.MeshStandardMaterial({ color: COL_SIDE, roughness: 0.5 });
-        const backMat = new THREE.MeshStandardMaterial({ color: COL_BACK, roughness: 0.6 });
 
+        // Front face material
         let frontMat;
-        if (canvasDataUrl) {
+        if (frontDataUrl) {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = function () {
@@ -244,10 +249,30 @@
                 frontTexture.encoding = THREE.sRGBEncoding;
                 panel.material[4] = new THREE.MeshStandardMaterial({ map: frontTexture, roughness: 0.4 });
             };
-            img.src = canvasDataUrl;
+            img.src = frontDataUrl;
             frontMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
         } else {
             frontMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+        }
+
+        // Back face material (뒷면 텍스처 — 좌우반전)
+        let backMat;
+        if (backDataUrl) {
+            const backImg = new Image();
+            backImg.crossOrigin = 'anonymous';
+            backImg.onload = function () {
+                backTexture = new THREE.Texture(backImg);
+                backTexture.needsUpdate = true;
+                backTexture.encoding = THREE.sRGBEncoding;
+                // 좌우반전: 뒤에서 보면 거울상이므로 repeat.x = -1
+                backTexture.wrapS = THREE.RepeatWrapping;
+                backTexture.repeat.x = -1;
+                panel.material[5] = new THREE.MeshStandardMaterial({ map: backTexture, roughness: 0.4 });
+            };
+            backImg.src = backDataUrl;
+            backMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+        } else {
+            backMat = new THREE.MeshStandardMaterial({ color: COL_BACK, roughness: 0.6 });
         }
 
         // BoxGeometry faces: +X, -X, +Y, -Y, +Z(front), -Z(back)
@@ -338,14 +363,16 @@
 
         const geo = new THREE.ExtrudeGeometry(shape, { depth: standWidth, bevelEnabled: false });
         const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x - standWidth / 2, bottomY, backZ);
+        // 삼각 받침대를 뒤쪽(-Z)으로 향하게 회전
+        mesh.rotation.y = Math.PI / 2;
+        mesh.position.set(x, bottomY, backZ);
         mesh.castShadow = true;
         wallGroup.add(mesh);
 
-        // Connecting plate
-        const plateGeo = new THREE.BoxGeometry(0.08, 0.12, 0.015);
+        // Connecting plate (뒤쪽으로 확장)
+        const plateGeo = new THREE.BoxGeometry(0.08, 0.12, standBase * 0.3);
         const plate = new THREE.Mesh(plateGeo, mat);
-        plate.position.set(x, bottomY + 0.06, backZ - 0.008);
+        plate.position.set(x, bottomY + 0.06, backZ - standBase * 0.15);
         wallGroup.add(plate);
     }
 
@@ -484,6 +511,62 @@
         return textures;
     }
 
+    // ─── Capture all wall faces (양면) ───
+    async function captureAllWallFaces() {
+        const fabricCanvas = window.canvas;
+        if (!fabricCanvas) return [];
+
+        if (window.savePageState) window.savePageState();
+        const origIndex = window._getPageIndex ? window._getPageIndex() : 0;
+        const pageList = window.__pageDataList;
+        if (!pageList || pageList.length < 2) return [];
+
+        const textures = [];
+        // 각 가벽당 2페이지 (앞면, 뒷면)
+        const faceCount = Math.min(pageList.length, 2); // Phase 2: 1 wall × 2 faces
+
+        for (let i = 0; i < faceCount; i++) {
+            await new Promise(resolve => {
+                fabricCanvas.loadFromJSON(pageList[i], () => resolve());
+            });
+
+            const board = fabricCanvas.getObjects().find(o => o.isBoard);
+            if (!board) { textures.push(null); continue; }
+
+            try {
+                const vpt = fabricCanvas.viewportTransform.slice();
+                fabricCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+                fabricCanvas.setDimensions({ width: board.width, height: board.height });
+                fabricCanvas.renderAll();
+
+                const dataUrl = fabricCanvas.toDataURL({
+                    format: 'png', left: 0, top: 0,
+                    width: board.width, height: board.height
+                });
+                textures.push(dataUrl);
+
+                fabricCanvas.viewportTransform = vpt;
+            } catch (e) {
+                console.error('Wall face capture failed for face ' + i, e);
+                textures.push(null);
+            }
+        }
+
+        // Restore original page
+        await new Promise(resolve => {
+            fabricCanvas.loadFromJSON(pageList[origIndex], () => {
+                const b = fabricCanvas.getObjects().find(o => o.isBoard);
+                if (b) fabricCanvas.sendToBack(b);
+                const stage = document.querySelector('.stage');
+                if (stage) fabricCanvas.setDimensions({ width: stage.clientWidth, height: stage.clientHeight });
+                fabricCanvas.renderAll();
+                resolve();
+            });
+        });
+
+        return textures;
+    }
+
     // ─── Canvas Capture Helper ───
     function captureCanvas() {
         const fabricCanvas = window.canvas;
@@ -543,12 +626,31 @@
             const board = fabricCanvas.getObjects().find(o => o.isBoard);
             if (!board) return;
 
-            // board.width/height is in pixels (mm × 3.7795), convert back to mm
             const PX_PER_MM = 3.7795;
             const widthMM = Math.round(board.width / PX_PER_MM);
             const heightMM = Math.round(board.height / PX_PER_MM);
-            const dataUrl = captureCanvas();
-            buildWall(widthMM, heightMM, dataUrl);
+
+            // 양면 가벽 모드: 앞/뒤 모두 캡처
+            if (window.__wallMode && window.__pageDataList && window.__pageDataList.length >= 2) {
+                const faces = await captureAllWallFaces();
+                buildWall(widthMM, heightMM, faces[0] || null, faces[1] || null);
+            } else {
+                const dataUrl = captureCanvas();
+                buildWall(widthMM, heightMM, dataUrl, null);
+            }
+        }
+
+        // 3D 사이드바 표시 (가벽 모드에서만)
+        const sidebar = document.getElementById('wall3DSidebar');
+        if (sidebar) {
+            sidebar.style.display = (window.__wallMode && !window.__boxMode) ? 'flex' : 'none';
+        }
+
+        // 힌트 텍스트 업데이트
+        const hint = document.getElementById('wall3dHint');
+        if (hint && window.__wallMode && !window.__boxMode) {
+            const t = window.t || ((k, d) => d);
+            hint.textContent = t('hint_3d_wall_controls', '🖱 클릭: 선택 | Shift+드래그: 이동 | 드래그: 회전');
         }
 
         startAnimate();
@@ -565,7 +667,21 @@
             return;
         }
 
-        // 벽 모드: 앞면만 갱신
+        // 벽 모드: 양면 재캡처
+        if (window.__wallMode && window.__pageDataList && window.__pageDataList.length >= 2) {
+            const fabricCanvas = window.canvas;
+            if (!fabricCanvas) return;
+            const board = fabricCanvas.getObjects().find(o => o.isBoard);
+            if (!board) return;
+            const PX_PER_MM = 3.7795;
+            const widthMM = Math.round(board.width / PX_PER_MM);
+            const heightMM = Math.round(board.height / PX_PER_MM);
+            const faces = await captureAllWallFaces();
+            buildWall(widthMM, heightMM, faces[0] || null, faces[1] || null);
+            return;
+        }
+
+        // 단면 벽: 앞면만 갱신
         const dataUrl = captureCanvas();
         if (!dataUrl) return;
 
@@ -590,5 +706,21 @@
         if (!modal || modal.style.display === 'none' || !isInitialized) return;
         if (e.detail.mode === 'wall') window.open3DPreview();
     });
+
+    // ─── Phase 3: 공유 상태 노출 ───
+    // wall-3d-walls.js 등 외부 모듈이 scene, camera 등에 접근
+    window.__wall3D = {
+        get scene() { return scene; },
+        get camera() { return camera; },
+        get renderer() { return renderer; },
+        get wallGroup() { return wallGroup; },
+        get spherical() { return spherical; },
+        get target() { return target; },
+        updateCamera: function () { updateCamera(); },
+        buildWall: function (w, h, f, b) { buildWall(w, h, f, b); },
+        captureAllWallFaces: captureAllWallFaces,
+        captureCanvas: captureCanvas,
+        addBox: function (w, h, d, x, y, z, mat) { addBox(w, h, d, x, y, z, mat); }
+    };
 
 })();

@@ -403,6 +403,35 @@ button, input, textarea, select { font-family: inherit; }
 .box-face-tab:hover { background: rgba(99,102,241,0.3); color: #c7d2fe; }
 .box-face-tab.active { background: #6366f1; color: #fff; }
 
+/* Wall Face Tabs */
+.wall-face-tab {
+    padding: 6px 14px; border: none; border-radius: 6px;
+    background: rgba(255,255,255,0.1); color: #94a3b8;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+}
+.wall-face-tab:hover { background: rgba(99,102,241,0.3); color: #c7d2fe; }
+.wall-face-tab.active { background: #6366f1; color: #fff; }
+
+/* 3D Wall Sidebar */
+.wall3d-preset-btn {
+    padding: 8px 4px; background: rgba(255,255,255,0.06); color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    cursor: pointer; font-size: 12px; text-align: center; line-height: 1.2;
+    transition: all 0.2s;
+}
+.wall3d-preset-btn:hover { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); }
+.wall3d-preset-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+
+.wall3d-wall-item {
+    padding: 8px 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #e2e8f0; font-size: 11px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; transition: all 0.15s;
+}
+.wall3d-wall-item:hover { background: rgba(99,102,241,0.15); }
+.wall3d-wall-item.selected { background: rgba(99,102,241,0.25); border-color: #6366f1; }
+.wall3d-wall-item .wall-color { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
 /* 칼선 도구 */
 .tool-box-group {
     background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; 

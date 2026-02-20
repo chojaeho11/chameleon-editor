@@ -1394,5 +1394,15 @@
   "ppt_trans_zoom": "Zoom",
   "ppt_trans_wipe": "Wipe",
   "ppt_trans_push": "Push",
-  "loading_product": "Loading product..."
+  "loading_product": "Loading product...",
+  "wall_preset_title": "Preset",
+  "wall_face_front": "Front",
+  "wall_face_back": "Back",
+  "wall_add_btn": "Add wall",
+  "wall_delete_btn": "Delete",
+  "wall_rotate_btn": "Rotate",
+  "wall_preset_booth": "Booth",
+  "wall_preset_square": "Square",
+  "msg_min_wall": "At least one wall is required",
+  "hint_3d_wall_controls": "Click: select | Shift+drag: move | Drag: rotate view"
 }

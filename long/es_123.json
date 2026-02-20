@@ -1394,5 +1394,15 @@
   "ppt_trans_zoom": "Zoom",
   "ppt_trans_wipe": "Barrido",
   "ppt_trans_push": "Empujar",
-  "loading_product": "Cargando producto..."
+  "loading_product": "Cargando producto...",
+  "wall_preset_title": "Preajuste",
+  "wall_face_front": "Frontal",
+  "wall_face_back": "Trasero",
+  "wall_add_btn": "Añadir pared",
+  "wall_delete_btn": "Eliminar",
+  "wall_rotate_btn": "Rotar",
+  "wall_preset_booth": "Puesto",
+  "wall_preset_square": "Cuadrado",
+  "msg_min_wall": "Se requiere al menos una pared",
+  "hint_3d_wall_controls": "Clic: seleccionar | Shift+arrastrar: mover | Arrastrar: rotar"
 }

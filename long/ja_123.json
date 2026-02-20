@@ -1394,5 +1394,15 @@
   "ppt_trans_zoom": "ズーム",
   "ppt_trans_wipe": "ワイプ",
   "ppt_trans_push": "プッシュ",
-  "loading_product": "商品ページへ移動中..."
+  "loading_product": "商品ページへ移動中...",
+  "wall_preset_title": "プリセット",
+  "wall_face_front": "表面",
+  "wall_face_back": "裏面",
+  "wall_add_btn": "パネル追加",
+  "wall_delete_btn": "削除",
+  "wall_rotate_btn": "回転",
+  "wall_preset_booth": "ブース",
+  "wall_preset_square": "四角",
+  "msg_min_wall": "パネルは最低1枚必要です",
+  "hint_3d_wall_controls": "クリック: 選択 | Shift+ドラッグ: 移動 | ドラッグ: 回転"
 }

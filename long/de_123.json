@@ -1394,5 +1394,15 @@
   "ppt_trans_zoom": "Zoom",
   "ppt_trans_wipe": "Wischen",
   "ppt_trans_push": "Drücken",
-  "loading_product": "Produktseite wird geladen..."
+  "loading_product": "Produktseite wird geladen...",
+  "wall_preset_title": "Voreinstellung",
+  "wall_face_front": "Vorderseite",
+  "wall_face_back": "Rückseite",
+  "wall_add_btn": "Wand hinzufügen",
+  "wall_delete_btn": "Löschen",
+  "wall_rotate_btn": "Drehen",
+  "wall_preset_booth": "Stand",
+  "wall_preset_square": "Quadrat",
+  "msg_min_wall": "Mindestens eine Wand erforderlich",
+  "hint_3d_wall_controls": "Klick: auswählen | Shift+ziehen: verschieben | Ziehen: drehen"
 }

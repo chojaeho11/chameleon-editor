@@ -262,6 +262,85 @@ window.switchBoxFace = function(index) {
     });
 };
 
+// ─── 가벽 모드: 양면(앞/뒤) 페이지 ───
+
+const WALL_FACE_NAMES = ['Front', 'Back'];
+
+export function initWallPages(wallCount, widthMM, heightMM) {
+    const PX = 3.7795;
+    const w = widthMM * PX;
+    const h = heightMM * PX;
+
+    pageDataList = [];
+    currentPageIndex = 0;
+
+    for (let wi = 0; wi < wallCount; wi++) {
+        // Front face
+        canvas.clear();
+        const frontBoard = new fabric.Rect({
+            width: w, height: h, fill: 'white',
+            left: 0, top: 0, selectable: false, evented: false, isBoard: true
+        });
+        canvas.add(frontBoard);
+        canvas.sendToBack(frontBoard);
+        pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
+
+        // Back face
+        canvas.clear();
+        const backBoard = new fabric.Rect({
+            width: w, height: h, fill: 'white',
+            left: 0, top: 0, selectable: false, evented: false, isBoard: true
+        });
+        canvas.add(backBoard);
+        canvas.sendToBack(backBoard);
+        pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
+    }
+
+    // Load first page (wall 1 front)
+    currentPageIndex = 0;
+    loadPage(0);
+    setTimeout(() => resizeCanvasToFit(), 50);
+    updatePageCounter();
+
+    // Tab active state
+    updateWallFaceTabs(0, 0);
+
+    // window 노출
+    window.__wallMode = true;
+    window.__wallCount = wallCount;
+}
+
+// wallIndex = 가벽 번호(0-based), faceIndex = 0(앞면) / 1(뒷면)
+window.switchWallFace = function (wallIndex, faceIndex) {
+    const pageIndex = wallIndex * 2 + faceIndex;
+    if (pageIndex < 0 || pageIndex >= pageDataList.length) return;
+    if (pageIndex === currentPageIndex) return;
+
+    saveCurrentPageState();
+    currentPageIndex = pageIndex;
+
+    const json = pageDataList[pageIndex];
+    if (!json) return;
+
+    canvas.loadFromJSON(json, () => {
+        const board = canvas.getObjects().find(o => o.isBoard);
+        if (board) canvas.sendToBack(board);
+        updatePageCounter();
+        canvas.requestRenderAll();
+        resizeCanvasToFit();
+    });
+
+    updateWallFaceTabs(wallIndex, faceIndex);
+};
+
+function updateWallFaceTabs(activeWall, activeFace) {
+    document.querySelectorAll('.wall-face-tab').forEach(tab => {
+        const wi = parseInt(tab.dataset.wall || '0');
+        const fi = parseInt(tab.dataset.face || '0');
+        tab.classList.toggle('active', wi === activeWall && fi === activeFace);
+    });
+}
+
 // 박스 치수 적용
 window.applyBoxDimensions = function() {
     const w = parseInt(document.getElementById('boxW').value);

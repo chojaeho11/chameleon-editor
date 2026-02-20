@@ -1018,5 +1018,15 @@
   "ppt_trans_zoom": "확대",
   "ppt_trans_wipe": "와이프",
   "ppt_trans_push": "푸시",
-  "loading_product": "상품 페이지로 이동 중..."
+  "loading_product": "상품 페이지로 이동 중...",
+  "wall_preset_title": "프리셋",
+  "wall_face_front": "앞면",
+  "wall_face_back": "뒷면",
+  "wall_add_btn": "가벽 추가",
+  "wall_delete_btn": "삭제",
+  "wall_rotate_btn": "회전",
+  "wall_preset_booth": "부스",
+  "wall_preset_square": "사각",
+  "msg_min_wall": "가벽은 최소 1개 필요합니다",
+  "hint_3d_wall_controls": "클릭: 선택 | Shift+드래그: 이동 | 드래그: 회전"
 }
