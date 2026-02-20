@@ -1413,5 +1413,12 @@
   "wall_single_sided": "Simple",
   "wall_double_sided": "Doble",
   "wall_count": "Cantidad",
-  "wall_price_calc": "Precio"
+  "wall_price_calc": "Precio",
+  "wall_opt_label": "Opciones",
+  "wall_opt_corner_pillar": "Pilar esquinero",
+  "wall_opt_top_light": "Luz superior (blanco)",
+  "wall_opt_outdoor_stand": "Soporte exterior (1 juego)",
+  "wall_acc_light": "Luz",
+  "wall_acc_stand": "Soporte",
+  "wall_acc_set_unit": "juego"
 }

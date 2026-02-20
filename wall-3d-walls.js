@@ -957,9 +957,10 @@
             if (grandTotal > 0) {
                 const fmt = (v) => Math.round(v).toLocaleString();
                 let lines = [];
-                if (pillarCount > 0) lines.push('\uCF54\uB108\uAE30\uB465 ' + pillarCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.cornerPillar * rate));
-                if (lightCount > 0) lines.push('\uC870\uBA85 ' + lightCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.topLight * rate));
-                if (standSetCount > 0) lines.push('\uC678\uBD80\uBC1B\uCE68 ' + standSetCount + '\uC870\u00D7' + fmt(ACCESSORY_PRICES_KRW.outdoorStand * rate));
+                const _t = (k, d) => (window.t ? window.t(k, d) : d);
+                if (pillarCount > 0) lines.push(_t('wall_opt_corner_pillar', '\uCF54\uB108\uAE30\uB465') + ' ' + pillarCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.cornerPillar * rate));
+                if (lightCount > 0) lines.push(_t('wall_acc_light', '\uC870\uBA85') + ' ' + lightCount + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.topLight * rate));
+                if (standSetCount > 0) lines.push(_t('wall_acc_stand', '\uC678\uBD80\uBC1B\uCE68') + ' ' + standSetCount + _t('wall_acc_set_unit', '\uC870') + '\u00D7' + fmt(ACCESSORY_PRICES_KRW.outdoorStand * rate));
                 priceEl.innerHTML = lines.join('<br>') +
                     '<div style="border-top:1px solid rgba(255,255,255,0.15);margin:4px 0;padding-top:4px;font-weight:700;color:#FFD700;">' +
                     fmt(grandTotal) + ' ' + unit + '</div>';

@@ -1413,5 +1413,12 @@
   "wall_single_sided": "片面",
   "wall_double_sided": "両面",
   "wall_count": "数量",
-  "wall_price_calc": "価格"
+  "wall_price_calc": "価格",
+  "wall_opt_label": "オプション",
+  "wall_opt_corner_pillar": "コーナーポール",
+  "wall_opt_top_light": "上部照明（白）",
+  "wall_opt_outdoor_stand": "外部スタンド（1組）",
+  "wall_acc_light": "照明",
+  "wall_acc_stand": "スタンド",
+  "wall_acc_set_unit": "組"
 }

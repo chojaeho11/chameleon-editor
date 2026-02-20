@@ -1404,5 +1404,12 @@
   "wall_preset_booth": "كشك",
   "wall_preset_square": "مربع",
   "msg_min_wall": "يلزم جدار واحد على الأقل",
-  "hint_3d_wall_controls": "انقر: تحديد | Shift+سحب: نقل | سحب: تدوير"
+  "hint_3d_wall_controls": "انقر: تحديد | Shift+سحب: نقل | سحب: تدوير",
+  "wall_opt_label": "خيارات",
+  "wall_opt_corner_pillar": "عمود زاوية",
+  "wall_opt_top_light": "إضاءة علوية (أبيض)",
+  "wall_opt_outdoor_stand": "حامل خارجي (مجموعة واحدة)",
+  "wall_acc_light": "إضاءة",
+  "wall_acc_stand": "حامل",
+  "wall_acc_set_unit": "مجموعة"
 }

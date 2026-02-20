@@ -2644,21 +2644,21 @@ async function handleSubReturn() {
   </div>
   <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:4px 0;">
   <div>
-    <div style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:8px;">옵션</div>
+    <div style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:8px;" data-i18n="wall_opt_label">옵션</div>
     <div style="display:flex; flex-direction:column; gap:6px;">
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
         <input type="checkbox" id="opt3dCornerPillar" onchange="window.toggleAccessory('cornerPillar', this.checked)" style="accent-color:#6366f1;">
-        <i class="fa-solid fa-archway" style="width:14px; color:#FFD700;"></i> 코너기둥
+        <i class="fa-solid fa-archway" style="width:14px; color:#FFD700;"></i> <span data-i18n="wall_opt_corner_pillar">코너기둥</span>
         <span id="cornerPillarCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
         <input type="checkbox" id="opt3dTopLight" onchange="window.toggleAccessory('topLight', this.checked)" style="accent-color:#6366f1;">
-        <i class="fa-solid fa-lightbulb" style="width:14px; color:#FFD700;"></i> 상단조명 백색
+        <i class="fa-solid fa-lightbulb" style="width:14px; color:#FFD700;"></i> <span data-i18n="wall_opt_top_light">상단조명 백색</span>
         <span id="topLightCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
         <input type="checkbox" id="opt3dOutdoorStand" onchange="window.toggleAccessory('outdoorStand', this.checked)" style="accent-color:#6366f1;">
-        <i class="fa-solid fa-wind" style="width:14px; color:#e2e8f0;"></i> 외부받침 1조
+        <i class="fa-solid fa-wind" style="width:14px; color:#e2e8f0;"></i> <span data-i18n="wall_opt_outdoor_stand">외부받침 1조</span>
         <span id="outdoorStandCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
     </div>

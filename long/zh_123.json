@@ -1413,5 +1413,12 @@
   "wall_single_sided": "单面",
   "wall_double_sided": "双面",
   "wall_count": "数量",
-  "wall_price_calc": "价格"
+  "wall_price_calc": "价格",
+  "wall_opt_label": "选项",
+  "wall_opt_corner_pillar": "转角柱",
+  "wall_opt_top_light": "顶部照明（白色）",
+  "wall_opt_outdoor_stand": "室外支架（1组）",
+  "wall_acc_light": "照明",
+  "wall_acc_stand": "支架",
+  "wall_acc_set_unit": "组"
 }

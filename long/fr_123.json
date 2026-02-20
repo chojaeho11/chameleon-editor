@@ -1413,5 +1413,12 @@
   "wall_single_sided": "Simple",
   "wall_double_sided": "Double",
   "wall_count": "Quantité",
-  "wall_price_calc": "Prix"
+  "wall_price_calc": "Prix",
+  "wall_opt_label": "Options",
+  "wall_opt_corner_pillar": "Pilier d'angle",
+  "wall_opt_top_light": "Éclairage supérieur (blanc)",
+  "wall_opt_outdoor_stand": "Support extérieur (1 jeu)",
+  "wall_acc_light": "Éclairage",
+  "wall_acc_stand": "Support",
+  "wall_acc_set_unit": "jeu"
 }

@@ -1413,5 +1413,12 @@
   "wall_single_sided": "Einseitig",
   "wall_double_sided": "Doppelt",
   "wall_count": "Anzahl",
-  "wall_price_calc": "Preis"
+  "wall_price_calc": "Preis",
+  "wall_opt_label": "Optionen",
+  "wall_opt_corner_pillar": "Eckpfeiler",
+  "wall_opt_top_light": "Deckenbeleuchtung (Weiß)",
+  "wall_opt_outdoor_stand": "Außenständer (1 Set)",
+  "wall_acc_light": "Licht",
+  "wall_acc_stand": "Ständer",
+  "wall_acc_set_unit": "Set"
 }

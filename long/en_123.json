@@ -1413,5 +1413,12 @@
   "wall_single_sided": "Single",
   "wall_double_sided": "Double",
   "wall_count": "Count",
-  "wall_price_calc": "Price"
+  "wall_price_calc": "Price",
+  "wall_opt_label": "Options",
+  "wall_opt_corner_pillar": "Corner Pillar",
+  "wall_opt_top_light": "Top Light (White)",
+  "wall_opt_outdoor_stand": "Outdoor Stand (1 Set)",
+  "wall_acc_light": "Light",
+  "wall_acc_stand": "Stand",
+  "wall_acc_set_unit": "set"
 }
