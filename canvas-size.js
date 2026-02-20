@@ -269,190 +269,224 @@ export function resizeCanvasToFit() {
 }
 
 // =================================================================
-// ★ 가벽 구성 시스템 (Wall Configuration)
+// ★ 가벽 구성 시스템 v2 — 벽별 개별 크기
 // =================================================================
 
 window.__wallConfig = {
-    sections: 2,
-    customWidth: null,
-    heightMM: 2200,
     doubleSided: false,
-    wallCount: 1,
+    walls: [{ widthMM: 2000, heightMM: 2200 }],
+    activeIndex: 0,
     pricePerSqm: 0,
     totalPrice: 0
 };
 
-// m² 단가 도출 — _base_sqm_price가 곧 회배당 단가(≈m² 단가)
+const WALL_WIDTHS = [1000, 2000, 3000, 4000, 5000];
+const WALL_HEIGHTS = [2000, 2200, 2400, 3000];
+
+// m² 단가 도출
 function deriveWallPricePerSqm() {
     const db = window.PRODUCT_DB;
     if (!db) return 60000;
-    // 1순위: 현재 제품의 _base_sqm_price (원본 회배단가)
     const key = window.currentProductKey;
     if (key && db[key]) {
         const p = db[key];
         if (p._base_sqm_price && p._base_sqm_price > 0) return p._base_sqm_price;
     }
-    // 2순위: Wall_1의 가격 ÷ 면적
     const wall1 = db['Wall_1'];
     if (wall1) {
         const origPrice = wall1._base_sqm_price || Number(wall1.price) || 0;
         if (origPrice > 0) return origPrice;
     }
-    // 3순위: 현재 제품 원본 가격 (customPrice 적용 전)
-    if (key && db[key]) {
-        const p = db[key];
-        const origPrice = Number(p.price) || 0;
-        const w = p.width_mm || p.w_mm || p.w || 1000;
-        const h = p.height_mm || p.h_mm || p.h || 2200;
-        if (origPrice > 0 && w > 0 && h > 0) {
-            const area = (w / 1000) * (h / 1000);
-            return Math.round(origPrice / area);
-        }
-    }
-    return 60000; // 기본값
+    return 60000;
 }
 
-// 너비 프리셋 (mm) — 버튼 index(1~5)에 대응
-const WALL_WIDTH_PRESETS = { 1: 1000, 2: 2000, 3: 3000, 4: 4000, 5: 5000 };
-
-function getWallWidthMM() {
+// 전체 가격 재계산
+function calcWallTotalPrice() {
     const cfg = window.__wallConfig;
-    if (cfg.customWidth && cfg.customWidth > 0) return cfg.customWidth;
-    return WALL_WIDTH_PRESETS[cfg.sections] || (cfg.sections * 1000);
-}
-
-function applyWallConfig() {
-    const cfg = window.__wallConfig;
-    const widthMM = getWallWidthMM();
-    const heightMM = cfg.heightMM;
-
-    // m² 단가
     if (!cfg.pricePerSqm) cfg.pricePerSqm = deriveWallPricePerSqm();
-
-    // 가격 계산
-    const area_m2 = (widthMM / 1000) * (heightMM / 1000);
     const sides = cfg.doubleSided ? 2 : 1;
-    cfg.totalPrice = Math.round(area_m2 * cfg.pricePerSqm * sides * cfg.wallCount / 10) * 10;
+    let total = 0;
+    cfg.walls.forEach(w => {
+        const area = (w.widthMM / 1000) * (w.heightMM / 1000);
+        total += area * cfg.pricePerSqm * sides;
+    });
+    cfg.totalPrice = Math.round(total / 10) * 10;
+    window.__wallCalculatedPrice = cfg.totalPrice;
+    return cfg.totalPrice;
+}
 
-    // 캔버스 크기 적용
-    applySize(widthMM, heightMM, 'WallCustom', 'wall', 'resize');
+const MM_TO_PX = 3.7795;
 
-    // 페이지 재생성 (단면/양면 분기)
+// 활성 벽 캔버스 적용 (크기만, 페이지 재생성 안함)
+function applyActiveWallToCanvas() {
+    const cfg = window.__wallConfig;
+    const wall = cfg.walls[cfg.activeIndex];
+    if (!wall) return;
+    applySize(Math.round(wall.widthMM * MM_TO_PX), Math.round(wall.heightMM * MM_TO_PX), 'WallCustom', 'wall', 'resize');
+}
+
+// 전체 페이지 재생성 (벽별 다른 크기)
+function rebuildAllWallPages() {
+    const cfg = window.__wallConfig;
     import('./canvas-pages.js?v=123').then(mod => {
-        mod.initWallPages(cfg.wallCount, widthMM, heightMM);
+        mod.initWallPagesMulti(cfg.walls, cfg.doubleSided, cfg.activeIndex);
+    });
+}
+
+// --- UI 렌더링 ---
+function renderWallConfigUI() {
+    const cfg = window.__wallConfig;
+    const container = document.getElementById('wallListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const fmt = window.formatCurrency || (v => v.toLocaleString() + '원');
+    const sides = cfg.doubleSided ? 2 : 1;
+
+    cfg.walls.forEach((wall, i) => {
+        const isActive = i === cfg.activeIndex;
+        const area = (wall.widthMM / 1000) * (wall.heightMM / 1000);
+        const price = Math.round(area * cfg.pricePerSqm * sides / 10) * 10;
+
+        const row = document.createElement('div');
+        row.className = 'wl-row' + (isActive ? ' active' : '');
+        row.onclick = (e) => { if (!e.target.closest('select') && !e.target.closest('.wl-del')) window.selectWall(i); };
+
+        // 번호
+        const num = document.createElement('span');
+        num.className = 'wl-num';
+        num.textContent = (i + 1);
+        row.appendChild(num);
+
+        // 너비 select
+        const wSel = document.createElement('select');
+        wSel.className = 'wl-sel';
+        WALL_WIDTHS.forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w; opt.textContent = (w / 1000) + 'm';
+            if (w === wall.widthMM) opt.selected = true;
+            wSel.appendChild(opt);
+        });
+        wSel.onchange = () => { window.setWallDim(i, 'w', parseInt(wSel.value)); };
+        row.appendChild(wSel);
+
+        const x = document.createElement('span');
+        x.className = 'wl-x'; x.textContent = '×';
+        row.appendChild(x);
+
+        // 높이 select
+        const hSel = document.createElement('select');
+        hSel.className = 'wl-sel';
+        WALL_HEIGHTS.forEach(h => {
+            const opt = document.createElement('option');
+            opt.value = h; opt.textContent = (h / 100) + 'cm';
+            if (h === wall.heightMM) opt.selected = true;
+            hSel.appendChild(opt);
+        });
+        hSel.onchange = () => { window.setWallDim(i, 'h', parseInt(hSel.value)); };
+        row.appendChild(hSel);
+
+        // 가격
+        const priceSpan = document.createElement('span');
+        priceSpan.className = 'wl-price';
+        priceSpan.textContent = fmt(price);
+        row.appendChild(priceSpan);
+
+        // 삭제
+        if (cfg.walls.length > 1) {
+            const del = document.createElement('button');
+            del.className = 'wl-del';
+            del.innerHTML = '×';
+            del.onclick = (e) => { e.stopPropagation(); window.removeWall(i); };
+            row.appendChild(del);
+        }
+
+        container.appendChild(row);
     });
 
-    // wallFaceTabs 표시/숨김
-    const wallFaceTabs = document.getElementById('wallFaceTabs');
-    if (wallFaceTabs) {
-        wallFaceTabs.style.display = cfg.doubleSided ? 'flex' : 'none';
-    }
-
-    // 전역 가격
-    window.__wallCalculatedPrice = cfg.totalPrice;
-
-    // UI 가격 업데이트
-    updateWallPriceUI(widthMM, heightMM, area_m2, sides, cfg);
-}
-
-function updateWallPriceUI(widthMM, heightMM, area_m2, sides, cfg) {
-    const breakdownEl = document.getElementById('wallPriceBreakdown');
+    // 합계
+    calcWallTotalPrice();
     const totalEl = document.getElementById('wallTotalPrice');
-    if (!breakdownEl || !totalEl) return;
+    if (totalEl) totalEl.textContent = fmt(cfg.totalPrice);
 
-    const fmt = window.formatCurrency || (v => v.toLocaleString() + '원');
-    const wm = (widthMM / 1000).toFixed(1);
-    const hm = (heightMM / 1000).toFixed(1);
-    const sideLabel = sides === 2 ? '양면' : '단면';
-    const countStr = cfg.wallCount > 1 ? (' × ' + cfg.wallCount + '개') : '';
+    // 단면/양면 active
+    const btnS = document.getElementById('btnWallSingle');
+    const btnD = document.getElementById('btnWallDouble');
+    if (btnS) btnS.classList.toggle('active', !cfg.doubleSided);
+    if (btnD) btnD.classList.toggle('active', cfg.doubleSided);
 
-    breakdownEl.textContent = `${wm}×${hm}m ${sideLabel}${countStr}`;
-    totalEl.textContent = fmt(cfg.totalPrice);
+    // wallFaceTabs
+    const wallFaceTabs = document.getElementById('wallFaceTabs');
+    if (wallFaceTabs) wallFaceTabs.style.display = cfg.doubleSided ? 'flex' : 'none';
 }
 
-// --- 섹션 선택 ---
-window.setWallSections = (n, btn) => {
-    window.__wallConfig.sections = n;
-    window.__wallConfig.customWidth = null;
-    // custom input 숨기기
-    const ci = document.getElementById('wallCustomW');
-    if (ci) { ci.style.display = 'none'; ci.value = ''; }
-    // active 토글 (섹션 버튼만)
-    document.querySelectorAll('#wallConfigPanel .wcfg-btn[data-sections]').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    document.querySelector('.wcfg-custom-toggle')?.classList.remove('active');
-    applyWallConfig();
+// --- 벽 선택 ---
+window.selectWall = (index) => {
+    const cfg = window.__wallConfig;
+    if (index < 0 || index >= cfg.walls.length) return;
+    // 현재 페이지 저장
+    if (window.savePageState) window.savePageState();
+    cfg.activeIndex = index;
+    // 캔버스를 이 벽 크기로 변경 (mm → px 변환)
+    const wall = cfg.walls[index];
+    applySize(Math.round(wall.widthMM * MM_TO_PX), Math.round(wall.heightMM * MM_TO_PX), 'WallCustom', 'wall', 'resize');
+    // 해당 벽의 페이지로 이동
+    const pagesPerWall = cfg.doubleSided ? 2 : 1;
+    const pageIndex = index * pagesPerWall;
+    if (window.switchWallFace) window.switchWallFace(index, 0);
+    renderWallConfigUI();
 };
 
-// --- 커스텀 너비 ---
-window.toggleWallCustomWidth = () => {
-    const ci = document.getElementById('wallCustomW');
-    if (!ci) return;
-    const show = ci.style.display === 'none';
-    ci.style.display = show ? 'inline-block' : 'none';
-    // 토글 버튼 active
-    const togBtn = document.querySelector('.wcfg-custom-toggle');
-    if (show) {
-        document.querySelectorAll('#wallConfigPanel .wcfg-btn[data-sections]').forEach(b => b.classList.remove('active'));
-        togBtn?.classList.add('active');
-        ci.focus();
-    } else {
-        togBtn?.classList.remove('active');
-        // 다시 섹션 기반으로
-        window.__wallConfig.customWidth = null;
-        const sec = window.__wallConfig.sections;
-        document.querySelector(`#wallConfigPanel .wcfg-btn[data-sections="${sec}"]`)?.classList.add('active');
-        applyWallConfig();
-    }
+// --- 벽 크기 변경 ---
+window.setWallDim = (index, dim, value) => {
+    const cfg = window.__wallConfig;
+    const wall = cfg.walls[index];
+    if (!wall) return;
+    if (dim === 'w') wall.widthMM = value;
+    else wall.heightMM = value;
+    // 전체 페이지 재생성 (크기가 바뀌었으므로)
+    rebuildAllWallPages();
+    renderWallConfigUI();
 };
 
-window.setWallCustomWidth = (val) => {
-    const v = parseInt(val);
-    if (!v || v < 500 || v > 10000) return;
-    window.__wallConfig.customWidth = v;
-    applyWallConfig();
+// --- 벽 추가 ---
+window.addWall = () => {
+    const cfg = window.__wallConfig;
+    if (cfg.walls.length >= 10) return;
+    cfg.walls.push({ widthMM: 2000, heightMM: 2200 });
+    rebuildAllWallPages();
+    renderWallConfigUI();
 };
 
-// --- 높이 설정 ---
-window.setWallHeight = (h, btn) => {
-    window.__wallConfig.heightMM = h;
-    // active 토글 (높이 행의 버튼만)
-    if (btn) {
-        const row = btn.closest('.wall-cfg-row');
-        if (row) row.querySelectorAll('.wcfg-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-    applyWallConfig();
+// --- 벽 삭제 ---
+window.removeWall = (index) => {
+    const cfg = window.__wallConfig;
+    if (cfg.walls.length <= 1) return;
+    cfg.walls.splice(index, 1);
+    if (cfg.activeIndex >= cfg.walls.length) cfg.activeIndex = cfg.walls.length - 1;
+    rebuildAllWallPages();
+    renderWallConfigUI();
 };
 
 // --- 단면/양면 ---
 window.setWallSided = (doubleSided) => {
     window.__wallConfig.doubleSided = doubleSided;
-    const btnS = document.getElementById('btnWallSingle');
-    const btnD = document.getElementById('btnWallDouble');
-    if (btnS) btnS.classList.toggle('active', !doubleSided);
-    if (btnD) btnD.classList.toggle('active', doubleSided);
-    applyWallConfig();
+    rebuildAllWallPages();
+    renderWallConfigUI();
 };
 
-// --- 개수 ---
-window.setWallCount = (delta) => {
-    const cfg = window.__wallConfig;
-    const newVal = cfg.wallCount + delta;
-    if (newVal < 1 || newVal > 10) return;
-    cfg.wallCount = newVal;
-    const disp = document.getElementById('wallCountDisplay');
-    if (disp) disp.textContent = newVal;
-    applyWallConfig();
-};
-
-// --- 초기화 (에디터 진입 시 호출) ---
+// --- 초기화 ---
 window.initWallConfig = () => {
     const cfg = window.__wallConfig;
     cfg.pricePerSqm = deriveWallPricePerSqm();
-    // 개수 표시 초기화
-    const disp = document.getElementById('wallCountDisplay');
-    if (disp) disp.textContent = cfg.wallCount;
-    // 초기 가격 계산 및 표시
-    applyWallConfig();
+    rebuildAllWallPages();
+    renderWallConfigUI();
+    // 패널 표시
+    const panel = document.getElementById('wallConfigPanel');
+    if (panel) panel.style.display = 'flex';
 };
+
+// 하위 호환 (높이 단독 변경 - 사용 안 하지만 안전)
+window.setWallHeight = (h) => {};
+window.setWallSections = () => {};
+window.setWallCount = () => {};

@@ -451,6 +451,95 @@ function updateBoxPrice(w, h, d) {
     product.is_custom_size = true;
 }
 
+// ─── 가벽 멀티월 모드: 벽별 다른 크기 ───
+
+export function initWallPagesMulti(walls, doubleSided, activeIndex) {
+    const PX = 3.7795;
+    const pagesPerWall = doubleSided ? 2 : 1;
+
+    // 기존 데이터가 있으면 저장해두기 (현재 페이지 상태 보존)
+    if (pageDataList.length > 0 && canvas) {
+        try { saveCurrentPageState(); } catch(e) {}
+    }
+
+    // 기존 페이지 데이터 백업 (크기가 같은 페이지는 유지)
+    const oldPages = [...pageDataList];
+
+    pageDataList = [];
+    currentPageIndex = 0;
+
+    for (let wi = 0; wi < walls.length; wi++) {
+        const wall = walls[wi];
+        const w = wall.widthMM * PX;
+        const h = wall.heightMM * PX;
+
+        // Front face (항상)
+        const oldFrontIdx = wi * pagesPerWall;
+        if (oldPages[oldFrontIdx]) {
+            // 기존 페이지 있으면 보드 크기만 업데이트
+            const json = JSON.parse(JSON.stringify(oldPages[oldFrontIdx]));
+            updateBoardInJson(json, w, h);
+            pageDataList.push(json);
+        } else {
+            canvas.clear();
+            const board = new fabric.Rect({
+                width: w, height: h, fill: 'white',
+                left: 0, top: 0, selectable: false, evented: false, isBoard: true
+            });
+            canvas.add(board);
+            canvas.sendToBack(board);
+            pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
+        }
+
+        // Back face (양면만)
+        if (doubleSided) {
+            const oldBackIdx = wi * 2 + 1;
+            if (oldPages[oldBackIdx]) {
+                const json = JSON.parse(JSON.stringify(oldPages[oldBackIdx]));
+                updateBoardInJson(json, w, h);
+                pageDataList.push(json);
+            } else {
+                canvas.clear();
+                const board = new fabric.Rect({
+                    width: w, height: h, fill: 'white',
+                    left: 0, top: 0, selectable: false, evented: false, isBoard: true
+                });
+                canvas.add(board);
+                canvas.sendToBack(board);
+                pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
+            }
+        }
+    }
+
+    // 활성 벽의 첫 페이지 로드
+    const targetPage = Math.min(activeIndex * pagesPerWall, pageDataList.length - 1);
+    currentPageIndex = targetPage;
+    loadPage(targetPage);
+    setTimeout(() => resizeCanvasToFit(), 50);
+    updatePageCounter();
+
+    // wallFaceTabs 동적 생성
+    buildWallFaceTabsUI(walls.length, doubleSided);
+    updateWallFaceTabs(activeIndex, 0);
+
+    // window 노출
+    window.__wallMode = true;
+    window.__wallCount = walls.length;
+    window.__wallPagesPerWall = pagesPerWall;
+}
+
+// JSON 내 board 객체의 크기를 업데이트
+function updateBoardInJson(json, w, h) {
+    if (!json || !json.objects) return;
+    for (const obj of json.objects) {
+        if (obj.isBoard) {
+            obj.width = w;
+            obj.height = h;
+            break;
+        }
+    }
+}
+
 // 배치도 PDF 다운로드
 window.downloadBoxLayoutPDF = async function() {
     if (!window.__boxNesting || !window.__boxDims) {
