@@ -143,7 +143,7 @@
 
         const geo = new THREE.ExtrudeGeometry(shape, { depth: standWidth, bevelEnabled: false });
         const mesh = new THREE.Mesh(geo, mat);
-        mesh.rotation.y = Math.PI / 2;
+        mesh.rotation.y = -Math.PI / 2;
         mesh.position.set(x, bottomY, backZ);
         mesh.castShadow = true;
         group.add(mesh);

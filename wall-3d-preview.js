@@ -364,7 +364,7 @@
         const geo = new THREE.ExtrudeGeometry(shape, { depth: standWidth, bevelEnabled: false });
         const mesh = new THREE.Mesh(geo, mat);
         // 삼각 받침대를 뒤쪽(-Z)으로 향하게 회전
-        mesh.rotation.y = Math.PI / 2;
+        mesh.rotation.y = -Math.PI / 2;
         mesh.position.set(x, bottomY, backZ);
         mesh.castShadow = true;
         wallGroup.add(mesh);
