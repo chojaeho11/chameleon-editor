@@ -373,7 +373,7 @@ function renderWallConfigUI() {
         hSel.className = 'wl-sel';
         WALL_HEIGHTS.forEach(h => {
             const opt = document.createElement('option');
-            opt.value = h; opt.textContent = (h / 100) + 'cm';
+            opt.value = h; opt.textContent = (h / 10) + 'cm';
             if (h === wall.heightMM) opt.selected = true;
             hSel.appendChild(opt);
         });
@@ -409,9 +409,12 @@ function renderWallConfigUI() {
     if (btnS) btnS.classList.toggle('active', !cfg.doubleSided);
     if (btnD) btnD.classList.toggle('active', cfg.doubleSided);
 
-    // wallFaceTabs
+    // wallFaceTabs: 양면이거나 벽이 2개 이상이면 표시
     const wallFaceTabs = document.getElementById('wallFaceTabs');
-    if (wallFaceTabs) wallFaceTabs.style.display = cfg.doubleSided ? 'flex' : 'none';
+    if (wallFaceTabs) {
+        const showTabs = cfg.doubleSided || cfg.walls.length > 1;
+        wallFaceTabs.style.display = showTabs ? 'flex' : 'none';
+    }
 }
 
 // --- 벽 선택 ---

@@ -253,27 +253,39 @@
             }
         });
 
-        // 기본 가벽 크기 (현재 제품 사이즈)
-        const fabricCanvas = window.canvas;
-        let widthMM = 2200, heightMM = 2200;
-        if (fabricCanvas) {
-            const board = fabricCanvas.getObjects().find(o => o.isBoard);
-            if (board) {
-                const PX_PER_MM = 3.7795;
-                widthMM = Math.round(board.width / PX_PER_MM);
-                heightMM = Math.round(board.height / PX_PER_MM);
+        // __wallConfig에서 벽별 크기 읽기
+        const cfg = window.__wallConfig;
+        const cfgWalls = cfg && cfg.walls && cfg.walls.length > 0 ? cfg.walls : null;
+
+        // 기본 가벽 크기 (fallback)
+        let defaultW = 2200, defaultH = 2200;
+        if (cfgWalls) {
+            defaultW = cfgWalls[0].widthMM;
+            defaultH = cfgWalls[0].heightMM;
+        } else {
+            const fabricCanvas = window.canvas;
+            if (fabricCanvas) {
+                const board = fabricCanvas.getObjects().find(o => o.isBoard);
+                if (board) {
+                    const PX_PER_MM = 3.7795;
+                    defaultW = Math.round(board.width / PX_PER_MM);
+                    defaultH = Math.round(board.height / PX_PER_MM);
+                }
             }
         }
 
-        const positions = preset(widthMM);
+        const positions = preset(defaultW);
         comp.walls = [];
         comp.presetName = presetName;
 
         positions.forEach((pos, i) => {
+            // 벽별 크기: __wallConfig.walls에서 읽거나 기본값
+            const ww = cfgWalls && cfgWalls[i] ? cfgWalls[i].widthMM : defaultW;
+            const hh = cfgWalls && cfgWalls[i] ? cfgWalls[i].heightMM : defaultH;
             const wallDef = {
                 id: genId(),
-                widthMM: widthMM,
-                heightMM: heightMM,
+                widthMM: ww,
+                heightMM: hh,
                 depthMM: 100,
                 posX: pos.posX,
                 posZ: pos.posZ,
@@ -296,12 +308,14 @@
         }
 
         // 카메라 조정
-        const maxDim = Math.max(widthMM / 1000, heightMM / 1000) * (positions.length > 2 ? 2.5 : 2);
+        const maxW = Math.max(...comp.walls.map(w => w.widthMM / 1000));
+        const maxH = Math.max(...comp.walls.map(w => w.heightMM / 1000));
+        const maxDim = Math.max(maxW, maxH) * (positions.length > 2 ? 2.5 : 2);
         ctx.spherical.radius = maxDim;
         ctx.spherical.theta = Math.PI / 5;
         ctx.spherical.phi = Math.PI / 3;
         ctx.target.x = 0;
-        ctx.target.y = heightMM / 2000;
+        ctx.target.y = maxH / 2;
         ctx.target.z = 0;
         ctx.updateCamera();
 
@@ -309,8 +323,8 @@
         updateWallListUI();
         updatePresetBtnUI(presetName);
 
-        // 가벽 양면 페이지 갱신 (wallCount × 2 pages)
-        updateWallPages(comp.walls.length, widthMM, heightMM);
+        // __wallConfig 동기화 (3D에서 만든 벽 수/크기 반영)
+        syncWallConfigFrom3D(comp.walls);
     };
 
     // ─── 가벽 추가 ───
@@ -359,8 +373,8 @@
         updateWallListUI();
         updatePresetBtnUI(null);
 
-        // 페이지 추가 (앞/뒤 2페이지)
-        updateWallPages(comp.walls.length, widthMM, heightMM);
+        // __wallConfig 동기화
+        syncWallConfigFrom3D(comp.walls);
     };
 
     // ─── 가벽 삭제 ───
@@ -398,17 +412,8 @@
         updateWallListUI();
         updatePresetBtnUI(null);
 
-        const fabricCanvas = window.canvas;
-        let widthMM = 2200, heightMM = 2200;
-        if (fabricCanvas) {
-            const board = fabricCanvas.getObjects().find(o => o.isBoard);
-            if (board) {
-                const PX_PER_MM = 3.7795;
-                widthMM = Math.round(board.width / PX_PER_MM);
-                heightMM = Math.round(board.height / PX_PER_MM);
-            }
-        }
-        updateWallPages(comp.walls.length, widthMM, heightMM);
+        // __wallConfig 동기화
+        syncWallConfigFrom3D(comp.walls);
     };
 
     // ─── 가벽 회전 (90도) ───
@@ -561,39 +566,23 @@
         });
     }
 
-    // ─── 페이지 동기화 ───
-    async function updateWallPages(wallCount, widthMM, heightMM) {
-        try {
-            const { initWallPages } = await import('./canvas-pages.js?v=123');
-            initWallPages(wallCount, widthMM, heightMM);
-            // wallFaceTabs 동적 갱신
-            updateWallFaceTabsHTML(wallCount);
-        } catch (e) {
-            console.error('Failed to update wall pages:', e);
-        }
-    }
-
-    function updateWallFaceTabsHTML(wallCount) {
-        const tabsContainer = document.getElementById('wallFaceTabs');
-        if (!tabsContainer) return;
-
-        tabsContainer.innerHTML = '';
-        for (let wi = 0; wi < wallCount; wi++) {
-            const frontBtn = document.createElement('button');
-            frontBtn.className = 'wall-face-tab' + (wi === 0 ? ' active' : '');
-            frontBtn.dataset.wall = wi;
-            frontBtn.dataset.face = '0';
-            frontBtn.textContent = wallCount > 1 ? `W${wi + 1} ${window.t ? window.t('wall_face_front', '앞면') : '앞면'}` : (window.t ? window.t('wall_face_front', '앞면') : '앞면');
-            frontBtn.onclick = () => window.switchWallFace(wi, 0);
-            tabsContainer.appendChild(frontBtn);
-
-            const backBtn = document.createElement('button');
-            backBtn.className = 'wall-face-tab';
-            backBtn.dataset.wall = wi;
-            backBtn.dataset.face = '1';
-            backBtn.textContent = wallCount > 1 ? `W${wi + 1} ${window.t ? window.t('wall_face_back', '뒷면') : '뒷면'}` : (window.t ? window.t('wall_face_back', '뒷면') : '뒷면');
-            backBtn.onclick = () => window.switchWallFace(wi, 1);
-            tabsContainer.appendChild(backBtn);
+    // ─── __wallConfig ↔ 3D 동기화 ───
+    function syncWallConfigFrom3D(walls3D) {
+        const cfg = window.__wallConfig;
+        if (!cfg) return;
+        cfg.walls = walls3D.map(w => ({ widthMM: w.widthMM, heightMM: w.heightMM }));
+        cfg.activeIndex = 0;
+        // 멀티월 페이지 재생성
+        import('./canvas-pages.js?v=123').then(mod => {
+            if (mod.initWallPagesMulti) {
+                mod.initWallPagesMulti(cfg.walls, cfg.doubleSided, cfg.activeIndex);
+            }
+        }).catch(e => console.error('Failed to sync wall pages:', e));
+        // 가격 재계산
+        if (window.initWallConfig) {
+            // renderUI만 갱신 (rebuild는 위에서 이미 함)
+            cfg.pricePerSqm = cfg.pricePerSqm || 60000;
+            window.__wallCalculatedPrice = cfg.totalPrice;
         }
     }
 
