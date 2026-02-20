@@ -524,8 +524,14 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. 벡터 PDF 먼저 시도, 실패 또는 빈 PDF시 래스터 PDF
-                let blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
+                // 3. PDF 생성 — 가벽 모드면 분판 PDF, 아니면 벡터→래스터 폴백
+                let blob = null;
+                if (window.__wallMode && window.__wallConfig && window.__wallConfig.walls) {
+                    blob = await generateWallPanelPDF(targetPages, window.__wallConfig.walls, boardX, boardY);
+                }
+                if (!blob || blob.size < 1000) {
+                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
+                }
                 if (!blob || blob.size < 1000) {
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
                 }
@@ -1077,6 +1083,96 @@ function loadImage(src) {
         img.onerror = reject;
         img.src = src;
     });
+}
+
+// ==========================================================
+// [4-C] 가벽 분판 PDF (Wall Panel Split)
+// 허니콤보드 인쇄판 최대 1000mm 기준으로 자동 분할
+// 예: 2000×2000mm 벽 2장 → 1000×2000mm 패널 4장
+// ==========================================================
+export async function generateWallPanelPDF(pdfPages, wallConfigs, boardX, boardY) {
+    if (!window.jspdf) return null;
+
+    const MAX_PANEL_W = 1000; // mm — 인쇄기 최대 폭
+    const MM_TO_PX = 3.7795;
+    const doubleSided = window.__wallConfig?.doubleSided || false;
+    const pagesPerWall = doubleSided ? 2 : 1;
+
+    // ── 패널 목록 생성 ──
+    const panels = [];
+    wallConfigs.forEach((cfg, wi) => {
+        const nPanels = Math.ceil(cfg.widthMM / MAX_PANEL_W);
+        const panelW = Math.round(cfg.widthMM / nPanels); // 균등 분할
+
+        for (let face = 0; face < pagesPerWall; face++) {
+            const pageIdx = wi * pagesPerWall + face;
+            if (pageIdx >= pdfPages.length) return;
+
+            for (let p = 0; p < nPanels; p++) {
+                const isLast = (p === nPanels - 1);
+                const thisW = isLast ? (cfg.widthMM - panelW * p) : panelW;
+                panels.push({
+                    wallIdx: wi, face, panelIdx: p, totalPanels: nPanels,
+                    wMM: thisW, hMM: cfg.heightMM,
+                    offsetMM: p * panelW,
+                    pageJson: pdfPages[pageIdx]
+                });
+            }
+        }
+    });
+    if (panels.length === 0) return null;
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const f = panels[0];
+        const doc = new jsPDF({
+            orientation: f.hMM >= f.wMM ? 'p' : 'l',
+            unit: 'mm', format: [f.wMM, f.hMM], compress: true
+        });
+
+        for (let i = 0; i < panels.length; i++) {
+            const pn = panels[i];
+            if (i > 0) doc.addPage([pn.wMM, pn.hMM], pn.hMM >= pn.wMM ? 'p' : 'l');
+
+            const pxW = Math.round(pn.wMM * MM_TO_PX);
+            const pxH = Math.round(pn.hMM * MM_TO_PX);
+            const offsetPx = Math.round(pn.offsetMM * MM_TO_PX);
+
+            const tempEl = document.createElement('canvas');
+            const tempCvs = new fabric.StaticCanvas(tempEl);
+            tempCvs.setWidth(pxW);
+            tempCvs.setHeight(pxH);
+            tempCvs.setBackgroundColor('#ffffff');
+
+            const filtered = { ...pn.pageJson };
+            if (filtered.objects) {
+                filtered.objects = filtered.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+            }
+
+            await new Promise(resolve => {
+                tempCvs.loadFromJSON(filtered, () => {
+                    // 뷰포트 이동: 대지 원점 + 패널 수평 오프셋
+                    tempCvs.setViewportTransform([1, 0, 0, 1, -(boardX + offsetPx), -boardY]);
+                    tempCvs.renderAll();
+                    setTimeout(resolve, 500);
+                });
+            });
+
+            // 고해상도 래스터 출력 (인쇄용)
+            const maxPx = 67108864;
+            const basePx = pxW * pxH;
+            let mult = 4;
+            if (basePx * mult * mult > maxPx) mult = Math.max(1, Math.floor(Math.sqrt(maxPx / basePx)));
+            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult });
+            doc.addImage(imgData, 'JPEG', 0, 0, pn.wMM, pn.hMM);
+            tempCvs.dispose();
+        }
+
+        return doc.output('blob');
+    } catch (e) {
+        console.error('generateWallPanelPDF error:', e);
+        return null;
+    }
 }
 
 // ==========================================================
