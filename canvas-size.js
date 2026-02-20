@@ -282,39 +282,43 @@ window.__wallConfig = {
     totalPrice: 0
 };
 
-// m² 단가 도출 (Wall_1 기준)
+// m² 단가 도출 — _base_sqm_price가 곧 회배당 단가(≈m² 단가)
 function deriveWallPricePerSqm() {
     const db = window.PRODUCT_DB;
-    if (!db) return 0;
-    // Wall_1 기준 단가 계산
-    const wall1 = db['Wall_1'];
-    if (wall1) {
-        const w = wall1.width_mm || wall1.w_mm || wall1.w || 1200;
-        const h = wall1.height_mm || wall1.h_mm || wall1.h || 2200;
-        const price = Number(wall1.price) || 0;
-        if (price > 0 && w > 0 && h > 0) {
-            const area = (w / 1000) * (h / 1000);
-            return Math.round(price / area);
-        }
-    }
-    // fallback: 현재 선택된 제품 가격으로
+    if (!db) return 60000;
+    // 1순위: 현재 제품의 _base_sqm_price (원본 회배단가)
     const key = window.currentProductKey;
     if (key && db[key]) {
         const p = db[key];
+        if (p._base_sqm_price && p._base_sqm_price > 0) return p._base_sqm_price;
+    }
+    // 2순위: Wall_1의 가격 ÷ 면적
+    const wall1 = db['Wall_1'];
+    if (wall1) {
+        const origPrice = wall1._base_sqm_price || Number(wall1.price) || 0;
+        if (origPrice > 0) return origPrice;
+    }
+    // 3순위: 현재 제품 원본 가격 (customPrice 적용 전)
+    if (key && db[key]) {
+        const p = db[key];
+        const origPrice = Number(p.price) || 0;
         const w = p.width_mm || p.w_mm || p.w || 1000;
         const h = p.height_mm || p.h_mm || p.h || 2200;
-        const price = Number(p.price) || 0;
-        if (price > 0 && w > 0 && h > 0) {
-            return Math.round(price / ((w / 1000) * (h / 1000)));
+        if (origPrice > 0 && w > 0 && h > 0) {
+            const area = (w / 1000) * (h / 1000);
+            return Math.round(origPrice / area);
         }
     }
-    return 50000; // 기본값
+    return 60000; // 기본값
 }
+
+// 너비 프리셋 (mm) — 버튼 index(1~5)에 대응
+const WALL_WIDTH_PRESETS = { 1: 1000, 2: 2000, 3: 3000, 4: 4000, 5: 5000 };
 
 function getWallWidthMM() {
     const cfg = window.__wallConfig;
     if (cfg.customWidth && cfg.customWidth > 0) return cfg.customWidth;
-    return cfg.sections * 1000 + 200; // 섹션 × 1000mm + 200mm 프레임
+    return WALL_WIDTH_PRESETS[cfg.sections] || (cfg.sections * 1000);
 }
 
 function applyWallConfig() {
@@ -357,11 +361,12 @@ function updateWallPriceUI(widthMM, heightMM, area_m2, sides, cfg) {
     if (!breakdownEl || !totalEl) return;
 
     const fmt = window.formatCurrency || (v => v.toLocaleString() + '원');
-    const sqmStr = area_m2.toFixed(1) + 'm²';
-    const sideStr = sides === 2 ? '×2' : '×1';
-    const countStr = cfg.wallCount > 1 ? ('×' + cfg.wallCount) : '';
+    const wm = (widthMM / 1000).toFixed(1);
+    const hm = (heightMM / 1000).toFixed(1);
+    const sideLabel = sides === 2 ? '양면' : '단면';
+    const countStr = cfg.wallCount > 1 ? (' × ' + cfg.wallCount + '개') : '';
 
-    breakdownEl.textContent = `${sqmStr} × ${fmt(cfg.pricePerSqm)}/m² ${sideStr}면 ${countStr}`;
+    breakdownEl.textContent = `${wm}×${hm}m ${sideLabel}${countStr}`;
     totalEl.textContent = fmt(cfg.totalPrice);
 }
 
