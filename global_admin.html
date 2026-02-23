@@ -952,9 +952,10 @@
             기존 등록된 상품에 적용하기
         </label>
         <div id="wizExistingWrap" style="display:none; margin-top:12px;">
-            <select id="wizExistingSelect" class="input-text" style="width:100%; padding:10px 14px; font-size:14px;">
+            <select id="wizExistingSelect" class="input-text" style="width:100%; padding:10px 14px; font-size:14px;" onchange="window.wizOnSelectExisting && window.wizOnSelectExisting(this)">
                 <option value="">상품을 선택하세요...</option>
             </select>
+            <div id="wizExistingInfo" style="display:none; margin-top:8px; padding:10px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; font-size:13px; color:#475569;"></div>
         </div>
     </div>
 

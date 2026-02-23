@@ -2928,6 +2928,33 @@ async function _wizLoadProductList() {
     } catch(e) { console.error('상품 목록 로드 실패:', e); }
 }
 
+// 기존 상품 선택 시 자동 채우기
+window.wizOnSelectExisting = (sel) => {
+    const opt = sel.options[sel.selectedIndex];
+    const info = document.getElementById('wizExistingInfo');
+    if (!opt || !opt.value) {
+        if (info) info.style.display = 'none';
+        return;
+    }
+    // 상품명, 카테고리 자동 채우기
+    const name = opt.dataset.name || '';
+    const cat = opt.dataset.category || '';
+    const imgUrl = opt.dataset.imgUrl || '';
+
+    if (name && !document.getElementById('wizTitle').value) {
+        document.getElementById('wizTitle').value = name;
+    }
+    if (cat) document.getElementById('wizCategory').value = cat;
+
+    // 기존 이미지 표시
+    if (info) {
+        info.style.display = 'block';
+        info.innerHTML = `<strong>${name}</strong> 선택됨` +
+            (imgUrl ? ` &nbsp;<img src="${imgUrl}" style="height:40px; vertical-align:middle; border-radius:4px; margin-left:6px;">` : '') +
+            `<br><span style="color:#9ca3af; font-size:12px;">새 사진을 올리지 않으면 기존 이미지가 유지됩니다.</span>`;
+    }
+};
+
 // 이미지 추가
 window.wizAddImages = (files) => {
     if (!files || !files.length) return;
