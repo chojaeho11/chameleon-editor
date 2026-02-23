@@ -188,7 +188,7 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
           headers: {
             "Content-Type": "application/json",
             "x-api-key": ANTHROPIC_API_KEY!,
-            "anthropic-version": "2023-10-01",
+            "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
             model,
