@@ -19,12 +19,19 @@ serve(async (req) => {
       product_category,
       product_specs = {},
       image_url,
+      image_urls = [],
       price = 0,
       original_description,
+      reference_text,
+      mode,
       langs = ["kr"]
     } = await req.json();
 
     if (!product_name) throw new Error("product_name is required");
+
+    const isWizard = mode === 'wizard';
+    const allImages: string[] = image_urls.length > 0 ? image_urls : (image_url ? [image_url] : []);
+    const heroImage = image_url || allImages[0] || '';
 
     const langMap: Record<string, { name: string, instruction: string, currency: string }> = {
       kr: { name: "Korean", instruction: "한국어로 작성하세요.", currency: `${price.toLocaleString()}원` },
@@ -37,13 +44,71 @@ serve(async (req) => {
       fr: { name: "French", instruction: "Écrivez en français.", currency: `€${(price * 0.001).toFixed(2)}` },
     };
 
-    // 각 언어별 생성 함수
-    async function generateForLang(lang: string): Promise<{ lang: string, html: string | null }> {
-      const lc = langMap[lang];
-      if (!lc) return { lang, html: null };
+    // 이미지 목록 텍스트 생성
+    const imageListText = allImages.map((url: string, i: number) => `IMAGE_${i + 1}: ${url}`).join('\n');
 
-      try {
-        const systemPrompt = `You are a product detail page writer for a printing company.
+    // ★ 위자드 모드 프롬프트 (풍부한 다중 이미지)
+    function buildWizardPrompt(lang: string): string {
+      const lc = langMap[lang];
+      if (!lc) return '';
+
+      return `You are a premium e-commerce product detail page designer for Chameleon Printing, a global printing company.
+
+Create a visually stunning, dynamic, and professional product detail page.
+
+STRICT HTML RULES:
+- Use ONLY: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <img>, <hr>, <br>
+- NEVER use <div>, <span>, <table>, <section>, or any container tags
+- NEVER use inline styles or CSS classes
+- Every image MUST be: <p><img src="URL" alt="description"></p>
+- Structure must be flat (no nesting containers)
+
+PRODUCT INFO:
+- Name: ${product_name}
+- Category: ${product_category || 'General'}
+${price > 0 ? `- Price: ${lc.currency}` : ''}
+${reference_text ? `- Reference/Notes: ${reference_text}` : ''}
+
+AVAILABLE IMAGES (${allImages.length} total):
+${imageListText}
+
+REQUIRED STRUCTURE — You MUST use ALL ${allImages.length} images:
+
+1. <h2> Product title (compelling, with product name)
+2. <p><img src="IMAGE_1" alt="..."></p>  ← Hero/main product shot
+3. <p> Eye-catching 2-3 sentence product introduction. Highlight what makes this product special.
+4. <h3> Key Features / Highlights
+5. <ul> with 5-7 compelling <li> feature points (use <strong> for emphasis)
+${allImages.length >= 2 ? `6. <p><img src="IMAGE_2" alt="..."></p>  ← Detail/close-up shot` : ''}
+7. <h3> Product Details / Specifications
+8. <p> Material, printing method, finish quality, durability description
+${allImages.length >= 3 ? `9. <p><img src="IMAGE_3" alt="..."></p>  ← Application/usage example` : ''}
+${allImages.length >= 4 ? `10. <h3> Gallery / More Views` : ''}
+${allImages.slice(3).map((_: string, i: number) => `${11 + i}. <p><img src="IMAGE_${i + 4}" alt="..."></p>`).join('\n')}
+${allImages.length >= 4 ? `${11 + allImages.length - 3}. <p> Brief description of the additional views shown above` : ''}
+${allImages.length >= 2 ? `\n<h3> Why Choose Chameleon Printing?` : ''}
+${allImages.length >= 2 ? `<ul> with 3-4 <li> about company strengths (quality, speed, global service)` : ''}
+<hr>
+<p> Order info: custom sizes available, fast production, worldwide shipping
+
+IMPORTANT:
+- Make content feel premium, professional, and persuasive
+- Each image should have a descriptive, relevant alt text
+- Use <strong> and <em> to create visual hierarchy in text
+- Content should be informative yet concise — no filler text
+- Think like a top-tier product photographer's website
+
+${lc.instruction}
+
+Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
+    }
+
+    // 기본 모드 프롬프트 (기존 호환)
+    function buildSimplePrompt(lang: string): string {
+      const lc = langMap[lang];
+      if (!lc) return '';
+
+      return `You are a product detail page writer for a printing company.
 
 Create a SIMPLE product detail page using ONLY these HTML tags: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <img>, <hr>, <br>.
 
@@ -59,13 +124,13 @@ Product info:
 - Name: ${product_name}
 - Category: ${product_category}
 - Price: ${lc.currency}
-- Image: ${image_url}
+- Image: ${heroImage}
 - Specs: ${JSON.stringify(product_specs)}
 ${original_description ? '- Reference: ' + original_description.substring(0, 200) : ''}
 
 Required structure:
 1. <h2> with product name
-2. <p><img src="${image_url}" alt="${product_name}"></p>
+2. <p><img src="${heroImage}" alt="${product_name}"></p>
 3. <p> with 2-3 sentence product description
 4. <h3> for key features heading
 5. <ul> with 3-5 <li> feature items
@@ -77,6 +142,17 @@ Required structure:
 ${lc.instruction}
 
 Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
+    }
+
+    // 각 언어별 생성 함수
+    async function generateForLang(lang: string): Promise<{ lang: string, html: string | null }> {
+      const lc = langMap[lang];
+      if (!lc) return { lang, html: null };
+
+      try {
+        const systemPrompt = isWizard ? buildWizardPrompt(lang) : buildSimplePrompt(lang);
+        const model = isWizard ? "claude-sonnet-4-5-20241022" : "claude-haiku-4-5-20251001";
+        const maxTokens = isWizard ? 4000 : 1500;
 
         const res = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
@@ -86,8 +162,8 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
             "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 1500,
+            model,
+            max_tokens: maxTokens,
             system: systemPrompt,
             messages: [{ role: "user", content: "Generate the product detail page HTML now." }],
           }),
@@ -108,7 +184,7 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
       }
     }
 
-    // ★ 병렬 실행 (6개 언어 동시 호출 → 타임아웃 방지)
+    // ★ 병렬 실행
     const validLangs = langs.filter((l: string) => langMap[l]);
     const results = await Promise.allSettled(validLangs.map((l: string) => generateForLang(l)));
 

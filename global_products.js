@@ -2865,3 +2865,343 @@ window.batchFillDetailPages = async () => {
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-lines"></i> 상세페이지 일괄 생성 (빈 상품)'; }
     showToast(`상세페이지 일괄 생성 완료!\n\n성공: ${success}건\n실패: ${fail}건`, "success");
 };
+
+// ═══════════════════════════════════════════════════════════════
+// ★★★ AI 상세페이지 마법사 (Detail Page Wizard) ★★★
+// ═══════════════════════════════════════════════════════════════
+
+let wizImages = [];          // [{file, preview, url, isThumbnail}]
+let wizGeneratedHtml = {};   // {kr:'<html>', jp:'...', ...}
+let _wizCurrentLang = 'kr';
+
+// 마법사 열기
+window.openDetailWizard = () => {
+    wizImages = [];
+    wizGeneratedHtml = {};
+    _wizCurrentLang = 'kr';
+    document.getElementById('wizImgGrid').innerHTML = '';
+    document.getElementById('wizTitle').value = '';
+    document.getElementById('wizRef').value = '';
+    document.getElementById('wizStatus').textContent = '';
+    document.getElementById('wizPreviewSection').style.display = 'none';
+    document.getElementById('wizExistingCheck').checked = false;
+    document.getElementById('wizExistingWrap').style.display = 'none';
+
+    // 카테고리 복사
+    const srcCat = document.getElementById('newProdCategory');
+    const wizCat = document.getElementById('wizCategory');
+    if (srcCat && wizCat) {
+        wizCat.innerHTML = srcCat.innerHTML;
+    }
+
+    // 기존 상품 편집 중이면 자동 채우기
+    if (window.editingProdId) {
+        const name = document.getElementById('newProdName');
+        if (name && name.value) document.getElementById('wizTitle').value = name.value;
+        const cat = document.getElementById('newProdCategory');
+        if (cat) document.getElementById('wizCategory').value = cat.value;
+    }
+
+    // 기존 상품 목록 로드
+    _wizLoadProductList();
+
+    document.getElementById('wizardModal').style.display = 'flex';
+};
+
+// 기존 상품 목록 로드
+async function _wizLoadProductList() {
+    const sel = document.getElementById('wizExistingSelect');
+    if (!sel) return;
+    try {
+        const { data } = await sb.from('admin_products').select('id, code, name, img_url, category').order('name');
+        if (!data) return;
+        sel.innerHTML = '<option value="">상품을 선택하세요...</option>';
+        data.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `[${p.code}] ${p.name}`;
+            opt.dataset.imgUrl = p.img_url || '';
+            opt.dataset.category = p.category || '';
+            opt.dataset.name = p.name || '';
+            sel.appendChild(opt);
+        });
+    } catch(e) { console.error('상품 목록 로드 실패:', e); }
+}
+
+// 이미지 추가
+window.wizAddImages = (files) => {
+    if (!files || !files.length) return;
+    const maxImages = 20;
+    Array.from(files).forEach(file => {
+        if (wizImages.length >= maxImages) return;
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            wizImages.push({
+                file: file,
+                preview: e.target.result,
+                url: null,
+                isThumbnail: wizImages.length === 0
+            });
+            _wizRenderGrid();
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
+// 썸네일 지정
+window.wizSetThumbnail = (idx) => {
+    wizImages.forEach((img, i) => img.isThumbnail = (i === idx));
+    _wizRenderGrid();
+};
+
+// 이미지 삭제
+window.wizRemoveImage = (idx) => {
+    const wasThumbnail = wizImages[idx].isThumbnail;
+    wizImages.splice(idx, 1);
+    if (wasThumbnail && wizImages.length > 0) wizImages[0].isThumbnail = true;
+    _wizRenderGrid();
+};
+
+// 이미지 그리드 렌더링
+function _wizRenderGrid() {
+    const grid = document.getElementById('wizImgGrid');
+    grid.innerHTML = wizImages.map((img, i) => `
+        <div class="wiz-img-card ${img.isThumbnail ? 'thumb' : ''}" onclick="window.wizSetThumbnail(${i})">
+            <img src="${img.preview}" alt="img${i}">
+            ${img.isThumbnail ? '<div class="wiz-thumb-badge">썸네일</div>' : ''}
+            <button class="wiz-remove-btn" onclick="event.stopPropagation(); window.wizRemoveImage(${i});">&times;</button>
+        </div>
+    `).join('');
+}
+
+// ★ 메인 생성 함수
+window.wizGenerate = async () => {
+    const title = document.getElementById('wizTitle').value.trim();
+    const category = document.getElementById('wizCategory').value;
+    const ref = document.getElementById('wizRef').value.trim();
+
+    if (!title) { showToast('상품명을 입력해주세요.', 'warn'); return; }
+    if (wizImages.length === 0) { showToast('사진을 1장 이상 올려주세요.', 'warn'); return; }
+
+    const btn = document.getElementById('wizGenerateBtn');
+    const status = document.getElementById('wizStatus');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...';
+
+    try {
+        // 1단계: 이미지 업로드
+        status.textContent = '📤 이미지 업로드 중... (0/' + wizImages.length + ')';
+        const timestamp = Date.now();
+        let uploadedCount = 0;
+
+        await Promise.all(wizImages.map(async (img, i) => {
+            const resp = await fetch(img.preview);
+            const blob = await resp.blob();
+            const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';
+            const path = `wizard/${timestamp}_${i}.${ext}`;
+            const { error } = await sb.storage.from('products').upload(path, blob, { contentType: blob.type });
+            if (error) throw new Error('이미지 업로드 실패: ' + error.message);
+            const { data: urlData } = sb.storage.from('products').getPublicUrl(path);
+            img.url = urlData.publicUrl;
+            uploadedCount++;
+            status.textContent = `📤 이미지 업로드 중... (${uploadedCount}/${wizImages.length})`;
+        }));
+
+        const imageUrls = wizImages.map(img => img.url);
+        const thumbnailUrl = wizImages.find(img => img.isThumbnail)?.url || imageUrls[0];
+
+        // 2단계: AI 생성 (한국어)
+        status.textContent = '🤖 AI가 상세페이지를 작성 중... (약 30초)';
+
+        const { data, error } = await sb.functions.invoke('generate-product-detail', {
+            body: {
+                product_name: title,
+                product_category: category,
+                image_urls: imageUrls,
+                image_url: thumbnailUrl,
+                reference_text: ref,
+                mode: 'wizard',
+                langs: ['kr']
+            }
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data || !data.success) throw new Error((data && data.error) || '생성 실패');
+
+        const krHtml = data.details.kr;
+        if (!krHtml) throw new Error('한국어 상세페이지 생성 실패');
+
+        wizGeneratedHtml = { kr: krHtml };
+
+        // 3단계: 7개 언어 자동 번역
+        status.textContent = '🌐 다국어 번역 중... (7개 언어)';
+
+        const targets = [
+            { code: 'ja', key: 'jp' },
+            { code: 'en', key: 'us' },
+            { code: 'zh-CN', key: 'cn' },
+            { code: 'ar', key: 'ar' },
+            { code: 'es', key: 'es' },
+            { code: 'de', key: 'de' },
+            { code: 'fr', key: 'fr' }
+        ];
+
+        if (typeof window.googleTranslateSimple === 'function') {
+            for (const t of targets) {
+                try {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = krHtml;
+                    async function trNode(node) {
+                        for (let child of node.childNodes) {
+                            if (child.nodeType === 3 && child.nodeValue.trim().length > 0) {
+                                child.nodeValue = await window.googleTranslateSimple(child.nodeValue, t.code);
+                            } else if (child.nodeType === 1 && child.tagName !== 'IMG') {
+                                await trNode(child);
+                            }
+                        }
+                    }
+                    await trNode(tempDiv);
+                    wizGeneratedHtml[t.key] = tempDiv.innerHTML;
+                } catch(e) {
+                    console.error('번역 실패 (' + t.key + '):', e);
+                    wizGeneratedHtml[t.key] = krHtml;
+                }
+            }
+        } else {
+            targets.forEach(t => { wizGeneratedHtml[t.key] = krHtml; });
+        }
+
+        // 4단계: 미리보기 표시
+        status.textContent = '✅ 8개 언어 상세페이지 생성 완료!';
+        _wizCurrentLang = 'kr';
+        document.getElementById('wizPreview').innerHTML = krHtml;
+        document.getElementById('wizPreviewSection').style.display = 'block';
+        document.querySelectorAll('.wiz-lang-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.wiz-lang-tab').classList.add('active');
+
+        // 기존 상품 적용 버튼 표시/숨김
+        const existChk = document.getElementById('wizExistingCheck');
+        document.getElementById('wizApplyExistingBtn').style.display = existChk.checked ? 'inline-block' : 'none';
+
+        // 미리보기로 스크롤
+        document.getElementById('wizPreviewSection').scrollIntoView({ behavior: 'smooth' });
+
+    } catch(e) {
+        console.error('마법사 생성 오류:', e);
+        status.textContent = '❌ 실패: ' + e.message;
+        showToast('생성 실패: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-robot"></i> AI 상세페이지 생성';
+    }
+};
+
+// 언어 탭 전환
+window.wizPreviewLang = (lang) => {
+    _wizCurrentLang = lang;
+    const html = wizGeneratedHtml[lang] || '';
+    document.getElementById('wizPreview').innerHTML = html || '<p style="color:#9ca3af;">이 언어의 콘텐츠가 없습니다.</p>';
+    document.querySelectorAll('.wiz-lang-tab').forEach(t => t.classList.remove('active'));
+    const tabs = document.querySelectorAll('.wiz-lang-tab');
+    const langOrder = ['kr','jp','us','cn','ar','es','de','fr'];
+    const idx = langOrder.indexOf(lang);
+    if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
+};
+
+// 새 상품 폼에 적용
+window.wizApplyToForm = () => {
+    if (!wizGeneratedHtml.kr) { showToast('먼저 AI 생성을 실행해주세요.', 'warn'); return; }
+
+    const langMap = { kr: 'KR', jp: 'JP', us: 'US', cn: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
+    for (const [lang, suffix] of Object.entries(langMap)) {
+        const el = document.getElementById('newProdDetail' + suffix);
+        if (el && wizGeneratedHtml[lang]) el.value = wizGeneratedHtml[lang];
+    }
+
+    // 썸네일 → 메인 이미지
+    const thumb = wizImages.find(img => img.isThumbnail);
+    if (thumb && thumb.url) {
+        const imgEl = document.getElementById('newProdImg');
+        const prevEl = document.getElementById('prodPreview');
+        if (imgEl) imgEl.value = thumb.url;
+        if (prevEl) prevEl.src = thumb.url;
+    }
+
+    // 상품명
+    const title = document.getElementById('wizTitle').value.trim();
+    if (title) {
+        const nameEl = document.getElementById('newProdName');
+        if (nameEl) nameEl.value = title;
+    }
+
+    // 카테고리
+    const cat = document.getElementById('wizCategory').value;
+    if (cat) {
+        const catEl = document.getElementById('newProdCategory');
+        if (catEl) catEl.value = cat;
+    }
+
+    // 상품코드 자동 생성
+    const codeEl = document.getElementById('newProdCode');
+    if (codeEl && !codeEl.value) {
+        const prefix = cat || 'prod';
+        codeEl.value = prefix + '_' + Date.now().toString(36);
+    }
+
+    // 상품명 자동 번역
+    if (typeof window.autoTranslateInputs === 'function') {
+        window.autoTranslateInputs();
+    }
+
+    document.getElementById('wizardModal').style.display = 'none';
+    showToast('폼에 적용 완료! 🎉\n\n• 상세페이지, 이미지, 상품명 적용됨\n• 가격을 입력한 후 [상품 등록하기]를 눌러주세요', 'success');
+
+    // 폼으로 스크롤
+    const form = document.querySelector('.product-form');
+    if (form) form.scrollIntoView({ behavior: 'smooth' });
+};
+
+// 기존 상품에 직접 저장
+window.wizApplyToExisting = async () => {
+    const sel = document.getElementById('wizExistingSelect');
+    const prodId = sel ? sel.value : '';
+    if (!prodId) { showToast('기존 상품을 선택해주세요.', 'warn'); return; }
+    if (!wizGeneratedHtml.kr) { showToast('먼저 AI 생성을 실행해주세요.', 'warn'); return; }
+
+    if (!confirm('선택한 상품의 상세페이지를 덮어쓰시겠습니까?')) return;
+
+    const thumb = wizImages.find(img => img.isThumbnail);
+    const updates = {
+        description: wizGeneratedHtml.kr || '',
+        description_jp: wizGeneratedHtml.jp || '',
+        description_us: wizGeneratedHtml.us || '',
+        description_cn: wizGeneratedHtml.cn || '',
+        description_ar: wizGeneratedHtml.ar || '',
+        description_es: wizGeneratedHtml.es || '',
+        description_de: wizGeneratedHtml.de || '',
+        description_fr: wizGeneratedHtml.fr || ''
+    };
+    if (thumb && thumb.url) updates.img_url = thumb.url;
+
+    const { error } = await sb.from('admin_products').update(updates).eq('id', prodId);
+    if (error) {
+        showToast('저장 실패: ' + error.message, 'error');
+    } else {
+        showToast('기존 상품 상세페이지 업데이트 완료! 🎉', 'success');
+    }
+};
+
+// 에디터에서 수정하기
+window.wizOpenInEditor = () => {
+    if (!wizGeneratedHtml.kr) { showToast('먼저 AI 생성을 실행해주세요.', 'warn'); return; }
+
+    const langMap = { kr: 'KR', jp: 'JP', us: 'US', cn: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
+    for (const [lang, suffix] of Object.entries(langMap)) {
+        const el = document.getElementById('newProdDetail' + suffix);
+        if (el && wizGeneratedHtml[lang]) el.value = wizGeneratedHtml[lang];
+    }
+
+    document.getElementById('wizardModal').style.display = 'none';
+    window.openDetailPageEditor();
+};

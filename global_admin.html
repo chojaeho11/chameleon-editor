@@ -837,6 +837,9 @@
     <button type="button" class="btn btn-vip" style="width: 100%; height: 50px; font-size: 15px; font-weight: 800; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); border: none; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);" onclick="window.openDetailPageEditor()">
         <i class="fa-solid fa-wand-magic-sparkles"></i> 상세페이지 제작
     </button>
+    <button type="button" class="btn" style="width:100%; height:50px; margin-top:8px; font-size:15px; font-weight:800; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:12px; box-shadow:0 4px 12px rgba(245,158,11,0.3); cursor:pointer;" onclick="window.openDetailWizard()">
+        <i class="fa-solid fa-hat-wizard"></i> AI 상세페이지 마법사
+    </button>
     <input type="hidden" id="newProdDetailKR">
     <input type="hidden" id="newProdDetailJP">
     <input type="hidden" id="newProdDetailUS">
@@ -886,6 +889,125 @@
     #popup-quill-editor .ql-toolbar { border: none !important; background: #fff; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #e2e8f0 !important; }
     #popup-quill-editor .ql-container { border: none !important; flex: 1; overflow-y: auto; }
     #popup-quill-editor .ql-editor { padding: 40px; min-height: 100%; max-width: 900px; margin: 0 auto; background: #fff; }
+</style>
+
+<!-- ★ AI 상세페이지 마법사 모달 -->
+<div id="wizardModal" class="modal-overlay" style="z-index:41000; display:none;">
+<div class="modal-box" style="width:1100px; max-width:98%; height:94vh; display:flex; flex-direction:column; padding:0; background:#fff; border-radius:24px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+
+<!-- Header -->
+<div style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; padding:18px 28px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; border-radius:24px 24px 0 0;">
+    <h3 style="margin:0; font-size:20px; font-weight:900;"><i class="fa-solid fa-hat-wizard"></i> AI 상세페이지 마법사</h3>
+    <button type="button" class="btn" onclick="document.getElementById('wizardModal').style.display='none'" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4); padding:8px 20px; font-weight:700; border-radius:8px;">닫기</button>
+</div>
+
+<!-- Body (scrollable) -->
+<div style="flex:1; overflow-y:auto; padding:24px 28px;">
+
+    <!-- 1. 이미지 업로드 -->
+    <div style="margin-bottom:24px;">
+        <label style="font-size:16px; font-weight:800; color:#1e1b4b; display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+            <i class="fa-solid fa-images" style="color:#f59e0b;"></i> 사진 업로드 (여러 장)
+        </label>
+        <div id="wizImgZone" style="border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; background:#fafafa; transition:0.2s;"
+             ondragover="event.preventDefault(); this.style.borderColor='#f59e0b'; this.style.background='#fffbeb';"
+             ondragleave="this.style.borderColor='#d1d5db'; this.style.background='#fafafa';"
+             ondrop="event.preventDefault(); this.style.borderColor='#d1d5db'; this.style.background='#fafafa'; window.wizAddImages(event.dataTransfer.files);"
+             onclick="document.getElementById('wizFileInput').click();">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px; color:#9ca3af; margin-bottom:8px;"></i>
+            <div style="color:#6b7280; font-size:14px;">클릭 또는 드래그하여 사진을 올려주세요</div>
+            <div style="color:#9ca3af; font-size:12px; margin-top:4px;">JPG, PNG, WebP (최대 20장)</div>
+        </div>
+        <input type="file" id="wizFileInput" accept="image/*" multiple style="display:none;" onchange="window.wizAddImages(this.files); this.value='';">
+
+        <div id="wizImgGrid" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;"></div>
+        <div style="color:#9ca3af; font-size:12px; margin-top:6px;"><i class="fa-solid fa-hand-pointer"></i> 클릭하면 썸네일로 지정됩니다 (녹색 테두리)</div>
+    </div>
+
+    <!-- 2. 상품 정보 -->
+    <div style="margin-bottom:24px; background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0;">
+        <label style="font-size:16px; font-weight:800; color:#1e1b4b; display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+            <i class="fa-solid fa-pen" style="color:#6366f1;"></i> 상품 정보
+        </label>
+        <div style="display:flex; gap:12px; margin-bottom:12px;">
+            <div style="flex:1;">
+                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">상품명 (한국어)</label>
+                <input id="wizTitle" class="input-text" placeholder="예: 프리미엄 허니콤보드 A1" style="width:100%; padding:10px 14px; font-size:14px;">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">카테고리</label>
+                <select id="wizCategory" class="input-text" style="width:100%; padding:10px 14px; font-size:14px;"><option value="">로딩 중...</option></select>
+            </div>
+        </div>
+        <div>
+            <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">레퍼런스 / 참고 내용</label>
+            <textarea id="wizRef" class="input-text" rows="3" placeholder="제품의 특징, 소재, 용도, 참고 URL 등을 자유롭게 적어주세요." style="width:100%; padding:10px 14px; font-size:14px; resize:vertical;"></textarea>
+        </div>
+    </div>
+
+    <!-- 3. 기존 상품 적용 옵션 -->
+    <div style="margin-bottom:24px; background:#fefce8; padding:16px 20px; border-radius:12px; border:1px solid #fde68a;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; color:#854d0e; font-size:14px;">
+            <input type="checkbox" id="wizExistingCheck" onchange="document.getElementById('wizExistingWrap').style.display=this.checked?'block':'none';">
+            기존 등록된 상품에 적용하기
+        </label>
+        <div id="wizExistingWrap" style="display:none; margin-top:12px;">
+            <select id="wizExistingSelect" class="input-text" style="width:100%; padding:10px 14px; font-size:14px;">
+                <option value="">상품을 선택하세요...</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 4. 생성 버튼 -->
+    <div style="text-align:center; margin-bottom:24px;">
+        <button id="wizGenerateBtn" type="button" onclick="window.wizGenerate()" style="padding:16px 48px; font-size:17px; font-weight:900; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border:none; border-radius:14px; cursor:pointer; box-shadow:0 6px 20px rgba(99,102,241,0.4); transition:0.2s;">
+            <i class="fa-solid fa-robot"></i> AI 상세페이지 생성
+        </button>
+        <div id="wizStatus" style="margin-top:10px; font-size:13px; color:#6b7280;"></div>
+    </div>
+
+    <!-- 5. 미리보기 영역 -->
+    <div id="wizPreviewSection" style="display:none; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+            <h4 style="margin:0; font-size:16px; font-weight:800; color:#1e1b4b;"><i class="fa-solid fa-eye"></i> 생성 결과 미리보기</h4>
+        </div>
+        <div id="wizLangTabs" style="display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap;">
+            <button type="button" class="wiz-lang-tab active" onclick="window.wizPreviewLang('kr')">🇰🇷 한국어</button>
+            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('jp')">🇯🇵 日本語</button>
+            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('us')">🇺🇸 English</button>
+            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('cn')">🇨🇳 中文</button>
+            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('ar')">🇸🇦 العربية</button>
+            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('es')">🇪🇸 Español</button>
+            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('de')">🇩🇪 Deutsch</button>
+            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('fr')">🇫🇷 Français</button>
+        </div>
+        <div id="wizPreview" style="border:1px solid #e2e8f0; border-radius:12px; padding:30px; background:#fff; min-height:300px; max-height:600px; overflow-y:auto; line-height:1.8; font-size:15px;"></div>
+
+        <div style="display:flex; gap:10px; margin-top:16px; justify-content:center;">
+            <button type="button" onclick="window.wizApplyToForm()" style="padding:12px 32px; font-size:15px; font-weight:800; background:#10b981; color:#fff; border:none; border-radius:10px; cursor:pointer;">
+                <i class="fa-solid fa-clipboard-check"></i> 새 상품 폼에 적용
+            </button>
+            <button type="button" onclick="window.wizApplyToExisting()" id="wizApplyExistingBtn" style="display:none; padding:12px 32px; font-size:15px; font-weight:800; background:#f59e0b; color:#fff; border:none; border-radius:10px; cursor:pointer;">
+                <i class="fa-solid fa-database"></i> 기존 상품에 저장
+            </button>
+            <button type="button" onclick="window.wizOpenInEditor()" style="padding:12px 32px; font-size:15px; font-weight:800; background:#6366f1; color:#fff; border:none; border-radius:10px; cursor:pointer;">
+                <i class="fa-solid fa-pen-to-square"></i> 에디터에서 수정
+            </button>
+        </div>
+    </div>
+
+</div>
+</div>
+</div>
+
+<style>
+.wiz-lang-tab { padding:8px 16px; border-radius:8px; border:1px solid #e2e8f0; background:#f1f5f9; font-size:13px; font-weight:700; color:#475569; cursor:pointer; transition:0.15s; }
+.wiz-lang-tab.active { background:#6366f1; color:#fff; border-color:#6366f1; }
+.wiz-img-card { position:relative; width:120px; height:120px; border-radius:10px; overflow:hidden; border:3px solid #e2e8f0; cursor:pointer; transition:0.2s; flex-shrink:0; }
+.wiz-img-card.thumb { border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.3); }
+.wiz-img-card img { width:100%; height:100%; object-fit:cover; }
+.wiz-img-card .wiz-thumb-badge { position:absolute; top:4px; left:4px; background:#10b981; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; }
+.wiz-img-card .wiz-remove-btn { position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; width:22px; height:22px; border-radius:50%; border:none; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 </style>
 
             <div class="form-group">
