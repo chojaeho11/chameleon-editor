@@ -489,11 +489,12 @@ function renderCalendar() {
     
     for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
     
-    let minDate = new Date(); 
-    let count = 0; 
-    while(count < 3) { 
-        minDate.setDate(minDate.getDate() + 1); 
-        if(minDate.getDay() !== 0 && minDate.getDay() !== 6) count++; 
+    let minDate = new Date();
+    let count = 0;
+    const leadDays = CURRENT_LANG === 'kr' ? 3 : 10;
+    while(count < leadDays) {
+        minDate.setDate(minDate.getDate() + 1);
+        if(minDate.getDay() !== 0 && minDate.getDay() !== 6) count++;
     }
     
     for(let i=1; i<=lastDate; i++) {
@@ -521,9 +522,60 @@ function renderCalendar() {
     }
 }
 
-function openDeliveryInfoModal() { 
-    document.getElementById("calendarModal").style.display = "none"; 
-    document.getElementById("deliveryInfoModal").style.display = "flex"; 
+function openDeliveryInfoModal() {
+    document.getElementById("calendarModal").style.display = "none";
+    document.getElementById("deliveryInfoModal").style.display = "flex";
+
+    // 허니콤보드 포함 여부 체크 → 배송 지역 선택 표시
+    const HONEYCOMB_CATS = ['honeycomb'];
+    const hasHoneycomb = cartData.some(item => {
+        if (!item.product) return false;
+        const cat = (item.product.category || '').toLowerCase();
+        return HONEYCOMB_CATS.some(hc => cat.includes(hc));
+    });
+
+    const metroSection = document.getElementById('metroAreaSection');
+    if (metroSection) {
+        metroSection.style.display = hasHoneycomb ? 'block' : 'none';
+        // 국가별 설명/옵션 라벨 업데이트
+        const descEl = document.getElementById('metroAreaDesc');
+        const opts = metroSection.querySelectorAll('.metro-opt');
+        const feeNotice = document.getElementById('nonMetroFeeNotice');
+        const feeText = document.getElementById('nonMetroFeeText');
+        const country = (typeof SITE_CONFIG !== 'undefined' ? SITE_CONFIG.COUNTRY : 'KR');
+
+        if (country === 'JP') {
+            if(descEl) descEl.textContent = window.t('desc_delivery_area_jp', 'ハニカムボードは東京23区外の場合、追加送料がかかります。');
+            if(opts[0]) opts[0].textContent = window.t('opt_metro_area_jp', '東京23区内');
+            if(opts[1]) opts[1].textContent = window.t('opt_non_metro_area_jp', 'その他地域');
+            if(feeText) feeText.textContent = window.t('msg_non_metro_fee_jp', 'その他地域 追加送料: ¥40,000が適用されます。');
+        } else if (country === 'KR') {
+            if(descEl) descEl.textContent = window.t('desc_delivery_area_kr', '허니콤보드 제품은 서울·경기 외 지역에 추가 배송비가 적용됩니다.');
+            if(opts[0]) opts[0].textContent = window.t('opt_metro_area', '수도권 (서울·경기)');
+            if(opts[1]) opts[1].textContent = window.t('opt_non_metro_area', '기타 지역');
+            if(feeText) feeText.textContent = window.t('msg_non_metro_fee', '기타 지역 추가 배송비: 200,000원이 적용됩니다.');
+        } else {
+            if(descEl) descEl.textContent = window.t('desc_delivery_area_global', 'Honeycomb board products have additional shipping fees for non-metropolitan areas.');
+            if(opts[0]) opts[0].textContent = window.t('opt_metro_area_global', 'Major metro area');
+            if(opts[1]) opts[1].textContent = window.t('opt_non_metro_area_global', 'Other regions');
+            if(feeText) feeText.textContent = window.t('msg_non_metro_fee_global', 'Additional shipping fee for non-metro area: ' + formatCurrency(200000) + ' will be applied.');
+        }
+
+        // 라디오 토글 이벤트
+        if (!metroSection.dataset.init) {
+            metroSection.dataset.init = '1';
+            metroSection.querySelectorAll('input[name="metroArea"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    opts.forEach(o => o.classList.remove('selected-metro'));
+                    radio.closest('label').querySelector('.metro-opt').classList.add('selected-metro');
+                    if (feeNotice) feeNotice.style.display = radio.value === 'non-metro' ? 'block' : 'none';
+                });
+            });
+        }
+        // 초기화: metro 선택으로 리셋
+        const metroRadio = metroSection.querySelector('input[value="metro"]');
+        if (metroRadio) { metroRadio.checked = true; metroRadio.dispatchEvent(new Event('change')); }
+    }
 }
 
 // [수정] 용량 초과 방지: 잘못된 이미지 데이터 자동 청소
@@ -1491,18 +1543,42 @@ async function processOrderSubmission() {
         rawTotal = MIN_ORDER_KRW;
     }
 
+    // 허니콤보드 비수도권 추가 배송비 (200,000 KRW)
+    const NON_METRO_FEE_KRW = 200000;
+    const metroRadio = document.querySelector('input[name="metroArea"]:checked');
+    const metroSection = document.getElementById('metroAreaSection');
+    const isNonMetro = metroSection && metroSection.style.display !== 'none' && metroRadio && metroRadio.value === 'non-metro';
+    if (isNonMetro) {
+        rawTotal += NON_METRO_FEE_KRW;
+        window._nonMetroFeeApplied = NON_METRO_FEE_KRW;
+    } else {
+        window._nonMetroFeeApplied = 0;
+    }
+
     const discountAmt = Math.floor(rawTotal * currentUserDiscountRate);
     const finalTotal = rawTotal - discountAmt;
     
     window.originalPayAmount = finalTotal; 
     window.finalPaymentAmount = finalTotal; 
 
-    document.getElementById("deliveryInfoModal").style.display = "none"; 
+    document.getElementById("deliveryInfoModal").style.display = "none";
     const checkoutModal = document.getElementById("checkoutModal");
     checkoutModal.style.display = "flex";
-    
-    document.getElementById("orderName").value = manager; 
-    document.getElementById("orderPhone").value = phone; 
+
+    // 비수도권 배송비 표시
+    const nmFeeCheckout = document.getElementById('nonMetroFeeCheckout');
+    const nmFeeAmountEl = document.getElementById('nonMetroFeeAmount');
+    if (nmFeeCheckout) {
+        if (isNonMetro) {
+            nmFeeCheckout.style.display = 'block';
+            if (nmFeeAmountEl) nmFeeAmountEl.textContent = formatCurrency(NON_METRO_FEE_KRW);
+        } else {
+            nmFeeCheckout.style.display = 'none';
+        }
+    }
+
+    document.getElementById("orderName").value = manager;
+    document.getElementById("orderPhone").value = phone;
     document.getElementById("orderAddr").value = address;
     document.getElementById("orderMemo").value = request;
 

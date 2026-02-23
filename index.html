@@ -2809,6 +2809,31 @@ async function handleSubReturn() {
             <input id="inputStreet2" class="ai-input-pretty" placeholder="Apartment, suite, unit, etc. (optional)">
         </div>
         
+        <!-- 배송 지역 선택 (허니콤보드 포함 시 표시) -->
+        <div id="metroAreaSection" style="display:none; margin-top:12px; background:#f0f9ff; border:1px solid #7dd3fc; border-radius:10px; padding:14px;">
+            <p style="font-weight:700; color:#0369a1; font-size:14px; margin:0 0 6px;">
+                🚚 <span data-i18n="label_delivery_area">배송 지역</span>
+            </p>
+            <p id="metroAreaDesc" style="font-size:12px; color:#555; margin:0 0 10px; line-height:1.4;" data-i18n="desc_delivery_area_kr">허니콤보드 제품은 서울·경기 외 지역에 추가 배송비가 적용됩니다.</p>
+            <div style="display:flex; gap:8px;">
+                <label style="flex:1; cursor:pointer;">
+                    <input type="radio" name="metroArea" value="metro" checked style="display:none;">
+                    <div class="metro-opt selected-metro" data-i18n="opt_metro_area">수도권 (서울·경기)</div>
+                </label>
+                <label style="flex:1; cursor:pointer;">
+                    <input type="radio" name="metroArea" value="non-metro" style="display:none;">
+                    <div class="metro-opt" data-i18n="opt_non_metro_area">기타 지역</div>
+                </label>
+            </div>
+            <div id="nonMetroFeeNotice" style="display:none; margin-top:10px; padding:10px; background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; font-size:13px; color:#92400e; line-height:1.5;">
+                ⚠️ <span id="nonMetroFeeText" data-i18n="msg_non_metro_fee">기타 지역 추가 배송비: 200,000원이 적용됩니다.</span>
+            </div>
+        </div>
+        <style>
+            .metro-opt { border:2px solid #e2e8f0; padding:12px; text-align:center; border-radius:8px; font-weight:600; color:#475569; transition:0.2s; font-size:13px; }
+            .metro-opt.selected-metro { background:#dbeafe; border-color:#3b82f6; color:#1d4ed8; }
+        </style>
+
         <p data-i18n="label_request_memo" style="margin-top:10px;">요청사항</p>
         <textarea id="inputRequest" class="ai-input-pretty"></textarea>
 
@@ -2869,6 +2894,9 @@ async function handleSubReturn() {
             </div>
         </div>
 
+        <div id="nonMetroFeeCheckout" style="display:none; background:#fef3c7; padding:10px 14px; border-radius:8px; margin-bottom:10px; font-size:13px; color:#92400e;">
+            🚚 <span data-i18n="label_non_metro_shipping">비수도권 추가 배송비</span>: <b id="nonMetroFeeAmount"></b>
+        </div>
         <div style="text-align:right; margin-bottom:20px;">
             <div style="font-size:13px; color:#666;" data-i18n="label_final_pay_amount">최종 결제 금액</div>
             <div id="finalPayAmountDisplay" style="font-size:24px; font-weight:900; color:#6366f1;">0원</div>
