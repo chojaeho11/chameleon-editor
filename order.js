@@ -1265,10 +1265,20 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
     updateSummary(grandProductTotal, grandAddonTotal, grandTotal);
 }
 
-function updateSummary(prodTotal, addonTotal, total) { 
-    const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal); 
+function updateSummary(prodTotal, addonTotal, total) {
+    // 최소 주문금액 5,000원(KRW) 적용
+    const MIN_ORDER_KRW = 5000;
+    const elMinNotice = document.getElementById("minOrderNotice");
+    if (total > 0 && total < MIN_ORDER_KRW) {
+        total = MIN_ORDER_KRW;
+        if (elMinNotice) elMinNotice.style.display = 'block';
+    } else {
+        if (elMinNotice) elMinNotice.style.display = 'none';
+    }
+
+    const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal);
     const elAddon = document.getElementById("summaryAddonPrice"); if(elAddon) elAddon.innerText = formatCurrency(addonTotal);
-    
+
     const excludedSet = window.excludedCategoryCodes || new Set();
 
     let discountableAmount = 0;
@@ -1473,6 +1483,13 @@ async function processOrderSubmission() {
         }
         rawTotal += (unitPrice * qty) + optionTotal;
     });
+
+    // 최소 주문금액 5,000원(KRW) 적용
+    const MIN_ORDER_KRW = 5000;
+    if (rawTotal > 0 && rawTotal < MIN_ORDER_KRW) {
+        showToast(window.t('msg_min_order_applied', `Minimum order amount ${formatCurrency(MIN_ORDER_KRW)} has been applied.`), "info");
+        rawTotal = MIN_ORDER_KRW;
+    }
 
     const discountAmt = Math.floor(rawTotal * currentUserDiscountRate);
     const finalTotal = rawTotal - discountAmt;

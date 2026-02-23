@@ -2751,11 +2751,14 @@ async function handleSubReturn() {
                     
                     <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                     
-                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px; margin-bottom: 10px;">
                         <span data-i18n="label_total_price">합계</span>
                         <span id="summaryTotal">0원</span>
                     </div>
-                    
+                    <div id="minOrderNotice" style="display:none; background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:10px 12px; margin-bottom:15px; font-size:13px; color:#92400e; line-height:1.5;">
+                        ⚠️ <span data-i18n="msg_min_order_notice">최소 주문금액 5,000원이 적용되었습니다.</span>
+                    </div>
+
                     <button id="btnGoCheckout" class="btn-round primary" style="margin-top:0; width:100%; height: 50px; font-size: 16px;">
                         💳 <span data-i18n="btn_do_checkout">결제하기</span>
                     </button>
