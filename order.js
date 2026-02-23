@@ -621,19 +621,45 @@ function saveCart() {
 // ============================================================
 // [4] 디자인/파일 장바구니 담기
 // ============================================================
+// 상품 공통 하단 안내문 캐시
+let _pdpFooterCache = {};
+async function loadPdpFooter() {
+    const lang = CURRENT_LANG || 'kr';
+    if (_pdpFooterCache[lang] !== undefined) return _pdpFooterCache[lang];
+    try {
+        const { data } = await sb.from('chatbot_knowledge').select('answer')
+            .eq('category', '_product_footer').eq('language', lang).eq('is_active', true).maybeSingle();
+        _pdpFooterCache[lang] = data ? data.answer : '';
+    } catch(e) { _pdpFooterCache[lang] = ''; }
+    return _pdpFooterCache[lang];
+}
+
 export function openProductDetail(key, w, h, mode) {
-    let product = PRODUCT_DB[key]; 
+    let product = PRODUCT_DB[key];
     if (!product) { product = { name: key, price: 0, img: '', addons: [] }; }
-    
+
     currentTargetProduct = { key, w, h, mode, info: product };
-    
+
     document.getElementById("pdpTitle").innerText = localName(product);
     document.getElementById("pdpPrice").innerText = formatCurrency(product.price);
-    
-    const imgElem = document.getElementById("pdpImage"); 
+
+    const imgElem = document.getElementById("pdpImage");
     if(imgElem) imgElem.src = product.img || 'https://placehold.co/400';
-    
+
     document.getElementById("productDetailModal").style.display = "flex";
+
+    // 공통 하단 안내문 로드
+    const footerEl = document.getElementById('pdpFooterContent');
+    if (footerEl) {
+        loadPdpFooter().then(content => {
+            if (content) {
+                footerEl.innerHTML = content.replace(/\n/g, '<br>');
+                footerEl.style.display = 'block';
+            } else {
+                footerEl.style.display = 'none';
+            }
+        });
+    }
 }
 
 export async function startDesignFromProduct() { 

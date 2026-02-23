@@ -1048,8 +1048,32 @@
                     <thead><tr><th width="50">국가</th><th width="60">이미지</th><th>코드/상품명</th><th>사이즈</th><th>가격</th><th width="80">관리</th></tr></thead>
                     <tbody id="prodTableBody"></tbody>
                 </table>
-            </div> </div> </div> </div>
+            </div> </div> </div>
 
+            <!-- 상품 공통 하단 안내문 -->
+            <div class="card" style="background:#f0fdf4; border:1px solid #bbf7d0; margin-top:20px;">
+                <h3 style="margin:0 0 12px; color:#166534;">📋 상품 공통 하단 안내문</h3>
+                <p style="font-size:12px; color:#555; margin:0 0 12px;">모든 상품 페이지 하단에 공통으로 표시되는 유의사항, 배송안내 등을 작성합니다. (국가별)</p>
+                <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                    <button class="btn btn-sm" onclick="pfLoadFooter('kr')" style="background:#e0e7ff; border:1px solid #a5b4fc;">🇰🇷 한국</button>
+                    <button class="btn btn-sm" onclick="pfLoadFooter('ja')" style="background:#fef3c7; border:1px solid #fcd34d;">🇯🇵 일본</button>
+                    <button class="btn btn-sm" onclick="pfLoadFooter('en')" style="background:#dbeafe; border:1px solid #93c5fd;">🇺🇸 영어</button>
+                    <button class="btn btn-sm" onclick="pfLoadFooter('zh')" style="background:#fce7f3; border:1px solid #f9a8d4;">🇨🇳 중국</button>
+                    <button class="btn btn-sm" onclick="pfLoadFooter('ar')" style="background:#f5f5f4; border:1px solid #d6d3d1;">🇸🇦 아랍</button>
+                    <button class="btn btn-sm" onclick="pfLoadFooter('es')" style="background:#fef9c3; border:1px solid #fde047;">🇪🇸 스페인</button>
+                    <button class="btn btn-sm" onclick="pfLoadFooter('fr')" style="background:#ede9fe; border:1px solid #c4b5fd;">🇫🇷 프랑스</button>
+                    <button class="btn btn-sm" onclick="pfLoadFooter('de')" style="background:#fef2f2; border:1px solid #fecaca;">🇩🇪 독일</button>
+                </div>
+                <div style="margin-bottom:8px; font-weight:bold; color:#166534;">현재 편집: <span id="pfCurrentLang">kr</span></div>
+                <textarea id="pfFooterContent" style="width:100%; min-height:200px; border:1px solid #86efac; border-radius:8px; padding:12px; font-size:13px; line-height:1.8; font-family:inherit; resize:vertical;" placeholder="유의사항, 배송안내, 교환/반품 안내 등을 입력하세요.&#10;&#10;HTML 태그 사용 가능 (예: <b>굵게</b>, <br> 줄바꿈)"></textarea>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="btn btn-primary" onclick="pfSaveFooter()" style="flex:1;">💾 저장</button>
+                    <button class="btn btn-secondary" onclick="pfPreviewFooter()" style="flex:1;">👁 미리보기</button>
+                </div>
+                <div id="pfPreviewArea" style="display:none; margin-top:12px; padding:16px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; line-height:1.8;"></div>
+            </div>
+
+            </div>
 
 
             <div id="sec-staff" class="section">
@@ -2725,6 +2749,42 @@ window.lcAddManager = async function() {
     lcLoadManagers(); showToast('상담사 등록!', 'success');
 };
 window.lcDeleteManager = async function(id) { if(!confirm('삭제?'))return; await window.sb.from('chatbot_knowledge').update({is_active:false}).eq('id',id); lcLoadManagers(); };
+
+// ── 상품 공통 하단 안내문 (Product Footer) ──
+var _pfCurrentLang = 'kr';
+window.pfLoadFooter = async function(lang) {
+    _pfCurrentLang = lang || 'kr';
+    document.getElementById('pfCurrentLang').textContent = _pfCurrentLang.toUpperCase();
+    var sb = getSb(); if (!sb) return;
+    var r = await sb.from('chatbot_knowledge').select('answer').eq('category','_product_footer').eq('language', _pfCurrentLang).eq('is_active',true).maybeSingle();
+    document.getElementById('pfFooterContent').value = (r && r.data) ? r.data.answer : '';
+    document.getElementById('pfPreviewArea').style.display = 'none';
+};
+window.pfSaveFooter = async function() {
+    var sb = getSb(); if (!sb) return;
+    var content = document.getElementById('pfFooterContent').value.trim();
+    // 기존 항목 비활성화
+    await sb.from('chatbot_knowledge').update({is_active:false}).eq('category','_product_footer').eq('language', _pfCurrentLang);
+    // 새로 저장
+    if (content) {
+        await sb.from('chatbot_knowledge').insert({
+            category: '_product_footer',
+            question: 'product_footer_' + _pfCurrentLang,
+            answer: content,
+            keywords: '',
+            language: _pfCurrentLang,
+            priority: 0,
+            is_active: true
+        });
+    }
+    showToast(_pfCurrentLang.toUpperCase() + ' 안내문 저장 완료!', 'success');
+};
+window.pfPreviewFooter = function() {
+    var area = document.getElementById('pfPreviewArea');
+    var content = document.getElementById('pfFooterContent').value;
+    area.innerHTML = content.replace(/\n/g, '<br>');
+    area.style.display = area.style.display === 'none' ? 'block' : 'none';
+};
 
 </script>
 
