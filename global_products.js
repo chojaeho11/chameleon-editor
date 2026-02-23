@@ -2909,24 +2909,44 @@ window.openDetailWizard = () => {
 };
 
 // 기존 상품 목록 로드
+let _wizAllProducts = [];
 async function _wizLoadProductList() {
-    const sel = document.getElementById('wizExistingSelect');
-    if (!sel) return;
     try {
         const { data } = await sb.from('admin_products').select('id, code, name, img_url, category').order('name');
-        if (!data) return;
-        sel.innerHTML = '<option value="">상품을 선택하세요...</option>';
-        data.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = `[${p.code}] ${p.name}`;
-            opt.dataset.imgUrl = p.img_url || '';
-            opt.dataset.category = p.category || '';
-            opt.dataset.name = p.name || '';
-            sel.appendChild(opt);
-        });
+        _wizAllProducts = data || [];
+        _wizRenderProductList(_wizAllProducts);
     } catch(e) { console.error('상품 목록 로드 실패:', e); }
 }
+
+function _wizRenderProductList(list) {
+    const sel = document.getElementById('wizExistingSelect');
+    if (!sel) return;
+    sel.innerHTML = '';
+    if (list.length === 0) {
+        sel.innerHTML = '<option value="">검색 결과 없음</option>';
+        return;
+    }
+    list.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `[${p.code}] ${p.name}`;
+        opt.dataset.imgUrl = p.img_url || '';
+        opt.dataset.category = p.category || '';
+        opt.dataset.name = p.name || '';
+        sel.appendChild(opt);
+    });
+}
+
+// 상품 검색 필터
+window.wizFilterProducts = (query) => {
+    const q = (query || '').toLowerCase().trim();
+    if (!q) { _wizRenderProductList(_wizAllProducts); return; }
+    const filtered = _wizAllProducts.filter(p =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.code && p.code.toLowerCase().includes(q))
+    );
+    _wizRenderProductList(filtered);
+};
 
 // 기존 상품 선택 시 자동 채우기
 window.wizOnSelectExisting = (sel) => {

@@ -952,8 +952,9 @@
             기존 등록된 상품에 적용하기
         </label>
         <div id="wizExistingWrap" style="display:none; margin-top:12px;">
-            <select id="wizExistingSelect" class="input-text" style="width:100%; padding:10px 14px; font-size:14px;" onchange="window.wizOnSelectExisting && window.wizOnSelectExisting(this)">
-                <option value="">상품을 선택하세요...</option>
+            <input id="wizExistingSearch" class="input-text" placeholder="상품명 또는 코드로 검색..." style="width:100%; padding:10px 14px; font-size:14px; margin-bottom:8px;" oninput="window.wizFilterProducts && window.wizFilterProducts(this.value)">
+            <select id="wizExistingSelect" class="input-text" size="6" style="width:100%; padding:6px; font-size:14px;" onchange="window.wizOnSelectExisting && window.wizOnSelectExisting(this)">
+                <option value="">검색 결과가 여기에 표시됩니다...</option>
             </select>
             <div id="wizExistingInfo" style="display:none; margin-top:8px; padding:10px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; font-size:13px; color:#475569;"></div>
         </div>
@@ -2878,19 +2879,19 @@ var _pfCurrentLang = 'kr';
 window.pfLoadFooter = async function(lang) {
     _pfCurrentLang = lang || 'kr';
     document.getElementById('pfCurrentLang').textContent = _pfCurrentLang.toUpperCase();
-    var sb = getSb(); if (!sb) return;
-    var r = await sb.from('chatbot_knowledge').select('answer').eq('category','_product_footer').eq('language', _pfCurrentLang).eq('is_active',true).maybeSingle();
+    var _sb = window.sb; if (!_sb) return;
+    var r = await _sb.from('chatbot_knowledge').select('answer').eq('category','_product_footer').eq('language', _pfCurrentLang).eq('is_active',true).maybeSingle();
     document.getElementById('pfFooterContent').value = (r && r.data) ? r.data.answer : '';
     document.getElementById('pfPreviewArea').style.display = 'none';
 };
 window.pfSaveFooter = async function() {
-    var sb = getSb(); if (!sb) return;
+    var _sb = window.sb; if (!_sb) return;
     var content = document.getElementById('pfFooterContent').value.trim();
     // 기존 항목 비활성화
-    await sb.from('chatbot_knowledge').update({is_active:false}).eq('category','_product_footer').eq('language', _pfCurrentLang);
+    await _sb.from('chatbot_knowledge').update({is_active:false}).eq('category','_product_footer').eq('language', _pfCurrentLang);
     // 새로 저장
     if (content) {
-        await sb.from('chatbot_knowledge').insert({
+        await _sb.from('chatbot_knowledge').insert({
             category: '_product_footer',
             question: 'product_footer_' + _pfCurrentLang,
             answer: content,

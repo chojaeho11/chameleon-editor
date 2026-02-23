@@ -151,7 +151,7 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
 
       try {
         const systemPrompt = isWizard ? buildWizardPrompt(lang) : buildSimplePrompt(lang);
-        const model = isWizard ? "claude-sonnet-4-5-20241022" : "claude-haiku-4-5-20251001";
+        const model = "claude-haiku-4-5-20251001";
         const maxTokens = isWizard ? 4000 : 1500;
 
         const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -170,7 +170,8 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
         });
 
         if (!res.ok) {
-          console.error(`Claude API error for ${lang}: ${res.status}`);
+          const errBody = await res.text();
+          console.error(`Claude API error for ${lang}: ${res.status} - ${errBody}`);
           return { lang, html: null };
         }
 
