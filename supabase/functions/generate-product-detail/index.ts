@@ -180,38 +180,45 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
 
       try {
         const systemPrompt = isWizard ? buildWizardPrompt(lang) : buildSimplePrompt(lang);
-        const model = "claude-haiku-4-5-20251001";
         const maxTokens = isWizard ? 4000 : 1500;
+        const models = ["claude-sonnet-4-5-20250929", "claude-haiku-4-5-20251001"];
 
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": ANTHROPIC_API_KEY!,
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({
-            model,
-            max_tokens: maxTokens,
-            system: systemPrompt,
-            messages: [{ role: "user", content: "Generate the product detail page HTML now." }],
-          }),
-        });
+        for (const model of models) {
+          const res = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": ANTHROPIC_API_KEY!,
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify({
+              model,
+              max_tokens: maxTokens,
+              system: systemPrompt,
+              messages: [{ role: "user", content: "Generate the product detail page HTML now." }],
+            }),
+          });
 
-        if (!res.ok) {
-          const errBody = await res.text();
-          console.error(`Claude API error for ${lang}: ${res.status} - ${errBody}`);
-          return { lang, html: null, error: `API ${res.status}: ${errBody.substring(0, 200)}` };
+          if (!res.ok) {
+            const errBody = await res.text();
+            console.error(`Claude API error (${model}) for ${lang}: ${res.status} - ${errBody}`);
+            if (model === models[models.length - 1]) {
+              return { lang, html: null, error: `API ${res.status}: ${errBody.substring(0, 200)}` };
+            }
+            console.log(`Falling back to next model...`);
+            continue;
+          }
+
+          const data = await res.json();
+          if (!data.content || data.content.length === 0) {
+            console.error(`Claude empty response (${model}) for ${lang}`);
+            continue;
+          }
+          let html = data.content.map((b: any) => b.text || "").join("");
+          html = html.replace(/```html?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+          if (html) return { lang, html };
         }
-
-        const data = await res.json();
-        if (!data.content || data.content.length === 0) {
-          console.error(`Claude empty response for ${lang}:`, JSON.stringify(data).substring(0, 500));
-          return { lang, html: null, error: 'Empty response from Claude' };
-        }
-        let html = data.content.map((b: any) => b.text || "").join("");
-        html = html.replace(/```html?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-        return { lang, html: html || null, error: html ? undefined : 'Generated HTML was empty' };
+        return { lang, html: null, error: 'All models failed' };
       } catch (e) {
         console.error(`Error generating ${lang}:`, e.message);
         return { lang, html: null, error: e.message };
