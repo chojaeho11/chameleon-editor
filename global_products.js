@@ -2981,14 +2981,12 @@ window.wizOnSelectExisting = (sel) => {
         if (info) info.style.display = 'none';
         return;
     }
-    // 상품명, 카테고리 자동 채우기
+    // 상품명, 카테고리, 가격 자동 채우기 (항상 덮어쓰기)
     const name = opt.dataset.name || '';
     const cat = opt.dataset.category || '';
     const imgUrl = opt.dataset.imgUrl || '';
 
-    if (name && !document.getElementById('wizTitle').value) {
-        document.getElementById('wizTitle').value = name;
-    }
+    if (name) document.getElementById('wizTitle').value = name;
     if (cat) document.getElementById('wizCategory').value = cat;
     const priceVal = opt.dataset.price;
     if (priceVal && priceVal !== '0') {
@@ -2996,12 +2994,24 @@ window.wizOnSelectExisting = (sel) => {
         if (priceEl) priceEl.value = priceVal;
     }
 
+    // 기존 이미지를 위자드에 자동 로드 (사진이 아직 없을 때만)
+    if (imgUrl && wizImages.length === 0) {
+        // URL 이미지를 wizImages에 추가 (file 없이 url+preview만)
+        wizImages.push({
+            file: null,
+            preview: imgUrl,
+            url: imgUrl,
+            isThumbnail: true
+        });
+        _wizRenderGrid();
+    }
+
     // 기존 이미지 표시
     if (info) {
         info.style.display = 'block';
         info.innerHTML = `<strong>${name}</strong> 선택됨` +
             (imgUrl ? ` &nbsp;<img src="${imgUrl}" style="height:40px; vertical-align:middle; border-radius:4px; margin-left:6px;">` : '') +
-            `<br><span style="color:#9ca3af; font-size:12px;">새 사진을 올리지 않으면 기존 이미지가 유지됩니다.</span>`;
+            `<br><span style="color:#10b981; font-size:12px;">✅ 기존 이미지 로드됨. 사진을 추가로 올릴 수 있습니다.</span>`;
     }
 };
 
@@ -3068,12 +3078,14 @@ window.wizGenerate = async () => {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...';
 
     try {
-        // 1단계: 이미지 업로드
+        // 1단계: 이미지 업로드 (이미 URL이 있는 이미지는 스킵)
         status.textContent = '📤 이미지 업로드 중... (0/' + wizImages.length + ')';
         const timestamp = Date.now();
         let uploadedCount = 0;
 
         await Promise.all(wizImages.map(async (img, i) => {
+            // 이미 URL이 있는 이미지(기존 상품 이미지)는 업로드 스킵
+            if (img.url) { uploadedCount++; return; }
             const resp = await fetch(img.preview);
             const blob = await resp.blob();
             const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';
@@ -3492,8 +3504,15 @@ window.wizRunPipeline = async () => {
         try {
             // 3a: AI 콘텐츠 생성
             _wpStep('wp-shorts-ai', 'active');
-            const thumbFile = thumb?.file || wizImages[0]?.file;
-            if (!thumbFile) throw new Error('쇼츠용 이미지가 없습니다.');
+            let thumbFile = thumb?.file || wizImages[0]?.file;
+            // file이 없으면 URL에서 fetch해서 blob으로 변환
+            if (!thumbFile) {
+                const thumbUrl = thumb?.url || wizImages[0]?.url;
+                if (!thumbUrl) throw new Error('쇼츠용 이미지가 없습니다.');
+                const resp = await fetch(thumbUrl);
+                const blob = await resp.blob();
+                thumbFile = new File([blob], 'thumb.jpg', { type: blob.type });
+            }
 
             const base64 = await _wizResizeToBase64(thumbFile, 1024);
             const { data: shortsData, error: shortsErr } = await sb.functions.invoke('marketing-content', {
