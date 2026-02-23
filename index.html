@@ -9847,11 +9847,20 @@ window.dsmRenderProducts = async function(keyword) {
     function _lt(key) { return (_liveText[key] && _liveText[key][_lang2]) || (_liveText[key] && _liveText[key]['en']) || ''; }
 
     // 기본 상담사 (DB 로드 실패 시) — 국가별
-    var DEFAULT_MANAGERS = _lang2 === 'ja'
-        ? [{name:'田中', phone:'047-712-1148'}, {name:'佐藤', phone:'047-712-1148'}, {name:'鈴木', phone:'047-712-1148'}]
-        : _lang2 === 'en'
-        ? [{name:'Sarah', phone:'047-712-1148'}, {name:'Emily', phone:'047-712-1148'}, {name:'Jessica', phone:'047-712-1148'}]
-        : [{name:'지숙', phone:'010-3455-1946'}, {name:'은미', phone:'010-7793-5393'}, {name:'성희', phone:'010-3490-3328'}];
+    var _mgrLabels = {
+        kr: ['지숙','은미','성희'],
+        ja: ['相談員 1','相談員 2','相談員 3'],
+        en: ['Consultant 1','Consultant 2','Consultant 3'],
+        zh: ['顾问 1','顾问 2','顾问 3'],
+        es: ['Consultor 1','Consultor 2','Consultor 3'],
+        fr: ['Conseiller 1','Conseiller 2','Conseiller 3'],
+        de: ['Berater 1','Berater 2','Berater 3'],
+        ar: ['مستشار 1','مستشار 2','مستشار 3']
+    };
+    var _ml = _mgrLabels[_lang2] || _mgrLabels['en'];
+    var DEFAULT_MANAGERS = _lang2 === 'kr'
+        ? [{name:'지숙', phone:'010-3455-1946'}, {name:'은미', phone:'010-7793-5393'}, {name:'성희', phone:'010-3490-3328'}]
+        : [{name:_ml[0]}, {name:_ml[1]}, {name:_ml[2]}];
 
     // ── 매니저 선택 UI 표시 ──
     function showManagerPicker(managers, msgArea) {
