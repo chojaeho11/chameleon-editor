@@ -3351,15 +3351,19 @@ window.wizRunPipeline = async () => {
         // ──────── STEP 1: 상품 저장 ────────
         _wpStep('wp-save', 'active');
 
-        const isExisting = document.getElementById('wizExistingCheck')?.checked;
+        // 기존 상품 여부 판단: 체크박스 OR editingProdId
+        const wizExistCheck = document.getElementById('wizExistingCheck');
+        const sel = document.getElementById('wizExistingSelect');
         let prodId = null;
 
+        // 3-tier fallback: select value → selectedIndex → editingProdId
+        if (sel?.value) prodId = sel.value;
+        if (!prodId && sel && sel.selectedIndex >= 0) prodId = sel.options[sel.selectedIndex]?.value;
+        if (!prodId && window.editingProdId) prodId = window.editingProdId;
+
+        const isExisting = !!(prodId && (wizExistCheck?.checked || window.editingProdId));
+
         if (isExisting) {
-            // 기존 상품 업데이트
-            const sel = document.getElementById('wizExistingSelect');
-            prodId = sel?.value || window.editingProdId || '';
-            if (!prodId && sel && sel.selectedIndex >= 0) prodId = sel.options[sel.selectedIndex]?.value;
-            if (!prodId) throw new Error('기존 상품을 선택해주세요.');
 
             const updates = {
                 description: wizGeneratedHtml.kr || '',
