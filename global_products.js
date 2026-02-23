@@ -3537,10 +3537,10 @@ window.wizRunPipeline = async () => {
             const { data: shortsData, error: shortsErr } = await sb.functions.invoke('marketing-content', {
                 body: {
                     platform: 'youtube_shorts_from_image',
-                    topic: title + ' - 반값 인쇄 꿀팁 카멜레온프린팅',
+                    topic: title + ' - 半額印刷の裏ワザ カメレオンプリンティング',
                     tone: 'fast_energetic',
                     lang: 'ja',
-                    instructions: '빠른 말투로 제품을 소개하는 쇼츠 나레이션을 일본어로 생성하세요. cafe0101.com 을 언급하세요. narration 배열에 5개 문장을 넣어주세요.',
+                    instructions: 'MUST write everything in 日本語 (Japanese) ONLY. No Korean. 早口で商品を紹介するショート動画のナレーションを日本語で生成してください。cafe0101.comを必ず言及してください。narration配列に5つの文を入れてください。タイトル、説明、ハッシュタグもすべて日本語で。',
                     coreKeywords: settings.coreKeywords || '',
                     usp: settings.usp || '',
                     ctaMsg: settings.ctaMsg || '',
@@ -3748,9 +3748,9 @@ window.wizRunDirectPipeline = async () => {
             const { data: shortsData, error: shortsErr } = await sb.functions.invoke('marketing-content', {
                 body: {
                     platform: 'youtube_shorts_from_image',
-                    topic: title + ' - 반값 인쇄 꿀팁 카멜레온프린팅',
+                    topic: title + ' - 半額印刷の裏ワザ カメレオンプリンティング',
                     tone: 'fast_energetic', lang: 'ja',
-                    instructions: '빠른 말투로 제품을 소개하는 쇼츠 나레이션을 일본어로 생성하세요. cafe0101.com 을 언급하세요. narration 배열에 5개 문장을 넣어주세요.',
+                    instructions: 'MUST write everything in 日本語 (Japanese) ONLY. No Korean. 早口で商品を紹介するショート動画のナレーションを日本語で生成してください。cafe0101.comを必ず言及してください。narration配列に5つの文を入れてください。タイトル、説明、ハッシュタグもすべて日本語で。',
                     coreKeywords: settings.coreKeywords || '', usp: settings.usp || '', ctaMsg: settings.ctaMsg || '',
                     imageBase64: base64
                 }
