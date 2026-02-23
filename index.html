@@ -9867,9 +9867,8 @@ window.dsmRenderProducts = async function(keyword) {
         managers.forEach(function(mgr, i) {
             var c = colors[i % colors.length];
             h += '<button class="cham-mgr-btn" data-name="' + mgr.name + '" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background=\'rgba(255,255,255,0.3)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">';
-            h += '<span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">📞</span>';
+            h += '<span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">🧑‍💼</span>';
             h += '<span style="flex:1; text-align:left;"><div>' + mgr.name + _lt('mgrSuffix') + '</div>';
-            if (mgr.phone) h += '<div style="font-size:11px; opacity:0.7; font-weight:400;">' + mgr.phone + '</div>';
             h += '</span><span style="font-size:18px;">→</span></button>';
         });
         h += '</div></div></div>';
