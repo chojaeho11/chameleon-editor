@@ -2883,15 +2883,30 @@ window.openDetailWizard = () => {
         wizCat.innerHTML = srcCat.innerHTML;
     }
 
-    // 기존 상품 편집 중이면 자동 채우기 (비어있을 때만)
-    if (window.editingProdId && !document.getElementById('wizTitle').value) {
-        const name = document.getElementById('newProdName');
-        if (name && name.value) document.getElementById('wizTitle').value = name.value;
-        if (srcCat) document.getElementById('wizCategory').value = srcCat.value;
+    // 기존 상품 편집 중이면 자동 연결
+    if (window.editingProdId) {
+        // 상품명, 카테고리 채우기
+        if (!document.getElementById('wizTitle').value) {
+            const name = document.getElementById('newProdName');
+            if (name && name.value) document.getElementById('wizTitle').value = name.value;
+            if (srcCat) document.getElementById('wizCategory').value = srcCat.value;
+        }
+        // "기존 상품에 적용" 자동 체크 + 상품 자동 선택
+        document.getElementById('wizExistingCheck').checked = true;
+        document.getElementById('wizExistingWrap').style.display = 'block';
+        // 상품 목록 로드 후 자동 선택
+        _wizLoadProductList().then(() => {
+            const sel = document.getElementById('wizExistingSelect');
+            if (sel) {
+                sel.value = window.editingProdId;
+                // 선택된 상품 정보 표시
+                window.wizOnSelectExisting(sel);
+            }
+        });
+    } else {
+        // 기존 상품 목록 로드 (아직 안 불러왔으면)
+        if (_wizAllProducts.length === 0) _wizLoadProductList();
     }
-
-    // 기존 상품 목록 로드 (아직 안 불러왔으면)
-    if (_wizAllProducts.length === 0) _wizLoadProductList();
 
     document.getElementById('wizardModal').style.display = 'flex';
 };
@@ -3216,7 +3231,15 @@ window.wizApplyToForm = () => {
 // 기존 상품에 직접 저장
 window.wizApplyToExisting = async () => {
     const sel = document.getElementById('wizExistingSelect');
-    const prodId = sel ? sel.value : '';
+    let prodId = sel ? sel.value : '';
+    // size 속성이 있는 select는 selectedIndex로도 확인
+    if (!prodId && sel && sel.selectedIndex >= 0) {
+        prodId = sel.options[sel.selectedIndex].value;
+    }
+    // 편집 중인 상품 ID fallback
+    if (!prodId && window.editingProdId) {
+        prodId = window.editingProdId;
+    }
     if (!prodId) { showToast('기존 상품을 선택해주세요.', 'warn'); return; }
     if (!wizGeneratedHtml.kr) { showToast('먼저 AI 생성을 실행해주세요.', 'warn'); return; }
 
