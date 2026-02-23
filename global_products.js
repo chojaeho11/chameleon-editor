@@ -3894,19 +3894,51 @@ async function _wizRenderShortsVideo(imageFiles, aiContent, audioCtx, audioBuffe
             // 모든 이미지 미리 로드
             const imgs = [];
             const imgUrls = [];
-            for (const f of files) {
+            for (let fi = 0; fi < files.length; fi++) {
+                const f = files[fi];
                 const im = new Image();
                 im.crossOrigin = 'anonymous';
-                const u = (f instanceof File || f instanceof Blob) ? URL.createObjectURL(f) : (f.url || f.preview || f);
+                let u;
+                if (f instanceof File || f instanceof Blob) {
+                    u = URL.createObjectURL(f);
+                } else if (typeof f === 'string') {
+                    u = f;
+                } else {
+                    u = f.url || f.preview || '';
+                }
                 imgUrls.push(u);
-                await new Promise((res, rej) => { im.onload = res; im.onerror = rej; im.src = u; });
+                await new Promise((res, rej) => {
+                    im.onload = () => {
+                        console.log(`[Shorts] Image ${fi+1}/${files.length} loaded: ${im.width}x${im.height}`);
+                        res();
+                    };
+                    im.onerror = (e) => {
+                        console.error(`[Shorts] Image ${fi+1} load failed:`, u, e);
+                        rej(new Error(`Image ${fi+1} load failed`));
+                    };
+                    im.src = u;
+                });
+                if (im.width === 0 || im.height === 0) {
+                    console.warn(`[Shorts] Image ${fi+1} has zero dimensions, skipping`);
+                    continue;
+                }
                 imgs.push(im);
             }
+            if (imgs.length === 0) throw new Error('No valid images loaded for shorts video');
+            console.log(`[Shorts] Total ${imgs.length} images ready for slideshow`);
 
             const W = 1080, H = 1920;
             const cvs = document.getElementById('wizShortsCanvas');
+            // display:none 캔버스는 captureStream이 검은 화면을 생성하므로 반드시 off-screen으로
+            cvs.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1920px;';
             cvs.width = W; cvs.height = H;
             const ctx = cvs.getContext('2d');
+
+            // 테스트 프레임: 캔버스가 제대로 렌더링되는지 확인
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(0, 0, W, H);
+            ctx.drawImage(imgs[0], 0, 0, W, H);
+            console.log('[Shorts] Canvas test frame drawn OK');
 
             const narrationTexts = aiContent.narration || [];
             const overlays = aiContent.overlay_texts || {};
@@ -3969,9 +4001,17 @@ async function _wizRenderShortsVideo(imageFiles, aiContent, audioCtx, audioBuffe
             recorder.start(100);
             if (hasTTS && audioSource) audioSource.start(0);
 
+            let _frameCount = 0;
+            const _FPS = 30;
+            const _frameInterval = 1000 / _FPS;
+
             function drawFrame() {
                 const elapsed = performance.now() - startTime;
                 const progress = Math.min(elapsed / totalMs, 1.0);
+                _frameCount++;
+                if (_frameCount <= 3 || _frameCount % 100 === 0) {
+                    console.log(`[Shorts] frame=${_frameCount} progress=${(progress*100).toFixed(1)}% imgIdx=${Math.min(Math.floor(progress / imgDur), imgCount - 1)}`);
+                }
 
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, W, H);
@@ -3980,6 +4020,11 @@ async function _wizRenderShortsVideo(imageFiles, aiContent, audioCtx, audioBuffe
                 const imgIdx = Math.min(Math.floor(progress / imgDur), imgCount - 1);
                 const imgProgress = (progress - imgIdx * imgDur) / imgDur; // 0~1 within this image
                 const img = imgs[imgIdx];
+                if (!img || !img.width || !img.height) {
+                    console.error(`[Shorts] Invalid image at index ${imgIdx}:`, img?.width, img?.height);
+                    if (progress < 1.0) { setTimeout(drawFrame, _frameInterval); } else { setTimeout(() => recorder.stop(), 300); }
+                    return;
+                }
                 const zoomDir = zoomDirs[imgIdx % zoomDirs.length];
 
                 // 이미지 전환 시 페이드 효과
@@ -4107,14 +4152,16 @@ async function _wizRenderShortsVideo(imageFiles, aiContent, audioCtx, audioBuffe
                 ctx.restore();
 
                 if (progress < 1.0) {
-                    requestAnimationFrame(drawFrame);
+                    setTimeout(drawFrame, _frameInterval);
                 } else {
+                    console.log(`[Shorts] Rendering complete. Total frames: ${_frameCount}`);
                     if (audioSource) try { audioSource.stop(); } catch(e) {}
                     setTimeout(() => recorder.stop(), 300);
                 }
             }
 
-            requestAnimationFrame(drawFrame);
+            // setTimeout 사용 (requestAnimationFrame은 탭 비활성시 스로틀링됨)
+            setTimeout(drawFrame, 10);
         } catch (err) { reject(err); }
     });
 }
