@@ -76,6 +76,12 @@ PRODUCT INFO:
 - Category: ${product_category || 'General'}
 ${price > 0 ? `- Price: ${lc.currency}` : ''}
 ${reference_text ? `- Reference/Notes: ${reference_text}` : ''}
+${original_description ? `
+EXISTING PRODUCT DESCRIPTION (IMPORTANT — incorporate this content):
+The product already has this description. Extract useful product details, features, specs, and selling points from it. Combine with your own creative writing to make the page RICHER and MORE DETAILED. Do NOT simply copy — rewrite elegantly in the dark theme style.
+---
+${original_description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').substring(0, 2000)}
+---` : ''}
 
 IMAGES (${allImages.length} total — use ALL of them):
 ${imageListText}

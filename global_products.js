@@ -2873,6 +2873,7 @@ window.batchFillDetailPages = async () => {
 let wizImages = [];          // [{file, preview, url, isThumbnail}]
 let wizGeneratedHtml = {};   // {kr:'<html>', jp:'...', ...}
 let _wizCurrentLang = 'kr';
+let _wizExistingDesc = '';   // 기존 상품의 상세페이지 HTML (AI 참조용)
 
 // 마법사 열기 (상태 유지 — 닫았다 열어도 데이터 보존)
 window.openDetailWizard = () => {
@@ -2916,6 +2917,7 @@ window.wizReset = () => {
     wizImages = [];
     wizGeneratedHtml = {};
     _wizCurrentLang = 'kr';
+    _wizExistingDesc = '';
     document.getElementById('wizImgGrid').innerHTML = '';
     document.getElementById('wizTitle').value = '';
     document.getElementById('wizRef').value = '';
@@ -2936,7 +2938,7 @@ window.wizReset = () => {
 let _wizAllProducts = [];
 async function _wizLoadProductList() {
     try {
-        const { data } = await sb.from('admin_products').select('id, code, name, img_url, category, price').order('name');
+        const { data } = await sb.from('admin_products').select('id, code, name, img_url, category, price, description').order('name');
         _wizAllProducts = data || [];
         _wizRenderProductList(_wizAllProducts);
     } catch(e) { console.error('상품 목록 로드 실패:', e); }
@@ -2958,6 +2960,7 @@ function _wizRenderProductList(list) {
         opt.dataset.category = p.category || '';
         opt.dataset.name = p.name || '';
         opt.dataset.price = p.price || 0;
+        opt.dataset.hasDesc = (p.description && p.description.length > 20) ? '1' : '0';
         sel.appendChild(opt);
     });
 }
@@ -2992,6 +2995,17 @@ window.wizOnSelectExisting = (sel) => {
     if (priceVal && priceVal !== '0') {
         const priceEl = document.getElementById('wizPrice');
         if (priceEl) priceEl.value = priceVal;
+    }
+
+    // 기존 상세페이지 내용 로드 (AI 참조용)
+    _wizExistingDesc = '';
+    if (opt.dataset.hasDesc === '1') {
+        sb.from('admin_products').select('description').eq('id', opt.value).single().then(({ data }) => {
+            if (data?.description) {
+                _wizExistingDesc = data.description;
+                console.log('기존 상세페이지 로드:', _wizExistingDesc.length, '자');
+            }
+        }).catch(() => {});
     }
 
     // 기존 이미지를 위자드에 자동 로드 (사진이 아직 없을 때만)
@@ -3116,6 +3130,7 @@ window.wizGenerate = async () => {
                 image_url: thumbnailUrl,
                 reference_text: ref,
                 price: price,
+                original_description: _wizExistingDesc || '',
                 mode: 'wizard',
                 langs: ['kr']
             }
@@ -3549,9 +3564,20 @@ window.wizRunPipeline = async () => {
             }
             _wpStep('wp-shorts-tts', 'done');
 
-            // 3c: 영상 렌더링
+            // 3c: 영상 렌더링 (모든 이미지로 슬라이드쇼)
             _wpStep('wp-shorts-render', 'active');
-            const videoBlob = await _wizRenderShortsVideo(thumbFile, shortsContent, hasTTS ? audioCtx : null, hasTTS ? audioBuffer : null, 'ja');
+            // wizImages에서 모든 이미지 파일 수집
+            const allShortsFiles = [];
+            for (const wImg of wizImages) {
+                if (wImg.file) { allShortsFiles.push(wImg.file); }
+                else if (wImg.url) {
+                    const r = await fetch(wImg.url);
+                    const b = await r.blob();
+                    allShortsFiles.push(new File([b], 'img.jpg', { type: b.type }));
+                }
+            }
+            const shortsFiles = allShortsFiles.length > 0 ? allShortsFiles : [thumbFile];
+            const videoBlob = await _wizRenderShortsVideo(shortsFiles, shortsContent, hasTTS ? audioCtx : null, hasTTS ? audioBuffer : null, 'ja');
             _wpStep('wp-shorts-render', 'done');
 
             // 3d: YouTube 업로드
@@ -3744,7 +3770,20 @@ window.wizRunDirectPipeline = async () => {
             _wpStep('wp-shorts-tts', 'done');
 
             _wpStep('wp-shorts-render', 'active');
-            const videoBlob = await _wizRenderShortsVideo(thumbFile, shortsContent, hasTTS ? audioCtx : null, hasTTS ? audioBuffer : null, 'ja');
+            // wizImages에 추가 사진이 있으면 슬라이드쇼로, 아니면 기본 1장
+            const directShortsFiles = [];
+            if (wizImages.length > 0) {
+                for (const wImg of wizImages) {
+                    if (wImg.file) { directShortsFiles.push(wImg.file); }
+                    else if (wImg.url) {
+                        const r2 = await fetch(wImg.url);
+                        const b2 = await r2.blob();
+                        directShortsFiles.push(new File([b2], 'img.jpg', { type: b2.type }));
+                    }
+                }
+            }
+            const dShortsFiles = directShortsFiles.length > 0 ? directShortsFiles : [thumbFile];
+            const videoBlob = await _wizRenderShortsVideo(dShortsFiles, shortsContent, hasTTS ? audioCtx : null, hasTTS ? audioBuffer : null, 'ja');
             _wpStep('wp-shorts-render', 'done');
 
             _wpStep('wp-shorts-upload', 'active');
@@ -3845,12 +3884,24 @@ function _wizWrapText(ctx, text, maxWidth) {
 }
 
 // ── 쇼츠 영상 렌더링 (Canvas + TTS) ──
-async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer, lang) {
+// imageFiles: File[] 또는 [{file, url}] — 여러 장 순서대로 슬라이드쇼
+async function _wizRenderShortsVideo(imageFiles, aiContent, audioCtx, audioBuffer, lang) {
+    // imageFiles를 배열로 정규화
+    const files = Array.isArray(imageFiles) ? imageFiles : [imageFiles];
+
     return new Promise(async (resolve, reject) => {
         try {
-            const img = new Image();
-            const imgUrl = URL.createObjectURL(imageFile);
-            await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgUrl; });
+            // 모든 이미지 미리 로드
+            const imgs = [];
+            const imgUrls = [];
+            for (const f of files) {
+                const im = new Image();
+                im.crossOrigin = 'anonymous';
+                const u = (f instanceof File || f instanceof Blob) ? URL.createObjectURL(f) : (f.url || f.preview || f);
+                imgUrls.push(u);
+                await new Promise((res, rej) => { im.onload = res; im.onerror = rej; im.src = u; });
+                imgs.push(im);
+            }
 
             const W = 1080, H = 1920;
             const cvs = document.getElementById('wizShortsCanvas');
@@ -3872,15 +3923,9 @@ async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer
             }
 
             const videoStream = cvs.captureStream(30);
-            let combinedStream;
-            if (hasTTS) {
-                combinedStream = new MediaStream([
-                    ...videoStream.getVideoTracks(),
-                    ...audioDest.stream.getAudioTracks()
-                ]);
-            } else {
-                combinedStream = videoStream;
-            }
+            const combinedStream = hasTTS
+                ? new MediaStream([...videoStream.getVideoTracks(), ...audioDest.stream.getAudioTracks()])
+                : videoStream;
 
             const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
                 ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
@@ -3889,7 +3934,7 @@ async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
                 const blob = new Blob(chunks, { type: mimeType });
-                URL.revokeObjectURL(imgUrl);
+                imgUrls.forEach(u => { try { URL.revokeObjectURL(u); } catch(_){} });
                 if (audioCtx) audioCtx.close();
                 resolve(blob);
             };
@@ -3901,22 +3946,24 @@ async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer
             const textSegments = [];
             const captionTexts = narrationTexts.length > 0 ? narrationTexts : [
                 overlays.hook || aiContent.title || '',
-                overlays.main || '',
-                overlays.detail || '',
-                overlays.cta || ''
+                overlays.main || '', overlays.detail || '', overlays.cta || ''
             ];
             captionTexts.forEach((text, i) => {
                 if (!text) return;
                 textSegments.push({
                     text, start: i * segDur, end: (i + 1) * segDur - 0.02,
-                    fontSize: i === 0 ? 44 : i === captionTexts.length - 1 ? 42 : 38,
-                    y: 0.72
+                    fontSize: i === 0 ? 44 : i === captionTexts.length - 1 ? 42 : 38, y: 0.72
                 });
             });
 
+            // 이미지 슬라이드 계산 (각 이미지에 균등 시간 배분)
+            const imgCount = imgs.length;
+            const imgDur = 1.0 / imgCount; // 0~1 비율
+            // 줌 방향을 이미지마다 교대로 설정
+            const zoomDirs = ['in', 'out', 'left_to_right', 'right_to_left'];
+
             const totalMs = durationSec * 1000;
             const startTime = performance.now();
-            const zoomDir = aiContent.video_style?.zoom_direction || 'in';
             const accentColor = aiContent.video_style?.color_accent || '#a78bfa';
 
             recorder.start(100);
@@ -3929,33 +3976,48 @@ async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, W, H);
 
-                // Ken Burns effect
+                // 현재 이미지 인덱스 + 이미지 내부 진행률
+                const imgIdx = Math.min(Math.floor(progress / imgDur), imgCount - 1);
+                const imgProgress = (progress - imgIdx * imgDur) / imgDur; // 0~1 within this image
+                const img = imgs[imgIdx];
+                const zoomDir = zoomDirs[imgIdx % zoomDirs.length];
+
+                // 이미지 전환 시 페이드 효과
+                const fadeIn = Math.min(imgProgress * 5, 1); // 처음 20%에서 페이드인
+                const fadeOut = imgProgress > 0.85 && imgIdx < imgCount - 1 ? (1 - imgProgress) / 0.15 : 1;
+                const imgAlpha = Math.min(fadeIn, fadeOut);
+
+                // Ken Burns effect (이미지별 개별 줌)
                 const imgAspect = img.width / img.height;
                 const canvasAspect = W / H;
                 let baseScale = imgAspect > canvasAspect ? H / img.height : W / img.width;
                 let scale, offsetX, offsetY;
+                const p = imgProgress;
                 switch (zoomDir) {
                     case 'out':
-                        scale = baseScale * (1.4 - 0.4 * progress);
-                        offsetX = -(img.width * scale - W) / 2 + (progress * 80);
+                        scale = baseScale * (1.4 - 0.4 * p);
+                        offsetX = -(img.width * scale - W) / 2 + (p * 80);
                         offsetY = -(img.height * scale - H) / 2;
                         break;
                     case 'left_to_right':
                         scale = baseScale * 1.2;
-                        offsetX = -(img.width * scale - W) * progress;
+                        offsetX = -(img.width * scale - W) * p;
                         offsetY = -(img.height * scale - H) / 2;
                         break;
                     case 'right_to_left':
                         scale = baseScale * 1.2;
-                        offsetX = -(img.width * scale - W) * (1 - progress);
+                        offsetX = -(img.width * scale - W) * (1 - p);
                         offsetY = -(img.height * scale - H) / 2;
                         break;
                     default:
-                        scale = baseScale * (1.0 + 0.35 * progress);
-                        offsetX = -(img.width * scale - W) / 2 - (progress * 80);
-                        offsetY = -(img.height * scale - H) / 2 - (progress * 50);
+                        scale = baseScale * (1.0 + 0.35 * p);
+                        offsetX = -(img.width * scale - W) / 2 - (p * 80);
+                        offsetY = -(img.height * scale - H) / 2 - (p * 50);
                 }
+                ctx.save();
+                ctx.globalAlpha = imgAlpha;
                 ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+                ctx.restore();
 
                 // 비네팅
                 const vigGrad = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.8);
@@ -3996,7 +4058,6 @@ async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer
                         ctx.globalAlpha = alpha;
                         ctx.textAlign = 'center';
                         ctx.font = `800 ${seg.fontSize}px "Pretendard", "Noto Sans JP", "Inter", sans-serif`;
-
                         const maxW = W - 120;
                         const lines = _wizWrapText(ctx, displayText, maxW);
                         const lineH = seg.fontSize * 1.45;
@@ -4012,17 +4073,14 @@ async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer
                             else ctx.rect(W/2 - tw/2 - pad, y - seg.fontSize + 2, tw + pad*2, seg.fontSize + pad);
                             ctx.fill();
                         });
-
                         lines.forEach((line, li) => {
                             const y = startY + li * lineH;
                             ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-                            ctx.lineWidth = 6;
-                            ctx.lineJoin = 'round';
+                            ctx.lineWidth = 6; ctx.lineJoin = 'round';
                             ctx.strokeText(line, W / 2, y);
                             ctx.fillStyle = '#ffffff';
                             ctx.fillText(line, W / 2, y);
                         });
-
                         ctx.restore();
                     }
                 });
@@ -4041,10 +4099,9 @@ async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#ffffff';
                 ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-                ctx.lineWidth = 4;
-                ctx.lineJoin = 'round';
+                ctx.lineWidth = 4; ctx.lineJoin = 'round';
                 const domainByLang = { kr: 'cafe2626.com', ja: 'cafe0101.com', en: 'cafe3355.com' };
-                const brandText = '🦎 カメレオンプリンティング | ' + (domainByLang[lang] || 'cafe0101.com');
+                const brandText = '\ud83e\udd8e \u30ab\u30e1\u30ec\u30aa\u30f3\u30d7\u30ea\u30f3\u30c6\u30a3\u30f3\u30b0 | ' + (domainByLang[lang] || 'cafe0101.com');
                 ctx.strokeText(brandText, W / 2, 55);
                 ctx.fillText(brandText, W / 2, 55);
                 ctx.restore();
