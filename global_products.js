@@ -3013,6 +3013,10 @@ window.wizOnSelectExisting = (sel) => {
             (imgUrl ? ` &nbsp;<img src="${imgUrl}" style="height:40px; vertical-align:middle; border-radius:4px; margin-left:6px;">` : '') +
             `<br><span style="color:#10b981; font-size:12px;">✅ 기존 이미지 로드됨. 사진을 추가로 올릴 수 있습니다.</span>`;
     }
+
+    // "블로그+쇼츠만 바로 실행" 버튼 표시
+    const directDiv = document.getElementById('wizDirectPipeline');
+    if (directDiv) directDiv.style.display = 'block';
 };
 
 // 이미지 추가
@@ -3602,6 +3606,174 @@ window.wizRunPipeline = async () => {
     pipeBtn.disabled = false;
     pipeBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> 원클릭 자동 파이프라인';
     showToast(`파이프라인 완료! 상품 저장${results.save?'✅':'❌'} / 블로그 ${results.blogs}개 / 쇼츠${results.shorts?'✅':'❌'}`, 'success');
+};
+
+// ★ 기존 상품 → 블로그 + 쇼츠만 바로 실행 (상세페이지 재생성 없이)
+window.wizRunDirectPipeline = async () => {
+    const sel = document.getElementById('wizExistingSelect');
+    let prodId = sel?.value || '';
+    if (!prodId && sel && sel.selectedIndex >= 0) prodId = sel.options[sel.selectedIndex]?.value;
+    if (!prodId && window.editingProdId) prodId = window.editingProdId;
+    if (!prodId) { showToast('상품을 먼저 선택해주세요.', 'warn'); return; }
+
+    const directBtn = document.getElementById('wizDirectPipeBtn');
+    directBtn.disabled = true;
+    directBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 실행 중...';
+
+    // 파이프라인 UI 표시
+    const pipeSection = document.getElementById('wizPipelineSection');
+    const pipeResult = document.getElementById('wizPipelineResult');
+    pipeSection.style.display = 'block';
+    pipeResult.style.display = 'none';
+    pipeSection.scrollIntoView({ behavior: 'smooth' });
+
+    // 스텝 초기화 (상품 저장은 스킵 표시)
+    ['wp-save','wp-blog-kr','wp-blog-ja','wp-blog-en','wp-blog-cn','wp-blog-ar','wp-blog-es','wp-blog-de','wp-blog-fr','wp-shorts-ai','wp-shorts-tts','wp-shorts-render','wp-shorts-upload'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = 'wp-step';
+    });
+    _wpStep('wp-save', 'done'); // 이미 저장된 상품
+
+    // DB에서 상품 정보 로드
+    const { data: prod, error: loadErr } = await sb.from('admin_products')
+        .select('id, name, category, price, img_url')
+        .eq('id', prodId).single();
+    if (loadErr || !prod) {
+        showToast('상품 정보 로드 실패', 'error');
+        directBtn.disabled = false;
+        directBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> 블로그 + 쇼츠만 바로 실행';
+        return;
+    }
+
+    const title = prod.name || '';
+    const category = prod.category || '';
+    const thumbnailUrl = prod.img_url || '';
+    const results = { blogs: 0, shorts: false };
+    let settings = {}; try { settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}'); } catch(e) {}
+
+    try {
+        // ──────── 블로그 8개국 ────────
+        const blogLangs = ['kr','ja','en','cn','ar','es','de','fr'];
+        const { data: { user } } = await sb.auth.getUser();
+        const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '카멜레온';
+
+        for (const lang of blogLangs) {
+            const stepId = 'wp-blog-' + lang;
+            _wpStep(stepId, 'active');
+            try {
+                const cfg = _wizLangConfig[lang];
+                const { data: aiData, error: aiErr } = await sb.functions.invoke('marketing-content', {
+                    body: {
+                        platform: 'blog',
+                        topic: title + ' - 카멜레온프린팅 제품 소개',
+                        tone: 'professional',
+                        lang: lang,
+                        instructions: `${cfg.site}에 게시될 ${cfg.label} 제품 블로그입니다. 상품명: ${title}. 카테고리: ${category}. 웹사이트: https://${cfg.site}`,
+                        coreKeywords: settings.coreKeywords || '',
+                        usp: settings.usp || '',
+                        ctaMsg: settings.ctaMsg || ''
+                    }
+                });
+                if (aiErr) throw new Error(aiErr.message);
+                const content = aiData?.content || aiData;
+                if (content?.error) throw new Error(content.error);
+
+                const focusKw = content.focus_keyword || '';
+                let htmlBody = (content.body || '')
+                    .replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')
+                    .replace(/## (.*)/g, '<h2>$1</h2>').replace(/### (.*)/g, '<h3>$1</h3>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                htmlBody = `<p><img src="${thumbnailUrl}" alt="${focusKw || title}" style="max-width:100%; border-radius:12px; margin-bottom:20px;" loading="lazy"/></p><p>${htmlBody}</p>`;
+                if (content.hashtags?.length) htmlBody += `<p style="color:#6366f1; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
+
+                const seoMeta = JSON.stringify({ meta_description: content.meta_description || '', focus_keyword: focusKw, hashtags: content.hashtags || [], og_image: thumbnailUrl });
+                const { error: postErr } = await sb.from('community_posts').insert({
+                    category: 'blog', country_code: cfg.countryCode,
+                    title: content.title || title, content: htmlBody,
+                    author_name: authorName, author_email: user?.email || '', author_id: user?.id || null,
+                    thumbnail: thumbnailUrl, markdown: seoMeta
+                });
+                if (postErr) throw new Error(postErr.message);
+                results.blogs++;
+                _wpStep(stepId, 'done');
+            } catch(e) {
+                console.error(`블로그 ${lang} 실패:`, e);
+                _wpStep(stepId, 'error');
+            }
+            await new Promise(r => setTimeout(r, 1500));
+        }
+
+        // Google sitemap ping
+        if (results.blogs > 0) {
+            ['https://www.cafe2626.com/sitemap.xml','https://www.cafe0101.com/sitemap.xml','https://www.cafe3355.com/sitemap.xml'].forEach(url => {
+                fetch('https://www.google.com/ping?sitemap=' + encodeURIComponent(url), { mode: 'no-cors' }).catch(() => {});
+            });
+        }
+
+        // ──────── 일본어 YouTube 쇼츠 ────────
+        try {
+            _wpStep('wp-shorts-ai', 'active');
+            if (!thumbnailUrl) throw new Error('상품 이미지가 없습니다.');
+            const resp = await fetch(thumbnailUrl);
+            const blob = await resp.blob();
+            const thumbFile = new File([blob], 'thumb.jpg', { type: blob.type });
+            const base64 = await _wizResizeToBase64(thumbFile, 1024);
+
+            const { data: shortsData, error: shortsErr } = await sb.functions.invoke('marketing-content', {
+                body: {
+                    platform: 'youtube_shorts_from_image',
+                    topic: title + ' - 반값 인쇄 꿀팁 카멜레온프린팅',
+                    tone: 'fast_energetic', lang: 'ja',
+                    instructions: '빠른 말투로 제품을 소개하는 쇼츠 나레이션을 일본어로 생성하세요. cafe0101.com 을 언급하세요. narration 배열에 5개 문장을 넣어주세요.',
+                    coreKeywords: settings.coreKeywords || '', usp: settings.usp || '', ctaMsg: settings.ctaMsg || '',
+                    imageBase64: base64
+                }
+            });
+            if (shortsErr) throw new Error(shortsErr.message);
+            const shortsContent = shortsData?.content || shortsData;
+            if (shortsContent?.error) throw new Error(shortsContent.error);
+            _wpStep('wp-shorts-ai', 'done');
+
+            _wpStep('wp-shorts-tts', 'active');
+            const narrationTexts = shortsContent.narration || [];
+            let audioCtx, audioBuffer, hasTTS = false;
+            if (narrationTexts.length > 0) {
+                const tts = await _wizGenerateTTS(narrationTexts, 'ja');
+                audioCtx = tts.audioCtx; audioBuffer = tts.audioBuffer; hasTTS = true;
+            }
+            _wpStep('wp-shorts-tts', 'done');
+
+            _wpStep('wp-shorts-render', 'active');
+            const videoBlob = await _wizRenderShortsVideo(thumbFile, shortsContent, hasTTS ? audioCtx : null, hasTTS ? audioBuffer : null, 'ja');
+            _wpStep('wp-shorts-render', 'done');
+
+            _wpStep('wp-shorts-upload', 'active');
+            const ytTitle = shortsContent.title || title + ' #Shorts';
+            const ytTags = shortsContent.hashtags || [];
+            if (!ytTags.includes('Shorts')) ytTags.unshift('Shorts');
+            const ytResult = await _wizUploadYoutube(videoBlob, ytTitle, shortsContent.body || title, ytTags);
+            _wpStep('wp-shorts-upload', 'done');
+            results.shorts = ytResult?.id || true;
+
+            try { await sb.from('marketing_content').insert({ platform: 'youtube_shorts', title: ytTitle, body: shortsContent.body || '', hashtags: ytTags, status: 'published', published_at: new Date().toISOString() }); } catch(_) {}
+        } catch(shortsErr) {
+            console.error('쇼츠 실패:', shortsErr);
+            ['wp-shorts-ai','wp-shorts-tts','wp-shorts-render','wp-shorts-upload'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('active')) _wpStep(id, 'error');
+            });
+        }
+    } catch(e) {
+        console.error('다이렉트 파이프라인 오류:', e);
+        showToast('오류: ' + e.message, 'error');
+    }
+
+    pipeResult.style.display = 'block';
+    pipeResult.innerHTML = `<div style="text-align:center;"><p style="font-weight:800; font-size:16px; color:#1e1b4b;">✅ 블로그 ${results.blogs}/8개 &nbsp;|&nbsp; ${results.shorts ? '✅' : '❌'} 쇼츠</p>
+        ${results.shorts && typeof results.shorts === 'string' ? `<a href="https://youtube.com/shorts/${results.shorts}" target="_blank" style="color:#6366f1; font-size:13px;">YouTube에서 보기</a>` : ''}</div>`;
+    directBtn.disabled = false;
+    directBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> 블로그 + 쇼츠만 바로 실행';
+    showToast(`완료! 블로그 ${results.blogs}개 / 쇼츠${results.shorts?'✅':'❌'}`, 'success');
 };
 
 // ── 이미지 리사이즈 → base64 ──
