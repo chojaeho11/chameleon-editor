@@ -3991,8 +3991,6 @@ async function _wizRenderShortsVideo(imageFiles, aiContent, audioCtx, audioBuffe
             // 이미지 슬라이드 계산 (각 이미지에 균등 시간 배분)
             const imgCount = imgs.length;
             const imgDur = 1.0 / imgCount; // 0~1 비율
-            // 줌 방향을 이미지마다 교대로 설정
-            const zoomDirs = ['in', 'out', 'left_to_right', 'right_to_left'];
 
             const totalMs = durationSec * 1000;
             const startTime = performance.now();
@@ -4009,77 +4007,34 @@ async function _wizRenderShortsVideo(imageFiles, aiContent, audioCtx, audioBuffe
                 const elapsed = performance.now() - startTime;
                 const progress = Math.min(elapsed / totalMs, 1.0);
                 _frameCount++;
-                if (_frameCount <= 3 || _frameCount % 100 === 0) {
-                    console.log(`[Shorts] frame=${_frameCount} progress=${(progress*100).toFixed(1)}% imgIdx=${Math.min(Math.floor(progress / imgDur), imgCount - 1)}`);
-                }
 
+                // 검은 배경
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, W, H);
 
-                // 현재 이미지 인덱스 + 이미지 내부 진행률
+                // 현재 이미지 결정 (균등 시간 배분)
                 const imgIdx = Math.min(Math.floor(progress / imgDur), imgCount - 1);
-                const imgProgress = (progress - imgIdx * imgDur) / imgDur; // 0~1 within this image
                 const img = imgs[imgIdx];
                 if (!img || !img.width || !img.height) {
-                    console.error(`[Shorts] Invalid image at index ${imgIdx}:`, img?.width, img?.height);
                     if (progress < 1.0) { setTimeout(drawFrame, _frameInterval); } else { setTimeout(() => recorder.stop(), 300); }
                     return;
                 }
-                const zoomDir = zoomDirs[imgIdx % zoomDirs.length];
 
-                // 이미지 전환 시 페이드 효과
-                const fadeIn = Math.min(imgProgress * 5, 1); // 처음 20%에서 페이드인
-                const fadeOut = imgProgress > 0.85 && imgIdx < imgCount - 1 ? (1 - imgProgress) / 0.15 : 1;
-                const imgAlpha = Math.min(fadeIn, fadeOut);
-
-                // Ken Burns effect (이미지별 개별 줌)
+                // 이미지를 캔버스에 꽉 차게 (cover 방식)
                 const imgAspect = img.width / img.height;
                 const canvasAspect = W / H;
-                let baseScale = imgAspect > canvasAspect ? H / img.height : W / img.width;
-                let scale, offsetX, offsetY;
-                const p = imgProgress;
-                switch (zoomDir) {
-                    case 'out':
-                        scale = baseScale * (1.4 - 0.4 * p);
-                        offsetX = -(img.width * scale - W) / 2 + (p * 80);
-                        offsetY = -(img.height * scale - H) / 2;
-                        break;
-                    case 'left_to_right':
-                        scale = baseScale * 1.2;
-                        offsetX = -(img.width * scale - W) * p;
-                        offsetY = -(img.height * scale - H) / 2;
-                        break;
-                    case 'right_to_left':
-                        scale = baseScale * 1.2;
-                        offsetX = -(img.width * scale - W) * (1 - p);
-                        offsetY = -(img.height * scale - H) / 2;
-                        break;
-                    default:
-                        scale = baseScale * (1.0 + 0.35 * p);
-                        offsetX = -(img.width * scale - W) / 2 - (p * 80);
-                        offsetY = -(img.height * scale - H) / 2 - (p * 50);
+                let drawW, drawH, drawX, drawY;
+                if (imgAspect > canvasAspect) {
+                    drawH = H; drawW = H * imgAspect;
+                    drawX = (W - drawW) / 2; drawY = 0;
+                } else {
+                    drawW = W; drawH = W / imgAspect;
+                    drawX = 0; drawY = (H - drawH) / 2;
                 }
-                ctx.save();
-                ctx.globalAlpha = imgAlpha;
-                ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
-                ctx.restore();
+                ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
-                // 비네팅
-                const vigGrad = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.8);
-                vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
-                vigGrad.addColorStop(1, 'rgba(0,0,0,0.4)');
-                ctx.fillStyle = vigGrad;
-                ctx.fillRect(0, 0, W, H);
-
-                // 상단 그라데이션
-                const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.15);
-                topGrad.addColorStop(0, 'rgba(0,0,0,0.6)');
-                topGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = topGrad;
-                ctx.fillRect(0, 0, W, H * 0.15);
-
-                // 하단 그라데이션
-                const botGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+                // 하단 그라데이션 (자막 배경)
+                const botGrad = ctx.createLinearGradient(0, H * 0.6, 0, H);
                 botGrad.addColorStop(0, 'rgba(0,0,0,0)');
                 botGrad.addColorStop(0.3, 'rgba(0,0,0,0.55)');
                 botGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
