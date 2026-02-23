@@ -1266,8 +1266,8 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 }
 
 function updateSummary(prodTotal, addonTotal, total) {
-    // 최소 주문금액 5,000원(KRW) 적용
-    const MIN_ORDER_KRW = 5000;
+    // 최소 주문금액 10,000원(KRW) 적용
+    const MIN_ORDER_KRW = 10000;
     const elMinNotice = document.getElementById("minOrderNotice");
     if (total > 0 && total < MIN_ORDER_KRW) {
         total = MIN_ORDER_KRW;
@@ -1484,8 +1484,8 @@ async function processOrderSubmission() {
         rawTotal += (unitPrice * qty) + optionTotal;
     });
 
-    // 최소 주문금액 5,000원(KRW) 적용
-    const MIN_ORDER_KRW = 5000;
+    // 최소 주문금액 10,000원(KRW) 적용
+    const MIN_ORDER_KRW = 10000;
     if (rawTotal > 0 && rawTotal < MIN_ORDER_KRW) {
         showToast(window.t('msg_min_order_applied', `Minimum order amount ${formatCurrency(MIN_ORDER_KRW)} has been applied.`), "info");
         rawTotal = MIN_ORDER_KRW;
