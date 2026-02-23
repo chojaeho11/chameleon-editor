@@ -2874,8 +2874,30 @@ let wizImages = [];          // [{file, preview, url, isThumbnail}]
 let wizGeneratedHtml = {};   // {kr:'<html>', jp:'...', ...}
 let _wizCurrentLang = 'kr';
 
-// 마법사 열기
+// 마법사 열기 (상태 유지 — 닫았다 열어도 데이터 보존)
 window.openDetailWizard = () => {
+    // 카테고리 복사 (항상)
+    const srcCat = document.getElementById('newProdCategory');
+    const wizCat = document.getElementById('wizCategory');
+    if (srcCat && wizCat && wizCat.options.length <= 1) {
+        wizCat.innerHTML = srcCat.innerHTML;
+    }
+
+    // 기존 상품 편집 중이면 자동 채우기 (비어있을 때만)
+    if (window.editingProdId && !document.getElementById('wizTitle').value) {
+        const name = document.getElementById('newProdName');
+        if (name && name.value) document.getElementById('wizTitle').value = name.value;
+        if (srcCat) document.getElementById('wizCategory').value = srcCat.value;
+    }
+
+    // 기존 상품 목록 로드 (아직 안 불러왔으면)
+    if (_wizAllProducts.length === 0) _wizLoadProductList();
+
+    document.getElementById('wizardModal').style.display = 'flex';
+};
+
+// 마법사 초기화 (새로 시작)
+window.wizReset = () => {
     wizImages = [];
     wizGeneratedHtml = {};
     _wizCurrentLang = 'kr';
@@ -2886,26 +2908,9 @@ window.openDetailWizard = () => {
     document.getElementById('wizPreviewSection').style.display = 'none';
     document.getElementById('wizExistingCheck').checked = false;
     document.getElementById('wizExistingWrap').style.display = 'none';
-
-    // 카테고리 복사
-    const srcCat = document.getElementById('newProdCategory');
-    const wizCat = document.getElementById('wizCategory');
-    if (srcCat && wizCat) {
-        wizCat.innerHTML = srcCat.innerHTML;
-    }
-
-    // 기존 상품 편집 중이면 자동 채우기
-    if (window.editingProdId) {
-        const name = document.getElementById('newProdName');
-        if (name && name.value) document.getElementById('wizTitle').value = name.value;
-        const cat = document.getElementById('newProdCategory');
-        if (cat) document.getElementById('wizCategory').value = cat.value;
-    }
-
-    // 기존 상품 목록 로드
-    _wizLoadProductList();
-
-    document.getElementById('wizardModal').style.display = 'flex';
+    const search = document.getElementById('wizExistingSearch');
+    if (search) search.value = '';
+    showToast('마법사가 초기화되었습니다.', 'info');
 };
 
 // 기존 상품 목록 로드
@@ -3127,9 +3132,8 @@ window.wizGenerate = async () => {
         document.querySelectorAll('.wiz-lang-tab').forEach(t => t.classList.remove('active'));
         document.querySelector('.wiz-lang-tab').classList.add('active');
 
-        // 기존 상품 적용 버튼 표시/숨김
-        const existChk = document.getElementById('wizExistingCheck');
-        document.getElementById('wizApplyExistingBtn').style.display = existChk.checked ? 'inline-block' : 'none';
+        // 기존 상품 적용 버튼 표시
+        document.getElementById('wizApplyExistingBtn').style.display = 'inline-block';
 
         // 미리보기로 스크롤
         document.getElementById('wizPreviewSection').scrollIntoView({ behavior: 'smooth' });

@@ -52,16 +52,24 @@ serve(async (req) => {
       const lc = langMap[lang];
       if (!lc) return '';
 
-      return `You are a premium e-commerce product detail page designer for Chameleon Printing, a global printing company.
+      return `You are a world-class e-commerce product detail page designer. Create a PREMIUM, DARK-THEMED product detail page for Chameleon Printing.
 
-Create a visually stunning, dynamic, and professional product detail page.
+DESIGN PHILOSOPHY:
+- Dark backgrounds (#1a1a2e, #16213e, #0f3460, #1b1b2f) with light text (#f0f0f0, #e0e0e0)
+- Luxurious, high-end, magazine-quality feel
+- LOTS of breathing space / whitespace between sections (use padding and margins generously)
+- Images should be LARGE and IMPACTFUL — full width (100%) or two side-by-side (49% each)
+- Random mix of layouts: some images full-width, some paired side-by-side
+- Short, punchy text — let the images do the talking
+- Elegant typography with subtle accent colors (#c9a84c gold, #e74c3c red, #3498db blue)
 
-STRICT HTML RULES:
-- Use ONLY: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <img>, <hr>, <br>
-- NEVER use <div>, <span>, <table>, <section>, or any container tags
-- NEVER use inline styles or CSS classes
-- Every image MUST be: <p><img src="URL" alt="description"></p>
-- Structure must be flat (no nesting containers)
+HTML RULES:
+- You CAN use <div> with inline styles for layout
+- You CAN use inline style="" attributes (this is important for the dark theme)
+- Use: <div>, <h2>, <h3>, <p>, <strong>, <em>, <ul>, <li>, <img>, <hr>, <br>
+- Full-width image: <div style="margin:40px 0;"><img src="URL" alt="text" style="width:100%; border-radius:8px;"></div>
+- Two images side-by-side: <div style="display:flex; gap:12px; margin:40px 0;"><img src="URL1" style="width:49%; border-radius:8px; object-fit:cover;"><img src="URL2" style="width:49%; border-radius:8px; object-fit:cover;"></div>
+- Section wrapper: <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
 
 PRODUCT INFO:
 - Name: ${product_name}
@@ -69,34 +77,55 @@ PRODUCT INFO:
 ${price > 0 ? `- Price: ${lc.currency}` : ''}
 ${reference_text ? `- Reference/Notes: ${reference_text}` : ''}
 
-AVAILABLE IMAGES (${allImages.length} total):
+IMAGES (${allImages.length} total — use ALL of them):
 ${imageListText}
 
-REQUIRED STRUCTURE — You MUST use ALL ${allImages.length} images:
+REQUIRED STRUCTURE:
 
-1. <h2> Product title (compelling, with product name)
-2. <p><img src="IMAGE_1" alt="..."></p>  ← Hero/main product shot
-3. <p> Eye-catching 2-3 sentence product introduction. Highlight what makes this product special.
-4. <h3> Key Features / Highlights
-5. <ul> with 5-7 compelling <li> feature points (use <strong> for emphasis)
-${allImages.length >= 2 ? `6. <p><img src="IMAGE_2" alt="..."></p>  ← Detail/close-up shot` : ''}
-7. <h3> Product Details / Specifications
-8. <p> Material, printing method, finish quality, durability description
-${allImages.length >= 3 ? `9. <p><img src="IMAGE_3" alt="..."></p>  ← Application/usage example` : ''}
-${allImages.length >= 4 ? `10. <h3> Gallery / More Views` : ''}
-${allImages.slice(3).map((_: string, i: number) => `${11 + i}. <p><img src="IMAGE_${i + 4}" alt="..."></p>`).join('\n')}
-${allImages.length >= 4 ? `${11 + allImages.length - 3}. <p> Brief description of the additional views shown above` : ''}
-${allImages.length >= 2 ? `\n<h3> Why Choose Chameleon Printing?` : ''}
-${allImages.length >= 2 ? `<ul> with 3-4 <li> about company strengths (quality, speed, global service)` : ''}
-<hr>
-<p> Order info: custom sizes available, fast production, worldwide shipping
+1. HERO SECTION — Dark bg (#0f3460), product name in large gold text, 1-2 line tagline in light gray
+   <div style="background:#0f3460; padding:80px 40px; text-align:center;">
+     <h2 style="color:#c9a84c; font-size:32px; margin:0; letter-spacing:2px;">PRODUCT NAME</h2>
+     <p style="color:#a0a0a0; font-size:16px; margin-top:16px;">Short elegant tagline</p>
+   </div>
 
-IMPORTANT:
-- Make content feel premium, professional, and persuasive
-- Each image should have a descriptive, relevant alt text
-- Use <strong> and <em> to create visual hierarchy in text
-- Content should be informative yet concise — no filler text
-- Think like a top-tier product photographer's website
+2. HERO IMAGE — First image full-width, no padding
+   <div style="margin:0;"><img src="IMAGE_1" style="width:100%; display:block;"></div>
+
+3. INTRO — Dark bg, centered text, generous padding
+   <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
+     <p style="color:#e0e0e0; font-size:17px; line-height:1.9; max-width:700px; margin:0 auto;">2-3 elegant sentences</p>
+   </div>
+
+4. KEY FEATURES — Dark bg with subtle border accents
+   <div style="background:#16213e; padding:50px 40px;">
+     <h3 style="color:#c9a84c; text-align:center; font-size:22px;">Features heading</h3>
+     <ul style="color:#d0d0d0; font-size:15px; line-height:2.2; max-width:600px; margin:20px auto;">
+       <li>Feature with <strong style="color:#fff;">emphasis</strong></li>
+     </ul>
+   </div>
+
+5. IMAGE GALLERY — Mix of full-width and side-by-side, with dark spacers between
+${allImages.length >= 2 ? `   Full-width or side-by-side pairs randomly mixed` : ''}
+${allImages.length >= 3 ? `   Use <div style="background:#1b1b2f; padding:20px 0;"> as spacer between images` : ''}
+
+6. DETAILS SECTION — Specs, materials, use cases
+   <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
+
+7. CLOSING — Order info, CTA feel
+   <div style="background:#0f3460; padding:50px 40px; text-align:center;">
+     <p style="color:#c9a84c; font-size:18px;">Chameleon Printing</p>
+     <p style="color:#808080; font-size:13px;">tagline</p>
+   </div>
+
+CRITICAL RULES:
+- Use ALL ${allImages.length} images throughout the page
+- RANDOMLY mix: some full-width, some paired side-by-side (if 3+ images)
+- Every section must have generous padding (50px-80px vertical)
+- Background colors should alternate between the dark palette
+- Text should be light (#e0e0e0, #d0d0d0) on dark backgrounds
+- Headings in gold (#c9a84c) or white
+- Keep text SHORT and ELEGANT — this is a visual showcase, not an essay
+- Make it look like a premium brand's product page
 
 ${lc.instruction}
 
