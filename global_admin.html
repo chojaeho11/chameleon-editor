@@ -942,9 +942,15 @@
                 <select id="wizCategory" class="input-text" style="width:100%; padding:10px 14px; font-size:14px;"><option value="">로딩 중...</option></select>
             </div>
         </div>
-        <div>
-            <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">레퍼런스 / 참고 내용</label>
-            <textarea id="wizRef" class="input-text" rows="3" placeholder="제품의 특징, 소재, 용도, 참고 URL 등을 자유롭게 적어주세요." style="width:100%; padding:10px 14px; font-size:14px; resize:vertical;"></textarea>
+        <div style="display:flex; gap:12px; margin-bottom:12px;">
+            <div style="flex:1;">
+                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">가격 (원, KRW)</label>
+                <input id="wizPrice" type="number" class="input-text" placeholder="예: 50000" style="width:100%; padding:10px 14px; font-size:14px;">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">레퍼런스 / 참고 내용</label>
+                <input id="wizRef" class="input-text" placeholder="제품 특징, 소재, 용도 등" style="width:100%; padding:10px 14px; font-size:14px;">
+            </div>
         </div>
     </div>
 
@@ -999,11 +1005,45 @@
                 <i class="fa-solid fa-pen-to-square"></i> 에디터에서 수정
             </button>
         </div>
+
+        <!-- 원클릭 자동 파이프라인 버튼 -->
+        <div style="text-align:center; margin-top:20px; padding:20px; background:linear-gradient(135deg,#0f172a,#1e1b4b); border-radius:14px;">
+            <p style="color:#a5b4fc; font-size:13px; margin-bottom:10px;">상세페이지 저장 + 8개국 블로그 + 일본어 쇼츠 자동 제작</p>
+            <button id="wizPipelineBtn" type="button" onclick="window.wizRunPipeline()" style="padding:16px 48px; font-size:17px; font-weight:900; background:linear-gradient(135deg,#f59e0b,#dc2626); color:#fff; border:none; border-radius:14px; cursor:pointer; box-shadow:0 6px 20px rgba(245,158,11,0.4); transition:0.2s;">
+                <i class="fa-solid fa-rocket"></i> 원클릭 자동 파이프라인
+            </button>
+        </div>
+    </div>
+
+    <!-- 6. 파이프라인 진행 상태 -->
+    <div id="wizPipelineSection" style="display:none; margin-bottom:20px;">
+        <h4 style="margin:0 0 14px; font-size:16px; font-weight:800; color:#1e1b4b;">
+            <i class="fa-solid fa-gears"></i> 자동 파이프라인 진행 상태
+        </h4>
+        <div id="wizPipelineSteps" style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+            <div id="wp-save" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 상품 저장</div>
+            <div id="wp-blog-kr" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (한국어)</div>
+            <div id="wp-blog-ja" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (日本語)</div>
+            <div id="wp-blog-en" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (English)</div>
+            <div id="wp-blog-cn" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (中文)</div>
+            <div id="wp-blog-ar" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (العربية)</div>
+            <div id="wp-blog-es" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (Español)</div>
+            <div id="wp-blog-de" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (Deutsch)</div>
+            <div id="wp-blog-fr" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (Français)</div>
+            <div id="wp-shorts-ai" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 AI 콘텐츠</div>
+            <div id="wp-shorts-tts" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 TTS 음성</div>
+            <div id="wp-shorts-render" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 영상 렌더링</div>
+            <div id="wp-shorts-upload" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 YouTube 업로드</div>
+        </div>
+        <div id="wizPipelineResult" style="margin-top:14px; padding:14px; background:#f1f5f9; border-radius:10px; font-size:13px; display:none;"></div>
     </div>
 
 </div>
 </div>
 </div>
+
+<!-- 쇼츠 렌더링용 숨김 캔버스 -->
+<canvas id="wizShortsCanvas" width="1080" height="1920" style="display:none;"></canvas>
 
 <style>
 .wiz-lang-tab { padding:8px 16px; border-radius:8px; border:1px solid #e2e8f0; background:#f1f5f9; font-size:13px; font-weight:700; color:#475569; cursor:pointer; transition:0.15s; }
@@ -1013,6 +1053,14 @@
 .wiz-img-card img { width:100%; height:100%; object-fit:cover; }
 .wiz-img-card .wiz-thumb-badge { position:absolute; top:4px; left:4px; background:#10b981; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; }
 .wiz-img-card .wiz-remove-btn { position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; width:22px; height:22px; border-radius:50%; border:none; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.wp-step { padding:8px 14px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; color:#64748b; display:flex; align-items:center; gap:8px; }
+.wp-step.active { background:#eff6ff; border-color:#3b82f6; color:#1d4ed8; font-weight:700; }
+.wp-step.active i { animation: spin 1s linear infinite; }
+.wp-step.done { background:#f0fdf4; border-color:#22c55e; color:#15803d; }
+.wp-step.done i::before { content:"\f058"; }
+.wp-step.error { background:#fef2f2; border-color:#ef4444; color:#dc2626; }
+.wp-step.error i::before { content:"\f06a"; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
 
             <div class="form-group">

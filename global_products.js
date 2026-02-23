@@ -2919,7 +2919,11 @@ window.wizReset = () => {
     document.getElementById('wizImgGrid').innerHTML = '';
     document.getElementById('wizTitle').value = '';
     document.getElementById('wizRef').value = '';
+    const wizPriceEl = document.getElementById('wizPrice');
+    if (wizPriceEl) wizPriceEl.value = '';
     document.getElementById('wizStatus').textContent = '';
+    const pipeSection = document.getElementById('wizPipelineSection');
+    if (pipeSection) pipeSection.style.display = 'none';
     document.getElementById('wizPreviewSection').style.display = 'none';
     document.getElementById('wizExistingCheck').checked = false;
     document.getElementById('wizExistingWrap').style.display = 'none';
@@ -2932,7 +2936,7 @@ window.wizReset = () => {
 let _wizAllProducts = [];
 async function _wizLoadProductList() {
     try {
-        const { data } = await sb.from('admin_products').select('id, code, name, img_url, category').order('name');
+        const { data } = await sb.from('admin_products').select('id, code, name, img_url, category, price').order('name');
         _wizAllProducts = data || [];
         _wizRenderProductList(_wizAllProducts);
     } catch(e) { console.error('상품 목록 로드 실패:', e); }
@@ -2953,6 +2957,7 @@ function _wizRenderProductList(list) {
         opt.dataset.imgUrl = p.img_url || '';
         opt.dataset.category = p.category || '';
         opt.dataset.name = p.name || '';
+        opt.dataset.price = p.price || 0;
         sel.appendChild(opt);
     });
 }
@@ -2985,6 +2990,11 @@ window.wizOnSelectExisting = (sel) => {
         document.getElementById('wizTitle').value = name;
     }
     if (cat) document.getElementById('wizCategory').value = cat;
+    const priceVal = opt.dataset.price;
+    if (priceVal && priceVal !== '0') {
+        const priceEl = document.getElementById('wizPrice');
+        if (priceEl) priceEl.value = priceVal;
+    }
 
     // 기존 이미지 표시
     if (info) {
@@ -3046,7 +3056,8 @@ function _wizRenderGrid() {
 window.wizGenerate = async () => {
     const title = document.getElementById('wizTitle').value.trim();
     const category = document.getElementById('wizCategory').value;
-    const ref = document.getElementById('wizRef').value.trim();
+    const ref = document.getElementById('wizRef')?.value?.trim() || '';
+    const price = parseInt(document.getElementById('wizPrice')?.value) || 0;
 
     if (!title) { showToast('상품명을 입력해주세요.', 'warn'); return; }
     if (wizImages.length === 0) { showToast('사진을 1장 이상 올려주세요.', 'warn'); return; }
@@ -3088,6 +3099,7 @@ window.wizGenerate = async () => {
                 image_urls: imageUrls,
                 image_url: thumbnailUrl,
                 reference_text: ref,
+                price: price,
                 mode: 'wizard',
                 langs: ['kr']
             }
@@ -3279,3 +3291,636 @@ window.wizOpenInEditor = () => {
     document.getElementById('wizardModal').style.display = 'none';
     window.openDetailPageEditor();
 };
+
+// ═══════════════════════════════════════════════════════════════
+// ★★★ 원클릭 자동 파이프라인 (상세페이지 저장 + 블로그 + 쇼츠) ★★★
+// ═══════════════════════════════════════════════════════════════
+
+const _wizLangConfig = {
+    kr: { countryCode: 'KR', site: 'cafe2626.com', label: '한국어' },
+    ja: { countryCode: 'JP', site: 'cafe0101.com', label: '日本語' },
+    en: { countryCode: 'US', site: 'cafe3355.com', label: 'English' },
+    cn: { countryCode: 'CN', site: 'cafe2626.com', label: '中文' },
+    ar: { countryCode: 'AR', site: 'cafe3355.com', label: 'العربية' },
+    es: { countryCode: 'ES', site: 'cafe3355.com', label: 'Español' },
+    de: { countryCode: 'DE', site: 'cafe3355.com', label: 'Deutsch' },
+    fr: { countryCode: 'FR', site: 'cafe3355.com', label: 'Français' }
+};
+
+function _wpStep(id, state) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'wp-step ' + state;
+    const icon = el.querySelector('i');
+    if (!icon) return;
+    if (state === 'active') icon.className = 'fa-solid fa-circle-notch fa-spin';
+    else if (state === 'done') icon.className = 'fa-solid fa-check-circle';
+    else if (state === 'error') icon.className = 'fa-solid fa-circle-exclamation';
+}
+
+// ★ 메인 파이프라인 오케스트레이터
+window.wizRunPipeline = async () => {
+    if (!wizGeneratedHtml.kr) { showToast('먼저 AI 상세페이지를 생성해주세요.', 'warn'); return; }
+
+    const pipeSection = document.getElementById('wizPipelineSection');
+    const pipeResult = document.getElementById('wizPipelineResult');
+    const pipeBtn = document.getElementById('wizPipelineBtn');
+    pipeSection.style.display = 'block';
+    pipeResult.style.display = 'none';
+    pipeBtn.disabled = true;
+    pipeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 파이프라인 실행 중...';
+
+    // 스텝 초기화
+    ['wp-save','wp-blog-kr','wp-blog-ja','wp-blog-en','wp-blog-cn','wp-blog-ar','wp-blog-es','wp-blog-de','wp-blog-fr','wp-shorts-ai','wp-shorts-tts','wp-shorts-render','wp-shorts-upload'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = 'wp-step';
+    });
+
+    const results = { save: false, blogs: 0, shorts: false };
+    const title = document.getElementById('wizTitle').value.trim();
+    const category = document.getElementById('wizCategory').value;
+    const price = parseInt(document.getElementById('wizPrice')?.value) || 0;
+    const thumb = wizImages.find(img => img.isThumbnail);
+    const thumbnailUrl = thumb?.url || wizImages[0]?.url || '';
+    const imageUrls = wizImages.filter(img => img.url).map(img => img.url);
+
+    try {
+        // ──────── STEP 1: 상품 저장 ────────
+        _wpStep('wp-save', 'active');
+
+        const isExisting = document.getElementById('wizExistingCheck')?.checked;
+        let prodId = null;
+
+        if (isExisting) {
+            // 기존 상품 업데이트
+            const sel = document.getElementById('wizExistingSelect');
+            prodId = sel?.value || window.editingProdId || '';
+            if (!prodId && sel && sel.selectedIndex >= 0) prodId = sel.options[sel.selectedIndex]?.value;
+            if (!prodId) throw new Error('기존 상품을 선택해주세요.');
+
+            const updates = {
+                description: wizGeneratedHtml.kr || '',
+                description_jp: wizGeneratedHtml.jp || '',
+                description_us: wizGeneratedHtml.us || '',
+                description_cn: wizGeneratedHtml.cn || '',
+                description_ar: wizGeneratedHtml.ar || '',
+                description_es: wizGeneratedHtml.es || '',
+                description_de: wizGeneratedHtml.de || '',
+                description_fr: wizGeneratedHtml.fr || ''
+            };
+            if (thumbnailUrl) updates.img_url = thumbnailUrl;
+            if (price > 0) updates.price = price;
+
+            const { error } = await sb.from('admin_products').update(updates).eq('id', prodId);
+            if (error) throw new Error('상품 저장 실패: ' + error.message);
+        } else {
+            // 새 상품 등록
+            const code = (category || 'prod') + '_' + Date.now().toString(36);
+            const newProd = {
+                code: code,
+                name: title,
+                category: category,
+                price: price,
+                img_url: thumbnailUrl,
+                description: wizGeneratedHtml.kr || '',
+                description_jp: wizGeneratedHtml.jp || '',
+                description_us: wizGeneratedHtml.us || '',
+                description_cn: wizGeneratedHtml.cn || '',
+                description_ar: wizGeneratedHtml.ar || '',
+                description_es: wizGeneratedHtml.es || '',
+                description_de: wizGeneratedHtml.de || '',
+                description_fr: wizGeneratedHtml.fr || ''
+            };
+            const { data: inserted, error } = await sb.from('admin_products').insert(newProd).select('id').single();
+            if (error) throw new Error('상품 등록 실패: ' + error.message);
+            prodId = inserted?.id;
+        }
+
+        results.save = true;
+        _wpStep('wp-save', 'done');
+
+        // ──────── STEP 2: 8개국 블로그 생성 ────────
+        const blogLangs = ['kr','ja','en','cn','ar','es','de','fr'];
+        const { data: { user } } = await sb.auth.getUser();
+        const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '카멜레온';
+        let settings = {}; try { settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}'); } catch(e) {}
+
+        for (const lang of blogLangs) {
+            const stepId = 'wp-blog-' + lang;
+            _wpStep(stepId, 'active');
+
+            try {
+                const cfg = _wizLangConfig[lang];
+                // AI 블로그 콘텐츠 생성
+                const { data: aiData, error: aiErr } = await sb.functions.invoke('marketing-content', {
+                    body: {
+                        platform: 'blog',
+                        topic: title + ' - 카멜레온프린팅 제품 소개',
+                        tone: 'professional',
+                        lang: lang,
+                        instructions: `${cfg.site}에 게시될 ${cfg.label} 제품 블로그입니다. 상품명: ${title}. 카테고리: ${category}. 웹사이트: https://${cfg.site}`,
+                        coreKeywords: settings.coreKeywords || '',
+                        usp: settings.usp || '',
+                        ctaMsg: settings.ctaMsg || ''
+                    }
+                });
+                if (aiErr) throw new Error(aiErr.message);
+                const content = aiData?.content || aiData;
+                if (content?.error) throw new Error(content.error);
+
+                // HTML 변환
+                const bodyText = content.body || '';
+                const focusKw = content.focus_keyword || '';
+                let htmlBody = bodyText
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/## (.*)/g, '<h2>$1</h2>')
+                    .replace(/### (.*)/g, '<h3>$1</h3>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                const altText = focusKw || title;
+                htmlBody = `<p><img src="${thumbnailUrl}" alt="${altText}" style="max-width:100%; border-radius:12px; margin-bottom:20px;" loading="lazy"/></p><p>${htmlBody}</p>`;
+                if (content.hashtags?.length) {
+                    htmlBody += `<p style="color:#6366f1; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
+                }
+
+                // community_posts에 게시
+                const seoMeta = JSON.stringify({
+                    meta_description: content.meta_description || '',
+                    focus_keyword: focusKw,
+                    hashtags: content.hashtags || [],
+                    og_image: thumbnailUrl
+                });
+                const { error: postErr } = await sb.from('community_posts').insert({
+                    category: 'blog',
+                    country_code: cfg.countryCode,
+                    title: content.title || title,
+                    content: htmlBody,
+                    author_name: authorName,
+                    author_email: user?.email || '',
+                    author_id: user?.id || null,
+                    thumbnail: thumbnailUrl,
+                    markdown: seoMeta
+                });
+                if (postErr) throw new Error(postErr.message);
+
+                results.blogs++;
+                _wpStep(stepId, 'done');
+            } catch(e) {
+                console.error(`블로그 ${lang} 실패:`, e);
+                _wpStep(stepId, 'error');
+            }
+
+            // API 부하 방지
+            await new Promise(r => setTimeout(r, 1500));
+        }
+
+        // Google sitemap ping
+        if (results.blogs > 0) {
+            ['https://www.cafe2626.com/sitemap.xml','https://www.cafe0101.com/sitemap.xml','https://www.cafe3355.com/sitemap.xml'].forEach(url => {
+                fetch('https://www.google.com/ping?sitemap=' + encodeURIComponent(url), { mode: 'no-cors' }).catch(() => {});
+            });
+        }
+
+        // ──────── STEP 3: 일본어 YouTube 쇼츠 ────────
+        try {
+            // 3a: AI 콘텐츠 생성
+            _wpStep('wp-shorts-ai', 'active');
+            const thumbFile = thumb?.file || wizImages[0]?.file;
+            if (!thumbFile) throw new Error('쇼츠용 이미지가 없습니다.');
+
+            const base64 = await _wizResizeToBase64(thumbFile, 1024);
+            const { data: shortsData, error: shortsErr } = await sb.functions.invoke('marketing-content', {
+                body: {
+                    platform: 'youtube_shorts_from_image',
+                    topic: title + ' - 반값 인쇄 꿀팁 카멜레온프린팅',
+                    tone: 'fast_energetic',
+                    lang: 'ja',
+                    instructions: '빠른 말투로 제품을 소개하는 쇼츠 나레이션을 일본어로 생성하세요. cafe0101.com 을 언급하세요. narration 배열에 5개 문장을 넣어주세요.',
+                    coreKeywords: settings.coreKeywords || '',
+                    usp: settings.usp || '',
+                    ctaMsg: settings.ctaMsg || '',
+                    imageBase64: base64
+                }
+            });
+            if (shortsErr) throw new Error(shortsErr.message);
+            const shortsContent = shortsData?.content || shortsData;
+            if (shortsContent?.error) throw new Error(shortsContent.error);
+            _wpStep('wp-shorts-ai', 'done');
+
+            // 3b: TTS 음성 생성
+            _wpStep('wp-shorts-tts', 'active');
+            const narrationTexts = shortsContent.narration || [];
+            let audioCtx, audioBuffer, hasTTS = false;
+            if (narrationTexts.length > 0) {
+                const tts = await _wizGenerateTTS(narrationTexts, 'ja');
+                audioCtx = tts.audioCtx;
+                audioBuffer = tts.audioBuffer;
+                hasTTS = true;
+            }
+            _wpStep('wp-shorts-tts', 'done');
+
+            // 3c: 영상 렌더링
+            _wpStep('wp-shorts-render', 'active');
+            const videoBlob = await _wizRenderShortsVideo(thumbFile, shortsContent, hasTTS ? audioCtx : null, hasTTS ? audioBuffer : null, 'ja');
+            _wpStep('wp-shorts-render', 'done');
+
+            // 3d: YouTube 업로드
+            _wpStep('wp-shorts-upload', 'active');
+            const ytTitle = shortsContent.title || title + ' #Shorts';
+            const ytDesc = shortsContent.body || title;
+            const ytTags = shortsContent.hashtags || [];
+            if (!ytTags.includes('Shorts')) ytTags.unshift('Shorts');
+
+            const ytResult = await _wizUploadYoutube(videoBlob, ytTitle, ytDesc, ytTags);
+            _wpStep('wp-shorts-upload', 'done');
+            results.shorts = ytResult?.id || true;
+
+            // marketing_content에 기록
+            try {
+                await sb.from('marketing_content').insert({
+                    platform: 'youtube_shorts',
+                    title: ytTitle,
+                    body: ytDesc,
+                    hashtags: ytTags,
+                    thumbnail_prompt: '',
+                    status: 'published',
+                    published_at: new Date().toISOString()
+                });
+            } catch(_) {}
+
+        } catch(shortsErr) {
+            console.error('쇼츠 파이프라인 실패:', shortsErr);
+            ['wp-shorts-ai','wp-shorts-tts','wp-shorts-render','wp-shorts-upload'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('active')) _wpStep(id, 'error');
+            });
+        }
+
+    } catch(e) {
+        console.error('파이프라인 오류:', e);
+        showToast('파이프라인 오류: ' + e.message, 'error');
+    }
+
+    // 결과 표시
+    pipeResult.style.display = 'block';
+    pipeResult.innerHTML = `
+        <div style="text-align:center;">
+            <p style="font-weight:800; font-size:16px; color:#1e1b4b; margin-bottom:8px;">
+                ${results.save ? '✅' : '❌'} 상품 저장 &nbsp;|&nbsp;
+                ✅ 블로그 ${results.blogs}/8개 &nbsp;|&nbsp;
+                ${results.shorts ? '✅' : '❌'} 쇼츠
+            </p>
+            ${results.shorts && typeof results.shorts === 'string' ? `<a href="https://youtube.com/shorts/${results.shorts}" target="_blank" style="color:#6366f1; font-size:13px;">YouTube에서 보기</a>` : ''}
+        </div>`;
+
+    pipeBtn.disabled = false;
+    pipeBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> 원클릭 자동 파이프라인';
+    showToast(`파이프라인 완료! 상품 저장${results.save?'✅':'❌'} / 블로그 ${results.blogs}개 / 쇼츠${results.shorts?'✅':'❌'}`, 'success');
+};
+
+// ── 이미지 리사이즈 → base64 ──
+function _wizResizeToBase64(file, maxDim) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+                if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            cv.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(cv.toDataURL('image/jpeg', 0.85).split(',')[1]);
+            URL.revokeObjectURL(img.src);
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+// ── TTS 음성 생성 (OpenAI via Supabase) ──
+async function _wizGenerateTTS(texts, lang) {
+    const supabaseUrl = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    const resp = await fetch(`${supabaseUrl}/functions/v1/tts-generate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey
+        },
+        body: JSON.stringify({ texts, lang, speed: 1.05 })
+    });
+    if (!resp.ok) throw new Error('TTS 생성 실패: ' + await resp.text());
+    const mp3Buffer = await resp.arrayBuffer();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await audioCtx.decodeAudioData(mp3Buffer);
+    return { audioCtx, audioBuffer };
+}
+
+// ── Canvas 텍스트 줄바꿈 ──
+function _wizWrapText(ctx, text, maxWidth) {
+    if (!text) return [''];
+    const words = text.split(' ').filter(w => w.length > 0);
+    if (words.length === 0) return [text];
+    const lines = [];
+    let cur = '';
+    words.forEach(word => {
+        const test = cur ? cur + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && cur) { lines.push(cur); cur = word; }
+        else cur = test;
+    });
+    if (cur) lines.push(cur);
+    const result = [];
+    lines.forEach(line => {
+        if (ctx.measureText(line).width > maxWidth * 1.2) {
+            let sub = '';
+            for (const ch of line) {
+                if (ctx.measureText(sub + ch).width > maxWidth && sub) { result.push(sub); sub = ch; }
+                else sub += ch;
+            }
+            if (sub) result.push(sub);
+        } else result.push(line);
+    });
+    return result.length > 0 ? result : [text];
+}
+
+// ── 쇼츠 영상 렌더링 (Canvas + TTS) ──
+async function _wizRenderShortsVideo(imageFile, aiContent, audioCtx, audioBuffer, lang) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const img = new Image();
+            const imgUrl = URL.createObjectURL(imageFile);
+            await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgUrl; });
+
+            const W = 1080, H = 1920;
+            const cvs = document.getElementById('wizShortsCanvas');
+            cvs.width = W; cvs.height = H;
+            const ctx = cvs.getContext('2d');
+
+            const narrationTexts = aiContent.narration || [];
+            const overlays = aiContent.overlay_texts || {};
+            const hasTTS = !!(audioCtx && audioBuffer);
+
+            let durationSec = 30;
+            let audioSource, audioDest;
+            if (hasTTS) {
+                durationSec = Math.max(15, Math.min(59, Math.ceil(audioBuffer.duration) + 2));
+                audioDest = audioCtx.createMediaStreamDestination();
+                audioSource = audioCtx.createBufferSource();
+                audioSource.buffer = audioBuffer;
+                audioSource.connect(audioDest);
+            }
+
+            const videoStream = cvs.captureStream(30);
+            let combinedStream;
+            if (hasTTS) {
+                combinedStream = new MediaStream([
+                    ...videoStream.getVideoTracks(),
+                    ...audioDest.stream.getAudioTracks()
+                ]);
+            } else {
+                combinedStream = videoStream;
+            }
+
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
+            const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 5000000 });
+            const chunks = [];
+            recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: mimeType });
+                URL.revokeObjectURL(imgUrl);
+                if (audioCtx) audioCtx.close();
+                resolve(blob);
+            };
+            recorder.onerror = (e) => reject(e.error || new Error('MediaRecorder error'));
+
+            // 자막 타이밍
+            const segCount = narrationTexts.length || 5;
+            const segDur = 1.0 / segCount;
+            const textSegments = [];
+            const captionTexts = narrationTexts.length > 0 ? narrationTexts : [
+                overlays.hook || aiContent.title || '',
+                overlays.main || '',
+                overlays.detail || '',
+                overlays.cta || ''
+            ];
+            captionTexts.forEach((text, i) => {
+                if (!text) return;
+                textSegments.push({
+                    text, start: i * segDur, end: (i + 1) * segDur - 0.02,
+                    fontSize: i === 0 ? 44 : i === captionTexts.length - 1 ? 42 : 38,
+                    y: 0.72
+                });
+            });
+
+            const totalMs = durationSec * 1000;
+            const startTime = performance.now();
+            const zoomDir = aiContent.video_style?.zoom_direction || 'in';
+            const accentColor = aiContent.video_style?.color_accent || '#a78bfa';
+
+            recorder.start(100);
+            if (hasTTS && audioSource) audioSource.start(0);
+
+            function drawFrame() {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / totalMs, 1.0);
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+
+                // Ken Burns effect
+                const imgAspect = img.width / img.height;
+                const canvasAspect = W / H;
+                let baseScale = imgAspect > canvasAspect ? H / img.height : W / img.width;
+                let scale, offsetX, offsetY;
+                switch (zoomDir) {
+                    case 'out':
+                        scale = baseScale * (1.4 - 0.4 * progress);
+                        offsetX = -(img.width * scale - W) / 2 + (progress * 80);
+                        offsetY = -(img.height * scale - H) / 2;
+                        break;
+                    case 'left_to_right':
+                        scale = baseScale * 1.2;
+                        offsetX = -(img.width * scale - W) * progress;
+                        offsetY = -(img.height * scale - H) / 2;
+                        break;
+                    case 'right_to_left':
+                        scale = baseScale * 1.2;
+                        offsetX = -(img.width * scale - W) * (1 - progress);
+                        offsetY = -(img.height * scale - H) / 2;
+                        break;
+                    default:
+                        scale = baseScale * (1.0 + 0.35 * progress);
+                        offsetX = -(img.width * scale - W) / 2 - (progress * 80);
+                        offsetY = -(img.height * scale - H) / 2 - (progress * 50);
+                }
+                ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+
+                // 비네팅
+                const vigGrad = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.8);
+                vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                vigGrad.addColorStop(1, 'rgba(0,0,0,0.4)');
+                ctx.fillStyle = vigGrad;
+                ctx.fillRect(0, 0, W, H);
+
+                // 상단 그라데이션
+                const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.15);
+                topGrad.addColorStop(0, 'rgba(0,0,0,0.6)');
+                topGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = topGrad;
+                ctx.fillRect(0, 0, W, H * 0.15);
+
+                // 하단 그라데이션
+                const botGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+                botGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                botGrad.addColorStop(0.3, 'rgba(0,0,0,0.55)');
+                botGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
+                ctx.fillStyle = botGrad;
+                ctx.fillRect(0, H * 0.55, W, H * 0.45);
+
+                // 자막 렌더링
+                textSegments.forEach(seg => {
+                    if (progress >= seg.start && progress <= seg.end && seg.text) {
+                        const segP = (progress - seg.start) / (seg.end - seg.start);
+                        let alpha = 1;
+                        if (segP < 0.06) alpha = segP / 0.06;
+                        else if (segP > 0.94) alpha = (1 - segP) / 0.06;
+                        alpha = Math.max(0, Math.min(1, alpha));
+
+                        const charProgress = Math.min(segP * 2.0, 1.0);
+                        const visibleChars = Math.ceil(seg.text.length * charProgress);
+                        const displayText = seg.text.substring(0, visibleChars);
+
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        ctx.textAlign = 'center';
+                        ctx.font = `800 ${seg.fontSize}px "Pretendard", "Noto Sans JP", "Inter", sans-serif`;
+
+                        const maxW = W - 120;
+                        const lines = _wizWrapText(ctx, displayText, maxW);
+                        const lineH = seg.fontSize * 1.45;
+                        const startY = H * seg.y - ((lines.length - 1) * lineH) / 2;
+
+                        lines.forEach((line, li) => {
+                            const y = startY + li * lineH;
+                            const tw = ctx.measureText(line).width;
+                            const pad = 18;
+                            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                            ctx.beginPath();
+                            if (ctx.roundRect) ctx.roundRect(W/2 - tw/2 - pad, y - seg.fontSize + 2, tw + pad*2, seg.fontSize + pad, 10);
+                            else ctx.rect(W/2 - tw/2 - pad, y - seg.fontSize + 2, tw + pad*2, seg.fontSize + pad);
+                            ctx.fill();
+                        });
+
+                        lines.forEach((line, li) => {
+                            const y = startY + li * lineH;
+                            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                            ctx.lineWidth = 6;
+                            ctx.lineJoin = 'round';
+                            ctx.strokeText(line, W / 2, y);
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillText(line, W / 2, y);
+                        });
+
+                        ctx.restore();
+                    }
+                });
+
+                // 진행률 바
+                const barGrad = ctx.createLinearGradient(0, 0, W * progress, 0);
+                barGrad.addColorStop(0, accentColor);
+                barGrad.addColorStop(1, '#ffffff');
+                ctx.fillStyle = barGrad;
+                ctx.fillRect(0, H - 6, W * progress, 6);
+
+                // 브랜드 워터마크
+                ctx.save();
+                ctx.globalAlpha = 0.8;
+                ctx.font = '700 28px "Pretendard", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+                ctx.lineWidth = 4;
+                ctx.lineJoin = 'round';
+                const domainByLang = { kr: 'cafe2626.com', ja: 'cafe0101.com', en: 'cafe3355.com' };
+                const brandText = '🦎 カメレオンプリンティング | ' + (domainByLang[lang] || 'cafe0101.com');
+                ctx.strokeText(brandText, W / 2, 55);
+                ctx.fillText(brandText, W / 2, 55);
+                ctx.restore();
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(drawFrame);
+                } else {
+                    if (audioSource) try { audioSource.stop(); } catch(e) {}
+                    setTimeout(() => recorder.stop(), 300);
+                }
+            }
+
+            requestAnimationFrame(drawFrame);
+        } catch (err) { reject(err); }
+    });
+}
+
+// ── YouTube 업로드 ──
+async function _wizUploadYoutube(videoBlob, title, description, tags) {
+    // 토큰 가져오기
+    const { data: config } = await sb.from('marketing_youtube_config')
+        .select('id, access_token, refresh_token, client_id, client_secret, token_expires_at')
+        .limit(1).single();
+    if (!config?.access_token) throw new Error('YouTube 채널이 연결되지 않았습니다. 마케팅봇에서 먼저 연결하세요.');
+
+    let accessToken = config.access_token;
+
+    // 토큰 만료 체크 (5분 여유)
+    const expiresAt = config.token_expires_at ? new Date(config.token_expires_at).getTime() : 0;
+    if (Date.now() >= expiresAt - 300000) {
+        if (!config.refresh_token) throw new Error('Refresh token이 없습니다.');
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: config.client_id,
+                client_secret: config.client_secret,
+                refresh_token: config.refresh_token,
+                grant_type: 'refresh_token'
+            })
+        });
+        const tokens = await tokenRes.json();
+        if (tokens.error) throw new Error('토큰 갱신 실패: ' + (tokens.error_description || tokens.error));
+        await sb.from('marketing_youtube_config').update({
+            access_token: tokens.access_token,
+            token_expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString()
+        }).eq('id', config.id);
+        accessToken = tokens.access_token;
+    }
+
+    // 업로드
+    const metadata = {
+        snippet: { title, description, tags, categoryId: '22' },
+        status: { privacyStatus: 'public', selfDeclaredMadeForKids: false }
+    };
+
+    const initRes = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Upload-Content-Length': videoBlob.size,
+            'X-Upload-Content-Type': videoBlob.type
+        },
+        body: JSON.stringify(metadata)
+    });
+    if (!initRes.ok) throw new Error('YouTube 업로드 초기화 실패: ' + await initRes.text());
+    const uploadUrl = initRes.headers.get('Location');
+
+    const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': videoBlob.type },
+        body: videoBlob
+    });
+    if (!uploadRes.ok) throw new Error('YouTube 업로드 실패: ' + uploadRes.status);
+    return await uploadRes.json();
+}

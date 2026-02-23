@@ -58,8 +58,8 @@ DESIGN PHILOSOPHY:
 - Dark backgrounds (#1a1a2e, #16213e, #0f3460, #1b1b2f) with light text (#f0f0f0, #e0e0e0)
 - Luxurious, high-end, magazine-quality feel
 - LOTS of breathing space / whitespace between sections (use padding and margins generously)
-- Images should be LARGE and IMPACTFUL — full width (100%) or two side-by-side (49% each)
-- Random mix of layouts: some images full-width, some paired side-by-side
+- Images should be LARGE and IMPACTFUL — always full width (100%), one image per row
+- NEVER place two images side-by-side. Each image gets its own full-width row
 - Short, punchy text — let the images do the talking
 - Elegant typography with subtle accent colors (#c9a84c gold, #e74c3c red, #3498db blue)
 
@@ -68,7 +68,7 @@ HTML RULES:
 - You CAN use inline style="" attributes (this is important for the dark theme)
 - Use: <div>, <h2>, <h3>, <p>, <strong>, <em>, <ul>, <li>, <img>, <hr>, <br>
 - Full-width image: <div style="margin:40px 0;"><img src="URL" alt="text" style="width:100%; border-radius:8px;"></div>
-- Two images side-by-side: <div style="display:flex; gap:12px; margin:40px 0;"><img src="URL1" style="width:49%; border-radius:8px; object-fit:cover;"><img src="URL2" style="width:49%; border-radius:8px; object-fit:cover;"></div>
+- NEVER use side-by-side layout. Always one image per row, full width
 - Section wrapper: <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
 
 PRODUCT INFO:
@@ -104,8 +104,8 @@ REQUIRED STRUCTURE:
      </ul>
    </div>
 
-5. IMAGE GALLERY — Mix of full-width and side-by-side, with dark spacers between
-${allImages.length >= 2 ? `   Full-width or side-by-side pairs randomly mixed` : ''}
+5. IMAGE GALLERY — All images full-width, one per row, with dark spacers between
+${allImages.length >= 2 ? `   Each image full-width (100%) with spacer section between them` : ''}
 ${allImages.length >= 3 ? `   Use <div style="background:#1b1b2f; padding:20px 0;"> as spacer between images` : ''}
 
 6. DETAILS SECTION — Specs, materials, use cases
@@ -119,7 +119,7 @@ ${allImages.length >= 3 ? `   Use <div style="background:#1b1b2f; padding:20px 0
 
 CRITICAL RULES:
 - Use ALL ${allImages.length} images throughout the page
-- RANDOMLY mix: some full-width, some paired side-by-side (if 3+ images)
+- Every image must be full-width (100%), one per row — NEVER side-by-side
 - Every section must have generous padding (50px-80px vertical)
 - Background colors should alternate between the dark palette
 - Text should be light (#e0e0e0, #d0d0d0) on dark backgrounds
