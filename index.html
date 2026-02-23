@@ -5979,6 +5979,7 @@ window.showChoiceModal = async function(key) {
                 <div class="product-detail-render" style="line-height:1.8; width:100%;">
                     ${dDesc}
                 </div>
+                <div id="productCommonFooter" style="margin-top:30px; border-top:2px solid #e5e7eb; padding-top:24px;"></div>
             </div>
 
             <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; min-width:${window.innerWidth <= 768 ? 'auto' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto; max-height:90vh; min-height:0;">
@@ -6051,6 +6052,29 @@ window.showChoiceModal = async function(key) {
         window.productReviewPage = 0;
         window.renderReviewWriteForm(key);
         window.loadProductReviews(key, 0);
+
+        // ★ 공통 하단 안내문 로드
+        const footerEl = document.getElementById('productCommonFooter');
+        if (footerEl) {
+            const _fLang = lang || 'kr';
+            if (window._pdpFooterCache && window._pdpFooterCache[_fLang] !== undefined) {
+                footerEl.innerHTML = window._pdpFooterCache[_fLang];
+                footerEl.style.display = window._pdpFooterCache[_fLang] ? 'block' : 'none';
+            } else {
+                window._pdpFooterCache = window._pdpFooterCache || {};
+                const _sb = window.sb || (typeof sb !== 'undefined' ? sb : null);
+                if (_sb) {
+                    _sb.from('chatbot_knowledge').select('answer')
+                        .eq('category','_product_footer').eq('language', _fLang).eq('is_active',true).maybeSingle()
+                        .then(function(res) {
+                            const content = (res && res.data) ? res.data.answer : '';
+                            window._pdpFooterCache[_fLang] = content;
+                            footerEl.innerHTML = content;
+                            footerEl.style.display = content ? 'block' : 'none';
+                        });
+                }
+            }
+        }
     }, 300);
 };
 // 실시간 합계 업데이트 함수
