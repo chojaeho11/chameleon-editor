@@ -188,7 +188,7 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
           headers: {
             "Content-Type": "application/json",
             "x-api-key": ANTHROPIC_API_KEY!,
-            "anthropic-version": "2023-06-01",
+            "anthropic-version": "2023-10-01",
           },
           body: JSON.stringify({
             model,
@@ -201,16 +201,20 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
         if (!res.ok) {
           const errBody = await res.text();
           console.error(`Claude API error for ${lang}: ${res.status} - ${errBody}`);
-          return { lang, html: null };
+          return { lang, html: null, error: `API ${res.status}: ${errBody.substring(0, 200)}` };
         }
 
         const data = await res.json();
+        if (!data.content || data.content.length === 0) {
+          console.error(`Claude empty response for ${lang}:`, JSON.stringify(data).substring(0, 500));
+          return { lang, html: null, error: 'Empty response from Claude' };
+        }
         let html = data.content.map((b: any) => b.text || "").join("");
         html = html.replace(/```html?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-        return { lang, html };
+        return { lang, html: html || null, error: html ? undefined : 'Generated HTML was empty' };
       } catch (e) {
         console.error(`Error generating ${lang}:`, e.message);
-        return { lang, html: null };
+        return { lang, html: null, error: e.message };
       }
     }
 
@@ -219,15 +223,21 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
     const results = await Promise.allSettled(validLangs.map((l: string) => generateForLang(l)));
 
     const details: Record<string, string> = {};
+    const errors: Record<string, string> = {};
     for (const result of results) {
       if (result.status === 'fulfilled' && result.value.html) {
         details[result.value.lang] = result.value.html;
+      } else if (result.status === 'fulfilled') {
+        errors[result.value.lang] = result.value.error || 'AI returned empty HTML';
+      } else {
+        errors['unknown'] = result.reason?.message || 'Promise rejected';
       }
     }
 
     return new Response(JSON.stringify({
       success: true,
       details,
+      errors,
       generated_langs: Object.keys(details)
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

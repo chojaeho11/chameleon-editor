@@ -3109,7 +3109,10 @@ window.wizGenerate = async () => {
         if (!data || !data.success) throw new Error((data && data.error) || '생성 실패');
 
         const krHtml = data.details.kr;
-        if (!krHtml) throw new Error('한국어 상세페이지 생성 실패');
+        if (!krHtml) {
+            const errDetail = data.errors?.kr || JSON.stringify(data.errors || {});
+            throw new Error('한국어 상세페이지 생성 실패: ' + errDetail);
+        }
 
         wizGeneratedHtml = { kr: krHtml };
 
