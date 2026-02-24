@@ -1658,7 +1658,10 @@
             <div style="padding:18px 20px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
                     <h3 style="margin:0; color:#fff; font-size:18px; font-weight:800; letter-spacing:-0.3px;">💬 상담 대기열</h3>
-                    <button onclick="lcLoadRooms()" style="background:rgba(255,255,255,0.08); border:none; color:#94a3b8; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; transition:background 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.15)'" onmouseleave="this.style.background='rgba(255,255,255,0.08)'">새로고침</button>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="lcMarkAllRead()" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:6px 10px; border-radius:8px; font-size:11px; cursor:pointer;" title="모든 미확인 메시지 읽음처리">전체읽음</button>
+                        <button onclick="lcLoadRooms()" style="background:rgba(255,255,255,0.08); border:none; color:#94a3b8; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; transition:background 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.15)'" onmouseleave="this.style.background='rgba(255,255,255,0.08)'">새로고침</button>
+                    </div>
                 </div>
                 <!-- 매니저 선택 -->
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; padding:8px 12px; background:rgba(99,102,241,0.15); border-radius:10px; border:1px solid rgba(99,102,241,0.25);">
@@ -2835,6 +2838,19 @@ async function saveCommonInfo() {
         };
         return (msgs[key] && msgs[key][lang]) || msgs[key]['kr'];
     }
+    // ★ 전체 미확인 메시지 읽음 처리
+    window.lcMarkAllRead = async function() {
+        var sb = getSb(); if (!sb) return;
+        var cutoff = new Date(Date.now() - 48*60*60*1000).toISOString();
+        var { error } = await sb.from('chat_messages').update({ is_read: true }).eq('is_read', false).eq('sender_type', 'customer').gte('created_at', cutoff);
+        if (error) { console.warn('전체 읽음 처리 실패:', error); return; }
+        _unreadCount = 0;
+        updateUnreadBadge(0);
+        checkUnreadAndNotify();
+        lcLoadRooms();
+        showChatToast('모든 미확인 메시지를 읽음 처리했습니다', '', false);
+    };
+
     window.lcLoadRooms = async function() {
         var sb=getSb(); if(!sb) return;
         var q = sb.from('chat_rooms').select('*').order('created_at',{ascending:false}).limit(50);

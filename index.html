@@ -9625,12 +9625,14 @@ window.dsmRenderProducts = async function(keyword) {
     // 매니저 메시지 수신 시 통합 알림
     function _custNotifyNewMsg(senderName) {
         _custPlaySound();
-        _autoOpenChatIfClosed();
-        _scrollChatBottom();
-        // 채팅창이 닫혀있거나 탭 비활성이면 추가 알림
+        // ★ 채팅창 강제 오픈 제거 — 뱃지만 표시 (고객이 직접 열도록)
         var win = getEl('cham-bot-window');
-        var isChatClosed = !win || !win.classList.contains('visible');
-        if (isChatClosed) _custShowBadge();
+        var isChatOpen = win && win.classList.contains('visible');
+        if (isChatOpen) {
+            _scrollChatBottom();
+        } else {
+            _custShowBadge();
+        }
         if (document.hidden) _custFlashTitle('💬 ' + (senderName || 'New message'));
     }
 
