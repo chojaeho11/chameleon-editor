@@ -1621,7 +1621,7 @@
                 <!-- 필터 탭 -->
                 <div style="display:flex; gap:4px; flex-wrap:wrap;">
                     <button class="btn btn-primary btn-sm" onclick="lcFilterRooms('all')" id="lcFilterAll" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px;">전체</button>
-                    <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('waiting')" id="lcFilterWait" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">대기</button>
+                    <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('waiting')" id="lcFilterWait" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12); position:relative;">대기<span id="lcWaitBadge" style="display:none;position:absolute;top:-6px;right:-4px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;align-items:center;justify-content:center;padding:0 4px;animation:lcBadgePulse 1.5s ease infinite;box-shadow:0 0 6px rgba(239,68,68,0.5);"></span></button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('active')" id="lcFilterActive" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">상담</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('closed')" id="lcFilterClosed" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">종료</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('ai_chatting')" id="lcFilterAiChat" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">AI</button>
@@ -2169,6 +2169,8 @@ async function saveCommonInfo() {
     var _unreadCount = 0;         // 미확인 메시지 수
     var _repeatAlarmTimer = null; // 반복 알람 타이머
     var _lastAlarmTime = 0;       // 마지막 알람 시간 (중복 방지)
+    var _unreadPollTimer = null;  // 20초 폴링 타이머
+    var _lastUnreadTotal = 0;     // 이전 폴링의 미확인 수 (새 알림 판단용)
 
     // 내 매니저 이름 저장/로드
     window.lcSaveMyName = function() {
@@ -2387,8 +2389,11 @@ async function saveCommonInfo() {
     }
     function clearUnreadBadge() {
         _unreadCount = 0;
+        _lastUnreadTotal = 0;
         updateUnreadBadge(0);
         stopRepeatAlarm();
+        // 대기 탭 배지도 즉시 갱신
+        checkUnreadAndNotify();
     }
 
     // ── 반복 알람 (미응답 시 30초마다 재알림) ──
@@ -2438,6 +2443,83 @@ async function saveCommonInfo() {
             clearUnreadBadge();
         }
     });
+
+    // ── 20초 폴링: 미확인 메시지 수 체크 + 대기 배지 + 알림 ──
+    async function checkUnreadAndNotify() {
+        var sb = getSb(); if (!sb) return;
+        try {
+            // 1) 대기(waiting) 상태 방의 수 → 대기 탭 배지
+            var waitRes = await sb.from('chat_rooms').select('id', {count:'exact'}).eq('status','waiting');
+            var waitCount = (waitRes.count || 0);
+
+            // 2) 미확인 고객 메시지 (is_read=false, sender_type=customer) 전체
+            var unreadRes = await sb.from('chat_messages').select('id', {count:'exact'}).eq('is_read', false).eq('sender_type', 'customer');
+            var totalUnread = (unreadRes.count || 0);
+
+            // 매니저 필터 적용한 미확인 수 (대기+내담당 방만)
+            var filterMgr = myManagerName || '';
+            var myUnread = totalUnread; // 기본은 전체
+            if (filterMgr && filterMgr !== '' && filterMgr !== '__HQ__') {
+                // 내 담당 + 미배정 방의 미확인만 카운트
+                var myRooms = await sb.from('chat_rooms').select('id').or('assigned_manager.eq.' + filterMgr + ',status.eq.waiting,status.eq.ai_chatting');
+                if (myRooms.data && myRooms.data.length > 0) {
+                    var roomIds = myRooms.data.map(function(r) { return r.id; });
+                    var myUnreadRes = await sb.from('chat_messages').select('id', {count:'exact'}).eq('is_read', false).eq('sender_type', 'customer').in('room_id', roomIds);
+                    myUnread = (myUnreadRes.count || 0);
+                } else {
+                    myUnread = 0;
+                }
+            }
+
+            // 대기 탭 배지 업데이트
+            var badge = document.getElementById('lcWaitBadge');
+            if (badge) {
+                var showCount = waitCount + myUnread; // 대기방 수 + 미확인 메시지
+                if (myUnread > 0) {
+                    badge.textContent = myUnread > 99 ? '99+' : myUnread;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            // 사이드바 배지도 업데이트
+            _unreadCount = myUnread;
+            updateUnreadBadge(0);
+
+            // 새 미확인 발생 시 또는 계속 미확인이 있으면 알림
+            if (myUnread > 0) {
+                // 채팅 섹션을 보고 있으면 알림 스킵
+                var chatSec = document.getElementById('sec-live-chat');
+                var isChatActive = chatSec && chatSec.classList.contains('active') && !document.hidden;
+                if (!isChatActive) {
+                    // 새 미확인 증가 시 강한 알림
+                    if (myUnread > _lastUnreadTotal) {
+                        playKakaoSound();
+                        showChatToast('📬 미확인 메시지 ' + myUnread + '건', '확인하지 않은 고객 메시지가 있습니다', true);
+                    } else {
+                        // 계속 미확인 → 부드러운 반복 알림
+                        playRepeatAlarm();
+                    }
+                    flashTitle('미확인 메시지 ' + myUnread + '건');
+                }
+            } else {
+                // 미확인 없음 → 타이틀 원복
+                if (_titleFlash) { clearInterval(_titleFlash); _titleFlash = null; }
+                _updateTitleBadge();
+            }
+            _lastUnreadTotal = myUnread;
+        } catch(e) {
+            console.warn('⚠️ [폴링] checkUnreadAndNotify 에러:', e);
+        }
+    }
+    // 20초 간격 폴링 시작
+    function startUnreadPolling() {
+        if (_unreadPollTimer) return;
+        checkUnreadAndNotify(); // 즉시 1회
+        _unreadPollTimer = setInterval(checkUnreadAndNotify, 20000);
+    }
+    setTimeout(startUnreadPolling, 3000); // 페이지 로드 3초 후 시작
 
     // ── 통합 알림 발송 v4 — 사운드+토스트는 항상, TTS/데스크톱은 필터 ──
     function sendNotification(title, body, ttsText, assignedMgr, isUrgent) {
@@ -2678,14 +2760,37 @@ async function saveCommonInfo() {
         }
         var list=document.getElementById('lcRoomList');
         if(!r.data||r.data.length===0){list.innerHTML='<div style="text-align:center;color:#64748b;padding:30px;font-size:14px;">상담방 없음</div>';return;}
+        // 각 방의 미확인 메시지 수 + 마지막 메시지 조회
+        var roomIds = r.data.map(function(rm) { return rm.id; });
+        var unreadMap = {};
+        var lastMsgMap = {};
+        try {
+            // 미확인 수 (방별)
+            var uRes = await sb.from('chat_messages').select('room_id').eq('is_read', false).eq('sender_type', 'customer').in('room_id', roomIds);
+            if (uRes.data) uRes.data.forEach(function(u) { unreadMap[u.room_id] = (unreadMap[u.room_id] || 0) + 1; });
+            // 마지막 메시지 (방별)
+            var lRes = await sb.from('chat_messages').select('room_id,message,sender_type,created_at').in('room_id', roomIds).order('created_at', {ascending: false}).limit(roomIds.length * 2);
+            if (lRes.data) lRes.data.forEach(function(m) { if (!lastMsgMap[m.room_id]) lastMsgMap[m.room_id] = m; });
+        } catch(e) { console.warn('방 목록 추가정보 로드 실패:', e); }
         var h=''; r.data.forEach(function(rm){
             var t=new Date(rm.created_at).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
             var si=rm.status==='waiting'?'⏳':rm.status==='active'?'💬':rm.status==='ai_chatting'?'🤖':'✅';
             var isActive=currentRoom&&currentRoom.id===rm.id;
             var bg=isActive?'rgba(99,102,241,0.2)':'rgba(255,255,255,0.03)';
             var bdL=rm.status==='waiting'?'#f87171':rm.status==='active'?'#4ade80':rm.status==='ai_chatting'?'#fbbf24':'#475569';
+            var unread = unreadMap[rm.id] || 0;
             h+='<div onclick="lcSelectRoom(\''+rm.id+'\')" style="background:'+bg+';border-left:3px solid '+bdL+';border-radius:10px;padding:12px 14px;margin-bottom:6px;cursor:pointer;transition:background 0.15s;" onmouseenter="if(!'+isActive+')this.style.background=\'rgba(255,255,255,0.08)\'" onmouseleave="if(!'+isActive+')this.style.background=\'rgba(255,255,255,0.03)\'">';
-            h+='<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:700;font-size:14px;color:#f1f5f9;">'+si+' '+(rm.customer_name||'고객')+'</span><span style="font-size:11px;color:#64748b;">'+t+'</span></div>';
+            h+='<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:700;font-size:14px;color:#f1f5f9;">'+si+' '+(rm.customer_name||'고객')+'</span><span style="display:flex;align-items:center;gap:6px;">';
+            if (unread > 0) h+='<span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;animation:lcBadgePulse 1.5s ease infinite;">'+(unread>99?'99+':unread)+'</span>';
+            h+='<span style="font-size:11px;color:#64748b;">'+t+'</span></span></div>';
+            // 마지막 메시지 미리보기
+            var lastMsg = lastMsgMap[rm.id];
+            if (lastMsg) {
+                var preview = (lastMsg.message || '(파일)');
+                if (preview.length > 30) preview = preview.substring(0,30) + '...';
+                var senderIcon = lastMsg.sender_type==='customer'?'👤':lastMsg.sender_type==='manager'?'💬':'🤖';
+                h+='<div style="font-size:11px;color:#94a3b8;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+senderIcon+' '+preview+'</div>';
+            }
             h+='<div style="font-size:12px;margin-top:5px;display:flex;align-items:center;gap:6px;"><span style="background:'+(rm.status==='ai_chatting'?'rgba(251,191,36,0.15)':'rgba(99,102,241,0.15)')+';color:'+(rm.status==='ai_chatting'?'#fbbf24':'#a5b4fc')+';padding:2px 10px;border-radius:10px;font-weight:600;font-size:11px;">'+(rm.status==='ai_chatting'?'🤖 AI':'👤 '+(rm.assigned_manager||'미배정'))+'</span><span style="color:#64748b;font-size:11px;">'+(rm.source==='chatbot'?'AI→상담':'직접')+'</span></div>';
             if(rm.ai_summary) h+='<div style="font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px;">🤖 '+rm.ai_summary.substring(0,50)+'</div>';
             h+='</div>';
