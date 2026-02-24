@@ -9,7 +9,7 @@ export function showLoading(show) {
 // [공통] 화폐 단위 포맷 (KRW → 현지 통화 환산 포함)
 export const formatCurrency = (amount, siteCode) => {
     if (!amount) return '0';
-    const rates = { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.01, 'AR': 0.005, 'ES': 0.001 };
+    const rates = { 'KR': 1, 'JP': 0.1, 'US': 0.002, 'CN': 0.01, 'AR': 0.005, 'ES': 0.001 };
     const rate = rates[siteCode] || 1;
     const converted = amount * rate;
     if (siteCode === 'JP') return '¥' + Math.floor(converted).toLocaleString();

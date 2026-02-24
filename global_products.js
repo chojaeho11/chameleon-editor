@@ -1300,7 +1300,7 @@ window.autoTranslateInputs = async () => {
     btn.disabled = true;
 
     try {
-        const rateJPY = 0.2, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
+        const rateJPY = 0.1, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
 
         if (krPrice && krPrice > 0) {
             document.getElementById('newProdPriceJP').value = Math.round(krPrice * rateJPY);
@@ -1371,7 +1371,7 @@ window.autoTranslateAddonInputs = async () => {
     const krName = document.getElementById('nmKR').value;
     const krPrice = document.getElementById('prKR').value;
     if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
-    const rateJPY = 0.2, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
+    const rateJPY = 0.1, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
     if (krPrice) {
         document.getElementById('prJP').value = Math.round(krPrice * rateJPY);
         document.getElementById('prUS').value = (krPrice * rateUSD).toFixed(2);
@@ -1546,7 +1546,7 @@ window.updateAllCurrency = async () => {
         let successCount = 0;
         for (const p of products) {
             const krw = p.price || 0;
-            const priceJP = Math.round(krw * 0.2);   
+            const priceJP = Math.round(krw * 0.1);
             const priceUS = Math.round(krw * 0.002); 
             const { error: updateErr } = await sb.from('admin_products')
                 .update({ 
@@ -2543,7 +2543,7 @@ window.batchCrawlProducts = async () => {
                 price: price,
                 description: detailHtml.kr || product.description || '',
                 name_jp: '', name_us: '', name_cn: '', name_ar: '', name_es: '',
-                price_jp: Math.round(price * 0.2),
+                price_jp: Math.round(price * 0.1),
                 price_us: Math.round(price * 0.002),
                 description_jp: detailHtml.jp || '',
                 description_us: detailHtml.us || '',

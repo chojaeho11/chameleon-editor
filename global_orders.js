@@ -162,7 +162,7 @@ window.loadOrders = async () => {
             const site = order.site_code || 'KR';
 
             // 통화 변환 헬퍼 (DB는 KRW 기준 저장)
-            const currRates = { KR: 1, JP: 0.2, US: 0.002, CN: 0.01, AR: 0.005, ES: 0.001, STORE: 1, GODO: 1 };
+            const currRates = { KR: 1, JP: 0.1, US: 0.002, CN: 0.01, AR: 0.005, ES: 0.001, STORE: 1, GODO: 1 };
             const currSymbols = { KR: '', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', STORE: '', GODO: '' };
             const rate = currRates[site] || 1;
             const sym = currSymbols[site] || '';
