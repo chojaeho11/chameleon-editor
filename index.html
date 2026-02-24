@@ -5913,13 +5913,13 @@ window.showChoiceModal = async function(key) {
                             }
 
                             optionsHtml += `
-                                <label class="color-btn-item" style="cursor:pointer; position:relative; width:52px; flex-shrink:0;" title="${a.name}">
+                                <label class="color-btn-item" style="cursor:pointer; position:relative; width:calc(20% - 4px); flex-shrink:0;" title="${a.name}">
                                     <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-cat-code="${cat.code}"
                                            style="position:absolute; opacity:0; width:0; height:0;"
                                            onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">
                                     <div class="color-btn-box" style="border:1px solid #e2e8f0; border-radius:8px; padding:4px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; background-color:#fff;">
-                                        <img src="${imgUrl}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #eee; flex-shrink:0;">
-                                        ${colorPriceLabel ? `<span style="font-size:9px; color:#6366f1; margin-top:2px; font-weight:bold;">${colorPriceLabel}</span>` : ''}
+                                        <img src="${imgUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #eee; flex-shrink:0;">
+                                        ${colorPriceLabel ? `<span style="font-size:8px; color:#6366f1; margin-top:1px; font-weight:bold;">${colorPriceLabel}</span>` : ''}
                                     </div>
                                 </label>`;
                         });
@@ -6427,38 +6427,15 @@ if (w >= 20 && h >= 20) {
                             } catch(e) { console.warn('썸네일 생성 실패:', e); }
                         }
 
-                        // 장바구니에 제품+파일+옵션 추가 (cartData 직접 push)
-                        const { cartData } = await import('./config.js?v=123');
-
-                        const cleanProduct = {
-                            name: productToCart.name, name_jp: productToCart.name_jp || '', name_us: productToCart.name_us || '',
-                            price: finalPricePerItem, price_jp: productToCart.price_jp || 0, price_us: productToCart.price_us || 0,
-                            code: targetCode, img: thumbUrl,
-                            w: productToCart.width_mm || 0, h: productToCart.height_mm || 0,
-                            category: productToCart.category || '', addons: productToCart.addons || []
-                        };
-                        const selAddons = {};
-                        selectedAddonCodes.forEach(c => { selAddons['opt_' + c] = c; });
-
-                        cartData.push({
-                            uid: Date.now() + i,
-                            product: cleanProduct,
-                            type: 'file_upload',
-                            fileName: file.name,
-                            originalUrl: originalUrl,
-                            thumb: thumbUrl,
-                            width: cleanProduct.w, height: cleanProduct.h,
-                            isOpen: true,
-                            qty: i === 0 ? finalQty : 1,
-                            selectedAddons: i === 0 ? selAddons : {},
-                            addonQuantities: i === 0 ? selectedAddonQtys : {}
-                        });
+                        // 장바구니에 제품+파일+옵션 추가 (addProductToCartDirectly 사용)
+                        m.addProductToCartDirectly(
+                            productToCart,
+                            i === 0 ? finalQty : 1,
+                            i === 0 ? selectedAddonCodes : [],
+                            i === 0 ? selectedAddonQtys : {},
+                            { type: 'file_upload', fileName: file.name, originalUrl: originalUrl, thumb: thumbUrl }
+                        );
                     }
-
-                    // 장바구니 저장 + 렌더링
-                    const mod = await import('./order.js?v=123');
-                    if (mod.saveCart) mod.saveCart();
-                    if (mod.renderCart) mod.renderCart();
 
                     document.getElementById('choiceModal').style.display = 'none';
                     document.getElementById('cartAddedModal').style.display = 'flex';
