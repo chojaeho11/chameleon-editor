@@ -9367,7 +9367,7 @@ window.dsmRenderProducts = async function(keyword) {
 .cham-subtitle{color:rgba(255,255,255,.8);font-size:11px;margin-top:1px}
 .cham-close{background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
 .cham-close:hover{background:rgba(255,255,255,.25)}
-.cham-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.cham-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
 .cham-messages::-webkit-scrollbar{width:4px}
 .cham-messages::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
 .cm-row{display:flex;gap:7px;max-width:88%;animation:cmIn .3s ease-out}
@@ -9376,7 +9376,7 @@ window.dsmRenderProducts = async function(keyword) {
 @keyframes cmIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .cm-ava{width:28px;height:28px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;margin-top:2px}
 .cm-row.user .cm-ava{display:none}
-.cm-bub{padding:11px 15px;border-radius:16px;font-size:13.5px;line-height:1.7;word-break:keep-all;white-space:pre-line}
+.cm-bub{padding:12px 16px;border-radius:16px;font-size:15px;line-height:1.7;word-break:keep-all;white-space:pre-line}
 .cm-row.bot .cm-bub{background:#fff;border:1px solid #e2e8f0;border-top-left-radius:4px;color:#1e293b}
 .cm-row.user .cm-bub{background:#6366f1;color:#fff;border-top-right-radius:4px}
 .cm-typing{display:flex;gap:4px;padding:12px 16px}
@@ -9385,10 +9385,10 @@ window.dsmRenderProducts = async function(keyword) {
 .cm-typing span:nth-child(3){animation-delay:.4s}
 @keyframes cmBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
 .cm-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.cm-qbtn{padding:6px 13px;border:1.5px solid #6366f1;border-radius:20px;background:#f5f3ff;color:#6366f1;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
+.cm-qbtn{padding:7px 14px;border:1.5px solid #6366f1;border-radius:20px;background:#f5f3ff;color:#6366f1;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
 .cm-qbtn:hover{background:#6366f1;color:#fff;transform:translateY(-1px)}
 .cham-input-area{padding:10px 14px;background:#fff;border-top:1px solid #e2e8f0;display:flex;gap:7px;align-items:center;flex-shrink:0}
-.cham-input-area input{flex:1;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:13.5px;font-family:inherit;outline:none;transition:border-color .2s;background:#f8fafc}
+.cham-input-area input{flex:1;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;background:#f8fafc}
 .cham-input-area input:focus{border-color:#6366f1}
 .cham-input-area input::placeholder{color:#94a3b8}
 .cham-send{width:40px;height:40px;border-radius:50%;background:#6366f1;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
@@ -9509,7 +9509,7 @@ window.dsmRenderProducts = async function(keyword) {
     function fmtBot(text) {
         return text
             .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-            .replace(/`(.*?)`/g, '<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>');
+            .replace(/`(.*?)`/g, '<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:14px;">$1</code>');
     }
 
     function addMsg(text, who) {
@@ -9525,17 +9525,16 @@ window.dsmRenderProducts = async function(keyword) {
             r.innerHTML = '<div class="cm-bub">' + html + '</div>';
         }
         c.appendChild(r);
-        c.scrollTop = c.scrollHeight;
+        _scrollChatBottom();
     }
 
     // 채팅 메시지 영역 스크롤을 맨 아래로 (지연 포함)
     function _scrollChatBottom() {
         var c = document.getElementById('chamMessages');
-        if (c) { c.scrollTop = c.scrollHeight; }
-        setTimeout(function() {
-            var c2 = document.getElementById('chamMessages');
-            if (c2) c2.scrollTop = c2.scrollHeight;
-        }, 150);
+        if (c) c.scrollTop = c.scrollHeight;
+        setTimeout(function() { var c2 = document.getElementById('chamMessages'); if (c2) c2.scrollTop = c2.scrollHeight; }, 100);
+        setTimeout(function() { var c3 = document.getElementById('chamMessages'); if (c3) c3.scrollTop = c3.scrollHeight; }, 300);
+        setTimeout(function() { var c4 = document.getElementById('chamMessages'); if (c4) c4.scrollTop = c4.scrollHeight; }, 600);
     }
 
     // 매니저 메시지 표시 (끼어들기 시)
@@ -9543,8 +9542,8 @@ window.dsmRenderProducts = async function(keyword) {
         var c = getEl('chamMessages');
         if (!c) return;
         var h = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-        h += '<span style="font-size:10px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + escHtml(name) + '</span>';
-        h += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + escHtml(text) + '</div>';
+        h += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + escHtml(name) + '</span>';
+        h += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + escHtml(text) + '</div>';
         h += '</div>';
         c.insertAdjacentHTML('beforeend', h);
         _scrollChatBottom();
@@ -9726,9 +9725,9 @@ window.dsmRenderProducts = async function(keyword) {
                 } else if (m.sender_type === 'system') {
                     if (msgArea) {
                         msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
-                        msgArea.scrollTop = msgArea.scrollHeight;
                     }
                 }
+                _scrollChatBottom();
             }).subscribe();
     }
 
@@ -10225,17 +10224,17 @@ window.dsmRenderProducts = async function(keyword) {
                     if (m.sender_type === 'manager') {
                         var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
                         var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-                        mh += '<span style="font-size:10px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
+                        mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
                         if (m.file_url) {
                             if (m.file_type && m.file_type.startsWith('image/'))
                                 mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
                             else
-                                mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;">📎 ' + (m.file_name||_lt('fileDl')) + '</a>';
+                                mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:14px;display:inline-block;">📎 ' + (m.file_name||_lt('fileDl')) + '</a>';
                         }
                         if (m.message) {
                             // URL을 클릭 가능한 링크로 변환
                             var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
-                            mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
+                            mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
                         }
                         mh += '</div>';
                         msgArea.insertAdjacentHTML('beforeend', mh);
@@ -10312,8 +10311,8 @@ window.dsmRenderProducts = async function(keyword) {
         var text = inp.value.trim(); if (!text) return;
         inp.value = '';
         var msgArea = document.getElementById('chamMessages');
-        msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + text + '</div></div>');
-        msgArea.scrollTop = msgArea.scrollHeight;
+        msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + text + '</div></div>');
+        _scrollChatBottom();
         var sb = getSb();
         if (sb) {
             sb.from('chat_messages').insert({ room_id: _room.id, sender_type: 'customer', sender_name: _customerName || _ct('customer'), message: text })
@@ -10367,16 +10366,16 @@ window.dsmRenderProducts = async function(keyword) {
                 if (m.sender_type === 'manager') {
                     var mn = m.sender_name || '매니저';
                     var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-                    mh += '<span style="font-size:10px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + mn + '</span>';
+                    mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + mn + '</span>';
                     if (m.file_url) {
                         if (m.file_type && m.file_type.startsWith('image/'))
                             mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
                         else
-                            mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;">📎 ' + (m.file_name||'파일 다운로드') + '</a>';
+                            mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:14px;display:inline-block;">📎 ' + (m.file_name||'파일 다운로드') + '</a>';
                     }
                     if (m.message) {
                         var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
-                        mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
+                        mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
                     }
                     mh += '</div>';
                     msgArea.insertAdjacentHTML('beforeend', mh);
