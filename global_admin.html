@@ -2410,14 +2410,27 @@ async function saveCommonInfo() {
         if (_repeatAlarmTimer) { clearInterval(_repeatAlarmTimer); _repeatAlarmTimer = null; }
     }
 
-    // ── 채팅 섹션 진입 시 배지 클리어 ──
-    var _origShowSection = window.showSection;
-    window.showSection = function(id, navEl) {
-        if (_origShowSection) _origShowSection(id, navEl);
-        if (id === 'sec-live-chat') {
-            clearUnreadBadge();
+    // ── 채팅 섹션 진입 시 배지 클리어 (MutationObserver 방식) ──
+    (function() {
+        var chatSec = document.getElementById('sec-live-chat');
+        if (chatSec) {
+            var obs = new MutationObserver(function() {
+                if (chatSec.classList.contains('active')) clearUnreadBadge();
+            });
+            obs.observe(chatSec, { attributes: true, attributeFilter: ['class'] });
+        } else {
+            // DOM 아직 준비 안됨 → 대기
+            setTimeout(function() {
+                var cs = document.getElementById('sec-live-chat');
+                if (cs) {
+                    var obs2 = new MutationObserver(function() {
+                        if (cs.classList.contains('active')) clearUnreadBadge();
+                    });
+                    obs2.observe(cs, { attributes: true, attributeFilter: ['class'] });
+                }
+            }, 3000);
         }
-    };
+    })();
     // 포커스 복귀 시에도 체크
     window.addEventListener('focus', function() {
         var chatSec = document.getElementById('sec-live-chat');
@@ -2428,18 +2441,24 @@ async function saveCommonInfo() {
 
     // ── 통합 알림 발송 v4 — 사운드+토스트는 항상, TTS/데스크톱은 필터 ──
     function sendNotification(title, body, ttsText, assignedMgr, isUrgent) {
+        console.log('🔔 [sendNotification] 호출:', title, '| mgr:', assignedMgr, '| urgent:', isUrgent);
         var now = Date.now();
         // 1초 내 중복 알림 방지
-        if (now - _lastAlarmTime < 1000) return;
+        if (now - _lastAlarmTime < 1000) {
+            console.log('🔇 [sendNotification] 1초 내 중복 → 스킵');
+            return;
+        }
         _lastAlarmTime = now;
 
-        // ★ 사운드는 항상 재생 (관련 고객이면)
-        if (shouldAlwaysAlert(assignedMgr)) {
-            if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); }
-            showChatToast(title, body, isUrgent);
-            flashTitle(title);
-            updateUnreadBadge(1);
-            startRepeatAlarm();
+        // ★ 사운드+토스트는 항상 (관련 고객이면)
+        var alert = shouldAlwaysAlert(assignedMgr);
+        console.log('🔔 [sendNotification] shouldAlwaysAlert:', alert, '| myName:', myManagerName);
+        if (alert) {
+            try { if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); } } catch(e) { console.error('사운드 에러:', e); }
+            try { showChatToast(title, body, isUrgent); } catch(e) { console.error('토스트 에러:', e); }
+            try { flashTitle(title); } catch(e) { console.error('타이틀 에러:', e); }
+            try { updateUnreadBadge(1); } catch(e) { console.error('배지 에러:', e); }
+            try { startRepeatAlarm(); } catch(e) { console.error('반복알람 에러:', e); }
         }
 
         // TTS + 데스크톱 알림 = 토글 ON일 때만
@@ -2521,11 +2540,14 @@ async function saveCommonInfo() {
 
     // ── 전역 구독: chat_rooms (새 방 / 상태 변경) ──
     function startGlobalRoomWatch() {
-        var sb = getSb(); if (!sb) { setTimeout(startGlobalRoomWatch, 2000); return; }
+        var sb = getSb();
+        if (!sb) { console.log('⏳ [알림] sb 미준비(room), 2초 후 재시도'); setTimeout(startGlobalRoomWatch, 2000); return; }
         if (globalRoomSub) { globalRoomSub.unsubscribe(); }
+        console.log('✅ [알림] startGlobalRoomWatch 구독 시작');
         globalRoomSub = sb.channel('global-room-watch')
             .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_rooms'}, function(p) {
                 var rm = p.new;
+                console.log('📨 [알림] chat_rooms INSERT:', rm.customer_name, rm.status);
                 if (rm.status === 'waiting' || rm.status === 'ai_chatting') {
                     var name = rm.customer_name || '고객';
                     var mgr = rm.assigned_manager;
@@ -2554,30 +2576,39 @@ async function saveCommonInfo() {
                 }
                 lcLoadRooms();
             })
-            .subscribe();
+            .subscribe(function(status) {
+                console.log('📡 [알림] global-room-watch 상태:', status);
+            });
     }
     setTimeout(startGlobalRoomWatch, 1500);
 
     // ── 전역 구독: chat_messages (모든 고객 메시지 알림) ──
     function startMessageWatch() {
         if (_msgSubChannel) return;
-        var sb = getSb(); if (!sb) { setTimeout(startMessageWatch, 2000); return; }
+        var sb = getSb();
+        if (!sb) { console.log('⏳ [알림] sb 미준비, 2초 후 재시도'); setTimeout(startMessageWatch, 2000); return; }
+        console.log('✅ [알림] startMessageWatch 구독 시작');
         _msgSubChannel = sb.channel('global-msg-watch')
             .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_messages'}, async function(p) {
                 var msg = p.new;
+                console.log('📨 [알림] chat_messages INSERT 수신:', msg.sender_type, msg.message ? msg.message.substring(0,20) : '(파일)');
                 if (msg.sender_type !== 'customer') return;
                 // 채팅 섹션이 활성화되어 있고, 해당 방을 보고 있고, 탭이 포커스된 경우만 스킵
                 var chatSec = document.getElementById('sec-live-chat');
                 var isChatActive = chatSec && chatSec.classList.contains('active') && !document.hidden;
-                if (isChatActive && currentRoom && currentRoom.id === msg.room_id) return;
+                if (isChatActive && currentRoom && currentRoom.id === msg.room_id) {
+                    console.log('🔇 [알림] 현재 보고 있는 방 → 스킵');
+                    return;
+                }
                 // 방 정보
                 var roomInfo = null;
                 try {
                     var rr = await sb.from('chat_rooms').select('customer_name,assigned_manager,status').eq('id', msg.room_id).single();
                     if (rr.data) roomInfo = rr.data;
-                } catch(e) {}
+                } catch(e) { console.warn('⚠️ [알림] 방 정보 조회 실패:', e); }
                 var name = (roomInfo && roomInfo.customer_name) || '고객';
                 var mgr = roomInfo && roomInfo.assigned_manager;
+                console.log('🔔 [알림] 알림 발송:', name, '담당:', mgr, 'shouldAlert:', shouldAlwaysAlert(mgr));
                 var txt = msg.message || '(파일)';
                 if (txt.length > 30) txt = txt.substring(0, 30) + '...';
                 var tts = mgr
@@ -2590,7 +2621,9 @@ async function saveCommonInfo() {
                     txt, tts, mgr, false
                 );
             })
-            .subscribe();
+            .subscribe(function(status) {
+                console.log('📡 [알림] global-msg-watch 상태:', status);
+            });
     }
     function stopMessageWatch() {
         if (_msgSubChannel) { _msgSubChannel.unsubscribe(); _msgSubChannel = null; }
