@@ -502,7 +502,7 @@ function openCalendarModal() {
     // 동적 타이틀
     const country = getCountryCode();
     const leadDays = LEAD_DAYS_MAP[country] || 10;
-    const titleEl = document.querySelector('[data-i18n="modal_calendar_title"]');
+    const titleEl = document.getElementById('calendarTitleText');
     if (titleEl) {
         const titles = {
             'kr': `배송요청 [제작기간: 약 ${leadDays}영업일]`,
