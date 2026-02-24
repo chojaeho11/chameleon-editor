@@ -2156,16 +2156,19 @@ async function saveCommonInfo() {
     function getSb(){return window.sb;}
 
     // ══════════════════════════════════════════════
-    // ★ 강화된 알림 시스템 v3 — 내 매니저 필터 + 담당자 TTS + MAX 볼륨
+    // ★ 강화된 알림 시스템 v4 — 항상 알림 + 반복 알람 + 배지 + 강한 사운드
     // ══════════════════════════════════════════════
-    var notifyAll = false;  // 일반 유입 알림 (미배정 + 내 담당)
-    var notifyMgr = false;  // 내 담당 고객만
+    var notifyAll = false;  // TTS/데스크톱 알림 (일반 유입)
+    var notifyMgr = false;  // TTS/데스크톱 알림 (내 담당)
     var myManagerName = '';  // 접속한 매니저 이름
     try { notifyAll = localStorage.getItem('lcNotifyAll') === 'on'; } catch(e) {}
     try { notifyMgr = localStorage.getItem('lcNotifyMgr') === 'on'; } catch(e) {}
     try { myManagerName = localStorage.getItem('lcMyManager') || ''; } catch(e) {}
     var _audioCtx = null;
     var _msgSubChannel = null;
+    var _unreadCount = 0;         // 미확인 메시지 수
+    var _repeatAlarmTimer = null; // 반복 알람 타이머
+    var _lastAlarmTime = 0;       // 마지막 알람 시간 (중복 방지)
 
     // 내 매니저 이름 저장/로드
     window.lcSaveMyName = function() {
@@ -2195,50 +2198,82 @@ async function saveCommonInfo() {
     }
     setTimeout(loadManagerOptions, 1500);
 
-    // ── 내 알림인지 판단 ──
+    // ── 내 알림인지 판단 (TTS/데스크톱 전용 필터) ──
     function isMyNotification(assignedMgr) {
-        // 미배정(null/빈값) → 일반 유입 → notifyAll이면 알림
         if (!assignedMgr) return notifyAll;
-        // 내 이름과 일치 → 내 담당 → notifyMgr 또는 notifyAll이면 알림
         if (myManagerName && assignedMgr === myManagerName) return (notifyMgr || notifyAll);
-        // 다른 매니저 → 알림 안함
+        return false;
+    }
+    // ── 사운드+토스트는 항상 울릴지 판단 ──
+    function shouldAlwaysAlert(assignedMgr) {
+        // 미배정 → 항상 알림 (누군가 응답해야)
+        if (!assignedMgr) return true;
+        // 내 담당 → 항상 알림
+        if (myManagerName && assignedMgr === myManagerName) return true;
+        // 매니저 미선택 → 전체 알림
+        if (!myManagerName) return true;
         return false;
     }
 
-    // 카카오톡 스타일 알림음 — MAX 볼륨
+    // ── 강화된 알림음: 고객 메시지 (카카오톡 스타일 3연타) ──
     function playKakaoSound() {
         try {
             if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             var ctx = _audioCtx;
             if (ctx.state === 'suspended') ctx.resume();
-            var notes = [784, 988, 1175];
-            notes.forEach(function(freq, i) {
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.type = 'sine'; osc.frequency.value = freq;
-                var t = ctx.currentTime + i * 0.12;
-                gain.gain.setValueAtTime(1.0, t);
-                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-                osc.start(t); osc.stop(t + 0.15);
+            // 3회 반복 (0ms, 500ms, 1000ms)
+            [0, 0.5, 1.0].forEach(function(rep) {
+                [784, 988, 1175].forEach(function(freq, i) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.type = 'sine'; osc.frequency.value = freq;
+                    var t = ctx.currentTime + rep + i * 0.12;
+                    gain.gain.setValueAtTime(1.0, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                    osc.start(t); osc.stop(t + 0.2);
+                });
             });
         } catch(e) {}
     }
 
-    // 새 상담 요청 — MAX 볼륨 강한 알림
+    // ── 강화된 알림음: 새 상담 / 긴급 (경보 스타일 5연타) ──
     function playNewChatSound() {
         try {
             if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             var ctx = _audioCtx;
             if (ctx.state === 'suspended') ctx.resume();
-            [0, 0.4].forEach(function(delay) {
+            // 5회 반복 경보음
+            [0, 0.35, 0.7, 1.05, 1.4].forEach(function(delay) {
                 [660, 880, 1100].forEach(function(freq, i) {
                     var osc = ctx.createOscillator();
                     var gain = ctx.createGain();
                     osc.connect(gain); gain.connect(ctx.destination);
                     osc.type = 'triangle'; osc.frequency.value = freq;
-                    var t = ctx.currentTime + delay + i * 0.1;
+                    var t = ctx.currentTime + delay + i * 0.08;
                     gain.gain.setValueAtTime(1.0, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                    osc.start(t); osc.stop(t + 0.15);
+                });
+            });
+        } catch(e) {}
+    }
+
+    // ── 반복 경보음 (미응답 시 30초마다) ──
+    function playRepeatAlarm() {
+        try {
+            if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var ctx = _audioCtx;
+            if (ctx.state === 'suspended') ctx.resume();
+            // 낮은 톤 경고음 2회
+            [0, 0.6].forEach(function(delay) {
+                [440, 554, 660, 554, 440].forEach(function(freq, i) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.type = 'square'; osc.frequency.value = freq;
+                    var t = ctx.currentTime + delay + i * 0.1;
+                    gain.gain.setValueAtTime(0.8, t);
                     gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
                     osc.start(t); osc.stop(t + 0.12);
                 });
@@ -2272,54 +2307,146 @@ async function saveCommonInfo() {
         } catch(e) {}
     }
 
-    // 인앱 토스트 배너
+    // 인앱 토스트 배너 (스택 지원, 더 오래 표시)
+    var _toastCount = 0;
     function showChatToast(title, body, isUrgent) {
-        var existing = document.getElementById('lcToastBanner');
-        if (existing) existing.remove();
+        _toastCount++;
+        var idx = _toastCount;
         var div = document.createElement('div');
-        div.id = 'lcToastBanner';
-        div.style.cssText = 'position:fixed;top:16px;right:16px;z-index:99999;min-width:320px;max-width:420px;background:' + (isUrgent ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'linear-gradient(135deg,#22c55e,#16a34a)') + ';color:#fff;border-radius:14px;padding:14px 18px;box-shadow:0 8px 30px rgba(0,0,0,0.25);animation:lcSlideIn .3s ease;cursor:pointer;';
+        div.className = 'lc-toast-item';
+        div.style.cssText = 'position:fixed;top:' + (16 + ((document.querySelectorAll('.lc-toast-item').length) * 80)) + 'px;right:16px;z-index:99999;min-width:340px;max-width:440px;background:' + (isUrgent ? 'linear-gradient(135deg,#dc2626,#ef4444)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)') + ';color:#fff;border-radius:14px;padding:14px 18px;box-shadow:0 8px 30px rgba(0,0,0,0.35);animation:lcSlideIn .3s ease;cursor:pointer;';
         div.innerHTML = '<div style="display:flex;align-items:center;gap:10px;">'
-            + '<div style="width:40px;height:40px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;">' + (isUrgent ? '🔔' : '💬') + '</div>'
-            + '<div style="flex:1;"><div style="font-weight:700;font-size:14px;">' + title + '</div><div style="font-size:12px;opacity:0.9;margin-top:2px;">' + body + '</div></div>'
-            + '<div onclick="event.stopPropagation();this.parentElement.parentElement.remove();" style="cursor:pointer;opacity:0.7;font-size:16px;padding:4px;">✕</div>'
+            + '<div style="width:44px;height:44px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;' + (isUrgent ? 'animation:lcPulse 0.5s ease infinite;' : '') + '">' + (isUrgent ? '🚨' : '💬') + '</div>'
+            + '<div style="flex:1;"><div style="font-weight:700;font-size:15px;">' + title + '</div><div style="font-size:13px;opacity:0.9;margin-top:2px;">' + body + '</div></div>'
+            + '<div onclick="event.stopPropagation();this.parentElement.parentElement.remove();" style="cursor:pointer;opacity:0.7;font-size:18px;padding:4px 8px;">✕</div>'
             + '</div>';
         div.onclick = function() { div.remove(); if (window.showSection) window.showSection('sec-live-chat'); };
         document.body.appendChild(div);
         if (!document.getElementById('lcToastCSS')) {
             var st = document.createElement('style'); st.id = 'lcToastCSS';
-            st.textContent = '@keyframes lcSlideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes lcSlideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}';
+            st.textContent = '@keyframes lcSlideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes lcSlideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}@keyframes lcPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}@keyframes lcBadgePulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(239,68,68,0.7)}50%{transform:scale(1.1);box-shadow:0 0 0 8px rgba(239,68,68,0)}}';
             document.head.appendChild(st);
         }
+        // 긴급이면 10초, 일반이면 8초 후 자동 닫힘
         setTimeout(function() {
             if (div.parentElement) {
                 div.style.animation = 'lcSlideOut .3s ease forwards';
                 setTimeout(function() { if (div.parentElement) div.remove(); }, 300);
             }
-        }, 6000);
+        }, isUrgent ? 10000 : 8000);
     }
 
-    // 타이틀 깜빡임
+    // 타이틀 깜빡임 + 미확인 카운트 표시
     var _titleFlash = null;
+    var _origTitle = '';
     function flashTitle(msg) {
         if (_titleFlash) return;
-        var orig = document.title; var on = false;
-        _titleFlash = setInterval(function() { document.title = on ? orig : '🔴 ' + msg; on = !on; }, 1000);
+        _origTitle = document.title.replace(/^\(\d+\)\s*/, '').replace(/^🔴\s*/, '');
+        var on = false;
+        _titleFlash = setInterval(function() {
+            var prefix = _unreadCount > 0 ? '(' + _unreadCount + ') ' : '';
+            document.title = on ? prefix + _origTitle : '🔴 ' + msg;
+            on = !on;
+        }, 800);
         window.addEventListener('focus', function restore() {
-            clearInterval(_titleFlash); _titleFlash = null; document.title = orig;
+            clearInterval(_titleFlash); _titleFlash = null;
+            _updateTitleBadge();
             window.removeEventListener('focus', restore);
         });
     }
+    function _updateTitleBadge() {
+        var base = (_origTitle || document.title).replace(/^\(\d+\)\s*/, '').replace(/^🔴\s*/, '');
+        document.title = _unreadCount > 0 ? '(' + _unreadCount + ') ' + base : base;
+    }
 
-    // ── 통합 알림 발송 (내 알림만 통과) ──
+    // ── 사이드바 미확인 배지 ──
+    function updateUnreadBadge(delta) {
+        if (delta > 0) _unreadCount += delta;
+        // 사이드바 채팅 메뉴에 배지 추가
+        var menuItems = document.querySelectorAll('.menu-item, .sidebar a, [onclick*="sec-live-chat"]');
+        menuItems.forEach(function(el) {
+            if (el.textContent.indexOf('채팅') >= 0 || el.textContent.indexOf('상담') >= 0 ||
+                (el.getAttribute('onclick') || '').indexOf('sec-live-chat') >= 0) {
+                var badge = el.querySelector('.lc-unread-badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'lc-unread-badge';
+                    badge.style.cssText = 'background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:0 5px;animation:lcBadgePulse 1.5s ease infinite;';
+                    el.style.position = 'relative';
+                    el.appendChild(badge);
+                }
+                if (_unreadCount > 0) {
+                    badge.textContent = _unreadCount > 99 ? '99+' : _unreadCount;
+                    badge.style.display = 'inline-flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        });
+        _updateTitleBadge();
+    }
+    function clearUnreadBadge() {
+        _unreadCount = 0;
+        updateUnreadBadge(0);
+        stopRepeatAlarm();
+    }
+
+    // ── 반복 알람 (미응답 시 30초마다 재알림) ──
+    function startRepeatAlarm() {
+        if (_repeatAlarmTimer) return;
+        _repeatAlarmTimer = setInterval(function() {
+            // 채팅 섹션을 보고 있으면 알람 중지
+            var chatSec = document.getElementById('sec-live-chat');
+            if (chatSec && chatSec.classList.contains('active') && !document.hidden) {
+                stopRepeatAlarm();
+                return;
+            }
+            playRepeatAlarm();
+            // 타이틀도 다시 깜빡이기
+            if (!_titleFlash) flashTitle('미확인 메시지 ' + _unreadCount + '건');
+        }, 30000);
+    }
+    function stopRepeatAlarm() {
+        if (_repeatAlarmTimer) { clearInterval(_repeatAlarmTimer); _repeatAlarmTimer = null; }
+    }
+
+    // ── 채팅 섹션 진입 시 배지 클리어 ──
+    var _origShowSection = window.showSection;
+    window.showSection = function(id, navEl) {
+        if (_origShowSection) _origShowSection(id, navEl);
+        if (id === 'sec-live-chat') {
+            clearUnreadBadge();
+        }
+    };
+    // 포커스 복귀 시에도 체크
+    window.addEventListener('focus', function() {
+        var chatSec = document.getElementById('sec-live-chat');
+        if (chatSec && chatSec.classList.contains('active')) {
+            clearUnreadBadge();
+        }
+    });
+
+    // ── 통합 알림 발송 v4 — 사운드+토스트는 항상, TTS/데스크톱은 필터 ──
     function sendNotification(title, body, ttsText, assignedMgr, isUrgent) {
-        if (!notifyAll && !notifyMgr) return;
-        if (!isMyNotification(assignedMgr)) return;
-        if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); }
-        if (ttsText) speakTTS(ttsText);
-        showDesktopNotify(title, body);
-        showChatToast(title, body, isUrgent);
-        if (document.hidden) flashTitle(title);
+        var now = Date.now();
+        // 1초 내 중복 알림 방지
+        if (now - _lastAlarmTime < 1000) return;
+        _lastAlarmTime = now;
+
+        // ★ 사운드는 항상 재생 (관련 고객이면)
+        if (shouldAlwaysAlert(assignedMgr)) {
+            if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); }
+            showChatToast(title, body, isUrgent);
+            flashTitle(title);
+            updateUnreadBadge(1);
+            startRepeatAlarm();
+        }
+
+        // TTS + 데스크톱 알림 = 토글 ON일 때만
+        if ((notifyAll || notifyMgr) && isMyNotification(assignedMgr)) {
+            if (ttsText) speakTTS(ttsText);
+            showDesktopNotify(title, body);
+        }
     }
 
     // ── 알림 토글 ──
@@ -2431,7 +2558,7 @@ async function saveCommonInfo() {
     }
     setTimeout(startGlobalRoomWatch, 1500);
 
-    // ── 전역 구독: chat_messages (모든 메시지 알림) ──
+    // ── 전역 구독: chat_messages (모든 고객 메시지 알림) ──
     function startMessageWatch() {
         if (_msgSubChannel) return;
         var sb = getSb(); if (!sb) { setTimeout(startMessageWatch, 2000); return; }
@@ -2451,11 +2578,8 @@ async function saveCommonInfo() {
                 } catch(e) {}
                 var name = (roomInfo && roomInfo.customer_name) || '고객';
                 var mgr = roomInfo && roomInfo.assigned_manager;
-                // 내 알림인지 체크 (다른 매니저 담당이면 스킵)
-                if (!isMyNotification(mgr)) return;
                 var txt = msg.message || '(파일)';
                 if (txt.length > 30) txt = txt.substring(0, 30) + '...';
-                // TTS: 항상 담당자 이름 포함
                 var tts = mgr
                     ? mgr + ' 매니저님, ' + name + ' 고객님 메시지입니다'
                     : myManagerName
@@ -2471,9 +2595,10 @@ async function saveCommonInfo() {
     function stopMessageWatch() {
         if (_msgSubChannel) { _msgSubChannel.unsubscribe(); _msgSubChannel = null; }
     }
-    // 항상 메시지 감시 시작 (알림 설정과 무관하게 구독, sendNotification 내부에서 필터)
+    // ★ 항상 메시지 감시 시작 (알림 설정과 무관)
     setTimeout(startMessageWatch, 2000);
-    if ((notifyAll || notifyMgr) && 'Notification' in window && Notification.permission === 'default') {
+    // ★ 브라우저 알림 권한 항상 요청
+    if ('Notification' in window && Notification.permission === 'default') {
         setTimeout(function() { Notification.requestPermission(); }, 3000);
     }
     // 고객 이름으로 언어 감지
@@ -2694,6 +2819,7 @@ async function saveCommonInfo() {
     };
     window.lcSelectRoom = async function(roomId) {
         var sb=getSb(); if(subscription){subscription.unsubscribe();subscription=null;}
+        clearUnreadBadge();
         var rr=await sb.from('chat_rooms').select('*').eq('id',roomId).single();
         if(rr.error) return; currentRoom=rr.data;
         var isAiChat = currentRoom.status==='ai_chatting';
@@ -2732,8 +2858,9 @@ async function saveCommonInfo() {
                 area.scrollTop=area.scrollHeight;
                 if(m.sender_type==='customer') {
                     sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
-                    // 탭이 비활성이면 현재 방이라도 알림
-                    if(document.hidden) playKakaoSound();
+                    // ★ 항상 알림음 재생 (현재 방 메시지)
+                    playKakaoSound();
+                    if(document.hidden) flashTitle('💬 새 메시지');
                 }
             }
         }).subscribe();
