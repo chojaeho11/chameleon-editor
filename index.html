@@ -6036,7 +6036,7 @@ window.showChoiceModal = async function(key) {
                 <div id="productCommonFooter" style="margin-top:30px; border-top:2px solid #e5e7eb; padding-top:24px;"></div>
             </div>
 
-            <div class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; min-width:${window.innerWidth <= 768 ? 'auto' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto; max-height:90vh; min-height:0;">
+            <div id="choiceRightActions" class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; min-width:${window.innerWidth <= 768 ? 'auto' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto; max-height:90vh; min-height:0;">
                 ${rightSideUI}
                 ${optionsHtml}
                 <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:20px; text-align:right;">
@@ -6057,8 +6057,8 @@ window.showChoiceModal = async function(key) {
                 <span id="mobileStickyTotal" style="font-size:20px; font-weight:900; color:#6366f1;">0</span>
             </div>
             <div style="display:flex; gap:8px;">
-                ${product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" style="flex:1; height:48px; border-radius:10px; border:none; background:#6366f1; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🎨 ${lang==='ja'?'デザイン':lang==='en'?'Design':'디자인'}</button>`}
-                <button onclick="window.confirmChoice('cart')" style="flex:${product.is_general_product ? '1' : '1'}; height:48px; border-radius:10px; border:none; background:#111; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🛒 ${lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
+                ${product.is_general_product ? '' : `<button onclick="document.getElementById('choiceRightActions').scrollIntoView({behavior:'smooth'})" style="flex:1; height:48px; border-radius:10px; border:none; background:#6366f1; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🎨 ${lang==='ja'?'デザイン':lang==='en'?'Design':'디자인'}</button>`}
+                <button onclick="document.getElementById('choiceRightActions').scrollIntoView({behavior:'smooth'})" style="flex:1; height:48px; border-radius:10px; border:none; background:#111; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🛒 ${lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
             </div>
         </div>
     `;
