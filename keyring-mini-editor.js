@@ -26,6 +26,8 @@ export async function openMiniKeyringEditor(containerEl, imageFile, onConfirm, o
         brushSize: 20,
         drawX: 0, drawY: 0, drawW: 0, drawH: 0, displayScale: 1,
         dpr: 1, logW: 0, logH: 0,
+        holeAngle: -90, // 고리 위치 각도 (deg, -90=상단 중앙)
+        draggingHole: false,
         onConfirm, onCancel
     };
 
@@ -180,8 +182,10 @@ function renderPreview() {
     // 4. 편집된 이미지
     ctx.drawImage(es.offCanvas, drawX, drawY, drawW, drawH);
 
-    // 5. 키링 고리 구멍
-    drawKeyringHole(ctx, drawX + drawW / 2, drawY - 4, scale);
+    // 5. 키링 고리 구멍 (holeAngle 기반 위치)
+    const holePt = getHolePosition(drawX, drawY, drawW, drawH, es.holeAngle);
+    es._holeCx = holePt.cx; es._holeCy = holePt.cy; // 히트 테스트용 캐시
+    drawKeyringHole(ctx, holePt.cx, holePt.cy, holePt.connX, holePt.connY, scale);
 
     ctx.restore();
 }
@@ -279,13 +283,33 @@ function erodeAlpha(imgData, pixels) {
     }
 }
 
-function drawKeyringHole(ctx, cx, cy, scale) {
+function getHolePosition(drawX, drawY, drawW, drawH, angleDeg) {
+    const rad = angleDeg * Math.PI / 180;
+    const cx = drawX + drawW / 2;
+    const cy = drawY + drawH / 2;
+    const rx = drawW / 2 + 2; // 이미지 가장자리에서 약간 바깥
+    const ry = drawH / 2 + 2;
+    // 타원 위의 점 (이미지 경계)
+    const edgeX = cx + rx * Math.cos(rad);
+    const edgeY = cy + ry * Math.sin(rad);
+    // 고리 중심은 가장자리에서 더 바깥으로
+    const dist = 16;
+    const holeX = edgeX + dist * Math.cos(rad);
+    const holeY = edgeY + dist * Math.sin(rad);
+    return { cx: holeX, cy: holeY, connX: edgeX, connY: edgeY };
+}
+
+function drawKeyringHole(ctx, cx, cy, connX, connY, scale) {
     const outerR = Math.max(10, 14 * scale);
     const innerR = Math.max(6, 8.5 * scale);
 
-    // 연결 바
-    ctx.fillStyle = 'rgba(200,200,200,0.3)';
-    ctx.fillRect(cx - 3, cy, 6, outerR * 0.6);
+    // 연결 바 (이미지 가장자리 → 고리 중심)
+    ctx.beginPath();
+    ctx.moveTo(connX, connY);
+    ctx.lineTo(cx, cy);
+    ctx.strokeStyle = 'rgba(200,200,200,0.5)';
+    ctx.lineWidth = 5;
+    ctx.stroke();
 
     // 외곽 원
     ctx.beginPath();
@@ -304,6 +328,12 @@ function drawKeyringHole(ctx, cx, cy, scale) {
     ctx.strokeStyle = '#FF0000';
     ctx.lineWidth = 1.5;
     ctx.stroke();
+
+    // 드래그 힌트 (반투명 이동 아이콘)
+    ctx.fillStyle = 'rgba(99,102,241,0.6)';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⤡', cx, cy + 3);
 }
 
 function drawCheckerboard(ctx, w, h, size) {
@@ -334,6 +364,49 @@ function getEraserBrushRadius() {
     const rect = es.canvas.getBoundingClientRect();
     const sx = es.origW / (es.drawW * (rect.width / es.logW));
     return (es.brushSize / 2) * sx;
+}
+
+function canvasDown(e) {
+    if (!es) return;
+    const rect = es.canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    // 고리 히트 테스트 (지우개 모드가 아닐 때)
+    if (!es.eraserMode && es._holeCx !== undefined) {
+        const dx = mx - es._holeCx, dy = my - es._holeCy;
+        if (Math.sqrt(dx * dx + dy * dy) < 25) {
+            es.draggingHole = true;
+            return;
+        }
+    }
+
+    // 지우개 모드
+    if (!es.eraserMode) return;
+    eraserDown(e);
+}
+
+function canvasMove(e) {
+    if (!es) return;
+    if (es.draggingHole) {
+        const rect = es.canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        // 이미지 중심 기준 각도 계산
+        const imgCx = es.drawX + es.drawW / 2;
+        const imgCy = es.drawY + es.drawH / 2;
+        es.holeAngle = Math.atan2(my - imgCy, mx - imgCx) * 180 / Math.PI;
+        renderPreview();
+        return;
+    }
+    updateCursor(e);
+    eraserMove(e);
+}
+
+function canvasUp() {
+    if (!es) return;
+    if (es.draggingHole) { es.draggingHole = false; return; }
+    eraserUp();
 }
 
 function eraserDown(e) {
@@ -379,15 +452,24 @@ function eraserUp() {
     }
 }
 
-function eraserTouchDown(e) { e.preventDefault(); const t = e.touches[0]; eraserDown({ clientX: t.clientX, clientY: t.clientY }); }
-function eraserTouchMove(e) { e.preventDefault(); const t = e.touches[0]; eraserMove({ clientX: t.clientX, clientY: t.clientY }); updateCursorTouch(e); }
-function eraserTouchUp() { eraserUp(); }
+function canvasTouchDown(e) { e.preventDefault(); const t = e.touches[0]; canvasDown({ clientX: t.clientX, clientY: t.clientY }); }
+function canvasTouchMove(e) { e.preventDefault(); const t = e.touches[0]; canvasMove({ clientX: t.clientX, clientY: t.clientY }); }
+function canvasTouchUp() { canvasUp(); }
 
 function updateCursor(e) {
-    if (!es || !es.eraserMode) return;
+    if (!es) return;
+    const rect = es.canvas.getBoundingClientRect();
+
+    // 고리 근처 → grab 커서
+    if (!es.eraserMode && es._holeCx !== undefined) {
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        const dx = mx - es._holeCx, dy = my - es._holeCy;
+        es.canvas.style.cursor = Math.sqrt(dx*dx + dy*dy) < 25 ? 'grab' : 'default';
+    }
+
+    if (!es.eraserMode) return;
     const cursor = es.container.querySelector('.mkr-eraser-cursor');
     if (!cursor) return;
-    const rect = es.canvas.getBoundingClientRect();
     const s = es.brushSize;
     cursor.style.display = 'block';
     cursor.style.width = s + 'px';
@@ -442,31 +524,26 @@ function applyStroke(ctx, stroke) {
 // 이벤트 바인딩
 // ============================================================
 function bindCanvasEvents(canvas) {
-    canvas.addEventListener('mousedown', eraserDown);
-    canvas.addEventListener('mousemove', onCanvasMouseMove);
-    canvas.addEventListener('mouseup', eraserUp);
-    canvas.addEventListener('mouseleave', eraserUp);
-    canvas.addEventListener('touchstart', eraserTouchDown, { passive: false });
-    canvas.addEventListener('touchmove', eraserTouchMove, { passive: false });
-    canvas.addEventListener('touchend', eraserTouchUp);
-    canvas.addEventListener('touchcancel', eraserTouchUp);
+    canvas.addEventListener('mousedown', canvasDown);
+    canvas.addEventListener('mousemove', canvasMove);
+    canvas.addEventListener('mouseup', canvasUp);
+    canvas.addEventListener('mouseleave', canvasUp);
+    canvas.addEventListener('touchstart', canvasTouchDown, { passive: false });
+    canvas.addEventListener('touchmove', canvasTouchMove, { passive: false });
+    canvas.addEventListener('touchend', canvasTouchUp);
+    canvas.addEventListener('touchcancel', canvasTouchUp);
 }
 
 function unbindCanvasEvents(canvas) {
     if (!canvas) return;
-    canvas.removeEventListener('mousedown', eraserDown);
-    canvas.removeEventListener('mousemove', onCanvasMouseMove);
-    canvas.removeEventListener('mouseup', eraserUp);
-    canvas.removeEventListener('mouseleave', eraserUp);
-    canvas.removeEventListener('touchstart', eraserTouchDown);
-    canvas.removeEventListener('touchmove', eraserTouchMove);
-    canvas.removeEventListener('touchend', eraserTouchUp);
-    canvas.removeEventListener('touchcancel', eraserTouchUp);
-}
-
-function onCanvasMouseMove(e) {
-    updateCursor(e);
-    eraserMove(e);
+    canvas.removeEventListener('mousedown', canvasDown);
+    canvas.removeEventListener('mousemove', canvasMove);
+    canvas.removeEventListener('mouseup', canvasUp);
+    canvas.removeEventListener('mouseleave', canvasUp);
+    canvas.removeEventListener('touchstart', canvasTouchDown);
+    canvas.removeEventListener('touchmove', canvasTouchMove);
+    canvas.removeEventListener('touchend', canvasTouchUp);
+    canvas.removeEventListener('touchcancel', canvasTouchUp);
 }
 
 function bindToolbarEvents(container) {
