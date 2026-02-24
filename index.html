@@ -9779,7 +9779,7 @@ window.dsmRenderProducts = async function(keyword) {
                 filter: 'room_id=eq.' + _aiRoom.id
             }, function(payload) {
                 var m = payload.new;
-                if (m.sender_type === 'internal') return;
+                if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
                 var msgArea = document.getElementById('chamMessages');
                 if (m.sender_type === 'manager') {
                     switchToLiveFromAI(m.sender_name || '매니저');
@@ -10393,7 +10393,7 @@ window.dsmRenderProducts = async function(keyword) {
                     filter: 'room_id=eq.' + _room.id
                 }, function(payload) {
                     var m = payload.new;
-                    if (m.sender_type === 'internal') return;
+                    if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
                     var ma = document.getElementById('chamMessages');
                     if (m.sender_type === 'manager') {
                         var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
@@ -10565,7 +10565,7 @@ window.dsmRenderProducts = async function(keyword) {
                 filter: 'room_id=eq.' + _room.id
             }, function(payload) {
                 var m = payload.new;
-                if (m.sender_type === 'internal') return;
+                if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
                 var ma = document.getElementById('chamMessages');
                 if (m.sender_type === 'manager') {
                     var mn = m.sender_name || '매니저';
@@ -10597,7 +10597,7 @@ window.dsmRenderProducts = async function(keyword) {
 
     // ── 페이지 로드 시 실시간 상담 복원 ──
     function _renderRestoredMsg(ma, m) {
-        if (m.sender_type === 'internal') return; // 내부대화 무시
+        if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return; // 내부대화 무시
         if (m.sender_type === 'customer') {
             if (m.file_url) {
                 if (m.file_type && m.file_type.startsWith('image/'))
@@ -10641,7 +10641,7 @@ window.dsmRenderProducts = async function(keyword) {
                 filter: 'room_id=eq.' + roomId
             }, function(payload) {
                 var m = payload.new;
-                if (m.sender_type === 'internal') return;
+                if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
                 var ma = document.getElementById('chamMessages');
                 if (m.sender_type === 'manager') {
                     var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
@@ -10735,7 +10735,7 @@ window.dsmRenderProducts = async function(keyword) {
 
             // DB에서 메시지 로드
             sb.from('chat_messages').select('*').eq('room_id', _room.id)
-              .neq('sender_type', 'internal')
+              .neq('sender_type', 'internal').neq('sender_type', 'admin_memo')
               .order('created_at', { ascending: true }).limit(200)
               .then(function(msgRes) {
                 var ma = document.getElementById('chamMessages');

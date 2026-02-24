@@ -1751,11 +1751,24 @@
                     <button id="lcChangeMgrBtn" class="btn btn-outline btn-sm" onclick="lcShowChangeManager()" style="font-size:12px; display:none; padding:6px 12px;">🔄 담당 변경</button>
                     <div id="lcChangeMgrDropdown" style="display:none; position:absolute; top:100%; right:0; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.15); z-index:100; min-width:200px; padding:8px; margin-top:4px;"></div>
                     <button id="lcInterveneBtn" class="btn btn-primary btn-sm" onclick="lcIntervene()" style="font-size:12px; display:none; background:#f59e0b; border-color:#f59e0b; padding:6px 12px;">🖐️ 끼어들기</button>
+                    <button id="lcMemoBtn" class="btn btn-outline btn-sm" onclick="lcToggleMemo()" style="font-size:12px; padding:6px 12px;">📝 메모</button>
                     <button class="btn btn-outline btn-sm" onclick="lcSaveToKnowledge()" style="font-size:12px; padding:6px 12px;">📚 학습저장</button>
                     <button class="btn btn-outline btn-sm" onclick="lcCloseRoom()" style="font-size:12px; color:#ef4444; border-color:#ef4444; padding:6px 12px;">종료</button>
                 </div>
             </div>
             <div id="lcAiSummary" style="display:none; background:#ede9fe; padding:10px 24px; font-size:13px; color:#6366f1; border-bottom:1px solid #c4b5fd;"><b>🤖 AI 요약:</b> <span id="lcAiSummaryText"></span></div>
+            <!-- 메모 패널 -->
+            <div id="lcMemoPanel" style="display:none; background:#fffbeb; border-bottom:2px solid #fcd34d; padding:14px 24px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:13px; font-weight:700; color:#92400e;">📝 관리자 메모</span>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="lcSaveMemo()" style="font-size:12px; background:#f59e0b; color:#fff; border:none; padding:5px 14px; border-radius:6px; cursor:pointer; font-weight:700;">저장</button>
+                        <button onclick="lcToggleMemo()" style="font-size:12px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; padding:5px 10px; border-radius:6px; cursor:pointer;">닫기</button>
+                    </div>
+                </div>
+                <textarea id="lcMemoText" placeholder="이 상담방에 대한 메모를 입력하세요..." style="width:100%; height:80px; border:1px solid #fcd34d; border-radius:8px; padding:10px 12px; font-size:13px; resize:vertical; font-family:inherit; background:#fff; line-height:1.5;"></textarea>
+                <div id="lcMemoInfo" style="font-size:11px; color:#a1a1aa; margin-top:4px;"></div>
+            </div>
             <!-- 메시지 영역 -->
             <div id="lcChatMessages" style="flex:1; overflow-y:auto; padding:24px; background:#f8f9fb;">
                 <div style="text-align:center; color:#94a3b8; padding:80px 20px;"><i class="fa-solid fa-headset" style="font-size:56px; display:block; margin-bottom:20px; opacity:0.5;"></i><span style="font-size:15px;">왼쪽에서 상담방을 선택하세요</span></div>
@@ -2855,7 +2868,7 @@ async function saveCommonInfo() {
             var uRes = await sb.from('chat_messages').select('room_id').eq('is_read', false).eq('sender_type', 'customer').in('room_id', roomIds);
             if (uRes.data) uRes.data.forEach(function(u) { unreadMap[u.room_id] = (unreadMap[u.room_id] || 0) + 1; });
             // 마지막 메시지 (방별)
-            var lRes = await sb.from('chat_messages').select('room_id,message,sender_type,created_at').in('room_id', roomIds).order('created_at', {ascending: false}).limit(roomIds.length * 2);
+            var lRes = await sb.from('chat_messages').select('room_id,message,sender_type,created_at').in('room_id', roomIds).neq('sender_type','admin_memo').order('created_at', {ascending: false}).limit(roomIds.length * 2);
             if (lRes.data) lRes.data.forEach(function(m) { if (!lastMsgMap[m.room_id]) lastMsgMap[m.room_id] = m; });
         } catch(e) { console.warn('방 목록 추가정보 로드 실패:', e); }
         var h=''; r.data.forEach(function(rm){
@@ -3060,6 +3073,9 @@ async function saveCommonInfo() {
         var changeMgrBtn=document.getElementById('lcChangeMgrBtn');
         if(changeMgrBtn) changeMgrBtn.style.display=(currentRoom.status==='active'||currentRoom.status==='waiting')?'inline-block':'none';
         if(currentRoom.ai_summary){document.getElementById('lcAiSummary').style.display='block';document.getElementById('lcAiSummaryText').textContent=currentRoom.ai_summary;}else{document.getElementById('lcAiSummary').style.display='none';}
+        // 메모 패널 숨기고 메모 인디케이터 로드
+        var memoPanel=document.getElementById('lcMemoPanel'); if(memoPanel) memoPanel.style.display='none';
+        lcLoadMemo();
         if(currentRoom.status==='waiting'){
             await sb.from('chat_rooms').update({status:'active',updated_at:new Date().toISOString()}).eq('id',roomId);
             currentRoom.status='active';
@@ -3068,10 +3084,11 @@ async function saveCommonInfo() {
         var mr=await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(100);
         var area=document.getElementById('lcChatMessages');
         if(!mr.data||mr.data.length===0){area.innerHTML='<div style="text-align:center;color:#94a3b8;padding:30px;">메시지 없음</div>';}
-        else{var h='';mr.data.forEach(function(m){h+=renderMsg(m);});area.innerHTML=h;area.scrollTop=area.scrollHeight;}
+        else{var h='';mr.data.forEach(function(m){if(m.sender_type==='admin_memo') return; h+=renderMsg(m);});area.innerHTML=h;area.scrollTop=area.scrollHeight;}
         sb.from('chat_messages').update({is_read:true}).eq('room_id',roomId).eq('sender_type','customer').eq('is_read',false).then(function(){});
         subscription=sb.channel('admin-'+roomId).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room_id=eq.'+roomId},async function(p){
             var m=p.new;
+            if(m.sender_type==='admin_memo') return; // 메모는 채팅에 표시하지 않음
             // ★ 모든 메시지 타입 표시 (customer, manager, system, chatbot)
             // 내가 이 PC에서 방금 보낸 매니저 메시지는 이미 로컬 표시됨 → 중복 스킵
             if ((m.sender_type === 'manager' || m.sender_type === 'internal') && m.sender_name === myManagerName && (Date.now() - _lastSentAt) < 5000) {
@@ -3234,7 +3251,7 @@ async function saveCommonInfo() {
         if (preview) preview.style.display = 'none';
         _pendingFiles = [];
     };
-    async function lcUpFile(f){var sb=getSb();var sType=_lcInternalMode?'internal':'manager';var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error){showToast('업로드 실패','error');return;}var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
+    async function lcUpFile(f){var sb=getSb();_lastSentAt=Date.now();var sType=_lcInternalMode?'internal':'manager';var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error){showToast('업로드 실패','error');return;}var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
     window.lcCloseRoom = async function(){
         if(!currentRoom||!confirm('상담 종료?')) return;var sb=getSb();
         await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',currentRoom.id);
@@ -3290,6 +3307,73 @@ async function saveCommonInfo() {
         if(!cq.length||!ma.length) { showToast('질문과 답변 필요', 'warn'); return; }
         await sb.from('chatbot_knowledge').insert({category:'상담사례',question:cq.join(' / ').substring(0,500),answer:ma.join(' ').substring(0,1000),language:'ko',priority:3,is_active:true});
         showToast('AI 학습 데이터로 저장!', 'success');
+    };
+
+    // ── 관리자 메모 기능 ──
+    var _memoMsgId = null; // 현재 방 메모의 chat_messages.id (수정시 사용)
+    window.lcToggleMemo = function() {
+        var panel = document.getElementById('lcMemoPanel');
+        if (!panel) return;
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            lcLoadMemo();
+        } else {
+            panel.style.display = 'none';
+        }
+    };
+    window.lcLoadMemo = async function() {
+        if (!currentRoom) return;
+        var sb = getSb();
+        var ta = document.getElementById('lcMemoText');
+        var info = document.getElementById('lcMemoInfo');
+        var btn = document.getElementById('lcMemoBtn');
+        ta.value = ''; _memoMsgId = null;
+        if (info) info.textContent = '';
+        var res = await sb.from('chat_messages').select('*')
+            .eq('room_id', currentRoom.id)
+            .eq('sender_type', 'admin_memo')
+            .order('created_at', { ascending: false })
+            .limit(1);
+        if (res.data && res.data.length > 0) {
+            var memo = res.data[0];
+            ta.value = memo.message || '';
+            _memoMsgId = memo.id;
+            if (info) info.textContent = '마지막 수정: ' + new Date(memo.created_at).toLocaleString('ko-KR') + ' · ' + (memo.sender_name || '');
+            if (btn) btn.innerHTML = '📝 메모 <span style="background:#f59e0b;color:#fff;border-radius:50%;width:8px;height:8px;display:inline-block;vertical-align:middle;margin-left:2px;"></span>';
+        } else {
+            if (btn) btn.innerHTML = '📝 메모';
+        }
+    };
+    window.lcSaveMemo = async function() {
+        if (!currentRoom) return;
+        var sb = getSb();
+        var ta = document.getElementById('lcMemoText');
+        var txt = (ta.value || '').trim();
+        var mgrName = currentRoom.assigned_manager || '매니저';
+        if (!txt) {
+            // 텍스트가 비어있으면 기존 메모 삭제
+            if (_memoMsgId) {
+                await sb.from('chat_messages').delete().eq('id', _memoMsgId);
+                _memoMsgId = null;
+            }
+            var btn = document.getElementById('lcMemoBtn');
+            if (btn) btn.innerHTML = '📝 메모';
+            showToast('메모 삭제됨', 'success');
+            return;
+        }
+        if (_memoMsgId) {
+            // 기존 메모 업데이트
+            await sb.from('chat_messages').update({ message: txt, sender_name: mgrName, created_at: new Date().toISOString() }).eq('id', _memoMsgId);
+        } else {
+            // 새 메모 생성
+            var ins = await sb.from('chat_messages').insert({ room_id: currentRoom.id, sender_type: 'admin_memo', sender_name: mgrName, message: txt }).select();
+            if (ins.data && ins.data.length > 0) _memoMsgId = ins.data[0].id;
+        }
+        var btn = document.getElementById('lcMemoBtn');
+        if (btn) btn.innerHTML = '📝 메모 <span style="background:#f59e0b;color:#fff;border-radius:50%;width:8px;height:8px;display:inline-block;vertical-align:middle;margin-left:2px;"></span>';
+        var info = document.getElementById('lcMemoInfo');
+        if (info) info.textContent = '마지막 수정: ' + new Date().toLocaleString('ko-KR') + ' · ' + mgrName;
+        showToast('메모 저장됨', 'success');
     };
 
     // ── [기능3] 드래그앤드롭 + 클립보드 붙여넣기 ──
