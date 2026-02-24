@@ -2152,6 +2152,7 @@ async function saveCommonInfo() {
         myManagerName = sel.value;
         localStorage.setItem('lcMyManager', myManagerName);
         updateNotifyUI();
+        lcLoadRooms(); // 이름 변경 시 목록 새로고침 (필터 적용)
     };
     // 매니저 목록 로드 → select 채우기
     async function loadManagerOptions() {
@@ -2160,7 +2161,7 @@ async function saveCommonInfo() {
         var sel = document.getElementById('lcMyManagerName');
         if (!sel || !r.data) return;
         var saved = myManagerName;
-        sel.innerHTML = '<option value="">선택하세요</option>';
+        sel.innerHTML = '<option value="">전체 보기</option><option value="__HQ__"' + (saved === '__HQ__' ? ' selected' : '') + '>본사상담</option>';
         r.data.forEach(function(m) {
             try { var info = JSON.parse(m.answer); } catch(e) { var info = { name: m.question }; }
             var name = info.name || m.question;
@@ -2469,13 +2470,28 @@ async function saveCommonInfo() {
     }
     window.lcLoadRooms = async function() {
         var sb=getSb(); if(!sb) return;
-        var q = sb.from('chat_rooms').select('*').order('created_at',{ascending:false}).limit(30);
+        var q = sb.from('chat_rooms').select('*').order('created_at',{ascending:false}).limit(50);
         if (currentFilter === 'ai_chatting') {
             q = q.eq('status', 'ai_chatting');
         } else if (currentFilter !== 'all' && currentFilter !== 'chatbot') {
             q = q.eq('status', currentFilter);
         }
         var r = await q;
+        // 매니저 이름 필터 적용
+        var filterMgr = myManagerName || '';
+        if (filterMgr && filterMgr !== '' && r.data) {
+            if (filterMgr === '__HQ__') {
+                // 본사상담: assigned_manager가 비어있거나 '본사' 포함
+                r.data = r.data.filter(function(rm) {
+                    return !rm.assigned_manager || rm.assigned_manager === '' || rm.assigned_manager.indexOf('본사') >= 0;
+                });
+            } else {
+                // 특정 매니저: 자신이 담당하거나 미배정(대기)인 것만
+                r.data = r.data.filter(function(rm) {
+                    return rm.assigned_manager === filterMgr || rm.status === 'waiting' || rm.status === 'ai_chatting';
+                });
+            }
+        }
         var list=document.getElementById('lcRoomList');
         if(!r.data||r.data.length===0){list.innerHTML='<div style="text-align:center;color:#64748b;padding:30px;font-size:14px;">상담방 없음</div>';return;}
         var h=''; r.data.forEach(function(rm){
