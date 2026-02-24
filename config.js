@@ -64,11 +64,18 @@ export function initConfig() {
 
                 // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시
                 if (event === 'PASSWORD_RECOVERY') {
-                    import('./login.js?v=123').then(m => {
-                        if (m.openResetPwStep2) m.openResetPwStep2();
-                    }).catch(() => {});
+                    window.__passwordRecoveryMode = true;
+                    showPasswordResetModal();
                 }
             });
+
+            // 3-1. URL에 type=recovery 해시가 있으면 비밀번호 복구 모드
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            if (hashParams.get('type') === 'recovery') {
+                window.__passwordRecoveryMode = true;
+                // 이벤트가 늦게 올 수 있으므로 약간 대기 후 모달 표시
+                setTimeout(() => showPasswordResetModal(), 500);
+            }
 
             // 4. 데이터 로드 (이 부분만 최적화됨)
             await loadSystemData();
@@ -242,10 +249,33 @@ export function getLocalizedData(item) {
         formattedPrice = price.toLocaleString() + '원';
     }
 
-    return { 
-        name, 
-        price: Number(price) || 0, 
+    return {
+        name,
+        price: Number(price) || 0,
         formattedPrice,
-        raw: item 
+        raw: item
     };
+}
+
+// ── 비밀번호 재설정 모달 표시 헬퍼 ──
+function showPasswordResetModal() {
+    // login.js의 openResetPwStep2가 window에 노출되어 있으면 바로 사용
+    if (window.__openResetPwStep2) {
+        window.__openResetPwStep2();
+        return;
+    }
+    // 아직 login.js가 로드되지 않았을 수 있으므로 동적 import
+    import('./login.js?v=123').then(m => {
+        if (m.openResetPwStep2) m.openResetPwStep2();
+    }).catch(() => {
+        // 최후 수단: DOM 직접 조작
+        const modal = document.getElementById('resetPwModal');
+        const step1 = document.getElementById('resetPwStep1');
+        const step2 = document.getElementById('resetPwStep2');
+        if (modal) {
+            if (step1) step1.style.display = 'none';
+            if (step2) step2.style.display = 'block';
+            modal.style.display = 'flex';
+        }
+    });
 }

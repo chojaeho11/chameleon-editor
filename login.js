@@ -255,7 +255,11 @@ export function openResetPwStep2() {
     if (newPw) newPw.value = "";
     if (newPwConfirm) newPwConfirm.value = "";
     modal.style.display = "flex";
+    // URL 해시 정리 (recovery 토큰 노출 방지)
+    if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search);
 }
+// window에 노출 (config.js에서 접근 가능)
+window.__openResetPwStep2 = openResetPwStep2;
 
 // Step1: 이메일로 재설정 링크 발송
 async function handleForgotPassword() {
