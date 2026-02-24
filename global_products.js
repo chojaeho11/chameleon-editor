@@ -984,6 +984,7 @@ window.addProductDB = async () => {
     const isGeneral = document.getElementById('newProdIsGeneral').checked;
     const isHotDeal = document.getElementById('newProdIsHotDeal').checked;
     const isBizDeal = document.getElementById('newProdIsBizDeal').checked;
+    const isFileUpload = document.getElementById('newProdIsFileUpload').checked;
 
     const priceKR = Math.round(parseFloat(document.getElementById('newProdPrice').value || 0));
     const priceJP = Math.round(parseFloat(document.getElementById('newProdPriceJP').value || 0));
@@ -998,6 +999,7 @@ window.addProductDB = async () => {
         is_general_product: isGeneral,
         is_hot_deal: isHotDeal,
         is_biz_deal: isBizDeal,
+        is_file_upload: isFileUpload,
         img_url: imgUrl, // 여기에 짧은 주소가 들어감
         name: document.getElementById('newProdName').value, 
         price: priceKR,
@@ -1078,6 +1080,7 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdIsGeneral').checked = data.is_general_product || false;
     document.getElementById('newProdIsHotDeal').checked = data.is_hot_deal || false;
     document.getElementById('newProdIsBizDeal').checked = data.is_biz_deal || false;
+    document.getElementById('newProdIsFileUpload').checked = data.is_file_upload || false;
 
     // 상세 설명
     document.getElementById('newProdDetailKR').value = data.description || '';
