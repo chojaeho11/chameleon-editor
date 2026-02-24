@@ -1620,8 +1620,8 @@
                 </div>
                 <!-- 필터 탭 -->
                 <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                    <button class="btn btn-primary btn-sm" onclick="lcFilterRooms('all')" id="lcFilterAll" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px;">전체</button>
-                    <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('waiting')" id="lcFilterWait" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12); position:relative;">대기<span id="lcWaitBadge" style="display:none;position:absolute;top:-6px;right:-4px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;align-items:center;justify-content:center;padding:0 4px;animation:lcBadgePulse 1.5s ease infinite;box-shadow:0 0 6px rgba(239,68,68,0.5);"></span></button>
+                    <button class="btn btn-primary btn-sm" onclick="lcFilterRooms('all')" id="lcFilterAll" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; position:relative;">전체<span id="lcAllBadge" style="display:none;position:absolute;top:-6px;right:-4px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;animation:lcBadgePulse 1.5s ease infinite;box-shadow:0 0 6px rgba(239,68,68,0.5);"></span></button>
+                    <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('waiting')" id="lcFilterWait" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12); position:relative;">대기<span id="lcWaitBadge" style="display:none;position:absolute;top:-6px;right:-4px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;animation:lcBadgePulse 1.5s ease infinite;box-shadow:0 0 6px rgba(239,68,68,0.5);"></span></button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('active')" id="lcFilterActive" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">상담</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('closed')" id="lcFilterClosed" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">종료</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('ai_chatting')" id="lcFilterAiChat" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">AI</button>
@@ -1634,7 +1634,7 @@
                             <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#64748b; font-size:12px;"></i>
                             <input id="lcSearchInput" type="text" placeholder="고객명 또는 대화내용 검색..." oninput="lcSearchDebounce()" onkeydown="if(event.key==='Enter')lcDoSearch()" style="width:100%; padding:8px 10px 8px 30px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:#2d2a42; color:#e2e8f0; outline:none;">
                         </div>
-                        <button onclick="lcDoSearch()" style="background:#6366f1; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; white-space:nowrap;">검색</button>
+                        <button onclick="lcDoSearch()" style="background:#6366f1; border:none; color:#fff; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:11px; white-space:nowrap; flex-shrink:0;">🔍</button>
                     </div>
                     <div id="lcSearchMode" style="display:flex; gap:6px; margin-top:6px;">
                         <label style="font-size:11px; color:#94a3b8; cursor:pointer; display:flex; align-items:center; gap:3px;">
@@ -2471,15 +2471,24 @@ async function saveCommonInfo() {
                 }
             }
 
-            // 대기 탭 배지 업데이트
-            var badge = document.getElementById('lcWaitBadge');
-            if (badge) {
-                var showCount = waitCount + myUnread; // 대기방 수 + 미확인 메시지
-                if (myUnread > 0) {
-                    badge.textContent = myUnread > 99 ? '99+' : myUnread;
-                    badge.style.display = 'flex';
+            // 대기 탭 배지 = 대기(waiting) 방 수
+            var waitBadge = document.getElementById('lcWaitBadge');
+            if (waitBadge) {
+                if (waitCount > 0) {
+                    waitBadge.textContent = waitCount > 99 ? '99+' : waitCount;
+                    waitBadge.style.display = 'flex';
                 } else {
-                    badge.style.display = 'none';
+                    waitBadge.style.display = 'none';
+                }
+            }
+            // 전체 탭 배지 = 미확인 메시지 수
+            var allBadge = document.getElementById('lcAllBadge');
+            if (allBadge) {
+                if (myUnread > 0) {
+                    allBadge.textContent = myUnread > 99 ? '99+' : myUnread;
+                    allBadge.style.display = 'flex';
+                } else {
+                    allBadge.style.display = 'none';
                 }
             }
 
