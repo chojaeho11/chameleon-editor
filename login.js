@@ -86,11 +86,35 @@ export function initAuth() {
     if(inputPw) {
         inputPw.addEventListener("keydown", (e) => {
             if(e.key === 'Enter') {
-                e.preventDefault(); 
+                e.preventDefault();
                 handleAuthAction();
             }
         });
     }
+
+    // 6. 비밀번호 찾기 버튼
+    const btnForgotPw = document.getElementById("btnForgotPw");
+    if (btnForgotPw) {
+        btnForgotPw.onclick = () => {
+            document.getElementById("loginModal").style.display = "none";
+            openResetPwModal();
+        };
+    }
+
+    // 7. 비밀번호 재설정 모달 버튼들
+    const btnSendReset = document.getElementById("btnSendResetEmail");
+    if (btnSendReset) btnSendReset.onclick = handleForgotPassword;
+
+    const btnBackToLogin = document.getElementById("btnBackToLogin");
+    if (btnBackToLogin) {
+        btnBackToLogin.onclick = () => {
+            document.getElementById("resetPwModal").style.display = "none";
+            openLoginModal();
+        };
+    }
+
+    const btnChangePw = document.getElementById("btnChangePassword");
+    if (btnChangePw) btnChangePw.onclick = handleResetPassword;
 }
 
 function openLoginModal() {
@@ -191,14 +215,97 @@ async function handleSocialLogin(provider) {
     const t = window.translations || {};
 
     if (!sb) { showToast(t['err_db_connection'] || "DB 미연결", "error"); return; }
-    const redirectUrl = window.location.origin; 
+    const redirectUrl = window.location.origin;
     const { data, error } = await sb.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: redirectUrl, queryParams: { access_type: 'offline', prompt: 'consent' } },
     });
-    
+
     if (error) {
         const errPrefix = t['err_login_fail'] || "로그인 실패: ";
         showToast(errPrefix + error.message, "error");
+    }
+}
+
+// ── 비밀번호 재설정 모달 ──
+function openResetPwModal() {
+    const modal = document.getElementById("resetPwModal");
+    if (!modal) return;
+    // Step1 표시, Step2 숨기기
+    const step1 = document.getElementById("resetPwStep1");
+    const step2 = document.getElementById("resetPwStep2");
+    if (step1) step1.style.display = "block";
+    if (step2) step2.style.display = "none";
+    // 입력 초기화
+    const emailInput = document.getElementById("resetEmail");
+    if (emailInput) emailInput.value = "";
+    modal.style.display = "flex";
+}
+
+// 비밀번호 재설정 Step2 (새 비밀번호 입력) 표시
+export function openResetPwStep2() {
+    const modal = document.getElementById("resetPwModal");
+    if (!modal) return;
+    const step1 = document.getElementById("resetPwStep1");
+    const step2 = document.getElementById("resetPwStep2");
+    if (step1) step1.style.display = "none";
+    if (step2) step2.style.display = "block";
+    const newPw = document.getElementById("newPw");
+    const newPwConfirm = document.getElementById("newPwConfirm");
+    if (newPw) newPw.value = "";
+    if (newPwConfirm) newPwConfirm.value = "";
+    modal.style.display = "flex";
+}
+
+// Step1: 이메일로 재설정 링크 발송
+async function handleForgotPassword() {
+    const email = document.getElementById("resetEmail")?.value.trim();
+    if (!email) { showToast(window.t('err_input_required', "이메일을 입력해주세요."), "warn"); return; }
+    if (!sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
+
+    const btn = document.getElementById("btnSendResetEmail");
+    const originalText = btn.innerText;
+    btn.innerText = window.t('msg_processing', "처리 중...");
+    btn.disabled = true;
+
+    try {
+        const redirectUrl = window.location.origin;
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+        if (error) throw error;
+        showToast(window.t('msg_reset_email_sent', "재설정 이메일을 발송했습니다. 메일함을 확인해주세요."), "success");
+        document.getElementById("resetPwModal").style.display = "none";
+    } catch (e) {
+        showToast((window.t('err_prefix', "오류: ")) + e.message, "error");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+// Step2: 새 비밀번호로 변경
+async function handleResetPassword() {
+    const newPw = document.getElementById("newPw")?.value.trim();
+    const newPwConfirm = document.getElementById("newPwConfirm")?.value.trim();
+
+    if (!newPw || !newPwConfirm) { showToast(window.t('err_input_required', "비밀번호를 입력해주세요."), "warn"); return; }
+    if (newPw !== newPwConfirm) { showToast(window.t('err_pw_mismatch', "비밀번호가 일치하지 않습니다."), "error"); return; }
+    if (newPw.length < 6) { showToast(window.t('err_pw_length', "비밀번호는 6자리 이상이어야 합니다."), "error"); return; }
+    if (!sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
+
+    const btn = document.getElementById("btnChangePassword");
+    const originalText = btn.innerText;
+    btn.innerText = window.t('msg_processing', "처리 중...");
+    btn.disabled = true;
+
+    try {
+        const { error } = await sb.auth.updateUser({ password: newPw });
+        if (error) throw error;
+        showToast(window.t('msg_pw_changed', "비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요."), "success");
+        document.getElementById("resetPwModal").style.display = "none";
+    } catch (e) {
+        showToast((window.t('err_prefix', "오류: ")) + e.message, "error");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 }

@@ -56,11 +56,18 @@ export function initConfig() {
                 // UI 갱신
                 const btnLogin = document.getElementById("btnLoginBtn");
                 if(btnLogin && btnLogin.updateState) btnLogin.updateState();
-                
+
                 const btnLib = document.getElementById("btnMyLibrary");
                 if(btnLib) btnLib.style.display = session ? "inline-flex" : "none";
 
                 if (event === 'SIGNED_OUT') location.reload();
+
+                // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시
+                if (event === 'PASSWORD_RECOVERY') {
+                    import('./login.js?v=123').then(m => {
+                        if (m.openResetPwStep2) m.openResetPwStep2();
+                    }).catch(() => {});
+                }
             });
 
             // 4. 데이터 로드 (이 부분만 최적화됨)

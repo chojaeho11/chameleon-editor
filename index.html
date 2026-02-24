@@ -2730,6 +2730,9 @@ async function handleSubReturn() {
             <input id="loginPw" class="ai-input-pretty" type="password" placeholder="비밀번호" data-i18n-placeholder="placeholder_pw" style="margin:0;">
             <input id="loginPwConfirm" class="ai-input-pretty" type="password" placeholder="비밀번호 확인" data-i18n-placeholder="placeholder_pw_confirm" style="margin:0; display:none;">
         </div>
+        <div id="forgotPwLink" style="text-align:right; margin-bottom:10px;">
+            <span id="btnForgotPw" style="font-size:12px; color:#6366f1; cursor:pointer; text-decoration:underline;" data-i18n="btn_forgot_pw">비밀번호를 잊으셨나요?</span>
+        </div>
         <button class="btn-round primary" id="btnAuthAction" style="width:100%; justify-content:center; height:45px; font-size:15px;" data-i18n="btn_login_submit">로그인</button>
         <div style="margin-top:15px; font-size:13px; color:#666;">
             <span id="authSwitchText" data-i18n="msg_no_account">계정이 없으신가요?</span>
@@ -2753,6 +2756,31 @@ async function handleSubReturn() {
         👀 <span data-i18n="login_browse_guest">로그인 없이 둘러보기</span>
     </button>
 </div>
+    </div>
+</div>
+<!-- 비밀번호 재설정 모달 -->
+<div id="resetPwModal" class="modal-bg" style="z-index: 10003;">
+    <div class="modal-box" style="width: 400px;">
+        <!-- 1단계: 이메일 입력 (비밀번호 찾기) -->
+        <div id="resetPwStep1">
+            <h3 style="margin-top:0;" data-i18n="modal_forgot_pw_title">비밀번호 찾기</h3>
+            <p style="font-size:13px; color:#666; margin-bottom:15px; line-height:1.5;" data-i18n="msg_forgot_pw_desc">가입하신 이메일 주소를 입력하시면<br>비밀번호 재설정 링크를 보내드립니다.</p>
+            <input id="resetEmail" class="ai-input-pretty" placeholder="이메일 주소" data-i18n-placeholder="placeholder_email" style="margin:0 0 15px 0;">
+            <button class="btn-round primary" id="btnSendResetEmail" style="width:100%; justify-content:center; height:45px; font-size:15px;" data-i18n="btn_send_reset_email">재설정 링크 발송</button>
+            <div style="margin-top:15px; text-align:center;">
+                <span id="btnBackToLogin" style="font-size:13px; color:#6366f1; cursor:pointer; text-decoration:underline;" data-i18n="btn_back_to_login">로그인으로 돌아가기</span>
+            </div>
+        </div>
+        <!-- 2단계: 새 비밀번호 입력 (이메일 링크 클릭 후) -->
+        <div id="resetPwStep2" style="display:none;">
+            <h3 style="margin-top:0;" data-i18n="modal_reset_pw_title">비밀번호 재설정</h3>
+            <p style="font-size:13px; color:#666; margin-bottom:15px;" data-i18n="msg_reset_pw_desc">새로운 비밀번호를 입력해주세요.</p>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                <input id="newPw" class="ai-input-pretty" type="password" placeholder="새 비밀번호 (6자 이상)" data-i18n-placeholder="placeholder_new_pw" style="margin:0;">
+                <input id="newPwConfirm" class="ai-input-pretty" type="password" placeholder="새 비밀번호 확인" data-i18n-placeholder="placeholder_new_pw_confirm" style="margin:0;">
+            </div>
+            <button class="btn-round primary" id="btnChangePassword" style="width:100%; justify-content:center; height:45px; font-size:15px;" data-i18n="btn_change_pw">비밀번호 변경</button>
+        </div>
     </div>
 </div>
 <div id="productDetailModal" class="modal-bg" style="z-index: 11000;">

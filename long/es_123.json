@@ -1431,5 +1431,17 @@
   "wall_opt_outdoor_stand": "Soporte exterior (1 juego)",
   "wall_acc_light": "Luz",
   "wall_acc_stand": "Soporte",
-  "wall_acc_set_unit": "juego"
+  "wall_acc_set_unit": "juego",
+  "btn_forgot_pw": "¿Olvidaste tu contraseña?",
+  "modal_forgot_pw_title": "Recuperar contraseña",
+  "msg_forgot_pw_desc": "Ingresa tu correo electrónico registrado<br>y te enviaremos un enlace para restablecer tu contraseña.",
+  "btn_send_reset_email": "Enviar enlace de restablecimiento",
+  "btn_back_to_login": "Volver al inicio de sesión",
+  "modal_reset_pw_title": "Restablecer contraseña",
+  "msg_reset_pw_desc": "Ingresa tu nueva contraseña.",
+  "placeholder_new_pw": "Nueva contraseña (mínimo 6 caracteres)",
+  "placeholder_new_pw_confirm": "Confirmar nueva contraseña",
+  "btn_change_pw": "Cambiar contraseña",
+  "msg_reset_email_sent": "Correo de restablecimiento enviado. Revisa tu bandeja de entrada.",
+  "msg_pw_changed": "Contraseña cambiada exitosamente. Inicia sesión con tu nueva contraseña."
 }

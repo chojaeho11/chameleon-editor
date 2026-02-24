@@ -1435,5 +1435,17 @@
   "wall_opt_outdoor_stand": "外部スタンド（1組）",
   "wall_acc_light": "照明",
   "wall_acc_stand": "スタンド",
-  "wall_acc_set_unit": "組"
+  "wall_acc_set_unit": "組",
+  "btn_forgot_pw": "パスワードをお忘れですか？",
+  "modal_forgot_pw_title": "パスワード再設定",
+  "msg_forgot_pw_desc": "ご登録のメールアドレスを入力してください。<br>パスワード再設定リンクをお送りします。",
+  "btn_send_reset_email": "再設定リンクを送信",
+  "btn_back_to_login": "ログインに戻る",
+  "modal_reset_pw_title": "パスワード再設定",
+  "msg_reset_pw_desc": "新しいパスワードを入力してください。",
+  "placeholder_new_pw": "新しいパスワード（6文字以上）",
+  "placeholder_new_pw_confirm": "新しいパスワード確認",
+  "btn_change_pw": "パスワード変更",
+  "msg_reset_email_sent": "再設定メールを送信しました。メールをご確認ください。",
+  "msg_pw_changed": "パスワードが変更されました。新しいパスワードでログインしてください。"
 }
