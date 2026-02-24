@@ -6371,7 +6371,7 @@ if (w >= 20 && h >= 20) {
             finalH = parseInt(document.getElementById('inputCustH').value || 0);
             finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
             
-            if (finalW < 20 || finalH < 20) { showToast(lang==='ja'?'最小サイズは100mm以上にしてください。':lang==='zh'?'最小尺寸必须为100mm以上。':lang==='ar'?'يجب أن يكون الحد الأدنى للحجم 100 مم أو أكثر.':lang==='es'?'El tamaño mínimo debe ser de 100 mm o más.':lang==='de'?'Die Mindestgröße muss 100 mm oder mehr betragen.':lang==='fr'?'La taille minimale doit être de 100 mm ou plus.':lang==='en'?'Minimum size must be 100mm or more.':'최소 사이즈는 100mm 이상이어야 합니다.', 'warn'); return; }
+            if (finalW < 20 || finalH < 20) { showToast(lang==='ja'?'先にサイズを入力してください。':lang==='zh'?'请先输入尺寸。':lang==='ar'?'يرجى إدخال الحجم أولاً.':lang==='es'?'Por favor, ingrese el tamaño primero.':lang==='de'?'Bitte geben Sie zuerst die Größe ein.':lang==='fr'?'Veuillez d\'abord saisir la taille.':lang==='en'?'Please enter the size first.':'먼저 사이즈를 입력해 주세요.', 'warn'); return; }
             
             const area = (finalW * finalH) / 1000000;
             let rawPrice = area * unitPrice;
