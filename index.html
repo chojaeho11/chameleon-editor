@@ -440,28 +440,46 @@
         }
         #btnDesignStart {
             padding: 18px 48px;
-            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #6366f1);
-            background-size: 300% 300%;
-            animation: gradientShift 4s ease infinite;
-            color: #fff;
-            border: none;
+            position: relative;
+            background: linear-gradient(135deg, #f8f8f8, #ffffff, #f0eff4, #ffffff, #f5f3f8);
+            background-size: 400% 400%;
+            animation: pearlShimmer 6s ease infinite;
+            color: #1e293b;
+            border: 1.5px solid rgba(200, 195, 215, 0.5);
             border-radius: 50px;
             font-size: 17px;
             font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+            box-shadow: 0 2px 16px rgba(180, 170, 200, 0.25), inset 0 1px 0 rgba(255,255,255,0.9);
             transition: transform 0.2s, box-shadow 0.2s;
             width: 100%;
             max-width: 600px;
+            overflow: hidden;
+        }
+        #btnDesignStart::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+            animation: pearlSweep 3s ease-in-out infinite;
+        }
+        @keyframes pearlShimmer {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        @keyframes pearlSweep {
+            0% { left: -100%; }
+            100% { left: 200%; }
         }
         #btnDesignStart:hover {
             transform: scale(1.02);
-            box-shadow: 0 8px 30px rgba(99,102,241,0.5);
+            box-shadow: 0 6px 24px rgba(180, 170, 200, 0.4), inset 0 1px 0 rgba(255,255,255,0.9);
         }
     </style>
     <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px; padding:0 15px;">
         <button id="btnDesignStart" onclick="window.openProductPickerModal()">
-            <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="dsm_btn_start">무료 디자인 및 제품 검색</span>
+            <i class="fa-solid fa-wand-magic-sparkles" style="margin-right:4px;"></i> <span data-i18n="dsm_btn_start">오늘은 무엇을 만들까요?</span>
         </button>
     </div>
 
@@ -9437,6 +9455,9 @@ window.dsmRenderProducts = async function(keyword) {
         namePh:     { kr: '이름 (예: 홍길동)', ja: 'お名前 (例: 田中太郎)', en: 'Name (e.g. John)', zh: '姓名（例：张三）', ar: 'الاسم (مثال: أحمد)', es: 'Nombre (ej: Juan)', de: 'Name (z.B. Max)', fr: 'Nom (ex: Jean)' },
         nameBtn:    { kr: '확인', ja: '確認', en: 'OK', zh: '确认', ar: 'تأكيد', es: 'OK', de: 'OK', fr: 'OK' },
         nameErr:    { kr: '이름을 입력해주세요!', ja: 'お名前を入力してください！', en: 'Please enter your name!', zh: '请输入姓名！', ar: 'يرجى إدخال الاسم!', es: '¡Ingrese su nombre!', de: 'Bitte Namen eingeben!', fr: 'Veuillez entrer votre nom !' },
+        phonePh:    { kr: '연락처 (예: 010-1234-5678)', ja: '電話番号 (例: 090-1234-5678)', en: 'Phone (e.g. 010-1234-5678)', zh: '电话 (例: 138-1234-5678)', ar: 'الهاتف (مثال: 010-1234-5678)', es: 'Teléfono (ej: 010-1234-5678)', de: 'Telefon (z.B. 010-1234-5678)', fr: 'Téléphone (ex: 010-1234-5678)' },
+        phoneErr:   { kr: '연락처를 입력해주세요!', ja: '電話番号を入力してください！', en: 'Please enter your phone!', zh: '请输入电话！', ar: 'يرجى إدخال الهاتف!', es: '¡Ingrese su teléfono!', de: 'Bitte Telefon eingeben!', fr: 'Veuillez entrer votre téléphone !' },
+        enterInfo:  { kr: '성함과 연락처를 알려주세요!', ja: 'お名前と電話番号を教えてください！', en: 'Please enter your name and phone!', zh: '请输入姓名和电话！', ar: 'يرجى إدخال الاسم والهاتف!', es: '¡Ingrese su nombre y teléfono!', de: 'Bitte Name und Telefon eingeben!', fr: 'Veuillez entrer votre nom et téléphone !' },
         fileMsg:    { kr: '파일을 확인했습니다! 파일 관련 상담이 필요하시면 하단 \'상담사 연결\' 버튼을 눌러 매니저에게 직접 전달해주세요 😊', ja: 'ファイルを確認しました！ファイルに関するご相談は下の「相談員に接続」ボタンからマネージャーに直接お伝えください 😊', en: 'File received! For file-related inquiries, click \'Connect to Agent\' below to reach a manager directly 😊', zh: '已收到文件！如需文件相关咨询，请点击下方"连接客服"按钮直接联系经理 😊', ar: 'تم استلام الملف! للاستفسارات المتعلقة بالملف، انقر على "الاتصال بالوكيل" أدناه 😊', es: '¡Archivo recibido! Para consultas sobre archivos, haga clic en \'Conectar con agente\' abajo 😊', de: 'Datei erhalten! Für dateibezogene Anfragen klicken Sie unten auf \'Mit Agent verbinden\' 😊', fr: 'Fichier reçu ! Pour les demandes liées au fichier, cliquez sur \'Contacter un agent\' ci-dessous 😊' },
         customer:   { kr: '고객', ja: 'お客様', en: 'Customer', zh: '客户', ar: 'عميل', es: 'Cliente', de: 'Kunde', fr: 'Client' },
         webCustomer:{ kr: '웹 고객', ja: 'Webお客様', en: 'Web Customer', zh: '网页客户', ar: 'عميل ويب', es: 'Cliente Web', de: 'Web-Kunde', fr: 'Client Web' },
@@ -9627,6 +9648,8 @@ window.dsmRenderProducts = async function(keyword) {
                     // 매니저가 끼어들었음! → 실시간 상담 모드로 전환
                     switchToLiveFromAI(m.sender_name || '매니저');
                     addManagerMsg(m.sender_name || '매니저', m.message);
+                    // 채팅창이 닫혀있으면 자동으로 열기
+                    _autoOpenChatIfClosed();
                 } else if (m.sender_type === 'system') {
                     if (msgArea) {
                         msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
@@ -9742,6 +9765,21 @@ window.dsmRenderProducts = async function(keyword) {
         win.classList.remove('visible');
         trg.classList.remove('open');
         if (ico) ico.className = 'fa-solid fa-comments';
+    }
+
+    // 상담사 메시지 수신 시 채팅창이 닫혀있으면 자동으로 열기
+    function _autoOpenChatIfClosed() {
+        var win = getEl('cham-bot-window');
+        if (win && !win.classList.contains('visible')) {
+            var trg = getEl('cham-bot-trigger');
+            var ico = getEl('cham-bot-icon');
+            var badge = getEl('cham-bot-badge');
+            if (win) win.classList.add('visible');
+            if (trg) trg.classList.add('open');
+            if (ico) ico.className = 'fa-solid fa-xmark';
+            if (badge) badge.classList.add('hide');
+            if (!opened) { opened = true; }
+        }
     }
 
     function toggleBot() {
@@ -9968,36 +10006,42 @@ window.dsmRenderProducts = async function(keyword) {
 
     // ── 상담사 연결 (진입점) ──
     var _customerName = '';
-    
+    var _customerPhone = '';
+
     window.ChamBot_connectHuman = function() {
         var msgArea = document.getElementById('chamMessages');
         if (!msgArea) return;
-        
-        // 먼저 고객 이름 입력 받기
+
+        // 고객 이름 + 연락처 입력 받기
         var h = '<div style="padding:4px 0;">';
         h += '<div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px;">';
         h += '<div style="text-align:center; margin-bottom:10px;">';
         h += '<div style="font-size:24px;">✨</div>';
         h += '<div style="font-weight:700; color:#0369a1; font-size:14px;">' + _ct('connectTo') + '</div>';
-        h += '<div style="font-size:12px; color:#0284c7; margin-top:2px;">' + _ct('enterName') + '</div>';
+        h += '<div style="font-size:12px; color:#0284c7; margin-top:2px;">' + _ct('enterInfo') + '</div>';
         h += '</div>';
-        h += '<div style="display:flex; gap:6px;">';
-        h += '<input id="chamCustName" type="text" placeholder="' + _ct('namePh') + '" style="flex:1; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit;">';
-        h += '<button id="chamCustNameBtn" style="background:#0284c7; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap;">' + _ct('nameBtn') + '</button>';
+        h += '<div style="display:flex; flex-direction:column; gap:6px;">';
+        h += '<input id="chamCustName" type="text" placeholder="' + _ct('namePh') + '" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box;">';
+        h += '<input id="chamCustPhone" type="tel" placeholder="' + _ct('phonePh') + '" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box;">';
+        h += '<button id="chamCustNameBtn" style="background:#0284c7; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; width:100%;">' + _ct('nameBtn') + '</button>';
         h += '</div></div></div>';
         msgArea.insertAdjacentHTML('beforeend', h);
         msgArea.scrollTop = msgArea.scrollHeight;
-        
+
         var nameInput = document.getElementById('chamCustName');
+        var phoneInput = document.getElementById('chamCustPhone');
         var nameBtn = document.getElementById('chamCustNameBtn');
         if (nameInput) nameInput.focus();
-        
+
         function onNameSubmit() {
             var name = nameInput.value.trim();
+            var phone = phoneInput.value.trim();
             if (!name) { nameInput.style.borderColor = '#ef4444'; nameInput.placeholder = _ct('nameErr'); return; }
+            if (!phone) { phoneInput.style.borderColor = '#ef4444'; phoneInput.placeholder = _ct('phoneErr'); return; }
             _customerName = name;
-            
-            // 이름 입력 UI 제거
+            _customerPhone = phone;
+
+            // 입력 UI 제거
             var card = nameBtn.closest('div[style*="padding:4px"]');
             if (card) card.remove();
             
@@ -10043,8 +10087,10 @@ window.dsmRenderProducts = async function(keyword) {
             }).join('\n');
         } catch(e) {}
         
+        var _dispCustName = _customerName || _lt('custLabel');
+        if (_customerPhone) _dispCustName += ' | ' + _customerPhone;
         sb.from('chat_rooms').insert({
-            customer_name: _customerName || _lt('custLabel'),
+            customer_name: _dispCustName,
             assigned_manager: managerName,
             status: 'waiting',
             source: 'chatbot',
@@ -10118,6 +10164,8 @@ window.dsmRenderProducts = async function(keyword) {
                         }
                         mh += '</div>';
                         msgArea.insertAdjacentHTML('beforeend', mh);
+                        // 채팅창이 닫혀있으면 자동으로 열기
+                        _autoOpenChatIfClosed();
                     } else if (m.sender_type === 'system') {
                         msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
                         if (m.message.indexOf('접속') >= 0 && sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _lt('consulting');
