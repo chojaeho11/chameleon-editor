@@ -9528,13 +9528,61 @@ window.dsmRenderProducts = async function(keyword) {
         _scrollChatBottom();
     }
 
-    // 채팅 메시지 영역 스크롤을 맨 아래로 (지연 포함)
+    // 채팅 메시지 영역 스크롤을 맨 아래로 (강제 반복)
     function _scrollChatBottom() {
-        var c = document.getElementById('chamMessages');
-        if (c) c.scrollTop = c.scrollHeight;
-        setTimeout(function() { var c2 = document.getElementById('chamMessages'); if (c2) c2.scrollTop = c2.scrollHeight; }, 100);
-        setTimeout(function() { var c3 = document.getElementById('chamMessages'); if (c3) c3.scrollTop = c3.scrollHeight; }, 300);
-        setTimeout(function() { var c4 = document.getElementById('chamMessages'); if (c4) c4.scrollTop = c4.scrollHeight; }, 600);
+        [0, 50, 150, 400, 800].forEach(function(ms) {
+            setTimeout(function() {
+                var c = document.getElementById('chamMessages');
+                if (c) { c.scrollTop = c.scrollHeight + 9999; }
+            }, ms);
+        });
+    }
+
+    // ── 고객측 알림 시스템 ──
+    var _custAudioCtx = null;
+    function _custPlaySound() {
+        try {
+            if (!_custAudioCtx) _custAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var ctx = _custAudioCtx;
+            if (ctx.state === 'suspended') ctx.resume();
+            var notes = [784, 988, 1175];
+            notes.forEach(function(freq, i) {
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine'; osc.frequency.value = freq;
+                var t = ctx.currentTime + i * 0.12;
+                gain.gain.setValueAtTime(0.6, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                osc.start(t); osc.stop(t + 0.15);
+            });
+        } catch(e) {}
+    }
+    var _custTitleFlash = null;
+    function _custFlashTitle(msg) {
+        if (_custTitleFlash) return;
+        var orig = document.title; var on = false;
+        _custTitleFlash = setInterval(function() { document.title = on ? orig : msg; on = !on; }, 1000);
+        var restore = function() {
+            clearInterval(_custTitleFlash); _custTitleFlash = null; document.title = orig;
+            window.removeEventListener('focus', restore);
+        };
+        window.addEventListener('focus', restore);
+    }
+    function _custShowBadge() {
+        var badge = document.getElementById('cham-bot-badge');
+        if (badge) { badge.classList.remove('hide'); badge.textContent = '!'; }
+    }
+    // 매니저 메시지 수신 시 통합 알림
+    function _custNotifyNewMsg(senderName) {
+        _custPlaySound();
+        _autoOpenChatIfClosed();
+        _scrollChatBottom();
+        // 채팅창이 닫혀있거나 탭 비활성이면 추가 알림
+        var win = getEl('cham-bot-window');
+        var isChatClosed = !win || !win.classList.contains('visible');
+        if (isChatClosed) _custShowBadge();
+        if (document.hidden) _custFlashTitle('💬 ' + (senderName || 'New message'));
     }
 
     // 매니저 메시지 표시 (끼어들기 시)
@@ -9684,6 +9732,7 @@ window.dsmRenderProducts = async function(keyword) {
                     res.data.forEach(function(m) {
                         addManagerMsg(m.sender_name || '매니저', m.message);
                     });
+                    _custNotifyNewMsg(firstName);
                 }, 300);
             });
     }
@@ -9709,25 +9758,23 @@ window.dsmRenderProducts = async function(keyword) {
     // 매니저 끼어들기 감지 (realtime 구독)
     function subscribeManagerIntervene() {
         if (!db || !_aiRoom || _aiSub) return;
-        var msgArea = getEl('chamMessages');
         _aiSub = db.channel('ai-room-' + _aiRoom.id)
             .on('postgres_changes', {
                 event: 'INSERT', schema: 'public', table: 'chat_messages',
                 filter: 'room_id=eq.' + _aiRoom.id
             }, function(payload) {
                 var m = payload.new;
+                var msgArea = document.getElementById('chamMessages');
                 if (m.sender_type === 'manager') {
-                    // 매니저가 끼어들었음! → 실시간 상담 모드로 전환
                     switchToLiveFromAI(m.sender_name || '매니저');
                     addManagerMsg(m.sender_name || '매니저', m.message);
-                    // 채팅창이 닫혀있으면 자동으로 열기
-                    _autoOpenChatIfClosed();
+                    _custNotifyNewMsg(m.sender_name || '매니저');
                 } else if (m.sender_type === 'system') {
                     if (msgArea) {
                         msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
                     }
+                    _scrollChatBottom();
                 }
-                _scrollChatBottom();
             }).subscribe();
     }
 
@@ -10221,6 +10268,7 @@ window.dsmRenderProducts = async function(keyword) {
                     filter: 'room_id=eq.' + _room.id
                 }, function(payload) {
                     var m = payload.new;
+                    var ma = document.getElementById('chamMessages');
                     if (m.sender_type === 'manager') {
                         var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
                         var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
@@ -10232,20 +10280,18 @@ window.dsmRenderProducts = async function(keyword) {
                                 mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:14px;display:inline-block;">📎 ' + (m.file_name||_lt('fileDl')) + '</a>';
                         }
                         if (m.message) {
-                            // URL을 클릭 가능한 링크로 변환
                             var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
                             mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
                         }
                         mh += '</div>';
-                        msgArea.insertAdjacentHTML('beforeend', mh);
-                        // 채팅창이 닫혀있으면 자동으로 열기
-                        _autoOpenChatIfClosed();
+                        if (ma) ma.insertAdjacentHTML('beforeend', mh);
+                        _custNotifyNewMsg(mn);
                     } else if (m.sender_type === 'system') {
-                        msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+                        if (ma) ma.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
                         if (m.message.indexOf('접속') >= 0 && sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _lt('consulting');
                         if (m.message.indexOf('종료') >= 0) endLive();
+                        _scrollChatBottom();
                     }
-                    _scrollChatBottom();
                 }).subscribe();
 
             _scrollChatBottom();
@@ -10356,13 +10402,13 @@ window.dsmRenderProducts = async function(keyword) {
         if (bar) bar.style.display = 'none';
 
         // Realtime 구독 (매니저 메시지 수신)
-        var msgArea = document.getElementById('chamMessages');
         _sub = sb.channel('room-' + _room.id)
             .on('postgres_changes', {
                 event: 'INSERT', schema: 'public', table: 'chat_messages',
                 filter: 'room_id=eq.' + _room.id
             }, function(payload) {
                 var m = payload.new;
+                var ma = document.getElementById('chamMessages');
                 if (m.sender_type === 'manager') {
                     var mn = m.sender_name || '매니저';
                     var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
@@ -10378,13 +10424,13 @@ window.dsmRenderProducts = async function(keyword) {
                         mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
                     }
                     mh += '</div>';
-                    msgArea.insertAdjacentHTML('beforeend', mh);
-                    _autoOpenChatIfClosed();
+                    if (ma) ma.insertAdjacentHTML('beforeend', mh);
+                    _custNotifyNewMsg(mn);
                 } else if (m.sender_type === 'system') {
-                    msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+                    if (ma) ma.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
                     if (m.message.indexOf('종료') >= 0) endLive();
+                    _scrollChatBottom();
                 }
-                _scrollChatBottom();
             }).subscribe();
     };
 
