@@ -6509,8 +6509,10 @@ if (w >= 20 && h >= 20) {
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
                         const f = fileInput.files[i];
-                        const ext = f.name.split('.').pop();
-                        const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+                        const ext = f.name.split('.').pop().toLowerCase();
+                        const blockedExts = ['ai','eps','psd','svg','cdr'];
+                        const safeExt = blockedExts.includes(ext) ? 'bin' : ext;
+                        const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${safeExt}`;
                         const safeType = (f.type && !f.type.includes('postscript') && !f.type.includes('octet')) ? f.type : 'application/octet-stream';
                         const uploadBody = (safeType !== f.type) ? new Blob([await f.arrayBuffer()], { type: safeType }) : f;
                         const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, uploadBody, { contentType: safeType, upsert: true });
