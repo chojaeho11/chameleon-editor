@@ -3091,7 +3091,7 @@ async function saveCommonInfo() {
             if(m.sender_type==='admin_memo') return; // 메모는 채팅에 표시하지 않음
             // ★ 모든 메시지 타입 표시 (customer, manager, system, chatbot)
             // 내가 이 PC에서 방금 보낸 매니저 메시지는 이미 로컬 표시됨 → 중복 스킵
-            if ((m.sender_type === 'manager' || m.sender_type === 'internal') && m.sender_name === myManagerName && (Date.now() - _lastSentAt) < 5000) {
+            if ((m.sender_type === 'manager' || m.sender_type === 'internal') && (Date.now() - _lastSentAt) < 5000) {
                 // 내가 방금 보낸 메시지 → 이미 로컬에 표시됨
             } else {
                 // Realtime payload에 file_url이 누락될 수 있으므로 DB에서 전체 데이터 재조회
