@@ -6381,7 +6381,7 @@ if (w >= 20 && h >= 20) {
             fileInput.onchange = async function() {
                 if (!fileInput.files || fileInput.files.length === 0) return;
                 window.isDirectCartAddInProgress = true;
-                showToast('파일 업로드 중...', 'info');
+                showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
 
                 try {
                     const _sb = window.sb || (await import('./config.js?v=123')).sb;
@@ -6464,7 +6464,7 @@ if (w >= 20 && h >= 20) {
                     document.getElementById('cartAddedModal').style.display = 'flex';
                 } catch(err) {
                     console.error('파일 업로드 오류:', err);
-                    showToast('파일 업로드 실패: ' + err.message, 'error');
+                    showToast((lang==='ja'?'アップロード失敗: ':lang==='en'?'Upload failed: ':lang==='zh'?'上传失败: ':'파일 업로드 실패: ') + err.message, 'error');
                 } finally {
                     window.isDirectCartAddInProgress = false;
                 }
