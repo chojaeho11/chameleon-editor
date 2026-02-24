@@ -3003,7 +3003,11 @@ async function saveCommonInfo() {
         sb.from('chat_messages').update({is_read:true}).eq('room_id',roomId).eq('sender_type','customer').eq('is_read',false).then(function(){});
         subscription=sb.channel('admin-'+roomId).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room_id=eq.'+roomId},async function(p){
             var m=p.new;
-            if(m.sender_type==='customer'||m.sender_type==='system'){
+            // ★ 모든 메시지 타입 표시 (customer, manager, system, chatbot)
+            // 내가 이 PC에서 방금 보낸 매니저 메시지는 이미 로컬 표시됨 → 중복 스킵
+            if (m.sender_type === 'manager' && m.sender_name === myManagerName && (Date.now() - _lastSentAt) < 5000) {
+                // 내가 방금 보낸 메시지 → 이미 로컬에 표시됨
+            } else {
                 // Realtime payload에 file_url이 누락될 수 있으므로 DB에서 전체 데이터 재조회
                 if(m.id){
                     var fresh=await sb.from('chat_messages').select('*').eq('id',m.id).single();
@@ -3011,12 +3015,12 @@ async function saveCommonInfo() {
                 }
                 area.insertAdjacentHTML('beforeend',renderMsg(m));
                 area.scrollTop=area.scrollHeight;
-                if(m.sender_type==='customer') {
-                    sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
-                    // ★ 항상 알림음 재생 (현재 방 메시지)
-                    playKakaoSound();
-                    if(document.hidden) flashTitle('💬 새 메시지');
-                }
+            }
+            if(m.sender_type==='customer') {
+                sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
+                // ★ 항상 알림음 재생 (현재 방 메시지)
+                playKakaoSound();
+                if(document.hidden) flashTitle('💬 새 메시지');
             }
         }).subscribe();
         lcLoadRooms();
@@ -3036,9 +3040,11 @@ async function saveCommonInfo() {
         if(m.message){var mt=m.message.replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(isMgr?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:12px 18px;border-radius:'+bdRadius+';max-width:420px;font-size:16px;line-height:1.6;word-break:break-all;box-shadow:'+shadow+';">'+mt+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:3px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:11px;background:none;border:1px solid #e2e8f0;color:#64748b;padding:2px 8px;border-radius:6px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:12px;color:#6366f1;margin-left:4px;"></span></div>';}}
         return h+'</div>';
     }
+    var _lastSentAt = 0; // 내가 보낸 메시지 중복 방지용
     window.lcSendMsg = async function(){
         if(!currentRoom) return; var sb=getSb();var inp=document.getElementById('lcMsgInput');var txt=inp.value.trim();if(!txt) return;inp.value='';inp.style.height='auto';
         lcHideQuick();
+        _lastSentAt = Date.now();
         var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt,created_at:new Date().toISOString()};
         var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;
         await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt});
