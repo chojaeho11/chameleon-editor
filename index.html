@@ -6050,26 +6050,9 @@ window.showChoiceModal = async function(key) {
                 </div>
             </div>
         </div>
-        <!-- ★ 모바일 하단 고정 바 -->
-        <div id="mobileStickyBar" style="display:none; position:sticky; bottom:0; left:0; right:0; background:#fff; border-top:2px solid #e2e8f0; padding:10px 15px; z-index:100; box-shadow:0 -4px 15px rgba(0,0,0,0.1);">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-                <span style="font-size:12px; color:#64748b;">Total</span>
-                <span id="mobileStickyTotal" style="font-size:20px; font-weight:900; color:#6366f1;">0</span>
-            </div>
-            <div style="display:flex; gap:8px;">
-                ${product.is_general_product ? '' : `<button onclick="document.getElementById('choiceRightActions').scrollIntoView({behavior:'smooth'})" style="flex:1; height:48px; border-radius:10px; border:none; background:#6366f1; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🎨 ${lang==='ja'?'デザイン':lang==='en'?'Design':'디자인'}</button>`}
-                <button onclick="document.getElementById('choiceRightActions').scrollIntoView({behavior:'smooth'})" style="flex:1; height:48px; border-radius:10px; border:none; background:#111; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🛒 ${lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
-            </div>
-        </div>
     `;
 
     modal.style.display = 'flex';
-
-    // ★ 모바일 sticky bar 표시
-    if (window.innerWidth <= 768) {
-        const stickyBar = document.getElementById('mobileStickyBar');
-        if (stickyBar) stickyBar.style.display = 'block';
-    }
 
     // 설명 이미지 최적화: lazy load + 크기 제한
     modalBox.querySelectorAll('.product-detail-render img, .choice-left-content img').forEach(img => {
@@ -6209,10 +6192,6 @@ window.updateModalTotal = function() {
     const finalTotal = productTotal + optionTotal;
     const display = document.getElementById('modalRealtimeTotal');
     if(display) display.innerText = fmtLocal(finalTotal);
-
-    // ★ 모바일 sticky bar 가격 동기화
-    const stickyTotal = document.getElementById('mobileStickyTotal');
-    if(stickyTotal) stickyTotal.innerText = fmtLocal(finalTotal);
 };
 
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
