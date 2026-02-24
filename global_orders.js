@@ -162,13 +162,13 @@ window.loadOrders = async () => {
             const site = order.site_code || 'KR';
 
             // 통화 변환 헬퍼 (DB는 KRW 기준 저장)
-            const currRates = { KR: 1, JP: 0.2, US: 0.002, CN: 0.01, AR: 0.005, ES: 0.001 };
-            const currSymbols = { KR: '', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€' };
+            const currRates = { KR: 1, JP: 0.2, US: 0.002, CN: 0.01, AR: 0.005, ES: 0.001, STORE: 1, GODO: 1 };
+            const currSymbols = { KR: '', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', STORE: '', GODO: '' };
             const rate = currRates[site] || 1;
             const sym = currSymbols[site] || '';
             const fmtAmt = (krw) => {
                 const v = site === 'ES' ? (krw * rate).toFixed(2) : Math.round(krw * rate);
-                if (site === 'KR') return Number(v).toLocaleString();
+                if (site === 'KR' || site === 'STORE' || site === 'GODO') return Number(v).toLocaleString();
                 if (site === 'AR') return `${Number(v).toLocaleString()} ﷼`;
                 return `${sym}${Number(v).toLocaleString()}`;
             };
@@ -262,7 +262,7 @@ window.loadOrders = async () => {
             tbody.innerHTML += `
                 <tr>
                     <td style="text-align:center;"><input type="checkbox" class="row-chk" value="${order.id}"></td>
-                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}" style="cursor:pointer;" onclick="fixSiteCode('${order.id}')" title="클릭하여 변경">${site}</span>${(pmLower.includes('stripe') && site === 'KR') ? '<div style="font-size:9px;color:#ef4444;">⚠️오류?</div>' : ''}</td>
+                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}" style="cursor:pointer;" onclick="fixSiteCode('${order.id}')" title="클릭하여 변경">${site === 'STORE' ? '스토어' : site === 'GODO' ? '고도몰' : site}</span>${(pmLower.includes('stripe') && site === 'KR') ? '<div style="font-size:9px;color:#ef4444;">⚠️오류?</div>' : ''}</td>
                     <td style="text-align:center; line-height:1.2;">
                         <span style="color:#334155;">${orderDate}</span>
                         ${deliveryHtml}
@@ -315,10 +315,10 @@ function createStaffSelectHTML(orderId, role, selectedId) {
 }
 // [사이트 코드 수정] 관리자가 site_code를 직접 변경
 window.fixSiteCode = async (orderId) => {
-    const newCode = prompt('사이트 코드 변경 (KR / JP / US):', '');
+    const newCode = prompt('사이트 코드 변경 (KR / JP / US / STORE / GODO):', '');
     if (!newCode) return;
     const code = newCode.trim().toUpperCase();
-    if (!['KR', 'JP', 'US', 'CN', 'AR', 'ES'].includes(code)) { showToast('KR, JP, US, CN, AR, ES 중 선택', "warn"); return; }
+    if (!['KR', 'JP', 'US', 'CN', 'AR', 'ES', 'STORE', 'GODO'].includes(code)) { showToast('KR, JP, US, STORE, GODO 등 입력', "warn"); return; }
     const { error } = await sb.from('orders').update({ site_code: code }).eq('id', orderId);
     if (error) { showToast('변경 실패: ' + error.message, "error"); return; }
     showToast(`주문 #${orderId} → ${code} 변경 완료`, "success");
@@ -972,5 +972,95 @@ window.openBidAdminModal = async (orderId) => {
     } catch (e) {
         console.error(e);
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">오류 발생: ${e.message}</td></tr>`;
+    }
+};
+
+// ============================================================
+// [수동주문] 모달 열기/닫기 + 등록
+// ============================================================
+window.openManualOrderModal = () => {
+    document.getElementById('moSource').value = 'STORE';
+    document.getElementById('moName').value = '';
+    document.getElementById('moPhone').value = '';
+    document.getElementById('moAddress').value = '';
+    document.getElementById('moItems').value = '';
+    document.getElementById('moAmount').value = '';
+    document.getElementById('moDelivery').value = '';
+    document.getElementById('moNote').value = '';
+    document.getElementById('moFiles').value = '';
+    document.getElementById('manualOrderModal').style.display = 'flex';
+};
+
+window.submitManualOrder = async () => {
+    const source = document.getElementById('moSource').value;
+    const name = document.getElementById('moName').value.trim();
+    const phone = document.getElementById('moPhone').value.trim();
+    const address = document.getElementById('moAddress').value.trim();
+    const itemsText = document.getElementById('moItems').value.trim();
+    const amount = parseInt(document.getElementById('moAmount').value) || 0;
+    const delivery = document.getElementById('moDelivery').value;
+    const note = document.getElementById('moNote').value.trim();
+    const fileInput = document.getElementById('moFiles');
+
+    if (!name) { alert('고객명을 입력하세요.'); return; }
+    if (!itemsText) { alert('주문내역을 입력하세요.'); return; }
+    if (amount <= 0) { alert('주문총액을 입력하세요.'); return; }
+
+    showLoading(true);
+    try {
+        const sourceName = source === 'STORE' ? '스마트스토어' : '고도몰';
+        const payMethod = source === 'STORE' ? '스토어결제' : '고도몰결제';
+
+        // items를 JSON 배열로 변환 (줄 단위로 분리)
+        const lines = itemsText.split('\n').filter(l => l.trim());
+        const items = lines.map(line => ({ productName: line.trim(), qty: 1 }));
+
+        // DB 주문 생성
+        const { data: orderData, error } = await sb.from('orders').insert([{
+            manager_name: name,
+            phone: phone,
+            address: address,
+            request_note: note ? `[${sourceName}] ${note}` : `[${sourceName}]`,
+            total_amount: amount,
+            actual_payment: amount,
+            discount_amount: 0,
+            items: items,
+            status: '접수됨',
+            payment_status: '결제완료',
+            payment_method: payMethod,
+            site_code: source,
+            delivery_target_date: delivery || null,
+            created_at: new Date().toISOString()
+        }]).select();
+
+        if (error) throw error;
+        const orderId = orderData[0].id;
+
+        // 파일 업로드
+        if (fileInput.files.length > 0) {
+            const files = [];
+            for (const f of fileInput.files) {
+                const ext = f.name.split('.').pop().toLowerCase();
+                const safe = Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '.' + ext;
+                const path = `orders/${orderId}/${safe}`;
+                const { error: upErr } = await sb.storage.from('orders').upload(path, f);
+                if (!upErr) {
+                    const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+                    files.push({ name: f.name, url: urlData.publicUrl, type: 'admin_added' });
+                }
+            }
+            if (files.length > 0) {
+                await sb.from('orders').update({ files }).eq('id', orderId);
+            }
+        }
+
+        document.getElementById('manualOrderModal').style.display = 'none';
+        alert(`✅ ${sourceName} 수동주문이 등록되었습니다. (주문번호: ${orderId})`);
+        loadOrders();
+    } catch (e) {
+        console.error('[수동주문] 오류:', e);
+        alert('주문 등록 실패: ' + e.message);
+    } finally {
+        showLoading(false);
     }
 };

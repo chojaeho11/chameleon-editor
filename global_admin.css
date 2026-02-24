@@ -65,6 +65,8 @@ tr:hover td { background: #f8fafc; }
 .badge-site.kr { color: #cf2e2e; border-color: #fecaca; background: #fef2f2; }
 .badge-site.jp { color: #ea580c; border-color: #ffedd5; background: #fff7ed; }
 .badge-site.us { color: #2563eb; border-color: #dbeafe; background: #eff6ff; }
+.badge-site.store { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; }
+.badge-site.godo { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
 
 /* 파일 업로드 & 템플릿 카드 */
 .file-drop-zone { border: 2px dashed #cbd5e1; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; position: relative; background: #f8fafc; color: #64748b; margin-bottom: 10px; }
