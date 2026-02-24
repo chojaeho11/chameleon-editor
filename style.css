@@ -4735,13 +4735,15 @@ html[lang="ja"] h1, html[lang="ja"] h2, html[lang="ja"] h3, html[lang="ja"] h4 {
     line-height: 1.15 !important;
 }
 html[lang="ja"] .hero-title {
-    font-size: 28px !important;
-    line-height: 1.1 !important;
-    letter-spacing: -0.06em !important;
+    font-size: 48px !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.04em !important;
 }
 html[lang="ja"] .hero-desc {
-    font-size: 12px !important;
-    letter-spacing: -0.03em !important;
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
 }
 html[lang="ja"] .quick-menu-label,
 html[lang="ja"] .section-title {
@@ -4777,11 +4779,13 @@ html[lang="ja"] .product-detail-render div {
 /* 일본어 모바일 추가 축소 */
 @media (max-width: 768px) {
     html[lang="ja"] .hero-title {
-        font-size: 18px !important;
-        line-height: 1.1 !important;
+        font-size: 22px !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
     }
     html[lang="ja"] .hero-desc {
-        font-size: 10px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
     }
     html[lang="ja"] .quick-menu-label,
     html[lang="ja"] .section-title {
