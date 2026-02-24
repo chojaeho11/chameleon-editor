@@ -2393,7 +2393,7 @@ async function saveCommonInfo() {
 
     // 인앱 토스트 배너 (스택 지원, 더 오래 표시)
     var _toastCount = 0;
-    function showChatToast(title, body, isUrgent) {
+    function showChatToast(title, body, isUrgent, roomId) {
         _toastCount++;
         var idx = _toastCount;
         var div = document.createElement('div');
@@ -2404,7 +2404,7 @@ async function saveCommonInfo() {
             + '<div style="flex:1;"><div style="font-weight:700;font-size:15px;">' + title + '</div><div style="font-size:13px;opacity:0.9;margin-top:2px;">' + body + '</div></div>'
             + '<div onclick="event.stopPropagation();this.parentElement.parentElement.remove();" style="cursor:pointer;opacity:0.7;font-size:18px;padding:4px 8px;">✕</div>'
             + '</div>';
-        div.onclick = function() { div.remove(); if (window.showSection) window.showSection('sec-live-chat'); };
+        div.onclick = function() { div.remove(); if (window.showSection) window.showSection('sec-live-chat'); if (roomId && window.lcSelectRoom) window.lcSelectRoom(roomId); };
         document.body.appendChild(div);
         if (!document.getElementById('lcToastCSS')) {
             var st = document.createElement('style'); st.id = 'lcToastCSS';
@@ -2621,7 +2621,7 @@ async function saveCommonInfo() {
     setTimeout(startUnreadPolling, 3000); // 페이지 로드 3초 후 시작
 
     // ── 통합 알림 발송 v4 — 사운드+토스트는 항상, TTS/데스크톱은 필터 ──
-    function sendNotification(title, body, ttsText, assignedMgr, isUrgent) {
+    function sendNotification(title, body, ttsText, assignedMgr, isUrgent, roomId) {
         console.log('🔔 [sendNotification] 호출:', title, '| mgr:', assignedMgr, '| urgent:', isUrgent);
         var now = Date.now();
         // 1초 내 중복 알림 방지
@@ -2636,7 +2636,7 @@ async function saveCommonInfo() {
         console.log('🔔 [sendNotification] shouldAlwaysAlert:', alert, '| myName:', myManagerName);
         if (alert) {
             try { if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); } } catch(e) { console.error('사운드 에러:', e); }
-            try { showChatToast(title, body, isUrgent); } catch(e) { console.error('토스트 에러:', e); }
+            try { showChatToast(title, body, isUrgent, roomId); } catch(e) { console.error('토스트 에러:', e); }
             try { flashTitle(title); } catch(e) { console.error('타이틀 에러:', e); }
             try { updateUnreadBadge(1); } catch(e) { console.error('배지 에러:', e); }
             try { startRepeatAlarm(); } catch(e) { console.error('반복알람 에러:', e); }
@@ -2740,7 +2740,7 @@ async function saveCommonInfo() {
                     sendNotification(
                         '새 상담 요청',
                         name + '님이 상담을 요청했습니다' + (mgr ? ' (담당: ' + mgr + ')' : ''),
-                        tts, mgr, true
+                        tts, mgr, true, rm.id
                     );
                     lcLoadRooms();
                 }
@@ -2752,7 +2752,7 @@ async function saveCommonInfo() {
                         '상담 배정',
                         rm.assigned_manager + ' 매니저님에게 상담이 배정되었습니다',
                         rm.assigned_manager + ' 매니저님, 새 상담이 배정되었습니다',
-                        rm.assigned_manager, true
+                        rm.assigned_manager, true, rm.id
                     );
                 }
                 lcLoadRooms();
@@ -2799,7 +2799,7 @@ async function saveCommonInfo() {
                         : name + ' 고객님 메시지입니다';
                 sendNotification(
                     '💬 ' + name + (mgr ? ' → ' + mgr : ''),
-                    txt, tts, mgr, false
+                    txt, tts, mgr, false, msg.room_id
                 );
                 // 방 목록 즉시 갱신 (미확인 뱃지 업데이트)
                 if (window.lcLoadRooms) lcLoadRooms();
