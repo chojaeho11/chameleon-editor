@@ -1187,10 +1187,10 @@ function renderCart() {
         
         // [수정됨] 썸네일 우선순위 및 유효성 검사 강화
         let displayImg = null;
-// 1. 에디터 작업물인 경우 (업로드된 썸네일 URL이 있는 경우만)
-if (item.type === 'design' && item.thumb && item.thumb.startsWith('http')) {
+// 1. 에디터 작업물 또는 파일업로드인 경우 (업로드된 썸네일 URL이 있는 경우만)
+if ((item.type === 'design' || item.type === 'file_upload') && item.thumb && item.thumb.startsWith('http')) {
     displayImg = item.thumb;
-} 
+}
 // 2. 일반 제품이거나 썸네일이 없는 경우, 제품 DB의 이미지 URL을 직접 참조
 else if (item.product && item.product.img && item.product.img.startsWith('http')) {
     displayImg = item.product.img;
@@ -1234,17 +1234,16 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 
                     if (isSwatchCat) {
                         // 스와치 모드: 이미지 그리드 (수량 = 제품수량 자동)
-                        addonHtml += `<div style="display:flex; flex-wrap:wrap; gap:4px;">
+                        addonHtml += `<div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:3px;">
                             ${catAddons.map(opt => {
                                 const isSelected = Object.values(item.selectedAddons).includes(opt.code);
                                 const imgUrl = opt.img_url || 'https://placehold.co/40/eeeeee/cccccc?text=+';
                                 return `
-                                    <label style="cursor:pointer; position:relative; width:calc(20% - 4px); flex-shrink:0;" title="${opt.display_name || opt.name}">
+                                    <label style="cursor:pointer; position:relative;" title="${opt.display_name || opt.name}">
                                         <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''}
                                                style="position:absolute; opacity:0; width:0; height:0;">
-                                        <div style="border:${isSelected ? '2px solid #6366f1' : '1px solid #e2e8f0'}; border-radius:6px; padding:3px 1px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; background:${isSelected ? '#eff6ff' : '#fff'}; ${isSelected ? 'box-shadow:0 0 0 1px #6366f1;' : ''}">
-                                            <img src="${imgUrl}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1px solid #eee;">
-                                            <span style="font-size:7px; color:${isSelected ? '#6366f1' : '#94a3b8'}; margin-top:1px; font-weight:bold; text-align:center; line-height:1.1;">+${formatCurrency(opt.price)}</span>
+                                        <div style="border:${isSelected ? '2px solid #6366f1' : '1px solid #e2e8f0'}; border-radius:5px; padding:2px; display:flex; align-items:center; justify-content:center; transition:0.2s; background:${isSelected ? '#eff6ff' : '#fff'}; aspect-ratio:1;">
+                                            <img src="${imgUrl}" style="width:22px; height:22px; border-radius:50%; object-fit:cover;">
                                         </div>
                                     </label>`;
                             }).join('')}
@@ -1298,7 +1297,8 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 
                     <div style="flex:1; min-width:200px;">
                         <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${localName(item.product)}</h4>
-                        <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.fileName ? item.fileName : window.t('msg_file_attached_separately', '(File attached separately)')}</div>
+                        ${(item.width && item.height) ? `<div style="font-size:12px; color:#6366f1; margin-top:4px; font-weight:bold;">📐 ${item.width}x${item.height}mm</div>` : ''}
+                        <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.type === 'file_upload' ? item.fileName : (item.fileName || window.t('msg_file_attached_separately', '(File attached separately)'))}</div>
                         <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
                         ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:8px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
@@ -1333,6 +1333,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                         <img src="${displayImg}" loading="lazy" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${localName(item.product)}</h4>
+                            ${(item.width && item.height) ? `<div style="font-size:11px; color:#6366f1; margin-top:2px; font-weight:bold;">📐 ${item.width}x${item.height}mm</div>` : ''}
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
                             ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:6px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
                         </div>
@@ -1368,16 +1369,8 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 }
 
 function updateSummary(prodTotal, addonTotal, total) {
-    // 최소 주문금액 (KR: 10,000원, JP: 8,000원 ≈ ¥1,000)
-    const _minCc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW = _minCc === 'JP' ? 8000 : 10000;
     const elMinNotice = document.getElementById("minOrderNotice");
-    if (total > 0 && total < MIN_ORDER_KRW) {
-        total = MIN_ORDER_KRW;
-        if (elMinNotice) elMinNotice.style.display = 'block';
-    } else {
-        if (elMinNotice) elMinNotice.style.display = 'none';
-    }
+    if (elMinNotice) elMinNotice.style.display = 'none';
 
     const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal);
     const elAddon = document.getElementById("summaryAddonPrice"); if(elAddon) elAddon.innerText = formatCurrency(addonTotal);
@@ -1605,13 +1598,6 @@ async function processOrderSubmission() {
     });
 
     const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-
-    // 최소 주문금액 (KR: 10,000원, JP: 8,000원 ≈ ¥1,000)
-    const MIN_ORDER_KRW2 = _cc === 'JP' ? 8000 : 10000;
-    if (rawTotal > 0 && rawTotal < MIN_ORDER_KRW2) {
-        showToast(window.t('msg_min_order_applied', `Minimum order amount ${formatCurrency(MIN_ORDER_KRW2)} has been applied.`), "info");
-        rawTotal = MIN_ORDER_KRW2;
-    }
 
     // 허니콤보드 용차 배송비 (KR: 200,000 KRW, JP: 310,000 KRW ≈ ¥40,000)
     const NON_METRO_FEE_KRW = _cc === 'JP' ? 310000 : 200000;
@@ -2365,10 +2351,10 @@ const cleanProduct = {
     price_us: productInfo.price_us || 0,
     code: productInfo.code || productInfo.key,
     img: ((productInfo.img || productInfo.img_url) && (productInfo.img || productInfo.img_url).length < 500 && !(productInfo.img || productInfo.img_url).startsWith('data:')) ? (productInfo.img || productInfo.img_url) : null,
-    w: productInfo.w || 0,
-    h: productInfo.h || 0,
-    w_mm: productInfo.w_mm || 0,
-    h_mm: productInfo.h_mm || 0,
+    w: productInfo.w || productInfo.width_mm || 0,
+    h: productInfo.h || productInfo.height_mm || 0,
+    w_mm: productInfo.w_mm || productInfo.width_mm || 0,
+    h_mm: productInfo.h_mm || productInfo.height_mm || 0,
     category: productInfo.category || '',
     addons: productInfo.addons || [],
     partner_id: productInfo.partner_id || null
