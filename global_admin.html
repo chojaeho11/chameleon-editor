@@ -2498,11 +2498,17 @@ async function saveCommonInfo() {
             _unreadCount = myUnread;
             updateUnreadBadge(0);
 
+            // 채팅 섹션 활성화 상태 확인
+            var chatSec = document.getElementById('sec-live-chat');
+            var isChatActive = chatSec && chatSec.classList.contains('active') && !document.hidden;
+
+            // ★ 채팅 섹션 보고 있으면 방 목록도 자동 갱신 (20초마다)
+            if (isChatActive && window.lcLoadRooms) {
+                window.lcLoadRooms();
+            }
+
             // 새 미확인 발생 시 또는 계속 미확인이 있으면 알림
             if (myUnread > 0) {
-                // 채팅 섹션을 보고 있으면 알림 스킵
-                var chatSec = document.getElementById('sec-live-chat');
-                var isChatActive = chatSec && chatSec.classList.contains('active') && !document.hidden;
                 if (!isChatActive) {
                     // 새 미확인 증가 시 강한 알림
                     if (myUnread > _lastUnreadTotal) {

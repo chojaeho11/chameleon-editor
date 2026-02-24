@@ -10115,7 +10115,22 @@ window.dsmRenderProducts = async function(keyword) {
 
     var _room = null, _sub = null, _live = false;
 
-    function getSb() { return window.sb || null; }
+    var _ownSb = null;
+    function getSb() {
+        if (window.sb) return window.sb;
+        // fallback: window.sb가 없으면 자체 클라이언트 생성
+        if (!_ownSb && typeof window.supabase !== 'undefined') {
+            try {
+                _ownSb = window.supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
+                    { auth: { persistSession: true, autoRefreshToken: true } }
+                );
+                console.log('🔧 [라이브챗] 자체 Supabase 클라이언트 생성');
+            } catch(e) { console.error('🔧 [라이브챗] Supabase 생성 실패:', e); }
+        }
+        return _ownSb || null;
+    }
 
     // 즉시 localStorage 확인: 저장된 실시간 상담방이 있으면 플래그 설정
     // (AI 모듈의 500ms 복원보다 먼저 실행되어야 함)
@@ -10283,13 +10298,21 @@ window.dsmRenderProducts = async function(keyword) {
     };
 
     // ── 실시간 상담 시작 ──
-    function startLive(managerName) {
+    function startLive(managerName, retryCount) {
+        retryCount = retryCount || 0;
         var sb = getSb();
         var msgArea = document.getElementById('chamMessages');
         if (!sb || !msgArea) {
+            console.warn('⚠️ [라이브챗] startLive - sb:', !!sb, 'msgArea:', !!msgArea, 'retry:', retryCount);
+            // 모바일에서 Supabase 로딩이 늦을 수 있으므로 재시도
+            if (retryCount < 3) {
+                setTimeout(function() { startLive(managerName, retryCount + 1); }, 1000);
+                return;
+            }
             if (msgArea) msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('connectErr') + '</div>');
             return;
         }
+        console.log('✅ [라이브챗] startLive 시작 - manager:', managerName);
         
         // AI 대화 요약
         var summary = '';
@@ -10446,17 +10469,46 @@ window.dsmRenderProducts = async function(keyword) {
     
     function liveSend() {
         var inp = document.getElementById('chamInput');
-        if (!inp || !_room) return;
+        if (!inp) return;
+        if (!_room) {
+            console.warn('⚠️ [라이브챗] _room이 없음 - 전송 불가');
+            var ma = document.getElementById('chamMessages');
+            if (ma) ma.insertAdjacentHTML('beforeend', '<div style="text-align:center;padding:4px 0;"><span style="background:#fef2f2;color:#dc2626;padding:4px 12px;border-radius:12px;font-size:12px;">⚠️ ' + _lt('connectErr') + '</span></div>');
+            return;
+        }
         var text = inp.value.trim(); if (!text) return;
         inp.value = '';
         var msgArea = document.getElementById('chamMessages');
-        msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + text + '</div></div>');
+        // 메시지 ID를 부여해서 실패 시 표시용
+        var msgId = 'lmsg_' + Date.now();
+        msgArea.insertAdjacentHTML('beforeend', '<div id="' + msgId + '" style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + text + '</div></div>');
         if (window._scrollChatBottom) window._scrollChatBottom();
         var sb = getSb();
-        if (sb) {
-            sb.from('chat_messages').insert({ room_id: _room.id, sender_type: 'customer', sender_name: _customerName || _ct('customer'), message: text })
-              .then(function(r) { if(r.error) console.error('메시지 전송 에러:', r.error); else console.log('✅ 고객 메시지 전송 성공'); });
+        if (!sb) {
+            console.error('❌ [라이브챗] Supabase 클라이언트 없음');
+            _markMsgFailed(msgId);
+            return;
         }
+        sb.from('chat_messages').insert({
+            room_id: _room.id,
+            sender_type: 'customer',
+            sender_name: _customerName || (window._ct ? window._ct('customer') : 'Customer'),
+            message: text
+        }).then(function(r) {
+            if (r.error) {
+                console.error('❌ [라이브챗] 메시지 전송 에러:', r.error);
+                _markMsgFailed(msgId);
+            } else {
+                console.log('✅ [라이브챗] 메시지 전송 성공');
+            }
+        }).catch(function(e) {
+            console.error('❌ [라이브챗] 메시지 전송 예외:', e);
+            _markMsgFailed(msgId);
+        });
+    }
+    function _markMsgFailed(msgId) {
+        var el = document.getElementById(msgId);
+        if (el) el.insertAdjacentHTML('afterend', '<div style="text-align:right;padding:0 4px;"><span style="color:#ef4444;font-size:11px;">⚠️ 전송 실패 - 탭하여 재시도</span></div>');
     }
 
     // ── 상담 종료 ──
