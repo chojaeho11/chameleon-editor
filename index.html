@@ -6484,6 +6484,8 @@ if (w >= 20 && h >= 20) {
                         productToCart.is_custom = true;
                     }
                     const m = await import('./order.js?v=123');
+                    const uploadedFiles = [];
+                    let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
                         const f = fileInput.files[i];
                         const ext = f.name.split('.').pop();
@@ -6506,8 +6508,14 @@ if (w >= 20 && h >= 20) {
                                 thumbUrl = td.publicUrl; URL.revokeObjectURL(img.src);
                             } catch(e) { console.warn('썸네일 생성 실패:', e); }
                         }
-                        m.addProductToCartDirectly(productToCart, i===0?finalQty:1, i===0?selectedAddonCodes:[], i===0?selectedAddonQtys:{},
-                            { type:'file_upload', fileName:f.name, originalUrl:urlData.publicUrl, thumb:thumbUrl });
+                        uploadedFiles.push({ fileName: f.name, originalUrl: urlData.publicUrl, thumb: thumbUrl });
+                        if (!firstThumb) firstThumb = thumbUrl;
+                    }
+                    if (uploadedFiles.length > 0) {
+                        const fileNames = uploadedFiles.map(f => f.fileName).join(', ');
+                        const fileUrls = uploadedFiles.map(f => f.originalUrl);
+                        m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, selectedAddonQtys,
+                            { type:'file_upload', fileName: fileNames, originalUrl: fileUrls[0], uploadedFiles: uploadedFiles, thumb: firstThumb });
                     }
                     document.getElementById('choiceModal').style.display = 'none';
                     document.getElementById('cartPage').style.display = 'block';

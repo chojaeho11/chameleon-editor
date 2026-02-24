@@ -2009,6 +2009,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             height: item.height || 0,
             fileName: item.fileName || '',
             originalUrl: item.originalUrl || '',
+            uploadedFiles: item.uploadedFiles || null,
             cutlineUrl: item.cutlineUrl || ''
         };
     }).filter(i => i !== null);
@@ -2060,7 +2061,15 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
     for (let i = 0; i < cartData.length; i++) {
         const item = cartData[i]; 
         const idx = String(i + 1).padStart(2, '0');
-        if (item.originalUrl) {
+        if (item.uploadedFiles && item.uploadedFiles.length > 0) {
+            item.uploadedFiles.forEach((f, fi) => {
+                uploadedFiles.push({
+                    name: `customer_file_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'file'}`,
+                    url: f.originalUrl,
+                    type: 'customer_file'
+                });
+            });
+        } else if (item.originalUrl) {
             uploadedFiles.push({
                 name: `customer_file_${idx}_${item.fileName || 'file'}`,
                 url: item.originalUrl,
