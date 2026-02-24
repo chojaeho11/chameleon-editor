@@ -797,8 +797,8 @@ button, input, textarea, select { font-family: inherit; }
         overflow-x: auto !important; white-space: nowrap !important; background: #fff !important;
     }
     .topbar::-webkit-scrollbar { display: none; }
-    #siteNavBar { gap: 2px !important; margin-left: auto !important; flex-shrink: 0 !important; order: 99 !important; }
-    #siteNavBar .flag-link { width: 24px !important; height: 24px !important; font-size: 14px !important; }
+    #siteNavBar { gap: 1px !important; margin-left: 0 !important; flex-shrink: 0 !important; order: 2 !important; }
+    #siteNavBar .flag-link { width: 22px !important; height: 22px !important; font-size: 13px !important; padding: 0 !important; }
     #startScreen { top: 50px !important; height: calc(100vh - 50px) !important; }
     .brand { order: 1 !important; margin-right: 5px !important; flex-shrink: 0 !important; }
     .brand { display: none !important; } /* 로고 숨김 요청 반영 */
