@@ -6511,8 +6511,9 @@ if (w >= 20 && h >= 20) {
                         const f = fileInput.files[i];
                         const ext = f.name.split('.').pop();
                         const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-                        const safeType = (f.type && !f.type.includes('postscript')) ? f.type : 'application/octet-stream';
-                        const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, f, { contentType: safeType, upsert: true });
+                        const safeType = (f.type && !f.type.includes('postscript') && !f.type.includes('octet')) ? f.type : 'application/octet-stream';
+                        const uploadBody = (safeType !== f.type) ? new Blob([await f.arrayBuffer()], { type: safeType }) : f;
+                        const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, uploadBody, { contentType: safeType, upsert: true });
                         if (upErr) { console.error('업로드 실패:', upErr); continue; }
                         const { data: urlData } = _sb.storage.from('customer_uploads').getPublicUrl(path);
                         let thumbUrl = urlData.publicUrl;
