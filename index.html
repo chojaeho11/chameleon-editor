@@ -6399,12 +6399,12 @@ if (w >= 20 && h >= 20) {
                     for (let i = 0; i < fileInput.files.length; i++) {
                         const file = fileInput.files[i];
                         const ext = file.name.split('.').pop();
-                        const path = `customer_uploads/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+                        const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
                         // 파일 업로드
-                        const { error: upErr } = await _sb.storage.from('designs').upload(path, file, { contentType: file.type, upsert: true });
+                        const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, file, { contentType: file.type, upsert: true });
                         if (upErr) { console.error('업로드 실패:', upErr); continue; }
-                        const { data: urlData } = _sb.storage.from('designs').getPublicUrl(path);
+                        const { data: urlData } = _sb.storage.from('customer_uploads').getPublicUrl(path);
                         const originalUrl = urlData.publicUrl;
 
                         // 썸네일 생성 (이미지인 경우)
@@ -6421,8 +6421,8 @@ if (w >= 20 && h >= 20) {
                                 cv.getContext('2d').drawImage(loaded, 0, 0, cv.width, cv.height);
                                 const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.7));
                                 const thumbPath = `thumbs/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-                                await _sb.storage.from('designs').upload(thumbPath, blob, { contentType: 'image/jpeg', upsert: true });
-                                const { data: td } = _sb.storage.from('designs').getPublicUrl(thumbPath);
+                                await _sb.storage.from('customer_uploads').upload(thumbPath, blob, { contentType: 'image/jpeg', upsert: true });
+                                const { data: td } = _sb.storage.from('customer_uploads').getPublicUrl(thumbPath);
                                 thumbUrl = td.publicUrl;
                                 URL.revokeObjectURL(img.src);
                             } catch(e) { console.warn('썸네일 생성 실패:', e); }
