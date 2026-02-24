@@ -6045,7 +6045,8 @@ window.showChoiceModal = async function(key) {
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
                     ${product.cutline_url ? `<a href="${product.cutline_url}" target="_blank" download class="btn-round" style="height:50px; font-size:14px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; text-decoration:none;">✂️ ${lang==='ja'?'カットライン ダウンロード':lang==='zh'?'刀线下载':lang==='ar'?'تحميل خط القطع':lang==='es'?'Descargar línea de corte':lang==='de'?'Stanzlinie herunterladen':lang==='fr'?'Télécharger la ligne de coupe':lang==='en'?'Download Die-cut Line':'칼선 다운받기'}</a>` : ''}
                     ${product.is_file_upload
-                        ? `<button onclick="window.confirmChoice('upload')" class="btn-round primary" style="height:60px; font-size:16px; background:#0891b2;">📎 ${lang==='ja'?'画像をアップロード':lang==='zh'?'上传图片':lang==='en'?'Upload Image':'이미지 올리기'}</button>`
+                        ? `<button onclick="window.confirmChoice('upload')" id="btnKeyringUpload" class="btn-round primary" style="height:60px; font-size:16px; background:#0891b2;">📎 ${lang==='ja'?'画像をアップロード':lang==='zh'?'上传图片':lang==='en'?'Upload Image':'이미지 올리기'}</button>
+                           <div id="miniKeyringEditorContainer" style="display:none;"></div>`
                         : (product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='zh'?'编辑器设计':lang==='ar'?'محرر التصميم':lang==='es'?'Editor de Diseño':lang==='de'?'Design-Editor':lang==='fr'?'Éditeur de design':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>`)
                     }
                     <button onclick="window.confirmChoice('cart')" class="btn-round ${product.is_general_product ? 'primary' : ''}" style="height:60px; ${product.is_general_product ? 'font-size:16px;' : 'background:#4ccc02; color:white;'}">🛒 ${lang==='ja'?'カートに入れる':lang==='zh'?'加入购物车':lang==='ar'?'أضف إلى السلة':lang==='es'?'Añadir al Carrito':lang==='de'?'In den Warenkorb':lang==='fr'?'Ajouter au panier':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
@@ -6373,78 +6374,115 @@ if (w >= 20 && h >= 20) {
                 window.isCustomModeCurrent ? finalPricePerItem : null
             );
         } else if (mode === 'upload') {
-            // ★ 파일업로드 모드: 파일 선택 → 업로드 → 장바구니
+            // ★ 파일업로드 모드
+            const _isKeyring = ((product.code||'')+(product.name||'')+(product.category||'')).toLowerCase().match(/keyring|키링|key_ring|acr_key/);
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
-            fileInput.multiple = true;
-            fileInput.accept = 'image/*,.pdf,.ai,.psd,.eps,.svg';
+            fileInput.multiple = !_isKeyring;
+            fileInput.accept = _isKeyring ? 'image/*' : 'image/*,.pdf,.ai,.psd,.eps,.svg';
             fileInput.onchange = async function() {
                 if (!fileInput.files || fileInput.files.length === 0) return;
+                const file = fileInput.files[0];
+
+                // ★ 키링 제품 + 이미지: 미니 에디터 열기
+                if (_isKeyring && file.type.startsWith('image/')) {
+                    const container = document.getElementById('miniKeyringEditorContainer');
+                    const uploadBtn = document.getElementById('btnKeyringUpload');
+                    if (uploadBtn) uploadBtn.style.display = 'none';
+
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=123');
+                    openMiniKeyringEditor(
+                        container, file,
+                        // onConfirm: 편집 완료된 이미지 dataURL
+                        async (editedDataURL) => {
+                            window.isDirectCartAddInProgress = true;
+                            try {
+                                const _sb = window.sb || (await import('./config.js?v=123')).sb;
+                                // 편집 이미지 업로드
+                                const blob = await (await fetch(editedDataURL)).blob();
+                                const path = `keyring_${Date.now()}_${Math.random().toString(36).slice(2)}.png`;
+                                const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, blob, { contentType: 'image/png', upsert: true });
+                                if (upErr) throw upErr;
+                                const { data: urlData } = _sb.storage.from('customer_uploads').getPublicUrl(path);
+
+                                // 썸네일 생성
+                                const thumbCanvas = document.createElement('canvas');
+                                const thumbImg = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = editedDataURL; });
+                                const sz = 200, sc = Math.min(sz / thumbImg.width, sz / thumbImg.height);
+                                thumbCanvas.width = thumbImg.width * sc; thumbCanvas.height = thumbImg.height * sc;
+                                thumbCanvas.getContext('2d').drawImage(thumbImg, 0, 0, thumbCanvas.width, thumbCanvas.height);
+                                const thumbBlob = await new Promise(r => thumbCanvas.toBlob(r, 'image/png'));
+                                const thumbPath = `thumbs/${Date.now()}_${Math.random().toString(36).slice(2)}.png`;
+                                await _sb.storage.from('customer_uploads').upload(thumbPath, thumbBlob, { contentType: 'image/png', upsert: true });
+                                const { data: td } = _sb.storage.from('customer_uploads').getPublicUrl(thumbPath);
+
+                                const productToCart = { ...product };
+                                productToCart.price = finalPricePerItem;
+                                if (window.isCustomModeCurrent) {
+                                    productToCart.name += ` (${finalW}x${finalH}mm)`;
+                                    productToCart.width_mm = finalW; productToCart.height_mm = finalH;
+                                    productToCart.is_custom = true;
+                                }
+                                const m = await import('./order.js?v=123');
+                                m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, selectedAddonQtys,
+                                    { type: 'file_upload', fileName: file.name, originalUrl: urlData.publicUrl, thumb: td.publicUrl });
+                                document.getElementById('choiceModal').style.display = 'none';
+                                document.getElementById('cartAddedModal').style.display = 'flex';
+                            } catch(err) {
+                                console.error('키링 업로드 오류:', err);
+                                showToast('Upload failed: ' + err.message, 'error');
+                            } finally { window.isDirectCartAddInProgress = false; }
+                        },
+                        // onCancel: 미니 에디터 닫기
+                        () => { if (uploadBtn) uploadBtn.style.display = ''; }
+                    );
+                    return;
+                }
+
+                // ★ 기존 플로우 (비키링 또는 비이미지 파일)
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
-
                 try {
                     const _sb = window.sb || (await import('./config.js?v=123')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
                         productToCart.name += ` (${finalW}x${finalH}mm)`;
-                        productToCart.width_mm = finalW;
-                        productToCart.height_mm = finalH;
+                        productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-
                     const m = await import('./order.js?v=123');
                     for (let i = 0; i < fileInput.files.length; i++) {
-                        const file = fileInput.files[i];
-                        const ext = file.name.split('.').pop();
+                        const f = fileInput.files[i];
+                        const ext = f.name.split('.').pop();
                         const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-
-                        // 파일 업로드
-                        const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, file, { contentType: file.type, upsert: true });
+                        const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, f, { contentType: f.type, upsert: true });
                         if (upErr) { console.error('업로드 실패:', upErr); continue; }
                         const { data: urlData } = _sb.storage.from('customer_uploads').getPublicUrl(path);
-                        const originalUrl = urlData.publicUrl;
-
-                        // 썸네일 생성 (이미지인 경우)
-                        let thumbUrl = originalUrl;
-                        if (file.type.startsWith('image/')) {
+                        let thumbUrl = urlData.publicUrl;
+                        if (f.type.startsWith('image/')) {
                             try {
                                 const img = new Image();
-                                const loaded = await new Promise((res, rej) => { img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(file); });
-                                const cv = document.createElement('canvas');
-                                const sz = 200;
-                                const scale = Math.min(sz / loaded.width, sz / loaded.height);
-                                cv.width = loaded.width * scale;
-                                cv.height = loaded.height * scale;
+                                const loaded = await new Promise((res, rej) => { img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(f); });
+                                const cv = document.createElement('canvas'); const sz = 200, sc = Math.min(sz/loaded.width, sz/loaded.height);
+                                cv.width = loaded.width*sc; cv.height = loaded.height*sc;
                                 cv.getContext('2d').drawImage(loaded, 0, 0, cv.width, cv.height);
-                                const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.7));
-                                const thumbPath = `thumbs/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-                                await _sb.storage.from('customer_uploads').upload(thumbPath, blob, { contentType: 'image/jpeg', upsert: true });
-                                const { data: td } = _sb.storage.from('customer_uploads').getPublicUrl(thumbPath);
-                                thumbUrl = td.publicUrl;
-                                URL.revokeObjectURL(img.src);
+                                const bl = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.7));
+                                const tp = `thumbs/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+                                await _sb.storage.from('customer_uploads').upload(tp, bl, { contentType: 'image/jpeg', upsert: true });
+                                const { data: td } = _sb.storage.from('customer_uploads').getPublicUrl(tp);
+                                thumbUrl = td.publicUrl; URL.revokeObjectURL(img.src);
                             } catch(e) { console.warn('썸네일 생성 실패:', e); }
                         }
-
-                        // 장바구니에 제품+파일+옵션 추가 (addProductToCartDirectly 사용)
-                        m.addProductToCartDirectly(
-                            productToCart,
-                            i === 0 ? finalQty : 1,
-                            i === 0 ? selectedAddonCodes : [],
-                            i === 0 ? selectedAddonQtys : {},
-                            { type: 'file_upload', fileName: file.name, originalUrl: originalUrl, thumb: thumbUrl }
-                        );
+                        m.addProductToCartDirectly(productToCart, i===0?finalQty:1, i===0?selectedAddonCodes:[], i===0?selectedAddonQtys:{},
+                            { type:'file_upload', fileName:f.name, originalUrl:urlData.publicUrl, thumb:thumbUrl });
                     }
-
                     document.getElementById('choiceModal').style.display = 'none';
                     document.getElementById('cartAddedModal').style.display = 'flex';
                 } catch(err) {
                     console.error('파일 업로드 오류:', err);
-                    showToast((lang==='ja'?'アップロード失敗: ':lang==='en'?'Upload failed: ':lang==='zh'?'上传失败: ':'파일 업로드 실패: ') + err.message, 'error');
-                } finally {
-                    window.isDirectCartAddInProgress = false;
-                }
+                    showToast((lang==='ja'?'アップロード失敗: ':lang==='en'?'Upload failed: ':'파일 업로드 실패: ') + err.message, 'error');
+                } finally { window.isDirectCartAddInProgress = false; }
             };
             fileInput.click();
 
