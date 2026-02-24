@@ -74,7 +74,7 @@ HTML RULES:
 PRODUCT INFO:
 - Name: ${product_name}
 - Category: ${product_category || 'General'}
-${price > 0 ? `- Price: ${lc.currency}` : ''}
+${''/* 가격은 상세페이지에 포함하지 않음 */}
 ${reference_text ? `- Reference/Notes: ${reference_text}` : ''}
 ${original_description ? `
 EXISTING PRODUCT DESCRIPTION (IMPORTANT — incorporate this content):
@@ -132,6 +132,7 @@ CRITICAL RULES:
 - Headings in gold (#c9a84c) or white
 - Keep text SHORT and ELEGANT — this is a visual showcase, not an essay
 - Make it look like a premium brand's product page
+- NEVER include any price, cost, or monetary amount in the page — no won, yen, dollar amounts
 
 ${lc.instruction}
 
@@ -154,11 +155,11 @@ STRICT RULES:
 - Images: <p><img src="URL" alt="text"></p> (one image per paragraph)
 - Structure must be flat: heading → image → text → list → heading → text
 - Keep it concise: 5-8 sections maximum
+- NEVER include any price, cost, or monetary amount — no won, yen, dollar amounts
 
 Product info:
 - Name: ${product_name}
 - Category: ${product_category}
-- Price: ${lc.currency}
 - Image: ${heroImage}
 - Specs: ${JSON.stringify(product_specs)}
 ${original_description ? '- Reference: ' + original_description.substring(0, 200) : ''}

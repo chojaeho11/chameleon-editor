@@ -4640,55 +4640,73 @@ video {
 }
 
 /* =========================================
-   [일본어 전용] 글씨·자간·행간 축소
+   [일본어 전용] 글씨·자간·행간 대폭 축소
    ========================================= */
 html[lang="ja"] {
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     word-break: break-all;
 }
-html[lang="ja"] .hero-title {
-    font-size: 38px !important;
-    line-height: 1.15 !important;
+html[lang="ja"] body {
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.04em !important;
+}
+html[lang="ja"] h1, html[lang="ja"] h2, html[lang="ja"] h3, html[lang="ja"] h4 {
     letter-spacing: -0.05em !important;
+    line-height: 1.15 !important;
+}
+html[lang="ja"] .hero-title {
+    font-size: 28px !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.06em !important;
 }
 html[lang="ja"] .hero-desc {
-    font-size: 14px !important;
-    letter-spacing: -0.02em !important;
+    font-size: 12px !important;
+    letter-spacing: -0.03em !important;
 }
 html[lang="ja"] .quick-menu-label,
 html[lang="ja"] .section-title {
-    font-size: 16px !important;
-    letter-spacing: -0.02em !important;
+    font-size: 14px !important;
+    letter-spacing: -0.04em !important;
 }
 html[lang="ja"] .quick-menu-card span {
-    font-size: 11px !important;
-    letter-spacing: -0.03em !important;
-    line-height: 1.2 !important;
+    font-size: 10px !important;
+    letter-spacing: -0.04em !important;
+    line-height: 1.15 !important;
 }
 html[lang="ja"] p,
 html[lang="ja"] .desc-text,
 html[lang="ja"] .product-desc {
-    font-size: 13px !important;
-    line-height: 1.5 !important;
-    letter-spacing: -0.02em !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    letter-spacing: -0.03em !important;
+}
+/* 상세페이지 내 텍스트 */
+html[lang="ja"] .product-detail-render h2,
+html[lang="ja"] .product-detail-render h3 {
+    font-size: 16px !important;
+    letter-spacing: -0.05em !important;
+    line-height: 1.2 !important;
+}
+html[lang="ja"] .product-detail-render p,
+html[lang="ja"] .product-detail-render span,
+html[lang="ja"] .product-detail-render div {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.03em !important;
 }
 /* 일본어 모바일 추가 축소 */
 @media (max-width: 768px) {
     html[lang="ja"] .hero-title {
-        font-size: 20px !important;
-        line-height: 1.2 !important;
+        font-size: 18px !important;
+        line-height: 1.1 !important;
     }
     html[lang="ja"] .hero-desc {
-        font-size: 11px !important;
+        font-size: 10px !important;
     }
     html[lang="ja"] .quick-menu-label,
     html[lang="ja"] .section-title {
-        font-size: 14px !important;
-    }
-    html[lang="ja"] body {
         font-size: 13px !important;
-        letter-spacing: -0.03em !important;
-        line-height: 1.4 !important;
     }
 }
 
