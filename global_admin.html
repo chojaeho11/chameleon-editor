@@ -2870,15 +2870,17 @@ async function saveCommonInfo() {
             var uRes = await sb.from('chat_messages').select('room_id').eq('is_read', false).eq('sender_type', 'customer').in('room_id', roomIds);
             if (uRes.data) uRes.data.forEach(function(u) { unreadMap[u.room_id] = (unreadMap[u.room_id] || 0) + 1; });
             // 마지막 메시지 (방별)
-            var lRes = await sb.from('chat_messages').select('room_id,message,sender_type,created_at').in('room_id', roomIds).neq('sender_type','admin_memo').order('created_at', {ascending: false}).limit(roomIds.length * 2);
+            var lRes = await sb.from('chat_messages').select('room_id,message,sender_type,created_at').in('room_id', roomIds).neq('sender_type','admin_memo').order('created_at', {ascending: false}).limit(roomIds.length * 3);
             if (lRes.data) lRes.data.forEach(function(m) { if (!lastMsgMap[m.room_id]) lastMsgMap[m.room_id] = m; });
         } catch(e) { console.warn('방 목록 추가정보 로드 실패:', e); }
-        // 미확인 메시지 있는 방을 상단으로 정렬
+        // 정렬: 미확인 최상단 → 마지막 메시지 최신순
         r.data.sort(function(a, b) {
             var ua = unreadMap[a.id] || 0, ub = unreadMap[b.id] || 0;
             if (ua > 0 && ub === 0) return -1;
             if (ua === 0 && ub > 0) return 1;
-            return new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
+            var ta = lastMsgMap[a.id] ? new Date(lastMsgMap[a.id].created_at) : new Date(a.updated_at || a.created_at);
+            var tb = lastMsgMap[b.id] ? new Date(lastMsgMap[b.id].created_at) : new Date(b.updated_at || b.created_at);
+            return tb - ta;
         });
         var h=''; r.data.forEach(function(rm){
             var t=new Date(rm.updated_at||rm.created_at).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -3118,6 +3120,8 @@ async function saveCommonInfo() {
                 playKakaoSound();
                 if(document.hidden) flashTitle('💬 새 메시지');
             }
+            // 메시지 수신 시 방 목록 순서 갱신
+            lcLoadRooms();
         }).subscribe();
         lcLoadRooms();
     };
