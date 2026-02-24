@@ -26,7 +26,7 @@ export async function openMiniKeyringEditor(containerEl, imageFile, onConfirm, o
         brushSize: 20,
         drawX: 0, drawY: 0, drawW: 0, drawH: 0, displayScale: 1,
         dpr: 1, logW: 0, logH: 0,
-        holeAngle: -90, // 고리 위치 각도 (deg, -90=상단 중앙)
+        holeX: null, holeY: null, // 고리 위치 (논리 좌표, null=기본 상단 중앙)
         draggingHole: false,
         onConfirm, onCancel
     };
@@ -182,10 +182,15 @@ function renderPreview() {
     // 4. 편집된 이미지
     ctx.drawImage(es.offCanvas, drawX, drawY, drawW, drawH);
 
-    // 5. 키링 고리 구멍 (holeAngle 기반 위치)
-    const holePt = getHolePosition(drawX, drawY, drawW, drawH, es.holeAngle);
-    es._holeCx = holePt.cx; es._holeCy = holePt.cy; // 히트 테스트용 캐시
-    drawKeyringHole(ctx, holePt.cx, holePt.cy, holePt.connX, holePt.connY, scale);
+    // 5. 키링 고리 구멍 (자유 위치)
+    if (es.holeX === null) {
+        // 기본 위치: 이미지 상단 중앙 위
+        es.holeX = drawX + drawW / 2;
+        es.holeY = drawY - 18;
+    }
+    const connPt = getNearestEdgePoint(drawX, drawY, drawW, drawH, es.holeX, es.holeY);
+    es._holeCx = es.holeX; es._holeCy = es.holeY;
+    drawKeyringHole(ctx, es.holeX, es.holeY, connPt.x, connPt.y, scale);
 
     ctx.restore();
 }
@@ -283,20 +288,25 @@ function erodeAlpha(imgData, pixels) {
     }
 }
 
-function getHolePosition(drawX, drawY, drawW, drawH, angleDeg) {
-    const rad = angleDeg * Math.PI / 180;
-    const cx = drawX + drawW / 2;
-    const cy = drawY + drawH / 2;
-    const rx = drawW / 2 + 2; // 이미지 가장자리에서 약간 바깥
-    const ry = drawH / 2 + 2;
-    // 타원 위의 점 (이미지 경계)
-    const edgeX = cx + rx * Math.cos(rad);
-    const edgeY = cy + ry * Math.sin(rad);
-    // 고리 중심은 가장자리에서 더 바깥으로
-    const dist = 16;
-    const holeX = edgeX + dist * Math.cos(rad);
-    const holeY = edgeY + dist * Math.sin(rad);
-    return { cx: holeX, cy: holeY, connX: edgeX, connY: edgeY };
+// 이미지 사각형 가장자리에서 고리 중심까지의 가장 가까운 점 계산
+function getNearestEdgePoint(rx, ry, rw, rh, hx, hy) {
+    // 이미지 중심
+    const cx = rx + rw / 2, cy = ry + rh / 2;
+    // 중심→고리 방향 벡터
+    const dx = hx - cx, dy = hy - cy;
+    if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) return { x: cx, y: ry }; // 중심이면 상단
+    // 사각형 가장자리와의 교점 (ray casting)
+    let t = Infinity;
+    if (dx !== 0) {
+        const t1 = (rw / 2) / Math.abs(dx); // 좌우 변
+        if (t1 > 0) t = Math.min(t, t1);
+    }
+    if (dy !== 0) {
+        const t2 = (rh / 2) / Math.abs(dy); // 상하 변
+        if (t2 > 0) t = Math.min(t, t2);
+    }
+    if (!isFinite(t)) t = 1;
+    return { x: cx + dx * t, y: cy + dy * t };
 }
 
 function drawKeyringHole(ctx, cx, cy, connX, connY, scale) {
@@ -390,12 +400,8 @@ function canvasMove(e) {
     if (!es) return;
     if (es.draggingHole) {
         const rect = es.canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        // 이미지 중심 기준 각도 계산
-        const imgCx = es.drawX + es.drawW / 2;
-        const imgCy = es.drawY + es.drawH / 2;
-        es.holeAngle = Math.atan2(my - imgCy, mx - imgCx) * 180 / Math.PI;
+        es.holeX = e.clientX - rect.left;
+        es.holeY = e.clientY - rect.top;
         renderPreview();
         return;
     }
@@ -611,9 +617,13 @@ function generateCutlineImage() {
     // 2. 편집된 이미지
     ctx.drawImage(es.offCanvas, imgX, imgY, w, h);
 
-    // 3. 키링 고리 구멍 (holeAngle 기반)
-    const holePt = getHolePosition(imgX, imgY, w, h, es.holeAngle);
-    drawKeyringHole(ctx, holePt.cx, holePt.cy, holePt.connX, holePt.connY, 1);
+    // 3. 키링 고리 구멍 (자유 위치 → 원본 해상도 변환)
+    // 디스플레이 좌표를 원본 해상도 칼선 캔버스 좌표로 변환
+    const scaleToOrig = w / es.drawW; // 디스플레이→원본 비율
+    const cutHoleX = imgX + (es.holeX - es.drawX) * scaleToOrig;
+    const cutHoleY = imgY + (es.holeY - es.drawY) * scaleToOrig;
+    const cutConn = getNearestEdgePoint(imgX, imgY, w, h, cutHoleX, cutHoleY);
+    drawKeyringHole(ctx, cutHoleX, cutHoleY, cutConn.x, cutConn.y, 1);
 
     return cv.toDataURL('image/png');
 }
