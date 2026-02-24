@@ -47,7 +47,7 @@ function formatCurrency(amount) {
     const rate = SITE_CONFIG.CURRENCY_RATE?.[country] || 1;
     const converted = num * rate;
 
-    if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
+    if (country === 'JP') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'US') return '$' + Math.round(converted).toLocaleString();
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
