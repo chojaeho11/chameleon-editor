@@ -9412,9 +9412,23 @@ window.dsmRenderProducts = async function(keyword) {
     var db = window.sb || null;
     // window.sb가 config.js 모듈 초기화 전일 수 있으므로 지연 재확인 (중복 GoTrueClient 방지)
     if (!db) {
-        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 1000);
-        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 2500);
-        setTimeout(function() { if (!db && window.sb) db = window.sb; }, 5000);
+        setTimeout(function() { if (!db && window.sb) { db = window.sb; _tryRestoreAiRoom(); } }, 1000);
+        setTimeout(function() { if (!db && window.sb) { db = window.sb; _tryRestoreAiRoom(); } }, 2500);
+        setTimeout(function() { if (!db && window.sb) { db = window.sb; _tryRestoreAiRoom(); } }, 5000);
+    } else {
+        // db가 즉시 사용 가능하면 바로 복원 시도
+        setTimeout(function() { _tryRestoreAiRoom(); }, 500);
+    }
+
+    var _aiRoomRestored = false;
+    function _tryRestoreAiRoom() {
+        if (_aiRoomRestored || _aiRoom || _aiSub) return;
+        _aiRoomRestored = true;
+        if (_loadAiRoom()) {
+            console.log('♻️ 페이지 로드 시 AI 채팅방 복원:', _aiRoom.id);
+            subscribeManagerIntervene();
+            _fetchMissedMessages();
+        }
     }
 
     var chatHistory = [];
@@ -9428,6 +9442,9 @@ window.dsmRenderProducts = async function(keyword) {
         var u = window.currentUser;
         return u ? 'cham_chat_' + u.id : 'cham_chat_guest';
     }
+    function _aiRoomStorageKey() {
+        return _chatStorageKey() + '_room';
+    }
     function _saveChatHistory() {
         try { localStorage.setItem(_chatStorageKey(), JSON.stringify(chatHistory)); } catch(e) {}
     }
@@ -9437,6 +9454,22 @@ window.dsmRenderProducts = async function(keyword) {
             if (saved) { chatHistory = JSON.parse(saved); return true; }
         } catch(e) {}
         return false;
+    }
+    function _saveAiRoom() {
+        if (_aiRoom) {
+            try { localStorage.setItem(_aiRoomStorageKey(), JSON.stringify(_aiRoom)); } catch(e) {}
+        }
+    }
+    function _loadAiRoom() {
+        try {
+            var saved = localStorage.getItem(_aiRoomStorageKey());
+            if (saved) { _aiRoom = JSON.parse(saved); return true; }
+        } catch(e) {}
+        return false;
+    }
+    function _clearAiRoom() {
+        _aiRoom = null;
+        try { localStorage.removeItem(_aiRoomStorageKey()); } catch(e) {}
     }
     function _clearChatHistory() {
         chatHistory = [];
@@ -9597,6 +9630,13 @@ window.dsmRenderProducts = async function(keyword) {
     // ── AI 대화용 채팅방 생성 (첫 메시지 시 1회) ──
     function ensureAiRoom() {
         if (_aiRoom) return Promise.resolve(_aiRoom);
+        // localStorage에서 기존 방 복원 시도
+        if (_loadAiRoom()) {
+            console.log('♻️ AI 채팅방 복원:', _aiRoom.id);
+            subscribeManagerIntervene();
+            _fetchMissedMessages();
+            return Promise.resolve(_aiRoom);
+        }
         if (!db) return Promise.resolve(null);
         var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
         var _custNameMap = { ja: 'ウェブ顧客', us: 'Web Customer', en: 'Web Customer', zh: '网页客户', ar: 'عميل ويب', es: 'Cliente Web', de: 'Web-Kunde', fr: 'Client Web' };
@@ -9609,11 +9649,34 @@ window.dsmRenderProducts = async function(keyword) {
         }).select().single().then(function(res) {
             if (res.error || !res.data) { console.warn('AI 채팅방 생성 실패:', res.error); return null; }
             _aiRoom = res.data;
+            _saveAiRoom();
             console.log('✅ AI 채팅방 생성:', _aiRoom.id);
-            // 매니저 끼어들기 감지용 realtime 구독
             subscribeManagerIntervene();
             return _aiRoom;
         });
+    }
+
+    // ── 놓친 매니저 메시지 폴링 (페이지 새로고침 시) ──
+    function _fetchMissedMessages() {
+        if (!db || !_aiRoom) return;
+        db.from('chat_messages').select('*')
+            .eq('room_id', _aiRoom.id)
+            .eq('sender_type', 'manager')
+            .order('created_at', { ascending: true })
+            .then(function(res) {
+                if (!res.data || res.data.length === 0) return;
+                console.log('📩 놓친 매니저 메시지 ' + res.data.length + '개 발견');
+                // 채팅창이 열리지 않았으면 먼저 열기
+                _autoOpenChatIfClosed();
+                // 약간 지연 후 메시지 표시 (DOM 준비 보장)
+                setTimeout(function() {
+                    var firstName = res.data[0].sender_name || '매니저';
+                    switchToLiveFromAI(firstName);
+                    res.data.forEach(function(m) {
+                        addManagerMsg(m.sender_name || '매니저', m.message);
+                    });
+                }, 300);
+            });
     }
 
     // DB에 메시지 저장
@@ -9913,7 +9976,7 @@ window.dsmRenderProducts = async function(keyword) {
     // ── 새 대화 시작 ──
     function newChat() {
         _clearChatHistory();
-        _aiRoom = null;
+        _clearAiRoom();
         if (_aiSub) { _aiSub.unsubscribe(); _aiSub = null; }
         var c = getEl('chamMessages');
         if (c) c.innerHTML = '';
