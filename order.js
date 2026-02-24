@@ -1228,27 +1228,14 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                     const catDisplayName = catInfo ? catInfo.display_name : (cat === '_default' ? window.t('label_options', 'Options') : cat);
                     const isSwatchCat = cat === 'opt_8796' || (catInfo && catInfo.is_swatch) || catAddons.some(a => a.is_swatch);
 
+                    // 스와치 모드: 장바구니에서는 숨김 (제품 모달에서만 선택)
+                    if (isSwatchCat) return;
+
                     addonHtml += `
                         <div style="margin-bottom:12px;">
                             <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${catDisplayName}</div>`;
 
-                    if (isSwatchCat) {
-                        // 스와치 모드: 이미지 그리드 (수량 = 제품수량 자동)
-                        addonHtml += `<div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:3px;">
-                            ${catAddons.map(opt => {
-                                const isSelected = Object.values(item.selectedAddons).includes(opt.code);
-                                const imgUrl = opt.img_url || 'https://placehold.co/40/eeeeee/cccccc?text=+';
-                                return `
-                                    <label style="cursor:pointer; position:relative;" title="${opt.display_name || opt.name}">
-                                        <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''}
-                                               style="position:absolute; opacity:0; width:0; height:0;">
-                                        <div style="border:${isSelected ? '2px solid #6366f1' : '1px solid #e2e8f0'}; border-radius:5px; padding:2px; display:flex; align-items:center; justify-content:center; transition:0.2s; background:${isSelected ? '#eff6ff' : '#fff'}; aspect-ratio:1;">
-                                            <img src="${imgUrl}" style="width:22px; height:22px; border-radius:50%; object-fit:cover;">
-                                        </div>
-                                    </label>`;
-                            }).join('')}
-                        </div>`;
-                    } else {
+                    {
                         // 일반 옵션: 리스트형
                         addonHtml += `<div style="display:flex; flex-direction:column; gap:6px;">
                                 ${catAddons.map(opt => {
