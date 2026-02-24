@@ -685,7 +685,7 @@ async function renderAdminCalendar() {
 // ── 지역 판별 헬퍼 ──
 function isMetroArea(address) {
     if (!address) return true;
-    const metro = ['서울','경기','인천','성남','수원','고양','용인','부천','안산','안양','화성','평택','시흥','파주','김포','광명','군포','하남','오산','이천','양주','구리','남양주','의정부','동두천','과천','양평','여주','가평','연천','포천'];
+    const metro = ['서울','경기','인천','성남','분당','수원','고양','용인','부천','안산','안양','화성','평택','시흥','파주','김포','광명','군포','하남','오산','이천','양주','구리','남양주','의정부','동두천','과천','양평','여주','가평','연천','포천','일산','판교','광교','동탄','위례','세종'];
     return metro.some(m => address.includes(m));
 }
 function isHoneycombOrder(order) {
@@ -745,13 +745,13 @@ window.openAdminSlotModal = async (dateStr) => {
         const dlvOtherLocal = deliveryOnly.filter(o => !isHoneycombOrder(o) && !isMetroArea(o.address));
 
         // ── 2열 레이아웃 생성 ──
-        let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">';
+        let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">';
 
         // ===== 좌측: 설치 시간 슬롯 =====
         html += '<div>';
-        html += '<h4 style="margin:0 0 10px 0; font-size:14px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 설치 예약 시간표</h4>';
-        html += '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
-        html += '<thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">시간</th><th style="padding:8px; text-align:center; width:60px;">팀</th><th style="padding:8px; text-align:left;">고객</th><th style="padding:8px; width:36px;"></th></tr></thead><tbody>';
+        html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 설치 예약 시간표</h4>';
+        html += '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
+        html += '<thead><tr style="background:#f8fafc;"><th style="padding:10px; text-align:left;">시간</th><th style="padding:10px; text-align:center; width:70px;">팀</th><th style="padding:10px; text-align:left;">고객</th><th style="padding:10px; width:40px;"></th></tr></thead><tbody>';
 
         ADMIN_SLOTS.forEach((slot, idx) => {
             const endSlot = idx + 1 < ADMIN_SLOTS.length ? ADMIN_SLOTS[idx + 1] : '22:00';
@@ -767,26 +767,26 @@ window.openAdminSlotModal = async (dateStr) => {
                 return `<div style="padding:2px 0; ${isBlock?'color:#94a3b8; font-style:italic;':''}">
                     <span style="font-weight:600;">${o.manager_name}</span>
                     ${!isBlock && o.phone ? `<span style="color:#6366f1; margin-left:4px;">${o.phone}</span>` : ''}
-                    ${info ? `<span style="color:#6d28d9; font-size:10px;">(${info.duration})</span>` : ''}
+                    ${info ? `<span style="color:#6d28d9; font-size:12px;">(${info.duration})</span>` : ''}
                 </div>`;
             }).join('') || '<span style="color:#cbd5e1;">-</span>';
 
-            let removeHtml = uniqueOrders.map(o => `<button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:11px; padding:1px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')" title="제거">✕</button>`).join('');
+            let removeHtml = uniqueOrders.map(o => `<button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:14px; padding:2px 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')" title="제거">✕</button>`).join('');
 
             html += `<tr style="border-bottom:1px solid #f1f5f9; background:${bgColor};">
-                <td style="padding:6px 8px; font-weight:bold; white-space:nowrap;">${slot}~${endSlot}</td>
-                <td style="padding:6px; text-align:center;">
-                    <div style="display:flex; gap:2px; justify-content:center;">${[0,1,2].map(i=>`<div style="width:12px; height:12px; border-radius:50%; background:${i<used?barColor:'#e2e8f0'};"></div>`).join('')}</div>
+                <td style="padding:10px; font-weight:bold; white-space:nowrap; font-size:15px;">${slot}~${endSlot}</td>
+                <td style="padding:10px; text-align:center;">
+                    <div style="display:flex; gap:3px; justify-content:center;">${[0,1,2].map(i=>`<div style="width:14px; height:14px; border-radius:50%; background:${i<used?barColor:'#e2e8f0'};"></div>`).join('')}</div>
                 </td>
-                <td style="padding:6px 8px;">${custHtml}</td>
-                <td style="padding:6px; text-align:center;">${removeHtml}</td>
+                <td style="padding:10px;">${custHtml}</td>
+                <td style="padding:10px; text-align:center;">${removeHtml}</td>
             </tr>`;
         });
         html += '</tbody></table></div>';
 
         // ===== 우측: 배송 목록 (분류별) =====
         html += '<div>';
-        html += '<h4 style="margin:0 0 10px 0; font-size:14px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 배송 목록</h4>';
+        html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 배송 목록</h4>';
 
         // 시간지정 배송 (설치 시간 있는 건)
         const timedDelivery = installOrders.filter(o => !o.manager_name?.startsWith('[차단]'));
@@ -816,27 +816,27 @@ window.openAdminSlotModal = async (dateStr) => {
 };
 
 function renderDeliveryGroup(title, orders, color, bg, showTime) {
-    let html = `<div style="margin-bottom:12px;">
-        <div style="font-size:12px; font-weight:bold; color:${color}; padding:6px 10px; background:${bg}; border-radius:6px 6px 0 0; border-left:3px solid ${color};">${title} (${orders.length}건)</div>
+    let html = `<div style="margin-bottom:14px;">
+        <div style="font-size:15px; font-weight:bold; color:${color}; padding:8px 12px; background:${bg}; border-radius:6px 6px 0 0; border-left:3px solid ${color};">${title} (${orders.length}건)</div>
         <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 6px 6px;">`;
     orders.forEach(o => {
         const driver = staffList.find(s => s.id == o.staff_driver_id);
         const isDone = o.status === '배송완료' || o.status === '완료됨';
         const installInfo = showTime ? getInstallationDisplayInfo(o) : null;
         const region = isMetroArea(o.address) ? '수도권' : '지방';
-        html += `<div style="padding:6px 10px; border-bottom:1px solid #f1f5f9; font-size:11px; ${isDone?'opacity:0.5;':''}">
+        html += `<div style="padding:8px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${isDone?'opacity:0.5;':''}">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <span style="font-weight:600;">${o.manager_name}</span>
-                    <span style="color:#6366f1; margin-left:4px;">${o.phone || ''}</span>
-                    ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:1px 5px; border-radius:3px; margin-left:4px; font-size:10px;">${installInfo.start}~${installInfo.end}</span>` : ''}
+                    <span style="color:#6366f1; margin-left:6px;">${o.phone || ''}</span>
+                    ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; margin-left:6px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}
                 </div>
-                <div style="display:flex; align-items:center; gap:4px;">
-                    ${driver ? `<span style="color:#059669; font-size:10px;">🚛${driver.name}</span>` : ''}
-                    ${isDone ? '<span style="color:#22c55e;">✅</span>' : `<span style="color:#94a3b8; font-size:10px;">${o.status}</span>`}
+                <div style="display:flex; align-items:center; gap:6px;">
+                    ${driver ? `<span style="color:#059669; font-size:13px;">🚛${driver.name}</span>` : ''}
+                    ${isDone ? '<span style="color:#22c55e;">✅</span>' : `<span style="color:#94a3b8; font-size:12px;">${o.status}</span>`}
                 </div>
             </div>
-            ${o.address ? `<div style="color:#64748b; font-size:10px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : ''}
+            ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : ''}
         </div>`;
     });
     html += '</div></div>';
