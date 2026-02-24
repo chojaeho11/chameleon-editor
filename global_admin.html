@@ -1627,6 +1627,28 @@
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('ai_chatting')" id="lcFilterAiChat" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">AI</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('chatbot')" id="lcFilterBot" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">로그</button>
                 </div>
+                <!-- 검색 -->
+                <div style="margin-top:10px; position:relative;">
+                    <div style="display:flex; gap:4px;">
+                        <div style="flex:1; position:relative;">
+                            <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#64748b; font-size:12px;"></i>
+                            <input id="lcSearchInput" type="text" placeholder="고객명 또는 대화내용 검색..." oninput="lcSearchDebounce()" onkeydown="if(event.key==='Enter')lcDoSearch()" style="width:100%; padding:8px 10px 8px 30px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:#2d2a42; color:#e2e8f0; outline:none;">
+                        </div>
+                        <button onclick="lcDoSearch()" style="background:#6366f1; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; white-space:nowrap;">검색</button>
+                    </div>
+                    <div id="lcSearchMode" style="display:flex; gap:6px; margin-top:6px;">
+                        <label style="font-size:11px; color:#94a3b8; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                            <input type="radio" name="lcSearchType" value="customer" checked style="accent-color:#6366f1;"> 고객명
+                        </label>
+                        <label style="font-size:11px; color:#94a3b8; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                            <input type="radio" name="lcSearchType" value="message" style="accent-color:#6366f1;"> 대화내용
+                        </label>
+                        <label style="font-size:11px; color:#94a3b8; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                            <input type="radio" name="lcSearchType" value="both" style="accent-color:#6366f1;"> 전체
+                        </label>
+                        <span id="lcSearchClear" onclick="lcClearSearch()" style="display:none; margin-left:auto; font-size:11px; color:#f87171; cursor:pointer; text-decoration:underline;">초기화</span>
+                    </div>
+                </div>
             </div>
             <!-- 상담방 목록 -->
             <div id="lcRoomList" style="flex:1; overflow-y:auto; padding:8px 10px;"></div>
@@ -2511,6 +2533,118 @@ async function saveCommonInfo() {
             h+='</div>';
         }); list.innerHTML=h;
     };
+
+    // ══════════════════════════════════════
+    // ★ 검색 기능 (고객명 / 대화내용 / 전체)
+    // ══════════════════════════════════════
+    var _lcSearchTimer = null;
+    var _lcSearching = false;
+    window.lcSearchDebounce = function() {
+        clearTimeout(_lcSearchTimer);
+        var val = (document.getElementById('lcSearchInput').value || '').trim();
+        if (!val) { lcClearSearch(); return; }
+        _lcSearchTimer = setTimeout(lcDoSearch, 400);
+    };
+    window.lcDoSearch = async function() {
+        var q = (document.getElementById('lcSearchInput').value || '').trim();
+        if (!q || _lcSearching) return;
+        var sb = getSb(); if (!sb) return;
+        var type = 'customer';
+        document.querySelectorAll('input[name="lcSearchType"]').forEach(function(r) { if (r.checked) type = r.value; });
+        _lcSearching = true;
+        var list = document.getElementById('lcRoomList');
+        list.innerHTML = '<div style="text-align:center;color:#a5b4fc;padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 검색 중...</div>';
+        document.getElementById('lcSearchClear').style.display = 'inline';
+        try {
+            var rooms = [];
+            if (type === 'customer' || type === 'both') {
+                // 고객명 검색 — chat_rooms에서 customer_name ILIKE
+                var rr = await sb.from('chat_rooms').select('*').ilike('customer_name', '%' + q + '%').order('created_at', {ascending: false}).limit(50);
+                if (rr.data) rooms = rooms.concat(rr.data);
+            }
+            if (type === 'message' || type === 'both') {
+                // 대화내용 검색 — chat_messages에서 message ILIKE → room_id 수집 → rooms 조회
+                var mr = await sb.from('chat_messages').select('room_id, message, sender_name, created_at').ilike('message', '%' + q + '%').order('created_at', {ascending: false}).limit(100);
+                if (mr.data && mr.data.length > 0) {
+                    // 중복 제거 + room_id 별 매칭 메시지 저장
+                    var roomIds = [];
+                    var matchedMsgs = {};
+                    mr.data.forEach(function(m) {
+                        if (roomIds.indexOf(m.room_id) < 0) roomIds.push(m.room_id);
+                        if (!matchedMsgs[m.room_id]) matchedMsgs[m.room_id] = m;
+                    });
+                    // 이미 rooms에 있는 id 제외
+                    var existIds = rooms.map(function(r) { return r.id; });
+                    var newIds = roomIds.filter(function(id) { return existIds.indexOf(id) < 0; });
+                    if (newIds.length > 0) {
+                        var rr2 = await sb.from('chat_rooms').select('*').in('id', newIds.slice(0, 50));
+                        if (rr2.data) {
+                            rr2.data.forEach(function(rm) { rm._matchedMsg = matchedMsgs[rm.id]; });
+                            rooms = rooms.concat(rr2.data);
+                        }
+                    }
+                    // 기존 rooms에도 매칭 메시지 추가
+                    rooms.forEach(function(rm) { if (!rm._matchedMsg && matchedMsgs[rm.id]) rm._matchedMsg = matchedMsgs[rm.id]; });
+                }
+            }
+            // 중복 제거
+            var seen = {};
+            rooms = rooms.filter(function(rm) { if (seen[rm.id]) return false; seen[rm.id] = true; return true; });
+            // 정렬 (최신순)
+            rooms.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+
+            if (rooms.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px;font-size:13px;"><i class="fa-solid fa-search" style="font-size:24px;display:block;margin-bottom:10px;opacity:0.4;"></i>"' + q + '" 검색 결과 없음</div>';
+            } else {
+                var h = '<div style="padding:4px 6px 8px;font-size:11px;color:#a5b4fc;font-weight:600;">' + rooms.length + '개 결과 — "' + q + '"</div>';
+                rooms.forEach(function(rm) {
+                    var t = new Date(rm.created_at).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+                    var si = rm.status==='waiting'?'⏳':rm.status==='active'?'💬':rm.status==='ai_chatting'?'🤖':'✅';
+                    var isActive = currentRoom && currentRoom.id === rm.id;
+                    var bg = isActive ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)';
+                    var bdL = rm.status==='waiting'?'#f87171':rm.status==='active'?'#4ade80':rm.status==='ai_chatting'?'#fbbf24':'#475569';
+                    // 고객명 하이라이트
+                    var custName = rm.customer_name || '고객';
+                    var qLow = q.toLowerCase();
+                    var nameIdx = custName.toLowerCase().indexOf(qLow);
+                    var dispName = custName;
+                    if (nameIdx >= 0) {
+                        dispName = custName.substring(0, nameIdx) + '<span style="background:#fbbf24;color:#1e1b2e;border-radius:2px;padding:0 1px;">' + custName.substring(nameIdx, nameIdx + q.length) + '</span>' + custName.substring(nameIdx + q.length);
+                    }
+                    h += '<div onclick="lcSelectRoom(\'' + rm.id + '\')" style="background:' + bg + ';border-left:3px solid ' + bdL + ';border-radius:10px;padding:12px 14px;margin-bottom:6px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseleave="this.style.background=\'' + bg + '\'">';
+                    h += '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:700;font-size:14px;color:#f1f5f9;">' + si + ' ' + dispName + '</span><span style="font-size:11px;color:#64748b;">' + t + '</span></div>';
+                    h += '<div style="font-size:12px;margin-top:5px;display:flex;align-items:center;gap:6px;"><span style="background:' + (rm.status==='ai_chatting'?'rgba(251,191,36,0.15)':'rgba(99,102,241,0.15)') + ';color:' + (rm.status==='ai_chatting'?'#fbbf24':'#a5b4fc') + ';padding:2px 10px;border-radius:10px;font-weight:600;font-size:11px;">' + (rm.status==='ai_chatting'?'🤖 AI':'👤 ' + (rm.assigned_manager||'미배정')) + '</span></div>';
+                    // 매칭된 대화내용 미리보기
+                    if (rm._matchedMsg) {
+                        var mtext = rm._matchedMsg.message || '';
+                        var mIdx = mtext.toLowerCase().indexOf(qLow);
+                        var preview = mtext;
+                        if (mIdx >= 0) {
+                            var start = Math.max(0, mIdx - 15);
+                            var end = Math.min(mtext.length, mIdx + q.length + 30);
+                            preview = (start > 0 ? '...' : '') + mtext.substring(start, mIdx) + '<span style="background:#fbbf24;color:#1e1b2e;border-radius:2px;padding:0 1px;">' + mtext.substring(mIdx, mIdx + q.length) + '</span>' + mtext.substring(mIdx + q.length, end) + (end < mtext.length ? '...' : '');
+                        } else if (preview.length > 50) {
+                            preview = preview.substring(0, 50) + '...';
+                        }
+                        h += '<div style="font-size:11px;color:#94a3b8;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">💬 ' + (rm._matchedMsg.sender_name || '') + ': ' + preview + '</div>';
+                    }
+                    h += '</div>';
+                });
+                list.innerHTML = h;
+            }
+        } catch(e) {
+            console.error('검색 에러:', e);
+            list.innerHTML = '<div style="text-align:center;color:#f87171;padding:20px;font-size:13px;">검색 오류: ' + (e.message||'') + '</div>';
+        }
+        _lcSearching = false;
+    };
+    window.lcClearSearch = function() {
+        document.getElementById('lcSearchInput').value = '';
+        document.getElementById('lcSearchClear').style.display = 'none';
+        _lcSearching = false;
+        lcLoadRooms();
+    };
+
     window.lcFilterRooms = function(f) {
         currentFilter=f;
         ['All','Wait','Active','Closed','AiChat','Bot'].forEach(function(k) {
