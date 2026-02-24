@@ -688,12 +688,16 @@ async function openInstallationTimeModal() {
         if (notice) {
             notice.style.display = 'block';
             const msgs = {
-                'kr': '⚠️ 100만원 미만 주문은 설치 시간을 선택할 수 없습니다.\n날짜만 지정되며, 시간은 배송팀에서 배정합니다.',
-                'ja': '⚠️ 100万円未満のご注文は設置時間の指定ができません。\n日付のみ指定され、時間は配送チームが手配します。',
-                'en': '⚠️ Orders under ¥1,000,000 cannot select installation time.\nOnly date is specified. Time will be assigned by delivery team.',
-                'zh': '⚠️ 100万日元以下的订单无法选择安装时间。\n仅指定日期，时间由配送团队安排。'
+                'kr': '허니콤보드 100만원 미만 주문은 지정시간 설치 서비스가 불가합니다.\n\n배송팀이 해당 날짜에 순차적으로 무료배송 및 설치해 드립니다.\n\n시간 지정 설치가 꼭 필요한 경우 별도의 비용이 발생하며, 채팅을 통해 담당자에게 문의해주세요.',
+                'ja': 'ハニカムボード10万円未満のご注文は、時間指定の設置サービスをご利用いただけません。\n\n配送チームが該当日に順次、無料配送・設置いたします。\n\n時間指定の設置が必要な場合は別途費用が発生します。チャットにて担当者までお問い合わせください。',
+                'en': 'Honeycomb board orders under $1,000 are not eligible for scheduled installation service.\n\nOur delivery team will provide free delivery and installation in order on the selected date.\n\nIf you need a specific time slot, additional fees apply. Please contact us via chat.',
+                'zh': '蜂窝板订单金额低于100万日元，无法使用定时安装服务。\n\n配送团队将在所选日期按顺序提供免费配送和安装。\n\n如需指定时间安装，将产生额外费用，请通过聊天联系客服。',
+                'ar': 'طلبات لوح العسل أقل من 1,000 دولار غير مؤهلة لخدمة التركيب المجدول.\n\nسيقوم فريق التوصيل بالتوصيل والتركيب المجاني بالترتيب في التاريخ المحدد.\n\nإذا كنت بحاجة لتحديد وقت معين، ستطبق رسوم إضافية. يرجى التواصل عبر الدردشة.',
+                'es': 'Los pedidos de paneles de panal inferiores a $1,000 no son elegibles para el servicio de instalación programada.\n\nNuestro equipo realizará la entrega e instalación gratuita en orden en la fecha seleccionada.\n\nSi necesita una hora específica, se aplicarán cargos adicionales. Contáctenos por chat.',
+                'de': 'Wabenplatten-Bestellungen unter $1.000 sind nicht für den geplanten Installationsservice berechtigt.\n\nUnser Lieferteam liefert und installiert kostenlos in der Reihenfolge am gewählten Datum.\n\nWenn Sie einen bestimmten Zeitpunkt benötigen, fallen zusätzliche Kosten an. Bitte kontaktieren Sie uns per Chat.',
+                'fr': "Les commandes de panneaux nid d'abeille inférieures à 1 000 $ ne sont pas éligibles au service d'installation programmée.\n\nNotre équipe assurera la livraison et l'installation gratuites dans l'ordre à la date choisie.\n\nSi vous avez besoin d'un créneau horaire précis, des frais supplémentaires s'appliquent. Veuillez nous contacter par chat."
             };
-            notice.innerHTML = msgs[CURRENT_LANG] || msgs['en'];
+            notice.innerHTML = (msgs[CURRENT_LANG] || msgs['en']).replace(/\n/g, '<br>');
         }
         if (btnConfirm) {
             btnConfirm.disabled = false;
