@@ -5894,13 +5894,12 @@ window.showChoiceModal = async function(key) {
 
                     if (isColorCategory) {
                         // 컬러: 5열 그리드 + 이름 삭제
-                        optionsHtml += `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px;">`;
+                        optionsHtml += `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px;">`;
                         catAddons.forEach(a => {
                             let basePrice = a.price_kr || a.price || 0;
                             if (lang === 'ja' && a.price_jp) basePrice = a.price_jp;
                             else if (lang === 'en' && a.price_us) basePrice = a.price_us;
-                            // CN/AR/ES: KRW 원가 유지 (fmtLocal에서 환산)
-                            const imgUrl = a.img_url || 'https://placehold.co/60/eeeeee/cccccc?text=+';
+                            const imgUrl = a.img_url || 'https://placehold.co/40/eeeeee/cccccc?text=+';
                             let colorPriceLabel = '';
                             if (basePrice > 0) {
                                 if (lang === 'ja') colorPriceLabel = `+¥${basePrice.toLocaleString()}`;
@@ -5914,13 +5913,13 @@ window.showChoiceModal = async function(key) {
                             }
 
                             optionsHtml += `
-                                <label class="color-btn-item" style="cursor:pointer; position:relative;" title="${a.name}">
+                                <label class="color-btn-item" style="cursor:pointer; position:relative; max-width:60px;" title="${a.name}">
                                     <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-cat-code="${cat.code}"
                                            style="position:absolute; opacity:0; width:0; height:0;"
                                            onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">
-                                    <div class="color-btn-box" style="border:1px solid #e2e8f0; border-radius:8px; padding:8px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; height:100%; background-color:#fff;">
-                                        <img src="${imgUrl}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid #eee;">
-                                        ${colorPriceLabel ? `<span style="font-size:10px; color:#6366f1; margin-top:4px; font-weight:bold;">${colorPriceLabel}</span>` : ''}
+                                    <div class="color-btn-box" style="border:1px solid #e2e8f0; border-radius:8px; padding:4px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; background-color:#fff;">
+                                        <img src="${imgUrl}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #eee; flex-shrink:0;">
+                                        ${colorPriceLabel ? `<span style="font-size:9px; color:#6366f1; margin-top:2px; font-weight:bold;">${colorPriceLabel}</span>` : ''}
                                     </div>
                                 </label>`;
                         });
