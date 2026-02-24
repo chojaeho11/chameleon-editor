@@ -5212,7 +5212,7 @@ history.replaceState({ type: 'home' }, '', window.location.href);
 // [신규] 언어 설정을 유지하면서 홈으로 이동하는 함수
 window.goHome = function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const currentLang = urlParams.get('lang');
+    const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : null);
     // 채팅 내역은 localStorage에 저장되어 있으므로 새로고침 후 자동 복원됨
     window.location.href = currentLang ? '/?lang=' + currentLang : '/';
 };
@@ -5230,7 +5230,7 @@ window.goHome = function() {
         try {
             // 1. 언어 설정 유지
             const urlParams = new URLSearchParams(window.location.search);
-            const currentLang = urlParams.get('lang');
+            const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : null);
 
             // ★ [핵심 수정] sb 대신 window.sb 사용 (전역 변수 강제 참조)
             if (!window.sb) throw new Error("데이터베이스 연결 대기 중... 잠시 후 다시 시도해주세요.");
@@ -5388,7 +5388,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     // 설명 박스 처리 (일본어 대응 포함)
     if (descBox) {
         const urlParams = new URLSearchParams(window.location.search);
-        const currentLang = urlParams.get('lang') || 'kr';
+        const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : 'kr');
         let displayDesc = catDesc;
         if (window.modalGlobalData?.categories) {
             const catData = window.modalGlobalData.categories.find(c => c.code === catKey);
@@ -5475,7 +5475,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         try {
             // 1. 현재 언어 설정 확인 (이걸 잃어버리지 않게 잡아야 함)
             const urlParams = new URLSearchParams(window.location.search);
-            const currentLang = urlParams.get('lang'); // 'ja', 'en' 등
+            const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : null); // 호스트명 폴백
 
             // DB 조회
             const { data: product, error } = await sb.from('admin_products')
