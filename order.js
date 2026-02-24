@@ -1581,8 +1581,9 @@ async function processOrderSubmission() {
         rawTotal = MIN_ORDER_KRW;
     }
 
-    // 허니콤보드 비수도권 추가 배송비 (200,000 KRW)
-    const NON_METRO_FEE_KRW = 200000;
+    // 허니콤보드 비수도권 추가 배송비 (KR: 200,000 KRW, JP: 25,000 KRW ≈ ¥3,000)
+    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const NON_METRO_FEE_KRW = _cc === 'JP' ? 25000 : 200000;
     const metroRadio = document.querySelector('input[name="metroArea"]:checked');
     const metroSection = document.getElementById('metroAreaSection');
     const isNonMetro = metroSection && metroSection.style.display !== 'none' && metroRadio && metroRadio.value === 'non-metro';

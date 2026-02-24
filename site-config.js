@@ -61,7 +61,7 @@ export const SITE_CONFIG = {
     },
 
     // 국가별 환산율 (DB는 KRW 기준 저장, 표시 시 환산)
-    CURRENCY_RATE: { 'KR': 1, 'JP': 0.2, 'US': 0.002, 'CN': 0.01, 'AR': 0.005, 'ES': 0.001, 'DE': 0.001, 'FR': 0.001 },
+    CURRENCY_RATE: { 'KR': 1, 'JP': 0.13, 'US': 0.002, 'CN': 0.01, 'AR': 0.005, 'ES': 0.001, 'DE': 0.001, 'FR': 0.001 },
 
     // 국가별 폰트 정의
     FONTS: {

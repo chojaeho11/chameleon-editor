@@ -59,20 +59,20 @@
     }
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄 & 무료 디자인 에디터</title>
-<meta name="description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 등신대/백월 디자인부터 인쇄까지 한번에 해결하세요.">
-<meta name="keywords" content="카멜레온프린팅,허니콤보드,종이매대,패브릭인쇄,팝업스토어,등신대제작">
+<title>Chameleon Printing</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
 
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="카멜레온프린팅">
-<meta property="og:title" content="카멜레온프린팅 - 친환경 전시 인쇄 & 무료 에디터">
-<meta property="og:description" content="허니콤보드, 패브릭인쇄, 팝업스토어 전문. 무료 에디터로 쉽고 빠르게 디자인하세요.">
-<meta property="og:url" content="https://www.cafe2626.com/">
+<meta property="og:site_name" content="Chameleon Printing">
+<meta property="og:title" content="Chameleon Printing">
+<meta property="og:description" content="">
+<meta property="og:url" content="">
 <meta property="og:image" content="https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="카멜레온프린팅">
-<meta name="twitter:description" content="친환경 전시 인쇄 & 무료 디자인 에디터">
+<meta name="twitter:title" content="Chameleon Printing">
+<meta name="twitter:description" content="">
 <meta name="twitter:image" content="https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png">
 
 <link rel="shortcut icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
@@ -280,6 +280,13 @@
     if (isProductPage) {
         window._SEO_PRODUCT_CODE = path;
     }
+    // JP일 때 특정상거래법 링크 표시
+    if (cc === 'JP') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var el = document.getElementById('footerTokushoLink');
+            if (el) el.style.display = 'list-item';
+        });
+    }
 })();
 </script>
 
@@ -422,8 +429,8 @@
 <div id="startScreen">
     
     <div class="hero-section">
-    <h1 class="hero-title" data-i18n="hero_title"><span>카멜레온프린팅</span><br>서울 경기 무료배송 허니콤보드 무료시공</h1>
-    <p class="hero-desc" data-i18n="hero_desc">전제품 5만원 이상 무료배송. 소량 주문은 착불로 배송됩니다.</p>
+    <h1 class="hero-title" data-i18n="hero_title">&nbsp;</h1>
+    <p class="hero-desc" data-i18n="hero_desc">&nbsp;</p>
 </div>
 
 <!-- 퀵메뉴와퍼 (통합) -->
@@ -1753,6 +1760,7 @@ async function handleSubReturn() {
                     <li><a href="#" data-i18n="footer_menu_notice">공지사항</a></li>
                     <li><a href="#" data-i18n="footer_menu_terms">이용약관</a></li>
                     <li><a href="#"><strong data-i18n="footer_menu_privacy">개인정보처리방침</strong></a></li>
+                    <li id="footerTokushoLink" style="display:none;"><a href="#" onclick="document.getElementById('tokushoModal').style.display='flex';return false;" data-i18n="footer_menu_tokusho">特定商取引法に基づく表示</a></li>
                 </ul>
             </div>
             <div class="foot-info">
@@ -1796,7 +1804,27 @@ async function handleSubReturn() {
     </div>
 </div>
 
-
+<!-- 特定商取引法に基づく表示 (JP only) -->
+<div id="tokushoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:#fff; border-radius:16px; max-width:700px; width:95%; max-height:85vh; overflow-y:auto; padding:32px; position:relative;">
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:24px; cursor:pointer; color:#64748b;">&times;</button>
+        <h2 style="font-size:20px; font-weight:700; margin-bottom:20px; color:#1e293b;">特定商取引法に基づく表示</h2>
+        <table style="width:100%; border-collapse:collapse; font-size:14px; line-height:1.8;">
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; width:35%; background:#f8fafc; color:#475569; font-weight:600;">販売業者</th><td style="padding:12px 8px;" data-i18n="footer_company_value">(株)カメレオンプリンティング ジャパン</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">代表者</th><td style="padding:12px 8px;" data-i18n="footer_ceo_value">田中 春人</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">所在地</th><td style="padding:12px 8px;" data-i18n="footer_addr_value">〒150-0001 東京都渋谷区神宮前3-15-8</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">電話番号</th><td style="padding:12px 8px;" data-i18n="footer_cs_phone">047-712-1148</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">営業時間</th><td style="padding:12px 8px;" data-i18n="footer_cs_time">平日 09:00 ~ 18:00</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">メールアドレス</th><td style="padding:12px 8px;">support@cafe0101.com</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">販売価格</th><td style="padding:12px 8px;">各商品ページに記載（税込価格）</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">送料</th><td style="padding:12px 8px;">5,000円以上送料無料。5,000円未満の場合は着払い。東京23区外は別途送料あり。</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">お支払い方法</th><td style="padding:12px 8px;">クレジットカード（Visa, Mastercard, JCB, AMEX）、銀行振込</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">商品の引渡し時期</th><td style="padding:12px 8px;">ご注文確認後、3〜7営業日以内に発送いたします。</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">返品・交換について</th><td style="padding:12px 8px;">商品到着後7日以内に限り返品・交換を承ります。お客様のご都合による返品の場合、送料はお客様負担となります。不良品の場合は当社が送料を負担いたします。オーダーメイド商品は返品・交換不可。</td></tr>
+            <tr><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">個人情報の取扱い</th><td style="padding:12px 8px;">お客様の個人情報は、商品の発送およびご連絡のために利用し、第三者への提供は行いません。</td></tr>
+        </table>
+    </div>
+</div>
 
 <div id="mainEditor" style="display:none;">
 
