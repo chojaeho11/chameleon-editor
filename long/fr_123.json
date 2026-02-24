@@ -93,6 +93,8 @@
   "msg_no_account": "Vous n'avez pas de compte ?",
   "btn_signup": "S'inscrire",
   "btn_close": "Fermer",
+  "btn_confirm_date": "Confirmer la date",
+  "btn_confirm_time": "Confirmer l'heure",
   "modal_delivery_title": "📝 Informations de Livraison",
   "label_manager_name": "Nom du Contact",
   "label_contact_phone": "Numéro de Téléphone",

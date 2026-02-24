@@ -93,6 +93,8 @@
   "msg_no_account": "アカウントをお持ちではありませんか？",
   "btn_signup": "新規会員登録",
   "btn_close": "閉じる",
+  "btn_confirm_date": "日付確定",
+  "btn_confirm_time": "時間確定",
   "modal_delivery_title": "📝 配送先情報の入力",
   "label_manager_name": "担当者名",
   "label_contact_phone": "電話番号",

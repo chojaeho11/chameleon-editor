@@ -93,6 +93,8 @@
   "msg_no_account": "ليس لديك حساب؟",
   "btn_signup": "إنشاء حساب",
   "btn_close": "إغلاق",
+  "btn_confirm_date": "تأكيد التاريخ",
+  "btn_confirm_time": "تأكيد الوقت",
   "modal_delivery_title": "📝 معلومات الشحن",
   "label_manager_name": "اسم جهة الاتصال",
   "label_contact_phone": "رقم الهاتف",

@@ -36,7 +36,7 @@ let currentUserDiscountRate = 0;
 let finalPaymentAmount = 0; // 최종 결제 금액 저장용
 
 const urlParams = new URLSearchParams(window.location.search);
-const CURRENT_LANG = (urlParams.get('lang') || 'kr').toLowerCase();
+const CURRENT_LANG = (urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : 'kr')).toLowerCase();
 
 // ============================================================
 // [1] 헬퍼 함수 (유틸리티)
@@ -588,12 +588,27 @@ function renderCalendar() {
 }
 
 // ── 허니콤보드 감지 ──
+function isHoneycombProduct(product) {
+    if (!product) return false;
+    const cat = (product.category || '').toLowerCase();
+    if (cat.includes('honeycomb')) return true;
+    // sub-category → top_category_code 조회
+    if (window.globalSubCats) {
+        const sub = window.globalSubCats.find(s => s.code === product.category);
+        if (sub && sub.top_category_code) {
+            if (sub.top_category_code.toLowerCase().includes('honeycomb')) return true;
+            // 같은 대분류의 소분류 이름에 허니콤 포함 여부
+            const siblings = window.globalSubCats.filter(s => s.top_category_code === sub.top_category_code);
+            if (siblings.some(s => s.name && (s.name.includes('허니콤') || s.name.toLowerCase().includes('honeycomb')))) return true;
+        }
+    }
+    // 상품명 폴백
+    const name = ((product.name || '') + ' ' + (product.name_jp || '') + ' ' + (product.name_us || '')).toLowerCase();
+    if (name.includes('허니콤') || name.includes('honeycomb') || name.includes('ハニカム'.toLowerCase())) return true;
+    return false;
+}
 function hasHoneycombInCart() {
-    return cartData.some(item => {
-        if (!item.product) return false;
-        const cat = (item.product.category || '').toLowerCase();
-        return cat.includes('honeycomb');
-    });
+    return cartData.some(item => isHoneycombProduct(item.product));
 }
 
 // ── 장바구니 합계 (KRW) ──
@@ -795,12 +810,7 @@ function openDeliveryInfoModal() {
     document.getElementById("deliveryInfoModal").style.display = "flex";
 
     // 허니콤보드 포함 여부 체크 → 배송 지역 선택 표시
-    const HONEYCOMB_CATS = ['honeycomb'];
-    const hasHoneycomb = cartData.some(item => {
-        if (!item.product) return false;
-        const cat = (item.product.category || '').toLowerCase();
-        return HONEYCOMB_CATS.some(hc => cat.includes(hc));
-    });
+    const hasHoneycomb = hasHoneycombInCart();
 
     const metroSection = document.getElementById('metroAreaSection');
     if (metroSection) {

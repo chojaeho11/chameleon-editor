@@ -93,6 +93,8 @@
   "msg_no_account": "还没有账号？",
   "btn_signup": "注册",
   "btn_close": "关闭",
+  "btn_confirm_date": "确认日期",
+  "btn_confirm_time": "确认时间",
   "modal_delivery_title": "📝 收货信息",
   "label_manager_name": "联系人姓名",
   "label_contact_phone": "联系电话",

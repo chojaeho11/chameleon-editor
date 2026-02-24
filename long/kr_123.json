@@ -93,6 +93,8 @@
   "msg_no_account": "계정이 없으신가요?",
   "btn_signup": "회원가입",
   "btn_close": "닫기",
+  "btn_confirm_date": "날짜 확정",
+  "btn_confirm_time": "시간 확정",
   "modal_delivery_title": "📝 배송 정보 입력",
   "label_manager_name": "고객명",
   "label_contact_phone": "연락처",
