@@ -1,0 +1,18 @@
+{
+  "name": "카멜레온 상담",
+  "short_name": "상담",
+  "description": "카멜레온 프린팅 실시간 상담 매니저 앱",
+  "start_url": "/manager_chat.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1e1b2e",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "https://gdadmin.signmini.com/data/common/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["business", "productivity"]
+}

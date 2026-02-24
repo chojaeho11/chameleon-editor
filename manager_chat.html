@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>카멜레온 상담</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1e1b2e">
+<link rel="manifest" href="manifest_chat.json">
+<link rel="icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
+<link rel="apple-touch-icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:100dvh;overflow:hidden;color:#1e293b;}
+/* === Views === */
+.app{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden;}
+.view{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform;}
+#viewRooms{z-index:1;background:#f0f2f5;}
+#viewChat{z-index:2;transform:translateX(100%);background:#e8e4df;}
+#viewChat.active{transform:translateX(0);}
+/* === Room List Header === */
+.rl-header{background:linear-gradient(135deg,#1e1b2e,#2d2a42);padding:env(safe-area-inset-top,12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;}
+.rl-header h1{color:#fff;font-size:18px;font-weight:800;}
+.rl-header .mgr-name{color:#a5b4fc;font-size:12px;font-weight:600;}
+.rl-header-btns{display:flex;gap:8px;}
+.rl-header-btns button{background:rgba(255,255,255,.1);border:none;color:#e2e8f0;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;}
+/* === Search === */
+.rl-search{padding:8px 12px;background:#fff;border-bottom:1px solid #e5e7eb;}
+.rl-search input{width:100%;padding:10px 14px 10px 36px;border:1px solid #e5e7eb;border-radius:20px;font-size:14px;background:#f3f4f6;outline:none;font-family:inherit;}
+.rl-search i{position:absolute;left:24px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;}
+/* === Filter Tabs === */
+.rl-filters{display:flex;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid #e5e7eb;overflow-x:auto;}
+.rl-filters button{flex-shrink:0;padding:6px 14px;border-radius:16px;border:1px solid #e5e7eb;background:#fff;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit;}
+.rl-filters button.active{background:#6366f1;color:#fff;border-color:#6366f1;}
+/* === Room List === */
+.rl-list{flex:1;overflow-y:auto;overscroll-behavior:contain;}
+.room-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f0f0f0;background:#fff;cursor:pointer;transition:background .15s;}
+.room-item:active{background:#f3f4f6;}
+.room-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;color:#fff;}
+.room-avatar.waiting{background:#f59e0b;}
+.room-avatar.active{background:#22c55e;}
+.room-avatar.ai{background:#8b5cf6;}
+.room-avatar.closed{background:#94a3b8;}
+.room-info{flex:1;min-width:0;}
+.room-name{font-size:15px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.room-last-msg{font-size:13px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.room-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.room-time{font-size:11px;color:#94a3b8;}
+.room-badge{min-width:20px;height:20px;border-radius:10px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;}
+/* === Chat Header === */
+.ch-header{background:linear-gradient(135deg,#1e1b2e,#2d2a42);padding:env(safe-area-inset-top,8px) 8px 10px;display:flex;align-items:center;gap:8px;}
+.ch-back{background:none;border:none;color:#fff;font-size:20px;padding:8px;cursor:pointer;}
+.ch-title{flex:1;min-width:0;}
+.ch-title h2{color:#fff;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-title span{color:#a5b4fc;font-size:11px;}
+.ch-actions{display:flex;gap:4px;}
+.ch-actions button{background:rgba(255,255,255,.12);border:none;color:#fff;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.ch-actions button.warn{background:rgba(239,68,68,.3);color:#fca5a5;}
+.ch-actions button.intervene{background:rgba(245,158,11,.3);color:#fde68a;}
+/* === Messages === */
+.ch-messages{flex:1;overflow-y:auto;padding:12px;overscroll-behavior:contain;}
+.msg-row{margin-bottom:12px;display:flex;flex-direction:column;}
+.msg-row.customer{align-items:flex-start;}
+.msg-row.manager{align-items:flex-end;}
+.msg-row.system{align-items:center;}
+.msg-sender{font-size:11px;font-weight:600;margin-bottom:3px;padding:0 4px;}
+.msg-sender.customer{color:#f59e0b;}
+.msg-sender.chatbot{color:#059669;}
+.msg-sender.manager{color:#6366f1;}
+.msg-bubble{max-width:80%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.6;word-break:break-word;white-space:pre-wrap;}
+.msg-row.customer .msg-bubble{background:#fff;color:#1e293b;border-top-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+.msg-row.manager .msg-bubble{background:#6366f1;color:#fff;border-top-right-radius:4px;}
+.msg-row.chatbot .msg-bubble{background:#ecfdf5;color:#065f46;border-top-left-radius:4px;}
+.msg-row.system .msg-bubble{background:rgba(0,0,0,.05);color:#64748b;font-size:12px;padding:4px 14px;border-radius:20px;}
+.msg-time{font-size:10px;color:#94a3b8;margin-top:2px;padding:0 4px;}
+.msg-img{max-width:220px;border-radius:12px;cursor:pointer;margin:4px 0;}
+.msg-file{display:inline-block;background:#dbeafe;padding:8px 14px;border-radius:10px;color:#2563eb;text-decoration:none;font-size:13px;margin:4px 0;}
+/* === Input === */
+.ch-input{padding:8px 10px env(safe-area-inset-bottom,8px);background:#f5f5f5;border-top:1px solid #e5e7eb;display:flex;gap:8px;align-items:flex-end;}
+.ch-input label{color:#6366f1;font-size:22px;padding:8px;cursor:pointer;flex-shrink:0;}
+.ch-input label input{display:none;}
+.ch-input textarea{flex:1;border:1px solid #e5e7eb;border-radius:20px;padding:10px 16px;font-size:14px;resize:none;max-height:100px;min-height:40px;line-height:1.4;font-family:inherit;outline:none;background:#fff;}
+.ch-input button{width:40px;height:40px;border-radius:50%;background:#6366f1;border:none;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;}
+.ch-input button:disabled{opacity:.4;}
+/* === Settings Modal === */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:#fff;border-radius:16px;width:100%;max-width:360px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-box h3{font-size:18px;font-weight:800;margin-bottom:16px;}
+.modal-box select,.modal-box input{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;margin-bottom:12px;font-family:inherit;outline:none;}
+.modal-box button{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+.modal-box .btn-primary{background:#6366f1;color:#fff;margin-bottom:8px;}
+.modal-box .btn-secondary{background:#f3f4f6;color:#64748b;}
+/* === Empty State === */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#94a3b8;}
+.empty i{font-size:48px;margin-bottom:16px;opacity:.4;}
+.empty p{font-size:14px;}
+/* === Loading === */
+.loading{text-align:center;padding:40px;color:#94a3b8;}
+.loading i{font-size:24px;}
+/* === File Preview === */
+.file-preview{display:none;padding:8px 12px;background:#fff;border-top:1px solid #e5e7eb;align-items:center;gap:10px;}
+.file-preview.show{display:flex;}
+.file-preview img{width:60px;height:60px;object-fit:cover;border-radius:8px;}
+.file-preview .fp-info{flex:1;min-width:0;}
+.file-preview .fp-name{font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-preview button{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ========== VIEW A: Room List ========== -->
+<div class="view" id="viewRooms" style="display:flex;flex-direction:column;">
+    <div class="rl-header">
+        <div>
+            <h1>카멜레온 상담</h1>
+            <div class="mgr-name" id="headerMgrName">매니저 미선택</div>
+        </div>
+        <div class="rl-header-btns">
+            <button onclick="loadRooms()" title="새로고침"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <button onclick="showSettings()" title="설정"><i class="fa-solid fa-gear"></i></button>
+        </div>
+    </div>
+    <div class="rl-search" style="position:relative;">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="searchInput" type="text" placeholder="고객명 또는 대화내용 검색..." oninput="onSearchInput()" onkeydown="if(event.key==='Enter')doSearch()">
+    </div>
+    <div class="rl-filters" id="filterTabs">
+        <button class="active" onclick="setFilter('all',this)">전체</button>
+        <button onclick="setFilter('waiting',this)">대기</button>
+        <button onclick="setFilter('active',this)">상담중</button>
+        <button onclick="setFilter('ai_chatting',this)">AI</button>
+        <button onclick="setFilter('closed',this)">종료</button>
+    </div>
+    <div class="rl-list" id="roomList">
+        <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i></div>
+    </div>
+</div>
+
+<!-- ========== VIEW B: Chat ========== -->
+<div class="view" id="viewChat" style="display:flex;flex-direction:column;">
+    <div class="ch-header">
+        <button class="ch-back" onclick="goBack()"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="ch-title">
+            <h2 id="chatTitle">고객</h2>
+            <span id="chatSubtitle"></span>
+        </div>
+        <div class="ch-actions" id="chatActions"></div>
+    </div>
+    <div class="ch-messages" id="chatMessages"></div>
+    <div class="file-preview" id="filePreview">
+        <img id="fpImg" src="">
+        <div class="fp-info"><div class="fp-name" id="fpName"></div></div>
+        <button onclick="confirmFile()" style="background:#6366f1;color:#fff;">전송</button>
+        <button onclick="cancelFile()" style="background:#f3f4f6;color:#64748b;">취소</button>
+    </div>
+    <div class="ch-input">
+        <label><i class="fa-solid fa-paperclip"></i><input type="file" id="fileInput" multiple accept="image/*,.pdf,.zip,.doc,.docx" onchange="onFileSelect(event)"></label>
+        <textarea id="msgInput" placeholder="메시지 입력..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendMessage();}" oninput="autoResize(this)"></textarea>
+        <button onclick="sendMessage()" id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+</div>
+
+</div>
+
+<!-- ========== Settings Modal ========== -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-box">
+        <h3><i class="fa-solid fa-gear"></i> 설정</h3>
+        <label style="font-size:13px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">내 이름 선택</label>
+        <select id="mgrSelect"><option value="">선택하세요</option></select>
+        <label style="font-size:13px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">알림</label>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                <input type="checkbox" id="chkSound" checked style="accent-color:#6366f1;"> 소리
+            </label>
+            <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                <input type="checkbox" id="chkVibrate" checked style="accent-color:#6366f1;"> 진동
+            </label>
+        </div>
+        <button class="btn-primary" onclick="saveSettings()">저장</button>
+        <button class="btn-secondary" onclick="hideSettings()">닫기</button>
+    </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ══════════════════════════════════
+// Config
+// ══════════════════════════════════
+var SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+var sb = null;
+var myName = '';
+var curFilter = 'all';
+var curRoom = null;
+var curRoomId = null;
+var msgSub = null;
+var roomSub = null;
+var globalMsgSub = null;
+var allRooms = [];
+var searchTimer = null;
+var pendingFile = null;
+var audioCtx = null;
+var titleFlash = null;
+var notifySound = true;
+var notifyVibrate = true;
+
+// ══════════════════════════════════
+// Init
+// ══════════════════════════════════
+function init() {
+    sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    myName = localStorage.getItem('mchat_mgr') || '';
+    notifySound = localStorage.getItem('mchat_sound') !== 'off';
+    notifyVibrate = localStorage.getItem('mchat_vibrate') !== 'off';
+    document.getElementById('chkSound').checked = notifySound;
+    document.getElementById('chkVibrate').checked = notifyVibrate;
+    updateMgrDisplay();
+    loadManagerList();
+    loadRooms();
+    subscribeRoomChanges();
+    subscribeGlobalMessages();
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw_chat.js').catch(function(){});
+    }
+    if (!myName) setTimeout(showSettings, 500);
+}
+
+function updateMgrDisplay() {
+    document.getElementById('headerMgrName').textContent = myName ? myName + ' 님' : '매니저 미선택';
+}
+
+// ══════════════════════════════════
+// Manager List
+// ══════════════════════════════════
+async function loadManagerList() {
+    if (!sb) return;
+    var r = await sb.from('chatbot_knowledge').select('question,answer').eq('category','_managers').eq('is_active',true);
+    var sel = document.getElementById('mgrSelect');
+    sel.innerHTML = '<option value="">선택하세요</option>';
+    if (!r.data) return;
+    r.data.forEach(function(m) {
+        try { var info = JSON.parse(m.answer); } catch(e) { var info = {name:m.question}; }
+        var name = info.name || m.question;
+        var opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name + (info.role ? ' ('+info.role+')' : '');
+        if (name === myName) opt.selected = true;
+        sel.appendChild(opt);
+    });
+}
+
+// ══════════════════════════════════
+// Settings
+// ══════════════════════════════════
+window.showSettings = function() { document.getElementById('settingsModal').classList.add('show'); };
+window.hideSettings = function() { document.getElementById('settingsModal').classList.remove('show'); };
+window.saveSettings = function() {
+    myName = document.getElementById('mgrSelect').value;
+    notifySound = document.getElementById('chkSound').checked;
+    notifyVibrate = document.getElementById('chkVibrate').checked;
+    localStorage.setItem('mchat_mgr', myName);
+    localStorage.setItem('mchat_sound', notifySound ? 'on' : 'off');
+    localStorage.setItem('mchat_vibrate', notifyVibrate ? 'on' : 'off');
+    updateMgrDisplay();
+    hideSettings();
+    loadRooms();
+};
+
+// ══════════════════════════════════
+// Room List
+// ══════════════════════════════════
+window.loadRooms = async function() {
+    if (!sb) return;
+    var list = document.getElementById('roomList');
+
+    var q = sb.from('chat_rooms').select('*').order('updated_at',{ascending:false}).limit(80);
+    if (curFilter !== 'all') q = q.eq('status', curFilter);
+    var r = await q;
+    if (!r.data) { list.innerHTML = '<div class="empty"><i class="fa-solid fa-inbox"></i><p>상담방 없음</p></div>'; return; }
+
+    // Manager filter
+    var rooms = r.data;
+    if (myName) {
+        rooms = rooms.filter(function(rm) {
+            return rm.assigned_manager === myName || !rm.assigned_manager || rm.status === 'waiting' || rm.status === 'ai_chatting';
+        });
+    }
+    allRooms = rooms;
+
+    // Fetch last messages + unread counts
+    var ids = rooms.map(function(r){return r.id;});
+    var lastMsgs = {};
+    var unreadCounts = {};
+    if (ids.length > 0) {
+        // Last messages (batch)
+        var mr = await sb.from('chat_messages').select('room_id,message,sender_type,sender_name,created_at').in('room_id',ids).order('created_at',{ascending:false});
+        if (mr.data) {
+            mr.data.forEach(function(m) {
+                if (!lastMsgs[m.room_id]) lastMsgs[m.room_id] = m;
+            });
+            // Unread count
+            mr.data.forEach(function(m) {
+                if (m.sender_type === 'customer') {
+                    // Simple count - count all customer messages as a proxy
+                }
+            });
+        }
+        // Unread: count is_read=false customer messages
+        var ur = await sb.from('chat_messages').select('room_id').eq('is_read',false).eq('sender_type','customer').in('room_id',ids);
+        if (ur.data) {
+            ur.data.forEach(function(m) {
+                unreadCounts[m.room_id] = (unreadCounts[m.room_id]||0) + 1;
+            });
+        }
+    }
+
+    renderRoomList(rooms, lastMsgs, unreadCounts);
+};
+
+function renderRoomList(rooms, lastMsgs, unreadCounts) {
+    var list = document.getElementById('roomList');
+    if (rooms.length === 0) {
+        list.innerHTML = '<div class="empty"><i class="fa-solid fa-inbox"></i><p>상담방 없음</p></div>';
+        return;
+    }
+    var h = '';
+    rooms.forEach(function(rm) {
+        var lm = lastMsgs[rm.id];
+        var uc = unreadCounts[rm.id] || 0;
+        var statusClass = rm.status === 'waiting' ? 'waiting' : rm.status === 'active' ? 'active' : rm.status === 'ai_chatting' ? 'ai' : 'closed';
+        var icon = rm.status === 'waiting' ? '⏳' : rm.status === 'active' ? '💬' : rm.status === 'ai_chatting' ? '🤖' : '✅';
+        var name = rm.customer_name || '고객';
+        var initial = name.charAt(0);
+        var lastMsg = lm ? (lm.message || '(파일)') : (rm.status === 'ai_chatting' ? 'AI 상담 중' : '');
+        if (lastMsg.length > 35) lastMsg = lastMsg.substring(0,35) + '...';
+        var time = '';
+        var ts = lm ? lm.created_at : rm.updated_at || rm.created_at;
+        if (ts) {
+            var d = new Date(ts);
+            var now = new Date();
+            if (d.toDateString() === now.toDateString()) {
+                time = d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+            } else {
+                time = (d.getMonth()+1) + '/' + d.getDate();
+            }
+        }
+        var senderPrefix = '';
+        if (lm) {
+            if (lm.sender_type === 'manager') senderPrefix = '나: ';
+            else if (lm.sender_type === 'chatbot') senderPrefix = 'AI: ';
+        }
+
+        h += '<div class="room-item" onclick="openRoom(\'' + rm.id + '\')">';
+        h += '<div class="room-avatar ' + statusClass + '">' + icon + '</div>';
+        h += '<div class="room-info">';
+        h += '<div class="room-name">' + esc(name) + '</div>';
+        h += '<div class="room-last-msg">' + senderPrefix + esc(lastMsg) + '</div>';
+        h += '</div>';
+        h += '<div class="room-meta">';
+        h += '<div class="room-time">' + time + '</div>';
+        if (uc > 0) h += '<div class="room-badge">' + (uc > 99 ? '99+' : uc) + '</div>';
+        h += '</div>';
+        h += '</div>';
+    });
+    list.innerHTML = h;
+}
+
+window.setFilter = function(f, btn) {
+    curFilter = f;
+    document.querySelectorAll('.rl-filters button').forEach(function(b){b.classList.remove('active');});
+    if (btn) btn.classList.add('active');
+    loadRooms();
+};
+
+// ══════════════════════════════════
+// Search
+// ══════════════════════════════════
+window.onSearchInput = function() {
+    clearTimeout(searchTimer);
+    var val = document.getElementById('searchInput').value.trim();
+    if (!val) { loadRooms(); return; }
+    searchTimer = setTimeout(doSearch, 400);
+};
+window.doSearch = async function() {
+    var q = document.getElementById('searchInput').value.trim();
+    if (!q || !sb) return;
+    var list = document.getElementById('roomList');
+    list.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+
+    var rooms = [];
+    var matchedMsgs = {};
+    // Customer name search
+    var rr = await sb.from('chat_rooms').select('*').ilike('customer_name','%'+q+'%').order('created_at',{ascending:false}).limit(30);
+    if (rr.data) rooms = rooms.concat(rr.data);
+    // Message content search
+    var mr = await sb.from('chat_messages').select('room_id,message,sender_name,created_at').ilike('message','%'+q+'%').order('created_at',{ascending:false}).limit(50);
+    if (mr.data) {
+        var existIds = rooms.map(function(r){return r.id;});
+        var newIds = [];
+        mr.data.forEach(function(m) {
+            if (!matchedMsgs[m.room_id]) matchedMsgs[m.room_id] = m;
+            if (existIds.indexOf(m.room_id) < 0 && newIds.indexOf(m.room_id) < 0) newIds.push(m.room_id);
+        });
+        if (newIds.length > 0) {
+            var rr2 = await sb.from('chat_rooms').select('*').in('id',newIds.slice(0,30));
+            if (rr2.data) rooms = rooms.concat(rr2.data);
+        }
+    }
+    // Dedupe
+    var seen = {};
+    rooms = rooms.filter(function(r){if(seen[r.id])return false;seen[r.id]=true;return true;});
+
+    if (rooms.length === 0) {
+        list.innerHTML = '<div class="empty"><i class="fa-solid fa-magnifying-glass"></i><p>"'+esc(q)+'" 결과 없음</p></div>';
+        return;
+    }
+    var h = '<div style="padding:8px 16px;font-size:12px;color:#6366f1;font-weight:600;">'+rooms.length+'개 결과</div>';
+    rooms.forEach(function(rm) {
+        var statusClass = rm.status==='waiting'?'waiting':rm.status==='active'?'active':rm.status==='ai_chatting'?'ai':'closed';
+        var icon = rm.status==='waiting'?'⏳':rm.status==='active'?'💬':rm.status==='ai_chatting'?'🤖':'✅';
+        var mm = matchedMsgs[rm.id];
+        var preview = mm ? (mm.sender_name||'')+': '+(mm.message||'').substring(0,40) : '';
+        h += '<div class="room-item" onclick="openRoom(\''+rm.id+'\')">';
+        h += '<div class="room-avatar '+statusClass+'">'+icon+'</div>';
+        h += '<div class="room-info"><div class="room-name">'+esc(rm.customer_name||'고객')+'</div>';
+        h += '<div class="room-last-msg" style="color:#6366f1;">'+esc(preview)+'</div></div>';
+        h += '<div class="room-meta"><div class="room-time">'+new Date(rm.created_at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})+'</div></div>';
+        h += '</div>';
+    });
+    list.innerHTML = h;
+};
+
+// ══════════════════════════════════
+// Chat View
+// ══════════════════════════════════
+window.openRoom = async function(roomId) {
+    if (!sb) return;
+    var rr = await sb.from('chat_rooms').select('*').eq('id',roomId).single();
+    if (rr.error || !rr.data) return;
+    curRoom = rr.data;
+    curRoomId = roomId;
+
+    // UI
+    document.getElementById('chatTitle').textContent = (curRoom.customer_name||'고객') + ' 님';
+    var statusText = curRoom.status==='waiting'?'대기중':curRoom.status==='active'?'상담중':curRoom.status==='ai_chatting'?'AI 상담':'종료';
+    var mgrText = curRoom.assigned_manager ? ' · 담당: '+curRoom.assigned_manager : '';
+    document.getElementById('chatSubtitle').textContent = statusText + mgrText;
+
+    // Action buttons
+    var acts = '';
+    if (curRoom.status === 'ai_chatting') {
+        acts += '<button class="intervene" onclick="doIntervene()"><i class="fa-solid fa-hand"></i> 끼어들기</button>';
+    }
+    if (curRoom.status !== 'closed') {
+        acts += '<button class="warn" onclick="doCloseRoom()"><i class="fa-solid fa-xmark"></i> 종료</button>';
+    }
+    document.getElementById('chatActions').innerHTML = acts;
+
+    // Load messages
+    await loadMessages(roomId);
+
+    // Mark as read
+    sb.from('chat_messages').update({is_read:true}).eq('room_id',roomId).eq('sender_type','customer').eq('is_read',false).then(function(){});
+
+    // Activate waiting room
+    if (curRoom.status === 'waiting' && myName) {
+        await sb.from('chat_rooms').update({status:'active', assigned_manager:myName, updated_at:new Date().toISOString()}).eq('id',roomId);
+        curRoom.status = 'active';
+        curRoom.assigned_manager = myName;
+        var lang = detectLang(curRoom);
+        var sysText = lang==='ja' ? '✅ '+myName+' マネージャーが接続しました！' : lang==='en' ? '✅ '+myName+' has connected!' : '✅ '+myName+' 매니저가 접속했습니다!';
+        await sb.from('chat_messages').insert({room_id:roomId, sender_type:'system', message:sysText});
+        document.getElementById('chatSubtitle').textContent = '상담중 · 담당: '+myName;
+        document.getElementById('chatActions').innerHTML = '<button class="warn" onclick="doCloseRoom()"><i class="fa-solid fa-xmark"></i> 종료</button>';
+    }
+
+    // Subscribe
+    subscribeMessages(roomId);
+
+    // Slide in
+    document.getElementById('viewChat').classList.add('active');
+    // Android back button
+    history.pushState({chat:true}, '');
+};
+
+async function loadMessages(roomId) {
+    var area = document.getElementById('chatMessages');
+    area.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    var mr = await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(200);
+    if (!mr.data || mr.data.length === 0) {
+        area.innerHTML = '<div class="empty"><i class="fa-solid fa-comments"></i><p>메시지 없음</p></div>';
+        return;
+    }
+    var h = '';
+    mr.data.forEach(function(m) { h += renderMessage(m); });
+    area.innerHTML = h;
+    scrollToBottom();
+}
+
+function renderMessage(m) {
+    var t = new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    if (m.sender_type === 'system') {
+        return '<div class="msg-row system"><div class="msg-bubble">'+esc(m.message)+'</div></div>';
+    }
+    var who = m.sender_type === 'manager' ? 'manager' : m.sender_type === 'chatbot' ? 'chatbot' : 'customer';
+    var name = m.sender_name || (who==='manager'?'매니저':who==='chatbot'?'AI 봇':'고객');
+    var nameIcon = who==='customer'?'👤 ':who==='chatbot'?'🤖 ':'💬 ';
+    var h = '<div class="msg-row '+who+'">';
+    if (who !== 'manager') h += '<div class="msg-sender '+who+'">'+nameIcon+esc(name)+'</div>';
+    // File
+    if (m.file_url) {
+        if (m.file_type && m.file_type.startsWith('image/')) {
+            h += '<img class="msg-img" src="'+m.file_url+'" onclick="window.open(this.src)" loading="lazy">';
+        } else {
+            h += '<a class="msg-file" href="'+m.file_url+'" target="_blank">📎 '+(m.file_name||'파일')+'</a>';
+        }
+    }
+    // Text
+    if (m.message) {
+        var text = esc(m.message).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(who==='manager'?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');
+        h += '<div class="msg-bubble">'+text+'</div>';
+    }
+    h += '<div class="msg-time" style="text-align:'+(who==='manager'?'right':'left')+'">'+t+'</div>';
+    h += '</div>';
+    return h;
+}
+
+function scrollToBottom() {
+    [0,50,150,400].forEach(function(ms){
+        setTimeout(function(){
+            var c = document.getElementById('chatMessages');
+            if (c) c.scrollTop = c.scrollHeight + 9999;
+        }, ms);
+    });
+}
+
+// ══════════════════════════════════
+// Send Message
+// ══════════════════════════════════
+window.sendMessage = async function() {
+    if (!curRoom || !sb) return;
+    var inp = document.getElementById('msgInput');
+    var txt = inp.value.trim();
+    if (!txt) return;
+    inp.value = '';
+    autoResize(inp);
+
+    var senderName = curRoom.assigned_manager || myName || '매니저';
+    // Optimistic UI
+    var area = document.getElementById('chatMessages');
+    var m = {sender_type:'manager',sender_name:senderName,message:txt,created_at:new Date().toISOString()};
+    area.insertAdjacentHTML('beforeend', renderMessage(m));
+    scrollToBottom();
+
+    await sb.from('chat_messages').insert({room_id:curRoomId, sender_type:'manager', sender_name:senderName, message:txt});
+    sb.from('chat_rooms').update({updated_at:new Date().toISOString()}).eq('id',curRoomId).then(function(){});
+};
+
+window.autoResize = function(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+};
+
+// ══════════════════════════════════
+// File Upload
+// ══════════════════════════════════
+window.onFileSelect = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    pendingFile = file;
+    var fp = document.getElementById('filePreview');
+    document.getElementById('fpName').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + 'KB)';
+    if (file.type.startsWith('image/')) {
+        var reader = new FileReader();
+        reader.onload = function(ev) { document.getElementById('fpImg').src = ev.target.result; };
+        reader.readAsDataURL(file);
+        document.getElementById('fpImg').style.display = 'block';
+    } else {
+        document.getElementById('fpImg').style.display = 'none';
+    }
+    fp.classList.add('show');
+    e.target.value = '';
+};
+window.confirmFile = async function() {
+    if (!pendingFile || !curRoom || !sb) return;
+    var file = pendingFile;
+    cancelFile();
+    var ext = file.name.split('.').pop();
+    var path = 'chat/' + curRoomId + '/' + Date.now() + '.' + ext;
+    var up = await sb.storage.from('chat-files').upload(path, file);
+    if (up.error) { alert('업로드 실패: '+(up.error.message||'')); return; }
+    var url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
+    var senderName = curRoom.assigned_manager || myName || '매니저';
+    await sb.from('chat_messages').insert({room_id:curRoomId, sender_type:'manager', sender_name:senderName, file_url:url, file_type:file.type, file_name:file.name});
+    sb.from('chat_rooms').update({updated_at:new Date().toISOString()}).eq('id',curRoomId).then(function(){});
+};
+window.cancelFile = function() {
+    pendingFile = null;
+    document.getElementById('filePreview').classList.remove('show');
+};
+
+// ══════════════════════════════════
+// Actions
+// ══════════════════════════════════
+window.doIntervene = async function() {
+    if (!curRoom || !sb || !myName) return;
+    await sb.from('chat_rooms').update({status:'active', assigned_manager:myName, updated_at:new Date().toISOString()}).eq('id',curRoomId);
+    var lang = detectLang(curRoom);
+    var sysText = lang==='ja' ? '✅ '+myName+' マネージャーが会話に参加しました！' : lang==='en' ? '✅ '+myName+' has joined the conversation!' : '✅ '+myName+' 매니저가 대화에 참여했습니다!';
+    await sb.from('chat_messages').insert({room_id:curRoomId, sender_type:'system', message:sysText});
+    curRoom.status = 'active';
+    curRoom.assigned_manager = myName;
+    document.getElementById('chatSubtitle').textContent = '상담중 · 담당: '+myName;
+    document.getElementById('chatActions').innerHTML = '<button class="warn" onclick="doCloseRoom()"><i class="fa-solid fa-xmark"></i> 종료</button>';
+};
+
+window.doCloseRoom = async function() {
+    if (!curRoom || !sb) return;
+    if (!confirm('상담을 종료하시겠습니까?')) return;
+    var lang = detectLang(curRoom);
+    var sysText = lang==='ja' ? '상담이 종료되었습니다。ありがとうございました。' : lang==='en' ? 'Consultation has ended. Thank you.' : '상담이 종료되었습니다. 감사합니다.';
+    await sb.from('chat_messages').insert({room_id:curRoomId, sender_type:'system', message:sysText});
+    await sb.from('chat_rooms').update({status:'closed', updated_at:new Date().toISOString()}).eq('id',curRoomId);
+    goBack();
+};
+
+window.goBack = function() {
+    document.getElementById('viewChat').classList.remove('active');
+    if (msgSub) { msgSub.unsubscribe(); msgSub = null; }
+    curRoom = null;
+    curRoomId = null;
+    loadRooms();
+};
+
+// Android back button
+window.addEventListener('popstate', function(e) {
+    if (document.getElementById('viewChat').classList.contains('active')) {
+        goBack();
+    }
+});
+
+// ══════════════════════════════════
+// Realtime Subscriptions
+// ══════════════════════════════════
+function subscribeMessages(roomId) {
+    if (msgSub) { msgSub.unsubscribe(); msgSub = null; }
+    msgSub = sb.channel('mchat-msg-'+roomId)
+        .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_messages', filter:'room_id=eq.'+roomId}, async function(p) {
+            var m = p.new;
+            if (m.sender_type === 'manager' && m.sender_name === (curRoom.assigned_manager||myName)) return; // Own message
+            // Fetch full data (file_url may be missing in realtime)
+            if (m.id) {
+                var fresh = await sb.from('chat_messages').select('*').eq('id',m.id).single();
+                if (fresh.data) m = fresh.data;
+            }
+            var area = document.getElementById('chatMessages');
+            if (area) area.insertAdjacentHTML('beforeend', renderMessage(m));
+            scrollToBottom();
+            if (m.sender_type === 'customer') {
+                sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
+                playSound();
+                vibrate();
+            }
+        }).subscribe();
+}
+
+function subscribeRoomChanges() {
+    if (roomSub) return;
+    roomSub = sb.channel('mchat-rooms')
+        .on('postgres_changes', {event:'*', schema:'public', table:'chat_rooms'}, function() {
+            // Refresh room list if we're on the list view
+            if (!document.getElementById('viewChat').classList.contains('active')) {
+                loadRooms();
+            }
+        }).subscribe();
+}
+
+function subscribeGlobalMessages() {
+    if (globalMsgSub) return;
+    globalMsgSub = sb.channel('mchat-global-msg')
+        .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_messages'}, async function(p) {
+            var msg = p.new;
+            if (msg.sender_type !== 'customer') return;
+            // Skip if currently viewing this room
+            if (curRoomId && curRoomId === msg.room_id && document.getElementById('viewChat').classList.contains('active')) return;
+            // Check if it's my notification
+            var roomInfo = null;
+            try {
+                var rr = await sb.from('chat_rooms').select('customer_name,assigned_manager').eq('id',msg.room_id).single();
+                if (rr.data) roomInfo = rr.data;
+            } catch(e){}
+            var mgr = roomInfo && roomInfo.assigned_manager;
+            if (mgr && myName && mgr !== myName) return; // Other manager's room
+            playSound();
+            vibrate();
+            var custName = (roomInfo && roomInfo.customer_name) || '고객';
+            flashTitleFn('💬 '+custName);
+            // Refresh room list
+            if (!document.getElementById('viewChat').classList.contains('active')) loadRooms();
+        }).subscribe();
+}
+
+// ══════════════════════════════════
+// Notifications
+// ══════════════════════════════════
+function playSound() {
+    if (!notifySound) return;
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        [784,988,1175].forEach(function(freq,i) {
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'sine'; osc.frequency.value = freq;
+            var t = audioCtx.currentTime + i * 0.12;
+            gain.gain.setValueAtTime(0.7, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+            osc.start(t); osc.stop(t + 0.15);
+        });
+    } catch(e){}
+}
+
+function vibrate() {
+    if (!notifyVibrate) return;
+    try { if (navigator.vibrate) navigator.vibrate([100,50,100]); } catch(e){}
+}
+
+function flashTitleFn(msg) {
+    if (titleFlash) return;
+    var orig = document.title; var on = false;
+    titleFlash = setInterval(function(){ document.title = on ? orig : msg; on = !on; }, 1000);
+    var restore = function() {
+        clearInterval(titleFlash); titleFlash = null; document.title = orig;
+        window.removeEventListener('focus', restore);
+    };
+    window.addEventListener('focus', restore);
+}
+
+// ══════════════════════════════════
+// Helpers
+// ══════════════════════════════════
+function esc(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+function detectLang(room) {
+    if (!room) return 'kr';
+    var cn = (room.customer_name||'').toLowerCase();
+    if (/[\u3040-\u30FF]/.test(cn) || cn.indexOf('ウェブ')>=0) return 'ja';
+    if (/^[a-zA-Z\s|]+$/.test(cn) || cn.indexOf('web')>=0) return 'en';
+    return 'kr';
+}
+
+// ══════════════════════════════════
+// Start
+// ══════════════════════════════════
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>
