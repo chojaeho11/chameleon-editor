@@ -5883,7 +5883,7 @@ window.showChoiceModal = async function(key) {
                     if (lang === 'de') catName = cat.name_de || cat.name_us || catName;
                     if (lang === 'fr') catName = cat.name_fr || cat.name_us || catName;
 
-                    const isColorCategory = cat.is_swatch || cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color');
+                    const isColorCategory = cat.is_swatch || catAddons.some(a => a.is_swatch) || cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color');
                     const _cr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
 
                     optionsHtml += `
@@ -5915,7 +5915,7 @@ window.showChoiceModal = async function(key) {
 
                             optionsHtml += `
                                 <label class="color-btn-item" style="cursor:pointer; position:relative;" title="${a.name}">
-                                    <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}"
+                                    <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-cat-code="${cat.code}"
                                            style="position:absolute; opacity:0; width:0; height:0;"
                                            onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">
                                     <div class="color-btn-box" style="border:1px solid #e2e8f0; border-radius:8px; padding:8px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; height:100%; background-color:#fff;">
@@ -6050,9 +6050,26 @@ window.showChoiceModal = async function(key) {
                 </div>
             </div>
         </div>
+        <!-- ★ 모바일 하단 고정 바 -->
+        <div id="mobileStickyBar" style="display:none; position:sticky; bottom:0; left:0; right:0; background:#fff; border-top:2px solid #e2e8f0; padding:10px 15px; z-index:100; box-shadow:0 -4px 15px rgba(0,0,0,0.1);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <span style="font-size:12px; color:#64748b;">Total</span>
+                <span id="mobileStickyTotal" style="font-size:20px; font-weight:900; color:#6366f1;">0</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+                ${product.is_general_product ? '' : `<button onclick="window.confirmChoice('editor')" style="flex:1; height:48px; border-radius:10px; border:none; background:#6366f1; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🎨 ${lang==='ja'?'デザイン':lang==='en'?'Design':'디자인'}</button>`}
+                <button onclick="window.confirmChoice('cart')" style="flex:${product.is_general_product ? '1' : '1'}; height:48px; border-radius:10px; border:none; background:#111; color:#fff; font-weight:800; font-size:14px; cursor:pointer;">🛒 ${lang==='ja'?'カートに入れる':lang==='en'?'Add to Cart':'장바구니 담기'}</button>
+            </div>
+        </div>
     `;
 
     modal.style.display = 'flex';
+
+    // ★ 모바일 sticky bar 표시
+    if (window.innerWidth <= 768) {
+        const stickyBar = document.getElementById('mobileStickyBar');
+        if (stickyBar) stickyBar.style.display = 'block';
+    }
 
     // 설명 이미지 최적화: lazy load + 크기 제한
     modalBox.querySelectorAll('.product-detail-render img, .choice-left-content img').forEach(img => {
@@ -6168,11 +6185,10 @@ window.updateModalTotal = function() {
     
     document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
         let price = parseFloat(chk.dataset.price || 0);
-        
+
         // 해당 옵션 줄(row)에서 수량 입력칸 찾기
-        // (리스트형 옵션은 .addon-qty-input이 있고, 버튼형은 보통 1개로 침)
         const row = chk.closest('.addon-item-row') || chk.closest('.color-btn-item');
-        let optQty = 1; // 기본 1개
+        let optQty = 1;
 
         if(row) {
             const qtyInput = row.querySelector('.addon-qty-input');
@@ -6181,15 +6197,22 @@ window.updateModalTotal = function() {
             }
         }
 
-        // ★ 핵심: (옵션단가 * 옵션수량)만 더함. 상품수량은 곱하지 않음.
+        // ★ 키링고리(opt_8796): 제품 수량만큼 자동 곱하기
+        if (chk.dataset.catCode === 'opt_8796') {
+            optQty = prodQty;
+        }
+
         optionTotal += (price * optQty);
     });
 
     // 3. 최종 합산
     const finalTotal = productTotal + optionTotal;
     const display = document.getElementById('modalRealtimeTotal');
-    
     if(display) display.innerText = fmtLocal(finalTotal);
+
+    // ★ 모바일 sticky bar 가격 동기화
+    const stickyTotal = document.getElementById('mobileStickyTotal');
+    if(stickyTotal) stickyTotal.innerText = fmtLocal(finalTotal);
 };
 
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
@@ -6346,6 +6369,10 @@ if (w >= 20 && h >= 20) {
             if (row) {
                 const qtyInput = row.querySelector('.addon-qty-input');
                 if (qtyInput) optQty = parseInt(qtyInput.value) || 1;
+            }
+            // ★ 키링고리(opt_8796): 제품 수량만큼 자동 매칭
+            if (chk.dataset.catCode === 'opt_8796') {
+                optQty = finalQty;
             }
             selectedAddonQtys[chk.value] = optQty;
         });
