@@ -1052,6 +1052,7 @@
   "referral_no_refund": "Your referrer will be happy. Thank you!",
   "referral_no_refund_short": "Your referrer will be happy. Thank you!",
   "referral_thanks": "Your referrer will be happy. Thank you!",
+  "referral_refund_notice": "If the referrer has withdrawn the reward, that amount will be deducted from the refund.",
   "referral_applied": "Referrer applied",
   "referral_badge": "Referral",
   "referral_log_info": "Deposit can be used like cash. A 3.3% tax will be deducted upon withdrawal.",
