@@ -9528,6 +9528,16 @@ window.dsmRenderProducts = async function(keyword) {
         c.scrollTop = c.scrollHeight;
     }
 
+    // 채팅 메시지 영역 스크롤을 맨 아래로 (지연 포함)
+    function _scrollChatBottom() {
+        var c = document.getElementById('chamMessages');
+        if (c) { c.scrollTop = c.scrollHeight; }
+        setTimeout(function() {
+            var c2 = document.getElementById('chamMessages');
+            if (c2) c2.scrollTop = c2.scrollHeight;
+        }, 150);
+    }
+
     // 매니저 메시지 표시 (끼어들기 시)
     function addManagerMsg(name, text) {
         var c = getEl('chamMessages');
@@ -9537,7 +9547,7 @@ window.dsmRenderProducts = async function(keyword) {
         h += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:13px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + escHtml(text) + '</div>';
         h += '</div>';
         c.insertAdjacentHTML('beforeend', h);
-        c.scrollTop = c.scrollHeight;
+        _scrollChatBottom();
     }
 
     function showTyping() {
@@ -9843,6 +9853,8 @@ window.dsmRenderProducts = async function(keyword) {
             if (badge) badge.classList.add('hide');
             if (!opened) { opened = true; }
         }
+        // 창이 열린 후 스크롤 맨 아래로
+        _scrollChatBottom();
     }
 
     function toggleBot() {
@@ -10234,10 +10246,10 @@ window.dsmRenderProducts = async function(keyword) {
                         if (m.message.indexOf('접속') >= 0 && sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _lt('consulting');
                         if (m.message.indexOf('종료') >= 0) endLive();
                     }
-                    msgArea.scrollTop = msgArea.scrollHeight;
+                    _scrollChatBottom();
                 }).subscribe();
-            
-            msgArea.scrollTop = msgArea.scrollHeight;
+
+            _scrollChatBottom();
         }).catch(function(err) {
             console.error('상담 연결 에러:', err);
             msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('errPhone') + '</div>');
@@ -10368,11 +10380,12 @@ window.dsmRenderProducts = async function(keyword) {
                     }
                     mh += '</div>';
                     msgArea.insertAdjacentHTML('beforeend', mh);
+                    _autoOpenChatIfClosed();
                 } else if (m.sender_type === 'system') {
                     msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
                     if (m.message.indexOf('종료') >= 0) endLive();
                 }
-                msgArea.scrollTop = msgArea.scrollHeight;
+                _scrollChatBottom();
             }).subscribe();
     };
 
