@@ -5894,7 +5894,7 @@ window.showChoiceModal = async function(key) {
 
                     if (isColorCategory) {
                         // 컬러: 5열 그리드 + 이름 삭제
-                        optionsHtml += `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px;">`;
+                        optionsHtml += `<div style="display:flex; flex-wrap:wrap; gap:5px;">`;
                         catAddons.forEach(a => {
                             let basePrice = a.price_kr || a.price || 0;
                             if (lang === 'ja' && a.price_jp) basePrice = a.price_jp;
@@ -5913,7 +5913,7 @@ window.showChoiceModal = async function(key) {
                             }
 
                             optionsHtml += `
-                                <label class="color-btn-item" style="cursor:pointer; position:relative; max-width:60px;" title="${a.name}">
+                                <label class="color-btn-item" style="cursor:pointer; position:relative; width:52px; flex-shrink:0;" title="${a.name}">
                                     <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-cat-code="${cat.code}"
                                            style="position:absolute; opacity:0; width:0; height:0;"
                                            onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">

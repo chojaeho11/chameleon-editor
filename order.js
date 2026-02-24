@@ -1234,16 +1234,16 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 
                     if (isSwatchCat) {
                         // 스와치 모드: 이미지 그리드 (수량 = 제품수량 자동)
-                        addonHtml += `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:4px;">
+                        addonHtml += `<div style="display:flex; flex-wrap:wrap; gap:4px;">
                             ${catAddons.map(opt => {
                                 const isSelected = Object.values(item.selectedAddons).includes(opt.code);
                                 const imgUrl = opt.img_url || 'https://placehold.co/40/eeeeee/cccccc?text=+';
                                 return `
-                                    <label style="cursor:pointer; position:relative;" title="${opt.display_name || opt.name}">
+                                    <label style="cursor:pointer; position:relative; width:48px; flex-shrink:0;" title="${opt.display_name || opt.name}">
                                         <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''}
                                                style="position:absolute; opacity:0; width:0; height:0;">
                                         <div style="border:${isSelected ? '2px solid #6366f1' : '1px solid #e2e8f0'}; border-radius:6px; padding:3px 1px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; background:${isSelected ? '#eff6ff' : '#fff'}; ${isSelected ? 'box-shadow:0 0 0 1px #6366f1;' : ''}">
-                                            <img src="${imgUrl}" style="width:22px; height:22px; border-radius:50%; object-fit:cover; border:1px solid #eee;">
+                                            <img src="${imgUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #eee;">
                                             <span style="font-size:7px; color:${isSelected ? '#6366f1' : '#94a3b8'}; margin-top:2px; font-weight:bold; text-align:center; line-height:1.1;">+${formatCurrency(opt.price)}</span>
                                         </div>
                                     </label>`;
