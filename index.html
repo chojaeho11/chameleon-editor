@@ -6511,7 +6511,8 @@ if (w >= 20 && h >= 20) {
                         const f = fileInput.files[i];
                         const ext = f.name.split('.').pop();
                         const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-                        const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, f, { contentType: f.type, upsert: true });
+                        const safeType = (f.type && !f.type.includes('postscript')) ? f.type : 'application/octet-stream';
+                        const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, f, { contentType: safeType, upsert: true });
                         if (upErr) { console.error('업로드 실패:', upErr); continue; }
                         const { data: urlData } = _sb.storage.from('customer_uploads').getPublicUrl(path);
                         let thumbUrl = urlData.publicUrl;
@@ -6592,7 +6593,8 @@ if (w >= 20 && h >= 20) {
         const files = window._pendingUploadedFiles || [];
         if (files.length === 0) { container.style.display = 'none'; container.innerHTML = ''; return; }
         container.style.display = 'block';
-        let html = `<div style="font-size:13px; font-weight:bold; color:#16a34a; margin-bottom:8px;">📎 ${lang==='ja'?'アップロード済みファイル':lang==='en'?'Uploaded Files':'업로드된 파일'} (${files.length})</div>`;
+        const _l = (function(){ const p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase()==='jp'?'ja':p.toLowerCase()==='us'?'en':p.toLowerCase(); const h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
+        let html = `<div style="font-size:13px; font-weight:bold; color:#16a34a; margin-bottom:8px;">📎 ${_l==='ja'?'アップロード済みファイル':_l==='en'?'Uploaded Files':'업로드된 파일'} (${files.length})</div>`;
         files.forEach((f, idx) => {
             const isImg = f.thumb && (f.thumb.includes('.jpg') || f.thumb.includes('.png') || f.thumb.includes('.jpeg') || f.thumb.includes('.webp'));
             html += `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; ${idx>0?'border-top:1px solid #dcfce7;':''}">
