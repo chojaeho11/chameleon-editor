@@ -158,7 +158,7 @@ async function uploadFileToSupabase(file, folder) {
 }
 
 // [추가] 장바구니 로드 함수
-function loadCartFromStorage() {
+export function loadCartFromStorage() {
     try {
         const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
         const savedCart = localStorage.getItem(storageKey);

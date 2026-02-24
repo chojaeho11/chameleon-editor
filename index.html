@@ -6459,10 +6459,10 @@ if (w >= 20 && h >= 20) {
                         localStorage.setItem(storageKey, JSON.stringify(cart));
                     }
 
-                    // 장바구니 렌더링
+                    // 장바구니 메모리 동기화 + 렌더링
                     const mod = await import('./order.js?v=123');
+                    if (mod.loadCartFromStorage) mod.loadCartFromStorage();
                     if (mod.renderCart) mod.renderCart();
-                    if (mod.saveCart) mod.saveCart();
 
                     document.getElementById('choiceModal').style.display = 'none';
                     document.getElementById('cartAddedModal').style.display = 'flex';
