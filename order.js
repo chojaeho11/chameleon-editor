@@ -1344,8 +1344,9 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 }
 
 function updateSummary(prodTotal, addonTotal, total) {
-    // 최소 주문금액 10,000원(KRW) 적용
-    const MIN_ORDER_KRW = 10000;
+    // 최소 주문금액 (KR: 10,000원, JP: 8,000원 ≈ ¥1,000)
+    const _minCc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const MIN_ORDER_KRW = _minCc === 'JP' ? 8000 : 10000;
     const elMinNotice = document.getElementById("minOrderNotice");
     if (total > 0 && total < MIN_ORDER_KRW) {
         total = MIN_ORDER_KRW;
@@ -1574,16 +1575,17 @@ async function processOrderSubmission() {
         rawTotal += (unitPrice * qty) + optionTotal;
     });
 
-    // 최소 주문금액 10,000원(KRW) 적용
-    const MIN_ORDER_KRW = 10000;
-    if (rawTotal > 0 && rawTotal < MIN_ORDER_KRW) {
-        showToast(window.t('msg_min_order_applied', `Minimum order amount ${formatCurrency(MIN_ORDER_KRW)} has been applied.`), "info");
-        rawTotal = MIN_ORDER_KRW;
+    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+
+    // 최소 주문금액 (KR: 10,000원, JP: 8,000원 ≈ ¥1,000)
+    const MIN_ORDER_KRW2 = _cc === 'JP' ? 8000 : 10000;
+    if (rawTotal > 0 && rawTotal < MIN_ORDER_KRW2) {
+        showToast(window.t('msg_min_order_applied', `Minimum order amount ${formatCurrency(MIN_ORDER_KRW2)} has been applied.`), "info");
+        rawTotal = MIN_ORDER_KRW2;
     }
 
-    // 허니콤보드 비수도권 추가 배송비 (KR: 200,000 KRW, JP: 25,000 KRW ≈ ¥3,000)
-    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const NON_METRO_FEE_KRW = _cc === 'JP' ? 25000 : 200000;
+    // 허니콤보드 용차 배송비 (KR: 200,000 KRW, JP: 310,000 KRW ≈ ¥40,000)
+    const NON_METRO_FEE_KRW = _cc === 'JP' ? 310000 : 200000;
     const metroRadio = document.querySelector('input[name="metroArea"]:checked');
     const metroSection = document.getElementById('metroAreaSection');
     const isNonMetro = metroSection && metroSection.style.display !== 'none' && metroRadio && metroRadio.value === 'non-metro';
