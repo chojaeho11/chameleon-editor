@@ -9426,6 +9426,8 @@ window.dsmRenderProducts = async function(keyword) {
         _aiRoomRestored = true;
         if (_loadAiRoom()) {
             console.log('♻️ 페이지 로드 시 AI 채팅방 복원:', _aiRoom.id);
+            // 실시간 상담 복원 중이면 중복 방지 (인간 상담 모듈이 처리)
+            if (window._chamLiveRestoring || window._chamLiveRestored) return;
             subscribeManagerIntervene();
             _fetchMissedMessages();
         }
@@ -9475,6 +9477,11 @@ window.dsmRenderProducts = async function(keyword) {
         chatHistory = [];
         try { localStorage.removeItem(_chatStorageKey()); } catch(e) {}
     }
+
+    // ── 채팅창 열림 상태 영속화 ──
+    function _chatOpenKey() { return 'cham_chat_open'; }
+    function _saveChatOpen(v) { try { localStorage.setItem(_chatOpenKey(), v ? '1' : '0'); } catch(e) {} }
+    function _isChatWasOpen() { try { return localStorage.getItem(_chatOpenKey()) === '1'; } catch(e) { return false; } }
 
     // 챗봇 전역 언어 감지 (한번만)
     var _chamLang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
@@ -9884,6 +9891,7 @@ window.dsmRenderProducts = async function(keyword) {
         win.classList.remove('visible');
         trg.classList.remove('open');
         if (ico) ico.className = 'fa-solid fa-comments';
+        _saveChatOpen(false);
     }
 
     // 상담사 메시지 수신 시 채팅창이 닫혀있으면 자동으로 열기
@@ -9897,6 +9905,7 @@ window.dsmRenderProducts = async function(keyword) {
             if (trg) trg.classList.add('open');
             if (ico) ico.className = 'fa-solid fa-xmark';
             if (badge) badge.classList.add('hide');
+            _saveChatOpen(true);
             if (!opened) { opened = true; }
         }
         // 창이 열린 후 스크롤 맨 아래로
@@ -9922,14 +9931,17 @@ window.dsmRenderProducts = async function(keyword) {
             trg.classList.add('open');
             if (ico) ico.className = 'fa-solid fa-xmark';
             if (badge) badge.classList.add('hide');
+            _saveChatOpen(true);
             // 모바일에서 뒤로가기 버튼으로 채팅 닫을 수 있도록 history 추가
             if (window.innerWidth <= 480) {
                 window.history.pushState({ type: 'chatbot' }, '');
                 window._chamBotHistoryPushed = true;
             }
             if (!opened) {
-                // 저장된 채팅 기록이 있으면 복원, 없으면 환영 메시지
-                if (_loadChatHistory() && chatHistory.length > 0) {
+                // 실시간 상담 복원된 경우 AI 기록 렌더링 스킵
+                if (window._chamLiveRestored) {
+                    // 인간 상담 모듈이 이미 메시지를 렌더링함
+                } else if (_loadChatHistory() && chatHistory.length > 0) {
                     chatHistory.forEach(function(m) { addMsg(m.content, m.role === 'user' ? 'user' : 'bot'); });
                 } else {
                     welcome();
@@ -10036,14 +10048,60 @@ window.dsmRenderProducts = async function(keyword) {
         _clearChatHistory();
         _clearAiRoom();
         if (_aiSub) { _aiSub.unsubscribe(); _aiSub = null; }
+        // 실시간 상담 상태도 초기화
+        if (window._chamClearLiveRoom) window._chamClearLiveRoom();
+        window._chamLiveMode = false;
+        window._chamLiveRestored = false;
         var c = getEl('chamMessages');
         if (c) c.innerHTML = '';
         welcome();
     }
 
+    // ── 페이지 로드 시 채팅창 자동 복원 ──
+    function _tryRestoreChatWindow() {
+        if (!_isChatWasOpen()) return;
+        // 실시간 상담 복원 중이면 인간 상담 모듈이 처리
+        if (window._chamLiveRestored) {
+            opened = true;
+            _autoOpenChatIfClosed();
+            return;
+        }
+        if (window._chamLiveRestoring) {
+            // 복원 진행 중이면 대기 후 재확인
+            setTimeout(function() {
+                if (window._chamLiveRestored) { opened = true; _autoOpenChatIfClosed(); return; }
+                _restoreAiWindow();
+            }, 2000);
+            return;
+        }
+        _restoreAiWindow();
+    }
+    function _restoreAiWindow() {
+        _autoOpenChatIfClosed();
+        if (!opened) {
+            if (_loadChatHistory() && chatHistory.length > 0) {
+                chatHistory.forEach(function(m) { addMsg(m.content, m.role === 'user' ? 'user' : 'bot'); });
+            } else {
+                welcome();
+            }
+            opened = true;
+        }
+    }
+    // DOMContentLoaded 후 지연 실행 (인간 상담 모듈 복원 우선)
+    function _scheduleRestore() {
+        setTimeout(_tryRestoreChatWindow, 1200);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _scheduleRestore);
+    } else {
+        _scheduleRestore();
+    }
+
     // 전역 접근용
     window.ChamBot = { toggle: toggleBot, send: sendMsg, newChat: newChat };
     window._ct = _ct;
+    window._scrollChatBottom = _scrollChatBottom;
+    window._custNotifyNewMsg = _custNotifyNewMsg;
 
     console.log('\uD83E\uDD8E \uCE74\uBA5C\uB808\uC628 AI \uC0C1\uB2F4\uBD07 \uB85C\uB4DC \uC644\uB8CC');
 
@@ -10058,6 +10116,14 @@ window.dsmRenderProducts = async function(keyword) {
     var _room = null, _sub = null, _live = false;
 
     function getSb() { return window.sb || null; }
+
+    // 즉시 localStorage 확인: 저장된 실시간 상담방이 있으면 플래그 설정
+    // (AI 모듈의 500ms 복원보다 먼저 실행되어야 함)
+    try {
+        var u = window.currentUser;
+        var k = u ? 'cham_live_' + u.id : 'cham_live_guest';
+        if (localStorage.getItem(k)) window._chamLiveRestoring = true;
+    } catch(e) {}
 
     // 언어 감지
     var _lang2 = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
@@ -10078,6 +10144,32 @@ window.dsmRenderProducts = async function(keyword) {
         errPhone:     { kr:'연결 오류! 📞 지숙 매니저: 010-3455-1946', ja:'接続エラー！📞 047-712-1148', en:'Connection error! 📞 047-712-1148' }
     };
     function _lt(key) { return (_liveText[key] && _liveText[key][_lang2]) || (_liveText[key] && _liveText[key]['en']) || ''; }
+
+    // ── 실시간 상담방 localStorage 영속화 ──
+    function _liveRoomKey() {
+        var u = window.currentUser;
+        return u ? 'cham_live_' + u.id : 'cham_live_guest';
+    }
+    function _saveLiveRoom() {
+        if (!_room) return;
+        try {
+            localStorage.setItem(_liveRoomKey(), JSON.stringify({
+                room: _room,
+                customerName: _customerName,
+                customerPhone: _customerPhone
+            }));
+        } catch(e) {}
+    }
+    function _loadLiveRoomData() {
+        try {
+            var saved = localStorage.getItem(_liveRoomKey());
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return null;
+    }
+    function _clearLiveRoom() {
+        try { localStorage.removeItem(_liveRoomKey()); } catch(e) {}
+    }
 
     // 기본 상담사 (DB 로드 실패 시) — 국가별
     var _mgrLabels = {
@@ -10226,7 +10318,8 @@ window.dsmRenderProducts = async function(keyword) {
             
             _room = res.data;
             _live = true; window._chamLiveMode = true;
-            
+            _saveLiveRoom();
+
             // 헤더 변경
             var title = document.querySelector('.cham-title');
             var sub = document.querySelector('.cham-subtitle');
@@ -10285,16 +10378,16 @@ window.dsmRenderProducts = async function(keyword) {
                         }
                         mh += '</div>';
                         if (ma) ma.insertAdjacentHTML('beforeend', mh);
-                        _custNotifyNewMsg(mn);
+                        if (window._custNotifyNewMsg) window._custNotifyNewMsg(mn);
                     } else if (m.sender_type === 'system') {
                         if (ma) ma.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
                         if (m.message.indexOf('접속') >= 0 && sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>' + _lt('consulting');
                         if (m.message.indexOf('종료') >= 0) endLive();
-                        _scrollChatBottom();
+                        if (window._scrollChatBottom) window._scrollChatBottom();
                     }
                 }).subscribe();
 
-            _scrollChatBottom();
+            if (window._scrollChatBottom) window._scrollChatBottom();
         }).catch(function(err) {
             console.error('상담 연결 에러:', err);
             msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('errPhone') + '</div>');
@@ -10358,7 +10451,7 @@ window.dsmRenderProducts = async function(keyword) {
         inp.value = '';
         var msgArea = document.getElementById('chamMessages');
         msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + text + '</div></div>');
-        _scrollChatBottom();
+        if (window._scrollChatBottom) window._scrollChatBottom();
         var sb = getSb();
         if (sb) {
             sb.from('chat_messages').insert({ room_id: _room.id, sender_type: 'customer', sender_name: _customerName || _ct('customer'), message: text })
@@ -10369,6 +10462,7 @@ window.dsmRenderProducts = async function(keyword) {
     // ── 상담 종료 ──
     function endLive() {
         _live = false; _room = null; window._chamLiveMode = false;
+        _clearLiveRoom();
         if (_sub) { _sub.unsubscribe(); _sub = null; }
         var title = document.querySelector('.cham-title');
         var sub = document.querySelector('.cham-subtitle');
@@ -10386,6 +10480,7 @@ window.dsmRenderProducts = async function(keyword) {
         _customerName = _customerName || _ct('webCustomer');
         _live = true;
         window._chamLiveMode = true;
+        _saveLiveRoom();
 
         // 파일 버튼: 실시간 상담 모드 전용 핸들러 등록
         var fileInput = document.getElementById('chamFileInput');
@@ -10425,17 +10520,201 @@ window.dsmRenderProducts = async function(keyword) {
                     }
                     mh += '</div>';
                     if (ma) ma.insertAdjacentHTML('beforeend', mh);
-                    _custNotifyNewMsg(mn);
+                    if (window._custNotifyNewMsg) window._custNotifyNewMsg(mn);
                 } else if (m.sender_type === 'system') {
                     if (ma) ma.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
                     if (m.message.indexOf('종료') >= 0) endLive();
-                    _scrollChatBottom();
+                    if (window._scrollChatBottom) window._scrollChatBottom();
                 }
             }).subscribe();
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', overrideSend);
     else setTimeout(overrideSend, 300);
+
+    // ── 페이지 로드 시 실시간 상담 복원 ──
+    function _renderRestoredMsg(ma, m) {
+        if (m.sender_type === 'customer') {
+            if (m.file_url) {
+                if (m.file_type && m.file_type.startsWith('image/'))
+                    ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + m.file_url + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(99,102,241,0.2);cursor:pointer;" onclick="window.open(this.src)"></div>');
+                else
+                    ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:14px;">📎 ' + (m.file_name||'File') + '</div></div>');
+            }
+            if (m.message) {
+                var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#fff; text-decoration:underline;">$1</a>');
+                ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + msgText + '</div></div>');
+            }
+        } else if (m.sender_type === 'manager') {
+            var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
+            var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
+            mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
+            if (m.file_url) {
+                if (m.file_type && m.file_type.startsWith('image/'))
+                    mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
+                else
+                    mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:14px;display:inline-block;">📎 ' + (m.file_name||_lt('fileDl')) + '</a>';
+            }
+            if (m.message) {
+                var msgText2 = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
+                mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText2 + '</div>';
+            }
+            mh += '</div>';
+            ma.insertAdjacentHTML('beforeend', mh);
+        } else if (m.sender_type === 'system') {
+            ma.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+        } else if (m.sender_type === 'bot') {
+            var text = m.message || '';
+            text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/`(.*?)`/g, '<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:14px;">$1</code>');
+            ma.insertAdjacentHTML('beforeend', '<div class="cm-row bot"><div class="cm-ava"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:20px;height:20px;border-radius:50%;"></div><div class="cm-bub">' + text + '</div></div>');
+        }
+    }
+
+    function _subscribeLiveRestore(sb, roomId) {
+        _sub = sb.channel('room-' + roomId)
+            .on('postgres_changes', {
+                event: 'INSERT', schema: 'public', table: 'chat_messages',
+                filter: 'room_id=eq.' + roomId
+            }, function(payload) {
+                var m = payload.new;
+                var ma = document.getElementById('chamMessages');
+                if (m.sender_type === 'manager') {
+                    var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
+                    var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
+                    mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
+                    if (m.file_url) {
+                        if (m.file_type && m.file_type.startsWith('image/'))
+                            mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
+                        else
+                            mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:14px;display:inline-block;">📎 ' + (m.file_name||_lt('fileDl')) + '</a>';
+                    }
+                    if (m.message) {
+                        var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
+                        mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
+                    }
+                    mh += '</div>';
+                    if (ma) ma.insertAdjacentHTML('beforeend', mh);
+                    if (window._custNotifyNewMsg) window._custNotifyNewMsg(mn);
+                    else if (window._scrollChatBottom) window._scrollChatBottom();
+                } else if (m.sender_type === 'system') {
+                    if (ma) ma.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+                    if (m.message.indexOf('종료') >= 0 || m.message.indexOf('closed') >= 0 || m.message.indexOf('終了') >= 0) endLive();
+                    if (window._scrollChatBottom) window._scrollChatBottom();
+                }
+            }).subscribe();
+    }
+
+    function _tryRestoreLiveRoom() {
+        var data = _loadLiveRoomData();
+        if (!data || !data.room) return;
+
+        window._chamLiveRestoring = true;
+
+        var sb = getSb();
+        if (!sb) {
+            // Supabase 아직 로드 안됨 → 재시도
+            setTimeout(function() {
+                sb = getSb();
+                if (sb) _doRestoreLive(sb, data);
+                else { window._chamLiveRestoring = false; _clearLiveRoom(); }
+            }, 2000);
+            return;
+        }
+        _doRestoreLive(sb, data);
+    }
+
+    function _doRestoreLive(sb, data) {
+        // DB에서 방 상태 확인
+        sb.from('chat_rooms').select('*').eq('id', data.room.id).single().then(function(res) {
+            if (res.error || !res.data || res.data.status === 'closed') {
+                console.log('🔚 저장된 상담방이 종료됨, 복원 취소');
+                _clearLiveRoom();
+                window._chamLiveRestoring = false;
+                return;
+            }
+
+            _room = res.data;
+            _customerName = data.customerName || '';
+            _customerPhone = data.customerPhone || '';
+            _live = true;
+            window._chamLiveMode = true;
+            window._chamLiveRestored = true;
+            window._chamLiveRestoring = false;
+
+            console.log('♻️ 실시간 상담 복원:', _room.id, '상태:', _room.status);
+
+            // 채팅창 열기
+            var win = document.getElementById('cham-bot-window');
+            var trg = document.getElementById('cham-bot-trigger');
+            var ico = document.getElementById('cham-bot-icon');
+            var badge = document.getElementById('cham-bot-badge');
+            if (win) win.classList.add('visible');
+            if (trg) trg.classList.add('open');
+            if (ico) ico.className = 'fa-solid fa-xmark';
+            if (badge) badge.classList.add('hide');
+
+            // 헤더 변경
+            var managerName = _room.assigned_manager || '';
+            var titleEl = document.querySelector('.cham-title');
+            var subEl = document.querySelector('.cham-subtitle');
+            if (titleEl && managerName) titleEl.textContent = managerName + _lt('mgrChat');
+            var statusText = (_room.status === 'waiting') ?
+                ((_customerName||_lt('custLabel')) + _lt('waiting')) :
+                _lt('consulting');
+            var statusColor = (_room.status === 'waiting') ? '#fbbf24' : '#4ade80';
+            if (subEl) subEl.innerHTML = '<i class="fa-solid fa-circle" style="color:' + statusColor + ';font-size:7px;margin-right:4px;"></i>' + statusText;
+
+            // 상담사 연결 바 숨기기
+            var bar = document.getElementById('chamConnectBar');
+            if (bar) bar.style.display = 'none';
+
+            // DB에서 메시지 로드
+            sb.from('chat_messages').select('*').eq('room_id', _room.id)
+              .order('created_at', { ascending: true }).limit(200)
+              .then(function(msgRes) {
+                var ma = document.getElementById('chamMessages');
+                if (!ma) return;
+                ma.innerHTML = '';
+                if (msgRes.data && msgRes.data.length > 0) {
+                    msgRes.data.forEach(function(m) { _renderRestoredMsg(ma, m); });
+                }
+                if (window._scrollChatBottom) window._scrollChatBottom();
+            });
+
+            // Realtime 구독
+            _subscribeLiveRestore(sb, _room.id);
+
+            // 파일 업로드 핸들러
+            var fileInput = document.getElementById('chamFileInput');
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    if (!_live) return;
+                    for (var i = 0; i < e.target.files.length; i++) uploadFile(e.target.files[i]);
+                    e.target.value = '';
+                }, true);
+            }
+        }).catch(function(err) {
+            console.error('실시간 상담 복원 에러:', err);
+            _clearLiveRoom();
+            window._chamLiveRestoring = false;
+        });
+    }
+
+    // 페이지 로드 시 복원 시도 (AI 모듈보다 먼저 실행)
+    function _scheduleLiveRestore() {
+        setTimeout(_tryRestoreLiveRoom, 600);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _scheduleLiveRestore);
+    } else {
+        _scheduleLiveRestore();
+    }
+
+    // 전역 접근용 (AI 모듈에서 newChat 시 사용)
+    window._chamClearLiveRoom = function() {
+        endLive();
+        _clearLiveRoom();
+    };
 
     console.log('🔗 인간 상담 연결 모듈 로드 완료');
 })();
