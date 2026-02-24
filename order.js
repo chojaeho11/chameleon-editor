@@ -1171,7 +1171,9 @@ function renderCart() {
         Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) {
-                const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                // 키링고리(opt_8796) 등 스와치 카테고리: 수량 = 제품 수량 자동
+                const isSwatchAddon = addon.category_code === 'opt_8796' || addon.is_swatch;
+                const aq = isSwatchAddon ? item.qty : ((item.addonQuantities && item.addonQuantities[code]) || 1);
                 optionTotal += addon.price * aq;
             }
         });
@@ -1224,10 +1226,32 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                     const catAddons = allAddons.filter(a => (a.category_code || '_default') === cat);
                     const catInfo = ADDON_CAT_DB[cat];
                     const catDisplayName = catInfo ? catInfo.display_name : (cat === '_default' ? window.t('label_options', 'Options') : cat);
+                    const isSwatchCat = cat === 'opt_8796' || (catInfo && catInfo.is_swatch) || catAddons.some(a => a.is_swatch);
+
                     addonHtml += `
                         <div style="margin-bottom:12px;">
-                            <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${catDisplayName}</div>
-                            <div style="display:flex; flex-direction:column; gap:6px;">
+                            <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${catDisplayName}</div>`;
+
+                    if (isSwatchCat) {
+                        // 스와치 모드: 이미지 그리드 (수량 = 제품수량 자동)
+                        addonHtml += `<div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px;">
+                            ${catAddons.map(opt => {
+                                const isSelected = Object.values(item.selectedAddons).includes(opt.code);
+                                const imgUrl = opt.img_url || 'https://placehold.co/50/eeeeee/cccccc?text=+';
+                                return `
+                                    <label style="cursor:pointer; position:relative;" title="${opt.display_name || opt.name}">
+                                        <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''}
+                                               style="position:absolute; opacity:0; width:0; height:0;">
+                                        <div style="border:${isSelected ? '2px solid #6366f1' : '1px solid #e2e8f0'}; border-radius:8px; padding:6px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; background:${isSelected ? '#eff6ff' : '#fff'}; ${isSelected ? 'box-shadow:0 0 0 1px #6366f1;' : ''}">
+                                            <img src="${imgUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #eee;">
+                                            <span style="font-size:8px; color:${isSelected ? '#6366f1' : '#94a3b8'}; margin-top:3px; font-weight:bold; text-align:center; line-height:1.2; overflow:hidden; max-height:20px;">+${formatCurrency(opt.price)}</span>
+                                        </div>
+                                    </label>`;
+                            }).join('')}
+                        </div>`;
+                    } else {
+                        // 일반 옵션: 리스트형
+                        addonHtml += `<div style="display:flex; flex-direction:column; gap:6px;">
                                 ${catAddons.map(opt => {
                                     const isSelected = Object.values(item.selectedAddons).includes(opt.code);
                                     const currentAddonQty = (item.addonQuantities && item.addonQuantities[opt.code]) || 1;
@@ -1241,16 +1265,16 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                                                         <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
                                                     </div>
                                                 </label>
-                                                
-                                                ${isSelected && opt.is_swatch !== true ? `
+
+                                                ${isSelected ? `
                                                 <div style="display:flex; align-items:center; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; background:#fff; height:26px;">
-                                                    <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty - 1})" 
+                                                    <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty - 1})"
                                                             style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">-</button>
-                                                    <input type="number" 
-                                                           value="${currentAddonQty}" 
+                                                    <input type="number"
+                                                           value="${currentAddonQty}"
                                                            onchange="window.updateCartAddonQty(${idx}, '${opt.code}', this.value)"
                                                            style="width:50px; height:100%; text-align:center; border:none; border-left:1px solid #eee; border-right:1px solid #eee; font-size:11px; font-weight:bold; outline:none; -webkit-appearance:none; margin:0;">
-                                                    <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty + 1})" 
+                                                    <button onclick="window.updateCartAddonQty(${idx}, '${opt.code}', ${currentAddonQty + 1})"
                                                             style="border:none; background:#f8fafc; width:22px; height:100%; cursor:pointer; font-weight:bold; font-size:13px;">+</button>
                                                 </div>
                                                 ` : ''}
@@ -1258,9 +1282,9 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                                         </div>
                                     `;
                                 }).join('')}
-                            </div>
-                        </div>
-                    `;
+                            </div>`;
+                    }
+                    addonHtml += `</div>`;
                 });
             }
         }
@@ -1377,7 +1401,11 @@ function updateSummary(prodTotal, addonTotal, total) {
                 Object.values(item.selectedAddons).forEach(code => {
                     const db = typeof ADDON_DB !== 'undefined' ? ADDON_DB : (window.ADDON_DB || {});
                     const addon = db[code];
-                    if (addon) itemTotal += addon.price * (item.addonQuantities[code] || 1);
+                    if (addon) {
+                        const _sw = addon.category_code === 'opt_8796' || addon.is_swatch;
+                        const _aq = _sw ? qty : (item.addonQuantities[code] || 1);
+                        itemTotal += addon.price * _aq;
+                    }
                 });
             }
             discountableAmount += itemTotal;
@@ -1568,7 +1596,8 @@ async function processOrderSubmission() {
         if(item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
                 const addon = ADDON_DB[code];
-                const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                const _sw = addon && (addon.category_code === 'opt_8796' || addon.is_swatch);
+                const aq = _sw ? qty : ((item.addonQuantities && item.addonQuantities[code]) || 1);
                 if(addon) optionTotal += addon.price * aq;
             });
         }
@@ -1711,7 +1740,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         if(item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
                 const addon = ADDON_DB[code];
-                const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                const _sw = addon && (addon.category_code === 'opt_8796' || addon.is_swatch);
+                const aq = _sw ? (item.qty || 1) : ((item.addonQuantities && item.addonQuantities[code]) || 1);
                 if(addon) optionTotal += addon.price * aq;
             });
         }
@@ -1948,7 +1978,10 @@ async function processFinalPayment() {
                  if(item.selectedAddons) {
                     Object.values(item.selectedAddons).forEach(code => {
                         let ad = ADDON_DB[code];
-                        if(ad) optTotal += ad.price * (item.addonQuantities[code] || 1);
+                        if(ad) {
+                            const _sw = ad.category_code === 'opt_8796' || ad.is_swatch;
+                            optTotal += ad.price * (_sw ? qty : (item.addonQuantities[code] || 1));
+                        }
                     });
                  }
                  let compatible = Math.floor((unitPrice*qty + optTotal)/qty);
@@ -2253,10 +2286,10 @@ window.toggleCartAddon = function(idx, code, isChecked) {
             const key = `opt_${code}`;
             cartData[idx].selectedAddons[key] = code; 
             
-            // 수량이 없으면 1로 초기화
-            if (!cartData[idx].addonQuantities[code]) {
-                cartData[idx].addonQuantities[code] = 1; 
-            }
+            // 스와치(키링고리 등): 수량 = 제품 수량 자동, 일반: 1로 초기화
+            const _addonInfo = ADDON_DB[code];
+            const _isSwatchAddon = _addonInfo && (_addonInfo.category_code === 'opt_8796' || _addonInfo.is_swatch);
+            cartData[idx].addonQuantities[code] = _isSwatchAddon ? (cartData[idx].qty || 1) : (cartData[idx].addonQuantities[code] || 1);
         } else { 
             // 해제 시: 키값(Prefix)이 'addon_'인지 'opt_'인지 상관없이
             // 해당 옵션 코드를 값으로 가지고 있는 모든 항목을 찾아서 삭제
