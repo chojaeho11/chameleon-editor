@@ -737,9 +737,7 @@ button, input, textarea, select { font-family: inherit; }
 .time-slot.slot-selected { background: #6366f1; color: white !important; border-color: #6366f1; box-shadow: 0 2px 8px rgba(99,102,241,0.3); }
 .time-slot.slot-selected .slot-count { color: rgba(255,255,255,0.8); }
 .time-slot.slot-available { border-color: #86efac; }
-.time-slot.slot-partial { border-color: #fbbf24; background: #fffbeb; }
-.time-slot.slot-full { border-color: #fecaca; color: #cbd5e1; cursor: not-allowed; background: #fef2f2; text-decoration: line-through; }
-.time-slot .slot-count { font-size: 11px; display: block; margin-top: 3px; font-weight: normal; color: #64748b; }
+.time-slot.slot-full { border-color: #e2e8f0; color: #cbd5e1; cursor: not-allowed; background: #f8fafc; }
 
 /* 심플 제품 카드 & 팝업 */
 .simple-prod-card {

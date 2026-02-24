@@ -748,9 +748,6 @@ async function openInstallationTimeModal() {
 // ── 시간 슬롯 렌더링 ──
 function renderTimeSlots(grid, bookedSlots, slotInfo) {
     grid.innerHTML = '';
-    const lblAvail = CURRENT_LANG==='kr'?'예약 가능':CURRENT_LANG==='ja'?'予約可能':'Available';
-    const lblFull = CURRENT_LANG==='kr'?'마감':CURRENT_LANG==='ja'?'満席':'Full';
-    const lblTeam = CURRENT_LANG==='kr'?'팀':CURRENT_LANG==='ja'?'チーム':'teams';
 
     // 종일
     if (slotInfo.type === 'fullday') {
@@ -759,7 +756,7 @@ function renderTimeSlots(grid, bookedSlots, slotInfo) {
         const div = document.createElement('div');
         div.className = 'time-slot' + (canBook ? ' slot-available' : ' slot-full');
         div.style.gridColumn = '1 / -1';
-        div.innerHTML = `<div>08:00 ~ 22:00</div><span class="slot-count">${canBook ? `${MAX_TEAMS - maxUsed}/${MAX_TEAMS} ${lblTeam}` : lblFull}</span>`;
+        div.innerHTML = `<div>08:00 ~ 22:00</div>`;
         if (canBook) {
             div.onclick = () => {
                 grid.querySelectorAll('.time-slot').forEach(s => s.classList.remove('slot-selected'));
@@ -775,23 +772,18 @@ function renderTimeSlots(grid, bookedSlots, slotInfo) {
     // 2시간 / 4시간 슬롯
     INSTALL_TIME_SLOTS.forEach((slot, idx) => {
         let canBook = true;
-        let minRemaining = MAX_TEAMS;
         for (let i = 0; i < slotInfo.slots; i++) {
             if (idx + i >= INSTALL_TIME_SLOTS.length) { canBook = false; break; }
             const used = bookedSlots[INSTALL_TIME_SLOTS[idx + i]] || 0;
             if (used >= MAX_TEAMS) { canBook = false; break; }
-            minRemaining = Math.min(minRemaining, MAX_TEAMS - used);
         }
 
         const endIdx = Math.min(idx + slotInfo.slots, INSTALL_TIME_SLOTS.length);
         const endTime = endIdx < INSTALL_TIME_SLOTS.length ? INSTALL_TIME_SLOTS[endIdx] : '22:00';
 
-        const used0 = bookedSlots[slot] || 0;
-        const statusClass = !canBook ? 'slot-full' : (used0 >= 2 ? 'slot-partial' : 'slot-available');
-
         const div = document.createElement('div');
-        div.className = `time-slot ${statusClass}`;
-        div.innerHTML = `<div>${slot} ~ ${endTime}</div><span class="slot-count">${canBook ? `${minRemaining}/${MAX_TEAMS} ${lblTeam}` : lblFull}</span>`;
+        div.className = `time-slot ${canBook ? 'slot-available' : 'slot-full'}`;
+        div.innerHTML = `<div>${slot} ~ ${endTime}</div>`;
 
         if (canBook) {
             div.onclick = () => {

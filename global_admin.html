@@ -369,19 +369,40 @@
             <div id="sec-tasks" class="section">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
-                        <h3 style="margin:0; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-truck-fast" style="color:#6366f1;"></i> 날짜별 배송 스케줄</h3>
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-calendar-days" style="color:#6366f1;"></i> 설치/배송 스케줄</h3>
                         <div style="display:flex; gap:8px; align-items:center;">
-                            <select id="filterTaskDriver" class="input-text" style="width:200px; font-weight:bold;" onchange="loadDailyTasks()">
-                                <option value="all">🚛 전체 기사 보기</option>
-                            </select>
-                            <input type="date" id="taskDate" class="input-text" style="width:140px;" onchange="loadDailyTasks()">
-                            <button class="btn btn-primary" onclick="loadDailyTasks()">조회</button>
+                            <button class="btn btn-outline btn-sm" onclick="adminCalChangeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="adminCalTitle" style="font-weight:bold; font-size:16px; min-width:120px; text-align:center;"></span>
+                            <button class="btn btn-outline btn-sm" onclick="adminCalChangeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
-                    <table style="margin-top:0;">
-                        <thead><tr><th style="width:90px; white-space:nowrap;">상태</th><th style="width:180px;">고객 정보 (이름/연락처)</th><th>주문 파일</th><th style="width:180px;">🚚 배송 기사 배정</th><th style="width:160px;">⏰ 시간 / 완료체크</th></tr></thead>
-                        <tbody id="taskListBody"></tbody>
-                    </table>
+                    <!-- 달력 그리드 -->
+                    <div id="adminCalGrid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:#e2e8f0; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></div>
+                </div>
+
+                <!-- 날짜 클릭 팝업 (설치 예약 상세) -->
+                <div id="adminSlotModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20000; display:none; justify-content:center; align-items:center;">
+                    <div style="background:white; border-radius:16px; max-width:700px; width:95%; max-height:85vh; overflow-y:auto; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3 id="adminSlotTitle" style="margin:0; font-size:18px;"></h3>
+                            <button onclick="document.getElementById('adminSlotModal').style.display='none'" style="background:none; border:none; font-size:22px; cursor:pointer; color:#64748b;">&times;</button>
+                        </div>
+                        <!-- 시간 슬롯 테이블 -->
+                        <div id="adminSlotContent"></div>
+                        <!-- 관리자 수동 예약 추가 -->
+                        <div style="margin-top:20px; padding-top:16px; border-top:2px solid #e2e8f0;">
+                            <h4 style="margin:0 0 12px 0; font-size:14px; color:#6366f1;"><i class="fa-solid fa-plus-circle"></i> 관리자 스케줄 추가/차단</h4>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                <select id="adminSlotTime" class="input-text" style="width:140px;"></select>
+                                <select id="adminSlotType" class="input-text" style="width:160px;">
+                                    <option value="block">🚫 시간 차단 (1팀)</option>
+                                    <option value="block_all">🔒 완전 차단 (3팀)</option>
+                                </select>
+                                <input id="adminSlotMemo" class="input-text" placeholder="메모 (선택)" style="flex:1; min-width:120px;">
+                                <button class="btn btn-primary btn-sm" onclick="adminAddSlotBlock()"><i class="fa-solid fa-plus"></i> 추가</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

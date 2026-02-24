@@ -571,162 +571,283 @@ window.matchOrderManual = async (txId, name, suggestedId = '') => {
 };
 
 // [배송 스케줄 및 기사 배정]
+// ── 관리자 달력 뷰 ──
+let adminCalDate = null;
+const ADMIN_SLOTS = ["08:00","10:00","12:00","14:00","16:00","18:00","20:00"];
+const ADMIN_MAX_TEAMS = 3;
+
 window.loadDailyTasks = async () => {
-    // 1. 날짜가 없으면 오늘 날짜로 강제 설정 (한국 시간 기준)
-    const dateInput = document.getElementById('taskDate');
-    if (!dateInput.value) {
+    if (!adminCalDate) {
         const now = new Date();
         const krNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-        dateInput.value = krNow.toISOString().split('T')[0];
+        adminCalDate = new Date(krNow.getFullYear(), krNow.getMonth(), 1);
     }
-    const targetDate = dateInput.value;
-    const driverFilterId = document.getElementById('filterTaskDriver').value;
+    if (staffList.length === 0) {
+        const { data } = await sb.from('admin_staff').select('id, name, role, color');
+        staffList = data || [];
+    }
+    renderAdminCalendar();
+};
+
+window.adminCalChangeMonth = (delta) => {
+    if (!adminCalDate) adminCalDate = new Date();
+    adminCalDate.setMonth(adminCalDate.getMonth() + delta);
+    renderAdminCalendar();
+};
+
+async function renderAdminCalendar() {
+    const grid = document.getElementById('adminCalGrid');
+    const titleEl = document.getElementById('adminCalTitle');
+    if (!grid) return;
+
+    const year = adminCalDate.getFullYear();
+    const month = adminCalDate.getMonth();
+    titleEl.textContent = `${year}년 ${month + 1}월`;
+
+    // 월간 주문 데이터 조회
+    const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(month + 2 > 12 ? 1 : month + 2).padStart(2, '0')}-01`;
+    const endYear = month + 2 > 12 ? year + 1 : year;
 
     showLoading(true);
-    const tbody = document.getElementById('taskListBody');
-    tbody.innerHTML = '';
-
+    let orders = [];
     try {
-        // 2. 스태프 목록이 로드되지 않았다면 가져오기
-        if (staffList.length === 0) {
-            const { data } = await sb.from('admin_staff').select('id, name, role, color');
-            staffList = data || [];
-        }
+        const { data, error } = await sb.from('orders')
+            .select('id, delivery_target_date, installation_time, total_amount, manager_name, phone, status')
+            .gte('delivery_target_date', startDate)
+            .lt('delivery_target_date', `${endYear}-${String(month + 2 > 12 ? 1 : month + 2).padStart(2, '0')}-01`);
+        if (!error && data) orders = data;
+    } catch (e) { console.error(e); }
+    showLoading(false);
 
-        // 3. 필터 드롭다운에 기사님 목록 채우기 (옵션이 '전체' 하나뿐일 때)
-        const filterSelect = document.getElementById('filterTaskDriver');
-        if (filterSelect && filterSelect.options.length === 1) {
-            staffList.filter(s => s.role === 'driver').forEach(s => {
-                filterSelect.innerHTML += `<option value="${s.id}">${s.name} 기사님</option>`;
-            });
-        }
+    // 날짜별 주문 그룹
+    const ordersByDate = {};
+    orders.forEach(o => {
+        if (!ordersByDate[o.delivery_target_date]) ordersByDate[o.delivery_target_date] = [];
+        ordersByDate[o.delivery_target_date].push(o);
+    });
 
-        // 4. 해당 날짜의 배송 건 조회
-        let query = sb.from('orders').select('id, status, total_amount, items, manager_name, phone, address, delivery_target_date, delivery_time, installation_time, staff_driver_id, staff_manager_id, request_note, created_at').eq('delivery_target_date', targetDate);
-        if (driverFilterId !== 'all') {
-            query = query.eq('staff_driver_id', driverFilterId);
-        }
+    grid.innerHTML = '';
 
-        const { data: orders, error } = await query;
+    // 요일 헤더
+    ['일','월','화','수','목','금','토'].forEach(d => {
+        grid.innerHTML += `<div style="background:#f1f5f9; padding:8px; text-align:center; font-weight:bold; font-size:13px; color:${d==='일'?'#ef4444':d==='토'?'#3b82f6':'#334155'};">${d}</div>`;
+    });
 
-        if (error) throw error;
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-        if (!orders || orders.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#999;">${targetDate} 배송 일정이 없습니다.</td></tr>`;
-            showLoading(false);
-            return;
-        }
+    // 빈 칸
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div style="background:#fafafa; min-height:100px;"></div>`;
+    }
 
-        // 5. 정렬 (기사님 이름순 -> 배송 시간순)
-        orders.sort((a, b) => {
-            const driverA = staffList.find(s => s.id == a.staff_driver_id)?.name || 'zzz'; // 미배정은 뒤로
-            const driverB = staffList.find(s => s.id == b.staff_driver_id)?.name || 'zzz';
-            if (driverA !== driverB) return driverA.localeCompare(driverB);
-            
-            const timeA = a.delivery_time || "99:99";
-            const timeB = b.delivery_time || "99:99";
-            return timeA.localeCompare(timeB);
+    // 날짜 칸
+    for (let d = 1; d <= lastDate; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayOrders = ordersByDate[dateStr] || [];
+        const installOrders = dayOrders.filter(o => o.installation_time);
+        const deliveryOnly = dayOrders.filter(o => !o.installation_time);
+        const isToday = dateStr === todayStr;
+        const dow = new Date(year, month, d).getDay();
+
+        // 슬롯별 팀 수 계산
+        const slotTeams = {};
+        ADMIN_SLOTS.forEach(s => slotTeams[s] = 0);
+        installOrders.forEach(o => {
+            const startIdx = ADMIN_SLOTS.indexOf(o.installation_time);
+            if (startIdx === -1) return;
+            const total = o.total_amount || 0;
+            const slots = total >= 5000000 ? 7 : (total >= 3000000 ? 2 : 1);
+            const endIdx = slots === 7 ? ADMIN_SLOTS.length : Math.min(startIdx + slots, ADMIN_SLOTS.length);
+            for (let i = (slots === 7 ? 0 : startIdx); i < endIdx; i++) slotTeams[ADMIN_SLOTS[i]]++;
         });
+        const hasFullSlot = ADMIN_SLOTS.some(s => slotTeams[s] >= ADMIN_MAX_TEAMS);
+        const allFull = ADMIN_SLOTS.every(s => slotTeams[s] >= ADMIN_MAX_TEAMS);
 
-        // 6. 테이블 렌더링
-        orders.forEach(o => {
-            const isDone = (o.status === '배송완료' || o.status === '완료됨');
-            const dotColor = isDone ? '#22c55e' : '#cbd5e1';
-            const statusBadge = isDone 
-                ? `<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">배송완료</span>` 
-                : `<span class="badge" style="background:#f1f5f9; color:#64748b;">${o.status}</span>`;
-            const rowStyle = isDone ? 'background-color: #f0fdf4;' : '';
-            const textStyle = isDone ? 'opacity: 0.6;' : '';
+        let badges = '';
+        if (installOrders.length > 0) badges += `<div style="font-size:10px; background:${allFull?'#fecaca':'#ede9fe'}; color:${allFull?'#dc2626':'#6d28d9'}; border-radius:4px; padding:1px 5px; margin-top:2px;">🔧 ${installOrders.length}건</div>`;
+        if (deliveryOnly.length > 0) badges += `<div style="font-size:10px; background:#dbeafe; color:#2563eb; border-radius:4px; padding:1px 5px; margin-top:2px;">🚚 ${deliveryOnly.length}건</div>`;
 
-            // 파일 링크 생성
-            let fileLinks = '';
-            if (o.files && Array.isArray(o.files)) {
-                o.files.forEach(f => {
-                    const icon = f.type === 'cutline' ? '✂️' : '📄';
-                    const bg = f.type === 'cutline' ? 'background:#fef2f2; border:1px solid #fca5a5; color:#dc2626;' : 'background:#fff; border:1px solid #ddd; color:#334155;';
-                    fileLinks += `<a href="${f.url}" target="_blank" class="badge" style="text-decoration:none; ${bg} margin-right:4px;">${icon} ${f.name}</a>`;
-                });
-            } else {
-                fileLinks = '<span style="font-size:11px; color:#ccc;">파일 없음</span>';
+        const cellBg = isToday ? '#fffbeb' : (allFull ? '#fef2f2' : '#fff');
+        const borderStyle = isToday ? 'border:2px solid #f59e0b;' : '';
+
+        grid.innerHTML += `<div onclick="openAdminSlotModal('${dateStr}')" style="background:${cellBg}; min-height:100px; padding:6px; cursor:pointer; position:relative; ${borderStyle} transition:0.15s;" onmouseenter="this.style.background='#f0f4ff'" onmouseleave="this.style.background='${cellBg}'">
+            <div style="font-weight:bold; font-size:14px; color:${dow===0?'#ef4444':dow===6?'#3b82f6':'#334155'}; ${isToday?'background:#f59e0b; color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;':''}">${d}</div>
+            ${badges}
+            ${hasFullSlot && !allFull ? '<div style="position:absolute; top:4px; right:4px; width:8px; height:8px; background:#f59e0b; border-radius:50;"></div>' : ''}
+        </div>`;
+    }
+}
+
+// ── 관리자 날짜 클릭 팝업 ──
+window.openAdminSlotModal = async (dateStr) => {
+    const modal = document.getElementById('adminSlotModal');
+    const titleEl = document.getElementById('adminSlotTitle');
+    const content = document.getElementById('adminSlotContent');
+    if (!modal) return;
+
+    titleEl.textContent = `📅 ${dateStr} 설치/배송 스케줄`;
+    modal.style.display = 'flex';
+    content.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩중...</div>';
+
+    // 시간 선택 옵션 채우기
+    const timeSelect = document.getElementById('adminSlotTime');
+    if (timeSelect) {
+        timeSelect.innerHTML = ADMIN_SLOTS.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    // 데이터 조회
+    try {
+        const { data: orders } = await sb.from('orders')
+            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id')
+            .eq('delivery_target_date', dateStr);
+        const dayOrders = orders || [];
+
+        // 슬롯별 팀 수 + 주문 매핑
+        const slotTeams = {};
+        const slotOrders = {};
+        ADMIN_SLOTS.forEach(s => { slotTeams[s] = 0; slotOrders[s] = []; });
+
+        dayOrders.filter(o => o.installation_time).forEach(o => {
+            const startIdx = ADMIN_SLOTS.indexOf(o.installation_time);
+            if (startIdx === -1) return;
+            const total = o.total_amount || 0;
+            const slots = total >= 5000000 ? 7 : (total >= 3000000 ? 2 : 1);
+            const endIdx = slots === 7 ? ADMIN_SLOTS.length : Math.min(startIdx + slots, ADMIN_SLOTS.length);
+            for (let i = (slots === 7 ? 0 : startIdx); i < endIdx; i++) {
+                slotTeams[ADMIN_SLOTS[i]]++;
+                slotOrders[ADMIN_SLOTS[i]].push(o);
             }
-
-            // 기사 선택 옵션
-            let driverOpts = `<option value="">미지정 (택배/퀵)</option>`;
-            staffList.filter(s => s.role === 'driver').forEach(s => {
-                const selected = o.staff_driver_id == s.id ? 'selected' : '';
-                driverOpts += `<option value="${s.id}" ${selected}>${s.name}</option>`;
-            });
-
-            // 시간 선택 옵션
-            const timeOpts = getDeliveryTimeOptions(o.delivery_time);
-            const installInfo = getInstallationDisplayInfo(o);
-            const installBadge = installInfo ? `<div style="margin-top:4px; padding:4px 8px; background:#ede9fe; border-radius:6px; font-size:11px; color:#6d28d9; border:1px solid #c4b5fd; display:inline-block;"><i class="fa-solid fa-person-digging"></i> 설치: ${installInfo.start}~${installInfo.end} (${installInfo.duration})</div>` : '';
-
-            tbody.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td style="text-align:center;">${statusBadge}</td>
-                    <td style="${textStyle}">
-                        <div style="font-weight:bold; font-size:14px;">${o.manager_name}</div>
-                        <div style="font-size:12px; color:#6366f1;">${o.phone}</div>
-                        <div style="font-size:12px; color:#666; margin-top:2px;">${o.address || '주소 미입력'}</div>
-                        ${installBadge}
-                    </td>
-                    <td style="${textStyle}">
-                        <div style="display:flex; flex-wrap:wrap; gap:2px;">${fileLinks}</div>
-                    </td>
-                    <td>
-                        <select class="input-text" onchange="updateTaskDB('${o.id}', 'staff_driver_id', this.value)" style="width:100%; ${isDone ? 'background:transparent; border:none; font-weight:bold;' : ''}" ${isDone?'disabled':''}>
-                            ${driverOpts}
-                        </select>
-                    </td>
-                    <td>
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <select class="input-text" onchange="updateTaskDB('${o.id}', 'delivery_time', this.value)" style="flex:1; ${isDone ? 'background:transparent; border:none; font-weight:bold;' : ''}" ${isDone?'disabled':''}>
-                                ${timeOpts}
-                            </select>
-                            <button class="btn btn-sm ${isDone ? 'btn-outline' : 'btn-success'}" onclick="updateTaskDB('${o.id}', 'status', '${isDone ? '제작준비' : '배송완료'}')" title="완료/취소 토글">
-                                <i class="fa-solid fa-check"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
         });
+
+        // 일반 배송 (설치 아닌)
+        const deliveryOnly = dayOrders.filter(o => !o.installation_time);
+
+        let html = '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
+        html += '<thead><tr style="background:#f8fafc;"><th style="padding:10px; text-align:left; width:120px;">시간대</th><th style="padding:10px; text-align:center; width:80px;">팀 현황</th><th style="padding:10px; text-align:left;">예약 고객</th><th style="padding:10px; text-align:center; width:60px;">관리</th></tr></thead><tbody>';
+
+        ADMIN_SLOTS.forEach((slot, idx) => {
+            const endSlot = idx + 1 < ADMIN_SLOTS.length ? ADMIN_SLOTS[idx + 1] : '22:00';
+            const used = slotTeams[slot] || 0;
+            const isFull = used >= ADMIN_MAX_TEAMS;
+            const barColor = isFull ? '#ef4444' : (used > 0 ? '#f59e0b' : '#22c55e');
+            const bgColor = isFull ? '#fef2f2' : (used > 0 ? '#fffbeb' : '#f0fdf4');
+
+            let customerInfo = '';
+            const uniqueOrders = [...new Map(slotOrders[slot].map(o => [o.id, o])).values()];
+            uniqueOrders.forEach(o => {
+                const driver = staffList.find(s => s.id == o.staff_driver_id);
+                const installInfo = getInstallationDisplayInfo(o);
+                customerInfo += `<div style="padding:3px 0; border-bottom:1px solid #f1f5f9;">
+                    <span style="font-weight:600;">${o.manager_name}</span>
+                    <span style="color:#6366f1; margin-left:6px;">${o.phone || ''}</span>
+                    ${installInfo ? `<span style="color:#6d28d9; font-size:11px; margin-left:4px;">(${installInfo.start}~${installInfo.end})</span>` : ''}
+                    ${driver ? `<span style="color:#059669; font-size:11px; margin-left:4px;">🚛${driver.name}</span>` : ''}
+                    ${o.status === '배송완료' || o.status === '완료됨' ? '<span style="color:#22c55e; font-size:11px;"> ✅</span>' : ''}
+                </div>`;
+            });
+            if (!customerInfo) customerInfo = '<span style="color:#cbd5e1;">-</span>';
+
+            html += `<tr style="border-bottom:1px solid #e2e8f0; background:${bgColor};">
+                <td style="padding:10px; font-weight:bold;">${slot} ~ ${endSlot}</td>
+                <td style="padding:10px; text-align:center;">
+                    <div style="display:flex; gap:3px; justify-content:center;">
+                        ${[0,1,2].map(i => `<div style="width:16px; height:16px; border-radius:50%; background:${i < used ? barColor : '#e2e8f0'};"></div>`).join('')}
+                    </div>
+                    <div style="font-size:10px; color:#64748b; margin-top:2px;">${used}/${ADMIN_MAX_TEAMS}</div>
+                </td>
+                <td style="padding:10px;">${customerInfo}</td>
+                <td style="padding:10px; text-align:center;">
+                    ${uniqueOrders.map(o => `<button class="btn btn-outline btn-sm" style="font-size:10px; padding:2px 6px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')" title="설치 예약 제거">✕</button>`).join(' ')}
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+
+        // 일반 배송 섹션
+        if (deliveryOnly.length > 0) {
+            html += `<div style="margin-top:16px; padding-top:12px; border-top:2px solid #e2e8f0;">
+                <h4 style="margin:0 0 8px 0; font-size:13px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 일반 배송 (${deliveryOnly.length}건)</h4>`;
+            deliveryOnly.forEach(o => {
+                const driver = staffList.find(s => s.id == o.staff_driver_id);
+                html += `<div style="padding:6px 10px; background:#f8fafc; border-radius:6px; margin-bottom:4px; font-size:12px;">
+                    <span style="font-weight:600;">${o.manager_name}</span>
+                    <span style="color:#6366f1; margin-left:6px;">${o.phone || ''}</span>
+                    ${driver ? `<span style="color:#059669; margin-left:6px;">🚛${driver.name}</span>` : ''}
+                    <span style="color:#64748b; margin-left:6px;">${o.status}</span>
+                </div>`;
+            });
+            html += '</div>';
+        }
+
+        content.innerHTML = html;
+
+        // 팝업 데이터 저장 (리프레시용)
+        window._adminSlotDate = dateStr;
 
     } catch (e) {
-        console.error(e);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
-    } finally {
-        showLoading(false);
+        content.innerHTML = `<div style="color:red; padding:20px;">오류: ${e.message}</div>`;
     }
 };
 
-// [헬퍼] 배송 데이터 업데이트 (기사 배정, 시간, 완료체크)
+// ── 관리자 설치 예약 제거 ──
+window.adminRemoveInstallation = async (orderId, dateStr) => {
+    if (!confirm('이 주문의 설치 시간 예약을 제거하시겠습니까?')) return;
+    try {
+        await sb.from('orders').update({ installation_time: null }).eq('id', orderId);
+        showToast('설치 예약 제거 완료', 'success');
+        openAdminSlotModal(dateStr);
+        renderAdminCalendar();
+    } catch (e) {
+        showToast('제거 실패: ' + e.message, 'error');
+    }
+};
+
+// ── 관리자 스케줄 차단 추가 ──
+window.adminAddSlotBlock = async () => {
+    const dateStr = window._adminSlotDate;
+    const time = document.getElementById('adminSlotTime').value;
+    const type = document.getElementById('adminSlotType').value;
+    const memo = document.getElementById('adminSlotMemo').value || '관리자 차단';
+    if (!dateStr || !time) return;
+
+    try {
+        const blocksToAdd = type === 'block_all' ? ADMIN_MAX_TEAMS : 1;
+        for (let i = 0; i < blocksToAdd; i++) {
+            await sb.from('orders').insert({
+                delivery_target_date: dateStr,
+                installation_time: time,
+                total_amount: 1000000,
+                manager_name: `[차단] ${memo}`,
+                phone: '-',
+                status: '관리자차단',
+                payment_status: '-',
+                items: [],
+                site_code: 'KR'
+            });
+        }
+        showToast(`${time} 슬롯 차단 완료 (${blocksToAdd}팀)`, 'success');
+        document.getElementById('adminSlotMemo').value = '';
+        openAdminSlotModal(dateStr);
+        renderAdminCalendar();
+    } catch (e) {
+        showToast('차단 추가 실패: ' + e.message, 'error');
+    }
+};
+
+// [헬퍼] 배송 데이터 업데이트
 window.updateTaskDB = async (orderId, field, value) => {
     const valToSave = value === "" ? null : value;
-    
-    // 상태 변경일 경우 UI 즉시 반응을 위해 리로드
-    const shouldReload = (field === 'status');
-    
     try {
         const { error } = await sb.from('orders').update({ [field]: valToSave }).eq('id', orderId);
         if (error) throw error;
-        
-        if (shouldReload) loadDailyTasks(); // 완료 체크 시 새로고침
     } catch (e) {
         showToast("업데이트 실패: " + e.message, "error");
     }
 };
-
-// [헬퍼] 시간 옵션 생성기
-function getDeliveryTimeOptions(selectedTime) {
-    let html = '<option value="">시간 미정</option>';
-    for (let i = 9; i <= 20; i++) {
-        const timeStr = (i < 10 ? '0' + i : i) + ":00";
-        const isSelected = selectedTime === timeStr ? 'selected' : '';
-        html += `<option value="${timeStr}" ${isSelected}>${timeStr}</option>`;
-    }
-    return html;
-}
 
 // 설치 예약 정보 표시 헬퍼
 function getInstallationDisplayInfo(order) {
