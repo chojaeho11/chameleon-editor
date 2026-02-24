@@ -1022,7 +1022,6 @@ window.submitManualOrder = async () => {
             address: address,
             request_note: note ? `[${sourceName}] ${note}` : `[${sourceName}]`,
             total_amount: amount,
-            actual_payment: amount,
             discount_amount: 0,
             items: items,
             status: '접수됨',
