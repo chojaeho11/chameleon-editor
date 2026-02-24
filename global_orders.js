@@ -16,7 +16,7 @@ async function creditReferralBonus(orderId) {
             .eq('type', 'referral_bonus').ilike('description', `%##${orderId}##%`).maybeSingle();
         if (existing) return;
 
-        const bonusAmount = Math.floor(order.total_amount * 0.1);
+        const bonusAmount = Math.floor(order.total_amount * 0.05);
         if (bonusAmount <= 0) return;
 
         const buyerName = order.manager_name || '고객';

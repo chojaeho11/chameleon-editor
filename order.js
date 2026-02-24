@@ -1383,10 +1383,12 @@ function updateSummary(prodTotal, addonTotal, total) {
         }
     });
 
-    const discountAmount = Math.floor(discountableAmount * currentUserDiscountRate);
+    const gradeDiscount = Math.floor(discountableAmount * currentUserDiscountRate);
+    const referralDiscount = window.verifiedReferrerId ? Math.floor(discountableAmount * 0.05) : 0;
+    const discountAmount = gradeDiscount + referralDiscount;
     const finalTotal = total - discountAmount;
-    
-    window.finalPaymentAmount = finalTotal; 
+
+    window.finalPaymentAmount = finalTotal;
     finalPaymentAmount = finalTotal;
 
     if (typeof currentUser !== 'undefined' && currentUser) {
@@ -1427,8 +1429,18 @@ function updateSummary(prodTotal, addonTotal, total) {
 
     const elDiscount = document.getElementById("summaryDiscount");
     if(elDiscount) {
-        if(discountAmount > 0) elDiscount.innerText = `-${formatCurrency(discountAmount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
+        if(gradeDiscount > 0) elDiscount.innerText = `-${formatCurrency(gradeDiscount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
         else elDiscount.innerText = formatCurrency(0) + " (0%)";
+    }
+    const elRefDiscount = document.getElementById("summaryReferralDiscount");
+    const elRefRow = document.getElementById("referralDiscountRow");
+    if(elRefRow) {
+        if(referralDiscount > 0) {
+            elRefRow.style.display = 'flex';
+            if(elRefDiscount) elRefDiscount.innerText = `-${formatCurrency(referralDiscount)} (5%)`;
+        } else {
+            elRefRow.style.display = 'none';
+        }
     }
     const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(finalTotal); 
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`; 
@@ -1494,7 +1506,7 @@ async function creditReferralBonus(orderId, referrerId) {
             .select('total_amount, manager_name').eq('id', orderId).maybeSingle();
         if (!order || !order.total_amount) return;
 
-        const bonusAmount = Math.floor(order.total_amount * 0.1);
+        const bonusAmount = Math.floor(order.total_amount * 0.05);
         if (bonusAmount <= 0) return;
 
         const buyerName = order.manager_name || '고객';
@@ -1581,10 +1593,12 @@ async function processOrderSubmission() {
         window._nonMetroFeeApplied = 0;
     }
 
-    const discountAmt = Math.floor(rawTotal * currentUserDiscountRate);
+    const gradeDisc = Math.floor(rawTotal * currentUserDiscountRate);
+    const refDisc = window.verifiedReferrerId ? Math.floor(rawTotal * 0.05) : 0;
+    const discountAmt = gradeDisc + refDisc;
     const finalTotal = rawTotal - discountAmt;
-    
-    window.originalPayAmount = finalTotal; 
+
+    window.originalPayAmount = finalTotal;
     window.finalPaymentAmount = finalTotal; 
 
     document.getElementById("deliveryInfoModal").style.display = "none";
@@ -1611,10 +1625,12 @@ async function processOrderSubmission() {
     // 추천인 정보 표시
     const refInfoEl = document.getElementById('checkoutReferralInfo');
     const refEmailEl = document.getElementById('checkoutReferrerEmail');
+    const refDiscEl = document.getElementById('checkoutReferralDiscount');
     if (refInfoEl) {
         if (window.verifiedReferrerId && window.verifiedReferrerEmail) {
             refInfoEl.style.display = 'block';
             if (refEmailEl) refEmailEl.textContent = window.verifiedReferrerEmail;
+            if (refDiscEl) refDiscEl.textContent = `-${formatCurrency(refDisc)} (5%)`;
         } else {
             refInfoEl.style.display = 'none';
         }

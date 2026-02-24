@@ -2785,7 +2785,12 @@ async function handleSubReturn() {
                         <span data-i18n="label_grade_discount">등급 할인</span>
                         <span id="summaryDiscount">0원 (0%)</span>
                     </div>
-                    
+
+                    <div id="referralDiscountRow" style="display:none; justify-content:space-between; color:#7c3aed; font-weight:bold; margin-bottom: 5px;">
+                        <span data-i18n="label_referral_discount">추천인 할인</span>
+                        <span id="summaryReferralDiscount">-0원 (5%)</span>
+                    </div>
+
                     <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                     
                     <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px; margin-bottom: 10px;">
@@ -2880,7 +2885,7 @@ async function handleSubReturn() {
                 <span style="font-size:20px;">🎁</span>
                 <b style="color:#6d28d9; font-size:15px;" data-i18n="referral_title">추천인 코드</b>
             </div>
-            <p style="font-size:12px; color:#555; margin:0 0 10px; line-height:1.5;" data-i18n="referral_desc">추천인의 이메일을 입력하면 구매 금액의 10%가 추천인에게 적립됩니다.</p>
+            <p style="font-size:12px; color:#555; margin:0 0 10px; line-height:1.5;" data-i18n="referral_desc">추천인 이메일 입력 시 구매자 5% 할인 + 추천인 5% 적립!</p>
             <div style="display:flex; gap:8px;">
                 <input id="inputReferrerEmail" class="ai-input-pretty" type="email" placeholder="추천인 이메일 입력" data-i18n-placeholder="referral_placeholder" style="flex:1; margin:0;">
                 <button id="btnVerifyReferrer" class="btn-round" type="button" onclick="window.validateReferrer()" style="width:80px; background:#7c3aed; color:white; border:none; justify-content:center; font-size:13px;" data-i18n="referral_verify">확인</button>
@@ -2963,7 +2968,10 @@ async function handleSubReturn() {
         <div id="checkoutReferralInfo" style="display:none; margin-bottom:15px; padding:12px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px;">
             <span style="font-weight:bold;">🎁 <span data-i18n="referral_applied">추천인 적용됨</span>:</span>
             <span id="checkoutReferrerEmail" style="color:#7c3aed; font-weight:bold;"></span>
-            <div style="margin-top:6px; font-size:12px; color:#dc2626; font-weight:bold;">
+            <div style="margin-top:6px; font-size:13px; color:#7c3aed; font-weight:bold;">
+                <span data-i18n="label_referral_discount">추천인 할인</span>: <span id="checkoutReferralDiscount"></span>
+            </div>
+            <div style="margin-top:4px; font-size:12px; color:#dc2626; font-weight:bold;">
                 ⚠️ <span data-i18n="referral_no_refund_short">이 주문은 추천인 적립 후 환불이 불가합니다.</span>
             </div>
         </div>

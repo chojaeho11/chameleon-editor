@@ -68,7 +68,7 @@
                 const [order] = await orderRes.json();
                 if (!order || !order.total_amount) return;
 
-                const bonus = Math.floor(order.total_amount * 0.1);
+                const bonus = Math.floor(order.total_amount * 0.05);
                 if (bonus <= 0) return;
                 const buyerName = order.manager_name || '고객';
 
