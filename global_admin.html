@@ -2317,7 +2317,7 @@ async function saveCommonInfo() {
             });
         } else {
             notifyAll = false; localStorage.setItem('lcNotifyAll', 'off');
-            updateNotifyUI(); if (!notifyMgr) stopMessageWatch();
+            updateNotifyUI();
         }
     };
 
@@ -2331,7 +2331,7 @@ async function saveCommonInfo() {
             });
         } else {
             notifyMgr = false; localStorage.setItem('lcNotifyMgr', 'off');
-            updateNotifyUI(); if (!notifyAll) stopMessageWatch();
+            updateNotifyUI();
         }
     };
 
@@ -2409,7 +2409,7 @@ async function saveCommonInfo() {
     }
     setTimeout(startGlobalRoomWatch, 1500);
 
-    // ── 전역 구독: chat_messages (모든 메시지 알림 — 내 담당만) ──
+    // ── 전역 구독: chat_messages (모든 메시지 알림) ──
     function startMessageWatch() {
         if (_msgSubChannel) return;
         var sb = getSb(); if (!sb) { setTimeout(startMessageWatch, 2000); return; }
@@ -2417,7 +2417,10 @@ async function saveCommonInfo() {
             .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_messages'}, async function(p) {
                 var msg = p.new;
                 if (msg.sender_type !== 'customer') return;
-                if (currentRoom && currentRoom.id === msg.room_id) return;
+                // 채팅 섹션이 활성화되어 있고, 해당 방을 보고 있고, 탭이 포커스된 경우만 스킵
+                var chatSec = document.getElementById('sec-live-chat');
+                var isChatActive = chatSec && chatSec.classList.contains('active') && !document.hidden;
+                if (isChatActive && currentRoom && currentRoom.id === msg.room_id) return;
                 // 방 정보
                 var roomInfo = null;
                 try {
@@ -2446,7 +2449,8 @@ async function saveCommonInfo() {
     function stopMessageWatch() {
         if (_msgSubChannel) { _msgSubChannel.unsubscribe(); _msgSubChannel = null; }
     }
-    if (notifyAll || notifyMgr) { setTimeout(startMessageWatch, 2000); }
+    // 항상 메시지 감시 시작 (알림 설정과 무관하게 구독, sendNotification 내부에서 필터)
+    setTimeout(startMessageWatch, 2000);
     if ((notifyAll || notifyMgr) && 'Notification' in window && Notification.permission === 'default') {
         setTimeout(function() { Notification.requestPermission(); }, 3000);
     }
@@ -2592,7 +2596,11 @@ async function saveCommonInfo() {
                 }
                 area.insertAdjacentHTML('beforeend',renderMsg(m));
                 area.scrollTop=area.scrollHeight;
-                if(m.sender_type==='customer') sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
+                if(m.sender_type==='customer') {
+                    sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
+                    // 탭이 비활성이면 현재 방이라도 알림
+                    if(document.hidden) playKakaoSound();
+                }
             }
         }).subscribe();
         lcLoadRooms();
