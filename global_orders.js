@@ -125,8 +125,8 @@ window.loadOrders = async () => {
             .select('id, status, total_amount, items, created_at, payment_status, payment_method, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, has_partner_items, files, bids(id)', { count: 'exact' })
             .order('created_at', { ascending: false });
 
-        // [핵심 2] 결제하기 안 누른 '임시작성' 건은 숨김
-        query = query.neq('status', '임시작성');
+        // [핵심 2] 임시작성 및 관리자차단 건 숨김
+        query = query.neq('status', '임시작성').neq('status', '관리자차단');
 
         // 필터 적용
         if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
