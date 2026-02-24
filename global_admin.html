@@ -2448,23 +2448,25 @@ async function saveCommonInfo() {
     async function checkUnreadAndNotify() {
         var sb = getSb(); if (!sb) return;
         try {
-            // 1) 대기(waiting) 상태 방의 수 → 대기 탭 배지
-            var waitRes = await sb.from('chat_rooms').select('id', {count:'exact'}).eq('status','waiting');
+            // 48시간 기준 시간
+            var cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+
+            // 1) 대기(waiting) 상태 방의 수 → 대기 탭 배지 (48시간 이내)
+            var waitRes = await sb.from('chat_rooms').select('id', {count:'exact'}).eq('status','waiting').gte('created_at', cutoff);
             var waitCount = (waitRes.count || 0);
 
-            // 2) 미확인 고객 메시지 (is_read=false, sender_type=customer) 전체
-            var unreadRes = await sb.from('chat_messages').select('id', {count:'exact'}).eq('is_read', false).eq('sender_type', 'customer');
+            // 2) 미확인 고객 메시지 (48시간 이내만)
+            var unreadRes = await sb.from('chat_messages').select('id', {count:'exact'}).eq('is_read', false).eq('sender_type', 'customer').gte('created_at', cutoff);
             var totalUnread = (unreadRes.count || 0);
 
             // 매니저 필터 적용한 미확인 수 (대기+내담당 방만)
             var filterMgr = myManagerName || '';
             var myUnread = totalUnread; // 기본은 전체
             if (filterMgr && filterMgr !== '' && filterMgr !== '__HQ__') {
-                // 내 담당 + 미배정 방의 미확인만 카운트
-                var myRooms = await sb.from('chat_rooms').select('id').or('assigned_manager.eq.' + filterMgr + ',status.eq.waiting,status.eq.ai_chatting');
+                var myRooms = await sb.from('chat_rooms').select('id').or('assigned_manager.eq.' + filterMgr + ',status.eq.waiting,status.eq.ai_chatting').gte('created_at', cutoff);
                 if (myRooms.data && myRooms.data.length > 0) {
                     var roomIds = myRooms.data.map(function(r) { return r.id; });
-                    var myUnreadRes = await sb.from('chat_messages').select('id', {count:'exact'}).eq('is_read', false).eq('sender_type', 'customer').in('room_id', roomIds);
+                    var myUnreadRes = await sb.from('chat_messages').select('id', {count:'exact'}).eq('is_read', false).eq('sender_type', 'customer').gte('created_at', cutoff).in('room_id', roomIds);
                     myUnread = (myUnreadRes.count || 0);
                 } else {
                     myUnread = 0;
