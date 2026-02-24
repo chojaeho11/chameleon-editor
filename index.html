@@ -6428,10 +6428,8 @@ if (w >= 20 && h >= 20) {
                             } catch(e) { console.warn('썸네일 생성 실패:', e); }
                         }
 
-                        // 장바구니에 제품+파일+옵션 추가
-                        const storageKey = window.currentUser ? `chameleon_cart_${window.currentUser.id}` : 'chameleon_cart_guest';
-                        let cart = [];
-                        try { const s = localStorage.getItem(storageKey); if (s) cart = JSON.parse(s); } catch(e) {}
+                        // 장바구니에 제품+파일+옵션 추가 (cartData 직접 push)
+                        const { cartData } = await import('./config.js?v=123');
 
                         const cleanProduct = {
                             name: productToCart.name, name_jp: productToCart.name_jp || '', name_us: productToCart.name_us || '',
@@ -6443,7 +6441,7 @@ if (w >= 20 && h >= 20) {
                         const selAddons = {};
                         selectedAddonCodes.forEach(c => { selAddons['opt_' + c] = c; });
 
-                        cart.push({
+                        cartData.push({
                             uid: Date.now() + i,
                             product: cleanProduct,
                             type: 'file_upload',
@@ -6456,12 +6454,11 @@ if (w >= 20 && h >= 20) {
                             selectedAddons: i === 0 ? selAddons : {},
                             addonQuantities: i === 0 ? selectedAddonQtys : {}
                         });
-                        localStorage.setItem(storageKey, JSON.stringify(cart));
                     }
 
-                    // 장바구니 메모리 동기화 + 렌더링
+                    // 장바구니 저장 + 렌더링
                     const mod = await import('./order.js?v=123');
-                    if (mod.loadCartFromStorage) mod.loadCartFromStorage();
+                    if (mod.saveCart) mod.saveCart();
                     if (mod.renderCart) mod.renderCart();
 
                     document.getElementById('choiceModal').style.display = 'none';
