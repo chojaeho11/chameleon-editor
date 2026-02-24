@@ -459,67 +459,335 @@ function getOrderInfo() {
 }
 
 // ============================================================
-// [3] 달력 및 배송 정보 모달
+// [3] 달력 및 배송 정보 모달 + 설치 예약
 // ============================================================
 let currentCalDate = new Date();
+let selectedInstallationTime = null;
+
+const LEAD_DAYS_MAP = { 'KR': 3, 'JP': 10, 'US': 15 };
+const INSTALL_TIME_SLOTS = ["08:00","10:00","12:00","14:00","16:00","18:00","20:00"];
+const MAX_TEAMS = 3;
+
+const DAY_HEADERS = {
+    'kr': ['일','월','화','수','목','금','토'],
+    'ja': ['日','月','火','水','木','金','土'],
+    'zh': ['日','一','二','三','四','五','六'],
+    'ar': ['أحد','إثن','ثلا','أرب','خمي','جمع','سبت'],
+    'en': ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    'es': ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+    'de': ['So','Mo','Di','Mi','Do','Fr','Sa'],
+    'fr': ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
+};
+
+function getCountryCode() {
+    return (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.COUNTRY) ? SITE_CONFIG.COUNTRY : 'KR';
+}
+
+function computeEarliestDate() {
+    const country = getCountryCode();
+    const leadDays = LEAD_DAYS_MAP[country] || 10;
+    let d = new Date(); let count = 0;
+    while (count < leadDays) {
+        d.setDate(d.getDate() + 1);
+        if (d.getDay() !== 0 && d.getDay() !== 6) count++;
+    }
+    return d;
+}
 
 function openCalendarModal() {
+    selectedInstallationTime = null;
+    const earliest = computeEarliestDate();
+    currentCalDate = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
+
+    // 동적 타이틀
+    const country = getCountryCode();
+    const leadDays = LEAD_DAYS_MAP[country] || 10;
+    const titleEl = document.querySelector('[data-i18n="modal_calendar_title"]');
+    if (titleEl) {
+        const titles = {
+            'kr': `배송요청 [제작기간: 약 ${leadDays}영업일]`,
+            'ja': `配送希望日 [納期:約${leadDays}営業日]`,
+            'en': `Delivery Request [Lead: ~${leadDays} business days]`,
+            'zh': `配送请求 [制作周期:约${leadDays}个工作日]`,
+            'ar': `طلب التوصيل [المدة: ${leadDays} أيام عمل]`,
+            'es': `Solicitud de Envío [Plazo: ~${leadDays} días hábiles]`,
+            'de': `Lieferanfrage [Vorlauf: ~${leadDays} Werktage]`,
+            'fr': `Demande de Livraison [Délai: ~${leadDays} jours ouvrés]`
+        };
+        titleEl.textContent = titles[CURRENT_LANG] || titles['en'];
+    }
+
     document.getElementById("calendarModal").style.display = "flex";
     renderCalendar();
 }
 
-function changeMonth(delta) { 
-    currentCalDate.setMonth(currentCalDate.getMonth() + delta); 
-    renderCalendar(); 
+function changeMonth(delta) {
+    currentCalDate.setMonth(currentCalDate.getMonth() + delta);
+    renderCalendar();
 }
 
 function renderCalendar() {
-    const grid = document.getElementById("calendarGrid"); 
-    const year = currentCalDate.getFullYear(); 
+    const grid = document.getElementById("calendarGrid");
+    const year = currentCalDate.getFullYear();
     const month = currentCalDate.getMonth();
-    
-    document.getElementById("currentMonthYear").innerText = `${year}. ${String(month+1).padStart(2,'0')}`; 
+
+    document.getElementById("currentMonthYear").innerText = `${year}. ${String(month+1).padStart(2,'0')}`;
     grid.innerHTML = "";
-    
-    const days = CURRENT_LANG === 'kr' ? ['일','월','화','수','목','금','토'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    const days = DAY_HEADERS[CURRENT_LANG] || DAY_HEADERS['en'];
     days.forEach(d => grid.innerHTML += `<div class="cal-day-header">${d}</div>`);
-    
-    const firstDay = new Date(year, month, 1).getDay(); 
+
+    const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
-    
-    for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-    
-    let minDate = new Date();
-    let count = 0;
-    const leadDays = CURRENT_LANG === 'kr' ? 3 : 10;
-    while(count < leadDays) {
-        minDate.setDate(minDate.getDate() + 1);
-        if(minDate.getDay() !== 0 && minDate.getDay() !== 6) count++;
-    }
-    
-    for(let i=1; i<=lastDate; i++) {
-        const dateObj = new Date(year, month, i); 
-        const div = document.createElement("div"); 
-        div.className = "cal-day"; 
+
+    for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
+
+    const minDate = computeEarliestDate();
+    const limitDate = new Date(minDate); limitDate.setHours(0,0,0,0);
+
+    let firstAvailableSelected = false;
+
+    for (let i = 1; i <= lastDate; i++) {
+        const dateObj = new Date(year, month, i);
+        const div = document.createElement("div");
+        div.className = "cal-day";
         div.innerText = i;
-        
-        const checkDate = new Date(dateObj); 
-        checkDate.setHours(0,0,0,0); 
-        const limitDate = new Date(minDate); 
-        limitDate.setHours(0,0,0,0);
-        
-        if(checkDate < limitDate || dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
-            div.classList.add("disabled"); 
-        } else { 
-            div.onclick = () => { 
-                document.querySelectorAll(".cal-day").forEach(d => d.classList.remove("selected")); 
-                div.classList.add("selected"); 
-                selectedDeliveryDate = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`; 
-                openDeliveryInfoModal(); 
-            }; 
+
+        const checkDate = new Date(dateObj); checkDate.setHours(0,0,0,0);
+
+        if (checkDate < limitDate || dateObj.getDay() === 0 || dateObj.getDay() === 6) {
+            div.classList.add("disabled");
+        } else {
+            // 가장 빠른 날짜 자동 선택
+            if (!firstAvailableSelected) {
+                div.classList.add("selected");
+                selectedDeliveryDate = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                firstAvailableSelected = true;
+            }
+            div.onclick = () => {
+                document.querySelectorAll(".cal-day").forEach(d => d.classList.remove("selected"));
+                div.classList.add("selected");
+                selectedDeliveryDate = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            };
         }
         grid.appendChild(div);
     }
+
+    // 확인 버튼 핸들러 (날짜 선택 확정)
+    const confirmBtn = document.getElementById("btnCalendarConfirm");
+    if (confirmBtn) {
+        confirmBtn.onclick = () => {
+            if (!selectedDeliveryDate) { showToast(window.t('msg_select_date','날짜를 선택해주세요.'), 'warn'); return; }
+            if (hasHoneycombInCart()) {
+                openInstallationTimeModal();
+            } else {
+                openDeliveryInfoModal();
+            }
+        };
+    }
+}
+
+// ── 허니콤보드 감지 ──
+function hasHoneycombInCart() {
+    return cartData.some(item => {
+        if (!item.product) return false;
+        const cat = (item.product.category || '').toLowerCase();
+        return cat.includes('honeycomb');
+    });
+}
+
+// ── 장바구니 합계 (KRW) ──
+function calculateCartTotalKRW() {
+    let total = 0;
+    cartData.forEach(item => {
+        if (!item.product) return;
+        const unitPrice = item.product.price || 0;
+        const qty = item.qty || 1;
+        let optTotal = 0;
+        if (item.selectedAddons && typeof ADDON_DB !== 'undefined') {
+            const codes = Array.isArray(item.selectedAddons) ? item.selectedAddons : Object.values(item.selectedAddons);
+            codes.forEach(code => {
+                const addon = ADDON_DB[code];
+                if (!addon) return;
+                const aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                optTotal += (addon.price || 0) * aq;
+            });
+        }
+        total += (unitPrice * qty) + optTotal;
+    });
+    return total;
+}
+
+// ── 설치 슬롯 정보 (금액 기반) ──
+function getInstallationSlotInfo(totalKRW) {
+    if (totalKRW < 1000000) return { type: 'date_only', slots: 0 };
+    if (totalKRW < 3000000) return { type: '2hour', slots: 1 };
+    if (totalKRW < 5000000) return { type: '4hour', slots: 2 };
+    return { type: 'fullday', slots: 7 };
+}
+
+// ── 해당 날짜 예약 현황 조회 ──
+async function fetchInstallationSlots(date) {
+    const slotTeams = {};
+    INSTALL_TIME_SLOTS.forEach(s => slotTeams[s] = 0);
+
+    try {
+        const _sb = window.sb || sb;
+        const { data } = await _sb.from('orders')
+            .select('installation_time, total_amount')
+            .eq('delivery_target_date', date)
+            .not('installation_time', 'is', null);
+
+        (data || []).forEach(order => {
+            const startIdx = INSTALL_TIME_SLOTS.indexOf(order.installation_time);
+            if (startIdx === -1) return;
+            const info = getInstallationSlotInfo(order.total_amount || 0);
+            const endIdx = info.type === 'fullday' ? INSTALL_TIME_SLOTS.length : Math.min(startIdx + info.slots, INSTALL_TIME_SLOTS.length);
+            for (let i = (info.type === 'fullday' ? 0 : startIdx); i < endIdx; i++) {
+                slotTeams[INSTALL_TIME_SLOTS[i]]++;
+            }
+        });
+    } catch(e) { console.warn('설치 슬롯 조회 실패:', e); }
+    return slotTeams;
+}
+
+// ── 설치 시간 모달 ──
+async function openInstallationTimeModal() {
+    document.getElementById("calendarModal").style.display = "none";
+    const modal = document.getElementById("installationTimeModal");
+    if (!modal) { openDeliveryInfoModal(); return; }
+    modal.style.display = "flex";
+
+    const grid = document.getElementById("installTimeGrid");
+    const notice = document.getElementById("installTimeNotice");
+    const btnConfirm = document.getElementById("btnConfirmInstallTime");
+    selectedInstallationTime = null;
+    if (btnConfirm) btnConfirm.disabled = true;
+
+    const cartTotalKRW = calculateCartTotalKRW();
+    const slotInfo = getInstallationSlotInfo(cartTotalKRW);
+
+    // 100만원 미만: 시간 선택 불가
+    if (slotInfo.type === 'date_only') {
+        grid.innerHTML = '';
+        if (notice) {
+            notice.style.display = 'block';
+            const msgs = {
+                'kr': '⚠️ 100만원 미만 주문은 설치 시간을 선택할 수 없습니다.\n날짜만 지정되며, 시간은 배송팀에서 배정합니다.',
+                'ja': '⚠️ 100万円未満のご注文は設置時間の指定ができません。\n日付のみ指定され、時間は配送チームが手配します。',
+                'en': '⚠️ Orders under ¥1,000,000 cannot select installation time.\nOnly date is specified. Time will be assigned by delivery team.',
+                'zh': '⚠️ 100万日元以下的订单无法选择安装时间。\n仅指定日期，时间由配送团队安排。'
+            };
+            notice.innerHTML = msgs[CURRENT_LANG] || msgs['en'];
+        }
+        if (btnConfirm) {
+            btnConfirm.disabled = false;
+            btnConfirm.onclick = () => { modal.style.display = 'none'; openDeliveryInfoModal(); };
+        }
+        return;
+    }
+
+    if (notice) notice.style.display = 'none';
+    grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:20px; color:#6366f1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+
+    const bookedSlots = await fetchInstallationSlots(selectedDeliveryDate);
+
+    // 타이틀 업데이트
+    const titleEl = document.getElementById("installTimeTitle");
+    if (titleEl) {
+        const durLabel = slotInfo.type === 'fullday' ? (CURRENT_LANG==='kr'?'종일':CURRENT_LANG==='ja'?'終日':'Full day')
+            : slotInfo.type === '4hour' ? '4h' : '2h';
+        const titles = {
+            'kr': `🔧 설치 시간 선택 (${durLabel})`,
+            'ja': `🔧 設置時間の選択 (${durLabel})`,
+            'en': `🔧 Select Installation Time (${durLabel})`,
+            'zh': `🔧 选择安装时间 (${durLabel})`
+        };
+        titleEl.textContent = titles[CURRENT_LANG] || titles['en'];
+    }
+
+    // 설명
+    const descEl = document.getElementById("installTimeDesc");
+    if (descEl) {
+        const dateStr = selectedDeliveryDate;
+        const descs = {
+            'kr': `📅 ${dateStr} | 잔여 팀 수를 확인하고 원하는 시간을 선택하세요.`,
+            'ja': `📅 ${dateStr} | 残りチーム数を確認し、ご希望の時間を選択してください。`,
+            'en': `📅 ${dateStr} | Check available teams and select your preferred time.`,
+            'zh': `📅 ${dateStr} | 查看剩余团队数并选择您希望的时间。`
+        };
+        descEl.textContent = descs[CURRENT_LANG] || descs['en'];
+    }
+
+    renderTimeSlots(grid, bookedSlots, slotInfo);
+
+    if (btnConfirm) {
+        btnConfirm.onclick = () => {
+            if (!selectedInstallationTime) return;
+            modal.style.display = "none";
+            openDeliveryInfoModal();
+        };
+    }
+}
+
+// ── 시간 슬롯 렌더링 ──
+function renderTimeSlots(grid, bookedSlots, slotInfo) {
+    grid.innerHTML = '';
+    const lblAvail = CURRENT_LANG==='kr'?'예약 가능':CURRENT_LANG==='ja'?'予約可能':'Available';
+    const lblFull = CURRENT_LANG==='kr'?'마감':CURRENT_LANG==='ja'?'満席':'Full';
+    const lblTeam = CURRENT_LANG==='kr'?'팀':CURRENT_LANG==='ja'?'チーム':'teams';
+
+    // 종일
+    if (slotInfo.type === 'fullday') {
+        const maxUsed = Math.max(...INSTALL_TIME_SLOTS.map(s => bookedSlots[s] || 0));
+        const canBook = maxUsed < MAX_TEAMS;
+        const div = document.createElement('div');
+        div.className = 'time-slot' + (canBook ? ' slot-available' : ' slot-full');
+        div.style.gridColumn = '1 / -1';
+        div.innerHTML = `<div>08:00 ~ 22:00</div><span class="slot-count">${canBook ? `${MAX_TEAMS - maxUsed}/${MAX_TEAMS} ${lblTeam}` : lblFull}</span>`;
+        if (canBook) {
+            div.onclick = () => {
+                grid.querySelectorAll('.time-slot').forEach(s => s.classList.remove('slot-selected'));
+                div.classList.add('slot-selected');
+                selectedInstallationTime = '08:00';
+                document.getElementById("btnConfirmInstallTime").disabled = false;
+            };
+        }
+        grid.appendChild(div);
+        return;
+    }
+
+    // 2시간 / 4시간 슬롯
+    INSTALL_TIME_SLOTS.forEach((slot, idx) => {
+        let canBook = true;
+        let minRemaining = MAX_TEAMS;
+        for (let i = 0; i < slotInfo.slots; i++) {
+            if (idx + i >= INSTALL_TIME_SLOTS.length) { canBook = false; break; }
+            const used = bookedSlots[INSTALL_TIME_SLOTS[idx + i]] || 0;
+            if (used >= MAX_TEAMS) { canBook = false; break; }
+            minRemaining = Math.min(minRemaining, MAX_TEAMS - used);
+        }
+
+        const endIdx = Math.min(idx + slotInfo.slots, INSTALL_TIME_SLOTS.length);
+        const endTime = endIdx < INSTALL_TIME_SLOTS.length ? INSTALL_TIME_SLOTS[endIdx] : '22:00';
+
+        const used0 = bookedSlots[slot] || 0;
+        const statusClass = !canBook ? 'slot-full' : (used0 >= 2 ? 'slot-partial' : 'slot-available');
+
+        const div = document.createElement('div');
+        div.className = `time-slot ${statusClass}`;
+        div.innerHTML = `<div>${slot} ~ ${endTime}</div><span class="slot-count">${canBook ? `${minRemaining}/${MAX_TEAMS} ${lblTeam}` : lblFull}</span>`;
+
+        if (canBook) {
+            div.onclick = () => {
+                grid.querySelectorAll('.time-slot').forEach(s => s.classList.remove('slot-selected'));
+                div.classList.add('slot-selected');
+                selectedInstallationTime = slot;
+                document.getElementById("btnConfirmInstallTime").disabled = false;
+            };
+        }
+        grid.appendChild(div);
+    });
 }
 
 function openDeliveryInfoModal() {
@@ -1563,6 +1831,7 @@ async function processOrderSubmission() {
         address,
         request,
         deliveryDate,
+        installationTime: selectedInstallationTime || null,
         referrerId: window.verifiedReferrerId || null,
         referrerEmail: window.verifiedReferrerEmail || null
     };
@@ -1768,6 +2037,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         user_id: currentUser?.id,
         order_date: new Date().toISOString(),
         delivery_target_date: deliveryDate,
+        installation_time: window.tempOrderInfo?.installationTime || null,
         manager_name: manager,
         phone,
         address,

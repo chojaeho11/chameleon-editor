@@ -602,7 +602,7 @@ window.loadDailyTasks = async () => {
         }
 
         // 4. 해당 날짜의 배송 건 조회
-        let query = sb.from('orders').select('id, status, total_amount, items, manager_name, phone, address, delivery_target_date, delivery_time, staff_driver_id, staff_manager_id, request_note, created_at').eq('delivery_target_date', targetDate);
+        let query = sb.from('orders').select('id, status, total_amount, items, manager_name, phone, address, delivery_target_date, delivery_time, installation_time, staff_driver_id, staff_manager_id, request_note, created_at').eq('delivery_target_date', targetDate);
         if (driverFilterId !== 'all') {
             query = query.eq('staff_driver_id', driverFilterId);
         }
@@ -659,6 +659,8 @@ window.loadDailyTasks = async () => {
 
             // 시간 선택 옵션
             const timeOpts = getDeliveryTimeOptions(o.delivery_time);
+            const installInfo = getInstallationDisplayInfo(o);
+            const installBadge = installInfo ? `<div style="margin-top:4px; padding:4px 8px; background:#ede9fe; border-radius:6px; font-size:11px; color:#6d28d9; border:1px solid #c4b5fd; display:inline-block;"><i class="fa-solid fa-person-digging"></i> 설치: ${installInfo.start}~${installInfo.end} (${installInfo.duration})</div>` : '';
 
             tbody.innerHTML += `
                 <tr style="${rowStyle}">
@@ -667,6 +669,7 @@ window.loadDailyTasks = async () => {
                         <div style="font-weight:bold; font-size:14px;">${o.manager_name}</div>
                         <div style="font-size:12px; color:#6366f1;">${o.phone}</div>
                         <div style="font-size:12px; color:#666; margin-top:2px;">${o.address || '주소 미입력'}</div>
+                        ${installBadge}
                     </td>
                     <td style="${textStyle}">
                         <div style="display:flex; flex-wrap:wrap; gap:2px;">${fileLinks}</div>
@@ -717,12 +720,30 @@ window.updateTaskDB = async (orderId, field, value) => {
 // [헬퍼] 시간 옵션 생성기
 function getDeliveryTimeOptions(selectedTime) {
     let html = '<option value="">시간 미정</option>';
-    for (let i = 9; i <= 20; i++) { // 9시부터 20시까지
+    for (let i = 9; i <= 20; i++) {
         const timeStr = (i < 10 ? '0' + i : i) + ":00";
         const isSelected = selectedTime === timeStr ? 'selected' : '';
         html += `<option value="${timeStr}" ${isSelected}>${timeStr}</option>`;
     }
     return html;
+}
+
+// 설치 예약 정보 표시 헬퍼
+function getInstallationDisplayInfo(order) {
+    if (!order.installation_time) return null;
+    const SLOTS = ["08:00","10:00","12:00","14:00","16:00","18:00","20:00"];
+    const startIdx = SLOTS.indexOf(order.installation_time);
+    if (startIdx === -1) return null;
+    const total = order.total_amount || 0;
+    let slots = total >= 5000000 ? 7 : (total >= 3000000 ? 2 : 1);
+    const endIdx = Math.min(startIdx + slots, SLOTS.length);
+    const endTime = endIdx < SLOTS.length ? SLOTS[endIdx] : '22:00';
+    return {
+        start: order.installation_time,
+        end: endTime,
+        duration: slots === 7 ? '종일' : `${slots * 2}시간`,
+        slots: slots
+    };
 }
 
 window.updateOrderStaff = async (id, role, selectEl) => {

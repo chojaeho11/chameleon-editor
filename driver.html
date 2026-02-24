@@ -258,6 +258,15 @@
                             ${o.address || '주소 없음'}
                         </div>
                         ${o.request_note ? `<div class="note-box"><i class="fa-solid fa-bullhorn"></i> ${o.request_note}</div>` : ''}
+                        ${(function(){
+                            if(!o.installation_time) return '';
+                            var SL=["08:00","10:00","12:00","14:00","16:00","18:00","20:00"];
+                            var si=SL.indexOf(o.installation_time); if(si===-1) return '';
+                            var ta=o.total_amount||0, ns=ta>=5000000?7:(ta>=3000000?2:1);
+                            var ei=Math.min(si+ns,SL.length), et=ei<SL.length?SL[ei]:'22:00';
+                            var dl=ns===7?'종일':(ns*2)+'시간';
+                            return '<div style="margin-top:10px;padding:12px;background:#ede9fe;border-radius:10px;border:1px solid #c4b5fd;"><div style="font-weight:800;color:#6d28d9;font-size:14px;"><i class="fa-solid fa-person-digging"></i> 설치 예약</div><div style="font-size:16px;font-weight:bold;color:#4c1d95;margin-top:4px;">'+o.installation_time+' ~ '+et+' ('+dl+')</div></div>';
+                        })()}
                         ${knowhowHtml}
                         <select class="time-select" onchange="updateDeliveryTime('${o.id}', this.value)" ${isDone ? 'disabled' : ''}>
                             ${timeOptions}

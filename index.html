@@ -2850,7 +2850,23 @@ async function handleSubReturn() {
             <button id="btnNextMonth" class="btn-round" style="width:30px;">&gt;</button>
         </div>
         <div id="calendarGrid" class="calendar-grid"></div>
-        <button onclick="document.getElementById('calendarModal').style.display='none'" class="btn-round" style="margin-top:15px;" data-i18n="btn_close">닫기</button>
+        <div style="display:flex; gap:8px; margin-top:15px;">
+            <button onclick="document.getElementById('calendarModal').style.display='none'" class="btn-round" style="flex:1;" data-i18n="btn_close">닫기</button>
+            <button id="btnCalendarConfirm" class="btn-round primary" style="flex:2;" data-i18n="btn_confirm_date">날짜 확정</button>
+        </div>
+    </div>
+</div>
+<!-- 설치 시간 선택 모달 -->
+<div id="installationTimeModal" class="modal-bg" style="z-index: 12550; display:none;">
+    <div class="modal-box" style="max-width:480px; width:95%;">
+        <h3 id="installTimeTitle" style="text-align:center;">🔧 설치 시간 선택</h3>
+        <p id="installTimeDesc" style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;"></p>
+        <div id="installTimeGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+        <div id="installTimeNotice" style="display:none; margin-top:12px; padding:14px; background:#fffbeb; border:1px solid #f59e0b; border-radius:10px; font-size:13px; color:#92400e; line-height:1.6; white-space:pre-line;"></div>
+        <div style="display:flex; gap:8px; margin-top:15px;">
+            <button onclick="document.getElementById('installationTimeModal').style.display='none';document.getElementById('calendarModal').style.display='flex';" class="btn-round" style="flex:1;" data-i18n="btn_back">뒤로</button>
+            <button id="btnConfirmInstallTime" class="btn-round primary" style="flex:2;" disabled data-i18n="btn_confirm_time">시간 확정</button>
+        </div>
     </div>
 </div>
 <div id="deliveryInfoModal" class="modal-bg" style="z-index: 12600;">

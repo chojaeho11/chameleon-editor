@@ -728,6 +728,19 @@ button, input, textarea, select { font-family: inherit; }
 .cal-day.selected { background: #6366f1; color: white !important; font-weight: bold; box-shadow: 0 2px 5px rgba(99,102,241,0.4); }
 .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; }
 
+/* 설치 시간 슬롯 */
+.time-slot {
+    padding: 14px 10px; border: 2px solid #e2e8f0; border-radius: 10px;
+    text-align: center; cursor: pointer; transition: 0.2s; font-weight: 600; font-size: 14px;
+}
+.time-slot:hover:not(.slot-full) { border-color: #6366f1; background: #eff6ff; }
+.time-slot.slot-selected { background: #6366f1; color: white !important; border-color: #6366f1; box-shadow: 0 2px 8px rgba(99,102,241,0.3); }
+.time-slot.slot-selected .slot-count { color: rgba(255,255,255,0.8); }
+.time-slot.slot-available { border-color: #86efac; }
+.time-slot.slot-partial { border-color: #fbbf24; background: #fffbeb; }
+.time-slot.slot-full { border-color: #fecaca; color: #cbd5e1; cursor: not-allowed; background: #fef2f2; text-decoration: line-through; }
+.time-slot .slot-count { font-size: 11px; display: block; margin-top: 3px; font-weight: normal; color: #64748b; }
+
 /* 심플 제품 카드 & 팝업 */
 .simple-prod-card {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
