@@ -1707,10 +1707,13 @@
                     </div>
                 </div>
             </div>
+            <!-- 내부대화 모드 경고 바 -->
+            <div id="lcInternalBar" style="display:none; padding:6px 24px; background:#fef3c7; border-top:1px solid #fcd34d; text-align:center; font-size:12px; font-weight:700; color:#92400e;">🔒 내부대화 모드 - 이 메시지는 고객에게 보이지 않습니다</div>
             <!-- 입력 영역 -->
             <div style="padding:14px 24px; border-top:1px solid #e2e8f0; background:#fff; display:flex; gap:10px; align-items:center; position:relative;">
                 <div id="lcQuickReplyBox" style="display:none; position:absolute; bottom:100%; left:0; right:0; max-height:300px; overflow-y:auto; background:#fff; border:1px solid #c7d2fe; border-bottom:none; border-radius:12px 12px 0 0; box-shadow:0 -6px 30px rgba(99,102,241,0.15); z-index:100;"></div>
                 <label style="cursor:pointer; color:#6366f1; font-size:22px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="lcFileInput" style="display:none;" multiple></label>
+                <button id="lcModeToggle" onclick="lcToggleMode()" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all 0.2s;" title="고객응대 / 내부대화 전환">💬 고객응대</button>
                 <textarea id="lcMsgInput" class="input-text" placeholder="메시지 입력... (Shift+Enter 줄바꿈)" rows="1" style="flex:1; font-size:17px; padding:12px 16px; border-radius:12px; resize:none; min-height:44px; max-height:120px; overflow-y:auto; line-height:1.4; font-family:inherit;" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();lcSendMsg();lcHideQuick();}" oninput="lcSearchQuick(this.value);this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';"></textarea>
                 <button class="btn btn-primary" onclick="lcSendMsg();lcHideQuick();" style="padding:10px 24px; font-size:15px; border-radius:12px;">전송</button>
             </div>
@@ -2805,7 +2808,7 @@ async function saveCommonInfo() {
             if (lastMsg) {
                 var preview = (lastMsg.message || '(파일)');
                 if (preview.length > 30) preview = preview.substring(0,30) + '...';
-                var senderIcon = lastMsg.sender_type==='customer'?'👤':lastMsg.sender_type==='manager'?'💬':'🤖';
+                var senderIcon = lastMsg.sender_type==='customer'?'👤':lastMsg.sender_type==='manager'?'💬':lastMsg.sender_type==='internal'?'🔒':'🤖';
                 h+='<div style="font-size:11px;color:#94a3b8;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+senderIcon+' '+preview+'</div>';
             }
             h+='<div style="font-size:12px;margin-top:5px;display:flex;align-items:center;gap:6px;"><span style="background:'+(rm.status==='ai_chatting'?'rgba(251,191,36,0.15)':'rgba(99,102,241,0.15)')+';color:'+(rm.status==='ai_chatting'?'#fbbf24':'#a5b4fc')+';padding:2px 10px;border-radius:10px;font-weight:600;font-size:11px;">'+(rm.status==='ai_chatting'?'🤖 AI':'👤 '+(rm.assigned_manager||'미배정'))+'</span><span style="color:#64748b;font-size:11px;">'+(rm.source==='chatbot'?'AI→상담':'직접')+'</span></div>';
@@ -3005,7 +3008,7 @@ async function saveCommonInfo() {
             var m=p.new;
             // ★ 모든 메시지 타입 표시 (customer, manager, system, chatbot)
             // 내가 이 PC에서 방금 보낸 매니저 메시지는 이미 로컬 표시됨 → 중복 스킵
-            if (m.sender_type === 'manager' && m.sender_name === myManagerName && (Date.now() - _lastSentAt) < 5000) {
+            if ((m.sender_type === 'manager' || m.sender_type === 'internal') && m.sender_name === myManagerName && (Date.now() - _lastSentAt) < 5000) {
                 // 내가 방금 보낸 메시지 → 이미 로컬에 표시됨
             } else {
                 // Realtime payload에 file_url이 누락될 수 있으므로 DB에서 전체 데이터 재조회
@@ -3028,26 +3031,47 @@ async function saveCommonInfo() {
     function renderMsg(m){
         var t=new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
         if(m.sender_type==='system') return '<div style="text-align:center;padding:8px;font-size:14px;color:#94a3b8;"><span style="background:#f1f5f9;padding:4px 14px;border-radius:20px;">'+m.message+'</span></div>';
-        var isMgr=m.sender_type==='manager';var isBot=m.sender_type==='chatbot';var al=isMgr?'flex-end':'flex-start';
-        var bg=isMgr?'#6366f1':isBot?'#e8f5e9':'#fff';var cl=isMgr?'#fff':'#1e293b';
+        var isInternal=m.sender_type==='internal';
+        var isMgr=m.sender_type==='manager'||isInternal;var isBot=m.sender_type==='chatbot';var al=isMgr?'flex-end':'flex-start';
+        var bg=isInternal?'#fef3c7':m.sender_type==='manager'?'#6366f1':isBot?'#e8f5e9':'#fff';
+        var cl=isInternal?'#92400e':m.sender_type==='manager'?'#fff':'#1e293b';
         var bdRadius=isMgr?'18px 18px 4px 18px':'18px 18px 18px 4px';
         var shadow=isMgr?'none':'0 1px 3px rgba(0,0,0,0.06)';
-        var name=isMgr?(m.sender_name||'매니저'):isBot?'🤖 AI 봇':(m.sender_name||'고객');
-        var nameColor=isMgr?'#6366f1':isBot?'#059669':'#f59e0b';
+        var name=isInternal?'🔒 '+(m.sender_name||'매니저')+' (내부메모)':m.sender_type==='manager'?(m.sender_name||'매니저'):isBot?'🤖 AI 봇':(m.sender_name||'고객');
+        var nameColor=isInternal?'#b45309':m.sender_type==='manager'?'#6366f1':isBot?'#059669':'#f59e0b';
         var h='<div style="display:flex;flex-direction:column;align-items:'+al+';margin-bottom:14px;">';
-        h+='<span style="font-size:13px;color:'+nameColor+';font-weight:700;margin-bottom:4px;">'+(isMgr?'💬 ':isBot?'':'👤 ')+name+' · '+t+'</span>';
-        if(m.file_url){if(m.file_type&&m.file_type.startsWith('image/')){h+='<img src="'+m.file_url+'" style="max-width:300px;border-radius:14px;cursor:pointer;margin:4px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';}else{h+='<a href="'+m.file_url+'" target="_blank" style="background:#dbeafe;padding:10px 16px;border-radius:14px;color:#2563eb;text-decoration:none;font-size:16px;display:inline-block;margin:4px 0;">📎 '+(m.file_name||'파일')+'</a>';}}
-        if(m.message){var mt=m.message.replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(isMgr?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:12px 18px;border-radius:'+bdRadius+';max-width:420px;font-size:16px;line-height:1.6;word-break:break-all;box-shadow:'+shadow+';">'+mt+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:3px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:11px;background:none;border:1px solid #e2e8f0;color:#64748b;padding:2px 8px;border-radius:6px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:12px;color:#6366f1;margin-left:4px;"></span></div>';}}
+        h+='<span style="font-size:13px;color:'+nameColor+';font-weight:700;margin-bottom:4px;">'+(isInternal?'':m.sender_type==='manager'?'💬 ':isBot?'':'👤 ')+name+' · '+t+'</span>';
+        if(m.file_url){if(m.file_type&&m.file_type.startsWith('image/')){h+='<img src="'+m.file_url+'" style="max-width:300px;border-radius:14px;cursor:pointer;margin:4px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1);'+(isInternal?'border:2px dashed #fcd34d;':'')+'" onclick="window.open(this.src)">';}else{h+='<a href="'+m.file_url+'" target="_blank" style="background:'+(isInternal?'#fef3c7':'#dbeafe')+';padding:10px 16px;border-radius:14px;color:'+(isInternal?'#92400e':'#2563eb')+';text-decoration:none;font-size:16px;display:inline-block;margin:4px 0;">📎 '+(m.file_name||'파일')+'</a>';}}
+        if(m.message){var linkColor=isInternal?'#b45309':m.sender_type==='manager'?'#c7d2fe':'#2563eb';var mt=m.message.replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+linkColor+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:12px 18px;border-radius:'+bdRadius+';max-width:420px;font-size:16px;line-height:1.6;word-break:break-all;box-shadow:'+shadow+';'+(isInternal?'border:1px dashed #fcd34d;':'')+'">'+mt+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:3px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:11px;background:none;border:1px solid #e2e8f0;color:#64748b;padding:2px 8px;border-radius:6px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:12px;color:#6366f1;margin-left:4px;"></span></div>';}}
         return h+'</div>';
     }
     var _lastSentAt = 0; // 내가 보낸 메시지 중복 방지용
+    var _lcInternalMode = false; // 내부대화 모드
+    window.lcToggleMode = function() {
+        _lcInternalMode = !_lcInternalMode;
+        var btn = document.getElementById('lcModeToggle');
+        var bar = document.getElementById('lcInternalBar');
+        var inp = document.getElementById('lcMsgInput');
+        if (_lcInternalMode) {
+            btn.innerHTML = '🔒 내부대화';
+            btn.style.background = '#fef3c7'; btn.style.color = '#92400e'; btn.style.borderColor = '#fcd34d';
+            if (bar) bar.style.display = 'block';
+            if (inp) { inp.style.background = '#fffbeb'; inp.style.borderColor = '#fcd34d'; inp.placeholder = '내부 메모 입력... (고객에게 보이지 않음)'; }
+        } else {
+            btn.innerHTML = '💬 고객응대';
+            btn.style.background = '#e0e7ff'; btn.style.color = '#4338ca'; btn.style.borderColor = '#c7d2fe';
+            if (bar) bar.style.display = 'none';
+            if (inp) { inp.style.background = ''; inp.style.borderColor = ''; inp.placeholder = '메시지 입력... (Shift+Enter 줄바꿈)'; }
+        }
+    };
     window.lcSendMsg = async function(){
         if(!currentRoom) return; var sb=getSb();var inp=document.getElementById('lcMsgInput');var txt=inp.value.trim();if(!txt) return;inp.value='';inp.style.height='auto';
         lcHideQuick();
         _lastSentAt = Date.now();
-        var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt,created_at:new Date().toISOString()};
+        var sType=_lcInternalMode?'internal':'manager';
+        var m={room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',message:txt,created_at:new Date().toISOString()};
         var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;
-        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',message:txt});
+        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',message:txt});
     };
 
     // ── Quick Reply (자동 추천 답변) ──
@@ -3144,7 +3168,7 @@ async function saveCommonInfo() {
         if (preview) preview.style.display = 'none';
         _pendingFiles = [];
     };
-    async function lcUpFile(f){var sb=getSb();var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error){showToast('업로드 실패','error');return;}var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
+    async function lcUpFile(f){var sb=getSb();var sType=_lcInternalMode?'internal':'manager';var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error){showToast('업로드 실패','error');return;}var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
     window.lcCloseRoom = async function(){
         if(!currentRoom||!confirm('상담 종료?')) return;var sb=getSb();
         await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',currentRoom.id);
