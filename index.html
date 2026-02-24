@@ -6393,17 +6393,30 @@ if (w >= 20 && h >= 20) {
                     const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=123');
                     openMiniKeyringEditor(
                         container, file,
-                        // onConfirm: 편집 완료된 이미지 dataURL
-                        async (editedDataURL) => {
+                        // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
+                        async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
                                 const _sb = window.sb || (await import('./config.js?v=123')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
-                                const path = `keyring_${Date.now()}_${Math.random().toString(36).slice(2)}.png`;
+                                const ts = Date.now();
+                                const path = `keyring_${ts}_${Math.random().toString(36).slice(2)}.png`;
                                 const { error: upErr } = await _sb.storage.from('customer_uploads').upload(path, blob, { contentType: 'image/png', upsert: true });
                                 if (upErr) throw upErr;
                                 const { data: urlData } = _sb.storage.from('customer_uploads').getPublicUrl(path);
+
+                                // 칼선 이미지 업로드
+                                let cutlinePublicUrl = '';
+                                if (cutlineDataURL) {
+                                    const cutBlob = await (await fetch(cutlineDataURL)).blob();
+                                    const cutPath = `keyring_cutline_${ts}_${Math.random().toString(36).slice(2)}.png`;
+                                    const { error: cutErr } = await _sb.storage.from('customer_uploads').upload(cutPath, cutBlob, { contentType: 'image/png', upsert: true });
+                                    if (!cutErr) {
+                                        const { data: cutUrl } = _sb.storage.from('customer_uploads').getPublicUrl(cutPath);
+                                        cutlinePublicUrl = cutUrl.publicUrl;
+                                    }
+                                }
 
                                 // 썸네일 생성
                                 const thumbCanvas = document.createElement('canvas');
@@ -6412,7 +6425,7 @@ if (w >= 20 && h >= 20) {
                                 thumbCanvas.width = thumbImg.width * sc; thumbCanvas.height = thumbImg.height * sc;
                                 thumbCanvas.getContext('2d').drawImage(thumbImg, 0, 0, thumbCanvas.width, thumbCanvas.height);
                                 const thumbBlob = await new Promise(r => thumbCanvas.toBlob(r, 'image/png'));
-                                const thumbPath = `thumbs/${Date.now()}_${Math.random().toString(36).slice(2)}.png`;
+                                const thumbPath = `thumbs/${ts}_${Math.random().toString(36).slice(2)}.png`;
                                 await _sb.storage.from('customer_uploads').upload(thumbPath, thumbBlob, { contentType: 'image/png', upsert: true });
                                 const { data: td } = _sb.storage.from('customer_uploads').getPublicUrl(thumbPath);
 
@@ -6425,7 +6438,7 @@ if (w >= 20 && h >= 20) {
                                 }
                                 const m = await import('./order.js?v=123');
                                 m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, selectedAddonQtys,
-                                    { type: 'file_upload', fileName: file.name, originalUrl: urlData.publicUrl, thumb: td.publicUrl });
+                                    { type: 'file_upload', fileName: file.name, originalUrl: urlData.publicUrl, thumb: td.publicUrl, cutlineUrl: cutlinePublicUrl });
                                 document.getElementById('choiceModal').style.display = 'none';
                                 document.getElementById('cartAddedModal').style.display = 'flex';
                             } catch(err) {

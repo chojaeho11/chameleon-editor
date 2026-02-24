@@ -1739,7 +1739,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             width: item.width || 0,          
             height: item.height || 0,
             fileName: item.fileName || '',
-            originalUrl: item.originalUrl || ''
+            originalUrl: item.originalUrl || '',
+            cutlineUrl: item.cutlineUrl || ''
         };
     }).filter(i => i !== null);
 
@@ -1790,10 +1791,17 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         const item = cartData[i]; 
         const idx = String(i + 1).padStart(2, '0');
         if (item.originalUrl) {
-            uploadedFiles.push({ 
+            uploadedFiles.push({
                 name: `customer_file_${idx}_${item.fileName || 'file'}`,
-                url: item.originalUrl, 
-                type: 'customer_file' 
+                url: item.originalUrl,
+                type: 'customer_file'
+            });
+        }
+        if (item.cutlineUrl) {
+            uploadedFiles.push({
+                name: `cutline_${idx}_${item.fileName || 'keyring'}.png`,
+                url: item.cutlineUrl,
+                type: 'cutline'
             });
         }
     }

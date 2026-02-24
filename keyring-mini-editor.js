@@ -576,13 +576,100 @@ function bindToolbarEvents(container) {
 }
 
 // ============================================================
-// 확인 → 업로드 → 장바구니
+// 확인 → 칼선 생성 → 업로드 → 장바구니
 // ============================================================
 async function handleConfirm() {
     if (!es) return;
     const dataURL = es.offCanvas.toDataURL('image/png');
-    if (es.onConfirm) es.onConfirm(dataURL);
+    const cutlineDataURL = generateCutlineImage();
+    if (es.onConfirm) es.onConfirm(dataURL, cutlineDataURL);
     closeMiniKeyringEditor();
+}
+
+// 칼선(커트라인) 이미지 생성 — 원본 해상도로 디자인 + 빨간 외곽선 + 고리 구멍
+function generateCutlineImage() {
+    if (!es) return null;
+    const w = es.origW, h = es.origH;
+    // 고리 공간 추가 (상단/좌우/하단 여백)
+    const margin = Math.round(Math.max(w, h) * 0.08);
+    const holeExtra = Math.round(Math.max(w, h) * 0.1);
+    const cW = w + margin * 2;
+    const cH = h + margin * 2 + holeExtra;
+
+    const cv = document.createElement('canvas');
+    cv.width = cW; cv.height = cH;
+    const ctx = cv.getContext('2d');
+
+    // 투명 배경
+    ctx.clearRect(0, 0, cW, cH);
+
+    const imgX = margin, imgY = margin + holeExtra;
+
+    // 1. 아크릴 외곽선 (blur+threshold 방식, 원본 해상도)
+    drawCutlineOutline(ctx, imgX, imgY, w, h);
+
+    // 2. 편집된 이미지
+    ctx.drawImage(es.offCanvas, imgX, imgY, w, h);
+
+    // 3. 키링 고리 구멍 (holeAngle 기반)
+    const holePt = getHolePosition(imgX, imgY, w, h, es.holeAngle);
+    drawKeyringHole(ctx, holePt.cx, holePt.cy, holePt.connX, holePt.connY, 1);
+
+    return cv.toDataURL('image/png');
+}
+
+// 칼선 전용 외곽선 (원본 해상도)
+function drawCutlineOutline(ctx, dx, dy, dw, dh) {
+    const padPx = 16;
+    const tmpW = dw + padPx * 2, tmpH = dh + padPx * 2;
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = tmpW; tmpCanvas.height = tmpH;
+    const tmpCtx = tmpCanvas.getContext('2d');
+
+    // 이미지 실루엣
+    tmpCtx.drawImage(es.offCanvas, padPx, padPx, dw, dh);
+    tmpCtx.globalCompositeOperation = 'source-in';
+    tmpCtx.fillStyle = '#ffffff';
+    tmpCtx.fillRect(0, 0, tmpW, tmpH);
+
+    // blur 팽창
+    const expandCanvas = document.createElement('canvas');
+    expandCanvas.width = tmpW; expandCanvas.height = tmpH;
+    const expCtx = expandCanvas.getContext('2d');
+    const blurPx = Math.max(6, Math.round(dw * 0.015));
+    expCtx.filter = `blur(${blurPx}px)`;
+    expCtx.drawImage(tmpCanvas, 0, 0);
+    expCtx.drawImage(expandCanvas, 0, 0);
+    expCtx.filter = 'none';
+
+    // threshold
+    const imgData = expCtx.getImageData(0, 0, tmpW, tmpH);
+    const d = imgData.data;
+    for (let i = 3; i < d.length; i += 4) {
+        d[i] = d[i] > 15 ? 255 : 0;
+    }
+    expCtx.putImageData(imgData, 0, 0);
+
+    // 빨간 커트라인 테두리 (3px)
+    const edgeCanvas = document.createElement('canvas');
+    edgeCanvas.width = tmpW; edgeCanvas.height = tmpH;
+    const edgeCtx = edgeCanvas.getContext('2d');
+    edgeCtx.drawImage(expandCanvas, 0, 0);
+    edgeCtx.globalCompositeOperation = 'destination-out';
+    const innerCanvas = document.createElement('canvas');
+    innerCanvas.width = tmpW; innerCanvas.height = tmpH;
+    const innerCtx = innerCanvas.getContext('2d');
+    innerCtx.drawImage(expandCanvas, 0, 0);
+    const innerData = innerCtx.getImageData(0, 0, tmpW, tmpH);
+    erodeAlpha(innerData, 3);
+    innerCtx.putImageData(innerData, 0, 0);
+    edgeCtx.drawImage(innerCanvas, 0, 0);
+
+    edgeCtx.globalCompositeOperation = 'source-in';
+    edgeCtx.fillStyle = '#FF0000';
+    edgeCtx.fillRect(0, 0, tmpW, tmpH);
+
+    ctx.drawImage(edgeCanvas, dx - padPx, dy - padPx);
 }
 
 // ============================================================

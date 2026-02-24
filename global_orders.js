@@ -371,11 +371,20 @@ window.closeFileModal = () => document.getElementById('fileManagerModal').style.
 
 function renderFileList() {
     const list = document.getElementById('fileMgrList');
-    list.innerHTML = currentMgrFiles.map((f, i) => `
-        <div class="file-item-row">
-            <a href="${f.url}" target="_blank">${f.name}</a>
-            <button class="btn btn-danger btn-sm" onclick="deleteFileFromOrder(${i})">삭제</button>
-        </div>`).join('') || '<div style="padding:10px; text-align:center;">파일 없음</div>';
+    list.innerHTML = currentMgrFiles.map((f, i) => {
+        const isCutline = f.type === 'cutline';
+        const isImage = f.url && (f.url.match(/\.(png|jpg|jpeg|webp)(\?|$)/i) || isCutline);
+        const icon = isCutline ? '✂️' : f.type === 'customer_file' ? '📎' : f.type === 'order_sheet' ? '📋' : f.type === 'quotation' ? '💰' : '📄';
+        const badge = isCutline ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">칼선</span>' : '';
+        const preview = isImage ? `<div style="margin:4px 0;"><img src="${f.url}" style="max-width:120px;max-height:80px;border:1px solid #e2e8f0;border-radius:4px;cursor:pointer;" onclick="window.open('${f.url}','_blank')"></div>` : '';
+        return `<div class="file-item-row" style="flex-direction:column;align-items:flex-start;">
+            <div style="display:flex;align-items:center;width:100%;justify-content:space-between;">
+                <a href="${f.url}" target="_blank">${icon} ${f.name}${badge}</a>
+                <button class="btn btn-danger btn-sm" onclick="deleteFileFromOrder(${i})">삭제</button>
+            </div>
+            ${preview}
+        </div>`;
+    }).join('') || '<div style="padding:10px; text-align:center;">파일 없음</div>';
 }
 
 window.uploadFileToOrder = async () => {
@@ -633,7 +642,9 @@ window.loadDailyTasks = async () => {
             let fileLinks = '';
             if (o.files && Array.isArray(o.files)) {
                 o.files.forEach(f => {
-                    fileLinks += `<a href="${f.url}" target="_blank" class="badge" style="text-decoration:none; background:#fff; border:1px solid #ddd; color:#334155; margin-right:4px;">📄 ${f.name}</a>`;
+                    const icon = f.type === 'cutline' ? '✂️' : '📄';
+                    const bg = f.type === 'cutline' ? 'background:#fef2f2; border:1px solid #fca5a5; color:#dc2626;' : 'background:#fff; border:1px solid #ddd; color:#334155;';
+                    fileLinks += `<a href="${f.url}" target="_blank" class="badge" style="text-decoration:none; ${bg} margin-right:4px;">${icon} ${f.name}</a>`;
                 });
             } else {
                 fileLinks = '<span style="font-size:11px; color:#ccc;">파일 없음</span>';
