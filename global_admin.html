@@ -382,26 +382,26 @@
 
                 <!-- 날짜 클릭 팝업 (설치 예약 상세) -->
                 <div id="adminSlotModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20000; display:none; justify-content:center; align-items:center;">
-                    <div style="background:white; border-radius:16px; max-width:700px; width:95%; max-height:85vh; overflow-y:auto; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="background:white; border-radius:16px; max-width:1100px; width:95%; max-height:85vh; overflow-y:auto; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                             <h3 id="adminSlotTitle" style="margin:0; font-size:18px;"></h3>
                             <button onclick="document.getElementById('adminSlotModal').style.display='none'" style="background:none; border:none; font-size:22px; cursor:pointer; color:#64748b;">&times;</button>
                         </div>
-                        <!-- 시간 슬롯 테이블 -->
-                        <div id="adminSlotContent"></div>
-                        <!-- 관리자 수동 예약 추가 -->
-                        <div style="margin-top:20px; padding-top:16px; border-top:2px solid #e2e8f0;">
-                            <h4 style="margin:0 0 12px 0; font-size:14px; color:#6366f1;"><i class="fa-solid fa-plus-circle"></i> 관리자 스케줄 추가/차단</h4>
+                        <!-- 관리자 수동 예약 추가 (상단) -->
+                        <div style="margin-bottom:16px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
                             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <select id="adminSlotTime" class="input-text" style="width:140px;"></select>
-                                <select id="adminSlotType" class="input-text" style="width:160px;">
-                                    <option value="block">🚫 시간 차단 (1팀)</option>
+                                <span style="font-size:12px; font-weight:bold; color:#6366f1;"><i class="fa-solid fa-plus-circle"></i> 스케줄 차단</span>
+                                <select id="adminSlotTime" class="input-text" style="width:100px; font-size:12px;"></select>
+                                <select id="adminSlotType" class="input-text" style="width:150px; font-size:12px;">
+                                    <option value="block">🚫 1팀 차단</option>
                                     <option value="block_all">🔒 완전 차단 (3팀)</option>
                                 </select>
-                                <input id="adminSlotMemo" class="input-text" placeholder="메모 (선택)" style="flex:1; min-width:120px;">
-                                <button class="btn btn-primary btn-sm" onclick="adminAddSlotBlock()"><i class="fa-solid fa-plus"></i> 추가</button>
+                                <input id="adminSlotMemo" class="input-text" placeholder="메모" style="flex:1; min-width:80px; font-size:12px;">
+                                <button class="btn btn-primary btn-sm" onclick="adminAddSlotBlock()" style="font-size:12px;"><i class="fa-solid fa-plus"></i> 추가</button>
                             </div>
                         </div>
+                        <!-- 시간 슬롯 + 배송 목록 -->
+                        <div id="adminSlotContent"></div>
                     </div>
                 </div>
             </div>

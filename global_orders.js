@@ -682,6 +682,22 @@ async function renderAdminCalendar() {
     }
 }
 
+// ── 지역 판별 헬퍼 ──
+function isMetroArea(address) {
+    if (!address) return true;
+    const metro = ['서울','경기','인천','성남','수원','고양','용인','부천','안산','안양','화성','평택','시흥','파주','김포','광명','군포','하남','오산','이천','양주','구리','남양주','의정부','동두천','과천','양평','여주','가평','연천','포천'];
+    return metro.some(m => address.includes(m));
+}
+function isHoneycombOrder(order) {
+    if (!order.items) return false;
+    const items = Array.isArray(order.items) ? order.items : [];
+    return items.some(item => {
+        const cat = (item.category || item.product?.category || '').toLowerCase();
+        const name = (item.productName || item.product?.name || '').toLowerCase();
+        return cat.includes('honeycomb') || cat.includes('hc_') || name.includes('허니콤') || name.includes('honeycomb') || name.includes('ハニカム');
+    });
+}
+
 // ── 관리자 날짜 클릭 팝업 ──
 window.openAdminSlotModal = async (dateStr) => {
     const modal = document.getElementById('adminSlotModal');
@@ -693,16 +709,13 @@ window.openAdminSlotModal = async (dateStr) => {
     modal.style.display = 'flex';
     content.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩중...</div>';
 
-    // 시간 선택 옵션 채우기
     const timeSelect = document.getElementById('adminSlotTime');
-    if (timeSelect) {
-        timeSelect.innerHTML = ADMIN_SLOTS.map(s => `<option value="${s}">${s}</option>`).join('');
-    }
+    if (timeSelect) timeSelect.innerHTML = ADMIN_SLOTS.map(s => `<option value="${s}">${s}</option>`).join('');
+    window._adminSlotDate = dateStr;
 
-    // 데이터 조회
     try {
         const { data: orders } = await sb.from('orders')
-            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id')
+            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id, items')
             .eq('delivery_target_date', dateStr);
         const dayOrders = orders || [];
 
@@ -711,7 +724,8 @@ window.openAdminSlotModal = async (dateStr) => {
         const slotOrders = {};
         ADMIN_SLOTS.forEach(s => { slotTeams[s] = 0; slotOrders[s] = []; });
 
-        dayOrders.filter(o => o.installation_time).forEach(o => {
+        const installOrders = dayOrders.filter(o => o.installation_time);
+        installOrders.forEach(o => {
             const startIdx = ADMIN_SLOTS.indexOf(o.installation_time);
             if (startIdx === -1) return;
             const total = o.total_amount || 0;
@@ -723,75 +737,111 @@ window.openAdminSlotModal = async (dateStr) => {
             }
         });
 
-        // 일반 배송 (설치 아닌)
+        // 일반 배송 분류
         const deliveryOnly = dayOrders.filter(o => !o.installation_time);
+        const dlvHcMetro = deliveryOnly.filter(o => isHoneycombOrder(o) && isMetroArea(o.address));
+        const dlvHcLocal = deliveryOnly.filter(o => isHoneycombOrder(o) && !isMetroArea(o.address));
+        const dlvOtherMetro = deliveryOnly.filter(o => !isHoneycombOrder(o) && isMetroArea(o.address));
+        const dlvOtherLocal = deliveryOnly.filter(o => !isHoneycombOrder(o) && !isMetroArea(o.address));
 
-        let html = '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
-        html += '<thead><tr style="background:#f8fafc;"><th style="padding:10px; text-align:left; width:120px;">시간대</th><th style="padding:10px; text-align:center; width:80px;">팀 현황</th><th style="padding:10px; text-align:left;">예약 고객</th><th style="padding:10px; text-align:center; width:60px;">관리</th></tr></thead><tbody>';
+        // ── 2열 레이아웃 생성 ──
+        let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">';
+
+        // ===== 좌측: 설치 시간 슬롯 =====
+        html += '<div>';
+        html += '<h4 style="margin:0 0 10px 0; font-size:14px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 설치 예약 시간표</h4>';
+        html += '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
+        html += '<thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">시간</th><th style="padding:8px; text-align:center; width:60px;">팀</th><th style="padding:8px; text-align:left;">고객</th><th style="padding:8px; width:36px;"></th></tr></thead><tbody>';
 
         ADMIN_SLOTS.forEach((slot, idx) => {
             const endSlot = idx + 1 < ADMIN_SLOTS.length ? ADMIN_SLOTS[idx + 1] : '22:00';
             const used = slotTeams[slot] || 0;
             const isFull = used >= ADMIN_MAX_TEAMS;
             const barColor = isFull ? '#ef4444' : (used > 0 ? '#f59e0b' : '#22c55e');
-            const bgColor = isFull ? '#fef2f2' : (used > 0 ? '#fffbeb' : '#f0fdf4');
+            const bgColor = isFull ? '#fef2f2' : (used > 0 ? '#fffbeb' : '#fff');
 
-            let customerInfo = '';
             const uniqueOrders = [...new Map(slotOrders[slot].map(o => [o.id, o])).values()];
-            uniqueOrders.forEach(o => {
-                const driver = staffList.find(s => s.id == o.staff_driver_id);
-                const installInfo = getInstallationDisplayInfo(o);
-                customerInfo += `<div style="padding:3px 0; border-bottom:1px solid #f1f5f9;">
+            let custHtml = uniqueOrders.map(o => {
+                const info = getInstallationDisplayInfo(o);
+                const isBlock = o.manager_name?.startsWith('[차단]');
+                return `<div style="padding:2px 0; ${isBlock?'color:#94a3b8; font-style:italic;':''}">
                     <span style="font-weight:600;">${o.manager_name}</span>
-                    <span style="color:#6366f1; margin-left:6px;">${o.phone || ''}</span>
-                    ${installInfo ? `<span style="color:#6d28d9; font-size:11px; margin-left:4px;">(${installInfo.start}~${installInfo.end})</span>` : ''}
-                    ${driver ? `<span style="color:#059669; font-size:11px; margin-left:4px;">🚛${driver.name}</span>` : ''}
-                    ${o.status === '배송완료' || o.status === '완료됨' ? '<span style="color:#22c55e; font-size:11px;"> ✅</span>' : ''}
+                    ${!isBlock && o.phone ? `<span style="color:#6366f1; margin-left:4px;">${o.phone}</span>` : ''}
+                    ${info ? `<span style="color:#6d28d9; font-size:10px;">(${info.duration})</span>` : ''}
                 </div>`;
-            });
-            if (!customerInfo) customerInfo = '<span style="color:#cbd5e1;">-</span>';
+            }).join('') || '<span style="color:#cbd5e1;">-</span>';
 
-            html += `<tr style="border-bottom:1px solid #e2e8f0; background:${bgColor};">
-                <td style="padding:10px; font-weight:bold;">${slot} ~ ${endSlot}</td>
-                <td style="padding:10px; text-align:center;">
-                    <div style="display:flex; gap:3px; justify-content:center;">
-                        ${[0,1,2].map(i => `<div style="width:16px; height:16px; border-radius:50%; background:${i < used ? barColor : '#e2e8f0'};"></div>`).join('')}
-                    </div>
-                    <div style="font-size:10px; color:#64748b; margin-top:2px;">${used}/${ADMIN_MAX_TEAMS}</div>
+            let removeHtml = uniqueOrders.map(o => `<button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:11px; padding:1px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')" title="제거">✕</button>`).join('');
+
+            html += `<tr style="border-bottom:1px solid #f1f5f9; background:${bgColor};">
+                <td style="padding:6px 8px; font-weight:bold; white-space:nowrap;">${slot}~${endSlot}</td>
+                <td style="padding:6px; text-align:center;">
+                    <div style="display:flex; gap:2px; justify-content:center;">${[0,1,2].map(i=>`<div style="width:12px; height:12px; border-radius:50%; background:${i<used?barColor:'#e2e8f0'};"></div>`).join('')}</div>
                 </td>
-                <td style="padding:10px;">${customerInfo}</td>
-                <td style="padding:10px; text-align:center;">
-                    ${uniqueOrders.map(o => `<button class="btn btn-outline btn-sm" style="font-size:10px; padding:2px 6px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')" title="설치 예약 제거">✕</button>`).join(' ')}
-                </td>
+                <td style="padding:6px 8px;">${custHtml}</td>
+                <td style="padding:6px; text-align:center;">${removeHtml}</td>
             </tr>`;
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
 
-        // 일반 배송 섹션
-        if (deliveryOnly.length > 0) {
-            html += `<div style="margin-top:16px; padding-top:12px; border-top:2px solid #e2e8f0;">
-                <h4 style="margin:0 0 8px 0; font-size:13px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 일반 배송 (${deliveryOnly.length}건)</h4>`;
-            deliveryOnly.forEach(o => {
-                const driver = staffList.find(s => s.id == o.staff_driver_id);
-                html += `<div style="padding:6px 10px; background:#f8fafc; border-radius:6px; margin-bottom:4px; font-size:12px;">
-                    <span style="font-weight:600;">${o.manager_name}</span>
-                    <span style="color:#6366f1; margin-left:6px;">${o.phone || ''}</span>
-                    ${driver ? `<span style="color:#059669; margin-left:6px;">🚛${driver.name}</span>` : ''}
-                    <span style="color:#64748b; margin-left:6px;">${o.status}</span>
-                </div>`;
-            });
-            html += '</div>';
+        // ===== 우측: 배송 목록 (분류별) =====
+        html += '<div>';
+        html += '<h4 style="margin:0 0 10px 0; font-size:14px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 배송 목록</h4>';
+
+        // 시간지정 배송 (설치 시간 있는 건)
+        const timedDelivery = installOrders.filter(o => !o.manager_name?.startsWith('[차단]'));
+        if (timedDelivery.length > 0) {
+            html += renderDeliveryGroup('⏰ 시간지정 설치', timedDelivery, '#6d28d9', '#ede9fe', true);
         }
 
+        // 허니콤 수도권
+        if (dlvHcMetro.length > 0) html += renderDeliveryGroup('🔧 허니콤보드 · 수도권', dlvHcMetro, '#7c3aed', '#f5f3ff');
+        // 허니콤 지방
+        if (dlvHcLocal.length > 0) html += renderDeliveryGroup('🔧 허니콤보드 · 지방', dlvHcLocal, '#9333ea', '#faf5ff');
+        // 기타 수도권
+        if (dlvOtherMetro.length > 0) html += renderDeliveryGroup('📦 기타제품 · 수도권', dlvOtherMetro, '#2563eb', '#eff6ff');
+        // 기타 지방
+        if (dlvOtherLocal.length > 0) html += renderDeliveryGroup('📦 기타제품 · 지방', dlvOtherLocal, '#0284c7', '#f0f9ff');
+
+        if (deliveryOnly.length === 0 && timedDelivery.length === 0) {
+            html += '<div style="text-align:center; padding:30px; color:#cbd5e1;">배송 건 없음</div>';
+        }
+
+        html += '</div></div>'; // grid 닫기
+
         content.innerHTML = html;
-
-        // 팝업 데이터 저장 (리프레시용)
-        window._adminSlotDate = dateStr;
-
     } catch (e) {
         content.innerHTML = `<div style="color:red; padding:20px;">오류: ${e.message}</div>`;
     }
 };
+
+function renderDeliveryGroup(title, orders, color, bg, showTime) {
+    let html = `<div style="margin-bottom:12px;">
+        <div style="font-size:12px; font-weight:bold; color:${color}; padding:6px 10px; background:${bg}; border-radius:6px 6px 0 0; border-left:3px solid ${color};">${title} (${orders.length}건)</div>
+        <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 6px 6px;">`;
+    orders.forEach(o => {
+        const driver = staffList.find(s => s.id == o.staff_driver_id);
+        const isDone = o.status === '배송완료' || o.status === '완료됨';
+        const installInfo = showTime ? getInstallationDisplayInfo(o) : null;
+        const region = isMetroArea(o.address) ? '수도권' : '지방';
+        html += `<div style="padding:6px 10px; border-bottom:1px solid #f1f5f9; font-size:11px; ${isDone?'opacity:0.5;':''}">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <span style="font-weight:600;">${o.manager_name}</span>
+                    <span style="color:#6366f1; margin-left:4px;">${o.phone || ''}</span>
+                    ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:1px 5px; border-radius:3px; margin-left:4px; font-size:10px;">${installInfo.start}~${installInfo.end}</span>` : ''}
+                </div>
+                <div style="display:flex; align-items:center; gap:4px;">
+                    ${driver ? `<span style="color:#059669; font-size:10px;">🚛${driver.name}</span>` : ''}
+                    ${isDone ? '<span style="color:#22c55e;">✅</span>' : `<span style="color:#94a3b8; font-size:10px;">${o.status}</span>`}
+                </div>
+            </div>
+            ${o.address ? `<div style="color:#64748b; font-size:10px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : ''}
+        </div>`;
+    });
+    html += '</div></div>';
+    return html;
+}
 
 // ── 관리자 설치 예약 제거 ──
 window.adminRemoveInstallation = async (orderId, dateStr) => {
