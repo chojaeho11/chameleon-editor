@@ -103,8 +103,12 @@ async function loadSystemData() {
     try {
         const country = SITE_CONFIG.COUNTRY; 
 
-        // 옵션 카테고리 로드
-        const { data: addonCats } = await sb.from('addon_categories').select('*').order('sort_order', {ascending: true});
+        // 옵션 카테고리 + 옵션 병렬 로드
+        const [catResult, addonResult] = await Promise.all([
+            sb.from('addon_categories').select('*').order('sort_order', {ascending: true}),
+            sb.from('admin_addons').select('*')
+        ]);
+        const addonCats = catResult.data;
         if (addonCats) {
             ADDON_CAT_DB = {};
             addonCats.forEach(cat => {
@@ -121,8 +125,7 @@ async function loadSystemData() {
             window.ADDON_CAT_DB = ADDON_CAT_DB;
         }
 
-        // 옵션 로드
-        const { data: addons } = await sb.from('admin_addons').select('*');
+        const addons = addonResult.data;
         if (addons) {
             ADDON_DB = {};
             const rate = SITE_CONFIG.CURRENCY_RATE[country] || 1;
