@@ -5089,6 +5089,13 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(세부 항목 선택)</span>`;
         if(descEl) descEl.innerText = "원하시는 카테고리를 선택해주세요.";
 
+        // pushState: 카테고리 모달 열릴 때 히스토리에 추가 (뒤로가기로 홈 복귀 가능)
+        if (!window._navNavigating) {
+            var langParam = new URLSearchParams(window.location.search).get('lang');
+            var catUrl = '?' + 'top=' + topCode + (langParam ? '&lang=' + langParam : '');
+            window.history.pushState({ type: 'topmenu', code: topCode, title: titleText }, '', catUrl);
+        }
+
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;">Loading...</div>';
 
         try {
@@ -5802,7 +5809,13 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
         var state = event.state;
         window._navNavigating = true;
 
-        if (state && state.type === 'subcat') {
+        if (state && state.type === 'topmenu') {
+            // subcat/product → 대분류 카테고리 모달 복귀
+            _closeAllModals();
+            var ss0 = document.getElementById('startScreen');
+            if (ss0) ss0.style.display = '';
+            window.openTopMenu(state.code, state.title);
+        } else if (state && state.type === 'subcat') {
             // 상품 → 소분류: 상품 모달 닫고 카테고리 모달 열기
             _closeAllModals();
             var ss = document.getElementById('startScreen');
@@ -11198,7 +11211,7 @@ window.dsmRenderProducts = async function(keyword) {
     window.addEventListener('popstate', function(e) {
         // 네비게이션 핸들러가 관리하는 state면 여기서 처리하지 않음
         var s = e.state;
-        if (s && (s.type === 'product' || s.type === 'subcat' || s.type === 'home')) return;
+        if (s && (s.type === 'product' || s.type === 'subcat' || s.type === 'topmenu' || s.type === 'home')) return;
 
         // 모바일: subPanel이 열려있으면 닫고 네비게이션 차단
         if (window.innerWidth <= 768) {
