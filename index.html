@@ -502,6 +502,18 @@
         </button>
     </div>
 
+    <!-- Get a Free Quote CTA -->
+    <div style="text-align:center; margin: 0 auto 12px auto; max-width:600px; padding:0 15px;">
+        <button id="btnGetQuote" onclick="document.getElementById('quoteModal').style.display='flex'" style="width:100%; padding:14px 28px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:50px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 16px rgba(16,185,129,0.35); transition:transform 0.2s, box-shadow 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_get_quote">무료 견적 요청</span>
+        </button>
+    </div>
+    <div style="text-align:center; margin-bottom:12px; font-size:13px; color:#64748b;">
+        <a href="mailto:support@cafe2626.com" style="color:#6366f1; text-decoration:none; font-weight:600;">
+            <i class="fa-solid fa-envelope" style="margin-right:4px;"></i>support@cafe2626.com
+        </a>
+    </div>
+
     <!-- 카프와 함께 멋진 작품을 만들어봐요 -->
     <div class="quick-title-box">
         <span class="qt-badge" data-i18n="home_quick_badge">세상에 인쇄가 필요한 모든것을 가장 저렴하고 퀄리티 높게 제작합니다.</span>
@@ -2757,7 +2769,7 @@ async function handleSubReturn() {
                 <i class="fa-brands fa-google" style="color:#DB4437; margin-right:8px;"></i> <span data-i18n="btn_google_login">Google로 시작하기</span>
             </button>
             <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center;">
-                <i class="fa-solid fa-comment" style="margin-right:8px;"></i> 카카오로 시작하기
+                <i class="fa-solid fa-comment" style="margin-right:8px;"></i> <span data-i18n="btn_kakao_login">카카오로 시작하기</span>
             </button>
         </div>
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
@@ -2803,14 +2815,14 @@ async function handleSubReturn() {
         <img id="pdpImage" src="" style="max-width: 100%; max-height: 300px; object-fit: contain;">
       </div>
       <div style="width: 55%; padding: 40px; display: flex; flex-direction: column;">
-        <h2 id="pdpTitle" style="margin: 0 0 10px 0;">상품명</h2>
-        <h3 id="pdpPrice" style="color: var(--primary); margin: 0 0 20px 0;">0원</h3>
-        <button id="btnActionDesign" class="btn-round primary" style="height: 50px;">🎨 직접 디자인하기</button>
+        <h2 id="pdpTitle" style="margin: 0 0 10px 0;" data-i18n="pdp_product_name">상품명</h2>
+        <h3 id="pdpPrice" style="color: var(--primary); margin: 0 0 20px 0;">0</h3>
+        <button id="btnActionDesign" class="btn-round primary" style="height: 50px;"><span data-i18n="pdp_design_start">🎨 직접 디자인하기</span></button>
         <div style="margin-top:10px;">
           <input type="file" id="pdpFileUpload" style="display: none;">
-          <button onclick="document.getElementById('pdpFileUpload').click()" class="btn-round">📂 파일 업로드 주문</button>
+          <button onclick="document.getElementById('pdpFileUpload').click()" class="btn-round"><span data-i18n="pdp_file_upload">📂 파일 업로드 주문</span></button>
         </div>
-        <button onclick="document.getElementById('productDetailModal').style.display='none'" style="margin-top: auto; border:none; background:none; cursor:pointer;">닫기</button>
+        <button onclick="document.getElementById('productDetailModal').style.display='none'" style="margin-top: auto; border:none; background:none; cursor:pointer;" data-i18n="btn_close">닫기</button>
       </div>
     </div>
     <div id="pdpFooterContent" style="display:none; border-top:1px solid #e5e7eb; padding:24px 30px; overflow-y:auto; max-height:300px; background:#fafafa; font-size:13px; line-height:1.8; color:#555;"></div>
@@ -3435,12 +3447,12 @@ window.filterFxCards = function(cat, btn) {
 <div id="mobileControlDock" style="z-index: 30000;">
     <button onclick="window.toggleMobilePanel('left')" class="mobile-fab left">
         <i class="fa-solid fa-shapes"></i>
-        <span>글자도형</span>
+        <span data-i18n="mobile_text_shapes">글자도형</span>
     </button>
 
     <button onclick="window.toggleSubPanel('sub-align')" class="mobile-fab right">
         <i class="fa-solid fa-layer-group"></i>
-        <span>편집/정렬</span>
+        <span data-i18n="mobile_edit_align">편집/정렬</span>
     </button>
 </div>
 <div id="categoryDetailModal" class="modal-bg" style="z-index: 15000;">
@@ -3450,7 +3462,7 @@ window.filterFxCards = function(cat, btn) {
                 style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; z-index: 10;">
             <i class="fa-solid fa-xmark"></i>
         </button>
-        <h3 id="catModalTitle">📏 사이즈(제품)를 선택해주세요</h3>
+        <h3 id="catModalTitle" data-i18n="cat_select_size">📏 사이즈(제품)를 선택해주세요</h3>
         
         <div style="margin-bottom: 15px; position: relative;">
             <input type="text" id="modalProdSearch" class="ai-input-pretty" 
@@ -8016,8 +8028,8 @@ if (w >= 20 && h >= 20) {
             <div id="gifPreviewOverlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10; align-items:center; justify-content:center; flex-direction:column;">
                 <img id="gifPreviewImg" style="max-width:80%; max-height:70%; border-radius:12px; box-shadow:0 0 40px rgba(236,72,153,0.3);">
                 <div style="margin-top:20px; display:flex; gap:12px;">
-                    <button onclick="window.gifDownload()" style="padding:12px 28px; background:linear-gradient(135deg,#ec4899,#f472b6); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-download" style="margin-right:6px;"></i>다운로드</button>
-                    <button onclick="document.getElementById('gifPreviewOverlay').style.display='none'" style="padding:12px 28px; background:#374151; color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer;">닫기</button>
+                    <button onclick="window.gifDownload()" style="padding:12px 28px; background:linear-gradient(135deg,#ec4899,#f472b6); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-download" style="margin-right:6px;"></i><span data-i18n="btn_download">다운로드</span></button>
+                    <button onclick="document.getElementById('gifPreviewOverlay').style.display='none'" style="padding:12px 28px; background:#374151; color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer;" data-i18n="btn_close">닫기</button>
                 </div>
             </div>
             <!-- 진행률 -->
@@ -8512,6 +8524,47 @@ if (w >= 20 && h >= 20) {
 }
 </style>
 
+<!-- Quote Request Modal (no login required) -->
+<div id="quoteModal" class="modal-bg" style="z-index: 30001; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 500px; max-width: 95%;">
+        <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); margin: -25px -25px 20px -25px; padding: 25px 25px 20px; color: white; border-radius: 12px 12px 0 0; text-align: center;">
+            <h3 style="margin:0 0 6px 0; font-size:20px;" data-i18n="quote_title">무료 견적 요청</h3>
+            <p style="margin:0; font-size:13px; opacity:0.9;" data-i18n="quote_subtitle">로그인 없이 간편하게 문의하세요</p>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <div style="flex:1;">
+                <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:4px;" data-i18n="quote_name">이름 / 회사명</label>
+                <input id="quoteName" class="ai-input-pretty" data-i18n-placeholder="quote_name_ph" placeholder="예: 홍길동 / ABC Corp" style="margin:0;">
+            </div>
+            <div style="flex:1;">
+                <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:4px;" data-i18n="quote_email_label">이메일 *</label>
+                <input id="quoteEmail" type="email" class="ai-input-pretty" placeholder="email@example.com" style="margin:0;">
+            </div>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:4px;" data-i18n="quote_phone">연락처 (선택)</label>
+            <input id="quotePhone" class="ai-input-pretty" data-i18n-placeholder="quote_phone_ph" placeholder="010-0000-0000" style="margin:0;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:4px;" data-i18n="quote_detail">문의 내용 *</label>
+            <textarea id="quoteDetail" class="ai-input-pretty" data-i18n-placeholder="quote_detail_ph" placeholder="필요한 제품, 수량, 사이즈, 납기 등을 자유롭게 적어주세요." style="height:100px; margin:0;"></textarea>
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:4px;" data-i18n="quote_file">파일 첨부 (선택)</label>
+            <div onclick="document.getElementById('quoteFileInput').click()" style="border:2px dashed #cbd5e1; background:#f8fafc; padding:15px; text-align:center; border-radius:8px; cursor:pointer;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:20px; color:#94a3b8;"></i>
+                <div style="color:#64748b; font-size:12px; margin-top:4px;" data-i18n="quote_file_click">클릭하여 파일 선택</div>
+                <div id="quoteFileList" style="margin-top:8px; font-size:12px; color:#059669;"></div>
+            </div>
+            <input type="file" id="quoteFileInput" multiple style="display:none;" onchange="Array.from(this.files).forEach(f=>{document.getElementById('quoteFileList').innerHTML+='<div>📎 '+f.name+'</div>'})">
+        </div>
+        <button onclick="window.submitQuoteRequest()" class="btn-round primary" style="width:100%; height:50px; font-size:16px; background:#059669; border:none; color:#fff; border-radius:12px; cursor:pointer; font-weight:700;">
+            <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> <span data-i18n="quote_submit">견적 요청 보내기</span>
+        </button>
+        <button onclick="document.getElementById('quoteModal').style.display='none'" class="btn-round" style="width:100%; margin-top:8px; border:none; color:#64748b;" data-i18n="btn_close">닫기</button>
+    </div>
+</div>
+
 <div id="vipOrderModal" class="modal-bg" style="z-index: 30000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 550px; max-width: 95%;">
         <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); margin: -25px -25px 20px -25px; padding: 25px 25px 20px; color: white; border-radius: 12px 12px 0 0; text-align: center;">
@@ -8577,7 +8630,7 @@ if (w >= 20 && h >= 20) {
         </button>
 
         <button onclick="document.getElementById('vipOrderModal').style.display='none'; setTimeout(function(){if(window.ChamBot)window.ChamBot.toggle();},300);" class="btn-round" style="width: 100%; margin-top: 10px; height: 48px; font-size: 15px; font-weight: 700; border: 2px solid #10b981; color: #059669; background: #ecfdf5; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-            <i class="fa-solid fa-comments" style="font-size:18px;"></i> 즉시 상담하기
+            <i class="fa-solid fa-comments" style="font-size:18px;"></i> <span data-i18n="btn_live_chat">즉시 상담하기</span>
         </button>
 
         <button onclick="document.getElementById('vipOrderModal').style.display='none'" class="btn-round" style="width: 100%; margin-top: 8px; border: none; color: #64748b;" data-i18n="btn_close">
@@ -9631,16 +9684,16 @@ window.dsmRenderProducts = async function(keyword) {
         <div class="cham-header-left">
             <div class="cham-avatar"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:24px;height:24px;border-radius:50%;"></div>
             <div>
-                <div class="cham-title" id="chamTitle">카멜레온 AI 상담</div>
-                <div class="cham-subtitle" id="chamSubtitle"><i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i>AI 실시간 상담 · 24시간</div>
+                <div class="cham-title" id="chamTitle" data-i18n="cham_title">카멜레온 AI 상담</div>
+                <div class="cham-subtitle" id="chamSubtitle"><i class="fa-solid fa-circle" style="color:#4ade80;font-size:7px;margin-right:4px;"></i><span data-i18n="cham_subtitle">AI 실시간 상담 · 24시간</span></div>
             </div>
         </div>
-        <button class="cham-newchat" onclick="window.ChamBot && window.ChamBot.newChat()" title="New Chat" style="background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 10px;border-radius:14px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='none'"><i class="fa-solid fa-plus" style="margin-right:3px;font-size:10px;"></i><span id="chamNewChatText">새 대화</span></button>
+        <button class="cham-newchat" onclick="window.ChamBot && window.ChamBot.newChat()" title="New Chat" style="background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 10px;border-radius:14px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='none'"><i class="fa-solid fa-plus" style="margin-right:3px;font-size:10px;"></i><span id="chamNewChatText" data-i18n="cham_new_chat">새 대화</span></button>
         <button class="cham-close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="cham-messages" id="chamMessages"></div>
     <div id="chamConnectBar" style="padding:6px 14px; background:#f0f9ff; border-top:1px solid #e0e7ff; display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0;">
-        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : showToast(typeof _ct==='function'?_ct('connectAlert'):'Please refresh and try again.','info');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> <span id="chamConnectText">상담사 연결</span></button>
+        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : showToast(typeof _ct==='function'?_ct('connectAlert'):'Please refresh and try again.','info');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> <span id="chamConnectText" data-i18n="cham_connect">상담사 연결</span></button>
     </div>
     <div class="cham-input-area">
         <label id="chamFileBtn" style="cursor:pointer; padding:8px; color:#6366f1; font-size:18px; display:flex; align-items:center;"><i class="fa-solid fa-paperclip"></i><input type="file" id="chamFileInput" style="display:none;" multiple accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp"></label>

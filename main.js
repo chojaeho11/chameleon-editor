@@ -1334,3 +1334,67 @@ async function googleTranslate(text, targetLang) {
         return ""; // 오류 시 빈 문자열 반환
     }
 }
+
+// ========== Quote Request (no login required) ==========
+window.submitQuoteRequest = async function() {
+    const name = document.getElementById('quoteName').value.trim();
+    const email = document.getElementById('quoteEmail').value.trim();
+    const phone = document.getElementById('quotePhone').value.trim();
+    const detail = document.getElementById('quoteDetail').value.trim();
+    const fileInput = document.getElementById('quoteFileInput');
+
+    if (!email || !detail) {
+        showToast(window.t('quote_alert_required') || 'Please fill in email and details.', 'warn');
+        return;
+    }
+
+    const btn = document.querySelector('#quoteModal .btn-round.primary');
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+    btn.disabled = true;
+
+    try {
+        const uploadedFiles = [];
+        if (fileInput && fileInput.files.length > 0) {
+            const ts = Date.now();
+            const rnd = Math.random().toString(36).substring(2, 8);
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const ext = file.name.split('.').pop();
+                const safeName = `QUOTE_${ts}_${rnd}_${i}.${ext}`;
+                const path = `vip_uploads/${safeName}`;
+                const { error: upErr } = await sb.storage.from('orders').upload(path, file);
+                if (!upErr) {
+                    const { data: pub } = sb.storage.from('orders').getPublicUrl(path);
+                    uploadedFiles.push({ name: file.name, url: pub.publicUrl });
+                }
+            }
+        }
+
+        const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+        const domain = location.hostname;
+        await sb.from('vip_orders').insert({
+            customer_name: name || 'Quote Request',
+            customer_phone: phone || email,
+            preferred_manager: 'Quote-' + country,
+            memo: `[QUOTE REQUEST from ${domain}]\nEmail: ${email}\nPhone: ${phone}\n\n${detail}`,
+            files: uploadedFiles.length > 0 ? uploadedFiles : null,
+            status: 'quote'
+        });
+
+        showToast(window.t('quote_success') || 'Quote request sent! We will reply within 24 hours.', 'success');
+        document.getElementById('quoteModal').style.display = 'none';
+        document.getElementById('quoteName').value = '';
+        document.getElementById('quoteEmail').value = '';
+        document.getElementById('quotePhone').value = '';
+        document.getElementById('quoteDetail').value = '';
+        document.getElementById('quoteFileList').innerHTML = '';
+        if (fileInput) fileInput.value = '';
+    } catch (e) {
+        console.error('Quote submit error:', e);
+        showToast(window.t('quote_error') || 'Failed to send. Please email us at support@cafe2626.com', 'warn');
+    } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+    }
+};
