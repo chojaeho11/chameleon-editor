@@ -2109,6 +2109,9 @@ async function handleSubReturn() {
             <div class="icon-item" data-panel="sub-element">
                 <i class="fa-solid fa-shapes"></i><span data-i18n="menu_element">요소</span>
             </div>
+            <div class="icon-item" data-panel="sub-icon">
+                <i class="fa-solid fa-icons"></i><span data-i18n="menu_icon">아이콘</span>
+            </div>
             <div class="icon-item" data-panel="sub-text">
                 <i class="fa-solid fa-font"></i><span data-i18n="menu_text">텍스트</span>
             </div>
@@ -2205,6 +2208,26 @@ async function handleSubReturn() {
                     <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:11px;"></i>
                 </div>
                 <div id="sideAssetList" style="min-height:60px;"></div>
+            </div>
+
+            <!-- 2-1. 아이콘 (Iconify) -->
+            <div id="sub-icon" class="sub-content">
+                <div class="sub-panel-header" style="font-weight:900; font-family:Inter,'Noto Sans KR',sans-serif; letter-spacing:0.5px;">ICONS</div>
+                <div style="position:relative; margin-bottom:8px;">
+                    <input type="text" id="iconSearchInput"
+                           placeholder="아이콘 검색 (예: star, home)" data-i18n-placeholder="ph_search_icon"
+                           autocomplete="off"
+                           style="width:100%; padding:8px 8px 8px 30px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:12px; outline:none;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:11px;"></i>
+                </div>
+                <div id="iconCategoryTags" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px;"></div>
+                <div id="iconColorRow" style="display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:6px 8px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+                    <span style="font-size:12px; color:#64748b; font-weight:600;" data-i18n="icon_color">색상</span>
+                    <input type="color" id="iconColorPicker" value="#000000" style="width:28px; height:28px; border:none; cursor:pointer; background:none;">
+                    <button id="iconColorReset" style="font-size:11px; padding:3px 8px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; margin-left:auto;" data-i18n="icon_color_reset">원본</button>
+                </div>
+                <div id="iconResultGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; min-height:60px;"></div>
+                <button id="iconLoadMore" style="display:none; width:100%; padding:8px; margin-top:8px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:12px; cursor:pointer; color:#6366f1; font-weight:600;" data-i18n="icon_load_more">더 보기</button>
             </div>
 
             <!-- 3. 텍스트 -->
