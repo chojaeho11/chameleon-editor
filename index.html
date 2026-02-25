@@ -5748,9 +5748,16 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         const urlParams = new URLSearchParams(window.location.search);
         let productCode = urlParams.get('product');
 
-        // 경로 기반 제품 감지 (/honeycomb, /fabric-print 등 - SEO 크롤러용)
+        // 경로 기반 제품 감지 (/honeycomb, /hb_dw_1 등)
         if (!productCode && window._SEO_PRODUCT_CODE) {
             productCode = window._SEO_PRODUCT_CODE;
+        }
+        // URL 경로가 상품코드일 수 있음 (/hb_dw_1, /fb_a4 등)
+        if (!productCode) {
+            const pathCode = window.location.pathname.replace(/^\/|\/$/g, '');
+            if (pathCode && pathCode.length > 1 && !pathCode.includes('/') && !pathCode.includes('.')) {
+                productCode = pathCode;
+            }
         }
 
         if (productCode) {
