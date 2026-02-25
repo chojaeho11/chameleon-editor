@@ -122,7 +122,7 @@ window.loadOrders = async () => {
 
         // [핵심 1] 쿼리에 bids(id) 추가 (입찰 카운트용)
         let query = sb.from('orders')
-            .select('id, status, total_amount, items, created_at, payment_status, payment_method, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, has_partner_items, files, bids(id)', { count: 'exact' })
+            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, has_partner_items, files, bids(id)', { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
@@ -212,9 +212,18 @@ window.loadOrders = async () => {
             // [상태 & 결제정보] (카드/무통장 디테일 표시)
             let statusHtml = '';
 
-            // 1. 상태 뱃지 표시 (완료됨일 때만 녹색, 나머지는 기본)
+            // 1. 상태 뱃지 표시
             if (order.status === '완료됨' || order.status === '발송완료') {
                 statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#dcfce7; color:#15803d;">${order.status}</span></div>`;
+            } else if (order.status === '취소됨') {
+                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fee2e2; color:#dc2626;">${order.status}</span></div>`;
+                if (order.payment_status === '환불완료') {
+                    statusHtml += `<div style="font-size:10px; color:#15803d; font-weight:bold;">✅ 환불완료</div>`;
+                } else if (order.payment_status === '환불대기') {
+                    statusHtml += `<div style="font-size:10px; color:#d97706; font-weight:bold;">⏳ 환불대기</div>`;
+                } else if (order.payment_status === '환불실패') {
+                    statusHtml += `<div style="font-size:10px; color:#dc2626; font-weight:bold;">❌ 환불실패</div>`;
+                }
             } else {
                 statusHtml = `<div style="margin-bottom:4px;"><span class="badge">${order.status}</span></div>`;
             }
@@ -339,7 +348,7 @@ window.changePage = (step) => { if(currentPage + step > 0) { currentPage += step
 window.updateActionButtons = () => {
     const div = document.getElementById('action-buttons');
     if(!div) return;
-    if(currentOrderStatus === '접수됨') div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
+    if(currentOrderStatus === '접수됨') div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-warning" onclick="cancelWithRefundSelected()" style="background:#dc2626; color:white;">결제취소</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
     else if(currentOrderStatus === '칼선작업') div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button>`;
     else div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
 };
@@ -348,6 +357,84 @@ window.changeStatusSelected = async (status) => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if(ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
     await sb.from('orders').update({ status }).in('id', ids);
+    loadOrders();
+};
+
+// [결제 취소 + 환불] 관리자용
+window.cancelWithRefundSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건의 주문을 결제 취소(환불) 처리하시겠습니까?`)) return;
+
+    showLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const id of ids) {
+        try {
+            const { data: order } = await sb.from('orders')
+                .select('payment_method, toss_payment_key, total_amount, discount_amount, user_id')
+                .eq('id', id).single();
+            if (!order) { failCount++; continue; }
+
+            const pm = (order.payment_method || '').toLowerCase();
+            const isCard = pm.includes('카드') || pm.includes('card');
+            const isStripe = pm.includes('stripe');
+            const isDeposit = pm.includes('예치금');
+            let newPaymentStatus = '환불완료';
+
+            // PG 환불
+            if ((isCard || isStripe) && order.toss_payment_key) {
+                if (isStripe) {
+                    const { data, error } = await sb.functions.invoke('cancel-stripe-payment', {
+                        body: { session_id: order.toss_payment_key, cancelReason: '관리자 취소' }
+                    });
+                    if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
+                } else {
+                    const { data, error } = await sb.functions.invoke('cancel-toss-payment', {
+                        body: { paymentKey: order.toss_payment_key, cancelReason: '관리자 취소' }
+                    });
+                    if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
+                }
+            } else if (isDeposit && order.user_id) {
+                // 예치금 복원
+                const { data: pf } = await sb.from('profiles').select('deposit').eq('id', order.user_id).single();
+                if (pf) {
+                    await sb.from('profiles').update({ deposit: (pf.deposit || 0) + (order.total_amount || 0) }).eq('id', order.user_id);
+                    await sb.from('wallet_logs').insert({
+                        user_id: order.user_id, type: 'refund_cancel',
+                        amount: order.total_amount || 0,
+                        description: `관리자 주문 취소 환불 (주문번호: ${id})`
+                    });
+                }
+            } else {
+                newPaymentStatus = '환불대기';
+            }
+
+            // 마일리지 복원
+            if (order.discount_amount > 0 && order.user_id) {
+                const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
+                if (pf) {
+                    await sb.from('profiles').update({ mileage: (pf.mileage || 0) + order.discount_amount }).eq('id', order.user_id);
+                    await sb.from('wallet_logs').insert({
+                        user_id: order.user_id, type: 'refund_mileage',
+                        amount: order.discount_amount,
+                        description: `관리자 취소 마일리지 복원 (주문번호: ${id})`
+                    });
+                }
+            }
+
+            await sb.from('orders').update({ status: '취소됨', payment_status: newPaymentStatus }).eq('id', id);
+            successCount++;
+        } catch (e) {
+            console.error(`Order ${id} refund error:`, e);
+            await sb.from('orders').update({ status: '취소됨', payment_status: '환불실패' }).eq('id', id);
+            failCount++;
+        }
+    }
+
+    showLoading(false);
+    showToast(`결제취소 완료: 성공 ${successCount}건${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
     loadOrders();
 };
 

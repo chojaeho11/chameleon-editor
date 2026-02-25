@@ -1,4 +1,10 @@
 
+[functions.cancel-stripe-payment]
+enabled = true
+verify_jwt = true
+import_map = "./functions/cancel-stripe-payment/deno.json"
+entrypoint = "./functions/cancel-stripe-payment/index.ts"
+
 [functions.cancel-toss-payment]
 enabled = true
 verify_jwt = true
