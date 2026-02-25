@@ -65,6 +65,20 @@ serve(async (req) => {
         const domain = domainMap[filterCountry] || domainMap.KR;
         const lang = langMap[filterCountry] || "ko";
 
+        // 카테고리 조회 (카테고리→상위카테고리 매핑)
+        const { data: categories } = await sb
+            .from("admin_categories")
+            .select("code, name, name_jp, name_us, top_category_code");
+
+        const catNameMap: Record<string, Record<string, string>> = {};
+        for (const cat of (categories || [])) {
+            catNameMap[cat.code] = {
+                KR: cat.name || '',
+                JP: cat.name_jp || cat.name || '',
+                US: cat.name_us || cat.name || '',
+            };
+        }
+
         // 제품 목록 조회
         const { data: products, error } = await sb
             .from("admin_products")
@@ -107,12 +121,15 @@ serve(async (req) => {
             xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${domainMap.KR}/${code}"/>
 `;
 
-            // 이미지 사이트맵
+            // 이미지 사이트맵 (카테고리 컨텍스트 포함 강화된 메타데이터)
             if (product.img_url) {
+                const catName = catNameMap[product.category]?.[filterCountry] || '';
+                const imageTitle = catName ? `${name} - ${catName}` : name;
+                const imageCaption = catName ? `${seoDesc} - ${catName}` : seoDesc;
                 xml += `    <image:image>
       <image:loc>${escapeXml(product.img_url)}</image:loc>
-      <image:title>${escapeXml(name)}</image:title>
-      <image:caption>${escapeXml(seoDesc)}</image:caption>
+      <image:title>${escapeXml(imageTitle)}</image:title>
+      <image:caption>${escapeXml(imageCaption)}</image:caption>
     </image:image>
 `;
             }
