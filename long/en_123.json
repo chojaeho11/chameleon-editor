@@ -1008,7 +1008,7 @@
   "msg_non_metro_fee_global": "Additional shipping fee for non-metro area will be applied.",
   "label_non_metro_shipping": "Non-metro shipping fee",
   "sub_title": "Premium benefits for just $9/mo",
-  "sub_desc": "Unlimited premium templates + $2,000 mileage on subscription (use 5% per purchase)",
+  "sub_desc": "<span style=\"color:#fbbf24;\">25% OFF all orders</span> + Unlimited Premium Templates + <span style=\"color:#fbbf24;\">$2,000 Mileage</span>",
   "sub_monthly": "Monthly",
   "sub_annual": "Annual",
   "sub_monthly_period": "Billed monthly",

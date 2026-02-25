@@ -1005,7 +1005,7 @@
   "msg_non_metro_fee_jp": "展示ブースなど配送車両が必要な場合は別途お問い合わせください。宅配便は全国送料無料です。",
   "label_non_metro_shipping": "車両配送料（別途お問い合わせ）",
   "sub_title": "月額¥900で受けられる超特急特典",
-  "sub_desc": "プレミアムテンプレート無制限 + 購読時10万円マイレージ即時付与（購入ごと5%使用可）",
+  "sub_desc": "<span style=\"color:#fbbf24;\">購入金額25%割引</span> + プレミアムテンプレート無制限 + <span style=\"color:#fbbf24;\">マイレージ10万円</span>",
   "sub_monthly": "月額プラン",
   "sub_annual": "年額プラン",
   "sub_monthly_period": "毎月自動決済",
