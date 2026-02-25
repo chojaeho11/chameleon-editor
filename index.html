@@ -3,17 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <script>
-// ★ 경로 기반 상품코드 감지 → ?product= 파라미터로 리다이렉트 (Google Ads 랜딩페이지용)
+// ★ 경로 기반 상품코드 감지 (Google Ads 랜딩페이지용 - 리다이렉트 없이 전역변수로 전달)
 (function(){
     var p = location.pathname.replace(/^\/|\/$/g, '');
-    if (!p || p.length < 2) return;
-    if (/[\/\.]/.test(p)) return;
-    var skip = ['board','mypage','success','fail','partner','robots','sitemap'];
-    if (skip.indexOf(p) >= 0) return;
-    var params = new URLSearchParams(location.search);
-    if (params.get('product')) return;
-    params.set('product', p);
-    location.replace('/' + '?' + params.toString());
+    if (p && p.length >= 2 && !/[\/\.]/.test(p)) {
+        var skip = ['board','mypage','success','fail','partner','robots','sitemap'];
+        if (skip.indexOf(p) < 0) window.__PATH_PRODUCT_CODE = p;
+    }
 })();
 </script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -5762,16 +5758,13 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         const urlParams = new URLSearchParams(window.location.search);
         let productCode = urlParams.get('product');
 
-        // 경로 기반 제품 감지 (/honeycomb, /hb_dw_1 등)
+        // 경로 기반 제품 감지 (/honeycomb 등 SEO 슬러그)
         if (!productCode && window._SEO_PRODUCT_CODE) {
             productCode = window._SEO_PRODUCT_CODE;
         }
-        // URL 경로가 상품코드일 수 있음 (/hb_dw_1, /fb_a4 등)
-        if (!productCode) {
-            const pathCode = window.location.pathname.replace(/^\/|\/$/g, '');
-            if (pathCode && pathCode.length > 1 && !pathCode.includes('/') && !pathCode.includes('.')) {
-                productCode = pathCode;
-            }
+        // <head> 스크립트에서 감지한 경로 기반 상품코드
+        if (!productCode && window.__PATH_PRODUCT_CODE) {
+            productCode = window.__PATH_PRODUCT_CODE;
         }
 
         if (productCode) {
@@ -5780,7 +5773,15 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             for (let i = 0; i < 50 && !sb; i++) {
                 await new Promise(r => setTimeout(r, 100));
             }
-            if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(productCode);
+            // 함수 대기 (최대 3초)
+            for (let j = 0; j < 30 && !window.loadProductDetailAndOpen; j++) {
+                await new Promise(r => setTimeout(r, 100));
+            }
+            if (window.loadProductDetailAndOpen) {
+                window.loadProductDetailAndOpen(productCode);
+            } else {
+                console.error("❌ loadProductDetailAndOpen 함수 없음");
+            }
         }
     })();
     // [최종 안정화 버전] 상세 페이지 모달 오픈 함수
