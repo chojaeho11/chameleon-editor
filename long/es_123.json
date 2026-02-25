@@ -962,6 +962,7 @@
   "dsm_h_banner": "Banner H.",
   "dsm_v_banner": "Banner V.",
   "dsm_custom_input": "✏️ Tamaño personalizado (mm)",
+  "dsm_custom_hint": "Si solo necesita un diseño en el tamaño deseado sin seleccionar un producto, ingrese el tamaño aquí",
   "dsm_ph_w": "Ancho",
   "dsm_ph_h": "Alto",
   "dsm_start": "Iniciar",

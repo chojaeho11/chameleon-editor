@@ -962,6 +962,7 @@
   "dsm_h_banner": "横幅",
   "dsm_v_banner": "竖幅",
   "dsm_custom_input": "✏️ 自定义尺寸 (mm)",
+  "dsm_custom_hint": "如果您只需要自定义尺寸的设计而无需选择产品，请在此输入尺寸",
   "dsm_ph_w": "宽",
   "dsm_ph_h": "高",
   "dsm_start": "开始",

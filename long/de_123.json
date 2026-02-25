@@ -962,6 +962,7 @@
   "dsm_h_banner": "Quer-Banner",
   "dsm_v_banner": "Hoch-Banner",
   "dsm_custom_input": "✏️ Benutzerdefiniert (mm)",
+  "dsm_custom_hint": "Wenn Sie nur ein Design in Ihrer gewünschten Größe ohne Produktauswahl benötigen, geben Sie hier die Größe ein",
   "dsm_ph_w": "Breite",
   "dsm_ph_h": "Höhe",
   "dsm_start": "Start",

@@ -959,6 +959,7 @@
   "dsm_h_banner": "横断幕",
   "dsm_v_banner": "縦バナー",
   "dsm_custom_input": "✏️ 直接入力 (mm)",
+  "dsm_custom_hint": "商品を選ばずにお好みのサイズでデザインだけ必要な場合は、ここにサイズを入力してください",
   "dsm_ph_w": "横",
   "dsm_ph_h": "縦",
   "dsm_start": "開始",

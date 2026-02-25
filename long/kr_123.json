@@ -579,6 +579,7 @@
   "dsm_h_banner": "가로현수막",
   "dsm_v_banner": "세로배너",
   "dsm_custom_input": "✏️ 직접 입력 (mm)",
+  "dsm_custom_hint": "제품없이 원하는 사이즈의 디자인만 필요할때 여기에 사이즈를 입력하세요",
   "dsm_ph_w": "가로",
   "dsm_ph_h": "세로",
   "dsm_start": "시작",

@@ -962,6 +962,7 @@
   "dsm_h_banner": "H. Banner",
   "dsm_v_banner": "V. Banner",
   "dsm_custom_input": "✏️ Custom Size (mm)",
+  "dsm_custom_hint": "If you just need a design in your desired size without selecting a product, enter the size here",
   "dsm_ph_w": "Width",
   "dsm_ph_h": "Height",
   "dsm_start": "Start",
