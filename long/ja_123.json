@@ -1453,6 +1453,7 @@
   "msg_reset_email_sent": "再設定メールを送信しました。メールをご確認ください。",
   "msg_pw_changed": "パスワードが変更されました。新しいパスワードでログインしてください。",
   "btn_get_quote": "無料見積もり依頼",
+  "btn_go_back": "戻る",
   "btn_live_chat": "今すぐ相談",
   "btn_kakao_login": "カカオでログイン",
   "btn_download": "ダウンロード",

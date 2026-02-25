@@ -1456,6 +1456,7 @@
   "msg_reset_email_sent": "Reset email sent. Please check your inbox.",
   "msg_pw_changed": "Password changed successfully. Please log in with your new password.",
   "btn_get_quote": "Get a Free Quote",
+  "btn_go_back": "Back",
   "btn_live_chat": "Live Chat Now",
   "btn_kakao_login": "Sign in with Kakao",
   "btn_download": "Download",

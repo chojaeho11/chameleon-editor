@@ -502,18 +502,6 @@
         </button>
     </div>
 
-    <!-- Get a Free Quote CTA -->
-    <div style="text-align:center; margin: 0 auto 12px auto; max-width:600px; padding:0 15px;">
-        <button id="btnGetQuote" onclick="document.getElementById('quoteModal').style.display='flex'" style="width:100%; padding:14px 28px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:50px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 16px rgba(16,185,129,0.35); transition:transform 0.2s, box-shadow 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;">
-            <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_get_quote">무료 견적 요청</span>
-        </button>
-    </div>
-    <div style="text-align:center; margin-bottom:12px; font-size:13px; color:#64748b;">
-        <a href="mailto:support@cafe2626.com" style="color:#6366f1; text-decoration:none; font-weight:600;">
-            <i class="fa-solid fa-envelope" style="margin-right:4px;"></i>support@cafe2626.com
-        </a>
-    </div>
-
     <!-- 카프와 함께 멋진 작품을 만들어봐요 -->
     <div class="quick-title-box">
         <span class="qt-badge" data-i18n="home_quick_badge">세상에 인쇄가 필요한 모든것을 가장 저렴하고 퀄리티 높게 제작합니다.</span>
@@ -628,9 +616,14 @@
             전담 매니저가 쉽게 주문 하실 수 있도록 가이드 합니다.
         </p>
 
-        <button onclick="document.getElementById('vipOrderModal').style.display='flex';" class="btn-round" style="background: linear-gradient(135deg, #fff 0%, #ede9fe 100%); color: #5b21b6; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); width: auto; display: inline-flex; gap: 10px; align-items: center; margin-bottom: 20px; border-radius: 50px;">
-            <i class="fa-solid fa-crown" style="color: #d97706;"></i> <span data-i18n="home_btn_vip_upload">VIP 주문 파일 업로드 (원스톱 접수)</span>
+        <button onclick="document.getElementById('quoteModal').style.display='flex';" class="btn-round" style="background: linear-gradient(135deg, #fff 0%, #ecfdf5 100%); color: #059669; padding: 15px 40px; font-size: 18px; font-weight: 800; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); width: auto; display: inline-flex; gap: 10px; align-items: center; margin-bottom: 10px; border-radius: 50px;">
+            <i class="fa-solid fa-file-invoice" style="color: #059669;"></i> <span data-i18n="btn_get_quote">무료 견적 요청</span>
         </button>
+        <div style="margin-bottom:15px;">
+            <a href="mailto:support@cafe2626.com" style="color:rgba(255,255,255,0.9); text-decoration:none; font-size:14px; font-weight:600;">
+                <i class="fa-solid fa-envelope" style="margin-right:4px;"></i>support@cafe2626.com
+            </a>
+        </div>
 
         <!-- 허니콤보드 소분류 목록 (메인 페이지) -->
         <div id="homeHoneycombGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin-top:10px; max-width:700px; margin-left:auto; margin-right:auto;"></div>
@@ -3457,10 +3450,14 @@ window.filterFxCards = function(cat, btn) {
 </div>
 <div id="categoryDetailModal" class="modal-bg" style="z-index: 15000;">
     <div class="modal-box" style="width: 800px; max-width: 95%; position: relative;">
-        
+
         <button onclick="document.getElementById('categoryDetailModal').style.display='none';"
                 style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; z-index: 10;">
             <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button id="catModalBackBtn" onclick="if(window._catModalBackAction) window._catModalBackAction();"
+                style="position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: #6366f1; z-index: 10; display:none; align-items:center; gap:4px; font-weight:600;">
+            <i class="fa-solid fa-arrow-left"></i> <span style="font-size:14px;" data-i18n="btn_go_back">뒤로</span>
         </button>
         <h3 id="catModalTitle" data-i18n="cat_select_size">📏 사이즈(제품)를 선택해주세요</h3>
         
@@ -5042,6 +5039,10 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         const titleEl = document.getElementById('catModalTitle');
         const descEl = modal.querySelector('p');
 
+        // 뒤로가기 버튼 숨김 (중분류 레벨에서는 뒤로갈 곳 없음)
+        var backBtn = document.getElementById('catModalBackBtn');
+        if (backBtn) { backBtn.style.display = 'none'; window._catModalBackAction = null; }
+
         // 1. 모달 창 열기 & 로딩 표시
         modal.style.display = 'flex';
         if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(세부 항목 선택)</span>`;
@@ -5106,9 +5107,9 @@ let iconUrl = window.getTinyThumb(rawUrl, 150);
                     <div class="quick-text">${cat.name}</div>
                 `;
 
-                // 클릭하면 상품 목록으로 이동
+                // 클릭하면 상품 목록으로 이동 (뒤로가기 액션 전달)
                 div.onclick = () => {
-                    window.showCategoryProducts(cat.code, cat.name);
+                    window.showCategoryProducts(cat.code, cat.name, null, () => window.openTopMenu(topCode, titleText));
                 };
 
                 grid.appendChild(div);
@@ -5439,7 +5440,7 @@ window.filterMainIcons = function(keyword) {
 window.categoryCache = {}; 
 
 // [최종 통합] 카테고리 클릭 시 상품 목록 로드 (상세정보는 제외하여 로딩 속도 최적화)
-window.showCategoryProducts = async function(catKey, catName, catDesc) {
+window.showCategoryProducts = async function(catKey, catName, catDesc, backAction) {
     if (!window._navNavigating) {
         var langParam = new URLSearchParams(window.location.search).get('lang');
         var catUrl = '/?cat=' + catKey + (langParam ? '&lang=' + langParam : '');
@@ -5450,6 +5451,18 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
     const modal = document.getElementById('categoryDetailModal');
     const titleEl = document.getElementById('catModalTitle');
     const descBox = document.getElementById('catModalDesc');
+
+    // 뒤로가기 버튼 표시/숨김
+    var backBtn = document.getElementById('catModalBackBtn');
+    if (backBtn) {
+        if (backAction) {
+            window._catModalBackAction = backAction;
+            backBtn.style.display = 'flex';
+        } else {
+            window._catModalBackAction = null;
+            backBtn.style.display = 'none';
+        }
+    }
 
     // 1. UI 초기화
     if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
