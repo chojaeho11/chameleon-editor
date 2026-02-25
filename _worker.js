@@ -164,10 +164,11 @@ export default {
         // Skip if request is FROM Prerender.io's renderer (avoid infinite loop)
         const isPrerender = request.headers.get('X-Prerender') === '1' || /prerender/i.test(ua);
 
-        if (!isPrerender && BOT_UA.test(ua) && path && !path.includes('.')) {
+        if (!isPrerender && BOT_UA.test(ua) && !path.includes('.')) {
             // Skip admin/internal paths
-            if (!['board', 'mypage', 'success', 'fail', 'partner', 'global_admin', 'driver', 'admin_m_secret_882', 'marketing_bot'].includes(path)) {
-                // Try Prerender.io first (fully rendered + cached page)
+            const skipPaths = ['board', 'mypage', 'success', 'fail', 'partner', 'global_admin', 'driver', 'admin_m_secret_882', 'marketing_bot'];
+            if (!skipPaths.includes(path)) {
+                // Try Prerender.io first (fully rendered + cached page, works for ALL pages incl. homepage)
                 try {
                     const prerenderRes = await fetch(`https://service.prerender.io/${request.url}`, {
                         headers: {
@@ -194,8 +195,8 @@ export default {
                     // Prerender.io unavailable, fall through to custom pre-rendering
                 }
 
-                // Fallback: custom pre-rendering with Supabase data
-                try {
+                // Fallback: custom pre-rendering with Supabase data (product/category pages only)
+                if (path) try {
                     const cc = getCountry(url.hostname);
 
                     // Check SEO category
