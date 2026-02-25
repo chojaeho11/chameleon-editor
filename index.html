@@ -5521,9 +5521,16 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             const urlParams = new URLSearchParams(window.location.search);
             const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : null); // 호스트명 폴백
 
-            // DB 조회
-            const { data: product, error } = await sb.from('admin_products')
-                .select('*').eq('code', productCode).single();
+            // DB 조회 (코드 매칭 → 실패 시 카테고리 매칭)
+            let product, error;
+            const res1 = await sb.from('admin_products').select('*').eq('code', productCode).single();
+            if (res1.data) { product = res1.data; error = null; }
+            else {
+                // SEO 슬러그 → 카테고리 매칭 시도 (첫 번째 상품 반환)
+                const res2 = await sb.from('admin_products').select('*').eq('category', productCode).order('sort_order', { ascending: true }).limit(1);
+                if (res2.data && res2.data.length > 0) { product = res2.data[0]; productCode = product.code; error = null; }
+                else { error = res1.error || { message: 'not found' }; }
+            }
 
             if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
 
