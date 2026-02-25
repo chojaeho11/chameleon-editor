@@ -121,8 +121,18 @@ const PRODUCT_SEO = {
   }
 };
 
+// 리다이렉트 매핑 (_redirects 파일의 규칙을 미들웨어에서 처리)
+const REWRITES = {
+  '/board': '/board.html',
+  '/mypage': '/mypage.html',
+  '/success': '/success.html',
+  '/fail': '/fail.html',
+  '/partner': '/partner.html'
+};
+const REDIRECTS_301 = ['/en.html', '/jp.html', '/en', '/jp', '/index.html', '/index'];
+
 export async function onRequest(context) {
-  const { request, next } = context;
+  const { request, next, env } = context;
   const url = new URL(request.url);
 
   // 정적 파일은 패스스루 (JS, CSS, 이미지, 폰트, 데이터 등)
@@ -130,7 +140,29 @@ export async function onRequest(context) {
     return next();
   }
 
-  const response = await next();
+  // 301 리다이렉트 처리
+  if (REDIRECTS_301.includes(url.pathname)) {
+    return Response.redirect(new URL('/' + url.search, url.origin), 301);
+  }
+
+  // 클린 URL 리라이트 처리 (board → board.html 등)
+  const rewriteTo = REWRITES[url.pathname];
+  if (rewriteTo) {
+    const rewriteUrl = new URL(rewriteTo, url.origin);
+    rewriteUrl.search = url.search;
+    const rewriteReq = new Request(rewriteUrl.toString(), request);
+    return next(rewriteReq);
+  }
+
+  // 원본 응답 가져오기
+  let response = await next();
+
+  // 404인 경우 SPA 폴백 — index.html 서빙
+  if (response.status === 404) {
+    const indexUrl = new URL('/index.html', url.origin);
+    const indexReq = new Request(indexUrl.toString(), request);
+    response = await env.ASSETS.fetch(indexReq);
+  }
 
   // HTML 응답만 처리
   const contentType = response.headers.get('content-type') || '';
