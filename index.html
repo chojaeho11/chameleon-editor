@@ -5289,8 +5289,8 @@ window.goHome = function() {
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             window.PRODUCT_DB[productCode] = product;
 
-            // 2. 주소창 변경 (언어 유지)
-            let newUrl = `${window.location.pathname}?product=${productCode}`;
+            // 2. 주소창 변경 (언어 유지, 공유 가능한 URL)
+            let newUrl = `/?product=${productCode}`;
             if (currentLang) {
                 newUrl += `&lang=${currentLang}`;
             }
@@ -5582,10 +5582,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
                 }
             })();
 
-            // 2. ★ [핵심] 주소창 바꿀 때 SEO 클린 URL 유지
-            let newUrl = '/' + productCode;
+            // 2. ★ [핵심] 주소창 바꿀 때 ?product= 파라미터 사용 (공유 가능)
+            let newUrl = '/?product=' + productCode;
             if (currentLang) {
-                newUrl += '?lang=' + currentLang;
+                newUrl += '&lang=' + currentLang;
             }
             if (!window._navNavigating) window.history.pushState({ type: 'product', code: productCode }, '', newUrl);
 
