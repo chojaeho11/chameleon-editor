@@ -83,6 +83,8 @@ async function loadDashboardCharts() {
     // 올해 1월 1일부터 조회
     const now = new Date();
     const currentYear = now.getFullYear();
+    const statsYearEl = document.getElementById('statsYear');
+    if(statsYearEl) statsYearEl.textContent = currentYear;
     const startOfYear = `${currentYear}-01-01T00:00:00`;
     
     try {
