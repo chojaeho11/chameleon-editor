@@ -781,75 +781,6 @@ function scrollHotdeal(gridId, dir) {
 }
 </script>
 
-<!-- 배송비 계산기 배너 -->
-<div id="shippingCalcSection" style="display:none; width:100%; max-width:1200px; padding:0 20px; box-sizing:border-box;">
-<style>
-    .sc-banner { position:relative; overflow:hidden; background: linear-gradient(135deg, #020617 0%, #0a1628 30%, #091832 50%, #0a1628 70%, #020617 100%); padding:60px 20px 50px; text-align:center; border-radius:16px; margin:20px 0 0; }
-    .sc-banner::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background: radial-gradient(ellipse at 30% 20%, rgba(99,102,241,0.1) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(16,185,129,0.06) 0%, transparent 50%); pointer-events:none; }
-    /* 별 반짝임 */
-    @keyframes scTwinkle { 0%,100%{opacity:0.1; transform:scale(0.8)} 50%{opacity:1; transform:scale(1.2)} }
-    .sc-star { position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; animation: scTwinkle 2s ease-in-out infinite; }
-    .sc-star.big { width:3px; height:3px; box-shadow: 0 0 6px 1px rgba(165,180,252,0.6); }
-    /* 텍스트 페이드인 */
-    @keyframes scFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-    .sc-fade { animation: scFadeUp 0.8s ease forwards; opacity:0; }
-    .sc-fade-d1 { animation-delay:0.2s; } .sc-fade-d2 { animation-delay:0.4s; } .sc-fade-d3 { animation-delay:0.6s; } .sc-fade-d4 { animation-delay:0.8s; }
-    /* 슬라이드 텍스트 */
-    @keyframes scSlideText { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
-    .sc-slide-track { overflow:hidden; width:100%; max-width:800px; margin:0 auto; }
-    .sc-slide-text { display:inline-block; white-space:nowrap; animation: scSlideText 18s linear infinite; color:rgba(255,255,255,0.25); font-size:13px; font-weight:600; letter-spacing:2px; }
-    /* 버튼 */
-    .sc-cta-btn { display:inline-flex; align-items:center; gap:12px; background:linear-gradient(135deg,#059669,#10b981); color:#fff; border:none; border-radius:60px; padding:18px 52px; font-size:18px; font-weight:800; cursor:pointer; box-shadow:0 8px 30px rgba(16,185,129,0.35); transition:all 0.3s; position:relative; z-index:2; }
-    .sc-cta-btn:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 12px 40px rgba(16,185,129,0.45); }
-    @media(max-width:600px) { #shippingCalcSection { display:none !important; } }
-</style>
-<div class="sc-banner">
-    <!-- 별 -->
-    <div class="sc-star" style="top:8%;left:5%;animation-delay:0s;"></div>
-    <div class="sc-star big" style="top:12%;left:15%;animation-delay:0.5s;animation-duration:2.5s;"></div>
-    <div class="sc-star" style="top:5%;left:25%;animation-delay:1.2s;"></div>
-    <div class="sc-star big" style="top:20%;left:35%;animation-delay:0.3s;animation-duration:3s;"></div>
-    <div class="sc-star" style="top:10%;left:45%;animation-delay:1.8s;"></div>
-    <div class="sc-star" style="top:25%;left:55%;animation-delay:0.7s;animation-duration:2.2s;"></div>
-    <div class="sc-star big" style="top:8%;left:65%;animation-delay:1.4s;animation-duration:2.8s;"></div>
-    <div class="sc-star" style="top:18%;left:75%;animation-delay:0.1s;"></div>
-    <div class="sc-star big" style="top:6%;left:85%;animation-delay:2s;animation-duration:3.2s;"></div>
-    <div class="sc-star" style="top:30%;left:92%;animation-delay:0.9s;"></div>
-    <div class="sc-star" style="top:35%;left:8%;animation-delay:1.6s;animation-duration:2.4s;"></div>
-    <div class="sc-star big" style="top:40%;left:20%;animation-delay:0.4s;animation-duration:2.6s;"></div>
-    <div class="sc-star" style="top:38%;left:50%;animation-delay:2.2s;"></div>
-    <div class="sc-star" style="top:42%;left:70%;animation-delay:1s;animation-duration:2.1s;"></div>
-    <div class="sc-star big" style="top:33%;left:80%;animation-delay:1.7s;animation-duration:3.5s;"></div>
-    <div class="sc-star" style="top:15%;left:3%;animation-delay:2.5s;"></div>
-    <div class="sc-star" style="top:28%;left:42%;animation-delay:0.6s;animation-duration:2.3s;"></div>
-    <div class="sc-star big" style="top:22%;left:95%;animation-delay:1.3s;animation-duration:2.9s;"></div>
-    <!-- 콘텐츠 -->
-    <div style="position:relative; z-index:2;">
-        <div class="sc-fade sc-fade-d1" style="margin-bottom:8px;">
-            <span style="display:inline-block; background:rgba(99,102,241,0.2); color:#a5b4fc; padding:6px 18px; border-radius:30px; font-size:13px; font-weight:700; letter-spacing:1px;">
-                🌏 GLOBAL SHIPPING NETWORK
-            </span>
-        </div>
-        <h2 class="sc-fade sc-fade-d2" style="color:#fff; font-size:28px; font-weight:900; margin:16px 0 8px; line-height:1.35; letter-spacing:-0.5px;">
-            <span data-i18n="sc_banner_title">전세계 모든 도시로 배송됩니다.<br>지금 바로 견적상담하세요.</span>
-        </h2>
-        <p class="sc-fade sc-fade-d3" style="color:rgba(255,255,255,0.6); font-size:15px; margin:0 0 20px; line-height:1.6;">
-            <span data-i18n="sc_banner_desc">허니콤보드는 조립식 모듈로 부피를 줄입니다.</span>
-        </p>
-        <div class="sc-fade sc-fade-d3" style="margin-bottom:24px;">
-            <button onclick="if(window.ChamBot)window.ChamBot.toggle();" style="display:inline-flex; align-items:center; gap:10px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; padding:14px 32px; border-radius:50px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.4); transition:transform 0.2s, box-shadow 0.2s;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(99,102,241,0.5)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(99,102,241,0.4)'">
-                <i class="fa-solid fa-comments" style="font-size:20px;"></i> <span data-i18n="sc_chat_btn">글로벌 배송 상담채팅</span>
-            </button>
-        </div>
-        <div class="sc-fade sc-fade-d4" style="margin-top:8px;">
-            <div class="sc-slide-track">
-                <span class="sc-slide-text">KOREA · JAPAN · USA · CHINA · SINGAPORE · GERMANY · FRANCE · SPAIN · UAE · MALAYSIA · UK · AUSTRALIA · CANADA · THAILAND · VIETNAM · INDIA · INDONESIA</span>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-
 <!-- 배송비 계산기 모달 -->
 <div id="scModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100001; justify-content:center; align-items:center; padding:16px; overscroll-behavior:contain;">
     <style>
@@ -1048,12 +979,13 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     <div class="sub-shimmer"></div>
     <div style="position:relative; z-index:2;">
         <div class="sub-badge">🎁 PRO BENEFITS</div>
-        <h2 class="sub-title" data-i18n="sub_title">구독 10% + 추천인 5% + 마일리지 5% = 최대 20% 할인</h2>
+        <h2 class="sub-title" data-i18n="sub_title">구독 10% + 추천인 5% + 친구 5% + 마일리지 5% = 최대 25% 자동할인</h2>
         <p class="sub-desc" style="margin-bottom:16px;" data-i18n="sub_desc">프리미엄 템플릿 무제한 + 구독 시 100만원 마일리지 즉시 지급 (구매시 5%씩 사용)</p>
         <!-- 할인 혜택 요약 -->
-        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:24px;">
+        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
             <span style="background:rgba(251,191,36,0.15); color:#fbbf24; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">👑 구독 10%</span>
             <span style="background:rgba(52,211,153,0.15); color:#34d399; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">🤝 추천인 5%</span>
+            <span style="background:rgba(249,115,22,0.15); color:#fb923c; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">👫 친구 5%</span>
             <span style="background:rgba(165,180,252,0.15); color:#a5b4fc; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">💰 마일리지 5%</span>
         </div>
         <div class="sub-cards">
