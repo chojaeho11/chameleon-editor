@@ -2210,9 +2210,18 @@ async function handleSubReturn() {
                 <div id="sideAssetList" style="min-height:60px;"></div>
             </div>
 
-            <!-- 2-1. 아이콘 (Iconify) -->
+            <!-- 2-1. 아이콘 & 로고 (Iconify) -->
             <div id="sub-icon" class="sub-content">
-                <div class="sub-panel-header" style="font-weight:900; font-family:Inter,'Noto Sans KR',sans-serif; letter-spacing:0.5px;">ICONS</div>
+                <!-- 탭: 아이콘 | 로고 -->
+                <div style="display:flex; gap:0; margin-bottom:10px; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0;">
+                    <button id="iconTabIcon" class="icon-tab active" style="flex:1; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s;">
+                        <i class="fa-solid fa-icons" style="margin-right:4px;"></i><span data-i18n="tab_icons">아이콘</span>
+                    </button>
+                    <button id="iconTabLogo" class="icon-tab" style="flex:1; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s;">
+                        <i class="fa-solid fa-copyright" style="margin-right:4px;"></i><span data-i18n="tab_logos">로고</span>
+                    </button>
+                </div>
+                <!-- 검색바 -->
                 <div style="position:relative; margin-bottom:8px;">
                     <input type="text" id="iconSearchInput"
                            placeholder="아이콘 검색 (예: star, home)" data-i18n-placeholder="ph_search_icon"
@@ -2220,12 +2229,15 @@ async function handleSubReturn() {
                            style="width:100%; padding:8px 8px 8px 30px; border:2px solid #f1f5f9; border-radius:8px; background:#f8fafc; font-size:12px; outline:none;">
                     <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:11px;"></i>
                 </div>
+                <!-- 빠른 태그 -->
                 <div id="iconCategoryTags" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px;"></div>
+                <!-- 색상 피커 -->
                 <div id="iconColorRow" style="display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:6px 8px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
                     <span style="font-size:12px; color:#64748b; font-weight:600;" data-i18n="icon_color">색상</span>
                     <input type="color" id="iconColorPicker" value="#000000" style="width:28px; height:28px; border:none; cursor:pointer; background:none;">
                     <button id="iconColorReset" style="font-size:11px; padding:3px 8px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; margin-left:auto;" data-i18n="icon_color_reset">원본</button>
                 </div>
+                <!-- 결과 그리드 -->
                 <div id="iconResultGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; min-height:60px;"></div>
                 <button id="iconLoadMore" style="display:none; width:100%; padding:8px; margin-top:8px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:12px; cursor:pointer; color:#6366f1; font-weight:600;" data-i18n="icon_load_more">더 보기</button>
             </div>

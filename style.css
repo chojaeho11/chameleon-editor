@@ -3281,6 +3281,10 @@ body {
     to { opacity: 1; transform: translateX(0); }
 }
 .sub-content { display: none; padding: 15px 12px; }
+/* 아이콘/로고 탭 */
+.icon-tab { background:#f8fafc; color:#94a3b8; }
+.icon-tab.active { background:#6366f1; color:#fff; }
+.icon-tab:hover:not(.active) { background:#e2e8f0; color:#333; }
 .sub-content .section-title { margin-top: 15px; margin-bottom: 8px; }
 .sub-content .section-title:first-child { margin-top: 0; }
 /* 템플릿 패널: 리스트가 패널 내에서 스크롤 */
