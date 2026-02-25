@@ -1394,7 +1394,7 @@ window.submitQuoteRequest = async function() {
         if (fileInput) fileInput.value = '';
     } catch (e) {
         console.error('Quote submit error:', e);
-        showToast(window.t('quote_error') || 'Failed to send. Please email us at support@cafe2626.com', 'warn');
+        showToast(window.t('quote_error') || 'Failed to send. Please contact us via live chat.', 'warn');
     } finally {
         btn.innerHTML = origText;
         btn.disabled = false;

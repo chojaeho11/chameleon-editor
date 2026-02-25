@@ -1526,7 +1526,7 @@
   "quote_submit": "提交报价请求",
   "quote_alert_required": "请填写邮箱和咨询内容。",
   "quote_success": "报价请求已发送！我们将在24小时内通过邮件回复。",
-  "quote_error": "发送失败。请直接联系 support@cafe2626.com。",
+  "quote_error": "发送失败。请通过在线客服联系我们。",
 
   "//_REFERRAL": "--- 推荐人 ---",
   "label_referral_discount": "推荐人折扣",
