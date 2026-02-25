@@ -10317,45 +10317,9 @@ window.dsmRenderProducts = async function(keyword) {
         welcome();
     }
 
-    // ── 페이지 로드 시 채팅창 자동 복원 ──
-    function _tryRestoreChatWindow() {
-        if (!_isChatWasOpen()) return;
-        // 실시간 상담 복원 중이면 인간 상담 모듈이 처리
-        if (window._chamLiveRestored) {
-            opened = true;
-            _autoOpenChatIfClosed();
-            return;
-        }
-        if (window._chamLiveRestoring) {
-            // 복원 진행 중이면 대기 후 재확인
-            setTimeout(function() {
-                if (window._chamLiveRestored) { opened = true; _autoOpenChatIfClosed(); return; }
-                _restoreAiWindow();
-            }, 2000);
-            return;
-        }
-        _restoreAiWindow();
-    }
-    function _restoreAiWindow() {
-        _autoOpenChatIfClosed();
-        if (!opened) {
-            if (_loadChatHistory() && chatHistory.length > 0) {
-                chatHistory.forEach(function(m) { addMsg(m.content, m.role === 'user' ? 'user' : 'bot'); });
-            } else {
-                welcome();
-            }
-            opened = true;
-        }
-    }
-    // DOMContentLoaded 후 지연 실행 (인간 상담 모듈 복원 우선)
-    function _scheduleRestore() {
-        setTimeout(_tryRestoreChatWindow, 1200);
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', _scheduleRestore);
-    } else {
-        _scheduleRestore();
-    }
+    // ── 페이지 로드 시 채팅창 자동 복원 제거 (새로고침 시 항상 닫힘) ──
+    // localStorage 상태 초기화
+    _saveChatOpen(false);
 
     // 전역 접근용
     window.ChamBot = { toggle: toggleBot, send: sendMsg, newChat: newChat };
