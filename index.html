@@ -978,15 +978,15 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
 <div class="sub-hero">
     <div class="sub-shimmer"></div>
     <div style="position:relative; z-index:2;">
-        <div class="sub-badge">🎁 PRO BENEFITS</div>
-        <h2 class="sub-title" data-i18n="sub_title">구독 10% + 추천인 5% + 친구 5% + 마일리지 5% = 최대 25% 자동할인</h2>
-        <p class="sub-desc" style="margin-bottom:16px;" data-i18n="sub_desc">프리미엄 템플릿 무제한 + 구독 시 100만원 마일리지 즉시 지급 (구매시 5%씩 사용)</p>
-        <!-- 할인 혜택 요약 -->
-        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
-            <span style="background:rgba(251,191,36,0.15); color:#fbbf24; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">👑 구독 10%</span>
-            <span style="background:rgba(52,211,153,0.15); color:#34d399; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">🤝 추천인 5%</span>
-            <span style="background:rgba(249,115,22,0.15); color:#fb923c; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">👫 친구 5%</span>
-            <span style="background:rgba(165,180,252,0.15); color:#a5b4fc; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">💰 마일리지 5%</span>
+        <div class="sub-badge">🎁 PRO</div>
+        <h2 class="sub-title"><span id="subTitlePrice" data-i18n="sub_title">월 5,000원으로 받는 초특급 혜택</span></h2>
+        <p class="sub-desc" style="margin-bottom:12px;" data-i18n="sub_desc">프리미엄 템플릿 무제한 + 구독 시 100만원 마일리지 즉시 지급 (구매시 5%씩 사용)</p>
+        <div style="display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-bottom:20px;">
+            <span style="background:rgba(251,191,36,0.12); color:#fbbf24; padding:3px 10px; border-radius:14px; font-size:11px; font-weight:600;">구독 10%</span>
+            <span style="background:rgba(52,211,153,0.12); color:#34d399; padding:3px 10px; border-radius:14px; font-size:11px; font-weight:600;">추천인 5%</span>
+            <span style="background:rgba(249,115,22,0.12); color:#fb923c; padding:3px 10px; border-radius:14px; font-size:11px; font-weight:600;">친구 5%</span>
+            <span style="background:rgba(165,180,252,0.12); color:#a5b4fc; padding:3px 10px; border-radius:14px; font-size:11px; font-weight:600;">마일리지 5%</span>
+            <span style="background:rgba(255,255,255,0.1); color:#fff; padding:3px 10px; border-radius:14px; font-size:11px; font-weight:800;">= 최대 25%</span>
         </div>
         <div class="sub-cards">
             <div class="sub-card" onclick="window.startSubscription('monthly')">
@@ -1062,6 +1062,14 @@ function updateSubPrices() {
     const elA = document.getElementById('subPriceAnnual');
     if (elM) elM.innerHTML = p.monthly + '<small>' + p.monthlyPer + '</small>';
     if (elA) elA.innerHTML = p.annual + '<small>' + p.annualPer + '</small>';
+    // 타이틀에 국가별 월간 금액 표시
+    var titleEl = document.getElementById('subTitlePrice');
+    if (titleEl) {
+        if (country === 'JP') titleEl.textContent = '月額' + p.monthly + 'で受けられる超特急特典';
+        else if (country === 'US') titleEl.textContent = 'Premium benefits for just ' + p.monthly + '/mo';
+        else if (country === 'KR') titleEl.textContent = '월 ' + p.monthly.replace('₩','') + '원으로 받는 초특급 혜택';
+        else titleEl.textContent = p.monthly + p.monthlyPer + ' — Premium Benefits';
+    }
     var krNotice = document.getElementById('subKrCardNotice');
     if (krNotice) krNotice.style.display = (country === 'KR') ? 'block' : 'none';
 }
@@ -1089,6 +1097,25 @@ async function checkSubscription() {
             var krNotice = document.getElementById('subKrCardNotice');
             if (krNotice) krNotice.style.display = 'none';
             document.querySelectorAll('.sub-card').forEach(function(c) { c.style.display = 'none'; });
+
+            // 구독 마일리지 미지급 시 자동 지급 (안전장치)
+            try {
+                var { data: mLog } = await window.sb.from('wallet_logs')
+                    .select('id').eq('user_id', session.user.id)
+                    .eq('type', 'subscription_mileage').maybeSingle();
+                if (!mLog) {
+                    var cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+                    var mAmt = cc === 'JP' ? 100000 : cc === 'US' ? 2000000 : 1000000;
+                    var mLabel = cc === 'JP' ? '¥100,000' : cc === 'US' ? '$2,000' : '₩1,000,000';
+                    var { data: pf } = await window.sb.from('profiles').select('mileage').eq('id', session.user.id).single();
+                    await window.sb.from('profiles').update({ mileage: (parseInt(pf?.mileage || 0)) + mAmt }).eq('id', session.user.id);
+                    await window.sb.from('wallet_logs').insert({
+                        user_id: session.user.id, type: 'subscription_mileage',
+                        amount: mAmt, description: '##SUB_MILEAGE## Auto-grant (' + mLabel + ')'
+                    });
+                    console.log('[구독 마일리지] 자동 지급:', mLabel);
+                }
+            } catch (me) { console.warn('[구독 마일리지] 체크 오류:', me); }
         } else {
             window.isSubscriber = false;
             window.subscriptionPlan = null;
