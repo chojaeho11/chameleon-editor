@@ -11,7 +11,7 @@ const FONT_CONFIG = {
     // export.js 수정 (일본어 폰트 주소 변경)
 jp: {
     // 수파베이스 대신 빠르고 제한 없는 구글 폰트 CDN 주소 사용
-    url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf",
+    url: "https://fonts.gstatic.com/s/notosansjp/v56/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf",
     name: "NotoSansJP"
 },
     us: {

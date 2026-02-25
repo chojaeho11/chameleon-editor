@@ -1175,7 +1175,7 @@ const PTXT = PDF_LABELS[PDF_LANG] || PDF_LABELS['kr'];
 // 폰트 설정
 const PDF_FONT_CONFIG = {
     kr: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" },
-    jp: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf", name: "NotoSansJP" },
+    jp: { url: "https://fonts.gstatic.com/s/notosansjp/v56/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf", name: "NotoSansJP" },
     us: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" },
     cn: { url: "https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYw.ttf", name: "NotoSansSC" },
     ar: { url: "https://fonts.gstatic.com/s/notosansarabic/v33/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvuw.ttf", name: "NotoSansArabic" },

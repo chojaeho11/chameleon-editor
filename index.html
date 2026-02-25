@@ -7604,7 +7604,7 @@ if (w >= 20 && h >= 20) {
     // PDF 폰트 설정 (국가별 분기)
     window.pdfFontCache = null;
     const _pdfFontMap = {
-        'ja': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansjp/NotoSansJP-Regular.ttf', name: 'NotoSansJP' },
+        'ja': { url: 'https://fonts.gstatic.com/s/notosansjp/v56/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf', name: 'NotoSansJP' },
         'en': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf', name: 'Inter' },
         'kr': { url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf', name: 'NanumGothic' },
         'zh': { url: 'https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYw.ttf', name: 'NotoSansSC' },
@@ -11164,11 +11164,15 @@ window.dsmRenderProducts = async function(keyword) {
         return topModal;
     }
 
+    // 네비게이션 핸들러가 관리하는 모달은 여기서 제외 (pushState 중복 방지)
+    var NAV_MANAGED_MODALS = ['choiceModal','generalProductModal','categoryDetailModal','productDetailModal'];
+
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mut) {
             if (mut.type !== 'attributes' || mut.attributeName !== 'style') return;
             var el = mut.target;
             if (!el.classList || !el.classList.contains('modal-bg') || !el.id) return;
+            if (NAV_MANAGED_MODALS.indexOf(el.id) !== -1) return; // 네비게이션 모달 제외
             var isVisible = el.style.display && el.style.display !== 'none';
             var idx = modalStack.indexOf(el.id);
             if (isVisible && idx === -1) {
@@ -11189,6 +11193,10 @@ window.dsmRenderProducts = async function(keyword) {
     new MutationObserver(function() { observeModals(); }).observe(document.body, { childList: true, subtree: true });
 
     window.addEventListener('popstate', function(e) {
+        // 네비게이션 핸들러가 관리하는 state면 여기서 처리하지 않음
+        var s = e.state;
+        if (s && (s.type === 'product' || s.type === 'subcat' || s.type === 'home')) return;
+
         // 모바일: subPanel이 열려있으면 닫고 네비게이션 차단
         if (window.innerWidth <= 768) {
             var sp = document.getElementById('subPanel');
@@ -11197,13 +11205,12 @@ window.dsmRenderProducts = async function(keyword) {
                 sp.style.transform = '';
                 document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
                 document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
-                // state 복원해서 뒤로가기 네비게이션 방지
                 if (e.state) window.history.pushState(e.state, '');
                 return;
             }
         }
         var topModal = getTopmostVisibleModal();
-        if (topModal) {
+        if (topModal && NAV_MANAGED_MODALS.indexOf(topModal.id) === -1) {
             topModal.style.display = 'none';
             document.body.style.overflow = '';
             var idx = modalStack.indexOf(topModal.id);
