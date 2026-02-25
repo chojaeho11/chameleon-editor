@@ -2,16 +2,6 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<script>
-// ★ 경로 기반 상품코드 감지 (Google Ads 랜딩페이지용 - 리다이렉트 없이 전역변수로 전달)
-(function(){
-    var p = location.pathname.replace(/^\/|\/$/g, '');
-    if (p && p.length >= 2 && !/[\/\.]/.test(p)) {
-        var skip = ['board','mypage','success','fail','partner','robots','sitemap'];
-        if (skip.indexOf(p) < 0) window.__PATH_PRODUCT_CODE = p;
-    }
-})();
-</script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
@@ -5761,10 +5751,6 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
         // 경로 기반 제품 감지 (/honeycomb 등 SEO 슬러그)
         if (!productCode && window._SEO_PRODUCT_CODE) {
             productCode = window._SEO_PRODUCT_CODE;
-        }
-        // <head> 스크립트에서 감지한 경로 기반 상품코드
-        if (!productCode && window.__PATH_PRODUCT_CODE) {
-            productCode = window.__PATH_PRODUCT_CODE;
         }
 
         if (productCode) {
