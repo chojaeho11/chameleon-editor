@@ -4,6 +4,7 @@
 // ================================================================
 window.PRODUCT_SEO = {
     honeycomb: {
+        image: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1769076824090_63416175887313310.png',
         KR: {
             title: '허니콤보드 인쇄 - 친환경 종이 디스플레이 | 카멜레온프린팅',
             desc: '친환경 허니콤보드 맞춤 인쇄. 팝업스토어·전시부스·매장 디스플레이에 최적. 무료 온라인 에디터로 직접 디자인하고 전국 당일배송.',
@@ -36,6 +37,7 @@ window.PRODUCT_SEO = {
         }
     },
     'fabric-print': {
+        image: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/bulk_1768728014712_0.png',
         KR: {
             title: '패브릭 인쇄 - 고화질 천 인쇄 & 출력 | 카멜레온프린팅',
             desc: '고화질 패브릭(천) 맞춤 인쇄. 백월·포토존·배경막·현수막에 최적. 무료 디자인 에디터로 직접 제작, 전국 당일배송.',
@@ -196,6 +198,7 @@ window.PRODUCT_SEO = {
         }
     },
     goods: {
+        image: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770968526644_1000004100_detail_07.jpg',
         KR: {
             title: '아크릴 굿즈 제작 - 키링·포토카드·스탠드 | 카멜레온프린팅',
             desc: '아크릴 굿즈 맞춤 제작. 키링·포토카드·아크릴스탠드·뱃지. 무료 에디터로 직접 디자인, 소량 주문 가능, 전국 배송.',

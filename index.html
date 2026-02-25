@@ -185,6 +185,14 @@
     if(ogUrl) ogUrl.content = pageUrl;
     var ogSite = document.querySelector('meta[property="og:site_name"]');
     if(ogSite) ogSite.content = s.siteName;
+    // 6-2. OG/Twitter image (제품별 이미지 우선, 없으면 기본 로고)
+    if (isProductPage && window.PRODUCT_SEO[path] && window.PRODUCT_SEO[path].image) {
+        var prodImg = window.PRODUCT_SEO[path].image;
+        var ogImg = document.querySelector('meta[property="og:image"]');
+        if(ogImg) ogImg.content = prodImg;
+        var twImg = document.querySelector('meta[name="twitter:image"]');
+        if(twImg) twImg.content = prodImg;
+    }
     // 7. Twitter Card
     var twTitle = document.querySelector('meta[name="twitter:title"]');
     if(twTitle) twTitle.content = pageTitle;
@@ -248,7 +256,7 @@
             "description": pageDesc,
             "url": pageUrl,
             "brand": { "@type": "Brand", "name": s.siteName },
-            "image": "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png",
+            "image": (window.PRODUCT_SEO && window.PRODUCT_SEO[path] && window.PRODUCT_SEO[path].image) || "https://gdadmin.signmini.com/data/editor/policy/260105/6c9bc3b9b9a5903a01b44a7b36fc2cbe_191502.png",
             "offers": {
                 "@type": "Offer",
                 "availability": "https://schema.org/InStock",
@@ -4789,7 +4797,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
 
                 div.innerHTML = `
                     ${badge}
-                    <img src="${imgSrc}" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+                    <img src="${imgSrc}" alt="Design template" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
                 `;
                 div.onclick = () => window.onTemplateClick(tpl);
                 grid.appendChild(div);
@@ -5156,7 +5164,7 @@ window._drawQuickItems = (list, isProductMode = false) => {
         div.innerHTML = `
             <div class="quick-icon" onclick="${clickAction}" style="position:relative; overflow:hidden; cursor:pointer;">
                 ${isProduct ? '<span style="position:absolute;top:6px;left:6px;background:#6366f1;color:white;font-size:10px;padding:2px 6px;border-radius:4px;z-index:2;font-weight:bold;">상품</span>' : ''}
-                <img src="${tinyUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/200?text=No+Img'">
+                <img src="${tinyUrl}" alt="${name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/200?text=No+Img'">
             </div>
             <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
         `;
@@ -5484,7 +5492,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc) {
             div.className = 'quick-item';
             div.innerHTML = `
                 <div class="quick-icon-img-box">
-                    <img src="${thumbUrl}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
+                    <img src="${thumbUrl}" alt="${localized.name}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
                 </div>
                 <div class="quick-text" style="display:block !important; font-weight:bold; margin-top:8px;">${localized.name}</div>
                 <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${localized.formattedPrice}</div>
@@ -6037,7 +6045,7 @@ window.showChoiceModal = async function(key) {
 
     let productHeaderHtml = `
         <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
-            <img src="${product.img || product.img_url}" loading="lazy" style="width:100%; max-height:180px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
+            <img src="${product.img || product.img_url}" alt="${dName}" loading="lazy" style="width:100%; max-height:180px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
     `;
 
@@ -6708,7 +6716,7 @@ if (w >= 20 && h >= 20) {
             const hasPhoto = r.photo_url && r.photo_url.trim();
             const photoHtml = hasPhoto ? `
                 <div class="review-photo-wrap">
-                    <img src="${r.photo_url}" class="review-photo" alt="리뷰 사진" onclick="window.openReviewPhoto('${r.photo_url}')" loading="lazy">
+                    <img src="${r.photo_url}" class="review-photo" alt="${r.product_name || 'Customer review photo'}" onclick="window.openReviewPhoto('${r.photo_url}')" loading="lazy">
                 </div>` : '';
             html += `
                 <div class="review-card ${hasPhoto ? 'has-photo' : ''}">
@@ -7479,7 +7487,7 @@ if (w >= 20 && h >= 20) {
                 card.innerHTML = `
                     ${badgeHtml}
                     ${starHtml}
-                    <img src="${imgSrc}" class="tpl-card-img" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <img src="${imgSrc}" alt="${tpl.name || 'Design template'}" class="tpl-card-img" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;">
                     <div class="tpl-card-overlay"></div>
                 `;
                 
@@ -8997,7 +9005,7 @@ window.filterModalItems = function(keyword) {
 
         const iconUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
         const imgTag = iconUrl
-            ? `<img src="${iconUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
+            ? `<img src="${iconUrl}" alt="${item.name || ''}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
             : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
 
         div.innerHTML = `
@@ -11138,12 +11146,19 @@ window.dsmRenderProducts = async function(keyword) {
 <p>Chameleon Printing is a global online printing platform with a free built-in design editor. We serve customers in Korea, Japan, and the United States with 560+ manufacturing partners across 20+ countries.</p>
 
 <h2>Honeycomb Board Printing - Exhibition Booth & Pop-up Store Display</h2>
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1769076824090_63416175887313310.png" alt="Honeycomb board exhibition booth - 3m x 3m backlit booth set for trade shows and exhibitions" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="Honeycomb board temporary wall display - eco-friendly paper display for pop-up stores" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770042960042_Honeycomb%20Board%20(945).jpg" alt="Honeycomb board life-size standee - custom printed exhibition display board" width="600" height="400">
 <p>Custom eco-friendly honeycomb board printing for exhibition booths, trade show displays, pop-up stores, and retail environments. Our honeycomb boards are lightweight, durable, and 100% recyclable — perfect for sustainable event displays. Available in custom sizes with full-color UV printing. Free online design editor included.</p>
 
 <h2>Fabric Printing - Backwalls, Photo Zones & Banners</h2>
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/bulk_1768728014712_0.png" alt="Fabric printing backwall display stand - custom printed textile for exhibitions and events" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/bulk_1768895924748_1.png" alt="Custom fabric banner printing - high quality cloth print for photo zones and trade shows" width="600" height="400">
 <p>High-quality fabric printing for backwall displays, photo zones, event banners, and exhibition booth backdrops. Wrinkle-resistant, vibrant colors, and easy to install. Ideal for trade shows, corporate events, and retail promotions.</p>
 
-<h2>Acrylic Printing & Goods</h2>
+<h2>Acrylic Printing & Goods - Keychains, Standees & Badges</h2>
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770968526644_1000004100_detail_07.jpg" alt="Custom acrylic keychain printing - frosted matte acrylic keyrings with UV printing" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770963262365_1000004101_detail_023.png" alt="Glitter acrylic keychain - sparkle acrylic keyring with custom design printing" width="600" height="400">
 <p>Custom acrylic printing including acrylic standees, keychains, phone grips, and display signs. UV direct printing on clear or white acrylic with vivid colors and fine detail.</p>
 
 <h2>Banner Stands & Display Systems</h2>
@@ -11192,6 +11207,21 @@ window.dsmRenderProducts = async function(keyword) {
 </ul>
 
 <p>Visit <a href="https://www.cafe3355.com/">Chameleon Printing</a> to start designing your custom prints today. Free shipping on all products.</p>
+
+<h2>カメレオンプリンティング - 日本語商品一覧</h2>
+<h3>ハニカムボード印刷 - 展示ブース・ポップアップストア</h3>
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1769076824090_63416175887313310.png" alt="ハニカムボード展示ブース - 3m x 3m バックライト付きブースセット 展示会・イベント用" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="ハニカムボード仮壁ディスプレイ - エコ紙ディスプレイ ポップアップストア用" width="600" height="400">
+<p>エコハニカムボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。軽量・耐久性・100%リサイクル可能。無料オンラインエディターでデザイン。</p>
+
+<h3>ファブリック印刷 - バックウォール・フォトゾーン・バナー</h3>
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/bulk_1768728014712_0.png" alt="ファブリック印刷バックウォール - カスタム布印刷 展示会・イベント用ディスプレイ" width="600" height="400">
+<p>高画質ファブリック印刷。バックウォール・フォトゾーン・イベントバナー・展示ブース背景に最適。シワになりにくく、鮮やかな発色。</p>
+
+<h3>アクリルグッズ - キーホルダー・スタンド・バッジ</h3>
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770968526644_1000004100_detail_07.jpg" alt="アクリルキーホルダー印刷 - カスタムアクリルキーリング UV印刷" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770963262365_1000004101_detail_023.png" alt="ラメアクリルキーホルダー - キラキラアクリルキーリング カスタムデザイン印刷" width="600" height="400">
+<p>カスタムアクリルグッズ制作。キーホルダー・フォトカード・アクリルスタンド・バッジ。無料エディターでデザイン、小ロット対応。</p>
 </section>
 </noscript>
 
