@@ -1631,7 +1631,16 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 
 function updateSummary(prodTotal, addonTotal, total) {
     const elMinNotice = document.getElementById("minOrderNotice");
-    if (elMinNotice) elMinNotice.style.display = 'none';
+
+    // 최소주문금액 체크 (KRW 기준: KR=10000, JP=5000(=¥1,000), 그 외 없음)
+    const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
+    if (MIN_ORDER_KRW > 0 && total > 0 && total < MIN_ORDER_KRW) {
+        total = MIN_ORDER_KRW;
+        if (elMinNotice) elMinNotice.style.display = 'block';
+    } else {
+        if (elMinNotice) elMinNotice.style.display = 'none';
+    }
 
     const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal);
     const elAddon = document.getElementById("summaryAddonPrice"); if(elAddon) elAddon.innerText = formatCurrency(addonTotal);
@@ -2207,7 +2216,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 // ============================================================
 async function processFinalPayment() {
     if (!window.tempOrderInfo && !window.currentDbId) { showToast(window.t('msg_no_order_info', "No order info. Please try again from the start."), "error"); return; }
-    
+
     const mileageInput = document.getElementById('inputUseMileage');
     const localMileageVal = mileageInput ? (parseFloat(mileageInput.value) || 0) : 0;
     // 역환산: 현지 통화 → KRW
@@ -2217,6 +2226,14 @@ async function processFinalPayment() {
     const realFinalPayAmount = baseAmount - useMileage;
 
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
+
+    // 최소주문금액 검증
+    const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
+    if (MIN_ORDER_KRW > 0 && realFinalPayAmount > 0 && realFinalPayAmount < MIN_ORDER_KRW) {
+        showToast(window.t('msg_min_order_applied', '최소 주문금액이 적용되었습니다.'), 'warn');
+        return;
+    }
 
     if (useMileage > 0) {
         if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
