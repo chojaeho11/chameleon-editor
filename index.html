@@ -968,11 +968,20 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     .sub-feature i { color:#a5b4fc; font-size:14px; }
     .sub-active-banner { display:none; background:linear-gradient(135deg,#059669,#10b981); color:#fff; border-radius:12px; padding:16px 24px; text-align:center; font-weight:700; font-size:15px; margin-top:20px; position:relative; z-index:2; }
     .sub-active-banner i { margin-right:8px; }
+    .promo-discount-row { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:0; margin-bottom:20px; position:relative; z-index:2; }
+    .promo-item { font-size:24px; font-weight:900; letter-spacing:-0.5px; }
+    .promo-plus { color:rgba(255,255,255,0.25); font-size:18px; font-weight:300; margin:0 6px; }
+    .promo-eq { color:rgba(255,255,255,0.25); font-size:18px; font-weight:300; margin:0 6px; }
+    .promo-total { background:linear-gradient(135deg,#f59e0b,#f97316); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; font-size:32px; font-weight:900; letter-spacing:-1px; }
     @media(max-width:600px) {
-        .sub-hero { padding:35px 20px 30px; border-radius:12px; }
-        .sub-title { font-size:20px; }
+        .sub-hero { padding:30px 16px 24px; border-radius:12px; }
+        .sub-title { font-size:18px; }
         .sub-cards { flex-direction:column; align-items:center; }
         .sub-card { min-width:0; max-width:100%; width:100%; }
+        .promo-item { font-size:15px; }
+        .promo-plus, .promo-eq { font-size:13px; margin:0 3px; }
+        .promo-total { font-size:20px; }
+        .promo-discount-row { margin-bottom:14px; }
     }
 </style>
 <div class="sub-hero">
@@ -980,15 +989,14 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     <div style="position:relative; z-index:2;">
         <div class="sub-badge">🎁 PRO</div>
         <h2 class="sub-title"><span id="subTitlePrice" data-i18n="sub_title">월 5,000원으로 받는 초특급 혜택</span></h2>
-        <h2 class="sub-title" style="margin-top:0; font-size:22px;" data-i18n="sub_desc"><span style="color:#fbbf24;">구매금액 25% 할인</span> + 프리미엄 템플릿 무제한 + <span style="color:#fbbf24;">마일리지 100만원</span></h2>
-        <div style="display:flex; justify-content:center; align-items:center; gap:0; flex-wrap:wrap; margin-bottom:24px;">
-            <span style="color:#fbbf24; font-size:36px; font-weight:900; letter-spacing:-1px;" data-i18n="promo_big_sub">구독 10%</span>
-            <span style="color:rgba(255,255,255,0.3); font-size:28px; font-weight:300; margin:0 8px;">+</span>
-            <span style="color:#34d399; font-size:36px; font-weight:900; letter-spacing:-1px;" data-i18n="promo_big_ref">추천인 10%</span>
-            <span style="color:rgba(255,255,255,0.3); font-size:28px; font-weight:300; margin:0 8px;">+</span>
-            <span style="color:#a5b4fc; font-size:36px; font-weight:900; letter-spacing:-1px;" data-i18n="promo_big_mile">마일리지 5%</span>
-            <span style="color:rgba(255,255,255,0.3); font-size:28px; font-weight:300; margin:0 8px;">=</span>
-            <span style="background:linear-gradient(135deg,#f59e0b,#f97316); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; font-size:48px; font-weight:900; letter-spacing:-2px;" data-i18n="promo_big_total">최대 25% 즉시할인</span>
+        <div class="promo-discount-row">
+            <span class="promo-item" style="color:#fbbf24;" data-i18n="promo_big_sub">구독 10%</span>
+            <span class="promo-plus">+</span>
+            <span class="promo-item" style="color:#34d399;" data-i18n="promo_big_ref">추천인 10%</span>
+            <span class="promo-plus">+</span>
+            <span class="promo-item" style="color:#a5b4fc;" data-i18n="promo_big_mile">마일리지 5%</span>
+            <span class="promo-eq">=</span>
+            <span class="promo-total" data-i18n="promo_big_total">최대 25% 즉시할인</span>
         </div>
         <div class="sub-cards">
             <div class="sub-card" onclick="window.startSubscription('monthly')">
@@ -1011,11 +1019,6 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
                 <div style="color:rgba(255,255,255,0.35); font-size:11px; margin-bottom:16px; line-height:1.5;" data-i18n="sub_cancel_info">언제든 부담 없이 취소할 수 있습니다.<br>취소 후에도 기간 만료까지 이용 가능</div>
                 <button class="sub-card-btn" style="background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.7);" data-i18n="sub_manage_btn">구독 관리하기</button>
             </div>
-        </div>
-        <div class="sub-features">
-            <div class="sub-feature"><i class="fa-solid fa-star"></i> <span data-i18n="sub_feat_templates">프리미엄 템플릿 무제한</span></div>
-            <div class="sub-feature"><i class="fa-solid fa-coins"></i> <span data-i18n="sub_feat_mileage">100만원 마일리지 지급</span></div>
-            <div class="sub-feature"><i class="fa-solid fa-user-plus"></i> <span data-i18n="sub_feat_referral">추천인 5% 할인 · 친구 5% 현금</span></div>
         </div>
         <div id="subKrCardNotice" style="display:none; text-align:center; margin-top:14px; padding:10px 16px; background:rgba(255,215,0,0.15); border:1px solid rgba(255,215,0,0.4); border-radius:10px;">
             <span style="color:#ffd700; font-size:13px; font-weight:600;">⚠ 한국의 경우 해외 결제가 가능한 카드로만 구독서비스 신청이 가능합니다</span>
