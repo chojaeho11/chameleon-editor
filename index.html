@@ -2,6 +2,20 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
+<script>
+// ★ 경로 기반 상품코드 감지 → ?product= 파라미터로 변환 (Google Ads 랜딩페이지용)
+(function(){
+    var p = location.pathname.replace(/^\/|\/$/g, '');
+    if (!p || p.length < 2) return;
+    if (/[\/\.]/.test(p)) return; // 파일 경로 제외
+    var skip = ['board','mypage','success','fail','partner','robots','sitemap'];
+    if (skip.indexOf(p) >= 0) return;
+    var params = new URLSearchParams(location.search);
+    if (params.get('product')) return; // 이미 product 파라미터 있으면 스킵
+    params.set('product', p);
+    history.replaceState(null, '', '/' + '?' + params.toString());
+})();
+</script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
