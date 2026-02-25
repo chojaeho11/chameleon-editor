@@ -10,6 +10,7 @@ const SOCIAL_BOT_UA = /facebookexternalhit|twitterbot|linkedinbot|kakaotalk|line
 
 const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const PRERENDER_TOKEN = '2JsjKgGMzVH9qEqjkYam';
 
 // SEO category → DB query mapping
 const SEO_CATEGORIES = {
@@ -160,10 +161,36 @@ export default {
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
         // ========== BOT PRE-RENDERING ==========
-        // For Google/Bing bots on product pages, return rich HTML with images
-        if (BOT_UA.test(ua) && path && !path.includes('.')) {
+        // Skip if request is FROM Prerender.io's renderer (avoid infinite loop)
+        const isPrerender = request.headers.get('X-Prerender') === '1' || /prerender/i.test(ua);
+
+        if (!isPrerender && BOT_UA.test(ua) && path && !path.includes('.')) {
             // Skip admin/internal paths
             if (!['board', 'mypage', 'success', 'fail', 'partner', 'global_admin', 'driver', 'admin_m_secret_882', 'marketing_bot'].includes(path)) {
+                // Try Prerender.io first (fully rendered + cached page)
+                try {
+                    const prerenderRes = await fetch(`https://service.prerender.io/${request.url}`, {
+                        headers: {
+                            'X-Prerender-Token': PRERENDER_TOKEN,
+                            'X-Prerender-Int-Type': 'cloudflare',
+                        },
+                        redirect: 'manual',
+                    });
+                    if (prerenderRes.status === 200) {
+                        return new Response(prerenderRes.body, {
+                            status: 200,
+                            headers: {
+                                'Content-Type': 'text/html; charset=utf-8',
+                                'Cache-Control': 'public, max-age=86400',
+                                'X-Prerender': 'true',
+                            },
+                        });
+                    }
+                } catch (e) {
+                    // Prerender.io unavailable, fall through to custom pre-rendering
+                }
+
+                // Fallback: custom pre-rendering with Supabase data
                 try {
                     const cc = getCountry(url.hostname);
 
