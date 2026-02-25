@@ -177,14 +177,18 @@ export default {
                         redirect: 'manual',
                     });
                     if (prerenderRes.status === 200) {
-                        return new Response(prerenderRes.body, {
-                            status: 200,
-                            headers: {
-                                'Content-Type': 'text/html; charset=utf-8',
-                                'Cache-Control': 'public, max-age=86400',
-                                'X-Prerender': 'true',
-                            },
-                        });
+                        const prerenderBody = await prerenderRes.text();
+                        // Only use if Prerender.io returned real content (not empty render)
+                        if (prerenderBody.length > 1000) {
+                            return new Response(prerenderBody, {
+                                status: 200,
+                                headers: {
+                                    'Content-Type': 'text/html; charset=utf-8',
+                                    'Cache-Control': 'public, max-age=86400',
+                                    'X-Prerender': 'true',
+                                },
+                            });
+                        }
                     }
                 } catch (e) {
                     // Prerender.io unavailable, fall through to custom pre-rendering
