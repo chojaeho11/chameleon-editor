@@ -154,14 +154,22 @@ export async function onRequest(context) {
     return next(rewriteReq);
   }
 
-  // 원본 응답 가져오기
-  let response = await next();
+  // SPA 경로 판별: 제품 코드이거나 루트 경로면 index.html을 서빙
+  const path = url.pathname.replace(/^\/|\/$/g, '').replace(/\.html$/, '');
+  const isProductPath = !!PRODUCT_SEO[path];
+  const isRoot = path === '';
+  const isSpaPath = isProductPath || isRoot;
 
-  // 404인 경우 SPA 폴백 — index.html 서빙
-  if (response.status === 404) {
+  let response;
+  if (isSpaPath && !isRoot) {
+    // 제품 경로 → index.html 직접 서빙 (404.html 방지)
     const indexUrl = new URL('/index.html', url.origin);
-    const indexReq = new Request(indexUrl.toString(), request);
-    response = await env.ASSETS.fetch(indexReq);
+    response = await env.ASSETS.fetch(new Request(indexUrl.toString(), {
+      method: 'GET',
+      headers: request.headers
+    }));
+  } else {
+    response = await next();
   }
 
   // HTML 응답만 처리
@@ -174,8 +182,7 @@ export async function onRequest(context) {
   const hostname = url.hostname;
   const cc = hostname.includes('cafe0101') ? 'JP' : 'US';
 
-  // URL 경로로 제품 판별
-  const path = url.pathname.replace(/^\/|\/$/g, '').replace(/\.html$/, '');
+  // URL 경로로 제품 판별 (path는 위에서 이미 선언됨)
   const productSeo = PRODUCT_SEO[path] && PRODUCT_SEO[path][cc];
   const homeSeo = HOME_SEO[cc];
   const seo = productSeo || (path === '' ? homeSeo : null);
