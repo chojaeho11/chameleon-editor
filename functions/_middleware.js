@@ -154,20 +154,16 @@ export async function onRequest(context) {
     return next(rewriteReq);
   }
 
-  // SPA 경로 판별: 제품 코드이거나 루트 경로면 index.html을 서빙
+  // SPA 경로 판별
   const path = url.pathname.replace(/^\/|\/$/g, '').replace(/\.html$/, '');
   const isProductPath = !!PRODUCT_SEO[path];
-  const isRoot = path === '';
-  const isSpaPath = isProductPath || isRoot;
 
   let response;
-  if (isSpaPath && !isRoot) {
-    // 제품 경로 → index.html 직접 서빙 (404.html 방지)
+  if (isProductPath) {
+    // 제품 경로 → /index.html로 리라이트하여 next() 호출 (SPA 폴백)
     const indexUrl = new URL('/index.html', url.origin);
-    response = await env.ASSETS.fetch(new Request(indexUrl.toString(), {
-      method: 'GET',
-      headers: request.headers
-    }));
+    indexUrl.search = url.search;
+    response = await next(new Request(indexUrl.toString(), request));
   } else {
     response = await next();
   }
