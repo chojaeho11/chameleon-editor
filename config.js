@@ -60,6 +60,16 @@ export function initConfig() {
                 const btnLib = document.getElementById("btnMyLibrary");
                 if(btnLib) btnLib.style.display = session ? "inline-flex" : "none";
 
+                // 소셜 로그인/이메일 인증 후 프로필에 가입 국가 저장
+                if (event === 'SIGNED_IN' && session && session.user) {
+                    const sc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+                    sb.from('profiles').select('site').eq('id', session.user.id).maybeSingle().then(({ data: pf }) => {
+                        if (pf && (!pf.site || pf.site === 'KR') && sc !== 'KR') {
+                            sb.from('profiles').update({ site: sc }).eq('id', session.user.id);
+                        }
+                    });
+                }
+
                 if (event === 'SIGNED_OUT') location.reload();
 
                 // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시

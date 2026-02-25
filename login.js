@@ -187,9 +187,15 @@ async function handleAuthAction() {
             if (password !== pwConfirm) throw new Error(t['err_pw_mismatch'] || "비밀번호 불일치");
             if (password.length < 6) throw new Error(t['err_pw_length'] || "비밀번호 6자리 이상");
 
+            const siteCode = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
             const { data, error } = await sb.auth.signUp({ email, password });
             if (error) throw error;
-            
+
+            // 프로필에 가입 국가 저장
+            if (data.user) {
+                await sb.from('profiles').update({ site: siteCode }).eq('id', data.user.id);
+            }
+
             if (data.session) {
                 showToast(t['msg_signup_success'] || "가입 완료!", "success");
                 location.reload();
