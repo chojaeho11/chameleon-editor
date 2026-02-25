@@ -5817,6 +5817,9 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             var ss2 = document.getElementById('startScreen');
             if (ss2) ss2.style.display = '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            // 홈 도달: 뒤로가기로 사이트를 벗어나지 않도록 히스토리에 홈 상태 다시 삽입
+            var lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY !== 'KR') ? '?lang=' + (window.SITE_CONFIG.LANG || 'ko') : '';
+            window.history.pushState({ type: 'home' }, '', '/' + lang);
         }
 
         window._navNavigating = false;
