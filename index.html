@@ -963,6 +963,7 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     .sub-card-btn { display:block; width:100%; padding:12px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; }
     .sub-card-btn:hover { transform:scale(1.02); box-shadow:0 4px 15px rgba(99,102,241,0.4); }
     .sub-card.popular .sub-card-btn { background:linear-gradient(135deg,#f59e0b,#f97316); }
+    .sub-mileage-cta { margin-top:12px; padding:8px 4px; font-size:12px; font-weight:700; color:#fbbf24; line-height:1.5; text-align:center; background:rgba(251,191,36,0.1); border-radius:8px; letter-spacing:-0.3px; }
     .sub-features { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-top:28px; position:relative; z-index:2; }
     .sub-feature { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.6); font-size:12px; }
     .sub-feature i { color:#a5b4fc; font-size:14px; }
@@ -1004,6 +1005,7 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
                 <div class="sub-card-price" id="subPriceMonthly">₩5,000<small>/월</small></div>
                 <div class="sub-card-period" data-i18n="sub_monthly_period">매월 자동 결제</div>
                 <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
+                <div class="sub-mileage-cta" data-i18n="sub_mileage_cta">🎁 지금 구독하고<br>마일리지 100만원 받기</div>
             </div>
             <div class="sub-card popular" onclick="window.startSubscription('annual')">
                 <div class="sub-card-plan" data-i18n="sub_annual">연간 구독</div>
@@ -1074,6 +1076,13 @@ function updateSubPrices() {
         else if (country === 'US') titleEl.textContent = 'Premium benefits for just ' + p.monthly + '/mo';
         else if (country === 'KR') titleEl.textContent = '월 ' + p.monthly.replace('₩','') + '원으로 받는 초특급 혜택';
         else titleEl.textContent = p.monthly + p.monthlyPer + ' — Premium Benefits';
+    }
+    // 마일리지 CTA 국가별 텍스트
+    var ctaEl = document.querySelector('.sub-mileage-cta');
+    if (ctaEl) {
+        if (country === 'JP') ctaEl.innerHTML = '🎁 今すぐ購読して<br>マイレージ10万円GET';
+        else if (country === 'US') ctaEl.innerHTML = '🎁 Subscribe now &<br>get $2,000 mileage';
+        else ctaEl.innerHTML = '🎁 지금 구독하고<br>마일리지 100만원 받기';
     }
     var krNotice = document.getElementById('subKrCardNotice');
     if (krNotice) krNotice.style.display = (country === 'KR') ? 'block' : 'none';
