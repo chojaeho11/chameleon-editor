@@ -1,9 +1,12 @@
 User-agent: *
 Allow: /
 Disallow: /global_admin
+Disallow: /global_admin.js
+Disallow: /global_admin.html
+Disallow: /global_stats.js
+Disallow: /global_orders.js
 Disallow: /marketing_bot
 Disallow: /driver
-Disallow: /*.js$
 Disallow: /admin_m_secret_882
 Disallow: /node_modules/
 

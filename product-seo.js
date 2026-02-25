@@ -17,7 +17,7 @@ window.PRODUCT_SEO = {
         US: {
             title: 'Honeycomb Board Printing - Eco Paper Display | Chameleon Printing',
             desc: 'Custom eco-friendly honeycomb board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.',
-            keywords: 'honeycomb board,honeycomb board printing,paper display,pop-up store display,eco display,exhibition booth'
+            keywords: 'honeycomb board,honeycomb board printing,honeycomb board exhibition booth,paper display,pop-up store display,eco display,exhibition booth,trade show display,retail display board,eco-friendly display board,custom exhibition display,convention booth display'
         },
         CN: {
             title: '蜂窝板印刷 - 环保纸质展示板 | 变色龙印刷',
@@ -529,7 +529,7 @@ window.PRODUCT_SEO = {
         US: {
             title: 'Banner Stands - X-Banner & Roll-up Banner | Chameleon Printing',
             desc: 'Custom banner stands. X-banners, roll-up banners & display stands. For trade shows, events & retail. Free design editor.',
-            keywords: 'banner stand,X-banner,roll-up banner,trade show banner,event banner,display stand,retractable banner'
+            keywords: 'banner stand,X-banner,roll-up banner,trade show banner,event banner,display stand,retractable banner,exhibition banner,convention banner,trade show display'
         },
         CN: {
             title: '展架印刷 - X展架和易拉宝 | 变色龙印刷',
