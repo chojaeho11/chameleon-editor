@@ -1077,12 +1077,10 @@ function updateSubPrices() {
         else if (country === 'KR') titleEl.textContent = '월 ' + p.monthly.replace('₩','') + '원으로 받는 초특급 혜택';
         else titleEl.textContent = p.monthly + p.monthlyPer + ' — Premium Benefits';
     }
-    // 마일리지 CTA 국가별 텍스트
+    // 마일리지 CTA — i18n 키 사용 (sub_mileage_cta)
     var ctaEl = document.querySelector('.sub-mileage-cta');
-    if (ctaEl) {
-        if (country === 'JP') ctaEl.innerHTML = '🎁 今すぐ購読して<br>マイレージ10万円GET';
-        else if (country === 'US') ctaEl.innerHTML = '🎁 Subscribe now &<br>get $2,000 mileage';
-        else ctaEl.innerHTML = '🎁 지금 구독하고<br>마일리지 100만원 받기';
+    if (ctaEl && window.translations && window.translations['sub_mileage_cta']) {
+        ctaEl.innerHTML = window.translations['sub_mileage_cta'];
     }
     var krNotice = document.getElementById('subKrCardNotice');
     if (krNotice) krNotice.style.display = (country === 'KR') ? 'block' : 'none';
