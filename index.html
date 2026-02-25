@@ -10923,15 +10923,9 @@ window.dsmRenderProducts = async function(keyword) {
 
             console.log('♻️ 실시간 상담 복원:', _room.id, '상태:', _room.status);
 
-            // 채팅창 열기
-            var win = document.getElementById('cham-bot-window');
-            var trg = document.getElementById('cham-bot-trigger');
-            var ico = document.getElementById('cham-bot-icon');
+            // 채팅창 열지 않고 뱃지만 표시 (고객이 직접 열도록)
             var badge = document.getElementById('cham-bot-badge');
-            if (win) win.classList.add('visible');
-            if (trg) trg.classList.add('open');
-            if (ico) ico.className = 'fa-solid fa-xmark';
-            if (badge) badge.classList.add('hide');
+            if (badge) { badge.classList.remove('hide'); badge.textContent = '!'; }
 
             // 헤더 변경
             var managerName = _room.assigned_manager || '';
