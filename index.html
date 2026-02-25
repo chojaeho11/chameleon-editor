@@ -6888,10 +6888,32 @@ if (w >= 20 && h >= 20) {
 
     // [신규] 완료 모달 : 다른 제품 구매하기 버튼 (시작화면으로)
     window.continueShopping = function() {
-        document.getElementById('cartAddedModal').style.display = 'none'; // 완료 모달 닫기
-        document.getElementById('categoryDetailModal').style.display = 'none'; // 카테고리창도 닫기(필요시)
-        // 시작 화면은 이미 배경에 깔려 있으므로 모달만 닫으면 됩니다.
-        // 만약 새로고침이 필요하다면 location.reload()를 사용하세요.
+        document.getElementById('cartAddedModal').style.display = 'none';
+        // 모든 상품 모달 닫기
+        ['choiceModal','generalProductModal','categoryDetailModal','productDetailModal'].forEach(function(id) {
+            var m = document.getElementById(id);
+            if (m) {
+                m.style.display = 'none';
+                m.classList.remove('product-full-page');
+                m.style.padding = '';
+                m.style.background = '';
+                var box = m.querySelector('.modal-box');
+                if (box) {
+                    box.style = '';
+                    var h = box.querySelector('.product-full-header');
+                    var g = box.querySelector('.product-guide-banner');
+                    if (h) h.remove();
+                    if (g) g.remove();
+                }
+            }
+        });
+        // 시작 화면 복원
+        var ss = document.getElementById('startScreen');
+        if (ss) ss.style.display = '';
+        // URL을 홈으로 복원
+        var lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY !== 'KR') ? '?lang=' + (window.SITE_CONFIG.LANG || 'ko') : '';
+        window.history.pushState(null, '', '/' + lang);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     // [추가] 장바구니 일괄 업로드 핸들러
