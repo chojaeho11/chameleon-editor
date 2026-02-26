@@ -1248,7 +1248,9 @@ async function addCanvasToCart() {
     }
 
     // ★ 가벽 3D 액세서리 → 장바구니 addon 자동 연동
+    // ★ PDP에서 명시적으로 선택한 addon은 삭제하지 않음
     if (window.__wallMode && window.__wallAccessories) {
+        const _pendingSet = new Set(window.pendingSelectedAddons || []);
         const _ADDON_MAP = { cornerPillar: 'For', topLight: '87545', outdoorStand: 'b0001' };
         const _counts = (window.__wallConfig && window.__wallConfig.accessoryCounts) || {};
         Object.entries(window.__wallAccessories).forEach(([key, enabled]) => {
@@ -1257,7 +1259,8 @@ async function addCanvasToCart() {
             if (enabled) {
                 recoveredAddons['opt_' + code] = code;
                 recoveredAddonQtys[code] = _counts[key] || 1;
-            } else {
+            } else if (!_pendingSet.has(code)) {
+                // PDP에서 사용자가 직접 선택한 addon은 3D 설정으로 삭제하지 않음
                 delete recoveredAddons['opt_' + code];
                 delete recoveredAddonQtys[code];
             }
