@@ -1155,7 +1155,28 @@ async function addCanvasToCart() {
         }
     }
 
-    let calcProduct = { ...product };
+    // ★ 상품 정보 다이어트 (select('*')로 불러온 거대 데이터 방지 — addProductToCartDirectly와 동일 패턴)
+    const _imgField = product.img || product.img_url || '';
+    let calcProduct = {
+        name: product.name,
+        name_jp: product.name_jp || '',
+        name_us: product.name_us || '',
+        code: product.code || product.key,
+        price: product.price,
+        price_jp: product.price_jp || 0,
+        price_us: product.price_us || 0,
+        img: (_imgField && _imgField.length < 500 && !_imgField.startsWith('data:')) ? _imgField : null,
+        w: product.w || 0,
+        h: product.h || 0,
+        w_mm: product.w_mm || product.width_mm || 0,
+        h_mm: product.h_mm || product.height_mm || 0,
+        category: product.category || '',
+        addons: product.addons || [],
+        is_custom_size: product.is_custom_size || false,
+        _calculated_price: product._calculated_price || false,
+        _base_sqm_price: product._base_sqm_price || 0,
+        partner_id: product.partner_id || null
+    };
 
     const mmToPx = 3.7795;
     const currentMmW = finalW / mmToPx;
@@ -1214,12 +1235,16 @@ async function addCanvasToCart() {
     const recoveredAddons = {};
     const recoveredAddonQtys = {};
 
+    console.log('[장바구니] pendingSelectedAddons:', window.pendingSelectedAddons, 'pendingAddonQtys:', window.pendingSelectedAddonQtys);
+    console.log('[장바구니] product.addons:', calcProduct.addons);
+
     if (window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
         const savedQtys = window.pendingSelectedAddonQtys || {};
         window.pendingSelectedAddons.forEach(code => {
             recoveredAddons[`opt_${code}`] = code;
             recoveredAddonQtys[code] = savedQtys[code] || 1;
         });
+        console.log('[장바구니] 복구된 addons:', recoveredAddons, 'qtys:', recoveredAddonQtys);
     }
 
     // ★ 가벽 3D 액세서리 → 장바구니 addon 자동 연동
