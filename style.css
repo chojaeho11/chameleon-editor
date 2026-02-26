@@ -4734,6 +4734,7 @@ html[lang="ja"] h1, html[lang="ja"] h2, html[lang="ja"] h3, html[lang="ja"] h4 {
     line-height: 1.15 !important;
 }
 html[lang="ja"] .hero-title {
+    font-family: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif !important;
     font-size: 48px !important;
     font-weight: 900 !important;
     line-height: 1.15 !important;
@@ -4778,6 +4779,7 @@ html[lang="ja"] .product-detail-render div {
 /* 일본어 모바일 추가 축소 */
 @media (max-width: 768px) {
     html[lang="ja"] .hero-title {
+        font-family: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif !important;
         font-size: 22px !important;
         font-weight: 900 !important;
         line-height: 1.15 !important;
