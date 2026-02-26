@@ -77,9 +77,11 @@ export function initAuth() {
     // 4. 소셜 로그인
     const btnGoogle = document.getElementById("btnGoogleLogin");
     const btnKakao = document.getElementById("btnKakaoLogin");
+    const btnApple = document.getElementById("btnAppleLogin");
 
     if (btnGoogle) btnGoogle.onclick = () => handleSocialLogin("google");
     if (btnKakao) btnKakao.onclick = () => handleSocialLogin("kakao");
+    if (btnApple) btnApple.onclick = () => handleSocialLogin("apple");
     
     // 5. 엔터키 입력 처리
     const inputPw = document.getElementById("loginPw");
@@ -216,13 +218,13 @@ function updateModalUI() {
         if (quickSignupBtn) quickSignupBtn.style.display = "block"; // 1초 버튼 표시
     }
 
-    // ★ 한국 외 카카오 숨김
+    // ★ 한국=카카오, 그 외=Apple
+    const isKR = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'KR') ||
+                 (window.__SITE_CODE === 'KR');
     const kakaoBtn = document.getElementById("btnKakaoLogin");
-    if (kakaoBtn) {
-        const isKR = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'KR') ||
-                     (window.__SITE_CODE === 'KR');
-        kakaoBtn.style.display = isKR ? 'flex' : 'none';
-    }
+    const appleBtn = document.getElementById("btnAppleLogin");
+    if (kakaoBtn) kakaoBtn.style.display = isKR ? 'flex' : 'none';
+    if (appleBtn) appleBtn.style.display = isKR ? 'none' : 'flex';
 }
 
 async function handleAuthAction() {

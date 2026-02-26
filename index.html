@@ -2821,6 +2821,9 @@ async function handleSubReturn() {
             <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center;">
                 <i class="fa-solid fa-comment" style="margin-right:8px;"></i> <span data-i18n="btn_kakao_login">카카오로 시작하기</span>
             </button>
+            <button id="btnAppleLogin" class="btn-round" style="border-color:#000; background:#000; color:#fff; justify-content:center; display:none;">
+                <i class="fa-brands fa-apple" style="margin-right:8px; font-size:18px;"></i> <span data-i18n="btn_apple_login">Apple로 시작하기</span>
+            </button>
         </div>
         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f1f5f9; text-align: center;">
             <button onclick="document.getElementById('loginModal').style.display='none'" class="btn-round" style="width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-weight: normal;">
@@ -4691,9 +4694,12 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             const loginBtn = document.getElementById('btnLoginBtn');
             if (loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
             
-            // 카카오 버튼 숨김 (한국어 아닐 때)
+            // 한국=카카오, 그 외=Apple
+            const _isKR = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'KR') || (window.__SITE_CODE === 'KR');
             const kakaoBtn = document.getElementById('btnKakaoLogin');
-            if (kakaoBtn) kakaoBtn.style.display = (CURRENT_LANG === 'kr') ? 'flex' : 'none';
+            const appleBtn = document.getElementById('btnAppleLogin');
+            if (kakaoBtn) kakaoBtn.style.display = _isKR ? 'flex' : 'none';
+            if (appleBtn) appleBtn.style.display = _isKR ? 'none' : 'flex';
 
             loadLanguageFont(); // 폰트 적용
 

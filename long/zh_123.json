@@ -405,6 +405,7 @@
   "ctx_unlock": "解锁",
   "ctx_unlock_all": "全部解锁",
   "btn_google_login": "使用Google账号登录",
+  "btn_apple_login": "使用Apple账号登录",
   "placeholder_pw_confirm": "确认密码",
   "label_select_manager": "选择客户经理（可选）",
   "partner_menu_pool": "可接订单",

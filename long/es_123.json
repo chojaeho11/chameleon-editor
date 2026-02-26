@@ -405,6 +405,7 @@
   "ctx_unlock": "Desbloquear",
   "ctx_unlock_all": "Desbloquear Todo",
   "btn_google_login": "Continuar con Google",
+  "btn_apple_login": "Continuar con Apple",
   "placeholder_pw_confirm": "Confirmar Contraseña",
   "label_select_manager": "Seleccionar Gerente (Opcional)",
   "partner_menu_pool": "Pedidos Disponibles",

@@ -405,6 +405,7 @@
   "ctx_unlock": "Déverrouiller",
   "ctx_unlock_all": "Tout Déverrouiller",
   "btn_google_login": "Continuer avec Google",
+  "btn_apple_login": "Continuer avec Apple",
   "placeholder_pw_confirm": "Confirmer le Mot de Passe",
   "label_select_manager": "Sélectionner un Responsable (Optionnel)",
   "partner_menu_pool": "Commandes Disponibles",

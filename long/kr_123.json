@@ -368,6 +368,7 @@
   "msg_min_page_limit": "최소 한 개의 페이지가 필요합니다.",
   "btn_my_page": "📂 마이페이지",
   "btn_google_login": "Google로 시작하기",
+  "btn_apple_login": "Apple로 시작하기",
   "placeholder_pw_confirm": "비밀번호 확인",
   "label_select_manager": "담당 매니저 선택 (선택 사항)",
   "partner_menu_pool": "입찰 가능 오더",

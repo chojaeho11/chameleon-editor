@@ -402,6 +402,7 @@
   "ctx_unlock": "ロック解除",
   "ctx_unlock_all": "すべてのロックを解除",
   "btn_google_login": "Googleでログイン",
+  "btn_apple_login": "Appleでログイン",
   "placeholder_pw_confirm": "パスワード再確認",
   "label_select_manager": "担当マネージャー選択 (任意)",
   "partner_menu_pool": "入札可能な案件",

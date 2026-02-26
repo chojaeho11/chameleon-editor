@@ -405,6 +405,7 @@
   "ctx_unlock": "Entsperren",
   "ctx_unlock_all": "Alle entsperren",
   "btn_google_login": "Mit Google fortfahren",
+  "btn_apple_login": "Mit Apple fortfahren",
   "placeholder_pw_confirm": "Passwort bestätigen",
   "label_select_manager": "Betreuer wählen (optional)",
   "partner_menu_pool": "Verfügbare Bestellungen",

@@ -405,6 +405,7 @@
   "ctx_unlock": "Unlock",
   "ctx_unlock_all": "Unlock All",
   "btn_google_login": "Continue with Google",
+  "btn_apple_login": "Continue with Apple",
   "placeholder_pw_confirm": "Confirm Password",
   "label_select_manager": "Select Manager (Optional)",
   "partner_menu_pool": "Available Orders",

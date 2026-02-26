@@ -405,6 +405,7 @@
   "ctx_unlock": "إلغاء القفل",
   "ctx_unlock_all": "إلغاء قفل الكل",
   "btn_google_login": "المتابعة مع Google",
+  "btn_apple_login": "المتابعة مع Apple",
   "placeholder_pw_confirm": "تأكيد كلمة المرور",
   "label_select_manager": "اختر مديراً (اختياري)",
   "partner_menu_pool": "الطلبات المتاحة",
