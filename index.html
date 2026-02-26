@@ -6133,10 +6133,22 @@ window.showChoiceModal = async function(key) {
     if (isCustom) {
         rightSideUI = productHeaderHtml + `
             <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
-                <button onclick="window.confirmChoice('upload')" id="btnKeyringUpload" class="btn-round" style="height:50px; font-size:14px; background:#f59e0b; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">📎 ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger':lang==='en'?'Upload File':'파일 업로드'}</button>
-                <div style="text-align:center; font-size:11px; color:#94a3b8; margin-top:-4px;">${lang==='ja'?'※画像とPDFファイルのみアップロード可能です。':lang==='zh'?'※仅支持上传图片和PDF文件。':lang==='ar'?'※يمكن رفع الصور وملفات PDF فقط.':lang==='es'?'※Solo se pueden subir imágenes y archivos PDF.':lang==='de'?'※Nur Bilder und PDF-Dateien können hochgeladen werden.':lang==='fr'?'※Seuls les images et fichiers PDF peuvent être téléchargés.':lang==='en'?'※Only images and PDF files can be uploaded.':'※이미지와 PDF 파일만 업로드 가능합니다.'}</div>
+                <button onclick="window.confirmChoice('upload')" id="btnKeyringUpload" class="btn-round" style="height:50px; font-size:14px; background:#f59e0b; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">📎 ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일 업로드'}</button>
+                <div style="text-align:center; font-size:11px; color:#94a3b8; margin-top:-4px;">${lang==='ja'?'※画像とPDFファイルのみ':lang==='zh'?'※仅支持图片和PDF':lang==='ar'?'※صور وPDF فقط':lang==='es'?'※Solo imágenes y PDF':lang==='de'?'※Nur Bilder und PDF':lang==='fr'?'※Images et PDF uniquement':lang==='en'?'※Images and PDF only':'※이미지와 PDF만 가능'}</div>
                 ${product.is_file_upload ? '<div id="miniKeyringEditorContainer" style="display:none;"></div>' : ''}
                 <div id="uploadedFilesList" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px;"></div>
+            </div>
+            <div id="uploadPreviewArea" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc; box-shadow:0 2px 6px rgba(99,102,241,0.2);">
+                    <div style="flex:1; min-width:0;">
+                        <div id="uploadPreviewName" style="font-size:12px; font-weight:600; color:#1e40af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                        <div style="font-size:11px; color:#16a34a; font-weight:500;">✅ ${lang==='ja'?'アップロード完了':lang==='zh'?'上传完成':lang==='ar'?'تم الرفع':lang==='es'?'Subido':lang==='de'?'Hochgeladen':lang==='fr'?'Envoi terminé':lang==='en'?'Upload complete':'업로드 완료'}</div>
+                    </div>
+                </div>
+                <div style="background:linear-gradient(135deg, #eef2ff, #e0e7ff); padding:10px 12px; border-radius:8px; font-size:12px; color:#4338ca; line-height:1.5; font-weight:500;">
+                    🤖 ${lang==='ja'?'片方のサイズを入力するとAIが自動計算して見積もりを出します':lang==='zh'?'输入一边尺寸，AI将自动计算并估算价格':lang==='ar'?'أدخل بُعداً واحداً وسيحسب الذكاء الاصطناعي الحجم والسعر':lang==='es'?'Ingrese un lado y la IA calculará el tamaño y precio':lang==='de'?'Geben Sie eine Seite ein — KI berechnet Größe und Preis automatisch':lang==='fr'?'Entrez un côté, IA calculera la taille et le prix':lang==='en'?'Enter one side and AI will auto-calculate the size and estimate the price':'한쪽 사이즈를 입력하면 AI가 크기를 자동 계산하여 견적을 내어줍니다'}
+                </div>
             </div>
             <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
@@ -6145,7 +6157,7 @@ window.showChoiceModal = async function(key) {
                     <span style="display:flex; align-items:center; color:#999;">x</span>
                     <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
-                <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'幅または高さを入力すると、アップロードファイルから自動計算されます。':lang==='zh'?'输入宽或高，另一个尺寸将根据文件自动计算。':lang==='ar'?'أدخل العرض أو الارتفاع، سيتم حساب الآخر تلقائيًا.':lang==='es'?'Ingrese ancho o alto, el otro se calculará automáticamente.':lang==='de'?'Breite oder Höhe eingeben, das andere wird automatisch berechnet.':lang==='fr'?'Entrez la largeur ou la hauteur, le reste sera calculé automatiquement.':lang==='en'?'Enter width or height only — the other will be auto-calculated from your file.':'가로 또는 세로 한개만 입력하면 나머지는 파일에서 자동으로 입력됩니다.'}</div>
+                <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'ファイルアップロード後、片方のサイズを入力するとAIが自動計算します':lang==='zh'?'上传文件后输入一边尺寸，AI将自动计算':lang==='ar'?'ارفع ملفاً ثم أدخل بُعداً واحداً وسيحسب الذكاء الاصطناعي الباقي':lang==='es'?'Suba un archivo e ingrese un lado, la IA calculará el resto':lang==='de'?'Datei hochladen, eine Seite eingeben — KI berechnet den Rest':lang==='fr'?'Envoyez un fichier et entrez un côté, IA calculera le reste':lang==='en'?'Upload a file, then enter one side — AI will calculate the rest':'파일 업로드 후 한쪽 사이즈만 입력하면 AI가 자동 계산합니다'}</div>
             </div>
             <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량'}</div>
             <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
@@ -6154,7 +6166,7 @@ window.showChoiceModal = async function(key) {
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
             <div style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin-top:15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
-                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 自動見積価格':lang==='zh'?'💰 自动估价':lang==='ar'?'💰 السعر المقدر تلقائياً':lang==='es'?'💰 Precio Estimado Auto':lang==='de'?'💰 Auto-Preisschätzung':lang==='fr'?'💰 Estimation automatique':lang==='en'?'💰 Auto Estimated Price':'💰 자동 견적가'}</div>
+                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 AI自動見積価格':lang==='zh'?'💰 AI自动估价':lang==='ar'?'💰 تقدير AI التلقائي':lang==='es'?'💰 Estimación AI':lang==='de'?'💰 KI-Preisschätzung':lang==='fr'?'💰 Estimation IA':lang==='en'?'💰 AI Auto Estimate':'💰 AI 자동 견적가'}</div>
                 <div id="calcResultPrice" style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${lang==='ja'?'¥0':lang==='zh'?'¥0':lang==='ar'?'0 ﷼':lang==='es'?'€0':lang==='de'?'€0':lang==='fr'?'€0':lang==='en'?'$0':'0원'}</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.8; margin-top:2px;">-</div>
             </div>
@@ -6767,27 +6779,19 @@ if (w >= 20 && h >= 20) {
                 } catch(e) { console.warn('누끼 바운딩박스 감지 실패:', e); }
             }
 
-            // 비율 저장
+            // 비율 저장 (사이즈 자동 입력하지 않음 — 고객이 한쪽 입력하면 나머지 계산)
             window._uploadedFileDimensions = { w: pw, h: ph, ratio: pw / ph };
 
-            // 사이즈 입력창에 자동 입력 (px → mm, 300 DPI 기준)
-            const wInput = document.getElementById('inputCustW');
-            const hInput = document.getElementById('inputCustH');
-            if (wInput && hInput) {
-                const wMm = Math.round(pw * 25.4 / 300);
-                const hMm = Math.round(ph * 25.4 / 300);
-                wInput.value = Math.max(wMm, 20);
-                hInput.value = Math.max(hMm, 20);
-                window.calcCustomPrice();
-                window.updateModalTotal();
-
-                // 힌트 텍스트 업데이트
-                const hint = document.getElementById('sizeAutoHint');
-                if (hint) {
-                    const _l = (function(){ const p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase()==='jp'?'ja':p.toLowerCase()==='us'?'en':p.toLowerCase(); const h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
-                    hint.innerHTML = '✅ ' + (_l==='ja'?'ファイルからサイズを自動検出しました。変更可能です。':_l==='zh'?'已从文件自动检测尺寸，可修改。':_l==='ar'?'تم اكتشاف الحجم تلقائياً من الملف. يمكنك التعديل.':_l==='es'?'Tamaño auto-detectado del archivo. Puede modificarlo.':_l==='de'?'Größe automatisch erkannt. Sie können es ändern.':_l==='fr'?'Taille auto-détectée du fichier. Modifiable.':_l==='en'?'Size auto-detected from file. You can adjust.':'파일에서 사이즈가 자동 감지되었습니다. 수정 가능합니다.');
-                    hint.style.color = '#16a34a';
-                }
+            // 업로드 미리보기 표시 (작은 썸네일 + AI 안내)
+            const previewArea = document.getElementById('uploadPreviewArea');
+            const previewThumb = document.getElementById('uploadPreviewThumb');
+            const previewName = document.getElementById('uploadPreviewName');
+            if (previewArea) {
+                if (previewThumb) previewThumb.src = img.src; // objectURL 재사용
+                if (previewName && file.name) previewName.textContent = file.name;
+                previewArea.style.display = 'block';
+                // img.src objectURL은 preview에서 사용하므로 revoke하지 않음
+                return;
             }
             URL.revokeObjectURL(img.src);
         };
@@ -6807,6 +6811,16 @@ if (w >= 20 && h >= 20) {
             hInput.value = Math.round(parseInt(wInput.value) / ratio);
         } else if (changedField === 'h' && hInput.value) {
             wInput.value = Math.round(parseInt(hInput.value) * ratio);
+        }
+
+        // 한쪽 입력 완료 시 힌트 업데이트
+        if ((wInput.value && hInput.value) && (parseInt(wInput.value) >= 20 && parseInt(hInput.value) >= 20)) {
+            const hint = document.getElementById('sizeAutoHint');
+            if (hint) {
+                const _l = (function(){ const p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase()==='jp'?'ja':p.toLowerCase()==='us'?'en':p.toLowerCase(); const h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
+                hint.innerHTML = '✅ ' + (_l==='ja'?'AIがサイズを自動計算しました。修正可能です。':_l==='zh'?'AI已自动计算尺寸，可修改。':_l==='ar'?'حسب الذكاء الاصطناعي الحجم تلقائياً. يمكنك التعديل.':_l==='es'?'IA calculó el tamaño automáticamente. Puede modificarlo.':_l==='de'?'KI hat die Größe automatisch berechnet. Änderbar.':_l==='fr'?'IA a calculé la taille automatiquement. Modifiable.':_l==='en'?'AI auto-calculated the size. You can adjust.':'AI가 사이즈를 자동 계산했습니다. 수정 가능합니다.');
+                hint.style.color = '#16a34a';
+            }
         }
     };
 
