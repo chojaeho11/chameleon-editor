@@ -347,6 +347,7 @@ ${hreflangTags('/')}
         // Rewrite OG/meta tags using HTMLRewriter
         return new HTMLRewriter()
             .on('html', { element(el) { el.setAttribute('lang', siteData.lang); } })
+            .on('head', { element(el) { el.append('<style>#btnKakaoLogin{display:none!important;}</style>', { html: true }); } })
             .on('title', { element(el) { el.setInnerContent(siteData.title); } })
             .on('meta[name="description"]', { element(el) { el.setAttribute('content', siteData.description); } })
             .on('meta[property="og:site_name"]', { element(el) { el.setAttribute('content', siteData.siteName); } })
