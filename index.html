@@ -7126,16 +7126,10 @@ if (w >= 20 && h >= 20) {
     }
 
     // [수정됨] 에디터 진입 (DB 데이터 안전 로딩 추가)
-    // [수정됨] 에디터 진입 (DB 데이터 안전 로딩 추가)
     window.startEditorDirect = async function(key, customW = null, customH = null, customPrice = null) {
-        
-        // 1. [검증] 로그인 체크
-        const { data } = await sb.auth.getSession();
-        if (!data || !data.session || !data.session.user) {
-            showToast(window.t('msg_login_required_design'), 'warn');
-            document.getElementById('loginModal').style.display = 'flex';
-            return;
-        }
+
+        // ★ 로그인 체크 제거 — 비로그인도 자유롭게 에디터 사용 가능
+        // 저장/결제 시점에서 가입 유도 (my-design.js, order.js)
 
         if (!key) { showToast("상품 코드가 올바르지 않습니다.", 'error'); return; }
 
