@@ -6536,6 +6536,8 @@ if (w >= 20 && h >= 20) {
 
         if (mode === 'editor') {
             document.getElementById('choiceModal').style.display = 'none';
+            // ★ PDP→에디터 새 진입 시 기존 편집 인덱스 초기화 (stale 상태 방지)
+            window.editingCartItemIdx = undefined;
             window.pendingSelectedAddons = selectedAddonCodes;
             window.pendingSelectedAddonQtys = selectedAddonQtys;
 

@@ -1322,11 +1322,18 @@ async function addCanvasToCart() {
 
     // 2. 리스트에 추가 또는 기존 아이템 업데이트 (다시 편집 시)
     if (typeof window.editingCartItemIdx === 'number' && window.editingCartItemIdx >= 0 && window.editingCartItemIdx < currentCartList.length) {
+        console.log('[장바구니] 기존 아이템 편집 모드, idx:', window.editingCartItemIdx);
         // 기존 아이템의 수량/옵션/가격 보존하면서 디자인 데이터만 교체
         const oldItem = currentCartList[window.editingCartItemIdx];
         newItem.qty = oldItem.qty || newItem.qty;
-        newItem.selectedAddons = oldItem.selectedAddons || newItem.selectedAddons;
-        newItem.addonQuantities = oldItem.addonQuantities || newItem.addonQuantities;
+        // ★ PDP에서 새로 선택한 옵션이 있으면 그것을 우선 사용 (복구된 addons > 기존 addons)
+        if (window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
+            // recoveredAddons가 이미 newItem에 반영됨 — 기존 아이템으로 덮어쓰지 않음
+            console.log('[장바구니] pendingSelectedAddons 존재 → 새 옵션 유지');
+        } else {
+            newItem.selectedAddons = oldItem.selectedAddons || newItem.selectedAddons;
+            newItem.addonQuantities = oldItem.addonQuantities || newItem.addonQuantities;
+        }
         // ★ 기존 단가/사이즈 보존 (회배계산기 결과 + 커스텀 사이즈)
         if (oldItem.product) {
             if (oldItem.product.price) newItem.product.price = oldItem.product.price;
@@ -1548,9 +1555,12 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
         const displayMmH = (item.height && item.type === 'design') ? Math.round(item.height / _mmToPxR) : (item.height || 0);
 
         let addonHtml = '';
+        // ★ [디버그] 장바구니 addon 렌더링 진단
+        console.log(`[renderCart] item[${idx}] selectedAddons:`, JSON.stringify(item.selectedAddons), 'product.addons:', item.product.addons);
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
             const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
+            console.log(`[renderCart] item[${idx}] addonCodes:`, addonCodes, 'allAddons:', allAddons.map(a => a.code));
             const categories = [...new Set(allAddons.map(a => a.category_code || '_default'))];
 
             if(categories.length > 0 && allAddons.length > 0) {
@@ -1571,7 +1581,9 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                         // 일반 옵션: 리스트형
                         addonHtml += `<div style="display:flex; flex-direction:column; gap:6px;">
                                 ${catAddons.map(opt => {
-                                    const isSelected = Object.values(item.selectedAddons).includes(opt.code);
+                                    const _vals = Object.values(item.selectedAddons);
+                                    const isSelected = _vals.includes(opt.code);
+                                    console.log(`[renderCart] addon check: opt.code='${opt.code}' type=${typeof opt.code}, values=`, _vals, '→ isSelected:', isSelected);
                                     const currentAddonQty = (item.addonQuantities && item.addonQuantities[opt.code]) || 1;
                                     return `
                                         <div style="display:flex; flex-direction:column; padding:8px; border-radius:10px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; transition:0.2s; margin-bottom:6px;">
