@@ -2627,13 +2627,13 @@ body {
     /* 2. 템플릿 버튼 숨김 + 버튼 순서 재배치 */
     .template-tabs { display: none !important; } /* 템플릿 버튼 숨김 (사이드바에 있음) */
 
+    #btnHomeTop    { order: 0 !important; } /* 홈 (맨 앞) */
     #btnOrderTop   { order: 1 !important; } /* 구매하기 */
     #btnLoginBtn   { order: 3 !important; } /* 로그인/로그아웃 */
     #btnMyLibrary  { order: 4 !important; } /* MY Page (보관함) */
-    
-    /* 나머지 버튼들 (필요시 순서 조정) */
-    #btnHomeTop    { order: 5 !important; } 
-    #btnViewCart   { order: 6 !important; } 
+
+    /* 나머지 버튼들 */
+    #btnViewCart   { order: 6 !important; }
     .btn-save-top  { order: 7 !important; }
 
     /* 3. 좁은 화면을 위한 스타일 최적화 */
