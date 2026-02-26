@@ -1366,7 +1366,24 @@ async function addCanvasToCart() {
     cartData.length = 0;
     currentCartList.forEach(item => cartData.push(item));
 
-    renderCart(); 
+    // ★ [안전장치] 방금 추가한 아이템에 addon이 제대로 붙었는지 최종 확인
+    const latestItem = cartData[cartData.length - 1];
+    if (latestItem && window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
+        const hasAddons = latestItem.selectedAddons && Object.keys(latestItem.selectedAddons).length > 0;
+        if (!hasAddons) {
+            console.warn('[장바구니] selectedAddons 누락 감지! pendingSelectedAddons에서 강제 복원');
+            const _savedQtys = window.pendingSelectedAddonQtys || {};
+            latestItem.selectedAddons = {};
+            latestItem.addonQuantities = {};
+            window.pendingSelectedAddons.forEach(code => {
+                latestItem.selectedAddons[`opt_${code}`] = code;
+                latestItem.addonQuantities[code] = _savedQtys[code] || 1;
+            });
+        }
+        console.log('[장바구니] 최종 selectedAddons:', JSON.stringify(latestItem.selectedAddons));
+    }
+
+    renderCart();
 
     if(loading) loading.style.display = "none";
     
@@ -1460,11 +1477,20 @@ function renderCart() {
     cartData.forEach((item, idx) => {
         if (!item.product) return;
 
-        console.log(`[renderCart] item[${idx}] selectedAddons:`, JSON.stringify(item.selectedAddons), 'product.addons:', item.product.addons);
-
         if (!item.qty) item.qty = 1;
         if (item.isOpen === undefined) item.isOpen = true;
         if (!item.selectedAddons) item.selectedAddons = {};
+
+        // ★ [안전장치] pendingSelectedAddons가 있고 이 아이템의 selectedAddons가 비어있으면 강제 적용
+        if (Object.keys(item.selectedAddons).length === 0 && window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
+            const _sq = window.pendingSelectedAddonQtys || {};
+            window.pendingSelectedAddons.forEach(code => {
+                item.selectedAddons[`opt_${code}`] = code;
+                if (!item.addonQuantities) item.addonQuantities = {};
+                item.addonQuantities[code] = _sq[code] || 1;
+            });
+            console.log(`[renderCart] item[${idx}] addon 강제 적용:`, JSON.stringify(item.selectedAddons));
+        }
         
         let baseProductTotal = (item.product.price || 0) * item.qty;
         let optionTotal = 0;
