@@ -1137,7 +1137,7 @@ async function checkSubscription() {
     }
 }
 
-// Determine if a template is premium (deterministic ~66%)
+// Determine if a template is premium (deterministic ~25%)
 window.isPremiumTemplate = function(tpl) {
     var id = String(tpl.id || tpl.code || '');
     if (!id) return false;
@@ -1146,7 +1146,7 @@ window.isPremiumTemplate = function(tpl) {
         hash = ((hash << 5) - hash) + id.charCodeAt(i);
         hash = hash & hash; // Convert to 32-bit int
     }
-    return Math.abs(hash) % 3 !== 0; // ~66% premium
+    return Math.abs(hash) % 4 === 0; // ~25% premium
 };
 
 // Start subscription flow
@@ -7811,7 +7811,7 @@ if (w >= 20 && h >= 20) {
                     badgeHtml = `<span style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; z-index:5; box-shadow:0 2px 4px rgba(0,0,0,0.2); text-transform:uppercase; letter-spacing:0.5px;">${badgeText}</span>`;
                 }
 
-                // 프리미엄 별표 뱃지 (~66% of templates)
+                // 프리미엄 별표 뱃지 (~25% of templates)
                 const isPremium = window.isPremiumTemplate && window.isPremiumTemplate(tpl);
                 let starHtml = '';
                 if (isPremium) {
