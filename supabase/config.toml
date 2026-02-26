@@ -53,3 +53,9 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/chatbot-ai/deno.json"
 entrypoint = "./functions/chatbot-ai/index.ts"
+
+[functions.admin-reset-pw]
+enabled = true
+verify_jwt = true
+import_map = "./functions/admin-reset-pw/deno.json"
+entrypoint = "./functions/admin-reset-pw/index.ts"

@@ -108,6 +108,7 @@ window.loadMembers = async (isNewSearch = false) => {
                 <td style="padding:5px; text-align:center;">
     <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${m.deposit||0})">예치금</button>
     <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#d97706; border-color:#d97706;" onclick="editMileageManual('${m.id}', '${m.email}', ${m.mileage||0})">마일리지</button>
+    <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#6366f1; border-color:#6366f1;" onclick="openPwResetModal('${m.id}', '${m.email}')">🔑비번</button>
 </td>
                 <td style="padding:5px 15px;">${memoHtml}</td>
                 <td style="text-align:center;"><span class="badge" style="background:${badgeColor}; font-size:11px;">${displayRole}</span></td>
@@ -343,6 +344,39 @@ window.editMileageManual = async (userId, email, currentMileage) => {
     else { showToast("수정되었습니다.", "success"); loadMembers(); }
 };
 
+
+// [비밀번호 리셋]
+window.openPwResetModal = (userId, email) => {
+    const modal = document.getElementById('pwResetModal');
+    if (!modal) return;
+    document.getElementById('pwResetTargetId').value = userId;
+    document.getElementById('pwResetTargetName').innerText = email;
+    document.getElementById('pwResetNewPw').value = '';
+    modal.style.display = 'flex';
+};
+
+window.submitPwReset = async () => {
+    const userId = document.getElementById('pwResetTargetId').value;
+    const newPw = document.getElementById('pwResetNewPw').value.trim();
+    if (!newPw) { showToast("새 비밀번호를 입력해주세요.", "warn"); return; }
+    if (!confirm("이 회원의 비밀번호를 변경하시겠습니까?")) return;
+
+    showLoading(true);
+    try {
+        const { data, error } = await sb.functions.invoke('admin-reset-pw', {
+            body: { user_id: userId, new_password: newPw },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        showToast("비밀번호가 변경되었습니다.", "success");
+        document.getElementById('pwResetModal').style.display = 'none';
+    } catch (e) {
+        showToast("오류: " + e.message, "error");
+    } finally {
+        showLoading(false);
+    }
+};
 
 // [스태프 관리]
 window.loadStaffList = async () => {

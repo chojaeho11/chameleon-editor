@@ -139,6 +139,26 @@
         </div>
     </div>
 
+    <div id="pwResetModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box" style="width: 400px;">
+            <div class="modal-header">
+                <span>🔑 비밀번호 리셋</span>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('pwResetModal').style.display='none'">✕</button>
+            </div>
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center;">
+                <div id="pwResetTargetName" style="font-weight:bold; color:#334155;">-</div>
+                <div style="font-size:12px; color:#64748b;">대상 회원</div>
+            </div>
+            <input type="hidden" id="pwResetTargetId">
+            <div class="form-group">
+                <label class="form-label">새 비밀번호</label>
+                <input type="text" id="pwResetNewPw" class="input-text" placeholder="고객이 요청한 새 비밀번호">
+            </div>
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:10px;">※ 1자리 이상 입력 (6자 미만은 자동 패딩)</div>
+            <button class="btn btn-primary" style="width:100%; margin-top:5px;" onclick="submitPwReset()">비밀번호 변경</button>
+        </div>
+    </div>
+
     <div class="sidebar">
         <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
         <ul class="nav-menu">
