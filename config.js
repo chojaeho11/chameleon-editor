@@ -176,7 +176,23 @@ function updateUserSession(session) {
     }
     // UI 갱신
     const btnLogin = document.getElementById("btnLoginBtn");
-    if (btnLogin && btnLogin.updateState) btnLogin.updateState();
+    if (btnLogin) {
+        // ★ 직접 버튼 텍스트 갱신 (모듈 바인딩 문제 우회)
+        if (currentUser) {
+            const _isAdm = ADMIN_EMAILS.includes(currentUser.email);
+            btnLogin.innerText = _isAdm
+                ? (window.t ? window.t('btn_admin_logout', '관리자 로그아웃') : '관리자 로그아웃')
+                : (window.t ? window.t('btn_logout', '로그아웃') : '로그아웃');
+            btnLogin.classList.add('primary');
+            if (_isAdm) btnLogin.style.backgroundColor = '#dc2626';
+            else btnLogin.style.backgroundColor = '';
+        } else {
+            btnLogin.innerText = window.t ? window.t('btn_login', '로그인') : '로그인';
+            btnLogin.classList.remove('primary');
+            btnLogin.style.backgroundColor = '';
+        }
+        if (btnLogin.updateState) btnLogin.updateState();
+    }
     const btnLib = document.getElementById("btnMyLibrary");
     if (btnLib) btnLib.style.display = currentUser ? "inline-flex" : "none";
     loadUserCart();

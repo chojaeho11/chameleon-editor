@@ -241,23 +241,24 @@ async function handleAuthAction() {
                 await sb.from('profiles').update({ site: siteCode }).eq('id', data.user.id);
             }
 
-            if (data.session) {
-                // ★ 새로고침 없이 세션 갱신
-                const freshSession = await sb.auth.getSession();
-                if (window.updateUserSession) window.updateUserSession(freshSession.data.session);
+            // ★ 가입 즉시 로그인 처리
+            let session = data.session;
+            if (!session) {
+                // 세션이 없으면 직접 로그인 시도
+                const { data: loginData, error: loginErr } = await sb.auth.signInWithPassword({ email, password: paddedPassword });
+                if (!loginErr && loginData.session) session = loginData.session;
+            }
+            if (session) {
+                if (window.updateUserSession) window.updateUserSession(session);
+            }
+            showToast(window.t('msg_signup_success', "가입 완료!"), "success");
+            document.getElementById("loginModal").style.display = "none";
 
-                showToast(t['msg_signup_success'] || "가입 완료!", "success");
-                document.getElementById("loginModal").style.display = "none";
-
-                // 콜백 실행 (저장/결제 재시도)
-                if (window._authCallback) {
-                    const cb = window._authCallback;
-                    window._authCallback = null;
-                    setTimeout(cb, 300);
-                }
-            } else {
-                showToast(t['msg_verify_email'] || "인증 메일 발송됨", "info");
-                document.getElementById("loginModal").style.display = "none";
+            // 콜백 실행 (저장/결제 재시도)
+            if (window._authCallback) {
+                const cb = window._authCallback;
+                window._authCallback = null;
+                setTimeout(cb, 300);
             }
         } else {
             const { data, error } = await sb.auth.signInWithPassword({ email, password: paddedPassword });
