@@ -9051,9 +9051,16 @@ window.loadHomeHcGrid = function(){
         const referrer = document.referrer;
         const currentUrl = window.location.href;
 
-        // 1. [광고 체크] URL에 gclid(구글광고ID)나 utm 파라미터가 있는지 확인
-        if (params.has('gclid') || params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
+        // 1. [광고 체크] URL에 광고 추적 파라미터가 있는지 확인
+        if (params.has('gclid') || (params.get('utm_source') === 'google' && params.get('utm_medium') === 'cpc')) {
             return 'Google Ads (광고)';
+        }
+        if (params.has('na_click_id') || params.has('n_campaign_type') || params.has('nclid') ||
+            (params.get('utm_source') === 'naver' && params.get('utm_medium') === 'cpc')) {
+            return 'Naver Ads (광고)';
+        }
+        if (params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
+            return 'Ads (광고)';
         }
         
         // 2. [직접 접속/즐겨찾기] 리퍼러가 없는 경우
