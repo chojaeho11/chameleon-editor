@@ -6539,6 +6539,11 @@ if (w >= 20 && h >= 20) {
             window.pendingSelectedAddons = selectedAddonCodes;
             window.pendingSelectedAddonQtys = selectedAddonQtys;
 
+            // ★ 업로드된 파일이 있으면 에디터에서 불러올 수 있도록 저장
+            if (window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
+                window._pendingEditorFiles = [...window._pendingUploadedFiles];
+            }
+
             // ★ [수정] 확실하게 찾은 targetCode를 넘겨줌
             window.startEditorDirect(
                 targetCode,
@@ -6659,6 +6664,30 @@ if (w >= 20 && h >= 20) {
                                 const { data: td } = _sb.storage.from('customer_uploads').getPublicUrl(tp);
                                 thumbUrl = td.publicUrl; URL.revokeObjectURL(img.src);
                             } catch(e) { console.warn('썸네일 생성 실패:', e); }
+                        } else if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
+                            // PDF 썸네일: 첫 페이지를 렌더링하여 이미지로 변환
+                            try {
+                                if (window.pdfjsLib) {
+                                    if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                                    const arrBuf = await f.arrayBuffer();
+                                    const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(arrBuf) }).promise;
+                                    const page = await pdf.getPage(1);
+                                    const vp = page.getViewport({ scale: 0.5 });
+                                    const cv = document.createElement('canvas');
+                                    cv.width = vp.width; cv.height = vp.height;
+                                    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+                                    // 리사이즈
+                                    const thumbCv = document.createElement('canvas');
+                                    const sz = 200, sc = Math.min(sz/cv.width, sz/cv.height);
+                                    thumbCv.width = cv.width*sc; thumbCv.height = cv.height*sc;
+                                    thumbCv.getContext('2d').drawImage(cv, 0, 0, thumbCv.width, thumbCv.height);
+                                    const bl = await new Promise(r => thumbCv.toBlob(r, 'image/jpeg', 0.7));
+                                    const tp = `thumbs/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+                                    await _sb.storage.from('customer_uploads').upload(tp, bl, { contentType: 'image/jpeg', upsert: true });
+                                    const { data: td } = _sb.storage.from('customer_uploads').getPublicUrl(tp);
+                                    thumbUrl = td.publicUrl;
+                                }
+                            } catch(e) { console.warn('PDF 썸네일 생성 실패:', e); }
                         }
                         uploadedFiles.push({ fileName: f.name, originalUrl: urlData.publicUrl, thumb: thumbUrl });
                         if (!firstThumb) firstThumb = thumbUrl;
@@ -7525,6 +7554,71 @@ if (w >= 20 && h >= 20) {
                 window.pendingAiImage = null;
                 if(loading) loading.style.display = 'none';
             }, { crossOrigin: 'anonymous' });
+        }
+
+        // ★ 업로드된 파일을 에디터 캔버스에 로드
+        if (window._pendingEditorFiles && window._pendingEditorFiles.length > 0) {
+            const editorFiles = window._pendingEditorFiles;
+            window._pendingEditorFiles = null;
+            setTimeout(async () => {
+                const loading = document.getElementById("loading");
+                if(loading) loading.style.display = 'flex';
+                try {
+                    for (const ef of editorFiles) {
+                        const fileUrl = ef.originalUrl;
+                        const isPdf = fileUrl.toLowerCase().endsWith('.pdf');
+                        if (isPdf && window.pdfjsLib) {
+                            // PDF → 첫 페이지를 이미지로 렌더링하여 캔버스에 추가
+                            if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                            const resp = await fetch(fileUrl);
+                            const arrBuf = await resp.arrayBuffer();
+                            const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(arrBuf) }).promise;
+                            const page = await pdf.getPage(1);
+                            const vp = page.getViewport({ scale: 2 }); // 고해상도
+                            const cv = document.createElement('canvas');
+                            cv.width = vp.width; cv.height = vp.height;
+                            await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+                            const dataUrl = cv.toDataURL('image/png');
+                            await new Promise((resolve) => {
+                                fabric.Image.fromURL(dataUrl, (img) => {
+                                    if (!img) { resolve(); return; }
+                                    const board = canvas.getObjects().find(o => o.isBoard);
+                                    const cW = board ? board.width * board.scaleX : canvas.width;
+                                    const cH = board ? board.height * board.scaleY : canvas.height;
+                                    const cX = board ? board.left + cW / 2 : canvas.width / 2;
+                                    const cY = board ? board.top + cH / 2 : canvas.height / 2;
+                                    const scale = Math.min((cW * 0.95) / img.width, (cH * 0.95) / img.height);
+                                    img.set({ scaleX: scale, scaleY: scale, left: cX, top: cY, originX: 'center', originY: 'center' });
+                                    canvas.add(img);
+                                    canvas.setActiveObject(img);
+                                    canvas.requestRenderAll();
+                                    resolve();
+                                });
+                            });
+                        } else {
+                            // 이미지 파일 → 직접 캔버스에 추가
+                            const imgUrl = ef.originalUrl || ef.thumb;
+                            await new Promise((resolve) => {
+                                fabric.Image.fromURL(imgUrl, (img) => {
+                                    if (!img) { resolve(); return; }
+                                    const board = canvas.getObjects().find(o => o.isBoard);
+                                    const cW = board ? board.width * board.scaleX : canvas.width;
+                                    const cH = board ? board.height * board.scaleY : canvas.height;
+                                    const cX = board ? board.left + cW / 2 : canvas.width / 2;
+                                    const cY = board ? board.top + cH / 2 : canvas.height / 2;
+                                    const scale = Math.min((cW * 0.95) / img.width, (cH * 0.95) / img.height);
+                                    img.set({ scaleX: scale, scaleY: scale, left: cX, top: cY, originX: 'center', originY: 'center' });
+                                    canvas.add(img);
+                                    canvas.setActiveObject(img);
+                                    canvas.requestRenderAll();
+                                    resolve();
+                                }, { crossOrigin: 'anonymous' });
+                            });
+                        }
+                    }
+                } catch(e) { console.warn('에디터 파일 로드 실패:', e); }
+                if(loading) loading.style.display = 'none';
+            }, 800);
         }
 
     };
