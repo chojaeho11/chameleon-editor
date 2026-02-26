@@ -12,7 +12,8 @@ const GM = {
     playing: false,
     playTimer: null,
     maxFrames: 30,
-    videoFrameCount: 10
+    videoFrameCount: 10,
+    gifQuality: 'high' // 'high' or 'low'
 };
 window._gm = GM;
 
@@ -200,6 +201,11 @@ window.gifSetVideoFrames = function(n) {
     });
 };
 
+/* ─── GIF Quality Selection ─── */
+window.gifSetQuality = function(val) {
+    GM.gifQuality = (val === 'low') ? 'low' : 'high';
+};
+
 /* ─── Video Upload & Frame Extraction ─── */
 window.gifUploadVideo = function(input) {
     var file = input.files && input.files[0];
@@ -241,7 +247,9 @@ window.gifUploadVideo = function(input) {
         if (status) status.textContent = _t('gm_video_extracting', '프레임 추출 중...') + ' 0/' + frameCount;
 
         var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         var vw = video.videoWidth || 500;
         var vh = video.videoHeight || 500;
         canvas.width = vw;
@@ -774,10 +782,13 @@ window.exportGif = function() {
     const overlayJSON = fc.toJSON(['left','top','scaleX','scaleY','angle','flipX','flipY','originX','originY']);
 
     // build each frame as a canvas
+    const isHigh = GM.gifQuality === 'high';
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = GM.w;
     tempCanvas.height = GM.h;
-    const tempCtx = tempCanvas.getContext('2d');
+    const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = isHigh ? 'high' : 'medium';
 
     const frameDataUrls = [];
     let processed = 0;
@@ -854,12 +865,15 @@ function doEncode(frameDataUrls, delay) {
     const progressFill = document.getElementById('gifProgressFill');
     const progressText = document.getElementById('gifProgressText');
 
+    // quality: 1 = best color (slow), 10 = decent, 20 = fast/poor
+    const isHigh = GM.gifQuality === 'high';
     const gif = new GIF({
-        workers: 2,
-        quality: 10,
+        workers: isHigh ? 4 : 2,
+        quality: isHigh ? 1 : 20,
         width: GM.w,
         height: GM.h,
-        workerScript: './gif.worker.js'
+        workerScript: './gif.worker.js',
+        dither: isHigh ? 'FloydSteinberg' : false
     });
 
     let loaded = 0;

@@ -8261,6 +8261,13 @@ if (w >= 20 && h >= 20) {
                 <option value="2000" data-i18n="gm_speed_slowest">매우 느림 (2초)</option>
             </select>
             <div style="width:1px; height:28px; background:rgba(255,255,255,0.1); margin:0 6px;"></div>
+            <!-- 화질 선택 -->
+            <span style="color:#c4b5fd; font-size:13px;" data-i18n="gm_quality_label">화질:</span>
+            <select id="gifQuality" onchange="window.gifSetQuality(this.value)" style="padding:6px 10px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; font-size:13px; cursor:pointer;">
+                <option value="high" data-i18n="gm_quality_high">고화질 (느림)</option>
+                <option value="low" data-i18n="gm_quality_low">저화질 (빠름)</option>
+            </select>
+            <div style="width:1px; height:28px; background:rgba(255,255,255,0.1); margin:0 6px;"></div>
             <!-- 내보내기 -->
             <button id="gifExportBtn" onclick="window.exportGif()" style="padding:8px 22px; background:linear-gradient(135deg,#ec4899,#f472b6); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 2px 12px rgba(236,72,153,0.4);"><i class="fa-solid fa-download" style="margin-right:6px;"></i><span data-i18n="gm_save_gif">GIF 저장</span></button>
             <button onclick="window.closeGifMaker()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer; padding:8px; margin-left:4px;"><i class="fa-solid fa-xmark"></i></button>
