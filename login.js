@@ -197,11 +197,19 @@ async function handleAuthAction() {
     const emailInput = document.getElementById("loginId");
     const pwInput = document.getElementById("loginPw");
     const pwConfirmInput = document.getElementById("loginPwConfirm");
-    const email = emailInput?.value.trim();
+    let email = emailInput?.value.trim();
     const password = pwInput?.value.trim();
 
     if (!email || !password) { showToast(window.t('err_input_required', "Input required."), "warn"); return; }
     if (!sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
+
+    // ★ '@' 없으면 자동으로 이메일 형식 생성 (간편 가입)
+    if (!email.includes('@')) {
+        email = email + '@cafe2626.com';
+    }
+    // ★ Supabase 최소 6자 요구 → 짧은 비번은 자동 패딩 (가입/로그인 모두 동일 처리)
+    let paddedPassword = password;
+    while (paddedPassword.length < 6) paddedPassword += '0';
 
     const btn = document.getElementById("btnAuthAction");
     const originalText = btn.innerText;
@@ -212,10 +220,9 @@ async function handleAuthAction() {
         if (isSignUpMode) {
             const pwConfirm = pwConfirmInput?.value.trim();
             if (password !== pwConfirm) throw new Error(t['err_pw_mismatch'] || "비밀번호 불일치");
-            if (password.length < 6) throw new Error(t['err_pw_length'] || "비밀번호 6자리 이상");
 
             const siteCode = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-            const { data, error } = await sb.auth.signUp({ email, password });
+            const { data, error } = await sb.auth.signUp({ email, password: paddedPassword });
             if (error) throw error;
 
             // 프로필에 가입 국가 저장
@@ -242,7 +249,7 @@ async function handleAuthAction() {
                 document.getElementById("loginModal").style.display = "none";
             }
         } else {
-            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+            const { data, error } = await sb.auth.signInWithPassword({ email, password: paddedPassword });
             if (error) throw error;
 
             // ★ 새로고침 없이 세션 갱신
@@ -349,7 +356,6 @@ async function handleResetPassword() {
 
     if (!newPw || !newPwConfirm) { showToast(window.t('err_input_required', "비밀번호를 입력해주세요."), "warn"); return; }
     if (newPw !== newPwConfirm) { showToast(window.t('err_pw_mismatch', "비밀번호가 일치하지 않습니다."), "error"); return; }
-    if (newPw.length < 6) { showToast(window.t('err_pw_length', "비밀번호는 6자리 이상이어야 합니다."), "error"); return; }
     if (!sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
 
     const btn = document.getElementById("btnChangePassword");
@@ -358,7 +364,9 @@ async function handleResetPassword() {
     btn.disabled = true;
 
     try {
-        const { error } = await sb.auth.updateUser({ password: newPw });
+        let paddedNewPw = newPw;
+        while (paddedNewPw.length < 6) paddedNewPw += '0';
+        const { error } = await sb.auth.updateUser({ password: paddedNewPw });
         if (error) throw error;
         showToast(window.t('msg_pw_changed', "비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요."), "success");
         document.getElementById("resetPwModal").style.display = "none";
