@@ -188,7 +188,7 @@ Output ONLY the HTML. No markdown, no code blocks, no explanation.`;
       try {
         const systemPrompt = isWizard ? buildWizardPrompt(lang) : buildSimplePrompt(lang);
         const maxTokens = isWizard ? 4000 : 1500;
-        const models = ["claude-sonnet-4-5-20250929", "claude-haiku-4-5-20251001"];
+        const models = ["claude-sonnet-4-6", "claude-haiku-4-5-20251001"];
 
         for (const model of models) {
           const res = await fetch("https://api.anthropic.com/v1/messages", {
