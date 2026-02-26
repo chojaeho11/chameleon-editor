@@ -439,6 +439,7 @@
   "err_pw_mismatch": "Las contraseñas no coinciden.",
   "err_pw_length": "La contraseña debe tener al menos 6 caracteres.",
   "msg_signup_success": "¡Registro completado!",
+  "msg_login_success": "¡Inicio de sesión exitoso!",
   "msg_verify_email": "Correo de verificación enviado. Por favor revise su bandeja de entrada.",
   "err_prefix": "Error: ",
   "err_login_fail": "Error al iniciar sesión: ",

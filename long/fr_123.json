@@ -439,6 +439,7 @@
   "err_pw_mismatch": "Les mots de passe ne correspondent pas.",
   "err_pw_length": "Le mot de passe doit contenir au moins 6 caractères.",
   "msg_signup_success": "Inscription terminée !",
+  "msg_login_success": "Connexion réussie !",
   "msg_verify_email": "E-mail de vérification envoyé. Veuillez vérifier votre boîte de réception.",
   "err_prefix": "Erreur : ",
   "err_login_fail": "Échec de la connexion : ",

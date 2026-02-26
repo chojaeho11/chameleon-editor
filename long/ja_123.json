@@ -436,6 +436,7 @@
   "err_pw_mismatch": "パスワードが一致しません。",
   "err_pw_length": "パスワードは6文字以上で入力してください。",
   "msg_signup_success": "会員登録が完了しました！",
+  "msg_login_success": "ログイン完了！",
   "msg_verify_email": "認証メールを送信しました。メールボックスを確認してください。",
   "err_prefix": "エラー: ",
   "err_login_fail": "ログイン失敗: ",

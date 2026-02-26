@@ -439,6 +439,7 @@
   "err_pw_mismatch": "Passwörter stimmen nicht überein.",
   "err_pw_length": "Passwort muss mindestens 6 Zeichen lang sein.",
   "msg_signup_success": "Registrierung abgeschlossen!",
+  "msg_login_success": "Anmeldung erfolgreich!",
   "msg_verify_email": "Bestätigungs-E-Mail gesendet. Bitte prüfen Sie Ihren Posteingang.",
   "err_prefix": "Fehler: ",
   "err_login_fail": "Anmeldung fehlgeschlagen: ",

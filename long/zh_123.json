@@ -439,6 +439,7 @@
   "err_pw_mismatch": "两次输入的密码不一致。",
   "err_pw_length": "密码至少需要6个字符。",
   "msg_signup_success": "注册完成！",
+  "msg_login_success": "登录成功！",
   "msg_verify_email": "验证邮件已发送，请查收。",
   "err_prefix": "错误: ",
   "err_login_fail": "登录失败: ",

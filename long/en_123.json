@@ -439,6 +439,7 @@
   "err_pw_mismatch": "Passwords do not match.",
   "err_pw_length": "Password must be at least 6 characters.",
   "msg_signup_success": "Registration complete!",
+  "msg_login_success": "Login successful!",
   "msg_verify_email": "Verification email sent. Please check your inbox.",
   "err_prefix": "Error: ",
   "err_login_fail": "Login failed: ",

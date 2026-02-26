@@ -402,6 +402,7 @@
   "err_pw_mismatch": "비밀번호가 일치하지 않습니다.",
   "err_pw_length": "비밀번호는 6자리 이상이어야 합니다.",
   "msg_signup_success": "회원가입이 완료되었습니다!",
+  "msg_login_success": "로그인 완료!",
   "msg_verify_email": "인증 메일이 발송되었습니다. 메일함을 확인해주세요.",
   "err_prefix": "오류: ",
   "err_login_fail": "로그인 실패: ",
