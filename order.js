@@ -1489,6 +1489,11 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
             flex-direction: ${isMobile ? 'column' : 'row'};
         `;
 
+        // 에디터(type=design)는 px 단위, 직접추가(product_only/file_upload)는 mm 단위
+        const _mmToPxR = 3.7795;
+        const displayMmW = (item.width && item.type === 'design') ? Math.round(item.width / _mmToPxR) : (item.width || 0);
+        const displayMmH = (item.height && item.type === 'design') ? Math.round(item.height / _mmToPxR) : (item.height || 0);
+
         let addonHtml = '';
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
@@ -1558,7 +1563,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
 
                     <div style="flex:1; min-width:200px;">
                         <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${localName(item.product)}</h4>
-                        ${(item.width && item.height) ? `<div style="font-size:12px; color:#6366f1; margin-top:4px; font-weight:bold;">📐 ${item.width}x${item.height}mm</div>` : ''}
+                        ${(displayMmW && displayMmH) ? `<div style="font-size:12px; color:#6366f1; margin-top:4px; font-weight:bold;">📐 ${displayMmW}x${displayMmH}mm</div>` : ''}
                         <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.type === 'file_upload' ? item.fileName : (item.fileName || window.t('msg_file_attached_separately', '(File attached separately)'))}</div>
                         <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
                         ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:8px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
@@ -1594,7 +1599,7 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
                         <img src="${displayImg}" loading="lazy" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${localName(item.product)}</h4>
-                            ${(item.width && item.height) ? `<div style="font-size:11px; color:#6366f1; margin-top:2px; font-weight:bold;">📐 ${item.width}x${item.height}mm</div>` : ''}
+                            ${(displayMmW && displayMmH) ? `<div style="font-size:11px; color:#6366f1; margin-top:2px; font-weight:bold;">📐 ${displayMmW}x${displayMmH}mm</div>` : ''}
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
                             ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:6px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
                         </div>

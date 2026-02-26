@@ -6144,6 +6144,7 @@ window.showChoiceModal = async function(key) {
                     <div style="flex:1; min-width:0;">
                         <div id="uploadPreviewName" style="font-size:12px; font-weight:600; color:#1e40af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
                         <div style="font-size:11px; color:#16a34a; font-weight:500;">✅ ${lang==='ja'?'アップロード完了':lang==='zh'?'上传完成':lang==='ar'?'تم الرفع':lang==='es'?'Subido':lang==='de'?'Hochgeladen':lang==='fr'?'Envoi terminé':lang==='en'?'Upload complete':'업로드 완료'}</div>
+                        <div id="uploadPreviewDims" style="display:none; font-size:10px; color:#6366f1; font-weight:600; margin-top:2px;"></div>
                     </div>
                 </div>
                 <div style="background:linear-gradient(135deg, #eef2ff, #e0e7ff); padding:10px 12px; border-radius:8px; font-size:12px; color:#4338ca; line-height:1.5; font-weight:500;">
@@ -6782,13 +6783,21 @@ if (w >= 20 && h >= 20) {
             // 비율 저장 (사이즈 자동 입력하지 않음 — 고객이 한쪽 입력하면 나머지 계산)
             window._uploadedFileDimensions = { w: pw, h: ph, ratio: pw / ph };
 
-            // 업로드 미리보기 표시 (작은 썸네일 + AI 안내)
+            // 업로드 미리보기 표시 (작은 썸네일 + 감지된 크기 + AI 안내)
             const previewArea = document.getElementById('uploadPreviewArea');
             const previewThumb = document.getElementById('uploadPreviewThumb');
             const previewName = document.getElementById('uploadPreviewName');
             if (previewArea) {
                 if (previewThumb) previewThumb.src = img.src; // objectURL 재사용
                 if (previewName && file.name) previewName.textContent = file.name;
+                // 감지된 픽셀 크기 표시
+                const dimInfo = document.getElementById('uploadPreviewDims');
+                if (dimInfo) {
+                    const estMmW = Math.round(pw * 25.4 / 300);
+                    const estMmH = Math.round(ph * 25.4 / 300);
+                    dimInfo.textContent = `${pw}×${ph}px (≈${estMmW}×${estMmH}mm @300dpi)`;
+                    dimInfo.style.display = 'block';
+                }
                 previewArea.style.display = 'block';
                 // img.src objectURL은 preview에서 사용하므로 revoke하지 않음
                 return;
