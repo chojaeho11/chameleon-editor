@@ -3430,7 +3430,8 @@ window.wizRunPipeline = async () => {
                 description_ar: wizGeneratedHtml.ar || '',
                 description_es: wizGeneratedHtml.es || '',
                 description_de: wizGeneratedHtml.de || '',
-                description_fr: wizGeneratedHtml.fr || ''
+                description_fr: wizGeneratedHtml.fr || '',
+                addons: ''
             };
             const { data: inserted, error } = await sb.from('admin_products').insert(newProd).select('id').single();
             if (error) throw new Error('상품 등록 실패: ' + error.message);
