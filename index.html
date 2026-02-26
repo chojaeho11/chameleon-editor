@@ -2821,14 +2821,6 @@ async function handleSubReturn() {
             <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center;">
                 <i class="fa-solid fa-comment" style="margin-right:8px;"></i> <span data-i18n="btn_kakao_login">카카오로 시작하기</span>
             </button>
-            <button id="btnAppleLogin" class="btn-round" style="border-color:#000; background:#000; color:#fff; justify-content:center; display:none;">
-                <i class="fa-brands fa-apple" style="margin-right:8px; font-size:18px;"></i> <span data-i18n="btn_apple_login">Apple로 시작하기</span>
-            </button>
-        </div>
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f1f5f9; text-align: center;">
-            <button onclick="document.getElementById('loginModal').style.display='none'" class="btn-round" style="width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-weight: normal;">
-                <span data-i18n="login_browse_guest">로그인 없이 둘러보기</span>
-            </button>
         </div>
     </div>
 </div>
@@ -4694,14 +4686,12 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             const loginBtn = document.getElementById('btnLoginBtn');
             if (loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
             
-            // 한국=카카오+Apple, 해외=Apple만
+            // 한국=카카오+구글, 해외=구글만
             const _h2 = window.location.hostname || '';
             const _isKR = _h2.indexOf('cafe2626') !== -1 ||
                           (_h2.indexOf('cafe0101') === -1 && _h2.indexOf('cafe3355') === -1 && (window.__SITE_CODE === 'KR' || !window.__SITE_CODE));
             const kakaoBtn = document.getElementById('btnKakaoLogin');
-            const appleBtn = document.getElementById('btnAppleLogin');
             if (kakaoBtn) kakaoBtn.style.display = _isKR ? 'flex' : 'none';
-            if (appleBtn) appleBtn.style.display = 'flex'; // Apple은 모든 국가 표시
 
             loadLanguageFont(); // 폰트 적용
 
