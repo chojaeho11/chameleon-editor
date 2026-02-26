@@ -1460,6 +1460,8 @@ function renderCart() {
     cartData.forEach((item, idx) => {
         if (!item.product) return;
 
+        console.log(`[renderCart] item[${idx}] selectedAddons:`, JSON.stringify(item.selectedAddons), 'product.addons:', item.product.addons);
+
         if (!item.qty) item.qty = 1;
         if (item.isOpen === undefined) item.isOpen = true;
         if (!item.selectedAddons) item.selectedAddons = {};
