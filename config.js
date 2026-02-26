@@ -164,6 +164,7 @@ function updateUserSession(session) {
         window.currentUser = session.user;
 
         isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+        window.isAdmin = isAdmin;
 
         if(isAdmin) {
             const btnReg = document.getElementById("btnRegisterTemplate");
@@ -173,6 +174,7 @@ function updateUserSession(session) {
         currentUser = null;
         window.currentUser = null; // ★ 로그아웃 시 확실히 비움
         isAdmin = false;
+        window.isAdmin = false;
     }
     // UI 갱신
     const btnLogin = document.getElementById("btnLoginBtn");

@@ -9,14 +9,14 @@ export function initAuth() {
     const btnLogin = document.getElementById("btnLoginBtn");
     if (btnLogin) {
         btnLogin.updateState = () => {
-            if (currentUser) {
+            if (window.currentUser) {
                 // 관리자/일반 로그아웃 텍스트 처리
-                btnLogin.innerText = isAdmin 
-                    ? (window.t('btn_admin_logout', "Admin Logout")) 
+                btnLogin.innerText = window.isAdmin
+                    ? (window.t('btn_admin_logout', "Admin Logout"))
                     : (window.t('btn_logout', "Logout"));
-                
+
                 btnLogin.classList.add("primary");
-                if (isAdmin) btnLogin.style.backgroundColor = "#dc2626"; 
+                if (window.isAdmin) btnLogin.style.backgroundColor = "#dc2626";
             } else {
                 // 로그인 텍스트 처리
                 btnLogin.innerText = window.t('btn_login', "Login");
@@ -29,9 +29,9 @@ export function initAuth() {
         btnLogin.onclick = async () => {
             const t = window.translations || {}; // 클릭 시점 번역
 
-            if (currentUser) {
-                const msg = isAdmin 
-                    ? (t['confirm_admin_logout'] || "관리자 계정에서 로그아웃 하시겠습니까?") 
+            if (window.currentUser) {
+                const msg = window.isAdmin
+                    ? (t['confirm_admin_logout'] || "관리자 계정에서 로그아웃 하시겠습니까?")
                     : (t['confirm_logout'] || "로그아웃 하시겠습니까?");
                 
                 if (!confirm(msg)) return;
