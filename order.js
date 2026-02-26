@@ -2215,6 +2215,16 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 // [수정됨] 최종 결제 버튼 클릭 시 실행
 // ============================================================
 async function processFinalPayment() {
+    // ★ 미로그인 시 가입 유도 (결제 정보 유지)
+    if (!currentUser) {
+        if (window.openAuthModal) {
+            window.openAuthModal('signup', () => processFinalPayment());
+        } else {
+            showToast(window.t('msg_login_required', "Login is required."), "warn");
+        }
+        return;
+    }
+
     if (!window.tempOrderInfo && !window.currentDbId) { showToast(window.t('msg_no_order_info', "No order info. Please try again from the start."), "error"); return; }
 
     const mileageInput = document.getElementById('inputUseMileage');

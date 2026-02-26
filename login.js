@@ -91,6 +91,15 @@ export function initAuth() {
             }
         });
     }
+    const inputPwConfirm = document.getElementById("loginPwConfirm");
+    if(inputPwConfirm) {
+        inputPwConfirm.addEventListener("keydown", (e) => {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                handleAuthAction();
+            }
+        });
+    }
 
     // 6. 비밀번호 찾기 버튼
     const btnForgotPw = document.getElementById("btnForgotPw");
@@ -122,18 +131,36 @@ function openLoginModal() {
     if (modal) {
         modal.style.display = "flex";
         isSignUpMode = false; // 기본은 로그인 모드로 열기
-        updateModalUI(); 
-        
+        updateModalUI();
+
         // 입력창 초기화
         const idInput = document.getElementById("loginId");
         const pwInput = document.getElementById("loginPw");
         const pwConfirm = document.getElementById("loginPwConfirm");
-        
+
         if(idInput) idInput.value = "";
         if(pwInput) pwInput.value = "";
         if(pwConfirm) pwConfirm.value = "";
     }
 }
+
+// ★ 전역 인증 모달 함수 (저장/결제 등에서 호출)
+// mode: 'login' | 'signup', callback: 가입/로그인 성공 후 실행할 함수
+window.openAuthModal = function(mode, callback) {
+    if (callback) window._authCallback = callback;
+    const modal = document.getElementById("loginModal");
+    if (!modal) return;
+    isSignUpMode = (mode === 'signup');
+    updateModalUI();
+    modal.style.display = "flex";
+    // 입력창 초기화
+    const idInput = document.getElementById("loginId");
+    const pwInput = document.getElementById("loginPw");
+    const pwConfirm = document.getElementById("loginPwConfirm");
+    if(idInput) idInput.value = "";
+    if(pwInput) pwInput.value = "";
+    if(pwConfirm) pwConfirm.value = "";
+};
 
 // ★ 여기가 가장 중요한 수정 부분입니다 (모달 내부 텍스트 번역 적용)
 function updateModalUI() {
@@ -197,8 +224,19 @@ async function handleAuthAction() {
             }
 
             if (data.session) {
+                // ★ 새로고침 없이 세션 갱신
+                const freshSession = await sb.auth.getSession();
+                if (window.updateUserSession) window.updateUserSession(freshSession.data.session);
+
                 showToast(t['msg_signup_success'] || "가입 완료!", "success");
-                location.reload();
+                document.getElementById("loginModal").style.display = "none";
+
+                // 콜백 실행 (저장/결제 재시도)
+                if (window._authCallback) {
+                    const cb = window._authCallback;
+                    window._authCallback = null;
+                    setTimeout(cb, 300);
+                }
             } else {
                 showToast(t['msg_verify_email'] || "인증 메일 발송됨", "info");
                 document.getElementById("loginModal").style.display = "none";
@@ -206,7 +244,19 @@ async function handleAuthAction() {
         } else {
             const { data, error } = await sb.auth.signInWithPassword({ email, password });
             if (error) throw error;
-            location.reload(); 
+
+            // ★ 새로고침 없이 세션 갱신
+            if (window.updateUserSession) window.updateUserSession(data.session);
+
+            showToast(t['msg_login_success'] || "로그인 완료!", "success");
+            document.getElementById("loginModal").style.display = "none";
+
+            // 콜백 실행 (저장/결제 재시도)
+            if (window._authCallback) {
+                const cb = window._authCallback;
+                window._authCallback = null;
+                setTimeout(cb, 300);
+            }
         }
     } catch (e) {
         const errPrefix = t['err_prefix'] || "오류: ";

@@ -24,11 +24,21 @@ export function initMyDesign() {
         };
     }
 
-    // 3. 사이드바 '저장 버튼' -> 저장 모달 열기
+    // 3. 사이드바 '저장 버튼' -> 저장 모달 열기 (미로그인 시 가입 유도)
     const btnOpenSave = document.getElementById("btnOpenSaveModal");
     if (btnOpenSave) {
         btnOpenSave.onclick = () => {
-            if (!currentUser) { showToast(window.t('msg_login_required', "Login is required to save."), "warn"); return; }
+            if (!currentUser) {
+                // 가입/로그인 모달 자동 표시 → 완료 후 저장 모달 열기
+                if (window.openAuthModal) {
+                    window.openAuthModal('signup', () => {
+                        document.getElementById("saveDesignModal").style.display = "flex";
+                    });
+                } else {
+                    showToast(window.t('msg_login_required', "Login is required to save."), "warn");
+                }
+                return;
+            }
             document.getElementById("saveDesignModal").style.display = "flex";
         };
     }

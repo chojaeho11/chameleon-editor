@@ -161,10 +161,10 @@ function updateUserSession(session) {
     if (session && session.user) {
         currentUser = session.user;
         // ★ [핵심] window 객체에도 심어서 index.html이 바로 쓰게 함
-        window.currentUser = session.user; 
-        
+        window.currentUser = session.user;
+
         isAdmin = ADMIN_EMAILS.includes(currentUser.email);
-        
+
         if(isAdmin) {
             const btnReg = document.getElementById("btnRegisterTemplate");
             if(btnReg) btnReg.style.display = "flex";
@@ -174,8 +174,15 @@ function updateUserSession(session) {
         window.currentUser = null; // ★ 로그아웃 시 확실히 비움
         isAdmin = false;
     }
+    // UI 갱신
+    const btnLogin = document.getElementById("btnLoginBtn");
+    if (btnLogin && btnLogin.updateState) btnLogin.updateState();
+    const btnLib = document.getElementById("btnMyLibrary");
+    if (btnLib) btnLib.style.display = currentUser ? "inline-flex" : "none";
     loadUserCart();
 }
+// login.js에서 가입/로그인 후 새로고침 없이 세션 갱신 가능하도록 노출
+window.updateUserSession = updateUserSession;
 function loadUserCart() {
     const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
     cartData.length = 0; 
