@@ -172,23 +172,29 @@ function updateModalUI() {
     const switchText = document.getElementById("authSwitchText");
     const switchBtn = document.getElementById("btnSwitchAuthMode");
     const pwConfirm = document.getElementById("loginPwConfirm");
+    const signupGuide = document.getElementById("signupGuide");
+    const forgotPwLink = document.getElementById("forgotPwLink");
 
     if (isSignUpMode) {
-        // [회원가입 모드]
+        // [회원가입 모드] — 비번확인 없이 1회 입력으로 간편 가입
         title.innerText = t['modal_signup_title'] || "회원가입";
         actionBtn.innerText = t['btn_signup_submit'] || "가입하기";
         switchText.innerText = t['msg_have_account'] || "이미 계정이 있으신가요?";
-        switchBtn.innerText = t['btn_to_login'] || "로그인"; // 로그인으로 전환하는 버튼 텍스트
-        
-        if (pwConfirm) pwConfirm.style.display = "block";
+        switchBtn.innerText = t['btn_to_login'] || "로그인";
+
+        if (pwConfirm) pwConfirm.style.display = "none"; // ★ 비번확인 제거
+        if (signupGuide) signupGuide.style.display = "block"; // ★ 간편가입 안내 표시
+        if (forgotPwLink) forgotPwLink.style.display = "none"; // 비번찾기 숨김
     } else {
         // [로그인 모드]
         title.innerText = t['modal_login_title'] || "로그인";
         actionBtn.innerText = t['btn_login_submit'] || "로그인";
         switchText.innerText = t['msg_no_account'] || "계정이 없으신가요?";
-        switchBtn.innerText = t['btn_to_signup'] || "회원가입"; // 회원가입으로 전환하는 버튼 텍스트
-        
+        switchBtn.innerText = t['btn_to_signup'] || "회원가입";
+
         if (pwConfirm) pwConfirm.style.display = "none";
+        if (signupGuide) signupGuide.style.display = "none"; // 안내 숨김
+        if (forgotPwLink) forgotPwLink.style.display = "block"; // 비번찾기 표시
     }
 }
 
@@ -218,8 +224,7 @@ async function handleAuthAction() {
 
     try {
         if (isSignUpMode) {
-            const pwConfirm = pwConfirmInput?.value.trim();
-            if (password !== pwConfirm) throw new Error(t['err_pw_mismatch'] || "비밀번호 불일치");
+            // ★ 비밀번호 확인 제거 — 1회 입력으로 간편 가입
 
             const siteCode = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
             const { data, error } = await sb.auth.signUp({ email, password: paddedPassword });

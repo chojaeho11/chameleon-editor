@@ -2780,10 +2780,22 @@ async function handleSubReturn() {
 </div></div>
 
 <div id="loginModal" class="modal-bg" style="z-index: 10002;">
-    <div class="modal-box" style="width: 400px;">
-        <h3 id="authTitle" style="margin-top:0;" data-i18n="modal_login_title">로그인</h3>
+    <div class="modal-box" style="width: 400px; position:relative;">
+        <!-- ★ 닫기 버튼 -->
+        <button onclick="document.getElementById('loginModal').style.display='none'"
+                style="position:absolute; top:12px; right:14px; background:none; border:none; font-size:22px; cursor:pointer; color:#94a3b8; line-height:1; padding:4px 8px; z-index:1;"
+                title="닫기">&times;</button>
+
+        <h3 id="authTitle" style="margin-top:0; margin-bottom:5px;" data-i18n="modal_login_title">로그인</h3>
+
+        <!-- ★ 간편 가입 안내 (회원가입 모드에서만 표시) -->
+        <div id="signupGuide" style="display:none; background:linear-gradient(135deg,#ede9fe,#e0f2fe); border-radius:10px; padding:12px 14px; margin-bottom:14px; text-align:center;">
+            <div style="font-size:14px; font-weight:800; color:#4f46e5; margin-bottom:4px;">1초 간편 가입</div>
+            <div style="font-size:12px; color:#6366f1; line-height:1.5;">아이디와 비밀번호 입력만으로<br>바로 가입됩니다. 인증 메일 없음!</div>
+        </div>
+
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-            <input id="loginId" class="ai-input-pretty" placeholder="이메일 주소" data-i18n-placeholder="placeholder_email" style="margin:0;">
+            <input id="loginId" class="ai-input-pretty" placeholder="아이디 (이메일도 가능)" style="margin:0;">
             <input id="loginPw" class="ai-input-pretty" type="password" placeholder="비밀번호" data-i18n-placeholder="placeholder_pw" style="margin:0;">
             <input id="loginPwConfirm" class="ai-input-pretty" type="password" placeholder="비밀번호 확인" data-i18n-placeholder="placeholder_pw_confirm" style="margin:0; display:none;">
         </div>
@@ -2804,15 +2816,11 @@ async function handleSubReturn() {
                 <i class="fa-solid fa-comment" style="margin-right:8px;"></i> <span data-i18n="btn_kakao_login">카카오로 시작하기</span>
             </button>
         </div>
-        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
-    <p style="font-size: 13px; color: #6366f1; font-weight: bold; margin-bottom: 15px; line-height: 1.5; word-break: keep-all;">
-        <i class="fa-solid fa-circle-info"></i> <span data-i18n="login_save_msg">고객님의 소중한 작업물을 임시저장하기 위해서는<br>회원가입 또는 로그인이 꼭 필요한 서비스입니다.</span>
-    </p>
-
-    <button onclick="document.getElementById('loginModal').style.display='none'" class="btn-round" style="width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-weight: normal;">
-        👀 <span data-i18n="login_browse_guest">로그인 없이 둘러보기</span>
-    </button>
-</div>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f1f5f9; text-align: center;">
+            <button onclick="document.getElementById('loginModal').style.display='none'" class="btn-round" style="width: 100%; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-weight: normal;">
+                <span data-i18n="login_browse_guest">로그인 없이 둘러보기</span>
+            </button>
+        </div>
     </div>
 </div>
 <!-- 비밀번호 재설정 모달 -->
