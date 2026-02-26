@@ -610,7 +610,7 @@ window.openMyOrderList = async function() {
 
     document.getElementById('myOrderModal').style.display = 'flex';
     const container = document.getElementById('myOrderListUser');
-    container.innerHTML = '<div style="text-align:center; padding:30px;">로딩 중...</div>';
+    container.innerHTML = `<div style="text-align:center; padding:30px;">${window.t('msg_loading','로딩 중...')}</div>`;
 
     const { data: orders, error } = await sb.from('orders')
         .select('id, status, total_amount, items, created_at, payment_status, manager_name')
@@ -619,7 +619,7 @@ window.openMyOrderList = async function() {
         .limit(50);
 
     if (error || !orders || orders.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">주문 내역이 없습니다.</div>';
+        container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;">${window.t('msg_no_orders','주문 내역이 없습니다.')}</div>`;
         return;
     }
 

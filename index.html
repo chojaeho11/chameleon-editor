@@ -380,7 +380,7 @@
         
         <div style="flex:1;"></div>
         
-        <button class="btn" onclick="window.goHome()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
+        <button class="btn" id="btnHomeTop" onclick="window.goHome()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
     <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
 </button>
 
@@ -421,7 +421,7 @@
         <button class="btn" id="btnMyLibrary" onclick="document.getElementById('libraryModal').style.display='flex'; if(window.loadMyDesigns) window.loadMyDesigns();" style="background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
             <span data-i18n="btn_my_library">📂 보관함</span>
         </button>
-        <button class="btn" onclick="window.openMyOrderList()" style="background:white; border:1px solid #ddd; color:#333; margin-right:5px;">
+        <button class="btn" id="btnOrderTracking" onclick="window.openMyOrderList()" style="background:white; border:1px solid #ddd; color:#333; margin-right:5px;">
     <span data-i18n="menu_orders">🚚 주문배송조회</span>
 </button>
 
@@ -1607,12 +1607,13 @@ async function handleSubReturn() {
 </div>
 <!-- 파트너 콘솔 모달 제거됨 — partner.html로 이동 -->
 
-<div id="myOrderModal" class="modal-bg" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 800px; max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden;">
-        
-        <div style="background: #fff; padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+<div id="myOrderModal" class="modal-bg" onclick="if(event.target===this)this.style.display='none'" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
+    <div class="modal-box" style="width: 800px; max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; background: #f8fafc; overflow: hidden; position:relative;">
+        <!-- X 닫기 -->
+        <button onclick="document.getElementById('myOrderModal').style.display='none'"
+                style="position:absolute; top:10px; right:12px; background:none; border:none; font-size:24px; cursor:pointer; color:#94a3b8; z-index:1; padding:4px 8px;">&times;</button>
+        <div style="background: #fff; padding: 20px; padding-right:40px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; color: #1e293b;" data-i18n="my_order_tracking_title">📦 나의 주문 배송 조회</h3>
-            <button onclick="document.getElementById('myOrderModal').style.display='none'" class="btn-round" style="width: auto; padding: 5px 15px;" data-i18n="btn_close">닫기</button>
         </div>
 
         <div style="flex: 1; padding: 20px; overflow-y: auto;">
@@ -11621,6 +11622,15 @@ window.dsmRenderProducts = async function(keyword) {
 <p>カスタムアクリルグッズ制作。キーホルダー・フォトカード・アクリルスタンド・バッジ。無料エディターでデザイン、小ロット対応。</p>
 </section>
 </noscript>
+
+<!-- ★ 모든 모달 배경 클릭 시 닫기 (모바일 UX) -->
+<script>
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-bg')) {
+        e.target.style.display = 'none';
+    }
+});
+</script>
 
 </body>
 </html>

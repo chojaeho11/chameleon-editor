@@ -178,6 +178,20 @@ function updateModalUI() {
     const quickSignupBtn = document.getElementById("btnQuickSignup");
     const switchRow = document.getElementById("authSwitchRow");
 
+    // ★ 번역 적용 (CDN 캐시로 data-i18n 미적용 대비)
+    const loginId = document.getElementById("loginId");
+    if (loginId && t['placeholder_id']) loginId.placeholder = t['placeholder_id'];
+    if (quickSignupBtn && t['btn_quick_signup']) {
+        const sp = quickSignupBtn.querySelector('span');
+        if (sp) sp.innerText = t['btn_quick_signup'];
+    }
+    if (signupGuide) {
+        const guideTitle = signupGuide.querySelector('div:first-child');
+        const guideDesc = signupGuide.querySelector('div:last-child');
+        if (guideTitle && t['signup_guide_title']) guideTitle.innerText = t['signup_guide_title'];
+        if (guideDesc && t['signup_guide_desc']) guideDesc.innerHTML = t['signup_guide_desc'];
+    }
+
     if (isSignUpMode) {
         // [회원가입 모드] — 아이디 + 비번 + 비번확인
         title.innerText = t['modal_signup_title'] || "회원가입";
