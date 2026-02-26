@@ -416,7 +416,7 @@
     <!-- <span data-i18n="btn_cart">🛒 장바구니</span> -->
 <!-- </button> -->
         
-        <button class="btn" id="btnLoginBtn" onclick="document.getElementById('loginModal').style.display='flex'" style="margin-right:5px;" data-i18n="btn_login">로그인</button>
+        <button class="btn" id="btnLoginBtn" style="margin-right:5px;" data-i18n="btn_login">로그인</button>
 
         <button class="btn" id="btnMyLibrary" onclick="document.getElementById('libraryModal').style.display='flex'; if(window.loadMyDesigns) window.loadMyDesigns();" style="background:white; border:1px solid #ddd; color:#333; padding:8px 12px;">
             <span data-i18n="btn_my_library">📂 보관함</span>
@@ -2818,7 +2818,7 @@ async function handleSubReturn() {
             <button id="btnGoogleLogin" class="btn-round" style="border-color:#ddd; justify-content:center;">
                 <i class="fa-brands fa-google" style="color:#DB4437; margin-right:8px;"></i> <span data-i18n="btn_google_login">Google로 시작하기</span>
             </button>
-            <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center;">
+            <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center; display:none;">
                 <i class="fa-solid fa-comment" style="margin-right:8px;"></i> <span data-i18n="btn_kakao_login">카카오로 시작하기</span>
             </button>
         </div>
