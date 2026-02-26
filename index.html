@@ -6557,8 +6557,8 @@ if (w >= 20 && h >= 20) {
                 if (!fileInput.files || fileInput.files.length === 0) return;
                 const file = fileInput.files[0];
 
-                // ★ 이미지 파일이면 사이즈 자동 감지
-                if (file.type.startsWith('image/') && window._autoDetectFileSize) {
+                // ★ 이미지 또는 PDF 파일이면 사이즈 자동 감지
+                if ((file.type.startsWith('image/') || file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) && window._autoDetectFileSize) {
                     window._autoDetectFileSize(file);
                 }
 
@@ -6744,9 +6744,54 @@ if (w >= 20 && h >= 20) {
     // ===== 파일 업로드 → 사이즈 자동 감지 =====
     window._uploadedFileDimensions = null;
 
-    // 업로드된 이미지에서 치수 감지 (키링: 누끼 바운딩박스, 일반: 전체 이미지)
+    // 업로드된 파일에서 치수 감지 (이미지 + PDF 지원)
     window._autoDetectFileSize = function(file) {
-        if (!file || !file.type.startsWith('image/')) return;
+        if (!file) return;
+        // PDF 파일: PDF.js로 페이지 크기 감지
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            const reader = new FileReader();
+            reader.onload = async function() {
+                try {
+                    if (window.pdfjsLib) {
+                        if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                        }
+                        const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(reader.result) }).promise;
+                        const page = await pdf.getPage(1);
+                        const viewport = page.getViewport({ scale: 1 });
+                        // PDF 단위는 포인트 (1pt = 1/72 inch), mm로 변환
+                        const pdfMmW = Math.round(viewport.width * 25.4 / 72);
+                        const pdfMmH = Math.round(viewport.height * 25.4 / 72);
+                        window._uploadedFileDimensions = { w: pdfMmW, h: pdfMmH, ratio: pdfMmW / pdfMmH, unit: 'mm' };
+                        // 미리보기 업데이트
+                        const previewArea = document.getElementById('uploadPreviewArea');
+                        const previewThumb = document.getElementById('uploadPreviewThumb');
+                        const previewName = document.getElementById('uploadPreviewName');
+                        if (previewArea) {
+                            if (previewThumb) previewThumb.src = 'https://placehold.co/48x48/6366f1/fff?text=PDF';
+                            if (previewName && file.name) previewName.textContent = file.name;
+                            const dimInfo = document.getElementById('uploadPreviewDims');
+                            if (dimInfo) {
+                                dimInfo.textContent = `PDF ${pdfMmW}×${pdfMmH}mm (${Math.round(viewport.width)}×${Math.round(viewport.height)}pt)`;
+                                dimInfo.style.display = 'block';
+                            }
+                            previewArea.style.display = 'block';
+                        }
+                        // W입력값이 있으면 자동으로 H 계산
+                        const wInput = document.getElementById('inputCustW');
+                        const hInput = document.getElementById('inputCustH');
+                        if (wInput && wInput.value && hInput) {
+                            hInput.value = Math.round(parseInt(wInput.value) / (pdfMmW / pdfMmH));
+                            if (window.calcCustomPrice) window.calcCustomPrice();
+                            if (window.updateModalTotal) window.updateModalTotal();
+                        }
+                    }
+                } catch(e) { console.warn('PDF 크기 감지 실패:', e); }
+            };
+            reader.readAsArrayBuffer(file);
+            return;
+        }
+        if (!file.type.startsWith('image/')) return;
         const product = window.selectedProductForChoice;
         const _isKeyring = product && ((product.code||'')+(product.name||'')+(product.category||'')).toLowerCase().match(/keyring|키링|key_ring|acr_key/);
 
