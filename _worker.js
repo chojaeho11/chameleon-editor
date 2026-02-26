@@ -86,6 +86,13 @@ function escHtml(s) {
     return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function hreflangTags(suffix) {
+    return `<link rel="alternate" hreflang="ko" href="https://www.cafe2626.com${suffix}">
+<link rel="alternate" hreflang="ja" href="https://www.cafe0101.com${suffix}">
+<link rel="alternate" hreflang="en" href="https://www.cafe3355.com${suffix}">
+<link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com${suffix}">`;
+}
+
 function generateCategoryHtml(products, path, cc) {
     const lang = cc === 'JP' ? 'ja' : cc === 'US' ? 'en' : 'ko';
     const siteName = cc === 'JP' ? 'カメレオンプリンティング' : cc === 'US' ? 'Chameleon Printing' : '카멜레온프린팅';
@@ -114,10 +121,12 @@ function generateCategoryHtml(products, path, cc) {
 
     return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escHtml(path)} - ${escHtml(siteName)}</title>
+<meta name="description" content="${escHtml(path)} - ${escHtml(siteName)}">
 <meta name="robots" content="index, follow">
 <meta property="og:image" content="${escHtml(products[0]?.img_url || '')}">
 <meta property="og:url" content="${domain}/${path}">
 <link rel="canonical" href="${domain}/${path}">
+${hreflangTags('/' + path)}
 <script type="application/ld+json">${jsonLd}</script>
 </head><body><h1>${escHtml(path)} - ${escHtml(siteName)}</h1>
 <p>${products.length} products</p>${items}
@@ -147,6 +156,7 @@ function generateProductHtml(product, cc) {
 <meta property="og:image" content="${escHtml(product.img_url || '')}">
 <meta property="og:url" content="${domain}/${product.code}">
 <link rel="canonical" href="${domain}/${product.code}">
+${hreflangTags('/' + product.code)}
 <script type="application/ld+json">${jsonLd}</script>
 </head><body><h1>${escHtml(name)}</h1>
 ${product.img_url ? `<img src="${escHtml(product.img_url)}" alt="${escHtml(name)}" width="600" height="600" style="max-width:100%;object-fit:contain;">` : ''}
@@ -195,9 +205,72 @@ export default {
                     // Prerender.io unavailable, fall through to custom pre-rendering
                 }
 
-                // Fallback: custom pre-rendering with Supabase data (product/category pages only)
-                if (path) try {
+                // Fallback: custom pre-rendering with Supabase data
+                try {
                     const cc = getCountry(url.hostname);
+
+                    // Homepage fallback: generate rich HTML for bots
+                    if (!path) {
+                        const homeData = cc === 'JP' ? {
+                            lang: 'ja', siteName: 'カメレオンプリンティング',
+                            title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
+                            desc: 'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
+                            domain: 'https://www.cafe0101.com'
+                        } : {
+                            lang: 'en', siteName: 'Chameleon Printing',
+                            title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
+                            desc: 'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
+                            domain: 'https://www.cafe3355.com'
+                        };
+                        // Fetch some products for the homepage
+                        const homeProducts = await fetchFromSupabase(
+                            'admin_products?select=code,name,name_jp,name_us,img_url&or=(partner_id.is.null,partner_status.eq.approved)&order=sort_order.asc&limit=30'
+                        );
+                        let productItems = '';
+                        if (homeProducts && homeProducts.length > 0) {
+                            homeProducts.forEach(p => {
+                                const name = getProductName(p, cc);
+                                if (p.img_url) {
+                                    productItems += `<div style="display:inline-block;margin:10px;text-align:center;max-width:200px;">
+<a href="${homeData.domain}/${encodeURIComponent(p.code)}"><img src="${escHtml(p.img_url)}" alt="${escHtml(name)}" width="200" height="200" loading="lazy"></a>
+<p style="font-size:13px;margin:6px 0;">${escHtml(name)}</p></div>\n`;
+                                }
+                            });
+                        }
+                        // Category links for bots to discover
+                        const catLinks = Object.keys(SEO_CATEGORIES).map(c =>
+                            `<a href="${homeData.domain}/${c}">${c}</a>`
+                        ).join(' | ');
+
+                        const homeHtml = `<!DOCTYPE html><html lang="${homeData.lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escHtml(homeData.title)}</title>
+<meta name="description" content="${escHtml(homeData.desc)}">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${escHtml(homeData.title)}">
+<meta property="og:description" content="${escHtml(homeData.desc)}">
+<meta property="og:url" content="${homeData.domain}/">
+<meta property="og:site_name" content="${escHtml(homeData.siteName)}">
+<link rel="canonical" href="${homeData.domain}/">
+${hreflangTags('/')}
+<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org", "@graph": [
+        { "@type": "Organization", "name": homeData.siteName, "url": homeData.domain,
+          "sameAs": ["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"] },
+        { "@type": "WebSite", "name": homeData.siteName, "url": homeData.domain, "inLanguage": homeData.lang }
+    ]
+})}</script>
+</head><body>
+<h1>${escHtml(homeData.title)}</h1>
+<p>${escHtml(homeData.desc)}</p>
+<nav><h2>Categories</h2><p>${catLinks}</p></nav>
+<section><h2>Products</h2>${productItems}</section>
+</body></html>`;
+                        return new Response(homeHtml, {
+                            status: 200,
+                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                        });
+                    }
 
                     // Check SEO category
                     const catInfo = SEO_CATEGORIES[path];
@@ -267,6 +340,10 @@ export default {
         const siteData = getSiteData(url.hostname);
         if (!siteData) return response; // KR site, keep original Korean
 
+        // Build correct page URL (not always homepage)
+        const pageUrl = path ? `${siteData.url.replace(/\/$/, '')}/${path}` : siteData.url;
+        const suffix = path ? `/${path}` : '/';
+
         // Rewrite OG/meta tags using HTMLRewriter
         return new HTMLRewriter()
             .on('html', { element(el) { el.setAttribute('lang', siteData.lang); } })
@@ -275,10 +352,19 @@ export default {
             .on('meta[property="og:site_name"]', { element(el) { el.setAttribute('content', siteData.siteName); } })
             .on('meta[property="og:title"]', { element(el) { el.setAttribute('content', siteData.title); } })
             .on('meta[property="og:description"]', { element(el) { el.setAttribute('content', siteData.description); } })
-            .on('meta[property="og:url"]', { element(el) { el.setAttribute('content', siteData.url); } })
+            .on('meta[property="og:url"]', { element(el) { el.setAttribute('content', pageUrl); } })
             .on('meta[name="twitter:title"]', { element(el) { el.setAttribute('content', siteData.title); } })
             .on('meta[name="twitter:description"]', { element(el) { el.setAttribute('content', siteData.description); } })
-            .on('link[rel="canonical"]', { element(el) { el.setAttribute('href', siteData.url); } })
+            .on('link[rel="canonical"]', { element(el) { el.setAttribute('href', pageUrl); } })
+            .on('link[rel="alternate"][hreflang="ko"]', { element(el) { el.setAttribute('href', `https://www.cafe2626.com${suffix}`); } })
+            .on('link[rel="alternate"][hreflang="ja"]', { element(el) { el.setAttribute('href', `https://www.cafe0101.com${suffix}`); } })
+            .on('link[rel="alternate"][hreflang="en"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}`); } })
+            .on('link[rel="alternate"][hreflang="zh"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=zh`); } })
+            .on('link[rel="alternate"][hreflang="ar"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=ar`); } })
+            .on('link[rel="alternate"][hreflang="es"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=es`); } })
+            .on('link[rel="alternate"][hreflang="de"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=de`); } })
+            .on('link[rel="alternate"][hreflang="fr"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=fr`); } })
+            .on('link[rel="alternate"][hreflang="x-default"]', { element(el) { el.setAttribute('href', `https://www.cafe2626.com${suffix}`); } })
             .transform(response);
     }
 };
