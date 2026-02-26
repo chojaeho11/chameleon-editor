@@ -215,6 +215,14 @@ function updateModalUI() {
         if (forgotPwLink) forgotPwLink.style.display = "block";
         if (quickSignupBtn) quickSignupBtn.style.display = "block"; // 1초 버튼 표시
     }
+
+    // ★ 한국 외 카카오 숨김
+    const kakaoBtn = document.getElementById("btnKakaoLogin");
+    if (kakaoBtn) {
+        const isKR = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'KR') ||
+                     (window.__SITE_CODE === 'KR');
+        kakaoBtn.style.display = isKR ? 'flex' : 'none';
+    }
 }
 
 async function handleAuthAction() {
