@@ -1798,21 +1798,15 @@ body {
 }
 
 .hotdeal-grid {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
     gap: 10px;
     margin-top: 20px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
 }
-.hotdeal-grid::-webkit-scrollbar { display: none; }
 
 .hotdeal-grid .hotdeal-card {
-    min-width: calc((100% - 50px) / 6);
-    max-width: calc((100% - 50px) / 6);
-    scroll-snap-align: start;
-    flex-shrink: 0;
+    min-width: unset;
+    max-width: unset;
 }
 
 .hotdeal-arrow {
@@ -1838,22 +1832,10 @@ body {
 .hotdeal-arrow-left { left: -18px; }
 .hotdeal-arrow-right { right: -18px; }
 
-@media (min-width: 769px) {
-    .hotdeal-arrow { display: flex; }
-}
-
 @media (max-width: 768px) {
     .hotdeal-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px;
-        overflow: visible;
-        max-height: none;
-        scroll-snap-type: none;
-    }
-    .hotdeal-grid .hotdeal-card {
-        min-width: unset;
-        max-width: unset;
     }
     .hotdeal-img-box {
         height: 120px;
