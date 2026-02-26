@@ -7587,8 +7587,9 @@ if (w >= 20 && h >= 20) {
                                     const cH = board ? board.height * board.scaleY : canvas.height;
                                     const cX = board ? board.left + cW / 2 : canvas.width / 2;
                                     const cY = board ? board.top + cH / 2 : canvas.height / 2;
-                                    const scale = Math.min((cW * 0.95) / img.width, (cH * 0.95) / img.height);
-                                    img.set({ scaleX: scale, scaleY: scale, left: cX, top: cY, originX: 'center', originY: 'center' });
+                                    const scaleX = cW / img.width;
+                                    const scaleY = cH / img.height;
+                                    img.set({ scaleX: scaleX, scaleY: scaleY, left: board ? board.left : 0, top: board ? board.top : 0, originX: 'left', originY: 'top' });
                                     canvas.add(img);
                                     canvas.setActiveObject(img);
                                     canvas.requestRenderAll();
@@ -7604,10 +7605,9 @@ if (w >= 20 && h >= 20) {
                                     const board = canvas.getObjects().find(o => o.isBoard);
                                     const cW = board ? board.width * board.scaleX : canvas.width;
                                     const cH = board ? board.height * board.scaleY : canvas.height;
-                                    const cX = board ? board.left + cW / 2 : canvas.width / 2;
-                                    const cY = board ? board.top + cH / 2 : canvas.height / 2;
-                                    const scale = Math.min((cW * 0.95) / img.width, (cH * 0.95) / img.height);
-                                    img.set({ scaleX: scale, scaleY: scale, left: cX, top: cY, originX: 'center', originY: 'center' });
+                                    const scaleX = cW / img.width;
+                                    const scaleY = cH / img.height;
+                                    img.set({ scaleX: scaleX, scaleY: scaleY, left: board ? board.left : 0, top: board ? board.top : 0, originX: 'left', originY: 'top' });
                                     canvas.add(img);
                                     canvas.setActiveObject(img);
                                     canvas.requestRenderAll();
