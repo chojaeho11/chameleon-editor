@@ -4733,8 +4733,8 @@ html[lang="ja"] body {
     line-height: 1.35 !important;
     letter-spacing: -0.04em !important;
 }
-/* 한국어 이외 사이트에서 카카오 로그인 숨김 */
-html:not([lang="ko"]) #btnKakaoLogin { display: none !important; }
+/* 한국어 이외 사이트에서 카카오 로그인 숨김 (JS가 lang="kr"로 설정) */
+html:not([lang="kr"]):not([lang="ko"]) #btnKakaoLogin { display: none !important; }
 
 html[lang="ja"] h1, html[lang="ja"] h2, html[lang="ja"] h3, html[lang="ja"] h4 {
     letter-spacing: -0.05em !important;
