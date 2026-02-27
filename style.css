@@ -4915,6 +4915,33 @@ html[lang="ja"] .product-detail-render div {
 }
 .npc-expert:hover { background: linear-gradient(135deg, #d97706, #b45309); }
 .npc-expert:active { background: linear-gradient(135deg, #d97706, #b45309); }
+.npc-hc-input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+}
+.npc-hc-amount {
+    width: 100%;
+    padding: 16px;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    border: 2px solid #bae6fd;
+    border-radius: 12px;
+    background: #f0f9ff;
+    color: #0c4a6e;
+    outline: none;
+    box-sizing: border-box;
+}
+.npc-hc-amount:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+}
+.npc-hc-pay-btn {
+    padding: 16px !important;
+    font-size: 18px !important;
+}
 .npc-nav {
     display: flex;
     justify-content: space-between;

@@ -8,6 +8,12 @@ const NPC_IMG = './img/npc-guide.png';
 
 const NPC_TEXTS = {
     kr: {
+        hcQuote: '허니콤보드는 매니저를 통해 견적을 받으신 후 결제해주세요 📋',
+        hcGetQuote: '💬 매니저에게 견적받기',
+        hcInputQuote: '💰 견적금액 입력하기',
+        hcEnterAmount: '매니저에게 받은 견적금액을 입력해주세요',
+        hcPay: '💳 결제하기',
+        hcAmountPlaceholder: '금액 입력',
         askFile: '가지고 계신 사진이나 파일로 인쇄의뢰 하실건가요?',
         yes: '네, 있어요!',
         no: '아니요, 없어요',
@@ -28,6 +34,12 @@ const NPC_TEXTS = {
         uploaded: '업로드 완료! 다음으로 넘어갈게요 👍',
     },
     ja: {
+        hcQuote: 'ハニカムボードはマネージャーを通じてお見積もりを受けてからお支払いください 📋',
+        hcGetQuote: '💬 マネージャーに見積もりを依頼',
+        hcInputQuote: '💰 見積金額を入力',
+        hcEnterAmount: 'マネージャーから受け取った見積金額を入力してください',
+        hcPay: '💳 お支払い',
+        hcAmountPlaceholder: '金額を入力',
         askFile: 'お持ちの写真やファイルで印刷をご依頼されますか？',
         yes: 'はい、あります！',
         no: 'いいえ、ありません',
@@ -48,6 +60,12 @@ const NPC_TEXTS = {
         uploaded: 'アップロード完了！次のステップへ 👍',
     },
     en: {
+        hcQuote: 'For honeycomb boards, please get a quote from our manager before payment 📋',
+        hcGetQuote: '💬 Get quote from manager',
+        hcInputQuote: '💰 Enter quoted amount',
+        hcEnterAmount: 'Please enter the quoted amount from the manager',
+        hcPay: '💳 Proceed to payment',
+        hcAmountPlaceholder: 'Enter amount',
         askFile: 'Would you like to print with your own photo or file?',
         yes: 'Yes, I do!',
         no: "No, I don't",
@@ -68,6 +86,12 @@ const NPC_TEXTS = {
         uploaded: 'File uploaded! Moving to next step 👍',
     },
     zh: {
+        hcQuote: '蜂窝板请先通过经理获取报价后再付款 📋',
+        hcGetQuote: '💬 向经理获取报价',
+        hcInputQuote: '💰 输入报价金额',
+        hcEnterAmount: '请输入经理提供的报价金额',
+        hcPay: '💳 去支付',
+        hcAmountPlaceholder: '输入金额',
         askFile: '您要用自己的照片或文件来印刷吗？',
         yes: '有！',
         no: '没有',
@@ -88,6 +112,12 @@ const NPC_TEXTS = {
         uploaded: '文件上传完成！进入下一步 👍',
     },
     ar: {
+        hcQuote: 'للوح العسل، يرجى الحصول على عرض سعر من المدير قبل الدفع 📋',
+        hcGetQuote: '💬 طلب عرض سعر من المدير',
+        hcInputQuote: '💰 إدخال مبلغ العرض',
+        hcEnterAmount: 'يرجى إدخال مبلغ العرض من المدير',
+        hcPay: '💳 متابعة الدفع',
+        hcAmountPlaceholder: 'أدخل المبلغ',
         askFile: 'هل تريد الطباعة بصورتك أو ملفك الخاص؟',
         yes: 'نعم!',
         no: 'لا',
@@ -108,6 +138,12 @@ const NPC_TEXTS = {
         uploaded: 'تم رفع الملف! الخطوة التالية 👍',
     },
     es: {
+        hcQuote: 'Para paneles honeycomb, solicite un presupuesto al gerente antes de pagar 📋',
+        hcGetQuote: '💬 Solicitar presupuesto al gerente',
+        hcInputQuote: '💰 Ingresar monto del presupuesto',
+        hcEnterAmount: 'Ingrese el monto del presupuesto del gerente',
+        hcPay: '💳 Proceder al pago',
+        hcAmountPlaceholder: 'Ingrese el monto',
         askFile: '¿Quieres imprimir con tu propia foto o archivo?',
         yes: '¡Sí, tengo!',
         no: 'No, no tengo',
@@ -128,6 +164,12 @@ const NPC_TEXTS = {
         uploaded: '¡Archivo subido! Siguiente paso 👍',
     },
     de: {
+        hcQuote: 'Für Wabenplatten holen Sie bitte zuerst ein Angebot vom Manager ein 📋',
+        hcGetQuote: '💬 Angebot vom Manager anfordern',
+        hcInputQuote: '💰 Angebotsbetrag eingeben',
+        hcEnterAmount: 'Bitte geben Sie den vom Manager erhaltenen Betrag ein',
+        hcPay: '💳 Zur Zahlung',
+        hcAmountPlaceholder: 'Betrag eingeben',
         askFile: 'Möchten Sie mit Ihrem eigenen Foto oder Datei drucken?',
         yes: 'Ja!',
         no: 'Nein',
@@ -148,6 +190,12 @@ const NPC_TEXTS = {
         uploaded: 'Datei hochgeladen! Nächster Schritt 👍',
     },
     fr: {
+        hcQuote: 'Pour les panneaux nid d\'abeille, veuillez obtenir un devis du responsable avant le paiement 📋',
+        hcGetQuote: '💬 Demander un devis au responsable',
+        hcInputQuote: '💰 Saisir le montant du devis',
+        hcEnterAmount: 'Veuillez saisir le montant du devis du responsable',
+        hcPay: '💳 Procéder au paiement',
+        hcAmountPlaceholder: 'Saisir le montant',
         askFile: 'Souhaitez-vous imprimer avec votre propre photo ou fichier ?',
         yes: 'Oui !',
         no: 'Non',
@@ -193,6 +241,7 @@ window.NpcWizard = {
     product: null,
     isCustom: false,
     isGeneral: false,
+    isHoneycomb: false,
     hasOptions: false,
     sections: {},
     guideEl: null,
@@ -202,6 +251,8 @@ window.NpcWizard = {
         this.product = product;
         this.isCustom = !!product.is_custom_size;
         this.isGeneral = !!product.is_general_product;
+        const key = product.code || window.currentProductKey || '';
+        this.isHoneycomb = (product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
         this.hasFile = null;
         this.designChoice = null;
         this.step = 0;
@@ -217,7 +268,10 @@ window.NpcWizard = {
         this._hideAll();
         this._createGuideArea(rightActions);
 
-        if (this.isCustom && this.isGeneral) {
+        if (this.isHoneycomb) {
+            // 허니콤보드 → 매니저 견적 플로우
+            this._goStep('honeycombQuote');
+        } else if (this.isCustom && this.isGeneral) {
             // 면적 기반 시공 상품 (인쇄 없음) → 사이즈만 입력 → 장바구니
             this._goStep('size');
         } else if (this.isCustom) {
@@ -417,6 +471,29 @@ window.NpcWizard = {
                 this._renderBubble(_t('expertMsg'), null, true);
                 setTimeout(() => { if (window.ChamBot) window.ChamBot.toggle(); }, 500);
                 break;
+
+            case 'honeycombQuote':
+                // 허니콤보드: 매니저 견적 안내
+                this._renderBubble(_t('hcQuote'), [
+                    { label: _t('hcGetQuote'), cls: 'npc-yes', onclick: "if(window.ChamBot) window.ChamBot.toggle();" },
+                    { label: _t('hcInputQuote'), cls: 'npc-expert', onclick: "window.NpcWizard._goStep('honeycombInput')" },
+                ]);
+                break;
+
+            case 'honeycombInput':
+                // 허니콤보드: 견적금액 입력
+                this._renderBubble(_t('hcEnterAmount'), null, true);
+                // 슬롯에 금액 입력 UI 추가
+                const slot = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot) {
+                    slot.innerHTML = `
+                        <div class="npc-hc-input-wrap">
+                            <input type="number" id="npcHcAmount" class="npc-hc-amount" placeholder="${_t('hcAmountPlaceholder')}" min="0" inputmode="numeric">
+                            <button class="npc-choice-btn npc-yes npc-hc-pay-btn" onclick="window.NpcWizard._honeycombPay()">${_t('hcPay')}</button>
+                        </div>
+                    `;
+                }
+                break;
         }
     },
 
@@ -462,8 +539,52 @@ window.NpcWizard = {
         this._goStep('final');
     },
 
+    // 허니콤보드: 견적금액으로 결제 (장바구니에 담기)
+    _honeycombPay() {
+        const amountInput = document.getElementById('npcHcAmount');
+        if (!amountInput) return;
+        const amount = parseInt(amountInput.value);
+        if (!amount || amount <= 0) {
+            if (window.showToast) window.showToast(_t('hcEnterAmount'), 'warn');
+            amountInput.focus();
+            return;
+        }
+
+        const product = this.product;
+        if (!product) return;
+
+        import('./order.js?v=123').then(m => {
+            const productToCart = { ...product };
+            productToCart.price = amount;
+            productToCart.is_custom = false;
+
+            // 업로드된 파일이 있으면 포함
+            const pendingFiles = window._pendingUploadedFiles || [];
+            let extraFields = null;
+            if (pendingFiles.length > 0) {
+                extraFields = {
+                    type: 'file_upload',
+                    fileName: pendingFiles.map(f => f.fileName).join(', '),
+                    originalUrl: pendingFiles[0].originalUrl,
+                    uploadedFiles: [...pendingFiles],
+                    thumb: pendingFiles[0].thumb
+                };
+            }
+
+            m.addProductToCartDirectly(productToCart, 1, [], {}, extraFields);
+            window._pendingUploadedFiles = [];
+            document.getElementById('choiceModal').style.display = 'none';
+            document.getElementById('cartAddedModal').style.display = 'flex';
+        }).catch(err => {
+            console.error('허니콤보드 장바구니 오류:', err);
+            if (window.showToast) window.showToast('Error: ' + err.message, 'error');
+        });
+    },
+
     _goPrev() {
         const step = this.step;
+        // 허니콤보드: honeycombQuote가 첫 단계
+        if (step === 'honeycombInput') { this._goStep('honeycombQuote'); return; }
         // 면적 기반 시공 상품: size가 첫 단계이므로 size에서 이전 없음
         if (step === 'size' && this.isCustom && this.isGeneral) { return; }
         if (step === 'upload') { this._goStep('askFile'); return; }
