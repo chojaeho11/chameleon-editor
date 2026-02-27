@@ -4821,8 +4821,8 @@ html[lang="ja"] .product-detail-render div {
         margin-bottom: 12px;
     }
     .npc-avatar {
-        width: 70px;
-        height: 70px;
+        width: 100px;
+        height: 100px;
         flex-shrink: 0;
         animation: npcBounce 2s ease infinite;
     }
