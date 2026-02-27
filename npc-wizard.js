@@ -227,53 +227,23 @@ window.NpcWizard = {
         });
     },
 
-    // 기존 요소들에 섹션 태그 부여
+    // 기존 요소들에 data-npc 속성으로 섹션 찾기
     _tagSections(container) {
-        const children = Array.from(container.children);
         this.sections = {};
-
-        if (this.isCustom) {
-            // Custom product: header(img+name) → upload area → preview → size → qty → estimate → options → total → buttons
-            // productHeaderHtml is first child (the card with img)
-            if (children[0]) { this.sections.header = children[0]; }
-            // Children after header: upload section, preview, size, qty, estimate
-            // Find by IDs
-            this.sections.upload = container.querySelector('#btnKeyringUpload')?.closest('div:not(#choiceRightActions)');
-            this.sections.uploadPreview = container.querySelector('#uploadPreviewArea');
-            this.sections.uploadedFiles = container.querySelector('#uploadedFilesList');
-            // Size section: contains #inputCustW
-            const sizeInput = container.querySelector('#inputCustW');
-            if (sizeInput) this.sections.size = sizeInput.closest('div[style*="background:#f8fafc"]') || sizeInput.parentElement?.parentElement;
-            // Quantity: contains #inputCustQty
-            const qtyLabel = container.querySelector('#inputCustQty');
-            if (qtyLabel) {
-                this.sections.qtyLabel = qtyLabel.closest('.qty-wrapper')?.previousElementSibling;
-                this.sections.qty = qtyLabel.closest('.qty-wrapper');
-            }
-            // AI estimate box
-            const calcPrice = container.querySelector('#calcResultPrice');
-            if (calcPrice) this.sections.estimate = calcPrice.closest('div[style*="linear-gradient"]');
-        } else {
-            // General/non-custom product
-            if (children[0]) this.sections.header = children[0];
-            // Price display (gradient box with price)
-            const priceBox = container.querySelector('#fixedProdQty');
-            if (priceBox) {
-                this.sections.price = priceBox.closest('.qty-wrapper')?.previousElementSibling;
-                this.sections.qty = priceBox.closest('.qty-wrapper');
-            }
-        }
-        // Options area
+        // data-npc 속성으로 안정적으로 찾기
+        this.sections.header = container.querySelector('[data-npc="header"]');
+        this.sections.upload = container.querySelector('[data-npc="upload"]');
+        this.sections.uploadPreview = container.querySelector('[data-npc="uploadPreview"]');
+        this.sections.size = container.querySelector('[data-npc="size"]');
+        this.sections.qtyLabel = container.querySelector('[data-npc="qtyLabel"]');
+        this.sections.qty = container.querySelector('[data-npc="qty"]');
+        this.sections.estimate = container.querySelector('[data-npc="estimate"]');
+        this.sections.price = container.querySelector('[data-npc="price"]');
         this.sections.options = container.querySelector('#addonCategoryArea');
-        // Total box
-        const totalEl = container.querySelector('#modalRealtimeTotal');
-        if (totalEl) this.sections.total = totalEl.closest('div[style*="border:2px solid"]');
-        // Buttons area (last child with buttons)
-        const allDivs = container.querySelectorAll(':scope > div');
-        const lastDiv = allDivs[allDivs.length - 1];
-        if (lastDiv && (lastDiv.querySelector('.btn-round') || lastDiv.querySelector('button[onclick*="confirmChoice"]'))) {
-            this.sections.buttons = lastDiv;
-        }
+        this.sections.total = container.querySelector('[data-npc="total"]');
+        this.sections.buttons = container.querySelector('[data-npc="buttons"]');
+        // uploadedFiles는 upload 섹션 내부에 있음
+        this.sections.uploadedFiles = container.querySelector('#uploadedFilesList');
     },
 
     _hideAll() {
@@ -341,8 +311,11 @@ window.NpcWizard = {
 
             case 'upload':
                 this._showSection('upload');
-                this._showSection('uploadPreview');
-                this._showSection('uploadedFiles');
+                // uploadPreview와 uploadedFiles는 upload 핸들러가 파일 업로드 시 자동으로 보여줌
+                // 이미 파일이 있으면 preview도 보여주기
+                if (window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
+                    this._showSection('uploadPreview');
+                }
                 this._renderBubble(_t('uploadFile'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._goStep('size')" },
                 ], true);
@@ -461,7 +434,6 @@ window.NpcWizard = {
                 this._renderBubble(_t('uploaded'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._goStep('size')" },
                 ], true);
-                this._showSection('uploadedFiles');
                 this._showSection('uploadPreview');
             }
         }, 500);

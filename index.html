@@ -6136,21 +6136,22 @@ window.showChoiceModal = async function(key) {
     };
 
     let productHeaderHtml = `
-        <div class="choice-summary-card" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
+        <div class="choice-summary-card" data-npc="header" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
             <img src="${product.img || product.img_url}" alt="${dName}" loading="lazy" style="width:100%; max-height:180px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
+        </div>
     `;
 
     let rightSideUI = "";
     if (isCustom) {
         rightSideUI = productHeaderHtml + `
-            <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+            <div data-npc="upload" style="display:flex; flex-direction:column; gap:8px;">
                 <button onclick="window.confirmChoice('upload')" id="btnKeyringUpload" class="btn-round" style="height:50px; font-size:14px; background:#f59e0b; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">📎 ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일 업로드'}</button>
                 <div style="text-align:center; font-size:11px; color:#94a3b8; margin-top:-4px;">${lang==='ja'?'※画像とPDFファイルのみ':lang==='zh'?'※仅支持图片和PDF':lang==='ar'?'※صور وPDF فقط':lang==='es'?'※Solo imágenes y PDF':lang==='de'?'※Nur Bilder und PDF':lang==='fr'?'※Images et PDF uniquement':lang==='en'?'※Images and PDF only':'※이미지와 PDF만 가능'}</div>
                 ${product.is_file_upload ? '<div id="miniKeyringEditorContainer" style="display:none;"></div>' : ''}
                 <div id="uploadedFilesList" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px;"></div>
             </div>
-            <div id="uploadPreviewArea" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
+            <div id="uploadPreviewArea" data-npc="uploadPreview" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
                     <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc; box-shadow:0 2px 6px rgba(99,102,241,0.2);">
                     <div style="flex:1; min-width:0;">
@@ -6163,7 +6164,7 @@ window.showChoiceModal = async function(key) {
                     🤖 ${lang==='ja'?'片方のサイズを入力するとAIが自動計算して見積もりを出します':lang==='zh'?'输入一边尺寸，AI将自动计算并估算价格':lang==='ar'?'أدخل بُعداً واحداً وسيحسب الذكاء الاصطناعي الحجم والسعر':lang==='es'?'Ingrese un lado y la IA calculará el tamaño y precio':lang==='de'?'Geben Sie eine Seite ein — KI berechnet Größe und Preis automatisch':lang==='fr'?'Entrez un côté, IA calculera la taille et le prix':lang==='en'?'Enter one side and AI will auto-calculate the size and estimate the price':'한쪽 사이즈를 입력하면 AI가 크기를 자동 계산하여 견적을 내어줍니다'}
                 </div>
             </div>
-            <div style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
+            <div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
                 <div style="display:flex; gap:5px;">
                     <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('w'); window.calcCustomPrice(); window.updateModalTotal();">
@@ -6172,30 +6173,28 @@ window.showChoiceModal = async function(key) {
                 </div>
                 <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'ファイルアップロード後、片方のサイズを入力するとAIが自動計算します':lang==='zh'?'上传文件后输入一边尺寸，AI将自动计算':lang==='ar'?'ارفع ملفاً ثم أدخل بُعداً واحداً وسيحسب الذكاء الاصطناعي الباقي':lang==='es'?'Suba un archivo e ingrese un lado, la IA calculará el resto':lang==='de'?'Datei hochladen, eine Seite eingeben — KI berechnet den Rest':lang==='fr'?'Envoyez un fichier et entrez un côté, IA calculera le reste':lang==='en'?'Upload a file, then enter one side — AI will calculate the rest':'파일 업로드 후 한쪽 사이즈만 입력하면 AI가 자동 계산합니다'}</div>
             </div>
-            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량'}</div>
-            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
+            <div data-npc="qtyLabel" style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량'}</div>
+            <div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>
-            <div style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin-top:15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
+            <div data-npc="estimate" style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin-top:15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
                 <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 AI自動見積価格':lang==='zh'?'💰 AI自动估价':lang==='ar'?'💰 تقدير AI التلقائي':lang==='es'?'💰 Estimación AI':lang==='de'?'💰 KI-Preisschätzung':lang==='fr'?'💰 Estimation IA':lang==='en'?'💰 AI Auto Estimate':'💰 AI 자동 견적가'}</div>
                 <div id="calcResultPrice" style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${lang==='ja'?'¥0':lang==='zh'?'¥0':lang==='ar'?'0 ﷼':lang==='es'?'€0':lang==='de'?'€0':lang==='fr'?'€0':lang==='en'?'$0':'0원'}</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.8; margin-top:2px;">-</div>
-            </div>
-        </div>`;
+            </div>`;
     } else {
         rightSideUI = productHeaderHtml + `
-            <div style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0 15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
+            <div data-npc="price" style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0 15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
                 <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 販売価格':lang==='zh'?'💰 售价':lang==='ar'?'💰 السعر':lang==='es'?'💰 Precio':lang==='de'?'💰 Preis':lang==='fr'?'💰 Prix':lang==='en'?'💰 Price':'💰 판매가'}</div>
                 <div style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${formatPriceSimple(dPrice)}</div>
             </div>
-            <div class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px;">
+            <div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px;">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="fixedProdQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
-            </div>
-        </div>`;
+            </div>`;
     }
 
     // 6. 모달 조립
@@ -6218,11 +6217,11 @@ window.showChoiceModal = async function(key) {
             <div id="choiceRightActions" class="choice-right-actions" style="width:${window.innerWidth <= 768 ? '100%' : '380px'}; min-width:${window.innerWidth <= 768 ? 'auto' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto; max-height:90vh; min-height:0;">
                 ${rightSideUI}
                 ${optionsHtml}
-                <div style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:20px; text-align:right;">
+                <div data-npc="total" style="background:#fff; border:2px solid #6366f1; padding:15px; border-radius:15px; margin-top:20px; text-align:right;">
                     <div style="font-size:12px; color:#64748b;">Total</div>
                     <div id="modalRealtimeTotal" style="font-size:26px; font-weight:900; color:#6366f1;">0</div>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
+                <div data-npc="buttons" style="display:flex; flex-direction:column; gap:10px; margin-top:20px; padding-bottom:50px;">
                     ${product.cutline_url ? `<a href="${product.cutline_url}" target="_blank" download class="btn-round" style="height:50px; font-size:14px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; text-decoration:none;">✂️ ${lang==='ja'?'カットライン ダウンロード':lang==='zh'?'刀线下载':lang==='ar'?'تحميل خط القطع':lang==='es'?'Descargar línea de corte':lang==='de'?'Stanzlinie herunterladen':lang==='fr'?'Télécharger la ligne de coupe':lang==='en'?'Download Die-cut Line':'칼선 다운받기'}</a>` : ''}
                     ${!isCustom && product.is_file_upload ? `<div id="miniKeyringEditorContainer" style="display:none;"></div>` : ''}
                     ${!isCustom ? `<div id="uploadedFilesList" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px;"></div>` : ''}
@@ -6295,14 +6294,39 @@ window.showChoiceModal = async function(key) {
 
             const relatedSection = document.createElement('div');
             relatedSection.className = 'related-products-section';
-            relatedSection.style.cssText = 'order:0; padding:20px; background:#fff; border-bottom:1px solid #e2e8f0;';
-            relatedSection.innerHTML = `
-                <h3 style="font-size:16px; font-weight:800; color:#333; margin:0 0 12px 0;">🛍️ ${_t('related_products','추천 상품')}</h3>
-                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">${cards}</div>
-            `;
-
-            const layout = modalBox.querySelector('.choice-layout');
-            if (layout) layout.appendChild(relatedSection);
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                relatedSection.style.cssText = 'padding:20px; background:#fff; border-top:1px solid #e2e8f0;';
+                relatedSection.innerHTML = `
+                    <h3 style="font-size:16px; font-weight:800; color:#333; margin:0 0 12px 0;">🛍️ ${_t('related_products','추천 상품')}</h3>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">${cards}</div>
+                `;
+                // 모바일: choiceRightActions 하단에 추가
+                const rightActions = modalBox.querySelector('#choiceRightActions');
+                if (rightActions) rightActions.appendChild(relatedSection);
+            } else {
+                // PC: 상세설명 하단에 가로 스크롤로 작게 표시
+                relatedSection.style.cssText = 'padding:20px 0; margin-top:20px; border-top:1px solid #e2e8f0;';
+                relatedSection.innerHTML = `
+                    <h3 style="font-size:14px; font-weight:800; color:#333; margin:0 0 10px 0;">🛍️ ${_t('related_products','추천 상품')}</h3>
+                    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:8px;">${relatedRaw.map(p => {
+                        const loc = typeof getLocalizedData === 'function' ? getLocalizedData(p) : { name: p.name, formattedPrice: '' };
+                        const img = p.img_url || 'https://placehold.co/150?text=No+Img';
+                        return `<div onclick="window.loadProductDetailAndOpen('${p.code}')" style="cursor:pointer; background:#fff; border-radius:10px; border:1px solid #e2e8f0; overflow:hidden; min-width:130px; max-width:130px; flex-shrink:0; transition:box-shadow 0.2s;">
+                            <div style="width:130px; height:100px; overflow:hidden; background:#f8fafc;">
+                                <img src="${img}" alt="${loc.name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/150?text=No+Img'">
+                            </div>
+                            <div style="padding:6px 8px;">
+                                <div style="font-size:11px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${loc.name}</div>
+                                <div style="font-size:11px; font-weight:800; color:#6366f1; margin-top:2px;">${loc.formattedPrice}</div>
+                            </div>
+                        </div>`;
+                    }).join('')}</div>
+                `;
+                // PC: 상세설명(choice-left-content) 하단에 삽입
+                const leftContent = modalBox.querySelector('.choice-left-content');
+                if (leftContent) leftContent.appendChild(relatedSection);
+            }
         } catch(e) { console.warn('추천상품 로드 실패:', e); }
     })();
 
