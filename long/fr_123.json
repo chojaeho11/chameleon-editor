@@ -1458,7 +1458,6 @@
   "btn_change_pw": "Changer le mot de passe",
   "msg_reset_email_sent": "E-mail de réinitialisation envoyé. Veuillez vérifier votre boîte de réception.",
   "msg_pw_changed": "Mot de passe modifié avec succès. Connectez-vous avec votre nouveau mot de passe.",
-
   "//_ICON_PANEL": "--- Panneau d'icônes ---",
   "menu_icon": "Icônes",
   "ph_search_icon": "Rechercher des icônes (ex: star, home)",
@@ -1470,7 +1469,6 @@
   "tab_icons": "Icônes",
   "tab_logos": "Logos",
   "ph_search_logo": "Rechercher des logos (ex: google, nike)",
-
   "//_PROMO_SUBSCRIPTION": "--- Promotion/Abonnement ---",
   "promo_banner_title": "Abonnement 10% + Parrainage 10% + Miles 5%<br>Jusqu'à 25% de réduction !",
   "promo_banner_desc": "Abonnez-vous et recevez 1 million de miles instantanément !<br>Utilisez jusqu'à 5% par achat",
@@ -1490,19 +1488,16 @@
   "sub_mileage_cta": "🎁 Abonnez-vous<br>et recevez 1 million de miles",
   "sub_feat_mileage": "1 million de miles instantanés",
   "sub_feat_referral": "Parrainage 5% réduction · Ami 5% espèces",
-
   "//_DELIVERY_AREA": "--- Zone de livraison ---",
   "desc_delivery_area_kr": "Les produits en panneaux alvéolaires ont des frais de livraison supplémentaires hors Séoul/Gyeonggi.",
   "opt_metro_area": "Zone métropolitaine (Séoul/Gyeonggi)",
   "opt_non_metro_area": "Autres régions",
   "msg_non_metro_fee": "Frais de livraison supplémentaires : 200 000 KRW.",
-
   "//_BUTTONS": "--- Boutons ---",
   "btn_get_quote": "Devis gratuit",
   "btn_live_chat": "Chat en direct",
   "btn_kakao_login": "Se connecter avec KakaoTalk",
   "btn_download": "Télécharger",
-
   "//_PDP_MOBILE": "--- Détail produit/Mobile ---",
   "pdp_product_name": "Nom du produit",
   "pdp_design_start": "🎨 Créer un design",
@@ -1510,13 +1505,11 @@
   "mobile_text_shapes": "Texte et formes",
   "mobile_edit_align": "Éditer/Aligner",
   "cat_select_size": "📏 Sélectionnez la taille (produit)",
-
   "//_CHAMELEON_CHAT": "--- Chat intelligent ---",
   "cham_title": "Chameleon AI Chat",
   "cham_subtitle": "Assistance IA · 24h/24",
   "cham_new_chat": "Nouvelle conversation",
   "cham_connect": "Contacter un agent",
-
   "//_QUOTE_FORM": "--- Formulaire de devis ---",
   "quote_title": "Devis gratuit",
   "quote_subtitle": "Demandez facilement sans connexion",
@@ -1533,9 +1526,9 @@
   "quote_alert_required": "Veuillez saisir votre e-mail et les détails.",
   "quote_success": "Demande envoyée ! Nous répondrons par e-mail sous 24h.",
   "quote_error": "Échec de l'envoi. Contactez-nous via le chat en direct.",
-
   "//_REFERRAL": "--- Parrainage ---",
   "label_referral_discount": "Réduction parrainage",
   "referral_thanks": "Votre parrain sera ravi. Merci !",
-  "referral_refund_notice": "Si le parrain a retiré la récompense, ce montant sera déduit du remboursement."
+  "referral_refund_notice": "Si le parrain a retiré la récompense, ce montant sera déduit du remboursement.",
+  "related_products": "Produits Recommandés"
 }

@@ -295,7 +295,7 @@
   "msg_data_loading": "데이터를 불러오는 중입니다...",
   "msg_db_disconnected": "DB 미연결",
   "msg_no_data": "표시할 데이터가 없습니다.",
-  "btn_go_back": "이전 페이지로 돌아가기",
+  "btn_go_back": "뒤로",
   "msg_load_failed": "데이터를 불러오지 못했습니다.",
   "btn_retry": "다시 시도",
   "btn_apply_now": "바로 적용",
@@ -1112,7 +1112,6 @@
   "label_refund_done": "환불완료",
   "btn_cancel_refund": "결제취소",
   "btn_get_quote": "무료 견적 요청",
-  "btn_go_back": "뒤로",
   "btn_live_chat": "즉시 상담하기",
   "btn_kakao_login": "카카오로 시작하기",
   "btn_download": "다운로드",
@@ -1140,5 +1139,6 @@
   "quote_submit": "견적 요청 보내기",
   "quote_alert_required": "이메일과 문의 내용을 입력해주세요.",
   "quote_success": "견적 요청이 전송되었습니다! 24시간 내에 이메일로 답변 드리겠습니다.",
-  "quote_error": "전송 실패. 채팅 상담으로 문의해주세요."
+  "quote_error": "전송 실패. 채팅 상담으로 문의해주세요.",
+  "related_products": "추천 상품"
 }

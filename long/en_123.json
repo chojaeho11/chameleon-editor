@@ -322,7 +322,7 @@
   "msg_data_loading": "Loading data...",
   "msg_db_disconnected": "DB Not Connected",
   "msg_no_data": "No data to display.",
-  "btn_go_back": "Go back to previous page",
+  "btn_go_back": "Back",
   "msg_load_failed": "Failed to load data.",
   "btn_retry": "Retry",
   "btn_apply_now": "Apply Now",
@@ -1488,7 +1488,6 @@
   "msg_reset_email_sent": "Reset email sent. Please check your inbox.",
   "msg_pw_changed": "Password changed successfully. Please log in with your new password.",
   "btn_get_quote": "Get a Free Quote",
-  "btn_go_back": "Back",
   "btn_live_chat": "Live Chat Now",
   "btn_kakao_login": "Sign in with Kakao",
   "btn_download": "Download",
@@ -1516,5 +1515,6 @@
   "quote_submit": "Send Quote Request",
   "quote_alert_required": "Please fill in your email and project details.",
   "quote_success": "Quote request sent! We'll reply to your email within 24 hours.",
-  "quote_error": "Failed to send. Please contact us via live chat."
+  "quote_error": "Failed to send. Please contact us via live chat.",
+  "related_products": "Recommended"
 }

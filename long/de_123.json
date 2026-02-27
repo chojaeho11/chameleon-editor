@@ -1458,7 +1458,6 @@
   "btn_change_pw": "Passwort ändern",
   "msg_reset_email_sent": "E-Mail zum Zurücksetzen wurde gesendet. Bitte überprüfen Sie Ihren Posteingang.",
   "msg_pw_changed": "Passwort erfolgreich geändert. Melden Sie sich mit Ihrem neuen Passwort an.",
-
   "//_ICON_PANEL": "--- Symbol-Panel ---",
   "menu_icon": "Symbole",
   "ph_search_icon": "Symbole suchen (z.B. star, home)",
@@ -1470,7 +1469,6 @@
   "tab_icons": "Symbole",
   "tab_logos": "Logos",
   "ph_search_logo": "Logos suchen (z.B. google, nike)",
-
   "//_PROMO_SUBSCRIPTION": "--- Aktion/Abonnement ---",
   "promo_banner_title": "Abo 10% + Empfehlung 10% + Meilen 5%<br>Bis zu 25% Rabatt!",
   "promo_banner_desc": "Jetzt abonnieren und 1 Million Meilen sofort erhalten!<br>Bis zu 5% pro Einkauf nutzen",
@@ -1490,19 +1488,16 @@
   "sub_mileage_cta": "🎁 Jetzt abonnieren<br>und 1 Mio. Meilen erhalten",
   "sub_feat_mileage": "1 Million Meilen sofort",
   "sub_feat_referral": "Empfehlung 5% Rabatt · Freund 5% bar",
-
   "//_DELIVERY_AREA": "--- Liefergebiet ---",
   "desc_delivery_area_kr": "Wabenplatten-Produkte haben zusätzliche Versandkosten außerhalb von Seoul/Gyeonggi.",
   "opt_metro_area": "Großraum (Seoul/Gyeonggi)",
   "opt_non_metro_area": "Andere Regionen",
   "msg_non_metro_fee": "Zusätzliche Versandkosten: 200.000 KRW.",
-
   "//_BUTTONS": "--- Schaltflächen ---",
   "btn_get_quote": "Kostenloses Angebot",
   "btn_live_chat": "Live-Chat",
   "btn_kakao_login": "Mit KakaoTalk anmelden",
   "btn_download": "Herunterladen",
-
   "//_PDP_MOBILE": "--- Produktdetails/Mobil ---",
   "pdp_product_name": "Produktname",
   "pdp_design_start": "🎨 Selbst gestalten",
@@ -1510,13 +1505,11 @@
   "mobile_text_shapes": "Text & Formen",
   "mobile_edit_align": "Bearbeiten/Ausrichten",
   "cat_select_size": "📏 Bitte Größe (Produkt) wählen",
-
   "//_CHAMELEON_CHAT": "--- KI-Chat ---",
   "cham_title": "Chameleon AI Chat",
   "cham_subtitle": "KI-Beratung · Rund um die Uhr",
   "cham_new_chat": "Neues Gespräch",
   "cham_connect": "Berater kontaktieren",
-
   "//_QUOTE_FORM": "--- Angebotsformular ---",
   "quote_title": "Kostenloses Angebot",
   "quote_subtitle": "Einfach anfragen ohne Anmeldung",
@@ -1533,9 +1526,9 @@
   "quote_alert_required": "Bitte E-Mail und Anfragedetails eingeben.",
   "quote_success": "Anfrage gesendet! Wir antworten innerhalb von 24 Stunden per E-Mail.",
   "quote_error": "Senden fehlgeschlagen. Kontaktieren Sie uns per Live-Chat.",
-
   "//_REFERRAL": "--- Empfehlung ---",
   "label_referral_discount": "Empfehlungsrabatt",
   "referral_thanks": "Ihr Empfehler wird sich freuen. Vielen Dank!",
-  "referral_refund_notice": "Wenn der Empfehler die Belohnung bereits abgehoben hat, wird dieser Betrag von der Rückerstattung abgezogen."
+  "referral_refund_notice": "Wenn der Empfehler die Belohnung bereits abgehoben hat, wird dieser Betrag von der Rückerstattung abgezogen.",
+  "related_products": "Empfohlene Produkte"
 }

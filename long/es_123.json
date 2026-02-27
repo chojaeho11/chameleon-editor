@@ -1458,7 +1458,6 @@
   "btn_change_pw": "Cambiar contraseña",
   "msg_reset_email_sent": "Correo de restablecimiento enviado. Revisa tu bandeja de entrada.",
   "msg_pw_changed": "Contraseña cambiada exitosamente. Inicia sesión con tu nueva contraseña.",
-
   "//_ICON_PANEL": "--- Panel de iconos ---",
   "menu_icon": "Iconos",
   "ph_search_icon": "Buscar iconos (ej: star, home)",
@@ -1470,7 +1469,6 @@
   "tab_icons": "Iconos",
   "tab_logos": "Logos",
   "ph_search_logo": "Buscar logos (ej: google, nike)",
-
   "//_PROMO_SUBSCRIPTION": "--- Promoción/Suscripción ---",
   "promo_banner_title": "Suscripción 10% + Referido 10% + Millas 5%<br>¡Hasta 25% de descuento!",
   "promo_banner_desc": "¡Suscríbete y recibe 1 millón de millas al instante!<br>Usa hasta 5% por compra",
@@ -1490,19 +1488,16 @@
   "sub_mileage_cta": "🎁 Suscríbete ahora<br>y recibe 1 millón de millas",
   "sub_feat_mileage": "1 millón de millas al instante",
   "sub_feat_referral": "Referido 5% dto. · Amigo 5% efectivo",
-
   "//_DELIVERY_AREA": "--- Zona de envío ---",
   "desc_delivery_area_kr": "Los productos de panel honeycomb tienen cargos adicionales fuera de Seúl/Gyeonggi.",
   "opt_metro_area": "Área metropolitana (Seúl/Gyeonggi)",
   "opt_non_metro_area": "Otras regiones",
   "msg_non_metro_fee": "Cargo adicional de envío: 200,000 KRW.",
-
   "//_BUTTONS": "--- Botones ---",
   "btn_get_quote": "Cotización gratis",
   "btn_live_chat": "Chat en vivo",
   "btn_kakao_login": "Iniciar con KakaoTalk",
   "btn_download": "Descargar",
-
   "//_PDP_MOBILE": "--- Detalle producto/Móvil ---",
   "pdp_product_name": "Nombre del producto",
   "pdp_design_start": "🎨 Diseñar ahora",
@@ -1510,13 +1505,11 @@
   "mobile_text_shapes": "Texto y formas",
   "mobile_edit_align": "Editar/Alinear",
   "cat_select_size": "📏 Selecciona el tamaño (producto)",
-
   "//_CHAMELEON_CHAT": "--- Chat inteligente ---",
   "cham_title": "Chameleon AI Chat",
   "cham_subtitle": "Asistencia IA · 24 horas",
   "cham_new_chat": "Nueva conversación",
   "cham_connect": "Conectar con agente",
-
   "//_QUOTE_FORM": "--- Formulario de cotización ---",
   "quote_title": "Cotización gratis",
   "quote_subtitle": "Consulta fácil sin iniciar sesión",
@@ -1533,9 +1526,9 @@
   "quote_alert_required": "Ingresa tu correo electrónico y los detalles de la consulta.",
   "quote_success": "¡Solicitud enviada! Te responderemos por correo en 24 horas.",
   "quote_error": "Error al enviar. Contáctanos por chat en vivo.",
-
   "//_REFERRAL": "--- Referido ---",
   "label_referral_discount": "Descuento referido",
   "referral_thanks": "¡Tu referido estará feliz. ¡Gracias!",
-  "referral_refund_notice": "Si el referido ya retiró la recompensa, ese monto se deducirá del reembolso."
+  "referral_refund_notice": "Si el referido ya retiró la recompensa, ese monto se deducirá del reembolso.",
+  "related_products": "Productos Recomendados"
 }

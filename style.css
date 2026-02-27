@@ -4204,13 +4204,13 @@ video {
 
     /* 2. [상품 선택 모달] 스크롤 잘림 해결 (핵심) */
     #choiceModal .modal-box {
-        width: 95% !important;
+        width: 100% !important;
         height: auto !important;
-        max-height: 90dvh !important; /* 화면 높이의 90%까지만 */
-        
+        max-height: none !important;
+
         /* ★ 스크롤 핵심 설정 */
-        overflow-y: auto !important; 
-        display: block !important; /* flex 해제하여 자연스러운 흐름 유도 */
+        overflow-y: visible !important;
+        display: block !important;
         padding: 0 !important;
     }
 
@@ -4228,10 +4228,10 @@ video {
         height: auto !important;
         overflow: visible !important;
         padding: 20px !important;
+        padding-bottom: 20px !important;
         background: #f8fafc !important;
         border-bottom: 1px solid #e2e8f0;
         border-top: none !important;
-        padding-bottom: 50px !important;
     }
 
     /* 하단: 상세 내용 (아래로 이동) */
