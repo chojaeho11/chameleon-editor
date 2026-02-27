@@ -7580,7 +7580,7 @@ if (w >= 20 && h >= 20) {
             setTimeout(async () => {
                 try {
                     const { initPaperDisplayPages } = await import('./canvas-pages.js?v=123');
-                    initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor);
+                    initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
                 }

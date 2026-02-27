@@ -627,15 +627,20 @@ window.downloadBoxLayoutPDF = async function() {
 
 // ─── 종이매대 모드: 3면 페이지 (상단광고, 옆면, 선반) ───
 
-const PD_FACE_NAMES = ['Top Ad', 'Side Panel', 'Shelf'];
+const PD_FACE_NAMES = ['Top Ad', 'Side Panel', 'Shelf', 'Bottom Panel'];
 
-export function initPaperDisplayPages(widthMM, heightMM, adHeightMM, shelfHeightMM, depthMM, bgColor) {
+export function initPaperDisplayPages(widthMM, heightMM, adHeightMM, shelfHeightMM, depthMM, bgColor, shelfCount) {
     const PX = 3.7795; // mm → px
     const lipHeightMM = 70; // 선반 앞면 립 높이 7cm
+    const bodyHeightMM = heightMM - adHeightMM;
+    const sc = shelfCount || Math.floor(bodyHeightMM / shelfHeightMM);
+    const bottomRemainderMM = bodyHeightMM - sc * shelfHeightMM;
+    const bottomPageH = Math.max(bottomRemainderMM, 50); // 최소 50mm
     const faces = [
-        { name: 'Top Ad',     w: widthMM * PX,  h: adHeightMM * PX },
-        { name: 'Side Panel', w: depthMM * PX,   h: heightMM * PX },
-        { name: 'Shelf',      w: widthMM * PX,  h: lipHeightMM * PX },
+        { name: 'Top Ad',       w: widthMM * PX,  h: adHeightMM * PX },
+        { name: 'Side Panel',   w: depthMM * PX,  h: heightMM * PX },
+        { name: 'Shelf',        w: widthMM * PX,  h: lipHeightMM * PX },
+        { name: 'Bottom Panel', w: widthMM * PX,  h: bottomPageH * PX },
     ];
 
     pageDataList = [];
@@ -677,6 +682,7 @@ function buildPdFaceTabsUI() {
         t('pd_tab_ad', '상단 광고'),
         t('pd_tab_side', '옆면'),
         t('pd_tab_shelf', '선반'),
+        t('pd_tab_bottom', '하단'),
     ];
 
     names.forEach((name, i) => {

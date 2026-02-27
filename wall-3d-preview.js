@@ -715,7 +715,7 @@
         }
     }
 
-    // ─── Capture Paper Display faces (3 pages) ───
+    // ─── Capture Paper Display faces (4 pages) ───
     async function capturePaperDisplayFaces() {
         const fabricCanvas = window.canvas;
         if (!fabricCanvas) return [];
@@ -723,10 +723,10 @@
         if (window.savePageState) window.savePageState();
         const origIndex = window._getPageIndex ? window._getPageIndex() : 0;
         const pageList = window.__pageDataList;
-        if (!pageList || pageList.length < 3) return [];
+        if (!pageList || pageList.length < 4) return [];
 
         const textures = [];
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
             await new Promise(resolve => {
                 fabricCanvas.loadFromJSON(pageList[i], () => resolve());
             });
@@ -914,7 +914,7 @@
                 bgMat.clone()
             ];
             var lip = new THREE.Mesh(lipGeo, lipMats);
-            lip.position.set(0, shelfY - actualLipH / 2, d / 2 - thick / 2);
+            lip.position.set(0, shelfY + actualLipH / 2, d / 2 - thick / 2);
             wallGroup.add(lip);
         }
 
@@ -923,6 +923,22 @@
         var bottom = new THREE.Mesh(bottomGeo, bgMat.clone());
         bottom.position.set(0, thick / 2, 0);
         wallGroup.add(bottom);
+
+        // 6. 하단 앞면 패널 (마지막 선반 아래 ~ 바닥까지, textures[3])
+        var lastShelfY = bodyH - shelfCount * shH;
+        var bottomPanelH = lastShelfY - thick; // 바닥판 두께 제외
+        if (bottomPanelH > 0.005) {
+            var bpGeo = new THREE.BoxGeometry(innerW, bottomPanelH, thick);
+            var bpMats = [
+                bgMat.clone(), bgMat.clone(),
+                bgMat.clone(), bgMat.clone(),
+                makeTexMat(textures[3], false),  // +Z front face
+                bgMat.clone()
+            ];
+            var bottomPanel = new THREE.Mesh(bpGeo, bpMats);
+            bottomPanel.position.set(0, thick + bottomPanelH / 2, d / 2 - thick / 2);
+            wallGroup.add(bottomPanel);
+        }
 
         // 전체 그룹을 바닥에 맞춤 (Y=0이 바닥)
         wallGroup.position.set(0, 0, 0);
