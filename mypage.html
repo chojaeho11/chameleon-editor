@@ -17,6 +17,20 @@
             window.__SITE_CODE = code;
         })();
     </script>
+    <script>
+        // 해외 사이트: 번역 적용 전 한글 깜빡임 방지
+        if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') {
+            var _s = document.createElement('style');
+            _s.id = 'i18nHideStyle';
+            _s.textContent = '[data-i18n]:not(.i18n-done) { color: transparent !important; }' +
+                '[data-i18n-placeholder]:not(.i18n-done) { color: transparent !important; }';
+            document.head.appendChild(_s);
+            setTimeout(function() {
+                var s = document.getElementById('i18nHideStyle');
+                if (s) s.remove();
+            }, 2000);
+        }
+    </script>
     <style>
         /* 마이페이지 전용 레이아웃 (style.css에 추가해도 됨) */
         body.mypage-body { background: #f8fafc; display: flex; height: 100vh; overflow: hidden; }

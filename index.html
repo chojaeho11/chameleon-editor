@@ -342,6 +342,21 @@
     const PROJECT_VERSION = '123';
     const DATA_PATH = './long/';
 </script>
+<script>
+    // 해외 사이트: 번역 적용 전 한글 깜빡임 방지 (CSS를 head에 즉시 삽입)
+    if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') {
+        var _s = document.createElement('style');
+        _s.id = 'i18nHideStyle';
+        _s.textContent = '[data-i18n]:not(.i18n-done) { color: transparent !important; }' +
+            '[data-i18n-placeholder]:not(.i18n-done) { color: transparent !important; }';
+        document.head.appendChild(_s);
+        // 안전장치: 2초 후 강제 표시
+        setTimeout(function() {
+            var s = document.getElementById('i18nHideStyle');
+            if (s) s.remove();
+        }, 2000);
+    }
+</script>
 </head>
 <body>
 <script src="toast.js?v=123"></script>
@@ -4701,8 +4716,15 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
 
             loadLanguageFont(); // 폰트 적용
 
+            // ★ 번역 완료 → 한글 깜빡임 방지 해제
+            var _hideStyle = document.getElementById('i18nHideStyle');
+            if (_hideStyle) _hideStyle.remove();
+
         } catch (error) {
             console.error(`🚨 번역 로드 실패 (${CURRENT_LANG}):`, error);
+            // 번역 실패 시에도 화면 표시
+            var _hideStyle2 = document.getElementById('i18nHideStyle');
+            if (_hideStyle2) _hideStyle2.remove();
             // 영어/일본어 파일이 없을 때만 한국어로 자동 전환 (무한루프 방지)
             if (CURRENT_LANG !== 'kr') {
                 console.warn("⚠️ 한국어로 전환합니다.");

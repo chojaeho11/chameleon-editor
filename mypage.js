@@ -124,6 +124,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 3. 번역 적용 (HTML의 data-i18n 태그들)
     applyTranslations();
+    // 번역 완료 → 한글 깜빡임 방지 해제
+    var _hideStyle = document.getElementById('i18nHideStyle');
+    if (_hideStyle) _hideStyle.remove();
 
     if (!currentUser) {
         showToast(window.t('msg_login_required') || "Login is required.", 'info');
