@@ -250,15 +250,9 @@ const NPC_TEXTS = {
 };
 
 function _npcLang() {
-    const l = window.currentLang || 'kr';
-    if (l === 'ja') return 'ja';
-    if (l === 'en') return 'en';
-    if (l === 'zh') return 'zh';
-    if (l === 'ar') return 'ar';
-    if (l === 'es') return 'es';
-    if (l === 'de') return 'de';
-    if (l === 'fr') return 'fr';
-    return 'kr';
+    const c = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const map = { KR:'kr', JP:'ja', US:'en', CN:'zh', AR:'ar', ES:'es', DE:'de', FR:'fr' };
+    return map[c] || 'kr';
 }
 function _t(key) {
     const lang = _npcLang();
