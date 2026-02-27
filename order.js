@@ -1975,7 +1975,13 @@ async function processOrderSubmission() {
     const elMinCheckout = document.getElementById('minOrderCheckoutNotice');
     if (MIN_ORDER_KRW > 0 && finalTotal > 0 && finalTotal < MIN_ORDER_KRW && !_hasUnitOrder) {
         finalTotal = MIN_ORDER_KRW;
-        if (elMinCheckout) elMinCheckout.style.display = 'block';
+        if (elMinCheckout) {
+            elMinCheckout.style.display = 'block';
+            // 동적으로 최소금액 텍스트 설정 (현지 통화로 표시)
+            const minAmt = formatCurrency(MIN_ORDER_KRW);
+            const _t = window.t || ((k, d) => d);
+            elMinCheckout.innerHTML = '⚠️ ' + _t('msg_min_order_notice', '최소 주문금액 ' + minAmt + '이 적용되었습니다.');
+        }
     } else {
         if (elMinCheckout) elMinCheckout.style.display = 'none';
     }
