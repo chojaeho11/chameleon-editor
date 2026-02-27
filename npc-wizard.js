@@ -516,8 +516,8 @@ window.NpcWizard = {
     guideEl: null,
     _fileWatcher: null,
     // 종이매대 전용 상태
-    _pdWidth: 0,
-    _pdHeight: 0,
+    _pdWidth: 40,
+    _pdHeight: 120,
     _pdDepth: 30,
     _pdAdHeight: 20,
     _pdShelfHeight: 25,
@@ -537,8 +537,8 @@ window.NpcWizard = {
         this.hasFile = null;
         this.designChoice = null;
         this._fromHoneycombDirect = false;
-        this._pdWidth = 0;
-        this._pdHeight = 0;
+        this._pdWidth = 40;
+        this._pdHeight = 120;
         this._pdDepth = 30;
         this._pdAdHeight = 20;
         this._pdShelfHeight = 25;
@@ -816,15 +816,15 @@ window.NpcWizard = {
                     slot1.innerHTML = `
                         <div class="pd-input-row">
                             <label>${_t('pdWidth')}</label>
-                            <input type="number" id="npcPdWidth" value="${this._pdWidth || ''}" min="10" placeholder="60" inputmode="numeric">
+                            <input type="number" id="npcPdWidth" value="${this._pdWidth || 40}" min="10" max="60" placeholder="40" inputmode="numeric">
                         </div>
                         <div class="pd-input-row">
                             <label>${_t('pdHeight')}</label>
-                            <input type="number" id="npcPdHeight" value="${this._pdHeight || ''}" min="10" placeholder="120" inputmode="numeric">
+                            <input type="number" id="npcPdHeight" value="${this._pdHeight || 120}" min="10" max="150" placeholder="120" inputmode="numeric">
                         </div>
                         <div class="pd-input-row">
                             <label>${_t('pdDepth')}</label>
-                            <input type="number" id="npcPdDepth" value="${this._pdDepth || 30}" min="5" placeholder="30" inputmode="numeric">
+                            <input type="number" id="npcPdDepth" value="${this._pdDepth || 30}" min="5" max="40" placeholder="30" inputmode="numeric">
                         </div>
                     `;
                 }
@@ -1120,13 +1120,17 @@ window.NpcWizard = {
         const wEl = document.getElementById('npcPdWidth');
         const hEl = document.getElementById('npcPdHeight');
         const dEl = document.getElementById('npcPdDepth');
-        const w = parseInt(wEl && wEl.value) || 0;
-        const h = parseInt(hEl && hEl.value) || 0;
-        const d = parseInt(dEl && dEl.value) || 30;
+        let w = parseInt(wEl && wEl.value) || 0;
+        let h = parseInt(hEl && hEl.value) || 0;
+        let d = parseInt(dEl && dEl.value) || 30;
         if (w < 10 || h < 10) {
             if (window.showToast) window.showToast(_t('pdEnterSize'), 'warn');
             return;
         }
+        // 최대값 제한
+        w = Math.min(w, 60);
+        h = Math.min(h, 150);
+        d = Math.min(d, 40);
         this._pdWidth = w;
         this._pdHeight = h;
         this._pdDepth = d;
