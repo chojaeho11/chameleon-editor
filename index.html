@@ -2786,7 +2786,7 @@ async function handleSubReturn() {
 <div id="loginModal" class="modal-bg" style="z-index: 20000;">
     <div class="modal-box" style="width: 400px; position:relative;">
         <!-- ★ 닫기 버튼 -->
-        <button onclick="document.getElementById('loginModal').style.display='none'"
+        <button onclick="document.getElementById('loginModal').style.display='none'; window._authCallback=null; window.__authInProgress=false;"
                 style="position:absolute; top:12px; right:14px; background:none; border:none; font-size:22px; cursor:pointer; color:#94a3b8; line-height:1; padding:4px 8px; z-index:1;"
                 title="닫기">&times;</button>
 
@@ -6659,7 +6659,7 @@ if (w >= 20 && h >= 20) {
         // 6. 실행 (에디터 or 장바구니)
 
         if (mode === 'editor') {
-            document.getElementById('choiceModal').style.display = 'none';
+            // ★ choiceModal은 startEditorDirect 내부에서 로그인 확인 후 닫음
             // ★ PDP→에디터 새 진입 시 기존 편집 인덱스 초기화 (stale 상태 방지)
             window.editingCartItemIdx = undefined;
             window.pendingSelectedAddons = selectedAddonCodes;
@@ -7459,6 +7459,10 @@ if (w >= 20 && h >= 20) {
         }
 
         if (!key) { showToast("상품 코드가 올바르지 않습니다.", 'error'); return; }
+
+        // ★ 로그인 확인 완료 — NPC 모달 등 이전 모달 닫기
+        const _choiceModal = document.getElementById('choiceModal');
+        if (_choiceModal) _choiceModal.style.display = 'none';
 
         // 2. [설정] 상품 정보 로드 (전역 변수에 없으면 DB에서 가져옴)
         window.currentProductKey = key;
@@ -11786,8 +11790,8 @@ document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal-bg')) {
         e.stopPropagation();
         e.preventDefault();
-        // choiceModal(NPC 위자드)은 배경 클릭으로 닫지 않음 (X 버튼으로만 닫기)
-        if (e.target.id === 'choiceModal') return;
+        // choiceModal(NPC 위자드), loginModal은 배경 클릭으로 닫지 않음 (X 버튼으로만 닫기)
+        if (e.target.id === 'choiceModal' || e.target.id === 'loginModal') return;
         e.target.style.display = 'none';
     }
 });

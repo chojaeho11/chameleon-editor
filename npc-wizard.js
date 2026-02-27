@@ -1210,8 +1210,7 @@ window.NpcWizard = {
             refCode: this._pdRefCode,
         };
 
-        // 모달 닫고 에디터 열기
-        document.getElementById('choiceModal').style.display = 'none';
+        // 에디터 열기 (choiceModal은 startEditorDirect 내부에서 로그인 확인 후 닫음)
         window.startEditorDirect(product.code, widthMM, heightMM, null);
     },
 
