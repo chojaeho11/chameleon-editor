@@ -5953,15 +5953,15 @@ window.showChoiceModal = async function(key) {
     // [최종 수정] 공통 정보 로드 (전체 -> 카테고리 순서 + 대분류 자동매칭)
     // ============================================================
     let commonInfoHtml = "";
-    
+    let targetCat = product.category || 'NO_CAT';
+
     try {
-        const dbClient = window.sb || sb; 
+        const dbClient = window.sb || sb;
         if (!dbClient) throw new Error("DB 연결이 초기화되지 않았습니다.");
 
         // [핵심] 상품의 소분류 코드로 '대분류(Top Category) 코드' 찾기
         // 관리자에서 대분류 기준으로 저장했기 때문에, 여기서 변환이 필요합니다.
         const subCatCode = product.category;
-        let targetCat = subCatCode || 'NO_CAT';
 
         if (window.globalSubCats) {
             // 미리 로드된 카테고리 목록에서 현재 상품의 소분류를 찾고, 그 부모(대분류) 코드를 가져옵니다.
