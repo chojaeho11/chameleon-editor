@@ -9,7 +9,7 @@ const NPC_IMG = './img/npc-guide.png';
 const NPC_TEXTS = {
     kr: {
         hcAskConsulted: '매니저와 상담하셨나요? 🤝',
-        hcYes: '네, 견적 받았어요',
+        hcYes: '상담완료했어요',
         hcNo: '아니요, 아직이요',
         hcInputAmount: '받으신 견적금액을 입력해 주세요 💰',
         hcConsultManager: '💬 매니저와 상담하기',
@@ -39,7 +39,7 @@ const NPC_TEXTS = {
     },
     ja: {
         hcAskConsulted: 'マネージャーとご相談されましたか？ 🤝',
-        hcYes: 'はい、見積もりを受けました',
+        hcYes: '相談完了しました',
         hcNo: 'いいえ、まだです',
         hcInputAmount: '受け取ったお見積金額を入力してください 💰',
         hcConsultManager: '💬 マネージャーに相談する',
@@ -69,7 +69,7 @@ const NPC_TEXTS = {
     },
     en: {
         hcAskConsulted: 'Have you consulted with our manager? 🤝',
-        hcYes: 'Yes, I got a quote',
+        hcYes: 'Consultation done',
         hcNo: 'No, not yet',
         hcInputAmount: 'Please enter the quoted amount 💰',
         hcConsultManager: '💬 Consult with manager',
@@ -99,7 +99,7 @@ const NPC_TEXTS = {
     },
     zh: {
         hcAskConsulted: '您已与经理咨询过了吗？ 🤝',
-        hcYes: '是的，已获得报价',
+        hcYes: '咨询完成了',
         hcNo: '还没有',
         hcInputAmount: '请输入收到的报价金额 💰',
         hcConsultManager: '💬 与经理咨询',
@@ -129,7 +129,7 @@ const NPC_TEXTS = {
     },
     ar: {
         hcAskConsulted: 'هل تشاورت مع المدير؟ 🤝',
-        hcYes: 'نعم، حصلت على عرض سعر',
+        hcYes: 'تمت الاستشارة',
         hcNo: 'لا، ليس بعد',
         hcInputAmount: 'يرجى إدخال مبلغ العرض المستلم 💰',
         hcConsultManager: '💬 التشاور مع المدير',
@@ -159,7 +159,7 @@ const NPC_TEXTS = {
     },
     es: {
         hcAskConsulted: '¿Ha consultado con nuestro gerente? 🤝',
-        hcYes: 'Sí, tengo un presupuesto',
+        hcYes: 'Consulta completada',
         hcNo: 'No, todavía no',
         hcInputAmount: 'Ingrese el monto del presupuesto recibido 💰',
         hcConsultManager: '💬 Consultar con el gerente',
@@ -189,7 +189,7 @@ const NPC_TEXTS = {
     },
     de: {
         hcAskConsulted: 'Haben Sie sich mit unserem Manager beraten? 🤝',
-        hcYes: 'Ja, ich habe ein Angebot',
+        hcYes: 'Beratung abgeschlossen',
         hcNo: 'Nein, noch nicht',
         hcInputAmount: 'Bitte geben Sie den erhaltenen Angebotsbetrag ein 💰',
         hcConsultManager: '💬 Mit Manager beraten',
@@ -219,7 +219,7 @@ const NPC_TEXTS = {
     },
     fr: {
         hcAskConsulted: 'Avez-vous consulté notre responsable ? 🤝',
-        hcYes: 'Oui, j\'ai un devis',
+        hcYes: 'Consultation terminée',
         hcNo: 'Non, pas encore',
         hcInputAmount: 'Veuillez saisir le montant du devis reçu 💰',
         hcConsultManager: '💬 Consulter le responsable',
@@ -604,7 +604,7 @@ window.NpcWizard = {
         if (!amountInput) return;
         const amount = parseInt(amountInput.value.replace(/[^0-9]/g, ''));
         if (!amount || amount <= 0) {
-            if (window.showToast) window.showToast(_t('hcEnterAmount'), 'warn');
+            if (window.showToast) window.showToast(_t('hcInputAmount'), 'warn');
             amountInput.focus();
             return;
         }
