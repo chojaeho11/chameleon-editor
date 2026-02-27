@@ -221,11 +221,7 @@ function updateModalUI() {
         if (quickSignupBtn) quickSignupBtn.style.display = "block"; // 1초 버튼 표시
     }
 
-    // ★ 한국=카카오+구글, 해외=구글만 (hostname 폴백 포함)
-    const _h = window.location.hostname || '';
-    const _isJPorUS = _h.includes('cafe0101') || _h.includes('cafe3355');
-    const kakaoBtn = document.getElementById("btnKakaoLogin");
-    if (kakaoBtn) kakaoBtn.style.display = _isJPorUS ? 'none' : 'flex';
+    // ★ 카카오 버튼은 CSS로만 해외몰 숨김 처리 (JS에서 건드리지 않음)
 }
 
 async function handleAuthAction() {

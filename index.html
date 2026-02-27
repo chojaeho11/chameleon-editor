@@ -2818,7 +2818,7 @@ async function handleSubReturn() {
             <button id="btnGoogleLogin" class="btn-round" style="border-color:#ddd; justify-content:center;">
                 <i class="fa-brands fa-google" style="color:#DB4437; margin-right:8px;"></i> <span data-i18n="btn_google_login">Google로 시작하기</span>
             </button>
-            <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center; display:none;">
+            <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center; display:flex;">
                 <i class="fa-solid fa-comment" style="margin-right:8px;"></i> <span data-i18n="btn_kakao_login">카카오로 시작하기</span>
             </button>
         </div>
@@ -4690,12 +4690,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             const loginBtn = document.getElementById('btnLoginBtn');
             if (loginBtn && langData['btn_login']) loginBtn.innerText = langData['btn_login'];
             
-            // 한국=카카오+구글, 해외=구글만
-            const _h2 = window.location.hostname || '';
-            const _isKR = _h2.indexOf('cafe2626') !== -1 ||
-                          (_h2.indexOf('cafe0101') === -1 && _h2.indexOf('cafe3355') === -1 && (window.__SITE_CODE === 'KR' || !window.__SITE_CODE));
-            const kakaoBtn = document.getElementById('btnKakaoLogin');
-            if (kakaoBtn) kakaoBtn.style.display = _isKR ? 'flex' : 'none';
+            // ★ 카카오 버튼은 CSS로만 해외몰 숨김 (html:not([lang="ko"]))
 
             loadLanguageFont(); // 폰트 적용
 
