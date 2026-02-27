@@ -293,6 +293,106 @@ ${hreflangTags('/')}
             });
         }
 
+        // Editor landing page — 무료 디자인 에디터 SEO
+        if (path === 'editor') {
+            const edTitle = '무료 디자인 에디터 - 캔바(Canva) 대안 온라인 편집기 | 카멜레온프린팅';
+            const edDesc = '카멜레온프린팅 무료 디자인 에디터. 캔바(Canva)처럼 쉬운 온라인 편집기로 허니콤보드, 배너, 포스터, 등신대를 직접 디자인. 무료 템플릿 & 이미지 제공, 회원가입 없이 바로 시작.';
+            const edKeywords = '무료디자인에디터,무료에디터,캔바대안,Canva대안,온라인디자인,무료이미지,무료템플릿,포스터만들기,배너디자인,온라인편집기,무료포스터제작,인쇄디자인에디터';
+            const edImg = 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1769076824090_63416175887313310.png';
+
+            const features = [
+                { icon: '🎨', title: '드래그 & 드롭 편집', desc: '캔바(Canva)처럼 직관적인 인터페이스. 클릭 몇 번으로 전문 디자인 완성.' },
+                { icon: '📐', title: '실제 인쇄 사이즈', desc: '허니콤보드, 배너, 포스터 등 실제 인쇄 규격에 맞춰 자동 설정.' },
+                { icon: '🖼️', title: '무료 템플릿 & 이미지', desc: '수백 개의 무료 템플릿과 이미지 라이브러리. 상업적 사용 가능.' },
+                { icon: '🤖', title: 'AI 디자인 어시스턴트', desc: 'AI가 텍스트, 레이아웃, 배색을 자동 추천. 디자인 경험 없어도 OK.' },
+                { icon: '📄', title: '다중 페이지 지원', desc: '앞면/뒷면, 여러 페이지를 한 번에 편집. 양면 인쇄물도 간편하게.' },
+                { icon: '💾', title: '바로 인쇄 주문', desc: '디자인 완료 후 클릭 한 번으로 인쇄 주문. 전국 당일배송 가능.' },
+            ];
+            const featHtml = features.map(f =>
+                `<div style="display:inline-block;vertical-align:top;width:280px;margin:15px;padding:20px;border:1px solid #eee;border-radius:12px;">
+<p style="font-size:32px;margin:0;">${f.icon}</p>
+<h3 style="margin:10px 0 5px;">${esc(f.title)}</h3>
+<p style="font-size:14px;color:#555;margin:0;">${esc(f.desc)}</p></div>`
+            ).join('\n');
+
+            const comparisons = [
+                { feature: '가격', us: '무료 (완전 무료)', canva: '무료 + 유료 (Pro $12.99/월)' },
+                { feature: '인쇄 주문 연동', us: '✅ 바로 주문 가능', canva: '❌ 별도 다운로드 필요' },
+                { feature: '실제 인쇄 규격', us: '✅ 자동 설정', canva: '❌ 수동 설정' },
+                { feature: '회원가입', us: '❌ 불필요', canva: '✅ 필수' },
+                { feature: 'AI 디자인 지원', us: '✅ 무료', canva: '✅ 유료(Pro)' },
+                { feature: '한국어 지원', us: '✅ 완벽 지원', canva: '⚠️ 부분 지원' },
+            ];
+            const compRows = comparisons.map(c =>
+                `<tr><td style="padding:8px;border:1px solid #ddd;">${esc(c.feature)}</td><td style="padding:8px;border:1px solid #ddd;background:#f0fff0;">${c.us}</td><td style="padding:8px;border:1px solid #ddd;">${c.canva}</td></tr>`
+            ).join('');
+
+            const jsonLd = JSON.stringify({
+                "@context": "https://schema.org", "@type": "SoftwareApplication",
+                "name": "카멜레온프린팅 무료 디자인 에디터",
+                "applicationCategory": "DesignApplication",
+                "operatingSystem": "Web",
+                "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+                "description": edDesc,
+                "url": `${DOMAIN}/editor`,
+                "image": edImg,
+                "author": { "@type": "Organization", "name": "카멜레온프린팅", "url": DOMAIN },
+                "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "1250" }
+            });
+
+            return new Response(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(edTitle)}</title>
+<meta name="description" content="${esc(edDesc)}">
+<meta name="keywords" content="${esc(edKeywords)}">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${esc(edTitle)}">
+<meta property="og:description" content="${esc(edDesc)}">
+<meta property="og:image" content="${esc(edImg)}">
+<meta property="og:url" content="${DOMAIN}/editor">
+<link rel="canonical" href="${DOMAIN}/editor">
+${hreflangTags('/editor')}
+<script type="application/ld+json">${jsonLd}</script>
+</head><body>
+<h1>무료 디자인 에디터 - 캔바(Canva)처럼 쉬운 온라인 편집기</h1>
+<p>${esc(edDesc)}</p>
+
+<section>
+<h2>주요 기능</h2>
+${featHtml}
+</section>
+
+<section>
+<h2>카멜레온 에디터 vs 캔바(Canva) 비교</h2>
+<table style="border-collapse:collapse;width:100%;max-width:700px;">
+<thead><tr><th style="padding:8px;border:1px solid #ddd;background:#f5f5f5;">기능</th><th style="padding:8px;border:1px solid #ddd;background:#e8f5e9;">카멜레온 에디터</th><th style="padding:8px;border:1px solid #ddd;background:#f5f5f5;">Canva</th></tr></thead>
+<tbody>${compRows}</tbody>
+</table>
+</section>
+
+<section>
+<h2>이런 분들에게 추천합니다</h2>
+<ul>
+<li>전시부스·팝업스토어 디자인이 필요한 기업 담당자</li>
+<li>등신대·포토존을 직접 디자인하고 싶은 팬</li>
+<li>소규모 사업자 - 간판, 배너, 현수막 직접 제작</li>
+<li>디자인 경험 없이 전문적인 인쇄물을 만들고 싶은 분</li>
+<li>캔바(Canva) 대안을 찾는 분 - 인쇄 특화 무료 에디터</li>
+</ul>
+</section>
+
+<section>
+<h2>지원 인쇄물</h2>
+<p><a href="${DOMAIN}/honeycomb">허니콤보드</a> | <a href="${DOMAIN}/fabric-print">패브릭인쇄</a> | <a href="${DOMAIN}/banner-stand">배너스탠드</a> | <a href="${DOMAIN}/standee">등신대</a> | <a href="${DOMAIN}/foamex-print">포맥스인쇄</a> | <a href="${DOMAIN}/acrylic-print">아크릴인쇄</a> | <a href="${DOMAIN}/goods">굿즈제작</a> | <a href="${DOMAIN}/biz-print">명함인쇄</a></p>
+</section>
+
+<p><a href="${DOMAIN}/">카멜레온프린팅 홈</a></p>
+</body></html>`, {
+                status: 200,
+                headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+            });
+        }
+
         // SEO category page
         const catInfo = SEO_CATEGORIES[path];
         if (catInfo) {

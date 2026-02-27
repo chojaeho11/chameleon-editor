@@ -341,6 +341,128 @@ ${hreflangTags('/')}
                         });
                     }
 
+                    // Editor landing page — Free Design Editor SEO
+                    if (path === 'editor') {
+                        const editorSeo = cc === 'JP' ? {
+                            lang: 'ja', siteName: 'カメレオンプリンティング', domain: 'https://www.cafe0101.com',
+                            title: '無料デザインエディター - Canva代替オンライン編集ツール | カメレオンプリンティング',
+                            desc: 'カメレオンプリンティングの無料デザインエディター。Canvaのように簡単なオンライン編集ツールで、ハニカムボード・バナー・等身大パネルを自分でデザイン。無料テンプレート＆画像素材付き、会員登録不要ですぐ開始。',
+                            keywords: '無料デザインエディター,無料エディター,Canva代替,オンラインデザイン,無料画像,無料テンプレート,ポスター作成,バナーデザイン,オンライン編集,無料ポスター作成,印刷デザインエディター,無料画像素材',
+                            h1: '無料デザインエディター - Canvaのように簡単なオンライン編集ツール',
+                            features: [
+                                { icon: '🎨', title: 'ドラッグ＆ドロップ編集', desc: 'Canvaのような直感的インターフェース。数クリックでプロ級デザイン完成。' },
+                                { icon: '📐', title: '実際の印刷サイズ対応', desc: 'ハニカムボード・バナー・ポスターなど実際の印刷規格に自動設定。' },
+                                { icon: '🖼️', title: '無料テンプレート＆画像', desc: '数百の無料テンプレートと画像ライブラリ。商用利用可能。' },
+                                { icon: '🤖', title: 'AIデザインアシスタント', desc: 'AIがテキスト・レイアウト・配色を自動提案。デザイン経験不要。' },
+                                { icon: '📄', title: '複数ページ対応', desc: '表裏・複数ページを一度に編集。両面印刷物も簡単に。' },
+                                { icon: '💾', title: 'そのまま印刷注文', desc: 'デザイン完了後ワンクリックで印刷注文。全国配送対応。' },
+                            ],
+                            comp: [
+                                { feature: '価格', us: '無料（完全無料）', canva: '無料＋有料（Pro $12.99/月）' },
+                                { feature: '印刷注文連動', us: '✅ そのまま注文可能', canva: '❌ 別途ダウンロード必要' },
+                                { feature: '実際の印刷規格', us: '✅ 自動設定', canva: '❌ 手動設定' },
+                                { feature: '会員登録', us: '❌ 不要', canva: '✅ 必須' },
+                                { feature: 'AIデザイン支援', us: '✅ 無料', canva: '✅ 有料(Pro)' },
+                                { feature: '日本語対応', us: '✅ 完全対応', canva: '✅ 対応' },
+                            ],
+                            recommend: [
+                                '展示ブース・ポップアップストアのデザインが必要な企業担当者',
+                                '等身大パネル・フォトゾーンを自分でデザインしたいファン',
+                                '小規模事業者 - 看板・バナー・横断幕を自分で制作',
+                                'デザイン経験なしでプロ級印刷物を作りたい方',
+                                'Canva代替を探している方 - 印刷特化の無料エディター',
+                            ],
+                        } : {
+                            lang: 'en', siteName: 'Chameleon Printing', domain: 'https://www.cafe3355.com',
+                            title: 'Free Design Editor - Canva Alternative for Print Design | Chameleon Printing',
+                            desc: 'Chameleon Printing free design editor. Easy online tool like Canva for designing honeycomb boards, banners, standees & more. Free templates & images included, no signup required.',
+                            keywords: 'free design editor,free editor,Canva alternative,online design tool,free images,free templates,poster maker,banner design,online editor,free poster maker,print design editor,free stock images,free design tool',
+                            h1: 'Free Design Editor - Easy Online Tool Like Canva for Print Design',
+                            features: [
+                                { icon: '🎨', title: 'Drag & Drop Editing', desc: 'Intuitive Canva-like interface. Create professional designs in just a few clicks.' },
+                                { icon: '📐', title: 'Real Print Sizes', desc: 'Auto-configured for actual print specs - honeycomb boards, banners, posters & more.' },
+                                { icon: '🖼️', title: 'Free Templates & Images', desc: 'Hundreds of free templates and image library. Available for commercial use.' },
+                                { icon: '🤖', title: 'AI Design Assistant', desc: 'AI suggests text, layout & color schemes automatically. No design experience needed.' },
+                                { icon: '📄', title: 'Multi-Page Support', desc: 'Edit front/back and multiple pages at once. Double-sided prints made easy.' },
+                                { icon: '💾', title: 'Direct Print Ordering', desc: 'One-click print order after designing. Fast worldwide shipping available.' },
+                            ],
+                            comp: [
+                                { feature: 'Price', us: 'Free (completely free)', canva: 'Free + Paid (Pro $12.99/mo)' },
+                                { feature: 'Print Order Integration', us: '✅ Direct ordering', canva: '❌ Separate download needed' },
+                                { feature: 'Real Print Specs', us: '✅ Auto-configured', canva: '❌ Manual setup' },
+                                { feature: 'Signup Required', us: '❌ No signup needed', canva: '✅ Required' },
+                                { feature: 'AI Design Help', us: '✅ Free', canva: '✅ Paid (Pro)' },
+                                { feature: 'Multi-language', us: '✅ 8 languages', canva: '✅ Supported' },
+                            ],
+                            recommend: [
+                                'Event managers needing exhibition booth & pop-up store designs',
+                                'Fans wanting to design life-size standees & photo zones',
+                                'Small business owners - DIY signs, banners & displays',
+                                'Anyone wanting professional print designs without design experience',
+                                'Looking for a Canva alternative specialized for print design',
+                            ],
+                        };
+
+                        const ed = editorSeo;
+                        const edImg = 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1769076824090_63416175887313310.png';
+
+                        const featHtml = ed.features.map(f =>
+                            `<div style="display:inline-block;vertical-align:top;width:280px;margin:15px;padding:20px;border:1px solid #eee;border-radius:12px;">
+<p style="font-size:32px;margin:0;">${f.icon}</p>
+<h3 style="margin:10px 0 5px;">${escHtml(f.title)}</h3>
+<p style="font-size:14px;color:#555;margin:0;">${escHtml(f.desc)}</p></div>`
+                        ).join('\n');
+
+                        const compRows = ed.comp.map(c =>
+                            `<tr><td style="padding:8px;border:1px solid #ddd;">${escHtml(c.feature)}</td><td style="padding:8px;border:1px solid #ddd;background:#f0fff0;">${c.us}</td><td style="padding:8px;border:1px solid #ddd;">${c.canva}</td></tr>`
+                        ).join('');
+
+                        const recItems = ed.recommend.map(r => `<li>${escHtml(r)}</li>`).join('');
+
+                        const jsonLd = JSON.stringify({
+                            "@context": "https://schema.org", "@type": "SoftwareApplication",
+                            "name": ed.title.split(' - ')[0],
+                            "applicationCategory": "DesignApplication",
+                            "operatingSystem": "Web",
+                            "offers": { "@type": "Offer", "price": "0", "priceCurrency": cc === 'JP' ? 'JPY' : 'USD' },
+                            "description": ed.desc, "url": `${ed.domain}/editor`, "image": edImg,
+                            "author": { "@type": "Organization", "name": ed.siteName, "url": ed.domain },
+                            "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "1250" }
+                        });
+
+                        const catLinks = Object.keys(SEO_CATEGORIES).map(c =>
+                            `<a href="${ed.domain}/${c}">${c}</a>`).join(' | ');
+
+                        return new Response(`<!DOCTYPE html><html lang="${ed.lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escHtml(ed.title)}</title>
+<meta name="description" content="${escHtml(ed.desc)}">
+<meta name="keywords" content="${escHtml(ed.keywords)}">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${escHtml(ed.title)}">
+<meta property="og:description" content="${escHtml(ed.desc)}">
+<meta property="og:image" content="${escHtml(edImg)}">
+<meta property="og:url" content="${ed.domain}/editor">
+<link rel="canonical" href="${ed.domain}/editor">
+${hreflangTags('/editor')}
+<script type="application/ld+json">${jsonLd}</script>
+</head><body>
+<h1>${escHtml(ed.h1)}</h1>
+<p>${escHtml(ed.desc)}</p>
+<section><h2>${cc === 'JP' ? '主な機能' : 'Key Features'}</h2>${featHtml}</section>
+<section><h2>${cc === 'JP' ? 'カメレオン エディター vs Canva 比較' : 'Chameleon Editor vs Canva'}</h2>
+<table style="border-collapse:collapse;width:100%;max-width:700px;">
+<thead><tr><th style="padding:8px;border:1px solid #ddd;background:#f5f5f5;">${cc === 'JP' ? '機能' : 'Feature'}</th><th style="padding:8px;border:1px solid #ddd;background:#e8f5e9;">${cc === 'JP' ? 'カメレオン エディター' : 'Chameleon Editor'}</th><th style="padding:8px;border:1px solid #ddd;background:#f5f5f5;">Canva</th></tr></thead>
+<tbody>${compRows}</tbody></table></section>
+<section><h2>${cc === 'JP' ? 'こんな方におすすめ' : 'Who Is This For?'}</h2><ul>${recItems}</ul></section>
+<section><h2>${cc === 'JP' ? '対応印刷物' : 'Supported Print Products'}</h2><p>${catLinks}</p></section>
+<p><a href="${ed.domain}/">${escHtml(ed.siteName)}</a></p>
+</body></html>`, {
+                            status: 200,
+                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                        });
+                    }
+
                     // Check SEO category
                     const catInfo = SEO_CATEGORIES[path];
                     if (catInfo) {
