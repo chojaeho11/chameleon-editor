@@ -7449,8 +7449,14 @@ if (w >= 20 && h >= 20) {
     // [수정됨] 에디터 진입 (DB 데이터 안전 로딩 추가)
     window.startEditorDirect = async function(key, customW = null, customH = null, customPrice = null) {
 
-        // ★ 로그인 체크 제거 — 비로그인도 자유롭게 에디터 사용 가능
-        // 저장/결제 시점에서 가입 유도 (my-design.js, order.js)
+        // ★ 에디터 진입 전 로그인 필수 — 미로그인 시 로그인 모달 표시
+        if (!window.currentUser) {
+            window.openAuthModal('login', function() {
+                // 로그인 성공 후 에디터 재진입
+                window.startEditorDirect(key, customW, customH, customPrice);
+            });
+            return;
+        }
 
         if (!key) { showToast("상품 코드가 올바르지 않습니다.", 'error'); return; }
 
@@ -11778,6 +11784,10 @@ window.dsmRenderProducts = async function(keyword) {
 <script>
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal-bg')) {
+        e.stopPropagation();
+        e.preventDefault();
+        // choiceModal(NPC 위자드)은 배경 클릭으로 닫지 않음 (X 버튼으로만 닫기)
+        if (e.target.id === 'choiceModal') return;
         e.target.style.display = 'none';
     }
 });
