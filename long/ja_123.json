@@ -1523,5 +1523,7 @@
   "dsm_search_hint": "作りたいものを検索してみましょう",
   "dsm_search_examples": "例：横断幕、名刺、ポスター、ステッカーなど",
   "dsm_no_results": "該当する商品がありません。",
-  "dsm_load_failed": "商品の読み込みに失敗しました"
+  "dsm_load_failed": "商品の読み込みに失敗しました",
+  "dsm_size_error": "幅と高さを正しく入力してください。",
+  "dsm_editor_error": "エディターの読み込み中にエラーが発生しました。"
 }

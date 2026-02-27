@@ -1540,5 +1540,7 @@
   "dsm_search_hint": "搜索您想制作的产品",
   "dsm_search_examples": "例：横幅、名片、海报、贴纸等",
   "dsm_no_results": "没有找到相关商品。",
-  "dsm_load_failed": "商品加载失败"
+  "dsm_load_failed": "商品加载失败",
+  "dsm_size_error": "请正确输入宽度和高度。",
+  "dsm_editor_error": "加载编辑器时出错。"
 }

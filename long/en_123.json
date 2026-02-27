@@ -1526,5 +1526,7 @@
   "dsm_search_hint": "Search for what you want to create",
   "dsm_search_examples": "e.g. Banners, Business Cards, Posters, Stickers",
   "dsm_no_results": "No products found for this search.",
-  "dsm_load_failed": "Failed to load products"
+  "dsm_load_failed": "Failed to load products",
+  "dsm_size_error": "Please enter width and height correctly.",
+  "dsm_editor_error": "An error occurred while loading the editor."
 }

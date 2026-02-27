@@ -1540,5 +1540,7 @@
   "dsm_search_hint": "Busque lo que quiere crear",
   "dsm_search_examples": "Ej: Pancartas, Tarjetas, Pósters, Pegatinas",
   "dsm_no_results": "No se encontraron productos.",
-  "dsm_load_failed": "Error al cargar productos"
+  "dsm_load_failed": "Error al cargar productos",
+  "dsm_size_error": "Ingrese el ancho y alto correctamente.",
+  "dsm_editor_error": "Error al cargar el editor."
 }

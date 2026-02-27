@@ -1540,5 +1540,7 @@
   "dsm_search_hint": "Suchen Sie, was Sie erstellen möchten",
   "dsm_search_examples": "z.B. Banner, Visitenkarten, Poster, Aufkleber",
   "dsm_no_results": "Keine Produkte gefunden.",
-  "dsm_load_failed": "Produkte konnten nicht geladen werden"
+  "dsm_load_failed": "Produkte konnten nicht geladen werden",
+  "dsm_size_error": "Bitte Breite und Höhe korrekt eingeben.",
+  "dsm_editor_error": "Fehler beim Laden des Editors."
 }

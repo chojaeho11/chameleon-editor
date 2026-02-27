@@ -603,7 +603,8 @@
     window.dsmOpenCustomInline = function() {
         var w = parseInt(document.getElementById('dsmCustomW2').value);
         var h = parseInt(document.getElementById('dsmCustomH2').value);
-        if (!w || !h || w < 10 || h < 10) { showToast('가로/세로 크기를 입력해주세요 (최소 10mm)', 'warn'); return; }
+        var _t = window.t || function(k,d){return d;};
+        if (!w || !h || w < 10 || h < 10) { showToast(_t('dsm_size_error', '가로/세로 크기를 입력해주세요 (최소 10mm)'), 'warn'); return; }
         if (window.startEditorDirect) window.startEditorDirect('custom', w, h);
     };
     window.dsmOpenPrintInline = function(w, h, label) {
@@ -9761,13 +9762,13 @@ window.filterModalItems = function(keyword) {
             <!-- 상품 그리드 -->
             <div id="dsmProductGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; max-height:450px; overflow-y:auto; text-align:left;">
                 <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">
-                    <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i><br><br>로딩 중...
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i><br><br><span data-i18n="msg_loading">로딩 중...</span>
                 </div>
             </div>
 
             <!-- 닫기 버튼 -->
             <div style="margin-top:20px; text-align:center;">
-                <button onclick="document.getElementById('designStartModal').style.display='none'" style="padding:12px 40px; background:#f1f5f9; color:#64748b; border:none; font-size:14px; font-weight:600; border-radius:50px; cursor:pointer;">닫기</button>
+                <button onclick="document.getElementById('designStartModal').style.display='none'" style="padding:12px 40px; background:#f1f5f9; color:#64748b; border:none; font-size:14px; font-weight:600; border-radius:50px; cursor:pointer;" data-i18n="btn_close">닫기</button>
             </div>
         </div>
     </div>
@@ -9930,7 +9931,8 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
             }, 500);
         }
     } else {
-        showToast('에디터를 불러오는 중 오류가 발생했습니다.', 'error');
+        var _t = window.t || function(k,d){return d;};
+        showToast(_t('dsm_editor_error', '에디터를 불러오는 중 오류가 발생했습니다.'), 'error');
     }
 };
 
@@ -9938,7 +9940,8 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
 window.dsmOpenCustom = function() {
     var w = parseInt(document.getElementById('dsmCustomW').value);
     var h = parseInt(document.getElementById('dsmCustomH').value);
-    if (!w || !h || w <= 0 || h <= 0) { showToast('가로/세로를 올바르게 입력해주세요.', 'warn'); return; }
+    var _t = window.t || function(k,d){return d;};
+    if (!w || !h || w <= 0 || h <= 0) { showToast(_t('dsm_size_error', '가로/세로를 올바르게 입력해주세요.'), 'warn'); return; }
     window.dsmOpenEditor(w, h, 'Custom');
 };
 
@@ -10164,7 +10167,11 @@ window.dsmRenderProducts = async function(keyword) {
             '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + displayName + '</div></div>';
         div.onclick = function() {
             document.getElementById('designStartModal').style.display = 'none';
-            if (window.loadProductDetailAndOpen) {
+            // DSM에서 이미 사이즈 선택 → 에디터로 직행 (상품 코드 포함)
+            var sz = window._dsmPrintSize;
+            if (sz && window.startEditorDirect) {
+                window.startEditorDirect(p.code, sz.w, sz.h, null);
+            } else if (window.loadProductDetailAndOpen) {
                 window.loadProductDetailAndOpen(p.code);
             }
         };

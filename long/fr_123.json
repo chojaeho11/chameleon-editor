@@ -1540,5 +1540,7 @@
   "dsm_search_hint": "Recherchez ce que vous voulez créer",
   "dsm_search_examples": "Ex : Bannières, Cartes de visite, Affiches, Autocollants",
   "dsm_no_results": "Aucun produit trouvé.",
-  "dsm_load_failed": "Échec du chargement des produits"
+  "dsm_load_failed": "Échec du chargement des produits",
+  "dsm_size_error": "Veuillez saisir la largeur et la hauteur correctement.",
+  "dsm_editor_error": "Erreur lors du chargement de l'éditeur."
 }
