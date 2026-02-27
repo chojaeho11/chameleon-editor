@@ -1966,7 +1966,19 @@ async function processOrderSubmission() {
     const gradeDisc = Math.floor(rawTotal * currentUserDiscountRate);
     const refDisc = window.verifiedReferrerId ? Math.floor(rawTotal * 0.05) : 0;
     const discountAmt = gradeDisc + refDisc;
-    const finalTotal = rawTotal - discountAmt;
+    let finalTotal = rawTotal - discountAmt;
+
+    // 최소주문금액 적용 (KR: 10000원, JP: 5000원)
+    const _minCountry = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const MIN_ORDER_KRW = _minCountry === 'KR' ? 10000 : _minCountry === 'JP' ? 5000 : 0;
+    const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
+    const elMinCheckout = document.getElementById('minOrderCheckoutNotice');
+    if (MIN_ORDER_KRW > 0 && finalTotal > 0 && finalTotal < MIN_ORDER_KRW && !_hasUnitOrder) {
+        finalTotal = MIN_ORDER_KRW;
+        if (elMinCheckout) elMinCheckout.style.display = 'block';
+    } else {
+        if (elMinCheckout) elMinCheckout.style.display = 'none';
+    }
 
     window.originalPayAmount = finalTotal;
     window.finalPaymentAmount = finalTotal; 
@@ -2314,17 +2326,16 @@ async function processFinalPayment() {
     const payRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
     const useMileage = Math.round(localMileageVal / payRate);
     const baseAmount = window.originalPayAmount || 0;
-    const realFinalPayAmount = baseAmount - useMileage;
+    let realFinalPayAmount = baseAmount - useMileage;
 
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
-    // 최소주문금액 검증 (1000원단위 주문 상품 예외)
+    // 최소주문금액 적용 (1000원단위 주문 상품 예외)
     const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
+    const MIN_ORDER_KRW_PAY = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
     const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
-    if (MIN_ORDER_KRW > 0 && realFinalPayAmount > 0 && realFinalPayAmount < MIN_ORDER_KRW && !_hasUnitOrder) {
-        showToast(window.t('msg_min_order_applied', '최소 주문금액이 적용되었습니다.'), 'warn');
-        return;
+    if (MIN_ORDER_KRW_PAY > 0 && realFinalPayAmount > 0 && realFinalPayAmount < MIN_ORDER_KRW_PAY && !_hasUnitOrder) {
+        realFinalPayAmount = MIN_ORDER_KRW_PAY;
     }
 
     if (useMileage > 0) {
