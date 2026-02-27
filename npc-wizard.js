@@ -15,7 +15,7 @@ const NPC_TEXTS = {
         askFile: '인쇄할 파일이 있으신가요?',
         yes: '네, 있어요!',
         no: '아니요, 없어요',
-        uploadFile: '멋진 작품이네요! 여기에 파일을 올려주세요 📎',
+        uploadFile: '파일을 올려주세요',
         enterSize: '제작할 제품의 가로 또는 세로 사이즈를 입력하시면 견적을 드릴게요 📏',
         selectOption: '옵션을 선택하세요 ✨',
         finalCart: '자, 이제 장바구니 버튼만 누르시면 됩니다. 수고하셨습니다! 🎉',
@@ -33,7 +33,7 @@ const NPC_TEXTS = {
         askFile: '印刷するファイルはお持ちですか？',
         yes: 'はい、あります！',
         no: 'いいえ、ありません',
-        uploadFile: '素敵な作品ですね！ファイルをアップロードしてください 📎',
+        uploadFile: 'ファイルをアップロードしてください',
         enterSize: '製品の横または縦サイズを入力すると見積もりをお出しします 📏',
         selectOption: 'オプションを選択してください ✨',
         finalCart: 'カートボタンを押すだけで完了です。お疲れ様でした！ 🎉',
@@ -51,7 +51,7 @@ const NPC_TEXTS = {
         askFile: 'Do you have a file to print?',
         yes: 'Yes, I do!',
         no: "No, I don't",
-        uploadFile: "Great work! Please upload your file here 📎",
+        uploadFile: "Please upload your file",
         enterSize: "Enter the width or height and we'll give you a quote 📏",
         selectOption: 'Select your options ✨',
         finalCart: "Just click the cart button and you're done! Great job! 🎉",
@@ -69,7 +69,7 @@ const NPC_TEXTS = {
         askFile: '您有要印刷的文件吗？',
         yes: '有！',
         no: '没有',
-        uploadFile: '很棒的作品！请在这里上传文件 📎',
+        uploadFile: '请上传文件',
         enterSize: '输入产品的宽度或高度，我们会为您报价 📏',
         selectOption: '请选择选项 ✨',
         finalCart: '点击购物车按钮就完成了！辛苦了！ 🎉',
@@ -87,7 +87,7 @@ const NPC_TEXTS = {
         askFile: 'هل لديك ملف للطباعة؟',
         yes: 'نعم!',
         no: 'لا',
-        uploadFile: 'عمل رائع! يرجى رفع ملفك هنا 📎',
+        uploadFile: 'يرجى رفع ملفك',
         enterSize: 'أدخل العرض أو الارتفاع وسنعطيك عرض سعر 📏',
         selectOption: 'اختر الخيارات ✨',
         finalCart: 'اضغط على زر السلة وانتهيت! عمل رائع! 🎉',
@@ -105,7 +105,7 @@ const NPC_TEXTS = {
         askFile: '¿Tienes un archivo para imprimir?',
         yes: '¡Sí, tengo!',
         no: 'No, no tengo',
-        uploadFile: '¡Gran trabajo! Sube tu archivo aquí 📎',
+        uploadFile: 'Sube tu archivo',
         enterSize: 'Ingresa el ancho o alto y te daremos un presupuesto 📏',
         selectOption: 'Selecciona tus opciones ✨',
         finalCart: '¡Solo presiona el botón del carrito y listo! 🎉',
@@ -123,7 +123,7 @@ const NPC_TEXTS = {
         askFile: 'Haben Sie eine Datei zum Drucken?',
         yes: 'Ja!',
         no: 'Nein',
-        uploadFile: 'Tolle Arbeit! Laden Sie Ihre Datei hier hoch 📎',
+        uploadFile: 'Laden Sie Ihre Datei hoch',
         enterSize: 'Geben Sie Breite oder Höhe ein für ein Angebot 📏',
         selectOption: 'Wählen Sie Ihre Optionen ✨',
         finalCart: 'Einfach auf den Warenkorb klicken und fertig! 🎉',
@@ -141,7 +141,7 @@ const NPC_TEXTS = {
         askFile: 'Avez-vous un fichier à imprimer ?',
         yes: 'Oui !',
         no: 'Non',
-        uploadFile: 'Super travail ! Téléchargez votre fichier ici 📎',
+        uploadFile: 'Téléchargez votre fichier',
         enterSize: 'Entrez la largeur ou la hauteur pour un devis 📏',
         selectOption: 'Sélectionnez vos options ✨',
         finalCart: 'Cliquez sur le panier et c\'est fini ! 🎉',
@@ -323,6 +323,13 @@ window.NpcWizard = {
                 this._showSection('upload');
                 if (window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
                     this._showSection('uploadPreview');
+                }
+                // 업로드 섹션을 가이드 영역 바로 아래로 이동 (헤더보다 위)
+                if (this.sections.upload && this.guideEl) {
+                    this.guideEl.parentElement.insertBefore(this.sections.upload, this.guideEl.nextSibling);
+                    if (this.sections.uploadPreview) {
+                        this.sections.upload.parentElement.insertBefore(this.sections.uploadPreview, this.sections.upload.nextSibling);
+                    }
                 }
                 this._renderBubble(_t('uploadFile'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._goStep('size')" },
