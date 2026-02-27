@@ -5946,6 +5946,12 @@ window.showChoiceModal = async function(key) {
     // 1000원단위 주문 상품은 일반상품으로 강제 (수량→구매 플로우)
     if (product.code === '21355677') product.is_general_product = true;
 
+    // 파인텍스 시공: 면적 기반 커스텀 상품으로 강제 (사이즈 입력 → 구매만)
+    if (product.category === 'sy-18' || (product.code && product.code.startsWith('ft'))) {
+        product.is_custom_size = true;
+        product.is_general_product = true;
+    }
+
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
