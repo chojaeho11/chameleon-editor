@@ -36,6 +36,33 @@ const NPC_TEXTS = {
         prev: '← 이전',
         skipOption: '옵션 없이 진행 →',
         uploaded: '업로드 완료! 다음으로 넘어갈게요 👍',
+        // 종이매대 (Paper Display Stand)
+        pdEnterSize: '매대의 전체 크기를 입력해주세요 📐',
+        pdWidth: '가로 (cm)',
+        pdHeight: '높이 (cm)',
+        pdAdHeightDesc: '상단 광고판 높이를 입력하세요 (기본 20cm) 📢',
+        pdShelfHeight: '선반 높이 (cm)',
+        pdCalcResult: '선반 계산 결과',
+        pdSelectRef: '레퍼런스를 선택해주세요 🖼️',
+        pdSkipRef: '선택 없이 진행',
+        pdCustomize: '디자인을 커스터마이징하세요 🎨',
+        pdAdDesign: '📢 상단 광고 디자인',
+        pdSideDesign: '📐 옆면 디자인',
+        pdShelfDesign: '📦 선반 디자인',
+        pdBgColor: '🎨 배경색',
+        pdUpload: '📁 파일 업로드',
+        pdEditor: '🎨 에디터',
+        pdNotSet: '미설정',
+        pdSet: '✅ 설정됨',
+        pdSummary: '주문 요약입니다! 장바구니에 담으면 끝! ✨',
+        pdTotalSize: '전체 크기',
+        pdAdArea: '상단 광고',
+        pdShelfCount: '선반',
+        pdShelfUnit: '{count}칸 (각 {h}cm)',
+        pdReference: '레퍼런스',
+        pdNone: '없음',
+        pdAddToCart: '🛒 장바구니 담기',
+        pdQty: '수량',
     },
     ja: {
         hcAskConsulted: 'マネージャーとご相談されましたか？ 🤝',
@@ -66,6 +93,32 @@ const NPC_TEXTS = {
         prev: '← 戻る',
         skipOption: 'オプションなしで進む →',
         uploaded: 'アップロード完了！次のステップへ 👍',
+        pdEnterSize: '什器の全体サイズを入力してください 📐',
+        pdWidth: '幅 (cm)',
+        pdHeight: '高さ (cm)',
+        pdAdHeightDesc: '上部広告パネルの高さを入力してください（デフォルト20cm） 📢',
+        pdShelfHeight: '棚の高さ (cm)',
+        pdCalcResult: '棚の計算結果',
+        pdSelectRef: 'リファレンスを選択してください 🖼️',
+        pdSkipRef: '選択せずに進む',
+        pdCustomize: 'デザインをカスタマイズしてください 🎨',
+        pdAdDesign: '📢 上部広告デザイン',
+        pdSideDesign: '📐 側面デザイン',
+        pdShelfDesign: '📦 棚デザイン',
+        pdBgColor: '🎨 背景色',
+        pdUpload: '📁 ファイルアップロード',
+        pdEditor: '🎨 エディタ',
+        pdNotSet: '未設定',
+        pdSet: '✅ 設定済み',
+        pdSummary: '注文概要です！カートに入れたら完了！ ✨',
+        pdTotalSize: '全体サイズ',
+        pdAdArea: '上部広告',
+        pdShelfCount: '棚',
+        pdShelfUnit: '{count}段（各{h}cm）',
+        pdReference: 'リファレンス',
+        pdNone: 'なし',
+        pdAddToCart: '🛒 カートに入れる',
+        pdQty: '数量',
     },
     en: {
         hcAskConsulted: 'Have you consulted with our manager? 🤝',
@@ -96,6 +149,32 @@ const NPC_TEXTS = {
         prev: '← Back',
         skipOption: 'Skip options →',
         uploaded: 'File uploaded! Moving to next step 👍',
+        pdEnterSize: 'Enter the overall size of the display stand 📐',
+        pdWidth: 'Width (cm)',
+        pdHeight: 'Height (cm)',
+        pdAdHeightDesc: 'Enter the top ad panel height (default 20cm) 📢',
+        pdShelfHeight: 'Shelf height (cm)',
+        pdCalcResult: 'Shelf Calculation Result',
+        pdSelectRef: 'Select a reference design 🖼️',
+        pdSkipRef: 'Skip selection',
+        pdCustomize: 'Customize your design 🎨',
+        pdAdDesign: '📢 Top Ad Design',
+        pdSideDesign: '📐 Side Panel Design',
+        pdShelfDesign: '📦 Shelf Design',
+        pdBgColor: '🎨 Background Color',
+        pdUpload: '📁 Upload File',
+        pdEditor: '🎨 Editor',
+        pdNotSet: 'Not set',
+        pdSet: '✅ Set',
+        pdSummary: 'Order summary! Add to cart and done! ✨',
+        pdTotalSize: 'Total Size',
+        pdAdArea: 'Top Ad',
+        pdShelfCount: 'Shelves',
+        pdShelfUnit: '{count} shelves ({h}cm each)',
+        pdReference: 'Reference',
+        pdNone: 'None',
+        pdAddToCart: '🛒 Add to Cart',
+        pdQty: 'Quantity',
     },
     zh: {
         hcAskConsulted: '您已与经理咨询过了吗？ 🤝',
@@ -126,6 +205,32 @@ const NPC_TEXTS = {
         prev: '← 上一步',
         skipOption: '跳过选项 →',
         uploaded: '文件上传完成！进入下一步 👍',
+        pdEnterSize: '请输入展示架的整体尺寸 📐',
+        pdWidth: '宽度 (cm)',
+        pdHeight: '高度 (cm)',
+        pdAdHeightDesc: '请输入顶部广告板高度（默认20cm） 📢',
+        pdShelfHeight: '货架高度 (cm)',
+        pdCalcResult: '货架计算结果',
+        pdSelectRef: '请选择参考设计 🖼️',
+        pdSkipRef: '跳过选择',
+        pdCustomize: '自定义您的设计 🎨',
+        pdAdDesign: '📢 顶部广告设计',
+        pdSideDesign: '📐 侧面设计',
+        pdShelfDesign: '📦 货架设计',
+        pdBgColor: '🎨 背景色',
+        pdUpload: '📁 上传文件',
+        pdEditor: '🎨 编辑器',
+        pdNotSet: '未设置',
+        pdSet: '✅ 已设置',
+        pdSummary: '订单摘要！加入购物车即完成！ ✨',
+        pdTotalSize: '整体尺寸',
+        pdAdArea: '顶部广告',
+        pdShelfCount: '货架',
+        pdShelfUnit: '{count}层（每层{h}cm）',
+        pdReference: '参考',
+        pdNone: '无',
+        pdAddToCart: '🛒 加入购物车',
+        pdQty: '数量',
     },
     ar: {
         hcAskConsulted: 'هل تشاورت مع المدير؟ 🤝',
@@ -156,6 +261,32 @@ const NPC_TEXTS = {
         prev: '← السابق',
         skipOption: 'تخطي الخيارات →',
         uploaded: 'تم رفع الملف! الخطوة التالية 👍',
+        pdEnterSize: 'أدخل الحجم الكلي لحامل العرض 📐',
+        pdWidth: 'العرض (سم)',
+        pdHeight: 'الارتفاع (سم)',
+        pdAdHeightDesc: 'أدخل ارتفاع لوحة الإعلان العلوية (افتراضي 20 سم) 📢',
+        pdShelfHeight: 'ارتفاع الرف (سم)',
+        pdCalcResult: 'نتيجة حساب الأرفف',
+        pdSelectRef: 'اختر تصميمًا مرجعيًا 🖼️',
+        pdSkipRef: 'تخطي الاختيار',
+        pdCustomize: 'خصص تصميمك 🎨',
+        pdAdDesign: '📢 تصميم الإعلان العلوي',
+        pdSideDesign: '📐 تصميم الجانب',
+        pdShelfDesign: '📦 تصميم الرف',
+        pdBgColor: '🎨 لون الخلفية',
+        pdUpload: '📁 رفع ملف',
+        pdEditor: '🎨 المحرر',
+        pdNotSet: 'غير محدد',
+        pdSet: '✅ تم التعيين',
+        pdSummary: 'ملخص الطلب! أضف للسلة وانتهيت! ✨',
+        pdTotalSize: 'الحجم الكلي',
+        pdAdArea: 'الإعلان العلوي',
+        pdShelfCount: 'الأرفف',
+        pdShelfUnit: '{count} أرفف (كل {h} سم)',
+        pdReference: 'المرجع',
+        pdNone: 'لا شيء',
+        pdAddToCart: '🛒 أضف للسلة',
+        pdQty: 'الكمية',
     },
     es: {
         hcAskConsulted: '¿Ha consultado con nuestro gerente? 🤝',
@@ -186,6 +317,32 @@ const NPC_TEXTS = {
         prev: '← Anterior',
         skipOption: 'Saltar opciones →',
         uploaded: '¡Archivo subido! Siguiente paso 👍',
+        pdEnterSize: 'Ingrese el tamaño total del exhibidor 📐',
+        pdWidth: 'Ancho (cm)',
+        pdHeight: 'Alto (cm)',
+        pdAdHeightDesc: 'Ingrese la altura del panel publicitario superior (predeterminado 20cm) 📢',
+        pdShelfHeight: 'Altura del estante (cm)',
+        pdCalcResult: 'Resultado del cálculo de estantes',
+        pdSelectRef: 'Seleccione un diseño de referencia 🖼️',
+        pdSkipRef: 'Omitir selección',
+        pdCustomize: 'Personalice su diseño 🎨',
+        pdAdDesign: '📢 Diseño del anuncio superior',
+        pdSideDesign: '📐 Diseño lateral',
+        pdShelfDesign: '📦 Diseño del estante',
+        pdBgColor: '🎨 Color de fondo',
+        pdUpload: '📁 Subir archivo',
+        pdEditor: '🎨 Editor',
+        pdNotSet: 'No configurado',
+        pdSet: '✅ Configurado',
+        pdSummary: '¡Resumen del pedido! ¡Agregar al carrito y listo! ✨',
+        pdTotalSize: 'Tamaño total',
+        pdAdArea: 'Anuncio superior',
+        pdShelfCount: 'Estantes',
+        pdShelfUnit: '{count} estantes ({h}cm cada uno)',
+        pdReference: 'Referencia',
+        pdNone: 'Ninguno',
+        pdAddToCart: '🛒 Agregar al carrito',
+        pdQty: 'Cantidad',
     },
     de: {
         hcAskConsulted: 'Haben Sie sich mit unserem Manager beraten? 🤝',
@@ -216,6 +373,32 @@ const NPC_TEXTS = {
         prev: '← Zurück',
         skipOption: 'Ohne Optionen →',
         uploaded: 'Datei hochgeladen! Nächster Schritt 👍',
+        pdEnterSize: 'Geben Sie die Gesamtgröße des Displays ein 📐',
+        pdWidth: 'Breite (cm)',
+        pdHeight: 'Höhe (cm)',
+        pdAdHeightDesc: 'Geben Sie die Höhe des oberen Werbeschilds ein (Standard 20cm) 📢',
+        pdShelfHeight: 'Regalhöhe (cm)',
+        pdCalcResult: 'Regal-Berechnung',
+        pdSelectRef: 'Wählen Sie ein Referenzdesign 🖼️',
+        pdSkipRef: 'Auswahl überspringen',
+        pdCustomize: 'Passen Sie Ihr Design an 🎨',
+        pdAdDesign: '📢 Oberes Werbedesign',
+        pdSideDesign: '📐 Seitendesign',
+        pdShelfDesign: '📦 Regaldesign',
+        pdBgColor: '🎨 Hintergrundfarbe',
+        pdUpload: '📁 Datei hochladen',
+        pdEditor: '🎨 Editor',
+        pdNotSet: 'Nicht gesetzt',
+        pdSet: '✅ Gesetzt',
+        pdSummary: 'Bestellübersicht! In den Warenkorb und fertig! ✨',
+        pdTotalSize: 'Gesamtgröße',
+        pdAdArea: 'Obere Werbung',
+        pdShelfCount: 'Regale',
+        pdShelfUnit: '{count} Regale (je {h}cm)',
+        pdReference: 'Referenz',
+        pdNone: 'Keine',
+        pdAddToCart: '🛒 In den Warenkorb',
+        pdQty: 'Menge',
     },
     fr: {
         hcAskConsulted: 'Avez-vous consulté notre responsable ? 🤝',
@@ -246,6 +429,32 @@ const NPC_TEXTS = {
         prev: '← Retour',
         skipOption: 'Passer les options →',
         uploaded: 'Fichier envoyé ! Étape suivante 👍',
+        pdEnterSize: 'Entrez la taille totale du présentoir 📐',
+        pdWidth: 'Largeur (cm)',
+        pdHeight: 'Hauteur (cm)',
+        pdAdHeightDesc: 'Entrez la hauteur du panneau publicitaire supérieur (défaut 20cm) 📢',
+        pdShelfHeight: 'Hauteur de l\'étagère (cm)',
+        pdCalcResult: 'Résultat du calcul des étagères',
+        pdSelectRef: 'Sélectionnez un design de référence 🖼️',
+        pdSkipRef: 'Passer la sélection',
+        pdCustomize: 'Personnalisez votre design 🎨',
+        pdAdDesign: '📢 Design pub supérieure',
+        pdSideDesign: '📐 Design latéral',
+        pdShelfDesign: '📦 Design étagère',
+        pdBgColor: '🎨 Couleur de fond',
+        pdUpload: '📁 Télécharger',
+        pdEditor: '🎨 Éditeur',
+        pdNotSet: 'Non défini',
+        pdSet: '✅ Défini',
+        pdSummary: 'Résumé de commande ! Ajoutez au panier et c\'est fini ! ✨',
+        pdTotalSize: 'Taille totale',
+        pdAdArea: 'Pub supérieure',
+        pdShelfCount: 'Étagères',
+        pdShelfUnit: '{count} étagères ({h}cm chacune)',
+        pdReference: 'Référence',
+        pdNone: 'Aucun',
+        pdAddToCart: '🛒 Ajouter au panier',
+        pdQty: 'Quantité',
     },
 };
 
@@ -269,10 +478,21 @@ window.NpcWizard = {
     isCustom: false,
     isGeneral: false,
     isHoneycomb: false,
+    isPaperDisplay: false,
     hasOptions: false,
     sections: {},
     guideEl: null,
     _fileWatcher: null,
+    // 종이매대 전용 상태
+    _pdWidth: 0,
+    _pdHeight: 0,
+    _pdAdHeight: 20,
+    _pdShelfHeight: 25,
+    _pdShelfCount: 0,
+    _pdRefCode: null,
+    _pdRefName: null,
+    _pdCustom: { ad: null, side: null, shelf: null, bgColor: '#ffffff' },
+    _pdRefs: [],
 
     init(product) {
         this.product = product;
@@ -280,9 +500,19 @@ window.NpcWizard = {
         this.isGeneral = !!product.is_general_product;
         const key = product.code || window.currentProductKey || '';
         this.isHoneycomb = (product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
+        this.isPaperDisplay = (typeof key === 'string' && key.startsWith('pd_'));
         this.hasFile = null;
         this.designChoice = null;
         this._fromHoneycombDirect = false;
+        this._pdWidth = 0;
+        this._pdHeight = 0;
+        this._pdAdHeight = 20;
+        this._pdShelfHeight = 25;
+        this._pdShelfCount = 0;
+        this._pdRefCode = null;
+        this._pdRefName = null;
+        this._pdCustom = { ad: null, side: null, shelf: null, bgColor: '#ffffff' };
+        this._pdRefs = [];
         this.step = 0;
         this.active = true;
 
@@ -296,7 +526,10 @@ window.NpcWizard = {
         this._hideAll();
         this._createGuideArea(rightActions);
 
-        if (this.isHoneycomb) {
+        if (this.isPaperDisplay) {
+            // 종이매대 → 전용 위자드
+            this._goStep('pdSize');
+        } else if (this.isHoneycomb) {
             // 허니콤보드 → 매니저 상담 여부 확인
             this._goStep('honeycombAsk');
         } else if (this.isCustom && this.isGeneral) {
@@ -537,6 +770,196 @@ window.NpcWizard = {
                 }
                 break;
             }
+
+            // ═══ 종이매대 (Paper Display Stand) 전용 스텝 ═══
+
+            case 'pdSize': {
+                // Step 1: 전체 가로/높이 입력
+                this._renderBubble(_t('pdEnterSize'), null, false, null,
+                    { onclick: "window.NpcWizard._pdAfterSize()", label: _t('next') });
+                const slot1 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot1) {
+                    slot1.innerHTML = `
+                        <div class="pd-input-row">
+                            <label>${_t('pdWidth')}</label>
+                            <input type="number" id="npcPdWidth" value="${this._pdWidth || ''}" min="10" placeholder="60" inputmode="numeric">
+                        </div>
+                        <div class="pd-input-row">
+                            <label>${_t('pdHeight')}</label>
+                            <input type="number" id="npcPdHeight" value="${this._pdHeight || ''}" min="10" placeholder="120" inputmode="numeric">
+                        </div>
+                    `;
+                }
+                break;
+            }
+
+            case 'pdAdHeight': {
+                // Step 2: 상단 광고 높이 + 선반 높이 + 자동계산
+                this._renderBubble(_t('pdAdHeightDesc'), null, true, null,
+                    { onclick: "window.NpcWizard._pdCalcAndShow()", label: _t('next') });
+                const slot2 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot2) {
+                    slot2.innerHTML = `
+                        <div class="pd-input-row">
+                            <label>${_t('pdAdArea')}</label>
+                            <input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" placeholder="20" inputmode="numeric"> <span style="font-size:13px;color:#64748b;">cm</span>
+                        </div>
+                        <div class="pd-input-row">
+                            <label>${_t('pdShelfHeight')}</label>
+                            <input type="number" id="npcPdShelfH" value="${this._pdShelfHeight}" min="5" placeholder="25" inputmode="numeric"> <span style="font-size:13px;color:#64748b;">cm</span>
+                        </div>
+                        <div id="npcPdCalcPreview"></div>
+                    `;
+                    // 입력 시 실시간 미리보기
+                    const adInp = slot2.querySelector('#npcPdAdH');
+                    const shInp = slot2.querySelector('#npcPdShelfH');
+                    const preview = slot2.querySelector('#npcPdCalcPreview');
+                    const self = this;
+                    const doPreview = () => {
+                        const ad = parseInt(adInp.value) || 0;
+                        const sh = parseInt(shInp.value) || 25;
+                        const calc = self._pdCalcShelves(self._pdHeight, ad, sh);
+                        preview.innerHTML = self._pdRenderDiagram(self._pdWidth, self._pdHeight, ad, sh, calc);
+                    };
+                    adInp.addEventListener('input', doPreview);
+                    shInp.addEventListener('input', doPreview);
+                    doPreview();
+                }
+                break;
+            }
+
+            case 'pdCalcResult': {
+                // Step 2.5: 계산 결과 확인 (다이어그램 포함)
+                const calc = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
+                this._pdShelfCount = calc.count;
+                const msg = _t('pdCalcResult');
+                this._renderBubble(msg, null, true, null,
+                    { onclick: "window.NpcWizard._pdAfterCalc()", label: _t('next') });
+                const slot2b = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot2b) {
+                    slot2b.innerHTML = this._pdRenderDiagram(this._pdWidth, this._pdHeight, this._pdAdHeight, this._pdShelfHeight, calc);
+                }
+                break;
+            }
+
+            case 'pdReference': {
+                // Step 3: 레퍼런스 선택
+                this._renderBubble(_t('pdSelectRef'), null, true, null,
+                    { onclick: "window.NpcWizard._pdAfterRef()", label: _t('next') });
+                const slot3 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot3) {
+                    slot3.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">Loading...</div>';
+                    this._pdLoadReferences().then(refs => {
+                        this._pdRefs = refs;
+                        if (!refs || refs.length === 0) {
+                            slot3.innerHTML = '<div style="text-align:center;padding:12px;color:#94a3b8;font-size:13px;">' + _t('pdNone') + '</div>';
+                            return;
+                        }
+                        const lang = _npcLang();
+                        let html = '<div class="pd-ref-grid">';
+                        refs.forEach(r => {
+                            const name = (lang === 'ja' && r.name_jp) ? r.name_jp : (lang === 'en' && r.name_us) ? r.name_us : r.name;
+                            const img = r.img_url || 'https://placehold.co/150?text=No+Img';
+                            const sel = this._pdRefCode === r.code ? ' selected' : '';
+                            html += `<div class="pd-ref-card${sel}" onclick="window.NpcWizard._pdSelectRef('${r.code}', this)" data-code="${r.code}">
+                                <img src="${img}" alt="${name}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
+                                <div class="pd-ref-name">${name}</div>
+                            </div>`;
+                        });
+                        html += '</div>';
+                        html += `<button class="npc-choice-btn" style="margin-top:8px;font-size:13px;padding:8px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;" onclick="window.NpcWizard._pdRefCode=null;window.NpcWizard._pdRefName=null;document.querySelectorAll('.pd-ref-card').forEach(c=>c.classList.remove('selected'));">${_t('pdSkipRef')}</button>`;
+                        slot3.innerHTML = html;
+                    });
+                }
+                break;
+            }
+
+            case 'pdCustomize': {
+                // Step 4: 커스터마이징
+                this._renderBubble(_t('pdCustomize'), null, true, null,
+                    { onclick: "window.NpcWizard._pdAfterCustomize()", label: _t('next') });
+                const slot4 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot4) {
+                    const c = this._pdCustom;
+                    slot4.innerHTML = `
+                        <div class="pd-custom-cards">
+                            <div class="pd-custom-card">
+                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
+                                    ${_t('pdAdDesign')} <span class="pd-custom-status">${c.ad ? _t('pdSet') : _t('pdNotSet')}</span>
+                                </div>
+                                <div class="pd-custom-body">
+                                    <input type="file" accept="image/*,application/pdf" onchange="window.NpcWizard._pdUploadFile('ad', this)" style="font-size:13px;">
+                                </div>
+                            </div>
+                            <div class="pd-custom-card">
+                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
+                                    ${_t('pdSideDesign')} <span class="pd-custom-status">${c.side ? _t('pdSet') : _t('pdNotSet')}</span>
+                                </div>
+                                <div class="pd-custom-body">
+                                    <input type="file" accept="image/*,application/pdf" onchange="window.NpcWizard._pdUploadFile('side', this)" style="font-size:13px;">
+                                </div>
+                            </div>
+                            <div class="pd-custom-card">
+                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
+                                    ${_t('pdShelfDesign')} <span class="pd-custom-status">${c.shelf ? _t('pdSet') : _t('pdNotSet')}</span>
+                                </div>
+                                <div class="pd-custom-body">
+                                    <input type="file" accept="image/*,application/pdf" onchange="window.NpcWizard._pdUploadFile('shelf', this)" style="font-size:13px;">
+                                </div>
+                            </div>
+                            <div class="pd-custom-card">
+                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
+                                    ${_t('pdBgColor')} <span class="pd-custom-status" id="pdBgColorPreview" style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${c.bgColor};border:1px solid #cbd5e1;vertical-align:middle;"></span>
+                                </div>
+                                <div class="pd-custom-body">
+                                    <input type="color" value="${c.bgColor}" onchange="window.NpcWizard._pdCustom.bgColor=this.value;document.getElementById('pdBgColorPreview').style.background=this.value;" style="width:100%;height:40px;border:none;cursor:pointer;">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                break;
+            }
+
+            case 'pdSummary': {
+                // Step 5 (or 6): 주문 요약 + 장바구니
+                this._showSection('total');
+                const calc2 = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
+                const shelfTxt = _t('pdShelfUnit').replace('{count}', calc2.count).replace('{h}', this._pdShelfHeight);
+                const refTxt = this._pdRefName || _t('pdNone');
+                const c2 = this._pdCustom;
+                const customParts = [];
+                if (c2.ad) customParts.push(_t('pdAdDesign'));
+                if (c2.side) customParts.push(_t('pdSideDesign'));
+                if (c2.shelf) customParts.push(_t('pdShelfDesign'));
+                const customTxt = customParts.length > 0 ? customParts.join(', ') : _t('pdNone');
+
+                this._renderBubble(_t('pdSummary'), null, true);
+                const slot5 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot5) {
+                    slot5.innerHTML = `
+                        <div class="pd-summary-card">
+                            <div class="pd-summary-row"><span>${_t('pdTotalSize')}</span><strong>${this._pdWidth}cm x ${this._pdHeight}cm</strong></div>
+                            <div class="pd-summary-row"><span>${_t('pdAdArea')}</span><strong>${this._pdAdHeight}cm</strong></div>
+                            <div class="pd-summary-row"><span>${_t('pdShelfCount')}</span><strong>${shelfTxt}</strong></div>
+                            <div class="pd-summary-row"><span>${_t('pdReference')}</span><strong>${refTxt}</strong></div>
+                            <div class="pd-summary-row"><span>${_t('pdBgColor')}</span><span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:${c2.bgColor};border:1px solid #cbd5e1;vertical-align:middle;"></span></div>
+                            <div class="pd-summary-row"><span>${_t('pdCustomize')}</span><strong>${customTxt}</strong></div>
+                        </div>
+                        <div class="pd-input-row" style="margin-top:12px;">
+                            <label>${_t('pdQty')}</label>
+                            <div style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; flex:1;">
+                                <button onclick="const i=document.getElementById('npcPdQty');i.value=Math.max(1,parseInt(i.value)-1);" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">-</button>
+                                <input type="number" id="npcPdQty" value="1" min="1" style="width:50px;text-align:center;border:none;font-weight:bold;font-size:15px;">
+                                <button onclick="const i=document.getElementById('npcPdQty');i.value=parseInt(i.value)+1;" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">+</button>
+                            </div>
+                        </div>
+                        <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:16px;font-size:16px;" onclick="window.NpcWizard._pdAddToCart()">${_t('pdAddToCart')}</button>
+                    `;
+                }
+                this._insertToSlot('total');
+                break;
+            }
         }
     },
 
@@ -582,7 +1005,11 @@ window.NpcWizard = {
 
     _afterOptions() {
         if (window.updateModalTotal) window.updateModalTotal();
-        this._goStep('final');
+        if (this.isPaperDisplay) {
+            this._goStep('pdSummary');
+        } else {
+            this._goStep('final');
+        }
     },
 
     // 허니콤보드: 직접 주문 → 파일 여부만 묻고 에디터 없이 진행
@@ -634,8 +1061,185 @@ window.NpcWizard = {
         });
     },
 
+    // ═══ 종이매대 헬퍼 메서드 ═══
+
+    _pdCalcShelves(totalH, adH, shelfH) {
+        const usable = totalH - adH;
+        if (usable <= 0) return { count: 0, usable: 0, remainder: 0 };
+        const count = Math.floor(usable / shelfH);
+        const remainder = usable - (count * shelfH);
+        return { count, usable, remainder };
+    },
+
+    _pdRenderDiagram(w, h, adH, shelfH, calc) {
+        if (!h || h <= 0) return '';
+        const maxPx = 250; // 다이어그램 최대 높이 (px)
+        const scale = maxPx / h;
+        const adPx = Math.max(adH * scale, 20);
+        const shPx = Math.max(shelfH * scale, 18);
+        const remPx = Math.max(calc.remainder * scale, 0);
+
+        let html = `<div class="pd-diagram" style="height:${Math.min(h * scale, maxPx)}px;width:${Math.min(w * scale * 1.5, 200)}px;margin:12px auto;">`;
+        // 상단 광고
+        html += `<div class="pd-diagram-ad" style="height:${adPx}px;">📢 ${adH}cm</div>`;
+        // 선반들
+        for (let i = 0; i < calc.count; i++) {
+            html += `<div class="pd-diagram-shelf" style="height:${shPx}px;">📦 ${i + 1} (${shelfH}cm)</div>`;
+        }
+        // 남은 공간
+        if (calc.remainder > 0) {
+            html += `<div class="pd-diagram-remainder" style="height:${Math.max(remPx, 14)}px;">${calc.remainder}cm</div>`;
+        }
+        html += '</div>';
+        // 요약 텍스트
+        html += `<div style="text-align:center;font-size:13px;color:#334155;font-weight:600;margin-top:4px;">
+            ${w}cm x ${h}cm → ${_t('pdAdArea')} ${adH}cm + <strong>${calc.count}</strong>${_t('pdShelfCount')} (${shelfH}cm)
+        </div>`;
+        return html;
+    },
+
+    _pdAfterSize() {
+        const wEl = document.getElementById('npcPdWidth');
+        const hEl = document.getElementById('npcPdHeight');
+        const w = parseInt(wEl && wEl.value) || 0;
+        const h = parseInt(hEl && hEl.value) || 0;
+        if (w < 10 || h < 10) {
+            if (window.showToast) window.showToast(_t('pdEnterSize'), 'warn');
+            return;
+        }
+        this._pdWidth = w;
+        this._pdHeight = h;
+        this._goStep('pdAdHeight');
+    },
+
+    _pdCalcAndShow() {
+        const adEl = document.getElementById('npcPdAdH');
+        const shEl = document.getElementById('npcPdShelfH');
+        this._pdAdHeight = parseInt(adEl && adEl.value) || 20;
+        this._pdShelfHeight = parseInt(shEl && shEl.value) || 25;
+        if (this._pdAdHeight >= this._pdHeight) {
+            if (window.showToast) window.showToast('Ad height must be less than total height', 'warn');
+            return;
+        }
+        const calc = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
+        this._pdShelfCount = calc.count;
+        this._goStep('pdCalcResult');
+    },
+
+    _pdAfterCalc() {
+        this._goStep('pdReference');
+    },
+
+    _pdSelectRef(code, el) {
+        document.querySelectorAll('.pd-ref-card').forEach(c => c.classList.remove('selected'));
+        if (el) el.classList.add('selected');
+        this._pdRefCode = code;
+        const ref = this._pdRefs.find(r => r.code === code);
+        if (ref) {
+            const lang = _npcLang();
+            this._pdRefName = (lang === 'ja' && ref.name_jp) ? ref.name_jp : (lang === 'en' && ref.name_us) ? ref.name_us : ref.name;
+        }
+    },
+
+    _pdAfterRef() {
+        this._goStep('pdCustomize');
+    },
+
+    _pdUploadFile(area, inputEl) {
+        const file = inputEl && inputEl.files && inputEl.files[0];
+        if (!file) return;
+        this._pdCustom[area] = { name: file.name, file };
+        // 상태 업데이트
+        const statusEl = inputEl.closest('.pd-custom-card').querySelector('.pd-custom-status');
+        if (statusEl) statusEl.textContent = _t('pdSet');
+    },
+
+    _pdAfterCustomize() {
+        if (this.hasOptions) {
+            this._goStep('options');
+        } else {
+            this._goStep('pdSummary');
+        }
+    },
+
+    async _pdLoadReferences() {
+        const sb = window.sb;
+        if (!sb) return [];
+        try {
+            let subCats = [];
+            if (window.globalSubCats) {
+                const found = window.globalSubCats
+                    .filter(c => (c.top_category_code && c.top_category_code.includes('paper')) || (c.code && c.code.startsWith('pd')))
+                    .map(c => c.code);
+                if (found.length) subCats = found;
+            }
+            // 현재 상품의 카테고리도 포함
+            const curCat = this.product && this.product.category;
+            if (curCat && !subCats.includes(curCat)) subCats.push(curCat);
+            if (subCats.length === 0) return [];
+
+            const { data } = await sb.from('admin_products')
+                .select('code, name, name_jp, name_us, img_url, category')
+                .in('category', subCats)
+                .limit(20);
+            return data || [];
+        } catch (e) {
+            console.warn('종이매대 레퍼런스 로드 실패:', e);
+            return [];
+        }
+    },
+
+    _pdAddToCart() {
+        const product = this.product;
+        if (!product) return;
+        const qty = parseInt(document.getElementById('npcPdQty')?.value) || 1;
+
+        import('./order.js?v=123').then(m => {
+            const productToCart = { ...product };
+            // 가로x높이를 mm로 변환하여 설정
+            productToCart.w_mm = this._pdWidth * 10;
+            productToCart.h_mm = this._pdHeight * 10;
+            productToCart.is_custom = true;
+
+            const extraFields = {
+                type: 'paper_display',
+                totalWidth: this._pdWidth,
+                totalHeight: this._pdHeight,
+                adHeight: this._pdAdHeight,
+                shelfCount: this._pdShelfCount,
+                shelfHeight: this._pdShelfHeight,
+                referenceCode: this._pdRefCode,
+                referenceName: this._pdRefName,
+                customization: { ...this._pdCustom },
+            };
+
+            // 업로드된 파일 처리
+            const pendingFiles = window._pendingUploadedFiles || [];
+            if (pendingFiles.length > 0) {
+                extraFields.uploadedFiles = [...pendingFiles];
+            }
+
+            m.addProductToCartDirectly(productToCart, qty, [], {}, extraFields);
+            window._pendingUploadedFiles = [];
+            document.getElementById('choiceModal').style.display = 'none';
+            document.getElementById('cartAddedModal').style.display = 'flex';
+        }).catch(err => {
+            console.error('종이매대 장바구니 오류:', err);
+            if (window.showToast) window.showToast('Error: ' + err.message, 'error');
+        });
+    },
+
     _goPrev() {
         const step = this.step;
+        // 종이매대
+        if (step === 'pdAdHeight') { this._goStep('pdSize'); return; }
+        if (step === 'pdCalcResult') { this._goStep('pdAdHeight'); return; }
+        if (step === 'pdReference') { this._goStep('pdCalcResult'); return; }
+        if (step === 'pdCustomize') { this._goStep('pdReference'); return; }
+        if (step === 'pdSummary' && this.hasOptions) { this._goStep('options'); return; }
+        if (step === 'pdSummary') { this._goStep('pdCustomize'); return; }
+        // 옵션에서 이전: 종이매대면 커스터마이징으로
+        if (step === 'options' && this.isPaperDisplay) { this._goStep('pdCustomize'); return; }
         // 허니콤보드
         if (step === 'honeycombInput') { this._goStep('honeycombAsk'); return; }
         if (step === 'honeycombChoice') { this._goStep('honeycombAsk'); return; }

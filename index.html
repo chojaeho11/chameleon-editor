@@ -5951,6 +5951,11 @@ window.showChoiceModal = async function(key) {
         product.is_general_product = true;
     }
 
+    // 종이매대: 커스텀 사이즈 강제 (NPC 위자드에서 전용 플로우로 처리)
+    if (product.code && product.code.startsWith('pd_')) {
+        product.is_custom_size = true;
+    }
+
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
