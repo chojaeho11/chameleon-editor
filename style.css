@@ -4865,20 +4865,22 @@ html[lang="ja"] .product-detail-render div {
 }
 .npc-choices {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 10px;
     animation: npcFadeIn 0.4s ease;
 }
 .npc-choice-btn {
     flex: 1;
-    padding: 14px 10px;
+    padding: 16px 12px;
     border-radius: 12px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     border: 2px solid;
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
+    word-break: keep-all;
+    line-height: 1.3;
 }
 .npc-choice-btn:hover {
     transform: scale(1.03);

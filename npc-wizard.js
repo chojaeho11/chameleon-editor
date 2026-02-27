@@ -270,6 +270,7 @@ window.NpcWizard = {
     step: 0,
     hasFile: null,
     designChoice: null, // 'self' or 'expert'
+    _fromHoneycombDirect: false,
     product: null,
     isCustom: false,
     isGeneral: false,
@@ -287,6 +288,7 @@ window.NpcWizard = {
         this.isHoneycomb = (product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
         this.hasFile = null;
         this.designChoice = null;
+        this._fromHoneycombDirect = false;
         this.step = 0;
         this.active = true;
 
@@ -479,7 +481,7 @@ window.NpcWizard = {
             case 'final':
                 this._showSection('total');
                 this._showSection('buttons');
-                if (this.isGeneral) {
+                if (this.isGeneral || this._fromHoneycombDirect) {
                     this._renderBubble(_t('cartFinal'), null, true);
                 } else if (this.hasFile) {
                     this._renderBubble(_t('finalCart'), null, true);
@@ -548,6 +550,9 @@ window.NpcWizard = {
         this.hasFile = has;
         if (has) {
             this._goStep('upload');
+        } else if (this._fromHoneycombDirect) {
+            // 허니콤 직접주문: 디자인 선택 없이 바로 사이즈
+            this._goStep('size');
         } else {
             // 파일 없음 → 직접/의뢰 먼저 선택
             this._goStep('chooseDesign');
@@ -586,9 +591,10 @@ window.NpcWizard = {
         this._goStep('final');
     },
 
-    // 허니콤보드: 직접 주문 → 일반 커스텀 상품 플로우로 전환
+    // 허니콤보드: 직접 주문 → 파일 여부만 묻고 에디터 없이 진행
     _honeycombDirect() {
-        this.isHoneycomb = false; // 이후 일반 커스텀 플로우로 동작
+        this.isHoneycomb = false;
+        this._fromHoneycombDirect = true;
         this._goStep('askFile');
     },
 
@@ -643,6 +649,7 @@ window.NpcWizard = {
         if (step === 'size' && this.isCustom && this.isGeneral) { return; }
         if (step === 'upload') { this._goStep('askFile'); return; }
         if (step === 'size' && this.hasFile) { this._goStep('upload'); return; }
+        if (step === 'size' && !this.hasFile && this._fromHoneycombDirect) { this._goStep('askFile'); return; }
         if (step === 'size' && !this.hasFile) { this._goStep('chooseDesign'); return; }
         if (step === 'chooseDesign') { this._goStep('askFile'); return; }
         if (step === 'expertChat') { this._goStep('chooseDesign'); return; }
