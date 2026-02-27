@@ -853,19 +853,32 @@
         backBody.position.set(0, bodyH / 2, -d / 2);
         wallGroup.add(backBody);
 
-        // 2. 상단 간판 (뒷판 상단 연장, 상단 라운딩)
-        var adRadius = Math.min(w * 0.1, 0.03); // 라운딩 반경
-        var adShape = createRoundedTopShape(w, adH, adRadius);
-        var adExtrudeSettings = { depth: thick, bevelEnabled: false };
-        var adGeo = new THREE.ExtrudeGeometry(adShape, adExtrudeSettings);
-        // ExtrudeGeometry: front face=+Z, back face=-Z relative to extrude
-        var adFrontMat = makeTexMat(textures[0], false);
-        var adBackMat = bgMat.clone();
-        var adSideMat = bgMat.clone();
-        // ExtrudeGeometry material order: [sides, front, back]
-        var adPanel = new THREE.Mesh(adGeo, [adSideMat, adFrontMat, adBackMat]);
-        adPanel.position.set(0, bodyH, -d / 2 - thick / 2);
+        // 2. 상단 간판 — BoxGeometry(텍스처) + 라운드캡(장식)
+        var adRadius = Math.min(w * 0.1, 0.03);
+        var adBodyH = adH - adRadius; // 사각형 부분
+        if (adBodyH < 0.01) adBodyH = adH * 0.8;
+        var adCapH = adH - adBodyH;   // 라운딩 캡 높이
+
+        // 2a. 사각형 메인 — BoxGeometry (텍스처 정상 매핑)
+        var adGeo = new THREE.BoxGeometry(w, adBodyH, thick);
+        var adMats = [
+            bgMat.clone(), bgMat.clone(), // +X, -X
+            bgMat.clone(), bgMat.clone(), // +Y, -Y
+            makeTexMat(textures[0], false), // +Z front (텍스처)
+            bgMat.clone()                   // -Z back
+        ];
+        var adPanel = new THREE.Mesh(adGeo, adMats);
+        adPanel.position.set(0, bodyH + adBodyH / 2, -d / 2);
         wallGroup.add(adPanel);
+
+        // 2b. 라운드 캡 (상단 장식, bgColor)
+        if (adCapH > 0.005) {
+            var capShape = createRoundedTopShape(w, adCapH, adRadius);
+            var capGeo = new THREE.ExtrudeGeometry(capShape, { depth: thick, bevelEnabled: false });
+            var capPanel = new THREE.Mesh(capGeo, bgMat.clone());
+            capPanel.position.set(0, bodyH + adBodyH, -d / 2 - thick / 2);
+            wallGroup.add(capPanel);
+        }
 
         // 3. 옆면 — 상단 선반보다 약간 위까지만 (bodyH + sideMargin)
         var sideH = bodyH + sideMargin;

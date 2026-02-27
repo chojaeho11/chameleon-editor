@@ -529,14 +529,16 @@ export function initExport() {
 
                 // 3. PDF 생성 — 가벽 모드면 분판 PDF, 아니면 벡터→래스터 폴백
                 let blob = null;
+                // 종이매대 모드: 페이지별 다른 사이즈
+                const isPdMode = window.__pdMode;
                 if (window.__wallMode && window.__wallConfig && window.__wallConfig.walls) {
                     blob = await generateWallPanelPDF(targetPages, window.__wallConfig.walls, boardX, boardY);
                 }
                 if (!blob || blob.size < 1000) {
-                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY);
+                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 }
                 if (!blob || blob.size < 1000) {
-                    blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY);
+                    blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 }
 
                 if (blob) {
@@ -731,24 +733,49 @@ function drawCell(doc, x, y, w, h, text, align='center', fontSize=9, isHeader=fa
 // ==========================================================
 // [4] 벡터(아웃라인) PDF 생성 함수 (주문 시스템 로직)
 // ==========================================================
-export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
+export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, perPageSizes = false) {
     if (!window.jspdf) return null;
     const pages = Array.isArray(inputData) ? inputData : [inputData];
-    
+
+    // 페이지 JSON에서 보드 크기 추출 헬퍼
+    function getBoardFromJson(json) {
+        if (!json || !json.objects) return null;
+        return json.objects.find(o => o.isBoard);
+    }
+
     try {
-        const MM_TO_PX = 3.7795; 
+        const MM_TO_PX = 3.7795;
         const widthMM = w / MM_TO_PX; const heightMM = h / MM_TO_PX;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM], compress: true });
 
         for (let i = 0; i < pages.length; i++) {
-            if (i > 0) doc.addPage([widthMM, heightMM], widthMM > heightMM ? 'l' : 'p');
             const json = pages[i];
-            
+
+            // 페이지별 사이즈 계산 (종이매대 등 페이지별 보드 크기가 다른 경우)
+            var pw = w, ph = h, px = x, py = y;
+            if (perPageSizes) {
+                var board = getBoardFromJson(json);
+                if (board) {
+                    pw = (board.width || w) * (board.scaleX || 1);
+                    ph = (board.height || h) * (board.scaleY || 1);
+                    px = board.left || 0;
+                    py = board.top || 0;
+                }
+            }
+            var pwMM = pw / MM_TO_PX, phMM = ph / MM_TO_PX;
+
+            if (i > 0) doc.addPage([pwMM, phMM], pwMM > phMM ? 'l' : 'p');
+            else if (perPageSizes && i === 0) {
+                // 첫 페이지도 크기 재설정
+                doc.internal.pageSize.width = pwMM;
+                doc.internal.pageSize.height = phMM;
+            }
+
             // 가상 캔버스 생성
             const tempElement = document.createElement('canvas');
             const tempCanvas = new fabric.StaticCanvas(tempElement);
-            tempCanvas.setWidth(w); tempCanvas.setHeight(h);
+            tempCanvas.setWidth(pw); tempCanvas.setHeight(ph);
             tempCanvas.setBackgroundColor('#ffffff'); // 배경 흰색
 
             // 목업 오브젝트 제거 (PDF에 포함하지 않음)
@@ -761,7 +788,7 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
                 tempCanvas.loadFromJSON(filteredJson, () => {
                     // ★ 핵심: 뷰포트를 이동시켜서 대지 영역을 (0,0)으로 맞춤
                     // 대지의 시작점(x, y)만큼 반대로 이동(-x, -y)시키면 대지가 캔버스의 (0,0)에 오게 됨
-                    if (filteredJson.objects) tempCanvas.setViewportTransform([1, 0, 0, 1, -x, -y]);
+                    if (filteredJson.objects) tempCanvas.setViewportTransform([1, 0, 0, 1, -px, -py]);
                     tempCanvas.renderAll();
                     setTimeout(resolve, 500);
                 });
@@ -782,21 +809,21 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0) {
                 console.warn("[벡터PDF] 미변환 텍스트 발견 → 래스터 전환");
                 tempCanvas.renderAll();
                 const maxPixels = 67108864; // 64M pixels - 고해상도 인쇄용
-                const basePixels = w * h;
+                const basePixels = pw * ph;
                 let mult = 4;
                 if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
                 const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult });
-                doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
+                doc.addImage(imgData, 'JPEG', 0, 0, pwMM, phMM);
             } else {
                 // 모든 텍스트가 패스로 변환됨 → SVG 벡터 출력
                 const svgStr = tempCanvas.toSVG({
-                    viewBox: { x: 0, y: 0, width: w, height: h },
-                    width: w, height: h,
+                    viewBox: { x: 0, y: 0, width: pw, height: ph },
+                    width: pw, height: ph,
                     suppressPreamble: true
                 });
                 const parser = new DOMParser();
                 const svgElem = parser.parseFromString(svgStr, "image/svg+xml").documentElement;
-                await doc.svg(svgElem, { x: 0, y: 0, width: widthMM, height: heightMM });
+                await doc.svg(svgElem, { x: 0, y: 0, width: pwMM, height: phMM });
             }
             tempCanvas.dispose();
         }
@@ -911,9 +938,15 @@ async function convertCanvasTextToPaths(fabricCanvas) {
 }
 
 // 래스터(이미지) PDF 생성 함수
-export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
+export async function generateRasterPDF(inputData, w, h, x = 0, y = 0, perPageSizes = false) {
     if (!window.jspdf) return null;
     const pages = Array.isArray(inputData) ? inputData : [inputData];
+
+    function getBoardFromJson(json) {
+        if (!json || !json.objects) return null;
+        return json.objects.find(o => o.isBoard);
+    }
+
     try {
         const MM_TO_PX = 3.7795;
         const widthMM = w / MM_TO_PX; const heightMM = h / MM_TO_PX;
@@ -921,14 +954,33 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
         const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
 
         for (let i = 0; i < pages.length; i++) {
-            if (i > 0) doc.addPage([widthMM, heightMM], widthMM > heightMM ? 'l' : 'p');
+            const pageJson = { ...pages[i] };
+
+            // 페이지별 사이즈 계산
+            var pw = w, ph = h, px = x, py = y;
+            if (perPageSizes) {
+                var board = getBoardFromJson(pageJson);
+                if (board) {
+                    pw = (board.width || w) * (board.scaleX || 1);
+                    ph = (board.height || h) * (board.scaleY || 1);
+                    px = board.left || 0;
+                    py = board.top || 0;
+                }
+            }
+            var pwMM = pw / MM_TO_PX, phMM = ph / MM_TO_PX;
+
+            if (i > 0) doc.addPage([pwMM, phMM], pwMM > phMM ? 'l' : 'p');
+            else if (perPageSizes && i === 0) {
+                doc.internal.pageSize.width = pwMM;
+                doc.internal.pageSize.height = phMM;
+            }
+
             const tempEl = document.createElement('canvas');
             const tempCvs = new fabric.StaticCanvas(tempEl);
-            tempCvs.setWidth(w); tempCvs.setHeight(h);
+            tempCvs.setWidth(pw); tempCvs.setHeight(ph);
             tempCvs.setBackgroundColor('#ffffff'); // 흰색 배경
 
             // 목업 오브젝트 제거
-            const pageJson = { ...pages[i] };
             if (pageJson.objects) {
                 pageJson.objects = pageJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
             }
@@ -936,7 +988,7 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
             await new Promise(resolve => {
                 tempCvs.loadFromJSON(pageJson, () => {
                     // 좌표 보정
-                    tempCvs.setViewportTransform([1, 0, 0, 1, -x, -y]);
+                    tempCvs.setViewportTransform([1, 0, 0, 1, -px, -py]);
                     tempCvs.renderAll();
                     setTimeout(resolve, 500);
                 });
@@ -944,11 +996,11 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0) {
             const isMobileDevice = window.innerWidth <= 768;
             // 고해상도 인쇄용 PDF: 픽셀 면적 기준으로 multiplier 조절
             const maxPixels = 67108864; // 64M pixels - 고해상도
-            const basePixels = w * h;
+            const basePixels = pw * ph;
             let mult = isMobileDevice ? 2 : 4;
             if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
             const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult });
-            doc.addImage(imgData, 'JPEG', 0, 0, widthMM, heightMM);
+            doc.addImage(imgData, 'JPEG', 0, 0, pwMM, phMM);
             tempCvs.dispose();
         }
         return doc.output('blob');

@@ -70,7 +70,7 @@ export function initConfig() {
                     });
                 }
 
-                if (event === 'SIGNED_OUT') location.reload();
+                if (event === 'SIGNED_OUT' && !window.__authInProgress) location.reload();
 
                 // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시
                 if (event === 'PASSWORD_RECOVERY') {

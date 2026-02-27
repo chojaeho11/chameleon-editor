@@ -150,6 +150,7 @@ function openLoginModal() {
 // mode: 'login' | 'signup', callback: 가입/로그인 성공 후 실행할 함수
 window.openAuthModal = function(mode, callback) {
     if (callback) window._authCallback = callback;
+    window.__authInProgress = true; // 로그인/가입 중 SIGNED_OUT reload 방지
     const modal = document.getElementById("loginModal");
     if (!modal) return;
     isSignUpMode = (mode === 'signup');
@@ -234,6 +235,7 @@ async function handleAuthAction() {
 
     if (!email || !password) { showToast(window.t('err_input_required', "Input required."), "warn"); return; }
     if (!sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
+    window.__authInProgress = true; // 로그인/가입 중 SIGNED_OUT reload 방지
 
     // ★ '@' 없으면 자동으로 이메일 형식 생성 (간편 가입)
     if (!email.includes('@')) {
@@ -304,6 +306,7 @@ async function handleAuthAction() {
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
+        window.__authInProgress = false;
     }
 }
 
