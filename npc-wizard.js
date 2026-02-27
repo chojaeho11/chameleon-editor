@@ -324,16 +324,19 @@ window.NpcWizard = {
                 if (window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
                     this._showSection('uploadPreview');
                 }
-                // 업로드 섹션을 가이드 영역 바로 아래로 이동 (헤더보다 위)
-                if (this.sections.upload && this.guideEl) {
-                    this.guideEl.parentElement.insertBefore(this.sections.upload, this.guideEl.nextSibling);
-                    if (this.sections.uploadPreview) {
-                        this.sections.upload.parentElement.insertBefore(this.sections.uploadPreview, this.sections.upload.nextSibling);
-                    }
-                }
                 this._renderBubble(_t('uploadFile'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._goStep('size')" },
                 ], true, 'ask');
+                // 업로드 섹션을 말풍선과 다음 버튼 사이에 삽입
+                if (this.sections.upload && this.guideEl) {
+                    const bubbleWrap = this.guideEl.querySelector('.npc-bubble-wrap');
+                    if (bubbleWrap) {
+                        bubbleWrap.after(this.sections.upload);
+                        if (this.sections.uploadPreview && window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
+                            this.sections.upload.after(this.sections.uploadPreview);
+                        }
+                    }
+                }
                 break;
 
             case 'size':
