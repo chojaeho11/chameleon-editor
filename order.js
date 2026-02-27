@@ -1714,7 +1714,7 @@ function updateSummary(prodTotal, addonTotal, total) {
     // 최소주문금액 체크 (KRW 기준: KR=10000, JP=5000(=¥1,000), 그 외 없음)
     // 예외: 1000원단위 주문 상품(21355677)은 최소금액 미적용
     const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
+    const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 10000 : 0;
     const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
     if (MIN_ORDER_KRW > 0 && total > 0 && total < MIN_ORDER_KRW && !_hasUnitOrder) {
         total = MIN_ORDER_KRW;
@@ -1968,9 +1968,9 @@ async function processOrderSubmission() {
     const discountAmt = gradeDisc + refDisc;
     let finalTotal = rawTotal - discountAmt;
 
-    // 최소주문금액 적용 (KR: 10000원, JP: 5000원)
+    // 최소주문금액 적용 (KR: 10000원, JP: 10000원 = ¥1,000)
     const _minCountry = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW = _minCountry === 'KR' ? 10000 : _minCountry === 'JP' ? 5000 : 0;
+    const MIN_ORDER_KRW = _minCountry === 'KR' ? 10000 : _minCountry === 'JP' ? 10000 : 0;
     const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
     const elMinCheckout = document.getElementById('minOrderCheckoutNotice');
     if (MIN_ORDER_KRW > 0 && finalTotal > 0 && finalTotal < MIN_ORDER_KRW && !_hasUnitOrder) {
@@ -2338,7 +2338,7 @@ async function processFinalPayment() {
 
     // 최소주문금액 적용 (1000원단위 주문 상품 예외)
     const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW_PAY = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
+    const MIN_ORDER_KRW_PAY = _country === 'KR' ? 10000 : _country === 'JP' ? 10000 : 0;
     const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
     if (MIN_ORDER_KRW_PAY > 0 && realFinalPayAmount > 0 && realFinalPayAmount < MIN_ORDER_KRW_PAY && !_hasUnitOrder) {
         realFinalPayAmount = MIN_ORDER_KRW_PAY;
