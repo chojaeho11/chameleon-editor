@@ -217,8 +217,11 @@ window.NpcWizard = {
         this._hideAll();
         this._createGuideArea(rightActions);
 
-        if (this.isCustom) {
-            // 커스텀 사이즈 상품만 파일/디자인 위자드 진행
+        if (this.isCustom && this.isGeneral) {
+            // 면적 기반 시공 상품 (인쇄 없음) → 사이즈만 입력 → 장바구니
+            this._goStep('size');
+        } else if (this.isCustom) {
+            // 커스텀 인쇄 상품 → 파일/디자인 위자드 진행
             this._goStep('askFile');
         } else {
             // 일반 상품 + 고정 사이즈 상품 → 수량 선택 → 구매
@@ -363,7 +366,9 @@ window.NpcWizard = {
                 this._showSection('qty');
                 this._showSection('estimate');
                 if (this.isCustom) {
-                    this._renderBubble(_t('enterSize'), null, true, null,
+                    // 면적 기반 시공 상품은 size가 첫 단계 → 이전 버튼 없음
+                    const showPrev = !(this.isCustom && this.isGeneral);
+                    this._renderBubble(_t('enterSize'), null, showPrev, null,
                         { onclick: "window.NpcWizard._afterSize()" });
                 }
                 this._insertToSlot('size', 'qtyLabel', 'qty', 'estimate');
@@ -459,16 +464,17 @@ window.NpcWizard = {
 
     _goPrev() {
         const step = this.step;
+        // 면적 기반 시공 상품: size가 첫 단계이므로 size에서 이전 없음
+        if (step === 'size' && this.isCustom && this.isGeneral) { return; }
         if (step === 'upload') { this._goStep('askFile'); return; }
         if (step === 'size' && this.hasFile) { this._goStep('upload'); return; }
         if (step === 'size' && !this.hasFile) { this._goStep('chooseDesign'); return; }
         if (step === 'chooseDesign') { this._goStep('askFile'); return; }
         if (step === 'expertChat') { this._goStep('chooseDesign'); return; }
-        if (step === 'options' && this.isCustom) { this._goStep('size'); return; }
-        if (step === 'options' && this.isGeneral) { this._goStep('qty'); return; }
+        if (step === 'options') { this._goStep('size'); return; }
         if (step === 'final' && this.hasOptions) { this._goStep('options'); return; }
         if (step === 'final' && this.isCustom) { this._goStep('size'); return; }
-        if (step === 'final' && this.isGeneral) { this._goStep('qty'); return; }
+        if (step === 'final' && !this.isCustom && this.isGeneral) { this._goStep('qty'); return; }
     },
 
     _watchFileUpload() {
