@@ -6242,6 +6242,11 @@ window.showChoiceModal = async function(key) {
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
 
+    // ★ NPC 가이드 위자드 초기화 (모바일 전용)
+    if (window.innerWidth <= 768 && window.NpcWizard) {
+        setTimeout(() => window.NpcWizard.init(product), 100);
+    }
+
     // ★ 추천상품 로드 (대분류 기준 4개, 모바일에서 옵션과 상세설명 사이)
     (async function loadRelatedProducts() {
         try {
@@ -11575,6 +11580,7 @@ window.dsmRenderProducts = async function(keyword) {
 })();
 </script>
 <script src="./gif-maker.js?v=123"></script>
+<script src="./npc-wizard.js?v=123"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">
