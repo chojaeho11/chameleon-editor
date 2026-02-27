@@ -8,10 +8,13 @@ const NPC_IMG = './img/npc-guide.png';
 
 const NPC_TEXTS = {
     kr: {
-        hcQuote: '허니콤보드는 매니저를 통해 견적을 받으신 후 결제해주세요 📋',
-        hcGetQuote: '💬 매니저에게 견적받기',
-        hcInputQuote: '💰 견적금액 입력하기',
-        hcEnterAmount: '매니저에게 받은 견적금액을 입력해주세요',
+        hcAskConsulted: '매니저와 상담하셨나요? 🤝',
+        hcYes: '네, 견적 받았어요',
+        hcNo: '아니요, 아직이요',
+        hcInputAmount: '받으신 견적금액을 입력해 주세요 💰',
+        hcConsultManager: '💬 매니저와 상담하기',
+        hcOrderDirect: '🛒 직접 주문하기',
+        hcChooseAction: '어떻게 하시겠어요?',
         hcPay: '💳 결제하기',
         hcAmountPlaceholder: '금액 입력',
         enterArea: '시공면적을 적어주세요 📐',
@@ -35,10 +38,13 @@ const NPC_TEXTS = {
         uploaded: '업로드 완료! 다음으로 넘어갈게요 👍',
     },
     ja: {
-        hcQuote: 'ハニカムボードはマネージャーを通じてお見積もりを受けてからお支払いください 📋',
-        hcGetQuote: '💬 マネージャーに見積もりを依頼',
-        hcInputQuote: '💰 見積金額を入力',
-        hcEnterAmount: 'マネージャーから受け取った見積金額を入力してください',
+        hcAskConsulted: 'マネージャーとご相談されましたか？ 🤝',
+        hcYes: 'はい、見積もりを受けました',
+        hcNo: 'いいえ、まだです',
+        hcInputAmount: '受け取ったお見積金額を入力してください 💰',
+        hcConsultManager: '💬 マネージャーに相談する',
+        hcOrderDirect: '🛒 直接注文する',
+        hcChooseAction: 'どうされますか？',
         hcPay: '💳 お支払い',
         hcAmountPlaceholder: '金額を入力',
         enterArea: '施工面積を入力してください 📐',
@@ -62,10 +68,13 @@ const NPC_TEXTS = {
         uploaded: 'アップロード完了！次のステップへ 👍',
     },
     en: {
-        hcQuote: 'For honeycomb boards, please get a quote from our manager before payment 📋',
-        hcGetQuote: '💬 Get quote from manager',
-        hcInputQuote: '💰 Enter quoted amount',
-        hcEnterAmount: 'Please enter the quoted amount from the manager',
+        hcAskConsulted: 'Have you consulted with our manager? 🤝',
+        hcYes: 'Yes, I got a quote',
+        hcNo: 'No, not yet',
+        hcInputAmount: 'Please enter the quoted amount 💰',
+        hcConsultManager: '💬 Consult with manager',
+        hcOrderDirect: '🛒 Order directly',
+        hcChooseAction: 'What would you like to do?',
         hcPay: '💳 Proceed to payment',
         hcAmountPlaceholder: 'Enter amount',
         enterArea: 'Please enter the installation area 📐',
@@ -89,10 +98,13 @@ const NPC_TEXTS = {
         uploaded: 'File uploaded! Moving to next step 👍',
     },
     zh: {
-        hcQuote: '蜂窝板请先通过经理获取报价后再付款 📋',
-        hcGetQuote: '💬 向经理获取报价',
-        hcInputQuote: '💰 输入报价金额',
-        hcEnterAmount: '请输入经理提供的报价金额',
+        hcAskConsulted: '您已与经理咨询过了吗？ 🤝',
+        hcYes: '是的，已获得报价',
+        hcNo: '还没有',
+        hcInputAmount: '请输入收到的报价金额 💰',
+        hcConsultManager: '💬 与经理咨询',
+        hcOrderDirect: '🛒 直接下单',
+        hcChooseAction: '您想怎么做？',
         hcPay: '💳 去支付',
         hcAmountPlaceholder: '输入金额',
         enterArea: '请输入施工面积 📐',
@@ -116,10 +128,13 @@ const NPC_TEXTS = {
         uploaded: '文件上传完成！进入下一步 👍',
     },
     ar: {
-        hcQuote: 'للوح العسل، يرجى الحصول على عرض سعر من المدير قبل الدفع 📋',
-        hcGetQuote: '💬 طلب عرض سعر من المدير',
-        hcInputQuote: '💰 إدخال مبلغ العرض',
-        hcEnterAmount: 'يرجى إدخال مبلغ العرض من المدير',
+        hcAskConsulted: 'هل تشاورت مع المدير؟ 🤝',
+        hcYes: 'نعم، حصلت على عرض سعر',
+        hcNo: 'لا، ليس بعد',
+        hcInputAmount: 'يرجى إدخال مبلغ العرض المستلم 💰',
+        hcConsultManager: '💬 التشاور مع المدير',
+        hcOrderDirect: '🛒 الطلب مباشرة',
+        hcChooseAction: 'ماذا تريد أن تفعل؟',
         hcPay: '💳 متابعة الدفع',
         hcAmountPlaceholder: 'أدخل المبلغ',
         enterArea: 'يرجى إدخال مساحة التركيب 📐',
@@ -143,10 +158,13 @@ const NPC_TEXTS = {
         uploaded: 'تم رفع الملف! الخطوة التالية 👍',
     },
     es: {
-        hcQuote: 'Para paneles honeycomb, solicite un presupuesto al gerente antes de pagar 📋',
-        hcGetQuote: '💬 Solicitar presupuesto al gerente',
-        hcInputQuote: '💰 Ingresar monto del presupuesto',
-        hcEnterAmount: 'Ingrese el monto del presupuesto del gerente',
+        hcAskConsulted: '¿Ha consultado con nuestro gerente? 🤝',
+        hcYes: 'Sí, tengo un presupuesto',
+        hcNo: 'No, todavía no',
+        hcInputAmount: 'Ingrese el monto del presupuesto recibido 💰',
+        hcConsultManager: '💬 Consultar con el gerente',
+        hcOrderDirect: '🛒 Pedir directamente',
+        hcChooseAction: '¿Qué le gustaría hacer?',
         hcPay: '💳 Proceder al pago',
         hcAmountPlaceholder: 'Ingrese el monto',
         enterArea: 'Ingrese el área de instalación 📐',
@@ -170,10 +188,13 @@ const NPC_TEXTS = {
         uploaded: '¡Archivo subido! Siguiente paso 👍',
     },
     de: {
-        hcQuote: 'Für Wabenplatten holen Sie bitte zuerst ein Angebot vom Manager ein 📋',
-        hcGetQuote: '💬 Angebot vom Manager anfordern',
-        hcInputQuote: '💰 Angebotsbetrag eingeben',
-        hcEnterAmount: 'Bitte geben Sie den vom Manager erhaltenen Betrag ein',
+        hcAskConsulted: 'Haben Sie sich mit unserem Manager beraten? 🤝',
+        hcYes: 'Ja, ich habe ein Angebot',
+        hcNo: 'Nein, noch nicht',
+        hcInputAmount: 'Bitte geben Sie den erhaltenen Angebotsbetrag ein 💰',
+        hcConsultManager: '💬 Mit Manager beraten',
+        hcOrderDirect: '🛒 Direkt bestellen',
+        hcChooseAction: 'Was möchten Sie tun?',
         hcPay: '💳 Zur Zahlung',
         hcAmountPlaceholder: 'Betrag eingeben',
         enterArea: 'Bitte geben Sie die Installationsfläche ein 📐',
@@ -197,10 +218,13 @@ const NPC_TEXTS = {
         uploaded: 'Datei hochgeladen! Nächster Schritt 👍',
     },
     fr: {
-        hcQuote: 'Pour les panneaux nid d\'abeille, veuillez obtenir un devis du responsable avant le paiement 📋',
-        hcGetQuote: '💬 Demander un devis au responsable',
-        hcInputQuote: '💰 Saisir le montant du devis',
-        hcEnterAmount: 'Veuillez saisir le montant du devis du responsable',
+        hcAskConsulted: 'Avez-vous consulté notre responsable ? 🤝',
+        hcYes: 'Oui, j\'ai un devis',
+        hcNo: 'Non, pas encore',
+        hcInputAmount: 'Veuillez saisir le montant du devis reçu 💰',
+        hcConsultManager: '💬 Consulter le responsable',
+        hcOrderDirect: '🛒 Commander directement',
+        hcChooseAction: 'Que souhaitez-vous faire ?',
         hcPay: '💳 Procéder au paiement',
         hcAmountPlaceholder: 'Saisir le montant',
         enterArea: 'Veuillez entrer la surface d\'installation 📐',
@@ -277,8 +301,8 @@ window.NpcWizard = {
         this._createGuideArea(rightActions);
 
         if (this.isHoneycomb) {
-            // 허니콤보드 → 매니저 견적 플로우
-            this._goStep('honeycombQuote');
+            // 허니콤보드 → 매니저 상담 여부 확인
+            this._goStep('honeycombAsk');
         } else if (this.isCustom && this.isGeneral) {
             // 면적 기반 시공 상품 (인쇄 없음) → 사이즈만 입력 → 장바구니
             this._goStep('size');
@@ -481,17 +505,25 @@ window.NpcWizard = {
                 setTimeout(() => { if (window.ChamBot) window.ChamBot.toggle(); }, 500);
                 break;
 
-            case 'honeycombQuote':
-                // 허니콤보드: 매니저 견적 안내
-                this._renderBubble(_t('hcQuote'), [
-                    { label: _t('hcGetQuote'), cls: 'npc-yes', onclick: "if(window.ChamBot) window.ChamBot.toggle();" },
-                    { label: _t('hcInputQuote'), cls: 'npc-expert', onclick: "window.NpcWizard._goStep('honeycombInput')" },
+            case 'honeycombAsk':
+                // 허니콤보드: 매니저 상담 여부 확인
+                this._renderBubble(_t('hcAskConsulted'), [
+                    { label: _t('hcYes'), cls: 'npc-yes', onclick: "window.NpcWizard._goStep('honeycombInput')" },
+                    { label: _t('hcNo'), cls: 'npc-no', onclick: "window.NpcWizard._goStep('honeycombChoice')" },
                 ]);
                 break;
 
-            case 'honeycombInput':
+            case 'honeycombChoice':
+                // 허니콤보드: 상담 안 했을 때 → 상담하기 or 직접 주문
+                this._renderBubble(_t('hcChooseAction'), [
+                    { label: _t('hcConsultManager'), cls: 'npc-yes', onclick: "if(window.ChamBot) window.ChamBot.toggle();" },
+                    { label: _t('hcOrderDirect'), cls: 'npc-expert', onclick: "window.NpcWizard._honeycombDirect()" },
+                ], true);
+                break;
+
+            case 'honeycombInput': {
                 // 허니콤보드: 견적금액 입력
-                this._renderBubble(_t('hcEnterAmount'), null, true);
+                this._renderBubble(_t('hcInputAmount'), null, true);
                 // 슬롯에 금액 입력 UI 추가
                 const slot = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
                 if (slot) {
@@ -503,6 +535,7 @@ window.NpcWizard = {
                     `;
                 }
                 break;
+            }
         }
     },
 
@@ -546,6 +579,12 @@ window.NpcWizard = {
     _afterOptions() {
         if (window.updateModalTotal) window.updateModalTotal();
         this._goStep('final');
+    },
+
+    // 허니콤보드: 직접 주문 → 일반 커스텀 상품 플로우로 전환
+    _honeycombDirect() {
+        this.isHoneycomb = false; // 이후 일반 커스텀 플로우로 동작
+        this._goStep('askFile');
     },
 
     // 허니콤보드: 견적금액으로 결제 (장바구니에 담기)
@@ -592,8 +631,9 @@ window.NpcWizard = {
 
     _goPrev() {
         const step = this.step;
-        // 허니콤보드: honeycombQuote가 첫 단계
-        if (step === 'honeycombInput') { this._goStep('honeycombQuote'); return; }
+        // 허니콤보드
+        if (step === 'honeycombInput') { this._goStep('honeycombAsk'); return; }
+        if (step === 'honeycombChoice') { this._goStep('honeycombAsk'); return; }
         // 면적 기반 시공 상품: size가 첫 단계이므로 size에서 이전 없음
         if (step === 'size' && this.isCustom && this.isGeneral) { return; }
         if (step === 'upload') { this._goStep('askFile'); return; }
