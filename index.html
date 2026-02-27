@@ -6247,14 +6247,22 @@ window.showChoiceModal = async function(key) {
         try {
             const dbClient = window.sb || sb;
             if (!dbClient) return;
-            // 대분류에 속하는 모든 소분류 코드 수집
-            const topCat = targetCat || product.category;
-            let subCatCodes = [product.category];
+            // 대분류에 속하는 모든 소분류 코드 수집 (직접 계산)
+            const curCat = product.category;
+            let topCatCode = curCat;
+            let subCatCodes = [curCat];
             if (window.globalSubCats && window.globalSubCats.length > 0) {
+                // 현재 상품의 소분류 → 대분류 코드 찾기
+                const match = window.globalSubCats.find(c => c.code === curCat);
+                if (match && match.top_category_code) {
+                    topCatCode = match.top_category_code;
+                }
+                // 같은 대분류의 모든 소분류 코드 수집
                 const found = window.globalSubCats
-                    .filter(c => c.top_category_code === topCat)
+                    .filter(c => c.top_category_code === topCatCode)
                     .map(c => c.code);
                 if (found.length > 0) subCatCodes = found;
+                console.log(`🛍️ 추천상품: ${curCat} → 대분류 ${topCatCode}, 소분류 ${subCatCodes.length}개:`, subCatCodes);
             }
             const { data: relatedRaw } = await dbClient.from('admin_products')
                 .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, category')
