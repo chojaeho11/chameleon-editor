@@ -4215,27 +4215,31 @@ video {
     }
 
     .choice-layout {
-        display: block !important; /* 좌우 배치 -> 상하 배치 */
+        display: flex !important;
+        flex-direction: column !important;
         height: auto !important;
         overflow: visible !important;
     }
 
-    /* 상단: 상세 내용 (스크롤 없이 다 보여줌) */
-    .choice-left-content {
-        height: auto !important;
-        overflow: visible !important;
-        padding: 20px !important;
-    }
-
-    /* 하단: 옵션 및 버튼 영역 (옵션이 길어도 스크롤 됨) */
+    /* 상단: 옵션 및 버튼 영역 (먼저 표시) */
     .choice-right-actions {
+        order: -1 !important;
         width: 100% !important;
         height: auto !important;
         overflow: visible !important;
         padding: 20px !important;
         background: #f8fafc !important;
-        border-top: 1px solid #e2e8f0;
-        padding-bottom: 50px !important; /* 하단 버튼 공간 확보 */
+        border-bottom: 1px solid #e2e8f0;
+        border-top: none !important;
+        padding-bottom: 50px !important;
+    }
+
+    /* 하단: 상세 내용 (아래로 이동) */
+    .choice-left-content {
+        order: 1 !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 20px !important;
     }
 
     /* 3. [카테고리/상품목록 모달] 스크롤 해결 */
