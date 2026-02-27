@@ -6425,7 +6425,7 @@ window.updateModalTotal = function() {
     if (window.isCustomModeCurrent) {
         // 커스텀: data-raw-price에서 원본 숫자 직접 읽기 (텍스트 파싱 안 함)
         const calcPriceEl = document.getElementById('calcResultPrice');
-        productTotal = parseFloat(calcPriceEl.dataset.rawPrice) || 0;
+        productTotal = calcPriceEl ? (parseFloat(calcPriceEl.dataset.rawPrice) || 0) : 0;
     } else {
         // 일반: (국가별 단가) * (상품 수량)
         const urlParams = new URLSearchParams(window.location.search);
