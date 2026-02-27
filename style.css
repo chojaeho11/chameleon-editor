@@ -4809,17 +4809,13 @@ html[lang="ja"] .product-detail-render div {
 @media (max-width: 768px) {
     .npc-guide-area {
         padding: 10px 0 6px;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background: #f8fafc;
     }
     .npc-bubble-wrap {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 0;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
     }
     .npc-bubble {
         background: #1a1a1a;
@@ -4834,7 +4830,6 @@ html[lang="ja"] .product-detail-render div {
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         animation: npcFadeIn 0.3s ease;
         text-align: center;
-        order: 1;
     }
     .npc-bubble::after {
         content: '';
@@ -4847,17 +4842,19 @@ html[lang="ja"] .product-detail-render div {
         border-color: #1a1a1a transparent transparent transparent;
     }
     .npc-avatar {
-        width: 130px;
-        height: 130px;
+        width: 120px;
+        height: 120px;
         flex-shrink: 0;
         animation: npcBounce 2s ease infinite;
-        order: 2;
         margin-top: 6px;
     }
     .npc-avatar img {
         width: 100%;
         height: 100%;
         object-fit: contain;
+    }
+    #npcContentSlot {
+        width: 100%;
     }
     @keyframes npcBounce {
         0%, 100% { transform: translateY(0); }

@@ -12,9 +12,9 @@ const NPC_TEXTS = {
         yes: '네, 있어요!',
         no: '아니요, 없어요',
         uploadFile: '파일을 올려주세요',
-        enterSize: '제작할 제품의 가로 또는 세로 사이즈를 입력하시면 견적을 드릴게요 📏',
+        enterSize: '사이즈를 입력하시면 견적을 드릴게요 📏',
         selectOption: '옵션을 선택하세요 ✨',
-        finalCart: '자, 이제 장바구니 버튼만 누르시면 됩니다. 수고하셨습니다! 🎉',
+        finalCart: '장바구니 버튼만 누르시면 끝! 🎉',
         chooseDesign: '어떻게 디자인하시겠어요?',
         selfDesign: '🎨 직접 디자인하기',
         expertDesign: '👨‍🎨 전문가에게 의뢰',
@@ -23,16 +23,16 @@ const NPC_TEXTS = {
         next: '다음 →',
         prev: '← 이전',
         skipOption: '옵션 없이 진행 →',
-        uploaded: '파일이 업로드 되었네요! 다음 단계로 넘어갈게요 👍',
+        uploaded: '업로드 완료! 다음으로 넘어갈게요 👍',
     },
     ja: {
         askFile: '印刷するファイルはお持ちですか？',
         yes: 'はい、あります！',
         no: 'いいえ、ありません',
         uploadFile: 'ファイルをアップロードしてください',
-        enterSize: '製品の横または縦サイズを入力すると見積もりをお出しします 📏',
+        enterSize: 'サイズを入力するとお見積もりをお出しします 📏',
         selectOption: 'オプションを選択してください ✨',
-        finalCart: 'カートボタンを押すだけで完了です。お疲れ様でした！ 🎉',
+        finalCart: 'カートボタンを押すだけで完了です！ 🎉',
         chooseDesign: 'どのようにデザインしますか？',
         selfDesign: '🎨 自分でデザイン',
         expertDesign: '👨‍🎨 専門家に依頼',
@@ -48,9 +48,9 @@ const NPC_TEXTS = {
         yes: 'Yes, I do!',
         no: "No, I don't",
         uploadFile: "Please upload your file",
-        enterSize: "Enter the width or height and we'll give you a quote 📏",
+        enterSize: "Enter the size and we'll give you a quote 📏",
         selectOption: 'Select your options ✨',
-        finalCart: "Just click the cart button and you're done! Great job! 🎉",
+        finalCart: "Just click the cart button and you're done! 🎉",
         chooseDesign: 'How would you like to design?',
         selfDesign: '🎨 Design it myself',
         expertDesign: '👨‍🎨 Request an expert',
@@ -66,9 +66,9 @@ const NPC_TEXTS = {
         yes: '有！',
         no: '没有',
         uploadFile: '请上传文件',
-        enterSize: '输入产品的宽度或高度，我们会为您报价 📏',
+        enterSize: '输入尺寸，我们会为您报价 📏',
         selectOption: '请选择选项 ✨',
-        finalCart: '点击购物车按钮就完成了！辛苦了！ 🎉',
+        finalCart: '点击购物车按钮就完成了！ 🎉',
         chooseDesign: '您想如何设计？',
         selfDesign: '🎨 自己设计',
         expertDesign: '👨‍🎨 委托专家',
@@ -84,9 +84,9 @@ const NPC_TEXTS = {
         yes: 'نعم!',
         no: 'لا',
         uploadFile: 'يرجى رفع ملفك',
-        enterSize: 'أدخل العرض أو الارتفاع وسنعطيك عرض سعر 📏',
+        enterSize: 'أدخل الحجم وسنعطيك عرض سعر 📏',
         selectOption: 'اختر الخيارات ✨',
-        finalCart: 'اضغط على زر السلة وانتهيت! عمل رائع! 🎉',
+        finalCart: 'اضغط على زر السلة وانتهيت! 🎉',
         chooseDesign: 'كيف تريد التصميم؟',
         selfDesign: '🎨 تصميم بنفسي',
         expertDesign: '👨‍🎨 طلب خبير',
@@ -102,7 +102,7 @@ const NPC_TEXTS = {
         yes: '¡Sí, tengo!',
         no: 'No, no tengo',
         uploadFile: 'Sube tu archivo',
-        enterSize: 'Ingresa el ancho o alto y te daremos un presupuesto 📏',
+        enterSize: 'Ingresa el tamaño y te daremos un presupuesto 📏',
         selectOption: 'Selecciona tus opciones ✨',
         finalCart: '¡Solo presiona el botón del carrito y listo! 🎉',
         chooseDesign: '¿Cómo quieres diseñar?',
@@ -120,7 +120,7 @@ const NPC_TEXTS = {
         yes: 'Ja!',
         no: 'Nein',
         uploadFile: 'Laden Sie Ihre Datei hoch',
-        enterSize: 'Geben Sie Breite oder Höhe ein für ein Angebot 📏',
+        enterSize: 'Geben Sie die Größe ein für ein Angebot 📏',
         selectOption: 'Wählen Sie Ihre Optionen ✨',
         finalCart: 'Einfach auf den Warenkorb klicken und fertig! 🎉',
         chooseDesign: 'Wie möchten Sie gestalten?',
@@ -138,7 +138,7 @@ const NPC_TEXTS = {
         yes: 'Oui !',
         no: 'Non',
         uploadFile: 'Téléchargez votre fichier',
-        enterSize: 'Entrez la largeur ou la hauteur pour un devis 📏',
+        enterSize: 'Entrez la taille pour un devis 📏',
         selectOption: 'Sélectionnez vos options ✨',
         finalCart: 'Cliquez sur le panier et c\'est fini ! 🎉',
         chooseDesign: 'Comment souhaitez-vous concevoir ?',
@@ -177,8 +177,8 @@ window.NpcWizard = {
     isCustom: false,
     isGeneral: false,
     hasOptions: false,
-    sections: {},       // cached DOM references
-    guideEl: null,      // NPC guide area element
+    sections: {},
+    guideEl: null,
     _fileWatcher: null,
 
     init(product) {
@@ -193,27 +193,18 @@ window.NpcWizard = {
         const rightActions = document.getElementById('choiceRightActions');
         if (!rightActions) return;
 
-        // 옵션 있는지 확인
         const addonArea = rightActions.querySelector('#addonCategoryArea');
         this.hasOptions = !!(addonArea && addonArea.querySelectorAll('input[name="userOption"]').length > 0);
 
-        // 기존 요소들을 data-npc 속성으로 찾기
         this._tagSections(rightActions);
-
-        // 모든 섹션 숨기기
         this._hideAll();
-
-        // NPC 가이드 영역을 맨 위에 삽입
         this._createGuideArea(rightActions);
 
-        // 첫 번째 스텝 (헤더는 _goStep 내에서 보여줌)
         if (this.isGeneral) {
             this._goStep('qty');
         } else {
             this._goStep('askFile');
         }
-
-        // 파일 업로드 감시
         this._watchFileUpload();
     },
 
@@ -221,13 +212,11 @@ window.NpcWizard = {
         this.active = false;
         if (this._fileWatcher) clearInterval(this._fileWatcher);
         if (this.guideEl) this.guideEl.remove();
-        // 모든 섹션 다시 보이기
         Object.values(this.sections).forEach(el => {
             if (el) el.style.display = '';
         });
     },
 
-    // 기존 요소들에 data-npc 속성으로 섹션 찾기
     _tagSections(container) {
         this.sections = {};
         this.sections.header = container.querySelector('[data-npc="header"]');
@@ -255,32 +244,27 @@ window.NpcWizard = {
         if (el) el.style.display = '';
     },
 
-    _hideSection(name) {
-        const el = this.sections[name];
-        if (el) el.style.display = 'none';
-    },
-
-    // NPC 가이드 영역을 컨테이너 맨 위에 삽입
     _createGuideArea(container) {
         if (this.guideEl) this.guideEl.remove();
         const div = document.createElement('div');
         div.id = 'npcGuideArea';
         div.className = 'npc-guide-area';
-        // ★ 맨 위에 삽입 (헤더보다 위) — 위치 고정
         container.insertBefore(div, container.firstChild);
         this.guideEl = div;
     },
 
-    // nextBtn: { label, onclick } — 다음 버튼을 이전과 나란히 배치
+    // 말풍선 + 아바타 + 선택지 + 이전/다음 렌더
     _renderBubble(text, choices, showNav, mood, nextBtn) {
         if (!this.guideEl) return;
         let html = `
             <div class="npc-bubble-wrap">
+                <div class="npc-bubble">${text}</div>
                 <div class="npc-avatar">
                     <img src="${NPC_IMG}" alt="Guide" onerror="this.style.display='none';this.parentElement.textContent='🦎';">
                 </div>
-                <div class="npc-bubble">${text}</div>
             </div>`;
+        // 콘텐츠 삽입 영역 (섹션이 여기에 들어감)
+        html += '<div id="npcContentSlot"></div>';
         if (choices && choices.length > 0) {
             html += '<div class="npc-choices">';
             choices.forEach(c => {
@@ -288,13 +272,12 @@ window.NpcWizard = {
             });
             html += '</div>';
         }
-        // 이전/다음 버튼을 좌우로 배치
         if (showNav || nextBtn) {
             html += '<div class="npc-nav">';
             if (showNav) {
                 html += `<button class="npc-nav-btn npc-prev" onclick="window.NpcWizard._goPrev()">${_t('prev')}</button>`;
             } else {
-                html += '<span></span>';  // flex spacer
+                html += '<span></span>';
             }
             if (nextBtn) {
                 html += `<button class="npc-nav-btn npc-next-nav" onclick="${nextBtn.onclick}">${nextBtn.label || _t('next')}</button>`;
@@ -305,14 +288,14 @@ window.NpcWizard = {
         this.guideEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
 
-    // 콘텐츠 섹션을 썸네일(header) 위로 이동
-    _moveAboveHeader(...names) {
-        const header = this.sections.header;
-        if (!header || !header.parentElement) return;
+    // ★ 핵심: 콘텐츠 섹션을 가이드 영역 내 슬롯에 삽입
+    _insertToSlot(...names) {
+        const slot = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+        if (!slot) return;
         names.forEach(name => {
             const el = this.sections[name];
             if (el && el.style.display !== 'none') {
-                header.parentElement.insertBefore(el, header);
+                slot.appendChild(el);
             }
         });
     },
@@ -321,7 +304,6 @@ window.NpcWizard = {
     _goStep(stepName) {
         this.step = stepName;
         this._hideAll();
-        // 헤더(썸네일+상품명)는 항상 표시 (콘텐츠보다 아래)
         this._showSection('header');
 
         switch (stepName) {
@@ -339,16 +321,7 @@ window.NpcWizard = {
                 }
                 this._renderBubble(_t('uploadFile'), null, true, null,
                     { onclick: "window.NpcWizard._goStep('size')" });
-                // 업로드 섹션을 가이드 영역 안으로 이동 (말풍선 아래)
-                if (this.sections.upload && this.guideEl) {
-                    const bubbleWrap = this.guideEl.querySelector('.npc-bubble-wrap');
-                    if (bubbleWrap) {
-                        bubbleWrap.after(this.sections.upload);
-                        if (this.sections.uploadPreview && window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
-                            this.sections.upload.after(this.sections.uploadPreview);
-                        }
-                    }
-                }
+                this._insertToSlot('upload', 'uploadPreview');
                 break;
 
             case 'size':
@@ -360,24 +333,22 @@ window.NpcWizard = {
                     this._renderBubble(_t('enterSize'), null, true, null,
                         { onclick: "window.NpcWizard._afterSize()" });
                 }
-                // 사이즈/수량/견적을 썸네일 위로
-                this._moveAboveHeader('size', 'qtyLabel', 'qty', 'estimate');
+                this._insertToSlot('size', 'qtyLabel', 'qty', 'estimate');
                 break;
 
             case 'qty':
-                // 일반 상품용
                 this._showSection('price');
                 this._showSection('qty');
                 this._renderBubble(_t('selectQty'), null, false, null,
                     { onclick: "window.NpcWizard._afterQty()" });
-                this._moveAboveHeader('price', 'qty');
+                this._insertToSlot('price', 'qty');
                 break;
 
             case 'options':
                 this._showSection('options');
                 this._renderBubble(_t('selectOption'), null, true, null,
                     { onclick: "window.NpcWizard._afterOptions()" });
-                this._moveAboveHeader('options');
+                this._insertToSlot('options');
                 break;
 
             case 'final':
@@ -388,7 +359,7 @@ window.NpcWizard = {
                 } else {
                     this._renderBubble(_t('finalCart'), null, true);
                 }
-                this._moveAboveHeader('total', 'buttons');
+                this._insertToSlot('total', 'buttons');
                 if (window.updateModalTotal) window.updateModalTotal();
                 break;
 
@@ -398,7 +369,7 @@ window.NpcWizard = {
                     { label: _t('selfDesign'), cls: 'npc-yes', onclick: "window.confirmChoice('editor')" },
                     { label: _t('expertDesign'), cls: 'npc-expert', onclick: "if(window.ChamBot)window.ChamBot.toggle();" },
                 ], true);
-                this._moveAboveHeader('total');
+                this._insertToSlot('total');
                 if (window.updateModalTotal) window.updateModalTotal();
                 break;
         }
@@ -452,7 +423,6 @@ window.NpcWizard = {
         if (step === 'chooseDesign') { this._goStep('size'); return; }
     },
 
-    // 파일 업로드 감시 (파일이 올라오면 놀라는 표정으로 버블 업데이트)
     _watchFileUpload() {
         if (this._fileWatcher) clearInterval(this._fileWatcher);
         let lastCount = 0;
@@ -461,10 +431,10 @@ window.NpcWizard = {
             const files = window._pendingUploadedFiles || [];
             if (files.length > lastCount && this.step === 'upload') {
                 lastCount = files.length;
-                // 파일 올라옴 → 버블 업데이트
                 this._renderBubble(_t('uploaded'), null, true, null,
                     { onclick: "window.NpcWizard._goStep('size')" });
                 this._showSection('uploadPreview');
+                this._insertToSlot('upload', 'uploadPreview');
             }
         }, 500);
     },
