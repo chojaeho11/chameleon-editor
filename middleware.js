@@ -29,6 +29,80 @@ const SEO_CATEGORIES = {
     standee: { prefix: 'hb_point' },
 };
 
+// Korean SEO metadata for category pages (from product-seo.js)
+const CATEGORY_SEO = {
+    honeycomb: {
+        title: '허니콤보드 인쇄 - 친환경 종이 디스플레이 | 카멜레온프린팅',
+        desc: '친환경 허니콤보드 맞춤 인쇄. 팝업스토어·전시부스·매장 디스플레이에 최적. 무료 온라인 에디터로 직접 디자인하고 전국 당일배송.',
+        keywords: '허니콤보드,허니콤보드인쇄,종이디스플레이,팝업스토어디스플레이,친환경전시,종이보드인쇄,전시부스,매장디스플레이'
+    },
+    'fabric-print': {
+        title: '패브릭 인쇄 - 고화질 천 인쇄 & 출력 | 카멜레온프린팅',
+        desc: '고화질 패브릭(천) 맞춤 인쇄. 백월·포토존·배경막·현수막에 최적. 무료 디자인 에디터로 직접 제작, 전국 당일배송.',
+        keywords: '패브릭인쇄,천인쇄,백월,포토존,배경막인쇄,현수막,패브릭출력,천출력'
+    },
+    'paper-stand': {
+        title: '종이매대 제작 - 친환경 POP 진열대 | 카멜레온프린팅',
+        desc: '친환경 종이매대 맞춤 제작. 마트·편의점·매장 진열대에 최적. 무료 에디터로 디자인, 소량부터 대량까지 전국 배송.',
+        keywords: '종이매대,종이진열대,POP진열대,매장진열대,친환경매대,종이매대제작,카드보드디스플레이'
+    },
+    goods: {
+        title: '아크릴 굿즈 제작 - 키링·포토카드·스탠드 | 카멜레온프린팅',
+        desc: '아크릴 굿즈 맞춤 제작. 키링·포토카드·아크릴스탠드·뱃지. 무료 에디터로 직접 디자인, 소량 주문 가능, 전국 배송.',
+        keywords: '아크릴굿즈,아크릴키링,포토카드제작,아크릴스탠드,아크릴뱃지,굿즈제작,맞춤굿즈'
+    },
+    'acrylic-print': {
+        title: '아크릴 인쇄 - UV 아크릴 간판 & 디스플레이 | 카멜레온프린팅',
+        desc: '고품질 아크릴 UV 인쇄. 간판·네임플레이트·안내판·인테리어 소품. 무료 에디터로 디자인, 다양한 두께·사이즈.',
+        keywords: '아크릴인쇄,아크릴간판,UV아크릴,아크릴안내판,아크릴네임플레이트,아크릴디스플레이'
+    },
+    'paper-furniture': {
+        title: '종이가구 제작 - 친환경 골판지 가구 | 카멜레온프린팅',
+        desc: '친환경 종이가구 맞춤 제작. 전시·이벤트·팝업스토어용 테이블·의자·선반. 가볍고 튼튼한 골판지 가구, 전국 배송.',
+        keywords: '종이가구,골판지가구,친환경가구,전시가구,팝업스토어가구,이벤트가구,카드보드가구'
+    },
+    'foamex-print': {
+        title: '포맥스 인쇄 - PVC 폼 보드 출력 | 카멜레온프린팅',
+        desc: '고품질 포맥스(PVC폼보드) 맞춤 인쇄. 간판·안내판·인테리어·전시용. 무료 디자인 에디터, 다양한 두께 선택 가능.',
+        keywords: '포맥스인쇄,PVC폼보드,포맥스출력,간판제작,안내판,포맥스간판,PVC인쇄'
+    },
+    'foamboard-print': {
+        title: '폼보드 인쇄 - 우드락 출력 & 제작 | 카멜레온프린팅',
+        desc: '폼보드(우드락) 맞춤 인쇄. 전시·안내·POP·포토존에 최적. 무료 에디터로 디자인, 재단·라미네이팅 옵션, 전국 당일배송.',
+        keywords: '폼보드인쇄,우드락인쇄,폼보드출력,우드락출력,전시보드,POP보드,폼보드제작'
+    },
+    'foamex-stand': {
+        title: '포맥스 매대 - PVC 진열대 & 디스플레이 | 카멜레온프린팅',
+        desc: '포맥스(PVC) 매대 맞춤 제작. 매장 진열·제품 디스플레이·전시회용. 내구성 뛰어난 PVC 소재, 무료 디자인 에디터.',
+        keywords: '포맥스매대,PVC매대,PVC진열대,포맥스디스플레이,매장진열대,PVC디스플레이'
+    },
+    'biz-print': {
+        title: '명함 인쇄 & 인쇄물 제작 | 카멜레온프린팅',
+        desc: '고급 명함·전단지·브로셔·리플렛 맞춤 인쇄. 무료 온라인 에디터로 직접 디자인, 다양한 용지·후가공 옵션, 전국 빠른배송.',
+        keywords: '명함인쇄,전단지인쇄,브로셔제작,리플렛인쇄,인쇄물제작,명함제작,전단지제작'
+    },
+    'promo-items': {
+        title: '판촉물 제작 - 맞춤 홍보물 & 기념품 | 카멜레온프린팅',
+        desc: '기업 판촉물·기념품·홍보물 맞춤 제작. 머그컵·텀블러·볼펜·에코백 등. 무료 에디터, 소량 주문 가능, 전국 배송.',
+        keywords: '판촉물,판촉물제작,홍보물,기념품제작,기업판촉물,맞춤판촉물,기업기념품'
+    },
+    'tshirt-print': {
+        title: '티셔츠 인쇄 - 맞춤 단체복 & 의류 프린팅 | 카멜레온프린팅',
+        desc: '맞춤 티셔츠 인쇄. 단체복·유니폼·이벤트복·커플티. 무료 에디터로 디자인, 1장부터 주문, 다양한 원단.',
+        keywords: '티셔츠인쇄,맞춤티셔츠,단체복,유니폼제작,의류인쇄,커플티,이벤트복'
+    },
+    'banner-stand': {
+        title: '배너 스탠드 - 실내외 X배너·롤업배너 | 카멜레온프린팅',
+        desc: '배너 스탠드 맞춤 제작. X배너·롤업배너·거치대. 전시회·행사·매장 홍보용. 무료 에디터, 당일 출고 가능.',
+        keywords: '배너스탠드,X배너,롤업배너,실내배너,전시배너,행사배너,배너거치대,배너제작'
+    },
+    standee: {
+        title: '등신대 제작 - 실물 크기 인물 패널 | 카멜레온프린팅',
+        desc: '등신대(실물크기 패널) 맞춤 제작. 아이돌·캐릭터·이벤트용. 무료 에디터로 직접 디자인, 고화질 UV 인쇄.',
+        keywords: '등신대,등신대제작,실물크기패널,아이돌등신대,캐릭터등신대,이벤트등신대,포토존등신대'
+    },
+};
+
 const SKIP_PATHS = ['board', 'mypage', 'success', 'fail', 'partner', 'global_admin', 'driver', 'admin_m_secret_882', 'marketing_bot'];
 
 async function fetchFromSupabase(path) {
@@ -70,19 +144,28 @@ function generateCategoryHtml(products, path) {
         }
     });
 
-    const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "CollectionPage", "name": path, "url": `${DOMAIN}/${path}`,
+    const seo = CATEGORY_SEO[path];
+    const title = seo ? seo.title : `${path} - 카멜레온프린팅`;
+    const desc = seo ? seo.desc : `${path} - 카멜레온프린팅`;
+    const keywords = seo ? seo.keywords : '';
+
+    const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": `${DOMAIN}/${path}`,
         "mainEntity": { "@type": "ItemList", "itemListElement": jsonLdItems } });
 
     return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(path)} - 카멜레온프린팅</title>
-<meta name="description" content="${esc(path)} - 카멜레온프린팅">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
+${keywords ? `<meta name="keywords" content="${esc(keywords)}">` : ''}
 <meta name="robots" content="index, follow">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${esc(products[0]?.img_url || '')}">
 <meta property="og:url" content="${DOMAIN}/${path}">
 <link rel="canonical" href="${DOMAIN}/${path}">
 ${hreflangTags('/' + path)}
 <script type="application/ld+json">${jsonLd}</script>
-</head><body><h1>${esc(path)} - 카멜레온프린팅</h1>
+</head><body><h1>${esc(title)}</h1>
+<p>${esc(desc)}</p>
 <p>${products.length} products</p>${items}
 <p><a href="${DOMAIN}/">카멜레온프린팅</a></p></body></html>`;
 }
