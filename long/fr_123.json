@@ -1535,5 +1535,10 @@
   "referral_thanks": "Votre parrain sera ravi. Merci !",
   "referral_refund_notice": "Si le parrain a retiré la récompense, ce montant sera déduit du remboursement.",
   "related_products": "Produits Recommandés",
-  "title_install_time": "🔧 Sélectionner l'heure d'installation"
+  "title_install_time": "🔧 Sélectionner l'heure d'installation",
+  "dsm_where_to_print": "Sur quoi souhaitez-vous imprimer ?",
+  "dsm_search_hint": "Recherchez ce que vous voulez créer",
+  "dsm_search_examples": "Ex : Bannières, Cartes de visite, Affiches, Autocollants",
+  "dsm_no_results": "Aucun produit trouvé.",
+  "dsm_load_failed": "Échec du chargement des produits"
 }

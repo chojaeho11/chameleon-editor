@@ -1145,5 +1145,10 @@
   "quote_success": "견적 요청이 전송되었습니다! 24시간 내에 이메일로 답변 드리겠습니다.",
   "quote_error": "전송 실패. 채팅 상담으로 문의해주세요.",
   "related_products": "추천 상품",
-  "title_install_time": "🔧 설치 시간 선택"
+  "title_install_time": "🔧 설치 시간 선택",
+  "dsm_where_to_print": "어디에 인쇄할까요?",
+  "dsm_search_hint": "인쇄할 상품을 검색해보세요",
+  "dsm_search_examples": "예: 현수막, 명함, 포스터, 스티커 등",
+  "dsm_no_results": "해당 조건의 상품이 없습니다.",
+  "dsm_load_failed": "상품 로드 실패"
 }

@@ -1521,5 +1521,10 @@
   "quote_success": "Quote request sent! We'll reply to your email within 24 hours.",
   "quote_error": "Failed to send. Please contact us via live chat.",
   "related_products": "Recommended",
-  "title_install_time": "🔧 Select Installation Time"
+  "title_install_time": "🔧 Select Installation Time",
+  "dsm_where_to_print": "What would you like to print on?",
+  "dsm_search_hint": "Search for what you want to create",
+  "dsm_search_examples": "e.g. Banners, Business Cards, Posters, Stickers",
+  "dsm_no_results": "No products found for this search.",
+  "dsm_load_failed": "Failed to load products"
 }

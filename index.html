@@ -10085,9 +10085,12 @@ window.dsmShowPrintCategory = async function(wMM, hMM, label) {
     window._dsmProducts = null;
     document.getElementById('dsm-main-view').style.display = 'none';
     document.getElementById('dsm-print-view').style.display = 'block';
-    document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '\u00d7' + hMM + 'mm) \u2014 어디에 인쇄할까요?';
+    var _t = window.t || function(k,d){return d;};
+    document.getElementById('dsm-print-title').textContent = label + ' (' + wMM + '\u00d7' + hMM + 'mm) \u2014 ' + _t('dsm_where_to_print', '어디에 인쇄할까요?');
     document.getElementById('dsmPrintSearch').value = '';
-    document.getElementById('dsmProductGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:#94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px; margin-bottom:12px;"></i><br>인쇄할 상품을 검색해보세요<br><span style="font-size:12px;">예: 현수막, 명함, 포스터, 스티커 등</span></div>';
+    var _searchHint = _t('dsm_search_hint', '인쇄할 상품을 검색해보세요');
+    var _searchEx = _t('dsm_search_examples', '예: 현수막, 명함, 포스터, 스티커 등');
+    document.getElementById('dsmProductGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:#94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px; margin-bottom:12px;"></i><br>' + _searchHint + '<br><span style="font-size:12px;">' + _searchEx + '</span></div>';
 };
 
 window.dsmBackToMain = function() {
@@ -10098,16 +10101,27 @@ window.dsmBackToMain = function() {
 window.dsmFilterPrintProducts = function(keyword) {
     var term = (keyword || '').trim();
     if (!term) {
-        document.getElementById('dsmProductGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:#94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px; margin-bottom:12px;"></i><br>인쇄할 상품을 검색해보세요<br><span style="font-size:12px;">예: 현수막, 명함, 포스터, 스티커 등</span></div>';
+        var _t = window.t || function(k,d){return d;};
+        var _sh = _t('dsm_search_hint', '인쇄할 상품을 검색해보세요');
+        var _se = _t('dsm_search_examples', '예: 현수막, 명함, 포스터, 스티커 등');
+        document.getElementById('dsmProductGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:#94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px; margin-bottom:12px;"></i><br>' + _sh + '<br><span style="font-size:12px;">' + _se + '</span></div>';
         return;
     }
     window.dsmRenderProducts(term);
+};
+
+window._dsmLocalName = function(p) {
+    var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    if (country === 'JP' && p.name_jp) return p.name_jp;
+    if (country !== 'KR' && p.name_us) return p.name_us;
+    return p.name || p.code || '';
 };
 
 window.dsmRenderProducts = async function(keyword) {
     var grid = document.getElementById('dsmProductGrid');
     var term = (keyword || '').toLowerCase().trim();
     if (!term) return;
+    var _t = window.t || function(k,d){return d;};
 
     // 최초 검색 시 DB 로드 (1회만)
     if (!window._dsmProducts) {
@@ -10115,7 +10129,7 @@ window.dsmRenderProducts = async function(keyword) {
         try {
             if (typeof sb === 'undefined') throw new Error('DB');
             var prodResp = await sb.from('admin_products')
-                .select('name, code, img_url, category, price, width_mm, height_mm')
+                .select('name, name_jp, name_us, code, img_url, category, price, width_mm, height_mm')
                 .or('partner_id.is.null,partner_status.eq.approved')
                 .not('img_url', 'is', null).neq('img_url', '')
                 .order('sort_order', { ascending: true });
@@ -10124,28 +10138,30 @@ window.dsmRenderProducts = async function(keyword) {
                 return !excSet.has(p.category);
             });
         } catch(e) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">상품 로드 실패</div>';
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">' + _t('dsm_load_failed', '상품 로드 실패') + '</div>';
             return;
         }
     }
 
     var items = window._dsmProducts.filter(function(p) {
-        return (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term);
+        var localN = window._dsmLocalName(p).toLowerCase();
+        return localN.includes(term) || (p.name || '').toLowerCase().includes(term) || (p.code || '').toLowerCase().includes(term);
     });
 
     if (!items.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:8px;"></i><br>해당 조건의 상품이 없습니다.</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-box-open" style="font-size:24px; margin-bottom:8px;"></i><br>' + _t('dsm_no_results', '해당 조건의 상품이 없습니다.') + '</div>';
         return;
     }
 
     grid.innerHTML = '';
     items.forEach(function(p) {
+        var displayName = window._dsmLocalName(p);
         var div = document.createElement('div');
         div.style.cssText = 'cursor:pointer; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; transition:all 0.2s; background:#fff;';
         div.onmouseover = function() { div.style.borderColor='#6366f1'; div.style.transform='translateY(-2px)'; div.style.boxShadow='0 4px 12px rgba(99,102,241,0.12)'; };
         div.onmouseout = function() { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
         div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
-            '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (p.name || p.code) + '</div></div>';
+            '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + displayName + '</div></div>';
         div.onclick = function() {
             document.getElementById('designStartModal').style.display = 'none';
             if (window.loadProductDetailAndOpen) {

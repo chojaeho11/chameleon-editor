@@ -1535,5 +1535,10 @@
   "referral_thanks": "Ihr Empfehler wird sich freuen. Vielen Dank!",
   "referral_refund_notice": "Wenn der Empfehler die Belohnung bereits abgehoben hat, wird dieser Betrag von der Rückerstattung abgezogen.",
   "related_products": "Empfohlene Produkte",
-  "title_install_time": "🔧 Installationszeit wählen"
+  "title_install_time": "🔧 Installationszeit wählen",
+  "dsm_where_to_print": "Worauf möchten Sie drucken?",
+  "dsm_search_hint": "Suchen Sie, was Sie erstellen möchten",
+  "dsm_search_examples": "z.B. Banner, Visitenkarten, Poster, Aufkleber",
+  "dsm_no_results": "Keine Produkte gefunden.",
+  "dsm_load_failed": "Produkte konnten nicht geladen werden"
 }

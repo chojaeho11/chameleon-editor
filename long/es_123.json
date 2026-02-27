@@ -1535,5 +1535,10 @@
   "referral_thanks": "¡Tu referido estará feliz. ¡Gracias!",
   "referral_refund_notice": "Si el referido ya retiró la recompensa, ese monto se deducirá del reembolso.",
   "related_products": "Productos Recomendados",
-  "title_install_time": "🔧 Seleccionar hora de instalación"
+  "title_install_time": "🔧 Seleccionar hora de instalación",
+  "dsm_where_to_print": "¿En qué desea imprimir?",
+  "dsm_search_hint": "Busque lo que quiere crear",
+  "dsm_search_examples": "Ej: Pancartas, Tarjetas, Pósters, Pegatinas",
+  "dsm_no_results": "No se encontraron productos.",
+  "dsm_load_failed": "Error al cargar productos"
 }
