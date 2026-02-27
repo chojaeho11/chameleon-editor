@@ -15,9 +15,11 @@ const NPC_TEXTS = {
         enterSize: '사이즈를 입력하시면 견적을 드릴게요 📏',
         selectOption: '옵션을 선택하세요 ✨',
         finalCart: '구매하기 버튼만 누르면 끝! 수정이 필요하다면 에디터에서 디자인하기를 눌러주세요 🎉',
+        finalEditor: '에디터에서 디자인하기를 눌러 직접 디자인해보세요! 🎨',
         chooseDesign: '어떻게 디자인하시겠어요?',
         selfDesign: '🎨 직접 디자인하기',
         expertDesign: '👨‍🎨 전문가에게 의뢰',
+        expertMsg: '채팅을 열어드릴테니 상담사와 상담 후 진행해 주세요 💬',
         selectQty: '수량을 선택해주세요 📦',
         cartFinal: '장바구니에 담으면 끝! 🎉',
         next: '다음 →',
@@ -33,9 +35,11 @@ const NPC_TEXTS = {
         enterSize: 'サイズを入力するとお見積もりをお出しします 📏',
         selectOption: 'オプションを選択してください ✨',
         finalCart: '購入ボタンを押すだけで完了！修正が必要な場合はエディタでデザインしてください 🎉',
+        finalEditor: 'エディタでデザインボタンを押して直接デザインしてみましょう！ 🎨',
         chooseDesign: 'どのようにデザインしますか？',
         selfDesign: '🎨 自分でデザイン',
         expertDesign: '👨‍🎨 専門家に依頼',
+        expertMsg: 'チャットを開きますので、担当者とご相談ください 💬',
         selectQty: '数量を選択してください 📦',
         cartFinal: 'カートに入れたら完了です！ 🎉',
         next: '次へ →',
@@ -51,9 +55,11 @@ const NPC_TEXTS = {
         enterSize: "Enter the size and we'll give you a quote 📏",
         selectOption: 'Select your options ✨',
         finalCart: "Just click Purchase and you're done! Need changes? Use the Design Editor 🎉",
+        finalEditor: 'Click "Design in Editor" to create your own design! 🎨',
         chooseDesign: 'How would you like to design?',
         selfDesign: '🎨 Design it myself',
         expertDesign: '👨‍🎨 Request an expert',
+        expertMsg: "We'll open a chat for you. Please consult with our specialist 💬",
         selectQty: 'Select quantity 📦',
         cartFinal: 'Add to cart and done! 🎉',
         next: 'Next →',
@@ -69,9 +75,11 @@ const NPC_TEXTS = {
         enterSize: '输入尺寸，我们会为您报价 📏',
         selectOption: '请选择选项 ✨',
         finalCart: '点击购买就完成了！需要修改请使用设计编辑器 🎉',
+        finalEditor: '点击"在编辑器中设计"来创建您的设计！ 🎨',
         chooseDesign: '您想如何设计？',
         selfDesign: '🎨 自己设计',
         expertDesign: '👨‍🎨 委托专家',
+        expertMsg: '我们将为您打开聊天窗口，请与顾问沟通后进行 💬',
         selectQty: '请选择数量 📦',
         cartFinal: '加入购物车就完成了！ 🎉',
         next: '下一步 →',
@@ -87,9 +95,11 @@ const NPC_TEXTS = {
         enterSize: 'أدخل الحجم وسنعطيك عرض سعر 📏',
         selectOption: 'اختر الخيارات ✨',
         finalCart: 'اضغط شراء وانتهيت! تحتاج تعديل؟ استخدم محرر التصميم 🎉',
+        finalEditor: 'انقر على "التصميم في المحرر" لإنشاء تصميمك! 🎨',
         chooseDesign: 'كيف تريد التصميم؟',
         selfDesign: '🎨 تصميم بنفسي',
         expertDesign: '👨‍🎨 طلب خبير',
+        expertMsg: 'سنفتح لك الدردشة، يرجى التشاور مع المختص 💬',
         selectQty: 'اختر الكمية 📦',
         cartFinal: 'أضف للسلة وانتهيت! 🎉',
         next: 'التالي →',
@@ -105,9 +115,11 @@ const NPC_TEXTS = {
         enterSize: 'Ingresa el tamaño y te daremos un presupuesto 📏',
         selectOption: 'Selecciona tus opciones ✨',
         finalCart: '¡Presiona Comprar y listo! ¿Necesitas cambios? Usa el Editor de Diseño 🎉',
+        finalEditor: '¡Haz clic en "Diseñar en el Editor" para crear tu diseño! 🎨',
         chooseDesign: '¿Cómo quieres diseñar?',
         selfDesign: '🎨 Diseñar yo mismo',
         expertDesign: '👨‍🎨 Solicitar experto',
+        expertMsg: 'Abriremos un chat para ti. Consulta con nuestro especialista 💬',
         selectQty: 'Selecciona la cantidad 📦',
         cartFinal: '¡Agregar al carrito y listo! 🎉',
         next: 'Siguiente →',
@@ -123,9 +135,11 @@ const NPC_TEXTS = {
         enterSize: 'Geben Sie die Größe ein für ein Angebot 📏',
         selectOption: 'Wählen Sie Ihre Optionen ✨',
         finalCart: 'Einfach Kaufen klicken und fertig! Änderungen nötig? Nutzen Sie den Design-Editor 🎉',
+        finalEditor: 'Klicken Sie auf "Im Editor gestalten" um Ihr Design zu erstellen! 🎨',
         chooseDesign: 'Wie möchten Sie gestalten?',
         selfDesign: '🎨 Selbst gestalten',
         expertDesign: '👨‍🎨 Experte beauftragen',
+        expertMsg: 'Wir öffnen einen Chat für Sie. Bitte beraten Sie sich mit unserem Spezialisten 💬',
         selectQty: 'Menge wählen 📦',
         cartFinal: 'In den Warenkorb und fertig! 🎉',
         next: 'Weiter →',
@@ -141,9 +155,11 @@ const NPC_TEXTS = {
         enterSize: 'Entrez la taille pour un devis 📏',
         selectOption: 'Sélectionnez vos options ✨',
         finalCart: 'Cliquez sur Acheter et c\'est fini ! Besoin de modifications ? Utilisez l\'éditeur 🎉',
+        finalEditor: 'Cliquez sur "Designer dans l\'éditeur" pour créer votre design ! 🎨',
         chooseDesign: 'Comment souhaitez-vous concevoir ?',
         selfDesign: '🎨 Concevoir moi-même',
         expertDesign: '👨‍🎨 Demander un expert',
+        expertMsg: 'Nous ouvrirons un chat pour vous. Veuillez consulter notre spécialiste 💬',
         selectQty: 'Choisissez la quantité 📦',
         cartFinal: 'Ajoutez au panier et c\'est fini ! 🎉',
         next: 'Suivant →',
@@ -173,6 +189,7 @@ window.NpcWizard = {
     active: false,
     step: 0,
     hasFile: null,
+    designChoice: null, // 'self' or 'expert'
     product: null,
     isCustom: false,
     isGeneral: false,
@@ -186,6 +203,7 @@ window.NpcWizard = {
         this.isCustom = !!product.is_custom_size;
         this.isGeneral = !!product.is_general_product;
         this.hasFile = null;
+        this.designChoice = null;
         this.step = 0;
         this.active = true;
 
@@ -355,21 +373,28 @@ window.NpcWizard = {
                 this._showSection('buttons');
                 if (this.isGeneral) {
                     this._renderBubble(_t('cartFinal'), null, true);
-                } else {
+                } else if (this.hasFile) {
                     this._renderBubble(_t('finalCart'), null, true);
+                } else {
+                    // 직접 디자인 경로 → 에디터 안내
+                    this._renderBubble(_t('finalEditor'), null, true);
                 }
                 this._insertToSlot('total', 'buttons');
                 if (window.updateModalTotal) window.updateModalTotal();
                 break;
 
             case 'chooseDesign':
-                this._showSection('total');
+                // 파일 없음 → 직접/의뢰 먼저 선택 (사이즈 입력 전)
                 this._renderBubble(_t('chooseDesign'), [
-                    { label: _t('selfDesign'), cls: 'npc-yes', onclick: "window.confirmChoice('editor')" },
-                    { label: _t('expertDesign'), cls: 'npc-expert', onclick: "if(window.ChamBot)window.ChamBot.toggle();" },
+                    { label: _t('selfDesign'), cls: 'npc-yes', onclick: "window.NpcWizard._chooseSelfDesign()" },
+                    { label: _t('expertDesign'), cls: 'npc-expert', onclick: "window.NpcWizard._chooseExpert()" },
                 ], true);
-                this._insertToSlot('total');
-                if (window.updateModalTotal) window.updateModalTotal();
+                break;
+
+            case 'expertChat':
+                // 전문가 의뢰 → 안내 메시지 + 채팅 열기
+                this._renderBubble(_t('expertMsg'), null, true);
+                setTimeout(() => { if (window.ChamBot) window.ChamBot.toggle(); }, 500);
                 break;
         }
     },
@@ -379,8 +404,20 @@ window.NpcWizard = {
         if (has) {
             this._goStep('upload');
         } else {
-            this._goStep('size');
+            // 파일 없음 → 직접/의뢰 먼저 선택
+            this._goStep('chooseDesign');
         }
+    },
+
+    // 직접 디자인 선택 → 사이즈 입력으로
+    _chooseSelfDesign() {
+        this.designChoice = 'self';
+        this._goStep('size');
+    },
+
+    // 전문가 의뢰 선택 → 채팅 열기
+    _chooseExpert() {
+        this._goStep('expertChat');
     },
 
     _afterSize() {
@@ -401,25 +438,21 @@ window.NpcWizard = {
 
     _afterOptions() {
         if (window.updateModalTotal) window.updateModalTotal();
-        if (this.isGeneral || this.hasFile) {
-            this._goStep('final');
-        } else {
-            this._goStep('chooseDesign');
-        }
+        this._goStep('final');
     },
 
     _goPrev() {
         const step = this.step;
         if (step === 'upload') { this._goStep('askFile'); return; }
         if (step === 'size' && this.hasFile) { this._goStep('upload'); return; }
-        if (step === 'size' && !this.hasFile) { this._goStep('askFile'); return; }
+        if (step === 'size' && !this.hasFile) { this._goStep('chooseDesign'); return; }
+        if (step === 'chooseDesign') { this._goStep('askFile'); return; }
+        if (step === 'expertChat') { this._goStep('chooseDesign'); return; }
         if (step === 'options' && this.isCustom) { this._goStep('size'); return; }
         if (step === 'options' && this.isGeneral) { this._goStep('qty'); return; }
         if (step === 'final' && this.hasOptions) { this._goStep('options'); return; }
         if (step === 'final' && this.isCustom) { this._goStep('size'); return; }
         if (step === 'final' && this.isGeneral) { this._goStep('qty'); return; }
-        if (step === 'chooseDesign' && this.hasOptions) { this._goStep('options'); return; }
-        if (step === 'chooseDesign') { this._goStep('size'); return; }
     },
 
     _watchFileUpload() {
