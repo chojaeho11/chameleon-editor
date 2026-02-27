@@ -45,14 +45,21 @@ export function initAuth() {
                 } catch (e) {
                     console.error("로그아웃 오류(무시):", e);
                 } finally {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    document.cookie.split(";").forEach((c) => {
-                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-                    });
-                    // ★ 현재 언어 파라미터를 유지하여 같은 언어 페이지로 복귀
-                    const _lp = new URLSearchParams(window.location.search).get('lang');
-                    window.location.replace(_lp ? '/?lang=' + _lp : '/');
+                    // ★ 에디터 활성 중이면 새로고침/리다이렉트 없이 UI만 갱신
+                    if (document.body.classList.contains('editor-active')) {
+                        localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token');
+                        if (window.updateUserSession) window.updateUserSession(null);
+                        if (btnLogin.updateState) btnLogin.updateState();
+                    } else {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        document.cookie.split(";").forEach((c) => {
+                            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                        });
+                        // ★ 현재 언어 파라미터를 유지하여 같은 언어 페이지로 복귀
+                        const _lp = new URLSearchParams(window.location.search).get('lang');
+                        window.location.replace(_lp ? '/?lang=' + _lp : '/');
+                    }
                 }
             } else {
                 openLoginModal();

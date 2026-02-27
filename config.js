@@ -55,7 +55,26 @@ export function initConfig() {
                 updateUserSession(session);
                 // UI 갱신
                 const btnLogin = document.getElementById("btnLoginBtn");
-                if(btnLogin && btnLogin.updateState) btnLogin.updateState();
+                if(btnLogin && btnLogin.updateState) {
+                    btnLogin.updateState();
+                } else if (btnLogin) {
+                    // updateState가 없을 때 직접 텍스트+onclick 갱신 (에디터 내 등)
+                    const _t = window.t || ((k, d) => d);
+                    if (session) {
+                        btnLogin.innerText = _t('btn_logout', 'Logout');
+                        btnLogin.style.fontWeight = 'bold';
+                        btnLogin.style.color = '#ef4444';
+                    } else {
+                        btnLogin.innerText = _t('btn_login', 'Login');
+                        btnLogin.style.fontWeight = 'normal';
+                        btnLogin.style.color = '';
+                        // 로그아웃 상태 → 클릭 시 로그인 모달 열기
+                        btnLogin.onclick = () => {
+                            const modal = document.getElementById('loginModal');
+                            if (modal) modal.style.display = 'flex';
+                        };
+                    }
+                }
 
                 const btnLib = document.getElementById("btnMyLibrary");
                 if(btnLib) btnLib.style.display = session ? "inline-flex" : "none";
@@ -70,7 +89,7 @@ export function initConfig() {
                     });
                 }
 
-                if (event === 'SIGNED_OUT' && !window.__authInProgress) location.reload();
+                if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active')) location.reload();
 
                 // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시
                 if (event === 'PASSWORD_RECOVERY') {

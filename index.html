@@ -4941,8 +4941,11 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                     // [수정] 다국어 적용
                     if (confirm(window.t('msg_logout_confirm'))) {
                         if(typeof sb !== 'undefined') await sb.auth.signOut();
-                        localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); 
-                        window.location.reload(); 
+                        localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token');
+                        // ★ 에디터 활성 중이면 새로고침 안 함 (디자인 보존)
+                        if (!document.body.classList.contains('editor-active')) {
+                            window.location.reload();
+                        }
                     }
                 };
             }
@@ -7832,8 +7835,11 @@ if (w >= 20 && h >= 20) {
                     // [수정] "로그아웃 하시겠습니까?" -> window.t('msg_logout_confirm')
                     if (confirm(window.t('msg_logout_confirm'))) {
                         await sb.auth.signOut();
-                        localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); 
-                        window.location.reload(); 
+                        localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token');
+                        // ★ 에디터 활성 중이면 새로고침 안 함 (디자인 보존)
+                        if (!document.body.classList.contains('editor-active')) {
+                            window.location.reload();
+                        }
                     }
                 };
             }
