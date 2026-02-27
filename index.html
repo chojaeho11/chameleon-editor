@@ -6245,17 +6245,18 @@ window.showChoiceModal = async function(key) {
     // ★ 추천상품 로드 (대분류 기준 4개, 모바일에서 옵션과 상세설명 사이)
     (async function loadRelatedProducts() {
         try {
-            if (!sb) return;
+            const dbClient = window.sb || sb;
+            if (!dbClient) return;
             // 대분류에 속하는 모든 소분류 코드 수집
             const topCat = targetCat || product.category;
             let subCatCodes = [product.category];
-            if (window.globalSubCats) {
-                subCatCodes = window.globalSubCats
+            if (window.globalSubCats && window.globalSubCats.length > 0) {
+                const found = window.globalSubCats
                     .filter(c => c.top_category_code === topCat)
                     .map(c => c.code);
-                if (subCatCodes.length === 0) subCatCodes = [product.category];
+                if (found.length > 0) subCatCodes = found;
             }
-            const { data: relatedRaw } = await sb.from('admin_products')
+            const { data: relatedRaw } = await dbClient.from('admin_products')
                 .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, category')
                 .in('category', subCatCodes)
                 .neq('code', product.code)
