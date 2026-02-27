@@ -27,16 +27,16 @@ export function initAuth() {
 
         // 로그아웃 로직
         btnLogin.onclick = async () => {
-            const t = window.translations || {}; // 클릭 시점 번역
+            const _t = window.t || ((k, d) => d);
 
             if (window.currentUser) {
                 const msg = window.isAdmin
-                    ? (t['confirm_admin_logout'] || "관리자 계정에서 로그아웃 하시겠습니까?")
-                    : (t['confirm_logout'] || "로그아웃 하시겠습니까?");
-                
+                    ? _t('confirm_admin_logout', "관리자 계정에서 로그아웃 하시겠습니까?")
+                    : _t('confirm_logout', "로그아웃 하시겠습니까?");
+
                 if (!confirm(msg)) return;
 
-                btnLogin.innerText = t['msg_processing'] || "처리 중...";
+                btnLogin.innerText = _t('msg_processing', "처리 중...");
 
                 try {
                     if (sb && sb.auth) {
@@ -174,8 +174,7 @@ window.openAuthModal = function(mode, callback) {
 
 // ★ 여기가 가장 중요한 수정 부분입니다 (모달 내부 텍스트 번역 적용)
 function updateModalUI() {
-    // 번역 데이터 가져오기
-    const t = window.translations || {};
+    const _tt = (key, fb) => (window.t ? window.t(key, fb) : fb);
 
     const title = document.getElementById("authTitle");
     const actionBtn = document.getElementById("btnAuthAction");
@@ -188,22 +187,19 @@ function updateModalUI() {
     const quickSignupBtn = document.getElementById("btnQuickSignup");
     const switchRow = document.getElementById("authSwitchRow");
 
-    // ★ 번역 적용 (CDN 캐시로 data-i18n 미적용 대비)
+    // ★ 번역 적용
     const loginId = document.getElementById("loginId");
-    if (loginId && t['placeholder_id']) loginId.placeholder = t['placeholder_id'];
-    if (quickSignupBtn && t['btn_quick_signup']) {
+    if (loginId) loginId.placeholder = _tt('placeholder_id', '아이디 (이메일도 가능)');
+    if (quickSignupBtn) {
         const sp = quickSignupBtn.querySelector('span');
-        if (sp) sp.innerText = t['btn_quick_signup'];
+        if (sp) sp.innerText = _tt('btn_quick_signup', '1초 간편 가입');
     }
     if (signupGuide) {
         const guideTitle = signupGuide.querySelector('div:first-child');
         const guideDesc = signupGuide.querySelector('div:last-child');
-        if (guideTitle && t['signup_guide_title']) guideTitle.innerText = t['signup_guide_title'];
-        if (guideDesc && t['signup_guide_desc']) guideDesc.innerHTML = t['signup_guide_desc'];
+        if (guideTitle) guideTitle.innerText = _tt('signup_guide_title', '1초 간편 가입');
+        if (guideDesc) guideDesc.innerHTML = _tt('signup_guide_desc', '아이디와 비밀번호 입력만으로<br>바로 가입됩니다. 인증 메일 없음!');
     }
-
-    // ★ 번역 헬퍼: window.t 우선, 없으면 translations 객체, 없으면 fallback
-    const _tt = (key, fb) => (window.t && window.t(key) !== key ? window.t(key) : t[key] || fb);
 
     if (isSignUpMode) {
         // [회원가입 모드] — 아이디 + 비번 + 비번확인
@@ -297,7 +293,7 @@ async function handleAuthAction() {
             // ★ 새로고침 없이 세션 갱신
             if (window.updateUserSession) window.updateUserSession(data.session);
 
-            showToast(t['msg_login_success'] || "로그인 완료!", "success");
+            showToast(window.t('msg_login_success', '로그인 완료!'), "success");
             document.getElementById("loginModal").style.display = "none";
 
             // 콜백 실행 (저장/결제 재시도)
@@ -308,7 +304,7 @@ async function handleAuthAction() {
             }
         }
     } catch (e) {
-        const errPrefix = t['err_prefix'] || "오류: ";
+        const errPrefix = window.t('err_prefix', '오류: ');
         showToast(errPrefix + e.message, "error");
     } finally {
         btn.innerText = originalText;
@@ -318,9 +314,7 @@ async function handleAuthAction() {
 }
 
 async function handleSocialLogin(provider) {
-    const t = window.translations || {};
-
-    if (!sb) { showToast(t['err_db_connection'] || "DB 미연결", "error"); return; }
+    if (!sb) { showToast(window.t('err_db_connection', 'DB 미연결'), "error"); return; }
     // ★ 현재 URL의 lang 파라미터를 유지하여 로그인 후 같은 언어 페이지로 복귀
     const redirectUrl = window.location.href.split('#')[0];
     const { data, error } = await sb.auth.signInWithOAuth({
@@ -329,7 +323,7 @@ async function handleSocialLogin(provider) {
     });
 
     if (error) {
-        const errPrefix = t['err_login_fail'] || "로그인 실패: ";
+        const errPrefix = window.t('err_login_fail', '로그인 실패: ');
         showToast(errPrefix + error.message, "error");
     }
 }
