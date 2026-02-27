@@ -3,6 +3,13 @@
 // 기존 모달 요소를 단계별로 show/hide하여 게임 NPC 안내 느낌 제공
 // ═══════════════════════════════════════════════════════════════
 
+// NPC 캐릭터 이미지 (mood별)
+const NPC_IMG = {
+    ask:      './img/npc-1.jpg',   // 앉아서 손모으기 (진입/질문)
+    excited:  './img/npc-2.jpg',   // 놀라는 표정 (파일 업로드 후)
+    thumbsup: './img/npc-3.jpg',   // 엄지척 (마지막 단계)
+};
+
 const NPC_TEXTS = {
     kr: {
         askFile: '인쇄할 파일이 있으신가요?',
@@ -194,19 +201,16 @@ window.NpcWizard = {
         const addonArea = rightActions.querySelector('#addonCategoryArea');
         this.hasOptions = !!(addonArea && addonArea.querySelectorAll('input[name="userOption"]').length > 0);
 
-        // 기존 요소들을 data-npc-section으로 그룹화
+        // 기존 요소들을 data-npc 속성으로 찾기
         this._tagSections(rightActions);
 
         // 모든 섹션 숨기기
         this._hideAll();
 
-        // NPC 가이드 영역 삽입
+        // NPC 가이드 영역을 맨 위에 삽입
         this._createGuideArea(rightActions);
 
-        // 헤더(썸네일+상품명)는 항상 보이기
-        this._showSection('header');
-
-        // 첫 번째 스텝
+        // 첫 번째 스텝 (헤더는 _goStep 내에서 보여줌)
         if (this.isGeneral) {
             this._goStep('qty');
         } else {
@@ -230,7 +234,6 @@ window.NpcWizard = {
     // 기존 요소들에 data-npc 속성으로 섹션 찾기
     _tagSections(container) {
         this.sections = {};
-        // data-npc 속성으로 안정적으로 찾기
         this.sections.header = container.querySelector('[data-npc="header"]');
         this.sections.upload = container.querySelector('[data-npc="upload"]');
         this.sections.uploadPreview = container.querySelector('[data-npc="uploadPreview"]');
@@ -242,7 +245,6 @@ window.NpcWizard = {
         this.sections.options = container.querySelector('#addonCategoryArea');
         this.sections.total = container.querySelector('[data-npc="total"]');
         this.sections.buttons = container.querySelector('[data-npc="buttons"]');
-        // uploadedFiles는 upload 섹션 내부에 있음
         this.sections.uploadedFiles = container.querySelector('#uploadedFilesList');
     },
 
@@ -262,20 +264,27 @@ window.NpcWizard = {
         if (el) el.style.display = 'none';
     },
 
+    // NPC 가이드 영역을 컨테이너 맨 위에 삽입
     _createGuideArea(container) {
         if (this.guideEl) this.guideEl.remove();
         const div = document.createElement('div');
         div.id = 'npcGuideArea';
         div.className = 'npc-guide-area';
-        container.insertBefore(div, this.sections.header ? this.sections.header.nextSibling : container.firstChild);
+        // ★ 맨 위에 삽입 (헤더보다 위) — 위치 고정
+        container.insertBefore(div, container.firstChild);
         this.guideEl = div;
     },
 
-    _renderBubble(text, choices, showNav) {
+    // mood: 'ask' | 'excited' | 'thumbsup'
+    _renderBubble(text, choices, showNav, mood) {
         if (!this.guideEl) return;
+        mood = mood || 'ask';
+        const imgSrc = NPC_IMG[mood] || NPC_IMG.ask;
         let html = `
             <div class="npc-bubble-wrap">
-                <div class="npc-avatar">🦎</div>
+                <div class="npc-avatar">
+                    <img src="${imgSrc}" alt="Guide" onerror="this.style.display='none';this.parentElement.textContent='🦎';">
+                </div>
                 <div class="npc-bubble">${text}</div>
             </div>`;
         if (choices && choices.length > 0) {
@@ -291,7 +300,7 @@ window.NpcWizard = {
             </div>`;
         }
         this.guideEl.innerHTML = html;
-        // 스크롤 to guide
+        // 맨 위로 스크롤 (가이드 영역)
         this.guideEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
 
@@ -299,6 +308,7 @@ window.NpcWizard = {
     _goStep(stepName) {
         this.step = stepName;
         this._hideAll();
+        // 헤더(썸네일+상품명)는 가이드 아래에 항상 표시
         this._showSection('header');
 
         switch (stepName) {
@@ -306,19 +316,17 @@ window.NpcWizard = {
                 this._renderBubble(_t('askFile'), [
                     { label: _t('yes'), cls: 'npc-yes', onclick: "window.NpcWizard._chooseFile(true)" },
                     { label: _t('no'), cls: 'npc-no', onclick: "window.NpcWizard._chooseFile(false)" },
-                ]);
+                ], false, 'ask');
                 break;
 
             case 'upload':
                 this._showSection('upload');
-                // uploadPreview와 uploadedFiles는 upload 핸들러가 파일 업로드 시 자동으로 보여줌
-                // 이미 파일이 있으면 preview도 보여주기
                 if (window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
                     this._showSection('uploadPreview');
                 }
                 this._renderBubble(_t('uploadFile'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._goStep('size')" },
-                ], true);
+                ], true, 'ask');
                 break;
 
             case 'size':
@@ -329,7 +337,7 @@ window.NpcWizard = {
                 if (this.isCustom) {
                     this._renderBubble(_t('enterSize'), [
                         { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._afterSize()" },
-                    ], true);
+                    ], true, 'ask');
                 }
                 break;
 
@@ -339,25 +347,24 @@ window.NpcWizard = {
                 this._showSection('qty');
                 this._renderBubble(_t('selectQty'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._afterQty()" },
-                ]);
+                ], false, 'ask');
                 break;
 
             case 'options':
                 this._showSection('options');
                 this._renderBubble(_t('selectOption'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._afterOptions()" },
-                ], true);
+                ], true, 'excited');
                 break;
 
             case 'final':
                 this._showSection('total');
                 this._showSection('buttons');
                 if (this.isGeneral) {
-                    this._renderBubble(_t('cartFinal'), null, true);
+                    this._renderBubble(_t('cartFinal'), null, true, 'thumbsup');
                 } else {
-                    this._renderBubble(_t('finalCart'), null, true);
+                    this._renderBubble(_t('finalCart'), null, true, 'thumbsup');
                 }
-                // 가격 업데이트
                 if (window.updateModalTotal) window.updateModalTotal();
                 break;
 
@@ -366,7 +373,7 @@ window.NpcWizard = {
                 this._renderBubble(_t('chooseDesign'), [
                     { label: _t('selfDesign'), cls: 'npc-yes', onclick: "window.confirmChoice('editor')" },
                     { label: _t('expertDesign'), cls: 'npc-expert', onclick: "if(window.ChamBot)window.ChamBot.toggle();" },
-                ], true);
+                ], true, 'thumbsup');
                 if (window.updateModalTotal) window.updateModalTotal();
                 break;
         }
@@ -402,7 +409,6 @@ window.NpcWizard = {
         if (this.isGeneral || this.hasFile) {
             this._goStep('final');
         } else {
-            // 파일 없음 → 에디터/전문가 선택
             this._goStep('chooseDesign');
         }
     },
@@ -421,7 +427,7 @@ window.NpcWizard = {
         if (step === 'chooseDesign') { this._goStep('size'); return; }
     },
 
-    // 파일 업로드 감시 (파일이 올라오면 다음 스텝으로 자동 유도)
+    // 파일 업로드 감시 (파일이 올라오면 놀라는 표정으로 버블 업데이트)
     _watchFileUpload() {
         if (this._fileWatcher) clearInterval(this._fileWatcher);
         let lastCount = 0;
@@ -430,10 +436,10 @@ window.NpcWizard = {
             const files = window._pendingUploadedFiles || [];
             if (files.length > lastCount && this.step === 'upload') {
                 lastCount = files.length;
-                // 파일 올라옴 → 버블 업데이트
+                // 파일 올라옴 → 놀라는 표정 + 버블 업데이트
                 this._renderBubble(_t('uploaded'), [
                     { label: _t('next'), cls: 'npc-next', onclick: "window.NpcWizard._goStep('size')" },
-                ], true);
+                ], true, 'excited');
                 this._showSection('uploadPreview');
             }
         }, 500);
