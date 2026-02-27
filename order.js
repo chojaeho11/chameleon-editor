@@ -685,6 +685,12 @@ async function openInstallationTimeModal() {
     // 100만원 미만: 시간 선택 불가
     if (slotInfo.type === 'date_only') {
         grid.innerHTML = '';
+        // ★ 타이틀 번역
+        const titleEl0 = document.getElementById("installTimeTitle");
+        if (titleEl0) {
+            const t0 = { 'kr':'🔧 설치 시간 선택','ja':'🔧 設置時間の選択','en':'🔧 Select Installation Time','zh':'🔧 选择安装时间','ar':'🔧 اختيار وقت التركيب','es':'🔧 Seleccionar hora de instalación','de':'🔧 Installationszeit wählen','fr':'🔧 Sélectionner l\'heure d\'installation' };
+            titleEl0.textContent = t0[CURRENT_LANG] || t0['en'];
+        }
         if (notice) {
             notice.style.display = 'block';
             const msgs = {

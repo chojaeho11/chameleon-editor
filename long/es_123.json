@@ -1530,5 +1530,6 @@
   "label_referral_discount": "Descuento referido",
   "referral_thanks": "¡Tu referido estará feliz. ¡Gracias!",
   "referral_refund_notice": "Si el referido ya retiró la recompensa, ese monto se deducirá del reembolso.",
-  "related_products": "Productos Recomendados"
+  "related_products": "Productos Recomendados",
+  "title_install_time": "🔧 Seleccionar hora de instalación"
 }

@@ -1530,5 +1530,6 @@
   "label_referral_discount": "Réduction parrainage",
   "referral_thanks": "Votre parrain sera ravi. Merci !",
   "referral_refund_notice": "Si le parrain a retiré la récompense, ce montant sera déduit du remboursement.",
-  "related_products": "Produits Recommandés"
+  "related_products": "Produits Recommandés",
+  "title_install_time": "🔧 Sélectionner l'heure d'installation"
 }

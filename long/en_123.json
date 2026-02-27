@@ -1516,5 +1516,6 @@
   "quote_alert_required": "Please fill in your email and project details.",
   "quote_success": "Quote request sent! We'll reply to your email within 24 hours.",
   "quote_error": "Failed to send. Please contact us via live chat.",
-  "related_products": "Recommended"
+  "related_products": "Recommended",
+  "title_install_time": "🔧 Select Installation Time"
 }

@@ -1530,5 +1530,6 @@
   "label_referral_discount": "Empfehlungsrabatt",
   "referral_thanks": "Ihr Empfehler wird sich freuen. Vielen Dank!",
   "referral_refund_notice": "Wenn der Empfehler die Belohnung bereits abgehoben hat, wird dieser Betrag von der Rückerstattung abgezogen.",
-  "related_products": "Empfohlene Produkte"
+  "related_products": "Empfohlene Produkte",
+  "title_install_time": "🔧 Installationszeit wählen"
 }

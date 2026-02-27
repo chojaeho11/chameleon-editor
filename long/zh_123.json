@@ -1530,5 +1530,6 @@
   "label_referral_discount": "推荐人折扣",
   "referral_thanks": "您的推荐人会很高兴的，谢谢！",
   "referral_refund_notice": "如推荐人已提取奖励金额，退款时将扣除该金额。",
-  "related_products": "推荐商品"
+  "related_products": "推荐商品",
+  "title_install_time": "🔧 选择安装时间"
 }

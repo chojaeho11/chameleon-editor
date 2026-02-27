@@ -1140,5 +1140,6 @@
   "quote_alert_required": "이메일과 문의 내용을 입력해주세요.",
   "quote_success": "견적 요청이 전송되었습니다! 24시간 내에 이메일로 답변 드리겠습니다.",
   "quote_error": "전송 실패. 채팅 상담으로 문의해주세요.",
-  "related_products": "추천 상품"
+  "related_products": "추천 상품",
+  "title_install_time": "🔧 설치 시간 선택"
 }

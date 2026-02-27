@@ -1513,5 +1513,6 @@
   "quote_alert_required": "メールアドレスとお問い合わせ内容をご入力ください。",
   "quote_success": "見積もり依頼を送信しました！24時間以内にメールでご返信いたします。",
   "quote_error": "送信に失敗しました。チャットでお問い合わせください。",
-  "related_products": "おすすめ商品"
+  "related_products": "おすすめ商品",
+  "title_install_time": "🔧 設置時間の選択"
 }

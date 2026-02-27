@@ -221,11 +221,11 @@ function updateModalUI() {
         if (quickSignupBtn) quickSignupBtn.style.display = "block"; // 1초 버튼 표시
     }
 
-    // ★ 한국=카카오+구글, 해외=구글만
-    const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || window.__SITE_CODE || 'KR';
-    const _isKR = (_country === 'KR');
+    // ★ 한국=카카오+구글, 해외=구글만 (hostname 폴백 포함)
+    const _h = window.location.hostname || '';
+    const _isJPorUS = _h.includes('cafe0101') || _h.includes('cafe3355');
     const kakaoBtn = document.getElementById("btnKakaoLogin");
-    if (kakaoBtn) kakaoBtn.style.display = _isKR ? 'flex' : 'none';
+    if (kakaoBtn) kakaoBtn.style.display = _isJPorUS ? 'none' : 'flex';
 }
 
 async function handleAuthAction() {
