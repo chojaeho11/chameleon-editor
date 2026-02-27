@@ -214,8 +214,11 @@ export default async function middleware(request) {
     const isPrerender = request.headers.get('X-Prerender') === '1' || /prerender/i.test(ua);
     if (isPrerender) return;
 
-    // 1. Try Prerender.io first
-    try {
+    // Pages with custom-built HTML (no SPA route → skip Prerender.io)
+    const CUSTOM_LANDING = ['editor'];
+
+    // 1. Try Prerender.io first (skip for custom landing pages that don't exist in SPA)
+    if (!CUSTOM_LANDING.includes(path)) try {
         const prerenderRes = await fetch(`https://service.prerender.io/${request.url}`, {
             headers: {
                 'X-Prerender-Token': PRERENDER_TOKEN,

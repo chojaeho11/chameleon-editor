@@ -247,8 +247,11 @@ export default {
             // Skip admin/internal paths
             const skipPaths = ['board', 'mypage', 'success', 'fail', 'partner', 'global_admin', 'driver', 'admin_m_secret_882', 'marketing_bot'];
             if (!skipPaths.includes(path)) {
-                // Try Prerender.io first (fully rendered + cached page, works for ALL pages incl. homepage)
-                try {
+                // Pages with custom-built HTML (no SPA route → skip Prerender.io)
+                const CUSTOM_LANDING = ['editor'];
+
+                // Try Prerender.io first (skip for custom landing pages)
+                if (!CUSTOM_LANDING.includes(path)) try {
                     const prerenderRes = await fetch(`https://service.prerender.io/${request.url}`, {
                         headers: {
                             'X-Prerender-Token': PRERENDER_TOKEN,
