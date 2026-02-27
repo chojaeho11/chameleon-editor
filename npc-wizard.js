@@ -529,10 +529,15 @@ window.NpcWizard = {
                 if (slot) {
                     slot.innerHTML = `
                         <div class="npc-hc-input-wrap">
-                            <input type="number" id="npcHcAmount" class="npc-hc-amount" placeholder="${_t('hcAmountPlaceholder')}" min="0" inputmode="numeric">
+                            <input type="text" id="npcHcAmount" class="npc-hc-amount" placeholder="${_t('hcAmountPlaceholder')}" inputmode="numeric">
                             <button class="npc-choice-btn npc-yes npc-hc-pay-btn" onclick="window.NpcWizard._honeycombPay()">${_t('hcPay')}</button>
                         </div>
                     `;
+                    const inp = slot.querySelector('#npcHcAmount');
+                    if (inp) inp.addEventListener('input', function() {
+                        const raw = this.value.replace(/[^0-9]/g, '');
+                        this.value = raw ? Number(raw).toLocaleString() : '';
+                    });
                 }
                 break;
             }
@@ -591,7 +596,7 @@ window.NpcWizard = {
     _honeycombPay() {
         const amountInput = document.getElementById('npcHcAmount');
         if (!amountInput) return;
-        const amount = parseInt(amountInput.value);
+        const amount = parseInt(amountInput.value.replace(/[^0-9]/g, ''));
         if (!amount || amount <= 0) {
             if (window.showToast) window.showToast(_t('hcEnterAmount'), 'warn');
             amountInput.focus();
