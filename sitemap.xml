@@ -116,6 +116,35 @@
     <priority>0.9</priority>
   </url>
 
+  <!-- ===== Editor Landing Page (3 languages) ===== -->
+  <url>
+    <loc>https://www.cafe2626.com/editor</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/editor"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe0101.com/editor</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/editor"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cafe3355.com/editor</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cafe3355.com/editor"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/editor"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- ===== Blog/Community (8 languages) ===== -->
   <url>
     <loc>https://www.cafe2626.com/board</loc>
