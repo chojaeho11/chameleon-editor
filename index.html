@@ -5436,7 +5436,7 @@ window.goHome = function() {
 
                 const headerHTML = `
                     <div class="product-full-header">
-                        <button class="back-btn" onclick="window.history.back()">
+                        <button class="back-btn" onclick="if(window.NpcWizard&&window.NpcWizard.active){window.NpcWizard.destroy();}window.continueShopping?window.continueShopping():window.history.back();">
                             <i class="fa-solid fa-arrow-left"></i> ${_backText}
                         </button>
                         <div class="page-title">${productName}</div>
@@ -5742,7 +5742,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
 
                 const headerHTML = `
                     <div class="product-full-header">
-                        <button class="back-btn" onclick="window.history.back()">
+                        <button class="back-btn" onclick="if(window.NpcWizard&&window.NpcWizard.active){window.NpcWizard.destroy();}window.continueShopping?window.continueShopping():window.history.back();">
                             <i class="fa-solid fa-arrow-left"></i> ${_backText}
                         </button>
                         <div class="page-title">${productName}</div>
@@ -6255,6 +6255,12 @@ window.showChoiceModal = async function(key) {
     modal.style.display = 'flex';
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
+
+    // ★ 상품 설명 내 링크 → 새 탭으로 열기 (페이지 이탈 방지)
+    modal.querySelectorAll('.product-detail-render a, .choice-left-content a').forEach(a => {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener');
+    });
 
     // ★ NPC 가이드 위자드 초기화 (PC + 모바일 공통)
     if (window.NpcWizard) {
