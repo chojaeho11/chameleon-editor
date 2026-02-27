@@ -807,7 +807,7 @@
         const bodyH = h - adH; // 선반 영역 높이
         const shelfCount = pd.shelfCount || Math.floor(bodyH / shH);
         const innerW = w - thick * 2;
-        const sideMargin = 0.02; // 옆판이 상단 선반보다 2cm 위로
+        const sideMargin = 0.07; // 옆판이 상단 선반보다 7cm 위로
 
         // Helper: create textured material from dataURL
         function makeTexMat(dataUrl, mirror) {
@@ -853,14 +853,12 @@
         backBody.position.set(0, bodyH / 2, -d / 2);
         wallGroup.add(backBody);
 
-        // 2. 상단 간판 — BoxGeometry(텍스처) + 라운드캡(장식)
+        // 2. 상단 간판 — 전체 높이 BoxGeometry(텍스처) + 라운드캡(장식, 위에 얹음)
         var adRadius = Math.min(w * 0.1, 0.03);
-        var adBodyH = adH - adRadius; // 사각형 부분
-        if (adBodyH < 0.01) adBodyH = adH * 0.8;
-        var adCapH = adH - adBodyH;   // 라운딩 캡 높이
+        var adCapH = adRadius; // 라운딩 캡 높이 (장식)
 
-        // 2a. 사각형 메인 — BoxGeometry (텍스처 정상 매핑)
-        var adGeo = new THREE.BoxGeometry(w, adBodyH, thick);
+        // 2a. 전체 높이 광고판 — BoxGeometry (텍스처 전체 매핑)
+        var adGeo = new THREE.BoxGeometry(w, adH, thick);
         var adMats = [
             bgMat.clone(), bgMat.clone(), // +X, -X
             bgMat.clone(), bgMat.clone(), // +Y, -Y
@@ -868,15 +866,15 @@
             bgMat.clone()                   // -Z back
         ];
         var adPanel = new THREE.Mesh(adGeo, adMats);
-        adPanel.position.set(0, bodyH + adBodyH / 2, -d / 2);
+        adPanel.position.set(0, bodyH + adH / 2, -d / 2);
         wallGroup.add(adPanel);
 
-        // 2b. 라운드 캡 (상단 장식, bgColor)
+        // 2b. 라운드 캡 (상단 장식, bgColor, 광고판 위에 얹음)
         if (adCapH > 0.005) {
             var capShape = createRoundedTopShape(w, adCapH, adRadius);
             var capGeo = new THREE.ExtrudeGeometry(capShape, { depth: thick, bevelEnabled: false });
             var capPanel = new THREE.Mesh(capGeo, bgMat.clone());
-            capPanel.position.set(0, bodyH + adBodyH, -d / 2 - thick / 2);
+            capPanel.position.set(0, bodyH + adH, -d / 2 - thick / 2);
             wallGroup.add(capPanel);
         }
 
