@@ -1201,6 +1201,10 @@ async function addCanvasToCart() {
         calcProduct._calculated_price = true;
         calcProduct.is_custom_size = true;
         calcProduct._wall_config = window.__wallConfig ? { ...window.__wallConfig } : null;
+    // ★ 종이매대: 고정가격 사용 (회배계산 적용 안함)
+    } else if (window.__paperDisplayData) {
+        calcProduct.is_custom = true;
+        calcProduct._calculated_price = true;
     } else if (product.is_custom_size) {
         // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지
         if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || 0) - currentMmW) < 5) {
