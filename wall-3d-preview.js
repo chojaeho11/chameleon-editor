@@ -830,21 +830,6 @@
             return mat;
         }
 
-        // Helper: 라운딩 사각형 Shape (상단 모서리만 라운딩)
-        function createRoundedTopShape(width, height, radius) {
-            var shape = new THREE.Shape();
-            var hw = width / 2;
-            var r = Math.min(radius, hw, height / 2);
-            shape.moveTo(-hw, 0);
-            shape.lineTo(-hw, height - r);
-            shape.quadraticCurveTo(-hw, height, -hw + r, height);
-            shape.lineTo(hw - r, height);
-            shape.quadraticCurveTo(hw, height, hw, height - r);
-            shape.lineTo(hw, 0);
-            shape.lineTo(-hw, 0);
-            return shape;
-        }
-
         // BoxGeometry face order: [+X(Right), -X(Left), +Y(Top), -Y(Bottom), +Z(Front), -Z(Back)]
 
         // 1. 뒷판 하단부 (선반 영역, bgColor만)
@@ -853,30 +838,18 @@
         backBody.position.set(0, bodyH / 2, -d / 2);
         wallGroup.add(backBody);
 
-        // 2. 상단 간판 — 전체 높이 BoxGeometry(텍스처) + 라운드캡(장식, 위에 얹음)
-        var adRadius = Math.min(w * 0.1, 0.03);
-        var adCapH = adRadius; // 라운딩 캡 높이 (장식)
-
-        // 2a. 전체 높이 광고판 — BoxGeometry (텍스처 전체 매핑)
+        // 2. 상단 광고판 — 사각 BoxGeometry (텍스처 앞뒤 양면)
+        console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
         var adGeo = new THREE.BoxGeometry(w, adH, thick);
         var adMats = [
-            bgMat.clone(), bgMat.clone(), // +X, -X
-            bgMat.clone(), bgMat.clone(), // +Y, -Y
-            makeTexMat(textures[0], false), // +Z front (텍스처)
-            bgMat.clone()                   // -Z back
+            bgMat.clone(), bgMat.clone(),        // +X, -X
+            bgMat.clone(), bgMat.clone(),        // +Y, -Y
+            makeTexMat(textures[0], false),       // +Z front
+            makeTexMat(textures[0], false)        // -Z back (양면 텍스처)
         ];
         var adPanel = new THREE.Mesh(adGeo, adMats);
         adPanel.position.set(0, bodyH + adH / 2, -d / 2);
         wallGroup.add(adPanel);
-
-        // 2b. 라운드 캡 (상단 장식, bgColor, 광고판 위에 얹음)
-        if (adCapH > 0.005) {
-            var capShape = createRoundedTopShape(w, adCapH, adRadius);
-            var capGeo = new THREE.ExtrudeGeometry(capShape, { depth: thick, bevelEnabled: false });
-            var capPanel = new THREE.Mesh(capGeo, bgMat.clone());
-            capPanel.position.set(0, bodyH + adH, -d / 2 - thick / 2);
-            wallGroup.add(capPanel);
-        }
 
         // 3. 옆면 — 상단 선반보다 약간 위까지만 (bodyH + sideMargin)
         var sideH = bodyH + sideMargin;
@@ -893,9 +866,9 @@
         leftPanel.position.set(-w / 2, sideH / 2, 0);
         wallGroup.add(leftPanel);
 
-        // 우측 옆면 (미러링)
+        // 우측 옆면 (미러링 없이 동일 디자인)
         var rightMats = [
-            makeTexMat(textures[1], true),        // +X (outer, mirrored)
+            makeTexMat(textures[1], false),        // +X (outer, 정상)
             bgMat.clone(),                         // -X (inner)
             bgMat.clone(), bgMat.clone(),
             bgMat.clone(), bgMat.clone()
