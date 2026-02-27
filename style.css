@@ -497,6 +497,17 @@ button, input, textarea, select { font-family: inherit; }
 .wall-face-tab:hover { background: rgba(99,102,241,0.4); color: #fff; }
 .wall-face-tab.active { background: #6366f1; color: #fff; box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
 
+/* Paper Display Face Tabs */
+.pd-face-tabs { display: flex; gap: 2px; }
+.pd-face-tab {
+    padding: 7px 16px; border: none; border-radius: 7px;
+    background: rgba(255,255,255,0.12); color: #94a3b8;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s;
+}
+.pd-face-tab:hover { background: rgba(99,102,241,0.3); color: #c7d2fe; }
+.pd-face-tab.active { background: #6366f1; color: #fff; box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
+
 /* 3D Wall Sidebar */
 .wall3d-preset-btn {
     padding: 8px 4px; background: rgba(255,255,255,0.06); color: #e2e8f0;

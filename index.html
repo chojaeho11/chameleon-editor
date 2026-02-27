@@ -2578,6 +2578,9 @@ async function handleSubReturn() {
             <!-- 가벽 양면 탭 -->
             <div id="wallFaceTabs" style="display:none; position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(15,15,30,0.95); border-radius:10px; padding:6px 8px; gap:4px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.4); pointer-events:auto;">
             </div>
+            <!-- 종이매대 면 탭 -->
+            <div id="pdFaceTabs" class="pd-face-tabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3);">
+            </div>
 
             <div id="pageControls" class="page-controls-bar">
                 <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
@@ -7503,11 +7506,12 @@ if (w >= 20 && h >= 20) {
         if(inpW) inpW.value = displayW;
         if(inpH) inpH.value = displayH;
 
-        // 3D 미리보기 버튼: 허니콤보드 상품일 때만 표시
+        // 3D 미리보기 버튼: 허니콤보드 또는 종이매대 상품일 때 표시
         const btn3d = document.getElementById('btn3DPreview');
         if (btn3d) {
             const isHoneycomb = (product && product.category === 'honeycomb') || (product && product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
-            btn3d.style.display = isHoneycomb ? 'flex' : 'none';
+            const isPd = (typeof key === 'string' && key.startsWith('pd_'));
+            btn3d.style.display = (isHoneycomb || isPd) ? 'flex' : 'none';
         }
 
         // 가벽설정 버튼: wall 모드일 때만 표시
@@ -7556,6 +7560,28 @@ if (w >= 20 && h >= 20) {
             if (wallFaceTabs) wallFaceTabs.style.display = 'none';
             window.__boxMode = false;
             window.__wallMode = false;
+        }
+
+        // 종이매대 모드 감지
+        const pdFaceTabs = document.getElementById('pdFaceTabs');
+        const isPaperDisplay = window.__paperDisplayMode;
+        if (isPaperDisplay) {
+            const pd = window.__paperDisplayData;
+            window.__paperDisplayMode = false; // 사용 후 초기화
+
+            if (pdFaceTabs) pdFaceTabs.style.display = 'flex';
+
+            setTimeout(async () => {
+                try {
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=123');
+                    initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor);
+                } catch (e) {
+                    console.error('initPaperDisplayPages error:', e);
+                }
+            }, 300);
+        } else {
+            if (pdFaceTabs) pdFaceTabs.style.display = 'none';
+            window.__pdMode = false;
         }
 
         // 3. 화면 전환

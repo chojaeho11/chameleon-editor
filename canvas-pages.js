@@ -624,3 +624,104 @@ window.downloadBoxLayoutPDF = async function() {
         if (btn) { btn.innerText = orig; btn.disabled = false; }
     }
 };
+
+// ─── 종이매대 모드: 3면 페이지 (상단광고, 옆면, 선반) ───
+
+const PD_FACE_NAMES = ['Top Ad', 'Side Panel', 'Shelf'];
+
+export function initPaperDisplayPages(widthMM, heightMM, adHeightMM, shelfHeightMM, depthMM, bgColor) {
+    const PX = 3.7795; // mm → px
+    const faces = [
+        { name: 'Top Ad',     w: widthMM * PX,  h: adHeightMM * PX },
+        { name: 'Side Panel', w: depthMM * PX,   h: heightMM * PX },
+        { name: 'Shelf',      w: widthMM * PX,  h: shelfHeightMM * PX },
+    ];
+
+    pageDataList = [];
+    currentPageIndex = 0;
+
+    faces.forEach((face) => {
+        canvas.clear();
+        const board = new fabric.Rect({
+            width: face.w, height: face.h,
+            fill: bgColor || '#ffffff',
+            left: 0, top: 0, selectable: false, evented: false, isBoard: true
+        });
+        canvas.add(board);
+        canvas.sendToBack(board);
+        pageDataList.push(canvas.toJSON(CUSTOM_PROPS));
+    });
+
+    // 첫 페이지(상단 광고) 로드
+    currentPageIndex = 0;
+    loadPage(0);
+    setTimeout(() => resizeCanvasToFit(), 50);
+    updatePageCounter();
+
+    // 종이매대 탭 UI 생성
+    buildPdFaceTabsUI();
+
+    // 전역 노출
+    window.__pdMode = true;
+}
+
+function buildPdFaceTabsUI() {
+    const container = document.getElementById('pdFaceTabs');
+    if (!container) return;
+    container.style.display = 'flex';
+    container.innerHTML = '';
+
+    const t = window.t || ((k, d) => d);
+    const names = [
+        t('pd_tab_ad', '상단 광고'),
+        t('pd_tab_side', '옆면'),
+        t('pd_tab_shelf', '선반'),
+    ];
+
+    names.forEach((name, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'pd-face-tab' + (i === 0 ? ' active' : '');
+        btn.textContent = name;
+        btn.dataset.index = i;
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            window.switchPdFace(i);
+        });
+        container.appendChild(btn);
+    });
+}
+
+window.switchPdFace = function(index) {
+    const pages = window.__pageDataList || pageDataList;
+    if (index < 0 || index >= pages.length) return;
+    if (index === currentPageIndex) return;
+
+    saveCurrentPageState();
+    currentPageIndex = index;
+
+    // 모듈-레벨 동기화
+    if (pages !== pageDataList) pageDataList = pages;
+
+    const json = pages[index];
+    if (!json) return;
+
+    canvas.loadFromJSON(json, () => {
+        const board = canvas.getObjects().find(o => o.isBoard);
+        if (board) {
+            canvas.sendToBack(board);
+            canvas.clipPath = new fabric.Rect({
+                left: 0, top: 0,
+                width: board.width, height: board.height,
+                absolutePositioned: true
+            });
+        }
+        updatePageCounter();
+        canvas.requestRenderAll();
+        resizeCanvasToFit();
+    });
+
+    // 탭 active 업데이트
+    document.querySelectorAll('.pd-face-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+    });
+};

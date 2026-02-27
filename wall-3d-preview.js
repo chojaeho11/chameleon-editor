@@ -715,6 +715,192 @@
         }
     }
 
+    // ─── Capture Paper Display faces (3 pages) ───
+    async function capturePaperDisplayFaces() {
+        const fabricCanvas = window.canvas;
+        if (!fabricCanvas) return [];
+
+        if (window.savePageState) window.savePageState();
+        const origIndex = window._getPageIndex ? window._getPageIndex() : 0;
+        const pageList = window.__pageDataList;
+        if (!pageList || pageList.length < 3) return [];
+
+        const textures = [];
+        for (let i = 0; i < 3; i++) {
+            await new Promise(resolve => {
+                fabricCanvas.loadFromJSON(pageList[i], () => resolve());
+            });
+
+            const board = fabricCanvas.getObjects().find(o => o.isBoard);
+            if (!board) { textures.push(null); continue; }
+
+            try {
+                const vpt = fabricCanvas.viewportTransform.slice();
+                fabricCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+                fabricCanvas.setDimensions({ width: board.width, height: board.height });
+                fabricCanvas.renderAll();
+
+                const dataUrl = fabricCanvas.toDataURL({
+                    format: 'png', left: 0, top: 0,
+                    width: board.width, height: board.height
+                });
+                textures.push(dataUrl);
+
+                fabricCanvas.viewportTransform = vpt;
+            } catch (e) {
+                console.error('PD face capture failed for face ' + i, e);
+                textures.push(null);
+            }
+        }
+
+        // Restore original page
+        await new Promise(resolve => {
+            fabricCanvas.loadFromJSON(pageList[origIndex], () => {
+                const b = fabricCanvas.getObjects().find(o => o.isBoard);
+                if (b) fabricCanvas.sendToBack(b);
+                const stage = document.querySelector('.stage');
+                if (stage) fabricCanvas.setDimensions({ width: stage.clientWidth, height: stage.clientHeight });
+                fabricCanvas.renderAll();
+                resolve();
+            });
+        });
+
+        return textures;
+    }
+
+    // ─── Build Paper Display 3D ───
+    function buildPaperDisplay(pd, textures) {
+        if (wallGroup) {
+            scene.remove(wallGroup);
+            wallGroup.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                    else child.material.dispose();
+                }
+            });
+        }
+
+        wallGroup = new THREE.Group();
+
+        const w = pd.widthMM / 1000;   // meters
+        const h = pd.heightMM / 1000;
+        const d = pd.depthMM / 1000;
+        const adH = pd.adHeightMM / 1000;
+        const shH = pd.shelfHeightMM / 1000;
+        const thick = 0.005; // 5mm thickness
+        const bgColor = new THREE.Color(pd.bgColor || '#ffffff');
+        const bgMat = new THREE.MeshStandardMaterial({ color: bgColor, roughness: 0.5 });
+
+        // Helper: create textured material from dataURL
+        function makeTexMat(dataUrl, mirror) {
+            if (!dataUrl) return bgMat.clone();
+            const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function () {
+                const tex = new THREE.Texture(img);
+                tex.needsUpdate = true;
+                tex.encoding = THREE.sRGBEncoding;
+                if (mirror) {
+                    tex.wrapS = THREE.RepeatWrapping;
+                    tex.repeat.x = -1;
+                }
+                mat.map = tex;
+                mat.needsUpdate = true;
+            };
+            img.src = dataUrl;
+            return mat;
+        }
+
+        // 1. 뒷판 (전체 높이, bgColor)
+        const backGeo = new THREE.BoxGeometry(w, h, thick);
+        const backPanel = new THREE.Mesh(backGeo, bgMat.clone());
+        backPanel.position.set(0, h / 2, -d / 2);
+        wallGroup.add(backPanel);
+
+        // 2. 상단 광고판 (textures[0]) — 전면
+        const adGeo = new THREE.BoxGeometry(w, adH, thick);
+        // BoxGeometry faces: +X, -X, +Y, -Y, +Z(front), -Z(back)
+        const adMats = [
+            bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone(),
+            makeTexMat(textures[0], false),  // front
+            bgMat.clone()                     // back
+        ];
+        const adPanel = new THREE.Mesh(adGeo, adMats);
+        adPanel.position.set(0, h - adH / 2, d / 2);
+        wallGroup.add(adPanel);
+
+        // 3. 좌측 옆면 (textures[1])
+        const sideGeo = new THREE.BoxGeometry(thick, h, d);
+        const leftMats = [
+            bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone(),
+            bgMat.clone(),
+            makeTexMat(textures[1], false)  // -Z = outer face of left panel
+        ];
+        // For left panel, the outer face is -X direction
+        const leftOuterMats = [
+            bgMat.clone(),                       // +X (inner)
+            makeTexMat(textures[1], false),       // -X (outer)
+            bgMat.clone(), bgMat.clone(),
+            bgMat.clone(), bgMat.clone()
+        ];
+        const leftPanel = new THREE.Mesh(sideGeo, leftOuterMats);
+        leftPanel.position.set(-w / 2, h / 2, 0);
+        wallGroup.add(leftPanel);
+
+        // 4. 우측 옆면 (textures[1] 미러링)
+        const rightOuterMats = [
+            makeTexMat(textures[1], true),        // +X (outer, mirrored)
+            bgMat.clone(),                         // -X (inner)
+            bgMat.clone(), bgMat.clone(),
+            bgMat.clone(), bgMat.clone()
+        ];
+        const rightPanel = new THREE.Mesh(sideGeo.clone(), rightOuterMats);
+        rightPanel.position.set(w / 2, h / 2, 0);
+        wallGroup.add(rightPanel);
+
+        // 5. 선반들 (textures[2])
+        const usableH = h - adH;
+        const shelfCount = pd.shelfCount || Math.floor(usableH / shH);
+        for (let i = 0; i < shelfCount; i++) {
+            const shelfGeo = new THREE.BoxGeometry(w - thick * 2, thick, d);
+            // 선반 상면에 텍스처
+            const shelfMats = [
+                bgMat.clone(), bgMat.clone(),
+                makeTexMat(textures[2], false),   // +Y (top)
+                bgMat.clone(),                     // -Y (bottom)
+                bgMat.clone(), bgMat.clone()
+            ];
+            const shelfY = h - adH - i * shH - thick / 2;
+            const shelf = new THREE.Mesh(shelfGeo, shelfMats);
+            shelf.position.set(0, shelfY, 0);
+            wallGroup.add(shelf);
+        }
+
+        // 6. 바닥판
+        const bottomGeo = new THREE.BoxGeometry(w, thick, d);
+        const bottom = new THREE.Mesh(bottomGeo, bgMat.clone());
+        bottom.position.set(0, thick / 2, 0);
+        wallGroup.add(bottom);
+
+        scene.add(wallGroup);
+
+        // Camera positioning
+        const maxDim = Math.max(w, h, d);
+        spherical.radius = maxDim * 2.5;
+        spherical.theta = Math.PI / 5;
+        spherical.phi = Math.PI / 3;
+        target.x = 0;
+        target.y = h / 2;
+        target.z = 0;
+        updateCamera();
+
+        // Dimension label
+        const label = document.getElementById('wall3dDimLabel');
+        if (label) label.textContent = pd.widthMM + 'mm × ' + pd.heightMM + 'mm × ' + pd.depthMM + 'mm';
+    }
+
     // ─── Public API ───
     window.open3DPreview = async function () {
         const modal = document.getElementById('wall3DModal');
@@ -732,8 +918,14 @@
 
         initScene(container);
 
-        // 박스 모드 vs 벽 모드
-        if (window.__boxDims && window.__boxMode) {
+        // 종이매대 모드
+        if (window.__pdMode && window.__paperDisplayData) {
+            const pd = window.__paperDisplayData;
+            const faceTextures = await capturePaperDisplayFaces();
+            buildPaperDisplay(pd, faceTextures);
+        }
+        // 박스 모드
+        else if (window.__boxDims && window.__boxMode) {
             const { w, h, d } = window.__boxDims;
             const faceTextures = await captureAllBoxFaces();
             buildBox(w, h, d, faceTextures);
@@ -780,6 +972,14 @@
 
     window.refresh3DTexture = async function () {
         if (!isInitialized) return;
+
+        // 종이매대 모드: 3면 재캡처
+        if (window.__pdMode && window.__paperDisplayData) {
+            const pd = window.__paperDisplayData;
+            const faceTextures = await capturePaperDisplayFaces();
+            buildPaperDisplay(pd, faceTextures);
+            return;
+        }
 
         // 박스 모드: 전체 6면 재캡처
         if (window.__boxDims && window.__boxMode) {

@@ -40,6 +40,7 @@ const NPC_TEXTS = {
         pdEnterSize: '매대의 전체 크기를 입력해주세요 📐',
         pdWidth: '가로 (cm)',
         pdHeight: '높이 (cm)',
+        pdDepth: '깊이 (cm)',
         pdAdHeightDesc: '상단 광고판 높이를 입력하세요 (기본 20cm) 📢',
         pdShelfHeight: '선반 높이 (cm)',
         pdCalcResult: '선반 계산 결과',
@@ -63,6 +64,9 @@ const NPC_TEXTS = {
         pdNone: '없음',
         pdAddToCart: '🛒 장바구니 담기',
         pdQty: '수량',
+        pdDepthLabel: '깊이',
+        pdOpenEditor: '에디터로 디자인하기',
+        pdSkipDesign: '디자인 없이 진행',
     },
     ja: {
         hcAskConsulted: 'マネージャーとご相談されましたか？ 🤝',
@@ -96,6 +100,7 @@ const NPC_TEXTS = {
         pdEnterSize: '什器の全体サイズを入力してください 📐',
         pdWidth: '幅 (cm)',
         pdHeight: '高さ (cm)',
+        pdDepth: '奥行き (cm)',
         pdAdHeightDesc: '上部広告パネルの高さを入力してください（デフォルト20cm） 📢',
         pdShelfHeight: '棚の高さ (cm)',
         pdCalcResult: '棚の計算結果',
@@ -119,6 +124,9 @@ const NPC_TEXTS = {
         pdNone: 'なし',
         pdAddToCart: '🛒 カートに入れる',
         pdQty: '数量',
+        pdDepthLabel: '奥行き',
+        pdOpenEditor: 'エディタでデザイン',
+        pdSkipDesign: 'デザインなしで進む',
     },
     en: {
         hcAskConsulted: 'Have you consulted with our manager? 🤝',
@@ -152,6 +160,7 @@ const NPC_TEXTS = {
         pdEnterSize: 'Enter the overall size of the display stand 📐',
         pdWidth: 'Width (cm)',
         pdHeight: 'Height (cm)',
+        pdDepth: 'Depth (cm)',
         pdAdHeightDesc: 'Enter the top ad panel height (default 20cm) 📢',
         pdShelfHeight: 'Shelf height (cm)',
         pdCalcResult: 'Shelf Calculation Result',
@@ -175,6 +184,9 @@ const NPC_TEXTS = {
         pdNone: 'None',
         pdAddToCart: '🛒 Add to Cart',
         pdQty: 'Quantity',
+        pdDepthLabel: 'Depth',
+        pdOpenEditor: 'Design in Editor',
+        pdSkipDesign: 'Skip design',
     },
     zh: {
         hcAskConsulted: '您已与经理咨询过了吗？ 🤝',
@@ -208,6 +220,7 @@ const NPC_TEXTS = {
         pdEnterSize: '请输入展示架的整体尺寸 📐',
         pdWidth: '宽度 (cm)',
         pdHeight: '高度 (cm)',
+        pdDepth: '深度 (cm)',
         pdAdHeightDesc: '请输入顶部广告板高度（默认20cm） 📢',
         pdShelfHeight: '货架高度 (cm)',
         pdCalcResult: '货架计算结果',
@@ -231,6 +244,9 @@ const NPC_TEXTS = {
         pdNone: '无',
         pdAddToCart: '🛒 加入购物车',
         pdQty: '数量',
+        pdDepthLabel: '深度',
+        pdOpenEditor: '在编辑器中设计',
+        pdSkipDesign: '跳过设计',
     },
     ar: {
         hcAskConsulted: 'هل تشاورت مع المدير؟ 🤝',
@@ -264,6 +280,7 @@ const NPC_TEXTS = {
         pdEnterSize: 'أدخل الحجم الكلي لحامل العرض 📐',
         pdWidth: 'العرض (سم)',
         pdHeight: 'الارتفاع (سم)',
+        pdDepth: 'العمق (سم)',
         pdAdHeightDesc: 'أدخل ارتفاع لوحة الإعلان العلوية (افتراضي 20 سم) 📢',
         pdShelfHeight: 'ارتفاع الرف (سم)',
         pdCalcResult: 'نتيجة حساب الأرفف',
@@ -287,6 +304,9 @@ const NPC_TEXTS = {
         pdNone: 'لا شيء',
         pdAddToCart: '🛒 أضف للسلة',
         pdQty: 'الكمية',
+        pdDepthLabel: 'العمق',
+        pdOpenEditor: 'التصميم في المحرر',
+        pdSkipDesign: 'تخطي التصميم',
     },
     es: {
         hcAskConsulted: '¿Ha consultado con nuestro gerente? 🤝',
@@ -320,6 +340,7 @@ const NPC_TEXTS = {
         pdEnterSize: 'Ingrese el tamaño total del exhibidor 📐',
         pdWidth: 'Ancho (cm)',
         pdHeight: 'Alto (cm)',
+        pdDepth: 'Profundidad (cm)',
         pdAdHeightDesc: 'Ingrese la altura del panel publicitario superior (predeterminado 20cm) 📢',
         pdShelfHeight: 'Altura del estante (cm)',
         pdCalcResult: 'Resultado del cálculo de estantes',
@@ -343,6 +364,9 @@ const NPC_TEXTS = {
         pdNone: 'Ninguno',
         pdAddToCart: '🛒 Agregar al carrito',
         pdQty: 'Cantidad',
+        pdDepthLabel: 'Profundidad',
+        pdOpenEditor: 'Diseñar en el Editor',
+        pdSkipDesign: 'Omitir diseño',
     },
     de: {
         hcAskConsulted: 'Haben Sie sich mit unserem Manager beraten? 🤝',
@@ -376,6 +400,7 @@ const NPC_TEXTS = {
         pdEnterSize: 'Geben Sie die Gesamtgröße des Displays ein 📐',
         pdWidth: 'Breite (cm)',
         pdHeight: 'Höhe (cm)',
+        pdDepth: 'Tiefe (cm)',
         pdAdHeightDesc: 'Geben Sie die Höhe des oberen Werbeschilds ein (Standard 20cm) 📢',
         pdShelfHeight: 'Regalhöhe (cm)',
         pdCalcResult: 'Regal-Berechnung',
@@ -399,6 +424,9 @@ const NPC_TEXTS = {
         pdNone: 'Keine',
         pdAddToCart: '🛒 In den Warenkorb',
         pdQty: 'Menge',
+        pdDepthLabel: 'Tiefe',
+        pdOpenEditor: 'Im Editor gestalten',
+        pdSkipDesign: 'Design überspringen',
     },
     fr: {
         hcAskConsulted: 'Avez-vous consulté notre responsable ? 🤝',
@@ -432,6 +460,7 @@ const NPC_TEXTS = {
         pdEnterSize: 'Entrez la taille totale du présentoir 📐',
         pdWidth: 'Largeur (cm)',
         pdHeight: 'Hauteur (cm)',
+        pdDepth: 'Profondeur (cm)',
         pdAdHeightDesc: 'Entrez la hauteur du panneau publicitaire supérieur (défaut 20cm) 📢',
         pdShelfHeight: 'Hauteur de l\'étagère (cm)',
         pdCalcResult: 'Résultat du calcul des étagères',
@@ -455,6 +484,9 @@ const NPC_TEXTS = {
         pdNone: 'Aucun',
         pdAddToCart: '🛒 Ajouter au panier',
         pdQty: 'Quantité',
+        pdDepthLabel: 'Profondeur',
+        pdOpenEditor: 'Designer dans l\'éditeur',
+        pdSkipDesign: 'Passer le design',
     },
 };
 
@@ -486,6 +518,7 @@ window.NpcWizard = {
     // 종이매대 전용 상태
     _pdWidth: 0,
     _pdHeight: 0,
+    _pdDepth: 30,
     _pdAdHeight: 20,
     _pdShelfHeight: 25,
     _pdShelfCount: 0,
@@ -506,6 +539,7 @@ window.NpcWizard = {
         this._fromHoneycombDirect = false;
         this._pdWidth = 0;
         this._pdHeight = 0;
+        this._pdDepth = 30;
         this._pdAdHeight = 20;
         this._pdShelfHeight = 25;
         this._pdShelfCount = 0;
@@ -788,6 +822,10 @@ window.NpcWizard = {
                             <label>${_t('pdHeight')}</label>
                             <input type="number" id="npcPdHeight" value="${this._pdHeight || ''}" min="10" placeholder="120" inputmode="numeric">
                         </div>
+                        <div class="pd-input-row">
+                            <label>${_t('pdDepth')}</label>
+                            <input type="number" id="npcPdDepth" value="${this._pdDepth || 30}" min="5" placeholder="30" inputmode="numeric">
+                        </div>
                     `;
                 }
                 break;
@@ -875,46 +913,25 @@ window.NpcWizard = {
             }
 
             case 'pdCustomize': {
-                // Step 4: 커스터마이징
-                this._renderBubble(_t('pdCustomize'), null, true, null,
-                    { onclick: "window.NpcWizard._pdAfterCustomize()", label: _t('next') });
+                // Step 4: 배경색 선택 + 에디터 열기
+                this._renderBubble(_t('pdCustomize'), null, true);
                 const slot4 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
                 if (slot4) {
                     const c = this._pdCustom;
                     slot4.innerHTML = `
                         <div class="pd-custom-cards">
-                            <div class="pd-custom-card">
-                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
-                                    ${_t('pdAdDesign')} <span class="pd-custom-status">${c.ad ? _t('pdSet') : _t('pdNotSet')}</span>
-                                </div>
-                                <div class="pd-custom-body">
-                                    <input type="file" accept="image/*,application/pdf" onchange="window.NpcWizard._pdUploadFile('ad', this)" style="font-size:13px;">
-                                </div>
-                            </div>
-                            <div class="pd-custom-card">
-                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
-                                    ${_t('pdSideDesign')} <span class="pd-custom-status">${c.side ? _t('pdSet') : _t('pdNotSet')}</span>
-                                </div>
-                                <div class="pd-custom-body">
-                                    <input type="file" accept="image/*,application/pdf" onchange="window.NpcWizard._pdUploadFile('side', this)" style="font-size:13px;">
-                                </div>
-                            </div>
-                            <div class="pd-custom-card">
-                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
-                                    ${_t('pdShelfDesign')} <span class="pd-custom-status">${c.shelf ? _t('pdSet') : _t('pdNotSet')}</span>
-                                </div>
-                                <div class="pd-custom-body">
-                                    <input type="file" accept="image/*,application/pdf" onchange="window.NpcWizard._pdUploadFile('shelf', this)" style="font-size:13px;">
-                                </div>
-                            </div>
-                            <div class="pd-custom-card">
-                                <div class="pd-custom-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="pd-custom-card open">
+                                <div class="pd-custom-header">
                                     ${_t('pdBgColor')} <span class="pd-custom-status" id="pdBgColorPreview" style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${c.bgColor};border:1px solid #cbd5e1;vertical-align:middle;"></span>
                                 </div>
                                 <div class="pd-custom-body">
                                     <input type="color" value="${c.bgColor}" onchange="window.NpcWizard._pdCustom.bgColor=this.value;document.getElementById('pdBgColorPreview').style.background=this.value;" style="width:100%;height:40px;border:none;cursor:pointer;">
                                 </div>
                             </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+                            <button class="npc-choice-btn npc-yes" style="width:100%;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
+                            <button class="npc-choice-btn" style="width:100%;padding:10px;font-size:13px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;" onclick="window.NpcWizard._pdAfterCustomize()">${_t('pdSkipDesign')}</button>
                         </div>
                     `;
                 }
@@ -946,6 +963,7 @@ window.NpcWizard = {
                             <div class="pd-summary-row"><span>${_t('pdBgColor')}</span><span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:${c2.bgColor};border:1px solid #cbd5e1;vertical-align:middle;"></span></div>
                             <div class="pd-summary-row"><span>${_t('pdCustomize')}</span><strong>${customTxt}</strong></div>
                         </div>
+                        <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
                         <div class="pd-input-row" style="margin-top:12px;">
                             <label>${_t('pdQty')}</label>
                             <div style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; flex:1;">
@@ -1101,14 +1119,17 @@ window.NpcWizard = {
     _pdAfterSize() {
         const wEl = document.getElementById('npcPdWidth');
         const hEl = document.getElementById('npcPdHeight');
+        const dEl = document.getElementById('npcPdDepth');
         const w = parseInt(wEl && wEl.value) || 0;
         const h = parseInt(hEl && hEl.value) || 0;
+        const d = parseInt(dEl && dEl.value) || 30;
         if (w < 10 || h < 10) {
             if (window.showToast) window.showToast(_t('pdEnterSize'), 'warn');
             return;
         }
         this._pdWidth = w;
         this._pdHeight = h;
+        this._pdDepth = d;
         this._goStep('pdAdHeight');
     },
 
@@ -1160,6 +1181,34 @@ window.NpcWizard = {
         } else {
             this._goStep('pdSummary');
         }
+    },
+
+    _pdOpenEditor() {
+        const product = this.product;
+        if (!product) return;
+        // 배경색 업데이트 (color picker에서 최신값)
+        const colorEl = document.querySelector('#npcContentSlot input[type="color"]');
+        if (colorEl) this._pdCustom.bgColor = colorEl.value;
+
+        const widthMM = this._pdWidth * 10;
+        const heightMM = this._pdHeight * 10;
+
+        // 종이매대 데이터를 전역에 저장 (에디터에서 참조)
+        window.__paperDisplayMode = true;
+        window.__paperDisplayData = {
+            widthMM,
+            heightMM,
+            adHeightMM: this._pdAdHeight * 10,
+            shelfHeightMM: this._pdShelfHeight * 10,
+            depthMM: this._pdDepth * 10,
+            shelfCount: this._pdShelfCount,
+            bgColor: this._pdCustom.bgColor,
+            refCode: this._pdRefCode,
+        };
+
+        // 모달 닫고 에디터 열기
+        document.getElementById('choiceModal').style.display = 'none';
+        window.startEditorDirect(product.code, widthMM, heightMM, null);
     },
 
     async _pdLoadReferences() {
