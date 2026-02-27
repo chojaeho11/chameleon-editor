@@ -4821,19 +4821,15 @@ html[lang="ja"] .product-detail-render div {
         margin-bottom: 12px;
     }
     .npc-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        overflow: hidden;
+        width: 70px;
+        height: 70px;
         flex-shrink: 0;
-        box-shadow: 0 3px 14px rgba(99,102,241,0.3);
-        border: 3px solid #c7d2fe;
         animation: npcBounce 2s ease infinite;
     }
     .npc-avatar img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
     }
     @keyframes npcBounce {
         0%, 100% { transform: translateY(0); }
@@ -4902,19 +4898,29 @@ html[lang="ja"] .product-detail-render div {
     .npc-expert:active { background: linear-gradient(135deg, #d97706, #b45309); }
     .npc-nav {
         display: flex;
-        justify-content: flex-start;
-        margin-top: 6px;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        gap: 10px;
     }
     .npc-nav-btn {
         background: none;
-        border: none;
-        font-size: 13px;
-        color: #94a3b8;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #64748b;
         cursor: pointer;
-        padding: 6px 12px;
+        padding: 10px 20px;
         font-weight: 600;
+        transition: all 0.2s;
     }
-    .npc-nav-btn:active { color: #6366f1; }
+    .npc-nav-btn:active { color: #6366f1; border-color: #6366f1; }
     .npc-prev { text-align: left; }
+    .npc-next-nav {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #fff;
+        border-color: #6366f1;
+    }
+    .npc-next-nav:active { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
 }
 
