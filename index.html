@@ -6242,14 +6242,22 @@ window.showChoiceModal = async function(key) {
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
 
-    // ★ 추천상품 로드 (같은 카테고리 4개, 모바일에서 옵션과 상세설명 사이)
+    // ★ 추천상품 로드 (대분류 기준 4개, 모바일에서 옵션과 상세설명 사이)
     (async function loadRelatedProducts() {
         try {
-            const cat = product.category;
-            if (!cat || !sb) return;
+            if (!sb) return;
+            // 대분류에 속하는 모든 소분류 코드 수집
+            const topCat = targetCat || product.category;
+            let subCatCodes = [product.category];
+            if (window.globalSubCats) {
+                subCatCodes = window.globalSubCats
+                    .filter(c => c.top_category_code === topCat)
+                    .map(c => c.code);
+                if (subCatCodes.length === 0) subCatCodes = [product.category];
+            }
             const { data: relatedRaw } = await sb.from('admin_products')
                 .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, category')
-                .eq('category', cat)
+                .in('category', subCatCodes)
                 .neq('code', product.code)
                 .limit(4);
             if (!relatedRaw || relatedRaw.length === 0) return;
