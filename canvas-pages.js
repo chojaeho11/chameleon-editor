@@ -631,10 +631,11 @@ const PD_FACE_NAMES = ['Top Ad', 'Side Panel', 'Shelf'];
 
 export function initPaperDisplayPages(widthMM, heightMM, adHeightMM, shelfHeightMM, depthMM, bgColor) {
     const PX = 3.7795; // mm → px
+    const lipHeightMM = 70; // 선반 앞면 립 높이 7cm
     const faces = [
         { name: 'Top Ad',     w: widthMM * PX,  h: adHeightMM * PX },
         { name: 'Side Panel', w: depthMM * PX,   h: heightMM * PX },
-        { name: 'Shelf',      w: widthMM * PX,  h: shelfHeightMM * PX },
+        { name: 'Shelf',      w: widthMM * PX,  h: lipHeightMM * PX },
     ];
 
     pageDataList = [];

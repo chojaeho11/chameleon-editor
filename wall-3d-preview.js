@@ -769,6 +769,18 @@
     }
 
     // ─── Build Paper Display 3D ───
+    // 참조: 일반적인 종이매대 구조
+    //   ┌──────────────┐  ← 상단 광고 (뒷판 상단부, 텍스처 전면)
+    //   │  📢 Top Ad    │
+    //   ├──┬────────┬──┤
+    //   │  │ ▌lip▌  │  │  ← 선반 앞면 립 (7cm, 텍스처)
+    //   │옆│________│옆│  ← 선반 판 (수평, bgColor)
+    //   │면│ ▌lip▌  │면│
+    //   │  │________│  │
+    //   │  │ ▌lip▌  │  │
+    //   │  │________│  │
+    //   └──┴────────┴──┘
+    //        뒷판 (bgColor)
     function buildPaperDisplay(pd, textures) {
         if (wallGroup) {
             scene.remove(wallGroup);
@@ -788,7 +800,8 @@
         const d = pd.depthMM / 1000;
         const adH = pd.adHeightMM / 1000;
         const shH = pd.shelfHeightMM / 1000;
-        const thick = 0.005; // 5mm thickness
+        const thick = 0.005; // 5mm
+        const lipH = 0.07;   // 선반 앞면 립 높이 7cm
         const bgColor = new THREE.Color(pd.bgColor || '#ffffff');
         const bgMat = new THREE.MeshStandardMaterial({ color: bgColor, roughness: 0.5 });
 
@@ -813,69 +826,75 @@
             return mat;
         }
 
-        // 1. 뒷판 (전체 높이, bgColor)
-        const backGeo = new THREE.BoxGeometry(w, h, thick);
-        const backPanel = new THREE.Mesh(backGeo, bgMat.clone());
-        backPanel.position.set(0, h / 2, -d / 2);
-        wallGroup.add(backPanel);
+        // BoxGeometry face order: [+X(Right), -X(Left), +Y(Top), -Y(Bottom), +Z(Front), -Z(Back)]
 
-        // 2. 상단 광고판 (textures[0]) — 전면
+        // 1. 뒷판 하단부 (선반 영역, bgColor만)
+        const bodyH = h - adH;
+        const backBodyGeo = new THREE.BoxGeometry(w, bodyH, thick);
+        const backBody = new THREE.Mesh(backBodyGeo, bgMat.clone());
+        backBody.position.set(0, bodyH / 2, -d / 2);
+        wallGroup.add(backBody);
+
+        // 2. 뒷판 상단 = 상단 광고판 (뒷판 뒤쪽 위치, 전면에 텍스처)
         const adGeo = new THREE.BoxGeometry(w, adH, thick);
-        // BoxGeometry faces: +X, -X, +Y, -Y, +Z(front), -Z(back)
         const adMats = [
             bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone(),
-            makeTexMat(textures[0], false),  // front
-            bgMat.clone()                     // back
+            makeTexMat(textures[0], false),  // +Z front: 광고 텍스처
+            bgMat.clone()                     // -Z back
         ];
         const adPanel = new THREE.Mesh(adGeo, adMats);
-        adPanel.position.set(0, h - adH / 2, d / 2);
+        adPanel.position.set(0, bodyH + adH / 2, -d / 2); // 뒷판 위쪽 연장
         wallGroup.add(adPanel);
 
-        // 3. 좌측 옆면 (textures[1])
+        // 3. 좌측 옆면 (외측에 텍스처)
         const sideGeo = new THREE.BoxGeometry(thick, h, d);
         const leftMats = [
-            bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone(),
-            bgMat.clone(),
-            makeTexMat(textures[1], false)  // -Z = outer face of left panel
-        ];
-        // For left panel, the outer face is -X direction
-        const leftOuterMats = [
             bgMat.clone(),                       // +X (inner)
             makeTexMat(textures[1], false),       // -X (outer)
             bgMat.clone(), bgMat.clone(),
             bgMat.clone(), bgMat.clone()
         ];
-        const leftPanel = new THREE.Mesh(sideGeo, leftOuterMats);
+        const leftPanel = new THREE.Mesh(sideGeo, leftMats);
         leftPanel.position.set(-w / 2, h / 2, 0);
         wallGroup.add(leftPanel);
 
-        // 4. 우측 옆면 (textures[1] 미러링)
-        const rightOuterMats = [
+        // 4. 우측 옆면 (외측에 텍스처, 미러링)
+        const rightMats = [
             makeTexMat(textures[1], true),        // +X (outer, mirrored)
             bgMat.clone(),                         // -X (inner)
             bgMat.clone(), bgMat.clone(),
             bgMat.clone(), bgMat.clone()
         ];
-        const rightPanel = new THREE.Mesh(sideGeo.clone(), rightOuterMats);
+        const rightPanel = new THREE.Mesh(sideGeo.clone(), rightMats);
         rightPanel.position.set(w / 2, h / 2, 0);
         wallGroup.add(rightPanel);
 
-        // 5. 선반들 (textures[2])
-        const usableH = h - adH;
-        const shelfCount = pd.shelfCount || Math.floor(usableH / shH);
-        for (let i = 0; i < shelfCount; i++) {
-            const shelfGeo = new THREE.BoxGeometry(w - thick * 2, thick, d);
-            // 선반 상면에 텍스처
-            const shelfMats = [
+        // 5. 선반들 — 수평판 (bgColor) + 앞면 립 (텍스처)
+        const shelfCount = pd.shelfCount || Math.floor(bodyH / shH);
+        const innerW = w - thick * 2; // 좌우 옆면 안쪽 폭
+
+        for (let i = 0; i <= shelfCount; i++) {
+            // 선반 Y 위치 (위에서부터)
+            const shelfY = bodyH - i * shH;
+
+            // 수평 선반판 (bgColor만)
+            const platGeo = new THREE.BoxGeometry(innerW, thick, d);
+            const plat = new THREE.Mesh(platGeo, bgMat.clone());
+            plat.position.set(0, shelfY, 0);
+            wallGroup.add(plat);
+
+            // 앞면 립 (선반에서 아래로 꺾임, 전면에 텍스처)
+            const actualLipH = Math.min(lipH, shH - thick); // 선반 간격보다 크지 않게
+            const lipGeo = new THREE.BoxGeometry(innerW, actualLipH, thick);
+            const lipMats = [
                 bgMat.clone(), bgMat.clone(),
-                makeTexMat(textures[2], false),   // +Y (top)
-                bgMat.clone(),                     // -Y (bottom)
-                bgMat.clone(), bgMat.clone()
+                bgMat.clone(), bgMat.clone(),
+                makeTexMat(textures[2], false),  // +Z front: 선반 텍스처
+                bgMat.clone()                     // -Z back
             ];
-            const shelfY = h - adH - i * shH - thick / 2;
-            const shelf = new THREE.Mesh(shelfGeo, shelfMats);
-            shelf.position.set(0, shelfY, 0);
-            wallGroup.add(shelf);
+            const lip = new THREE.Mesh(lipGeo, lipMats);
+            lip.position.set(0, shelfY - actualLipH / 2, d / 2 - thick / 2);
+            wallGroup.add(lip);
         }
 
         // 6. 바닥판
