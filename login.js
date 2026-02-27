@@ -50,7 +50,9 @@ export function initAuth() {
                     document.cookie.split(";").forEach((c) => {
                         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
                     });
-                    window.location.replace("/"); 
+                    // ★ 현재 언어 파라미터를 유지하여 같은 언어 페이지로 복귀
+                    const _lp = new URLSearchParams(window.location.search).get('lang');
+                    window.location.replace(_lp ? '/?lang=' + _lp : '/');
                 }
             } else {
                 openLoginModal();
@@ -192,13 +194,16 @@ function updateModalUI() {
         if (guideDesc && t['signup_guide_desc']) guideDesc.innerHTML = t['signup_guide_desc'];
     }
 
+    // ★ 번역 헬퍼: window.t 우선, 없으면 translations 객체, 없으면 fallback
+    const _tt = (key, fb) => (window.t && window.t(key) !== key ? window.t(key) : t[key] || fb);
+
     if (isSignUpMode) {
         // [회원가입 모드] — 아이디 + 비번 + 비번확인
-        title.innerText = t['modal_signup_title'] || "회원가입";
-        actionBtn.innerText = t['btn_signup_submit'] || "가입하기";
+        title.innerText = _tt('modal_signup_title', "Sign Up");
+        actionBtn.innerText = _tt('btn_signup_submit', "Sign Up");
         if (switchRow) { switchRow.style.display = "block"; }
-        if (switchText) switchText.innerText = t['msg_have_account'] || "이미 계정이 있으신가요?";
-        if (switchBtn) switchBtn.innerText = t['btn_to_login'] || "로그인";
+        if (switchText) switchText.innerText = _tt('msg_have_account', "Already have an account?");
+        if (switchBtn) switchBtn.innerText = _tt('btn_to_login', "Login");
 
         if (pwConfirm) pwConfirm.style.display = "block"; // ★ 비번확인 표시
         if (signupGuide) signupGuide.style.display = "block"; // 간편가입 안내
@@ -206,8 +211,8 @@ function updateModalUI() {
         if (quickSignupBtn) quickSignupBtn.style.display = "none"; // 1초 버튼 숨김
     } else {
         // [로그인 모드]
-        title.innerText = t['modal_login_title'] || "로그인";
-        actionBtn.innerText = t['btn_login_submit'] || "로그인";
+        title.innerText = _tt('modal_login_title', "Login");
+        actionBtn.innerText = _tt('btn_login_submit', "Login");
         if (switchRow) { switchRow.style.display = "none"; }
 
         if (pwConfirm) pwConfirm.style.display = "none";
@@ -217,10 +222,8 @@ function updateModalUI() {
     }
 
     // ★ 한국=카카오+구글, 해외=구글만
-    const _h = window.location.hostname || '';
-    const _isKR = _h.indexOf('cafe2626') !== -1 ||
-                  (_h.indexOf('cafe0101') === -1 && _h.indexOf('cafe3355') === -1 &&
-                   (window.__SITE_CODE === 'KR' || !window.__SITE_CODE));
+    const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || window.__SITE_CODE || 'KR';
+    const _isKR = (_country === 'KR');
     const kakaoBtn = document.getElementById("btnKakaoLogin");
     if (kakaoBtn) kakaoBtn.style.display = _isKR ? 'flex' : 'none';
 }
@@ -312,7 +315,8 @@ async function handleSocialLogin(provider) {
     const t = window.translations || {};
 
     if (!sb) { showToast(t['err_db_connection'] || "DB 미연결", "error"); return; }
-    const redirectUrl = window.location.origin;
+    // ★ 현재 URL의 lang 파라미터를 유지하여 로그인 후 같은 언어 페이지로 복귀
+    const redirectUrl = window.location.href.split('#')[0];
     const { data, error } = await sb.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: redirectUrl, queryParams: { access_type: 'offline', prompt: 'consent' } },
