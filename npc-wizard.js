@@ -230,6 +230,7 @@ window.NpcWizard = {
     destroy() {
         this.active = false;
         if (this._fileWatcher) clearInterval(this._fileWatcher);
+        this._restoreSections();
         if (this.guideEl) this.guideEl.remove();
         Object.values(this.sections).forEach(el => {
             if (el) el.style.display = '';
@@ -272,9 +273,22 @@ window.NpcWizard = {
         this.guideEl = div;
     },
 
+    // ★ 슬롯에 들어간 섹션들을 rightActions로 복원 (DOM 분리 방지)
+    _restoreSections() {
+        const rightActions = document.getElementById('choiceRightActions');
+        if (!rightActions) return;
+        Object.values(this.sections).forEach(el => {
+            if (el && el.parentNode && el.parentNode.id === 'npcContentSlot') {
+                rightActions.appendChild(el);
+            }
+        });
+    },
+
     // 말풍선 + 아바타 + 선택지 + 이전/다음 렌더
     _renderBubble(text, choices, showNav, mood, nextBtn) {
         if (!this.guideEl) return;
+        // innerHTML 교체 전에 섹션들을 안전하게 복원
+        this._restoreSections();
         let html = `
             <div class="npc-bubble-wrap">
                 <div class="npc-bubble">${text}</div>
