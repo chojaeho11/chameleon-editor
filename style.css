@@ -4804,135 +4804,151 @@ html[lang="ja"] .product-detail-render div {
 }
 
 /* ═══════════════════════════════════════════════
-   NPC 가이드 위자드 스타일 (모바일 전용)
+   NPC 가이드 위자드 스타일 (PC + 모바일 공통)
    ═══════════════════════════════════════════════ */
+.npc-guide-area {
+    padding: 10px 0 6px;
+}
+.npc-bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 8px;
+}
+.npc-bubble {
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 18px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.5;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    animation: npcFadeIn 0.3s ease;
+    text-align: center;
+}
+.npc-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 10px 8px 0 8px;
+    border-style: solid;
+    border-color: #1a1a1a transparent transparent transparent;
+}
+.npc-avatar {
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+    animation: npcBounce 2s ease infinite;
+    margin-top: 6px;
+}
+.npc-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+#npcContentSlot {
+    width: 100%;
+}
+@keyframes npcBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+@keyframes npcFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.npc-choices {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    animation: npcFadeIn 0.4s ease;
+}
+.npc-choice-btn {
+    flex: 1;
+    padding: 14px 10px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.npc-choice-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.npc-choice-btn:active {
+    transform: scale(0.96);
+}
+.npc-yes {
+    background: #ecfdf5;
+    border-color: #86efac;
+    color: #16a34a;
+}
+.npc-yes:hover { background: #d1fae5; }
+.npc-yes:active { background: #d1fae5; }
+.npc-no {
+    background: #fef3c7;
+    border-color: #fcd34d;
+    color: #b45309;
+}
+.npc-no:hover { background: #fde68a; }
+.npc-no:active { background: #fde68a; }
+.npc-next {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-color: #6366f1;
+    color: #fff;
+}
+.npc-next:hover { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+.npc-next:active { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+.npc-expert {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #f59e0b;
+    color: #fff;
+}
+.npc-expert:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+.npc-expert:active { background: linear-gradient(135deg, #d97706, #b45309); }
+.npc-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 10px;
+}
+.npc-nav-btn {
+    background: none;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.npc-nav-btn:hover { color: #6366f1; border-color: #6366f1; }
+.npc-nav-btn:active { color: #6366f1; border-color: #6366f1; }
+.npc-prev { text-align: left; }
+.npc-next-nav {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-color: #6366f1;
+}
+.npc-next-nav:hover { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
+.npc-next-nav:active { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
+
+/* 모바일에서 아바타 더 크게 */
 @media (max-width: 768px) {
-    .npc-guide-area {
-        padding: 10px 0 6px;
-    }
-    .npc-bubble-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-        margin-bottom: 8px;
-    }
-    .npc-bubble {
-        background: #1a1a1a;
-        border: 2px solid #333;
-        border-radius: 18px;
-        padding: 12px 18px;
-        font-size: 14px;
-        font-weight: 700;
-        color: #fff;
-        line-height: 1.5;
-        position: relative;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-        animation: npcFadeIn 0.3s ease;
-        text-align: center;
-    }
-    .npc-bubble::after {
-        content: '';
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-width: 10px 8px 0 8px;
-        border-style: solid;
-        border-color: #1a1a1a transparent transparent transparent;
-    }
     .npc-avatar {
         width: 120px;
         height: 120px;
-        flex-shrink: 0;
-        animation: npcBounce 2s ease infinite;
-        margin-top: 6px;
     }
-    .npc-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-    #npcContentSlot {
-        width: 100%;
-    }
-    @keyframes npcBounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-3px); }
-    }
-    @keyframes npcFadeIn {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .npc-choices {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-        animation: npcFadeIn 0.4s ease;
-    }
-    .npc-choice-btn {
-        flex: 1;
-        padding: 14px 10px;
-        border-radius: 12px;
-        font-size: 15px;
-        font-weight: 700;
-        border: 2px solid;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-align: center;
-    }
-    .npc-choice-btn:active {
-        transform: scale(0.96);
-    }
-    .npc-yes {
-        background: #ecfdf5;
-        border-color: #86efac;
-        color: #16a34a;
-    }
-    .npc-yes:active { background: #d1fae5; }
-    .npc-no {
-        background: #fef3c7;
-        border-color: #fcd34d;
-        color: #b45309;
-    }
-    .npc-no:active { background: #fde68a; }
-    .npc-next {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        border-color: #6366f1;
-        color: #fff;
-    }
-    .npc-next:active { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
-    .npc-expert {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        border-color: #f59e0b;
-        color: #fff;
-    }
-    .npc-expert:active { background: linear-gradient(135deg, #d97706, #b45309); }
-    .npc-nav {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 10px;
-        gap: 10px;
-    }
-    .npc-nav-btn {
-        background: none;
-        border: 1.5px solid #cbd5e1;
-        border-radius: 10px;
-        font-size: 14px;
-        color: #64748b;
-        cursor: pointer;
-        padding: 10px 20px;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
-    .npc-nav-btn:active { color: #6366f1; border-color: #6366f1; }
-    .npc-prev { text-align: left; }
-    .npc-next-nav {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: #fff;
-        border-color: #6366f1;
-    }
-    .npc-next-nav:active { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
 }
 

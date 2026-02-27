@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// NPC 가이드 주문 위자드 — 모바일 전용 (768px 이하)
+// NPC 가이드 주문 위자드 — PC + 모바일 공통
 // 기존 모달 요소를 단계별로 show/hide하여 게임 NPC 안내 느낌 제공
 // ═══════════════════════════════════════════════════════════════
 
@@ -182,7 +182,6 @@ window.NpcWizard = {
     _fileWatcher: null,
 
     init(product) {
-        if (window.innerWidth > 768) return;
         this.product = product;
         this.isCustom = !!product.is_custom_size;
         this.isGeneral = !!product.is_general_product;

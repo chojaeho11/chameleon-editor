@@ -6243,8 +6243,8 @@ window.showChoiceModal = async function(key) {
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
 
-    // ★ NPC 가이드 위자드 초기화 (모바일 전용)
-    if (window.innerWidth <= 768 && window.NpcWizard) {
+    // ★ NPC 가이드 위자드 초기화 (PC + 모바일 공통)
+    if (window.NpcWizard) {
         setTimeout(() => window.NpcWizard.init(product), 100);
     }
 
