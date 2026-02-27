@@ -14,6 +14,7 @@ const NPC_TEXTS = {
         hcEnterAmount: '매니저에게 받은 견적금액을 입력해주세요',
         hcPay: '💳 결제하기',
         hcAmountPlaceholder: '금액 입력',
+        enterArea: '시공면적을 적어주세요 📐',
         askFile: '가지고 계신 사진이나 파일로 인쇄의뢰 하실건가요?',
         yes: '네, 있어요!',
         no: '아니요, 없어요',
@@ -40,6 +41,7 @@ const NPC_TEXTS = {
         hcEnterAmount: 'マネージャーから受け取った見積金額を入力してください',
         hcPay: '💳 お支払い',
         hcAmountPlaceholder: '金額を入力',
+        enterArea: '施工面積を入力してください 📐',
         askFile: 'お持ちの写真やファイルで印刷をご依頼されますか？',
         yes: 'はい、あります！',
         no: 'いいえ、ありません',
@@ -66,6 +68,7 @@ const NPC_TEXTS = {
         hcEnterAmount: 'Please enter the quoted amount from the manager',
         hcPay: '💳 Proceed to payment',
         hcAmountPlaceholder: 'Enter amount',
+        enterArea: 'Please enter the installation area 📐',
         askFile: 'Would you like to print with your own photo or file?',
         yes: 'Yes, I do!',
         no: "No, I don't",
@@ -92,6 +95,7 @@ const NPC_TEXTS = {
         hcEnterAmount: '请输入经理提供的报价金额',
         hcPay: '💳 去支付',
         hcAmountPlaceholder: '输入金额',
+        enterArea: '请输入施工面积 📐',
         askFile: '您要用自己的照片或文件来印刷吗？',
         yes: '有！',
         no: '没有',
@@ -118,6 +122,7 @@ const NPC_TEXTS = {
         hcEnterAmount: 'يرجى إدخال مبلغ العرض من المدير',
         hcPay: '💳 متابعة الدفع',
         hcAmountPlaceholder: 'أدخل المبلغ',
+        enterArea: 'يرجى إدخال مساحة التركيب 📐',
         askFile: 'هل تريد الطباعة بصورتك أو ملفك الخاص؟',
         yes: 'نعم!',
         no: 'لا',
@@ -144,6 +149,7 @@ const NPC_TEXTS = {
         hcEnterAmount: 'Ingrese el monto del presupuesto del gerente',
         hcPay: '💳 Proceder al pago',
         hcAmountPlaceholder: 'Ingrese el monto',
+        enterArea: 'Ingrese el área de instalación 📐',
         askFile: '¿Quieres imprimir con tu propia foto o archivo?',
         yes: '¡Sí, tengo!',
         no: 'No, no tengo',
@@ -170,6 +176,7 @@ const NPC_TEXTS = {
         hcEnterAmount: 'Bitte geben Sie den vom Manager erhaltenen Betrag ein',
         hcPay: '💳 Zur Zahlung',
         hcAmountPlaceholder: 'Betrag eingeben',
+        enterArea: 'Bitte geben Sie die Installationsfläche ein 📐',
         askFile: 'Möchten Sie mit Ihrem eigenen Foto oder Datei drucken?',
         yes: 'Ja!',
         no: 'Nein',
@@ -196,6 +203,7 @@ const NPC_TEXTS = {
         hcEnterAmount: 'Veuillez saisir le montant du devis du responsable',
         hcPay: '💳 Procéder au paiement',
         hcAmountPlaceholder: 'Saisir le montant',
+        enterArea: 'Veuillez entrer la surface d\'installation 📐',
         askFile: 'Souhaitez-vous imprimer avec votre propre photo ou fichier ?',
         yes: 'Oui !',
         no: 'Non',
@@ -420,9 +428,10 @@ window.NpcWizard = {
                 this._showSection('qty');
                 this._showSection('estimate');
                 if (this.isCustom) {
+                    const isAreaOnly = this.isCustom && this.isGeneral;
+                    const sizeText = isAreaOnly ? _t('enterArea') : _t('enterSize');
                     // 면적 기반 시공 상품은 size가 첫 단계 → 이전 버튼 없음
-                    const showPrev = !(this.isCustom && this.isGeneral);
-                    this._renderBubble(_t('enterSize'), null, showPrev, null,
+                    this._renderBubble(sizeText, null, !isAreaOnly, null,
                         { onclick: "window.NpcWizard._afterSize()" });
                 }
                 this._insertToSlot('size', 'qtyLabel', 'qty', 'estimate');
