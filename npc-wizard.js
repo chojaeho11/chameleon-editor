@@ -8,7 +8,7 @@ const NPC_IMG = './img/npc-guide.png';
 
 const NPC_TEXTS = {
     kr: {
-        askFile: '인쇄할 파일이 있으신가요?',
+        askFile: '가지고 계신 사진이나 파일로 인쇄의뢰 하실건가요?',
         yes: '네, 있어요!',
         no: '아니요, 없어요',
         uploadFile: '파일을 올려주세요',
@@ -26,7 +26,7 @@ const NPC_TEXTS = {
         uploaded: '업로드 완료! 다음으로 넘어갈게요 👍',
     },
     ja: {
-        askFile: '印刷するファイルはお持ちですか？',
+        askFile: 'お持ちの写真やファイルで印刷をご依頼されますか？',
         yes: 'はい、あります！',
         no: 'いいえ、ありません',
         uploadFile: 'ファイルをアップロードしてください',
@@ -44,7 +44,7 @@ const NPC_TEXTS = {
         uploaded: 'アップロード完了！次のステップへ 👍',
     },
     en: {
-        askFile: 'Do you have a file to print?',
+        askFile: 'Would you like to print with your own photo or file?',
         yes: 'Yes, I do!',
         no: "No, I don't",
         uploadFile: "Please upload your file",
@@ -62,7 +62,7 @@ const NPC_TEXTS = {
         uploaded: 'File uploaded! Moving to next step 👍',
     },
     zh: {
-        askFile: '您有要印刷的文件吗？',
+        askFile: '您要用自己的照片或文件来印刷吗？',
         yes: '有！',
         no: '没有',
         uploadFile: '请上传文件',
@@ -80,7 +80,7 @@ const NPC_TEXTS = {
         uploaded: '文件上传完成！进入下一步 👍',
     },
     ar: {
-        askFile: 'هل لديك ملف للطباعة؟',
+        askFile: 'هل تريد الطباعة بصورتك أو ملفك الخاص؟',
         yes: 'نعم!',
         no: 'لا',
         uploadFile: 'يرجى رفع ملفك',
@@ -98,7 +98,7 @@ const NPC_TEXTS = {
         uploaded: 'تم رفع الملف! الخطوة التالية 👍',
     },
     es: {
-        askFile: '¿Tienes un archivo para imprimir?',
+        askFile: '¿Quieres imprimir con tu propia foto o archivo?',
         yes: '¡Sí, tengo!',
         no: 'No, no tengo',
         uploadFile: 'Sube tu archivo',
@@ -116,7 +116,7 @@ const NPC_TEXTS = {
         uploaded: '¡Archivo subido! Siguiente paso 👍',
     },
     de: {
-        askFile: 'Haben Sie eine Datei zum Drucken?',
+        askFile: 'Möchten Sie mit Ihrem eigenen Foto oder Datei drucken?',
         yes: 'Ja!',
         no: 'Nein',
         uploadFile: 'Laden Sie Ihre Datei hoch',
@@ -134,7 +134,7 @@ const NPC_TEXTS = {
         uploaded: 'Datei hochgeladen! Nächster Schritt 👍',
     },
     fr: {
-        askFile: 'Avez-vous un fichier à imprimer ?',
+        askFile: 'Souhaitez-vous imprimer avec votre propre photo ou fichier ?',
         yes: 'Oui !',
         no: 'Non',
         uploadFile: 'Téléchargez votre fichier',
