@@ -5944,7 +5944,7 @@ window.showChoiceModal = async function(key) {
     }
 
     // 1000원단위 주문 상품은 일반상품으로 강제 (수량→구매 플로우)
-    if (String(product.id) === '21355677') product.is_general_product = true;
+    if (product.code === '21355677') product.is_general_product = true;
 
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;

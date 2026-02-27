@@ -1709,7 +1709,7 @@ function updateSummary(prodTotal, addonTotal, total) {
     // 예외: 1000원단위 주문 상품(21355677)은 최소금액 미적용
     const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
     const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
-    const _hasUnitOrder = cartData.some(i => i.product && String(i.product.id) === '21355677');
+    const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
     if (MIN_ORDER_KRW > 0 && total > 0 && total < MIN_ORDER_KRW && !_hasUnitOrder) {
         total = MIN_ORDER_KRW;
         if (elMinNotice) elMinNotice.style.display = 'block';
@@ -2315,7 +2315,7 @@ async function processFinalPayment() {
     // 최소주문금액 검증 (1000원단위 주문 상품 예외)
     const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
     const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 5000 : 0;
-    const _hasUnitOrder = cartData.some(i => i.product && String(i.product.id) === '21355677');
+    const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
     if (MIN_ORDER_KRW > 0 && realFinalPayAmount > 0 && realFinalPayAmount < MIN_ORDER_KRW && !_hasUnitOrder) {
         showToast(window.t('msg_min_order_applied', '최소 주문금액이 적용되었습니다.'), 'warn');
         return;
