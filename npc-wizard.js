@@ -217,10 +217,12 @@ window.NpcWizard = {
         this._hideAll();
         this._createGuideArea(rightActions);
 
-        if (this.isGeneral) {
-            this._goStep('qty');
-        } else {
+        if (this.isCustom) {
+            // 커스텀 사이즈 상품만 파일/디자인 위자드 진행
             this._goStep('askFile');
+        } else {
+            // 일반 상품 + 고정 사이즈 상품 → 수량 선택 → 구매
+            this._goStep('qty');
         }
         this._watchFileUpload();
     },
