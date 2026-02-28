@@ -507,7 +507,7 @@ const _WZ_DICT = {
     '雪':'눈','snow':'눈','風':'바람','wind':'바람','花':'꽃','flower':'꽃',
     '木':'나무','tree':'나무','森':'숲','forest':'숲','月':'달','moon':'달',
     '星':'별','star':'별','太陽':'태양','sun':'태양','火':'불','fire':'불',
-    '水':'물','water':'물','水面':'물','湖':'호수','lake':'호수','島':'섬','island':'섬',
+    '水':'바다','water':'바다','水面':'수면','湖':'호수','lake':'호수','島':'섬','island':'섬',
     '滝':'폭포','waterfall':'폭포','波':'파도','wave':'파도','虹':'무지개','rainbow':'무지개',
     '桜':'벚꽃','cherry':'벚꽃','薔薇':'장미','rose':'장미','向日葵':'해바라기','sunflower':'해바라기',
     '葉':'잎','leaf':'잎','草':'풀','grass':'풀','石':'돌','rock':'돌','砂':'모래','sand':'모래',
@@ -662,6 +662,7 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     const style = window._wzCurrentStyle || 'blue';
     const palettes = _WZ_GRADIENT_PALETTES[style] || _WZ_GRADIENT_PALETTES.blue;
     const [c1, c2] = palettes[Math.floor(Math.random() * palettes.length)];
+    window._wzBgColors = [c1, c2]; // 글자색 자동 판별용
 
     // 랜덤 각도 (대각선 변형)
     const angles = [
@@ -699,6 +700,16 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     canvas.requestRenderAll();
 }
 
+// ★ 배경 밝기 자동 감지 → 밝으면 검정 글씨, 어두우면 흰색 글씨
+function _wzIsDarkBg() {
+    const [c1, c2] = window._wzBgColors || ['#ffffff','#ffffff'];
+    function lum(hex) {
+        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        return 0.299*r + 0.587*g + 0.114*b;
+    }
+    return (lum(c1) + lum(c2)) / 2 < 140;
+}
+
 // ─── Step 2: Title text (효과 없이 깔끔한 텍스트) ───
 async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const sz = Math.round(bW * 0.075);
@@ -718,9 +729,10 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
         displayTitle = title.substring(0, cut) + '\n' + title.substring(cut);
     }
 
+    const dark = _wzIsDarkBg();
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: '900',
-        fill: S.titleColor || '#ffffff',
+        fill: dark ? '#ffffff' : '#1a1a1a',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.30,
         width: bW * 0.90, lineHeight: 1.2, charSpacing: 30
@@ -772,9 +784,10 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     // 박스 없이 설명 텍스트만 중간에 배치 (확실한 줄바꿈)
     const maxW = bW * 0.55;
     const fSize = Math.round(bW * 0.016);
+    const dark = _wzIsDarkBg();
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
-        fontWeight:'400', fill: S.boxTextColor || '#334155',
+        fontWeight:'400', fill: dark ? 'rgba(255,255,255,0.8)' : '#334155',
         originX:'center', originY:'top', textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.44,
         width: maxW,
@@ -836,7 +849,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     const data = allItems.slice(0, 8); // 최대 8개 요소
 
     // ★ 하단 좌우: 매우 크게 + 나머지 요소 2배 + 위치 랜덤
-    const bigSize = bW * 0.60;    // 하단 큰 요소 (2/3)
+    const bigSize = bW * 1.20;    // 하단 큰 요소 (2x)
     const smallSize = bW * 0.27;  // 작은 요소 (2/3)
     const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
