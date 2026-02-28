@@ -1141,7 +1141,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     const bigSize = bW * 1.20;
     const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
-        { left: bL + bW * 0.95, top: bT + bH * rnd(0.55, 0.65), size: bigSize }
+        { left: bL + bW * 0.75, top: bT + bH * rnd(0.55, 0.65), size: bigSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
