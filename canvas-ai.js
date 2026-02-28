@@ -1098,10 +1098,11 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
 
     let allItems = [];
     const usedIds = new Set();
+    // ★ 마법사는 transparent-graphic (관리자 고화질) 카테고리만 사용
     async function _searchKw(kw) {
         const res = await sb.from('library')
             .select('id, thumb_url, data_url, category')
-            .in('category', ['vector','graphic','transparent-graphic'])
+            .eq('category', 'transparent-graphic')
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
@@ -1119,13 +1120,19 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     if (allItems.length < 3) {
         for (const kw of keywords.slice(0, 3)) await _searchKw(kw);
     }
-    // 그래도 없으면 일반 폴백
+    // ★ 검색 결과 없으면 최근 등록된 transparent-graphic 이미지로 폴백
     if (!allItems.length) {
-        const cc = window.SITE_CONFIG?.COUNTRY || 'KR';
-        const fallbacks = cc === 'KR' ? ['꽃','별','나무','자연'] : ['flower','star','tree','nature'];
-        for (const fb of fallbacks) {
-            await _searchKw(fb);
-            if (allItems.length >= 4) break;
+        const res = await sb.from('library')
+            .select('id, thumb_url, data_url, category')
+            .eq('category', 'transparent-graphic')
+            .eq('status','approved')
+            .order('created_at', { ascending: false })
+            .limit(6);
+        const filtered = _wzFilterPremium(res.data);
+        if (filtered && filtered.length) {
+            for (const item of filtered) {
+                if (!usedIds.has(item.id)) { usedIds.add(item.id); allItems.push(item); }
+            }
         }
     }
     if (!allItems.length) return;
