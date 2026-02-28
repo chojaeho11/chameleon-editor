@@ -91,32 +91,43 @@ function renderColorPalette() {
 
     // ★ 팔레트 클릭 시 Fabric이 먼저 deselect하므로 마지막 선택 객체 캐시
     let _lastActiveObj = null;
+    let _clearTimer = null;
     if (canvas) {
-        canvas.on('selection:created', (e) => { _lastActiveObj = e.selected?.[0] || canvas.getActiveObject(); });
-        canvas.on('selection:updated', (e) => { _lastActiveObj = e.selected?.[0] || canvas.getActiveObject(); });
-        canvas.on('selection:cleared', () => { /* 캐시 유지 — 팔레트 클릭 때문 */ });
+        canvas.on('selection:created', (e) => {
+            clearTimeout(_clearTimer);
+            _lastActiveObj = e.selected?.[0] || canvas.getActiveObject();
+        });
+        canvas.on('selection:updated', (e) => {
+            clearTimeout(_clearTimer);
+            _lastActiveObj = e.selected?.[0] || canvas.getActiveObject();
+        });
+        canvas.on('selection:cleared', () => {
+            // 300ms 후 캐시 리셋 (팔레트 클릭은 그 사이에 발생)
+            _clearTimer = setTimeout(() => { _lastActiveObj = null; }, 300);
+        });
     }
 
     // 팔레트 색상 적용: 선택된 객체가 있으면 fill, 없으면 배경
     function _getActiveObj() {
-        return (canvas && canvas.getActiveObject()) || _lastActiveObj;
+        const cur = canvas && canvas.getActiveObject();
+        if (cur && !cur.isBoard && !cur.isTemplateBackground) return cur;
+        if (_lastActiveObj && !_lastActiveObj.isBoard && !_lastActiveObj.isTemplateBackground) return _lastActiveObj;
+        return null;
     }
     function _applyColor(color) {
         const obj = _getActiveObj();
-        if (obj && !obj.isBoard && !obj.isTemplateBackground) {
+        if (obj) {
             if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('fill', color));
             else obj.set('fill', color);
             canvas.requestRenderAll();
-            // 다시 선택 상태로
-            canvas.setActiveObject(obj);
+            try { canvas.setActiveObject(obj); } catch(e) {}
         } else {
-            _lastActiveObj = null;
             setBoardColor(color);
         }
     }
     function _applyGrad(c1, c2) {
         const obj = _getActiveObj();
-        if (obj && !obj.isBoard && !obj.isTemplateBackground) {
+        if (obj) {
             const grad = new fabric.Gradient({
                 type: 'linear',
                 coords: { x1: 0, y1: 0, x2: obj.width || 100, y2: obj.height || 100 },
@@ -125,9 +136,8 @@ function renderColorPalette() {
             if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('fill', grad));
             else obj.set('fill', grad);
             canvas.requestRenderAll();
-            canvas.setActiveObject(obj);
+            try { canvas.setActiveObject(obj); } catch(e) {}
         } else {
-            _lastActiveObj = null;
             setBoardGradient(c1, c2);
         }
     }
