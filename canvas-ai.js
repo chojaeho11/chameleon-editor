@@ -612,7 +612,7 @@ async function runDesignWizard(title, style) {
         width: bW, height: bH * 0.28,
         left: bL, top: bT + bH * 0.72,
         originX:'left', originY:'top',
-        fill: '#000000', opacity: 0.85,
+        fill: '#000000', opacity: 1,
         rx: 0, ry: 0
     });
     canvas.add(bottomBlack);
