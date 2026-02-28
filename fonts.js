@@ -1,7 +1,7 @@
 // fonts.js (전체 코드 복사 후 덮어쓰기)
 
 export const FONT_URLS = {
-    "JalnanGothic": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/JalnanGothic.otf",
+    "JalnanGothic": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/JalnanGothicTTF.ttf",
     "Jalnan2": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/Jalnan2.otf",
     "HakgyoansimChilpanjiugaeBold": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/Hakgyoansim%20Chilpanjiugae%20OTF%20B.otf",
     "HakgyoansimDunggeunmisoBold": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/fonts/Hakgyoansim%20Dunggeunmiso%20OTF%20B.otf",
