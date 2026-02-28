@@ -612,15 +612,22 @@ async function runDesignWizard(title, style) {
     _wzRender(steps, 0);
     await _wzBg(keywords, bW, bH, bL, bT);
 
-    // ★ 하단 1/4 검정 오버레이 (이동/크기조절 가능한 도형)
+    // ★ 하단 검정 오버레이 (배경 바로 위 레이어)
     const bottomBlack = new fabric.Rect({
         width: bW, height: bH * 0.28,
         left: bL, top: bT + bH * 0.72,
         originX:'left', originY:'top',
         fill: '#000000', opacity: 1,
-        rx: 0, ry: 0
+        rx: 0, ry: 0,
+        isBottomOverlay: true
     });
     canvas.add(bottomBlack);
+    // 배경(templateBg) 바로 위로 보내기
+    const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
+    if (bgObj) {
+        const bgIdx = canvas.getObjects().indexOf(bgObj);
+        canvas.moveTo(bottomBlack, bgIdx + 1);
+    }
 
     // ─── Step 2: Title ───
     _wzRender(steps, 1);
@@ -922,14 +929,11 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }));
     await Promise.all(promises);
 
-    // 설명 박스와 텍스트를 맨 앞으로
-    canvas.getObjects().forEach(o => {
-        if (o.type === 'rect' && !o.isBoard && !o.isTemplateBackground) canvas.bringToFront(o);
-    });
+    // ★ 레이어 순서: 배경 → 검정도형 → 요소(이미지) → 텍스트
+    // 텍스트만 맨 앞으로 (검정 도형은 요소 뒤에 유지)
     canvas.getObjects().forEach(o => {
         if ((o.type === 'textbox' || o.type === 'i-text') && !o._objects) canvas.bringToFront(o);
     });
-    // 타이틀 효과 그룹도 앞으로
     canvas.getObjects().forEach(o => {
         if (o._objects && o._objects.some(c => c.isMainText)) canvas.bringToFront(o);
     });
