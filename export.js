@@ -1,6 +1,7 @@
 import { canvas } from "./canvas-core.js?v=123";
 import { ADDON_DB, currentUser, sb } from "./config.js?v=123";
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=123"; // 페이지 인덱스 가져오기
+import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=123";
 
 // [안전장치] 언어별 기본 폰트 URL 설정
 const FONT_CONFIG = {
@@ -845,8 +846,14 @@ async function convertCanvasTextToPaths(fabricCanvas) {
     const findFontUrl = (name) => {
         if (!name) return TARGET_FONT.url;
         const target = name.toLowerCase().replace(/[\s\-_]/g, '');
+        // 1. DB site_fonts 테이블 검색
         const match = fontList.find(f => target.includes(f.normalized));
-        return match ? match.url : TARGET_FONT.url;
+        if (match) return match.url;
+        // 2. fonts.js FONT_URLS 맵 검색 (JalnanGothic 등 Supabase 스토리지 폰트)
+        const aliasKey = FONT_ALIASES?.[name] || name;
+        if (FONT_URLS?.[aliasKey]) return FONT_URLS[aliasKey];
+        if (FONT_URLS?.[name]) return FONT_URLS[name];
+        return TARGET_FONT.url;
     };
 
     // 폰트 로드 헬퍼 (실패 시 폴백 폰트 재시도)

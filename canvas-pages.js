@@ -259,8 +259,14 @@ function loadPage(index) {
     canvas.loadFromJSON(json, () => {
         // 로드 후 후처리 (대지 맨 뒤로 등)
         const board = canvas.getObjects().find(o => o.isBoard);
-        if(board) canvas.sendToBack(board);
-        
+        if (board) {
+            canvas.sendToBack(board);
+            canvas.clipPath = new fabric.Rect({
+                left: 0, top: 0,
+                width: board.width, height: board.height,
+                absolutePositioned: true
+            });
+        }
         updatePageCounter();
         canvas.requestRenderAll();
     });
@@ -351,7 +357,15 @@ window.switchBoxFace = function(index) {
 
     canvas.loadFromJSON(json, () => {
         const board = canvas.getObjects().find(o => o.isBoard);
-        if (board) canvas.sendToBack(board);
+        if (board) {
+            canvas.sendToBack(board);
+            // 클립 경로 설정 (보드 밖 이미지 숨김)
+            canvas.clipPath = new fabric.Rect({
+                left: 0, top: 0,
+                width: board.width, height: board.height,
+                absolutePositioned: true
+            });
+        }
         updatePageCounter();
         canvas.requestRenderAll();
         // 면별 다른 크기 → 로드 완료 후 화면 맞춤

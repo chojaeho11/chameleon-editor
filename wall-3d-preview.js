@@ -442,21 +442,18 @@
                 materials.push(mat);
 
                 // Async texture load
-                // gi=5 → Back face(-Z): 텍스처 좌우반전 필요 (외부에서 봤을 때 정방향)
-                const needFlip = (gi === 5);
-                (function(matRef, dataUrl, flip) {
+                (function(matRef, dataUrl) {
                     const img = new Image();
                     img.crossOrigin = 'anonymous';
                     img.onload = function() {
                         const tex = new THREE.Texture(img);
                         tex.needsUpdate = true;
                         tex.encoding = THREE.sRGBEncoding;
-                        if (flip) { tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; }
                         matRef.map = tex;
                         matRef.needsUpdate = true;
                     };
                     img.src = dataUrl;
-                })(mat, faceDataUrls[fi], needFlip);
+                })(mat, faceDataUrls[fi]);
             } else {
                 materials.push(defaultMat.clone());
             }
