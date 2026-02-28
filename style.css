@@ -4754,6 +4754,7 @@ html[lang="ja"] h1, html[lang="ja"] h2, html[lang="ja"] h3, html[lang="ja"] h4 {
     line-height: 1.15 !important;
 }
 html[lang="ja"] .hero-title {
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif !important;
     font-size: 60px !important;
     font-weight: 900 !important;
     line-height: 1.1 !important;
@@ -4761,11 +4762,26 @@ html[lang="ja"] .hero-title {
 }
 html[lang="ja"] .hero-title span {
     font-size: 38px !important;
+    font-weight: 900 !important;
 }
 html[lang="ja"] .hero-desc {
     font-size: 17px !important;
     font-weight: 700 !important;
     letter-spacing: -0.02em !important;
+    color: #fff !important;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+}
+/* 해외 사이트 공통 — 두꺼운 서체 + hero-desc 보라 배경 강제 */
+html:not([lang="kr"]):not([lang="ko"]) .hero-title {
+    font-weight: 900 !important;
+}
+html:not([lang="kr"]):not([lang="ko"]) .hero-title span {
+    font-weight: 900 !important;
+}
+html:not([lang="kr"]):not([lang="ko"]) .hero-desc {
+    color: #fff !important;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+    font-weight: 700 !important;
 }
 html[lang="ja"] .quick-menu-label,
 html[lang="ja"] .section-title {
@@ -4801,16 +4817,20 @@ html[lang="ja"] .product-detail-render div {
 /* 일본어 모바일 추가 축소 */
 @media (max-width: 768px) {
     html[lang="ja"] .hero-title {
+        font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif !important;
         font-size: 28px !important;
         font-weight: 900 !important;
         line-height: 1.1 !important;
     }
     html[lang="ja"] .hero-title span {
         font-size: 20px !important;
+        font-weight: 900 !important;
     }
     html[lang="ja"] .hero-desc {
         font-size: 13px !important;
         font-weight: 700 !important;
+        color: #fff !important;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
     }
     html[lang="ja"] .quick-menu-label,
     html[lang="ja"] .section-title {
