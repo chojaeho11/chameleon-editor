@@ -778,12 +778,12 @@ async function runDesignWizardForPD(title, style) {
         const b1L = board1.left, b1T = board1.top;
         await _wzBg(keywords, b1W, b1H, b1L, b1T);
         await _wzElem(keywords, b1W, b1H, b1L, b1T);
-        // ★ 요소를 하단 중앙으로 재배치
+        // ★ 요소를 하단 중앙으로 재배치 (2배 크기)
         canvas.getObjects().forEach(o => {
             if (!o.isBoard && !o.isTemplateBackground && o.type === 'image') {
-                const bigSize = b1W * 1.0;
+                const bigSize = b1W * 2.0;
                 const scale = bigSize / Math.max(o.width || 1, o.height || 1);
-                o.set({ scaleX: scale, scaleY: scale, left: b1L + b1W * 0.5, top: b1T + b1H * 0.80, originX: 'center', originY: 'center' });
+                o.set({ scaleX: scale, scaleY: scale, left: b1L + b1W * 0.5, top: b1T + b1H * 0.90, originX: 'center', originY: 'center' });
             }
         });
         canvas.requestRenderAll();
@@ -800,6 +800,19 @@ async function runDesignWizardForPD(title, style) {
         const b2L = board2.left, b2T = board2.top;
         await _wzBg(keywords, b2W, b2H, b2L, b2T);
         _wzShelfTitle(title, titleFont, b2W, b2H, b2L, b2T);
+        canvas.requestRenderAll();
+    }
+    if (window.savePageState) window.savePageState();
+
+    // ─── Face 3: 하단 — 배경만 (같은 테마색) ───
+    window.switchPdFace(3);
+    await new Promise(r => setTimeout(r, 500));
+    canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+    const board3 = canvas.getObjects().find(o => o.isBoard);
+    if (board3) {
+        const b3W = board3.width * (board3.scaleX || 1), b3H = board3.height * (board3.scaleY || 1);
+        const b3L = board3.left, b3T = board3.top;
+        await _wzBg(keywords, b3W, b3H, b3L, b3T);
         canvas.requestRenderAll();
     }
     if (window.savePageState) window.savePageState();
