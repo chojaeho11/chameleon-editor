@@ -612,21 +612,38 @@ async function runDesignWizard(title, style) {
     _wzRender(steps, 0);
     await _wzBg(keywords, bW, bH, bL, bT);
 
-    // ★ 하단 검정 오버레이 (배경 바로 위 레이어)
-    const bottomBlack = new fabric.Rect({
+    // ★ 하단 진한 그라데이션 오버레이 (배경 바로 위 레이어)
+    const [bgC1, bgC2] = window._wzBgColors || ['#1a0033','#0d001a'];
+    function _darkenHex(hex, factor) {
+        const r = Math.round(parseInt(hex.slice(1,3),16) * factor);
+        const g = Math.round(parseInt(hex.slice(3,5),16) * factor);
+        const b = Math.round(parseInt(hex.slice(5,7),16) * factor);
+        return '#' + [r,g,b].map(v => Math.min(255,v).toString(16).padStart(2,'0')).join('');
+    }
+    const darkC1 = _darkenHex(bgC2, 0.35);
+    const darkC2 = _darkenHex(bgC2, 0.15);
+    const bottomOverlay = new fabric.Rect({
         width: bW, height: bH * 0.28,
         left: bL, top: bT + bH * 0.72,
         originX:'left', originY:'top',
-        fill: '#000000', opacity: 1,
+        fill: new fabric.Gradient({
+            type: 'linear',
+            coords: { x1: 0, y1: 0, x2: 0, y2: bH * 0.28 },
+            colorStops: [
+                { offset: 0, color: darkC1 },
+                { offset: 1, color: darkC2 }
+            ]
+        }),
+        opacity: 1,
         rx: 0, ry: 0,
         isBottomOverlay: true
     });
-    canvas.add(bottomBlack);
+    canvas.add(bottomOverlay);
     // 배경(templateBg) 바로 위로 보내기
     const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
     if (bgObj) {
         const bgIdx = canvas.getObjects().indexOf(bgObj);
-        canvas.moveTo(bottomBlack, bgIdx + 1);
+        canvas.moveTo(bottomOverlay, bgIdx + 1);
     }
 
     // ─── Step 2: Title ───
