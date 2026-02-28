@@ -529,13 +529,15 @@ const _WZ_DICT = {
 function _wzTranslateForSearch(keywords) {
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
     if (country === 'KR') return keywords;
-    const result = [];
+    // ★ KR 번역어 우선, 번역 안 된 원본은 뒤로 (JP/EN 원본은 KR 태그에 안 맞음)
+    const translated = [];
+    const untranslated = [];
     for (const kw of keywords) {
         const kr = _WZ_DICT[kw] || _WZ_DICT[kw.toLowerCase()];
-        if (kr) result.push(kr);
-        result.push(kw); // 원본도 유지 (다국어 태그 대비)
+        if (kr) translated.push(kr);
+        else untranslated.push(kw);
     }
-    return [...new Set(result)];
+    return [...new Set([...translated, ...untranslated])];
 }
 
 function _wzSteps() {
