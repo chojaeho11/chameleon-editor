@@ -1061,6 +1061,8 @@
   "btn_quick_signup": "1초 회원가입",
   "signup_guide_title": "1초 간편 가입",
   "signup_guide_desc": "아이디와 비밀번호 입력만으로<br>바로 가입됩니다. 인증 메일 없음!",
+  "hero_signup_btn": "1초 회원가입",
+  "hero_signup_desc": "개인정보 인증없이 아이디와 비번만으로 바로 가입됩니다.",
   "gm_upload_video": "영상에서 프레임 추출",
   "ppt_export": "PPT 내보내기",
   "ppt_trans_none": "없음",

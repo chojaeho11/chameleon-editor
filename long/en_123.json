@@ -1444,6 +1444,8 @@
   "btn_quick_signup": "Quick Sign Up",
   "signup_guide_title": "Instant Sign Up",
   "signup_guide_desc": "Just enter a username and password.<br>No verification email needed!",
+  "hero_signup_btn": "Sign Up in 1 Second",
+  "hero_signup_desc": "No verification needed. Just enter a username and password to get started.",
   "gm_upload_video": "Extract frames from video",
   "ppt_export": "Export PPT",
   "ppt_trans_none": "None",

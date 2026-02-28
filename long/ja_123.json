@@ -1441,6 +1441,8 @@
   "btn_quick_signup": "1秒で会員登録",
   "signup_guide_title": "1秒かんたん登録",
   "signup_guide_desc": "IDとパスワードの入力だけで<br>すぐに登録完了。認証メール不要！",
+  "hero_signup_btn": "1秒で無料登録",
+  "hero_signup_desc": "個人情報認証不要、IDとパスワードだけですぐ登録できます。",
   "gm_upload_video": "動画からフレーム抽出",
   "ppt_export": "PPTエクスポート",
   "ppt_trans_none": "なし",
