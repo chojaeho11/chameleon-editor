@@ -107,11 +107,19 @@ button, input, textarea, select { font-family: inherit; }
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     font-size: 42px;
 }
+.hero-cta-row {
+    display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+}
 .hero-desc {
     font-size: 18px; color: #fff; font-weight: 600;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 12px 28px; border-radius: 30px; display: inline-block;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 12px 28px; border-radius: 30px; display: inline-block; margin: 0;
 }
-#heroSignupBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.5); }
+.hero-signup-btn {
+    border: none; border-radius: 30px; background: linear-gradient(135deg,#7c3aed,#6366f1); color: #fff;
+    font-size: 17px; font-weight: 800; cursor: pointer; padding: 14px 36px;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.4); transition: all 0.3s; letter-spacing: 0.5px; white-space: nowrap;
+}
+.hero-signup-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.5); }
 .hero-signup-desc { font-size: 13px; color: #888; margin-top: 8px; font-weight: 500; }
 
 /* 퀵 메뉴 (제품 선택) */
@@ -985,8 +993,9 @@ button, input, textarea, select { font-family: inherit; }
     .hero-section { display: block !important; padding: 20px 15px 15px !important; margin-bottom: 0 !important; }
     .hero-title { font-size: 28px !important; word-break: keep-all; }
     .hero-title span { font-size: 20px !important; }
+    .hero-cta-row { flex-direction: column; gap: 8px; }
     .hero-desc { font-size: 13px !important; padding: 8px 16px !important; }
-    #heroSignupBtn { font-size: 14px !important; padding: 10px 24px !important; margin-top: 10px !important; }
+    .hero-signup-btn { font-size: 14px !important; padding: 10px 24px !important; }
     .hero-signup-desc { font-size: 11px !important; }
     .quick-menu-track { grid-template-columns: repeat(2, 1fr) !important; }
     
