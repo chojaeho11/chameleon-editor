@@ -381,21 +381,24 @@ function _wzFilterPremium(items) {
 function _wzExtractKeywords(title) {
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
 
-    // ★ 일본어: 한자(1文字以上) + カタカナ + 한자+히라가나 복합어 추출
+    // ★ 일본어: 명사(한자2字以上 또는 한자+히라가나 복합명사) 추출
     if (country === 'JP') {
-        // 한자+히라가나 복합어 (例: 飢えた→飢, 群れ→群, 一匹→一匹)
-        const compoundWords = title.match(/[\u4e00-\u9faf\u3400-\u4dbf]+[\u3040-\u309f]*[\u4e00-\u9faf\u3400-\u4dbf]*/g) || [];
-        // 카타카나 덩어리
+        // 불필요한 단독 한자 (조사/접속/수량/位置)
+        const jpStopKanji = new Set('中上下前後内外間的一二三四五六七八九十百千万個匹本枚台件人回目日月年時分秒'.split(''));
+        // 한자2字以上 블록 (鯨, 水面, 一筋 등)
+        const kanjiBlocks = title.match(/[\u4e00-\u9faf\u3400-\u4dbf]{2,}/g) || [];
+        // 한자+히라가나+한자 복합명사 (飼い猫, 浮かぶ→浮)
+        const compounds = title.match(/[\u4e00-\u9faf]{1,}[\u3040-\u309f]{1,3}[\u4e00-\u9faf]{1,}/g) || [];
+        // カタカナ2字以上
         const kataBlocks = title.match(/[\u30a0-\u30ff]{2,}/g) || [];
-        // 조사/접속사로 분리 후 한자만 추출 (の、を、が、に、は、で、と、も、へ、た、て)
-        const jpParticles = /[のをがにはでともへたてからまでよりばかりなど]/g;
-        const segments = title.split(jpParticles).filter(s => s.length > 0);
-        const kanjiFromSegments = [];
-        for (const seg of segments) {
-            const k = seg.match(/[\u4e00-\u9faf\u3400-\u4dbf]+/g);
-            if (k) kanjiFromSegments.push(...k);
+        // 単独漢字(意味のある名詞のみ): 조사(の等)で区切って意味ある1字漢字
+        const meaningfulSingle = [];
+        const parts = title.split(/[のをがにはでともへ、。！？「」\s]+/);
+        for (const p of parts) {
+            const m = p.match(/^[\u4e00-\u9faf]$/);
+            if (m && !jpStopKanji.has(m[0])) meaningfulSingle.push(m[0]);
         }
-        const all = [...new Set([...compoundWords.map(w => w.replace(/[\u3040-\u309f]+$/, '')).filter(w => w.length >= 1), ...kanjiFromSegments.filter(w => w.length >= 1), ...kataBlocks])];
+        const all = [...new Set([...kanjiBlocks, ...compounds, ...kataBlocks, ...meaningfulSingle])];
         console.log('[Wizard Keywords JP]', title, '→', all);
         return all.length > 0 ? all : [title.replace(/[。、！？\s]/g,'').substring(0,4)];
     }
@@ -702,15 +705,22 @@ async function _wzGetDescText(title) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    // 박스 없이 설명 텍스트만 중간에 배치
+    // 박스 없이 설명 텍스트만 중간에 배치 (확실한 줄바꿈)
+    const maxW = bW * 0.55;
+    const fSize = Math.round(bW * 0.016);
     const obj = new fabric.Textbox(descText, {
-        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
+        fontFamily: descFont + ', sans-serif', fontSize: fSize,
         fontWeight:'400', fill: S.boxTextColor || '#334155',
         originX:'center', originY:'top', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.46,
-        width: bW * 0.55,
-        lineHeight: 1.5
+        left: bL + bW/2, top: bT + bH * 0.44,
+        width: maxW,
+        lineHeight: 1.5,
+        splitByGrapheme: true
     });
+    // 텍스트가 대지 하단 60%를 넘으면 폰트 축소
+    if (obj.height > bH * 0.15) {
+        obj.set('fontSize', Math.round(fSize * 0.8));
+    }
     canvas.add(obj);
     canvas.bringToFront(obj);
 }
