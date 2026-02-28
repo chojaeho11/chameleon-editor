@@ -647,6 +647,15 @@ async function runDesignWizard(title, style) {
     canvas.discardActiveObject();
     canvas.requestRenderAll();
 
+    // ★ 클립아트 검색창에 첫 번째 키워드 자동 입력
+    const searchKws = _wzTranslateForSearch(keywords);
+    const firstKw = searchKws[0] || keywords[0] || '';
+    if (firstKw) {
+        const searchInput = document.getElementById('sideAssetSearch');
+        if (searchInput) { searchInput.value = firstKw; }
+        if (window.handleAssetSearch) window.handleAssetSearch(firstKw);
+    }
+
     // 서체 리렌더 (폰트 로드 완료 후 캔버스 갱신)
     setTimeout(() => {
         canvas.getObjects().forEach(o => {
@@ -759,9 +768,9 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: 'normal',
         fill: '#ffffff',
-        originX:'right', originY:'center', textAlign:'right',
-        left: bL + bW * 0.93, top: bT + bH * 0.25,
-        width: bW * 0.65, lineHeight: isJP ? 1.1 : 0.95,
+        originX:'left', originY:'center', textAlign:'left',
+        left: bL + bW * 0.05, top: bT + bH * 0.25,
+        width: bW * 0.60, lineHeight: isJP ? 1.1 : 0.95,
         charSpacing: isJP ? 40 : 80,
         splitByGrapheme: isJP ? true : false
     });
@@ -808,14 +817,14 @@ async function _wzGetDescText(title) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    // 우측 정렬 + 좁은 폭으로 짧게 내려쓰기 (디자인 요소)
+    // 좌측 정렬 + 좁은 폭으로 짧게 내려쓰기
     const maxW = bW * 0.38;
     const fSize = Math.round(bW * 0.014);
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
         fontWeight:'400', fill: 'rgba(255,255,255,0.85)',
-        originX:'right', originY:'top', textAlign:'right',
-        left: bL + bW * 0.93, top: bT + bH * 0.50,
+        originX:'left', originY:'top', textAlign:'left',
+        left: bL + bW * 0.05, top: bT + bH * 0.48,
         width: maxW,
         lineHeight: 1.6,
         splitByGrapheme: true
@@ -867,28 +876,12 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         }
     }
     if (!allItems.length) return;
-    // ★ 첫 번째 = 가장 중요한 키워드의 최신 결과 → 좌측 크게. 나머지만 셔플
-    const rest = allItems.slice(1);
-    for (let i = rest.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [rest[i], rest[j]] = [rest[j], rest[i]];
-    }
-    const data = [allItems[0], ...rest.slice(0, 6)]; // 1 big + max 6 small
-
-    // ★ 좌측 1개 크게 (바깥으로 나감) + 나머지 보드 안쪽 랜덤
+    // ★ 큰 요소 1개만 배치 (우측 하단, 텍스트와 겹치지 않게)
+    const data = [allItems[0]];
     const bigSize = bW * 1.20;
-    const smallSize = bW * 0.27;
     const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
-        // 좌측 큰 요소 (바깥으로 삐져나감)
-        { left: bL - bigSize * 0.02,  top: bT + bH * rnd(0.50, 0.65), size: bigSize },
-        // 나머지 작은 요소: 보드 안쪽 랜덤 (너무 바깥 안 나감)
-        { left: bL + bW * rnd(0.65, 0.88), top: bT + bH * rnd(0.02, 0.14), size: smallSize * rnd(0.7, 1.2) },
-        { left: bL + bW * rnd(0.08, 0.30), top: bT + bH * rnd(0.02, 0.12), size: smallSize * rnd(0.6, 1.0) },
-        { left: bL + bW * rnd(0.68, 0.92), top: bT + bH * rnd(0.75, 0.92), size: smallSize * rnd(0.7, 1.1) },
-        { left: bL + bW * rnd(0.30, 0.55), top: bT + bH * rnd(0.82, 0.95), size: smallSize * rnd(0.5, 0.8) },
-        { left: bL + bW * rnd(0.70, 0.92), top: bT + bH * rnd(0.42, 0.58), size: smallSize * rnd(0.6, 1.0) },
-        { left: bL + bW * rnd(0.08, 0.25), top: bT + bH * rnd(0.02, 0.10), size: smallSize * rnd(0.5, 0.9) },
+        { left: bL + bW * 0.95, top: bT + bH * rnd(0.55, 0.65), size: bigSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
