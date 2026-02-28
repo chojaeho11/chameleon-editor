@@ -489,51 +489,105 @@ function _wzExtractKeywords(title) {
     return all.length > 0 ? all : [title];
 }
 
-// ★ JP/EN 키워드 → KR 검색어 변환 사전 (라이브러리가 KR 태그 기반)
-const _WZ_DICT = {
+// ★ JP → EN 변환 사전 (일본어 키워드를 영어로 번역)
+const _WZ_JP_EN = {
     // 동물
-    '鯨':'고래','whale':'고래','魚':'물고기','fish':'물고기','猫':'고양이','cat':'고양이',
-    '犬':'개','dog':'개','鳥':'새','bird':'새','馬':'말','horse':'말','虎':'호랑이','tiger':'호랑이',
-    '狐':'여우','fox':'여우','狼':'늑대','wolf':'늑대','龍':'용','竜':'용','dragon':'용',
-    '蝶':'나비','butterfly':'나비','兎':'토끼','rabbit':'토끼','熊':'곰','bear':'곰',
-    '蛇':'뱀','snake':'뱀','鹿':'사슴','deer':'사슴','象':'코끼리','elephant':'코끼리',
-    '獅子':'사자','lion':'사자','鷲':'독수리','eagle':'독수리','亀':'거북이','turtle':'거북이',
-    '蜂':'벌','bee':'벌','豚':'돼지','pig':'돼지','羊':'양','sheep':'양','鶏':'닭',
-    'ペンギン':'펭귄','penguin':'펭귄','パンダ':'판다','panda':'판다',
-    'イルカ':'돌고래','dolphin':'돌고래','ライオン':'사자','ウサギ':'토끼',
+    '鯨':'whale','魚':'fish','猫':'cat','犬':'dog','鳥':'bird','馬':'horse','虎':'tiger',
+    '狐':'fox','狼':'wolf','龍':'dragon','竜':'dragon','蝶':'butterfly','兎':'rabbit','熊':'bear',
+    '蛇':'snake','鹿':'deer','象':'elephant','獅子':'lion','鷲':'eagle','亀':'turtle',
+    '蜂':'bee','豚':'pig','羊':'sheep','鶏':'chicken','恐竜':'dinosaur','足跡':'footprint',
+    'ペンギン':'penguin','パンダ':'panda','イルカ':'dolphin','ライオン':'lion','ウサギ':'rabbit',
+    'サメ':'shark','クマ':'bear','ネコ':'cat','イヌ':'dog','トリ':'bird','カメ':'turtle',
+    'クジラ':'whale','タコ':'octopus','カニ':'crab','エビ':'shrimp',
     // 자연
-    '海':'바다','sea':'바다','ocean':'바다','山':'산','mountain':'산','川':'강','river':'강',
-    '空':'하늘','sky':'하늘','雲':'구름','cloud':'구름','雨':'비','rain':'비',
-    '雪':'눈','snow':'눈','風':'바람','wind':'바람','花':'꽃','flower':'꽃',
-    '木':'나무','tree':'나무','森':'숲','forest':'숲','月':'달','moon':'달',
-    '星':'별','star':'별','太陽':'태양','sun':'태양','火':'불','fire':'불',
-    '水':'바다','water':'바다','水面':'수면','湖':'호수','lake':'호수','島':'섬','island':'섬',
-    '滝':'폭포','waterfall':'폭포','波':'파도','wave':'파도','虹':'무지개','rainbow':'무지개',
-    '桜':'벚꽃','cherry':'벚꽃','薔薇':'장미','rose':'장미','向日葵':'해바라기','sunflower':'해바라기',
-    '葉':'잎','leaf':'잎','草':'풀','grass':'풀','石':'돌','rock':'돌','砂':'모래','sand':'모래',
+    '海':'ocean','山':'mountain','川':'river','空':'sky','雲':'cloud','雨':'rain',
+    '雪':'snow','風':'wind','花':'flower','木':'tree','森':'forest','月':'moon',
+    '星':'star','太陽':'sun','火':'fire','水':'water','水面':'ocean','湖':'lake','島':'island',
+    '滝':'waterfall','波':'wave','虹':'rainbow','砂漠':'desert',
+    '桜':'cherry blossom','薔薇':'rose','向日葵':'sunflower','葉':'leaf','草':'grass',
+    '石':'rock','砂':'sand','氷':'ice','霧':'fog','嵐':'storm',
     // 사물/개념
-    '城':'성','castle':'성','家':'집','house':'집','船':'배','ship':'배','車':'자동차','car':'자동차',
-    '剣':'검','sword':'검','王':'왕','king':'왕','姫':'공주','princess':'공주',
-    '愛':'사랑','love':'하트','heart':'하트','夢':'꿈','dream':'꿈',
-    '光':'빛','light':'빛','影':'그림자','shadow':'그림자',
-    '音楽':'음악','music':'음악','本':'책','book':'책',
-    '食':'음식','food':'음식','酒':'술','茶':'차','coffee':'커피','cake':'케이크',
-    'コーヒー':'커피','ケーキ':'케이크','ワイン':'와인','wine':'와인',
-    '天使':'천사','angel':'천사','宇宙':'우주','space':'우주','地球':'지구','earth':'지구',
-    '夜':'밤','night':'밤','朝':'아침','morning':'아침',
-    '春':'봄','spring':'봄','夏':'여름','summer':'여름','秋':'가을','autumn':'가을','冬':'겨울','winter':'겨울',
-    '街':'거리','town':'마을','village':'마을','garden':'정원','庭':'정원',
-    '飛行機':'비행기','airplane':'비행기','電車':'기차','train':'기차',
-    '雷':'번개','lightning':'번개','thunder':'번개',
+    '城':'castle','家':'house','船':'ship','車':'car','剣':'sword','王':'king','姫':'princess',
+    '愛':'love','夢':'dream','光':'light','影':'shadow','音楽':'music','本':'book',
+    '食':'food','酒':'wine','茶':'tea','天使':'angel','宇宙':'space','地球':'earth',
+    '夜':'night','朝':'morning','街':'town','庭':'garden','飛行機':'airplane','電車':'train','雷':'lightning',
+    '春':'spring','夏':'summer','秋':'autumn','冬':'winter',
+    'コーヒー':'coffee','ケーキ':'cake','ワイン':'wine','ビール':'beer',
+    // 컨셉/형용사
+    '巨大':'giant','秘密':'secret','泳':'swimming','生物':'creature','足':'foot',
+    '古代':'ancient','神秘':'mystery','深海':'deep sea','密林':'jungle',
 };
+
+// ★ KR 키워드 변환 사전 (한국어 사이트용)
+const _WZ_KR_DICT = {
+    // 동물 (EN→KR)
+    'whale':'고래','fish':'물고기','cat':'고양이','dog':'개','bird':'새','horse':'말','tiger':'호랑이',
+    'fox':'여우','wolf':'늑대','dragon':'용','butterfly':'나비','rabbit':'토끼','bear':'곰',
+    'snake':'뱀','deer':'사슴','elephant':'코끼리','lion':'사자','eagle':'독수리','turtle':'거북이',
+    'bee':'벌','pig':'돼지','sheep':'양','penguin':'펭귄','panda':'판다','dolphin':'돌고래',
+    'shark':'상어','octopus':'문어','crab':'게','shrimp':'새우','dinosaur':'공룡',
+    // 자연 (EN→KR)
+    'ocean':'바다','sea':'바다','mountain':'산','river':'강','sky':'하늘','cloud':'구름','rain':'비',
+    'snow':'눈','wind':'바람','flower':'꽃','tree':'나무','forest':'숲','moon':'달',
+    'star':'별','sun':'태양','fire':'불','water':'바다','lake':'호수','island':'섬',
+    'waterfall':'폭포','wave':'파도','rainbow':'무지개','cherry':'벚꽃','rose':'장미','sunflower':'해바라기',
+    'leaf':'잎','grass':'풀','rock':'돌','sand':'모래','ice':'얼음','desert':'사막',
+    // 사물/개념 (EN→KR)
+    'castle':'성','house':'집','ship':'배','car':'자동차','sword':'검','king':'왕','princess':'공주',
+    'love':'하트','heart':'하트','dream':'꿈','light':'빛','shadow':'그림자',
+    'music':'음악','book':'책','food':'음식','coffee':'커피','cake':'케이크','wine':'와인',
+    'angel':'천사','space':'우주','earth':'지구','night':'밤','morning':'아침',
+    'spring':'봄','summer':'여름','autumn':'가을','winter':'겨울',
+    'town':'마을','village':'마을','garden':'정원','airplane':'비행기','train':'기차',
+    'lightning':'번개','thunder':'번개',
+    // JP→KR
+    '鯨':'고래','魚':'물고기','猫':'고양이','犬':'개','鳥':'새','馬':'말','虎':'호랑이',
+    '狐':'여우','狼':'늑대','龍':'용','竜':'용','蝶':'나비','兎':'토끼','熊':'곰',
+    '蛇':'뱀','鹿':'사슴','象':'코끼리','獅子':'사자','鷲':'독수리','亀':'거북이',
+    '蜂':'벌','豚':'돼지','羊':'양','鶏':'닭','恐竜':'공룡',
+    'ペンギン':'펭귄','パンダ':'판다','イルカ':'돌고래','ライオン':'사자','ウサギ':'토끼',
+    '海':'바다','山':'산','川':'강','空':'하늘','雲':'구름','雨':'비',
+    '雪':'눈','風':'바람','花':'꽃','木':'나무','森':'숲','月':'달',
+    '星':'별','太陽':'태양','火':'불','水':'바다','水面':'수면','湖':'호수','島':'섬',
+    '滝':'폭포','波':'파도','虹':'무지개',
+    '桜':'벚꽃','薔薇':'장미','向日葵':'해바라기','葉':'잎','草':'풀','石':'돌','砂':'모래',
+    '城':'성','家':'집','船':'배','車':'자동차','剣':'검','王':'왕','姫':'공주',
+    '愛':'사랑','夢':'꿈','光':'빛','影':'그림자','音楽':'음악','本':'책',
+    '食':'음식','天使':'천사','宇宙':'우주','地球':'지구','夜':'밤','朝':'아침',
+    '春':'봄','夏':'여름','秋':'가을','冬':'겨울','街':'거리','庭':'정원',
+    '飛行機':'비행기','電車':'기차','雷':'번개',
+};
+
 function _wzTranslateForSearch(keywords) {
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
-    if (country === 'KR') return keywords;
-    // ★ KR 번역어 우선, 번역 안 된 원본은 뒤로 (JP/EN 원본은 KR 태그에 안 맞음)
+
+    // ★ US: 영어 키워드 그대로 사용 (뒤쪽 중요 단어 우선)
+    if (country === 'US') {
+        const reversed = [...keywords].reverse();
+        console.log('[Wizard Translate US] EN as-is (reversed):', reversed);
+        return [...new Set(reversed)];
+    }
+
+    // ★ JP: 일본어 → 영어 변환 (뒤쪽 중요 단어 우선)
+    if (country === 'JP') {
+        const reversed = [...keywords].reverse();
+        const translated = [];
+        const untranslated = [];
+        for (const kw of reversed) {
+            const en = _WZ_JP_EN[kw] || _WZ_JP_EN[kw.toLowerCase()];
+            if (en) translated.push(en);
+            else untranslated.push(kw);
+        }
+        const result = [...new Set([...translated, ...untranslated])];
+        console.log('[Wizard Translate JP→EN]', keywords, '→', result);
+        return result;
+    }
+
+    // ★ KR: 한국어 키워드 그대로 (JP/EN 원본이 섞여있으면 KR로 변환)
     const translated = [];
     const untranslated = [];
     for (const kw of keywords) {
-        const kr = _WZ_DICT[kw] || _WZ_DICT[kw.toLowerCase()];
+        const kr = _WZ_KR_DICT[kw] || _WZ_KR_DICT[kw.toLowerCase()];
         if (kr) translated.push(kr);
         else untranslated.push(kw);
     }
@@ -885,9 +939,11 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     if (allItems.length < 3) {
         for (const kw of keywords.slice(0, 3)) await _searchKw(kw);
     }
-    // 그래도 없으면 일반 폴백 (꽃, 별, 자연 등)
+    // 그래도 없으면 일반 폴백
     if (!allItems.length) {
-        for (const fb of ['꽃','별','나무','자연']) {
+        const cc = window.SITE_CONFIG?.COUNTRY || 'KR';
+        const fallbacks = cc === 'KR' ? ['꽃','별','나무','자연'] : ['flower','star','tree','nature'];
+        for (const fb of fallbacks) {
             await _searchKw(fb);
             if (allItems.length >= 4) break;
         }
