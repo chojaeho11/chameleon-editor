@@ -89,11 +89,39 @@ function renderColorPalette() {
 
     paletteContainer.innerHTML = '';
 
+    // 팔레트 색상 적용: 선택된 객체가 있으면 fill, 없으면 배경
+    function _applyColor(color) {
+        const obj = canvas && canvas.getActiveObject();
+        if (obj) {
+            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('fill', color));
+            else obj.set('fill', color);
+            canvas.requestRenderAll();
+        } else {
+            setBoardColor(color);
+        }
+    }
+    function _applyGrad(c1, c2) {
+        const obj = canvas && canvas.getActiveObject();
+        if (obj) {
+            // 객체에 그라데이션 적용
+            const grad = new fabric.Gradient({
+                type: 'linear',
+                coords: { x1: 0, y1: 0, x2: obj.width || 100, y2: obj.height || 100 },
+                colorStops: [{ offset: 0, color: c1 }, { offset: 1, color: c2 }]
+            });
+            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('fill', grad));
+            else obj.set('fill', grad);
+            canvas.requestRenderAll();
+        } else {
+            setBoardGradient(c1, c2);
+        }
+    }
+
     // 컬러피커 (사용자 지정)
     const pickerLabel = document.createElement('label');
     pickerLabel.className = 'color-swatch picker';
     pickerLabel.innerHTML = '<i class="fa-solid fa-plus"></i><input type="color" id="customBgPicker" style="opacity:0; width:0; height:0;">';
-    pickerLabel.onchange = (e) => setBoardColor(e.target.value);
+    pickerLabel.onchange = (e) => _applyColor(e.target.value);
     paletteContainer.appendChild(pickerLabel);
 
     // 프리셋 단색
@@ -101,7 +129,7 @@ function renderColorPalette() {
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
         swatch.style.backgroundColor = color;
-        swatch.onclick = () => setBoardColor(color);
+        swatch.onclick = () => _applyColor(color);
         paletteContainer.appendChild(swatch);
     });
 
@@ -117,7 +145,7 @@ function renderColorPalette() {
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
         swatch.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
-        swatch.onclick = () => setBoardGradient(c1, c2);
+        swatch.onclick = () => _applyGrad(c1, c2);
         paletteContainer.appendChild(swatch);
     });
 }

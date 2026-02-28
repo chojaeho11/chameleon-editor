@@ -1070,6 +1070,7 @@
   "wizard_label_style": "Style",
   "wizard_generate": "Generate Design",
   "close": "Close",
+  "no_uploaded_images": "No uploaded images",
   "wizard_step_bg": "Searching background...",
   "wizard_step_title": "Placing title...",
   "wizard_step_desc": "Generating description...",

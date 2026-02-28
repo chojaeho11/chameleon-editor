@@ -694,12 +694,12 @@ async function _wzGetDescText(title) {
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     // 박스 없이 설명 텍스트만 중간에 배치
     const obj = new fabric.Textbox(descText, {
-        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.02),
+        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
         fontWeight:'400', fill: S.boxTextColor || '#334155',
         originX:'center', originY:'top', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.48,
-        width: bW * 0.60,
-        lineHeight: 1.6
+        left: bL + bW/2, top: bT + bH * 0.46,
+        width: bW * 0.55,
+        lineHeight: 1.5
     });
     canvas.add(obj);
     canvas.bringToFront(obj);
@@ -740,7 +740,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
 
     // ★ 하단 좌우: 매우 크게 + 나머지 요소 2배 + 위치 랜덤
     const bigSize = bW * 0.90;    // 하단 큰 요소
-    const smallSize = bW * 0.22;  // 작은 요소 (2배)
+    const smallSize = bW * 0.40;  // 작은 요소 (큰 사이즈)
     const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
         // 하단 좌측: 매우 크게

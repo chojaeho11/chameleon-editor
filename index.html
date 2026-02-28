@@ -3964,7 +3964,7 @@ window.filterFxCards = function(cat, btn) {
         try {
             const { data, error } = await window.sb.storage.from('design').list('user-uploads/' + user.id, { limit: 30, sortBy: { column: 'created_at', order: 'desc' } });
             if (error || !data || data.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:15px 0;">업로드한 이미지가 없습니다</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:15px 0;" data-i18n="no_uploaded_images">업로드한 이미지가 없습니다</div>';
                 return;
             }
             grid.innerHTML = '';
