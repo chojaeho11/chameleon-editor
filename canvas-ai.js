@@ -605,7 +605,7 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
 
 // ─── Step 2: Title text (효과 없이 깔끔한 텍스트) ───
 async function _wzTitle(title, font, S, bW, bH, bL, bT) {
-    const sz = Math.round(bW * 0.08);
+    const sz = Math.round(bW * 0.055);
 
     // 줄바꿈: 윗줄에 많이, 아랫줄에 적게 (마지막 어절만 아래로)
     let displayTitle = title;
