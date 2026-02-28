@@ -442,18 +442,21 @@
                 materials.push(mat);
 
                 // Async texture load
-                (function(matRef, dataUrl) {
+                // gi=5 → Back face(-Z): 텍스처 좌우반전 필요 (외부에서 봤을 때 정방향)
+                const needFlip = (gi === 5);
+                (function(matRef, dataUrl, flip) {
                     const img = new Image();
                     img.crossOrigin = 'anonymous';
                     img.onload = function() {
                         const tex = new THREE.Texture(img);
                         tex.needsUpdate = true;
                         tex.encoding = THREE.sRGBEncoding;
+                        if (flip) { tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; }
                         matRef.map = tex;
                         matRef.needsUpdate = true;
                     };
                     img.src = dataUrl;
-                })(mat, faceDataUrls[fi]);
+                })(mat, faceDataUrls[fi], needFlip);
             } else {
                 materials.push(defaultMat.clone());
             }
@@ -507,13 +510,20 @@
 
             try {
                 const vpt = fabricCanvas.viewportTransform.slice();
+                // ★ board의 실제 크기 (scaleX/Y 반영)
+                const bW = Math.round(board.width * (board.scaleX || 1));
+                const bH = Math.round(board.height * (board.scaleY || 1));
+                const bL = board.left || 0;
+                const bT = board.top || 0;
+
                 fabricCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
-                fabricCanvas.setDimensions({ width: board.width, height: board.height });
+                fabricCanvas.setDimensions({ width: bL + bW, height: bT + bH });
                 fabricCanvas.renderAll();
 
                 const dataUrl = fabricCanvas.toDataURL({
-                    format: 'png', left: 0, top: 0,
-                    width: board.width, height: board.height
+                    format: 'png',
+                    left: bL, top: bT,
+                    width: bW, height: bH
                 });
                 textures.push(dataUrl);
 
