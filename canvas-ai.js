@@ -735,11 +735,10 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: '900',
         fill: dark ? '#ffffff' : '#1a1a1a',
-        originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.30,
-        width: bW * 0.90, lineHeight: 1.2, charSpacing: 30
+        originX:'right', originY:'center', textAlign:'right',
+        left: bL + bW * 0.93, top: bT + bH * 0.28,
+        width: bW * 0.65, lineHeight: 1.2, charSpacing: 30
     });
-    if (obj.width > bW * 0.90) obj.set('fontSize', Math.round(sz * (bW*0.90) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
 }
@@ -783,21 +782,21 @@ async function _wzGetDescText(title) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    // 박스 없이 설명 텍스트만 중간에 배치 (확실한 줄바꿈)
-    const maxW = bW * 0.55;
-    const fSize = Math.round(bW * 0.016);
+    // 우측 정렬 + 좁은 폭으로 짧게 내려쓰기 (디자인 요소)
+    const maxW = bW * 0.38;
+    const fSize = Math.round(bW * 0.014);
     const dark = _wzIsDarkBg();
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
-        fontWeight:'400', fill: dark ? 'rgba(255,255,255,0.8)' : '#334155',
-        originX:'center', originY:'top', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.44,
+        fontWeight:'400', fill: dark ? 'rgba(255,255,255,0.75)' : '#475569',
+        originX:'right', originY:'top', textAlign:'right',
+        left: bL + bW * 0.93, top: bT + bH * 0.42,
         width: maxW,
-        lineHeight: 1.5,
+        lineHeight: 1.6,
         splitByGrapheme: true
     });
-    // 텍스트가 대지 하단 60%를 넘으면 폰트 축소
-    if (obj.height > bH * 0.15) {
+    // 텍스트가 보드 하단을 넘으면 폰트 축소
+    if (obj.height > bH * 0.25) {
         obj.set('fontSize', Math.round(fSize * 0.8));
     }
     canvas.add(obj);
@@ -843,30 +842,28 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         }
     }
     if (!allItems.length) return;
-    // 셔플하여 다양하게
-    for (let i = allItems.length - 1; i > 0; i--) {
+    // ★ 첫 번째 = 가장 중요한 키워드의 최신 결과 → 좌측 크게. 나머지만 셔플
+    const rest = allItems.slice(1);
+    for (let i = rest.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [allItems[i], allItems[j]] = [allItems[j], allItems[i]];
+        [rest[i], rest[j]] = [rest[j], rest[i]];
     }
-    const data = allItems.slice(0, 8); // 최대 8개 요소
+    const data = [allItems[0], ...rest.slice(0, 6)]; // 1 big + max 6 small
 
-    // ★ 하단 좌우: 매우 크게 + 나머지 요소 2배 + 위치 랜덤
-    const bigSize = bW * 1.20;    // 하단 큰 요소 (2x)
-    const smallSize = bW * 0.27;  // 작은 요소 (2/3)
+    // ★ 좌측 1개 크게 (바깥으로 나감) + 나머지 보드 안쪽 랜덤
+    const bigSize = bW * 1.20;
+    const smallSize = bW * 0.27;
     const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
-        // 하단 좌측: 매우 크게
-        { left: bL + bigSize * 0.12,            top: bT + bH * rnd(0.85,0.92), size: bigSize },
-        // 하단 우측: 매우 크게
-        { left: bL + bW - bigSize * 0.12,       top: bT + bH * rnd(0.82,0.90), size: bigSize },
-        // 상단: 랜덤 위치
-        { left: bL + bW * rnd(0.10,0.25),       top: bT + bH * rnd(0.03,0.12), size: smallSize * rnd(0.7,1.2) },
-        { left: bL + bW * rnd(0.75,0.92),       top: bT + bH * rnd(0.03,0.12), size: smallSize * rnd(0.7,1.2) },
-        { left: bL + bW * rnd(0.30,0.50),       top: bT + bH * rnd(0.02,0.10), size: smallSize * rnd(0.6,1.0) },
-        { left: bL + bW * rnd(0.55,0.72),       top: bT + bH * rnd(0.02,0.10), size: smallSize * rnd(0.6,1.0) },
-        // 좌우 중간: 랜덤
-        { left: bL + bW * rnd(0.02,0.08),       top: bT + bH * rnd(0.45,0.60), size: smallSize * rnd(0.8,1.1) },
-        { left: bL + bW * rnd(0.92,0.98),       top: bT + bH * rnd(0.42,0.58), size: smallSize * rnd(0.8,1.1) }
+        // 좌측 큰 요소 (바깥으로 삐져나감)
+        { left: bL - bigSize * 0.02,  top: bT + bH * rnd(0.50, 0.65), size: bigSize },
+        // 나머지 작은 요소: 보드 안쪽 랜덤 (너무 바깥 안 나감)
+        { left: bL + bW * rnd(0.65, 0.88), top: bT + bH * rnd(0.02, 0.14), size: smallSize * rnd(0.7, 1.2) },
+        { left: bL + bW * rnd(0.08, 0.30), top: bT + bH * rnd(0.02, 0.12), size: smallSize * rnd(0.6, 1.0) },
+        { left: bL + bW * rnd(0.68, 0.92), top: bT + bH * rnd(0.75, 0.92), size: smallSize * rnd(0.7, 1.1) },
+        { left: bL + bW * rnd(0.30, 0.55), top: bT + bH * rnd(0.82, 0.95), size: smallSize * rnd(0.5, 0.8) },
+        { left: bL + bW * rnd(0.70, 0.92), top: bT + bH * rnd(0.42, 0.58), size: smallSize * rnd(0.6, 1.0) },
+        { left: bL + bW * rnd(0.08, 0.25), top: bT + bH * rnd(0.02, 0.10), size: smallSize * rnd(0.5, 0.9) },
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
