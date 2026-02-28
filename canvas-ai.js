@@ -610,11 +610,9 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz,
         fill: S.titleColor || '#ffffff',
-        fontWeight: '900',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.25,
-        width: bW * 0.85, lineHeight: 1.15, charSpacing: -10,
-        shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.3)', blur: 8, offsetX: 2, offsetY: 2 })
+        width: bW * 0.85, lineHeight: 1.15, charSpacing: -10
     });
     if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
     canvas.add(obj);
@@ -708,18 +706,18 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     if (!data || !data.length) return;
 
-    // ★ 좌우 크게 (밖으로 삐져나가게) + 위쪽 작게 배치
-    const bigSize = bW * 0.45;   // 큰 요소 (하단 좌우) — 스샷처럼 크게
-    const smallSize = bW * 0.18; // 작은 요소 (상단)
+    // ★ 좌우로 삐져나가게 + 위쪽 작게 배치 (약간 축소)
+    const bigSize = bW * 0.35;   // 큰 요소 (하단 좌우)
+    const smallSize = bW * 0.13; // 작은 요소 (상단)
     const positions = [
-        // 하단 좌측: 크게, 왼쪽으로 삐져나감
-        { left: bL + bigSize * 0.15,            top: bT + bH * 0.70, size: bigSize },
-        // 하단 우측: 크게, 오른쪽으로 삐져나감
-        { left: bL + bW - bigSize * 0.15,       top: bT + bH * 0.65, size: bigSize },
+        // 하단 좌측: 왼쪽으로 삐져나감
+        { left: bL + bigSize * 0.2,             top: bT + bH * 0.68, size: bigSize },
+        // 하단 우측: 오른쪽으로 삐져나감
+        { left: bL + bW - bigSize * 0.2,        top: bT + bH * 0.63, size: bigSize },
         // 상단 좌측: 작게
-        { left: bL + bW * 0.12,                 top: bT + bH * 0.10, size: smallSize },
+        { left: bL + bW * 0.12,                 top: bT + bH * 0.08, size: smallSize },
         // 상단 우측: 작게
-        { left: bL + bW * 0.88,                 top: bT + bH * 0.08, size: smallSize }
+        { left: bL + bW * 0.88,                 top: bT + bH * 0.06, size: smallSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
