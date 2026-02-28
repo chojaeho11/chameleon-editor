@@ -7619,6 +7619,7 @@ if (w >= 20 && h >= 20) {
                     }
                     window.initWallConfig();
                     // 에디터 진입 시 자동으로 모달 열기
+                    window.__wallConfigFirstOpen = true;
                     window.openWallConfig();
                 }
             }, 500);

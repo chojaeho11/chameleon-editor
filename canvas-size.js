@@ -490,6 +490,11 @@ window.openWallConfig = () => {
 window.closeWallConfig = () => {
     const overlay = document.getElementById('wallConfigOverlay');
     if (overlay) overlay.style.display = 'none';
+    // ★ 첫 진입 시 가벽 설정 후 디자인 마법사 자동 오픈
+    if (window.__wallConfigFirstOpen && window.openDesignWizard) {
+        window.__wallConfigFirstOpen = false;
+        setTimeout(() => window.openDesignWizard(), 500);
+    }
 };
 
 // 하위 호환 (높이 단독 변경 - 사용 안 하지만 안전)
