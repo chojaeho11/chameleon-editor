@@ -143,7 +143,7 @@
 
         // Panel
         const panelGeo = new THREE.BoxGeometry(width, height, depth);
-        const sideMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.5 });
+        const sideMat = new THREE.MeshStandardMaterial({ color: 0xc4a070, roughness: 0.6 }); // 허니콤보드 크라프트 베이지
         const frontMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
         const backMat = new THREE.MeshStandardMaterial({ color: doubleSided ? 0xffffff : 0xe8e8e8, roughness: doubleSided ? 0.4 : 0.6 });
         const materials = [sideMat, sideMat.clone(), sideMat.clone(), sideMat.clone(), frontMat, backMat];
