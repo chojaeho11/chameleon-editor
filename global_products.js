@@ -3492,7 +3492,7 @@ window.wizRunPipeline = async () => {
                     hashtags: content.hashtags || [],
                     og_image: thumbnailUrl
                 });
-                const { error: postErr } = await sb.from('community_posts').insert({
+                const { data: inserted, error: postErr } = await sb.from('community_posts').insert({
                     category: 'blog',
                     country_code: cfg.countryCode,
                     title: content.title || title,
@@ -3502,8 +3502,15 @@ window.wizRunPipeline = async () => {
                     author_id: user?.id || null,
                     thumbnail: thumbnailUrl,
                     markdown: seoMeta
-                });
+                }).select('id').single();
                 if (postErr) throw new Error(postErr.message);
+
+                // KR/EN 블로그일 때 SNS 자동 포스팅
+                if (inserted && (lang === 'kr' || lang === 'en')) {
+                    const blogUrl = 'https://' + cfg.site + '/board?cat=blog&country=' + cfg.countryCode + '&id=' + inserted.id;
+                    const metaDesc = content.meta_description || (content.body || '').substring(0, 150);
+                    await _socialPostAfterBlog(content.title || title, metaDesc, blogUrl, thumbnailUrl, content.hashtags || [], console.log);
+                }
 
                 results.blogs++;
                 _wpStep(stepId, 'done');
@@ -4500,13 +4507,20 @@ async function _adpGenerateBlogs(prod, thumbnailUrl) {
             }
 
             const seoMeta = JSON.stringify({ meta_description: content.meta_description || '', focus_keyword: focusKw, hashtags: content.hashtags || [], og_image: thumbnailUrl });
-            await sb.from('community_posts').insert({
+            const { data: inserted } = await sb.from('community_posts').insert({
                 category: 'blog', country_code: cfg.countryCode,
                 title: content.title || prod.name, content: htmlBody,
                 author_name: authorName, author_email: user?.email || '',
                 author_id: user?.id || null, thumbnail: thumbnailUrl, markdown: seoMeta
-            });
+            }).select('id').single();
             blogCount++;
+
+            // KR/EN 블로그일 때 SNS 자동 포스팅
+            if (inserted && (lang === 'kr' || lang === 'en')) {
+                const blogUrl = 'https://' + cfg.site + '/board?cat=blog&country=' + cfg.countryCode + '&id=' + inserted.id;
+                const metaDesc = content.meta_description || (content.body || '').substring(0, 150);
+                await _socialPostAfterBlog(content.title || prod.name, metaDesc, blogUrl, thumbnailUrl, content.hashtags || [], _adpLog);
+            }
         } catch(e) {
             _adpLog('  ⚠ 블로그 ' + lang + ' 실패: ' + e.message);
         }
@@ -4571,4 +4585,29 @@ function _adpLoadProgress() {
         if (Date.now() - data.ts > 24 * 60 * 60 * 1000) { localStorage.removeItem('adp_progress'); return null; }
         return data;
     } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ★★★ SNS 자동 포스팅 (블로그 발행 후 호출) ★★★
+// ═══════════════════════════════════════════════════════════════
+
+async function _socialPostAfterBlog(title, summary, blogUrl, imageUrl, hashtags, logFn) {
+    const log = logFn || console.log;
+    const platforms = ['twitter', 'facebook', 'instagram', 'reddit'];
+    let posted = 0;
+
+    for (const platform of platforms) {
+        try {
+            const { data, error } = await sb.functions.invoke('social-post', {
+                body: { platform, title, summary, link: blogUrl, image_url: imageUrl, hashtags }
+            });
+            if (error) { log('  ⚠ SNS ' + platform + ': ' + error.message); continue; }
+            if (data?.skipped) continue; // 비활성 플랫폼
+            if (data?.success) { posted++; log('  📣 ' + platform + ' 포스팅 완료'); }
+            else { log('  ⚠ SNS ' + platform + ': ' + (data?.error || '알 수 없는 오류')); }
+        } catch(e) {
+            log('  ⚠ SNS ' + platform + ' 실패: ' + e.message);
+        }
+    }
+    if (posted > 0) log('  📢 SNS ' + posted + '개 플랫폼 포스팅 완료');
 }

@@ -609,6 +609,88 @@ textarea.form-input { resize:vertical; min-height:80px; }
         </div>
         <button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-save"></i> 설정 저장</button>
     </div>
+
+    <!-- ═══ SNS 자동 포스팅 설정 ═══ -->
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-share-nodes"></i> SNS 자동 포스팅 설정</div>
+        <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">블로그 발행 시 자동으로 SNS에 포스팅합니다. 각 플랫폼의 API 키를 입력하고 토글을 켜주세요.</p>
+
+        <!-- Twitter/X -->
+        <div style="border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:12px; background:#0f172a;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-weight:bold; font-size:15px;"><i class="fa-brands fa-x-twitter"></i> Twitter / X</span>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="snsTwitterEnabled"> <span style="font-size:13px;">활성화</span>
+                </label>
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">
+                <a href="https://developer.twitter.com/en/portal/projects-and-apps" target="_blank" style="color:#3b82f6;">developer.twitter.com</a> → App → Keys & Tokens에서 발급
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">API Key</label><input type="text" class="form-input" id="snsTwitterApiKey" placeholder="API Key"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">API Secret</label><input type="password" class="form-input" id="snsTwitterApiSecret" placeholder="API Secret"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Access Token</label><input type="text" class="form-input" id="snsTwitterAccessToken" placeholder="Access Token"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Access Token Secret</label><input type="password" class="form-input" id="snsTwitterAccessSecret" placeholder="Access Token Secret"></div>
+            </div>
+        </div>
+
+        <!-- Facebook -->
+        <div style="border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:12px; background:#0f172a;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-weight:bold; font-size:15px;"><i class="fa-brands fa-facebook"></i> Facebook</span>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="snsFacebookEnabled"> <span style="font-size:13px;">활성화</span>
+                </label>
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">
+                <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color:#3b82f6;">Graph API Explorer</a> → Page Access Token 발급 (pages_manage_posts 권한 필요)
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Page ID</label><input type="text" class="form-input" id="snsFacebookPageId" placeholder="Page ID (숫자)"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Page Access Token</label><input type="password" class="form-input" id="snsFacebookToken" placeholder="Long-lived Page Access Token"></div>
+            </div>
+        </div>
+
+        <!-- Instagram -->
+        <div style="border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:12px; background:#0f172a;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-weight:bold; font-size:15px;"><i class="fa-brands fa-instagram"></i> Instagram</span>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="snsInstagramEnabled"> <span style="font-size:13px;">활성화</span>
+                </label>
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">
+                Instagram Business 계정 필요. Facebook Page에 연결된 IG User ID + 동일한 Access Token 사용
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">IG User ID</label><input type="text" class="form-input" id="snsInstagramUserId" placeholder="Instagram Business User ID"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Access Token</label><input type="password" class="form-input" id="snsInstagramToken" placeholder="Facebook과 동일한 Token"></div>
+            </div>
+        </div>
+
+        <!-- Reddit -->
+        <div style="border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:12px; background:#0f172a;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-weight:bold; font-size:15px;"><i class="fa-brands fa-reddit"></i> Reddit</span>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="snsRedditEnabled"> <span style="font-size:13px;">활성화</span>
+                </label>
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">
+                <a href="https://www.reddit.com/prefs/apps" target="_blank" style="color:#3b82f6;">reddit.com/prefs/apps</a> → "script" 타입 앱 생성
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Client ID</label><input type="text" class="form-input" id="snsRedditClientId" placeholder="앱의 Client ID"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Client Secret</label><input type="password" class="form-input" id="snsRedditSecret" placeholder="Client Secret"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Username</label><input type="text" class="form-input" id="snsRedditUsername" placeholder="Reddit 유저명"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Password</label><input type="password" class="form-input" id="snsRedditPassword" placeholder="Reddit 비밀번호"></div>
+            </div>
+            <div class="form-group" style="margin:8px 0 0;"><label style="font-size:12px;">Subreddit</label><input type="text" class="form-input" id="snsRedditSubreddit" placeholder="예: printing" value="printing"></div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSocialConfig()" style="width:100%;"><i class="fa-solid fa-save"></i> SNS 설정 저장</button>
+        <div id="snsSaveStatus" style="text-align:center; margin-top:8px; font-size:13px;"></div>
+    </div>
 </div>
 
 </div><!-- /main-content -->
@@ -657,6 +739,7 @@ const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     loadDashboard();
     loadTopics();
     loadYoutubeConfig();
+    loadSocialConfig();
 })();
 
 // ===== 탭 전환 =====
@@ -1531,6 +1614,97 @@ window.saveSettings = function() {
         if (saved.ctaMsg) document.getElementById('setCtaMsg').value = saved.ctaMsg;
     } catch(e) {}
 })();
+
+// ===== SNS 자동 포스팅 설정 =====
+window.saveSocialConfig = async function() {
+    const statusEl = document.getElementById('snsSaveStatus');
+    statusEl.textContent = '저장 중...';
+    statusEl.style.color = '#94a3b8';
+
+    const platforms = [
+        { platform: 'twitter', enabled: document.getElementById('snsTwitterEnabled').checked, config: {
+            api_key: document.getElementById('snsTwitterApiKey').value,
+            api_secret: document.getElementById('snsTwitterApiSecret').value,
+            access_token: document.getElementById('snsTwitterAccessToken').value,
+            access_token_secret: document.getElementById('snsTwitterAccessSecret').value
+        }},
+        { platform: 'facebook', enabled: document.getElementById('snsFacebookEnabled').checked, config: {
+            page_id: document.getElementById('snsFacebookPageId').value,
+            access_token: document.getElementById('snsFacebookToken').value
+        }},
+        { platform: 'instagram', enabled: document.getElementById('snsInstagramEnabled').checked, config: {
+            ig_user_id: document.getElementById('snsInstagramUserId').value,
+            access_token: document.getElementById('snsInstagramToken').value
+        }},
+        { platform: 'reddit', enabled: document.getElementById('snsRedditEnabled').checked, config: {
+            client_id: document.getElementById('snsRedditClientId').value,
+            client_secret: document.getElementById('snsRedditSecret').value,
+            username: document.getElementById('snsRedditUsername').value,
+            password: document.getElementById('snsRedditPassword').value,
+            subreddit: document.getElementById('snsRedditSubreddit').value || 'printing'
+        }}
+    ];
+
+    try {
+        for (const p of platforms) {
+            const { data: existing } = await sb.from('marketing_social_config')
+                .select('id').eq('platform', p.platform).single();
+            if (existing) {
+                await sb.from('marketing_social_config').update({
+                    config: p.config, enabled: p.enabled, updated_at: new Date().toISOString()
+                }).eq('id', existing.id);
+            } else {
+                await sb.from('marketing_social_config').insert({
+                    platform: p.platform, config: p.config, enabled: p.enabled
+                });
+            }
+        }
+        statusEl.textContent = 'SNS 설정이 저장되었습니다!';
+        statusEl.style.color = '#34d399';
+        showToast('SNS 설정 저장 완료!', 'success');
+    } catch(e) {
+        statusEl.textContent = '저장 실패: ' + e.message;
+        statusEl.style.color = '#f87171';
+    }
+};
+
+// SNS 설정 불러오기
+async function loadSocialConfig() {
+    try {
+        const { data } = await sb.from('marketing_social_config').select('*');
+        if (!data) return;
+        for (const row of data) {
+            const cfg = row.config || {};
+            switch(row.platform) {
+                case 'twitter':
+                    document.getElementById('snsTwitterEnabled').checked = row.enabled;
+                    document.getElementById('snsTwitterApiKey').value = cfg.api_key || '';
+                    document.getElementById('snsTwitterApiSecret').value = cfg.api_secret || '';
+                    document.getElementById('snsTwitterAccessToken').value = cfg.access_token || '';
+                    document.getElementById('snsTwitterAccessSecret').value = cfg.access_token_secret || '';
+                    break;
+                case 'facebook':
+                    document.getElementById('snsFacebookEnabled').checked = row.enabled;
+                    document.getElementById('snsFacebookPageId').value = cfg.page_id || '';
+                    document.getElementById('snsFacebookToken').value = cfg.access_token || '';
+                    break;
+                case 'instagram':
+                    document.getElementById('snsInstagramEnabled').checked = row.enabled;
+                    document.getElementById('snsInstagramUserId').value = cfg.ig_user_id || '';
+                    document.getElementById('snsInstagramToken').value = cfg.access_token || '';
+                    break;
+                case 'reddit':
+                    document.getElementById('snsRedditEnabled').checked = row.enabled;
+                    document.getElementById('snsRedditClientId').value = cfg.client_id || '';
+                    document.getElementById('snsRedditSecret').value = cfg.client_secret || '';
+                    document.getElementById('snsRedditUsername').value = cfg.username || '';
+                    document.getElementById('snsRedditPassword').value = cfg.password || '';
+                    document.getElementById('snsRedditSubreddit').value = cfg.subreddit || 'printing';
+                    break;
+            }
+        }
+    } catch(e) { console.error('SNS 설정 로드 실패:', e); }
+}
 
 // OAuth 콜백 처리 (init 에서 sb 초기화 후 호출됨)
 async function handleOAuthCallback() {
