@@ -2107,11 +2107,11 @@ async function handleSubReturn() {
     <!-- Box Dimension Controls -->
     <div id="boxDimensionControls" style="display:none; align-items:center; gap:6px; padding:8px 16px; background:rgba(30,30,60,0.95); border-radius:10px; margin:0 auto;">
         <div style="color:#a78bfa; font-size:12px; font-weight:700; white-space:nowrap;"><i class="fa-solid fa-box"></i> <span data-i18n="box_dimensions">박스 (mm)</span></div>
-        <input id="boxW" type="number" placeholder="W" value="300" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
+        <input id="boxW" type="number" placeholder="W" value="400" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
         <span style="color:#666;">×</span>
-        <input id="boxH" type="number" placeholder="H" value="200" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
+        <input id="boxH" type="number" placeholder="H" value="400" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
         <span style="color:#666;">×</span>
-        <input id="boxD" type="number" placeholder="D" value="150" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
+        <input id="boxD" type="number" placeholder="D" value="400" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
         <button onclick="window.applyBoxDimensions()" style="padding:5px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" data-i18n="box_apply">적용</button>
         <span id="boxPriceDisplay" style="display:none; align-items:center; gap:4px; color:#22c55e; font-size:12px; font-weight:700; white-space:nowrap;">
             <i class="fa-solid fa-calculator"></i>
@@ -7691,11 +7691,7 @@ if (w >= 20 && h >= 20) {
         if (isPaperDisplay && window.openDesignWizard) {
             setTimeout(() => window.openDesignWizard(), 1200);
         }
-        // ★ 허니콤 박스: applyBoxDimensions 완료 후 마법사 오픈
-        if (window.__boxWizardMode && mode === 'box' && window.openDesignWizard) {
-            window.__boxWizardMode = false;
-            setTimeout(() => window.openDesignWizard(), 1200);
-        }
+        // 허니콤 박스: 마법사 없이 빈 화면 시작 (사용자가 수동으로 마법사 클릭)
 
         // 목업 이미지 로드 (잠금 배경 레이어)
         if (product && product.mockup_url) {
