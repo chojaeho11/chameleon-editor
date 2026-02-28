@@ -607,6 +607,16 @@ async function runDesignWizard(title, style) {
     _wzRender(steps, 0);
     await _wzBg(keywords, bW, bH, bL, bT);
 
+    // ★ 하단 1/4 검정 오버레이 (이동/크기조절 가능한 도형)
+    const bottomBlack = new fabric.Rect({
+        width: bW, height: bH * 0.28,
+        left: bL, top: bT + bH * 0.72,
+        originX:'left', originY:'top',
+        fill: '#000000', opacity: 0.85,
+        rx: 0, ry: 0
+    });
+    canvas.add(bottomBlack);
+
     // ─── Step 2: Title ───
     _wzRender(steps, 1);
     await _wzTitle(title, titleFont, S, bW, bH, bL, bT);
@@ -731,13 +741,12 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
         displayTitle = title.substring(0, cut) + '\n' + title.substring(cut);
     }
 
-    const dark = _wzIsDarkBg();
     const obj = new fabric.Textbox(displayTitle, {
-        fontFamily: font, fontSize: sz, fontWeight: '900',
-        fill: dark ? '#ffffff' : '#1a1a1a',
+        fontFamily: font, fontSize: sz, fontWeight: 'normal',
+        fill: '#ffffff',
         originX:'right', originY:'center', textAlign:'right',
-        left: bL + bW * 0.93, top: bT + bH * 0.28,
-        width: bW * 0.65, lineHeight: 1.2, charSpacing: 30
+        left: bL + bW * 0.93, top: bT + bH * 0.25,
+        width: bW * 0.65, lineHeight: 0.95, charSpacing: 80
     });
     canvas.add(obj);
     canvas.bringToFront(obj);
@@ -785,12 +794,11 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     // 우측 정렬 + 좁은 폭으로 짧게 내려쓰기 (디자인 요소)
     const maxW = bW * 0.38;
     const fSize = Math.round(bW * 0.014);
-    const dark = _wzIsDarkBg();
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
-        fontWeight:'400', fill: dark ? 'rgba(255,255,255,0.75)' : '#475569',
+        fontWeight:'400', fill: 'rgba(255,255,255,0.85)',
         originX:'right', originY:'top', textAlign:'right',
-        left: bL + bW * 0.93, top: bT + bH * 0.42,
+        left: bL + bW * 0.93, top: bT + bH * 0.50,
         width: maxW,
         lineHeight: 1.6,
         splitByGrapheme: true
