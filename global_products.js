@@ -4185,3 +4185,390 @@ async function _wizUploadYoutube(videoBlob, title, description, tags) {
     if (!uploadRes.ok) throw new Error('YouTube 업로드 실패: ' + uploadRes.status);
     return await uploadRes.json();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ★★★ 자동 상세페이지 구축 시스템 (Auto Detail Page Builder) ★★★
+// ═══════════════════════════════════════════════════════════════
+
+let _adpProducts = [];       // 대상 상품 목록
+let _adpIndex = 0;           // 현재 처리 인덱스
+let _adpRunning = false;     // 실행 중 여부
+let _adpStopReq = false;     // 중지 요청
+let _adpDoneCount = 0;
+let _adpFailCount = 0;
+
+// ── 모달 열기 ──
+window.openAutoDetailBuilder = function() {
+    document.getElementById('adpModal').style.display = 'flex';
+    // 이전 진행 상태 확인
+    const saved = _adpLoadProgress();
+    if (saved && saved.remaining > 0) {
+        document.getElementById('adpBtnResume').style.display = '';
+        _adpLog('⏸ 이전 진행이 있습니다: ' + saved.done + '/' + (saved.done + saved.remaining) + ' 완료. "이어서 진행" 클릭.');
+    }
+};
+
+// ── 대상 상품 스캔 ──
+window.adpScanProducts = async function() {
+    const btn = document.getElementById('adpBtnScan');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 스캔 중...';
+    _adpLog('🔍 전체 상품 조회 중...');
+
+    try {
+        const { data, error } = await sb.from('admin_products')
+            .select('id, name, code, category, price, img_url, description')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+
+        _adpProducts = (data || []).filter(_adpNeedsGeneration);
+        _adpIndex = 0;
+        _adpDoneCount = 0;
+        _adpFailCount = 0;
+
+        document.getElementById('adpStatTotal').textContent = _adpProducts.length;
+        document.getElementById('adpStatDone').textContent = '0';
+        document.getElementById('adpStatFail').textContent = '0';
+        const eta = _adpProducts.length * 2;
+        document.getElementById('adpStatEta').textContent = eta < 60 ? eta + '분' : Math.round(eta / 60 * 10) / 10 + '시간';
+        document.getElementById('adpProgressBar').style.width = '0%';
+
+        _adpLog('✅ 총 ' + data.length + '개 상품 중 ' + _adpProducts.length + '개 대상 감지');
+        if (_adpProducts.length > 0) {
+            _adpProducts.slice(0, 5).forEach(p => _adpLog('   • ' + p.name + (p.category ? ' [' + p.category + ']' : '')));
+            if (_adpProducts.length > 5) _adpLog('   ... 외 ' + (_adpProducts.length - 5) + '개');
+            document.getElementById('adpBtnStart').disabled = false;
+        } else {
+            _adpLog('🎉 모든 상품에 상세페이지가 이미 있습니다.');
+        }
+    } catch(e) {
+        _adpLog('❌ 스캔 실패: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> 대상 상품 스캔';
+};
+
+// ── 대상 판별 ──
+function _adpNeedsGeneration(p) {
+    if (!p.img_url) return false;
+    const desc = (p.description || '').trim();
+    // 이미 마법사로 생성된 상세페이지
+    if (desc.includes('#0f3460') || desc.includes('#1a1a2e')) return false;
+    // 비어있거나 200자 미만
+    if (desc.length < 200) return true;
+    // HTML 태그 제거 후 텍스트가 빈약하고 이미지 1개 이하
+    const textOnly = desc.replace(/<[^>]*>/g, '').trim();
+    const imgCount = (desc.match(/<img\s/gi) || []).length;
+    if (textOnly.length < 50 && imgCount <= 1) return true;
+    return false;
+}
+
+// ── 시작 ──
+window.adpStart = function() {
+    if (_adpRunning) return;
+    if (_adpProducts.length === 0) { _adpLog('⚠ 먼저 스캔을 실행해주세요.'); return; }
+
+    _adpRunning = true;
+    _adpStopReq = false;
+    document.getElementById('adpBtnStart').style.display = 'none';
+    document.getElementById('adpBtnScan').style.display = 'none';
+    document.getElementById('adpBtnStop').style.display = '';
+    document.getElementById('adpBtnResume').style.display = 'none';
+    _adpLog('🚀 자동 구축 시작! (' + _adpProducts.length + '개 상품)');
+    _adpProcessLoop();
+};
+
+// ── 중지 ──
+window.adpStop = function() {
+    _adpStopReq = true;
+    _adpLog('⏹ 중지 요청됨. 현재 상품 완료 후 중지합니다...');
+};
+
+// ── 이어하기 ──
+window.adpResume = async function() {
+    const saved = _adpLoadProgress();
+    if (!saved || saved.remaining === 0) { _adpLog('⚠ 이전 진행 상태가 없습니다.'); return; }
+
+    _adpLog('🔄 이전 진행 복원 중...');
+    // 남은 상품 ID로 다시 조회
+    const { data, error } = await sb.from('admin_products')
+        .select('id, name, code, category, price, img_url, description')
+        .in('id', saved.remainingIds);
+    if (error) { _adpLog('❌ 복원 실패: ' + error.message); return; }
+
+    _adpProducts = (data || []).filter(_adpNeedsGeneration);
+    _adpIndex = 0;
+    _adpDoneCount = saved.done;
+    _adpFailCount = saved.fail || 0;
+
+    document.getElementById('adpStatTotal').textContent = _adpDoneCount + _adpProducts.length;
+    document.getElementById('adpStatDone').textContent = _adpDoneCount;
+    document.getElementById('adpStatFail').textContent = _adpFailCount;
+
+    _adpLog('✅ ' + _adpProducts.length + '개 남은 상품 복원 완료');
+    _adpRunning = true;
+    _adpStopReq = false;
+    document.getElementById('adpBtnStart').style.display = 'none';
+    document.getElementById('adpBtnScan').style.display = 'none';
+    document.getElementById('adpBtnStop').style.display = '';
+    document.getElementById('adpBtnResume').style.display = 'none';
+    _adpProcessLoop();
+};
+
+// ── 핵심 처리 루프 ──
+async function _adpProcessLoop() {
+    const delay = (parseInt(document.getElementById('adpOptDelay').value) || 3) * 1000;
+    const doImages = document.getElementById('adpOptImages').checked;
+    const doBlog = document.getElementById('adpOptBlog').checked;
+    const total = _adpDoneCount + _adpFailCount + _adpProducts.length;
+
+    while (_adpIndex < _adpProducts.length) {
+        if (_adpStopReq) {
+            _adpLog('⏹ 중지됨. ' + _adpDoneCount + '개 완료, ' + (_adpProducts.length - _adpIndex) + '개 남음.');
+            _adpSaveProgress();
+            _adpFinishUI();
+            return;
+        }
+
+        const prod = _adpProducts[_adpIndex];
+        const num = _adpDoneCount + _adpFailCount + 1;
+        _adpLog('━━━ [' + num + '/' + total + '] ' + prod.name + ' ━━━');
+        _adpShowCurrent(prod, '준비 중...');
+
+        try {
+            let imageUrls = [prod.img_url];
+
+            // ── STEP 1: 이미지 변형 (선택) ──
+            if (doImages) {
+                _adpShowCurrent(prod, '🔄 이미지 변형 생성 중 (5장)...');
+                _adpLog('  📸 이미지 변형 5장 생성 중 (병렬)...');
+                const promises = [];
+                for (let i = 0; i < 5; i++) {
+                    promises.push(
+                        sb.functions.invoke('reimagine-product', {
+                            body: { image_url: prod.img_url, mode: 'variation', prompt_hint: prod.name }
+                        }).then(res => {
+                            if (res.error) throw new Error(res.error.message || res.error);
+                            return res.data?.image_url || res.data?.url || null;
+                        }).catch(e => { _adpLog('  ⚠ 변형 ' + (i + 1) + ' 실패: ' + e.message); return null; })
+                    );
+                }
+                const results = await Promise.all(promises);
+                const newImgs = results.filter(Boolean);
+                imageUrls = [prod.img_url, ...newImgs];
+                _adpLog('  ✅ 이미지 ' + imageUrls.length + '장 준비 (원본 + ' + newImgs.length + '장 변형)');
+            }
+
+            // ── STEP 2: AI 상세페이지 KR 생성 ──
+            _adpShowCurrent(prod, '🤖 AI 상세페이지 생성 중...');
+            _adpLog('  🤖 AI 상세페이지 HTML 생성 중...');
+            const { data: aiData, error: aiErr } = await sb.functions.invoke('generate-product-detail', {
+                body: {
+                    product_name: prod.name,
+                    product_category: prod.category || '',
+                    image_urls: imageUrls,
+                    image_url: prod.img_url,
+                    price: prod.price || 0,
+                    original_description: prod.description || '',
+                    mode: 'wizard',
+                    langs: ['kr']
+                }
+            });
+            if (aiErr) throw new Error('AI 생성 실패: ' + (aiErr.message || aiErr));
+            if (!aiData || !aiData.success) throw new Error('AI 생성 실패: ' + (aiData?.error || '응답 없음'));
+            const krHtml = aiData.details?.kr;
+            if (!krHtml) throw new Error('KR HTML이 비어있습니다.');
+            _adpLog('  ✅ KR 상세페이지 생성 완료 (' + krHtml.length + '자)');
+
+            // ── STEP 3: 7개국 번역 ──
+            _adpShowCurrent(prod, '🌐 다국어 번역 중 (7개국)...');
+            _adpLog('  🌐 7개 언어 번역 중...');
+            const translations = { kr: krHtml };
+            const targets = [
+                { code: 'ja', key: 'jp' }, { code: 'en', key: 'us' },
+                { code: 'zh-CN', key: 'cn' }, { code: 'ar', key: 'ar' },
+                { code: 'es', key: 'es' }, { code: 'de', key: 'de' }, { code: 'fr', key: 'fr' }
+            ];
+
+            if (typeof window.googleTranslateSimple === 'function') {
+                for (const t of targets) {
+                    try {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = krHtml;
+                        async function trNode(node) {
+                            for (let child of node.childNodes) {
+                                if (child.nodeType === 3 && child.nodeValue.trim().length > 0) {
+                                    child.nodeValue = await window.googleTranslateSimple(child.nodeValue, t.code);
+                                } else if (child.nodeType === 1 && child.tagName !== 'IMG') {
+                                    await trNode(child);
+                                }
+                            }
+                        }
+                        await trNode(tempDiv);
+                        translations[t.key] = tempDiv.innerHTML;
+                    } catch(e) {
+                        translations[t.key] = krHtml;
+                    }
+                }
+                _adpLog('  ✅ 번역 완료');
+            } else {
+                targets.forEach(t => { translations[t.key] = krHtml; });
+                _adpLog('  ⚠ googleTranslateSimple 없음 → KR 원문으로 저장');
+            }
+
+            // ── STEP 4: DB 저장 ──
+            _adpShowCurrent(prod, '💾 DB 저장 중...');
+            const { error: saveErr } = await sb.from('admin_products').update({
+                description: translations.kr,
+                description_jp: translations.jp || '',
+                description_us: translations.us || '',
+                description_cn: translations.cn || '',
+                description_ar: translations.ar || '',
+                description_es: translations.es || '',
+                description_de: translations.de || '',
+                description_fr: translations.fr || ''
+            }).eq('id', prod.id);
+            if (saveErr) throw new Error('DB 저장 실패: ' + saveErr.message);
+            _adpLog('  ✅ 8개국 상세페이지 저장 완료');
+
+            // ── STEP 5: 블로그 (선택) ──
+            if (doBlog) {
+                _adpShowCurrent(prod, '📝 블로그 생성 중 (8개국)...');
+                await _adpGenerateBlogs(prod, imageUrls[0]);
+            }
+
+            _adpDoneCount++;
+            _adpLog('  🎉 완료!');
+
+        } catch(e) {
+            _adpFailCount++;
+            _adpLog('  ❌ 실패: ' + e.message);
+        }
+
+        _adpIndex++;
+        _adpUpdateProgress(total);
+        _adpSaveProgress();
+
+        // API 부하 방지 딜레이
+        if (_adpIndex < _adpProducts.length) {
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+
+    _adpLog('═══════════════════════════════════');
+    _adpLog('🏁 전체 완료! 성공: ' + _adpDoneCount + ', 실패: ' + _adpFailCount);
+    localStorage.removeItem('adp_progress');
+    _adpFinishUI();
+}
+
+// ── 블로그 생성 (8개국) ──
+async function _adpGenerateBlogs(prod, thumbnailUrl) {
+    const blogLangs = ['kr','ja','en','cn','ar','es','de','fr'];
+    const { data: { user } } = await sb.auth.getUser();
+    const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '카멜레온';
+    let settings = {}; try { settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}'); } catch(e) {}
+    let blogCount = 0;
+
+    for (const lang of blogLangs) {
+        try {
+            const cfg = _wizLangConfig[lang];
+            if (!cfg) continue;
+            const { data: aiData, error: aiErr } = await sb.functions.invoke('marketing-content', {
+                body: {
+                    platform: 'blog',
+                    topic: prod.name + ' - 카멜레온프린팅 제품 소개',
+                    tone: 'professional',
+                    lang: lang,
+                    instructions: cfg.site + '에 게시될 ' + cfg.label + ' 제품 블로그입니다. 상품명: ' + prod.name + '. 카테고리: ' + (prod.category || '') + '. 웹사이트: https://' + cfg.site,
+                    coreKeywords: settings.coreKeywords || '',
+                    usp: settings.usp || '',
+                    ctaMsg: settings.ctaMsg || ''
+                }
+            });
+            if (aiErr) throw new Error(aiErr.message);
+            const content = aiData?.content || aiData;
+            if (content?.error) throw new Error(content.error);
+
+            const bodyText = content.body || '';
+            const focusKw = content.focus_keyword || '';
+            let htmlBody = bodyText.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')
+                .replace(/## (.*)/g, '<h2>$1</h2>').replace(/### (.*)/g, '<h3>$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            htmlBody = '<p><img src="' + thumbnailUrl + '" alt="' + (focusKw || prod.name) + '" style="max-width:100%; border-radius:12px; margin-bottom:20px;" loading="lazy"/></p><p>' + htmlBody + '</p>';
+            if (content.hashtags?.length) {
+                htmlBody += '<p style="color:#6366f1; margin-top:20px;">' + content.hashtags.map(t => '#' + t).join(' ') + '</p>';
+            }
+
+            const seoMeta = JSON.stringify({ meta_description: content.meta_description || '', focus_keyword: focusKw, hashtags: content.hashtags || [], og_image: thumbnailUrl });
+            await sb.from('community_posts').insert({
+                category: 'blog', country_code: cfg.countryCode,
+                title: content.title || prod.name, content: htmlBody,
+                author_name: authorName, author_email: user?.email || '',
+                author_id: user?.id || null, thumbnail: thumbnailUrl, markdown: seoMeta
+            });
+            blogCount++;
+        } catch(e) {
+            _adpLog('  ⚠ 블로그 ' + lang + ' 실패: ' + e.message);
+        }
+        await new Promise(r => setTimeout(r, 1500));
+    }
+    _adpLog('  📝 블로그 ' + blogCount + '/8 생성 완료');
+}
+
+// ── UI 헬퍼 ──
+function _adpLog(msg) {
+    const area = document.getElementById('adpLogArea');
+    if (!area) return;
+    const time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+    area.innerHTML += '<div><span style="color:#64748b;">[' + time + ']</span> ' + msg + '</div>';
+    area.scrollTop = area.scrollHeight;
+}
+
+function _adpShowCurrent(prod, step) {
+    const wrap = document.getElementById('adpCurrentWrap');
+    wrap.style.display = '';
+    document.getElementById('adpCurrentImg').src = prod.img_url || '';
+    document.getElementById('adpCurrentName').textContent = prod.name;
+    document.getElementById('adpCurrentStep').textContent = step;
+}
+
+function _adpUpdateProgress(total) {
+    const done = _adpDoneCount + _adpFailCount;
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    document.getElementById('adpProgressBar').style.width = pct + '%';
+    document.getElementById('adpStatDone').textContent = _adpDoneCount;
+    document.getElementById('adpStatFail').textContent = _adpFailCount;
+    const remaining = total - done;
+    const eta = remaining * 2;
+    document.getElementById('adpStatEta').textContent = remaining === 0 ? '완료!' : (eta < 60 ? eta + '분' : Math.round(eta / 60 * 10) / 10 + '시간');
+}
+
+function _adpFinishUI() {
+    _adpRunning = false;
+    document.getElementById('adpBtnStart').style.display = '';
+    document.getElementById('adpBtnStart').disabled = true;
+    document.getElementById('adpBtnScan').style.display = '';
+    document.getElementById('adpBtnStop').style.display = 'none';
+    document.getElementById('adpCurrentWrap').style.display = 'none';
+}
+
+// ── 진행 상태 저장/복원 ──
+function _adpSaveProgress() {
+    const remainingIds = _adpProducts.slice(_adpIndex).map(p => p.id);
+    localStorage.setItem('adp_progress', JSON.stringify({
+        done: _adpDoneCount, fail: _adpFailCount,
+        remaining: remainingIds.length, remainingIds: remainingIds,
+        ts: Date.now()
+    }));
+}
+
+function _adpLoadProgress() {
+    try {
+        const raw = localStorage.getItem('adp_progress');
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        // 24시간 이상 지난 진행 상태는 무시
+        if (Date.now() - data.ts > 24 * 60 * 60 * 1000) { localStorage.removeItem('adp_progress'); return null; }
+        return data;
+    } catch(e) { return null; }
+}

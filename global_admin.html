@@ -1237,6 +1237,9 @@
             <button id="btnBatchFillDetail" class="btn" onclick="batchFillDetailPages()" style="width:100%; margin-top:10px; background:#059669; color:#fff; border:none; font-weight:bold; padding:10px; border-radius:8px; cursor:pointer;">
                 <i class="fa-solid fa-file-lines"></i> 상세페이지 일괄 생성 (빈 상품)
             </button>
+            <button class="btn" onclick="openAutoDetailBuilder()" style="width:100%; margin-top:8px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; font-weight:bold; padding:12px; border-radius:8px; cursor:pointer; font-size:14px;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 자동 상세페이지 구축 (AI)
+            </button>
         </div> <div class="product-grid-area" style="flex: 1.5; display: flex; flex-direction: column; gap: 20px;">
             
             <div class="card" style="margin-bottom:0; border-left: 5px solid #6366f1;">
@@ -2005,6 +2008,80 @@
         <div style="padding:15px; border-top:1px solid #eee; text-align:right; background:#f9fafb; border-radius:0 0 8px 8px;">
             <button class="btn btn-outline" onclick="document.getElementById('bulkHtmlModal').style.display='none'" style="margin-right:5px;">취소</button>
             <button class="btn btn-primary" onclick="runBulkHtmlUpdate()" style="background:#db2777; border-color:#be185d;">🚀 일괄 적용하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 자동 상세페이지 구축 모달 ═══ -->
+<div id="adpModal" class="modal-overlay" style="display:none; z-index:50000;">
+    <div class="modal-box" style="width:850px; max-width:95%; max-height:90vh; display:flex; flex-direction:column; background:#0f172a; color:#e2e8f0; border:1px solid #334155;">
+        <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9); padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-radius:8px 8px 0 0;">
+            <span style="font-weight:bold; font-size:18px; color:#fff;"><i class="fa-solid fa-wand-magic-sparkles"></i> 자동 상세페이지 구축 (AI)</span>
+            <button onclick="document.getElementById('adpModal').style.display='none'" style="border:none; background:transparent; color:#fff; font-size:24px; cursor:pointer;">✕</button>
+        </div>
+        <!-- 통계 카드 -->
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:15px 20px 10px;">
+            <div style="background:#1e293b; border-radius:8px; padding:12px; text-align:center; border:1px solid #334155;">
+                <div style="font-size:11px; color:#94a3b8;">대상 상품</div>
+                <div id="adpStatTotal" style="font-size:28px; font-weight:bold; color:#a78bfa;">0</div>
+            </div>
+            <div style="background:#1e293b; border-radius:8px; padding:12px; text-align:center; border:1px solid #334155;">
+                <div style="font-size:11px; color:#94a3b8;">완료</div>
+                <div id="adpStatDone" style="font-size:28px; font-weight:bold; color:#34d399;">0</div>
+            </div>
+            <div style="background:#1e293b; border-radius:8px; padding:12px; text-align:center; border:1px solid #334155;">
+                <div style="font-size:11px; color:#94a3b8;">실패</div>
+                <div id="adpStatFail" style="font-size:28px; font-weight:bold; color:#f87171;">0</div>
+            </div>
+            <div style="background:#1e293b; border-radius:8px; padding:12px; text-align:center; border:1px solid #334155;">
+                <div style="font-size:11px; color:#94a3b8;">예상 시간</div>
+                <div id="adpStatEta" style="font-size:20px; font-weight:bold; color:#fbbf24;">-</div>
+            </div>
+        </div>
+        <!-- 프로그레스 바 -->
+        <div style="padding:0 20px;">
+            <div style="background:#1e293b; border-radius:6px; height:8px; overflow:hidden;">
+                <div id="adpProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#7c3aed,#a855f7); transition:width 0.3s;"></div>
+            </div>
+        </div>
+        <!-- 현재 처리 중 -->
+        <div id="adpCurrentWrap" style="display:none; padding:10px 20px; margin:10px 20px; background:#1e293b; border-radius:8px; border:1px solid #334155;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img id="adpCurrentImg" src="" style="width:60px; height:60px; object-fit:cover; border-radius:8px; background:#0f172a;">
+                <div style="flex:1; min-width:0;">
+                    <div id="adpCurrentName" style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                    <div id="adpCurrentStep" style="font-size:12px; color:#a78bfa; margin-top:4px;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- 옵션 -->
+        <div style="display:flex; gap:15px; padding:5px 20px; align-items:center; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;">
+                <input type="checkbox" id="adpOptImages" checked> <span>이미지 변형 (5장)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;">
+                <input type="checkbox" id="adpOptBlog"> <span>블로그 생성</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:5px; font-size:13px;">
+                딜레이: <input type="number" id="adpOptDelay" value="3" min="1" max="30" style="width:50px; background:#1e293b; color:#e2e8f0; border:1px solid #475569; border-radius:4px; padding:3px 6px; text-align:center;">초
+            </label>
+        </div>
+        <!-- 로그 -->
+        <div id="adpLogArea" style="flex:1; margin:10px 20px; background:#020617; border:1px solid #1e293b; border-radius:8px; padding:10px; font-family:'Consolas','Courier New',monospace; font-size:12px; overflow-y:auto; min-height:180px; max-height:300px; line-height:1.6;"></div>
+        <!-- 버튼 -->
+        <div style="padding:15px 20px; display:flex; gap:8px; border-top:1px solid #1e293b;">
+            <button id="adpBtnScan" onclick="adpScanProducts()" style="flex:1; padding:10px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; background:#3b82f6; color:#fff; font-size:14px;">
+                <i class="fa-solid fa-magnifying-glass"></i> 대상 상품 스캔
+            </button>
+            <button id="adpBtnStart" onclick="adpStart()" style="flex:1; padding:10px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; background:#059669; color:#fff; font-size:14px;" disabled>
+                <i class="fa-solid fa-play"></i> 자동 구축 시작
+            </button>
+            <button id="adpBtnStop" onclick="adpStop()" style="flex:0.5; padding:10px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; background:#dc2626; color:#fff; font-size:14px; display:none;">
+                <i class="fa-solid fa-stop"></i> 중지
+            </button>
+            <button id="adpBtnResume" onclick="adpResume()" style="flex:1; padding:10px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; background:#d97706; color:#fff; font-size:14px; display:none;">
+                <i class="fa-solid fa-forward"></i> 이어서 진행
+            </button>
         </div>
     </div>
 </div>
