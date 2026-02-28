@@ -1031,7 +1031,18 @@ window.NpcWizard = {
     },
 
     // 허니콤보드: 직접 주문 → 파일 여부만 묻고 에디터 없이 진행
+    // ★ hb_bx (허니콤 박스): 에디터로 바로 직행
     _honeycombDirect() {
+        const key = this.product?.code || window.currentProductKey || '';
+        if (key.startsWith('hb_bx')) {
+            // 허니콤 박스 → 에디터 직행 (마법사 자동 실행)
+            const product = this.product;
+            const w = product.display_width || 300;
+            const h = product.display_height || 300;
+            window.__boxWizardMode = true; // 에디터 진입 후 마법사 자동 오픈용 플래그
+            window.startEditorDirect(key, w, h, null);
+            return;
+        }
         this.isHoneycomb = false;
         this._fromHoneycombDirect = true;
         this._goStep('askFile');

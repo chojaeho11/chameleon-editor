@@ -334,6 +334,8 @@ export function initAiTools() {
             try {
                 if (window.__pdMode) {
                     await runDesignWizardForPD(title, style);
+                } else if (window.__boxMode) {
+                    await runDesignWizardForBox(title, style);
                 } else {
                     await runDesignWizard(title, style);
                 }
@@ -841,6 +843,86 @@ function _wzShelfTitle(title, font, bW, bH, bL, bT) {
     });
     canvas.add(obj);
     canvas.bringToFront(obj);
+}
+
+// ============================================================
+// ★ 허니콤 박스 전용 멀티페이스 마법사 (6면 동일 디자인)
+// ============================================================
+async function runDesignWizardForBox(title, style) {
+    // ─── Face 0 (Front): 풀 마법사 실행 ───
+    await runDesignWizard(title, style);
+    if (window.savePageState) window.savePageState();
+
+    // Face 0의 캔버스 JSON 캡처 (보드 제외한 오브젝트들)
+    const face0Json = canvas.toJSON(['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isTemplateBackground','isBottomOverlay']);
+    const keywords = _wzExtractKeywords(title);
+
+    // ─── Face 1~5: 동일 디자인 복제 ───
+    for (let fi = 1; fi <= 5; fi++) {
+        window.switchBoxFace(fi);
+        await new Promise(r => setTimeout(r, 500));
+        // 기존 오브젝트 제거 (보드 제외)
+        canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+        const board = canvas.getObjects().find(o => o.isBoard);
+        if (!board) continue;
+        const bW = board.width * (board.scaleX || 1), bH = board.height * (board.scaleY || 1);
+        const bL = board.left, bT = board.top;
+
+        // 배경 그라데이션 (같은 스타일)
+        await _wzBg(keywords, bW, bH, bL, bT);
+
+        // 하단 오버레이
+        const [bgC1, bgC2] = window._wzBgColors || ['#1a0033','#0d001a'];
+        function darken(hex, factor) {
+            const r = Math.round(parseInt(hex.slice(1,3),16) * factor);
+            const g = Math.round(parseInt(hex.slice(3,5),16) * factor);
+            const b = Math.round(parseInt(hex.slice(5,7),16) * factor);
+            return '#' + [r,g,b].map(v => Math.min(255,v).toString(16).padStart(2,'0')).join('');
+        }
+        const overlay = new fabric.Rect({
+            width: bW, height: bH * 0.28,
+            left: bL, top: bT + bH * 0.72,
+            originX:'left', originY:'top',
+            fill: new fabric.Gradient({
+                type: 'linear',
+                coords: { x1: 0, y1: 0, x2: 0, y2: bH * 0.28 },
+                colorStops: [
+                    { offset: 0, color: darken(bgC2, 0.35) },
+                    { offset: 1, color: darken(bgC2, 0.15) }
+                ]
+            }),
+            opacity: 1, rx: 0, ry: 0, isBottomOverlay: true
+        });
+        canvas.add(overlay);
+        const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
+        if (bgObj) canvas.moveTo(overlay, canvas.getObjects().indexOf(bgObj) + 1);
+
+        // 타이틀
+        const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+        const titleFontMap = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
+        let titleFont = titleFontMap[country] || 'Impact, Arial Black, sans-serif';
+        if (country === 'JP' && window.DYNAMIC_FONTS) {
+            const popFont = window.DYNAMIC_FONTS.find(f => f.font_name?.includes('ポプ'));
+            if (popFont) titleFont = popFont.font_family;
+        }
+        const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
+        const S = WIZARD_STYLES[style] || WIZARD_STYLES.blue;
+        await _wzTitle(title, titleFont, S, bW, bH, bL, bT);
+
+        // 설명
+        const descText = await _wzGetDescText(title);
+        _wzBottomBox(descText, S, descFont, bW, bH, bL, bT);
+
+        // 요소
+        await _wzElem(keywords, bW, bH, bL, bT);
+
+        canvas.requestRenderAll();
+        if (window.savePageState) window.savePageState();
+    }
+
+    // ─── Face 0으로 복귀 ───
+    window.switchBoxFace(0);
+    await new Promise(r => setTimeout(r, 300));
 }
 
 // ─── Step 1: Background (data_url 원본, 잠금 처리) ───

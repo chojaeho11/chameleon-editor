@@ -7691,6 +7691,11 @@ if (w >= 20 && h >= 20) {
         if (isPaperDisplay && window.openDesignWizard) {
             setTimeout(() => window.openDesignWizard(), 1200);
         }
+        // ★ 허니콤 박스: applyBoxDimensions 완료 후 마법사 오픈
+        if (window.__boxWizardMode && mode === 'box' && window.openDesignWizard) {
+            window.__boxWizardMode = false;
+            setTimeout(() => window.openDesignWizard(), 1200);
+        }
 
         // 목업 이미지 로드 (잠금 배경 레이어)
         if (product && product.mockup_url) {
