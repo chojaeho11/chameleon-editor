@@ -332,7 +332,11 @@ export function initAiTools() {
             btnWizGen.innerHTML = '<div class="loading-spin" style="width:20px;height:20px;border-width:3px;"></div>';
             document.getElementById('wizardProgressArea').style.display = 'block';
             try {
-                await runDesignWizard(title, style);
+                if (window.__pdMode) {
+                    await runDesignWizardForPD(title, style);
+                } else {
+                    await runDesignWizard(title, style);
+                }
                 document.getElementById('designWizardModal').style.display = 'none';
             } catch(e) {
                 console.error('Wizard error:', e);
@@ -743,6 +747,87 @@ async function runDesignWizard(title, style) {
         });
         canvas.requestRenderAll();
     }, 500);
+}
+
+// ============================================================
+// ★ 종이매대(PD) 전용 멀티페이스 마법사
+// Face 0: 간판 (풀 디자인) / Face 1: 옆면 (배경+요소) / Face 2: 선반 (배경+타이틀)
+// ============================================================
+async function runDesignWizardForPD(title, style) {
+    // ─── Face 0: 상단 간판 — 풀 마법사 실행 ───
+    await runDesignWizard(title, style);
+    if (window.savePageState) window.savePageState();
+
+    // 공통 데이터 캐시
+    const keywords = _wzExtractKeywords(title);
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+    const titleFontMap = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
+    let titleFont = titleFontMap[country] || 'Impact, Arial Black, sans-serif';
+    if (country === 'JP' && window.DYNAMIC_FONTS) {
+        const popFont = window.DYNAMIC_FONTS.find(f => f.font_name?.includes('ポプ'));
+        if (popFont) titleFont = popFont.font_family;
+    }
+
+    // ─── Face 1: 옆면 — 배경 + 요소만 하단에 크게 ───
+    window.switchPdFace(1);
+    await new Promise(r => setTimeout(r, 500));
+    canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+    const board1 = canvas.getObjects().find(o => o.isBoard);
+    if (board1) {
+        const b1W = board1.width * (board1.scaleX || 1), b1H = board1.height * (board1.scaleY || 1);
+        const b1L = board1.left, b1T = board1.top;
+        await _wzBg(keywords, b1W, b1H, b1L, b1T);
+        await _wzElem(keywords, b1W, b1H, b1L, b1T);
+        // ★ 요소를 하단 중앙으로 재배치
+        canvas.getObjects().forEach(o => {
+            if (!o.isBoard && !o.isTemplateBackground && o.type === 'image') {
+                const bigSize = b1W * 1.0;
+                const scale = bigSize / Math.max(o.width || 1, o.height || 1);
+                o.set({ scaleX: scale, scaleY: scale, left: b1L + b1W * 0.5, top: b1T + b1H * 0.80, originX: 'center', originY: 'center' });
+            }
+        });
+        canvas.requestRenderAll();
+    }
+    if (window.savePageState) window.savePageState();
+
+    // ─── Face 2: 선반 — 배경 + 타이틀만 ───
+    window.switchPdFace(2);
+    await new Promise(r => setTimeout(r, 500));
+    canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+    const board2 = canvas.getObjects().find(o => o.isBoard);
+    if (board2) {
+        const b2W = board2.width * (board2.scaleX || 1), b2H = board2.height * (board2.scaleY || 1);
+        const b2L = board2.left, b2T = board2.top;
+        await _wzBg(keywords, b2W, b2H, b2L, b2T);
+        _wzShelfTitle(title, titleFont, b2W, b2H, b2L, b2T);
+        canvas.requestRenderAll();
+    }
+    if (window.savePageState) window.savePageState();
+
+    // ─── Face 0으로 복귀 ───
+    window.switchPdFace(0);
+    await new Promise(r => setTimeout(r, 300));
+}
+
+// ★ 선반 전용 타이틀 (중앙 정렬, 선반 높이에 맞는 크기)
+function _wzShelfTitle(title, font, bW, bH, bL, bT) {
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+    const isJP = country === 'JP';
+    // 선반 높이에 맞게 폰트 크기 조정 (선반은 높이가 작으므로 50% 정도)
+    const sz = Math.round(bH * 0.45);
+    const displayTitle = title.length > 15 ? title.substring(0, 15) : title;
+    const obj = new fabric.Textbox(displayTitle, {
+        fontFamily: font, fontSize: sz, fontWeight: 'normal',
+        fill: '#ffffff',
+        originX: 'center', originY: 'center', textAlign: 'center',
+        left: bL + bW * 0.5, top: bT + bH * 0.5,
+        width: bW * 0.90,
+        lineHeight: 1.0,
+        charSpacing: isJP ? 40 : 60,
+        splitByGrapheme: isJP ? true : false
+    });
+    canvas.add(obj);
+    canvas.bringToFront(obj);
 }
 
 // ─── Step 1: Background (data_url 원본, 잠금 처리) ───
