@@ -3600,11 +3600,15 @@ window.filterFxCards = function(cat, btn) {
                 onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
 
             <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;" data-i18n="wizard_label_style">스타일</label>
-            <div id="wizardStyleGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
-                <button class="wizard-style-btn active" data-style="blue" data-i18n="wizard_style_blue" style="background:linear-gradient(135deg,#38bdf8,#1e3a8a);color:#fff;">Blue</button>
-                <button class="wizard-style-btn" data-style="yellow" data-i18n="wizard_style_yellow" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#78350f;">Yellow</button>
-                <button class="wizard-style-btn" data-style="candy" data-i18n="wizard_style_candy" style="background:linear-gradient(135deg,#f472b6,#ec4899);color:#fff;">Candy</button>
-                <button class="wizard-style-btn" data-style="dark" data-i18n="wizard_style_dark" style="background:linear-gradient(135deg,#334155,#0f172a);color:#e2e8f0;">Dark</button>
+            <div id="wizardStyleGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px;">
+                <button class="wizard-style-btn active" data-style="ocean" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;">Ocean</button>
+                <button class="wizard-style-btn" data-style="sunset" style="background:linear-gradient(135deg,#f6d365,#fda085);color:#78350f;">Sunset</button>
+                <button class="wizard-style-btn" data-style="rose" style="background:linear-gradient(135deg,#ff9a9e,#fad0c4);color:#831843;">Rose</button>
+                <button class="wizard-style-btn" data-style="midnight" style="background:linear-gradient(135deg,#0f0c29,#302b63);color:#e2e8f0;">Midnight</button>
+                <button class="wizard-style-btn" data-style="forest" style="background:linear-gradient(135deg,#11998e,#38ef7d);color:#064e3b;">Forest</button>
+                <button class="wizard-style-btn" data-style="lavender" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);color:#4c1d95;">Lavender</button>
+                <button class="wizard-style-btn" data-style="coral" style="background:linear-gradient(135deg,#ff6b6b,#feca57);color:#881337;">Coral</button>
+                <button class="wizard-style-btn" data-style="arctic" style="background:linear-gradient(135deg,#e0eafc,#cfdef3);color:#1e40af;">Arctic</button>
             </div>
 
             <!-- Progress -->
@@ -7668,6 +7672,12 @@ if (w >= 20 && h >= 20) {
         window.dispatchEvent(new Event('resize'));
 
         if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
+
+        // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
+        const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');
+        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && window.openDesignWizard) {
+            setTimeout(() => window.openDesignWizard(), 800);
+        }
 
         // 목업 이미지 로드 (잠금 배경 레이어)
         if (product && product.mockup_url) {

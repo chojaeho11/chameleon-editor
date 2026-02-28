@@ -353,22 +353,14 @@ export function initAiTools() {
 // [Design Wizard] Core logic
 // ============================================================
 const WIZARD_STYLES = {
-    blue: {
-        effect:'blue',
-        boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(56,189,248,0.35)', boxTextColor:'#1e3a5f'
-    },
-    yellow: {
-        effect:'yellow',
-        boxFill:'rgba(255,251,235,0.92)', boxStroke:'rgba(251,191,36,0.35)', boxTextColor:'#78350f'
-    },
-    candy: {
-        effect:'candy',
-        boxFill:'rgba(253,242,248,0.92)', boxStroke:'rgba(244,114,182,0.35)', boxTextColor:'#831843'
-    },
-    dark: {
-        effect:'dark',
-        boxFill:'rgba(15,23,42,0.88)', boxStroke:'rgba(255,0,170,0.3)', boxTextColor:'#f9a8d4'
-    }
+    ocean:   { titleColor:'#ffffff', boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(56,189,248,0.35)', boxTextColor:'#1e3a5f' },
+    sunset:  { titleColor:'#ffffff', boxFill:'rgba(255,251,235,0.92)', boxStroke:'rgba(251,191,36,0.35)', boxTextColor:'#78350f' },
+    rose:    { titleColor:'#ffffff', boxFill:'rgba(253,242,248,0.92)', boxStroke:'rgba(244,114,182,0.35)', boxTextColor:'#831843' },
+    midnight:{ titleColor:'#f9a8d4', boxFill:'rgba(15,23,42,0.88)',   boxStroke:'rgba(255,0,170,0.3)',   boxTextColor:'#f9a8d4' },
+    forest:  { titleColor:'#ffffff', boxFill:'rgba(236,253,245,0.92)', boxStroke:'rgba(52,211,153,0.35)', boxTextColor:'#064e3b' },
+    lavender:{ titleColor:'#ffffff', boxFill:'rgba(245,243,255,0.92)', boxStroke:'rgba(167,139,250,0.35)', boxTextColor:'#4c1d95' },
+    coral:   { titleColor:'#ffffff', boxFill:'rgba(255,241,242,0.92)', boxStroke:'rgba(251,113,133,0.35)', boxTextColor:'#881337' },
+    arctic:  { titleColor:'#1e3a5f', boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(96,165,250,0.35)', boxTextColor:'#1e40af' }
 };
 
 // Extract meaningful keywords from title
@@ -543,26 +535,14 @@ async function runDesignWizard(title, style) {
 // ─── Step 1: Background (data_url 원본, 잠금 처리) ───
 // ─── 벡터 그라데이션 배경 팔레트 (스타일별 랜덤) ───
 const _WZ_GRADIENT_PALETTES = {
-    blue: [
-        ['#667eea','#764ba2'],['#a1c4fd','#c2e9fb'],['#89f7fe','#66a6ff'],
-        ['#4facfe','#00f2fe'],['#6a85b6','#bac8e0'],['#a18cd1','#fbc2eb'],
-        ['#96e6a1','#d4fc79'],['#84fab0','#8fd3f4'],['#cfd9df','#e2ebf0']
-    ],
-    yellow: [
-        ['#f6d365','#fda085'],['#ffecd2','#fcb69f'],['#ff9a9e','#fecfef'],
-        ['#fbc2eb','#a6c1ee'],['#fddb92','#d1fdff'],['#f093fb','#f5576c'],
-        ['#ffecd2','#fcb69f'],['#fad0c4','#ffd1ff'],['#fccb90','#d57eeb']
-    ],
-    candy: [
-        ['#ff9a9e','#fad0c4'],['#fbc2eb','#a6c1ee'],['#f093fb','#f5576c'],
-        ['#c471f5','#fa71cd'],['#f78ca0','#f9748f'],['#e8cbc0','#636fa4'],
-        ['#fad0c4','#ffd1ff'],['#ff9a9e','#fecfef'],['#a18cd1','#fbc2eb']
-    ],
-    dark: [
-        ['#0c0c1d','#1a1a3e'],['#0f0c29','#302b63'],['#141e30','#243b55'],
-        ['#1a002e','#2d004f'],['#0d1117','#161b22'],['#1e1b4b','#312e81'],
-        ['#020024','#090979'],['#0a0a23','#1a1a4e'],['#1a1a2e','#16213e']
-    ]
+    ocean:    [['#667eea','#764ba2'],['#4facfe','#00f2fe'],['#89f7fe','#66a6ff'],['#a1c4fd','#c2e9fb']],
+    sunset:   [['#f6d365','#fda085'],['#ffecd2','#fcb69f'],['#fddb92','#d1fdff'],['#fccb90','#d57eeb']],
+    rose:     [['#ff9a9e','#fad0c4'],['#fbc2eb','#a6c1ee'],['#f78ca0','#f9748f'],['#c471f5','#fa71cd']],
+    midnight: [['#0f0c29','#302b63'],['#1a002e','#2d004f'],['#1e1b4b','#312e81'],['#020024','#090979']],
+    forest:   [['#11998e','#38ef7d'],['#56ab2f','#a8e063'],['#134e5e','#71b280'],['#2c7744','#a8e6a3']],
+    lavender: [['#a18cd1','#fbc2eb'],['#667eea','#764ba2'],['#6a85b6','#bac8e0'],['#c471f5','#e8cbc0']],
+    coral:    [['#ff6b6b','#feca57'],['#f093fb','#f5576c'],['#ff9a9e','#fecfef'],['#fc5c7d','#6a82fb']],
+    arctic:   [['#e0eafc','#cfdef3'],['#dfe6e9','#b2bec3'],['#cfd9df','#e2ebf0'],['#f5f7fa','#c3cfe2']]
 };
 
 async function _wzBg(keywords, bW, bH, bL, bT) {
@@ -606,26 +586,16 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     canvas.requestRenderAll();
 }
 
-// ─── Step 2: Title text (applyTextEffect 사용 — 수동 효과와 동일, PDF 정상) ───
-// 스타일별 효과 매핑
-const WIZARD_EFFECT_MAP = {
-    blue:   'block-3d-blue',
-    yellow: 'block-3d-gold',
-    candy:  'retro-candy',
-    dark:   'neon-pink'
-};
-
+// ─── Step 2: Title text (효과 없이 깔끔한 텍스트) ───
 async function _wzTitle(title, font, S, bW, bH, bL, bT) {
-    const sz = Math.round(bW * 0.07);
+    const sz = Math.round(bW * 0.09);
     const maxW = bW * (2/3);
 
-    // 임시 텍스트로 실제 너비 측정
     const temp = new fabric.Textbox(title, {
         fontFamily: font, fontSize: sz, charSpacing: -10
     });
     const textW = temp.calcTextWidth ? temp.calcTextWidth() : temp.width;
 
-    // 가로 2/3 초과 → 줄바꿈
     let displayTitle = title;
     if (textW > maxW) {
         const spaceIdx = title.indexOf(' ', Math.floor(title.length * 0.3));
@@ -637,37 +607,18 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
         }
     }
 
-    // 1. 기본 흰색 텍스트 생성 (효과 적용 전)
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz,
-        fill: '#ffffff',
+        fill: S.titleColor || '#ffffff',
+        fontWeight: '900',
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * (S.effect === 'dark' ? 0.38 : 0.28),
-        width: bW * 0.85, lineHeight: 1.15, charSpacing: -10
+        left: bL + bW/2, top: bT + bH * 0.25,
+        width: bW * 0.85, lineHeight: 1.15, charSpacing: -10,
+        shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.3)', blur: 8, offsetX: 2, offsetY: 2 })
     });
     if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
-
-    // 2. applyTextEffect 호출 (수동 효과와 동일한 방식)
-    const effectName = WIZARD_EFFECT_MAP[S.effect] || WIZARD_EFFECT_MAP.blue || 'block-3d-blue';
-    if (window.applyTextEffect) {
-        canvas.setActiveObject(obj);
-        canvas.requestRenderAll();
-
-        // 효과 적용 완료 대기 (groupAndRender가 object:added 발생)
-        await new Promise(resolve => {
-            let done = false;
-            const finish = () => { if (done) return; done = true; canvas.off('object:added', onAdd); resolve(); };
-            const onAdd = () => setTimeout(finish, 300);
-            canvas.on('object:added', onAdd);
-            window.applyTextEffect(effectName);
-            setTimeout(finish, 3000); // 안전 타임아웃
-        });
-
-        canvas.discardActiveObject();
-        canvas.requestRenderAll();
-    }
 }
 
 // ─── Step 3a: AI 설명 텍스트 생성 (텍스트만 반환) ───
@@ -711,49 +662,22 @@ async function _wzGetDescText(title) {
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     const margin = bW * 0.06;
     const boxW = bW - margin * 2;
+    const boxH = bH * 0.20;
+    const boxY = bT + bH - margin - boxH / 2;
 
-    // 다크: 박스를 위로 키워서 타이틀 영역까지 커버
-    const isDark = (S.effect === 'dark');
-    const boxH = isDark ? bH * 0.55 : bH * 0.20;
-    const boxY = isDark
-        ? bT + bH - margin - boxH / 2        // 하단 기준 위로 확장
-        : bT + bH - margin - boxH / 2;
-
-    // 불투명 박스 (스타일별 색상)
     const rectOpts = {
         width: boxW, height: boxH,
-        rx: isDark ? 16 : 10, ry: isDark ? 16 : 10,
+        rx: 10, ry: 10,
         fill: S.boxFill || 'rgba(255,255,255,0.92)',
-        stroke: S.boxStroke || 'rgba(99,102,241,0.3)', strokeWidth: isDark ? 2 : 1.5,
+        stroke: S.boxStroke || 'rgba(99,102,241,0.3)', strokeWidth: 1.5,
         left: bL + bW/2, top: boxY,
         originX:'center', originY:'center'
     };
-    // 다크: 네온 글로우 테두리
-    if (isDark) {
-        rectOpts.strokeWidth = 2.5;
-        rectOpts.shadow = new fabric.Shadow({
-            color: 'rgba(255,0,170,0.6)', blur: 25, offsetX: 0, offsetY: 0
-        });
-    }
     const rect = new fabric.Rect(rectOpts);
     canvas.add(rect);
     canvas.bringToFront(rect);
 
-    // 다크: 타이틀 효과 그룹을 박스 위(앞)로 올림
-    if (isDark) {
-        const objs = canvas.getObjects();
-        for (let i = objs.length - 1; i >= 0; i--) {
-            const o = objs[i];
-            // 텍스트 효과 그룹 (isMainText 가진 _objects) 찾기
-            if (o._objects && o._objects.some(c => c.isMainText)) {
-                canvas.bringToFront(o);
-                break;
-            }
-        }
-    }
-
-    // 박스 안 설명 텍스트 — 다크는 하단 배치
-    const descY = isDark ? boxY + boxH * 0.3 : boxY;
+    const descY = boxY;
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
         fontWeight:'400', fill: S.boxTextColor || '#334155',
@@ -785,17 +709,17 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     if (!data || !data.length) return;
 
     // ★ 좌우 크게 (밖으로 삐져나가게) + 위쪽 작게 배치
-    const bigSize = bW * 0.35;   // 큰 요소 (하단 좌우)
-    const smallSize = bW * 0.15; // 작은 요소 (상단)
+    const bigSize = bW * 0.45;   // 큰 요소 (하단 좌우) — 스샷처럼 크게
+    const smallSize = bW * 0.18; // 작은 요소 (상단)
     const positions = [
         // 하단 좌측: 크게, 왼쪽으로 삐져나감
-        { left: bL + bigSize * 0.25,            top: bT + bH * 0.72, size: bigSize },
+        { left: bL + bigSize * 0.15,            top: bT + bH * 0.70, size: bigSize },
         // 하단 우측: 크게, 오른쪽으로 삐져나감
-        { left: bL + bW - bigSize * 0.25,       top: bT + bH * 0.68, size: bigSize },
+        { left: bL + bW - bigSize * 0.15,       top: bT + bH * 0.65, size: bigSize },
         // 상단 좌측: 작게
-        { left: bL + bW * 0.15,                 top: bT + bH * 0.12, size: smallSize },
+        { left: bL + bW * 0.12,                 top: bT + bH * 0.10, size: smallSize },
         // 상단 우측: 작게
-        { left: bL + bW * 0.85,                 top: bT + bH * 0.10, size: smallSize }
+        { left: bL + bW * 0.88,                 top: bT + bH * 0.08, size: smallSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
