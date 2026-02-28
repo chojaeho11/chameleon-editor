@@ -26,13 +26,19 @@ export function initPageTools() {
     renderColorPalette();
 }
 
+// 위저드 배경 레이어 제거 (보드 위의 그라데이션 Rect)
+function _removeWizardBg() {
+    if (!canvas) return;
+    const wzBgs = canvas.getObjects().filter(o => o.isTemplateBackground);
+    wzBgs.forEach(o => canvas.remove(o));
+}
+
 // [2] 배경색 변경 로직 (단색 + 그라데이션 지원)
 export function setBoardColor(color) {
     if (!canvas) return;
+    _removeWizardBg();
 
-    // 1. 대지(Board) 객체 찾기
     const board = canvas.getObjects().find(o => o.isBoard);
-
     if (board) {
         board.set('fill', color);
         canvas.requestRenderAll();
@@ -45,6 +51,8 @@ export function setBoardColor(color) {
 // 그라데이션 배경 설정
 export function setBoardGradient(color1, color2) {
     if (!canvas) return;
+    _removeWizardBg();
+
     const board = canvas.getObjects().find(o => o.isBoard);
     if (board) {
         const grad = new fabric.Gradient({

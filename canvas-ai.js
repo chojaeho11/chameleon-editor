@@ -382,12 +382,14 @@ function _wzExtractKeywords(title) {
     const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
     if (!words.length) return [title];
 
-    const suffixes = ['집','점','관','원','소','실','당','방','장','위','아래','속','밑','앞','뒤','옆'];
-    const particles = ['을','를','이','가','은','는','에','의','로','와','과','도','만','까지','에서','부터','처럼','같이','보다'];
+    const suffixes = ['집','점','관','원','소','실','당','방','장','위','아래','속','밑','앞','뒤','옆','안'];
+    const particles = ['을','를','이','가','은','는','에','의','로','와','과','도','만','까지','에서','부터','처럼','같이','보다','에게','한테','께','으로','이나','나','든지','라도','마저','조차'];
     // 한국어 형용사/관형어 (검색 의미 낮음)
     const adjectives = ['큰','작은','예쁜','멋진','새로운','특별한','푸른','빨간','파란','노란','초록','하얀','검은','보라','분홍','아름다운','화려한','심플한','모던한','귀여운','멋있는','진정한','좋은','나쁜','높은','낮은','넓은','깊은','밝은','어두운','따뜻한','차가운','시원한'];
     // 불용어 (검색에 무의미한 일반 단어)
-    const stopWords = ['것','수','때','곳','등','중','안','밖','오신','여러분','위한','함께','통해','대한','모든','이런','저런','그런','우리','당신','너의','나의','영혼','마음','세계','세상','곳에','하는','있는','없는','되는','같은'];
+    const stopWords = ['것','수','때','곳','등','중','안','밖','오신','여러분','위한','함께','통해','대한','모든','이런','저런','그런','우리','당신','너의','나의','영혼','마음','세계','세상','곳에','하는','있는','없는','되는','같은','산책','여행','사는','가는','오는','타는','먹는','놀러'];
+    // 동사/형용사 어미 제거
+    const verbEndings = ['하고','하는','하며','했던','에서','인','적','들'];
 
     const nouns = [];
     const adjs = [];
@@ -398,6 +400,13 @@ function _wzExtractKeywords(title) {
         for (const p of particles) {
             if (root.length > p.length + 1 && root.endsWith(p)) {
                 root = root.slice(0, -p.length);
+                break;
+            }
+        }
+        // 동사 어미 제거 ("산책하고" → "산책")
+        for (const ve of verbEndings) {
+            if (root.length > ve.length + 1 && root.endsWith(ve)) {
+                root = root.slice(0, -ve.length);
                 break;
             }
         }
@@ -683,32 +692,55 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
 async function _wzElem(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
-    let data = null;
-    for (const kw of keywords) {
+    // ★ 여러 키워드에서 골고루 이미지를 가져오기
+    let allItems = [];
+    const usedIds = new Set();
+    for (const kw of keywords.slice(0, 5)) {
         const res = await sb.from('library')
             .select('id, thumb_url, data_url, category')
             .in('category', ['vector','graphic','transparent-graphic'])
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
             .order('created_at', { ascending: false })
-            .limit(8);
+            .limit(6);
         const filtered = _wzFilterPremium(res.data);
-        if (filtered && filtered.length) { data = filtered.slice(0, 4); break; }
+        if (filtered && filtered.length) {
+            for (const item of filtered) {
+                if (!usedIds.has(item.id)) {
+                    usedIds.add(item.id);
+                    allItems.push(item);
+                }
+            }
+        }
     }
-    if (!data || !data.length) return;
+    if (!allItems.length) return;
+    // 셔플하여 다양하게
+    for (let i = allItems.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allItems[i], allItems[j]] = [allItems[j], allItems[i]];
+    }
+    const data = allItems.slice(0, 8); // 최대 8개 요소
 
-    // ★ 하단 좌우: 훨씬 크게 (절반 가려지도록 아래로) + 상단 작게 (안쪽으로)
-    const bigSize = bW * 0.55;   // 큰 요소 — 절반이 캔버스 밖으로
-    const smallSize = bW * 0.12; // 작은 요소 (상단)
+    // ★ 하단 좌우: 아주 크게 + 상단/중간 작은 요소 여러개
+    const bigSize = bW * 0.82;    // 큰 요소 (50% 증가)
+    const smallSize = bW * 0.12;  // 작은 요소
     const positions = [
-        // 하단 좌측: 크게, 아래+왼쪽으로 나감
-        { left: bL + bigSize * 0.2,             top: bT + bH * 0.85, size: bigSize },
-        // 하단 우측: 크게, 아래+오른쪽으로 나감
-        { left: bL + bW - bigSize * 0.2,        top: bT + bH * 0.80, size: bigSize },
-        // 상단 좌측: 안쪽으로 이동
-        { left: bL + bW * 0.18,                 top: bT + bH * 0.10, size: smallSize },
-        // 상단 우측: 안쪽으로 이동
-        { left: bL + bW * 0.82,                 top: bT + bH * 0.08, size: smallSize }
+        // 하단 좌측: 매우 크게
+        { left: bL + bigSize * 0.15,            top: bT + bH * 0.88, size: bigSize },
+        // 하단 우측: 매우 크게
+        { left: bL + bW - bigSize * 0.15,       top: bT + bH * 0.83, size: bigSize },
+        // 상단 좌측: 작게
+        { left: bL + bW * 0.15,                 top: bT + bH * 0.08, size: smallSize },
+        // 상단 우측: 작게
+        { left: bL + bW * 0.85,                 top: bT + bH * 0.06, size: smallSize },
+        // 상단 중앙좌: 작게
+        { left: bL + bW * 0.35,                 top: bT + bH * 0.04, size: smallSize * 0.8 },
+        // 상단 중앙우: 작게
+        { left: bL + bW * 0.65,                 top: bT + bH * 0.05, size: smallSize * 0.7 },
+        // 좌측 중단: 작게
+        { left: bL + bW * 0.05,                 top: bT + bH * 0.55, size: smallSize * 0.9 },
+        // 우측 중단: 작게
+        { left: bL + bW * 0.95,                 top: bT + bH * 0.50, size: smallSize * 0.9 }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
