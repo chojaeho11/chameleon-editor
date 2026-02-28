@@ -3505,8 +3505,8 @@ window.wizRunPipeline = async () => {
                 }).select('id').single();
                 if (postErr) throw new Error(postErr.message);
 
-                // KR/EN 블로그일 때 SNS 자동 포스팅
-                if (inserted && (lang === 'kr' || lang === 'en')) {
+                // JA 블로그일 때 SNS 자동 포스팅 (일본 마케팅 포커스)
+                if (inserted && lang === 'ja') {
                     const blogUrl = 'https://' + cfg.site + '/board?cat=blog&country=' + cfg.countryCode + '&id=' + inserted.id;
                     const metaDesc = content.meta_description || (content.body || '').substring(0, 150);
                     await _socialPostAfterBlog(content.title || title, metaDesc, blogUrl, thumbnailUrl, content.hashtags || [], console.log);
@@ -4515,8 +4515,8 @@ async function _adpGenerateBlogs(prod, thumbnailUrl) {
             }).select('id').single();
             blogCount++;
 
-            // KR/EN 블로그일 때 SNS 자동 포스팅
-            if (inserted && (lang === 'kr' || lang === 'en')) {
+            // JA 블로그일 때 SNS 자동 포스팅 (일본 마케팅 포커스)
+            if (inserted && lang === 'ja') {
                 const blogUrl = 'https://' + cfg.site + '/board?cat=blog&country=' + cfg.countryCode + '&id=' + inserted.id;
                 const metaDesc = content.meta_description || (content.body || '').substring(0, 150);
                 await _socialPostAfterBlog(content.title || prod.name, metaDesc, blogUrl, thumbnailUrl, content.hashtags || [], _adpLog);
