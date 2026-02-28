@@ -624,13 +624,12 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
 
 // ─── Step 2: Title text (효과 없이 깔끔한 텍스트) ───
 async function _wzTitle(title, font, S, bW, bH, bL, bT) {
-    const sz = Math.round(bW * 0.055);
+    const sz = Math.round(bW * 0.075);
 
     // 줄바꿈: 윗줄에 많이, 아랫줄에 적게 (마지막 어절만 아래로)
     let displayTitle = title;
     const words = title.split(' ');
     if (words.length >= 3) {
-        // 마지막 1~2어절만 아래로
         const lastWords = words.length >= 4 ? 2 : 1;
         const topLine = words.slice(0, words.length - lastWords).join(' ');
         const bottomLine = words.slice(words.length - lastWords).join(' ');
@@ -638,13 +637,12 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     } else if (words.length === 2) {
         displayTitle = words[0] + '\n' + words[1];
     } else if (title.length > 6) {
-        // 공백 없는 긴 텍스트: 앞쪽 많이
         const cut = Math.ceil(title.length * 0.65);
         displayTitle = title.substring(0, cut) + '\n' + title.substring(cut);
     }
 
     const obj = new fabric.Textbox(displayTitle, {
-        fontFamily: font, fontSize: sz,
+        fontFamily: font, fontSize: sz, fontWeight: '900',
         fill: S.titleColor || '#ffffff',
         originX:'center', originY:'center', textAlign:'center',
         left: bL + bW/2, top: bT + bH * 0.30,
@@ -696,11 +694,11 @@ async function _wzGetDescText(title) {
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     // 박스 없이 설명 텍스트만 중간에 배치
     const obj = new fabric.Textbox(descText, {
-        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.022),
+        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.02),
         fontWeight:'400', fill: S.boxTextColor || '#334155',
-        originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.52,
-        width: bW * 0.65,
+        originX:'center', originY:'top', textAlign:'center',
+        left: bL + bW/2, top: bT + bH * 0.48,
+        width: bW * 0.60,
         lineHeight: 1.6
     });
     canvas.add(obj);
@@ -740,26 +738,23 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     const data = allItems.slice(0, 8); // 최대 8개 요소
 
-    // ★ 하단 좌우: 아주 크게 + 상단/중간 작은 요소 여러개
-    const bigSize = bW * 0.82;    // 큰 요소 (50% 증가)
-    const smallSize = bW * 0.12;  // 작은 요소
+    // ★ 하단 좌우: 매우 크게 + 나머지 요소 2배 + 위치 랜덤
+    const bigSize = bW * 0.90;    // 하단 큰 요소
+    const smallSize = bW * 0.22;  // 작은 요소 (2배)
+    const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
         // 하단 좌측: 매우 크게
-        { left: bL + bigSize * 0.15,            top: bT + bH * 0.88, size: bigSize },
+        { left: bL + bigSize * 0.12,            top: bT + bH * rnd(0.85,0.92), size: bigSize },
         // 하단 우측: 매우 크게
-        { left: bL + bW - bigSize * 0.15,       top: bT + bH * 0.83, size: bigSize },
-        // 상단 좌측: 작게
-        { left: bL + bW * 0.15,                 top: bT + bH * 0.08, size: smallSize },
-        // 상단 우측: 작게
-        { left: bL + bW * 0.85,                 top: bT + bH * 0.06, size: smallSize },
-        // 상단 중앙좌: 작게
-        { left: bL + bW * 0.35,                 top: bT + bH * 0.04, size: smallSize * 0.8 },
-        // 상단 중앙우: 작게
-        { left: bL + bW * 0.65,                 top: bT + bH * 0.05, size: smallSize * 0.7 },
-        // 좌측 중단: 작게
-        { left: bL + bW * 0.05,                 top: bT + bH * 0.55, size: smallSize * 0.9 },
-        // 우측 중단: 작게
-        { left: bL + bW * 0.95,                 top: bT + bH * 0.50, size: smallSize * 0.9 }
+        { left: bL + bW - bigSize * 0.12,       top: bT + bH * rnd(0.82,0.90), size: bigSize },
+        // 상단: 랜덤 위치
+        { left: bL + bW * rnd(0.10,0.25),       top: bT + bH * rnd(0.03,0.12), size: smallSize * rnd(0.7,1.2) },
+        { left: bL + bW * rnd(0.75,0.92),       top: bT + bH * rnd(0.03,0.12), size: smallSize * rnd(0.7,1.2) },
+        { left: bL + bW * rnd(0.30,0.50),       top: bT + bH * rnd(0.02,0.10), size: smallSize * rnd(0.6,1.0) },
+        { left: bL + bW * rnd(0.55,0.72),       top: bT + bH * rnd(0.02,0.10), size: smallSize * rnd(0.6,1.0) },
+        // 좌우 중간: 랜덤
+        { left: bL + bW * rnd(0.02,0.08),       top: bT + bH * rnd(0.45,0.60), size: smallSize * rnd(0.8,1.1) },
+        { left: bL + bW * rnd(0.92,0.98),       top: bT + bH * rnd(0.42,0.58), size: smallSize * rnd(0.8,1.1) }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
