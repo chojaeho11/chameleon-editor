@@ -772,7 +772,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
                 scaleX: scale, scaleY: scale,
                 left: pos.left, top: pos.top,
                 originX:'center', originY:'center',
-                opacity: i >= 2 ? 0.7 : 1  // 상단 요소는 약간 투명
+                opacity: 1
             });
             canvas.add(img);
             canvas.bringToFront(img);
