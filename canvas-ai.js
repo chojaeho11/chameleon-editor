@@ -381,24 +381,39 @@ function _wzFilterPremium(items) {
 function _wzExtractKeywords(title) {
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
 
-    // ★ 일본어: 명사(한자2字以上 또는 한자+히라가나 복합명사) 추출
+    // ★ 일본어: 명사 추출 (한자블록 + 접미사 제거 + 단독한자)
     if (country === 'JP') {
-        // 불필요한 단독 한자 (조사/접속/수량/位置)
         const jpStopKanji = new Set('中上下前後内外間的一二三四五六七八九十百千万個匹本枚台件人回目日月年時分秒'.split(''));
-        // 한자2字以上 블록 (鯨, 水面, 一筋 등)
+        const jpSuffixes = ['たち','さん','ちゃん','くん','さま','ども','など','たい','ない','ような','みたいな','のよう','みたい'];
+        // 1) 2+ consecutive kanji
         const kanjiBlocks = title.match(/[\u4e00-\u9faf\u3400-\u4dbf]{2,}/g) || [];
-        // 한자+히라가나+한자 복합명사 (飼い猫, 浮かぶ→浮)
+        // 2) kanji+hiragana+kanji compound (飼い猫 etc.)
         const compounds = title.match(/[\u4e00-\u9faf]{1,}[\u3040-\u309f]{1,3}[\u4e00-\u9faf]{1,}/g) || [];
-        // カタカナ2字以上
+        // 3) katakana 2+
         const kataBlocks = title.match(/[\u30a0-\u30ff]{2,}/g) || [];
-        // 単独漢字(意味のある名詞のみ): 조사(の等)で区切って意味ある1字漢字
+        // 4) particle split → suffix strip → extract meaningful kanji
         const meaningfulSingle = [];
-        const parts = title.split(/[のをがにはでともへ、。！？「」\s]+/);
-        for (const p of parts) {
-            const m = p.match(/^[\u4e00-\u9faf]$/);
-            if (m && !jpStopKanji.has(m[0])) meaningfulSingle.push(m[0]);
+        const extraKanji = [];
+        const parts = title.split(/[のをがにはでともへや、。！？「」（）\s]+/);
+        for (let p of parts) {
+            if (!p) continue;
+            // 접미사 제거 (魚たち→魚, 子供たち→子供)
+            for (const suf of jpSuffixes) {
+                if (p.endsWith(suf) && p.length > suf.length) { p = p.slice(0, -suf.length); break; }
+            }
+            // 선행 히라가나 제거 (そして水面→水面)
+            p = p.replace(/^[\u3040-\u309f]+/, '');
+            if (!p) continue;
+            // 단독 한자
+            if (/^[\u4e00-\u9faf]$/.test(p) && !jpStopKanji.has(p)) meaningfulSingle.push(p);
+            // 2+ 한자 블록 (이미 잡히지 않은 것)
+            const multi = p.match(/[\u4e00-\u9faf]{2,}/);
+            if (multi) extraKanji.push(multi[0]);
+            // 한자+히라가나에서 선행 한자 추출 (浮かぶ→浮 → skip verb, but 食べ物→食)
+            const lead = p.match(/^([\u4e00-\u9faf])[\u3040-\u309f]/);
+            if (lead && !jpStopKanji.has(lead[1])) meaningfulSingle.push(lead[1]);
         }
-        const all = [...new Set([...kanjiBlocks, ...compounds, ...kataBlocks, ...meaningfulSingle])];
+        const all = [...new Set([...kanjiBlocks, ...extraKanji, ...compounds, ...kataBlocks, ...meaningfulSingle])];
         console.log('[Wizard Keywords JP]', title, '→', all);
         return all.length > 0 ? all : [title.replace(/[。、！？\s]/g,'').substring(0,4)];
     }
@@ -472,6 +487,55 @@ function _wzExtractKeywords(title) {
     const all = [...new Set([...ordered, ...adjs])];
     console.log('[Wizard Keywords]', title, '→', all);
     return all.length > 0 ? all : [title];
+}
+
+// ★ JP/EN 키워드 → KR 검색어 변환 사전 (라이브러리가 KR 태그 기반)
+const _WZ_DICT = {
+    // 동물
+    '鯨':'고래','whale':'고래','魚':'물고기','fish':'물고기','猫':'고양이','cat':'고양이',
+    '犬':'개','dog':'개','鳥':'새','bird':'새','馬':'말','horse':'말','虎':'호랑이','tiger':'호랑이',
+    '狐':'여우','fox':'여우','狼':'늑대','wolf':'늑대','龍':'용','竜':'용','dragon':'용',
+    '蝶':'나비','butterfly':'나비','兎':'토끼','rabbit':'토끼','熊':'곰','bear':'곰',
+    '蛇':'뱀','snake':'뱀','鹿':'사슴','deer':'사슴','象':'코끼리','elephant':'코끼리',
+    '獅子':'사자','lion':'사자','鷲':'독수리','eagle':'독수리','亀':'거북이','turtle':'거북이',
+    '蜂':'벌','bee':'벌','豚':'돼지','pig':'돼지','羊':'양','sheep':'양','鶏':'닭',
+    'ペンギン':'펭귄','penguin':'펭귄','パンダ':'판다','panda':'판다',
+    'イルカ':'돌고래','dolphin':'돌고래','ライオン':'사자','ウサギ':'토끼',
+    // 자연
+    '海':'바다','sea':'바다','ocean':'바다','山':'산','mountain':'산','川':'강','river':'강',
+    '空':'하늘','sky':'하늘','雲':'구름','cloud':'구름','雨':'비','rain':'비',
+    '雪':'눈','snow':'눈','風':'바람','wind':'바람','花':'꽃','flower':'꽃',
+    '木':'나무','tree':'나무','森':'숲','forest':'숲','月':'달','moon':'달',
+    '星':'별','star':'별','太陽':'태양','sun':'태양','火':'불','fire':'불',
+    '水':'물','water':'물','水面':'물','湖':'호수','lake':'호수','島':'섬','island':'섬',
+    '滝':'폭포','waterfall':'폭포','波':'파도','wave':'파도','虹':'무지개','rainbow':'무지개',
+    '桜':'벚꽃','cherry':'벚꽃','薔薇':'장미','rose':'장미','向日葵':'해바라기','sunflower':'해바라기',
+    '葉':'잎','leaf':'잎','草':'풀','grass':'풀','石':'돌','rock':'돌','砂':'모래','sand':'모래',
+    // 사물/개념
+    '城':'성','castle':'성','家':'집','house':'집','船':'배','ship':'배','車':'자동차','car':'자동차',
+    '剣':'검','sword':'검','王':'왕','king':'왕','姫':'공주','princess':'공주',
+    '愛':'사랑','love':'하트','heart':'하트','夢':'꿈','dream':'꿈',
+    '光':'빛','light':'빛','影':'그림자','shadow':'그림자',
+    '音楽':'음악','music':'음악','本':'책','book':'책',
+    '食':'음식','food':'음식','酒':'술','茶':'차','coffee':'커피','cake':'케이크',
+    'コーヒー':'커피','ケーキ':'케이크','ワイン':'와인','wine':'와인',
+    '天使':'천사','angel':'천사','宇宙':'우주','space':'우주','地球':'지구','earth':'지구',
+    '夜':'밤','night':'밤','朝':'아침','morning':'아침',
+    '春':'봄','spring':'봄','夏':'여름','summer':'여름','秋':'가을','autumn':'가을','冬':'겨울','winter':'겨울',
+    '街':'거리','town':'마을','village':'마을','garden':'정원','庭':'정원',
+    '飛行機':'비행기','airplane':'비행기','電車':'기차','train':'기차',
+    '雷':'번개','lightning':'번개','thunder':'번개',
+};
+function _wzTranslateForSearch(keywords) {
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+    if (country === 'KR') return keywords;
+    const result = [];
+    for (const kw of keywords) {
+        const kr = _WZ_DICT[kw] || _WZ_DICT[kw.toLowerCase()];
+        if (kr) result.push(kr);
+        result.push(kw); // 원본도 유지 (다국어 태그 대비)
+    }
+    return [...new Set(result)];
 }
 
 function _wzSteps() {
@@ -729,10 +793,13 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
 async function _wzElem(keywords, bW, bH, bL, bT) {
     if (!sb) return;
 
-    // ★ 여러 키워드에서 골고루 이미지를 가져오기
+    // ★ JP/EN → KR 번역 후 검색 (라이브러리가 KR 태그 기반)
+    const searchKws = _wzTranslateForSearch(keywords);
+    console.log('[Wizard Search]', keywords, '→', searchKws);
+
     let allItems = [];
     const usedIds = new Set();
-    for (const kw of keywords.slice(0, 5)) {
+    async function _searchKw(kw) {
         const res = await sb.from('library')
             .select('id, thumb_url, data_url, category')
             .in('category', ['vector','graphic','transparent-graphic'])
@@ -743,11 +810,21 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         const filtered = _wzFilterPremium(res.data);
         if (filtered && filtered.length) {
             for (const item of filtered) {
-                if (!usedIds.has(item.id)) {
-                    usedIds.add(item.id);
-                    allItems.push(item);
-                }
+                if (!usedIds.has(item.id)) { usedIds.add(item.id); allItems.push(item); }
             }
+        }
+    }
+    // 번역된 키워드로 검색
+    for (const kw of searchKws.slice(0, 6)) await _searchKw(kw);
+    // 결과 부족 시 원본 키워드로 재시도
+    if (allItems.length < 3) {
+        for (const kw of keywords.slice(0, 3)) await _searchKw(kw);
+    }
+    // 그래도 없으면 일반 폴백 (꽃, 별, 자연 등)
+    if (!allItems.length) {
+        for (const fb of ['꽃','별','나무','자연']) {
+            await _searchKw(fb);
+            if (allItems.length >= 4) break;
         }
     }
     if (!allItems.length) return;
@@ -759,8 +836,8 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     const data = allItems.slice(0, 8); // 최대 8개 요소
 
     // ★ 하단 좌우: 매우 크게 + 나머지 요소 2배 + 위치 랜덤
-    const bigSize = bW * 0.90;    // 하단 큰 요소
-    const smallSize = bW * 0.40;  // 작은 요소 (큰 사이즈)
+    const bigSize = bW * 0.60;    // 하단 큰 요소 (2/3)
+    const smallSize = bW * 0.27;  // 작은 요소 (2/3)
     const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
         // 하단 좌측: 매우 크게
