@@ -379,7 +379,26 @@ function _wzFilterPremium(items) {
 }
 
 function _wzExtractKeywords(title) {
-    const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+
+    // ★ 일본어: 한자/카타카나 덩어리 추출
+    if (country === 'JP') {
+        const kanjiBlocks = title.match(/[\u4e00-\u9faf\u3400-\u4dbf]{2,}/g) || [];
+        const kataBlocks = title.match(/[\u30a0-\u30ff]{2,}/g) || [];
+        const all = [...new Set([...kanjiBlocks, ...kataBlocks])];
+        console.log('[Wizard Keywords JP]', title, '→', all);
+        return all.length > 0 ? all : [title.replace(/[。、！？\s]/g,'').substring(0,4)];
+    }
+
+    // ★ 영어: 불용어 제외하고 명사 추출
+    if (country === 'US') {
+        const enStopWords = ['the','a','an','is','are','was','were','be','been','being','in','on','at','to','for','of','with','by','from','as','into','like','through','after','over','between','out','against','during','without','before','under','around','among','and','or','but','not','no','so','if','that','this','it','its','my','your','his','her','our','their','who','which','what','where','when','how','all','each','every','both','few','more','most','other','some','such','only','same','than','too','very','can','will','just','should','now'];
+        const enWords = title.replace(/[^a-zA-Z\s]/g,'').split(/\s+/).filter(w => w.length >= 3 && !enStopWords.includes(w.toLowerCase()));
+        console.log('[Wizard Keywords EN]', title, '→', enWords);
+        return enWords.length > 0 ? enWords : [title.substring(0,10)];
+    }
+
+    const words = title.replace(/[!@#$%^&*(),.?":{}|<>~`。、！？「」]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
     if (!words.length) return [title];
 
     const suffixes = ['집','점','관','원','소','실','당','방','장','위','아래','속','밑','앞','뒤','옆','안'];
@@ -677,12 +696,12 @@ async function _wzGetDescText(title) {
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     // 박스 없이 설명 텍스트만 중간에 배치
     const obj = new fabric.Textbox(descText, {
-        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
+        fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.022),
         fontWeight:'400', fill: S.boxTextColor || '#334155',
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.50,
-        width: bW * 0.75,
-        lineHeight: 1.5
+        left: bL + bW/2, top: bT + bH * 0.52,
+        width: bW * 0.65,
+        lineHeight: 1.6
     });
     canvas.add(obj);
     canvas.bringToFront(obj);

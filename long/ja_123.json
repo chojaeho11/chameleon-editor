@@ -1066,6 +1066,7 @@
   "wizard_placeholder": "例: カフェ、雲、海、夏、誕生日",
   "wizard_label_style": "スタイル",
   "wizard_generate": "デザイン生成",
+  "close": "閉じる",
   "wizard_step_bg": "背景を検索中...",
   "wizard_step_title": "タイトル配置中...",
   "wizard_step_desc": "説明文を生成中...",

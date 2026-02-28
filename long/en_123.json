@@ -1069,6 +1069,7 @@
   "wizard_placeholder": "e.g. cafe, cloud, ocean, summer, birthday",
   "wizard_label_style": "Style",
   "wizard_generate": "Generate Design",
+  "close": "Close",
   "wizard_step_bg": "Searching background...",
   "wizard_step_title": "Placing title...",
   "wizard_step_desc": "Generating description...",
