@@ -147,7 +147,8 @@
         const wzColors = window._wzBgColors;
         const sideColor = wzColors ? wzColors[1] : '#c4a070';
         const sideMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.5 });
-        const frontMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+        const frontColor = wzColors ? wzColors[0] : '#ffffff';
+        const frontMat = new THREE.MeshStandardMaterial({ color: frontColor, roughness: 0.4 });
         const backMat = new THREE.MeshStandardMaterial({ color: doubleSided ? 0xffffff : 0xe8e8e8, roughness: doubleSided ? 0.4 : 0.6 });
         const materials = [sideMat, sideMat.clone(), sideMat.clone(), sideMat.clone(), frontMat, backMat];
         const panel = new THREE.Mesh(panelGeo, materials);
