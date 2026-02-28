@@ -381,11 +381,21 @@ function _wzFilterPremium(items) {
 function _wzExtractKeywords(title) {
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
 
-    // ★ 일본어: 한자/카타카나 덩어리 추출
+    // ★ 일본어: 한자(1文字以上) + カタカナ + 한자+히라가나 복합어 추출
     if (country === 'JP') {
-        const kanjiBlocks = title.match(/[\u4e00-\u9faf\u3400-\u4dbf]{2,}/g) || [];
+        // 한자+히라가나 복합어 (例: 飢えた→飢, 群れ→群, 一匹→一匹)
+        const compoundWords = title.match(/[\u4e00-\u9faf\u3400-\u4dbf]+[\u3040-\u309f]*[\u4e00-\u9faf\u3400-\u4dbf]*/g) || [];
+        // 카타카나 덩어리
         const kataBlocks = title.match(/[\u30a0-\u30ff]{2,}/g) || [];
-        const all = [...new Set([...kanjiBlocks, ...kataBlocks])];
+        // 조사/접속사로 분리 후 한자만 추출 (の、を、が、に、は、で、と、も、へ、た、て)
+        const jpParticles = /[のをがにはでともへたてからまでよりばかりなど]/g;
+        const segments = title.split(jpParticles).filter(s => s.length > 0);
+        const kanjiFromSegments = [];
+        for (const seg of segments) {
+            const k = seg.match(/[\u4e00-\u9faf\u3400-\u4dbf]+/g);
+            if (k) kanjiFromSegments.push(...k);
+        }
+        const all = [...new Set([...compoundWords.map(w => w.replace(/[\u3040-\u309f]+$/, '')).filter(w => w.length >= 1), ...kanjiFromSegments.filter(w => w.length >= 1), ...kataBlocks])];
         console.log('[Wizard Keywords JP]', title, '→', all);
         return all.length > 0 ? all : [title.replace(/[。、！？\s]/g,'').substring(0,4)];
     }
