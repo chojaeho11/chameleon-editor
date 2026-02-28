@@ -579,7 +579,12 @@ async function runDesignWizard(title, style) {
     // JP: Noto Sans JP 900 (굵은 기본), others: Impact (시스템 굵은 기본)
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
     const titleFontMap = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
-    const titleFont = titleFontMap[country] || 'Impact, Arial Black, sans-serif';
+    let titleFont = titleFontMap[country] || 'Impact, Arial Black, sans-serif';
+    // JP: DB에 로드된 源暎ポプ Pw 폰트가 있으면 사용 (두꺼운 팝 서체)
+    if (country === 'JP' && window.DYNAMIC_FONTS) {
+        const popFont = window.DYNAMIC_FONTS.find(f => f.font_name?.includes('ポプ'));
+        if (popFont) titleFont = popFont.font_family;
+    }
     const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
 
     // 잘난고딕 @font-face 로드 (jsdelivr CDN)
@@ -724,7 +729,9 @@ function _wzIsDarkBg() {
 
 // ─── Step 2: Title text (효과 없이 깔끔한 텍스트) ───
 async function _wzTitle(title, font, S, bW, bH, bL, bT) {
-    const sz = Math.round(bW * 0.075);
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+    // JP: 더 작게 (팝 서체는 자체가 두꺼움), 2/3 이내
+    const sz = Math.round(bW * (country === 'JP' ? 0.055 : 0.075));
 
     // 줄바꿈: 윗줄에 많이, 아랫줄에 적게 (마지막 어절만 아래로)
     let displayTitle = title;
@@ -741,12 +748,15 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
         displayTitle = title.substring(0, cut) + '\n' + title.substring(cut);
     }
 
+    const isJP = country === 'JP';
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: 'normal',
         fill: '#ffffff',
         originX:'right', originY:'center', textAlign:'right',
         left: bL + bW * 0.93, top: bT + bH * 0.25,
-        width: bW * 0.65, lineHeight: 0.95, charSpacing: 80
+        width: bW * 0.65, lineHeight: isJP ? 1.1 : 0.95,
+        charSpacing: isJP ? 40 : 80,
+        splitByGrapheme: isJP ? true : false
     });
     canvas.add(obj);
     canvas.bringToFront(obj);
