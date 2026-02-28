@@ -458,11 +458,12 @@
     <div class="hero-section">
     <h1 class="hero-title" data-i18n="hero_title">&nbsp;</h1>
     <p class="hero-desc" data-i18n="hero_desc">&nbsp;</p>
-    <button id="heroSignupBtn" onclick="document.getElementById('loginModal').style.display='flex'; setTimeout(function(){var b=document.getElementById('btnSwitchAuthMode'); if(b && document.getElementById('loginPwConfirm').style.display==='none') b.click();},100);"
-        style="margin-top:16px; border:none; border-radius:30px; background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; font-size:17px; font-weight:800; cursor:pointer; padding:14px 36px; box-shadow:0 4px 15px rgba(99,102,241,0.4); transition:all 0.3s; letter-spacing:0.5px; display:inline-block;">
-        <span data-i18n="hero_signup_btn">1초 회원가입</span>
-    </button>
-    <p class="hero-signup-desc" data-i18n="hero_signup_desc">개인정보 인증없이 아이디와 비번만으로 바로 가입됩니다.</p>
+    <div style="margin-top:16px;">
+        <button id="heroSignupBtn" onclick="document.getElementById('loginModal').style.display='flex'; setTimeout(function(){var b=document.getElementById('btnSwitchAuthMode'); if(b && document.getElementById('loginPwConfirm').style.display==='none') b.click();},100);"
+            style="border:none; border-radius:30px; background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; font-size:17px; font-weight:800; cursor:pointer; padding:14px 36px; box-shadow:0 4px 15px rgba(99,102,241,0.4); transition:all 0.3s; letter-spacing:0.5px;">
+            <span data-i18n="hero_signup_btn">1초 회원가입</span>
+        </button>
+    </div>
 </div>
 
 <!-- 퀵메뉴와퍼 (통합) -->
