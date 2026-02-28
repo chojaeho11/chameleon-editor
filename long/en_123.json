@@ -478,6 +478,7 @@
   "editor_line_height": "Height",
   "editor_bg_color": "Background Color",
   "editor_basic_palette": "Basic Palette",
+  "editor_gradient_palette": "Gradient",
   "editor_recommended": "🎨 Recommended",
   "editor_tab_template": "Templates",
   "editor_tab_element": "Elements",

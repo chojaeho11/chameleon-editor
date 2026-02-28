@@ -26,20 +26,38 @@ export function initPageTools() {
     renderColorPalette();
 }
 
-// [2] 배경색 변경 로직
+// [2] 배경색 변경 로직 (단색 + 그라데이션 지원)
 export function setBoardColor(color) {
     if (!canvas) return;
-    
+
     // 1. 대지(Board) 객체 찾기
     const board = canvas.getObjects().find(o => o.isBoard);
-    
+
     if (board) {
         board.set('fill', color);
         canvas.requestRenderAll();
-        saveCurrentPageState(); // 변경 사항 저장
+        saveCurrentPageState();
     } else {
-        // 대지가 없으면 캔버스 배경색 변경
         canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
+    }
+}
+
+// 그라데이션 배경 설정
+export function setBoardGradient(color1, color2) {
+    if (!canvas) return;
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (board) {
+        const grad = new fabric.Gradient({
+            type: 'linear',
+            coords: { x1: 0, y1: 0, x2: board.width, y2: board.height },
+            colorStops: [
+                { offset: 0, color: color1 },
+                { offset: 1, color: color2 }
+            ]
+        });
+        board.set('fill', grad);
+        canvas.requestRenderAll();
+        saveCurrentPageState();
     }
 }
 
@@ -47,15 +65,22 @@ function renderColorPalette() {
     const paletteContainer = document.getElementById('colorPaletteGrid');
     if(!paletteContainer) return;
 
-    // 미리캔버스 스타일 기본 팔레트
+    // 기본 단색 팔레트
     const colors = [
         '#ffffff', '#f8f9fa', '#e9ecef', '#dee2e6', '#ced4da', '#adb5bd', '#868e96', '#495057', '#212529', '#000000',
         '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff', '#fffffc',
         '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50'
     ];
 
+    // 그라데이션 팔레트 (테마 색상)
+    const gradients = [
+        ['#667eea','#764ba2'], ['#f6d365','#fda085'], ['#ff9a9e','#fad0c4'], ['#0f0c29','#302b63'],
+        ['#11998e','#38ef7d'], ['#a18cd1','#fbc2eb'], ['#ff6b6b','#feca57'], ['#e0eafc','#cfdef3'],
+        ['#4a00e0','#8e2de2'], ['#f12711','#f5af19'], ['#0f2027','#203a43'], ['#0f0f0f','#2c2c2c']
+    ];
+
     paletteContainer.innerHTML = '';
-    
+
     // 컬러피커 (사용자 지정)
     const pickerLabel = document.createElement('label');
     pickerLabel.className = 'color-swatch picker';
@@ -63,12 +88,28 @@ function renderColorPalette() {
     pickerLabel.onchange = (e) => setBoardColor(e.target.value);
     paletteContainer.appendChild(pickerLabel);
 
-    // 프리셋 컬러
+    // 프리셋 단색
     colors.forEach(color => {
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
         swatch.style.backgroundColor = color;
         swatch.onclick = () => setBoardColor(color);
+        paletteContainer.appendChild(swatch);
+    });
+
+    // 그라데이션 라벨
+    const gradLabel = document.createElement('div');
+    gradLabel.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:bold;color:#666;margin-top:8px;text-align:left;';
+    gradLabel.setAttribute('data-i18n', 'editor_gradient_palette');
+    gradLabel.textContent = '그라데이션';
+    paletteContainer.appendChild(gradLabel);
+
+    // 프리셋 그라데이션
+    gradients.forEach(([c1, c2]) => {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+        swatch.onclick = () => setBoardGradient(c1, c2);
         paletteContainer.appendChild(swatch);
     });
 }

@@ -360,7 +360,11 @@ const WIZARD_STYLES = {
     forest:  { titleColor:'#ffffff', boxFill:'rgba(236,253,245,0.92)', boxStroke:'rgba(52,211,153,0.35)', boxTextColor:'#064e3b' },
     lavender:{ titleColor:'#ffffff', boxFill:'rgba(245,243,255,0.92)', boxStroke:'rgba(167,139,250,0.35)', boxTextColor:'#4c1d95' },
     coral:   { titleColor:'#ffffff', boxFill:'rgba(255,241,242,0.92)', boxStroke:'rgba(251,113,133,0.35)', boxTextColor:'#881337' },
-    arctic:  { titleColor:'#1e3a5f', boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(96,165,250,0.35)', boxTextColor:'#1e40af' }
+    arctic:  { titleColor:'#1e3a5f', boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(96,165,250,0.35)', boxTextColor:'#1e40af' },
+    neon:    { titleColor:'#ffffff', boxFill:'rgba(30,0,50,0.88)',    boxStroke:'rgba(168,85,247,0.4)',  boxTextColor:'#d8b4fe' },
+    flame:   { titleColor:'#ffffff', boxFill:'rgba(50,10,0,0.88)',    boxStroke:'rgba(251,146,60,0.4)',  boxTextColor:'#fed7aa' },
+    moody:   { titleColor:'#ffffff', boxFill:'rgba(20,20,30,0.88)',   boxStroke:'rgba(129,140,248,0.4)', boxTextColor:'#c7d2fe' },
+    noir:    { titleColor:'#f0f0f0', boxFill:'rgba(10,10,10,0.88)',   boxStroke:'rgba(100,100,100,0.4)', boxTextColor:'#d4d4d4' }
 };
 
 // Extract meaningful keywords from title
@@ -542,7 +546,11 @@ const _WZ_GRADIENT_PALETTES = {
     forest:   [['#11998e','#38ef7d'],['#56ab2f','#a8e063'],['#134e5e','#71b280'],['#2c7744','#a8e6a3']],
     lavender: [['#a18cd1','#fbc2eb'],['#667eea','#764ba2'],['#6a85b6','#bac8e0'],['#c471f5','#e8cbc0']],
     coral:    [['#ff6b6b','#feca57'],['#f093fb','#f5576c'],['#ff9a9e','#fecfef'],['#fc5c7d','#6a82fb']],
-    arctic:   [['#e0eafc','#cfdef3'],['#dfe6e9','#b2bec3'],['#cfd9df','#e2ebf0'],['#f5f7fa','#c3cfe2']]
+    arctic:   [['#e0eafc','#cfdef3'],['#dfe6e9','#b2bec3'],['#cfd9df','#e2ebf0'],['#f5f7fa','#c3cfe2']],
+    neon:     [['#4a00e0','#8e2de2'],['#7b2ff7','#f107a3'],['#6a0dad','#c471ed'],['#3a0ca3','#7209b7']],
+    flame:    [['#f12711','#f5af19'],['#eb3349','#f45c43'],['#e65c00','#f9d423'],['#d31027','#ea384d']],
+    moody:    [['#0f2027','#203a43'],['#141e30','#243b55'],['#1a1a2e','#16213e'],['#232526','#414345']],
+    noir:     [['#0f0f0f','#2c2c2c'],['#1a1a1a','#3d3d3d'],['#0d0d0d','#262626'],['#111111','#333333']]
 };
 
 async function _wzBg(keywords, bW, bH, bL, bT) {
@@ -588,33 +596,33 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
 
 // ─── Step 2: Title text (효과 없이 깔끔한 텍스트) ───
 async function _wzTitle(title, font, S, bW, bH, bL, bT) {
-    const sz = Math.round(bW * 0.09);
-    const maxW = bW * (2/3);
+    const sz = Math.round(bW * 0.08);
 
-    const temp = new fabric.Textbox(title, {
-        fontFamily: font, fontSize: sz, charSpacing: -10
-    });
-    const textW = temp.calcTextWidth ? temp.calcTextWidth() : temp.width;
-
+    // 줄바꿈: 윗줄에 많이, 아랫줄에 적게 (마지막 어절만 아래로)
     let displayTitle = title;
-    if (textW > maxW) {
-        const spaceIdx = title.indexOf(' ', Math.floor(title.length * 0.3));
-        if (spaceIdx > 0 && spaceIdx < title.length * 0.75) {
-            displayTitle = title.substring(0, spaceIdx) + '\n' + title.substring(spaceIdx + 1);
-        } else if (title.length > 6) {
-            const mid = Math.ceil(title.length / 2);
-            displayTitle = title.substring(0, mid) + '\n' + title.substring(mid);
-        }
+    const words = title.split(' ');
+    if (words.length >= 3) {
+        // 마지막 1~2어절만 아래로
+        const lastWords = words.length >= 4 ? 2 : 1;
+        const topLine = words.slice(0, words.length - lastWords).join(' ');
+        const bottomLine = words.slice(words.length - lastWords).join(' ');
+        displayTitle = topLine + '\n' + bottomLine;
+    } else if (words.length === 2) {
+        displayTitle = words[0] + '\n' + words[1];
+    } else if (title.length > 6) {
+        // 공백 없는 긴 텍스트: 앞쪽 많이
+        const cut = Math.ceil(title.length * 0.65);
+        displayTitle = title.substring(0, cut) + '\n' + title.substring(cut);
     }
 
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz,
         fill: S.titleColor || '#ffffff',
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: bT + bH * 0.25,
-        width: bW * 0.85, lineHeight: 1.15, charSpacing: -10
+        left: bL + bW/2, top: bT + bH * 0.30,
+        width: bW * 0.90, lineHeight: 1.2, charSpacing: 30
     });
-    if (obj.width > bW * 0.85) obj.set('fontSize', Math.round(sz * (bW*0.85) / obj.width));
+    if (obj.width > bW * 0.90) obj.set('fontSize', Math.round(sz * (bW*0.90) / obj.width));
     canvas.add(obj);
     canvas.bringToFront(obj);
 }
@@ -658,30 +666,13 @@ async function _wzGetDescText(title) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    const margin = bW * 0.06;
-    const boxW = bW - margin * 2;
-    const boxH = bH * 0.20;
-    const boxY = bT + bH - margin - boxH / 2;
-
-    const rectOpts = {
-        width: boxW, height: boxH,
-        rx: 10, ry: 10,
-        fill: S.boxFill || 'rgba(255,255,255,0.92)',
-        stroke: S.boxStroke || 'rgba(99,102,241,0.3)', strokeWidth: 1.5,
-        left: bL + bW/2, top: boxY,
-        originX:'center', originY:'center'
-    };
-    const rect = new fabric.Rect(rectOpts);
-    canvas.add(rect);
-    canvas.bringToFront(rect);
-
-    const descY = boxY;
+    // 박스 없이 설명 텍스트만 중간에 배치
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: Math.round(bW * 0.018),
         fontWeight:'400', fill: S.boxTextColor || '#334155',
         originX:'center', originY:'center', textAlign:'center',
-        left: bL + bW/2, top: descY,
-        width: boxW * 0.88,
+        left: bL + bW/2, top: bT + bH * 0.50,
+        width: bW * 0.75,
         lineHeight: 1.5
     });
     canvas.add(obj);
@@ -706,18 +697,18 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     if (!data || !data.length) return;
 
-    // ★ 좌우로 삐져나가게 + 위쪽 작게 배치 (약간 축소)
-    const bigSize = bW * 0.35;   // 큰 요소 (하단 좌우)
-    const smallSize = bW * 0.13; // 작은 요소 (상단)
+    // ★ 하단 좌우: 훨씬 크게 (절반 가려지도록 아래로) + 상단 작게
+    const bigSize = bW * 0.55;   // 큰 요소 — 절반이 캔버스 밖으로
+    const smallSize = bW * 0.12; // 작은 요소 (상단)
     const positions = [
-        // 하단 좌측: 왼쪽으로 삐져나감
-        { left: bL + bigSize * 0.2,             top: bT + bH * 0.68, size: bigSize },
-        // 하단 우측: 오른쪽으로 삐져나감
-        { left: bL + bW - bigSize * 0.2,        top: bT + bH * 0.63, size: bigSize },
+        // 하단 좌측: 크게, 아래+왼쪽으로 나감
+        { left: bL + bigSize * 0.2,             top: bT + bH * 0.85, size: bigSize },
+        // 하단 우측: 크게, 아래+오른쪽으로 나감
+        { left: bL + bW - bigSize * 0.2,        top: bT + bH * 0.80, size: bigSize },
         // 상단 좌측: 작게
-        { left: bL + bW * 0.12,                 top: bT + bH * 0.08, size: smallSize },
+        { left: bL + bW * 0.10,                 top: bT + bH * 0.07, size: smallSize },
         // 상단 우측: 작게
-        { left: bL + bW * 0.88,                 top: bT + bH * 0.06, size: smallSize }
+        { left: bL + bW * 0.90,                 top: bT + bH * 0.05, size: smallSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
