@@ -697,7 +697,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     if (!data || !data.length) return;
 
-    // ★ 하단 좌우: 훨씬 크게 (절반 가려지도록 아래로) + 상단 작게
+    // ★ 하단 좌우: 훨씬 크게 (절반 가려지도록 아래로) + 상단 작게 (안쪽으로)
     const bigSize = bW * 0.55;   // 큰 요소 — 절반이 캔버스 밖으로
     const smallSize = bW * 0.12; // 작은 요소 (상단)
     const positions = [
@@ -705,10 +705,10 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         { left: bL + bigSize * 0.2,             top: bT + bH * 0.85, size: bigSize },
         // 하단 우측: 크게, 아래+오른쪽으로 나감
         { left: bL + bW - bigSize * 0.2,        top: bT + bH * 0.80, size: bigSize },
-        // 상단 좌측: 작게
-        { left: bL + bW * 0.10,                 top: bT + bH * 0.07, size: smallSize },
-        // 상단 우측: 작게
-        { left: bL + bW * 0.90,                 top: bT + bH * 0.05, size: smallSize }
+        // 상단 좌측: 안쪽으로 이동
+        { left: bL + bW * 0.18,                 top: bT + bH * 0.10, size: smallSize },
+        // 상단 우측: 안쪽으로 이동
+        { left: bL + bW * 0.82,                 top: bT + bH * 0.08, size: smallSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)

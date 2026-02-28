@@ -249,7 +249,7 @@ export function resizeCanvasToFit() {
     const board = canvas.getObjects().find(o => o.isBoard);
     if(!board) return;
 
-    const padding = 60; 
+    const padding = 100;
     const availW = stage.clientWidth - padding;
     const availH = stage.clientHeight - padding;
 

@@ -7667,9 +7667,13 @@ if (w >= 20 && h >= 20) {
         if(tplTabs) tplTabs.style.display = 'flex';
         document.body.classList.add('editor-active'); 
 
-        // 사이드바 템플릿 로드 (PC만)
-        if (window.innerWidth > 768 && typeof window.loadSideBarTemplates === 'function') {
-            window.loadSideBarTemplates(key);
+        // 사이드바: PC에서 기본으로 요소 패널 + 팔레트 열기
+        if (window.innerWidth > 768) {
+            window.toggleSubPanel('sub-element');
+            setTimeout(() => {
+                const bgPanel = document.getElementById('bgColorPanel');
+                if (bgPanel) bgPanel.style.display = 'block';
+            }, 100);
         }
         
         // if (window.ChannelIO) ChannelIO('hide'); // 채널톡 비활성화됨
