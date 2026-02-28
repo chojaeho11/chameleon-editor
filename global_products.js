@@ -4203,6 +4203,8 @@ let _adpRunning = false;     // 실행 중 여부
 let _adpStopReq = false;     // 중지 요청
 let _adpDoneCount = 0;
 let _adpFailCount = 0;
+let _adpReport = [];         // 작업 리포트 (밤새 작업 결과)
+let _adpShortsCount = 0;     // 오늘 생성한 쇼츠 수
 
 // ── 모달 열기 ──
 window.openAutoDetailBuilder = function() {
@@ -4236,7 +4238,7 @@ window.adpScanProducts = async function() {
         document.getElementById('adpStatTotal').textContent = _adpProducts.length;
         document.getElementById('adpStatDone').textContent = '0';
         document.getElementById('adpStatFail').textContent = '0';
-        const eta = _adpProducts.length * 2;
+        const eta = _adpProducts.length * 5;
         document.getElementById('adpStatEta').textContent = eta < 60 ? eta + '분' : Math.round(eta / 60 * 10) / 10 + '시간';
         document.getElementById('adpProgressBar').style.width = '0%';
 
@@ -4255,33 +4257,33 @@ window.adpScanProducts = async function() {
     btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> 대상 상품 스캔';
 };
 
-// ── 대상 판별 ──
+// ── 대상 판별 (이미지 1장 이하인 모든 상품) ──
 function _adpNeedsGeneration(p) {
     if (!p.img_url) return false;
     const desc = (p.description || '').trim();
-    // 이미 마법사로 생성된 상세페이지
+    // 이미 마법사로 생성된 상세페이지 → skip
     if (desc.includes('#0f3460') || desc.includes('#1a1a2e')) return false;
-    // 비어있거나 200자 미만
-    if (desc.length < 200) return true;
-    // HTML 태그 제거 후 텍스트가 빈약하고 이미지 1개 이하
-    const textOnly = desc.replace(/<[^>]*>/g, '').trim();
+    // 상세페이지 내 이미지 1장 이하 → 대상 (글자수 무관)
     const imgCount = (desc.match(/<img\s/gi) || []).length;
-    if (textOnly.length < 50 && imgCount <= 1) return true;
-    return false;
+    return imgCount <= 1;
 }
 
 // ── 시작 ──
-window.adpStart = function() {
+window.adpStart = async function() {
     if (_adpRunning) return;
     if (_adpProducts.length === 0) { _adpLog('⚠ 먼저 스캔을 실행해주세요.'); return; }
 
     _adpRunning = true;
     _adpStopReq = false;
+    _adpReport = [];
+    _adpShortsCount = await _adpGetTodayShortsCount();
+    const el = document.getElementById('adpShortsCount');
+    if (el) el.textContent = _adpShortsCount;
     document.getElementById('adpBtnStart').style.display = 'none';
     document.getElementById('adpBtnScan').style.display = 'none';
     document.getElementById('adpBtnStop').style.display = '';
     document.getElementById('adpBtnResume').style.display = 'none';
-    _adpLog('🚀 자동 구축 시작! (' + _adpProducts.length + '개 상품)');
+    _adpLog('🚀 자동 구축 시작! (' + _adpProducts.length + '개 상품, 오늘 쇼츠 ' + _adpShortsCount + '/7)');
     _adpProcessLoop();
 };
 
@@ -4297,7 +4299,6 @@ window.adpResume = async function() {
     if (!saved || saved.remaining === 0) { _adpLog('⚠ 이전 진행 상태가 없습니다.'); return; }
 
     _adpLog('🔄 이전 진행 복원 중...');
-    // 남은 상품 ID로 다시 조회
     const { data, error } = await sb.from('admin_products')
         .select('id, name, code, category, price, img_url, description')
         .in('id', saved.remainingIds);
@@ -4307,12 +4308,16 @@ window.adpResume = async function() {
     _adpIndex = 0;
     _adpDoneCount = saved.done;
     _adpFailCount = saved.fail || 0;
+    _adpReport = [];
+    _adpShortsCount = await _adpGetTodayShortsCount();
+    const el = document.getElementById('adpShortsCount');
+    if (el) el.textContent = _adpShortsCount;
 
     document.getElementById('adpStatTotal').textContent = _adpDoneCount + _adpProducts.length;
     document.getElementById('adpStatDone').textContent = _adpDoneCount;
     document.getElementById('adpStatFail').textContent = _adpFailCount;
 
-    _adpLog('✅ ' + _adpProducts.length + '개 남은 상품 복원 완료');
+    _adpLog('✅ ' + _adpProducts.length + '개 남은 상품 복원 완료 (오늘 쇼츠 ' + _adpShortsCount + '/7)');
     _adpRunning = true;
     _adpStopReq = false;
     document.getElementById('adpBtnStart').style.display = 'none';
@@ -4325,14 +4330,13 @@ window.adpResume = async function() {
 // ── 핵심 처리 루프 ──
 async function _adpProcessLoop() {
     const delay = (parseInt(document.getElementById('adpOptDelay').value) || 3) * 1000;
-    const doImages = document.getElementById('adpOptImages').checked;
-    const doBlog = document.getElementById('adpOptBlog').checked;
     const total = _adpDoneCount + _adpFailCount + _adpProducts.length;
 
     while (_adpIndex < _adpProducts.length) {
         if (_adpStopReq) {
             _adpLog('⏹ 중지됨. ' + _adpDoneCount + '개 완료, ' + (_adpProducts.length - _adpIndex) + '개 남음.');
             _adpSaveProgress();
+            _adpShowReport();
             _adpFinishUI();
             return;
         }
@@ -4341,32 +4345,12 @@ async function _adpProcessLoop() {
         const num = _adpDoneCount + _adpFailCount + 1;
         _adpLog('━━━ [' + num + '/' + total + '] ' + prod.name + ' ━━━');
         _adpShowCurrent(prod, '준비 중...');
+        const report = { name: prod.name, id: prod.id, success: false, detail: false, blogCount: 0, shorts: false, sns: false, error: '' };
 
         try {
-            let imageUrls = [prod.img_url];
+            const imageUrls = [prod.img_url];
 
-            // ── STEP 1: 이미지 변형 (선택) ──
-            if (doImages) {
-                _adpShowCurrent(prod, '🔄 이미지 변형 생성 중 (5장)...');
-                _adpLog('  📸 이미지 변형 5장 생성 중 (병렬)...');
-                const promises = [];
-                for (let i = 0; i < 5; i++) {
-                    promises.push(
-                        sb.functions.invoke('reimagine-product', {
-                            body: { image_url: prod.img_url, mode: 'variation', prompt_hint: prod.name }
-                        }).then(res => {
-                            if (res.error) throw new Error(res.error.message || res.error);
-                            return res.data?.image_url || res.data?.url || null;
-                        }).catch(e => { _adpLog('  ⚠ 변형 ' + (i + 1) + ' 실패: ' + e.message); return null; })
-                    );
-                }
-                const results = await Promise.all(promises);
-                const newImgs = results.filter(Boolean);
-                imageUrls = [prod.img_url, ...newImgs];
-                _adpLog('  ✅ 이미지 ' + imageUrls.length + '장 준비 (원본 + ' + newImgs.length + '장 변형)');
-            }
-
-            // ── STEP 2: AI 상세페이지 KR 생성 ──
+            // ── STEP 1: AI 상세페이지 KR 생성 ──
             _adpShowCurrent(prod, '🤖 AI 상세페이지 생성 중...');
             _adpLog('  🤖 AI 상세페이지 HTML 생성 중...');
             const { data: aiData, error: aiErr } = await sb.functions.invoke('generate-product-detail', {
@@ -4387,7 +4371,7 @@ async function _adpProcessLoop() {
             if (!krHtml) throw new Error('KR HTML이 비어있습니다.');
             _adpLog('  ✅ KR 상세페이지 생성 완료 (' + krHtml.length + '자)');
 
-            // ── STEP 3: 7개국 번역 ──
+            // ── STEP 2: 7개국 번역 ──
             _adpShowCurrent(prod, '🌐 다국어 번역 중 (7개국)...');
             _adpLog('  🌐 7개 언어 번역 중...');
             const translations = { kr: krHtml };
@@ -4423,7 +4407,7 @@ async function _adpProcessLoop() {
                 _adpLog('  ⚠ googleTranslateSimple 없음 → KR 원문으로 저장');
             }
 
-            // ── STEP 4: DB 저장 ──
+            // ── STEP 3: DB 저장 ──
             _adpShowCurrent(prod, '💾 DB 저장 중...');
             const { error: saveErr } = await sb.from('admin_products').update({
                 description: translations.kr,
@@ -4437,21 +4421,41 @@ async function _adpProcessLoop() {
             }).eq('id', prod.id);
             if (saveErr) throw new Error('DB 저장 실패: ' + saveErr.message);
             _adpLog('  ✅ 8개국 상세페이지 저장 완료');
+            report.detail = true;
 
-            // ── STEP 5: 블로그 (선택) ──
-            if (doBlog) {
-                _adpShowCurrent(prod, '📝 블로그 생성 중 (8개국)...');
-                await _adpGenerateBlogs(prod, imageUrls[0]);
+            // ── STEP 4: 블로그 8개국 (필수) ──
+            _adpShowCurrent(prod, '📝 블로그 생성 중 (8개국)...');
+            report.blogCount = await _adpGenerateBlogs(prod, imageUrls[0]);
+            report.sns = true; // SNS는 블로그 내에서 JA일 때 자동 호출됨
+
+            // ── STEP 5: YouTube 쇼츠 (하루 7개 제한) ──
+            if (_adpShortsCount < 7) {
+                _adpShowCurrent(prod, '🎬 쇼츠 생성 중...');
+                try {
+                    await _adpGenerateShorts(prod);
+                    _adpShortsCount++;
+                    const el = document.getElementById('adpShortsCount');
+                    if (el) el.textContent = _adpShortsCount;
+                    report.shorts = true;
+                    _adpLog('  🎬 쇼츠 완료 (' + _adpShortsCount + '/7)');
+                } catch(se) {
+                    _adpLog('  ⚠ 쇼츠 실패: ' + se.message);
+                }
+            } else {
+                _adpLog('  ⏭ 쇼츠 스킵 (오늘 7개 달성)');
             }
 
             _adpDoneCount++;
+            report.success = true;
             _adpLog('  🎉 완료!');
 
         } catch(e) {
             _adpFailCount++;
+            report.error = e.message;
             _adpLog('  ❌ 실패: ' + e.message);
         }
 
+        _adpReport.push(report);
         _adpIndex++;
         _adpUpdateProgress(total);
         _adpSaveProgress();
@@ -4462,8 +4466,9 @@ async function _adpProcessLoop() {
         }
     }
 
-    _adpLog('═══════════════════════════════════');
-    _adpLog('🏁 전체 완료! 성공: ' + _adpDoneCount + ', 실패: ' + _adpFailCount);
+    _adpShowReport();
+    _adpLog('');
+    _adpLog('🏁 전체 완료! 성공: ' + _adpDoneCount + ', 실패: ' + _adpFailCount + ', 쇼츠: ' + _adpShortsCount + '/7');
     localStorage.removeItem('adp_progress');
     _adpFinishUI();
 }
@@ -4527,6 +4532,7 @@ async function _adpGenerateBlogs(prod, thumbnailUrl) {
         await new Promise(r => setTimeout(r, 1500));
     }
     _adpLog('  📝 블로그 ' + blogCount + '/8 생성 완료');
+    return blogCount;
 }
 
 // ── UI 헬퍼 ──
@@ -4553,7 +4559,7 @@ function _adpUpdateProgress(total) {
     document.getElementById('adpStatDone').textContent = _adpDoneCount;
     document.getElementById('adpStatFail').textContent = _adpFailCount;
     const remaining = total - done;
-    const eta = remaining * 2;
+    const eta = remaining * 5;
     document.getElementById('adpStatEta').textContent = remaining === 0 ? '완료!' : (eta < 60 ? eta + '분' : Math.round(eta / 60 * 10) / 10 + '시간');
 }
 
@@ -4585,6 +4591,112 @@ function _adpLoadProgress() {
         if (Date.now() - data.ts > 24 * 60 * 60 * 1000) { localStorage.removeItem('adp_progress'); return null; }
         return data;
     } catch(e) { return null; }
+}
+
+// ── 오늘 쇼츠 수 조회 ──
+async function _adpGetTodayShortsCount() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const { count } = await sb.from('marketing_content')
+            .select('id', { count: 'exact', head: true })
+            .eq('platform', 'youtube_shorts')
+            .gte('published_at', today + 'T00:00:00Z');
+        return count || 0;
+    } catch(e) { return 0; }
+}
+
+// ── ADP용 쇼츠 생성 (기존 wizRunPipeline 쇼츠 로직 재활용) ──
+async function _adpGenerateShorts(prod) {
+    let settings = {}; try { settings = JSON.parse(localStorage.getItem('mkt_settings') || '{}'); } catch(e) {}
+
+    // 이미지 준비
+    _adpLog('  🎬 쇼츠: 이미지 준비 중...');
+    const resp = await fetch(prod.img_url);
+    const blob = await resp.blob();
+    const thumbFile = new File([blob], 'thumb.jpg', { type: blob.type });
+
+    // AI 콘텐츠 생성
+    _adpLog('  🎬 쇼츠: AI 콘텐츠 생성 중...');
+    const base64 = await _wizResizeToBase64(thumbFile, 1024);
+    const { data: shortsData, error: shortsErr } = await sb.functions.invoke('marketing-content', {
+        body: {
+            platform: 'youtube_shorts_from_image',
+            topic: prod.name + ' - 半額印刷の裏ワザ カメレオンプリンティング',
+            tone: 'fast_energetic',
+            lang: 'ja',
+            instructions: 'MUST write everything in 日本語 (Japanese) ONLY. No Korean. 早口で商品を紹介するショート動画のナレーションを日本語で生成してください。cafe0101.comを必ず言及してください。narration配列に5つの文を入れてください。タイトル、説明、ハッシュタグもすべて日本語で。',
+            coreKeywords: settings.coreKeywords || '',
+            usp: settings.usp || '',
+            ctaMsg: settings.ctaMsg || '',
+            imageBase64: base64
+        }
+    });
+    if (shortsErr) throw new Error(shortsErr.message);
+    const shortsContent = shortsData?.content || shortsData;
+    if (shortsContent?.error) throw new Error(shortsContent.error);
+
+    // TTS 음성 생성
+    _adpLog('  🎬 쇼츠: TTS 음성 생성 중...');
+    const narrationTexts = shortsContent.narration || [];
+    let audioCtx = null, audioBuffer = null, hasTTS = false;
+    if (narrationTexts.length > 0) {
+        const tts = await _wizGenerateTTS(narrationTexts, 'ja');
+        audioCtx = tts.audioCtx;
+        audioBuffer = tts.audioBuffer;
+        hasTTS = true;
+    }
+
+    // 영상 렌더링
+    _adpLog('  🎬 쇼츠: 영상 렌더링 중...');
+    const videoBlob = await _wizRenderShortsVideo([thumbFile], shortsContent, hasTTS ? audioCtx : null, hasTTS ? audioBuffer : null, 'ja');
+
+    // YouTube 업로드
+    _adpLog('  🎬 쇼츠: YouTube 업로드 중...');
+    const ytTitle = shortsContent.title || prod.name + ' #Shorts';
+    const ytDesc = shortsContent.body || prod.name;
+    const ytTags = shortsContent.hashtags || [];
+    if (!ytTags.includes('Shorts')) ytTags.unshift('Shorts');
+
+    const ytResult = await _wizUploadYoutube(videoBlob, ytTitle, ytDesc, ytTags);
+
+    // marketing_content에 기록
+    try {
+        await sb.from('marketing_content').insert({
+            platform: 'youtube_shorts',
+            title: ytTitle,
+            body: ytDesc,
+            hashtags: ytTags,
+            thumbnail_prompt: '',
+            status: 'published',
+            published_at: new Date().toISOString()
+        });
+    } catch(_) {}
+
+    return ytResult;
+}
+
+// ── 작업 리포트 출력 (밤새 작업 결과 요약) ──
+function _adpShowReport() {
+    if (_adpReport.length === 0) return;
+    _adpLog('');
+    _adpLog('═══════════════════════════════════════════');
+    _adpLog('📋 작업 리포트 (처리 상품 목록)');
+    _adpLog('═══════════════════════════════════════════');
+    const ok = _adpReport.filter(r => r.success).length;
+    const fail = _adpReport.filter(r => !r.success).length;
+    _adpLog('✅ 성공: ' + ok + '개  |  ❌ 실패: ' + fail + '개  |  🎬 쇼츠: ' + _adpShortsCount + '/7');
+    _adpLog('');
+    _adpReport.forEach((r, i) => {
+        const icon = r.success ? '✅' : '❌';
+        const parts = [];
+        if (r.detail) parts.push('상세O');
+        if (r.blogCount > 0) parts.push('블로그' + r.blogCount + '개');
+        if (r.shorts) parts.push('쇼츠O');
+        if (r.sns) parts.push('SNS');
+        _adpLog(icon + ' ' + (i + 1) + '. ' + r.name + (parts.length ? '  [' + parts.join(', ') + ']' : ''));
+        if (r.error) _adpLog('   └ ' + r.error);
+    });
+    _adpLog('═══════════════════════════════════════════');
 }
 
 // ═══════════════════════════════════════════════════════════════
