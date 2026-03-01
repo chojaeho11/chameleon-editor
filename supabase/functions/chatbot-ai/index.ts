@@ -276,6 +276,9 @@ serve(async (req) => {
 
         const lp = langPrompts[clientLang === 'en' ? 'us' : clientLang] || langPrompts['kr'];
 
+        // 국가별 사이트 URL
+        const siteUrl = clientLang === 'ja' ? 'https://www.cafe0101.com' : clientLang === 'en' || clientLang === 'us' ? 'https://www.cafe3355.com' : 'https://www.cafe2626.com';
+
         // 통화 변환 헬퍼 (1000원 = 200엔 = $2)
         function convertPrice(krw: number): string {
             if (clientLang === 'ja') {
@@ -306,6 +309,14 @@ ${lp.rules}
 - "아크릴" → 포맥스/폼보드 안내
 - "현수막" → 패브릭 백월, 현수막 카테고리
 - 상품 목록에 있는 상품은 반드시 가격과 함께 안내하세요!
+
+## 상품 상세페이지 링크 (⚠️ 중요! / Product Detail Links)
+- 상품을 안내할 때 반드시 상세페이지 링크를 함께 제공하세요!
+- When recommending a product, ALWAYS include its detail page link!
+- 링크 형식: ${siteUrl}/?product={상품코드}
+- Link format: ${siteUrl}/?product={product_code}
+- 상품 데이터의 "code" 필드를 사용하세요. 예: code가 "honeycomb"이면 → ${siteUrl}/?product=honeycomb
+- ${clientLang === 'ja' ? '例：「こちらの商品の詳細ページをご覧くださいませ → リンク」のように丁寧に案内してください。' : clientLang === 'en' ? 'Example: "Check out the product details here → link"' : '예: "상세 페이지에서 확인해보세요! → 링크"'}
 
 ## 가격 안내 (⚠️ 매우 중요! / Pricing Rules)
 - "서버 자동 계산 결과"가 있으면 그 금액을 **그대로** 안내하세요! 직접 계산하지 마세요!
