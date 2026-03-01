@@ -1067,6 +1067,26 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     </div>
 </div>
 
+<!-- 이미지 템플릿 제목 입력 모달 -->
+<div id="tplTitleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:100003; justify-content:center; align-items:center; padding:16px;">
+    <div style="background:#fff; border-radius:24px; max-width:440px; width:100%; padding:0; overflow:hidden; animation:scSlideUp 0.3s ease; box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+        <div style="background:linear-gradient(135deg,#7c3aed,#a855f7); padding:28px 30px 20px; text-align:center;">
+            <div style="font-size:40px; margin-bottom:8px;">🎨</div>
+            <h3 id="tplTitleHead" style="margin:0 0 6px; font-size:20px; font-weight:800; color:#fff;">디자인 제목을 입력해주세요</h3>
+            <p id="tplTitleSub" style="margin:0; color:rgba(255,255,255,0.85); font-size:13px;">입력한 제목이 디자인에 자동으로 적용됩니다</p>
+        </div>
+        <div style="padding:24px 30px 28px;">
+            <div style="position:relative;">
+                <input type="text" id="tplTitleInput" maxlength="30" style="width:100%; padding:14px 16px; font-size:16px; font-weight:600; border:2px solid #e2e8f0; border-radius:12px; outline:none; transition:border-color 0.2s; box-sizing:border-box;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'">
+                <div id="tplTitlePlaceholder" style="position:absolute; top:14px; left:16px; color:#94a3b8; font-size:16px; pointer-events:none;">예: 카페, 생일파티, 웨딩</div>
+            </div>
+            <div id="tplTitleWarn" style="display:none; color:#ef4444; font-size:12px; margin-top:8px; text-align:center;">제목을 입력해주세요</div>
+            <button id="tplTitleBtn" style="width:100%; margin-top:16px; padding:14px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">✨ 다음</button>
+            <button id="tplTitleCancel" style="width:100%; margin-top:8px; padding:12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;">취소</button>
+        </div>
+    </div>
+</div>
+
 <script>
 // ===== Subscription Logic =====
 window.isSubscriber = false;
@@ -7855,6 +7875,54 @@ if (w >= 20 && h >= 20) {
 
     };
 
+    // ── 이미지 템플릿 제목 입력 모달 (8개국어) ──
+    function _showTitleInputModal(tpl) {
+        const c = window.SITE_CONFIG?.COUNTRY || 'KR';
+        const i18n = {
+            KR: { head:'디자인 제목을 입력해주세요', sub:'입력한 제목이 디자인에 자동으로 적용됩니다', ph:'예: 카페, 생일파티, 웨딩', warn:'제목을 입력해주세요', next:'✨ 다음', cancel:'취소' },
+            JP: { head:'デザインタイトルを入力してください', sub:'入力したタイトルがデザインに自動適用されます', ph:'例: カフェ、誕生日パーティー、ウェディング', warn:'タイトルを入力してください', next:'✨ 次へ', cancel:'キャンセル' },
+            US: { head:'Enter your design title', sub:'The title will be automatically applied to your design', ph:'e.g. Cafe, Birthday Party, Wedding', warn:'Please enter a title', next:'✨ Next', cancel:'Cancel' },
+            CN: { head:'请输入设计标题', sub:'输入的标题将自动应用到设计中', ph:'例：咖啡、生日派对、婚礼', warn:'请输入标题', next:'✨ 下一步', cancel:'取消' },
+            AR: { head:'أدخل عنوان التصميم', sub:'سيتم تطبيق العنوان تلقائياً على التصميم', ph:'مثال: مقهى، حفلة عيد ميلاد، زفاف', warn:'يرجى إدخال العنوان', next:'✨ التالي', cancel:'إلغاء' },
+            ES: { head:'Ingrese el título del diseño', sub:'El título se aplicará automáticamente a su diseño', ph:'Ej: Café, Fiesta, Boda', warn:'Por favor ingrese un título', next:'✨ Siguiente', cancel:'Cancelar' },
+            DE: { head:'Designtitel eingeben', sub:'Der Titel wird automatisch auf Ihr Design angewendet', ph:'z.B. Café, Geburtstagsparty, Hochzeit', warn:'Bitte Titel eingeben', next:'✨ Weiter', cancel:'Abbrechen' },
+            FR: { head:'Entrez le titre du design', sub:'Le titre sera automatiquement appliqué à votre design', ph:'Ex: Café, Anniversaire, Mariage', warn:'Veuillez entrer un titre', next:'✨ Suivant', cancel:'Annuler' }
+        };
+        const t = i18n[c] || i18n['US'];
+        const modal = document.getElementById('tplTitleModal');
+        document.getElementById('tplTitleHead').textContent = t.head;
+        document.getElementById('tplTitleSub').textContent = t.sub;
+        document.getElementById('tplTitlePlaceholder').textContent = t.ph;
+        document.getElementById('tplTitleWarn').textContent = t.warn;
+        document.getElementById('tplTitleBtn').textContent = t.next;
+        document.getElementById('tplTitleCancel').textContent = t.cancel;
+        const input = document.getElementById('tplTitleInput');
+        const warn = document.getElementById('tplTitleWarn');
+        const ph = document.getElementById('tplTitlePlaceholder');
+        input.value = '';
+        warn.style.display = 'none';
+        ph.style.display = '';
+        input.oninput = function() { ph.style.display = this.value ? 'none' : ''; warn.style.display = 'none'; };
+        modal.style.display = 'flex';
+        setTimeout(() => input.focus(), 200);
+
+        document.getElementById('tplTitleBtn').onclick = function() {
+            const val = input.value.trim();
+            if (!val) { warn.style.display = 'block'; input.focus(); return; }
+            modal.style.display = 'none';
+            window.pendingTemplate = tpl;
+            window.pendingTemplateKeyword = val;
+            showCategorySelectionModal();
+        };
+        document.getElementById('tplTitleCancel').onclick = function() {
+            modal.style.display = 'none';
+            window.pendingTemplate = null;
+        };
+        input.onkeydown = function(e) {
+            if (e.key === 'Enter') document.getElementById('tplTitleBtn').click();
+        };
+    }
+
     window.onTemplateClick = async function(tpl) {
         // 프리미엄 템플릿 접근 제어
         if (window.isPremiumTemplate && window.isPremiumTemplate(tpl) && !window.isSubscriber) {
@@ -7872,12 +7940,9 @@ if (w >= 20 && h >= 20) {
             window.pendingTemplate = tpl;
             let kw = lastSearchKeyword || '';
             if (!kw) {
-                // 이미지 선택했지만 검색어 없음 → 제목 입력 강제
-                const lang = window.SITE_CONFIG?.COUNTRY || 'KR';
-                const msg = {KR:'디자인 제목을 입력해주세요\n(예: 카페, 생일파티, 웨딩)',JP:'デザインタイトルを入力してください\n(例: カフェ、誕生日、ウェディング)',US:'Enter a design title\n(e.g. Cafe, Birthday, Wedding)'}[lang] || 'Enter a design title';
-                kw = prompt(msg);
-                if (!kw || !kw.trim()) { window.pendingTemplate = null; return; }
-                kw = kw.trim();
+                // 이미지 선택했지만 검색어 없음 → 제목 입력 팝업
+                _showTitleInputModal(tpl);
+                return;
             }
             window.pendingTemplateKeyword = kw;
             showCategorySelectionModal();
