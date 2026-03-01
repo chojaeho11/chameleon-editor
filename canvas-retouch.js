@@ -25,120 +25,121 @@ const PRESETS = {
 // ==========================================================
 // 옵션 선택이 필요한 AI 기능 정의
 // ==========================================================
+// t() 헬퍼 — window.t 가 없으면 fallback 반환
+const _t = (key, fb) => (typeof window.t === 'function' ? window.t(key, fb) : fb);
+
 const AI_OPTIONS = {
     cartoon: {
-        title: '만화 스타일 선택',
+        titleKey: 'opt_title_cartoon', title: '만화 스타일 선택',
         options: [
-            { value: '3d_cartoon', label: '3D 카툰' },
-            { value: 'pixar', label: 'Pixar' },
-            { value: 'pixar_plus', label: 'Pixar+' },
-            { value: 'anime', label: '애니메' },
-            { value: 'jpcartoon', label: '일본 카툰' },
-            { value: 'comic', label: '코믹' },
-            { value: 'sketch', label: '스케치' },
-            { value: 'handdrawn', label: '손그림' },
-            { value: '3d', label: '3D 인형' },
-            { value: '3d_game', label: '3D 게임' },
-            { value: 'angel', label: '천사' },
-            { value: 'demon', label: '악마' },
-            { value: 'artstyle', label: '아트' },
-            { value: 'animation3d', label: '3D 애니' },
-            { value: 'classic_cartoon', label: '클래식 카툰' },
-            { value: 'hongkong', label: '홍콩 스타일' },
+            { value: '3d_cartoon', key: 'opt_3d_cartoon', label: '3D 카툰' },
+            { value: 'pixar', key: 'opt_pixar', label: 'Pixar' },
+            { value: 'pixar_plus', key: 'opt_pixar_plus', label: 'Pixar+' },
+            { value: 'anime', key: 'opt_anime', label: '애니메' },
+            { value: 'jpcartoon', key: 'opt_jpcartoon', label: '일본 카툰' },
+            { value: 'comic', key: 'opt_comic', label: '코믹' },
+            { value: 'sketch', key: 'opt_sketch', label: '스케치' },
+            { value: 'handdrawn', key: 'opt_handdrawn', label: '손그림' },
+            { value: '3d', key: 'opt_3d_doll', label: '3D 인형' },
+            { value: '3d_game', key: 'opt_3d_game', label: '3D 게임' },
+            { value: 'angel', key: 'opt_angel', label: '천사' },
+            { value: 'demon', key: 'opt_demon', label: '악마' },
+            { value: 'artstyle', key: 'opt_artstyle', label: '아트' },
+            { value: 'animation3d', key: 'opt_animation3d', label: '3D 애니' },
+            { value: 'classic_cartoon', key: 'opt_classic_cartoon', label: '클래식 카툰' },
+            { value: 'hongkong', key: 'opt_hongkong', label: '홍콩 스타일' },
         ],
         paramKey: 'type',
     },
     emotion: {
-        title: '표정 선택',
+        titleKey: 'opt_title_emotion', title: '표정 선택',
         options: [
-            { value: '10', label: '보조개 미소' },
-            { value: '11', label: '배 보조개' },
-            { value: '12', label: '활짝 웃기' },
-            { value: '13', label: '함박 웃음' },
-            { value: '14', label: '쿨한 포즈' },
-            { value: '15', label: '슬픔' },
-            { value: '16', label: '억지 웃음' },
-            { value: '100', label: '눈뜨기' },
+            { value: '10', key: 'opt_dimple_smile', label: '보조개 미소' },
+            { value: '11', key: 'opt_belly_dimple', label: '배 보조개' },
+            { value: '12', key: 'opt_big_smile', label: '활짝 웃기' },
+            { value: '13', key: 'opt_hearty_laugh', label: '함박 웃음' },
+            { value: '14', key: 'opt_cool_pose', label: '쿨한 포즈' },
+            { value: '15', key: 'opt_sad', label: '슬픔' },
+            { value: '16', key: 'opt_forced_smile', label: '억지 웃음' },
+            { value: '100', key: 'opt_open_eyes', label: '눈뜨기' },
         ],
         paramKey: 'service_choice',
     },
     age_gender: {
-        title: '변환 유형 선택',
+        titleKey: 'opt_title_age', title: '변환 유형 선택',
         options: [
-            { value: 'TO_KID', label: '어린이로' },
-            { value: 'TO_OLD', label: '노인으로' },
-            { value: 'TO_FEMALE', label: '여성으로' },
-            { value: 'TO_MALE', label: '남성으로' },
+            { value: 'TO_KID', key: 'opt_to_kid', label: '어린이로' },
+            { value: 'TO_OLD', key: 'opt_to_old', label: '노인으로' },
+            { value: 'TO_FEMALE', key: 'opt_to_female', label: '여성으로' },
+            { value: 'TO_MALE', key: 'opt_to_male', label: '남성으로' },
         ],
         paramKey: 'action_type',
     },
     face_filter: {
-        title: '얼굴 필터 선택',
+        titleKey: 'opt_title_filter', title: '얼굴 필터 선택',
         options: [
-            { value: '10001', label: '내추럴' },
-            { value: '10002', label: '화이트닝' },
-            { value: '10003', label: '핑크' },
-            { value: '10010', label: '우아한' },
-            { value: '10011', label: '청춘' },
-            { value: '10015', label: '레트로' },
-            { value: '10020', label: '시네마' },
-            { value: '10025', label: '빈티지' },
-            { value: '10030', label: '따뜻한 톤' },
-            { value: '10035', label: '차가운 톤' },
-            { value: '10040', label: '드라마틱' },
-            { value: '10050', label: '모노크롬' },
-            { value: '10060', label: '네온' },
-            { value: '10070', label: '선셋' },
+            { value: '10001', key: 'opt_natural', label: '내추럴' },
+            { value: '10002', key: 'opt_whitening', label: '화이트닝' },
+            { value: '10003', key: 'opt_pink', label: '핑크' },
+            { value: '10010', key: 'opt_elegant', label: '우아한' },
+            { value: '10011', key: 'opt_youth', label: '청춘' },
+            { value: '10015', key: 'opt_retro', label: '레트로' },
+            { value: '10020', key: 'opt_cinema', label: '시네마' },
+            { value: '10025', key: 'opt_vintage', label: '빈티지' },
+            { value: '10030', key: 'opt_warm_tone', label: '따뜻한 톤' },
+            { value: '10035', key: 'opt_cool_tone', label: '차가운 톤' },
+            { value: '10040', key: 'opt_dramatic', label: '드라마틱' },
+            { value: '10050', key: 'opt_monochrome', label: '모노크롬' },
+            { value: '10060', key: 'opt_neon', label: '네온' },
+            { value: '10070', key: 'opt_sunset', label: '선셋' },
         ],
         paramKey: 'resource_type',
     },
     hairstyle: {
-        title: '헤어스타일 선택',
+        titleKey: 'opt_title_hair', title: '헤어스타일 선택',
         options: [
-            // 여성
-            { value: 'BobCut', label: '밥컷' },
-            { value: 'LongStraight', label: '롱 스트레이트' },
-            { value: 'LongWavy', label: '롱 웨이브' },
-            { value: 'LongCurly', label: '롱 컬리' },
-            { value: 'PixieCut', label: '픽시컷' },
-            { value: 'CurlyBob', label: '컬리 밥' },
-            { value: 'Ponytail', label: '포니테일' },
-            { value: 'Updo', label: '업도' },
-            { value: 'Chignon', label: '시뇽' },
-            { value: 'FishtailBraid', label: '피쉬테일' },
-            { value: 'TwinBraids', label: '트윈 브레이드' },
-            { value: 'ShortPixieWithShavedSides', label: '사이드 쉐이브' },
-            { value: 'DoubleBun', label: '더블 번' },
-            { value: 'Dreadlocks', label: '드레드락' },
-            { value: 'ShoulderLengthHair', label: '어깨 길이' },
-            { value: 'BoxBraids', label: '박스 브레이드' },
-            // 남성
-            { value: 'BuzzCut', label: '버즈컷' },
-            { value: 'UnderCut', label: '언더컷' },
-            { value: 'Pompadour', label: '퐁파두르' },
-            { value: 'SlickBack', label: '슬릭백' },
-            { value: 'CurlyShag', label: '컬리 쉐그' },
-            { value: 'WavyShag', label: '웨이비 쉐그' },
-            { value: 'FauxHawk', label: '포호크' },
-            { value: 'TwoBlockHaircut', label: '투블럭' },
-            { value: 'ManBun', label: '맨번' },
-            { value: 'CombOver', label: '콤오버' },
-            { value: 'Afro', label: '아프로' },
-            { value: 'CornrowBraids', label: '콘로우' },
+            { value: 'BobCut', key: 'opt_bobcut', label: '밥컷' },
+            { value: 'LongStraight', key: 'opt_long_straight', label: '롱 스트레이트' },
+            { value: 'LongWavy', key: 'opt_long_wavy', label: '롱 웨이브' },
+            { value: 'LongCurly', key: 'opt_long_curly', label: '롱 컬리' },
+            { value: 'PixieCut', key: 'opt_pixie', label: '픽시컷' },
+            { value: 'CurlyBob', key: 'opt_curly_bob', label: '컬리 밥' },
+            { value: 'Ponytail', key: 'opt_ponytail', label: '포니테일' },
+            { value: 'Updo', key: 'opt_updo', label: '업도' },
+            { value: 'Chignon', key: 'opt_chignon', label: '시뇽' },
+            { value: 'FishtailBraid', key: 'opt_fishtail', label: '피쉬테일' },
+            { value: 'TwinBraids', key: 'opt_twin_braids', label: '트윈 브레이드' },
+            { value: 'ShortPixieWithShavedSides', key: 'opt_shaved_sides', label: '사이드 쉐이브' },
+            { value: 'DoubleBun', key: 'opt_double_bun', label: '더블 번' },
+            { value: 'Dreadlocks', key: 'opt_dreadlocks', label: '드레드락' },
+            { value: 'ShoulderLengthHair', key: 'opt_shoulder', label: '어깨 길이' },
+            { value: 'BoxBraids', key: 'opt_box_braids', label: '박스 브레이드' },
+            { value: 'BuzzCut', key: 'opt_buzzcut', label: '버즈컷' },
+            { value: 'UnderCut', key: 'opt_undercut', label: '언더컷' },
+            { value: 'Pompadour', key: 'opt_pompadour', label: '퐁파두르' },
+            { value: 'SlickBack', key: 'opt_slickback', label: '슬릭백' },
+            { value: 'CurlyShag', key: 'opt_curly_shag', label: '컬리 쉐그' },
+            { value: 'WavyShag', key: 'opt_wavy_shag', label: '웨이비 쉐그' },
+            { value: 'FauxHawk', key: 'opt_fauxhawk', label: '포호크' },
+            { value: 'TwoBlockHaircut', key: 'opt_twoblock', label: '투블럭' },
+            { value: 'ManBun', key: 'opt_manbun', label: '맨번' },
+            { value: 'CombOver', key: 'opt_combover', label: '콤오버' },
+            { value: 'Afro', key: 'opt_afro', label: '아프로' },
+            { value: 'CornrowBraids', key: 'opt_cornrow', label: '콘로우' },
         ],
         paramKey: 'hair_style',
     },
     lips_color: {
-        title: '립 컬러 선택',
+        titleKey: 'opt_title_lips', title: '립 컬러 선택',
         options: [
-            { value: JSON.stringify({r:200,g:50,b:50,a:60}), label: '레드' },
-            { value: JSON.stringify({r:180,g:60,b:80,a:55}), label: '로즈' },
-            { value: JSON.stringify({r:200,g:100,b:80,a:50}), label: '코랄' },
-            { value: JSON.stringify({r:180,g:80,b:120,a:55}), label: '베리' },
-            { value: JSON.stringify({r:160,g:50,b:60,a:60}), label: '와인' },
-            { value: JSON.stringify({r:220,g:120,b:100,a:45}), label: '누드 핑크' },
-            { value: JSON.stringify({r:150,g:30,b:50,a:65}), label: '딥 레드' },
-            { value: JSON.stringify({r:200,g:80,b:100,a:50}), label: '핫 핑크' },
+            { value: JSON.stringify({r:200,g:50,b:50,a:60}), key: 'opt_red', label: '레드' },
+            { value: JSON.stringify({r:180,g:60,b:80,a:55}), key: 'opt_rose', label: '로즈' },
+            { value: JSON.stringify({r:200,g:100,b:80,a:50}), key: 'opt_coral', label: '코랄' },
+            { value: JSON.stringify({r:180,g:80,b:120,a:55}), key: 'opt_berry', label: '베리' },
+            { value: JSON.stringify({r:160,g:50,b:60,a:60}), key: 'opt_wine', label: '와인' },
+            { value: JSON.stringify({r:220,g:120,b:100,a:45}), key: 'opt_nude_pink', label: '누드 핑크' },
+            { value: JSON.stringify({r:150,g:30,b:50,a:65}), key: 'opt_deep_red', label: '딥 레드' },
+            { value: JSON.stringify({r:200,g:80,b:100,a:50}), key: 'opt_hot_pink', label: '핫 핑크' },
         ],
         paramKey: 'lip_color_infos',
     },
@@ -464,17 +465,19 @@ function resetFilters() {
 // ==========================================================
 function _showOptionModal(config) {
     return new Promise((resolve) => {
-        // 기존 모달 제거
         document.getElementById('retouchOptionModal')?.remove();
+
+        const modalTitle = _t(config.titleKey, config.title);
+        const cancelText = _t('retouch_cancel', '취소');
 
         const modal = document.createElement('div');
         modal.id = 'retouchOptionModal';
         modal.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);';
         modal.innerHTML = `
             <div style="background:#fff;border-radius:16px;padding:24px;max-width:400px;width:90%;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#1e293b;">${config.title}</div>
+                <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#1e293b;">${modalTitle}</div>
                 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;" id="retouchOptions"></div>
-                <button id="retouchOptionClose" style="margin-top:16px;width:100%;height:38px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#64748b;font-size:13px;cursor:pointer;font-weight:600;">취소</button>
+                <button id="retouchOptionClose" style="margin-top:16px;width:100%;height:38px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#64748b;font-size:13px;cursor:pointer;font-weight:600;">${cancelText}</button>
             </div>
         `;
         document.body.appendChild(modal);
@@ -483,7 +486,7 @@ function _showOptionModal(config) {
         for (const opt of config.options) {
             const btn = document.createElement('button');
             btn.style.cssText = 'padding:10px 8px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:600;color:#334155;';
-            btn.textContent = opt.label;
+            btn.textContent = opt.key ? _t(opt.key, opt.label) : opt.label;
             btn.onmouseover = () => { btn.style.borderColor = '#6366f1'; btn.style.background = '#f5f3ff'; };
             btn.onmouseout = () => { btn.style.borderColor = '#e2e8f0'; btn.style.background = '#fff'; };
             btn.onclick = () => { modal.remove(); resolve(opt.value); };
@@ -504,7 +507,7 @@ function _pickSecondImage(imageList) {
         modal.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);';
         modal.innerHTML = `
             <div style="background:#fff;border-radius:16px;padding:24px;max-width:400px;width:90%;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#1e293b;">합성할 얼굴 이미지 선택</div>
+                <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#1e293b;">${_t('opt_title_fusion', '합성할 얼굴 이미지 선택')}</div>
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="retouchImgPick"></div>
                 <button id="retouchOptionClose" style="margin-top:16px;width:100%;height:38px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#64748b;font-size:13px;cursor:pointer;font-weight:600;">취소</button>
             </div>
