@@ -7868,7 +7868,7 @@ if (w >= 20 && h >= 20) {
 
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
         const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');
-        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !window.__WEDDING_MODE) {
+        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !window.__WEDDING_MODE && !window.__RETOUCH_MODE) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
                 const _kw = window.pendingTemplateKeyword;
@@ -10420,6 +10420,8 @@ window.dsmOpenRetouch = function() {
                 // 모달 닫기
                 var m = document.getElementById('designStartModal');
                 if (m) m.style.display = 'none';
+                // 보정모드 플래그 → 디자인 마법사 자동팝업 방지
+                window.__RETOUCH_MODE = true;
                 // 에디터 열기
                 if (window.startEditorDirect) {
                     await window.startEditorDirect('custom', mmW, mmH);
@@ -10453,6 +10455,8 @@ window.dsmOpenRetouch = function() {
                                 var ctrl = document.getElementById('retouchControls');
                                 if (noSel) noSel.style.display = 'none';
                                 if (ctrl) ctrl.style.display = 'block';
+                                // 플래그 리셋
+                                window.__RETOUCH_MODE = false;
                             }, 300);
                         }, { crossOrigin: 'anonymous' });
                     }, 500);
