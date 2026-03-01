@@ -22,6 +22,7 @@ import { initVideoMaker } from "./video-maker.js?v=123";
 import { initPptMode } from "./ppt-mode.js?v=123";
 import { initWeddingMode } from "./wedding-mode.js?v=123";
 import { initIconTools } from "./canvas-icons.js?v=123";
+import { initRetouchTools } from "./canvas-retouch.js?v=123";
 
 window.currentUploadedPdfUrl = null;
 
@@ -68,6 +69,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             ['PageTools', initPageTools],
             ['TemplateTools', initTemplateTools],
             ['AiTools', initAiTools],
+            ['RetouchTools', initRetouchTools],
             ['IconTools', initIconTools],
             ['Export', initExport],
             ['OrderSystem', initOrderSystem],

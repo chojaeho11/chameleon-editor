@@ -2188,6 +2188,9 @@ async function handleSubReturn() {
             <div class="icon-item" data-panel="sub-upload">
                 <i class="fa-solid fa-cloud-arrow-up"></i><span data-i18n="menu_upload">업로드</span>
             </div>
+            <div class="icon-item" data-panel="sub-retouch">
+                <i class="fa-solid fa-face-smile-beam"></i><span data-i18n="menu_retouch">보정</span>
+            </div>
             <div class="icon-item" data-panel="sub-ai">
                 <i class="fa-solid fa-wand-magic-sparkles"></i><span data-i18n="menu_ai">AI</span>
             </div>
@@ -2385,6 +2388,74 @@ async function handleSubReturn() {
                 </div>
                 <div id="myUploadGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; min-height:60px;">
                     <div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:15px 0;" data-i18n="label_login_required">로그인 후 이용 가능</div>
+                </div>
+            </div>
+
+            <!-- 4.5 보정 (Retouch) -->
+            <div id="sub-retouch" class="sub-content">
+                <div class="sub-panel-header" data-i18n="panel_retouch">인물 보정</div>
+
+                <p id="retouchNoSel" style="font-size:12px; color:#94a3b8; text-align:center; padding:20px 0;"
+                   data-i18n="retouch_select_image">캔버스에서 이미지를 선택하세요</p>
+
+                <div id="retouchControls" style="display:none;">
+                    <!-- AI 인물 보정 -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">
+                        ✨ <span data-i18n="retouch_ai_title">AI 인물 보정</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:14px;">
+                        <button class="btn-round" data-retouch="face_beauty" style="height:36px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-face-smile"></i> <span data-i18n="retouch_face">피부 보정</span>
+                        </button>
+                        <button class="btn-round" data-retouch="blemish" style="height:36px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-eraser"></i> <span data-i18n="retouch_blemish">잡티 제거</span>
+                        </button>
+                        <button class="btn-round" data-retouch="face_shape" style="height:36px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-user"></i> <span data-i18n="retouch_face_shape">얼굴 성형</span>
+                        </button>
+                        <button class="btn-round" data-retouch="full_beauty" style="height:36px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="retouch_full">전체 보정</span>
+                        </button>
+                    </div>
+
+                    <!-- 수동 필터 슬라이더 -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">
+                        🎨 <span data-i18n="retouch_manual_title">수동 조정</span>
+                    </div>
+                    <div id="retouchSliders" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"></div>
+                    <div style="display:flex; gap:6px; margin-bottom:14px;">
+                        <button id="btnRetouchApply" class="btn-round" style="flex:1; height:34px; font-size:12px; justify-content:center; background:#6366f1; color:white; border:none;">
+                            <span data-i18n="retouch_apply">적용</span>
+                        </button>
+                        <button id="btnRetouchReset" class="btn-round" style="flex:1; height:34px; font-size:12px; justify-content:center;">
+                            <span data-i18n="retouch_reset">초기화</span>
+                        </button>
+                    </div>
+
+                    <!-- 퀵 프리셋 -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">
+                        🎭 <span data-i18n="retouch_presets_title">퀵 필터</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+                        <button class="btn-round" data-preset="portrait" style="height:30px; font-size:10px; justify-content:center;">
+                            <span data-i18n="retouch_preset_portrait">인물</span>
+                        </button>
+                        <button class="btn-round" data-preset="vivid" style="height:30px; font-size:10px; justify-content:center;">
+                            <span data-i18n="retouch_preset_vivid">선명</span>
+                        </button>
+                        <button class="btn-round" data-preset="warm" style="height:30px; font-size:10px; justify-content:center;">
+                            <span data-i18n="retouch_preset_warm">따뜻한</span>
+                        </button>
+                        <button class="btn-round" data-preset="cool" style="height:30px; font-size:10px; justify-content:center;">
+                            <span data-i18n="retouch_preset_cool">차가운</span>
+                        </button>
+                        <button class="btn-round" data-preset="bw" style="height:30px; font-size:10px; justify-content:center;">
+                            <span data-i18n="retouch_preset_bw">흑백</span>
+                        </button>
+                        <button class="btn-round" data-preset="soft" style="height:30px; font-size:10px; justify-content:center;">
+                            <span data-i18n="retouch_preset_soft">소프트</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -3736,6 +3807,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./canvas-image.js?v=123"></script>
 <script type="module" src="./canvas-template.js?v=123"></script> 
 <script type="module" src="./canvas-ai.js?v=123"></script>
+<script type="module" src="./canvas-retouch.js?v=123"></script>
 <script type="module" src="./canvas-utils.js?v=123"></script>
 <script type="module" src="./shortcuts.js?v=123"></script>
 <script type="module" src="./context-menu.js?v=123"></script>
