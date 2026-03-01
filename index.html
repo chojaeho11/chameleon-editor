@@ -7870,7 +7870,16 @@ if (w >= 20 && h >= 20) {
             await applyTemplateDirectly(tpl);
         } else {
             window.pendingTemplate = tpl;
-            window.pendingTemplateKeyword = lastSearchKeyword || '';
+            let kw = lastSearchKeyword || '';
+            if (!kw) {
+                // 이미지 선택했지만 검색어 없음 → 제목 입력 강제
+                const lang = window.SITE_CONFIG?.COUNTRY || 'KR';
+                const msg = {KR:'디자인 제목을 입력해주세요\n(예: 카페, 생일파티, 웨딩)',JP:'デザインタイトルを入力してください\n(例: カフェ、誕生日、ウェディング)',US:'Enter a design title\n(e.g. Cafe, Birthday, Wedding)'}[lang] || 'Enter a design title';
+                kw = prompt(msg);
+                if (!kw || !kw.trim()) { window.pendingTemplate = null; return; }
+                kw = kw.trim();
+            }
+            window.pendingTemplateKeyword = kw;
             showCategorySelectionModal();
         }
     };
