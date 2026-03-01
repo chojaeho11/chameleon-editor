@@ -1142,15 +1142,27 @@ async function generateAllPages(fd, setStep) {
     const c = canvas || window.canvas;
     if (!c) return;
 
-    // Page 1: Cover (already on current canvas from dsmOpenEditor)
+    // === Photo distribution plan ===
+    // photos[0] → cover (page 1)
+    // photos[last] → closing page (last page)
+    // photos[1..last-1] → gallery pages (middle photos)
+    const allPhotos = fd.photos || [];
+    const coverPhoto = allPhotos[0] || null;
+    const closingPhoto = allPhotos.length > 1 ? allPhotos[allPhotos.length - 1] : null;
+    const middlePhotos = allPhotos.length > 2 ? allPhotos.slice(1, -1) : [];
+
+    // Calculate gallery page distribution: fit middle photos into pages of 1~3
+    const galleryPages = _distributePhotos(middlePhotos);
+
+    // Page 1: Cover (first photo + names + date + venue)
     setStep(_t('wed_step_cover','표지 만드는 중...'));
     await buildCoverPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 2: Gallery (text-only poem/quote)
-    setStep(_t('wed_step_gallery','축하시 작성 중...'));
+    // Page 2: Greeting (인사말 — 결혼합니다 + 부모님 + 축하하러 와주세요)
+    setStep(_t('wed_step_greeting','인사말 작성 중...'));
     await _addPageAndWait(c);
-    await buildGalleryPage(c, fd);
+    await buildGreetingPage(c, fd);
     if (window.savePageState) window.savePageState();
 
     // Page 3: Calendar
@@ -1165,12 +1177,19 @@ async function generateAllPages(fd, setStep) {
     await buildVenuePage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 5+: Photo gallery pages (3 photos per page, skip cover photo)
-    const galleryPhotos = fd.photos.slice(1); // photos[0] is cover
-    for (let i = 0; i < galleryPhotos.length; i += 3) {
-        setStep(_t('wed_step_gallery','갤러리 배치 중...') + ` (${Math.floor(i/3)+1})`);
+    // Page 5+: Photo gallery pages (middle photos)
+    for (let i = 0; i < galleryPages.length; i++) {
+        setStep(_t('wed_step_gallery','갤러리 배치 중...') + ` (${i + 1}/${galleryPages.length})`);
         await _addPageAndWait(c);
-        await buildPhotoGalleryPage(c, fd, galleryPhotos.slice(i, i + 3));
+        await buildPhotoGalleryPage(c, fd, galleryPages[i]);
+        if (window.savePageState) window.savePageState();
+    }
+
+    // Last page: Closing (last photo + "참석해서 자리를 빛내주세요")
+    if (closingPhoto) {
+        setStep('마무리 페이지 만드는 중...');
+        await _addPageAndWait(c);
+        await buildClosingPage(c, fd, closingPhoto);
         if (window.savePageState) window.savePageState();
     }
 
@@ -1180,6 +1199,33 @@ async function generateAllPages(fd, setStep) {
     await _sleep(500);
     if (window.weddingActivatePanel) window.weddingActivatePanel();
     setTimeout(() => renderSlideThumbs(), 500);
+}
+
+/* Distribute N photos into pages of 1~3 photos optimally */
+function _distributePhotos(photos) {
+    const n = photos.length;
+    if (n === 0) return [];
+    if (n <= 3) return [photos];
+    if (n === 4) return [photos.slice(0, 2), photos.slice(2, 4)]; // 2+2
+    if (n === 5) return [photos.slice(0, 3), photos.slice(3, 5)]; // 3+2
+
+    // For 6+: fill pages of 3, handle remainder
+    const pages = [];
+    let i = 0;
+    const remainder = n % 3;
+    while (i < n) {
+        // If remainder is 1, make one page of 2+2 instead of 3+1
+        if (remainder === 1 && n - i === 4) {
+            pages.push(photos.slice(i, i + 2));
+            pages.push(photos.slice(i + 2, i + 4));
+            break;
+        }
+        // If remainder is 2, last page gets 2
+        const take = (n - i >= 3) ? 3 : (n - i);
+        pages.push(photos.slice(i, i + take));
+        i += take;
+    }
+    return pages;
 }
 
 /* Wait for addPage to fully complete including resizeCanvasToFit */
@@ -1265,52 +1311,45 @@ async function buildGreetingPage(c, fd) {
     board.set({ fill: s.bg });
     c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
 
+    // top decoration
+    c.add(new fabric.Textbox('♥', {
+        left: board.left + w * 0.44, top: board.top + h * 0.08, width: w * 0.12,
+        fontSize: Math.round(h * 0.03), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
+    }));
+
     // top line
-    c.add(new fabric.Rect({ left: board.left + w * 0.3, top: board.top + h * 0.08, width: w * 0.4, height: 2, fill: s.accent, selectable: true, evented: true }));
+    c.add(new fabric.Rect({ left: board.left + w * 0.25, top: board.top + h * 0.14, width: w * 0.5, height: 2, fill: s.accent, selectable: true, evented: true }));
 
     // title
     c.add(new fabric.Textbox(_t('wed_invite_title','초대합니다'), {
-        left: board.left + w * 0.1, top: board.top + h * 0.12, width: w * 0.8,
-        fontSize: Math.round(h * 0.035), fontFamily: s.font, fontWeight: 'bold',
+        left: board.left + w * 0.1, top: board.top + h * 0.17, width: w * 0.8,
+        fontSize: Math.round(h * 0.035), fontFamily: s.font, fontWeight: '300',
         fill: s.text, textAlign: 'center'
     }));
 
     // line
-    c.add(new fabric.Rect({ left: board.left + w * 0.3, top: board.top + h * 0.2, width: w * 0.4, height: 2, fill: s.accent, selectable: true, evented: true }));
+    c.add(new fabric.Rect({ left: board.left + w * 0.25, top: board.top + h * 0.24, width: w * 0.5, height: 2, fill: s.accent, selectable: true, evented: true }));
 
-    // AI greeting text
-    let greetingText = _t('wed_greeting_text','서로가 마주보며 다져온 사랑을\n이제 함께 한 곳을 바라보며\n걸어가고자 합니다.\n\n저희 두 사람이 사랑의 이름으로\n지켜나갈 수 있도록\n오셔서 축복해 주십시오.');
-
-    try {
-        if (window.sb) {
-            const prompt = `${fd.groom}과 ${fd.bride}의 결혼식 초대 인사말을 200자 이내로 작성해주세요. 감성적이고 격식있게. 줄바꿈 포함. 제목이나 이름은 넣지 마세요. 인사말 본문만 작성하세요.`;
-            const { data, error } = await window.sb.functions.invoke('generate-text', {
-                body: { prompt, max_tokens: 300 }
-            });
-            if (data && !error) {
-                const txt = typeof data === 'string' ? data : (data.text || data.result || '');
-                if (txt.length > 20) greetingText = txt.trim();
-            }
-        }
-    } catch (e) { console.warn('AI greeting fallback:', e); }
+    // Greeting message
+    const greetingText = `${fd.groom}과 ${fd.bride}가\n결혼합니다.\n\n서로를 향한 마음을 모아\n하나의 가정을 이루려 합니다.\n\n귀한 걸음 하시어\n축하해 주시면 감사하겠습니다.`;
 
     c.add(new fabric.Textbox(greetingText, {
-        left: board.left + w * 0.1, top: board.top + h * 0.26, width: w * 0.8,
-        fontSize: Math.round(h * 0.02), fontFamily: s.font,
-        fill: s.text, textAlign: 'center', lineHeight: 1.8
+        left: board.left + w * 0.08, top: board.top + h * 0.30, width: w * 0.84,
+        fontSize: Math.round(h * 0.021), fontFamily: s.font, fontWeight: '300',
+        fill: s.text, textAlign: 'center', lineHeight: 2.0
     }));
 
-    // parents — uses actual form data
-    const parentsText = `${fd.groomFather} · ${fd.groomMother}   의 아들  ${fd.groom}\n${fd.brideFather} · ${fd.brideMother}   의 딸  ${fd.bride}`;
+    // parents
+    const parentsText = `${fd.groomFather} · ${fd.groomMother}  의 아들  ${fd.groom}\n${fd.brideFather} · ${fd.brideMother}  의 딸  ${fd.bride}`;
     c.add(new fabric.Textbox(parentsText, {
-        left: board.left + w * 0.08, top: board.top + h * 0.68, width: w * 0.84,
-        fontSize: Math.round(h * 0.019), fontFamily: s.font,
-        fill: s.text, textAlign: 'center', lineHeight: 2.0
+        left: board.left + w * 0.06, top: board.top + h * 0.72, width: w * 0.88,
+        fontSize: Math.round(h * 0.019), fontFamily: s.font, fontWeight: '300',
+        fill: s.text, textAlign: 'center', lineHeight: 2.2
     }));
 
     // bottom decoration
     c.add(new fabric.Textbox('✿  ✿  ✿', {
-        left: board.left + w * 0.3, top: board.top + h * 0.88, width: w * 0.4,
+        left: board.left + w * 0.3, top: board.top + h * 0.90, width: w * 0.4,
         fontSize: Math.round(h * 0.02), fontFamily: s.font,
         fill: s.highlight, textAlign: 'center'
     }));
@@ -1318,61 +1357,44 @@ async function buildGreetingPage(c, fd) {
     c.requestRenderAll();
 }
 
-async function buildGalleryPage(c, fd) {
+/* buildGalleryPage removed — replaced by buildGreetingPage with invitation text */
+
+/* ─── Closing page (last photo + farewell message) ─── */
+async function buildClosingPage(c, fd, photo) {
     const board = c.getObjects().find(o => o.isBoard);
     if (!board) return;
     const w = board.width, h = board.height, s = fd.style;
     board.set({ fill: s.bg });
     c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
 
-    // heart
+    // Photo fills top 65%
+    if (photo) {
+        await _placePhotoOnCanvas(c, photo, board.left + w * 0.06, board.top + h * 0.04, w * 0.88, h * 0.58, 16, 16);
+    }
+
+    // Heart decoration
     c.add(new fabric.Textbox('♥', {
-        left: board.left + w * 0.44, top: board.top + h * 0.06, width: w * 0.12,
-        fontSize: Math.round(h * 0.03), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
+        left: board.left + w * 0.44, top: board.top + h * 0.66, width: w * 0.12,
+        fontSize: Math.round(h * 0.025), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
     }));
 
-    // title
-    c.add(new fabric.Textbox(_t('wed_poem_title','# 축하 시'), {
-        left: board.left + w * 0.1, top: board.top + h * 0.12, width: w * 0.8,
-        fontSize: Math.round(h * 0.025), fontFamily: s.font, fontWeight: 'bold',
-        fill: s.text, textAlign: 'center'
+    // Closing message
+    c.add(new fabric.Textbox('참석하셔서\n자리를 빛내주세요.', {
+        left: board.left + w * 0.1, top: board.top + h * 0.72, width: w * 0.8,
+        fontSize: Math.round(h * 0.026), fontFamily: s.font, fontWeight: '300',
+        fill: s.text, textAlign: 'center', lineHeight: 2.0
     }));
 
-    c.add(new fabric.Rect({ left: board.left + w * 0.35, top: board.top + h * 0.19, width: w * 0.3, height: 2, fill: s.accent, selectable: true, evented: true }));
-
-    // AI love poem or default
-    let poemText = '두 손을 맞잡은 순간,\n세상이 따뜻해진다.\n같은 길을 걷기로 한\n그 용기 속에\n사랑이 피어난다.\n\n앞으로의 날들에서\n서로를 비추는 거울이 되어\n더 나은 사람이 되고,\n함께하는 가정 속에서\n영원한 행복을 찾기를.';
-
-    try {
-        if (window.sb) {
-            const prompt = `${fd.groom}과 ${fd.bride}의 결혼을 축하하는 사랑에 대한 짧은 시를 200자 이내로 작성해주세요. 감성적이고 아름답게. 제목이나 이름은 넣지 마세요. 시 본문만 작성하세요.`;
-            const { data, error } = await window.sb.functions.invoke('generate-text', {
-                body: { prompt, max_tokens: 250 }
-            });
-            if (data && !error) {
-                const txt = typeof data === 'string' ? data : (data.text || data.result || '');
-                if (txt.length > 20) poemText = txt.trim();
-            }
-        }
-    } catch (e) { console.warn('AI poem fallback:', e); }
-
-    // Poem text (centered, large area)
-    c.add(new fabric.Textbox(poemText, {
-        left: board.left + w * 0.1, top: board.top + h * 0.24, width: w * 0.8,
-        fontSize: Math.round(h * 0.02), fontFamily: s.font,
-        fill: s.text, textAlign: 'center', lineHeight: 2.2
-    }));
-
-    // Bottom decoration only — placed lower
+    // Bottom decoration
     c.add(new fabric.Textbox('─  ♥  ─', {
-        left: board.left + w * 0.3, top: board.top + h * 0.93, width: w * 0.4,
+        left: board.left + w * 0.3, top: board.top + h * 0.90, width: w * 0.4,
         fontSize: Math.round(h * 0.018), fontFamily: s.font, fill: s.accent, textAlign: 'center'
     }));
 
     c.requestRenderAll();
 }
 
-/* ─── Photo gallery page (3 photos per page) ─── */
+/* ─── Photo gallery page (1~3 photos per page) ─── */
 async function buildPhotoGalleryPage(c, fd, photos) {
     const board = c.getObjects().find(o => o.isBoard);
     if (!board) return;
@@ -1381,17 +1403,24 @@ async function buildPhotoGalleryPage(c, fd, photos) {
     c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
 
     const bL = board.left, bT = board.top;
+    const m = w * 0.05; // margin
+    const g = w * 0.03; // gap
 
     if (photos.length >= 3) {
-        // Large photo on top, 2 smaller below
-        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.06, bT + h * 0.03, w * 0.88, h * 0.45, 12, 12);
-        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.06, bT + h * 0.51, w * 0.42, h * 0.45, 10, 10);
-        await _placePhotoOnCanvas(c, photos[2], bL + w * 0.52, bT + h * 0.51, w * 0.42, h * 0.45, 10, 10);
+        // 1 large top + 2 small bottom
+        const topH = h * 0.48, botH = h * 0.44;
+        await _placePhotoOnCanvas(c, photos[0], bL + m, bT + m, w - m * 2, topH, 12, 12);
+        const botW = (w - m * 2 - g) / 2;
+        await _placePhotoOnCanvas(c, photos[1], bL + m, bT + m + topH + g, botW, botH, 10, 10);
+        await _placePhotoOnCanvas(c, photos[2], bL + m + botW + g, bT + m + topH + g, botW, botH, 10, 10);
     } else if (photos.length === 2) {
-        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.06, bT + h * 0.03, w * 0.88, h * 0.47, 12, 12);
-        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.06, bT + h * 0.52, w * 0.88, h * 0.45, 12, 12);
+        // 2 equal photos stacked vertically
+        const ph = (h - m * 2 - g) / 2;
+        await _placePhotoOnCanvas(c, photos[0], bL + m, bT + m, w - m * 2, ph, 12, 12);
+        await _placePhotoOnCanvas(c, photos[1], bL + m, bT + m + ph + g, w - m * 2, ph, 12, 12);
     } else if (photos.length === 1) {
-        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.06, bT + h * 0.05, w * 0.88, h * 0.9, 12, 12);
+        // Single photo centered with margin
+        await _placePhotoOnCanvas(c, photos[0], bL + m, bT + m, w - m * 2, h - m * 2, 12, 12);
     }
 
     c.requestRenderAll();
