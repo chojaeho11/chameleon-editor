@@ -24,7 +24,9 @@ window.loadTemplates = async (isNewSearch = false) => {
 
     // 1. 쿼리 구성
     let query = sb.from('library')
-        .select('id, thumb_url, category, product_key, tags, data_url', { count: 'exact' })
+        .select('id, thumb_url, category, product_key, tags, data_url, is_featured, featured_at', { count: 'exact' })
+        .order('is_featured', { ascending: false, nullsFirst: false })
+        .order('featured_at', { ascending: false, nullsFirst: true })
         .order('created_at', { ascending: false });
 
     // 필터 적용
@@ -86,11 +88,17 @@ window.loadTemplates = async (isNewSearch = false) => {
             ? `<button class="tpl-del-btn" style="background:#e0e7ff;color:#4338ca;right:50px;" onclick="event.stopPropagation();window._adminPlayAudio('${t.data_url}',this)">▶ 재생</button>`
             : '';
 
+        const isFeat = !!t.is_featured;
+        const starStyle = isFeat
+            ? 'background:#fef3c7; color:#f59e0b; border:2px solid #f59e0b;'
+            : 'background:#f1f5f9; color:#94a3b8; border:2px solid #e2e8f0;';
+
         grid.innerHTML += `
-            <div class="tpl-card">
+            <div class="tpl-card" style="${isFeat ? 'box-shadow:0 0 0 2px #f59e0b; border:1px solid #f59e0b;' : ''}">
                 <div style="position:absolute; top:8px; right:8px; z-index:5;">
                     <input type="checkbox" class="tpl-chk" value="${t.id}" style="width:16px; height:16px; cursor:pointer;">
                 </div>
+                <button onclick="event.stopPropagation();window.toggleFeatured(${t.id},${!isFeat})" title="${isFeat ? '우선표시 해제' : '우선표시'}" style="position:absolute; top:8px; left:8px; z-index:5; width:28px; height:28px; border-radius:50%; ${starStyle} cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; padding:0;">⭐</button>
                 ${thumbContent}
                 <div class="tpl-info">
                     <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
@@ -196,6 +204,39 @@ window._adminPlayAudio = (url, btn) => {
     a.play().catch(e=>showToast('재생 실패: '+e.message, "error"));
     _adminAudioEl=a; if(btn)btn.textContent='⏹ 정지';
     a.onended=()=>{_adminAudioEl=null;if(btn)btn.textContent='▶ 재생';};
+};
+
+// [우선표시 토글]
+window.toggleFeatured = async (id, setFeatured) => {
+    const updateData = setFeatured
+        ? { is_featured: true, featured_at: new Date().toISOString() }
+        : { is_featured: false, featured_at: null };
+    const { error } = await sb.from('library').update(updateData).eq('id', id);
+    if (error) { showToast("실패: " + error.message, "error"); return; }
+    showToast(setFeatured ? "⭐ 우선표시 설정" : "우선표시 해제", "success");
+    loadTemplates();
+};
+
+// [선택 항목 일괄 우선표시]
+window.featureSelectedTemplates = async () => {
+    const checks = document.querySelectorAll('.tpl-chk:checked');
+    if (checks.length === 0) { showToast("선택된 항목이 없습니다.", "warn"); return; }
+    const ids = Array.from(checks).map(c => Number(c.value));
+    const { error } = await sb.from('library').update({ is_featured: true, featured_at: new Date().toISOString() }).in('id', ids);
+    if (error) { showToast("실패: " + error.message, "error"); return; }
+    showToast(`⭐ ${ids.length}개 우선표시 설정`, "success");
+    loadTemplates();
+};
+
+// [선택 항목 일괄 우선표시 해제]
+window.unfeatureSelectedTemplates = async () => {
+    const checks = document.querySelectorAll('.tpl-chk:checked');
+    if (checks.length === 0) { showToast("선택된 항목이 없습니다.", "warn"); return; }
+    const ids = Array.from(checks).map(c => Number(c.value));
+    const { error } = await sb.from('library').update({ is_featured: false, featured_at: null }).in('id', ids);
+    if (error) { showToast("실패: " + error.message, "error"); return; }
+    showToast(`${ids.length}개 우선표시 해제`, "success");
+    loadTemplates();
 };
 
 // [템플릿 삭제]

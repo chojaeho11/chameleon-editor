@@ -1496,9 +1496,11 @@
             <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h3 style="margin:0;">🗂️ 템플릿 라이브러리</h3>
-                    <button class="btn btn-danger" onclick="deleteSelectedTemplates()">
-                        <i class="fa-solid fa-trash-can"></i> 선택 삭제
-                    </button>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn" style="background:#fef3c7; color:#92400e; border:1px solid #f59e0b;" onclick="featureSelectedTemplates()">⭐ 우선표시</button>
+                        <button class="btn" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;" onclick="unfeatureSelectedTemplates()">☆ 해제</button>
+                        <button class="btn btn-danger" onclick="deleteSelectedTemplates()"><i class="fa-solid fa-trash-can"></i> 선택 삭제</button>
+                    </div>
                 </div>
                 
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">

@@ -8057,11 +8057,13 @@ if (w >= 20 && h >= 20) {
         try {
             // DB 쿼리 준비
             let query = sb.from('library')
-                .select('id, thumb_url, category, tags', { count: 'exact' }) // 전체 개수도 같이 가져옴
+                .select('id, thumb_url, category, tags', { count: 'exact' })
+                // 우선표시 항목 먼저, 최근 선택 순 → 나머지는 오래된 순
+                .order('is_featured', { ascending: false, nullsFirst: false })
+                .order('featured_at', { ascending: false, nullsFirst: true })
                 .order('created_at', { ascending: true })
-                // ★ [수정] 유저 템플릿(벡터/이미지) + 사진(photo-bg)까지 포함
-                .in('category', ['user_vector', 'user_image', 'photo-bg']) 
-                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1); // 범위 설정
+                .in('category', ['user_vector', 'user_image', 'photo-bg'])
+                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
             // 검색어 필터 (태그 검색)
             if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
