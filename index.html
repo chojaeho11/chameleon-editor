@@ -555,10 +555,10 @@
                 <div class="dsm-name" data-i18n="dsm_gifmaker">움짤만들기</div>
                 <div class="dsm-size">GIF Animator</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '카드뉴스')">
-                <div class="dsm-icon"><i class="fa-solid fa-newspaper"></i></div>
-                <div class="dsm-name" data-i18n="dsm_cardnews">카드뉴스</div>
-                <div class="dsm-size">1080 × 1080 px</div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(286, 508, '청첩장')" style="border:2px solid #f9a8d4;">
+                <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-heart"></i></div>
+                <div class="dsm-name" data-i18n="dsm_wedding">청첩장</div>
+                <div class="dsm-size">1080 × 1920 px</div>
             </div>
             <div class="dsm-card" onclick="window.dsmOpenEditor(227, 291, '상세페이지')">
                 <div class="dsm-icon"><i class="fa-solid fa-scroll"></i></div>
@@ -2095,6 +2095,29 @@ async function handleSubReturn() {
         </button>
     </div>
 
+    <!-- ═══ 청첩장 모드 툴바 ═══ -->
+    <div id="weddingToolbar" style="display:none; align-items:center; gap:8px; padding:8px 16px; background:linear-gradient(135deg,#ec4899,#db2777); color:#fff; font-size:13px; font-weight:600;">
+        <i class="fa-solid fa-heart" style="font-size:18px;"></i>
+        <span style="margin-right:2px; font-weight:800;" data-i18n="dsm_wedding">청첩장</span>
+        <button onclick="window.addPage()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:#fff; color:#ec4899; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="wed_add_page">추가</span>
+        </button>
+        <button onclick="window.weddingDuplicateSlide()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
+            <i class="fa-solid fa-copy"></i> <span data-i18n="wed_duplicate">복제</span>
+        </button>
+        <button onclick="window.weddingShowTemplates()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
+            <i class="fa-solid fa-table-cells-large"></i> <span data-i18n="wed_templates">섹션</span>
+        </button>
+        <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
+            <button onclick="window.changePage(-1)" style="padding:4px 10px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="weddingPageCounter" style="min-width:60px; text-align:center;">1 / 1</span>
+            <button onclick="window.changePage(1)" style="padding:4px 10px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <button onclick="window.weddingPreview()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-eye"></i> <span data-i18n="wed_preview">미리보기</span>
+        </button>
+    </div>
+
     <!-- 가벽 설정 모달 오버레이 -->
     <div id="wallConfigOverlay" style="display:none;" onclick="if(event.target===this)window.closeWallConfig()">
         <div id="wallConfigModal">
@@ -2638,6 +2661,9 @@ async function handleSubReturn() {
             </div>
             <!-- PPT 플로팅 슬라이드 추가 버튼 -->
             <button id="pptAddSlideFloat" onclick="window.addPage()" style="display:none; position:absolute; bottom:90px; right:20px; z-index:60; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#f97316,#d97706); color:#fff; border:none; box-shadow:0 4px 15px rgba(249,115,22,0.4); cursor:pointer; align-items:center; justify-content:center; font-size:24px; transition:transform 0.2s;" title="슬라이드 추가">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            <button id="weddingAddPageFloat" onclick="window.addPage()" style="display:none; position:absolute; bottom:90px; right:20px; z-index:60; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#ec4899,#db2777); color:#fff; border:none; box-shadow:0 4px 15px rgba(236,72,153,0.4); cursor:pointer; align-items:center; justify-content:center; font-size:24px; transition:transform 0.2s;" title="페이지 추가">
                 <i class="fa-solid fa-plus"></i>
             </button>
             <div class="bottom-dock">
@@ -7683,6 +7709,13 @@ if (w >= 20 && h >= 20) {
             var _pf = document.getElementById('pptAddSlideFloat');
             if (_pf) _pf.style.display = 'none';
         }
+        // 청첩장 UI: 비-청첩장 모드일 때 툴바 숨기기
+        if (!window.__WEDDING_MODE) {
+            var _wt = document.getElementById('weddingToolbar');
+            if (_wt) _wt.style.display = 'none';
+            var _wf = document.getElementById('weddingAddPageFloat');
+            if (_wf) _wf.style.display = 'none';
+        }
         
         const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
@@ -9944,10 +9977,10 @@ window.filterModalItems = function(keyword) {
                         <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
                         <div class="dsm-size">891 × 1260 px</div>
                     </div>
-                    <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '카드뉴스')">
-                        <div class="dsm-icon"><i class="fa-solid fa-newspaper"></i></div>
-                        <div class="dsm-name" data-i18n="dsm_cardnews">카드뉴스</div>
-                        <div class="dsm-size">1080 × 1080 px</div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(286, 508, '청첩장')" style="border:2px solid #f9a8d4;">
+                        <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-heart"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_wedding">청첩장</div>
+                        <div class="dsm-size">1080 × 1920 px</div>
                     </div>
                     <div class="dsm-card" onclick="window.dsmOpenEditor(227, 291, '상세페이지')">
                         <div class="dsm-icon"><i class="fa-solid fa-scroll"></i></div>
@@ -10195,6 +10228,8 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
     // 파워포인트 모드 설정
     window.__PPT_MODE = (label === '파워포인트');
     window.__pptTransitions = window.__pptTransitions || {};
+    // 청첩장 모드 설정
+    window.__WEDDING_MODE = (label === '청첩장');
     if (window.startEditorDirect) {
         await window.startEditorDirect('custom', wMM, hMM);
         // PPT 모드 UI 활성화
@@ -10206,6 +10241,17 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
             // 슬라이드 패널 활성화
             setTimeout(function() {
                 if (window.pptActivateSlidePanel) window.pptActivateSlidePanel();
+            }, 500);
+        }
+        // 청첩장 모드 UI 활성화
+        if (window.__WEDDING_MODE) {
+            var wtb = document.getElementById('weddingToolbar');
+            if (wtb) wtb.style.display = 'flex';
+            var wAddBtn = document.getElementById('weddingAddPageFloat');
+            if (wAddBtn) wAddBtn.style.display = 'flex';
+            setTimeout(function() {
+                if (window.weddingActivatePanel) window.weddingActivatePanel();
+                if (window.weddingInitPages) window.weddingInitPages();
             }, 500);
         }
     } else {
@@ -10242,6 +10288,9 @@ window._pptSetTransition = function(val) {
                 var obs = new MutationObserver(function() {
                     var pptC = document.getElementById('pptPageCounter');
                     if (pptC && window.__PPT_MODE) pptC.textContent = pc.textContent;
+                    // 청첩장 카운터 동기화
+                    var wedC = document.getElementById('weddingPageCounter');
+                    if (wedC && window.__WEDDING_MODE) wedC.textContent = pc.textContent;
                     // 전환 효과 select 동기화
                     var sel = document.getElementById('pptTransition');
                     if (sel && window.__PPT_MODE) {
@@ -12032,6 +12081,29 @@ window.dsmRenderProducts = async function(keyword) {
 <style>
 @keyframes pptModalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
 </style>
+
+<!-- ═══ 청첩장 세로 스크롤 미리보기 ═══ -->
+<div id="weddingPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:linear-gradient(135deg,#fdf2f8,#fce7f3); flex-direction:column; align-items:center;">
+    <div id="weddingPreviewScroll" style="flex:1; overflow-y:auto; width:100%; padding:20px 0; -webkit-overflow-scrolling:touch;"></div>
+    <!-- 하단 컨트롤 -->
+    <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:14px; padding:10px 24px; background:rgba(0,0,0,0.65); border-radius:30px; backdrop-filter:blur(8px); z-index:100000;">
+        <span id="weddingPreviewCounter" style="color:#fff; font-size:14px; font-weight:600;">1 pages</span>
+        <div style="width:1px; height:22px; background:rgba(255,255,255,0.25);"></div>
+        <button onclick="window.weddingClosePreview()" style="background:none; border:none; color:rgba(255,255,255,0.7); font-size:13px; cursor:pointer; padding:4px 8px; display:flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> ESC</button>
+    </div>
+</div>
+
+<!-- ═══ 청첩장 섹션 템플릿 모달 ═══ -->
+<div id="weddingTemplateModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) window.weddingHideTemplates()">
+    <div style="background:#fff; border-radius:20px; padding:28px; max-width:540px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:pptModalIn 0.2s ease;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+            <div style="font-size:18px; font-weight:800; color:#5c4033;"><i class="fa-solid fa-heart" style="color:#ec4899; margin-right:6px;"></i>섹션 템플릿</div>
+            <button onclick="window.weddingHideTemplates()" style="background:none; border:none; font-size:20px; color:#94a3b8; cursor:pointer; padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="weddingTemplateGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;"></div>
+        <p style="margin-top:14px; font-size:12px; color:#94a3b8; text-align:center;">현재 페이지의 내용이 교체됩니다</p>
+    </div>
+</div>
 
 <noscript>
 <section style="padding:40px 20px; max-width:1200px; margin:0 auto; font-family:sans-serif; color:#334155; line-height:1.8;">
