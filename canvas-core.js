@@ -75,7 +75,10 @@ export function initCanvas() {
                 'lockRotation',
                 'lockScalingX',
                 'lockScalingY',
-                'isAiGenerated'
+                'isAiGenerated',
+                'isWedPlaceholder',
+                'isWedPlaceholderText',
+                'wedPlaceholderId'
             ]));
         };
     })(fabric.Object.prototype.toObject);

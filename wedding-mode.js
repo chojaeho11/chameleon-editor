@@ -5,7 +5,7 @@ import { canvas } from "./canvas-core.js?v=123";
 const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 
 /* ─── Constants ─── */
-const CUSTOM_PROPS = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst'];
+const CUSTOM_PROPS = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isWedPlaceholder','isWedPlaceholderText','wedPlaceholderId'];
 
 /* ─── Wedding Section Templates ─── */
 const WEDDING_TEMPLATES = {
@@ -23,10 +23,12 @@ const WEDDING_TEMPLATES = {
                   fill:'#8b5e3c', textAlign:'center', fontStyle:'italic' },
                 // 이미지 영역
                 { type:'rect', left:w*0.1, top:h*0.25, width:w*0.8, height:h*0.35,
-                  fill:'#f5e6d3', rx:16, ry:16, stroke:'#d4a373', strokeWidth:2, selectable:true, evented:true },
+                  fill:'#f5e6d3', rx:16, ry:16, stroke:'#d4a373', strokeWidth:2, selectable:true, evented:true,
+                  isWedPlaceholder:true, wedPlaceholderId:'cover_main' },
                 { type:'textbox', text:_t('wed_photo_here','사진을 넣어주세요'), left:w*0.2, top:h*0.4, width:w*0.6,
                   fontSize:Math.round(h*0.022), fontFamily:'Georgia, serif',
-                  fill:'#c4a07a', textAlign:'center' },
+                  fill:'#c4a07a', textAlign:'center', editable:false,
+                  isWedPlaceholderText:true, wedPlaceholderId:'cover_main' },
                 // 신랑 ♥ 신부
                 { type:'textbox', text:_t('wed_groom','신랑'), left:w*0.1, top:h*0.67, width:w*0.3,
                   fontSize:Math.round(h*0.032), fontFamily:'Georgia, serif', fontWeight:'bold',
@@ -98,15 +100,19 @@ const WEDDING_TEMPLATES = {
                   fill:'#d4a373', selectable:true, evented:true },
                 // 메인 이미지 영역
                 { type:'rect', left:w*0.08, top:h*0.18, width:w*0.84, height:h*0.4,
-                  fill:'#f5e6d3', rx:12, ry:12, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true },
+                  fill:'#f5e6d3', rx:12, ry:12, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true,
+                  isWedPlaceholder:true, wedPlaceholderId:'gallery_main' },
                 { type:'textbox', text:_t('wed_drag_photo','사진을 넣어주세요'), left:w*0.25, top:h*0.36, width:w*0.5,
                   fontSize:Math.round(h*0.02), fontFamily:'Georgia, serif',
-                  fill:'#c4a07a', textAlign:'center' },
+                  fill:'#c4a07a', textAlign:'center', editable:false,
+                  isWedPlaceholderText:true, wedPlaceholderId:'gallery_main' },
                 // 서브 이미지 2개
                 { type:'rect', left:w*0.08, top:h*0.62, width:w*0.4, height:h*0.25,
-                  fill:'#f5e6d3', rx:10, ry:10, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true },
+                  fill:'#f5e6d3', rx:10, ry:10, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true,
+                  isWedPlaceholder:true, wedPlaceholderId:'gallery_sub1' },
                 { type:'rect', left:w*0.52, top:h*0.62, width:w*0.4, height:h*0.25,
-                  fill:'#f5e6d3', rx:10, ry:10, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true },
+                  fill:'#f5e6d3', rx:10, ry:10, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true,
+                  isWedPlaceholder:true, wedPlaceholderId:'gallery_sub2' },
                 // 캡션
                 { type:'textbox', text:_t('wed_caption','우리의 아름다운 순간들'), left:w*0.15, top:h*0.9, width:w*0.7,
                   fontSize:Math.round(h*0.016), fontFamily:'Georgia, serif', fontStyle:'italic',
@@ -146,10 +152,12 @@ const WEDDING_TEMPLATES = {
                   fill:'#ec4899', textAlign:'center' },
                 // 달력 플레이스홀더
                 { type:'rect', left:w*0.1, top:h*0.62, width:w*0.8, height:h*0.28,
-                  fill:'#fdf2f8', rx:12, ry:12, stroke:'#f9a8d4', strokeWidth:1, selectable:true, evented:true },
+                  fill:'#fdf2f8', rx:12, ry:12, stroke:'#f9a8d4', strokeWidth:1, selectable:true, evented:true,
+                  isWedPlaceholder:true, wedPlaceholderId:'calendar_img' },
                 { type:'textbox', text:_t('wed_calendar_note','달력을 이미지로\n추가해주세요'), left:w*0.25, top:h*0.73, width:w*0.5,
                   fontSize:Math.round(h*0.018), fontFamily:'Georgia, serif',
-                  fill:'#c4a07a', textAlign:'center' }
+                  fill:'#c4a07a', textAlign:'center', editable:false,
+                  isWedPlaceholderText:true, wedPlaceholderId:'calendar_img' }
             ];
         }
     },
@@ -178,10 +186,12 @@ const WEDDING_TEMPLATES = {
                   fill:'#b08968', textAlign:'center' },
                 // 지도 영역
                 { type:'rect', left:w*0.08, top:h*0.36, width:w*0.84, height:h*0.35,
-                  fill:'#f0ebe3', rx:12, ry:12, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true },
+                  fill:'#f0ebe3', rx:12, ry:12, stroke:'#d4a373', strokeWidth:1, selectable:true, evented:true,
+                  isWedPlaceholder:true, wedPlaceholderId:'venue_map' },
                 { type:'textbox', text:_t('wed_map_placeholder','지도 이미지를\n넣어주세요'), left:w*0.25, top:h*0.5, width:w*0.5,
                   fontSize:Math.round(h*0.02), fontFamily:'Georgia, serif',
-                  fill:'#c4a07a', textAlign:'center' },
+                  fill:'#c4a07a', textAlign:'center', editable:false,
+                  isWedPlaceholderText:true, wedPlaceholderId:'venue_map' },
                 // 교통편
                 { type:'textbox',
                   text:_t('wed_transport','지하철\n○호선 ○○역 0번출구 도보 0분\n\n버스\n○○번, ○○번 ○○○ 정류장 하차\n\n주차\n건물 내 지하주차장 이용 가능'),
@@ -229,7 +239,125 @@ export function initWeddingMode() {
     window.weddingHideTemplates = hideTemplateModal;
     window.renderWeddingThumbs = renderSlideThumbs;
 
+    /* ─── Placeholder click-to-upload handler ─── */
+    setupPlaceholderUpload();
+
     console.log('✅ Wedding Mode initialized');
+}
+
+/* ═══════════════════════════════════════════
+   1-B. PLACEHOLDER CLICK-TO-UPLOAD
+   ═══════════════════════════════════════════ */
+let _wedUploadTarget = null; // placeholder rect being replaced
+
+function setupPlaceholderUpload() {
+    // create a hidden file input dedicated to wedding placeholders
+    let inp = document.getElementById('wedPlaceholderUpload');
+    if (!inp) {
+        inp = document.createElement('input');
+        inp.id = 'wedPlaceholderUpload';
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.style.display = 'none';
+        document.body.appendChild(inp);
+    }
+
+    inp.addEventListener('change', function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file || !_wedUploadTarget) { _wedUploadTarget = null; return; }
+        replacePlaceholderWithImage(file, _wedUploadTarget);
+        _wedUploadTarget = null;
+        inp.value = '';
+    });
+
+    // listen for click on canvas placeholders
+    const checkCanvas = setInterval(() => {
+        if (!canvas) return;
+        clearInterval(checkCanvas);
+
+        canvas.on('mouse:down', function (opt) {
+            if (!window.__WEDDING_MODE) return;
+            const target = opt.target;
+            if (!target) return;
+
+            // clicked a placeholder rect?
+            if (target.isWedPlaceholder) {
+                _wedUploadTarget = target;
+                setTimeout(() => {
+                    canvas.discardActiveObject();
+                    canvas.requestRenderAll();
+                    document.getElementById('wedPlaceholderUpload').click();
+                }, 50);
+                return;
+            }
+            // clicked the placeholder text?
+            if (target.isWedPlaceholderText) {
+                const rect = canvas.getObjects().find(o => o.isWedPlaceholder && o.wedPlaceholderId === target.wedPlaceholderId);
+                if (rect) {
+                    _wedUploadTarget = rect;
+                    setTimeout(() => {
+                        canvas.discardActiveObject();
+                        canvas.requestRenderAll();
+                        document.getElementById('wedPlaceholderUpload').click();
+                    }, 50);
+                }
+            }
+        });
+    }, 300);
+}
+
+function replacePlaceholderWithImage(file, placeholderRect) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const imgObj = new Image();
+        imgObj.src = e.target.result;
+        imgObj.onload = function () {
+            const fabricImg = new fabric.Image(imgObj);
+
+            // placeholder bounds
+            const pLeft = placeholderRect.left;
+            const pTop = placeholderRect.top;
+            const pW = placeholderRect.width * (placeholderRect.scaleX || 1);
+            const pH = placeholderRect.height * (placeholderRect.scaleY || 1);
+            const pRx = placeholderRect.rx || 0;
+            const pRy = placeholderRect.ry || 0;
+
+            // scale to cover (fill) the placeholder area
+            const scale = Math.max(pW / fabricImg.width, pH / fabricImg.height);
+            fabricImg.set({
+                scaleX: scale,
+                scaleY: scale,
+                left: pLeft + pW / 2,
+                top: pTop + pH / 2,
+                originX: 'center',
+                originY: 'center'
+            });
+
+            // clip to placeholder shape
+            fabricImg.clipPath = new fabric.Rect({
+                width: pW,
+                height: pH,
+                rx: pRx,
+                ry: pRy,
+                originX: 'center',
+                originY: 'center',
+                absolutePositioned: false
+            });
+
+            // remove placeholder rect + its text label
+            const phId = placeholderRect.wedPlaceholderId;
+            const textLabel = canvas.getObjects().find(o => o.isWedPlaceholderText && o.wedPlaceholderId === phId);
+            canvas.remove(placeholderRect);
+            if (textLabel) canvas.remove(textLabel);
+
+            // add image
+            canvas.add(fabricImg);
+            canvas.bringToFront(fabricImg);
+            canvas.setActiveObject(fabricImg);
+            canvas.requestRenderAll();
+        };
+    };
+    reader.readAsDataURL(file);
 }
 
 /* ═══════════════════════════════════════════
@@ -476,6 +604,10 @@ function applyTemplateToCanvas(templateId) {
             obj = new fabric.Rect(props);
         }
         if (obj) {
+            // make placeholders look clickable
+            if (def.isWedPlaceholder || def.isWedPlaceholderText) {
+                obj.hoverCursor = 'pointer';
+            }
             canvas.add(obj);
             canvas.bringToFront(obj);
         }

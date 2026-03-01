@@ -300,7 +300,7 @@ function updatePageCounter() {
 
 // ─── 박스 모드: 6면 페이지 ───
 
-const CUSTOM_PROPS = ['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst'];
+const CUSTOM_PROPS = ['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', 'isWedPlaceholder', 'isWedPlaceholderText', 'wedPlaceholderId'];
 
 const BOX_FACE_NAMES = ['Front', 'Back', 'Left', 'Right', 'Top', 'Bottom'];
 
