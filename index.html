@@ -8117,12 +8117,8 @@ if (w >= 20 && h >= 20) {
                     starHtml = `<span style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.75); color:#fbbf24; font-size:13px; width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; z-index:5;"><i class="fa-solid fa-crown"></i></span>`;
                 }
 
-                // 2. 이미지 최적화 (별표는 고해상도)
+                // 2. 이미지 원본 사용 (리사이즈 없음 — 최고 해상도)
                 let imgSrc = tpl.thumb_url || 'https://via.placeholder.com/300';
-                if (imgSrc.includes('supabase.co')) {
-                    const separator = imgSrc.includes('?') ? '&' : '?';
-                    imgSrc += `${separator}width=800&height=800&resize=cover&format=webp&quality=85`;
-                }
 
                 // 3. HTML 구성 및 스타일 강제 적용
                 card.style.cssText = "aspect-ratio: 1/1; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid #e5e7eb; background: #f8fafc;";
