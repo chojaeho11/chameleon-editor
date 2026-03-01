@@ -1622,10 +1622,11 @@ window.loadSideAssets = async function(page) {
     try {
         const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern'];
         let query = sb.from('library')
-            .select('id, thumb_url, data_url, title, category, tags')
+            .select('id, thumb_url, data_url, title, category, tags, is_featured')
             .eq('status', 'approved')
             .in('category', cats)
             .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
+            .order('is_featured', { ascending: false, nullsFirst: false })
             .order('created_at', { ascending: true })
             .range(sideAssetPage * SIDE_ASSET_PER_PAGE, (sideAssetPage + 1) * SIDE_ASSET_PER_PAGE - 1);
         if (sideAssetKeyword) {
@@ -1648,10 +1649,12 @@ window.loadSideAssets = async function(page) {
             const imgUrl = pngUrl || (window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 150) : tpl.thumb_url);
             let badge = '';
             if (tpl.category === 'vector') badge = '<span style="position:absolute;top:3px;left:3px;background:#7c3aed;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">V</span>';
+            // 우선표시 뱃지
+            const featBadge = tpl.is_featured ? '<span style="position:absolute;bottom:3px;left:3px;color:#f59e0b;font-size:10px;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.3));z-index:5;"><i class="fa-solid fa-star"></i></span>' : '';
             // 프리미엄 크라운 뱃지
             const aIsPrem = window.isPremiumTemplate && window.isPremiumTemplate(tpl);
             const crownBadge = aIsPrem ? '<span style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.75);color:#fbbf24;font-size:10px;width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;z-index:5;"><i class="fa-solid fa-crown"></i></span>' : '';
-            div.innerHTML = badge + crownBadge + '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
+            div.innerHTML = badge + featBadge + crownBadge + '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
             div.onclick = function() {
                 // 프리미엄 접근 제어
                 if (aIsPrem && !window.isSubscriber) {

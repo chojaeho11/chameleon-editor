@@ -1187,13 +1187,14 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
 
     let allItems = [];
     const usedIds = new Set();
-    // ★ 마법사는 transparent-graphic (관리자 고화질) 카테고리만 사용
+    // ★ 마법사는 transparent-graphic (관리자 고화질) 카테고리만 사용, 우선표시 우선
     async function _searchKw(kw) {
         const res = await sb.from('library')
-            .select('id, thumb_url, data_url, category')
+            .select('id, thumb_url, data_url, category, is_featured')
             .eq('category', 'transparent-graphic')
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
             .eq('status','approved')
+            .order('is_featured', { ascending: false, nullsFirst: false })
             .order('created_at', { ascending: false })
             .limit(6);
         const filtered = _wzFilterPremium(res.data);
@@ -1209,10 +1210,37 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     if (allItems.length < 3) {
         for (const kw of keywords.slice(0, 3)) await _searchKw(kw);
     }
-    // ★ 검색 결과 없으면 최근 등록된 transparent-graphic 이미지로 폴백
+    // ★ 결과 부족 시 키워드 첫 글자 부분 매칭으로 확장 검색
+    if (allItems.length < 2) {
+        const partialKws = [...new Set([...searchKws, ...keywords])];
+        for (const kw of partialKws.slice(0, 4)) {
+            if (kw.length >= 2) {
+                const short = kw.substring(0, Math.ceil(kw.length / 2));
+                await _searchKw(short);
+                if (allItems.length >= 3) break;
+            }
+        }
+    }
+    // ★ 검색 결과 없으면 우선표시(is_featured)된 요소로 폴백
     if (!allItems.length) {
         const res = await sb.from('library')
-            .select('id, thumb_url, data_url, category')
+            .select('id, thumb_url, data_url, category, is_featured')
+            .eq('category', 'transparent-graphic')
+            .eq('status','approved')
+            .eq('is_featured', true)
+            .order('featured_at', { ascending: false, nullsFirst: true })
+            .limit(6);
+        const filtered = _wzFilterPremium(res.data);
+        if (filtered && filtered.length) {
+            for (const item of filtered) {
+                if (!usedIds.has(item.id)) { usedIds.add(item.id); allItems.push(item); }
+            }
+        }
+    }
+    // ★ 우선표시도 없으면 최종 폴백: 최근 등록순
+    if (!allItems.length) {
+        const res = await sb.from('library')
+            .select('id, thumb_url, data_url, category, is_featured')
             .eq('category', 'transparent-graphic')
             .eq('status','approved')
             .order('created_at', { ascending: false })
