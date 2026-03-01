@@ -1716,5 +1716,6 @@
   "dsm_a4_portrait": "A4 Vertical",
   "dsm_landscape": "Horizontal",
   "dsm_square": "Cuadrado",
-  "dsm_banner_type": "Banner"
+  "dsm_banner_type": "Banner",
+  "dsm_retouch": "Retoque foto"
 }

@@ -540,11 +540,12 @@
                 <div class="dsm-name" data-i18n="dsm_video">영상제작</div>
                 <div class="dsm-size">1920 × 1080 px</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '유튜브썸네일')">
-                <div class="dsm-icon" style="color:#ff0000;"><i class="fa-solid fa-image"></i></div>
-                <div class="dsm-name" data-i18n="dsm_thumbnail">유튜브썸네일</div>
-                <div class="dsm-size">1280 × 720 px</div>
+            <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="border:2px solid #a78bfa;">
+                <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="dsm-name" data-i18n="dsm_retouch">사진보정</div>
+                <div class="dsm-size">AI Retouch</div>
             </div>
+            <input type="file" id="dsmRetouchFileInput" accept="image/*" style="display:none;">
             <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '파워포인트')">
                 <div class="dsm-icon" style="color:#e85d26;"><i class="fa-solid fa-file-powerpoint"></i></div>
                 <div class="dsm-name" data-i18n="dsm_ppt">파워포인트</div>
@@ -10097,6 +10098,11 @@ window.filterModalItems = function(keyword) {
                     <i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span>
                 </h4>
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px;">
+                    <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="border:2px solid #a78bfa;">
+                        <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_retouch">사진보정</div>
+                        <div class="dsm-size">AI Retouch</div>
+                    </div>
                     <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
                         <div class="dsm-icon"><i class="fa-solid fa-image"></i></div>
                         <div class="dsm-name" data-i18n="dsm_thumbnail">썸네일</div>
@@ -10388,6 +10394,75 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
         var _t = window.t || function(k,d){return d;};
         showToast(_t('dsm_editor_error', '에디터를 불러오는 중 오류가 발생했습니다.'), 'error');
     }
+};
+
+// 사진보정 모드: 파일 업로드 → 이미지 크기 에디터 → 보정패널 열기
+window.dsmOpenRetouch = function() {
+    var fileInput = document.getElementById('dsmRetouchFileInput');
+    if (!fileInput) return;
+    fileInput.value = '';
+    fileInput.onchange = async function(e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+        // 이미지 로드 → 원본 크기 확인
+        var reader = new FileReader();
+        reader.onload = async function(ev) {
+            var img = new Image();
+            img.onload = async function() {
+                var pxW = img.naturalWidth;
+                var pxH = img.naturalHeight;
+                // px → mm (96 DPI 기준: 1px = 25.4/96 mm)
+                var mmW = Math.round(pxW * 25.4 / 96);
+                var mmH = Math.round(pxH * 25.4 / 96);
+                // 최소 50mm
+                if (mmW < 50) mmW = 50;
+                if (mmH < 50) mmH = 50;
+                // 모달 닫기
+                var m = document.getElementById('designStartModal');
+                if (m) m.style.display = 'none';
+                // 에디터 열기
+                if (window.startEditorDirect) {
+                    await window.startEditorDirect('custom', mmW, mmH);
+                    // 이미지를 보드에 꽉 채워 배치
+                    setTimeout(function() {
+                        var c = window.canvas;
+                        if (!c) return;
+                        var dataURL = ev.target.result;
+                        fabric.Image.fromURL(dataURL, function(fImg) {
+                            var board = c.getObjects().find(function(o) { return o.isBoard; });
+                            if (board) {
+                                var bW = board.width * board.scaleX;
+                                var bH = board.height * board.scaleY;
+                                var scale = Math.max(bW / fImg.width, bH / fImg.height);
+                                fImg.set({
+                                    scaleX: scale, scaleY: scale,
+                                    originX: 'center', originY: 'center',
+                                    left: board.left + bW / 2,
+                                    top: board.top + bH / 2
+                                });
+                            }
+                            c.add(fImg);
+                            c.bringToFront(fImg);
+                            c.setActiveObject(fImg);
+                            c.requestRenderAll();
+                            // 보정 패널 열기
+                            setTimeout(function() {
+                                if (window.toggleSubPanel) window.toggleSubPanel('sub-retouch');
+                                // retouchControls 표시 (이미지가 선택된 상태이므로)
+                                var noSel = document.getElementById('retouchNoSel');
+                                var ctrl = document.getElementById('retouchControls');
+                                if (noSel) noSel.style.display = 'none';
+                                if (ctrl) ctrl.style.display = 'block';
+                            }, 300);
+                        }, { crossOrigin: 'anonymous' });
+                    }, 500);
+                }
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+    fileInput.click();
 };
 
 // 직접 입력

@@ -1326,5 +1326,6 @@
   "dsm_a4_portrait": "A4 세로형",
   "dsm_landscape": "가로형",
   "dsm_square": "정사각",
-  "dsm_banner_type": "배너형"
+  "dsm_banner_type": "배너형",
+  "dsm_retouch": "사진보정"
 }

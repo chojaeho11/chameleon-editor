@@ -1702,5 +1702,6 @@
   "dsm_a4_portrait": "A4 縦型",
   "dsm_landscape": "横型",
   "dsm_square": "正方形",
-  "dsm_banner_type": "バナー"
+  "dsm_banner_type": "バナー",
+  "dsm_retouch": "写真補正"
 }

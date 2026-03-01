@@ -1716,5 +1716,6 @@
   "dsm_a4_portrait": "A4 Hochformat",
   "dsm_landscape": "Querformat",
   "dsm_square": "Quadrat",
-  "dsm_banner_type": "Banner"
+  "dsm_banner_type": "Banner",
+  "dsm_retouch": "Foto-Retusche"
 }

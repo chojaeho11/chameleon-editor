@@ -1716,5 +1716,6 @@
   "dsm_a4_portrait": "A4 Portrait",
   "dsm_landscape": "Paysage",
   "dsm_square": "Carré",
-  "dsm_banner_type": "Bannière"
+  "dsm_banner_type": "Bannière",
+  "dsm_retouch": "Retouche photo"
 }
