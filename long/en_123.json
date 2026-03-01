@@ -1558,5 +1558,12 @@
   "dsm_no_results": "No products found for this search.",
   "dsm_load_failed": "Failed to load products",
   "dsm_size_error": "Please enter width and height correctly.",
-  "dsm_editor_error": "An error occurred while loading the editor."
+  "dsm_editor_error": "An error occurred while loading the editor.",
+  "wed_share": "Share",
+  "wed_share_title": "Share Invitation",
+  "wed_share_url": "Share Link",
+  "wed_share_copy": "Copy",
+  "wed_share_copied": "Copied!",
+  "wed_share_saving": "Saving...",
+  "wed_share_login": "Login required to share"
 }

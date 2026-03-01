@@ -1179,5 +1179,12 @@
   "dsm_no_results": "해당 조건의 상품이 없습니다.",
   "dsm_load_failed": "상품 로드 실패",
   "dsm_size_error": "가로/세로를 올바르게 입력해주세요.",
-  "dsm_editor_error": "에디터를 불러오는 중 오류가 발생했습니다."
+  "dsm_editor_error": "에디터를 불러오는 중 오류가 발생했습니다.",
+  "wed_share": "공유하기",
+  "wed_share_title": "청첩장 공유",
+  "wed_share_url": "공유 링크",
+  "wed_share_copy": "복사",
+  "wed_share_copied": "복사되었습니다!",
+  "wed_share_saving": "저장 중...",
+  "wed_share_login": "공유하려면 로그인이 필요합니다"
 }

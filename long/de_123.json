@@ -1569,5 +1569,12 @@
   "dsm_no_results": "Keine Produkte gefunden.",
   "dsm_load_failed": "Produkte konnten nicht geladen werden",
   "dsm_size_error": "Bitte Breite und Höhe korrekt eingeben.",
-  "dsm_editor_error": "Fehler beim Laden des Editors."
+  "dsm_editor_error": "Fehler beim Laden des Editors.",
+  "wed_share": "Teilen",
+  "wed_share_title": "Einladung teilen",
+  "wed_share_url": "Freigabelink",
+  "wed_share_copy": "Kopieren",
+  "wed_share_copied": "Kopiert!",
+  "wed_share_saving": "Speichern...",
+  "wed_share_login": "Zum Teilen bitte anmelden"
 }

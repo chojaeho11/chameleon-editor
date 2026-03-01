@@ -242,6 +242,7 @@ export function initWeddingMode() {
     window.handleWeddingPhotos = handleWeddingPhotos;
     window.runWeddingGeneration = runWeddingGeneration;
     window._wedRemovePhoto = _wedRemovePhoto;
+    window.shareWeddingInvitation = shareWeddingInvitation;
 
     /* ─── Placeholder click-to-upload handler ─── */
     setupPlaceholderUpload();
@@ -438,6 +439,11 @@ function activateSlidePanel() {
 /* ═══════════════════════════════════════════
    4. THUMBNAILS
    ═══════════════════════════════════════════ */
+/* Promise timeout helper — prevents loadFromJSON from hanging forever */
+function _withTimeout(promise, ms) {
+    return Promise.race([promise, new Promise(r => setTimeout(() => r(null), ms))]);
+}
+
 async function generateThumbnail(pageIndex) {
     const pageJson = pageDataList[pageIndex];
     if (!pageJson) return null;
@@ -458,20 +464,25 @@ async function generateThumbnail(pageIndex) {
     tmpCanvas.setWidth(thumbW); tmpCanvas.setHeight(thumbH);
     tmpCanvas.setBackgroundColor('#fdf2f8');
 
-    return new Promise(resolve => {
-        tmpCanvas.loadFromJSON(pageJson, () => {
-            tmpCanvas.setViewportTransform([thumbScale, 0, 0, thumbScale, -bx * thumbScale, -by * thumbScale]);
-            tmpCanvas.getObjects().forEach(obj => {
-                if (obj.isMockup || obj.excludeFromExport || obj.isGuide) tmpCanvas.remove(obj);
+    const inner = new Promise(resolve => {
+        try {
+            tmpCanvas.loadFromJSON(pageJson, () => {
+                tmpCanvas.setViewportTransform([thumbScale, 0, 0, thumbScale, -bx * thumbScale, -by * thumbScale]);
+                tmpCanvas.getObjects().forEach(obj => {
+                    if (obj.isMockup || obj.excludeFromExport || obj.isGuide) tmpCanvas.remove(obj);
+                });
+                tmpCanvas.renderAll();
+                setTimeout(() => {
+                    try {
+                        const dataUrl = tmpCanvas.toDataURL({ format:'jpeg', quality:0.7 });
+                        tmpCanvas.dispose();
+                        resolve(dataUrl);
+                    } catch(e) { tmpCanvas.dispose(); resolve(null); }
+                }, 150);
             });
-            tmpCanvas.renderAll();
-            setTimeout(() => {
-                const dataUrl = tmpCanvas.toDataURL({ format:'jpeg', quality:0.7 });
-                tmpCanvas.dispose();
-                resolve(dataUrl);
-            }, 100);
-        });
+        } catch(e) { try { tmpCanvas.dispose(); } catch(_){} resolve(null); }
     });
+    return _withTimeout(inner, 6000);
 }
 
 async function renderSlideThumbs() {
@@ -485,7 +496,8 @@ async function renderSlideThumbs() {
     container.innerHTML = '';
 
     for (let i = 0; i < pageDataList.length; i++) {
-        const thumbUrl = await generateThumbnail(i);
+        let thumbUrl = null;
+        try { thumbUrl = await generateThumbnail(i); } catch(e) { console.warn('Thumb error page', i, e); }
         const isActive = i === curIdx;
 
         const div = document.createElement('div');
@@ -497,7 +509,7 @@ async function renderSlideThumbs() {
         div.innerHTML = `
             <span style="font-size:11px; font-weight:700; color:${isActive?'#ec4899':'#94a3b8'}; min-width:18px; text-align:center; padding-top:4px;">${i+1}</span>
             <div style="flex:1; border-radius:4px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1); aspect-ratio:9/16; background:#fdf2f8;">
-                ${thumbUrl ? '<img src="'+thumbUrl+'" style="width:100%; height:100%; object-fit:cover; display:block;" draggable="false">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#d4a373;font-size:11px;">...</div>'}
+                ${thumbUrl ? '<img src="'+thumbUrl+'" style="width:100%; height:100%; object-fit:cover; display:block;" draggable="false">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#d4a373;font-size:11px;">'+(i+1)+'</div>'}
             </div>
             <div class="wed-sl-act" style="display:none; position:absolute; top:4px; right:4px; gap:2px;">
                 <button onclick="event.stopPropagation(); window.weddingDuplicateSlide(${i})" title="${_t('wed_duplicate','복제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-copy"></i></button>
@@ -642,20 +654,25 @@ async function renderPageToImage(index) {
     tmpCanvas.setWidth(bw * scale); tmpCanvas.setHeight(bh * scale);
     tmpCanvas.setBackgroundColor('#fdf2f8');
 
-    return new Promise(resolve => {
-        tmpCanvas.loadFromJSON(pageJson, () => {
-            tmpCanvas.setViewportTransform([scale, 0, 0, scale, -bx * scale, -by * scale]);
-            tmpCanvas.getObjects().forEach(obj => {
-                if (obj.isMockup || obj.excludeFromExport || obj.isGuide) tmpCanvas.remove(obj);
+    const inner = new Promise(resolve => {
+        try {
+            tmpCanvas.loadFromJSON(pageJson, () => {
+                tmpCanvas.setViewportTransform([scale, 0, 0, scale, -bx * scale, -by * scale]);
+                tmpCanvas.getObjects().forEach(obj => {
+                    if (obj.isMockup || obj.excludeFromExport || obj.isGuide) tmpCanvas.remove(obj);
+                });
+                tmpCanvas.renderAll();
+                setTimeout(() => {
+                    try {
+                        const dataUrl = tmpCanvas.toDataURL({ format:'png', quality:1.0 });
+                        tmpCanvas.dispose();
+                        resolve(dataUrl);
+                    } catch(e) { tmpCanvas.dispose(); resolve(null); }
+                }, 200);
             });
-            tmpCanvas.renderAll();
-            setTimeout(() => {
-                const dataUrl = tmpCanvas.toDataURL({ format:'png', quality:1.0 });
-                tmpCanvas.dispose();
-                resolve(dataUrl);
-            }, 200);
-        });
+        } catch(e) { try { tmpCanvas.dispose(); } catch(_){} resolve(null); }
     });
+    return _withTimeout(inner, 10000);
 }
 
 async function openWeddingPreview() {
@@ -669,23 +686,35 @@ async function openWeddingPreview() {
     const container = document.getElementById('weddingPreviewScroll');
     if (!container) return;
 
-    container.innerHTML = `<div style="text-align:center; padding:60px 0; color:#d4a373;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>${_t('wed_loading','로딩 중...')}</div>`;
+    container.innerHTML = `<div style="text-align:center; padding:60px 0; color:#d4a373;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>${_t('wed_loading','로딩 중...')} (${pageDataList.length} pages)</div>`;
 
-    // 모든 페이지를 이미지로 렌더링
+    // 모든 페이지를 이미지로 렌더링 (with try/catch per page)
     const images = [];
     for (let i = 0; i < pageDataList.length; i++) {
-        const dataUrl = await renderPageToImage(i);
-        if (dataUrl) images.push(dataUrl);
+        try {
+            const dataUrl = await renderPageToImage(i);
+            images.push(dataUrl); // null is OK, we handle below
+        } catch(e) {
+            console.warn('Preview render error page', i, e);
+            images.push(null);
+        }
     }
 
     // 세로 스택으로 표시
     container.innerHTML = '';
     images.forEach((src, i) => {
-        const img = document.createElement('img');
-        img.src = src;
-        img.style.cssText = 'width:100%; max-width:420px; display:block; margin:0 auto;';
-        img.alt = `Page ${i + 1}`;
-        container.appendChild(img);
+        if (src) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.style.cssText = 'width:100%; max-width:420px; display:block; margin:0 auto;';
+            img.alt = `Page ${i + 1}`;
+            container.appendChild(img);
+        } else {
+            const ph = document.createElement('div');
+            ph.style.cssText = 'width:100%; max-width:420px; margin:0 auto; aspect-ratio:9/16; background:#fdf2f8; display:flex; align-items:center; justify-content:center; color:#d4a373; font-size:16px;';
+            ph.textContent = `Page ${i + 1}`;
+            container.appendChild(ph);
+        }
     });
 
     // 페이지 카운터
@@ -1403,6 +1432,122 @@ function _placeGeneratedImage(c, dataUrl, left, top, width, height) {
         img.src = dataUrl;
     });
 }
+
+/* ═══════════════════════════════════════════════════════
+   10. SHARE — Supabase Storage 저장 + 공유 링크
+   ═══════════════════════════════════════════════════════ */
+async function shareWeddingInvitation() {
+    // Login check
+    if (!window.currentUser) {
+        if (window.showToast) window.showToast(_t('wed_share_login','공유하려면 로그인이 필요합니다'), 'warn');
+        return;
+    }
+    if (!window.sb) {
+        if (window.showToast) window.showToast('Supabase not available', 'error');
+        return;
+    }
+
+    // Save current page state
+    if (window.savePageState) window.savePageState();
+
+    const totalPages = pageDataList.length;
+    if (totalPages === 0) return;
+
+    // Show progress dialog
+    const dlg = document.getElementById('weddingShareDialog');
+    const prog = document.getElementById('wedShareProgress');
+    const result = document.getElementById('wedShareResult');
+    if (dlg) { dlg.style.display = 'flex'; }
+    if (prog) { prog.style.display = 'block'; prog.innerHTML = '<div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div><p style="color:#6b7280; font-size:14px;">' + _t('wed_share_saving','저장 중...') + ' (0/' + totalPages + ')</p>'; }
+    if (result) result.style.display = 'none';
+
+    try {
+        // Generate slug
+        const slug = 'wed_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const basePath = `wedding/${slug}`;
+
+        // Render and upload each page
+        const pageUrls = [];
+        for (let i = 0; i < totalPages; i++) {
+            if (prog) prog.innerHTML = '<div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div><p style="color:#6b7280; font-size:14px;">' + _t('wed_share_saving','저장 중...') + ` (${i + 1}/${totalPages})</p>`;
+
+            let dataUrl = null;
+            try { dataUrl = await renderPageToImage(i); } catch(e) { console.warn('Share render err', i, e); }
+            if (!dataUrl) continue;
+
+            // Convert data URL to Blob
+            const resp = await fetch(dataUrl);
+            const blob = await resp.blob();
+            const filePath = `${basePath}/page_${i}.png`;
+
+            const { error } = await window.sb.storage.from('design').upload(filePath, blob, {
+                contentType: 'image/png', upsert: true
+            });
+            if (error) { console.error('Upload error page', i, error); continue; }
+
+            const { data: urlData } = window.sb.storage.from('design').getPublicUrl(filePath);
+            if (urlData) pageUrls.push(urlData.publicUrl);
+        }
+
+        if (pageUrls.length === 0) {
+            if (window.showToast) window.showToast('Upload failed', 'error');
+            if (dlg) dlg.style.display = 'none';
+            return;
+        }
+
+        // Upload meta.json
+        const meta = {
+            pageCount: pageUrls.length,
+            pages: pageUrls,
+            createdAt: new Date().toISOString(),
+            userId: window.currentUser.id
+        };
+        const metaBlob = new Blob([JSON.stringify(meta)], { type: 'application/json' });
+        await window.sb.storage.from('design').upload(`${basePath}/meta.json`, metaBlob, {
+            contentType: 'application/json', upsert: true
+        });
+
+        // Generate share URL
+        const siteHost = window.location.hostname === 'localhost' ? 'http://localhost:3000' : window.location.origin;
+        const shareUrl = `${siteHost}/w.html?id=${slug}`;
+
+        // Show result
+        if (prog) prog.style.display = 'none';
+        if (result) {
+            result.style.display = 'block';
+            const urlInput = document.getElementById('wedShareUrl');
+            if (urlInput) urlInput.value = shareUrl;
+        }
+
+        console.log('Wedding shared:', shareUrl, meta);
+    } catch (err) {
+        console.error('Share error:', err);
+        if (window.showToast) window.showToast('Share failed: ' + err.message, 'error');
+        if (dlg) dlg.style.display = 'none';
+    }
+}
+
+function _copyShareUrl() {
+    const inp = document.getElementById('wedShareUrl');
+    if (!inp) return;
+    const url = inp.value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            if (window.showToast) window.showToast(_t('wed_share_copied','복사되었습니다!'), 'success');
+            const msg = document.getElementById('wedShareCopiedMsg');
+            if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2000); }
+        });
+    } else {
+        inp.select();
+        document.execCommand('copy');
+        if (window.showToast) window.showToast(_t('wed_share_copied','복사되었습니다!'), 'success');
+    }
+}
+window._copyShareUrl = _copyShareUrl;
+window._closeShareDialog = () => {
+    const dlg = document.getElementById('weddingShareDialog');
+    if (dlg) dlg.style.display = 'none';
+};
 
 /* ─── Photo placement helper (cover mode) ─── */
 function _placePhotoOnCanvas(c, dataUrl, left, top, width, height, rx, ry) {

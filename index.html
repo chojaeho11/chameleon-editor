@@ -2116,6 +2116,9 @@ async function handleSubReturn() {
         <button onclick="window.weddingPreview()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
             <i class="fa-solid fa-eye"></i> <span data-i18n="wed_preview">미리보기</span>
         </button>
+        <button onclick="window.shareWeddingInvitation()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-share-nodes"></i> <span data-i18n="wed_share">공유하기</span>
+        </button>
     </div>
 
     <!-- 가벽 설정 모달 오버레이 -->
@@ -12090,6 +12093,32 @@ window.dsmRenderProducts = async function(keyword) {
         <span id="weddingPreviewCounter" style="color:#fff; font-size:14px; font-weight:600;">1 pages</span>
         <div style="width:1px; height:22px; background:rgba(255,255,255,0.25);"></div>
         <button onclick="window.weddingClosePreview()" style="background:none; border:none; color:rgba(255,255,255,0.7); font-size:13px; cursor:pointer; padding:4px 8px; display:flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> ESC</button>
+    </div>
+</div>
+
+<!-- ═══ 청첩장 공유 다이얼로그 ═══ -->
+<div id="weddingShareDialog" style="display:none; position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.55); align-items:center; justify-content:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) window._closeShareDialog()">
+    <div style="background:#fff; border-radius:20px; max-width:440px; width:90%; box-shadow:0 24px 80px rgba(0,0,0,0.35); animation:pptModalIn 0.25s ease; overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#7c3aed,#a78bfa); padding:18px 24px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:17px; font-weight:800; color:#fff;"><i class="fa-solid fa-share-nodes" style="margin-right:8px;"></i><span data-i18n="wed_share_title">청첩장 공유</span></div>
+            <button onclick="window._closeShareDialog()" style="background:rgba(255,255,255,0.3); border:none; width:30px; height:30px; border-radius:50%; color:#fff; font-size:14px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:24px;">
+            <div id="wedShareProgress" style="text-align:center; padding:20px 0;">
+                <div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div>
+                <p style="color:#6b7280; font-size:14px;" data-i18n="wed_share_saving">저장 중...</p>
+            </div>
+            <div id="wedShareResult" style="display:none;">
+                <p style="font-size:13px; color:#6b7280; margin-bottom:8px;" data-i18n="wed_share_url">공유 링크</p>
+                <div style="display:flex; gap:8px;">
+                    <input id="wedShareUrl" type="text" readonly style="flex:1; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:13px; color:#374151; background:#f9fafb; outline:none;">
+                    <button onclick="window._copyShareUrl()" style="padding:10px 16px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                        <i class="fa-solid fa-copy"></i> <span data-i18n="wed_share_copy">복사</span>
+                    </button>
+                </div>
+                <p id="wedShareCopiedMsg" style="display:none; color:#16a34a; font-size:12px; margin-top:6px; text-align:center;" data-i18n="wed_share_copied">복사되었습니다!</p>
+            </div>
+        </div>
     </div>
 </div>
 

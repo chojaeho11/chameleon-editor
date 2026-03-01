@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>청첩장</title>
+    <meta name="description" content="Wedding Invitation">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💌</text></svg>">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        .page-img {
+            width: 100%;
+            display: block;
+        }
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: #d4a373;
+        }
+        .loading i {
+            font-size: 36px;
+            margin-bottom: 16px;
+            display: block;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading p {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .error-msg {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9ca3af;
+        }
+        .error-msg i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .footer {
+            text-align: center;
+            padding: 32px 20px 48px;
+        }
+        .footer a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #ec4899, #db2777);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(236, 72, 153, 0.35);
+            transition: transform 0.2s;
+        }
+        .footer a:hover {
+            transform: scale(1.05);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="container" id="viewer">
+        <div class="loading">
+            <i class="fa-solid fa-heart"></i>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    (async function() {
+        const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+
+        const viewer = document.getElementById('viewer');
+        const params = new URLSearchParams(window.location.search);
+        const slug = params.get('id');
+
+        if (!slug) {
+            viewer.innerHTML = '<div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i><p>Invalid link</p></div>';
+            return;
+        }
+
+        try {
+            const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // Load meta.json
+            const metaPath = `wedding/${slug}/meta.json`;
+            const { data: metaBlob, error: metaErr } = await sb.storage.from('design').download(metaPath);
+            if (metaErr) throw new Error('Invitation not found');
+
+            const meta = JSON.parse(await metaBlob.text());
+
+            // Update page title
+            if (meta.groom && meta.bride) {
+                document.title = `${meta.groom} ♥ ${meta.bride}`;
+            }
+
+            // Render pages
+            viewer.innerHTML = '';
+            const pageCount = meta.pageCount || meta.pages?.length || 0;
+
+            if (meta.pages && meta.pages.length > 0) {
+                // Use page URLs from meta
+                for (let i = 0; i < meta.pages.length; i++) {
+                    const img = document.createElement('img');
+                    img.className = 'page-img';
+                    img.alt = `Page ${i + 1}`;
+                    img.src = meta.pages[i];
+                    img.loading = i < 2 ? 'eager' : 'lazy';
+                    viewer.appendChild(img);
+                }
+            } else {
+                // Fallback: construct URLs from page count
+                for (let i = 0; i < pageCount; i++) {
+                    const path = `wedding/${slug}/page_${i}.png`;
+                    const { data: urlData } = sb.storage.from('design').getPublicUrl(path);
+                    const img = document.createElement('img');
+                    img.className = 'page-img';
+                    img.alt = `Page ${i + 1}`;
+                    img.src = urlData.publicUrl;
+                    img.loading = i < 2 ? 'eager' : 'lazy';
+                    viewer.appendChild(img);
+                }
+            }
+
+            // Footer
+            const footer = document.createElement('div');
+            footer.className = 'footer';
+            footer.innerHTML = '<a href="https://cafe2626.com" target="_blank"><i class="fa-solid fa-heart"></i> Make Your Own</a>';
+            viewer.appendChild(footer);
+
+        } catch (err) {
+            console.error('Viewer error:', err);
+            viewer.innerHTML = '<div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i><p>' + (err.message || 'Failed to load invitation') + '</p></div>';
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -1570,5 +1570,12 @@
   "dsm_no_results": "لا توجد منتجات مطابقة.",
   "dsm_load_failed": "فشل في تحميل المنتجات",
   "dsm_size_error": "يرجى إدخال العرض والارتفاع بشكل صحيح.",
-  "dsm_editor_error": "حدث خطأ أثناء تحميل المحرر."
+  "dsm_editor_error": "حدث خطأ أثناء تحميل المحرر.",
+  "wed_share": "مشاركة",
+  "wed_share_title": "مشاركة الدعوة",
+  "wed_share_url": "رابط المشاركة",
+  "wed_share_copy": "نسخ",
+  "wed_share_copied": "تم النسخ!",
+  "wed_share_saving": "جاري الحفظ...",
+  "wed_share_login": "يجب تسجيل الدخول للمشاركة"
 }
