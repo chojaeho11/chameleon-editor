@@ -129,8 +129,9 @@ const AI_OPTIONS = {
 // 상태
 let _vals = {};
 let _debounceTimer = null;
-let _originalSrcMap = new WeakMap();  // 원본 보존 (슬라이더 초기화용)
-let _historyMap = new WeakMap();       // 되돌리기 히스토리 (AI 보정용)
+let _originalSrcMap = new WeakMap();    // 슬라이더 기준점 (AI 보정 후 갱신됨)
+let _trueOriginalMap = new WeakMap();   // 진짜 원본 (절대 덮어쓰지 않음)
+let _historyMap = new WeakMap();        // 되돌리기 히스토리 (AI 보정용)
 
 // ==========================================================
 // 초기화
@@ -230,8 +231,22 @@ function _saveOriginal(imgObj) {
         c.width = el.naturalWidth || el.width;
         c.height = el.naturalHeight || el.height;
         c.getContext('2d').drawImage(el, 0, 0);
-        _originalSrcMap.set(imgObj, { dataUrl: c.toDataURL('image/png'), width: c.width, height: c.height });
-    } catch (e) { console.warn('Save original failed:', e); }
+        const entry = { dataUrl: c.toDataURL('image/png'), width: c.width, height: c.height };
+        _originalSrcMap.set(imgObj, entry);
+        // 진짜 원본은 한 번만 저장 (절대 덮어쓰지 않음)
+        if (!_trueOriginalMap.has(imgObj)) {
+            _trueOriginalMap.set(imgObj, { ...entry });
+        }
+    } catch (e) {
+        console.warn('Save original failed:', e);
+        // CORS 실패 시 element src로 폴백 저장
+        if (!_trueOriginalMap.has(imgObj)) {
+            const el = imgObj._originalElement || imgObj._element;
+            if (el && el.src) {
+                _trueOriginalMap.set(imgObj, { dataUrl: el.src, width: el.naturalWidth || el.width, height: el.naturalHeight || el.height });
+            }
+        }
+    }
 }
 
 function _restoreOriginal(obj) {
@@ -304,12 +319,32 @@ function undoRetouch() {
 function restoreToOriginal() {
     const obj = canvas.getActiveObject();
     if (!obj || obj.type !== 'image') return;
-    // 히스토리의 맨 처음 또는 원본 맵에서 복원
+
+    // 진짜 원본에서 복원
+    const trueOriginal = _trueOriginalMap.get(obj);
+    if (!trueOriginal) {
+        window.showToast?.('원본 데이터가 없습니다', 'warning');
+        return;
+    }
+
+    // 히스토리 비우기
     const stack = _historyMap.get(obj);
-    if (stack) stack.length = 0; // 히스토리 비우기
-    _restoreOriginal(obj);
-    _resetSliderUI();
-    _updateUndoBtn();
+    if (stack) stack.length = 0;
+
+    const prevW = obj.width, prevH = obj.height, prevSX = obj.scaleX, prevSY = obj.scaleY;
+    obj.setSrc(trueOriginal.dataUrl, () => {
+        if (obj.width !== prevW || obj.height !== prevH) {
+            obj.scaleX = prevSX * (prevW / obj.width);
+            obj.scaleY = prevSY * (prevH / obj.height);
+        }
+        obj.filters = [];
+        obj.applyFilters();
+        // 슬라이더 기준점도 원본으로 리셋
+        _originalSrcMap.set(obj, { ...trueOriginal });
+        _resetSliderUI();
+        canvas.requestRenderAll();
+        _updateUndoBtn();
+    }, { crossOrigin: 'anonymous' });
     window.showToast?.('원본으로 복원 완료', 'success');
 }
 
