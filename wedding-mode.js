@@ -612,20 +612,62 @@ function _renderThumbsFromCache() {
    5. NAVIGATION
    ═══════════════════════════════════════════ */
 function weddingGoToSlide(index) {
+    // Save current page + update its thumbnail before switching
     if (window.savePageState) window.savePageState();
+    _updateCurrentThumbSync();
     goToPage(index);
-    setTimeout(() => {
-        // Update current page highlight
-        _renderThumbsFromCache();
-        // Regenerate thumbnail for the page we just left (may have been edited)
-        _refreshCurrentThumb();
-    }, 200);
+    // After loadPage completes, MutationObserver triggers _renderThumbsFromCache
 }
 
-/* Refresh thumbnail for the currently displayed page (after editing) */
-async function _refreshCurrentThumb() {
-    // no-op if no cache yet
-    if (!_wedThumbCache.length) return;
+/* Synchronous quick thumbnail for the CURRENT page (before navigating away) */
+function _updateCurrentThumbSync() {
+    const c = canvas || window.canvas;
+    if (!c || !_wedThumbCache.length) return;
+    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    try {
+        const origVpt = c.viewportTransform.slice();
+        const origW = c.getWidth(), origH = c.getHeight();
+        c.setViewportTransform([1, 0, 0, 1, -board.left, -board.top]);
+        c.setDimensions({ width: board.width, height: board.height });
+        c.requestRenderAll();
+        const url = c.toDataURL({ format: 'jpeg', quality: 0.5, multiplier: 0.2, enableRetinaScaling: false });
+        while (_wedThumbCache.length <= curIdx) _wedThumbCache.push(null);
+        _wedThumbCache[curIdx] = url;
+        c.setViewportTransform(origVpt);
+        c.setDimensions({ width: origW, height: origH });
+    } catch(e) { /* ignore */ }
+}
+
+/* Update only the current page thumbnail without capturing all pages */
+function _updateCurrentThumb() {
+    const c = canvas || window.canvas;
+    if (!c) return;
+    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+
+    // Quick snapshot of the current canvas
+    const origVpt = c.viewportTransform.slice();
+    const origW = c.getWidth(), origH = c.getHeight();
+    c.setViewportTransform([1, 0, 0, 1, -board.left, -board.top]);
+    c.setDimensions({ width: board.width, height: board.height });
+    c.requestRenderAll();
+
+    setTimeout(() => {
+        try {
+            const url = c.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.2, enableRetinaScaling: false });
+            // Update cache
+            while (_wedThumbCache.length <= curIdx) _wedThumbCache.push(null);
+            _wedThumbCache[curIdx] = url;
+        } catch(e) { /* ignore */ }
+        // Restore
+        c.setViewportTransform(origVpt);
+        c.setDimensions({ width: origW, height: origH });
+        c.requestRenderAll();
+        _renderThumbsFromCache();
+    }, 100);
 }
 
 /* ═══════════════════════════════════════════
@@ -656,6 +698,41 @@ function weddingDeleteSlide(index) {
 /* ═══════════════════════════════════════════
    7. SECTION TEMPLATES
    ═══════════════════════════════════════════ */
+function _generateLayoutPreview(layoutId) {
+    const layout = PHOTO_LAYOUTS[layoutId];
+    if (!layout) return '';
+    const pw = 80, ph = 120; // preview size (9:16 ratio-ish)
+    const cvs = document.createElement('canvas');
+    cvs.width = pw; cvs.height = ph;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = '#fdf2f8';
+    ctx.fillRect(0, 0, pw, ph);
+
+    const slots = layout.build(pw, ph);
+    slots.forEach(slot => {
+        const r = Math.min(slot.rx || 0, 4);
+        ctx.fillStyle = '#f9a8d4';
+        ctx.beginPath();
+        const x = slot.left, y = slot.top, w = slot.width, h = slot.height;
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+        ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+        ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+        ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+        ctx.closePath();
+        ctx.fill();
+        // camera icon hint
+        ctx.fillStyle = '#ec4899';
+        const cx = x + w / 2, cy = y + h / 2;
+        const sz = Math.min(w, h) * 0.2;
+        ctx.font = `${sz}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('📷', cx, cy);
+    });
+    return cvs.toDataURL('image/png');
+}
+
 function showTemplateModal() {
     const modal = document.getElementById('weddingTemplateModal');
     if (!modal) return;
@@ -677,16 +754,16 @@ function showTemplateModal() {
             `;
         });
 
-        // Photo layout templates
+        // Photo layout templates with visual previews
         html += '<div style="grid-column:1/-1; font-size:13px; font-weight:800; color:#5c4033; margin:12px 0 2px; border-top:1px solid #f3e8f4; padding-top:12px;"><i class="fa-solid fa-images" style="color:#7c3aed; margin-right:4px;"></i>사진 배치</div>';
         Object.entries(PHOTO_LAYOUTS).forEach(([id, layout]) => {
-            const count = layout.name.charAt(0);
+            const previewImg = _generateLayoutPreview(id);
             html += `
-                <div onclick="window.weddingApplyPhotoLayout('${id}')" style="padding:10px 6px; border:2px solid #e9d5ff; border-radius:12px; cursor:pointer; text-align:center; transition:all 0.15s; background:#fff;"
+                <div onclick="window.weddingApplyPhotoLayout('${id}')" style="padding:8px 6px; border:2px solid #e9d5ff; border-radius:12px; cursor:pointer; text-align:center; transition:all 0.15s; background:#fff;"
                      onmouseenter="this.style.borderColor='#7c3aed'; this.style.background='#f5f3ff';"
                      onmouseleave="this.style.borderColor='#e9d5ff'; this.style.background='#fff';">
-                    <div style="font-size:20px; color:#7c3aed; margin-bottom:4px;"><i class="fa-solid ${layout.icon}"></i></div>
-                    <div style="font-size:11px; font-weight:700; color:#5c4033;">${layout.name}</div>
+                    <img src="${previewImg}" style="width:60px; height:90px; border-radius:6px; margin-bottom:4px; display:block; margin-left:auto; margin-right:auto; box-shadow:0 1px 3px rgba(0,0,0,0.1);" draggable="false">
+                    <div style="font-size:10px; font-weight:700; color:#5c4033;">${layout.name}</div>
                 </div>
             `;
         });
@@ -724,7 +801,8 @@ async function applyTemplate(templateId) {
     }
 
     if (window.savePageState) window.savePageState();
-    setTimeout(() => renderSlideThumbs(), 300);
+    // Only update the current page thumbnail (not all pages)
+    _updateCurrentThumb();
 }
 
 function applyTemplateToCanvas(templateId) {
@@ -811,7 +889,8 @@ function applyPhotoLayout(layoutId) {
 
     canvas.requestRenderAll();
     if (window.savePageState) window.savePageState();
-    setTimeout(() => renderSlideThumbs(), 300);
+    // Only update the current page thumbnail (not all pages)
+    _updateCurrentThumb();
 }
 window.weddingApplyPhotoLayout = applyPhotoLayout;
 

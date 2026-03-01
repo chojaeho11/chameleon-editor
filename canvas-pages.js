@@ -247,10 +247,12 @@ export function deleteCurrentPage() {
 
 function saveCurrentPageState() {
     if (!canvas) return;
-    // 사용자 정의 속성 포함하여 저장
-    const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
+    // 사용자 정의 속성 포함하여 저장 (wedding placeholder 속성 포함)
+    const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', 'isWedPlaceholder', 'isWedPlaceholderText', 'wedPlaceholderId']);
     pageDataList[currentPageIndex] = json;
 }
+
+const _CUSTOM_PROPS_LOAD = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isWedPlaceholder','isWedPlaceholderText','wedPlaceholderId'];
 
 function loadPage(index) {
     const json = pageDataList[index];
@@ -268,7 +270,11 @@ function loadPage(index) {
             });
         }
         updatePageCounter();
+        if (window.resizeCanvasToFit) window.resizeCanvasToFit();
         canvas.requestRenderAll();
+    }, (o, obj) => {
+        // reviver: preserve custom properties
+        _CUSTOM_PROPS_LOAD.forEach(p => { if (o[p] !== undefined) obj[p] = o[p]; });
     });
 }
 
