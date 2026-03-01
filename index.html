@@ -2271,9 +2271,10 @@ async function handleSubReturn() {
 
         <!-- 서브 패널 -->
         <div id="subPanel" style="display:none;">
-            <!-- 모바일 드래그 핸들 -->
-            <div id="subPanelDragHandle" style="padding:10px 0 4px 0; cursor:grab; touch-action:none;">
+            <!-- 모바일 드래그 핸들 + 닫기 버튼 -->
+            <div id="subPanelDragHandle" style="padding:10px 0 4px 0; cursor:grab; touch-action:none; position:relative;">
                 <div style="width:36px; height:4px; background:#cbd5e1; border-radius:2px; margin:0 auto;"></div>
+                <button id="subPanelCloseBtn" onclick="document.getElementById('subPanel').style.display='none'; document.querySelectorAll('.icon-item').forEach(function(i){i.classList.remove('active')}); document.querySelectorAll('.sub-content').forEach(function(c){c.style.display='none'})" style="display:none; position:absolute; top:4px; right:4px; border:none; background:none; font-size:18px; color:#94a3b8; cursor:pointer; padding:4px 8px; line-height:1;">&times;</button>
             </div>
 
             <!-- 1. 템플릿 -->
@@ -4045,28 +4046,40 @@ window.filterFxCards = function(cat, btn) {
     });
 
     // ─── [모바일] 바텀시트 드래그 핸들로 닫기 ───
+    // ─── [모바일] 바텀시트 스와이프 닫기 (핸들 + 패널 전체) ───
     (function() {
         if (window.innerWidth > 768) return;
         const subPanel = document.getElementById('subPanel');
-        const handle = document.getElementById('subPanelDragHandle');
-        if (!subPanel || !handle) return;
+        if (!subPanel) return;
 
         let startY = 0, diffY = 0, dragging = false;
 
-        handle.addEventListener('touchstart', function(e) {
-            startY = e.touches[0].clientY;
-            diffY = 0;
-            dragging = true;
-            subPanel.style.transition = 'none';
+        function _closePanel() {
+            subPanel.style.display = 'none';
+            subPanel.style.transform = '';
+            document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
+            document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+        }
+
+        // 패널 전체에서 터치 시작 (스크롤 맨 위일때만 드래그 활성화)
+        subPanel.addEventListener('touchstart', function(e) {
+            if (subPanel.scrollTop <= 0) {
+                startY = e.touches[0].clientY;
+                diffY = 0;
+                dragging = true;
+                subPanel.style.transition = 'none';
+            }
         }, { passive: true });
 
-        // touchmove는 subPanel에서 감지 (핸들에서 시작해도 움직이면 범위 벗어남)
-        document.addEventListener('touchmove', function(e) {
+        subPanel.addEventListener('touchmove', function(e) {
             if (!dragging) return;
             diffY = e.touches[0].clientY - startY;
             if (diffY > 0) {
                 subPanel.style.transform = 'translateY(' + diffY + 'px)';
                 e.preventDefault();
+            } else {
+                dragging = false;
+                subPanel.style.transform = '';
             }
         }, { passive: false });
 
@@ -4074,11 +4087,8 @@ window.filterFxCards = function(cat, btn) {
             if (!dragging) return;
             dragging = false;
             subPanel.style.transition = 'transform 0.3s ease';
-            if (diffY > 80) {
-                subPanel.style.display = 'none';
-                subPanel.style.transform = '';
-                document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
-                document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+            if (diffY > 60) {
+                _closePanel();
             } else {
                 subPanel.style.transform = '';
             }
@@ -6081,15 +6091,21 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
     }
 
     window.addEventListener('popstate', function(event) {
-        // 모바일: subPanel 열려있으면 닫고 네비게이션 차단
+        // 모바일: 에디터가 열려있으면 뒤로가기로 나가지 않도록 차단
         if (window.innerWidth <= 768) {
-            var sp = document.getElementById('subPanel');
-            if (sp && sp.style.display !== 'none' && sp.style.display !== '') {
-                sp.style.display = 'none';
-                sp.style.transform = '';
-                document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
-                document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
-                if (event.state) window.history.pushState(event.state, '');
+            var ss = document.getElementById('startScreen');
+            var isEditorOpen = ss && window.getComputedStyle(ss).display === 'none';
+            if (isEditorOpen) {
+                // 1) subPanel 열려있으면 닫기
+                var sp = document.getElementById('subPanel');
+                if (sp && sp.style.display !== 'none' && sp.style.display !== '') {
+                    sp.style.display = 'none';
+                    sp.style.transform = '';
+                    document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
+                    document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+                }
+                // 2) 에디터 상태 재삽입 (뒤로가기로 빠져나가지 않게)
+                window.history.pushState({ type: 'editor' }, '');
                 return;
             }
         }
@@ -7887,6 +7903,10 @@ if (w >= 20 && h >= 20) {
         // 3. 화면 전환
         document.getElementById("startScreen").style.display = "none";
         document.getElementById("mainEditor").style.display = "flex";
+        // 모바일: 에디터 진입 시 history에 editor 상태 추가 (뒤로가기 방지)
+        if (window.innerWidth <= 768) {
+            window.history.pushState({ type: 'editor' }, '');
+        }
         // PPT UI: 비-PPT 모드일 때 툴바 숨기기
         if (!window.__PPT_MODE) {
             var _pt = document.getElementById('pptToolbar');
@@ -12295,17 +12315,10 @@ window.dsmRenderProducts = async function(keyword) {
         var s = e.state;
         if (s && (s.type === 'product' || s.type === 'subcat' || s.type === 'topmenu' || s.type === 'home')) return;
 
-        // 모바일: subPanel이 열려있으면 닫고 네비게이션 차단
+        // 모바일: 에디터 열려있으면 차단 (첫 번째 핸들러가 처리)
         if (window.innerWidth <= 768) {
-            var sp = document.getElementById('subPanel');
-            if (sp && sp.style.display !== 'none' && sp.style.display !== '') {
-                sp.style.display = 'none';
-                sp.style.transform = '';
-                document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
-                document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
-                if (e.state) window.history.pushState(e.state, '');
-                return;
-            }
+            var ss = document.getElementById('startScreen');
+            if (ss && window.getComputedStyle(ss).display === 'none') return;
         }
         var topModal = getTopmostVisibleModal();
         if (topModal && NAV_MANAGED_MODALS.indexOf(topModal.id) === -1) {

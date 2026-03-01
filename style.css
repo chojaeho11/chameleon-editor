@@ -3390,8 +3390,9 @@ body {
         overflow-x: hidden;
         transition: transform 0.3s ease;
     }
-    /* 드래그 핸들 표시 */
+    /* 드래그 핸들 + 닫기 버튼 표시 */
     #subPanelDragHandle { display: block; }
+    #subPanelCloseBtn { display: block !important; }
     #subPanel .sub-panel-header { font-size: 13px; padding-bottom: 8px; margin-bottom: 8px; }
 
     /* 모바일 FAB 숨김 (아이콘바로 대체) */
