@@ -38,12 +38,19 @@ serve(async (req) => {
     }
 
     try {
-        const body = await req.json();
+        let body;
+        try {
+            body = await req.json();
+        } catch (parseErr) {
+            throw new Error(`Request body parse failed (too large?): ${parseErr.message}`);
+        }
         const { action, image_base64, image_base64_2, params } = body;
 
         if (!action || !image_base64) {
             throw new Error("action and image_base64 are required");
         }
+
+        console.log(`[portrait-retouch] action=${action}, image_size=${(image_base64.length * 0.75 / 1024).toFixed(0)}KB`);
 
         const endpoint = ENDPOINTS[action];
         if (!endpoint) throw new Error(`Unknown action: ${action}`);
@@ -230,9 +237,10 @@ serve(async (req) => {
         });
 
     } catch (error: any) {
-        console.error("Portrait Retouch Error:", error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
+        console.error("Portrait Retouch Error:", error?.message, error?.stack);
+        // 200으로 반환하되 error 필드 포함 — sb.functions.invoke가 non-2xx body를 삼킴
+        return new Response(JSON.stringify({ error: error.message || String(error) }), {
+            status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
     }

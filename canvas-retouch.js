@@ -375,17 +375,53 @@ function _showOptionModal(config) {
 }
 
 // ==========================================================
-// 이미지 → base64 추출 유틸
+// 이미지 → base64 추출 유틸 (리사이즈 + JPEG 압축)
+// AILab API 제한: 대부분 2048px 이하, 파일 2MB 이하 권장
+// Supabase Edge Function body 제한: ~2MB
 // ==========================================================
+const MAX_AI_DIM = 2048;   // 최대 한 변 길이
+const AI_JPEG_QUALITY = 0.85;
+
 function _getImageBase64(obj) {
+    let el;
     const original = _originalSrcMap.get(obj);
-    if (original) return original.dataUrl.split(',')[1];
-    const el = obj._originalElement || obj._element;
+    if (original) {
+        // 원본 dataURL에서 Image 엘리먼트 만들어 리사이즈 필요 여부 확인
+        const img = new Image();
+        img.src = original.dataUrl;
+        el = img;
+        // synchronous check — dataUrl은 이미 로드된 상태
+        if (original.width <= MAX_AI_DIM && original.height <= MAX_AI_DIM) {
+            // 작은 이미지면 JPEG 변환만
+            const c = document.createElement('canvas');
+            c.width = original.width;
+            c.height = original.height;
+            c.getContext('2d').drawImage(el, 0, 0);
+            return c.toDataURL('image/jpeg', AI_JPEG_QUALITY).split(',')[1];
+        }
+    } else {
+        el = obj._originalElement || obj._element;
+    }
+
+    const srcW = el.naturalWidth || el.width;
+    const srcH = el.naturalHeight || el.height;
+
+    // 리사이즈 계산
+    let dstW = srcW, dstH = srcH;
+    if (srcW > MAX_AI_DIM || srcH > MAX_AI_DIM) {
+        const ratio = Math.min(MAX_AI_DIM / srcW, MAX_AI_DIM / srcH);
+        dstW = Math.round(srcW * ratio);
+        dstH = Math.round(srcH * ratio);
+    }
+
     const c = document.createElement('canvas');
-    c.width = el.naturalWidth || el.width;
-    c.height = el.naturalHeight || el.height;
-    c.getContext('2d').drawImage(el, 0, 0);
-    return c.toDataURL('image/png').split(',')[1];
+    c.width = dstW;
+    c.height = dstH;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(el, 0, 0, dstW, dstH);
+    return c.toDataURL('image/jpeg', AI_JPEG_QUALITY).split(',')[1];
 }
 
 // ==========================================================
@@ -462,6 +498,9 @@ async function handleAiRetouch(action) {
 
         if (error) throw new Error(error.message || 'Edge Function error');
 
+        // Edge Function이 200으로 반환하되 error 필드가 있을 수 있음
+        if (data?.error) throw new Error(data.error);
+
         // 피부 분석은 이미지가 아닌 JSON 결과
         if (action === 'skin_analysis') {
             _showSkinAnalysis(data.analysis);
@@ -469,7 +508,7 @@ async function handleAiRetouch(action) {
         }
 
         if (!data || (!data.image_url && !data.image_base64)) {
-            throw new Error(data?.error || 'No result');
+            throw new Error('결과 이미지가 없습니다');
         }
 
         const imgSrc = data.image_base64
