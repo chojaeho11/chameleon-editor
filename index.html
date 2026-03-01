@@ -9590,11 +9590,92 @@ window.filterModalItems = function(keyword) {
         return;
     }
 
-    // B. 검색어가 있을 때 -> 제품만 필터링
+    // B. 검색어가 있을 때 -> 제품 필터링 (다국어 + 관련어 확장 검색)
     const { products } = window.modalGlobalData;
 
-    // 상품 검색 (이름 일치)
-    const matchedProds = products.filter(prod => (prod.name || '').toLowerCase().includes(term));
+    // 인쇄 제품 관련어 매핑 (KR / JP / EN)
+    const _RELATED = {
+        '초대장':['청첩장','안내장','명함','카드','엽서','전단지','리플릿','봉투','invitation','招待状'],
+        '청첩장':['초대장','안내장','카드','엽서','봉투','웨딩','結婚式','wedding'],
+        '명함':['카드','초대장','엽서','名刺','card','business'],
+        '전단지':['리플릿','브로슈어','팜플렛','포스터','카탈로그','チラシ','flyer'],
+        '리플릿':['전단지','브로슈어','팜플렛','카탈로그','포스터','リーフレット','leaflet'],
+        '포스터':['전단지','리플릿','배너','현수막','ポスター','poster'],
+        '배너':['현수막','거치대','X배너','롤업','バナー','banner','横断幕'],
+        '현수막':['배너','플래카드','거치대','横断幕','banner'],
+        '스티커':['라벨','씰','도무송','シール','sticker','ラベル'],
+        '봉투':['편지','레터','안내장','초대장','封筒','envelope'],
+        '카탈로그':['리플릿','브로슈어','팜플렛','전단지','カタログ','catalog'],
+        '액자':['포토','사진','프레임','フォトフレーム','photo','frame'],
+        '텀블러':['머그컵','컵','보틀','タンブラー','tumbler','mug'],
+        '招待状':['名刺','カード','案内状','はがき','封筒','チラシ','초대장','청첩장','안내장','명함'],
+        '名刺':['カード','招待状','案内状','はがき','명함','초대장'],
+        'チラシ':['フライヤー','リーフレット','パンフレット','ポスター','カタログ','전단지','리플릿'],
+        'ポスター':['チラシ','フライヤー','バナー','横断幕','포스터','배너'],
+        'バナー':['横断幕','のぼり','看板','배너','현수막'],
+        'シール':['ラベル','ステッカー','스티커'],
+        'パンフレット':['カタログ','リーフレット','チラシ','카탈로그','리플릿'],
+        '封筒':['招待状','案内状','はがき','봉투','초대장'],
+        'タンブラー':['マグカップ','ボトル','텀블러','tumbler'],
+        'invitation':['card','postcard','envelope','flyer','leaflet','wedding','초대장','招待状'],
+        'card':['invitation','postcard','business card','namecard','명함','カード'],
+        'flyer':['leaflet','brochure','pamphlet','poster','catalog','전단지','チラシ'],
+        'poster':['flyer','banner','sign','포스터','ポスター'],
+        'banner':['sign','flag','poster','배너','バナー'],
+        'sticker':['label','seal','decal','스티커','シール'],
+        'brochure':['leaflet','flyer','pamphlet','catalog','리플릿','パンフレット'],
+        'tumbler':['mug','cup','bottle','텀블러','タンブラー']
+    };
+
+    // 모든 언어 필드에서 검색
+    const _matchProd = (prod, s) => {
+        return [prod.name, prod.name_jp, prod.name_us, prod.name_cn,
+                prod.name_ar, prod.name_es, prod.name_de, prod.name_fr,
+                prod.code, prod.category
+        ].some(f => (f || '').toLowerCase().includes(s));
+    };
+
+    // 1차: 직접 검색 (모든 언어)
+    const matchedSet = new Set();
+    const matchedProds = [];
+    products.forEach(prod => {
+        if (_matchProd(prod, term)) { matchedSet.add(prod.code || prod.name); matchedProds.push(prod); }
+    });
+
+    // 2차: 결과가 부족하면 관련어로 확장
+    if (matchedProds.length < 5) {
+        const expandTerms = new Set();
+        const kw = keyword.trim();
+        // 정확히 매칭되는 관련어 키
+        if (_RELATED[kw]) _RELATED[kw].forEach(t => expandTerms.add(t.toLowerCase()));
+        // 부분 매칭 관련어 키
+        for (const [key, vals] of Object.entries(_RELATED)) {
+            if (key.toLowerCase().includes(term) || term.includes(key.toLowerCase())) {
+                vals.forEach(t => expandTerms.add(t.toLowerCase()));
+            }
+        }
+        expandTerms.forEach(rt => {
+            products.forEach(prod => {
+                const pk = prod.code || prod.name;
+                if (!matchedSet.has(pk) && _matchProd(prod, rt)) {
+                    matchedSet.add(pk); matchedProds.push(prod);
+                }
+            });
+        });
+    }
+
+    // 3차: 여전히 부족하면 카테고리 확장 (매칭된 제품의 같은 카테고리)
+    if (matchedProds.length > 0 && matchedProds.length < 5) {
+        const cats = new Set(matchedProds.map(p => p.category).filter(Boolean));
+        cats.forEach(cat => {
+            products.forEach(prod => {
+                const pk = prod.code || prod.name;
+                if (!matchedSet.has(pk) && prod.category === cat) {
+                    matchedSet.add(pk); matchedProds.push(prod);
+                }
+            });
+        });
+    }
 
     // 결과가 없을 때
     if (matchedProds.length === 0) {
