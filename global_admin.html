@@ -1539,24 +1539,6 @@
             </div>
 
             <div id="tplGrid" class="tpl-card-grid"></div>
-
-            <!-- 썸네일 마이그레이션 도구 -->
-            <div style="margin-top:20px; padding:16px; background:#fffbeb; border:1px solid #f59e0b; border-radius:10px;">
-                <h4 style="margin:0 0 8px 0; color:#92400e;">🔄 썸네일 고해상도 마이그레이션</h4>
-                <p style="font-size:13px; color:#78350f; margin:0 0 12px 0;">
-                    base64 저해상도 썸네일을 Supabase Storage 고해상도(800px) URL로 변환합니다.<br>
-                    <b>주의:</b> 대량 처리이므로 시간이 걸릴 수 있습니다. 브라우저를 닫지 마세요.
-                </p>
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                    <button id="btnThumbMigrate" class="btn" style="background:#f59e0b; color:#fff; border:none; font-weight:bold;" onclick="migrateBase64Thumbs()">
-                        <i class="fa-solid fa-arrows-rotate"></i> 마이그레이션 시작
-                    </button>
-                    <button id="btnThumbMigrateStop" class="btn" style="background:#ef4444; color:#fff; border:none; display:none;" onclick="stopThumbMigration()">
-                        <i class="fa-solid fa-stop"></i> 중지
-                    </button>
-                    <span id="thumbMigrationStatus" style="font-size:13px; color:#78350f;"></span>
-                </div>
-            </div>
         </div>
     </div>
 </div>
