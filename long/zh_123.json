@@ -1717,5 +1717,11 @@
   "dsm_landscape": "横版",
   "dsm_square": "正方形",
   "dsm_banner_type": "横幅广告",
-  "dsm_retouch": "照片修饰"
+  "dsm_retouch": "照片修饰",
+  "dsm_custom": "自定义",
+  "dsm_custom_desc": "输入尺寸",
+  "dsm_custom_start": "开始设计",
+  "dsm_width": "宽",
+  "dsm_height": "高",
+  "dsm_size_min": "最小尺寸: 10mm"
 }

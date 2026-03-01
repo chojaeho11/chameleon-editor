@@ -1706,5 +1706,11 @@
   "dsm_landscape": "Landscape",
   "dsm_square": "Square",
   "dsm_banner_type": "Banner",
-  "dsm_retouch": "Photo Retouch"
+  "dsm_retouch": "Photo Retouch",
+  "dsm_custom": "Custom",
+  "dsm_custom_desc": "Custom Size",
+  "dsm_custom_start": "Start Design",
+  "dsm_width": "Width",
+  "dsm_height": "Height",
+  "dsm_size_min": "Minimum size: 10mm"
 }

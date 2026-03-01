@@ -1327,5 +1327,11 @@
   "dsm_landscape": "가로형",
   "dsm_square": "정사각",
   "dsm_banner_type": "배너형",
-  "dsm_retouch": "사진보정"
+  "dsm_retouch": "사진보정",
+  "dsm_custom": "커스텀",
+  "dsm_custom_desc": "직접 입력",
+  "dsm_custom_start": "디자인 시작",
+  "dsm_width": "가로",
+  "dsm_height": "세로",
+  "dsm_size_min": "최소 크기: 10mm"
 }

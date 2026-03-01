@@ -573,6 +573,11 @@
         <div class="dsm-section-box">
         <h4 class="dsm-section-title" style="color:#fbbf24;"><i class="fa-solid fa-ruler-combined"></i> <span data-i18n="dsm_design_size">디자인 사이즈</span></h4>
         <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px;">
+            <div class="dsm-card" onclick="window.dsmOpenCustomSize()" style="border:2px solid #f59e0b;">
+                <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-crop-simple"></i></div>
+                <div class="dsm-name" data-i18n="dsm_custom">커스텀</div>
+                <div class="dsm-size" data-i18n="dsm_custom_desc">직접 입력</div>
+            </div>
             <div class="dsm-card" onclick="window.dsmOpenEditor(210, 297, 'A4세로형')">
                 <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
                 <div class="dsm-name" data-i18n="dsm_a4_portrait">A4 세로형</div>
@@ -587,11 +592,6 @@
                 <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-regular fa-square"></i></div>
                 <div class="dsm-name" data-i18n="dsm_square">정사각</div>
                 <div class="dsm-size">1080 × 1080 px</div>
-            </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 159, '배너형')">
-                <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-window-maximize"></i></div>
-                <div class="dsm-name" data-i18n="dsm_banner_type">배너형</div>
-                <div class="dsm-size">1920 × 600 px</div>
             </div>
             <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
                 <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-image"></i></div>
@@ -622,7 +622,61 @@
             if (window.dsmShowPrintCategory) window.dsmShowPrintCategory(w, h, label);
         }, 50);
     };
+    window.dsmOpenCustomSize = function() {
+        document.getElementById('dsmCustomSizeModal').style.display = 'flex';
+        document.getElementById('dsmCsW').value = '';
+        document.getElementById('dsmCsH').value = '';
+        document.getElementById('dsmCsW').focus();
+    };
+    window.dsmCustomSizeApply = function() {
+        var _t = window.t || function(k,d){return d;};
+        var w = parseFloat(document.getElementById('dsmCsW').value);
+        var h = parseFloat(document.getElementById('dsmCsH').value);
+        var unit = document.querySelector('input[name="dsmCsUnit"]:checked').value;
+        if (!w || !h || w <= 0 || h <= 0) { showToast(_t('dsm_size_error','가로/세로를 입력해주세요'), 'warn'); return; }
+        var mmW, mmH;
+        if (unit === 'px') {
+            mmW = w * 25.4 / 96;
+            mmH = h * 25.4 / 96;
+        } else {
+            mmW = w;
+            mmH = h;
+        }
+        if (mmW < 10 || mmH < 10) { showToast(_t('dsm_size_min','최소 크기: 10mm'), 'warn'); return; }
+        document.getElementById('dsmCustomSizeModal').style.display = 'none';
+        if (window.startEditorDirect) window.startEditorDirect('custom', Math.round(mmW), Math.round(mmH));
+    };
     </script>
+
+    <!-- 커스텀 사이즈 입력 모달 -->
+    <div id="dsmCustomSizeModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:#fff; border-radius:16px; padding:28px; width:340px; max-width:90vw; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; font-size:17px; font-weight:800;" data-i18n="dsm_custom">커스텀</h3>
+                <button onclick="document.getElementById('dsmCustomSizeModal').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer; color:#94a3b8; padding:0; line-height:1;">&times;</button>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:16px; justify-content:center;">
+                <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:2px solid #e2e8f0; border-radius:10px; cursor:pointer; font-size:13px; font-weight:700; transition:all 0.15s;" onclick="this.querySelector('input').checked=true; this.style.borderColor='#6366f1'; this.style.background='#eef2ff'; this.parentElement.children[1].style.borderColor='#e2e8f0'; this.parentElement.children[1].style.background='#fff';">
+                    <input type="radio" name="dsmCsUnit" value="px" checked style="accent-color:#6366f1;"> px
+                </label>
+                <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:2px solid #e2e8f0; border-radius:10px; cursor:pointer; font-size:13px; font-weight:700; transition:all 0.15s;" onclick="this.querySelector('input').checked=true; this.style.borderColor='#6366f1'; this.style.background='#eef2ff'; this.parentElement.children[0].style.borderColor='#e2e8f0'; this.parentElement.children[0].style.background='#fff';">
+                    <input type="radio" name="dsmCsUnit" value="mm" style="accent-color:#6366f1;"> mm
+                </label>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; color:#64748b; font-weight:600; display:block; margin-bottom:4px;" data-i18n="dsm_width">가로</label>
+                    <input type="number" id="dsmCsW" placeholder="1920" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:16px; text-align:center; font-weight:700; outline:none; transition:border 0.15s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <span style="font-size:18px; color:#94a3b8; margin-top:18px;">×</span>
+                <div style="flex:1;">
+                    <label style="font-size:11px; color:#64748b; font-weight:600; display:block; margin-bottom:4px;" data-i18n="dsm_height">세로</label>
+                    <input type="number" id="dsmCsH" placeholder="1080" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:16px; text-align:center; font-weight:700; outline:none; transition:border 0.15s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter'){window.dsmCustomSizeApply();}">
+                </div>
+            </div>
+            <button onclick="window.dsmCustomSizeApply()" style="width:100%; padding:14px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" data-i18n="dsm_custom_start">디자인 시작</button>
+        </div>
+    </div>
 
     <!-- 기본 대분류 ~ 도매라운지: 모달용 데이터소스 (화면에 안보이게) -->
     <div style="position:absolute; left:-9999px; width:0; height:0; overflow:hidden; pointer-events:none;">
@@ -10142,6 +10196,11 @@ window.filterModalItems = function(keyword) {
                     <i class="fa-solid fa-ruler-combined"></i> <span data-i18n="dsm_design_size">디자인 사이즈</span>
                 </h4>
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px;">
+                    <div class="dsm-card" onclick="window.dsmOpenCustomSize()" style="border:2px solid #f59e0b;">
+                        <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-crop-simple"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_custom">커스텀</div>
+                        <div class="dsm-size" data-i18n="dsm_custom_desc">직접 입력</div>
+                    </div>
                     <div class="dsm-card" onclick="window.dsmOpenEditor(210, 297, 'A4세로형')">
                         <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
                         <div class="dsm-name" data-i18n="dsm_a4_portrait">A4 세로형</div>
@@ -10156,11 +10215,6 @@ window.filterModalItems = function(keyword) {
                         <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-regular fa-square"></i></div>
                         <div class="dsm-name" data-i18n="dsm_square">정사각</div>
                         <div class="dsm-size">1080 × 1080 px</div>
-                    </div>
-                    <div class="dsm-card" onclick="window.dsmOpenEditor(508, 159, '배너형')">
-                        <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-window-maximize"></i></div>
-                        <div class="dsm-name" data-i18n="dsm_banner_type">배너형</div>
-                        <div class="dsm-size">1920 × 600 px</div>
                     </div>
                     <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
                         <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-image"></i></div>

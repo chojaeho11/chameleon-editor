@@ -1718,5 +1718,11 @@
   "dsm_landscape": "أفقي",
   "dsm_square": "مربع",
   "dsm_banner_type": "بانر",
-  "dsm_retouch": "تعديل الصور"
+  "dsm_retouch": "تعديل الصور",
+  "dsm_custom": "مخصص",
+  "dsm_custom_desc": "إدخال الحجم",
+  "dsm_custom_start": "ابدأ التصميم",
+  "dsm_width": "العرض",
+  "dsm_height": "الارتفاع",
+  "dsm_size_min": "الحد الأدنى: 10 ملم"
 }

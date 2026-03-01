@@ -1717,5 +1717,11 @@
   "dsm_landscape": "Querformat",
   "dsm_square": "Quadrat",
   "dsm_banner_type": "Banner",
-  "dsm_retouch": "Foto-Retusche"
+  "dsm_retouch": "Foto-Retusche",
+  "dsm_custom": "Benutzerdefiniert",
+  "dsm_custom_desc": "Größe eingeben",
+  "dsm_custom_start": "Design starten",
+  "dsm_width": "Breite",
+  "dsm_height": "Höhe",
+  "dsm_size_min": "Mindestgröße: 10mm"
 }

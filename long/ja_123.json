@@ -1703,5 +1703,11 @@
   "dsm_landscape": "横型",
   "dsm_square": "正方形",
   "dsm_banner_type": "バナー",
-  "dsm_retouch": "写真補正"
+  "dsm_retouch": "写真補正",
+  "dsm_custom": "カスタム",
+  "dsm_custom_desc": "サイズ入力",
+  "dsm_custom_start": "デザイン開始",
+  "dsm_width": "横",
+  "dsm_height": "縦",
+  "dsm_size_min": "最小サイズ: 10mm"
 }

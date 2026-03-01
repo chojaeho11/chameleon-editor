@@ -1717,5 +1717,11 @@
   "dsm_landscape": "Paysage",
   "dsm_square": "Carré",
   "dsm_banner_type": "Bannière",
-  "dsm_retouch": "Retouche photo"
+  "dsm_retouch": "Retouche photo",
+  "dsm_custom": "Personnalisé",
+  "dsm_custom_desc": "Taille libre",
+  "dsm_custom_start": "Commencer",
+  "dsm_width": "Largeur",
+  "dsm_height": "Hauteur",
+  "dsm_size_min": "Taille min: 10mm"
 }

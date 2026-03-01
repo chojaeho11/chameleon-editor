@@ -1717,5 +1717,11 @@
   "dsm_landscape": "Horizontal",
   "dsm_square": "Cuadrado",
   "dsm_banner_type": "Banner",
-  "dsm_retouch": "Retoque foto"
+  "dsm_retouch": "Retoque foto",
+  "dsm_custom": "Personalizado",
+  "dsm_custom_desc": "Tamaño libre",
+  "dsm_custom_start": "Iniciar diseño",
+  "dsm_width": "Ancho",
+  "dsm_height": "Alto",
+  "dsm_size_min": "Tamaño mínimo: 10mm"
 }
