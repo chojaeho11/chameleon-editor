@@ -7737,7 +7737,7 @@ if (w >= 20 && h >= 20) {
 
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
         const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');
-        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay) {
+        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !window.__WEDDING_MODE) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
                 const _kw = window.pendingTemplateKeyword;

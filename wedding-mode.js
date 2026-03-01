@@ -318,9 +318,9 @@ function replacePlaceholderWithImage(file, placeholderRect) {
         imgObj.onload = function () {
             const fabricImg = new fabric.Image(imgObj);
 
-            // placeholder bounds
-            const pLeft = placeholderRect.left;
-            const pTop = placeholderRect.top;
+            // ensure coords are fresh
+            placeholderRect.setCoords();
+            const center = placeholderRect.getCenterPoint();
             const pW = placeholderRect.width * (placeholderRect.scaleX || 1);
             const pH = placeholderRect.height * (placeholderRect.scaleY || 1);
             const pRx = placeholderRect.rx || 0;
@@ -331,21 +331,23 @@ function replacePlaceholderWithImage(file, placeholderRect) {
             fabricImg.set({
                 scaleX: scale,
                 scaleY: scale,
-                left: pLeft + pW / 2,
-                top: pTop + pH / 2,
+                left: center.x,
+                top: center.y,
                 originX: 'center',
                 originY: 'center'
             });
 
-            // clip to placeholder shape
+            // clip to placeholder shape (absolutePositioned: true for canvas-space clipping)
             fabricImg.clipPath = new fabric.Rect({
                 width: pW,
                 height: pH,
                 rx: pRx,
                 ry: pRy,
+                left: center.x,
+                top: center.y,
                 originX: 'center',
                 originY: 'center',
-                absolutePositioned: false
+                absolutePositioned: true
             });
 
             // remove placeholder rect + its text label
@@ -882,60 +884,67 @@ async function generateAllPages(fd, setStep) {
     const c = canvas || window.canvas;
     if (!c) return;
 
-    // Page 1: Cover
+    // Page 1: Cover (already on current canvas from dsmOpenEditor)
     setStep(_t('wed_step_cover','표지 만드는 중...'));
     await buildCoverPage(c, fd);
     if (window.savePageState) window.savePageState();
 
     // Page 2: Greeting
     setStep(_t('wed_step_greeting','인사말 작성 중...'));
-    if (window.addPage) window.addPage();
-    await _sleep(400);
+    await _addPageAndWait(c);
     await buildGreetingPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 3: Gallery 1 (photos 1~3)
-    const galleryPhotos = fd.photos.slice(1); // photo[0] is cover
+    // Page 3: Gallery 1 (photos[1]~[3])
+    const galleryPhotos = fd.photos.slice(1);
     if (galleryPhotos.length > 0) {
         setStep(_t('wed_step_gallery','갤러리 배치 중...'));
-        if (window.addPage) window.addPage();
-        await _sleep(400);
+        await _addPageAndWait(c);
         await buildGalleryPage(c, fd, galleryPhotos.slice(0, 3));
         if (window.savePageState) window.savePageState();
     }
 
     // Page 4: Calendar
     setStep(_t('wed_step_calendar','캘린더 만드는 중...'));
-    if (window.addPage) window.addPage();
-    await _sleep(400);
+    await _addPageAndWait(c);
     await buildCalendarPage(c, fd);
     if (window.savePageState) window.savePageState();
 
     // Page 5: Venue
     setStep(_t('wed_step_venue','오시는길 만드는 중...'));
-    if (window.addPage) window.addPage();
-    await _sleep(400);
+    await _addPageAndWait(c);
     await buildVenuePage(c, fd);
     if (window.savePageState) window.savePageState();
 
     // Extra gallery pages for remaining photos
-    const remainingPhotos = galleryPhotos.slice(3);
-    if (remainingPhotos.length > 0) {
+    const remaining = galleryPhotos.slice(3);
+    for (let i = 0; i < remaining.length; i += 3) {
         setStep(_t('wed_step_gallery','갤러리 배치 중...'));
-        for (let i = 0; i < remainingPhotos.length; i += 3) {
-            const batch = remainingPhotos.slice(i, i + 3);
-            if (window.addPage) window.addPage();
-            await _sleep(400);
-            await buildGalleryPage(c, fd, batch);
-            if (window.savePageState) window.savePageState();
-        }
+        await _addPageAndWait(c);
+        await buildGalleryPage(c, fd, remaining.slice(i, i + 3));
+        if (window.savePageState) window.savePageState();
     }
 
-    // go to page 1
-    goToPage(0);
+    // Navigate to page 1 after generation
     await _sleep(300);
+    goToPage(0);
+    await _sleep(500);
     if (window.weddingActivatePanel) window.weddingActivatePanel();
     setTimeout(() => renderSlideThumbs(), 500);
+}
+
+/* Wait for addPage to fully complete including resizeCanvasToFit */
+async function _addPageAndWait(c) {
+    if (window.addPage) window.addPage();
+    await new Promise(resolve => {
+        let ticks = 0;
+        const iv = setInterval(() => {
+            ticks++;
+            const board = c.getObjects().find(o => o.isBoard);
+            if (board && ticks >= 4) { clearInterval(iv); resolve(); }
+            else if (ticks > 30) { clearInterval(iv); resolve(); }
+        }, 100);
+    });
 }
 
 function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -947,85 +956,62 @@ async function buildCoverPage(c, fd) {
     const w = board.width, h = board.height, s = fd.style;
     board.set({ fill: s.bg });
 
-    // clear non-board
+    // clear non-board objects
     c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
 
-    // photo background (if available)
+    // Photo fills top 68% — NO overlay
     if (fd.photos.length > 0) {
-        await _placePhotoOnCanvas(c, fd.photos[0], board.left, board.top + h * 0.15, w, h * 0.45, 0, 0);
-        // overlay for text readability
-        const overlay = new fabric.Rect({
-            left: board.left, top: board.top + h * 0.15, width: w, height: h * 0.45,
-            fill: 'rgba(0,0,0,0.15)', selectable: true, evented: true
-        });
-        c.add(overlay);
+        await _placePhotoOnCanvas(c, fd.photos[0], board.left, board.top, w, h * 0.68, 0, 0);
     } else {
         // placeholder rect
         const ph = new fabric.Rect({
-            left: board.left + w * 0.1, top: board.top + h * 0.25, width: w * 0.8, height: h * 0.35,
+            left: board.left + w * 0.05, top: board.top + h * 0.05, width: w * 0.9, height: h * 0.58,
             fill: '#f5e6d3', rx: 16, ry: 16, stroke: s.accent, strokeWidth: 2,
-            selectable: true, evented: true, isWedPlaceholder: true, wedPlaceholderId: 'cover_main'
+            selectable: true, evented: true, isWedPlaceholder: true, wedPlaceholderId: 'cover_main', hoverCursor: 'pointer'
         });
         const phText = new fabric.Textbox(_t('wed_photo_here','사진을 넣어주세요'), {
-            left: board.left + w * 0.2, top: board.top + h * 0.4, width: w * 0.6,
+            left: board.left + w * 0.15, top: board.top + h * 0.3, width: w * 0.7,
             fontSize: Math.round(h * 0.022), fontFamily: s.font,
             fill: '#c4a07a', textAlign: 'center', editable: false,
-            isWedPlaceholderText: true, wedPlaceholderId: 'cover_main',
-            hoverCursor: 'pointer'
+            isWedPlaceholderText: true, wedPlaceholderId: 'cover_main', hoverCursor: 'pointer'
         });
-        ph.hoverCursor = 'pointer';
         c.add(ph); c.add(phText);
     }
 
-    // top decoration
-    c.add(new fabric.Textbox('♥', {
-        left: board.left + w * 0.42, top: board.top + h * 0.05, width: w * 0.16,
-        fontSize: Math.round(h * 0.04), fontFamily: s.font,
-        fill: s.accent, textAlign: 'center'
-    }));
-
-    // title
+    // "저희 결혼합니다" title — below photo
     c.add(new fabric.Textbox(_t('wed_we_marry','저희 결혼합니다'), {
-        left: board.left + w * 0.1, top: board.top + h * 0.09, width: w * 0.8,
-        fontSize: Math.round(h * 0.032), fontFamily: s.font,
-        fill: fd.photos.length > 0 ? '#ffffff' : s.text, textAlign: 'center', fontStyle: 'italic',
-        shadow: fd.photos.length > 0 ? '0 1px 4px rgba(0,0,0,0.5)' : ''
+        left: board.left + w * 0.1, top: board.top + h * 0.70, width: w * 0.8,
+        fontSize: Math.round(h * 0.028), fontFamily: s.font,
+        fill: s.text, textAlign: 'center', fontStyle: 'italic'
     }));
 
     // groom ♥ bride
     c.add(new fabric.Textbox(fd.groom, {
-        left: board.left + w * 0.08, top: board.top + h * 0.65, width: w * 0.34,
+        left: board.left + w * 0.05, top: board.top + h * 0.77, width: w * 0.35,
         fontSize: Math.round(h * 0.032), fontFamily: s.font, fontWeight: 'bold',
         fill: s.text, textAlign: 'center'
     }));
     c.add(new fabric.Textbox('♥', {
-        left: board.left + w * 0.38, top: board.top + h * 0.65, width: w * 0.24,
-        fontSize: Math.round(h * 0.04), fontFamily: s.font,
+        left: board.left + w * 0.38, top: board.top + h * 0.77, width: w * 0.24,
+        fontSize: Math.round(h * 0.035), fontFamily: s.font,
         fill: s.highlight, textAlign: 'center'
     }));
     c.add(new fabric.Textbox(fd.bride, {
-        left: board.left + w * 0.58, top: board.top + h * 0.65, width: w * 0.34,
+        left: board.left + w * 0.6, top: board.top + h * 0.77, width: w * 0.35,
         fontSize: Math.round(h * 0.032), fontFamily: s.font, fontWeight: 'bold',
         fill: s.text, textAlign: 'center'
     }));
 
     // date
     c.add(new fabric.Textbox(fd.dateDisplay, {
-        left: board.left + w * 0.15, top: board.top + h * 0.76, width: w * 0.7,
-        fontSize: Math.round(h * 0.024), fontFamily: s.font,
-        fill: s.text, textAlign: 'center', letterSpacing: 200
+        left: board.left + w * 0.1, top: board.top + h * 0.85, width: w * 0.8,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font,
+        fill: s.accent, textAlign: 'center', letterSpacing: 200
     }));
 
     // venue
     c.add(new fabric.Textbox(fd.venueName, {
-        left: board.left + w * 0.15, top: board.top + h * 0.83, width: w * 0.7,
-        fontSize: Math.round(h * 0.02), fontFamily: s.font,
-        fill: s.accent, textAlign: 'center'
-    }));
-
-    // bottom decoration
-    c.add(new fabric.Textbox('~ ♥ ~', {
-        left: board.left + w * 0.35, top: board.top + h * 0.92, width: w * 0.3,
+        left: board.left + w * 0.1, top: board.top + h * 0.91, width: w * 0.8,
         fontSize: Math.round(h * 0.018), fontFamily: s.font,
         fill: s.accent, textAlign: 'center'
     }));
@@ -1070,17 +1056,17 @@ async function buildGreetingPage(c, fd) {
     } catch (e) { console.warn('AI greeting fallback:', e); }
 
     c.add(new fabric.Textbox(greetingText, {
-        left: board.left + w * 0.1, top: board.top + h * 0.28, width: w * 0.8,
+        left: board.left + w * 0.1, top: board.top + h * 0.26, width: w * 0.8,
         fontSize: Math.round(h * 0.02), fontFamily: s.font,
         fill: s.text, textAlign: 'center', lineHeight: 1.8
     }));
 
-    // parents
-    const parentsText = `${fd.groomFather} · ${fd.groomMother} 의 아들  ${fd.groom}\n${fd.brideFather} · ${fd.brideMother} 의 딸  ${fd.bride}`;
+    // parents — uses actual form data
+    const parentsText = `${fd.groomFather} · ${fd.groomMother}   의 아들  ${fd.groom}\n${fd.brideFather} · ${fd.brideMother}   의 딸  ${fd.bride}`;
     c.add(new fabric.Textbox(parentsText, {
-        left: board.left + w * 0.1, top: board.top + h * 0.7, width: w * 0.8,
-        fontSize: Math.round(h * 0.018), fontFamily: s.font,
-        fill: s.accent, textAlign: 'center', lineHeight: 1.8
+        left: board.left + w * 0.08, top: board.top + h * 0.68, width: w * 0.84,
+        fontSize: Math.round(h * 0.019), fontFamily: s.font,
+        fill: s.text, textAlign: 'center', lineHeight: 2.0
     }));
 
     // bottom decoration
@@ -1111,7 +1097,6 @@ async function buildGalleryPage(c, fd, photos) {
     const bL = board.left, bT = board.top;
 
     if (photos.length >= 3) {
-        // 1 main + 2 sub
         await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.4, 12, 12);
         await _placePhotoOnCanvas(c, photos[1], bL + w * 0.08, bT + h * 0.62, w * 0.4, h * 0.25, 10, 10);
         await _placePhotoOnCanvas(c, photos[2], bL + w * 0.52, bT + h * 0.62, w * 0.4, h * 0.25, 10, 10);
@@ -1122,7 +1107,6 @@ async function buildGalleryPage(c, fd, photos) {
         await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.7, 12, 12);
     }
 
-    // caption
     c.add(new fabric.Textbox(_t('wed_caption','우리의 아름다운 순간들'), {
         left: board.left + w * 0.15, top: board.top + h * 0.92, width: w * 0.7,
         fontSize: Math.round(h * 0.016), fontFamily: s.font, fontStyle: 'italic',
@@ -1139,35 +1123,33 @@ async function buildCalendarPage(c, fd) {
     board.set({ fill: s.bg });
     c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
 
+    // header
     c.add(new fabric.Textbox('♥', {
-        left: board.left + w * 0.44, top: board.top + h * 0.06, width: w * 0.12,
+        left: board.left + w * 0.44, top: board.top + h * 0.04, width: w * 0.12,
         fontSize: Math.round(h * 0.025), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
     }));
     c.add(new fabric.Textbox(_t('wed_date_title','예식 일시'), {
-        left: board.left + w * 0.1, top: board.top + h * 0.12, width: w * 0.8,
-        fontSize: Math.round(h * 0.03), fontFamily: s.font, fontWeight: 'bold', fill: s.text, textAlign: 'center'
+        left: board.left + w * 0.1, top: board.top + h * 0.09, width: w * 0.8,
+        fontSize: Math.round(h * 0.028), fontFamily: s.font, fontWeight: 'bold', fill: s.text, textAlign: 'center'
     }));
+    c.add(new fabric.Rect({ left: board.left + w * 0.3, top: board.top + h * 0.15, width: w * 0.4, height: 2, fill: s.accent, selectable: true, evented: true }));
 
-    // year
-    const year = fd.dateStr ? new Date(fd.dateStr).getFullYear().toString() : '2026';
-    c.add(new fabric.Textbox(year, {
-        left: board.left + w * 0.2, top: board.top + h * 0.22, width: w * 0.6,
-        fontSize: Math.round(h * 0.055), fontFamily: s.font, fontWeight: 'bold', fill: s.accent, textAlign: 'center'
+    // date/time display
+    const dateInfo = fd.dateDisplay + (fd.dayOfWeek ? '  ' + fd.dayOfWeek : '');
+    c.add(new fabric.Textbox(dateInfo, {
+        left: board.left + w * 0.05, top: board.top + h * 0.18, width: w * 0.9,
+        fontSize: Math.round(h * 0.022), fontFamily: s.font, fill: s.text, textAlign: 'center'
     }));
-
-    // month day dayOfWeek
-    const monthDay = fd.dateStr ? fd.dateDisplay.split('. ').slice(1).join('월 ') + '일' : '00월 00일';
-    c.add(new fabric.Textbox(monthDay + (fd.dayOfWeek ? ' ' + fd.dayOfWeek : ''), {
-        left: board.left + w * 0.15, top: board.top + h * 0.32, width: w * 0.7,
-        fontSize: Math.round(h * 0.028), fontFamily: s.font, fill: s.text, textAlign: 'center'
-    }));
-
     c.add(new fabric.Textbox(fd.timeDisplay, {
-        left: board.left + w * 0.2, top: board.top + h * 0.39, width: w * 0.6,
-        fontSize: Math.round(h * 0.024), fontFamily: s.font, fill: s.accent, textAlign: 'center'
+        left: board.left + w * 0.2, top: board.top + h * 0.23, width: w * 0.6,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font, fill: s.accent, textAlign: 'center'
     }));
 
-    c.add(new fabric.Rect({ left: board.left + w * 0.25, top: board.top + h * 0.47, width: w * 0.5, height: 2, fill: s.accent, selectable: true, evented: true }));
+    // Auto-generated calendar image
+    if (fd.dateStr) {
+        const calDataUrl = _generateCalendarImage(fd.dateStr, s, w);
+        await _placeGeneratedImage(c, calDataUrl, board.left + w * 0.06, board.top + h * 0.28, w * 0.88, h * 0.46);
+    }
 
     // D-day
     let dday = 'D - DAY';
@@ -1176,25 +1158,91 @@ async function buildCalendarPage(c, fd) {
         dday = diff > 0 ? `D - ${diff}` : (diff === 0 ? 'D - DAY' : `D + ${Math.abs(diff)}`);
     }
     c.add(new fabric.Textbox(dday, {
-        left: board.left + w * 0.2, top: board.top + h * 0.52, width: w * 0.6,
-        fontSize: Math.round(h * 0.04), fontFamily: s.font, fontWeight: 'bold', fill: s.highlight, textAlign: 'center'
+        left: board.left + w * 0.15, top: board.top + h * 0.78, width: w * 0.7,
+        fontSize: Math.round(h * 0.035), fontFamily: s.font, fontWeight: 'bold', fill: s.highlight, textAlign: 'center'
     }));
 
-    // calendar placeholder
-    c.add(new fabric.Rect({
-        left: board.left + w * 0.1, top: board.top + h * 0.62, width: w * 0.8, height: h * 0.28,
-        fill: s.bg === '#ffffff' ? '#f8fafc' : '#fdf2f8', rx: 12, ry: 12,
-        stroke: s.highlight, strokeWidth: 1, selectable: true, evented: true,
-        isWedPlaceholder: true, wedPlaceholderId: 'calendar_img', hoverCursor: 'pointer'
-    }));
-    c.add(new fabric.Textbox(_t('wed_calendar_note','달력을 이미지로\n추가해주세요'), {
-        left: board.left + w * 0.25, top: board.top + h * 0.73, width: w * 0.5,
-        fontSize: Math.round(h * 0.018), fontFamily: s.font,
-        fill: '#c4a07a', textAlign: 'center', editable: false,
-        isWedPlaceholderText: true, wedPlaceholderId: 'calendar_img', hoverCursor: 'pointer'
+    // venue hint
+    c.add(new fabric.Textbox(fd.venueName, {
+        left: board.left + w * 0.15, top: board.top + h * 0.86, width: w * 0.7,
+        fontSize: Math.round(h * 0.016), fontFamily: s.font, fill: s.accent, textAlign: 'center'
     }));
 
     c.requestRenderAll();
+}
+
+/* ─── Calendar image generator (offscreen canvas) ─── */
+function _generateCalendarImage(dateStr, style, boardW) {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const weddingDay = date.getDate();
+
+    const cw = Math.round(boardW * 4); // high-res
+    const ch = Math.round(cw * 0.85);
+    const cvs = document.createElement('canvas');
+    cvs.width = cw; cvs.height = ch;
+    const ctx = cvs.getContext('2d');
+
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Month header
+    const monthKR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    ctx.fillStyle = style.text;
+    ctx.font = `bold ${Math.round(ch * 0.07)}px ${style.font}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${year}년 ${monthKR[month]}`, cw / 2, ch * 0.08);
+
+    // Line under header
+    ctx.strokeStyle = style.accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cw * 0.05, ch * 0.12); ctx.lineTo(cw * 0.95, ch * 0.12); ctx.stroke();
+
+    // Day headers: 일 월 화 수 목 금 토
+    const dayHeaders = ['일','월','화','수','목','금','토'];
+    const cellW = cw * 0.88 / 7;
+    const startX = cw * 0.06;
+    const headerY = ch * 0.20;
+    ctx.font = `bold ${Math.round(ch * 0.045)}px ${style.font}`;
+    for (let i = 0; i < 7; i++) {
+        ctx.fillStyle = i === 0 ? '#ef4444' : (i === 6 ? '#3b82f6' : style.accent);
+        ctx.fillText(dayHeaders[i], startX + cellW * i + cellW / 2, headerY);
+    }
+
+    // Calendar grid
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let row = 0;
+    const gridStartY = ch * 0.28;
+    const rowH = ch * 0.12;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const col = (firstDay + day - 1) % 7;
+        if (day > 1 && col === 0) row++;
+
+        const cx = startX + cellW * col + cellW / 2;
+        const cy = gridStartY + row * rowH;
+
+        if (day === weddingDay) {
+            // Highlight circle
+            const r = Math.min(cellW, rowH) * 0.36;
+            ctx.fillStyle = style.highlight || style.accent;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${Math.round(ch * 0.055)}px ${style.font}`;
+            ctx.fillText(day.toString(), cx, cy + ch * 0.02);
+            ctx.font = `${Math.round(ch * 0.05)}px ${style.font}`;
+        } else {
+            ctx.fillStyle = col === 0 ? '#ef4444' : (col === 6 ? '#3b82f6' : style.text);
+            ctx.font = `${Math.round(ch * 0.05)}px ${style.font}`;
+            ctx.fillText(day.toString(), cx, cy + ch * 0.02);
+        }
+    }
+
+    return cvs.toDataURL('image/png');
 }
 
 async function buildVenuePage(c, fd) {
@@ -1204,49 +1252,159 @@ async function buildVenuePage(c, fd) {
     board.set({ fill: s.bg });
     c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
 
+    // Title
     c.add(new fabric.Textbox(_t('wed_location_title','오시는 길'), {
         left: board.left + w * 0.1, top: board.top + h * 0.06, width: w * 0.8,
         fontSize: Math.round(h * 0.03), fontFamily: s.font, fontWeight: 'bold', fill: s.text, textAlign: 'center'
     }));
     c.add(new fabric.Rect({ left: board.left + w * 0.3, top: board.top + h * 0.13, width: w * 0.4, height: 2, fill: s.accent, selectable: true, evented: true }));
 
+    // Venue name
     c.add(new fabric.Textbox(fd.venueName, {
-        left: board.left + w * 0.1, top: board.top + h * 0.18, width: w * 0.8,
+        left: board.left + w * 0.08, top: board.top + h * 0.17, width: w * 0.84,
         fontSize: Math.round(h * 0.026), fontFamily: s.font, fontWeight: 'bold', fill: s.text, textAlign: 'center'
     }));
 
+    // Generated venue/location card image
+    const venueDataUrl = _generateVenueImage(fd.venueName, fd.venueAddr, s, w);
+    await _placeGeneratedImage(c, venueDataUrl, board.left + w * 0.06, board.top + h * 0.24, w * 0.88, h * 0.45);
+
+    // Address below map
     if (fd.venueAddr) {
         c.add(new fabric.Textbox(fd.venueAddr, {
-            left: board.left + w * 0.08, top: board.top + h * 0.24, width: w * 0.84,
-            fontSize: Math.round(h * 0.018), fontFamily: s.font, fill: s.accent, textAlign: 'center'
+            left: board.left + w * 0.06, top: board.top + h * 0.72, width: w * 0.88,
+            fontSize: Math.round(h * 0.018), fontFamily: s.font, fill: s.text, textAlign: 'center', lineHeight: 1.6
         }));
     }
 
-    // map placeholder
-    c.add(new fabric.Rect({
-        left: board.left + w * 0.08, top: board.top + h * 0.32, width: w * 0.84, height: h * 0.35,
-        fill: s.bg === '#ffffff' ? '#f1f5f9' : '#f0ebe3', rx: 12, ry: 12,
-        stroke: s.accent, strokeWidth: 1, selectable: true, evented: true,
-        isWedPlaceholder: true, wedPlaceholderId: 'venue_map', hoverCursor: 'pointer'
-    }));
-    c.add(new fabric.Textbox(_t('wed_map_placeholder','지도 이미지를\n넣어주세요'), {
-        left: board.left + w * 0.25, top: board.top + h * 0.46, width: w * 0.5,
-        fontSize: Math.round(h * 0.02), fontFamily: s.font,
-        fill: '#c4a07a', textAlign: 'center', editable: false,
-        isWedPlaceholderText: true, wedPlaceholderId: 'venue_map', hoverCursor: 'pointer'
-    }));
-
-    // transport info
+    // Transport info
     c.add(new fabric.Textbox(_t('wed_transport','교통편 정보를 입력해주세요'), {
-        left: board.left + w * 0.08, top: board.top + h * 0.72, width: w * 0.84,
+        left: board.left + w * 0.08, top: board.top + h * 0.82, width: w * 0.84,
         fontSize: Math.round(h * 0.015), fontFamily: s.font,
-        fill: s.text, textAlign: 'center', lineHeight: 1.6
+        fill: s.accent, textAlign: 'center', lineHeight: 1.6
     }));
 
     c.requestRenderAll();
 }
 
-/* ─── Photo placement helper ─── */
+/* ─── Venue location card image generator ─── */
+function _generateVenueImage(venueName, venueAddr, style, boardW) {
+    const cw = Math.round(boardW * 4);
+    const ch = Math.round(cw * 0.8);
+    const cvs = document.createElement('canvas');
+    cvs.width = cw; cvs.height = ch;
+    const ctx = cvs.getContext('2d');
+
+    // Background with rounded corners
+    const bgColor = style.bg === '#ffffff' ? '#f0f4f8' : '#fdf6f9';
+    const r = 40;
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(cw - r, 0); ctx.arcTo(cw, 0, cw, r, r);
+    ctx.lineTo(cw, ch - r); ctx.arcTo(cw, ch, cw - r, ch, r);
+    ctx.lineTo(r, ch); ctx.arcTo(0, ch, 0, ch - r, r);
+    ctx.lineTo(0, r); ctx.arcTo(0, 0, r, 0, r);
+    ctx.closePath();
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+    ctx.strokeStyle = style.accent;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Decorative grid lines (map-like)
+    ctx.strokeStyle = style.bg === '#ffffff' ? '#e2e8f0' : '#f3e8ef';
+    ctx.lineWidth = 1;
+    for (let x = cw * 0.1; x < cw * 0.9; x += cw * 0.12) {
+        ctx.beginPath(); ctx.moveTo(x, ch * 0.05); ctx.lineTo(x, ch * 0.55); ctx.stroke();
+    }
+    for (let y = ch * 0.08; y < ch * 0.55; y += ch * 0.1) {
+        ctx.beginPath(); ctx.moveTo(cw * 0.05, y); ctx.lineTo(cw * 0.95, y); ctx.stroke();
+    }
+
+    // Location pin icon
+    const pinCx = cw / 2, pinCy = ch * 0.28;
+    const pinR = Math.min(cw, ch) * 0.08;
+
+    // Pin shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.beginPath();
+    ctx.ellipse(pinCx + 3, pinCy + pinR * 1.5, pinR * 0.7, pinR * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pin body
+    ctx.fillStyle = style.highlight || '#ec4899';
+    ctx.beginPath();
+    ctx.arc(pinCx, pinCy - pinR * 0.2, pinR, 0, Math.PI * 2);
+    ctx.fill();
+    // Pin point
+    ctx.beginPath();
+    ctx.moveTo(pinCx - pinR * 0.55, pinCy + pinR * 0.55);
+    ctx.lineTo(pinCx, pinCy + pinR * 1.5);
+    ctx.lineTo(pinCx + pinR * 0.55, pinCy + pinR * 0.55);
+    ctx.fill();
+    // White inner circle
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(pinCx, pinCy - pinR * 0.2, pinR * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Venue name
+    ctx.fillStyle = style.text;
+    ctx.font = `bold ${Math.round(ch * 0.065)}px ${style.font}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(venueName, cw / 2, ch * 0.68);
+
+    // Divider
+    ctx.strokeStyle = style.accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cw * 0.2, ch * 0.74); ctx.lineTo(cw * 0.8, ch * 0.74); ctx.stroke();
+
+    // Address with word wrap
+    if (venueAddr) {
+        ctx.fillStyle = style.accent;
+        ctx.font = `${Math.round(ch * 0.04)}px ${style.font}`;
+        const maxW = cw * 0.8;
+        const words = venueAddr.split('');
+        let line = '', lineY = ch * 0.82;
+        for (const char of words) {
+            const test = line + char;
+            if (ctx.measureText(test).width > maxW && line) {
+                ctx.fillText(line, cw / 2, lineY);
+                line = char;
+                lineY += ch * 0.06;
+            } else {
+                line = test;
+            }
+        }
+        if (line) ctx.fillText(line, cw / 2, lineY);
+    }
+
+    return cvs.toDataURL('image/png');
+}
+
+/* ─── Place generated image (contain mode) ─── */
+function _placeGeneratedImage(c, dataUrl, left, top, width, height) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const fImg = new fabric.Image(img);
+            const scale = Math.min(width / fImg.width, height / fImg.height);
+            fImg.set({
+                scaleX: scale, scaleY: scale,
+                left: left + width / 2,
+                top: top + height / 2,
+                originX: 'center', originY: 'center'
+            });
+            c.add(fImg);
+            c.requestRenderAll();
+            resolve(fImg);
+        };
+        img.onerror = () => resolve(null);
+        img.src = dataUrl;
+    });
+}
+
+/* ─── Photo placement helper (cover mode) ─── */
 function _placePhotoOnCanvas(c, dataUrl, left, top, width, height, rx, ry) {
     return new Promise(resolve => {
         const imgObj = new Image();
@@ -1260,8 +1418,9 @@ function _placePhotoOnCanvas(c, dataUrl, left, top, width, height, rx, ry) {
             });
             fabricImg.clipPath = new fabric.Rect({
                 width, height, rx: rx || 0, ry: ry || 0,
+                left: left + width / 2, top: top + height / 2,
                 originX: 'center', originY: 'center',
-                absolutePositioned: false
+                absolutePositioned: true
             });
             c.add(fabricImg);
             c.bringToFront(fabricImg);
