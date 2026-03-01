@@ -9682,20 +9682,27 @@ window.filterModalItems = function(keyword) {
         // 안내 문구
         grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:10px 0 5px; color:#94a3b8;"><span style="font-size:14px;">${_recGuide}</span></div><div style="grid-column:1/-1; display:flex; align-items:center; gap:8px; margin:5px 0 10px;"><span style="font-size:16px; font-weight:800; color:#6366f1;">🔥 ${_recTitle}</span><div style="flex:1; height:1px; background:#e2e8f0;"></div></div>`;
 
-        // 가격 포맷 헬퍼
-        const _fmtR = (p) => {
-            if (typeof getLocalizedData === 'function') { return getLocalizedData(p).formattedPrice; }
-            const cfg = window.SITE_CONFIG || {};
-            const country = cfg.COUNTRY || 'KR';
-            const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
-            const v = (p.price || 0) * rate;
-            if (country === 'JP') return '¥' + Math.floor(v).toLocaleString();
-            if (country === 'US') return '$' + Math.round(v).toLocaleString();
-            return v.toLocaleString() + '원';
-        };
+        // 다국어 이름/가격 헬퍼 (config.js getLocalizedData 동일 로직)
+        const _c = _recLang;
         const _nameR = (p) => {
-            if (typeof getLocalizedData === 'function') { return getLocalizedData(p).name; }
+            if (_c==='JP') return p.name_jp || p.name || '';
+            if (_c==='US') return p.name_us || p.name || '';
+            if (_c==='CN') return p.name_cn || p.name_us || p.name || '';
+            if (_c==='AR') return p.name_ar || p.name_us || p.name || '';
+            if (_c==='ES') return p.name_es || p.name_us || p.name || '';
+            if (_c==='DE') return p.name_de || p.name_us || p.name || '';
+            if (_c==='FR') return p.name_fr || p.name_us || p.name || '';
             return p.name || '';
+        };
+        const _fmtR = (p) => {
+            const price = Number(p.price) || 0;
+            if (_c==='JP') { const jp = Number(p.price_jp) || price; return '¥' + Math.floor(jp).toLocaleString(); }
+            if (_c==='US') { const us = Number(p.price_us) || price; return '$' + Math.round(us).toLocaleString(); }
+            const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
+            if (_c==='CN') { const r = rates.CN||0.01; return '¥' + Math.round(price*r).toLocaleString(); }
+            if (_c==='AR') { const r = rates.AR||0.005; return Math.round(price*r).toLocaleString() + ' ﷼'; }
+            if (_c==='ES'||_c==='DE'||_c==='FR') { const r = rates[_c]||0.001; return '€' + (price*r).toFixed(2); }
+            return price.toLocaleString() + '원';
         };
 
         // 스크롤 가드
@@ -9835,28 +9842,38 @@ window.filterModalItems = function(keyword) {
         modalBox.addEventListener('pointerdown', function(e) { _scrollGuardY = this.scrollTop; }, true);
     }
 
-    // [헬퍼] 아이템 HTML 생성 함수
+    // [헬퍼] 아이템 HTML 생성 함수 (다국어 대응)
+    const _cc = (window.SITE_CONFIG?.COUNTRY||'KR');
+    const _localName = (it) => {
+        if (_cc==='JP') return it.name_jp || it.name || '';
+        if (_cc==='US') return it.name_us || it.name || '';
+        if (_cc==='CN') return it.name_cn || it.name_us || it.name || '';
+        if (_cc==='AR') return it.name_ar || it.name_us || it.name || '';
+        if (_cc==='ES') return it.name_es || it.name_us || it.name || '';
+        if (_cc==='DE') return it.name_de || it.name_us || it.name || '';
+        if (_cc==='FR') return it.name_fr || it.name_us || it.name || '';
+        return it.name || '';
+    };
+    const _localPrice = (it) => {
+        const price = Number(it.price) || 0;
+        if (_cc==='JP') { return '¥' + Math.floor(Number(it.price_jp)||price).toLocaleString(); }
+        if (_cc==='US') { return '$' + Math.round(Number(it.price_us)||price).toLocaleString(); }
+        const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
+        if (_cc==='CN') return '¥' + Math.round(price*(rates.CN||0.01)).toLocaleString();
+        if (_cc==='AR') return Math.round(price*(rates.AR||0.005)).toLocaleString() + ' ﷼';
+        if (_cc==='ES'||_cc==='DE'||_cc==='FR') return '€' + (price*(rates[_cc]||0.001)).toFixed(2);
+        return price.toLocaleString() + '원';
+    };
+
     const createItem = (item, type) => {
         const div = document.createElement('div');
         div.className = 'quick-item';
 
-        // 가격 포맷 헬퍼 (로컬 스코프)
-        const _fmt = (krw) => {
-            const cfg = window.SITE_CONFIG || {};
-            const country = cfg.COUNTRY || 'KR';
-            const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
-            const v = (krw || 0) * rate;
-            if (country === 'JP') return '¥' + Math.floor(v).toLocaleString();
-            if (country === 'US') return '$' + Math.round(v).toLocaleString();
-            return v.toLocaleString() + '원';
-        };
-
-        // 이미지 주소 결정
         const rawUrl = item.img_url || '';
-
         const iconUrl = window.getTinyThumb ? window.getTinyThumb(rawUrl, 150) : rawUrl;
+        const dName = _localName(item);
         const imgTag = iconUrl
-            ? `<img src="${iconUrl}" alt="${item.name || ''}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
+            ? `<img src="${iconUrl}" alt="${dName}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">`
             : `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
 
         div.innerHTML = `
@@ -9864,10 +9881,10 @@ window.filterModalItems = function(keyword) {
                 ${imgTag}
             </div>
             <div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                ${item.name || ''}
+                ${dName}
             </div>
             <div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">
-                ${_fmt(item.price || 0)}
+                ${_localPrice(item)}
             </div>
             <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
                 ${item.width_mm || '-'} x ${item.height_mm || '-'} mm
