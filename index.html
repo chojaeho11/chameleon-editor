@@ -12208,12 +12208,12 @@ window.dsmRenderProducts = async function(keyword) {
 
 <!-- ═══ 청첩장 섹션 템플릿 모달 ═══ -->
 <div id="weddingTemplateModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) window.weddingHideTemplates()">
-    <div style="background:#fff; border-radius:20px; padding:28px; max-width:540px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:pptModalIn 0.2s ease;">
+    <div style="background:#fff; border-radius:20px; padding:28px; max-width:600px; width:94%; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:pptModalIn 0.2s ease;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
             <div style="font-size:18px; font-weight:800; color:#5c4033;"><i class="fa-solid fa-heart" style="color:#ec4899; margin-right:6px;"></i>섹션 템플릿</div>
             <button onclick="window.weddingHideTemplates()" style="background:none; border:none; font-size:20px; color:#94a3b8; cursor:pointer; padding:4px;"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="weddingTemplateGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;"></div>
+        <div id="weddingTemplateGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;"></div>
         <p style="margin-top:14px; font-size:12px; color:#94a3b8; text-align:center;">현재 페이지의 내용이 교체됩니다</p>
     </div>
 </div>

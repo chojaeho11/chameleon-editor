@@ -19,8 +19,8 @@ const WEDDING_TEMPLATES = {
                   fill:'#d4a373', textAlign:'center' },
                 // 타이틀
                 { type:'textbox', text:_t('wed_we_marry','저희 결혼합니다'), left:w*0.1, top:h*0.15, width:w*0.8,
-                  fontSize:Math.round(h*0.035), fontFamily:'Georgia, serif',
-                  fill:'#8b5e3c', textAlign:'center', fontStyle:'italic' },
+                  fontSize:Math.round(h*0.035), fontFamily:'Georgia, serif', fontWeight:'300',
+                  fill:'#8b5e3c', textAlign:'center' },
                 // 이미지 영역
                 { type:'rect', left:w*0.1, top:h*0.25, width:w*0.8, height:h*0.35,
                   fill:'#f5e6d3', rx:16, ry:16, stroke:'#d4a373', strokeWidth:2, selectable:true, evented:true,
@@ -54,46 +54,13 @@ const WEDDING_TEMPLATES = {
             ];
         }
     },
-    greeting: {
-        name: _t('wed_tpl_greeting','인사말'), icon: 'fa-envelope-open-text',
-        build(w, h) {
-            return [
-                // 장식 라인
-                { type:'rect', left:w*0.3, top:h*0.08, width:w*0.4, height:2,
-                  fill:'#d4a373', selectable:true, evented:true },
-                // 제목
-                { type:'textbox', text:_t('wed_invite_title','초대합니다'), left:w*0.1, top:h*0.12, width:w*0.8,
-                  fontSize:Math.round(h*0.035), fontFamily:'Georgia, serif', fontWeight:'bold',
-                  fill:'#5c4033', textAlign:'center' },
-                // 장식 라인
-                { type:'rect', left:w*0.3, top:h*0.2, width:w*0.4, height:2,
-                  fill:'#d4a373', selectable:true, evented:true },
-                // 인사말 본문
-                { type:'textbox',
-                  text:_t('wed_greeting_text','서로가 마주보며 다져온 사랑을\n이제 함께 한 곳을 바라보며\n걸어가고자 합니다.\n\n저희 두 사람이 사랑의 이름으로\n지켜나갈 수 있도록\n오셔서 축복해 주십시오.'),
-                  left:w*0.1, top:h*0.28, width:w*0.8,
-                  fontSize:Math.round(h*0.02), fontFamily:'Georgia, serif',
-                  fill:'#6b5244', textAlign:'center', lineHeight:1.8 },
-                // 양가 부모
-                { type:'textbox',
-                  text:_t('wed_parents','○○○ · ○○○ 의 장남  신랑\n○○○ · ○○○ 의 장녀  신부'),
-                  left:w*0.1, top:h*0.7, width:w*0.8,
-                  fontSize:Math.round(h*0.018), fontFamily:'Georgia, serif',
-                  fill:'#8b7355', textAlign:'center', lineHeight:1.8 },
-                // 하단 꽃 장식
-                { type:'textbox', text:'✿  ✿  ✿', left:w*0.3, top:h*0.88, width:w*0.4,
-                  fontSize:Math.round(h*0.02), fontFamily:'Georgia, serif',
-                  fill:'#ec98a8', textAlign:'center' }
-            ];
-        }
-    },
     gallery: {
         name: _t('wed_tpl_gallery','갤러리'), icon: 'fa-images',
         build(w, h) {
             return [
                 // 제목
                 { type:'textbox', text:_t('wed_gallery_title','Our Moments'), left:w*0.1, top:h*0.06, width:w*0.8,
-                  fontSize:Math.round(h*0.03), fontFamily:'Georgia, serif', fontStyle:'italic',
+                  fontSize:Math.round(h*0.03), fontFamily:'Georgia, serif', fontWeight:'300',
                   fill:'#8b5e3c', textAlign:'center' },
                 // 장식 라인
                 { type:'rect', left:w*0.35, top:h*0.13, width:w*0.3, height:2,
@@ -115,7 +82,7 @@ const WEDDING_TEMPLATES = {
                   isWedPlaceholder:true, wedPlaceholderId:'gallery_sub2' },
                 // 캡션
                 { type:'textbox', text:_t('wed_caption','우리의 아름다운 순간들'), left:w*0.15, top:h*0.9, width:w*0.7,
-                  fontSize:Math.round(h*0.016), fontFamily:'Georgia, serif', fontStyle:'italic',
+                  fontSize:Math.round(h*0.016), fontFamily:'Georgia, serif', fontWeight:'300',
                   fill:'#a07855', textAlign:'center' }
             ];
         }
@@ -204,6 +171,115 @@ const WEDDING_TEMPLATES = {
     blank: {
         name: _t('wed_tpl_blank','빈 페이지'), icon: 'fa-square',
         build() { return []; }
+    }
+};
+
+/* ─── Photo Layout Templates (2/3/4 photo arrangements) ─── */
+const PHOTO_LAYOUTS = {
+    p2_vert: {
+        name: '2장 세로', icon: 'fa-grip-lines',
+        preview: '▯\n▯',
+        build(w, h) {
+            const m = w * 0.05, g = h * 0.02;
+            const pw = w - m * 2, ph = (h - m * 2 - g) / 2;
+            return [
+                { left: m, top: m, width: pw, height: ph, rx: 12, ry: 12 },
+                { left: m, top: m + ph + g, width: pw, height: ph, rx: 12, ry: 12 }
+            ];
+        }
+    },
+    p2_horiz: {
+        name: '2장 가로', icon: 'fa-grip-lines-vertical',
+        preview: '▯ ▯',
+        build(w, h) {
+            const m = w * 0.05, g = w * 0.03;
+            const pw = (w - m * 2 - g) / 2, ph = h - m * 2;
+            return [
+                { left: m, top: m, width: pw, height: ph, rx: 12, ry: 12 },
+                { left: m + pw + g, top: m, width: pw, height: ph, rx: 12, ry: 12 }
+            ];
+        }
+    },
+    p2_big_small: {
+        name: '2장 크게+작게', icon: 'fa-table-cells',
+        preview: '▯▯\n▯▯\n  ▯',
+        build(w, h) {
+            const m = w * 0.05, g = h * 0.02;
+            return [
+                { left: m, top: m, width: w - m * 2, height: h * 0.62, rx: 12, ry: 12 },
+                { left: w * 0.2, top: m + h * 0.62 + g, width: w * 0.6, height: h * 0.3, rx: 12, ry: 12 }
+            ];
+        }
+    },
+    p3_top1_bot2: {
+        name: '3장 1+2', icon: 'fa-th-large',
+        preview: '▯▯▯\n▯ ▯',
+        build(w, h) {
+            const m = w * 0.05, g = w * 0.03;
+            const topH = h * 0.48, botH = h * 0.44;
+            const botW = (w - m * 2 - g) / 2;
+            return [
+                { left: m, top: m, width: w - m * 2, height: topH, rx: 12, ry: 12 },
+                { left: m, top: m + topH + g, width: botW, height: botH, rx: 10, ry: 10 },
+                { left: m + botW + g, top: m + topH + g, width: botW, height: botH, rx: 10, ry: 10 }
+            ];
+        }
+    },
+    p3_vert: {
+        name: '3장 세로', icon: 'fa-bars',
+        preview: '▯\n▯\n▯',
+        build(w, h) {
+            const m = w * 0.05, g = h * 0.02;
+            const ph = (h - m * 2 - g * 2) / 3;
+            return [
+                { left: m, top: m, width: w - m * 2, height: ph, rx: 10, ry: 10 },
+                { left: m, top: m + ph + g, width: w - m * 2, height: ph, rx: 10, ry: 10 },
+                { left: m, top: m + (ph + g) * 2, width: w - m * 2, height: ph, rx: 10, ry: 10 }
+            ];
+        }
+    },
+    p3_left1_right2: {
+        name: '3장 좌1우2', icon: 'fa-columns',
+        preview: '▯ ▯\n▯ ▯',
+        build(w, h) {
+            const m = w * 0.05, g = w * 0.03, gv = h * 0.02;
+            const leftW = (w - m * 2 - g) * 0.55, rightW = (w - m * 2 - g) * 0.45;
+            const rh = (h - m * 2 - gv) / 2;
+            return [
+                { left: m, top: m, width: leftW, height: h - m * 2, rx: 12, ry: 12 },
+                { left: m + leftW + g, top: m, width: rightW, height: rh, rx: 10, ry: 10 },
+                { left: m + leftW + g, top: m + rh + gv, width: rightW, height: rh, rx: 10, ry: 10 }
+            ];
+        }
+    },
+    p4_grid: {
+        name: '4장 격자', icon: 'fa-border-all',
+        preview: '▯ ▯\n▯ ▯',
+        build(w, h) {
+            const m = w * 0.05, gx = w * 0.03, gy = h * 0.02;
+            const cw = (w - m * 2 - gx) / 2, ch = (h - m * 2 - gy) / 2;
+            return [
+                { left: m, top: m, width: cw, height: ch, rx: 10, ry: 10 },
+                { left: m + cw + gx, top: m, width: cw, height: ch, rx: 10, ry: 10 },
+                { left: m, top: m + ch + gy, width: cw, height: ch, rx: 10, ry: 10 },
+                { left: m + cw + gx, top: m + ch + gy, width: cw, height: ch, rx: 10, ry: 10 }
+            ];
+        }
+    },
+    p4_top1_bot3: {
+        name: '4장 1+3', icon: 'fa-table-cells-large',
+        preview: '▯▯▯\n▯ ▯ ▯',
+        build(w, h) {
+            const m = w * 0.05, gx = w * 0.025, gy = h * 0.02;
+            const topH = h * 0.48, botH = h * 0.44;
+            const botW = (w - m * 2 - gx * 2) / 3;
+            return [
+                { left: m, top: m, width: w - m * 2, height: topH, rx: 12, ry: 12 },
+                { left: m, top: m + topH + gy, width: botW, height: botH, rx: 8, ry: 8 },
+                { left: m + botW + gx, top: m + topH + gy, width: botW, height: botH, rx: 8, ry: 8 },
+                { left: m + (botW + gx) * 2, top: m + topH + gy, width: botW, height: botH, rx: 8, ry: 8 }
+            ];
+        }
     }
 };
 
@@ -536,8 +612,20 @@ function _renderThumbsFromCache() {
    5. NAVIGATION
    ═══════════════════════════════════════════ */
 function weddingGoToSlide(index) {
+    if (window.savePageState) window.savePageState();
     goToPage(index);
-    setTimeout(() => _renderThumbsFromCache(), 200);
+    setTimeout(() => {
+        // Update current page highlight
+        _renderThumbsFromCache();
+        // Regenerate thumbnail for the page we just left (may have been edited)
+        _refreshCurrentThumb();
+    }, 200);
+}
+
+/* Refresh thumbnail for the currently displayed page (after editing) */
+async function _refreshCurrentThumb() {
+    // no-op if no cache yet
+    if (!_wedThumbCache.length) return;
 }
 
 /* ═══════════════════════════════════════════
@@ -575,16 +663,34 @@ function showTemplateModal() {
     const grid = document.getElementById('weddingTemplateGrid');
     if (grid) {
         let html = '';
+
+        // Section templates (compact row)
+        html += '<div style="grid-column:1/-1; font-size:13px; font-weight:800; color:#5c4033; margin-bottom:2px;"><i class="fa-solid fa-bookmark" style="color:#ec4899; margin-right:4px;"></i>섹션</div>';
         Object.entries(WEDDING_TEMPLATES).forEach(([id, tpl]) => {
             html += `
-                <div onclick="window.weddingApplyTemplate('${id}')" style="padding:16px 12px; border:2px solid #f9a8d4; border-radius:12px; cursor:pointer; text-align:center; transition:all 0.15s; background:#fff;"
+                <div onclick="window.weddingApplyTemplate('${id}')" style="padding:12px 8px; border:2px solid #f9a8d4; border-radius:12px; cursor:pointer; text-align:center; transition:all 0.15s; background:#fff;"
                      onmouseenter="this.style.borderColor='#ec4899'; this.style.background='#fdf2f8';"
                      onmouseleave="this.style.borderColor='#f9a8d4'; this.style.background='#fff';">
-                    <i class="fa-solid ${tpl.icon}" style="font-size:28px; color:#ec4899; margin-bottom:8px; display:block;"></i>
-                    <div style="font-size:13px; font-weight:700; color:#5c4033;">${tpl.name}</div>
+                    <i class="fa-solid ${tpl.icon}" style="font-size:22px; color:#ec4899; margin-bottom:6px; display:block;"></i>
+                    <div style="font-size:11px; font-weight:700; color:#5c4033;">${tpl.name}</div>
                 </div>
             `;
         });
+
+        // Photo layout templates
+        html += '<div style="grid-column:1/-1; font-size:13px; font-weight:800; color:#5c4033; margin:12px 0 2px; border-top:1px solid #f3e8f4; padding-top:12px;"><i class="fa-solid fa-images" style="color:#7c3aed; margin-right:4px;"></i>사진 배치</div>';
+        Object.entries(PHOTO_LAYOUTS).forEach(([id, layout]) => {
+            const count = layout.name.charAt(0);
+            html += `
+                <div onclick="window.weddingApplyPhotoLayout('${id}')" style="padding:10px 6px; border:2px solid #e9d5ff; border-radius:12px; cursor:pointer; text-align:center; transition:all 0.15s; background:#fff;"
+                     onmouseenter="this.style.borderColor='#7c3aed'; this.style.background='#f5f3ff';"
+                     onmouseleave="this.style.borderColor='#e9d5ff'; this.style.background='#fff';">
+                    <div style="font-size:20px; color:#7c3aed; margin-bottom:4px;"><i class="fa-solid ${layout.icon}"></i></div>
+                    <div style="font-size:11px; font-weight:700; color:#5c4033;">${layout.name}</div>
+                </div>
+            `;
+        });
+
         grid.innerHTML = html;
     }
 
@@ -596,9 +702,27 @@ function hideTemplateModal() {
     if (modal) modal.style.display = 'none';
 }
 
-function applyTemplate(templateId) {
+async function applyTemplate(templateId) {
     hideTemplateModal();
     applyTemplateToCanvas(templateId);
+
+    // For cover template, auto-generate a default decorative photo
+    if (templateId === 'cover') {
+        const board = canvas.getObjects().find(o => o.isBoard);
+        if (board) {
+            const w = board.width, h = board.height;
+            const s = WED_STYLES.classic;
+            const defPhoto = _generateDefaultCoverPhoto(w, Math.round(h * 0.35), s);
+            const ph = canvas.getObjects().find(o => o.isWedPlaceholder && o.wedPlaceholderId === 'cover_main');
+            if (ph) {
+                const phText = canvas.getObjects().find(o => o.isWedPlaceholderText && o.wedPlaceholderId === 'cover_main');
+                await _placePhotoOnCanvas(canvas, defPhoto, ph.left, ph.top, ph.width * (ph.scaleX||1), ph.height * (ph.scaleY||1), ph.rx || 0, ph.ry || 0);
+                canvas.remove(ph);
+                if (phText) canvas.remove(phText);
+            }
+        }
+    }
+
     if (window.savePageState) window.savePageState();
     setTimeout(() => renderSlideThumbs(), 300);
 }
@@ -642,6 +766,54 @@ function applyTemplateToCanvas(templateId) {
 
     canvas.requestRenderAll();
 }
+
+/* ─── Photo Layout Application ─── */
+function applyPhotoLayout(layoutId) {
+    hideTemplateModal();
+    const layout = PHOTO_LAYOUTS[layoutId];
+    if (!layout || !canvas) return;
+
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const w = board.width, h = board.height;
+    const bL = board.left, bT = board.top;
+
+    // Set board background
+    board.set({ fill: '#fdf2f8' });
+
+    // Remove all non-board objects
+    canvas.getObjects().filter(o => !o.isBoard).forEach(o => canvas.remove(o));
+
+    // Build placeholder rects for each photo slot
+    const slots = layout.build(w, h);
+    slots.forEach((slot, i) => {
+        // Photo placeholder rect
+        canvas.add(new fabric.Rect({
+            left: bL + slot.left, top: bT + slot.top,
+            width: slot.width, height: slot.height,
+            fill: '#f5e6d3', rx: slot.rx || 0, ry: slot.ry || 0,
+            stroke: '#d4a373', strokeWidth: 2,
+            selectable: true, evented: true,
+            isWedPlaceholder: true, wedPlaceholderId: `layout_${layoutId}_${i}`,
+            hoverCursor: 'pointer'
+        }));
+        // Placeholder text
+        canvas.add(new fabric.Textbox(_t('wed_photo_here','사진을 넣어주세요'), {
+            left: bL + slot.left + slot.width * 0.1, top: bT + slot.top + slot.height / 2 - 10,
+            width: slot.width * 0.8,
+            fontSize: Math.round(Math.min(slot.width, slot.height) * 0.06),
+            fontFamily: 'Georgia, serif', fill: '#c4a07a',
+            textAlign: 'center', editable: false,
+            isWedPlaceholderText: true, wedPlaceholderId: `layout_${layoutId}_${i}`,
+            hoverCursor: 'pointer'
+        }));
+    });
+
+    canvas.requestRenderAll();
+    if (window.savePageState) window.savePageState();
+    setTimeout(() => renderSlideThumbs(), 300);
+}
+window.weddingApplyPhotoLayout = applyPhotoLayout;
 
 /* ═══════════════════════════════════════════
    8. VERTICAL SCROLL PREVIEW
@@ -896,31 +1068,25 @@ async function generateAllPages(fd, setStep) {
     await buildCoverPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 2: Greeting (인사말 + 부모님)
-    setStep(_t('wed_step_greeting','인사말 작성 중...'));
-    await _addPageAndWait(c);
-    await buildGreetingPage(c, fd);
-    if (window.savePageState) window.savePageState();
-
-    // Page 3: Gallery (text-only poem/quote)
+    // Page 2: Gallery (text-only poem/quote)
     setStep(_t('wed_step_gallery','축하시 작성 중...'));
     await _addPageAndWait(c);
     await buildGalleryPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 4: Calendar
+    // Page 3: Calendar
     setStep(_t('wed_step_calendar','캘린더 만드는 중...'));
     await _addPageAndWait(c);
     await buildCalendarPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 5: Venue
+    // Page 4: Venue
     setStep(_t('wed_step_venue','오시는길 만드는 중...'));
     await _addPageAndWait(c);
     await buildVenuePage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 6+: Photo gallery pages (3 photos per page, skip cover photo)
+    // Page 5+: Photo gallery pages (3 photos per page, skip cover photo)
     const galleryPhotos = fd.photos.slice(1); // photos[0] is cover
     for (let i = 0; i < galleryPhotos.length; i += 3) {
         setStep(_t('wed_step_gallery','갤러리 배치 중...') + ` (${Math.floor(i/3)+1})`);
@@ -975,8 +1141,8 @@ async function buildCoverPage(c, fd) {
     // "저희 결혼합니다" title — below photo
     c.add(new fabric.Textbox(_t('wed_we_marry','저희 결혼합니다'), {
         left: board.left + w * 0.1, top: board.top + h * 0.70, width: w * 0.8,
-        fontSize: Math.round(h * 0.028), fontFamily: s.font,
-        fill: s.text, textAlign: 'center', fontStyle: 'italic'
+        fontSize: Math.round(h * 0.028), fontFamily: s.font, fontWeight: '300',
+        fill: s.text, textAlign: 'center'
     }));
 
     // groom ♥ bride
@@ -1118,9 +1284,9 @@ async function buildGalleryPage(c, fd) {
         fill: s.text, textAlign: 'center', lineHeight: 2.2
     }));
 
-    // Bottom decoration only
+    // Bottom decoration only — placed lower
     c.add(new fabric.Textbox('─  ♥  ─', {
-        left: board.left + w * 0.3, top: board.top + h * 0.88, width: w * 0.4,
+        left: board.left + w * 0.3, top: board.top + h * 0.93, width: w * 0.4,
         fontSize: Math.round(h * 0.018), fontFamily: s.font, fill: s.accent, textAlign: 'center'
     }));
 
