@@ -1,8 +1,11 @@
 // canvas-icons.js — Iconify icon/logo search + color picker + canvas integration
 
+import { sb } from "./config.js?v=123";
+
 const ICONIFY_SEARCH = 'https://api.iconify.design/search';
 const ICONIFY_SVG = 'https://api.iconify.design';
 const PER_PAGE = 48;
+const LOGO_PER_PAGE = 4;
 
 // --- State ---
 let iconCurrentColor = '#000000';
@@ -12,9 +15,8 @@ let iconCurrentQuery = '';
 let iconDebounceTimer = null;
 let iconCurrentMode = 'icon'; // 'icon' or 'logo'
 let logoIsOriginalColor = true; // logos default to original colors
-
-// Logo prefixes to search in (brand icon collections)
-const LOGO_PREFIXES = ['simple-icons', 'logos', 'cib', 'devicon', 'skill-icons', 'brandico'];
+let logoPage = 0;
+let logoKeyword = '';
 
 const ICON_TAGS = [
     { label: '⭐ Star', q: 'star' },
@@ -33,39 +35,6 @@ const ICON_TAGS = [
     { label: '📷 Camera', q: 'camera' },
     { label: '🎵 Music', q: 'music' },
     { label: '☁️ Cloud', q: 'cloud' },
-];
-
-const LOGO_TAGS = [
-    { label: 'Google', q: 'google' },
-    { label: 'Apple', q: 'apple' },
-    { label: 'Microsoft', q: 'microsoft' },
-    { label: 'Amazon', q: 'amazon' },
-    { label: 'Meta', q: 'meta' },
-    { label: 'Samsung', q: 'samsung' },
-    { label: 'Netflix', q: 'netflix' },
-    { label: 'Spotify', q: 'spotify' },
-    { label: 'Tesla', q: 'tesla' },
-    { label: 'Nike', q: 'nike' },
-    { label: 'Adidas', q: 'adidas' },
-    { label: 'YouTube', q: 'youtube' },
-    { label: 'Instagram', q: 'instagram' },
-    { label: 'TikTok', q: 'tiktok' },
-    { label: 'X Twitter', q: 'twitter' },
-    { label: 'LinkedIn', q: 'linkedin' },
-    { label: 'GitHub', q: 'github' },
-    { label: 'Slack', q: 'slack' },
-    { label: 'Discord', q: 'discord' },
-    { label: 'Figma', q: 'figma' },
-    { label: 'Visa', q: 'visa' },
-    { label: 'PayPal', q: 'paypal' },
-    { label: 'Stripe', q: 'stripe' },
-    { label: 'BMW', q: 'bmw' },
-    { label: 'Mercedes', q: 'mercedes' },
-    { label: 'Toyota', q: 'toyota' },
-    { label: 'Uber', q: 'uber' },
-    { label: 'Airbnb', q: 'airbnb' },
-    { label: 'Starbucks', q: 'starbucks' },
-    { label: 'McDonald', q: 'mcdonalds' },
 ];
 
 export function initIconTools() {
@@ -99,7 +68,19 @@ export function initIconTools() {
         clearTimeout(iconDebounceTimer);
         iconDebounceTimer = setTimeout(() => {
             const q = searchInput.value.trim();
-            if (q.length >= 2) doSearch(q, true);
+            if (iconCurrentMode === 'logo') {
+                logoKeyword = q;
+                logoPage = 0;
+                loadLogos();
+            } else if (q.length >= 2) {
+                doSearch(q, true);
+            } else if (q.length === 0 && iconCurrentMode === 'icon') {
+                // Clear icon results when search is empty
+                const grid = document.getElementById('iconResultGrid');
+                if (grid) grid.innerHTML = '';
+                const lmb = document.getElementById('iconLoadMore');
+                if (lmb) lmb.style.display = 'none';
+            }
         }, 400);
     };
 
@@ -115,28 +96,13 @@ export function initIconTools() {
     // Reset color
     if (colorReset) {
         colorReset.onclick = () => {
-            if (iconCurrentMode === 'logo') {
-                // For logos: restore original colors
-                logoIsOriginalColor = true;
-                iconCurrentColor = '#000000';
-                if (colorPicker) colorPicker.value = '#000000';
-                // Re-fetch and re-render with original colors
-                const grid = document.getElementById('iconResultGrid');
-                if (grid) {
-                    grid.querySelectorAll('.icon-grid-cell').forEach(cell => {
-                        const svgUrl = cell.dataset.svgUrl;
-                        if (svgUrl) fetchAndInlineSvg(svgUrl, cell, true);
-                    });
-                }
-            } else {
-                iconCurrentColor = '#000000';
-                if (colorPicker) colorPicker.value = '#000000';
-                recolorGrid();
-            }
+            iconCurrentColor = '#000000';
+            if (colorPicker) colorPicker.value = '#000000';
+            recolorGrid();
         };
     }
 
-    // Load more
+    // Load more (only for icon mode)
     if (loadMoreBtn) {
         loadMoreBtn.onclick = () => doSearch(iconCurrentQuery, false);
     }
@@ -166,29 +132,35 @@ function switchMode(mode) {
         searchInput.value = '';
         searchInput.placeholder = mode === 'icon'
             ? (window.t ? window.t('ph_search_icon', 'Search icons (e.g. star, home)') : 'Search icons')
-            : (window.t ? window.t('ph_search_logo', 'Search logos (e.g. google, nike)') : 'Search logos');
+            : (window.t ? window.t('ph_search_logo', 'Search logos') : 'Search logos (e.g. google, nike)');
     }
 
-    // Rebuild tags
+    // Rebuild tags (only for icon mode)
     if (tagsContainer) {
         tagsContainer.innerHTML = '';
-        buildTags(tagsContainer, mode === 'icon' ? ICON_TAGS : LOGO_TAGS);
+        if (mode === 'icon') buildTags(tagsContainer, ICON_TAGS);
     }
 
-    // Clear grid
-    if (grid) grid.innerHTML = '';
+    // Clear grid and reset columns
+    if (grid) {
+        grid.innerHTML = '';
+        grid.style.gridTemplateColumns = mode === 'logo' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)';
+    }
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
 
-    // Logo mode: default to original color
-    if (mode === 'logo') {
-        logoIsOriginalColor = true;
-    } else {
-        logoIsOriginalColor = false;
-    }
+    // Hide color row in logo mode
+    if (colorRow) colorRow.style.display = mode === 'logo' ? 'none' : '';
 
     iconSearchResults = [];
     iconCurrentOffset = 0;
     iconCurrentQuery = '';
+    logoPage = 0;
+    logoKeyword = '';
+
+    // Auto-load logos from DB when switching to logo mode
+    if (mode === 'logo') {
+        loadLogos();
+    }
 }
 
 function buildTags(container, tags) {
@@ -210,7 +182,9 @@ function buildTags(container, tags) {
 
 function doSearch(query, reset) {
     if (iconCurrentMode === 'logo') {
-        doLogoSearch(query, reset);
+        logoKeyword = query;
+        logoPage = 0;
+        loadLogos();
     } else {
         doIconSearch(query, reset);
     }
@@ -248,7 +222,7 @@ async function doIconSearch(query, reset) {
         iconSearchResults = iconSearchResults.concat(icons);
         iconCurrentOffset += icons.length;
 
-        icons.forEach(iconId => renderIconCell(grid, iconId, false));
+        icons.forEach(iconId => renderIconCell(grid, iconId));
 
         if (loadMoreBtn) {
             loadMoreBtn.style.display = (icons.length >= PER_PAGE) ? 'block' : 'none';
@@ -259,66 +233,132 @@ async function doIconSearch(query, reset) {
     }
 }
 
-async function doLogoSearch(query, reset) {
-    if (!query) return;
-
+// --- Logo from Supabase library ---
+async function loadLogos() {
     const grid = document.getElementById('iconResultGrid');
     const loadMoreBtn = document.getElementById('iconLoadMore');
-    if (!grid) return;
+    if (!grid || !sb) return;
 
-    if (reset) {
-        iconCurrentOffset = 0;
-        iconSearchResults = [];
-        grid.innerHTML = loadingHtml();
-    }
-
-    iconCurrentQuery = query;
+    grid.innerHTML = loadingHtml();
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
 
     try {
-        // Search across multiple logo collections in parallel
-        const searches = LOGO_PREFIXES.map(prefix =>
-            fetch(`${ICONIFY_SEARCH}?query=${encodeURIComponent(query)}&prefix=${prefix}&limit=24&start=${iconCurrentOffset}`)
-                .then(r => r.json())
-                .catch(() => ({ icons: [] }))
-        );
+        let query = sb.from('library')
+            .select('id, thumb_url, data_url, title, category, tags')
+            .eq('status', 'approved')
+            .eq('category', 'logo')
+            .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
+            .order('created_at', { ascending: true })
+            .range(logoPage * LOGO_PER_PAGE, (logoPage + 1) * LOGO_PER_PAGE - 1);
 
-        const results = await Promise.all(searches);
-        let allIcons = [];
-        results.forEach(data => {
-            if (data.icons) allIcons = allIcons.concat(data.icons);
-        });
+        if (logoKeyword) {
+            query = query.or('title.ilike.%' + logoKeyword + '%,tags.ilike.%' + logoKeyword + '%');
+        }
 
-        // Deduplicate
-        const seen = new Set();
-        allIcons = allIcons.filter(id => {
-            if (seen.has(id)) return false;
-            seen.add(id);
-            return true;
-        });
+        const { data, error } = await query;
+        if (error) throw error;
 
-        if (reset && allIcons.length === 0) {
-            grid.innerHTML = noResultsHtml();
-            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        grid.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:11px; padding:15px;">' +
+                (logoKeyword ? (window.t ? window.t('msg_no_search_result', 'No results') : 'No results') : 'No data') + '</div>';
+            renderLogoPagination(grid, 0);
             return;
         }
 
-        if (reset) grid.innerHTML = '';
+        // Change grid to 2 columns for logos
+        grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
 
-        iconSearchResults = iconSearchResults.concat(allIcons);
-        iconCurrentOffset += 24; // For next page
+        data.forEach(item => renderLogoCell(grid, item));
 
-        allIcons.forEach(iconId => renderIconCell(grid, iconId, true));
-
-        if (loadMoreBtn) {
-            loadMoreBtn.style.display = (allIcons.length >= 6) ? 'block' : 'none';
-        }
+        // Pagination
+        renderLogoPagination(grid, data.length);
     } catch (err) {
-        console.error('[Logos] Search error:', err);
-        if (reset) grid.innerHTML = errorHtml();
+        console.error('[Logos] Load error:', err);
+        grid.innerHTML = errorHtml();
     }
 }
 
-function renderIconCell(grid, iconId, isLogo) {
+function renderLogoCell(grid, item) {
+    const div = document.createElement('div');
+    div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:1; background-image:linear-gradient(45deg,#e2e8f0 25%,transparent 25%),linear-gradient(-45deg,#e2e8f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e2e8f0 75%),linear-gradient(-45deg,transparent 75%,#e2e8f0 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; border:1px solid #e2e8f0; position:relative; transition:all 0.15s;';
+
+    // Extract PNG URL from data_url or fallback to thumb_url
+    const pngUrl = _extractLogoPng(item);
+    const imgUrl = pngUrl || (window.getTinyThumb ? window.getTinyThumb(item.thumb_url, 150) : item.thumb_url);
+
+    div.innerHTML = '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
+    if (item.title) div.title = item.title;
+
+    div.onmouseenter = () => { div.style.borderColor = '#6366f1'; div.style.boxShadow = '0 2px 8px rgba(99,102,241,0.2)'; };
+    div.onmouseleave = () => { div.style.borderColor = '#e2e8f0'; div.style.boxShadow = 'none'; };
+
+    div.onclick = () => {
+        window.selectedTpl = item;
+        if (window.processLoad) window.processLoad('add');
+    };
+
+    grid.appendChild(div);
+}
+
+function renderLogoPagination(grid, dataLen) {
+    const pgDiv = document.createElement('div');
+    pgDiv.style.cssText = 'grid-column:1/-1; display:flex; justify-content:center; gap:10px; padding:10px 0;';
+
+    const prevB = document.createElement('button');
+    prevB.style.cssText = 'width:32px; height:32px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;';
+    prevB.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    prevB.disabled = logoPage === 0;
+    if (prevB.disabled) prevB.style.opacity = '0.4';
+    prevB.onclick = () => { logoPage--; loadLogos(); };
+
+    const pageL = document.createElement('span');
+    pageL.style.cssText = 'font-weight:bold; color:#64748b; font-size:13px; line-height:32px;';
+    pageL.textContent = (logoPage + 1) + '';
+
+    const nextB = document.createElement('button');
+    nextB.style.cssText = 'width:32px; height:32px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;';
+    nextB.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+    nextB.disabled = dataLen < LOGO_PER_PAGE;
+    if (nextB.disabled) nextB.style.opacity = '0.4';
+    nextB.onclick = () => { logoPage++; loadLogos(); };
+
+    pgDiv.appendChild(prevB);
+    pgDiv.appendChild(pageL);
+    pgDiv.appendChild(nextB);
+    grid.appendChild(pgDiv);
+}
+
+// Extract PNG URL from library item data_url
+function _extractLogoPng(item) {
+    var raw = item.data_url;
+    if (!raw) return null;
+    if (typeof raw === 'string') {
+        if (raw.startsWith('http') && raw.toLowerCase().includes('.png')) return raw;
+        if (raw.startsWith('data:image/png')) return raw;
+        try {
+            var json = JSON.parse(raw);
+            if (json.objects && json.objects.length) {
+                for (var i = 0; i < json.objects.length; i++) {
+                    var src = json.objects[i].src;
+                    if (src && src.startsWith('http')) return src;
+                    if (src && src.startsWith('data:image/png')) return src;
+                }
+            }
+        } catch(e) {}
+    }
+    if (typeof raw === 'object' && raw && raw.objects) {
+        for (var i = 0; i < raw.objects.length; i++) {
+            var src = raw.objects[i].src;
+            if (src && src.startsWith('http')) return src;
+            if (src && src.startsWith('data:image/png')) return src;
+        }
+    }
+    return null;
+}
+
+function renderIconCell(grid, iconId) {
     const [prefix, name] = iconId.split(':');
     const svgUrl = `${ICONIFY_SVG}/${prefix}/${name}.svg`;
 
@@ -327,7 +367,7 @@ function renderIconCell(grid, iconId, isLogo) {
     cell.style.cssText = 'aspect-ratio:1; border:1px solid #f1f5f9; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:6px; background:#fff; transition:all 0.15s; position:relative;';
     cell.title = iconId;
     cell.dataset.svgUrl = svgUrl;
-    cell.dataset.isLogo = isLogo ? '1' : '0';
+    cell.dataset.isLogo = '0';
 
     // Placeholder img
     const img = document.createElement('img');
@@ -337,13 +377,12 @@ function renderIconCell(grid, iconId, isLogo) {
     cell.appendChild(img);
 
     // Inline SVG for color control
-    const keepOriginal = isLogo && logoIsOriginalColor;
-    fetchAndInlineSvg(svgUrl, cell, keepOriginal);
+    fetchAndInlineSvg(svgUrl, cell, false);
 
     cell.onmouseenter = () => { cell.style.borderColor = '#6366f1'; cell.style.boxShadow = '0 2px 8px rgba(99,102,241,0.2)'; };
     cell.onmouseleave = () => { cell.style.borderColor = '#f1f5f9'; cell.style.boxShadow = 'none'; };
 
-    cell.onclick = () => addIconToCanvas(iconId, isLogo && logoIsOriginalColor);
+    cell.onclick = () => addIconToCanvas(iconId);
 
     grid.appendChild(cell);
 }
@@ -394,13 +433,11 @@ function recolorGrid() {
     grid.querySelectorAll('.icon-grid-cell').forEach(cell => {
         const svgEl = cell.querySelector('svg');
         if (!svgEl) return;
-        const isLogo = cell.dataset.isLogo === '1';
-        if (isLogo && logoIsOriginalColor) return; // Don't recolor original logos
         applyColorToSvg(svgEl, iconCurrentColor);
     });
 }
 
-async function addIconToCanvas(iconId, keepOriginal) {
+async function addIconToCanvas(iconId) {
     const [prefix, name] = iconId.split(':');
     const svgUrl = `${ICONIFY_SVG}/${prefix}/${name}.svg`;
 
@@ -408,15 +445,13 @@ async function addIconToCanvas(iconId, keepOriginal) {
         const resp = await fetch(svgUrl);
         let svgText = await resp.text();
 
-        if (!keepOriginal) {
-            // Apply chosen color
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(svgText, 'image/svg+xml');
-            const svgEl = doc.querySelector('svg');
-            if (!svgEl) return;
-            applyColorToSvg(svgEl, iconCurrentColor);
-            svgText = new XMLSerializer().serializeToString(svgEl);
-        }
+        // Apply chosen color
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgEl = doc.querySelector('svg');
+        if (!svgEl) return;
+        applyColorToSvg(svgEl, iconCurrentColor);
+        svgText = new XMLSerializer().serializeToString(svgEl);
 
         fabric.loadSVGFromString(svgText, (objects, options) => {
             if (!objects || objects.length === 0) return;
@@ -437,7 +472,7 @@ async function addIconToCanvas(iconId, keepOriginal) {
                 }
             }
 
-            group.set({ iconId: iconId, iconColor: keepOriginal ? 'original' : iconCurrentColor });
+            group.set({ iconId: iconId, iconColor: iconCurrentColor });
 
             if (window.addToCenter) {
                 window.addToCenter(group);

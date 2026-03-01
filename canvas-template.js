@@ -1620,7 +1620,7 @@ window.loadSideAssets = async function(page) {
     if (!list || !sb) return;
     list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin" style="color:#6366f1;"></i></div>';
     try {
-        const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern', 'logo'];
+        const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern'];
         let query = sb.from('library')
             .select('id, thumb_url, data_url, title, category, tags')
             .eq('status', 'approved')
