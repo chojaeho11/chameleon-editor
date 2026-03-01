@@ -238,6 +238,10 @@ export function initWeddingMode() {
     window.weddingShowTemplates = showTemplateModal;
     window.weddingHideTemplates = hideTemplateModal;
     window.renderWeddingThumbs = renderSlideThumbs;
+    window.openWeddingWizard = openWeddingWizard;
+    window.handleWeddingPhotos = handleWeddingPhotos;
+    window.runWeddingGeneration = runWeddingGeneration;
+    window._wedRemovePhoto = _wedRemovePhoto;
 
     /* ─── Placeholder click-to-upload handler ─── */
     setupPlaceholderUpload();
@@ -698,4 +702,573 @@ function closeWeddingPreview() {
 
 function previewKeyHandler(e) {
     if (e.key === 'Escape') closeWeddingPreview();
+}
+
+/* ═══════════════════════════════════════════════════════
+   9. WEDDING WIZARD — AI 자동 생성 시스템
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── Style definitions ─── */
+const WED_STYLES = {
+    classic:  { bg:'#fdf2f8', text:'#5c4033', accent:'#d4a373', highlight:'#ec4899', font:'Georgia, serif' },
+    modern:   { bg:'#ffffff', text:'#1e293b', accent:'#6366f1', highlight:'#818cf8', font:'Arial, sans-serif' },
+    romantic: { bg:'#fff0f3', text:'#831843', accent:'#ec4899', highlight:'#f472b6', font:'Georgia, serif' },
+    minimal:  { bg:'#fafafa', text:'#374151', accent:'#9ca3af', highlight:'#6b7280', font:'Helvetica, Arial, sans-serif' }
+};
+
+/* ─── Photo storage ─── */
+let _wedPhotos = []; // base64 data URLs
+
+/* ─── Open wizard modal ─── */
+function openWeddingWizard() {
+    const modal = document.getElementById('weddingWizardModal');
+    if (!modal) return;
+    // reset form
+    ['wedGroomName','wedBrideName','wedGroomFather','wedGroomMother','wedBrideFather','wedBrideMother','wedVenueName','wedVenueAddr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const dateEl = document.getElementById('wedDate');
+    if (dateEl) dateEl.value = '';
+    const timeEl = document.getElementById('wedTime');
+    if (timeEl) timeEl.value = '12:00';
+    // reset style
+    document.querySelectorAll('.wed-style-btn').forEach((b, i) => {
+        b.classList.toggle('wed-style-active', i === 0);
+    });
+    // reset photos
+    _wedPhotos = [];
+    const grid = document.getElementById('wedPhotoGrid');
+    if (grid) grid.innerHTML = '';
+    const inp = document.getElementById('wedPhotoInput');
+    if (inp) inp.value = '';
+    // reset progress
+    const prog = document.getElementById('wedWizardProgress');
+    if (prog) prog.style.display = 'none';
+    const btn = document.getElementById('btnWedGenerate');
+    if (btn) btn.style.display = 'block';
+
+    modal.style.display = 'flex';
+}
+
+/* ─── Photo handling ─── */
+function handleWeddingPhotos(fileListOrFiles) {
+    const files = Array.from(fileListOrFiles);
+    const remaining = 10 - _wedPhotos.length;
+    const toAdd = files.slice(0, remaining).filter(f => f.type.startsWith('image/'));
+
+    toAdd.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            _wedPhotos.push(e.target.result);
+            renderPhotoGrid();
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderPhotoGrid() {
+    const grid = document.getElementById('wedPhotoGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    _wedPhotos.forEach((src, i) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; border:2px solid ' + (i === 0 ? '#ec4899' : '#e2e8f0') + ';';
+        div.innerHTML = `
+            <img src="${src}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            ${i === 0 ? '<div style="position:absolute; top:2px; left:2px; background:#ec4899; color:#fff; font-size:9px; padding:1px 5px; border-radius:4px; font-weight:700;">MAIN</div>' : ''}
+            <button onclick="event.stopPropagation(); window._wedRemovePhoto(${i})" style="position:absolute; top:2px; right:2px; width:18px; height:18px; border:none; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;"><i class="fa-solid fa-xmark"></i></button>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+function _wedRemovePhoto(index) {
+    _wedPhotos.splice(index, 1);
+    renderPhotoGrid();
+}
+
+/* ─── Run generation ─── */
+async function runWeddingGeneration() {
+    // collect form data
+    const groom = document.getElementById('wedGroomName')?.value.trim() || _t('wed_groom','신랑');
+    const bride = document.getElementById('wedBrideName')?.value.trim() || _t('wed_bride','신부');
+    const groomFather = document.getElementById('wedGroomFather')?.value.trim() || '○○○';
+    const groomMother = document.getElementById('wedGroomMother')?.value.trim() || '○○○';
+    const brideFather = document.getElementById('wedBrideFather')?.value.trim() || '○○○';
+    const brideMother = document.getElementById('wedBrideMother')?.value.trim() || '○○○';
+    const dateStr = document.getElementById('wedDate')?.value || '';
+    const timeStr = document.getElementById('wedTime')?.value || '12:00';
+    const venueName = document.getElementById('wedVenueName')?.value.trim() || _t('wed_venue_name','예식장소');
+    const venueAddr = document.getElementById('wedVenueAddr')?.value.trim() || '';
+    const styleBtn = document.querySelector('.wed-style-btn.wed-style-active');
+    const styleId = styleBtn ? styleBtn.dataset.style : 'classic';
+    const style = WED_STYLES[styleId] || WED_STYLES.classic;
+
+    // parse date
+    let dateDisplay = '2026. 00. 00';
+    let dayOfWeek = '';
+    let timeDisplay = _t('wed_time','오후 0시 0분');
+    if (dateStr) {
+        const d = new Date(dateStr);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        dateDisplay = `${y}. ${m}. ${dd}`;
+        const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+        dayOfWeek = days[d.getDay()];
+    }
+    if (timeStr) {
+        const [hh, mm] = timeStr.split(':').map(Number);
+        const ampm = hh < 12 ? '오전' : '오후';
+        const h12 = hh === 0 ? 12 : (hh > 12 ? hh - 12 : hh);
+        timeDisplay = `${ampm} ${h12}시 ${mm > 0 ? mm + '분' : ''}`.trim();
+    }
+
+    const formData = { groom, bride, groomFather, groomMother, brideFather, brideMother,
+                       dateStr, dateDisplay, dayOfWeek, timeDisplay, venueName, venueAddr,
+                       style, photos: _wedPhotos };
+
+    // show progress
+    const prog = document.getElementById('wedWizardProgress');
+    const stepEl = document.getElementById('wedWizardStep');
+    const genBtn = document.getElementById('btnWedGenerate');
+    if (prog) prog.style.display = 'block';
+    if (genBtn) genBtn.style.display = 'none';
+
+    function setStep(text) { if (stepEl) stepEl.textContent = text; }
+
+    // close wizard modal
+    const modal = document.getElementById('weddingWizardModal');
+    if (modal) modal.style.display = 'none';
+
+    // open editor
+    setStep(_t('wed_step_cover','표지 만드는 중...'));
+    window.dsmOpenEditor(286, 508, '청첩장');
+
+    // wait for editor + canvas ready
+    await _waitForCanvas(3000);
+
+    // generate pages
+    try {
+        await generateAllPages(formData, setStep);
+    } catch (err) {
+        console.error('Wedding generation error:', err);
+    }
+
+    // reset progress
+    if (prog) prog.style.display = 'none';
+    if (genBtn) genBtn.style.display = 'block';
+}
+
+function _waitForCanvas(timeout) {
+    return new Promise(resolve => {
+        const start = Date.now();
+        const check = setInterval(() => {
+            const c = canvas || window.canvas;
+            if (c && c.getObjects().find(o => o.isBoard)) {
+                clearInterval(check);
+                resolve();
+            } else if (Date.now() - start > timeout) {
+                clearInterval(check);
+                resolve();
+            }
+        }, 200);
+    });
+}
+
+/* ─── Generate all pages ─── */
+async function generateAllPages(fd, setStep) {
+    const c = canvas || window.canvas;
+    if (!c) return;
+
+    // Page 1: Cover
+    setStep(_t('wed_step_cover','표지 만드는 중...'));
+    await buildCoverPage(c, fd);
+    if (window.savePageState) window.savePageState();
+
+    // Page 2: Greeting
+    setStep(_t('wed_step_greeting','인사말 작성 중...'));
+    if (window.addPage) window.addPage();
+    await _sleep(400);
+    await buildGreetingPage(c, fd);
+    if (window.savePageState) window.savePageState();
+
+    // Page 3: Gallery 1 (photos 1~3)
+    const galleryPhotos = fd.photos.slice(1); // photo[0] is cover
+    if (galleryPhotos.length > 0) {
+        setStep(_t('wed_step_gallery','갤러리 배치 중...'));
+        if (window.addPage) window.addPage();
+        await _sleep(400);
+        await buildGalleryPage(c, fd, galleryPhotos.slice(0, 3));
+        if (window.savePageState) window.savePageState();
+    }
+
+    // Page 4: Calendar
+    setStep(_t('wed_step_calendar','캘린더 만드는 중...'));
+    if (window.addPage) window.addPage();
+    await _sleep(400);
+    await buildCalendarPage(c, fd);
+    if (window.savePageState) window.savePageState();
+
+    // Page 5: Venue
+    setStep(_t('wed_step_venue','오시는길 만드는 중...'));
+    if (window.addPage) window.addPage();
+    await _sleep(400);
+    await buildVenuePage(c, fd);
+    if (window.savePageState) window.savePageState();
+
+    // Extra gallery pages for remaining photos
+    const remainingPhotos = galleryPhotos.slice(3);
+    if (remainingPhotos.length > 0) {
+        setStep(_t('wed_step_gallery','갤러리 배치 중...'));
+        for (let i = 0; i < remainingPhotos.length; i += 3) {
+            const batch = remainingPhotos.slice(i, i + 3);
+            if (window.addPage) window.addPage();
+            await _sleep(400);
+            await buildGalleryPage(c, fd, batch);
+            if (window.savePageState) window.savePageState();
+        }
+    }
+
+    // go to page 1
+    goToPage(0);
+    await _sleep(300);
+    if (window.weddingActivatePanel) window.weddingActivatePanel();
+    setTimeout(() => renderSlideThumbs(), 500);
+}
+
+function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ─── Page builders ─── */
+async function buildCoverPage(c, fd) {
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const w = board.width, h = board.height, s = fd.style;
+    board.set({ fill: s.bg });
+
+    // clear non-board
+    c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
+
+    // photo background (if available)
+    if (fd.photos.length > 0) {
+        await _placePhotoOnCanvas(c, fd.photos[0], board.left, board.top + h * 0.15, w, h * 0.45, 0, 0);
+        // overlay for text readability
+        const overlay = new fabric.Rect({
+            left: board.left, top: board.top + h * 0.15, width: w, height: h * 0.45,
+            fill: 'rgba(0,0,0,0.15)', selectable: true, evented: true
+        });
+        c.add(overlay);
+    } else {
+        // placeholder rect
+        const ph = new fabric.Rect({
+            left: board.left + w * 0.1, top: board.top + h * 0.25, width: w * 0.8, height: h * 0.35,
+            fill: '#f5e6d3', rx: 16, ry: 16, stroke: s.accent, strokeWidth: 2,
+            selectable: true, evented: true, isWedPlaceholder: true, wedPlaceholderId: 'cover_main'
+        });
+        const phText = new fabric.Textbox(_t('wed_photo_here','사진을 넣어주세요'), {
+            left: board.left + w * 0.2, top: board.top + h * 0.4, width: w * 0.6,
+            fontSize: Math.round(h * 0.022), fontFamily: s.font,
+            fill: '#c4a07a', textAlign: 'center', editable: false,
+            isWedPlaceholderText: true, wedPlaceholderId: 'cover_main',
+            hoverCursor: 'pointer'
+        });
+        ph.hoverCursor = 'pointer';
+        c.add(ph); c.add(phText);
+    }
+
+    // top decoration
+    c.add(new fabric.Textbox('♥', {
+        left: board.left + w * 0.42, top: board.top + h * 0.05, width: w * 0.16,
+        fontSize: Math.round(h * 0.04), fontFamily: s.font,
+        fill: s.accent, textAlign: 'center'
+    }));
+
+    // title
+    c.add(new fabric.Textbox(_t('wed_we_marry','저희 결혼합니다'), {
+        left: board.left + w * 0.1, top: board.top + h * 0.09, width: w * 0.8,
+        fontSize: Math.round(h * 0.032), fontFamily: s.font,
+        fill: fd.photos.length > 0 ? '#ffffff' : s.text, textAlign: 'center', fontStyle: 'italic',
+        shadow: fd.photos.length > 0 ? '0 1px 4px rgba(0,0,0,0.5)' : ''
+    }));
+
+    // groom ♥ bride
+    c.add(new fabric.Textbox(fd.groom, {
+        left: board.left + w * 0.08, top: board.top + h * 0.65, width: w * 0.34,
+        fontSize: Math.round(h * 0.032), fontFamily: s.font, fontWeight: 'bold',
+        fill: s.text, textAlign: 'center'
+    }));
+    c.add(new fabric.Textbox('♥', {
+        left: board.left + w * 0.38, top: board.top + h * 0.65, width: w * 0.24,
+        fontSize: Math.round(h * 0.04), fontFamily: s.font,
+        fill: s.highlight, textAlign: 'center'
+    }));
+    c.add(new fabric.Textbox(fd.bride, {
+        left: board.left + w * 0.58, top: board.top + h * 0.65, width: w * 0.34,
+        fontSize: Math.round(h * 0.032), fontFamily: s.font, fontWeight: 'bold',
+        fill: s.text, textAlign: 'center'
+    }));
+
+    // date
+    c.add(new fabric.Textbox(fd.dateDisplay, {
+        left: board.left + w * 0.15, top: board.top + h * 0.76, width: w * 0.7,
+        fontSize: Math.round(h * 0.024), fontFamily: s.font,
+        fill: s.text, textAlign: 'center', letterSpacing: 200
+    }));
+
+    // venue
+    c.add(new fabric.Textbox(fd.venueName, {
+        left: board.left + w * 0.15, top: board.top + h * 0.83, width: w * 0.7,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font,
+        fill: s.accent, textAlign: 'center'
+    }));
+
+    // bottom decoration
+    c.add(new fabric.Textbox('~ ♥ ~', {
+        left: board.left + w * 0.35, top: board.top + h * 0.92, width: w * 0.3,
+        fontSize: Math.round(h * 0.018), fontFamily: s.font,
+        fill: s.accent, textAlign: 'center'
+    }));
+
+    c.requestRenderAll();
+}
+
+async function buildGreetingPage(c, fd) {
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const w = board.width, h = board.height, s = fd.style;
+    board.set({ fill: s.bg });
+    c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
+
+    // top line
+    c.add(new fabric.Rect({ left: board.left + w * 0.3, top: board.top + h * 0.08, width: w * 0.4, height: 2, fill: s.accent, selectable: true, evented: true }));
+
+    // title
+    c.add(new fabric.Textbox(_t('wed_invite_title','초대합니다'), {
+        left: board.left + w * 0.1, top: board.top + h * 0.12, width: w * 0.8,
+        fontSize: Math.round(h * 0.035), fontFamily: s.font, fontWeight: 'bold',
+        fill: s.text, textAlign: 'center'
+    }));
+
+    // line
+    c.add(new fabric.Rect({ left: board.left + w * 0.3, top: board.top + h * 0.2, width: w * 0.4, height: 2, fill: s.accent, selectable: true, evented: true }));
+
+    // AI greeting text
+    let greetingText = _t('wed_greeting_text','서로가 마주보며 다져온 사랑을\n이제 함께 한 곳을 바라보며\n걸어가고자 합니다.\n\n저희 두 사람이 사랑의 이름으로\n지켜나갈 수 있도록\n오셔서 축복해 주십시오.');
+
+    try {
+        if (window.sb) {
+            const prompt = `${fd.groom}과 ${fd.bride}의 결혼식 초대 인사말을 200자 이내로 작성해주세요. 감성적이고 격식있게. 줄바꿈 포함. 제목이나 이름은 넣지 마세요. 인사말 본문만 작성하세요.`;
+            const { data, error } = await window.sb.functions.invoke('generate-text', {
+                body: { prompt, max_tokens: 300 }
+            });
+            if (data && !error) {
+                const txt = typeof data === 'string' ? data : (data.text || data.result || '');
+                if (txt.length > 20) greetingText = txt.trim();
+            }
+        }
+    } catch (e) { console.warn('AI greeting fallback:', e); }
+
+    c.add(new fabric.Textbox(greetingText, {
+        left: board.left + w * 0.1, top: board.top + h * 0.28, width: w * 0.8,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font,
+        fill: s.text, textAlign: 'center', lineHeight: 1.8
+    }));
+
+    // parents
+    const parentsText = `${fd.groomFather} · ${fd.groomMother} 의 아들  ${fd.groom}\n${fd.brideFather} · ${fd.brideMother} 의 딸  ${fd.bride}`;
+    c.add(new fabric.Textbox(parentsText, {
+        left: board.left + w * 0.1, top: board.top + h * 0.7, width: w * 0.8,
+        fontSize: Math.round(h * 0.018), fontFamily: s.font,
+        fill: s.accent, textAlign: 'center', lineHeight: 1.8
+    }));
+
+    // bottom decoration
+    c.add(new fabric.Textbox('✿  ✿  ✿', {
+        left: board.left + w * 0.3, top: board.top + h * 0.88, width: w * 0.4,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font,
+        fill: s.highlight, textAlign: 'center'
+    }));
+
+    c.requestRenderAll();
+}
+
+async function buildGalleryPage(c, fd, photos) {
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const w = board.width, h = board.height, s = fd.style;
+    board.set({ fill: s.bg });
+    c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
+
+    // title
+    c.add(new fabric.Textbox('Our Moments', {
+        left: board.left + w * 0.1, top: board.top + h * 0.06, width: w * 0.8,
+        fontSize: Math.round(h * 0.03), fontFamily: s.font, fontStyle: 'italic',
+        fill: s.text, textAlign: 'center'
+    }));
+    c.add(new fabric.Rect({ left: board.left + w * 0.35, top: board.top + h * 0.13, width: w * 0.3, height: 2, fill: s.accent, selectable: true, evented: true }));
+
+    const bL = board.left, bT = board.top;
+
+    if (photos.length >= 3) {
+        // 1 main + 2 sub
+        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.4, 12, 12);
+        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.08, bT + h * 0.62, w * 0.4, h * 0.25, 10, 10);
+        await _placePhotoOnCanvas(c, photos[2], bL + w * 0.52, bT + h * 0.62, w * 0.4, h * 0.25, 10, 10);
+    } else if (photos.length === 2) {
+        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.35, 12, 12);
+        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.08, bT + h * 0.57, w * 0.84, h * 0.35, 12, 12);
+    } else if (photos.length === 1) {
+        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.7, 12, 12);
+    }
+
+    // caption
+    c.add(new fabric.Textbox(_t('wed_caption','우리의 아름다운 순간들'), {
+        left: board.left + w * 0.15, top: board.top + h * 0.92, width: w * 0.7,
+        fontSize: Math.round(h * 0.016), fontFamily: s.font, fontStyle: 'italic',
+        fill: s.accent, textAlign: 'center'
+    }));
+
+    c.requestRenderAll();
+}
+
+async function buildCalendarPage(c, fd) {
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const w = board.width, h = board.height, s = fd.style;
+    board.set({ fill: s.bg });
+    c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
+
+    c.add(new fabric.Textbox('♥', {
+        left: board.left + w * 0.44, top: board.top + h * 0.06, width: w * 0.12,
+        fontSize: Math.round(h * 0.025), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
+    }));
+    c.add(new fabric.Textbox(_t('wed_date_title','예식 일시'), {
+        left: board.left + w * 0.1, top: board.top + h * 0.12, width: w * 0.8,
+        fontSize: Math.round(h * 0.03), fontFamily: s.font, fontWeight: 'bold', fill: s.text, textAlign: 'center'
+    }));
+
+    // year
+    const year = fd.dateStr ? new Date(fd.dateStr).getFullYear().toString() : '2026';
+    c.add(new fabric.Textbox(year, {
+        left: board.left + w * 0.2, top: board.top + h * 0.22, width: w * 0.6,
+        fontSize: Math.round(h * 0.055), fontFamily: s.font, fontWeight: 'bold', fill: s.accent, textAlign: 'center'
+    }));
+
+    // month day dayOfWeek
+    const monthDay = fd.dateStr ? fd.dateDisplay.split('. ').slice(1).join('월 ') + '일' : '00월 00일';
+    c.add(new fabric.Textbox(monthDay + (fd.dayOfWeek ? ' ' + fd.dayOfWeek : ''), {
+        left: board.left + w * 0.15, top: board.top + h * 0.32, width: w * 0.7,
+        fontSize: Math.round(h * 0.028), fontFamily: s.font, fill: s.text, textAlign: 'center'
+    }));
+
+    c.add(new fabric.Textbox(fd.timeDisplay, {
+        left: board.left + w * 0.2, top: board.top + h * 0.39, width: w * 0.6,
+        fontSize: Math.round(h * 0.024), fontFamily: s.font, fill: s.accent, textAlign: 'center'
+    }));
+
+    c.add(new fabric.Rect({ left: board.left + w * 0.25, top: board.top + h * 0.47, width: w * 0.5, height: 2, fill: s.accent, selectable: true, evented: true }));
+
+    // D-day
+    let dday = 'D - DAY';
+    if (fd.dateStr) {
+        const diff = Math.ceil((new Date(fd.dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+        dday = diff > 0 ? `D - ${diff}` : (diff === 0 ? 'D - DAY' : `D + ${Math.abs(diff)}`);
+    }
+    c.add(new fabric.Textbox(dday, {
+        left: board.left + w * 0.2, top: board.top + h * 0.52, width: w * 0.6,
+        fontSize: Math.round(h * 0.04), fontFamily: s.font, fontWeight: 'bold', fill: s.highlight, textAlign: 'center'
+    }));
+
+    // calendar placeholder
+    c.add(new fabric.Rect({
+        left: board.left + w * 0.1, top: board.top + h * 0.62, width: w * 0.8, height: h * 0.28,
+        fill: s.bg === '#ffffff' ? '#f8fafc' : '#fdf2f8', rx: 12, ry: 12,
+        stroke: s.highlight, strokeWidth: 1, selectable: true, evented: true,
+        isWedPlaceholder: true, wedPlaceholderId: 'calendar_img', hoverCursor: 'pointer'
+    }));
+    c.add(new fabric.Textbox(_t('wed_calendar_note','달력을 이미지로\n추가해주세요'), {
+        left: board.left + w * 0.25, top: board.top + h * 0.73, width: w * 0.5,
+        fontSize: Math.round(h * 0.018), fontFamily: s.font,
+        fill: '#c4a07a', textAlign: 'center', editable: false,
+        isWedPlaceholderText: true, wedPlaceholderId: 'calendar_img', hoverCursor: 'pointer'
+    }));
+
+    c.requestRenderAll();
+}
+
+async function buildVenuePage(c, fd) {
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const w = board.width, h = board.height, s = fd.style;
+    board.set({ fill: s.bg });
+    c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
+
+    c.add(new fabric.Textbox(_t('wed_location_title','오시는 길'), {
+        left: board.left + w * 0.1, top: board.top + h * 0.06, width: w * 0.8,
+        fontSize: Math.round(h * 0.03), fontFamily: s.font, fontWeight: 'bold', fill: s.text, textAlign: 'center'
+    }));
+    c.add(new fabric.Rect({ left: board.left + w * 0.3, top: board.top + h * 0.13, width: w * 0.4, height: 2, fill: s.accent, selectable: true, evented: true }));
+
+    c.add(new fabric.Textbox(fd.venueName, {
+        left: board.left + w * 0.1, top: board.top + h * 0.18, width: w * 0.8,
+        fontSize: Math.round(h * 0.026), fontFamily: s.font, fontWeight: 'bold', fill: s.text, textAlign: 'center'
+    }));
+
+    if (fd.venueAddr) {
+        c.add(new fabric.Textbox(fd.venueAddr, {
+            left: board.left + w * 0.08, top: board.top + h * 0.24, width: w * 0.84,
+            fontSize: Math.round(h * 0.018), fontFamily: s.font, fill: s.accent, textAlign: 'center'
+        }));
+    }
+
+    // map placeholder
+    c.add(new fabric.Rect({
+        left: board.left + w * 0.08, top: board.top + h * 0.32, width: w * 0.84, height: h * 0.35,
+        fill: s.bg === '#ffffff' ? '#f1f5f9' : '#f0ebe3', rx: 12, ry: 12,
+        stroke: s.accent, strokeWidth: 1, selectable: true, evented: true,
+        isWedPlaceholder: true, wedPlaceholderId: 'venue_map', hoverCursor: 'pointer'
+    }));
+    c.add(new fabric.Textbox(_t('wed_map_placeholder','지도 이미지를\n넣어주세요'), {
+        left: board.left + w * 0.25, top: board.top + h * 0.46, width: w * 0.5,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font,
+        fill: '#c4a07a', textAlign: 'center', editable: false,
+        isWedPlaceholderText: true, wedPlaceholderId: 'venue_map', hoverCursor: 'pointer'
+    }));
+
+    // transport info
+    c.add(new fabric.Textbox(_t('wed_transport','교통편 정보를 입력해주세요'), {
+        left: board.left + w * 0.08, top: board.top + h * 0.72, width: w * 0.84,
+        fontSize: Math.round(h * 0.015), fontFamily: s.font,
+        fill: s.text, textAlign: 'center', lineHeight: 1.6
+    }));
+
+    c.requestRenderAll();
+}
+
+/* ─── Photo placement helper ─── */
+function _placePhotoOnCanvas(c, dataUrl, left, top, width, height, rx, ry) {
+    return new Promise(resolve => {
+        const imgObj = new Image();
+        imgObj.onload = () => {
+            const fabricImg = new fabric.Image(imgObj);
+            const scale = Math.max(width / fabricImg.width, height / fabricImg.height);
+            fabricImg.set({
+                scaleX: scale, scaleY: scale,
+                left: left + width / 2, top: top + height / 2,
+                originX: 'center', originY: 'center'
+            });
+            fabricImg.clipPath = new fabric.Rect({
+                width, height, rx: rx || 0, ry: ry || 0,
+                originX: 'center', originY: 'center',
+                absolutePositioned: false
+            });
+            c.add(fabricImg);
+            c.bringToFront(fabricImg);
+            c.requestRenderAll();
+            resolve(fabricImg);
+        };
+        imgObj.onerror = () => resolve(null);
+        imgObj.src = dataUrl;
+    });
 }

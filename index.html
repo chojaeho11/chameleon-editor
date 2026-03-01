@@ -555,7 +555,7 @@
                 <div class="dsm-name" data-i18n="dsm_gifmaker">움짤만들기</div>
                 <div class="dsm-size">GIF Animator</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenEditor(286, 508, '청첩장')" style="border:2px solid #f9a8d4;">
+            <div class="dsm-card" onclick="if(window.openWeddingWizard) window.openWeddingWizard(); else window.dsmOpenEditor(286, 508, '청첩장');" style="border:2px solid #f9a8d4;">
                 <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-heart"></i></div>
                 <div class="dsm-name" data-i18n="dsm_wedding">청첩장</div>
                 <div class="dsm-size">1080 × 1920 px</div>
@@ -9977,7 +9977,7 @@ window.filterModalItems = function(keyword) {
                         <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
                         <div class="dsm-size">891 × 1260 px</div>
                     </div>
-                    <div class="dsm-card" onclick="window.dsmOpenEditor(286, 508, '청첩장')" style="border:2px solid #f9a8d4;">
+                    <div class="dsm-card" onclick="if(window.openWeddingWizard) window.openWeddingWizard(); else window.dsmOpenEditor(286, 508, '청첩장');" style="border:2px solid #f9a8d4;">
                         <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-heart"></i></div>
                         <div class="dsm-name" data-i18n="dsm_wedding">청첩장</div>
                         <div class="dsm-size">1080 × 1920 px</div>
@@ -12092,6 +12092,88 @@ window.dsmRenderProducts = async function(keyword) {
         <button onclick="window.weddingClosePreview()" style="background:none; border:none; color:rgba(255,255,255,0.7); font-size:13px; cursor:pointer; padding:4px 8px; display:flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> ESC</button>
     </div>
 </div>
+
+<!-- ═══ 청첩장 위저드 모달 ═══ -->
+<div id="weddingWizardModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.55); align-items:center; justify-content:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) this.style.display='none'">
+    <div style="background:#fff; border-radius:24px; max-width:640px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 24px 80px rgba(0,0,0,0.35); animation:pptModalIn 0.25s ease;">
+        <div style="background:linear-gradient(135deg,#ec4899,#f9a8d4,#d4a373); padding:22px 28px; border-radius:24px 24px 0 0; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:20px; font-weight:800; color:#fff;"><i class="fa-solid fa-heart" style="margin-right:8px;"></i><span data-i18n="wed_wizard_title">청첩장 만들기</span></div>
+            <button onclick="document.getElementById('weddingWizardModal').style.display='none'" style="background:rgba(255,255,255,0.3); border:none; width:32px; height:32px; border-radius:50%; color:#fff; font-size:16px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding:24px 28px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_groom_name">신랑 이름</label>
+                    <input id="wedGroomName" type="text" placeholder="홍길동" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_bride_name">신부 이름</label>
+                    <input id="wedBrideName" type="text" placeholder="김영희" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
+                </div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;"><i class="fa-solid fa-person" style="color:#6366f1; margin-right:4px;"></i><span data-i18n="wed_groom_parents">신랑측 부모님</span></label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <input id="wedGroomFather" type="text" placeholder="아버지 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
+                    <input id="wedGroomMother" type="text" placeholder="어머니 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;"><i class="fa-solid fa-person-dress" style="color:#ec4899; margin-right:4px;"></i><span data-i18n="wed_bride_parents">신부측 부모님</span></label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <input id="wedBrideFather" type="text" placeholder="아버지 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
+                    <input id="wedBrideMother" type="text" placeholder="어머니 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_date">예식 날짜</label>
+                    <input id="wedDate" type="date" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_time_label">예식 시간</label>
+                    <input id="wedTime" type="time" value="12:00" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_venue">예식장 이름</label>
+                    <input id="wedVenueName" type="text" placeholder="○○웨딩홀" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_address">예식장 주소</label>
+                    <input id="wedVenueAddr" type="text" placeholder="서울특별시 ○○구 ○○로 000" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:8px;" data-i18n="wed_style">스타일</label>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="wed-style-btn wed-style-active" data-style="classic" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:100px; padding:10px 8px; border:2px solid #d4a373; border-radius:10px; background:#fdf2f8; cursor:pointer; font-weight:700; font-size:13px; color:#5c4033; transition:all 0.15s;" data-i18n="wed_style_classic">클래식</button>
+                    <button class="wed-style-btn" data-style="modern" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:100px; padding:10px 8px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-weight:700; font-size:13px; color:#1e293b; transition:all 0.15s;" data-i18n="wed_style_modern">모던</button>
+                    <button class="wed-style-btn" data-style="romantic" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:100px; padding:10px 8px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-weight:700; font-size:13px; color:#831843; transition:all 0.15s;" data-i18n="wed_style_romantic">로맨틱</button>
+                    <button class="wed-style-btn" data-style="minimal" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:100px; padding:10px 8px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-weight:700; font-size:13px; color:#374151; transition:all 0.15s;" data-i18n="wed_style_minimal">미니멀</button>
+                </div>
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_photos">사진 업로드 (최대 10장)</label>
+                <p style="font-size:11px; color:#94a3b8; margin:0 0 8px;" data-i18n="wed_photo_main_note">첫번째 사진이 표지에 사용됩니다</p>
+                <div id="wedPhotoDropZone" style="border:2px dashed #f9a8d4; border-radius:14px; padding:20px; text-align:center; cursor:pointer; background:#fdf2f8; transition:all 0.15s;" onclick="document.getElementById('wedPhotoInput').click()" ondragover="event.preventDefault(); this.style.borderColor='#ec4899'; this.style.background='#fce7f3';" ondragleave="this.style.borderColor='#f9a8d4'; this.style.background='#fdf2f8';" ondrop="event.preventDefault(); this.style.borderColor='#f9a8d4'; this.style.background='#fdf2f8'; if(window.handleWeddingPhotos) window.handleWeddingPhotos(event.dataTransfer.files);">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px; color:#ec4899; display:block; margin-bottom:6px;"></i>
+                    <span style="font-size:13px; color:#8b5e3c;" data-i18n="wed_photo_drop">클릭 또는 드래그해서 사진 업로드</span>
+                    <input id="wedPhotoInput" type="file" accept="image/*" multiple style="display:none;" onchange="if(window.handleWeddingPhotos) window.handleWeddingPhotos(this.files)">
+                </div>
+                <div id="wedPhotoGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-top:10px;"></div>
+            </div>
+            <div id="wedWizardProgress" style="display:none; text-align:center; padding:20px 0;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:32px; color:#ec4899;"></i>
+                <p id="wedWizardStep" style="margin:12px 0 0; font-size:14px; font-weight:600; color:#5c4033;" data-i18n="wed_generating">청첩장을 만들고 있습니다...</p>
+            </div>
+            <button id="btnWedGenerate" onclick="if(window.runWeddingGeneration) window.runWeddingGeneration()" style="width:100%; padding:14px; background:linear-gradient(135deg,#ec4899,#d4a373); color:#fff; font-size:16px; font-weight:800; border:none; border-radius:14px; cursor:pointer; transition:all 0.15s; box-shadow:0 4px 16px rgba(236,72,153,0.3);" onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(236,72,153,0.4)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 4px 16px rgba(236,72,153,0.3)';"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px;"></i><span data-i18n="wed_generate">청첩장 생성하기</span></button>
+            <button onclick="document.getElementById('weddingWizardModal').style.display='none'" style="width:100%; margin-top:8px; padding:10px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕ <span data-i18n="btn_close">닫기</span></button>
+        </div>
+    </div>
+</div>
+<style>.wed-style-active { border-color:#ec4899 !important; background:#fdf2f8 !important; box-shadow:0 0 0 3px rgba(236,72,153,0.15); }</style>
 
 <!-- ═══ 청첩장 섹션 템플릿 모달 ═══ -->
 <div id="weddingTemplateModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) window.weddingHideTemplates()">
