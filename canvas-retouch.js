@@ -129,7 +129,8 @@ const AI_OPTIONS = {
 // 상태
 let _vals = {};
 let _debounceTimer = null;
-let _originalSrcMap = new WeakMap();
+let _originalSrcMap = new WeakMap();  // 원본 보존 (슬라이더 초기화용)
+let _historyMap = new WeakMap();       // 되돌리기 히스토리 (AI 보정용)
 
 // ==========================================================
 // 초기화
@@ -178,6 +179,8 @@ export function initRetouchTools() {
     // 버튼 이벤트
     document.getElementById('btnRetouchApply')?.addEventListener('click', () => applyFiltersHighQuality());
     document.getElementById('btnRetouchReset')?.addEventListener('click', resetFilters);
+    document.getElementById('btnRetouchUndo')?.addEventListener('click', undoRetouch);
+    document.getElementById('btnRetouchOriginal')?.addEventListener('click', restoreToOriginal);
 
     // AI 보정 버튼들
     document.querySelectorAll('[data-retouch]').forEach(btn => {
@@ -202,6 +205,7 @@ function onSelectionChange() {
         if (controls) controls.style.display = 'block';
         _saveOriginal(obj);
         _resetSliderUI();
+        _updateUndoBtn();
     } else {
         if (noSel) noSel.style.display = 'block';
         if (controls) controls.style.display = 'none';
@@ -243,6 +247,70 @@ function _restoreOriginal(obj) {
         obj.applyFilters();
         canvas.requestRenderAll();
     }, { crossOrigin: 'anonymous' });
+}
+
+// ==========================================================
+// 되돌리기 히스토리
+// ==========================================================
+function _pushHistory(obj) {
+    const el = obj._originalElement || obj._element;
+    if (!el) return;
+    try {
+        const c = document.createElement('canvas');
+        c.width = el.naturalWidth || el.width;
+        c.height = el.naturalHeight || el.height;
+        c.getContext('2d').drawImage(el, 0, 0);
+        const dataUrl = c.toDataURL('image/png');
+        let stack = _historyMap.get(obj);
+        if (!stack) { stack = []; _historyMap.set(obj, stack); }
+        if (stack.length >= 20) stack.shift(); // 최대 20단계
+        stack.push({ dataUrl, width: c.width, height: c.height });
+        _updateUndoBtn();
+    } catch (e) { console.warn('History push failed:', e); }
+}
+
+function _updateUndoBtn() {
+    const btn = document.getElementById('btnRetouchUndo');
+    if (!btn) return;
+    const obj = canvas.getActiveObject();
+    const stack = obj ? _historyMap.get(obj) : null;
+    const hasHistory = stack && stack.length > 0;
+    btn.disabled = !hasHistory;
+    btn.style.opacity = hasHistory ? '1' : '0.4';
+    btn.style.pointerEvents = hasHistory ? 'auto' : 'none';
+}
+
+function undoRetouch() {
+    const obj = canvas.getActiveObject();
+    if (!obj || obj.type !== 'image') return;
+    const stack = _historyMap.get(obj);
+    if (!stack || stack.length === 0) return;
+
+    const prev = stack.pop();
+    const prevW = obj.width, prevH = obj.height, prevSX = obj.scaleX, prevSY = obj.scaleY;
+    obj.setSrc(prev.dataUrl, () => {
+        if (obj.width !== prevW || obj.height !== prevH) {
+            obj.scaleX = prevSX * (prevW / obj.width);
+            obj.scaleY = prevSY * (prevH / obj.height);
+        }
+        _originalSrcMap.set(obj, { dataUrl: prev.dataUrl, width: prev.width, height: prev.height });
+        _resetSliderUI();
+        canvas.requestRenderAll();
+        _updateUndoBtn();
+    }, { crossOrigin: 'anonymous' });
+    window.showToast?.('되돌리기 완료', 'success');
+}
+
+function restoreToOriginal() {
+    const obj = canvas.getActiveObject();
+    if (!obj || obj.type !== 'image') return;
+    // 히스토리의 맨 처음 또는 원본 맵에서 복원
+    const stack = _historyMap.get(obj);
+    if (stack) stack.length = 0; // 히스토리 비우기
+    _restoreOriginal(obj);
+    _resetSliderUI();
+    _updateUndoBtn();
+    window.showToast?.('원본으로 복원 완료', 'success');
 }
 
 function _resetSliderUI() {
@@ -485,15 +553,20 @@ async function handleAiRetouch(action) {
         // 간단 버전: 같은 이미지로 셀프 합성
     }
 
-    // 버튼 로딩 상태
+    // 버튼 로딩 상태 (카드형 버튼 지원)
     const btn = document.querySelector(`[data-retouch="${action}"]`);
     const originalHTML = btn ? btn.innerHTML : '';
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.classList.add('loading');
+        const thumb = btn.querySelector('.rt-thumb');
+        if (thumb) thumb.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:20px;"></i>';
     }
 
     try {
+        // 히스토리에 현재 상태 저장 (되돌리기용)
+        _pushHistory(obj);
+
         const base64 = await _getImageBase64(obj);
 
         const requestBody = { action, image_base64: base64 };
@@ -523,13 +596,18 @@ async function handleAiRetouch(action) {
             : data.image_url;
 
         await _replaceImage(obj, imgSrc);
+        _updateUndoBtn();
         window.showToast?.('보정 완료!', 'success');
 
     } catch (e) {
         console.error('AI Retouch error:', e);
         window.showToast?.('보정 실패: ' + e.message, 'error');
     } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = originalHTML;
+        }
     }
 }
 

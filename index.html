@@ -2392,6 +2392,17 @@ async function handleSubReturn() {
             </div>
 
             <!-- 4.5 보정 (Retouch) -->
+            <style>
+            .rt-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px 5px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;transition:all .2s;font-family:inherit}
+            .rt-card:hover{border-color:#6366f1;transform:translateY(-1px);box-shadow:0 3px 10px rgba(99,102,241,.12)}
+            .rt-card:active{transform:scale(0.97)}
+            .rt-card:disabled{opacity:.5;pointer-events:none}
+            .rt-thumb{width:100%;aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.2)}
+            .rt-card span{font-size:10px;font-weight:600;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+            .rt-card .rt-loading{display:none}
+            .rt-card.loading .rt-loading{display:block}
+            .rt-card.loading .rt-thumb i{display:none}
+            </style>
             <div id="sub-retouch" class="sub-content">
                 <div class="sub-panel-header" data-i18n="panel_retouch">AI 보정</div>
 
@@ -2400,55 +2411,79 @@ async function handleSubReturn() {
 
                 <div id="retouchControls" style="display:none;">
 
+                    <!-- ===== 되돌리기 바 ===== -->
+                    <div style="display:flex; gap:5px; margin-bottom:10px;">
+                        <button id="btnRetouchUndo" class="btn-round" style="flex:1;height:30px;font-size:11px;justify-content:center;opacity:0.4;pointer-events:none;" disabled>
+                            <i class="fa-solid fa-rotate-left"></i> <span data-i18n="retouch_undo">되돌리기</span>
+                        </button>
+                        <button id="btnRetouchOriginal" class="btn-round" style="flex:1;height:30px;font-size:11px;justify-content:center;">
+                            <i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="retouch_original">원본 복원</span>
+                        </button>
+                    </div>
+
                     <!-- ===== 1. AI 뷰티 ===== -->
-                    <div class="section-title" style="font-size:12px; margin-bottom:6px;">✨ AI 뷰티</div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:12px;">
-                        <button class="btn-round" data-retouch="smart_beauty" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> 원클릭 뷰티
+                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">✨ AI 뷰티</div>
+                    <div class="rt-card-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;">
+                        <button class="rt-card" data-retouch="smart_beauty">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#fce4ec,#f8bbd0,#f48fb1);"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                            <span>원클릭 뷰티</span>
                         </button>
-                        <button class="btn-round" data-retouch="face_beauty_pro" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-face-smile"></i> 피부 보정
+                        <button class="rt-card" data-retouch="face_beauty_pro">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2,#ffcc80);"><i class="fa-solid fa-face-smile"></i></div>
+                            <span>피부 보정</span>
                         </button>
-                        <button class="btn-round" data-retouch="smart_skin" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-eraser"></i> 잡티 제거
+                        <button class="rt-card" data-retouch="smart_skin">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9,#a5d6a7);"><i class="fa-solid fa-eraser"></i></div>
+                            <span>잡티 제거</span>
                         </button>
-                        <button class="btn-round" data-retouch="face_enhancer" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-bolt"></i> 얼굴 선명화
+                        <button class="rt-card" data-retouch="face_enhancer">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#e3f2fd,#90caf9,#42a5f5);"><i class="fa-solid fa-bolt"></i></div>
+                            <span>얼굴 선명화</span>
                         </button>
-                        <button class="btn-round" data-retouch="face_slimming" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-minimize"></i> 얼굴 슬리밍
+                        <button class="rt-card" data-retouch="face_slimming">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#f3e5f5,#ce93d8,#ab47bc);"><i class="fa-solid fa-minimize"></i></div>
+                            <span>얼굴 슬리밍</span>
                         </button>
-                        <button class="btn-round" data-retouch="skin_analysis" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-microscope"></i> 피부 분석
+                        <button class="rt-card" data-retouch="skin_analysis">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#e0f2f1,#80cbc4,#26a69a);"><i class="fa-solid fa-microscope"></i></div>
+                            <span>피부 분석</span>
                         </button>
                     </div>
 
                     <!-- ===== 2. AI 변환 ===== -->
-                    <div class="section-title" style="font-size:12px; margin-bottom:6px;">🎭 AI 변환</div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:12px;">
-                        <button class="btn-round" data-retouch="cartoon" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-palette"></i> 만화 변환
+                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">🎭 AI 변환</div>
+                    <div class="rt-card-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;">
+                        <button class="rt-card" data-retouch="cartoon">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#fff9c4,#ffee58,#fdd835);"><i class="fa-solid fa-palette"></i></div>
+                            <span>만화 변환</span>
                         </button>
-                        <button class="btn-round" data-retouch="emotion" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-masks-theater"></i> 표정 변화
+                        <button class="rt-card" data-retouch="emotion">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#fce4ec,#ef9a9a,#ef5350);"><i class="fa-solid fa-masks-theater"></i></div>
+                            <span>표정 변화</span>
                         </button>
-                        <button class="btn-round" data-retouch="age_gender" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-clock-rotate-left"></i> 나이/성별
+                        <button class="rt-card" data-retouch="age_gender">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#e8eaf6,#9fa8da,#5c6bc0);"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                            <span>나이/성별</span>
                         </button>
-                        <button class="btn-round" data-retouch="face_filter" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-sliders"></i> 얼굴 필터
+                        <button class="rt-card" data-retouch="face_filter">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#f3e5f5,#e1bee7,#ba68c8);"><i class="fa-solid fa-sliders"></i></div>
+                            <span>얼굴 필터</span>
                         </button>
-                        <button class="btn-round" data-retouch="hairstyle" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-scissors"></i> 헤어스타일
+                        <button class="rt-card" data-retouch="hairstyle">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#efebe9,#bcaaa4,#8d6e63);"><i class="fa-solid fa-scissors"></i></div>
+                            <span>헤어스타일</span>
                         </button>
-                        <button class="btn-round" data-retouch="lips_color" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-lips"></i> 립 컬러
+                        <button class="rt-card" data-retouch="lips_color">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#fce4ec,#e91e63,#c2185b);"><i class="fa-solid fa-lips"></i></div>
+                            <span>립 컬러</span>
                         </button>
-                        <button class="btn-round" data-retouch="face_blur" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-eye-slash"></i> 얼굴 블러
+                        <button class="rt-card" data-retouch="face_blur">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#eceff1,#b0bec5,#78909c);"><i class="fa-solid fa-eye-slash"></i></div>
+                            <span>얼굴 블러</span>
                         </button>
-                        <button class="btn-round" data-retouch="face_fusion" style="height:34px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-object-group"></i> 얼굴 합성
+                        <button class="rt-card" data-retouch="face_fusion">
+                            <div class="rt-thumb" style="background:linear-gradient(135deg,#e0f7fa,#4dd0e1,#0097a7);"><i class="fa-solid fa-object-group"></i></div>
+                            <span>얼굴 합성</span>
                         </button>
                     </div>
 
