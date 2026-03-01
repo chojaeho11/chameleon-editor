@@ -95,18 +95,36 @@ const AI_OPTIONS = {
     hairstyle: {
         title: '헤어스타일 선택',
         options: [
-            { value: 'FemaleShortCurlyBob', label: '여성 숏컬 밥' },
-            { value: 'FemaleLongStraight', label: '여성 롱 스트레이트' },
-            { value: 'FemaleMediumWavy', label: '여성 미디엄 웨이브' },
-            { value: 'FemalePixieCut', label: '여성 픽시컷' },
-            { value: 'FemaleBraids', label: '여성 브레이드' },
-            { value: 'FemalePonytail', label: '여성 포니테일' },
-            { value: 'FemaleBun', label: '여성 번' },
-            { value: 'MaleShortCrew', label: '남성 크루컷' },
-            { value: 'MaleSlickBack', label: '남성 슬릭백' },
-            { value: 'MaleCurly', label: '남성 컬리' },
-            { value: 'MalePompadour', label: '남성 퐁파두르' },
-            { value: 'MaleBuzzCut', label: '남성 버즈컷' },
+            // 여성
+            { value: 'BobCut', label: '밥컷' },
+            { value: 'LongStraight', label: '롱 스트레이트' },
+            { value: 'LongWavy', label: '롱 웨이브' },
+            { value: 'LongCurly', label: '롱 컬리' },
+            { value: 'PixieCut', label: '픽시컷' },
+            { value: 'CurlyBob', label: '컬리 밥' },
+            { value: 'Ponytail', label: '포니테일' },
+            { value: 'Updo', label: '업도' },
+            { value: 'Chignon', label: '시뇽' },
+            { value: 'FishtailBraid', label: '피쉬테일' },
+            { value: 'TwinBraids', label: '트윈 브레이드' },
+            { value: 'ShortPixieWithShavedSides', label: '사이드 쉐이브' },
+            { value: 'DoubleBun', label: '더블 번' },
+            { value: 'Dreadlocks', label: '드레드락' },
+            { value: 'ShoulderLengthHair', label: '어깨 길이' },
+            { value: 'BoxBraids', label: '박스 브레이드' },
+            // 남성
+            { value: 'BuzzCut', label: '버즈컷' },
+            { value: 'UnderCut', label: '언더컷' },
+            { value: 'Pompadour', label: '퐁파두르' },
+            { value: 'SlickBack', label: '슬릭백' },
+            { value: 'CurlyShag', label: '컬리 쉐그' },
+            { value: 'WavyShag', label: '웨이비 쉐그' },
+            { value: 'FauxHawk', label: '포호크' },
+            { value: 'TwoBlockHaircut', label: '투블럭' },
+            { value: 'ManBun', label: '맨번' },
+            { value: 'CombOver', label: '콤오버' },
+            { value: 'Afro', label: '아프로' },
+            { value: 'CornrowBraids', label: '콘로우' },
         ],
         paramKey: 'hair_style',
     },
@@ -477,6 +495,40 @@ function _showOptionModal(config) {
     });
 }
 
+// 두 번째 이미지 선택 모달 (얼굴 합성용)
+function _pickSecondImage(imageList) {
+    return new Promise((resolve) => {
+        document.getElementById('retouchOptionModal')?.remove();
+        const modal = document.createElement('div');
+        modal.id = 'retouchOptionModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:24px;max-width:400px;width:90%;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#1e293b;">합성할 얼굴 이미지 선택</div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="retouchImgPick"></div>
+                <button id="retouchOptionClose" style="margin-top:16px;width:100%;height:38px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#64748b;font-size:13px;cursor:pointer;font-weight:600;">취소</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        const container = modal.querySelector('#retouchImgPick');
+        for (const imgObj of imageList) {
+            const el = imgObj._originalElement || imgObj._element;
+            if (!el) continue;
+            const thumb = document.createElement('div');
+            thumb.style.cssText = 'cursor:pointer;border:2px solid #e2e8f0;border-radius:10px;overflow:hidden;aspect-ratio:1;transition:all .2s;';
+            thumb.innerHTML = `<img src="${el.src}" style="width:100%;height:100%;object-fit:cover;">`;
+            thumb.onmouseover = () => { thumb.style.borderColor = '#6366f1'; };
+            thumb.onmouseout = () => { thumb.style.borderColor = '#e2e8f0'; };
+            thumb.onclick = () => { modal.remove(); resolve(imgObj); };
+            container.appendChild(thumb);
+        }
+
+        modal.querySelector('#retouchOptionClose').onclick = () => { modal.remove(); resolve(null); };
+        modal.onclick = (e) => { if (e.target === modal) { modal.remove(); resolve(null); } };
+    });
+}
+
 // ==========================================================
 // 이미지 → base64 추출 유틸 (리사이즈 + JPEG 압축)
 // AILab API 제한: 대부분 2048px 이하, 파일 2MB 이하 권장
@@ -582,10 +634,18 @@ async function handleAiRetouch(action) {
         }
     }
 
-    // 얼굴 합성은 두 번째 이미지 필요
+    // 얼굴 합성은 두 번째 이미지 필요 — 캔버스에서 다른 이미지 자동 검색
+    let secondImageBase64 = null;
     if (action === 'face_fusion') {
-        window.showToast?.('얼굴 합성: 캔버스에서 두 번째 이미지를 선택하세요 (현재 버전에서는 첫 번째 이미지에 적용됩니다)', 'info');
-        // 간단 버전: 같은 이미지로 셀프 합성
+        const allImages = canvas.getObjects().filter(o => o.type === 'image' && o !== obj);
+        if (allImages.length === 0) {
+            window.showToast?.('얼굴 합성은 캔버스에 2개 이상의 이미지가 필요합니다', 'warning');
+            return;
+        }
+        // 두 번째 이미지 선택 모달
+        const secondImg = await _pickSecondImage(allImages);
+        if (!secondImg) return; // 취소
+        secondImageBase64 = await _getImageBase64(secondImg);
     }
 
     // 버튼 로딩 상태 (카드형 버튼 지원)
@@ -605,6 +665,7 @@ async function handleAiRetouch(action) {
         const base64 = await _getImageBase64(obj);
 
         const requestBody = { action, image_base64: base64 };
+        if (secondImageBase64) requestBody.image_base64_2 = secondImageBase64;
         if (Object.keys(params).length > 0) requestBody.params = params;
 
         const { data, error } = await sb.functions.invoke('portrait-retouch', {

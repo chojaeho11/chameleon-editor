@@ -139,7 +139,7 @@ serve(async (req) => {
             case "hairstyle":
                 formData.append("task_type", "async");
                 formData.append("auto", "1");
-                formData.append("hair_style", String(p.hair_style || "FemaleShortCurlyBob"));
+                formData.append("hair_style", String(p.hair_style || "BobCut"));
                 if (p.color) formData.append("color", p.color);
                 break;
 
