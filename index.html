@@ -568,42 +568,42 @@
         </div>
         </div><!-- /dsm-section-box 온라인디지털 -->
 
-        <!-- 인쇄물 카드 -->
+        <!-- 디자인 사이즈 카드 -->
         <div class="dsm-section-box">
-        <h4 class="dsm-section-title" style="color:#fbbf24;"><i class="fa-solid fa-print"></i> <span data-i18n="dsm_print">인쇄물</span></h4>
+        <h4 class="dsm-section-title" style="color:#fbbf24;"><i class="fa-solid fa-ruler-combined"></i> <span data-i18n="dsm_design_size">디자인 사이즈</span></h4>
         <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px;">
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(210, 297, 'A4')">
+            <div class="dsm-card" onclick="window.dsmOpenEditor(210, 297, 'A4세로형')">
                 <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A4</div>
+                <div class="dsm-name" data-i18n="dsm_a4_portrait">A4 세로형</div>
                 <div class="dsm-size">210 × 297 mm</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(297, 420, 'A3')">
-                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A3</div>
-                <div class="dsm-size">297 × 420 mm</div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(297, 210, '가로형')">
+                <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-image"></i></div>
+                <div class="dsm-name" data-i18n="dsm_landscape">가로형</div>
+                <div class="dsm-size">297 × 210 mm</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(420, 594, 'A2')">
-                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A2</div>
-                <div class="dsm-size">420 × 594 mm</div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '정사각')">
+                <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-regular fa-square"></i></div>
+                <div class="dsm-name" data-i18n="dsm_square">정사각</div>
+                <div class="dsm-size">1080 × 1080 px</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(594, 841, 'A1')">
-                <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                <div class="dsm-name">A1</div>
-                <div class="dsm-size">594 × 841 mm</div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 159, '배너형')">
+                <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-window-maximize"></i></div>
+                <div class="dsm-name" data-i18n="dsm_banner_type">배너형</div>
+                <div class="dsm-size">1920 × 600 px</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(5000, 900, '가로현수막')">
-                <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-scroll"></i></div>
-                <div class="dsm-name" data-i18n="dsm_h_banner">가로현수막</div>
-                <div class="dsm-size">5000 × 900 mm</div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
+                <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-image"></i></div>
+                <div class="dsm-name" data-i18n="dsm_thumbnail">썸네일</div>
+                <div class="dsm-size">1280 × 720 px</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenPrintInline(600, 1800, '세로배너')">
-                <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-flag"></i></div>
-                <div class="dsm-name" data-i18n="dsm_v_banner">세로배너</div>
-                <div class="dsm-size">600 × 1800 mm</div>
+            <div class="dsm-card" onclick="window.dsmOpenEditor(236, 333, '웹포스터')">
+                <div class="dsm-icon" style="color:#10b981;"><i class="fa-solid fa-file-image"></i></div>
+                <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
+                <div class="dsm-size">891 × 1260 px</div>
             </div>
         </div>
-        </div><!-- /dsm-section-box 인쇄물 -->
+        </div><!-- /dsm-section-box 디자인사이즈 -->
 
     </div>
     <script>
@@ -10130,41 +10130,41 @@ window.filterModalItems = function(keyword) {
                 </div>
             </div>
 
-            <!-- 인쇄물 섹션 -->
+            <!-- 디자인 사이즈 섹션 -->
             <div>
                 <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#f59e0b; display:flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-print"></i> <span data-i18n="dsm_print">인쇄물</span>
+                    <i class="fa-solid fa-ruler-combined"></i> <span data-i18n="dsm_design_size">디자인 사이즈</span>
                 </h4>
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px;">
-                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(210, 297, 'A4')">
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(210, 297, 'A4세로형')">
                         <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                        <div class="dsm-name">A4</div>
+                        <div class="dsm-name" data-i18n="dsm_a4_portrait">A4 세로형</div>
                         <div class="dsm-size">210 × 297 mm</div>
                     </div>
-                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(297, 420, 'A3')">
-                        <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                        <div class="dsm-name">A3</div>
-                        <div class="dsm-size">297 × 420 mm</div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(297, 210, '가로형')">
+                        <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-image"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_landscape">가로형</div>
+                        <div class="dsm-size">297 × 210 mm</div>
                     </div>
-                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(420, 594, 'A2')">
-                        <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                        <div class="dsm-name">A2</div>
-                        <div class="dsm-size">420 × 594 mm</div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '정사각')">
+                        <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-regular fa-square"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_square">정사각</div>
+                        <div class="dsm-size">1080 × 1080 px</div>
                     </div>
-                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(594, 841, 'A1')">
-                        <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
-                        <div class="dsm-name">A1</div>
-                        <div class="dsm-size">594 × 841 mm</div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(508, 159, '배너형')">
+                        <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-window-maximize"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_banner_type">배너형</div>
+                        <div class="dsm-size">1920 × 600 px</div>
                     </div>
-                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(5000, 900, '가로현수막')">
-                        <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-scroll"></i></div>
-                        <div class="dsm-name" data-i18n="dsm_h_banner">가로현수막</div>
-                        <div class="dsm-size">5000 × 900 mm</div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(338, 190, '썸네일')">
+                        <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-image"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_thumbnail">썸네일</div>
+                        <div class="dsm-size">1280 × 720 px</div>
                     </div>
-                    <div class="dsm-card" onclick="window.dsmShowPrintCategory(600, 1800, '세로배너')">
-                        <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-flag"></i></div>
-                        <div class="dsm-name" data-i18n="dsm_v_banner">세로배너</div>
-                        <div class="dsm-size">600 × 1800 mm</div>
+                    <div class="dsm-card" onclick="window.dsmOpenEditor(236, 333, '웹포스터')">
+                        <div class="dsm-icon" style="color:#10b981;"><i class="fa-solid fa-file-image"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
+                        <div class="dsm-size">891 × 1260 px</div>
                     </div>
                 </div>
             </div>

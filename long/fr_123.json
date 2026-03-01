@@ -1711,5 +1711,10 @@
   "opt_wine": "Wine",
   "opt_nude_pink": "Nude Pink",
   "opt_deep_red": "Deep Red",
-  "opt_hot_pink": "Hot Pink"
+  "opt_hot_pink": "Hot Pink",
+  "dsm_design_size": "Tailles de design",
+  "dsm_a4_portrait": "A4 Portrait",
+  "dsm_landscape": "Paysage",
+  "dsm_square": "Carré",
+  "dsm_banner_type": "Bannière"
 }

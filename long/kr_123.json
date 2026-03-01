@@ -1321,5 +1321,10 @@
   "opt_wine": "와인",
   "opt_nude_pink": "누드 핑크",
   "opt_deep_red": "딥 레드",
-  "opt_hot_pink": "핫 핑크"
+  "opt_hot_pink": "핫 핑크",
+  "dsm_design_size": "디자인 사이즈",
+  "dsm_a4_portrait": "A4 세로형",
+  "dsm_landscape": "가로형",
+  "dsm_square": "정사각",
+  "dsm_banner_type": "배너형"
 }

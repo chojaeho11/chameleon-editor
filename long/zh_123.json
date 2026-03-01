@@ -1711,5 +1711,10 @@
   "opt_wine": "酒红",
   "opt_nude_pink": "裸粉",
   "opt_deep_red": "深红",
-  "opt_hot_pink": "亮粉"
+  "opt_hot_pink": "亮粉",
+  "dsm_design_size": "设计尺寸",
+  "dsm_a4_portrait": "A4 竖版",
+  "dsm_landscape": "横版",
+  "dsm_square": "正方形",
+  "dsm_banner_type": "横幅广告"
 }
