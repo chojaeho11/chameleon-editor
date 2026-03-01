@@ -7684,8 +7684,17 @@ if (w >= 20 && h >= 20) {
 
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
         const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');
-        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && window.openDesignWizard) {
-            setTimeout(() => window.openDesignWizard(), 800);
+        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay) {
+            if (window.pendingTemplate && window.pendingTemplateKeyword) {
+                // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
+                const _kw = window.pendingTemplateKeyword;
+                setTimeout(() => {
+                    if (window.runImageTemplateDesign) window.runImageTemplateDesign(_kw);
+                    window.pendingTemplateKeyword = null;
+                }, 1200);
+            } else if (window.openDesignWizard) {
+                setTimeout(() => window.openDesignWizard(), 800);
+            }
         }
         // ★ 종이매대: initPaperDisplayPages 완료 후 마법사 오픈
         if (isPaperDisplay && window.openDesignWizard) {
@@ -7862,6 +7871,7 @@ if (w >= 20 && h >= 20) {
             await applyTemplateDirectly(tpl);
         } else {
             window.pendingTemplate = tpl;
+            window.pendingTemplateKeyword = lastSearchKeyword || '';
             showCategorySelectionModal();
         }
     };

@@ -752,6 +752,95 @@ async function runDesignWizard(title, style) {
 }
 
 // ============================================================
+// ★ 이미지 템플릿 자동 디자인 (시작화면에서 이미지 선택 시)
+// 배경은 이미 적용됨 → 검색어를 타이틀로 + AI 설명 하단 배치
+// ============================================================
+window.runImageTemplateDesign = async function(keyword) {
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);
+    const bL = board.left, bT = board.top;
+
+    // 폰트 준비 (runDesignWizard와 동일)
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+    const titleFontMap = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
+    let titleFont = titleFontMap[country] || 'Impact, Arial Black, sans-serif';
+    if (country === 'JP' && window.DYNAMIC_FONTS) {
+        const popFont = window.DYNAMIC_FONTS.find(f => f.font_name?.includes('ポプ'));
+        if (popFont) titleFont = popFont.font_family;
+    }
+    const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
+
+    // 잘난고딕 로드
+    if (titleFont === 'JalnanGothic' && !document.querySelector('style[data-jalnan]')) {
+        const st = document.createElement('style');
+        st.dataset.jalnan = '1';
+        st.textContent = "@font-face { font-family:'JalnanGothic'; src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_231029@1.1/JalnanGothic.woff') format('woff'); font-weight:normal; font-display:swap; }";
+        document.head.appendChild(st);
+    }
+    // Google Fonts 로드
+    [descFont, titleFont].forEach(f => {
+        if (f.includes(',') || f === 'JalnanGothic') return;
+        const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f) + ':wght@400;700;900&display=swap';
+        if (!document.querySelector('link[href="' + fUrl + '"]')) {
+            const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
+        }
+    });
+    await new Promise(r => setTimeout(r, 600));
+
+    // 배경 이미지는 이미 적용됨 → 글자색은 흰색(사진 위)
+    window._wzBgColors = ['#222222', '#111111'];
+
+    // ── 1. 하단 반투명 그라데이션 오버레이 (가독성) ──
+    const bottomOverlay = new fabric.Rect({
+        width: bW, height: bH * 0.45,
+        left: bL, top: bT + bH * 0.55,
+        originX:'left', originY:'top',
+        fill: new fabric.Gradient({
+            type: 'linear',
+            coords: { x1: 0, y1: 0, x2: 0, y2: bH * 0.45 },
+            colorStops: [
+                { offset: 0, color: 'rgba(0,0,0,0)' },
+                { offset: 0.5, color: 'rgba(0,0,0,0.4)' },
+                { offset: 1, color: 'rgba(0,0,0,0.75)' }
+            ]
+        }),
+        selectable: false, evented: false,
+        lockMovementX: true, lockMovementY: true,
+        hasControls: false, hasBorders: false
+    });
+    canvas.add(bottomOverlay);
+    // 배경 바로 위로
+    const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
+    if (bgObj) {
+        const bgIdx = canvas.getObjects().indexOf(bgObj);
+        canvas.moveTo(bottomOverlay, bgIdx + 1);
+    }
+
+    // ── 2. 타이틀 (검색어) ──
+    await _wzTitle(keyword, titleFont, null, bW, bH, bL, bT);
+
+    // ── 3. AI 설명 텍스트 생성 + 하단 배치 ──
+    const descText = await _wzGetDescText(keyword);
+    _wzBottomBox(descText, null, descFont, bW, bH, bL, bT);
+
+    // ── 4. 완성 ──
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
+
+    // 서체 리렌더 (폰트 로드 완료 후)
+    setTimeout(() => {
+        canvas.getObjects().forEach(o => {
+            if (o.type === 'textbox' || o.type === 'i-text' || o.type === 'text') {
+                o.set('dirty', true);
+                if (o.initDimensions) o.initDimensions();
+            }
+        });
+        canvas.requestRenderAll();
+    }, 500);
+};
+
+// ============================================================
 // ★ 종이매대(PD) 전용 멀티페이스 마법사
 // Face 0: 간판 (풀 디자인) / Face 1: 옆면 (배경+요소) / Face 2: 선반 (배경+타이틀)
 // ============================================================
