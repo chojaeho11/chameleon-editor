@@ -448,8 +448,11 @@ function replacePlaceholderWithImage(file, placeholderRect) {
 /* ═══════════════════════════════════════════
    2. DEFAULT PAGES (첫 진입 시 3페이지)
    ═══════════════════════════════════════════ */
+let _wedInitCancelled = false;
+
 function initDefaultPages() {
     if (!window.__WEDDING_MODE || !canvas) return;
+    if (_wedInitCancelled) return;
     // 이미 페이지가 1개 이상 있고, 첫 진입 여부 확인
     if (pageDataList.length > 1) return;
 
@@ -466,6 +469,7 @@ function initDefaultPages() {
     // 2페이지: greeting
     if (window.addPage) window.addPage();
     setTimeout(() => {
+        if (_wedInitCancelled) return;
         const b2 = canvas.getObjects().find(o => o.isBoard);
         if (b2) b2.set({ fill: '#fdf2f8' });
         applyTemplateToCanvas('greeting');
@@ -473,12 +477,14 @@ function initDefaultPages() {
         // 3페이지: gallery
         if (window.addPage) window.addPage();
         setTimeout(() => {
+            if (_wedInitCancelled) return;
             const b3 = canvas.getObjects().find(o => o.isBoard);
             if (b3) b3.set({ fill: '#fdf2f8' });
             applyTemplateToCanvas('gallery');
 
             // 1페이지로 돌아가기
             setTimeout(() => {
+                if (_wedInitCancelled) return;
                 goToPage(0);
                 setTimeout(() => renderSlideThumbs(), 400);
             }, 200);
@@ -1142,30 +1148,41 @@ async function generateAllPages(fd, setStep) {
     const c = canvas || window.canvas;
     if (!c) return;
 
+    // === Cancel any pending initDefaultPages setTimeout callbacks ===
+    _wedInitCancelled = true;
+    await _sleep(1000); // wait for all initDefaultPages timeouts to fire and be cancelled
+
+    // === Navigate to page 0 first (before removing extra pages) ===
+    if (currentPageIndex !== 0 && pageDataList.length > 0) {
+        goToPage(0);
+        await _sleep(300);
+    }
+
     // === Clean up: remove ALL old pages, keep only the first ===
     while (pageDataList.length > 1) pageDataList.pop();
 
-    // === Photo distribution plan ===
-    // photos[0] → cover (page 1)
-    // photos[last] → closing page (last page) — only if 2+ photos
-    // photos[1..last-1] → gallery pages (middle photos)
+    // === Smart photo distribution ===
+    // 1장: 표지(사진1) + 인사말 + 캘린더 = 3p
+    // 2장: 표지(사진1) + 인사말 + 캘린더 + 마무리(사진2) = 4p
+    // 3장: 표지(사진1) + 인사말 + 캘린더 + 갤러리(사진2) + 마무리(사진3) = 5p
+    // 4+장: 표지(사진1) + 인사말 + 캘린더 + 갤러리들(사진2~N-1) + 마무리(사진N)
     const allPhotos = fd.photos || [];
-    const coverPhoto = allPhotos[0] || null;
-    const closingPhoto = allPhotos.length >= 2 ? allPhotos[allPhotos.length - 1] : null;
-    // Middle = everything except first and last (no duplicates)
-    const middlePhotos = allPhotos.length >= 3 ? allPhotos.slice(1, allPhotos.length - 1) : [];
+    const n = allPhotos.length;
 
-    // Calculate gallery page distribution: fit middle photos into pages of 1~3
+    // Split photos
+    const coverPhoto = n >= 1 ? allPhotos[0] : null;
+    const closingPhoto = n >= 2 ? allPhotos[n - 1] : null;
+    const middlePhotos = n >= 3 ? allPhotos.slice(1, n - 1) : [];
     const galleryPages = _distributePhotos(middlePhotos);
 
-    console.log(`[Wedding] ${allPhotos.length} photos → cover(1) + gallery(${middlePhotos.length}) on ${galleryPages.length} pages + closing(${closingPhoto ? 1 : 0})`);
+    console.log(`[Wedding] ${n} photos → cover:${coverPhoto?1:0} gallery:${middlePhotos.length}(${galleryPages.length}pg) closing:${closingPhoto?1:0}`);
 
-    // Page 1: Cover (first photo + names + date + venue)
+    // Page 1: Cover
     setStep(_t('wed_step_cover','표지 만드는 중...'));
     await buildCoverPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 2: Greeting (인사말)
+    // Page 2: Greeting
     setStep(_t('wed_step_greeting','인사말 작성 중...'));
     await _addPageAndWait(c);
     await buildGreetingPage(c, fd);
@@ -1177,13 +1194,7 @@ async function generateAllPages(fd, setStep) {
     await buildCalendarPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 4: Venue
-    setStep(_t('wed_step_venue','오시는길 만드는 중...'));
-    await _addPageAndWait(c);
-    await buildVenuePage(c, fd);
-    if (window.savePageState) window.savePageState();
-
-    // Page 5+: Photo gallery pages (middle photos)
+    // Gallery pages (middle photos, 1~3 per page)
     for (let i = 0; i < galleryPages.length; i++) {
         setStep(_t('wed_step_gallery','갤러리 배치 중...') + ` (${i + 1}/${galleryPages.length})`);
         await _addPageAndWait(c);
@@ -1191,7 +1202,7 @@ async function generateAllPages(fd, setStep) {
         if (window.savePageState) window.savePageState();
     }
 
-    // Last page: Closing (last photo + farewell message)
+    // Last page: Closing (last photo + farewell)
     if (closingPhoto) {
         setStep('마무리 페이지 만드는 중...');
         await _addPageAndWait(c);
@@ -1199,10 +1210,12 @@ async function generateAllPages(fd, setStep) {
         if (window.savePageState) window.savePageState();
     }
 
-    // Navigate to page 1 after generation
+    // Navigate to page 1 + fit canvas
     await _sleep(300);
     goToPage(0);
-    await _sleep(500);
+    await _sleep(300);
+    if (window.resizeCanvasToFit) window.resizeCanvasToFit();
+    await _sleep(300);
     if (window.weddingActivatePanel) window.weddingActivatePanel();
     setTimeout(() => renderSlideThumbs(), 500);
 }
@@ -1211,22 +1224,19 @@ async function generateAllPages(fd, setStep) {
 function _distributePhotos(photos) {
     const n = photos.length;
     if (n === 0) return [];
-    if (n <= 3) return [photos];
-    if (n === 4) return [photos.slice(0, 2), photos.slice(2, 4)]; // 2+2
-    if (n === 5) return [photos.slice(0, 3), photos.slice(3, 5)]; // 3+2
+    if (n <= 3) return [photos.slice()];
+    if (n === 4) return [photos.slice(0, 2), photos.slice(2, 4)];
+    if (n === 5) return [photos.slice(0, 3), photos.slice(3, 5)];
 
-    // For 6+: fill pages of 3, handle remainder
     const pages = [];
     let i = 0;
     const remainder = n % 3;
     while (i < n) {
-        // If remainder is 1, make one page of 2+2 instead of 3+1
         if (remainder === 1 && n - i === 4) {
             pages.push(photos.slice(i, i + 2));
             pages.push(photos.slice(i + 2, i + 4));
             break;
         }
-        // If remainder is 2, last page gets 2
         const take = (n - i >= 3) ? 3 : (n - i);
         pages.push(photos.slice(i, i + take));
         i += take;
