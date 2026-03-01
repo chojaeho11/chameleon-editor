@@ -1533,7 +1533,7 @@
             <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin: 15px 0; padding:10px; background:#f8fafc; border-radius:8px;">
                 <button class="btn btn-outline btn-sm" onclick="goTplPage('first')" title="맨앞">◀◀</button>
                 <button class="btn btn-outline btn-sm" onclick="changeTplPage(-1)">◀ 이전</button>
-                <span id="tplPageLabel" style="font-weight:bold; font-size:14px; color:#334155;">Page 1</span>
+                <span style="font-weight:bold; font-size:14px; color:#334155; display:inline-flex; align-items:center; gap:4px;">Page <input type="number" id="tplPageInput" value="1" min="1" style="width:50px; text-align:center; border:1px solid #cbd5e1; border-radius:6px; padding:2px 4px; font-size:14px; font-weight:bold; color:#6366f1;" onkeyup="if(event.key==='Enter') goTplPageDirect()"> / <span id="tplTotalPages">1</span></span>
                 <button class="btn btn-outline btn-sm" onclick="changeTplPage(1)">다음 ▶</button>
                 <button class="btn btn-outline btn-sm" onclick="goTplPage('last')" title="맨뒤">▶▶</button>
             </div>

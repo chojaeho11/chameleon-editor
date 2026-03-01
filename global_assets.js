@@ -55,8 +55,10 @@ window.loadTemplates = async (isNewSearch = false) => {
 
     // 2. 페이지 UI 업데이트
     totalTplPages = Math.ceil((count || 0) / tplItemsPerPage) || 1;
-    const pageLabel = document.getElementById('tplPageLabel');
-    if(pageLabel) pageLabel.innerText = `Page ${currentTplPage} / ${totalTplPages}`;
+    const pageInput = document.getElementById('tplPageInput');
+    const totalLabel = document.getElementById('tplTotalPages');
+    if(pageInput) { pageInput.value = currentTplPage; pageInput.max = totalTplPages; }
+    if(totalLabel) totalLabel.innerText = totalTplPages;
 
     // 3. 그리드 렌더링
     grid.innerHTML = '';
@@ -274,6 +276,16 @@ window.changeTplPage = (step) => {
     if (next < 1) { showToast("첫 페이지입니다.", "info"); return; }
     if (next > totalTplPages) { showToast("마지막 페이지입니다.", "info"); return; }
     currentTplPage = next;
+    loadTemplates(false);
+};
+
+window.goTplPageDirect = () => {
+    const input = document.getElementById('tplPageInput');
+    if (!input) return;
+    let page = parseInt(input.value);
+    if (isNaN(page) || page < 1) page = 1;
+    if (page > totalTplPages) page = totalTplPages;
+    currentTplPage = page;
     loadTemplates(false);
 };
 
