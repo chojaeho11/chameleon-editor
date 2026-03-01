@@ -1911,6 +1911,8 @@ async function handleSubReturn() {
     <button id="imgToolBgRemove" class="img-float-btn"><i class="fa-solid fa-scissors"></i><span data-i18n="img_tool_bg_remove">배경 제거</span></button>
     <div style="width:1px;height:24px;background:#e2e8f0;"></div>
     <button id="imgToolEraser" class="img-float-btn"><i class="fa-solid fa-eraser"></i><span data-i18n="img_tool_eraser">지우개</span></button>
+    <div style="width:1px;height:24px;background:#e2e8f0;"></div>
+    <button id="imgToolReplace" class="img-float-btn" onclick="window.replaceSelectedImage && window.replaceSelectedImage()"><i class="fa-solid fa-arrow-right-arrow-left"></i><span data-i18n="img_tool_replace">교체</span></button>
 </div>
 <style>
 .img-float-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#334155;transition:all .15s;white-space:nowrap}

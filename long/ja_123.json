@@ -1562,5 +1562,6 @@
   "wed_share_copy": "コピー",
   "wed_share_copied": "コピーしました！",
   "wed_share_saving": "保存中...",
-  "wed_share_login": "共有するにはログインが必要です"
+  "wed_share_login": "共有するにはログインが必要です",
+  "img_tool_replace": "差し替え"
 }

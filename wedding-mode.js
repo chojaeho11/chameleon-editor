@@ -209,18 +209,20 @@ const WEDDING_TEMPLATES = {
 
 /* ─── State ─── */
 let thumbCache = {};
+let _wedThumbCache = []; // cached thumbnail data URLs
 let previewState = { pages:[], scrollContainer:null };
 
 /* ═══════════════════════════════════════════
    1. INITIALIZATION
    ═══════════════════════════════════════════ */
 export function initWeddingMode() {
+    // Watch page counter changes to re-render slide panel from cache (lightweight)
     const pc = document.getElementById('pageCounter');
     if (pc) {
         const obs = new MutationObserver(() => {
             if (window.__WEDDING_MODE) {
                 clearTimeout(window.__wedThumbTimer);
-                window.__wedThumbTimer = setTimeout(() => renderSlideThumbs(), 400);
+                window.__wedThumbTimer = setTimeout(() => _renderThumbsFromCache(), 200);
             }
         });
         obs.observe(pc, { childList:true, characterData:true, subtree:true });
@@ -489,15 +491,22 @@ async function renderSlideThumbs() {
     if (!window.__WEDDING_MODE) return;
     if (window.savePageState) window.savePageState();
 
+    // Full capture of all pages (called after generation, page add/delete)
+    const thumbs = await _captureAllPages(0.2);
+    _wedThumbCache = thumbs;
+    _renderThumbsFromCache();
+}
+
+/* Lightweight: re-render slide panel from cached thumbnails */
+function _renderThumbsFromCache() {
     const container = document.getElementById('weddingSlideList');
     if (!container) return;
+    const pages = window.__pageDataList || pageDataList;
+    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
 
-    const curIdx = currentPageIndex;
     container.innerHTML = '';
-
-    for (let i = 0; i < pageDataList.length; i++) {
-        let thumbUrl = null;
-        try { thumbUrl = await generateThumbnail(i); } catch(e) { console.warn('Thumb error page', i, e); }
+    for (let i = 0; i < pages.length; i++) {
+        const thumbUrl = _wedThumbCache[i] || null;
         const isActive = i === curIdx;
 
         const div = document.createElement('div');
@@ -513,7 +522,7 @@ async function renderSlideThumbs() {
             </div>
             <div class="wed-sl-act" style="display:none; position:absolute; top:4px; right:4px; gap:2px;">
                 <button onclick="event.stopPropagation(); window.weddingDuplicateSlide(${i})" title="${_t('wed_duplicate','복제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-copy"></i></button>
-                <button onclick="event.stopPropagation(); window.weddingDeleteSlide(${i})" title="${_t('wed_delete','삭제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(239,68,68,0.8); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" ${pageDataList.length<=1?'disabled':''}><i class="fa-solid fa-trash"></i></button>
+                <button onclick="event.stopPropagation(); window.weddingDeleteSlide(${i})" title="${_t('wed_delete','삭제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(239,68,68,0.8); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" ${pages.length<=1?'disabled':''}><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
         container.appendChild(div);
@@ -528,7 +537,7 @@ async function renderSlideThumbs() {
    ═══════════════════════════════════════════ */
 function weddingGoToSlide(index) {
     goToPage(index);
-    setTimeout(() => renderSlideThumbs(), 300);
+    setTimeout(() => _renderThumbsFromCache(), 200);
 }
 
 /* ═══════════════════════════════════════════
@@ -677,62 +686,31 @@ async function renderPageToImage(index) {
 
 async function openWeddingPreview() {
     if (!window.__WEDDING_MODE) return;
-    if (window.savePageState) window.savePageState();
 
-    const overlay = document.getElementById('weddingPreviewOverlay');
-    if (!overlay) return;
-
-    overlay.style.display = 'flex';
-    const container = document.getElementById('weddingPreviewScroll');
-    if (!container) return;
-
-    container.innerHTML = `<div style="text-align:center; padding:60px 0; color:#d4a373;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>${_t('wed_loading','로딩 중...')} (${pageDataList.length} pages)</div>`;
-
-    // 모든 페이지를 이미지로 렌더링 (with try/catch per page)
-    const images = [];
-    for (let i = 0; i < pageDataList.length; i++) {
-        try {
-            const dataUrl = await renderPageToImage(i);
-            images.push(dataUrl); // null is OK, we handle below
-        } catch(e) {
-            console.warn('Preview render error page', i, e);
-            images.push(null);
-        }
+    // Capture all pages using the main canvas (reliable)
+    const images = await _captureAllPages(3);
+    const validImages = images.filter(Boolean);
+    if (validImages.length === 0) {
+        if (window.showToast) window.showToast('No pages to preview', 'warn');
+        return;
     }
 
-    // 세로 스택으로 표시
-    container.innerHTML = '';
-    images.forEach((src, i) => {
-        if (src) {
-            const img = document.createElement('img');
-            img.src = src;
-            img.style.cssText = 'width:100%; max-width:420px; display:block; margin:0 auto;';
-            img.alt = `Page ${i + 1}`;
-            container.appendChild(img);
-        } else {
-            const ph = document.createElement('div');
-            ph.style.cssText = 'width:100%; max-width:420px; margin:0 auto; aspect-ratio:9/16; background:#fdf2f8; display:flex; align-items:center; justify-content:center; color:#d4a373; font-size:16px;';
-            ph.textContent = `Page ${i + 1}`;
-            container.appendChild(ph);
-        }
-    });
+    // Open in new window
+    const previewWin = window.open('', '_blank', 'width=480,height=800,scrollbars=yes');
+    if (!previewWin) {
+        if (window.showToast) window.showToast('Popup blocked — please allow popups', 'warn');
+        return;
+    }
 
-    // 페이지 카운터
-    const counter = document.getElementById('weddingPreviewCounter');
-    if (counter) counter.textContent = pageDataList.length + ' pages';
-
-    // ESC 키 핸들러
-    document.addEventListener('keydown', previewKeyHandler);
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"><title>${_t('wed_preview','미리보기')}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(135deg,#fdf2f8,#fce7f3);min-height:100vh;font-family:-apple-system,sans-serif}.container{max-width:420px;margin:0 auto;padding:0}img{width:100%;display:block}.footer{text-align:center;padding:24px;color:#9ca3af;font-size:13px}</style></head><body><div class="container">${images.map((src, i) => src ? `<img src="${src}" alt="Page ${i+1}">` : '').join('')}</div><div class="footer">${validImages.length} pages</div></body></html>`;
+    previewWin.document.write(html);
+    previewWin.document.close();
 }
 
 function closeWeddingPreview() {
+    // Preview now opens in new window, this is kept for backward compatibility
     const overlay = document.getElementById('weddingPreviewOverlay');
     if (overlay) overlay.style.display = 'none';
-    document.removeEventListener('keydown', previewKeyHandler);
-}
-
-function previewKeyHandler(e) {
-    if (e.key === 'Escape') closeWeddingPreview();
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -918,41 +896,23 @@ async function generateAllPages(fd, setStep) {
     await buildCoverPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 2: Greeting
-    setStep(_t('wed_step_greeting','인사말 작성 중...'));
+    // Page 2: Gallery (text-only poem/quote)
+    setStep(_t('wed_step_gallery','갤러리 배치 중...'));
     await _addPageAndWait(c);
-    await buildGreetingPage(c, fd);
+    await buildGalleryPage(c, fd, []);
     if (window.savePageState) window.savePageState();
 
-    // Page 3: Gallery 1 (photos[1]~[3])
-    const galleryPhotos = fd.photos.slice(1);
-    if (galleryPhotos.length > 0) {
-        setStep(_t('wed_step_gallery','갤러리 배치 중...'));
-        await _addPageAndWait(c);
-        await buildGalleryPage(c, fd, galleryPhotos.slice(0, 3));
-        if (window.savePageState) window.savePageState();
-    }
-
-    // Page 4: Calendar
+    // Page 3: Calendar
     setStep(_t('wed_step_calendar','캘린더 만드는 중...'));
     await _addPageAndWait(c);
     await buildCalendarPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 5: Venue
+    // Page 4: Venue
     setStep(_t('wed_step_venue','오시는길 만드는 중...'));
     await _addPageAndWait(c);
     await buildVenuePage(c, fd);
     if (window.savePageState) window.savePageState();
-
-    // Extra gallery pages for remaining photos
-    const remaining = galleryPhotos.slice(3);
-    for (let i = 0; i < remaining.length; i += 3) {
-        setStep(_t('wed_step_gallery','갤러리 배치 중...'));
-        await _addPageAndWait(c);
-        await buildGalleryPage(c, fd, remaining.slice(i, i + 3));
-        if (window.savePageState) window.savePageState();
-    }
 
     // Navigate to page 1 after generation
     await _sleep(300);
@@ -992,19 +952,9 @@ async function buildCoverPage(c, fd) {
     if (fd.photos.length > 0) {
         await _placePhotoOnCanvas(c, fd.photos[0], board.left, board.top, w, h * 0.68, 0, 0);
     } else {
-        // placeholder rect
-        const ph = new fabric.Rect({
-            left: board.left + w * 0.05, top: board.top + h * 0.05, width: w * 0.9, height: h * 0.58,
-            fill: '#f5e6d3', rx: 16, ry: 16, stroke: s.accent, strokeWidth: 2,
-            selectable: true, evented: true, isWedPlaceholder: true, wedPlaceholderId: 'cover_main', hoverCursor: 'pointer'
-        });
-        const phText = new fabric.Textbox(_t('wed_photo_here','사진을 넣어주세요'), {
-            left: board.left + w * 0.15, top: board.top + h * 0.3, width: w * 0.7,
-            fontSize: Math.round(h * 0.022), fontFamily: s.font,
-            fill: '#c4a07a', textAlign: 'center', editable: false,
-            isWedPlaceholderText: true, wedPlaceholderId: 'cover_main', hoverCursor: 'pointer'
-        });
-        c.add(ph); c.add(phText);
+        // Generate default decorative cover image
+        const defPhoto = _generateDefaultCoverPhoto(w, Math.round(h * 0.68), s);
+        await _placePhotoOnCanvas(c, defPhoto, board.left, board.top, w, h * 0.68, 0, 0);
     }
 
     // "저희 결혼합니다" title — below photo
@@ -1469,36 +1419,28 @@ async function shareWeddingInvitation() {
         return;
     }
 
-    // Save current page state
-    if (window.savePageState) window.savePageState();
-
-    const totalPages = pageDataList.length;
-    if (totalPages === 0) return;
-
     // Show progress dialog
     const dlg = document.getElementById('weddingShareDialog');
     const prog = document.getElementById('wedShareProgress');
     const result = document.getElementById('wedShareResult');
     if (dlg) { dlg.style.display = 'flex'; }
-    if (prog) { prog.style.display = 'block'; prog.innerHTML = '<div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div><p style="color:#6b7280; font-size:14px;">' + _t('wed_share_saving','저장 중...') + ' (0/' + totalPages + ')</p>'; }
+    if (prog) { prog.style.display = 'block'; prog.innerHTML = '<div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div><p style="color:#6b7280; font-size:14px;">' + _t('wed_share_saving','저장 중...') + '</p>'; }
     if (result) result.style.display = 'none';
 
     try {
-        // Generate slug
+        // Capture all pages using reliable main canvas method
+        const images = await _captureAllPages(3);
+
         const slug = 'wed_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
         const basePath = `wedding/${slug}`;
 
-        // Render and upload each page
+        // Upload each page
         const pageUrls = [];
-        for (let i = 0; i < totalPages; i++) {
-            if (prog) prog.innerHTML = '<div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div><p style="color:#6b7280; font-size:14px;">' + _t('wed_share_saving','저장 중...') + ` (${i + 1}/${totalPages})</p>`;
+        for (let i = 0; i < images.length; i++) {
+            if (!images[i]) continue;
+            if (prog) prog.querySelector('p').textContent = _t('wed_share_saving','저장 중...') + ` (${i + 1}/${images.length})`;
 
-            let dataUrl = null;
-            try { dataUrl = await renderPageToImage(i); } catch(e) { console.warn('Share render err', i, e); }
-            if (!dataUrl) continue;
-
-            // Convert data URL to Blob
-            const resp = await fetch(dataUrl);
+            const resp = await fetch(images[i]);
             const blob = await resp.blob();
             const filePath = `${basePath}/page_${i}.png`;
 
@@ -1540,8 +1482,6 @@ async function shareWeddingInvitation() {
             const urlInput = document.getElementById('wedShareUrl');
             if (urlInput) urlInput.value = shareUrl;
         }
-
-        console.log('Wedding shared:', shareUrl, meta);
     } catch (err) {
         console.error('Share error:', err);
         if (window.showToast) window.showToast('Share failed: ' + err.message, 'error');
@@ -1570,6 +1510,177 @@ window._closeShareDialog = () => {
     const dlg = document.getElementById('weddingShareDialog');
     if (dlg) dlg.style.display = 'none';
 };
+
+/* ─── Default cover photo generator ─── */
+function _generateDefaultCoverPhoto(w, h, style) {
+    const oc = document.createElement('canvas');
+    oc.width = w; oc.height = h;
+    const ctx = oc.getContext('2d');
+
+    // Soft gradient background
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#fce4ec');
+    grad.addColorStop(0.4, '#f8bbd0');
+    grad.addColorStop(0.7, '#f48fb1');
+    grad.addColorStop(1, '#ec407a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Soft bokeh circles
+    const circles = [
+        { x: w * 0.2, y: h * 0.3, r: w * 0.12, a: 0.1 },
+        { x: w * 0.7, y: h * 0.2, r: w * 0.15, a: 0.08 },
+        { x: w * 0.5, y: h * 0.6, r: w * 0.2, a: 0.06 },
+        { x: w * 0.85, y: h * 0.7, r: w * 0.1, a: 0.12 },
+        { x: w * 0.15, y: h * 0.75, r: w * 0.08, a: 0.1 },
+    ];
+    circles.forEach(({ x, y, r, a }) => {
+        const cg = ctx.createRadialGradient(x, y, 0, x, y, r);
+        cg.addColorStop(0, `rgba(255,255,255,${a})`);
+        cg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = cg;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Heart in center
+    const cx = w / 2, cy = h * 0.45, sz = w * 0.08;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + sz * 0.3);
+    ctx.bezierCurveTo(cx - sz, cy - sz * 0.5, cx - sz * 1.5, cy + sz * 0.3, cx, cy + sz);
+    ctx.bezierCurveTo(cx + sz * 1.5, cy + sz * 0.3, cx + sz, cy - sz * 0.5, cx, cy + sz * 0.3);
+    ctx.fill();
+    ctx.restore();
+
+    return oc.toDataURL('image/jpeg', 0.9);
+}
+
+/* ─── Main canvas page capture (reliable, no offscreen loadFromJSON) ─── */
+async function _captureAllPages(multiplier = 3) {
+    const c = canvas || window.canvas;
+    if (!c) return [];
+    if (window.savePageState) window.savePageState();
+    const pages = window.__pageDataList || pageDataList;
+    const origIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
+
+    // Show loading overlay to hide canvas changes
+    let overlay = document.getElementById('wedCaptureOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'wedCaptureOverlay';
+        overlay.style.cssText = 'position:fixed; inset:0; z-index:99998; background:rgba(255,255,255,0.95); display:flex; align-items:center; justify-content:center; flex-direction:column;';
+        overlay.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:32px; color:#ec4899; margin-bottom:12px;"></i><p style="color:#6b7280; font-size:14px;">Rendering pages...</p>';
+        document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+
+    const results = [];
+    const CUSTOM = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isWedPlaceholder','isWedPlaceholderText','wedPlaceholderId'];
+
+    for (let i = 0; i < pages.length; i++) {
+        const json = pages[i];
+        if (!json) { results.push(null); continue; }
+
+        try {
+            const dataUrl = await new Promise((resolve) => {
+                const timer = setTimeout(() => resolve(null), 12000); // 12s timeout
+                c.loadFromJSON(json, () => {
+                    clearTimeout(timer);
+                    const board = c.getObjects().find(o => o.isBoard);
+                    if (!board) { resolve(null); return; }
+                    c.sendToBack(board);
+                    c.getObjects().forEach(obj => {
+                        if (obj.isMockup || obj.excludeFromExport || obj.isGuide) c.remove(obj);
+                    });
+                    // Set viewport to show only the board
+                    const origVpt = c.viewportTransform.slice();
+                    const origW = c.getWidth(), origH = c.getHeight();
+                    c.setViewportTransform([1, 0, 0, 1, -board.left, -board.top]);
+                    c.setDimensions({ width: board.width, height: board.height });
+                    c.requestRenderAll();
+
+                    setTimeout(() => {
+                        try {
+                            const url = c.toDataURL({ format: 'png', multiplier, enableRetinaScaling: false });
+                            // Restore viewport
+                            c.setViewportTransform(origVpt);
+                            c.setDimensions({ width: origW, height: origH });
+                            resolve(url);
+                        } catch(e) {
+                            c.setViewportTransform(origVpt);
+                            c.setDimensions({ width: origW, height: origH });
+                            resolve(null);
+                        }
+                    }, 300);
+                }, (o, obj) => {
+                    // reviver — preserve custom props
+                    CUSTOM.forEach(p => { if (o[p] !== undefined) obj[p] = o[p]; });
+                });
+            });
+            results.push(dataUrl);
+        } catch(e) {
+            console.warn('Capture page error', i, e);
+            results.push(null);
+        }
+    }
+
+    // Restore original page
+    const origJson = pages[origIdx];
+    if (origJson) {
+        await new Promise(resolve => {
+            c.loadFromJSON(origJson, () => {
+                const board = c.getObjects().find(o => o.isBoard);
+                if (board) c.sendToBack(board);
+                if (window.resizeCanvasToFit) window.resizeCanvasToFit();
+                c.requestRenderAll();
+                resolve();
+            }, (o, obj) => { CUSTOM.forEach(p => { if (o[p] !== undefined) obj[p] = o[p]; }); });
+        });
+    }
+
+    overlay.style.display = 'none';
+    return results;
+}
+
+/* ─── Photo replacement helper ─── */
+function replaceSelectedImage() {
+    const c = canvas || window.canvas;
+    if (!c) return;
+    const active = c.getActiveObject();
+    if (!active || active.type !== 'image') {
+        if (window.showToast) window.showToast(_t('msg_select_image','이미지를 선택하세요'), 'warn');
+        return;
+    }
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = () => {
+        const file = inp.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imgObj = new Image();
+            imgObj.onload = () => {
+                active.setElement(imgObj);
+                // Re-scale to fit existing clip area
+                if (active.clipPath) {
+                    const cpW = active.clipPath.width * (active.clipPath.scaleX || 1);
+                    const cpH = active.clipPath.height * (active.clipPath.scaleY || 1);
+                    const scale = Math.max(cpW / imgObj.width, cpH / imgObj.height);
+                    active.set({ scaleX: scale, scaleY: scale });
+                }
+                c.requestRenderAll();
+                if (window.savePageState) window.savePageState();
+            };
+            imgObj.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+    inp.click();
+}
+window.replaceSelectedImage = replaceSelectedImage;
 
 /* ─── Photo placement helper (cover mode) ─── */
 function _placePhotoOnCanvas(c, dataUrl, left, top, width, height, rx, ry) {

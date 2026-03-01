@@ -1576,5 +1576,6 @@
   "wed_share_copy": "复制",
   "wed_share_copied": "已复制！",
   "wed_share_saving": "保存中...",
-  "wed_share_login": "分享需要登录"
+  "wed_share_login": "分享需要登录",
+  "img_tool_replace": "替换"
 }
