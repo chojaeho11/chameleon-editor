@@ -1413,6 +1413,8 @@
   "login_browse_guest": "Explorar sin iniciar sesión",
   "placeholder_id": "Usuario (o correo)",
   "btn_quick_signup": "Registro rápido",
+  "hero_signup_btn": "Regístrate en 1 segundo",
+  "hero_signup_desc": "Sin verificación. Solo ingresa un usuario y contraseña para comenzar.",
   "signup_guide_title": "Registro instantáneo",
   "signup_guide_desc": "Solo ingresa un usuario y contraseña.<br>¡Sin correo de verificación!",
   "gm_upload_video": "Extraer fotogramas del video",

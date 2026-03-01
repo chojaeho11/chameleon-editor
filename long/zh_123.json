@@ -1413,6 +1413,8 @@
   "login_browse_guest": "无需登录浏览",
   "placeholder_id": "用户名（或邮箱）",
   "btn_quick_signup": "快速注册",
+  "hero_signup_btn": "1秒快速注册",
+  "hero_signup_desc": "无需验证，只需输入用户名和密码即可开始。",
   "signup_guide_title": "1秒快速注册",
   "signup_guide_desc": "只需输入用户名和密码<br>即可注册，无需验证邮件！",
   "gm_upload_video": "从视频提取帧",

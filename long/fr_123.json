@@ -1413,6 +1413,8 @@
   "login_browse_guest": "Parcourir sans connexion",
   "placeholder_id": "Identifiant (ou email)",
   "btn_quick_signup": "Inscription rapide",
+  "hero_signup_btn": "Inscription en 1 seconde",
+  "hero_signup_desc": "Aucune vérification requise. Entrez simplement un identifiant et un mot de passe.",
   "signup_guide_title": "Inscription instantanée",
   "signup_guide_desc": "Entrez simplement un identifiant et un mot de passe.<br>Aucun email de vérification requis !",
   "gm_upload_video": "Extraire des images de la vidéo",
