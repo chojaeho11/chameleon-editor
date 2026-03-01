@@ -9598,7 +9598,9 @@ window.showCategorySelectionModal = async function() {
     const searchInput = document.getElementById('modalProdSearch');
 
     // UI 초기화
-    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${window.t('tpl_search_product')}</span>`;
+    const _lang = (window.SITE_CONFIG?.COUNTRY||'KR');
+    const _searchTitle = {KR:'상품검색',JP:'商品検索',US:'Product Search',CN:'商品搜索',AR:'بحث المنتج',ES:'Buscar Producto',DE:'Produktsuche',FR:'Recherche Produit'}[_lang]||'상품검색';
+    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${_searchTitle}</span>`;
     if(descEl) descEl.style.display = 'none'; // 설명 숨김
     
     // 검색창 초기화
@@ -9623,9 +9625,21 @@ window.showCategorySelectionModal = async function() {
             .not('img_url', 'is', null)
             .neq('img_url', '');
 
+        // (2-b) 핫딜 + 업자용핫딜 추천상품 로드
+        const [{ data: hotDeals }, { data: bizDeals }] = await Promise.all([
+            sb.from('admin_products')
+                .select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, category')
+                .eq('is_hot_deal', true).order('sort_order', { ascending: true }).limit(12),
+            sb.from('admin_products')
+                .select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, category')
+                .eq('is_biz_deal', true).order('sort_order', { ascending: true }).limit(12)
+        ]);
+
         // (3) 데이터 전역 저장
         window.modalGlobalData.categories = categories || [];
         window.modalGlobalData.products = products || [];
+        window.modalGlobalData.hotDeals = hotDeals || [];
+        window.modalGlobalData.bizDeals = bizDeals || [];
         window.modalGlobalData.thumbMap = {};
 
         // 썸네일 매핑 (카테고리 대표 이미지용)
@@ -9652,15 +9666,58 @@ window.filterModalItems = function(keyword) {
     const grid = document.getElementById('catProductGrid');
     if (!grid) return;
 
-    // A. 검색어가 없을 때 -> 안내 문구만 표시 (깔끔하게)
+    // A. 검색어가 없을 때 -> 핫딜+업자용핫딜 추천상품 24개 표시
     if (term === '') {
-        grid.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding: 60px 0; color:#94a3b8;">
-                <i class="fa-solid fa-magnifying-glass" style="font-size:40px; margin-bottom:15px; opacity:0.5;"></i><br>
-                <span style="font-size:18px; font-weight:bold; color:#475569;">${window.t && window.t('search_guide') || '찾으시는 상품을 검색해주세요.'}</span><br>
-                <span style="font-size:14px; margin-top:5px; display:inline-block;">${window.t && window.t('search_guide_ex') || '(예: 배너, 현수막, 텀블러 등)'}</span>
-            </div>
-        `;
+        const _recLang = (window.SITE_CONFIG?.COUNTRY||'KR');
+        const _recTitle = {KR:'추천상품',JP:'おすすめ商品',US:'Recommended',CN:'推荐商品',AR:'منتجات مقترحة',ES:'Recomendados',DE:'Empfohlen',FR:'Recommandés'}[_recLang]||'추천상품';
+        const _recGuide = {KR:'찾으시는 상품을 검색하거나 아래 추천상품을 선택하세요.',JP:'商品を検索するか、おすすめ商品をお選びください。',US:'Search for products or browse recommendations below.',CN:'搜索商品或浏览以下推荐商品。',AR:'ابحث عن منتج أو اختر من المنتجات المقترحة أدناه.',ES:'Busque un producto o elija entre los recomendados.',DE:'Suchen Sie ein Produkt oder wählen Sie eine Empfehlung.',FR:'Recherchez un produit ou choisissez parmi les recommandations.'}[_recLang]||'찾으시는 상품을 검색하거나 아래 추천상품을 선택하세요.';
+
+        const allRec = [...(window.modalGlobalData.hotDeals||[]), ...(window.modalGlobalData.bizDeals||[])];
+        if (allRec.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 0; color:#94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size:40px; margin-bottom:15px; opacity:0.5;"></i><br><span style="font-size:18px; font-weight:bold; color:#475569;">${_recGuide}</span></div>`;
+            return;
+        }
+
+        grid.innerHTML = '';
+        // 안내 문구
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:10px 0 5px; color:#94a3b8;"><span style="font-size:14px;">${_recGuide}</span></div><div style="grid-column:1/-1; display:flex; align-items:center; gap:8px; margin:5px 0 10px;"><span style="font-size:16px; font-weight:800; color:#6366f1;">🔥 ${_recTitle}</span><div style="flex:1; height:1px; background:#e2e8f0;"></div></div>`;
+
+        // 가격 포맷 헬퍼
+        const _fmtR = (p) => {
+            if (typeof getLocalizedData === 'function') { return getLocalizedData(p).formattedPrice; }
+            const cfg = window.SITE_CONFIG || {};
+            const country = cfg.COUNTRY || 'KR';
+            const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+            const v = (p.price || 0) * rate;
+            if (country === 'JP') return '¥' + Math.floor(v).toLocaleString();
+            if (country === 'US') return '$' + Math.round(v).toLocaleString();
+            return v.toLocaleString() + '원';
+        };
+        const _nameR = (p) => {
+            if (typeof getLocalizedData === 'function') { return getLocalizedData(p).name; }
+            return p.name || '';
+        };
+
+        // 스크롤 가드
+        const modalBox = grid.closest('.modal-box');
+        let _scrollGuardY = 0;
+        if (modalBox) {
+            modalBox.addEventListener('pointerdown', function(e) { _scrollGuardY = this.scrollTop; }, true);
+        }
+
+        allRec.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'quick-item';
+            const iconUrl = window.getTinyThumb ? window.getTinyThumb(p.img_url||'', 150) : (p.img_url||'');
+            const imgTag = iconUrl ? `<img src="${iconUrl}" alt="${_nameR(p)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">` : `<i class="fa-solid fa-cube" style="font-size:24px; color:#cbd5e1;"></i>`;
+            div.innerHTML = `<div style="position:relative; width:100%; aspect-ratio:1; background:#f8fafc; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${_nameR(p)}</div><div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">${_fmtR(p)}</div><div style="font-size:12px; color:#94a3b8; margin-top:2px;">${p.width_mm||'-'} x ${p.height_mm||'-'} mm</div>`;
+            div.onclick = () => {
+                if (modalBox && Math.abs(modalBox.scrollTop - _scrollGuardY) > 10) return;
+                document.getElementById('categoryDetailModal').style.display = 'none';
+                window.loadProductDetailAndOpen(p.code);
+            };
+            grid.appendChild(div);
+        });
         return;
     }
 
