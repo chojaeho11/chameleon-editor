@@ -2393,68 +2393,86 @@ async function handleSubReturn() {
 
             <!-- 4.5 보정 (Retouch) -->
             <div id="sub-retouch" class="sub-content">
-                <div class="sub-panel-header" data-i18n="panel_retouch">인물 보정</div>
+                <div class="sub-panel-header" data-i18n="panel_retouch">AI 보정</div>
 
                 <p id="retouchNoSel" style="font-size:12px; color:#94a3b8; text-align:center; padding:20px 0;"
                    data-i18n="retouch_select_image">캔버스에서 이미지를 선택하세요</p>
 
                 <div id="retouchControls" style="display:none;">
-                    <!-- AI 인물 보정 -->
-                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">
-                        ✨ <span data-i18n="retouch_ai_title">AI 인물 보정</span>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:14px;">
-                        <button class="btn-round" data-retouch="face_beauty" style="height:36px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-face-smile"></i> <span data-i18n="retouch_face">피부 보정</span>
+
+                    <!-- ===== 1. AI 뷰티 ===== -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:6px;">✨ AI 뷰티</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:12px;">
+                        <button class="btn-round" data-retouch="smart_beauty" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> 원클릭 뷰티
                         </button>
-                        <button class="btn-round" data-retouch="blemish" style="height:36px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-eraser"></i> <span data-i18n="retouch_blemish">잡티 제거</span>
+                        <button class="btn-round" data-retouch="face_beauty_pro" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-face-smile"></i> 피부 보정
                         </button>
-                        <button class="btn-round" data-retouch="face_shape" style="height:36px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-user"></i> <span data-i18n="retouch_face_shape">얼굴 성형</span>
+                        <button class="btn-round" data-retouch="smart_skin" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-eraser"></i> 잡티 제거
                         </button>
-                        <button class="btn-round" data-retouch="full_beauty" style="height:36px; font-size:11px; justify-content:center;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="retouch_full">전체 보정</span>
+                        <button class="btn-round" data-retouch="face_enhancer" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-bolt"></i> 얼굴 선명화
+                        </button>
+                        <button class="btn-round" data-retouch="face_slimming" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-minimize"></i> 얼굴 슬리밍
+                        </button>
+                        <button class="btn-round" data-retouch="skin_analysis" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-microscope"></i> 피부 분석
                         </button>
                     </div>
 
-                    <!-- 수동 필터 슬라이더 -->
-                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">
-                        🎨 <span data-i18n="retouch_manual_title">수동 조정</span>
+                    <!-- ===== 2. AI 변환 ===== -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:6px;">🎭 AI 변환</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:12px;">
+                        <button class="btn-round" data-retouch="cartoon" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-palette"></i> 만화 변환
+                        </button>
+                        <button class="btn-round" data-retouch="emotion" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-masks-theater"></i> 표정 변화
+                        </button>
+                        <button class="btn-round" data-retouch="age_gender" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-clock-rotate-left"></i> 나이/성별
+                        </button>
+                        <button class="btn-round" data-retouch="face_filter" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-sliders"></i> 얼굴 필터
+                        </button>
+                        <button class="btn-round" data-retouch="hairstyle" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-scissors"></i> 헤어스타일
+                        </button>
+                        <button class="btn-round" data-retouch="lips_color" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-lips"></i> 립 컬러
+                        </button>
+                        <button class="btn-round" data-retouch="face_blur" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-eye-slash"></i> 얼굴 블러
+                        </button>
+                        <button class="btn-round" data-retouch="face_fusion" style="height:34px; font-size:11px; justify-content:center;">
+                            <i class="fa-solid fa-object-group"></i> 얼굴 합성
+                        </button>
                     </div>
-                    <div id="retouchSliders" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"></div>
-                    <div style="display:flex; gap:6px; margin-bottom:14px;">
-                        <button id="btnRetouchApply" class="btn-round" style="flex:1; height:34px; font-size:12px; justify-content:center; background:#6366f1; color:white; border:none;">
+
+                    <!-- ===== 3. 수동 조정 ===== -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:6px;">🎨 수동 조정</div>
+                    <div id="retouchSliders" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
+                    <div style="display:flex; gap:6px; margin-bottom:12px;">
+                        <button id="btnRetouchApply" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center; background:#6366f1; color:white; border:none;">
                             <span data-i18n="retouch_apply">적용</span>
                         </button>
-                        <button id="btnRetouchReset" class="btn-round" style="flex:1; height:34px; font-size:12px; justify-content:center;">
+                        <button id="btnRetouchReset" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center;">
                             <span data-i18n="retouch_reset">초기화</span>
                         </button>
                     </div>
 
-                    <!-- 퀵 프리셋 -->
-                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">
-                        🎭 <span data-i18n="retouch_presets_title">퀵 필터</span>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
-                        <button class="btn-round" data-preset="portrait" style="height:30px; font-size:10px; justify-content:center;">
-                            <span data-i18n="retouch_preset_portrait">인물</span>
-                        </button>
-                        <button class="btn-round" data-preset="vivid" style="height:30px; font-size:10px; justify-content:center;">
-                            <span data-i18n="retouch_preset_vivid">선명</span>
-                        </button>
-                        <button class="btn-round" data-preset="warm" style="height:30px; font-size:10px; justify-content:center;">
-                            <span data-i18n="retouch_preset_warm">따뜻한</span>
-                        </button>
-                        <button class="btn-round" data-preset="cool" style="height:30px; font-size:10px; justify-content:center;">
-                            <span data-i18n="retouch_preset_cool">차가운</span>
-                        </button>
-                        <button class="btn-round" data-preset="bw" style="height:30px; font-size:10px; justify-content:center;">
-                            <span data-i18n="retouch_preset_bw">흑백</span>
-                        </button>
-                        <button class="btn-round" data-preset="soft" style="height:30px; font-size:10px; justify-content:center;">
-                            <span data-i18n="retouch_preset_soft">소프트</span>
-                        </button>
+                    <!-- ===== 4. 퀵 프리셋 ===== -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:6px;">🎬 퀵 필터</div>
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:5px;">
+                        <button class="btn-round" data-preset="portrait" style="height:28px; font-size:10px; justify-content:center;">인물</button>
+                        <button class="btn-round" data-preset="vivid" style="height:28px; font-size:10px; justify-content:center;">선명</button>
+                        <button class="btn-round" data-preset="warm" style="height:28px; font-size:10px; justify-content:center;">따뜻한</button>
+                        <button class="btn-round" data-preset="cool" style="height:28px; font-size:10px; justify-content:center;">차가운</button>
+                        <button class="btn-round" data-preset="bw" style="height:28px; font-size:10px; justify-content:center;">흑백</button>
+                        <button class="btn-round" data-preset="soft" style="height:28px; font-size:10px; justify-content:center;">소프트</button>
                     </div>
                 </div>
             </div>
