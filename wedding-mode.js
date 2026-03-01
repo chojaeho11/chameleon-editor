@@ -1142,24 +1142,30 @@ async function generateAllPages(fd, setStep) {
     const c = canvas || window.canvas;
     if (!c) return;
 
+    // === Clean up: remove ALL old pages, keep only the first ===
+    while (pageDataList.length > 1) pageDataList.pop();
+
     // === Photo distribution plan ===
     // photos[0] → cover (page 1)
-    // photos[last] → closing page (last page)
+    // photos[last] → closing page (last page) — only if 2+ photos
     // photos[1..last-1] → gallery pages (middle photos)
     const allPhotos = fd.photos || [];
     const coverPhoto = allPhotos[0] || null;
-    const closingPhoto = allPhotos.length > 1 ? allPhotos[allPhotos.length - 1] : null;
-    const middlePhotos = allPhotos.length > 2 ? allPhotos.slice(1, -1) : [];
+    const closingPhoto = allPhotos.length >= 2 ? allPhotos[allPhotos.length - 1] : null;
+    // Middle = everything except first and last (no duplicates)
+    const middlePhotos = allPhotos.length >= 3 ? allPhotos.slice(1, allPhotos.length - 1) : [];
 
     // Calculate gallery page distribution: fit middle photos into pages of 1~3
     const galleryPages = _distributePhotos(middlePhotos);
+
+    console.log(`[Wedding] ${allPhotos.length} photos → cover(1) + gallery(${middlePhotos.length}) on ${galleryPages.length} pages + closing(${closingPhoto ? 1 : 0})`);
 
     // Page 1: Cover (first photo + names + date + venue)
     setStep(_t('wed_step_cover','표지 만드는 중...'));
     await buildCoverPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 2: Greeting (인사말 — 결혼합니다 + 부모님 + 축하하러 와주세요)
+    // Page 2: Greeting (인사말)
     setStep(_t('wed_step_greeting','인사말 작성 중...'));
     await _addPageAndWait(c);
     await buildGreetingPage(c, fd);
@@ -1185,7 +1191,7 @@ async function generateAllPages(fd, setStep) {
         if (window.savePageState) window.savePageState();
     }
 
-    // Last page: Closing (last photo + "참석해서 자리를 빛내주세요")
+    // Last page: Closing (last photo + farewell message)
     if (closingPhoto) {
         setStep('마무리 페이지 만드는 중...');
         await _addPageAndWait(c);
