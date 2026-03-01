@@ -172,7 +172,7 @@ export function initRetouchTools() {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; align-items:center; gap:6px;';
         row.innerHTML = `
-            <span style="font-size:11px; color:#64748b; width:48px; flex-shrink:0;" data-i18n="${s.i18n}">${s.label}</span>
+            <span style="font-size:11px; color:#64748b; width:48px; flex-shrink:0;" data-i18n="${s.i18n}">${_t(s.i18n, s.label)}</span>
             <input type="range" data-slider="${s.key}" min="${s.min}" max="${s.max}" value="${s.def}"
                    style="flex:1; height:4px; accent-color:#6366f1; cursor:pointer;">
             <span data-val="${s.key}" style="font-size:10px; color:#94a3b8; width:28px; text-align:right;">${s.def}</span>
