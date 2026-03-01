@@ -719,10 +719,10 @@ function closeWeddingPreview() {
 
 /* ─── Style definitions ─── */
 const WED_STYLES = {
-    classic:  { bg:'#fdf2f8', text:'#5c4033', accent:'#d4a373', highlight:'#ec4899', font:'Georgia, serif' },
-    modern:   { bg:'#ffffff', text:'#1e293b', accent:'#6366f1', highlight:'#818cf8', font:'Arial, sans-serif' },
-    romantic: { bg:'#fff0f3', text:'#831843', accent:'#ec4899', highlight:'#f472b6', font:'Georgia, serif' },
-    minimal:  { bg:'#fafafa', text:'#374151', accent:'#9ca3af', highlight:'#6b7280', font:'Helvetica, Arial, sans-serif' }
+    classic:  { bg:'#faf3eb', text:'#3e2723', accent:'#b8860b', highlight:'#d4a017', font:'Georgia, serif' },
+    insta:    { bg:'#ffffff', text:'#262626', accent:'#c13584', highlight:'#e1306c', font:'"Segoe UI", Arial, sans-serif' },
+    romantic: { bg:'#ffe0ec', text:'#880e4f', accent:'#e91e63', highlight:'#f06292', font:'Georgia, serif' },
+    modern:   { bg:'#1a1a1a', text:'#f5f5f5', accent:'#888888', highlight:'#ffffff', font:'Helvetica, Arial, sans-serif' }
 };
 
 /* ─── Photo storage ─── */
@@ -1554,12 +1554,21 @@ function _generateDefaultCoverPhoto(w, h, style) {
     oc.width = w; oc.height = h;
     const ctx = oc.getContext('2d');
 
-    // Soft gradient background
+    // Theme-adaptive gradient
     const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, '#fce4ec');
-    grad.addColorStop(0.4, '#f8bbd0');
-    grad.addColorStop(0.7, '#f48fb1');
-    grad.addColorStop(1, '#ec407a');
+    if (style.bg === '#1a1a1a') {
+        // Modern (dark)
+        grad.addColorStop(0, '#2d2d2d'); grad.addColorStop(0.5, '#1a1a1a'); grad.addColorStop(1, '#0d0d0d');
+    } else if (style.bg === '#ffe0ec') {
+        // Romantic (pink gradient)
+        grad.addColorStop(0, '#fce4ec'); grad.addColorStop(0.4, '#f8bbd0'); grad.addColorStop(0.7, '#f48fb1'); grad.addColorStop(1, '#e91e63');
+    } else if (style.bg === '#ffffff') {
+        // Insta (warm white)
+        grad.addColorStop(0, '#fafafa'); grad.addColorStop(0.5, '#f5f5f5'); grad.addColorStop(1, '#eeeeee');
+    } else {
+        // Classic (warm beige/gold)
+        grad.addColorStop(0, '#f5e6d3'); grad.addColorStop(0.5, '#e8d5b7'); grad.addColorStop(1, '#d4a373');
+    }
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
