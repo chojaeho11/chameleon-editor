@@ -1626,7 +1626,7 @@ window.loadSideAssets = async function(page) {
             .eq('status', 'approved')
             .in('category', cats)
             .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: true })
             .range(sideAssetPage * SIDE_ASSET_PER_PAGE, (sideAssetPage + 1) * SIDE_ASSET_PER_PAGE - 1);
         if (sideAssetKeyword) {
             query = query.or('title.ilike.%' + sideAssetKeyword + '%,tags.ilike.%' + sideAssetKeyword + '%');
