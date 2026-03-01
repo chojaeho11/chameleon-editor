@@ -618,11 +618,14 @@ function _renderThumbsFromCache() {
    5. NAVIGATION
    ═══════════════════════════════════════════ */
 function weddingGoToSlide(index) {
+    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
+    if (index === curIdx) return;
     // Save current page + update its thumbnail before switching
     if (window.savePageState) window.savePageState();
     _updateCurrentThumbSync();
     goToPage(index);
-    // After loadPage completes, MutationObserver triggers _renderThumbsFromCache
+    // Ensure slide panel updates active state after page loads
+    setTimeout(() => _renderThumbsFromCache(), 400);
 }
 
 /* Synchronous quick thumbnail for the CURRENT page (before navigating away) */
@@ -638,7 +641,7 @@ function _updateCurrentThumbSync() {
         c.setViewportTransform([1, 0, 0, 1, -board.left, -board.top]);
         c.setDimensions({ width: board.width, height: board.height });
         c.requestRenderAll();
-        const url = c.toDataURL({ format: 'jpeg', quality: 0.5, multiplier: 0.2, enableRetinaScaling: false });
+        const url = c.toDataURL({ format: 'jpeg', quality: 0.7, multiplier: 0.35, enableRetinaScaling: false });
         while (_wedThumbCache.length <= curIdx) _wedThumbCache.push(null);
         _wedThumbCache[curIdx] = url;
         c.setViewportTransform(origVpt);
@@ -663,7 +666,8 @@ function _updateCurrentThumb() {
 
     setTimeout(() => {
         try {
-            const url = c.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.2, enableRetinaScaling: false });
+            c.requestRenderAll();
+            const url = c.toDataURL({ format: 'jpeg', quality: 0.7, multiplier: 0.35, enableRetinaScaling: false });
             // Update cache
             while (_wedThumbCache.length <= curIdx) _wedThumbCache.push(null);
             _wedThumbCache[curIdx] = url;
@@ -673,7 +677,7 @@ function _updateCurrentThumb() {
         c.setDimensions({ width: origW, height: origH });
         c.requestRenderAll();
         _renderThumbsFromCache();
-    }, 100);
+    }, 150);
 }
 
 /* ═══════════════════════════════════════════
@@ -1915,6 +1919,10 @@ async function _captureAllPages(multiplier = 3) {
 
     const results = [];
     const CUSTOM = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isWedPlaceholder','isWedPlaceholderText','wedPlaceholderId'];
+    // Use jpeg for thumbnails (faster, smaller), png for export
+    const isThumb = multiplier < 1;
+    const fmt = isThumb ? 'jpeg' : 'png';
+    const quality = isThumb ? 0.7 : undefined;
 
     for (let i = 0; i < pages.length; i++) {
         const json = pages[i];
@@ -1938,9 +1946,14 @@ async function _captureAllPages(multiplier = 3) {
                     c.setDimensions({ width: board.width, height: board.height });
                     c.requestRenderAll();
 
+                    // Wait for images to fully render (base64 decode takes time)
+                    const waitMs = isThumb ? 500 : 400;
                     setTimeout(() => {
                         try {
-                            const url = c.toDataURL({ format: 'png', multiplier, enableRetinaScaling: false });
+                            c.requestRenderAll();
+                            const opts = { format: fmt, multiplier: isThumb ? 0.35 : multiplier, enableRetinaScaling: false };
+                            if (quality) opts.quality = quality;
+                            const url = c.toDataURL(opts);
                             // Restore viewport
                             c.setViewportTransform(origVpt);
                             c.setDimensions({ width: origW, height: origH });
@@ -1950,7 +1963,7 @@ async function _captureAllPages(multiplier = 3) {
                             c.setDimensions({ width: origW, height: origH });
                             resolve(null);
                         }
-                    }, 300);
+                    }, waitMs);
                 }, (o, obj) => {
                     // reviver — preserve custom props
                     CUSTOM.forEach(p => { if (o[p] !== undefined) obj[p] = o[p]; });
