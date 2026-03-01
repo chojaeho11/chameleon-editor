@@ -1123,18 +1123,40 @@ async function buildGalleryPage(c, fd, photos) {
     }));
     c.add(new fabric.Rect({ left: board.left + w * 0.35, top: board.top + h * 0.13, width: w * 0.3, height: 2, fill: s.accent, selectable: true, evented: true }));
 
-    const bL = board.left, bT = board.top;
+    // Text-only layout — AI love poem or default
+    let poemText = '사랑이란,\n서로의 눈을 바라보는 것이 아니라\n함께 같은 방향을 바라보는 것입니다.\n\n두 사람이 하나가 되어\n서로를 아끼고 사랑하며\n아름다운 내일을 함께 그려가겠습니다.';
 
-    if (photos.length >= 3) {
-        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.4, 12, 12);
-        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.08, bT + h * 0.62, w * 0.4, h * 0.25, 10, 10);
-        await _placePhotoOnCanvas(c, photos[2], bL + w * 0.52, bT + h * 0.62, w * 0.4, h * 0.25, 10, 10);
-    } else if (photos.length === 2) {
-        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.35, 12, 12);
-        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.08, bT + h * 0.57, w * 0.84, h * 0.35, 12, 12);
-    } else if (photos.length === 1) {
-        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.08, bT + h * 0.18, w * 0.84, h * 0.7, 12, 12);
-    }
+    try {
+        if (window.sb) {
+            const prompt = `${fd.groom}과 ${fd.bride}의 결혼을 축하하는 사랑에 대한 짧은 시 또는 명언을 150자 이내로 작성해주세요. 감성적이고 아름답게. 제목이나 이름은 넣지 마세요.`;
+            const { data, error } = await window.sb.functions.invoke('generate-text', {
+                body: { prompt, max_tokens: 200 }
+            });
+            if (data && !error) {
+                const txt = typeof data === 'string' ? data : (data.text || data.result || '');
+                if (txt.length > 20) poemText = txt.trim();
+            }
+        }
+    } catch (e) { console.warn('AI poem fallback:', e); }
+
+    // Decorative element
+    c.add(new fabric.Textbox('♥', {
+        left: board.left + w * 0.44, top: board.top + h * 0.2, width: w * 0.12,
+        fontSize: Math.round(h * 0.04), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
+    }));
+
+    // Poem text
+    c.add(new fabric.Textbox(poemText, {
+        left: board.left + w * 0.1, top: board.top + h * 0.3, width: w * 0.8,
+        fontSize: Math.round(h * 0.022), fontFamily: s.font,
+        fill: s.text, textAlign: 'center', lineHeight: 2.0
+    }));
+
+    // Bottom decoration
+    c.add(new fabric.Textbox('─  ♥  ─', {
+        left: board.left + w * 0.3, top: board.top + h * 0.75, width: w * 0.4,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font, fill: s.accent, textAlign: 'center'
+    }));
 
     c.add(new fabric.Textbox(_t('wed_caption','우리의 아름다운 순간들'), {
         left: board.left + w * 0.15, top: board.top + h * 0.92, width: w * 0.7,
