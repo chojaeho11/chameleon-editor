@@ -896,23 +896,38 @@ async function generateAllPages(fd, setStep) {
     await buildCoverPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 2: Gallery (text-only poem/quote)
-    setStep(_t('wed_step_gallery','갤러리 배치 중...'));
+    // Page 2: Greeting (인사말 + 부모님)
+    setStep(_t('wed_step_greeting','인사말 작성 중...'));
     await _addPageAndWait(c);
-    await buildGalleryPage(c, fd, []);
+    await buildGreetingPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 3: Calendar
+    // Page 3: Gallery (text-only poem/quote)
+    setStep(_t('wed_step_gallery','축하시 작성 중...'));
+    await _addPageAndWait(c);
+    await buildGalleryPage(c, fd);
+    if (window.savePageState) window.savePageState();
+
+    // Page 4: Calendar
     setStep(_t('wed_step_calendar','캘린더 만드는 중...'));
     await _addPageAndWait(c);
     await buildCalendarPage(c, fd);
     if (window.savePageState) window.savePageState();
 
-    // Page 4: Venue
+    // Page 5: Venue
     setStep(_t('wed_step_venue','오시는길 만드는 중...'));
     await _addPageAndWait(c);
     await buildVenuePage(c, fd);
     if (window.savePageState) window.savePageState();
+
+    // Page 6+: Photo gallery pages (3 photos per page, skip cover photo)
+    const galleryPhotos = fd.photos.slice(1); // photos[0] is cover
+    for (let i = 0; i < galleryPhotos.length; i += 3) {
+        setStep(_t('wed_step_gallery','갤러리 배치 중...') + ` (${Math.floor(i/3)+1})`);
+        await _addPageAndWait(c);
+        await buildPhotoGalleryPage(c, fd, galleryPhotos.slice(i, i + 3));
+        if (window.savePageState) window.savePageState();
+    }
 
     // Navigate to page 1 after generation
     await _sleep(300);
@@ -1058,29 +1073,36 @@ async function buildGreetingPage(c, fd) {
     c.requestRenderAll();
 }
 
-async function buildGalleryPage(c, fd, photos) {
+async function buildGalleryPage(c, fd) {
     const board = c.getObjects().find(o => o.isBoard);
     if (!board) return;
     const w = board.width, h = board.height, s = fd.style;
     board.set({ fill: s.bg });
     c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
 
+    // heart
+    c.add(new fabric.Textbox('♥', {
+        left: board.left + w * 0.44, top: board.top + h * 0.06, width: w * 0.12,
+        fontSize: Math.round(h * 0.03), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
+    }));
+
     // title
-    c.add(new fabric.Textbox('Our Moments', {
-        left: board.left + w * 0.1, top: board.top + h * 0.06, width: w * 0.8,
-        fontSize: Math.round(h * 0.03), fontFamily: s.font, fontStyle: 'italic',
+    c.add(new fabric.Textbox(_t('wed_poem_title','# 축하 시'), {
+        left: board.left + w * 0.1, top: board.top + h * 0.12, width: w * 0.8,
+        fontSize: Math.round(h * 0.025), fontFamily: s.font, fontWeight: 'bold',
         fill: s.text, textAlign: 'center'
     }));
-    c.add(new fabric.Rect({ left: board.left + w * 0.35, top: board.top + h * 0.13, width: w * 0.3, height: 2, fill: s.accent, selectable: true, evented: true }));
 
-    // Text-only layout — AI love poem or default
-    let poemText = '사랑이란,\n서로의 눈을 바라보는 것이 아니라\n함께 같은 방향을 바라보는 것입니다.\n\n두 사람이 하나가 되어\n서로를 아끼고 사랑하며\n아름다운 내일을 함께 그려가겠습니다.';
+    c.add(new fabric.Rect({ left: board.left + w * 0.35, top: board.top + h * 0.19, width: w * 0.3, height: 2, fill: s.accent, selectable: true, evented: true }));
+
+    // AI love poem or default
+    let poemText = '두 손을 맞잡은 순간,\n세상이 따뜻해진다.\n같은 길을 걷기로 한\n그 용기 속에\n사랑이 피어난다.\n\n앞으로의 날들에서\n서로를 비추는 거울이 되어\n더 나은 사람이 되고,\n함께하는 가정 속에서\n영원한 행복을 찾기를.';
 
     try {
         if (window.sb) {
-            const prompt = `${fd.groom}과 ${fd.bride}의 결혼을 축하하는 사랑에 대한 짧은 시 또는 명언을 150자 이내로 작성해주세요. 감성적이고 아름답게. 제목이나 이름은 넣지 마세요.`;
+            const prompt = `${fd.groom}과 ${fd.bride}의 결혼을 축하하는 사랑에 대한 짧은 시를 200자 이내로 작성해주세요. 감성적이고 아름답게. 제목이나 이름은 넣지 마세요. 시 본문만 작성하세요.`;
             const { data, error } = await window.sb.functions.invoke('generate-text', {
-                body: { prompt, max_tokens: 200 }
+                body: { prompt, max_tokens: 250 }
             });
             if (data && !error) {
                 const txt = typeof data === 'string' ? data : (data.text || data.result || '');
@@ -1089,30 +1111,43 @@ async function buildGalleryPage(c, fd, photos) {
         }
     } catch (e) { console.warn('AI poem fallback:', e); }
 
-    // Decorative element
-    c.add(new fabric.Textbox('♥', {
-        left: board.left + w * 0.44, top: board.top + h * 0.2, width: w * 0.12,
-        fontSize: Math.round(h * 0.04), fontFamily: s.font, fill: s.highlight, textAlign: 'center'
-    }));
-
-    // Poem text
+    // Poem text (centered, large area)
     c.add(new fabric.Textbox(poemText, {
-        left: board.left + w * 0.1, top: board.top + h * 0.3, width: w * 0.8,
-        fontSize: Math.round(h * 0.022), fontFamily: s.font,
-        fill: s.text, textAlign: 'center', lineHeight: 2.0
+        left: board.left + w * 0.1, top: board.top + h * 0.24, width: w * 0.8,
+        fontSize: Math.round(h * 0.02), fontFamily: s.font,
+        fill: s.text, textAlign: 'center', lineHeight: 2.2
     }));
 
-    // Bottom decoration
+    // Bottom decoration only
     c.add(new fabric.Textbox('─  ♥  ─', {
-        left: board.left + w * 0.3, top: board.top + h * 0.75, width: w * 0.4,
-        fontSize: Math.round(h * 0.02), fontFamily: s.font, fill: s.accent, textAlign: 'center'
+        left: board.left + w * 0.3, top: board.top + h * 0.88, width: w * 0.4,
+        fontSize: Math.round(h * 0.018), fontFamily: s.font, fill: s.accent, textAlign: 'center'
     }));
 
-    c.add(new fabric.Textbox(_t('wed_caption','우리의 아름다운 순간들'), {
-        left: board.left + w * 0.15, top: board.top + h * 0.92, width: w * 0.7,
-        fontSize: Math.round(h * 0.016), fontFamily: s.font, fontStyle: 'italic',
-        fill: s.accent, textAlign: 'center'
-    }));
+    c.requestRenderAll();
+}
+
+/* ─── Photo gallery page (3 photos per page) ─── */
+async function buildPhotoGalleryPage(c, fd, photos) {
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const w = board.width, h = board.height, s = fd.style;
+    board.set({ fill: s.bg });
+    c.getObjects().filter(o => !o.isBoard).forEach(o => c.remove(o));
+
+    const bL = board.left, bT = board.top;
+
+    if (photos.length >= 3) {
+        // Large photo on top, 2 smaller below
+        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.06, bT + h * 0.03, w * 0.88, h * 0.45, 12, 12);
+        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.06, bT + h * 0.51, w * 0.42, h * 0.45, 10, 10);
+        await _placePhotoOnCanvas(c, photos[2], bL + w * 0.52, bT + h * 0.51, w * 0.42, h * 0.45, 10, 10);
+    } else if (photos.length === 2) {
+        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.06, bT + h * 0.03, w * 0.88, h * 0.47, 12, 12);
+        await _placePhotoOnCanvas(c, photos[1], bL + w * 0.06, bT + h * 0.52, w * 0.88, h * 0.45, 12, 12);
+    } else if (photos.length === 1) {
+        await _placePhotoOnCanvas(c, photos[0], bL + w * 0.06, bT + h * 0.05, w * 0.88, h * 0.9, 12, 12);
+    }
 
     c.requestRenderAll();
 }
@@ -1163,11 +1198,13 @@ async function buildCalendarPage(c, fd) {
         fontSize: Math.round(h * 0.035), fontFamily: s.font, fontWeight: 'bold', fill: s.highlight, textAlign: 'center'
     }));
 
-    // venue hint
-    c.add(new fabric.Textbox(fd.venueName, {
-        left: board.left + w * 0.15, top: board.top + h * 0.86, width: w * 0.7,
-        fontSize: Math.round(h * 0.016), fontFamily: s.font, fill: s.accent, textAlign: 'center'
-    }));
+    // venue hint below D-day
+    if (fd.venueName && fd.venueName !== _t('wed_venue_name','예식장소')) {
+        c.add(new fabric.Textbox(fd.venueName, {
+            left: board.left + w * 0.15, top: board.top + h * 0.86, width: w * 0.7,
+            fontSize: Math.round(h * 0.016), fontFamily: s.font, fill: s.accent, textAlign: 'center'
+        }));
+    }
 
     c.requestRenderAll();
 }
