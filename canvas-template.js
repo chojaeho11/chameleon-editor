@@ -1167,11 +1167,11 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         let query = sb.from('library')
             .select('id, thumb_url, data_url, title, category, product_key, tags, is_featured')
             .eq('status', 'approved');
-        // 요소: 우선표시 먼저, 그 다음 오래된순
-        if (isAsset) {
+        // 요소/템플릿: 우선표시 먼저
+        if (isAsset || sideCurrentGroup === 'group_template') {
             query = query
                 .order('is_featured', { ascending: false, nullsFirst: false })
-                .order('created_at', { ascending: true });
+                .order('created_at', { ascending: isAsset });
         } else {
             query = query.order('created_at', { ascending: isAsc });
         }
