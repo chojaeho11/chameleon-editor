@@ -382,29 +382,32 @@ function _showOptionModal(config) {
 const MAX_AI_DIM = 2048;   // 최대 한 변 길이
 const AI_JPEG_QUALITY = 0.85;
 
-function _getImageBase64(obj) {
-    let el;
-    const original = _originalSrcMap.get(obj);
-    if (original) {
-        // 원본 dataURL에서 Image 엘리먼트 만들어 리사이즈 필요 여부 확인
+function _loadImageAsync(src) {
+    return new Promise((resolve, reject) => {
         const img = new Image();
-        img.src = original.dataUrl;
-        el = img;
-        // synchronous check — dataUrl은 이미 로드된 상태
-        if (original.width <= MAX_AI_DIM && original.height <= MAX_AI_DIM) {
-            // 작은 이미지면 JPEG 변환만
-            const c = document.createElement('canvas');
-            c.width = original.width;
-            c.height = original.height;
-            c.getContext('2d').drawImage(el, 0, 0);
-            return c.toDataURL('image/jpeg', AI_JPEG_QUALITY).split(',')[1];
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = src;
+    });
+}
+
+async function _getImageBase64(obj) {
+    // 이미 로드된 Fabric.js 엘리먼트 사용 (가장 안정적)
+    let el = obj._originalElement || obj._element;
+
+    // Fabric element가 없으면 _originalSrcMap에서 비동기 로드
+    if (!el) {
+        const original = _originalSrcMap.get(obj);
+        if (original) {
+            el = await _loadImageAsync(original.dataUrl);
         }
-    } else {
-        el = obj._originalElement || obj._element;
     }
+    if (!el) throw new Error('이미지 엘리먼트를 찾을 수 없습니다');
 
     const srcW = el.naturalWidth || el.width;
     const srcH = el.naturalHeight || el.height;
+    if (!srcW || !srcH) throw new Error('이미지가 로드되지 않았습니다');
 
     // 리사이즈 계산
     let dstW = srcW, dstH = srcH;
@@ -421,7 +424,11 @@ function _getImageBase64(obj) {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(el, 0, 0, dstW, dstH);
-    return c.toDataURL('image/jpeg', AI_JPEG_QUALITY).split(',')[1];
+
+    const result = c.toDataURL('image/jpeg', AI_JPEG_QUALITY).split(',')[1];
+    if (!result) throw new Error('이미지 base64 추출 실패');
+    console.log(`[retouch] base64 size: ${(result.length * 0.75 / 1024).toFixed(0)}KB, dim: ${dstW}x${dstH}`);
+    return result;
 }
 
 // ==========================================================
@@ -487,7 +494,7 @@ async function handleAiRetouch(action) {
     }
 
     try {
-        const base64 = _getImageBase64(obj);
+        const base64 = await _getImageBase64(obj);
 
         const requestBody = { action, image_base64: base64 };
         if (Object.keys(params).length > 0) requestBody.params = params;
