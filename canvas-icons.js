@@ -5,7 +5,7 @@ import { sb } from "./config.js?v=123";
 const ICONIFY_SEARCH = 'https://api.iconify.design/search';
 const ICONIFY_SVG = 'https://api.iconify.design';
 const PER_PAGE = 48;
-const LOGO_PER_PAGE = 4;
+const LOGO_PER_PAGE = 10;
 
 // --- State ---
 let iconCurrentColor = '#000000';
@@ -17,6 +17,8 @@ let iconCurrentMode = 'icon'; // 'icon' or 'logo'
 let logoIsOriginalColor = true; // logos default to original colors
 let logoPage = 0;
 let logoKeyword = '';
+let logoHasMore = false;
+let logoLoading = false;
 
 const ICON_TAGS = [
     { label: '⭐ Star', q: 'star' },
@@ -144,7 +146,7 @@ function switchMode(mode) {
     // Clear grid and reset columns
     if (grid) {
         grid.innerHTML = '';
-        grid.style.gridTemplateColumns = mode === 'logo' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)';
+        grid.style.gridTemplateColumns = mode === 'logo' ? '1fr' : 'repeat(4, 1fr)';
     }
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
 
@@ -159,6 +161,9 @@ function switchMode(mode) {
 
     // Auto-load logos from DB when switching to logo mode
     if (mode === 'logo') {
+        logoHasMore = false;
+        logoLoading = false;
+        setupLogoScroll();
         loadLogos();
     }
 }
@@ -234,13 +239,15 @@ async function doIconSearch(query, reset) {
 }
 
 // --- Logo from Supabase library ---
-async function loadLogos() {
+async function loadLogos(append) {
     const grid = document.getElementById('iconResultGrid');
-    const loadMoreBtn = document.getElementById('iconLoadMore');
     if (!grid || !sb) return;
+    if (logoLoading) return;
+    logoLoading = true;
 
-    grid.innerHTML = loadingHtml();
-    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+    if (!append) {
+        grid.innerHTML = loadingHtml();
+    }
 
     try {
         let query = sb.from('library')
@@ -258,31 +265,31 @@ async function loadLogos() {
         const { data, error } = await query;
         if (error) throw error;
 
-        grid.innerHTML = '';
+        if (!append) grid.innerHTML = '';
 
         if (!data || data.length === 0) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:11px; padding:15px;">' +
-                (logoKeyword ? (window.t ? window.t('msg_no_search_result', 'No results') : 'No results') : 'No data') + '</div>';
-            renderLogoPagination(grid, 0);
+            logoHasMore = false;
+            if (!append) {
+                grid.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:11px; padding:15px;">' +
+                    (logoKeyword ? (window.t ? window.t('msg_no_search_result', 'No results') : 'No results') : 'No data') + '</div>';
+            }
+            logoLoading = false;
             return;
         }
 
-        // Change grid to 2 columns for logos
-        grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
-
+        grid.style.gridTemplateColumns = '1fr';
         data.forEach(item => renderLogoCell(grid, item));
-
-        // Pagination
-        renderLogoPagination(grid, data.length);
+        logoHasMore = data.length >= LOGO_PER_PAGE;
     } catch (err) {
         console.error('[Logos] Load error:', err);
-        grid.innerHTML = errorHtml();
+        if (!append) grid.innerHTML = errorHtml();
     }
+    logoLoading = false;
 }
 
 function renderLogoCell(grid, item) {
     const div = document.createElement('div');
-    div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:1; background-image:linear-gradient(45deg,#e2e8f0 25%,transparent 25%),linear-gradient(-45deg,#e2e8f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e2e8f0 75%),linear-gradient(-45deg,transparent 75%,#e2e8f0 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; border:1px solid #e2e8f0; position:relative; transition:all 0.15s;';
+    div.style.cssText = 'cursor:pointer; border-radius:8px; overflow:hidden; height:120px; background-image:linear-gradient(45deg,#e2e8f0 25%,transparent 25%),linear-gradient(-45deg,#e2e8f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e2e8f0 75%),linear-gradient(-45deg,transparent 75%,#e2e8f0 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; border:1px solid #e2e8f0; position:relative; transition:all 0.15s;';
 
     // Extract PNG URL from data_url or fallback to thumb_url
     const pngUrl = _extractLogoPng(item);
@@ -302,32 +309,18 @@ function renderLogoCell(grid, item) {
     grid.appendChild(div);
 }
 
-function renderLogoPagination(grid, dataLen) {
-    const pgDiv = document.createElement('div');
-    pgDiv.style.cssText = 'grid-column:1/-1; display:flex; justify-content:center; gap:10px; padding:10px 0;';
-
-    const prevB = document.createElement('button');
-    prevB.style.cssText = 'width:32px; height:32px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;';
-    prevB.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
-    prevB.disabled = logoPage === 0;
-    if (prevB.disabled) prevB.style.opacity = '0.4';
-    prevB.onclick = () => { logoPage--; loadLogos(); };
-
-    const pageL = document.createElement('span');
-    pageL.style.cssText = 'font-weight:bold; color:#64748b; font-size:13px; line-height:32px;';
-    pageL.textContent = (logoPage + 1) + '';
-
-    const nextB = document.createElement('button');
-    nextB.style.cssText = 'width:32px; height:32px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;';
-    nextB.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
-    nextB.disabled = dataLen < LOGO_PER_PAGE;
-    if (nextB.disabled) nextB.style.opacity = '0.4';
-    nextB.onclick = () => { logoPage++; loadLogos(); };
-
-    pgDiv.appendChild(prevB);
-    pgDiv.appendChild(pageL);
-    pgDiv.appendChild(nextB);
-    grid.appendChild(pgDiv);
+// Scroll-based infinite loading for logos
+function setupLogoScroll() {
+    const panel = document.getElementById('sub-icon');
+    if (!panel || panel._logoScrollAttached) return;
+    panel._logoScrollAttached = true;
+    panel.addEventListener('scroll', () => {
+        if (iconCurrentMode !== 'logo' || !logoHasMore || logoLoading) return;
+        if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 80) {
+            logoPage++;
+            loadLogos(true);
+        }
+    });
 }
 
 // Extract PNG URL from library item data_url
