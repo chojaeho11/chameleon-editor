@@ -9700,6 +9700,12 @@ window.filterModalItems = function(keyword) {
         'tumbler':['mug','cup','bottle','텀블러','タンブラー']
     };
 
+    // 자재류 제외 (원단 등 완제품이 아닌 자재)
+    const _isMaterial = (prod) => {
+        const n = (prod.name || '').toLowerCase();
+        return n.includes('원단') || n.includes('자재') || n.includes('롤지') || n.includes('생지');
+    };
+
     // 모든 언어 필드에서 검색
     const _matchProd = (prod, s) => {
         return [prod.name, prod.name_jp, prod.name_us, prod.name_cn,
@@ -9708,11 +9714,11 @@ window.filterModalItems = function(keyword) {
         ].some(f => (f || '').toLowerCase().includes(s));
     };
 
-    // 1차: 직접 검색 (모든 언어)
+    // 1차: 직접 검색 (모든 언어, 자재 제외)
     const matchedSet = new Set();
     const matchedProds = [];
     products.forEach(prod => {
-        if (_matchProd(prod, term)) { matchedSet.add(prod.code || prod.name); matchedProds.push(prod); }
+        if (!_isMaterial(prod) && _matchProd(prod, term)) { matchedSet.add(prod.code || prod.name); matchedProds.push(prod); }
     });
 
     // 2차: 결과가 부족하면 관련어로 확장
@@ -9730,7 +9736,7 @@ window.filterModalItems = function(keyword) {
         expandTerms.forEach(rt => {
             products.forEach(prod => {
                 const pk = prod.code || prod.name;
-                if (!matchedSet.has(pk) && _matchProd(prod, rt)) {
+                if (!matchedSet.has(pk) && !_isMaterial(prod) && _matchProd(prod, rt)) {
                     matchedSet.add(pk); matchedProds.push(prod);
                 }
             });
@@ -9743,7 +9749,7 @@ window.filterModalItems = function(keyword) {
         cats.forEach(cat => {
             products.forEach(prod => {
                 const pk = prod.code || prod.name;
-                if (!matchedSet.has(pk) && prod.category === cat) {
+                if (!matchedSet.has(pk) && !_isMaterial(prod) && prod.category === cat) {
                     matchedSet.add(pk); matchedProds.push(prod);
                 }
             });
@@ -9763,6 +9769,13 @@ window.filterModalItems = function(keyword) {
 
     // C. 결과 그리기 (기존 내용 비우고 새로 그림)
     grid.innerHTML = '';
+
+    // 스크롤 가드 (스크롤 중 클릭 방지)
+    const modalBox = grid.closest('.modal-box');
+    let _scrollGuardY = 0;
+    if (modalBox) {
+        modalBox.addEventListener('pointerdown', function(e) { _scrollGuardY = this.scrollTop; }, true);
+    }
 
     // [헬퍼] 아이템 HTML 생성 함수
     const createItem = (item, type) => {
@@ -9803,8 +9816,9 @@ window.filterModalItems = function(keyword) {
             </div>
         `;
 
-        // 클릭 이벤트 연결
+        // 클릭 이벤트 (스크롤 중 오클릭 방지)
         div.onclick = () => {
+            if (modalBox && Math.abs(modalBox.scrollTop - _scrollGuardY) > 10) return;
             document.getElementById('categoryDetailModal').style.display = 'none';
             window.loadProductDetailAndOpen(item.code);
         };
