@@ -10636,8 +10636,12 @@ window.dsmRenderProducts = async function(keyword) {
 .cham-send.loading i{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:480px){
-    #cham-bot-window{bottom:0;right:0;width:100vw;height:100vh;max-height:100vh;border-radius:0}
+    #cham-bot-window{top:0;left:0;right:0;bottom:0;width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:none}
+    #cham-bot-window .cham-header{padding:calc(env(safe-area-inset-top,8px) + 10px) 14px 12px}
+    #cham-bot-window .cham-input-area{padding:8px 10px calc(env(safe-area-inset-bottom,8px) + 6px)}
     #cham-bot-trigger{bottom:16px;right:16px;width:54px;height:54px}
+    #cham-bot-trigger.open{display:none}
+    body.cham-chat-open{overflow:hidden!important;position:fixed;width:100%;height:100%}
 }
 </style>
 
@@ -11133,6 +11137,7 @@ window.dsmRenderProducts = async function(keyword) {
         win.classList.remove('visible');
         trg.classList.remove('open');
         if (ico) ico.className = 'fa-solid fa-comments';
+        document.body.classList.remove('cham-chat-open');
         _saveChatOpen(false);
     }
 
@@ -11176,6 +11181,7 @@ window.dsmRenderProducts = async function(keyword) {
             _saveChatOpen(true);
             // 모바일에서 뒤로가기 버튼으로 채팅 닫을 수 있도록 history 추가
             if (window.innerWidth <= 480) {
+                document.body.classList.add('cham-chat-open');
                 window.history.pushState({ type: 'chatbot' }, '');
                 window._chamBotHistoryPushed = true;
             }

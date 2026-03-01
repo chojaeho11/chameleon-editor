@@ -27,13 +27,107 @@ serve(async (req) => {
 
     try {
         const body = await req.json();
-        const action = body.action; // "single" | "bulk" | "ping"
+        const action = body.action; // "single" | "bulk" | "bulk-auto" | "ping"
 
         const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
         const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
         const sb = createClient(supabaseUrl, supabaseKey);
 
         const googleSaJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
+
+        // ========== bulk-auto: automatic daily indexing with DB-tracked offset ==========
+        if (action === "bulk-auto") {
+            // 1. Read current offset from DB
+            const { data: progress } = await sb
+                .from("indexing_progress")
+                .select("*")
+                .eq("id", 1)
+                .single();
+
+            const currentOffset = progress?.current_offset || 0;
+
+            // 2. Build full URL list (same as bulk)
+            const { data: products } = await sb
+                .from("admin_products")
+                .select("code")
+                .or("partner_id.is.null,partner_status.eq.approved");
+            const codes = (products || []).map((p: any) => p.code);
+
+            const allUrls: string[] = [];
+            for (const code of codes) {
+                for (const domain of Object.values(DOMAINS)) {
+                    allUrls.push(`${domain}/${code}`);
+                }
+            }
+            for (const cat of SEO_CATEGORIES) {
+                for (const domain of Object.values(DOMAINS)) {
+                    allUrls.push(`${domain}/${cat}`);
+                }
+            }
+            for (const domain of Object.values(DOMAINS)) {
+                allUrls.push(domain + "/");
+            }
+
+            const totalUrls = allUrls.length;
+
+            // 3. Check if already completed
+            if (currentOffset >= totalUrls) {
+                return new Response(JSON.stringify({
+                    success: true,
+                    completed: true,
+                    message: "All URLs already indexed",
+                    totalUrls,
+                    currentOffset,
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+
+            const results: Record<string, any> = {};
+
+            // 4. Google Indexing API with auto offset
+            if (googleSaJson) {
+                try {
+                    const sa = JSON.parse(googleSaJson);
+                    results.google = await submitGoogleIndexing(allUrls, sa, currentOffset);
+                } catch (e: any) {
+                    results.google = { error: e.message };
+                }
+            }
+
+            // 5. IndexNow (send all URLs - no daily limit)
+            results.indexNow = await submitIndexNow(allUrls);
+
+            // 6. Sitemap ping
+            results.sitemapPing = await pingSitemaps();
+
+            // 7. Update offset in DB — only advance by actually submitted count
+            const googleSubmitted = results.google?.submitted || 0;
+            const nextOffset = currentOffset + googleSubmitted;
+            const isCompleted = nextOffset >= totalUrls;
+            await sb
+                .from("indexing_progress")
+                .upsert({
+                    id: 1,
+                    current_offset: nextOffset,
+                    last_run: new Date().toISOString(),
+                    total_urls: totalUrls,
+                    is_completed: isCompleted,
+                });
+
+            return new Response(JSON.stringify({
+                success: true,
+                action: "bulk-auto",
+                currentOffset,
+                nextOffset,
+                googleSubmitted,
+                totalUrls,
+                remaining: Math.max(0, totalUrls - nextOffset),
+                isCompleted,
+                results,
+            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        // ========== Original actions: single / bulk / ping ==========
+        const offset = body.offset || 0;
 
         let productCodes: string[] = [];
 
@@ -73,11 +167,11 @@ serve(async (req) => {
         // 1. IndexNow — Bing, Yandex, Seznam, and others
         results.indexNow = await submitIndexNow(allUrls);
 
-        // 2. Google Indexing API
+        // 2. Google Indexing API (with offset for daily batching)
         if (googleSaJson) {
             try {
                 const sa = JSON.parse(googleSaJson);
-                results.google = await submitGoogleIndexing(allUrls, sa);
+                results.google = await submitGoogleIndexing(allUrls, sa, offset);
             } catch (e: any) {
                 results.google = { error: "Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON: " + e.message };
             }
@@ -145,7 +239,7 @@ async function submitIndexNow(urls: string[]): Promise<any> {
 }
 
 // ========== Google Indexing API ==========
-async function submitGoogleIndexing(urls: string[], serviceAccount: any): Promise<any> {
+async function submitGoogleIndexing(urls: string[], serviceAccount: any, offset: number = 0): Promise<any> {
     try {
         const accessToken = await getGoogleAccessToken(serviceAccount);
         let submitted = 0;
@@ -153,7 +247,7 @@ async function submitGoogleIndexing(urls: string[], serviceAccount: any): Promis
         const errorDetails: string[] = [];
         const maxPerCall = 200; // daily limit
 
-        const batch = urls.slice(0, maxPerCall);
+        const batch = urls.slice(offset, offset + maxPerCall);
 
         for (const url of batch) {
             try {
@@ -186,7 +280,10 @@ async function submitGoogleIndexing(urls: string[], serviceAccount: any): Promis
             submitted,
             errors,
             total: batch.length,
-            remaining: Math.max(0, urls.length - maxPerCall),
+            offset,
+            nextOffset: offset + maxPerCall,
+            remaining: Math.max(0, urls.length - offset - maxPerCall),
+            totalUrls: urls.length,
             errorDetails: errorDetails.length > 0 ? errorDetails : undefined,
         };
     } catch (e: any) {
