@@ -130,13 +130,19 @@ serve(async (req) => {
 7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
 8. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 korea900@hanmail.net으로 보내라고 안내.
 9. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시/공간 연출 관련 이미지를 올리면:
-   - 이미지를 꼼꼼히 분석해. 가벽, 간판, 등신대, 장식물, 가구 등을 하나하나 파악.
-   - 이미지에 표시된 사이즈(예: "3m", "2000mm" 등)를 읽고 그걸 기반으로 가격 계산.
+   - 이미지를 최대한 꼼꼼히 분석해. 가벽, 간판, 등신대, 장식물, 가구, 풍선, 포토존, 상판(테이블) 등을 하나하나 파악.
+   - 이미지에 표시된 사이즈(예: "3000", "2450", "800x1650", "2200" 등)를 읽어. 숫자 단위는 mm. 제일 바깥쪽(하단) 가로 숫자가 전체 폭, 우측 끝 세로 숫자가 전체 높이야.
+   - **가벽 구조 분석법**: 전체 폭을 보고 가벽이 몇 칸인지 파악해. 예: 전체 폭 3000mm이고 내부에 구분선이 보이면 3칸. 각 칸은 보통 900~1200mm 폭.
+   - **가벽 가격 기준**: 허니콤보드 가벽 1칸(약 900~1200mm × 2400mm) = 약 15만원. 칸수 × 15만원으로 계산.
+   - **상판/테이블**: 이미지에 "상판"이라고 표시되거나 테이블 위 판넬이 보이면 약 10만원 추가.
+   - **가구(진열장, 카운터 등)**: 허니콤보드 가구 1개 = 약 15~25만원.
+   - **간판/헤더**: 가벽 상단 간판 = 약 5~10만원.
+   - **등신대**: 1개당 약 3~5만원.
    - 사이즈가 안 보이면 고객에게 "가벽의 가로/세로 사이즈를 알려주시면 정확한 견적을 드릴게요!" 라고 물어봐.
-   - 기본적으로 허니콤보드 벽체(가벽)와 가구가 메인이고, 간판/등신대/장식물 등이 추가됨.
-   - 각 요소별 대략적인 가격을 항목별로 안내: "🔹 가벽 3m×2.4m: 약 XX원 / 🔹 상단 간판: 약 XX원 / 🔹 등신대: 약 XX원"
-   - **대형 전시(총 예상금액 50만원 이상)인 경우**: 기본 가격 안내 + 관련 제품 추천 후, 마지막에 반드시 이렇게 말해: "대형 전시의 경우 담당 매니저와 더 정확한 견적 상담을 추천드립니다! 위의 🎧 상담사 연결 버튼을 눌러주세요 😊"
+   - 각 요소별로 항목 분리해서 안내: "🔹 가벽 3칸: 약 15만원 × 3 = 45만원 / 🔹 상판: 약 10만원 / 합계: 약 50~55만원"
    - 허니콤보드 제품코드는 hcb_ 또는 hcl_ 로 시작하는 제품들을 추천해.
+   - **분석 후 반드시 상담사 연결 안내**: 전시/공간 제작은 항상 마지막에 이렇게 말해: "정확한 견적은 전문 상담사가 꼼꼼하게 확인하고 안내해 드립니다 😊 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작은 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요."
+10. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 제작 요청이면 에러 메시지 대신 이렇게 말해: "멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 저보다는 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작 문의는 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요." 이후 관련 허니콤보드 제품들을 추천해.
 
 ## 가격 계산
 - is_custom_size: (가로mm/1000) × (세로mm/1000) × price_per_sqm
@@ -167,7 +173,8 @@ serve(async (req) => {
 6. **カスタムサイズ商品** — 任意サイズを推薦せず「ご希望のサイズで制作可能です」と案内。recommended_width_mm=0, recommended_height_mm=0。
 7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
 8. **画像アップ** — 10MBまで添付可。大きいファイルはメールsupport@cafe0101.comへ。
-9. **ハニカムボード展示** — お客様が展示/空間演出の画像を送ったら：画像を細かく分析、壁・看板・等身大パネル・装飾を把握。画像にサイズ表示があれば読み取り価格計算。なければサイズを聞く。項目別に概算価格を案内。大型展示（50万ウォン以上）の場合「🎧 相談員接続ボタンを押してください」と案内。
+9. **ハニカムボード展示** — 展示/空間演出の画像を分析：壁・看板・等身大パネル・装飾・テーブル天板を把握。数字はmm単位。下部の横幅が全体幅、右端の縦が全体高さ。壁パネル1枚(約900~1200mm×2400mm)=約¥15,000。天板=約¥10,000。家具=約¥15,000~25,000。項目別に見積もり提示。分析後必ず「正確なお見積りは専門相談員がご案内いたします 😊 上の🎧ボタンを押してください」。
+10. **エラーメッセージ禁止** — 分析が難しい場合「接続が不安定」と言わず、素敵な作品の構想ですね！と言い、相談員接続を案内。
 
 ⚠️ 連絡先規則: 絶対に作り上げないこと。以下のみ使用。
 ## 会社情報
@@ -192,7 +199,8 @@ serve(async (req) => {
 6. **Custom size products** — don't make up sizes, say "Available in your preferred size! Tell me dimensions for exact pricing." Set recommended_width_mm=0, recommended_height_mm=0.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
 8. **Image upload** — up to 10MB. Larger files: email korea900as@gmail.com.
-9. **Honeycomb exhibition references** — When customer uploads exhibition/space design images: analyze carefully for walls, signs, standees, decorations. Read any dimensions shown (e.g. "3m"). If no sizes visible, ask. Provide itemized pricing estimates. For large exhibitions (est. >500,000 KRW), recommend connecting with a consultant via the 🎧 button.
+9. **Honeycomb exhibition references** — Analyze exhibition images carefully: walls, signs, standees, decorations, table tops, furniture. Numbers are in mm. Bottom width = total width, right side = total height. Wall panel (approx 900~1200mm × 2400mm) = ~$30 each. Table top = ~$20. Furniture = ~$30~50. Present itemized estimate. If no sizes visible, ask. Always end with: "For an accurate quote, our specialist consultants can help 😊 Click the 🎧 button above!"
+10. **Never say 'connection unstable'** — For complex requests, say "What a wonderful project! ✨ Our specialist consultants can help better with this" and recommend consultant connection + related products.
 
 ⚠️ Contact rules: NEVER make up info. Use ONLY:
 ## Company Info
@@ -448,9 +456,9 @@ ${JSON.stringify(categories)}${qaSection}`;
     } catch (error) {
         console.error("Product Advisor Error:", error);
         const errMsgs: Record<string, string> = {
-            kr: "앗, 잠시 연결이 불안정해요 😅 다시 시도해주세요!",
-            ja: "一時的にエラーが発生しました 😅 もう一度お試しください！",
-            us: "Oops, something went wrong 😅 Please try again!",
+            kr: "멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 저보다는 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요!\n\n제품 제작 문의는 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요 😊",
+            ja: "素敵な作品の構想ですね！✨ このような制作は専門相談員が丁寧にご対応いたします。上の🎧相談員接続ボタンを押してください 😊",
+            us: "What a wonderful project! ✨ For this kind of work, our specialist consultants can provide the best guidance. Click the 🎧 consultant button above! 😊",
         };
         let errKey = (reqBody?.lang || 'kr').toLowerCase();
         if (errKey === 'en') errKey = 'us';
