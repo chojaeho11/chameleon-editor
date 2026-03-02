@@ -1095,28 +1095,26 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
         canvas.add(btObj);
     }
 
-    // ── 타이틀: 박스 바로 위에 밀착 (originY:'center' 사용) ──
-    const titleSize = Math.max(Math.round(bH * 0.32), 24);
-    // 글씨 중심 = 박스 위쪽 - 글씨높이/2 - 약간 간격
-    const titleCenterY = boxTop - titleSize * 0.55;
+    // ── 타이틀: 박스 바로 위, 테마색 ──
+    const titleSize = Math.max(Math.round(bH * 0.30), 24);
+    const titleTop = boxTop - titleSize * 1.15 - 6; // 박스 바로 위
 
     // 그림자 (입체감)
-    const shadowObj = new fabric.Textbox(titleText, {
+    canvas.add(new fabric.Textbox(titleText, {
         fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
-        fill: '#000000', textAlign: 'center', opacity: 0.12,
-        originX: 'center', originY: 'center',
-        left: bL + bW / 2 + 3, top: titleCenterY + 4,
+        fill: '#000000', textAlign: 'center', opacity: 0.15,
+        originX: 'left', originY: 'top',
+        left: bL + bW * 0.04 + 3, top: titleTop + 4,
         width: bW * 0.92, lineHeight: 1.05, charSpacing: 50,
         selectable: false, evented: false,
-    });
-    canvas.add(shadowObj);
+    }));
 
-    // 메인 타이틀 (검은색 굵은 글씨)
+    // 메인 타이틀 (테마색 = 박스색)
     const titleObj = new fabric.Textbox(titleText, {
         fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
-        fill: '#1a1a1a', textAlign: 'center',
-        originX: 'center', originY: 'center',
-        left: bL + bW / 2, top: titleCenterY,
+        fill: C.box, textAlign: 'center',
+        originX: 'left', originY: 'top',
+        left: bL + bW * 0.04, top: titleTop,
         width: bW * 0.92, lineHeight: 1.05, charSpacing: 50,
     });
     canvas.add(titleObj);

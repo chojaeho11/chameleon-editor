@@ -278,21 +278,15 @@
             img.src = frontDataUrl;
         }
 
-        // 바닥면
-        const floorGeo = new THREE.PlaneGeometry(10, 10);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.9 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -0.001;
-        wallGroup.add(floor);
-
         scene.add(wallGroup);
 
-        // 카메라 위치
+        // 카메라 위치 (커스텀 orbit 시스템 사용)
         const maxDim = Math.max(w, h);
-        camera.position.set(w * 0.5, h * 0.7, maxDim * 1.2);
-        camera.lookAt(0, h * 0.4, 0);
-        if (controls) { controls.target.set(0, h * 0.4, 0); controls.update(); }
+        target.x = 0; target.y = h * 0.4; target.z = 0;
+        spherical.radius = maxDim * 1.5;
+        spherical.theta = Math.PI / 5;
+        spherical.phi = Math.PI / 3;
+        updateCamera();
     }
 
     // ─── Build Wall (양면 지원) ───
