@@ -621,7 +621,7 @@ function _wzRender(steps, idx) {
     if (bar) bar.style.width = Math.min(100, ((idx+1)/steps.length)*100) + '%';
 }
 
-async function runDesignWizard(title, style) {
+export async function runDesignWizard(title, style) {
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) throw new Error('No canvas board');
     const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);

@@ -1460,7 +1460,11 @@ async function handleSubReturn() {
     <button id="btnStartSearch" class="hero-search-btn">
         <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">Search</span>
     </button>
+    <button id="btnAiAdvisor" class="hero-ai-btn" title="AI 추천">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> AI
+    </button>
 </div>
+<div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 <div class="pagination-wrapper" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:20px 0 15px 0;">
     <button id="btnTplPrev" class="btn-round" onclick="changeTemplatePage(-1)" style="width:100px; justify-content:center;" disabled>
         <i class="fa-solid fa-chevron-left"></i> <span data-i18n="btn_prev">이전</span>
@@ -5190,6 +5194,9 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         var scSec = document.getElementById('shippingCalcSection');
         if (scSec) scSec.style.display = 'block';
 
+        // AI 어드바이저 패널 초기화
+        import('./advisor-panel.js?v=123').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
+
         // PRO 구독 초기화
         if (typeof updateSubPrices === 'function') updateSubPrices();
         if (typeof checkSubscription === 'function') checkSubscription();
@@ -7923,6 +7930,22 @@ if (w >= 20 && h >= 20) {
                     }
                 } catch(e) {
                     console.error('Letter sign auto-design error:', e);
+                }
+            }, 1000);
+        }
+
+        // AI 어드바이저 자동 디자인 모드 감지
+        if (window.__advisorDesignPending) {
+            const adv = window.__advisorDesignPending;
+            window.__advisorDesignPending = null;
+            setTimeout(async () => {
+                try {
+                    const mod = await import('./canvas-ai.js?v=123');
+                    if (mod.runDesignWizard) {
+                        await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
+                    }
+                } catch(e) {
+                    console.error('Advisor auto-design error:', e);
                 }
             }, 1000);
         }

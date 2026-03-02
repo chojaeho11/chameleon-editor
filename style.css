@@ -1199,6 +1199,226 @@ button, input, textarea, select { font-family: inherit; }
 .hero-search-btn:hover {
     background: var(--primary-dark);
 }
+
+/* ── AI 어드바이저 버튼 ── */
+.hero-ai-btn {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    margin: 5px;
+    border-radius: 40px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+.hero-ai-btn:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    transform: scale(1.05);
+}
+.hero-ai-btn i { font-size: 14px; }
+
+/* ── AI 어드바이저 패널 ── */
+.advisor-panel {
+    max-width: 900px;
+    margin: 15px auto 0;
+    padding: 0 15px;
+    animation: advisorSlideDown 0.3s ease-out;
+}
+@keyframes advisorSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.advisor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.advisor-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e1b4b;
+}
+.advisor-title i {
+    color: #8b5cf6;
+    margin-right: 6px;
+}
+.advisor-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+.advisor-close:hover { color: #475569; }
+
+.advisor-summary {
+    color: #475569;
+    font-size: 14px;
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+.advisor-loading {
+    text-align: center;
+    padding: 40px 20px;
+}
+.advisor-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #8b5cf6;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    animation: advisorSpin 0.8s linear infinite;
+}
+@keyframes advisorSpin {
+    to { transform: rotate(360deg); }
+}
+.advisor-loading p {
+    color: #64748b;
+    font-size: 15px;
+}
+.advisor-empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: #64748b;
+}
+.advisor-retry-btn {
+    margin-top: 12px;
+    padding: 8px 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+.advisor-retry-btn:hover { background: #f8fafc; }
+
+/* ── 추천 카드 ── */
+.advisor-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+}
+.advisor-card {
+    position: relative;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px 16px 16px;
+    transition: all 0.2s;
+}
+.advisor-card:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.12);
+}
+.advisor-card-badge {
+    position: absolute;
+    top: -10px;
+    left: 14px;
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+.advisor-card-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin: 0 0 8px;
+}
+.advisor-card-reason {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0 0 10px;
+}
+.advisor-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #334155;
+}
+.advisor-card-info i {
+    color: #8b5cf6;
+    width: 16px;
+    margin-right: 4px;
+}
+.advisor-card-actions {
+    display: flex;
+    gap: 8px;
+}
+.advisor-btn-edit {
+    flex: 1;
+    padding: 10px 8px;
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: opacity 0.2s;
+}
+.advisor-btn-edit:hover { opacity: 0.9; }
+.advisor-btn-cart {
+    flex: 1;
+    padding: 10px 8px;
+    background: white;
+    color: #6366f1;
+    border: 2px solid #6366f1;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+.advisor-btn-cart:hover { background: #f5f3ff; }
+
+/* ── 모바일 advisor ── */
+@media (max-width: 768px) {
+    .advisor-cards {
+        grid-template-columns: 1fr;
+    }
+    .advisor-panel {
+        padding: 0 10px;
+    }
+    .hero-ai-btn {
+        width: 50px !important;
+        height: 100%;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0 !important;
+        font-size: 12px !important;
+    }
+}
+
 /* =========================================
    [수정됨] 리얼 후기 (Marquee) 섹션
    ========================================= */
