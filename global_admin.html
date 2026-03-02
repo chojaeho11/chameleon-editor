@@ -1755,6 +1755,13 @@
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('ai_chatting')" id="lcFilterAiChat" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">AI</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('chatbot')" id="lcFilterBot" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">로그</button>
                 </div>
+                <!-- 사이트 필터 -->
+                <div style="display:flex; gap:4px; margin-top:6px;">
+                    <button onclick="lcFilterSite('all')" id="lcSiteAll" class="btn btn-primary btn-sm" style="font-size:11px; flex:1; padding:5px 4px; border-radius:8px;">🌐 전체</button>
+                    <button onclick="lcFilterSite('kr')" id="lcSiteKr" class="btn btn-outline btn-sm" style="font-size:11px; flex:1; padding:5px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">🇰🇷</button>
+                    <button onclick="lcFilterSite('ja')" id="lcSiteJa" class="btn btn-outline btn-sm" style="font-size:11px; flex:1; padding:5px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">🇯🇵</button>
+                    <button onclick="lcFilterSite('en')" id="lcSiteEn" class="btn btn-outline btn-sm" style="font-size:11px; flex:1; padding:5px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">🇺🇸</button>
+                </div>
                 <!-- 검색 -->
                 <div style="margin-top:10px; position:relative;">
                     <div style="display:flex; gap:4px;">
@@ -2545,7 +2552,7 @@ async function saveCommonInfo() {
 
 // ═══ 실시간 상담 관리 ═══
 (function() {
-    var currentRoom=null, currentFilter='waiting', subscription=null, globalRoomSub=null;
+    var currentRoom=null, currentFilter='waiting', currentSiteFilter='all', subscription=null, globalRoomSub=null;
     function getSb(){return window.sb;}
 
     // ══════════════════════════════════════════════
@@ -3186,6 +3193,13 @@ async function saveCommonInfo() {
                 });
             }
         }
+        // 사이트(언어) 필터 적용
+        if (currentSiteFilter && currentSiteFilter !== 'all' && r.data) {
+            r.data = r.data.filter(function(rm) {
+                var sl = rm.site_lang || 'kr';
+                return sl === currentSiteFilter;
+            });
+        }
         var list=document.getElementById('lcRoomList');
         if(!r.data||r.data.length===0){list.innerHTML='<div style="text-align:center;color:#64748b;padding:30px;font-size:14px;">상담방 없음</div>';return;}
         // 각 방의 미확인 메시지 수 + 마지막 메시지 조회
@@ -3218,7 +3232,8 @@ async function saveCommonInfo() {
             var bdL=unread>0?'#ef4444':rm.status==='waiting'?'#f87171':rm.status==='active'?'#4ade80':rm.status==='ai_chatting'?'#fbbf24':'#475569';
             var bdW=unread>0?'4px':'3px';
             h+='<div onclick="lcSelectRoom(\''+rm.id+'\')" style="background:'+bg+';border-left:'+bdW+' solid '+bdL+';border-radius:10px;padding:12px 14px;margin-bottom:6px;cursor:pointer;transition:background 0.15s;'+(unread>0?'box-shadow:inset 0 0 0 1px rgba(239,68,68,0.2);':'')+'" onmouseenter="if(!'+isActive+')this.style.background=\''+(unread>0?'rgba(239,68,68,0.18)':'rgba(255,255,255,0.08)')+'\'" onmouseleave="if(!'+isActive+')this.style.background=\''+bg+'\'">';
-            var _dispNm = rm.nickname ? rm.nickname : (rm.customer_name||'고객');
+            var _siteFlag = rm.site_lang==='ja'?'🇯🇵 ':rm.site_lang==='en'?'🇺🇸 ':'';
+            var _dispNm = _siteFlag + (rm.nickname ? rm.nickname : (rm.customer_name||'고객'));
             var _subNm = rm.nickname ? '<div style="font-size:10px;color:#94a3b8;margin-top:1px;">'+si+' '+(rm.customer_name||'')+'</div>' : '';
             h+='<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:700;font-size:14px;color:'+(unread>0?'#fca5a5':'#f1f5f9')+';cursor:pointer;" onclick="event.stopPropagation();lcEditNickname(\''+rm.id+'\',this)" title="클릭하여 별명 설정">'+(unread>0?'🔴 ':'')+(rm.nickname?'':si+' ')+_dispNm+(rm.nickname?' <span style=&quot;font-size:10px;color:#a5b4fc;&quot;>✏️</span>':'')+'</span><span style="display:flex;align-items:center;gap:6px;">';
             if (unread > 0) h+='<span style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:11px;font-weight:800;min-width:22px;height:22px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;animation:lcBadgePulse 1.5s ease infinite;box-shadow:0 0 8px rgba(239,68,68,0.6);">'+(unread>99?'99+':unread)+'</span>';
@@ -3387,6 +3402,19 @@ async function saveCommonInfo() {
         if (f === 'chatbot') { lcLoadChatbotLogs(); return; }
         lcLoadRooms();
     };
+
+    // 사이트(언어) 필터
+    window.lcFilterSite = function(s) {
+        currentSiteFilter = s;
+        ['All','Kr','Ja','En'].forEach(function(k) {
+            var el = document.getElementById('lcSite'+k);
+            if (el) el.className = 'btn btn-outline btn-sm';
+        });
+        var activeId = {all:'All',kr:'Kr',ja:'Ja',en:'En'}[s];
+        var el = document.getElementById('lcSite'+(activeId||'All'));
+        if (el) el.className = 'btn btn-primary btn-sm';
+        lcLoadRooms();
+    };
     // AI 챗봇 상담 로그 표시
     window.lcLoadChatbotLogs = async function() {
         var sb=getSb(); if(!sb) return;
@@ -3429,7 +3457,8 @@ async function saveCommonInfo() {
         if(rr.error) return; currentRoom=rr.data;
         var isAiChat = currentRoom.status==='ai_chatting';
         var _dn=currentRoom.nickname||(currentRoom.customer_name||'고객');
-        document.getElementById('lcChatTitle').textContent=(isAiChat?'🤖 ':'👤 ')+_dn+' 님'+(isAiChat?' AI 상담':' 상담');
+        var _sf=currentRoom.site_lang==='ja'?'🇯🇵 ':currentRoom.site_lang==='en'?'🇺🇸 ':'';
+        document.getElementById('lcChatTitle').textContent=_sf+(isAiChat?'🤖 ':'👤 ')+_dn+' 님'+(isAiChat?' AI 상담':' 상담');
         // 담당자 배지 업데이트
         var mgrBadge=document.getElementById('lcChatManagerBadge');
         var statusBadge=document.getElementById('lcChatStatusBadge');
@@ -3446,9 +3475,16 @@ async function saveCommonInfo() {
         var memoPanel=document.getElementById('lcMemoPanel'); if(memoPanel) memoPanel.style.display='none';
         lcLoadMemo();
         if(currentRoom.status==='waiting'){
-            await sb.from('chat_rooms').update({status:'active',updated_at:new Date().toISOString()}).eq('id',roomId);
+            // 미배정 방이면 현재 매니저로 자동 배정
+            var autoMgr = currentRoom.assigned_manager;
+            if (!autoMgr && myManagerName && myManagerName !== '__HQ__') {
+                autoMgr = myManagerName;
+                currentRoom.assigned_manager = autoMgr;
+            }
+            await sb.from('chat_rooms').update({status:'active',assigned_manager:autoMgr||currentRoom.assigned_manager,updated_at:new Date().toISOString()}).eq('id',roomId);
             currentRoom.status='active';
-            await sb.from('chat_messages').insert({room_id:roomId,sender_type:'system',message:sysMsg('connected', currentRoom.assigned_manager)});
+            if(mgrBadge){mgrBadge.textContent='담당: '+autoMgr;mgrBadge.style.background='#6366f1';}
+            await sb.from('chat_messages').insert({room_id:roomId,sender_type:'system',message:sysMsg('connected', autoMgr||currentRoom.assigned_manager)});
         }
         var mr=await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(100);
         var area=document.getElementById('lcChatMessages');

@@ -42,6 +42,9 @@ serve(async (req) => {
         await sql`ALTER TABLE public.advisor_qa_log ADD COLUMN IF NOT EXISTS customer_message_ko TEXT`;
         await sql`ALTER TABLE public.advisor_qa_log ADD COLUMN IF NOT EXISTS admin_answer_ko TEXT`;
 
+        // chat_rooms에 사이트 언어 컬럼 추가 (해외몰 구분용)
+        await sql`ALTER TABLE public.chat_rooms ADD COLUMN IF NOT EXISTS site_lang TEXT DEFAULT 'kr'`;
+
         await sql.end();
         return new Response(JSON.stringify({ status: "created" }), {
             headers: { "Content-Type": "application/json" },

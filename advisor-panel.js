@@ -536,7 +536,8 @@ async function connectToManager(managerName) {
             assigned_manager: managerName,
             status: 'waiting',
             source: 'chatbot',
-            ai_summary: summary
+            ai_summary: summary,
+            site_lang: getLang()
         }).select().single();
 
         if (error || !data) {
