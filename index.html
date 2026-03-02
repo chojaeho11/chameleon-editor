@@ -5276,7 +5276,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=126').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=127').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // PRO 구독 초기화
         if (typeof updateSubPrices === 'function') updateSubPrices();

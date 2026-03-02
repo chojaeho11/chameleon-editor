@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 import postgres from "https://deno.land/x/postgresjs@v3.4.5/mod.js";
 
 serve(async (req) => {
@@ -45,8 +46,37 @@ serve(async (req) => {
         // chat_rooms에 사이트 언어 컬럼 추가 (해외몰 구분용)
         await sql`ALTER TABLE public.chat_rooms ADD COLUMN IF NOT EXISTS site_lang TEXT DEFAULT 'kr'`;
 
+        // Storage RLS 정책: chat-files 버킷 업로드/다운로드 허용
+        try {
+            await sql`DROP POLICY IF EXISTS "chat-files-insert" ON storage.objects`;
+            await sql`DROP POLICY IF EXISTS "chat-files-select" ON storage.objects`;
+            await sql`DROP POLICY IF EXISTS "chat-files-update" ON storage.objects`;
+            await sql`CREATE POLICY "chat-files-insert" ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'chat-files')`;
+            await sql`CREATE POLICY "chat-files-select" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'chat-files')`;
+            await sql`CREATE POLICY "chat-files-update" ON storage.objects FOR UPDATE TO anon, authenticated USING (bucket_id = 'chat-files')`;
+        } catch(pe) { console.log('Policy error (may already exist):', pe.message); }
+
         await sql.end();
-        return new Response(JSON.stringify({ status: "created" }), {
+
+        // Storage: chat-files 버킷 생성 (service_role key 사용)
+        const supaUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const sb = createClient(supaUrl, serviceKey);
+
+        // 버킷 존재 확인
+        const { data: buckets } = await sb.storage.listBuckets();
+        const exists = buckets?.some((b: any) => b.id === 'chat-files');
+        let storageMsg = 'bucket already exists';
+
+        if (!exists) {
+            const { error: createErr } = await sb.storage.createBucket('chat-files', {
+                public: true,
+                fileSizeLimit: 52428800, // 50MB
+            });
+            storageMsg = createErr ? 'bucket create error: ' + createErr.message : 'bucket created';
+        }
+
+        return new Response(JSON.stringify({ status: "created", storage: storageMsg }), {
             headers: { "Content-Type": "application/json" },
         });
     } catch (e) {

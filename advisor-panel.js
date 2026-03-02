@@ -842,6 +842,40 @@ function addTyping() {
 }
 
 // ─── 제품 카드 ───
+// 제품별 선택된 옵션 저장
+const selectedAddons = {};
+
+function buildAddonHtml(rec, i) {
+    if (!rec.addons || rec.addons.length === 0) return '';
+    // 카테고리별 그룹핑
+    const groups = {};
+    rec.addons.forEach(a => {
+        const cat = a.category || (getLang() === 'ja' ? 'オプション' : getLang() === 'en' ? 'Options' : '옵션');
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(a);
+    });
+
+    const optLabel = getLang() === 'ja' ? 'オプション選択' : getLang() === 'en' ? 'Select Options' : '옵션 선택';
+    let html = `<div class="adv-addon-area" data-product-i="${i}">
+        <div style="font-size:11px;font-weight:700;color:#6366f1;margin:8px 0 4px;"><i class="fa-solid fa-sliders"></i> ${optLabel}</div>`;
+
+    for (const [catName, addons] of Object.entries(groups)) {
+        html += `<div style="margin-bottom:6px;">
+            <span style="font-size:10px;color:#94a3b8;font-weight:600;">${esc(catName)}</span>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;">`;
+        addons.forEach(a => {
+            html += `<button class="adv-addon-chip" data-addon-code="${esc(a.code)}" data-product-i="${i}"
+                style="font-size:11px;padding:4px 10px;border-radius:16px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:all .15s;white-space:nowrap;"
+                title="${esc(a.name)} ${esc(a.price)}">
+                ${esc(a.name)} <span style="color:#94a3b8;font-size:10px;">${esc(a.price)}</span>
+            </button>`;
+        });
+        html += `</div></div>`;
+    }
+    html += `</div>`;
+    return html;
+}
+
 function addProductCards(products) {
     if (!chatArea) return;
     const wrap = document.createElement('div');
@@ -857,6 +891,7 @@ function addProductCards(products) {
         const sizeText = (w > 0 && h > 0)
             ? `${w}\u00d7${h}mm`
             : (getLang() === 'ja' ? 'サイズ自由' : getLang() === 'en' ? 'Custom size' : '사이즈 자유');
+        const addonHtml = buildAddonHtml(rec, i);
         card.innerHTML = `
             ${thumbHtml}
             <div class="adv-card-top">
@@ -868,6 +903,7 @@ function addProductCards(products) {
                 <span><i class="fa-solid fa-ruler-combined"></i> ${sizeText}</span>
                 ${rec.price_display ? `<span><i class="fa-solid fa-tag"></i> ${esc(rec.price_display)}</span>` : ''}
             </div>
+            ${addonHtml}
             <div class="adv-card-btns">
                 <button class="adv-btn-editor" data-i="${i}">
                     <i class="fa-solid fa-palette"></i> ${t('editor')}
@@ -882,6 +918,7 @@ function addProductCards(products) {
 
     chatArea.appendChild(wrap);
     bindCardEvents(wrap, products);
+    bindAddonEvents(wrap, products);
     scrollChat();
 }
 
@@ -894,12 +931,35 @@ function bindCardEvents(wrap, products) {
     });
 }
 
+function bindAddonEvents(wrap, products) {
+    wrap.querySelectorAll('.adv-addon-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const code = chip.dataset.addonCode;
+            const pi = chip.dataset.productI;
+            const pCode = products[+pi]?.code || pi;
+            if (!selectedAddons[pCode]) selectedAddons[pCode] = new Set();
+            if (selectedAddons[pCode].has(code)) {
+                selectedAddons[pCode].delete(code);
+                chip.style.background = '#fff';
+                chip.style.borderColor = '#e2e8f0';
+                chip.style.color = '#475569';
+            } else {
+                selectedAddons[pCode].add(code);
+                chip.style.background = '#6366f1';
+                chip.style.borderColor = '#6366f1';
+                chip.style.color = '#fff';
+            }
+        });
+    });
+}
+
 function rebindCardEvents() {
     // 복원된 카드의 이벤트 재바인딩 (lastProducts 사용)
     if (!chatArea || lastProducts.length === 0) return;
     const wraps = chatArea.querySelectorAll('.adv-cards-wrap');
     wraps.forEach(wrap => {
         bindCardEvents(wrap, lastProducts);
+        bindAddonEvents(wrap, lastProducts);
     });
 }
 
@@ -912,6 +972,12 @@ async function openEditor(rec) {
         window.__letterSignData = { titleText: rec.design_title || '', bottomText: '', style: 'forest' };
     } else {
         window.__advisorDesignPending = { title: rec.design_title || '', keywords: rec.design_keywords || [], style: 'forest' };
+    }
+
+    // 선택된 옵션 전달
+    const addons = selectedAddons[rec.code];
+    if (addons && addons.size > 0) {
+        window.__advisorSelectedAddons = Array.from(addons);
     }
 
     if (panelEl) panelEl.style.display = 'none';
@@ -928,12 +994,14 @@ async function addToCart(rec, btnEl) {
             priceKRW = Math.round((area * rec._raw_per_sqm_krw) / 100) * 100;
             if (priceKRW <= 0) priceKRW = rec._raw_price_krw || 50000;
         }
+        const addons = selectedAddons[rec.code];
+        const addonArr = addons ? Array.from(addons) : [];
         addProductToCartDirectly({
             code: rec.code, name: rec.name, price: priceKRW,
             w_mm: rec.recommended_width_mm, h_mm: rec.recommended_height_mm,
             width_mm: rec.recommended_width_mm, height_mm: rec.recommended_height_mm,
             is_custom_size: rec.is_custom_size || false, img: null,
-        }, 1, [], {});
+        }, 1, addonArr, {});
         if (btnEl) {
             btnEl.innerHTML = '<i class="fa-solid fa-check"></i> OK';
             btnEl.disabled = true;

@@ -76,9 +76,9 @@ serve(async (req) => {
 
         // DB 조회
         const sb = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
-        const [prodRes, baseRes, catRes, qaRes] = await Promise.all([
+        const [prodRes, baseRes, catRes, qaRes, addonRes, addonCatRes] = await Promise.all([
             sb.from("admin_products")
-                .select("code,name,price,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url")
+                .select("code,name,price,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url,addons")
                 .order("sort_order", { ascending: true }).limit(2000),
             sb.from("admin_products")
                 .select("code,name,price,width_mm,height_mm,is_custom_size,category")
@@ -90,6 +90,10 @@ serve(async (req) => {
                 .select("customer_message,admin_answer,category")
                 .eq("is_reviewed", true).eq("is_active", true)
                 .order("reviewed_at", { ascending: false }).limit(30),
+            sb.from("admin_addons")
+                .select("code,name,name_jp,name_us,category_code,price,price_jp,price_us"),
+            sb.from("addon_categories")
+                .select("code,name_kr,name_jp,name_us"),
         ]);
 
         const baseProducts = baseRes.data || [];
@@ -116,6 +120,20 @@ serve(async (req) => {
         const categories = catRes.data || [];
         const siteUrl = clientLang === 'ja' ? 'https://www.cafe0101.com' : clientLang === 'us' ? 'https://www.cafe3355.com' : 'https://www.cafe2626.com';
 
+        // Addon 데이터 정리
+        const allAddons = addonRes.data || [];
+        const addonCats = addonCatRes.data || [];
+        const addonCatMap: Record<string, string> = {};
+        addonCats.forEach((c: any) => {
+            addonCatMap[c.code] = clientLang === 'ja' ? (c.name_jp || c.name_kr) : clientLang === 'us' ? (c.name_us || c.name_kr) : c.name_kr;
+        });
+        const addonMap: Record<string, any> = {};
+        allAddons.forEach((a: any) => {
+            const name = clientLang === 'ja' ? (a.name_jp || a.name) : clientLang === 'us' ? (a.name_us || a.name) : a.name;
+            const price = clientLang === 'ja' ? (a.price_jp || Math.round(a.price * 0.1)) : clientLang === 'us' ? (a.price_us || Math.round(a.price * 0.002)) : a.price;
+            addonMap[a.code] = { code: a.code, name, category: addonCatMap[a.category_code] || '', price: convertPrice(price) };
+        });
+
         // 시스템 프롬프트 — 카푸 AI 쇼핑 어시스턴트
         const langPrompts: Record<string, string> = {
             kr: `너는 카멜레온프린팅의 AI 쇼핑 어시스턴트 "카푸"야. 따뜻하고 친근하게 고객을 응대해. 이모지를 적절히 사용하고 3~5문장으로 답변해.
@@ -126,7 +144,7 @@ serve(async (req) => {
 3. **이전 대화를 기억해** — conversation_history가 있으면 맥락을 이해하고 이전 대화를 바탕으로 답변해.
 4. **추천 개수는 자유** — 1개면 1개, 3개면 3개, 5개면 5개. 상황에 맞게. 최대 5개까지.
 5. **제품 설명과 옵션을 활용해** — 각 제품의 description과 특성(is_custom_size, is_file_upload 등)을 확인하고 정확히 안내해.
-6. **커스텀 사이즈 제품(is_custom_size=true)은 원하는 크기로 제작 가능** — 임의 사이즈를 추천하지 말고, "원하시는 사이즈로 제작 가능합니다. 사이즈를 알려주시면 정확한 가격을 안내해 드릴게요!" 라고 안내해. recommended_width_mm=0, recommended_height_mm=0으로 설정.
+6. **커스텀 사이즈 제품 상담 순서** — (1) 먼저 사이즈를 물어봐 "원하시는 사이즈를 알려주세요!" (2) 사이즈를 받으면 가격 계산 후 옵션(addons)을 설명해줘. 옵션이 있으면 각 옵션의 이름, 설명, 가격을 안내해. (3) 그 다음에 제품 카드를 추천해. 사이즈를 모르면 recommended_width_mm=0, recommended_height_mm=0으로 설정하고 **제품 카드를 보여주지 마(products 빈 배열)**. 사이즈를 알면 제품 카드와 함께 옵션을 안내해.
 7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
 8. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 korea900@hanmail.net으로 보내라고 안내.
 9. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시/공간 연출 관련 이미지를 올리면:
@@ -170,7 +188,7 @@ serve(async (req) => {
 3. **過去の会話を記憶** — conversation_historyがあれば文脈を理解し回答。
 4. **推薦数は自由** — 1個なら1個、3個なら3個。状況に応じて最大5個。
 5. **商品説明を活用** — description、is_custom_size等を確認し正確に案内。
-6. **カスタムサイズ商品** — 任意サイズを推薦せず「ご希望のサイズで制作可能です」と案内。recommended_width_mm=0, recommended_height_mm=0。
+6. **カスタムサイズ商品の相談順序** — (1)まずサイズを聞く「ご希望のサイズを教えてください！」 (2)サイズ確認後、価格計算しオプション(addons)を説明。各オプションの名前・説明・価格を案内 (3)その後に商品カードを推薦。サイズ不明の場合はrecommended_width_mm=0, recommended_height_mm=0に設定し**商品カードは表示しない(products空配列)**。
 7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
 8. **画像アップ** — 10MBまで添付可。大きいファイルはメールsupport@cafe0101.comへ。
 9. **ハニカムボード展示** — 展示/空間演出の画像を分析：壁・看板・等身大パネル・装飾・テーブル天板を把握。数字はmm単位。下部の横幅が全体幅、右端の縦が全体高さ。壁パネル1枚(約900~1200mm×2400mm)=約¥15,000。天板=約¥10,000。家具=約¥15,000~25,000。項目別に見積もり提示。分析後必ず「正確なお見積りは専門相談員がご案内いたします 😊 上の🎧ボタンを押してください」。
@@ -196,7 +214,7 @@ serve(async (req) => {
 3. **Remember conversation** — use conversation_history for context.
 4. **Flexible count** — 1 to 5 products as needed.
 5. **Use product descriptions** — check description, is_custom_size etc.
-6. **Custom size products** — don't make up sizes, say "Available in your preferred size! Tell me dimensions for exact pricing." Set recommended_width_mm=0, recommended_height_mm=0.
+6. **Custom size product consultation flow** — (1) First ask for size: "What size would you like?" (2) After size, calculate price and explain available options (addons) with name, description, and price for each. (3) Then recommend product cards. If size unknown, set recommended_width_mm=0, recommended_height_mm=0 and **don't show product cards (empty products array)**.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
 8. **Image upload** — up to 10MB. Larger files: email korea900as@gmail.com.
 9. **Honeycomb exhibition references** — Analyze exhibition images carefully: walls, signs, standees, decorations, table tops, furniture. Numbers are in mm. Bottom width = total width, right side = total height. Wall panel (approx 900~1200mm × 2400mm) = ~$30 each. Table top = ~$20. Furniture = ~$30~50. Present itemized estimate. If no sizes visible, ask. Always end with: "For an accurate quote, our specialist consultants can help 😊 Click the 🎧 button above!"
@@ -238,7 +256,11 @@ serve(async (req) => {
         const systemPrompt = `${langPrompts[clientLang] || langPrompts['kr']}
 ${labels.note}
 ## ${labels.products}
-${JSON.stringify(products.map(p => ({ code: p.code, name: p.name, category: p.category, desc: (p.description || '').substring(0, 100), img: p.img_url || '', size: p.width_mm + 'x' + p.height_mm + 'mm', is_custom_size: p.is_custom_size, is_bulk_order: p.is_bulk_order, qty_options: p.quantity_options, price: p.price_display, price_per_sqm: p.price_per_sqm_display })))}
+${JSON.stringify(products.map(p => {
+    const addonCodes = p.addons ? p.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
+    const productAddons = addonCodes.map((c: string) => addonMap[c]).filter(Boolean);
+    return { code: p.code, name: p.name, category: p.category, desc: (p.description || '').substring(0, 100), img: p.img_url || '', size: p.width_mm + 'x' + p.height_mm + 'mm', is_custom_size: p.is_custom_size, is_bulk_order: p.is_bulk_order, qty_options: p.quantity_options, price: p.price_display, price_per_sqm: p.price_per_sqm_display, addons: productAddons.length > 0 ? productAddons : undefined };
+}))}
 
 ## ${labels.categories}
 ${JSON.stringify(categories)}${qaSection}`;
@@ -398,6 +420,11 @@ ${JSON.stringify(categories)}${qaSection}`;
                             rec._raw_price_krw = dbProduct._raw_price;
                             rec._raw_per_sqm_krw = dbProduct._raw_per_sqm;
                             rec.is_custom_size = dbProduct.is_custom_size;
+                            // addon 정보 보강
+                            if (dbProduct.addons) {
+                                const addonCodes = dbProduct.addons.split(',').map((c: string) => c.trim()).filter(Boolean);
+                                rec.addons = addonCodes.map((c: string) => addonMap[c]).filter(Boolean);
+                            }
                         }
                     });
                 }
