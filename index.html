@@ -6522,16 +6522,34 @@ window.showChoiceModal = async function(key) {
                 <div id="calcResultSize" style="font-size:11px; opacity:0.8; margin-top:2px;">-</div>
             </div>`;
     } else {
-        rightSideUI = productHeaderHtml + `
-            <div data-npc="price" style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0 15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
-                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 販売価格':lang==='zh'?'💰 售价':lang==='ar'?'💰 السعر':lang==='es'?'💰 Precio':lang==='de'?'💰 Preis':lang==='fr'?'💰 Prix':lang==='en'?'💰 Price':'💰 판매가'}</div>
-                <div style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${formatPriceSimple(dPrice)}</div>
-            </div>
+        // 대량 주문제작상품: 수량 드롭다운 / 일반: +/- 수량 버튼
+        const isBulk = product.is_bulk_order && product.quantity_options && product.quantity_options.length > 0;
+        const qtyLabel = lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량';
+        const unitLabel = lang==='ja'?'個':lang==='en'?'pcs':lang==='zh'?'个':lang==='es'?'uds':lang==='de'?'Stk':lang==='fr'?'pcs':'개';
+        let qtyHtml = '';
+        if (isBulk) {
+            const opts = product.quantity_options.map(q => `<option value="${q}">${q.toLocaleString()}${unitLabel}</option>`).join('');
+            qtyHtml = `
+            <div data-npc="qty" style="margin-top:10px;">
+                <div style="font-size:12px; color:#6d28d9; font-weight:bold; margin-bottom:6px;">📦 ${qtyLabel} (${lang==='ja'?'ロット単位':lang==='en'?'Lot unit':'단위 선택'})</div>
+                <select id="fixedProdQty" onchange="window.updateModalTotal();" style="width:100%; height:44px; border:2px solid #7c3aed; border-radius:10px; font-size:16px; font-weight:bold; text-align:center; color:#4c1d95; background:#f5f3ff; cursor:pointer;">
+                    ${opts}
+                </select>
+            </div>`;
+        } else {
+            qtyHtml = `
             <div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px;">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
                 <input type="number" id="fixedProdQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
             </div>`;
+        }
+        rightSideUI = productHeaderHtml + `
+            <div data-npc="price" style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0 15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
+                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 販売価格':lang==='zh'?'💰 售价':lang==='ar'?'💰 السعر':lang==='es'?'💰 Precio':lang==='de'?'💰 Preis':lang==='fr'?'💰 Prix':lang==='en'?'💰 Price':'💰 판매가'}${isBulk ? ` (${lang==='ja'?'1個あたり':lang==='en'?'per unit':'개당'})` : ''}</div>
+                <div style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${formatPriceSimple(dPrice)}</div>
+            </div>
+            ${qtyHtml}`;
     }
 
     // 6. 모달 조립
@@ -6565,7 +6583,7 @@ window.showChoiceModal = async function(key) {
                     ${product.is_general_product
                         ? `<button onclick="window.confirmChoice('cart')" class="btn-round primary" style="height:60px; font-size:16px;">🛒 ${lang==='ja'?'カートに入れる':lang==='zh'?'加入购物车':lang==='ar'?'أضف إلى السلة':lang==='es'?'Añadir al Carrito':lang==='de'?'In den Warenkorb':lang==='fr'?'Ajouter au panier':lang==='en'?'Add to Cart':'장바구니 담기'}</button>`
                         : `${!isCustom ? `<button onclick="window.confirmChoice('upload')" id="btnKeyringUpload2" class="btn-round" style="height:auto; padding:14px 20px; font-size:16px; background:#f59e0b; color:white; display:flex; flex-direction:column; align-items:center; gap:4px;"><span>${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger':lang==='en'?'Upload File':'파일 업로드'}</span><span style="font-size:11px; font-weight:normal; opacity:0.85;">${lang==='ja'?'※画像とPDFファイルのみアップロード可能です':lang==='zh'?'※仅支持上传图片和PDF文件':lang==='ar'?'※يمكن رفع الصور وملفات PDF فقط':lang==='es'?'※Solo imágenes y archivos PDF':lang==='de'?'※Nur Bilder und PDF-Dateien':lang==='fr'?'※Images et fichiers PDF uniquement':lang==='en'?'※Images and PDF files only':'※이미지와 PDF 파일만 업로드 가능합니다'}</span></button>` : ''}
-                          ${!product.is_file_upload ? `<button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='zh'?'编辑器设计':lang==='ar'?'محرر التصميم':lang==='es'?'Editor de Diseño':lang==='de'?'Design-Editor':lang==='fr'?'Éditeur de design':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>` : ''}
+                          <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">🎨 ${lang==='ja'?'エディタでデザイン':lang==='zh'?'编辑器设计':lang==='ar'?'محرر التصميم':lang==='es'?'Editor de Diseño':lang==='de'?'Design-Editor':lang==='fr'?'Éditeur de design':lang==='en'?'Design Editor':'에디터로 디자인하기'}</button>
                           <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:60px; font-size:16px; background:#4ccc02; color:white;">🛒 ${lang==='ja'?'購入する':lang==='zh'?'购买':lang==='ar'?'شراء':lang==='es'?'Comprar':lang==='de'?'Kaufen':lang==='fr'?'Acheter':lang==='en'?'Purchase':'구매하기'}</button>`
                     }
                 </div>
@@ -7804,7 +7822,7 @@ if (w >= 20 && h >= 20) {
         // ★ [핵심] 데이터가 비어있으면 DB에서 불러오는 안전장치
         if (!window.PRODUCT_DB[key]) {
             console.log("🔄 에디터용 상품 정보 로딩 중...");
-            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, is_custom_size').eq('code', key).single();
+            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, is_custom_size, is_file_upload, is_bulk_order, quantity_options, is_general_product').eq('code', key).single();
             if (error || !prodData) {
                 console.error("상품 로드 실패:", error);
                 showToast("상품 정보를 찾을 수 없습니다.", 'error'); return;
@@ -7813,6 +7831,9 @@ if (w >= 20 && h >= 20) {
         }
 
         const product = window.PRODUCT_DB[key];
+
+        // 사이즈고정상품 플래그 (에디터에서 크기 변경 차단)
+        window.__fixedSizeProduct = !!(product && product.is_file_upload);
 
         // 커스텀 가격/사이즈 적용
         if (customPrice !== null) {
@@ -8003,6 +8024,21 @@ if (w >= 20 && h >= 20) {
         window.dispatchEvent(new Event('resize'));
 
         if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
+
+        // ★ 사이즈고정상품: 에디터 내 사이즈 변경 UI 비활성화
+        if (window.__fixedSizeProduct) {
+            ['inputUserW','inputUserH'].forEach(id => { const el = document.getElementById(id); if(el) { el.disabled = true; el.style.opacity = '0.5'; } });
+            const _btnApply = document.getElementById('btnApplyUserSize');
+            if (_btnApply) { _btnApply.disabled = true; _btnApply.style.opacity = '0.5'; _btnApply.textContent = lang==='ja'?'サイズ固定':'Fixed Size'; }
+            const _btnRotate = document.getElementById('btnRotateCanvas');
+            if (_btnRotate) { _btnRotate.disabled = true; _btnRotate.style.opacity = '0.5'; }
+        } else {
+            ['inputUserW','inputUserH'].forEach(id => { const el = document.getElementById(id); if(el) { el.disabled = false; el.style.opacity = '1'; } });
+            const _btnApply = document.getElementById('btnApplyUserSize');
+            if (_btnApply) { _btnApply.disabled = false; _btnApply.style.opacity = '1'; }
+            const _btnRotate = document.getElementById('btnRotateCanvas');
+            if (_btnRotate) { _btnRotate.disabled = false; _btnRotate.style.opacity = '1'; }
+        }
 
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
         const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');

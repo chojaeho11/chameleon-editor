@@ -38,6 +38,9 @@ export function initSizeControls() {
 
     if (btnApplyUser && inputW && inputH) {
         btnApplyUser.onclick = () => {
+            if (window.__fixedSizeProduct) {
+                showToast(window.t('msg_fixed_size', "This product has a fixed canvas size."), "warn"); return;
+            }
             let reqW = parseInt(inputW.value); // mm 단위
             let reqH = parseInt(inputH.value); // mm 단위
 
@@ -119,6 +122,9 @@ export function initSizeControls() {
         btnRotate = newBtn; // 새 버튼으로 변수 갱신
 
         btnRotate.onclick = () => {
+            if (window.__fixedSizeProduct) {
+                showToast(window.t('msg_fixed_size', "This product has a fixed canvas size."), "warn"); return;
+            }
             const board = canvas.getObjects().find(o => o.isBoard);
             if (!board) return;
             
@@ -142,6 +148,9 @@ export function initSizeControls() {
 // -----------------------------------------------------------------
 
 function requestChangeSize(w, h, name, mode) {
+    if (window.__fixedSizeProduct) {
+        showToast(window.t('msg_fixed_size', "This product has a fixed canvas size."), "warn"); return;
+    }
     const objects = canvas.getObjects().filter(o => !o.isBoard);
     if (objects.length === 0) {
         applySize(w, h, name, mode, 'replace');

@@ -985,6 +985,9 @@ window.addProductDB = async () => {
     const isHotDeal = document.getElementById('newProdIsHotDeal').checked;
     const isBizDeal = document.getElementById('newProdIsBizDeal').checked;
     const isFileUpload = document.getElementById('newProdIsFileUpload').checked;
+    const isBulkOrder = document.getElementById('newProdIsBulkOrder').checked;
+    const bulkQtyStr = document.getElementById('newProdBulkQtyOptions') ? document.getElementById('newProdBulkQtyOptions').value : '';
+    const quantityOptions = bulkQtyStr ? bulkQtyStr.split(',').map(s => parseInt(s.trim())).filter(n => n > 0) : [];
 
     const priceKR = Math.round(parseFloat(document.getElementById('newProdPrice').value || 0));
     const priceJP = Math.round(parseFloat(document.getElementById('newProdPriceJP').value || 0));
@@ -1000,6 +1003,8 @@ window.addProductDB = async () => {
         is_hot_deal: isHotDeal,
         is_biz_deal: isBizDeal,
         is_file_upload: isFileUpload,
+        is_bulk_order: isBulkOrder,
+        quantity_options: quantityOptions,
         img_url: imgUrl, // 여기에 짧은 주소가 들어감
         name: document.getElementById('newProdName').value, 
         price: priceKR,
@@ -1081,6 +1086,10 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdIsHotDeal').checked = data.is_hot_deal || false;
     document.getElementById('newProdIsBizDeal').checked = data.is_biz_deal || false;
     document.getElementById('newProdIsFileUpload').checked = data.is_file_upload || false;
+    document.getElementById('newProdIsBulkOrder').checked = data.is_bulk_order || false;
+    const bulkDiv = document.getElementById('bulkOrderOptions');
+    if (bulkDiv) bulkDiv.style.display = data.is_bulk_order ? 'block' : 'none';
+    if (document.getElementById('newProdBulkQtyOptions')) document.getElementById('newProdBulkQtyOptions').value = (data.quantity_options || []).join(', ');
 
     // 상세 설명
     document.getElementById('newProdDetailKR').value = data.description || '';
@@ -1204,6 +1213,10 @@ window.resetProductForm = () => {
     document.querySelectorAll('input[name="prodAddon"]').forEach(cb => cb.checked = false);
     document.getElementById('newProdIsCustom').checked = false;
     document.getElementById('newProdIsGeneral').checked = false;
+    if (document.getElementById('newProdIsBulkOrder')) document.getElementById('newProdIsBulkOrder').checked = false;
+    const bulkDiv = document.getElementById('bulkOrderOptions');
+    if (bulkDiv) bulkDiv.style.display = 'none';
+    if (document.getElementById('newProdBulkQtyOptions')) document.getElementById('newProdBulkQtyOptions').value = '';
     // 칼선/목업 초기화
     const cutlineClear = document.getElementById('btnCutlineClear');
     if (cutlineClear) cutlineClear.style.display = 'none';

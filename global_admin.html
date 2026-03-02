@@ -924,9 +924,9 @@
                     <input type="checkbox" id="newProdIsCustom" style="width:18px; height:18px;"> 사이즈 입력 허용 (헤베 계산)
                 </label>
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#059669;">
-    <input type="checkbox" id="newProdIsGeneral" style="width:18px; height:18px;"> 체크금지
+    <input type="checkbox" id="newProdIsGeneral" style="width:18px; height:18px;"> 🛒 일반상품 (에디터 없이 수량+구매만)
     <button id="btnEmergencyReset" class="btn btn-danger btn-sm" onclick="resetAllGeneralProducts()" style="background:#ef4444; border-color:#dc2626; margin-left: 10px;">
-    🚫 '일반상품' 설정 전체 해제 (복구)
+    🚫 전체 해제
 </button>
 </label>
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#ef4444;">
@@ -935,8 +935,15 @@
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#4f46e5;">
                     <input type="checkbox" id="newProdIsBizDeal" style="width:18px; height:18px;"> 💼 업자용 핫딜
                 </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#7c3aed;">
+                    <input type="checkbox" id="newProdIsBulkOrder" style="width:18px; height:18px;" onchange="document.getElementById('bulkOrderOptions').style.display=this.checked?'block':'none'"> 📦 대량 주문제작상품
+                </label>
+                <div id="bulkOrderOptions" style="display:none; margin-left:26px; margin-top:5px; padding:10px; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px;">
+                    <label style="font-size:12px; font-weight:600; color:#6d28d9;">수량단위 (쉼표구분, 예: 100,300,1000)</label>
+                    <input id="newProdBulkQtyOptions" class="input-text" placeholder="100,300,1000" style="margin-top:4px;">
+                </div>
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#0891b2;">
-                    <input type="checkbox" id="newProdIsFileUpload" style="width:18px; height:18px;"> 📎 파일업로드 전용 (에디터 없이 이미지만 올리기)
+                    <input type="checkbox" id="newProdIsFileUpload" style="width:18px; height:18px;"> 📐 사이즈고정상품 (에디터O, 사이즈변경X)
                 </label>
             </div>
 
