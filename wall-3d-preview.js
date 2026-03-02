@@ -225,6 +225,14 @@
         if (!animFrameId) animate();
     }
 
+    // ─── Fabric.js 텍스트 객체에서 실제 렌더링된 줄 읽기 (워드랩 포함) ───
+    function _lsGetRenderedText(textObj) {
+        if (textObj._textLines && textObj._textLines.length > 0) {
+            return textObj._textLines.map(line => line.join('')).join('\n');
+        }
+        return textObj.text || '';
+    }
+
     // ─── 글씨 스카시 텍스처 생성 헬퍼 (박스 전면용) ───
     function _lsCreateTexture(text, bgColor, textColor, widthPx, heightPx, transparentBg) {
         const cvs = document.createElement('canvas');
@@ -276,19 +284,36 @@
             const font = await _lsLoad3DFont();
             if (!font || !text) return null;
 
-            // 글자 경로 → THREE.ShapePath
-            const opPath = font.getPath(text, 0, 0, 72);
-            const sp = new THREE.ShapePath();
-            for (const c of opPath.commands) {
-                switch (c.type) {
-                    case 'M': sp.moveTo(c.x, -c.y); break;
-                    case 'L': sp.lineTo(c.x, -c.y); break;
-                    case 'Q': sp.quadraticCurveTo(c.x1, -c.y1, c.x, -c.y); break;
-                    case 'C': sp.bezierCurveTo(c.x1, -c.y1, c.x2, -c.y2, c.x, -c.y); break;
+            const fontSize = 72;
+            const lineHeight = fontSize * 1.3;
+            const lines = text.split('\n').filter(l => l.trim());
+            if (!lines.length) return null;
+
+            // 각 줄 너비 측정 → 중앙 정렬용
+            const lineWidths = lines.map(l => font.getAdvanceWidth(l.trim(), fontSize));
+            const maxLineW = Math.max(...lineWidths);
+
+            // 줄별로 글자 경로 생성 (중앙 정렬)
+            const allShapes = [];
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const xOffset = (maxLineW - lineWidths[i]) / 2; // 중앙 정렬
+                const yPos = i * lineHeight;
+                const opPath = font.getPath(line, xOffset, yPos, fontSize);
+                const sp = new THREE.ShapePath();
+                for (const c of opPath.commands) {
+                    switch (c.type) {
+                        case 'M': sp.moveTo(c.x, -c.y); break;
+                        case 'L': sp.lineTo(c.x, -c.y); break;
+                        case 'Q': sp.quadraticCurveTo(c.x1, -c.y1, c.x, -c.y); break;
+                        case 'C': sp.bezierCurveTo(c.x1, -c.y1, c.x2, -c.y2, c.x, -c.y); break;
+                    }
                 }
+                allShapes.push(...sp.toShapes(false));
             }
-            const shapes = sp.toShapes(false);
-            if (!shapes.length) return null;
+            if (!allShapes.length) return null;
+            const shapes = allShapes;
 
             // 바운딩박스 계산
             let minX = Infinity, maxX2 = -Infinity, minY = Infinity, maxY2 = -Infinity;
@@ -1192,8 +1217,8 @@
                         (o.type === 'textbox' || o.type === 'i-text') && o.selectable !== false);
                     if (textObjs.length > 0) {
                         const sorted = [...textObjs].sort((a, b) => (b.fontSize || 0) - (a.fontSize || 0));
-                        if (sorted[0] && sorted[0].text) window.__letterSignData.titleText = sorted[0].text;
-                        if (sorted[1] && sorted[1].text) window.__letterSignData.bottomText = sorted[1].text;
+                        if (sorted[0]) window.__letterSignData.titleText = _lsGetRenderedText(sorted[0]);
+                        if (sorted[1]) window.__letterSignData.bottomText = _lsGetRenderedText(sorted[1]);
                     }
                     const dataUrl = captureCanvas();
                     buildLetterSign(wMM, hMM, dataUrl);
@@ -1258,13 +1283,13 @@
                     const PX_PER_MM = 3.7795;
                     const wMM = Math.round(board.width / PX_PER_MM);
                     const hMM = Math.round(board.height / PX_PER_MM);
-                    // 에디터 텍스트 동기화 (selectable 텍스트만)
+                    // 에디터 텍스트 동기화 (selectable 텍스트만, 워드랩 줄바꿈 포함)
                     const textObjs = fabricCanvas.getObjects().filter(o =>
                         (o.type === 'textbox' || o.type === 'i-text') && o.selectable !== false);
                     if (textObjs.length > 0) {
                         const sorted = [...textObjs].sort((a, b) => (b.fontSize || 0) - (a.fontSize || 0));
-                        if (sorted[0] && sorted[0].text) window.__letterSignData.titleText = sorted[0].text;
-                        if (sorted[1] && sorted[1].text) window.__letterSignData.bottomText = sorted[1].text;
+                        if (sorted[0]) window.__letterSignData.titleText = _lsGetRenderedText(sorted[0]);
+                        if (sorted[1]) window.__letterSignData.bottomText = _lsGetRenderedText(sorted[1]);
                     }
                     const dataUrl = captureCanvas();
                     buildLetterSign(wMM, hMM, dataUrl);
