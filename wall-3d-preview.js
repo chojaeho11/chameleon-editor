@@ -300,10 +300,29 @@
             const scale = Math.min((maxW * 0.85) / tw, (maxH * 0.9) / th);
 
             // ExtrudeGeometry로 입체 글씨 생성
-            const mat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3 });
+            // 앞면(viewer쪽)=테마색, 뒷면=흰색, 측면(두께)=흰색
+            const matBack = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });  // geometry front(z=0) = 뒷면
+            const matSide = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });  // 두께 = 흰색
+            const matFront = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3 }); // geometry back(z=depth) = 앞면
+            const mats = [matBack, matSide, matFront];
             const extOpts = { depth: depth / scale, bevelEnabled: false };
             const inner = new THREE.Group();
-            shapes.forEach(s => inner.add(new THREE.Mesh(new THREE.ExtrudeGeometry(s, extOpts), mat)));
+            shapes.forEach(s => {
+                const geo = new THREE.ExtrudeGeometry(s, extOpts);
+                // face 그룹(materialIndex=0)을 front/back으로 분리
+                const newGroups = [];
+                for (const g of geo.groups) {
+                    if (g.materialIndex === 0) {
+                        const half = g.count / 2;
+                        newGroups.push({ start: g.start, count: half, materialIndex: 0 });           // 뒷면(흰색)
+                        newGroups.push({ start: g.start + half, count: half, materialIndex: 2 });    // 앞면(테마색)
+                    } else {
+                        newGroups.push({ ...g, materialIndex: 1 }); // 측면(흰색)
+                    }
+                }
+                geo.groups = newGroups;
+                inner.add(new THREE.Mesh(geo, mats));
+            });
             inner.scale.set(scale, scale, scale);
             inner.position.set(
                 -(minX + maxX2) / 2 * scale,  // X 중앙 정렬
