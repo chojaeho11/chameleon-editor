@@ -519,10 +519,12 @@ ${hreflangTags('/editor')}
             return Response.redirect(new URL('/', url.origin).toString(), 301);
         }
 
-        // ========== NORMAL HANDLING (existing logic) ==========
+        // ========== NORMAL HANDLING ==========
+        // Pretty URLs: /mypage → serves mypage.html (200), /mypage.html → 308 to /mypage
+        // _redirects HTML rewrites removed to avoid 308 loop with Pretty URLs
         let response = await env.ASSETS.fetch(request);
 
-        // SPA fallback: _worker.js overrides _redirects, so replicate /* /index.html 200
+        // SPA fallback: serve index.html for non-file 404s
         if (response.status === 404 && path && !path.includes('.')) {
             response = await env.ASSETS.fetch(new Request(new URL('/', url.origin), request));
         }

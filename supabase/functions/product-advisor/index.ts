@@ -118,16 +118,38 @@ serve(async (req) => {
         const langPrompts: Record<string, string> = {
             kr: `카멜레온프린팅 AI 어시스턴트. 따뜻하고 친근하게 응대. 이모지 사용. 3~5문장.
 
+⚠️ 연락처 규칙 (최중요): 절대로 전화번호, 이메일, 주소를 임의로 만들지 마. 아래 정보만 사용.
+## 회사 정보
+- 상호: (주)카멜레온프린팅
+- 주소: 경기도 화성시 우정읍 한말길 72-2
+- 영업시간: 평일 09:00~18:00 (점심 12:00~13:00, 주말/공휴일 휴무)
+- 매니저: 지숙(010-3455-1946), 은미(010-7793-5393), 성희(010-3490-3328)
+- AI 챗봇: 24시간 운영
+- 배송: 전상품 무료배송 (허니콤보드 시공배송 제외)
+- 결제: 카드결제, 무통장입금, 카카오페이, 네이버페이
+
 규칙: products 배열에 항상 정확히 2개 제품을 넣어. 0개 금지. 1개 금지. 3개 이상 금지.
 - 제품 관련 질문 → 고객 요청에 맞는 2개 추천
 - 일상 대화(인사 등) → 인기 제품 2개를 자연스럽게 소개
 - 이미지 분석 → 이미지에 어울리는 2개 추천
+- 연락처/전화번호/영업시간/배송/결제 문의 → summary에 위 회사 정보를 직접 포함하여 답변. 전화번호를 그대로 summary에 넣어줘.
 - price_display는 숫자 가격만 (예: "15,000원"). 텍스트 금지.
 - 사이즈 미지정 시 기본 사이즈로 추천. summary 마지막에 "원하시는 사이즈(가로×세로mm)를 알려주시면 정확한 가격을 안내해 드릴게요! 📐" 포함.
 - 가격: is_custom_size면 (가로mm/1000)×(세로mm/1000)×price_per_sqm. 고정사이즈면 price 그대로.
 - 사이트: ${siteUrl}`,
 
             ja: `カメレオンプリンティングAIアシスタント。温かく丁寧に対応。絵文字使用。3〜5文。
+
+⚠️ 連絡先規則（最重要）: 電話番号・メールアドレス・住所を絶対に作り上げないこと。以下の情報のみ使用。
+## 会社情報
+- 会社名: Chameleon Printing 株式会社
+- 住所: 〒270-0023 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
+- 電話: 047-712-1148
+- メール: support@cafe0101.com
+- 営業時間: 平日 09:00〜18:00（土日祝休み）
+- AI チャットボット: 24時間対応
+- 配送: 全商品送料無料（ハニカムボード施工配送を除く）
+- 決済: クレジットカード（Visa, Mastercard, JCB, AMEX）、銀行振込
 
 ⚠️ 言語規則（最重要）: summary、name、reason、全ての応答を必ず日本語で書くこと。韓国語の使用は絶対禁止。商品データの名前は韓国語だが、必ず日本語に翻訳して応答すること。
 - 例: "허니콤배너" → "ハニカムバナー"、"포맥스" → "フォーメックス(PVC)"、"실사출력" → "大判プリント"、"패브릭" → "ファブリック"、"등신대" → "等身大パネル"、"아크릴인쇄" → "アクリルプリント"、"폼보드" → "フォームボード"、"천인쇄" → "布プリント"
@@ -136,6 +158,7 @@ serve(async (req) => {
 - 製品関連の質問 → お客様の要望に合う2つを推薦
 - 日常会話（挨拶等）→ 人気製品2つを自然に紹介
 - 画像分析 → 画像に合う2つを推薦
+- 連絡先・電話番号・営業時間・配送・決済の問い合わせ → summaryに上記の会社情報を直接含めて回答。電話番号をそのままsummaryに入れる。
 - price_displayは数字の価格のみ（例:「¥3,000」）。テキスト禁止。
 - nameは必ず日本語で書くこと（韓国語のままにしない）。
 - サイズ未指定時はデフォルトサイズで推薦。summaryの最後に「ご希望のサイズ（横×縦mm）を教えていただければ正確な価格をご案内します！📐」を含める。
@@ -144,6 +167,16 @@ serve(async (req) => {
 
             us: `Chameleon Printing AI assistant. Warm and friendly. Use emojis. 3-5 sentences.
 
+⚠️ Contact info rule (CRITICAL): NEVER make up phone numbers, emails, or addresses. ONLY use the info below.
+## Company Info
+- Company: Chameleon Printing
+- Website: ${siteUrl}
+- Support: Use the chat widget on our website or email support@cafe0101.com
+- Hours: Weekdays 09:00-18:00 KST (Korea Standard Time)
+- AI Chatbot: Available 24/7
+- Shipping: Free shipping on all products (except Honeycomb board installation delivery)
+- Payment: Credit cards (Visa, Mastercard, JCB, AMEX)
+
 ⚠️ Language rule (CRITICAL): ALL responses including summary, name, reason MUST be in English. Product data names are in Korean — you MUST translate them to English.
 - Examples: "허니콤배너" → "Honeycomb Banner", "포맥스" → "Foamex (PVC Board)", "실사출력" → "Large Format Print", "패브릭" → "Fabric Print", "등신대" → "Life-size Standee", "아크릴인쇄" → "Acrylic Print"
 
@@ -151,6 +184,7 @@ Rule: ALWAYS put exactly 2 products in the products array. 0 forbidden. 1 forbid
 - Product questions → recommend 2 relevant products
 - Casual chat (greetings etc.) → naturally introduce 2 popular products
 - Image analysis → recommend 2 products matching the image
+- Contact/phone/hours/shipping/payment inquiries → include the company info directly in the summary text. Put actual contact details in the summary.
 - price_display must be numeric price only (e.g. "$30.00"). No text.
 - name MUST be in English (never leave Korean as-is).
 - If size not specified, use default sizes. Include at end of summary: "What size (width×height mm) would you like? I'll give you an exact price! 📐"
@@ -191,11 +225,11 @@ ${JSON.stringify(categories)}${qaSection}`;
         // Claude API — tool_choice: auto (대화 or 추천)
         const tools = [{
             name: "recommend_products",
-            description: "ALWAYS return exactly 2 products. For product requests: recommend relevant items. For casual chat: recommend popular items. NEVER return 0 products.",
+            description: "ALWAYS return exactly 2 products AND a summary. For contact/phone/hours inquiries: include actual company contact info (phone, email, address) in the summary field, AND also recommend 2 popular products. For product requests: recommend relevant items. For casual chat: recommend popular items. NEVER return 0 products.",
             input_schema: {
                 type: "object" as const,
                 properties: {
-                    summary: { type: "string" as const, description: "Brief summary (customer's language)" },
+                    summary: { type: "string" as const, description: "Main response to the customer (in customer's language). For contact/phone/hours inquiries, MUST include actual company phone numbers and contact details here." },
                     products: {
                         type: "array" as const,
                         items: {
@@ -321,7 +355,29 @@ ${JSON.stringify(categories)}${qaSection}`;
         }
 
         const result = await callClaude("claude-sonnet-4-20250514");
-        result._v = "2026-03-02-v8-qa-log";
+        result._v = "2026-03-03-v9-contact-info";
+
+        // 연락처 관련 질문 감지 → AI가 빠뜨려도 프로그래밍적으로 보장
+        const msgLower = trimmedMsg.toLowerCase();
+        // Japanese chars via fromCharCode to avoid encoding issues on deploy
+        const JP_DENWA = String.fromCharCode(0x96FB, 0x8A71);      // 電話
+        const JP_RENRAKU = String.fromCharCode(0x9023, 0x7D61);    // 連絡
+        const JP_TOIAWASE = String.fromCharCode(0x554F, 0x3044, 0x5408, 0x308F, 0x305B); // 問い合わせ
+        const JP_MAIL = String.fromCharCode(0x30E1, 0x30FC, 0x30EB); // メール
+        const isContactQuery = ['전화','연락처','번호','phone','call','contact','메일','email','이메일'].some(k => msgLower.includes(k))
+            || [JP_DENWA, JP_RENRAKU, JP_TOIAWASE, JP_MAIL].some(k => trimmedMsg.includes(k));
+        if (isContactQuery) {
+            const chatMsg = result.chat_message || result.summary || '';
+            const contactInfos: Record<string, string> = {
+                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n💬 AI 챗봇은 24시간 운영됩니다!",
+                ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: support@cafe0101.com\n🏢 住所: 〒270-0023 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 AIチャットボットは24時間対応しています！",
+                us: "\n\n📧 Email: support@cafe0101.com\n🌐 Website: https://www.cafe3355.com\n🕐 Hours: Weekdays 09:00-18:00 KST\n💬 AI Chatbot available 24/7!",
+            };
+            const hasContact = chatMsg.includes('010-') || chatMsg.includes('047-') || chatMsg.includes('support@');
+            if (!hasContact) {
+                result.chat_message = chatMsg + (contactInfos[clientLang] || contactInfos['kr']);
+            }
+        }
 
         // 추천 제품에 raw price 보강 + 사이즈 질문 자동 추가
         if (result.products && result.products.length > 0) {
