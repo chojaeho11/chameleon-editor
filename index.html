@@ -1460,8 +1460,11 @@ async function handleSubReturn() {
     <button id="btnStartSearch" class="hero-search-btn">
         <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">Search</span>
     </button>
-    <button id="btnAiAdvisor" class="hero-ai-btn" title="AI 추천">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> AI
+</div>
+<div style="text-align:center; margin-top:8px;">
+    <button id="btnAiAdvisor" class="hero-ai-btn">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span data-i18n="btn_ai_advisor">AI 제품 추천받기</span>
     </button>
 </div>
 <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
@@ -5205,19 +5208,27 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
         if (searchBtn && searchInput) {
-            const doSearch = () => { 
+            const doSearch = () => {
                 // 모바일 키보드 닫기 (UX 개선)
                 searchInput.blur();
-                if(window.searchTemplates) window.searchTemplates(searchInput.value); 
+                if(window.searchTemplates) window.searchTemplates(searchInput.value);
             };
-            
+
             searchBtn.onclick = doSearch;
-            
+
             // [수정] 모바일 호환성을 위해 keydown 사용 & 엔터키 처리 강화
-            searchInput.addEventListener('keydown', (e) => { 
+            searchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.keyCode === 13) {
                     e.preventDefault(); // 폼 자동제출 방지
-                    doSearch(); 
+                    // AI 어드바이저: 2어절 이상이면 AI 추천
+                    const val = searchInput.value.trim();
+                    const wordCount = val.split(/\s+/).filter(Boolean).length;
+                    if (wordCount >= 2 && val.length >= 5 && window.__runAdvisor) {
+                        searchInput.blur();
+                        window.__runAdvisor(val);
+                        return;
+                    }
+                    doSearch();
                 }
             });
         }

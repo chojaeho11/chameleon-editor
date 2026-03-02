@@ -65,6 +65,9 @@ export function initAdvisorPanel() {
     panelEl = document.getElementById('advisorPanel');
     if (!panelEl) return;
 
+    // window 전역 함수 등록 (index.html Enter 핸들러에서 호출)
+    window.__runAdvisor = runAdvisor;
+
     // AI 추천 버튼 이벤트
     const aiBtn = document.getElementById('btnAiAdvisor');
     if (aiBtn) {
@@ -75,23 +78,6 @@ export function initAdvisorPanel() {
                 runAdvisor(query);
             } else {
                 input && input.focus();
-            }
-        });
-    }
-
-    // Enter 키: 2어절 이상이면 AI, 아니면 기존 검색
-    const searchInput = document.getElementById('startSearchInput');
-    if (searchInput) {
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const val = searchInput.value.trim();
-                const wordCount = val.split(/\s+/).filter(Boolean).length;
-                if (wordCount >= 2 && val.length >= 5) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    runAdvisor(val);
-                }
-                // 1어절 이하 → 기존 검색 그대로 동작
             }
         });
     }
