@@ -1022,26 +1022,25 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
     if (!board) throw new Error('No canvas board');
     const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);
     const bL = board.left, bT = board.top;
-    const S = WIZARD_STYLES[style] || WIZARD_STYLES.forest;
 
     // 기존 오브젝트 제거
     canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
     canvas.discardActiveObject();
 
-    // 스카시 색상 정의 (스타일 기반)
+    // 스카시 색상 (스타일별)
     const lsColors = {
-        neon:    { bg:'#1a1a2e', box:'#e2e8f0', boxText:'#1e293b', titleFill:'#1e293b', titleStroke:'#e2e8f0', outline:'#6366f1' },
-        ocean:   { bg:'#0c1929', box:'#d4e6f1', boxText:'#1a3c5e', titleFill:'#1a3c5e', titleStroke:'#d4e6f1', outline:'#2980b9' },
-        flame:   { bg:'#1a0a00', box:'#fdebd0', boxText:'#6e2c00', titleFill:'#6e2c00', titleStroke:'#fdebd0', outline:'#e74c3c' },
-        forest:  { bg:'#0a1a0a', box:'#d5f5e3', boxText:'#145a32', titleFill:'#145a32', titleStroke:'#d5f5e3', outline:'#27ae60' },
-        minimal: { bg:'#f8f9fa', box:'#2d3436', boxText:'#ffffff', titleFill:'#2d3436', titleStroke:'#ffffff', outline:'#636e72' },
-        luxury:  { bg:'#1a1a1a', box:'#c9a84c', boxText:'#1a1a1a', titleFill:'#1a1a1a', titleStroke:'#c9a84c', outline:'#c9a84c' },
-        pastel:  { bg:'#fdf2f8', box:'#be93c5', boxText:'#ffffff', titleFill:'#4a1a6b', titleStroke:'#f0d0ff', outline:'#be93c5' },
-        retro:   { bg:'#f5e6ca', box:'#8b4513', boxText:'#f5e6ca', titleFill:'#8b4513', titleStroke:'#f5e6ca', outline:'#d2691e' },
+        neon:    { bg:'#e8eaf6', box:'#1a237e', boxText:'#ffffff', title:'#1a237e' },
+        ocean:   { bg:'#e0f2f1', box:'#004d40', boxText:'#ffffff', title:'#004d40' },
+        flame:   { bg:'#fbe9e7', box:'#bf360c', boxText:'#ffffff', title:'#bf360c' },
+        forest:  { bg:'#e8f5e9', box:'#1b5e20', boxText:'#ffffff', title:'#1b5e20' },
+        minimal: { bg:'#f5f5f5', box:'#212121', boxText:'#ffffff', title:'#212121' },
+        luxury:  { bg:'#f5f0e1', box:'#3e2723', boxText:'#c9a84c', title:'#3e2723' },
+        pastel:  { bg:'#fce4ec', box:'#6a1b9a', boxText:'#ffffff', title:'#6a1b9a' },
+        retro:   { bg:'#fff3e0', box:'#4e342e', boxText:'#ffcc80', title:'#4e342e' },
     };
     const C = lsColors[style] || lsColors.forest;
 
-    // 배경 (밝은 회색/투명 느낌 — 실제 스카시는 벽에 설치되므로)
+    // 배경 (밝은 색 — 벽 설치 느낌)
     window._wzBgColors = [C.bg, C.bg];
     const bgRect = new fabric.Rect({
         width: bW, height: bH, left: bL, top: bT,
@@ -1053,95 +1052,74 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
     const boardObj = canvas.getObjects().find(o => o.isBoard);
     if (boardObj) { canvas.sendToBack(bgRect); canvas.sendToBack(boardObj); }
 
-    // 폰트 결정
+    // 폰트
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
-    const fontMap = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
-    let titleFont = fontMap[country] || 'Impact, Arial Black, sans-serif';
+    let titleFont = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Impact, Arial Black, sans-serif';
     if (country === 'JP' && window.DYNAMIC_FONTS) {
         const popFont = window.DYNAMIC_FONTS.find(f => f.font_name?.includes('ポプ'));
         if (popFont) titleFont = popFont.font_family;
     }
     const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
-
-    // 잘난고딕 로드
     if (titleFont === 'JalnanGothic' && !document.querySelector('style[data-jalnan]')) {
-        const st = document.createElement('style');
-        st.dataset.jalnan = '1';
+        const st = document.createElement('style'); st.dataset.jalnan = '1';
         st.textContent = `@font-face { font-family:'JalnanGothic'; src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_231029@1.1/JalnanGothic.woff') format('woff'); font-weight:normal; font-display:swap; }`;
         document.head.appendChild(st);
     }
     [descFont, titleFont].forEach(f => {
         if (f.includes(',') || f === 'JalnanGothic') return;
         const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f) + ':wght@400;700;900&display=swap';
-        if (!document.querySelector(`link[href="${fUrl}"]`)) {
-            const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
-        }
+        if (!document.querySelector(`link[href="${fUrl}"]`)) { const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk); }
     });
     await new Promise(r => setTimeout(r, 400));
 
-    // ── 스카시 레이아웃 ──
-    // 하단 박스: 전체 높이의 30%
-    const boxH = bH * 0.30;
-    const boxY = bT + bH - boxH;
+    // ── 스카시 레이아웃: 하단 박스 + 박스 바로 위 입체 글씨 ──
+    const pad = bW * 0.04;
+
+    // 하단 박스 (전체 높이의 28%)
+    const boxH = bH * 0.28;
+    const boxTop = bT + bH - boxH - pad;
     const boxRect = new fabric.Rect({
-        width: bW * 0.92, height: boxH * 0.85, left: bL + bW * 0.04, top: boxY + boxH * 0.05,
-        rx: 8, ry: 8,
-        fill: C.box, originX:'left', originY:'top',
-        selectable: true, evented: true,
+        width: bW - pad * 2, height: boxH, left: bL + pad, top: boxTop,
+        rx: 6, ry: 6, fill: C.box,
+        originX:'left', originY:'top',
     });
     canvas.add(boxRect);
 
     // 하단 박스 텍스트
     if (bottomText) {
-        const btSize = Math.round(bW * 0.028);
+        const btSize = Math.max(Math.round(boxH * 0.25), 14);
         const btObj = new fabric.Textbox(bottomText, {
             fontFamily: descFont + ', sans-serif', fontSize: btSize, fontWeight: '700',
             fill: C.boxText, textAlign: 'center',
             originX: 'center', originY: 'center',
-            left: bL + bW / 2, top: boxY + boxH * 0.48,
-            width: bW * 0.80, lineHeight: 1.4,
+            left: bL + bW / 2, top: boxTop + boxH / 2,
+            width: bW * 0.80, lineHeight: 1.3,
         });
         canvas.add(btObj);
     }
 
-    // 상단 입체 글씨 영역: 전체 높이의 상위 65%
-    // 글씨 테두리(아웃라인) — 키링처럼 글씨보다 큰 윤곽
-    const titleAreaH = bH * 0.65;
-    const titleCenterY = bT + titleAreaH * 0.5;
-    const titleSize = Math.round(bH * 0.35);
+    // 타이틀 글씨 — 박스 바로 위에 밀착
+    const titleSize = Math.max(Math.round(bH * 0.38), 24);
+    const titleBottom = boxTop - 4; // 박스 바로 위
 
-    // 1) 글씨 테두리 (큰 stroke — 글씨보다 큰 윤곽 효과)
-    const outlineObj = new fabric.Textbox(titleText, {
-        fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
-        fill: 'transparent', textAlign: 'center',
-        stroke: C.outline, strokeWidth: Math.round(titleSize * 0.12),
-        originX: 'center', originY: 'center',
-        left: bL + bW / 2, top: titleCenterY,
-        width: bW * 0.90, lineHeight: 1.1, charSpacing: 60,
-        selectable: false, evented: false, opacity: 0.35,
-    });
-    canvas.add(outlineObj);
-
-    // 2) 글씨 그림자/깊이 (입체 효과)
+    // 그림자 (입체 깊이)
     const shadowObj = new fabric.Textbox(titleText, {
         fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
-        fill: C.titleStroke, textAlign: 'center',
-        stroke: C.titleStroke, strokeWidth: Math.round(titleSize * 0.04),
-        originX: 'center', originY: 'center',
-        left: bL + bW / 2 + 3, top: titleCenterY + 4,
-        width: bW * 0.90, lineHeight: 1.1, charSpacing: 60,
+        fill: C.title, textAlign: 'center', opacity: 0.15,
+        originX: 'center', originY: 'bottom',
+        left: bL + bW / 2 + 4, top: titleBottom + 5,
+        width: bW * 0.92, lineHeight: 1.05, charSpacing: 50,
         selectable: false, evented: false,
     });
     canvas.add(shadowObj);
 
-    // 3) 메인 입체 글씨
+    // 메인 타이틀 (굵은 글씨, 밝은 배경에 어두운 색)
     const titleObj = new fabric.Textbox(titleText, {
         fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
-        fill: C.titleFill, textAlign: 'center',
-        stroke: C.titleStroke, strokeWidth: Math.round(titleSize * 0.02),
-        originX: 'center', originY: 'center',
-        left: bL + bW / 2, top: titleCenterY,
-        width: bW * 0.90, lineHeight: 1.1, charSpacing: 60,
+        fill: C.title, textAlign: 'center',
+        originX: 'center', originY: 'bottom',
+        left: bL + bW / 2, top: titleBottom,
+        width: bW * 0.92, lineHeight: 1.05, charSpacing: 50,
     });
     canvas.add(titleObj);
 
@@ -1150,10 +1128,7 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
     // 폰트 리렌더
     setTimeout(() => {
         canvas.getObjects().forEach(o => {
-            if (o.type === 'textbox' || o.type === 'i-text') {
-                o.set('dirty', true);
-                o.initDimensions && o.initDimensions();
-            }
+            if (o.type === 'textbox' || o.type === 'i-text') { o.set('dirty', true); o.initDimensions && o.initDimensions(); }
         });
         canvas.requestRenderAll();
     }, 800);

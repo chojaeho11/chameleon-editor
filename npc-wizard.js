@@ -1138,10 +1138,8 @@ window.NpcWizard = {
                 break;
             }
             case 'lsSizeInput': {
-                const lsRatios = { hcl_simple:0.5, hcl_box1:0.5, hcl_box3:0.5, hcl_heavy:0.5, hcl_acrylic:0.5 };
-                const lsRatio = lsRatios[this._lsType] || 0.5;
                 const defaultW = this._lsWidthCm || 120;
-                if (!this._lsHeightCm || this._lsHeightCm === 48 || this._lsHeightCm === 72) this._lsHeightCm = Math.round(defaultW * lsRatio);
+                this._lsHeightCm = Math.round(defaultW * 0.5); // 자동계산
 
                 this._renderBubble(_t('lsEnterSize'), null, true, null,
                     { onclick: "window.NpcWizard._lsAfterSize()", label: _t('next') });
@@ -1150,15 +1148,9 @@ window.NpcWizard = {
                     lsSlot3.innerHTML = `
                         <div style="margin-bottom:10px;">
                             <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsWidthLabel')} <span style="color:#94a3b8;font-size:11px;">(max 240cm)</span></label>
-                            <input type="number" id="npcLsWidth" value="${defaultW}" min="20" max="240" inputmode="numeric"
-                                oninput="window.NpcWizard._lsUpdateHeight()"
-                                style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;box-sizing:border-box;">
-                        </div>
-                        <div style="margin-bottom:10px;">
-                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsHeightLabel')} <span style="color:#94a3b8;font-size:11px;">(max 120cm)</span></label>
-                            <input type="number" id="npcLsHeight" value="${this._lsHeightCm}" min="10" max="120" inputmode="numeric"
+                            <input type="number" id="npcLsWidth" value="${defaultW}" min="60" max="240" step="10" inputmode="numeric"
                                 oninput="window.NpcWizard._lsUpdatePrice()"
-                                style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;box-sizing:border-box;">
+                                style="width:100%;padding:12px;border:2px solid #c7d2fe;border-radius:10px;font-size:18px;font-weight:700;box-sizing:border-box;text-align:center;">
                         </div>
                         <div id="npcLsPricePreview"></div>
                     `;
@@ -1555,38 +1547,31 @@ window.NpcWizard = {
         this._goStep('lsSizeInput');
     },
     _lsUpdateHeight() {
-        const wEl = document.getElementById('npcLsWidth');
-        const hEl = document.getElementById('npcLsHeight');
-        const w = parseInt(wEl && wEl.value) || 60;
-        const ratios = { hcl_simple:0.5, hcl_box1:0.5, hcl_box3:0.5, hcl_heavy:0.5, hcl_acrylic:0.5 };
-        const r = ratios[this._lsType] || 1.0;
-        if (hEl) hEl.value = Math.round(w * r);
+        // 높이는 가로의 50%로 자동계산 (입력 없음)
         this._lsUpdatePrice();
     },
     _lsUpdatePrice() {
         const wEl = document.getElementById('npcLsWidth');
-        const hEl = document.getElementById('npcLsHeight');
-        const w = parseInt(wEl && wEl.value) || 60;
-        const h = parseInt(hEl && hEl.value) || 60;
-        const area = (w / 100) * (h / 100);
-        const sqm = this.product._base_sqm_price || this.product.price || 50000;
-        const price = Math.round(area * sqm / 10) * 10;
+        const w = Math.min(parseInt(wEl && wEl.value) || 120, 240);
+        // 가격: 1.2m(120cm) = 기본단가, 2.4m(240cm) = 2배
+        const basePrice = this.product._base_sqm_price || this.product.price || 50000;
+        const multiplier = w / 120; // 120cm 기준
+        const price = Math.round(basePrice * multiplier / 10) * 10;
         const fmt = window.formatCurrency ? window.formatCurrency(price) : price.toLocaleString() + '원';
         const el = document.getElementById('npcLsPricePreview');
         if (el) {
-            el.innerHTML = `<div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:12px;border-radius:10px;text-align:center;">
+            el.innerHTML = `<div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:14px;border-radius:10px;text-align:center;">
                 <div style="font-size:11px;opacity:0.9;">${_t('lsPrice')}</div>
-                <div style="font-size:20px;font-weight:800;color:#fbbf24;">${fmt}</div>
-                <div style="font-size:11px;opacity:0.7;">${w}cm x ${h}cm (${area.toFixed(2)}m2)</div>
+                <div style="font-size:22px;font-weight:800;color:#fbbf24;">${fmt}</div>
+                <div style="font-size:11px;opacity:0.7;">${w}cm (${(w/120).toFixed(1)}x)</div>
             </div>`;
         }
     },
     _lsAfterSize() {
         const wEl = document.getElementById('npcLsWidth');
-        const hEl = document.getElementById('npcLsHeight');
         this._lsWidthCm = Math.min(parseInt(wEl && wEl.value) || 120, 240);
-        this._lsHeightCm = Math.min(parseInt(hEl && hEl.value) || 60, 120);
-        if (this._lsWidthCm < 20 || this._lsHeightCm < 10) {
+        this._lsHeightCm = Math.round(this._lsWidthCm * 0.5); // 자동계산
+        if (this._lsWidthCm < 60) {
             if (window.showToast) window.showToast(_t('lsEnterSize'), 'warn'); return;
         }
         this._goStep('lsStyleSelect');
@@ -1606,11 +1591,10 @@ window.NpcWizard = {
         const product = this.product;
         if (!product) return;
         const widthMM = this._lsWidthCm * 10;
-        const heightMM = this._lsHeightCm * 10;
-        // 면적 기반 가격 계산
-        const area = (this._lsWidthCm / 100) * (this._lsHeightCm / 100);
-        const sqm = product._base_sqm_price || product.price || 50000;
-        const calcPrice = Math.round(area * sqm / 10) * 10;
+        const heightMM = Math.round(this._lsWidthCm * 0.5) * 10; // 자동 높이
+        // 가격: 1.2m 기준 단가
+        const basePrice = product._base_sqm_price || product.price || 50000;
+        const calcPrice = Math.round(basePrice * (this._lsWidthCm / 120) / 10) * 10;
         window.__letterSignMode = true;
         window.__letterSignData = {
             widthMM, heightMM,
@@ -1628,17 +1612,17 @@ window.NpcWizard = {
         import('./order.js?v=123').then(m => {
             const p = { ...product };
             p.w_mm = this._lsWidthCm * 10;
-            p.h_mm = this._lsHeightCm * 10;
+            p.h_mm = Math.round(this._lsWidthCm * 0.5) * 10;
             p.is_custom = true;
             p.is_custom_size = true;
-            const area = (this._lsWidthCm / 100) * (this._lsHeightCm / 100);
-            const sqm = product._base_sqm_price || product.price || 50000;
-            p.price = Math.round(area * sqm / 10) * 10;
+            // 가격: 1.2m(120cm) 기준 단가, 2.4m = 2배
+            const basePrice = product._base_sqm_price || product.price || 50000;
+            p.price = Math.round(basePrice * (this._lsWidthCm / 120) / 10) * 10;
             p._calculated_price = true;
             const extra = {
                 type: 'letter_sign', lsType: this._lsType,
                 titleText: this._lsTitleText, bottomText: this._lsBottomText,
-                widthCm: this._lsWidthCm, heightCm: this._lsHeightCm, style: this._lsStyle,
+                widthCm: this._lsWidthCm, heightCm: Math.round(this._lsWidthCm * 0.5), style: this._lsStyle,
             };
             m.addProductToCartDirectly(p, qty, [], {}, extra);
             window._pendingUploadedFiles = [];
