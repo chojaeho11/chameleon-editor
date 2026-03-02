@@ -11417,7 +11417,7 @@ window.dsmRenderProducts = async function(keyword) {
         var _l = (_chamLang === 'en') ? 'us' : _chamLang;
         return fetch(_ADVISOR_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY },
             body: JSON.stringify({ message: userMessage, lang: _chamLang })
         }).then(function(res) {
             if (!res.ok) throw new Error('API ' + res.status);
@@ -11479,23 +11479,26 @@ window.dsmRenderProducts = async function(keyword) {
     window._chamAddCart = function(idx, btnEl) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
-        import('./order.js?v=123').then(function(mod) {
-            var addFn = mod.addProductToCartDirectly;
-            if (!addFn) return;
-            var priceKRW = rec._raw_price_krw || 50000;
-            if (rec.is_custom_size && rec._raw_per_sqm_krw) {
-                var area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
-                priceKRW = Math.round((area * rec._raw_per_sqm_krw) / 100) * 100;
-            }
-            addFn({
-                code: rec.code, name: rec.name, price: priceKRW,
-                w_mm: rec.recommended_width_mm, h_mm: rec.recommended_height_mm,
-                width_mm: rec.recommended_width_mm, height_mm: rec.recommended_height_mm,
-                is_custom_size: rec.is_custom_size || false, img: null
-            }, 1, [], {});
-            if (btnEl) { btnEl.innerHTML = '<i class="fa-solid fa-check"></i> OK'; btnEl.disabled = true; btnEl.style.background = '#ecfdf5'; btnEl.style.color = '#059669'; btnEl.style.borderColor = '#059669'; }
-            if (window.updateCartBadge) window.updateCartBadge();
-        }).catch(function(e) { console.error('Cart error:', e); });
+        try {
+            import('./order.js?v=123').then(function(mod) {
+                var addFn = mod.addProductToCartDirectly;
+                if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
+                var priceKRW = rec._raw_price_krw || 50000;
+                if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
+                    var area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
+                    priceKRW = Math.round((area * rec._raw_per_sqm_krw) / 100) * 100;
+                    if (priceKRW <= 0) priceKRW = rec._raw_price_krw || 50000;
+                }
+                addFn({
+                    code: rec.code, name: rec.name, price: priceKRW,
+                    w_mm: rec.recommended_width_mm, h_mm: rec.recommended_height_mm,
+                    width_mm: rec.recommended_width_mm, height_mm: rec.recommended_height_mm,
+                    is_custom_size: rec.is_custom_size || false, img: null
+                }, 1, [], {});
+                if (btnEl) { btnEl.innerHTML = '<i class="fa-solid fa-check"></i> OK'; btnEl.disabled = true; btnEl.style.background = '#ecfdf5'; btnEl.style.color = '#059669'; btnEl.style.borderColor = '#059669'; }
+                if (window.updateCartBadge) window.updateCartBadge();
+            }).catch(function(e) { console.error('Cart error:', e); });
+        } catch(e) { console.error('Cart import error:', e); }
     };
 
     function processInput(text) {
@@ -11526,7 +11529,8 @@ window.dsmRenderProducts = async function(keyword) {
             if (chatMsg) saveMsg('chatbot', chatMsg);
         }).catch(function() {
             removeTyping();
-            addMsg("오류가 발생했습니다. 다시 시도해주세요.");
+            var _l = (_chamLang === 'en') ? 'us' : _chamLang;
+            addMsg(_errGeneral[_l] || _errGeneral['kr']);
         }).finally(function() {
             setLoading(false);
         });
@@ -11691,11 +11695,13 @@ window.dsmRenderProducts = async function(keyword) {
         if (heroSearchInput) {
             heroSearchInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' || e.keyCode === 13) {
+                    if (e.isComposing) return;  // 한글 조합 중 Enter 무시
                     var val = heroSearchInput.value.trim();
                     if (!val) return;  // 빈 검색은 기존 동작 유지
                     e.preventDefault();
                     e.stopPropagation();
                     e.stopImmediatePropagation();
+                    heroSearchInput.value = '';  // 입력창 초기화
                     heroSearchInput.blur();
                     // ChamBot 열기
                     var win = getEl('cham-bot-window');
