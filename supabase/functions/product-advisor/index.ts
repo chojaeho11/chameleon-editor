@@ -1,9 +1,8 @@
 // ============================================================
 // 파일명: supabase/functions/product-advisor/index.ts
-// AI 제품 어드바이저 — 자연어 → 구조화된 제품 추천 (tool_use)
+// AI 어드바이저 — 대화형 AI + 제품 추천 (tool_use: auto)
 //
-// [배포]
-// supabase functions deploy product-advisor
+// [배포] supabase functions deploy product-advisor
 // ============================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -18,16 +17,13 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// ㎡당 단가 계산 (chatbot-ai와 동일 로직)
 function calcPricePerSqm(product: any, allProducts: any[]): number | null {
     if (!product.is_custom_size) return null;
     if (!product.price || !product.width_mm || !product.height_mm) return null;
     if (product.width_mm === 1000 && product.height_mm === 1000) return product.price;
-
     const nameWords = product.name.replace(/\[.*?\]/g, '').trim().split(/\s+/);
     const hasDan = nameWords.some((w: string) => w.includes('단면'));
     const hasYang = nameWords.some((w: string) => w.includes('양면'));
-
     const sqmProduct = allProducts.find((p: any) => {
         if (!p.is_custom_size || !p.price) return false;
         if (p.width_mm !== 1000 || p.height_mm !== 1000) return false;
@@ -40,7 +36,6 @@ function calcPricePerSqm(product: any, allProducts: any[]): number | null {
         return coreWords.every((w: string) => pName.includes(w));
     });
     if (sqmProduct) return sqmProduct.price;
-
     const area = (product.width_mm / 1000) * (product.height_mm / 1000);
     return area > 0 ? Math.round(product.price / area) : null;
 }
@@ -55,7 +50,6 @@ serve(async (req) => {
         if (!message) throw new Error("message is required");
         const clientLang = (lang || 'kr').toLowerCase();
 
-        // 통화 변환
         function convertPrice(krw: number): string {
             if (clientLang === 'ja') return '¥' + Math.round(krw * 0.2).toLocaleString();
             if (clientLang === 'en' || clientLang === 'us') return '$' + (krw * 0.002).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -67,8 +61,7 @@ serve(async (req) => {
         const [prodRes, baseRes, catRes] = await Promise.all([
             sb.from("admin_products")
                 .select("code,name,price,width_mm,height_mm,is_custom_size,is_general_product,category,description")
-                .order("sort_order", { ascending: true })
-                .limit(120),
+                .order("sort_order", { ascending: true }).limit(120),
             sb.from("admin_products")
                 .select("code,name,price,width_mm,height_mm,is_custom_size,category")
                 .eq("width_mm", 1000).eq("height_mm", 1000).eq("is_custom_size", true),
@@ -87,91 +80,101 @@ serve(async (req) => {
         const products = rawProducts.map((p: any) => {
             const perSqm = calcPricePerSqm(p, allRaw);
             return {
-                code: p.code,
-                name: p.name,
-                category: p.category,
-                description: p.description,
-                width_mm: p.width_mm,
-                height_mm: p.height_mm,
-                is_custom_size: p.is_custom_size,
+                code: p.code, name: p.name, category: p.category, description: p.description,
+                width_mm: p.width_mm, height_mm: p.height_mm, is_custom_size: p.is_custom_size,
                 price_display: convertPrice(p.price || 0),
                 price_per_sqm_display: perSqm ? convertPrice(perSqm) : null,
-                _raw_price: p.price || 0,
-                _raw_per_sqm: perSqm,
+                _raw_price: p.price || 0, _raw_per_sqm: perSqm,
             };
         });
 
         const categories = catRes.data || [];
+        const siteUrl = clientLang === 'ja' ? 'https://www.cafe0101.com' : clientLang === 'en' || clientLang === 'us' ? 'https://www.cafe3355.com' : 'https://www.cafe2626.com';
 
-        // 언어별 시스템 프롬프트
-        const langIntro: Record<string, string> = {
-            kr: `당신은 카멜레온프린팅의 AI 제품 추천 전문가입니다.
-고객이 자연어로 요청하면, 가장 적합한 제품 1~3개를 추천하세요.
-각 제품에 대해: 추천 이유, 적정 사이즈(mm), 예상 가격, 디자인 타이틀을 제안하세요.
-반드시 recommend_products 도구를 사용하여 구조화된 형식으로 응답하세요.`,
-            ja: `あなたはカメレオンプリンティングのAI製品推薦エキスパートです。
-お客様の自然言語リクエストに基づき、最適な製品を1〜3つ推薦してください。
-各製品について：推薦理由、適切なサイズ(mm)、予想価格、デザインタイトルを提案してください。
-必ずrecommend_productsツールを使用して構造化された形式で応答してください。`,
-            us: `You are an AI product recommendation expert for Chameleon Printing.
-Based on the customer's natural language request, recommend 1-3 most suitable products.
-For each: provide reason, recommended size(mm), estimated price, and a design title suggestion.
-You MUST use the recommend_products tool to respond in structured format.`,
+        // 시스템 프롬프트 — 친근한 대화형 AI
+        const langPrompts: Record<string, string> = {
+            kr: `당신은 카멜레온프린팅의 친절한 AI 어시스턴트 "카멜"입니다.
+
+## 성격
+- 따뜻하고 공감 능력이 뛰어남. 이모지를 자연스럽게 사용.
+- 고객이 고민을 얘기하면 진심으로 들어주고 공감해준 뒤, 자연스럽게 도움을 제안.
+- 인쇄/제품과 무관한 대화도 편하게 응대. 하지만 자연스럽게 카멜레온프린팅 서비스로 연결.
+- 답변은 3~5문장으로 간결하되 따뜻하게.
+
+## 제품 추천
+- 고객이 제품/인쇄/디자인/행사/이벤트/광고 관련 요청을 하면 recommend_products 도구로 추천.
+- 추천 시 용도, 장소(실내/실외), 크기, 예산을 고려.
+- 관련 없는 대화에서는 도구를 사용하지 말고 텍스트로만 대화.
+
+## 제품 지식
+- 허니콤보드: 친환경 종이 소재, 가벼움, 실내 전시/팝업에 최적
+- 패브릭: 백월, 현수막, 배너, 대형 이벤트에 적합
+- 폼보드/포맥스: PVC 소재, 간판, POP, 내구성 우수
+- 등신대: 포토존, 홍보용 실물크기 패널
+- 종이매대: 매장 내 진열/판촉 디스플레이
+- 모든 제품은 무료 온라인 에디터에서 직접 디자인 가능!
+
+## 가격
+- 면적 기반: (가로mm/1000) × (세로mm/1000) × ㎡당 단가
+- 가격은 현지 통화로 표시
+- 사이트: ${siteUrl}`,
+
+            ja: `あなたはカメレオンプリンティングの親切なAIアシスタント「カメル」です。
+
+## 性格
+- 温かく共感力に優れています。絵文字を自然に使います。
+- お客様のお悩みを親身に聞き、共感した後、自然にサポートを提案。
+- 印刷/製品に関係ない会話にも気軽に対応。自然にサービス紹介へ。
+- 回答は3〜5文で簡潔かつ温かく。
+
+## 製品推薦
+- 製品/印刷/デザイン/イベント関連の場合はrecommend_productsツールで推薦。
+- 関係ない会話ではツールを使わずテキストのみ。
+- サイト: ${siteUrl}`,
+
+            us: `You are "Chamel", the friendly AI assistant for Chameleon Printing.
+
+## Personality
+- Warm, empathetic, uses emojis naturally.
+- Listen to customer concerns genuinely, then naturally suggest how you can help.
+- Handle non-product conversations comfortably, but gently connect to services.
+- Keep responses to 3-5 sentences, warm and concise.
+
+## Product Recommendations
+- Use recommend_products tool for product/printing/design/event requests.
+- Don't use the tool for unrelated conversations — just chat.
+- Site: ${siteUrl}`,
         };
 
-        const systemPrompt = `${langIntro[clientLang === 'en' ? 'us' : clientLang] || langIntro['kr']}
+        const systemPrompt = `${langPrompts[clientLang === 'en' ? 'us' : clientLang] || langPrompts['kr']}
 
-## 추천 가이드라인
-- 고객 요청의 용도, 설치 장소, 크기 힌트를 분석하세요.
-- 실내/실외, 일회성/상시, 크기 등을 고려하여 최적의 소재를 선택하세요.
-- 허니콤보드: 실내 전시, 팝업, 가벼운 설치물에 적합
-- 패브릭: 백월, 현수막, 대형 배너에 적합
-- 폼보드/포맥스: 간판, POP, 내구성 필요 시
-- 종이매대: 매장 진열, 판촉 디스플레이
-- 등신대: 포토존, 홍보용 인물 패널
-- 사이즈는 용도에 맞게 현실적으로 추천하세요 (예: 선거 포스터 → 600x900mm)
-- design_title은 고객 요청에서 핵심 문구를 추출하세요
-- design_keywords는 디자인 배경/요소 검색에 사용할 키워드 (영어)
-
-## 가격 계산
-- 면적 기반 상품: (가로mm/1000) × (세로mm/1000) × ㎡당 단가, 100원 단위 반올림
-- 고정가 상품: DB 가격 그대로
-- 가격은 이미 현지 통화로 변환되어 있음
-
-## 상품 목록
-${JSON.stringify(products.map(p => ({ code: p.code, name: p.name, category: p.category, description: p.description, size: p.width_mm + 'x' + p.height_mm + 'mm', is_custom_size: p.is_custom_size, price: p.price_display, price_per_sqm: p.price_per_sqm_display })))}
+## 상품 데이터
+${JSON.stringify(products.map(p => ({ code: p.code, name: p.name, category: p.category, size: p.width_mm + 'x' + p.height_mm + 'mm', is_custom_size: p.is_custom_size, price: p.price_display, price_per_sqm: p.price_per_sqm_display })))}
 
 ## 카테고리
 ${JSON.stringify(categories)}`;
 
-        // Claude API with tool_use
+        // Claude API — tool_choice: auto (대화 or 추천)
         const tools = [{
             name: "recommend_products",
-            description: "Recommend products based on customer request. Always use this tool to respond.",
+            description: "Recommend specific products when the customer needs printing/display/signage products. Do NOT use for general conversation.",
             input_schema: {
                 type: "object" as const,
                 properties: {
-                    summary: {
-                        type: "string" as const,
-                        description: "Brief summary of what the customer needs (in customer's language)"
-                    },
+                    summary: { type: "string" as const, description: "Brief summary (customer's language)" },
                     products: {
                         type: "array" as const,
                         items: {
                             type: "object" as const,
                             properties: {
-                                code: { type: "string" as const, description: "Product code from DB" },
-                                name: { type: "string" as const, description: "Product name (localized)" },
-                                reason: { type: "string" as const, description: "Why this product is recommended (1-2 sentences, in customer's language)" },
-                                recommended_width_mm: { type: "number" as const, description: "Recommended width in mm" },
-                                recommended_height_mm: { type: "number" as const, description: "Recommended height in mm" },
-                                price_display: { type: "string" as const, description: "Calculated price in local currency" },
-                                design_title: { type: "string" as const, description: "Suggested main text for the design" },
-                                design_keywords: {
-                                    type: "array" as const,
-                                    items: { type: "string" as const },
-                                    description: "English keywords for design background/elements (e.g. 'election', 'school', 'vote')"
-                                }
+                                code: { type: "string" as const },
+                                name: { type: "string" as const },
+                                reason: { type: "string" as const },
+                                recommended_width_mm: { type: "number" as const },
+                                recommended_height_mm: { type: "number" as const },
+                                price_display: { type: "string" as const },
+                                design_title: { type: "string" as const },
+                                design_keywords: { type: "array" as const, items: { type: "string" as const } }
                             },
                             required: ["code", "name", "reason", "recommended_width_mm", "recommended_height_mm", "price_display", "design_title"]
                         }
@@ -194,7 +197,7 @@ ${JSON.stringify(categories)}`;
                     max_tokens: 1024,
                     system: systemPrompt,
                     tools,
-                    tool_choice: { type: "tool", name: "recommend_products" },
+                    tool_choice: { type: "auto" },  // 자동 판단: 대화 or 추천
                     messages: [{ role: "user", content: message }],
                 }),
             });
@@ -205,12 +208,10 @@ ${JSON.stringify(categories)}`;
                     return callClaude(model, retries + 1);
                 }
                 if (model !== "claude-haiku-4-5-20251001") {
-                    console.log("Sonnet 429 → Haiku fallback");
                     return callClaude("claude-haiku-4-5-20251001", 0);
                 }
                 throw new Error("API rate limit");
             }
-
             if (!res.ok) {
                 const errText = await res.text();
                 console.error("Claude API Error:", res.status, errText);
@@ -219,21 +220,32 @@ ${JSON.stringify(categories)}`;
 
             const data = await res.json();
 
-            // tool_use 응답에서 input 추출
+            // tool_use 블록이 있으면 제품 추천
             const toolBlock = data.content.find((b: any) => b.type === "tool_use");
             if (toolBlock) {
-                return toolBlock.input;
+                // text 블록도 함께 있을 수 있음 (대화 + 추천)
+                const textBlock = data.content.find((b: any) => b.type === "text");
+                const result = toolBlock.input;
+                if (textBlock && textBlock.text) {
+                    result.chat_message = textBlock.text;
+                }
+                result.type = "recommendation";
+                return result;
             }
 
-            // fallback: text 응답
-            const textBlock = data.content.find((b: any) => b.type === "text");
-            return { summary: textBlock?.text || "", products: [] };
+            // 텍스트만 있으면 대화
+            const textParts = data.content.filter((b: any) => b.type === "text").map((b: any) => b.text);
+            return {
+                type: "chat",
+                chat_message: textParts.join("\n") || "...",
+                products: []
+            };
         }
 
         const result = await callClaude("claude-sonnet-4-20250514");
 
-        // 각 추천 제품에 raw price 정보 보강 (프론트엔드 장바구니용)
-        if (result.products) {
+        // 추천 제품에 raw price 보강
+        if (result.products && result.products.length > 0) {
             result.products.forEach((rec: any) => {
                 const dbProduct = products.find(p => p.code === rec.code);
                 if (dbProduct) {
@@ -252,14 +264,14 @@ ${JSON.stringify(categories)}`;
     } catch (error) {
         console.error("Product Advisor Error:", error);
         const errMsgs: Record<string, string> = {
-            kr: "추천을 가져오지 못했습니다. 잠시 후 다시 시도해주세요.",
-            ja: "推薦を取得できませんでした。しばらくしてからもう一度お試しください。",
-            us: "Could not get recommendations. Please try again shortly.",
+            kr: "앗, 잠시 연결이 불안정해요 😅 다시 시도해주세요!",
+            ja: "一時的にエラーが発生しました 😅 もう一度お試しください！",
+            us: "Oops, something went wrong 😅 Please try again!",
         };
         let errLang = 'kr';
         try { errLang = (await req.json()).lang || 'kr'; } catch {}
         return new Response(
-            JSON.stringify({ summary: errMsgs[errLang === 'en' ? 'us' : errLang] || errMsgs['kr'], products: [] }),
+            JSON.stringify({ type: "chat", chat_message: errMsgs[errLang === 'en' ? 'us' : errLang] || errMsgs['kr'], products: [] }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }

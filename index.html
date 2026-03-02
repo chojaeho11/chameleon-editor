@@ -5216,27 +5216,21 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
 
             searchBtn.onclick = doSearch;
 
-            // [수정] 모바일 호환성을 위해 keydown 사용 & 엔터키 처리 강화
+            // Enter → AI 어드바이저 (무조건)
             searchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault(); // 폼 자동제출 방지
-                    // AI 어드바이저: 2어절 이상이면 AI 추천
+                    e.preventDefault();
                     const val = searchInput.value.trim();
-                    const wordCount = val.split(/\s+/).filter(Boolean).length;
-                    if (wordCount >= 2 && val.length >= 5) {
-                        searchInput.blur();
-                        if (window.__runAdvisor) {
-                            window.__runAdvisor(val);
-                        } else {
-                            // advisor-panel.js가 아직 로드 안 됐으면 직접 import
-                            import('./advisor-panel.js?v=123').then(m => {
-                                if (m.initAdvisorPanel) m.initAdvisorPanel();
-                                if (m.runAdvisor) m.runAdvisor(val);
-                            });
-                        }
-                        return;
+                    if (!val) { doSearch(); return; }
+                    searchInput.blur();
+                    if (window.__runAdvisor) {
+                        window.__runAdvisor(val);
+                    } else {
+                        import('./advisor-panel.js?v=123').then(m => {
+                            if (m.initAdvisorPanel) m.initAdvisorPanel();
+                            if (m.runAdvisor) m.runAdvisor(val);
+                        });
                     }
-                    doSearch();
                 }
             });
         }
