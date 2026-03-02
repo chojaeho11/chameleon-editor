@@ -1456,6 +1456,7 @@ async function handleSubReturn() {
            autocomplete="off"
            readonly
            onfocus="this.removeAttribute('readonly');"
+           onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();var _v=this.value.trim();if(_v&amp;&amp;window._startAdvisor){this.value='';this.blur();window._startAdvisor(_v);return false;}}"
     >
     <button id="btnStartSearch" class="hero-search-btn">
         <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">Search</span>
@@ -5216,21 +5217,17 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
 
             searchBtn.onclick = doSearch;
 
-            // Enter → AI 어드바이저 (무조건)
+            // Enter → onkeydown 속성에서 처리됨 (advisor-panel.js의 _startAdvisor 호출)
+            // fallback: onkeydown이 처리 못 한 경우 기존 검색 실행
             searchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.keyCode === 13) {
                     e.preventDefault();
                     const val = searchInput.value.trim();
                     if (!val) { doSearch(); return; }
-                    searchInput.blur();
-                    if (window.__runAdvisor) {
-                        window.__runAdvisor(val);
-                    } else {
-                        import('./advisor-panel.js?v=123').then(m => {
-                            if (m.initAdvisorPanel) m.initAdvisorPanel();
-                            if (m.runAdvisor) m.runAdvisor(val);
-                        });
-                    }
+                    // _startAdvisor가 있으면 onkeydown 속성에서 이미 처리됨
+                    if (window._startAdvisor) return;
+                    // fallback: 기존 검색
+                    doSearch();
                 }
             });
         }
@@ -11690,46 +11687,7 @@ window.dsmRenderProducts = async function(keyword) {
             });
         }
 
-        // ── 검색바 Enter → ChamBot 열고 메시지 전송 (capture phase로 다른 핸들러보다 먼저 실행) ──
-        var heroSearchInput = document.getElementById('startSearchInput');
-        if (heroSearchInput) {
-            heroSearchInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    if (e.isComposing) return;  // 한글 조합 중 Enter 무시
-                    var val = heroSearchInput.value.trim();
-                    if (!val) return;  // 빈 검색은 기존 동작 유지
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    heroSearchInput.value = '';  // 입력창 초기화
-                    heroSearchInput.blur();
-                    // ChamBot 열기
-                    var win = getEl('cham-bot-window');
-                    if (!win || !win.classList.contains('visible')) {
-                        toggleBot();
-                    }
-                    // 메시지 전송
-                    setTimeout(function() { processInput(val); }, 400);
-                }
-            }, true);  // capture: true — 다른 모든 keydown 핸들러보다 먼저 실행
-        }
-
-        // AI 추천 버튼도 ChamBot으로 연결
-        var aiBtn = document.getElementById('btnAiAdvisor');
-        if (aiBtn) {
-            aiBtn.addEventListener('click', function() {
-                var searchInput = document.getElementById('startSearchInput');
-                var val = searchInput ? searchInput.value.trim() : '';
-                // ChamBot 열기
-                var win = getEl('cham-bot-window');
-                if (!win || !win.classList.contains('visible')) {
-                    toggleBot();
-                }
-                if (val) {
-                    setTimeout(function() { processInput(val); }, 400);
-                }
-            });
-        }
+        // 검색바 → advisor-panel.js가 처리 (onkeydown 속성 + btnAiAdvisor)
     }
 
     // DOM 준비되면 바인딩
