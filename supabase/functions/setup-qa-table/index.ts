@@ -38,6 +38,10 @@ serve(async (req) => {
         await sql`DROP INDEX IF EXISTS idx_qa_log_reviewed`;
         await sql`CREATE INDEX IF NOT EXISTS idx_qa_log_reviewed ON public.advisor_qa_log(is_reviewed, is_active, reviewed_at DESC)`;
 
+        // 학습 시스템용 번역 캐시 컬럼
+        await sql`ALTER TABLE public.advisor_qa_log ADD COLUMN IF NOT EXISTS customer_message_ko TEXT`;
+        await sql`ALTER TABLE public.advisor_qa_log ADD COLUMN IF NOT EXISTS admin_answer_ko TEXT`;
+
         await sql.end();
         return new Response(JSON.stringify({ status: "created" }), {
             headers: { "Content-Type": "application/json" },

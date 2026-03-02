@@ -1617,22 +1617,25 @@
             </div>
         </div>
         <div id="cbPanelLogs" style="display:none;">
-            <div id="cbDailyReport" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:15px;"></div>
-            <div id="cbUrgentBox" style="display:none; background:#fef2f2; border:2px solid #fca5a5; border-radius:10px; padding:15px; margin-bottom:15px;">
-                <h4 style="margin:0 0 10px; color:#dc2626;">🚨 AI가 곤란했던 질문들</h4>
-                <div id="cbUrgentList"></div>
-            </div>
-            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-                <input type="date" id="cbLogDate" class="input-text" style="width:150px;">
-                <select id="cbLogFilter" class="input-text" style="width:150px;">
+            <div id="qaReportStats" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:15px;"></div>
+            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
+                <input type="date" id="qaReportDate" class="input-text" style="width:150px;">
+                <select id="qaReportFilter" class="input-text" style="width:140px;">
                     <option value="all">전체</option>
-                    <option value="unresolved">❌ 미해결</option>
-                    <option value="needs_training">📝 학습필요</option>
+                    <option value="unreviewed">미검토</option>
+                    <option value="reviewed">검토완료</option>
                 </select>
-                <button class="btn btn-primary btn-sm" onclick="cbLoadLogs()">조회</button>
-                <span id="cbLogCount" style="font-size:12px; color:#64748b; align-self:center;"></span>
+                <select id="qaReportLang" class="input-text" style="width:120px;">
+                    <option value="all">모든 언어</option>
+                    <option value="kr">한국어</option>
+                    <option value="ja">日本語</option>
+                    <option value="us">English</option>
+                </select>
+                <button class="btn btn-primary btn-sm" onclick="qaLoadReport()">조회</button>
+                <button class="btn btn-outline btn-sm" onclick="qaBulkTranslate()" style="color:#6366f1; border-color:#6366f1;">🔄 일괄 번역</button>
+                <span id="qaReportCount" style="font-size:12px; color:#64748b; align-self:center;"></span>
             </div>
-            <div id="cbLogList" style="max-height:600px; overflow-y:auto;"></div>
+            <div id="qaReportList" style="max-height:700px; overflow-y:auto;"></div>
         </div>
         <div id="cbPanelKnowledge" style="display:block;">
             <div style="background:#f0fdf4; border:1px dashed #86efac; border-radius:10px; padding:15px; margin-bottom:15px;">
@@ -2231,7 +2234,7 @@ async function saveCommonInfo() {
         document.getElementById('cbTabLogs').className = 'btn btn-' + (tab === 'logs' ? 'primary' : 'outline') + ' btn-sm';
         document.getElementById('cbTabKnowledge').className = 'btn btn-' + (tab === 'knowledge' ? 'primary' : 'outline') + ' btn-sm';
         document.getElementById('cbTabSettings').className = 'btn btn-' + (tab === 'settings' ? 'primary' : 'outline') + ' btn-sm';
-        if (tab === 'logs') cbLoadLogs();
+        if (tab === 'logs') qaLoadReport();
         if (tab === 'knowledge') cbLoadKnowledge();
         if (tab === 'settings') cbLoadSettings();
     };
@@ -2322,31 +2325,210 @@ async function saveCommonInfo() {
         cbLoadKnowledge();
         if (window.lcLoadQuickReplies) lcLoadQuickReplies();
     };
-    window.cbLoadLogs = async function() {
+    // ═══ AI 일일 보고 & 학습 ═══
+    var qaData = [];
+    function qaEsc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
+
+    window.qaLoadReport = async function() {
         var sb = getSb(); if (!sb) return;
-        var filter = document.getElementById('cbLogFilter').value, today = new Date().toISOString().split('T')[0];
-        try {
-            var [ta, tu, tt, tk] = await Promise.all([
-                sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00'),
-                sb.from('chatbot_logs').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('is_resolved',false),
-                sb.from('chatbot_logs').select('id',{count:'exact',head:true}).eq('needs_training',true).eq('is_resolved',false),
-                sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true)
-            ]);
-            document.getElementById('cbDailyReport').innerHTML = '<div style="background:#ede9fe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#6366f1;">'+(ta.count||0)+'</div><div style="font-size:11px;color:#64748b;">오늘 상담</div></div><div style="background:#fef2f2;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#ef4444;">'+(tu.count||0)+'</div><div style="font-size:11px;">미해결</div></div><div style="background:#fefce8;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#f59e0b;">'+(tt.count||0)+'</div><div style="font-size:11px;">🚨 학습필요</div></div><div style="background:#d1fae5;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#059669;">'+(tk.count||0)+'</div><div style="font-size:11px;">학습데이터</div></div>';
-        } catch(e){}
-        var urgR = await sb.from('chatbot_logs').select('id, user_message, bot_reply').eq('needs_training',true).eq('is_resolved',false).order('created_at',{ascending:false}).limit(10);
-        var ub = document.getElementById('cbUrgentBox'), ul = document.getElementById('cbUrgentList');
-        if (urgR.data && urgR.data.length > 0) { ub.style.display='block'; var h=''; urgR.data.forEach(function(l){ h+='<div style="background:#fff;border:1px solid #fca5a5;border-radius:8px;padding:8px;margin-bottom:4px;font-size:12px;"><b style="color:#dc2626;">❓</b> '+l.user_message+'<br><span style="color:#94a3b8;">AI: '+((l.bot_reply||'').substring(0,80))+'</span><br><button class="btn btn-primary btn-sm" style="font-size:10px;margin-top:4px;background:#dc2626;" onclick="cbTrainFromLog('+l.id+',\''+l.user_message.replace(/'/g,"\\'").replace(/\n/g," ")+'\')">📚 답변등록</button> <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="cbResolveLog('+l.id+')">✅ 문제없음</button></div>'; }); ul.innerHTML=h; } else { ub.style.display='none'; }
-        var q2 = sb.from('chatbot_logs').select('id, created_at, needs_training, is_resolved, user_message, bot_reply').order('created_at',{ascending:false}).limit(30);
-        if (filter==='unresolved') q2=q2.eq('is_resolved',false); if (filter==='needs_training') q2=q2.eq('needs_training',true);
-        var dv = document.getElementById('cbLogDate').value; if(dv) q2=q2.gte('created_at',dv+'T00:00:00').lte('created_at',dv+'T23:59:59');
-        var r = await q2; var list = document.getElementById('cbLogList'); document.getElementById('cbLogCount').textContent='총 '+(r.data?r.data.length:0)+'건';
-        if(!r.data||r.data.length===0){list.innerHTML='<p style="text-align:center;color:#94a3b8;">기록 없음</p>';return;}
-        var h=''; r.data.forEach(function(l){ var t=new Date(l.created_at).toLocaleString('ko-KR'); h+='<div style="border:1px solid '+(l.needs_training?'#fca5a5':'#e2e8f0')+';border-radius:8px;padding:10px;margin-bottom:6px;background:'+(l.needs_training?'#fffbeb':'#fff')+';font-size:12px;"><div style="display:flex;justify-content:space-between;"><span style="color:#94a3b8;font-size:11px;">'+t+'</span><span style="background:'+(l.is_resolved?'#10b981':'#ef4444')+';color:#fff;padding:1px 6px;border-radius:6px;font-size:10px;">'+(l.is_resolved?'해결':'미해결')+'</span></div><div style="background:#f0f9ff;padding:6px 10px;border-radius:6px;margin:6px 0;"><b style="color:#0284c7;">고객:</b> '+l.user_message+'</div><div style="background:#f8fafc;padding:6px 10px;border-radius:6px;"><b style="color:#6366f1;">AI:</b> '+((l.bot_reply||'').substring(0,150))+'</div><div style="margin-top:6px;display:flex;gap:4px;">'+(l.is_resolved?'':'<button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="cbResolveLog('+l.id+')">✅</button>')+'<button class="btn btn-outline btn-sm" style="font-size:10px;color:#f59e0b;" onclick="cbTrainFromLog('+l.id+',\''+l.user_message.replace(/'/g,"\\'").replace(/\n/g," ")+'\')">📚 학습</button></div></div>'; });
-        list.innerHTML=h;
+        var dateEl = document.getElementById('qaReportDate');
+        if (!dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+        var date = dateEl.value;
+        var filter = document.getElementById('qaReportFilter').value;
+        var lang = document.getElementById('qaReportLang').value;
+
+        var q = sb.from('advisor_qa_log').select('*')
+            .gte('created_at', date + 'T00:00:00')
+            .lte('created_at', date + 'T23:59:59')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (filter === 'unreviewed') q = q.eq('is_reviewed', false);
+        if (filter === 'reviewed') q = q.eq('is_reviewed', true);
+        if (lang !== 'all') q = q.eq('lang', lang);
+
+        var res = await q;
+        qaData = res.data || [];
+        qaRenderReport(qaData);
+        qaLoadStats(date);
     };
-    window.cbResolveLog = async function(id) { await getSb().from('chatbot_logs').update({is_resolved:true}).eq('id',id); cbLoadLogs(); };
-    window.cbTrainFromLog = function(id, q) { cbShowTab('knowledge'); document.getElementById('cbNewQ').value=q; document.getElementById('cbNewA').focus(); getSb().from('chatbot_logs').update({needs_training:true}).eq('id',id).then(function(){}); };
+
+    async function qaLoadStats(date) {
+        var sb = getSb();
+        var [total, kr, ja, us, reviewed] = await Promise.all([
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',date+'T00:00:00').lte('created_at',date+'T23:59:59').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',date+'T00:00:00').lte('created_at',date+'T23:59:59').eq('lang','kr').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',date+'T00:00:00').lte('created_at',date+'T23:59:59').eq('lang','ja').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',date+'T00:00:00').lte('created_at',date+'T23:59:59').eq('lang','us').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',date+'T00:00:00').lte('created_at',date+'T23:59:59').eq('is_reviewed',true).eq('is_active',true),
+        ]);
+        document.getElementById('qaReportStats').innerHTML =
+            '<div style="background:#ede9fe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#6366f1;">'+(total.count||0)+'</div><div style="font-size:11px;color:#64748b;">총 상담</div></div>' +
+            '<div style="background:#dbeafe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:18px;font-weight:900;color:#2563eb;">'+(kr.count||0)+' / '+(ja.count||0)+' / '+(us.count||0)+'</div><div style="font-size:11px;color:#64748b;">KR / JP / US</div></div>' +
+            '<div style="background:#d1fae5;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#059669;">'+(reviewed.count||0)+'</div><div style="font-size:11px;color:#64748b;">검토완료</div></div>' +
+            '<div style="background:#fef2f2;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#ef4444;">'+((total.count||0)-(reviewed.count||0))+'</div><div style="font-size:11px;color:#64748b;">미검토</div></div>';
+    }
+
+    function qaRenderReport(data) {
+        var list = document.getElementById('qaReportList');
+        document.getElementById('qaReportCount').textContent = '총 ' + data.length + '건';
+        if (!data || data.length === 0) {
+            list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:30px;">상담 기록이 없습니다.</p>';
+            return;
+        }
+        var h = '';
+        data.forEach(function(qa) {
+            var time = new Date(qa.created_at).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+            var langBadge = {kr:'KR', ja:'JP', us:'US'}[qa.lang] || qa.lang;
+            var langColor = {kr:'#3b82f6', ja:'#ef4444', us:'#10b981'}[qa.lang] || '#64748b';
+            var isNonKr = qa.lang !== 'kr';
+            var statusBadge = qa.is_reviewed
+                ? '<span style="background:#d1fae5;color:#059669;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">검토완료</span>'
+                : '<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">미검토</span>';
+
+            h += '<div id="qaCard_'+qa.id+'" style="border:1px solid '+(qa.is_reviewed?'#d1fae5':'#fca5a5')+';border-radius:12px;padding:16px;margin-bottom:10px;background:#fff;">';
+
+            // Header
+            h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+            h += '<div style="display:flex;gap:8px;align-items:center;">';
+            h += '<span style="font-size:13px;font-weight:700;color:#334155;">'+time+'</span>';
+            h += '<span style="background:'+langColor+';color:#fff;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">'+langBadge+'</span>';
+            if (qa.has_image) h += '<span style="background:#f59e0b;color:#fff;padding:2px 6px;border-radius:6px;font-size:10px;">이미지</span>';
+            if (qa.category && qa.category !== 'general') h += '<span style="background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:6px;font-size:10px;">'+qaEsc(qa.category)+'</span>';
+            h += '</div>' + statusBadge + '</div>';
+
+            // Customer Message
+            h += '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px;margin-bottom:8px;">';
+            h += '<div style="font-size:11px;color:#0369a1;font-weight:700;margin-bottom:4px;">고객 질문</div>';
+            h += '<div style="font-size:13px;color:#334155;">'+qaEsc(qa.customer_message)+'</div>';
+            if (isNonKr) {
+                h += '<div id="qaKoMsg_'+qa.id+'" style="margin-top:6px;padding-top:6px;border-top:1px dashed #bae6fd;">';
+                if (qa.customer_message_ko) {
+                    h += '<div style="font-size:11px;color:#6366f1;font-weight:600;">한국어 번역</div>';
+                    h += '<div style="font-size:12px;color:#475569;">'+qaEsc(qa.customer_message_ko)+'</div>';
+                } else {
+                    h += '<button class="btn btn-outline btn-sm" onclick="qaTranslateMsg(\''+qa.id+'\')" style="font-size:11px;padding:2px 10px;color:#6366f1;border-color:#6366f1;">번역</button>';
+                }
+                h += '</div>';
+            }
+            h += '</div>';
+
+            // AI Response
+            h += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-bottom:8px;">';
+            h += '<div style="font-size:11px;color:#6366f1;font-weight:700;margin-bottom:4px;">AI 응답</div>';
+            var aiText = qa.ai_response || '';
+            h += '<div style="font-size:12px;color:#475569;max-height:100px;overflow-y:auto;white-space:pre-wrap;">'+qaEsc(aiText.substring(0,500))+'</div>';
+            h += '</div>';
+
+            // Products
+            if (qa.products_recommended && qa.products_recommended.length > 0) {
+                h += '<div style="margin-bottom:8px;"><span style="font-size:11px;color:#64748b;">추천: </span>';
+                qa.products_recommended.forEach(function(p) {
+                    h += '<span style="background:#e0e7ff;color:#4338ca;padding:1px 6px;border-radius:4px;font-size:11px;margin-right:4px;">'+qaEsc(p.name||p.code)+'</span>';
+                });
+                h += '</div>';
+            }
+
+            // Admin Answer
+            h += '<div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:10px;">';
+            h += '<div style="font-size:11px;color:#a16207;font-weight:700;margin-bottom:6px;">관리자 답변 (한국어로 작성)</div>';
+            if (qa.is_reviewed && (qa.admin_answer_ko || qa.admin_answer)) {
+                h += '<div style="font-size:12px;color:#334155;margin-bottom:4px;">'+qaEsc(qa.admin_answer_ko || qa.admin_answer)+'</div>';
+                if (isNonKr && qa.admin_answer) {
+                    h += '<div style="font-size:11px;color:#64748b;margin-top:4px;padding-top:4px;border-top:1px dashed #fde047;">번역본: '+qaEsc(qa.admin_answer)+'</div>';
+                }
+                h += '<button class="btn btn-outline btn-sm" onclick="qaEditAnswer(\''+qa.id+'\')" style="font-size:10px;margin-top:6px;">수정</button>';
+            } else {
+                h += '<textarea id="qaAnswer_'+qa.id+'" rows="2" style="width:100%;border:1px solid #d4d4d8;border-radius:6px;padding:8px;font-size:12px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="올바른 답변을 한국어로 작성하세요..."></textarea>';
+                h += '<div style="display:flex;gap:6px;margin-top:6px;align-items:center;">';
+                h += '<select id="qaCat_'+qa.id+'" style="font-size:11px;padding:4px 8px;border:1px solid #d4d4d8;border-radius:6px;">';
+                ['general','pricing','shipping','payment','product','cancel','service','honeycomb'].forEach(function(c) {
+                    var label = {general:'일반',pricing:'가격',shipping:'배송',payment:'결제',product:'상품',cancel:'취소/환불',service:'서비스',honeycomb:'허니콤'}[c] || c;
+                    h += '<option value="'+c+'"'+(qa.category===c?' selected':'')+'>'+label+'</option>';
+                });
+                h += '</select>';
+                h += '<button class="btn btn-primary btn-sm" onclick="qaSaveAnswer(\''+qa.id+'\',\''+qa.lang+'\')" style="font-size:11px;padding:4px 16px;">저장 (학습)</button>';
+                h += '</div>';
+            }
+            h += '</div>';
+
+            h += '</div>';
+        });
+        list.innerHTML = h;
+    }
+
+    // 고객 메시지 한국어 번역
+    window.qaTranslateMsg = async function(qaId) {
+        var qa = qaData.find(function(q) { return q.id === qaId; });
+        if (!qa) return;
+        var el = document.getElementById('qaKoMsg_' + qaId);
+        if (!el) return;
+        el.innerHTML = '<span style="font-size:11px;color:#6366f1;">번역 중...</span>';
+        try {
+            var sb = getSb();
+            var res = await sb.functions.invoke('admin-qa-update', {
+                body: { action: 'translate_message', qa_id: qaId, customer_message: qa.customer_message, lang: qa.lang }
+            });
+            var d = res.data;
+            if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
+            if (d && d.translated) {
+                qa.customer_message_ko = d.translated;
+                el.innerHTML = '<div style="font-size:11px;color:#6366f1;font-weight:600;">한국어 번역</div><div style="font-size:12px;color:#475569;">'+qaEsc(d.translated)+'</div>';
+            } else {
+                throw new Error(d?.error || 'Translation failed');
+            }
+        } catch(e) {
+            el.innerHTML = '<span style="color:#ef4444;font-size:11px;">번역 실패</span> <button class="btn btn-outline btn-sm" onclick="qaTranslateMsg(\''+qaId+'\')" style="font-size:10px;">재시도</button>';
+        }
+    };
+
+    // 관리자 답변 저장 (자동 번역 + 학습)
+    window.qaSaveAnswer = async function(qaId, lang) {
+        var textarea = document.getElementById('qaAnswer_' + qaId);
+        var catSelect = document.getElementById('qaCat_' + qaId);
+        if (!textarea) return;
+        var answerKo = textarea.value.trim();
+        if (!answerKo) { showToast('답변을 입력하세요', 'warn'); return; }
+        textarea.disabled = true;
+        try {
+            var sb = getSb();
+            var res = await sb.functions.invoke('admin-qa-update', {
+                body: { action: 'save_answer', qa_id: qaId, admin_answer_ko: answerKo, lang: lang, category: catSelect ? catSelect.value : 'general' }
+            });
+            var d = res.data;
+            if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
+            if (d && d.success) {
+                showToast('저장 완료! AI 학습에 반영됩니다.', 'success');
+                qaLoadReport();
+            } else {
+                throw new Error(d?.error || 'Save failed');
+            }
+        } catch(e) {
+            showToast('저장 실패: ' + (e.message || e), 'error');
+            textarea.disabled = false;
+        }
+    };
+
+    // 일괄 번역
+    window.qaBulkTranslate = async function() {
+        var nonKr = qaData.filter(function(q) { return q.lang !== 'kr' && !q.customer_message_ko; });
+        if (nonKr.length === 0) { showToast('번역할 항목이 없습니다', 'info'); return; }
+        showToast(nonKr.length + '건 번역 중...', 'info');
+        for (var i = 0; i < nonKr.length; i++) {
+            await qaTranslateMsg(nonKr[i].id);
+        }
+        showToast('번역 완료!', 'success');
+    };
+
+    // 기존 답변 수정
+    window.qaEditAnswer = function(qaId) {
+        var qa = qaData.find(function(q) { return q.id === qaId; });
+        if (!qa) return;
+        qa.is_reviewed = false;
+        qaRenderReport(qaData);
+        var ta = document.getElementById('qaAnswer_' + qaId);
+        if (ta) ta.value = qa.admin_answer_ko || qa.admin_answer || '';
+    };
     window.cbLoadSettings = async function() {
         var sb = getSb(); var r = await sb.from('chatbot_knowledge').select('answer').eq('category','_system_prompt').eq('is_active',true).maybeSingle();
         if(r.data) document.getElementById('cbCustomPrompt').value=r.data.answer;
