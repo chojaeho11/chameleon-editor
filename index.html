@@ -3879,6 +3879,15 @@ window.filterFxCards = function(cat, btn) {
 .wizard-step .step-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f1f5f9;font-size:11px;flex-shrink:0}
 .wizard-step.active .step-icon{background:#6366f1;color:#fff}
 .wizard-step.done .step-icon{background:#10b981;color:#fff}
+.ls-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.ls-type-card{border:2px solid #e2e8f0;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#fff}
+.ls-type-card:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,.15)}
+.ls-type-card.selected{border-color:#6366f1;background:#ede9fe;box-shadow:0 0 0 2px #6366f1}
+.ls-type-card .ls-icon{font-size:28px;margin-bottom:6px}
+.ls-type-card .ls-name{font-size:13px;font-weight:700;color:#1e293b}
+.ls-type-card .ls-desc{font-size:11px;color:#64748b;margin-top:2px}
+.ls-summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.ls-summary-row .ls-label{color:#64748b}.ls-summary-row .ls-value{color:#1e293b;font-weight:600}
 </style>
 
 <div id="aiStartModal" class="modal-bg" style="z-index: 15000;">
@@ -7826,7 +7835,8 @@ if (w >= 20 && h >= 20) {
         if (btn3d) {
             const isHoneycomb = (product && product.category === 'honeycomb') || (product && product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
             const isPd = (typeof key === 'string' && key.startsWith('pd_'));
-            btn3d.style.display = (isHoneycomb || isPd) ? 'flex' : 'none';
+            const isLetterSign = (product && product.category === 'honeycomb_letter') || (typeof key === 'string' && key.startsWith('hcl_'));
+            btn3d.style.display = (isHoneycomb || isPd || isLetterSign) ? 'flex' : 'none';
         }
 
         // 가벽설정 버튼: wall 모드일 때만 표시
@@ -7900,6 +7910,23 @@ if (w >= 20 && h >= 20) {
             window.__pdMode = false;
         }
 
+        // 글씨 스카시 모드 감지
+        const isLetterSignMode = window.__letterSignMode;
+        if (isLetterSignMode) {
+            const lsData = window.__letterSignData || {};
+            window.__letterSignMode = false; // 사용 후 초기화
+            setTimeout(async () => {
+                try {
+                    const mod = await import('./canvas-ai.js?v=123');
+                    if (mod.runDesignWizardForLetterSign) {
+                        mod.runDesignWizardForLetterSign(lsData.title || '', lsData.bottomText || '', lsData.style || 'forest');
+                    }
+                } catch(e) {
+                    console.error('Letter sign auto-design error:', e);
+                }
+            }, 1000);
+        }
+
         // 3. 화면 전환
         document.getElementById("startScreen").style.display = "none";
         document.getElementById("mainEditor").style.display = "flex";
@@ -7942,7 +7969,7 @@ if (w >= 20 && h >= 20) {
 
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
         const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');
-        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !window.__WEDDING_MODE && !window.__RETOUCH_MODE) {
+        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
                 const _kw = window.pendingTemplateKeyword;

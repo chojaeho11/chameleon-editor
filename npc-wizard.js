@@ -67,6 +67,30 @@ const NPC_TEXTS = {
         pdDepthLabel: '깊이',
         pdOpenEditor: '에디터로 디자인하기',
         pdSkipDesign: '디자인 없이 진행',
+        // 글씨 스카시 (Letter Sign)
+        lsSelectType: '글씨 스카시 타입을 선택해주세요 ✨',
+        lsType1: '간단 등신대형 (1장)',
+        lsType2: '하단박스 + 1장 + 입체글씨',
+        lsType3: '하단박스 + 3장 + 입체글씨',
+        lsType4: '10장짜리 묵직한 스타일',
+        lsType5: '아크릴 허니콤 글씨',
+        lsEnterTitle: '타이틀 글씨를 입력해주세요 ✏️',
+        lsTitlePlaceholder: '예: GRAND OPEN',
+        lsBottomPlaceholder: '예: 카페 오픈 기념',
+        lsEnterSize: '가로 사이즈를 입력해주세요 📏',
+        lsWidthLabel: '가로 (cm)',
+        lsHeightLabel: '세로 (cm)',
+        lsHeightAuto: '(자동 계산됨)',
+        lsSelectStyle: '디자인 스타일을 선택해주세요 🎨',
+        lsPrice: '예상 견적',
+        lsGenerate: '디자인 생성하기',
+        lsEditInEditor: '에디터에서 편집하기',
+        lsSummary: '주문 요약입니다! ✨',
+        lsTitleText: '타이틀',
+        lsBottomTextLabel: '하단 글씨',
+        lsSize: '사이즈',
+        lsType: '타입',
+        lsAddToCart: '장바구니 담기',
     },
     ja: {
         hcAskConsulted: 'マネージャーとご相談されましたか？ 🤝',
@@ -127,6 +151,29 @@ const NPC_TEXTS = {
         pdDepthLabel: '奥行き',
         pdOpenEditor: 'エディタでデザイン',
         pdSkipDesign: 'デザインなしで進む',
+        lsSelectType: '文字看板のタイプを選んでください ✨',
+        lsType1: 'シンプルスタンディ（1枚）',
+        lsType2: '下部ボックス＋1枚＋立体文字',
+        lsType3: '下部ボックス＋3枚＋立体文字',
+        lsType4: '10枚重厚スタイル',
+        lsType5: 'アクリルハニカム文字',
+        lsEnterTitle: 'タイトル文字を入力してください ✏️',
+        lsTitlePlaceholder: '例: GRAND OPEN',
+        lsBottomPlaceholder: '例: カフェオープン記念',
+        lsEnterSize: '横幅サイズを入力してください 📏',
+        lsWidthLabel: '横幅 (cm)',
+        lsHeightLabel: '高さ (cm)',
+        lsHeightAuto: '（自動計算）',
+        lsSelectStyle: 'デザインスタイルを選んでください 🎨',
+        lsPrice: 'お見積もり',
+        lsGenerate: 'デザイン生成',
+        lsEditInEditor: 'エディタで編集',
+        lsSummary: '注文概要です！ ✨',
+        lsTitleText: 'タイトル',
+        lsBottomTextLabel: '下部テキスト',
+        lsSize: 'サイズ',
+        lsType: 'タイプ',
+        lsAddToCart: 'カートに入れる',
     },
     en: {
         hcAskConsulted: 'Have you consulted with our manager? 🤝',
@@ -187,6 +234,29 @@ const NPC_TEXTS = {
         pdDepthLabel: 'Depth',
         pdOpenEditor: 'Design in Editor',
         pdSkipDesign: 'Skip design',
+        lsSelectType: 'Select your letter sign type ✨',
+        lsType1: 'Simple Standee (1 sheet)',
+        lsType2: 'Bottom Box + 1 Sheet + 3D Letters',
+        lsType3: 'Bottom Box + 3 Sheets + 3D Letters',
+        lsType4: '10-Sheet Heavy Style',
+        lsType5: 'Acrylic Honeycomb Letters',
+        lsEnterTitle: 'Enter your title text ✏️',
+        lsTitlePlaceholder: 'e.g., GRAND OPEN',
+        lsBottomPlaceholder: 'e.g., Grand Opening Event',
+        lsEnterSize: 'Enter the width size 📏',
+        lsWidthLabel: 'Width (cm)',
+        lsHeightLabel: 'Height (cm)',
+        lsHeightAuto: '(auto-calculated)',
+        lsSelectStyle: 'Select your design style 🎨',
+        lsPrice: 'Estimated Price',
+        lsGenerate: 'Generate Design',
+        lsEditInEditor: 'Edit in Editor',
+        lsSummary: 'Order summary! ✨',
+        lsTitleText: 'Title',
+        lsBottomTextLabel: 'Bottom Text',
+        lsSize: 'Size',
+        lsType: 'Type',
+        lsAddToCart: 'Add to Cart',
     },
     zh: {
         hcAskConsulted: '您已与经理咨询过了吗？ 🤝',
@@ -247,6 +317,11 @@ const NPC_TEXTS = {
         pdDepthLabel: '深度',
         pdOpenEditor: '在编辑器中设计',
         pdSkipDesign: '跳过设计',
+        lsSelectType: '请选择文字招牌类型 ✨', lsType1: '简单立牌（1张）', lsType2: '底部箱+1张+立体文字', lsType3: '底部箱+3张+立体文字', lsType4: '10张厚重风格', lsType5: '亚克力蜂窝文字',
+        lsEnterTitle: '请输入标题文字 ✏️', lsTitlePlaceholder: '例: GRAND OPEN', lsBottomPlaceholder: '例: 咖啡开业庆典',
+        lsEnterSize: '请输入宽度尺寸 📏', lsWidthLabel: '宽度 (cm)', lsHeightLabel: '高度 (cm)', lsHeightAuto: '（自动计算）',
+        lsSelectStyle: '请选择设计风格 🎨', lsPrice: '预估报价', lsGenerate: '生成设计', lsEditInEditor: '在编辑器中编辑',
+        lsSummary: '订单摘要！ ✨', lsTitleText: '标题', lsBottomTextLabel: '底部文字', lsSize: '尺寸', lsType: '类型', lsAddToCart: '加入购物车',
     },
     ar: {
         hcAskConsulted: 'هل تشاورت مع المدير؟ 🤝',
@@ -307,6 +382,11 @@ const NPC_TEXTS = {
         pdDepthLabel: 'العمق',
         pdOpenEditor: 'التصميم في المحرر',
         pdSkipDesign: 'تخطي التصميم',
+        lsSelectType: 'اختر نوع لافتة الحروف ✨', lsType1: 'لوحة بسيطة (ورقة واحدة)', lsType2: 'صندوق سفلي + ورقة + حروف ثلاثية', lsType3: 'صندوق سفلي + 3 أوراق + حروف ثلاثية', lsType4: 'نمط ثقيل 10 أوراق', lsType5: 'حروف أكريليك هانيكوم',
+        lsEnterTitle: 'أدخل نص العنوان ✏️', lsTitlePlaceholder: 'مثال: GRAND OPEN', lsBottomPlaceholder: 'مثال: حفل الافتتاح',
+        lsEnterSize: 'أدخل حجم العرض 📏', lsWidthLabel: 'العرض (سم)', lsHeightLabel: 'الارتفاع (سم)', lsHeightAuto: '(حساب تلقائي)',
+        lsSelectStyle: 'اختر نمط التصميم 🎨', lsPrice: 'السعر المقدر', lsGenerate: 'إنشاء التصميم', lsEditInEditor: 'التعديل في المحرر',
+        lsSummary: 'ملخص الطلب! ✨', lsTitleText: 'العنوان', lsBottomTextLabel: 'النص السفلي', lsSize: 'الحجم', lsType: 'النوع', lsAddToCart: 'أضف للسلة',
     },
     es: {
         hcAskConsulted: '¿Ha consultado con nuestro gerente? 🤝',
@@ -367,6 +447,11 @@ const NPC_TEXTS = {
         pdDepthLabel: 'Profundidad',
         pdOpenEditor: 'Diseñar en el Editor',
         pdSkipDesign: 'Omitir diseño',
+        lsSelectType: 'Seleccione el tipo de letrero ✨', lsType1: 'Simple (1 lámina)', lsType2: 'Caja inferior + 1 lámina + letras 3D', lsType3: 'Caja inferior + 3 láminas + letras 3D', lsType4: 'Estilo pesado 10 láminas', lsType5: 'Letras acrílico honeycomb',
+        lsEnterTitle: 'Ingrese el texto del título ✏️', lsTitlePlaceholder: 'Ej: GRAND OPEN', lsBottomPlaceholder: 'Ej: Evento de inauguración',
+        lsEnterSize: 'Ingrese el ancho 📏', lsWidthLabel: 'Ancho (cm)', lsHeightLabel: 'Alto (cm)', lsHeightAuto: '(calculado automáticamente)',
+        lsSelectStyle: 'Seleccione el estilo de diseño 🎨', lsPrice: 'Precio estimado', lsGenerate: 'Generar diseño', lsEditInEditor: 'Editar en el editor',
+        lsSummary: '¡Resumen del pedido! ✨', lsTitleText: 'Título', lsBottomTextLabel: 'Texto inferior', lsSize: 'Tamaño', lsType: 'Tipo', lsAddToCart: 'Agregar al carrito',
     },
     de: {
         hcAskConsulted: 'Haben Sie sich mit unserem Manager beraten? 🤝',
@@ -427,6 +512,11 @@ const NPC_TEXTS = {
         pdDepthLabel: 'Tiefe',
         pdOpenEditor: 'Im Editor gestalten',
         pdSkipDesign: 'Design überspringen',
+        lsSelectType: 'Wählen Sie den Schildtyp ✨', lsType1: 'Einfach (1 Blatt)', lsType2: 'Sockelbox + 1 Blatt + 3D-Buchstaben', lsType3: 'Sockelbox + 3 Blatt + 3D-Buchstaben', lsType4: '10-Blatt schwerer Stil', lsType5: 'Acryl-Wabenbuchstaben',
+        lsEnterTitle: 'Geben Sie den Titeltext ein ✏️', lsTitlePlaceholder: 'z.B.: GRAND OPEN', lsBottomPlaceholder: 'z.B.: Eröffnungsfeier',
+        lsEnterSize: 'Geben Sie die Breite ein 📏', lsWidthLabel: 'Breite (cm)', lsHeightLabel: 'Höhe (cm)', lsHeightAuto: '(automatisch berechnet)',
+        lsSelectStyle: 'Wählen Sie den Designstil 🎨', lsPrice: 'Geschätzter Preis', lsGenerate: 'Design erstellen', lsEditInEditor: 'Im Editor bearbeiten',
+        lsSummary: 'Bestellübersicht! ✨', lsTitleText: 'Titel', lsBottomTextLabel: 'Unterer Text', lsSize: 'Größe', lsType: 'Typ', lsAddToCart: 'In den Warenkorb',
     },
     fr: {
         hcAskConsulted: 'Avez-vous consulté notre responsable ? 🤝',
@@ -487,6 +577,11 @@ const NPC_TEXTS = {
         pdDepthLabel: 'Profondeur',
         pdOpenEditor: 'Designer dans l\'éditeur',
         pdSkipDesign: 'Passer le design',
+        lsSelectType: 'Choisissez le type d\'enseigne ✨', lsType1: 'Simple (1 feuille)', lsType2: 'Boîte basse + 1 feuille + lettres 3D', lsType3: 'Boîte basse + 3 feuilles + lettres 3D', lsType4: 'Style lourd 10 feuilles', lsType5: 'Lettres acrylique nid d\'abeille',
+        lsEnterTitle: 'Entrez le texte du titre ✏️', lsTitlePlaceholder: 'Ex: GRAND OPEN', lsBottomPlaceholder: 'Ex: Événement d\'inauguration',
+        lsEnterSize: 'Entrez la largeur 📏', lsWidthLabel: 'Largeur (cm)', lsHeightLabel: 'Hauteur (cm)', lsHeightAuto: '(calculé automatiquement)',
+        lsSelectStyle: 'Choisissez le style de design 🎨', lsPrice: 'Prix estimé', lsGenerate: 'Générer le design', lsEditInEditor: 'Modifier dans l\'éditeur',
+        lsSummary: 'Résumé de commande ! ✨', lsTitleText: 'Titre', lsBottomTextLabel: 'Texte du bas', lsSize: 'Taille', lsType: 'Type', lsAddToCart: 'Ajouter au panier',
     },
 };
 
@@ -515,6 +610,14 @@ window.NpcWizard = {
     sections: {},
     guideEl: null,
     _fileWatcher: null,
+    // 글씨 스카시 전용 상태
+    isLetterSign: false,
+    _lsType: null,
+    _lsTitleText: '',
+    _lsBottomText: '',
+    _lsWidthCm: 60,
+    _lsHeightCm: 48,
+    _lsStyle: 'forest',
     // 종이매대 전용 상태
     _pdWidth: 40,
     _pdHeight: 120,
@@ -532,11 +635,18 @@ window.NpcWizard = {
         this.isCustom = !!product.is_custom_size;
         this.isGeneral = !!product.is_general_product;
         const key = product.code || window.currentProductKey || '';
-        this.isHoneycomb = (product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
+        this.isLetterSign = (product.category === 'honeycomb_letter') || (typeof key === 'string' && key.startsWith('hcl_'));
+        this.isHoneycomb = !this.isLetterSign && ((product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb')));
         this.isPaperDisplay = (typeof key === 'string' && key.startsWith('pd_'));
         this.hasFile = null;
         this.designChoice = null;
         this._fromHoneycombDirect = false;
+        this._lsType = null;
+        this._lsTitleText = '';
+        this._lsBottomText = '';
+        this._lsWidthCm = 60;
+        this._lsHeightCm = 48;
+        this._lsStyle = 'forest';
         this._pdWidth = 40;
         this._pdHeight = 120;
         this._pdDepth = 30;
@@ -560,7 +670,10 @@ window.NpcWizard = {
         this._hideAll();
         this._createGuideArea(rightActions);
 
-        if (this.isPaperDisplay) {
+        if (this.isLetterSign) {
+            // 글씨 스카시 → 전용 위자드
+            this._goStep('lsTypeSelect');
+        } else if (this.isPaperDisplay) {
             // 종이매대 → 전용 위자드
             this._goStep('pdSize');
         } else if (this.isHoneycomb) {
@@ -978,6 +1091,144 @@ window.NpcWizard = {
                 this._insertToSlot('total');
                 break;
             }
+
+            // ═══ 글씨 스카시 (Letter Sign) 스텝 ═══
+            case 'lsTypeSelect': {
+                this._renderBubble(_t('lsSelectType'), null, false);
+                const lsSlot1 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (lsSlot1) {
+                    const types = [
+                        { code: 'hcl_simple',  label: _t('lsType1'), icon: '📋' },
+                        { code: 'hcl_box1',    label: _t('lsType2'), icon: '📦' },
+                        { code: 'hcl_box3',    label: _t('lsType3'), icon: '🏗️' },
+                        { code: 'hcl_heavy',   label: _t('lsType4'), icon: '🪨' },
+                        { code: 'hcl_acrylic', label: _t('lsType5'), icon: '💎' },
+                    ];
+                    let html = '<div class="ls-type-grid">';
+                    types.forEach(t => {
+                        const sel = this._lsType === t.code ? ' selected' : '';
+                        html += `<div class="ls-type-card${sel}" onclick="window.NpcWizard._lsSelectType('${t.code}',this)" data-code="${t.code}">
+                            <div class="ls-type-icon">${t.icon}</div>
+                            <div class="ls-type-label">${t.label}</div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    lsSlot1.innerHTML = html;
+                }
+                break;
+            }
+            case 'lsTextInput': {
+                this._renderBubble(_t('lsEnterTitle'), null, true, null,
+                    { onclick: "window.NpcWizard._lsAfterText()", label: _t('next') });
+                const lsSlot2 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (lsSlot2) {
+                    lsSlot2.innerHTML = `
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">${_t('lsTitleText')}</label>
+                            <input type="text" id="npcLsTitle" value="${this._lsTitleText}" placeholder="${_t('lsTitlePlaceholder')}" maxlength="30"
+                                style="width:100%;padding:12px;border:2px solid #c7d2fe;border-radius:10px;font-size:16px;font-weight:700;box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">${_t('lsBottomTextLabel')}</label>
+                            <input type="text" id="npcLsBottom" value="${this._lsBottomText}" placeholder="${_t('lsBottomPlaceholder')}" maxlength="40"
+                                style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                        </div>
+                    `;
+                }
+                break;
+            }
+            case 'lsSizeInput': {
+                const lsRatios = { hcl_simple:0.8, hcl_box1:1.2, hcl_box3:1.5, hcl_heavy:1.0, hcl_acrylic:0.5 };
+                const lsRatio = lsRatios[this._lsType] || 1.0;
+                const defaultW = this._lsWidthCm || 60;
+                if (!this._lsHeightCm || this._lsHeightCm === 48) this._lsHeightCm = Math.round(defaultW * lsRatio);
+
+                this._renderBubble(_t('lsEnterSize'), null, true, null,
+                    { onclick: "window.NpcWizard._lsAfterSize()", label: _t('next') });
+                const lsSlot3 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (lsSlot3) {
+                    lsSlot3.innerHTML = `
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsWidthLabel')}</label>
+                            <input type="number" id="npcLsWidth" value="${defaultW}" min="20" max="300" inputmode="numeric"
+                                oninput="window.NpcWizard._lsUpdateHeight()"
+                                style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsHeightLabel')} <span style="color:#94a3b8;font-size:11px;">${_t('lsHeightAuto')}</span></label>
+                            <input type="number" id="npcLsHeight" value="${this._lsHeightCm}" min="20" max="300" inputmode="numeric"
+                                oninput="window.NpcWizard._lsUpdatePrice()"
+                                style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;box-sizing:border-box;">
+                        </div>
+                        <div id="npcLsPricePreview"></div>
+                    `;
+                    this._lsUpdatePrice();
+                }
+                break;
+            }
+            case 'lsStyleSelect': {
+                this._renderBubble(_t('lsSelectStyle'), null, true, null,
+                    { onclick: "window.NpcWizard._lsAfterStyle()", label: _t('lsGenerate') });
+                const lsSlot4 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (lsSlot4) {
+                    const styles = [
+                        { key:'neon',     bg:'linear-gradient(135deg,#5b00f5,#b030ff)' },
+                        { key:'ocean',    bg:'linear-gradient(135deg,#4f6cf7,#8b5cf6)' },
+                        { key:'flame',    bg:'linear-gradient(135deg,#f02020,#ff8c00)' },
+                        { key:'forest',   bg:'linear-gradient(135deg,#059e7a,#34e89e)' },
+                        { key:'midnight', bg:'linear-gradient(135deg,#0a0033,#3b2d8b)' },
+                        { key:'coral',    bg:'linear-gradient(135deg,#ff4757,#ff6b81)' },
+                        { key:'sunset',   bg:'linear-gradient(135deg,#f7971e,#ffd200)' },
+                        { key:'arctic',   bg:'linear-gradient(135deg,#c8d6e5,#dfe6ed)' },
+                    ];
+                    let html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">';
+                    styles.forEach(s => {
+                        const sel = this._lsStyle === s.key;
+                        const border = sel ? 'border:2px solid #6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.3);' : 'border:2px solid #e2e8f0;';
+                        html += `<button onclick="window.NpcWizard._lsPickStyle('${s.key}',this)" data-style="${s.key}"
+                            style="padding:10px 4px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:#fff;background:${s.bg};${border};text-transform:capitalize;">${s.key}</button>`;
+                    });
+                    html += '</div>';
+                    lsSlot4.innerHTML = html;
+                }
+                break;
+            }
+            case 'lsSummary': {
+                this._showSection('total');
+                const lsW = this._lsWidthCm, lsH = this._lsHeightCm;
+                const lsArea = (lsW / 100) * (lsH / 100);
+                const lsProd = this.product;
+                const lsSqm = lsProd._base_sqm_price || lsProd.price || 50000;
+                const lsCalcPrice = Math.round(lsArea * lsSqm / 10) * 10;
+                const lsFmt = window.formatCurrency ? window.formatCurrency(lsCalcPrice) : lsCalcPrice.toLocaleString() + '원';
+                const lsTypeLabels = { hcl_simple: _t('lsType1'), hcl_box1: _t('lsType2'), hcl_box3: _t('lsType3'), hcl_heavy: _t('lsType4'), hcl_acrylic: _t('lsType5') };
+
+                this._renderBubble(_t('lsSummary'), null, true);
+                const lsSlot5 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (lsSlot5) {
+                    lsSlot5.innerHTML = `
+                        <div class="pd-summary-card">
+                            <div class="pd-summary-row"><span>${_t('lsType')}</span><strong>${lsTypeLabels[this._lsType] || this._lsType}</strong></div>
+                            <div class="pd-summary-row"><span>${_t('lsTitleText')}</span><strong>${this._lsTitleText}</strong></div>
+                            <div class="pd-summary-row"><span>${_t('lsBottomTextLabel')}</span><strong>${this._lsBottomText || '-'}</strong></div>
+                            <div class="pd-summary-row"><span>${_t('lsSize')}</span><strong>${lsW}cm x ${lsH}cm (${lsArea.toFixed(2)}m2)</strong></div>
+                            <div class="pd-summary-row"><span>${_t('lsPrice')}</span><strong style="color:#6366f1;font-size:18px;">${lsFmt}</strong></div>
+                        </div>
+                        <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._lsOpenEditor()">🎨 ${_t('lsEditInEditor')}</button>
+                        <div style="margin-top:12px;">
+                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('pdQty')}</label>
+                            <div style="display:flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;height:40px;">
+                                <button onclick="const i=document.getElementById('npcLsQty');i.value=Math.max(1,parseInt(i.value)-1);" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">-</button>
+                                <input type="number" id="npcLsQty" value="1" min="1" style="width:50px;text-align:center;border:none;font-weight:bold;font-size:15px;">
+                                <button onclick="const i=document.getElementById('npcLsQty');i.value=parseInt(i.value)+1;" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">+</button>
+                            </div>
+                        </div>
+                        <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:16px;font-size:16px;" onclick="window.NpcWizard._lsAddToCart()">🛒 ${_t('lsAddToCart')}</button>
+                    `;
+                }
+                this._insertToSlot('total');
+                break;
+            }
         }
     },
 
@@ -1288,8 +1539,124 @@ window.NpcWizard = {
         });
     },
 
+    // ═══ 글씨 스카시 헬퍼 메서드 ═══
+    _lsSelectType(code, el) {
+        document.querySelectorAll('.ls-type-card').forEach(c => c.classList.remove('selected'));
+        if (el) el.classList.add('selected');
+        this._lsType = code;
+        setTimeout(() => this._goStep('lsTextInput'), 300);
+    },
+    _lsAfterText() {
+        const t = document.getElementById('npcLsTitle');
+        const b = document.getElementById('npcLsBottom');
+        this._lsTitleText = (t && t.value.trim()) || '';
+        this._lsBottomText = (b && b.value.trim()) || '';
+        if (!this._lsTitleText) { if (window.showToast) window.showToast(_t('lsEnterTitle'), 'warn'); return; }
+        this._goStep('lsSizeInput');
+    },
+    _lsUpdateHeight() {
+        const wEl = document.getElementById('npcLsWidth');
+        const hEl = document.getElementById('npcLsHeight');
+        const w = parseInt(wEl && wEl.value) || 60;
+        const ratios = { hcl_simple:0.8, hcl_box1:1.2, hcl_box3:1.5, hcl_heavy:1.0, hcl_acrylic:0.5 };
+        const r = ratios[this._lsType] || 1.0;
+        if (hEl) hEl.value = Math.round(w * r);
+        this._lsUpdatePrice();
+    },
+    _lsUpdatePrice() {
+        const wEl = document.getElementById('npcLsWidth');
+        const hEl = document.getElementById('npcLsHeight');
+        const w = parseInt(wEl && wEl.value) || 60;
+        const h = parseInt(hEl && hEl.value) || 60;
+        const area = (w / 100) * (h / 100);
+        const sqm = this.product._base_sqm_price || this.product.price || 50000;
+        const price = Math.round(area * sqm / 10) * 10;
+        const fmt = window.formatCurrency ? window.formatCurrency(price) : price.toLocaleString() + '원';
+        const el = document.getElementById('npcLsPricePreview');
+        if (el) {
+            el.innerHTML = `<div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:12px;border-radius:10px;text-align:center;">
+                <div style="font-size:11px;opacity:0.9;">${_t('lsPrice')}</div>
+                <div style="font-size:20px;font-weight:800;color:#fbbf24;">${fmt}</div>
+                <div style="font-size:11px;opacity:0.7;">${w}cm x ${h}cm (${area.toFixed(2)}m2)</div>
+            </div>`;
+        }
+    },
+    _lsAfterSize() {
+        const wEl = document.getElementById('npcLsWidth');
+        const hEl = document.getElementById('npcLsHeight');
+        this._lsWidthCm = parseInt(wEl && wEl.value) || 60;
+        this._lsHeightCm = parseInt(hEl && hEl.value) || 60;
+        if (this._lsWidthCm < 20 || this._lsHeightCm < 20) {
+            if (window.showToast) window.showToast(_t('lsEnterSize'), 'warn'); return;
+        }
+        this._goStep('lsStyleSelect');
+    },
+    _lsPickStyle(style, el) {
+        if (el) {
+            el.parentElement.querySelectorAll('button').forEach(b => { b.style.borderColor = '#e2e8f0'; b.style.boxShadow = 'none'; });
+            el.style.borderColor = '#6366f1';
+            el.style.boxShadow = '0 0 0 2px rgba(99,102,241,0.3)';
+        }
+        this._lsStyle = style;
+    },
+    _lsAfterStyle() {
+        this._goStep('lsSummary');
+    },
+    _lsOpenEditor() {
+        const product = this.product;
+        if (!product) return;
+        const widthMM = this._lsWidthCm * 10;
+        const heightMM = this._lsHeightCm * 10;
+        // 면적 기반 가격 계산
+        const area = (this._lsWidthCm / 100) * (this._lsHeightCm / 100);
+        const sqm = product._base_sqm_price || product.price || 50000;
+        const calcPrice = Math.round(area * sqm / 10) * 10;
+        window.__letterSignMode = true;
+        window.__letterSignData = {
+            widthMM, heightMM,
+            type: this._lsType,
+            titleText: this._lsTitleText,
+            bottomText: this._lsBottomText,
+            style: this._lsStyle,
+        };
+        window.startEditorDirect(product.code, widthMM, heightMM, calcPrice);
+    },
+    _lsAddToCart() {
+        const product = this.product;
+        if (!product) return;
+        const qty = parseInt(document.getElementById('npcLsQty')?.value) || 1;
+        import('./order.js?v=123').then(m => {
+            const p = { ...product };
+            p.w_mm = this._lsWidthCm * 10;
+            p.h_mm = this._lsHeightCm * 10;
+            p.is_custom = true;
+            p.is_custom_size = true;
+            const area = (this._lsWidthCm / 100) * (this._lsHeightCm / 100);
+            const sqm = product._base_sqm_price || product.price || 50000;
+            p.price = Math.round(area * sqm / 10) * 10;
+            p._calculated_price = true;
+            const extra = {
+                type: 'letter_sign', lsType: this._lsType,
+                titleText: this._lsTitleText, bottomText: this._lsBottomText,
+                widthCm: this._lsWidthCm, heightCm: this._lsHeightCm, style: this._lsStyle,
+            };
+            m.addProductToCartDirectly(p, qty, [], {}, extra);
+            window._pendingUploadedFiles = [];
+            document.getElementById('choiceModal').style.display = 'none';
+            document.getElementById('cartAddedModal').style.display = 'flex';
+        }).catch(err => {
+            console.error('글씨 스카시 장바구니 오류:', err);
+            if (window.showToast) window.showToast('Error: ' + err.message, 'error');
+        });
+    },
+
     _goPrev() {
         const step = this.step;
+        // 글씨 스카시
+        if (step === 'lsTextInput') { this._goStep('lsTypeSelect'); return; }
+        if (step === 'lsSizeInput') { this._goStep('lsTextInput'); return; }
+        if (step === 'lsStyleSelect') { this._goStep('lsSizeInput'); return; }
+        if (step === 'lsSummary') { this._goStep('lsStyleSelect'); return; }
         // 종이매대
         if (step === 'pdAdHeight') { this._goStep('pdSize'); return; }
         if (step === 'pdCalcResult') { this._goStep('pdAdHeight'); return; }

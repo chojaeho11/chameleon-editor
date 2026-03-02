@@ -1014,6 +1014,109 @@ async function runDesignWizardForBox(title, style) {
     await new Promise(r => setTimeout(r, 300));
 }
 
+// ============================================================
+// ★ 글씨 스카시 전용 디자인 생성기 (타이틀 + 하단텍스트)
+// ============================================================
+export async function runDesignWizardForLetterSign(titleText, bottomText, style) {
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) throw new Error('No canvas board');
+    const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);
+    const bL = board.left, bT = board.top;
+    const S = WIZARD_STYLES[style] || WIZARD_STYLES.forest;
+
+    // 기존 오브젝트 제거
+    canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+    canvas.discardActiveObject();
+
+    // 배경 그라디언트
+    const palettes = _WZ_GRADIENT_PALETTES[style] || _WZ_GRADIENT_PALETTES.forest;
+    const [c1, c2] = palettes[Math.floor(Math.random() * palettes.length)];
+    window._wzBgColors = [c1, c2];
+    const bgRect = new fabric.Rect({
+        width: bW, height: bH, left: bL, top: bT,
+        originX:'left', originY:'top',
+        fill: new fabric.Gradient({
+            type: 'linear',
+            coords: { x1: 0, y1: 0, x2: bW * 0.3, y2: bH },
+            colorStops: [{ offset: 0, color: c1 }, { offset: 1, color: c2 }]
+        }),
+        selectable: false, evented: false, isTemplateBackground: true
+    });
+    canvas.add(bgRect);
+    canvas.sendToBack(bgRect);
+    const boardObj = canvas.getObjects().find(o => o.isBoard);
+    if (boardObj) { canvas.sendToBack(bgRect); canvas.sendToBack(boardObj); }
+
+    // 폰트 결정
+    const country = window.SITE_CONFIG?.COUNTRY || 'KR';
+    const fontMap = { KR:'JalnanGothic', JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' };
+    let titleFont = fontMap[country] || 'Impact, Arial Black, sans-serif';
+    if (country === 'JP' && window.DYNAMIC_FONTS) {
+        const popFont = window.DYNAMIC_FONTS.find(f => f.font_name?.includes('ポプ'));
+        if (popFont) titleFont = popFont.font_family;
+    }
+    const descFont = { JP:'Noto Sans JP', CN:'Noto Sans SC', AR:'Noto Sans Arabic' }[country] || 'Noto Sans KR';
+
+    // 잘난고딕 로드
+    if (titleFont === 'JalnanGothic' && !document.querySelector('style[data-jalnan]')) {
+        const st = document.createElement('style');
+        st.dataset.jalnan = '1';
+        st.textContent = `@font-face { font-family:'JalnanGothic'; src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_231029@1.1/JalnanGothic.woff') format('woff'); font-weight:normal; font-display:swap; }`;
+        document.head.appendChild(st);
+    }
+    [descFont, titleFont].forEach(f => {
+        if (f.includes(',') || f === 'JalnanGothic') return;
+        const fUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f) + ':wght@400;700;900&display=swap';
+        if (!document.querySelector(`link[href="${fUrl}"]`)) {
+            const lk = document.createElement('link'); lk.rel='stylesheet'; lk.href=fUrl; document.head.appendChild(lk);
+        }
+    });
+    await new Promise(r => setTimeout(r, 400));
+
+    // 타이틀 (크게, 중앙 상단)
+    const titleSize = Math.round(bW * 0.10);
+    const titleObj = new fabric.Textbox(titleText, {
+        fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
+        fill: S.titleColor || '#ffffff', textAlign: 'center',
+        originX: 'center', originY: 'center',
+        left: bL + bW / 2, top: bT + bH * 0.35,
+        width: bW * 0.85, lineHeight: 1.15, charSpacing: 80,
+    });
+    canvas.add(titleObj);
+
+    // 구분선
+    const lineObj = new fabric.Line([bL + bW * 0.25, bT + bH * 0.55, bL + bW * 0.75, bT + bH * 0.55], {
+        stroke: S.titleColor || '#ffffff', strokeWidth: 2, opacity: 0.4
+    });
+    canvas.add(lineObj);
+
+    // 하단 텍스트
+    if (bottomText) {
+        const bottomSize = Math.round(bW * 0.035);
+        const bottomObj = new fabric.Textbox(bottomText, {
+            fontFamily: descFont + ', sans-serif', fontSize: bottomSize,
+            fill: 'rgba(255,255,255,0.85)', textAlign: 'center',
+            originX: 'center', originY: 'center',
+            left: bL + bW / 2, top: bT + bH * 0.68,
+            width: bW * 0.7, lineHeight: 1.5,
+        });
+        canvas.add(bottomObj);
+    }
+
+    canvas.requestRenderAll();
+
+    // 폰트 리렌더
+    setTimeout(() => {
+        canvas.getObjects().forEach(o => {
+            if (o.type === 'textbox' || o.type === 'i-text') {
+                o.set('dirty', true);
+                o.initDimensions && o.initDimensions();
+            }
+        });
+        canvas.requestRenderAll();
+    }, 800);
+}
+
 // ─── Step 1: Background (data_url 원본, 잠금 처리) ───
 // ─── 벡터 그라데이션 배경 팔레트 (스타일별 랜덤) ───
 const _WZ_GRADIENT_PALETTES = {
