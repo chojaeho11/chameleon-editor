@@ -299,16 +299,21 @@
         boxMesh.position.set(0, boxSize / 2, 0);
         wallGroup.add(boxMesh);
 
-        // ── 상단 패널 (타이틀 글씨, 투명 배경) ──
-        const panelGeo = new THREE.PlaneGeometry(w, panelH);
+        // ── 상단 타이틀 (두께 있는 3D 글씨, 박스 바로 위, 가운데) ──
+        const textDepth = 0.05; // 5cm 두께
+        const panelGeo = new THREE.BoxGeometry(w, panelH, textDepth);
         const titleTex = _lsCreateTexture(lsData.titleText || '', 'transparent', C.box,
             Math.round(w * 512), Math.round(panelH * 512), true);
-        const panelMat = new THREE.MeshStandardMaterial({
-            map: titleTex, transparent: true, roughness: 0.4, side: THREE.DoubleSide
-        });
-        const panelMesh = new THREE.Mesh(panelGeo, panelMat);
-        // 패널: 박스 바로 위, 뒤쪽에 세움
-        panelMesh.position.set(0, boxSize + panelH / 2, -boxSize / 2);
+        const titleTexBack = _lsCreateTexture(lsData.titleText || '', 'transparent', C.box,
+            Math.round(w * 512), Math.round(panelH * 512), true);
+        const titleFrontMat = new THREE.MeshStandardMaterial({ map: titleTex, transparent: true, roughness: 0.3 });
+        const titleBackMat = new THREE.MeshStandardMaterial({ map: titleTexBack, transparent: true, roughness: 0.3 });
+        const titleSideMat = new THREE.MeshStandardMaterial({ color: C.hex, roughness: 0.3 });
+        // BoxGeometry 면: +x, -x, +y, -y, +z(전면), -z(후면)
+        const panelMats = [titleSideMat, titleSideMat, titleSideMat, titleSideMat, titleFrontMat, titleBackMat];
+        const panelMesh = new THREE.Mesh(panelGeo, panelMats);
+        // 가운데(z=0), 박스 바로 위에 붙임
+        panelMesh.position.set(0, boxSize + panelH / 2, 0);
         wallGroup.add(panelMesh);
 
         scene.add(wallGroup);
