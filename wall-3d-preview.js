@@ -372,16 +372,33 @@
         };
         const C = colorMap[style] || colorMap.forest;
 
-        // ── 하단 박스 (서브 글씨를 전면에 표시) ──
+        // ── 하단 박스 (캔버스 캡처 하단 크롭으로 에디터와 일치) ──
         const boxGeo = new THREE.BoxGeometry(w, boxSize, boxSize);
         const boxDefaultMat = new THREE.MeshStandardMaterial({ color: C.hex, roughness: 0.3 });
-        const frontTex = _lsCreateTexture(lsData.bottomText || '', C.box, C.boxText,
-            Math.round(w * 512), Math.round(boxSize * 512), false);
-        const boxFrontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.3 });
-        const boxMats = [boxDefaultMat, boxDefaultMat, boxDefaultMat, boxDefaultMat, boxFrontMat, boxDefaultMat];
+        const boxMats = [boxDefaultMat, boxDefaultMat, boxDefaultMat, boxDefaultMat, boxDefaultMat.clone(), boxDefaultMat];
         const boxMesh = new THREE.Mesh(boxGeo, boxMats);
         boxMesh.position.set(0, boxSize / 2, 0);
+        boxMesh.name = 'lsBox';
         wallGroup.add(boxMesh);
+
+        // 캔버스 캡처 → 하단 35% 크롭 → 박스 전면 텍스처
+        if (frontDataUrl) {
+            const cImg = new Image();
+            cImg.crossOrigin = 'anonymous';
+            cImg.onload = function() {
+                const cropCvs = document.createElement('canvas');
+                cropCvs.width = cImg.width;
+                cropCvs.height = Math.round(cImg.height * 0.35);
+                const ctx = cropCvs.getContext('2d');
+                ctx.drawImage(cImg, 0, Math.round(cImg.height * 0.65), cImg.width, cropCvs.height,
+                    0, 0, cropCvs.width, cropCvs.height);
+                const tex = new THREE.Texture(cropCvs);
+                tex.needsUpdate = true;
+                tex.encoding = THREE.sRGBEncoding;
+                boxMesh.material[4] = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.3 });
+            };
+            cImg.src = frontDataUrl;
+        }
 
         // ── 상단: 3D 입체 글씨 (opentype.js 비동기 로딩) ──
         const textDepth = 0.05; // 5cm 두께
@@ -1170,8 +1187,9 @@
                     const PX_PER_MM = 3.7795;
                     const wMM = Math.round(board.width / PX_PER_MM);
                     const hMM = Math.round(board.height / PX_PER_MM);
-                    // 에디터에서 현재 텍스트 읽어서 __letterSignData 동기화
-                    const textObjs = fabricCanvas.getObjects().filter(o => o.type === 'textbox' || o.type === 'i-text');
+                    // 에디터에서 현재 텍스트 읽어서 __letterSignData 동기화 (selectable 텍스트만, 그림자 제외)
+                    const textObjs = fabricCanvas.getObjects().filter(o =>
+                        (o.type === 'textbox' || o.type === 'i-text') && o.selectable !== false);
                     if (textObjs.length > 0) {
                         const sorted = [...textObjs].sort((a, b) => (b.fontSize || 0) - (a.fontSize || 0));
                         if (sorted[0] && sorted[0].text) window.__letterSignData.titleText = sorted[0].text;
@@ -1230,6 +1248,30 @@
 
     window.refresh3DTexture = async function () {
         if (!isInitialized) return;
+
+        // 글씨 스카시 모드: 캔버스 재캡처 + 3D 재생성
+        if (window.__letterSignData) {
+            const fabricCanvas = window.canvas;
+            if (fabricCanvas) {
+                const board = fabricCanvas.getObjects().find(o => o.isBoard);
+                if (board) {
+                    const PX_PER_MM = 3.7795;
+                    const wMM = Math.round(board.width / PX_PER_MM);
+                    const hMM = Math.round(board.height / PX_PER_MM);
+                    // 에디터 텍스트 동기화 (selectable 텍스트만)
+                    const textObjs = fabricCanvas.getObjects().filter(o =>
+                        (o.type === 'textbox' || o.type === 'i-text') && o.selectable !== false);
+                    if (textObjs.length > 0) {
+                        const sorted = [...textObjs].sort((a, b) => (b.fontSize || 0) - (a.fontSize || 0));
+                        if (sorted[0] && sorted[0].text) window.__letterSignData.titleText = sorted[0].text;
+                        if (sorted[1] && sorted[1].text) window.__letterSignData.bottomText = sorted[1].text;
+                    }
+                    const dataUrl = captureCanvas();
+                    buildLetterSign(wMM, hMM, dataUrl);
+                }
+            }
+            return;
+        }
 
         // 종이매대 모드: 3면 재캡처
         if (window.__pdMode && window.__paperDisplayData) {
