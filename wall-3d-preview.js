@@ -225,6 +225,76 @@
         if (!animFrameId) animate();
     }
 
+    // ─── Build Letter Sign (스카시: 하단 박스 + 위 평판) ───
+    function buildLetterSign(widthMM, heightMM, frontDataUrl) {
+        if (wallGroup) {
+            scene.remove(wallGroup);
+            wallGroup.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                    else child.material.dispose();
+                }
+            });
+        }
+        wallGroup = new THREE.Group();
+
+        const w = widthMM / 1000;
+        const h = heightMM / 1000;
+        const boxRatio = 0.30; // 하단 박스 비율
+        const boxH = h * boxRatio;
+        const boxDepth = 0.08; // 80mm 두께
+        const panelH = h * (1 - boxRatio);
+        const panelDepth = 0.015; // 15mm 얇은 판
+
+        // 하단 박스 (두꺼운 사각 바)
+        const boxGeo = new THREE.BoxGeometry(w, boxH, boxDepth);
+        const lsData = window.__letterSignData || {};
+        const boxColor = { forest:0x1b5e20, neon:0x1a237e, ocean:0x004d40, flame:0xbf360c, minimal:0x212121, luxury:0x3e2723, pastel:0x6a1b9a, retro:0x4e342e }[lsData.style] || 0x1b5e20;
+        const boxMat = new THREE.MeshStandardMaterial({ color: boxColor, roughness: 0.3 });
+        const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+        boxMesh.position.set(0, boxH / 2, 0);
+        wallGroup.add(boxMesh);
+
+        // 상단 패널 (얇은 판 + 캔버스 텍스처)
+        const panelGeo = new THREE.BoxGeometry(w, panelH, panelDepth);
+        let panelMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
+        const panelMesh = new THREE.Mesh(panelGeo, panelMat);
+        panelMesh.position.set(0, boxH + panelH / 2, boxDepth / 2 - panelDepth / 2);
+        wallGroup.add(panelMesh);
+
+        // 캔버스 텍스처 전체를 상단 패널 전면에 적용
+        if (frontDataUrl) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                const tex = new THREE.Texture(img);
+                tex.needsUpdate = true;
+                tex.encoding = THREE.sRGBEncoding;
+                // 상단 영역만 크롭 (하단 30%는 박스가 대신함)
+                // 전체 텍스처를 패널에 맞게 표시
+                panelMesh.material = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4 });
+            };
+            img.src = frontDataUrl;
+        }
+
+        // 바닥면
+        const floorGeo = new THREE.PlaneGeometry(10, 10);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.9 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.001;
+        wallGroup.add(floor);
+
+        scene.add(wallGroup);
+
+        // 카메라 위치
+        const maxDim = Math.max(w, h);
+        camera.position.set(w * 0.5, h * 0.7, maxDim * 1.2);
+        camera.lookAt(0, h * 0.4, 0);
+        if (controls) { controls.target.set(0, h * 0.4, 0); controls.update(); }
+    }
+
     // ─── Build Wall (양면 지원) ───
     function buildWall(widthMM, heightMM, frontDataUrl, backDataUrl) {
         if (wallGroup) {
@@ -972,6 +1042,20 @@
             const pd = window.__paperDisplayData;
             const faceTextures = await capturePaperDisplayFaces();
             buildPaperDisplay(pd, faceTextures);
+        }
+        // 글씨 스카시 모드
+        else if (window.__letterSignData) {
+            const fabricCanvas = window.canvas;
+            if (fabricCanvas) {
+                const board = fabricCanvas.getObjects().find(o => o.isBoard);
+                if (board) {
+                    const PX_PER_MM = 3.7795;
+                    const wMM = Math.round(board.width / PX_PER_MM);
+                    const hMM = Math.round(board.height / PX_PER_MM);
+                    const dataUrl = captureCanvas();
+                    buildLetterSign(wMM, hMM, dataUrl);
+                }
+            }
         }
         // 박스 모드
         else if (window.__boxDims && window.__boxMode) {
