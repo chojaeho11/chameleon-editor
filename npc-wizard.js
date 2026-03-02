@@ -615,8 +615,8 @@ window.NpcWizard = {
     _lsType: null,
     _lsTitleText: '',
     _lsBottomText: '',
-    _lsWidthCm: 60,
-    _lsHeightCm: 48,
+    _lsWidthCm: 120,
+    _lsHeightCm: 60,
     _lsStyle: 'forest',
     // 종이매대 전용 상태
     _pdWidth: 40,
@@ -1138,10 +1138,10 @@ window.NpcWizard = {
                 break;
             }
             case 'lsSizeInput': {
-                const lsRatios = { hcl_simple:1.2, hcl_box1:1.2, hcl_box3:1.2, hcl_heavy:1.2, hcl_acrylic:1.2 };
-                const lsRatio = lsRatios[this._lsType] || 1.0;
-                const defaultW = this._lsWidthCm || 60;
-                if (!this._lsHeightCm || this._lsHeightCm === 48) this._lsHeightCm = Math.round(defaultW * lsRatio);
+                const lsRatios = { hcl_simple:0.5, hcl_box1:0.5, hcl_box3:0.5, hcl_heavy:0.5, hcl_acrylic:0.5 };
+                const lsRatio = lsRatios[this._lsType] || 0.5;
+                const defaultW = this._lsWidthCm || 120;
+                if (!this._lsHeightCm || this._lsHeightCm === 48 || this._lsHeightCm === 72) this._lsHeightCm = Math.round(defaultW * lsRatio);
 
                 this._renderBubble(_t('lsEnterSize'), null, true, null,
                     { onclick: "window.NpcWizard._lsAfterSize()", label: _t('next') });
@@ -1149,14 +1149,14 @@ window.NpcWizard = {
                 if (lsSlot3) {
                     lsSlot3.innerHTML = `
                         <div style="margin-bottom:10px;">
-                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsWidthLabel')}</label>
-                            <input type="number" id="npcLsWidth" value="${defaultW}" min="20" max="300" inputmode="numeric"
+                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsWidthLabel')} <span style="color:#94a3b8;font-size:11px;">(max 240cm)</span></label>
+                            <input type="number" id="npcLsWidth" value="${defaultW}" min="20" max="240" inputmode="numeric"
                                 oninput="window.NpcWizard._lsUpdateHeight()"
                                 style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:10px;">
-                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsHeightLabel')} <span style="color:#94a3b8;font-size:11px;">${_t('lsHeightAuto')}</span></label>
-                            <input type="number" id="npcLsHeight" value="${this._lsHeightCm}" min="20" max="300" inputmode="numeric"
+                            <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsHeightLabel')} <span style="color:#94a3b8;font-size:11px;">(max 120cm)</span></label>
+                            <input type="number" id="npcLsHeight" value="${this._lsHeightCm}" min="10" max="120" inputmode="numeric"
                                 oninput="window.NpcWizard._lsUpdatePrice()"
                                 style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;box-sizing:border-box;">
                         </div>
@@ -1558,7 +1558,7 @@ window.NpcWizard = {
         const wEl = document.getElementById('npcLsWidth');
         const hEl = document.getElementById('npcLsHeight');
         const w = parseInt(wEl && wEl.value) || 60;
-        const ratios = { hcl_simple:1.2, hcl_box1:1.2, hcl_box3:1.2, hcl_heavy:1.2, hcl_acrylic:1.2 };
+        const ratios = { hcl_simple:0.5, hcl_box1:0.5, hcl_box3:0.5, hcl_heavy:0.5, hcl_acrylic:0.5 };
         const r = ratios[this._lsType] || 1.0;
         if (hEl) hEl.value = Math.round(w * r);
         this._lsUpdatePrice();
@@ -1584,9 +1584,9 @@ window.NpcWizard = {
     _lsAfterSize() {
         const wEl = document.getElementById('npcLsWidth');
         const hEl = document.getElementById('npcLsHeight');
-        this._lsWidthCm = parseInt(wEl && wEl.value) || 60;
-        this._lsHeightCm = parseInt(hEl && hEl.value) || 60;
-        if (this._lsWidthCm < 20 || this._lsHeightCm < 20) {
+        this._lsWidthCm = Math.min(parseInt(wEl && wEl.value) || 120, 240);
+        this._lsHeightCm = Math.min(parseInt(hEl && hEl.value) || 60, 120);
+        if (this._lsWidthCm < 20 || this._lsHeightCm < 10) {
             if (window.showToast) window.showToast(_t('lsEnterSize'), 'warn'); return;
         }
         this._goStep('lsStyleSelect');
