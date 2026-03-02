@@ -1368,8 +1368,9 @@ button, input, textarea, select { font-family: inherit; }
 /* 제품 카드 */
 .adv-cards-wrap {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 10px;
+    max-width: 100%;
     margin: 8px 0 12px;
 }
 .adv-card {
