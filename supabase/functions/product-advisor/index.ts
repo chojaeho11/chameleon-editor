@@ -22,6 +22,7 @@ function getCorsHeaders(req: Request) {
     return {
         "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
         "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
     };
 }
 
@@ -112,7 +113,7 @@ serve(async (req) => {
         });
 
         const categories = catRes.data || [];
-        const siteUrl = clientLang === 'ja' ? 'https://www.cafe0101.com' : clientLang === 'en' || clientLang === 'us' ? 'https://www.cafe3355.com' : 'https://www.cafe2626.com';
+        const siteUrl = clientLang === 'ja' ? 'https://www.cafe0101.com' : clientLang === 'us' ? 'https://www.cafe3355.com' : 'https://www.cafe2626.com';
 
         // 시스템 프롬프트 — 친근한 대화형 AI
         const langPrompts: Record<string, string> = {
@@ -400,7 +401,7 @@ ${JSON.stringify(categories)}${qaSection}`;
             const chatMsg = result.chat_message || result.summary || '';
             // 사이즈 관련 키워드가 이미 있으면 추가하지 않음
             const hasSizeQ = chatMsg.includes('사이즈') || chatMsg.includes('サイズ') || chatMsg.includes('size') || chatMsg.includes('Size');
-            if (!hasSizeQ) {
+            if (!hasSizeQ && !isContactQuery) {
                 result.chat_message = chatMsg + sizeQ;
             }
         }

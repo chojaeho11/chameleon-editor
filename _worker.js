@@ -288,11 +288,16 @@ export default {
                             title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
                             desc: 'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
                             domain: 'https://www.cafe0101.com'
-                        } : {
+                        } : cc === 'US' ? {
                             lang: 'en', siteName: 'Chameleon Printing',
                             title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
                             desc: 'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
                             domain: 'https://www.cafe3355.com'
+                        } : {
+                            lang: 'ko', siteName: '카멜레온프린팅',
+                            title: '카멜레온프린팅 - 에코 전시 & 팝업스토어 인쇄 & 무료 디자인 에디터',
+                            desc: '허니콤보드, 패브릭 인쇄, 아크릴 굿즈, 배너, 간판, 패키지까지. 무료 온라인 디자인 에디터로 디자인부터 인쇄까지. 글로벌 인쇄 마켓플레이스.',
+                            domain: 'https://www.cafe2626.com'
                         };
                         // Fetch some products for the homepage
                         const homeProducts = await fetchFromSupabase(
