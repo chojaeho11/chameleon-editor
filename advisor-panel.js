@@ -190,7 +190,7 @@ function buildPanelUI() {
             <button id="advImgRemove" class="adv-img-remove"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="adv-input-area">
-            <input type="file" id="advFileInput" accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp" style="display:none">
+            <input type="file" id="advFileInput" style="display:none">
             <button class="adv-upload-btn" id="advUploadBtn" title="${t('upload')}">
                 <i class="fa-solid fa-image"></i>
             </button>
@@ -295,14 +295,15 @@ function handleFileSelect(e) {
     if (!file) return;
     e.target.value = '';
 
-    if (file.size > 10 * 1024 * 1024) {
-        addBubble(t('tooBig'), 'ai');
+    // 실시간 상담 모드: 파일 직접 업로드 (용량 제한 없음)
+    if (liveMode && liveRoom) {
+        uploadLiveFile(file);
         return;
     }
 
-    // 실시간 상담 모드: 파일 직접 업로드
-    if (liveMode && liveRoom) {
-        uploadLiveFile(file);
+    // AI 채팅 모드: 10MB 제한
+    if (file.size > 10 * 1024 * 1024) {
+        addBubble(t('tooBig'), 'ai');
         return;
     }
 
@@ -642,22 +643,30 @@ function sendLiveMessage(text) {
     if (inp) inp.focus();
 }
 
-function uploadLiveFile(file) {
+async function uploadLiveFile(file) {
     if (!liveRoom) return;
     const sb = getSb();
     if (!sb) return;
 
-    const ext = file.name.split('.').pop().toLowerCase();
-    const safeName = Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '.' + ext;
-    const path = 'room-' + liveRoom.id + '/' + safeName;
+    // 업로드 중 표시
+    addBubble('📎 ' + file.name + ' 업로드 중...', 'user');
+    const uploadingEl = chatArea ? chatArea.lastElementChild : null;
 
-    sb.storage.from('chat-files').upload(path, file, { upsert: true }).then(up => {
+    try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const safeName = Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '.' + ext;
+        const path = 'room-' + liveRoom.id + '/' + safeName;
+
+        const up = await sb.storage.from('chat-files').upload(path, file, { upsert: true });
         if (up.error) {
             console.error('File upload error:', up.error);
+            if (uploadingEl) uploadingEl.remove();
+            addBubble('⚠️ 파일 업로드 실패: ' + (up.error.message || ''), 'user');
             return;
         }
+
         const url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
-        sb.from('chat_messages').insert({
+        const ins = await sb.from('chat_messages').insert({
             room_id: liveRoom.id,
             sender_type: 'customer',
             sender_name: customerName || 'Customer',
@@ -667,15 +676,29 @@ function uploadLiveFile(file) {
             message: ''
         });
 
-        // 로컬 표시
-        if (file.type.startsWith('image/')) {
+        if (ins.error) {
+            console.error('Message insert error:', ins.error);
+            if (uploadingEl) uploadingEl.remove();
+            addBubble('⚠️ 메시지 전송 실패', 'user');
+            return;
+        }
+
+        // 업로드 중 메시지 제거 후 결과 표시
+        if (uploadingEl) uploadingEl.remove();
+
+        if (file.type && file.type.startsWith('image/')) {
             if (chatArea) chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${url}" class="adv-chat-img" alt="uploaded" onclick="window.open(this.src)"></div></div>`);
         } else {
             addBubble('📎 ' + file.name + ' ✅', 'user');
         }
         saveChat();
         scrollChat();
-    });
+        saveChat();
+    } catch(err) {
+        console.error('Upload error:', err);
+        if (uploadingEl) uploadingEl.remove();
+        addBubble('⚠️ 파일 업로드 중 오류 발생', 'user');
+    }
 }
 
 function endLiveSession() {
