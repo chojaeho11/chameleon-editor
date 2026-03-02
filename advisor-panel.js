@@ -1,6 +1,6 @@
 // ============================================================
-// advisor-panel.js — 카푸 AI 쇼핑 안내 인라인 채팅 패널
-// 검색바 아래 대형 채팅창. 순수 AI 전용 (상담사 없음)
+// advisor-panel.js — 카푸 AI 쇼핑 안내 + 상담사 연결 통합 패널
+// 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
 import { SITE_CONFIG } from './site-config.js?v=123';
@@ -16,9 +16,9 @@ function getLang() {
 }
 
 const T = {
-    kr: { title: '카푸', subtitle: '쇼핑을 안내해 드립니다', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 korea900@hanmail.net으로 보내주세요.', error: '앗, 연결이 불안정해요 😅 잠시 후 다시 시도해주세요!' },
-    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはsupport@cafe0101.comへお送りください。', error: '接続が不安定です 😅 しばらくしてからお試しください！' },
-    en: { title: 'Kapu', subtitle: 'Your shopping guide', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email korea900as@gmail.com.', error: 'Connection unstable 😅 Please try again!' },
+    kr: { title: '카푸', subtitle: '쇼핑을 안내해 드립니다', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 korea900@hanmail.net으로 보내주세요.', error: '앗, 연결이 불안정해요 😅 잠시 후 다시 시도해주세요!', reset: '대화 초기화', consultant: '상담사 연결', selectMgr: '상담 매니저를 선택해주세요', selectSub: '선택하시면 바로 연결됩니다', mgrSuffix: ' 매니저', enterName: '상담사 연결을 위해 정보를 입력해주세요', namePh: '이름', phonePh: '연락처 (010-0000-0000)', nameBtn: '다음', nameErr: '이름을 입력해주세요', phoneErr: '연락처를 입력해주세요', connecting: '연결 요청!', pleaseWait: '잠시만 기다려주세요 😊', tipFile: '아래 📎 버튼으로 사진/파일도 보낼 수 있어요!', consulting: '상담 중', hqConsultant: '본사 상담사', waiting: '님 연결 대기 중...', connectErr: '연결 중 오류! 잠시 후 다시 시도해주세요.', endChat: '상담 종료', backToAi: '카푸 AI로 돌아가기' },
+    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはsupport@cafe0101.comへお送りください。', error: '接続が不安定です 😅 しばらくしてからお試しください！', reset: 'チャットリセット', consultant: '相談員に接続', selectMgr: '相談マネージャーを選択してください', selectSub: '選択するとすぐに接続されます', mgrSuffix: '', enterName: '接続のため情報を入力してください', namePh: 'お名前', phonePh: '電話番号', nameBtn: '次へ', nameErr: '名前を入力', phoneErr: '電話番号を入力', connecting: 'に接続リクエスト！', pleaseWait: '少々お待ちください 😊', tipFile: '下の📎ボタンで写真/ファイルも送れます！', consulting: '相談中', hqConsultant: '本社相談員', waiting: '様 接続待機中...', connectErr: '接続エラー！しばらくしてからお試しください。', endChat: '相談終了', backToAi: 'カプAIに戻る' },
+    en: { title: 'Kapu', subtitle: 'Your shopping guide', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email korea900as@gmail.com.', error: 'Connection unstable 😅 Please try again!', reset: 'Reset chat', consultant: 'Connect agent', selectMgr: 'Please select a consultant', selectSub: "You'll be connected right away", mgrSuffix: '', enterName: 'Please enter your info to connect', namePh: 'Name', phonePh: 'Phone number', nameBtn: 'Next', nameErr: 'Please enter your name', phoneErr: 'Please enter phone', connecting: ' - Connection requested!', pleaseWait: 'Please wait a moment 😊', tipFile: 'You can send photos/files using the 📎 button below!', consulting: 'In consultation', hqConsultant: 'HQ Consultant', waiting: ' connecting...', connectErr: 'Connection error! Please try again.', endChat: 'End chat', backToAi: 'Back to Kapu AI' },
 };
 function t(key) { const l = getLang(); return (T[l] && T[l][key]) || T['en'][key] || ''; }
 
@@ -26,18 +26,112 @@ let panelEl = null;
 let chatArea = null;
 let isProcessing = false;
 let lastProducts = [];
-let pendingImage = null; // { base64, type, name, previewUrl }
-let conversationHistory = []; // 대화 기록 (세션 내 유지)
+let pendingImage = null;
+let conversationHistory = [];
+
+// ─── 상담사 연결 상태 ───
+let liveMode = false;
+let liveRoom = null;
+let liveSub = null;
+let customerName = '';
+let customerPhone = '';
+
+// ─── Supabase 클라이언트 ───
+let _ownSb = null;
+function getSb() {
+    if (window.sb) return window.sb;
+    if (!_ownSb && typeof window.supabase !== 'undefined') {
+        try {
+            _ownSb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+        } catch(e) {}
+    }
+    return _ownSb || null;
+}
+
+// ─── localStorage 영속성 ───
+function chatKey() {
+    const u = window.currentUser;
+    return u ? 'kapu_chat_' + u.id : 'kapu_chat_guest';
+}
+function liveKey() {
+    const u = window.currentUser;
+    return u ? 'kapu_live_' + u.id : 'kapu_live_guest';
+}
+
+function saveChat() {
+    try {
+        localStorage.setItem(chatKey(), JSON.stringify({
+            html: chatArea ? chatArea.innerHTML : '',
+            history: conversationHistory,
+            lastProducts
+        }));
+    } catch(e) {}
+}
+
+function saveLiveState() {
+    if (!liveRoom) return;
+    try {
+        localStorage.setItem(liveKey(), JSON.stringify({
+            room: { id: liveRoom.id, assigned_manager: liveRoom.assigned_manager, status: liveRoom.status },
+            customerName, customerPhone
+        }));
+    } catch(e) {}
+}
+
+function loadChat() {
+    try {
+        const raw = localStorage.getItem(chatKey());
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (chatArea && data.html) {
+            chatArea.innerHTML = data.html;
+            // 제품 카드 이벤트 다시 바인딩
+            rebindCardEvents();
+        }
+        conversationHistory = data.history || [];
+        lastProducts = data.lastProducts || [];
+        return true;
+    } catch(e) { return false; }
+}
+
+function loadLiveState() {
+    try {
+        const raw = localStorage.getItem(liveKey());
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch(e) { return null; }
+}
+
+function clearChat() {
+    conversationHistory = [];
+    lastProducts = [];
+    if (chatArea) chatArea.innerHTML = '';
+    try { localStorage.removeItem(chatKey()); } catch(e) {}
+}
+
+function clearLiveState() {
+    liveMode = false;
+    liveRoom = null;
+    customerName = '';
+    customerPhone = '';
+    if (liveSub) { liveSub.unsubscribe(); liveSub = null; }
+    try { localStorage.removeItem(liveKey()); } catch(e) {}
+    updateHeaderForAI();
+}
 
 // ─── 초기화 ───
 export function initAdvisorPanel() {
     panelEl = document.getElementById('advisorPanel');
     if (!panelEl) return;
 
-    // 전역 함수 등록 (index.html의 onkeydown에서 호출)
     window._startAdvisor = startAdvisor;
 
-    // AI 추천 버튼 (복수 지원: btnAiAdvisor, btnAiAdvisor2, btnKapuGuide)
+    // 우측 하단 챗봇 숨기기 (카푸로 통일)
+    const chamTrigger = document.getElementById('cham-bot-trigger');
+    const chamWindow = document.getElementById('cham-bot-window');
+    if (chamTrigger) chamTrigger.style.display = 'none';
+    if (chamWindow) chamWindow.style.display = 'none';
+
     ['btnAiAdvisor', 'btnAiAdvisor2', 'btnKapuGuide'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
@@ -52,10 +146,16 @@ export function initAdvisorPanel() {
         }
     });
 
-    console.log('✅ Advisor panel initialized, window._startAdvisor ready');
+    // 실시간 상담 복원 체크
+    const liveData = loadLiveState();
+    if (liveData && liveData.room) {
+        restoreLiveSession(liveData);
+    }
+
+    console.log('✅ Advisor panel initialized (AI + consultant unified)');
 }
 
-// ─── 패널 열기 (빈 상태) ───
+// ─── 패널 열기 ───
 function openPanel() {
     if (!panelEl) return;
     if (panelEl.style.display === 'block') return;
@@ -71,9 +171,17 @@ function buildPanelUI() {
                 <i class="fa-solid fa-wand-magic-sparkles"></i> ${t('title')}
                 <span class="adv-panel-sub">${t('subtitle')}</span>
             </div>
-            <button class="adv-panel-close" id="advCloseBtn">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <button class="adv-header-btn" id="advConsultantBtn" title="${t('consultant')}">
+                    <i class="fa-solid fa-headset"></i>
+                </button>
+                <button class="adv-header-btn" id="advResetBtn" title="${t('reset')}">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                <button class="adv-panel-close" id="advCloseBtn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
         <div class="adv-img-preview" id="advImgPreview" style="display:none">
@@ -82,7 +190,7 @@ function buildPanelUI() {
             <button id="advImgRemove" class="adv-img-remove"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="adv-input-area">
-            <input type="file" id="advFileInput" accept="image/*,.pdf" style="display:none">
+            <input type="file" id="advFileInput" accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp" style="display:none">
             <button class="adv-upload-btn" id="advUploadBtn" title="${t('upload')}">
                 <i class="fa-solid fa-image"></i>
             </button>
@@ -94,9 +202,24 @@ function buildPanelUI() {
     `;
     chatArea = document.getElementById('advChatArea');
 
-    // 닫기 (대화기록은 유지 — 패널 닫았다 열어도 이전 대화 기억)
+    // 닫기
     document.getElementById('advCloseBtn').addEventListener('click', () => {
         panelEl.style.display = 'none';
+    });
+
+    // 초기화
+    document.getElementById('advResetBtn').addEventListener('click', () => {
+        if (liveMode) {
+            endLiveSession();
+        }
+        clearChat();
+        clearLiveState();
+    });
+
+    // 상담사 연결
+    document.getElementById('advConsultantBtn').addEventListener('click', () => {
+        if (liveMode) return; // 이미 상담 중
+        startConsultantFlow();
     });
 
     // 전송
@@ -107,7 +230,6 @@ function buildPanelUI() {
             sendFromInput();
         }
     });
-    // 한글 IME 완료 후 Enter 처리
     document.getElementById('advInput').addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -121,6 +243,31 @@ function buildPanelUI() {
     });
     document.getElementById('advFileInput').addEventListener('change', handleFileSelect);
     document.getElementById('advImgRemove').addEventListener('click', clearPendingImage);
+
+    // 저장된 대화 복원
+    const restored = loadChat();
+    if (restored) {
+        scrollChat();
+    }
+
+    // 실시간 상담 복원 상태 반영
+    if (liveMode && liveRoom) {
+        updateHeaderForLive(liveRoom.assigned_manager || '');
+    }
+}
+
+// ─── 헤더 업데이트 ───
+function updateHeaderForAI() {
+    const titleEl = panelEl?.querySelector('.adv-panel-title');
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${t('title')} <span class="adv-panel-sub">${t('subtitle')}</span>`;
+    }
+}
+function updateHeaderForLive(managerName) {
+    const titleEl = panelEl?.querySelector('.adv-panel-title');
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="fa-solid fa-headset" style="color:#4ade80;"></i> ${managerName}${t('mgrSuffix')} <span class="adv-panel-sub" style="color:#4ade80;">${t('consulting')}</span>`;
+    }
 }
 
 function sendFromInput() {
@@ -128,8 +275,15 @@ function sendFromInput() {
     if (!input) return;
     const val = input.value.trim();
     if (!val && !pendingImage) return;
-    if (isProcessing) return;
+    if (isProcessing && !liveMode) return;
     input.value = '';
+
+    // 실시간 상담 모드
+    if (liveMode) {
+        sendLiveMessage(val);
+        return;
+    }
+
     const img = pendingImage;
     clearPendingImage();
     sendMessage(val, img);
@@ -139,11 +293,16 @@ function sendFromInput() {
 function handleFileSelect(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    e.target.value = ''; // reset for re-select
+    e.target.value = '';
 
-    // 크기 제한 10MB
     if (file.size > 10 * 1024 * 1024) {
         addBubble(t('tooBig'), 'ai');
+        return;
+    }
+
+    // 실시간 상담 모드: 파일 직접 업로드
+    if (liveMode && liveRoom) {
+        uploadLiveFile(file);
         return;
     }
 
@@ -186,34 +345,29 @@ function startAdvisor(query) {
     panelEl.style.display = 'block';
     if (!chatArea) buildPanelUI();
     sendMessage(query.trim());
-
-    // 패널로 스크롤
     panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ─── 메시지 전송 ───
+// ─── AI 메시지 전송 ───
 async function sendMessage(text, imageData) {
     if (isProcessing) return;
     isProcessing = true;
 
-    // 유저 메시지 (이미지 포함 시 이미지도 표시)
     if (imageData) {
         addImageBubble(imageData.previewUrl, text);
     } else {
         addBubble(text, 'user');
     }
 
-    // 대화 기록에 유저 메시지 추가
     conversationHistory.push({ role: 'user', content: text || '(image)' });
 
-    // 타이핑 표시
     const typingEl = addTyping();
 
     try {
         const payload = {
             message: text,
             lang: getLang(),
-            conversation_history: conversationHistory.slice(-20) // 최근 20개까지 전송
+            conversation_history: conversationHistory.slice(-20)
         };
         if (imageData) {
             payload.image = imageData.base64;
@@ -232,14 +386,11 @@ async function sendMessage(text, imageData) {
         if (!res.ok) throw new Error('API ' + res.status);
         const data = await res.json();
 
-        // 타이핑 제거
         typingEl.remove();
 
-        // AI 응답
         const chatMsg = data.chat_message || data.summary || '';
         if (chatMsg) addBubble(chatMsg, 'ai');
 
-        // 대화 기록에 AI 응답 추가
         const products = data.products || [];
         conversationHistory.push({
             role: 'assistant',
@@ -247,7 +398,6 @@ async function sendMessage(text, imageData) {
             products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
         });
 
-        // 제품 카드
         if (products.length > 0) {
             lastProducts = products;
             addProductCards(products);
@@ -260,11 +410,360 @@ async function sendMessage(text, imageData) {
     }
 
     isProcessing = false;
+    saveChat();
     scrollChat();
 
-    // 입력창 포커스
     const inp = document.getElementById('advInput');
     if (inp) inp.focus();
+}
+
+// ═══════════════════════════════════════
+// 상담사 연결 기능
+// ═══════════════════════════════════════
+
+const DEFAULT_MANAGERS = {
+    kr: [
+        { name: '지숙', phone: '010-3455-1946' },
+        { name: '은미', phone: '010-7793-5393' },
+        { name: '성희', phone: '010-3490-3328' }
+    ],
+    ja: [{ name: '相談員 1' }, { name: '相談員 2' }, { name: '相談員 3' }],
+    en: [{ name: 'Consultant 1' }, { name: 'Consultant 2' }, { name: 'Consultant 3' }]
+};
+
+function startConsultantFlow() {
+    if (!chatArea) return;
+
+    // 이름/연락처 입력 카드
+    const card = document.createElement('div');
+    card.className = 'adv-row adv-row-ai';
+    card.innerHTML = `
+        <div class="adv-avatar"><i class="fa-solid fa-headset"></i></div>
+        <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px; max-width:85%;">
+            <div style="text-align:center; margin-bottom:10px;">
+                <div style="font-size:24px;">✨</div>
+                <div style="font-weight:700; color:#0369a1; font-size:14px;">${t('enterName')}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <input id="advCustName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box;">
+                <input id="advCustPhone" type="tel" placeholder="${t('phonePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box;">
+                <button id="advCustSubmit" style="background:#0284c7; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; width:100%;">${t('nameBtn')}</button>
+            </div>
+        </div>
+    `;
+    chatArea.appendChild(card);
+    scrollChat();
+
+    const nameInput = document.getElementById('advCustName');
+    const phoneInput = document.getElementById('advCustPhone');
+    const submitBtn = document.getElementById('advCustSubmit');
+    if (nameInput) nameInput.focus();
+
+    function onSubmit() {
+        const name = nameInput.value.trim();
+        const phone = phoneInput.value.trim();
+        if (!name) { nameInput.style.borderColor = '#ef4444'; nameInput.placeholder = t('nameErr'); return; }
+        if (!phone) { phoneInput.style.borderColor = '#ef4444'; phoneInput.placeholder = t('phoneErr'); return; }
+        customerName = name;
+        customerPhone = phone;
+        card.remove();
+        showManagerPicker();
+    }
+    submitBtn.addEventListener('click', onSubmit);
+    nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') onSubmit(); });
+    phoneInput.addEventListener('keydown', e => { if (e.key === 'Enter') onSubmit(); });
+}
+
+function showManagerPicker() {
+    if (!chatArea) return;
+    const lang = getLang();
+    const managers = [...(DEFAULT_MANAGERS[lang] || DEFAULT_MANAGERS['en'])];
+    managers.push({ name: t('hqConsultant') });
+
+    const wrap = document.createElement('div');
+    wrap.className = 'adv-row adv-row-ai';
+    let h = `<div class="adv-avatar"><i class="fa-solid fa-headset"></i></div>
+    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:16px; padding:16px; color:#fff; max-width:85%; box-shadow:0 4px 15px rgba(102,126,234,0.3);">
+        <div style="text-align:center; margin-bottom:12px;">
+            <div style="font-size:28px; margin-bottom:4px;">👋</div>
+            <div style="font-weight:700; font-size:15px;">${t('selectMgr')}</div>
+            <div style="font-size:11px; opacity:0.8; margin-top:2px;">${t('selectSub')}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">`;
+
+    managers.forEach((mgr) => {
+        h += `<button class="adv-mgr-pick" data-name="${esc(mgr.name)}" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+            <span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">🧑‍💼</span>
+            <span style="flex:1; text-align:left;">${esc(mgr.name)}${t('mgrSuffix')}</span>
+            <span style="font-size:18px;">→</span>
+        </button>`;
+    });
+    h += `</div></div>`;
+    wrap.innerHTML = h;
+    chatArea.appendChild(wrap);
+    scrollChat();
+
+    wrap.querySelectorAll('.adv-mgr-pick').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mgrName = btn.getAttribute('data-name');
+            wrap.remove();
+            connectToManager(mgrName);
+        });
+    });
+}
+
+async function connectToManager(managerName) {
+    const sb = getSb();
+    if (!sb) {
+        addBubble(t('connectErr'), 'ai');
+        return;
+    }
+
+    // AI 대화 요약
+    let summary = '';
+    try {
+        summary = conversationHistory.slice(-4).map(h =>
+            (h.role === 'user' ? customerName + ': ' : 'AI: ') + String(h.content).substring(0, 80)
+        ).join('\n');
+    } catch(e) {}
+
+    const dispName = customerName + (customerPhone ? ' | ' + customerPhone : '');
+
+    try {
+        const { data, error } = await sb.from('chat_rooms').insert({
+            customer_name: dispName,
+            assigned_manager: managerName,
+            status: 'waiting',
+            source: 'chatbot',
+            ai_summary: summary
+        }).select().single();
+
+        if (error || !data) {
+            console.error('chat_rooms INSERT error:', error);
+            addBubble(t('connectErr'), 'ai');
+            return;
+        }
+
+        liveRoom = data;
+        liveMode = true;
+        saveLiveState();
+        updateHeaderForLive(managerName);
+
+        // 연결 안내
+        const notice = document.createElement('div');
+        notice.style.padding = '4px 0';
+        notice.innerHTML = `
+            <div style="background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%); border-radius:16px; padding:16px; border:1px solid #6ee7b7;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                    <span style="background:#10b981; color:#fff; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">🔗</span>
+                    <div><div style="font-weight:700; color:#065f46; font-size:14px;">${esc(managerName)}${t('connecting')}</div>
+                    <div style="font-size:12px; color:#047857;">${t('pleaseWait')}</div></div>
+                </div>
+                <div style="background:rgba(255,255,255,0.6); border-radius:10px; padding:10px; font-size:12px; color:#065f46;">
+                    💡 <b>Tip:</b> ${t('tipFile')}
+                </div>
+            </div>`;
+        chatArea.appendChild(notice);
+        scrollChat();
+        saveChat();
+
+        // Realtime 구독
+        subscribeLive(liveRoom.id);
+
+    } catch(err) {
+        console.error('Connect error:', err);
+        addBubble(t('connectErr'), 'ai');
+    }
+}
+
+function subscribeLive(roomId) {
+    const sb = getSb();
+    if (!sb) return;
+    if (liveSub) { liveSub.unsubscribe(); liveSub = null; }
+
+    liveSub = sb.channel('kapu-room-' + roomId)
+        .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'chat_messages',
+            filter: 'room_id=eq.' + roomId
+        }, (payload) => {
+            const m = payload.new;
+            if (!m || m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
+
+            if (m.sender_type === 'manager') {
+                const mn = m.sender_name || (getLang() === 'ja' ? 'マネージャー' : getLang() === 'en' ? 'Manager' : '매니저');
+                let html = `<div class="adv-row adv-row-ai">
+                    <div class="adv-avatar" style="background:#10b981;"><i class="fa-solid fa-headset" style="color:#fff;"></i></div>
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
+                if (m.file_url) {
+                    if (m.file_type && m.file_type.startsWith('image/'))
+                        html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:4px;" onclick="window.open(this.src)">`;
+                    else
+                        html += `<a href="${m.file_url}" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:4px;">📎 ${esc(m.file_name || 'File')}</a>`;
+                }
+                if (m.message) {
+                    const msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
+                    html += `<div class="adv-bubble adv-bubble-ai">${msgText}</div>`;
+                }
+                html += `</div></div>`;
+                if (chatArea) chatArea.insertAdjacentHTML('beforeend', html);
+                scrollChat();
+                saveChat();
+            } else if (m.sender_type === 'system') {
+                if (chatArea) chatArea.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">${m.message}</div></div>`);
+                if (m.message && (m.message.includes('종료') || m.message.includes('closed') || m.message.includes('終了'))) {
+                    endLiveSession();
+                }
+                scrollChat();
+                saveChat();
+            }
+        }).subscribe();
+}
+
+function sendLiveMessage(text) {
+    if (!text || !liveRoom) return;
+    const sb = getSb();
+    if (!sb) return;
+
+    // 유저 말풍선
+    addBubble(text, 'user');
+    saveChat();
+
+    sb.from('chat_messages').insert({
+        room_id: liveRoom.id,
+        sender_type: 'customer',
+        sender_name: customerName || 'Customer',
+        message: text
+    }).then(r => {
+        if (r.error) console.error('Live send error:', r.error);
+    });
+
+    const inp = document.getElementById('advInput');
+    if (inp) inp.focus();
+}
+
+function uploadLiveFile(file) {
+    if (!liveRoom) return;
+    const sb = getSb();
+    if (!sb) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const safeName = Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '.' + ext;
+    const path = 'room-' + liveRoom.id + '/' + safeName;
+
+    sb.storage.from('chat-files').upload(path, file, { upsert: true }).then(up => {
+        if (up.error) {
+            console.error('File upload error:', up.error);
+            return;
+        }
+        const url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
+        sb.from('chat_messages').insert({
+            room_id: liveRoom.id,
+            sender_type: 'customer',
+            sender_name: customerName || 'Customer',
+            file_url: url,
+            file_name: file.name,
+            file_type: file.type,
+            message: ''
+        });
+
+        // 로컬 표시
+        if (file.type.startsWith('image/')) {
+            if (chatArea) chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${url}" class="adv-chat-img" alt="uploaded" onclick="window.open(this.src)"></div></div>`);
+        } else {
+            addBubble('📎 ' + file.name + ' ✅', 'user');
+        }
+        saveChat();
+        scrollChat();
+    });
+}
+
+function endLiveSession() {
+    liveMode = false;
+    if (liveSub) { liveSub.unsubscribe(); liveSub = null; }
+    liveRoom = null;
+    try { localStorage.removeItem(liveKey()); } catch(e) {}
+    updateHeaderForAI();
+
+    // "AI로 돌아가기" 안내
+    if (chatArea) {
+        chatArea.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:8px 0;"><div style="display:inline-block; background:#f1f5f9; border-radius:20px; padding:6px 16px; font-size:12px; color:#64748b;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:4px;"></i>${t('backToAi')}</div></div>`);
+    }
+    saveChat();
+    scrollChat();
+}
+
+async function restoreLiveSession(data) {
+    const sb = getSb();
+    if (!sb) {
+        // Supabase 아직 로드 안됨 → 재시도
+        setTimeout(() => restoreLiveSession(data), 2000);
+        return;
+    }
+
+    try {
+        const { data: room, error } = await sb.from('chat_rooms').select('*').eq('id', data.room.id).single();
+        if (error || !room || room.status === 'closed') {
+            clearLiveState();
+            return;
+        }
+
+        liveRoom = room;
+        liveMode = true;
+        customerName = data.customerName || '';
+        customerPhone = data.customerPhone || '';
+
+        // Realtime 구독
+        subscribeLive(liveRoom.id);
+
+        // 메시지 복원 (패널이 열릴 때 DB에서 로드)
+        window._kapuRestoreLiveMessages = async function() {
+            const { data: msgs } = await sb.from('chat_messages').select('*').eq('room_id', liveRoom.id)
+                .neq('sender_type', 'internal').neq('sender_type', 'admin_memo')
+                .order('created_at', { ascending: true }).limit(200);
+            if (msgs && msgs.length > 0 && chatArea) {
+                msgs.forEach(m => renderRestoredMsg(m));
+                scrollChat();
+                saveChat();
+            }
+        };
+
+        console.log('♻️ Live session restored:', liveRoom.id);
+    } catch(err) {
+        console.error('Restore error:', err);
+        clearLiveState();
+    }
+}
+
+function renderRestoredMsg(m) {
+    if (!chatArea) return;
+    if (m.sender_type === 'customer') {
+        if (m.file_url) {
+            if (m.file_type && m.file_type.startsWith('image/'))
+                chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${m.file_url}" class="adv-chat-img" onclick="window.open(this.src)"></div></div>`);
+            else
+                chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user">📎 ${esc(m.file_name || 'File')}</div></div>`);
+        }
+        if (m.message) addBubble(m.message, 'user');
+    } else if (m.sender_type === 'manager') {
+        const mn = m.sender_name || 'Manager';
+        let html = `<div class="adv-row adv-row-ai"><div class="adv-avatar" style="background:#10b981;"><i class="fa-solid fa-headset" style="color:#fff;"></i></div><div style="display:flex;flex-direction:column;">
+            <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
+        if (m.file_url) {
+            if (m.file_type && m.file_type.startsWith('image/'))
+                html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;" onclick="window.open(this.src)">`;
+            else
+                html += `<a href="${m.file_url}" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;">📎 ${esc(m.file_name || 'File')}</a>`;
+        }
+        if (m.message) {
+            const msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;">$1</a>');
+            html += `<div class="adv-bubble adv-bubble-ai">${msgText}</div>`;
+        }
+        html += `</div></div>`;
+        chatArea.insertAdjacentHTML('beforeend', html);
+    } else if (m.sender_type === 'system') {
+        chatArea.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">${m.message}</div></div>`);
+    }
 }
 
 // ─── 이미지 말풍선 ───
@@ -329,7 +828,6 @@ function addProductCards(products) {
         card.className = 'adv-card';
         const thumbUrl = rec.img_url || '';
         const thumbHtml = thumbUrl ? `<img src="${esc(thumbUrl)}" class="adv-card-thumb" alt="${esc(rec.name)}" onerror="this.style.display='none'">` : '';
-        // 사이즈 표시: width=0, height=0 이면 "사이즈 자유" 표시
         const w = rec.recommended_width_mm || 0;
         const h = rec.recommended_height_mm || 0;
         const sizeText = (w > 0 && h > 0)
@@ -359,16 +857,26 @@ function addProductCards(products) {
     });
 
     chatArea.appendChild(wrap);
+    bindCardEvents(wrap, products);
+    scrollChat();
+}
 
-    // 이벤트
+function bindCardEvents(wrap, products) {
     wrap.querySelectorAll('.adv-btn-editor').forEach(btn => {
         btn.addEventListener('click', () => openEditor(products[+btn.dataset.i]));
     });
     wrap.querySelectorAll('.adv-btn-cart').forEach(btn => {
         btn.addEventListener('click', () => addToCart(products[+btn.dataset.i], btn));
     });
+}
 
-    scrollChat();
+function rebindCardEvents() {
+    // 복원된 카드의 이벤트 재바인딩 (lastProducts 사용)
+    if (!chatArea || lastProducts.length === 0) return;
+    const wraps = chatArea.querySelectorAll('.adv-cards-wrap');
+    wraps.forEach(wrap => {
+        bindCardEvents(wrap, lastProducts);
+    });
 }
 
 // ─── 에디터 열기 ───
