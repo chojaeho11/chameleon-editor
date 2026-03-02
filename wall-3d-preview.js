@@ -1170,6 +1170,13 @@
                     const PX_PER_MM = 3.7795;
                     const wMM = Math.round(board.width / PX_PER_MM);
                     const hMM = Math.round(board.height / PX_PER_MM);
+                    // 에디터에서 현재 텍스트 읽어서 __letterSignData 동기화
+                    const textObjs = fabricCanvas.getObjects().filter(o => o.type === 'textbox' || o.type === 'i-text');
+                    if (textObjs.length > 0) {
+                        const sorted = [...textObjs].sort((a, b) => (b.fontSize || 0) - (a.fontSize || 0));
+                        if (sorted[0] && sorted[0].text) window.__letterSignData.titleText = sorted[0].text;
+                        if (sorted[1] && sorted[1].text) window.__letterSignData.bottomText = sorted[1].text;
+                    }
                     const dataUrl = captureCanvas();
                     buildLetterSign(wMM, hMM, dataUrl);
                 }

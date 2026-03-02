@@ -1063,11 +1063,16 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
     });
     await new Promise(r => setTimeout(r, 400));
 
-    // ── 스카시 레이아웃: 위=타이틀(크게), 아래=서브글씨 박스 ──
+    // ── 스카시 레이아웃: 위=타이틀(크게, 박스 바로 위), 아래=서브글씨 박스 ──
 
-    // 상단 타이틀 영역 (전체 높이의 상위 60%)
-    const titleSize = Math.max(Math.round(bH * 0.35), 30);
-    const titleTop = bT + bH * 0.05;
+    // 하단 박스 (전체 높이의 하단 35%)
+    const boxH = bH * 0.35;
+    const boxTop = bT + bH - boxH;
+
+    // 타이틀: 박스 바로 위에 밀착
+    const titleSize = Math.max(Math.round(bH * 0.30), 30);
+    const titleBottom = boxTop; // 타이틀 하단 = 박스 상단
+    const titleTop = titleBottom - titleSize * 1.15; // 폰트 높이 + 여백
 
     // 타이틀 그림자
     canvas.add(new fabric.Textbox(titleText, {
@@ -1088,10 +1093,6 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
         width: bW * 0.90, lineHeight: 1.1, charSpacing: 50,
     });
     canvas.add(titleObj);
-
-    // 하단 박스 (전체 높이의 하단 35%)
-    const boxH = bH * 0.35;
-    const boxTop = bT + bH - boxH;
     canvas.add(new fabric.Rect({
         width: bW, height: boxH, left: bL, top: boxTop,
         fill: C.box, originX:'left', originY:'top',
