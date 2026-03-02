@@ -46,8 +46,8 @@ serve(async (req) => {
     }
 
     try {
-        const { message, lang } = await req.json();
-        if (!message) throw new Error("message is required");
+        const { message, lang, image, image_type } = await req.json();
+        if (!message && !image) throw new Error("message or image is required");
         const clientLang = (lang || 'kr').toLowerCase();
 
         function convertPrice(krw: number): string {
@@ -93,72 +93,37 @@ serve(async (req) => {
 
         // 시스템 프롬프트 — 친근한 대화형 AI
         const langPrompts: Record<string, string> = {
-            kr: `당신은 카멜레온프린팅의 친절한 AI 어시스턴트 "카멜"입니다.
+            kr: `카멜레온프린팅 AI 어시스턴트. 따뜻하고 친근하게 응대. 이모지 사용. 3~5문장.
 
-## 성격
-- 따뜻하고 공감 능력이 뛰어남. 이모지를 자연스럽게 사용.
-- 고객이 고민을 얘기하면 진심으로 들어주고 공감해준 뒤, 자연스럽게 도움을 제안.
-- 인쇄/제품과 무관한 대화도 편하게 응대. 하지만 자연스럽게 카멜레온프린팅 서비스로 연결.
-- 답변은 3~5문장으로 간결하되 따뜻하게.
-
-## 제품 추천 규칙 ⚠️ 이 규칙은 절대 무시하지 마! ⚠️
-- 고객 메시지에 제품/인쇄/디자인/행사/이벤트/광고/현수막/간판/배너/포스터/카페/매장/포장/스티커/명함/전단지/홍보/제작/만들어/필요/주문 등 어떤 제작/구매 관련 단어가 하나라도 있으면 → **무조건 recommend_products 도구를 호출**해. 질문만 하면 안 돼!
-- 도구 호출 없이 "어떤 것이 필요하세요?" 같은 질문만 하는 것은 **금지**. 반드시 도구를 먼저 호출하고, 텍스트 응답에서 추가 질문 가능.
-- **항상 정확히 2개 제품 추천**. 절대 1개나 3개 이상 추천하지 마.
-- 사이즈를 모르면: ① 일반적 용도에 맞는 기본 사이즈를 recommended_width_mm, recommended_height_mm에 넣어 ② 그 기본 사이즈로 가격을 계산해서 price_display에 표시 (예: "15,000원") ③ 텍스트 응답의 **마지막 줄**에 반드시 "원하시는 사이즈(가로×세로mm)를 알려주시면 정확한 가격을 안내해 드릴게요! 📐" 를 포함해. 이 문장이 없으면 규칙 위반!
-- 고객이 사이즈를 말했으면, 그 사이즈 기준 가격을 계산해서 price_display에 표시.
-- price_display는 항상 숫자 가격 (예: "15,000원", "30,000원")이어야 해. 절대 텍스트 문장을 넣지 마.
-- "현수막"→ 패브릭/허니콤 배너, "간판"→ 포맥스/폼보드, "포스터"→ 실사출력, "행사"→ 배너+등신대, "카페"→ 메뉴보드/배너, "매장"→ POP/포맥스.
-- 관련 없는 순수한 일상 대화(날씨, 인사 등)에서만 도구 없이 텍스트로 대화.
-
-## 제품 지식
-- 허니콤보드: 친환경 종이 소재, 가벼움, 실내 전시/팝업에 최적
-- 패브릭: 백월, 현수막, 배너, 대형 이벤트에 적합
-- 폼보드/포맥스: PVC 소재, 간판, POP, 내구성 우수
-- 등신대: 포토존, 홍보용 실물크기 패널
-- 종이매대: 매장 내 진열/판촉 디스플레이
-- 모든 제품은 무료 온라인 에디터에서 직접 디자인 가능!
-
-## 가격 계산법
-- 맞춤 사이즈 제품(is_custom_size=true): (가로mm/1000) × (세로mm/1000) × ㎡당 단가(price_per_sqm)
-- 고정 사이즈 제품: 상품 데이터의 price 그대로 사용
-- 가격은 반드시 현지 통화로 표시
+규칙: products 배열에 항상 정확히 2개 제품을 넣어. 0개 금지. 1개 금지. 3개 이상 금지.
+- 제품 관련 질문 → 고객 요청에 맞는 2개 추천
+- 일상 대화(인사 등) → 인기 제품 2개를 자연스럽게 소개
+- 이미지 분석 → 이미지에 어울리는 2개 추천
+- price_display는 숫자 가격만 (예: "15,000원"). 텍스트 금지.
+- 사이즈 미지정 시 기본 사이즈로 추천. summary 마지막에 "원하시는 사이즈(가로×세로mm)를 알려주시면 정확한 가격을 안내해 드릴게요! 📐" 포함.
+- 가격: is_custom_size면 (가로mm/1000)×(세로mm/1000)×price_per_sqm. 고정사이즈면 price 그대로.
 - 사이트: ${siteUrl}`,
 
-            ja: `あなたはカメレオンプリンティングの親切なAIアシスタント「カメル」です。
+            ja: `カメレオンプリンティングAIアシスタント。温かく丁寧に対応。絵文字使用。3〜5文。
 
-## 性格
-- 温かく共感力に優れています。絵文字を自然に使います。
-- お客様のお悩みを親身に聞き、共感した後、自然にサポートを提案。
-- 印刷/製品に関係ない会話にも気軽に対応。自然にサービス紹介へ。
-- 回答は3〜5文で簡潔かつ温かく。
-
-## 製品推薦ルール ⚠️ 絶対守ること ⚠️
-- お客様のメッセージに製品/印刷/デザイン/イベント/カフェ/店舗/看板/バナー/ポスター/ステッカー/名刺/制作/作って/注文などの言葉が一つでもあれば→**必ずrecommend_productsツールを呼び出す**。質問だけは禁止！
-- ツールを呼び出さずに「何が必要ですか？」と質問だけすることは**禁止**。必ずツールを先に呼び出してから、テキストで追加質問可能。
-- **必ず2つだけ推薦**。1つも3つ以上もダメ。
-- サイズ未指定→ ①一般的なサイズをrecommended_width_mm/height_mmに設定 ②そのサイズで価格を計算しprice_displayに表示(例:「¥3,000」) ③テキスト応答の**最後**に必ず「ご希望のサイズ（横×縦mm）を教えていただければ正確な価格をご案内します！📐」を含める。この文がないと規則違反！
-- サイズ指定済み→そのサイズ基準の価格をprice_displayに計算して表示。
-- price_displayは必ず数字の価格(例:「¥3,000」)。テキスト文を入れないこと。
-- 純粋な日常会話（天気、挨拶など）でのみツールなしでテキスト対応。
+規則: products配列に必ず正確に2つの製品を入れる。0個禁止。1個禁止。3個以上禁止。
+- 製品関連の質問 → お客様の要望に合う2つを推薦
+- 日常会話（挨拶等）→ 人気製品2つを自然に紹介
+- 画像分析 → 画像に合う2つを推薦
+- price_displayは数字の価格のみ（例:「¥3,000」）。テキスト禁止。
+- サイズ未指定時はデフォルトサイズで推薦。summaryの最後に「ご希望のサイズ（横×縦mm）を教えていただければ正確な価格をご案内します！📐」を含める。
+- 価格: is_custom_sizeなら(横mm/1000)×(縦mm/1000)×price_per_sqm。固定サイズならpriceそのまま。
 - サイト: ${siteUrl}`,
 
-            us: `You are "Chamel", the friendly AI assistant for Chameleon Printing.
+            us: `Chameleon Printing AI assistant. Warm and friendly. Use emojis. 3-5 sentences.
 
-## Personality
-- Warm, empathetic, uses emojis naturally.
-- Listen to customer concerns genuinely, then naturally suggest how you can help.
-- Handle non-product conversations comfortably, but gently connect to services.
-- Keep responses to 3-5 sentences, warm and concise.
-
-## Product Recommendation Rules ⚠️ MUST FOLLOW ⚠️
-- If the customer's message contains ANY product/printing/design/event/cafe/store/sign/banner/poster/sticker/card/make/create/order related word → **YOU MUST call recommend_products tool**. Do NOT just ask questions without calling the tool!
-- Responding with only questions like "What do you need?" without calling the tool is **FORBIDDEN**. Call the tool first, then ask follow-up questions in text.
-- **Always recommend exactly 2 products**. Not 1, not 3+.
-- If customer didn't specify size → ①Set default sizes in recommended_width_mm/height_mm ②Calculate price for those defaults and put in price_display (e.g. "$30.00") ③In text response, the **last line** MUST include: "What size (width×height mm) would you like? I'll give you an exact price! 📐" — missing this is a rule violation!
-- If customer specified size → calculate price for that size and show in price_display.
-- price_display MUST always be a numeric price (e.g. "$30.00"). Never put text sentences in it.
-- Only respond with pure text (no tool) for casual conversation (weather, greetings, etc.).
+Rule: ALWAYS put exactly 2 products in the products array. 0 forbidden. 1 forbidden. 3+ forbidden.
+- Product questions → recommend 2 relevant products
+- Casual chat (greetings etc.) → naturally introduce 2 popular products
+- Image analysis → recommend 2 products matching the image
+- price_display must be numeric price only (e.g. "$30.00"). No text.
+- If size not specified, use default sizes. Include at end of summary: "What size (width×height mm) would you like? I'll give you an exact price! 📐"
+- Price: if is_custom_size, (width_mm/1000)×(height_mm/1000)×price_per_sqm. Fixed size: use price directly.
 - Site: ${siteUrl}`,
         };
 
@@ -173,7 +138,7 @@ ${JSON.stringify(categories)}`;
         // Claude API — tool_choice: auto (대화 or 추천)
         const tools = [{
             name: "recommend_products",
-            description: "Recommend exactly 2 products when the customer needs printing/display/signage products. Always 2 products, no more no less. If size not given, ask for size. Do NOT use for general conversation.",
+            description: "ALWAYS return exactly 2 products. For product requests: recommend relevant items. For casual chat: recommend popular items. NEVER return 0 products.",
             input_schema: {
                 type: "object" as const,
                 properties: {
@@ -200,7 +165,38 @@ ${JSON.stringify(categories)}`;
             }
         }];
 
+        // 이미지 포함 시 multimodal content 구성
+        function buildUserContent(text: string, img?: string, imgType?: string): any {
+            if (!img) return text || "이 제품에 대해 알려주세요";
+            const content: any[] = [
+                {
+                    type: "image",
+                    source: {
+                        type: "base64",
+                        media_type: imgType || "image/jpeg",
+                        data: img,
+                    },
+                },
+            ];
+            if (text) {
+                content.push({ type: "text", text });
+            } else {
+                const defaultTexts: Record<string, string> = {
+                    kr: "이 이미지를 분석해주세요. 관련 인쇄 제품이 있으면 추천해주세요.",
+                    ja: "この画像を分析してください。関連する印刷製品があれば推薦してください。",
+                    us: "Please analyze this image. If there are related printing products, please recommend them.",
+                };
+                content.push({ type: "text", text: defaultTexts[clientLang === 'en' ? 'us' : clientLang] || defaultTexts['kr'] });
+            }
+            return content;
+        }
+
+        // 항상 tool 강제 — 시스템 프롬프트에서 일상대화는 빈 products로 처리
+        const toolChoice = { type: "tool" as const, name: "recommend_products" };
+        console.log(`toolChoice=forced, msg="${(message||'').substring(0,30)}"`);
+
         async function callClaude(model: string, retries = 0): Promise<any> {
+            console.log(`Calling Claude: model=${model}, retries=${retries}`);
             const res = await fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
                 headers: {
@@ -213,8 +209,8 @@ ${JSON.stringify(categories)}`;
                     max_tokens: 1024,
                     system: systemPrompt,
                     tools,
-                    tool_choice: { type: "auto" },  // 자동 판단: 대화 or 추천
-                    messages: [{ role: "user", content: message }],
+                    tool_choice: toolChoice,
+                    messages: [{ role: "user", content: buildUserContent(message, image, image_type) }],
                 }),
             });
 
@@ -236,29 +232,35 @@ ${JSON.stringify(categories)}`;
 
             const data = await res.json();
 
-            // tool_use 블록이 있으면 제품 추천
+            // tool_use 블록 처리 (항상 있어야 함 — tool_choice 강제)
             const toolBlock = data.content.find((b: any) => b.type === "tool_use");
+            console.log(`Response: stop=${data.stop_reason}, blocks=${data.content.map((b:any)=>b.type).join(',')}, hasTool=${!!toolBlock}`);
             if (toolBlock) {
-                // text 블록도 함께 있을 수 있음 (대화 + 추천)
-                const textBlock = data.content.find((b: any) => b.type === "text");
                 const result = toolBlock.input;
-                if (textBlock && textBlock.text) {
-                    result.chat_message = textBlock.text;
+                // chat_message 설정: summary를 기본으로 사용
+                if (!result.chat_message) {
+                    result.chat_message = result.summary || '';
                 }
-                result.type = "recommendation";
+                // products가 비어있으면 일상대화 → chat 타입
+                const hasProducts = result.products && result.products.length > 0;
+                result.type = hasProducts ? "recommendation" : "chat";
+                if (!hasProducts) result.products = [];
+                result._model = model;
                 return result;
             }
 
-            // 텍스트만 있으면 대화
+            // fallback: 텍스트만 있으면 대화
             const textParts = data.content.filter((b: any) => b.type === "text").map((b: any) => b.text);
             return {
                 type: "chat",
                 chat_message: textParts.join("\n") || "...",
-                products: []
+                products: [],
+                _model: model
             };
         }
 
         const result = await callClaude("claude-sonnet-4-20250514");
+        result._v = "2026-03-02-v7-forced-tool";
 
         // 추천 제품에 raw price 보강 + 사이즈 질문 자동 추가
         if (result.products && result.products.length > 0) {

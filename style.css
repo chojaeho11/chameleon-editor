@@ -1457,6 +1457,74 @@ button, input, textarea, select { font-family: inherit; }
 }
 .adv-send-btn:hover { opacity: 0.85; }
 
+/* 업로드 버튼 */
+.adv-upload-btn {
+    width: 42px;
+    height: 42px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #6366f1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.adv-upload-btn:hover { background: #eef2ff; border-color: #6366f1; }
+
+/* 이미지 미리보기 */
+.adv-img-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #f1f5f9;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+}
+.adv-img-preview img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.adv-img-preview span {
+    flex: 1;
+    font-size: 12px;
+    color: #64748b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.adv-img-remove {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+.adv-img-remove:hover { background: #dc2626; }
+
+/* 채팅 내 이미지 */
+.adv-chat-img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    display: block;
+}
+.adv-bubble-img { padding: 6px !important; }
+
 /* ── 모바일 advisor ── */
 @media (max-width: 768px) {
     .advisor-panel { padding: 0 8px; }

@@ -16,9 +16,9 @@ function getLang() {
 }
 
 const T = {
-    kr: { title: 'AI 카멜', subtitle: '무엇이든 물어보세요', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', error: '앗, 연결이 불안정해요 😅 잠시 후 다시 시도해주세요!' },
-    ja: { title: 'AI カメル', subtitle: '何でもお聞きください', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', error: '接続が不安定です 😅 しばらくしてからお試しください！' },
-    en: { title: 'AI Chamel', subtitle: 'Ask me anything', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', error: 'Connection unstable 😅 Please try again!' },
+    kr: { title: 'AI 카멜', subtitle: '무엇이든 물어보세요', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 5MB)', error: '앗, 연결이 불안정해요 😅 잠시 후 다시 시도해주세요!' },
+    ja: { title: 'AI カメル', subtitle: '何でもお聞きください', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大5MB）', error: '接続が不安定です 😅 しばらくしてからお試しください！' },
+    en: { title: 'AI Chamel', subtitle: 'Ask me anything', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 5MB)', error: 'Connection unstable 😅 Please try again!' },
 };
 function t(key) { const l = getLang(); return (T[l] && T[l][key]) || T['en'][key] || ''; }
 
@@ -26,6 +26,7 @@ let panelEl = null;
 let chatArea = null;
 let isProcessing = false;
 let lastProducts = [];
+let pendingImage = null; // { base64, type, name, previewUrl }
 
 // ─── 초기화 ───
 export function initAdvisorPanel() {
@@ -74,7 +75,16 @@ function buildPanelUI() {
             </button>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
+        <div class="adv-img-preview" id="advImgPreview" style="display:none">
+            <img id="advImgThumb" src="" alt="">
+            <span id="advImgName"></span>
+            <button id="advImgRemove" class="adv-img-remove"><i class="fa-solid fa-xmark"></i></button>
+        </div>
         <div class="adv-input-area">
+            <input type="file" id="advFileInput" accept="image/*,.pdf" style="display:none">
+            <button class="adv-upload-btn" id="advUploadBtn" title="${t('upload')}">
+                <i class="fa-solid fa-image"></i>
+            </button>
             <input type="text" id="advInput" class="adv-input" placeholder="${t('placeholder')}" autocomplete="off">
             <button class="adv-send-btn" id="advSendBtn">
                 <i class="fa-solid fa-paper-plane"></i>
@@ -103,15 +113,66 @@ function buildPanelUI() {
             sendFromInput();
         }
     });
+
+    // 파일 업로드
+    document.getElementById('advUploadBtn').addEventListener('click', () => {
+        document.getElementById('advFileInput').click();
+    });
+    document.getElementById('advFileInput').addEventListener('change', handleFileSelect);
+    document.getElementById('advImgRemove').addEventListener('click', clearPendingImage);
 }
 
 function sendFromInput() {
     const input = document.getElementById('advInput');
     if (!input) return;
     const val = input.value.trim();
-    if (!val || isProcessing) return;
+    if (!val && !pendingImage) return;
+    if (isProcessing) return;
     input.value = '';
-    sendMessage(val);
+    const img = pendingImage;
+    clearPendingImage();
+    sendMessage(val, img);
+}
+
+// ─── 파일 선택 처리 ───
+function handleFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    e.target.value = ''; // reset for re-select
+
+    // 크기 제한 5MB
+    if (file.size > 5 * 1024 * 1024) {
+        addBubble(t('tooBig'), 'ai');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        const dataUrl = reader.result;
+        const base64 = dataUrl.split(',')[1];
+        const type = file.type || 'image/jpeg';
+        pendingImage = { base64, type, name: file.name, previewUrl: dataUrl };
+        showImagePreview();
+    };
+    reader.readAsDataURL(file);
+}
+
+function showImagePreview() {
+    const preview = document.getElementById('advImgPreview');
+    const thumb = document.getElementById('advImgThumb');
+    const nameEl = document.getElementById('advImgName');
+    if (!preview || !pendingImage) return;
+    thumb.src = pendingImage.previewUrl;
+    nameEl.textContent = pendingImage.name;
+    preview.style.display = 'flex';
+}
+
+function clearPendingImage() {
+    pendingImage = null;
+    const preview = document.getElementById('advImgPreview');
+    if (preview) preview.style.display = 'none';
+    const thumb = document.getElementById('advImgThumb');
+    if (thumb) thumb.src = '';
 }
 
 // ─── 외부 호출 (검색바 Enter) ───
@@ -130,17 +191,26 @@ function startAdvisor(query) {
 }
 
 // ─── 메시지 전송 ───
-async function sendMessage(text) {
+async function sendMessage(text, imageData) {
     if (isProcessing) return;
     isProcessing = true;
 
-    // 유저 메시지
-    addBubble(text, 'user');
+    // 유저 메시지 (이미지 포함 시 이미지도 표시)
+    if (imageData) {
+        addImageBubble(imageData.previewUrl, text);
+    } else {
+        addBubble(text, 'user');
+    }
 
     // 타이핑 표시
     const typingEl = addTyping();
 
     try {
+        const payload = { message: text, lang: getLang() };
+        if (imageData) {
+            payload.image = imageData.base64;
+            payload.image_type = imageData.type;
+        }
         const res = await fetch(API_URL, {
             method: 'POST',
             headers: {
@@ -148,7 +218,7 @@ async function sendMessage(text) {
                 'Authorization': 'Bearer ' + SUPA_KEY,
                 'apikey': SUPA_KEY
             },
-            body: JSON.stringify({ message: text, lang: getLang() })
+            body: JSON.stringify(payload)
         });
 
         if (!res.ok) throw new Error('API ' + res.status);
@@ -180,6 +250,22 @@ async function sendMessage(text) {
     // 입력창 포커스
     const inp = document.getElementById('advInput');
     if (inp) inp.focus();
+}
+
+// ─── 이미지 말풍선 ───
+function addImageBubble(previewUrl, text) {
+    if (!chatArea) return;
+    const row = document.createElement('div');
+    row.className = 'adv-row adv-row-user';
+    row.innerHTML = `
+        <div class="adv-bubble adv-bubble-user adv-bubble-img">
+            <img src="${previewUrl}" class="adv-chat-img" alt="uploaded">
+            ${text ? `<p style="margin:6px 0 0">${esc(text)}</p>` : ''}
+        </div>
+    `;
+    chatArea.appendChild(row);
+    scrollChat();
+    return row;
 }
 
 // ─── 말풍선 추가 ───
