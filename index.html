@@ -5223,9 +5223,17 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                     // AI 어드바이저: 2어절 이상이면 AI 추천
                     const val = searchInput.value.trim();
                     const wordCount = val.split(/\s+/).filter(Boolean).length;
-                    if (wordCount >= 2 && val.length >= 5 && window.__runAdvisor) {
+                    if (wordCount >= 2 && val.length >= 5) {
                         searchInput.blur();
-                        window.__runAdvisor(val);
+                        if (window.__runAdvisor) {
+                            window.__runAdvisor(val);
+                        } else {
+                            // advisor-panel.js가 아직 로드 안 됐으면 직접 import
+                            import('./advisor-panel.js?v=123').then(m => {
+                                if (m.initAdvisorPanel) m.initAdvisorPanel();
+                                if (m.runAdvisor) m.runAdvisor(val);
+                            });
+                        }
                         return;
                     }
                     doSearch();
@@ -8311,13 +8319,13 @@ if (w >= 20 && h >= 20) {
             if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
         }
 
-        // 5. 검색창 연결
+        // 5. 검색창 연결 (Enter 핸들러는 window.load 블록에서 처리 — 중복 등록 방지)
         const searchBtn = document.getElementById('btnStartSearch');
         const searchInput = document.getElementById('startSearchInput');
         if (searchBtn && searchInput) {
             const doSearch = () => { if(window.searchTemplates) window.searchTemplates(searchInput.value); };
             searchBtn.onclick = doSearch;
-            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
+            // keypress Enter 제거 — keydown 핸들러(AI 분기 포함)에서 통합 처리
         }
     });
 
