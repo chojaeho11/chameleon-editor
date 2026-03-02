@@ -1,6 +1,6 @@
 // ============================================================
 // 파일명: supabase/functions/product-advisor/index.ts
-// AI 어드바이저 — 대화형 AI + 제품 추천 (tool_choice: forced)
+// 카푸 AI 쇼핑 어시스턴트 — 대화형 AI + 스마트 제품 추천
 //
 // [배포] supabase functions deploy product-advisor
 // ============================================================
@@ -59,29 +59,27 @@ serve(async (req) => {
     let reqBody: any = {};
     try {
         reqBody = await req.json();
-        const { message, lang, image, image_type } = reqBody;
+        const { message, lang, image, image_type, conversation_history } = reqBody;
         const trimmedMsg = (message || '').trim();
         if (!trimmedMsg && !image) throw new Error("message or image is required");
-        // 입력 크기 제한
         if (trimmedMsg.length > 2000) throw new Error("Message too long");
-        if (image && image.length > 5 * 1024 * 1024) throw new Error("Image too large");
+        if (image && image.length > 10 * 1024 * 1024) throw new Error("Image too large (max 10MB)");
 
-        // en→us 정규화 (한 번만)
         let clientLang = (lang || 'kr').toLowerCase();
         if (clientLang === 'en') clientLang = 'us';
 
         function convertPrice(krw: number): string {
-            if (clientLang === 'ja') return '¥' + Math.round(krw * 0.1).toLocaleString('ja-JP');
+            if (clientLang === 'ja') return '\u00a5' + Math.round(krw * 0.1).toLocaleString('ja-JP');
             if (clientLang === 'us') return '$' + (krw * 0.002).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-            return krw.toLocaleString('ko-KR') + '원';
+            return krw.toLocaleString('ko-KR') + '\uc6d0';
         }
 
         // DB 조회
         const sb = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
         const [prodRes, baseRes, catRes, qaRes] = await Promise.all([
             sb.from("admin_products")
-                .select("code,name,price,width_mm,height_mm,is_custom_size,is_general_product,category,description")
-                .order("sort_order", { ascending: true }).limit(120),
+                .select("code,name,price,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url")
+                .order("sort_order", { ascending: true }).limit(2000),
             sb.from("admin_products")
                 .select("code,name,price,width_mm,height_mm,is_custom_size,category")
                 .eq("width_mm", 1000).eq("height_mm", 1000).eq("is_custom_size", true),
@@ -105,7 +103,10 @@ serve(async (req) => {
             const perSqm = calcPricePerSqm(p, allRaw);
             return {
                 code: p.code, name: p.name, category: p.category, description: p.description,
+                img_url: p.img_url,
                 width_mm: p.width_mm, height_mm: p.height_mm, is_custom_size: p.is_custom_size,
+                is_general_product: p.is_general_product, is_file_upload: p.is_file_upload,
+                is_bulk_order: p.is_bulk_order, quantity_options: p.quantity_options,
                 price_display: convertPrice(p.price || 0),
                 price_per_sqm_display: perSqm ? convertPrice(perSqm) : null,
                 _raw_price: p.price || 0, _raw_per_sqm: perSqm,
@@ -115,82 +116,86 @@ serve(async (req) => {
         const categories = catRes.data || [];
         const siteUrl = clientLang === 'ja' ? 'https://www.cafe0101.com' : clientLang === 'us' ? 'https://www.cafe3355.com' : 'https://www.cafe2626.com';
 
-        // 시스템 프롬프트 — 친근한 대화형 AI
+        // 시스템 프롬프트 — 카푸 AI 쇼핑 어시스턴트
         const langPrompts: Record<string, string> = {
-            kr: `카멜레온프린팅 AI 어시스턴트. 따뜻하고 친근하게 응대. 이모지 사용. 3~5문장.
+            kr: `너는 카멜레온프린팅의 AI 쇼핑 어시스턴트 "카푸"야. 따뜻하고 친근하게 고객을 응대해. 이모지를 적절히 사용하고 3~5문장으로 답변해.
 
-⚠️ 연락처 규칙 (최중요): 절대로 전화번호, 이메일, 주소를 임의로 만들지 마. 아래 정보만 사용.
+## 핵심 원칙
+1. **대화를 먼저 해** — 고객이 인사하거나 일상 대화를 하면 자연스럽게 대화해. 무조건 제품을 추천하지 마.
+2. **제품 추천은 필요할 때만** — 고객이 구매 의사를 보이거나 제품을 찾을 때만 추천해. 연락처/인사/잡담에는 products를 비워둬(빈 배열).
+3. **이전 대화를 기억해** — conversation_history가 있으면 맥락을 이해하고 이전 대화를 바탕으로 답변해.
+4. **추천 개수는 자유** — 1개면 1개, 3개면 3개, 5개면 5개. 상황에 맞게. 최대 5개까지.
+5. **제품 설명과 옵션을 활용해** — 각 제품의 description과 특성(is_custom_size, is_file_upload 등)을 확인하고 정확히 안내해.
+6. **커스텀 사이즈 제품(is_custom_size=true)은 원하는 크기로 제작 가능** — 임의 사이즈를 추천하지 말고, "원하시는 사이즈로 제작 가능합니다. 사이즈를 알려주시면 정확한 가격을 안내해 드릴게요!" 라고 안내해. recommended_width_mm=0, recommended_height_mm=0으로 설정.
+7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
+8. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 korea900@hanmail.net으로 보내라고 안내.
+9. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시 관련 이미지를 올리면 구조를 분석하고 필요한 제품과 가격 정보를 상세히 안내해.
+
+## 가격 계산
+- is_custom_size: (가로mm/1000) × (세로mm/1000) × price_per_sqm
+- 고정사이즈: price 그대로
+- is_bulk_order: 수량단위(quantity_options)에 따라 안내
+- 사이즈 미지정 커스텀 제품: 가격 안내 대신 "사이즈를 알려주시면 견적을 바로 드릴게요!"
+
+⚠️ 연락처 규칙 (절대): 전화번호/이메일/주소를 절대 임의로 만들지 마. 아래 정보만 사용.
 ## 회사 정보
 - 상호: (주)카멜레온프린팅
 - 주소: 경기도 화성시 우정읍 한말길 72-2
 - 영업시간: 평일 09:00~18:00 (점심 12:00~13:00, 주말/공휴일 휴무)
 - 매니저: 지숙(010-3455-1946), 은미(010-7793-5393), 성희(010-3490-3328)
-- AI 챗봇: 24시간 운영
+- AI 챗봇(카푸): 24시간 운영
 - 배송: 전상품 무료배송 (허니콤보드 시공배송 제외)
 - 결제: 카드결제, 무통장입금, 카카오페이, 네이버페이
-
-규칙: products 배열에 항상 정확히 2개 제품을 넣어. 0개 금지. 1개 금지. 3개 이상 금지.
-- 제품 관련 질문 → 고객 요청에 맞는 2개 추천
-- 일상 대화(인사 등) → 인기 제품 2개를 자연스럽게 소개
-- 이미지 분석 → 이미지에 어울리는 2개 추천
-- 연락처/전화번호/영업시간/배송/결제 문의 → summary에 위 회사 정보를 직접 포함하여 답변. 전화번호를 그대로 summary에 넣어줘.
-- price_display는 숫자 가격만 (예: "15,000원"). 텍스트 금지.
-- 사이즈 미지정 시 기본 사이즈로 추천. summary 마지막에 "원하시는 사이즈(가로×세로mm)를 알려주시면 정확한 가격을 안내해 드릴게요! 📐" 포함.
-- 가격: is_custom_size면 (가로mm/1000)×(세로mm/1000)×price_per_sqm. 고정사이즈면 price 그대로.
+- 대용량 파일: korea900@hanmail.net으로 전송
 - 사이트: ${siteUrl}`,
 
-            ja: `カメレオンプリンティングAIアシスタント。温かく丁寧に対応。絵文字使用。3〜5文。
+            ja: `あなたはカメレオンプリンティングのAIショッピングアシスタント「カプ」です。温かく丁寧にお客様に対応してください。絵文字を適切に使い、3〜5文で回答。
 
-⚠️ 連絡先規則（最重要）: 電話番号・メールアドレス・住所を絶対に作り上げないこと。以下の情報のみ使用。
+## 核心原則
+1. **まず会話を** — お客様の挨拶や雑談には自然に会話。すぐに商品を推薦しない。
+2. **推薦は必要な時だけ** — 購入意思や商品検索時のみ推薦。挨拶/雑談にはproducts空配列。
+3. **過去の会話を記憶** — conversation_historyがあれば文脈を理解し回答。
+4. **推薦数は自由** — 1個なら1個、3個なら3個。状況に応じて最大5個。
+5. **商品説明を活用** — description、is_custom_size等を確認し正確に案内。
+6. **カスタムサイズ商品** — 任意サイズを推薦せず「ご希望のサイズで制作可能です」と案内。recommended_width_mm=0, recommended_height_mm=0。
+7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
+8. **画像アップ** — 10MBまで添付可。大きいファイルはメールsupport@cafe0101.comへ。
+9. **ハニカムボード展示** — 構造を分析し必要な商品・価格を詳しく案内。
+
+⚠️ 連絡先規則: 絶対に作り上げないこと。以下のみ使用。
 ## 会社情報
-- 会社名: Chameleon Printing 株式会社
+- 会社名: Chameleon Printing
 - 住所: 〒270-0023 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
-- 電話: 047-712-1148
-- メール: support@cafe0101.com
+- 電話: 047-712-1148 / メール: support@cafe0101.com
 - 営業時間: 平日 09:00〜18:00（土日祝休み）
-- AI チャットボット: 24時間対応
-- 配送: 全商品送料無料（ハニカムボード施工配送を除く）
-- 決済: クレジットカード（Visa, Mastercard, JCB, AMEX）、銀行振込
+- 大容量ファイル: support@cafe0101.comへ送信
+- サイト: ${siteUrl}
 
-⚠️ 言語規則（最重要）: summary、name、reason、全ての応答を必ず日本語で書くこと。韓国語の使用は絶対禁止。商品データの名前は韓国語だが、必ず日本語に翻訳して応答すること。
-- 例: "허니콤배너" → "ハニカムバナー"、"포맥스" → "フォーメックス(PVC)"、"실사출력" → "大判プリント"、"패브릭" → "ファブリック"、"등신대" → "等身大パネル"、"아크릴인쇄" → "アクリルプリント"、"폼보드" → "フォームボード"、"천인쇄" → "布プリント"
+⚠️ 言語規則: 全て日本語で回答。商品名も韓国語→日本語翻訳。
+- "허니콤배너"→"ハニカムバナー"、"실사출력"→"大判プリント"、"패브릭"→"ファブリック"`,
 
-規則: products配列に必ず正確に2つの製品を入れる。0個禁止。1個禁止。3個以上禁止。
-- 製品関連の質問 → お客様の要望に合う2つを推薦
-- 日常会話（挨拶等）→ 人気製品2つを自然に紹介
-- 画像分析 → 画像に合う2つを推薦
-- 連絡先・電話番号・営業時間・配送・決済の問い合わせ → summaryに上記の会社情報を直接含めて回答。電話番号をそのままsummaryに入れる。
-- price_displayは数字の価格のみ（例:「¥3,000」）。テキスト禁止。
-- nameは必ず日本語で書くこと（韓国語のままにしない）。
-- サイズ未指定時はデフォルトサイズで推薦。summaryの最後に「ご希望のサイズ（横×縦mm）を教えていただければ正確な価格をご案内します！📐」を含める。
-- 価格: is_custom_sizeなら(横mm/1000)×(縦mm/1000)×price_per_sqm。固定サイズならpriceそのまま。
-- サイト: ${siteUrl}`,
+            us: `You are "Kapu", Chameleon Printing's AI shopping assistant. Be warm and friendly. Use emojis appropriately. 3-5 sentences.
 
-            us: `Chameleon Printing AI assistant. Warm and friendly. Use emojis. 3-5 sentences.
+## Core Principles
+1. **Chat first** — greetings/casual talk → natural conversation, don't force product recommendations.
+2. **Recommend only when needed** — only when customer shows purchase intent. For greetings/chat, empty products array.
+3. **Remember conversation** — use conversation_history for context.
+4. **Flexible count** — 1 to 5 products as needed.
+5. **Use product descriptions** — check description, is_custom_size etc.
+6. **Custom size products** — don't make up sizes, say "Available in your preferred size! Tell me dimensions for exact pricing." Set recommended_width_mm=0, recommended_height_mm=0.
+7. **Banner/signage queries** — recommend printing services, not raw materials.
+8. **Image upload** — up to 10MB. Larger files: email korea900as@gmail.com.
+9. **Honeycomb exhibition references** — analyze structure, provide detailed pricing.
 
-⚠️ Contact info rule (CRITICAL): NEVER make up phone numbers, emails, or addresses. ONLY use the info below.
+⚠️ Contact rules: NEVER make up info. Use ONLY:
 ## Company Info
 - Company: Chameleon Printing
+- Email: support@cafe0101.com / korea900as@gmail.com
 - Website: ${siteUrl}
-- Support: Use the chat widget on our website or email support@cafe0101.com
-- Hours: Weekdays 09:00-18:00 KST (Korea Standard Time)
-- AI Chatbot: Available 24/7
-- Shipping: Free shipping on all products (except Honeycomb board installation delivery)
-- Payment: Credit cards (Visa, Mastercard, JCB, AMEX)
+- Hours: Weekdays 09:00-18:00 KST
+- Large files: email korea900as@gmail.com
 
-⚠️ Language rule (CRITICAL): ALL responses including summary, name, reason MUST be in English. Product data names are in Korean — you MUST translate them to English.
-- Examples: "허니콤배너" → "Honeycomb Banner", "포맥스" → "Foamex (PVC Board)", "실사출력" → "Large Format Print", "패브릭" → "Fabric Print", "등신대" → "Life-size Standee", "아크릴인쇄" → "Acrylic Print"
-
-Rule: ALWAYS put exactly 2 products in the products array. 0 forbidden. 1 forbidden. 3+ forbidden.
-- Product questions → recommend 2 relevant products
-- Casual chat (greetings etc.) → naturally introduce 2 popular products
-- Image analysis → recommend 2 products matching the image
-- Contact/phone/hours/shipping/payment inquiries → include the company info directly in the summary text. Put actual contact details in the summary.
-- price_display must be numeric price only (e.g. "$30.00"). No text.
-- name MUST be in English (never leave Korean as-is).
-- If size not specified, use default sizes. Include at end of summary: "What size (width×height mm) would you like? I'll give you an exact price! 📐"
-- Price: if is_custom_size, (width_mm/1000)×(height_mm/1000)×price_per_sqm. Fixed size: use price directly.
-- Site: ${siteUrl}`,
+⚠️ Language: ALL responses in English. Translate Korean product names.`,
         };
 
         const dataLabels: Record<string, { products: string; categories: string; note: string }> = {
@@ -205,9 +210,9 @@ Rule: ALWAYS put exactly 2 products in the products array. 0 forbidden. 1 forbid
         let qaSection = '';
         if (qaData.length > 0) {
             const qaLabels: Record<string, { title: string; q: string; a: string }> = {
-                kr: { title: '학습된 Q&A (이전 고객 질문과 관리자 답변 — 유사 질문에 활용)', q: '질문', a: '답변' },
-                ja: { title: '学習済みQ&A（過去の質問と管理者回答 — 類似質問に活用）', q: '質問', a: '回答' },
-                us: { title: 'Learned Q&A (past questions with admin answers — use for similar questions)', q: 'Q', a: 'A' },
+                kr: { title: '학습된 Q&A (이전 고객 질문과 관리자 답변)', q: '질문', a: '답변' },
+                ja: { title: '学習済みQ&A', q: '質問', a: '回答' },
+                us: { title: 'Learned Q&A', q: 'Q', a: 'A' },
             };
             const ql = qaLabels[clientLang] || qaLabels['kr'];
             qaSection = `\n\n## ${ql.title}\n` + qaData.map((q: any) =>
@@ -218,30 +223,32 @@ Rule: ALWAYS put exactly 2 products in the products array. 0 forbidden. 1 forbid
         const systemPrompt = `${langPrompts[clientLang] || langPrompts['kr']}
 ${labels.note}
 ## ${labels.products}
-${JSON.stringify(products.map(p => ({ code: p.code, name: p.name, category: p.category, size: p.width_mm + 'x' + p.height_mm + 'mm', is_custom_size: p.is_custom_size, price: p.price_display, price_per_sqm: p.price_per_sqm_display })))}
+${JSON.stringify(products.map(p => ({ code: p.code, name: p.name, category: p.category, desc: (p.description || '').substring(0, 100), img: p.img_url || '', size: p.width_mm + 'x' + p.height_mm + 'mm', is_custom_size: p.is_custom_size, is_bulk_order: p.is_bulk_order, qty_options: p.quantity_options, price: p.price_display, price_per_sqm: p.price_per_sqm_display })))}
 
 ## ${labels.categories}
 ${JSON.stringify(categories)}${qaSection}`;
 
-        // Claude API — tool_choice: auto (대화 or 추천)
+        // Claude API — tool_choice: auto (대화 or 추천 자유)
         const tools = [{
             name: "recommend_products",
-            description: "ALWAYS return exactly 2 products AND a summary. For contact/phone/hours inquiries: include actual company contact info (phone, email, address) in the summary field, AND also recommend 2 popular products. For product requests: recommend relevant items. For casual chat: recommend popular items. NEVER return 0 products.",
+            description: "Return a response to the customer. Set products array ONLY when recommending products. For casual chat/greetings/contact inquiries, set products to empty array []. Product count: 0 to 5 depending on context.",
             input_schema: {
                 type: "object" as const,
                 properties: {
-                    summary: { type: "string" as const, description: "Main response to the customer (in customer's language). For contact/phone/hours inquiries, MUST include actual company phone numbers and contact details here." },
+                    summary: { type: "string" as const, description: "Main response to the customer (in customer's language). This is what the customer will see as chat message." },
                     products: {
                         type: "array" as const,
+                        description: "Recommended products. Empty array [] for non-product conversations. 1-5 items for product recommendations.",
                         items: {
                             type: "object" as const,
                             properties: {
                                 code: { type: "string" as const },
                                 name: { type: "string" as const },
                                 reason: { type: "string" as const },
-                                recommended_width_mm: { type: "number" as const },
-                                recommended_height_mm: { type: "number" as const },
-                                price_display: { type: "string" as const },
+                                recommended_width_mm: { type: "number" as const, description: "0 if custom size product and customer hasn't specified size" },
+                                recommended_height_mm: { type: "number" as const, description: "0 if custom size product and customer hasn't specified size" },
+                                price_display: { type: "string" as const, description: "Price string. For custom size without dimensions, say 'size needed' in customer language" },
+                                img_url: { type: "string" as const, description: "Product thumbnail URL from product data" },
                                 design_title: { type: "string" as const },
                                 design_keywords: { type: "array" as const, items: { type: "string" as const } }
                             },
@@ -286,12 +293,43 @@ ${JSON.stringify(categories)}${qaSection}`;
             return content;
         }
 
-        // 항상 tool 강제 — 시스템 프롬프트에서 일상대화는 빈 products로 처리
+        // 대화 기록 구성
+        const messages: any[] = [];
+        if (conversation_history && Array.isArray(conversation_history) && conversation_history.length > 0) {
+            // 최근 10개 메시지만 사용 (토큰 절약)
+            const recent = conversation_history.slice(-10);
+            recent.forEach((msg: any) => {
+                if (msg.role === 'user') {
+                    messages.push({ role: 'user', content: msg.content });
+                } else if (msg.role === 'assistant') {
+                    // assistant 메시지는 tool_use 형태로 변환
+                    messages.push({
+                        role: 'assistant',
+                        content: [{
+                            type: 'tool_use',
+                            id: 'prev_' + Math.random().toString(36).slice(2),
+                            name: 'recommend_products',
+                            input: { summary: msg.content, products: msg.products || [] }
+                        }]
+                    });
+                    messages.push({
+                        role: 'user',
+                        content: [{
+                            type: 'tool_result',
+                            tool_use_id: messages[messages.length - 1].content[0].id,
+                            content: 'OK'
+                        }]
+                    });
+                }
+            });
+        }
+        // 현재 메시지 추가
+        messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type) });
+
         const toolChoice = { type: "tool" as const, name: "recommend_products" };
-        console.log(`toolChoice=forced, msg="${trimmedMsg.substring(0,30)}"`);
+        console.log(`[kapu] msg="${trimmedMsg.substring(0,40)}", history=${conversation_history?.length || 0}`);
 
         async function callClaude(model: string, retries = 0): Promise<any> {
-            console.log(`Calling Claude: model=${model}, retries=${retries}`);
             const res = await fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
                 headers: {
@@ -301,11 +339,11 @@ ${JSON.stringify(categories)}${qaSection}`;
                 },
                 body: JSON.stringify({
                     model,
-                    max_tokens: 1024,
+                    max_tokens: 2048,
                     system: systemPrompt,
                     tools,
                     tool_choice: toolChoice,
-                    messages: [{ role: "user", content: buildUserContent(trimmedMsg, image, image_type) }],
+                    messages,
                 }),
             });
 
@@ -326,83 +364,57 @@ ${JSON.stringify(categories)}${qaSection}`;
             }
 
             const data = await res.json();
-
-            // tool_use 블록 처리 (항상 있어야 함 — tool_choice 강제)
             const blocks = data.content || [];
             const toolBlock = blocks.find((b: any) => b.type === "tool_use");
-            console.log(`Response: stop=${data.stop_reason}, blocks=${blocks.map((b:any)=>b.type).join(',')}, hasTool=${!!toolBlock}`);
             if (toolBlock) {
                 const result = toolBlock.input;
-                // chat_message 설정: summary를 기본으로 사용
-                if (!result.chat_message) {
-                    result.chat_message = result.summary || '';
-                }
-                // products가 비어있으면 일상대화 → chat 타입
+                if (!result.chat_message) result.chat_message = result.summary || '';
                 const hasProducts = result.products && result.products.length > 0;
                 result.type = hasProducts ? "recommendation" : "chat";
                 if (!hasProducts) result.products = [];
                 result._model = model;
+
+                // img_url 보강: AI가 빠뜨려도 DB에서 매칭
+                if (result.products) {
+                    result.products.forEach((rec: any) => {
+                        const dbProduct = products.find(p => p.code === rec.code);
+                        if (dbProduct) {
+                            if (!rec.img_url) rec.img_url = dbProduct.img_url || '';
+                            rec._raw_price_krw = dbProduct._raw_price;
+                            rec._raw_per_sqm_krw = dbProduct._raw_per_sqm;
+                            rec.is_custom_size = dbProduct.is_custom_size;
+                        }
+                    });
+                }
+
                 return result;
             }
 
-            // fallback: 텍스트만 있으면 대화
             const textParts = blocks.filter((b: any) => b.type === "text").map((b: any) => b.text);
-            return {
-                type: "chat",
-                chat_message: textParts.join("\n") || "...",
-                products: [],
-                _model: model
-            };
+            return { type: "chat", chat_message: textParts.join("\n") || "...", products: [], _model: model };
         }
 
         const result = await callClaude("claude-sonnet-4-20250514");
-        result._v = "2026-03-03-v9-contact-info";
+        result._v = "2026-03-03-v10-kapu-smart";
 
-        // 연락처 관련 질문 감지 → AI가 빠뜨려도 프로그래밍적으로 보장
+        // 연락처 관련 질문 감지 → 프로그래밍적 보장
         const msgLower = trimmedMsg.toLowerCase();
-        // Japanese chars via fromCharCode to avoid encoding issues on deploy
-        const JP_DENWA = String.fromCharCode(0x96FB, 0x8A71);      // 電話
-        const JP_RENRAKU = String.fromCharCode(0x9023, 0x7D61);    // 連絡
-        const JP_TOIAWASE = String.fromCharCode(0x554F, 0x3044, 0x5408, 0x308F, 0x305B); // 問い合わせ
-        const JP_MAIL = String.fromCharCode(0x30E1, 0x30FC, 0x30EB); // メール
+        const JP_DENWA = String.fromCharCode(0x96FB, 0x8A71);
+        const JP_RENRAKU = String.fromCharCode(0x9023, 0x7D61);
+        const JP_TOIAWASE = String.fromCharCode(0x554F, 0x3044, 0x5408, 0x308F, 0x305B);
+        const JP_MAIL = String.fromCharCode(0x30E1, 0x30FC, 0x30EB);
         const isContactQuery = ['전화','연락처','번호','phone','call','contact','메일','email','이메일'].some(k => msgLower.includes(k))
             || [JP_DENWA, JP_RENRAKU, JP_TOIAWASE, JP_MAIL].some(k => trimmedMsg.includes(k));
         if (isContactQuery) {
             const chatMsg = result.chat_message || result.summary || '';
             const contactInfos: Record<string, string> = {
-                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n💬 AI 챗봇은 24시간 운영됩니다!",
-                ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: support@cafe0101.com\n🏢 住所: 〒270-0023 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 AIチャットボットは24時間対応しています！",
-                us: "\n\n📧 Email: support@cafe0101.com\n🌐 Website: https://www.cafe3355.com\n🕐 Hours: Weekdays 09:00-18:00 KST\n💬 AI Chatbot available 24/7!",
+                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n📧 대용량 파일: korea900@hanmail.net\n💬 카푸는 24시간 운영됩니다!",
+                ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: support@cafe0101.com\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 カプは24時間対応！",
+                us: "\n\n📧 Email: support@cafe0101.com / korea900as@gmail.com\n🕐 Hours: Weekdays 09:00-18:00 KST\n💬 Kapu is available 24/7!",
             };
             const hasContact = chatMsg.includes('010-') || chatMsg.includes('047-') || chatMsg.includes('support@');
             if (!hasContact) {
                 result.chat_message = chatMsg + (contactInfos[clientLang] || contactInfos['kr']);
-            }
-        }
-
-        // 추천 제품에 raw price 보강 + 사이즈 질문 자동 추가
-        if (result.products && result.products.length > 0) {
-            result.products.forEach((rec: any) => {
-                const dbProduct = products.find(p => p.code === rec.code);
-                if (dbProduct) {
-                    rec._raw_price_krw = dbProduct._raw_price;
-                    rec._raw_per_sqm_krw = dbProduct._raw_per_sqm;
-                    rec.is_custom_size = dbProduct.is_custom_size;
-                }
-            });
-
-            // AI가 사이즈 질문을 빠뜨릴 수 있으므로 프로그래밍적으로 보장
-            const sizeQs: Record<string, string> = {
-                kr: "\n\n원하시는 사이즈(가로×세로mm)를 알려주시면 정확한 가격을 안내해 드릴게요! 📐",
-                ja: "\n\nご希望のサイズ（横×縦mm）を教えていただければ正確な価格をご案内します！📐",
-                us: "\n\nWhat size (width×height mm) would you like? I'll give you an exact price! 📐",
-            };
-            const sizeQ = sizeQs[clientLang] || sizeQs['kr'];
-            const chatMsg = result.chat_message || result.summary || '';
-            // 사이즈 관련 키워드가 이미 있으면 추가하지 않음
-            const hasSizeQ = chatMsg.includes('사이즈') || chatMsg.includes('サイズ') || chatMsg.includes('size') || chatMsg.includes('Size');
-            if (!hasSizeQ && !isContactQuery) {
-                result.chat_message = chatMsg + sizeQ;
             }
         }
 
@@ -435,7 +447,6 @@ ${JSON.stringify(categories)}${qaSection}`;
         };
         let errKey = (reqBody?.lang || 'kr').toLowerCase();
         if (errKey === 'en') errKey = 'us';
-        console.error("errKey:", errKey, "error:", (error as Error)?.message);
         return new Response(
             JSON.stringify({ type: "chat", chat_message: errMsgs[errKey] || errMsgs['kr'], products: [] }),
             { status: 200, headers: { ...cors, "Content-Type": "application/json" } }

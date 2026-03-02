@@ -1,5 +1,5 @@
 // ============================================================
-// advisor-panel.js — AI 카멜 인라인 채팅 패널
+// advisor-panel.js — 카푸 AI 쇼핑 안내 인라인 채팅 패널
 // 검색바 아래 대형 채팅창. 순수 AI 전용 (상담사 없음)
 // ============================================================
 
@@ -16,9 +16,9 @@ function getLang() {
 }
 
 const T = {
-    kr: { title: 'AI 카멜', subtitle: '무엇이든 물어보세요', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 5MB)', error: '앗, 연결이 불안정해요 😅 잠시 후 다시 시도해주세요!' },
-    ja: { title: 'AI カメル', subtitle: '何でもお聞きください', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大5MB）', error: '接続が不安定です 😅 しばらくしてからお試しください！' },
-    en: { title: 'AI Chamel', subtitle: 'Ask me anything', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 5MB)', error: 'Connection unstable 😅 Please try again!' },
+    kr: { title: '카푸', subtitle: '쇼핑을 안내해 드립니다', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 korea900@hanmail.net으로 보내주세요.', error: '앗, 연결이 불안정해요 😅 잠시 후 다시 시도해주세요!' },
+    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはsupport@cafe0101.comへお送りください。', error: '接続が不安定です 😅 しばらくしてからお試しください！' },
+    en: { title: 'Kapu', subtitle: 'Your shopping guide', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email korea900as@gmail.com.', error: 'Connection unstable 😅 Please try again!' },
 };
 function t(key) { const l = getLang(); return (T[l] && T[l][key]) || T['en'][key] || ''; }
 
@@ -27,6 +27,7 @@ let chatArea = null;
 let isProcessing = false;
 let lastProducts = [];
 let pendingImage = null; // { base64, type, name, previewUrl }
+let conversationHistory = []; // 대화 기록 (세션 내 유지)
 
 // ─── 초기화 ───
 export function initAdvisorPanel() {
@@ -36,8 +37,8 @@ export function initAdvisorPanel() {
     // 전역 함수 등록 (index.html의 onkeydown에서 호출)
     window._startAdvisor = startAdvisor;
 
-    // AI 추천 버튼 (복수 지원: btnAiAdvisor, btnAiAdvisor2)
-    ['btnAiAdvisor', 'btnAiAdvisor2'].forEach(id => {
+    // AI 추천 버튼 (복수 지원: btnAiAdvisor, btnAiAdvisor2, btnKapuGuide)
+    ['btnAiAdvisor', 'btnAiAdvisor2', 'btnKapuGuide'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
             btn.addEventListener('click', () => {
@@ -93,7 +94,7 @@ function buildPanelUI() {
     `;
     chatArea = document.getElementById('advChatArea');
 
-    // 닫기
+    // 닫기 (대화기록은 유지 — 패널 닫았다 열어도 이전 대화 기억)
     document.getElementById('advCloseBtn').addEventListener('click', () => {
         panelEl.style.display = 'none';
     });
@@ -140,8 +141,8 @@ function handleFileSelect(e) {
     if (!file) return;
     e.target.value = ''; // reset for re-select
 
-    // 크기 제한 5MB
-    if (file.size > 5 * 1024 * 1024) {
+    // 크기 제한 10MB
+    if (file.size > 10 * 1024 * 1024) {
         addBubble(t('tooBig'), 'ai');
         return;
     }
@@ -202,11 +203,18 @@ async function sendMessage(text, imageData) {
         addBubble(text, 'user');
     }
 
+    // 대화 기록에 유저 메시지 추가
+    conversationHistory.push({ role: 'user', content: text || '(image)' });
+
     // 타이핑 표시
     const typingEl = addTyping();
 
     try {
-        const payload = { message: text, lang: getLang() };
+        const payload = {
+            message: text,
+            lang: getLang(),
+            conversation_history: conversationHistory.slice(-20) // 최근 20개까지 전송
+        };
         if (imageData) {
             payload.image = imageData.base64;
             payload.image_type = imageData.type;
@@ -231,8 +239,15 @@ async function sendMessage(text, imageData) {
         const chatMsg = data.chat_message || data.summary || '';
         if (chatMsg) addBubble(chatMsg, 'ai');
 
-        // 제품 카드
+        // 대화 기록에 AI 응답 추가
         const products = data.products || [];
+        conversationHistory.push({
+            role: 'assistant',
+            content: chatMsg,
+            products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
+        });
+
+        // 제품 카드
         if (products.length > 0) {
             lastProducts = products;
             addProductCards(products);
@@ -312,14 +327,23 @@ function addProductCards(products) {
     products.forEach((rec, i) => {
         const card = document.createElement('div');
         card.className = 'adv-card';
+        const thumbUrl = rec.img_url || '';
+        const thumbHtml = thumbUrl ? `<img src="${esc(thumbUrl)}" class="adv-card-thumb" alt="${esc(rec.name)}" onerror="this.style.display='none'">` : '';
+        // 사이즈 표시: width=0, height=0 이면 "사이즈 자유" 표시
+        const w = rec.recommended_width_mm || 0;
+        const h = rec.recommended_height_mm || 0;
+        const sizeText = (w > 0 && h > 0)
+            ? `${w}\u00d7${h}mm`
+            : (getLang() === 'ja' ? 'サイズ自由' : getLang() === 'en' ? 'Custom size' : '사이즈 자유');
         card.innerHTML = `
+            ${thumbHtml}
             <div class="adv-card-top">
                 <span class="adv-card-badge">${i + 1}</span>
                 <span class="adv-card-name">${esc(rec.name)}</span>
             </div>
             <p class="adv-card-reason">${esc(rec.reason)}</p>
             <div class="adv-card-meta">
-                <span><i class="fa-solid fa-ruler-combined"></i> ${esc(String(rec.recommended_width_mm))}\u00d7${esc(String(rec.recommended_height_mm))}mm</span>
+                <span><i class="fa-solid fa-ruler-combined"></i> ${sizeText}</span>
                 ${rec.price_display ? `<span><i class="fa-solid fa-tag"></i> ${esc(rec.price_display)}</span>` : ''}
             </div>
             <div class="adv-card-btns">

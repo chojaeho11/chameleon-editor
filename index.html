@@ -518,13 +518,61 @@
             box-shadow: 0 6px 24px rgba(180, 170, 200, 0.4), inset 0 1px 0 rgba(255,255,255,0.9);
         }
     </style>
-    <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px; padding:0 15px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
-        <button id="btnDesignStart" onclick="window.openProductPickerModal()">
-            <i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> <span data-i18n="dsm_btn_start">제품검색</span>
-        </button>
-        <button id="btnAiAdvisor2" class="hero-ai-btn" style="padding:14px 32px; font-size:15px; border-radius:50px;">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span data-i18n="btn_ai_advisor">AI 제품 추천받기</span>
+    <!-- 카푸 쇼핑 안내 (화려한 메인 버튼) -->
+    <style>
+        #btnKapuGuide {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; max-width: 640px; margin: 0 auto 12px auto;
+            padding: 18px 28px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7, #ec4899);
+            background-size: 300% 300%;
+            animation: kapuGlow 4s ease infinite;
+            color: #fff; border: none; border-radius: 60px;
+            font-size: 17px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 24px rgba(139,92,246,0.45), 0 0 60px rgba(168,85,247,0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative; overflow: hidden;
+            letter-spacing: -0.3px;
+        }
+        #btnKapuGuide::before {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            animation: kapuSweep 2.5s ease-in-out infinite;
+        }
+        #btnKapuGuide:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 32px rgba(139,92,246,0.55), 0 0 80px rgba(168,85,247,0.2);
+        }
+        @keyframes kapuGlow {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        @keyframes kapuSweep {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+        .kapu-subtitle {
+            display: block; font-size: 12px; font-weight: 500; opacity: 0.9;
+            margin-top: 2px;
+        }
+        .kapu-icon-bounce {
+            font-size: 22px;
+            animation: kapuBounce 1.5s ease infinite;
+        }
+        @keyframes kapuBounce {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+    </style>
+    <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px; padding:0 15px;">
+        <button id="btnKapuGuide" class="hero-ai-btn">
+            <span class="kapu-icon-bounce">🐾</span>
+            <span style="text-align:left; line-height:1.3;">
+                <span data-i18n="btn_kapu_guide">카푸가 쇼핑을 안내해 드립니다</span>
+                <span class="kapu-subtitle" data-i18n="btn_kapu_sub">고민이나 농담도 괜찮아요 ^^</span>
+            </span>
+            <i class="fa-solid fa-wand-magic-sparkles" style="font-size:18px; opacity:0.8;"></i>
         </button>
     </div>
     <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
@@ -829,6 +877,13 @@
     }
 })();
 </script>
+
+<!-- 제품검색 버튼 (핫딜 바로 위) -->
+<div style="text-align:center; margin: 20px auto 15px auto; max-width:1000px; padding:0 15px;">
+    <button id="btnDesignStart" onclick="window.openProductPickerModal()">
+        <i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> <span data-i18n="dsm_btn_start">제품검색</span>
+    </button>
+</div>
 
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
@@ -1468,9 +1523,9 @@ async function handleSubReturn() {
     </button>
 </div>
 <div style="text-align:center; margin-top:8px;">
-    <button id="btnAiAdvisor" class="hero-ai-btn">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <span data-i18n="btn_ai_advisor">AI 제품 추천받기</span>
+    <button id="btnAiAdvisor" class="hero-ai-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7,#ec4899); background-size:300% 300%; animation:kapuGlow 4s ease infinite; color:#fff; border:none; padding:14px 28px; border-radius:50px; font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 3px 16px rgba(139,92,246,0.35);">
+        <span style="margin-right:4px;">🐾</span>
+        <span data-i18n="btn_kapu_guide">카푸가 쇼핑을 안내해 드립니다</span>
     </button>
 </div>
 <div class="pagination-wrapper" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:20px 0 15px 0;">
