@@ -11101,6 +11101,7 @@ window.dsmRenderProducts = async function(keyword) {
 
     function fmtBot(text) {
         return text
+            .replace(/\n/g, '<br>')
             .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
             .replace(/`(.*?)`/g, '<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:14px;">$1</code>');
     }
@@ -11399,52 +11400,103 @@ window.dsmRenderProducts = async function(keyword) {
         if (window._chamOnManagerTakeover) window._chamOnManagerTakeover(_aiRoom, managerName);
     }
 
+    // ── product-advisor 기반 대화형 AI (대화 + 제품 추천) ──
+    var _ADVISOR_URL = SUPA_URL + '/functions/v1/product-advisor';
+    var _errGeneral = {
+        kr: "죄송합니다, 일시적인 오류가 발생했어요 😥\n잠시 후 다시 시도하시거나, 하단 '상담사 연결' 버튼을 눌러주세요!",
+        ja: "申し訳ございません、一時的なエラーが発生しました 😥\nしばらくしてから再度お試しいただくか、下の「相談員に接続」ボタンをご利用ください！",
+        us: "Sorry, a temporary error occurred 😥\nPlease try again shortly, or click 'Connect to Agent' below!",
+        zh: "抱歉，发生了临时错误 😥\n请稍后重试，或点击下方'连接客服'按钮！",
+        ar: "عذراً، حدث خطأ مؤقت 😥\nيرجى المحاولة لاحقاً أو انقر على 'الاتصال بالوكيل' أدناه!",
+        es: "Lo sentimos, ocurrió un error temporal 😥\nInténtelo de nuevo o haga clic en 'Conectar con agente' abajo.",
+        de: "Entschuldigung, ein vorübergehender Fehler ist aufgetreten 😥\nBitte versuchen Sie es erneut oder klicken Sie unten auf 'Mit Agent verbinden'!",
+        fr: "Désolé, une erreur temporaire s'est produite 😥\nVeuillez réessayer ou cliquez sur 'Contacter un agent' ci-dessous !"
+    };
+
     function askAI(userMessage) {
-        var _lang = (function(){ var p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase(); var h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
-        var _errOffline = {
-            kr: "현재 서버 연결 중입니다. 잠시 후 다시 시도해주세요!\n\n급하신 문의는 하단 '상담사 연결' 버튼을 눌러주세요 😊",
-            ja: "現在サーバーに接続中です。しばらくしてから再度お試しください！\n\nお急ぎの場合は下の「相談員に接続」ボタンをご利用ください 😊",
-            us: "Connecting to server. Please try again shortly!\n\nFor urgent inquiries, click 'Connect to Agent' below 😊",
-            zh: "正在连接服务器，请稍后重试！\n\n紧急咨询请点击下方'连接客服'按钮 😊",
-            ar: "جاري الاتصال بالخادم. يرجى المحاولة لاحقاً!\n\nللاستفسارات العاجلة، انقر على 'الاتصال بالوكيل' أدناه 😊",
-            es: "Conectando al servidor. ¡Inténtelo de nuevo en breve!\n\nPara consultas urgentes, haga clic en 'Conectar con agente' abajo 😊",
-            de: "Verbindung zum Server wird hergestellt. Bitte versuchen Sie es gleich erneut!\n\nFür dringende Anfragen klicken Sie unten auf 'Mit Agent verbinden' 😊",
-            fr: "Connexion au serveur en cours. Veuillez réessayer dans un instant !\n\nPour les demandes urgentes, cliquez sur 'Contacter un agent' ci-dessous 😊"
-        };
-        var _errEmpty = {
-            kr: "응답을 처리하지 못했습니다. 다시 시도해주세요.",
-            ja: "応答を処理できませんでした。もう一度お試しください。",
-            us: "Could not process the response. Please try again.",
-            zh: "无法处理响应，请重试。",
-            ar: "تعذرت معالجة الاستجابة. يرجى المحاولة مرة أخرى.",
-            es: "No se pudo procesar la respuesta. Inténtelo de nuevo.",
-            de: "Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.",
-            fr: "Impossible de traiter la réponse. Veuillez réessayer."
-        };
-        var _errGeneral = {
-            kr: "죄송합니다, 일시적인 오류가 발생했어요 😥\n잠시 후 다시 시도하시거나, 하단 '상담사 연결' 버튼을 눌러주세요!",
-            ja: "申し訳ございません、一時的なエラーが発生しました 😥\nしばらくしてから再度お試しいただくか、下の「相談員に接続」ボタンをご利用ください！",
-            us: "Sorry, a temporary error occurred 😥\nPlease try again shortly, or click 'Connect to Agent' below!",
-            zh: "抱歉，发生了临时错误 😥\n请稍后重试，或点击下方'连接客服'按钮！",
-            ar: "عذراً، حدث خطأ مؤقت 😥\nيرجى المحاولة لاحقاً أو انقر على 'الاتصال بالوكيل' أدناه!",
-            es: "Lo sentimos, ocurrió un error temporal 😥\nInténtelo de nuevo o haga clic en 'Conectar con agente' abajo.",
-            de: "Entschuldigung, ein vorübergehender Fehler ist aufgetreten 😥\nBitte versuchen Sie es erneut oder klicken Sie unten auf 'Mit Agent verbinden'!",
-            fr: "Désolé, une erreur temporaire s'est produite 😥\nVeuillez réessayer ou cliquez sur 'Contacter un agent' ci-dessous !"
-        };
-        var _l = (_lang === 'en') ? 'us' : _lang;
-        if (!db) {
-            return Promise.resolve(_errOffline[_l] || _errOffline['kr']);
-        }
-        return db.functions.invoke('chatbot-ai', {
-            body: { message: userMessage, history: chatHistory.slice(-8), lang: _lang }
-        }).then(function(result) {
-            if (result.error) throw result.error;
-            return (result.data && result.data.reply) || (_errEmpty[_l] || _errEmpty['kr']);
+        var _l = (_chamLang === 'en') ? 'us' : _chamLang;
+        return fetch(_ADVISOR_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMessage, lang: _chamLang })
+        }).then(function(res) {
+            if (!res.ok) throw new Error('API ' + res.status);
+            return res.json();
+        }).then(function(data) {
+            return data;  // { type, chat_message, products[] }
         }).catch(function(e) {
             console.error('AI 호출 오류:', e);
-            return _errGeneral[_l] || _errGeneral['kr'];
+            return { type: 'chat', chat_message: _errGeneral[_l] || _errGeneral['kr'], products: [] };
         });
     }
+
+    // 제품 추천 카드 렌더링
+    function addProductCards(products) {
+        var c = getEl('chamMessages');
+        if (!c) return;
+        var _l = (_chamLang === 'en') ? 'us' : _chamLang;
+        var editorLabel = { kr: '에디터에서 디자인', ja: 'エディターでデザイン', us: 'Design in Editor', zh: '在编辑器中设计', ar: 'التصميم في المحرر', es: 'Diseñar en Editor', de: 'Im Editor designen', fr: 'Designer dans l\'éditeur' };
+        var cartLabel = { kr: '장바구니', ja: 'カートに入れる', us: 'Add to Cart', zh: '加入购物车', ar: 'أضف إلى السلة', es: 'Agregar al carrito', de: 'In den Warenkorb', fr: 'Ajouter au panier' };
+        var html = '<div style="padding:4px 0;">';
+        products.forEach(function(rec, i) {
+            html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin:8px 44px 8px 0;">';
+            html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">';
+            html += '<span style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">' + (i+1) + '</span>';
+            html += '<span style="font-weight:700; color:#1e293b; font-size:14px;">' + escHtml(rec.name) + '</span>';
+            html += '</div>';
+            html += '<p style="color:#64748b; font-size:13px; margin:0 0 8px; line-height:1.4;">' + escHtml(rec.reason) + '</p>';
+            html += '<div style="display:flex; gap:8px; font-size:12px; color:#64748b; margin-bottom:10px; flex-wrap:wrap;">';
+            html += '<span><i class="fa-solid fa-ruler-combined"></i> ' + rec.recommended_width_mm + '\u00d7' + rec.recommended_height_mm + 'mm</span>';
+            if (rec.price_display) html += '<span><i class="fa-solid fa-tag"></i> ' + escHtml(rec.price_display) + '</span>';
+            html += '</div>';
+            html += '<div style="display:flex; gap:6px;">';
+            html += '<button onclick="window._chamOpenEditor(' + i + ')" style="flex:1; padding:8px; border:none; border-radius:8px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:600; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'"><i class="fa-solid fa-palette"></i> ' + (editorLabel[_l] || editorLabel['us']) + '</button>';
+            html += '<button onclick="window._chamAddCart(' + i + ',this)" style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; color:#334155; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.borderColor=\'#6366f1\'" onmouseout="this.style.borderColor=\'#e2e8f0\'"><i class="fa-solid fa-cart-plus"></i> ' + (cartLabel[_l] || cartLabel['us']) + '</button>';
+            html += '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+        c.insertAdjacentHTML('beforeend', html);
+        _scrollChatBottom();
+        window._chamLastProducts = products;
+    }
+
+    // 제품 카드 액션: 에디터 열기
+    window._chamOpenEditor = function(idx) {
+        var rec = window._chamLastProducts && window._chamLastProducts[idx];
+        if (!rec || !window.startEditorDirect) return;
+        if (rec.code && rec.code.startsWith('hcl_')) {
+            window.__letterSignMode = true;
+            window.__letterSignData = { titleText: rec.design_title || '', bottomText: '', style: 'forest' };
+        } else {
+            window.__advisorDesignPending = { title: rec.design_title || '', keywords: rec.design_keywords || [], style: 'forest' };
+        }
+        _closeBotWindow();
+        window.startEditorDirect(rec.code, rec.recommended_width_mm, rec.recommended_height_mm);
+    };
+
+    // 제품 카드 액션: 장바구니
+    window._chamAddCart = function(idx, btnEl) {
+        var rec = window._chamLastProducts && window._chamLastProducts[idx];
+        if (!rec) return;
+        import('./order.js?v=123').then(function(mod) {
+            var addFn = mod.addProductToCartDirectly;
+            if (!addFn) return;
+            var priceKRW = rec._raw_price_krw || 50000;
+            if (rec.is_custom_size && rec._raw_per_sqm_krw) {
+                var area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
+                priceKRW = Math.round((area * rec._raw_per_sqm_krw) / 100) * 100;
+            }
+            addFn({
+                code: rec.code, name: rec.name, price: priceKRW,
+                w_mm: rec.recommended_width_mm, h_mm: rec.recommended_height_mm,
+                width_mm: rec.recommended_width_mm, height_mm: rec.recommended_height_mm,
+                is_custom_size: rec.is_custom_size || false, img: null
+            }, 1, [], {});
+            if (btnEl) { btnEl.innerHTML = '<i class="fa-solid fa-check"></i> OK'; btnEl.disabled = true; btnEl.style.background = '#ecfdf5'; btnEl.style.color = '#059669'; btnEl.style.borderColor = '#059669'; }
+            if (window.updateCartBadge) window.updateCartBadge();
+        }).catch(function(e) { console.error('Cart error:', e); });
+    };
 
     function processInput(text) {
         if (isProcessing) return;
@@ -11453,17 +11505,25 @@ window.dsmRenderProducts = async function(keyword) {
         setLoading(true);
         showTyping();
 
-        // 첫 메시지 시 AI 채팅방 생성 후 진행
         ensureAiRoom().then(function() {
             saveMsg('customer', text);
             return askAI(text);
-        }).then(function(reply) {
+        }).then(function(data) {
             removeTyping();
-            addMsg(reply);
-            chatHistory.push({ role: 'assistant', content: reply });
+            var chatMsg = data.chat_message || data.summary || '';
+            if (chatMsg) {
+                addMsg(chatMsg);
+                chatHistory.push({ role: 'assistant', content: chatMsg });
+            }
+            if (data.products && data.products.length > 0) {
+                addProductCards(data.products);
+            }
+            if (!chatMsg && (!data.products || data.products.length === 0)) {
+                addMsg('...');
+            }
             if (chatHistory.length > 20) chatHistory = chatHistory.slice(-16);
             _saveChatHistory();
-            saveMsg('chatbot', reply);
+            if (chatMsg) saveMsg('chatbot', chatMsg);
         }).catch(function() {
             removeTyping();
             addMsg("오류가 발생했습니다. 다시 시도해주세요.");
@@ -11625,6 +11685,45 @@ window.dsmRenderProducts = async function(keyword) {
                 e.target.value = '';
             });
         }
+
+        // ── 검색바 Enter → ChamBot 열고 메시지 전송 (capture phase로 다른 핸들러보다 먼저 실행) ──
+        var heroSearchInput = document.getElementById('startSearchInput');
+        if (heroSearchInput) {
+            heroSearchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    var val = heroSearchInput.value.trim();
+                    if (!val) return;  // 빈 검색은 기존 동작 유지
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    heroSearchInput.blur();
+                    // ChamBot 열기
+                    var win = getEl('cham-bot-window');
+                    if (!win || !win.classList.contains('visible')) {
+                        toggleBot();
+                    }
+                    // 메시지 전송
+                    setTimeout(function() { processInput(val); }, 400);
+                }
+            }, true);  // capture: true — 다른 모든 keydown 핸들러보다 먼저 실행
+        }
+
+        // AI 추천 버튼도 ChamBot으로 연결
+        var aiBtn = document.getElementById('btnAiAdvisor');
+        if (aiBtn) {
+            aiBtn.addEventListener('click', function() {
+                var searchInput = document.getElementById('startSearchInput');
+                var val = searchInput ? searchInput.value.trim() : '';
+                // ChamBot 열기
+                var win = getEl('cham-bot-window');
+                if (!win || !win.classList.contains('visible')) {
+                    toggleBot();
+                }
+                if (val) {
+                    setTimeout(function() { processInput(val); }, 400);
+                }
+            });
+        }
     }
 
     // DOM 준비되면 바인딩
@@ -11653,10 +11752,11 @@ window.dsmRenderProducts = async function(keyword) {
     _saveChatOpen(false);
 
     // 전역 접근용
-    window.ChamBot = { toggle: toggleBot, send: sendMsg, newChat: newChat };
+    window.ChamBot = { toggle: toggleBot, send: sendMsg, newChat: newChat, processInput: processInput };
     window._ct = _ct;
     window._scrollChatBottom = _scrollChatBottom;
     window._custNotifyNewMsg = _custNotifyNewMsg;
+    console.log('🦎 ChamBot v2 (product-advisor) loaded @ ' + new Date().toISOString());
 
     console.log('\uD83E\uDD8E \uCE74\uBA5C\uB808\uC628 AI \uC0C1\uB2F4\uBD07 \uB85C\uB4DC \uC644\uB8CC');
 
