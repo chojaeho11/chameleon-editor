@@ -1040,17 +1040,8 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
     };
     const C = lsColors[style] || lsColors.forest;
 
-    // 배경 — 벽 색상 (밝은 회색)
-    window._wzBgColors = ['#e8e8e8', '#e8e8e8'];
-    const bgRect = new fabric.Rect({
-        width: bW, height: bH, left: bL, top: bT,
-        originX:'left', originY:'top', fill: '#e8e8e8',
-        selectable: false, evented: false, isTemplateBackground: true
-    });
-    canvas.add(bgRect);
-    canvas.sendToBack(bgRect);
-    const boardObj = canvas.getObjects().find(o => o.isBoard);
-    if (boardObj) { canvas.sendToBack(bgRect); canvas.sendToBack(boardObj); }
+    // 배경 없음 (타이틀 영역 투명, 하단 박스만 색상)
+    window._wzBgColors = ['transparent', 'transparent'];
 
     // 폰트
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
