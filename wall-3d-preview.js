@@ -287,7 +287,7 @@
                     case 'C': sp.bezierCurveTo(c.x1, -c.y1, c.x2, -c.y2, c.x, -c.y); break;
                 }
             }
-            const shapes = sp.toShapes(true);
+            const shapes = sp.toShapes(false);
             if (!shapes.length) return null;
 
             // 바운딩박스 계산
