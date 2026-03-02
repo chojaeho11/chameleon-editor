@@ -35,21 +35,20 @@ export function initAdvisorPanel() {
     // 전역 함수 등록 (index.html의 onkeydown에서 호출)
     window._startAdvisor = startAdvisor;
 
-    // AI 추천 버튼
-    const aiBtn = document.getElementById('btnAiAdvisor');
-    if (aiBtn) {
-        aiBtn.addEventListener('click', () => {
-            const input = document.getElementById('startSearchInput');
-            const val = input ? input.value.trim() : '';
-            if (val) {
-                input.value = '';
-                startAdvisor(val);
-            } else {
+    // AI 추천 버튼 (복수 지원: btnAiAdvisor, btnAiAdvisor2)
+    ['btnAiAdvisor', 'btnAiAdvisor2'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', () => {
                 openPanel();
-                if (input) input.focus();
-            }
-        });
-    }
+                panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => {
+                    const inp = document.getElementById('advInput');
+                    if (inp) inp.focus();
+                }, 400);
+            });
+        }
+    });
 
     console.log('✅ Advisor panel initialized, window._startAdvisor ready');
 }
