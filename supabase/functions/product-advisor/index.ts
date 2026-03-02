@@ -129,7 +129,14 @@ serve(async (req) => {
 6. **커스텀 사이즈 제품(is_custom_size=true)은 원하는 크기로 제작 가능** — 임의 사이즈를 추천하지 말고, "원하시는 사이즈로 제작 가능합니다. 사이즈를 알려주시면 정확한 가격을 안내해 드릴게요!" 라고 안내해. recommended_width_mm=0, recommended_height_mm=0으로 설정.
 7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
 8. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 korea900@hanmail.net으로 보내라고 안내.
-9. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시 관련 이미지를 올리면 구조를 분석하고 필요한 제품과 가격 정보를 상세히 안내해.
+9. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시/공간 연출 관련 이미지를 올리면:
+   - 이미지를 꼼꼼히 분석해. 가벽, 간판, 등신대, 장식물, 가구 등을 하나하나 파악.
+   - 이미지에 표시된 사이즈(예: "3m", "2000mm" 등)를 읽고 그걸 기반으로 가격 계산.
+   - 사이즈가 안 보이면 고객에게 "가벽의 가로/세로 사이즈를 알려주시면 정확한 견적을 드릴게요!" 라고 물어봐.
+   - 기본적으로 허니콤보드 벽체(가벽)와 가구가 메인이고, 간판/등신대/장식물 등이 추가됨.
+   - 각 요소별 대략적인 가격을 항목별로 안내: "🔹 가벽 3m×2.4m: 약 XX원 / 🔹 상단 간판: 약 XX원 / 🔹 등신대: 약 XX원"
+   - **대형 전시(총 예상금액 50만원 이상)인 경우**: 기본 가격 안내 + 관련 제품 추천 후, 마지막에 반드시 이렇게 말해: "대형 전시의 경우 담당 매니저와 더 정확한 견적 상담을 추천드립니다! 위의 🎧 상담사 연결 버튼을 눌러주세요 😊"
+   - 허니콤보드 제품코드는 hcb_ 또는 hcl_ 로 시작하는 제품들을 추천해.
 
 ## 가격 계산
 - is_custom_size: (가로mm/1000) × (세로mm/1000) × price_per_sqm
@@ -160,7 +167,7 @@ serve(async (req) => {
 6. **カスタムサイズ商品** — 任意サイズを推薦せず「ご希望のサイズで制作可能です」と案内。recommended_width_mm=0, recommended_height_mm=0。
 7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
 8. **画像アップ** — 10MBまで添付可。大きいファイルはメールsupport@cafe0101.comへ。
-9. **ハニカムボード展示** — 構造を分析し必要な商品・価格を詳しく案内。
+9. **ハニカムボード展示** — お客様が展示/空間演出の画像を送ったら：画像を細かく分析、壁・看板・等身大パネル・装飾を把握。画像にサイズ表示があれば読み取り価格計算。なければサイズを聞く。項目別に概算価格を案内。大型展示（50万ウォン以上）の場合「🎧 相談員接続ボタンを押してください」と案内。
 
 ⚠️ 連絡先規則: 絶対に作り上げないこと。以下のみ使用。
 ## 会社情報
@@ -185,7 +192,7 @@ serve(async (req) => {
 6. **Custom size products** — don't make up sizes, say "Available in your preferred size! Tell me dimensions for exact pricing." Set recommended_width_mm=0, recommended_height_mm=0.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
 8. **Image upload** — up to 10MB. Larger files: email korea900as@gmail.com.
-9. **Honeycomb exhibition references** — analyze structure, provide detailed pricing.
+9. **Honeycomb exhibition references** — When customer uploads exhibition/space design images: analyze carefully for walls, signs, standees, decorations. Read any dimensions shown (e.g. "3m"). If no sizes visible, ask. Provide itemized pricing estimates. For large exhibitions (est. >500,000 KRW), recommend connecting with a consultant via the 🎧 button.
 
 ⚠️ Contact rules: NEVER make up info. Use ONLY:
 ## Company Info
