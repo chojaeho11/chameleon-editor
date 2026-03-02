@@ -225,7 +225,7 @@
         if (!animFrameId) animate();
     }
 
-    // ─── 글씨 스카시 텍스처 생성 헬퍼 ───
+    // ─── 글씨 스카시 텍스처 생성 헬퍼 (박스 전면용) ───
     function _lsCreateTexture(text, bgColor, textColor, widthPx, heightPx, transparentBg) {
         const cvs = document.createElement('canvas');
         cvs.width = Math.max(widthPx, 64);
@@ -243,8 +243,7 @@
             ctx.font = `bold ${fontSize}px ${fontFamily}, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            const maxW = cvs.width * 0.85;
-            ctx.fillText(text, cvs.width / 2, cvs.height / 2, maxW);
+            ctx.fillText(text, cvs.width / 2, cvs.height / 2, cvs.width * 0.85);
         }
         const tex = new THREE.Texture(cvs);
         tex.needsUpdate = true;
@@ -252,7 +251,76 @@
         return tex;
     }
 
-    // ─── Build Letter Sign (스카시: 하단 30cm 박스 + 위 타이틀 패널) ───
+    // ─── 3D 입체 글씨 (opentype.js + ExtrudeGeometry) ───
+    async function _lsLoad3DFont() {
+        if (window.__lsFont) return window.__lsFont;
+        // opentype.js 로드
+        if (!window.opentype) {
+            await new Promise((res, rej) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js';
+                s.onload = res; s.onerror = rej;
+                document.head.appendChild(s);
+            });
+        }
+        // 한글 폰트 로드 (WOFF1)
+        const fontUrl = 'https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_231029@1.1/JalnanGothic.woff';
+        window.__lsFont = await new Promise((res, rej) => {
+            opentype.load(fontUrl, (err, font) => err ? rej(err) : res(font));
+        });
+        return window.__lsFont;
+    }
+
+    async function _lsBuild3DText(text, maxW, maxH, colorHex, depth) {
+        try {
+            const font = await _lsLoad3DFont();
+            if (!font || !text) return null;
+
+            // 글자 경로 → THREE.ShapePath
+            const opPath = font.getPath(text, 0, 0, 72);
+            const sp = new THREE.ShapePath();
+            for (const c of opPath.commands) {
+                switch (c.type) {
+                    case 'M': sp.moveTo(c.x, -c.y); break;
+                    case 'L': sp.lineTo(c.x, -c.y); break;
+                    case 'Q': sp.quadraticCurveTo(c.x1, -c.y1, c.x, -c.y); break;
+                    case 'C': sp.bezierCurveTo(c.x1, -c.y1, c.x2, -c.y2, c.x, -c.y); break;
+                }
+            }
+            const shapes = sp.toShapes(true);
+            if (!shapes.length) return null;
+
+            // 바운딩박스 계산
+            let minX = Infinity, maxX2 = -Infinity, minY = Infinity, maxY2 = -Infinity;
+            shapes.forEach(s => s.getPoints().forEach(p => {
+                if (p.x < minX) minX = p.x; if (p.x > maxX2) maxX2 = p.x;
+                if (p.y < minY) minY = p.y; if (p.y > maxY2) maxY2 = p.y;
+            }));
+            const tw = maxX2 - minX || 1, th = maxY2 - minY || 1;
+            const scale = Math.min((maxW * 0.85) / tw, (maxH * 0.9) / th);
+
+            // ExtrudeGeometry로 입체 글씨 생성
+            const mat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3 });
+            const extOpts = { depth: depth / scale, bevelEnabled: false };
+            const inner = new THREE.Group();
+            shapes.forEach(s => inner.add(new THREE.Mesh(new THREE.ExtrudeGeometry(s, extOpts), mat)));
+            inner.scale.set(scale, scale, scale);
+            inner.position.set(
+                -(minX + maxX2) / 2 * scale,  // X 중앙 정렬
+                -minY * scale,                  // 하단을 y=0에 맞춤
+                -depth / 2                      // Z 중앙 정렬
+            );
+
+            const container = new THREE.Group();
+            container.add(inner);
+            return container;
+        } catch (e) {
+            console.warn('3D text failed:', e);
+            return null;
+        }
+    }
+
+    // ─── Build Letter Sign (스카시: 하단 박스 + 위 3D 입체 글씨) ───
     function buildLetterSign(widthMM, heightMM, frontDataUrl) {
         if (wallGroup) {
             scene.remove(wallGroup);
@@ -266,14 +334,13 @@
         }
         wallGroup = new THREE.Group();
 
-        const w = widthMM / 1000; // 가로 (m)
-        const h = heightMM / 1000; // 전체 높이 (m)
-        const boxSize = 0.3; // 30cm = 0.3m
-        const panelH = h * 0.65; // 타이틀 영역 높이
+        const w = widthMM / 1000;
+        const h = heightMM / 1000;
+        const boxSize = 0.3;
+        const panelH = h * 0.65;
         const lsData = window.__letterSignData || {};
         const style = lsData.style || 'forest';
 
-        // 색상 맵
         const colorMap = {
             neon:    { box:'#1a237e', boxText:'#ffffff', hex:0x1a237e },
             ocean:   { box:'#004d40', boxText:'#ffffff', hex:0x004d40 },
@@ -289,32 +356,32 @@
         // ── 하단 박스 (서브 글씨를 전면에 표시) ──
         const boxGeo = new THREE.BoxGeometry(w, boxSize, boxSize);
         const boxDefaultMat = new THREE.MeshStandardMaterial({ color: C.hex, roughness: 0.3 });
-        // 박스 전면(+z) 텍스처: 서브 글씨
         const frontTex = _lsCreateTexture(lsData.bottomText || '', C.box, C.boxText,
             Math.round(w * 512), Math.round(boxSize * 512), false);
         const boxFrontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.3 });
-        // BoxGeometry 면 순서: +x, -x, +y, -y, +z(전면), -z(후면)
         const boxMats = [boxDefaultMat, boxDefaultMat, boxDefaultMat, boxDefaultMat, boxFrontMat, boxDefaultMat];
         const boxMesh = new THREE.Mesh(boxGeo, boxMats);
         boxMesh.position.set(0, boxSize / 2, 0);
         wallGroup.add(boxMesh);
 
-        // ── 상단 타이틀 (두께 있는 3D 글씨, 박스 바로 위, 가운데) ──
+        // ── 상단: 3D 입체 글씨 (opentype.js 비동기 로딩) ──
         const textDepth = 0.05; // 5cm 두께
-        const panelGeo = new THREE.BoxGeometry(w, panelH, textDepth);
-        const titleTex = _lsCreateTexture(lsData.titleText || '', 'transparent', C.box,
-            Math.round(w * 512), Math.round(panelH * 512), true);
-        const titleTexBack = _lsCreateTexture(lsData.titleText || '', 'transparent', C.box,
-            Math.round(w * 512), Math.round(panelH * 512), true);
-        const titleFrontMat = new THREE.MeshStandardMaterial({ map: titleTex, transparent: true, roughness: 0.3 });
-        const titleBackMat = new THREE.MeshStandardMaterial({ map: titleTexBack, transparent: true, roughness: 0.3 });
-        const titleSideMat = new THREE.MeshStandardMaterial({ color: C.hex, roughness: 0.3 });
-        // BoxGeometry 면: +x, -x, +y, -y, +z(전면), -z(후면)
-        const panelMats = [titleSideMat, titleSideMat, titleSideMat, titleSideMat, titleFrontMat, titleBackMat];
-        const panelMesh = new THREE.Mesh(panelGeo, panelMats);
-        // 가운데(z=0), 박스 바로 위에 붙임
-        panelMesh.position.set(0, boxSize + panelH / 2, 0);
-        wallGroup.add(panelMesh);
+        _lsBuild3DText(lsData.titleText || '', w, panelH, C.hex, textDepth).then(textGroup => {
+            if (textGroup && wallGroup) {
+                textGroup.position.y = boxSize; // 박스 바로 위에 붙임
+                wallGroup.add(textGroup);
+            }
+        }).catch(() => {
+            // Fallback: 텍스처 패널
+            if (!wallGroup) return;
+            const titleTex = _lsCreateTexture(lsData.titleText || '', 'transparent', C.box,
+                Math.round(w * 512), Math.round(panelH * 512), true);
+            const geo = new THREE.BoxGeometry(w, panelH, textDepth);
+            const mat = new THREE.MeshStandardMaterial({ map: titleTex, transparent: true, roughness: 0.3 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(0, boxSize + panelH / 2, 0);
+            wallGroup.add(mesh);
+        });
 
         scene.add(wallGroup);
 
