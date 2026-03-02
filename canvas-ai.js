@@ -1072,52 +1072,51 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
     });
     await new Promise(r => setTimeout(r, 400));
 
-    // ── 스카시 레이아웃 ──
-    // 하단 박스: 높이의 30%, 바닥에 밀착
-    const boxH = bH * 0.30;
+    // ── 스카시 레이아웃: 위=타이틀(크게), 아래=서브글씨 박스 ──
+
+    // 상단 타이틀 영역 (전체 높이의 상위 60%)
+    const titleSize = Math.max(Math.round(bH * 0.35), 30);
+    const titleTop = bT + bH * 0.05;
+
+    // 타이틀 그림자
+    canvas.add(new fabric.Textbox(titleText, {
+        fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
+        fill: '#000000', textAlign: 'center', opacity: 0.12,
+        originX: 'center', originY: 'top',
+        left: bL + bW / 2 + 3, top: titleTop + 4,
+        width: bW * 0.90, lineHeight: 1.1, charSpacing: 50,
+        selectable: false, evented: false,
+    }));
+
+    // 타이틀 메인 (테마색 = 박스색)
+    const titleObj = new fabric.Textbox(titleText, {
+        fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
+        fill: C.box, textAlign: 'center',
+        originX: 'center', originY: 'top',
+        left: bL + bW / 2, top: titleTop,
+        width: bW * 0.90, lineHeight: 1.1, charSpacing: 50,
+    });
+    canvas.add(titleObj);
+
+    // 하단 박스 (전체 높이의 하단 35%)
+    const boxH = bH * 0.35;
     const boxTop = bT + bH - boxH;
-    const boxRect = new fabric.Rect({
+    canvas.add(new fabric.Rect({
         width: bW, height: boxH, left: bL, top: boxTop,
         fill: C.box, originX:'left', originY:'top',
-    });
-    canvas.add(boxRect);
+    }));
 
-    // 하단 박스 텍스트
+    // 하단 박스 서브 텍스트
     if (bottomText) {
         const btSize = Math.max(Math.round(boxH * 0.22), 14);
-        const btObj = new fabric.Textbox(bottomText, {
+        canvas.add(new fabric.Textbox(bottomText, {
             fontFamily: descFont + ', sans-serif', fontSize: btSize, fontWeight: '700',
             fill: C.boxText, textAlign: 'center',
             originX: 'center', originY: 'center',
             left: bL + bW / 2, top: boxTop + boxH / 2,
             width: bW * 0.85, lineHeight: 1.3,
-        });
-        canvas.add(btObj);
+        }));
     }
-
-    // ── 타이틀: 박스 바로 위, 테마색 ──
-    const titleSize = Math.max(Math.round(bH * 0.30), 24);
-    const titleTop = boxTop - titleSize * 1.15 - 6; // 박스 바로 위
-
-    // 그림자 (입체감)
-    canvas.add(new fabric.Textbox(titleText, {
-        fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
-        fill: '#000000', textAlign: 'center', opacity: 0.15,
-        originX: 'left', originY: 'top',
-        left: bL + bW * 0.04 + 3, top: titleTop + 4,
-        width: bW * 0.92, lineHeight: 1.05, charSpacing: 50,
-        selectable: false, evented: false,
-    }));
-
-    // 메인 타이틀 (테마색 = 박스색)
-    const titleObj = new fabric.Textbox(titleText, {
-        fontFamily: titleFont, fontSize: titleSize, fontWeight: 'bold',
-        fill: C.box, textAlign: 'center',
-        originX: 'left', originY: 'top',
-        left: bL + bW * 0.04, top: titleTop,
-        width: bW * 0.92, lineHeight: 1.05, charSpacing: 50,
-    });
-    canvas.add(titleObj);
 
     canvas.requestRenderAll();
 

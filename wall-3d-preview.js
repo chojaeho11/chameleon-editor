@@ -225,7 +225,7 @@
         if (!animFrameId) animate();
     }
 
-    // ─── Build Letter Sign (스카시: 하단 박스 + 위 평판) ───
+    // ─── Build Letter Sign (스카시: 하단 30cm 박스 + 위 캔버스 패널) ───
     function buildLetterSign(widthMM, heightMM, frontDataUrl) {
         if (wallGroup) {
             scene.remove(wallGroup);
@@ -239,31 +239,31 @@
         }
         wallGroup = new THREE.Group();
 
-        const w = widthMM / 1000;
-        const h = heightMM / 1000;
-        const boxRatio = 0.30; // 하단 박스 비율
-        const boxH = h * boxRatio;
-        const boxDepth = 0.08; // 80mm 두께
-        const panelH = h * (1 - boxRatio);
+        const w = widthMM / 1000; // 가로 (m)
+        const h = heightMM / 1000; // 전체 높이 (m)
+        // 하단 박스: 폭30cm × 높이30cm × 두께30cm (가로만 제품 길이)
+        const boxSize = 0.3; // 30cm = 0.3m
+        const panelH = h; // 패널은 전체 캔버스 높이
         const panelDepth = 0.015; // 15mm 얇은 판
 
-        // 하단 박스 (두꺼운 사각 바)
-        const boxGeo = new THREE.BoxGeometry(w, boxH, boxDepth);
+        // 하단 박스 (30cm 정육면체, 가로만 제품 폭)
+        const boxGeo = new THREE.BoxGeometry(w, boxSize, boxSize);
         const lsData = window.__letterSignData || {};
         const boxColor = { forest:0x1b5e20, neon:0x1a237e, ocean:0x004d40, flame:0xbf360c, minimal:0x212121, luxury:0x3e2723, pastel:0x6a1b9a, retro:0x4e342e }[lsData.style] || 0x1b5e20;
         const boxMat = new THREE.MeshStandardMaterial({ color: boxColor, roughness: 0.3 });
         const boxMesh = new THREE.Mesh(boxGeo, boxMat);
-        boxMesh.position.set(0, boxH / 2, 0);
+        boxMesh.position.set(0, boxSize / 2, 0);
         wallGroup.add(boxMesh);
 
-        // 상단 패널 (얇은 판 + 캔버스 텍스처)
+        // 상단 패널 (캔버스 전체 텍스처 — 박스 뒤쪽에 세움)
         const panelGeo = new THREE.BoxGeometry(w, panelH, panelDepth);
         let panelMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
         const panelMesh = new THREE.Mesh(panelGeo, panelMat);
-        panelMesh.position.set(0, boxH + panelH / 2, boxDepth / 2 - panelDepth / 2);
+        // 패널 바닥이 박스 위에 올라감, 뒤쪽에 배치
+        panelMesh.position.set(0, boxSize + panelH / 2, -boxSize / 2 + panelDepth / 2);
         wallGroup.add(panelMesh);
 
-        // 캔버스 텍스처 전체를 상단 패널 전면에 적용
+        // 캔버스 텍스처
         if (frontDataUrl) {
             const img = new Image();
             img.crossOrigin = 'anonymous';
@@ -271,8 +271,6 @@
                 const tex = new THREE.Texture(img);
                 tex.needsUpdate = true;
                 tex.encoding = THREE.sRGBEncoding;
-                // 상단 영역만 크롭 (하단 30%는 박스가 대신함)
-                // 전체 텍스처를 패널에 맞게 표시
                 panelMesh.material = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4 });
             };
             img.src = frontDataUrl;
@@ -280,10 +278,10 @@
 
         scene.add(wallGroup);
 
-        // 카메라 위치 (커스텀 orbit 시스템 사용)
-        const maxDim = Math.max(w, h);
-        target.x = 0; target.y = h * 0.4; target.z = 0;
-        spherical.radius = maxDim * 1.5;
+        // 카메라
+        const totalH = boxSize + panelH;
+        target.x = 0; target.y = totalH * 0.45; target.z = 0;
+        spherical.radius = Math.max(w, totalH) * 1.5;
         spherical.theta = Math.PI / 5;
         spherical.phi = Math.PI / 3;
         updateCamera();
