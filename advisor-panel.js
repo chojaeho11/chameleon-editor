@@ -147,6 +147,16 @@ export function initAdvisorPanel() {
 
     window._startAdvisor = startAdvisor;
 
+    // 전역 함수: 어디서든 카푸 패널 열기
+    window.openAdvisorPanel = function() {
+        openPanel();
+        panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => {
+            const inp = document.getElementById('advInput');
+            if (inp) inp.focus();
+        }, 400);
+    };
+
     // 우측 하단 챗봇 숨기기 (카푸로 통일)
     const chamTrigger = document.getElementById('cham-bot-trigger');
     const chamWindow = document.getElementById('cham-bot-window');

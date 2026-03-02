@@ -144,15 +144,24 @@ serve(async (req) => {
 3. **이전 대화를 기억해** — conversation_history가 있으면 맥락을 이해하고 이전 대화를 바탕으로 답변해.
 4. **추천 개수는 자유** — 1개면 1개, 3개면 3개, 5개면 5개. 상황에 맞게. 최대 5개까지.
 5. **제품 설명과 옵션을 활용해** — 각 제품의 description과 특성(is_custom_size, is_file_upload 등)을 확인하고 정확히 안내해.
-6. **⚠️ 커스텀 사이즈 제품(is_custom_size=true) 상담 순서 — 반드시 지켜!**
-   - **1단계: 사이즈 질문** — 고객이 제품을 물어보면 products를 **반드시 빈 배열 []**로 설정하고, 제품 종류를 간단히 설명한 후 "원하시는 사이즈(가로×세로)를 알려주세요!"라고 물어봐. 사이즈를 모르면 절대 products에 제품을 넣지 마!
-   - **2단계: 옵션 안내** — 고객이 사이즈를 알려주면, 가격을 계산하고 해당 제품의 옵션(addons)을 설명해. 이때도 products는 빈 배열 [].
-   - **3단계: 제품 카드** — 옵션까지 안내한 후에야 products 배열에 제품을 넣어서 카드를 보여줘.
-   - **예외**: 고객이 이미 사이즈를 말한 경우(예: "1미터 현수막") → 바로 2단계로.
-   - **핵심: 고객이 사이즈를 말하기 전에는 products = [] (빈 배열). 이것은 절대 규칙이야!**
-7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
-8. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 korea900@hanmail.net으로 보내라고 안내.
-9. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시/공간 연출 관련 이미지를 올리면:
+6. **⚠️ 커스텀 사이즈 제품(is_custom_size=true) 상담 — 절대 규칙!**
+   - **고객이 사이즈를 아직 안 말했으면** → products = **빈 배열 []**. 제품 카드를 절대 보여주지 마!
+     대신 제품 종류를 간단히 설명하고 "원하시는 사이즈(가로×세로)를 알려주세요!"라고 물어봐.
+   - **고객이 사이즈를 말하면** → 가격을 계산하고, products 배열에 제품을 넣어서 카드를 보여줘.
+     카드를 클릭하면 해당 사이즈로 에디터가 열리고 장바구니에 담을 수 있어.
+   - **예외: 배너(거치대 배너)** — 배너는 기본 크기(600×1800mm)가 있으므로 바로 카드 표시 OK.
+   - **이 규칙이 적용되는 제품**: 현수막, 가벽, 실사출력, 패브릭 등 is_custom_size=true인 모든 제품.
+   - **핵심**: 사이즈 없이 제품 카드를 보여주면 고객이 가격도 모르고 에디터도 못 여니까 의미가 없어!
+7. **고정 사이즈 제품(is_custom_size=false)** — 사이즈 질문 없이 바로 제품 카드를 보여줘.
+8. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
+   - **배너 추천 규칙**:
+     - 배너 가장 보편적 크기: 600×1800mm
+     - **실내용**: 허니콤보드 배너 강력추천! 종이 소재라 친환경적이고 가벼움. 커스텀 사이즈 가능. 단, 바람/비에 약해서 외부 사용은 비추천.
+     - **외부용**: 철재배너, 물통배너 추천! 바람/비에 강함. 단 거치대가 있어서 커스텀 사이즈 불가(고정 사이즈만).
+     - 고객이 실내/외부 구분 없이 "배너"라고 하면 → 용도(실내/외부)를 먼저 물어봐!
+     - **용도가 정해지면 바로 제품 카드를 보여줘!** 배너는 기본 크기(600×1800mm)가 있으므로 사이즈 질문 불필요. 바로 products에 넣어.
+9. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 korea900@hanmail.net으로 보내라고 안내.
+10. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시/공간 연출 관련 이미지를 올리면:
    - 이미지를 최대한 꼼꼼히 분석해. 가벽, 간판, 등신대, 장식물, 가구, 풍선, 포토존, 상판(테이블) 등을 하나하나 파악.
    - 이미지에 표시된 사이즈(예: "3000", "2450", "800x1650", "2200" 등)를 읽어. 숫자 단위는 mm. 제일 바깥쪽(하단) 가로 숫자가 전체 폭, 우측 끝 세로 숫자가 전체 높이야.
    - **가벽 구조 분석법**: 전체 폭을 보고 가벽이 몇 칸인지 파악해. 예: 전체 폭 3000mm이고 내부에 구분선이 보이면 3칸. 각 칸은 보통 900~1200mm 폭.
@@ -165,7 +174,7 @@ serve(async (req) => {
    - 각 요소별로 항목 분리해서 안내: "🔹 가벽 3칸: 약 15만원 × 3 = 45만원 / 🔹 상판: 약 10만원 / 합계: 약 50~55만원"
    - 허니콤보드 제품코드는 hcb_ 또는 hcl_ 로 시작하는 제품들을 추천해.
    - **분석 후 반드시 상담사 연결 안내**: 전시/공간 제작은 항상 마지막에 이렇게 말해: "정확한 견적은 전문 상담사가 꼼꼼하게 확인하고 안내해 드립니다 😊 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작은 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요."
-10. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 제작 요청이면 에러 메시지 대신 이렇게 말해: "멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 저보다는 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작 문의는 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요." 이후 관련 허니콤보드 제품들을 추천해.
+11. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 제작 요청이면 에러 메시지 대신 이렇게 말해: "멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 저보다는 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작 문의는 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요." 이후 관련 허니콤보드 제품들을 추천해.
 
 ## 가격 계산
 - is_custom_size: (가로mm/1000) × (세로mm/1000) × price_per_sqm
@@ -178,7 +187,8 @@ serve(async (req) => {
 - 상호: (주)카멜레온프린팅
 - 주소: 경기도 화성시 우정읍 한말길 72-2
 - 영업시간: 평일 09:00~18:00 (점심 12:00~13:00, 주말/공휴일 휴무)
-- 매니저: 지숙(010-3455-1946), 은미(010-7793-5393), 성희(010-3490-3328)
+- 매니저: 지숙(010-3455-1946), 은미(010-7793-5393), 성희(010-3490-3328) — 일반 제품/견적/주문 상담
+- 출고실(제품 파손/출고 문의/홈페이지 시스템 문의): 이선율 팀장(010-7610-3455), 변지웅 부사장(010-5512-5366)
 - AI 챗봇(카푸): 24시간 운영
 - 배송: 전상품 무료배송 (허니콤보드 시공배송 제외)
 - 결제: 카드결제, 무통장입금, 카카오페이, 네이버페이
@@ -442,11 +452,76 @@ ${JSON.stringify(categories)}${qaSection}`;
                     });
                 }
 
+                // ★ 서버 측 사이즈 기반 제품 카드 제어
+                // AI가 가격을 계산했으면 = 사이즈를 받은 것. 가격 패턴: "14만원", "120,000원", "¥15,000", "$30"
+                const _aiMsg = result.chat_message || '';
+                const _userHasDigit = /\d/.test(trimmedMsg || '') && !/010[-\s]?\d/.test(trimmedMsg || '');
+                // 가격 패턴: "120,000" "60,000" "14400" "15000" 등 큰 숫자 or $¥
+                const _aiHasPrice = /\d{2,3},\d{3}|\d{5,}|[$¥]\s*\d/.test(_aiMsg);
+                const hasUserSize = _userHasDigit && _aiHasPrice;
+                const hasBannerDefault = /600.*1800/.test(_aiMsg);
+
+                // A) 사이즈 없으면 → 커스텀 사이즈 제품만 제거 (고정 사이즈는 유지)
+                if (result.products && result.products.length > 0 && !hasUserSize && !hasBannerDefault) {
+                    const before = result.products.length;
+                    result.products = result.products.filter((p: any) => !p.is_custom_size);
+                    if (result.products.length < before) {
+                        console.log('[kapu] Strip custom-size products:', before, '->', result.products.length);
+                    }
+                    if (result.products.length === 0) result.type = "chat";
+                }
+
+                // B) 카드가 없는데 사이즈가 있으면 → 유저 메시지+AI 텍스트에서 제품 매칭하여 주입
+                if ((!result.products || result.products.length === 0) && hasUserSize) {
+                    const combined = (_userMsg + ' ' + (result.chat_message || '')).toLowerCase();
+                    // DB에서 커스텀 사이즈 제품 중 이름 키워드가 언급된 것 찾기
+                    const matched = products.filter((p: any) => {
+                        if (!p.is_custom_size) return false;
+                        const name = (p.name || '');
+                        const keywords = name.split(/\s+/).filter((w: string) => w.length >= 2);
+                        return keywords.some((kw: string) => combined.includes(kw.toLowerCase()));
+                    }).slice(0, 3);
+                    if (matched.length > 0) {
+                        result.products = matched.map((p: any) => {
+                            const rawP = rawProducts.find((r: any) => r.code === p.code);
+                            const addonCodes = rawP?.addons ? rawP.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
+                            return {
+                                code: p.code, name: p.name, img_url: p.img_url || '',
+                                _raw_price_krw: p._raw_price, _raw_per_sqm_krw: p._raw_per_sqm,
+                                is_custom_size: p.is_custom_size,
+                                addons: addonCodes.map((c: string) => addonMap[c]).filter(Boolean),
+                            };
+                        });
+                        result.type = "recommendation";
+                        console.log('[kapu] Inject products: user gave size →', matched.map((p:any) => p.code));
+                    }
+                }
+
                 return result;
             }
 
             const textParts = blocks.filter((b: any) => b.type === "text").map((b: any) => b.text);
-            return { type: "chat", chat_message: textParts.join("\n") || "...", products: [], _model: model };
+            const textResult: any = { type: "chat", chat_message: textParts.join("\n") || "...", products: [], _model: model };
+            // 텍스트 응답에서도 사이즈+제품명 매칭 시 카드 주입
+            const _um2 = trimmedMsg || '';
+            const _ud2 = /\d/.test(_um2) && !/010[-\s]?\d/.test(_um2);
+            const _ap2 = /\d{2,3},\d{3}|\d{5,}|[$¥]\s*\d/.test(textResult.chat_message);
+            if (_ud2 && _ap2) {
+                const _c2 = (_um2 + ' ' + textResult.chat_message).toLowerCase();
+                const _m2 = products.filter((p: any) => {
+                    if (!p.is_custom_size) return false;
+                    return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _c2.includes(kw.toLowerCase()));
+                }).slice(0, 3);
+                if (_m2.length > 0) {
+                    textResult.products = _m2.map((p: any) => {
+                        const rp = rawProducts.find((r: any) => r.code === p.code);
+                        const ac = rp?.addons ? rp.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
+                        return { code: p.code, name: p.name, img_url: p.img_url || '', _raw_price_krw: p._raw_price, _raw_per_sqm_krw: p._raw_per_sqm, is_custom_size: p.is_custom_size, addons: ac.map((c: string) => addonMap[c]).filter(Boolean) };
+                    });
+                    textResult.type = "recommendation";
+                }
+            }
+            return textResult;
         }
 
         const result = await callClaude("claude-sonnet-4-20250514");
@@ -463,7 +538,7 @@ ${JSON.stringify(categories)}${qaSection}`;
         if (isContactQuery) {
             const chatMsg = result.chat_message || result.summary || '';
             const contactInfos: Record<string, string> = {
-                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n📧 대용량 파일: korea900@hanmail.net\n💬 카푸는 24시간 운영됩니다!",
+                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n📦 출고실(파손/출고/시스템 문의):\n• 이선율 팀장: 010-7610-3455\n• 변지웅 부사장: 010-5512-5366\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n📧 대용량 파일: korea900@hanmail.net\n💬 카푸는 24시간 운영됩니다!",
                 ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: support@cafe0101.com\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 カプは24時間対応！",
                 us: "\n\n📧 Email: support@cafe0101.com / korea900as@gmail.com\n🕐 Hours: Weekdays 09:00-18:00 KST\n💬 Kapu is available 24/7!",
             };
