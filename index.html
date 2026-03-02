@@ -7835,7 +7835,7 @@ if (w >= 20 && h >= 20) {
         if (btn3d) {
             const isHoneycomb = (product && product.category === 'honeycomb') || (product && product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb'));
             const isPd = (typeof key === 'string' && key.startsWith('pd_'));
-            const isLetterSign = (product && product.category === 'honeycomb_letter') || (typeof key === 'string' && key.startsWith('hcl_'));
+            const isLetterSign = (product && (product.category === 'honeycomb_letter' || product.category === 'hb_skashi')) || (typeof key === 'string' && key.startsWith('hcl_'));
             btn3d.style.display = (isHoneycomb || isPd || isLetterSign) ? 'flex' : 'none';
         }
 

@@ -635,7 +635,7 @@ window.NpcWizard = {
         this.isCustom = !!product.is_custom_size;
         this.isGeneral = !!product.is_general_product;
         const key = product.code || window.currentProductKey || '';
-        this.isLetterSign = (product.category === 'honeycomb_letter') || (typeof key === 'string' && key.startsWith('hcl_'));
+        this.isLetterSign = (product.category === 'honeycomb_letter' || product.category === 'hb_skashi') || (typeof key === 'string' && key.startsWith('hcl_'));
         this.isHoneycomb = !this.isLetterSign && ((product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb')));
         this.isPaperDisplay = (typeof key === 'string' && key.startsWith('pd_'));
         this.hasFile = null;
