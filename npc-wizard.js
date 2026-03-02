@@ -1138,7 +1138,7 @@ window.NpcWizard = {
                 break;
             }
             case 'lsSizeInput': {
-                const lsRatios = { hcl_simple:0.8, hcl_box1:1.2, hcl_box3:1.5, hcl_heavy:1.0, hcl_acrylic:0.5 };
+                const lsRatios = { hcl_simple:1.2, hcl_box1:1.2, hcl_box3:1.2, hcl_heavy:1.2, hcl_acrylic:1.2 };
                 const lsRatio = lsRatios[this._lsType] || 1.0;
                 const defaultW = this._lsWidthCm || 60;
                 if (!this._lsHeightCm || this._lsHeightCm === 48) this._lsHeightCm = Math.round(defaultW * lsRatio);
@@ -1558,7 +1558,7 @@ window.NpcWizard = {
         const wEl = document.getElementById('npcLsWidth');
         const hEl = document.getElementById('npcLsHeight');
         const w = parseInt(wEl && wEl.value) || 60;
-        const ratios = { hcl_simple:0.8, hcl_box1:1.2, hcl_box3:1.5, hcl_heavy:1.0, hcl_acrylic:0.5 };
+        const ratios = { hcl_simple:1.2, hcl_box1:1.2, hcl_box3:1.2, hcl_heavy:1.2, hcl_acrylic:1.2 };
         const r = ratios[this._lsType] || 1.0;
         if (hEl) hEl.value = Math.round(w * r);
         this._lsUpdatePrice();
