@@ -558,16 +558,18 @@
         }
         .kapu-icon-bounce {
             font-size: 22px;
-            animation: kapuBounce 1.5s ease infinite;
+            animation: kapuArrowMove 1.2s ease-in-out infinite;
+            color: #fff;
+            display: inline-flex; align-items: center; justify-content: center;
         }
-        @keyframes kapuBounce {
-            0%,100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
+        @keyframes kapuArrowMove {
+            0%,100% { transform: translateX(0); opacity: 0.7; }
+            50% { transform: translateX(8px); opacity: 1; }
         }
     </style>
     <div style="text-align:center; margin: 0 auto 15px auto; max-width:1000px; padding:0 15px;">
         <button id="btnKapuGuide" class="hero-ai-btn">
-            <span class="kapu-icon-bounce">🐾</span>
+            <span class="kapu-icon-bounce"><i class="fa-solid fa-arrow-right" style="font-size:20px; color:#fff;"></i></span>
             <span style="text-align:left; line-height:1.3;">
                 <span data-i18n="btn_kapu_guide">카푸가 쇼핑을 안내해 드립니다</span>
                 <span class="kapu-subtitle" data-i18n="btn_kapu_sub">고민이나 농담도 괜찮아요. 여기를 클릭해 주세요</span>
@@ -1542,7 +1544,7 @@ async function handleSubReturn() {
 </div>
 <div style="text-align:center; margin-top:8px;">
     <button id="btnAiAdvisor" class="hero-ai-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7,#ec4899); background-size:300% 300%; animation:kapuGlow 4s ease infinite; color:#fff; border:none; padding:14px 28px; border-radius:50px; font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 3px 16px rgba(139,92,246,0.35);">
-        <span style="margin-right:4px;">🐾</span>
+        <span class="kapu-icon-bounce" style="margin-right:4px;"><i class="fa-solid fa-arrow-right" style="font-size:16px; color:#fff;"></i></span>
         <span data-i18n="btn_kapu_guide">카푸가 쇼핑을 안내해 드립니다</span>
     </button>
 </div>
@@ -5276,7 +5278,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=127').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=128').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // PRO 구독 초기화
         if (typeof updateSubPrices === 'function') updateSubPrices();

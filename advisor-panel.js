@@ -107,6 +107,27 @@ function clearChat() {
     lastProducts = [];
     if (chatArea) chatArea.innerHTML = '';
     try { localStorage.removeItem(chatKey()); } catch(e) {}
+    showWelcomeMessage();
+}
+
+const WELCOME = {
+    kr: `어떤 제품을 찾으시나요? 🎨\n레퍼런스가 있으시면 이미지나 PDF로 올려주시면 견적을 내어드릴 수 있어요.\n아니면 끝말잇기 게임이나 오늘의 운세를 물어보셔도 좋아요 😄`,
+    ja: `どんな商品をお探しですか？🎨\nリファレンスがあれば、画像やPDFをアップロードしていただければお見積りいたします。\nしりとりゲームや今日の占いもOKですよ 😄`,
+    en: `What product are you looking for? 🎨\nIf you have a reference, upload an image or PDF and we can give you a quote.\nOr feel free to play a word game or ask about today's fortune 😄`,
+};
+
+function showWelcomeMessage() {
+    if (!chatArea) return;
+    const lang = getLang();
+    const msg = WELCOME[lang] || WELCOME['en'];
+    const formatted = msg.replace(/\n/g, '<br>');
+    chatArea.insertAdjacentHTML('beforeend', `
+        <div class="adv-row adv-row-ai">
+            <div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="adv-bubble adv-bubble-ai">${formatted}</div>
+        </div>
+    `);
+    scrollChat();
 }
 
 function clearLiveState() {
@@ -248,6 +269,9 @@ function buildPanelUI() {
     const restored = loadChat();
     if (restored) {
         scrollChat();
+    } else {
+        // 첫 방문: 기본 안내 메시지 표시
+        showWelcomeMessage();
     }
 
     // 실시간 상담 복원 상태 반영
