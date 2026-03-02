@@ -7919,7 +7919,7 @@ if (w >= 20 && h >= 20) {
                 try {
                     const mod = await import('./canvas-ai.js?v=123');
                     if (mod.runDesignWizardForLetterSign) {
-                        mod.runDesignWizardForLetterSign(lsData.title || '', lsData.bottomText || '', lsData.style || 'forest');
+                        mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
                 } catch(e) {
                     console.error('Letter sign auto-design error:', e);
