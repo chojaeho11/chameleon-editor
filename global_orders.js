@@ -37,6 +37,10 @@ async function creditReferralBonus(orderId) {
 let currentOrderStatus = '전체';
 let currentPage = 1;
 const itemsPerPage = 10;
+
+// window에 노출 (별도 페이지에서 사이드바 nav 접근용)
+Object.defineProperty(window, 'currentOrderStatus', { get: () => currentOrderStatus, set: v => { currentOrderStatus = v; } });
+Object.defineProperty(window, 'currentPage', { get: () => currentPage, set: v => { currentPage = v; } });
 let currentMgrOrderId = null;
 let currentMgrFiles = [];
 let staffList = [];
@@ -366,6 +370,7 @@ window.filterOrders = (status, btn) => {
     loadOrders();
 };
 
+window.toggleAll = (el) => { document.querySelectorAll('.row-chk').forEach(c => c.checked = el.checked); };
 window.resetPage = () => { currentPage = 1; };
 window.changePage = (step) => { if(currentPage + step > 0) { currentPage += step; loadOrders(); } };
 
