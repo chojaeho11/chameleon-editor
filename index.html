@@ -6692,11 +6692,6 @@ window.showChoiceModal = async function(key) {
     if (isCustom) {
         rightSideUI = productHeaderHtml + `
             ${optionsHtml}
-            <div data-npc="upload" style="display:flex; flex-direction:column; gap:8px; margin-top:15px;">
-                <button onclick="window.confirmChoice('upload')" id="btnKeyringUpload" class="btn-round" style="height:auto; padding:12px 16px; font-size:15px; background:#f59e0b; color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-align:center; line-height:1.4;">${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일 업로드'}<br><span style="font-size:11px; font-weight:500; opacity:0.85;">${lang==='ja'?'※画像とPDFファイルのみ':lang==='zh'?'※仅支持图片和PDF':lang==='ar'?'※صور وPDF فقط':lang==='es'?'※Solo imágenes y PDF':lang==='de'?'※Nur Bilder und PDF':lang==='fr'?'※Images et PDF uniquement':lang==='en'?'※Images and PDF only':'※이미지와 PDF만 가능'}</span></button>
-                ${product.is_file_upload ? '<div id="miniKeyringEditorContainer" style="display:none;"></div>' : ''}
-                <div id="uploadedFilesList" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px;"></div>
-            </div>
             <div id="uploadPreviewArea" data-npc="uploadPreview" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
                     <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc; box-shadow:0 2px 6px rgba(99,102,241,0.2);">
@@ -6791,7 +6786,7 @@ window.showChoiceModal = async function(key) {
                 </div>
                 <div data-npc="buttons" style="display:flex; flex-direction:column; gap:12px; margin-top:20px; padding-bottom:50px;">
                     ${product.cutline_url ? `<a href="${product.cutline_url}" target="_blank" download class="btn-round" style="height:44px; font-size:13px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; text-decoration:none;">✂️ ${lang==='ja'?'カットライン ダウンロード':lang==='zh'?'刀线下载':lang==='ar'?'تحميل خط القطع':lang==='es'?'Descargar línea de corte':lang==='de'?'Stanzlinie herunterladen':lang==='fr'?'Télécharger la ligne de coupe':lang==='en'?'Download Die-cut Line':'칼선 다운받기'}</a>` : ''}
-                    ${!isCustom && product.is_file_upload ? `<div id="miniKeyringEditorContainer" style="display:none;"></div>` : ''}
+                    ${product.is_file_upload ? `<div id="miniKeyringEditorContainer" style="display:none;"></div>` : ''}
                     <div id="uploadedFilesList" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px;"></div>
                     ${product.is_general_product
                         ? `<button onclick="window.confirmChoice('cart')" class="btn-round primary" style="height:56px; font-size:16px;">🛒 ${lang==='ja'?'カートに入れる':lang==='zh'?'加入购物车':lang==='ar'?'أضف إلى السلة':lang==='es'?'Añadir al Carrito':lang==='de'?'In den Warenkorb':lang==='fr'?'Ajouter au panier':lang==='en'?'Add to Cart':'장바구니 담기'}</button>`
