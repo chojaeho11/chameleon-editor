@@ -2089,9 +2089,9 @@ async function handleSubReturn() {
 <!-- 모바일 텍스트 편집 입력창 -->
 <div id="mobileTextEditBar" style="display:none; position:fixed; bottom:62px; left:0; right:0; z-index:10003; background:#fff; padding:10px 12px; border-top:1px solid #e2e8f0; box-shadow:0 -2px 10px rgba(0,0,0,0.1);">
     <div style="display:flex; gap:8px; align-items:center;">
-        <input id="mobileTextInput" type="text" style="flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:16px; outline:none;" placeholder="텍스트 입력...">
-        <button id="mobileTextApply" style="padding:10px 18px; background:#6366f1; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;">적용</button>
-        <button id="mobileTextCancel" style="padding:10px 12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;">✕</button>
+        <input id="mobileActionTextInput" type="text" style="flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:16px; outline:none;" placeholder="텍스트 입력...">
+        <button id="mobileActionTextApply" style="padding:10px 18px; background:#6366f1; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;">적용</button>
+        <button id="mobileActionTextCancel" style="padding:10px 12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;">✕</button>
     </div>
 </div>
 
@@ -2111,9 +2111,9 @@ async function handleSubReturn() {
         const editBtn = document.getElementById('mobileEditBtn');
         const delBtn = document.getElementById('mobileDelBtn');
         const editBar = document.getElementById('mobileTextEditBar');
-        const textInput = document.getElementById('mobileTextInput');
-        const applyBtn = document.getElementById('mobileTextApply');
-        const cancelBtn = document.getElementById('mobileTextCancel');
+        const textInput = document.getElementById('mobileActionTextInput');
+        const applyBtn = document.getElementById('mobileActionTextApply');
+        const cancelBtn = document.getElementById('mobileActionTextCancel');
 
         let editingGroup = null;
 
