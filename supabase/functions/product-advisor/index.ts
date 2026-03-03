@@ -383,7 +383,7 @@ ${JSON.stringify(categories)}${qaSection}`;
                 },
                 body: JSON.stringify({
                     model,
-                    max_tokens: 2048,
+                    max_tokens: 1024,
                     system: systemPrompt,
                     tools,
                     tool_choice: toolChoice,
@@ -463,7 +463,7 @@ ${JSON.stringify(categories)}${qaSection}`;
             return textResult;
         }
 
-        const result = await callClaude("claude-sonnet-4-20250514");
+        const result = await callClaude("claude-haiku-4-5-20251001");
         result._v = "2026-03-03-v10-kapu-smart";
 
         // 연락처 관련 질문 감지 → 프로그래밍적 보장
