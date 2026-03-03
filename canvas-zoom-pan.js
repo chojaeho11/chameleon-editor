@@ -135,14 +135,96 @@ export function initZoomPan() {
         if(isDragging) {
             canvas.setViewportTransform(canvas.viewportTransform);
             isDragging = false;
-            
+
             // 패닝 모드가 유지 중이면 grab, 아니면 default
             canvas.defaultCursor = window.isPanningMode ? 'grab' : 'default';
-            
+
             // 패닝 모드가 아닐 때만 선택 활성화
             if (!window.isPanningMode) {
                 canvas.selection = true;
             }
         }
     });
+
+    // =========================================================
+    // ★ 모바일 핀치 줌 & 2손가락 패닝
+    // =========================================================
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        let pinchActive = false;
+        let lastDist = 0;
+        let lastMidX = 0;
+        let lastMidY = 0;
+        let lastZoom = 1;
+
+        function getTouchDist(t1, t2) {
+            const dx = t1.clientX - t2.clientX;
+            const dy = t1.clientY - t2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function getTouchMid(t1, t2) {
+            return {
+                x: (t1.clientX + t2.clientX) / 2,
+                y: (t1.clientY + t2.clientY) / 2
+            };
+        }
+
+        // 캔버스 upper-canvas (fabric.js가 이벤트를 받는 레이어)
+        const upperEl = canvas.upperCanvasEl || canvas.getElement();
+
+        upperEl.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                pinchActive = true;
+                canvas.selection = false;
+                canvas.discardActiveObject();
+                canvas.requestRenderAll();
+
+                lastDist = getTouchDist(e.touches[0], e.touches[1]);
+                const mid = getTouchMid(e.touches[0], e.touches[1]);
+                lastMidX = mid.x;
+                lastMidY = mid.y;
+                lastZoom = canvas.getZoom();
+
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        upperEl.addEventListener('touchmove', function(e) {
+            if (!pinchActive || e.touches.length !== 2) return;
+            e.preventDefault();
+
+            const dist = getTouchDist(e.touches[0], e.touches[1]);
+            const mid = getTouchMid(e.touches[0], e.touches[1]);
+
+            // 줌 계산
+            const scale = dist / lastDist;
+            let newZoom = lastZoom * scale;
+            if (newZoom > 20) newZoom = 20;
+            if (newZoom < 0.05) newZoom = 0.05;
+
+            // 캔버스 내 좌표로 변환
+            const rect = upperEl.getBoundingClientRect();
+            const cx = mid.x - rect.left;
+            const cy = mid.y - rect.top;
+
+            canvas.zoomToPoint({ x: cx, y: cy }, newZoom);
+
+            // 2손가락 패닝
+            const vpt = canvas.viewportTransform;
+            vpt[4] += mid.x - lastMidX;
+            vpt[5] += mid.y - lastMidY;
+            canvas.requestRenderAll();
+
+            lastMidX = mid.x;
+            lastMidY = mid.y;
+        }, { passive: false });
+
+        upperEl.addEventListener('touchend', function(e) {
+            if (pinchActive && e.touches.length < 2) {
+                pinchActive = false;
+                canvas.selection = true;
+                canvas.setViewportTransform(canvas.viewportTransform);
+            }
+        });
+    }
 }
