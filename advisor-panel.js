@@ -918,7 +918,7 @@ function addProductCards(products) {
     // 사이트 URL 결정
     const lang = getLang();
     const siteHost = lang === 'ja' ? 'https://cafe0101.com' : lang === 'en' ? 'https://cafe3355.com' : 'https://cafe2626.com';
-    const detailLabel = lang === 'ja' ? '詳細' : lang === 'en' ? 'Details' : '상세보기';
+    const detailLabel = lang === 'ja' ? '購入する' : lang === 'en' ? 'Buy Now' : '구매하러가기';
 
     products.forEach((rec, i) => {
         const card = document.createElement('div');
@@ -945,12 +945,9 @@ function addProductCards(products) {
             </div>
             ${addonHtml}
             <div class="adv-card-btns">
-                <a href="${detailUrl}" class="adv-btn-editor" style="text-decoration:none; text-align:center;">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> ${detailLabel}
+                <a href="${detailUrl}" class="adv-btn-editor" style="text-decoration:none; text-align:center; flex:1;">
+                    <i class="fa-solid fa-bag-shopping"></i> ${detailLabel}
                 </a>
-                <button class="adv-btn-cart" data-i="${i}">
-                    <i class="fa-solid fa-cart-plus"></i> ${t('cart')}
-                </button>
             </div>
         `;
         wrap.appendChild(card);
