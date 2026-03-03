@@ -488,6 +488,37 @@ button, input, textarea, select { font-family: inherit; }
 }
 .wcm-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
 
+/* 가벽 설정 모바일 반응형 */
+@media (max-width: 768px) {
+    #wallConfigModal {
+        min-width: unset;
+        width: 95%;
+        max-width: 95%;
+        padding: 16px;
+        border-radius: 16px;
+    }
+    .wcm-title { font-size: 16px; }
+    .wcm-type-row {
+        gap: 8px;
+        padding: 10px 12px;
+    }
+    .wcm-label { font-size: 13px; }
+    .wcm-btn { padding: 8px 14px; font-size: 13px; }
+    .wl-row {
+        gap: 6px;
+        padding: 10px 8px;
+        flex-wrap: wrap;
+    }
+    .wl-num { width: 26px; height: 26px; font-size: 12px; }
+    .wl-sel { min-width: 60px; padding: 6px 8px; font-size: 14px; }
+    .wl-x { font-size: 14px; }
+    .wl-price { font-size: 13px; }
+    .wl-del { width: 26px; height: 26px; font-size: 16px; }
+    .wcm-footer { gap: 8px; flex-wrap: wrap; }
+    .wcm-total-price { font-size: 20px; }
+    .wcm-confirm { padding: 12px; font-size: 15px; }
+}
+
 /* Box Face Tabs */
 .box-face-tab {
     padding: 6px 14px; border: none; border-radius: 6px;
