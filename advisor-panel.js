@@ -953,8 +953,46 @@ function addProductCards(products) {
     chatArea.appendChild(wrap);
     bindCardEvents(wrap, products);
     bindAddonEvents(wrap, products);
+
+    // 커스텀 사이즈 제품이 있으면 사이즈 입력 프롬프트 표시
+    const hasCustomSize = products.some(p => !p.recommended_width_mm || !p.recommended_height_mm);
+    if (hasCustomSize) {
+        const lang = getLang();
+        const sizeLabel = lang === 'ja' ? 'ご希望サイズを入力してください（例：600×1800mm）'
+            : lang === 'en' ? 'Enter your desired size (e.g. 600×1800mm)'
+            : '원하시는 사이즈를 적어주시면 링크와 견적을 드릴게요';
+        const sizePh = lang === 'ja' ? '例: 600×1800mm' : lang === 'en' ? 'e.g. 600×1800mm' : '예: 600×1800mm';
+        const sizeBtn = lang === 'ja' ? '送信' : lang === 'en' ? 'Send' : '전송';
+        const sizePrompt = document.createElement('div');
+        sizePrompt.style.cssText = 'text-align:center; padding:10px 0 4px;';
+        sizePrompt.innerHTML = `
+            <p style="font-size:13px; color:#6366f1; font-weight:700; margin:0 0 8px;">📐 ${sizeLabel}</p>
+            <div style="display:inline-flex; align-items:center; background:#f1f5f9; border:2px solid #6366f1; border-radius:50px; padding:4px 4px 4px 16px; max-width:320px; width:90%;">
+                <input type="text" id="advSizeInput" placeholder="${sizePh}" style="border:none; background:transparent; outline:none; font-size:14px; flex:1; min-width:0; font-weight:600; color:#1e293b;">
+                <button onclick="window._sendSizeInput()" style="background:#6366f1; color:#fff; border:none; border-radius:50px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">${sizeBtn}</button>
+            </div>`;
+        chatArea.appendChild(sizePrompt);
+
+        // Enter 키로도 전송
+        setTimeout(() => {
+            const si = document.getElementById('advSizeInput');
+            if (si) si.addEventListener('keydown', (e) => { if (e.key === 'Enter') window._sendSizeInput(); });
+        }, 100);
+    }
+
     scrollChat();
 }
+
+window._sendSizeInput = function() {
+    const si = document.getElementById('advSizeInput');
+    if (!si || !si.value.trim()) return;
+    const val = si.value.trim();
+    // 프롬프트 제거
+    const parent = si.closest('div[style*="text-align:center"]');
+    if (parent) parent.remove();
+    // 채팅으로 전송
+    sendMessage(val);
+};
 
 function bindCardEvents(wrap, products) {
     wrap.querySelectorAll('.adv-btn-editor').forEach(btn => {
