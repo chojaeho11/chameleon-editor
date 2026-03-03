@@ -1314,10 +1314,13 @@ button, input, textarea, select { font-family: inherit; }
 /* ══════ AI 어드바이저 인라인 채팅 패널 ══════ */
 .advisor-panel {
     max-width: 900px;
+    width: 100%;
     margin: 20px auto 0;
     padding: 0 15px;
+    box-sizing: border-box;
     animation: advSlideIn 0.35s ease-out;
 }
+.advisor-panel * { box-sizing: border-box; }
 @keyframes advSlideIn {
     from { opacity: 0; transform: translateY(-12px); }
     to { opacity: 1; transform: translateY(0); }
@@ -1532,7 +1535,10 @@ button, input, textarea, select { font-family: inherit; }
     border: 1px solid #e2e8f0;
     border-top: none;
     border-radius: 0 0 16px 16px;
+    width: 100%;
+    min-width: 0;
 }
+.adv-input { min-width: 0; }
 .adv-input {
     flex: 1;
     padding: 10px 14px;
