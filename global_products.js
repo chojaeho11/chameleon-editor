@@ -4212,6 +4212,8 @@ async function _wizUploadYoutube(videoBlob, title, description, tags) {
 
 let _adpProducts = [];       // 대상 상품 목록
 let _adpIndex = 0;           // 현재 처리 인덱스
+// 제외할 대분류 카테고리 (실사출력소재, 패브릭부스, 종이매대, 보드류도매)
+const _adpSkipTopCategories = ['99999', '23434242', 'paper_display', 'Wholesale Board Prices'];
 let _adpRunning = false;     // 실행 중 여부
 let _adpStopReq = false;     // 중지 요청
 let _adpDoneCount = 0;
@@ -4238,12 +4240,25 @@ window.adpScanProducts = async function() {
     _adpLog('🔍 전체 상품 조회 중...');
 
     try {
+        // 카테고리 로드 → 제외 대분류에 속한 서브카테고리 코드 수집
+        const { data: catData } = await sb.from('admin_categories')
+            .select('code, top_category_code');
+        const skipSubCats = new Set();
+        (catData || []).forEach(c => {
+            if (_adpSkipTopCategories.includes(c.top_category_code) || _adpSkipTopCategories.includes(c.code)) {
+                skipSubCats.add(c.code);
+            }
+        });
+
         const { data, error } = await sb.from('admin_products')
             .select('id, name, code, category, price, img_url, description')
             .order('created_at', { ascending: false });
         if (error) throw error;
 
-        _adpProducts = (data || []).filter(_adpNeedsGeneration);
+        _adpProducts = (data || []).filter(p => {
+            if (skipSubCats.has(p.category)) return false;
+            return _adpNeedsGeneration(p);
+        });
         _adpIndex = 0;
         _adpDoneCount = 0;
         _adpFailCount = 0;
@@ -4441,22 +4456,8 @@ async function _adpProcessLoop() {
             report.blogCount = await _adpGenerateBlogs(prod, imageUrls[0]);
             report.sns = true; // SNS는 블로그 내에서 JA일 때 자동 호출됨
 
-            // ── STEP 5: YouTube 쇼츠 (하루 7개 제한) ──
-            if (_adpShortsCount < 7) {
-                _adpShowCurrent(prod, '🎬 쇼츠 생성 중...');
-                try {
-                    await _adpGenerateShorts(prod);
-                    _adpShortsCount++;
-                    const el = document.getElementById('adpShortsCount');
-                    if (el) el.textContent = _adpShortsCount;
-                    report.shorts = true;
-                    _adpLog('  🎬 쇼츠 완료 (' + _adpShortsCount + '/7)');
-                } catch(se) {
-                    _adpLog('  ⚠ 쇼츠 실패: ' + se.message);
-                }
-            } else {
-                _adpLog('  ⏭ 쇼츠 스킵 (오늘 7개 달성)');
-            }
+            // ── STEP 5: YouTube 쇼츠 — 비활성화 (불필요) ──
+            // _adpLog('  ⏭ 쇼츠 스킵');
 
             _adpDoneCount++;
             report.success = true;
