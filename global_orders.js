@@ -34,7 +34,7 @@ async function creditReferralBonus(orderId) {
     }
 }
 
-let currentOrderStatus = '접수됨';
+let currentOrderStatus = '전체';
 let currentPage = 1;
 const itemsPerPage = 10;
 let currentMgrOrderId = null;
@@ -127,12 +127,30 @@ window.loadOrders = async () => {
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
         query = query.neq('status', '임시작성').neq('status', '관리자차단');
 
-        // 필터 적용
-        if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
-        else if (currentOrderStatus === '칼선작업') query = query.in('status', ['칼선작업', '제작중']);
-        else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정', '배송완료']);
-        else if (currentOrderStatus === '취소요청') query = query.eq('status', '취소요청');
-        else if (currentOrderStatus === '취소됨') query = query.eq('status', '취소됨');
+        // 필터 적용 (고도몰 스타일 세부 탭)
+        if (currentOrderStatus === '전체') {
+            query = query.not('status', 'in', '("취소요청","취소됨")');
+        } else if (currentOrderStatus === '입금대기') {
+            query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
+            query = query.not('payment_status', 'in', '("결제완료","입금확인")');
+        } else if (currentOrderStatus === '접수됨') {
+            query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
+            query = query.in('payment_status', ['결제완료', '입금확인']);
+        } else if (currentOrderStatus === '칼선작업') {
+            query = query.in('status', ['칼선작업', '제작중']);
+        } else if (currentOrderStatus === '완료됨') {
+            query = query.in('status', ['완료됨', '완료', '구매확정']);
+        } else if (currentOrderStatus === '배송') {
+            query = query.in('status', ['발송완료', '배송완료']);
+        } else if (currentOrderStatus === '취소요청') {
+            query = query.eq('status', '취소요청');
+        } else if (currentOrderStatus === '취소됨') {
+            query = query.eq('status', '취소됨').eq('payment_status', '환불완료');
+        } else if (currentOrderStatus === '환불대기') {
+            query = query.eq('status', '취소됨').eq('payment_status', '환불대기');
+        } else if (currentOrderStatus === '환불실패') {
+            query = query.eq('status', '취소됨').eq('payment_status', '환불실패');
+        }
 
         if (deliveryDateFilter) query = query.eq('delivery_target_date', deliveryDateFilter);
         if (orderDateFilter) query = query.gte('created_at', orderDateFilter + 'T00:00:00').lte('created_at', orderDateFilter + 'T23:59:59');
@@ -150,11 +168,18 @@ window.loadOrders = async () => {
         if(pageLabel) pageLabel.innerText = `Page ${currentPage} / ${Math.ceil((count||0)/itemsPerPage) || 1}`;
         const sumCount = document.getElementById('sumCount');
         if(sumCount) sumCount.innerText = (count || 0) + '건';
+        // 매출 합계 (현재 페이지 기준)
+        const sumRevenue = document.getElementById('sumRevenue');
+        if(sumRevenue && data) {
+            const total = data.reduce((acc, o) => acc + (o.total_amount || 0), 0);
+            sumRevenue.innerText = total.toLocaleString() + '원';
+        }
 
         tbody.innerHTML = '';
-        if (!data || data.length === 0) { 
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">주문이 없습니다.</td></tr>'; 
-            showLoading(false); return; 
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:30px;">주문이 없습니다.</td></tr>';
+            if(sumRevenue) sumRevenue.innerText = '0원';
+            showLoading(false); return;
         }
 
         data.forEach(order => {
@@ -188,63 +213,64 @@ window.loadOrders = async () => {
                 deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px;">(배)${delDate}</div>`;
             }
 
-            // [상태 & 결제정보]
-            let statusHtml = '';
-
-            if (order.status === '완료됨' || order.status === '발송완료' || order.status === '배송완료') {
-                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#dcfce7; color:#15803d;">${order.status}</span></div>`;
-            } else if (order.status === '취소요청') {
-                const pmL = (order.payment_method || '').toLowerCase();
-                const cancelType = (pmL.includes('카드') || pmL.includes('card') || pmL.includes('stripe') || pmL.includes('간편결제'))
-                    ? '<div style="font-size:10px;color:#2563eb;font-weight:bold;">💳 카드결제</div>'
-                    : (pmL.includes('예치금') ? '<div style="font-size:10px;color:#7c3aed;font-weight:bold;">💰 예치금</div>'
-                    : '<div style="font-size:10px;color:#d97706;font-weight:bold;">🏦 현금(무통장)</div>');
-                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fef3c7; color:#d97706; font-weight:bold;">❌ 취소요청</span></div>${cancelType}`;
-            } else if (order.status === '취소됨') {
-                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fee2e2; color:#dc2626;">${order.status}</span></div>`;
-                if (order.payment_status === '환불완료') {
-                    statusHtml += `<div style="font-size:10px; color:#15803d; font-weight:bold;">✅ 환불완료</div>`;
-                } else if (order.payment_status === '환불대기') {
-                    statusHtml += `<div style="font-size:10px; color:#d97706; font-weight:bold;">⏳ 환불대기</div>`;
-                } else if (order.payment_status === '환불실패') {
-                    statusHtml += `<div style="font-size:10px; color:#dc2626; font-weight:bold;">❌ 환불실패</div>`;
-                }
-            } else {
-                statusHtml = `<div style="margin-bottom:4px;"><span class="badge">${order.status}</span></div>`;
-            }
-
+            // ═══ [결제 칼럼] 결제수단 + 결제확인 상태만 표시 ═══
             const pmLower = (order.payment_method || '').toLowerCase();
             const isCard = pmLower.includes('카드') || pmLower.includes('card') || pmLower.includes('stripe') || pmLower.includes('간편결제');
             const isBank = pmLower.includes('무통장') || pmLower.includes('bank');
             const isDeposit = pmLower.includes('예치금');
-            const depositor = order.depositor_name || order.depositor || '입금자 미정';
+            const depositor = order.depositor_name || order.depositor || '';
+            const isPaid = order.payment_status === '결제완료' || order.payment_status === '입금확인';
 
-            // 2. 결제 정보 표시 (상태와 무관하게 무조건 표시)
+            let payHtml = '';
             if (isCard) {
-                const cardLabel = pmLower.includes('stripe') ? '💳 Stripe' : '💳 카드결제';
-                statusHtml += `<div style="font-size:11px; color:#2563eb; font-weight:bold;">${cardLabel}</div>`;
-                if(order.payment_status === '결제완료') {
-                    statusHtml += `<div style="font-size:10px; color:#15803d;">(승인완료)</div>`;
-                } else {
-                    statusHtml += `<div style="font-size:10px; color:#ef4444;">(미결제)</div>`;
+                const label = pmLower.includes('stripe') ? 'Stripe' : '카드';
+                payHtml = `<div style="font-size:11px;font-weight:bold;color:#2563eb;">💳 ${label}</div>`;
+                payHtml += isPaid
+                    ? `<div style="font-size:10px;color:#15803d;font-weight:bold;">승인완료</div>`
+                    : `<div style="font-size:10px;color:#ef4444;">미결제</div>`;
+            } else if (isDeposit) {
+                payHtml = `<div style="font-size:11px;font-weight:bold;color:#7c3aed;">💰 예치금</div>`;
+                if (isPaid) payHtml += `<div style="font-size:10px;color:#15803d;">확인</div>`;
+            } else if (isBank) {
+                payHtml = `<div style="font-size:11px;font-weight:bold;color:#d97706;">🏦 무통장</div>`;
+                if (depositor) payHtml += `<div style="font-size:10px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55px;" title="${depositor}">${depositor}</div>`;
+                if (!isPaid && order.status !== '취소됨' && order.status !== '취소요청') {
+                    payHtml += `<button class="btn btn-success btn-sm" style="width:100%;margin-top:2px;font-size:10px;padding:1px 3px;" onclick="confirmDeposit('${order.id}')">입금확인</button>`;
+                } else if (isPaid) {
+                    payHtml += `<div style="font-size:10px;color:#15803d;font-weight:bold;">확인됨</div>`;
                 }
+            } else {
+                payHtml = `<div style="font-size:10px;color:#94a3b8;">-</div>`;
             }
-            else if (isDeposit) {
-                statusHtml += `<div style="font-size:11px; color:#7c3aed; font-weight:bold;">💰 예치금</div>`;
-                if(order.payment_status === '결제완료') {
-                    statusHtml += `<div style="font-size:10px; color:#15803d;">(승인완료)</div>`;
-                }
-            }
-            else if (isBank) {
-                statusHtml += `<div style="font-size:11px; color:#d97706; font-weight:bold;">🏦 무통장</div>`;
-                statusHtml += `<div style="font-size:11px; color:#334155;">${depositor}</div>`;
-                
-                // [핵심] 입금확인이 안 되었다면 '입금확인' 버튼을 계속 보여줌 (완료된 주문이라도 후불 처리를 위해)
-                if (order.payment_status !== '입금확인' && order.payment_status !== '결제완료') {
-                    statusHtml += `<button class="btn btn-success btn-sm" style="width:100%; margin-top:3px; font-size:11px; padding:2px;" onclick="confirmDeposit('${order.id}')">입금확인</button>`;
+
+            // ═══ [상태 칼럼] 주문 진행상태만 깔끔하게 ═══
+            let statusHtml = '';
+            const st = order.status;
+            if (st === '접수됨' || st === '파일처리중' || st === '접수대기' || st === '제작준비') {
+                statusHtml = `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;">접수됨</span>`;
+            } else if (st === '칼선작업' || st === '제작중') {
+                statusHtml = `<span class="badge" style="background:#fef3c7;color:#92400e;font-weight:bold;">🔨 제작중</span>`;
+            } else if (st === '완료됨' || st === '완료' || st === '구매확정') {
+                statusHtml = `<span class="badge" style="background:#dcfce7;color:#15803d;font-weight:bold;">✅ 완료</span>`;
+            } else if (st === '발송완료') {
+                statusHtml = `<span class="badge" style="background:#d1fae5;color:#065f46;font-weight:bold;">🚚 발송</span>`;
+            } else if (st === '배송완료') {
+                statusHtml = `<span class="badge" style="background:#a7f3d0;color:#064e3b;font-weight:bold;">📦 배송완료</span>`;
+            } else if (st === '취소요청') {
+                statusHtml = `<span class="badge" style="background:#fff7ed;color:#ea580c;font-weight:bold;border:1px solid #fed7aa;">❌ 취소요청</span>`;
+            } else if (st === '취소됨') {
+                const refSt = order.payment_status;
+                if (refSt === '환불완료') {
+                    statusHtml = `<span class="badge" style="background:#f0fdf4;color:#15803d;font-weight:bold;border:1px solid #bbf7d0;">✅ 환불완료</span>`;
+                } else if (refSt === '환불대기') {
+                    statusHtml = `<span class="badge" style="background:#fffbeb;color:#d97706;font-weight:bold;border:1px solid #fde68a;">⏳ 환불대기</span>`;
+                } else if (refSt === '환불실패') {
+                    statusHtml = `<span class="badge" style="background:#fef2f2;color:#dc2626;font-weight:bold;border:1px solid #fecaca;">❌ 환불실패</span>`;
                 } else {
-                    statusHtml += `<div style="font-size:10px; color:#15803d; font-weight:bold;">(확인됨)</div>`;
+                    statusHtml = `<span class="badge" style="background:#fee2e2;color:#dc2626;">취소됨</span>`;
                 }
+            } else {
+                statusHtml = `<span class="badge">${st}</span>`;
             }
 
             // [파일 버튼] — 파일 없으면 경고 표시
@@ -276,13 +302,14 @@ window.loadOrders = async () => {
                     <td>${managerOpts} <div style="margin-top:2px;">${driverOpts}</div></td>
                     
                     <td style="padding:2px 4px;">${fileBtn}${addBtn}</td>
-                    
-                    <td style="text-align:center; line-height:1.2;">${statusHtml}</td>
+
+                    <td style="text-align:center; line-height:1.3; padding:2px;">${payHtml}</td>
+                    <td style="text-align:center; padding:2px;">${statusHtml}</td>
                 </tr>`;
         });
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:red;">${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:red;">${e.message}</td></tr>`;
     } finally {
         showLoading(false);
         updateCancelReqBadge();
@@ -324,8 +351,17 @@ window.fixSiteCode = async (orderId) => {
 
 window.filterOrders = (status, btn) => {
     currentOrderStatus = status;
-    document.querySelectorAll('#sec-orders .btn-primary').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-outline'); });
-    if(btn) { btn.classList.remove('btn-outline'); btn.classList.add('btn-primary'); }
+    // 모든 탭 버튼 비활성화 (2줄 모두)
+    document.querySelectorAll('#sec-orders [id^="btnFilter"]').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-outline');
+        b.style.fontWeight = '';
+    });
+    if(btn) {
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-primary');
+        btn.style.fontWeight = 'bold';
+    }
     currentPage = 1;
     loadOrders();
 };
@@ -336,16 +372,28 @@ window.changePage = (step) => { if(currentPage + step > 0) { currentPage += step
 window.updateActionButtons = () => {
     const div = document.getElementById('action-buttons');
     if(!div) return;
-    if(currentOrderStatus === '접수됨') {
+    const s = currentOrderStatus;
+    if (s === '입금대기') {
+        div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">입금확인</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
+    } else if (s === '접수됨') {
         div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
-    } else if(currentOrderStatus === '칼선작업') {
+    } else if (s === '칼선작업') {
         div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button>`;
-    } else if(currentOrderStatus === '취소요청') {
-        div.innerHTML = `<button class="btn btn-success" onclick="approveCancelSelected()" style="font-weight:bold;">💳 카드 취소승인</button><button class="btn" onclick="completeCashRefundSelected()" style="font-weight:bold; background:#d97706; color:white;">💰 현금 환불완료</button><button class="btn btn-outline" onclick="rejectCancelSelected()" style="font-weight:bold;">🔙 취소거절 (복원)</button>`;
-    } else if(currentOrderStatus === '취소됨') {
-        div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#d97706;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
-    } else {
+    } else if (s === '완료됨') {
+        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('발송완료')">발송처리</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+    } else if (s === '배송') {
+        div.innerHTML = `<button class="btn btn-outline" onclick="changeStatusSelected('배송완료')">배송완료</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+    } else if (s === '취소요청') {
+        div.innerHTML = `<button class="btn btn-success" onclick="approveCancelSelected()" style="font-weight:bold;">💳 카드 취소승인</button><button class="btn" onclick="completeCashRefundSelected()" style="font-weight:bold;background:#d97706;color:white;">💰 현금 환불완료</button><button class="btn btn-outline" onclick="rejectCancelSelected()" style="font-weight:bold;">🔙 취소거절</button>`;
+    } else if (s === '취소됨') {
         div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+    } else if (s === '환불대기') {
+        div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#d97706;color:white;">🔄 환불 재시도</button>`;
+    } else if (s === '환불실패') {
+        div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#dc2626;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+    } else {
+        // 전체 탭
+        div.innerHTML = '';
     }
 };
 
@@ -508,20 +556,44 @@ window.retryRefundSelected = async () => {
     loadOrders();
 };
 
-// [취소요청 카운트 뱃지]
+// [뱃지 카운트 업데이트] — 취소요청 + 입금대기
 async function updateCancelReqBadge() {
     try {
-        const { count } = await sb.from('orders')
+        // 취소요청 카운트
+        const { count: cancelCount } = await sb.from('orders')
             .select('id', { count: 'exact', head: true })
             .eq('status', '취소요청');
         const badge = document.getElementById('cancelReqCount');
         if (badge) {
-            badge.textContent = count || 0;
-            badge.style.display = (count > 0) ? 'inline' : 'none';
+            badge.textContent = cancelCount || 0;
+            badge.style.display = (cancelCount > 0) ? 'inline' : 'none';
+        }
+        // 입금대기 카운트
+        const { count: depositCount } = await sb.from('orders')
+            .select('id', { count: 'exact', head: true })
+            .in('status', ['접수됨', '파일처리중', '접수대기', '제작준비'])
+            .not('payment_status', 'in', '("결제완료","입금확인")');
+        const dBadge = document.getElementById('depositWaitCount');
+        if (dBadge) {
+            dBadge.textContent = depositCount || 0;
+            dBadge.style.display = (depositCount > 0) ? 'inline' : 'none';
         }
     } catch (e) { /* ignore */ }
 }
 window.updateCancelReqBadge = updateCancelReqBadge;
+
+// [일괄 입금확인] 입금대기 탭에서 사용
+window.confirmDepositSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건의 입금을 확인 처리하시겠습니까?`)) return;
+    for (const id of ids) {
+        await sb.from('orders').update({ payment_status: '입금확인' }).eq('id', id);
+        await creditReferralBonus(id);
+    }
+    showToast(`${ids.length}건 입금확인 완료`, 'success');
+    loadOrders();
+};
 
 window.deleteOrdersSelected = async (force) => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
