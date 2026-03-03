@@ -459,6 +459,26 @@
     <h1 class="hero-title" data-i18n="hero_title">&nbsp;</h1>
     <div class="hero-cta-row">
         <p class="hero-desc" data-i18n="hero_desc">&nbsp;</p>
+
+        <!-- 프로모션 배너 (비로그인 시만 표시) -->
+        <div id="promoTimerBox" style="display:none; background:linear-gradient(135deg,#1e0a3c,#2d1052); border-radius:16px; padding:20px 24px; margin-bottom:16px; text-align:center; box-shadow:0 8px 30px rgba(99,102,241,0.3); border:1px solid rgba(168,85,247,0.3); max-width:380px; width:100%;">
+            <!-- 카운트다운 타이머 -->
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:12px;">
+                <span style="font-size:18px;">&#x23F0;</span>
+                <div style="display:flex; gap:4px; align-items:center;">
+                    <span id="promoH" style="background:#ef4444; color:#fff; font-size:22px; font-weight:900; padding:4px 8px; border-radius:8px; min-width:36px; display:inline-block; text-align:center; font-family:monospace;">02</span>
+                    <span style="color:#ef4444; font-size:20px; font-weight:900;">:</span>
+                    <span id="promoM" style="background:#ef4444; color:#fff; font-size:22px; font-weight:900; padding:4px 8px; border-radius:8px; min-width:36px; display:inline-block; text-align:center; font-family:monospace;">00</span>
+                    <span style="color:#ef4444; font-size:20px; font-weight:900;">:</span>
+                    <span id="promoS" style="background:#ef4444; color:#fff; font-size:22px; font-weight:900; padding:4px 8px; border-radius:8px; min-width:36px; display:inline-block; text-align:center; font-family:monospace;">00</span>
+                </div>
+                <span style="color:#fca5a5; font-size:13px; font-weight:700;" data-i18n="promo_remaining">남음</span>
+            </div>
+            <!-- 혜택 문구 -->
+            <p style="color:#e9d5ff; font-size:15px; font-weight:800; margin:0 0 4px; line-height:1.5;" data-i18n="promo_offer">지금 가입하면 3개월 무료 구독!</p>
+            <p style="color:#fbbf24; font-size:18px; font-weight:900; margin:0; letter-spacing:0.5px;" data-i18n="promo_mileage">+ 마일리지 100,000원 증정</p>
+        </div>
+
         <button id="heroSignupBtn" onclick="document.getElementById('loginModal').style.display='flex'; setTimeout(function(){var b=document.getElementById('btnSwitchAuthMode'); if(b && document.getElementById('loginPwConfirm').style.display==='none') b.click();},100);"
             class="hero-signup-btn">
             <span data-i18n="hero_signup_btn">1초 회원가입</span>
@@ -466,6 +486,78 @@
     </div>
     <p class="hero-signup-desc" data-i18n="hero_signup_desc">개인정보 인증없이 아이디와 비번만으로 바로 가입됩니다.</p>
 </div>
+
+<!-- 프로모션 타이머 스크립트 -->
+<script>
+(function() {
+    var KEY = 'promo_start_ts';
+    var DURATION = 2 * 60 * 60; // 2시간 (초)
+    var box = document.getElementById('promoTimerBox');
+    var hEl = document.getElementById('promoH');
+    var mEl = document.getElementById('promoM');
+    var sEl = document.getElementById('promoS');
+    var tid = null;
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function startTimer() {
+        var startTs = localStorage.getItem(KEY);
+        if (!startTs) {
+            startTs = Date.now();
+            localStorage.setItem(KEY, startTs);
+        }
+        startTs = parseInt(startTs);
+
+        function tick() {
+            var elapsed = Math.floor((Date.now() - startTs) / 1000);
+            var remain = DURATION - elapsed;
+            if (remain <= 0) {
+                // 타이머 만료 → 리셋 (마케팅용)
+                localStorage.setItem(KEY, Date.now());
+                startTs = Date.now();
+                remain = DURATION;
+            }
+            var h = Math.floor(remain / 3600);
+            var m = Math.floor((remain % 3600) / 60);
+            var s = remain % 60;
+            if (hEl) hEl.textContent = pad(h);
+            if (mEl) mEl.textContent = pad(m);
+            if (sEl) sEl.textContent = pad(s);
+        }
+        tick();
+        tid = setInterval(tick, 1000);
+    }
+
+    // 로그인 상태 체크 후 표시
+    function checkAndShow() {
+        // Supabase 세션 확인
+        if (window.sb && window.sb.auth) {
+            window.sb.auth.getSession().then(function(res) {
+                if (!res.data.session && box) {
+                    box.style.display = 'block';
+                    startTimer();
+                }
+            });
+        } else {
+            // sb 로드 전이면 일단 표시
+            if (box) { box.style.display = 'block'; startTimer(); }
+        }
+    }
+
+    // DOM 로드 후 실행
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(checkAndShow, 500); });
+    } else {
+        setTimeout(checkAndShow, 500);
+    }
+
+    // 로그인 시 숨기기
+    window.addEventListener('authStateChange', function() {
+        if (box) box.style.display = 'none';
+        if (tid) clearInterval(tid);
+    });
+})();
+</script>
 
 <!-- 퀵메뉴와퍼 (통합) -->
 <div class="quick-menu-wrapper">

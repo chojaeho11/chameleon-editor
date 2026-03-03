@@ -262,9 +262,31 @@ async function handleAuthAction() {
             const { data, error } = await sb.auth.signUp({ email, password: paddedPassword });
             if (error) throw error;
 
-            // 프로필에 가입 국가 저장
+            // 프로필에 가입 국가 + 구독자 역할 + 마일리지 지급
             if (data.user) {
-                await sb.from('profiles').update({ site: siteCode }).eq('id', data.user.id);
+                await sb.from('profiles').update({
+                    site: siteCode,
+                    role: 'subscriber',
+                    mileage: 100000
+                }).eq('id', data.user.id);
+
+                // 3개월 구독 레코드 생성
+                var expiresAt = new Date();
+                expiresAt.setMonth(expiresAt.getMonth() + 3);
+                await sb.from('subscriptions').insert({
+                    user_id: data.user.id,
+                    status: 'active',
+                    started_at: new Date().toISOString(),
+                    expires_at: expiresAt.toISOString()
+                }).catch(function() {});
+
+                // 마일리지 지급 로그
+                await sb.from('wallet_logs').insert({
+                    user_id: data.user.id,
+                    type: 'signup_bonus',
+                    amount: 100000,
+                    description: '신규가입 프로모션 마일리지'
+                }).catch(function() {});
             }
 
             // ★ 가입 즉시 로그인 처리
