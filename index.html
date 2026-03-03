@@ -6800,17 +6800,157 @@ window.showChoiceModal = async function(key) {
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
 
+    // ★ 간소화 플로우: 일반상품이 아니고 템플릿 선택이 아닌 경우 초기 2버튼만 표시
+    if (!product.is_general_product && !window.pendingTemplate) {
+        const rightPanel = document.getElementById('choiceRightActions');
+        if (rightPanel) {
+            // 상세 요소 숨기기 (원래 display값 저장)
+            rightPanel.querySelectorAll('[data-npc="upload"], [data-npc="size"], [data-npc="qtyLabel"], [data-npc="qty"], [data-npc="estimate"], [data-npc="price"], [data-npc="total"], [data-npc="buttons"], [data-npc="uploadPreview"]').forEach(el => {
+                el.dataset.origDisplay = el.style.display || '';
+                el.style.display = 'none';
+            });
+            const addonArea = document.getElementById('addonCategoryArea');
+            if (addonArea) { addonArea.dataset.origDisplay = addonArea.style.display || ''; addonArea.style.display = 'none'; }
+            // uploadedFilesList도 숨김
+            const uploadedList = document.getElementById('uploadedFilesList');
+            if (uploadedList) uploadedList.style.display = 'none';
+
+            // 다국어 버튼 텍스트
+            const _btnEditorText = lang==='ja'?'エディタでデザイン':lang==='zh'?'在编辑器中设计':lang==='ar'?'التصميم في المحرر':lang==='es'?'Diseñar en Editor':lang==='de'?'Im Editor gestalten':lang==='fr'?'Créer dans l\'éditeur':lang==='en'?'Design in Editor':'에디터로 직접디자인';
+            const _btnUploadText = lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일올리기';
+
+            // 초기 2버튼 삽입 (상품 헤더 바로 아래)
+            const initBtnsHtml = `
+                <div id="pdpInitialButtons" style="display:flex; flex-direction:column; gap:16px; margin-top:20px; padding-bottom:50px;">
+                    <button onclick="window._pdpShowEditorFlow()" class="btn-round primary"
+                            style="height:80px; font-size:18px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                        <i class="fa-solid fa-palette" style="font-size:24px;"></i> ${_btnEditorText}
+                    </button>
+                    <button onclick="window._pdpShowUploadFlow()" class="btn-round"
+                            style="height:80px; font-size:18px; background:#f59e0b; color:white; display:flex; align-items:center; justify-content:center; gap:10px; border:none; border-radius:12px; cursor:pointer; font-weight:bold;">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size:24px;"></i> ${_btnUploadText}
+                    </button>
+                </div>
+                <div id="pdpDetailArea" style="display:none;">
+                    <div id="pdpConfirmButtons" style="margin-top:20px; display:flex; flex-direction:column; gap:12px; padding-bottom:50px;"></div>
+                </div>`;
+            const headerCard = rightPanel.querySelector('.choice-summary-card');
+            if (headerCard) headerCard.insertAdjacentHTML('afterend', initBtnsHtml);
+        }
+    }
+
+    // ★ 간소화 플로우: 요소 복원 헬퍼 (저장된 원래 display값 복원)
+    window._pdpRestoreDisplay = function(el) { el.style.display = el.dataset.origDisplay || ''; };
+
+    // ★ 간소화 플로우 함수: 에디터 플로우
+    window._pdpShowEditorFlow = function() {
+        const initBtns = document.getElementById('pdpInitialButtons');
+        if (initBtns) initBtns.style.display = 'none';
+
+        const rightPanel = document.getElementById('choiceRightActions');
+        if (!rightPanel) return;
+
+        const _isCustom = window.isCustomModeCurrent;
+        // 사이즈 (커스텀만)
+        if (_isCustom) {
+            rightPanel.querySelectorAll('[data-npc="size"]').forEach(el => window._pdpRestoreDisplay(el));
+        }
+        // 수량
+        rightPanel.querySelectorAll('[data-npc="qty"]').forEach(el => window._pdpRestoreDisplay(el));
+        rightPanel.querySelectorAll('[data-npc="qtyLabel"]').forEach(el => window._pdpRestoreDisplay(el));
+        // 견적가/가격
+        rightPanel.querySelectorAll('[data-npc="estimate"]').forEach(el => window._pdpRestoreDisplay(el));
+        rightPanel.querySelectorAll('[data-npc="price"]').forEach(el => window._pdpRestoreDisplay(el));
+        // 옵션
+        const addonArea = document.getElementById('addonCategoryArea');
+        if (addonArea) window._pdpRestoreDisplay(addonArea);
+        // Total
+        rightPanel.querySelectorAll('[data-npc="total"]').forEach(el => window._pdpRestoreDisplay(el));
+
+        // 다국어
+        const _lang = (function(){ const p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase()==='jp'?'ja':p.toLowerCase()==='us'?'en':p.toLowerCase(); const h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
+        const _enterEditorText = _lang==='ja'?'エディタを開く':_lang==='zh'?'打开编辑器':_lang==='ar'?'فتح المحرر':_lang==='es'?'Abrir Editor':_lang==='de'?'Editor öffnen':_lang==='fr'?'Ouvrir l\'éditeur':_lang==='en'?'Open Editor':'에디터 진입';
+
+        // 확인 버튼
+        const confirmDiv = document.getElementById('pdpConfirmButtons');
+        if (confirmDiv) {
+            confirmDiv.innerHTML = `
+                <button onclick="window.confirmChoice('editor')" class="btn-round primary" style="height:60px; font-size:16px;">
+                    <i class="fa-solid fa-palette"></i> ${_enterEditorText}
+                </button>`;
+        }
+        const detailArea = document.getElementById('pdpDetailArea');
+        if (detailArea) detailArea.style.display = '';
+    };
+
+    // ★ 간소화 플로우 함수: 파일 업로드 플로우
+    window._pdpShowUploadFlow = function() {
+        // 바로 파일 선택 다이얼로그 오픈
+        window.confirmChoice('upload');
+    };
+
+    // ★ 간소화 플로우: 업로드 완료 후 상세 영역 표시
+    window._pdpAfterUpload = function() {
+        const initBtns = document.getElementById('pdpInitialButtons');
+        if (initBtns) initBtns.style.display = 'none';
+
+        const rightPanel = document.getElementById('choiceRightActions');
+        if (!rightPanel) return;
+
+        const _isCustom = window.isCustomModeCurrent;
+        // 업로드된 파일 목록 표시
+        const uploadedList = document.getElementById('uploadedFilesList');
+        if (uploadedList && window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) uploadedList.style.display = 'block';
+        // 업로드 프리뷰
+        rightPanel.querySelectorAll('[data-npc="uploadPreview"]').forEach(el => {
+            if (window._uploadedFileDimensions) window._pdpRestoreDisplay(el);
+        });
+        // 사이즈 (커스텀만)
+        if (_isCustom) {
+            rightPanel.querySelectorAll('[data-npc="size"]').forEach(el => window._pdpRestoreDisplay(el));
+        }
+        // 수량
+        rightPanel.querySelectorAll('[data-npc="qty"]').forEach(el => window._pdpRestoreDisplay(el));
+        rightPanel.querySelectorAll('[data-npc="qtyLabel"]').forEach(el => window._pdpRestoreDisplay(el));
+        // 견적가/가격
+        rightPanel.querySelectorAll('[data-npc="estimate"]').forEach(el => window._pdpRestoreDisplay(el));
+        rightPanel.querySelectorAll('[data-npc="price"]').forEach(el => window._pdpRestoreDisplay(el));
+        // 옵션
+        const addonArea = document.getElementById('addonCategoryArea');
+        if (addonArea) window._pdpRestoreDisplay(addonArea);
+        // Total
+        rightPanel.querySelectorAll('[data-npc="total"]').forEach(el => window._pdpRestoreDisplay(el));
+
+        // 다국어
+        const _lang = (function(){ const p = new URLSearchParams(window.location.search).get('lang'); if(p) return p.toLowerCase()==='jp'?'ja':p.toLowerCase()==='us'?'en':p.toLowerCase(); const h = window.location.hostname; if(h.includes('cafe0101.com')) return 'ja'; if(h.includes('cafe3355.com')) return 'en'; return 'kr'; })();
+        const _editInEditorText = _lang==='ja'?'エディタで編集':_lang==='zh'?'在编辑器中编辑':_lang==='ar'?'التعديل في المحرر':_lang==='es'?'Editar en Editor':_lang==='de'?'Im Editor bearbeiten':_lang==='fr'?'Modifier dans l\'éditeur':_lang==='en'?'Edit in Editor':'에디터에서 수정하기';
+        const _addToCartText = _lang==='ja'?'カートに入れる':_lang==='zh'?'加入购物车':_lang==='ar'?'أضف إلى السلة':_lang==='es'?'Añadir al Carrito':_lang==='de'?'In den Warenkorb':_lang==='fr'?'Ajouter au panier':_lang==='en'?'Add to Cart':'장바구니 바로가기';
+
+        // 확인 버튼: 에디터에서 수정 + 장바구니
+        const confirmDiv = document.getElementById('pdpConfirmButtons');
+        if (confirmDiv) {
+            confirmDiv.innerHTML = `
+                <button onclick="window.confirmChoice('editor')" class="btn-round" style="height:55px; font-size:15px;">
+                    <i class="fa-solid fa-palette"></i> ${_editInEditorText}
+                </button>
+                <button onclick="window.confirmChoice('cart')" class="btn-round primary" style="height:55px; font-size:15px; background:#4ccc02; color:white; border:none;">
+                    <i class="fa-solid fa-cart-shopping"></i> ${_addToCartText}
+                </button>`;
+        }
+        const detailArea = document.getElementById('pdpDetailArea');
+        if (detailArea) detailArea.style.display = '';
+    };
+
     // ★ 상품 설명 내 링크 → 새 탭으로 열기 (페이지 이탈 방지)
     modal.querySelectorAll('.product-detail-render a, .choice-left-content a').forEach(a => {
         a.setAttribute('target', '_blank');
         a.setAttribute('rel', 'noopener');
     });
 
-    // ★ NPC 가이드 위자드 초기화 (PC + 모바일 공통)
-    // 시작화면에서 이미지 템플릿 선택 후 진입한 경우 → 위자드 스킵 (버튼 모두 표시)
-    if (window.NpcWizard && !window.pendingTemplate) {
-        setTimeout(() => window.NpcWizard.init(product), 100);
-    }
+    // ★ NPC 가이드 위자드 비활성화 (간소화 플로우 적용)
+    // if (window.NpcWizard && !window.pendingTemplate) {
+    //     setTimeout(() => window.NpcWizard.init(product), 100);
+    // }
 
     // ★ 추천상품 로드 (대분류 기준 4개, 모바일에서 옵션과 상세설명 사이)
     (async function loadRelatedProducts() {
@@ -7284,6 +7424,7 @@ if (w >= 20 && h >= 20) {
                                 if (!window._pendingUploadedFiles) window._pendingUploadedFiles = [];
                                 window._pendingUploadedFiles.push({ fileName: file.name, originalUrl: urlData.publicUrl, thumb: td.publicUrl, cutlineUrl: cutlinePublicUrl });
                                 window._renderUploadedFiles();
+                                if (window._pdpAfterUpload) window._pdpAfterUpload();
                                 showToast(lang==='ja'?'アップロード完了':lang==='en'?'Upload complete':'업로드 완료', 'success');
                             } catch(err) {
                                 console.error('키링 업로드 오류:', err);
@@ -7365,6 +7506,7 @@ if (w >= 20 && h >= 20) {
                         if (!window._pendingUploadedFiles) window._pendingUploadedFiles = [];
                         uploadedFiles.forEach(f => window._pendingUploadedFiles.push(f));
                         window._renderUploadedFiles();
+                        if (window._pdpAfterUpload) window._pdpAfterUpload();
                         showToast(lang==='ja'?'アップロード完了':lang==='en'?'Upload complete':'업로드 완료', 'success');
                     }
                 } catch(err) {
