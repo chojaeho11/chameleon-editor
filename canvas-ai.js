@@ -304,9 +304,11 @@ export function initAiTools() {
     window.openDesignWizard = function() {
         const modal = document.getElementById('designWizardModal');
         const input = document.getElementById('wizardTitleInput');
+        const bodyInput = document.getElementById('wizardBodyInput');
         const prog  = document.getElementById('wizardProgressArea');
         const btn   = document.getElementById('btnWizardGenerate');
         if (input) input.value = '';
+        if (bodyInput) bodyInput.value = '';
         if (prog)  prog.style.display = 'none';
         if (btn) { btn.disabled = false; btn.querySelector('span').textContent = window.t?.('wizard_generate','디자인 생성하기') || '디자인 생성하기'; }
         if (modal) { modal.style.display = 'flex'; setTimeout(() => input?.focus(), 150); }
@@ -326,6 +328,7 @@ export function initAiTools() {
         btnWizGen.onclick = async () => {
             const title = document.getElementById('wizardTitleInput')?.value.trim();
             if (!title) { showToast(window.t?.('msg_input_desc','제목을 입력해주세요') || '제목을 입력해주세요', "info"); return; }
+            const bodyText = document.getElementById('wizardBodyInput')?.value.trim() || '';
             const styleBtn = document.querySelector('.wizard-style-btn.active');
             const style = styleBtn?.dataset.style || 'modern';
             btnWizGen.disabled = true;
@@ -333,11 +336,11 @@ export function initAiTools() {
             document.getElementById('wizardProgressArea').style.display = 'block';
             try {
                 if (window.__pdMode) {
-                    await runDesignWizardForPD(title, style);
+                    await runDesignWizardForPD(title, style, bodyText);
                 } else if (window.__boxMode) {
-                    await runDesignWizardForBox(title, style);
+                    await runDesignWizardForBox(title, style, bodyText);
                 } else {
-                    await runDesignWizard(title, style);
+                    await runDesignWizard(title, style, bodyText);
                 }
                 document.getElementById('designWizardModal').style.display = 'none';
             } catch(e) {
@@ -621,7 +624,7 @@ function _wzRender(steps, idx) {
     if (bar) bar.style.width = Math.min(100, ((idx+1)/steps.length)*100) + '%';
 }
 
-export async function runDesignWizard(title, style) {
+export async function runDesignWizard(title, style, bodyText) {
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) throw new Error('No canvas board');
     const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);
@@ -709,6 +712,11 @@ export async function runDesignWizard(title, style) {
     // ─── Step 2: Title ───
     _wzRender(steps, 1);
     await _wzTitle(title, titleFont, S, bW, bH, bL, bT);
+
+    // ─── Step 2.5: Body Text (사용자 입력 본문 — 중간 크기 고딕) ───
+    if (bodyText) {
+        _wzBodyText(bodyText, descFont, bW, bH, bL, bT);
+    }
 
     // ─── Step 3: Description (하단 박스 안에 삽입) ───
     _wzRender(steps, 2);
@@ -844,9 +852,9 @@ window.runImageTemplateDesign = async function(keyword) {
 // ★ 종이매대(PD) 전용 멀티페이스 마법사
 // Face 0: 간판 (풀 디자인) / Face 1: 옆면 (배경+요소) / Face 2: 선반 (배경+타이틀)
 // ============================================================
-async function runDesignWizardForPD(title, style) {
+async function runDesignWizardForPD(title, style, bodyText) {
     // ─── Face 0: 상단 간판 — 풀 마법사 실행 ───
-    await runDesignWizard(title, style);
+    await runDesignWizard(title, style, bodyText);
     if (window.savePageState) window.savePageState();
 
     // 공통 데이터 캐시
@@ -937,9 +945,9 @@ function _wzShelfTitle(title, font, bW, bH, bL, bT) {
 // ============================================================
 // ★ 허니콤 박스 전용 멀티페이스 마법사 (6면 동일 디자인)
 // ============================================================
-async function runDesignWizardForBox(title, style) {
+async function runDesignWizardForBox(title, style, bodyText) {
     // ─── Face 0 (Front): 풀 마법사 실행 ───
-    await runDesignWizard(title, style);
+    await runDesignWizard(title, style, bodyText);
     if (window.savePageState) window.savePageState();
 
     // Face 0의 캔버스 JSON 캡처 (보드 제외한 오브젝트들)
@@ -1262,6 +1270,26 @@ async function _wzGetDescText(title) {
     return text;
 }
 
+// ─── Step 2.5b: 사용자 본문 텍스트 (제목 아래, 중간 크기 고딕) ───
+function _wzBodyText(bodyText, descFont, bW, bH, bL, bT) {
+    const fSize = Math.round(bW * 0.028);
+    const obj = new fabric.Textbox(bodyText, {
+        fontFamily: descFont + ', sans-serif', fontSize: fSize,
+        fontWeight: '500', fill: 'rgba(255,255,255,0.95)',
+        originX:'left', originY:'top', textAlign:'left',
+        left: bL + bW * 0.05, top: bT + bH * 0.38,
+        width: bW * 0.55,
+        lineHeight: 1.5,
+        splitByGrapheme: true,
+        isWizardBody: true
+    });
+    if (obj.height > bH * 0.15) {
+        obj.set('fontSize', Math.round(fSize * 0.8));
+    }
+    canvas.add(obj);
+    canvas.bringToFront(obj);
+}
+
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     // 하단 네모박스: Forest 스타일 컬러 사용
@@ -1270,7 +1298,9 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     const fSize = Math.round(bW * 0.014);
     const padX = bW * 0.02, padY = bH * 0.015;
     const boxLeft = bL + bW * 0.05;
-    const boxTop = bT + bH * 0.48;
+    // 본문이 있으면 더 아래로
+    const bodyObj = canvas.getObjects().find(o => o.isWizardBody);
+    const boxTop = bodyObj ? (bodyObj.top + bodyObj.height + bH * 0.03) : (bT + bH * 0.48);
 
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
