@@ -454,11 +454,16 @@ async function loadOrders() {
         let badgeClass = 'status-wait';
         if(['완료됨','배송완료','구매확정'].includes(o.status)) badgeClass = 'status-done';
         if(o.status === '취소됨') badgeClass = 'status-cancel';
+        if(o.status === '취소요청') badgeClass = 'status-cancel';
 
-        // 환불 상태 표시
+        // 환불/취소 상태 표시
         let refundLabel = '';
-        if (o.status === '취소됨' && o.payment_status === '환불완료') {
+        if (o.status === '취소요청') {
+            refundLabel = `<div style="font-size:10px; color:#d97706; font-weight:bold;">(${window.t('label_cancel_pending', '취소 심사중')})</div>`;
+        } else if (o.status === '취소됨' && o.payment_status === '환불완료') {
             refundLabel = `<div style="font-size:10px; color:#15803d; font-weight:bold;">(${window.t('label_refund_done', '환불완료')})</div>`;
+        } else if (o.status === '취소됨' && o.payment_status === '환불대기') {
+            refundLabel = `<div style="font-size:10px; color:#d97706; font-weight:bold;">(${window.t('label_refund_pending', '환불 처리중')})</div>`;
         }
 
         const canCancel = ['접수대기','입금대기','접수됨'].includes(o.status);
@@ -513,90 +518,17 @@ async function loadOrders() {
 }
 
 async function cancelOrder(orderId) {
-    if (!confirm(window.t('confirm_cancel_refund', "주문을 취소하고 결제를 환불하시겠습니까?"))) return;
+    if (!confirm(window.t('confirm_cancel_request', "주문 취소를 요청하시겠습니까?\n관리자 확인 후 환불이 진행됩니다."))) return;
 
-    // 1. 주문 정보 조회
-    const { data: order, error: fetchErr } = await sb.from('orders')
-        .select('payment_method, toss_payment_key, total_amount, discount_amount, user_id')
-        .eq('id', orderId).single();
-
-    if (fetchErr || !order) {
-        showToast(window.t('msg_refund_failed', '환불 처리 실패. 고객센터에 문의하세요.'), 'error');
-        return;
-    }
-
-    showToast(window.t('msg_refund_processing', '환불 처리 중...'), 'info');
-
-    const pm = (order.payment_method || '').toLowerCase();
-    const isCard = pm.includes('카드') || pm.includes('card');
-    const isStripe = pm.includes('stripe');
-    const isDeposit = pm.includes('예치금');
-    const isBank = pm.includes('무통장') || pm.includes('bank');
-    let refundSuccess = true;
-    let newPaymentStatus = '환불완료';
+    showToast(window.t('msg_cancel_processing', '취소 요청 중...'), 'info');
 
     try {
-        // 2. 결제수단별 환불 처리
-        if ((isCard || isStripe) && order.toss_payment_key) {
-            if (isStripe) {
-                // Stripe 환불
-                const { data, error } = await sb.functions.invoke('cancel-stripe-payment', {
-                    body: { session_id: order.toss_payment_key, cancelReason: '고객 직접 취소' }
-                });
-                if (error || (data && data.error)) {
-                    throw new Error((data && data.error) || error?.message || 'Stripe refund failed');
-                }
-            } else {
-                // Toss 환불
-                const { data, error } = await sb.functions.invoke('cancel-toss-payment', {
-                    body: { paymentKey: order.toss_payment_key, cancelReason: '고객 직접 취소' }
-                });
-                if (error || (data && data.error)) {
-                    throw new Error((data && data.error) || error?.message || 'Toss refund failed');
-                }
-            }
-        } else if (isDeposit) {
-            // 예치금 복원
-            const { data: pf } = await sb.from('profiles').select('deposit').eq('id', order.user_id).single();
-            if (pf) {
-                const newBalance = (pf.deposit || 0) + (order.total_amount || 0);
-                await sb.from('profiles').update({ deposit: newBalance }).eq('id', order.user_id);
-                await sb.from('wallet_logs').insert({
-                    user_id: order.user_id,
-                    type: 'refund_cancel',
-                    amount: order.total_amount || 0,
-                    description: `주문 취소 환불 (주문번호: ${orderId})`
-                });
-            }
-        } else if (isBank) {
-            // 무통장은 자동 환불 불가
-            newPaymentStatus = '환불대기';
-            alert(window.t('msg_bank_cancel_notice', '무통장 입금 건은 별도 환불 안내를 드립니다.'));
-        }
-
-        // 3. 마일리지 복원
-        if (order.discount_amount > 0 && order.user_id) {
-            const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
-            if (pf) {
-                await sb.from('profiles').update({ mileage: (pf.mileage || 0) + order.discount_amount }).eq('id', order.user_id);
-                await sb.from('wallet_logs').insert({
-                    user_id: order.user_id,
-                    type: 'refund_mileage',
-                    amount: order.discount_amount,
-                    description: `주문 취소 마일리지 복원 (주문번호: ${orderId})`
-                });
-            }
-        }
-
-        // 4. 주문 상태 업데이트
-        await sb.from('orders').update({ status: '취소됨', payment_status: newPaymentStatus }).eq('id', orderId);
-        showToast(window.t('msg_refund_complete', '환불이 완료되었습니다.'), 'success');
-
+        const { error } = await sb.from('orders').update({ status: '취소요청' }).eq('id', orderId);
+        if (error) throw error;
+        showToast(window.t('msg_cancel_requested', '취소 요청이 접수되었습니다. 관리자 확인 후 환불이 처리됩니다.'), 'success');
     } catch (e) {
-        console.error('Refund error:', e);
-        // PG 환불 실패 시에도 취소 상태는 업데이트 (환불 실패 표시)
-        await sb.from('orders').update({ status: '취소됨', payment_status: '환불실패' }).eq('id', orderId);
-        showToast(window.t('msg_refund_failed', '환불 처리 실패. 고객센터에 문의하세요.') + '\n' + e.message, 'error');
+        console.error('Cancel request error:', e);
+        showToast(window.t('msg_cancel_request_failed', '취소 요청 실패. 고객센터에 문의하세요.'), 'error');
     }
 
     loadOrders();

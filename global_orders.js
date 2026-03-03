@@ -120,9 +120,8 @@ window.loadOrders = async () => {
             staffList = data || [];
         }
 
-        // [핵심 1] 쿼리에 bids(id) 추가 (입찰 카운트용)
         let query = sb.from('orders')
-            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, has_partner_items, files, bids(id)', { count: 'exact' })
+            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name', { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
@@ -130,12 +129,14 @@ window.loadOrders = async () => {
 
         // 필터 적용
         if (currentOrderStatus === '접수됨') query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
-        else if (currentOrderStatus === '칼선작업') query = query.eq('status', '칼선작업');
-        else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정']);
+        else if (currentOrderStatus === '칼선작업') query = query.in('status', ['칼선작업', '제작중']);
+        else if (currentOrderStatus === '완료됨') query = query.in('status', ['완료됨', '발송완료', '완료', '구매확정', '배송완료']);
+        else if (currentOrderStatus === '취소요청') query = query.eq('status', '취소요청');
+        else if (currentOrderStatus === '취소됨') query = query.eq('status', '취소됨');
 
         if (deliveryDateFilter) query = query.eq('delivery_target_date', deliveryDateFilter);
         if (orderDateFilter) query = query.gte('created_at', orderDateFilter + 'T00:00:00').lte('created_at', orderDateFilter + 'T23:59:59');
-        if (searchKeyword) query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%`);
+        if (searchKeyword) query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,id.eq.${searchKeyword}`);
         if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
 
         const from = (currentPage - 1) * itemsPerPage;
@@ -152,7 +153,7 @@ window.loadOrders = async () => {
 
         tbody.innerHTML = '';
         if (!data || data.length === 0) { 
-            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:30px;">주문이 없습니다.</td></tr>'; 
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;">주문이 없습니다.</td></tr>'; 
             showLoading(false); return; 
         }
 
@@ -187,34 +188,13 @@ window.loadOrders = async () => {
                 deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px;">(배)${delDate}</div>`;
             }
 
-            // [입찰 표시] (팝업 버튼 연동)
-            let bidHtml = '';
-            const bidCount = (order.bids && Array.isArray(order.bids)) ? order.bids.length : 0;
-
-            if (order.head_office_check === true) {
-                bidHtml = `<div style="margin-bottom:2px;"><span class="badge" style="background:#333; color:#fff; font-size:11px;">⛔ 본사직권</span></div>`;
-            } else {
-                // 입찰 건수가 있으면 클릭 가능한 버튼으로 표시
-                const btnClass = bidCount > 0 ? 'btn-primary' : 'btn-outline';
-                const btnText = bidCount > 0 ? `${bidCount}건` : '0';
-                const subText = bidCount > 0 ? '입찰확인' : '본사처리';
-                const action = bidCount > 0 ? `openBidAdminModal('${order.id}')` : `setHeadOfficeOnly('${order.id}')`;
-
-                bidHtml = `
-                    <button class="btn ${btnClass} btn-sm" onclick="${action}" style="width:100%; padding:2px 0; font-size:11px;">
-                        ${btnText}
-                    </button>
-                    <div style="font-size:10px; color:#94a3b8; margin-top:2px;">${subText}</div>
-                `;
-            }
-
-            // [상태 & 결제정보] (카드/무통장 디테일 표시)
-            // [상태 & 결제정보] (카드/무통장 디테일 표시)
+            // [상태 & 결제정보]
             let statusHtml = '';
 
-            // 1. 상태 뱃지 표시
-            if (order.status === '완료됨' || order.status === '발송완료') {
+            if (order.status === '완료됨' || order.status === '발송완료' || order.status === '배송완료') {
                 statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#dcfce7; color:#15803d;">${order.status}</span></div>`;
+            } else if (order.status === '취소요청') {
+                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fef3c7; color:#d97706; font-weight:bold;">❌ 취소요청</span></div>`;
             } else if (order.status === '취소됨') {
                 statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fee2e2; color:#dc2626;">${order.status}</span></div>`;
                 if (order.payment_status === '환불완료') {
@@ -262,9 +242,11 @@ window.loadOrders = async () => {
                 }
             }
 
-            // [파일 버튼] (너비 50px에 맞게 축소)
+            // [파일 버튼] — 파일 없으면 경고 표시
             const fCount = order.files?.length || 0;
-            const fileBtn = `<button class="btn btn-outline" style="width:100%; padding:2px 0; font-size:12px; height:24px;" onclick="openFileModal('${order.id}')" title="파일목록">📂 ${fCount}</button>`;
+            const fileIcon = fCount === 0 ? '⚠️' : '📂';
+            const fileBtnStyle = fCount === 0 ? 'width:100%; padding:2px 0; font-size:12px; height:24px; background:#fef2f2; border-color:#fca5a5; color:#dc2626;' : 'width:100%; padding:2px 0; font-size:12px; height:24px;';
+            const fileBtn = `<button class="btn btn-outline" style="${fileBtnStyle}" onclick="openFileModal('${order.id}')" title="파일목록">${fileIcon} ${fCount}</button>`;
             const addBtn = `<label class="btn btn-sky" style="width:100%; padding:2px 0; font-size:12px; height:24px; margin-top:2px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;" title="파일추가"><i class="fa-solid fa-plus"></i><input type="file" style="display:none;" onchange="uploadFileDirect('${order.id}', this)"></label>`;
 
             // [렌더링]
@@ -282,7 +264,7 @@ window.loadOrders = async () => {
                     
                     <td style="font-size:11px;">${items.map(i => `<div>- ${i.productName || '상품'} (${i.qty})</div>`).join('')}</td>
                     
-                    <td style="text-align:center;">${bidHtml}</td> <td style="text-align:right;">${fmtAmt(total)}</td>
+                    <td style="text-align:right;">${fmtAmt(total)}</td>
                     <td style="text-align:right; color:#ef4444;">${fmtAmt(order.discount_amount || 0)}</td>
                     <td style="text-align:right; color:#d97706;">${fmtAmt(order.used_deposit || 0)}</td>
                     <td style="text-align:right; font-weight:bold; color:#15803d;">${fmtAmt(order.actual_payment || total)}</td>
@@ -295,9 +277,10 @@ window.loadOrders = async () => {
         });
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:red;">${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:red;">${e.message}</td></tr>`;
     } finally {
         showLoading(false);
+        updateCancelReqBadge();
     }
 };
 function createStaffSelectHTML(orderId, role, selectedId) {
@@ -348,9 +331,17 @@ window.changePage = (step) => { if(currentPage + step > 0) { currentPage += step
 window.updateActionButtons = () => {
     const div = document.getElementById('action-buttons');
     if(!div) return;
-    if(currentOrderStatus === '접수됨') div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-warning" onclick="cancelWithRefundSelected()" style="background:#dc2626; color:white;">결제취소</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
-    else if(currentOrderStatus === '칼선작업') div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button>`;
-    else div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+    if(currentOrderStatus === '접수됨') {
+        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
+    } else if(currentOrderStatus === '칼선작업') {
+        div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button>`;
+    } else if(currentOrderStatus === '취소요청') {
+        div.innerHTML = `<button class="btn btn-success" onclick="approveCancelSelected()" style="font-weight:bold;">✅ 취소승인 (환불)</button><button class="btn btn-outline" onclick="rejectCancelSelected()" style="font-weight:bold;">🔙 취소거절 (복원)</button>`;
+    } else if(currentOrderStatus === '취소됨') {
+        div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#d97706;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+    } else {
+        div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+    }
 };
 
 window.changeStatusSelected = async (status) => {
@@ -360,70 +351,73 @@ window.changeStatusSelected = async (status) => {
     loadOrders();
 };
 
-// [결제 취소 + 환불] 관리자용
-window.cancelWithRefundSelected = async () => {
+// [환불 헬퍼] 단건 환불 처리 — 여러 함수에서 공유
+async function refundSingleOrder(id, reason = '관리자 취소') {
+    const { data: order } = await sb.from('orders')
+        .select('payment_method, toss_payment_key, total_amount, discount_amount, user_id')
+        .eq('id', id).single();
+    if (!order) throw new Error('주문 조회 실패');
+
+    const pm = (order.payment_method || '').toLowerCase();
+    const isCard = pm.includes('카드') || pm.includes('card');
+    const isStripe = pm.includes('stripe');
+    const isDeposit = pm.includes('예치금');
+    let newPaymentStatus = '환불완료';
+
+    // PG 환불
+    if ((isCard || isStripe) && order.toss_payment_key) {
+        if (isStripe) {
+            const { data, error } = await sb.functions.invoke('cancel-stripe-payment', {
+                body: { session_id: order.toss_payment_key, cancelReason: reason }
+            });
+            if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
+        } else {
+            const { data, error } = await sb.functions.invoke('cancel-toss-payment', {
+                body: { paymentKey: order.toss_payment_key, cancelReason: reason }
+            });
+            if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
+        }
+    } else if (isDeposit && order.user_id) {
+        const { data: pf } = await sb.from('profiles').select('deposit').eq('id', order.user_id).single();
+        if (pf) {
+            await sb.from('profiles').update({ deposit: (pf.deposit || 0) + (order.total_amount || 0) }).eq('id', order.user_id);
+            await sb.from('wallet_logs').insert({
+                user_id: order.user_id, type: 'refund_cancel',
+                amount: order.total_amount || 0,
+                description: `${reason} 환불 (주문번호: ${id})`
+            });
+        }
+    } else {
+        newPaymentStatus = '환불대기';
+    }
+
+    // 마일리지 복원
+    if (order.discount_amount > 0 && order.user_id) {
+        const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
+        if (pf) {
+            await sb.from('profiles').update({ mileage: (pf.mileage || 0) + order.discount_amount }).eq('id', order.user_id);
+            await sb.from('wallet_logs').insert({
+                user_id: order.user_id, type: 'refund_mileage',
+                amount: order.discount_amount,
+                description: `${reason} 마일리지 복원 (주문번호: ${id})`
+            });
+        }
+    }
+
+    return newPaymentStatus;
+}
+
+// [취소승인] 취소요청 탭에서 환불 처리
+window.approveCancelSelected = async () => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
-    if (!confirm(`${ids.length}건의 주문을 결제 취소(환불) 처리하시겠습니까?`)) return;
+    if (!confirm(`${ids.length}건의 취소를 승인하고 환불을 진행하시겠습니까?`)) return;
 
     showLoading(true);
-    let successCount = 0;
-    let failCount = 0;
-
+    let successCount = 0, failCount = 0;
     for (const id of ids) {
         try {
-            const { data: order } = await sb.from('orders')
-                .select('payment_method, toss_payment_key, total_amount, discount_amount, user_id')
-                .eq('id', id).single();
-            if (!order) { failCount++; continue; }
-
-            const pm = (order.payment_method || '').toLowerCase();
-            const isCard = pm.includes('카드') || pm.includes('card');
-            const isStripe = pm.includes('stripe');
-            const isDeposit = pm.includes('예치금');
-            let newPaymentStatus = '환불완료';
-
-            // PG 환불
-            if ((isCard || isStripe) && order.toss_payment_key) {
-                if (isStripe) {
-                    const { data, error } = await sb.functions.invoke('cancel-stripe-payment', {
-                        body: { session_id: order.toss_payment_key, cancelReason: '관리자 취소' }
-                    });
-                    if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
-                } else {
-                    const { data, error } = await sb.functions.invoke('cancel-toss-payment', {
-                        body: { paymentKey: order.toss_payment_key, cancelReason: '관리자 취소' }
-                    });
-                    if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
-                }
-            } else if (isDeposit && order.user_id) {
-                // 예치금 복원
-                const { data: pf } = await sb.from('profiles').select('deposit').eq('id', order.user_id).single();
-                if (pf) {
-                    await sb.from('profiles').update({ deposit: (pf.deposit || 0) + (order.total_amount || 0) }).eq('id', order.user_id);
-                    await sb.from('wallet_logs').insert({
-                        user_id: order.user_id, type: 'refund_cancel',
-                        amount: order.total_amount || 0,
-                        description: `관리자 주문 취소 환불 (주문번호: ${id})`
-                    });
-                }
-            } else {
-                newPaymentStatus = '환불대기';
-            }
-
-            // 마일리지 복원
-            if (order.discount_amount > 0 && order.user_id) {
-                const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
-                if (pf) {
-                    await sb.from('profiles').update({ mileage: (pf.mileage || 0) + order.discount_amount }).eq('id', order.user_id);
-                    await sb.from('wallet_logs').insert({
-                        user_id: order.user_id, type: 'refund_mileage',
-                        amount: order.discount_amount,
-                        description: `관리자 취소 마일리지 복원 (주문번호: ${id})`
-                    });
-                }
-            }
-
+            const newPaymentStatus = await refundSingleOrder(id, '취소 승인');
             await sb.from('orders').update({ status: '취소됨', payment_status: newPaymentStatus }).eq('id', id);
             successCount++;
         } catch (e) {
@@ -432,11 +426,61 @@ window.cancelWithRefundSelected = async () => {
             failCount++;
         }
     }
-
     showLoading(false);
-    showToast(`결제취소 완료: 성공 ${successCount}건${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
+    showToast(`취소승인 완료: 성공 ${successCount}건${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
+    updateCancelReqBadge();
     loadOrders();
 };
+
+// [취소거절] 취소요청을 접수됨으로 복원
+window.rejectCancelSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건의 취소 요청을 거절하시겠습니까?\n주문이 '접수됨' 상태로 복원됩니다.`)) return;
+
+    await sb.from('orders').update({ status: '접수됨' }).in('id', ids);
+    showToast(`${ids.length}건 취소 거절 처리 완료`, 'success');
+    updateCancelReqBadge();
+    loadOrders();
+};
+
+// [환불 재시도] 환불실패 건 재처리
+window.retryRefundSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건의 환불을 재시도하시겠습니까?`)) return;
+
+    showLoading(true);
+    let successCount = 0, failCount = 0;
+    for (const id of ids) {
+        try {
+            const newPaymentStatus = await refundSingleOrder(id, '환불 재시도');
+            await sb.from('orders').update({ payment_status: newPaymentStatus }).eq('id', id);
+            successCount++;
+        } catch (e) {
+            console.error(`Order ${id} retry refund error:`, e);
+            failCount++;
+        }
+    }
+    showLoading(false);
+    showToast(`환불 재시도: 성공 ${successCount}건${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
+    loadOrders();
+};
+
+// [취소요청 카운트 뱃지]
+async function updateCancelReqBadge() {
+    try {
+        const { count } = await sb.from('orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', '취소요청');
+        const badge = document.getElementById('cancelReqCount');
+        if (badge) {
+            badge.textContent = count || 0;
+            badge.style.display = (count > 0) ? 'inline' : 'none';
+        }
+    } catch (e) { /* ignore */ }
+}
+window.updateCancelReqBadge = updateCancelReqBadge;
 
 window.deleteOrdersSelected = async (force) => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
@@ -1168,103 +1212,6 @@ window.downloadMonthlyExcel = async () => {
     }
 };
 // [추가] 입찰 본사 직권 처리 (파트너 입찰 막기)
-window.setHeadOfficeOnly = async (orderId) => {
-    if(!confirm("본사 직권 처리하시겠습니까?\n(파트너사는 더 이상 입찰할 수 없습니다.)")) return;
-    
-    // DB에 head_office_check 컬럼을 true로 업데이트 (DB에 해당 컬럼이 있어야 함)
-    const { error } = await sb.from('orders').update({ head_office_check: true }).eq('id', orderId);
-    
-    if(error) {
-        showToast("처리 실패: " + error.message, "error");
-    } else {
-        showToast("본사 처리로 설정되었습니다.", "success");
-        loadOrders();
-    }
-};
-// [신규] 입찰 내역 관리 팝업 열기
-window.openBidAdminModal = async (orderId) => {
-    const modal = document.getElementById('bidAdminModal');
-    const tbody = document.getElementById('bidAdminListBody');
-    
-    // 1. 모달 초기화 및 열기
-    modal.style.display = 'flex';
-    document.getElementById('bidModalOrderId').innerText = orderId;
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;"><div class="spinner"></div> 데이터 조회 중...</td></tr>';
-
-    try {
-        // 2. 주문 정보 가져오기 (고객명, 현재상태)
-        const { data: order } = await sb.from('orders').select('manager_name, status').eq('id', orderId).single();
-        if(order) {
-            document.getElementById('bidModalCustomer').innerText = order.manager_name || '비회원';
-            document.getElementById('bidModalStatus').innerText = order.status;
-        }
-
-        // 3. 입찰 내역 조회
-        const { data: bids, error } = await sb.from('bids')
-            .select('*')
-            .eq('order_id', orderId)
-            .order('price', { ascending: true }); // 저렴한 순 정렬
-
-        if (error) throw error;
-
-        if (!bids || bids.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">등록된 입찰이 없습니다.</td></tr>';
-            return;
-        }
-
-        // 4. 파트너 정보(업체명) 조회를 위해 ID 수집
-        const partnerIds = bids.map(b => b.partner_id);
-        const { data: profiles } = await sb.from('profiles').select('id, company_name, email').in('id', partnerIds);
-        
-        const profileMap = {};
-        if (profiles) profiles.forEach(p => profileMap[p.id] = p);
-
-        // 5. 리스트 렌더링
-        tbody.innerHTML = '';
-        bids.forEach(bid => {
-            const partner = profileMap[bid.partner_id] || {};
-            const company = partner.company_name || '이름없음';
-            const email = partner.email || '-';
-            
-            // 상태 뱃지
-            let statusBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b;">대기중</span>';
-            let rowStyle = '';
-            
-            if (bid.status === 'selected') {
-                statusBadge = '<span class="badge" style="background:#dcfce7; color:#15803d; font-weight:bold;">✅ 매칭됨 (낙찰)</span>';
-                rowStyle = 'background:#f0fdf4;'; // 선택된 행 강조
-            } else if (bid.status === 'rejected') {
-                statusBadge = '<span class="badge" style="background:#fee2e2; color:#ef4444;">탈락</span>';
-            }
-
-            tbody.innerHTML += `
-                <tr style="border-bottom:1px solid #f1f5f9; ${rowStyle}">
-                    <td style="padding:10px;">
-                        <div style="font-weight:bold; color:#334155;">${company}</div>
-                        <div style="font-size:11px; color:#94a3b8;">${email}</div>
-                    </td>
-                    <td style="padding:10px; text-align:right; font-weight:bold; color:#6366f1;">
-                        ${bid.price.toLocaleString()}원
-                    </td>
-                    <td style="padding:10px; color:#475569; max-width:200px;">
-                        ${bid.message || '-'}
-                    </td>
-                    <td style="padding:10px; text-align:center;">
-                        ${bid.partner_phone || '-'}
-                    </td>
-                    <td style="padding:10px; text-align:center;">
-                        ${statusBadge}
-                    </td>
-                </tr>
-            `;
-        });
-
-    } catch (e) {
-        console.error(e);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">오류 발생: ${e.message}</td></tr>`;
-    }
-};
-
 // ============================================================
 // [수동주문] 모달 열기/닫기 + 등록
 // ============================================================
