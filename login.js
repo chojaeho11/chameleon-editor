@@ -263,11 +263,13 @@ async function handleAuthAction() {
             if (error) throw error;
 
             // 프로필에 가입 국가 + 구독자 역할 + 마일리지 지급
+            // DB는 KRW 기준: KR=100,000원, JP=100,000원(¥10,000), US=50,000원($100)
+            var bonusMileage = siteCode === 'US' ? 50000 : 100000;
             if (data.user) {
                 await sb.from('profiles').update({
                     site: siteCode,
                     role: 'subscriber',
-                    mileage: 100000
+                    mileage: bonusMileage
                 }).eq('id', data.user.id);
 
                 // 3개월 구독 레코드 생성
@@ -284,7 +286,7 @@ async function handleAuthAction() {
                 await sb.from('wallet_logs').insert({
                     user_id: data.user.id,
                     type: 'signup_bonus',
-                    amount: 100000,
+                    amount: bonusMileage,
                     description: '신규가입 프로모션 마일리지'
                 }).catch(function() {});
             }
