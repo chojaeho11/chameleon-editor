@@ -22,7 +22,15 @@ window.loadMembers = async (isNewSearch = false) => {
     
     let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at', { count: 'exact' });
     if (roleVal !== 'all') query = query.eq('role', roleVal);
-    if (keyword) query = query.or(`email.ilike.%${keyword}%,username.ilike.%${keyword}%`);
+    if (keyword) {
+        // UUID 형식이면 ID 직접 검색, 아니면 이메일/이름 검색
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keyword);
+        if (isUUID) {
+            query = query.eq('id', keyword);
+        } else {
+            query = query.or(`email.ilike.%${keyword}%,username.ilike.%${keyword}%`);
+        }
+    }
 
     if (sortVal === 'deposit_desc') query = query.order('deposit', { ascending: false });
     else if (sortVal === 'deposit_asc') query = query.order('deposit', { ascending: true });
@@ -109,6 +117,7 @@ window.loadMembers = async (isNewSearch = false) => {
     <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${m.deposit||0})">예치금</button>
     <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#d97706; border-color:#d97706;" onclick="editMileageManual('${m.id}', '${m.email}', ${m.mileage||0})">마일리지</button>
     <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#6366f1; border-color:#6366f1;" onclick="openPwResetModal('${m.id}', '${m.email}')">🔑비번</button>
+    <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#0891b2; border-color:#0891b2;" onclick="viewMemberOrders('${m.id}', '${name.replace(/'/g, "\\'")}')">📦주문</button>
 </td>
                 <td style="padding:5px 15px;">${memoHtml}</td>
                 <td style="text-align:center;"><span class="badge" style="background:${badgeColor}; font-size:11px;">${displayRole}</span></td>
@@ -376,6 +385,67 @@ window.submitPwReset = async () => {
     } finally {
         showLoading(false);
     }
+};
+
+// [회원 주문이력 조회]
+window.viewMemberOrders = async (userId, name) => {
+    const modal = document.getElementById('memberOrderModal');
+    if (!modal) return;
+    document.getElementById('memberOrderName').innerText = name;
+    const tbody = document.getElementById('memberOrderBody');
+    const statsDiv = document.getElementById('memberOrderStats');
+    const emptyDiv = document.getElementById('memberOrderEmpty');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;"><div class="spinner"></div></td></tr>';
+    statsDiv.innerHTML = '';
+    emptyDiv.style.display = 'none';
+    modal.style.display = 'flex';
+
+    const { data: orders } = await sb.from('orders')
+        .select('id, created_at, items, total_amount, payment_method, payment_status, status, site_code')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+    if (!orders || orders.length === 0) {
+        tbody.innerHTML = '';
+        emptyDiv.style.display = 'block';
+        return;
+    }
+
+    // 통계
+    const totalSpend = orders.filter(o => o.status !== '취소됨').reduce((s, o) => s + (o.total_amount || 0), 0);
+    const cancelCount = orders.filter(o => o.status === '취소됨').length;
+    statsDiv.innerHTML = `
+        <div style="flex:1;background:#f0fdf4;padding:8px 12px;border-radius:8px;text-align:center;">
+            <div style="font-size:11px;color:#64748b;">총 주문</div>
+            <div style="font-size:18px;font-weight:bold;color:#15803d;">${orders.length}건</div>
+        </div>
+        <div style="flex:1;background:#eff6ff;padding:8px 12px;border-radius:8px;text-align:center;">
+            <div style="font-size:11px;color:#64748b;">총 결제</div>
+            <div style="font-size:18px;font-weight:bold;color:#2563eb;">${totalSpend.toLocaleString()}원</div>
+        </div>
+        <div style="flex:1;background:#fef2f2;padding:8px 12px;border-radius:8px;text-align:center;">
+            <div style="font-size:11px;color:#64748b;">취소</div>
+            <div style="font-size:18px;font-weight:bold;color:#dc2626;">${cancelCount}건</div>
+        </div>`;
+
+    tbody.innerHTML = '';
+    orders.forEach(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items || '[]') : (o.items || []);
+        const itemStr = items.map(i => i.productName || '상품').join(', ');
+        const d = new Date(o.created_at);
+        const dateStr = `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
+        const statusColor = o.status === '취소됨' ? '#dc2626' : o.status === '완료됨' ? '#15803d' : '#334155';
+        const pmLabel = (o.payment_method || '').includes('카드') ? '💳카드' : (o.payment_method || '').includes('예치금') ? '💰예치금' : '🏦무통장';
+        tbody.innerHTML += `<tr style="border-bottom:1px solid #f1f5f9;height:38px;">
+            <td style="padding:0 8px;color:#64748b;">${dateStr}</td>
+            <td style="padding:0 8px;font-size:10px;color:#94a3b8;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${o.id}">${o.id.substring(0,8)}...</td>
+            <td style="padding:0 8px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${itemStr}">${itemStr || '-'}</td>
+            <td style="padding:0 8px;text-align:right;font-weight:bold;">${(o.total_amount||0).toLocaleString()}</td>
+            <td style="padding:0 8px;text-align:center;font-size:11px;">${pmLabel}</td>
+            <td style="padding:0 8px;text-align:center;"><span style="color:${statusColor};font-weight:bold;font-size:11px;">${o.status}</span></td>
+        </tr>`;
+    });
 };
 
 // [스태프 관리]

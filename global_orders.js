@@ -194,7 +194,12 @@ window.loadOrders = async () => {
             if (order.status === '완료됨' || order.status === '발송완료' || order.status === '배송완료') {
                 statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#dcfce7; color:#15803d;">${order.status}</span></div>`;
             } else if (order.status === '취소요청') {
-                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fef3c7; color:#d97706; font-weight:bold;">❌ 취소요청</span></div>`;
+                const pmL = (order.payment_method || '').toLowerCase();
+                const cancelType = (pmL.includes('카드') || pmL.includes('card') || pmL.includes('stripe') || pmL.includes('간편결제'))
+                    ? '<div style="font-size:10px;color:#2563eb;font-weight:bold;">💳 카드결제</div>'
+                    : (pmL.includes('예치금') ? '<div style="font-size:10px;color:#7c3aed;font-weight:bold;">💰 예치금</div>'
+                    : '<div style="font-size:10px;color:#d97706;font-weight:bold;">🏦 현금(무통장)</div>');
+                statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fef3c7; color:#d97706; font-weight:bold;">❌ 취소요청</span></div>${cancelType}`;
             } else if (order.status === '취소됨') {
                 statusHtml = `<div style="margin-bottom:4px;"><span class="badge" style="background:#fee2e2; color:#dc2626;">${order.status}</span></div>`;
                 if (order.payment_status === '환불완료') {
@@ -336,7 +341,7 @@ window.updateActionButtons = () => {
     } else if(currentOrderStatus === '칼선작업') {
         div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button>`;
     } else if(currentOrderStatus === '취소요청') {
-        div.innerHTML = `<button class="btn btn-success" onclick="approveCancelSelected()" style="font-weight:bold;">✅ 취소승인 (환불)</button><button class="btn btn-outline" onclick="rejectCancelSelected()" style="font-weight:bold;">🔙 취소거절 (복원)</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="approveCancelSelected()" style="font-weight:bold;">💳 카드 취소승인</button><button class="btn" onclick="completeCashRefundSelected()" style="font-weight:bold; background:#d97706; color:white;">💰 현금 환불완료</button><button class="btn btn-outline" onclick="rejectCancelSelected()" style="font-weight:bold;">🔙 취소거절 (복원)</button>`;
     } else if(currentOrderStatus === '취소됨') {
         div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#d97706;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else {
@@ -440,6 +445,42 @@ window.rejectCancelSelected = async () => {
 
     await sb.from('orders').update({ status: '접수됨' }).in('id', ids);
     showToast(`${ids.length}건 취소 거절 처리 완료`, 'success');
+    updateCancelReqBadge();
+    loadOrders();
+};
+
+// [현금 환불완료] 무통장/현금 주문 — 관리자가 직접 송금 후 완료 처리 (PG 호출 없음)
+window.completeCashRefundSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건을 현금 환불완료 처리하시겠습니까?\n(이미 고객에게 송금을 완료한 후 눌러주세요)`)) return;
+
+    showLoading(true);
+    let successCount = 0, failCount = 0;
+    for (const id of ids) {
+        try {
+            // 마일리지 복원만 처리 (PG 환불 없음)
+            const { data: order } = await sb.from('orders').select('discount_amount, user_id').eq('id', id).single();
+            if (order && order.discount_amount > 0 && order.user_id) {
+                const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
+                if (pf) {
+                    await sb.from('profiles').update({ mileage: (pf.mileage || 0) + order.discount_amount }).eq('id', order.user_id);
+                    await sb.from('wallet_logs').insert({
+                        user_id: order.user_id, type: 'refund_mileage',
+                        amount: order.discount_amount,
+                        description: `현금 환불완료 마일리지 복원 (주문번호: ${id})`
+                    });
+                }
+            }
+            await sb.from('orders').update({ status: '취소됨', payment_status: '환불완료' }).eq('id', id);
+            successCount++;
+        } catch (e) {
+            console.error(`Order ${id} cash refund error:`, e);
+            failCount++;
+        }
+    }
+    showLoading(false);
+    showToast(`현금 환불완료: ${successCount}건 처리${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
     updateCancelReqBadge();
     loadOrders();
 };
