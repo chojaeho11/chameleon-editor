@@ -3068,19 +3068,32 @@ async function handleSubReturn() {
 </div>
 <div id="mobileTextEditor" style="display:none;">
     <div class="m-text-header">
-        <span style="color:#6366f1; font-weight:bold;"><i class="fa-solid fa-pen"></i> <span data-i18n="editor_text_edit">텍스트 수정</span></span>
-        
+        <span style="color:#6366f1; font-weight:bold; font-size:13px;"><i class="fa-solid fa-pen"></i> <span data-i18n="editor_text_label">텍스트</span></span>
+
+        <div style="display:flex; gap:2px; align-items:center;">
+            <button onclick="window.alignMobileText('left')" id="btnAlignL" class="m-align-btn m-align-active" title="Left"><i class="fa-solid fa-align-left"></i></button>
+            <button onclick="window.alignMobileText('center')" id="btnAlignC" class="m-align-btn" title="Center"><i class="fa-solid fa-align-center"></i></button>
+            <button onclick="window.alignMobileText('right')" id="btnAlignR" class="m-align-btn" title="Right"><i class="fa-solid fa-align-right"></i></button>
+        </div>
+
         <div style="display:flex; gap:5px;">
-            <button onclick="window.deleteMobileObject()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;">
-                <i class="fa-solid fa-trash"></i> <span data-i18n="btn_delete_obj">삭제</span>
+            <button onclick="window.deleteMobileObject()" style="background:#ef4444; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:12px;">
+                <i class="fa-solid fa-trash"></i>
             </button>
-            
-            <button onclick="window.closeMobileTextEditor()" style="background:#6366f1; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" data-i18n="btn_done_edit">
+            <button onclick="window.closeMobileTextEditor()" style="background:#6366f1; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:12px;" data-i18n="btn_done_edit">
                 완료
             </button>
         </div>
     </div>
     <textarea id="mobileTextInput" placeholder="여기에 내용을 입력하세요..." data-i18n-placeholder="ph_text_input"></textarea>
+    <div id="mobileColorRow" style="display:flex; gap:8px; align-items:center; padding:0 2px;">
+        <span onclick="window.setMobileTextColor('#FFFFFF')" class="m-color-dot" style="background:#FFFFFF; border:1.5px solid #ccc;" data-color="#FFFFFF"></span>
+        <span onclick="window.setMobileTextColor('#000000')" class="m-color-dot m-color-active" style="background:#000000;" data-color="#000000"></span>
+        <span onclick="window.setMobileTextColor('#EF4444')" class="m-color-dot" style="background:#EF4444;" data-color="#EF4444"></span>
+        <span onclick="window.setMobileTextColor('#3B82F6')" class="m-color-dot" style="background:#3B82F6;" data-color="#3B82F6"></span>
+        <span onclick="window.setMobileTextColor('#FACC15')" class="m-color-dot" style="background:#FACC15;" data-color="#FACC15"></span>
+        <span onclick="window.setMobileTextColor('#22C55E')" class="m-color-dot" style="background:#22C55E;" data-color="#22C55E"></span>
+    </div>
 </div>
 <div id="templateActionModal" class="modal-bg" style="z-index: 20000;">
     <div class="modal-box" style="width: 500px; max-width: 90%;">

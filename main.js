@@ -522,6 +522,53 @@ function initMobileTextEditor() {
         }
         closeMobileEditor();
     };
+
+    // ── 정렬 버튼 ──
+    function updateAlignUI(align) {
+        document.querySelectorAll('.m-align-btn').forEach(b => b.classList.remove('m-align-active'));
+        const map = { left: 'btnAlignL', center: 'btnAlignC', right: 'btnAlignR' };
+        const el = document.getElementById(map[align]);
+        if (el) el.classList.add('m-align-active');
+    }
+    window.alignMobileText = function(align) {
+        if (activeTextObj) {
+            activeTextObj.set('textAlign', align);
+            window.canvas.requestRenderAll();
+        }
+        updateAlignUI(align);
+    };
+
+    // ── 색상 동그라미 ──
+    function updateColorUI(color) {
+        document.querySelectorAll('.m-color-dot').forEach(d => {
+            d.classList.toggle('m-color-active', d.dataset.color === color);
+        });
+    }
+    window.setMobileTextColor = function(color) {
+        if (activeTextObj) {
+            activeTextObj.set('fill', color);
+            window.canvas.requestRenderAll();
+        }
+        updateColorUI(color);
+    };
+
+    // 선택 시 현재 정렬/색상 상태 반영
+    function syncEditorUI(obj) {
+        updateAlignUI(obj.textAlign || 'left');
+        const fill = obj.fill || '#000000';
+        updateColorUI(fill.toUpperCase());
+    }
+
+    // handleSelection 확장 — 기존 로직 후 UI 동기화
+    const origHandleSelection = handleSelection;
+    handleSelection = function(e) {
+        origHandleSelection(e);
+        if (activeTextObj) syncEditorUI(activeTextObj);
+    };
+    window.canvas.off('selection:created');
+    window.canvas.off('selection:updated');
+    window.canvas.on('selection:created', handleSelection);
+    window.canvas.on('selection:updated', handleSelection);
 }
 
 // ============================================================

@@ -1045,18 +1045,34 @@ button, input, textarea, select { font-family: inherit; }
 
 /* 모바일 텍스트 에디터 (항상 최상위) */
 #mobileTextEditor {
-    position: fixed; top: 0; left: 0; width: 100%; height: 140px; 
-    background: #fff; z-index: 999999; padding: 15px; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-    display: none; flex-direction: column; gap: 10px;
+    position: fixed; top: 0; left: 0; width: 100%; height: 170px;
+    background: #fff; z-index: 999999; padding: 10px 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: none; flex-direction: column; gap: 6px;
 }
 .m-text-header {
     display: flex; justify-content: space-between; align-items: center;
     font-weight: bold; color: #333;
 }
+.m-align-btn {
+    width: 32px; height: 32px; border: 1.5px solid #ddd; border-radius: 6px;
+    background: #f8f8f8; color: #888; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.m-align-btn.m-align-active {
+    background: #6366f1; color: #fff; border-color: #6366f1;
+}
+.m-color-dot {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    display: inline-block; box-sizing: border-box; border: 2px solid transparent;
+    flex-shrink: 0; transition: transform 0.15s;
+}
+.m-color-dot.m-color-active {
+    border-color: #6366f1; transform: scale(1.2);
+}
 #mobileTextInput {
     width: 100%; flex: 1; border: 1px solid #ddd; border-radius: 8px;
-    padding: 10px; font-size: 16px; outline: none; resize: none; font-family: inherit;
+    padding: 8px 10px; font-size: 16px; outline: none; resize: none; font-family: inherit;
 }
 #mobileTextInput:focus { border-color: #6366f1; }
 
