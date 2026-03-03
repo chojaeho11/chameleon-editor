@@ -157,11 +157,20 @@ async function uploadFileToSupabase(file, folder) {
     return publicData.publicUrl;
 }
 
+// ★ 장바구니 키: 로그인 무관 단일 키 (로그인/로그아웃해도 장바구니 유지)
+function cartStorageKey() { return 'chameleon_cart_current'; }
+
 // [추가] 장바구니 로드 함수
 export function loadCartFromStorage() {
     try {
-        const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
-        const savedCart = localStorage.getItem(storageKey);
+        const storageKey = cartStorageKey();
+        let savedCart = localStorage.getItem(storageKey);
+        // 마이그레이션: 이전 키에서 복구
+        if (!savedCart) {
+            const oldKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+            savedCart = localStorage.getItem(oldKey) || localStorage.getItem('chameleon_cart_guest');
+            if (savedCart) localStorage.setItem(storageKey, savedCart);
+        }
         if (savedCart) {
             const parsed = JSON.parse(savedCart);
             if (Array.isArray(parsed)) {
@@ -860,7 +869,7 @@ function openDeliveryInfoModal() {
 
 // [수정] 용량 초과 방지: 잘못된 이미지 데이터 자동 청소
 function saveCart() { 
-    const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+    const storageKey = cartStorageKey();
 
     // 1. 데이터 다이어트: 무거운 데이터는 빼고 저장
     const cleanData = cartData.map(item => {
@@ -1330,7 +1339,7 @@ async function addCanvasToCart() {
     };
 
     // 1. 저장소에서 최신 데이터 가져오기
-    const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+    const storageKey = cartStorageKey();
     let currentCartList = [];
     try {
         const saved = localStorage.getItem(storageKey);
@@ -2191,6 +2200,14 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                     url: f.originalUrl,
                     type: 'customer_file'
                 });
+                // ★ 키링 칼선 파일도 함께 추가 (uploadedFiles 내부의 cutlineUrl)
+                if (f.cutlineUrl) {
+                    uploadedFiles.push({
+                        name: `cutline_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'keyring'}.png`,
+                        url: f.cutlineUrl,
+                        type: 'cutline'
+                    });
+                }
             });
         } else if (item.originalUrl) {
             uploadedFiles.push({
@@ -2199,6 +2216,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                 type: 'customer_file'
             });
         }
+        // ★ 기존 호환: 최상위 cutlineUrl도 지원
         if (item.cutlineUrl) {
             uploadedFiles.push({
                 name: `cutline_${idx}_${item.fileName || 'keyring'}.png`,
@@ -2734,7 +2752,7 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
         });
     }
 
-    const storageKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
+    const storageKey = cartStorageKey();
     let currentCartList = [];
     try {
         const saved = localStorage.getItem(storageKey);

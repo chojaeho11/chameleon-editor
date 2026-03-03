@@ -52,7 +52,7 @@ export function initAuth() {
                         if (btnLogin.updateState) btnLogin.updateState();
                     } else {
                         // ★ 채팅/상담 데이터는 보존하고 인증 관련만 삭제
-                        const _preserveKeys = ['kapu_chat_current', 'kapu_live_current', 'kapu_chat_guest'];
+                        const _preserveKeys = ['kapu_chat_current', 'kapu_live_current', 'kapu_chat_guest', 'chameleon_cart_current'];
                         const _preserved = {};
                         _preserveKeys.forEach(k => { const v = localStorage.getItem(k); if(v) _preserved[k] = v; });
                         localStorage.clear();
