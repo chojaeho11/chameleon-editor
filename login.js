@@ -281,8 +281,10 @@ async function handleAuthAction() {
                     await sb.from('subscriptions').insert([{
                         user_id: data.user.id,
                         status: 'active',
-                        started_at: new Date().toISOString(),
-                        expires_at: expiresAt.toISOString()
+                        plan_type: 'signup_promo',
+                        stripe_customer_id: 'promo_' + data.user.id,
+                        stripe_subscription_id: 'promo_signup_' + Date.now(),
+                        current_period_end: expiresAt.toISOString()
                     }]);
                 } catch(e) { console.warn('subscription insert:', e); }
 

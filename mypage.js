@@ -317,6 +317,38 @@ async function loadDashboardStats() {
         const elTotalMileage = document.getElementById('displayTotalMileage');
         if(elTotalMileage) elTotalMileage.innerText = fmtMoney(profile.mileage || 0).replace(/[원¥$]/g, '').trim();
 
+        // 구독 정보 표시
+        try {
+            const { data: subData } = await sb.from('subscriptions')
+                .select('status, plan_type, current_period_end')
+                .eq('user_id', currentUser.id)
+                .eq('status', 'active')
+                .maybeSingle();
+
+            const subCard = document.getElementById('subscriptionInfoCard');
+            if (subData && subCard) {
+                subCard.style.display = 'block';
+                const endDate = new Date(subData.current_period_end);
+                const now = new Date();
+                const diffMs = endDate - now;
+                const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+
+                const elDays = document.getElementById('subRemainingDays');
+                if (elDays) elDays.textContent = diffDays + (window.t('mp_sub_days') || '일');
+
+                const elExpires = document.getElementById('subExpiresDate');
+                if (elExpires) elExpires.textContent = endDate.toLocaleDateString();
+
+                const badge = document.getElementById('subPlanBadge');
+                if (badge) badge.textContent = subData.plan_type === 'signup_promo' ? 'FREE' : 'PRO';
+            } else if (profile.role === 'subscriber' && subCard) {
+                // subscriptions 테이블 없어도 role로 표시
+                subCard.style.display = 'block';
+                const elDays = document.getElementById('subRemainingDays');
+                if (elDays) elDays.textContent = window.t('mp_sub_active') || '활성';
+            }
+        } catch(se) { console.warn('구독 정보 로드:', se); }
+
         // 등급 승급 체크
         await checkAndUpgradeTier(currentUser.id, profile.role);
 

@@ -1379,6 +1379,20 @@ async function checkSubscription() {
         if (data) {
             window.isSubscriber = true;
             window.subscriptionPlan = data.plan_type;
+            window.subscriptionEnd = data.current_period_end;
+        } else {
+            // subscriptions 테이블에 없으면 profiles.role 체크 (프로모 가입자 fallback)
+            try {
+                var { data: prof } = await window.sb.from('profiles')
+                    .select('role').eq('id', session.user.id).maybeSingle();
+                if (prof && prof.role === 'subscriber') {
+                    window.isSubscriber = true;
+                    window.subscriptionPlan = 'signup_promo';
+                }
+            } catch(pe) {}
+        }
+
+        if (window.isSubscriber) {
             // Show active banner, hide cards + KR notice
             var banner = document.getElementById('subActiveBanner');
             if (banner) banner.style.display = 'flex';

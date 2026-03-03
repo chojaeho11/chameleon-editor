@@ -150,7 +150,29 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- 구독 정보 카드 -->
+            <div id="subscriptionInfoCard" style="display:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); border-radius:16px; padding:20px 24px; margin-bottom:20px; color:#fff;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-size:16px; font-weight:800;"><i class="fa-solid fa-crown" style="color:#fbbf24;"></i> <span data-i18n="mp_sub_title">구독 중</span></span>
+                    <span id="subPlanBadge" style="background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">PRO</span>
+                </div>
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    <div>
+                        <div style="font-size:12px; opacity:0.8;" data-i18n="mp_sub_remaining">남은 기간</div>
+                        <div id="subRemainingDays" style="font-size:22px; font-weight:900;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px; opacity:0.8;" data-i18n="mp_sub_expires">만료일</div>
+                        <div id="subExpiresDate" style="font-size:15px; font-weight:700;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px; opacity:0.8;" data-i18n="mp_sub_discount">할인 혜택</div>
+                        <div style="font-size:15px; font-weight:700;" data-i18n="mp_sub_discount_val">10% 할인 적용 중</div>
+                    </div>
+                </div>
+            </div>
+
             <h3 data-i18n="mp_recent_logs">📢 최근 수익 알림</h3>
             <ul id="recentLogs" style="list-style:none; padding:0; margin-top:15px; color:#475569;">
                 <li data-i18n="msg_loading">로딩 중...</li>
