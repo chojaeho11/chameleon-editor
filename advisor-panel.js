@@ -959,9 +959,6 @@ function addProductCards(products) {
 
     scrollChat();
 }
-    // 채팅으로 전송
-    sendMessage(val);
-};
 
 function bindCardEvents(wrap, products) {
     wrap.querySelectorAll('.adv-btn-editor').forEach(btn => {
