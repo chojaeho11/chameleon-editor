@@ -1264,15 +1264,20 @@ async function _wzGetDescText(title) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    // 좌측 정렬 + 좁은 폭으로 짧게 내려쓰기
+    // 하단 네모박스: Forest 스타일 컬러 사용
+    const boxS = WIZARD_STYLES.forest;
     const maxW = bW * 0.38;
     const fSize = Math.round(bW * 0.014);
+    const padX = bW * 0.02, padY = bH * 0.015;
+    const boxLeft = bL + bW * 0.05;
+    const boxTop = bT + bH * 0.48;
+
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
-        fontWeight:'400', fill: 'rgba(255,255,255,0.85)',
+        fontWeight:'400', fill: boxS.boxTextColor,
         originX:'left', originY:'top', textAlign:'left',
-        left: bL + bW * 0.05, top: bT + bH * 0.48,
-        width: maxW,
+        left: boxLeft + padX, top: boxTop + padY,
+        width: maxW - padX * 2,
         lineHeight: 1.6,
         splitByGrapheme: true
     });
@@ -1280,6 +1285,18 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     if (obj.height > bH * 0.25) {
         obj.set('fontSize', Math.round(fSize * 0.8));
     }
+    // 배경 박스
+    const boxH = obj.height + padY * 2;
+    const boxRect = new fabric.Rect({
+        left: boxLeft, top: boxTop,
+        width: maxW, height: boxH,
+        rx: bW * 0.01, ry: bW * 0.01,
+        fill: boxS.boxFill, stroke: boxS.boxStroke, strokeWidth: 1.5,
+        originX:'left', originY:'top',
+        isBottomDescBox: true
+    });
+    canvas.add(boxRect);
+    canvas.bringToFront(boxRect);
     canvas.add(obj);
     canvas.bringToFront(obj);
 }
