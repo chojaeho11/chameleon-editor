@@ -144,16 +144,8 @@ serve(async (req) => {
 3. **이전 대화를 기억해** — conversation_history가 있으면 맥락을 이해하고 이전 대화를 바탕으로 답변해.
 4. **추천 개수는 자유** — 1개면 1개, 3개면 3개, 5개면 5개. 상황에 맞게. 최대 5개까지.
 5. **제품 설명과 옵션을 활용해** — 각 제품의 description과 특성(is_custom_size, is_file_upload 등)을 확인하고 정확히 안내해.
-6. **⚠️ 커스텀 사이즈 제품(is_custom_size=true) 상담 — 절대 규칙!**
-   - **고객이 사이즈를 아직 안 말했으면** → products = **빈 배열 []**. 제품 카드를 절대 보여주지 마!
-     대신 제품 종류를 간단히 설명하고 "원하시는 사이즈(가로×세로)를 알려주세요!"라고 물어봐.
-   - **고객이 사이즈를 말하면** → 가격을 계산하고, products 배열에 제품을 넣어서 카드를 보여줘.
-     카드를 클릭하면 해당 사이즈로 에디터가 열리고 장바구니에 담을 수 있어.
-   - **예외: 배너(거치대 배너)** — 배너는 기본 크기(600×1800mm)가 있으므로 바로 카드 표시 OK.
-   - **이 규칙이 적용되는 제품**: 현수막, 가벽, 실사출력, 패브릭 등 is_custom_size=true인 모든 제품.
-   - **핵심**: 사이즈 없이 제품 카드를 보여주면 고객이 가격도 모르고 에디터도 못 여니까 의미가 없어!
-7. **고정 사이즈 제품(is_custom_size=false)** — 사이즈 질문 없이 바로 제품 카드를 보여줘.
-8. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
+6. **제품 추천 시 — 바로 카드를 보여줘!** 커스텀 사이즈든 고정 사이즈든 상관없이, 고객이 제품을 찾으면 간단한 설명과 함께 바로 제품 카드를 보여줘. 사이즈를 먼저 물어보지 마! 고객이 카드를 클릭하면 상세 페이지로 이동해서 사이즈를 선택하고 주문할 수 있어.
+7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
    - **배너 추천 규칙**:
      - 배너 가장 보편적 크기: 600×1800mm
      - **실내용**: 허니콤보드 배너 강력추천! 종이 소재라 친환경적이고 가벼움. 커스텀 사이즈 가능. 단, 바람/비에 약해서 외부 사용은 비추천.
@@ -177,10 +169,10 @@ serve(async (req) => {
 11. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 제작 요청이면 에러 메시지 대신 이렇게 말해: "멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 저보다는 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작 문의는 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요." 이후 관련 허니콤보드 제품들을 추천해.
 
 ## 가격 계산
-- is_custom_size: (가로mm/1000) × (세로mm/1000) × price_per_sqm
+- is_custom_size: price_per_sqm 기준 단가 표시 (m² 단가)
 - 고정사이즈: price 그대로
 - is_bulk_order: 수량단위(quantity_options)에 따라 안내
-- 사이즈 미지정 커스텀 제품: 가격 안내 대신 "사이즈를 알려주시면 견적을 바로 드릴게요!"
+- 커스텀 사이즈 제품은 사이즈를 묻지 말고 바로 제품 카드를 보여줘. 상세 페이지에서 사이즈 선택 가능.
 
 ⚠️ 연락처 규칙 (절대): 전화번호/이메일/주소를 절대 임의로 만들지 마. 아래 정보만 사용.
 ## 회사 정보
@@ -203,11 +195,7 @@ serve(async (req) => {
 3. **過去の会話を記憶** — conversation_historyがあれば文脈を理解し回答。
 4. **推薦数は自由** — 1個なら1個、3個なら3個。状況に応じて最大5個。
 5. **商品説明を活用** — description、is_custom_size等を確認し正確に案内。
-6. **⚠️ カスタムサイズ商品(is_custom_size=true)の相談順序 — 必ず守ること！**
-   - **ステップ1: サイズ質問** — お客様が商品を聞いたら、products=**空配列[]**で、商品種類を簡単に説明後「ご希望のサイズ(横×縦)を教えてください！」。サイズ不明なら絶対にproductsに商品を入れない！
-   - **ステップ2: オプション案内** — サイズ確認後、価格計算しオプション(addons)を説明。productsはまだ空配列[]。
-   - **ステップ3: 商品カード** — オプション案内後にproductsに商品を入れてカード表示。
-   - **核心: お客様がサイズを言う前はproducts=[]。これは絶対ルール！**
+6. **商品推薦はすぐカード表示！** カスタムサイズでも固定サイズでも、お客様が商品を探していたら簡単な説明と一緒にすぐ商品カードを表示。サイズを先に聞かないで！お客様がカードをクリックすれば詳細ページでサイズ選択・注文できます。
 7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
 8. **画像アップ** — 10MBまで添付可。大きいファイルはメールsupport@cafe0101.comへ。
 9. **ハニカムボード展示** — 展示/空間演出の画像を分析：壁・看板・等身大パネル・装飾・テーブル天板を把握。数字はmm単位。下部の横幅が全体幅、右端の縦が全体高さ。壁パネル1枚(約900~1200mm×2400mm)=約¥15,000。天板=約¥10,000。家具=約¥15,000~25,000。項目別に見積もり提示。分析後必ず「正確なお見積りは専門相談員がご案内いたします 😊 上の🎧ボタンを押してください」。
@@ -233,11 +221,7 @@ serve(async (req) => {
 3. **Remember conversation** — use conversation_history for context.
 4. **Flexible count** — 1 to 5 products as needed.
 5. **Use product descriptions** — check description, is_custom_size etc.
-6. **⚠️ Custom size product (is_custom_size=true) consultation flow — MUST follow!**
-   - **Step 1: Ask size** — When customer asks about a product, set products=**empty array []**, briefly describe product types, then ask "What size (width×height) would you like?". NEVER put products in array if size is unknown!
-   - **Step 2: Explain options** — After customer provides size, calculate price and explain addons. Products still empty [].
-   - **Step 3: Product cards** — Only after options explained, put products in array.
-   - **KEY RULE: Before customer states size, products MUST be []. This is absolute!**
+6. **Show product cards immediately!** Whether custom or fixed size, when a customer asks about a product, give a brief description and show the product card right away. Don't ask for size first! Customers can click the card to go to the detail page where they can choose size and order.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
 8. **Image upload** — up to 10MB. Larger files: email korea900as@gmail.com.
 9. **Honeycomb exhibition references** — Analyze exhibition images carefully: walls, signs, standees, decorations, table tops, furniture. Numbers are in mm. Bottom width = total width, right side = total height. Wall panel (approx 900~1200mm × 2400mm) = ~$30 each. Table top = ~$20. Furniture = ~$30~50. Present itemized estimate. If no sizes visible, ask. Always end with: "For an accurate quote, our specialist consultants can help 😊 Click the 🎧 button above!"
@@ -450,51 +434,6 @@ ${JSON.stringify(categories)}${qaSection}`;
                             }
                         }
                     });
-                }
-
-                // ★ 서버 측 사이즈 기반 제품 카드 제어
-                // AI가 가격을 계산했으면 = 사이즈를 받은 것. 가격 패턴: "14만원", "120,000원", "¥15,000", "$30"
-                const _aiMsg = result.chat_message || '';
-                const _userHasDigit = /\d/.test(trimmedMsg || '') && !/010[-\s]?\d/.test(trimmedMsg || '');
-                // 가격 패턴: "120,000" "60,000" "14400" "15000" 등 큰 숫자 or $¥
-                const _aiHasPrice = /\d{2,3},\d{3}|\d{5,}|[$¥]\s*\d/.test(_aiMsg);
-                const hasUserSize = _userHasDigit && _aiHasPrice;
-                const hasBannerDefault = /600.*1800/.test(_aiMsg);
-
-                // A) 사이즈 없으면 → 커스텀 사이즈 제품만 제거 (고정 사이즈는 유지)
-                if (result.products && result.products.length > 0 && !hasUserSize && !hasBannerDefault) {
-                    const before = result.products.length;
-                    result.products = result.products.filter((p: any) => !p.is_custom_size);
-                    if (result.products.length < before) {
-                        console.log('[kapu] Strip custom-size products:', before, '->', result.products.length);
-                    }
-                    if (result.products.length === 0) result.type = "chat";
-                }
-
-                // B) 카드가 없는데 사이즈가 있으면 → 유저 메시지+AI 텍스트에서 제품 매칭하여 주입
-                if ((!result.products || result.products.length === 0) && hasUserSize) {
-                    const combined = (_userMsg + ' ' + (result.chat_message || '')).toLowerCase();
-                    // DB에서 커스텀 사이즈 제품 중 이름 키워드가 언급된 것 찾기
-                    const matched = products.filter((p: any) => {
-                        if (!p.is_custom_size) return false;
-                        const name = (p.name || '');
-                        const keywords = name.split(/\s+/).filter((w: string) => w.length >= 2);
-                        return keywords.some((kw: string) => combined.includes(kw.toLowerCase()));
-                    }).slice(0, 3);
-                    if (matched.length > 0) {
-                        result.products = matched.map((p: any) => {
-                            const rawP = rawProducts.find((r: any) => r.code === p.code);
-                            const addonCodes = rawP?.addons ? rawP.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
-                            return {
-                                code: p.code, name: p.name, img_url: p.img_url || '',
-                                _raw_price_krw: p._raw_price, _raw_per_sqm_krw: p._raw_per_sqm,
-                                is_custom_size: p.is_custom_size,
-                                addons: addonCodes.map((c: string) => addonMap[c]).filter(Boolean),
-                            };
-                        });
-                        result.type = "recommendation";
-                        console.log('[kapu] Inject products: user gave size →', matched.map((p:any) => p.code));
-                    }
                 }
 
                 return result;
