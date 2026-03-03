@@ -386,6 +386,19 @@ function startAdvisor(query) {
 // ─── AI 메시지 전송 ───
 async function sendMessage(text, imageData) {
     if (isProcessing) return;
+
+    // ★ 사용자가 상담사 연결 키워드를 직접 입력하면 AI 호출 없이 바로 상담사 폼
+    if (text && !imageData && !liveMode) {
+        const _userLower = text.toLowerCase();
+        const _directConsultKeys = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결','상담사','매니저','상담원',
+            '相談員','相談員接続','マネージャー','consultant','connect agent','human agent','talk to human','real person','manager'];
+        if (_directConsultKeys.some(k => _userLower.includes(k))) {
+            addBubble(text, 'user');
+            startConsultantFlow();
+            return;
+        }
+    }
+
     isProcessing = true;
 
     if (imageData) {
@@ -436,6 +449,16 @@ async function sendMessage(text, imageData) {
         if (products.length > 0) {
             lastProducts = products;
             addProductCards(products);
+        }
+
+        // ★ 상담사 연결 키워드 감지 → 자동으로 상담사 연결 폼 띄우기
+        const _allText = ((text || '') + ' ' + chatMsg).toLowerCase();
+        const _consultantKeywords = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결',
+            '相談員','相談員接続','マネージャー','consultant','connect consultant','human agent','talk to human','real person','manager'];
+        const _wantsConsultant = _consultantKeywords.some(k => _allText.includes(k))
+            || /🎧\s*상담/.test(chatMsg) || /상담사.*버튼/.test(chatMsg) || /상담사.*눌러/.test(chatMsg);
+        if (_wantsConsultant && !liveMode) {
+            setTimeout(() => startConsultantFlow(), 500);
         }
 
     } catch (err) {
