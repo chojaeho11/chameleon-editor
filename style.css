@@ -4688,10 +4688,7 @@ video {
     #loginModal .modal-box button {
         display: flex !important;
     }
-    /* 디자인마법사 닫기 버튼 표시 */
-    #designWizardModal button[onclick*="display='none'"] {
-        display: flex !important;
-    }
+    /* 디자인마법사 닫기 버튼: onclick에 display='none' 없으므로 자동으로 표시됨 */
 
     /* 3. 하단 줌/가이드 바 (아이콘바 위) */
     .bottom-dock {

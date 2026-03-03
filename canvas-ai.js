@@ -301,6 +301,11 @@ export function initAiTools() {
     // ============================================================
     // [5] AI Design Wizard (디자인 마법사)
     // ============================================================
+    window.closeDesignWizard = function() {
+        const m = document.getElementById('designWizardModal');
+        if (m) m.style.display = 'none';
+    };
+
     window.openDesignWizard = function() {
         const modal = document.getElementById('designWizardModal');
         const input = document.getElementById('wizardTitleInput');
@@ -342,7 +347,7 @@ export function initAiTools() {
                 } else {
                     await runDesignWizard(title, style, bodyText);
                 }
-                document.getElementById('designWizardModal').style.display = 'none';
+                window.closeDesignWizard();
             } catch(e) {
                 console.error('Wizard error:', e);
                 showToast(window.t?.('msg_failed','Failed: ') + e.message, "error");
