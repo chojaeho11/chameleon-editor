@@ -144,7 +144,7 @@ serve(async (req) => {
 3. **이전 대화를 기억해** — conversation_history가 있으면 맥락을 이해하고 이전 대화를 바탕으로 답변해.
 4. **추천 개수는 자유** — 1개면 1개, 3개면 3개, 5개면 5개. 상황에 맞게. 최대 5개까지.
 5. **제품 설명과 옵션을 활용해** — 각 제품의 description과 특성(is_custom_size, is_file_upload 등)을 확인하고 정확히 안내해.
-6. **제품 추천 시 — 바로 카드를 보여줘!** 커스텀 사이즈든 고정 사이즈든 상관없이, 고객이 제품을 찾으면 간단한 설명과 함께 바로 제품 카드를 보여줘. 사이즈를 먼저 물어보지 마! 고객이 카드를 클릭하면 상세 페이지로 이동해서 사이즈를 선택하고 주문할 수 있어.
+6. **제품이 나오면 무조건 카드를 보여줘!** 고객이 제품을 언급하거나 관련 질문을 하면 반드시 products 배열에 해당 제품을 넣어. 사이즈/용도/수량을 절대 먼저 물어보지 마! 간단한 설명 + 제품 카드를 바로 보여주면 돼. 고객이 카드를 클릭하면 상세 페이지에서 사이즈 선택, 옵션 선택, 주문까지 다 할 수 있어. 제품 추천을 주저하지 마 — 조금이라도 관련 있으면 카드를 보여줘.
 7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
    - **배너 추천 규칙**:
      - 배너 가장 보편적 크기: 600×1800mm
@@ -169,10 +169,10 @@ serve(async (req) => {
 11. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 제작 요청이면 에러 메시지 대신 이렇게 말해: "멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 저보다는 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작 문의는 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요." 이후 관련 허니콤보드 제품들을 추천해.
 
 ## 가격 계산
-- is_custom_size: price_per_sqm 기준 단가 표시 (m² 단가)
+- is_custom_size: price_per_sqm 단가 표시 (m² 단가). 사이즈는 상세페이지에서 입력.
 - 고정사이즈: price 그대로
 - is_bulk_order: 수량단위(quantity_options)에 따라 안내
-- 커스텀 사이즈 제품은 사이즈를 묻지 말고 바로 제품 카드를 보여줘. 상세 페이지에서 사이즈 선택 가능.
+- 어떤 제품이든 사이즈/수량을 묻지 말고 바로 카드를 보여줘!
 
 ⚠️ 연락처 규칙 (절대): 전화번호/이메일/주소를 절대 임의로 만들지 마. 아래 정보만 사용.
 ## 회사 정보
@@ -195,7 +195,7 @@ serve(async (req) => {
 3. **過去の会話を記憶** — conversation_historyがあれば文脈を理解し回答。
 4. **推薦数は自由** — 1個なら1個、3個なら3個。状況に応じて最大5個。
 5. **商品説明を活用** — description、is_custom_size等を確認し正確に案内。
-6. **商品推薦はすぐカード表示！** カスタムサイズでも固定サイズでも、お客様が商品を探していたら簡単な説明と一緒にすぐ商品カードを表示。サイズを先に聞かないで！お客様がカードをクリックすれば詳細ページでサイズ選択・注文できます。
+6. **商品が出たら必ずカード表示！** お客様が商品に言及したり関連質問をしたら、必ずproducts配列に入れて。サイズ・用途・数量を先に聞かないで！簡単な説明+商品カードをすぐ表示。お客様がカードをクリックすれば詳細ページでサイズ選択・注文できます。少しでも関連があればカードを表示して。
 7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
 8. **画像アップ** — 10MBまで添付可。大きいファイルはメールsupport@cafe0101.comへ。
 9. **ハニカムボード展示** — 展示/空間演出の画像を分析：壁・看板・等身大パネル・装飾・テーブル天板を把握。数字はmm単位。下部の横幅が全体幅、右端の縦が全体高さ。壁パネル1枚(約900~1200mm×2400mm)=約¥15,000。天板=約¥10,000。家具=約¥15,000~25,000。項目別に見積もり提示。分析後必ず「正確なお見積りは専門相談員がご案内いたします 😊 上の🎧ボタンを押してください」。
@@ -221,7 +221,7 @@ serve(async (req) => {
 3. **Remember conversation** — use conversation_history for context.
 4. **Flexible count** — 1 to 5 products as needed.
 5. **Use product descriptions** — check description, is_custom_size etc.
-6. **Show product cards immediately!** Whether custom or fixed size, when a customer asks about a product, give a brief description and show the product card right away. Don't ask for size first! Customers can click the card to go to the detail page where they can choose size and order.
+6. **Always show product cards when products are mentioned!** Whenever a customer mentions or asks about any product, ALWAYS include it in the products array. Never ask for size/purpose/quantity first! Show a brief description + product card immediately. Customers click the card to go to the detail page where they choose size, options, and order. Don't hesitate — if even slightly relevant, show the card.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
 8. **Image upload** — up to 10MB. Larger files: email korea900as@gmail.com.
 9. **Honeycomb exhibition references** — Analyze exhibition images carefully: walls, signs, standees, decorations, table tops, furniture. Numbers are in mm. Bottom width = total width, right side = total height. Wall panel (approx 900~1200mm × 2400mm) = ~$30 each. Table top = ~$20. Furniture = ~$30~50. Present itemized estimate. If no sizes visible, ask. Always end with: "For an accurate quote, our specialist consultants can help 😊 Click the 🎧 button above!"
@@ -289,9 +289,9 @@ ${JSON.stringify(categories)}${qaSection}`;
                                 code: { type: "string" as const },
                                 name: { type: "string" as const },
                                 reason: { type: "string" as const },
-                                recommended_width_mm: { type: "number" as const, description: "0 if custom size product and customer hasn't specified size" },
-                                recommended_height_mm: { type: "number" as const, description: "0 if custom size product and customer hasn't specified size" },
-                                price_display: { type: "string" as const, description: "Price string. For custom size without dimensions, say 'size needed' in customer language" },
+                                recommended_width_mm: { type: "number" as const, description: "Use product default size, or 0 for custom size products" },
+                                recommended_height_mm: { type: "number" as const, description: "Use product default size, or 0 for custom size products" },
+                                price_display: { type: "string" as const, description: "Price string from product data. For custom size, show per sqm price" },
                                 img_url: { type: "string" as const, description: "Product thumbnail URL from product data" },
                                 design_title: { type: "string" as const },
                                 design_keywords: { type: "array" as const, items: { type: "string" as const } }
@@ -441,18 +441,15 @@ ${JSON.stringify(categories)}${qaSection}`;
 
             const textParts = blocks.filter((b: any) => b.type === "text").map((b: any) => b.text);
             const textResult: any = { type: "chat", chat_message: textParts.join("\n") || "...", products: [], _model: model };
-            // 텍스트 응답에서도 사이즈+제품명 매칭 시 카드 주입
-            const _um2 = trimmedMsg || '';
-            const _ud2 = /\d/.test(_um2) && !/010[-\s]?\d/.test(_um2);
-            const _ap2 = /\d{2,3},\d{3}|\d{5,}|[$¥]\s*\d/.test(textResult.chat_message);
-            if (_ud2 && _ap2) {
-                const _c2 = (_um2 + ' ' + textResult.chat_message).toLowerCase();
-                const _m2 = products.filter((p: any) => {
-                    if (!p.is_custom_size) return false;
-                    return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _c2.includes(kw.toLowerCase()));
+            // 텍스트 응답에서 제품명 매칭 시 카드 주입 (사이즈/가격 조건 없이)
+            const _combined = (trimmedMsg + ' ' + textResult.chat_message).toLowerCase();
+            const _isContactMsg = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _combined.includes(k));
+            if (!_isContactMsg) {
+                const _matched = products.filter((p: any) => {
+                    return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _combined.includes(kw.toLowerCase()));
                 }).slice(0, 3);
-                if (_m2.length > 0) {
-                    textResult.products = _m2.map((p: any) => {
+                if (_matched.length > 0) {
+                    textResult.products = _matched.map((p: any) => {
                         const rp = rawProducts.find((r: any) => r.code === p.code);
                         const ac = rp?.addons ? rp.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
                         return { code: p.code, name: p.name, img_url: p.img_url || '', _raw_price_krw: p._raw_price, _raw_per_sqm_krw: p._raw_per_sqm, is_custom_size: p.is_custom_size, addons: ac.map((c: string) => addonMap[c]).filter(Boolean) };
