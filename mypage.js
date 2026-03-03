@@ -518,14 +518,25 @@ async function loadOrders() {
 }
 
 async function cancelOrder(orderId) {
-    if (!confirm(window.t('confirm_cancel_request', "주문 취소를 요청하시겠습니까?\n관리자 확인 후 환불이 진행됩니다."))) return;
-
-    showToast(window.t('msg_cancel_processing', '취소 요청 중...'), 'info');
-
     try {
-        const { error } = await sb.from('orders').update({ status: '취소요청' }).eq('id', orderId);
-        if (error) throw error;
-        showToast(window.t('msg_cancel_requested', '취소 요청이 접수되었습니다. 관리자 확인 후 환불이 처리됩니다.'), 'success');
+        // 주문 결제상태 확인
+        const { data: order } = await sb.from('orders').select('payment_status').eq('id', orderId).single();
+        const isPaid = order && ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'].includes(order.payment_status);
+
+        if (isPaid) {
+            // 결제완료 주문 → 관리자 승인 필요 (취소요청)
+            if (!confirm(window.t('confirm_cancel_request', "주문 취소를 요청하시겠습니까?\n관리자 확인 후 환불이 진행됩니다."))) return;
+            showToast(window.t('msg_cancel_processing', '취소 요청 중...'), 'info');
+            const { error } = await sb.from('orders').update({ status: '취소요청' }).eq('id', orderId);
+            if (error) throw error;
+            showToast(window.t('msg_cancel_requested', '취소 요청이 접수되었습니다. 관리자 확인 후 환불이 처리됩니다.'), 'success');
+        } else {
+            // 미결제 주문 → 즉시 취소 (환불할 금액 없음)
+            if (!confirm(window.t('confirm_cancel_unpaid', "주문을 취소하시겠습니까?"))) return;
+            const { error } = await sb.from('orders').update({ status: '취소됨', payment_status: '환불완료' }).eq('id', orderId);
+            if (error) throw error;
+            showToast(window.t('msg_cancel_done', '주문이 취소되었습니다.'), 'success');
+        }
     } catch (e) {
         console.error('Cancel request error:', e);
         showToast(window.t('msg_cancel_request_failed', '취소 요청 실패. 고객센터에 문의하세요.'), 'error');
