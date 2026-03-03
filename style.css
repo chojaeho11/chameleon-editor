@@ -569,6 +569,46 @@ button, input, textarea, select { font-family: inherit; }
 .wall3d-wall-item.selected { background: rgba(99,102,241,0.25); border-color: #6366f1; }
 .wall3d-wall-item .wall-color { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 
+/* 3D 모달 모바일 반응형 */
+@media (max-width: 768px) {
+    #wall3DInner {
+        height: 100vh !important;
+        border-radius: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    #wall3DHeader {
+        padding: 8px 12px !important;
+    }
+    #wall3DHeader span { font-size: 13px !important; }
+    #wall3DCloseX { display: none !important; }
+    #wall3DContentArea {
+        flex-direction: column !important;
+        overflow-y: auto !important;
+    }
+    #threeDContainer {
+        min-height: 45vh;
+        max-height: 45vh;
+        flex: none !important;
+    }
+    #wall3DSidebar {
+        width: 100% !important;
+        border-right: none !important;
+        border-top: 1px solid rgba(99,102,241,0.2);
+        flex-shrink: 0 !important;
+        overflow-y: visible !important;
+        padding: 10px !important;
+    }
+    #wall3DHint { display: none !important; }
+    #wall3DCloseBtn {
+        display: block !important;
+        border-radius: 0;
+        font-size: 18px !important;
+        padding: 18px !important;
+    }
+    .wall3d-preset-btn { padding: 10px 6px; font-size: 13px; }
+}
+
 /* 칼선 도구 */
 .tool-box-group {
     background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; 
