@@ -266,29 +266,35 @@ async function handleAuthAction() {
             // DB는 KRW 기준: KR=100,000원, JP=100,000원(¥10,000), US=50,000원($100)
             var bonusMileage = siteCode === 'US' ? 50000 : 100000;
             if (data.user) {
-                await sb.from('profiles').update({
-                    site: siteCode,
-                    role: 'subscriber',
-                    mileage: bonusMileage
-                }).eq('id', data.user.id);
+                try {
+                    await sb.from('profiles').update({
+                        site: siteCode,
+                        role: 'subscriber',
+                        mileage: bonusMileage
+                    }).eq('id', data.user.id);
+                } catch(e) { console.warn('profile update:', e); }
 
                 // 3개월 구독 레코드 생성
-                var expiresAt = new Date();
-                expiresAt.setMonth(expiresAt.getMonth() + 3);
-                await sb.from('subscriptions').insert({
-                    user_id: data.user.id,
-                    status: 'active',
-                    started_at: new Date().toISOString(),
-                    expires_at: expiresAt.toISOString()
-                }).catch(function() {});
+                try {
+                    var expiresAt = new Date();
+                    expiresAt.setMonth(expiresAt.getMonth() + 3);
+                    await sb.from('subscriptions').insert([{
+                        user_id: data.user.id,
+                        status: 'active',
+                        started_at: new Date().toISOString(),
+                        expires_at: expiresAt.toISOString()
+                    }]);
+                } catch(e) { console.warn('subscription insert:', e); }
 
                 // 마일리지 지급 로그
-                await sb.from('wallet_logs').insert({
-                    user_id: data.user.id,
-                    type: 'signup_bonus',
-                    amount: bonusMileage,
-                    description: '신규가입 프로모션 마일리지'
-                }).catch(function() {});
+                try {
+                    await sb.from('wallet_logs').insert([{
+                        user_id: data.user.id,
+                        type: 'signup_bonus',
+                        amount: bonusMileage,
+                        description: '신규가입 프로모션 마일리지'
+                    }]);
+                } catch(e) { console.warn('wallet_log insert:', e); }
             }
 
             // ★ 가입 즉시 로그인 처리
