@@ -393,12 +393,12 @@ window.updateActionButtons = () => {
     } else if (s === '취소됨') {
         div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '환불대기') {
-        div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#d97706;color:white;">🔄 환불 재시도</button>`;
+        div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#d97706;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">삭제</button>`;
     } else if (s === '환불실패') {
         div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#dc2626;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else {
         // 전체 탭
-        div.innerHTML = '';
+        div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">선택 삭제</button>`;
     }
 };
 
@@ -435,6 +435,9 @@ async function refundSingleOrder(id, reason = '관리자 취소') {
             });
             if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
         }
+    } else if ((isCard || isStripe) && !order.toss_payment_key) {
+        // 결제 시도 중 중단된 건 — PG 결제가 완료되지 않았으므로 환불 불필요
+        newPaymentStatus = '환불완료';
     } else if (isDeposit && order.user_id) {
         const { data: pf } = await sb.from('profiles').select('deposit').eq('id', order.user_id).single();
         if (pf) {
@@ -1334,16 +1337,21 @@ window.downloadMonthlyExcel = async () => {
 // [수동주문] 모달 열기/닫기 + 등록
 // ============================================================
 window.openManualOrderModal = () => {
-    document.getElementById('moSource').value = 'STORE';
-    document.getElementById('moName').value = '';
-    document.getElementById('moPhone').value = '';
-    document.getElementById('moAddress').value = '';
-    document.getElementById('moItems').value = '';
-    document.getElementById('moAmount').value = '';
-    document.getElementById('moDelivery').value = '';
-    document.getElementById('moNote').value = '';
-    document.getElementById('moFiles').value = '';
-    document.getElementById('manualOrderModal').style.display = 'flex';
+    // order_management.html에서는 showSection으로 오버라이드됨
+    // global_admin.html에서는 모달을 사용
+    const modal = document.getElementById('manualOrderModal');
+    if (modal && modal.querySelector('.modal-box')) {
+        document.getElementById('moSource').value = 'STORE';
+        document.getElementById('moName').value = '';
+        document.getElementById('moPhone').value = '';
+        document.getElementById('moAddress').value = '';
+        document.getElementById('moItems').value = '';
+        document.getElementById('moAmount').value = '';
+        document.getElementById('moDelivery').value = '';
+        document.getElementById('moNote').value = '';
+        document.getElementById('moFiles').value = '';
+        modal.style.display = 'flex';
+    }
 };
 
 window.submitManualOrder = async () => {

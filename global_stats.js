@@ -132,7 +132,8 @@ async function loadDashboardCharts() {
 
         // UI 업데이트
         yearTotalEl.innerText = yearSum.toLocaleString() + "원";
-        document.querySelector('.page-title').innerText = `통계 대시보드 (${currentYear}년)`;
+        const pageTitleEl = document.querySelector('.page-title');
+        if (pageTitleEl) pageTitleEl.innerText = `통계 대시보드 (${currentYear}년)`;
 
         // 차트 그리기
         renderChart('chartDaily', 'bar', dailyLabels, dailyData.map(d => d.sum), '#6366f1');

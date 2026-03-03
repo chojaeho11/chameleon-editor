@@ -10,6 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Pretendard',sans-serif; background:#f1f5f9; color:#334155; min-height:100vh; display:flex; flex-direction:column; font-size:14px; }
@@ -42,8 +43,7 @@
         .sidebar .nav-section { padding: 18px 0 6px 0; }
         .sidebar .nav-label {
             font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-            color: #64748b; padding: 0 16px 8px;
-            margin-bottom: 2px;
+            color: #64748b; padding: 0 16px 8px; margin-bottom: 2px;
         }
         .sidebar .nav-item {
             display: flex; align-items: center; gap: 12px;
@@ -64,6 +64,11 @@
 
         /* ===== MAIN CONTENT ===== */
         .main-content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+        /* ===== SECTIONS ===== */
+        .page-section { display: none; animation: fadeIn 0.3s; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
 
         /* ===== TOOLBAR ===== */
         .toolbar {
@@ -91,6 +96,9 @@
         .summary-bar b { color: #0f172a; }
         .summary-bar .divider { width: 1px; height: 18px; background: #e2e8f0; }
 
+        /* ===== CARD ===== */
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+
         /* ===== TABLE ===== */
         .order-table-wrap {
             background: white; border-radius: 12px; overflow: hidden;
@@ -107,6 +115,10 @@
         .order-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
         .order-table tbody tr:hover { background: #f8fafc; }
         .order-table tbody td { padding: 12px 8px; vertical-align: middle; color: #334155; }
+        /* generic table inside cards */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; vertical-align: middle; }
 
         /* ===== BADGES ===== */
         .badge { display:inline-block; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; white-space:nowrap; }
@@ -132,6 +144,19 @@
         .btn-vip { background:#d97706; color:white; }
         .btn-sky { background:#0ea5e9; color:white; }
         .btn-sky:hover { background:#0284c7; }
+
+        /* ===== STATS ===== */
+        .stat-card-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 20px; }
+        .stat-icon { width: 60px; height: 60px; border-radius: 12px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stat-info div:first-child { font-size: 14px; color: #64748b; font-weight: 600; margin-bottom: 5px; }
+        .stat-info div:last-child { font-size: 24px; font-weight: 800; color: #0f172a; }
+        .progress-bar-bg { width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        .progress-bar-fill { height: 100%; border-radius: 4px; transition: 0.5s; }
+
+        /* ===== FORM ===== */
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 5px; }
 
         /* ===== PAGINATION ===== */
         .pagination { display:flex; justify-content:center; align-items:center; gap:18px; padding:20px; }
@@ -171,10 +196,11 @@
 </head>
 <body>
 
-<!-- Stub functions available immediately (before module loads) -->
+<!-- Stub functions -->
 <script>
 window.navTo = function(){};
 window.showExcelExport = function(){};
+window.showSection = function(){};
 </script>
 
 <!-- TOP HEADER -->
@@ -194,7 +220,6 @@ window.showExcelExport = function(){};
 <div class="layout">
     <!-- LEFT SIDEBAR -->
     <div class="sidebar">
-        <!-- 주문 관리 -->
         <div class="nav-section">
             <div class="nav-label">주문 관리</div>
             <div class="nav-item active" onclick="window.navTo('전체', this)"><i class="fa-solid fa-list"></i> <span>전체 주문</span></div>
@@ -204,7 +229,6 @@ window.showExcelExport = function(){};
             <div class="nav-item" onclick="window.navTo('완료됨', this)"><i class="fa-solid fa-check-circle"></i> <span>완료</span></div>
             <div class="nav-item" onclick="window.navTo('배송', this)"><i class="fa-solid fa-truck"></i> <span>배송</span></div>
         </div>
-        <!-- 취소/환불 관리 -->
         <div class="nav-section">
             <div class="nav-label">취소 / 환불</div>
             <div class="nav-item" onclick="window.navTo('취소요청', this)"><i class="fa-solid fa-hand"></i> <span>취소요청</span> <span class="nav-badge" id="sideCancelCount" style="display:none;">0</span></div>
@@ -212,119 +236,200 @@ window.showExcelExport = function(){};
             <div class="nav-item" onclick="window.navTo('환불대기', this)"><i class="fa-solid fa-hourglass-half"></i> <span>환불대기</span></div>
             <div class="nav-item" onclick="window.navTo('환불실패', this)"><i class="fa-solid fa-circle-xmark"></i> <span>환불실패</span></div>
         </div>
-        <!-- 기타 -->
         <div class="nav-section">
             <div class="nav-label">도구</div>
-            <div class="nav-item" onclick="openManualOrderModal()"><i class="fa-solid fa-pen-to-square"></i> <span>수동주문</span></div>
+            <div class="nav-item" onclick="window.showSection('sec-manual', this)"><i class="fa-solid fa-pen-to-square"></i> <span>수동주문</span></div>
+            <div class="nav-item" onclick="window.showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> <span>매출통계</span></div>
             <div class="nav-item" onclick="window.showExcelExport()"><i class="fa-solid fa-file-excel"></i> <span>매출정산</span></div>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <!-- TOOLBAR -->
-        <div class="toolbar">
-            <div class="toolbar-row">
-                <input type="text" id="orderSearchInput" placeholder="고객명 / 연락처 / 주문번호" style="width:220px;" onkeyup="if(event.key=='Enter'){resetPage();loadOrders();}">
-                <span style="font-size:13px;font-weight:600;color:#475569;">📅 주문일:</span>
-                <input type="date" id="filterOrderDate" style="width:150px;" onchange="resetPage();loadOrders()">
-                <i class="fa-solid fa-xmark" style="cursor:pointer;color:#94a3b8;font-size:12px;" onclick="document.getElementById('filterOrderDate').value='';resetPage();loadOrders();" title="초기화"></i>
-                <span style="font-size:13px;font-weight:600;color:#475569;">🚚 배송일:</span>
-                <input type="date" id="filterDeliveryDate" style="width:150px;" onchange="resetPage();loadOrders()">
-                <i class="fa-solid fa-xmark" style="cursor:pointer;color:#94a3b8;font-size:12px;" onclick="document.getElementById('filterDeliveryDate').value='';resetPage();loadOrders();" title="초기화"></i>
-                <select id="filterSite" style="width:130px;" onchange="resetPage();loadOrders()">
-                    <option value="all">전체 국가</option>
-                    <option value="KR">한국</option>
-                    <option value="JP">일본</option>
-                    <option value="US">미국</option>
-                    <option value="STORE">스마트스토어</option>
-                    <option value="GODO">고도몰</option>
-                </select>
-                <button class="btn btn-primary" onclick="resetPage();loadOrders()"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
-                <div id="action-buttons" style="margin-left:auto; display:flex; gap:6px;"></div>
+
+        <!-- ============ SEC: ORDERS (기본) ============ -->
+        <div id="sec-orders" class="page-section active">
+            <div class="toolbar">
+                <div class="toolbar-row">
+                    <input type="text" id="orderSearchInput" placeholder="고객명 / 연락처 / 주문번호" style="width:220px;" onkeyup="if(event.key=='Enter'){resetPage();loadOrders();}">
+                    <span style="font-size:13px;font-weight:600;color:#475569;">📅 주문일:</span>
+                    <input type="date" id="filterOrderDate" style="width:150px;" onchange="resetPage();loadOrders()">
+                    <i class="fa-solid fa-xmark" style="cursor:pointer;color:#94a3b8;font-size:12px;" onclick="document.getElementById('filterOrderDate').value='';resetPage();loadOrders();" title="초기화"></i>
+                    <span style="font-size:13px;font-weight:600;color:#475569;">🚚 배송일:</span>
+                    <input type="date" id="filterDeliveryDate" style="width:150px;" onchange="resetPage();loadOrders()">
+                    <i class="fa-solid fa-xmark" style="cursor:pointer;color:#94a3b8;font-size:12px;" onclick="document.getElementById('filterDeliveryDate').value='';resetPage();loadOrders();" title="초기화"></i>
+                    <select id="filterSite" style="width:130px;" onchange="resetPage();loadOrders()">
+                        <option value="all">전체 국가</option>
+                        <option value="KR">한국</option>
+                        <option value="JP">일본</option>
+                        <option value="US">미국</option>
+                        <option value="STORE">스마트스토어</option>
+                        <option value="GODO">고도몰</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="resetPage();loadOrders()"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
+                    <div id="action-buttons" style="margin-left:auto; display:flex; gap:6px;"></div>
+                </div>
+                <div id="excelExportRow" style="display:none;" class="toolbar-row">
+                    <span style="font-weight:700;font-size:14px;">매출정산 엑셀:</span>
+                    <input type="month" id="excelMonth" class="input-text" style="width:150px;" value="2026-01">
+                    <button class="btn btn-success" onclick="downloadMonthlyExcel()"><i class="fa-solid fa-download"></i> 다운로드</button>
+                </div>
             </div>
-            <!-- 매출정산 (숨김) -->
-            <div id="excelExportRow" style="display:none;" class="toolbar-row">
-                <span style="font-weight:700;font-size:14px;">매출정산 엑셀:</span>
-                <input type="month" id="excelMonth" class="input-text" style="width:150px;" value="2026-01">
-                <button class="btn btn-success" onclick="downloadMonthlyExcel()"><i class="fa-solid fa-download"></i> 다운로드</button>
+
+            <div class="summary-bar">
+                <div>📦 검색된 주문: <b id="sumCount">0건</b></div>
+                <div class="divider"></div>
+                <div>💰 총 매출(검색기준): <b id="sumRevenue" style="font-size:17px;">0원</b></div>
+                <div style="margin-left:auto; font-size:12px; color:#94a3b8;">* 페이지네이션과 관계없이 검색된 전체 합계</div>
+            </div>
+
+            <div class="order-table-wrap">
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th style="width:32px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
+                            <th style="width:44px;">Site</th>
+                            <th style="width:65px;">날짜</th>
+                            <th style="width:115px;">고객 정보</th>
+                            <th style="width:65px;text-align:center;">주문번호</th>
+                            <th>주문 내역</th>
+                            <th style="width:85px;text-align:right;">주문총액</th>
+                            <th style="width:75px;text-align:right;color:#ef4444;">할인액</th>
+                            <th style="width:75px;text-align:right;color:#d97706;">예치금</th>
+                            <th style="width:85px;text-align:right;color:#059669;">실입금액</th>
+                            <th style="width:85px;">매니저/배송</th>
+                            <th style="width:55px;text-align:center;">파일</th>
+                            <th style="width:60px;text-align:center;">결제</th>
+                            <th style="width:80px;text-align:center;">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderListBody">
+                        <tr><td colspan="14" style="text-align:center;padding:48px;font-size:14px;"><div class="spinner" style="width:24px;height:24px;border-width:3px;"></div> 로딩 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button class="btn btn-outline btn-sm" onclick="changePage(-1)">◀ 이전</button>
+                <span class="page-label" id="pageLabel">Page 1</span>
+                <button class="btn btn-outline btn-sm" onclick="changePage(1)">다음 ▶</button>
             </div>
         </div>
 
-        <!-- SUMMARY -->
-        <div class="summary-bar">
-            <div>📦 검색된 주문: <b id="sumCount">0건</b></div>
-            <div class="divider"></div>
-            <div>💰 총 매출(검색기준): <b id="sumRevenue" style="font-size:17px;">0원</b></div>
-            <div style="margin-left:auto; font-size:12px; color:#94a3b8;">* 페이지네이션과 관계없이 검색된 전체 합계</div>
+        <!-- ============ SEC: STATS (매출통계) ============ -->
+        <div id="sec-stats" class="page-section">
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="margin-top:0; margin-bottom:15px; color:#1e293b;">
+                    <i class="fa-solid fa-chart-simple"></i> 실시간 매출 대시보드
+                </h3>
+                <div style="background:#1e1b4b; color:white; padding:20px; border-radius:12px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:14px; color:#a5b4fc; margin-bottom:5px;">📅 <span id="statsYear"></span>년 올해 누적 매출</div>
+                        <div id="yearTotalRevenue" style="font-size:28px; font-weight:800;">0원</div>
+                    </div>
+                    <div style="font-size:40px; opacity:0.2;"><i class="fa-solid fa-sack-dollar"></i></div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:15px;">
+                        <h4 style="margin:0 0 10px 0; color:#475569;">📊 최근 7일 매출 (일별)</h4>
+                        <div style="height:250px;"><canvas id="chartDaily"></canvas></div>
+                    </div>
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:15px;">
+                        <h4 style="margin:0 0 10px 0; color:#475569;">📅 월별 매출 추이</h4>
+                        <div style="height:250px;"><canvas id="chartMonthly"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-calendar-days" style="color:#6366f1;"></i> 기간별 상세 검색
+                </h3>
+                <div style="display:flex; gap:10px; align-items:flex-end; background:#f8fafc; padding:20px; border-radius:8px;">
+                    <div><label class="form-label">시작일</label><input type="date" id="statStartDate" class="input-text"></div>
+                    <div><label class="form-label">종료일</label><input type="date" id="statEndDate" class="input-text"></div>
+                    <button class="btn btn-primary" style="height:42px;" onclick="loadStatsData()"><i class="fa-solid fa-magnifying-glass"></i> 조회하기</button>
+                </div>
+            </div>
+
+            <div class="stat-card-group">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-won-sign"></i></div>
+                    <div class="stat-info"><div>기간 내 총 매출 (검색결과)</div><div id="totalRevenue">0</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#ecfdf5; color:#059669;"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="stat-info"><div>총 주문 건수</div><div id="totalCount">0건</div></div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div class="card">
+                    <h4 style="margin-top:0;">👨‍💼 담당 매니저별 실적</h4>
+                    <table style="margin-top:0;"><thead><tr><th>매니저</th><th style="text-align:right;">매출 기여도</th></tr></thead>
+                    <tbody id="statManagerBody"></tbody></table>
+                </div>
+                <div class="card">
+                    <h4 style="margin-top:0;">🚚 배송 기사별 실적</h4>
+                    <table style="margin-top:0;"><thead><tr><th>기사님</th><th style="text-align:right;">매출 기여도</th></tr></thead>
+                    <tbody id="statDriverBody"></tbody></table>
+                </div>
+            </div>
         </div>
 
-        <!-- TABLE -->
-        <div class="order-table-wrap">
-            <table class="order-table">
-                <thead>
-                    <tr>
-                        <th style="width:32px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
-                        <th style="width:44px;">Site</th>
-                        <th style="width:65px;">날짜</th>
-                        <th style="width:115px;">고객 정보</th>
-                        <th style="width:65px;text-align:center;">주문번호</th>
-                        <th>주문 내역</th>
-                        <th style="width:85px;text-align:right;">주문총액</th>
-                        <th style="width:75px;text-align:right;color:#ef4444;">할인액</th>
-                        <th style="width:75px;text-align:right;color:#d97706;">예치금</th>
-                        <th style="width:85px;text-align:right;color:#059669;">실입금액</th>
-                        <th style="width:85px;">매니저/배송</th>
-                        <th style="width:55px;text-align:center;">파일</th>
-                        <th style="width:60px;text-align:center;">결제</th>
-                        <th style="width:80px;text-align:center;">상태</th>
-                    </tr>
-                </thead>
-                <tbody id="orderListBody">
-                    <tr><td colspan="14" style="text-align:center;padding:48px;font-size:14px;"><div class="spinner" style="width:24px;height:24px;border-width:3px;"></div> 로딩 중...</td></tr>
-                </tbody>
-            </table>
+        <!-- ============ SEC: MANUAL ORDER (수동주문 전체화면) ============ -->
+        <div id="sec-manual" class="page-section">
+            <div class="card" style="max-width:800px;">
+                <h3 style="margin-top:0; margin-bottom:20px; color:#1e293b; display:flex; align-items:center; gap:10px; border-bottom:1px solid #e2e8f0; padding-bottom:15px;">
+                    <i class="fa-solid fa-pen-to-square" style="color:#6366f1;"></i> 수동주문 등록
+                </h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div>
+                        <label class="form-label">📦 주문출처</label>
+                        <select id="moSource" class="input-text" style="padding:10px;"><option value="STORE">🟢 스마트스토어</option><option value="GODO">🟣 고도몰</option></select>
+                    </div>
+                    <div></div>
+                    <div>
+                        <label class="form-label">👤 고객명</label>
+                        <input id="moName" class="input-text" type="text" placeholder="고객명" style="padding:10px;">
+                    </div>
+                    <div>
+                        <label class="form-label">📞 연락처</label>
+                        <input id="moPhone" class="input-text" type="text" placeholder="010-0000-0000" style="padding:10px;">
+                    </div>
+                    <div style="grid-column:1/3;">
+                        <label class="form-label">📍 주소</label>
+                        <input id="moAddress" class="input-text" type="text" placeholder="배송 주소" style="padding:10px;">
+                    </div>
+                    <div style="grid-column:1/3;">
+                        <label class="form-label">📋 주문내역</label>
+                        <textarea id="moItems" class="input-text" rows="5" placeholder="상품명, 사이즈, 수량 등 자유롭게 입력&#10;예) 코팩스 현수막 1000x2000mm (2장)" style="padding:10px;resize:vertical;font-family:inherit;"></textarea>
+                    </div>
+                    <div>
+                        <label class="form-label">💰 주문총액 (원)</label>
+                        <input id="moAmount" class="input-text" type="number" placeholder="0" style="padding:10px;">
+                    </div>
+                    <div>
+                        <label class="form-label">📅 배송희망일</label>
+                        <input id="moDelivery" class="input-text" type="date" style="padding:10px;">
+                    </div>
+                    <div style="grid-column:1/3;">
+                        <label class="form-label">📝 요청사항</label>
+                        <textarea id="moNote" class="input-text" rows="2" placeholder="요청사항 (선택)" style="padding:10px;resize:vertical;font-family:inherit;"></textarea>
+                    </div>
+                    <div style="grid-column:1/3;">
+                        <label class="form-label">📎 파일첨부</label>
+                        <input id="moFiles" type="file" multiple class="input-text" style="padding:8px;">
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:16px;font-size:16px;font-weight:700;" onclick="submitManualOrder()">📦 주문 등록</button>
+            </div>
         </div>
 
-        <!-- PAGINATION -->
-        <div class="pagination">
-            <button class="btn btn-outline btn-sm" onclick="changePage(-1)">◀ 이전</button>
-            <span class="page-label" id="pageLabel">Page 1</span>
-            <button class="btn btn-outline btn-sm" onclick="changePage(1)">다음 ▶</button>
-        </div>
     </div>
 </div>
 
 <!-- ===== MODALS ===== -->
-
-<!-- 수동주문 모달 -->
-<div id="manualOrderModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box" style="width:520px; max-height:90vh; overflow-y:auto;">
-        <div class="modal-header">
-            <span>✏️ 수동주문 등록</span>
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('manualOrderModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px; padding:5px 0;">
-            <div>
-                <label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">📦 주문출처</label>
-                <select id="moSource" class="input-text" style="padding:10px;"><option value="STORE">🟢 스마트스토어</option><option value="GODO">🟣 고도몰</option></select>
-            </div>
-            <div style="display:flex;gap:10px;">
-                <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">👤 고객명</label><input id="moName" class="input-text" type="text" placeholder="고객명" style="padding:10px;"></div>
-                <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">📞 연락처</label><input id="moPhone" class="input-text" type="text" placeholder="010-0000-0000" style="padding:10px;"></div>
-            </div>
-            <div><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">📍 주소</label><input id="moAddress" class="input-text" type="text" placeholder="배송 주소" style="padding:10px;"></div>
-            <div><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">📋 주문내역</label><textarea id="moItems" class="input-text" rows="4" placeholder="상품명, 사이즈, 수량 등 자유롭게 입력" style="padding:10px;resize:vertical;font-family:inherit;"></textarea></div>
-            <div style="display:flex;gap:10px;">
-                <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">💰 주문총액 (원)</label><input id="moAmount" class="input-text" type="number" placeholder="0" style="padding:10px;"></div>
-                <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">📅 배송희망일</label><input id="moDelivery" class="input-text" type="date" style="padding:10px;"></div>
-            </div>
-            <div><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">📝 요청사항</label><textarea id="moNote" class="input-text" rows="2" placeholder="요청사항 (선택)" style="padding:10px;resize:vertical;font-family:inherit;"></textarea></div>
-            <div><label style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;display:block;">📎 파일첨부</label><input id="moFiles" type="file" multiple class="input-text" style="padding:8px;"></div>
-        </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:15px;padding:14px;font-size:16px;font-weight:700;" onclick="submitManualOrder()">📦 주문 등록</button>
-    </div>
-</div>
 
 <!-- 파일 관리 모달 -->
 <div id="fileManagerModal" class="modal-overlay">
@@ -344,6 +449,9 @@ window.showExcelExport = function(){};
     </div>
 </div>
 
+<!-- 수동주문 모달 (기존 호환 — 기본 숨김, global_admin.html에서 사용) -->
+<div id="manualOrderModal" class="modal-overlay" style="display:none;"></div>
+
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loading">
     <div style="text-align:center;">
@@ -360,6 +468,7 @@ window.showExcelExport = function(){};
 import { sb, initConfig } from './global_config.js?v=123';
 import { checkAdminAccess, showLoading } from './global_common.js?v=123';
 import './global_orders.js?v=123';
+import './global_stats.js?v=123';
 
 window.sb = sb;
 window._supabase = sb;
@@ -377,20 +486,58 @@ window._supabase = sb;
     if (window.loadOrders) window.loadOrders();
 })();
 
-// 사이드바 네비게이션
+// 사이드바 → 주문 탭 네비게이션
 window.navTo = (status, el) => {
     document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
+    // 주문 섹션 활성화
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-orders').classList.add('active');
     window.currentOrderStatus = status;
     window.currentPage = 1;
     if (window.updateActionButtons) window.updateActionButtons();
     if (window.loadOrders) window.loadOrders();
 };
 
-// 매출정산 토글
+// 사이드바 → 별도 섹션 (매출통계, 수동주문)
+window.showSection = (secId, el) => {
+    document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    const sec = document.getElementById(secId);
+    if (sec) sec.classList.add('active');
+    // 섹션별 초기화
+    if (secId === 'sec-stats' && window.loadStatsData) window.loadStatsData();
+    if (secId === 'sec-manual') {
+        // 수동주문 폼 초기화
+        document.getElementById('moSource').value = 'STORE';
+        document.getElementById('moName').value = '';
+        document.getElementById('moPhone').value = '';
+        document.getElementById('moAddress').value = '';
+        document.getElementById('moItems').value = '';
+        document.getElementById('moAmount').value = '';
+        document.getElementById('moDelivery').value = '';
+        document.getElementById('moNote').value = '';
+        document.getElementById('moFiles').value = '';
+    }
+};
+
+// 매출정산 엑셀 토글 (주문 섹션 내)
 window.showExcelExport = () => {
+    // 주문 섹션으로 이동 후 매출정산 행 토글
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-orders').classList.add('active');
     const row = document.getElementById('excelExportRow');
     row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+};
+
+// openManualOrderModal → 수동주문 섹션으로 이동
+window.openManualOrderModal = () => {
+    window.showSection('sec-manual', null);
+    // 사이드바 활성화
+    document.querySelectorAll('.sidebar .nav-item').forEach(n => {
+        if (n.textContent.includes('수동주문')) n.classList.add('active');
+    });
 };
 
 // 사이드바 뱃지
