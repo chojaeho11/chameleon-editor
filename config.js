@@ -50,6 +50,25 @@ export function initConfig() {
             const { data: { session } } = await sb.auth.getSession();
             updateUserSession(session);
 
+            // 2-1. ★ 소셜 로그인 리다이렉트 후 복원 (getSession으로 세션 확인된 경우)
+            if (session && session.user) {
+                try {
+                    const _pa = sessionStorage.getItem('_pendingEditorAction');
+                    if (_pa) {
+                        const _act = JSON.parse(_pa);
+                        if (_act.ts && Date.now() - _act.ts < 300000) {
+                            sessionStorage.removeItem('_pendingEditorAction');
+                            if (_act.addons) window.pendingSelectedAddons = _act.addons;
+                            if (_act.addonQtys) window.pendingSelectedAddonQtys = _act.addonQtys;
+                            if (_act.uploadedFiles) window._pendingUploadedFiles = _act.uploadedFiles;
+                            window._pendingEditorRestore = _act; // main.js 초기화 완료 후 실행
+                        } else {
+                            sessionStorage.removeItem('_pendingEditorAction');
+                        }
+                    }
+                } catch(e) {}
+            }
+
             // 3. 리스너 등록
             sb.auth.onAuthStateChange((event, session) => {
                 updateUserSession(session);
@@ -89,7 +108,7 @@ export function initConfig() {
                     });
                 }
 
-                if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active')) location.reload();
+                if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active') && !sessionStorage.getItem('_pendingEditorAction')) location.reload();
 
                 // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시
                 if (event === 'PASSWORD_RECOVERY') {

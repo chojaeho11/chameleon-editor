@@ -8140,6 +8140,17 @@ if (w >= 20 && h >= 20) {
 
         // ★ 에디터 진입 전 로그인 필수 — 미로그인 시 로그인 모달 표시
         if (!window.currentUser) {
+            // 소셜 로그인(페이지 리다이렉트) 대비: 상태를 sessionStorage에 저장
+            try {
+                sessionStorage.setItem('_pendingEditorAction', JSON.stringify({
+                    key, customW, customH, customPrice,
+                    addons: window.pendingSelectedAddons || [],
+                    addonQtys: window.pendingSelectedAddonQtys || {},
+                    uploadedFiles: window._pendingUploadedFiles || [],
+                    productKey: window.currentProductKey,
+                    ts: Date.now()
+                }));
+            } catch(e) {}
             // choiceModal을 임시로 숨기고 로그인 모달 표시
             const _cm = document.getElementById('choiceModal');
             if (_cm && _cm.style.display !== 'none') {
@@ -8148,6 +8159,7 @@ if (w >= 20 && h >= 20) {
             }
             window.openAuthModal('login', function() {
                 window._restoreChoiceModal = false;
+                sessionStorage.removeItem('_pendingEditorAction');
                 // 로그인 성공 후 에디터 재진입
                 window.startEditorDirect(key, customW, customH, customPrice);
             });

@@ -201,6 +201,16 @@ window.addEventListener("DOMContentLoaded", async () => {
                 if(cartPage) cartPage.style.display = 'block';
                 if(window.renderCart) window.renderCart();
             }, 300);
+        } else if (window._pendingEditorRestore) {
+            // ★ 소셜 로그인 리다이렉트 후 에디터 자동 진입
+            const _act = window._pendingEditorRestore;
+            window._pendingEditorRestore = null;
+            if(loading) loading.style.display = 'none';
+            setTimeout(() => {
+                if (window.startEditorDirect) {
+                    window.startEditorDirect(_act.key, _act.customW, _act.customH, _act.customPrice);
+                }
+            }, 500);
         } else {
             if(loading) loading.style.display = 'none';
         }

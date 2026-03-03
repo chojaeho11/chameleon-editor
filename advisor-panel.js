@@ -48,15 +48,9 @@ function getSb() {
     return _ownSb || null;
 }
 
-// ─── localStorage 영속성 ───
-function chatKey() {
-    const u = window.currentUser;
-    return u ? 'kapu_chat_' + u.id : 'kapu_chat_guest';
-}
-function liveKey() {
-    const u = window.currentUser;
-    return u ? 'kapu_live_' + u.id : 'kapu_live_guest';
-}
+// ─── localStorage 영속성 (로그인 상태 무관하게 단일 키 사용) ───
+function chatKey() { return 'kapu_chat_current'; }
+function liveKey() { return 'kapu_live_current'; }
 
 function saveChat() {
     try {
@@ -80,7 +74,16 @@ function saveLiveState() {
 
 function loadChat() {
     try {
-        const raw = localStorage.getItem(chatKey());
+        let raw = localStorage.getItem(chatKey());
+        // 마이그레이션: 이전 키(guest/user별)에서 데이터 복구
+        if (!raw) {
+            const u = window.currentUser;
+            const oldKey = u ? 'kapu_chat_' + u.id : 'kapu_chat_guest';
+            raw = localStorage.getItem(oldKey) || localStorage.getItem('kapu_chat_guest');
+            if (raw) {
+                localStorage.setItem(chatKey(), raw); // 새 키로 복사
+            }
+        }
         if (!raw) return false;
         const data = JSON.parse(raw);
         if (chatArea && data.html) {

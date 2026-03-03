@@ -51,7 +51,12 @@ export function initAuth() {
                         if (window.updateUserSession) window.updateUserSession(null);
                         if (btnLogin.updateState) btnLogin.updateState();
                     } else {
+                        // ★ 채팅/상담 데이터는 보존하고 인증 관련만 삭제
+                        const _preserveKeys = ['kapu_chat_current', 'kapu_live_current', 'kapu_chat_guest'];
+                        const _preserved = {};
+                        _preserveKeys.forEach(k => { const v = localStorage.getItem(k); if(v) _preserved[k] = v; });
                         localStorage.clear();
+                        Object.entries(_preserved).forEach(([k,v]) => localStorage.setItem(k, v));
                         sessionStorage.clear();
                         document.cookie.split(";").forEach((c) => {
                             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
