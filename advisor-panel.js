@@ -956,7 +956,6 @@ function addProductCards(products) {
         const sizeText = (w > 0 && h > 0)
             ? `${w}\u00d7${h}mm`
             : (lang === 'ja' ? 'サイズ自由' : lang === 'en' ? 'Custom size' : '사이즈 자유');
-        const addonHtml = buildAddonHtml(rec, i);
         const detailUrl = siteHost + '/?product=' + encodeURIComponent(rec.code);
         card.innerHTML = `
             ${thumbHtml}
@@ -969,7 +968,6 @@ function addProductCards(products) {
                 <span><i class="fa-solid fa-ruler-combined"></i> ${sizeText}</span>
                 ${rec.price_display ? `<span><i class="fa-solid fa-tag"></i> ${esc(rec.price_display)}</span>` : ''}
             </div>
-            ${addonHtml}
             <div class="adv-card-btns">
                 <a href="${detailUrl}" class="adv-btn-editor" style="text-decoration:none; text-align:center; flex:1;">
                     <i class="fa-solid fa-bag-shopping"></i> ${detailLabel}
