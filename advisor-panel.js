@@ -454,12 +454,12 @@ async function sendMessage(text, imageData) {
             addProductCards(products);
         }
 
-        // ★ 상담사 연결 키워드 감지 → 자동으로 상담사 연결 폼 띄우기
-        const _allText = ((text || '') + ' ' + chatMsg).toLowerCase();
+        // ★ 상담사 연결 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
+        // AI가 "상담사 연결 버튼을 눌러주세요" 등 안내를 자주 하므로 AI 텍스트 포함 시 오작동
+        const _userText = (text || '').toLowerCase();
         const _consultantKeywords = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결',
             '相談員','相談員接続','マネージャー','consultant','connect consultant','human agent','talk to human','real person','manager'];
-        const _wantsConsultant = _consultantKeywords.some(k => _allText.includes(k))
-            || /🎧\s*상담/.test(chatMsg) || /상담사.*버튼/.test(chatMsg) || /상담사.*눌러/.test(chatMsg);
+        const _wantsConsultant = _consultantKeywords.some(k => _userText.includes(k));
         if (_wantsConsultant && !liveMode) {
             setTimeout(() => startConsultantFlow(), 500);
         }
