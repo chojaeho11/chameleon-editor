@@ -7272,7 +7272,7 @@ if (w >= 20 && h >= 20) {
             );
         } else if (mode === 'upload') {
             // ★ 파일업로드 모드
-            const _isKeyring = ((product.code||'')+(product.name||'')+(product.category||'')).toLowerCase().match(/keyring|키링|key_ring|acr_key/);
+            const _isKeyring = ((product.code||'')+(product.name||'')+(product.category||'')).toLowerCase().match(/keyring|키링|key_ring|acr_key|코롯토|corotto|스마트톡|smart_tok|smarttok|아크릴마그넷|acr_mag/);
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
             fileInput.multiple = !_isKeyring;
@@ -7541,7 +7541,7 @@ if (w >= 20 && h >= 20) {
         }
         if (!file.type.startsWith('image/')) return;
         const product = window.selectedProductForChoice;
-        const _isKeyring = product && ((product.code||'')+(product.name||'')+(product.category||'')).toLowerCase().match(/keyring|키링|key_ring|acr_key/);
+        const _isKeyring = product && ((product.code||'')+(product.name||'')+(product.category||'')).toLowerCase().match(/keyring|키링|key_ring|acr_key|코롯토|corotto|스마트톡|smart_tok|smarttok|아크릴마그넷|acr_mag/);
 
         const img = new Image();
         img.onload = function() {
