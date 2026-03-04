@@ -13006,19 +13006,5 @@ document.addEventListener('click', function(e) {
 });
 </script>
 
-<!-- AI 채팅 위젯 (비로그인 방문자 대상) -->
-<script>
-(function(){
-    var _cwTimer = setTimeout(loadChatWidget, 3000);
-    window.addEventListener('authStateChange', function() { clearTimeout(_cwTimer); });
-    function loadChatWidget() {
-        if (window.currentUser) return;
-        var s = document.createElement('script');
-        s.src = './chat-widget.js?v=127';
-        document.body.appendChild(s);
-    }
-})();
-</script>
-
 </body>
 </html>
