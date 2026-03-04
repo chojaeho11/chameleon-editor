@@ -643,6 +643,13 @@ export function initWallPagesMulti(walls, doubleSided, activeIndex) {
             // 기존 페이지 있으면 보드 크기만 업데이트
             const json = JSON.parse(JSON.stringify(oldPages[oldFrontIdx]));
             updateBoardInJson(json, w, h);
+            updateAllRectsInJson(json, w, h);
+            pageDataList.push(json);
+        } else if (oldPages[0]) {
+            // ★ 새 벽: 첫 번째 페이지의 디자인을 복사하여 적용
+            const json = JSON.parse(JSON.stringify(oldPages[0]));
+            updateBoardInJson(json, w, h);
+            updateAllRectsInJson(json, w, h);
             pageDataList.push(json);
         } else {
             canvas.clear();
@@ -661,6 +668,13 @@ export function initWallPagesMulti(walls, doubleSided, activeIndex) {
             if (oldPages[oldBackIdx]) {
                 const json = JSON.parse(JSON.stringify(oldPages[oldBackIdx]));
                 updateBoardInJson(json, w, h);
+                updateAllRectsInJson(json, w, h);
+                pageDataList.push(json);
+            } else if (oldPages[0]) {
+                // ★ 새 뒷면: 첫 번째 페이지의 디자인을 복사
+                const json = JSON.parse(JSON.stringify(oldPages[0]));
+                updateBoardInJson(json, w, h);
+                updateAllRectsInJson(json, w, h);
                 pageDataList.push(json);
             } else {
                 canvas.clear();
@@ -706,6 +720,36 @@ function updateBoardInJson(json, w, h) {
             obj.width = w;
             obj.height = h;
             break;
+        }
+    }
+}
+
+// ★ JSON 내 배경/오버레이 등 전체 크기 오브젝트도 새 보드 사이즈에 맞게 리사이즈
+function updateAllRectsInJson(json, newW, newH) {
+    if (!json || !json.objects) return;
+    // 기존 보드 크기 감지
+    let oldW = newW, oldH = newH;
+    for (const obj of json.objects) {
+        if (obj.isBoard) { oldW = obj.width; oldH = obj.height; break; }
+    }
+    if (oldW === newW && oldH === newH) return; // 같은 크기면 스킵
+    const scaleX = newW / oldW;
+    const scaleY = newH / oldH;
+    for (const obj of json.objects) {
+        if (obj.isBoard) continue;
+        // 배경 rect, 오버레이 등 보드 전체를 덮는 오브젝트 리사이즈
+        if (obj.type === 'rect' && !obj.selectable) {
+            obj.width = (obj.width || 0) * scaleX;
+            obj.height = (obj.height || 0) * scaleY;
+            obj.left = (obj.left || 0) * scaleX;
+            obj.top = (obj.top || 0) * scaleY;
+        }
+        // 이미지/텍스트 등은 비율에 맞게 위치/크기 조정
+        else {
+            obj.left = (obj.left || 0) * scaleX;
+            obj.top = (obj.top || 0) * scaleY;
+            obj.scaleX = (obj.scaleX || 1) * scaleX;
+            obj.scaleY = (obj.scaleY || 1) * scaleY;
         }
     }
 }

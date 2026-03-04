@@ -691,8 +691,8 @@ export async function runDesignWizard(title, style, bodyText) {
     const darkC1 = _darkenHex(bgC2, 0.35);
     const darkC2 = _darkenHex(bgC2, 0.15);
     const bottomOverlay = new fabric.Rect({
-        width: bW, height: bH * 0.28,
-        left: bL, top: bT + bH * 0.72,
+        width: bW + 4, height: bH * 0.28 + 2,
+        left: bL - 2, top: bT + bH * 0.72,
         originX:'left', originY:'top',
         fill: new fabric.Gradient({
             type: 'linear',
@@ -1167,9 +1167,10 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     ];
     const angle = angles[Math.floor(Math.random() * angles.length)];
 
+    // ★ 서브픽셀 렌더링으로 인한 흰색 테두리 방지: 배경을 2px씩 크게 (clipPath가 잘라줌)
     const bgRect = new fabric.Rect({
-        width: bW, height: bH,
-        left: bL, top: bT,
+        width: bW + 4, height: bH + 4,
+        left: bL - 2, top: bT - 2,
         originX:'left', originY:'top',
         fill: new fabric.Gradient({
             type: 'linear',
