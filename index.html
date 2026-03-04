@@ -6489,6 +6489,16 @@ window.showChoiceModal = async function(key) {
         product.is_custom_size = true;
     }
 
+    // 일반상품은 사이즈 계산기 비활성화 (시공상품 카테고리 제외)
+    if (product.is_general_product) {
+        const isInstallProduct = product.category === 'sy-18'
+            || (product.code && product.code.startsWith('ft'))
+            || (product.code && product.code.startsWith('pd_'));
+        if (!isInstallProduct) {
+            product.is_custom_size = false;
+        }
+    }
+
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
