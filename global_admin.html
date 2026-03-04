@@ -3124,16 +3124,10 @@ async function saveCommonInfo() {
         showChatToast('모든 미확인 메시지를 읽음 처리했습니다', '', false);
     };
 
-    var lcRoomOffset = 0;
-    var lcRoomPageSize = 30;
-    var lcHasMoreRooms = false;
-    var lcAllRoomsData = [];
-
-    window.lcLoadRooms = async function(loadMore) {
+    window.lcLoadRooms = async function() {
         var sb=getSb(); if(!sb) return;
-        if (!loadMore) { lcRoomOffset = 0; lcAllRoomsData = []; }
         try {
-        var q = sb.from('chat_rooms').select('*').order('created_at',{ascending:false}).range(lcRoomOffset, lcRoomOffset + lcRoomPageSize - 1);
+        var q = sb.from('chat_rooms').select('*').order('updated_at',{ascending:false}).limit(500);
         if (currentFilter === 'ai_chatting') {
             q = q.eq('status', 'ai_chatting');
         } else if (currentFilter !== 'all' && currentFilter !== 'chatbot') {
@@ -3142,11 +3136,7 @@ async function saveCommonInfo() {
         var r = await q;
         if (r.error) { console.error('채팅방 로드 오류:', r.error); document.getElementById('lcRoomList').innerHTML='<div style="text-align:center;color:#ef4444;padding:20px;">로딩 오류<br><button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="lcLoadRooms()">다시 시도</button></div>'; return; }
         var list=document.getElementById('lcRoomList');
-        lcHasMoreRooms = r.data && r.data.length === lcRoomPageSize;
-        if (loadMore) { lcAllRoomsData = lcAllRoomsData.concat(r.data || []); } else { lcAllRoomsData = r.data || []; }
-        lcRoomOffset += (r.data ? r.data.length : 0);
-        // 필터 적용은 합산된 전체 데이터에 대해
-        var filteredData = lcAllRoomsData.slice();
+        var filteredData = (r.data || []).slice();
         // 매니저 이름 필터 적용
         var filterMgr = myManagerName || '';
         if (filterMgr && filterMgr !== '') {
@@ -3168,7 +3158,6 @@ async function saveCommonInfo() {
             });
         }
         if(!filteredData||filteredData.length===0){
-            if (lcHasMoreRooms) { lcLoadRooms(true); return; }
             list.innerHTML='<div style="text-align:center;color:#64748b;padding:30px;font-size:14px;">상담방 없음</div>';return;
         }
         // 각 방의 미확인 메시지 수 + 마지막 메시지 조회
@@ -3179,11 +3168,11 @@ async function saveCommonInfo() {
             // 미확인 수 (방별)
             var uRes = await sb.from('chat_messages').select('room_id').eq('is_read', false).eq('sender_type', 'customer').in('room_id', roomIds);
             if (uRes.data) uRes.data.forEach(function(u) { unreadMap[u.room_id] = (unreadMap[u.room_id] || 0) + 1; });
-            // 마지막 메시지 (방별)
+            // 마지막 메시지 (방별) — 충분한 limit로 모든 방의 마지막 메시지 확보
             var lRes = await sb.from('chat_messages').select('room_id,message,sender_type,created_at').in('room_id', roomIds).neq('sender_type','admin_memo').order('created_at', {ascending: false}).limit(roomIds.length * 3);
             if (lRes.data) lRes.data.forEach(function(m) { if (!lastMsgMap[m.room_id]) lastMsgMap[m.room_id] = m; });
         } catch(e) { console.warn('방 목록 추가정보 로드 실패:', e); }
-        // 정렬: 미확인 최상단 → 마지막 메시지 최신순
+        // 카톡식 정렬: 마지막 메시지 최신순 (미확인 있으면 최상단)
         filteredData.sort(function(a, b) {
             var ua = unreadMap[a.id] || 0, ub = unreadMap[b.id] || 0;
             if (ua > 0 && ub === 0) return -1;
@@ -3193,7 +3182,17 @@ async function saveCommonInfo() {
             return tb - ta;
         });
         var h=''; filteredData.forEach(function(rm){
-            var t=new Date(rm.updated_at||rm.created_at).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+            // 시간: 마지막 메시지 시간 우선, 없으면 방 업데이트 시간
+            var lastMsg = lastMsgMap[rm.id];
+            var msgTime = lastMsg ? new Date(lastMsg.created_at) : new Date(rm.updated_at || rm.created_at);
+            var now = new Date();
+            var t;
+            // 오늘이면 시:분만, 아니면 월/일 시:분
+            if (msgTime.toDateString() === now.toDateString()) {
+                t = msgTime.toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+            } else {
+                t = msgTime.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+            }
             var si=rm.status==='waiting'?'⏳':rm.status==='active'?'💬':rm.status==='ai_chatting'?'🤖':'✅';
             var isActive=currentRoom&&currentRoom.id===rm.id;
             var unread = unreadMap[rm.id] || 0;
@@ -3209,7 +3208,6 @@ async function saveCommonInfo() {
             h+='<span style="font-size:11px;color:#64748b;">'+t+'</span></span></div>';
             if(_subNm) h+=_subNm;
             // 마지막 메시지 미리보기
-            var lastMsg = lastMsgMap[rm.id];
             if (lastMsg) {
                 var preview = (lastMsg.message || '(파일)');
                 if (preview.length > 30) preview = preview.substring(0,30) + '...';
@@ -3220,9 +3218,6 @@ async function saveCommonInfo() {
             if(rm.ai_summary) h+='<div style="font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px;">🤖 '+rm.ai_summary.substring(0,50)+'</div>';
             h+='</div>';
         });
-        if (lcHasMoreRooms) {
-            h+='<div onclick="lcLoadRooms(true)" style="text-align:center;padding:14px;margin-top:6px;cursor:pointer;color:#a5b4fc;font-size:13px;font-weight:600;border-radius:10px;background:rgba(99,102,241,0.08);transition:background 0.15s;" onmouseenter="this.style.background=\'rgba(99,102,241,0.18)\'" onmouseleave="this.style.background=\'rgba(99,102,241,0.08)\'">더 보기 ▼</div>';
-        }
         list.innerHTML=h;
         } catch(e) { console.error('채팅방 로드 예외:', e); }
     };
