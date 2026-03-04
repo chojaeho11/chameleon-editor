@@ -93,8 +93,14 @@ body:not(.embed) .chat-view {
 .ch-status-dot.closed { background: #94a3b8; }
 @keyframes aiPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 .ch-status-text { color: rgba(255,255,255,0.85); }
-.ch-header-close {
+.ch-header-btn {
     margin-left: auto; background: rgba(255,255,255,0.15); border: none; color: white;
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.2s;
+}
+.ch-header-btn:hover { background: rgba(255,255,255,0.3); }
+.ch-header-close {
+    margin-left: 6px; background: rgba(255,255,255,0.15); border: none; color: white;
     width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
     display: none; align-items: center; justify-content: center; font-size: 14px; transition: background 0.2s;
 }
@@ -252,6 +258,7 @@ body.embed .ch-header-close { display: flex; }
                 <span class="ch-status-text" id="statusText">카푸 상담중</span>
             </div>
         </div>
+        <button class="ch-header-btn" onclick="onNewChat()" title="새 채팅"><i class="fa-solid fa-rotate-right"></i></button>
         <button class="ch-header-close" onclick="closeEmbed()" title="닫기"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="conn-banner" id="connBanner"></div>
