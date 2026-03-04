@@ -1480,8 +1480,24 @@ window.openCustomerInfo = async function(userId, name, phone) {
         html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">이름</div><div style="font-size:16px;font-weight:bold;">${name}</div></div>`;
         html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">전화번호</div><div style="font-size:16px;font-weight:bold;">${phone || '-'}</div></div>`;
         if (profile) {
-            html += `<div style="background:#eff6ff;padding:14px 16px;border-radius:10px;border:1px solid #bfdbfe;"><div style="font-size:11px;color:#3b82f6;margin-bottom:4px;">💰 마일리지</div><div style="font-size:18px;font-weight:bold;color:#1d4ed8;">${(profile.mileage || 0).toLocaleString()}원</div></div>`;
-            html += `<div style="background:#faf5ff;padding:14px 16px;border-radius:10px;border:1px solid #ddd6fe;"><div style="font-size:11px;color:#7c3aed;margin-bottom:4px;">🏦 예치금</div><div style="font-size:18px;font-weight:bold;color:#6d28d9;">${(profile.deposit || 0).toLocaleString()}원</div></div>`;
+            html += `<div style="background:#eff6ff;padding:14px 16px;border-radius:10px;border:1px solid #bfdbfe;">
+                <div style="font-size:11px;color:#3b82f6;margin-bottom:4px;">💰 마일리지</div>
+                <div style="font-size:18px;font-weight:bold;color:#1d4ed8;" id="custMileageVal">${(profile.mileage || 0).toLocaleString()}원</div>
+                <div style="display:flex;gap:4px;margin-top:8px;">
+                    <input id="custMileageAmt" type="number" placeholder="금액" style="width:80px;border:1px solid #bfdbfe;border-radius:6px;padding:4px 6px;font-size:12px;">
+                    <button onclick="adjustBalance('${userId}','mileage',1)" style="background:#2563eb;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">+ 지급</button>
+                    <button onclick="adjustBalance('${userId}','mileage',-1)" style="background:#ef4444;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">- 차감</button>
+                </div>
+            </div>`;
+            html += `<div style="background:#faf5ff;padding:14px 16px;border-radius:10px;border:1px solid #ddd6fe;">
+                <div style="font-size:11px;color:#7c3aed;margin-bottom:4px;">🏦 예치금</div>
+                <div style="font-size:18px;font-weight:bold;color:#6d28d9;" id="custDepositVal">${(profile.deposit || 0).toLocaleString()}원</div>
+                <div style="display:flex;gap:4px;margin-top:8px;">
+                    <input id="custDepositAmt" type="number" placeholder="금액" style="width:80px;border:1px solid #ddd6fe;border-radius:6px;padding:4px 6px;font-size:12px;">
+                    <button onclick="adjustBalance('${userId}','deposit',1)" style="background:#7c3aed;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">+ 지급</button>
+                    <button onclick="adjustBalance('${userId}','deposit',-1)" style="background:#ef4444;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">- 차감</button>
+                </div>
+            </div>`;
             html += `<div style="background:#f0fdf4;padding:14px 16px;border-radius:10px;border:1px solid #bbf7d0;"><div style="font-size:11px;color:#15803d;margin-bottom:4px;">📊 총 주문액</div><div style="font-size:18px;font-weight:bold;color:#166534;">${(profile.total_spend || 0).toLocaleString()}원</div></div>`;
             html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">📧 이메일</div><div style="font-size:13px;word-break:break-all;">${profile.email || '-'}</div></div>`;
         } else {
@@ -1532,5 +1548,41 @@ window.saveCustomerMemo = async function(userId) {
         alert('✅ 메모가 저장되었습니다.');
     } catch (err) {
         alert('저장 실패: ' + err.message);
+    }
+};
+
+window.adjustBalance = async function(userId, field, direction) {
+    const inputId = field === 'mileage' ? 'custMileageAmt' : 'custDepositAmt';
+    const displayId = field === 'mileage' ? 'custMileageVal' : 'custDepositVal';
+    const label = field === 'mileage' ? '마일리지' : '예치금';
+    const amt = parseInt(document.getElementById(inputId).value);
+    if (!amt || amt <= 0) { alert('금액을 입력해주세요.'); return; }
+
+    const change = amt * direction;
+    const action = direction > 0 ? '지급' : '차감';
+    if (!confirm(`${label} ${amt.toLocaleString()}원을 ${action}하시겠습니까?`)) return;
+
+    try {
+        const { data: pf } = await sb.from('profiles').select(field).eq('id', userId).single();
+        const current = pf[field] || 0;
+        const newVal = current + change;
+        if (newVal < 0) { alert(`${label}이 부족합니다. (현재: ${current.toLocaleString()}원)`); return; }
+
+        await sb.from('profiles').update({ [field]: newVal }).eq('id', userId);
+
+        // 트랜잭션 로그 기록
+        await sb.from('transactions').insert({
+            user_id: userId,
+            type: `admin_${field}_${direction > 0 ? 'add' : 'deduct'}`,
+            amount: change,
+            description: `관리자 ${action}: ${amt.toLocaleString()}원`
+        });
+
+        document.getElementById(displayId).textContent = newVal.toLocaleString() + '원';
+        document.getElementById(inputId).value = '';
+        alert(`✅ ${label} ${amt.toLocaleString()}원 ${action} 완료 (잔액: ${newVal.toLocaleString()}원)`);
+    } catch (err) {
+        console.error('Balance adjust error:', err);
+        alert('처리 실패: ' + err.message);
     }
 };
