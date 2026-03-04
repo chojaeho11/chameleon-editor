@@ -158,7 +158,14 @@ window.loadOrders = async () => {
 
         if (deliveryDateFilter) query = query.eq('delivery_target_date', deliveryDateFilter);
         if (orderDateFilter) query = query.gte('created_at', orderDateFilter + 'T00:00:00').lte('created_at', orderDateFilter + 'T23:59:59');
-        if (searchKeyword) query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,id.eq.${searchKeyword}`);
+        if (searchKeyword) {
+            const isNum = /^\d+$/.test(searchKeyword);
+            if (isNum) {
+                query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%,id.eq.${searchKeyword}`);
+            } else {
+                query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%`);
+            }
+        }
         if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
 
         const from = (currentPage - 1) * itemsPerPage;
@@ -293,7 +300,7 @@ window.loadOrders = async () => {
                         <span style="color:#334155;">${orderDate}</span>
                         ${deliveryHtml}
                     </td>
-                    <td><b>${order.manager_name}</b><br><span style="font-size:11px; color:#666;">${order.phone}</span></td>
+                    <td><b style="cursor:pointer;color:#4f46e5;text-decoration:underline;" onclick="openCustomerInfo('${order.user_id || ''}','${(order.manager_name||'').replace(/'/g,"\\'")}','${order.phone||''}')">${order.manager_name}</b><br><span style="font-size:11px; color:#666;">${order.phone}</span></td>
                     
                     <td style="text-align:center; font-size:12px; color:#64748b; font-weight:bold;">${order.id}</td>
                     
@@ -1424,5 +1431,106 @@ window.submitManualOrder = async () => {
         alert('주문 등록 실패: ' + e.message);
     } finally {
         showLoading(false);
+    }
+};
+
+// ═══════════════════════════════════════════════════════
+// [고객 정보 팝업] — 마일리지, 예치금, 메모, 주문내역
+// ═══════════════════════════════════════════════════════
+window.openCustomerInfo = async function(userId, name, phone) {
+    // 이미 모달이 있으면 제거
+    let modal = document.getElementById('customerInfoModal');
+    if (modal) modal.remove();
+
+    modal = document.createElement('div');
+    modal.id = 'customerInfoModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `<div style="background:white;border-radius:16px;width:700px;max-width:95vw;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);"><div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;"><h3 style="margin:0;font-size:18px;">👤 고객 정보 — ${name}</h3><button onclick="document.getElementById('customerInfoModal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button></div><div id="customerInfoBody" style="padding:24px;"><div style="text-align:center;padding:40px;color:#94a3b8;">로딩중...</div></div></div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+
+    const body = document.getElementById('customerInfoBody');
+
+    try {
+        // 1. 프로필 정보 (회원인 경우)
+        let profile = null;
+        if (userId) {
+            const { data } = await sb.from('profiles').select('id, email, username, deposit, mileage, total_spend, admin_memo, created_at').eq('id', userId).maybeSingle();
+            profile = data;
+        }
+
+        // 2. 해당 고객의 주문 내역 (이름+전화번호 기준)
+        let orderQuery = sb.from('orders')
+            .select('id, status, total_amount, created_at, payment_status, items, site_code, payment_method')
+            .neq('status', '임시작성')
+            .order('created_at', { ascending: false })
+            .limit(30);
+        if (userId) {
+            orderQuery = orderQuery.eq('user_id', userId);
+        } else {
+            orderQuery = orderQuery.ilike('manager_name', name);
+        }
+        const { data: orders } = await orderQuery;
+
+        // 3. 렌더링
+        let html = '';
+
+        // 고객 기본 정보
+        html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">`;
+        html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">이름</div><div style="font-size:16px;font-weight:bold;">${name}</div></div>`;
+        html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">전화번호</div><div style="font-size:16px;font-weight:bold;">${phone || '-'}</div></div>`;
+        if (profile) {
+            html += `<div style="background:#eff6ff;padding:14px 16px;border-radius:10px;border:1px solid #bfdbfe;"><div style="font-size:11px;color:#3b82f6;margin-bottom:4px;">💰 마일리지</div><div style="font-size:18px;font-weight:bold;color:#1d4ed8;">${(profile.mileage || 0).toLocaleString()}원</div></div>`;
+            html += `<div style="background:#faf5ff;padding:14px 16px;border-radius:10px;border:1px solid #ddd6fe;"><div style="font-size:11px;color:#7c3aed;margin-bottom:4px;">🏦 예치금</div><div style="font-size:18px;font-weight:bold;color:#6d28d9;">${(profile.deposit || 0).toLocaleString()}원</div></div>`;
+            html += `<div style="background:#f0fdf4;padding:14px 16px;border-radius:10px;border:1px solid #bbf7d0;"><div style="font-size:11px;color:#15803d;margin-bottom:4px;">📊 총 주문액</div><div style="font-size:18px;font-weight:bold;color:#166534;">${(profile.total_spend || 0).toLocaleString()}원</div></div>`;
+            html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">📧 이메일</div><div style="font-size:13px;word-break:break-all;">${profile.email || '-'}</div></div>`;
+        } else {
+            html += `<div style="grid-column:1/3;background:#fffbeb;padding:14px 16px;border-radius:10px;border:1px solid #fde68a;"><span style="color:#92400e;font-size:13px;">⚠️ 비회원 주문 — 마일리지/예치금 정보 없음</span></div>`;
+        }
+        html += `</div>`;
+
+        // 메모
+        const memoVal = profile?.admin_memo || '';
+        html += `<div style="margin-bottom:20px;">`;
+        html += `<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">📝 관리자 메모</div>`;
+        if (profile) {
+            html += `<div style="display:flex;gap:8px;"><textarea id="custMemoInput" style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:13px;min-height:60px;resize:vertical;">${memoVal}</textarea><button onclick="saveCustomerMemo('${userId}')" style="background:#4f46e5;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">저장</button></div>`;
+        } else {
+            html += `<div style="color:#94a3b8;font-size:13px;padding:10px;background:#f8fafc;border-radius:8px;">비회원은 메모를 저장할 수 없습니다.</div>`;
+        }
+        html += `</div>`;
+
+        // 주문 내역
+        html += `<div style="font-size:13px;font-weight:bold;margin-bottom:8px;">📦 주문 내역 (최근 30건)</div>`;
+        if (orders && orders.length > 0) {
+            html += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
+            html += `<thead><tr style="background:#f1f5f9;"><th style="padding:6px 8px;text-align:left;">날짜</th><th style="padding:6px 8px;text-align:center;">주문번호</th><th style="padding:6px 8px;text-align:left;">주문내역</th><th style="padding:6px 8px;text-align:right;">금액</th><th style="padding:6px 8px;text-align:center;">상태</th></tr></thead><tbody>`;
+            orders.forEach(o => {
+                const d = new Date(o.created_at);
+                const dt = `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
+                const items = typeof o.items === 'string' ? JSON.parse(o.items || '[]') : (o.items || []);
+                const itemStr = items.map(i => i.productName || '상품').join(', ');
+                const stColor = o.status.includes('취소') ? '#ef4444' : o.status.includes('완료') ? '#15803d' : '#334155';
+                html += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 8px;">${dt}</td><td style="padding:6px 8px;text-align:center;font-size:11px;color:#64748b;">${o.id}</td><td style="padding:6px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${itemStr}">${itemStr}</td><td style="padding:6px 8px;text-align:right;font-weight:bold;">${(o.total_amount||0).toLocaleString()}</td><td style="padding:6px 8px;text-align:center;color:${stColor};font-weight:bold;">${o.status}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+        } else {
+            html += `<div style="text-align:center;padding:20px;color:#94a3b8;">주문 내역이 없습니다.</div>`;
+        }
+
+        body.innerHTML = html;
+    } catch (err) {
+        console.error('Customer info error:', err);
+        body.innerHTML = `<div style="text-align:center;padding:20px;color:#ef4444;">오류: ${err.message}</div>`;
+    }
+};
+
+window.saveCustomerMemo = async function(userId) {
+    const memo = document.getElementById('custMemoInput').value;
+    try {
+        await sb.from('profiles').update({ admin_memo: memo }).eq('id', userId);
+        alert('✅ 메모가 저장되었습니다.');
+    } catch (err) {
+        alert('저장 실패: ' + err.message);
     }
 };
