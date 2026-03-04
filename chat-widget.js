@@ -90,8 +90,8 @@
     // Create button (pill shape with text)
     var btn = document.createElement('button');
     btn.id = 'ccw-btn';
-    btn.setAttribute('aria-label', 'AI Chat');
-    btn.innerHTML = chatSvg + closeSvg + '<span class="ccw-label">AI 상담</span>';
+    btn.setAttribute('aria-label', 'Chat');
+    btn.innerHTML = chatSvg + closeSvg + '<span class="ccw-label">채팅 상담</span>';
     document.body.appendChild(btn);
 
     // Create iframe container

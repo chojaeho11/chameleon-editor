@@ -231,7 +231,7 @@ body.embed .ch-header-close { display: flex; }
 <div id="viewName" class="name-view">
     <div class="name-card">
         <div class="name-logo"><i class="fa-solid fa-robot" style="color:white;"></i></div>
-        <h1 id="titleText">AI 상담</h1>
+        <h1 id="titleText">카멜레온 상담</h1>
         <p id="subtitleText">이름과 문의 내용을 입력하시면<br>AI가 바로 답변해 드립니다.</p>
         <input type="text" id="nameInput" maxlength="30">
         <textarea id="firstMsgInput" rows="3"></textarea>
@@ -247,10 +247,10 @@ body.embed .ch-header-close { display: flex; }
     <div class="ch-header">
         <div class="ch-header-avatar" id="headerAvatar"><i class="fa-solid fa-robot" style="color:white;"></i></div>
         <div class="ch-header-info">
-            <h2 id="chatTitle">카멜레온 AI 상담</h2>
+            <h2 id="chatTitle">카멜레온 상담</h2>
             <div class="ch-status">
                 <span class="ch-status-dot ai_chatting" id="statusDot"></span>
-                <span class="ch-status-text" id="statusText">AI 상담중</span>
+                <span class="ch-status-text" id="statusText">카푸 상담중</span>
             </div>
         </div>
         <button class="ch-header-close" onclick="closeEmbed()" title="닫기"><i class="fa-solid fa-xmark"></i></button>
@@ -258,7 +258,7 @@ body.embed .ch-header-close { display: flex; }
     <div class="conn-banner" id="connBanner"></div>
     <div class="ch-messages" id="chatMessages"></div>
     <div class="typing-indicator" id="typingIndicator">
-        <div class="typing-dots"><span class="typing-label">AI</span><span></span><span></span><span></span></div>
+        <div class="typing-dots"><span class="typing-label">카푸</span><span></span><span></span><span></span></div>
     </div>
     <!-- Agent request bar (AI mode only) -->
     <div class="agent-bar" id="agentBar">
@@ -313,48 +313,48 @@ var site = detectSite();
 // ===== i18n =====
 var LANG = {
     kr: {
-        title: 'AI 상담', subtitle: '이름과 문의 내용을 입력하시면\nAI가 바로 답변해 드립니다.',
+        title: '카멜레온 상담', subtitle: '이름과 궁금한 점을 남겨주시면\n카푸가 바로 답변해 드릴게요!',
         namePlaceholder: '이름 입력', msgPlaceholder: '궁금한 점을 입력하세요',
         chatMsgPlaceholder: '메시지를 입력하세요...', startBtn: '상담 시작',
-        chatTitle: '카멜레온 AI 상담',
-        statusAI: 'AI 상담중', statusWaiting: '상담사 연결 대기중...', statusActive: '상담사 연결됨', statusClosed: '상담 종료',
+        chatTitle: '카멜레온 상담',
+        statusAI: '카푸 상담중', statusWaiting: '상담사 연결 대기중...', statusActive: '상담사 연결됨', statusClosed: '상담 종료',
         nameRequired: '이름을 입력해주세요', msgRequired: '문의 내용을 입력해주세요',
         createFail: '상담방 생성에 실패했습니다', sendFail: '메시지 전송 실패',
         uploadFail: '파일 업로드 실패', fileReceived: '파일을 받았습니다',
         newMsg: '새 메시지', newChatBtn: '새 상담 시작', connLost: '연결이 끊어졌습니다',
-        manager: '상담사', aiName: 'AI 상담봇',
+        manager: '상담사', aiName: '카푸',
         agentBtn: '상담사 연결', agentRequested: '상담사를 호출했습니다. 잠시만 기다려주세요.',
-        aiError: 'AI 응답 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        aiError: '앗, 잠깐 오류가 생겼어요. 다시 한번 말씀해 주세요!',
         orderBtn: '주문하기', detailBtn: '자세히 보기'
     },
     ja: {
-        title: 'AI相談', subtitle: 'お名前とお問い合わせ内容を入力すると\nAIがすぐにお答えします。',
+        title: 'カメレオン相談', subtitle: 'お名前とご質問を入力すると\nカプがすぐにお答えしますよ！',
         namePlaceholder: 'お名前', msgPlaceholder: 'ご質問を入力してください',
         chatMsgPlaceholder: 'メッセージを入力...', startBtn: '相談開始',
-        chatTitle: 'カメレオンAI相談',
-        statusAI: 'AI対応中', statusWaiting: '担当者接続待ち...', statusActive: '担当者対応中', statusClosed: '相談終了',
+        chatTitle: 'カメレオン相談',
+        statusAI: 'カプ対応中', statusWaiting: '担当者接続待ち...', statusActive: '担当者対応中', statusClosed: '相談終了',
         nameRequired: 'お名前を入力してください', msgRequired: 'お問い合わせ内容を入力してください',
         createFail: '相談ルーム作成に失敗しました', sendFail: 'メッセージ送信失敗',
         uploadFail: 'ファイルアップロード失敗', fileReceived: 'ファイルを受け取りました',
         newMsg: '新しいメッセージ', newChatBtn: '新しい相談を開始', connLost: '接続が切れました',
-        manager: '担当者', aiName: 'AIアシスタント',
+        manager: '担当者', aiName: 'カプ',
         agentBtn: '担当者に接続', agentRequested: '担当者を呼び出しました。少々お待ちください。',
-        aiError: 'AI応答エラーが発生しました。しばらくしてから再度お試しください。',
+        aiError: 'あ、ちょっとエラーが出ました。もう一度お願いできますか？',
         orderBtn: '注文する', detailBtn: '詳しく見る'
     },
     en: {
-        title: 'AI Chat', subtitle: 'Enter your name and question.\nOur AI will assist you right away.',
+        title: 'Chameleon Chat', subtitle: 'Enter your name and question.\nKapu will help you right away!',
         namePlaceholder: 'Your name', msgPlaceholder: 'How can we help you?',
         chatMsgPlaceholder: 'Type a message...', startBtn: 'Start Chat',
-        chatTitle: 'Chameleon AI Support',
-        statusAI: 'AI Active', statusWaiting: 'Waiting for agent...', statusActive: 'Agent connected', statusClosed: 'Chat ended',
+        chatTitle: 'Chameleon Chat',
+        statusAI: 'Kapu is here', statusWaiting: 'Waiting for agent...', statusActive: 'Agent connected', statusClosed: 'Chat ended',
         nameRequired: 'Please enter your name', msgRequired: 'Please enter your message',
         createFail: 'Failed to create chat room', sendFail: 'Failed to send message',
         uploadFail: 'File upload failed', fileReceived: 'File received',
         newMsg: 'New message', newChatBtn: 'Start New Chat', connLost: 'Connection lost',
-        manager: 'Agent', aiName: 'AI Assistant',
+        manager: 'Agent', aiName: 'Kapu',
         agentBtn: 'Connect to agent', agentRequested: 'Requesting agent. Please wait.',
-        aiError: 'AI response error. Please try again.',
+        aiError: 'Oops, something went wrong. Could you try again?',
         orderBtn: 'Order now', detailBtn: 'View details'
     }
 };
@@ -689,7 +689,7 @@ function updateStatusUI(status) {
 
     if (status === 'ai_chatting') {
         text.textContent = t('statusAI');
-        avatar.innerHTML = '<i class="fa-solid fa-robot" style="color:white;"></i>';
+        avatar.innerHTML = '<i class="fa-solid fa-comments" style="color:white;"></i>';
         agentBar.style.display = 'block';
     } else if (status === 'waiting') {
         text.textContent = t('statusWaiting');
@@ -763,7 +763,7 @@ function appendMessage(m, scroll) {
     // Sender
     var senderHtml = '';
     if (isChatbot) {
-        senderHtml = '<div class="msg-sender"><span class="ai-badge">AI</span> ' + esc(m.sender_name || t('aiName')) + '</div>';
+        senderHtml = '<div class="msg-sender">' + esc(m.sender_name || t('aiName')) + '</div>';
     } else if (!isCustomer && !isSystem) {
         senderHtml = '<div class="msg-sender">' + esc(m.sender_name || t('manager')) + '</div>';
     }
