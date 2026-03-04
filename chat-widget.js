@@ -1,5 +1,5 @@
 /**
- * Chameleon Chat Widget - Embeddable live chat for external sites
+ * Chameleon AI Chat Widget - Embeddable live chat for external sites
  *
  * Usage (one line):
  *   <script src="https://cafe2626.com/chat-widget.js"></script>
@@ -9,10 +9,9 @@
  *     window.CHAMELEON_CHAT = {
  *       position: 'right',       // 'left' or 'right'
  *       color: '#6366f1',        // button color
- *       size: 60,                // button size in px
- *       bottom: 24,              // bottom offset in px
+ *       bottom: 100,             // bottom offset in px (default 100 to avoid Channel Talk)
  *       side: 24,                // side offset in px
- *       url: 'https://cafe2626.com/live-chat.html', // chat page URL
+ *       url: 'https://cafe2626.com/live-chat.html',
  *       zIndex: 99990
  *     };
  *   </script>
@@ -21,19 +20,17 @@
 (function() {
     'use strict';
 
-    // Prevent double-init
     if (window.__chameleonChatLoaded) return;
     window.__chameleonChatLoaded = true;
 
     var cfg = window.CHAMELEON_CHAT || {};
     var position = cfg.position || 'right';
     var color = cfg.color || '#6366f1';
-    var size = cfg.size || 60;
-    var bottom = cfg.bottom || 24;
+    var bottom = cfg.bottom || 100; // 채널톡 등 기존 위젯 위에 배치
     var side = cfg.side || 24;
     var zIndex = cfg.zIndex || 99990;
 
-    // Auto-detect chat URL from script src domain, or use config
+    // Auto-detect chat URL from script src domain
     var chatUrl = cfg.url || (function() {
         var scripts = document.querySelectorAll('script[src*="chat-widget"]');
         if (scripts.length) {
@@ -45,43 +42,56 @@
     })();
     chatUrl += (chatUrl.indexOf('?') >= 0 ? '&' : '?') + 'embed=true';
 
-    // Chat icon SVG (inline, no external dependency)
-    var chatSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-        '<path d="M21 11.5C21 16.75 16.75 21 11.5 21C10.12 21 8.81 20.72 7.62 20.21L3 21L3.79 16.38C3.29 15.19 3 13.88 3 12.5C3 7.25 7.25 3 12.5 3C17.75 3 21 7.25 21 11.5Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<circle cx="8.5" cy="12" r="1" fill="white"/>' +
-        '<circle cx="12" cy="12" r="1" fill="white"/>' +
-        '<circle cx="15.5" cy="12" r="1" fill="white"/>' +
+    // Inject CSS
+    var style = document.createElement('style');
+    style.textContent = '' +
+        '#ccw-btn{' +
+            'position:fixed;bottom:' + bottom + 'px;' + position + ':' + side + 'px;' +
+            'height:44px;border-radius:22px;background:' + color + ';' +
+            'border:none;cursor:pointer;z-index:' + zIndex + ';' +
+            'display:flex;align-items:center;gap:7px;padding:0 16px 0 12px;' +
+            'box-shadow:0 4px 20px rgba(99,102,241,0.35);' +
+            'transition:transform .2s,box-shadow .2s;animation:ccwPulse 3s infinite;' +
+            'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
+        '}' +
+        '#ccw-btn:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(99,102,241,0.5)}' +
+        '#ccw-btn svg{flex-shrink:0}' +
+        '#ccw-btn .ccw-label{color:#fff;font-size:13px;font-weight:700;white-space:nowrap;line-height:1}' +
+        '#ccw-btn.open .ccw-label{display:none}' +
+        '#ccw-btn.open .ccw-icon-chat{display:none}' +
+        '#ccw-btn:not(.open) .ccw-icon-close{display:none}' +
+        '@keyframes ccwPulse{0%,100%{box-shadow:0 4px 20px rgba(99,102,241,0.35)}50%{box-shadow:0 4px 20px rgba(99,102,241,0.35),0 0 0 8px rgba(99,102,241,0.1)}}' +
+        '#ccw-frame{' +
+            'position:fixed;bottom:' + (bottom + 56) + 'px;' + position + ':' + side + 'px;' +
+            'width:400px;height:620px;max-width:calc(100vw - 32px);max-height:calc(100vh - ' + (bottom + 72) + 'px);' +
+            'border-radius:16px;overflow:hidden;z-index:' + (zIndex + 1) + ';' +
+            'box-shadow:0 20px 60px rgba(0,0,0,0.2);display:none;border:1px solid #e2e8f0;' +
+        '}' +
+        '#ccw-frame iframe{width:100%;height:100%;border:none}' +
+        '@media(max-width:480px){' +
+            '#ccw-frame{top:0!important;left:0!important;right:0!important;bottom:0!important;' +
+            'width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;' +
+            'border-radius:0!important;border:none!important}' +
+        '}';
+    document.head.appendChild(style);
+
+    // Chat icon SVG
+    var chatSvg = '<svg class="ccw-icon-chat" width="20" height="20" viewBox="0 0 24 24" fill="none">' +
+        '<path d="M12 3C7.03 3 3 6.58 3 11c0 2.42 1.26 4.58 3.23 6.04L5 21l4.13-1.85C10.05 19.38 11 19.5 12 19.5c4.97 0 9-3.08 9-6.5S16.97 3 12 3z" fill="white"/>' +
+        '<circle cx="8.5" cy="11" r="1.2" fill="' + color + '"/>' +
+        '<circle cx="12" cy="11" r="1.2" fill="' + color + '"/>' +
+        '<circle cx="15.5" cy="11" r="1.2" fill="' + color + '"/>' +
         '</svg>';
 
-    var closeSvg = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    var closeSvg = '<svg class="ccw-icon-close" width="18" height="18" viewBox="0 0 24 24" fill="none">' +
         '<path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2.5" stroke-linecap="round"/>' +
         '</svg>';
 
-    // Inject CSS
-    var style = document.createElement('style');
-    style.textContent = '#ccw-btn{position:fixed;bottom:' + bottom + 'px;' + position + ':' + side + 'px;' +
-        'width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';' +
-        'border:none;cursor:pointer;z-index:' + zIndex + ';display:flex;align-items:center;justify-content:center;' +
-        'box-shadow:0 4px 20px rgba(0,0,0,0.25);transition:transform .2s,box-shadow .2s;animation:ccwPulse 2.5s infinite}' +
-        '#ccw-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,0,0,0.3)}' +
-        '#ccw-btn.open svg:first-child{display:none}#ccw-btn:not(.open) svg:last-child{display:none}' +
-        '@keyframes ccwPulse{0%,100%{box-shadow:0 4px 20px rgba(0,0,0,0.25)}50%{box-shadow:0 4px 20px rgba(0,0,0,0.25),0 0 0 8px ' + color + '22}}' +
-        '#ccw-frame{position:fixed;bottom:' + (bottom + size + 16) + 'px;' + position + ':' + side + 'px;' +
-        'width:400px;height:620px;max-width:calc(100vw - 32px);max-height:calc(100vh - ' + (bottom + size + 32) + 'px);' +
-        'border-radius:16px;overflow:hidden;z-index:' + (zIndex + 1) + ';' +
-        'box-shadow:0 20px 60px rgba(0,0,0,0.2);display:none;border:1px solid #e2e8f0}' +
-        '#ccw-frame iframe{width:100%;height:100%;border:none}' +
-        '#ccw-badge{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;' +
-        'background:#ef4444;display:none;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700;border:2px solid white}' +
-        '@media(max-width:480px){#ccw-frame{top:0!important;left:0!important;right:0!important;bottom:0!important;' +
-        'width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;border-radius:0!important;border:none!important}}';
-    document.head.appendChild(style);
-
-    // Create button
+    // Create button (pill shape with text)
     var btn = document.createElement('button');
     btn.id = 'ccw-btn';
-    btn.setAttribute('aria-label', 'Chat');
-    btn.innerHTML = chatSvg + closeSvg + '<span id="ccw-badge"></span>';
+    btn.setAttribute('aria-label', 'AI Chat');
+    btn.innerHTML = chatSvg + closeSvg + '<span class="ccw-label">AI 상담</span>';
     document.body.appendChild(btn);
 
     // Create iframe container
@@ -100,8 +110,6 @@
         isOpen = !isOpen;
         frame.style.display = isOpen ? 'block' : 'none';
         btn.classList.toggle('open', isOpen);
-
-        // Stop pulse animation when opened
         if (isOpen) btn.style.animation = 'none';
 
         // Mobile: hide button when open
