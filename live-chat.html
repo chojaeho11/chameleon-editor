@@ -19,82 +19,44 @@
     --border: #e2e8f0;
     --success: #22c55e;
     --warning: #f59e0b;
+    --ai: #8b5cf6;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; overflow: hidden; }
 body {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
 }
 body.embed { background: transparent; }
 
 /* ===== Name Input View ===== */
-.name-view {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 20px;
-}
+.name-view { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 20px; }
 .name-card {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 40px 30px;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: 0 20px 60px rgba(99,102,241,0.12);
-    border: 1px solid var(--border);
-    text-align: center;
+    background: var(--card); border-radius: 20px; padding: 40px 30px;
+    width: 100%; max-width: 420px;
+    box-shadow: 0 20px 60px rgba(99,102,241,0.12); border: 1px solid var(--border); text-align: center;
 }
 .name-logo {
-    width: 72px; height: 72px;
-    border-radius: 50%;
+    width: 72px; height: 72px; border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 32px;
+    margin: 0 auto 20px; font-size: 32px;
     box-shadow: 0 8px 24px rgba(99,102,241,0.3);
 }
-.name-card h1 {
-    font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px;
-}
-.name-card p {
-    font-size: 14px; color: var(--text-sub); margin-bottom: 24px; line-height: 1.5;
-}
+.name-card h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.name-card p { font-size: 14px; color: var(--text-sub); margin-bottom: 24px; line-height: 1.5; }
 .name-card input, .name-card textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    font-size: 15px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-    margin-bottom: 12px;
-    resize: none;
+    width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s; margin-bottom: 12px; resize: none;
 }
-.name-card input:focus, .name-card textarea:focus {
-    border-color: var(--primary);
-}
+.name-card input:focus, .name-card textarea:focus { border-color: var(--primary); }
 .name-card .start-btn {
-    width: 100%;
-    padding: 14px;
+    width: 100%; padding: 14px;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .start-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
 .start-btn:active { transform: scale(0.98); }
@@ -102,280 +64,161 @@ body.embed { background: transparent; }
 
 /* ===== Chat View ===== */
 .chat-view {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    max-width: 500px;
-    height: 100%;
-    max-height: 100vh;
-    background: var(--card);
-    border-radius: 0;
-    overflow: hidden;
+    display: none; flex-direction: column; width: 100%; max-width: 500px;
+    height: 100%; max-height: 100vh; background: var(--card); border-radius: 0; overflow: hidden;
 }
 body:not(.embed) .chat-view {
-    border-radius: 16px;
-    max-height: 700px;
-    box-shadow: 0 20px 60px rgba(99,102,241,0.12);
-    border: 1px solid var(--border);
+    border-radius: 16px; max-height: 700px;
+    box-shadow: 0 20px 60px rgba(99,102,241,0.12); border: 1px solid var(--border);
 }
 @media (max-width: 520px) {
-    body:not(.embed) .chat-view {
-        max-width: 100%;
-        max-height: 100%;
-        border-radius: 0;
-        border: none;
-        box-shadow: none;
-    }
+    body:not(.embed) .chat-view { max-width: 100%; max-height: 100%; border-radius: 0; border: none; box-shadow: none; }
 }
 
 /* Header */
 .ch-header {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
 }
 .ch-header-avatar {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
+    width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
 }
-.ch-header-info h2 {
-    color: white; font-size: 15px; font-weight: 700;
-}
-.ch-header-info .ch-status {
-    font-size: 12px;
-    display: flex; align-items: center; gap: 5px;
-    margin-top: 2px;
-}
-.ch-status-dot {
-    width: 7px; height: 7px; border-radius: 50%; display: inline-block;
-}
+.ch-header-info h2 { color: white; font-size: 15px; font-weight: 700; }
+.ch-header-info .ch-status { font-size: 12px; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.ch-status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.ch-status-dot.ai_chatting { background: var(--ai); animation: aiPulse 1.5s infinite; }
 .ch-status-dot.waiting { background: var(--warning); }
 .ch-status-dot.active { background: var(--success); }
 .ch-status-dot.closed { background: #94a3b8; }
+@keyframes aiPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 .ch-status-text { color: rgba(255,255,255,0.85); }
 .ch-header-close {
-    margin-left: auto;
-    background: rgba(255,255,255,0.15);
-    border: none; color: white;
-    width: 32px; height: 32px; border-radius: 50%;
-    cursor: pointer;
-    display: none; /* shown only in embed mode */
-    align-items: center; justify-content: center;
-    font-size: 14px;
-    transition: background 0.2s;
+    margin-left: auto; background: rgba(255,255,255,0.15); border: none; color: white;
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+    display: none; align-items: center; justify-content: center; font-size: 14px; transition: background 0.2s;
 }
 body.embed .ch-header-close { display: flex; }
 .ch-header-close:hover { background: rgba(255,255,255,0.3); }
 
 /* Messages Area */
 .ch-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: var(--bg);
-    scroll-behavior: smooth;
+    flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    background: var(--bg); scroll-behavior: smooth;
 }
 .ch-messages::-webkit-scrollbar { width: 4px; }
 .ch-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
 /* Message Bubbles */
-.msg-row {
-    display: flex;
-    flex-direction: column;
-    max-width: 80%;
-    animation: msgIn 0.3s ease-out;
-}
-@keyframes msgIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+.msg-row { display: flex; flex-direction: column; max-width: 85%; animation: msgIn 0.3s ease-out; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .msg-row.customer { align-self: flex-end; align-items: flex-end; }
 .msg-row.manager { align-self: flex-start; align-items: flex-start; }
+.msg-row.chatbot { align-self: flex-start; align-items: flex-start; }
 .msg-row.system { align-self: center; max-width: 90%; }
 
-.msg-sender {
-    font-size: 11px; color: var(--text-sub); margin-bottom: 3px; padding: 0 4px;
-    font-weight: 600;
-}
+.msg-sender { font-size: 11px; color: var(--text-sub); margin-bottom: 3px; padding: 0 4px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.msg-sender .ai-badge { background: var(--ai); color: white; font-size: 9px; padding: 1px 5px; border-radius: 8px; font-weight: 700; }
 .msg-bubble {
-    padding: 10px 14px;
-    border-radius: 14px;
-    font-size: 14px;
-    line-height: 1.5;
-    word-break: break-word;
-    position: relative;
+    padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.6; word-break: break-word; position: relative;
 }
-.msg-row.customer .msg-bubble {
-    background: var(--primary);
-    color: white;
-    border-bottom-right-radius: 4px;
-}
-.msg-row.manager .msg-bubble {
-    background: var(--card);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-bottom-left-radius: 4px;
-}
+.msg-row.customer .msg-bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+.msg-row.manager .msg-bubble { background: var(--card); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.msg-row.chatbot .msg-bubble { background: #faf5ff; color: var(--text); border: 1px solid #ddd6fe; border-bottom-left-radius: 4px; }
 .msg-row.system .msg-bubble {
-    background: var(--border);
-    color: var(--text-sub);
-    font-size: 12px;
-    text-align: center;
-    border-radius: 20px;
-    padding: 6px 14px;
+    background: var(--border); color: var(--text-sub); font-size: 12px; text-align: center; border-radius: 20px; padding: 6px 14px;
 }
-.msg-time {
-    font-size: 10px; color: #94a3b8; margin-top: 3px; padding: 0 4px;
-}
-.msg-file-img {
-    max-width: 220px; max-height: 200px;
-    border-radius: 10px; cursor: pointer;
-    border: 1px solid var(--border);
-}
+.msg-time { font-size: 10px; color: #94a3b8; margin-top: 3px; padding: 0 4px; }
+.msg-file-img { max-width: 220px; max-height: 200px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border); }
 .msg-file-link {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 13px; color: var(--primary);
-    text-decoration: none; margin-top: 4px;
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f8fafc;
+    border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--primary); text-decoration: none; margin-top: 4px;
 }
 .msg-file-link:hover { background: var(--primary-light); }
 
+/* Product Cards */
+.product-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.product-card {
+    background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    display: flex; gap: 0; transition: box-shadow 0.2s; cursor: pointer;
+}
+.product-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.product-card-img {
+    width: 80px; min-height: 80px; object-fit: contain; background: #f8fafc; border-right: 1px solid var(--border); flex-shrink: 0; padding: 6px;
+}
+.product-card-body { padding: 10px 12px; flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.product-card-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.product-card-price { font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 3px; }
+.product-card-reason { font-size: 11px; color: var(--text-sub); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.product-card-btn {
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 6px 10px; background: var(--primary); color: white; border: none; border-radius: 6px;
+    font-size: 11px; font-weight: 600; cursor: pointer; margin-top: 6px; align-self: flex-start; transition: 0.2s;
+}
+.product-card-btn:hover { background: var(--primary-dark); }
+
 /* Typing Indicator */
 .typing-indicator {
-    display: none;
-    align-self: flex-start;
-    padding: 10px 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    border-bottom-left-radius: 4px;
+    display: none; align-self: flex-start; padding: 10px 14px;
+    background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 14px; border-bottom-left-radius: 4px;
 }
-.typing-dots { display: flex; gap: 4px; }
-.typing-dots span {
-    width: 6px; height: 6px; border-radius: 50%; background: #94a3b8;
-    animation: typingBounce 1.4s infinite;
-}
+.typing-dots { display: flex; gap: 4px; align-items: center; }
+.typing-label { font-size: 11px; color: var(--ai); margin-right: 6px; font-weight: 600; }
+.typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--ai); animation: typingBounce 1.4s infinite; }
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typingBounce {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-4px); }
+@keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+
+/* Agent Request Bar */
+.agent-bar {
+    display: none; padding: 8px 16px; background: #faf5ff; border-top: 1px solid #ddd6fe;
+    text-align: center; flex-shrink: 0;
 }
+.agent-bar-btn {
+    padding: 7px 16px; background: white; border: 1.5px solid var(--primary); color: var(--primary);
+    border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+}
+.agent-bar-btn:hover { background: var(--primary); color: white; }
 
 /* Input Area */
 .ch-input {
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-    padding: 12px 16px;
-    background: var(--card);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
+    display: flex; align-items: flex-end; gap: 8px; padding: 12px 16px;
+    background: var(--card); border-top: 1px solid var(--border); flex-shrink: 0;
 }
 .ch-input-file {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: #f1f5f9;
-    border: 1px solid var(--border);
-    color: var(--text-sub);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: 0.2s;
-    position: relative;
-    overflow: hidden;
+    width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; border: 1px solid var(--border);
+    color: var(--text-sub); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: 0.2s; position: relative; overflow: hidden;
 }
 .ch-input-file:hover { border-color: var(--primary); color: var(--primary); }
 .ch-input-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .ch-input-text {
-    flex: 1;
-    padding: 9px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 20px;
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    resize: none;
-    max-height: 100px;
-    line-height: 1.4;
-    transition: border-color 0.2s;
+    flex: 1; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 20px;
+    font-size: 14px; font-family: inherit; outline: none; resize: none; max-height: 100px; line-height: 1.4; transition: border-color 0.2s;
 }
 .ch-input-text:focus { border-color: var(--primary); }
 .ch-input-send {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--primary);
-    border: none;
-    color: white;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: 0.2s;
-    font-size: 14px;
+    width: 36px; height: 36px; border-radius: 50%; background: var(--primary); border: none; color: white;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; font-size: 14px;
 }
 .ch-input-send:hover { background: var(--primary-dark); }
 .ch-input-send:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Connection Banner */
-.conn-banner {
-    display: none;
-    padding: 6px 12px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-}
-.conn-banner.offline {
-    display: block;
-    background: #fef2f2;
-    color: #dc2626;
-    border-bottom: 1px solid #fca5a5;
-}
-.conn-banner.reconnecting {
-    display: block;
-    background: #fffbeb;
-    color: #d97706;
-    border-bottom: 1px solid #fde68a;
-}
+.conn-banner { display: none; padding: 6px 12px; text-align: center; font-size: 12px; font-weight: 600; }
+.conn-banner.offline { display: block; background: #fef2f2; color: #dc2626; border-bottom: 1px solid #fca5a5; }
 
-/* New Chat Button (after room closed) */
+/* New Chat Button */
 .new-chat-btn {
-    padding: 10px 20px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    margin: 10px auto;
-    display: block;
+    padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer; margin: 10px auto; display: block;
 }
 
 /* Toast */
 .lc-toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100px);
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: white;
-    background: #334155;
-    z-index: 99999;
-    transition: transform 0.3s;
-    white-space: nowrap;
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+    padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; color: white;
+    background: #334155; z-index: 99999; transition: transform 0.3s; white-space: nowrap;
 }
 .lc-toast.show { transform: translateX(-50%) translateY(0); }
 .lc-toast.error { background: #ef4444; }
@@ -387,11 +230,9 @@ body.embed .ch-header-close { display: flex; }
 <!-- VIEW A: Name Input -->
 <div id="viewName" class="name-view">
     <div class="name-card">
-        <div class="name-logo">
-            <i class="fa-solid fa-comments" style="color:white;"></i>
-        </div>
-        <h1 id="titleText">실시간 상담</h1>
-        <p id="subtitleText">이름과 문의 내용을 입력하시면<br>담당자가 바로 연결됩니다.</p>
+        <div class="name-logo"><i class="fa-solid fa-robot" style="color:white;"></i></div>
+        <h1 id="titleText">AI 상담</h1>
+        <p id="subtitleText">이름과 문의 내용을 입력하시면<br>AI가 바로 답변해 드립니다.</p>
         <input type="text" id="nameInput" maxlength="30">
         <textarea id="firstMsgInput" rows="3"></textarea>
         <button class="start-btn" id="startBtn" onclick="onStartChat()">
@@ -403,34 +244,28 @@ body.embed .ch-header-close { display: flex; }
 
 <!-- VIEW B: Chat -->
 <div id="viewChat" class="chat-view">
-    <!-- Header -->
     <div class="ch-header">
-        <div class="ch-header-avatar">
-            <i class="fa-solid fa-headset" style="color:white;"></i>
-        </div>
+        <div class="ch-header-avatar" id="headerAvatar"><i class="fa-solid fa-robot" style="color:white;"></i></div>
         <div class="ch-header-info">
-            <h2 id="chatTitle">카멜레온 상담</h2>
+            <h2 id="chatTitle">카멜레온 AI 상담</h2>
             <div class="ch-status">
-                <span class="ch-status-dot waiting" id="statusDot"></span>
-                <span class="ch-status-text" id="statusText">대기중</span>
+                <span class="ch-status-dot ai_chatting" id="statusDot"></span>
+                <span class="ch-status-text" id="statusText">AI 상담중</span>
             </div>
         </div>
-        <button class="ch-header-close" onclick="closeEmbed()" title="닫기">
-            <i class="fa-solid fa-xmark"></i>
+        <button class="ch-header-close" onclick="closeEmbed()" title="닫기"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="conn-banner" id="connBanner"></div>
+    <div class="ch-messages" id="chatMessages"></div>
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots"><span class="typing-label">AI</span><span></span><span></span><span></span></div>
+    </div>
+    <!-- Agent request bar (AI mode only) -->
+    <div class="agent-bar" id="agentBar">
+        <button class="agent-bar-btn" onclick="onRequestAgent()">
+            <i class="fa-solid fa-headset"></i> <span id="agentBarText">상담사 연결</span>
         </button>
     </div>
-
-    <!-- Connection Banner -->
-    <div class="conn-banner" id="connBanner"></div>
-
-    <!-- Messages -->
-    <div class="ch-messages" id="chatMessages"></div>
-
-    <!-- Typing Indicator -->
-    <div class="typing-indicator" id="typingIndicator">
-        <div class="typing-dots"><span></span><span></span><span></span></div>
-    </div>
-
     <!-- Input -->
     <div class="ch-input" id="chatInputArea">
         <label class="ch-input-file" title="파일 첨부">
@@ -438,13 +273,10 @@ body.embed .ch-header-close { display: flex; }
             <input type="file" id="fileInput" multiple accept="image/*,.pdf,.zip,.doc,.docx" onchange="onFileSelect(event)">
         </label>
         <textarea class="ch-input-text" id="msgInput" rows="1" onkeydown="onMsgKeydown(event)" oninput="autoGrow(this)"></textarea>
-        <button class="ch-input-send" id="sendBtn" onclick="onSendMessage()">
-            <i class="fa-solid fa-paper-plane"></i>
-        </button>
+        <button class="ch-input-send" id="sendBtn" onclick="onSendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 </div>
 
-<!-- Toast -->
 <div class="lc-toast" id="lcToast"></div>
 
 <script>
@@ -455,7 +287,8 @@ body.embed .ch-header-close { display: flex; }
 var SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 var STORAGE_KEY = 'chameleon_livechat_session';
-var SESSION_EXPIRE_MS = 7 * 24 * 3600 * 1000; // 7 days
+var SESSION_EXPIRE_MS = 7 * 24 * 3600 * 1000;
+var SITE_URLS = { kr: 'https://www.cafe2626.com', ja: 'https://www.cafe0101.com', en: 'https://www.cafe3355.com' };
 
 var sb = null;
 var roomId = null;
@@ -463,8 +296,10 @@ var customerName = '';
 var subscription = null;
 var roomSubscription = null;
 var isEmbed = false;
-var roomStatus = 'waiting';
-var sentMsgIds = new Set(); // track optimistically rendered messages
+var roomStatus = 'ai_chatting';
+var sentMsgIds = new Set();
+var conversationHistory = []; // for AI context
+var aiProcessing = false; // prevent double AI calls
 
 // ===== Site Detection =====
 function detectSite() {
@@ -478,93 +313,60 @@ var site = detectSite();
 // ===== i18n =====
 var LANG = {
     kr: {
-        title: '실시간 상담',
-        subtitle: '이름과 문의 내용을 입력하시면\n담당자가 바로 연결됩니다.',
-        namePlaceholder: '이름 입력',
-        msgPlaceholder: '문의 내용을 입력하세요',
-        chatMsgPlaceholder: '메시지를 입력하세요...',
-        startBtn: '상담 시작',
-        chatTitle: '카멜레온 상담',
-        statusWaiting: '담당자 연결 대기중...',
-        statusActive: '상담 연결됨',
-        statusClosed: '상담 종료',
-        nameRequired: '이름을 입력해주세요',
-        msgRequired: '문의 내용을 입력해주세요',
-        createFail: '상담방 생성에 실패했습니다',
-        sendFail: '메시지 전송 실패',
-        uploadFail: '파일 업로드 실패',
-        fileReceived: '파일을 받았습니다',
-        newMsg: '새 메시지',
-        newChatBtn: '새 상담 시작',
-        roomClosed: '상담이 종료되었습니다',
-        connLost: '연결이 끊어졌습니다',
-        reconnecting: '재연결 중...',
-        manager: '상담사'
+        title: 'AI 상담', subtitle: '이름과 문의 내용을 입력하시면\nAI가 바로 답변해 드립니다.',
+        namePlaceholder: '이름 입력', msgPlaceholder: '궁금한 점을 입력하세요',
+        chatMsgPlaceholder: '메시지를 입력하세요...', startBtn: '상담 시작',
+        chatTitle: '카멜레온 AI 상담',
+        statusAI: 'AI 상담중', statusWaiting: '상담사 연결 대기중...', statusActive: '상담사 연결됨', statusClosed: '상담 종료',
+        nameRequired: '이름을 입력해주세요', msgRequired: '문의 내용을 입력해주세요',
+        createFail: '상담방 생성에 실패했습니다', sendFail: '메시지 전송 실패',
+        uploadFail: '파일 업로드 실패', fileReceived: '파일을 받았습니다',
+        newMsg: '새 메시지', newChatBtn: '새 상담 시작', connLost: '연결이 끊어졌습니다',
+        manager: '상담사', aiName: 'AI 상담봇',
+        agentBtn: '상담사 연결', agentRequested: '상담사를 호출했습니다. 잠시만 기다려주세요.',
+        aiError: 'AI 응답 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        orderBtn: '주문하기', detailBtn: '자세히 보기'
     },
     ja: {
-        title: 'リアルタイム相談',
-        subtitle: 'お名前とお問い合わせ内容を入力すると\n担当者がすぐに対応いたします。',
-        namePlaceholder: 'お名前',
-        msgPlaceholder: 'お問い合わせ内容',
-        chatMsgPlaceholder: 'メッセージを入力...',
-        startBtn: '相談開始',
-        chatTitle: 'カメレオン相談',
-        statusWaiting: '担当者接続待ち...',
-        statusActive: '相談中',
-        statusClosed: '相談終了',
-        nameRequired: 'お名前を入力してください',
-        msgRequired: 'お問い合わせ内容を入力してください',
-        createFail: '相談ルーム作成に失敗しました',
-        sendFail: 'メッセージ送信失敗',
-        uploadFail: 'ファイルアップロード失敗',
-        fileReceived: 'ファイルを受け取りました',
-        newMsg: '新しいメッセージ',
-        newChatBtn: '新しい相談を開始',
-        roomClosed: '相談が終了しました',
-        connLost: '接続が切れました',
-        reconnecting: '再接続中...',
-        manager: '担当者'
+        title: 'AI相談', subtitle: 'お名前とお問い合わせ内容を入力すると\nAIがすぐにお答えします。',
+        namePlaceholder: 'お名前', msgPlaceholder: 'ご質問を入力してください',
+        chatMsgPlaceholder: 'メッセージを入力...', startBtn: '相談開始',
+        chatTitle: 'カメレオンAI相談',
+        statusAI: 'AI対応中', statusWaiting: '担当者接続待ち...', statusActive: '担当者対応中', statusClosed: '相談終了',
+        nameRequired: 'お名前を入力してください', msgRequired: 'お問い合わせ内容を入力してください',
+        createFail: '相談ルーム作成に失敗しました', sendFail: 'メッセージ送信失敗',
+        uploadFail: 'ファイルアップロード失敗', fileReceived: 'ファイルを受け取りました',
+        newMsg: '新しいメッセージ', newChatBtn: '新しい相談を開始', connLost: '接続が切れました',
+        manager: '担当者', aiName: 'AIアシスタント',
+        agentBtn: '担当者に接続', agentRequested: '担当者を呼び出しました。少々お待ちください。',
+        aiError: 'AI応答エラーが発生しました。しばらくしてから再度お試しください。',
+        orderBtn: '注文する', detailBtn: '詳しく見る'
     },
     en: {
-        title: 'Live Chat',
-        subtitle: 'Enter your name and message.\nOur team will assist you shortly.',
-        namePlaceholder: 'Your name',
-        msgPlaceholder: 'How can we help you?',
-        chatMsgPlaceholder: 'Type a message...',
-        startBtn: 'Start Chat',
-        chatTitle: 'Chameleon Support',
-        statusWaiting: 'Waiting for agent...',
-        statusActive: 'Connected',
-        statusClosed: 'Chat ended',
-        nameRequired: 'Please enter your name',
-        msgRequired: 'Please enter your message',
-        createFail: 'Failed to create chat room',
-        sendFail: 'Failed to send message',
-        uploadFail: 'File upload failed',
-        fileReceived: 'File received',
-        newMsg: 'New message',
-        newChatBtn: 'Start New Chat',
-        roomClosed: 'This chat has ended',
-        connLost: 'Connection lost',
-        reconnecting: 'Reconnecting...',
-        manager: 'Agent'
+        title: 'AI Chat', subtitle: 'Enter your name and question.\nOur AI will assist you right away.',
+        namePlaceholder: 'Your name', msgPlaceholder: 'How can we help you?',
+        chatMsgPlaceholder: 'Type a message...', startBtn: 'Start Chat',
+        chatTitle: 'Chameleon AI Support',
+        statusAI: 'AI Active', statusWaiting: 'Waiting for agent...', statusActive: 'Agent connected', statusClosed: 'Chat ended',
+        nameRequired: 'Please enter your name', msgRequired: 'Please enter your message',
+        createFail: 'Failed to create chat room', sendFail: 'Failed to send message',
+        uploadFail: 'File upload failed', fileReceived: 'File received',
+        newMsg: 'New message', newChatBtn: 'Start New Chat', connLost: 'Connection lost',
+        manager: 'Agent', aiName: 'AI Assistant',
+        agentBtn: 'Connect to agent', agentRequested: 'Requesting agent. Please wait.',
+        aiError: 'AI response error. Please try again.',
+        orderBtn: 'Order now', detailBtn: 'View details'
     }
 };
-
-function t(key) {
-    return (LANG[site.lang] || LANG.kr)[key] || key;
-}
+function t(key) { return (LANG[site.lang] || LANG.kr)[key] || key; }
 
 // ===== Init =====
 function init() {
     sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
     isEmbed = new URLSearchParams(location.search).get('embed') === 'true';
     if (isEmbed) document.body.classList.add('embed');
-
-    // Apply language
     applyLanguage();
 
-    // Check for existing session
     var session = loadSession();
     if (session && session.roomId) {
         roomId = session.roomId;
@@ -576,46 +378,32 @@ function init() {
         showNameView();
     }
 
-    // Request notification permission
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
+    if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
 }
 
 function applyLanguage() {
     document.getElementById('titleText').textContent = t('title');
-    var sub = document.getElementById('subtitleText');
-    sub.innerHTML = t('subtitle').replace(/\n/g, '<br>');
+    document.getElementById('subtitleText').innerHTML = t('subtitle').replace(/\n/g, '<br>');
     document.getElementById('nameInput').placeholder = t('namePlaceholder');
     document.getElementById('firstMsgInput').placeholder = t('msgPlaceholder');
     document.getElementById('startBtnText').textContent = t('startBtn');
     document.getElementById('chatTitle').textContent = t('chatTitle');
     document.getElementById('msgInput').placeholder = t('chatMsgPlaceholder');
+    document.getElementById('agentBarText').textContent = t('agentBtn');
     document.title = t('chatTitle');
 }
 
-// ===== Session Persistence =====
+// ===== Session =====
 function saveSession() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        roomId: roomId,
-        name: customerName,
-        ts: Date.now()
-    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ roomId: roomId, name: customerName, ts: Date.now() }));
 }
 function loadSession() {
-    try {
-        var s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (s && (Date.now() - s.ts) < SESSION_EXPIRE_MS) return s;
-    } catch(e) {}
+    try { var s = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (s && (Date.now() - s.ts) < SESSION_EXPIRE_MS) return s; } catch(e) {}
     return null;
 }
-function clearSession() {
-    localStorage.removeItem(STORAGE_KEY);
-    roomId = null;
-    customerName = '';
-}
+function clearSession() { localStorage.removeItem(STORAGE_KEY); roomId = null; customerName = ''; conversationHistory = []; }
 
-// ===== View Switching =====
+// ===== Views =====
 function showNameView() {
     document.getElementById('viewName').style.display = 'flex';
     document.getElementById('viewChat').style.display = 'none';
@@ -634,7 +422,6 @@ window.onStartChat = async function() {
     var msgEl = document.getElementById('firstMsgInput');
     var name = nameEl.value.trim();
     var msg = msgEl.value.trim();
-
     if (!name) { showToast(t('nameRequired'), 'error'); nameEl.focus(); return; }
     if (!msg) { showToast(t('msgRequired'), 'error'); msgEl.focus(); return; }
 
@@ -644,40 +431,35 @@ window.onStartChat = async function() {
     try {
         customerName = name;
 
-        // 1. Create room
+        // 1. Create room (AI mode)
         var res = await sb.from('chat_rooms').insert({
             customer_name: name,
-            status: 'waiting',
-            source: 'live-chat',
+            status: 'ai_chatting',
+            source: 'ai-chat',
             site_lang: site.lang,
             assigned_manager: ''
         }).select().single();
-
         if (res.error) throw res.error;
         roomId = res.data.id;
-        roomStatus = 'waiting';
+        roomStatus = 'ai_chatting';
         saveSession();
 
         // 2. Send first message
         var msgRes = await sb.from('chat_messages').insert({
-            room_id: roomId,
-            sender_type: 'customer',
-            sender_name: name,
-            message: msg
+            room_id: roomId, sender_type: 'customer', sender_name: name, message: msg
         }).select().single();
+        if (msgRes.data) sentMsgIds.add(msgRes.data.id);
 
         // 3. Show chat
         showChatView();
-        if (msgRes.data) sentMsgIds.add(msgRes.data.id);
-        appendMessage({
-            sender_type: 'customer',
-            sender_name: name,
-            message: msg,
-            created_at: new Date().toISOString()
-        });
+        appendMessage({ sender_type: 'customer', sender_name: name, message: msg, created_at: new Date().toISOString() });
 
         // 4. Start subscriptions
         startSubscriptions();
+
+        // 5. Get AI response for first message
+        conversationHistory.push({ role: 'user', content: msg });
+        getAIResponse(msg);
 
     } catch(err) {
         console.error('Chat create error:', err);
@@ -694,173 +476,204 @@ window.onSendMessage = async function() {
     inp.value = '';
     inp.style.height = 'auto';
 
-    // Optimistic render
-    appendMessage({
-        sender_type: 'customer',
-        sender_name: customerName,
-        message: txt,
-        created_at: new Date().toISOString(),
-        _optimistic: true
-    });
+    appendMessage({ sender_type: 'customer', sender_name: customerName, message: txt, created_at: new Date().toISOString(), _optimistic: true });
 
     try {
         var res = await sb.from('chat_messages').insert({
-            room_id: roomId,
-            sender_type: 'customer',
-            sender_name: customerName,
-            message: txt
+            room_id: roomId, sender_type: 'customer', sender_name: customerName, message: txt
         }).select().single();
-
         if (res.data) sentMsgIds.add(res.data.id);
         if (res.error) throw res.error;
-
-        // Update room timestamp
         sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId);
+
+        // AI auto-response (only in ai_chatting mode)
+        if (roomStatus === 'ai_chatting') {
+            conversationHistory.push({ role: 'user', content: txt });
+            getAIResponse(txt);
+        }
+    } catch(err) { showToast(t('sendFail'), 'error'); }
+};
+
+// ===== AI Response =====
+async function getAIResponse(userMessage) {
+    if (aiProcessing) return;
+    aiProcessing = true;
+    showTypingIndicator(true);
+
+    try {
+        var langParam = site.lang === 'ja' ? 'ja' : site.lang === 'en' ? 'us' : 'kr';
+        var res = await fetch(SUPA_URL + '/functions/v1/product-advisor', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: userMessage,
+                lang: langParam,
+                image: null,
+                conversation_history: conversationHistory.slice(-20)
+            })
+        });
+
+        if (!res.ok) throw new Error('API error: ' + res.status);
+        var data = await res.json();
+
+        var aiText = data.chat_message || '';
+        var products = data.products || [];
+
+        // Build message to save (embed products as JSON comment)
+        var msgToSave = aiText;
+        if (products.length > 0) {
+            msgToSave += '\n<!--PRODUCTS:' + JSON.stringify(products) + '-->';
+        }
+
+        // Save to DB
+        await sb.from('chat_messages').insert({
+            room_id: roomId, sender_type: 'chatbot', sender_name: t('aiName'), message: msgToSave
+        });
+
+        // Update conversation history
+        conversationHistory.push({ role: 'assistant', content: aiText });
+
+        // Render
+        showTypingIndicator(false);
+        appendMessage({
+            sender_type: 'chatbot', sender_name: t('aiName'),
+            message: aiText, created_at: new Date().toISOString(),
+            _products: products, _skipRealtime: true
+        });
+
     } catch(err) {
-        showToast(t('sendFail'), 'error');
+        console.error('AI error:', err);
+        showTypingIndicator(false);
+        appendMessage({
+            sender_type: 'chatbot', sender_name: t('aiName'),
+            message: t('aiError'), created_at: new Date().toISOString(), _skipRealtime: true
+        });
     }
+    aiProcessing = false;
+}
+
+function showTypingIndicator(show) {
+    var el = document.getElementById('typingIndicator');
+    el.style.display = show ? 'block' : 'none';
+    if (show) scrollToBottom();
+}
+
+// ===== Request Agent =====
+window.onRequestAgent = async function() {
+    if (roomStatus !== 'ai_chatting') return;
+
+    // Change room status to waiting
+    await sb.from('chat_rooms').update({ status: 'waiting' }).eq('id', roomId);
+
+    // Insert system message
+    await sb.from('chat_messages').insert({
+        room_id: roomId, sender_type: 'system', sender_name: 'system', message: t('agentRequested')
+    });
+
+    roomStatus = 'waiting';
+    updateStatusUI('waiting');
 };
 
 // ===== File Upload =====
 window.onFileSelect = async function(e) {
     var files = e.target.files;
     if (!files || !files.length || !roomId) return;
-
-    for (var i = 0; i < files.length; i++) {
-        await uploadFile(files[i]);
-    }
+    for (var i = 0; i < files.length; i++) await uploadFile(files[i]);
     e.target.value = '';
 };
 
 async function uploadFile(file) {
-    if (file.size > 10 * 1024 * 1024) {
-        showToast('Max 10MB', 'error');
-        return;
-    }
-
+    if (file.size > 10 * 1024 * 1024) { showToast('Max 10MB', 'error'); return; }
     var ext = file.name.split('.').pop().toLowerCase();
     var safeName = Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '.' + ext;
     var path = 'room-' + roomId + '/' + safeName;
-
     try {
         var up = await sb.storage.from('chat-files').upload(path, file, { upsert: true });
         if (up.error) throw up.error;
-
         var url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
-
         var res = await sb.from('chat_messages').insert({
-            room_id: roomId,
-            sender_type: 'customer',
-            sender_name: customerName,
-            message: '',
-            file_url: url,
-            file_name: file.name,
-            file_type: file.type
+            room_id: roomId, sender_type: 'customer', sender_name: customerName,
+            message: '', file_url: url, file_name: file.name, file_type: file.type
         }).select().single();
-
         if (res.data) sentMsgIds.add(res.data.id);
-
-        appendMessage({
-            sender_type: 'customer',
-            sender_name: customerName,
-            message: '',
-            file_url: url,
-            file_name: file.name,
-            file_type: file.type,
-            created_at: new Date().toISOString()
-        });
-    } catch(err) {
-        console.error('Upload error:', err);
-        showToast(t('uploadFail'), 'error');
-    }
+        appendMessage({ sender_type: 'customer', sender_name: customerName, message: '', file_url: url, file_name: file.name, file_type: file.type, created_at: new Date().toISOString() });
+    } catch(err) { console.error('Upload error:', err); showToast(t('uploadFail'), 'error'); }
 }
 
-// ===== Load Message History =====
+// ===== Load History =====
 async function loadMessages() {
     if (!roomId) return;
-
     try {
-        // Load room status
         var roomRes = await sb.from('chat_rooms').select('status').eq('id', roomId).single();
         if (roomRes.data) {
             roomStatus = roomRes.data.status;
             updateStatusUI(roomStatus);
-            if (roomStatus === 'closed') {
-                showClosedUI();
-            }
+            if (roomStatus === 'closed') showClosedUI();
         }
 
-        // Load messages
-        var res = await sb.from('chat_messages').select('*')
-            .eq('room_id', roomId)
-            .order('created_at', { ascending: true })
-            .limit(500);
-
+        var res = await sb.from('chat_messages').select('*').eq('room_id', roomId).order('created_at', { ascending: true }).limit(500);
         if (res.data) {
             var area = document.getElementById('chatMessages');
             area.innerHTML = '';
+            conversationHistory = [];
             res.data.forEach(function(m) {
-                // Skip internal/admin memos
                 if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
                 sentMsgIds.add(m.id);
+
+                // Rebuild conversation history for AI context
+                if (m.sender_type === 'customer') {
+                    conversationHistory.push({ role: 'user', content: m.message });
+                } else if (m.sender_type === 'chatbot') {
+                    var cleanMsg = (m.message || '').replace(/\n<!--PRODUCTS:.*?-->/s, '');
+                    conversationHistory.push({ role: 'assistant', content: cleanMsg });
+                }
+
+                // Parse embedded products
+                var products = [];
+                if (m.message && m.message.indexOf('<!--PRODUCTS:') >= 0) {
+                    try {
+                        var match = m.message.match(/<!--PRODUCTS:(.*?)-->/s);
+                        if (match) products = JSON.parse(match[1]);
+                    } catch(e) {}
+                }
+                m._products = products;
                 appendMessage(m, false);
             });
             scrollToBottom();
         }
-    } catch(err) {
-        console.error('Load messages error:', err);
-    }
+    } catch(err) { console.error('Load messages error:', err); }
 }
 
-// ===== Realtime Subscriptions =====
+// ===== Realtime =====
 function startSubscriptions() {
     if (!roomId) return;
 
-    // 1. Message subscription
     if (subscription) subscription.unsubscribe();
     subscription = sb.channel('lc-msg-' + roomId)
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chat_messages',
-            filter: 'room_id=eq.' + roomId
-        }, function(payload) {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + roomId }, function(payload) {
             var m = payload.new;
-            // Skip own messages (already rendered optimistically)
             if (m.sender_type === 'customer') return;
-            // Skip internal/memo
+            if (m.sender_type === 'chatbot') return; // AI messages rendered locally
             if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
 
+            // Manager or system message from realtime
             appendMessage(m);
             playNotifySound();
             if (document.hidden) sendBrowserNotification(m);
         })
         .subscribe(function(status) {
             var banner = document.getElementById('connBanner');
-            if (status === 'SUBSCRIBED') {
-                banner.style.display = 'none';
-                banner.className = 'conn-banner';
-            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                banner.textContent = t('connLost');
-                banner.className = 'conn-banner offline';
-            }
+            if (status === 'SUBSCRIBED') { banner.style.display = 'none'; banner.className = 'conn-banner'; }
+            else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { banner.textContent = t('connLost'); banner.className = 'conn-banner offline'; }
         });
 
-    // 2. Room status subscription
     if (roomSubscription) roomSubscription.unsubscribe();
     roomSubscription = sb.channel('lc-room-' + roomId)
-        .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'chat_rooms',
-            filter: 'id=eq.' + roomId
-        }, function(payload) {
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_rooms', filter: 'id=eq.' + roomId }, function(payload) {
             var room = payload.new;
             roomStatus = room.status;
             updateStatusUI(roomStatus);
-            if (roomStatus === 'closed') {
-                showClosedUI();
-            }
+            if (roomStatus === 'closed') showClosedUI();
         })
         .subscribe();
 }
@@ -869,17 +682,34 @@ function startSubscriptions() {
 function updateStatusUI(status) {
     var dot = document.getElementById('statusDot');
     var text = document.getElementById('statusText');
-    dot.className = 'ch-status-dot ' + (status === 'active' ? 'active' : status === 'closed' ? 'closed' : 'waiting');
+    var avatar = document.getElementById('headerAvatar');
+    var agentBar = document.getElementById('agentBar');
 
-    if (status === 'active') text.textContent = t('statusActive');
-    else if (status === 'closed') text.textContent = t('statusClosed');
-    else text.textContent = t('statusWaiting');
+    dot.className = 'ch-status-dot ' + status;
+
+    if (status === 'ai_chatting') {
+        text.textContent = t('statusAI');
+        avatar.innerHTML = '<i class="fa-solid fa-robot" style="color:white;"></i>';
+        agentBar.style.display = 'block';
+    } else if (status === 'waiting') {
+        text.textContent = t('statusWaiting');
+        avatar.innerHTML = '<i class="fa-solid fa-headset" style="color:white;"></i>';
+        agentBar.style.display = 'none';
+    } else if (status === 'active') {
+        text.textContent = t('statusActive');
+        avatar.innerHTML = '<i class="fa-solid fa-headset" style="color:white;"></i>';
+        agentBar.style.display = 'none';
+    } else if (status === 'closed') {
+        text.textContent = t('statusClosed');
+        avatar.innerHTML = '<i class="fa-solid fa-check" style="color:white;"></i>';
+        agentBar.style.display = 'none';
+    }
 }
 
 function showClosedUI() {
+    document.getElementById('agentBar').style.display = 'none';
     var inputArea = document.getElementById('chatInputArea');
-    inputArea.innerHTML = '<button class="new-chat-btn" onclick="onNewChat()">' +
-        '<i class="fa-solid fa-plus"></i> ' + t('newChatBtn') + '</button>';
+    inputArea.innerHTML = '<button class="new-chat-btn" onclick="onNewChat()"><i class="fa-solid fa-plus"></i> ' + t('newChatBtn') + '</button>';
 }
 
 window.onNewChat = function() {
@@ -887,21 +717,16 @@ window.onNewChat = function() {
     if (subscription) subscription.unsubscribe();
     if (roomSubscription) roomSubscription.unsubscribe();
     sentMsgIds.clear();
-    document.getElementById('chatMessages').innerHTML = '';
-    roomStatus = 'waiting';
-
-    // Restore input area
-    document.getElementById('chatInputArea') || location.reload();
     location.reload();
 };
 
 // ===== Render Message =====
 function appendMessage(m, scroll) {
     var area = document.getElementById('chatMessages');
-
     var isCustomer = m.sender_type === 'customer';
-    var isSystem = m.sender_type === 'system' || m.sender_type === 'chatbot';
-    var who = isSystem ? 'system' : (isCustomer ? 'customer' : 'manager');
+    var isChatbot = m.sender_type === 'chatbot';
+    var isSystem = m.sender_type === 'system';
+    var who = isSystem ? 'system' : isChatbot ? 'chatbot' : isCustomer ? 'customer' : 'manager';
 
     var time = '';
     if (m.created_at) {
@@ -911,112 +736,112 @@ function appendMessage(m, scroll) {
 
     var contentHtml = '';
 
-    // File content
+    // File
     if (m.file_url) {
         var isImage = m.file_type && m.file_type.startsWith('image/');
-        if (isImage) {
-            contentHtml = '<img class="msg-file-img" src="' + esc(m.file_url) + '" alt="' + esc(m.file_name || 'image') + '" onclick="window.open(this.src)">';
-        } else {
-            contentHtml = '<a class="msg-file-link" href="' + esc(m.file_url) + '" target="_blank" rel="noopener">' +
-                '<i class="fa-solid fa-file-arrow-down"></i> ' + esc(m.file_name || 'file') + '</a>';
-        }
+        if (isImage) contentHtml = '<img class="msg-file-img" src="' + esc(m.file_url) + '" onclick="window.open(this.src)">';
+        else contentHtml = '<a class="msg-file-link" href="' + esc(m.file_url) + '" target="_blank" rel="noopener"><i class="fa-solid fa-file-arrow-down"></i> ' + esc(m.file_name || 'file') + '</a>';
     }
 
-    // Text content
-    if (m.message) {
-        contentHtml += '<div class="msg-bubble">' + esc(m.message).replace(/\n/g, '<br>') + '</div>';
+    // Text (strip product JSON for chatbot messages)
+    var displayMsg = m.message || '';
+    if (isChatbot && displayMsg.indexOf('<!--PRODUCTS:') >= 0) {
+        displayMsg = displayMsg.replace(/\n<!--PRODUCTS:.*?-->/s, '');
+    }
+    if (displayMsg) {
+        contentHtml += '<div class="msg-bubble">' + formatMessage(displayMsg) + '</div>';
     } else if (!m.file_url) {
-        return; // empty message with no file
+        return;
     }
 
+    // Product cards
+    var products = m._products || [];
+    if (products.length > 0) {
+        contentHtml += renderProductCards(products);
+    }
+
+    // Sender
     var senderHtml = '';
-    if (!isCustomer && !isSystem) {
+    if (isChatbot) {
+        senderHtml = '<div class="msg-sender"><span class="ai-badge">AI</span> ' + esc(m.sender_name || t('aiName')) + '</div>';
+    } else if (!isCustomer && !isSystem) {
         senderHtml = '<div class="msg-sender">' + esc(m.sender_name || t('manager')) + '</div>';
     }
 
-    var html = '<div class="msg-row ' + who + '">' +
-        senderHtml +
-        contentHtml +
-        (time ? '<div class="msg-time">' + time + '</div>' : '') +
-        '</div>';
+    var html = '<div class="msg-row ' + who + '">' + senderHtml + contentHtml +
+        (time ? '<div class="msg-time">' + time + '</div>' : '') + '</div>';
 
     area.insertAdjacentHTML('beforeend', html);
     if (scroll !== false) scrollToBottom();
 }
 
+function formatMessage(text) {
+    // Escape HTML, convert newlines, make URLs clickable
+    var s = esc(text);
+    s = s.replace(/\n/g, '<br>');
+    s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">$1</a>');
+    return s;
+}
+
+function renderProductCards(products) {
+    var siteUrl = SITE_URLS[site.lang] || SITE_URLS.kr;
+    var html = '<div class="product-cards">';
+    products.forEach(function(p) {
+        var link = siteUrl + '/?product=' + encodeURIComponent(p.code);
+        var imgSrc = p.img_url || '';
+        var name = p.name || p.code;
+        var price = p.price_display || '';
+        var reason = p.reason || '';
+
+        html += '<a href="' + esc(link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">';
+        html += '<div class="product-card">';
+        if (imgSrc) html += '<img class="product-card-img" src="' + esc(imgSrc) + '" alt="' + esc(name) + '">';
+        html += '<div class="product-card-body">';
+        html += '<div class="product-card-name">' + esc(name) + '</div>';
+        if (price) html += '<div class="product-card-price">' + esc(price) + '</div>';
+        if (reason) html += '<div class="product-card-reason">' + esc(reason) + '</div>';
+        html += '<div class="product-card-btn"><i class="fa-solid fa-cart-shopping"></i> ' + t('orderBtn') + '</div>';
+        html += '</div></div></a>';
+    });
+    html += '</div>';
+    return html;
+}
+
 // ===== Input Handlers =====
 window.onMsgKeydown = function(e) {
-    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-        e.preventDefault();
-        window.onSendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); window.onSendMessage(); }
 };
-
-window.autoGrow = function(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
-};
-
-// ===== Embed Close =====
-window.closeEmbed = function() {
-    if (window.parent !== window) {
-        window.parent.postMessage('chameleon-chat-close', '*');
-    }
-};
+window.autoGrow = function(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; };
+window.closeEmbed = function() { if (window.parent !== window) window.parent.postMessage('chameleon-chat-close', '*'); };
 
 // ===== Notification =====
 function playNotifySound() {
     try {
         var ac = new (window.AudioContext || window.webkitAudioContext)();
-        var osc = ac.createOscillator();
-        var gain = ac.createGain();
+        var osc = ac.createOscillator(); var gain = ac.createGain();
         osc.connect(gain); gain.connect(ac.destination);
-        osc.frequency.value = 800;
-        gain.gain.value = 0.1;
+        osc.frequency.value = 800; gain.gain.value = 0.1;
         osc.start(); osc.stop(ac.currentTime + 0.15);
     } catch(e) {}
 }
-
 function sendBrowserNotification(m) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    try {
-        new Notification(t('newMsg'), {
-            body: m.message || t('fileReceived'),
-            icon: '/favicon.ico',
-            tag: 'livechat-' + roomId
-        });
-    } catch(e) {}
+    try { new Notification(t('newMsg'), { body: m.message || t('fileReceived'), icon: '/favicon.ico', tag: 'livechat-' + roomId }); } catch(e) {}
 }
 
 // ===== Helpers =====
-function scrollToBottom() {
-    requestAnimationFrame(function() {
-        var area = document.getElementById('chatMessages');
-        area.scrollTop = area.scrollHeight;
-    });
-}
-
-function esc(s) {
-    if (!s) return '';
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-}
-
+function scrollToBottom() { requestAnimationFrame(function() { var a = document.getElementById('chatMessages'); a.scrollTop = a.scrollHeight; }); }
+function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function showToast(msg, type) {
-    var el = document.getElementById('lcToast');
-    el.textContent = msg;
+    var el = document.getElementById('lcToast'); el.textContent = msg;
     el.className = 'lc-toast' + (type ? ' ' + type : '');
     setTimeout(function() { el.classList.add('show'); }, 10);
     setTimeout(function() { el.classList.remove('show'); }, 3000);
 }
 
 // ===== Boot =====
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 
 })();
 </script>
