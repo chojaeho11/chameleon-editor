@@ -2280,9 +2280,10 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         };
     }).filter(i => i !== null);
 
-    // ★ items가 비어있으면 경고 (주문 내역 공란 방지)
+    // ★ items가 비어있으면 주문 생성 중단 (주문 내역 공란 방지)
     if (itemsToSave.length === 0) {
         console.error('ORDER: itemsToSave is empty! cartData:', cartData);
+        throw new Error(window.t('msg_cart_empty', "Your cart is empty."));
     }
 
     // [핵심] 3중 사이트 코드 결정:
@@ -2471,6 +2472,8 @@ async function processFinalPayment() {
                 }).eq('id', orderId);
                 
                 showToast(window.t('msg_order_complete_bank'), "success");
+                // ★ [버그수정] 무통장입금 결제 완료 후 장바구니 비우기 (중복 주문 방지)
+                try { localStorage.removeItem(cartStorageKey()); cartData.length = 0; } catch(e) {}
                 location.reload();
             }
         } else {
@@ -2538,6 +2541,8 @@ async function processDepositPayment(payAmount, useMileage) {
         }
 
         showToast(window.t('msg_payment_complete'), "success");
+        // ★ [버그수정] 예치금 결제 완료 후 장바구니 비우기 (중복 주문 방지)
+        try { localStorage.removeItem(cartStorageKey()); cartData.length = 0; } catch(e2) {}
         location.reload();
 
     } catch (e) {

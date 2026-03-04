@@ -174,6 +174,7 @@
 
                 // 장바구니 비우기
                 try {
+                    localStorage.removeItem('chameleon_cart_current');
                     localStorage.removeItem('chameleon_cart_guest');
                     Object.keys(localStorage).forEach(key => {
                         if (key.startsWith('chameleon_cart_')) localStorage.removeItem(key);
