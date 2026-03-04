@@ -240,16 +240,22 @@ function updateUserSession(session) {
 // login.js에서 가입/로그인 후 새로고침 없이 세션 갱신 가능하도록 노출
 window.updateUserSession = updateUserSession;
 function loadUserCart() {
-    // ★ [수정] order.js와 동일한 통합 키 사용 (이전 키 불일치로 장바구니 데이터 손실 버그 수정)
+    // ★ [수정] order.js와 동일한 통합 키 사용
     const storageKey = 'chameleon_cart_current';
     cartData.length = 0;
     try {
         let saved = localStorage.getItem(storageKey);
-        // 마이그레이션: 통합 키에 없으면 이전 키에서 복구
+        // 마이그레이션: 통합 키에 없으면 이전 키에서 복구 (1회만)
         if (!saved) {
             const oldKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
             saved = localStorage.getItem(oldKey) || localStorage.getItem('chameleon_cart_guest');
-            if (saved) localStorage.setItem(storageKey, saved);
+            if (saved) {
+                localStorage.setItem(storageKey, saved);
+                // ★ 구 키 삭제 (좀비 데이터 재발 방지)
+                try { Object.keys(localStorage).forEach(k => {
+                    if (k.startsWith('chameleon_cart_') && k !== storageKey) localStorage.removeItem(k);
+                }); } catch(e2) {}
+            }
         }
         if (saved) JSON.parse(saved).forEach(item => cartData.push(item));
     } catch(e) {}

@@ -165,17 +165,23 @@ export function loadCartFromStorage() {
     try {
         const storageKey = cartStorageKey();
         let savedCart = localStorage.getItem(storageKey);
-        // 마이그레이션: 이전 키에서 복구
+        // 마이그레이션: 이전 키에서 복구 (1회만 — 복구 후 구 키 삭제)
         if (!savedCart) {
             const oldKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
             savedCart = localStorage.getItem(oldKey) || localStorage.getItem('chameleon_cart_guest');
-            if (savedCart) localStorage.setItem(storageKey, savedCart);
+            if (savedCart) {
+                localStorage.setItem(storageKey, savedCart);
+                // ★ 구 키 삭제 (좀비 데이터 재발 방지)
+                try { Object.keys(localStorage).forEach(k => {
+                    if (k.startsWith('chameleon_cart_') && k !== storageKey) localStorage.removeItem(k);
+                }); } catch(e2) {}
+            }
         }
         if (savedCart) {
             const parsed = JSON.parse(savedCart);
             if (Array.isArray(parsed)) {
-                cartData.length = 0; 
-                parsed.forEach(item => cartData.push(item)); 
+                cartData.length = 0;
+                parsed.forEach(item => cartData.push(item));
             }
         }
     } catch (e) {
@@ -2509,7 +2515,15 @@ async function processFinalPayment() {
                 
                 showToast(window.t('msg_order_complete_bank'), "success");
                 // ★ [버그수정] 무통장입금 결제 완료 후 장바구니 비우기 (중복 주문 방지)
-                try { localStorage.removeItem(cartStorageKey()); cartData.length = 0; } catch(e) {}
+                try {
+                    // ★ [수정] removeItem 대신 빈 배열 저장 (구 키 마이그레이션 방지)
+                    localStorage.setItem(cartStorageKey(), '[]');
+                    // 구 키도 정리 (좀비 데이터 완전 제거)
+                    Object.keys(localStorage).forEach(k => {
+                        if (k.startsWith('chameleon_cart_') && k !== cartStorageKey()) localStorage.removeItem(k);
+                    });
+                    cartData.length = 0;
+                } catch(e) {}
                 location.reload();
             }
         } else {
@@ -2578,7 +2592,14 @@ async function processDepositPayment(payAmount, useMileage) {
 
         showToast(window.t('msg_payment_complete'), "success");
         // ★ [버그수정] 예치금 결제 완료 후 장바구니 비우기 (중복 주문 방지)
-        try { localStorage.removeItem(cartStorageKey()); cartData.length = 0; } catch(e2) {}
+        try {
+            // ★ [수정] removeItem 대신 빈 배열 저장 (구 키 마이그레이션 방지)
+            localStorage.setItem(cartStorageKey(), '[]');
+            Object.keys(localStorage).forEach(k => {
+                if (k.startsWith('chameleon_cart_') && k !== cartStorageKey()) localStorage.removeItem(k);
+            });
+            cartData.length = 0;
+        } catch(e2) {}
         location.reload();
 
     } catch (e) {
