@@ -6733,12 +6733,12 @@ window.showChoiceModal = async function(key) {
                 </div>
                 <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\'IA vérifiera le fichier et calculera l\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
             </div>
+            ${optionsHtml}
             <div data-npc="estimate" style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin-top:15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
-                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 AI自動見積価格':lang==='zh'?'💰 AI自动估价':lang==='ar'?'💰 تقدير AI التلقائي':lang==='es'?'💰 Estimación AI':lang==='de'?'💰 KI-Preisschätzung':lang==='fr'?'💰 Estimation IA':lang==='en'?'💰 AI Auto Estimate':'💰 AI 자동 견적가'}</div>
+                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'🖨️ 印刷費':lang==='zh'?'🖨️ 印刷费':lang==='ar'?'🖨️ تكلفة الطباعة':lang==='es'?'🖨️ Costo de impresión':lang==='de'?'🖨️ Druckkosten':lang==='fr'?'🖨️ Frais d\'impression':lang==='en'?'🖨️ Printing Cost':'🖨️ 인쇄비'}</div>
                 <div id="calcResultPrice" style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${lang==='ja'?'¥0':lang==='zh'?'¥0':lang==='ar'?'0 ﷼':lang==='es'?'€0':lang==='de'?'€0':lang==='fr'?'€0':lang==='en'?'$0':'0원'}</div>
                 <div id="calcResultSize" style="font-size:11px; opacity:0.8; margin-top:2px;">-</div>
             </div>
-            ${optionsHtml}
             <div data-npc="qtyLabel" style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">${lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량'}</div>
             <div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;">
                 <button onclick="const i=document.getElementById('inputCustQty'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
