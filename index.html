@@ -6502,6 +6502,12 @@ window.showChoiceModal = async function(key) {
         product.is_general_product = true;
     }
 
+    // ★ 사이즈고정상품: 사이즈 입력 불필요 → 커스텀 모드 끄기 (수량+에디터+파일올리기 UI)
+    if (product.is_file_upload) {
+        product.is_custom_size = false;
+        product.is_general_product = false;
+    }
+
     const isCustom = product.is_custom_size === true;
     window.isCustomModeCurrent = isCustom;
 
