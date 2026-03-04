@@ -17,7 +17,7 @@
 
 // [버전 체크] 캐시된 구버전 HTML 감지 시 자동 새로고침
 (function(){
-    var CV = '20260304b';
+    var CV = '20260304c';
     if (sessionStorage.getItem('_vr')) return;
     try {
         fetch('/version.txt?_t=' + Date.now(), {cache:'no-store'})
@@ -1402,7 +1402,9 @@ async function checkSubscription() {
             if (krNotice) krNotice.style.display = 'none';
             document.querySelectorAll('.sub-card').forEach(function(c) { c.style.display = 'none'; });
 
-            // 구독 마일리지 미지급 시 자동 지급 (안전장치)
+            // 구독 마일리지 미지급 시 자동 지급 (signup_promo는 제외 — 가입보너스와 중복방지)
+            var _isPaidSub = window.subscriptionPlan && window.subscriptionPlan !== 'signup_promo';
+            if (_isPaidSub) {
             try {
                 var { data: mLog } = await window.sb.from('wallet_logs')
                     .select('id').eq('user_id', session.user.id)
@@ -1420,6 +1422,7 @@ async function checkSubscription() {
                     console.log('[구독 마일리지] 자동 지급:', mLabel);
                 }
             } catch (me) { console.warn('[구독 마일리지] 체크 오류:', me); }
+            }
         } else {
             window.isSubscriber = false;
             window.subscriptionPlan = null;

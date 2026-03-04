@@ -2146,6 +2146,11 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         };
     }).filter(i => i !== null);
 
+    // ★ items가 비어있으면 경고 (주문 내역 공란 방지)
+    if (itemsToSave.length === 0) {
+        console.error('ORDER: itemsToSave is empty! cartData:', cartData);
+    }
+
     // [핵심] 3중 사이트 코드 결정:
     // 1순위: HTML 인라인 스크립트 (CDN 캐시 불가)
     // 2순위: SITE_CONFIG 모듈
@@ -2226,9 +2231,10 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         }
     }
     
-    const orderInfoForPDF = { 
-        id: newOrderId, 
-        manager, phone, address, note: request, date: deliveryDate 
+    const orderInfoForPDF = {
+        id: newOrderId,
+        manager, phone, address, note: request, date: deliveryDate,
+        shippingFee: window._nonMetroFeeApplied || 0
     };
     
     // [모바일 감지] 모바일에서는 타임아웃을 짧게 설정

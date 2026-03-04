@@ -1416,9 +1416,18 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     });
 
     y += 5;
+    // 배송비는 KRW로 전달되므로 현재 통화로 변환
+    let shippingFee = orderInfo.shippingFee || 0;
+    if (shippingFee > 0 && _cr) {
+        if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
+            if (_cr.JP) shippingFee = Math.round(shippingFee * _cr.JP);
+        } else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') {
+            if (_cr.US) shippingFee = Math.round(shippingFee * _cr.US * 100) / 100;
+        }
+    }
     const afterRateDiscount = Math.floor(totalAmt * (1 - discountRate));
     const rateDiscountAmt = totalAmt - afterRateDiscount;
-    const finalAmt = afterRateDiscount - usedMileage;
+    const finalAmt = afterRateDiscount - usedMileage + shippingFee;
     
     // [수정] 부가세 계산 (일본 10%, 한국 10%)
     const vat = Math.floor(finalAmt / 11);
@@ -1444,6 +1453,12 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         doc.setTextColor(255, 0, 0);
         drawText(doc, TEXT.mileage, summaryX, y+5, {align:'right'}, "#ff0000");
         drawText(doc, "-" + usedMileage.toLocaleString() + " P", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
+    }
+    if (shippingFee > 0) {
+        doc.setTextColor(0, 0, 0);
+        const shippingLabel = CURRENT_LANG_CODE === 'ja' ? '地方配送追加料金 :' : CURRENT_LANG_CODE === 'us' ? 'Non-metro shipping fee :' : '비수도권 추가 배송비 :';
+        drawText(doc, shippingLabel, summaryX, y+5, {align:'right'});
+        drawText(doc, "+" + _fmtSummary(shippingFee), 195, y+5, {align:'right'}); y+=6;
     }
     y += 2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(summaryX-20, y, 195, y); y += 8;
 

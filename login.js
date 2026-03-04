@@ -246,6 +246,7 @@ async function handleAuthAction() {
     window.__authInProgress = true; // 로그인/가입 중 SIGNED_OUT reload 방지
 
     // ★ '@' 없으면 자동으로 이메일 형식 생성 (간편 가입)
+    // 도메인은 항상 cafe2626.com 통일 (크로스사이트 로그인 호환성 유지, 사이트 정보는 profiles.site에 저장)
     if (!email.includes('@')) {
         email = email + '@cafe2626.com';
     }

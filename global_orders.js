@@ -115,6 +115,7 @@ window.loadOrders = async () => {
     try {
         const searchKeyword = document.getElementById('orderSearchInput').value.trim();
         const siteFilter = document.getElementById('filterSite').value;
+        const managerFilter = document.getElementById('filterManager')?.value || 'all';
         const deliveryDateFilter = document.getElementById('filterDeliveryDate').value;
         const orderDateFilter = document.getElementById('filterOrderDate').value;
 
@@ -122,6 +123,17 @@ window.loadOrders = async () => {
         if(staffList.length === 0) {
             const { data } = await sb.from('admin_staff').select('id, name, role, color');
             staffList = data || [];
+            // 매니저 필터 드롭다운 채우기
+            const filterMgr = document.getElementById('filterManager');
+            if (filterMgr) {
+                const managers = staffList.filter(s => s.role === 'manager');
+                managers.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = m.name;
+                    filterMgr.appendChild(opt);
+                });
+            }
         }
 
         let query = sb.from('orders')
@@ -137,7 +149,7 @@ window.loadOrders = async () => {
         } else if (currentOrderStatus === '입금대기') {
             query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
             query = query.not('payment_status', 'in', '("결제완료","입금확인")');
-        } else if (currentOrderStatus === '접수됨') {
+        } else if (currentOrderStatus === '결제완료') {
             query = query.in('status', ['접수됨', '파일처리중', '접수대기', '제작준비']);
             query = query.in('payment_status', ['결제완료', '입금확인']);
         } else if (currentOrderStatus === '칼선작업') {
@@ -148,6 +160,8 @@ window.loadOrders = async () => {
             query = query.in('status', ['발송완료', '배송완료']);
         } else if (currentOrderStatus === '취소요청') {
             query = query.eq('status', '취소요청');
+        } else if (currentOrderStatus === '주문취소') {
+            query = query.eq('status', '취소됨').eq('payment_status', '주문취소');
         } else if (currentOrderStatus === '취소됨') {
             query = query.eq('status', '취소됨').eq('payment_status', '환불완료');
         } else if (currentOrderStatus === '환불대기') {
@@ -167,6 +181,8 @@ window.loadOrders = async () => {
             }
         }
         if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
+        if (managerFilter === 'none') query = query.is('staff_manager_id', null);
+        else if (managerFilter !== 'all') query = query.eq('staff_manager_id', managerFilter);
 
         const from = (currentPage - 1) * itemsPerPage;
         const to = from + itemsPerPage - 1;
@@ -245,13 +261,18 @@ window.loadOrders = async () => {
             } else if (isBank) {
                 payHtml = `<div style="font-size:11px;font-weight:bold;color:#d97706;">🏦 무통장</div>`;
                 if (depositor) payHtml += `<div style="font-size:10px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55px;" title="${depositor}">${depositor}</div>`;
-                if (!isPaid && order.status !== '취소됨' && order.status !== '취소요청') {
-                    payHtml += `<button class="btn btn-success btn-sm" style="width:100%;margin-top:2px;font-size:10px;padding:1px 3px;" onclick="confirmDeposit('${order.id}')">입금확인</button>`;
-                } else if (isPaid) {
-                    payHtml += `<div style="font-size:10px;color:#15803d;font-weight:bold;">확인됨</div>`;
-                }
             } else {
                 payHtml = `<div style="font-size:10px;color:#94a3b8;">-</div>`;
+            }
+            // 미결제 + 취소/요청 아닌 주문 → 입금/취소 버튼
+            if (!isPaid && order.status !== '취소됨' && order.status !== '취소요청') {
+                if (currentOrderStatus === '입금대기') {
+                    payHtml += `<button class="btn" style="width:100%;margin-top:4px;font-size:12px;padding:6px 4px;font-weight:bold;border-radius:6px;background:#15803d;color:#fff;" onclick="openDepositModal('${order.id}','${(order.manager_name||'').replace(/'/g,"\\'")}',${order.total_amount||0})">입금 / 취소</button>`;
+                } else {
+                    payHtml += `<button class="btn btn-sm" style="width:100%;margin-top:2px;font-size:10px;padding:1px 3px;background:#15803d;color:#fff;" onclick="openDepositModal('${order.id}','${(order.manager_name||'').replace(/'/g,"\\'")}',${order.total_amount||0})">입금/취소</button>`;
+                }
+            } else if (isPaid && !isCard) {
+                payHtml += `<div style="font-size:10px;color:#15803d;font-weight:bold;">확인됨</div>`;
             }
 
             // ═══ [상태 칼럼] 주문 진행상태만 깔끔하게 ═══
@@ -277,6 +298,8 @@ window.loadOrders = async () => {
                     statusHtml = `<span class="badge" style="background:#fffbeb;color:#d97706;font-weight:bold;border:1px solid #fde68a;">⏳ 환불대기</span>`;
                 } else if (refSt === '환불실패') {
                     statusHtml = `<span class="badge" style="background:#fef2f2;color:#dc2626;font-weight:bold;border:1px solid #fecaca;">❌ 환불실패</span>`;
+                } else if (refSt === '주문취소') {
+                    statusHtml = `<span class="badge" style="background:#fee2e2;color:#dc2626;font-weight:bold;border:1px solid #fecaca;">🚫 주문취소</span>`;
                 } else {
                     statusHtml = `<span class="badge" style="background:#fee2e2;color:#dc2626;">취소됨</span>`;
                 }
@@ -304,7 +327,7 @@ window.loadOrders = async () => {
                     
                     <td style="text-align:center; font-size:12px; color:#64748b; font-weight:bold;">${order.id}</td>
                     
-                    <td style="font-size:11px;">${items.map(i => `<div>- ${i.productName || '상품'} (${i.qty})</div>`).join('')}</td>
+                    <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${i.productName || '상품'} (${i.qty})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${i.productName || '상품'} (${i.qty})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
                     
                     <td style="text-align:right;">${fmtAmt(total)}</td>
                     <td style="text-align:right; color:#ef4444;">${fmtAmt(order.discount_amount || 0)}</td>
@@ -386,8 +409,8 @@ window.updateActionButtons = () => {
     if(!div) return;
     const s = currentOrderStatus;
     if (s === '입금대기') {
-        div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">입금확인</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
-    } else if (s === '접수됨') {
+        div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">일괄 입금처리</button><button class="btn btn-danger" onclick="cancelDepositSelected()">일괄 취소</button>`;
+    } else if (s === '결제완료') {
         div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
     } else if (s === '칼선작업') {
         div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button>`;
@@ -397,6 +420,8 @@ window.updateActionButtons = () => {
         div.innerHTML = `<button class="btn btn-outline" onclick="changeStatusSelected('배송완료')">배송완료</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '취소요청') {
         div.innerHTML = `<button class="btn btn-success" onclick="approveCancelSelected()" style="font-weight:bold;">💳 카드 취소승인</button><button class="btn" onclick="completeCashRefundSelected()" style="font-weight:bold;background:#d97706;color:white;">💰 현금 환불완료</button><button class="btn btn-outline" onclick="rejectCancelSelected()" style="font-weight:bold;">🔙 취소거절</button>`;
+    } else if (s === '주문취소') {
+        div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '취소됨') {
         div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '환불대기') {
@@ -597,17 +622,30 @@ async function updateCancelReqBadge() {
 }
 window.updateCancelReqBadge = updateCancelReqBadge;
 
-// [일괄 입금확인] 입금대기 탭에서 사용
+// [일괄 입금처리] 입금대기 탭에서 사용
 window.confirmDepositSelected = async () => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
-    if (!confirm(`${ids.length}건의 입금을 확인 처리하시겠습니까?`)) return;
+    if (!confirm(`${ids.length}건을 입금처리 하시겠습니까?`)) return;
     for (const id of ids) {
-        await sb.from('orders').update({ payment_status: '입금확인' }).eq('id', id);
+        await sb.from('orders').update({ payment_status: '결제완료' }).eq('id', id);
         await creditReferralBonus(id);
     }
-    showToast(`${ids.length}건 입금확인 완료`, 'success');
+    showToast(`${ids.length}건 입금처리 완료`, 'success');
     loadOrders();
+};
+
+// [일괄 취소] 입금대기 탭에서 사용
+window.cancelDepositSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건을 취소처리 하시겠습니까?`)) return;
+    for (const id of ids) {
+        await sb.from('orders').update({ status: '취소됨', payment_status: '주문취소' }).eq('id', id);
+    }
+    showToast(`${ids.length}건 취소처리 완료`, 'success');
+    loadOrders();
+    updateCancelReqBadge();
 };
 
 window.deleteOrdersSelected = async (force) => {
@@ -1203,12 +1241,72 @@ window.updateOrderStaff = async (id, role, selectEl) => {
     }
 };
 
-window.confirmDeposit = async (id) => {
-    if(confirm('입금확인 처리하시겠습니까?')) {
-        await sb.from('orders').update({ payment_status: '입금확인' }).eq('id', id);
-        await creditReferralBonus(id); // 추천인 적립
-        loadOrders();
+// ═══ 입금/취소 모달 ═══
+window.openDepositModal = (orderId, customerName, totalAmount) => {
+    const existing = document.getElementById('depositModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'depositModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+        <div style="background:white;border-radius:16px;padding:28px 32px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;font-size:18px;color:#1e293b;">주문 #${orderId}</h3>
+                <button onclick="document.getElementById('depositModal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">&times;</button>
+            </div>
+            <div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:18px;">
+                <div style="font-size:14px;color:#475569;"><b>${customerName}</b></div>
+                <div style="font-size:18px;font-weight:bold;color:#1e293b;margin-top:4px;">${Number(totalAmount).toLocaleString()}원</div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px;">메모 (선택)</label>
+                <textarea id="depositMemo" rows="3" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:13px;resize:none;box-sizing:border-box;" placeholder="입금자명, 취소사유 등 메모"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button onclick="processDeposit('${orderId}','confirm')" style="flex:1;padding:14px;font-size:15px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;background:#15803d;color:white;">💰 입금처리</button>
+                <button onclick="processDeposit('${orderId}','cancel')" style="flex:1;padding:14px;font-size:15px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;background:#dc2626;color:white;">✕ 취소처리</button>
+            </div>
+        </div>
+    `;
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+};
+
+window.processDeposit = async (orderId, action) => {
+    const memo = document.getElementById('depositMemo')?.value.trim() || '';
+    const now = new Date().toLocaleString('ko-KR');
+    const memoLine = memo ? `[${now}] ${memo}` : '';
+
+    try {
+        // 기존 request_note 가져오기
+        const { data: ord } = await sb.from('orders').select('request_note').eq('id', orderId).maybeSingle();
+        let noteArr = [];
+        if (ord?.request_note) noteArr.push(ord.request_note);
+        if (memoLine) noteArr.push(memoLine);
+
+        if (action === 'confirm') {
+            await sb.from('orders').update({
+                payment_status: '결제완료',
+                request_note: noteArr.length ? noteArr.join('\n') : ord?.request_note || null
+            }).eq('id', orderId);
+            await creditReferralBonus(orderId);
+            showToast('입금처리 완료 → 결제완료', 'success');
+        } else {
+            const cancelNote = noteArr.length ? noteArr.join('\n') : (ord?.request_note || '');
+            await sb.from('orders').update({
+                status: '취소됨',
+                payment_status: '주문취소',
+                request_note: cancelNote ? cancelNote : '[관리자 취소]'
+            }).eq('id', orderId);
+            showToast('취소처리 완료', 'success');
+        }
+    } catch (e) {
+        showToast('처리 실패: ' + e.message, 'error');
     }
+    document.getElementById('depositModal')?.remove();
+    loadOrders();
+    updateCancelReqBadge();
 };
 
 // [수정됨] 월별 매출 정산 엑셀 다운로드 (결제일, 담당매니저 추가)
