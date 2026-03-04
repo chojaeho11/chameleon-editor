@@ -170,9 +170,9 @@ body.embed .ch-header-close { display: flex; }
 }
 .typing-dots { display: flex; gap: 4px; align-items: center; }
 .typing-label { font-size: 11px; color: var(--ai); margin-right: 6px; font-weight: 600; }
-.typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--ai); animation: typingBounce 1.4s infinite; }
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+.typing-dots span.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ai); animation: typingBounce 1.4s infinite; }
+.typing-dots span.dot:nth-child(3) { animation-delay: 0.2s; }
+.typing-dots span.dot:nth-child(4) { animation-delay: 0.4s; }
 @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
 
 /* Agent Request Bar */
@@ -264,7 +264,7 @@ body.embed .ch-header-close { display: flex; }
     <div class="conn-banner" id="connBanner"></div>
     <div class="ch-messages" id="chatMessages"></div>
     <div class="typing-indicator" id="typingIndicator">
-        <div class="typing-dots"><span class="typing-label">카푸</span><span></span><span></span><span></span></div>
+        <div class="typing-dots"><span class="typing-label">카푸</span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
     </div>
     <!-- Agent request bar (AI mode only) -->
     <div class="agent-bar" id="agentBar">
