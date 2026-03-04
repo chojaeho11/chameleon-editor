@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>
+// [SPA 라우팅] 서브패스 URL → 루트 리다이렉트 (봇은 _worker.js에서 처리됨)
+// /honeycomb → /?_p=honeycomb (모든 브라우저/WebView에서 JS 정상 로드 보장)
+(function(){
+    var p = location.pathname;
+    if (p && p !== '/' && p !== '/index.html' && p.indexOf('.') === -1) {
+        var slug = p.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
+        if (slug) {
+            var qs = location.search;
+            var sep = qs ? qs + '&' : '?';
+            location.replace('/' + sep + '_p=' + encodeURIComponent(slug));
+            return;
+        }
+    }
+})();
+</script>
 <base href="/">
 <meta charset="UTF-8" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -153,8 +169,9 @@
     if (!s) return;
     var d = domains[cc];
 
-    // ★ 제품 경로 감지 (/honeycomb, /fabric-print 등)
+    // ★ 제품 경로 감지 (/honeycomb, /fabric-print 등) + ?_p= 리다이렉트 파라미터
     var path = location.pathname.replace(/^\/|\/$/g, '').replace(/\.html$/, '');
+    if (!path) path = new URLSearchParams(location.search).get('_p') || '';
     var productSeo = window.PRODUCT_SEO && window.PRODUCT_SEO[path] && window.PRODUCT_SEO[path][cc];
     var isProductPage = !!productSeo;
 
@@ -6341,10 +6358,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
         window._navNavigating = false;
     });
 
-    // 3. [초기 접속] URL에 ?product=코드 또는 /제품코드 경로가 있으면 바로 열기 (sb 대기 포함)
+    // 3. [초기 접속] URL에 ?product=코드, ?_p=코드, 또는 /제품코드 경로가 있으면 바로 열기 (sb 대기 포함)
     (async () => {
         const urlParams = new URLSearchParams(window.location.search);
-        let productCode = urlParams.get('product');
+        let productCode = urlParams.get('product') || urlParams.get('_p');
 
         // 경로 기반 제품 감지 (/honeycomb 등 SEO 슬러그)
         if (!productCode && window._SEO_PRODUCT_CODE) {
