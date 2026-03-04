@@ -6711,8 +6711,13 @@ window.showChoiceModal = async function(key) {
     let rightSideUI = "";
     if (isCustom) {
         rightSideUI = productHeaderHtml + `
-            <button onclick="window.confirmChoice('upload')" class="btn-round" style="height:56px; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger':lang==='en'?'Upload File':'파일올리기'}
+            <button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:14px 16px;">
+                <div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일올리기'}
+                </div>
+                <div style="font-size:11px; font-weight:400; color:#cbd5e1; line-height:1.5; text-align:center; margin-top:2px;">
+                    ${lang==='ja'?'印刷ファイルがある場合はPDFまたは画像でアップロードしてください。ファイルがなくても無料エディタで簡単にデザインできます。':lang==='zh'?'如果有印刷文件，请上传PDF或图片。没有文件也可以使用免费编辑器轻松设计。':lang==='ar'?'إذا كان لديك ملف للطباعة، يرجى رفعه بصيغة PDF أو صورة. إذا لم يكن لديك ملف، يمكنك التصميم بسهولة باستخدام المحرر المجاني.':lang==='es'?'Si tiene un archivo para imprimir, súbalo en PDF o imagen. Si no tiene archivo, puede diseñar fácilmente con el editor gratuito.':lang==='de'?'Falls Sie eine Druckdatei haben, laden Sie diese als PDF oder Bild hoch. Ohne Datei können Sie einfach mit dem kostenlosen Editor gestalten.':lang==='fr'?'Si vous avez un fichier d\'impression, envoyez-le en PDF ou image. Sans fichier, vous pouvez créer facilement avec l\'éditeur gratuit.':lang==='en'?'If you have a print file, upload it as PDF or image. No file? You can easily design with our free editor.':'인쇄할 파일이 있다면 PDF 또는 이미지로 올려주세요. 파일이 없어도 무료 에디터로 쉽게 디자인할 수 있습니다.'}
+                </div>
             </button>
             <div id="uploadPreviewArea" data-npc="uploadPreview" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
