@@ -1653,8 +1653,8 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
 
             let imgData = null;
 
-            // ★ [1순위] 썸네일 사용 (라이브 캔버스에서 캡처한 이미지, 가장 안정적)
-            if (p === 0 && item.thumb && item.type !== 'product_only') {
+            // ★ [1순위] 썸네일 사용 (단일 페이지일 때만 — 멀티페이지는 JSON에서 각각 렌더링)
+            if (p === 0 && loopCount <= 1 && item.thumb && item.type !== 'product_only') {
                 try { imgData = await getSafeImageDataUrl(item.thumb); } catch(e) {}
             }
 
