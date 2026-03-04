@@ -187,10 +187,10 @@
         <ul class="nav-menu">
             <div class="nav-label">Business</div>
             <div class="nav-label">AI Chatbot</div>
-            <li class="nav-item" onclick="showSection('sec-live-chat', this)"><i class="fa-solid fa-headset"></i> 💬 실시간 상담</li>
+            <li class="nav-item active" onclick="showSection('sec-live-chat', this)"><i class="fa-solid fa-headset"></i> 💬 실시간 상담</li>
             <li class="nav-item" onclick="showSection('sec-chatbot', this)"><i class="fa-solid fa-robot"></i> 🦎 AI 챗봇 학습</li>
 
-            <li class="nav-item active" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
+            <li class="nav-item" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
                 <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
             </li>
             <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 🛒 통합 주문 관리</li>
@@ -227,7 +227,7 @@
 
         <div class="content-scroll">
             
-            <div id="sec-vip" class="section active">
+            <div id="sec-vip" class="section">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
                         <h3 style="margin:0; display:flex; align-items:center; gap:10px; color: #312e81;">
@@ -1669,7 +1669,7 @@
 </div>
 
 <!-- ===== 실시간 상담 섹션 ===== -->
-<div id="sec-live-chat" class="section" style="margin:-80px -30px -30px -30px; padding:0;">
+<div id="sec-live-chat" class="section active" style="margin:-80px -30px -30px -30px; padding:0;">
     <div style="display:grid; grid-template-columns:400px 1fr; gap:0; height:100vh; overflow:hidden;">
         <!-- 좌측 사이드바 (다크 테마) -->
         <div style="background:#1e1b2e; color:#e2e8f0; display:flex; flex-direction:column; overflow:hidden;">
