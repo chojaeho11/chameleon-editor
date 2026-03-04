@@ -924,7 +924,8 @@ async function loadPdpFooter() {
 }
 
 export function openProductDetail(key, w, h, mode) {
-    let product = PRODUCT_DB[key];
+    // ★ [수정] window.PRODUCT_DB 우선 조회 (module PRODUCT_DB는 비어있을 수 있음)
+    let product = (window.PRODUCT_DB && window.PRODUCT_DB[key]) || PRODUCT_DB[key];
     if (!product) { product = { name: key, price: 0, img: '', addons: [] }; }
 
     currentTargetProduct = { key, w, h, mode, info: product };
@@ -1450,22 +1451,49 @@ async function addFileToCart(e) {
             if (uploadedThumbUrl) thumbUrl = uploadedThumbUrl;
         }
 
+        // ★ [수정] 상품 정보를 복사본으로 저장 (참조 공유 방지)
+        const pInfo = currentTargetProduct.info || {};
+        const cleanProduct = {
+            name: pInfo.name || currentTargetProduct.key,
+            name_jp: pInfo.name_jp || '', name_us: pInfo.name_us || '',
+            price: pInfo.price || 0,
+            price_jp: pInfo.price_jp || 0, price_us: pInfo.price_us || 0,
+            code: pInfo.code || currentTargetProduct.key,
+            img: (pInfo.img || pInfo.img_url || ''),
+            w: pInfo.w || pInfo.width_mm || 0, h: pInfo.h || pInfo.height_mm || 0,
+            w_mm: pInfo.w_mm || pInfo.width_mm || 0, h_mm: pInfo.h_mm || pInfo.height_mm || 0,
+            category: pInfo.category || '',
+            addons: pInfo.addons || [],
+            partner_id: pInfo.partner_id || null
+        };
+
+        // ★ [수정] pendingSelectedAddons에서 선택된 옵션 즉시 적용 (renderCart 의존 제거)
+        const selectedAddons = {};
+        const addonQuantities = {};
+        if (window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
+            const _sq = window.pendingSelectedAddonQtys || {};
+            window.pendingSelectedAddons.forEach(code => {
+                selectedAddons[`opt_${code}`] = code;
+                addonQuantities[code] = _sq[code] || 1;
+            });
+        }
+
         cartData.push({
             uid: Date.now(),
-            product: currentTargetProduct.info,
+            product: cleanProduct,
             type: 'file_upload',
             fileName: file.name,
             mimeType: file.type,
             fileData: null,
             originalUrl: originalUrl,
             thumb: thumbUrl,
-            isOpen: true, 
-            qty: 1, 
-            selectedAddons: {}, 
-            addonQuantities: {} 
+            isOpen: true,
+            qty: 1,
+            selectedAddons: selectedAddons,
+            addonQuantities: addonQuantities
         });
-        
-        saveCart(); 
+
+        saveCart();
         document.getElementById("productDetailModal").style.display = "none"; 
         renderCart(); 
         showToast(window.t('msg_file_added_to_cart') || "File order added to cart.", "success");
