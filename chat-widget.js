@@ -1,5 +1,5 @@
 /**
- * Chameleon AI Chat Widget - Embeddable live chat for external sites
+ * Chameleon AI Chat Widget - Embeddable live chat
  *
  * Usage (one line):
  *   <script src="https://cafe2626.com/chat-widget.js"></script>
@@ -9,10 +9,12 @@
  *     window.CHAMELEON_CHAT = {
  *       position: 'right',       // 'left' or 'right'
  *       color: '#6366f1',        // button color
- *       bottom: 100,             // bottom offset in px (default 100 to avoid Channel Talk)
+ *       bottom: 100,             // bottom offset in px
  *       side: 24,                // side offset in px
  *       url: 'https://cafe2626.com/live-chat.html',
- *       zIndex: 99990
+ *       zIndex: 99990,
+ *       autoOpen: false,         // auto-open on first visit (default: true for JP)
+ *       autoOpenDelay: 5000      // ms before auto-open
  *     };
  *   </script>
  *   <script src="https://cafe2626.com/chat-widget.js"></script>
@@ -26,9 +28,19 @@
     var cfg = window.CHAMELEON_CHAT || {};
     var position = cfg.position || 'right';
     var color = cfg.color || '#6366f1';
-    var bottom = cfg.bottom || 100; // 채널톡 등 기존 위젯 위에 배치
+    var bottom = cfg.bottom || 100;
     var side = cfg.side || 24;
     var zIndex = cfg.zIndex || 99990;
+
+    // Detect language from hostname or config
+    var h = location.hostname;
+    var lang = cfg.lang || (h.indexOf('cafe0101') >= 0 ? 'ja' : h.indexOf('cafe3355') >= 0 ? 'en' : 'kr');
+    var labels = {
+        kr: { btn: 'AI 상담', autoMsg: '무엇이든 물어보세요!' },
+        ja: { btn: 'AI相談', autoMsg: '何でもお聞きください！' },
+        en: { btn: 'AI Chat', autoMsg: 'Ask me anything!' }
+    };
+    var L = labels[lang] || labels.kr;
 
     // Auto-detect chat URL from script src domain
     var chatUrl = cfg.url || (function() {
@@ -61,6 +73,18 @@
         '#ccw-btn.open .ccw-icon-chat{display:none}' +
         '#ccw-btn:not(.open) .ccw-icon-close{display:none}' +
         '@keyframes ccwPulse{0%,100%{box-shadow:0 4px 20px rgba(99,102,241,0.35)}50%{box-shadow:0 4px 20px rgba(99,102,241,0.35),0 0 0 8px rgba(99,102,241,0.1)}}' +
+        // Auto-open tooltip bubble
+        '#ccw-tooltip{' +
+            'position:fixed;bottom:' + (bottom + 52) + 'px;' + position + ':' + side + 'px;' +
+            'background:#fff;color:#333;font-size:13px;font-weight:600;padding:10px 16px;' +
+            'border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:' + zIndex + ';' +
+            'display:none;max-width:200px;line-height:1.4;cursor:pointer;' +
+            'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
+            'animation:ccwTooltipIn .3s ease;' +
+        '}' +
+        '#ccw-tooltip::after{content:"";position:absolute;bottom:-6px;' + position + ':20px;' +
+            'width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:2px 2px 4px rgba(0,0,0,0.05);}' +
+        '@keyframes ccwTooltipIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}' +
         '#ccw-frame{' +
             'position:fixed;bottom:' + (bottom + 56) + 'px;' + position + ':' + side + 'px;' +
             'width:400px;height:620px;max-width:calc(100vw - 32px);max-height:calc(100vh - ' + (bottom + 72) + 'px);' +
@@ -91,41 +115,72 @@
     var btn = document.createElement('button');
     btn.id = 'ccw-btn';
     btn.setAttribute('aria-label', 'Chat');
-    btn.innerHTML = chatSvg + closeSvg + '<span class="ccw-label">채팅 상담</span>';
+    btn.innerHTML = chatSvg + closeSvg + '<span class="ccw-label">' + L.btn + '</span>';
     document.body.appendChild(btn);
 
-    // Create iframe container
+    // Create tooltip bubble
+    var tooltip = document.createElement('div');
+    tooltip.id = 'ccw-tooltip';
+    tooltip.textContent = L.autoMsg;
+    document.body.appendChild(tooltip);
+
+    // Create iframe container (lazy load — iframe src set on first open)
     var frame = document.createElement('div');
     frame.id = 'ccw-frame';
     var iframe = document.createElement('iframe');
-    iframe.src = chatUrl;
     iframe.setAttribute('allow', 'microphone; camera');
-    iframe.setAttribute('loading', 'lazy');
     frame.appendChild(iframe);
     document.body.appendChild(frame);
 
-    // Toggle
     var isOpen = false;
-    btn.addEventListener('click', function() {
-        isOpen = !isOpen;
-        frame.style.display = isOpen ? 'block' : 'none';
-        btn.classList.toggle('open', isOpen);
-        if (isOpen) btn.style.animation = 'none';
+    var iframeLoaded = false;
 
-        // Mobile: hide button when open
-        if (isOpen && window.innerWidth <= 480) {
-            btn.style.display = 'none';
-        }
+    function openChat() {
+        if (!iframeLoaded) { iframe.src = chatUrl; iframeLoaded = true; }
+        isOpen = true;
+        frame.style.display = 'block';
+        btn.classList.add('open');
+        btn.style.animation = 'none';
+        tooltip.style.display = 'none';
+        if (window.innerWidth <= 480) btn.style.display = 'none';
+        try { sessionStorage.setItem('ccw_opened', '1'); } catch(e) {}
+    }
+
+    function closeChat() {
+        isOpen = false;
+        frame.style.display = 'none';
+        btn.classList.remove('open');
+        btn.style.display = 'flex';
+    }
+
+    // Toggle
+    btn.addEventListener('click', function() {
+        if (isOpen) closeChat(); else openChat();
     });
+
+    // Tooltip click opens chat
+    tooltip.addEventListener('click', openChat);
 
     // Listen for close from iframe
     window.addEventListener('message', function(e) {
-        if (e.data === 'chameleon-chat-close') {
-            isOpen = false;
-            frame.style.display = 'none';
-            btn.classList.remove('open');
-            btn.style.display = 'flex';
-        }
+        if (e.data === 'chameleon-chat-close') closeChat();
     });
+
+    // Auto-open tooltip for first-time visitors (after delay)
+    var autoOpen = cfg.autoOpen !== undefined ? cfg.autoOpen : true;
+    var autoDelay = cfg.autoOpenDelay || 5000;
+
+    if (autoOpen) {
+        setTimeout(function() {
+            if (isOpen) return;
+            try { if (sessionStorage.getItem('ccw_opened')) return; } catch(e) {}
+            // Show tooltip bubble (not full chat — less intrusive)
+            tooltip.style.display = 'block';
+            // Auto-hide tooltip after 8 seconds if not clicked
+            setTimeout(function() {
+                if (!isOpen) tooltip.style.display = 'none';
+            }, 8000);
+        }, autoDelay);
+    }
 
 })();

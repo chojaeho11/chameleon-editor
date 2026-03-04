@@ -17,7 +17,7 @@
 
 // [버전 체크] 캐시된 구버전 HTML 감지 시 자동 새로고침
 (function(){
-    var CV = '20260304c';
+    var CV = '20260304d';
     if (sessionStorage.getItem('_vr')) return;
     try {
         fetch('/version.txt?_t=' + Date.now(), {cache:'no-store'})
@@ -13004,6 +13004,20 @@ document.addEventListener('click', function(e) {
         e.target.style.display = 'none';
     }
 });
+</script>
+
+<!-- AI 채팅 위젯 (비로그인 방문자 대상) -->
+<script>
+(function(){
+    var _cwTimer = setTimeout(loadChatWidget, 3000);
+    window.addEventListener('authStateChange', function() { clearTimeout(_cwTimer); });
+    function loadChatWidget() {
+        if (window.currentUser) return;
+        var s = document.createElement('script');
+        s.src = './chat-widget.js?v=127';
+        document.body.appendChild(s);
+    }
+})();
 </script>
 
 </body>
