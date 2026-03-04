@@ -537,7 +537,7 @@ function _pickSecondImage(imageList) {
 // AILab API 제한: 대부분 2048px 이하, 파일 2MB 이하 권장
 // Supabase Edge Function body 제한: ~2MB
 // ==========================================================
-const MAX_AI_DIM = 2048;   // 최대 한 변 길이
+const MAX_AI_DIM = 1500;   // 최대 한 변 길이 (2048은 AILab 413 에러 발생)
 const AI_JPEG_QUALITY = 0.85;
 
 function _loadImageAsync(src) {
@@ -617,7 +617,9 @@ function _replaceImage(obj, imgSrc) {
 // ==========================================================
 // AI 보정 메인 핸들러
 // ==========================================================
+let _aiProcessing = false;
 async function handleAiRetouch(action) {
+    if (_aiProcessing) { window.showToast?.('처리 중입니다. 잠시만 기다려주세요.', 'info'); return; }
     const obj = canvas.getActiveObject();
     if (!obj || obj.type !== 'image') {
         window.showToast?.('캔버스에서 이미지를 선택하세요', 'warning');
@@ -661,6 +663,7 @@ async function handleAiRetouch(action) {
         if (thumb) thumb.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:20px;"></i>';
     }
 
+    _aiProcessing = true;
     try {
         // 히스토리에 현재 상태 저장 (되돌리기용)
         _pushHistory(obj);
@@ -702,6 +705,7 @@ async function handleAiRetouch(action) {
         console.error('AI Retouch error:', e);
         window.showToast?.('보정 실패: ' + e.message, 'error');
     } finally {
+        _aiProcessing = false;
         if (btn) {
             btn.disabled = false;
             btn.classList.remove('loading');

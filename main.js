@@ -22,7 +22,7 @@ import { initVideoMaker } from "./video-maker.js?v=123";
 import { initPptMode } from "./ppt-mode.js?v=123";
 import { initWeddingMode } from "./wedding-mode.js?v=124";
 import { initIconTools } from "./canvas-icons.js?v=123";
-import { initRetouchTools } from "./canvas-retouch.js?v=123";
+import { initRetouchTools } from "./canvas-retouch.js?v=125";
 
 window.currentUploadedPdfUrl = null;
 
