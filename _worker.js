@@ -542,6 +542,10 @@ ${hreflangTags('/editor')}
         const noCacheHeaders = new Headers(response.headers);
         noCacheHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         noCacheHeaders.set('Pragma', 'no-cache');
+        // refresh 페이지는 브라우저에게 캐시 전체 삭제 요청
+        if (path === 'refresh' || path === 'refresh.html') {
+            noCacheHeaders.set('Clear-Site-Data', '"cache", "storage"');
+        }
         noCacheHeaders.set('Expires', '0');
         response = new Response(response.body, { status: response.status, headers: noCacheHeaders });
 

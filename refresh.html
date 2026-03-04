@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>페이지 새로고침 중...</title>
+<style>
+body { display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#f8fafc; font-family:-apple-system,sans-serif; }
+.box { text-align:center; padding:40px; }
+.spinner { width:40px; height:40px; border:4px solid #e2e8f0; border-top:4px solid #6366f1; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 20px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+h2 { color:#1e293b; font-size:18px; margin-bottom:8px; }
+p { color:#64748b; font-size:14px; }
+</style>
+<script>
+// 1. 서비스워커 캐시 전부 삭제
+if ('caches' in window) {
+    caches.keys().then(function(names) {
+        names.forEach(function(n) { caches.delete(n); });
+    });
+}
+
+// 2. 서비스워커 해제 후 재등록 유도
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+    });
+}
+
+// 3. 세션/로컬 스토리지의 버전 관련 항목 삭제
+try { sessionStorage.removeItem('_vr'); } catch(e) {}
+
+// 4. 2초 후 캐시 깨는 URL로 메인페이지 이동
+setTimeout(function() {
+    window.location.replace('/?_cb=' + Date.now());
+}, 1500);
+</script>
+</head>
+<body>
+<div class="box">
+    <div class="spinner"></div>
+    <h2>페이지를 최신 버전으로 업데이트 중...</h2>
+    <p>잠시만 기다려주세요</p>
+</div>
+</body>
+</html>

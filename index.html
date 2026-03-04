@@ -15,21 +15,26 @@
     }
 })();
 
-// [버전 체크] 캐시된 구버전 HTML 감지 시 자동 새로고침
+// [버전 체크] 캐시된 구버전 HTML 감지 시 강제 새로고침
 (function(){
-    var CV = '20260304f';
-    if (sessionStorage.getItem('_vr')) return;
+    var CV = '20260304g';
+    if (sessionStorage.getItem('_vr') === CV) return;
     try {
         fetch('/version.txt?_t=' + Date.now(), {cache:'no-store'})
         .then(function(r){ return r.ok ? r.text() : null; })
         .then(function(v){
             if (v && v.trim() !== CV) {
-                sessionStorage.setItem('_vr','1');
-                location.reload(true);
+                sessionStorage.setItem('_vr', CV);
+                // location.reload()가 WebView 캐시를 못 깰 수 있으므로 URL 변경으로 강제 새요청
+                var url = location.pathname + '?_cb=' + Date.now();
+                if (location.hash) url += location.hash;
+                location.replace(url);
             }
         }).catch(function(){});
     } catch(e){}
 })();
+// [Service Worker] HTML 캐시 강제 무효화 (인앱 브라우저 대응)
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function(){}); }
 </script>
 <base href="/">
 <meta charset="UTF-8" />
