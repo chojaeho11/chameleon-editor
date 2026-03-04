@@ -538,6 +538,13 @@ ${hreflangTags('/editor')}
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('text/html')) return response;
 
+        // ★ 모든 HTML 응답에 강력한 캐시 방지 헤더 적용 (인앱 브라우저 캐시 문제 방지)
+        const noCacheHeaders = new Headers(response.headers);
+        noCacheHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        noCacheHeaders.set('Pragma', 'no-cache');
+        noCacheHeaders.set('Expires', '0');
+        response = new Response(response.body, { status: response.status, headers: noCacheHeaders });
+
         const siteData = getSiteData(url.hostname);
         if (!siteData) return response; // KR site, keep original Korean
 
