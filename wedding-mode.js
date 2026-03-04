@@ -2012,12 +2012,19 @@ function replaceSelectedImage() {
         reader.onload = (e) => {
             const imgObj = new Image();
             imgObj.onload = () => {
+                // 교체 전 기존 이미지의 실제 표시 크기 저장
+                const oldVisualW = active.getScaledWidth();
+                const oldVisualH = active.getScaledHeight();
                 active.setElement(imgObj);
                 // Re-scale to fit existing clip area
                 if (active.clipPath) {
                     const cpW = active.clipPath.width * (active.clipPath.scaleX || 1);
                     const cpH = active.clipPath.height * (active.clipPath.scaleY || 1);
                     const scale = Math.max(cpW / imgObj.width, cpH / imgObj.height);
+                    active.set({ scaleX: scale, scaleY: scale });
+                } else {
+                    // clipPath 없으면 기존 표시 크기에 맞춤
+                    const scale = Math.min(oldVisualW / imgObj.width, oldVisualH / imgObj.height);
                     active.set({ scaleX: scale, scaleY: scale });
                 }
                 c.requestRenderAll();

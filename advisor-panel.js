@@ -17,7 +17,7 @@ function getLang() {
 
 const T = {
     kr: { title: '카푸', subtitle: '쇼핑을 안내해 드립니다', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 korea900@hanmail.net으로 보내주세요.', error: '멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작은 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요 😊', reset: '대화 초기화', consultant: '상담사 연결', selectMgr: '상담 매니저를 선택해주세요', selectSub: '선택하시면 바로 연결됩니다', mgrSuffix: ' 매니저', enterName: '상담사 연결을 위해 정보를 입력해주세요', namePh: '이름', phonePh: '연락처 (010-0000-0000)', nameBtn: '다음', nameErr: '이름을 입력해주세요', phoneErr: '연락처를 입력해주세요', connecting: '연결 요청!', pleaseWait: '잠시만 기다려주세요 😊', tipFile: '아래 📎 버튼으로 사진/파일도 보낼 수 있어요!', consulting: '상담 중', hqConsultant: '본사 상담사', waiting: '님 연결 대기 중...', connectErr: '연결 중 오류! 잠시 후 다시 시도해주세요.', endChat: '상담 종료', backToAi: '카푸 AI로 돌아가기' },
-    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはsupport@cafe0101.comへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は、専門の相談員が丁寧に確認・ご案内するのがベストです。上の🎧相談員接続ボタンを押してください！製品制作は相談員へ、出荷・制作状況の確認は本社相談員をお選びください 😊', reset: 'チャットリセット', consultant: '相談員に接続', selectMgr: '相談マネージャーを選択してください', selectSub: '選択するとすぐに接続されます', mgrSuffix: '', enterName: '接続のため情報を入力してください', namePh: 'お名前', phonePh: '電話番号', nameBtn: '次へ', nameErr: '名前を入力', phoneErr: '電話番号を入力', connecting: 'に接続リクエスト！', pleaseWait: '少々お待ちください 😊', tipFile: '下の📎ボタンで写真/ファイルも送れます！', consulting: '相談中', hqConsultant: '本社相談員', waiting: '様 接続待機中...', connectErr: '接続エラー！しばらくしてからお試しください。', endChat: '相談終了', backToAi: 'カプAIに戻る' },
+    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはsupport@cafe0101.comへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は、専門の担当者が丁寧に確認・ご案内するのがベストです。上の🎧担当者接続ボタンを押してください！製品制作は担当者へ、出荷・制作状況の確認は本社担当者をお選びください 😊', reset: 'チャットリセット', consultant: '担当者に接続', selectMgr: '相談マネージャーを選択してください', selectSub: '選択するとすぐに接続されます', mgrSuffix: '', enterName: '接続のため情報を入力してください', namePh: 'お名前', phonePh: '電話番号', nameBtn: '次へ', nameErr: '名前を入力', phoneErr: '電話番号を入力', connecting: 'に接続リクエスト！', pleaseWait: '少々お待ちください 😊', tipFile: '下の📎ボタンで写真/ファイルも送れます！', consulting: '相談中', hqConsultant: '本社担当者', waiting: '様 接続待機中...', connectErr: '接続エラー！しばらくしてからお試しください。', endChat: '相談終了', backToAi: 'カプAIに戻る' },
     en: { title: 'Kapu', subtitle: 'Your shopping guide', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email korea900as@gmail.com.', error: 'What an amazing project you have in mind! ✨ For this kind of product, our expert consultants can help you best. Please tap the 🎧 Connect Agent button above! For product inquiries, choose a consultant. For shipping/production status, choose HQ Consultant 😊', reset: 'Reset chat', consultant: 'Connect agent', selectMgr: 'Please select a consultant', selectSub: "You'll be connected right away", mgrSuffix: '', enterName: 'Please enter your info to connect', namePh: 'Name', phonePh: 'Phone number', nameBtn: 'Next', nameErr: 'Please enter your name', phoneErr: 'Please enter phone', connecting: ' - Connection requested!', pleaseWait: 'Please wait a moment 😊', tipFile: 'You can send photos/files using the 📎 button below!', consulting: 'In consultation', hqConsultant: 'HQ Consultant', waiting: ' connecting...', connectErr: 'Connection error! Please try again.', endChat: 'End chat', backToAi: 'Back to Kapu AI' },
 };
 function t(key) { const l = getLang(); return (T[l] && T[l][key]) || T['en'][key] || ''; }
@@ -115,7 +115,7 @@ function clearChat() {
 
 const WELCOME = {
     kr: `어떤 제품을 찾으시나요? 🎨\n레퍼런스가 있으시면 이미지나 PDF로 올려주시면 견적을 내어드릴 수 있어요.\n아니면 끝말잇기 게임이나 오늘의 운세를 물어보셔도 좋아요 😄`,
-    ja: `どんな商品をお探しですか？🎨\nリファレンスがあれば、画像やPDFをアップロードしていただければお見積りいたします。\nしりとりゲームや今日の占いもOKですよ 😄`,
+    ja: `どんな商品をお探しですか？🎨\nリファレンスがあれば、画像やPDFをアップロードしていただくとお見積りいたします。\nしりとりゲームや今日の占いもお気軽にどうぞ 😄`,
     en: `What product are you looking for? 🎨\nIf you have a reference, upload an image or PDF and we can give you a quote.\nOr feel free to play a word game or ask about today's fortune 😄`,
 };
 
@@ -394,7 +394,7 @@ async function sendMessage(text, imageData) {
     if (text && !imageData && !liveMode) {
         const _userLower = text.toLowerCase();
         const _directConsultKeys = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결','상담사','매니저','상담원',
-            '相談員','相談員接続','マネージャー','consultant','connect agent','human agent','talk to human','real person','manager'];
+            '担当者','担当者接続','マネージャー','consultant','connect agent','human agent','talk to human','real person','manager'];
         if (_directConsultKeys.some(k => _userLower.includes(k))) {
             addBubble(text, 'user');
             startConsultantFlow();
@@ -458,7 +458,7 @@ async function sendMessage(text, imageData) {
         // AI가 "상담사 연결 버튼을 눌러주세요" 등 안내를 자주 하므로 AI 텍스트 포함 시 오작동
         const _userText = (text || '').toLowerCase();
         const _consultantKeywords = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결',
-            '相談員','相談員接続','マネージャー','consultant','connect consultant','human agent','talk to human','real person','manager'];
+            '担当者','担当者接続','マネージャー','consultant','connect consultant','human agent','talk to human','real person','manager'];
         const _wantsConsultant = _consultantKeywords.some(k => _userText.includes(k));
         if (_wantsConsultant && !liveMode) {
             setTimeout(() => startConsultantFlow(), 500);
@@ -488,7 +488,7 @@ const DEFAULT_MANAGERS = {
         { name: '은미', phone: '010-7793-5393' },
         { name: '성희', phone: '010-3490-3328' }
     ],
-    ja: [{ name: '相談員 1' }, { name: '相談員 2' }, { name: '相談員 3' }],
+    ja: [{ name: '担当者 1' }, { name: '担当者 2' }, { name: '担当者 3' }],
     en: [{ name: 'Consultant 1' }, { name: 'Consultant 2' }, { name: 'Consultant 3' }]
 };
 

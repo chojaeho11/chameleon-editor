@@ -1309,29 +1309,18 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
 
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
-        fontWeight:'400', fill: boxS.boxTextColor,
+        fontWeight:'400', fill: '#ffffff',
         originX:'left', originY:'top', textAlign:'left',
-        left: boxLeft + padX, top: boxTop + padY,
-        width: maxW - padX * 2,
+        left: boxLeft, top: boxTop,
+        width: maxW,
         lineHeight: 1.6,
-        splitByGrapheme: true
+        splitByGrapheme: true,
+        shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 4, offsetX: 1, offsetY: 1 })
     });
     // 텍스트가 보드 하단을 넘으면 폰트 축소
     if (obj.height > bH * 0.25) {
         obj.set('fontSize', Math.round(fSize * 0.8));
     }
-    // 배경 박스
-    const boxH = obj.height + padY * 2;
-    const boxRect = new fabric.Rect({
-        left: boxLeft, top: boxTop,
-        width: maxW, height: boxH,
-        rx: bW * 0.01, ry: bW * 0.01,
-        fill: boxS.boxFill, stroke: boxS.boxStroke, strokeWidth: 1.5,
-        originX:'left', originY:'top',
-        isBottomDescBox: true
-    });
-    canvas.add(boxRect);
-    canvas.bringToFront(boxRect);
     canvas.add(obj);
     canvas.bringToFront(obj);
 }
@@ -1412,12 +1401,12 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         }
     }
     if (!allItems.length) return;
-    // ★ 큰 요소 1개만 배치 (우측 하단, 텍스트와 겹치지 않게)
+    // ★ 큰 요소 1개만 배치 (우측, 대지 안에 맞춤)
     const data = [allItems[0]];
-    const bigSize = bW * 1.20;
+    const bigSize = bW * 0.55;
     const rnd = (min, max) => min + Math.random() * (max - min);
     const positions = [
-        { left: bL + bW * 0.75, top: bT + bH * rnd(0.55, 0.65), size: bigSize }
+        { left: bL + bW * 0.60, top: bT + bH * rnd(0.25, 0.35), size: bigSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)

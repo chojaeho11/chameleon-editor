@@ -704,7 +704,7 @@ async function openInstallationTimeModal() {
             notice.style.display = 'block';
             const msgs = {
                 'kr': '허니콤보드 100만원 미만 주문은 지정시간 설치 서비스가 불가합니다.\n\n배송팀이 해당 날짜에 순차적으로 무료배송 및 설치해 드립니다.\n\n시간 지정 설치가 꼭 필요한 경우 별도의 비용이 발생하며, 채팅을 통해 담당자에게 문의해주세요.',
-                'ja': 'ハニカムボード10万円未満のご注文は、時間指定の設置サービスをご利用いただけません。\n\n配送チームが該当日に順次、無料配送・設置いたします。\n\n時間指定の設置が必要な場合は別途費用が発生します。チャットにて担当者までお問い合わせください。',
+                'ja': 'ハニカムボード10万円未満のご注文は、時間指定の設置サービスをご利用いただけません。\n\n配送チームがご指定の日に順次、無料で配送・設置いたします。\n\n時間指定の設置をご希望の場合は別途費用が発生いたします。チャットにて担当者までお問い合わせください。',
                 'en': 'Honeycomb board orders under $1,000 are not eligible for scheduled installation service.\n\nOur delivery team will provide free delivery and installation in order on the selected date.\n\nIf you need a specific time slot, additional fees apply. Please contact us via chat.',
                 'zh': '蜂窝板订单金额低于100万日元，无法使用定时安装服务。\n\n配送团队将在所选日期按顺序提供免费配送和安装。\n\n如需指定时间安装，将产生额外费用，请通过聊天联系客服。',
                 'ar': 'طلبات لوح العسل أقل من 1,000 دولار غير مؤهلة لخدمة التركيب المجدول.\n\nسيقوم فريق التوصيل بالتوصيل والتركيب المجاني بالترتيب في التاريخ المحدد.\n\nإذا كنت بحاجة لتحديد وقت معين، ستطبق رسوم إضافية. يرجى التواصل عبر الدردشة.',
