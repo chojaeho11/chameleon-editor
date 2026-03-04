@@ -473,11 +473,26 @@
             border-color: #e2e8f0; 
             background: #f8fafc; 
         }
-        .ql-container.ql-snow { 
-            border-bottom-left-radius: 10px; 
-            border-bottom-right-radius: 10px; 
-            border-color: #e2e8f0; 
-            font-family: 'Pretendard'; 
+        .ql-container.ql-snow {
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            border-color: #e2e8f0;
+            font-family: 'Pretendard';
+        }
+
+        /* ===== 모바일 반응형 ===== */
+        @media (max-width: 768px) {
+            .board-header-wrap { padding: 15px; }
+            .view-wrap { padding: 20px; }
+            .view-title { font-size: 22px; }
+            .write-wrap { padding: 15px; }
+            #editor-container { height: 300px; }
+            .post-grid { gap: 15px; }
+        }
+        @media (max-width: 480px) {
+            .view-wrap { padding: 15px; }
+            .view-title { font-size: 18px; }
+            #editor-container { height: 250px; }
         }
     </style>
 </head>

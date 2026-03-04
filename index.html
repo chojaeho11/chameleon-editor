@@ -3267,9 +3267,9 @@ async function handleSubReturn() {
         </div>
 
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-            <input id="loginId" class="ai-input-pretty" placeholder="아이디 (이메일도 가능)" data-i18n-placeholder="placeholder_id" style="margin:0;">
-            <input id="loginPw" class="ai-input-pretty" type="password" placeholder="비밀번호" data-i18n-placeholder="placeholder_pw" style="margin:0;">
-            <input id="loginPwConfirm" class="ai-input-pretty" type="password" placeholder="비밀번호 확인" data-i18n-placeholder="placeholder_pw_confirm" style="margin:0; display:none;">
+            <input id="loginId" class="ai-input-pretty" placeholder="아이디 (이메일도 가능)" data-i18n-placeholder="placeholder_id" style="margin:0;" autocomplete="username">
+            <input id="loginPw" class="ai-input-pretty" type="password" placeholder="비밀번호" data-i18n-placeholder="placeholder_pw" style="margin:0;" autocomplete="current-password">
+            <input id="loginPwConfirm" class="ai-input-pretty" type="password" placeholder="비밀번호 확인" data-i18n-placeholder="placeholder_pw_confirm" style="margin:0; display:none;" autocomplete="new-password">
         </div>
         <div id="forgotPwLink" style="text-align:right; margin-bottom:10px;">
             <span id="btnForgotPw" style="font-size:12px; color:#6366f1; cursor:pointer; text-decoration:underline;" data-i18n="btn_forgot_pw">비밀번호를 잊으셨나요?</span>
@@ -3322,11 +3322,11 @@ async function handleSubReturn() {
 </div>
 <div id="productDetailModal" class="modal-bg" style="z-index: 11000;">
   <div class="modal-box" style="width: 900px; max-width: 95%; text-align: left; padding:0; overflow:hidden; max-height:90vh; display:flex; flex-direction:column;">
-    <div style="display: flex; min-height:280px;">
-      <div style="width: 45%; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div id="pdpInnerLayout" style="display: flex; min-height:280px; flex-wrap: wrap;">
+      <div style="width: 45%; min-width:200px; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 20px; flex: 1 1 200px;">
         <img id="pdpImage" src="" style="max-width: 100%; max-height: 300px; object-fit: contain;">
       </div>
-      <div style="width: 55%; padding: 40px; display: flex; flex-direction: column;">
+      <div style="width: 55%; min-width:250px; padding: 30px; display: flex; flex-direction: column; flex: 1 1 250px;">
         <h2 id="pdpTitle" style="margin: 0 0 10px 0;" data-i18n="pdp_product_name">상품명</h2>
         <h3 id="pdpPrice" style="color: var(--primary); margin: 0 0 20px 0;">0</h3>
         <button id="btnActionDesign" class="btn-round primary" style="height: 50px;"><span data-i18n="pdp_design_start">🎨 직접 디자인하기</span></button>
@@ -3452,12 +3452,12 @@ async function handleSubReturn() {
 
         <div id="addrFormGlobal" style="display:none; gap:10px; flex-direction:column;">
             <div style="display:flex; gap:10px;">
-                <input id="inputZipCode" class="ai-input-pretty" placeholder="Zip/Postal Code" style="flex:1; margin:0;">
-                <input id="inputState" class="ai-input-pretty" placeholder="State/Prefecture" style="flex:1; margin:0;">
+                <input id="inputZipCode" class="ai-input-pretty" placeholder="Zip/Postal Code" data-i18n-placeholder="ph_zip" style="flex:1; margin:0;" inputmode="text" autocomplete="postal-code">
+                <input id="inputState" class="ai-input-pretty" placeholder="State/Prefecture" data-i18n-placeholder="ph_state" style="flex:1; margin:0;" autocomplete="address-level1">
             </div>
-            <input id="inputCity" class="ai-input-pretty" placeholder="City" style="margin-bottom:0;">
-            <input id="inputStreet1" class="ai-input-pretty" placeholder="Street Address 1" style="margin-bottom:0;">
-            <input id="inputStreet2" class="ai-input-pretty" placeholder="Apartment, suite, unit, etc. (optional)">
+            <input id="inputCity" class="ai-input-pretty" placeholder="City" data-i18n-placeholder="ph_city" style="margin-bottom:0;" autocomplete="address-level2">
+            <input id="inputStreet1" class="ai-input-pretty" placeholder="Street Address 1" data-i18n-placeholder="ph_street1" style="margin-bottom:0;" autocomplete="address-line1">
+            <input id="inputStreet2" class="ai-input-pretty" placeholder="Apartment, suite, unit, etc. (optional)" data-i18n-placeholder="ph_street2" autocomplete="address-line2">
         </div>
         
         <!-- 배송 지역 선택 (허니콤보드 포함 시 표시) -->
@@ -3511,7 +3511,7 @@ async function handleSubReturn() {
 </div>
 
 <div id="checkoutModal" class="modal-bg" style="z-index: 13000;">
-    <div class="modal-box" style="text-align:left; width: 500px;">
+    <div class="modal-box" style="text-align:left; width: 500px; max-width: 95vw;">
         <h3 style="text-align:center; margin-bottom: 20px;" data-i18n="modal_checkout_title">주문 확인 및 결제</h3>
         
         <label style="font-size:12px; color:#666; font-weight:bold;" data-i18n="label_orderer_name">주문자명</label>

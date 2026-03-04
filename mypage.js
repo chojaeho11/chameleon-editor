@@ -483,7 +483,38 @@ async function loadOrders() {
         // 상태 번역
         const translatedStatus = translateStatus(o.status);
 
-        tbody.innerHTML += `
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            // 모바일: 카드형 레이아웃
+            tbody.innerHTML += `
+            <tr><td colspan="5" style="padding:0;">
+                <div style="padding:12px; border-bottom:2px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span class="status-badge ${badgeClass}">${translatedStatus}</span>
+                        ${refundLabel}
+                        <small style="color:#888;">${new Date(o.created_at).toLocaleDateString()} #${o.id}</small>
+                    </div>
+                    <div style="font-weight:bold; font-size:14px; margin-bottom:4px;">${summary}</div>
+                    <div style="font-weight:bold; color:#1e293b; margin-bottom:8px;">${fmtMoney(o.total_amount || 0)}</div>
+                    ${actionBtn}
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="font-size:11px; padding:5px 10px;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
+                        <button onclick="reOrder('${o.id}')" style="height:28px; font-size:11px; padding:5px 10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;">${window.t('btn_reorder', 'Reorder')}</button>
+                        <div style="position:relative;">
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:28px; font-size:11px; padding:5px 10px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden; min-width:140px;">
+                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer;">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td></tr>`;
+        } else {
+            // 데스크탑: 기존 테이블 레이아웃
+            tbody.innerHTML += `
             <tr>
                 <td style="white-space:nowrap;">
                     ${new Date(o.created_at).toLocaleDateString()}<br>
@@ -514,6 +545,7 @@ async function loadOrders() {
                     </div>
                 </td>
             </tr>`;
+        }
     });
 }
 
@@ -860,7 +892,7 @@ window.checkBidsForOrder = async function(orderId) {
 
     const modalHtml = `
         <div id="bidListModal" class="modal-overlay" style="display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(2px);">
-            <div class="modal-box" style="width:450px; max-height:85vh; overflow-y:auto; background:#f8fafc; padding:0; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-box" style="width:450px; max-width:95vw; max-height:85vh; overflow-y:auto; background:#f8fafc; padding:0; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
                 <div style="background:white; padding:20px; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:10;">
                     <h3 style="margin:0; font-size:18px;">${window.t('msg_received_bids', 'Received Bids')} (${bids.length})</h3>
                     <p style="color:#64748b; font-size:13px; margin:5px 0 0 0;">${window.t('msg_compare_bids', 'Compare prices and ratings to select a partner.')}</p>
@@ -904,7 +936,7 @@ window.viewPartnerReviews = async function(partnerId) {
     const reviewModal = document.createElement('div');
     reviewModal.style.cssText = "position:fixed; inset:0; z-index:20001; background:rgba(0,0,0,0.3); display:flex; justify-content:center; align-items:center;";
     reviewModal.innerHTML = `
-        <div style="background:white; width:350px; padding:20px; border-radius:12px; max-height:60vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="background:white; width:350px; max-width:95vw; padding:20px; border-radius:12px; max-height:60vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
             <h4 style="margin:0 0 10px 0;">${window.t('label_partner_reviews', 'Partner Reviews')}</h4>
             ${html}
             <button onclick="this.parentElement.parentElement.remove()" style="width:100%; margin-top:15px; padding:10px; border:1px solid #ddd; background:white; border-radius:8px; cursor:pointer;">${window.t('btn_close', 'Close')}</button>
@@ -917,7 +949,8 @@ window.viewPartnerReviews = async function(partnerId) {
 // [파트너 선택 실행 함수] (수정됨: 고객 연락처 입력)
 window.selectBid = async function(bidId, orderId) {
     // 1. 고객 연락처 입력받기
-    const myPhone = prompt(window.t('prompt_enter_phone', "Enter your phone number to share with the partner:"), "010-");
+    const phoneDefault = {KR:'010-', JP:'090-', US:'+1-'}[(window.SITE_CONFIG||{}).COUNTRY] || '010-';
+    const myPhone = prompt(window.t('prompt_enter_phone', "Enter your phone number to share with the partner:"), phoneDefault);
 
     if(!myPhone) { showToast(window.t('msg_phone_required', "Phone number is required to connect with the partner."), 'warn'); return; }
 
@@ -977,6 +1010,8 @@ async function monitorMyBids() {
 }
 
 function speakTTS(text) {
+    // 사용자가 음소거 설정했으면 건너뜀
+    if (localStorage.getItem('tts_muted') === 'true') return;
     if ('speechSynthesis' in window) {
         const msg = new SpeechSynthesisUtterance(text);
         const country = (window.SITE_CONFIG || {}).COUNTRY || 'KR';

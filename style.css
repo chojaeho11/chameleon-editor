@@ -19,12 +19,16 @@
     -webkit-tap-highlight-color: transparent; 
 }
 
-/* 입력창 텍스트 선택 및 터치 허용 */
+/* 입력창 및 콘텐츠 텍스트 선택 허용 */
 input, textarea, select {
     user-select: text !important;
     -webkit-user-select: text !important;
     touch-action: manipulation !important;
     font-family: inherit;
+}
+p, span, h1, h2, h3, h4, h5, h6, li, td, th, label, a, .view-wrap, .msg-text {
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 body { 
@@ -3237,7 +3241,7 @@ body {
 /* 모바일 화면에서는 더 작게 */
 @media (max-width: 768px) {
     .quick-text { font-size: 12px; height: 32px; }
-    .long-text-mode .quick-text { font-size: 10px !important; height: 26px !important; }
+    .long-text-mode .quick-text { font-size: 11px !important; height: 28px !important; }
 }
 /* 상단 퀵메뉴 아이템 스타일 (크기 고정) */
 .quick-item {
@@ -5199,12 +5203,13 @@ video {
    ========================================= */
 html[lang="ja"] {
     letter-spacing: -0.04em;
-    word-break: break-all;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 html[lang="ja"] body {
-    font-size: 13px !important;
-    line-height: 1.35 !important;
-    letter-spacing: -0.04em !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    letter-spacing: -0.02em !important;
 }
 /* 한국어 이외 사이트에서 카카오 로그인 숨김 (JS가 lang="kr"로 설정) */
 html:not([lang="kr"]):not([lang="ko"]) #btnKakaoLogin { display: none !important; }
@@ -5249,9 +5254,9 @@ html[lang="ja"] .section-title {
     letter-spacing: -0.04em !important;
 }
 html[lang="ja"] .quick-menu-card span {
-    font-size: 10px !important;
-    letter-spacing: -0.04em !important;
-    line-height: 1.15 !important;
+    font-size: 11px !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.2 !important;
 }
 html[lang="ja"] p,
 html[lang="ja"] .desc-text,
