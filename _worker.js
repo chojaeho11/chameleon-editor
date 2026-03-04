@@ -524,27 +524,6 @@ ${hreflangTags('/editor')}
             return Response.redirect(new URL('/', url.origin).toString(), 301);
         }
 
-        // ========== IN-APP BROWSER → EXTERNAL BROWSER ==========
-        // 네이버/카카오 인앱 브라우저는 ES6 모듈을 제대로 실행하지 못함
-        // 서버에서 즉시 외부 브라우저로 전환하는 최소 HTML 반환 (캐시 무관)
-        if (/NAVER\(inapp|KAKAOTALK/i.test(ua)) {
-            const targetUrl = url.href;
-            const isAndroid = /Android/i.test(ua);
-            const intentUrl = `intent://${url.hostname}${url.pathname}${url.search}${url.hash}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
-
-            const html = isAndroid
-                ? `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script>location.replace('${intentUrl}');</script></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;background:#f5f5f5;"><div style="text-align:center;padding:20px;"><p style="font-size:16px;color:#333;">외부 브라우저로 이동 중...</p><p style="margin-top:16px;"><a href="${intentUrl}" style="padding:12px 28px;background:#4CAF50;color:#fff;text-decoration:none;border-radius:8px;font-size:15px;">Chrome으로 열기</a></p></div></body></html>`
-                : `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;background:#f5f5f5;"><div style="text-align:center;padding:20px;"><p style="font-size:16px;color:#333;">원활한 이용을 위해 외부 브라우저로 열어주세요</p><p style="margin-top:12px;color:#888;font-size:14px;">우측 상단 ⋮ 메뉴 → 「외부 브라우저로 열기」</p><p style="margin-top:20px;"><a href="${targetUrl}" target="_blank" style="padding:12px 28px;background:#4CAF50;color:#fff;text-decoration:none;border-radius:8px;font-size:15px;">브라우저로 열기</a></p></div></body></html>`;
-
-            return new Response(html, {
-                headers: {
-                    'Content-Type': 'text/html;charset=utf-8',
-                    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-                    'Pragma': 'no-cache',
-                },
-            });
-        }
-
         // ========== NORMAL HANDLING ==========
         // Pretty URLs: /mypage → serves mypage.html (200), /mypage.html → 308 to /mypage
         // _redirects HTML rewrites removed to avoid 308 loop with Pretty URLs

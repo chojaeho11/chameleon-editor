@@ -2,52 +2,38 @@
 <html lang="ko">
 <head>
 <script>
-// [통합 라우팅 + 인앱 브라우저 호환성]
-// 1. 서브패스 URL → 루트 리다이렉트 (/honeycomb → /?_p=honeycomb)
-// 2. 인앱 브라우저(네이버/카카오 등) 캐시 무효화 (오래된 HTML 방지)
-// 3. 모듈 로드 실패 시 외부 브라우저 전환
+// [SPA 라우팅] 서브패스 → 루트 리다이렉트
 (function(){
     var p = location.pathname;
-    var s = location.search;
-    var ua = navigator.userAgent || '';
-    var isInApp = /NAVER|KAKAOTALK|Instagram|FB_IAB|FBAN|Line\//i.test(ua);
-
-    // --- 리다이렉트 결정 ---
-    var slug = '';
     if (p && p !== '/' && p !== '/index.html' && p.indexOf('.') === -1) {
-        slug = p.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
-    }
-    var needsCacheBust = isInApp && s.indexOf('_nc=') === -1;
-
-    if (slug || needsCacheBust) {
-        var parts = [];
-        if (s) parts.push(s.substring(1)); // 기존 쿼리 유지
-        if (slug) parts.push('_p=' + encodeURIComponent(slug));
-        if (needsCacheBust) parts.push('_nc=' + Date.now());
-        location.replace('/' + (parts.length ? '?' + parts.join('&') : ''));
-        return;
+        var slug = p.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
+        if (slug) {
+            var qs = location.search;
+            var sep = qs ? qs + '&' : '?';
+            location.replace('/' + sep + '_p=' + encodeURIComponent(slug));
+        }
     }
 })();
 
-// --- 모듈 로드 체크: 5초 후에도 안 되면 외부 브라우저로 전환 ---
+// [진단] JS 에러 수집 + 모듈 로드 상태 추적
+window._jsErrors = [];
 window._modulesLoaded = false;
+window.onerror = function(msg, src, line) {
+    window._jsErrors.push(msg + ' @' + (src||'').split('/').pop() + ':' + line);
+};
+
+// 6초 후 모듈 미로드 시 빨간 진단 배너 표시 (원인 파악용)
 setTimeout(function() {
     if (window._modulesLoaded) return;
-    var ua = navigator.userAgent || '';
-    if (!/NAVER|KAKAOTALK|Instagram|FB_IAB|FBAN|Line\//i.test(ua)) return;
-
-    if (/Android/i.test(ua)) {
-        try {
-            location.replace('intent://' + location.href.replace(/^https?:\/\//, '') +
-                '#Intent;scheme=https;action=android.intent.action.VIEW;end');
-            return;
-        } catch(e) {}
-    }
-    var b = document.createElement('div');
-    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#222;color:#fff;text-align:center;padding:20px 16px;font-size:15px;line-height:1.7;box-shadow:0 -2px 10px rgba(0,0,0,0.5);';
-    b.innerHTML = '\u26A0 원활한 이용을 위해 외부 브라우저로 열어주세요<br><small style="color:#aaa;">우측 상단 \u22EE 메뉴 \u2192 <b>\u300C외부 브라우저로 열기\u300D</b></small>';
-    (document.body || document.documentElement).appendChild(b);
-}, 5000);
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#e74c3c;color:#fff;padding:12px;font-size:13px;line-height:1.5;text-align:left;word-break:break-all;';
+    var info = 'MODULE_FAIL | ';
+    info += 'UA: ' + navigator.userAgent.slice(-60) + ' | ';
+    info += 'ERR: ' + (window._jsErrors.length ? window._jsErrors.join('; ') : 'none') + ' | ';
+    info += 'fabric:' + (typeof fabric !== 'undefined') + ' supa:' + (typeof window.supabase !== 'undefined');
+    d.textContent = info;
+    document.body.appendChild(d);
+}, 6000);
 </script>
 <base href="/">
 <meta charset="UTF-8" />
