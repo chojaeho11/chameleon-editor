@@ -477,8 +477,17 @@ window.onSendMessage = async function() {
         var res = await sb.from('chat_messages').insert({
             room_id: roomId, sender_type: 'customer', sender_name: customerName, message: txt
         }).select().single();
-        if (res.data) sentMsgIds.add(res.data.id);
-        if (res.error) throw res.error;
+        if (res.error) {
+            // 연결 끊김 시 재연결 후 재시도 (1회)
+            startSubscriptions();
+            var retry = await sb.from('chat_messages').insert({
+                room_id: roomId, sender_type: 'customer', sender_name: customerName, message: txt
+            }).select().single();
+            if (retry.error) throw retry.error;
+            if (retry.data) sentMsgIds.add(retry.data.id);
+        } else {
+            if (res.data) sentMsgIds.add(res.data.id);
+        }
         sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId);
 
         // AI auto-response (only in ai_chatting mode)
@@ -486,7 +495,10 @@ window.onSendMessage = async function() {
             conversationHistory.push({ role: 'user', content: txt });
             getAIResponse(txt);
         }
-    } catch(err) { showToast(t('sendFail'), 'error'); }
+    } catch(err) {
+        console.error('Send failed:', err);
+        showToast(t('sendFail'), 'error');
+    }
 };
 
 // ===== AI Response =====
@@ -658,8 +670,15 @@ function startSubscriptions() {
         })
         .subscribe(function(status) {
             var banner = document.getElementById('connBanner');
-            if (status === 'SUBSCRIBED') { banner.style.display = 'none'; banner.className = 'conn-banner'; }
-            else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { banner.textContent = t('connLost'); banner.className = 'conn-banner offline'; }
+            if (status === 'SUBSCRIBED') {
+                banner.style.display = 'none'; banner.className = 'conn-banner';
+                connRetryCount = 0;
+            }
+            else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                banner.textContent = t('connLost'); banner.className = 'conn-banner offline';
+                banner.style.display = 'block';
+                scheduleReconnect();
+            }
         });
 
     if (roomSubscription) roomSubscription.unsubscribe();
@@ -672,6 +691,42 @@ function startSubscriptions() {
         })
         .subscribe();
 }
+
+// ===== 자동 재연결 =====
+var connRetryCount = 0;
+var reconnectTimer = null;
+
+function scheduleReconnect() {
+    if (reconnectTimer) return;
+    var delay = Math.min(3000 * Math.pow(2, connRetryCount), 30000); // 3s, 6s, 12s... max 30s
+    connRetryCount++;
+    reconnectTimer = setTimeout(function() {
+        reconnectTimer = null;
+        if (roomId) {
+            var banner = document.getElementById('connBanner');
+            banner.textContent = site.lang === 'ja' ? '再接続中...' : site.lang === 'en' ? 'Reconnecting...' : '재연결 중...';
+            startSubscriptions();
+            // 끊긴 동안 놓친 메시지 복구
+            loadMessages();
+        }
+    }, delay);
+}
+
+// 탭 복귀 시 연결 상태 확인 + 재연결
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && roomId) {
+        // 채널 상태 확인 후 필요시 재연결
+        var needsReconnect = false;
+        try {
+            if (!subscription || subscription.state !== 'joined') needsReconnect = true;
+        } catch(e) { needsReconnect = true; }
+
+        if (needsReconnect) {
+            startSubscriptions();
+            loadMessages(); // 놓친 메시지 복구
+        }
+    }
+});
 
 // ===== Status UI =====
 function updateStatusUI(status) {
