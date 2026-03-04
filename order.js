@@ -1450,15 +1450,15 @@ async function addFileToCart(e) {
             if (uploadedThumbUrl) thumbUrl = uploadedThumbUrl;
         }
 
-        cartData.push({ 
-            uid: Date.now(), 
-            product: currentTargetProduct.info, 
-            type: 'file', 
-            fileName: file.name, 
-            mimeType: file.type, 
-            fileData: null, 
-            originalUrl: originalUrl, 
-            thumb: thumbUrl, 
+        cartData.push({
+            uid: Date.now(),
+            product: currentTargetProduct.info,
+            type: 'file_upload',
+            fileName: file.name,
+            mimeType: file.type,
+            fileData: null,
+            originalUrl: originalUrl,
+            thumb: thumbUrl,
             isOpen: true, 
             qty: 1, 
             selectedAddons: {}, 
@@ -2904,14 +2904,14 @@ export async function processBulkCartUpload(files) {
                 }
 
                 return {
-                    uid: Date.now() + index + Math.random(), 
+                    uid: Date.now() + index + Math.random(),
                     product: {
                         name: window.t('label_attached_file', 'Attached File'),
-                        price: 0, 
+                        price: 0,
                         img: thumbUrl,
                         addons: []
                     },
-                    type: 'file',
+                    type: 'file_upload',
                     fileName: file.name,
                     mimeType: file.type,
                     originalUrl: originalUrl,
