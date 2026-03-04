@@ -1713,7 +1713,6 @@
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('active')" id="lcFilterActive" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">상담</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('closed')" id="lcFilterClosed" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">종료</button>
                     <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('ai_chatting')" id="lcFilterAiChat" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">AI</button>
-                    <button class="btn btn-outline btn-sm" onclick="lcFilterRooms('chatbot')" id="lcFilterBot" style="font-size:12px; flex:1; padding:7px 4px; border-radius:8px; color:#cbd5e1; border-color:rgba(255,255,255,0.12);">로그</button>
                 </div>
                 <!-- 사이트 필터 -->
                 <div style="display:flex; gap:4px; margin-top:6px;">
@@ -3145,7 +3144,7 @@ async function saveCommonInfo() {
         var q = sb.from('chat_rooms').select('*').order('updated_at',{ascending:false}).limit(500);
         if (currentFilter === 'ai_chatting') {
             q = q.eq('status', 'ai_chatting');
-        } else if (currentFilter !== 'all' && currentFilter !== 'chatbot') {
+        } else if (currentFilter !== 'all') {
             q = q.eq('status', currentFilter);
         }
         var r = await q;
@@ -3376,14 +3375,13 @@ async function saveCommonInfo() {
 
     window.lcFilterRooms = function(f) {
         currentFilter=f;
-        ['All','Wait','Active','Closed','AiChat','Bot'].forEach(function(k) {
+        ['All','Wait','Active','Closed','AiChat'].forEach(function(k) {
             var el = document.getElementById('lcFilter'+k);
             if (el) el.className = 'btn btn-outline btn-sm';
         });
-        var activeId = {all:'All',waiting:'Wait',active:'Active',closed:'Closed',ai_chatting:'AiChat',chatbot:'Bot'}[f];
+        var activeId = {all:'All',waiting:'Wait',active:'Active',closed:'Closed',ai_chatting:'AiChat'}[f];
         var el = document.getElementById('lcFilter'+(activeId||'All'));
         if (el) el.className = 'btn btn-primary btn-sm';
-        if (f === 'chatbot') { lcLoadChatbotLogs(); return; }
         lcLoadRooms();
     };
 
