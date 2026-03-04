@@ -6496,8 +6496,8 @@ window.showChoiceModal = async function(key) {
     }
 
     // ★ 최종 판정: 관리자가 "사이즈 입력 허용"을 체크하지 않은 상품은 무조건 일반상품
-    // 카테고리 하드코드보다 관리자 설정이 우선 (단, 종이매대는 제외)
-    if (!dbIsCustomSize && !isPaperDisplayProduct) {
+    // 카테고리 하드코드보다 관리자 설정이 우선 (단, 종이매대/사이즈고정상품은 제외)
+    if (!dbIsCustomSize && !isPaperDisplayProduct && !product.is_file_upload) {
         product.is_custom_size = false;
         product.is_general_product = true;
     }
