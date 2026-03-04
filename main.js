@@ -1,5 +1,8 @@
 // main.js - Complete Integrated Version
 
+// 모듈 로드 성공 플래그 (인앱 브라우저 호환성 체크용)
+window._modulesLoaded = true;
+
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=123";
 import { initCanvas, canvas } from "./canvas-core.js?v=123";
 import { initSizeControls, applySize } from "./canvas-size.js?v=123";

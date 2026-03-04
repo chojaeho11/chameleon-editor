@@ -17,6 +17,33 @@
     }
 })();
 </script>
+<script>
+// [인앱 브라우저 호환성] ES6 모듈 로드 실패 시 외부 브라우저로 자동 전환
+// 네이버/카카오톡/인스타 등 인앱 브라우저는 ES6 모듈을 제대로 실행 못하는 경우가 있음
+window._modulesLoaded = false;
+setTimeout(function() {
+    if (window._modulesLoaded) return; // 정상 로드 완료
+    var ua = navigator.userAgent || '';
+    var isInApp = /NAVER|KAKAOTALK|Instagram|FB_IAB|FBAN|Line\//i.test(ua);
+    if (!isInApp) return; // 일반 브라우저는 무시
+
+    // Android: intent로 기본 브라우저(Chrome 등)에서 열기
+    if (/Android/i.test(ua)) {
+        try {
+            location.replace('intent://' + location.href.replace(/^https?:\/\//, '') +
+                '#Intent;scheme=https;action=android.intent.action.VIEW;end');
+            return;
+        } catch(e) {}
+    }
+
+    // iOS 또는 intent 실패: 안내 배너 표시
+    var b = document.createElement('div');
+    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#222;color:#fff;text-align:center;padding:20px 16px;font-size:15px;line-height:1.7;box-shadow:0 -2px 10px rgba(0,0,0,0.5);';
+    b.innerHTML = '\u26A0 원활한 이용을 위해 외부 브라우저로 열어주세요<br>' +
+        '<small style="color:#aaa;">우측 상단 \u22EE 메뉴 \u2192 <b>\u300C외부 브라우저로 열기\u300D</b></small>';
+    (document.body || document.documentElement).appendChild(b);
+}, 5000);
+</script>
 <base href="/">
 <meta charset="UTF-8" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -4132,7 +4159,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=123"></script>
 <script type="module" src="./my-design.js?v=123"></script>
 <script type="module" src="./ppt-mode.js?v=123"></script>
-<script type="module" src="./main.js?v=125"></script>
+<script type="module" src="./main.js?v=126"></script>
 
 <script type="module">
     import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js";
