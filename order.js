@@ -21,7 +21,7 @@ function withTimeout(promise, ms, fallback = null) {
     return Promise.race([
         promise,
         new Promise(resolve => setTimeout(() => {
-            console.warn(`[타임아웃] ${ms}ms 초과 — fallback 반환`);
+            console.error(`[타임아웃] ${ms}ms 초과 — 파일 업로드/PDF 생성이 시간 내 완료되지 않음`);
             resolve(fallback);
         }, ms))
     ]);
@@ -2078,6 +2078,140 @@ async function processOrderSubmission() {
 }
 
 // ============================================================
+// [공통] 주문 파일 업로드 (고객파일 + PDF 생성)
+// ★ 재진입 경로에서도 호출하여 파일 누락 방지
+// ============================================================
+async function uploadOrderFiles(orderId, cartData, useMileage) {
+    const loading = document.getElementById("loading");
+    const { manager, phone, address, request, deliveryDate } = window.tempOrderInfo || {};
+
+    let uploadedFiles = [];
+
+    // [1] 고객 업로드 파일 수집
+    for (let i = 0; i < cartData.length; i++) {
+        const item = cartData[i];
+        const idx = String(i + 1).padStart(2, '0');
+        if (item.uploadedFiles && item.uploadedFiles.length > 0) {
+            item.uploadedFiles.forEach((f, fi) => {
+                uploadedFiles.push({
+                    name: `customer_file_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'file'}`,
+                    url: f.originalUrl,
+                    type: 'customer_file'
+                });
+                if (f.cutlineUrl) {
+                    uploadedFiles.push({
+                        name: `cutline_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'keyring'}.png`,
+                        url: f.cutlineUrl,
+                        type: 'cutline'
+                    });
+                }
+            });
+        } else if (item.originalUrl) {
+            uploadedFiles.push({
+                name: `customer_file_${idx}_${item.fileName || 'file'}`,
+                url: item.originalUrl,
+                type: 'customer_file'
+            });
+        }
+        if (item.cutlineUrl) {
+            uploadedFiles.push({
+                name: `cutline_${idx}_${item.fileName || 'keyring'}.png`,
+                url: item.cutlineUrl,
+                type: 'cutline'
+            });
+        }
+    }
+
+    // [2] PDF 생성 (작업지시서 + 견적서)
+    const orderInfoForPDF = {
+        id: orderId,
+        manager, phone, address, note: request, date: deliveryDate,
+        shippingFee: window._nonMetroFeeApplied || 0
+    };
+
+    const isMobile = window.innerWidth <= 768;
+    const PDF_TIMEOUT = isMobile ? 30000 : 60000;
+    const UPLOAD_TIMEOUT = 20000;
+
+    try {
+        if (loading) loading.querySelector('p').innerText = window.t('msg_generating_docs', "Generating documents...");
+        const orderSheetBlob = await withTimeout(generateOrderSheetPDF(orderInfoForPDF, cartData), PDF_TIMEOUT);
+        if(orderSheetBlob) {
+            const url = await withTimeout(uploadFileToSupabase(orderSheetBlob, `orders/${orderId}/order_sheet.pdf`), UPLOAD_TIMEOUT);
+            if(url) uploadedFiles.push({ name: `order_sheet.pdf`, url: url, type: 'order_sheet' });
+        }
+
+        const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate, useMileage), PDF_TIMEOUT);
+        if(quoteBlob) {
+            const url = await withTimeout(uploadFileToSupabase(quoteBlob, `orders/${orderId}/quotation.pdf`), UPLOAD_TIMEOUT);
+            if(url) uploadedFiles.push({ name: `quotation.pdf`, url: url, type: 'quotation' });
+        }
+    } catch(pdfErr) { console.warn("문서 생성 오류:", pdfErr); }
+
+    // [3] 디자인 PDF 업로드
+    for (let i = 0; i < cartData.length; i++) {
+        const item = cartData[i];
+        const idx = String(i + 1).padStart(2, '0');
+
+        if (item.designPdfUrl && item.type === 'design') {
+            if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
+            try {
+                const res = await withTimeout(fetch(item.designPdfUrl), PDF_TIMEOUT);
+                if (res.ok) {
+                    const pdfBlob = await res.blob();
+                    const url = await withTimeout(uploadFileToSupabase(pdfBlob, `orders/${orderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
+                    if (url) uploadedFiles.push({ name: `product_${idx}_${item.product?.name || 'design'}.pdf`, url: url, type: 'product' });
+                }
+            } catch(err) { console.warn("사전생성 PDF 전송 실패:", err); }
+
+            if (item.boxLayoutPdfUrl) {
+                try {
+                    const layoutRes = await withTimeout(fetch(item.boxLayoutPdfUrl), PDF_TIMEOUT);
+                    if (layoutRes.ok) {
+                        const layoutBlob = await layoutRes.blob();
+                        const layoutUrl = await withTimeout(uploadFileToSupabase(layoutBlob, `orders/${orderId}/box_layout_${idx}.pdf`), UPLOAD_TIMEOUT);
+                        if (layoutUrl) uploadedFiles.push({ name: `box_layout_${idx}_${item.product?.name || 'layout'}.pdf`, url: layoutUrl, type: 'box_layout' });
+                    }
+                } catch(err) { console.warn("박스 배치도 PDF 전송 실패:", err); }
+            }
+            continue;
+        }
+
+        if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
+            let hasContent = false;
+            if (item.json.objects && Array.isArray(item.json.objects)) {
+                const validObjects = item.json.objects.filter(obj => !obj.isBoard);
+                if (validObjects.length > 0) hasContent = true;
+            }
+            if (!hasContent) continue;
+
+            if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
+            try {
+                const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
+                let fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                if (!fileBlob || fileBlob.size < 5000) {
+                    fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                }
+
+                if(fileBlob) {
+                    const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${orderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
+                    if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.pdf`, url: url, type: 'product' });
+                }
+            } catch(err) { console.warn("디자인 변환 실패:", err); }
+        }
+    }
+
+    // [4] DB 업데이트
+    if (uploadedFiles.length > 0) {
+        await sb.from('orders').update({ files: uploadedFiles }).eq('id', orderId);
+    } else if (cartData.length > 0) {
+        console.error(`[파일누락경고] 주문 ${orderId}: 장바구니 ${cartData.length}개 상품이 있지만 업로드된 파일이 0개`);
+    }
+
+    return uploadedFiles;
+}
+
+// ============================================================
 // [신규] 실제 DB 생성 및 파일 업로드
 // ============================================================
 async function createRealOrderInDb(finalPayAmount, useMileage) {
@@ -2193,130 +2327,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
     const newOrderId = orderData[0].id;
     window.currentDbId = newOrderId; 
 
-    let uploadedFiles = [];
-    
-    for (let i = 0; i < cartData.length; i++) {
-        const item = cartData[i]; 
-        const idx = String(i + 1).padStart(2, '0');
-        if (item.uploadedFiles && item.uploadedFiles.length > 0) {
-            item.uploadedFiles.forEach((f, fi) => {
-                uploadedFiles.push({
-                    name: `customer_file_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'file'}`,
-                    url: f.originalUrl,
-                    type: 'customer_file'
-                });
-                // ★ 키링 칼선 파일도 함께 추가 (uploadedFiles 내부의 cutlineUrl)
-                if (f.cutlineUrl) {
-                    uploadedFiles.push({
-                        name: `cutline_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'keyring'}.png`,
-                        url: f.cutlineUrl,
-                        type: 'cutline'
-                    });
-                }
-            });
-        } else if (item.originalUrl) {
-            uploadedFiles.push({
-                name: `customer_file_${idx}_${item.fileName || 'file'}`,
-                url: item.originalUrl,
-                type: 'customer_file'
-            });
-        }
-        // ★ 기존 호환: 최상위 cutlineUrl도 지원
-        if (item.cutlineUrl) {
-            uploadedFiles.push({
-                name: `cutline_${idx}_${item.fileName || 'keyring'}.png`,
-                url: item.cutlineUrl,
-                type: 'cutline'
-            });
-        }
-    }
-    
-    const orderInfoForPDF = {
-        id: newOrderId,
-        manager, phone, address, note: request, date: deliveryDate,
-        shippingFee: window._nonMetroFeeApplied || 0
-    };
-    
-    // [모바일 감지] 모바일에서는 타임아웃을 짧게 설정
-    const isMobile = window.innerWidth <= 768;
-    const PDF_TIMEOUT = isMobile ? 30000 : 60000;
-    const UPLOAD_TIMEOUT = 20000;
-
-    try {
-        loading.querySelector('p').innerText = window.t('msg_generating_docs', "Generating documents...");
-        const orderSheetBlob = await withTimeout(generateOrderSheetPDF(orderInfoForPDF, cartData), PDF_TIMEOUT);
-        if(orderSheetBlob) {
-            const url = await withTimeout(uploadFileToSupabase(orderSheetBlob, `orders/${newOrderId}/order_sheet.pdf`), UPLOAD_TIMEOUT);
-            if(url) uploadedFiles.push({ name: `order_sheet.pdf`, url: url, type: 'order_sheet' });
-        }
-
-        const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate, useMileage), PDF_TIMEOUT);
-
-        if(quoteBlob) {
-            const url = await withTimeout(uploadFileToSupabase(quoteBlob, `orders/${newOrderId}/quotation.pdf`), UPLOAD_TIMEOUT);
-            if(url) uploadedFiles.push({ name: `quotation.pdf`, url: url, type: 'quotation' });
-        }
-    } catch(pdfErr) { console.warn("문서 생성 오류:", pdfErr); }
-
-    for (let i = 0; i < cartData.length; i++) {
-        const item = cartData[i];
-        const idx = String(i + 1).padStart(2, '0');
-
-        // ★ [1순위] 사전 생성된 PDF가 있으면 그대로 사용 (라이브 캔버스에서 생성한 것)
-        if (item.designPdfUrl && item.type === 'design') {
-            loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
-            try {
-                const res = await withTimeout(fetch(item.designPdfUrl), PDF_TIMEOUT);
-                if (res.ok) {
-                    const pdfBlob = await res.blob();
-                    const url = await withTimeout(uploadFileToSupabase(pdfBlob, `orders/${newOrderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
-                    if (url) uploadedFiles.push({ name: `product_${idx}_${item.product?.name || 'design'}.pdf`, url: url, type: 'product' });
-                }
-            } catch(err) { console.warn("사전생성 PDF 전송 실패:", err); }
-
-            // ★ 박스 배치도 PDF 업로드
-            if (item.boxLayoutPdfUrl) {
-                try {
-                    const layoutRes = await withTimeout(fetch(item.boxLayoutPdfUrl), PDF_TIMEOUT);
-                    if (layoutRes.ok) {
-                        const layoutBlob = await layoutRes.blob();
-                        const layoutUrl = await withTimeout(uploadFileToSupabase(layoutBlob, `orders/${newOrderId}/box_layout_${idx}.pdf`), UPLOAD_TIMEOUT);
-                        if (layoutUrl) uploadedFiles.push({ name: `box_layout_${idx}_${item.product?.name || 'layout'}.pdf`, url: layoutUrl, type: 'box_layout' });
-                    }
-                } catch(err) { console.warn("박스 배치도 PDF 전송 실패:", err); }
-            }
-
-            continue;
-        }
-
-        // ★ [2순위] 사전 PDF 없으면 기존 방식으로 재생성
-        if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
-            let hasContent = false;
-            if (item.json.objects && Array.isArray(item.json.objects)) {
-                const validObjects = item.json.objects.filter(obj => !obj.isBoard);
-                if (validObjects.length > 0) hasContent = true;
-            }
-            if (!hasContent) continue;
-
-            loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
-            try {
-                const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                let fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
-                if (!fileBlob || fileBlob.size < 5000) {
-                    fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
-                }
-
-                if(fileBlob) {
-                    const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${newOrderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
-                    if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.pdf`, url: url, type: 'product' });
-                }
-            } catch(err) { console.warn("디자인 변환 실패:", err); }
-        }
-    }
-
-    if (uploadedFiles.length > 0) {
-        await sb.from('orders').update({ files: uploadedFiles }).eq('id', newOrderId);
-    }
+    // ★ 공통 함수로 파일 업로드 (고객파일 + PDF 생성)
+    await uploadOrderFiles(newOrderId, cartData, useMileage);
 
     // [파트너 마켓플레이스] 파트너 상품이 포함된 경우 partner_settlements 생성
     try {
@@ -2431,8 +2443,11 @@ async function processFinalPayment() {
                 _updateData.request_note = _existNote + `\n##REF:${window.tempOrderInfo.referrerId}:${window.tempOrderInfo.referrerEmail}##`;
             }
             await sb.from('orders').update(_updateData).eq('id', window.currentDbId);
+
+            // ★ [버그수정] 재진입 시에도 파일 업로드 실행 (기존: 파일 업로드가 완전히 건너뛰어짐)
+            await uploadOrderFiles(window.currentDbId, cartData, useMileage);
         }
-        
+
         const orderId = window.currentDbId; 
 
         const selected = document.querySelector('input[name="paymentMethod"]:checked');
