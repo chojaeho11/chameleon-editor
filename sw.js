@@ -1,6 +1,6 @@
 // Chameleon Service Worker - HTML 캐시 강제 무효화 전용
 // JS/CSS/이미지 등은 건드리지 않고, HTML 요청만 네트워크 우선 처리
-var CACHE_VERSION = '20260304j';
+var CACHE_VERSION = '20260304k';
 
 self.addEventListener('install', function(e) {
     self.skipWaiting(); // 즉시 활성화

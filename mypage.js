@@ -1169,8 +1169,8 @@ const PDF_LABELS = {
     us: {
         quote_title: "QUOTATION", receipt_title: "RECEIPT", statement_title: "INVOICE", ordersheet_title: "WORK ORDER",
         recipient: "[ Customer ]", name: "Name :", phone: "Phone :", address: "Addr :",
-        provider_labels: ["Reg No.", "Company", "CEO", "Address", "Type", "Contact"],
-        provider_values: ["470-81-02808", "Chameleon Printing Inc.", "Jae-ho Cho", "72-2 Hanmal-gil, Ujeong-eup, Hwaseong-si", "Manufacturing", "+82-31-366-1984"],
+        provider_labels: ["EIN", "Company", "Owner", "Address", "Type", "Contact"],
+        provider_values: ["88-4057291", "Chameleon Printing Inc.", "Ji-Woon Hong", "3F, 32-11 Yakkasaki 7-chome, Matsudo-shi, Chiba 270-0023", "Manufacturing / Services", "047-712-1148"],
         headers: ["No", "Item", "Spec/Option", "Qty", "Price", "Amount"],
         supply_price: "Subtotal :", vat: "Sales Tax :", discount: "Discount :", mileage: "Points Used :",
         total_amount: "Grand Total", footer_claim: "Authorized Signature",
@@ -1189,7 +1189,7 @@ const PTXT = PDF_LABELS[PDF_LANG] || PDF_LABELS['kr'];
 const PDF_FONT_CONFIG = {
     kr: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" },
     jp: { url: "https://fonts.gstatic.com/s/notosansjp/v56/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf", name: "NotoSansJP" },
-    us: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf", name: "NanumGothic" },
+    us: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/opensans/OpenSans%5Bwdth%2Cwght%5D.ttf", name: "OpenSans" },
     cn: { url: "https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYw.ttf", name: "NotoSansSC" },
     ar: { url: "https://fonts.gstatic.com/s/notosansarabic/v33/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvuw.ttf", name: "NotoSansArabic" },
     es: { url: "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf", name: "Inter" }

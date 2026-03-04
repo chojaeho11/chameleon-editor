@@ -340,7 +340,7 @@ serve(async (req) => {
 5. **Use product descriptions** — check description, is_custom_size etc.
 6. **Always show product cards when products are mentioned!** Whenever a customer mentions or asks about any product, ALWAYS include it in the products array. Never ask for size/purpose/quantity first! Show a brief description + product card immediately. Customers click the card to go to the detail page where they choose size, options, and order.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
-8. **Image upload** — up to 10MB. Larger files: email korea900as@gmail.com.
+8. **Image upload** — up to 10MB. Larger files: email support@cafe3355.com.
 9. **Honeycomb exhibition references** — Analyze exhibition images: walls, signs, standees, decorations, table tops, furniture. Numbers are in mm. Wall panel (approx 900~1200mm × 2400mm) = ~$30 each. Table top = ~$20. Furniture = ~$30~50. Present itemized estimate. End with: "For an exact quote, our team can take a closer look 😊 Just click the consultant button above!"
 10. **Never say 'connection unstable'** — For complex requests, naturally guide to consultant connection. For text product questions, always show product cards.
 
@@ -359,10 +359,10 @@ serve(async (req) => {
 ⚠️ Contact rules: NEVER make up info. Use ONLY:
 ## Company Info
 - Company: Chameleon Printing
-- Email: support@cafe0101.com / korea900as@gmail.com
+- Email: support@cafe3355.com
 - Website: ${siteUrl}
-- Hours: Weekdays 09:00-18:00 KST
-- Large files: email korea900as@gmail.com
+- Hours: Weekdays 09:00-18:00 (EST)
+- Large files: email support@cafe3355.com
 
 ## Product Links
 - When customer asks for "link", "URL", "page" → provide direct product URL: ${siteUrl}/?product={product_code}
@@ -612,7 +612,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             const contactInfos: Record<string, string> = {
                 kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n📦 출고실(파손/출고/시스템 문의):\n• 이선율 팀장: 010-7610-3455\n• 변지웅 부사장: 010-5512-5366\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n📧 대용량 파일: korea900@hanmail.net\n💬 카푸는 24시간 운영됩니다!",
                 ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: support@cafe0101.com\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 カプは24時間対応！",
-                us: "\n\n📧 Email: support@cafe0101.com / korea900as@gmail.com\n🕐 Hours: Weekdays 09:00-18:00 KST\n💬 Kapu is available 24/7!",
+                us: "\n\n📧 Email: support@cafe3355.com\n🕐 Hours: Weekdays 09:00-18:00 (EST)\n💬 Kapu is available 24/7!",
             };
             const hasContact = chatMsg.includes('010-') || chatMsg.includes('047-') || chatMsg.includes('support@');
             if (!hasContact) {
