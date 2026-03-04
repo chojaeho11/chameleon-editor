@@ -15,25 +15,21 @@
     }
 })();
 
-// [진단] JS 에러 수집 + 모듈 로드 상태 추적
-window._jsErrors = [];
-window._modulesLoaded = false;
-window.onerror = function(msg, src, line) {
-    window._jsErrors.push(msg + ' @' + (src||'').split('/').pop() + ':' + line);
-};
-
-// 6초 후 모듈 미로드 시 빨간 진단 배너 표시 (원인 파악용)
-setTimeout(function() {
-    if (window._modulesLoaded) return;
-    var d = document.createElement('div');
-    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#e74c3c;color:#fff;padding:12px;font-size:13px;line-height:1.5;text-align:left;word-break:break-all;';
-    var info = 'MODULE_FAIL | ';
-    info += 'UA: ' + navigator.userAgent.slice(-60) + ' | ';
-    info += 'ERR: ' + (window._jsErrors.length ? window._jsErrors.join('; ') : 'none') + ' | ';
-    info += 'fabric:' + (typeof fabric !== 'undefined') + ' supa:' + (typeof window.supabase !== 'undefined');
-    d.textContent = info;
-    document.body.appendChild(d);
-}, 6000);
+// [버전 체크] 캐시된 구버전 HTML 감지 시 자동 새로고침
+(function(){
+    var CV = '20260304b';
+    if (sessionStorage.getItem('_vr')) return;
+    try {
+        fetch('/version.txt?_t=' + Date.now(), {cache:'no-store'})
+        .then(function(r){ return r.ok ? r.text() : null; })
+        .then(function(v){
+            if (v && v.trim() !== CV) {
+                sessionStorage.setItem('_vr','1');
+                location.reload(true);
+            }
+        }).catch(function(){});
+    } catch(e){}
+})();
 </script>
 <base href="/">
 <meta charset="UTF-8" />
