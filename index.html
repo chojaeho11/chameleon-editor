@@ -6761,10 +6761,11 @@ window.showChoiceModal = async function(key) {
             </div>`;
         } else {
             qtyHtml = `
-            <div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px;">
-                <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button>
-                <input type="number" id="fixedProdQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.updateModalTotal();">
-                <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button>
+            <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold;">${qtyLabel}</div>
+            <div data-npc="qty" class="qty-wrapper" style="display:flex; border:2px solid #6366f1; border-radius:10px; overflow:hidden; height:44px; margin-top:6px;">
+                <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f0f0ff; cursor:pointer; font-weight:bold; font-size:18px;">-</button>
+                <input type="number" id="fixedProdQty" value="1" min="1" style="width:70px; text-align:center; border:none; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; font-weight:bold; font-size:16px;" oninput="window.updateModalTotal();">
+                <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f0f0ff; cursor:pointer; font-weight:bold; font-size:18px;">+</button>
             </div>`;
         }
         rightSideUI = productHeaderHtml + `
